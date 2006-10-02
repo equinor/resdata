@@ -1,0 +1,47 @@
+
+-------------------------------------------------
+Definition of priors in real field experiments:
+
+PORO.INC, PERMX.INC, PERMZ.INC
+
+You need to place the original poro and perm files
+as included in your model in the Prior directory,
+and renamed as PORO.ORIG, PERMX.ORIG and PERMZ.ORIG.
+Also remember to remove the keyword in the files
+which should only contain numbers.
+
+In the menu you will update the poro and perm files
+to a formatted version that fits the system.  
+In this case the .ORIG files are read and written
+in formatted form to .INC files.
+
+
+MULTFLT.INC
+If you are estimating fault multipliers by defining
+the MULTFLT define statement, you also need to 
+install a file MULTFLT.INC in the prior directory.
+
+MULTZ.INC
+If you are estimating vertical multipliers by defining
+the MULTZ define statement, you also need to 
+install a file MULTZ.INC in the prior directory.
+
+EQUIL.INC
+If you specify uncertainty in the initial contacts
+through the EQUIL define statement, you also need
+to install a file EQUIL.INC in the prior directory.
+
+
+Note that these files should also be included at
+the appropriate locations in the ECLIPSE_orig.DATA
+file.
+
+-------------------------------------------------
+Note that in simulated experiments it is also 
+possible to generate a new random prior, but 
+this requires the reference simulation to be 
+run first as well as the updating of the iniens
+program.  In this case iniens writes random
+priors to the .INC files.
+
+-------------------------------------------------
