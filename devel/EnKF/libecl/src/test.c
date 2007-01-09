@@ -78,6 +78,8 @@ int main(int argc , char ** argv) {
 	fclose(data_stream);
 
 	gplot_stream = fopen(gplot_file , "w");
+	fprintf(gplot_stream , "set term post enhanced color blacktext solid \"Helvetica\" 14\n");
+	fprintf(gplot_stream , "set output \"%s-%s.ps\"\n" , well_list[iw] , var_list[ivar]);
 	fprintf(gplot_stream,"set pointsize %g\n" , ps);
 	fprintf(gplot_stream,"set xlabel \"Time (days)\n");
 	fprintf(gplot_stream,"set title \"%s %s\" \n",well_list[iw] , var_list[ivar]);
@@ -94,9 +96,6 @@ int main(int argc , char ** argv) {
 		    iens*2+3 , prior_lt , lw , iens*2 + 4 , posterior_lt , lw);
 	}
 	fprintf(gplot_stream , "\n");
-	fprintf(gplot_stream , "set term post enhanced color blacktext solid \"Helvetica\" 14\n");
-	fprintf(gplot_stream , "set output \"%s-%s.ps\"\n" , well_list[iw] , var_list[ivar]);
-	fprintf(gplot_stream , "replot\n");
 	fprintf(gplot_stream , "!convert %s-%s.ps %s-%s.pdf" , well_list[iw] , var_list[ivar] , well_list[iw] , var_list[ivar]);
 	fclose(gplot_stream);
       }
