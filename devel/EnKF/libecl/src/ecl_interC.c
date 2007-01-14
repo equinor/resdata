@@ -2,6 +2,7 @@
 #include <ecl_kw.h>
 #include <ecl_fstate.h>
 #include <ecl_sum.h>
+#include <ext_job.h>
 
 
 static ecl_fstate_type * ECL_FSTATE     = NULL;
@@ -92,10 +93,49 @@ void ecl_inter_load_summary__(const char *__header_file , const int *header_len 
   free(data_file);
 }
 
+/******************************************************************/
 
-/* void ecl_inter_new_file(const char * filename , int fmt_mode) { */
+static void ecl_inter_run_eclipse_static(int jobs , int max_running , int *submit_list , const char *base_run_path , const char *eclipse_base , int time_step , int fmt_out) {
+  const int max_restart = 5;
+  const int sleep_time  = 5;
+  int job , i , submit_jobs;
+  ext_job_type ** jobList;
+  char run_file[256] , complete_file[256] , run_path[256];
+  
+  submit_jobs = 0;
+  for (job = 0; job < jobs; job++) 
+    submit_jobs += submit_list[job];
+  jobList = calloc(submit_jobs , sizeof *jobList);
+  
+  i = 0;
+  for (job = 0; job < jobs; job++) {
+    if (submit_list[job]) {
+      sprintf(run_path , "%s%04d" , base_run_path , job); 
+      sprintf(run_file , "%s.run_lock" , eclipse_base);
+      if (fmt_out)
+	sprintf(complete_file , "%s.F%04d" , eclipse_base , time_step);
+      else
+	sprintf(complete_file , "%s.X%04d" , eclipse_base , time_step);
+      jobList[i] = ext_job_alloc("@eclips < eclipse.in > /dev/null" , NULL , run_path  , run_file , complete_file , max_restart , sleep_time , true);
+      i++;
+    }
+  }
+  ext_job_run_pool(submit_jobs , jobList , max_running , 30);
+}
+
+
+void ecl_inter_run_eclipse__(int *jobs , int *max_running , int *submit_list, int *time_step , int *fmt_out) {
+  /* Ugggly ....: tmpdir +++ should be input ...*/
+  ecl_inter_run_eclipse_static(*jobs , *max_running , submit_list , "tmpdir_" , "ECLIPSE" , *time_step , *fmt_out);
+}
+
+
+
+
+
+/*   void ecl_inter_new_file(const char * filename , int fmt_mode) { */
 /*   ECL_FSTATE = ecl_fstate_alloc(filename , 10 , fmt_mode , ENDIAN_CONVERT); */
-/* } */
+/*   } */
 
 
 /* void ecl_inter_get_kw_data(const char *header , char *buffer) { */

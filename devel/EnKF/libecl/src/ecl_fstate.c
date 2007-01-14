@@ -6,14 +6,14 @@
 #include <ecl_kw.h>
 #include <ecl_block.h>
 #include <ecl_fstate.h>
-#include <errno.h>
 #include <dirent.h>
-
+#include <util.h>
 
 
 struct ecl_fstate_struct {
   char 	      	 **filelist;
   bool 	      	   fmt_file;
+  int              fmt_mode;
   bool 	      	   endian_convert;
   bool        	   unified;
   int         	   files;
@@ -74,22 +74,7 @@ static bool ecl_fstate_fmt_bit8(const char *filename , int buffer_size) {
 }
 
 
-static bool file_exists(const char *filename) {
-  FILE *stream = fopen(filename , "r");
-  bool ex;
-  if (stream == NULL) {
-    if (errno == ENOENT)
-      ex = false;
-    else {
-      fprintf(stderr,"file: %s exists but open failed - aborting \n",filename);
-      abort();
-    }
-  } else {
-    fclose(stream);
-    ex = true;
-  }
-  return ex;
-}
+
 
 
 static int ecl_fstate_fname2time(const char *filename) {
@@ -116,17 +101,21 @@ static int ecl_fstate_fname2time(const char *filename) {
 }
 
 
-static ecl_fstate_type * ecl_fstate_alloc_static(bool fmt_file , bool endian_convert , bool unified) {
+ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , bool endian_convert , bool unified) {
   ecl_fstate_type *ecl_fstate = malloc(sizeof *ecl_fstate);
-  ecl_fstate->unified  	     = unified;
-  ecl_fstate->fmt_file 	     = fmt_file;
-  ecl_fstate->endian_convert = endian_convert;
-  ecl_fstate->N_blocks       = 0;
+  ecl_fstate->unified  	      = unified;
+  ecl_fstate->fmt_mode 	      = fmt_mode;
+  ecl_fstate->endian_convert  = endian_convert;
+  ecl_fstate->N_blocks        = 0;
+  ecl_fstate->filelist        = NULL;
+  ecl_fstate->block_list      = NULL;
   return ecl_fstate;
 }
 
-static void ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate , int fmt_mode) {
-  switch(fmt_mode) {
+
+static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
+  const bool existing_fmt = ecl_fstate->fmt_file;
+  switch(ecl_fstate->fmt_mode) {
   case ECL_FORMATTED:
     ecl_fstate->fmt_file = true;
     break;
@@ -134,15 +123,27 @@ static void ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate , int fmt_mode) {
     ecl_fstate->fmt_file = false;
     break;
   case ECL_FMT_AUTO:
-    if (file_exists(ecl_fstate->filelist[0])) 
+    if (util_file_exists(ecl_fstate->filelist[0])) 
       ecl_fstate->fmt_file = ecl_fstate_fmt_bit8(ecl_fstate->filelist[0] , 65536);
     else
       ecl_fstate->fmt_file = ecl_fstate_fmt_name(ecl_fstate->filelist[0]);
     break;
   }
+  if (ecl_fstate->fmt_file != existing_fmt) {
+    int i;
+    for (i=0; i < ecl_fstate->N_blocks; i++)
+      ecl_block_set_fmt_file(ecl_fstate->block_list[i] , ecl_fstate->fmt_file);
+  }
 }
 
-static void ecl_fstate_add_block(ecl_fstate_type *ecl_fstate , const ecl_block_type *new_block) {
+bool ecl_fstate_set_fmt_mode(ecl_fstate_type *ecl_fstate , int fmt_mode) {
+  ecl_fstate->fmt_mode = fmt_mode;
+  __ecl_fstate_set_fmt(ecl_fstate);
+  return ecl_fstate->fmt_mode;
+}
+
+
+void ecl_fstate_add_block(ecl_fstate_type *ecl_fstate , const ecl_block_type *new_block) {
   if (ecl_fstate->N_blocks == ecl_fstate->block_size) {
     ecl_fstate->block_size *= 2;
     ecl_fstate->block_list  = realloc(ecl_fstate->block_list , ecl_fstate->block_size * sizeof *ecl_fstate->block_list);
@@ -151,49 +152,75 @@ static void ecl_fstate_add_block(ecl_fstate_type *ecl_fstate , const ecl_block_t
   ecl_fstate->N_blocks++;  
 }
 
-
-static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int files , const char ** filelist , int fmt_mode , bool endian_convert , bool unified) {
-  /*
-    The true in the alloc here is dummy - it is actually set properly further down.
-  */
-  ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_static(true , endian_convert , unified);
-  ecl_fstate->block_size  = 10;
-  ecl_fstate->block_list  = calloc(ecl_fstate->block_size , sizeof *ecl_fstate->block_list);
-  if (unified) {
+static void ecl_fstate_init_files(ecl_fstate_type *ecl_fstate , const char *filename1 , int files , const char ** filelist) {
+  if (ecl_fstate->unified) {
     ecl_fstate->files = 1;
     ecl_fstate->filelist = calloc(1 , sizeof ecl_fstate->filelist);
     ecl_fstate->filelist[0] = calloc(strlen(filename1) + 1 , 1);
     strcpy(ecl_fstate->filelist[0] , filename1);
-    ecl_fstate_set_fmt(ecl_fstate , fmt_mode);
-    {
-      fortio_type *fortio = fortio_open(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert);
-      bool at_eof = false;
-      int block_nr    = 0;
-      while (!at_eof) {
-	ecl_block_type *ecl_block = ecl_block_alloc(block_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
-	ecl_block_fread(ecl_block , fortio , &at_eof);
-	ecl_fstate_add_block(ecl_fstate , ecl_block);
-	block_nr++;
-      }
-      fortio_close(fortio);
+  } else {
+    int file;
+    for (file=0; file < files; file++) {
+      ecl_fstate->filelist[file] = calloc(strlen(filelist[file]) + 1 , 1);
+      strcpy(ecl_fstate->filelist[file] , filelist[file]);
     }
+  }
+  __ecl_fstate_set_fmt(ecl_fstate);
+}
+
+
+void ecl_fstate_set_unified_file(ecl_fstate_type *ecl_fstate, const char *filename1) {
+  ecl_fstate_init_files(ecl_fstate , filename1 , 0 , NULL);
+}
+
+void ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate , bool unified) {
+  ecl_fstate->unified = unified;
+}
+
+void ecl_fstate_set_multiple_files(ecl_fstate_type *ecl_fstate, const char * basename , const char *ext) {
+  char **filelist;
+  int i;
+  filelist = calloc(ecl_fstate->N_blocks , sizeof(char *));
+
+  for (i=0; i < ecl_fstate->N_blocks; i++) {
+    filelist[i] = calloc(strlen(basename) + strlen(ext) + 1 + 1 + 4 , sizeof(char));
+    sprintf(filelist[i] , "%s.%s%04d" , basename , ext , ecl_block_get_block(ecl_fstate->block_list[i]));
+  }
+  ecl_fstate_init_files(ecl_fstate , NULL  , ecl_fstate->N_blocks , (const char **) filelist);
+  
+  for (i=0; i < ecl_fstate->N_blocks; i++) 
+    free(filelist[i]);
+  free(filelist);
+}
+
+static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int files , const char ** filelist , int fmt_mode , bool endian_convert , bool unified) {
+  ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(fmt_mode , endian_convert , unified);
+  ecl_fstate->block_size  = 10;
+  ecl_fstate->block_list  = calloc(ecl_fstate->block_size , sizeof *ecl_fstate->block_list);
+  ecl_fstate_init_files(ecl_fstate , filename1 , files , filelist);
+  if (unified) {
+    fortio_type *fortio = fortio_open(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert);
+    bool at_eof = false;
+    int block_nr    = 0;
+    while (!at_eof) {
+      ecl_block_type *ecl_block = ecl_block_alloc(block_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+      ecl_block_fread(ecl_block , fortio , &at_eof);
+      ecl_fstate_add_block(ecl_fstate , ecl_block);
+      block_nr++;
+    }
+    fortio_close(fortio);
   } else {
     ecl_fstate->files = files;
     ecl_fstate->filelist = calloc(files , sizeof ecl_fstate->filelist);
     {
       int file;
       for (file=0; file < files; file++) {
-	ecl_fstate->filelist[file] = calloc(strlen(filelist[file]) + 1 , 1);
-	strcpy(ecl_fstate->filelist[file] , filelist[file]);
-	if (file == 0) ecl_fstate_set_fmt(ecl_fstate , fmt_mode);
-	{
-	  bool at_eof;
-	  ecl_block_type *ecl_block = ecl_block_alloc(file , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
-	  fortio_type *fortio = fortio_open(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
-	  ecl_block_fread(ecl_block , fortio , &at_eof);
-	  ecl_fstate_add_block(ecl_fstate , ecl_block);
-	  fortio_close(fortio);
-	}
+	bool at_eof;
+	ecl_block_type *ecl_block = ecl_block_alloc(file , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+	fortio_type *fortio       = fortio_open(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
+	ecl_block_fread(ecl_block , fortio , &at_eof);
+	ecl_fstate_add_block(ecl_fstate , ecl_block);
+	fortio_close(fortio);
       }
     }
   }
@@ -253,7 +280,6 @@ void ecl_fstate_scandir_free(int files , char **filelist) {
 
 
 
-
 ecl_fstate_type * ecl_fstate_load_unified(const char *filename , int fmt_mode , bool endian_convert) {
   ecl_fstate_type *ecl_fstate;
   ecl_fstate = ecl_fstate_load_static(filename , 1 , NULL , fmt_mode , endian_convert , true);
@@ -264,12 +290,6 @@ ecl_fstate_type * ecl_fstate_load_unified(const char *filename , int fmt_mode , 
 ecl_fstate_type * ecl_fstate_load_multiple(int files , const char **filelist , int fmt_mode , bool endian_convert) {
   ecl_fstate_type *ecl_fstate;
   ecl_fstate = ecl_fstate_load_static(NULL , files , filelist , fmt_mode , endian_convert , false);
-  return ecl_fstate;
-}
-
-
-ecl_fstate_type *ecl_fstate_alloc_new(const char * filename , bool fmt_file , bool endian_convert , bool unified) {
-  ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_static(fmt_file , endian_convert , unified);
   return ecl_fstate;
 }
 
@@ -363,6 +383,31 @@ void ecl_fstate_free(ecl_fstate_type *ecl_fstate) {
   free(ecl_fstate->block_list);
 
   free(ecl_fstate);
+}
+
+
+static void ecl_fstate_save_multiple(const ecl_fstate_type *ecl_fstate) {
+  int block;
+  for (block = 0; block < ecl_fstate->N_blocks; block++) {
+    fortio_type *fortio = fortio_open(ecl_fstate->filelist[block] , "w" , ecl_fstate->endian_convert);
+    ecl_block_fwrite(ecl_fstate->block_list[block] , fortio);
+    fortio_close(fortio);
+  }
+}
+
+static void ecl_fstate_save_unified(const ecl_fstate_type *ecl_fstate) {
+  int block;
+  fortio_type *fortio = fortio_open(ecl_fstate->filelist[0] , "w" , ecl_fstate->endian_convert);
+  for (block = 0; block < ecl_fstate->N_blocks; block++) 
+    ecl_block_fwrite(ecl_fstate->block_list[block] , fortio);
+  fortio_close(fortio);
+}
+
+void ecl_fstate_save(const ecl_fstate_type *ecl_fstate) {
+  if (ecl_fstate->unified)
+    ecl_fstate_save_unified(ecl_fstate);
+  else
+    ecl_fstate_save_multiple(ecl_fstate);
 }
 
 

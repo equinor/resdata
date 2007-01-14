@@ -14,7 +14,9 @@ struct ecl_sum_struct {
   int               fmt_mode;
   int               Nwells;
   char            **well_list;
+  char            * base_name;
   bool              endian_convert;
+  bool              unified;
 };
 
 
@@ -29,7 +31,7 @@ static void set_well_kw_string(const char *well , const char *kw , char *well_kw
     well_kw[i] = well[i];
     i++;
   }
-
+  
   offset = i;
   i = 0;
   while (kw[i] != space_char && kw[i] != null_char) {
@@ -40,13 +42,26 @@ static void set_well_kw_string(const char *well , const char *kw , char *well_kw
 }  
 
 
-static ecl_sum_type * ecl_sum_alloc1(const char *header_file , int fmt_mode , bool endian_convert) {
+
+static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert , bool unified) {
   ecl_sum_type *ecl_sum;
   ecl_sum = malloc(sizeof *ecl_sum);
   ecl_sum->fmt_mode       = fmt_mode;
   ecl_sum->endian_convert = endian_convert;
+  ecl_sum->unified        = unified;
+  ecl_sum->index_hash     = hash_alloc(10);
+  ecl_sum->header         = NULL;
+  ecl_sum->data           = NULL;
+  ecl_sum->well_list      = NULL;
+  ecl_sum->base_name      = NULL;
+  return ecl_sum;
+}
+
+
+
+static ecl_sum_type * ecl_sum_alloc_existing(const char *header_file , int fmt_mode , bool endian_convert , bool unified) {
+  ecl_sum_type *ecl_sum   = ecl_sum_alloc_empty(fmt_mode , endian_convert , unified);
   ecl_sum->header         = ecl_fstate_load_unified(header_file , ecl_sum->fmt_mode , ecl_sum->endian_convert);
-  ecl_sum->index_hash     = hash_alloc(ecl_fstate_get_blocksize(ecl_sum->header));
   {
     ecl_kw_type *wells     = ecl_fstate_get_kw(ecl_sum->header , 0 , "WGNAMES"); 
     ecl_kw_type *keywords  = ecl_fstate_get_kw(ecl_sum->header , 0 , "KEYWORDS"); 
@@ -65,11 +80,113 @@ static ecl_sum_type * ecl_sum_alloc1(const char *header_file , int fmt_mode , bo
   
   return ecl_sum;
 }
-										
+	
+									
+static void ecl_sum_init_new(ecl_sum_type * ecl_sum , const int *_dimens , const char *kw_list , const char * _units , const char * well_list , 
+			     const int * _nums , bool iter_header , int Nwells, int Nvars , int kw_offset) {
+  const bool FMT_FILE = true;
+  int size = 10; /*...*/
+
+  ecl_block_type *header_block = ecl_block_alloc(0 , 10 , FMT_FILE , ecl_sum->endian_convert);
+  ecl_kw_type *kw       = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
+  ecl_kw_type *units    = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
+  ecl_kw_type *restart  = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
+  ecl_kw_type *dimens   = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
+  ecl_kw_type *wells    = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
+  ecl_kw_type *nums     = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
+  ecl_kw_type *startdat = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
+  /*
+    Might not need these ???
+    ecl_kw_type *runtimeI = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
+    ecl_kw_type *runtimeD = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
+  */
+  ecl_kw_set_header(kw       , "KEYWORDS" , size , "CHAR");
+  ecl_kw_set_header(units    , "UNITS"    , size , "CHAR");
+  ecl_kw_set_header(restart  , "RESTART"  , 9    , "CHAR");
+  ecl_kw_set_header(dimens   , "DIMENS"   , 6    , "INTE");
+  ecl_kw_set_header(wells    , "WGNAMES"  , size , "CHAR");
+  ecl_kw_set_header(nums     , "NUMS"     , size , "INTE");
+  ecl_kw_set_header(startdat , "STARTDAT" , 3    , "INTE");
+
+  ecl_block_add_kw(header_block , restart);
+  ecl_block_add_kw(header_block , dimens);
+  ecl_block_add_kw(header_block , kw);
+  ecl_block_add_kw(header_block , wells);
+  ecl_block_add_kw(header_block , nums);
+  ecl_block_add_kw(header_block , units);
+  ecl_block_add_kw(header_block , startdat);
+}
+
+static void ecl_sum_set_unified(ecl_sum_type *ecl_sum , bool unified) {
+  ecl_sum->unified = unified;
+  ecl_fstate_set_unified(ecl_sum->data , unified);
+}
+
+
+ecl_sum_type * ecl_sum_alloc_new(const char *base_name , int fmt_mode , bool endian_convert , bool unified) {
+  ecl_sum_type *ecl_sum = ecl_sum_alloc_empty(fmt_mode , endian_convert , unified);
+  ecl_sum->header = ecl_fstate_alloc_empty(fmt_mode , endian_convert , true);
+  ecl_sum->data   = ecl_fstate_alloc_empty(fmt_mode , endian_convert , unified);
+  ecl_sum->base_name = calloc(strlen(base_name) + 1 , sizeof *ecl_sum->base_name);
+  strcpy(ecl_sum->base_name , base_name);
+  return ecl_sum;
+}
+
+
+void ecl_sum_init_save(ecl_sum_type * ecl_sum , const char * base_name , int fmt_mode , bool unified) {
+  ecl_sum->base_name = calloc(strlen(base_name) + 1 , sizeof *ecl_sum->base_name);
+  strcpy(ecl_sum->base_name , base_name);
+
+  ecl_sum_set_fmt_mode(ecl_sum , fmt_mode);
+  ecl_sum_set_unified(ecl_sum , unified);
+}
+
+
+void ecl_sum_save(const ecl_sum_type * ecl_sum) {
+  char *summary_spec , ext[2] , *data_file;
+  if (ecl_sum->base_name == NULL || !(ecl_sum->fmt_mode == ECL_FORMATTED || ecl_sum->fmt_mode == ECL_BINARY)) {
+    fprintf(stderr,"%s: must inititialise ecl_sum object prior to saving - aborting \n",__func__);
+    abort();
+  }
+  
+  if (ecl_sum->fmt_mode == ECL_FORMATTED) {
+    summary_spec = malloc( strlen(ecl_sum->base_name) + 9 );
+    sprintf(summary_spec , "%s.FSMSPEC" , ecl_sum->base_name);
+  } else {
+    summary_spec = malloc( strlen(ecl_sum->base_name) + 8);
+    sprintf(summary_spec , "%s.SMSPEC" , ecl_sum->base_name);
+    sprintf(ext , "S");
+  }
+  ecl_fstate_set_unified_file(ecl_sum->header , summary_spec);
+
+  if (ecl_sum->unified) {
+    if (ecl_sum->fmt_mode == ECL_FORMATTED) {
+      data_file = calloc(strlen(ecl_sum->base_name) + 9 , sizeof(char));
+      sprintf(data_file , "%s.FUNSMRY" , ecl_sum->base_name);
+    } else {
+      data_file = calloc(strlen(ecl_sum->base_name) + 8 , sizeof(char));
+      sprintf(data_file , "%s.UNSMRY" , ecl_sum->base_name);
+    }
+    ecl_fstate_set_unified_file(ecl_sum->data , data_file);
+    free(data_file);
+  } else {
+    if (ecl_sum->fmt_mode == ECL_FORMATTED) 
+      sprintf(ext , "A");
+    else
+      sprintf(ext , "S");
+    ecl_fstate_set_multiple_files(ecl_sum->data , ecl_sum->base_name , ext);
+  }
+  
+  ecl_fstate_save(ecl_sum->header);
+  ecl_fstate_save(ecl_sum->data);
+  
+  free(summary_spec);
+}
+
 
 
 ecl_sum_type * ecl_sum_load_unified(const char * header_file , const char * data_file , int fmt_mode , bool endian_convert) {
-  ecl_sum_type * ecl_sum = ecl_sum_alloc1(header_file , fmt_mode , endian_convert);
+  ecl_sum_type * ecl_sum = ecl_sum_alloc_existing(header_file , fmt_mode , endian_convert , true);
   ecl_sum->data   = ecl_fstate_load_unified(data_file  , ecl_sum->fmt_mode , ecl_sum->endian_convert);
   return ecl_sum;
 }
@@ -77,7 +194,7 @@ ecl_sum_type * ecl_sum_load_unified(const char * header_file , const char * data
 
 
 ecl_sum_type * ecl_sum_load_multiple(const char * header_file , int files , const char ** data_files , int fmt_mode , bool endian_convert) {
-  ecl_sum_type * ecl_sum = ecl_sum_alloc1(header_file , fmt_mode , endian_convert);
+  ecl_sum_type * ecl_sum = ecl_sum_alloc_existing(header_file , fmt_mode , endian_convert , false);
   ecl_sum->data   = ecl_fstate_load_multiple(files , data_files  , ecl_sum->fmt_mode , ecl_sum->endian_convert);
   return ecl_sum;
 }
@@ -103,6 +220,16 @@ int ecl_sum_iget1(const ecl_sum_type *ecl_sum , int istep , const char *well_nam
   return index;
 }
 
+void ecl_sum_set_fmt_mode(ecl_sum_type *ecl_sum , int fmt_mode) {
+  if (ecl_sum->fmt_mode != fmt_mode) {
+    ecl_sum->fmt_mode = fmt_mode;
+    if (ecl_sum->header != NULL) ecl_fstate_set_fmt_mode(ecl_sum->header , fmt_mode);
+    if (ecl_sum->data   != NULL) ecl_fstate_set_fmt_mode(ecl_sum->data , fmt_mode);
+  }
+}
+
+
+
 
 int ecl_sum_get_size(const ecl_sum_type *ecl_sum) {
   return ecl_fstate_get_blocksize(ecl_sum->data);
@@ -112,10 +239,15 @@ void ecl_sum_free(ecl_sum_type *ecl_sum) {
   int i;
   ecl_fstate_free(ecl_sum->header);
   ecl_fstate_free(ecl_sum->data);
+
   hash_free(ecl_sum->index_hash);
+
   for (i=0; i < ecl_sum->Nwells; i++)
     free(ecl_sum->well_list[i]);
   free(ecl_sum->well_list);
+
+  if (ecl_sum->base_name != NULL)
+    free(ecl_sum->base_name);
   free(ecl_sum);
 }
 

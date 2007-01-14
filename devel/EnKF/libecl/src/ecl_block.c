@@ -41,6 +41,17 @@ void kw_set_strip_copy(char * copy , const char *src) {
 
   
 
+ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
+  ecl_block_type * copy;
+  copy = ecl_block_alloc(src->time_step , src->size , src->fmt_file , src->endian_convert);
+  {
+    int i;
+    for (i=0; i  < src->size; i++)
+      ecl_block_add_kw_copy(copy , src->kw_list[i]);
+  }
+  return copy;
+}
+
 
 ecl_block_type * ecl_block_alloc(int time_step , int Nkw , bool fmt_file , bool endian_convert) {
   ecl_block_type *ecl_block;
@@ -58,7 +69,7 @@ ecl_block_type * ecl_block_alloc(int time_step , int Nkw , bool fmt_file , bool 
     for (i=0; i < ecl_block->kw_list_size; i++)
       ecl_block->kw_list[i] = NULL;
   }
-  ecl_block->kw_hash = hash_alloc(10);
+  ecl_block->kw_hash = hash_alloc(2*Nkw);
   return ecl_block;
 }
 
@@ -86,11 +97,13 @@ bool ecl_block_add_kw_copy(ecl_block_type *ecl_block , const ecl_kw_type *src_kw
   if (ecl_block_get_kw(ecl_block , ecl_kw_get_header_ref(src_kw)))
     return false;
   else {
-    ecl_kw_type *new_kw = ecl_kw_alloc_clone(src_kw);
+    ecl_kw_type *new_kw = ecl_kw_alloc_copy(src_kw);
     ecl_block_add_kw(ecl_block , new_kw);
     return true;
   }
 }
+
+
 
 
 void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_eof) {
@@ -132,7 +145,19 @@ static bool ecl_block_include_kw(const ecl_block_type *ecl_block , const ecl_kw_
 
 void ecl_block_set_fmt_file(ecl_block_type *ecl_block , bool fmt_file) {
   ecl_block->fmt_file = fmt_file;
+  {
+    /*
+      This could be done with a for loop - it is a good stress test of
+      the hash algorithm though.
+    */
+    hash_node_type *kw_node = hash_iter_init(ecl_block->kw_hash);
+    while (kw_node != NULL) {
+      ecl_kw_set_fmt_file(ecl_block->kw_list[hash_node_as_int(kw_node)] , ecl_block->fmt_file);
+      kw_node = hash_iter_next(ecl_block->kw_hash , kw_node);
+    }
+  }
 }
+
 
 void ecl_block_select_formatted(ecl_block_type *ecl_block) { ecl_block_set_fmt_file(ecl_block , true ); }
 void ecl_block_select_binary(ecl_block_type *ecl_block) { ecl_block_set_fmt_file(ecl_block , false); }

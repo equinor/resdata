@@ -181,6 +181,26 @@ end subroutine ecl_inter_free
    
 
 
+subroutine ecl_inter_run_eclipse(jobs , max_running , submit_list , time_step , fmt_out)
+Implicit None
+Integer, Intent(IN) :: jobs
+integer, Intent(IN) :: max_running
+Integer, Intent(IN) :: submit_list(:)
+integer, Intent(IN) :: time_step
+logical, intent(IN) :: fmt_out
+
+Integer :: fmt_out_int
+
+  if (fmt_out) then
+     fmt_out_int = 1
+  else
+     fmt_out_int = 0
+  end if
+  
+  call ecl_inter_run_eclipse_(jobs , max_running, submit_list , time_step , fmt_out_int)
+
+end subroutine ecl_inter_run_eclipse
+
 
 
 end module ecl_inter

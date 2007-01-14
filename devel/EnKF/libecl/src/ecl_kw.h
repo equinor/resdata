@@ -29,7 +29,7 @@ void          ecl_kw_free(ecl_kw_type *);
 void          ecl_kw_set_fmt_file(ecl_kw_type *, bool);
 void 	      ecl_kw_select_formatted(ecl_kw_type *);
 void 	      ecl_kw_select_binary   (ecl_kw_type *);
-ecl_kw_type * ecl_kw_alloc_clone (const ecl_kw_type *);
+ecl_kw_type * ecl_kw_alloc_copy (const ecl_kw_type *);
 void        * ecl_kw_get_data_ref(const ecl_kw_type *);
 void          ecl_kw_memcpy(ecl_kw_type *, const ecl_kw_type *);
 void          ecl_kw_get_memcpy_data(const ecl_kw_type *, void *);
