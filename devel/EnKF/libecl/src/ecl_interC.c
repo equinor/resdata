@@ -12,13 +12,17 @@ static ecl_sum_type    * ECL_SUM        = NULL;
 
 /******************************************************************/
 
+static char * alloc_cstring(const char *fort_string , int strlen) {
+  const char null_char = '\0';
+  char *new_string = malloc(strlen + 1);
+  strncpy(new_string , fort_string , strlen);
+  new_string[strlen] = null_char;
+  return new_string;
+}
+
 
 void ecl_inter_load_file__(const char *__filename , const int *strlen) {
-  const char null_char = '\0';
-  char *filename;
-  filename = malloc(*strlen + 1);
-  strncpy(filename , __filename , *strlen);
-  filename[*strlen] = null_char;
+  char *filename = alloc_cstring(__filename , *strlen);
   ECL_FSTATE = ecl_fstate_load_unified(filename , ECL_FMT_AUTO , ENDIAN_CONVERT);
   free(filename);
 }
@@ -78,15 +82,8 @@ void ecl_inter_get_blocks__(int *blocks) {
 
 
 void ecl_inter_load_summary__(const char *__header_file , const int *header_len , const char *__data_file , const int *data_len) {
-  const char null_char = '\0';
-  char *header_file , *data_file;
-  header_file = malloc(*header_len + 1);
-  data_file   = malloc(*data_len   + 1);
-
-  strncpy(header_file , __header_file , *header_len);
-  strncpy(data_file , __data_file , *data_len);
-  header_file[*header_len] = null_char;
-  data_file[*data_len] = null_char;
+  char * header_file = alloc_cstring(__header_file , *header_len);
+  char * data_file   = alloc_cstring(__data_file   , *data_len);
 
   ECL_SUM = ecl_sum_load_unified(header_file , data_file , ECL_FMT_AUTO , ENDIAN_CONVERT);
   free(header_file);  
@@ -95,12 +92,11 @@ void ecl_inter_load_summary__(const char *__header_file , const int *header_len 
 
 /******************************************************************/
 
-static void ecl_inter_run_eclipse_static(int jobs , int max_running , int *submit_list , const char *base_run_path , const char *eclipse_base , int time_step , int fmt_out) {
-  const int max_restart = 5;
-  const int sleep_time  = 5;
+static void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_restart , int *submit_list , const char *base_run_path , const char *eclipse_base , int time_step , int fmt_out) {
+  const int sleep_time  = 2;
   int job , i , submit_jobs;
   ext_job_type ** jobList;
-  char run_file[256] , complete_file[256] , run_path[256];
+  char run_file[256] , complete_file[256] , run_path[256] , id[64], summary_file[64];
   
   submit_jobs = 0;
   for (job = 0; job < jobs; job++) 
@@ -110,26 +106,36 @@ static void ecl_inter_run_eclipse_static(int jobs , int max_running , int *submi
   i = 0;
   for (job = 0; job < jobs; job++) {
     if (submit_list[job]) {
-      sprintf(run_path , "%s%04d" , base_run_path , job); 
-      sprintf(run_file , "%s.run_lock" , eclipse_base);
+      sprintf(run_path , "%s%04d" , base_run_path , job + 1); 
+      sprintf(run_file , "%s.PRT" , eclipse_base);
       if (fmt_out)
 	sprintf(complete_file , "%s.F%04d" , eclipse_base , time_step);
       else
 	sprintf(complete_file , "%s.X%04d" , eclipse_base , time_step);
-      jobList[i] = ext_job_alloc("@eclips < eclipse.in > /dev/null" , NULL , run_path  , run_file , complete_file , max_restart , sleep_time , true);
+      sprintf(id,"Job: %04d" , job + 1);
+      jobList[i] = ext_job_alloc(id , "@eclipse < eclipse.in 2> /dev/null | grep filterXX" , NULL , run_path  , run_file , complete_file , max_restart , sleep_time , true);
       i++;
     }
   }
-  ext_job_run_pool(submit_jobs , jobList , max_running , 30);
+  sprintf(summary_file , "Jobsummary/summary_%04d", time_step);
+  ext_job_run_pool(submit_jobs , jobList , max_running , 10 , summary_file);
 }
 
 
-void ecl_inter_run_eclipse__(int *jobs , int *max_running , int *submit_list, int *time_step , int *fmt_out) {
-  /* Ugggly ....: tmpdir +++ should be input ...*/
-  ecl_inter_run_eclipse_static(*jobs , *max_running , submit_list , "tmpdir_" , "ECLIPSE" , *time_step , *fmt_out);
+void ecl_inter_run_eclipse__(const char * __basedir , int *basedir_length, 
+			     const char * __eclbase , int *eclbase_length , 
+			     int *jobs , int *max_running , int *max_restart, 
+			     int *submit_list, int *time_step , int *fmt_out) {
+  char *basedir = alloc_cstring(__basedir , *basedir_length);
+  char *eclbase = alloc_cstring(__eclbase , *eclbase_length);
+  
+  printf("*****************************************************************\n");
+  printf("Skal kjore eclipse jobber .... \n");
+  printf("*****************************************************************\n");
+  ecl_inter_run_eclipse_static(*jobs , *max_running , *max_restart , submit_list , basedir , eclbase , *time_step , *fmt_out);
+  free(basedir);
+  free(eclbase);
 }
-
-
 
 
 

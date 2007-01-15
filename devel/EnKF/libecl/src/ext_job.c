@@ -17,6 +17,7 @@
 
 
 struct ext_job_struct {
+  char *id;
   char *run_path;
   char *run_cmd;
   char *abort_cmd;
@@ -39,13 +40,13 @@ struct ext_job_struct {
 };
 
 
-static char * alloc_string_copy(const char *src , bool false_OK) {
+static char * alloc_string_copy(const char *src , bool abort_on_NULL) {
   if (src != NULL) {
     char *copy = calloc(strlen(src) + 1 , sizeof *copy);
     strcpy(copy , src);
     return copy;
   } else {
-    if (false_OK)
+    if (!abort_on_NULL)
       return NULL;
     else {
       fprintf(stderr,"%s: can not take NULL as input - aborting \n" , __func__);
@@ -108,13 +109,28 @@ void ext_job_set_status(ext_job_type *ext_job , ext_status_enum status) {
   ext_job_unlock(ext_job);
 }
 
+static void unlink_old_file(const ext_job_type *ext_job) {
+  if (util_file_exists(ext_job->run_file))
+    unlink(ext_job->run_file);
 
-ext_job_type * ext_job_alloc(const char *run_cmd , const char *abort_cmd , const char * run_path , const char *run_file , const char * complete_file , int max_restart , int sleep_time , bool do_fork) {
+  if (util_file_exists(ext_job->complete_file))
+    unlink(ext_job->complete_file);
+}
+
+
+
+ext_job_type * ext_job_alloc(const char *id , const char *run_cmd , const char *abort_cmd , const char * run_path , const char *run_file , const char * complete_file , int max_restart , int sleep_time , bool do_fork) {
   ext_job_type * ext_job;
   ext_job = malloc(sizeof *ext_job);
-  ext_job->run_path      = alloc_string_copy(run_path , false);
-  ext_job->run_cmd       = alloc_string_copy(run_cmd  , false);
-  ext_job->abort_cmd     = alloc_string_copy(abort_cmd , true);
+  if (id == NULL)
+    ext_job->id            = alloc_string_copy(run_path , true);
+  else
+    ext_job->id            = alloc_string_copy(id , true);
+
+  ext_job->run_path      = alloc_string_copy(run_path  , true);
+  ext_job->run_path      = alloc_string_copy(run_path  , true);
+  ext_job->run_cmd       = alloc_string_copy(run_cmd   , true);
+  ext_job->abort_cmd     = alloc_string_copy(abort_cmd , false);
   ext_job->run_file      = alloc_path_copy(run_path , run_file);
   ext_job->complete_file = alloc_path_copy(run_path , complete_file);
   ext_job->max_restart   = max_restart;
@@ -124,6 +140,7 @@ ext_job_type * ext_job_alloc(const char *run_cmd , const char *abort_cmd , const
   ext_job->sleep_time    = sleep_time;
   ext_job->do_fork       = do_fork;
   pthread_mutex_init(&ext_job->mutex , NULL);
+  unlink_old_file(ext_job);
   return ext_job;
 }
 
@@ -133,10 +150,61 @@ static void ext_job_set_ctime(const char *file , time_t *ct) {
   
   fildes = open(file , O_RDONLY);
   fstat(fildes, &buffer);
-  *ct = buffer.st_ctime;
+  *ct = buffer.st_mtime;
   close(fildes);
 }
 
+static void sprintf_timestring(char *time_str , const time_t *t) {
+  struct tm tr;
+  localtime_r(t , &tr);
+  sprintf(time_str , "%02d:%02d:%02d" , tr.tm_hour , tr.tm_min , tr.tm_sec);
+}
+
+static void ext_job_fprintf_status(ext_job_type *ext_job ,  FILE *stream) {
+  const ext_status_enum status = ext_job_get_status(ext_job);
+  char run_time[16] , job_status[128];
+  char submit_time[9],start_time[9],complete_time[9];
+  
+  sprintf(submit_time   , " ");
+  sprintf(start_time    , " ");
+  sprintf(complete_time , " ");
+  sprintf(run_time      , " ");
+
+  switch(status) {
+  case(ext_status_null):
+    sprintf(job_status,"Waiting");
+    break;
+  case(ext_status_submitted):
+    sprintf(job_status , "Submitted");
+    break;
+  case(ext_status_running):
+    sprintf(job_status , "Running");
+    break;
+  case(ext_status_complete_OK):
+    sprintf(job_status , "Complete:OK");
+    break;
+  case(ext_status_complete_kill):
+    sprintf(job_status , "Killed");
+    break;
+  case(ext_status_complete_fail):
+    sprintf(job_status, "Failed");
+    break;
+  }
+      
+
+  if (status >= ext_status_submitted)
+    sprintf_timestring(submit_time , &ext_job->submit_time);
+
+  if (status >= ext_status_running)
+    sprintf_timestring(start_time  , &ext_job->start_time);
+
+  if (status >= ext_status_complete_OK) {
+    sprintf_timestring(complete_time , &ext_job->complete_time);
+    sprintf(run_time , "%8.0f sec"   , difftime(ext_job->complete_time , ext_job->start_time));
+  }
+  
+  fprintf(stream , "%-20s  %-16s  %8s       %8s          %8s   %14s \n",ext_job->id , job_status , submit_time , start_time , complete_time , run_time);
+}
 
 
 /*
@@ -149,6 +217,9 @@ void ext_job_check(ext_job_type *ext_job) {
     Here we react to the action 
   */
   char cmd[512];
+  char *complete_file , *run_file;
+  complete_file = cmd;
+  run_file      = cmd;
   pid_t pid;
   ext_job_lock(ext_job);
   switch (ext_job->action) {
@@ -156,13 +227,10 @@ void ext_job_check(ext_job_type *ext_job) {
     break;
   case(ext_action_submit):
     sprintf(cmd , "cd %s ; %s" , ext_job->run_path , ext_job->run_cmd);
-    /* 
-       This is a blocking call...
-    */
-    
     if (ext_job->do_fork) {
       pid = fork();
       if (pid == 0) {
+	printf("Submitter: %s \n",ext_job->id);
 	system(cmd);
 	exit(1);
       }
@@ -189,14 +257,14 @@ void ext_job_check(ext_job_type *ext_job) {
       }
       
       /* 
-	 If it completes, and fails within the sleep window, the
-	 status will be stuck in ext_action_watch(). The run_file has
+	 If it completes, and fails, within the sleep window, the
+	 action will be stuck in ext_action_watch(). The run_file has
 	 been there and gone, and the complete_file never shows up
 	 (because the job failed), in this case the job must be
 	 manually rescheduled - this is currently not done, 
 	 and the job will appear to be lost.
       */
-
+      
     } else if (ext_job->status == ext_status_running) {
       if (util_file_exists(ext_job->complete_file)) {
 	ext_job->status = ext_status_complete_OK;
@@ -254,6 +322,7 @@ static void free_not_null(char *p) {
 }
 
 void ext_job_free(ext_job_type *ext_job) {
+  free_not_null(ext_job->id);
   free_not_null(ext_job->run_path);
   free_not_null(ext_job->run_cmd);
   free_not_null(ext_job->abort_cmd);
@@ -287,39 +356,58 @@ void ext_job_summarize_list(int job_size , ext_job_type ** jobList , int *state_
   All jobs are assumed to arrive with ext_action_null / ext_status_null ?
 */
 
-void ext_job_run_pool(int job_size , ext_job_type **jobList , int max_running , int sleep_time) {
+static void ext_job_fprintf_summary(int job_size ,ext_job_type **jobList , const char * summary_file) {
+  int job;
+  FILE *stream = fopen(summary_file , "w");
+  
+  fprintf(stream , "Job                   Status           submit-time    start-time      complete-time       run-time\n");
+  fprintf(stream , "--------------------------------------------------------------------------------------------------\n");
+  for (job = 0; job < job_size; job++) 
+    ext_job_fprintf_status(jobList[job] , stream);
+  fclose(stream);
+}
+
+void ext_job_run_pool(int job_size , ext_job_type **jobList , int max_running , int sleep_time , const char *summary_file) {
+  const bool exit_on_submit = false;
   int complete_jobs;
   int active_jobs;
   int job;
   pthread_t  *threadList;
   const int   state_size     = ext_job_get_state_size();
   int        *state_summary = calloc(state_size , sizeof *state_summary);
-  
+  bool exit_mainloop;
+
   threadList = calloc(job_size , sizeof *threadList);
   for (job = 0; job < job_size; job++) 
     pthread_create(&threadList[job] , NULL , ext_job_main , jobList[job]);
   
   do {
     sleep(sleep_time);
+    exit_mainloop = false;
     ext_job_summarize_list(job_size , jobList , state_summary);
+    if (state_summary[0] == 0) {
+      if (exit_on_submit)
+	exit_mainloop = true;
+    }
+      
     printf("%d  %d  %d  (%d %d %d) \n",state_summary[0] , state_summary[1] , state_summary[2] , state_summary[3] , state_summary[4] , state_summary[5]);
-
     complete_jobs = state_summary[ext_status_complete_OK] + state_summary[ext_status_complete_fail] + state_summary[ext_status_complete_kill]; 
     active_jobs   = state_summary[ext_status_submitted] + state_summary[ext_status_running];
-    printf("submitted:%d   Running:%d \n",state_summary[ext_status_submitted] , state_summary[ext_status_running]);
     if (active_jobs < max_running) {
       job         = 0;
       do {
 	if (ext_job_get_status(jobList[job]) == ext_status_null) {
 	  ext_job_set_action(jobList[job] , ext_action_submit);
 	  active_jobs++;
-	  printf("Submitter job:%d \n",job);
 	}
 	job++;
       } while (active_jobs < max_running && job < job_size);
     }
-    printf("Complete: %d \n",complete_jobs);
-  } while (complete_jobs < job_size);
+    if (complete_jobs == job_size)
+      exit_mainloop = true;
+    if (summary_file != NULL) 
+      ext_job_fprintf_summary(job_size , jobList , summary_file);
+  } while (!exit_mainloop);
   free(threadList);
   free(state_summary);
 }
