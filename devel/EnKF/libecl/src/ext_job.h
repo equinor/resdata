@@ -14,5 +14,5 @@ void              ext_job_free(ext_job_type *);
 ext_job_type    * ext_job_alloc(const char * ,const char *, const char *, const char * , const char *, const char * , int , int , bool);
 ext_status_enum   ext_job_get_status(ext_job_type * );
 void              ext_job_set_action(ext_job_type * , ext_action_enum );
-void              ext_job_run_pool(int , ext_job_type **, int , int , const char *);
+void              ext_job_run_pool(int , ext_job_type **, int , int , const char *, bool);
 #endif

@@ -367,8 +367,7 @@ static void ext_job_fprintf_summary(int job_size ,ext_job_type **jobList , const
   fclose(stream);
 }
 
-void ext_job_run_pool(int job_size , ext_job_type **jobList , int max_running , int sleep_time , const char *summary_file) {
-  const bool exit_on_submit = false;
+void ext_job_run_pool(int job_size , ext_job_type **jobList , int max_running , int sleep_time , const char *summary_file , bool exit_on_submit) {
   int complete_jobs;
   int active_jobs;
   int job;
@@ -386,6 +385,10 @@ void ext_job_run_pool(int job_size , ext_job_type **jobList , int max_running , 
     exit_mainloop = false;
     ext_job_summarize_list(job_size , jobList , state_summary);
     if (state_summary[0] == 0) {
+      /*
+	No jobs are waiting - then we just leave these threads
+	spinning on their own; hopefully they will manage ...
+      */
       if (exit_on_submit)
 	exit_mainloop = true;
     }

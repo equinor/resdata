@@ -181,7 +181,7 @@ end subroutine ecl_inter_free
    
 
 
-subroutine ecl_inter_run_eclipse(base_dir , ecl_base, jobs , max_running , max_restart , submit_list , time_step , fmt_out)
+subroutine ecl_inter_run_eclipse(base_dir , ecl_base, jobs , max_running , max_restart , submit_list , time_step , fmt_out , subexit)
 Implicit None
 Character(Len = *), Intent(IN) :: base_dir , ecl_base
 Integer, Intent(IN) :: jobs
@@ -189,17 +189,26 @@ integer, Intent(IN) :: max_running , max_restart
 Integer, Intent(IN) :: submit_list(:)
 integer, Intent(IN) :: time_step
 logical, intent(IN) :: fmt_out
+Logical, Intent(IN) :: subexit
 
-Integer :: fmt_out_int
+Integer :: fmt_out_int, subexit_int
 
-   if (fmt_out) then
+  if (fmt_out) then
      fmt_out_int = 1
   else
      fmt_out_int = 0
   end if
+
+  if (subexit) then
+     subexit_int = 1
+  else
+     subexit_int = 0
+  end if
+
+
   
   call ecl_inter_run_eclipse_(trim(base_dir) , len_trim(base_dir) , trim(ecl_base) , len_trim(ecl_base) , &
-  jobs , max_running, max_restart , submit_list , time_step , fmt_out_int)
+  jobs , max_running, max_restart , submit_list , time_step , fmt_out_int , subexit_int)
 
 end subroutine ecl_inter_run_eclipse
 

@@ -92,13 +92,19 @@ void ecl_inter_load_summary__(const char *__header_file , const int *header_len 
 
 /******************************************************************/
 
-static void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_restart , int *submit_list , const char *base_run_path , const char *eclipse_base , int time_step , int fmt_out) {
+static void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_restart , int *submit_list , const char *base_run_path , const char *eclipse_base , int time_step , int fmt_out , int exit_on_submit_int) {
   const int sleep_time  = 2;
+  bool exit_on_submit;
   int job , i , submit_jobs;
   ext_job_type ** jobList;
   char run_file[256] , complete_file[256] , run_path[256] , id[64], summary_file[64];
   
   submit_jobs = 0;
+  if (exit_on_submit_int)
+    exit_on_submit = true;
+  else
+    exit_on_submit = false;
+  
   for (job = 0; job < jobs; job++) 
     submit_jobs += submit_list[job];
   jobList = calloc(submit_jobs , sizeof *jobList);
@@ -118,21 +124,22 @@ static void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_re
     }
   }
   sprintf(summary_file , "Jobsummary/summary_%04d", time_step);
-  ext_job_run_pool(submit_jobs , jobList , max_running , 10 , summary_file);
+  ext_job_run_pool(submit_jobs , jobList , max_running , 10 , summary_file , exit_on_submit);
 }
 
 
 void ecl_inter_run_eclipse__(const char * __basedir , int *basedir_length, 
 			     const char * __eclbase , int *eclbase_length , 
 			     int *jobs , int *max_running , int *max_restart, 
-			     int *submit_list, int *time_step , int *fmt_out) {
+			     int *submit_list, int *time_step , int *fmt_out,
+			     int *exit_on_submit) {
   char *basedir = alloc_cstring(__basedir , *basedir_length);
   char *eclbase = alloc_cstring(__eclbase , *eclbase_length);
   
   printf("*****************************************************************\n");
   printf("Skal kjore eclipse jobber .... \n");
   printf("*****************************************************************\n");
-  ecl_inter_run_eclipse_static(*jobs , *max_running , *max_restart , submit_list , basedir , eclbase , *time_step , *fmt_out);
+  ecl_inter_run_eclipse_static(*jobs , *max_running , *max_restart , submit_list , basedir , eclbase , *time_step , *fmt_out , *exit_on_submit);
   free(basedir);
   free(eclbase);
 }
