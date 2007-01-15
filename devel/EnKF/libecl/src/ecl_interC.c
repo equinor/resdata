@@ -113,7 +113,7 @@ static void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_re
   for (job = 0; job < jobs; job++) {
     if (submit_list[job]) {
       sprintf(run_path , "%s%04d" , base_run_path , job + 1); 
-      sprintf(run_file , "%s.PRT" , eclipse_base);
+      sprintf(run_file , "%s.run_lock" , eclipse_base);
       if (fmt_out)
 	sprintf(complete_file , "%s.F%04d" , eclipse_base , time_step);
       else
@@ -137,7 +137,7 @@ void ecl_inter_run_eclipse__(const char * __basedir , int *basedir_length,
   char *eclbase = alloc_cstring(__eclbase , *eclbase_length);
   
   printf("*****************************************************************\n");
-  printf("Skal kjore eclipse jobber .... \n");
+  printf("* Skal kjore eclipse jobber .... ");
   printf("*****************************************************************\n");
   ecl_inter_run_eclipse_static(*jobs , *max_running , *max_restart , submit_list , basedir , eclbase , *time_step , *fmt_out , *exit_on_submit);
   free(basedir);

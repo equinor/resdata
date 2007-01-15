@@ -179,7 +179,6 @@ void ecl_sum_save(const ecl_sum_type * ecl_sum) {
   
   ecl_fstate_save(ecl_sum->header);
   ecl_fstate_save(ecl_sum->data);
-  
   free(summary_spec);
 }
 
