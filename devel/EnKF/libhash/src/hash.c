@@ -46,6 +46,13 @@ TYPE * FUNC(const hash_type * hash, const char *key) { \
    return ((TYPE *) data->data);                      \
 }
 
+#define HASH_NODE_AS(FUNC,TYPE)                           \
+TYPE FUNC(const hash_node_type * node) {                  \
+   hash_data_type *data = hash_node_value_ptr(node);      \
+   return *((TYPE *) data->data);                         \
+} 
+
+
 /*****************************************************************/
 
 static const void * hash_data_copyc(const void *_src) {
@@ -106,6 +113,8 @@ HASH_GET_SCALAR(hash_get_double , double)
 HASH_GET_ARRAY_PTR(hash_get_double_ptr , double)
 HASH_GET_ARRAY_PTR(hash_get_int_ptr    , int)
 
+HASH_NODE_AS(hash_node_as_int    , int)
+HASH_NODE_AS(hash_node_as_double , double)
 
 static uint32_t hash_index(const uint8_t *key, size_t len) {
   uint32_t hash = 0;
@@ -251,7 +260,7 @@ bool hash_has_key(hash_type *hash , const char *key) {
 }
 
 
-static hash_node_type * hash_iter_init(const hash_type *hash) {
+hash_node_type * hash_iter_init(const hash_type *hash) {
   uint32_t i = 0;
   while (i < hash->size && hash_sll_empty(hash->table[i]))
     i++;
@@ -263,7 +272,7 @@ static hash_node_type * hash_iter_init(const hash_type *hash) {
 }
 
 
-static hash_node_type * hash_iter_next(const hash_type *hash , const hash_node_type * node) {
+hash_node_type * hash_iter_next(const hash_type *hash , const hash_node_type * node) {
   hash_node_type *next_node = hash_node_get_next(node);
   if (next_node == NULL) {
     const uint32_t table_index = hash_node_get_table_index(node);
@@ -330,3 +339,4 @@ int hash_get_size(const hash_type *hash) {
 #undef HASH_INSERT_SCALAR
 #undef HASH_INSERT_ARRAY
 #undef HASH_GET_ARRAY_PTR
+#undef HASH_NODE_AS
