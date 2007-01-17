@@ -25,7 +25,7 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_INC_PATH)
 	install -d $(INSTALL_LIB_PATH)
 	install -d $(INSTALL_MOD_PATH)
-	install $(MOD_FILES) $(INSTALL_MOD_PATH)
+#	install $(MOD_FILES) $(INSTALL_MOD_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
 

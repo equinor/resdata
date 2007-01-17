@@ -216,7 +216,6 @@ static void lsf_pool_iset_status(const lsf_pool_type *lsf_pool , int ijob , lsf_
   
   if (old_status != lsf_status_OK && old_status != lsf_status_exit) {
     lsf_job_set_status(lsf_pool->jobList[ijob] , new_status);
-    printf("Skifter %d -> %d for:%s \n",old_status , new_status , lsf_pool->jobList[ijob]->id);
 
     lsf_pool->total_status[old_status]--;
     lsf_pool->total_status[new_status]++;
@@ -332,21 +331,6 @@ static void lsf_pool_update_status(lsf_pool_type *lsf_pool) {
     } while (cont);
     fclose(stream);
     unlink(lsf_pool->tmp_file);
-    printf("Update1      total:%2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
-	   lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
-    /*{
-      int ijob;
-      for (ijob = 0; ijob  < STATUS_SIZE; ijob++)
-	lsf_pool->total_status[ijob] = 0;
-      
-      for (ijob = 0; ijob  < lsf_pool->size; ijob++)
-	lsf_pool->total_status[lsf_job_get_status(lsf_pool->jobList[ijob])]++;
-    }
-    */
-    /*
-      printf("Update2      total:%2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
-	   lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
-    */
   } else {
     fprintf(stderr,"%s: failed to find status file:%s ... aborting \n", __func__ , lsf_pool->tmp_file);
     abort();
@@ -363,8 +347,6 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
   do {
     sleep(lsf_pool->sleep_time);
     cont = true;
-    printf("Starter      total:%2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
-	   lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
     /* 
        First step: submitting idle jobs 
     */
@@ -376,15 +358,12 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
 	ijob++;
       } while (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running && ijob < lsf_pool->size);
     }
-    printf("Etter resubm total:%2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
-	   lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
 
     /*
       Second step: update status
     */
+    
     lsf_pool_update_status(lsf_pool);
-    printf("Etter update total:%2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
-	   lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
     /*
       Third step: check complete jobs.
     */
@@ -406,6 +385,9 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
       if (lsf_pool->total_status[lsf_status_null] == 0) 
 	cont = false;
     }
+
+    printf("total:%2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
+	   lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
     
   } while (cont);
   /*

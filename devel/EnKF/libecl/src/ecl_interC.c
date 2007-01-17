@@ -168,7 +168,8 @@ void ecl_inter_init_lsf__(const int  * sleep_time , const int *max_running,
 
 
 
-void ecl_inter_add_lsf_job__(const char *_run_path      , const int *run_path_len , 
+void ecl_inter_add_lsf_job__(const int *iens, 
+			     const char *_run_path      , const int *run_path_len , 
 			     const char *_complete_file , const int *complete_file_len,
 			     const int  *max_resubmit) {
   if (LSF_POOL == NULL) {
@@ -182,6 +183,7 @@ void ecl_inter_add_lsf_job__(const char *_run_path      , const int *run_path_le
     lsf_pool_add_job(LSF_POOL , NULL , run_path , complete_file , *max_resubmit);
     free(run_path);
     free(complete_file);
+    printf("%4d" , *iens); fflush(stdout);
   }
 }
 
