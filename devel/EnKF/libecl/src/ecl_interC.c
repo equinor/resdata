@@ -3,12 +3,13 @@
 #include <ecl_fstate.h>
 #include <ecl_sum.h>
 #include <ext_job.h>
+#include <lsf_jobs.h>
 
 
 static ecl_fstate_type * ECL_FSTATE     = NULL;
 static bool              ENDIAN_CONVERT = true;
-
 static ecl_sum_type    * ECL_SUM        = NULL;
+static lsf_pool_type   * LSF_POOL       = NULL;
 
 /******************************************************************/
 
@@ -92,9 +93,9 @@ void ecl_inter_load_summary__(const char *__header_file , const int *header_len 
 
 /******************************************************************/
 
-static void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_restart , int *submit_list , const char *base_run_path , const char *eclipse_base , int time_step , int fmt_out , int exit_on_submit_int) {
+static void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_restart , int *submit_list , const char *base_run_path , const char *eclipse_base , int time_step , int fmt_out , int exit_on_submit_int , int use_lsf_int) {
   const int sleep_time  = 2;
-  bool exit_on_submit;
+  bool exit_on_submit , use_lsf;
   int job , i , submit_jobs;
   ext_job_type ** jobList;
   char run_file[256] , complete_file[256] , run_path[256] , id[64], summary_file[64];
@@ -104,6 +105,10 @@ static void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_re
     exit_on_submit = true;
   else
     exit_on_submit = false;
+  if (use_lsf_int)
+    use_lsf = true;
+  else
+    use_lsf = false;
   
   for (job = 0; job < jobs; job++) 
     submit_jobs += submit_list[job];
@@ -113,13 +118,20 @@ static void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_re
   for (job = 0; job < jobs; job++) {
     if (submit_list[job]) {
       sprintf(run_path , "%s%04d" , base_run_path , job + 1); 
-      sprintf(run_file , "%s.run_lock" , eclipse_base);
+      /*
+	For som fxxxing reason the *.run_lock file is not
+	created when the simulation is submitted from 
+	Geir's linux computer???
+
+	sprintf(run_file , "%s.run_lock" , eclipse_base);
+      */
+      sprintf(run_file , "%s.PRT" , eclipse_base);
       if (fmt_out)
 	sprintf(complete_file , "%s.F%04d" , eclipse_base , time_step);
       else
 	sprintf(complete_file , "%s.X%04d" , eclipse_base , time_step);
       sprintf(id,"Job: %04d" , job + 1);
-      jobList[i] = ext_job_alloc(id , "@eclipse < eclipse.in 2> /dev/null | grep filterXX" , NULL , run_path  , run_file , complete_file , max_restart , sleep_time , true);
+      jobList[i] = ext_job_alloc(id , "@eclipse < eclipse.in 2> /dev/null | grep filterXX" , NULL , run_path  , run_file , complete_file , max_restart , sleep_time , true , use_lsf);
       i++;
     }
   }
@@ -137,13 +149,63 @@ void ecl_inter_run_eclipse__(const char * __basedir , int *basedir_length,
   char *eclbase = alloc_cstring(__eclbase , *eclbase_length);
   
   printf("*****************************************************************\n");
-  printf("* Skal kjore eclipse jobber .... ");
+  printf("* Skal kjore eclipse jobber .... \n");
   printf("*****************************************************************\n");
-  ecl_inter_run_eclipse_static(*jobs , *max_running , *max_restart , submit_list , basedir , eclbase , *time_step , *fmt_out , *exit_on_submit);
+  ecl_inter_run_eclipse_static(*jobs , *max_running , *max_restart , submit_list , basedir , eclbase , *time_step , *fmt_out , *exit_on_submit , 0);
   free(basedir);
   free(eclbase);
 }
 
+
+/*****************************************************************/
+
+void ecl_inter_init_lsf__(const int  * sleep_time , const int *max_running, 
+			  const char * _summary_file , const int * summary_file_len) {
+  char *summary_file = alloc_cstring(_summary_file , *summary_file_len);
+  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , summary_file , "bjobs -a" , "/tmp");
+  free(summary_file);
+}
+
+
+
+void ecl_inter_add_lsf_job__(const char *_run_path      , const int *run_path_len , 
+			     const char *_complete_file , const int *complete_file_len,
+			     const int  *max_resubmit) {
+  if (LSF_POOL == NULL) {
+    fprintf(stderr,"%s - must call xxxx_lsf_init first - aborting \n",__func__);
+    abort();
+  }
+  {
+    char *complete_file = alloc_cstring(_complete_file , *complete_file_len); 
+    char *run_path      = alloc_cstring(_run_path      , *run_path_len);
+    
+    lsf_pool_add_job(LSF_POOL , NULL , run_path , complete_file , *max_resubmit);
+    free(run_path);
+    free(complete_file);
+  }
+}
+
+
+void ecl_inter_run_lsf__(const int *_sub_exit, int *exit_count) {
+  bool sub_exit;
+  if (LSF_POOL == NULL) {
+    fprintf(stderr,"%s - must call xxxx_lsf_init first - aborting \n",__func__);
+    abort();
+  }
+  if (*_sub_exit == 1)
+    sub_exit = true;
+  else
+    sub_exit = false;
+  
+  *exit_count = lsf_pool_run_jobs(LSF_POOL , sub_exit);
+}
+
+
+void ecl_inter_free_lsf__() {
+  if (LSF_POOL != NULL) 
+    lsf_pool_free(LSF_POOL);
+  LSF_POOL = NULL;
+}
 
 
 /*   void ecl_inter_new_file(const char * filename , int fmt_mode) { */

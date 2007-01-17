@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <hash.h>
 
 #define USE_MUTEX
 
@@ -28,16 +28,20 @@ struct ext_job_struct {
   int restart_nr;
   int sleep_time;
   bool do_fork;
-  
+  bool use_lsf;
+
   time_t           submit_time;
   time_t           start_time;
   time_t           complete_time;
   double           run_time_sec;
 
+  int              lsf_id;
   pthread_mutex_t  mutex;
   ext_status_enum  status;
   ext_action_enum  action;
 };
+
+
 
 
 static char * alloc_string_copy(const char *src , bool abort_on_NULL) {
@@ -94,6 +98,7 @@ void ext_job_set_action(ext_job_type *ext_job , ext_action_enum action) {
   ext_job_unlock(ext_job);
 }
 
+
 ext_status_enum ext_job_get_status(ext_job_type *ext_job) {
   ext_status_enum status;
   ext_job_lock(ext_job);
@@ -119,7 +124,7 @@ static void unlink_old_file(const ext_job_type *ext_job) {
 
 
 
-ext_job_type * ext_job_alloc(const char *id , const char *run_cmd , const char *abort_cmd , const char * run_path , const char *run_file , const char * complete_file , int max_restart , int sleep_time , bool do_fork) {
+ext_job_type * ext_job_alloc(const char *id , const char *run_cmd , const char *abort_cmd , const char * run_path , const char *run_file , const char * complete_file , int max_restart , int sleep_time , bool do_fork , bool use_lsf) {
   ext_job_type * ext_job;
   ext_job = malloc(sizeof *ext_job);
   if (id == NULL)
@@ -141,6 +146,8 @@ ext_job_type * ext_job_alloc(const char *id , const char *run_cmd , const char *
   ext_job->do_fork       = do_fork;
   pthread_mutex_init(&ext_job->mutex , NULL);
   unlink_old_file(ext_job);
+  
+  ext_job->use_lsf         = use_lsf;
   return ext_job;
 }
 
@@ -230,8 +237,9 @@ void ext_job_check(ext_job_type *ext_job) {
     if (ext_job->do_fork) {
       pid = fork();
       if (pid == 0) {
-	printf("Submitter: %s \n",ext_job->id);
+	printf("Submitter: %s\n",ext_job->id);
 	system(cmd);
+	sleep(1);
 	exit(1);
       }
     } else
@@ -366,6 +374,7 @@ static void ext_job_fprintf_summary(int job_size ,ext_job_type **jobList , const
     ext_job_fprintf_status(jobList[job] , stream);
   fclose(stream);
 }
+
 
 void ext_job_run_pool(int job_size , ext_job_type **jobList , int max_running , int sleep_time , const char *summary_file , bool exit_on_submit) {
   int complete_jobs;
