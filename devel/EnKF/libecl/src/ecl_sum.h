@@ -5,6 +5,8 @@
 
 typedef struct ecl_sum_struct ecl_sum_type;
 
+int            ecl_sum_get_Nwells(const ecl_sum_type *);
+void           ecl_sum_copy_well_names(const ecl_sum_type * , char **);
 void           ecl_sum_init_save(ecl_sum_type * , const char * , int , bool);
 ecl_sum_type * ecl_sum_load_unified(const char * , const char * , int , bool);
 ecl_sum_type * ecl_sum_load_multiple(const char * , int , const char ** , int , bool);

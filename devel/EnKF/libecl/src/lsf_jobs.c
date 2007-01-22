@@ -386,7 +386,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
 	cont = false;
     }
 
-    printf("total:%2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
+    printf("total: %2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
 	   lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
     
   } while (cont);

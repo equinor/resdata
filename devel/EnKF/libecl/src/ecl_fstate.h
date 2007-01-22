@@ -27,6 +27,6 @@ bool              ecl_fstate_kw_get_memcpy_data(const ecl_fstate_type * , int , 
 ecl_kw_type     * ecl_fstate_get_kw(const ecl_fstate_type * , int , const char *);
 int               ecl_fstate_kw_get_size(const ecl_fstate_type * , int , const char *);
 bool              ecl_fstate_kw_exists(const ecl_fstate_type *, int  , const char *);
-int               ecl_fstate_get_blocksize(const ecl_fstate_type *);
+int               ecl_fstate_get_Nstep(const ecl_fstate_type *);
 void              ecl_fstate_save(const ecl_fstate_type *);
 #endif

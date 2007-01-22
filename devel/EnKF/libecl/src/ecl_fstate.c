@@ -193,6 +193,7 @@ void ecl_fstate_set_multiple_files(ecl_fstate_type *ecl_fstate, const char * bas
   free(filelist);
 }
 
+
 static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int files , const char ** filelist , int fmt_mode , bool endian_convert , bool unified) {
   ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(fmt_mode , endian_convert , unified);
   ecl_fstate->block_size  = 10;
@@ -202,9 +203,10 @@ static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int file
     fortio_type *fortio = fortio_open(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert);
     bool at_eof = false;
     int block_nr    = 0;
+    ecl_kw_type *first_kw = NULL;
     while (!at_eof) {
-      ecl_block_type *ecl_block = ecl_block_alloc(block_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
-      ecl_block_fread(ecl_block , fortio , &at_eof);
+      ecl_block_type *ecl_block = ecl_block_alloc(block_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert , first_kw);
+      first_kw = ecl_block_fread(ecl_block , fortio , &at_eof , false);
       ecl_fstate_add_block(ecl_fstate , ecl_block);
       block_nr++;
     }
@@ -216,9 +218,9 @@ static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int file
       int file;
       for (file=0; file < files; file++) {
 	bool at_eof;
-	ecl_block_type *ecl_block = ecl_block_alloc(file , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+	ecl_block_type *ecl_block = ecl_block_alloc(file , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert , NULL);
 	fortio_type *fortio       = fortio_open(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
-	ecl_block_fread(ecl_block , fortio , &at_eof);
+	ecl_block_fread(ecl_block , fortio , &at_eof , false);
 	ecl_fstate_add_block(ecl_fstate , ecl_block);
 	fortio_close(fortio);
       }
@@ -366,7 +368,7 @@ bool ecl_fstate_kw_exists(const ecl_fstate_type *ecl_fstate , int istep , const 
 }
 
 
-int ecl_fstate_get_blocksize(const ecl_fstate_type *ecl_fstate) {
+int ecl_fstate_get_Nstep(const ecl_fstate_type *ecl_fstate) {
   return ecl_fstate->N_blocks;
 }
 

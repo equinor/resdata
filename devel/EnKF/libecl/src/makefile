@@ -48,6 +48,6 @@ ecl_kw.o    : ecl_kw.c ecl_kw.h fortio.o
 ecl_block.o : ecl_block.c ecl_block.h ecl_kw.o
 ecl_fstate.o: ecl_fstate.c ecl_fstate.h ecl_block.o util.o
 ecl_sum.o   : ecl_sum.c ecl_sum.h ecl_fstate.o
-ecl_interC.o: ecl_interC.c ecl_fstate.o ext_job.o
+ecl_interC.o: ecl_interC.c ecl_fstate.o ext_job.o ecl_sum.o
 #ecl_interF.o: ecl_interF.f90 ecl_interC.o
 

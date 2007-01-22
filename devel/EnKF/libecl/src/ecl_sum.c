@@ -73,7 +73,7 @@ static ecl_sum_type * ecl_sum_alloc_existing(const char *header_file , int fmt_m
       hash_insert_int(ecl_sum->index_hash , well_kw , index);
       hash_insert_int(well_hash , ecl_kw_iget_ptr(wells , index) , 1);
     }
-    ecl_sum->Nwells = hash_get_size(well_hash);
+    ecl_sum->Nwells    = hash_get_size(well_hash);
     ecl_sum->well_list = hash_alloc_keylist(well_hash);
     hash_free(well_hash);
   }
@@ -87,7 +87,7 @@ static void ecl_sum_init_new(ecl_sum_type * ecl_sum , const int *_dimens , const
   const bool FMT_FILE = true;
   int size = 10; /*...*/
 
-  ecl_block_type *header_block = ecl_block_alloc(0 , 10 , FMT_FILE , ecl_sum->endian_convert);
+  ecl_block_type *header_block = ecl_block_alloc(0 , 10 , FMT_FILE , ecl_sum->endian_convert , NULL);
   ecl_kw_type *kw       = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
   ecl_kw_type *units    = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
   ecl_kw_type *restart  = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
@@ -229,9 +229,30 @@ void ecl_sum_set_fmt_mode(ecl_sum_type *ecl_sum , int fmt_mode) {
 
 
 
+int ecl_sum_get_Nwells(const ecl_sum_type *ecl_sum) {
+  return ecl_sum->Nwells;
+}
+
+void ecl_sum_copy_well_names(const ecl_sum_type *ecl_sum , char **well_list) {
+  int iw;
+  for (iw=0; iw < ecl_sum->Nwells; iw++)
+    strcpy(well_list[iw] , ecl_sum->well_list[iw]);
+}
+
+
+char ** ecl_sum_alloc_well_names_copy(const ecl_sum_type *ecl_sum) {
+  char **well_list;
+  int iw;
+  well_list = calloc(ecl_sum->Nwells , sizeof *well_list);
+  for (iw = 0; iw < ecl_sum->Nwells; iw++)
+    well_list[iw] = malloc(strlen(ecl_sum->well_list[iw]) + 1);
+  ecl_sum_copy_well_names(ecl_sum , well_list);
+  return well_list;
+}
+
 
 int ecl_sum_get_size(const ecl_sum_type *ecl_sum) {
-  return ecl_fstate_get_blocksize(ecl_sum->data);
+  return ecl_fstate_get_Nstep(ecl_sum->data);
 }
 
 void ecl_sum_free(ecl_sum_type *ecl_sum) {

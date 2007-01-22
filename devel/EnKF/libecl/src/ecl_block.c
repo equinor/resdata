@@ -43,7 +43,7 @@ void kw_set_strip_copy(char * copy , const char *src) {
 
 ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
   ecl_block_type * copy;
-  copy = ecl_block_alloc(src->time_step , src->size , src->fmt_file , src->endian_convert);
+  copy = ecl_block_alloc(src->time_step , src->size , src->fmt_file , src->endian_convert , NULL);
   {
     int i;
     for (i=0; i  < src->size; i++)
@@ -53,7 +53,7 @@ ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
 }
 
 
-ecl_block_type * ecl_block_alloc(int time_step , int Nkw , bool fmt_file , bool endian_convert) {
+ecl_block_type * ecl_block_alloc(int time_step , int Nkw , bool fmt_file , bool endian_convert , const ecl_kw_type *first_kw) {
   ecl_block_type *ecl_block;
   
   
@@ -70,6 +70,7 @@ ecl_block_type * ecl_block_alloc(int time_step , int Nkw , bool fmt_file , bool 
       ecl_block->kw_list[i] = NULL;
   }
   ecl_block->kw_hash = hash_alloc(2*Nkw);
+  if (first_kw != NULL) ecl_block_add_kw(ecl_block , first_kw);
   return ecl_block;
 }
 
@@ -106,8 +107,9 @@ bool ecl_block_add_kw_copy(ecl_block_type *ecl_block , const ecl_kw_type *src_kw
 
 
 
-void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_eof) {
-  ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(ecl_block->fmt_file , ecl_block->endian_convert);
+ecl_kw_type * ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_eof , bool return_last_kw) {
+  ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty(ecl_block->fmt_file , ecl_block->endian_convert);
+  ecl_kw_type *return_kw = NULL;
   bool cont;
   cont = true;
   
@@ -116,7 +118,8 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
       if (!ecl_block_add_kw_copy(ecl_block , ecl_kw)) {
 	*at_eof = false;
 	cont    = false;
-	ecl_kw_rewind(ecl_kw , fortio);
+	if (!return_last_kw)
+	  ecl_kw_rewind(ecl_kw , fortio);
       }
     } else {
       cont    = false;
@@ -124,7 +127,15 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
     }
   }
   
-  ecl_kw_free(ecl_kw);
+  if (*at_eof == false) {
+    if (return_last_kw)
+      return_kw = ecl_kw;
+    else 
+      ecl_kw_free(ecl_kw);
+  } else 
+    ecl_kw_free(ecl_kw);
+
+  return return_kw;
 }
 
 

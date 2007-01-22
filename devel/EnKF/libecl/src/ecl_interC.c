@@ -41,6 +41,10 @@ void ecl_inter_free__(void) {
 }
 
 
+void ecl_inter_get_nstep__(int *Nstep) {
+  *Nstep = ecl_fstate_get_Nstep(ECL_FSTATE);
+}
+
 
 /*
   Fortran index conventions in the call: These functions are called
@@ -77,10 +81,6 @@ void ecl_inter_kw_exists__(const char *kw , const int *istep , int *int_ex) {
 }
 
 
-void ecl_inter_get_blocks__(int *blocks) {
-  *blocks =  ecl_fstate_get_blocksize(ECL_FSTATE);
-}
-
 
 void ecl_inter_load_summary__(const char *__header_file , const int *header_len , const char *__data_file , const int *data_len) {
   char * header_file = alloc_cstring(__header_file , *header_len);
@@ -90,6 +90,26 @@ void ecl_inter_load_summary__(const char *__header_file , const int *header_len 
   free(header_file);  
   free(data_file);
 }
+
+void ecl_inter_get_nwells__(int *Nwells) {
+  *Nwells = ecl_sum_get_Nwells(ECL_SUM);
+}
+
+void ecl_inter_copy_well_names__(char **well_list) {
+  ecl_sum_copy_well_names(ECL_SUM , well_list);
+}
+
+void ecl_inter_sum_get__(const char *_well_name , const int *well_len, 
+			 const char *_var_name  , const int *var_len, 
+			 void *value) {
+  char *well = alloc_cstring(_well_name , *well_len);
+  char *var  = alloc_cstring(_var_name  , *var_len);
+  ecl_sum_iget1(ECL_SUM , 0 , well , var , value);
+  free(well);
+  free(var);
+}
+    
+
 
 /******************************************************************/
 
