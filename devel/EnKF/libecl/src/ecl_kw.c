@@ -49,7 +49,6 @@ struct ecl_kw_struct {
 
 #define ecl_num_blocksize  1000
 #define ecl_char_blocksize  105
-#define ecl_str_len   8
 #define ecl_type_len  4
 #define ecl_Ntype     6
 
@@ -522,7 +521,8 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
       int ib;
       for (ib = 0; ib < blocks; ib++) {
 	if (ecl_kw->ecl_type == ecl_char_type || ecl_kw->ecl_type == ecl_mess_type) {
-	  /* Due to the necessaary terminating \0 characters there is
+	  /* 
+	     Due to the necessaary terminating \0 characters there is
 	     not a continous file/memory mapping.
 	  */
 	  int read_elm = MIN((ib + 1) * ecl_kw->blocksize , ecl_kw->size) - ib * ecl_kw->blocksize;
@@ -614,8 +614,6 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 
 
 void ecl_kw_set_header(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *ecl_str_type ) {
-  
-
   ecl_kw->ecl_type = __get_ecl_type(ecl_str_type);
   ecl_kw_set_types(ecl_kw , ecl_str_type);
   if (strlen(header) > ecl_str_len) {
@@ -627,6 +625,11 @@ void ecl_kw_set_header(ecl_kw_type *ecl_kw , const char *header ,  int size , co
   ecl_kw->size = size;
 }
 
+
+void ecl_kw_set_header_alloc(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *ecl_str_type ) {
+  ecl_kw_set_header(ecl_kw , header , size , ecl_str_type);
+  ecl_kw_alloc_data(ecl_kw);
+}
 
 bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   bool OK;
@@ -836,7 +839,8 @@ static void ecl_kw_fwrite_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
     } else {
       int sizeof_ctype = (ecl_kw->ecl_type == ecl_char_type) ? ecl_str_len * sizeof(char) : ecl_kw->sizeof_ctype;
       if (ecl_kw->ecl_type == ecl_char_type || ecl_kw->ecl_type == ecl_mess_type) {
-	/* Due to the necessaary terminating \0 characters there is
+	/* 
+	   Due to the necessaary terminating \0 characters there is
 	   not a continous file/memory mapping.
 	*/
 	FILE *stream = fortio_get_FILE(fortio);

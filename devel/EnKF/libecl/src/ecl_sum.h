@@ -15,6 +15,7 @@ void           ecl_sum_iget2(const ecl_sum_type *, int , int , void *);
 void           ecl_sum_free(ecl_sum_type *);
 int            ecl_sum_get_size(const ecl_sum_type *);
 void           ecl_sum_set_fmt_mode(ecl_sum_type *, int );
-ecl_sum_type * ecl_sum_alloc_new(const char * , int , bool , bool );
+ecl_sum_type * ecl_sum_alloc_new(const char * , int, int, int, int , bool , bool );
 void           ecl_sum_save(const ecl_sum_type * );
+void           ecl_sum_set_header_data(ecl_sum_type * , const char * , void *);
 #endif
