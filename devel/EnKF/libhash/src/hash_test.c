@@ -16,6 +16,8 @@ void set_rand_key(char *key, int N) {
 int main(void) {
   double data;
   hash_type      *hash;
+  char **ordered_keylist;
+  char **random_keylist;
   char key[9];
   int i;
   
@@ -23,7 +25,7 @@ int main(void) {
   hash_insert_string_copy(hash , "Name" , "Joakim Hove");
   hash_insert_int(hash , "Alder",34);
   hash_insert_double(hash , "Vekt" , 80.01);
-  for (i=0; i < 10000; i++) {
+  for (i=0; i < 100; i++) {
     set_rand_key(key , 8);
     hash_insert_int(hash , key , rand());
   }
@@ -51,6 +53,15 @@ int main(void) {
 
   printf("Jeg heter: %s \n", hash_get_string(hash , "Name"));
   printf("Jeg er %d aar gammel og veier %g kg \n",hash_get_int(hash , "Alder") , hash_get_double(hash , "Vekt"));
+  ordered_keylist = hash_alloc_ordered_keylist(hash);
+  random_keylist  = hash_alloc_keylist(hash);
+  {
+    int i;
+    for (i =0; i < hash_get_size(hash); i++) 
+      printf("%d:  %s  %s \n",i,ordered_keylist[i] , random_keylist[i]);
+  }
+
+  hash_free_ext_keylist(hash , ordered_keylist);
   hash_free(hash);
   return 0;
 }

@@ -25,8 +25,10 @@ void        	  hash_printf_keys(const hash_type *hash);
 int         	  hash_get_size(const hash_type *);
 void        	  hash_set_keylist(const hash_type * , char **);
 char **     	  hash_alloc_keylist(const hash_type *);
+void              hash_free_ext_keylist(const hash_type *, char **);
 hash_node_type  * hash_iter_init(const hash_type *);
 hash_node_type  * hash_iter_next(const hash_type *, const hash_node_type * );
+char **           hash_alloc_ordered_keylist(const hash_type *hash);
 
 
 HASH_GET_SCALAR(hash_get_int       , int);

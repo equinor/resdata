@@ -8,8 +8,9 @@
 #include <hash_node.h>
 
 struct hash_struct {
-  int             size;
-  int             elements;
+  uint32_t        global_insert_nr;
+  uint32_t        size;
+  uint32_t        elements;
   double          resize_fill;
   hash_sll_type **table;
   hashf_type     *hashf;
@@ -19,6 +20,14 @@ typedef struct hash_data_struct {
   int    byte_size;
   void  *data;
 } hash_data_type;
+
+
+typedef struct hash_sort_node {
+  char     *key;
+  uint32_t  cmp_value;
+} hash_sort_type;
+
+
 
 /*****************************************************************/
 
@@ -55,6 +64,12 @@ TYPE FUNC(const hash_node_type * node) {                  \
 
 /*****************************************************************/
 
+static char * alloc_string_copy(const char *src) {
+  char *new = malloc(strlen(src) + 1);
+  strcpy(new , src);
+  return new;
+}
+
 static const void * hash_data_copyc(const void *_src) {
   const hash_data_type *src = (const hash_data_type *) _src;
   hash_data_type *new;
@@ -87,6 +102,11 @@ static void * __hash_get_node(const hash_type *hash , const char *key, bool abor
   }
 }
 
+
+static int hash_get_insert_nr(const hash_type *hash , const char *key) {
+  hash_node_type * node = __hash_get_node(hash , key , true);
+  return hash_node_get_insert_nr(node);
+}
 
 void hash_del(hash_type *hash , const char *key) {
   const uint32_t global_index = hash->hashf(key , strlen(key));
@@ -141,8 +161,10 @@ static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf
   hash->table 	 = hash_sll_alloc_table(hash->size);
   hash->elements = 0;
   hash->resize_fill = resize_fill;
+  hash->global_insert_nr = 0;
   return hash;
 }
+
 
 static void hash_resize(hash_type *hash, int new_size) {
   hash_sll_type **new_table = hash_sll_alloc_table(new_size);
@@ -206,8 +228,9 @@ static void hash_insert_managed_copy(hash_type *hash, const char *key, const voi
   hash_data_type hash_data;
   hash_data.data      = (void *) value_ptr;
   hash_data.byte_size = value_size;
-  node = hash_node_alloc_new(key , &hash_data , hash_data_copyc , hash_data_free , hash->hashf , hash->size);
+  node = hash_node_alloc_new(key , &hash_data , hash_data_copyc , hash_data_free , hash->hashf , hash->size , hash->global_insert_nr);
   hash_insert_node(hash , node);
+  hash->global_insert_nr++;
 }
 
 
@@ -221,14 +244,16 @@ void hash_insert_copy(hash_type *hash , const char *key , const void *value , co
     fprintf(stderr,"%s: must provide copy constructer and delete operator for insert copy - aborting \n",__func__);
     abort();
   }
-  node = hash_node_alloc_new(key , value , copyc , del , hash->hashf , hash->size);
+  node = hash_node_alloc_new(key , value , copyc , del , hash->hashf , hash->size , hash->global_insert_nr);
   hash_insert_node(hash , node);
+  hash->global_insert_nr++;
 }
 
 void hash_insert_ref(hash_type *hash , const char *key , const void *value) {
   hash_node_type *node;
-  node = hash_node_alloc_new(key , value , NULL , NULL , hash->hashf , hash->size);
+  node = hash_node_alloc_new(key , value , NULL , NULL , hash->hashf , hash->size , hash->global_insert_nr);
   hash_insert_node(hash , node);
+  hash->global_insert_nr++;
 }
 
 void hash_insert_string_copy(hash_type *hash, const char *key , const char *value) {
@@ -258,6 +283,8 @@ bool hash_has_key(hash_type *hash , const char *key) {
   else
     return true;
 }
+
+
 
 
 hash_node_type * hash_iter_init(const hash_type *hash) {
@@ -305,10 +332,13 @@ char ** hash_alloc_keylist(const hash_type *hash) {
   node = hash_iter_init(hash);
   while (node != NULL) {
     const char *key = hash_node_get_keyref(node); 
-    int len = strlen(key);
-    keylist[i] = malloc(len + 1);
-    strcpy(keylist[i] , key);
-    keylist[i][len] = '\0';
+    /*
+      int len = strlen(key);
+      keylist[i] = malloc(len + 1);
+      strcpy(keylist[i] , key);
+      keylist[i][len] = '\0';
+    */
+    keylist[i] = alloc_string_copy(key);
     node = hash_iter_next(hash , node);
     i++;
   }
@@ -329,9 +359,62 @@ void hash_set_keylist(const hash_type *hash , char **keylist) {
     i++;
   }
 }
+
+static hash_sort_type * hash_alloc_sort_list(const hash_type *hash , const char **keylist) {
+  int i;
+  hash_sort_type * sort_list = calloc(hash_get_size(hash) , sizeof * sort_list);
+  for (i=0; i < hash_get_size(hash); i++) 
+    sort_list[i].key = alloc_string_copy(keylist[i]);
   
-int hash_get_size(const hash_type *hash) {
-  return hash->elements;
+  return sort_list;
+}
+
+static void hash_free_sort_list(const hash_type *hash , hash_sort_type *sort_list) {
+  int i;
+  for (i=0; i < hash_get_size(hash); i++) 
+    free(sort_list[i].key);
+  free(sort_list);
+}
+
+
+static int hash_sortlist_cmp(const hash_sort_type *p1 , const hash_sort_type *p2) {
+  if (p1->cmp_value == p2->cmp_value)
+    return 0;
+  else if (p1->cmp_value < p2->cmp_value)
+    return -1;
+  else
+    return 1;
+}
+
+int hash_get_size(const hash_type *hash) { return hash->elements; }
+
+
+
+char ** hash_alloc_ordered_keylist(const hash_type *hash) {
+  int i;
+  char **sorted_keylist;
+  char **tmp_keylist         = hash_alloc_keylist(hash);
+  hash_sort_type * sort_list = hash_alloc_sort_list(hash , (const char **) tmp_keylist);
+
+  for (i = 0; i < hash_get_size(hash); i++)
+    sort_list[i].cmp_value = hash_get_insert_nr(hash , sort_list[i].key);
+  
+  qsort(sort_list , hash_get_size(hash) , sizeof *sort_list , &hash_sortlist_cmp);
+  sorted_keylist = calloc(hash_get_size(hash) , sizeof *sorted_keylist);
+  for (i = 0; i < hash_get_size(hash); i++) 
+    sorted_keylist[i] = alloc_string_copy(sort_list[i].key);
+
+  hash_free_ext_keylist(hash , tmp_keylist);
+  hash_free_sort_list(hash , sort_list);
+  return sorted_keylist;
+}
+
+
+void hash_free_ext_keylist(const hash_type *hash , char **keylist) {
+  int i;
+  for (i = 0; i < hash_get_size(hash); i++) 
+    free(keylist[i]);
+  free(keylist);
 }
 
 

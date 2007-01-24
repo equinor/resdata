@@ -11,6 +11,7 @@
 
 struct hash_node_struct {
   char 	      	 *key;
+  uint32_t        insert_nr;
   uint32_t     	  global_index;
   uint32_t     	  table_index;
   const void     *value;
@@ -46,6 +47,8 @@ const char * hash_node_get_keyref(const hash_node_type * node)   { return node->
 
 hash_node_type * hash_node_get_next(const hash_node_type * node) { return node->next_node; }
 
+uint32_t hash_node_get_insert_nr(const hash_node_type * node) { return node->insert_nr; }
+
 void * hash_node_value_ptr(const hash_node_type *node) { return (void *) node->value; }
 
 void hash_node_set_next(hash_node_type *node , const hash_node_type *next_node) {
@@ -59,7 +62,7 @@ uint32_t hash_node_set_table_index(hash_node_type *node , uint32_t table_size) {
 }
 
 
-hash_node_type * hash_node_alloc_new(const char *key, const void *value , copyc_type *copyc , del_type *del , hashf_type *hashf , uint32_t table_size) {
+hash_node_type * hash_node_alloc_new(const char *key, const void *value , copyc_type *copyc , del_type *del , hashf_type *hashf , uint32_t table_size , uint32_t insert_nr) {
   hash_node_type *node;
   node      = malloc(sizeof *node);
   node->key = calloc(strlen(key) + 1 , sizeof *node->key);
@@ -73,6 +76,7 @@ hash_node_type * hash_node_alloc_new(const char *key, const void *value , copyc_
   node->next_node = NULL;
 
   node->global_index = hashf(node->key , strlen(node->key));
+  node->insert_nr    = insert_nr;
   hash_node_set_table_index(node , table_size);
   return node;
 }
