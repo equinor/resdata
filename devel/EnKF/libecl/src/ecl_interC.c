@@ -72,6 +72,11 @@ void ecl_inter_kw_get_data__(const char *kw , const int *istep , void *value) {
   }
 }
 
+void ecl_inter_del_kw(const char *kw, const int *istep) {
+  ecl_block_type *ecl_block = ecl_fstate_get_block(ECL_FSTATE , (*istep) - 1);
+  ecl_block_free_kw(ecl_block , kw);
+}
+
 
 void ecl_inter_kw_exists__(const char *kw , const int *istep , int *int_ex) {
   if (ecl_fstate_kw_exists(ECL_FSTATE ,  (*istep) - 1 , kw))
@@ -79,7 +84,6 @@ void ecl_inter_kw_exists__(const char *kw , const int *istep , int *int_ex) {
   else
     *int_ex =  0;
 }
-
 
 
 void ecl_inter_load_summary__(const char *__header_file , const int *header_len , const char *__data_file , const int *data_len) {
@@ -95,9 +99,26 @@ void ecl_inter_get_nwells__(int *Nwells) {
   *Nwells = ecl_sum_get_Nwells(ECL_SUM);
 }
 
-void ecl_inter_copy_well_names__(char **well_list) {
-  ecl_sum_copy_well_names(ECL_SUM , well_list);
+void ecl_inter_copy_well_names__(char *well_string) {
+  char **tmp_well_list = ecl_sum_alloc_well_names_copy(ECL_SUM);
+  int  N = ecl_sum_get_Nwells(ECL_SUM);
+  int i;
+
+  sprintf(well_string , "");
+  for (i=0; i < N; i++) {
+    strcat(well_string , tmp_well_list[i]);
+    if (i < (N - 1))
+      strcat(well_string , "|");
+  }
+  printf("%s \n",well_string);
+
+  
+  for (i=0; i < N; i++) 
+    free(tmp_well_list[i]);
+  free(tmp_well_list);
 }
+
+
 
 void ecl_inter_sum_get__(const char *_well_name , const int *well_len, 
 			 const char *_var_name  , const int *var_len, 
@@ -188,7 +209,8 @@ void ecl_inter_init_lsf__(const int  * sleep_time , const int *max_running,
 
 
 
-void ecl_inter_add_lsf_job__(const int *iens, 
+void ecl_inter_add_lsf_job__(const int  *iens, 
+			     const char *_id            , const int *id_len,
 			     const char *_run_path      , const int *run_path_len , 
 			     const char *_complete_file , const int *complete_file_len,
 			     const int  *max_resubmit) {
@@ -199,10 +221,12 @@ void ecl_inter_add_lsf_job__(const int *iens,
   {
     char *complete_file = alloc_cstring(_complete_file , *complete_file_len); 
     char *run_path      = alloc_cstring(_run_path      , *run_path_len);
+    char *id            = alloc_cstring(_id            , *id_len);
     
-    lsf_pool_add_job(LSF_POOL , NULL , run_path , complete_file , *max_resubmit);
+    lsf_pool_add_job(LSF_POOL , id, run_path , complete_file , *max_resubmit);
     free(run_path);
     free(complete_file);
+    free(id);
     printf("%4d" , *iens); fflush(stdout);
   }
 }

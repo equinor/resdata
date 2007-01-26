@@ -204,7 +204,7 @@ static void ext_job_fprintf_status(ext_job_type *ext_job ,  FILE *stream) {
 
   if (status >= ext_status_running)
     sprintf_timestring(start_time  , &ext_job->start_time);
-
+  
   if (status >= ext_status_complete_OK) {
     sprintf_timestring(complete_time , &ext_job->complete_time);
     sprintf(run_time , "%8.0f sec"   , difftime(ext_job->complete_time , ext_job->start_time));

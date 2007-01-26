@@ -26,4 +26,6 @@ void 	         ecl_block_select_formatted(ecl_block_type *);
 void 	         ecl_block_select_binary   (ecl_block_type *);
 int              ecl_block_get_block(const ecl_block_type *);
 void             ecl_block_printf_kwlist(const ecl_block_type *);
+ecl_kw_type    * ecl_block_detach_kw(ecl_block_type * , const char *);
+void             ecl_block_free_kw(ecl_block_type *, const char *);
 #endif

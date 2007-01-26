@@ -10,7 +10,7 @@
 #include <util.h>
 #include <hash.h>
 #include <lsf_jobs.h>
-#include <ext_job.h>
+/*#include <ext_job.h>*/
 
 
 
@@ -66,7 +66,6 @@ static char * alloc_string_copy(const char *src ) {
       abort();
     }
   }
-
 }
 
 
@@ -81,6 +80,84 @@ static void lsf_job_set_status(lsf_job_type *lsf_job , lsf_status_enum status) {
 static lsf_status_enum lsf_job_get_status(const lsf_job_type *lsf_job) {
   return lsf_job->status;
 }
+
+
+static void lsf_job_set_ctime(const char *file , time_t *ct) {
+  struct stat buffer;
+  int fildes;
+  
+  fildes = open(file , O_RDONLY);
+  fstat(fildes, &buffer);
+  *ct = buffer.st_mtime;
+  close(fildes);
+}
+
+static void sprintf_timestring(char *time_str , const time_t *t) {
+  struct tm tr;
+  localtime_r(t , &tr);
+  sprintf(time_str , "%02d:%02d:%02d" , tr.tm_hour , tr.tm_min , tr.tm_sec);
+}
+
+static void lsf_job_set_submit_time(lsf_job_type *lsf_job) {
+  lsf_job->submit_time = time(NULL);
+  lsf_job->start_time  = time(NULL); /* In case the real start is missed */
+}
+
+static void lsf_job_set_start_time(lsf_job_type *lsf_job) {
+  lsf_job->start_time = time(NULL);
+}
+
+static void lsf_job_set_complete_time(lsf_job_type *lsf_job) {
+  lsf_job_set_ctime(lsf_job->complete_file , &lsf_job->complete_time);
+}
+
+
+
+static void lsf_job_fprintf_status(lsf_job_type *lsf_job ,  FILE *stream) {
+  const lsf_status_enum status = lsf_job_get_status(lsf_job);
+  char run_time[16] , job_status[128];
+  char submit_time[9],start_time[9],complete_time[9];
+  
+  sprintf(submit_time   , " ");
+  sprintf(start_time    , " ");
+  sprintf(complete_time , " ");
+  sprintf(run_time      , " ");
+
+  switch(status) {
+  case(lsf_status_null):
+    sprintf(job_status,"Waiting");
+    break;
+  case(lsf_status_submitted):
+    sprintf(job_status , "Submitted");
+    break;
+  case(lsf_status_running):
+    sprintf(job_status , "Running");
+    break;
+  case(lsf_status_OK):
+    sprintf(job_status , "Complete:OK");
+    break;
+  case(lsf_status_exit):
+    sprintf(job_status , "Failed");
+    break;
+  }
+      
+
+  if (status >= lsf_status_submitted)
+    sprintf_timestring(submit_time , &lsf_job->submit_time);
+
+  if (status >= lsf_status_running)
+    sprintf_timestring(start_time  , &lsf_job->start_time);
+
+  if (status >= lsf_status_OK) {
+    sprintf_timestring(complete_time , &lsf_job->complete_time);
+    sprintf(run_time , "%8.0f sec"   , difftime(lsf_job->complete_time , lsf_job->start_time));
+  }
+  
+  fprintf(stream , "%-20s  %-16s  %8s       %8s          %8s   %14s \n",lsf_job->id , job_status , submit_time , start_time , complete_time , run_time);
+}
+
+
+
 
 
 
@@ -191,6 +268,7 @@ lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , const char * s
   
   lsf_pool->jobs      = hash_alloc(2*lsf_pool->alloc_size);
   lsf_pool->status_tr = hash_alloc(10);
+
   hash_insert_int(lsf_pool->status_tr , "PEND"   , lsf_status_submitted);
   hash_insert_int(lsf_pool->status_tr , "RUN"    , lsf_status_running);
   hash_insert_int(lsf_pool->status_tr , "SSUSP"  , lsf_status_running);
@@ -215,6 +293,19 @@ static void lsf_pool_iset_status(const lsf_pool_type *lsf_pool , int ijob , lsf_
   const lsf_status_enum old_status = lsf_pool_iget_status(lsf_pool , ijob);
   
   if (old_status != lsf_status_OK && old_status != lsf_status_exit) {
+    if (old_status != new_status) {
+      switch(new_status) {
+      case(lsf_status_submitted):
+	lsf_job_set_submit_time(lsf_pool->jobList[ijob]);
+	break;
+      case(lsf_status_running):
+	lsf_job_set_start_time(lsf_pool->jobList[ijob]);
+	break;
+      case(lsf_status_done):
+	lsf_job_set_complete_time(lsf_pool->jobList[ijob]);
+	break;
+      }
+    }
     lsf_job_set_status(lsf_pool->jobList[ijob] , new_status);
 
     lsf_pool->total_status[old_status]--;
@@ -235,6 +326,18 @@ static void lsf_pool_isubmit(lsf_pool_type *lsf_pool , int ijob) {
     hash_insert_int(lsf_pool->jobs , char_id , ijob);
   }
   lsf_pool_iset_status(lsf_pool , ijob , lsf_status_submitted);
+}
+
+
+static void lsf_pool_fprintf_summary(const lsf_pool_type *lsf_pool) {
+  int job;
+  FILE *stream = fopen(lsf_pool->summary_file , "w");
+  
+  fprintf(stream , "Job                   Status           submit-time    start-time      complete-time       run-time\n");
+  fprintf(stream , "--------------------------------------------------------------------------------------------------\n");
+  for (job = 0; job < lsf_pool->size; job++) 
+    lsf_job_fprintf_status(lsf_pool->jobList[job] , stream);
+  fclose(stream);
 }
 
 
@@ -388,6 +491,10 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
 
     printf("total: %2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
 	   lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
+    
+    if (lsf_pool->summary_file != NULL) 
+      lsf_pool_fprintf_summary(lsf_pool);
+
     
   } while (cont);
   /*
