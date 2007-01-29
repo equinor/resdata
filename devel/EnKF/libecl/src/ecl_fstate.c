@@ -189,15 +189,17 @@ static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int file
     ecl_fstate->files = files;
     {
       int file;
+      int block_nr = 0;
       for (file=0; file < files; file++) {
-	bool at_eof;
-	/* 
-	   { add  a while not eof loop here as well .... } 
-	*/
-	ecl_block_type *ecl_block = ecl_block_alloc(file /* Should get number from file */ , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert , NULL);
+	bool at_eof = false;
 	fortio_type *fortio       = fortio_open(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
-	ecl_block_fread(ecl_block , fortio , &at_eof , false);
-	ecl_fstate_add_block(ecl_fstate , ecl_block);
+
+	while (!at_eof) {
+	  ecl_block_type *ecl_block = ecl_block_alloc(block_nr /* Should get number from file */ , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert , NULL);
+	  ecl_block_fread(ecl_block , fortio , &at_eof , false);
+	  ecl_fstate_add_block(ecl_fstate , ecl_block);
+	  block_nr++;
+	}
 	fortio_close(fortio);
       }
     }
