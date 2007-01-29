@@ -103,16 +103,13 @@ void ecl_inter_copy_well_names__(char *well_string) {
   char **tmp_well_list = ecl_sum_alloc_well_names_copy(ECL_SUM);
   int  N = ecl_sum_get_Nwells(ECL_SUM);
   int i;
-
-  sprintf(well_string , "");
+  
+  well_string[0] = '|';
+  well_string[1] = '\0';
   for (i=0; i < N; i++) {
     strcat(well_string , tmp_well_list[i]);
-    if (i < (N - 1))
-      strcat(well_string , "|");
+    strcat(well_string , "|");
   }
-  printf("%s \n",well_string);
-
-  
   for (i=0; i < N; i++) 
     free(tmp_well_list[i]);
   free(tmp_well_list);
@@ -122,10 +119,10 @@ void ecl_inter_copy_well_names__(char *well_string) {
 
 void ecl_inter_sum_get__(const char *_well_name , const int *well_len, 
 			 const char *_var_name  , const int *var_len, 
-			 void *value) {
+			 void *value, int *index) {
   char *well = alloc_cstring(_well_name , *well_len);
   char *var  = alloc_cstring(_var_name  , *var_len);
-  ecl_sum_iget1(ECL_SUM , 0 , well , var , value);
+  *index = ecl_sum_iget1(ECL_SUM , 0 , well , var , value);
   free(well);
   free(var);
 }

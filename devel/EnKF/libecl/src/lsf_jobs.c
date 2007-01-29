@@ -475,7 +475,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
 	if (lsf_pool_complete_OK(lsf_pool , ijob)) { 
 	  lsf_pool_iset_status(lsf_pool , ijob , lsf_status_OK);
 	} else {
-	  printf("Could not find result_file %s rescheduling: %s \n",lsf_pool->jobList[ijob]->complete_file , lsf_pool->jobList[ijob]->id);
+	  printf("Could not find result_file %s rescheduling: %s [%d] \n",lsf_pool->jobList[ijob]->complete_file , lsf_pool->jobList[ijob]->id , lsf_pool->jobList[ijob]->submit_count);
 	  lsf_pool_ireschedule(lsf_pool , ijob);
 	}
       }
@@ -503,7 +503,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
   if (lsf_pool->total_status[lsf_status_exit] >= 0) {
     for (ijob = 0; ijob < lsf_pool->size; ijob++) {
       if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_exit)
-	printf("Job : %03d / %s failed \n",ijob + 1,lsf_pool->jobList[ijob]->id);
+	printf("Job : %04d / %s failed \n",ijob + 1,lsf_pool->jobList[ijob]->id);
     }
   }
       

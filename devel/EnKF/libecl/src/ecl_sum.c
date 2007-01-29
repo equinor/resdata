@@ -5,6 +5,7 @@
 #include <ecl_fstate.h>
 #include <ecl_sum.h>
 #include <hash.h>
+#include <util.h>
 
 #define ECL_DUMMY_WELL ":+:+:+:+"
 
@@ -70,24 +71,29 @@ static ecl_sum_type * ecl_sum_alloc_existing(const char *header_file , int fmt_m
     int index;
     for (index=0; index < ecl_kw_get_size(wells); index++) {
       char well_kw[17];
+      char *well_s;
+      well_s = util_alloc_strip_copy(ecl_kw_iget_ptr(wells , index));
+      /*
+	printf("<%s> -> <%s> [%d->%d] \n" , ecl_kw_iget_ptr(wells , index) , well_s , strlen(ecl_kw_iget_ptr(wells , index)) , strlen(well_s));
+      */
       set_well_kw_string(ecl_kw_iget_ptr(wells , index) , ecl_kw_iget_ptr(keywords , index) , well_kw);
       hash_insert_int(ecl_sum->index_hash , well_kw , index);
       hash_insert_int(well_hash , ecl_kw_iget_ptr(wells , index) , 1);
+      free(well_s);
     }
     ecl_sum->Nwells    = hash_get_size(well_hash);
     ecl_sum->well_list = hash_alloc_keylist(well_hash);
     hash_free(well_hash);
   }
-  
   return ecl_sum;
 }
 	
+
 									
 static void ecl_sum_set_unified(ecl_sum_type *ecl_sum , bool unified) {
   ecl_sum->unified = unified;
   ecl_fstate_set_unified(ecl_sum->data , unified);
 }
-
 
 
 
@@ -262,16 +268,33 @@ ecl_sum_type * ecl_sum_load_unified(const char * header_file , const char * data
 }
 
 
+char ** ecl_sum_alloc_filelist(const char *path , const char *base , bool file_fmt, int *files) {
+  if (file_fmt)
+    return ecl_fstate_alloc_filelist(path , base , "A" , files);
+  else
+    return ecl_fstate_alloc_filelist(path , base , "S" , files);
+}
+
+
 
 ecl_sum_type * ecl_sum_load_multiple(const char * header_file , int files , const char ** data_files , int fmt_mode , bool endian_convert) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc_existing(header_file , fmt_mode , endian_convert , false);
-  ecl_sum->data   = ecl_fstate_load_multiple(files , data_files  , ecl_sum->fmt_mode , ecl_sum->endian_convert);
+  ecl_sum->data = ecl_fstate_load_multiple(files , data_files  , ecl_sum->fmt_mode , ecl_sum->endian_convert);
   return ecl_sum;
+}
+
+
+static void ecl_sum_assert_index(const ecl_kw_type *params_kw, int index) {
+  if (index < 0 || index >= ecl_kw_get_size(params_kw)) {
+    fprintf(stderr,"%s index:%d invalid - aborting \n",__func__ , index);
+    abort();
+  }
 }
 
 
 void ecl_sum_iget2(const ecl_sum_type *ecl_sum , int istep , int index, void *value) {
   ecl_kw_type * data_kw = ecl_fstate_get_kw(ecl_sum->data , istep , "PARAMS");
+  ecl_sum_assert_index(data_kw , index);
   ecl_kw_iget(data_kw , index , value);
 }
 
@@ -282,13 +305,16 @@ int ecl_sum_iget1(const ecl_sum_type *ecl_sum , int istep , const char *well_nam
   
   set_well_kw_string(well_name , var_name , well_kw);
   if (!hash_has_key(ecl_sum->index_hash , well_kw)) {
-    fprintf(stderr,"%s: could not find data for well/variable %s/%s \n",__func__ , well_name , var_name);
-    abort();
+    /*
+      fprintf(stderr,"%s: could not find data for well/variable <%s/%s> \n",__func__ , well_name , var_name);
+    */
+    return -1;
   }
   index = hash_get_int(ecl_sum->index_hash , well_kw);
   ecl_sum_iget2(ecl_sum , istep , index , value);
   return index;
 }
+
 
 void ecl_sum_set_fmt_mode(ecl_sum_type *ecl_sum , int fmt_mode) {
   if (ecl_sum->fmt_mode != fmt_mode) {
@@ -308,7 +334,7 @@ int ecl_sum_get_Nwells(const ecl_sum_type *ecl_sum) {
 void ecl_sum_copy_well_names(const ecl_sum_type *ecl_sum , char **well_list) {
   int iw;
   for (iw=0; iw < ecl_sum->Nwells; iw++ )
-    printf("Bronn:%s Lengder: %d \n",ecl_sum->well_list[iw] , strlen(ecl_sum->well_list[iw]));
+    printf("Bronn:<%s> Lengder: %d \n",ecl_sum->well_list[iw] , strlen(ecl_sum->well_list[iw]));
   for (iw=0; iw < ecl_sum->Nwells; iw++) 
     printf("Innkommende: <%s> \n",well_list[iw]);
 
@@ -324,8 +350,10 @@ char ** ecl_sum_alloc_well_names_copy(const ecl_sum_type *ecl_sum) {
   char **well_list;
   int iw;
   well_list = calloc(ecl_sum->Nwells , sizeof *well_list);
-  for (iw = 0; iw < ecl_sum->Nwells; iw++)
+  for (iw = 0; iw < ecl_sum->Nwells; iw++) {
     well_list[iw] = malloc(strlen(ecl_sum->well_list[iw]) + 1);
+    well_list[iw][0] = '\0';
+  }
   ecl_sum_copy_well_names(ecl_sum , well_list);
   return well_list;
 }
@@ -334,6 +362,7 @@ char ** ecl_sum_alloc_well_names_copy(const ecl_sum_type *ecl_sum) {
 int ecl_sum_get_size(const ecl_sum_type *ecl_sum) {
   return ecl_fstate_get_Nstep(ecl_sum->data);
 }
+
 
 void ecl_sum_free(ecl_sum_type *ecl_sum) {
   int i;

@@ -12,7 +12,7 @@ typedef struct ecl_fstate_struct ecl_fstate_type;
 #define ECL_FMT_AUTO_BIT8 3
 #define ECL_FMT_AUTO_NAME 4
 
-
+char           ** ecl_fstate_alloc_filelist(const char *, const char *, const char *, int *);
 void              ecl_fstate_set_multiple_files(ecl_fstate_type *, const char * , const char *);
 void              ecl_fstate_set_unified_file(ecl_fstate_type *, const char *);
 void              ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate_type , bool unified);

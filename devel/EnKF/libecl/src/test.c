@@ -38,10 +38,12 @@ void add_subplot(FILE *stream , int ens_size , double ps , double lw , int histo
 
 
 
+
+
 int main(int argc , char ** argv) {
 #define Nvar    4
 #define var_len 5
-#define N_well  5
+#define N_well  20
   const int ens_size = 20;
   
   ecl_sum_type **prior;
@@ -55,7 +57,8 @@ int main(int argc , char ** argv) {
   const int   posterior_lt      = 1;
   const double lw               = 1.50;
   const double ps               = 0.75;
-
+  
+  const char *well_list[N_well] = {"PR03A_G8", "PR06_G28", "PR09_G10", "PR10_G18", "PR11E_A", "PR11E_G5", "PR11_G6", "PR12_G19", "PR13_G22", "PR14_G27", "PR15_G35", "PR18_G40", "PR22_G25", "PR23_G9", "PR24_G17", "PR25_G21", "PR26_G26", "PR27_G11", "PR29_G34", "T21A"}
   const char *well_list[N_well] = {"B-33A" , "B-37T2" , "B-43A","F-18A","F-24"};
   const char *var_list[Nvar]    = {"WOPT"  , "WOPR"  , "WGOR"   , "WWCT"};
   const char *hvar_list[Nvar]   = {"WOPTH" , "WOPRH" , "WGORH"  , "WWCTH"};
@@ -74,7 +77,6 @@ int main(int argc , char ** argv) {
   posterior = calloc(ens_size , sizeof (ecl_sum_type *));
   for (i = 0; i < ens_size; i++) {
     printf("Loading ens member: %3d: Prior...",i+1); fflush(stdout);
-    
     prior[i]     = ecl_load(prior_path , "tmpdir_" , i );
     printf("  Posterior..."); fflush(stdout);
     posterior[i] = ecl_load(posterior_path , "tmpdir_" , i);
@@ -85,7 +87,7 @@ int main(int argc , char ** argv) {
     int iw , ivar;
     for (iw = 0; iw < N_well; iw++) {
       FILE *gplot_stream;
-      char gplot_file[128];
+      /*char gplot_file[128];*/
 
       for (ivar = 0; ivar < Nvar; ivar++) {
 	FILE *data_stream ;
@@ -112,13 +114,14 @@ int main(int argc , char ** argv) {
 	}
 	fclose(data_stream);
 
-	gplot_stream = fopen(gplot_file , "w");
-	fprintf(gplot_stream , "set term post enhanced color blacktext solid \"Helvetica\" 14\n");
-	fprintf(gplot_stream , "set output \"%s-%s.ps\"\n" , well_list[iw] , var_list[ivar]);
+	/*
+	  gplot_stream = fopen(gplot_file , "w");
+	  fprintf(gplot_stream , "set term post enhanced color blacktext solid \"Helvetica\" 14\n");
+	  fprintf(gplot_stream , "set output \"%s-%s.ps\"\n" , well_list[iw] , var_list[ivar]);
+	  
 	
-	
-	add_subplot(gplot_stream , ens_size , ps , lw , history_pt , prior_lt , posterior_lt,
-		    history_title , prior_title , posterior_title , well_list[iw] , var_list[ivar]);
+	  add_subplot(gplot_stream , ens_size , ps , lw , history_pt , prior_lt , posterior_lt,
+	  history_title , prior_title , posterior_title , well_list[iw] , var_list[ivar]);
 
 
 	fprintf(gplot_stream , "!convert %s-%s.ps %s-%s.pdf" , well_list[iw] , var_list[ivar] , well_list[iw] , var_list[ivar]);

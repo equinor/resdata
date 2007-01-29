@@ -7,6 +7,7 @@
 #include <ecl_block.h>
 #include <errno.h>
 #include <hash.h>
+#include <util.h>
 
 
 struct ecl_block_struct {
@@ -19,16 +20,6 @@ struct ecl_block_struct {
 
 
 
-void kw_set_strip_copy(char * copy , const char *src) {
-  const char null_char  = '\0';
-  const char space_char = ' ';
-  int i = 0;
-  while (src[i] != null_char && src[i] != space_char) {
-    copy[i] = src[i];
-    i++;
-  }
-  copy[i] = null_char;
-}
 
   
 
@@ -68,7 +59,7 @@ bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw) {
   if (ecl_block_get_kw(ecl_block , ecl_kw_get_header_ref(ecl_kw)))
     return false;
   else {
-    kw_set_strip_copy(kw , ecl_kw_get_header_ref(ecl_kw));
+    util_set_strip_copy(kw , ecl_kw_get_header_ref(ecl_kw));
     hash_insert_ref(ecl_block->kw_hash , kw , ecl_kw);
     ecl_block->size++;
     return true;
@@ -230,11 +221,17 @@ void ecl_block_shallow_copy(ecl_block_type *target , const ecl_block_type *src) 
 ecl_kw_type * ecl_block_get_kw(const ecl_block_type *ecl_block , const char *kw) {
   ecl_kw_type *ecl_kw = NULL;
   char kw_s[9];
-  kw_set_strip_copy(kw_s , kw);  
+  util_set_strip_copy(kw_s , kw);  
   
   if (hash_has_key(ecl_block->kw_hash , kw_s)) 
     ecl_kw = hash_get(ecl_block->kw_hash , kw_s);
   
+  /*if (ecl_kw == NULL) 
+    printf("Fant ikke: %s \n", kw);
+  else
+    printf("Fant %s \n",kw);
+  */
+
   return ecl_kw;
 }
 

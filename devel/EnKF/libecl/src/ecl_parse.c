@@ -22,25 +22,15 @@ typedef struct {
 } ecl_type_node;
 
 
-static char * alloc_string_copy(const char *src ) {
-  if (src != NULL) {
-    char *copy = calloc(strlen(src) + 1 , sizeof *copy);
-    strcpy(copy , src);
-    return copy;
-  } else 
-    return NULL;
-
-}
-
 
 
 
 static ecl_type_node * alloc_type_node(const char *fortran_type , const char *default_value , const char *reader , const char *writer) {
   ecl_type_node *node = malloc(sizeof *node);
-  node->fortran_type  = alloc_string_copy(fortran_type);
-  node->default_value = alloc_string_copy(default_value);
-  node->reader        = alloc_string_copy(reader);
-  node->writer        = alloc_string_copy(writer);
+  node->fortran_type  = util_alloc_string_copy(fortran_type);
+  node->default_value = util_alloc_string_copy(default_value);
+  node->reader        = util_alloc_string_copy(reader);
+  node->writer        = util_alloc_string_copy(writer);
   return node;
 }
 
@@ -54,13 +44,15 @@ static void free_type_node(ecl_type_node *node) {
 }
 
 
-void init_type_map(hash_type *type_map) {
+hash_type *alloc_type_map() {
+  hash_type *type_map = hash_alloc(10);
   hash_insert_ref(type_map , "REAL" , alloc_type_node("real*4"            		     , "0.0" 	      , "read_real"    , "write_real"));
   hash_insert_ref(type_map , "DOUB" , alloc_type_node("double precision" 	 	     , "0.0" 	      , "read_double"  , "write_double"));
   hash_insert_ref(type_map , "INTE" , alloc_type_node("integer"          		     , "1"    	      , "read_integer" , "write_integer"));
   hash_insert_ref(type_map , "CHAR" , alloc_type_node("Character(Len = eclipse_str_len)" , "\"AAAAAAAA\"" , "read_char"    , "write_char"));
   hash_insert_ref(type_map , "LOGI" , alloc_type_node("logical"          		     ,  ".false."     , "read_logical" , "write_logical"));
   hash_insert_ref(type_map , "MESS" , NULL);
+  return type_map;
 }
 
 
@@ -121,6 +113,9 @@ void static ecl_parse_write_decl(const hash_type *var_hash , const hash_type *ty
 void ecl_parse(const char *refcase_path , const char *include_path) {
   ecl_kw_type *ecl_kw;
   fortio_type *fortio;
+  hash_type   *type_map = alloc_type_map();
   
+
+  free_type_map(type_map);
 }
 

@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <stdbool.h>
 
 #include <fortio.h>
 #include <ecl_kw.h>
@@ -41,36 +44,6 @@ static bool ecl_fstate_fmt_name(const char *filename) {
   fmt_match(filename , ".F"       , &fmt);
   
   return fmt;
-}
-
-
-static bool ecl_fstate_fmt_bit8(const char *filename , int buffer_size) {
-  const int min_read = 1024;
-  FILE *stream;
-  const double bit8set_limit = 0.00001;
-  double bit8set_fraction;
-  int N_bit8set = 0;
-  char *buffer;
-  int elm_read,i;
-  
-  buffer = malloc(buffer_size);
-  stream = fopen(filename , "r");
-  elm_read = fread(buffer , 1 , buffer_size , stream);
-  if (elm_read < min_read) {
-    fprintf(stderr,"Error in %s: file:%s is too small to automatically determine formatted/unformatted status \n",__func__ , filename);
-    abort();
-  }
-  for (i=0; i < elm_read; i++)
-    N_bit8set += (buffer[i] & (1 << 7)) >> 7;
-
-  fclose(stream);
-  free(buffer);
-
-  bit8set_fraction = 1.0 * N_bit8set / elm_read;
-  if (bit8set_fraction < bit8set_limit) 
-    return true;
-  else 
-    return false;
 }
 
 
@@ -124,7 +97,7 @@ static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
     break;
   case ECL_FMT_AUTO:
     if (util_file_exists(ecl_fstate->filelist[0])) 
-      ecl_fstate->fmt_file = ecl_fstate_fmt_bit8(ecl_fstate->filelist[0] , 65536);
+      ecl_fstate->fmt_file = util_fmt_bit8(ecl_fstate->filelist[0] , 65536);
     else
       ecl_fstate->fmt_file = ecl_fstate_fmt_name(ecl_fstate->filelist[0]);
     break;
@@ -152,18 +125,19 @@ void ecl_fstate_add_block(ecl_fstate_type *ecl_fstate , const ecl_block_type *ne
   ecl_fstate->N_blocks++;  
 }
 
+
 static void ecl_fstate_init_files(ecl_fstate_type *ecl_fstate , const char *filename1 , int files , const char ** filelist) {
   if (ecl_fstate->unified) {
     ecl_fstate->files = 1;
-    ecl_fstate->filelist = calloc(1 , sizeof ecl_fstate->filelist);
+    ecl_fstate->filelist = calloc(1 , sizeof *ecl_fstate->filelist);
     ecl_fstate->filelist[0] = calloc(strlen(filename1) + 1 , 1);
     strcpy(ecl_fstate->filelist[0] , filename1);
   } else {
     int file;
-    for (file=0; file < files; file++) {
-      ecl_fstate->filelist[file] = calloc(strlen(filelist[file]) + 1 , 1);
-      strcpy(ecl_fstate->filelist[file] , filelist[file]);
-    }
+    ecl_fstate->filelist = calloc(files , sizeof *ecl_fstate->filelist);
+    for (file=0; file < files; file++) 
+      ecl_fstate->filelist[file] = util_alloc_string_copy(filelist[file]);
+
   }
   __ecl_fstate_set_fmt(ecl_fstate);
 }
@@ -213,12 +187,14 @@ static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int file
     fortio_close(fortio);
   } else {
     ecl_fstate->files = files;
-    ecl_fstate->filelist = calloc(files , sizeof ecl_fstate->filelist);
     {
       int file;
       for (file=0; file < files; file++) {
 	bool at_eof;
-	ecl_block_type *ecl_block = ecl_block_alloc(file , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert , NULL);
+	/* 
+	   { add  a while not eof loop here as well .... } 
+	*/
+	ecl_block_type *ecl_block = ecl_block_alloc(file /* Should get number from file */ , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert , NULL);
 	fortio_type *fortio       = fortio_open(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
 	ecl_block_fread(ecl_block , fortio , &at_eof , false);
 	ecl_fstate_add_block(ecl_fstate , ecl_block);
@@ -229,6 +205,75 @@ static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int file
   return ecl_fstate;
 }
 
+
+static bool is_numeric(char c) {
+  if (c >= 48 && c <= 57)
+    return true;
+  else
+    return false;
+}
+
+
+bool ecl_fstate_include_file(const char *filename , const char *ext_match) {
+  char *substring_ptr = strstr(filename , ext_match);
+  if (substring_ptr == NULL) 
+    return false;
+  else {
+    bool include = true;
+    int i;
+    substring_ptr += strlen(ext_match);
+    if (strlen(substring_ptr) == 4) {
+      for (i=0; i < 4; i++)
+	include = include && is_numeric(substring_ptr[i]);
+    } else 
+      include = false;
+    return include;
+  }
+}
+
+
+
+
+/*
+  The filelist is *not* sorted. 
+*/
+
+char ** ecl_fstate_alloc_filelist(const char *path , const char *base, const char *ext_char, int *_files) {
+  DIR * dirH = opendir(path);
+  struct dirent *dentry;
+  int files;
+  char **fileList;
+  char *ext_match = malloc(strlen(ext_char) + 2);
+  sprintf(ext_match , ".%s" , ext_char);
+  
+  if (dirH == NULL) {
+    fprintf(stderr,"\n%s: opening directory:%s failed - aborting \n",__func__ , path);
+    abort();
+  }
+
+  files = 0;
+  while ((dentry = readdir (dirH)) != NULL) {
+    if (ecl_fstate_include_file(dentry->d_name , ext_match))
+      files++;
+  } 
+  rewinddir(dirH);
+
+  if (files == 0) 
+    fileList = NULL;
+  else {
+    fileList = calloc(files , sizeof *fileList);
+    files = 0;
+    while ((dentry = readdir (dirH)) != NULL) {
+      if (ecl_fstate_include_file(dentry->d_name , ext_match)) {
+	fileList[files] = malloc(strlen(path) + 1 + strlen(dentry->d_name) + 1);
+	sprintf(fileList[files] , "%s/%s" , path , dentry->d_name);
+	files++;
+      }
+    }
+  }
+  *_files = files;
+  return fileList;
+}
 
 
 

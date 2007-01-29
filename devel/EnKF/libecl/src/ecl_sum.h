@@ -18,4 +18,6 @@ void           ecl_sum_set_fmt_mode(ecl_sum_type *, int );
 ecl_sum_type * ecl_sum_alloc_new(const char * , int, int, int, int , bool , bool );
 void           ecl_sum_save(const ecl_sum_type * );
 void           ecl_sum_set_header_data(ecl_sum_type * , const char * , void *);
+char        ** ecl_sum_alloc_well_names_copy(const ecl_sum_type *);
+char        ** ecl_sum_alloc_filelist(const char *, const char *, bool , int *);
 #endif
