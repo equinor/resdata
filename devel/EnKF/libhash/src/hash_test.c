@@ -25,8 +25,14 @@ int main(void) {
   hash_insert_string_copy(hash , "Name" , "Joakim Hove");
   hash_insert_int(hash , "Alder",34);
   hash_insert_double(hash , "Vekt" , 80.01);
-  for (i=0; i < 100; i++) {
-    set_rand_key(key , 8);
+  printf("*****************************************************************\n");
+  for (i=0; i < 1000; i++) {
+    set_rand_key(key , 2);
+    if (hash_has_key(hash , key)) {
+      if (rand() % 10 < 5)
+	hash_del(hash , key);
+    }
+
     hash_insert_int(hash , key , rand());
   }
   
@@ -58,7 +64,7 @@ int main(void) {
   {
     int i;
     for (i =0; i < hash_get_size(hash); i++) 
-      printf("%d:  %s  %s \n",i,ordered_keylist[i] , random_keylist[i]);
+      printf("%d:  %s  %s  \n",i,ordered_keylist[i] , random_keylist[i] );
   }
 
   hash_free_ext_keylist(hash , ordered_keylist);

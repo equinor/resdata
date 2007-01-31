@@ -13,6 +13,7 @@
 #include <util.h>
 
 
+
 struct ecl_fstate_struct {
   char 	      	 **filelist;
   bool 	      	   fmt_file;
@@ -71,6 +72,18 @@ static int ecl_fstate_fname2time(const char *filename) {
   } 
   
   return block;
+}
+
+
+static int ecl_fstate_fname_cmp(const void *f1, const void *f2) {
+  int t1 = ecl_fstate_fname2time( *((const char **) f1) );
+  int t2 = ecl_fstate_fname2time( *((const char **) f2) );
+  if (t1 < t2)
+    return -1;
+  else if (t1 > t2)
+    return 1;
+  else
+    return 0;
 }
 
 
@@ -216,29 +229,30 @@ static bool is_numeric(char c) {
 }
 
 
-bool ecl_fstate_include_file(const char *filename , const char *ext_match) {
-  char *substring_ptr = strstr(filename , ext_match);
-  if (substring_ptr == NULL) 
-    return false;
-  else {
-    bool include = true;
-    int i;
-    substring_ptr += strlen(ext_match);
-    if (strlen(substring_ptr) == 4) {
-      for (i=0; i < 4; i++)
-	include = include && is_numeric(substring_ptr[i]);
-    } else 
-      include = false;
-    return include;
-  }
+bool ecl_fstate_include_file(const char *filename , const char *base, const char *ext_match) {
+  if (strstr(filename , base) == filename) {
+    char *substring_ptr = strstr(filename , ext_match);
+    if (substring_ptr == NULL) 
+      return false;
+    else {
+      bool include = true;
+      int i;
+      substring_ptr += strlen(ext_match);
+      if (strlen(substring_ptr) == 4) {
+	for (i=0; i < 4; i++)
+	  include = include && is_numeric(substring_ptr[i]);
+      } else 
+	include = false;
+      return include;
+    }
+  }  else return false;
 }
 
 
 
 
-/*
-  The filelist is *not* sorted. 
-*/
+
+
 
 char ** ecl_fstate_alloc_filelist(const char *path , const char *base, const char *ext_char, int *_files) {
   DIR * dirH = opendir(path);
@@ -255,7 +269,7 @@ char ** ecl_fstate_alloc_filelist(const char *path , const char *base, const cha
 
   files = 0;
   while ((dentry = readdir (dirH)) != NULL) {
-    if (ecl_fstate_include_file(dentry->d_name , ext_match))
+    if (ecl_fstate_include_file(dentry->d_name , base, ext_match))
       files++;
   } 
   rewinddir(dirH);
@@ -266,7 +280,7 @@ char ** ecl_fstate_alloc_filelist(const char *path , const char *base, const cha
     fileList = calloc(files , sizeof *fileList);
     files = 0;
     while ((dentry = readdir (dirH)) != NULL) {
-      if (ecl_fstate_include_file(dentry->d_name , ext_match)) {
+      if (ecl_fstate_include_file(dentry->d_name , base , ext_match)) {
 	fileList[files] = malloc(strlen(path) + 1 + strlen(dentry->d_name) + 1);
 	sprintf(fileList[files] , "%s/%s" , path , dentry->d_name);
 	files++;
@@ -274,6 +288,9 @@ char ** ecl_fstate_alloc_filelist(const char *path , const char *base, const cha
     }
   }
   *_files = files;
+  
+  if (files > 0)
+    qsort(fileList , files , sizeof *fileList , &ecl_fstate_fname_cmp);
   return fileList;
 }
 
@@ -403,6 +420,14 @@ bool ecl_fstate_kw_iget(const ecl_fstate_type * ecl_fstate , int istep , const c
     ecl_kw_iget(ecl_kw , iw , value);
     return true;
   }
+}
+
+void * ecl_fstate_kw_get_data_ref(const ecl_fstate_type * ecl_fstate , int istep , const char *kw) {
+  ecl_kw_type *ecl_kw = ecl_fstate_get_kw(ecl_fstate , istep , kw);
+  if (ecl_kw == NULL) 
+    return NULL;
+  else 
+    return ecl_kw_get_data_ref(ecl_kw);
 }
 
 

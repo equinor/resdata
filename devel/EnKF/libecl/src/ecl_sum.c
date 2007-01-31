@@ -333,16 +333,10 @@ int ecl_sum_get_Nwells(const ecl_sum_type *ecl_sum) {
 
 void ecl_sum_copy_well_names(const ecl_sum_type *ecl_sum , char **well_list) {
   int iw;
-  for (iw=0; iw < ecl_sum->Nwells; iw++ )
-    printf("Bronn:<%s> Lengder: %d \n",ecl_sum->well_list[iw] , strlen(ecl_sum->well_list[iw]));
-  for (iw=0; iw < ecl_sum->Nwells; iw++) 
-    printf("Innkommende: <%s> \n",well_list[iw]);
 
-  printf("Skal kopiere bronnwer \n");
-  for (iw=0; iw < ecl_sum->Nwells; iw++) {
-    printf("iw: %d \n",iw);
+  for (iw=0; iw < ecl_sum->Nwells; iw++) 
     strcpy(well_list[iw] , ecl_sum->well_list[iw]);
-  }
+
 }
 
 

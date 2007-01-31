@@ -204,6 +204,7 @@ void hash_free(hash_type *hash) {
 
 static void hash_insert_node(hash_type *hash , hash_node_type *node) {
   uint32_t table_index = hash_node_get_table_index(node);
+  uint32_t insert_nr;
   {
     /*
       If a node with the same key already exists in the table
@@ -211,11 +212,16 @@ static void hash_insert_node(hash_type *hash , hash_node_type *node) {
     */
     hash_node_type *existing_node = __hash_get_node(hash , hash_node_get_keyref(node) , false);
     if (existing_node != NULL) {
+      insert_nr = hash_node_get_insert_nr(existing_node);
       hash_sll_del_node(hash->table[table_index] , existing_node);
       hash->elements--;
+    } else {
+      insert_nr = hash->global_insert_nr;
+      hash->global_insert_nr++;
     }
   }
-
+  
+  hash_node_set_insert_nr(node , insert_nr);
   hash_sll_add_node(hash->table[table_index] , node);  
   hash->elements++;
   if ((1.0 * hash->elements / hash->size) > hash->resize_fill) 
@@ -228,9 +234,8 @@ static void hash_insert_managed_copy(hash_type *hash, const char *key, const voi
   hash_data_type hash_data;
   hash_data.data      = (void *) value_ptr;
   hash_data.byte_size = value_size;
-  node = hash_node_alloc_new(key , &hash_data , hash_data_copyc , hash_data_free , hash->hashf , hash->size , hash->global_insert_nr);
+  node = hash_node_alloc_new(key , &hash_data , hash_data_copyc , hash_data_free , hash->hashf , hash->size);
   hash_insert_node(hash , node);
-  hash->global_insert_nr++;
 }
 
 
@@ -244,17 +249,16 @@ void hash_insert_copy(hash_type *hash , const char *key , const void *value , co
     fprintf(stderr,"%s: must provide copy constructer and delete operator for insert copy - aborting \n",__func__);
     abort();
   }
-  node = hash_node_alloc_new(key , value , copyc , del , hash->hashf , hash->size , hash->global_insert_nr);
+  node = hash_node_alloc_new(key , value , copyc , del , hash->hashf , hash->size);
   hash_insert_node(hash , node);
-  hash->global_insert_nr++;
 }
 
 void hash_insert_ref(hash_type *hash , const char *key , const void *value) {
   hash_node_type *node;
-  node = hash_node_alloc_new(key , value , NULL , NULL , hash->hashf , hash->size , hash->global_insert_nr);
+  node = hash_node_alloc_new(key , value , NULL , NULL , hash->hashf , hash->size );
   hash_insert_node(hash , node);
-  hash->global_insert_nr++;
 }
+
 
 void hash_insert_string_copy(hash_type *hash, const char *key , const char *value) {
   hash_insert_managed_copy(hash , key , value , strlen(value) + 1);

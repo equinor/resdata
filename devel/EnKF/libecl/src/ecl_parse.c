@@ -5,6 +5,7 @@
 #include <util.h>
 #include <ecl_kw.h>
 #include <fortio.h>
+#include <ecl_fstate.h>
 
 
 typedef struct {
@@ -56,13 +57,37 @@ hash_type *alloc_type_map() {
 }
 
 
+ecl_var_type * ecl_var_alloc(const char *name , const char *ecl_str_type , int size) {
+  ecl_var_type *ecl_type = malloc( sizeof *ecl_type );
+  ecl_type->name     = util_alloc_string_copy(name);
+  ecl_type->ecl_type = util_alloc_string_copy(ecl_str_type);
+  ecl_type->size     = size;
+  return ecl_type;
+}
+
+const void * ecl_var_copyc(const void *_src) {
+  ecl_var_type *src = (ecl_var_type *) _src;
+  ecl_var_type *new = ecl_var_alloc(src->name , src->ecl_type , src->size);
+  return new;
+}
+
+void ecl_var_free(void *_ecl_var) {
+  ecl_var_type *ecl_var = (ecl_var_type *) _ecl_var;
+  
+  free(ecl_var->name);
+  free(ecl_var->ecl_type);
+  free(ecl_var);
+}
+
+  
+
 void free_type_map(hash_type *type_map) {
-  free(hash_get(type_map , "REAL")); 
-  free(hash_get(type_map , "DOUB")); 
-  free(hash_get(type_map , "INTE")); 
-  free(hash_get(type_map , "CHAR")); 
-  free(hash_get(type_map , "LOGI")); 
-  free(hash_get(type_map , "MESS")); 
+  free_type_node(hash_get(type_map , "REAL")); 
+  free_type_node(hash_get(type_map , "DOUB")); 
+  free_type_node(hash_get(type_map , "INTE")); 
+  free_type_node(hash_get(type_map , "CHAR")); 
+  free_type_node(hash_get(type_map , "LOGI")); 
+  /* free_type_node(hash_get(type_map , "MESS")); */
   hash_free(type_map);
 }
 
@@ -109,12 +134,167 @@ void static ecl_parse_write_decl(const hash_type *var_hash , const hash_type *ty
 }
 
 
+/*****************************************************************/
+static void ecl_parse_file(hash_type *hash , const char *filename, const hash_type *type_map , bool endian_flip) {
+  bool fmt_file       = util_fmt_bit8(filename , 65536);
+  fortio_type *fortio = fortio_open(filename , "r" , endian_flip);
+  ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_flip);
+  
+  printf("Parsing: %s \n",filename);
+  while (ecl_kw_fread_header(ecl_kw , fortio)) {
+    ecl_kw_fskip_data(ecl_kw, fortio);
+    if (!hash_has_key(hash , ecl_kw_get_header_ref(ecl_kw))) {
+      ecl_var_type *ecl_var = ecl_var_alloc(ecl_kw_get_header_ref(ecl_kw) , ecl_kw_get_str_type_ref(ecl_kw) , ecl_kw_get_size(ecl_kw));
+      hash_insert_copy(hash , ecl_kw_get_header_ref(ecl_kw) , ecl_var , ecl_var_copyc , ecl_var_free);
+      printf("Var: %s :%s:%8d \n",ecl_kw_get_header_ref(ecl_kw) , ecl_var->ecl_type , ecl_var->size);
+      ecl_var_free(ecl_var);
+    }
+  }
+}
+/*****************************************************************/
 
-void ecl_parse(const char *refcase_path , const char *include_path) {
-  ecl_kw_type *ecl_kw;
-  fortio_type *fortio;
+
+static void ecl_parse_restart(const char *refcase_path , const char *ecl_base , const char *include_path, const hash_type *type_map , bool fmt_file , bool unified , bool endian_flip) {
+  char **fileList;
+  int files;
+  if (unified) {
+    files = 1;
+    fileList    = calloc(1 , sizeof *fileList);
+    fileList[0] = malloc(strlen(refcase_path) + 1 + strlen(ecl_base) + 1 + 7);
+    if (fmt_file)
+      sprintf(fileList[0] , "%s/%s.FUNRST" , refcase_path , ecl_base);
+    else
+      sprintf(fileList[0] , "%s/%s.UNRST" , refcase_path , ecl_base);
+  } else {
+    if (fmt_file)
+      fileList = ecl_fstate_alloc_filelist(refcase_path , ecl_base , "F", &files);
+    else
+      fileList = ecl_fstate_alloc_filelist(refcase_path , ecl_base , "X", &files);
+  }
+  {
+    hash_type *hash = hash_alloc(10);
+    int i;
+    for (i=0; i < files; i++)
+      ecl_parse_file(hash , fileList[i] , type_map , endian_flip);
+    
+    hash_free(hash);
+  }
+  
+  
+  util_free_string_list(fileList , files);
+}
+
+
+
+
+static void ecl_parse_summary_data(const char *refcase_path , const char *ecl_base , const char *include_path, const hash_type *type_map , bool fmt_file , bool unified, bool endian_flip) {
+  char **fileList;
+  int files;
+  if (unified) {
+    files = 1;
+    fileList = calloc(1 , sizeof *fileList);
+    fileList[0] = malloc(strlen(refcase_path) + 1 + strlen(ecl_base) + 1 + 8);
+    if (fmt_file)
+      sprintf(fileList[0] , "%s/%s.FUNSMRY" , refcase_path , ecl_base);
+    else
+      sprintf(fileList[0] , "%s/%s.UNSMRY" , refcase_path , ecl_base);
+  } else {
+    if (fmt_file)
+      fileList = ecl_fstate_alloc_filelist(refcase_path , ecl_base , "A", &files);
+    else
+      fileList = ecl_fstate_alloc_filelist(refcase_path , ecl_base , "S", &files);
+  }
+  
+  {
+    hash_type *hash = hash_alloc(10);
+    int i;
+    for (i=0; i < files; i++)
+      ecl_parse_file(hash , fileList[i] , type_map , endian_flip);
+    
+    hash_free(hash);
+  }
+  
+  
+  util_free_string_list(fileList , files);
+}
+
+
+
+static void ecl_parse_summary_spec(const char *refcase_path , const char *ecl_base , const char *include_path, const hash_type *type_map , bool fmt_file , bool endian_flip) {
+  char *spec_file;
+
+  if (fmt_file) {
+    spec_file = malloc(strlen(refcase_path) + strlen(ecl_base) + 9);
+    sprintf(spec_file  , "%s/%s.FSMSPEC" , refcase_path , ecl_base);
+  } else {
+    spec_file = malloc(strlen(refcase_path) + strlen(ecl_base) + 8);
+    sprintf(spec_file , "%s/%s.SMSPEC" , refcase_path , ecl_base);
+  }
+  
+  {
+    hash_type *hash = hash_alloc(10);
+    ecl_parse_file(hash , spec_file ,  type_map , endian_flip);
+    
+    hash_free(hash);
+  }
+  free(spec_file);
+}
+
+
+  
+
+static void ecl_parse_grid(const char *refcase_path , const char *ecl_base , const char *include_path, const hash_type *type_map , bool fmt_file , bool endian_flip) {
+  char *grid_file;
+  ecl_fstate_type *grid;
+  if (fmt_file) {
+    grid_file = malloc(strlen(refcase_path) + strlen(ecl_base) + 8);
+    sprintf(grid_file  , "%s/%s.FEGRID" , refcase_path , ecl_base);
+  } else {
+    grid_file = malloc(strlen(refcase_path) + strlen(ecl_base) + 7);
+    sprintf(grid_file , "%s/%s.EGRID" , refcase_path , ecl_base);
+  } 
+  printf("Parsing: %s \n",grid_file);
+  if (fmt_file)
+    grid = ecl_fstate_load_unified(grid_file , ECL_FORMATTED , endian_flip);
+  else
+    grid = ecl_fstate_load_unified(grid_file , ECL_BINARY , endian_flip);
+
+  {
+    FILE *fileH;
+    int *gridhead  = ecl_fstate_kw_get_data_ref(grid , 0 , "GRIDHEAD");
+    int *actnum    = ecl_fstate_kw_get_data_ref(grid , 0 , "ACTNUM");
+    char *inc_file = malloc(strlen(include_path) + 1 + strlen("dimensions.inc") + 1);
+    int i;
+    int active = 0;
+    
+    sprintf(inc_file , "%s/dimensions.inc" , include_path);
+    for (i=0; i < ecl_fstate_kw_get_size(grid , 0 , "ACTNUM"); i++)
+      if (actnum[i] != 0)
+	active += 1;
+
+    fileH = fopen(inc_file , "w");
+    fprintf(fileH , "integer, parameter :: nx      = %8d \n",gridhead[1]);
+    fprintf(fileH , "integer, parameter :: ny      = %8d \n",gridhead[2]);
+    fprintf(fileH , "integer, parameter :: nz      = %8d \n",gridhead[3]);
+    fprintf(fileH , "integer, parameter :: nactive = %8d \n",active);
+    fclose(fileH);
+  
+    free(inc_file);
+  }
+  
+  free(grid_file);
+  ecl_fstate_free(grid);
+}
+
+
+
+void ecl_parse(const char *refcase_path , const char *eclbase, const char *include_path, bool fmt_file , bool unified, bool endian_flip) {
   hash_type   *type_map = alloc_type_map();
   
+  ecl_parse_summary_spec(refcase_path , eclbase , include_path, type_map , fmt_file , endian_flip);
+  ecl_parse_summary_data(refcase_path , eclbase , include_path , type_map , fmt_file , unified , endian_flip);
+  ecl_parse_restart(refcase_path , eclbase , include_path , type_map , fmt_file , unified, endian_flip);
+  ecl_parse_grid(refcase_path , eclbase , include_path , type_map , fmt_file , endian_flip);
 
   free_type_map(type_map);
 }

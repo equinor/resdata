@@ -22,6 +22,7 @@ ecl_fstate_type * ecl_fstate_alloc_empty(int , bool , bool );
 ecl_fstate_type * ecl_fstate_load_unified (const char *, int , bool );
 ecl_fstate_type * ecl_fstate_load_multiple(int , const char ** , int  , bool );
 void              ecl_fstate_free(ecl_fstate_type *);
+void            * ecl_fstate_kw_get_data_ref(const ecl_fstate_type * , int , const char *);
 bool              ecl_fstate_kw_iget(const ecl_fstate_type * , int , const char *, int , void *);
 bool              ecl_fstate_kw_get_memcpy_data(const ecl_fstate_type * , int , const char * , void *);
 ecl_block_type  * ecl_fstate_get_block(const ecl_fstate_type * , int );

@@ -1,9 +1,12 @@
 #include <errno.h>
+#include <time.h>
 #include <util.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 
 bool util_file_exists(const char *filename) {
@@ -79,6 +82,28 @@ void util_make_path(const char *_path) {
 }
 
 
+const char * util_newest_file(const char *file1 , const char *file2) {
+  struct stat b1, b2;
+  int f1,f2;
+  time_t t1,t2;
+
+  f1 = open(file1 , O_RDONLY);
+  fstat(f1, &b1);
+  t1 = b1.st_mtime;
+  close(f1);
+
+  f2 = open(file2 , O_RDONLY);
+  fstat(f2, &b2);
+  t2 = b2.st_mtime;
+  close(f2);
+
+  if (difftime(t1 , t2) > 0)
+    return file1;
+  else
+    return file2;
+}
+
+
 /*****************************************************************/
 
 void util_set_strip_copy(char * copy , const char *src) {
@@ -115,5 +140,14 @@ void util_free_string_list(char **list , int N) {
   for (i=0; i < N; i++)
     free(list[i]);
   free(list);
+}
+
+
+char ** util_alloc_string_list(int N, int len) {
+  int i;
+  char **list = calloc(N , sizeof *list);
+  for (i=0; i < N; i++)
+    list[i] = malloc(len);
+  return list;
 }
 
