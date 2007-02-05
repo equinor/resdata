@@ -7,6 +7,10 @@
 #include <fortio.h>
 #include <ecl_fstate.h>
 
+#define READER_FMT_VAR "read_fmt"
+#define WRITER_FMT_VAR "write_fmt"
+
+
 
 typedef struct {
   char *name;
@@ -100,11 +104,34 @@ static char * alloc_3string(const char *path , const char *prefix , const char *
 }
 
 
+void static ecl_parse_write_read_eclipse(const hash_type *var_hash , const hash_type *type_map , hash_type *special , const char *prefix , const char *path,
+					 const char *type_arg, const char *size_arg , const char *arg_index) {
+  char *read_file = alloc_3string(path , prefix , "readeclipseX");
+  FILE *fileH     = fopen(read_file , "w");
+  char **keylist  = hash_alloc_keylist(var_hash);
+  int i;
+  for (i=0; i < hash_get_size(var_hash); i++) {
+    const char * key          = keylist[i];
+    const ecl_var_type  *var  = hash_get(var_hash , key);
+    const ecl_type_node *type = hash_get(type_map , var->ecl_type);
+    
+    fprintf(fileH , "case(\"%s\") \n" , var->name);
+    fprintf(fileH , "    deallocate(%s) \n",var->name);
+    fprintf(fileH , "    allocate(%s(%s(%s))) \n",var->name , size_arg , arg_index);
+    if (hash_has_key(special , var->name))
+      fprintf(fileH , "    %s \n",hash_get_string(special , var->name));
+    fprintf(fileH , "    call %s(%s(%s),%s,%s(%s),%s) \n" , type->reader , size_arg , arg_index , var->name, type_arg , arg_index , READER_FMT_VAR);
+  }
+  fclose(fileH);
+  util_free_string_list(keylist , hash_get_size(var_hash));
+  free(read_file);
+}
+
 
 void static ecl_parse_write_decl(const hash_type *var_hash , const hash_type *type_map , const char *prefix , const char *path) {
-  char *decl_file    = alloc_3string(path , prefix , "declare");
-  char *alloc_file   = alloc_3string(path , prefix , "allocate");
-  char *dealloc_file = alloc_3string(path , prefix , "deallocate");
+  char *decl_file    = alloc_3string(path , prefix , "declareX");
+  char *alloc_file   = alloc_3string(path , prefix , "allocateX");
+  char *dealloc_file = alloc_3string(path , prefix , "deallocateX");
 
   FILE * declH    = fopen(decl_file    , "w");
   FILE * allocH   = fopen(alloc_file   , "w");
@@ -118,16 +145,16 @@ void static ecl_parse_write_decl(const hash_type *var_hash , const hash_type *ty
     const ecl_var_type  *var  = hash_get(var_hash , key);
     const ecl_type_node *type = hash_get(type_map , var->ecl_type);
 
-    fprintf(declH , "%20s,  allocatable :: %s(:)\n", type->fortran_type , var->name);
-    
-    
-
+    fprintf(declH    , "%20s,  allocatable :: %s(:)\n", type->fortran_type , var->name);
+    fprintf(allocH   , "allocate( %s(1) ) ; %s = %s \n" , var->name , var->name , type->default_value);
+    fprintf(deallocH , "deallocate( %s ) \n", var->name);
 
   }
   fclose(declH);
   fclose(allocH);
   fclose(deallocH);
-
+  
+  util_free_string_list(keylist , hash_get_size(var_hash));
   free(decl_file);
   free(alloc_file);
   free(dealloc_file);
@@ -232,9 +259,14 @@ static void ecl_parse_summary_spec(const char *refcase_path , const char *ecl_ba
   }
   
   {
-    hash_type *hash = hash_alloc(10);
+    hash_type *special = hash_alloc(10);
+    hash_type *hash    = hash_alloc(10);
+
     ecl_parse_file(hash , spec_file ,  type_map , endian_flip);
-    
+    ecl_parse_write_decl(hash , type_map , "fsm" , include_path);
+    ecl_parse_write_read_eclipse(hash , type_map , special, "fsm" , include_path , "fieldtype" , "fieldsize" , "i");
+
+    hash_free(special);
     hash_free(hash);
   }
   free(spec_file);

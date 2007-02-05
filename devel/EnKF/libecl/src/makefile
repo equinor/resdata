@@ -50,6 +50,6 @@ ecl_fstate.o: ecl_fstate.c ecl_fstate.h ecl_block.o util.o
 ecl_sum.o   : ecl_sum.c ecl_sum.h ecl_fstate.o
 ecl_parse.o : ecl_parse.h ecl_parse.h
 ecl_diag.o  : ecl_diag.c ecl_diag.h ecl_sum.o
-ecl_interC.o: ecl_interC.c ecl_fstate.o ext_job.o ecl_sum.o ecl_parse.o
+ecl_interC.o: ecl_interC.c ecl_fstate.o ext_job.o ecl_sum.o ecl_parse.o lsf_jobs.o
 #ecl_interF.o: ecl_interF.f90 ecl_interC.o
 

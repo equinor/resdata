@@ -306,7 +306,7 @@ int ecl_sum_iget1(const ecl_sum_type *ecl_sum , int istep , const char *well_nam
   set_well_kw_string(well_name , var_name , well_kw);
   if (!hash_has_key(ecl_sum->index_hash , well_kw)) {
     /*
-      fprintf(stderr,"%s: could not find data for well/variable <%s/%s> \n",__func__ , well_name , var_name);
+      fprintf(stderr,"%s could not find data for well/variable <%s/%s> \ key:<%s> n",__func__ , well_name , var_name , well_kw);
     */
     return -1;
   }

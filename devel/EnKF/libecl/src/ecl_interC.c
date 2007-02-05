@@ -24,7 +24,7 @@ static char * alloc_cstring(const char *fort_string , const int *strlen) {
 }
 
 static bool intptr_2bool(const int *iptr) {
-  if (*iptr == 0)
+  if ( (*iptr) == 0)
     return false;
   else
     return true;
@@ -80,6 +80,7 @@ void ecl_inter_kw_get_data__(const char *kw , const int *istep , void *value) {
     abort();
   }
 }
+
 
 void ecl_inter_del_kw(const char *kw, const int *istep) {
   ecl_block_type *ecl_block = ecl_fstate_get_block(ECL_FSTATE , (*istep) - 1);
@@ -144,7 +145,7 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
 /*   const int sleep_time  = 2; */
 /*   int job , i , submit_jobs; */
 /*   ext_job_type ** jobList; */
-/*   char run_file[256] , complete_file[256] , run_path[256] , id[64], summary_file[64]; */
+/*   char run_file[256] , restart_file[256] , run_path[256] , id[64], summary_file[64]; */
   
 /*   submit_jobs = 0; */
 /*   if (exit_on_submit_int) */
@@ -174,11 +175,11 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
 /*       *\/ */
 /*       sprintf(run_file , "%s.PRT" , eclipse_base); */
 /*       if (fmt_out) */
-/* 	sprintf(complete_file , "%s.F%04d" , eclipse_base , time_step); */
+/* 	sprintf(restart_file , "%s.F%04d" , eclipse_base , time_step); */
 /*       else */
-/* 	sprintf(complete_file , "%s.X%04d" , eclipse_base , time_step); */
+/* 	sprintf(restart_file , "%s.X%04d" , eclipse_base , time_step); */
 /*       sprintf(id,"Job: %04d" , job + 1); */
-/*       jobList[i] = ext_job_alloc(id , "@eclipse < eclipse.in 2> /dev/null | grep filterXX" , NULL , run_path  , run_file , complete_file , max_restart , sleep_time , true , use_lsf); */
+/*       jobList[i] = ext_job_alloc(id , "@eclipse < eclipse.in 2> /dev/null | grep filterXX" , NULL , run_path  , run_file , restart_file , max_restart , sleep_time , true , use_lsf); */
 /*       i++; */
 /*     } */
 /*   } */
@@ -218,21 +219,27 @@ void ecl_inter_init_lsf__(const int  * sleep_time , const int *max_running,
 void ecl_inter_add_lsf_job__(const int  *iens, 
 			     const char *_id            , const int *id_len,
 			     const char *_run_path      , const int *run_path_len , 
-			     const char *_complete_file , const int *complete_file_len,
+			     const char *_restart_file  , const int *restart_file_len,
+			     const char *_OK_file       , const int *OK_file_len,
+			     const char *_fail_file     , const int *fail_file_len,
 			     const int  *max_resubmit) {
   if (LSF_POOL == NULL) {
     fprintf(stderr,"%s - must call xxxx_lsf_init first - aborting \n",__func__);
     abort();
   }
   {
-    char *complete_file = alloc_cstring(_complete_file , complete_file_len); 
+    char *restart_file  = alloc_cstring(_restart_file , restart_file_len); 
     char *run_path      = alloc_cstring(_run_path      , run_path_len);
     char *id            = alloc_cstring(_id            , id_len);
-    
-    lsf_pool_add_job(LSF_POOL , id, run_path , complete_file , *max_resubmit);
+    char *fail_file     = alloc_cstring(_fail_file     , fail_file_len);
+    char *OK_file       = alloc_cstring(_OK_file       , OK_file_len);
+      
+    lsf_pool_add_job(LSF_POOL , id, run_path , restart_file , OK_file , fail_file , *max_resubmit);
     free(run_path);
-    free(complete_file);
+    free(restart_file);
     free(id);
+    free(fail_file);
+    free(OK_file);
     printf("%4d" , *iens); fflush(stdout);
   }
 }

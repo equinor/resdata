@@ -27,6 +27,20 @@ bool util_file_exists(const char *filename) {
 }
 
 
+int util_file_size(const char *file) {
+  struct stat buffer;
+  int fildes;
+  
+  fildes = open(file , O_RDONLY);
+  fstat(fildes, &buffer);
+  close(fildes);
+  
+  return buffer.st_size;
+}
+
+
+
+
 bool util_fmt_bit8(const char *filename , int buffer_size) {
   const int min_read = 1024;
   FILE *stream;
@@ -149,5 +163,12 @@ char ** util_alloc_string_list(int N, int len) {
   for (i=0; i < N; i++)
     list[i] = malloc(len);
   return list;
+}
+
+/*****************************************************************/
+
+void util_abort(const char *func, const char *file, int line, const char *message) {
+  fprintf(stderr,"%s (%s:%d) %s - aborting \n",func,file,line,message);
+  abort();
 }
 

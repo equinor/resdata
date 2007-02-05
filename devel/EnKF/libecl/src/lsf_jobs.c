@@ -21,7 +21,9 @@ struct lsf_job_struct {
   char             *base;
   char             *run_path;
   char 	  	   *submit_cmd;
-  char 	  	   *complete_file;
+  char 	  	   *restart_file;
+  char             *fail_file;
+  char             *OK_file;
   time_t  	    submit_time;
   time_t  	    start_time;
   time_t  	    complete_time;
@@ -108,7 +110,7 @@ static void lsf_job_set_start_time(lsf_job_type *lsf_job) {
 }
 
 static void lsf_job_set_complete_time(lsf_job_type *lsf_job) {
-  lsf_job_set_ctime(lsf_job->complete_file , &lsf_job->complete_time);
+  lsf_job_set_ctime(lsf_job->restart_file , &lsf_job->complete_time);
 }
 
 
@@ -167,7 +169,7 @@ static void lsf_job_fprintf_status(lsf_job_type *lsf_job ,  FILE *stream) {
 
 
 
-lsf_job_type * lsf_job_alloc(const char *base , const char *run_path ,  const char *complete_file, const char *tmp_path, int max_resubmit) {
+lsf_job_type * lsf_job_alloc(const char *base , const char *run_path ,  const char *restart_file, const char *OK_file , const char *fail_file , const char *tmp_path, int max_resubmit) {
   const char *submit_cmd = "@eclipse < eclipse.in  2> /dev/null | grep \"Job <\" | cut -f2 -d\"<\" | cut -f1 -d\">\" > ";
   lsf_job_type *lsf_job = malloc(sizeof *lsf_job);
   
@@ -176,7 +178,9 @@ lsf_job_type * lsf_job_alloc(const char *base , const char *run_path ,  const ch
   else
     lsf_job->base = alloc_string_copy(base);
   lsf_job->run_path      = alloc_string_copy(run_path);
-  lsf_job->complete_file = alloc_string_copy(complete_file);
+  lsf_job->restart_file = alloc_string_copy(restart_file);
+  lsf_job->fail_file     = alloc_string_copy(fail_file);
+  lsf_job->OK_file     = alloc_string_copy(OK_file);
   lsf_job->submit_cmd = malloc(strlen(run_path) + 7 + strlen(submit_cmd));
   sprintf(lsf_job->submit_cmd , "cd %s ; %s" , lsf_job->run_path , submit_cmd);
   lsf_job->max_resubmit   = max_resubmit;
@@ -192,6 +196,8 @@ void lsf_job_free(lsf_job_type *lsf_job) {
   free(lsf_job->submit_cmd);
   free(lsf_job->run_path);
   free(lsf_job->base);
+  free(lsf_job->fail_file);
+  free(lsf_job->OK_file);
   free(lsf_job);
 }
 
@@ -256,14 +262,19 @@ static bool lsf_job_can_reschedule(lsf_job_type *lsf_job) {
 
 
 bool lsf_job_complete_OK(lsf_job_type *lsf_job) {
-  if (util_file_exists(lsf_job->complete_file)) {
+  if (util_file_exists(lsf_job->restart_file)) {
+    FILE *stream;
     struct stat buffer;
     int fildes;
     
-    fildes = open(lsf_job->complete_file , O_RDONLY);
-    fstat(fildes, &buffer);
+    fildes = open(lsf_job->restart_file , O_RDONLY);
+    fstat(fildes , &buffer);
     lsf_job->complete_time = buffer.st_mtime;
     close(fildes);
+    
+    stream = fopen(lsf_job->OK_file , "w");
+    fprintf(stream , "Job: %s completed successfully \n",lsf_job->base);
+    fclose(stream);
 
     return true;
   }  else
@@ -374,8 +385,8 @@ int lsf_pool_get_active(const lsf_pool_type *lsf_pool) {
 }
 
 
-void lsf_pool_add_job(lsf_pool_type *lsf_pool , const char *base , const char *run_path , const char *complete_file, int max_resubmit) {
-  lsf_job_type *new_job = lsf_job_alloc(base , run_path , complete_file , lsf_pool->tmp_path , max_resubmit);
+void lsf_pool_add_job(lsf_pool_type *lsf_pool , const char *base , const char *run_path , const char *restart_file, const char *OK_file, const char *fail_file , int max_resubmit) {
+  lsf_job_type *new_job = lsf_job_alloc(base , run_path , restart_file , OK_file , fail_file , lsf_pool->tmp_path , max_resubmit);
 
   if (lsf_pool->size == lsf_pool->alloc_size) {
     lsf_pool->alloc_size *= 2;
@@ -383,7 +394,6 @@ void lsf_pool_add_job(lsf_pool_type *lsf_pool , const char *base , const char *r
   }
   lsf_pool->jobList[lsf_pool->size] = new_job;
   lsf_pool->size++;
-
 
   /* 
      Dette er eneste punkt hvor netto i total_status endres.
@@ -395,6 +405,17 @@ void lsf_pool_add_job(lsf_pool_type *lsf_pool , const char *base , const char *r
 
 
 
+static void lsf_pool_exit_job(lsf_pool_type *lsf_pool , int ijob) {
+  lsf_job_type *job = lsf_pool->jobList[ijob];
+
+  FILE *stream = fopen(job->fail_file , "w");
+  fprintf(stream, "Job:%s failed completely \n" , job->base);
+  fclose(stream);
+
+  lsf_pool_iset_status(lsf_pool, ijob , lsf_status_exit);
+}
+  
+
 
 
 static void lsf_pool_ireschedule(lsf_pool_type *lsf_pool , int ijob) {
@@ -405,7 +426,7 @@ static void lsf_pool_ireschedule(lsf_pool_type *lsf_pool , int ijob) {
     sprintf(old_base_char , "%d" , old_base);
     hash_del(lsf_pool->jobs , old_base_char); /* We orphan the job which has completed */
   } else 
-    lsf_pool_iset_status(lsf_pool, ijob , lsf_status_exit);
+    lsf_pool_exit_job(lsf_pool , ijob);
 }
 
 
@@ -416,7 +437,7 @@ static bool lsf_pool_complete_OK(const lsf_pool_type *lsf_pool , int ijob) {
 
 static void lsf_pool_update_status(lsf_pool_type *lsf_pool) {
   system(lsf_pool->bsub_status_cmd);
-  if (util_file_exists(lsf_pool->tmp_file)) {
+  if (util_file_size(lsf_pool->tmp_file) > 0) {
     const char newline = '\n';
     bool cont = true;
     int  jobbase_int;
@@ -426,12 +447,15 @@ static void lsf_pool_update_status(lsf_pool_type *lsf_pool) {
     FILE *stream = fopen(lsf_pool->tmp_file , "r");;
     char c;
     int read;
-
+    
+    printf("Fant tmp_file ...\n");
+    
     do {
       c = fgetc(stream);
     } while (c != newline);
 
     do {
+      printf("Hei ... \n");
       read = fscanf(stream , "%d %s %s",&jobbase_int , user , status);
       if (read == 3) {
 	sprintf(jobbase,"%d" , jobbase_int);
@@ -477,7 +501,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
     sleep(lsf_pool->sleep_time);
     cont = true;
     /* 
-       First step: submitting basele jobs 
+       First step: submitting basele(??) jobs 
     */
     if (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running) {
       ijob = 0;
@@ -492,6 +516,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
       Second step: update status
     */
     
+    
     lsf_pool_update_status(lsf_pool);
     /*
       Third step: check complete jobs.
@@ -501,7 +526,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
 	if (lsf_pool_complete_OK(lsf_pool , ijob)) { 
 	  lsf_pool_iset_status(lsf_pool , ijob , lsf_status_OK);
 	} else {
-	  printf("Could not find result_file: %s rescheduling: %s [Attempt:%d] \n",lsf_pool->jobList[ijob]->complete_file , lsf_pool->jobList[ijob]->base , lsf_pool->jobList[ijob]->submit_count);
+	  printf("Could not find result_file: %s rescheduling: %s [Attempt:%d] \n",lsf_pool->jobList[ijob]->restart_file , lsf_pool->jobList[ijob]->base , lsf_pool->jobList[ijob]->submit_count);
 	  lsf_pool_ireschedule(lsf_pool , ijob);
 	}
       }

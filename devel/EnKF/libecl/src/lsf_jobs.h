@@ -7,7 +7,7 @@ typedef struct lsf_job_struct  lsf_job_type;
 typedef enum   lsf_status_enum_def lsf_status_enum;
 
 lsf_pool_type * lsf_pool_alloc(int , int , const char * , const char *, const char *);
-void            lsf_pool_add_job(lsf_pool_type * , const char *, const char * , const char * , int);
+void            lsf_pool_add_job(lsf_pool_type * , const char *, const char * , const char *, const char *,  const char *, int);
 int             lsf_pool_run_jobs(lsf_pool_type * , bool);
 void            lsf_pool_set_fail_vector(const lsf_pool_type *  , int *);
 void            lsf_pool_free(lsf_pool_type *);
