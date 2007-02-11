@@ -218,6 +218,8 @@ void static ecl_parse_res_write_eclipse2(hash_type *var_hash , const char *inclu
   fclose(stream);
 }
 
+
+
 void static ecl_parse_res_write_eclipse1(hash_type *var_hash , const char *include_path , const hash_type *special, const hash_type * type_map) {
   FILE *stream;
   char *filename = malloc(strlen(include_path) + 1 + 22);
