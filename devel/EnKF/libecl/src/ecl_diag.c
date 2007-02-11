@@ -45,23 +45,27 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , const ecl_sum_type **
   FILE *stream;
   int items_written = 0;
   int iens,istep;
-
+  int min_size;
   
   {
     bool size_eq = true;
     int size0    = ecl_sum_get_size(ecl_sum_list[0]);
     int iens;
-    for (iens = 1; iens < (iens2 - iens1); iens++)
-      size_eq = size_eq && (ecl_sum_get_size(ecl_sum_list[iens]) == size0);
+    min_size = size0;
+    for (iens = 1; iens <= (iens2 - iens1); iens++) {
+      int size = ecl_sum_get_size(ecl_sum_list[iens]);
+      size_eq = size_eq && (size == size0);
+      if (size < min_size)
+	min_size = size;
+    }
     if (! size_eq) {
-      for (iens = 0; iens < (iens2 - iens1); iens++)
+      for (iens = 0; iens <= (iens2 - iens1); iens++)
 	printf("member:%3d   %d timestep \n",iens + 1, ecl_sum_get_size(ecl_sum_list[iens]));
-      UTIL_ABORT("not all ensemble members equally large");
+      printf("Data cut at timestep:%d \n",min_size);
     }
   }
-      
-      
-
+  
+  
   sprintf(hvar     , "%sH" , var);
   stream = fopen(out_file , "w");
   if (tecplot) {
@@ -73,7 +77,7 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , const ecl_sum_type **
     fprintf(stream , "ZONE I=%d DATAPACKING=POINT\n" , ecl_sum_get_size(ecl_sum_list[0]));
   }
 
-  for (istep = 0; istep < ecl_sum_get_size(ecl_sum_list[0]);  istep++) {
+  for (istep = 0; istep < min_size;  istep++) {
     float history_value , time_value, value;
     int index = ecl_sum_iget1(ecl_sum_list[0] , istep , well , var , &value);
     if (index >= 0) {
@@ -133,7 +137,7 @@ static ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , const char 
       sprintf(_path , "%s/%s%04d" , ens_path , eclbase_dir , iens);
       sprintf(_base , "%s-%04d"   , eclbase  , iens);
       fileList  = ecl_sum_alloc_filelist(_path , _base , fmt_file , &files);
-      printf("Loading from directory: %s ...",_path); fflush(stdout);
+      printf("Loading from directory: %s ... ",_path); fflush(stdout);
       ecl_sum_list[iens - iens1] = ecl_sum_load_multiple(spec_file , files , (const char **) fileList , fmt_mode , true);
       printf("%d timestep \n",ecl_sum_get_size(ecl_sum_list[iens - iens1]));
       util_free_string_list(fileList , files);
@@ -262,14 +266,14 @@ static void ecl_diag_add_subplot(FILE *stream , int prior_size , int posterior_s
 
 
 static void ecl_diag_make_gnuplot(int prior_size , int posterior_size , const char *prior_path , const char *posterior_path , const char *file , const char *plot_path) {
-  const char *history_title     = "History";
-  const int   history_pt        = 7;
-  const char *prior_title       = "Prior";
-  const char *posterior_title   = "Posterior";
-  const int   prior_lt          = 3;
-  const int   posterior_lt      = 1;
+  const char  *history_title     = "History";
+  const int    history_pt        = 6;
+  const char  *prior_title       = "Prior";
+  const char  *posterior_title   = "Posterior";
+  const int    prior_lt          = 3;
+  const int    posterior_lt      = 1;
   const double lw               = 1.50;
-  const double ps               = 0.75;
+  const double ps               = 1.50;
 
   char *plot_file      = malloc(strlen(plot_path)  + 1 + strlen(file) + 7);
   char *prior_file     = malloc(strlen(prior_path) + 1 + strlen(file) + 1);

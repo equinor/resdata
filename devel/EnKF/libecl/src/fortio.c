@@ -75,8 +75,8 @@ void fortio_complete_read(fortio_type *fortio) {
     trailer = FLIP32(trailer);
   
   if (trailer != fortio->active_header) {
-    fprintf(stderr," Header: %d   Trailer: %d \n",fortio->active_header , trailer);
-    fprintf(stderr," Fatal error reading record:%d in file: %s - aborting \n",fortio->rec_nr , fortio->filename);
+    fprintf(stderr,"\nHeader: %d   Trailer: %d \n",fortio->active_header , trailer);
+    fprintf(stderr,"Fatal error reading record:%d in file: %s - aborting \n",fortio->rec_nr , fortio->filename);
     abort();
   }
   fortio->active_header = 0;

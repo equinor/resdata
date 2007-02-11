@@ -6,9 +6,10 @@
 #include <ecl_kw.h>
 #include <fortio.h>
 #include <ecl_fstate.h>
+#include <str_buffer.h>
 
-#define READER_FMT_VAR "read_fmt"
-#define WRITER_FMT_VAR "write_fmt"
+#define READER_FMT_VAR  "read_fmt"
+#define WRITER_FMT_VAR  "write_fmt"
 
 
 
@@ -116,11 +117,15 @@ void static ecl_parse_write_read_eclipse(const hash_type *var_hash , const hash_
     const ecl_type_node *type = hash_get(type_map , var->ecl_type);
     
     fprintf(fileH , "case(\"%s\") \n" , var->name);
-    fprintf(fileH , "    deallocate(%s) \n",var->name);
-    fprintf(fileH , "    allocate(%s(%s(%s))) \n",var->name , size_arg , arg_index);
+    if (type != NULL) {
+      fprintf(fileH , "    deallocate(%s) \n",var->name);
+      fprintf(fileH , "    allocate(%s(%s(%s))) \n",var->name , size_arg , arg_index);
+    }
     if (hash_has_key(special , var->name))
       fprintf(fileH , "    %s \n",hash_get_string(special , var->name));
-    fprintf(fileH , "    call %s(%s(%s),%s,%s(%s),%s) \n" , type->reader , size_arg , arg_index , var->name, type_arg , arg_index , READER_FMT_VAR);
+    if (type != NULL)
+      fprintf(fileH , "    call %s(%s(%s),%s,%s(%s),%s) \n" , type->reader , size_arg , arg_index , var->name, type_arg , arg_index , READER_FMT_VAR);
+    fprintf(fileH , "\n");
   }
   fclose(fileH);
   util_free_string_list(keylist , hash_get_size(var_hash));
@@ -144,11 +149,12 @@ void static ecl_parse_write_decl(const hash_type *var_hash , const hash_type *ty
     const char * key          = keylist[i];
     const ecl_var_type  *var  = hash_get(var_hash , key);
     const ecl_type_node *type = hash_get(type_map , var->ecl_type);
-
-    fprintf(declH    , "%20s,  allocatable :: %s(:)\n", type->fortran_type , var->name);
-    fprintf(allocH   , "allocate( %s(1) ) ; %s = %s \n" , var->name , var->name , type->default_value);
-    fprintf(deallocH , "deallocate( %s ) \n", var->name);
-
+    
+    if (type != NULL) {
+      fprintf(declH    , "%s,  allocatable :: %s(:)\n", type->fortran_type , var->name);
+      fprintf(allocH   , "allocate( %s(1) ) ; %s = %s \n" , var->name , var->name , type->default_value);
+      fprintf(deallocH , "deallocate( %s ) \n", var->name);
+    }
   }
   fclose(declH);
   fclose(allocH);
@@ -161,6 +167,84 @@ void static ecl_parse_write_decl(const hash_type *var_hash , const hash_type *ty
 }
 
 
+void static ecl_parse_write_res_iostatic(hash_type *var_hash , hash_type *dynamic , const char *path) {
+  char *file = malloc(strlen(path) + 1 + 18 + 1);
+  FILE *stream;
+  char tmp_buffer[128];
+  int i;
+  str_buffer_type *str_buffer = str_buffer_alloc(100);
+  char **keyList = hash_alloc_keylist(var_hash);
+  
+  for (i=0; i < hash_get_size(var_hash); i++) {
+    if (! hash_has_key(dynamic , keyList[i])) {
+      sprintf(tmp_buffer , "%8s , &\n",keyList[i]);
+      str_buffer_add_string(str_buffer , tmp_buffer);
+    }
+  }
+
+  sprintf(file , "%s/res_iostatic.incX" , path);
+  stream = fopen(file , "w");
+  str_buffer_fprintf_substring(str_buffer , 0 , -4 , stream);
+  fprintf(stream , "\n");
+  fclose(stream);
+  
+  util_free_string_list(keyList , hash_get_size(var_hash));
+  str_buffer_free(str_buffer);
+  free(file);
+}
+
+void static ecl_parse_res_write_eclipse2(hash_type *var_hash , const char *include_path , const hash_type *special, const hash_type * type_map) {
+  FILE *stream;
+  char *filename = malloc(strlen(include_path) + 1 + 22);
+  char **keyList = hash_alloc_keylist(var_hash);
+  int i;
+  sprintf(filename , "%s/res_writeclipse2.incX" , include_path);
+  stream = fopen(filename , "w");
+  for (i=0; i < hash_get_size(var_hash); i++) {
+    const char * key          = keyList[i];
+    const ecl_var_type  *var  = hash_get(var_hash , key);
+    const ecl_type_node *type = hash_get(type_map , var->ecl_type);
+
+    fprintf(stream , "case(\"%s\")\n" , var->name);
+    if (type != NULL) 
+      fprintf(stream , "   call %s(fieldname(i) , fieldsize(i) , fieldtype(i) , %s , %s \n" , type->writer , var->name , WRITER_FMT_VAR);
+
+    if (hash_has_key(special , var->name))
+      fprintf(stream, "   %s\n",hash_get_string(special , var->name));
+    fprintf(stream , "\n");
+  }
+  util_free_string_list(keyList , hash_get_size(var_hash));
+  free(filename);
+  fclose(stream);
+}
+
+void static ecl_parse_res_write_eclipse1(hash_type *var_hash , const char *include_path , const hash_type *special, const hash_type * type_map) {
+  FILE *stream;
+  char *filename = malloc(strlen(include_path) + 1 + 22);
+  char **keyList = hash_alloc_keylist(var_hash);
+  int i;
+  sprintf(filename , "%s/res_writeclipse1.incX" , include_path);
+  stream = fopen(filename , "w");
+  for (i=0; i < hash_get_size(var_hash); i++) {
+    const char * key          = keyList[i];
+    const ecl_var_type  *var  = hash_get(var_hash , key);
+    const ecl_type_node *type = hash_get(type_map , var->ecl_type);
+
+    fprintf(stream , "case(\"%s\")\n" , var->name);
+    if (type != NULL) {
+      fprintf(stream , "   deallocate(%s) \n",var->name);
+      fprintf(stream , "   allocate(%s(fieldsize(i)))\n",var->name);
+    }
+    if (hash_has_key(special , var->name))
+      fprintf(stream, "   %s\n",hash_get_string(special , var->name));
+    fprintf(stream , "\n");
+  }
+  util_free_string_list(keyList , hash_get_size(var_hash));
+  free(filename);
+  fclose(stream);
+}
+
+
 /*****************************************************************/
 static void ecl_parse_file(hash_type *hash , const char *filename, const hash_type *type_map , bool endian_flip) {
   bool fmt_file       = util_fmt_bit8(filename , 65536);
@@ -169,13 +253,15 @@ static void ecl_parse_file(hash_type *hash , const char *filename, const hash_ty
   
   printf("Parsing: %s \n",filename);
   while (ecl_kw_fread_header(ecl_kw , fortio)) {
+    char *name            = util_alloc_strip_copy(ecl_kw_get_header_ref(ecl_kw));
     ecl_kw_fskip_data(ecl_kw, fortio);
-    if (!hash_has_key(hash , ecl_kw_get_header_ref(ecl_kw))) {
-      ecl_var_type *ecl_var = ecl_var_alloc(ecl_kw_get_header_ref(ecl_kw) , ecl_kw_get_str_type_ref(ecl_kw) , ecl_kw_get_size(ecl_kw));
-      hash_insert_copy(hash , ecl_kw_get_header_ref(ecl_kw) , ecl_var , ecl_var_copyc , ecl_var_free);
+    if (!hash_has_key(hash , name)) {
+      ecl_var_type *ecl_var = ecl_var_alloc(name , ecl_kw_get_str_type_ref(ecl_kw) , ecl_kw_get_size(ecl_kw));
+      hash_insert_copy(hash , name , ecl_var , ecl_var_copyc , ecl_var_free);
       printf("Var: %s :%s:%8d \n",ecl_kw_get_header_ref(ecl_kw) , ecl_var->ecl_type , ecl_var->size);
       ecl_var_free(ecl_var);
     }
+    free(name);
   }
 }
 /*****************************************************************/
@@ -198,19 +284,73 @@ static void ecl_parse_restart(const char *refcase_path , const char *ecl_base , 
     else
       fileList = ecl_fstate_alloc_filelist(refcase_path , ecl_base , "X", &files);
   }
+  
   {
     hash_type *hash = hash_alloc(10);
     int i;
     for (i=0; i < files; i++)
       ecl_parse_file(hash , fileList[i] , type_map , endian_flip);
     
+    ecl_parse_write_decl(hash , type_map , "res" , include_path);
+    {
+      hash_type *dynamic = hash_alloc(10);
+      hash_insert_int(dynamic , "PRESSURE", 1);
+      hash_insert_int(dynamic , "RS", 1);
+      hash_insert_int(dynamic , "STARTSOL", 1);
+      hash_insert_int(dynamic , "ENDSOL", 1);
+      hash_insert_int(dynamic , "SGAS", 1);
+      hash_insert_int(dynamic , "SWAT", 1);
+      hash_insert_int(dynamic , "RV", 1);
+
+      ecl_parse_write_res_iostatic(hash , dynamic , include_path);
+      hash_free(dynamic);
+    }
+    
+    {
+      hash_type *special = hash_alloc(10);
+      hash_insert_string_copy(special , "PRESSURE"    , "ipres  = i");
+      hash_insert_string_copy(special , "SGAS"        , "isgasg = i");
+      hash_insert_string_copy(special , "SWAT"        , "iswat  = i");
+      hash_insert_string_copy(special , "RS"          , "irs    = i");
+      hash_insert_string_copy(special , "RV"          , "irv    = i");
+
+      ecl_parse_write_read_eclipse(hash , type_map , special, "res" , include_path , "fieldtype" , "fieldsize" , "i");
+      ecl_parse_res_write_eclipse1(hash , include_path , special , type_map);
+      
+      hash_clear(special);
+      {
+	char tmp_string[256];
+	str_buffer_type *pressure_string = str_buffer_alloc(128);
+	str_buffer_type *sol_string      = str_buffer_alloc(128);
+	
+	sprintf(tmp_string , "             if (iopt == 22) call write_real('PERMX   ',ndim,'REAL',PERMX,%s)" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "             if (iopt == 22) call write_real('PERMZ   ',ndim,'REAL',PERMZ,%s)" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "             if (iopt == 22) call write_real('PORO    ',ndim,'REAL',PORO ,%s)" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	str_buffer_add_string(pressure_string , "#ifdef MULTPV\n");
+	sprintf(tmp_string , "             if (iopt == 22) call write_real('MULTPV    ',ndim,'REAL',MULTPV ,%s)" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	str_buffer_add_string(pressure_string , "#endif\n");
+	str_buffer_add_string(pressure_string , "#ifdef GAUSS2\n");
+	sprintf(tmp_string , "             if (iopt == 22) call write_real('GAUSS1   ',ndim,'REAL',GAUSS ,mem4%%gauss1,%s)" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "             if (iopt == 22) call write_real('GAUSS2   ',ndim,'REAL',GAUSS ,mem4%%gauss2,%s)" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	str_buffer_add_string(pressure_string , "#endif\n");
+
+	str_buffer_add_string(sol_string , "call write_eclipse_kwheader(fieldname(i), fieldsize(i) , fieldtype(i) , 10 , write_fmt)\n");
+	
+	hash_insert_string_copy(special , "PRESSURE" , str_buffer_get_char_ptr(pressure_string));
+	hash_insert_string_copy(special , "STARTSOL" , str_buffer_get_char_ptr(sol_string));
+	hash_insert_string_copy(special , "ENDSOL"   , str_buffer_get_char_ptr(sol_string));
+
+	str_buffer_free(pressure_string);
+	str_buffer_free(sol_string);
+      }
+      ecl_parse_res_write_eclipse2(hash , include_path , special , type_map);
+      hash_free(special);
+    }
     hash_free(hash);
   }
-  
-  
+
   util_free_string_list(fileList , files);
 }
-
 
 
 
@@ -237,7 +377,7 @@ static void ecl_parse_summary_data(const char *refcase_path , const char *ecl_ba
     int i;
     for (i=0; i < files; i++)
       ecl_parse_file(hash , fileList[i] , type_map , endian_flip);
-    
+    ecl_parse_write_decl(hash , type_map , "sum" , include_path);
     hash_free(hash);
   }
   
@@ -259,14 +399,19 @@ static void ecl_parse_summary_spec(const char *refcase_path , const char *ecl_ba
   }
   
   {
-    hash_type *special = hash_alloc(10);
     hash_type *hash    = hash_alloc(10);
 
     ecl_parse_file(hash , spec_file ,  type_map , endian_flip);
     ecl_parse_write_decl(hash , type_map , "fsm" , include_path);
-    ecl_parse_write_read_eclipse(hash , type_map , special, "fsm" , include_path , "fieldtype" , "fieldsize" , "i");
 
-    hash_free(special);
+    {
+      hash_type *special = hash_alloc(10);
+      hash_insert_string_copy(special , "KEYWORDS" , "ikeywords = ihead");
+      hash_insert_string_copy(special , "WGNAMES"  , "iwgnames  = ihead");
+      hash_insert_string_copy(special , "UNITS"    , "iunits    = ihead");
+      ecl_parse_write_read_eclipse(hash , type_map , special, "fsm" , include_path , "fieldtype" , "fieldsize" , "i");
+      hash_free(special);
+    }
     hash_free(hash);
   }
   free(spec_file);

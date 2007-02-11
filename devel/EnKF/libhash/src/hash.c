@@ -121,6 +121,16 @@ void hash_del(hash_type *hash , const char *key) {
 }
 
 
+void hash_clear(hash_type *hash) {
+  char **keyList = hash_alloc_keylist(hash);
+  int i;
+  for (i=0; i < hash->size; i++) {
+    hash_del(hash , keyList[i]);
+    free(keyList[i]);
+  }
+  free(keyList);
+}
+
 
 void * hash_get(const hash_type *hash , const char *key) {
   hash_node_type * node = __hash_get_node(hash , key , true);
@@ -281,8 +291,8 @@ char * hash_get_string(const hash_type *hash , const char *key) {
 }
 
 
-bool hash_has_key(hash_type *hash , const char *key) {
-  if (__hash_get_node(hash , key,false) == NULL)
+bool hash_has_key(const hash_type *hash , const char *key) {
+  if (__hash_get_node(hash , key , false) == NULL)
     return false;
   else
     return true;
@@ -389,6 +399,7 @@ static int hash_sortlist_cmp(const hash_sort_type *p1 , const hash_sort_type *p2
   else
     return 1;
 }
+
 
 int hash_get_size(const hash_type *hash) { return hash->elements; }
 

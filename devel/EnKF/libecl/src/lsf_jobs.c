@@ -40,9 +40,9 @@ struct lsf_pool_struct {
   int  		  alloc_size;
   int             sleep_time;
   int             max_running;
-  
-  int            *total_status;
-  
+  bool            sub_exit; 
+
+  int             *total_status;
   char            *summary_file;
   char            *tmp_path;
   char 		  *tmp_file;
@@ -285,7 +285,7 @@ bool lsf_job_complete_OK(lsf_job_type *lsf_job) {
 /*****************************************************************/
 
 
-lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , const char * summary_file , const char *bsub_status_cmd , const char *tmp_path) {
+lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit, const char * summary_file , const char *bsub_status_cmd , const char *tmp_path) {
   const char *tmp_file = "bjobs.jobList";
   lsf_pool_type *lsf_pool = malloc(sizeof *lsf_pool);
   lsf_pool->alloc_size = 100;
@@ -295,7 +295,7 @@ lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , const char * s
     lsf_pool->summary_file = alloc_string_copy(summary_file);
   else
     lsf_pool->summary_file = NULL;
-
+  
   lsf_pool->tmp_path = alloc_string_copy(tmp_path);
   lsf_pool->tmp_file = malloc(strlen(tmp_path) + strlen(tmp_file) + 2);
   sprintf(lsf_pool->tmp_file , "%s/%s" , tmp_path , tmp_file);
@@ -316,8 +316,10 @@ lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , const char * s
   
   lsf_pool->sleep_time   = sleep_time;
   lsf_pool->max_running  = max_running;
+  lsf_pool->sub_exit     = sub_exit;
   lsf_pool->total_status = calloc(STATUS_SIZE , sizeof *lsf_pool->total_status);
-    
+  
+  
   lsf_pool->size = 0;
   return lsf_pool;
 }
@@ -399,7 +401,7 @@ void lsf_pool_add_job(lsf_pool_type *lsf_pool , const char *base , const char *r
      Dette er eneste punkt hvor netto i total_status endres.
   */
   lsf_pool->total_status[lsf_status_null]++;
-  if (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running) 
+  if (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running || lsf_pool->sub_exit)
     lsf_pool_isubmit(lsf_pool , lsf_pool->size - 1);
 }
 
@@ -448,14 +450,11 @@ static void lsf_pool_update_status(lsf_pool_type *lsf_pool) {
     char c;
     int read;
     
-    printf("Fant tmp_file ...\n");
-    
     do {
       c = fgetc(stream);
     } while (c != newline);
 
     do {
-      printf("Hei ... \n");
       read = fscanf(stream , "%d %s %s",&jobbase_int , user , status);
       if (read == 3) {
 	sprintf(jobbase,"%d" , jobbase_int);
@@ -466,7 +465,7 @@ static void lsf_pool_update_status(lsf_pool_type *lsf_pool) {
 	if (hash_has_key(lsf_pool->jobs , jobbase)) {
 	  int job_nr = hash_get_int(lsf_pool->jobs , jobbase);
 	  lsf_pool_iset_status(lsf_pool , job_nr , hash_get_int(lsf_pool->status_tr , status));
-	}
+	} 
       } else if (read == 0) {
 	do {
 	  c = fgetc(stream);
@@ -494,71 +493,73 @@ static void lsf_pool_update_status(lsf_pool_type *lsf_pool) {
 
 
 
-int lsf_pool_run_jobs(lsf_pool_type *lsf_pool, bool sub_exit) {
-  bool cont;
-  int ijob;
-  do {
-    sleep(lsf_pool->sleep_time);
-    cont = true;
-    /* 
-       First step: submitting basele(??) jobs 
+int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
+  if (lsf_pool->sub_exit) 
+    /*
+      In this case there is no job control ...
     */
-    if (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running) {
-      ijob = 0;
-      do {
-	if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_null)
-	  lsf_pool_isubmit(lsf_pool , ijob);
-	ijob++;
-      } while (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running && ijob < lsf_pool->size);
-    }
+    return 0;
+  else {
+    bool cont;
+    int ijob;
+    do {
+      cont = true;
+      /* 
+	 First step: submitting basele(??) jobs 
+      */
+      if (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running) {
+	ijob = 0;
+	do {
+	  if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_null)
+	    lsf_pool_isubmit(lsf_pool , ijob);
+	  ijob++;
+	} while (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running && ijob < lsf_pool->size);
+      }
 
-    /*
-      Second step: update status
-    */
+      /*
+	Second step: update status
+      */
     
     
-    lsf_pool_update_status(lsf_pool);
-    /*
-      Third step: check complete jobs.
-    */
-    for (ijob = 0; ijob < lsf_pool->size; ijob++) {
-      if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_done) {
-	if (lsf_pool_complete_OK(lsf_pool , ijob)) { 
-	  lsf_pool_iset_status(lsf_pool , ijob , lsf_status_OK);
-	} else {
-	  printf("Could not find result_file: %s rescheduling: %s [Attempt:%d] \n",lsf_pool->jobList[ijob]->restart_file , lsf_pool->jobList[ijob]->base , lsf_pool->jobList[ijob]->submit_count);
-	  lsf_pool_ireschedule(lsf_pool , ijob);
+      lsf_pool_update_status(lsf_pool);
+      /*
+	Third step: check complete jobs.
+      */
+      for (ijob = 0; ijob < lsf_pool->size; ijob++) {
+	if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_done) {
+	  if (lsf_pool_complete_OK(lsf_pool , ijob)) { 
+	    lsf_pool_iset_status(lsf_pool , ijob , lsf_status_OK);
+	  } else {
+	    printf("Could not find result_file: %s rescheduling: %s [Attempt:%d] \n",lsf_pool->jobList[ijob]->restart_file , lsf_pool->jobList[ijob]->base , lsf_pool->jobList[ijob]->submit_count);
+	    lsf_pool_ireschedule(lsf_pool , ijob);
+	  }
 	}
       }
-    }
     
-    if (lsf_pool->total_status[lsf_status_OK] + lsf_pool->total_status[lsf_status_exit] == lsf_pool->size)
-      cont = false;
-    
-    if (sub_exit) {
-      if (lsf_pool->total_status[lsf_status_null] == 0) 
+      if (lsf_pool->total_status[lsf_status_OK] + lsf_pool->total_status[lsf_status_exit] == lsf_pool->size)
 	cont = false;
-    }
-
-    printf("total: %2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
-	   lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
     
-    if (lsf_pool->summary_file != NULL) 
-      lsf_pool_fprintf_summary(lsf_pool);
-
+      printf("total: %2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
+	     lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
     
-  } while (cont);
-  /*
-    Print warning about failed jobs.
-  */
-  if (lsf_pool->total_status[lsf_status_exit] >= 0) {
-    for (ijob = 0; ijob < lsf_pool->size; ijob++) {
-      if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_exit)
-	printf("Job : %04d / %s failed \n",ijob + 1,lsf_pool->jobList[ijob]->base);
+      if (lsf_pool->summary_file != NULL) 
+	lsf_pool_fprintf_summary(lsf_pool);
+
+      if (cont)
+	sleep(lsf_pool->sleep_time);
+
+    } while (cont);
+    /*
+      Print warning about failed jobs.
+    */
+    if (lsf_pool->total_status[lsf_status_exit] >= 0) {
+      for (ijob = 0; ijob < lsf_pool->size; ijob++) {
+	if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_exit)
+	  printf("Job : %04d / %s failed \n",ijob + 1,lsf_pool->jobList[ijob]->base);
+      }
     }
+    return lsf_pool->total_status[lsf_status_exit];
   }
-      
-  return lsf_pool->total_status[lsf_status_exit];
 }
 
 

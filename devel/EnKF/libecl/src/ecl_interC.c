@@ -6,6 +6,7 @@
 #include <lsf_jobs.h>
 #include <ecl_parse.h>
 #include <ecl_diag.h>
+#include <util.h>
 
 
 static ecl_fstate_type * ECL_FSTATE     = NULL;
@@ -207,10 +208,10 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
 
 /*****************************************************************/
 
-void ecl_inter_init_lsf__(const int  * sleep_time , const int *max_running, 
+void ecl_inter_init_lsf__(const int  * sleep_time , const int *max_running,  const int *subexit_int, 
 			  const char * _summary_file , const int * summary_file_len) {
   char *summary_file = alloc_cstring(_summary_file , summary_file_len);
-  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , summary_file , "bjobs -a" , "/tmp");
+  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , intptr_2bool(subexit_int) , summary_file , "bjobs -a" , "/tmp");
   free(summary_file);
 }
 
@@ -245,14 +246,13 @@ void ecl_inter_add_lsf_job__(const int  *iens,
 }
 
 
-void ecl_inter_run_lsf__(const int *_sub_exit, int *exit_count) {
-  bool sub_exit = intptr_2bool(_sub_exit);
+void ecl_inter_run_lsf__(int *exit_count) {
   if (LSF_POOL == NULL) {
     fprintf(stderr,"%s - must call xxxx_lsf_init first - aborting \n",__func__);
     abort();
   }
   
-  *exit_count = lsf_pool_run_jobs(LSF_POOL , sub_exit);
+  *exit_count = lsf_pool_run_jobs(LSF_POOL);
 }
 
 
@@ -300,6 +300,16 @@ void ecl_inter_diag_ens_interactive__(const char *_eclbase_dir  , const int *dir
 void ecl_inter_diag_make_gnuplot_interactive__() {
   ecl_diag_make_gnuplot_interactive();
 }
+
+
+void ecl_inter_unlink_path__(const char *_path , const int *path_len) {
+  char *path = alloc_cstring(_path , path_len);
+  
+  util_unlink_path(path);
+  free(path);
+
+}
+
 
 
 /*   void ecl_inter_new_file(const char * filename , int fmt_mode) { */

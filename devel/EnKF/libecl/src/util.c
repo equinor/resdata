@@ -7,6 +7,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 
 bool util_file_exists(const char *filename) {
@@ -139,6 +141,7 @@ char * util_alloc_strip_copy(const char *src) {
   return tmp;
 }
 
+
 char * util_alloc_string_copy(const char *src ) {
   if (src != NULL) {
     char *copy = calloc(strlen(src) + 1 , sizeof *copy);
@@ -171,4 +174,52 @@ void util_abort(const char *func, const char *file, int line, const char *messag
   fprintf(stderr,"%s (%s:%d) %s - aborting \n",func,file,line,message);
   abort();
 }
+
+
+
+/*****************************************************************/
+
+void util_unlink_path(const char *path) {
+  if (util_file_exists(path)) {
+    const uid_t uid = getuid();
+    struct dirent *dentry;
+    DIR *dirH;
+    
+    dirH = opendir(path);
+    while ( (dentry = readdir(dirH)) != NULL) {
+      struct stat buffer;
+      char *entry = malloc(strlen(dentry->d_name) + 1 + strlen(path) + 1);
+      sprintf(entry , "%s/%s", path , dentry->d_name);
+      
+      {
+	int fildes;
+	mode_t mode;
+	fildes = open(entry , O_RDONLY);
+	fstat(fildes , &buffer);
+	close(fildes);
+	mode = buffer.st_mode;
+	
+	if (S_ISDIR(mode)) {
+	  if ((strcmp(dentry->d_name , ".") != 0) && (strcmp(dentry->d_name , "..") != 0)) 
+	    util_unlink_path(entry);
+	} else if (S_ISREG(mode) || S_ISLNK(mode)) {
+	  if (buffer.st_uid == uid) 
+	    unlink(entry);
+	  else 
+	    fprintf(stderr,"Warning mismatch in uid of calling process and entry owener for:%s - entry *not* removed \n",entry);
+	} 
+      }
+      
+      free(entry);
+    }
+    closedir(dirH);
+    if (rmdir(path) != 0) {
+      fprintf(stderr," Failed to remove directory: %s \n",path);
+      abort();
+    }
+  }
+}
+
+
+
 
