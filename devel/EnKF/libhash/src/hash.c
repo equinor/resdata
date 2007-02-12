@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
+#include <dirent.h>
 
 #include <hash.h>
 #include <hash_sll.h>
@@ -123,8 +124,9 @@ void hash_del(hash_type *hash , const char *key) {
 
 void hash_clear(hash_type *hash) {
   char **keyList = hash_alloc_keylist(hash);
+  int old_size   = hash_get_size(hash);
   int i;
-  for (i=0; i < hash->size; i++) {
+  for (i=0; i < old_size; i++) {
     hash_del(hash , keyList[i]);
     free(keyList[i]);
   }
@@ -338,6 +340,9 @@ void hash_printf_keys(const hash_type *hash) {
 }
 
 
+
+
+
 char ** hash_alloc_keylist(const hash_type *hash) {
   char **keylist;
   int i = 0;
@@ -346,12 +351,6 @@ char ** hash_alloc_keylist(const hash_type *hash) {
   node = hash_iter_init(hash);
   while (node != NULL) {
     const char *key = hash_node_get_keyref(node); 
-    /*
-      int len = strlen(key);
-      keylist[i] = malloc(len + 1);
-      strcpy(keylist[i] , key);
-      keylist[i][len] = '\0';
-    */
     keylist[i] = alloc_string_copy(key);
     node = hash_iter_next(hash , node);
     i++;
@@ -391,7 +390,10 @@ static void hash_free_sort_list(const hash_type *hash , hash_sort_type *sort_lis
 }
 
 
-static int hash_sortlist_cmp(const hash_sort_type *p1 , const hash_sort_type *p2) {
+static int hash_sortlist_cmp(const void *_p1 , const void  *_p2) {
+  const hash_sort_type *p1 = (const hash_sort_type *) _p1;
+  const hash_sort_type *p2 = (const hash_sort_type *) _p2;
+
   if (p1->cmp_value == p2->cmp_value)
     return 0;
   else if (p1->cmp_value < p2->cmp_value)
@@ -401,18 +403,20 @@ static int hash_sortlist_cmp(const hash_sort_type *p1 , const hash_sort_type *p2
 }
 
 
-int hash_get_size(const hash_type *hash) { return hash->elements; }
+int hash_get_size(const hash_type *hash) { 
+  return hash->elements; 
+}
 
 
 
-char ** hash_alloc_ordered_keylist(const hash_type *hash) {
+static char ** __hash_alloc_ordered_keylist(const hash_type *hash , int ( hash_get_cmp_value) (const hash_type * , const char *)) {    
   int i;
   char **sorted_keylist;
-  char **tmp_keylist         = hash_alloc_keylist(hash);
+  char **tmp_keylist   = hash_alloc_keylist(hash);
   hash_sort_type * sort_list = hash_alloc_sort_list(hash , (const char **) tmp_keylist);
 
   for (i = 0; i < hash_get_size(hash); i++)
-    sort_list[i].cmp_value = hash_get_insert_nr(hash , sort_list[i].key);
+    sort_list[i].cmp_value = hash_get_cmp_value(hash , sort_list[i].key);
   
   qsort(sort_list , hash_get_size(hash) , sizeof *sort_list , &hash_sortlist_cmp);
   sorted_keylist = calloc(hash_get_size(hash) , sizeof *sorted_keylist);
@@ -425,9 +429,21 @@ char ** hash_alloc_ordered_keylist(const hash_type *hash) {
 }
 
 
-void hash_free_ext_keylist(const hash_type *hash , char **keylist) {
-  int i;
-  for (i = 0; i < hash_get_size(hash); i++) 
+char ** hash_alloc_ordered_keylist(const hash_type *hash) {
+  return __hash_alloc_ordered_keylist(hash , hash_get_insert_nr);
+}
+
+
+char ** hash_alloc_sorted_keylist(const hash_type *hash) { 
+  char **keylist = hash_alloc_keylist(hash);
+  qsort(keylist , hash_get_size(hash) , sizeof *keylist , alphasort);
+  return keylist;
+}
+
+
+void hash_free_ext_keylist(const hash_type *hash , char ** keylist) {
+int i;
+for (i = 0; i < hash_get_size(hash); i++) 
     free(keylist[i]);
   free(keylist);
 }

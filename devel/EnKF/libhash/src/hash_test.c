@@ -49,13 +49,13 @@ int main(void) {
   hash_insert_ref(hash , "GGKey2" , &data);
   hash_insert_ref(hash , "GGKey3" , &data);
   
-  /*{
-    char **keylist = hash_alloc_keylist(hash);
+  {
+    char **keylist = hash_alloc_sorted_keylist(hash);
     int i;
     for (i=0; i < hash_get_size(hash); i++)
       printf("%s\n",keylist[i]);
   }
-  */
+  exit(1);
 
   printf("Jeg heter: %s \n", hash_get_string(hash , "Name"));
   printf("Jeg er %d aar gammel og veier %g kg \n",hash_get_int(hash , "Alder") , hash_get_double(hash , "Vekt"));

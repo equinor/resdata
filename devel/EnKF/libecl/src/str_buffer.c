@@ -1,6 +1,7 @@
 #include <string.h>
 #include <str_buffer.h>
 
+#define NULL_CHAR  '\0'
 struct str_buffer_struct {
   int   size;
   int   len;
@@ -36,6 +37,7 @@ str_buffer_type * str_buffer_alloc(int size) {
   str_buffer->buffer = NULL;
   str_buffer_realloc(str_buffer , size);
   str_buffer->len = 0;
+  str_buffer->buffer[0] = NULL_CHAR;
   return str_buffer;
 }
 
@@ -64,3 +66,5 @@ void str_buffer_fprintf_substring(str_buffer_type *str_buffer , int i1 , int i2 
 const char * str_buffer_get_char_ptr(const str_buffer_type *str_buffer) {
   return str_buffer->buffer;
 }
+
+#undef NULL_CHAR
