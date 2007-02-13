@@ -195,21 +195,22 @@ void util_unlink_path(const char *path) {
 	int fildes;
 	mode_t mode;
 	fildes = open(entry , O_RDONLY);
-	fstat(fildes , &buffer);
-	close(fildes);
-	mode = buffer.st_mode;
-	
-	if (S_ISDIR(mode)) {
-	  if ((strcmp(dentry->d_name , ".") != 0) && (strcmp(dentry->d_name , "..") != 0)) 
-	    util_unlink_path(entry);
-	} else if (S_ISREG(mode) || S_ISLNK(mode)) {
-	  if (buffer.st_uid == uid) 
-	    unlink(entry);
-	  else 
-	    fprintf(stderr,"Warning mismatch in uid of calling process and entry owener for:%s - entry *not* removed \n",entry);
-	} 
+	if (fildes > 0) {
+	  fstat(fildes , &buffer);
+	  close(fildes);
+	  mode = buffer.st_mode;
+	  
+	  if (S_ISDIR(mode)) {
+	    if ((strcmp(dentry->d_name , ".") != 0) && (strcmp(dentry->d_name , "..") != 0)) 
+	      util_unlink_path(entry);
+	  } else if (S_ISREG(mode) || S_ISLNK(mode)) {
+	    if (buffer.st_uid == uid) 
+	      unlink(entry);
+	    else 
+	      fprintf(stderr,"Warning mismatch in uid of calling process and entry owener for:%s - entry *not* removed \n",entry);
+	  } 
+	}
       }
-      
       free(entry);
     }
     closedir(dirH);

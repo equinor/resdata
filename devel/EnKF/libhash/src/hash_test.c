@@ -18,54 +18,32 @@ int main(void) {
   hash_type      *hash;
   char **ordered_keylist;
   char **random_keylist;
+  char **sorted_keylist;
   char key[9];
   int i;
   
-  hash = hash_alloc(2);
-  hash_insert_string_copy(hash , "Name" , "Joakim Hove");
-  hash_insert_int(hash , "Alder",34);
-  hash_insert_double(hash , "Vekt" , 80.01);
-  printf("*****************************************************************\n");
-  for (i=0; i < 1000; i++) {
-    set_rand_key(key , 2);
-    if (hash_has_key(hash , key)) {
-      if (rand() % 10 < 5)
-	hash_del(hash , key);
-    }
+  hash = hash_alloc(10);
+  hash_insert_int(hash , "B" , 1);
+  hash_insert_int(hash , "C" , 1);
+  hash_insert_int(hash , "D" , 1);
+  hash_insert_int(hash , "E" , 1);
+  hash_insert_int(hash , "A" , 1);
+  hash_insert_int(hash , "I" , 1);
+  hash_insert_int(hash , "G" , 1);
+  hash_insert_int(hash , "K" , 1);
+  hash_insert_int(hash , "J" , 1);
+  hash_insert_int(hash , "F" , 1);
+  hash_insert_int(hash , "L" , 1);
+  hash_insert_int(hash , "H" , 1);
 
-    hash_insert_int(hash , key , rand());
-  }
-  
-  hash_insert_ref(hash , "Key1" , &data);
-  hash_insert_ref(hash , "Keyy" , &data);
-  hash_insert_ref(hash , "Keyx" , &data);
-  hash_insert_ref(hash , "Key2" , &data);
-  hash_insert_ref(hash , "Key3" , &data);
-
-  
-  hash_insert_ref(hash , "GGKey1" , &data);
-  hash_insert_ref(hash , "GGKeyy" , &data);
-  hash_insert_ref(hash , "GGKeyx" , &data);
-  hash_insert_ref(hash , "GGKey2" , &data);
-  hash_insert_ref(hash , "GGKey3" , &data);
-  
-  {
-    char **keylist = hash_alloc_sorted_keylist(hash);
-    int i;
-    for (i=0; i < hash_get_size(hash); i++)
-      printf("%s\n",keylist[i]);
-  }
-  exit(1);
-
-  printf("Jeg heter: %s \n", hash_get_string(hash , "Name"));
-  printf("Jeg er %d aar gammel og veier %g kg \n",hash_get_int(hash , "Alder") , hash_get_double(hash , "Vekt"));
   ordered_keylist = hash_alloc_ordered_keylist(hash);
+  sorted_keylist  = hash_alloc_sorted_keylist(hash);
   random_keylist  = hash_alloc_keylist(hash);
-  {
-    int i;
-    for (i =0; i < hash_get_size(hash); i++) 
-      printf("%d:  %s  %s  \n",i,ordered_keylist[i] , random_keylist[i] );
-  }
+
+  for (i=0; i < hash_get_size(hash); i++)
+    printf("%s  %s  %s  \n",sorted_keylist[i] , ordered_keylist[i] , random_keylist[i]);
+  
+
 
   hash_free_ext_keylist(hash , ordered_keylist);
   hash_free(hash);

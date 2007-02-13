@@ -102,16 +102,22 @@ void free_type_map(hash_type *type_map) {
 
 static char * alloc_3string(const char *path , const char *prefix , const char *file) {
   char *s;
-  s = malloc(strlen(path) + strlen(prefix) + strlen(file) + 6);
+  s = malloc(strlen(path) + strlen(prefix) + strlen(file) + 7);
   sprintf(s , "%s/%s_%s.inc" , path ,prefix , file);
   return s;
+}
+
+
+static FILE * fopen_printf(const char *name) {
+  printf("   Writing include file: %s \n", name);
+  return fopen(name , "w");
 }
 
 
 void static ecl_parse_write_read_eclipse(const hash_type *var_hash , const hash_type *type_map , hash_type *special , const char *prefix , const char *path,
 					 const char *type_arg, const char *size_arg , const char *arg_index) {
   char *read_file = alloc_3string(path , prefix , "readeclipse");
-  FILE *fileH     = fopen(read_file , "w");
+  FILE *fileH     = fopen_printf(read_file );
   char **keylist  = hash_alloc_keylist(var_hash);
   int i;
   for (i=0; i < hash_get_size(var_hash); i++) {
@@ -141,13 +147,14 @@ void static ecl_parse_write_decl(const hash_type *var_hash , const hash_type *ty
   char *alloc_file   = alloc_3string(path , prefix , "allocate");
   char *dealloc_file = alloc_3string(path , prefix , "deallocate");
 
-  FILE * declH    = fopen(decl_file    , "w");
-  FILE * allocH   = fopen(alloc_file   , "w");
-  FILE * deallocH = fopen(dealloc_file , "w");
+
+  FILE * declH    = fopen_printf(decl_file);
+  FILE * allocH   = fopen_printf(alloc_file);
+  FILE * deallocH = fopen_printf(dealloc_file);
   
   char **keylist = hash_alloc_keylist(var_hash);
   int i;
-
+  
   for (i=0; i < hash_get_size(var_hash); i++) {
     const char * key          = keylist[i];
     const ecl_var_type  *var  = hash_get(var_hash , key);
@@ -175,9 +182,14 @@ void static ecl_parse_write_res_iostatic(hash_type *var_hash , hash_type *dynami
   FILE *stream;
   char tmp_buffer[128];
   int i;
-  str_buffer_type *str_buffer = str_buffer_alloc(100);
-  char **keyList = hash_alloc_keylist(var_hash);
+  str_buffer_type *str_buffer = str_buffer_alloc(1);
+  char **keyList = hash_alloc_sorted_keylist(var_hash);
+
+  printf("Har allokert: \n");
+  for (i=0; i < hash_get_size(var_hash); i++) 
+    printf("Key[%d] = %s \n",i , keyList[i]);
   
+
   for (i=0; i < hash_get_size(var_hash); i++) {
     if (! hash_has_key(dynamic , keyList[i])) {
       sprintf(tmp_buffer , "%8s , &\n",keyList[i]);
@@ -186,7 +198,7 @@ void static ecl_parse_write_res_iostatic(hash_type *var_hash , hash_type *dynami
   }
 
   sprintf(file , "%s/res_iostatic.inc" , path);
-  stream = fopen(file , "w");
+  stream = fopen_printf(file );
   str_buffer_fprintf_substring(str_buffer , 0 , -4 , stream);
   fprintf(stream , "\n");
   fclose(stream);
@@ -202,7 +214,7 @@ void static ecl_parse_res_write_eclipse2(hash_type *var_hash , const char *inclu
   char **keyList = hash_alloc_keylist(var_hash);
   int i;
   sprintf(filename , "%s/res_writeeclipse2.inc" , include_path);
-  stream = fopen(filename , "w");
+  stream = fopen_printf(filename );
   for (i=0; i < hash_get_size(var_hash); i++) {
     const char * key          = keyList[i];
     const ecl_var_type  *var  = hash_get(var_hash , key);
@@ -229,7 +241,7 @@ void static ecl_parse_res_write_eclipse1(hash_type *var_hash , const char *inclu
   char **keyList = hash_alloc_keylist(var_hash);
   int i;
   sprintf(filename , "%s/res_writeeclipse1.inc" , include_path);
-  stream = fopen(filename , "w");
+  stream = fopen_printf(filename );
   for (i=0; i < hash_get_size(var_hash); i++) {
     const char * key          = keyList[i];
     const ecl_var_type  *var  = hash_get(var_hash , key);
@@ -323,11 +335,12 @@ static void ecl_parse_restart(const char *refcase_path , const char *ecl_base , 
       ecl_parse_write_res_iostatic(hash , dynamic , include_path);
       hash_free(dynamic);
     }
+
     
     {
       hash_type *special = hash_alloc(10);
       hash_insert_string_copy(special , "PRESSURE"    , "ipres  = i");
-      hash_insert_string_copy(special , "SGAS"        , "isgasg = i");
+      hash_insert_string_copy(special , "SGAS"        , "isgas  = i");
       hash_insert_string_copy(special , "SWAT"        , "iswat  = i");
       hash_insert_string_copy(special , "RS"          , "irs    = i");
       hash_insert_string_copy(special , "RV"          , "irv    = i");
@@ -338,21 +351,19 @@ static void ecl_parse_restart(const char *refcase_path , const char *ecl_base , 
       hash_clear(special);
       {
 	char tmp_string[256];
-	str_buffer_type *pressure_string = str_buffer_alloc(128);
-	str_buffer_type *sol_string      = str_buffer_alloc(128);
+	str_buffer_type *pressure_string = str_buffer_alloc(1);
+	str_buffer_type *sol_string      = str_buffer_alloc_with_string("call write_eclipse_kwheader(fieldname(i), fieldsize(i) , fieldtype(i) , 10 , write_fmt)\n");
 	
-	sprintf(tmp_string , "             if (iopt == 22) call write_real('PERMX   ',ndim,'REAL',PERMX,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
-	sprintf(tmp_string , "             if (iopt == 22) call write_real('PERMZ   ',ndim,'REAL',PERMZ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
-	sprintf(tmp_string , "             if (iopt == 22) call write_real('PORO    ',ndim,'REAL',PORO ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "   if (iopt == 22) call write_real('PERMX   ',ndim,'REAL',PERMX,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('PERMZ   ',ndim,'REAL',PERMZ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('PORO    ',ndim,'REAL',PORO ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
 	str_buffer_add_string(pressure_string , "#ifdef MULTPV\n");
-	sprintf(tmp_string , "             if (iopt == 22) call write_real('MULTPV    ',ndim,'REAL',MULTPV ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('MULTPV    ',ndim,'REAL',MULTPV ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
 	str_buffer_add_string(pressure_string , "#endif\n");
 	str_buffer_add_string(pressure_string , "#ifdef GAUSS2\n");
-	sprintf(tmp_string , "             if (iopt == 22) call write_real('GAUSS1   ',ndim,'REAL',GAUSS ,mem4%%gauss1,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
-	sprintf(tmp_string , "             if (iopt == 22) call write_real('GAUSS2   ',ndim,'REAL',GAUSS ,mem4%%gauss2,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('GAUSS1   ',ndim,'REAL',GAUSS ,mem4%%gauss1,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('GAUSS2   ',ndim,'REAL',GAUSS ,mem4%%gauss2,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
 	str_buffer_add_string(pressure_string , "#endif\n");
-
-	str_buffer_add_string(sol_string , "call write_eclipse_kwheader(fieldname(i), fieldsize(i) , fieldtype(i) , 10 , write_fmt)\n");
 	
 	hash_insert_string_copy(special , "PRESSURE" , str_buffer_get_char_ptr(pressure_string));
 	hash_insert_string_copy(special , "STARTSOL" , str_buffer_get_char_ptr(sol_string));
@@ -477,7 +488,7 @@ static void ecl_parse_grid(const char *refcase_path , const char *ecl_base , con
       if (actnum[i] != 0)
 	active += 1;
 
-    fileH = fopen(inc_file , "w");
+    fileH = fopen_printf(inc_file );
     fprintf(fileH , "integer, parameter :: nx      = %8d \n",gridhead[1]);
     fprintf(fileH , "integer, parameter :: ny      = %8d \n",gridhead[2]);
     fprintf(fileH , "integer, parameter :: nz      = %8d \n",gridhead[3]);

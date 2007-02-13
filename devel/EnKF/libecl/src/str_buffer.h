@@ -5,6 +5,7 @@ typedef struct str_buffer_struct str_buffer_type;
 
 
 str_buffer_type * str_buffer_alloc(int );
+str_buffer_type * str_buffer_alloc_with_string(const char *);
 void              str_buffer_free(str_buffer_type *);
 void              str_buffer_add_string(str_buffer_type *, const char *);
 void              str_buffer_fprintf_substring(str_buffer_type * , int , int , FILE *);

@@ -434,11 +434,25 @@ char ** hash_alloc_ordered_keylist(const hash_type *hash) {
 }
 
 
-char ** hash_alloc_sorted_keylist(const hash_type *hash) { 
+static int key_cmp(const void *_s1 , const void *_s2) {
+  const char * s1 = *((const char **) _s1);
+  const char * s2 = *((const char **) _s2);
+  
+  return strcmp(s1 , s2);
+}
+
+static char ** __hash_alloc_sorted_keylist(const hash_type *hash, int (cmp) (const void * , const void *)) { 
   char **keylist = hash_alloc_keylist(hash);
-  qsort(keylist , hash_get_size(hash) , sizeof *keylist , alphasort);
+  
+  qsort(keylist , hash_get_size(hash) , sizeof *keylist , &key_cmp);
   return keylist;
 }
+
+
+char ** hash_alloc_sorted_keylist(const hash_type *hash) {
+  return __hash_alloc_sorted_keylist(hash , key_cmp);
+}
+
 
 
 void hash_free_ext_keylist(const hash_type *hash , char ** keylist) {
