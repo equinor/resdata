@@ -185,11 +185,6 @@ void static ecl_parse_write_res_iostatic(hash_type *var_hash , hash_type *dynami
   str_buffer_type *str_buffer = str_buffer_alloc(1);
   char **keyList = hash_alloc_sorted_keylist(var_hash);
 
-  printf("Har allokert: \n");
-  for (i=0; i < hash_get_size(var_hash); i++) 
-    printf("Key[%d] = %s \n",i , keyList[i]);
-  
-
   for (i=0; i < hash_get_size(var_hash); i++) {
     if (! hash_has_key(dynamic , keyList[i])) {
       sprintf(tmp_buffer , "%8s , &\n",keyList[i]);
@@ -447,7 +442,7 @@ static void ecl_parse_summary_spec(const char *refcase_path , const char *ecl_ba
       hash_insert_string_copy(special , "KEYWORDS" , "ikeywords = ihead");
       hash_insert_string_copy(special , "WGNAMES"  , "iwgnames  = ihead");
       hash_insert_string_copy(special , "UNITS"    , "iunits    = ihead");
-      ecl_parse_write_read_eclipse(hash , type_map , special, "fsm" , include_path , "fieldtype" , "fieldsize" , "i");
+      ecl_parse_write_read_eclipse(hash , type_map , special, "fsm" , include_path , "headtype" , "headsize" , "ihead");
       hash_free(special);
     }
     hash_free(hash);
