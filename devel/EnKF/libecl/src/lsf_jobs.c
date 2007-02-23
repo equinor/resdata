@@ -269,14 +269,19 @@ bool lsf_job_complete_OK(lsf_job_type *lsf_job) {
     
     fildes = open(lsf_job->restart_file , O_RDONLY);
     fstat(fildes , &buffer);
-    lsf_job->complete_time = buffer.st_mtime;
     close(fildes);
-    
-    stream = fopen(lsf_job->OK_file , "w");
-    fprintf(stream , "Job: %s completed successfully \n",lsf_job->base);
-    fclose(stream);
 
-    return true;
+    if (buffer.st_size > 0) {
+      lsf_job->complete_time = buffer.st_mtime;
+
+      
+      stream = fopen(lsf_job->OK_file , "w");
+      fprintf(stream , "Job: %s completed successfully \n",lsf_job->base);
+      fclose(stream);
+      return true;
+    } else
+      /* Zero size */
+      return false;
   }  else
     return false;
 }
