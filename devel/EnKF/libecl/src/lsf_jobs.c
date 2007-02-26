@@ -113,6 +113,15 @@ static void lsf_job_set_complete_time(lsf_job_type *lsf_job) {
   lsf_job_set_ctime(lsf_job->restart_file , &lsf_job->complete_time);
 }
 
+static void lsf_pool_exit_job(const lsf_pool_type *lsf_pool , int ijob) {
+  lsf_job_type *job = lsf_pool->jobList[ijob];
+
+  FILE *stream = fopen(job->fail_file , "w");
+  fprintf(stream, "Job:%s failed completely \n" , job->base);
+  fclose(stream);
+
+}
+
 
 
 static void lsf_job_fprintf_status(lsf_job_type *lsf_job ,  FILE *stream) {
@@ -219,6 +228,12 @@ static void lsf_job_unlink_smspec(const lsf_job_type *lsf_job) {
 
   free(file);
 }
+
+
+
+  
+
+
 				    
 
 int lsf_job_submit(lsf_job_type *lsf_job , const char *tmp_path) {
@@ -348,6 +363,9 @@ static void lsf_pool_iset_status(const lsf_pool_type *lsf_pool , int ijob , lsf_
       case(lsf_status_done):
 	lsf_job_set_complete_time(lsf_pool->jobList[ijob]);
 	break;
+      case(lsf_status_exit):
+	lsf_pool_exit_job(lsf_pool , ijob);
+	break;
       }
     }
     lsf_job_set_status(lsf_pool->jobList[ijob] , new_status);
@@ -412,17 +430,6 @@ void lsf_pool_add_job(lsf_pool_type *lsf_pool , const char *base , const char *r
 
 
 
-static void lsf_pool_exit_job(lsf_pool_type *lsf_pool , int ijob) {
-  lsf_job_type *job = lsf_pool->jobList[ijob];
-
-  FILE *stream = fopen(job->fail_file , "w");
-  fprintf(stream, "Job:%s failed completely \n" , job->base);
-  fclose(stream);
-
-  lsf_pool_iset_status(lsf_pool, ijob , lsf_status_exit);
-}
-  
-
 
 
 static void lsf_pool_ireschedule(lsf_pool_type *lsf_pool , int ijob) {
@@ -433,7 +440,7 @@ static void lsf_pool_ireschedule(lsf_pool_type *lsf_pool , int ijob) {
     sprintf(old_base_char , "%d" , old_base);
     hash_del(lsf_pool->jobs , old_base_char); /* We orphan the job which has completed */
   } else 
-    lsf_pool_exit_job(lsf_pool , ijob);
+    lsf_pool_iset_status(lsf_pool , ijob , lsf_status_exit);
 }
 
 
