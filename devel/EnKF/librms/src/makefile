@@ -13,9 +13,9 @@ INSTALL_MOD_PATH = ../mod
 CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
 ARFLAGS = -csr
 #################################################################
-OBJECTS   = rms_load.o rms_interC.o
+OBJECTS   = rms_roff.o rms_interC.o
 MOD_FILES = 
-INC_FILES = rms_load.h
+INC_FILES = rms_roff.h
 LIB       = librms.a
 
 
@@ -36,5 +36,5 @@ $(LIB): $(OBJECTS)
 
 
 
-rms_load.o   : rms_load.c rms_load.h
-rms_interC.o : rms_interC.c rms_load.o
+rms_roff.o   : rms_roff.c rms_roff.h
+rms_interC.o : rms_interC.c rms_roff.o

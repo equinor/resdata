@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <rms_load.h>
+#include <rms_roff.h>
 
 
 static char * alloc_cstring(const char *fort_string , const int *strlen) {
@@ -13,10 +13,10 @@ static char * alloc_cstring(const char *fort_string , const int *strlen) {
 }
 
 
-void rms_inter_load_param__(const char *__filename , const int *strlen, const char *__param_name , const int * param_len, float *param) {
+void rms_inter_roff_param__(const char *__filename , const int *strlen, const char *__param_name , const int * param_len, float *param) {
   char *filename   = alloc_cstring(__filename   , strlen);
   char *param_name = alloc_cstring(__param_name , param_len);
-  rms_load(filename , param_name , param);
+  rms_roff_load(filename , param_name , param);
   free(filename);
   free(param_name);
 }
