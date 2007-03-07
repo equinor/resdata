@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <rms_load.h>
+#include <rms_roff.h>
 #include <string.h>
 
 
-void rms_load(const char *filename , const char *param_name , float *param) {
+void rms_roff_load(const char *filename , const char *param_name , float *param) {
   const int offset = 327 + strlen(param_name);
   int n_read;
   int size;
