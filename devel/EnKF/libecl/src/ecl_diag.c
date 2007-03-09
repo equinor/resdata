@@ -40,8 +40,8 @@ static void set_well_var(const char *file , char **_well , char **_var) {
 
 
 static void ecl_diag_make_plotfile(int iens1 , int iens2 , const ecl_sum_type **ecl_sum_list , const char *out_path , const char *well , const char *var, bool tecplot) {
-  char *hvar     = malloc(strlen(var) + 2);
-  char *out_file = alloc_wellvar_name(out_path , well , var);
+  char *hvar           = malloc(strlen(var) + 2);
+  const char *out_file = alloc_wellvar_name(out_path , well , var);
   FILE *stream;
   int items_written = 0;
   int iens,istep;
@@ -59,6 +59,7 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , const ecl_sum_type **
 	min_size = size;
     }
     if (! size_eq) {
+      min_size--;  /* Do not understand why this is necessary ?? */
       for (iens = 0; iens <= (iens2 - iens1); iens++)
 	printf("member:%3d   %d timestep \n",iens + 1, ecl_sum_get_size(ecl_sum_list[iens]));
       printf("Data cut at timestep:%d \n",min_size);
@@ -74,7 +75,7 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , const ecl_sum_type **
     for (iens = iens1; iens <= iens2; iens++) 
       fprintf(stream , "\"mem%02d\"" , iens);
     fprintf(stream , "\n");
-    fprintf(stream , "ZONE I=%d DATAPACKING=POINT\n" , ecl_sum_get_size(ecl_sum_list[0]));
+    fprintf(stream , "ZONE I=%d DATAPACKING=POINT\n" , min_size );
   }
 
   for (istep = 0; istep < min_size;  istep++) {
@@ -95,10 +96,10 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , const ecl_sum_type **
   
   fclose(stream);
   if (items_written == 0) {
-    fprintf(stderr,"No mathcing values for well:%s variable:%s  empty file:%s deleted\n",well , var , out_file);
+    fprintf(stderr,"No matching values for well:%s variable:%s  empty file:%s deleted\n",well , var , out_file);
     unlink(out_file);
   }
-  free(out_file);
+  free((char *) out_file);
   free(hvar);
 }
 

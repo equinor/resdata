@@ -259,7 +259,8 @@ int lsf_job_submit(lsf_job_type *lsf_job , const char *tmp_path) {
       */
       time(&lsf_job->submit_time);
     else {
-      fprintf(stderr,"Submitting job:%s failed - could not get LSF base \n",lsf_job->base);
+      fprintf(stderr,"*** Submitting job:%s failed - could not get LSF base \n",lsf_job->base);
+      fprintf(stderr,"*** Maybe you are trying to run from a machine without \n*** the que system installed?\n");
       abort();
     }
   }
@@ -317,9 +318,9 @@ lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit,
     lsf_pool->summary_file = NULL;
   
   lsf_pool->tmp_path = alloc_string_copy(tmp_path);
-  lsf_pool->tmp_file = malloc(strlen(tmp_path) + strlen(tmp_file) + 2);
-  sprintf(lsf_pool->tmp_file , "%s/%s" , tmp_path , tmp_file);
-  
+  lsf_pool->tmp_file = malloc(strlen(tmp_path) + strlen(tmp_file) + 8);
+  sprintf(lsf_pool->tmp_file , "%s/%s.%d" , tmp_path , tmp_file , (getpid() % 1000000));
+
   lsf_pool->bsub_status_cmd = malloc(strlen(bsub_status_cmd) + 4 + strlen(lsf_pool->tmp_file));
   sprintf(lsf_pool->bsub_status_cmd , "%s > %s" , bsub_status_cmd , lsf_pool->tmp_file);
   
@@ -327,12 +328,13 @@ lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit,
   lsf_pool->status_tr = hash_alloc(10);
 
   hash_insert_int(lsf_pool->status_tr , "PEND"   , lsf_status_submitted);
+  hash_insert_int(lsf_pool->status_tr , "PSUSP"  , lsf_status_submitted);
   hash_insert_int(lsf_pool->status_tr , "RUN"    , lsf_status_running);
   hash_insert_int(lsf_pool->status_tr , "SSUSP"  , lsf_status_running);
   hash_insert_int(lsf_pool->status_tr , "USUSP"  , lsf_status_running);
-  hash_insert_int(lsf_pool->status_tr , "PSUSP"  , lsf_status_running);
   hash_insert_int(lsf_pool->status_tr , "EXIT"   , lsf_status_exit);
   hash_insert_int(lsf_pool->status_tr , "DONE"   , lsf_status_done);
+  hash_insert_int(lsf_pool->status_tr , "UNKWN"  , lsf_status_exit); /* Uncertain about this one */
   
   lsf_pool->sleep_time   = sleep_time;
   lsf_pool->max_running  = max_running;

@@ -207,7 +207,7 @@ void util_unlink_path(const char *path) {
 	    if (buffer.st_uid == uid) 
 	      unlink(entry);
 	    else 
-	      fprintf(stderr,"Warning mismatch in uid of calling process and entry owener for:%s - entry *not* removed \n",entry);
+	      fprintf(stderr,"Warning mismatch in uid of calling process and entry owner for:%s - entry *not* removed \n",entry);
 	  } 
 	}
       }
