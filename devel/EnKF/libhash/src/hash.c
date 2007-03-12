@@ -7,6 +7,7 @@
 #include <hash.h>
 #include <hash_sll.h>
 #include <hash_node.h>
+#include <node_data.h>
 
 struct hash_struct {
   uint32_t        global_insert_nr;
@@ -16,11 +17,6 @@ struct hash_struct {
   hash_sll_type **table;
   hashf_type     *hashf;
 };
-
-typedef struct hash_data_struct {
-  int    byte_size;
-  void  *data;
-} hash_data_type;
 
 
 typedef struct hash_sort_node {
@@ -34,7 +30,7 @@ typedef struct hash_sort_node {
 
 #define HASH_GET_SCALAR(FUNC,TYPE) \
 TYPE FUNC (const hash_type *hash,  const char *key) { \
-   hash_data_type *data = hash_get(hash , key);       \
+   node_data_type *data = hash_get(hash , key);       \
    return *((TYPE *) data->data);                     \
 }
 
@@ -52,13 +48,13 @@ void FUNC(hash_type *hash, const char *key , TYPE *value, int SIZE) {  \
 
 #define HASH_GET_ARRAY_PTR(FUNC,TYPE)\
 TYPE * FUNC(const hash_type * hash, const char *key) { \
-   hash_data_type *data = hash_get(hash , key);       \
+   node_data_type *data = hash_get(hash , key);       \
    return ((TYPE *) data->data);                      \
 }
 
 #define HASH_NODE_AS(FUNC,TYPE)                           \
 TYPE FUNC(const hash_node_type * node) {                  \
-   hash_data_type *data = hash_node_value_ptr(node);      \
+   node_data_type *data = hash_node_value_ptr(node);      \
    return *((TYPE *) data->data);                         \
 } 
 
@@ -69,23 +65,6 @@ static char * alloc_string_copy(const char *src) {
   char *new = malloc(strlen(src) + 1);
   strcpy(new , src);
   return new;
-}
-
-static const void * hash_data_copyc(const void *_src) {
-  const hash_data_type *src = (const hash_data_type *) _src;
-  hash_data_type *new;
-  new = malloc(sizeof *new);
-  new->byte_size = src->byte_size;
-  new->data = malloc(new->byte_size);
-  memcpy(new->data , src->data , new->byte_size);
-  return new;
-}
-
-
-static void hash_data_free(void *_hash_data) {
-  hash_data_type *hash_data = (hash_data_type *) _hash_data;
-  free(hash_data->data);
-  free(hash_data);
 }
 
 
@@ -243,10 +222,10 @@ static void hash_insert_node(hash_type *hash , hash_node_type *node) {
 
 static void hash_insert_managed_copy(hash_type *hash, const char *key, const void *value_ptr , int value_size) {
   hash_node_type *node;
-  hash_data_type hash_data;
+  node_data_type hash_data;
   hash_data.data      = (void *) value_ptr;
   hash_data.byte_size = value_size;
-  node = hash_node_alloc_new(key , &hash_data , hash_data_copyc , hash_data_free , hash->hashf , hash->size);
+  node = hash_node_alloc_new(key , &hash_data , node_data_copyc , node_data_free , hash->hashf , hash->size);
   hash_insert_node(hash , node);
 }
 
@@ -285,7 +264,7 @@ HASH_INSERT_ARRAY (hash_insert_double_array , double)
 
 
 char * hash_get_string(const hash_type *hash , const char *key) {
-  hash_data_type *data = hash_get(hash , key);
+  node_data_type *data = hash_get(hash , key);
   if (data != NULL)
     return data->data;
   else
