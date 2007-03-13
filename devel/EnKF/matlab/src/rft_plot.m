@@ -4,12 +4,13 @@ function rft_plot(path , well , out_path , in_device)
     forecast = load(strcat(path,'\',well,'.F'));
     analyzed = load(strcat(path,'\',well,'.A'));
     fig_nr = 1;
+    shift = 0.10;
     
     figure(fig_nr)
     plot(true(:,1),true(:,2),'ko','MarkerSize',4,'MarkerFaceColor','k')
     hold on
-    plot(forecast(:,1)-0.25,forecast(:,6),'bo','MarkerSize',3,'MarkerFaceColor','b');
-    plot(analyzed(:,1)+0.25,analyzed(:,6),'ro','MarkerSize',3,'MarkerFaceColor','r');
+    plot(forecast(:,1)-shift,forecast(:,6),'bo','MarkerSize',3,'MarkerFaceColor','b');
+    plot(analyzed(:,1)+shift,analyzed(:,6),'ro','MarkerSize',3,'MarkerFaceColor','r');
     legend('Measured value','Forecast ensemble','Analyzed ensemble')
     plot(true(:,1),true(:,2),'-k')
     plot(true(:,1),true(:,2),'ko','MarkerSize',6,'MarkerFaceColor','k')

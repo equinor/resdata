@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <hash.h>
+#include <list.h>
+#include <list_node.h>
 
 
 /*****************************************************************/
@@ -27,6 +29,7 @@ struct rms_roff_file_struct {
   bool         endian_flip;
   bool         binary;
   hash_type  * type_map;
+  list_type  * tag_list;
 };
 
 
@@ -47,10 +50,14 @@ struct rms_roff_tag_struct {
 };
 
 
+/* Interface: */
+void rms_roff_free_tag(rms_roff_tag_type *);
+
 
 /*****************************************************************/
-
-
+/* A microscopic (purely internal) type object only used 
+   for storing the hash type_map */
+/*****************************************************************/
 
 typedef struct {
   rms_roff_type_enum   rms_type;
@@ -83,7 +90,47 @@ const void * rms_type_copyc(const void *__rms_t) {
 }
 			    
 
+
+/*
+  Thid translates from the RMS data layout to "fortan" data layout.
+
+  RMS: k index is running fastest *AND* backwards.
+  F90: i is running fastest, and k is running the 'normal' way.
+  
+*/
+void rms_roff_write_fortran_data(void *_f90_data , const void * _rms_data, int sizeof_ctype , int nx, int ny , int nz) {
+  char *f90_data       = (char *)       _f90_data;
+  const char *rms_data = (const char *) _rms_data;
+  int i,j,k,rms_index, f90_index;
+  rms_index = -1;
+  for (i=0; i < nx; i++) 
+    for (j=0; j < ny; j++)
+      for (k= (nz -1); k >= 0; k--) {
+	rms_index += 1;
+	f90_index  = i + j*nx + k*nx*ny;
+	memcpy(&f90_data[f90_index * sizeof_ctype] , &rms_data[rms_index * sizeof_ctype] , sizeof_ctype);
+      }
+}
+
+
+
+void rms_roff_read_fortran_data(const void *_f90_data , void * _rms_data, int sizeof_ctype , int nx, int ny , int nz) {
+  const char *f90_data = (const char *) _f90_data;
+  char *rms_data       = (char *)       _rms_data;
+  int i,j,k,rms_index, f90_index;
+  rms_index = -1;
+  for (i=0; i < nx; i++) 
+    for (j=0; j < ny; j++)
+      for (k= (nz -1); k >= 0; k--) {
+	rms_index += 1;
+	f90_index = i + j*nx + k*nx*ny;
+	memcpy(&rms_data[rms_index * sizeof_ctype] , &f90_data[f90_index * sizeof_ctype] , sizeof_ctype);
+      }
+}
+
+
 /*****************************************************************/
+/* Pure roff routines */
 
 static void rms_roff_fread_data(rms_roff_file_type *roff , int byte_size , char * buffer) {
   int bytes_read = fread(buffer , byte_size , 1 , roff->stream);
@@ -160,12 +207,6 @@ static bool rms_roff_binary(const rms_roff_file_type *roff_file) {
   return binary;
 }
 
-static void rms_roff_seek_tag(FILE *stream , const char *tag) {
-  
-}
-
-
-
 
 /*
   Check if the roff object is positioned *at* an endtag.
@@ -195,14 +236,7 @@ bool rms_roff_at_endtag(const rms_roff_file_type *roff) {
     
 
 
-static void rms_roff_fread_tagkey_type(const rms_roff_file_type *roff_file , char *type_string , bool *is_array) {
-  rms_roff_fread_string(roff_file , type_string , 7);
-  if (strcmp(type_string , rms_roff_array_string) == 0) {
-    *is_array = true;
-    rms_roff_fread_string(roff_file , type_string , 7);
-  } else
-    *is_array = false;
-}
+
 
 
 static rms_roff_file_type * rms_roff_alloc_file(const char *filename) {
@@ -214,6 +248,7 @@ static rms_roff_file_type * rms_roff_alloc_file(const char *filename) {
   }
   roff_file->endian_flip = false;
   roff_file->type_map  = hash_alloc(10);
+  roff_file->tag_list  = list_alloc();
 
   {
     __rms_type *rms_t = rms_type_alloc(1,1);
@@ -266,10 +301,28 @@ rms_roff_file_type * rms_roff_open(const char *filename , bool new_file , bool c
 
 void rms_roff_close(rms_roff_file_type * roff_file) {
   hash_free(roff_file->type_map);
+  {
+    list_node_type    *tag_node , *next_tag_node;
+    list_type         *tag_list = roff_file->tag_list;
+    
+    tag_node = list_get_head(tag_list);
+    while (tag_node) {
+      next_tag_node = list_node_get_next(tag_node);
+      rms_roff_free_tag( list_node_value_ptr(tag_node) );
+      tag_node = next_tag_node;
+    }
+  }
+
+  list_free(roff_file->tag_list);
   free( (char *) roff_file->filename);
   fclose(roff_file->stream); 
   free(roff_file);
 }
+
+
+/******************************************************************/
+/** Starting tagkey routines                                     **/
+/******************************************************************/
 
 
 rms_roff_tagkey_type * rms_roff_alloc_empty_tagkey() {
@@ -291,7 +344,13 @@ void rms_roff_free_tagkey(rms_roff_tagkey_type *tagkey) {
 }
 
 
+void rms_roff_free_tagkey_(void *_tagkey) {
+  rms_roff_tagkey_type * tagkey = (rms_roff_tagkey_type *) _tagkey;
+  rms_roff_free_tagkey(tagkey);
+}
 
+
+/* stream er godt nok */
 static void rms_roff_set_tagkey_data_size(const rms_roff_file_type *roff_file , rms_roff_tagkey_type *tagkey) {
 
   if (tagkey->rms_type == rms_char_type) {
@@ -319,6 +378,28 @@ static void rms_roff_alloc_tagkey_data(rms_roff_tagkey_type *tagkey) {
 }
 
 
+static const rms_roff_tagkey_type * rms_roff_tagkey_copyc(const rms_roff_tagkey_type *tagkey) {
+  rms_roff_tagkey_type *new_tagkey = rms_roff_alloc_empty_tagkey();
+  
+  new_tagkey->alloc_size   = 0;
+  new_tagkey->size         = tagkey->size;
+  new_tagkey->sizeof_ctype = tagkey->sizeof_ctype;
+  new_tagkey->data_size    = tagkey->data_size;
+  new_tagkey->rms_type     = tagkey->rms_type;
+  new_tagkey->data         = NULL;
+
+  rms_roff_alloc_tagkey_data(new_tagkey);               memcpy(new_tagkey->data , tagkey->data , tagkey->data_size);
+  new_tagkey->name = malloc(strlen(tagkey->name) + 1);  strcpy(new_tagkey->name , tagkey->name);
+  return new_tagkey;
+}
+
+static const void * rms_roff_tagkey_copyc_(const void * _tagkey) {
+  const rms_roff_tagkey_type * tagkey = (const rms_roff_tagkey_type *) _tagkey;
+
+  return rms_roff_tagkey_copyc(tagkey);
+}
+
+
 static void rms_roff_fread_tagkey_data(const rms_roff_file_type *roff_file , rms_roff_tagkey_type *tagkey) {
   if (tagkey->alloc_size < tagkey->data_size) {
     fprintf(stderr,"%s: fatal error buffer to small - aborting \n",__func__);
@@ -340,6 +421,68 @@ static void rms_roff_fskip_tagkey_data(const rms_roff_file_type *roff_file , rms
 }
 
 
+static void rms_roff_fread_tagkey_header(const rms_roff_file_type *roff_file , rms_roff_tagkey_type *tagkey) {
+  bool is_array;
+  char type_string[7];
+  
+  rms_roff_fread_string(roff_file , type_string , 7);
+  if (strcmp(type_string , rms_roff_array_string) == 0) {
+    is_array = true;
+    rms_roff_fread_string(roff_file , type_string , 7);
+  } else
+    is_array = false;
+  
+  {
+    __rms_type * rms_t   = hash_get(roff_file->type_map , type_string);
+    tagkey->rms_type     = rms_t->rms_type;
+    tagkey->sizeof_ctype = rms_t->sizeof_ctype;
+  }
+
+  tagkey->name = realloc(tagkey->name , rms_roff_fread_strlen(roff_file) + 1);
+  rms_roff_fread_string(roff_file , tagkey->name , 0);
+  if (is_array)
+    fread(&tagkey->size , 1 , sizeof tagkey->size, roff_file->stream);
+  else
+    tagkey->size = 1;
+  rms_roff_set_tagkey_data_size(roff_file , tagkey);
+}
+
+
+static void rms_roff_fread_realloc_tagkey(const rms_roff_file_type *roff_file , rms_roff_tagkey_type *tagkey) {
+
+  rms_roff_fread_tagkey_header(roff_file , tagkey);
+  rms_roff_alloc_tagkey_data(tagkey);
+  rms_roff_fread_tagkey_data(roff_file , tagkey);
+
+}
+
+
+static rms_roff_tagkey_type * rms_roff_fread_alloc_tagkey(const rms_roff_file_type *roff_file) {
+  rms_roff_tagkey_type *tagkey = rms_roff_alloc_empty_tagkey();
+  rms_roff_fread_realloc_tagkey(roff_file , tagkey);
+  return tagkey;
+}
+
+static void rms_roff_fskip_tagkey(const rms_roff_file_type *roff_file) {
+  rms_roff_tagkey_type *tagkey = rms_roff_alloc_empty_tagkey();
+  rms_roff_fread_tagkey_header(roff_file , tagkey);
+  rms_roff_fskip_tagkey_data(roff_file , tagkey);
+  rms_roff_free_tagkey(tagkey);
+}
+
+const char * rms_roff_get_tagkey_name(const rms_roff_tagkey_type *tagkey) {
+  return tagkey->name;
+}
+
+void rms_roff_load_tagkey(const rms_roff_file_type *roff_file , rms_roff_tagkey_type *tagkey) {
+  rms_roff_fread_realloc_tagkey(roff_file , tagkey);
+}
+
+
+/*****************************************************************/
+/* tag routines */
+
+
 rms_roff_tag_type * rms_roff_alloc_empty_tag() {
   rms_roff_tag_type *tag = malloc(sizeof *tag);
   tag->name = NULL;
@@ -352,7 +495,11 @@ void rms_roff_free_tag(rms_roff_tag_type *tag) {
   hash_free(tag->keys);
   free(tag);
 }
+
   
+const char * rms_roff_get_tag_name(const rms_roff_tag_type *tag) {
+  return tag->name;
+}
 
 
 
@@ -382,56 +529,46 @@ void rms_roff_free_tag(rms_roff_tag_type *tag) {
 }
 
 
+static void rms_roff_tag_add_tagkey(const rms_roff_tag_type *tag , const rms_roff_tagkey_type *tagkey) {
+  hash_insert_copy(tag->keys , tagkey->name , tagkey , rms_roff_tagkey_copyc_ , rms_roff_free_tagkey_);
+}
 
 
-
-static void rms_roff_fread_tagkey_header(const rms_roff_file_type *roff_file , rms_roff_tagkey_type *tagkey) {
-  bool is_array;
-  char rms_type_string[7];
-  
-  rms_roff_fread_tagkey_type(roff_file , rms_type_string , &is_array);
-  {
-    __rms_type * rms_t   = hash_get(roff_file->type_map , rms_type_string);
-    tagkey->rms_type     = rms_t->rms_type;
-    tagkey->sizeof_ctype = rms_t->sizeof_ctype;
+void rms_roff_fread_tag(const rms_roff_file_type * roff_file , rms_roff_tag_type *tag, bool *at_eof) {
+  rms_roff_fread_tag_header(roff_file , tag , at_eof);
+  if (!*at_eof) {
+    rms_roff_tagkey_type *tagkey = rms_roff_alloc_empty_tagkey();
+    while (! rms_roff_at_endtag(roff_file)) {
+      rms_roff_load_tagkey(roff_file , tagkey);
+      rms_roff_tag_add_tagkey(tag , tagkey);
+      printf("Have loaded: %s/%s \n",rms_roff_get_tag_name(tag) , rms_roff_get_tagkey_name(tagkey));
+    }
+    rms_roff_free_tagkey(tagkey);
   }
+}
 
-  tagkey->name = realloc(tagkey->name , rms_roff_fread_strlen(roff_file) + 1);
-  rms_roff_fread_string(roff_file , tagkey->name , 0);
-  if (is_array)
-    fread(&tagkey->size , 1 , sizeof tagkey->size, roff_file->stream);
-  else
-    tagkey->size = 1;
-  rms_roff_set_tagkey_data_size(roff_file , tagkey);
+rms_roff_tag_type * rms_roff_fread_alloc_tag(const rms_roff_file_type *roff_file , bool *at_eof) {
+  rms_roff_tag_type *tag = rms_roff_alloc_empty_tag();
+  rms_roff_fread_tag(roff_file , tag , at_eof);
+  return tag;
 }
 
 
-static void rms_roff_fread_realloc_tagkey(const rms_roff_file_type *roff_file , rms_roff_tagkey_type *tagkey) {
-
-  rms_roff_fread_tagkey_header(roff_file , tagkey);
-  rms_roff_alloc_tagkey_data(tagkey);
-  rms_roff_fread_tagkey_data(roff_file , tagkey);
-
-}
-
-void rms_roff_load_tagkey(const rms_roff_file_type *roff_file , rms_roff_tagkey_type *tagkey) {
-  rms_roff_fread_realloc_tagkey(roff_file , tagkey);
-}
-
-static rms_roff_tagkey_type * rms_roff_fread_alloc_tagkey(const rms_roff_file_type *roff_file) {
-  rms_roff_tagkey_type *tagkey = rms_roff_alloc_empty_tagkey();
-  rms_roff_fread_realloc_tagkey(roff_file , tagkey);
-  return tagkey;
+void rms_roff_load_file(rms_roff_file_type *roff_file) {
+  bool eof_tag = false;
+  
+  while (!eof_tag) {
+    rms_roff_tag_type * tag = rms_roff_fread_alloc_tag(roff_file ,  &eof_tag);
+    if (!eof_tag)
+      list_append_ref(roff_file->tag_list , tag);
+    else
+      rms_roff_free_tag(tag);
+  }
 }
 
 
-
-static void rms_roff_fskip_tagkey(const rms_roff_file_type *roff_file) {
-  rms_roff_tagkey_type *tagkey = rms_roff_alloc_empty_tagkey();
-  rms_roff_fread_tagkey_header(roff_file , tagkey);
-  rms_roff_fskip_tagkey_data(roff_file , tagkey);
-  rms_roff_free_tagkey(tagkey);
-}
+/*****************************************************************/
+/* Old hack version: */
   
 
 void rms_roff_load(const char *filename , const char *param_name , float *param) {

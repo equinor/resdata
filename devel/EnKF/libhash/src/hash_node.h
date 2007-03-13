@@ -2,10 +2,9 @@
 #define __HASH_NODE_H__
 #include <stdbool.h>
 #include <inttypes.h>
+#include <node_data.h>
 
 typedef struct hash_node_struct hash_node_type;
-typedef const void * (  copyc_type) (const void *);
-typedef void         (  del_type)   (void *);
 typedef uint32_t     (  hashf_type) (const uint8_t *key, size_t len);
 
 bool             hash_node_key_eq(const hash_node_type * , uint32_t  , const char *);

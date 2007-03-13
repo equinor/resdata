@@ -14,4 +14,11 @@ rms_roff_file_type * rms_roff_open      (const char *, bool , bool );
 void                 rms_roff_close     (rms_roff_file_type *);
 bool                 rms_roff_at_endtag (const rms_roff_file_type *roff);
 
+rms_roff_tag_type  * rms_roff_fread_alloc_tag(const rms_roff_file_type *, bool *);
+
+
+void                 rms_roff_write_fortran_data(void       * , const void * , int , int , int , int );
+void                 rms_roff_read_fortran_data (const void * ,       void * , int , int , int , int );
+
+
 #endif

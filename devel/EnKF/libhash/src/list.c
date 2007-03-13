@@ -21,73 +21,82 @@ typedef struct hash_data_struct {
 
 /*****************************************************************/
 
-static void list_del_node(list_type *list , list_node_type *del_node) {
-  if (del_node == NULL) {
-    fprintf(stderr,"%s: tried to delete NULL node - aborting \n",__func__);
-    abort();
-  }
-  {
-    list_node_type *node, *p_node;
-    p_node = NULL;
-    node   = list->head;
-    while (node != NULL && node != del_node) {
-      p_node = node;
-      node   = list_node_get_next(node);
-    }
-
-    if (node == del_node) {
-      if (p_node == NULL) 
-	/* 
-	   We are attempting to delete the first element in the list.
-	*/
-	list->head = list_node_get_next(del_node);
-      else if (del_node == list->tail) 
-	/*
-	  We are attempting to delete the last element in the list.
-	*/
-	list->tail = p_node;
-      
-      list_node_set_next(p_node , list_node_get_next(del_node));
-      list_node_free(del_node);
-      list->length--;
-    } else {
-      fprintf(stderr,"%s: tried to delete node not in list - aborting \n",__func__);
-      abort();
-    }
-  }
-}
-
-
 
 static void list_append_node(list_type *list , list_node_type *new_node) {
   if (list->head == NULL) 
     list->head = new_node;
   else 
-    list_node_set_next(list->tail , new_node);
+    list_node_link(list->tail , new_node);
   list->tail = new_node;
   list->length++;
 }
 
 
+static void list_insert_node_after(list_type *list , list_node_type *after_this, list_node_type *new_node) {
+  if (after_this == NULL) {
+    fprintf(stderr,"%s: after_this == NULL - aborting \n",__func__);
+    abort();
+  }
+  {
+    list_node_type *old_next = list_node_get_next(after_this);
+    list_node_link(after_this , new_node);
+    if (old_next == NULL) 
+      list->tail = new_node;
+    else
+      list_node_link(new_node   , old_next);
+  }
 
-static list_node_type * list_iget_node(const list_type *list, int index) {
+  list->length++;
+}
+
+
+static void list_insert_node_before(list_type *list , list_node_type *before_this , list_node_type *new_node) {
+  if (before_this == NULL) {
+    fprintf(stderr,"%s: before_this == NULL - aborting \n",__func__);
+    abort();
+  }
+
+  {
+    list_node_type *old_prev = list_node_get_prev(before_this);
+    list_node_link(new_node , before_this);
+    if (old_prev == NULL)
+      list->head = new_node;
+    else
+      list_node_link(old_prev , new_node);
+  }
+  
+  list->length++;
+}
+
+
+static list_node_type * list_iget_node_static(const list_type *list, int index, bool abort_on_error) {
   list_node_type *node = list->head;
   int n = 0;
   
-  while ((node != NULL) && (n < index))
+  
+  while ((node != NULL) && (n < index)) {
     node = list_node_get_next(node);
+    n++;
+  }
+
+  if (node == NULL && abort_on_error) {
+    fprintf(stderr,"%s: element:%d does not exist in list - aborting \n",__func__ , index);
+    abort();
+  }
   
   return node;
 }
 
 
-static void list_append_managed_copy(list_type *list , const void *value_ptr , int value_size) {
-  list_node_type *node;
-  node_data_type list_data;
-  list_data.data      = (void *) value_ptr;
-  list_data.byte_size = value_size;
-  node = list_node_alloc(&list_data , node_data_copyc , node_data_free);
-  list_append_node(list , node);
+list_node_type * list_iget_node(const list_type *list, int index) {
+
+  return list_iget_node_static(list , index, true);
+
+}
+
+
+list_node_type * list_iget_node_try(const list_type *list, int index) {
+  return list_iget_node_static(list , index, false);
 }
 
 
@@ -95,6 +104,61 @@ static void list_append_managed_copy(list_type *list , const void *value_ptr , i
 /*****************************************************************/
 /* Functions which are exported follow below here. */
 /*****************************************************************/
+
+
+void list_del_node(list_type *list , list_node_type *del_node) {
+  if (del_node == NULL) {
+    fprintf(stderr,"%s: tried to delete NULL node - aborting \n",__func__);
+    abort();
+  }
+  {
+    list_node_type *prev_node = list_node_get_prev(del_node);
+    list_node_type *next_node = list_node_get_next(del_node);
+    list_node_link(prev_node , next_node);
+    if (del_node == list->head)
+      list->head = next_node;
+
+    if (del_node == list->tail)
+      list->tail = prev_node;
+    
+    list_node_free(del_node);
+    list->length--;
+  }
+}
+
+
+
+
+
+#define LIST_SCALAR_APPEND(FUNC,TYPE) \
+void FUNC(list_type *list , TYPE value) {                               \
+  list_node_type *node = list_node_alloc_managed(&value , sizeof value); \
+  list_append_node(list ,  node) ;                                       \
+}
+
+
+#define LIST_ARRAY_APPEND(FUNC,TYPE)                                   \
+void FUNC(list_type *list, TYPE *value, int SIZE) {  \
+  list_node_type *node = list_node_alloc_managed(&value , SIZE * sizeof *value); \
+  list_append_node(list ,  node);                                       \
+}
+
+
+#define LIST_SCALAR_AFTER(FUNC,TYPE)                                     \
+void FUNC(list_type *list , list_node_type *after_this , TYPE value) {   \
+  list_node_type *node = list_node_alloc_managed(&value , sizeof value); \
+  list_insert_node_after(list , after_this , node);                     \
+}
+
+#define LIST_SCALAR_BEFORE(FUNC,TYPE)                                     \
+void FUNC(list_type *list , list_node_type *before_this , TYPE value) {   \
+  list_node_type *node = list_node_alloc_managed(&value , sizeof value);   \
+  list_insert_node_before(list , before_this , node);                     \
+}
+
+
+
+
 
 
 void list_free(list_type *list) {
@@ -121,17 +185,46 @@ list_type * list_alloc(void) {
 }
 
 
-
-void list_insert_ref(list_type *list , const void *value) {
+void list_append_ref(list_type *list , const void *value) {
   list_node_type *node = list_node_alloc(value , NULL , NULL);
   list_append_node(list , node);
 }
 
 
-void list_insert_copy(list_type *list , const void *value , copyc_type *copyc , del_type *del) {
+void list_append_copy(list_type *list , const void *value , copyc_type *copyc , del_type *del) {
   list_node_type *node = list_node_alloc(value , copyc , del);
   list_append_node(list , node);
 }
+
+
+void * list_iget(const list_type *list, int index) {
+  list_node_type * node = list_iget_node(list , index);
+  return list_node_value_ptr(node);
+}
+
+list_node_type * list_get_head(const list_type *list) { return list->head; }
+
+int list_iget_int(const list_type *list , int index) {
+  const list_node_type *node = list_iget_node(list , index);
+  return list_node_as_int(node);
+}
+
+double list_iget_double(const list_type *list , int index) {
+  const list_node_type *node = list_iget_node(list , index);
+  return list_node_as_double(node);
+}
+
+
+
+LIST_SCALAR_APPEND(list_int_append          , int)
+LIST_SCALAR_APPEND(list_double_append       , double)
+LIST_ARRAY_APPEND (list_int_array_append    , int)
+LIST_ARRAY_APPEND (list_double_array_append , double)
+LIST_SCALAR_AFTER (list_int_insert_after    , int)
+LIST_SCALAR_AFTER (list_double_insert_after , double)
+
+
+
 
 
 
