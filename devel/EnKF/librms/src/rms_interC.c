@@ -1,7 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <rms_roff.h>
+#include <rms_file.h>
+#include <rms_util.h>
+
+
+void old_rms_roff_load(const char *filename , const char *param_name , float *param);
+
+/*****************************************************************/
 
 
 static char * alloc_cstring(const char *fort_string , const int *strlen) {
@@ -16,7 +22,7 @@ static char * alloc_cstring(const char *fort_string , const int *strlen) {
 void old_rms_inter_roff_param__(const char *__filename , const int *strlen, const char *__param_name , const int * param_len, float *param) {
   char *filename   = alloc_cstring(__filename   , strlen);
   char *param_name = alloc_cstring(__param_name , param_len);
-  rms_roff_load(filename , param_name , param);
+  old_rms_roff_load(filename , param_name , param);
   free(filename);
   free(param_name);
 }
@@ -29,14 +35,14 @@ void rms_inter_roff_param__(const char *__filename , const int *strlen, const ch
   char *filename   = alloc_cstring(__filename   , strlen);
   char *param_name = alloc_cstring(__param_name , param_len);
 
-  rms_roff_load(filename , param_name , work);
+  old_rms_roff_load(filename , param_name , work);
   {
     int i;
     for (i = 0; i < (*nx) * (*ny) * (*nz); i++)
       if (work[i] == *undef_rms)
 	work[i] = *undef_out;
   }
-  rms_roff_write_fortran_data(param , work , sizeof *work , *nx , *ny , *nz);
+  rms_write_fortran_data(param , work , sizeof *work , *nx , *ny , *nz);
 
   free(filename);
   free(param_name);

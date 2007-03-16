@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <rms_roff.h>
 #include <string.h>
 #include <stdbool.h>
 #include <hash.h>
@@ -16,10 +15,12 @@
 /*****************************************************************/
 static const char * rms_ascii_header      = "roff-asc";
 static const char * rms_binary_header     = "roff-bin";
-static const char * rms_comment1          = "ROFF file";
-static const char * rms_comment2          = "Creator: RMS - Reservoir Modelling System, version 7.5.2";
-static const char * rms_parameter_tagname = "parameter";
-static const char * rms_tagkey_name       = "name";
+
+/*
+  static const char * rms_comment1          = "ROFF file";
+  static const char * rms_comment2          = "Creator: RMS - Reservoir Modelling System, version 7.5.2";
+  static const char * rms_parameter_tagname = "parameter";
+*/
 
 
 
@@ -58,13 +59,6 @@ static bool rms_binary(const rms_file_type *rms_file) {
   return binary;
 }
 
-
-/*
-  Check if the roff object is positioned *at* an endtag.
-  If it is at an entag the stream object is positioned at 
-  the end of of the endtag, otherwise it is repositioned at
-  the initial position.
-*/
 
     
 static void rms_file_add_tag(rms_file_type *rms_file , const rms_tag_type *tag) {
@@ -162,7 +156,7 @@ void rms_load_file(rms_file_type *rms_file) {
   bool eof_tag = false;
   
   while (!eof_tag) {
-    rms_tag_type * tag = rms_fread_alloc_tag(rms_file ,  &eof_tag);
+    rms_tag_type * tag = rms_tag_fread_alloc(rms_file->stream ,  rms_file->type_map , &eof_tag );
     if (!eof_tag)
       rms_file_add_tag(rms_file , tag);
     else
@@ -175,7 +169,7 @@ void rms_load_file(rms_file_type *rms_file) {
 /* Old hack version: */
   
 
-void rms_roff_load(const char *filename , const char *param_name , float *param) {
+void old_rms_roff_load(const char *filename , const char *param_name , float *param) {
   const int offset = 327 + strlen(param_name);
   int n_read;
   int size;
