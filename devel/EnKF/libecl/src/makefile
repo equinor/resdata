@@ -2,7 +2,7 @@ CC = gcc
 FC = ifort
 AR = ar
 #################################################################
-COMPILE_INCLUDE   = -I./ -I../../libhash/include
+COMPILE_INCLUDE   = -I./ -I../../libhash/include -I../../libutil/include
 COMPILE_LIB_PATH  = -L../../libhash/lib
 COMPILE_LIBS      = -lm -lhash
 
@@ -14,9 +14,9 @@ CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE)
 FFLAGS  = -fpe0 -traceback -warn unused -CB -u -g -real_size 64 -assume byterecl -assume nobuffered_io -convert big_endian
 ARFLAGS = -csr
 #################################################################
-OBJECTS   = ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o util.o fortio.o ext_job.o lsf_jobs.o ecl_parse.o ecl_diag.o str_buffer.o
+OBJECTS   = ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o ext_job.o lsf_jobs.o ecl_parse.o ecl_diag.o str_buffer.o
 MOD_FILES = 
-INC_FILES = ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h util.h ext_job.h lsf_jobs.h ecl_parse.h ecl_diag.h str_buffer.h
+INC_FILES = ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h ext_job.h lsf_jobs.h ecl_parse.h ecl_diag.h str_buffer.h
 LIB       = libecl.a
 
 
@@ -41,13 +41,12 @@ $(LIB): $(OBJECTS)
 
 
 str_buffer.o: str_buffer.c str_buffer.h
-util.o      : util.c util.h
-ext_job.o   : ext_job.c ext_job.h util.o
+ext_job.o   : ext_job.c ext_job.h 
 lsf_jobs.o  : lsf_jobs.c lsf_jobs.h ext_job.h
-fortio.o    : fortio.c fortio.h util.o
+fortio.o    : fortio.c fortio.h 
 ecl_kw.o    : ecl_kw.c ecl_kw.h fortio.o
 ecl_block.o : ecl_block.c ecl_block.h ecl_kw.o
-ecl_fstate.o: ecl_fstate.c ecl_fstate.h ecl_block.o util.o
+ecl_fstate.o: ecl_fstate.c ecl_fstate.h ecl_block.o 
 ecl_sum.o   : ecl_sum.c ecl_sum.h ecl_fstate.o
 ecl_parse.o : ecl_parse.h ecl_parse.h str_buffer.o
 ecl_diag.o  : ecl_diag.c ecl_diag.h ecl_sum.o

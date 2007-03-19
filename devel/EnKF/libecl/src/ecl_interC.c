@@ -16,24 +16,10 @@ static lsf_pool_type   * LSF_POOL       = NULL;
 
 /******************************************************************/
 
-static char * alloc_cstring(const char *fort_string , const int *strlen) {
-  const char null_char = '\0';
-  char *new_string = malloc(*strlen + 1);
-  strncpy(new_string , fort_string , *strlen);
-  new_string[*strlen] = null_char;
-  return new_string;
-}
-
-static bool intptr_2bool(const int *iptr) {
-  if ( (*iptr) == 0)
-    return false;
-  else
-    return true;
-}
 
 
 void ecl_inter_load_file__(const char *__filename , const int *strlen) {
-  char *filename = alloc_cstring(__filename , strlen);
+  char *filename = util_alloc_cstring(__filename , strlen);
   ECL_FSTATE = ecl_fstate_load_unified(filename , ECL_FMT_AUTO , ENDIAN_CONVERT);
   free(filename);
 }
@@ -98,8 +84,8 @@ void ecl_inter_kw_exists__(const char *kw , const int *istep , int *int_ex) {
 
 
 void ecl_inter_load_summary__(const char *__header_file , const int *header_len , const char *__data_file , const int *data_len) {
-  char * header_file = alloc_cstring(__header_file , header_len);
-  char * data_file   = alloc_cstring(__data_file   , data_len);
+  char * header_file = util_alloc_cstring(__header_file , header_len);
+  char * data_file   = util_alloc_cstring(__data_file   , data_len);
 
   ECL_SUM = ecl_sum_load_unified(header_file , data_file , ECL_FMT_AUTO , ENDIAN_CONVERT);
   free(header_file);  
@@ -131,8 +117,8 @@ void ecl_inter_copy_well_names__(char *well_string) {
 void ecl_inter_sum_get__(const char *_well_name , const int *well_len, 
 			 const char *_var_name  , const int *var_len, 
 			 void *value, int *index) {
-  char *well = alloc_cstring(_well_name , well_len);
-  char *var  = alloc_cstring(_var_name  , var_len);
+  char *well = util_alloc_cstring(_well_name , well_len);
+  char *var  = util_alloc_cstring(_var_name  , var_len);
   *index = ecl_sum_iget1(ECL_SUM , 0 , well , var , value);
   free(well);
   free(var);
@@ -194,8 +180,8 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
 /* 			     int *jobs , int *max_running , int *max_restart,  */
 /* 			     int *submit_list, int *time_step , int *fmt_out, */
 /* 			     int *exit_on_submit) { */
-/*   char *basedir = alloc_cstring(__basedir , *basedir_length); */
-/*   char *eclbase = alloc_cstring(__eclbase , *eclbase_length); */
+/*   char *basedir = util_alloc_cstring(__basedir , *basedir_length); */
+/*   char *eclbase = util_alloc_cstring(__eclbase , *eclbase_length); */
   
 /*   printf("*****************************************************************\n"); */
 /*   printf("* Skal kjore eclipse jobber .... \n"); */
@@ -210,8 +196,8 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
 
 void ecl_inter_init_lsf__(const int  * sleep_time , const int *max_running,  const int *subexit_int, 
 			  const char * _summary_file , const int * summary_file_len) {
-  char *summary_file = alloc_cstring(_summary_file , summary_file_len);
-  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , intptr_2bool(subexit_int) , summary_file , "bjobs -a" , "/tmp");
+  char *summary_file = util_alloc_cstring(_summary_file , summary_file_len);
+  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , util_intptr_2bool(subexit_int) , summary_file , "bjobs -a" , "/tmp");
   free(summary_file);
 }
 
@@ -229,11 +215,11 @@ void ecl_inter_add_lsf_job__(const int  *iens,
     abort();
   }
   {
-    char *restart_file  = alloc_cstring(_restart_file , restart_file_len); 
-    char *run_path      = alloc_cstring(_run_path      , run_path_len);
-    char *id            = alloc_cstring(_id            , id_len);
-    char *fail_file     = alloc_cstring(_fail_file     , fail_file_len);
-    char *OK_file       = alloc_cstring(_OK_file       , OK_file_len);
+    char *restart_file  = util_alloc_cstring(_restart_file , restart_file_len); 
+    char *run_path      = util_alloc_cstring(_run_path      , run_path_len);
+    char *id            = util_alloc_cstring(_id            , id_len);
+    char *fail_file     = util_alloc_cstring(_fail_file     , fail_file_len);
+    char *OK_file       = util_alloc_cstring(_OK_file       , OK_file_len);
       
     lsf_pool_add_job(LSF_POOL , id, run_path , restart_file , OK_file , fail_file , *max_resubmit);
     free(run_path);
@@ -269,11 +255,11 @@ void ecl_inter_parse__(const char *_refcase_path , const int * refcase_len,
 		       const char *_eclbase      , const int * eclbase_len, 
 		       const char *_include_path , const int * include_len, 
 		       const int  *fmt_file_int  , const int * unified_int) {
-  bool fmt_file = intptr_2bool(fmt_file_int);
-  bool unified  = intptr_2bool(unified_int);
-  char *refcase_path = alloc_cstring(_refcase_path , refcase_len);
-  char *eclbase      = alloc_cstring(_eclbase      , eclbase_len);
-  char *include_path = alloc_cstring(_include_path , include_len);
+  bool fmt_file = util_intptr_2bool(fmt_file_int);
+  bool unified  = util_intptr_2bool(unified_int);
+  char *refcase_path = util_alloc_cstring(_refcase_path , refcase_len);
+  char *eclbase      = util_alloc_cstring(_eclbase      , eclbase_len);
+  char *include_path = util_alloc_cstring(_include_path , include_len);
   
   ecl_parse(refcase_path , eclbase , include_path , fmt_file , unified , ENDIAN_CONVERT);
 
@@ -286,11 +272,11 @@ void ecl_inter_parse__(const char *_refcase_path , const int * refcase_len,
 void ecl_inter_diag_ens_interactive__(const char *_eclbase_dir  , const int *dir_len,
 				      const char *_eclbase_name , const int *name_len, 
 				      int *fmt_file_int , int *unified_int) {
-  char *eclbase_dir  = alloc_cstring(_eclbase_dir  , dir_len);
-  char *eclbase_name = alloc_cstring(_eclbase_name , name_len);
+  char *eclbase_dir  = util_alloc_cstring(_eclbase_dir  , dir_len);
+  char *eclbase_name = util_alloc_cstring(_eclbase_name , name_len);
 
-  bool fmt_file = intptr_2bool(fmt_file_int);
-  bool unified  = intptr_2bool(unified_int);
+  bool fmt_file = util_intptr_2bool(fmt_file_int);
+  bool unified  = util_intptr_2bool(unified_int);
   
   ecl_diag_ens_interactive(eclbase_dir , eclbase_name , fmt_file , unified);
   free(eclbase_dir);
@@ -303,7 +289,7 @@ void ecl_inter_diag_make_gnuplot_interactive__() {
 
 
 void ecl_inter_unlink_path__(const char *_path , const int *path_len) {
-  char *path = alloc_cstring(_path , path_len);
+  char *path = util_alloc_cstring(_path , path_len);
   
   util_unlink_path(path);
   free(path);
