@@ -607,3 +607,4 @@ void lsf_pool_free(lsf_pool_type *lsf_pool) {
   free(lsf_pool->total_status);
   free(lsf_pool);
 }
+/* Stupid comment */
