@@ -267,7 +267,7 @@ static void ecl_parse_file(hash_type *hash , const char *filename, const hash_ty
   if (verbosity == VERB_DOT)
     printf("."); 
   else if (verbosity == VERB_NAME)
-    printf("Parsing: %s" , filename);
+    printf("Parsing(2): %s" , filename);
   fflush(stdout);
   
   while (ecl_kw_fread_header(ecl_kw , fortio)) {
@@ -457,19 +457,18 @@ static void ecl_parse_grid(const char *refcase_path , const char *ecl_base , con
   char *grid_file;
   ecl_fstate_type *grid;
   if (fmt_file) {
-    grid_file = malloc(strlen(refcase_path) + strlen(ecl_base) + 8);
+    grid_file = malloc(strlen(refcase_path) + strlen(ecl_base) + 9);
     sprintf(grid_file  , "%s/%s.FEGRID" , refcase_path , ecl_base);
   } else {
-    grid_file = malloc(strlen(refcase_path) + strlen(ecl_base) + 7);
+    grid_file = malloc(strlen(refcase_path) + strlen(ecl_base) + 8);
     sprintf(grid_file , "%s/%s.EGRID" , refcase_path , ecl_base);
   } 
-  printf("Parsing: %s",grid_file); fflush(stdout);
+  printf("Parsing: ",grid_file); fflush(stdout);
   if (fmt_file)
     grid = ecl_fstate_load_unified(grid_file , ECL_FORMATTED , endian_flip);
   else
-    grid = ecl_fstate_load_unified(grid_file , ECL_BINARY , endian_flip);
-  printf("\n");
-
+    grid = ecl_fstate_load_unified(grid_file , ECL_BINARY    , endian_flip);
+  
   {
     FILE *fileH;
     int *gridhead  = ecl_fstate_kw_get_data_ref(grid , 0 , "GRIDHEAD");

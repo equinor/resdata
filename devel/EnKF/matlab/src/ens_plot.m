@@ -1,7 +1,7 @@
 function ens_plot(prior_path , posterior_path , well_list , var_list , unit_list , out_path , device)
    def_device = 'png';
    lw        = 1.00;
-   psize     = 1.50;
+   psize     = 2.00;
    nwell     = max(size(well_list));
    nvar      = max(size(var_list));
    
@@ -20,6 +20,7 @@ function ens_plot(prior_path , posterior_path , well_list , var_list , unit_list
            posterior_size = size(posterior , 2) - 2;
    
            figure(fig_nr)
+           grid 
            plot(prior(:,1) , prior(:,2) , 'ko' , 'MarkerFaceColor','k', 'MarkerSize', psize);
            hold on
            plot(prior(:,1)     , prior(:,3)     , 'b' , 'LineWidth' , lw);

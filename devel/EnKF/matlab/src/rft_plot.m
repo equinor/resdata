@@ -16,14 +16,14 @@ function rft_plot(path , well , out_path , in_device)
     plot(true(:,1),true(:,2),'ko','MarkerSize',6,'MarkerFaceColor','k')
     xlabel('Position along well (gridblocks)');
     ylabel('Pressure (bar)');
-    title('RFT Ensemble plot')
+    title(sprintf('RFT Ensemble plot Well:%s',well))
     hold off
     if nargin >= 3,
         if out_path == 1,
             out_path = path;
         end
         if out_path ~= 0,
-            out_file = sprintf('%s\\%s-%d',out_path , VAR , N);
+            out_file = sprintf('%s\\%s',out_path , well);
             if nargin == 3,
                 device = def_device;
             else
