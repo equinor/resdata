@@ -74,6 +74,11 @@ int util_file_size(const char *file) {
   return buffer.st_size;
 }
 
+void util_unlink_existing(const char *filename) {
+  if (util_file_exists(filename))
+    unlink(filename);
+}
+
 
 
 

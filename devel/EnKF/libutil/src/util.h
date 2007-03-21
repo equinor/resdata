@@ -8,6 +8,7 @@ void 	     util_make_path  (const char *);
 const char * util_newest_file(const char *, const char *);
 int          util_file_size(const char *);
 void         util_unlink_path(const char *);
+void         util_unlink_existing(const char *filename);
 
 char   * util_alloc_strip_copy(const char *);
 void     util_set_strip_copy(char * , const char *);
