@@ -170,9 +170,22 @@ const char * rms_tagkey_get_name(const rms_tagkey_type *tagkey) {
   return tagkey->name;
 }
 
+void * rms_tagkey_get_data_ref(const rms_tagkey_type *tagkey) {
+  return tagkey->data;
+}
+
 
 void rms_tagkey_load(rms_tagkey_type *tagkey , FILE *stream, hash_type *type_map) {
   rms_fread_realloc_tagkey(tagkey , stream , type_map);
+}
+
+bool rms_tagkey_char_eq(const rms_tagkey_type *tagkey , const char *keyvalue) {
+  bool eq = false;
+  if (tagkey->rms_type == rms_char_type) {
+    if (strcmp(keyvalue , tagkey->data) == 0)
+      eq = true;
+  }
+  return eq;
 }
 
 

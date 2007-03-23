@@ -2,7 +2,7 @@ CC = gcc
 FC = ifort
 AR = ar
 #################################################################
-COMPILE_INCLUDE   = -I./ -I../../libhash/include
+COMPILE_INCLUDE   = -I./ -I../../libhash/include -I../../libutil/include
 COMPILE_LIB_PATH  = -L../../libhash/lib
 COMPILE_LIBS      = -lm -lhash
 

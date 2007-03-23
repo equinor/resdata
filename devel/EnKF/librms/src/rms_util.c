@@ -13,7 +13,7 @@
   
 */
 
-void rms_write_fortran_data(void *_f90_data , const void * _rms_data, int sizeof_ctype , int nx, int ny , int nz) {
+void rms_set_fortran_data(void *_f90_data , const void * _rms_data, int sizeof_ctype , int nx, int ny , int nz) {
   char *f90_data       = (char *)       _f90_data;
   const char *rms_data = (const char *) _rms_data;
   int i,j,k,rms_index, f90_index;

@@ -68,6 +68,30 @@ void rms_fread_tag_header(rms_tag_type *tag , FILE *stream , bool *eof_tag) {
 }
 
 
+bool rms_tag_name_eq(const rms_tag_type *tag , const char * tagname , const char *tagkey_name , const char *keyvalue) {
+  bool eq = false;
+  if (strcmp(tag->name , tagname)) {
+    if (tagkey_name != NULL && keyvalue != NULL) {
+      if (hash_has_key(tag->keys , tagkey_name)) {
+	eq = rms_tagkey_char_eq(hash_get(tag->keys , tagkey_name) , keyvalue);
+      }
+    } 
+  }
+  return eq;
+}
+
+
+rms_tagkey_type * rms_tag_get_key(const rms_tag_type *tag , const char *keyname) {
+  if (hash_has_key(tag->keys , keyname))
+    return hash_get(tag->keys, keyname); 
+  else {
+    fprintf(stderr,"%s: tag:%s did not contain key:%s - aborting \n",__func__ , tag->name , keyname);
+    abort();
+  }
+}
+
+
+
 static void rms_tag_add_tagkey(const rms_tag_type *tag , const rms_tagkey_type *tagkey) {
   hash_insert_copy(tag->keys , rms_tagkey_get_name(tagkey) , tagkey , rms_tagkey_copyc_ , rms_free_tagkey_);
 }

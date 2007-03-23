@@ -65,9 +65,29 @@ static void rms_file_add_tag(rms_file_type *rms_file , const rms_tag_type *tag) 
   list_append_ref(rms_file->tag_list , tag);
 }
 
-static rms_tag_type * rms_get_tag(const rms_file_type *rms_file , const char *tagname, const char *keyname) {
-  return NULL;
+rms_tag_type * rms_file_get_tag(const rms_file_type *rms_file , const char *tagname, const char *keyname, const char *keyvalue) {
+  bool cont = true;
+  rms_tag_type *return_tag = NULL;
+  list_node_type *tag_node   = list_get_head(rms_file->tag_list);
+  while (cont) {
+    rms_tag_type *tag = list_node_value_ptr(tag_node);
+    if (rms_tag_name_eq(tag , tagname , keyname , keyvalue)) {
+      return_tag = tag;
+      cont = false;
+    } else 
+      tag_node = list_node_get_next(tag_node);
+    if (tag_node == NULL)
+      cont = false;
+  }
+  if (return_tag == NULL) {
+    if (keyname != NULL && keyvalue != NULL) 
+      fprintf(stderr,"%s: failed to find tag:%s with key:%s=%s in file:%s - aborting \n",__func__ , tagname , keyname , keyvalue , rms_file->filename);
+    else
+      fprintf(stderr,"%s: failed to find tag:%s in file:%s - aborting \n",__func__ , tagname , rms_file->filename);
+  }
+  return return_tag;
 }
+
 
 
 static rms_file_type * rms_alloc_file(const char *filename) {
@@ -100,10 +120,16 @@ static rms_file_type * rms_alloc_file(const char *filename) {
 
 
 static void rms_init_existing_file(rms_file_type * rms_file) {
-  if ( (rms_file->stream = fopen(rms_file->filename , "r")) == NULL) {
-    fprintf(stderr,"%s: failed to open: %s - aborting \n",__func__ , rms_file->filename);
+  if (util_file_exists(rms_file->filename)) {
+    if ( (rms_file->stream = fopen(rms_file->filename , "r")) == NULL) {
+      fprintf(stderr,"%s: failed to open: %s - aborting \n",__func__ , rms_file->filename);
+      abort();
+    }
+  } else {
+    fprintf(stderr,"%s file:%s does not exist - aborting \n",__func__ , rms_file->filename);
     abort();
   }
+    
   
   rms_file->binary = rms_binary(rms_file);
   if (!rms_file->binary) {
@@ -152,7 +178,7 @@ void rms_close(rms_file_type * rms_file) {
 }
 
 
-void rms_load_file(rms_file_type *rms_file) {
+void rms_file_load(rms_file_type *rms_file) {
   bool eof_tag = false;
   
   while (!eof_tag) {

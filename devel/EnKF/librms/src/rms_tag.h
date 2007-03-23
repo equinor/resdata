@@ -4,12 +4,15 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <hash.h>
+#include <rms_tagkey.h>
 
 
 
 typedef struct rms_tag_struct rms_tag_type;
 
-void           rms_tag_free(rms_tag_type *);
-rms_tag_type * rms_tag_fread_alloc(FILE *, hash_type *, bool *);
+void           	  rms_tag_free(rms_tag_type *);
+rms_tag_type    * rms_tag_fread_alloc(FILE *, hash_type *, bool *);
+bool           	  rms_tag_name_eq(const rms_tag_type *, const char * , const char *, const char *);
+rms_tagkey_type * rms_tag_get_key(const rms_tag_type *, const char *);
 
 #endif
