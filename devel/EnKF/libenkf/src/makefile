@@ -1,0 +1,42 @@
+CC = gcc
+FC = ifort
+AR = ar
+#################################################################
+COMPILE_INCLUDE   = -I./ -I../../libutil/include
+COMPILE_LIB_PATH  = -L../../libhash/lib
+COMPILE_LIBS      = -lm -lhash
+
+INSTALL_INC_PATH = ../include
+INSTALL_LIB_PATH = ../lib
+INSTALL_MOD_PATH = ../mod
+#################################################################
+CFLAGS  = -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
+ARFLAGS = -csr
+#################################################################
+OBJECTS           = mem_config.o ens_config.o multz_mem.o multz_config.o
+INC_FILES_INSTALL = mem_config.h ens_config.h multz_mem.h multz_config.h
+LIB               = libenkf.a
+
+
+
+INSTALL: $(LIB)
+	install -d $(INSTALL_INC_PATH)
+	install -d $(INSTALL_LIB_PATH)
+	install -d $(INSTALL_MOD_PATH)
+	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
+	install $(LIB) $(INSTALL_LIB_PATH)
+
+
+$(LIB): $(OBJECTS)
+	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
+
+%.o : %.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+
+
+multz_config.o : multz_config.c multz_config.h
+multz_mem.o    : multz_mem.c multz_mem.h multz_config.o
+
+
+
+

@@ -5,6 +5,7 @@
 #include <hash.h>
 #include <list.h>
 #include <list_node.h>
+#include <util.h>
 
 #include <rms_type.h>
 #include <rms_util.h>
@@ -68,7 +69,7 @@ static void rms_file_add_tag(rms_file_type *rms_file , const rms_tag_type *tag) 
 rms_tag_type * rms_file_get_tag(const rms_file_type *rms_file , const char *tagname, const char *keyname, const char *keyvalue) {
   bool cont = true;
   rms_tag_type *return_tag = NULL;
-  list_node_type *tag_node   = list_get_head(rms_file->tag_list);
+  list_node_type *tag_node = list_get_head(rms_file->tag_list);
   while (cont) {
     rms_tag_type *tag = list_node_value_ptr(tag_node);
     if (rms_tag_name_eq(tag , tagname , keyname , keyvalue)) {
@@ -175,6 +176,28 @@ void rms_close(rms_file_type * rms_file) {
   free( (char *) rms_file->filename);
   fclose(rms_file->stream); 
   free(rms_file);
+}
+
+static int rms_file_get_dim(const rms_tag_type *tag , const char *dim_name) {
+  rms_tagkey_type *key = rms_tag_get_key(tag , dim_name);
+  return * (int *) rms_tagkey_get_data_ref(key);
+}
+
+
+
+void rms_file_assert_dimensions(const rms_file_type *rms_file , int nx , int ny , int nz) {
+  bool OK = true;  
+  rms_tag_type    *tag    = rms_file_get_tag(rms_file , "dimensions" , NULL , NULL);
+  OK =       (nx == rms_file_get_dim(tag , "nX"));
+  OK = OK && (ny == rms_file_get_dim(tag , "nY"));
+  OK = OK && (nz == rms_file_get_dim(tag , "nZ"));
+
+  if (!OK) {
+    fprintf(stderr,"%s: dimensions on file: %s (%d, %d, %d) did not match with input dimensions (%d,%d,%d) - aborting \n",__func__ , rms_file->filename,
+	    rms_file_get_dim(tag , "nX"), rms_file_get_dim(tag , "nY"), rms_file_get_dim(tag , "nZ"),
+	    nx , ny , nz);
+    abort();
+  }
 }
 
 

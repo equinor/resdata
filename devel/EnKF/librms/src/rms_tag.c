@@ -70,12 +70,13 @@ void rms_fread_tag_header(rms_tag_type *tag , FILE *stream , bool *eof_tag) {
 
 bool rms_tag_name_eq(const rms_tag_type *tag , const char * tagname , const char *tagkey_name , const char *keyvalue) {
   bool eq = false;
-  if (strcmp(tag->name , tagname)) {
+  if (strcmp(tag->name , tagname) == 0) {
     if (tagkey_name != NULL && keyvalue != NULL) {
       if (hash_has_key(tag->keys , tagkey_name)) {
 	eq = rms_tagkey_char_eq(hash_get(tag->keys , tagkey_name) , keyvalue);
       }
-    } 
+    } else
+      eq = true;
   }
   return eq;
 }
@@ -91,14 +92,12 @@ rms_tagkey_type * rms_tag_get_key(const rms_tag_type *tag , const char *keyname)
 }
 
 
-
 static void rms_tag_add_tagkey(const rms_tag_type *tag , const rms_tagkey_type *tagkey) {
   hash_insert_copy(tag->keys , rms_tagkey_get_name(tagkey) , tagkey , rms_tagkey_copyc_ , rms_free_tagkey_);
 }
 
 
 static bool rms_tag_at_endtag(FILE *stream) {
-  
   const int init_pos = ftell(stream);
   bool at_endtag;
   char tag[7];
@@ -123,7 +122,6 @@ void rms_fread_tag(rms_tag_type *tag, FILE *stream , hash_type *type_map , bool 
     while (! rms_tag_at_endtag(stream)) {
       rms_tagkey_load(tagkey , stream , type_map);
       rms_tag_add_tagkey(tag , tagkey);
-      printf("Have loaded: %s/%s \n",rms_tag_get_name(tag) , rms_tagkey_get_name(tagkey));
     }
     rms_free_tagkey(tagkey);
   }

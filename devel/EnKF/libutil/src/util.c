@@ -29,6 +29,7 @@ char * util_alloc_cstring(const char *fort_string , const int *strlen) {
   return new_string;
 }
 
+
 char * util_alloc_substring_copy(const char *src , int N) {
   char *copy;
   if (N < strlen(src)) {
@@ -188,6 +189,16 @@ char * util_alloc_strip_copy(const char *src) {
 char * util_alloc_string_copy(const char *src ) {
   if (src != NULL) {
     char *copy = calloc(strlen(src) + 1 , sizeof *copy);
+    strcpy(copy , src);
+    return copy;
+  } else 
+    return NULL;
+}
+
+
+char * util_realloc_string_copy(char * old_string , const char *src ) {
+  if (src != NULL) {
+    char *copy = realloc(old_string , (strlen(src) + 1) * sizeof *copy);
     strcpy(copy , src);
     return copy;
   } else 

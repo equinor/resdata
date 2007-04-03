@@ -10,9 +10,11 @@ int          util_file_size(const char *);
 void         util_unlink_path(const char *);
 void         util_unlink_existing(const char *filename);
 
+char   * util_alloc_full_path(const char *, const char *);
 char   * util_alloc_strip_copy(const char *);
 void     util_set_strip_copy(char * , const char *);
 char   * util_alloc_string_copy(const char *);
+char   * util_realloc_string_copy(char * , const char *);
 void     util_free_string_list(char **, int );
 char  ** util_alloc_string_list(int , int );
 
