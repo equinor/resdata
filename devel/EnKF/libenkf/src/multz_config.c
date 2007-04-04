@@ -34,6 +34,10 @@ const char * multz_config_get_ensname_ref(const multz_config_type * multz_config
   return multz_config->ens_file;
 }
 
+const char * multz_config_get_eclname_ref(const multz_config_type * multz_config) {
+  return multz_config->ecl_file;
+}
+
 
 
 void multz_config_free(multz_config_type * multz_config) {

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <enkf_types.h>
 #include <multz_config.h>
 #include <multz_mem.h>
@@ -25,6 +26,15 @@ char * multz_mem_alloc_ensname(const multz_mem_type *multz_mem) {
   char *ens_name  = mem_config_alloc_ensname(multz_mem->mem_config , multz_config_get_ensname_ref(multz_mem->multz_config));
   return ens_name;
 }
+
+
+char * multz_mem_alloc_eclname(const multz_mem_type *multz_mem) {
+  char  *ecl_name = mem_config_alloc_eclname(multz_mem->mem_config , multz_config_get_eclname_ref(multz_mem->multz_config));
+  return ecl_name;
+}
+
+
+
 
 
 void multz_mem_free(multz_mem_type *multz_mem) {
