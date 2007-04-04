@@ -57,7 +57,8 @@ int main(void) {
     printf("Eclipse fil saves til: %s \n",ecl_file);
     free(ecl_file);
   }
-  
+  multz_mem_ecl_write(multz_mem2);
+
 }
 
 
