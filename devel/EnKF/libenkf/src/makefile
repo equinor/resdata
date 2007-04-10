@@ -13,8 +13,8 @@ INSTALL_MOD_PATH = ../mod
 CFLAGS  = -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
 ARFLAGS = -csr
 #################################################################
-OBJECTS           = multflt_config.o ecl_config.o mem_config.o ens_config.o multz.o multz_config.o
-INC_FILES_INSTALL = multflt_config.h ecl_config.h mem_config.h ens_config.h multz.h multz_config.h
+OBJECTS           = multflt_config.o ecl_config.o mem_config.o ens_config.o multz.o multz_config.o enkf_node.o
+INC_FILES_INSTALL = multflt_config.h ecl_config.h mem_config.h ens_config.h multz.h multz_config.h enkf_node.h
 LIB               = libenkf.a
 
 
@@ -38,6 +38,7 @@ $(LIB): $(OBJECTS)
 ecl_config.o   : ecl_config.c ecl_config.h
 multz_config.o : multz_config.c multz_config.h
 multz.o        : multz.c multz.h multz_config.o
+enkf_node.o    : enkf_node.h enkf_node.c
 
 
 
