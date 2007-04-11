@@ -3,13 +3,8 @@
 #include <ens_config.h>
 #include <multflt_config.h>
 #include <mem_config.h>
+#include <enkf_util.h>
 
-
-struct multflt_config_struct {
-  int    nfaults;
-  char * ecl_file;
-  char * ens_file;
-};
 
 
 multflt_config_type * multflt_config_alloc(int nfaults, const char * ecl_file , const char * ens_file) {
@@ -18,7 +13,9 @@ multflt_config_type * multflt_config_alloc(int nfaults, const char * ecl_file , 
   multflt_config->nfaults  = nfaults;
   multflt_config->ecl_file = util_alloc_string_copy(ecl_file);
   multflt_config->ens_file = util_alloc_string_copy(ens_file);
-  
+  multflt_config->mean     = enkf_util_malloc(nfaults * sizeof *multflt_config->mean , __func__);
+  multflt_config->std      = enkf_util_malloc(nfaults * sizeof *multflt_config->std ,  __func__);
+  multflt_config->active   = enkf_util_malloc(nfaults * sizeof *multflt_config->active , __func__);
   return multflt_config;
 }
 
@@ -38,6 +35,9 @@ int multflt_config_get_nfaults(const multflt_config_type *multflt_config) { retu
 void multflt_config_free(multflt_config_type * multflt_config) {
   free(multflt_config->ecl_file);
   free(multflt_config->ens_file);
+  free(multflt_config->mean);
+  free(multflt_config->std);
+  free(multflt_config->active);
   free(multflt_config);
 }
 							 

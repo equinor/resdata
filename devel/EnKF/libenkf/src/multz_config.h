@@ -2,9 +2,21 @@
 #define __MULTZ_CONFIG_H__
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <mem_config.h>
 
-typedef struct multz_config_struct multz_config_type;
+typedef struct {
+  int i1,i2,j1,j2;
+  int nz;
+  int _area;
+  bool     lognormal;
+  double * mean;
+  double * std;
+  bool   * active;
+  char   * ecl_file;
+  char   * ens_file;
+} multz_config_type;
+
 
 multz_config_type * multz_config_alloc(int , int , int , const char * , const char * );
 void                multz_config_free(multz_config_type *);

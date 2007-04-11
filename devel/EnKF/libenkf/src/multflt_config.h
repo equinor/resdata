@@ -2,9 +2,21 @@
 #define __MULTFLT_CONFIG_H__
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <mem_config.h>
 
 typedef struct multflt_config_struct multflt_config_type;
+
+struct multflt_config_struct {
+  int    nfaults;
+  bool   lognormal;
+  char   * ecl_file;
+  char   * ens_file;
+  double * mean;
+  double * std;
+  bool   * active;
+};
+
 
 multflt_config_type * multflt_config_alloc(int , const char * , const char * );
 void                  multflt_config_free(multflt_config_type *);
