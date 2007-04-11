@@ -21,6 +21,7 @@ void             enkf_sample    (enkf_node_type *);
 
 void             enkf_node_ecl_write (const enkf_node_type *);
 void             enkf_node_ecl_read  (enkf_node_type *);
+void             enkf_node_sample(enkf_node_type *enkf_node);
 
 void             enkf_node_ens_write (const enkf_node_type *);
 void             enkf_node_ens_read  (enkf_node_type *);

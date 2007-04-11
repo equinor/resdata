@@ -1,22 +1,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <enkf_types.h>
+#include <enkf_state.h>
 #include <multz_config.h>
 #include <multz.h>
 #include <enkf_util.h>
 
 
+
 struct multz_struct {
   const multz_config_type *multz_config;
-  const mem_config_type   *mem_config;
+  const enkf_state_type   *enkf_state;
   double                  *data;
 };
 
 /*****************************************************************/
 
-multz_type * multz_alloc(const mem_config_type * mem_config , const multz_config_type * multz_config) {
+multz_type * multz_alloc(const enkf_state_type * enkf_state , const multz_config_type * multz_config) {
   multz_type * multz = malloc(sizeof *multz);
-  multz->mem_config   = mem_config;
+  multz->enkf_state   = enkf_state;
   multz->multz_config = multz_config;
   multz->data         = enkf_util_malloc(multz_config_get_nz(multz_config) * sizeof *multz->data , __func__);
   return multz;
@@ -25,13 +27,13 @@ multz_type * multz_alloc(const mem_config_type * mem_config , const multz_config
 
 
 char * multz_alloc_ensname(const multz_type *multz) {
-  char *ens_name  = mem_config_alloc_ensname(multz->mem_config , multz_config_get_ensname_ref(multz->multz_config));
+  char *ens_name  = enkf_state_alloc_ensname(multz->enkf_state , multz_config_get_ensname_ref(multz->multz_config));
   return ens_name;
 }
 
 
 char * multz_alloc_eclname(const multz_type *multz) {
-  char  *ecl_name = mem_config_alloc_eclname(multz->mem_config , multz_config_get_eclname_ref(multz->multz_config));
+  char  *ecl_name = enkf_state_alloc_eclname(multz->enkf_state , multz_config_get_eclname_ref(multz->multz_config));
   return ecl_name;
 }
 

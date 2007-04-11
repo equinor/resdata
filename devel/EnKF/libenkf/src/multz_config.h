@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include <mem_config.h>
 
 typedef struct {
   int i1,i2,j1,j2;

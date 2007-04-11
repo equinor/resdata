@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <enkf_types.h>
+#include <enkf_state.h>
 #include <multflt_config.h>
 #include <multflt.h>
 #include <enkf_util.h>
@@ -8,15 +9,15 @@
 
 struct multflt_struct {
   const multflt_config_type *multflt_config;
-  const mem_config_type   *mem_config;
+  const enkf_state_type   *enkf_state;
   double                  *data;
 };
 
 /*****************************************************************/
 
-multflt_type * multflt_alloc(const mem_config_type * mem_config , const multflt_config_type * multflt_config) {
-  multflt_type * multflt = malloc(sizeof *multflt);
-  multflt->mem_config     = mem_config;
+multflt_type * multflt_alloc(const enkf_state_type * enkf_state , const multflt_config_type * multflt_config) {
+  multflt_type * multflt  = malloc(sizeof *multflt);
+  multflt->enkf_state     = enkf_state;
   multflt->multflt_config = multflt_config;
   multflt->data           = enkf_util_malloc(multflt_config->nfaults * sizeof *multflt->data , __func__);
   return multflt;
@@ -25,13 +26,13 @@ multflt_type * multflt_alloc(const mem_config_type * mem_config , const multflt_
 
 
 char * multflt_alloc_ensname(const multflt_type *multflt) {
-  char *ens_name  = mem_config_alloc_ensname(multflt->mem_config , multflt_config_get_ensname_ref(multflt->multflt_config));
+  char *ens_name  = enkf_state_alloc_ensname(multflt->enkf_state , multflt_config_get_ensname_ref(multflt->multflt_config));
   return ens_name;
 }
 
 
 char * multflt_alloc_eclname(const multflt_type *multflt) {
-  char  *ecl_name = mem_config_alloc_eclname(multflt->mem_config , multflt_config_get_eclname_ref(multflt->multflt_config));
+  char  *ecl_name = enkf_state_alloc_eclname(multflt->enkf_state , multflt_config_get_eclname_ref(multflt->multflt_config));
   return ecl_name;
 }
 
@@ -44,7 +45,7 @@ void multflt_ecl_write(const multflt_type * multflt) {
     int k;
     for (k=0; k < nfaults; k++)
       /*multflt_config_fprintf_layer(multflt->multflt_config , k + 1 , multflt->data[k] , stream);*/
-      fprintf(stream , "FAULT ... %g \n",multflt->data[k]);
+      fprintf(stream , "FAULT:%3d ... %g \n",k,multflt->data[k]);
   }
   
   fclose(stream);

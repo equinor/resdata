@@ -2,10 +2,11 @@
 #define __MULTZ_H__
 
 #include <enkf_util.h>
+#include <enkf_state.h>
 
 typedef struct multz_struct multz_type;
 
-multz_type     * multz_alloc(const mem_config_type * , const multz_config_type * );
+multz_type     * multz_alloc(const enkf_state_type * , const multz_config_type * );
 void             multz_free(multz_type *);
 char           * multz_alloc_ensname(const multz_type *);
 char           * multz_alloc_eclname(const multz_type *);

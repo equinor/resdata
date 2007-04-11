@@ -51,8 +51,8 @@ static void enkf_state_add_node__(enkf_state_type * enkf_state , const enkf_node
 }
 
 
-void enkf_state_add_node(enkf_state_type *enkf_state , void *data , ecl_read_ftype * ecl_read , ecl_write_ftype * ecl_write , ens_read_ftype *ens_read , ens_write_ftype * ens_write , sample_ftype *sample, free_ftype * free) {
-  enkf_node_type *node = enkf_node_alloc(data , ecl_read , ecl_write , ens_read , ens_write , sample , freef);
+void enkf_state_add_node(enkf_state_type *enkf_state , void *data , ecl_read_ftype * ecl_read , ecl_write_ftype * ecl_write , ens_read_ftype *ens_read , ens_write_ftype * ens_write , sample_ftype *sample, free_ftype * freef) {
+  enkf_node_type *enkf_node = enkf_node_alloc(data , ecl_read , ecl_write , ens_read , ens_write , sample , freef);
   enkf_state_add_node__(enkf_state , enkf_node);
 }
 
@@ -76,9 +76,18 @@ void enkf_state_ens_write(const enkf_state_type * enkf_state) {
   }
 }
 
+void enkf_state_sample(const enkf_state_type * enkf_state) {
+  list_node_type *list_node;
+  list_node = list_get_head(enkf_state->nodes);
+  while (list_node != NULL) {
+    enkf_node_sample(list_node_value_ptr(list_node));
+    list_node = list_node_get_next(list_node);
+  }
+}
 
 
-char * enkf_state_config_alloc_ensname(const enkf_state_type * enkf_state, const char * ext_name) {
+
+char * enkf_state_alloc_ensname(const enkf_state_type * enkf_state, const char * ext_name) {
   char *path     = ens_config_alloc_ensname(enkf_state->ens_config , enkf_state->enkf_state_ens_path);
   char *ens_file = util_alloc_full_path(path , ext_name);
 
@@ -89,7 +98,7 @@ char * enkf_state_config_alloc_ensname(const enkf_state_type * enkf_state, const
 }
 
 
-char * enkf_state_config_alloc_eclname(const enkf_state_type * enkf_state, const char * ext_name) {
+char * enkf_state_alloc_eclname(const enkf_state_type * enkf_state, const char * ext_name) {
   char *path     = ecl_config_alloc_eclname(enkf_state->ecl_config , enkf_state->enkf_state_ecl_path);
   char *ecl_file = util_alloc_full_path(path , ext_name);
   free(path);
@@ -97,14 +106,14 @@ char * enkf_state_config_alloc_eclname(const enkf_state_type * enkf_state, const
 }
 
 
-void enkf_state_config_make_ecl_path(const enkf_state_type *enkf_state) {
+void enkf_state_make_ecl_path(const enkf_state_type *enkf_state) {
   char *path = ecl_config_alloc_eclname(enkf_state->ecl_config , enkf_state->enkf_state_ecl_path);
   util_make_path(path);
   free(path);
 }
 
 
-void enkf_state_config_unlink_ecl_path(const enkf_state_type *enkf_state) {
+void enkf_state_unlink_ecl_path(const enkf_state_type *enkf_state) {
   char *path = ecl_config_alloc_eclname(enkf_state->ecl_config , enkf_state->enkf_state_ecl_path);
   util_unlink_path(path);
   free(path);
@@ -113,7 +122,7 @@ void enkf_state_config_unlink_ecl_path(const enkf_state_type *enkf_state) {
 
 
 
-void enkf_state_config_free(enkf_state_type *enkf_state) {
+void enkf_state_free(enkf_state_type *enkf_state) {
   free(enkf_state->enkf_state_ens_path);
   free(enkf_state->enkf_state_ecl_path);
   free(enkf_state);

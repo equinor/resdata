@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include <mem_config.h>
 
 typedef struct multflt_config_struct multflt_config_type;
 

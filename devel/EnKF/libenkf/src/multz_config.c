@@ -4,7 +4,6 @@
 #include <util.h>
 #include <ens_config.h>
 #include <multz_config.h>
-#include <mem_config.h>
 
 
 

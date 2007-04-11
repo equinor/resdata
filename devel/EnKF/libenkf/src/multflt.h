@@ -1,11 +1,12 @@
 #ifndef __MULTFLT_H__
 #define __MULTFLT_H__
 
+#include <enkf_state.h>
 #include <enkf_util.h>
 
 typedef struct multflt_struct multflt_type;
 
-multflt_type     * multflt_alloc(const mem_config_type * , const multflt_config_type * );
+multflt_type   * multflt_alloc(const enkf_state_type * , const multflt_config_type * );
 void             multflt_free(multflt_type *);
 char           * multflt_alloc_ensname(const multflt_type *);
 char           * multflt_alloc_eclname(const multflt_type *);
