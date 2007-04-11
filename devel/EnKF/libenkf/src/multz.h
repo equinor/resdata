@@ -17,5 +17,6 @@ VOID_FUNC_HEADER_CONST (multz_ecl_write  , multz_type);
 VOID_FUNC_HEADER_CONST (multz_ens_write  , multz_type);
 VOID_FUNC_HEADER       (multz_ens_read   , multz_type);
 VOID_FUNC_HEADER       (multz_sample     , multz_type);
+VOID_FUNC_HEADER       (multz_free       , multz_type);
 
 #endif

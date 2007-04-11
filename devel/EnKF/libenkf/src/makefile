@@ -2,7 +2,7 @@ CC = gcc
 FC = ifort
 AR = ar
 #################################################################
-COMPILE_INCLUDE   = -I./ -I../../libutil/include
+COMPILE_INCLUDE   = -I./ -I../../libutil/include -I../../libhash/include
 COMPILE_LIB_PATH  = -L../../libhash/lib
 COMPILE_LIBS      = -lm -lhash
 
@@ -13,8 +13,8 @@ INSTALL_MOD_PATH = ../mod
 CFLAGS  = -m32 -O3 -std=gnu99 -pg -Wall  $(COMPILE_INCLUDE) 
 ARFLAGS = -csr
 #################################################################
-OBJECTS           = multflt.o enkf_util.o multflt_config.o ecl_config.o mem_config.o ens_config.o multz.o multz_config.o enkf_node.o
-INC_FILES_INSTALL = multflt.h enkf_util.h multflt_config.h ecl_config.h mem_config.h ens_config.h multz.h multz_config.h enkf_node.h
+OBJECTS           = enkf_state.o multflt.o enkf_util.o multflt_config.o ecl_config.o mem_config.o ens_config.o multz.o multz_config.o enkf_node.o
+INC_FILES_INSTALL = enkf_state.h multflt.h enkf_util.h multflt_config.h ecl_config.h mem_config.h ens_config.h multz.h multz_config.h enkf_node.h
 LIB               = libenkf.a
 
 
@@ -34,7 +34,7 @@ $(LIB): $(OBJECTS)
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 
-
+enkf_state.o   : enkf_state.c enkf_state.h enkf_node.o
 multflt.o      : multflt.c multflt.h multflt_config.o enkf_util.o
 ecl_config.o   : ecl_config.c ecl_config.h
 multz_config.o : multz_config.c multz_config.h

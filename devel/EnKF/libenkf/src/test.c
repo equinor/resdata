@@ -5,7 +5,10 @@
 #include <mem_config.h>
 #include <multz_config.h>
 #include <multz.h>
+#include <multflt_config.h>
+#include <multflt.h>
 #include <enkf_node.h>
+#include <enkf_state.h>
 #include <work.h>
 #include <timer.h>
 
@@ -23,10 +26,14 @@ int main(void) {
   mem_config_type   * mem_config1  = mem_config_alloc(ens_config , ecl_config ,  "mem1" , "tmpdir1" );
   mem_config_type   * mem_config2  = mem_config_alloc(ens_config , ecl_config ,  "mem2" , "tmpdir2" );
 
-  multz_config_type * multz_config = multz_config_alloc(100 , 100 , 1000 , "MULTZ.INC" , "multz");
-  multz_type    * multz1   = multz_alloc(mem_config1 , multz_config);
-  multz_type    * multz2   = multz_alloc(mem_config2 , multz_config);
-  
+  multflt_config_type * multflt_config = multflt_config_alloc(100 , "MULTFLT.INC" , "multflt");
+  multz_config_type * multz_config     = multz_config_alloc(100 , 100 , 1000 , "MULTZ.INC" , "multz");
+  multz_type      * multz1     = multz_alloc(mem_config1   , multz_config);
+  multz_type      * multz2     = multz_alloc(mem_config2   , multz_config);
+  multflt_type    * multflt    = multflt_alloc(mem_config1 , multflt_config);
+  enkf_state_type * enkf_state = enkf_state_alloc(ens_config , ecl_config , "mem1" , "tmpdir1");
+
+
   ens_config_set_ext_path(ens_config , "Time0");
   {
     char *ens_file = multz_alloc_ensname(multz1);
@@ -65,9 +72,16 @@ int main(void) {
   multz_ecl_write(multz2);
   multz_ecl_write(multz2);
 
-
-  enkf_node = enkf_node_alloc(multz2 , NULL , multz_ecl_write__  ,  multz_ens_read__ , multz_ens_write__ , multz_sample__ );
+  /*
+    Some leakage here ...
+  */
+  enkf_node = enkf_node_alloc(multz2 , NULL , multz_ecl_write__  ,  multz_ens_read__ , multz_ens_write__ , multz_sample__ , multflt_free__);
+  enkf_state_add_node(enkf_state , enkf_node);
+  enkf_node = enkf_node_alloc(multflt , NULL , multflt_ecl_write__  ,  multflt_ens_read__ , multflt_ens_write__ , multflt_sample__ , multflt_free__);
+  enkf_state_add_node(enkf_state , enkf_node);
   
+
+
   enkf_node_ecl_write(enkf_node);
   enkf_node_sample(enkf_node);
   enkf_node_ens_write(enkf_node);
@@ -101,14 +115,16 @@ int main(void) {
       sprintf(ecl_path , "tmpdir%d" , i+1);
       mem_list[i]   = mem_config_alloc(ens_config , ecl_config , ens_path , ecl_path);
       multz_list[i] = multz_alloc(mem_list[i] , multz_config);
-      ens[i]        = enkf_node_alloc(multz_list[i] , NULL , multz_ecl_write__  ,  multz_ens_read__ , multz_ens_write__ , multz_sample__ );
+      ens[i]        = enkf_node_alloc(multz_list[i] , NULL , multz_ecl_write__  ,  multz_ens_read__ , multz_ens_write__ , multz_sample__ , multz_free__ );
     }
+    enkf_state_add_node(enkf_state , ens[0]);
+    enkf_state_add_node(enkf_state , ens[2]);
 
     for (i=0; i < 100; i++) {
       timer_start(timer_list[0]);
       enkf_node_sample(ens[i]);
       timer_stop(timer_list[0]);
-
+2
       mem_config_make_ecl_path(mem_list[i]);
 
       timer_start(timer_list[1]);
@@ -124,6 +140,7 @@ int main(void) {
     }
     work = work_alloc_double(10000 , __func__);
     timer_list_report((const timer_type **) timer_list , 3 , stdout , work);
+    enkf_state_ecl_write(enkf_state);
   }
 }
 

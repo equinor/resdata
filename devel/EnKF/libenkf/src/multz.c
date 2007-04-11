@@ -100,6 +100,7 @@ void multz_free(multz_type *multz) {
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/
 
+VOID_FUNC      (multz_free      , multz_type)
 VOID_FUNC_CONST(multz_ecl_write , multz_type)
 VOID_FUNC_CONST(multz_ens_write , multz_type)
 VOID_FUNC      (multz_ens_read  , multz_type)
