@@ -453,7 +453,7 @@ static void ecl_parse_summary_spec(const char *refcase_path , const char *ecl_ba
 
   
 
-static void ecl_parse_grid(const char *refcase_path , const char *ecl_base , const char *include_path, const hash_type *type_map , bool fmt_file , bool endian_flip) {
+void ecl_parse_grid(const char *refcase_path , const char *ecl_base , const char *include_path, bool fmt_file , bool endian_flip) {
   char *grid_file;
   ecl_fstate_type *grid;
   if (fmt_file) {
@@ -463,7 +463,7 @@ static void ecl_parse_grid(const char *refcase_path , const char *ecl_base , con
     grid_file = malloc(strlen(refcase_path) + strlen(ecl_base) + 8);
     sprintf(grid_file , "%s/%s.EGRID" , refcase_path , ecl_base);
   } 
-  printf("Parsing: ",grid_file); fflush(stdout);
+  printf("Parsing: %s\n",grid_file); 
   if (fmt_file)
     grid = ecl_fstate_load_unified(grid_file , ECL_FORMATTED , endian_flip);
   else
@@ -504,8 +504,9 @@ void ecl_parse(const char *refcase_path , const char *eclbase, const char *inclu
   ecl_parse_summary_spec(refcase_path , eclbase , include_path, type_map , fmt_file , endian_flip);
   ecl_parse_summary_data(refcase_path , eclbase , include_path , type_map , fmt_file , unified , endian_flip);
   ecl_parse_restart(refcase_path , eclbase , include_path , type_map , fmt_file , unified, endian_flip);
-  ecl_parse_grid(refcase_path , eclbase , include_path , type_map , fmt_file , endian_flip);
+  ecl_parse_grid(refcase_path , eclbase , include_path , fmt_file , endian_flip);
 
   free_type_map(type_map);
 }
+
 

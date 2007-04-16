@@ -299,15 +299,16 @@ bool lsf_job_complete_OK(lsf_job_type *lsf_job) {
 /*****************************************************************/
 
 
-lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit, const char * summary_file , const char *bsub_status_cmd , const char *tmp_path) {
+lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit, const char * summary_path , const char * summary_file , const char *bsub_status_cmd , const char *tmp_path) {
   const char *tmp_file = "bjobs.jobList";
   lsf_pool_type *lsf_pool = malloc(sizeof *lsf_pool);
   lsf_pool->alloc_size = 100;
   lsf_pool->jobList    = calloc(lsf_pool->alloc_size    , sizeof *lsf_pool->jobList);
-
-  if (summary_file != NULL)
-    lsf_pool->summary_file = util_alloc_string_copy(summary_file);
-  else
+  
+  if (summary_file != NULL && summary_path != NULL) {
+    lsf_pool->summary_file = util_alloc_full_path(summary_path , summary_file);
+    util_make_path(summary_path);
+  } else
     lsf_pool->summary_file = NULL;
   
   lsf_pool->tmp_path = util_alloc_string_copy(tmp_path);
@@ -393,11 +394,17 @@ static void lsf_pool_fprintf_summary(const lsf_pool_type *lsf_pool) {
   int job;
   FILE *stream = fopen(lsf_pool->summary_file , "w");
   
-  fprintf(stream , "Job                   Status           submit-time    start-time      complete-time       run-time\n");
-  fprintf(stream , "----------------------------------------------------------------------------------------------------\n");
-  for (job = 0; job < lsf_pool->size; job++) 
-    lsf_job_fprintf_status(lsf_pool->jobList[job] , stream);
-  fclose(stream);
+  
+  if (stream != NULL) {
+    fprintf(stream , "Job                   Status           submit-time    start-time      complete-time       run-time\n");
+    fprintf(stream , "----------------------------------------------------------------------------------------------------\n");
+    for (job = 0; job < lsf_pool->size; job++) 
+      lsf_job_fprintf_status(lsf_pool->jobList[job] , stream);
+    fclose(stream);
+  } else {
+    fprintf(stderr,"%s: failed to open summary file:%s - aborting \n",__func__ , lsf_pool->summary_file);
+    abort();
+  }
 }
 
 

@@ -29,7 +29,7 @@
 
 #define DEBUG 1
 
-enum ecl_type_enum_def {ecl_char_type , ecl_float_type , ecl_double_type , ecl_int_type , ecl_bool_type , ecl_mess_type};
+
 
 
 struct ecl_kw_struct {
@@ -44,8 +44,9 @@ struct ecl_kw_struct {
   char  *header;
   char  *read_fmt, *write_fmt;
   char  *data;
-  long  int start_pos;
+  long  int _start_pos;
 };
+
 
 #define ecl_num_blocksize  1000
 #define ecl_char_blocksize  105
@@ -546,7 +547,7 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 
 
 void ecl_kw_rewind(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
-  fseek(fortio_get_FILE(fortio) , ecl_kw->start_pos , SEEK_SET);
+  fseek(fortio_get_FILE(fortio) , ecl_kw->_start_pos , SEEK_SET);
 }
 
 
@@ -559,7 +560,7 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   int size;
   bool OK;
 
-  ecl_kw->start_pos = ftell(stream);
+  ecl_kw->_start_pos = ftell(stream);
   if (ecl_kw->fmt_file) {
     OK = ecl_kw_fscanf_qstring(header , "%8c" , 8 , stream); 
     if (OK) {
@@ -599,10 +600,12 @@ void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
     }
   }
   if (ecl_kw->data != tmp) {
-    ecl_kw->data      = tmp;
+    ecl_kw->data  = tmp;
     ecl_kw->data_size = ecl_kw->size;
   }
 }
+
+
 
 
 
@@ -899,3 +902,76 @@ const char * ecl_kw_get_str_type_ref(const ecl_kw_type *ecl_kw) {
   return __get_ecl_str_type(ecl_kw->ecl_type);
 }
 
+ecl_type_enum ecl_kw_get_type(const ecl_kw_type * ecl_kw) { return ecl_kw->ecl_type; }
+
+
+/******************************************************************/
+
+void ecl_kw_cfwrite(const ecl_kw_type * ecl_kw , FILE *stream) {
+  fwrite(&ecl_kw->fmt_file     	 , sizeof ecl_kw->fmt_file , 1 , stream);
+  fwrite(&ecl_kw->sizeof_ctype 	 , sizeof ecl_kw->sizeof_ctype , 1 , stream);
+  fwrite(&ecl_kw->size         	 , sizeof ecl_kw->size , 1 , stream);
+  fwrite(&ecl_kw->fmt_linesize 	 , sizeof ecl_kw->fmt_linesize , 1 , stream);
+  fwrite(&ecl_kw->blocksize    	 , sizeof ecl_kw->blocksize , 1 , stream);
+  fwrite(&ecl_kw->endian_convert , sizeof ecl_kw->endian_convert , 1 , stream);
+  fwrite(&ecl_kw->ecl_type       , sizeof ecl_kw->ecl_type   , 1 , stream);
+  {
+    int tmp_len;
+    tmp_len = strlen(ecl_kw->header);
+    fwrite(&tmp_len , sizeof tmp_len , 1 , stream); 
+    fwrite(ecl_kw->header   , sizeof ecl_kw->header  , tmp_len + 1 , stream);          /* The terminating \0 is included */
+    
+    fwrite(&tmp_len , sizeof tmp_len , 1 , stream);
+    fwrite(ecl_kw->write_fmt   , sizeof ecl_kw->write_fmt  , tmp_len + 1 , stream);    /* The terminating \0 is included */
+
+    fwrite(&tmp_len , sizeof tmp_len , 1 , stream);
+    fwrite(ecl_kw->read_fmt   , sizeof ecl_kw->read_fmt  , tmp_len + 1 , stream);      /* The terminating \0 is included */
+  }
+  {
+    int items_written = fwrite(ecl_kw->data , ecl_kw->sizeof_ctype , ecl_kw->size , stream);
+    if (items_written != ecl_kw->size) {
+      fprintf(stderr,"%s: failed to write all data to disk - aborting. \n",__func__);
+      abort();
+    }
+  }
+}
+
+
+
+void ecl_kw_cfread(ecl_kw_type * ecl_kw , FILE *stream) {
+  fread(&ecl_kw->fmt_file     	 , sizeof ecl_kw->fmt_file , 1 , stream);
+  fread(&ecl_kw->sizeof_ctype 	 , sizeof ecl_kw->sizeof_ctype , 1 , stream);
+  {
+    int file_size;
+    fread(&file_size , sizeof file_size , 1 , stream);
+    if (file_size != ecl_kw->size) 
+      ecl_kw_alloc_data(ecl_kw);
+  }
+      
+  fread(&ecl_kw->fmt_linesize 	 , sizeof ecl_kw->fmt_linesize , 1 , stream);
+  fread(&ecl_kw->blocksize    	 , sizeof ecl_kw->blocksize , 1 , stream);
+  fread(&ecl_kw->endian_convert  , sizeof ecl_kw->endian_convert , 1 , stream);
+  fread(&ecl_kw->ecl_type        , sizeof ecl_kw->ecl_type   , 1 , stream);
+  {
+    int tmp_len;
+    tmp_len = strlen(ecl_kw->header);
+    fread(&tmp_len , sizeof tmp_len , 1 , stream);
+    ecl_kw->header = realloc(ecl_kw->header , tmp_len + 1);
+    fread(ecl_kw->header   , sizeof ecl_kw->header  , tmp_len + 1 , stream);        /* The terminating \0 is included */
+    
+    fread(&tmp_len , sizeof tmp_len , 1 , stream);
+    ecl_kw->write_fmt = realloc(ecl_kw->write_fmt , tmp_len + 1);
+    fread(ecl_kw->write_fmt   , sizeof ecl_kw->write_fmt  , tmp_len + 1 , stream);  /* The terminating \0 is included */
+    
+    fread(&tmp_len , sizeof tmp_len , 1 , stream);
+    ecl_kw->read_fmt = realloc(ecl_kw->read_fmt , tmp_len + 1);
+    fread(ecl_kw->read_fmt   , sizeof ecl_kw->read_fmt  , tmp_len + 1 , stream);    /* The terminating \0 is included */
+  }
+  {
+    int items_written = fread(ecl_kw->data , sizeof *ecl_kw->data , ecl_kw->size , stream);
+    if (items_written != ecl_kw->size) {
+      fprintf(stderr,"%s: failed to write all data to disk - aborting. \n",__func__);
+      abort();
+    }
+  }
+}

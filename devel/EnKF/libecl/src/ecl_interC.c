@@ -195,9 +195,13 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
 /*****************************************************************/
 
 void ecl_inter_init_lsf__(const int  * sleep_time , const int *max_running,  const int *subexit_int, 
+			  const char * _summary_path , const int * summary_path_len,
 			  const char * _summary_file , const int * summary_file_len) {
+  
   char *summary_file = util_alloc_cstring(_summary_file , summary_file_len);
-  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , util_intptr_2bool(subexit_int) , summary_file , "bjobs -a" , "/tmp");
+  char *summary_path = util_alloc_cstring(_summary_path , summary_path_len);
+  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , util_intptr_2bool(subexit_int) , summary_path , summary_file , "bjobs -a" , "/tmp");
+  free(summary_path);
   free(summary_file);
 }
 
@@ -267,6 +271,25 @@ void ecl_inter_parse__(const char *_refcase_path , const int * refcase_len,
   free(eclbase);
   free(include_path);
 }
+
+
+void ecl_inter_parse_grid__(const char *_refcase_path , const int * refcase_len,
+			    const char *_eclbase      , const int * eclbase_len, 
+			    const char *_include_path , const int * include_len, 
+			    const int  *fmt_file_int ) {
+  bool fmt_file = util_intptr_2bool(fmt_file_int);
+  char *refcase_path = util_alloc_cstring(_refcase_path , refcase_len);
+  char *eclbase      = util_alloc_cstring(_eclbase      , eclbase_len);
+  char *include_path = util_alloc_cstring(_include_path , include_len);
+  
+  ecl_parse_grid(refcase_path , eclbase , include_path , fmt_file , ENDIAN_CONVERT);
+
+  free(refcase_path);
+  free(eclbase);
+  free(include_path);
+}
+
+
 
 
 void ecl_inter_diag_ens_interactive__(const char *_eclbase_dir  , const int *dir_len,

@@ -7,6 +7,7 @@
 #include <ecl_block.h>
 #include <errno.h>
 #include <hash.h>
+#include <list.h>
 #include <util.h>
 
 
@@ -16,6 +17,7 @@ struct ecl_block_struct {
   int           time_step;
   int           size;
   hash_type    *kw_hash;
+  list_type    *kw_list;
 };
 
 
@@ -48,17 +50,22 @@ ecl_block_type * ecl_block_alloc(int time_step , int Nkw , bool fmt_file , bool 
   ecl_block->size           = 0;
   
   ecl_block->kw_hash = hash_alloc(2*Nkw);
+  ecl_block->kw_list = list_alloc();
   if (first_kw != NULL) ecl_block_add_kw(ecl_block , first_kw);
   return ecl_block;
 }
 
 
+/*
+  hash_node -> list_node -> ecl_kw
+*/
 
 bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw) {
   char kw[9];
   if (ecl_block_get_kw(ecl_block , ecl_kw_get_header_ref(ecl_kw)))
     return false;
   else {
+    list_node_type * list_node = list_append_ref(ecl_block->kw_list , ecl_kw);
     util_set_strip_copy(kw , ecl_kw_get_header_ref(ecl_kw));
     hash_insert_ref(ecl_block->kw_hash , kw , ecl_kw);
     ecl_block->size++;
@@ -70,8 +77,10 @@ bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw) {
 
 ecl_kw_type * ecl_block_detach_kw(ecl_block_type *ecl_block , const char *kw) {
   ecl_kw_type *ecl_kw = ecl_block_get_kw(ecl_block , kw);
-  if (ecl_kw != NULL) 
+  if (ecl_kw != NULL) {
     hash_del(ecl_block->kw_hash , kw);
+    /*list_del_node(ecl_block->ks_list , );*/
+  }
   return ecl_kw;
 }
 
@@ -92,6 +101,7 @@ bool ecl_block_add_kw_copy(ecl_block_type *ecl_block , const ecl_kw_type *src_kw
     return true;
   }
 }
+
 
 
 ecl_kw_type * ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_eof , bool return_last_kw) {
@@ -124,6 +134,7 @@ ecl_kw_type * ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , b
 
   return return_kw;
 }
+
 
 
 static bool ecl_block_include_kw(const ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw , int N_kw, const char **kwlist) {
@@ -261,6 +272,7 @@ void * ecl_block_get_data_ref(const ecl_block_type *ecl_block, const char *kw) {
 
 void ecl_block_free(ecl_block_type *ecl_block) {
   hash_free(ecl_block->kw_hash);
+  list_free(ecl_block->kw_list);
   free(ecl_block);
 }
 
