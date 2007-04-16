@@ -29,11 +29,13 @@ ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
   ecl_block_type * copy;
   copy = ecl_block_alloc(src->time_step , src->size , src->fmt_file , src->endian_convert , NULL);
   {
+
     int i;
     char **kwlist = hash_alloc_ordered_keylist(src->kw_hash);
     for (i=0; i  < src->size; i++)
       ecl_block_add_kw_copy(copy , hash_get(src->kw_hash , kwlist[i]));
     hash_free_ext_keylist(src->kw_hash , kwlist);
+
   }
   return copy;
 }
@@ -67,22 +69,37 @@ bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw) {
   else {
     list_node_type * list_node = list_append_ref(ecl_block->kw_list , ecl_kw);
     util_set_strip_copy(kw , ecl_kw_get_header_ref(ecl_kw));
-    hash_insert_ref(ecl_block->kw_hash , kw , ecl_kw);
+    hash_insert_ref(ecl_block->kw_hash , kw , list_node);
     ecl_block->size++;
     return true;
   }
 }
 
 
+ecl_kw_type * ecl_block_get_kw(const ecl_block_type *ecl_block , const char *kw) {
+  ecl_kw_type *ecl_kw = NULL;
+  char kw_s[9];
+  util_set_strip_copy(kw_s , kw);  
+  
+  if (hash_has_key(ecl_block->kw_hash , kw_s)) 
+    ecl_kw = list_node_value_ptr(hash_get(ecl_block->kw_hash , kw_s));
+  
+  return ecl_kw;
+}
+
+
+
 
 ecl_kw_type * ecl_block_detach_kw(ecl_block_type *ecl_block , const char *kw) {
   ecl_kw_type *ecl_kw = ecl_block_get_kw(ecl_block , kw);
   if (ecl_kw != NULL) {
+    list_node_type *kw_node = hash_get(ecl_block->kw_hash , kw);
     hash_del(ecl_block->kw_hash , kw);
-    /*list_del_node(ecl_block->ks_list , );*/
+    list_del_node(ecl_block->kw_list , kw_node);
   }
   return ecl_kw;
 }
+
 
 
 void ecl_block_free_kw(ecl_block_type *ecl_block , const char *kw) {
@@ -101,7 +118,6 @@ bool ecl_block_add_kw_copy(ecl_block_type *ecl_block , const ecl_kw_type *src_kw
     return true;
   }
 }
-
 
 
 ecl_kw_type * ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_eof , bool return_last_kw) {
@@ -161,7 +177,7 @@ void ecl_block_set_fmt_file(ecl_block_type *ecl_block , bool fmt_file) {
     */
     hash_node_type *kw_node = hash_iter_init(ecl_block->kw_hash);
     while (kw_node != NULL) {
-      ecl_kw_set_fmt_file(hash_node_value_ptr(kw_node), ecl_block->fmt_file);
+      ecl_kw_set_fmt_file(list_node_value_ptr(hash_node_value_ptr(kw_node)), ecl_block->fmt_file);
       kw_node = hash_iter_next(ecl_block->kw_hash , kw_node);
     }
   }
@@ -194,7 +210,7 @@ void ecl_block_fwrite(ecl_block_type *ecl_block , fortio_type *fortio) {
   char **kw_list = hash_alloc_ordered_keylist(ecl_block->kw_hash);
 
   for (ikw = 0; ikw < ecl_block->size; ikw++) {
-    ecl_kw_type *ecl_kw = hash_get(ecl_block->kw_hash , kw_list[ikw]);
+    ecl_kw_type *ecl_kw = ecl_block_get_kw(ecl_block , kw_list[ikw]);
     ecl_kw_set_fmt_file(ecl_kw , ecl_block->fmt_file);
     ecl_kw_fwrite(ecl_kw , fortio);
   }
@@ -228,23 +244,6 @@ void ecl_block_shallow_copy(ecl_block_type *target , const ecl_block_type *src) 
 }
 */
 
-
-ecl_kw_type * ecl_block_get_kw(const ecl_block_type *ecl_block , const char *kw) {
-  ecl_kw_type *ecl_kw = NULL;
-  char kw_s[9];
-  util_set_strip_copy(kw_s , kw);  
-  
-  if (hash_has_key(ecl_block->kw_hash , kw_s)) 
-    ecl_kw = hash_get(ecl_block->kw_hash , kw_s);
-  
-  /*if (ecl_kw == NULL) 
-    printf("Fant ikke: %s \n", kw);
-  else
-    printf("Fant %s \n",kw);
-  */
-
-  return ecl_kw;
-}
 
 
 /*
