@@ -23,20 +23,46 @@ struct ecl_block_struct {
 
 
 
+
+ecl_kw_type * ecl_block_get_first_kw(const ecl_block_type * src) {
+  list_node_type *kw_node = list_get_head(src->kw_list);
+  return list_node_value_ptr(kw_node);
+}
   
+
+ecl_kw_type * ecl_block_get_next_kw(const ecl_block_type * ecl_block , const ecl_kw_type * ecl_kw) {
+  list_node_type *kw_node = hash_get(ecl_block->kw_hash , ecl_kw_get_header_ref(ecl_kw));
+  list_node_type *next_node = list_node_get_next(kw_node);
+  if (kw_node == NULL)
+    return NULL;
+  else
+    return list_node_value_ptr(next_node);
+}
+
+
 
 ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
   ecl_block_type * copy;
   copy = ecl_block_alloc(src->time_step , src->size , src->fmt_file , src->endian_convert , NULL);
   {
-
-    int i;
-    char **kwlist = hash_alloc_ordered_keylist(src->kw_hash);
-    for (i=0; i  < src->size; i++)
-      ecl_block_add_kw_copy(copy , hash_get(src->kw_hash , kwlist[i]));
-    hash_free_ext_keylist(src->kw_hash , kwlist);
-
+    list_node_type * kw_node = list_get_head(src->kw_list);
+    while (kw_node != NULL) {
+      const ecl_kw_type *kw = list_node_value_ptr(kw_node);
+      ecl_block_add_kw_copy(copy , kw);
+      kw_node = list_node_get_next(kw_node);
+    }
   }
+    
+  /*  
+      {
+      int i;
+      char **kwlist = hash_alloc_ordered_keylist(src->kw_hash);
+      for (i=0; i  < src->size; i++)
+      ecl_block_add_kw_copy(copy , hash_get(src->kw_hash , kwlist[i]));
+      hash_free_ext_keylist(src->kw_hash , kwlist);
+      }
+  */
+
   return copy;
 }
 
@@ -206,16 +232,24 @@ void ecl_block_fread_kwlist(ecl_block_type *ecl_block , fortio_type *fortio , in
 
 
 void ecl_block_fwrite(ecl_block_type *ecl_block , fortio_type *fortio) {
-  int ikw;
-  char **kw_list = hash_alloc_ordered_keylist(ecl_block->kw_hash);
-
-  for (ikw = 0; ikw < ecl_block->size; ikw++) {
-    ecl_kw_type *ecl_kw = ecl_block_get_kw(ecl_block , kw_list[ikw]);
+  list_node_type * kw_node = list_get_head(ecl_block->kw_list);
+  while (kw_node != NULL) {
+    ecl_kw_type *ecl_kw = list_node_value_ptr(kw_node);
     ecl_kw_set_fmt_file(ecl_kw , ecl_block->fmt_file);
     ecl_kw_fwrite(ecl_kw , fortio);
   }
-  hash_free_ext_keylist(ecl_block->kw_hash , kw_list);
-  
+
+  /*
+    int ikw;
+    char **kw_list = hash_alloc_ordered_keylist(ecl_block->kw_hash);
+
+    for (ikw = 0; ikw < ecl_block->size; ikw++) {
+    ecl_kw_type *ecl_kw = ecl_block_get_kw(ecl_block , kw_list[ikw]);
+    ecl_kw_set_fmt_file(ecl_kw , ecl_block->fmt_file);
+    ecl_kw_fwrite(ecl_kw , fortio);
+    }
+    hash_free_ext_keylist(ecl_block->kw_hash , kw_list);
+  */
 }
 
 
@@ -223,37 +257,6 @@ int ecl_block_get_block(const ecl_block_type *ecl_block) {
   return ecl_block->time_step;
 }
 
-/*
-This is not hash-safe (I think ...)
-
-void ecl_block_shallow_copy(ecl_block_type *target , const ecl_block_type *src) {
-  target->fmt_file       = src->fmt_file;
-  target->endian_convert = src->endian_convert;
-  target->time_step      = src->time_step;
-  target->size           = src->size;
-  target->kw_list_size   = src->kw_list_size;
-  target->kw_list        = realloc(target->kw_list , target->kw_list_size * sizeof (ecl_kw_type *));
-
-    The keywords are *not* memcpy'ed
-
-  {
-    int iw;
-    for (iw=0; iw < target->kw_list_size; iw++)
-      target->kw_list[iw] = src->kw_list[iw];
-  }
-}
-*/
-
-
-
-/*
-  void ecl_block_printf_kwlist(const ecl_block_type *ecl_block) {
-  int i;
-  printf("block nr: %d \n",ecl_block->time_step);
-  for (i=0; i < ecl_block->size; i++) 
-    printf("kw[%d] : %s \n",i,ecl_kw_get_header_ref(ecl_block->kw_list[i]));
-    }
-*/
 
 
 void * ecl_block_get_data_ref(const ecl_block_type *ecl_block, const char *kw) {

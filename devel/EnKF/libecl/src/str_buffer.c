@@ -87,6 +87,7 @@ void str_buffer_add_string(str_buffer_type *str_buffer , const char *s) {
   str_buffer_add_char_vector(str_buffer , s , strlen(s));
 }
 
+
 void str_buffer_add_char(str_buffer_type *str_buffer , char c) {
   str_buffer_add_char_vector(str_buffer , &c , 1);
 }

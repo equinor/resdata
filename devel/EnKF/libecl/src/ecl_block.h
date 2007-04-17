@@ -7,10 +7,9 @@
 
 typedef struct ecl_block_struct ecl_block_type;
 
-/*
-  ecl_block_type * ecl_block_alloc_shallow_clone(const ecl_block_type *);
-  void             ecl_block_shallow_copy(ecl_block_type *, const ecl_block_type *);
-*/
+
+ecl_kw_type    * ecl_block_get_first_kw(const ecl_block_type * );
+ecl_kw_type    * ecl_block_get_next_kw(const ecl_block_type *  , const ecl_kw_type * );
 void 		 ecl_block_fread_kwlist(ecl_block_type *, fortio_type *, int , const char **);
 ecl_kw_type    * ecl_block_fread(ecl_block_type *, fortio_type * , bool * , bool); 
 ecl_kw_type    * ecl_block_get_kw(const ecl_block_type *, const char *);
