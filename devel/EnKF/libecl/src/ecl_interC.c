@@ -7,6 +7,7 @@
 #include <ecl_parse.h>
 #include <ecl_diag.h>
 #include <util.h>
+#include <sched.h>
 
 
 static ecl_fstate_type * ECL_FSTATE     = NULL;
@@ -345,3 +346,19 @@ void ecl_inter_unlink_path__(const char *_path , const int *path_len) {
 /*   ecl_fstate_fwrite(ECL_FSTATE); */
 /* } */
 
+
+/*****************************************************************/
+
+void ecl_inter_parse_wconhist__(const char *_filename , const int *filename_len,
+				const char *_obs_path , const int *obs_path_len,
+				const char *_obs_file , const int *obs_file_len) {
+  char *filename = util_alloc_cstring(_filename , filename_len);
+  char *obs_path = util_alloc_cstring(_obs_path , obs_path_len);
+  char *obs_file = util_alloc_cstring(_obs_file , obs_file_len);
+  
+  sched_parse_wconhist(filename , obs_path , obs_file);
+  free(filename);
+  free(obs_path);
+  free(obs_file);
+
+}

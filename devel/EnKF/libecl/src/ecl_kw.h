@@ -11,7 +11,6 @@
 
 typedef struct ecl_kw_struct      ecl_kw_type;
 typedef enum   ecl_type_enum_def  ecl_type_enum;
-
 enum ecl_type_enum_def {ecl_char_type , ecl_float_type , ecl_double_type , ecl_int_type , ecl_bool_type , ecl_mess_type};
 
 
