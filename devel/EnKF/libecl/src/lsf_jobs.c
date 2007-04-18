@@ -98,7 +98,7 @@ static void lsf_pool_exit_job(const lsf_pool_type *lsf_pool , int ijob , lsf_sta
   
   FILE *stream = fopen(job->fail_file , "w");
   if (status == lsf_status_exit) 
-    fprintf(stream, "Job:%s failed with EXIT status from LSF que system.\n" , job->base);
+    fprintf(stream, "Job:%s/LSF: %d failed with EXIT status from the LSF que system.\n" , job->base , job->lsf_base);
   else if (status == lsf_status_uerror)
     fprintf(stream , "Job:%s failed to produce resultfile:%s  after %d attempts - giving up.\n",job->base , job->restart_file , job->max_resubmit);
   else {

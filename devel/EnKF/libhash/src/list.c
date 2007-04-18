@@ -185,15 +185,24 @@ list_type * list_alloc(void) {
 }
 
 
-void list_append_ref(list_type *list , const void *value) {
+list_node_type * list_append_ref(list_type *list , const void *value) {
   list_node_type *node = list_node_alloc(value , NULL , NULL);
   list_append_node(list , node);
+  return node;
 }
 
 
-void list_append_copy(list_type *list , const void *value , copyc_type *copyc , del_type *del) {
+list_node_type * list_append_managed_ref(list_type *list , const void *value , del_type *del) {
+  list_node_type *node = list_node_alloc(value , NULL , del);
+  list_append_node(list , node);
+  return node;
+}
+
+
+list_node_type * list_append_copy(list_type *list , const void *value , copyc_type *copyc , del_type *del) {
   list_node_type *node = list_node_alloc(value , copyc , del);
   list_append_node(list , node);
+  return node;
 }
 
 
@@ -203,6 +212,8 @@ void * list_iget(const list_type *list, int index) {
 }
 
 list_node_type * list_get_head(const list_type *list) { return list->head; }
+
+int list_get_size(const list_type *list) { return list->length; }
 
 int list_iget_int(const list_type *list , int index) {
   const list_node_type *node = list_iget_node(list , index);

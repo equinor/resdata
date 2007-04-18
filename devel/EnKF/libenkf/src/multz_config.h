@@ -3,11 +3,12 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <enkf_util.h>
 
 typedef struct {
-  int i1,i2,j1,j2;
-  int nz;
-  int _area;
+  CONFIG_STD_FIELDS;
+  int *i1, *i2 , *j1 , *j2 , *k;
+  int *area;
   bool     lognormal;
   double * mean;
   double * std;
@@ -22,6 +23,10 @@ void                multz_config_free(multz_config_type *);
 const        char * multz_config_get_ensname_ref(const multz_config_type * );
 const        char * multz_config_get_eclname_ref(const multz_config_type * );
 void                multz_config_fprintf_layer(const multz_config_type * , int , double , FILE *);
-int                 multz_config_get_nz(const multz_config_type *);
+
+
+/*Generated headers */
+
+GET_SIZE_FUNC_HEADER(multz_config);
 
 #endif

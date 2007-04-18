@@ -155,7 +155,8 @@ static void * rate_node_copyc__(const void *__src) {
 */
 
 static void rate_node_fprintf(const rate_node_type *rate_node , FILE *stream) {
-  fprintf(stream , "%-8s %16.4f  %16.4f  %16.4f \n",rate_node->well , rate_node->ORAT , rate_node->WRAT , rate_node->GRAT);
+  if (rate_node->ORAT > 0.0)
+    fprintf(stream , "%-8s %16.4f  %16.4f  %16.4f \n",rate_node->well , rate_node->ORAT , rate_node->WRAT , rate_node->GRAT);
 }
 
 /*****************************************************************/
@@ -197,6 +198,7 @@ static char * strip_line_alloc(const char * line) {
   quote_on = false;
   cont     = true;
   at_end   = false;
+  length   = 0;
   if (line[offset] != '\0') {
     pos = offset;
     do {
@@ -497,6 +499,7 @@ static void sched_parse_wconhist__(int lines , const char **line_list, const cha
 	    char * file = malloc(strlen(path) + 2 + strlen(obs_file));
 	    sprintf(file , "%s/%s" , path , obs_file);
 	    stream = fopen(file , "w");
+	    fprintf(stream , "%d\n",list_get_size(date_node->rates));
 	    while (rate_list_node != NULL) {
 	      rate_node_fprintf(list_node_value_ptr(rate_list_node) , stream);
 	      rate_list_node = list_node_get_next(rate_list_node);
@@ -527,8 +530,9 @@ void sched_parse_wconhist(const char *filename , const char *obs_path , const ch
 }
   
 
-
-int main(void) {
+/*
+  int main(void) {
   sched_parse_wconhist("SCHEDULE_orig.INC" , "Observations" , "PROD");
   return 0;
-}
+  }
+*/

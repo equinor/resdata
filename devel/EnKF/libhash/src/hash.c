@@ -250,6 +250,12 @@ void hash_insert_ref(hash_type *hash , const char *key , const void *value) {
   hash_insert_node(hash , node);
 }
 
+void hash_insert_managed_ref(hash_type *hash , const char *key , const void *value , del_type *del) {
+  hash_node_type *node;
+  node = hash_node_alloc_new(key , value , NULL , del , hash->hashf , hash->size );
+  hash_insert_node(hash , node);
+}
+
 
 void hash_insert_string_copy(hash_type *hash, const char *key , const char *value) {
   hash_insert_managed_copy(hash , key , value , strlen(value) + 1);

@@ -10,6 +10,7 @@ int          util_file_size(const char *);
 void         util_unlink_path(const char *);
 void         util_unlink_existing(const char *filename);
 
+char   * util_realloc_full_path(char * , const char *, const char *);
 char   * util_alloc_full_path(const char *, const char *);
 char   * util_alloc_strip_copy(const char *);
 void     util_set_strip_copy(char * , const char *);
@@ -24,6 +25,8 @@ char *   util_alloc_string_copy(const char *);
 void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
 
 void    util_abort(const char *, const char *, int , const char *);
-#define UTIL_ABORT(msg) (util_abort(__func__, __FILE__, __LINE__ , msg))
 
+void 	util_double_to_float(float  * , const double * , int );
+void 	util_float_to_double(double * , const float  * , int );
+#define UTIL_ABORT(msg) (util_abort(__func__, __FILE__, __LINE__ , msg))
 #endif

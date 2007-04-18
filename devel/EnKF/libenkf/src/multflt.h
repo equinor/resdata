@@ -14,10 +14,13 @@ void             multflt_ecl_write(const multflt_type * );
 void             multflt_ens_write(const multflt_type * );
 void             multflt_ens_read(multflt_type *);
 
-VOID_FUNC_HEADER_CONST (multflt_ecl_write  , multflt_type);
-VOID_FUNC_HEADER_CONST (multflt_ens_write  , multflt_type);
-VOID_FUNC_HEADER       (multflt_ens_read   , multflt_type);
-VOID_FUNC_HEADER       (multflt_sample     , multflt_type);
-VOID_FUNC_HEADER       (multflt_free       , multflt_type);
+VOID_FUNC_HEADER_CONST (multflt_ecl_write);
+VOID_FUNC_HEADER_CONST (multflt_ens_write);
+VOID_FUNC_HEADER       (multflt_ens_read );
+VOID_FUNC_HEADER       (multflt_sample   );
+VOID_FUNC_HEADER       (multflt_free     );
+VOID_SERIALIZE_HEADER  (multflt_serialize);
+
+MATH_OPS_HEADER(multflt);
 
 #endif

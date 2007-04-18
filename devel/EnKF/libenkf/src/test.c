@@ -12,9 +12,7 @@
 #include <timer.h>
 
 /*
-
-   gcc -m32 -I./ work.c timer.c test.c -L../../libutil/lib -L./ -lenkf -lutil
-
+   gcc -m32 -I./ -I../../libhash/include -I../../libutil/include test.c -L ../../libutil/lib -L./ -L../../libhash/lib -lenkf -lutil -lhash -lm
 */
 
 int main(void) {
@@ -44,8 +42,8 @@ int main(void) {
     multz_list[i]   = multz_alloc(ensemble[i] , multz_config);
     multflt_list[i] = multflt_alloc(ensemble[i] , multflt_config);
     
-    enkf_state_add_node(ensemble[i] , multz_list[i]   , NULL , multz_ecl_write__    ,  multz_ens_read__   , multz_ens_write__   , multz_sample__   , multz_free__   );
-    enkf_state_add_node(ensemble[i] , multflt_list[i] , NULL , multflt_ecl_write__  ,  multflt_ens_read__ , multflt_ens_write__ , multflt_sample__ , multflt_free__ );
+    enkf_state_add_node(ensemble[i] , "MULTZ"   , multz_list[i]   , NULL , multz_ecl_write__    ,  multz_ens_read__   , multz_ens_write__   , multz_sample__   , multz_free__   );
+    enkf_state_add_node(ensemble[i] , "MULTFLT" , multflt_list[i] , NULL , multflt_ecl_write__  ,  multflt_ens_read__ , multflt_ens_write__ , multflt_sample__ , multflt_free__ );
   }
   printf("Ferdig .... \n");
 
@@ -53,10 +51,14 @@ int main(void) {
   for (i=0; i < ens_size; i++) {
     enkf_state_make_ecl_path(ensemble[i]);
     enkf_state_sample(ensemble[i]);
-    enkf_state_ecl_write(ensemble[i]);
-    enkf_state_ens_write(ensemble[i]);
     printf("i: %d \n",i);
+    enkf_state_get_node(ensemble[i] , "MULTZ");
+    enkf_state_get_node(ensemble[i] , "MULTFLT");
+    enkf_state_ecl_write(ensemble[i]);
+    enkf_state_del_node(ensemble[i] , "MULTZ");
+    enkf_state_ens_write(ensemble[i]);
   }
+
   
   return 0;
 }

@@ -3,11 +3,12 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <enkf_util.h>
 
 typedef struct equil_config_struct equil_config_type;
 
 struct equil_config_struct {
-  int      nequil;
+  CONFIG_STD_FIELDS;
   char   * ecl_file;
   char   * ens_file;
   double * mean;

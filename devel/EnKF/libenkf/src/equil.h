@@ -14,10 +14,12 @@ void             equil_ecl_write(const equil_type * );
 void             equil_ens_write(const equil_type * );
 void             equil_ens_read(equil_type *);
 
-VOID_FUNC_HEADER_CONST (equil_ecl_write  , equil_type);
-VOID_FUNC_HEADER_CONST (equil_ens_write  , equil_type);
-VOID_FUNC_HEADER       (equil_ens_read   , equil_type);
-VOID_FUNC_HEADER       (equil_sample     , equil_type);
-VOID_FUNC_HEADER       (equil_free       , equil_type);
+VOID_FUNC_HEADER_CONST (equil_ecl_write);
+VOID_FUNC_HEADER_CONST (equil_ens_write);
+VOID_FUNC_HEADER       (equil_ens_read );
+VOID_FUNC_HEADER       (equil_sample   );
+VOID_FUNC_HEADER       (equil_free     );
+
+MATH_OPS_HEADER(equil);
 
 #endif

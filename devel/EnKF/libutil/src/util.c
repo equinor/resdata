@@ -75,6 +75,7 @@ int util_file_size(const char *file) {
   return buffer.st_size;
 }
 
+
 void util_unlink_existing(const char *filename) {
   if (util_file_exists(filename))
     unlink(filename);
@@ -207,7 +208,14 @@ char * util_realloc_string_copy(char * old_string , const char *src ) {
 
 
 char * util_alloc_full_path(const char *path , const char *file) {
-  char *copy = malloc(strlen(path) + strlen(file) + 1);
+  char *copy = malloc(strlen(path) + strlen(file) + 2);
+  sprintf(copy , "%s/%s" , path , file);
+  return copy;
+}
+
+
+char * util_realloc_full_path(char *old_path , const char *path , const char *file) {
+  char *copy = realloc(old_path , strlen(path) + strlen(file) + 2);
   sprintf(copy , "%s/%s" , path , file);
   return copy;
 }
@@ -216,8 +224,10 @@ char * util_alloc_full_path(const char *path , const char *file) {
 
 void util_free_string_list(char **list , int N) {
   int i;
-  for (i=0; i < N; i++)
-    free(list[i]);
+  for (i=0; i < N; i++) {
+    if (list[i] != NULL)
+      free(list[i]);
+  }
   free(list);
 }
 
@@ -266,10 +276,12 @@ void util_unlink_path(const char *path) {
 	    if ((strcmp(dentry->d_name , ".") != 0) && (strcmp(dentry->d_name , "..") != 0)) 
 	      util_unlink_path(entry);
 	  } else if (S_ISREG(mode) || S_ISLNK(mode)) {
+
 	    if (buffer.st_uid == uid) 
 	      unlink(entry);
 	    else 
 	      fprintf(stderr,"Warning mismatch in uid of calling process and entry owner for:%s - entry *not* removed \n",entry);
+
 	  } 
 	}
       }
@@ -388,6 +400,18 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
 }
 
 
+/*****************************************************************/
+
+void util_float_to_double(double *double_ptr , const float *float_ptr , int size) {
+  int i;
+  for (i=0; i < size; i++)
+    double_ptr[i] = (double) float_ptr[i];
+}
 
 
+void util_double_to_float(float *float_ptr , const double *double_ptr , int size) {
+  int i;
+  for (i=0; i < size; i++)
+    float_ptr[i] = (float) double_ptr[i];
+}
 
