@@ -22,6 +22,7 @@ typedef struct enkf_node_struct enkf_node_type;
 enkf_node_type * enkf_node_alloc(const char * , void * , ecl_read_ftype , ecl_write_ftype * , ens_read_ftype , ens_write_ftype , sample_ftype *, free_ftype);
 void             enkf_node_free(enkf_node_type *enkf_node);
 void             enkf_sample    (enkf_node_type *);
+void           * enkf_node_value_ptr(const enkf_node_type * );
 
 void             enkf_node_ecl_write (const enkf_node_type *);
 void             enkf_node_ecl_read  (enkf_node_type *);

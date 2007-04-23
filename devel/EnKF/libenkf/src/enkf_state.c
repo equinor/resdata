@@ -11,6 +11,8 @@
 #include <enkf_state.h>
 #include <ens_config.h>
 #include <ecl_config.h>
+#include <ecl_static_kw.h>
+#include <enkf_ecl_kw.h>
 
 
 struct enkf_state_struct {
@@ -51,7 +53,7 @@ enkf_state_type *enkf_state_alloc(const ens_config_type * ens_config , const ecl
 
 
 /*
-  hash_node -> list_node -> enkf_node -> {Actual enkf object: multz_type ...}
+  hash_node -> list_node -> enkf_node -> {Actual enkf object: multz_type/equil_type/multflt_type/...}
 */
 static void enkf_state_add_node__(enkf_state_type * enkf_state , const char * node_key , const enkf_node_type * node) {
   list_node_type *list_node = list_append_ref(enkf_state->node_list , node);
@@ -69,29 +71,43 @@ void enkf_state_add_node(enkf_state_type *enkf_state , const char * node_key , v
   enkf_state_add_node__(enkf_state , node_key , enkf_node);
 }
 
+static bool enkf_state_has_node(const enkf_state_type * enkf_state , const char * node_key) {
+  return hash_has_key(enkf_state->node_hash , node_key);
+}
 
-/*
+
+
 void enkf_state_ecl_read(enkf_state_type * enkf_state , const ecl_block_type *ecl_block) {
   ecl_kw_type * ecl_kw = ecl_block_get_first_kw(ecl_block);
   while (ecl_kw != NULL) {
-    ecl_kw = ecl_block_get_next_kw(ecl_block , ecl_kw);
     const char *kw     = ecl_kw_get_header_ref(ecl_kw);
     const bool enkf_kw = ecl_config_enkf_kw(enkf_state->ecl_config , kw);
 
     if (!enkf_state_has_node(enkf_state , kw)) {
-      
+      if (enkf_kw) {
+	enkf_ecl_kw_type * new_kw = enkf_ecl_kw_alloc(enkf_state , kw , ecl_kw_get_size(ecl_kw) , kw , ecl_restart);
+	enkf_state_add_node(enkf_state , kw , new_kw , NULL , NULL , NULL , NULL , NULL , NULL);
+      } else {
+	ecl_static_kw_type * new_kw = ecl_static_kw_alloc(enkf_state);
+	enkf_state_add_node(enkf_state , kw , new_kw , NULL , NULL , NULL , NULL , NULL , NULL);
+      }
     }
-    
-    
 
-    if (enkf_kw) {
-
-    } else {
+    {
+      enkf_node_type * enkf_node = enkf_state_get_node(enkf_state , kw);
       
+      if (enkf_kw) 
+
+	enkf_ecl_kw_get_data(enkf_node_value_ptr(enkf_node) , ecl_kw);    
+      else 
+	{}
     }
+
+
+    ecl_kw = ecl_block_get_next_kw(ecl_block , ecl_kw);
   }
 }
-*/
+
 
 
 void enkf_state_ecl_write(const enkf_state_type * enkf_state) {
@@ -121,8 +137,6 @@ void enkf_state_sample(const enkf_state_type * enkf_state) {
     list_node = list_node_get_next(list_node);
   }
 }
-
-
 
 char * enkf_state_alloc_ensname(const enkf_state_type * enkf_state, const char * ext_name) {
   char *path     = ens_config_alloc_ensname(enkf_state->ens_config , enkf_state->enkf_state_ens_path);
@@ -165,9 +179,7 @@ void enkf_state_free(enkf_state_type *enkf_state) {
 }
 
 
-bool enkf_state_has_node(const enkf_state_type * enkf_state , const char * node_key) {
-  return hash_has_key(enkf_state->node_hash , node_key);
-}
+
 
 
 enkf_node_type * enkf_state_get_node(const enkf_state_type * enkf_state , const char * node_key) {
