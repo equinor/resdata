@@ -16,7 +16,7 @@ struct ecl_config_struct {
 
 
 
-bool ecl_config_enkf_kw(const ecl_config_type *ecl_config, const char * ecl_kw_name) {
+bool ecl_config_restart_kw(const ecl_config_type *ecl_config, const char * ecl_kw_name) {
   if (hash_has_key(ecl_config->enkf_ecl_kw , ecl_kw_name))
     return true;
   else

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <enkf_util.h>
+#include <config.h>
 
 typedef struct {
   CONFIG_STD_FIELDS;
@@ -13,8 +14,6 @@ typedef struct {
   double * mean;
   double * std;
   bool   * active;
-  char   * ecl_file;
-  char   * ens_file;
 } multz_config_type;
 
 

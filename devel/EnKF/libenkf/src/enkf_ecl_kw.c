@@ -13,7 +13,7 @@ struct enkf_ecl_kw_struct {
     Due to the way these objects are allocated it is simplest to
     let each object have it's own config object.
   */
-  ecl_type_enum                   ecl_type;
+  ecl_type_enum                  ecl_type;
   const enkf_ecl_kw_config_type  *config;
   const enkf_state_type          *enkf_state;
   double                         *data;
@@ -29,21 +29,40 @@ static enkf_ecl_kw_type * enkf_ecl_kw_alloc2(const enkf_state_type * enkf_state 
 }
 
 
-enkf_ecl_kw_type * enkf_ecl_kw_alloc(const enkf_state_type * enkf_state , const char * ens_file , int size , const char * ecl_kw_name, enkf_var_type var_type) { 
+enkf_ecl_kw_type * enkf_ecl_kw_alloc(const enkf_state_type * enkf_state , const char * ens_file , int size , const char * ecl_kw_name) { 
   
-  enkf_ecl_kw_config_type * config  = enkf_ecl_kw_config_alloc(var_type , size , ecl_kw_name , ens_file);
+  enkf_ecl_kw_config_type * config  = enkf_ecl_kw_config_alloc(size , ecl_kw_name , ens_file);
   return enkf_ecl_kw_alloc2(enkf_state , config);
+
 }
 
 
+ecl_kw_type * enkf_ecl_kw_alloc_ecl_kw(const enkf_ecl_kw_type *enkf_kw , bool fmt_file , bool endian_convert) {
+  const int size     = enkf_ecl_kw_config_get_size(enkf_kw->config);
+  const char *header = enkf_kw->config->ecl_kw_name;
+  ecl_kw_type * ecl_kw;
+  void *data;
+
+  if (enkf_kw->ecl_type == ecl_float_type) {
+    data = enkf_util_malloc(size * sizeof(float) , __func__ );
+    util_double_to_float(data , enkf_kw->data , size);
+  } else
+    data = enkf_kw->data;
+  
+  ecl_kw = ecl_kw_alloc_complete(fmt_file , endian_convert , header , size , enkf_kw->ecl_type , data);
+  if (enkf_kw->ecl_type == ecl_float_type) 
+    free(data);
+
+  return ecl_kw;
+}
 
 
 void enkf_ecl_kw_get_data(enkf_ecl_kw_type * enkf_kw , const ecl_kw_type *ecl_kw) {
   enkf_kw->ecl_type =  ecl_kw_get_type(ecl_kw);
   if (enkf_kw->ecl_type == ecl_double_type) 
-    ecl_kw_get_memcpy_data(ecl_kw , enkf_kw->data);
+  ecl_kw_get_memcpy_data(ecl_kw , enkf_kw->data);
   else if (enkf_kw->ecl_type == ecl_float_type) 
-    util_float_to_double(enkf_kw->data , ecl_kw_get_data_ref(ecl_kw) , ecl_kw_get_size(ecl_kw));
+  util_float_to_double(enkf_kw->data , ecl_kw_get_data_ref(ecl_kw) , ecl_kw_get_size(ecl_kw));
   else {
     fprintf(stderr,"%s fatal error ECLIPSE type:%s can not be used in EnKF - aborting \n",__func__  , ecl_kw_get_str_type_ref(ecl_kw));
     abort();

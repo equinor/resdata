@@ -13,8 +13,8 @@ INSTALL_MOD_PATH = ../mod
 CFLAGS  = -m32 -O3 -std=gnu99 -pg -Wall  $(COMPILE_INCLUDE) 
 ARFLAGS = -csr
 #################################################################
-OBJECTS           = enkf_ecl_kw_config.o ecl_static_kw.o enkf_ecl_kw.o equil_config.o equil.o enkf_state.o multflt.o enkf_util.o multflt_config.o ecl_config.o ens_config.o multz.o multz_config.o enkf_node.o
-INC_FILES_INSTALL = enkf_ecl_kw_config.h ecl_static_kw.h enkf_ecl_kw.h equil_config.h equil.h enkf_state.h multflt.h enkf_util.h multflt_config.h ecl_config.h ens_config.h multz.h multz_config.h enkf_node.h
+OBJECTS           = enkf_ecl_kw_config.o ecl_static_kw_config.o ecl_static_kw.o enkf_ecl_kw.o equil_config.o equil.o enkf_state.o multflt.o enkf_util.o multflt_config.o enkf_config.o multz.o multz_config.o enkf_node.o
+INC_FILES_INSTALL = enkf_ecl_kw_config.h ecl_static_kw_config.h ecl_static_kw.h enkf_ecl_kw.h equil_config.h equil.h enkf_state.h multflt.h enkf_util.h multflt_config.h enkf_config.h multz.h multz_config.h enkf_node.h
 LIB               = libenkf.a
 
 
@@ -33,13 +33,13 @@ $(LIB): $(OBJECTS)
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 
-enkf_ecl_kw_config.o : enkf_ecl_kw_config.c enkf_ecl_kw_config.h
+enkf_ecl_kw_config.o : enkf_ecl_kw_config.c enkf_ecl_kw_config.h config.h
 enkf_ecl_kw.o  : enkf_util.h enkf_ecl_kw.c enkf_ecl_kw.h enkf_ecl_kw_config.o
-equil_config.o : enkf_util.h equil_config.c equil_config.h
+equil_config.o : enkf_util.h equil_config.c equil_config.h config.h
 enkf_state.o   : enkf_util.h enkf_state.c enkf_state.h enkf_node.o
 multflt.o      : enkf_util.h multflt.c multflt.h multflt_config.o enkf_util.o
-ecl_config.o   : enkf_util.h ecl_config.c ecl_config.h
-multz_config.o : enkf_util.h multz_config.c multz_config.h
+ecl_config.o   : enkf_util.h ecl_config.c ecl_config.h config.h
+multz_config.o : enkf_util.h multz_config.c multz_config.h config.h
 multz.o        : enkf_util.h multz.c multz.h multz_config.o
 enkf_node.o    : enkf_util.h enkf_node.h enkf_node.c
 

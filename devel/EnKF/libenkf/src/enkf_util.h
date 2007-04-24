@@ -3,9 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef enum {parameter = 1 , ecl_restart = 2 , ecl_summary = 4 , ecl_static = 8} enkf_var_type;
+typedef enum {parameter = 1 , ecl_restart = 2 , ecl_summary = 4 , ecl_static = 8 , all_types = 15} enkf_var_type;
 
-#define CONFIG_STD_FIELDS int size; const char * ecl_kw_name; enkf_var_type var_type;
 
 /*****************************************************************/
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <enkf_util.h>
+#include <config.h>
 
 typedef struct multflt_config_struct multflt_config_type;
 
@@ -11,8 +12,6 @@ struct multflt_config_struct {
   CONFIG_STD_FIELDS;
   bool   lognormal;
   char  ** fault_names;
-  char   * ecl_file;
-  char   * ens_file;
   double * mean;
   double * std;
   bool   * active;
