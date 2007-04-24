@@ -1,6 +1,7 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 #include <stdbool.h>
+#include <stdio.h>
 
 bool 	     util_file_exists(const char *);
 bool 	     util_fmt_bit8   (const char *, int );
@@ -9,6 +10,7 @@ const char * util_newest_file(const char *, const char *);
 int          util_file_size(const char *);
 void         util_unlink_path(const char *);
 void         util_unlink_existing(const char *filename);
+void util_copy_stream(FILE *, FILE *, int , void * );
 
 char   * util_realloc_full_path(char * , const char *, const char *);
 char   * util_alloc_full_path(const char *, const char *);

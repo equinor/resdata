@@ -45,6 +45,16 @@ char * util_alloc_substring_copy(const char *src , int N) {
 
 /******************************************************************/
 
+void util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size , void * buffer) {
+
+  while ( ! feof(src_stream)) {
+    int bytes;
+    bytes = fread (buffer , 1 , bytes , src_stream);
+    fwrite(buffer , 1 , bytes , target_stream);
+  }
+
+}
+
 
 bool util_file_exists(const char *filename) {
   FILE *stream = fopen(filename , "r");
