@@ -22,11 +22,6 @@ struct enkf_state_struct {
 };
 
 
-
-/* 
-   Disse burde være vanlige (static) funksjoner - det blir for guffent ...
- */
-
 /*****************************************************************/
 
 #define ENKF_STATE_APPLY(node_func)                                     \
@@ -92,6 +87,9 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char *
 /*
   hash_node -> list_node -> enkf_node -> {Actual enkf object: multz_type/equil_type/multflt_type/...}
 */
+/*
+  The list might take managed references??
+*/  
 static void enkf_state_add_node__(enkf_state_type * enkf_state , const char * node_key , const enkf_node_type * node) {
   list_node_type *list_node = list_append_ref(enkf_state->node_list , node);
   /*
@@ -107,6 +105,7 @@ void enkf_state_add_node(enkf_state_type *enkf_state , enkf_var_type var_type , 
   enkf_node_type *enkf_node = enkf_node_alloc(node_key , var_type , data , ecl_read , ecl_write , ens_read , ens_write , sample , freef);
   enkf_state_add_node__(enkf_state , node_key , enkf_node);
 }
+
 
 static bool enkf_state_has_node(const enkf_state_type * enkf_state , const char * node_key) {
   return hash_has_key(enkf_state->node_hash , node_key);

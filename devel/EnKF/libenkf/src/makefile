@@ -18,13 +18,14 @@ INC_FILES_INSTALL = enkf_ecl_kw_config.h ecl_static_kw_config.h ecl_static_kw.h 
 LIB               = libenkf.a
 
 
+
 INSTALL: $(LIB)
 	install -d $(INSTALL_INC_PATH)
 	install -d $(INSTALL_LIB_PATH)
 	install -d $(INSTALL_MOD_PATH)
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-
+	gcc -m32 -g -Wall $(COMPILE_INCLUDE) enkf_test.c -o enkf.x $(COMPILE_LIB_PATH) $(COMPILE_LIBS) -lenkf	
 
 $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
