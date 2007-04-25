@@ -16,6 +16,7 @@ enum ecl_type_enum_def {ecl_char_type , ecl_float_type , ecl_double_type , ecl_i
 
 ecl_type_enum ecl_kw_get_type(const ecl_kw_type *);
 const char  * ecl_kw_get_str_type_ref(const ecl_kw_type *);
+/*const char  * ecl_kw_str_type(ecl_type_enum );*/
 void          ecl_kw_fread_data(ecl_kw_type *, fortio_type *);
 const char  * ecl_kw_get_header_ref(const ecl_kw_type *);
 ecl_kw_type * ecl_kw_alloc_empty(bool , bool);
@@ -46,6 +47,8 @@ int           ecl_kw_get_size(const ecl_kw_type *);
 bool          ecl_kw_header_eq(const ecl_kw_type *, const char *);
 bool          ecl_kw_ichar_eq(const ecl_kw_type *, int , const char *);
 void        * ecl_kw_alloc_data_copy(const ecl_kw_type *);
+ecl_kw_type * ecl_kw_alloc_complete(bool , bool , const char * ,  int , ecl_type_enum , const void * );
 void          ecl_kw_cfwrite(const ecl_kw_type *  , FILE *);
 void          ecl_kw_cfread(ecl_kw_type *  , FILE *);
+bool          ecl_kw_get_endian_convert(const ecl_kw_type * );
 #endif

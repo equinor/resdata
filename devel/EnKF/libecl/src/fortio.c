@@ -88,10 +88,47 @@ void fortio_read_record(fortio_type *fortio, char *buffer) {
   fortio_complete_read(fortio);
 }
 
+
 void fortio_skip_record(fortio_type *fortio) {
   int record_size = fortio_init_read(fortio);
   fseek(fortio->stream , record_size , SEEK_CUR);
   fortio_complete_read(fortio);
+}
+
+
+void fortio_copy_record(fortio_type * src_stream , fortio_type * target_stream , int buffer_size , void * buffer , bool *at_eof) {
+  int bytes_read;
+  int record_size = fortio_init_read(src_stream); 
+  fortio_init_write(target_stream , record_size);
+
+  bytes_read = 0;
+  while (bytes_read < record_size) {
+    int bytes;
+    if (record_size > buffer_size)
+      bytes = buffer_size;
+    else
+      bytes = record_size - bytes_read;
+
+    {
+      bool ok;
+      ok = true;
+      ok =        (fread (buffer , 1 , bytes , src_stream->stream)    == bytes);
+      ok = (ok && (fwrite(buffer , 1 , bytes , target_stream->stream) == bytes));
+      if (!ok) {
+	fprintf(stderr,"%s: failed to read/write %d bytes - aborting \n",__func__ , bytes);
+	abort();
+      }
+    }
+    bytes_read += bytes;
+  }
+
+  fortio_complete_read(src_stream);
+  fortio_complete_write(target_stream);
+
+  if (feof(src_stream->stream))
+    *at_eof = true;
+  else
+    *at_eof = false;
 }
 
 

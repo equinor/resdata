@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -521,8 +522,13 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
     int ijob;
     do {
       cont = true;
+      if (kill(getppid() , 0) != 0) {
+	fprintf(stderr,"%s: seems parent has died - aborting. \n",__func__);
+	exit(1);
+      }
+
       /* 
-	 First step: submitting basele(??) jobs 
+	 First step: submitting basel(??) jobs 
       */
       if (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running) {
 	ijob = 0;

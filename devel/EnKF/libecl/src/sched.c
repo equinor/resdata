@@ -62,8 +62,13 @@ static void date_node_free__(void  *__date_node) {
 }
 
 
+/*
+  Her kan det være et vilkårlig filter ... 
+*/
+
 static void date_node_add_rate(date_node_type * date_node , const rate_node_type *rate_node) {
-  list_append_managed_ref(date_node->rates , rate_node , rate_node_free__);
+  if (rate_node->ORAT > 0.0)
+    list_append_managed_ref(date_node->rates , rate_node , rate_node_free__);
 }
 
 
@@ -155,8 +160,8 @@ static void * rate_node_copyc__(const void *__src) {
 */
 
 static void rate_node_fprintf(const rate_node_type *rate_node , FILE *stream) {
-  if (rate_node->ORAT > 0.0)
-    fprintf(stream , "%-8s %16.4f  %16.4f  %16.4f \n",rate_node->well , rate_node->ORAT , rate_node->WRAT , rate_node->GRAT);
+  /*if (rate_node->ORAT > 0.0)*/
+  fprintf(stream , "%-8s %16.4f  %16.4f  %16.4f \n",rate_node->well , rate_node->ORAT , rate_node->WRAT , rate_node->GRAT);
 }
 
 /*****************************************************************/
@@ -423,6 +428,7 @@ static void sched_parse_wconhist__(int lines , const char **line_list, const cha
   date_nr     = 1;
   date_node   = date_node_alloc(date_nr); 
   list_append_managed_ref(wconhist , date_node , date_node_free__);
+
   /*
     The reference to the date_node object is still valid - and can be 
     updated from here.

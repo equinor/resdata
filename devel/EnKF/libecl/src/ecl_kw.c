@@ -84,6 +84,10 @@ static const char * __get_ecl_str_type(ecl_type_enum ecl_type) {
   return ecl_type_map[ecl_type];
 }
 
+/*
+  const char * ecl_kw_str_type(ecl_type_enum ecl_type) { return __get_ecl_str_type(ecl_type); }
+*/
+
 
 static ecl_type_enum __get_ecl_type(const char *ecl_type_str) {
   if (strlen(ecl_type_str) != ecl_type_len) {
@@ -226,10 +230,11 @@ int ecl_kw_cmp(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2 , int *ind
 }
 
 
-ecl_kw_type * ecl_kw_alloc_complete(bool fmt_file , bool endian_convert , const char * header ,  int size, const char * ecl_type_str , const void * data) {
+
+ecl_kw_type * ecl_kw_alloc_complete(bool fmt_file , bool endian_convert , const char * header ,  int size, ecl_type_enum ecl_type , const void * data) {
   ecl_kw_type *ecl_kw;
   ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_convert);
-  ecl_kw_set_header(ecl_kw , header , size , ecl_type_str);
+  ecl_kw_set_header(ecl_kw , header , size , __get_ecl_str_type(ecl_type));
   ecl_kw_alloc_data(ecl_kw);
   ecl_kw_set_memcpy_data(ecl_kw , data);
   return ecl_kw;
@@ -648,12 +653,12 @@ ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio , bool fmt_file , bool endia
   bool OK;
   ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_convert);
   OK = ecl_kw_fread_realloc(ecl_kw , fortio);
-
+  
   if (!OK) {
     free(ecl_kw);
     ecl_kw = NULL;
   }
-  printf("Har loadet: %s \n",ecl_kw_get_header_ref(ecl_kw));
+  
   return ecl_kw;
 }
 
@@ -904,6 +909,8 @@ const char * ecl_kw_get_str_type_ref(const ecl_kw_type *ecl_kw) {
 
 ecl_type_enum ecl_kw_get_type(const ecl_kw_type * ecl_kw) { return ecl_kw->ecl_type; }
 
+bool ecl_kw_get_endian_convert(const ecl_kw_type * ecl_kw) { return ecl_kw->endian_convert; }
+
 
 /******************************************************************/
 
@@ -975,3 +982,6 @@ void ecl_kw_cfread(ecl_kw_type * ecl_kw , FILE *stream) {
     }
   }
 }
+
+
+

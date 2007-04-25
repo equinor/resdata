@@ -26,17 +26,30 @@ struct ecl_block_struct {
 
 ecl_kw_type * ecl_block_get_first_kw(const ecl_block_type * src) {
   list_node_type *kw_node = list_get_head(src->kw_list);
-  return list_node_value_ptr(kw_node);
+  if (kw_node != NULL)
+    return list_node_value_ptr(kw_node);
+  else
+    return NULL;
 }
   
 
 ecl_kw_type * ecl_block_get_next_kw(const ecl_block_type * ecl_block , const ecl_kw_type * ecl_kw) {
-  list_node_type *kw_node = hash_get(ecl_block->kw_hash , ecl_kw_get_header_ref(ecl_kw));
-  list_node_type *next_node = list_node_get_next(kw_node);
-  if (kw_node == NULL)
-    return NULL;
-  else
-    return list_node_value_ptr(next_node);
+  char kw_s[9];
+  list_node_type *kw_node;
+  list_node_type *next_node;
+  util_set_strip_copy(kw_s , ecl_kw_get_header_ref(ecl_kw));
+  
+  kw_node   = hash_get(ecl_block->kw_hash , kw_s);
+  if (kw_node == NULL) {
+    fprintf(stderr,"%s internal error in ecl_block.c - aborting \n",__func__);
+    abort();
+  } else {
+    next_node = list_node_get_next(kw_node);
+    if (next_node != NULL)
+      return list_node_value_ptr(next_node);
+    else
+      return NULL;
+  }
 }
 
 

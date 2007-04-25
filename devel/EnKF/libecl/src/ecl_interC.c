@@ -301,6 +301,11 @@ void ecl_inter_diag_ens_interactive__(const char *_eclbase_dir  , const int *dir
 
   bool fmt_file = util_intptr_2bool(fmt_file_int);
   bool unified  = util_intptr_2bool(unified_int);
+
+  if (unified)
+    printf("Unified file:\n");
+  else
+    printf("Not unified file \n");
   
   ecl_diag_ens_interactive(eclbase_dir , eclbase_name , fmt_file , unified);
   free(eclbase_dir);
