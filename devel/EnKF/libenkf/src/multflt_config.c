@@ -3,6 +3,7 @@
 #include <ens_config.h>
 #include <multflt_config.h>
 #include <enkf_util.h>
+#include <config.h>
 
 
 
@@ -54,4 +55,11 @@ void multflt_config_free(multflt_config_type * multflt_config) {
 							 
 
 /*****************************************************************/
-GET_SIZE_FUNC(multflt_config)
+
+CONFIG_SET_ECL_FILE(multflt);
+CONFIG_SET_ENS_FILE(multflt);
+CONFIG_SET_ECL_FILE_VOID(multflt);
+CONFIG_SET_ENS_FILE_VOID(multflt);
+CONFIG_GET_SIZE_FUNC(multflt);
+
+VOID_FUNC(multflt_config_free , multflt_config_type);

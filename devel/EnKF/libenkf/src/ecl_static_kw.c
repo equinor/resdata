@@ -35,8 +35,11 @@ void ecl_static_kw_init(ecl_static_kw_type * ecl_static_kw, const ecl_kw_type * 
 }
 
 char * ecl_static_kw_alloc_ensname(const ecl_static_kw_type *kw) {
-  char *ens_file  = enkf_state_alloc_ensname(kw->enkf_state , kw->config->ens_file);
-  return ens_file;
+  /*
+    char *ens_file  = enkf_state_alloc_ensname(kw->enkf_state , kw->config->ens_file);
+    return ens_file;
+  */
+  return NULL;
 }
 
 

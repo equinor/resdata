@@ -11,14 +11,14 @@
 
 
 
-multz_config_type * multz_config_alloc(int nx, int ny , int nz , const char * ecl_file , const char * ens_file) {
+multz_config_type * multz_config_alloc(int nx , int ny , int nz , const char * ecl_name , const char * ens_name) {
   multz_config_type *config = malloc(sizeof *config);
   config->ecl_kw_name = NULL;
   config->size        = nz;
   config->var_type    = parameter;
 
-  config->ecl_file = util_alloc_string_copy(ecl_file);
-  config->ens_file = util_alloc_string_copy(ens_file);
+  config->ecl_name = util_alloc_string_copy(ecl_name);
+  config->ens_name = util_alloc_string_copy(ens_name);
   
   config->mean   = enkf_util_malloc(config->size * sizeof *config->mean   , __func__);
   config->std    = enkf_util_malloc(config->size * sizeof *config->std    , __func__);
@@ -57,13 +57,14 @@ multz_config_type * multz_config_alloc(int nx, int ny , int nz , const char * ec
 }
 
 
-const char * multz_config_get_ensname_ref(const multz_config_type * config) {
+const char * multz_config_get_ens_file_ref(const multz_config_type * config) {
   return config->ens_file;
 }
 
-const char * multz_config_get_eclname_ref(const multz_config_type * config) {
+const char * multz_config_get_ecl_file_ref(const multz_config_type * config) {
   return config->ecl_file;
 }
+
 
 void multz_config_fprintf_layer(const multz_config_type * config , int ik , double multz_value , FILE *stream) {
   fprintf(stream,"BOX\n   %5d %5d %5d %5d %5d %5d / \nMULTZ\n%d*%g /\nENDBOX\n\n" , 
@@ -76,8 +77,8 @@ void multz_config_fprintf_layer(const multz_config_type * config , int ik , doub
 
 
 void multz_config_free(multz_config_type * config) {
-  free(config->mean);
   free(config->std);
+  free(config->mean);
   free(config->active);
   free(config->j1);
   free(config->j2);
@@ -95,7 +96,9 @@ CONFIG_SET_ECL_FILE(multz);
 CONFIG_SET_ENS_FILE(multz);
 CONFIG_SET_ECL_FILE_VOID(multz);
 CONFIG_SET_ENS_FILE_VOID(multz);
-GET_SIZE_FUNC(multz_config)
+CONFIG_GET_SIZE_FUNC(multz)
+
+VOID_FUNC(multz_config_free , multz_config_type);
 
 							 
 

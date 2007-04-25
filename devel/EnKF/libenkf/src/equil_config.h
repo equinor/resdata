@@ -22,4 +22,11 @@ const          char * equil_config_get_ensname_ref(const equil_config_type * );
 const          char * equil_config_get_eclname_ref(const equil_config_type * );
 int                   equil_config_get_nequil(const equil_config_type *);
 
+CONFIG_GET_SIZE_FUNC_HEADER(equil);
+CONFIG_SET_ECL_FILE_HEADER_VOID(equil);
+CONFIG_SET_ENS_FILE_HEADER_VOID(equil);
+CONFIG_GET_SIZE_FUNC_HEADER(equil);
+
+VOID_FUNC_HEADER(equil_config_free);
+
 #endif

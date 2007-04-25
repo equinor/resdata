@@ -45,52 +45,44 @@ multz_type * multz_copyc(const multz_type *multz) {
 }
 
 
-char * multz_alloc_ensname(const multz_type *multz) {
-  char *ens_name  = enkf_state_alloc_ensname(multz->enkf_state , multz_config_get_ensname_ref(multz->config));
-  return ens_name;
-}
-
-
-char * multz_alloc_eclname(const multz_type *multz) {
-  char  *ecl_name = enkf_state_alloc_eclname(multz->enkf_state , multz_config_get_eclname_ref(multz->config));
-  return ecl_name;
-}
 
 
 void multz_ecl_write(const multz_type * multz) {
-  char * ecl_file = multz_alloc_eclname(multz);
+  const char * ecl_file = multz_config_get_ecl_file_ref(multz->config);
   FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
   {
     const int size = multz_config_get_size(multz->config);   
     int k;
     for (k=0; k < size; k++)
-      multz_config_fprintf_layer(multz->config , k + 1 , multz->data[k] , stream);
+      multz_config_fprintf_layer(multz->config , k , multz->data[k] , stream);
   }
   fclose(stream);
-  free(ecl_file);
 }
+
 
 
 void multz_ens_write(const multz_type * multz) {
   const  multz_config_type * config = multz->config;
-  char * ens_file = multz_alloc_ensname(multz);  
+  const char * ens_file = multz_config_get_ens_file_ref(multz->config);
+  
   FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
   fwrite(&config->size    , sizeof  config->size     , 1 , stream);
   enkf_util_fwrite(multz->data    , sizeof *multz->data    , config->size , stream , __func__);
   fclose(stream);
-  free(ens_file);
+
 }
 
 
 
 void multz_ens_read(multz_type * multz) {
-  char * ens_file = multz_alloc_ensname(multz);
+  
+  const char * ens_file = multz_config_get_ens_file_ref(multz->config);
   FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
   int  size;
   fread(&size , sizeof  size     , 1 , stream);
   enkf_util_fread(multz->data , sizeof *multz->data , size , stream , __func__);
   fclose(stream);
-  free(ens_file);
+
 }
 
 
@@ -102,6 +94,8 @@ void multz_sample(multz_type *multz) {
   const double            *mean   = config->mean;
   const int                size     = multz_config_get_size(config);
   int i;
+
+  printf("Skal sample ... \n");
   
   for (i=0; i < size; i++) 
     if (active[i])

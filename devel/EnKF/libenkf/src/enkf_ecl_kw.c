@@ -85,12 +85,12 @@ enkf_ecl_kw_type * enkf_ecl_kw_copyc(const enkf_ecl_kw_type *enkf_kw) {
 }
 
 char * enkf_ecl_kw_alloc_ensname(const enkf_ecl_kw_type *enkf_ecl_kw) {
-  char *ens_file  = enkf_state_alloc_ensname(enkf_ecl_kw->enkf_state , enkf_ecl_kw->config->ens_file);
+  char *ens_file  = "NULL";
   return ens_file;
 }
 
 void enkf_ecl_kw_ens_write(const enkf_ecl_kw_type * enkf_ecl_kw) {
-  char * ens_file = enkf_ecl_kw_alloc_ensname(enkf_ecl_kw);  
+  char * ens_file = "NULL";
   FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
   const int    size = enkf_ecl_kw_config_get_size(enkf_ecl_kw->config);
   fwrite(&size    , sizeof  size     , 1 , stream);
@@ -100,7 +100,7 @@ void enkf_ecl_kw_ens_write(const enkf_ecl_kw_type * enkf_ecl_kw) {
 }
 
 void enkf_ecl_kw_ens_read(enkf_ecl_kw_type * enkf_ecl_kw) {
-  char * ens_file = enkf_ecl_kw_alloc_ensname(enkf_ecl_kw);
+  char * ens_file = "NULL";
   FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
   int  size;
   fread(&size , sizeof  size     , 1 , stream);

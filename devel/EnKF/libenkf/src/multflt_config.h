@@ -24,5 +24,10 @@ const          char * multflt_config_get_ensname_ref(const multflt_config_type *
 const          char * multflt_config_get_eclname_ref(const multflt_config_type * );
 
 
-GET_SIZE_FUNC_HEADER(multflt_config);
+
+CONFIG_GET_SIZE_FUNC_HEADER(multflt);
+CONFIG_SET_ECL_FILE_HEADER_VOID(multflt);
+CONFIG_SET_ENS_FILE_HEADER_VOID(multflt);
+
+VOID_FUNC_HEADER(multflt_config_free);
 #endif
