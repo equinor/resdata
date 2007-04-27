@@ -24,7 +24,7 @@ function ens_plot(prior_path , posterior_path , well_list , var_list , unit_list
    nwell     = max(size(well_list));
    nvar      = max(size(var_list));
    sep       = filesep;
-   
+
    fig_nr = 0;
    for iw=1:nwell,
        for ivar = 1:nvar,
@@ -40,27 +40,46 @@ function ens_plot(prior_path , posterior_path , well_list , var_list , unit_list
            posterior_size = size(posterior , 2) - 2;
    
            figure(fig_nr)
+	   plist = [];
            grid 
-           plot(prior(:,1) , prior(:,2) , 'ko' , 'MarkerFaceColor','k', 'MarkerSize', psize);
+	   plot(prior(:,1) , prior(:,2) , 'ko' , 'MarkerFaceColor','k', 'MarkerSize', psize);
+	   
+
            hold on
-           plot(prior(:,1)     , prior(:,3)     , 'b' , 'LineWidth' , lw);
-           plot(posterior(:,1) , posterior(:,3) , 'r' , 'LineWidth' , lw);
+           p = plot(prior(:,1)     , prior(:,3)     , 'b' , 'LineWidth' , lw); 
+	   set(p , 'userdata' , 'Member: 1');
+	   plist = [plist , p];
+
+           p = plot(posterior(:,1) , posterior(:,3) , 'r' , 'LineWidth' , lw);
+	   set(p , 'userdata' , 'Member: 1');
+	   plist = [plist , p];
+
+
            legend('History', 'Prior' , 'Posterior')
            xlabel('Time (days)')
            ylabel(sprintf('%s (%s)',var,unit));
            title(sprintf('%s: %s',well,var));
    
            for i=2:prior_size,
-               plot(prior(:,1) , prior(:,i+2) , 'b' , 'LineWidth' , lw)
+	      p = plot(prior(:,1) , prior(:,i+2) , 'b' , 'LineWidth' , lw) ; 
+	      set(p , 'userdata' , sprintf('Member: %d',i));
+	      plist = [plist , p];
            end
    
            for i=2:posterior_size,
-               plot(posterior(:,1) , posterior(:,i+2) , 'r' , 'LineWidth' , lw)
+               p = plot(posterior(:,1) , posterior(:,i+2) , 'r' , 'LineWidth' , lw);
+	       set(p , 'userdata' , sprintf('Member: %d',i));
+	       plist = [plist , p];
            end
            plot(prior(:,1) , prior(:,2) , 'ko' , 'MarkerFaceColor','k', 'MarkerSize', psize);
            hold off
-   
-           
+
+
+	   set(gcf,'windowbuttonupfcn','h=findobj(gca,''type'',''text'');delete(h)')
+	   cb='pos=get(gca,''currentpoint'');h = text(pos(1,1),pos(1,2),get(gco,''userdata'')); set(h , ''FontSize'' , 12)';
+
+	   set(plist , 'buttondownfcn',cb);   
+
            if nargin >= 6,
                if out_path ~= 0,
                    out_file = sprintf('%s%s%s-%s',out_path , sep , well , var);
