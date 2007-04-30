@@ -354,16 +354,34 @@ void ecl_inter_unlink_path__(const char *_path , const int *path_len) {
 
 /*****************************************************************/
 
-void ecl_inter_parse_wconhist__(const char *_filename , const int *filename_len,
+void ecl_inter_parse_wconhist__(const double * missing_value, 
+				const char *_filename , const int *filename_len,
 				const char *_obs_path , const int *obs_path_len,
 				const char *_obs_file , const int *obs_file_len) {
   char *filename = util_alloc_cstring(_filename , filename_len);
   char *obs_path = util_alloc_cstring(_obs_path , obs_path_len);
   char *obs_file = util_alloc_cstring(_obs_file , obs_file_len);
   
-  sched_parse_wconhist(filename , obs_path , obs_file);
+  sched_parse_wconhist(*missing_value , filename , obs_path , obs_file);
   free(filename);
   free(obs_path);
   free(obs_file);
 
+}
+
+
+
+void ecl_inter_insert_sched_end__(const char *_src_file    , const int *src_file_len,
+				  const char *_target_file , const int *target_file_len,
+				  const char *_end_string  , const int *end_string_len) {
+
+  char * src_file    = util_alloc_cstring(_src_file    , src_file_len);
+  char * target_file = util_alloc_cstring(_target_file , target_file_len);
+  char * end_string  = util_alloc_cstring(_end_string  , end_string_len);
+
+  sched_insert_end(src_file , target_file , end_string);
+  
+  free(src_file);
+  free(target_file);
+  free(end_string);
 }

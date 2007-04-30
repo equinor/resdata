@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -522,11 +523,6 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
     int ijob;
     do {
       cont = true;
-      if (kill(getppid() , 0) != 0) {
-	fprintf(stderr,"%s: seems parent has died - aborting. \n",__func__);
-	exit(1);
-      }
-
       /* 
 	 First step: submitting basel(??) jobs 
       */
@@ -538,12 +534,9 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 	  ijob++;
 	} while (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running && ijob < lsf_pool->size);
       }
-
       /*
 	Second step: update status
       */
-    
-    
       lsf_pool_update_status(lsf_pool);
       /*
 	Third step: check complete jobs.
@@ -583,7 +576,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
     }
     return lsf_pool->total_status[lsf_status_exit];
   }
-}
+  }
 
 
 void lsf_pool_set_fail_vector(const lsf_pool_type * lsf_pool , int *fail_vector) {

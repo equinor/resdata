@@ -14,6 +14,9 @@ static const char *wconhist_string = "WCONHIST";
 static const char *dates_string    = "DATES";
 static const char *slash_string    = "/";
 
+static const int strip_comment = 1;
+static const int strip_space   = 2;
+
 static void rate_node_free__(void *);
 
 /*****************************************************************/
@@ -80,18 +83,22 @@ static void date_node_set_date_string(date_node_type * date_node, const char **t
 
 
 /*****************************************************************/
-#define COND_ATOF(s) (s == NULL) ? RATE_ERROR : atof(s)
-static void rate_node_set(rate_node_type * node , int tokens , const char **token_list , bool *well_shut) {
+
+static void set_rate(double *rate , const char * token , double missing_value) {
+  if (token == NULL)
+    *rate = missing_value;
+  else
+    *rate = atof(token);
+}
+
+static void rate_node_set(rate_node_type * node , double missing_value , int tokens , const char **token_list , bool *well_shut) {
   node->well = util_realloc_string_copy(node->well , token_list[0]);
   
-  /*
-    Must check for NULL here ....
-  */
-  node->ORAT = COND_ATOF(token_list[3]);
-  node->WRAT = COND_ATOF(token_list[4]);
-  node->GRAT = COND_ATOF(token_list[5]);
-  node->THP  = COND_ATOF(token_list[8]);
-  node->BHP  = COND_ATOF(token_list[9]);
+  set_rate(&node->ORAT  , token_list[3],missing_value);
+  set_rate(&node->WRAT  , token_list[4],missing_value);
+  set_rate(&node->GRAT  , token_list[5],missing_value);
+  set_rate(&node->THP   , token_list[8],missing_value);
+  set_rate(&node->BHP   , token_list[9],missing_value);
   
 
   if (node->ORAT != 0.0)
@@ -110,17 +117,16 @@ static void rate_node_set(rate_node_type * node , int tokens , const char **toke
 
   
 }
-#undef COND_ATOF
 
 
 
 
 
-static rate_node_type * rate_node_alloc(int tokens, const char **token_list) {
+static rate_node_type * rate_node_alloc(double missing_value , int tokens, const char **token_list) {
   rate_node_type *node = malloc(sizeof *node);
   bool well_shut;
   node->well = NULL;
-  rate_node_set(node , tokens , token_list , &well_shut);
+  rate_node_set(node , missing_value , tokens , token_list , &well_shut);
   return node;
 }
 
@@ -161,7 +167,7 @@ static void * rate_node_copyc__(const void *__src) {
 
 static void rate_node_fprintf(const rate_node_type *rate_node , FILE *stream) {
   /*if (rate_node->ORAT > 0.0)*/
-  fprintf(stream , "%-8s %16.4f  %16.4f  %16.4f \n",rate_node->well , rate_node->ORAT , rate_node->WRAT , rate_node->GRAT);
+  fprintf(stream , "%-8s %16.4f  %16.4f  %16.4f %16.4f  %16.4f\n",rate_node->well , rate_node->ORAT , rate_node->WRAT , rate_node->GRAT , rate_node->THP , rate_node->BHP);
 }
 
 /*****************************************************************/
@@ -192,14 +198,18 @@ static void token_list_free(int size, char **token_list) {
 
 
 
-static char * strip_line_alloc(const char * line) {
+static char * strip_line_alloc(const char * line , int strip_mode) {
   const char  comment_char = '-';
   const char *space   = " \t";
   char * new_line = NULL;
   int offset, length,pos;
   bool cont , quote_on , at_end;
   
-  offset   = strspn(line , space);
+  if (strip_mode & strip_space)
+    offset   = strspn(line , space);
+  else
+    offset = 0;
+
   quote_on = false;
   cont     = true;
   at_end   = false;
@@ -210,9 +220,11 @@ static char * strip_line_alloc(const char * line) {
       if (line[pos] == '\'' || line[pos] == '"')
 	quote_on = !quote_on;
 
-      if (line[pos] == comment_char && !quote_on) {
-	cont   = false;
-	length = pos - offset;
+      if (strip_mode & strip_comment) {
+	if (line[pos] == comment_char && !quote_on) {
+	  cont   = false;
+	  length = pos - offset;
+	}
       }
       
       if (pos == (strlen(line) - 1)) {
@@ -227,21 +239,25 @@ static char * strip_line_alloc(const char * line) {
     /*
       Remove trailing space:
     */
-    if (at_end) {
-      while (line[offset + length - 1] == ' ')
-	length--;
+
+    if (strip_mode & strip_space) {
+      if (at_end) {
+	while (line[offset + length - 1] == ' ')
+	  length--;
+      }
     }
-      
   
-    if (length > 0)
-      new_line = strdup_n(&line[offset] , length);
+    if (length > 0) 
+      /*new_line = strdup_n(&line[offset] , length);*/
+      new_line = util_realloc_substring_copy(NULL , &line[offset] , length);
+      
   } 
   
   return new_line;
 }
 
 
-static char * alloc_line(FILE *stream , bool *at_eof) {
+static char * alloc_line(FILE *stream , bool *at_eof , int strip_mode) {
   int init_pos = ftell(stream);
   int len;
   char *line;
@@ -273,9 +289,12 @@ static char * alloc_line(FILE *stream , bool *at_eof) {
     for (i=0; i < len; i++)
       tmp_line[i] = fgetc(stream);
     tmp_line[len] = '\0';
-    line = strip_line_alloc(tmp_line);
+    line = strip_line_alloc(tmp_line , strip_mode);
     free(tmp_line);
   }
+  /*
+    Skipping the end of line marker(s).
+  */
   fgetc(stream);
   if (dos_newline)
     fgetc(stream);
@@ -386,7 +405,7 @@ static void parse_file(const char *filename , int *_lines , char ***_line_list) 
   
   line_list = realloc(line_list , buffer_lines * sizeof *line_list);
   do {
-    char * line = alloc_line(stream , &at_eof);
+    char * line = alloc_line(stream , &at_eof , strip_comment + strip_space);
     if (line != NULL) {
       line_list[lines] = line;
       lines++;
@@ -409,7 +428,7 @@ static void parse_file(const char *filename , int *_lines , char ***_line_list) 
 
 
 
-static void sched_parse_wconhist__(int lines , const char **line_list, const char *obs_path , const char *obs_file) {
+static void sched_parse_wconhist__(double missing_value , int lines , const char **line_list, const char *obs_path , const char *obs_file) {
 
 #define parse_off   0
 #define wconhist_on 1
@@ -479,7 +498,7 @@ static void sched_parse_wconhist__(int lines , const char **line_list, const cha
 	{
 	  rate_node_type *rate_node;
 	  parse_line(line_list[line] , &tokens , &token_list , 10);
-	  rate_node = rate_node_alloc(tokens , (const char **) token_list);
+	  rate_node = rate_node_alloc(missing_value , tokens , (const char **) token_list);
 	  date_node_add_rate(date_node , rate_node);
 	  token_list_free(tokens , token_list);
 	}
@@ -505,6 +524,7 @@ static void sched_parse_wconhist__(int lines , const char **line_list, const cha
 	    char * file = malloc(strlen(path) + 2 + strlen(obs_file));
 	    sprintf(file , "%s/%s" , path , obs_file);
 	    stream = fopen(file , "w");
+	    fprintf(stream , "%s\n",date_node->date_string);
 	    fprintf(stream , "%d\n",list_get_size(date_node->rates));
 	    while (rate_list_node != NULL) {
 	      rate_node_fprintf(list_node_value_ptr(rate_list_node) , stream);
@@ -527,18 +547,38 @@ static void sched_parse_wconhist__(int lines , const char **line_list, const cha
 /*****************************************************************/
 
 
-void sched_parse_wconhist(const char *filename , const char *obs_path , const char *obs_file) {
-  int lines;
+void sched_parse_wconhist(double missing_value , const char *filename , const char *obs_path , const char *obs_file) {
   char **line_list;
+  int lines;
   parse_file(filename , &lines , &line_list);
-  sched_parse_wconhist__(lines , (const char **) line_list , obs_path , obs_file);
+  sched_parse_wconhist__(missing_value , lines , (const char **) line_list , obs_path , obs_file);
   util_free_string_list(line_list , lines);
 }
-  
 
-/*
-  int main(void) {
-  sched_parse_wconhist("SCHEDULE_orig.INC" , "Observations" , "PROD");
-  return 0;
+
+
+void sched_insert_end(const char *src_file , const char *target_file , const char * end_string) {
+  FILE *out_stream;
+  FILE *in_stream;
+  bool at_eof;
+  
+  at_eof     = false;
+  out_stream = fopen(target_file , "w");
+  in_stream  = fopen(src_file , "r");
+  
+  while (!at_eof) {
+    char * line = alloc_line(in_stream , &at_eof , strip_space);
+    if (line != NULL) {
+      if (strncmp(line , end_string , strlen(end_string)) == 0)
+	fprintf(out_stream,"END\n");
+      else if (strncmp(line , "--" , 2) != 0) /* Skip comment lines */
+	fprintf(out_stream , "%s\n", line);
+      free(line);
+    }
   }
-*/
+  fclose(out_stream);
+  fclose(in_stream);
+}
+
+
+  

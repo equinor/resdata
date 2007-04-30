@@ -3,8 +3,8 @@
 
 
 
-void sched_parse_wconhist(const char *, const char *, const char *);
-
+void  sched_parse_wconhist(double , const char *, const char *, const char *);
+void  sched_insert_end(const char *, const char *, const char * );
 
 
 #endif
