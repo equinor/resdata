@@ -8,7 +8,6 @@
 
 
 typedef enum {OPEN , STOP , SHUT} well_state_type;
-
 static const double RATE_ERROR = -1.0;
 static const char *wconhist_string = "WCONHIST";
 static const char *dates_string    = "DATES";
@@ -17,9 +16,10 @@ static const char *slash_string    = "/";
 static const int strip_comment = 1;
 static const int strip_space   = 2;
 
-static void rate_node_free__(void *);
+static void wconhist_node_free__(void *);
 
 /*****************************************************************/
+
 
 typedef struct {
   char            *well;
@@ -32,7 +32,20 @@ typedef struct {
   double 	   BHP;	    
   double 	   GOR;	    
   double 	   WCT;     
-} rate_node_type;
+} wconhist_node_type;
+
+
+typedef struct {
+  char *well;
+  int  i,j,k1,k2;
+  double cf;
+} compdat_node_type;
+
+
+typedef struct {
+  int    items;
+  char **token_list;
+} void_node_type;
 
 
 typedef struct {
@@ -42,6 +55,65 @@ typedef struct {
 } date_node_type;
 
 
+typedef struct {
+  list_type      *data_list;
+  date_node_type *date_node;
+} sched_node_type;
+
+/*****************************************************************/
+
+static char * strdup_n(const char *s , int max_len) {
+  char *new_string;
+  int len;
+
+  if (strlen(s) > max_len)
+    len = max_len;
+  else
+    len = strlen(s);
+  new_string = malloc(len + 1);
+  
+  strncpy(new_string , s , len);  new_string[len] = '\0';
+  return new_string;
+}
+
+
+
+
+static char * dequote_string(char *s) {
+  char *new;
+  int offset,len;
+  if (s[0] == '\'')
+    offset = 1;
+  else 
+    offset = 0;
+  
+  if (s[strlen(s)] == '\'')
+    len = strlen(s) - 1 - offset;
+  else
+    len = strlen(s) - offset;
+  
+  new = strdup_n(&s[offset] , len);
+  free(s);
+  return new;
+}
+
+
+
+
+
+
+/*****************************************************************/
+
+sched_node_type * sched_node_alloc() {
+  sched_node_type * sched_node = malloc(sizeof *sched_node);
+  
+  return sched_node;
+}
+
+
+
+
+/*****************************************************************/
 
 static date_node_type * date_node_alloc(int date_nr) {
   date_node_type * date_node = malloc(sizeof *date_node);
@@ -69,9 +141,9 @@ static void date_node_free__(void  *__date_node) {
   Her kan det være et vilkårlig filter ... 
 */
 
-static void date_node_add_rate(date_node_type * date_node , const rate_node_type *rate_node) {
-  if (rate_node->ORAT > 0.0)
-    list_append_managed_ref(date_node->rates , rate_node , rate_node_free__);
+static void date_node_add_rate(date_node_type * date_node , const wconhist_node_type *wconhist_node) {
+  if (wconhist_node->ORAT > 0.0)
+    list_append_list_owned_ref(date_node->rates , wconhist_node , wconhist_node_free__);
 }
 
 
@@ -91,9 +163,11 @@ static void set_rate(double *rate , const char * token , double missing_value) {
     *rate = atof(token);
 }
 
-static void rate_node_set(rate_node_type * node , double missing_value , int tokens , const char **token_list , bool *well_shut) {
+
+static void wconhist_node_set(wconhist_node_type * node ,double missing_value ,   int tokens , const char **token_list , bool *well_shut) {
   node->well = util_realloc_string_copy(node->well , token_list[0]);
-  
+  node->well = dequote_string(node->well);
+
   set_rate(&node->ORAT  , token_list[3],missing_value);
   set_rate(&node->WRAT  , token_list[4],missing_value);
   set_rate(&node->GRAT  , token_list[5],missing_value);
@@ -122,30 +196,30 @@ static void rate_node_set(rate_node_type * node , double missing_value , int tok
 
 
 
-static rate_node_type * rate_node_alloc(double missing_value , int tokens, const char **token_list) {
-  rate_node_type *node = malloc(sizeof *node);
+static wconhist_node_type * wconhist_node_alloc(double missing_value , int tokens, const char **token_list) {
+  wconhist_node_type *node = malloc(sizeof *node);
   bool well_shut;
   node->well = NULL;
-  rate_node_set(node , missing_value , tokens , token_list , &well_shut);
+  wconhist_node_set(node , missing_value , tokens , token_list , &well_shut);
   return node;
 }
 
 
-static void rate_node_free(rate_node_type *rate_node) {
-  free(rate_node->well);
-  free(rate_node);
+static void wconhist_node_free(wconhist_node_type *wconhist_node) {
+  free(wconhist_node->well);
+  free(wconhist_node);
 }
 
 
-static void rate_node_free__(void *__rate_node) {
-  rate_node_type *rate_node = (rate_node_type *) __rate_node;
-  rate_node_free(rate_node);
+static void wconhist_node_free__(void *__wconhist_node) {
+  wconhist_node_type *wconhist_node = (wconhist_node_type *) __wconhist_node;
+  wconhist_node_free(wconhist_node);
 }
 
 
 /*
-static rate_node_type * rate_node_copyc(const rate_node_type *src) {
-  rate_node_type *new = malloc(sizeof *new);
+static wconhist_node_type * wconhist_node_copyc(const wconhist_node_type *src) {
+  wconhist_node_type *new = malloc(sizeof *new);
   new->well  = strdup(src->well);
   new->state = src->state;   
   new->ORAT  = src->ORAT;    
@@ -159,33 +233,18 @@ static rate_node_type * rate_node_copyc(const rate_node_type *src) {
   return new;
 }
 
-static void * rate_node_copyc__(const void *__src) {
-  rate_node_type *src = (rate_node_type *) __src;
-  return rate_node_copyc(src);
+static void * wconhist_node_copyc__(const void *__src) {
+  wconhist_node_type *src = (wconhist_node_type *) __src;
+  return wconhist_node_copyc(src);
 }
 */
 
-static void rate_node_fprintf(const rate_node_type *rate_node , FILE *stream) {
-  /*if (rate_node->ORAT > 0.0)*/
-  fprintf(stream , "%-8s %16.4f  %16.4f  %16.4f %16.4f  %16.4f\n",rate_node->well , rate_node->ORAT , rate_node->WRAT , rate_node->GRAT , rate_node->THP , rate_node->BHP);
+static void wconhist_node_fprintf(const wconhist_node_type *wconhist_node , FILE *stream) {
+  fprintf(stream , "%-8s %16.4f  %16.4f  %16.4f %16.4f  %16.4f\n",wconhist_node->well , wconhist_node->ORAT , wconhist_node->WRAT , wconhist_node->GRAT , wconhist_node->THP , wconhist_node->BHP);
 }
 
 /*****************************************************************/
 
-
-static char * strdup_n(const char *s , int max_len) {
-  char *new_string;
-  int len;
-
-  if (strlen(s) > max_len)
-    len = max_len;
-  else
-    len = strlen(s);
-  new_string = malloc(len + 1);
-  
-  strncpy(new_string , s , len);  new_string[len] = '\0';
-  return new_string;
-}
 
 
 static void token_list_free(int size, char **token_list) {
@@ -203,13 +262,14 @@ static char * strip_line_alloc(const char * line , int strip_mode) {
   const char *space   = " \t";
   char * new_line = NULL;
   int offset, length,pos;
-  bool cont , quote_on , at_end;
+  bool cont , quote_on , at_end, dash_on;
   
   if (strip_mode & strip_space)
     offset   = strspn(line , space);
   else
     offset = 0;
 
+  dash_on  = true;
   quote_on = false;
   cont     = true;
   at_end   = false;
@@ -219,11 +279,17 @@ static char * strip_line_alloc(const char * line , int strip_mode) {
     do {
       if (line[pos] == '\'' || line[pos] == '"')
 	quote_on = !quote_on;
-
+      
       if (strip_mode & strip_comment) {
-	if (line[pos] == comment_char && !quote_on) {
-	  cont   = false;
-	  length = pos - offset;
+	if (!quote_on) {
+	  if (line[pos] == comment_char) {
+	    if (dash_on) {
+	      cont   = false;
+	      length = pos - offset;
+	    } else 
+	      dash_on = true;
+	  } else
+	    dash_on = false;
 	}
       }
       
@@ -308,6 +374,8 @@ static char * alloc_line(FILE *stream , bool *at_eof , int strip_mode) {
 }
 
 
+
+
 static void parse_line(const char * line , int *_tokens , char ***_token_list , int min_tokens) {
   const char *delimiters = " ";
   int    token,tokens,offset,length;
@@ -371,6 +439,7 @@ static void parse_line(const char * line , int *_tokens , char ***_token_list , 
     }
   }
   
+
   /*
     Removing quotes ...
   */
@@ -441,13 +510,11 @@ static void sched_parse_wconhist__(double missing_value , int lines , const char
   int line;
   int date_nr;
   
-  
-  
   parse_state = parse_off;
   date_nr     = 1;
   date_node   = date_node_alloc(date_nr); 
   list_append_managed_ref(wconhist , date_node , date_node_free__);
-
+  
   /*
     The reference to the date_node object is still valid - and can be 
     updated from here.
@@ -496,10 +563,10 @@ static void sched_parse_wconhist__(double missing_value , int lines , const char
 	break;
       case(wconhist_on):
 	{
-	  rate_node_type *rate_node;
+	  wconhist_node_type *wconhist_node;
 	  parse_line(line_list[line] , &tokens , &token_list , 10);
-	  rate_node = rate_node_alloc(missing_value , tokens , (const char **) token_list);
-	  date_node_add_rate(date_node , rate_node);
+	  wconhist_node = wconhist_node_alloc(missing_value , tokens , (const char **) token_list);
+	  date_node_add_rate(date_node , wconhist_node);
 	  token_list_free(tokens , token_list);
 	}
 	break;
@@ -527,7 +594,7 @@ static void sched_parse_wconhist__(double missing_value , int lines , const char
 	    fprintf(stream , "%s\n",date_node->date_string);
 	    fprintf(stream , "%d\n",list_get_size(date_node->rates));
 	    while (rate_list_node != NULL) {
-	      rate_node_fprintf(list_node_value_ptr(rate_list_node) , stream);
+	      wconhist_node_fprintf(list_node_value_ptr(rate_list_node) , stream);
 	      rate_list_node = list_node_get_next(rate_list_node);
 	    }
 	    fclose(stream);
@@ -543,6 +610,10 @@ static void sched_parse_wconhist__(double missing_value , int lines , const char
   list_free(wconhist);
 }
 
+
+static void sched_parse_compdat__(int lines , const char **line_list) {
+  
+}
 
 /*****************************************************************/
 

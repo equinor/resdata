@@ -100,7 +100,7 @@ static void lsf_pool_exit_job(const lsf_pool_type *lsf_pool , int ijob , lsf_sta
   
   FILE *stream = fopen(job->fail_file , "w");
   if (status == lsf_status_exit) 
-    fprintf(stream, "Job:%s/LSF: %d failed with EXIT status from the LSF que system.\n" , job->base , job->lsf_base);
+    fprintf(stream, "Job:%s/LSF:%d failed with EXIT status from the LSF que system.\n" , job->base , job->lsf_base);
   else if (status == lsf_status_uerror)
     fprintf(stream , "Job:%s failed to produce resultfile:%s  after %d attempts - giving up.\n",job->base , job->restart_file , job->max_resubmit);
   else {
@@ -236,32 +236,41 @@ int lsf_job_submit(lsf_job_type *lsf_job , const char *tmp_path) {
     fprintf(stderr,"%s: fatal error when submitting job:%s - run_path:%s does not exist \n",__func__ , lsf_job->base , lsf_job->run_path);
     abort();
   }
-  const char *tmp_file = "bsub.tmp";
-  char *cmd       = malloc(strlen(lsf_job->submit_cmd) + strlen(tmp_path) + strlen(tmp_file) + 3);
-  char *tmp_file2 = cmd;
-  lsf_job_unlink_smspec(lsf_job);
-  sprintf(cmd , "%s %s/%s" , lsf_job->submit_cmd , tmp_path , tmp_file);
-  system(cmd);
-  sprintf(tmp_file2 , "%s/%s" , tmp_path , tmp_file);
+  const char *tmp_file_static = "bsub-";
+  char       *tmp_file = malloc(strlen(tmp_file_static) + 7);
+  sprintf(tmp_file , "%s%06d" , tmp_file_static , getpid() % 1000000);
   {
-    FILE *stream = fopen(tmp_file2 , "r");
-    int read1;
-    read1 = fscanf(stream , "%d" , &lsf_job->lsf_base);
-    fclose(stream);
-    if (read1 == 1) 
-      /*
-	Submit status is handled in the pool object.
-      */
-      time(&lsf_job->submit_time);
-    else {
-      fprintf(stderr,"*** Submitting job:%s failed - could not get LSF base \n",lsf_job->base);
-      fprintf(stderr,"*** Maybe you are trying to run from a machine without \n*** the que system installed?\n");
-      abort();
+    /* The same storage is used for both the variables cmd and tmp_full_path ... */
+    char *cmd           = malloc(strlen(lsf_job->submit_cmd) + strlen(tmp_path) + strlen(tmp_file) + 3);
+    char *tmp_full_path = cmd;
+    lsf_job_unlink_smspec(lsf_job);
+    sprintf(cmd , "%s %s/%s" , lsf_job->submit_cmd , tmp_path , tmp_file);
+    system(cmd);
+    sprintf(tmp_full_path , "%s/%s" , tmp_path , tmp_file);
+    {
+      FILE *stream = fopen(tmp_full_path , "r");
+      int read1;
+      read1 = fscanf(stream , "%d" , &lsf_job->lsf_base);
+      fclose(stream);
+      if (read1 == 1) 
+	/*
+	  Submit status is handled in the pool object.
+	*/
+	time(&lsf_job->submit_time);
+      else {
+	fprintf(stderr,"*** Submitting job:%s failed - could not get LSF base \n",lsf_job->base);
+	fprintf(stderr,"*** Maybe you are trying to run from a machine without \n*** the que system installed?\n");
+	abort();
+      }
     }
+    util_unlink_existing(tmp_full_path);
   }
+  free(tmp_file);
   lsf_job->submit_count++;
   return lsf_job->lsf_base;
 }
+
+
 
 static bool lsf_job_can_reschedule(lsf_job_type *lsf_job) {
   if (lsf_job->submit_count <= lsf_job->max_resubmit) {
