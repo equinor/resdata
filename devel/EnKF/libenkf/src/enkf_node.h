@@ -6,24 +6,24 @@
 
 /**********************************/
 
-typedef void (ecl_write_ftype)  (const void *);
-typedef void (ens_read_ftype)   (      void *);
-typedef void (ens_write_ftype)  (const void *);
-typedef void (sample_ftype)     (      void *);
-typedef void (free_ftype)       (      void *);
-typedef void (clear_ftype)      (      void *);
-typedef void (copyc_ftype)      (const void *);
-typedef void (isqrt_ftype)      (      void *);
-typedef void (scale_ftype)      (      void * , double);
-typedef void (iadd_ftype)       (      void * , const void *);
-typedef void (imul_ftype)       (      void * , const void *);
-typedef void (iaddsqr_ftype)    (      void * , const void *);
+typedef void   (ecl_write_ftype)  (const void *);
+typedef void   (ens_read_ftype)   (      void *);
+typedef void   (ens_write_ftype)  (const void *);
+typedef void   (sample_ftype)     (      void *);
+typedef void   (free_ftype)       (      void *);
+typedef void   (clear_ftype)      (      void *);
+typedef void * (copyc_ftype)      (const void *);
+typedef void   (isqrt_ftype)      (      void *);
+typedef void   (scale_ftype)      (      void * , double);
+typedef void   (iadd_ftype)       (      void * , const void *);
+typedef void   (imul_ftype)       (      void * , const void *);
+typedef void   (iaddsqr_ftype)    (      void * , const void *);
 
 
 typedef struct enkf_node_struct enkf_node_type;
 
-
-enkf_node_type * enkf_node_alloc(const char * , enkf_var_type , void * , ecl_write_ftype * , ens_read_ftype , ens_write_ftype , sample_ftype *, free_ftype);
+enkf_node_type * enkf_node_copyc(const enkf_node_type * );
+enkf_node_type * enkf_node_alloc(const char * , enkf_var_type , void * , ecl_write_ftype * , ens_read_ftype , ens_write_ftype , copyc_ftype * , sample_ftype *, free_ftype);
 void             enkf_node_free(enkf_node_type *enkf_node);
 void             enkf_sample    (enkf_node_type *);
 bool             enkf_node_include_type(const enkf_node_type * , int );

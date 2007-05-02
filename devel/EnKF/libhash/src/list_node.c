@@ -74,6 +74,12 @@ void list_node_free(list_node_type *node) {
 }
 
 
+const char * list_node_get_string(list_node_type *node) {
+  node_data_type *data = list_node_value_ptr(node);
+  return (const char *) data->data;                
+}
+
+
 /*****************************************************************/
 
 #define LIST_NODE_AS_SCALAR(FUNC,TYPE)                    \

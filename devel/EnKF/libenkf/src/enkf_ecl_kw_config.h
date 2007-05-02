@@ -10,6 +10,7 @@ struct enkf_ecl_kw_config_struct {
 };
 
 
+enkf_ecl_kw_config_type * enkf_ecl_kw_config_alloc(const enkf_ecl_kw_config_type * );
 enkf_ecl_kw_config_type * enkf_ecl_kw_config_alloc(int , const char * , const char *);
 int        		  enkf_ecl_kw_config_get_size       (const enkf_ecl_kw_config_type *);
 const char 		* enkf_ecl_kw_config_get_ensname_ref(const enkf_ecl_kw_config_type *);

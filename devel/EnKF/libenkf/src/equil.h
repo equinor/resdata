@@ -6,6 +6,7 @@
 
 typedef struct equil_struct equil_type;
 
+equil_type     * equil_copyc(const equil_type * );
 equil_type     * equil_alloc(const enkf_state_type * , const equil_config_type * );
 void             equil_free(equil_type *);
 char           * equil_alloc_ensname(const equil_type *);
@@ -19,7 +20,7 @@ VOID_FUNC_HEADER_CONST (equil_ens_write);
 VOID_FUNC_HEADER       (equil_ens_read );
 VOID_FUNC_HEADER       (equil_sample   );
 VOID_FUNC_HEADER       (equil_free     );
-
+VOID_COPYC_HEADER      (equil_copyc)   ;
 MATH_OPS_HEADER(equil);
 
 #endif

@@ -81,10 +81,9 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config) {
   enkf_state->config    = config;
   enkf_state->node_list = list_alloc();
   enkf_state->node_hash = hash_alloc(10);
+  printf("1: Totalt antall noder: %d \n",list_get_size(enkf_state->node_list));
   return enkf_state;
 }
-
-
 
 /*
   hash_node -> list_node -> enkf_node -> {Actual enkf object: multz_type/equil_type/multflt_type/...}
@@ -98,13 +97,45 @@ static void enkf_state_add_node__(enkf_state_type * enkf_state , const char * no
     to an enkf_node which contains a pointer to the actual enkf object.
   */
   hash_insert_ref(enkf_state->node_hash , node_key  , list_node);
+  printf("2: Totalt antall noder: %d \n",list_get_size(enkf_state->node_list));
 }
 
 
 
-void enkf_state_add_node(enkf_state_type *enkf_state , enkf_var_type var_type , const char * node_key , void *data , ecl_write_ftype * ecl_write , ens_read_ftype *ens_read , ens_write_ftype * ens_write , sample_ftype *sample, free_ftype * freef) {
-  enkf_node_type *enkf_node = enkf_node_alloc(node_key , var_type , data , ecl_write , ens_read , ens_write , sample , freef);
+
+enkf_state_type * enkf_state_copyc(const enkf_state_type * src) {
+  enkf_state_type * new = enkf_state_alloc(src->config);
+  list_node_type *list_node;                                          
+  list_node = list_get_head(src->node_list);                     
+  printf("Totalt antall noder: %d \n",list_get_size(src->node_list));
+
+  while (list_node != NULL) {                                           
+    printf("Kopierer node .... \n");
+    {
+      enkf_node_type *enkf_node = list_node_value_ptr(list_node);         
+      enkf_node_type *new_node  = enkf_node_copyc(enkf_node);
+      enkf_state_add_node__(new , enkf_node_get_key_ref(new_node) , new_node);
+      list_node = list_node_get_next(list_node);                          
+    }
+  }
+  
+  return new;
+}
+
+
+
+
+void enkf_state_add_node(enkf_state_type *enkf_state , enkf_var_type var_type , const char * node_key , void *data , 
+			 ecl_write_ftype * ecl_write , 
+			 ens_read_ftype  * ens_read  , 
+			 ens_write_ftype * ens_write , 
+			 copyc_ftype     * copyc     , 
+			 sample_ftype    * sample    , 
+			 free_ftype      * freef) {
+
+  enkf_node_type *enkf_node = enkf_node_alloc(node_key , var_type , data , ecl_write , ens_read , ens_write , copyc , sample , freef);
   enkf_state_add_node__(enkf_state , node_key , enkf_node);
+  
 }
 
 
@@ -122,11 +153,11 @@ void enkf_state_ecl_read(enkf_state_type * enkf_state , const ecl_block_type *ec
     if (!enkf_state_has_node(enkf_state , kw)) {
       if (restart_kw) {
 	enkf_ecl_kw_type * new_kw = enkf_ecl_kw_alloc(enkf_state , kw , ecl_kw_get_size(ecl_kw) , kw);
-	enkf_state_add_node(enkf_state , ecl_restart , kw , new_kw , NULL , NULL , NULL , NULL , NULL);
+	enkf_state_add_node(enkf_state , ecl_restart , kw , new_kw , NULL , NULL , NULL , NULL , NULL , NULL);
 	printf("Restart KW:");
       } else {
 	ecl_static_kw_type * new_kw = ecl_static_kw_alloc(enkf_state);
-	enkf_state_add_node(enkf_state , ecl_static , kw , new_kw , NULL , NULL , NULL , NULL , NULL);
+	enkf_state_add_node(enkf_state , ecl_static , kw , new_kw , NULL , NULL , NULL , NULL , NULL , NULL);
       }
     }
 

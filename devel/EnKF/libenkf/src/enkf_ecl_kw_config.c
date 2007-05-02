@@ -14,6 +14,12 @@ enkf_ecl_kw_config_type * enkf_ecl_kw_config_alloc(int size , const char *ecl_kw
 }
 
 
+enkf_ecl_kw_config_type * enkf_ecl_kw_config_alloc(const enkf_ecl_kw_config_type * src) {
+  enkf_ecl_kw_config_type * new = enkc_ecl_kw_config_alloc(src->size , src->ecl_kw_name , src->ens_file);
+  return new;
+}
+
+
 int enkf_ecl_kw_config_get_size(const enkf_ecl_kw_config_type * config) { return config->size; }
 
 const char * enkf_ecl_kw_config_get_ensname_ref(const enkf_ecl_kw_config_type * enkf_ecl_kw_config) {

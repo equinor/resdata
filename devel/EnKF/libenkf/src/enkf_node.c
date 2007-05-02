@@ -25,19 +25,47 @@ struct enkf_node_struct {
 
 
 
-enkf_node_type * enkf_node_alloc(const char *node_key, enkf_var_type var_type , void *data , ecl_write_ftype * ecl_write , ens_read_ftype *ens_read , ens_write_ftype * ens_write , sample_ftype *sample, free_ftype * freef) {
+enkf_node_type * enkf_node_alloc(const char *node_key, enkf_var_type var_type , void *data , 
+				 ecl_write_ftype * ecl_write , 
+				 ens_read_ftype  * ens_read  , 
+				 ens_write_ftype * ens_write , 
+				 copyc_ftype     * copyc     ,
+				 sample_ftype    * sample    , 
+				 free_ftype      * freef) {
+  
   enkf_node_type *node = malloc(sizeof *node);
   node->ecl_write = ecl_write;
   node->ens_read  = ens_read;
   node->ens_write = ens_write;
   node->sample    = sample;
   node->freef     = freef;
+  node->copyc     = copyc;
   node->data      = data;
   node->node_key  = util_alloc_string_copy(node_key);
   node->var_type  = var_type;
   return node;
+  
 }
 
+
+enkf_node_type * enkf_node_copyc(const enkf_node_type * src) {
+  if (src->copyc == NULL) {
+    printf("Har ikke copyc funksjon\n");
+    abort();
+  }
+  {void *new_data = src->copyc(src->data);
+  enkf_node_type * new = enkf_node_alloc(enkf_node_get_key_ref(src) , 
+					 src->var_type , 
+					 new_data, 
+					 src->ecl_write,
+					 src->ens_read,
+					 src->ens_write, 
+					 src->copyc,
+					 src->sample,
+					 src->freef);
+  return new;
+  }
+}
 
 
 bool enkf_node_include_type(const enkf_node_type * enkf_node, int mask) {

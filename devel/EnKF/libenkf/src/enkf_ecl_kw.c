@@ -37,6 +37,16 @@ enkf_ecl_kw_type * enkf_ecl_kw_alloc(const enkf_state_type * enkf_state , const 
 }
 
 
+enkf_ecl_kw_type * enkf_kw_copyc(const enkf_ecl_kw_type * src) {
+  enkf_ecl_kw_config_type * config = enkf_ecl_kw_config_copyc(src->config);
+  enkf_ecl_kw_type        * new_kw = enkf_ecl_kw_alloc2(src->enkf_state , config);
+  
+  memcpy(new->data , src->data , enkf_eckl_kw_config_get_size(config) * sizeof * src->data);
+  return new;
+}
+
+
+
 ecl_kw_type * enkf_ecl_kw_alloc_ecl_kw(const enkf_ecl_kw_type *enkf_kw , bool fmt_file , bool endian_convert) {
   const int size     = enkf_ecl_kw_config_get_size(enkf_kw->config);
   const char *header = enkf_kw->config->ecl_kw_name;
@@ -124,6 +134,8 @@ void enkf_ecl_kw_serialize(const enkf_ecl_kw_type *enkf_ecl_kw , double *serial_
 
   *_offset = offset;
 }
+
+
 
 /*
   MATH_OPS(enkf_ecl_kw);

@@ -18,8 +18,11 @@ char   * util_alloc_strip_copy(const char *);
 void     util_set_strip_copy(char * , const char *);
 char   * util_alloc_string_copy(const char *);
 char   * util_realloc_string_copy(char * , const char *);
+char   * util_realloc_substring_copy(char * , const char *, int );
+char   * util_alloc_dequoted_string(char *);
 void     util_free_string_list(char **, int );
 char  ** util_alloc_string_list(int , int );
+char   * util_alloc_substring_copy(const char *, int );
 
 bool     util_intptr_2bool(const int *);
 char *   util_alloc_cstring(const char *, const int *);

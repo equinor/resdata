@@ -17,7 +17,7 @@ void             multz_ens_read(multz_type *);
 
 MATH_OPS_HEADER(multz);
 
-
+VOID_COPYC_HEADER      (multz_copyc);
 VOID_FUNC_HEADER_CONST (multz_ecl_write);
 VOID_FUNC_HEADER_CONST (multz_ens_write);
 VOID_FUNC_HEADER       (multz_ens_read );

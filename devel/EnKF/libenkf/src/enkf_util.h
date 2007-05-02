@@ -14,7 +14,6 @@ void func ## __(const void *void_arg) { \
    func(arg);                             \
 }
 
-
 #define VOID_FUNC(func,type) \
 void func ## __(void *void_arg) { \
    type *arg = (type *) void_arg; \
@@ -27,9 +26,14 @@ void func ## __(const void *void_arg, double *serial_data , size_t *_offset) { \
    func(arg , serial_data , _offset);   \
 }
 
+#define VOID_COPYC(func,type) \
+void * func ## __(const void *void_arg) { \
+   const type *arg = (const type *) void_arg; \
+   return func(arg);                             \
+}
 
 
-
+#define VOID_COPYC_HEADER(func) void * func ## __(const void *void_arg)
 #define VOID_FUNC_HEADER(func) void func ## __(void *void_arg)
 #define VOID_FUNC_HEADER_CONST(func) void func ## __(const void *void_arg)
 #define VOID_SERIALIZE_HEADER(func) void func ## __(const void *void_arg , double *, size_t *)

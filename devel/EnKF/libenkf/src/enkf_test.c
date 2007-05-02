@@ -13,6 +13,7 @@
 int main(void) {
   enkf_config_type * enkf_config;
   enkf_state_type  * enkf_state;
+  enkf_state_type  * enkf_state2;
   multz_type       * multz;
   
   multz_config_type * multz_config = multz_config_alloc(100 , 100 , 10 , "MULTZ.INC" , "multz");
@@ -29,17 +30,17 @@ int main(void) {
 		      multz_ecl_write__ ,
 		      multz_ens_read__  ,
 		      multz_ens_write__ ,
+		      multz_copyc__,
 		      multz_sample__    , 
 		      multz_free__);
-  
 
-  enkf_state_add_node(enkf_state , parameter , "EQUIL" , equil_alloc(enkf_state , (const equil_config_type *) enkf_config_get_node_value(enkf_config , "EQUIL")) , 
-		      equil_ecl_write__ ,
-		      equil_ens_read__  ,
-		      equil_ens_write__ ,
-		      equil_sample__    , 
-		      equil_free__);
-  
+    enkf_state_add_node(enkf_state , parameter , "EQUIL" , equil_alloc(enkf_state , (const equil_config_type *) enkf_config_get_node_value(enkf_config , "EQUIL")) , 
+    equil_ecl_write__ ,
+    equil_ens_read__  ,
+    equil_ens_write__ ,
+    equil_copyc__     , 
+    equil_sample__    , 
+    equil_free__);
 
   enkf_config_add_enkf_kw(enkf_config , "SWAT    ");
   enkf_config_add_enkf_kw(enkf_config , "SGAS    ");
@@ -72,7 +73,10 @@ int main(void) {
     
     ecl_block_free(ecl_block);
   }
-    
+
+  enkf_state2 = enkf_state_copyc(enkf_state);
+  printf("Har klonet ... \n");
+  
   enkf_config_free(enkf_config);
   enkf_state_free(enkf_state);
 

@@ -42,6 +42,26 @@ char * util_alloc_substring_copy(const char *src , int N) {
 }
 
 
+char * util_alloc_dequoted_string(char *s) {
+  char *new;
+  int offset,len;
+  if (s[0] == '\'')
+    offset = 1;
+  else 
+    offset = 0;
+  
+  if (s[strlen(s)] == '\'')
+    len = strlen(s) - 1 - offset;
+  else
+    len = strlen(s) - offset;
+  
+  new = util_alloc_substring_copy(&s[offset] , len);
+  free(s);
+  return new;
+}
+
+
+
 
 /******************************************************************/
 
@@ -211,6 +231,24 @@ char * util_realloc_string_copy(char * old_string , const char *src ) {
   if (src != NULL) {
     char *copy = realloc(old_string , (strlen(src) + 1) * sizeof *copy);
     strcpy(copy , src);
+    return copy;
+  } else 
+    return NULL;
+}
+
+char * util_realloc_substring_copy(char * old_string , const char *src , int len) {
+  if (src != NULL) {
+    int str_len;
+    char *copy;
+    if (strlen(src) < len)
+      str_len = strlen(src);
+    else
+      str_len = len;
+
+    copy = realloc(old_string , (str_len + 1) * sizeof *copy);
+    strncpy(copy , src , str_len);
+    copy[str_len] = '\0';
+
     return copy;
   } else 
     return NULL;
@@ -425,3 +463,5 @@ void util_double_to_float(float *float_ptr , const double *double_ptr , int size
     float_ptr[i] = (float) double_ptr[i];
 }
 
+
+/*****************************************************************/

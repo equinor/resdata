@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <enkf_types.h>
 #include <enkf_state.h>
@@ -19,11 +20,17 @@ struct equil_struct {
 equil_type * equil_alloc(const enkf_state_type * enkf_state , const equil_config_type * config) {
   equil_type * equil    = malloc(sizeof *equil);
   equil->enkf_state     = enkf_state;
-  equil->config   = config;
+  equil->config         = config;
   equil->data           = enkf_util_malloc(config->size * sizeof *equil->data , __func__);
   return equil;
 }
 
+
+equil_type * equil_copyc(const equil_type * src) {
+  equil_type * new = equil_alloc(src->enkf_state , src->config);
+  memcpy(new->data , src->data , equil_config_get_size(new->config) * sizeof * new->data);
+  return new;
+}
 
 
 void equil_ecl_write(const equil_type * equil) {
@@ -84,6 +91,8 @@ void equil_free(equil_type *equil) {
 }
 
 
+
+
 MATH_OPS(equil);
 
 /******************************************************************/
@@ -95,3 +104,4 @@ VOID_FUNC_CONST(equil_ens_write , equil_type)
 VOID_FUNC      (equil_ens_read  , equil_type)
 VOID_FUNC      (equil_sample    , equil_type)
 VOID_FUNC      (equil_free      , equil_type)
+VOID_COPYC     (equil_copyc     , equil_type)

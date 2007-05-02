@@ -20,6 +20,13 @@ ecl_static_kw_type * ecl_static_kw_alloc(const enkf_state_type * enkf_state) {
   return static_kw;
 }
 
+
+ecl_static_kw_type * ecl_static_kw_copyc(const ecl_static_kw_type *src) {
+  ecl_static_kw_type * new = ecl_static_kw_alloc(src->enkf_state);
+  if (src->ecl_kw != NULL)
+    new->ecl_kw = ecl_kw_alloc_copy(src->ecl_kw);
+}
+
 void ecl_static_kw_free(ecl_static_kw_type * kw) {
   if (kw->ecl_kw != NULL) ecl_kw_free(kw->ecl_kw);
   /*ecl_static_kw_config_free(kw->config);*/
@@ -34,13 +41,8 @@ void ecl_static_kw_init(ecl_static_kw_type * ecl_static_kw, const ecl_kw_type * 
 
 }
 
-char * ecl_static_kw_alloc_ensname(const ecl_static_kw_type *kw) {
-  /*
-    char *ens_file  = enkf_state_alloc_ensname(kw->enkf_state , kw->config->ens_file);
-    return ens_file;
-  */
-  return NULL;
-}
+
+
 
 
 void ecl_static_ens_write(const ecl_static_kw_type * ecl_static_kw) {

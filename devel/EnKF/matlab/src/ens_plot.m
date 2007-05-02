@@ -1,4 +1,6 @@
 function ens_plot(year,month,day,prior_path , posterior_path , well_list , var_list , unit_list , out_path , in_device)
+% ens_plot(year , month , day , prior_path , posterior_path , well_list , var_list , unit_list)
+%
 % The ens_plot() function is designed to plot the results of ensemble
 % experiments. Before calling ens_plot() you must use the EnKF 11-e
 % option to generate ensemble plot files (say 'n' to Tecplot header).
@@ -19,6 +21,15 @@ function ens_plot(year,month,day,prior_path , posterior_path , well_list , var_l
 % The variables out_path and in_device are for saving to file, they are optional, see
 % the documentation of diag_plot() for details.
 
+   if exist(prior_path,'dir') == 0
+      disp(sprintf('Could not locate prior_path: %s - returning from ens_plot.' , prior_path));
+      return;
+   end
+
+   if exist(posterior_path,'dir') == 0
+      disp(sprintf('Could not locate posterior_path: %s - returning from ens_plot. , posterior_path));
+      return;
+   end
 
    def_device = 'png';
    lw        = 1.00;
@@ -37,6 +48,16 @@ function ens_plot(year,month,day,prior_path , posterior_path , well_list , var_l
            fig_nr = fig_nr + 1;
            prior_file     = strcat(prior_path , sep , well , '.' , var);
            posterior_file = strcat(posterior_path , sep , well , '.' , var);
+	   if exist(prior_file , 'file') == 0;
+	      disp(sprintf('Could not find file: %s - returning from ens_plot',prior_file));
+	      return;
+	   end
+
+	   if exist(posterior_file , 'file') == 0;
+	      disp(sprintf('Could not find file: %s - returning from ens_plot',posterior_file));
+	      return;
+	   end
+
            prior     = load(prior_file);
            posterior = load(posterior_file);
            prior_size     = size(prior , 2) - 2;

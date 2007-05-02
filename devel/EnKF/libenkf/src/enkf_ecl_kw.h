@@ -10,6 +10,7 @@ ecl_kw_type      * enkf_ecl_kw_alloc_ecl_kw(const enkf_ecl_kw_type * , bool  , b
 void               enkf_ecl_kw_get_data(enkf_ecl_kw_type * , const ecl_kw_type *);
 enkf_ecl_kw_type * enkf_ecl_kw_alloc(const enkf_state_type * , const char * , int , const char *);
 void               enkf_ecl_kw_free(enkf_ecl_kw_type *);
+enkf_ecl_kw_type * enkf_kw_copyc(const enkf_ecl_kw_type * );
 
 MATH_OPS_HEADER(enkf_ecl_kw);
 

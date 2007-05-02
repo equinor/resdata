@@ -1,17 +1,21 @@
 function diag_plot(path , VAR , NList , out_path, in_device)
+%diag_plot(year , month , day , path , VAR , NList , out_path , device)
+%
 %The diag_plot() function can be used to plot time-series of scalar 
 %enkf variables like fault multipliers and the WOC. 
 %
 % o Prior to calling diag_plot() yous *must* use the EnKF program
 %   to extract the mean and standard deviation of the ensemble. 
-%   This is done by using menu option 11-b and then analyse the
+%   This is done by using menu option 11-p and then analyse the
 %   ensaveA and ensstdA files. 
 %
 %   The diag_plot() function currently *only* considers the analyzed
 %   files.
 %
-% o The function has five arguments, only the three first are
+% o The function has eight arguments, only the six first are
 %   mandatory:
+%
+%   year / month / day : The starting date of the simulation.
 %
 %   [path:] This is the path to where the diagnostica variable from
 %           EnKF are stored. If you have run EnKF in the directory
@@ -34,8 +38,8 @@ function diag_plot(path , VAR , NList , out_path, in_device)
 %
 %   [out_path]: Path were hard copies are stored.
 %
-%   [in_device]: Type of files to plot, e.g. 'png', 'eps',..., defaults
-%                to 'png'.
+%   [device]: Type of files to plot, e.g. 'png', 'eps',..., defaults
+%             to 'png'.
 
 
 
@@ -54,13 +58,13 @@ function diag_plot(path , VAR , NList , out_path, in_device)
         errorbar(days , ave(:,N+3) , std(:,N + 3) , '-ro','LineWidth',2 , 'MarkerSize',10, 'MarkerEdgeColor','k', 'MarkerFaceColor','g')
         xlabel('Time (days)')
         title(sprintf('%s %d' , VAR , N));
-        if nargin >= 4,
+        if nargin >= 7,
             if out_path == 1,
                 out_path = path;
             end
             if out_path ~= 0,
                 out_file = sprintf('%s%s%s-%d',out_path , sep , VAR , N);
-                if nargin == 4,
+                if nargin == 7,
                     device = def_device;
                 else
                     device = in_device;

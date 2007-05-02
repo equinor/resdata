@@ -18,11 +18,17 @@ struct multz_struct {
 
 /*****************************************************************/
 
+void multz_realloc_data(multz_type *multz) {
+  multz->data = enkf_util_malloc(multz_config_get_size(multz->config) * sizeof *multz->data , __func__);
+}
+
+
 multz_type * multz_alloc(const enkf_state_type * enkf_state , const multz_config_type * multz_config) {
   multz_type * multz = malloc(sizeof *multz);
   multz->enkf_state   = enkf_state;
   multz->config = multz_config;
-  multz->data         = enkf_util_malloc(multz_config_get_size(multz_config) * sizeof *multz->data , __func__);
+  multz->data = NULL;
+  multz_realloc_data(multz);
   return multz;
 }
 
@@ -41,6 +47,7 @@ multz_type * multz_copyc(const multz_type *multz) {
   multz_type * new = multz_alloc(multz->enkf_state , multz->config);
   
   memcpy(new->data , multz->data , size * sizeof *multz->data);
+  printf("Har klonet et multz objekt \n");
   return new;
 }
 
@@ -104,6 +111,7 @@ void multz_sample(multz_type *multz) {
 }
 
 
+
 void multz_free(multz_type *multz) {
   free(multz->data);
   free(multz);
@@ -127,6 +135,14 @@ void multz_serialize(const multz_type *multz , double *serial_data , size_t *_of
 }
 
 
+void multz_free_data(multz_type *multz) {
+  free(multz->data);
+  multz->data = NULL;
+}
+
+
+
+
 
 
 
@@ -134,12 +150,14 @@ MATH_OPS(multz)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/
-VOID_FUNC      (multz_free      , multz_type)
-VOID_FUNC_CONST(multz_ecl_write , multz_type)
-VOID_FUNC_CONST(multz_ens_write , multz_type)
-VOID_FUNC_CONST(multz_copyc     , multz_type)
-VOID_FUNC      (multz_ens_read  , multz_type)
-VOID_FUNC      (multz_clear     , multz_type)
-VOID_FUNC      (multz_sample    , multz_type)
-VOID_SERIALIZE (multz_serialize , multz_type)
+VOID_FUNC      (multz_free         , multz_type)
+VOID_FUNC_CONST(multz_ecl_write    , multz_type)
+VOID_FUNC_CONST(multz_ens_write    , multz_type)
+VOID_COPYC     (multz_copyc        , multz_type)
+VOID_FUNC      (multz_ens_read     , multz_type)
+VOID_FUNC      (multz_clear        , multz_type)
+VOID_FUNC      (multz_sample       , multz_type)
+VOID_FUNC      (multz_free_data    , multz_type)
+VOID_FUNC      (multz_realloc_data , multz_type)
+VOID_SERIALIZE (multz_serialize    , multz_type)
 

@@ -20,6 +20,6 @@ void               enkf_config_set_ecl_path(enkf_config_type * , const char * );
 void               enkf_config_set_ens_root_path(enkf_config_type * , const char * );
 void               enkf_config_set_ecl_root_path(enkf_config_type * , const char * );
 void               enkf_config_free(enkf_config_type * );
-
+void               enkf_config_add_enkf_kw(const enkf_config_type *, const char *);
 
 #endif
