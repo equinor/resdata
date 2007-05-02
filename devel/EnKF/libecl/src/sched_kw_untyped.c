@@ -22,8 +22,8 @@ void sched_kw_untyped_fprintf(const sched_kw_untyped_type *kw , FILE *stream) {
   {
     list_node_type *line_node = list_get_head(kw->line_list);
     while (line_node != NULL) {
-      const char * line = list_node_value_ptr(line_node);
-      fprintf(stream , "%s" , line);
+      const char * line = list_node_get_string(line_node);
+      fprintf(stream , "   %s\n" , line);
       line_node = list_node_get_next(line_node);
     }
 
@@ -48,6 +48,7 @@ sched_kw_untyped_type * sched_kw_untyped_alloc(const char * kw_name , bool one_l
 void sched_kw_untyped_add_line(sched_kw_untyped_type * kw , const char *line) {
   list_append_string_copy(kw->line_list , line);
 }
+
 
 
 void sched_kw_untyped_free(sched_kw_untyped_type * kw) {

@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <sched_kw_wconhist.h>
 #include <list.h>
 #include <util.h>
 #include <list_node.h>
+#include <sched_util.h>
 #include <stdbool.h>
 
 typedef enum {LRAT , ORAT , RESV}  well_control_type;       
@@ -44,12 +46,12 @@ typedef struct  {
 
 static void rate_sched_fprintf_dbl(const rate_type *rate , int index, double value , FILE *stream) {
   if (rate->def[index])
-    fprintf(stream,"1* ");
+    fprintf(stream,"1*   ");
   else
     fprintf(stream , "%12.6f " , value);
 }
 
-static void rate_sched_fprintf_int(const rate_type *rate , int index, double value , FILE *stream) {
+static void rate_sched_fprintf_int(const rate_type *rate , int index, int value , FILE *stream) {
   if (rate->def[index])
     fprintf(stream,"1* ");
   else
@@ -59,14 +61,15 @@ static void rate_sched_fprintf_int(const rate_type *rate , int index, double val
 
 static void rate_sched_fprintf(const rate_type * rate , FILE *stream) {
   fprintf(stream , "  \'%s\'  \'%s\'    \'%s\'" , rate->well , rate->state_string , rate->cmode_string);
-  rate_sched_fprint_dbl(rate , 3  , rate->ORAT     , stream);
-  rate_sched_fprint_dbl(rate , 4  , rate->WRAT     , stream);
-  rate_sched_fprint_dbl(rate , 5  , rate->GRAT     , stream);
-  rate_sched_fprint_int(rate , 6  , rate->VFPTable , stream);
-  rate_sched_fprint_dbl(rate , 7  , rate->ALift    , stream);
-  rate_sched_fprint_dbl(rate , 8  , rate->THP      , stream);
-  rate_sched_fprint_dbl(rate , 9  , rate->BHP      , stream);
-  rate_sched_fprint_dbl(rate , 10 , rate->WGASRAT  , stream);
+  rate_sched_fprintf_dbl(rate , 3  , rate->ORAT     , stream);
+  rate_sched_fprintf_dbl(rate , 4  , rate->WRAT     , stream);
+  rate_sched_fprintf_dbl(rate , 5  , rate->GRAT     , stream);
+  rate_sched_fprintf_int(rate , 6  , rate->VFPTable , stream);
+  rate_sched_fprintf_dbl(rate , 7  , rate->ALift    , stream);
+  rate_sched_fprintf_dbl(rate , 8  , rate->THP      , stream);
+  rate_sched_fprintf_dbl(rate , 9  , rate->BHP      , stream);
+  rate_sched_fprintf_dbl(rate , 10 , rate->WGASRAT  , stream);
+  fprintf(stream , " /\n");
 }
 
 
@@ -168,8 +171,8 @@ void sched_kw_wconhist_fprintf(const sched_kw_wconhist_type *kw , FILE *stream) 
       rate_sched_fprintf(rate , stream);
       rate_node = list_node_get_next(rate_node);
     }
-    fprintf(stream , "/\n\n");
   }
+  fprintf(stream , "/\n\n");
 }
 
 
@@ -189,7 +192,7 @@ void sched_kw_wconhist_add_line(sched_kw_wconhist_type * kw , const char * line)
   sched_util_parse_line(line , &tokens , &token_list , kw->kw_size);
   {
     rate_type * rate = rate_alloc(kw->kw_size , (const char **) token_list);
-    list_append_managed_ref(kw->rate_list , rate , rate_free__);
+    list_append_list_owned_ref(kw->rate_list , rate , rate_free__);
   }
   sched_util_free_token_list(tokens , token_list);
   

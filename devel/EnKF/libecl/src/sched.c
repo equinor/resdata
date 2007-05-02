@@ -513,7 +513,7 @@ static void sched_parse_wconhist__(double missing_value , int lines , const char
   parse_state = parse_off;
   date_nr     = 1;
   date_node   = date_node_alloc(date_nr); 
-  list_append_managed_ref(wconhist , date_node , date_node_free__);
+  list_append_list_owned_ref(wconhist , date_node , date_node_free__);
   
   /*
     The reference to the date_node object is still valid - and can be 
@@ -542,7 +542,7 @@ static void sched_parse_wconhist__(double missing_value , int lines , const char
 	*/
 	date_nr++;
 	date_node = date_node_alloc(date_nr); 
-	list_append_managed_ref(wconhist , date_node , date_node_free__);
+	list_append_list_owned_ref(wconhist , date_node , date_node_free__);
       }
       parse_state = parse_off;
       skiprest = true;

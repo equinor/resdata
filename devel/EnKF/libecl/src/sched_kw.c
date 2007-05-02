@@ -17,7 +17,10 @@ struct sched_kw_struct {
 };
 
 
+
+
 /*****************************************************************/
+
 
 
 sched_kw_type * sched_kw_alloc(const char * kw_name , sched_type_enum type, bool one_line_kw, int * next_date_nr) {
@@ -64,6 +67,10 @@ void sched_kw_free(sched_kw_type * kw) {
   free(kw);
 }
 
+
+void sched_kw_free__(void * void_kw) {
+  sched_kw_free( (sched_kw_type *) void_kw);
+}
 
 
 void sched_kw_add_line(sched_kw_type * kw, const char * line, const hash_type *month_hash) {

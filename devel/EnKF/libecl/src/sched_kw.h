@@ -1,6 +1,7 @@
 #ifndef __SHCED_KW_H__
 #define __SCHED_KW_H__
 #include <stdlib.h>
+#include <hash.h>
 
 typedef enum {WCONHIST , UNTYPED , DATES} sched_type_enum;
 
@@ -11,6 +12,7 @@ typedef struct sched_kw_struct sched_kw_type;
 
 sched_kw_type * sched_kw_alloc(const char * , sched_type_enum , bool , int *);
 void            sched_kw_free(sched_kw_type * );
+void            sched_kw_free__(void * );
 void            sched_kw_fprintf(const sched_kw_type *  , FILE * );
-
+void            sched_kw_add_line(sched_kw_type * , const char * , const hash_type *);
 #endif
