@@ -25,6 +25,7 @@ void          ecl_kw_copy_data(const ecl_kw_type * , void *);
 bool          ecl_kw_fread_header(ecl_kw_type *, fortio_type *);
 void          ecl_kw_set_header(ecl_kw_type  * , const char * , int , const char *);
 void          ecl_kw_set_header_alloc(ecl_kw_type  * , const char * , int , const char *);
+bool          ecl_kw_fseek_kw(const char * , bool , fortio_type *);
 void          ecl_kw_fskip_data(ecl_kw_type * , fortio_type *);
 void          ecl_kw_fskip(fortio_type *, bool , bool );
 void          ecl_kw_alloc_data(ecl_kw_type  *);

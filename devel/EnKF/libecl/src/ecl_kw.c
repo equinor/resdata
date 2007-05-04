@@ -555,6 +555,32 @@ void ecl_kw_rewind(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
   fseek(fortio_get_FILE(fortio) , ecl_kw->_start_pos , SEEK_SET);
 }
 
+bool ecl_kw_fseek_kw(const char * kw , bool fmt_file , fortio_type *fortio) {
+  ecl_kw_type *tmp_kw = ecl_kw_alloc_empty(fmt_file , fortio_get_endian_flip(fortio));     
+  FILE *stream     = fortio_get_FILE(fortio);
+  long int init_pos = ftell(stream);
+  bool cont, kw_found;
+  
+  cont     = true;
+  kw_found = false;
+  while (cont) {
+    bool header_OK = ecl_kw_fread_header(tmp_kw , fortio);
+    if (header_OK) {
+      if (ecl_kw_string_eq(ecl_kw_get_header_ref(tmp_kw) , kw)) {
+	ecl_kw_rewind(tmp_kw, fortio);
+	kw_found = true;
+	cont = false;
+      } else
+	ecl_kw_fskip_data(tmp_kw , fortio);
+    } else
+      cont = false;
+  }
+  if (!kw_found)
+    fseek(stream , init_pos , SEEK_SET);
+  
+  return kw_found;
+}
+
 
 bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   const char null_char = '\0';

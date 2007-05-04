@@ -165,3 +165,4 @@ void fortio_write_record(fortio_type *fortio, const char *buffer , int record_si
 
 FILE        * fortio_get_FILE(const fortio_type *fortio)        { return fortio->stream; }
 int           fortio_get_record_size(const fortio_type *fortio) { return fortio->active_header; }
+bool          fortio_get_endian_flip(const fortio_type *fortio) { return fortio->endian_flip_header; }

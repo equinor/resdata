@@ -48,39 +48,52 @@ void ecl_inter_get_nstep__(int *Nstep) {
   with 1-based indexes.
 */
 
-void ecl_inter_kw_iget__(const char *kw , const int *istep , const int *iw , void *value) {
+void ecl_inter_kw_iget__(const char *_kw , const int * kw_len , const int *istep , const int *iw , void *value) {
+  char *kw = util_alloc_cstring(_kw , kw_len);
   if (!ecl_fstate_kw_iget(ECL_FSTATE , (*istep) - 1 , kw  , (*iw) - 1 , value)) {
     fprintf(stderr,"%s - failed to load kw:%s  timestep:%d  index:%d - aborting \n",__func__ , kw , *istep , *iw);
     abort();
   }
+  free(kw);
 }
 
 
-void ecl_inter_get_kw_size__(const char *kw, const int *istep, int *size) {
+void ecl_inter_get_kw_size__(const char *_kw, const int *kw_len , const int *istep, int *size) {
+  char *kw = util_alloc_cstring(_kw , kw_len);
   *size = ecl_fstate_kw_get_size(ECL_FSTATE , (*istep) - 1 , kw);
+  free(kw);
 }
   
 
 
-void ecl_inter_kw_get_data__(const char *kw , const int *istep , void *value) {
+void ecl_inter_kw_get_data__(const char *_kw , const int *kw_len , const int *istep , void *value) {
+  char *kw = util_alloc_cstring(_kw , kw_len);
   if (!ecl_fstate_kw_get_memcpy_data(ECL_FSTATE , (*istep) - 1, kw , value)) {
     fprintf(stderr,"%s: failed to load kw:%s  timestep:%d - aborting.\n",__func__ , kw , *istep);
     abort();
   }
+  free(kw);
 }
 
 
-void ecl_inter_del_kw(const char *kw, const int *istep) {
+
+void ecl_inter_del_kw(const char *_kw, const int *kw_len , const int *istep) {
+  char *kw = util_alloc_cstring(_kw , kw_len);
   ecl_block_type *ecl_block = ecl_fstate_get_block(ECL_FSTATE , (*istep) - 1);
   ecl_block_free_kw(ecl_block , kw);
+  free(kw);
 }
 
 
-void ecl_inter_kw_exists__(const char *kw , const int *istep , int *int_ex) {
+void ecl_inter_kw_exists__(const char *_kw , const int *kw_len , const int *istep , int *int_ex) {
+  char *kw = util_alloc_cstring(_kw , kw_len);
+
   if (ecl_fstate_kw_exists(ECL_FSTATE ,  (*istep) - 1 , kw))
     *int_ex = 1;
   else
     *int_ex =  0;
+
+  free(kw);
 }
 
 
