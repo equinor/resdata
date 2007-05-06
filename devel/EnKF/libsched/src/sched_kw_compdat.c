@@ -44,14 +44,11 @@ typedef struct  {
 
 
 static void comp_sched_init_conn_factor(comp_type * comp , const float *permx, const int * dims , const int * index_field) {
-  const int i     = comp->i;
-  const int j     = comp->j;
-  const int k     = comp->k1;
-  const int index = 0;
-
-  /*
-    const int index = index_field[i + j*dims[0] + k*dims[0] * dims[1]];
-  */
+  const int i     = comp->i  - 1;
+  const int j     = comp->j  - 1;
+  const int k     = comp->k1 - 1;
+  const int index_arg = i + j*dims[0] + k*dims[0] * dims[1];
+  const int index = index_field[index_arg] - 1;
   
   comp->conn_factor__ = comp->conn_factor / permx[index];
 }
@@ -61,12 +58,8 @@ static void comp_sched_set_conn_factor(comp_type * comp , const float *permx, co
   const int i     = comp->i;
   const int j     = comp->j;
   const int k     = comp->k1;
-  const int index = 0;
+  const int index = index_field[i + j*dims[0] + k*dims[0] * dims[1]];
 
-  /*
-    const int index = index_field[i + j*dims[0] + k*dims[0] * dims[1]];
-  */
-  
   comp->conn_factor = comp->conn_factor__ * permx[index];
 }
 
@@ -96,7 +89,6 @@ static void comp_sched_fprintf(const comp_type * comp , FILE *stream) {
 
 
 static void comp_set_from_string(comp_type * node , int kw_size , const char **token_list ) {
-  node->def     = calloc(kw_size , sizeof *node->def);
   {
     int i;
     for (i=0; i < kw_size; i++) {
@@ -148,10 +140,17 @@ static void comp_set_from_string(comp_type * node , int kw_size , const char **t
 }
 
 
-static comp_type * comp_alloc(int kw_size , const char **token_list) {
+static comp_type * comp_alloc_empty(int kw_size) {
   comp_type *node = malloc(sizeof *node);
   node->well          = NULL;
   node->conn_factor__ = -1;
+  node->def           = calloc(kw_size , sizeof *node->def);
+  return node;
+}
+
+
+static comp_type * comp_alloc(int kw_size , const char **token_list) {
+  comp_type * node = comp_alloc_empty(kw_size);
   comp_set_from_string(node , kw_size , token_list);
   return node;
 }
@@ -172,6 +171,50 @@ static void comp_free__(void *__comp) {
 }
 
 
+static void comp_sched_fwrite(const comp_type *comp , int kw_size , FILE *stream) {
+  util_fwrite_string(comp->well , stream);
+  util_fwrite_string(comp->comp_string , stream);
+  util_fwrite_string(comp->well_dir_string , stream);
+
+  fwrite(&comp->i  	      , sizeof comp->i  	     , 1 , stream);
+  fwrite(&comp->j  	      , sizeof comp->j  	     , 1 , stream);
+  fwrite(&comp->k1 	      , sizeof comp->k1 	     , 1 , stream);
+  fwrite(&comp->k2 	      , sizeof comp->k2 	     , 1 , stream);
+  fwrite(&comp->sat_table     , sizeof comp->sat_table       , 1 , stream);
+  fwrite(&comp->conn_factor   , sizeof comp->conn_factor     , 1 , stream);
+  fwrite(&comp->well_diameter , sizeof comp->well_diameter   , 1 , stream);
+  fwrite(&comp->eff_perm      , sizeof comp->eff_perm	     , 1 , stream);
+  fwrite(&comp->skin_factor   , sizeof comp->skin_factor     , 1 , stream);
+  fwrite(&comp->D_factor      , sizeof comp->D_factor	     , 1 , stream);
+  fwrite(&comp->r0            , sizeof comp->r0              , 1 , stream);
+  fwrite(&comp->conn_factor__ , sizeof comp->conn_factor__   , 1 , stream);
+  fwrite(comp->def            , sizeof * comp->def           , kw_size , stream);
+
+}
+
+
+static comp_type * comp_sched_fread_alloc(int kw_size , FILE * stream) {
+  comp_type * comp = comp_alloc_empty(kw_size);
+  comp->well        	= util_fread_alloc_string( stream );
+  comp->comp_string 	= util_fread_alloc_string( stream );
+  comp->well_dir_string = util_fread_alloc_string( stream );
+
+  fread(&comp->i  	      , sizeof comp->i  	     , 1 , stream);
+  fread(&comp->j  	      , sizeof comp->j  	     , 1 , stream);
+  fread(&comp->k1 	      , sizeof comp->k1 	     , 1 , stream);
+  fread(&comp->k2 	      , sizeof comp->k2 	     , 1 , stream);
+  fread(&comp->sat_table     , sizeof comp->sat_table       , 1 , stream);
+  fread(&comp->conn_factor   , sizeof comp->conn_factor     , 1 , stream);
+  fread(&comp->well_diameter , sizeof comp->well_diameter   , 1 , stream);
+  fread(&comp->eff_perm      , sizeof comp->eff_perm	     , 1 , stream);
+  fread(&comp->skin_factor   , sizeof comp->skin_factor     , 1 , stream);
+  fread(&comp->D_factor      , sizeof comp->D_factor	     , 1 , stream);
+  fread(&comp->r0            , sizeof comp->r0              , 1 , stream);
+  fread(&comp->conn_factor__ , sizeof comp->conn_factor__   , 1 , stream);
+  fread(comp->def            , sizeof * comp->def           , kw_size , stream);
+    
+  return comp;
+}
 
 /*****************************************************************/
 
@@ -241,6 +284,38 @@ void sched_kw_compdat_free(sched_kw_compdat_type * kw) {
 }
 
 
+
+
+void sched_kw_compdat_fwrite(const sched_kw_compdat_type *kw , FILE *stream) {
+  fwrite(&kw->kw_size , sizeof kw->kw_size , 1 , stream);
+  {
+    int compdat_lines = list_get_size(kw->comp_list);
+    fwrite(&compdat_lines , sizeof compdat_lines , 1, stream);
+  }
+  {
+    list_node_type *comp_node = list_get_head(kw->comp_list);
+    while (comp_node != NULL) {
+      const comp_type * comp = list_node_value_ptr(comp_node);
+      comp_sched_fwrite(comp , kw->kw_size , stream);
+      comp_node = list_node_get_next(comp_node);
+    }
+  }
+}
+
+
+
+sched_kw_compdat_type * sched_kw_compdat_fread_alloc(FILE *stream) {
+  sched_kw_compdat_type *kw = sched_kw_compdat_alloc();
+  int lines , i;
+  fread(&kw->kw_size , sizeof kw->kw_size , 1 , stream);
+  fread(&lines       , sizeof lines       , 1 , stream);
+  for (i=0; i < lines; i++) {
+    comp_type * comp = comp_sched_fread_alloc(kw->kw_size , stream);
+    list_append_list_owned_ref(kw->comp_list , comp , comp_free__);
+  } 
+  return kw;
+}
+  
 
 
 

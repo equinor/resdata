@@ -59,6 +59,44 @@ void sched_kw_untyped_free(sched_kw_untyped_type * kw) {
 
 
 
+void sched_kw_untyped_fwrite(const sched_kw_untyped_type *kw , FILE *stream) {
+  util_fwrite_string(kw->kw_name , stream);
+  fwrite(&kw->one_line , sizeof kw->one_line , 1 , stream);
+  {
+    int lines = list_get_size(kw->line_list);
+    fwrite(&lines , sizeof lines , 1, stream);
+  }
+  {
+    list_node_type *line_node = list_get_head(kw->line_list);
+    while (line_node != NULL) {
+      util_fwrite_string(list_node_get_string(line_node) , stream);
+      line_node = list_node_get_next(line_node);
+    }
+  }
+}
+
+
+
+sched_kw_untyped_type * sched_kw_untyped_fread_alloc(FILE *stream) {
+  bool one_line;
+  char *kw_name = util_fread_alloc_string(stream);
+  fread(&one_line , sizeof one_line , 1 , stream);
+  {
+    sched_kw_untyped_type *kw = sched_kw_untyped_alloc(kw_name , one_line);
+    int lines , i;
+    fread(&lines       , sizeof lines       , 1 , stream);
+    for (i=0; i < lines; i++) {
+      char * line = util_fread_alloc_string(stream);
+      list_append_string_copy(kw->line_list , line);
+      free(line);
+    } 
+    free(kw_name);
+    return kw;
+  }
+}
+  
+
+
 
 
 

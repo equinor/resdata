@@ -73,6 +73,7 @@ void sched_kw_free__(void * void_kw) {
 }
 
 
+
 void sched_kw_add_line(sched_kw_type * kw, const char * line, const hash_type *month_hash) {
   switch (kw->type) {
   case(COMPDAT):
@@ -111,7 +112,46 @@ void sched_kw_fprintf(const sched_kw_type * kw , int last_date_nr , time_t last_
 }
 
 
+void sched_kw_fwrite(const sched_kw_type *kw , FILE *stream) {
+  fwrite(&kw->type , sizeof kw->type , 1 , stream);
+  switch (kw->type) {
+  case(COMPDAT):
+    sched_kw_compdat_fwrite(kw->data , stream);
+    break;
+  case(WCONHIST):
+    sched_kw_wconhist_fwrite(kw->data , stream);
+    break;
+  case(DATES):
+    sched_kw_dates_fwrite(kw->data , stream);
+    break;
+  case(UNTYPED):
+    sched_kw_untyped_fwrite(kw->data , stream);
+    break;
+  }
+}
 
+
+sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , FILE *stream) {
+  sched_kw_type * kw = malloc(sizeof *kw);
+  fread(&kw->type  , sizeof kw->type , 1 , stream);
+
+  switch (kw->type) {
+  case(COMPDAT):
+    kw->data = sched_kw_compdat_fread_alloc(stream);
+    break;
+  case(WCONHIST):
+    kw->data = sched_kw_wconhist_fread_alloc(stream);
+    break;
+  case(DATES):
+    kw->data = sched_kw_dates_fread_alloc(next_date_nr, stream);
+    break;
+  case(UNTYPED):
+    kw->data = sched_kw_untyped_fread_alloc(stream);
+    break;
+  }
+
+  return kw;
+}
 
 
 

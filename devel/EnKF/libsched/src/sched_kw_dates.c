@@ -8,7 +8,6 @@
 
 
 struct sched_kw_dates_struct {
-  int  kw_size;
   int *next_date_ptr;
   list_type *date_list;
 };
@@ -16,7 +15,6 @@ struct sched_kw_dates_struct {
 
 
 typedef struct {
-  char   * date_string;
   time_t   time;
   int      date_nr;
 } date_node_type;
@@ -40,7 +38,6 @@ static const char month_table[12][4] = {{"JAN\0"},
 
 static date_node_type * date_node_alloc(int date_nr , const char *line , const hash_type *month_hash) {
   date_node_type *date_node = malloc(sizeof *date_node);
-  date_node->date_string = util_alloc_string_copy(line);
   date_node->date_nr     = date_nr; 
   
   {
@@ -60,7 +57,6 @@ static date_node_type * date_node_alloc(int date_nr , const char *line , const h
 }
 
 static void date_node_free(date_node_type *date) {
-  free(date->date_string);
   free(date);
 }
 
@@ -86,6 +82,19 @@ static void date_node_fprintf(const date_node_type * node, FILE *stream , int la
       *stop = true;
   }
 
+}
+
+static void date_node_fwrite(const date_node_type * date_node , FILE *stream) {
+  fwrite(&date_node->time    , sizeof date_node->time    , 1 , stream);
+  fwrite(&date_node->date_nr , sizeof date_node->date_nr , 1, stream);
+}
+
+
+static date_node_type * date_node_fread_alloc(FILE *stream) {
+  date_node_type * node = malloc(sizeof *node); /* SKipping spesific alloc routine - UGGLY */
+  fread(&node->time    , sizeof node->time    , 1 , stream);
+  fread(&node->date_nr , sizeof node->date_nr , 1 , stream);
+  return node;
 }
 
 /*****************************************************************/
@@ -125,6 +134,36 @@ sched_kw_dates_type * sched_kw_dates_alloc(int *next_date_ptr){
 void sched_kw_dates_free(sched_kw_dates_type * kw) {
   list_free(kw->date_list);
   free(kw);
+}
+
+
+
+void sched_kw_dates_fwrite(const sched_kw_dates_type *kw , FILE *stream) {
+  {
+    int date_lines = list_get_size(kw->date_list);
+    fwrite(&date_lines , sizeof date_lines , 1, stream);
+  }
+  {
+    list_node_type *date_node = list_get_head(kw->date_list);
+    while (date_node != NULL) {
+      const date_node_type * date = list_node_value_ptr(date_node);
+      date_node_fwrite(date ,  stream);
+      date_node = list_node_get_next(date_node);
+    }
+  }
+}
+
+
+
+sched_kw_dates_type * sched_kw_dates_fread_alloc(int * next_date_ptr , FILE *stream) {
+  int lines , i;
+  sched_kw_dates_type *kw = sched_kw_dates_alloc(next_date_ptr) ;
+  fread(&lines       , sizeof lines       , 1 , stream);
+  for (i=0; i < lines; i++) {
+    date_node_type * date_node = date_node_fread_alloc( stream);
+    list_append_list_owned_ref(kw->date_list , date_node , date_node_free__);
+  } 
+  return kw;
 }
 
 

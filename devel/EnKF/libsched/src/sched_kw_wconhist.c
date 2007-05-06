@@ -42,6 +42,61 @@ typedef struct  {
 
 /*****************************************************************/
 
+static rate_type * rate_alloc_empty(int kw_size) {
+  rate_type *node = malloc(sizeof *node);
+  node->well         = NULL;
+  node->state_string = NULL;
+  node->cmode_string = NULL;
+  node->def          = calloc(kw_size , sizeof *node->def);
+  return node;
+}
+
+
+static void rate_sched_fwrite(const rate_type *rate , int kw_size , FILE *stream) {
+  util_fwrite_string(rate->well , stream);
+  util_fwrite_string(rate->state_string , stream);
+  util_fwrite_string(rate->cmode_string , stream);
+  
+  
+  fwrite(&rate->cmode 	 , sizeof rate->cmode 	  , 1 , stream);
+  fwrite(&rate->state 	 , sizeof rate->state 	  , 1 , stream);
+  fwrite(&rate->ORAT  	 , sizeof rate->ORAT  	  , 1 , stream);
+  fwrite(&rate->WRAT     , sizeof rate->WRAT  	  , 1 , stream);
+  fwrite(&rate->GRAT     , sizeof rate->GRAT  	  , 1 , stream);
+  fwrite(&rate->VFPTable , sizeof rate->VFPTable  , 1 , stream);
+  fwrite(&rate->ALift    , sizeof rate->ALift     , 1 , stream);
+  fwrite(&rate->THP	 , sizeof rate->THP 	  , 1 , stream);
+  fwrite(&rate->BHP	 , sizeof rate->BHP 	  , 1 , stream);
+  fwrite(&rate->WGASRAT  , sizeof rate->WGASRAT   , 1 , stream);
+  fwrite(&rate->GOR	 , sizeof rate->GOR 	  , 1 , stream);
+  fwrite(&rate->WCT      , sizeof rate->WCT 	  , 1 , stream);
+  fwrite(&rate->def      , sizeof rate->def       , kw_size , stream);
+}
+
+
+static rate_type * rate_sched_fread_alloc(int kw_size , FILE *stream) {
+  rate_type *rate = rate_alloc_empty(kw_size);
+  rate->well         = util_fread_alloc_string( stream );
+  rate->state_string = util_fread_alloc_string( stream );
+  rate->cmode_string = util_fread_alloc_string( stream );
+  
+  
+  fread(&rate->cmode 	 , sizeof rate->cmode 	  , 1 , stream);
+  fread(&rate->state 	 , sizeof rate->state 	  , 1 , stream);
+  fread(&rate->ORAT  	 , sizeof rate->ORAT  	  , 1 , stream);
+  fread(&rate->WRAT     , sizeof rate->WRAT  	  , 1 , stream);
+  fread(&rate->GRAT     , sizeof rate->GRAT  	  , 1 , stream);
+  fread(&rate->VFPTable , sizeof rate->VFPTable  , 1 , stream);
+  fread(&rate->ALift    , sizeof rate->ALift     , 1 , stream);
+  fread(&rate->THP	 , sizeof rate->THP 	  , 1 , stream);
+  fread(&rate->BHP	 , sizeof rate->BHP 	  , 1 , stream);
+  fread(&rate->WGASRAT  , sizeof rate->WGASRAT   , 1 , stream);
+  fread(&rate->GOR	 , sizeof rate->GOR 	  , 1 , stream);
+  fread(&rate->WCT      , sizeof rate->WCT 	  , 1 , stream);
+  fread(&rate->def      , sizeof rate->def       , kw_size , stream);
+  
+  return rate;
+}
 
 
 
@@ -63,8 +118,7 @@ static void rate_sched_fprintf(const rate_type * rate , FILE *stream) {
 
 
 
-static void rate_set_from_string(rate_type * node , int kw_size , const char **token_list , bool *well_shut) {
-  node->def     = calloc(kw_size , sizeof *node->def);
+static void rate_set_from_string(rate_type * node , int kw_size , const char **token_list) {
   {
     int i;
     for (i=0; i < kw_size; i++) {
@@ -107,11 +161,10 @@ static void rate_set_from_string(rate_type * node , int kw_size , const char **t
 }
 
 
+
 static rate_type * rate_alloc(int kw_size , const char **token_list) {
-  rate_type *node = malloc(sizeof *node);
-  bool well_shut;
-  node->well = NULL;
-  rate_set_from_string(node ,kw_size , token_list , &well_shut);
+  rate_type *node = rate_alloc_empty(kw_size);
+  rate_set_from_string(node ,kw_size , token_list);
   return node;
 }
 
@@ -178,7 +231,36 @@ void sched_kw_wconhist_free(sched_kw_wconhist_type * kw) {
 }
 
 
+void sched_kw_wconhist_fwrite(const sched_kw_wconhist_type *kw , FILE *stream) {
+  fwrite(&kw->kw_size , sizeof kw->kw_size , 1 , stream);
+  {
+    int wconhist_lines = list_get_size(kw->rate_list);
+    fwrite(&wconhist_lines , sizeof wconhist_lines , 1, stream);
+  }
+  {
+    list_node_type *rate_node = list_get_head(kw->rate_list);
+    while (rate_node != NULL) {
+      const rate_type * rate = list_node_value_ptr(rate_node);
+      rate_sched_fwrite(rate , kw->kw_size , stream);
+      rate_node = list_node_get_next(rate_node);
+    }
+  }
+}
 
+
+
+sched_kw_wconhist_type * sched_kw_wconhist_fread_alloc(FILE *stream) {
+  sched_kw_wconhist_type *kw = sched_kw_wconhist_alloc();
+  int lines , i;
+  fread(&kw->kw_size , sizeof kw->kw_size , 1 , stream);
+  fread(&lines       , sizeof lines       , 1 , stream);
+  for (i=0; i < lines; i++) {
+    rate_type * rate = rate_sched_fread_alloc(kw->kw_size , stream);
+    list_append_list_owned_ref(kw->rate_list , rate , rate_free__);
+  } 
+  return kw;
+}
+  
 
 
 

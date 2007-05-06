@@ -37,9 +37,9 @@ $(LIB): $(OBJECTS)
 
 sched_util.o        : sched_util.c sched_util.h 
 sched_kw_wconhist.o : sched_kw_wconhist.h sched_kw_wconhist.c sched_util.o
-sched_kw_compdat.o  : sched_kw_compdat.h sched_kw_wconhist.c sched_util.o
-sched_kw_dates.o    : sched_kw_dates.h sched_kw_wconhist.c sched_util.o
-sched_kw_untyped.o  : sched_kw_untyped.h sched_kw_wconhist.c sched_util.o
-scehd_kw.o          : sched_kw.c sched_kw.o sched_kw_wconhist.o sched_kw_untyped.o sched_kw_compdat.o sched_kw_dates.o sched_util.o
+sched_kw_compdat.o  : sched_kw_compdat.h sched_kw_compdat.c sched_util.o
+sched_kw_dates.o    : sched_kw_dates.h sched_kw_dates.c sched_util.o
+sched_kw_untyped.o  : sched_kw_untyped.h sched_kw_untyped.c sched_util.o
+sched_kw.o          : sched_kw.c sched_kw.h sched_kw_wconhist.o sched_kw_untyped.o sched_kw_compdat.o sched_kw_dates.o sched_util.o
 sched_file.o        : sched_file.c sched_file.h sched_util.o sched_kw.o sched_kw_compdat.o
-shced_interC.o      : sched_interC.c sched_file.o
+sched_interC.o      : sched_interC.c sched_file.o

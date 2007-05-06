@@ -9,5 +9,7 @@ sched_kw_wconhist_type * sched_kw_wconhist_alloc();
 void                     sched_kw_wconhist_free(sched_kw_wconhist_type * );
 void                     sched_kw_wconhist_add_line(sched_kw_wconhist_type * kw , const char *);
 void                     sched_kw_wconhist_fprintf(const sched_kw_wconhist_type * , FILE *);
+void                     sched_kw_wconhist_fwrite(const sched_kw_wconhist_type *, FILE *);
+sched_kw_wconhist_type * sched_kw_wconhist_fread_alloc( FILE *);
 
 #endif

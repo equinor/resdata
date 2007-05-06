@@ -62,6 +62,12 @@ sched_file_type * sched_file_alloc() {
 }
 
 
+
+void sched_file_add_kw__(sched_file_type *sched_file , const sched_kw_type *kw) {
+  list_append_list_owned_ref(sched_file->kw_list , kw , sched_kw_free__); 
+}
+
+
 sched_kw_type * sched_file_add_kw(sched_file_type *sched_file , const char *kw_name) {
   sched_type_enum type;
   bool            one_line_kw = false;
@@ -77,7 +83,7 @@ sched_kw_type * sched_file_add_kw(sched_file_type *sched_file , const char *kw_n
       one_line_kw = false;
   }
   kw = sched_kw_alloc(kw_name , type , one_line_kw , &sched_file->next_date_nr);
-  list_append_list_owned_ref(sched_file->kw_list , kw , sched_kw_free__); 
+  sched_file_add_kw__(sched_file , kw);
   return kw;
 }
   
@@ -187,13 +193,17 @@ void sched_file_init_conn_factor(sched_file_type * sched_file , const char * ini
   ecl_kw_fseek_kw("PERMX" , fmt_file , fortio);
   permx_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
 
-  ecl_kw_fseek_kw("INTEHEAD" , fmt_file , fortio);
-  ihead_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
+  if (ecl_kw_fseek_kw("INTEHEAD" , fmt_file , fortio))
+    ihead_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
+  else {
+    fprintf(stderr,"%s: failed to locate keyword: INTHEAD in file:%s - aborting \n",__func__ , init_file);
+    abort();
+  }
   {
     int * tmp  = ecl_kw_get_data_ref(ihead_kw);
     dims       = &tmp[8];
   }
-
+  
   {
     list_node_type *list_node = list_get_head(sched_file->kw_list);
     while (list_node != NULL) {
@@ -226,6 +236,35 @@ void sched_file_set_conn_factor(sched_file_type * sched_file , const float * per
     fprintf(stderr, "%s: must call shced_file_init_conn_factor first - aborting \n",__func__);
     abort();
   }
+}
+
+
+void sched_file_fwrite(const sched_file_type * sched_file , FILE *stream) {
+  {
+    int len = list_get_size(sched_file->kw_list);
+    fwrite(&len , sizeof len , 1 , stream);
+  }
+  fwrite(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
+  {
+    list_node_type *list_node = list_get_head(sched_file->kw_list);
+    while (list_node != NULL) {
+      const sched_kw_type * sched_kw = list_node_value_ptr(list_node);
+      sched_kw_fwrite(sched_kw , stream);
+      list_node = list_node_get_next(list_node);
+    }
+  }
+}
+
+
+sched_file_type * sched_file_fread_alloc(FILE *stream) {
+  int i,len;
+  sched_file_type * sched_file = sched_file_alloc();
+  fread(&len                             , sizeof len                             , 1 , stream);
+  fread(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
+  for (i=0; i < len; i++) 
+    sched_file_add_kw__(sched_file , sched_kw_fread_alloc(&sched_file->next_date_nr , stream));
+
+  return sched_file;
 }
 
 

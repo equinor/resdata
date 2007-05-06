@@ -17,4 +17,7 @@ void              sched_kw_free(sched_kw_type * );
 void              sched_kw_free__(void * );
 void              sched_kw_fprintf(const sched_kw_type * kw , int , time_t , FILE *, bool *);
 void              sched_kw_add_line(sched_kw_type * , const char * , const hash_type *);
+sched_kw_type   * sched_kw_fread_alloc(int *, FILE *);
+void              sched_kw_fwrite(const sched_kw_type *kw , FILE *);
+
 #endif
