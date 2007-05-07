@@ -90,10 +90,20 @@ static void date_node_fwrite(const date_node_type * date_node , FILE *stream) {
 }
 
 
-static date_node_type * date_node_fread_alloc(FILE *stream) {
+static date_node_type * date_node_fread_alloc(int last_date_nr , time_t last_time , FILE *stream, bool *stop) {
   date_node_type * node = malloc(sizeof *node); /* SKipping spesific alloc routine - UGGLY */
   fread(&node->time    , sizeof node->time    , 1 , stream);
   fread(&node->date_nr , sizeof node->date_nr , 1 , stream);
+
+  if (last_date_nr > 0) {
+    if (node->date_nr >= last_date_nr)
+      *stop = true;
+  }
+  
+  if (last_time > 0) {
+    if (node->time >= last_time)
+      *stop = true;
+  }
   return node;
 }
 
@@ -155,13 +165,15 @@ void sched_kw_dates_fwrite(const sched_kw_dates_type *kw , FILE *stream) {
 
 
 
-sched_kw_dates_type * sched_kw_dates_fread_alloc(int * next_date_ptr , FILE *stream) {
-  int lines , i;
+sched_kw_dates_type * sched_kw_dates_fread_alloc(int * next_date_ptr , int last_date_nr ,time_t last_time , FILE *stream, bool *stop) {
+  int lines , line_nr;
   sched_kw_dates_type *kw = sched_kw_dates_alloc(next_date_ptr) ;
   fread(&lines       , sizeof lines       , 1 , stream);
-  for (i=0; i < lines; i++) {
-    date_node_type * date_node = date_node_fread_alloc( stream);
+  line_nr = 0;
+  while (!(*stop) && (line_nr < lines)) {
+    date_node_type * date_node = date_node_fread_alloc(last_date_nr , last_time ,  stream , stop);
     list_append_list_owned_ref(kw->date_list , date_node , date_node_free__);
+    line_nr++;
   } 
   return kw;
 }

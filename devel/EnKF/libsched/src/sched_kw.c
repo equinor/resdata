@@ -131,7 +131,7 @@ void sched_kw_fwrite(const sched_kw_type *kw , FILE *stream) {
 }
 
 
-sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , FILE *stream) {
+sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , int last_date_nr , time_t last_time , FILE *stream , bool *at_eof, bool *stop) {
   sched_kw_type * kw = malloc(sizeof *kw);
   fread(&kw->type  , sizeof kw->type , 1 , stream);
 
@@ -143,13 +143,23 @@ sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , FILE *stream) {
     kw->data = sched_kw_wconhist_fread_alloc(stream);
     break;
   case(DATES):
-    kw->data = sched_kw_dates_fread_alloc(next_date_nr, stream);
+    kw->data = sched_kw_dates_fread_alloc(next_date_nr, last_date_nr , last_time , stream , stop);
     break;
   case(UNTYPED):
     kw->data = sched_kw_untyped_fread_alloc(stream);
     break;
   }
 
+  {
+    char next_c = fgetc(stream);
+    if (feof(stream)) 
+      *at_eof = true;
+    else {
+      *at_eof = false;
+      ungetc(next_c , stream);
+    }
+  }
+  
   return kw;
 }
 

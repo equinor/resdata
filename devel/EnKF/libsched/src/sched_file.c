@@ -68,6 +68,7 @@ void sched_file_add_kw__(sched_file_type *sched_file , const sched_kw_type *kw) 
 }
 
 
+
 sched_kw_type * sched_file_add_kw(sched_file_type *sched_file , const char *kw_name) {
   sched_type_enum type;
   bool            one_line_kw = false;
@@ -87,8 +88,6 @@ sched_kw_type * sched_file_add_kw(sched_file_type *sched_file , const char *kw_n
   return kw;
 }
   
-
-
 
 
 void sched_file_free(sched_file_type *sched_file) {
@@ -214,10 +213,15 @@ void sched_file_init_conn_factor(sched_file_type * sched_file , const char * ini
       list_node = list_node_get_next(list_node);
     }
   }
-
+  sched_file->compdat_initialized = true;
+  /*
+    {
+    sched_file_set_conn_factor(sched_file , ecl_kw_get_data_ref(permx_kw) , dims , index_map);
+    sched_file_fprintf(sched_file , -1 , -1 , "Schedule-test");
+    }
+  */
   ecl_kw_free(permx_kw);
   ecl_kw_free(ihead_kw);
-  sched_file->compdat_initialized = true;
 }
 
 
@@ -256,13 +260,27 @@ void sched_file_fwrite(const sched_file_type * sched_file , FILE *stream) {
 }
 
 
-sched_file_type * sched_file_fread_alloc(FILE *stream) {
-  int i,len;
+sched_file_type * sched_file_fread_alloc(int last_date_nr , time_t last_time , FILE *stream) {
+  bool cont , at_eof , stop;
+  int len,kw_nr;
   sched_file_type * sched_file = sched_file_alloc();
   fread(&len                             , sizeof len                             , 1 , stream);
   fread(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
-  for (i=0; i < len; i++) 
-    sched_file_add_kw__(sched_file , sched_kw_fread_alloc(&sched_file->next_date_nr , stream));
+  at_eof = false;
+  stop   = false;
+  cont   = true;
+  kw_nr  = 0;
+  while (cont) {
+    sched_kw_type *kw = sched_kw_fread_alloc(&sched_file->next_date_nr , last_date_nr , last_time , stream , &at_eof, &stop);
+    sched_file_add_kw__(sched_file , kw);
+    kw_nr++;
+    if (at_eof || stop || kw_nr == len)
+      cont = false;
+  }
+  
+  if (kw_nr < len && !stop) 
+    fprintf(stderr,"%s: Warning premature end in schedule dump file: %d/%d \n",__func__ , kw_nr , len);
+  
 
   return sched_file;
 }

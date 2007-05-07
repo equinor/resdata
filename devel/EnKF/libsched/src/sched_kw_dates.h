@@ -8,6 +8,6 @@ void                  sched_kw_dates_fprintf(const sched_kw_dates_type *, FILE *
 void                  sched_kw_dates_add_line(sched_kw_dates_type *, const char *, const hash_type *);
 sched_kw_dates_type * sched_kw_dates_alloc(int *);
 void                  sched_kw_dates_free(sched_kw_dates_type * );
-sched_kw_dates_type * sched_kw_dates_fread_alloc(int *  , FILE *);
+sched_kw_dates_type * sched_kw_dates_fread_alloc(int *  , int , time_t , FILE * , bool *);
 void                  sched_kw_dates_fwrite(const sched_kw_dates_type * , FILE *);
 #endif

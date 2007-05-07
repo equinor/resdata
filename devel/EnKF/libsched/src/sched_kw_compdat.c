@@ -55,10 +55,11 @@ static void comp_sched_init_conn_factor(comp_type * comp , const float *permx, c
 
 
 static void comp_sched_set_conn_factor(comp_type * comp , const float *permx, const int * dims , const int * index_field) {
-  const int i     = comp->i;
-  const int j     = comp->j;
-  const int k     = comp->k1;
-  const int index = index_field[i + j*dims[0] + k*dims[0] * dims[1]];
+  const int i     = comp->i  - 1;
+  const int j     = comp->j  - 1;
+  const int k     = comp->k1 - 1;
+  const int index_arg = i + j*dims[0] + k*dims[0] * dims[1];
+  const int index = index_field[index_arg] - 1;
 
   comp->conn_factor = comp->conn_factor__ * permx[index];
 }
@@ -172,8 +173,8 @@ static void comp_free__(void *__comp) {
 
 
 static void comp_sched_fwrite(const comp_type *comp , int kw_size , FILE *stream) {
-  util_fwrite_string(comp->well , stream);
-  util_fwrite_string(comp->comp_string , stream);
+  util_fwrite_string(comp->well            , stream);
+  util_fwrite_string(comp->comp_string     , stream);
   util_fwrite_string(comp->well_dir_string , stream);
 
   fwrite(&comp->i  	      , sizeof comp->i  	     , 1 , stream);
@@ -203,15 +204,15 @@ static comp_type * comp_sched_fread_alloc(int kw_size , FILE * stream) {
   fread(&comp->j  	      , sizeof comp->j  	     , 1 , stream);
   fread(&comp->k1 	      , sizeof comp->k1 	     , 1 , stream);
   fread(&comp->k2 	      , sizeof comp->k2 	     , 1 , stream);
-  fread(&comp->sat_table     , sizeof comp->sat_table       , 1 , stream);
-  fread(&comp->conn_factor   , sizeof comp->conn_factor     , 1 , stream);
-  fread(&comp->well_diameter , sizeof comp->well_diameter   , 1 , stream);
-  fread(&comp->eff_perm      , sizeof comp->eff_perm	     , 1 , stream);
-  fread(&comp->skin_factor   , sizeof comp->skin_factor     , 1 , stream);
-  fread(&comp->D_factor      , sizeof comp->D_factor	     , 1 , stream);
-  fread(&comp->r0            , sizeof comp->r0              , 1 , stream);
-  fread(&comp->conn_factor__ , sizeof comp->conn_factor__   , 1 , stream);
-  fread(comp->def            , sizeof * comp->def           , kw_size , stream);
+  fread(&comp->sat_table      , sizeof comp->sat_table       , 1 , stream);
+  fread(&comp->conn_factor    , sizeof comp->conn_factor     , 1 , stream);
+  fread(&comp->well_diameter  , sizeof comp->well_diameter   , 1 , stream);
+  fread(&comp->eff_perm       , sizeof comp->eff_perm	     , 1 , stream);
+  fread(&comp->skin_factor    , sizeof comp->skin_factor     , 1 , stream);
+  fread(&comp->D_factor       , sizeof comp->D_factor	     , 1 , stream);
+  fread(&comp->r0             , sizeof comp->r0              , 1 , stream);
+  fread(&comp->conn_factor__  , sizeof comp->conn_factor__   , 1 , stream);
+  fread(comp->def             , sizeof * comp->def           , kw_size , stream);
     
   return comp;
 }
@@ -229,6 +230,7 @@ void sched_kw_compdat_init_conn_factor(sched_kw_compdat_type * kw , const ecl_kw
     comp_node = list_node_get_next(comp_node);
   }
 }
+
 
 void sched_kw_compdat_set_conn_factor(sched_kw_compdat_type * kw , const float *permx , const int * dims , const int * index_field) {
   list_node_type *comp_node = list_get_head(kw->comp_list);
