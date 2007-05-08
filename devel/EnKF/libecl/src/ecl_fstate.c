@@ -43,9 +43,25 @@ static bool ecl_fstate_fmt_name(const char *filename) {
   fmt_match(filename , ".FGRID"   , &fmt);
   fmt_match(filename , ".A"       , &fmt);
   fmt_match(filename , ".F"       , &fmt);
+  fmt_match(filename , ".dat"     , &fmt);
   
   return fmt;
 }
+
+
+bool ecl_fstate_fmt_file(const char *filename) {
+  const int min_size = 65536;
+  bool fmt_file;
+  if (util_file_exists(filename)) {
+    if (util_file_size(filename) > min_size)
+      fmt_file = util_fmt_bit8(filename , min_size);
+    else
+      fmt_file = ecl_fstate_fmt_name(filename);
+  } else
+    fmt_file = ecl_fstate_fmt_name(filename);
+  return fmt_file;
+}
+
 
 
 
@@ -109,10 +125,7 @@ static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
     ecl_fstate->fmt_file = false;
     break;
   case ECL_FMT_AUTO:
-    if (util_file_exists(ecl_fstate->filelist[0])) 
-      ecl_fstate->fmt_file = util_fmt_bit8(ecl_fstate->filelist[0] , 65536);
-    else
-      ecl_fstate->fmt_file = ecl_fstate_fmt_name(ecl_fstate->filelist[0]);
+    ecl_fstate->fmt_file = ecl_fstate_fmt_file(ecl_fstate->filelist[0]);
     break;
   }
   if (ecl_fstate->fmt_file != existing_fmt) {

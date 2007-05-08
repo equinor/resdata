@@ -260,7 +260,7 @@ void static ecl_parse_res_write_eclipse1(hash_type *var_hash , const char *inclu
 /*****************************************************************/
 
 static void ecl_parse_file(hash_type *hash , const char *filename, const hash_type *type_map , bool endian_flip , int verbosity) {
-  bool fmt_file       = util_fmt_bit8(filename , 65536);
+  bool fmt_file       = ecl_fstate_fmt_file(filename);
   fortio_type *fortio = fortio_open(filename , "r" , endian_flip);
   ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_flip);
 
@@ -349,11 +349,11 @@ static void ecl_parse_restart(const char *refcase_path , const char *ecl_base , 
 	str_buffer_type *pressure_string = str_buffer_alloc(1);
 	str_buffer_type *sol_string      = str_buffer_alloc_with_string("call write_eclipse_kwheader(fieldname(i), fieldsize(i) , fieldtype(i) , 10 , write_fmt)\n");
 	
-	sprintf(tmp_string , "   if (iopt == 22) call write_real('PERMX   ',ndim,'REAL',PERMX,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
-	sprintf(tmp_string , "      if (iopt == 22) call write_real('PERMZ   ',ndim,'REAL',PERMZ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
-	sprintf(tmp_string , "      if (iopt == 22) call write_real('PORO    ',ndim,'REAL',PORO ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "   if (iopt == 22) call write_real('PERMX   ',ndim,'REAL',permx,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('PERMZ   ',ndim,'REAL',permz,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('PORO    ',ndim,'REAL',poro ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
 	str_buffer_add_string(pressure_string , "#ifdef MULTPV\n");
-	sprintf(tmp_string , "      if (iopt == 22) call write_real('MULTPV    ',ndim,'REAL',MULTPV ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('MULTPV    ',ndim,'REAL',multpv ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
 	str_buffer_add_string(pressure_string , "#endif\n");
 	str_buffer_add_string(pressure_string , "#ifdef GAUSS2\n");
 	sprintf(tmp_string , "      if (iopt == 22) call write_real('GAUSS1   ',ndim,'REAL',GAUSS ,mem4%%gauss1,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);

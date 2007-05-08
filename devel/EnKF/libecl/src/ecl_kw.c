@@ -7,9 +7,14 @@
 #include <inttypes.h>
 #include <ecl_kw.h>
 #include <fortio.h>
+#include <util.h>
+
+
+#define DEBUG 1
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
+
 
 #define FLIP16(var) (((var >> 8) & 0x00ff) | ((var << 8) & 0xff00))
 
@@ -26,8 +31,6 @@
 		      ((var << 24) & 0x0000ff0000000000) | \
 		      ((var << 40) & 0x00ff000000000000) | \
 		      ((var << 56) & 0xff00000000000000))
-
-#define DEBUG 1
 
 
 
@@ -111,30 +114,34 @@ static ecl_type_enum __get_ecl_type(const char *ecl_type_str) {
 }
 
 
+
 static void ecl_kw_endian_convert_data(ecl_kw_type *ecl_kw) {
   if (ecl_kw->ecl_type != ecl_char_type && ecl_kw->ecl_type != ecl_mess_type) {
-    int i;
-    switch (ecl_kw->sizeof_ctype) {
-    case(1):
+    util_endian_flip_vector(ecl_kw->data , ecl_kw->sizeof_ctype , ecl_kw->size);
+    /*
+      int i;
+      switch (ecl_kw->sizeof_ctype) {
+      case(1):
       break;
-    case(4):
+      case(4):
       {
-	uint32_t *tmp_int = (uint32_t *) ecl_kw->data;
-	for (i=0; i < ecl_kw->size; i++)
-	  tmp_int[i] = FLIP32(tmp_int[i]);
-	break;
+      uint32_t *tmp_int = (uint32_t *) ecl_kw->data;
+      for (i=0; i < ecl_kw->size; i++)
+      tmp_int[i] = FLIP32(tmp_int[i]);
+      break;
       }
-    case(8):
+      case(8):
       {
-	uint64_t *tmp_int = (uint64_t *) ecl_kw->data;
-	for (i=0; i < ecl_kw->size; i++)
-	  tmp_int[i] = FLIP64(tmp_int[i]);
-	break;
+      uint64_t *tmp_int = (uint64_t *) ecl_kw->data;
+      for (i=0; i < ecl_kw->size; i++)
+      tmp_int[i] = FLIP64(tmp_int[i]);
+      break;
       }
-    default:
+      default:
       fprintf(stderr," sizeof_ctype: %d is not handled in %s - aborting \n",ecl_kw->sizeof_ctype , __func__);
       abort();
-    }
+      }
+    */
   }
 }
 
@@ -557,10 +564,11 @@ void ecl_kw_rewind(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
 
 bool ecl_kw_fseek_kw(const char * kw , bool fmt_file , fortio_type *fortio) {
   ecl_kw_type *tmp_kw = ecl_kw_alloc_empty(fmt_file , fortio_get_endian_flip(fortio));     
-  FILE *stream     = fortio_get_FILE(fortio);
+  FILE *stream      = fortio_get_FILE(fortio);
   long int init_pos = ftell(stream);
   bool cont, kw_found;
-  
+
+  fortio_rewind(fortio);
   cont     = true;
   kw_found = false;
   while (cont) {

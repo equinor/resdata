@@ -106,6 +106,7 @@ void ecl_inter_load_summary__(const char *__header_file , const int *header_len 
   free(data_file);
 }
 
+
 void ecl_inter_get_nwells__(int *Nwells) {
   *Nwells = ecl_sum_get_Nwells(ECL_SUM);
 }
@@ -217,6 +218,8 @@ void ecl_inter_init_lsf__(const int  * sleep_time , const int *max_running,  con
   LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , util_intptr_2bool(subexit_int) , summary_path , summary_file , "bjobs -a" , "/tmp");
   free(summary_path);
   free(summary_file);
+  printf("Submitting: <____>\b"); fflush(stdout);
+
 }
 
 
@@ -245,7 +248,8 @@ void ecl_inter_add_lsf_job__(const int  *iens,
     free(id);
     free(fail_file);
     free(OK_file);
-    printf("%4d" , *iens); fflush(stdout);
+    printf("\b\b\b\b");
+    printf("%04d" , *iens); fflush(stdout);
   }
 }
 
@@ -273,8 +277,8 @@ void ecl_inter_parse__(const char *_refcase_path , const int * refcase_len,
 		       const char *_eclbase      , const int * eclbase_len, 
 		       const char *_include_path , const int * include_len, 
 		       const int  *fmt_file_int  , const int * unified_int) {
-  bool fmt_file = util_intptr_2bool(fmt_file_int);
-  bool unified  = util_intptr_2bool(unified_int);
+  bool fmt_file      = util_intptr_2bool(fmt_file_int);
+  bool unified       = util_intptr_2bool(unified_int);
   char *refcase_path = util_alloc_cstring(_refcase_path , refcase_len);
   char *eclbase      = util_alloc_cstring(_eclbase      , eclbase_len);
   char *include_path = util_alloc_cstring(_include_path , include_len);
