@@ -179,3 +179,7 @@ sched_kw_dates_type * sched_kw_dates_fread_alloc(int * next_date_ptr , int last_
 }
 
 
+void sched_kw_dates_iterate_current(const sched_kw_dates_type * kw , int *current_date_nr) {
+  (*current_date_nr) += list_get_size(kw->date_list);
+}
+

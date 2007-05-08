@@ -8,7 +8,7 @@ COMPILE_LIBS      = -lm -lhash -lutil -lecl
 INSTALL_INC_PATH = ../include
 INSTALL_LIB_PATH = ../lib
 #################################################################
-CFLAGS  = -O0 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
+CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
 FFLAGS  = -fpe0 -traceback -warn unused -CB -u -g -real_size 64 -assume byterecl -assume nobuffered_io -convert big_endian
 ARFLAGS = -csr
 #################################################################

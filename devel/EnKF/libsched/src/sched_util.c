@@ -287,18 +287,26 @@ void sched_util_fprintf_int(bool def, int value , int width , FILE *stream) {
 }
 
 
+/*
+  The formatting is ridicolusly inflexible - don't touch this shit.
+*/
+
 void sched_util_fprintf_qst(bool def, const char *s , int width , FILE *stream) {
   int i;
   if (def) {
-    fprintf(stream , " 1*");
-    for (i=0; i < (width); i++) 
+    fprintf(stream , "  1*        ");
+    /*
+      for (i=0; i < (width); i++) 
       fputc(' ' , stream);
+    */
   } else {
+
+    for (i=0; i < (width + 1 - strlen(s)); i++) 
+      fputc(' ' , stream);
+    
     fputc('\'' , stream);
     fprintf(stream , "%s" , s);
     fputc('\'' , stream);
-    for (i=0; i < (width + 1 - strlen(s)); i++) 
-      fputc(' ' , stream);
   }
 }
 

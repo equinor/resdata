@@ -11,5 +11,5 @@ void                     sched_kw_wconhist_add_line(sched_kw_wconhist_type * kw 
 void                     sched_kw_wconhist_fprintf(const sched_kw_wconhist_type * , FILE *);
 void                     sched_kw_wconhist_fwrite(const sched_kw_wconhist_type *, FILE *);
 sched_kw_wconhist_type * sched_kw_wconhist_fread_alloc( FILE *);
-
+void                     sched_kw_wconhist_fprintf_rates(const sched_kw_wconhist_type * , const char *  , const char * , int );
 #endif

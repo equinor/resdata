@@ -164,6 +164,15 @@ sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , int last_date_nr , time
 }
 
 
+void sched_kw_fprintf_rates(const sched_kw_type * kw , const char *obs_path , const char * obs_file , int * current_date_nr) {
+  if (kw->type == WCONHIST)
+    sched_kw_wconhist_fprintf_rates(kw->data , obs_path , obs_file , *current_date_nr);
+  else if (kw->type == DATES)
+    sched_kw_dates_iterate_current(kw->data , current_date_nr);
+}
+
+
+
 
 
 /*****************************************************************/

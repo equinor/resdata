@@ -106,10 +106,10 @@ static rate_type * rate_sched_fread_alloc(int kw_size , FILE *stream) {
 
 
 static void rate_sched_fprintf(const rate_type * rate , FILE *stream) {
-  fprintf(stream , "   ");
-  sched_util_fprintf_qst(rate->def[0] , rate->well         , 8 , stream);
-  sched_util_fprintf_qst(rate->def[1] , rate->state_string , 4 , stream);
-  sched_util_fprintf_qst(rate->def[2] , rate->cmode_string , 4 , stream);
+  fprintf(stream , "  ");
+  sched_util_fprintf_qst(rate->def[0]  , rate->well          , 8 , stream);
+  sched_util_fprintf_qst(rate->def[1]  , rate->state_string  , 4 , stream);
+  sched_util_fprintf_qst(rate->def[2]  , rate->cmode_string  , 4 , stream);
   sched_util_fprintf_dbl(rate->def[3]  , rate->ORAT     , 12 , 3 , stream);
   sched_util_fprintf_dbl(rate->def[4]  , rate->WRAT     , 12 , 3 , stream);
   sched_util_fprintf_dbl(rate->def[5]  , rate->GRAT     , 12 , 3 , stream);
@@ -121,6 +121,10 @@ static void rate_sched_fprintf(const rate_type * rate , FILE *stream) {
   fprintf(stream , " /\n");
 }
 
+
+static void rate_sched_fprintf_rates(const rate_type * rate , FILE *stream) {
+  fprintf(stream , "  %8s   %16.4f   %16.4f   %16.4f \n",rate->well , rate->ORAT , rate->WRAT , rate->GRAT);
+}
 
 
 static void rate_set_from_string(rate_type * node , int kw_size , const char **token_list) {
@@ -265,7 +269,31 @@ sched_kw_wconhist_type * sched_kw_wconhist_fread_alloc(FILE *stream) {
 }
   
 
-
+void sched_kw_wconhist_fprintf_rates(const sched_kw_wconhist_type * kw , const char * _obs_path , const char * obs_file , int current_date_nr) {
+  char *obs_path = malloc(strlen(_obs_path) + 6);
+  char *file     = malloc(strlen(_obs_path) + strlen(obs_file) + 7);
+  FILE *stream;
+  sprintf(obs_path , "%s/%04d" , _obs_path , current_date_nr);
+  printf("%04d",current_date_nr); fflush(stdout);
+  sprintf(file , "%s/%04d/%s" , _obs_path , current_date_nr , obs_file);
+  util_make_path(obs_path);
+  stream = fopen(file , "w"); 
+  if (stream == NULL) {
+    fprintf(stderr,"%s: failed to open:%s for writing - abortnig \n",__func__ , file);
+    abort();
+  }
+  {
+    list_node_type *rate_node = list_get_head(kw->rate_list);
+    while (rate_node != NULL) {
+      const rate_type * rate = list_node_value_ptr(rate_node);
+      rate_sched_fprintf_rates(rate , stream);
+      rate_node = list_node_get_next(rate_node);
+    }
+  }
+  fclose(stream);
+  free(file);
+  printf("\b\b\b\b"); fflush(stdout);
+}
 
 
 

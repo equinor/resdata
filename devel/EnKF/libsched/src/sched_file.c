@@ -184,13 +184,15 @@ void sched_file_fprintf(const sched_file_type * sched_file , int last_date_nr , 
 
 
 void sched_file_init_conn_factor(sched_file_type * sched_file , const char * init_file , bool endian_flip , const int * index_map) {
-  ecl_kw_type * permx_kw , *ihead_kw ;
+  ecl_kw_type * permx_kw , *ihead_kw , *permz_kw;
   bool fmt_file        = util_fmt_bit8(init_file , 2 * 8192);
   fortio_type * fortio = fortio_open(init_file , "r" , endian_flip);
   int *dims;
 
   ecl_kw_fseek_kw("PERMX" , fmt_file , fortio);
   permx_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
+  ecl_kw_fseek_kw("PERMZ" , fmt_file , fortio);
+  permz_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
 
   if (ecl_kw_fseek_kw("INTEHEAD" , fmt_file , fortio))
     ihead_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
@@ -198,6 +200,7 @@ void sched_file_init_conn_factor(sched_file_type * sched_file , const char * ini
     fprintf(stderr,"%s: failed to locate keyword: INTHEAD in file:%s - aborting \n",__func__ , init_file);
     abort();
   }
+  
   {
     int * tmp  = ecl_kw_get_data_ref(ihead_kw);
     dims       = &tmp[8];
@@ -208,31 +211,25 @@ void sched_file_init_conn_factor(sched_file_type * sched_file , const char * ini
     while (list_node != NULL) {
       const sched_kw_type * sched_kw = list_node_value_ptr(list_node);
       if (sched_kw_get_type(sched_kw) == COMPDAT) 
-	sched_kw_compdat_init_conn_factor(sched_kw_get_data_ref(sched_kw) , permx_kw , dims , index_map);
+	sched_kw_compdat_init_conn_factor(sched_kw_get_data_ref(sched_kw) , permx_kw , permz_kw , dims , index_map);
       
       list_node = list_node_get_next(list_node);
     }
   }
   sched_file->compdat_initialized = true;
-  /*
-    {
-    sched_file_set_conn_factor(sched_file , ecl_kw_get_data_ref(permx_kw) , dims , index_map);
-    sched_file_fprintf(sched_file , -1 , -1 , "Schedule-test");
-    }
-  */
   ecl_kw_free(permx_kw);
   ecl_kw_free(ihead_kw);
 }
 
 
 
-void sched_file_set_conn_factor(sched_file_type * sched_file , const float * permx , const int *dims,  const int * index_map) {
+void sched_file_set_conn_factor(sched_file_type * sched_file , const float * permx , const float * permz , const int *dims,  const int * index_map) {
   if (sched_file->compdat_initialized) {
     list_node_type *list_node = list_get_head(sched_file->kw_list);
     while (list_node != NULL) {
       const sched_kw_type * sched_kw = list_node_value_ptr(list_node);
       if (sched_kw_get_type(sched_kw) == COMPDAT) 
-	sched_kw_compdat_set_conn_factor(sched_kw_get_data_ref(sched_kw) , permx , dims , index_map);
+	sched_kw_compdat_set_conn_factor(sched_kw_get_data_ref(sched_kw) , permx , permz , dims , index_map);
       
       list_node = list_node_get_next(list_node);
     }
@@ -243,12 +240,19 @@ void sched_file_set_conn_factor(sched_file_type * sched_file , const float * per
 }
 
 
-void sched_file_fwrite(const sched_file_type * sched_file , FILE *stream) {
+void sched_file_fwrite(const sched_file_type * sched_file , const char * filename) {
+  FILE *stream = fopen(filename , "w");
+  if (stream == NULL) {
+    fprintf(stderr,"%s: failed to open: %s for writing - aborting \n",__func__ , filename);
+    abort();
+  }
   {
     int len = list_get_size(sched_file->kw_list);
     fwrite(&len , sizeof len , 1 , stream);
   }
+
   fwrite(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
+
   {
     list_node_type *list_node = list_get_head(sched_file->kw_list);
     while (list_node != NULL) {
@@ -257,14 +261,23 @@ void sched_file_fwrite(const sched_file_type * sched_file , FILE *stream) {
       list_node = list_node_get_next(list_node);
     }
   }
+  fclose(stream);
 }
 
 
-sched_file_type * sched_file_fread_alloc(int last_date_nr , time_t last_time , FILE *stream) {
+sched_file_type * sched_file_fread_alloc(const char * filename , int last_date_nr , time_t last_time) {
   bool cont , at_eof , stop;
   int len,kw_nr;
-  sched_file_type * sched_file = sched_file_alloc();
-  fread(&len                             , sizeof len                             , 1 , stream);
+  sched_file_type * sched_file;
+  FILE *stream = fopen(filename , "r");
+
+  if (stream == NULL) {
+    fprintf(stderr,"%s: failed to open %s for reading - aborting \n",__func__ , filename);
+    abort();
+  }
+
+  sched_file = sched_file_alloc();
+  fread(&len                             , sizeof len                             , 1 , stream); 
   fread(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
   at_eof = false;
   stop   = false;
@@ -273,18 +286,32 @@ sched_file_type * sched_file_fread_alloc(int last_date_nr , time_t last_time , F
   while (cont) {
     sched_kw_type *kw = sched_kw_fread_alloc(&sched_file->next_date_nr , last_date_nr , last_time , stream , &at_eof, &stop);
     sched_file_add_kw__(sched_file , kw);
-    kw_nr++;
+    kw_nr += 1;
     if (at_eof || stop || kw_nr == len)
       cont = false;
   }
   
   if (kw_nr < len && !stop) 
-    fprintf(stderr,"%s: Warning premature end in schedule dump file: %d/%d \n",__func__ , kw_nr , len);
+    fprintf(stderr,"%s: Warning premature end in schedule dump file:%s read %d/%d keywords.\n",__func__ , filename , kw_nr , len);
   
-
+  fclose(stream);
   return sched_file;
 }
 
+
+
+void sched_file_fprintf_rates(const sched_file_type * sched_file , const char * obs_path, const char * obs_file) {
+  int current_date_nr = 1;
+  list_node_type *list_node = list_get_head(sched_file->kw_list);
+  util_make_path(obs_path);
+  printf("Writing observations: "); fflush(stdout);
+  while (list_node != NULL) {
+    const sched_kw_type * sched_kw = list_node_value_ptr(list_node);
+    sched_kw_fprintf_rates(sched_kw , obs_path , obs_file , &current_date_nr);
+    list_node = list_node_get_next(list_node);
+  }
+  printf("complete \n");
+}
 
 
 

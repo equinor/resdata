@@ -4,64 +4,107 @@
 #include <sched_file.h>
 
 
+void sched_parse_wconhist__(const char * _schedule_dump_file , const int * schedule_dump_len , 
+			    const char * _obs_path           , const int * obs_path_len      ,
+			    const char * _obs_file           , const int * obs_file_len) {
+  sched_file_type *s;
+  char * schedule_file = util_alloc_cstring(_schedule_dump_file , schedule_dump_len);
+  char * obs_path      = util_alloc_cstring(_obs_path , obs_path_len);
+  char * obs_file      = util_alloc_cstring(_obs_file , obs_file_len);
+  
+  s = sched_file_fread_alloc(schedule_file , -1  , -1);
+  sched_file_fprintf_rates(s , obs_path , obs_file);  
+  sched_file_free(s);
+  
+  free(schedule_file);
+  free(obs_path);
+  free(obs_file);
+}
 
-void sched_init_compdat__(const char * _schedule_file  	   , const int * schedule_file_len,
-			  const char * _init_file      	   , const int * init_file_len    ,
-			  const char * _schedule_dump_file , const int * schedule_dump_len , 
-			  const int  * endian_flip_int     , const int * index_map) {
 
+
+void sched_fprintf__(const char * _schedule_dump_file , const int * schedule_dump_len , 
+		     const char * _schedule_file      , const int * schedule_file_len,
+		     const char * _last_date_str      , const int * last_date_len) {
+
+  sched_file_type *s;
   char * schedule_file      = util_alloc_cstring(_schedule_file , schedule_file_len);
-  char * init_file          = util_alloc_cstring(_init_file     , init_file_len);
   char * schedule_dump_file = util_alloc_cstring(_schedule_dump_file , schedule_dump_len);
-  bool   endian_flip        = util_intptr_2bool(endian_flip_int);
-  
-  sched_file_type *s = sched_file_alloc();
-  sched_file_parse(s , schedule_file);
-  
-  sched_file_init_conn_factor(s , init_file , endian_flip , index_map );
-  {
-    FILE *stream = fopen(schedule_dump_file , "w");
-    if (stream == NULL) {
-      fprintf(stderr,"%s: failed to open: %s for writing - aborting \n",__func__ , schedule_dump_file);
-      abort();
-    }
-    sched_file_fwrite(s , stream);
-    fclose(stream);
-  }
+  char * last_date_str      = util_alloc_cstring(_last_date_str      , last_date_len);
+
+  s = sched_file_fread_alloc(schedule_dump_file , atoi(last_date_str)  , -1);
+  sched_file_fprintf(s , atoi(last_date_str) , -1 , schedule_file);
   sched_file_free(s);
 
-
+  free(last_date_str);
   free(schedule_dump_file);
-  free(init_file);
   free(schedule_file);
 }
 
 
 
-void sched_update_compdat__(const char  * _src_dump_file  , const int * src_dump_file_len,
+void sched_init__(const char * _schedule_file  	   , const int * schedule_file_len,
+		  const char * _schedule_dump_file , const int * schedule_dump_len) {
+  char * schedule_file      = util_alloc_cstring(_schedule_file , schedule_file_len);
+  char * schedule_dump_file = util_alloc_cstring(_schedule_dump_file , schedule_dump_len);
+  
+  sched_file_type *s = sched_file_alloc();
+  sched_file_parse(s , schedule_file);
+  sched_file_fwrite(s , schedule_dump_file);
+
+  sched_file_free(s);
+  free(schedule_dump_file);
+  free(schedule_file);
+}
+		  
+  
+
+
+void sched_init_compdat__(const char * _schedule_dump_file , const int * schedule_dump_len , 
+			  const char * _init_file      	   , const int * init_file_len    ,
+			  const int  * endian_flip_int     , const int * index_map) {
+  sched_file_type *s;
+  char * init_file          = util_alloc_cstring(_init_file     , init_file_len);
+  char * schedule_dump_file = util_alloc_cstring(_schedule_dump_file , schedule_dump_len);
+  bool   endian_flip        = util_intptr_2bool(endian_flip_int);
+
+  /*loading*/
+  s = sched_file_fread_alloc(schedule_dump_file , -1  , -1);
+
+  /* Initialising */
+  sched_file_init_conn_factor(s , init_file , endian_flip , index_map );
+
+  sched_file_fwrite(s , schedule_dump_file);
+  
+  sched_file_free(s);
+  free(init_file);
+  free(schedule_dump_file);
+}
+
+
+
+void sched_update_compdat__(const char  * _schedule_dump_file  , const int * schedule_dump_file_len,
 			    const char  * _target_file    , const int * target_file_len,
 			    const int   * last_date_nr    , 
-			    const float * permx           , const int *dims, 
+			    const float * permx           , const float * permz , 
+			    const int   * dims, 
 			    const int   * index_map) {
   sched_file_type *s;
-  char * src_dump_file  = util_alloc_cstring(_src_dump_file    , src_dump_file_len);
+  char * schedule_dump_file  = util_alloc_cstring(_schedule_dump_file    , schedule_dump_file_len);
   char * target_file    = util_alloc_cstring(_target_file , target_file_len);
-  FILE * stream         = fopen(src_dump_file , "r");
-  if (stream == NULL) {
-    fprintf(stderr,"%s: failed to open %s for reading - aborting \n",__func__ , src_dump_file);
-    abort();
-  }
 
-  s = sched_file_fread_alloc(*last_date_nr , -1 , stream);
-  fclose(stream);
+  s = sched_file_fread_alloc(schedule_dump_file , *last_date_nr , -1);
   
-  sched_file_set_conn_factor(s , permx , dims , index_map );
+  sched_file_set_conn_factor(s , permx , permz , dims , index_map );
   sched_file_fprintf(s , *last_date_nr , -1 , target_file);
   sched_file_free(s);
   
-  free(src_dump_file);
+  free(schedule_dump_file);
   free(target_file);
 }
+
+
+
 
 
 

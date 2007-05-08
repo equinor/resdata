@@ -18,7 +18,7 @@ struct sched_kw_untyped_struct {
 
 
 void sched_kw_untyped_fprintf(const sched_kw_untyped_type *kw , FILE *stream) {
-  fprintf(stream , "%s\n" , kw->kw_name);
+  fprintf(stream , "%s \n" , kw->kw_name);
   {
     list_node_type *line_node = list_get_head(kw->line_list);
     while (line_node != NULL) {

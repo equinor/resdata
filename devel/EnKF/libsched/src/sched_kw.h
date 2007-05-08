@@ -21,5 +21,5 @@ void              sched_kw_fprintf(const sched_kw_type * kw , int , time_t , FIL
 void              sched_kw_add_line(sched_kw_type * , const char * , const hash_type *);
 sched_kw_type   * sched_kw_fread_alloc(int *, int , time_t , FILE * , bool * , bool *);
 void              sched_kw_fwrite(const sched_kw_type *kw , FILE *);
-
+void              sched_kw_fprintf_rates(const sched_kw_type * , const char *, const char * , int * );
 #endif
