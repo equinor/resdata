@@ -21,6 +21,7 @@ void old_rms_inter_roff_param__(const char *__filename , const int *strlen, cons
 }
 
 
+
 void rms_inter_roff_param__(const char *__filename , const int *strlen, const char *__param_name , const int * param_len, 
 			    const int *nx , const int *ny , const int *nz , 
 			    float *undef_rms , float *undef_out,
@@ -35,7 +36,7 @@ void rms_inter_roff_param__(const char *__filename , const int *strlen, const ch
       if (work[i] == *undef_rms)
 	work[i] = *undef_out;
   }
-  rms_set_fortran_data(param , work , sizeof *work , *nx , *ny , *nz);
+  rms_util_set_fortran_data(param , work , sizeof *work , *nx , *ny , *nz);
 
   free(filename);
   free(param_name);
@@ -66,7 +67,7 @@ void rms_inter_roff_param2__(const char *__filename , const int *strlen, const c
       if (work[i] == *undef_rms)
 	work[i] = *undef_out;
   }
-  rms_set_fortran_data(param , work , sizeof *work , *nx , *ny , *nz);
+  rms_util_set_fortran_data(param , work , sizeof *work , *nx , *ny , *nz);
   rms_close(rms_file);
   
   free(filename);

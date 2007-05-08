@@ -14,7 +14,7 @@ void rms_type_free(void *rms_t) {
 }
 
 
-__rms_type * rms_type_set(__rms_type *rms_t , rms_type_enum rms_type , int sizeof_ctype) {
+static __rms_type * rms_type_set(__rms_type *rms_t , rms_type_enum rms_type , int sizeof_ctype) {
   rms_t->rms_type     = rms_type;
   rms_t->sizeof_ctype = sizeof_ctype;
   return rms_t;

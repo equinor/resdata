@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <hash.h>
+#include <list.h>
 #include <rms_tag.h>
 #include <rms_util.h>
 #include <rms_tagkey.h>
@@ -15,7 +16,8 @@ static const char * rms_endtag_string     = "endtag";
 
 struct rms_tag_struct {
   const char *name;
-  hash_type  *keys;
+  list_type  *key_list;
+  hash_type  *key_hash;
 };
 
 /*****************************************************************/
@@ -24,13 +26,15 @@ struct rms_tag_struct {
 rms_tag_type * rms_alloc_empty_tag() {
   rms_tag_type *tag = malloc(sizeof *tag);
   tag->name = NULL;
-  tag->keys = hash_alloc(10);
+  tag->key_hash = hash_alloc(10);
+  tag->key_list = list_alloc();
   return tag;
 }
 
 void rms_tag_free(rms_tag_type *tag) {
   free( (char *) tag->name);
-  hash_free(tag->keys);
+  hash_free(tag->key_hash);
+  list_free(tag->key_list);
   free(tag);
 }
 
@@ -46,12 +50,12 @@ void rms_fread_tag_header(rms_tag_type *tag , FILE *stream , bool *eof_tag) {
   char *buffer;
   *eof_tag = false;
   buffer = malloc(4);
-  if (rms_fread_string(stream , buffer , 4)) {
+  if (rms_util_fread_string(buffer , 4 , stream )) {
     if (strcmp(buffer , rms_starttag_string) == 0) {
       /* OK */
       {
-	char *tmp = malloc(rms_fread_strlen(stream) + 1);
-	rms_fread_string(stream , tmp , 0);
+	char *tmp = malloc(rms_util_fread_strlen(stream) + 1);
+	rms_util_fread_string(tmp , 0 , stream);
 	tag->name = tmp;
 	if (strcmp(tag->name , rms_eof_tag) == 0)
 	  *eof_tag = true;
@@ -72,8 +76,9 @@ bool rms_tag_name_eq(const rms_tag_type *tag , const char * tagname , const char
   bool eq = false;
   if (strcmp(tag->name , tagname) == 0) {
     if (tagkey_name != NULL && keyvalue != NULL) {
-      if (hash_has_key(tag->keys , tagkey_name)) {
-	eq = rms_tagkey_char_eq(hash_get(tag->keys , tagkey_name) , keyvalue);
+      if (hash_has_key(tag->key_hash , tagkey_name)) {
+	const rms_tagkey_type *tagkey = list_node_value_ptr(hash_get(tag->key_hash , tagkey_name));
+	eq = rms_tagkey_char_eq(tagkey , keyvalue);
       }
     } else
       eq = true;
@@ -83,8 +88,8 @@ bool rms_tag_name_eq(const rms_tag_type *tag , const char * tagname , const char
 
 
 rms_tagkey_type * rms_tag_get_key(const rms_tag_type *tag , const char *keyname) {
-  if (hash_has_key(tag->keys , keyname))
-    return hash_get(tag->keys, keyname); 
+  if (hash_has_key(tag->key_hash , keyname)) 
+    return list_node_value_ptr(hash_get(tag->key_hash, keyname));
   else {
     fprintf(stderr,"%s: tag:%s did not contain key:%s - aborting \n",__func__ , tag->name , keyname);
     abort();
@@ -93,7 +98,8 @@ rms_tagkey_type * rms_tag_get_key(const rms_tag_type *tag , const char *keyname)
 
 
 static void rms_tag_add_tagkey(const rms_tag_type *tag , const rms_tagkey_type *tagkey) {
-  hash_insert_copy(tag->keys , rms_tagkey_get_name(tagkey) , tagkey , rms_tagkey_copyc_ , rms_free_tagkey_);
+  list_node_type * list_node = list_append_copy(tag->key_list , tagkey , rms_tagkey_copyc_ , rms_free_tagkey_);
+  hash_insert_ref(tag->key_hash , rms_tagkey_get_name(tagkey) , list_node);
 }
 
 
@@ -101,7 +107,7 @@ static bool rms_tag_at_endtag(FILE *stream) {
   const int init_pos = ftell(stream);
   bool at_endtag;
   char tag[7];
-  if (rms_fread_string(stream , tag , 7)) {
+  if (rms_util_fread_string(tag , 7 , stream)) {
     if (strcmp(tag , rms_endtag_string) == 0)
       at_endtag = true;
     else
@@ -115,22 +121,51 @@ static bool rms_tag_at_endtag(FILE *stream) {
 }
 
 
-void rms_fread_tag(rms_tag_type *tag, FILE *stream , hash_type *type_map , bool *at_eof) {
+void rms_fread_tag(rms_tag_type *tag, FILE *stream , hash_type *type_map , bool endian_convert , bool *at_eof) {
   rms_fread_tag_header(tag , stream , at_eof);
   if (!*at_eof) {
-    rms_tagkey_type *tagkey = rms_alloc_empty_tagkey();
+    rms_tagkey_type *tagkey = rms_alloc_empty_tagkey(endian_convert);
     while (! rms_tag_at_endtag(stream)) {
-      rms_tagkey_load(tagkey , stream , type_map);
+      rms_tagkey_load(tagkey , endian_convert , stream , type_map);
       rms_tag_add_tagkey(tag , tagkey);
     }
     rms_free_tagkey(tagkey);
   }
 }
 
-rms_tag_type * rms_tag_fread_alloc(FILE *stream , hash_type *type_map , bool *at_eof) {
+
+
+rms_tag_type * rms_tag_fread_alloc(FILE *stream , hash_type *type_map , bool endian_convert , bool *at_eof) {
   rms_tag_type *tag = rms_alloc_empty_tag();
-  rms_fread_tag(tag , stream , type_map , at_eof);
+  rms_fread_tag(tag , stream , type_map , endian_convert , at_eof);
   return tag;
 }
 
 
+
+void rms_tag_fwrite(const rms_tag_type * tag , FILE * stream) {
+  rms_util_fwrite_string("tag"     , stream);
+  rms_util_fwrite_string(tag->name , stream);
+  {
+    list_node_type * key_node = list_get_head(tag->key_list);
+    while (key_node != NULL) {
+      const rms_tagkey_type * tagkey = (const rms_tagkey_type *) list_node_value_ptr(key_node);
+      rms_tagkey_fwrite( tagkey , stream);
+      key_node = list_node_get_next(key_node);
+    }
+  }
+  rms_util_fwrite_string("endtag" , stream);
+}
+
+
+rms_tag_type * rms_tag_alloc_filedata(const char * filetype) {
+  rms_tag_type * tag = rms_alloc_empty_tag();
+  tag->name = malloc(strlen("filedata") + 1);
+  sprintf((char *) tag->name , "filedata");
+
+  rms_tag_add_tagkey(tag , rms_tagkey_alloc_byteswap());
+  rms_tag_add_tagkey(tag , rms_tagkey_alloc_filetype(filetype));
+  rms_tag_add_tagkey(tag , rms_tagkey_alloc_creationDate());
+
+  return tag;
+}

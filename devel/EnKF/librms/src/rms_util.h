@@ -3,10 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void   rms_set_fortran_data(void *, const void * , int , int , int  , int);
-void   rms_read_fortran_data(const void *, void * , int , int , int , int);
-void   rms_fskip_string(FILE *);
-int    rms_fread_strlen(FILE *);
-bool   rms_fread_string(FILE * , char * ,  int);
+void   rms_util_set_fortran_data(void *, const void * , int , int , int  , int);
+void   rms_util_read_fortran_data(const void *, void * , int , int , int , int);
+void   rms_util_fskip_string(FILE *);
+int    rms_util_fread_strlen(FILE *);
+bool   rms_util_fread_string(char * ,  int , FILE *);
+void   rms_util_fwrite_string(const char * string , FILE *stream);
+void   rms_util_fwrite_newline(FILE *stream);
 
 #endif

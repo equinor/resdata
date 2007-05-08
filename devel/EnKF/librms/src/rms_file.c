@@ -17,9 +17,9 @@
 static const char * rms_ascii_header      = "roff-asc";
 static const char * rms_binary_header     = "roff-bin";
 
+static const char * rms_comment1          = "ROFF file";
+static const char * rms_comment2          = "Creator: RMS - Reservoir Modelling System, version 7.5.2";
 /*
-  static const char * rms_comment1          = "ROFF file";
-  static const char * rms_comment2          = "Creator: RMS - Reservoir Modelling System, version 7.5.2";
   static const char * rms_parameter_tagname = "parameter";
 */
 
@@ -30,7 +30,7 @@ static const char * rms_binary_header     = "roff-bin";
 struct rms_file_struct {
   const char * filename;
   FILE       * stream;
-  bool         endian_flip;
+  bool         endian_convert;
   bool         binary;
   hash_type  * type_map;
   list_type  * tag_list;
@@ -47,7 +47,7 @@ struct rms_file_struct {
 static bool rms_binary(const rms_file_type *rms_file) {
   bool binary;
   char filetype[9];
-  rms_fread_string(rms_file->stream , filetype , 9);
+  rms_util_fread_string( filetype , 9 , rms_file->stream);
 
   if (strncmp(filetype , rms_binary_header , 8) == 0)
     binary = true;
@@ -93,27 +93,17 @@ rms_tag_type * rms_file_get_tag(const rms_file_type *rms_file , const char *tagn
 
 static rms_file_type * rms_alloc_file(const char *filename) {
   rms_file_type *rms_file = malloc(sizeof *rms_file);
-  {
-    char *tmp_name = malloc(strlen(filename) + 1);
-    strcpy(tmp_name , filename);
-    rms_file->filename = tmp_name;
-  }
-  rms_file->endian_flip = false;
-  rms_file->type_map  = hash_alloc(10);
-  rms_file->tag_list  = list_alloc();
+  rms_file->filename     = util_alloc_string_copy(filename);
+  rms_file->endian_convert  = false;
+  rms_file->type_map  	 = hash_alloc(10);
+  rms_file->tag_list  	 = list_alloc();
 
-  {
-    __rms_type *rms_t = rms_type_alloc(1,1);
-    
-    hash_insert_copy(rms_file->type_map , "byte"   , rms_type_set(rms_t , rms_byte_type ,    1) , rms_type_copyc , rms_type_free);
-    hash_insert_copy(rms_file->type_map , "bool"   , rms_type_set(rms_t , rms_bool_type,     1) , rms_type_copyc , rms_type_free);
-    hash_insert_copy(rms_file->type_map , "int"    , rms_type_set(rms_t , rms_int_type ,     4) , rms_type_copyc , rms_type_free);
-    hash_insert_copy(rms_file->type_map , "float"  , rms_type_set(rms_t , rms_float_type  ,  4) , rms_type_copyc , rms_type_free);
-    hash_insert_copy(rms_file->type_map , "double" , rms_type_set(rms_t , rms_double_type ,  8) , rms_type_copyc , rms_type_free);
-    hash_insert_copy(rms_file->type_map , "char"   , rms_type_set(rms_t , rms_char_type   , -1) , rms_type_copyc , rms_type_free);
-    
-    rms_type_free(rms_t);
-  }
+  hash_insert_hash_owned_ref(rms_file->type_map , "byte"   , rms_type_alloc(rms_byte_type ,    1) ,  rms_type_free);
+  hash_insert_hash_owned_ref(rms_file->type_map , "bool"   , rms_type_alloc(rms_bool_type,     1) ,  rms_type_free);
+  hash_insert_hash_owned_ref(rms_file->type_map , "int"    , rms_type_alloc(rms_int_type ,     4) ,  rms_type_free);
+  hash_insert_hash_owned_ref(rms_file->type_map , "float"  , rms_type_alloc(rms_float_type  ,  4) ,  rms_type_free);
+  hash_insert_hash_owned_ref(rms_file->type_map , "double" , rms_type_alloc(rms_double_type ,  8) ,  rms_type_free);
+  hash_insert_hash_owned_ref(rms_file->type_map , "char"   , rms_type_alloc(rms_char_type   , -1) ,  rms_type_free);
   
   return rms_file;
 }
@@ -138,12 +128,28 @@ static void rms_init_existing_file(rms_file_type * rms_file) {
     abort();
   }
   /* Skipping two comment lines ... */
-  rms_fskip_string(rms_file->stream);
-  rms_fskip_string(rms_file->stream);
+  rms_util_fskip_string(rms_file->stream);
+  rms_util_fskip_string(rms_file->stream);
+  {
+    bool eof_tag;
+    rms_tag_type    * filedata_tag = rms_tag_fread_alloc(rms_file->stream , rms_file->type_map , rms_file->endian_convert , &eof_tag);
+    rms_tagkey_type * byteswap_key = rms_tag_get_key(filedata_tag , "byteswaptest");
+    int byteswap_value             = *( int *) rms_tagkey_get_data_ref(byteswap_key);
+    if (byteswap_value == 1)
+      rms_file->endian_convert = false;
+    else
+      rms_file->endian_convert = true;
+    rms_tag_free(filedata_tag);
+  }
 }
 
+
 static void rms_init_new_file(rms_file_type * rms_file , bool binary) {
-  
+  rms_file->binary = binary;
+  if (!rms_file->binary) {
+    fprintf(stderr,"%s only binary files implemented - aborting \n",__func__);
+    abort();
+  }
 }
 
 
@@ -178,6 +184,7 @@ void rms_close(rms_file_type * rms_file) {
   free(rms_file);
 }
 
+
 static int rms_file_get_dim(const rms_tag_type *tag , const char *dim_name) {
   rms_tagkey_type *key = rms_tag_get_key(tag , dim_name);
   return * (int *) rms_tagkey_get_data_ref(key);
@@ -205,12 +212,43 @@ void rms_file_load(rms_file_type *rms_file) {
   bool eof_tag = false;
   
   while (!eof_tag) {
-    rms_tag_type * tag = rms_tag_fread_alloc(rms_file->stream ,  rms_file->type_map , &eof_tag );
+    rms_tag_type * tag = rms_tag_fread_alloc(rms_file->stream ,  rms_file->type_map , rms_file->endian_convert , &eof_tag );
     if (!eof_tag)
       rms_file_add_tag(rms_file , tag);
     else
       rms_tag_free(tag);
   }
+}
+
+
+void rms_file_fwrite(const rms_file_type * rms_file, const char * filetype) {
+  FILE * stream = fopen(rms_file->filename , "w");
+  if (stream == NULL) {
+    fprintf(stderr,"%s: failed to open:%s for writing - aborting \n",__func__ , rms_file->filename);
+    abort();
+  }
+  if (rms_file->binary)
+    rms_util_fwrite_string(rms_binary_header , stream);
+  else
+    rms_util_fwrite_string(rms_ascii_header , stream);
+  rms_util_fwrite_string(rms_comment1 , stream);
+  rms_util_fwrite_string(rms_comment2 , stream);
+  {
+    rms_tag_type * filedata = rms_tag_alloc_filedata(filetype);
+    rms_tag_fwrite(filedata , stream);
+    rms_tag_free(filedata);
+  }
+  
+  {
+    list_node_type * tag_node = list_get_head(rms_file->tag_list);
+    while (tag_node != NULL) {
+      const rms_tag_type *tag = list_node_value_ptr(tag_node);
+      rms_tag_fwrite(tag , stream);
+      tag_node = list_node_get_next(tag_node);
+    }
+  }
+
+  fclose(stream);
 }
 
 

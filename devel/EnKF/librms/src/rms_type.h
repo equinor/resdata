@@ -13,12 +13,12 @@ enum rms_type_enum_def {rms_char_type , rms_float_type , rms_double_type , rms_b
 typedef struct {
   rms_type_enum   rms_type;
   int             sizeof_ctype;
+  
 } __rms_type;
 
 /*****************************************************************/
 
-void         rms_type_free(void *);
-__rms_type  * rms_type_set(__rms_type *, rms_type_enum , int );
+void          rms_type_free(void *);
 __rms_type  * rms_type_alloc(rms_type_enum , int );
 const void  * rms_type_copyc(const void * );
 
