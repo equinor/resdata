@@ -117,12 +117,6 @@ static void rms_tagkey_fread_data(rms_tagkey_type *tagkey , bool endian_convert 
   if (endian_convert) 
     if (tagkey->sizeof_ctype > 1)
       util_endian_flip_vector(tagkey->data , tagkey->sizeof_ctype , tagkey->size);
-  
-  if (tagkey->rms_type == rms_int_type)
-    printf("%d \n",((int *)tagkey->data)[0]);
-  else
-    printf("%s \n",(char *) tagkey->data);
-  
 }
 
 
@@ -148,8 +142,6 @@ static void rms_fread_tagkey_header(rms_tagkey_type *tagkey , FILE *stream, hash
   } else
     is_array = false;
   
-  printf("   %s - ",type_string); fflush(stdout);
-
   {
     __rms_type * rms_t   = hash_get(type_map , type_string);
     tagkey->rms_type     = rms_t->rms_type;
@@ -159,12 +151,10 @@ static void rms_fread_tagkey_header(rms_tagkey_type *tagkey , FILE *stream, hash
   tagkey->name = realloc(tagkey->name , rms_util_fread_strlen(stream) + 1);
 
   rms_util_fread_string(tagkey->name , 0 , stream);
-  printf("%s - ",tagkey->name); fflush(stdout);
   if (is_array)
     fread(&tagkey->size , 1 , sizeof tagkey->size, stream);
   else
     tagkey->size = 1;
-  printf("%d ",tagkey->size);  fflush(stdout);
   rms_tagkey_set_data_size(tagkey , stream , -1);
 }
 

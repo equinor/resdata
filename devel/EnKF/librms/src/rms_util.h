@@ -9,6 +9,7 @@ void   rms_util_fskip_string(FILE *);
 int    rms_util_fread_strlen(FILE *);
 bool   rms_util_fread_string(char * ,  int , FILE *);
 void   rms_util_fwrite_string(const char * string , FILE *stream);
+void   rms_util_fwrite_comment(const char *  , FILE *);
 void   rms_util_fwrite_newline(FILE *stream);
 
 #endif

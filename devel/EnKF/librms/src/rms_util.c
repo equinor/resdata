@@ -102,6 +102,13 @@ void rms_util_fwrite_string(const char * string , FILE *stream) {
   fputc('\0' , stream);
 }
 
+void rms_util_fwrite_comment(const char * comment , FILE *stream) {
+  fputc('#' , stream);
+  fwrite(comment , sizeof * comment , strlen(comment) , stream);
+  fputc('#' , stream);
+  fputc('\0' , stream);
+}
+
 
 void rms_util_fwrite_newline(FILE *stream) {
   return;

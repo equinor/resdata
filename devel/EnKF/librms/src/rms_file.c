@@ -18,7 +18,7 @@ static const char * rms_ascii_header      = "roff-asc";
 static const char * rms_binary_header     = "roff-bin";
 
 static const char * rms_comment1          = "ROFF file";
-static const char * rms_comment2          = "Creator: RMS - Reservoir Modelling System, version 7.5.2";
+static const char * rms_comment2          = "Creator: RMS - Reservoir Modelling System, version 8.1";
 /*
   static const char * rms_parameter_tagname = "parameter";
 */
@@ -64,6 +64,8 @@ static bool rms_file_binary(const rms_file_type *rms_file , FILE *stream) {
 static void rms_file_add_tag(rms_file_type *rms_file , const rms_tag_type *tag) {
   list_append_ref(rms_file->tag_list , tag);
 }
+
+
 
 rms_tag_type * rms_file_get_tag(const rms_file_type *rms_file , const char *tagname, const char *keyname, const char *keyvalue) {
   bool cont = true;
@@ -139,21 +141,6 @@ void rms_file_free_data(rms_file_type * rms_file) {
 
 
 
-void rms_file_list_tags(const rms_file_type * rms_file) {
-  list_node_type    *tag_node , *next_tag_node;
-  list_type         *tag_list = rms_file->tag_list;
-    
-  tag_node = list_get_head(tag_list);
-  printf("-----------------------------------------------------------------\n");
-  while (tag_node) {
-    next_tag_node = list_node_get_next(tag_node);
-    rms_tag_printf( list_node_value_ptr(tag_node) );
-    tag_node = next_tag_node;
-  }
-  printf("-----------------------------------------------------------------\n");
-}
-
-
 void rms_file_free(rms_file_type * rms_file) {
   rms_file_free_data(rms_file);
   list_free(rms_file->tag_list);
@@ -224,11 +211,12 @@ void rms_file_fread(rms_file_type *rms_file) {
   {
     bool eof_tag = false;
     while (!eof_tag) {
-    rms_tag_type * tag = rms_tag_fread_alloc(stream ,  rms_file->type_map , rms_file->endian_convert , &eof_tag );
-    if (!eof_tag)
-      rms_file_add_tag(rms_file , tag);
-    else
-      rms_tag_free(tag);
+      rms_tag_type * tag = rms_tag_fread_alloc(stream ,  rms_file->type_map , rms_file->endian_convert , &eof_tag );
+      if (!eof_tag)
+	rms_file_add_tag(rms_file , tag);
+      else
+	rms_tag_free(tag);
+      
     }
   }
   fclose(stream);
@@ -244,17 +232,15 @@ void rms_file_fwrite(const rms_file_type * rms_file, const char * filetype) {
     abort();
   }
 
-  printf("Har aapnet: %s \n",rms_file->filename);
-
   if (rms_file->binary)
     rms_util_fwrite_string(rms_binary_header , stream);
   else {
     fprintf(stderr,"%s: Sorry only binary writes implemented ... \n",__func__);
     rms_util_fwrite_string(rms_ascii_header , stream);
   }
-
-  rms_util_fwrite_string(rms_comment1 , stream);
-  rms_util_fwrite_string(rms_comment2 , stream);
+  
+  rms_util_fwrite_comment(rms_comment1 , stream);
+  rms_util_fwrite_comment(rms_comment2 , stream);
   rms_tag_fwrite_filedata(filetype , stream);
 
   {

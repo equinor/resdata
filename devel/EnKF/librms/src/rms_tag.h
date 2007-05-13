@@ -17,5 +17,5 @@ rms_tagkey_type * rms_tag_get_key(const rms_tag_type *, const char *);
 void       	  rms_tag_fwrite_filedata(const char * , FILE *stream);
 void       	  rms_tag_fwrite_eof(FILE *stream);
 void              rms_tag_fwrite(const rms_tag_type * , FILE * );
-
+const char      * rms_tag_name_ref(const rms_tag_type * );
 #endif
