@@ -27,7 +27,7 @@ struct rms_tagkey_struct {
   int                  alloc_size;
   rms_type_enum        rms_type;
   char                *name;
-  char                *data;
+  void                *data;
   bool                 endian_convert;
 };
 
@@ -61,7 +61,7 @@ static void rms_tagkey_alloc_data(rms_tagkey_type *tagkey) {
 
 
 static const rms_tagkey_type * rms_tagkey_copyc(const rms_tagkey_type *tagkey) {
-  rms_tagkey_type *new_tagkey = rms_alloc_empty_tagkey(tagkey->endian_convert);
+  rms_tagkey_type *new_tagkey = rms_tagkey_alloc_empty(tagkey->endian_convert);
   
   new_tagkey->alloc_size     = 0;
   new_tagkey->size           = tagkey->size;
@@ -84,15 +84,18 @@ const void * rms_tagkey_copyc_(const void * _tagkey) {
 }
 
 
-static void rms_set_tagkey_data_size(rms_tagkey_type *tagkey , FILE *stream) {
+static void rms_tagkey_set_data_size(rms_tagkey_type *tagkey , FILE *stream , int strlen) {
 
   if (tagkey->rms_type == rms_char_type) {
-    const long int init_pos = ftell(stream);
-    int i;
-    for (i=0; i < tagkey->size; i++)
-      rms_util_fskip_string(stream);
-    tagkey->data_size = ftell(stream) - init_pos;
-    fseek(stream , init_pos , SEEK_SET);
+    if (stream != NULL) {
+      const long int init_pos = ftell(stream);
+      int i;
+      for (i=0; i < tagkey->size; i++)
+	rms_util_fskip_string(stream);
+      tagkey->data_size = ftell(stream) - init_pos;
+      fseek(stream , init_pos , SEEK_SET);
+    } else 
+      tagkey->data_size = strlen + 1;
   } else
     tagkey->data_size = tagkey->size * tagkey->sizeof_ctype;  
 }
@@ -111,8 +114,15 @@ static void rms_tagkey_fread_data(rms_tagkey_type *tagkey , bool endian_convert 
     fprintf(stderr,"%s: tagkey:  %s \n",__func__ , tagkey->name);
     abort();
   }
-  if (endian_convert)
-    util_endian_flip_vector(tagkey->data , tagkey->sizeof_ctype , tagkey->size);
+  if (endian_convert) 
+    if (tagkey->sizeof_ctype > 1)
+      util_endian_flip_vector(tagkey->data , tagkey->sizeof_ctype , tagkey->size);
+  
+  if (tagkey->rms_type == rms_int_type)
+    printf("%d \n",((int *)tagkey->data)[0]);
+  else
+    printf("%s \n",(char *) tagkey->data);
+  
 }
 
 
@@ -122,7 +132,7 @@ void rms_tagkey_set_data(rms_tagkey_type * tagkey , const void * data) {
 
 
 static void rms_fskip_tagkey_data(rms_tagkey_type *tagkey , FILE *stream) {
-  rms_set_tagkey_data_size(tagkey , stream);
+  rms_tagkey_set_data_size(tagkey , stream , -1);
   fseek(stream , tagkey->data_size , SEEK_CUR);
 }
 
@@ -138,6 +148,8 @@ static void rms_fread_tagkey_header(rms_tagkey_type *tagkey , FILE *stream, hash
   } else
     is_array = false;
   
+  printf("   %s - ",type_string); fflush(stdout);
+
   {
     __rms_type * rms_t   = hash_get(type_map , type_string);
     tagkey->rms_type     = rms_t->rms_type;
@@ -145,12 +157,15 @@ static void rms_fread_tagkey_header(rms_tagkey_type *tagkey , FILE *stream, hash
   }
 
   tagkey->name = realloc(tagkey->name , rms_util_fread_strlen(stream) + 1);
+
   rms_util_fread_string(tagkey->name , 0 , stream);
+  printf("%s - ",tagkey->name); fflush(stdout);
   if (is_array)
     fread(&tagkey->size , 1 , sizeof tagkey->size, stream);
   else
     tagkey->size = 1;
-  rms_set_tagkey_data_size(tagkey , stream);
+  printf("%d ",tagkey->size);  fflush(stdout);
+  rms_tagkey_set_data_size(tagkey , stream , -1);
 }
 
 
@@ -165,14 +180,14 @@ static void rms_fread_realloc_tagkey(rms_tagkey_type *tagkey , bool endian_conve
 
 
 static rms_tagkey_type * rms_fread_alloc_tagkey(bool endian_convert , FILE *stream , hash_type * type_map) {
-  rms_tagkey_type *tagkey = rms_alloc_empty_tagkey(endian_convert);
+  rms_tagkey_type *tagkey = rms_tagkey_alloc_empty(endian_convert);
   rms_fread_realloc_tagkey(tagkey , endian_convert , stream , type_map );
   return tagkey;
 }
 
 
 static void rms_fskip_tagkey(FILE *stream , hash_type * type_map) {
-  rms_tagkey_type *tagkey = rms_alloc_empty_tagkey(false);
+  rms_tagkey_type *tagkey = rms_tagkey_alloc_empty(false);
   rms_fread_tagkey_header(tagkey , stream , type_map);
   rms_fskip_tagkey_data(tagkey , stream);
   rms_free_tagkey(tagkey);
@@ -180,9 +195,9 @@ static void rms_fskip_tagkey(FILE *stream , hash_type * type_map) {
 
 
 static void rms_tagkey_fwrite_data(const rms_tagkey_type * tagkey , FILE *stream) {
-  int elm = fwrite(tagkey->data , tagkey->sizeof_ctype , tagkey->size , stream);
-  if (elm != tagkey->size) {
-    fprintf(stderr,"%s: failed to write %d elements to file - aborting \n",__func__ , tagkey->size);
+  int elm = fwrite(tagkey->data , 1 , tagkey->data_size , stream);
+  if (elm != tagkey->data_size) {
+    fprintf(stderr,"%s: failed to write %d bytes to file [tagkey:%s] - aborting \n",__func__ , tagkey->data_size , tagkey->name);
     abort();
   }
 }
@@ -225,7 +240,7 @@ bool rms_tagkey_char_eq(const rms_tagkey_type *tagkey , const char *keyvalue) {
 }
 
 
-rms_tagkey_type * rms_alloc_empty_tagkey(bool endian_convert) {
+rms_tagkey_type * rms_tagkey_alloc_empty(bool endian_convert) {
   
   rms_tagkey_type *tagkey = malloc(sizeof *tagkey);
   tagkey->alloc_size 	  = 0;
@@ -238,7 +253,7 @@ rms_tagkey_type * rms_alloc_empty_tagkey(bool endian_convert) {
 
 
 static rms_tagkey_type * rms_tagkey_alloc_initialized(const char * name , int size , rms_type_enum rms_type , bool endian_convert) {
-  rms_tagkey_type *tagkey = rms_alloc_empty_tagkey(endian_convert);
+  rms_tagkey_type *tagkey = rms_tagkey_alloc_empty(endian_convert);
   tagkey->size         	  = size;
   tagkey->rms_type     	  = rms_type;
   tagkey->sizeof_ctype 	  = rms_type_size[rms_type];
@@ -271,16 +286,27 @@ rms_tagkey_type * rms_tagkey_alloc_byteswap() {
 }
 
 
+rms_tagkey_type * rms_tagkey_alloc_filetype(const char * filetype) {
+  rms_tagkey_type *tagkey = rms_tagkey_alloc_initialized("filetype" , 1 , rms_char_type , false);
+  rms_tagkey_set_data_size(tagkey , NULL , strlen(filetype));
+  rms_tagkey_alloc_data(tagkey);
+  sprintf(tagkey->data , "%s" , filetype);
+  return tagkey;
+}
+
+
 rms_tagkey_type * rms_tagkey_alloc_creationDate() {
-  const int len = strlen("08/05/2007 08:31:39") + 3;
+  const int len = strlen("08/05/2007 08:31:39");
   struct tm ts;
   time_t now;
-  rms_tagkey_type *tagkey = rms_tagkey_alloc_initialized("creationDate" , len , rms_char_type , false);
+  rms_tagkey_type *tagkey = rms_tagkey_alloc_initialized("creationDate" , 1 , rms_char_type , false);
   
   now = time(NULL);
   localtime_r(&now , &ts);
+
+  rms_tagkey_set_data_size(tagkey , NULL , len);
   rms_tagkey_alloc_data(tagkey);
-  sprintf(tagkey->data , "\"%02d/%02d/%4d %02d:%02d:%02d\"" , 
+  sprintf(tagkey->data , "%02d/%02d/%4d %02d:%02d:%02d" , 
 	  ts.tm_mday, 
 	  ts.tm_mon,
 	  ts.tm_year + 1900, 
@@ -292,10 +318,3 @@ rms_tagkey_type * rms_tagkey_alloc_creationDate() {
 }
 
 
-rms_tagkey_type * rms_tagkey_alloc_filetype(const char * filetype) {
-  rms_tagkey_type *tagkey = rms_tagkey_alloc_initialized("filetype" , strlen(filetype) + 3 , rms_char_type , false);
-  rms_tagkey_alloc_data(tagkey);
-  sprintf(tagkey->data , "\"%s\"" , filetype);
-
-  return tagkey;
-}

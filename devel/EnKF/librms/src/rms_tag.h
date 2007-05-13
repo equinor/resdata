@@ -14,7 +14,8 @@ void           	  rms_tag_free(rms_tag_type *);
 rms_tag_type    * rms_tag_fread_alloc(FILE *, hash_type *, bool , bool *);
 bool           	  rms_tag_name_eq(const rms_tag_type *, const char * , const char *, const char *);
 rms_tagkey_type * rms_tag_get_key(const rms_tag_type *, const char *);
-rms_tag_type    * rms_tag_alloc_filedata(const char * );
+void       	  rms_tag_fwrite_filedata(const char * , FILE *stream);
+void       	  rms_tag_fwrite_eof(FILE *stream);
 void              rms_tag_fwrite(const rms_tag_type * , FILE * );
 
 #endif

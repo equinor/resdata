@@ -28,8 +28,7 @@ static const char * rms_comment2          = "Creator: RMS - Reservoir Modelling 
 
 
 struct rms_file_struct {
-  const char * filename;
-  FILE       * stream;
+  char       * filename;
   bool         endian_convert;
   bool         binary;
   hash_type  * type_map;
@@ -44,10 +43,10 @@ struct rms_file_struct {
 
 
 
-static bool rms_binary(const rms_file_type *rms_file) {
+static bool rms_file_binary(const rms_file_type *rms_file , FILE *stream) {
   bool binary;
   char filetype[9];
-  rms_util_fread_string( filetype , 9 , rms_file->stream);
+  rms_util_fread_string( filetype , 9 , stream);
 
   if (strncmp(filetype , rms_binary_header , 8) == 0)
     binary = true;
@@ -91,96 +90,75 @@ rms_tag_type * rms_file_get_tag(const rms_file_type *rms_file , const char *tagn
 
 
 
-static rms_file_type * rms_alloc_file(const char *filename) {
-  rms_file_type *rms_file = malloc(sizeof *rms_file);
-  rms_file->filename     = util_alloc_string_copy(filename);
+rms_file_type * rms_file_alloc(const char *filename, bool create_binary) {
+  rms_file_type *rms_file   = malloc(sizeof *rms_file);
   rms_file->endian_convert  = false;
-  rms_file->type_map  	 = hash_alloc(10);
-  rms_file->tag_list  	 = list_alloc();
+  rms_file->type_map  	    = hash_alloc(10);
+  rms_file->tag_list  	    = list_alloc();
 
   hash_insert_hash_owned_ref(rms_file->type_map , "byte"   , rms_type_alloc(rms_byte_type ,    1) ,  rms_type_free);
   hash_insert_hash_owned_ref(rms_file->type_map , "bool"   , rms_type_alloc(rms_bool_type,     1) ,  rms_type_free);
   hash_insert_hash_owned_ref(rms_file->type_map , "int"    , rms_type_alloc(rms_int_type ,     4) ,  rms_type_free);
   hash_insert_hash_owned_ref(rms_file->type_map , "float"  , rms_type_alloc(rms_float_type  ,  4) ,  rms_type_free);
   hash_insert_hash_owned_ref(rms_file->type_map , "double" , rms_type_alloc(rms_double_type ,  8) ,  rms_type_free);
-  hash_insert_hash_owned_ref(rms_file->type_map , "char"   , rms_type_alloc(rms_char_type   , -1) ,  rms_type_free);
+  hash_insert_hash_owned_ref(rms_file->type_map , "char"   , rms_type_alloc(rms_char_type   , -1) ,  rms_type_free);  /* Char are a f*** mix of vector and scalar */
   
+  rms_file->filename = NULL;
+  rms_file_set_filename(rms_file , filename , create_binary);
   return rms_file;
 }
 
 
 
-static void rms_init_existing_file(rms_file_type * rms_file) {
-  if (util_file_exists(rms_file->filename)) {
-    if ( (rms_file->stream = fopen(rms_file->filename , "r")) == NULL) {
-      fprintf(stderr,"%s: failed to open: %s - aborting \n",__func__ , rms_file->filename);
-      abort();
-    }
-  } else {
-    fprintf(stderr,"%s file:%s does not exist - aborting \n",__func__ , rms_file->filename);
-    abort();
-  }
+
+
+
+void rms_file_set_filename(rms_file_type * rms_file , const char *filename , bool create_binary) {
+  rms_file->filename = util_realloc_string_copy(rms_file->filename , filename);
+  rms_file->binary   = create_binary;
+}
+
+
+static void rms_file_delete_tag(rms_file_type * rms_file , list_node_type *tag_node) {
+  rms_tag_free( list_node_value_ptr(tag_node) );
+  list_del_node(rms_file->tag_list , tag_node);
+}
+
+
+void rms_file_free_data(rms_file_type * rms_file) {
+  list_node_type    *tag_node , *next_tag_node;
+  list_type         *tag_list = rms_file->tag_list;
     
-  
-  rms_file->binary = rms_binary(rms_file);
-  if (!rms_file->binary) {
-    fprintf(stderr,"%s only binary files implemented - aborting \n",__func__);
-    abort();
-  }
-  /* Skipping two comment lines ... */
-  rms_util_fskip_string(rms_file->stream);
-  rms_util_fskip_string(rms_file->stream);
-  {
-    bool eof_tag;
-    rms_tag_type    * filedata_tag = rms_tag_fread_alloc(rms_file->stream , rms_file->type_map , rms_file->endian_convert , &eof_tag);
-    rms_tagkey_type * byteswap_key = rms_tag_get_key(filedata_tag , "byteswaptest");
-    int byteswap_value             = *( int *) rms_tagkey_get_data_ref(byteswap_key);
-    if (byteswap_value == 1)
-      rms_file->endian_convert = false;
-    else
-      rms_file->endian_convert = true;
-    rms_tag_free(filedata_tag);
-  }
-}
-
-
-static void rms_init_new_file(rms_file_type * rms_file , bool binary) {
-  rms_file->binary = binary;
-  if (!rms_file->binary) {
-    fprintf(stderr,"%s only binary files implemented - aborting \n",__func__);
-    abort();
+  tag_node = list_get_head(tag_list);
+  while (tag_node) {
+    next_tag_node = list_node_get_next(tag_node);
+    rms_file_delete_tag(rms_file , tag_node);
+    tag_node = next_tag_node;
   }
 }
 
 
 
-rms_file_type * rms_open(const char *filename , bool new_file , bool create_binary) {
-  rms_file_type * rms_file = rms_alloc_file(filename);
-  if (new_file)
-    rms_init_new_file(rms_file , create_binary);
-  else 
-    rms_init_existing_file(rms_file);
-  return rms_file;
-}
-
-
-void rms_close(rms_file_type * rms_file) {
-  hash_free(rms_file->type_map);
-  {
-    list_node_type    *tag_node , *next_tag_node;
-    list_type         *tag_list = rms_file->tag_list;
+void rms_file_list_tags(const rms_file_type * rms_file) {
+  list_node_type    *tag_node , *next_tag_node;
+  list_type         *tag_list = rms_file->tag_list;
     
-    tag_node = list_get_head(tag_list);
-    while (tag_node) {
-      next_tag_node = list_node_get_next(tag_node);
-      rms_tag_free( list_node_value_ptr(tag_node) );
-      tag_node = next_tag_node;
-    }
+  tag_node = list_get_head(tag_list);
+  printf("-----------------------------------------------------------------\n");
+  while (tag_node) {
+    next_tag_node = list_node_get_next(tag_node);
+    rms_tag_printf( list_node_value_ptr(tag_node) );
+    tag_node = next_tag_node;
   }
+  printf("-----------------------------------------------------------------\n");
+}
 
+
+void rms_file_free(rms_file_type * rms_file) {
+  rms_file_free_data(rms_file);
   list_free(rms_file->tag_list);
-  free( (char *) rms_file->filename);
-  fclose(rms_file->stream); 
+  hash_free(rms_file->type_map);
+  free(rms_file->filename);
   free(rms_file);
 }
 
@@ -208,17 +186,55 @@ void rms_file_assert_dimensions(const rms_file_type *rms_file , int nx , int ny 
 }
 
 
-void rms_file_load(rms_file_type *rms_file) {
-  bool eof_tag = false;
+void rms_file_fread(rms_file_type *rms_file) {
+  FILE *stream;
+  if (util_file_exists(rms_file->filename)) {
+    if ( (stream = fopen(rms_file->filename , "r")) == NULL) {
+      fprintf(stderr,"%s: failed to open: %s - aborting \n",__func__ , rms_file->filename);
+      abort();
+    }
+  } else {
+    fprintf(stderr,"%s file:%s does not exist - aborting \n",__func__ , rms_file->filename);
+    abort();
+  }
+    
   
-  while (!eof_tag) {
-    rms_tag_type * tag = rms_tag_fread_alloc(rms_file->stream ,  rms_file->type_map , rms_file->endian_convert , &eof_tag );
+  rms_file->binary = rms_file_binary(rms_file , stream);
+  if (!rms_file->binary) {
+    fprintf(stderr,"%s only binary files implemented - aborting \n",__func__);
+    abort();
+  }
+  /* Skipping two comment lines ... */
+  rms_util_fskip_string(stream);
+  rms_util_fskip_string(stream);
+
+  {
+    bool eof_tag;
+    rms_tag_type    * filedata_tag = rms_tag_fread_alloc(stream , rms_file->type_map , rms_file->endian_convert , &eof_tag);
+    rms_tagkey_type * byteswap_key = rms_tag_get_key(filedata_tag , "byteswaptest");
+    int byteswap_value             = *( int *) rms_tagkey_get_data_ref(byteswap_key);
+    if (byteswap_value == 1)
+      rms_file->endian_convert = false;
+    else
+      rms_file->endian_convert = true;
+    rms_tag_free(filedata_tag);
+  }
+
+  /* The main read loop */
+  {
+    bool eof_tag = false;
+    while (!eof_tag) {
+    rms_tag_type * tag = rms_tag_fread_alloc(stream ,  rms_file->type_map , rms_file->endian_convert , &eof_tag );
     if (!eof_tag)
       rms_file_add_tag(rms_file , tag);
     else
       rms_tag_free(tag);
+    }
   }
+  fclose(stream);
 }
+
+
 
 
 void rms_file_fwrite(const rms_file_type * rms_file, const char * filetype) {
@@ -227,18 +243,20 @@ void rms_file_fwrite(const rms_file_type * rms_file, const char * filetype) {
     fprintf(stderr,"%s: failed to open:%s for writing - aborting \n",__func__ , rms_file->filename);
     abort();
   }
+
+  printf("Har aapnet: %s \n",rms_file->filename);
+
   if (rms_file->binary)
     rms_util_fwrite_string(rms_binary_header , stream);
-  else
+  else {
+    fprintf(stderr,"%s: Sorry only binary writes implemented ... \n",__func__);
     rms_util_fwrite_string(rms_ascii_header , stream);
+  }
+
   rms_util_fwrite_string(rms_comment1 , stream);
   rms_util_fwrite_string(rms_comment2 , stream);
-  {
-    rms_tag_type * filedata = rms_tag_alloc_filedata(filetype);
-    rms_tag_fwrite(filedata , stream);
-    rms_tag_free(filedata);
-  }
-  
+  rms_tag_fwrite_filedata(filetype , stream);
+
   {
     list_node_type * tag_node = list_get_head(rms_file->tag_list);
     while (tag_node != NULL) {
@@ -248,6 +266,7 @@ void rms_file_fwrite(const rms_file_type * rms_file, const char * filetype) {
     }
   }
 
+  rms_tag_fwrite_eof(stream);
   fclose(stream);
 }
 

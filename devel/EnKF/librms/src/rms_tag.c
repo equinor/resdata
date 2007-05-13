@@ -3,6 +3,7 @@
 #include <string.h>
 #include <hash.h>
 #include <list.h>
+#include <util.h>
 #include <rms_tag.h>
 #include <rms_util.h>
 #include <rms_tagkey.h>
@@ -15,7 +16,7 @@ static const char * rms_endtag_string     = "endtag";
 
 
 struct rms_tag_struct {
-  const char *name;
+  char       *name;
   list_type  *key_list;
   hash_type  *key_hash;
 };
@@ -23,16 +24,20 @@ struct rms_tag_struct {
 /*****************************************************************/
 
 
-rms_tag_type * rms_alloc_empty_tag() {
+rms_tag_type * rms_tag_alloc(const char * name) {
   rms_tag_type *tag = malloc(sizeof *tag);
   tag->name = NULL;
   tag->key_hash = hash_alloc(10);
   tag->key_list = list_alloc();
+  if (name != NULL)
+    tag->name = util_alloc_string_copy(name);
   return tag;
 }
 
+
 void rms_tag_free(rms_tag_type *tag) {
-  free( (char *) tag->name);
+  printf("Skal ta free:%s \n",tag->name);
+  free(tag->name);
   hash_free(tag->key_hash);
   list_free(tag->key_list);
   free(tag);
@@ -123,20 +128,22 @@ static bool rms_tag_at_endtag(FILE *stream) {
 
 void rms_fread_tag(rms_tag_type *tag, FILE *stream , hash_type *type_map , bool endian_convert , bool *at_eof) {
   rms_fread_tag_header(tag , stream , at_eof);
+  printf("<%s>\n",tag->name);
   if (!*at_eof) {
-    rms_tagkey_type *tagkey = rms_alloc_empty_tagkey(endian_convert);
+    rms_tagkey_type *tagkey = rms_tagkey_alloc_empty(endian_convert);
     while (! rms_tag_at_endtag(stream)) {
       rms_tagkey_load(tagkey , endian_convert , stream , type_map);
       rms_tag_add_tagkey(tag , tagkey);
     }
     rms_free_tagkey(tagkey);
   }
+  printf("</%s>\n",tag->name);
 }
 
 
 
 rms_tag_type * rms_tag_fread_alloc(FILE *stream , hash_type *type_map , bool endian_convert , bool *at_eof) {
-  rms_tag_type *tag = rms_alloc_empty_tag();
+  rms_tag_type *tag = rms_tag_alloc(NULL);
   rms_fread_tag(tag , stream , type_map , endian_convert , at_eof);
   return tag;
 }
@@ -158,14 +165,27 @@ void rms_tag_fwrite(const rms_tag_type * tag , FILE * stream) {
 }
 
 
-rms_tag_type * rms_tag_alloc_filedata(const char * filetype) {
-  rms_tag_type * tag = rms_alloc_empty_tag();
-  tag->name = malloc(strlen("filedata") + 1);
-  sprintf((char *) tag->name , "filedata");
 
+void rms_tag_fwrite_filedata(const char * filetype, FILE *stream) {
+  rms_tag_type * tag = rms_tag_alloc("filedata");
+  
   rms_tag_add_tagkey(tag , rms_tagkey_alloc_byteswap());
   rms_tag_add_tagkey(tag , rms_tagkey_alloc_filetype(filetype));
   rms_tag_add_tagkey(tag , rms_tagkey_alloc_creationDate());
 
-  return tag;
+  rms_tag_fwrite(tag , stream);
+  rms_tag_free(tag);
+}
+
+
+
+void rms_tag_fwrite_eof(FILE *stream) {
+  rms_tag_type * tag = rms_tag_alloc("eof");
+  rms_tag_fwrite(tag , stream);
+  rms_tag_free(tag);
+}
+
+
+void rms_tag_printf(const rms_tag_type * tag) {
+  printf("%s \n",tag->name);
 }

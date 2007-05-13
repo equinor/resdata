@@ -25,6 +25,7 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_MOD_PATH)
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
+	gcc -Wall -g -m32 -I./ -I../../libhash/include -I../../libutil/include rms_test.c -o rms.x -L./ -L../../libutil/lib -L../../libhash/lib -lrms -lutil -util -lhash
 
 
 $(LIB): $(OBJECTS)

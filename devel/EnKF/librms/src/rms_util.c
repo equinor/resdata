@@ -98,7 +98,8 @@ bool rms_util_fread_string(char *string , int max_length , FILE *stream) {
 
 
 void rms_util_fwrite_string(const char * string , FILE *stream) {
-  fwrite(string , sizeof * string , strlen(string) + 1 , stream);
+  fwrite(string , sizeof * string , strlen(string) , stream);
+  fputc('\0' , stream);
 }
 
 
