@@ -18,4 +18,5 @@ list_node_type * list_append_ref(list_type *list , const void *);
 list_node_type * list_append_list_owned_ref(list_type *, const void *, del_type *);
 int              list_get_size(const list_type *);
 list_node_type * list_append_string_copy(list_type *, const char * );
+list_node_type * list_append_copy(list_type *, const void *, copyc_type *, del_type *);
 #endif

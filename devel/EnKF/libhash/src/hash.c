@@ -172,7 +172,16 @@ static void hash_resize(hash_type *hash, int new_size) {
     }
   }
   
+  /* 
+     Only freeing the table structure, *NOT* calling the node_free() functions,. which
+     happens when hash_sll_free() is called.
+  */
+  for (i=0; i < hash->size; i++) 
+    free(hash->table[i]);
+  
   free(hash->table);
+  
+
   hash->size     = new_size;
   hash->table    = new_table;
 }
@@ -249,6 +258,17 @@ void hash_insert_ref(hash_type *hash , const char *key , const void *value) {
   node = hash_node_alloc_new(key , value , NULL , NULL , hash->hashf , hash->size );
   hash_insert_node(hash , node);
 }
+
+void hash_insert_hash_owned_ref(hash_type *hash , const char *key , const void *value , del_type *del) {
+  hash_node_type *node;
+  if (del == NULL) {
+    fprintf(stderr,"%s: must provide delete operator for insert hash_owned_ref - aborting \n",__func__);
+    abort();
+  }
+  node = hash_node_alloc_new(key , value , NULL , del , hash->hashf , hash->size);
+  hash_insert_node(hash , node);
+}
+
 
 void hash_insert_managed_ref(hash_type *hash , const char *key , const void *value , del_type *del) {
   hash_node_type *node;

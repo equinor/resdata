@@ -32,6 +32,7 @@ hash_node_type  * hash_iter_init(const hash_type *);
 hash_node_type  * hash_iter_next(const hash_type *, const hash_node_type * );
 char           ** hash_alloc_ordered_keylist(const hash_type *hash);
 char           ** hash_alloc_sorted_keylist(const hash_type *);
+void              hash_insert_hash_owned_ref(hash_type *, const char * , const void *, del_type *);
 
 
 HASH_GET_SCALAR(hash_get_int       , int);

@@ -11,17 +11,16 @@ struct hash_sll_struct {
 
 
 static hash_sll_type * hash_sll_alloc(void) {
-  hash_sll_type * hash_sll;
-  hash_sll = malloc(sizeof *hash_sll);
+  hash_sll_type * hash_sll = malloc(sizeof *hash_sll);
   hash_sll->length = 0;
   hash_sll->head   = NULL;
   return hash_sll;
 }
 
 hash_sll_type **hash_sll_alloc_table(int size) {
+  int i;
   hash_sll_type **table;
   table = calloc(size , sizeof *table);
-  int i;
   for (i=0; i<size; i++)
     table[i] = hash_sll_alloc();
   return table;
@@ -67,6 +66,7 @@ void hash_sll_add_node(hash_sll_type *hash_sll , hash_node_type *new_node) {
   hash_sll->head = new_node;
   hash_sll->length++;
 }
+
 
 
 void hash_sll_free(hash_sll_type *hash_sll) {

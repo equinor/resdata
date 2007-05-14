@@ -24,7 +24,7 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_LIB_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-
+	gcc -m32 -Wall -g -I./ hash_test.c -o hash.x -L./ -L../../libutil/lib -lhash -lutil
 
 $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
