@@ -60,7 +60,7 @@ typedef struct  {
 */
   
   
-static void comp_sched_init_conn_factor(comp_type * comp , const float *permx_field, const float * permz_field , const int * dims , const int * index_field) {
+static void comp_sched_init_conn_factor(comp_type * comp , const float *permx_field, const float * permz_field , const int * dims , const int * index_field , bool *OK) {
   const int i         = comp->i  - 1;
   const int j         = comp->j  - 1;
   const int k         = comp->k1 - 1;
@@ -70,21 +70,28 @@ static void comp_sched_init_conn_factor(comp_type * comp , const float *permx_fi
   const float Kx   = permx_field[index];
   const float Ky   = permx_field[index];
   const float Kz   = permz_field[index];
-
+  float Keff;
+  
   switch (comp->well_dir) {
   case(X):
-    comp->conn_factor__ = comp->conn_factor / (sqrt(Ky * Kz));
+    Keff = sqrt(Ky * Kz);
     break;
   case(Y):
-    comp->conn_factor__ = comp->conn_factor / (sqrt(Kx * Kz));
+    Keff = sqrt(Kx * Kz);
     break;
   case(Z):
-    comp->conn_factor__ = comp->conn_factor / (sqrt(Kx * Ky));
+    Keff = sqrt(Kx * Ky);
     break;
   default:
     fprintf(stderr,"%s: comp->well_dir = %d - undefined INTERNAL ERROR - aborting \n", __func__ , comp->well_dir);
     abort();
   }
+  if (Keff == 0) {
+    fprintf(stderr,"%s: In well:%s (cell: %d, %d, %d) the effective permeability: is zero - can *not* update connection factor for this cell. K = (%g,%g,%g), Cf = %g \n",__func__ , comp->well , (i+1) , (j+1) , (k+1),
+	    Kx,Ky,Kz,comp->conn_factor);
+    comp->conn_factor__ = 0;
+  } else
+    comp->conn_factor__ = comp->conn_factor / Keff;
 }
 
 
@@ -99,17 +106,21 @@ static void comp_sched_set_conn_factor(comp_type * comp , const float *permx_fie
   const float Ky      = permx_field[index];
   const float Kz      = permz_field[index];
   
+  float Keff = 0;
+  
   switch (comp->well_dir) {
   case(X):
-    comp->conn_factor = comp->conn_factor__ * (sqrt(Ky * Kz));
+    Keff = sqrt(Ky * Kz);
     break;
   case(Y):
-    comp->conn_factor = comp->conn_factor__ * (sqrt(Kx * Kz));
+    Keff = sqrt(Kx * Kz);
     break;
   case(Z):
-    comp->conn_factor = comp->conn_factor__ * (sqrt(Kx * Ky));
+    Keff = sqrt(Kx * Ky);
     break;
   }
+  comp->conn_factor = comp->conn_factor__ * Keff;
+
 }
 
 
@@ -118,20 +129,20 @@ static void comp_sched_set_conn_factor(comp_type * comp , const float *permx_fie
 
 static void comp_sched_fprintf(const comp_type * comp , FILE *stream) {
   fprintf(stream , " ");
-  sched_util_fprintf_qst(comp->def[0] , comp->well 	    , 8  , stream);
-  sched_util_fprintf_int(comp->def[1] , comp->i    	    , 4  , stream);
-  sched_util_fprintf_int(comp->def[2] , comp->j    	    , 4  , stream);
-  sched_util_fprintf_int(comp->def[3] , comp->k1   	    , 4  , stream);
-  sched_util_fprintf_int(comp->def[4] , comp->k2   	    , 4  , stream);
-  sched_util_fprintf_qst(comp->def[5] , comp->comp_string   , 4  , stream);
-  sched_util_fprintf_int(comp->def[6] , comp->sat_table     , 6  ,     stream);
-  sched_util_fprintf_dbl(comp->def[7] , comp->conn_factor   , 12 , 6 , stream);
-  sched_util_fprintf_dbl(comp->def[8] , comp->well_diameter , 12 , 6 , stream);
-  sched_util_fprintf_dbl(comp->def[9] , comp->eff_perm      , 12 , 6 , stream);
-  sched_util_fprintf_dbl(comp->def[10], comp->skin_factor   , 12 , 6 , stream);
-  sched_util_fprintf_dbl(comp->def[11], comp->D_factor      , 12 , 6 , stream);
+  sched_util_fprintf_qst(comp->def[0] , comp->well 	      , 8  , stream);
+  sched_util_fprintf_int(comp->def[1] , comp->i    	      , 4  , stream);
+  sched_util_fprintf_int(comp->def[2] , comp->j    	      , 4  , stream);
+  sched_util_fprintf_int(comp->def[3] , comp->k1   	      , 4  , stream);
+  sched_util_fprintf_int(comp->def[4] , comp->k2   	      , 4  , stream);
+  sched_util_fprintf_qst(comp->def[5] , comp->comp_string     , 4  , stream);
+  sched_util_fprintf_int(comp->def[6] , comp->sat_table       , 6  ,     stream);
+  sched_util_fprintf_dbl(comp->def[7] , comp->conn_factor     , 9  , 3 , stream);
+  sched_util_fprintf_dbl(comp->def[8] , comp->well_diameter   , 9  , 3 , stream);
+  sched_util_fprintf_dbl(comp->def[9] , comp->eff_perm        , 9  , 3 , stream);
+  sched_util_fprintf_dbl(comp->def[10], comp->skin_factor     , 9  , 3 , stream);
+  sched_util_fprintf_dbl(comp->def[11], comp->D_factor        , 9  , 3 , stream);
   sched_util_fprintf_qst(comp->def[12], comp->well_dir_string , 2  , stream);
-  sched_util_fprintf_dbl(comp->def[13], comp->r0            , 12 , 6 , stream);
+  sched_util_fprintf_dbl(comp->def[13], comp->r0              , 9  , 3 , stream);
   fprintf(stream , " /\n");
 }
 
@@ -271,13 +282,13 @@ static comp_type * comp_sched_fread_alloc(int kw_size , FILE * stream) {
 
 
 
-void sched_kw_compdat_init_conn_factor(sched_kw_compdat_type * kw , const ecl_kw_type *permx_kw, const ecl_kw_type * permz_kw , const int * dims , const int * index_field) {
+void sched_kw_compdat_init_conn_factor(sched_kw_compdat_type * kw , const ecl_kw_type *permx_kw, const ecl_kw_type * permz_kw , const int * dims , const int * index_field , bool *OK) {
   float *permx = ecl_kw_get_data_ref(permx_kw);
   float *permz = ecl_kw_get_data_ref(permz_kw);
   list_node_type *comp_node = list_get_head(kw->comp_list);
   while (comp_node != NULL) {
     comp_type * comp = list_node_value_ptr(comp_node);
-    comp_sched_init_conn_factor(comp , permx , permz , dims , index_field);
+    comp_sched_init_conn_factor(comp , permx , permz , dims , index_field , OK);
     comp_node = list_node_get_next(comp_node);
   }
 }
@@ -321,7 +332,7 @@ void sched_kw_compdat_add_line(sched_kw_compdat_type * kw , const char * line) {
   int tokens;
   char **token_list;
   
-  sched_util_parse_line(line , &tokens , &token_list , kw->kw_size);
+  sched_util_parse_line(line , &tokens , &token_list , kw->kw_size , NULL);
   {
     comp_type * comp = comp_alloc(kw->kw_size , (const char **) token_list);
     list_append_list_owned_ref(kw->comp_list , comp , comp_free__);

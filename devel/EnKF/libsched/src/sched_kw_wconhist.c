@@ -8,9 +8,16 @@
 #include <sched_util.h>
 #include <stdbool.h>
 
+
 typedef enum {LRAT , ORAT , RESV}  well_control_type;       
 typedef enum {OPEN , STOP , SHUT}  well_state_type;
 static const double RATE_ERROR = -1.0;
+
+static const int ORAT_index = 3;
+static const int WRAT_index = 4;
+static const int GRAT_index = 5;
+static const int THP_index  = 8;
+static const int BHP_index  = 9;
 
 struct sched_kw_wconhist_struct {
   int        kw_size;
@@ -123,8 +130,18 @@ static void rate_sched_fprintf(const rate_type * rate , FILE *stream) {
 
 
 static void rate_sched_fprintf_rates(const rate_type * rate , FILE *stream) {
-  fprintf(stream , "  %8s   %16.4f   %16.4f   %16.4f \n",rate->well , rate->ORAT , rate->WRAT , rate->GRAT);
+  fprintf(stream , "  %8s %15.3f %15.3f %15.3f ",rate->well , rate->ORAT , rate->WRAT , rate->GRAT);
+  if (rate->def[THP_index])
+    fprintf(stream , "%15.3f ",RATE_ERROR);
+  else
+    fprintf(stream , "%15.3f ",rate->THP);
+  if (rate->def[BHP_index])
+    fprintf(stream , "%15.3f ",RATE_ERROR);
+  else
+    fprintf(stream , "%15.3f ",rate->BHP);
+  fprintf(stream,"\n");
 }
+
 
 
 static void rate_set_from_string(rate_type * node , int kw_size , const char **token_list) {
@@ -224,7 +241,7 @@ void sched_kw_wconhist_add_line(sched_kw_wconhist_type * kw , const char * line)
   int tokens;
   char **token_list;
 
-  sched_util_parse_line(line , &tokens , &token_list , kw->kw_size);
+  sched_util_parse_line(line , &tokens , &token_list , kw->kw_size , NULL);
   {
     rate_type * rate = rate_alloc(kw->kw_size , (const char **) token_list);
     list_append_list_owned_ref(kw->rate_list , rate , rate_free__);
@@ -277,11 +294,7 @@ void sched_kw_wconhist_fprintf_rates(const sched_kw_wconhist_type * kw , const c
   printf("%04d",current_date_nr); fflush(stdout);
   sprintf(file , "%s/%04d/%s" , _obs_path , current_date_nr , obs_file);
   util_make_path(obs_path);
-  stream = fopen(file , "w"); 
-  if (stream == NULL) {
-    fprintf(stderr,"%s: failed to open:%s for writing - abortnig \n",__func__ , file);
-    abort();
-  }
+  stream = util_fopen(file , false);
   {
     list_node_type *rate_node = list_get_head(kw->rate_list);
     while (rate_node != NULL) {

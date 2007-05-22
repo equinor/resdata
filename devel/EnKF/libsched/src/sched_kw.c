@@ -6,8 +6,9 @@
 #include <sched_kw_compdat.h>
 #include <sched_kw_wconhist.h>
 #include <sched_kw_dates.h>
+#include <sched_kw_tstep.h>
 #include <sched_kw_untyped.h>
-
+#include <sched_kw_cmd.h>
 
 
 
@@ -25,7 +26,7 @@ struct sched_kw_struct {
 void * sched_kw_get_data_ref(const sched_kw_type * kw) {return kw->data; }
 sched_type_enum sched_kw_get_type(const sched_kw_type * kw) { return kw->type; }
 
-sched_kw_type * sched_kw_alloc(const char * kw_name , sched_type_enum type, bool one_line_kw, int * next_date_nr) {
+sched_kw_type * sched_kw_alloc(const char * kw_name , sched_type_enum type, bool one_line_kw, int * next_date_nr , double * acc_days_ptr) {
   
   sched_kw_type *kw = malloc(sizeof *kw);
   kw->type = type;
@@ -40,8 +41,14 @@ sched_kw_type * sched_kw_alloc(const char * kw_name , sched_type_enum type, bool
   case(DATES):
     kw->data = sched_kw_dates_alloc(next_date_nr);
     break;
+  case(TSTEP):
+    kw->data = sched_kw_tstep_alloc(next_date_nr , acc_days_ptr);
+    break;
   case(UNTYPED):
     kw->data = sched_kw_untyped_alloc(kw_name , one_line_kw);
+    break;
+  case(COMMAND):
+    kw->data = sched_kw_cmd_alloc(kw_name );
     break;
   }
   return kw;
@@ -60,8 +67,14 @@ void sched_kw_free(sched_kw_type * kw) {
   case(DATES):
     sched_kw_dates_free(kw->data);
     break;
+  case(TSTEP):
+    sched_kw_tstep_free(kw->data);
+    break;
   case(UNTYPED):
     sched_kw_untyped_free(kw->data);
+    break;
+  case(COMMAND):
+    sched_kw_cmd_free(kw->data);
     break;
   }
   free(kw);
@@ -74,7 +87,7 @@ void sched_kw_free__(void * void_kw) {
 
 
 
-void sched_kw_add_line(sched_kw_type * kw, const char * line, const hash_type *month_hash) {
+void sched_kw_add_line(sched_kw_type * kw, const char * line, const hash_type *month_hash , bool *complete) {
   switch (kw->type) {
   case(COMPDAT):
     sched_kw_compdat_add_line(kw->data , line);
@@ -85,16 +98,22 @@ void sched_kw_add_line(sched_kw_type * kw, const char * line, const hash_type *m
   case(DATES):
     sched_kw_dates_add_line(kw->data , line , month_hash);
     break;
+  case(TSTEP):
+    sched_kw_tstep_add_line(kw->data , line , complete);
+    break;
   case(UNTYPED):
     sched_kw_untyped_add_line(kw->data , line);
     break;
+  case(COMMAND):
+    fprintf(stderr,"%s: Internal error - trying to add line info to a keyword which does not take arguments - aborting \n",__func__);
+    abort();
   }
 }
 
 
 
 
-void sched_kw_fprintf(const sched_kw_type * kw , int last_date_nr , time_t last_time , FILE *stream , bool *stop) {
+void sched_kw_fprintf(const sched_kw_type * kw , int last_date_nr , time_t last_time , double last_day , FILE *stream , bool *stop) {
   switch (kw->type) {
   case(COMPDAT):
     sched_kw_compdat_fprintf(kw->data , stream);
@@ -105,8 +124,14 @@ void sched_kw_fprintf(const sched_kw_type * kw , int last_date_nr , time_t last_
   case(DATES):
     sched_kw_dates_fprintf(kw->data , stream, last_date_nr , last_time , stop);
     break;
+  case(TSTEP):
+    sched_kw_tstep_fprintf(kw->data , stream, last_date_nr , last_day , stop);
+    break;
   case(UNTYPED):
     sched_kw_untyped_fprintf(kw->data , stream);
+    break;
+  case(COMMAND):
+    sched_kw_cmd_fprintf(kw->data , stream);
     break;
   }
 }
@@ -124,14 +149,20 @@ void sched_kw_fwrite(const sched_kw_type *kw , FILE *stream) {
   case(DATES):
     sched_kw_dates_fwrite(kw->data , stream);
     break;
+  case(TSTEP):
+    sched_kw_tstep_fwrite(kw->data , stream);
+    break;
   case(UNTYPED):
     sched_kw_untyped_fwrite(kw->data , stream);
+    break;
+  case(COMMAND):
+    sched_kw_cmd_fwrite(kw->data , stream);
     break;
   }
 }
 
 
-sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , int last_date_nr , time_t last_time , FILE *stream , bool *at_eof, bool *stop) {
+sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , double *acc_days_ptr , int last_date_nr , time_t last_time , double last_day , FILE *stream , bool *at_eof, bool *stop) {
   sched_kw_type * kw = malloc(sizeof *kw);
   fread(&kw->type  , sizeof kw->type , 1 , stream);
 
@@ -145,11 +176,17 @@ sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , int last_date_nr , time
   case(DATES):
     kw->data = sched_kw_dates_fread_alloc(next_date_nr, last_date_nr , last_time , stream , stop);
     break;
+  case(TSTEP):
+    kw->data = sched_kw_tstep_fread_alloc(next_date_nr, acc_days_ptr , last_date_nr , last_day , stream , stop);
+    break;
   case(UNTYPED):
     kw->data = sched_kw_untyped_fread_alloc(stream);
     break;
+  case(COMMAND):
+    kw->data = sched_kw_cmd_fread_alloc(stream);
+    break;
   }
-
+  
   {
     char next_c = fgetc(stream);
     if (feof(stream)) 
@@ -164,11 +201,13 @@ sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , int last_date_nr , time
 }
 
 
-void sched_kw_fprintf_rates(const sched_kw_type * kw , const char *obs_path , const char * obs_file , int * current_date_nr) {
-  if (kw->type == WCONHIST)
-    sched_kw_wconhist_fprintf_rates(kw->data , obs_path , obs_file , *current_date_nr);
-  else if (kw->type == DATES)
-    sched_kw_dates_iterate_current(kw->data , current_date_nr);
+void sched_kw_fprintf_rates(const sched_kw_type * kw , const char *obs_path , const char * obs_file , date_node_type **current_date) {
+  if (kw->type == WCONHIST) 
+    sched_kw_wconhist_fprintf_rates(kw->data , obs_path , obs_file , date_node_get_date_nr(*current_date) + 1);  /* Current_date is the last, i.e. previous, date. */
+  else if (kw->type == DATES) {
+    sched_kw_dates_iterate_current(kw->data , current_date);
+    date_node_fprintf_rate_date(*current_date , obs_path , "DATE");
+  }
 }
 
 

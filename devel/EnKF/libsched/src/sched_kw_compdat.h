@@ -7,7 +7,7 @@
 typedef struct sched_kw_compdat_struct sched_kw_compdat_type;
 
 void                    sched_kw_compdat_set_conn_factor(sched_kw_compdat_type *  , const float *, const float * , const int *  , const int * );
-void                    sched_kw_compdat_init_conn_factor(sched_kw_compdat_type * , const ecl_kw_type *, const ecl_kw_type * , const int * , const int * );
+void                    sched_kw_compdat_init_conn_factor(sched_kw_compdat_type * , const ecl_kw_type *, const ecl_kw_type * , const int * , const int * , bool *);
 sched_kw_compdat_type * sched_kw_compdat_alloc();
 void                    sched_kw_compdat_free(sched_kw_compdat_type * );
 void                    sched_kw_compdat_add_line(sched_kw_compdat_type * kw , const char *);

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <list.h>
 #include <hash.h>
 #include <time.h>
@@ -14,10 +15,10 @@ struct sched_kw_dates_struct {
 
 
 
-typedef struct {
+struct date_node_struct {
   time_t   time;
   int      date_nr;
-} date_node_type;
+};
 
 
 static const char month_table[12][4] = {{"JAN\0"},
@@ -44,7 +45,7 @@ static date_node_type * date_node_alloc(int date_nr , const char *line , const h
     int tokens;
     char **token_list;
     struct tm ts;
-    sched_util_parse_line(line, &tokens , &token_list , 3);
+    sched_util_parse_line(line, &tokens , &token_list , 3 , NULL);
     ts.tm_sec    = 0;
     ts.tm_min    = 0;
     ts.tm_hour   = 0;
@@ -105,6 +106,30 @@ static date_node_type * date_node_fread_alloc(int last_date_nr , time_t last_tim
       *stop = true;
   }
   return node;
+}
+
+int date_node_get_date_nr(const date_node_type * date_node) { 
+  if (date_node == NULL)
+    return 1;
+  else
+    return date_node->date_nr; 
+}
+
+void date_node_fprintf_rate_date(const date_node_type * date_node , const char * _obs_path , const char *date_file) {
+  FILE *stream;
+  char *obs_path = malloc(strlen(_obs_path) + 6);
+  sprintf(obs_path , "%s/%04d" , _obs_path , date_node->date_nr);
+  if (util_path_exists(obs_path)) {
+    struct tm ts;
+    char *file     = malloc(strlen(_obs_path) + strlen(date_file) + 7);
+    localtime_r(&date_node->time , &ts);
+    sprintf(file , "%s/%04d/%s" , _obs_path , date_node->date_nr , date_file);
+    stream = util_fopen(file , false);
+    fprintf(stream , "%02d \'%s\' %4d  / -- Dates keyword: %3d \n" , ts.tm_mday , month_table[ts.tm_mon] , ts.tm_year + 1900 , date_node->date_nr);
+    fclose(stream);
+    free(file);
+  }
+  free(obs_path);
 }
 
 /*****************************************************************/
@@ -179,7 +204,8 @@ sched_kw_dates_type * sched_kw_dates_fread_alloc(int * next_date_ptr , int last_
 }
 
 
-void sched_kw_dates_iterate_current(const sched_kw_dates_type * kw , int *current_date_nr) {
-  (*current_date_nr) += list_get_size(kw->date_list);
+void sched_kw_dates_iterate_current(const sched_kw_dates_type * kw , date_node_type **current_date) {
+  (*current_date)     = list_node_value_ptr(list_get_tail(kw->date_list));
 }
+
 

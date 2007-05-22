@@ -14,17 +14,16 @@ static char * strip_line_alloc(const char * line) {
   const int strip_mode = strip_comment + strip_space;
   char * new_line = NULL;
   int offset, length,pos;
-  bool cont , quote_on , at_end, dash_on;
+  bool cont , quote_on , dash_on;
   
   if (strip_mode & strip_space)
     offset   = strspn(line , space);
   else
     offset = 0;
 
-  dash_on  = true;
+  dash_on  = false;
   quote_on = false;
   cont     = true;
-  at_end   = false;
   length   = 0;
   if (line[offset] != '\0') {
     pos = offset;
@@ -37,7 +36,7 @@ static char * strip_line_alloc(const char * line) {
 	  if (line[pos] == comment_char) {
 	    if (dash_on) {
 	      cont   = false;
-	      length = pos - offset;
+	      length = pos - offset - 1;
 	    } else 
 	      dash_on = true;
 	  } else
@@ -48,7 +47,6 @@ static char * strip_line_alloc(const char * line) {
       if (pos == (strlen(line) - 1)) {
 	length = pos - offset + 1;
 	cont = false;
-	at_end = true;
       }
       if (cont)
 	pos++;
@@ -59,20 +57,18 @@ static char * strip_line_alloc(const char * line) {
     */
 
     if (strip_mode & strip_space) {
-      if (at_end) {
-	while (line[offset + length - 1] == ' ')
-	  length--;
-      }
+      while (line[offset + length - 1] == ' ')
+	length--;
     }
   
     if (length > 0) 
-      /*new_line = strdup_n(&line[offset] , length);*/
       new_line = util_realloc_substring_copy(NULL , &line[offset] , length);
       
   } 
   
   return new_line;
 }
+
 
 
 static char * alloc_line(FILE *stream , bool *at_eof) {
@@ -172,7 +168,7 @@ void sched_util_free_token_list(int size, char **token_list) {
 }
 
 
-void sched_util_parse_line(const char * line , int *_tokens , char ***_token_list , int min_tokens) {
+void sched_util_parse_line(const char * line , int *_tokens , char ***_token_list , int min_tokens , bool *slash_term) {
   const char *delimiters = " ";
   int    token,tokens,offset,length;
   char **token_list;
@@ -180,7 +176,7 @@ void sched_util_parse_line(const char * line , int *_tokens , char ***_token_lis
   tokens  = 0;
   offset = strspn(line , delimiters);
 
-  while (line[offset ] != '\0') {
+  while (line[offset ] != '\0' && line[offset] != '/') {
     length = strcspn(&line[offset] , delimiters);
     if (length > 0) {
       char * token_string = util_alloc_substring_copy(&line[offset] , length);
@@ -207,7 +203,7 @@ void sched_util_parse_line(const char * line , int *_tokens , char ***_token_lis
   
   token   = 0;
   offset = strspn(line , delimiters);
-  while (line[offset ] != '\0') {
+  while (line[offset ] != '\0' && line[offset] != '/' ) {
     length = strcspn(&line[offset] , delimiters);
     if (length > 0) {
       char * token_string  = util_alloc_substring_copy(&line[offset] , length);
@@ -234,8 +230,13 @@ void sched_util_parse_line(const char * line , int *_tokens , char ***_token_lis
       free(token_string);
     }
   }
+  if (slash_term != NULL) {
+    if (line[offset] == '/')
+      *slash_term = true;
+    else
+      *slash_term = false;
+  }
   
-
   /*
     Removing quotes ...
   */
