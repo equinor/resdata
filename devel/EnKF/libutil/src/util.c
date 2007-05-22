@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <time.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,8 +9,27 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <dirent.h>
-
 #include <util.h>
+
+
+#define FLIP16(var) (((var >> 8) & 0x00ff) | ((var << 8) & 0xff00))
+
+#define FLIP32(var) (( (var >> 24) & 0x000000ff) | \
+		      ((var >>  8) & 0x0000ff00) | \
+		      ((var <<  8) & 0x00ff0000) | \
+		      ((var << 24) & 0xff000000))
+
+#define FLIP64(var) (((var >> 56)  & 0x00000000000000ff) | \
+		      ((var >> 40) & 0x000000000000ff00) | \
+		      ((var >> 24) & 0x0000000000ff0000) | \
+		      ((var >>  8) & 0x00000000ff000000) | \
+		      ((var <<  8) & 0x000000ff00000000) | \
+		      ((var << 24) & 0x0000ff0000000000) | \
+		      ((var << 40) & 0x00ff000000000000) | \
+		      ((var << 56) & 0xff00000000000000))
+
+
+/*****************************************************************/
 
 
 
@@ -94,6 +114,20 @@ bool util_file_exists(const char *filename) {
 }
 
 
+bool util_path_exists(const char *pathname) {
+  DIR *stream = opendir(pathname);
+  bool ex;
+  if (stream == NULL) {
+    ex = false;
+  } else {
+    closedir(stream);
+    ex = true;
+  }
+  return ex;
+}
+
+
+
 int util_file_size(const char *file) {
   struct stat buffer;
   int fildes;
@@ -154,7 +188,7 @@ void util_make_path(const char *_path) {
   char *path = (char *) _path;
   int current_pos = 0;
 
-  if (!util_file_exists(path)) {
+  if (!util_path_exists(path)) {
     active_path = malloc(strlen(path) + 1);
     int i = 0;
     do {
@@ -166,14 +200,15 @@ void util_make_path(const char *_path) {
       strncpy(active_path , _path , n + current_pos); 
       active_path[n+current_pos] = '\0';
       current_pos += n;
-      if (!util_file_exists(active_path))    
+      if (!util_path_exists(active_path))    
 	mkdir(active_path , 0775);
     } while (strlen(active_path) < strlen(_path));
   }
 }
 
 
-const char * util_newest_file(const char *file1 , const char *file2) {
+
+double util_file_difftime(const char *file1 , const char *file2) {
   struct stat b1, b2;
   int f1,f2;
   time_t t1,t2;
@@ -188,11 +223,24 @@ const char * util_newest_file(const char *file1 , const char *file2) {
   t2 = b2.st_mtime;
   close(f2);
 
-  if (difftime(t1 , t2) > 0)
+  return difftime(t1 , t2);
+}
+
+const char * util_newest_file(const char *file1 , const char *file2) {
+  if (util_file_difftime(file1 , file2) < 0)
     return file1;
   else
     return file2;
 }
+
+
+bool util_file_update_required(const char *src_file , const char *target_file) {
+  if (util_file_difftime(src_file , target_file) < 0)
+    return true;
+  else
+    return false;
+}
+
 
 
 /*****************************************************************/
@@ -299,8 +347,16 @@ void util_abort(const char *func, const char *file, int line, const char *messag
 
 /*****************************************************************/
 
+
+
+
+
+/*****************************************************************/
+
+
+
 void util_unlink_path(const char *path) {
-  if (util_file_exists(path)) {
+  if (util_path_exists(path)) {
     const uid_t uid = getuid();
     struct dirent *dentry;
     DIR *dirH;
@@ -447,6 +503,40 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
   
 }
 
+/*****************************************************************/
+
+void util_split_string(const char *line , const char *sep, int *_tokens, char ***_token_list) {
+  int offset;
+  int tokens , token , token_length;
+  char **token_list;
+  
+  offset = strspn(line , sep);
+  tokens = 0;
+  do {
+    token_length = strcspn(&line[offset] , sep);
+    if (token_length > 0)
+      tokens++;
+    offset += token_length;
+  } while (line[offset] != '\0');
+  token_list = malloc(tokens * sizeof * token_list);
+  
+  offset = strspn(line , sep);
+  token  = 0;
+  do {
+    token_length = strcspn(&line[offset] , sep);
+    if (token_length > 0) {
+      token_list[token] = util_alloc_substring_copy(&line[offset] , token_length);
+      token++;
+    } else
+      token_list[token] = NULL;
+    
+    offset += token_length;
+  } while (line[offset] != '\0');
+  
+  *_tokens     = tokens;
+  *_token_list = token_list;
+}
+
 
 /*****************************************************************/
 
@@ -465,3 +555,138 @@ void util_double_to_float(float *float_ptr , const double *double_ptr , int size
 
 
 /*****************************************************************/
+
+void util_fwrite_string(const char * s, FILE *stream) {
+  int len = strlen(s);
+  fwrite(&len , sizeof len , 1       , stream);
+  fwrite(s    , 1          , len + 1 , stream);
+}
+
+
+
+char * util_fread_alloc_string(FILE *stream) {
+  int len;
+  char *s;
+  fread(&len , sizeof len , 1 , stream);
+  s = malloc(len + 1);
+  fread(s , 1 , len + 1 , stream);
+  return s;
+}
+
+
+void util_fskip_string(FILE *stream) {
+  int len;
+  fread(&len , sizeof len , 1 , stream);
+  fseek(stream , len + 1 , SEEK_CUR);
+}
+
+
+/*****************************************************************/
+
+
+int util_int_min(int a , int b) {
+  return (a < b) ? a : b;
+}
+
+double util_double_min(double a , double b) {
+  return (a < b) ? a : b;
+}
+
+float util_float_min(float a , float b) {
+  return (a < b) ? a : b;
+}
+
+int util_int_max(int a , int b) {
+  return (a > b) ? a : b;
+}
+
+double util_double_max(double a , double b) {
+  return (a > b) ? a : b;
+}
+
+float util_float_max(float a , float b) {;
+  return (a > b) ? a : b;
+}
+
+
+/*****************************************************************/
+
+
+
+void util_endian_flip_vector(void *data, int element_size , int elements) {
+  int i;
+  switch (element_size) {
+  case(1):
+    break;
+  case(2): 
+    {
+      uint16_t *tmp_int = (uint16_t *) data;
+      for (i = 0; i <elements; i++)
+	tmp_int[i] = FLIP16(tmp_int[i]);
+      break;
+    }
+  case(4):
+    {
+      uint32_t *tmp_int = (uint32_t *) data;
+      for (i = 0; i <elements; i++)
+	tmp_int[i] = FLIP32(tmp_int[i]);
+      break;
+    }
+  case(8):
+    {
+      uint64_t *tmp_int = (uint64_t *) data;
+      for (i = 0; i <elements; i++)
+	tmp_int[i] = FLIP64(tmp_int[i]);
+      break;
+    }
+  default:
+    fprintf(stderr,"%s can only 1/2/4/8 byte variables - aborting \n",__func__);
+    abort();
+  }
+}
+
+/*****************************************************************/
+
+bool util_proc_alive(pid_t pid) {
+  char proc_path[16];
+  sprintf(proc_path , "/proc/%d" , pid);
+  return util_path_exists(proc_path);
+}
+
+/*****************************************************************/
+
+
+#define ABORT_READ  1
+#define ABORT_WRITE 2
+
+static FILE * util_fopen__(const char *filename , bool readonly, int abort_mode) {
+  FILE *stream;
+
+  if (readonly) {
+    stream = fopen(filename , "r");
+    if (stream == NULL) {
+      fprintf(stderr,"%s: failed to open:%s for reading.\n",__func__ , filename);
+      if (abort_mode & ABORT_READ) abort();
+    }
+  } else {
+    stream = fopen(filename , "w");
+    if (stream == NULL) {
+      fprintf(stderr,"%s: failed to open:%s for writing.\n",__func__ , filename);
+      if (abort_mode & ABORT_WRITE) abort();
+    }
+  }
+  return stream;
+}
+
+
+FILE * util_fopen(const char * filename , bool readonly) {
+  return util_fopen__(filename , readonly , ABORT_READ + ABORT_WRITE);
+}
+
+
+#undef ABORT_READ
+#undef ABORT_WRITE
+
+/*****************************************************************/
+
+  

@@ -13,8 +13,8 @@ INSTALL_MOD_PATH = ../mod
 CFLAGS  = -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
 ARFLAGS = -csr
 #################################################################
-OBJECTS           = util.o util_interC.o thread_pool.o
-INC_FILES_INSTALL = util.h thread_pool.h
+OBJECTS           = pathv.o util.o util_interC.o thread_pool.o
+INC_FILES_INSTALL = pathv.h util.h thread_pool.h
 LIB               = libutil.a
 
 
@@ -37,4 +37,5 @@ $(LIB): $(OBJECTS)
 thread_pool.o : thread_pool.c thread_pool.h
 util.o        : util.c util.h
 util_interC.o : util_interC.c util.o
+pathv.o       : pathv.c pathv.h util.o
 
