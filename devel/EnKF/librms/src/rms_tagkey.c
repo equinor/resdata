@@ -77,6 +77,26 @@ void rms_tagkey_clear(rms_tagkey_type * tagkey) {
 }
 
 
+void rms_tagkey_apply(rms_tagkey_type * tagkey , double (f) (double)) {
+int i;
+  rms_tagkey_assert_fnum(tagkey);
+  switch (tagkey->rms_type) {
+  case(rms_double_type):
+    {
+      double *tmp = (double *) tagkey->data;
+      for (i=0; i < tagkey->size; i++)
+	tmp[i] = f(tmp[i]);
+    }
+  case(rms_float_type):
+    {
+      float *tmp = (float *) tagkey->data;
+      for (i=0; i < tagkey->size; i++)
+	tmp[i] = f(tmp[i]);
+    }
+  }
+}
+
+
 void rms_tagkey_inplace_sqr(rms_tagkey_type * tagkey) {
   int i;
   rms_tagkey_assert_fnum(tagkey);
@@ -92,6 +112,31 @@ void rms_tagkey_inplace_sqr(rms_tagkey_type * tagkey) {
       float *tmp = (float *) tagkey->data;
       for (i=0; i < tagkey->size; i++)
 	tmp[i] *= tmp[i];
+    }
+  }
+}
+
+
+void rms_tagkey_assign(rms_tagkey_type * new, const rms_tagkey_type *src) {
+  memcpy(new->data , src->data , new->size * new->sizeof_ctype);
+}
+
+
+void rms_tagkey_inplace_log10(rms_tagkey_type * tagkey) {
+  int i;
+  rms_tagkey_assert_fnum(tagkey);
+  switch (tagkey->rms_type) {
+  case(rms_double_type):
+    {
+      double *tmp = (double *) tagkey->data;
+      for (i=0; i < tagkey->size; i++)
+	tmp[i] = log10(tmp[i]);
+    }
+  case(rms_float_type):
+    {
+      float *tmp = (float *) tagkey->data;
+      for (i=0; i < tagkey->size; i++)
+	tmp[i] = log10(tmp[i]);
     }
   }
 }
@@ -154,6 +199,28 @@ void rms_tagkey_inplace_add(rms_tagkey_type * tagkey , const rms_tagkey_type *de
       const float *tmp2 = (const float *) delta->data;
       for (i=0; i < tagkey->size; i++)
 	tmp1[i] += tmp2[i];
+    }
+  }
+}
+
+
+void rms_tagkey_inplace_add_scaled(rms_tagkey_type * tagkey , const rms_tagkey_type *delta, double factor) {
+  int i;
+  rms_tagkey_assert_fnum2(tagkey , delta);
+  switch (tagkey->rms_type) {
+  case(rms_double_type):
+    {
+      double *tmp1       = (double *) tagkey->data;
+      const double *tmp2 = (const double *) delta->data;
+      for (i=0; i < tagkey->size; i++)
+	tmp1[i] += tmp2[i] * factor;
+    }
+  case(rms_float_type):
+    {
+      float *tmp1       = (float *) tagkey->data;
+      const float *tmp2 = (const float *) delta->data;
+      for (i=0; i < tagkey->size; i++)
+	tmp1[i] += tmp2[i] * factor;
     }
   }
 }

@@ -31,10 +31,14 @@ rms_tagkey_type * rms_tagkey_alloc_filetype(const char * );
 rms_tagkey_type * rms_tagkey_alloc_dim(const char * , int );
 rms_tagkey_type * rms_tagkey_alloc_parameter_name(const char * );
 
+void rms_tagkey_assign(rms_tagkey_type * , const rms_tagkey_type *);
+void rms_tagkey_apply(rms_tagkey_type * , double (f) (double));
+void rms_tagkey_inplace_log10(rms_tagkey_type * );
 void rms_tagkey_inplace_sqr(rms_tagkey_type *);
 void rms_tagkey_inplace_sqrt(rms_tagkey_type *);
 void rms_tagkey_inplace_mul(rms_tagkey_type * , const rms_tagkey_type *);
 void rms_tagkey_inplace_add(rms_tagkey_type * , const rms_tagkey_type *);
+void rms_tagkey_inplace_add_scaled(rms_tagkey_type * , const rms_tagkey_type * , double);
 void rms_tagkey_scale(rms_tagkey_type * , double );
 void rms_tagkey_clear(rms_tagkey_type *  );
 

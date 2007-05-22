@@ -10,7 +10,7 @@ INSTALL_INC_PATH = ../include
 INSTALL_LIB_PATH = ../lib
 INSTALL_MOD_PATH = ../mod
 #################################################################
-CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
+CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall -Wno-switch $(COMPILE_INCLUDE) 
 ARFLAGS = -csr
 #################################################################
 OBJECTS           = rms_interC.o rms_file.o rms_util.o rms_tag.o rms_type.o rms_tagkey.o rms_stats.o

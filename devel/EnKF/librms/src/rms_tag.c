@@ -103,7 +103,7 @@ rms_tagkey_type * rms_tag_get_key(const rms_tag_type *tag , const char *keyname)
 
 
 static void rms_tag_add_tagkey(const rms_tag_type *tag , const rms_tagkey_type *tagkey, int mem_mode) {
-  list_node_type * list_node;
+  list_node_type * list_node = NULL;
   switch (mem_mode) {
   case(COPY):
     list_node = list_append_copy(tag->key_list , tagkey , rms_tagkey_copyc_ , rms_tagkey_free_);
@@ -117,6 +117,7 @@ static void rms_tag_add_tagkey(const rms_tag_type *tag , const rms_tagkey_type *
   }
   hash_insert_ref(tag->key_hash , rms_tagkey_get_name(tagkey) , list_node);
 }
+
 
 
 static bool rms_tag_at_endtag(FILE *stream) {

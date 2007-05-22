@@ -56,7 +56,7 @@ void rms_inter_roff_param2__(const char *__filename , const int *strlen, const c
   rms_file_assert_dimensions(rms_file , *nx , *ny , *nz);
   
   {
-    rms_tag_type *tag       = rms_file_get_tag(rms_file , "parameter" , "name" , param_name);
+    rms_tag_type *tag       = rms_file_get_tag_ref(rms_file , "parameter" , "name" , param_name);
     rms_tagkey_type *tagkey = rms_tag_get_key(tag , "data");
     work                    = rms_tagkey_get_data_ref(tagkey);
   }

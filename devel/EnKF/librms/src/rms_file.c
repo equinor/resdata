@@ -30,7 +30,7 @@ static const char * rms_comment2          = "Creator: RMS - Reservoir Modelling 
 struct rms_file_struct {
   char       * filename;
   bool         endian_convert;
-  bool         binary;
+  bool         fmt_file;
   hash_type  * type_map;
   list_type  * tag_list;
 };
@@ -43,20 +43,20 @@ struct rms_file_struct {
 
 
 
-static bool rms_file_binary(const rms_file_type *rms_file , FILE *stream) {
-  bool binary;
+static bool rms_fmt_file(const rms_file_type *rms_file , FILE *stream) {
+  bool fmt_file;
   char filetype[9];
   rms_util_fread_string( filetype , 9 , stream);
 
   if (strncmp(filetype , rms_binary_header , 8) == 0)
-    binary = true;
+    fmt_file = false;
   else if (strncmp(filetype , rms_ascii_header , 8) == 0)
-    binary = false;
+    fmt_file = true;
   else {
     fprintf(stderr,"%s: header : %8s not recognized in file: %s - aborting \n",__func__ , filetype , rms_file->filename);
     abort();
   }
-  return binary;
+  return fmt_file;
 }
 
 
@@ -67,7 +67,7 @@ static void rms_file_add_tag(rms_file_type *rms_file , const rms_tag_type *tag) 
 
 
 
-rms_tag_type * rms_file_get_tag(const rms_file_type *rms_file , const char *tagname, const char *keyname, const char *keyvalue) {
+rms_tag_type * rms_file_get_tag_ref(const rms_file_type *rms_file , const char *tagname, const char *keyname, const char *keyvalue) {
   bool cont = true;
   rms_tag_type *return_tag = NULL;
   list_node_type *tag_node = list_get_head(rms_file->tag_list);
@@ -95,7 +95,7 @@ rms_tag_type * rms_file_get_tag(const rms_file_type *rms_file , const char *tagn
 
 
 
-rms_file_type * rms_file_alloc(const char *filename, bool create_binary) {
+rms_file_type * rms_file_alloc(const char *filename, bool fmt_file) {
   rms_file_type *rms_file   = malloc(sizeof *rms_file);
   rms_file->endian_convert  = false;
   rms_file->type_map  	    = hash_alloc(10);
@@ -110,7 +110,7 @@ rms_file_type * rms_file_alloc(const char *filename, bool create_binary) {
   hash_insert_hash_owned_ref(rms_file->type_map , "char"   , rms_type_alloc(rms_char_type   , -1) ,  rms_type_free);   /* Char are a f*** mix of vector and scalar */
 
   rms_file->filename = NULL;
-  rms_file_set_filename(rms_file , filename , create_binary);
+  rms_file_set_filename(rms_file , filename , fmt_file);
   return rms_file;
 }
 
@@ -119,9 +119,9 @@ rms_file_type * rms_file_alloc(const char *filename, bool create_binary) {
 
 
 
-void rms_file_set_filename(rms_file_type * rms_file , const char *filename , bool create_binary) {
+void rms_file_set_filename(rms_file_type * rms_file , const char *filename , bool fmt_file) {
   rms_file->filename = util_realloc_string_copy(rms_file->filename , filename);
-  rms_file->binary   = create_binary;
+  rms_file->fmt_file   = fmt_file;
 }
 
 
@@ -167,7 +167,7 @@ static int rms_file_get_dim(const rms_tag_type *tag , const char *dim_name) {
 
 void rms_file_assert_dimensions(const rms_file_type *rms_file , int nx , int ny , int nz) {
   bool OK = true;  
-  rms_tag_type    *tag    = rms_file_get_tag(rms_file , "dimensions" , NULL , NULL);
+  rms_tag_type    *tag    = rms_file_get_tag_ref(rms_file , "dimensions" , NULL , NULL);
   OK =       (nx == rms_file_get_dim(tag , "nX"));
   OK = OK && (ny == rms_file_get_dim(tag , "nY"));
   OK = OK && (nz == rms_file_get_dim(tag , "nZ"));
@@ -185,8 +185,8 @@ void rms_file_assert_dimensions(const rms_file_type *rms_file , int nx , int ny 
 
 static void rms_file_init_fread(rms_file_type * rms_file , FILE * stream) {
 
-  rms_file->binary = rms_file_binary(rms_file , stream);
-  if (!rms_file->binary) {
+  rms_file->fmt_file = rms_fmt_file(rms_file , stream);
+  if (rms_file->fmt_file) {
     fprintf(stderr,"%s only binary files implemented - aborting \n",__func__);
     abort();
   }
@@ -291,7 +291,7 @@ void rms_file_fread(rms_file_type *rms_file) {
 
 /*static */
 void rms_file_init_fwrite(const rms_file_type * rms_file , const char * filetype , FILE *stream) {
-  if (rms_file->binary)
+  if (!rms_file->fmt_file)
     rms_util_fwrite_string(rms_binary_header , stream);
   else {
     fprintf(stderr,"%s: Sorry only binary writes implemented ... \n",__func__);
