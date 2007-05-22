@@ -4,6 +4,7 @@
 #include <hash.h>
 #include <list.h>
 #include <util.h>
+#include <time.h>
 #include <ecl_kw.h>
 #include <sched_util.h>
 #include <sched_kw_compdat.h>
@@ -22,6 +23,7 @@ struct sched_file_struct {
   double      acc_days;
   bool        compdat_initialized;
   int        *dims;
+  time_t      start_date;
 };
 
 
@@ -275,7 +277,8 @@ void sched_file_fwrite(const sched_file_type * sched_file , const char * filenam
   }
 
   fwrite(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
-  fwrite(sched_file->dims , sizeof sched_file->dims , 3 , stream); 
+  fwrite(sched_file->dims                 , sizeof sched_file->dims       	   , 3 , stream); 
+  fwrite(&sched_file->start_date          , sizeof sched_file->start_date 	   , 1 , stream);
 
   {
     list_node_type *list_node = list_get_head(sched_file->kw_list);
@@ -298,7 +301,9 @@ sched_file_type * sched_file_fread_alloc(const char * filename , int last_date_n
   sched_file = sched_file_alloc();
   fread(&len                             , sizeof len                             , 1 , stream); 
   fread(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
-  fread(sched_file->dims , sizeof sched_file->dims , 3 , stream); 
+  fread(sched_file->dims                 , sizeof sched_file->dims                , 3 , stream); 
+  fread(&sched_file->start_date          , sizeof sched_file->start_date          , 1 , stream); 
+
   at_eof = false;
   stop   = false;
   cont   = true;

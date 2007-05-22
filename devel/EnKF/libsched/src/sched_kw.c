@@ -96,7 +96,7 @@ void sched_kw_add_line(sched_kw_type * kw, const char * line, const hash_type *m
     sched_kw_wconhist_add_line(kw->data , line);
     break;
   case(DATES):
-    sched_kw_dates_add_line(kw->data , line , month_hash);
+    sched_kw_dates_add_line(kw->data , line , month_hash , false);
     break;
   case(TSTEP):
     sched_kw_tstep_add_line(kw->data , line , complete);
@@ -209,9 +209,6 @@ void sched_kw_fprintf_rates(const sched_kw_type * kw , const char *obs_path , co
     date_node_fprintf_rate_date(*current_date , obs_path , "DATE");
   }
 }
-
-
-
 
 
 /*****************************************************************/

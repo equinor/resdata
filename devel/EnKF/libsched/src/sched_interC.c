@@ -89,6 +89,7 @@ void sched_init__(const char * _schedule_file  	   , const int * schedule_file_l
   if (util_file_exists(schedule_dump_file)) 
     update = util_file_update_required(schedule_file , schedule_dump_file);
   
+  update = true;
   if (update) {
     char * init_file   = util_alloc_cstring(_init_file , init_file_len);
     bool   endian_flip = util_intptr_2bool(endian_flip_int);

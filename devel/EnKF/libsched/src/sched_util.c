@@ -43,11 +43,14 @@ static char * strip_line_alloc(const char * line) {
 	    dash_on = false;
 	}
       }
-      
-      if (pos == (strlen(line) - 1)) {
-	length = pos - offset + 1;
-	cont = false;
+
+      if (cont) {
+	if (pos == (strlen(line) - 1)) {
+	  length = pos - offset + 1;
+	  cont = false;
+	}
       }
+      
       if (cont)
 	pos++;
     } while (cont);
@@ -63,7 +66,8 @@ static char * strip_line_alloc(const char * line) {
   
     if (length > 0) 
       new_line = util_realloc_substring_copy(NULL , &line[offset] , length);
-      
+    else 
+      new_line = NULL;
   } 
   
   return new_line;
