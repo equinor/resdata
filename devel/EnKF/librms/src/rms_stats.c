@@ -39,7 +39,8 @@ void rms_stats_mean_std(rms_tagkey_type * mean , rms_tagkey_type * std , const c
       for (j = 0; j < strlen(filelist[filenr]); j++) fputc('\b' , stdout);
     }
   }
-  
+  printf("\n");
+
   {
     rms_tagkey_type * mean2;
     mean2 = rms_tagkey_copyc(mean);

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <enkf_types.h>
 
 #define CONFIG_STD_FIELDS \
 int size;                 \
@@ -59,6 +60,86 @@ if (config->ens_name != NULL) free(config->ens_name);    \
 if (config->ens_file != NULL) free(config->ens_file);    \
 if (config->ecl_file != NULL) free(config->ecl_file);    \
 if (config->ecl_name != NULL) free(config->ecl_name);
+
+
+/*****************************************************************/
+
+#define VOID_ALLOC(prefix) \
+void * prefix ## _alloc__(const void *void_config) {                      \
+  return prefix ## _alloc((const prefix ## _config_type *) void_config);  \
+}
+
+#define VOID_ALLOC_HEADER(prefix) void * prefix ## _alloc__(const void *)
+
+
+/*****************************************************************/
+
+#define VOID_ENS_WRITE(prefix) \
+void prefix ## _ens_write__(const void * void_arg , const char * path) { \
+   prefix ## _ens_write((const prefix ## _type *) void_arg , path);      \
+}
+
+#define VOID_ENS_READ(prefix) \
+void prefix ## _ens_read__(void * void_arg , const char * path) { \
+   prefix ## _ens_read((prefix ## _type *) void_arg , path);      \
+}
+
+#define VOID_ENS_WRITE_HEADER(prefix) void prefix ## _ens_write__(const void * , const char * );
+#define VOID_ENS_READ_HEADER(prefix) void prefix ## _ens_read__(void * , const char * );
+
+
+/*****************************************************************/
+
+#define VOID_ECL_WRITE(prefix) \
+void prefix ## _ecl_write__(const void * void_arg , const char * path) { \
+   prefix ## _ecl_write((const prefix ## _type *) void_arg , path);      \
+}
+
+#define VOID_ECL_READ(prefix) \
+void prefix ## _ecl_read__(void * void_arg , const char * path) { \
+   prefix ## _ecl_read((prefix ## _type *) void_arg , path);      \
+}
+
+#define VOID_ECL_WRITE_HEADER(prefix) void prefix ## _ecl_write__(const void * , const char * );
+#define VOID_ECL_READ_HEADER(prefix) void prefix ## _ecl_read__(void * , const char * );
+
+
+/*****************************************************************/
+
+#define VOID_FREE(prefix)                        \
+void prefix ## _free__(void * void_arg) {         \
+   prefix ## _free((prefix ## _type *) void_arg); \
+}
+
+#define VOID_FREE_HEADER(prefix) void prefix ## _free__(void * );
+
+
+/*****************************************************************/
+
+#define VOID_FREE_DATA(prefix)                        \
+void prefix ## _free_data__(void * void_arg) {         \
+   prefix ## _free_data((prefix ## _type *) void_arg); \
+}
+
+#define VOID_FREE_DATA_HEADER(prefix) void prefix ## _free_data__(void * );
+
+/*****************************************************************/
+
+#define VOID_REALLOC_DATA(prefix)                        \
+void prefix ## _realloc_data__(void * void_arg) {         \
+   prefix ## _realloc_data((prefix ## _type *) void_arg); \
+}
+
+#define VOID_REALLOC_DATA_HEADER(prefix) void prefix ## _realloc_data__(void * );
+
+/*****************************************************************/
+
+#define VOID_COPYC(prefix)                                      \
+void * prefix ## _copyc__(const void * void_arg) {    \
+   return prefix ## _copyc((const prefix ## _type *) void_arg); \
+}
+
+#define VOID_COPYC_HEADER(prefix) void * prefix ## _copyc__(const void * )
 
 
 #endif

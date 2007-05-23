@@ -344,7 +344,6 @@ void util_abort(const char *func, const char *file, int line, const char *messag
 }
 
 
-
 /*****************************************************************/
 
 

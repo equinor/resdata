@@ -14,8 +14,8 @@ enkf_ecl_kw_config_type * enkf_ecl_kw_config_alloc(int size , const char *ecl_kw
 }
 
 
-enkf_ecl_kw_config_type * enkf_ecl_kw_config_alloc(const enkf_ecl_kw_config_type * src) {
-  enkf_ecl_kw_config_type * new = enkc_ecl_kw_config_alloc(src->size , src->ecl_kw_name , src->ens_file);
+enkf_ecl_kw_config_type * enkf_ecl_kw_config_copyc(const enkf_ecl_kw_config_type * src) {
+  enkf_ecl_kw_config_type * new = enkf_ecl_kw_config_alloc(src->size , src->ecl_kw_name , src->ens_file);
   return new;
 }
 
@@ -33,4 +33,6 @@ void enkf_ecl_kw_config_free(enkf_ecl_kw_config_type *config) {
   free(config);
 }
 
+/*****************************************************************/
 
+VOID_FREE(enkf_ecl_kw_config)

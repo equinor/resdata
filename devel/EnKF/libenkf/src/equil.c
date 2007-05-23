@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <util.h>
 #include <enkf_types.h>
-#include <enkf_state.h>
 #include <equil_config.h>
 #include <equil.h>
 #include <enkf_util.h>
@@ -11,15 +11,13 @@
 
 struct equil_struct {
   const equil_config_type *config;
-  const enkf_state_type   *enkf_state;
   double                  *data;
 };
 
 /*****************************************************************/
 
-equil_type * equil_alloc(const enkf_state_type * enkf_state , const equil_config_type * config) {
+equil_type * equil_alloc(const equil_config_type * config) {
   equil_type * equil    = malloc(sizeof *equil);
-  equil->enkf_state     = enkf_state;
   equil->config         = config;
   equil->data           = enkf_util_malloc(config->size * sizeof *equil->data , __func__);
   return equil;
@@ -27,14 +25,14 @@ equil_type * equil_alloc(const enkf_state_type * enkf_state , const equil_config
 
 
 equil_type * equil_copyc(const equil_type * src) {
-  equil_type * new = equil_alloc(src->enkf_state , src->config);
+  equil_type * new = equil_alloc(src->config);
   memcpy(new->data , src->data , equil_config_get_size(new->config) * sizeof * new->data);
   return new;
 }
 
 
-void equil_ecl_write(const equil_type * equil) {
-  const char * ecl_file = equil_config_get_ecl_file_ref(equil->config);
+void equil_ecl_write(const equil_type * equil, const char * path) {
+  char * ecl_file = util_alloc_full_path(path , equil_config_get_ecl_file_ref(equil->config));
   FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
   {
     const int size = equil->config->size;
@@ -43,29 +41,31 @@ void equil_ecl_write(const equil_type * equil) {
       /*config_fprintf_layer(equil->config , k + 1 , equil->data[k] , stream);*/
       fprintf(stream , "FAULT:%3d ... %g \n",k,equil->data[k]);
   }
-  
+  free(ecl_file);
   fclose(stream);
 }
 
 
-void equil_ens_write(const equil_type * equil) {
+void equil_ens_write(const equil_type * equil, const char * path) {
   const  equil_config_type * config = equil->config;
-  const char * ens_file = equil_config_get_ens_file_ref(equil->config);
+  char * ens_file = util_alloc_full_path(path , equil_config_get_ens_file_ref(equil->config));
   FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
   fwrite(&config->size  , sizeof  config->size     , 1 , stream);
   enkf_util_fwrite(equil->data    , sizeof *equil->data    , config->size , stream , __func__);
+  free(ens_file);
   fclose(stream);
 }
 
 
 
-void equil_ens_read(equil_type * equil) {
-  const char * ens_file = equil_config_get_ens_file_ref(equil->config);
+void equil_ens_read(equil_type * equil , const char * path) {
+  char * ens_file = util_alloc_full_path(path , equil_config_get_ens_file_ref(equil->config));
   FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
   int  nz;
   fread(&nz , sizeof  nz     , 1 , stream);
   enkf_util_fread(equil->data , sizeof *equil->data , nz , stream , __func__);
   fclose(stream);
+  free(ens_file);
 }
 
 
@@ -94,14 +94,14 @@ void equil_free(equil_type *equil) {
 
 
 MATH_OPS(equil);
-
+VOID_ALLOC(equil);
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/
-
-VOID_FUNC_CONST(equil_ecl_write , equil_type)
-VOID_FUNC_CONST(equil_ens_write , equil_type)
-VOID_FUNC      (equil_ens_read  , equil_type)
+VOID_ECL_WRITE (equil)
+VOID_ENS_WRITE (equil)
+VOID_ENS_READ  (equil)
+VOID_COPYC     (equil)
 VOID_FUNC      (equil_sample    , equil_type)
 VOID_FUNC      (equil_free      , equil_type)
-VOID_COPYC     (equil_copyc     , equil_type)
+

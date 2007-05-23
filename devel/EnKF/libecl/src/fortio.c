@@ -4,13 +4,16 @@
 #include <string.h>
 #include <errno.h>
 #include <fortio.h>
+#include <util.h>
 
 extern int errno;
 
+/*
 #define FLIP32(var) (((var >> 24) & 0x000000ff) | \
 		     ((var >>  8) & 0x0000ff00) | \
 		     ((var <<  8) & 0x00ff0000) | \
 		     ((var << 24) & 0xff000000))
+*/
 
 struct fortio_struct {
   FILE    *stream;
@@ -45,6 +48,7 @@ fortio_type *fortio_open(const char *filename , const char *mode, bool endian_fl
 
 
 
+
 void fortio_close(fortio_type *fortio) {
   fclose(fortio->stream);
   free(fortio->filename);
@@ -60,8 +64,8 @@ int fortio_init_read(fortio_type *fortio) {
   elm_read = fread(&fortio->active_header , sizeof(fortio->active_header) , 1 , fortio->stream);
   if (elm_read == 1) {
     if (fortio->endian_flip_header)
-      fortio->active_header = FLIP32(fortio->active_header);
-    
+      util_endian_flip_vector(&fortio->active_header , sizeof fortio->active_header , 1);
+
     fortio->rec_nr++;
     return fortio->active_header;
   } else 
@@ -72,7 +76,7 @@ void fortio_complete_read(fortio_type *fortio) {
   int trailer;
   fread(&trailer , sizeof(fortio->active_header) , 1 , fortio->stream);
   if (fortio->endian_flip_header)
-    trailer = FLIP32(trailer);
+    util_endian_flip_vector(&trailer , sizeof trailer , 1);
   
   if (trailer != fortio->active_header) {
     fprintf(stderr,"\nHeader: %d   Trailer: %d \n",fortio->active_header , trailer);
@@ -139,7 +143,7 @@ void  fortio_init_write(fortio_type *fortio , int record_size) {
   fortio->active_header = record_size;
   file_header = fortio->active_header;
   if (fortio->endian_flip_header)
-    file_header = FLIP32(file_header);
+    util_endian_flip_vector(&file_header , sizeof file_header , 1);
   
   fwrite(&file_header , sizeof(fortio->active_header) , 1 , fortio->stream);
   fortio->rec_nr++;
@@ -148,7 +152,7 @@ void  fortio_init_write(fortio_type *fortio , int record_size) {
 void fortio_complete_write(fortio_type *fortio) {
   int file_header = fortio->active_header;
   if (fortio->endian_flip_header)
-    file_header = FLIP32(file_header);
+    util_endian_flip_vector(&file_header , sizeof file_header , 1);
 
   fwrite(&file_header, sizeof(fortio->active_header) , 1 , fortio->stream);
   fortio->active_header = 0;
@@ -161,9 +165,21 @@ void fortio_write_record(fortio_type *fortio, const char *buffer , int record_si
   fortio_complete_write(fortio);
 }
 
+
+void * fortio_fread_alloc_record(fortio_type * fortio) {
+  void * buffer;
+  fortio_init_read(fortio);
+  buffer = malloc(fortio->active_header);
+  fread(buffer , 1 , fortio->active_header , fortio->stream);
+  fortio_complete_read(fortio);
+  return buffer;
+}
+
+
 /*****************************************************************/
 
 FILE        * fortio_get_FILE(const fortio_type *fortio)        { return fortio->stream; }
 int           fortio_get_record_size(const fortio_type *fortio) { return fortio->active_header; }
 bool          fortio_get_endian_flip(const fortio_type *fortio) { return fortio->endian_flip_header; }
 void          fortio_rewind(const fortio_type *fortio)          { rewind(fortio->stream); }
+const char  * fortio_filename_ref(const fortio_type * fortio)   { return (const char *) fortio->filename; }

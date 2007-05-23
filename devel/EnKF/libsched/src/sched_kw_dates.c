@@ -41,7 +41,7 @@ void sched_kw_dates_fprintf(const sched_kw_dates_type *kw , FILE *stream , int l
 }
 
 
-sched_kw_dates_type * sched_kw_dates_alloc(int *next_date_ptr){
+sched_kw_dates_type * sched_kw_dates_alloc(int *next_date_ptr , const time_t * start_date){
   sched_kw_dates_type *dates = malloc(sizeof *dates);
   dates->date_list     = list_alloc();
   dates->next_date_ptr = next_date_ptr;
@@ -72,9 +72,9 @@ void sched_kw_dates_fwrite(const sched_kw_dates_type *kw , FILE *stream) {
 
 
 
-sched_kw_dates_type * sched_kw_dates_fread_alloc(int * next_date_ptr , int last_date_nr ,time_t last_time , FILE *stream, bool *stop) {
+sched_kw_dates_type * sched_kw_dates_fread_alloc(int * next_date_ptr , const time_t * start_date , int last_date_nr ,time_t last_time , FILE *stream, bool *stop) {
   int lines , line_nr;
-  sched_kw_dates_type *kw = sched_kw_dates_alloc(next_date_ptr) ;
+  sched_kw_dates_type *kw = sched_kw_dates_alloc(next_date_ptr , start_date) ;
   fread(&lines       , sizeof lines       , 1 , stream);
   line_nr = 0;
   while (!(*stop) && (line_nr < lines)) {

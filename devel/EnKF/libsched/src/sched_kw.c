@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <hash.h>
+#include <time.h>
 #include <sched_kw.h>
 #include <sched_kw_compdat.h>
 #include <sched_kw_wconhist.h>
@@ -26,7 +27,7 @@ struct sched_kw_struct {
 void * sched_kw_get_data_ref(const sched_kw_type * kw) {return kw->data; }
 sched_type_enum sched_kw_get_type(const sched_kw_type * kw) { return kw->type; }
 
-sched_kw_type * sched_kw_alloc(const char * kw_name , sched_type_enum type, bool one_line_kw, int * next_date_nr , double * acc_days_ptr) {
+sched_kw_type * sched_kw_alloc(const char * kw_name , sched_type_enum type, bool one_line_kw, int * next_date_nr , double * acc_days_ptr, const time_t * start_date) {
   
   sched_kw_type *kw = malloc(sizeof *kw);
   kw->type = type;
@@ -39,10 +40,10 @@ sched_kw_type * sched_kw_alloc(const char * kw_name , sched_type_enum type, bool
     kw->data = sched_kw_wconhist_alloc();
     break;
   case(DATES):
-    kw->data = sched_kw_dates_alloc(next_date_nr);
+    kw->data = sched_kw_dates_alloc(next_date_nr , start_date);
     break;
   case(TSTEP):
-    kw->data = sched_kw_tstep_alloc(next_date_nr , acc_days_ptr);
+    kw->data = sched_kw_tstep_alloc(next_date_nr , acc_days_ptr , start_date);
     break;
   case(UNTYPED):
     kw->data = sched_kw_untyped_alloc(kw_name , one_line_kw);
@@ -162,7 +163,7 @@ void sched_kw_fwrite(const sched_kw_type *kw , FILE *stream) {
 }
 
 
-sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , double *acc_days_ptr , int last_date_nr , time_t last_time , double last_day , FILE *stream , bool *at_eof, bool *stop) {
+sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , double *acc_days_ptr , const time_t *start_date , int last_date_nr , time_t last_time , double last_day , FILE *stream , bool *at_eof, bool *stop) {
   sched_kw_type * kw = malloc(sizeof *kw);
   fread(&kw->type  , sizeof kw->type , 1 , stream);
 
@@ -174,10 +175,10 @@ sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , double *acc_days_ptr , 
     kw->data = sched_kw_wconhist_fread_alloc(stream);
     break;
   case(DATES):
-    kw->data = sched_kw_dates_fread_alloc(next_date_nr, last_date_nr , last_time , stream , stop);
+    kw->data = sched_kw_dates_fread_alloc(next_date_nr, start_date , last_date_nr , last_time , stream , stop);
     break;
   case(TSTEP):
-    kw->data = sched_kw_tstep_fread_alloc(next_date_nr, acc_days_ptr , last_date_nr , last_day , stream , stop);
+    kw->data = sched_kw_tstep_fread_alloc(next_date_nr, acc_days_ptr , start_date , last_date_nr , last_day , stream , stop);
     break;
   case(UNTYPED):
     kw->data = sched_kw_untyped_fread_alloc(stream);

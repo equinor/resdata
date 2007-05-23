@@ -140,6 +140,19 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
 }
     
 
+void ecl_inter_fwrite_param__(const char *_filename    , const int *filename_len,
+			      const int  *fmt_file_int , 
+			      const char *_header      , const int *header_len, 
+			      const int  *size,          void *data) {
+  char *filename = util_alloc_cstring(_filename , filename_len);
+  char *header   = util_alloc_cstring(_header   , header_len);
+  bool fmt_file  = util_intptr_2bool(fmt_file_int);
+  ecl_kw_fwrite_param(filename , fmt_file , ENDIAN_CONVERT , header , ecl_float_type , *size , data);
+  free(filename);
+  free(header);
+}
+
+
 
 /******************************************************************/
 

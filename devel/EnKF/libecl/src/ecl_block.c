@@ -159,6 +159,40 @@ bool ecl_block_add_kw_copy(ecl_block_type *ecl_block , const ecl_kw_type *src_kw
 }
 
 
+bool ecl_block_fseek(int istep , bool fmt_file , bool abort_on_error , fortio_type * fortio) {
+  if (istep == 0) 
+    return true;
+  else {
+    ecl_kw_type *tmp_kw = ecl_kw_alloc_empty(fmt_file , fortio_get_endian_flip(fortio));     
+    FILE *stream        = fortio_get_FILE(fortio);
+    long int init_pos   = ftell(stream);
+    char *first_kw;
+    int   step_nr;
+    bool block_found;
+    step_nr = 1;
+    
+    if (ecl_kw_fread_header(tmp_kw , fortio)) {
+      first_kw = util_alloc_string_copy(ecl_kw_get_header_ref(tmp_kw));
+      block_found = true;
+      do {
+	block_found = ecl_kw_fseek_kw(first_kw , fmt_file , false , false , fortio);
+	step_nr++;
+      } while (block_found && (step_nr < istep));
+    } else block_found = false;
+    ecl_kw_free(tmp_kw);
+    if (!block_found) {
+      fseek(stream , init_pos , SEEK_SET);
+      if (abort_on_error) {
+	fprintf(stderr,"%s: failed to locate block number:%d - aborting \n",__func__ , istep);
+	abort();
+      }
+    }
+    return block_found;
+  }
+}
+
+
+
 ecl_kw_type * ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_eof , bool return_last_kw) {
   ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty(ecl_block->fmt_file , ecl_block->endian_convert);
   ecl_kw_type *return_kw = NULL;

@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <util.h>
 #include <enkf_types.h>
-#include <enkf_state.h>
 #include <multz_config.h>
 #include <multz.h>
 #include <enkf_util.h>
@@ -12,7 +12,6 @@
 
 struct multz_struct {
   const multz_config_type *config;
-  const enkf_state_type   *enkf_state;
   double                  *data;
 };
 
@@ -23,14 +22,16 @@ void multz_realloc_data(multz_type *multz) {
 }
 
 
-multz_type * multz_alloc(const enkf_state_type * enkf_state , const multz_config_type * multz_config) {
-  multz_type * multz = malloc(sizeof *multz);
-  multz->enkf_state   = enkf_state;
+
+multz_type * multz_alloc(const multz_config_type * multz_config) {
+  multz_type * multz  = malloc(sizeof *multz);
   multz->config = multz_config;
   multz->data = NULL;
   multz_realloc_data(multz);
   return multz;
 }
+
+
 
 
 void multz_clear(multz_type * multz) {
@@ -44,7 +45,7 @@ void multz_clear(multz_type * multz) {
 
 multz_type * multz_copyc(const multz_type *multz) {
   const int size = multz_config_get_size(multz->config);   
-  multz_type * new = multz_alloc(multz->enkf_state , multz->config);
+  multz_type * new = multz_alloc(multz->config);
   
   memcpy(new->data , multz->data , size * sizeof *multz->data);
   printf("Har klonet et multz objekt \n");
@@ -54,8 +55,8 @@ multz_type * multz_copyc(const multz_type *multz) {
 
 
 
-void multz_ecl_write(const multz_type * multz) {
-  const char * ecl_file = multz_config_get_ecl_file_ref(multz->config);
+void multz_ecl_write(const multz_type * multz , const char * path) {
+  char * ecl_file = util_alloc_full_path(path , multz_config_get_ecl_file_ref(multz->config));
   FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
   {
     const int size = multz_config_get_size(multz->config);   
@@ -64,32 +65,31 @@ void multz_ecl_write(const multz_type * multz) {
       multz_config_fprintf_layer(multz->config , k , multz->data[k] , stream);
   }
   fclose(stream);
+  free(ecl_file);
 }
 
 
 
-void multz_ens_write(const multz_type * multz) {
+void multz_ens_write(const multz_type * multz , const char * path) {
   const  multz_config_type * config = multz->config;
-  const char * ens_file = multz_config_get_ens_file_ref(multz->config);
+  char * ens_file = util_alloc_full_path(path , multz_config_get_ens_file_ref(multz->config));
   
   FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
   fwrite(&config->size    , sizeof  config->size     , 1 , stream);
   enkf_util_fwrite(multz->data    , sizeof *multz->data    , config->size , stream , __func__);
   fclose(stream);
-
+  free(ens_file);
 }
 
 
-
-void multz_ens_read(multz_type * multz) {
-  
-  const char * ens_file = multz_config_get_ens_file_ref(multz->config);
+void multz_ens_read(multz_type * multz , const char *path) {
+  char * ens_file = util_alloc_full_path(path , multz_config_get_ens_file_ref(multz->config));
   FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
   int  size;
   fread(&size , sizeof  size     , 1 , stream);
   enkf_util_fread(multz->data , sizeof *multz->data , size , stream , __func__);
   fclose(stream);
-
+  free(ens_file);
 }
 
 
@@ -102,7 +102,6 @@ void multz_sample(multz_type *multz) {
   const int                size     = multz_config_get_size(config);
   int i;
 
-  printf("Skal sample ... \n");
   
   for (i=0; i < size; i++) 
     if (active[i])
@@ -111,9 +110,14 @@ void multz_sample(multz_type *multz) {
 }
 
 
+void multz_free_data(multz_type *multz) {
+  free(multz->data);
+  multz->data = NULL;
+}
+
 
 void multz_free(multz_type *multz) {
-  free(multz->data);
+  multz_free_data(multz);
   free(multz);
 }
 
@@ -135,10 +139,6 @@ void multz_serialize(const multz_type *multz , double *serial_data , size_t *_of
 }
 
 
-void multz_free_data(multz_type *multz) {
-  free(multz->data);
-  multz->data = NULL;
-}
 
 
 
@@ -147,17 +147,19 @@ void multz_free_data(multz_type *multz) {
 
 
 MATH_OPS(multz)
+VOID_ALLOC(multz)
+VOID_FREE(multz)
+VOID_FREE_DATA(multz)
+VOID_REALLOC_DATA(multz)
+VOID_ECL_WRITE (multz)
+VOID_ENS_WRITE (multz)
+VOID_ENS_READ  (multz)
+VOID_COPYC     (multz)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/
-VOID_FUNC      (multz_free         , multz_type)
-VOID_FUNC_CONST(multz_ecl_write    , multz_type)
-VOID_FUNC_CONST(multz_ens_write    , multz_type)
-VOID_COPYC     (multz_copyc        , multz_type)
-VOID_FUNC      (multz_ens_read     , multz_type)
+
 VOID_FUNC      (multz_clear        , multz_type)
 VOID_FUNC      (multz_sample       , multz_type)
-VOID_FUNC      (multz_free_data    , multz_type)
-VOID_FUNC      (multz_realloc_data , multz_type)
 VOID_SERIALIZE (multz_serialize    , multz_type)
 

@@ -220,6 +220,7 @@ void * list_iget(const list_type *list, int index) {
 }
 
 list_node_type * list_get_head(const list_type *list) { return list->head; }
+list_node_type * list_get_tail(const list_type *list) { return list->tail; }
 
 int list_get_size(const list_type *list) { return list->length; }
 

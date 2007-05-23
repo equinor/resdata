@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <enkf_util.h>
 #include <config.h>
+#include <enkf_types.h>
 
 typedef struct {
   CONFIG_STD_FIELDS;

@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef enum {parameter = 1 , ecl_restart = 2 , ecl_summary = 4 , ecl_static = 8 , all_types = 15} enkf_var_type;
-
 
 /*****************************************************************/
 
@@ -26,14 +24,6 @@ void func ## __(const void *void_arg, double *serial_data , size_t *_offset) { \
    func(arg , serial_data , _offset);   \
 }
 
-#define VOID_COPYC(func,type) \
-void * func ## __(const void *void_arg) { \
-   const type *arg = (const type *) void_arg; \
-   return func(arg);                             \
-}
-
-
-#define VOID_COPYC_HEADER(func) void * func ## __(const void *void_arg)
 #define VOID_FUNC_HEADER(func) void func ## __(void *void_arg)
 #define VOID_FUNC_HEADER_CONST(func) void func ## __(const void *void_arg)
 #define VOID_SERIALIZE_HEADER(func) void func ## __(const void *void_arg , double *, size_t *)

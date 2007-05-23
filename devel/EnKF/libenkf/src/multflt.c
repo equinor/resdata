@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <enkf_types.h>
 #include <enkf_state.h>
+#include <util.h>
 #include <multflt_config.h>
 #include <multflt.h>
 #include <enkf_util.h>
@@ -11,15 +12,13 @@
 
 struct multflt_struct {
   const multflt_config_type *config;
-  const enkf_state_type     *enkf_state;
   double                    *data;
 };
 
 /*****************************************************************/
 
-multflt_type * multflt_alloc(const enkf_state_type * enkf_state , const multflt_config_type * config) {
+multflt_type * multflt_alloc(const multflt_config_type * config) {
   multflt_type * multflt  = malloc(sizeof *multflt);
-  multflt->enkf_state     = enkf_state;
   multflt->config = config;
   multflt->data           = enkf_util_malloc(config->size * sizeof *multflt->data , __func__);
   return multflt;
@@ -37,27 +36,15 @@ void multflt_clear(multflt_type * multflt) {
 
 multflt_type * multflt_copyc(const multflt_type *multflt) {
   const int size = multflt_config_get_size(multflt->config);   
-  multflt_type * new = multflt_alloc(multflt->enkf_state , multflt->config);
+  multflt_type * new = multflt_alloc(multflt->config);
   
   memcpy(new->data , multflt->data , size * sizeof *multflt->data);
   return new;
 }
 
 
-char * multflt_alloc_ensname(const multflt_type *multflt) {
-  char *ens_name  = enkf_state_alloc_ensname(multflt->enkf_state , multflt_config_get_ensname_ref(multflt->config));
-  return ens_name;
-}
-
-
-char * multflt_alloc_eclname(const multflt_type *multflt) {
-  char  *ecl_name = enkf_state_alloc_eclname(multflt->enkf_state , multflt_config_get_eclname_ref(multflt->config));
-  return ecl_name;
-}
-
-
-void multflt_ecl_write(const multflt_type * multflt) {
-  char * ecl_file = multflt_alloc_eclname(multflt);
+void multflt_ecl_write(const multflt_type * multflt, const char * path) {
+  char * ecl_file = util_alloc_full_path(path , multflt_config_get_eclname_ref(multflt->config));
   FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
   {
     const multflt_config_type *config = multflt->config;
@@ -75,9 +62,9 @@ void multflt_ecl_write(const multflt_type * multflt) {
 }
 
 
-void multflt_ens_write(const multflt_type * multflt) {
+void multflt_ens_write(const multflt_type * multflt, const char * path) {
   const  multflt_config_type * config = multflt->config;
-  char * ens_file = multflt_alloc_ensname(multflt);  
+  char * ens_file = util_alloc_full_path(path , multflt_config_get_ensname_ref(config));
   FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
   fwrite(&config->size  , sizeof  config->size     , 1 , stream);
   enkf_util_fwrite(multflt->data    , sizeof *multflt->data    , config->size , stream , __func__);
@@ -86,9 +73,8 @@ void multflt_ens_write(const multflt_type * multflt) {
 }
 
 
-
-void multflt_ens_read(multflt_type * multflt) {
-  char * ens_file = multflt_alloc_ensname(multflt);
+void multflt_ens_read(multflt_type * multflt , const char * path) {
+  char * ens_file = util_alloc_full_path(path , multflt_config_get_ensname_ref(multflt->config));
   FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
   int  nz;
   fread(&nz , sizeof  nz     , 1 , stream);
@@ -139,14 +125,15 @@ void multflt_serialize(const multflt_type *multflt , double *serial_data , size_
 
 
 MATH_OPS(multflt);
-
+VOID_ALLOC(multflt);
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/
 
-VOID_FUNC_CONST(multflt_ecl_write , multflt_type)
-VOID_FUNC_CONST(multflt_ens_write , multflt_type)
-VOID_FUNC      (multflt_ens_read  , multflt_type)
+VOID_ECL_WRITE (multflt)
+VOID_ENS_WRITE (multflt)
+VOID_ENS_READ  (multflt)
+VOID_COPYC     (multflt)
 VOID_FUNC      (multflt_sample    , multflt_type)
 VOID_FUNC      (multflt_free      , multflt_type)
 VOID_SERIALIZE (multflt_serialize , multflt_type)

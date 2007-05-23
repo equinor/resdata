@@ -8,6 +8,7 @@
 typedef struct ecl_block_struct ecl_block_type;
 
 
+bool             ecl_block_fseek(int , bool , bool , fortio_type * );
 ecl_kw_type    * ecl_block_get_first_kw(const ecl_block_type * );
 ecl_kw_type    * ecl_block_get_next_kw(const ecl_block_type *  , const ecl_kw_type * );
 void 		 ecl_block_fread_kwlist(ecl_block_type *, fortio_type *, int , const char **);

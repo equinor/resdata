@@ -6,6 +6,7 @@
 
 
 struct enkf_node_struct {
+  alloc_ftype     *alloc;
   ecl_write_ftype *ecl_write;
   ens_read_ftype  *ens_read;
   ens_write_ftype *ens_write;
@@ -18,14 +19,19 @@ struct enkf_node_struct {
   imul_ftype      *imul;
   isqrt_ftype     *isqrt;
   iaddsqr_ftype   *iaddsqr;
+
   char            *node_key;
   void            *data;
+  const void      *config;
   enkf_var_type    var_type;
 };
 
 
 
-enkf_node_type * enkf_node_alloc(const char *node_key, enkf_var_type var_type , void *data , 
+enkf_node_type * enkf_node_alloc(const char *node_key, 
+				 enkf_var_type var_type , 
+				 const void * config, 
+				 alloc_ftype     * alloc     , 
 				 ecl_write_ftype * ecl_write , 
 				 ens_read_ftype  * ens_read  , 
 				 ens_write_ftype * ens_write , 
@@ -34,18 +40,21 @@ enkf_node_type * enkf_node_alloc(const char *node_key, enkf_var_type var_type , 
 				 free_ftype      * freef) {
   
   enkf_node_type *node = malloc(sizeof *node);
+  node->alloc     = alloc;
   node->ecl_write = ecl_write;
   node->ens_read  = ens_read;
   node->ens_write = ens_write;
   node->sample    = sample;
   node->freef     = freef;
   node->copyc     = copyc;
-  node->data      = data;
   node->node_key  = util_alloc_string_copy(node_key);
   node->var_type  = var_type;
-  return node;
+  node->config    = config;
   
+  node->data      = node->alloc(node->config);
+  return node;
 }
+
 
 
 enkf_node_type * enkf_node_copyc(const enkf_node_type * src) {
@@ -53,19 +62,21 @@ enkf_node_type * enkf_node_copyc(const enkf_node_type * src) {
     printf("Har ikke copyc funksjon\n");
     abort();
   }
-  {void *new_data = src->copyc(src->data);
-  enkf_node_type * new = enkf_node_alloc(enkf_node_get_key_ref(src) , 
-					 src->var_type , 
-					 new_data, 
-					 src->ecl_write,
-					 src->ens_read,
-					 src->ens_write, 
-					 src->copyc,
-					 src->sample,
-					 src->freef);
+  {
+    enkf_node_type * new = enkf_node_alloc(enkf_node_get_key_ref(src) , 
+					   src->var_type , 
+					   src->config,
+					   src->alloc,
+					   src->ecl_write,
+					   src->ens_read,
+					   src->ens_write, 
+					   src->copyc,
+					   src->sample,
+					   src->freef);
   return new;
   }
 }
+
 
 
 bool enkf_node_include_type(const enkf_node_type * enkf_node, int mask) {
@@ -81,19 +92,19 @@ bool enkf_node_include_type(const enkf_node_type * enkf_node, int mask) {
 void * enkf_node_value_ptr(const enkf_node_type * enkf_node) { return enkf_node->data; }
 
 
-void enkf_node_ecl_write(const enkf_node_type *enkf_node) {
+void enkf_node_ecl_write(const enkf_node_type *enkf_node , const char *path) {
   FUNC_ASSERT(enkf_node->ecl_write , "ecl_write");
-  enkf_node->ecl_write(enkf_node->data);
+  enkf_node->ecl_write(enkf_node->data , path);
 }
 
-void enkf_node_ens_write(const enkf_node_type *enkf_node) {
+void enkf_node_ens_write(const enkf_node_type *enkf_node , const char * path) {
   FUNC_ASSERT(enkf_node->ens_write , "ens_write");
-  enkf_node->ens_write(enkf_node->data);
+  enkf_node->ens_write(enkf_node->data , path);
 }
 
-void enkf_node_ens_read(enkf_node_type *enkf_node) {
+void enkf_node_ens_read(enkf_node_type *enkf_node , const char * path) {
   FUNC_ASSERT(enkf_node->ens_read , "ens_read");
-  enkf_node->ens_read(enkf_node->data);
+  enkf_node->ens_read(enkf_node->data , path);
 }
 
 void enkf_node_ens_clear(enkf_node_type *enkf_node) {
@@ -143,8 +154,6 @@ void enkf_node_free(enkf_node_type *enkf_node) {
   free(enkf_node->node_key);
   free(enkf_node);
 }
-
-
 
 const char *enkf_node_get_key_ref(const enkf_node_type * enkf_node) { return enkf_node->node_key; }
 

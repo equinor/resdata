@@ -104,7 +104,7 @@ sched_kw_type * sched_file_add_kw(sched_file_type *sched_file , const char *kw_n
     else
       one_line_kw = false;
   }
-  kw = sched_kw_alloc(kw_name , type , one_line_kw , &sched_file->next_date_nr , &sched_file->acc_days);
+  kw = sched_kw_alloc(kw_name , type , one_line_kw , &sched_file->next_date_nr , &sched_file->acc_days , &sched_file->start_date);
   sched_file_add_kw__(sched_file , kw);
   return kw;
 }
@@ -216,14 +216,15 @@ void sched_file_init_conn_factor(sched_file_type * sched_file , const char * ini
   bool fmt_file        = util_fmt_bit8(init_file , 2 * 8192);
   fortio_type * fortio = fortio_open(init_file , "r" , endian_flip);
 
-  ecl_kw_fseek_kw("PERMX" , fmt_file , true , fortio);
+  ecl_kw_fseek_kw("INTEHEAD" , fmt_file , true , true , fortio);
+  ihead_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
+
+  ecl_kw_fseek_kw("PERMX" , fmt_file , true , true , fortio);
   permx_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
 
-  ecl_kw_fseek_kw("PERMZ" , fmt_file , true , fortio);
+  ecl_kw_fseek_kw("PERMZ" , fmt_file , true , true , fortio);
   permz_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
   
-  ecl_kw_fseek_kw("INTEHEAD" , fmt_file , true , fortio);
-  ihead_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
   fortio_close(fortio);
 
   {
@@ -303,13 +304,13 @@ sched_file_type * sched_file_fread_alloc(const char * filename , int last_date_n
   fread(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
   fread(sched_file->dims                 , sizeof sched_file->dims                , 3 , stream); 
   fread(&sched_file->start_date          , sizeof sched_file->start_date          , 1 , stream); 
-
+  
   at_eof = false;
   stop   = false;
   cont   = true;
   kw_nr  = 0;
   while (cont) {
-    sched_kw_type *kw = sched_kw_fread_alloc(&sched_file->next_date_nr , &sched_file->acc_days , last_date_nr , last_time , last_day ,stream , &at_eof, &stop);
+    sched_kw_type *kw = sched_kw_fread_alloc(&sched_file->next_date_nr , &sched_file->acc_days , &sched_file->start_date , last_date_nr , last_time , last_day ,stream , &at_eof, &stop);
     sched_file_add_kw__(sched_file , kw);
     kw_nr += 1;
     if (at_eof || stop || kw_nr == len)

@@ -201,6 +201,9 @@ void hash_free(hash_type *hash) {
   free(hash);
 }
 
+void hash_free__(void *void_hash) {
+  hash_free((hash_type *) void_hash);
+}
 
 static void hash_insert_node(hash_type *hash , hash_node_type *node) {
   uint32_t table_index = hash_node_get_table_index(node);

@@ -13,7 +13,9 @@
 
 
 struct date_node_struct {
+  bool     TStep;
   time_t   time;
+  time_t  *start_time;
   int      date_nr;
 };
 
@@ -52,6 +54,7 @@ date_node_type * date_node_alloc(int date_nr , const char *line , const hash_typ
     ts.tm_year   = atoi(token_list[2]) - 1900;
     date_node->time = mktime( &ts );
   }
+  date_node->TStep = false;
   return date_node;
 }
 
@@ -85,13 +88,15 @@ void date_node_fprintf(const date_node_type * node, FILE *stream , int last_date
 
 void date_node_fwrite(const date_node_type * date_node , FILE *stream) {
   fwrite(&date_node->time    , sizeof date_node->time    , 1 , stream);
-  fwrite(&date_node->date_nr , sizeof date_node->date_nr , 1, stream);
+  fwrite(&date_node->TStep   , sizeof date_node->TStep   , 1 , stream);
+  fwrite(&date_node->date_nr , sizeof date_node->date_nr , 1 , stream);
 }
 
 
 date_node_type * date_node_fread_alloc(int last_date_nr , time_t last_time , FILE *stream, bool *stop) {
   date_node_type * node = malloc(sizeof *node); /* SKipping spesific alloc routine - UGGLY */
   fread(&node->time    , sizeof node->time    , 1 , stream);
+  fread(&node->TStep   , sizeof node->TStep   , 1 , stream);
   fread(&node->date_nr , sizeof node->date_nr , 1 , stream);
 
   if (last_date_nr > 0) {

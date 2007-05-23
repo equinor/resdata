@@ -2,48 +2,39 @@
 #include <string.h>
 #include <math.h>
 #include <util.h>
-#include <enkf_state.h>
 #include <ecl_kw.h>
 #include <enkf_ecl_kw.h>
 #include <enkf_ecl_kw_config.h>
 
 
 struct enkf_ecl_kw_struct {
-  /*
-    Due to the way these objects are allocated it is simplest to
-    let each object have it's own config object.
-  */
   ecl_type_enum                  ecl_type;
   const enkf_ecl_kw_config_type  *config;
-  const enkf_state_type          *enkf_state;
   double                         *data;
 };
 
 
-static enkf_ecl_kw_type * enkf_ecl_kw_alloc2(const enkf_state_type * enkf_state , const enkf_ecl_kw_config_type *config) {
-  enkf_ecl_kw_type     * enkf_kw = malloc(sizeof *enkf_kw);
-  enkf_kw->config     = config;
-  enkf_kw->enkf_state = enkf_state;
+void enkf_ecl_kw_realloc_data(enkf_ecl_kw_type * enkf_kw) {
   enkf_kw->data       = enkf_util_malloc(enkf_ecl_kw_config_get_size(enkf_kw->config) * sizeof * enkf_kw->data , __func__);
+}
+
+
+static enkf_ecl_kw_type * enkf_ecl_kw_alloc2(const enkf_ecl_kw_config_type *config) {
+  enkf_ecl_kw_type   *  enkf_kw = malloc(sizeof *enkf_kw);
+  
+  enkf_kw->config     = config;
   return enkf_kw;
 }
 
 
-enkf_ecl_kw_type * enkf_ecl_kw_alloc(const enkf_state_type * enkf_state , const char * ens_file , int size , const char * ecl_kw_name) { 
+
+enkf_ecl_kw_type * enkf_ecl_kw_alloc(const enkf_ecl_kw_config_type * config) { 
   
-  enkf_ecl_kw_config_type * config  = enkf_ecl_kw_config_alloc(size , ecl_kw_name , ens_file);
-  return enkf_ecl_kw_alloc2(enkf_state , config);
+  return enkf_ecl_kw_alloc2(config);
 
 }
 
 
-enkf_ecl_kw_type * enkf_kw_copyc(const enkf_ecl_kw_type * src) {
-  enkf_ecl_kw_config_type * config = enkf_ecl_kw_config_copyc(src->config);
-  enkf_ecl_kw_type        * new_kw = enkf_ecl_kw_alloc2(src->enkf_state , config);
-  
-  memcpy(new->data , src->data , enkf_eckl_kw_config_get_size(config) * sizeof * src->data);
-  return new;
-}
 
 
 
@@ -88,7 +79,7 @@ void enkf_ecl_kw_clear(enkf_ecl_kw_type * enkf_kw) {
 
 
 enkf_ecl_kw_type * enkf_ecl_kw_copyc(const enkf_ecl_kw_type *enkf_kw) {
-  enkf_ecl_kw_type * new_kw = enkf_ecl_kw_alloc2(enkf_kw->enkf_state , enkf_kw->config);
+  enkf_ecl_kw_type * new_kw = enkf_ecl_kw_alloc2(enkf_kw->config);
   memcpy(new_kw->data , enkf_kw->data , enkf_ecl_kw_config_get_size(enkf_kw->config) * sizeof * enkf_kw->data);
   new_kw->ecl_type = enkf_kw->ecl_type;
   return new_kw;
@@ -99,7 +90,7 @@ char * enkf_ecl_kw_alloc_ensname(const enkf_ecl_kw_type *enkf_ecl_kw) {
   return ens_file;
 }
 
-void enkf_ecl_kw_ens_write(const enkf_ecl_kw_type * enkf_ecl_kw) {
+void enkf_ecl_kw_ens_write(const enkf_ecl_kw_type * enkf_ecl_kw, const char * path) {
   char * ens_file = "NULL";
   FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
   const int    size = enkf_ecl_kw_config_get_size(enkf_ecl_kw->config);
@@ -109,7 +100,7 @@ void enkf_ecl_kw_ens_write(const enkf_ecl_kw_type * enkf_ecl_kw) {
   free(ens_file);
 }
 
-void enkf_ecl_kw_ens_read(enkf_ecl_kw_type * enkf_ecl_kw) {
+void enkf_ecl_kw_ens_read(enkf_ecl_kw_type * enkf_ecl_kw , const char * path) {
   char * ens_file = "NULL";
   FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
   int  size;
@@ -119,9 +110,13 @@ void enkf_ecl_kw_ens_read(enkf_ecl_kw_type * enkf_ecl_kw) {
   free(ens_file);
 }
 
-void enkf_ecl_kw_free(enkf_ecl_kw_type *enkf_ecl_kw) {
-  enkf_ecl_kw_config_free((enkf_ecl_kw_config_type *) enkf_ecl_kw->config);
+void enkf_ecl_kw_free_data(enkf_ecl_kw_type *enkf_ecl_kw) {
   free(enkf_ecl_kw->data);
+  enkf_ecl_kw->data = NULL;
+}
+
+void enkf_ecl_kw_free(enkf_ecl_kw_type *enkf_ecl_kw) {
+  enkf_ecl_kw_free_data(enkf_ecl_kw);
   free(enkf_ecl_kw);
 }
 
@@ -142,13 +137,16 @@ void enkf_ecl_kw_serialize(const enkf_ecl_kw_type *enkf_ecl_kw , double *serial_
 */
 
 
+VOID_ALLOC(enkf_ecl_kw)
+VOID_FREE(enkf_ecl_kw)
+VOID_FREE_DATA(enkf_ecl_kw)
+VOID_REALLOC_DATA(enkf_ecl_kw)
+VOID_ENS_WRITE (enkf_ecl_kw)
+VOID_ENS_READ  (enkf_ecl_kw)
+VOID_COPYC(enkf_ecl_kw)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/
-VOID_FUNC      (enkf_ecl_kw_free      , enkf_ecl_kw_type)
-VOID_FUNC_CONST(enkf_ecl_kw_ens_write , enkf_ecl_kw_type)
-VOID_FUNC_CONST(enkf_ecl_kw_copyc     , enkf_ecl_kw_type)
-VOID_FUNC      (enkf_ecl_kw_ens_read  , enkf_ecl_kw_type)
 VOID_FUNC      (enkf_ecl_kw_clear     , enkf_ecl_kw_type)
 VOID_SERIALIZE (enkf_ecl_kw_serialize , enkf_ecl_kw_type)
 

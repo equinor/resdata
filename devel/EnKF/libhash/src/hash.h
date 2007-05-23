@@ -14,6 +14,7 @@ typedef struct hash_struct hash_type;
 
 hash_type   	* hash_alloc(int);
 void        	  hash_free(hash_type *);
+void              hash_free__(void *);
 void        	  hash_insert_ref(hash_type * , const char * , const void *);
 void              hash_insert_managed_ref(hash_type *, const char *, const void *, del_type *);
 void        	  hash_insert_copy(hash_type *, const char * , const void *, copyc_type *, del_type *);

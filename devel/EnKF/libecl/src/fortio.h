@@ -21,5 +21,5 @@ FILE        * fortio_get_FILE(const fortio_type *);
 int           fortio_get_record_size(const fortio_type *);
 bool          fortio_get_endian_flip(const fortio_type *);
 void          fortio_rewind(const fortio_type *fortio);
-
+const char  * fortio_filename_ref(const fortio_type * );
 #endif

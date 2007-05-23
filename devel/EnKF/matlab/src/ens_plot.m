@@ -27,7 +27,7 @@ function ens_plot(year,month,day,prior_path , posterior_path , well_list , var_l
    end
 
    if exist(posterior_path,'dir') == 0
-      disp(sprintf('Could not locate posterior_path: %s - returning from ens_plot. , posterior_path));
+      disp(sprintf('Could not locate posterior_path: %s - returning from ens_plot. ', posterior_path));
       return;
    end
 

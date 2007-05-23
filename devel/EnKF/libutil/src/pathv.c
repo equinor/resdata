@@ -16,7 +16,6 @@ struct pathv_struct {
 /*****************************************************************/
 
 static void pathv_iset__(pathv_type * pathv , int i , const char *path) {
-  printf("Setter %d->%s \n",i,path);
   if (i > 0 || i < pathv->size) {
     if (path != NULL) {
       pathv->path_vector[i] = realloc(pathv->path_vector[i] , strlen(path) + 1);

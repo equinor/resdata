@@ -14,6 +14,7 @@ void             list_free(list_type *);
 bool             list_empty(const list_type * list);
 list_node_type * list_iget_node(const list_type *, int );
 list_node_type * list_get_head(const list_type *);
+list_node_type * list_get_tail(const list_type *);
 list_node_type * list_append_ref(list_type *list , const void *);
 list_node_type * list_append_list_owned_ref(list_type *, const void *, del_type *);
 int              list_get_size(const list_type *);

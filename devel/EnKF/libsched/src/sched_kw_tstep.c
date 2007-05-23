@@ -4,12 +4,14 @@
 #include <util.h>
 #include <sched_util.h>
 #include <sched_kw_tstep.h>
+#include <date_node.h>
 
 
 struct sched_kw_tstep_struct {
-  int    *next_tstep_ptr;
-  double *acc_days_ptr;
-  list_type *tstep_list;
+  const time_t * start_date;
+  int          * next_tstep_ptr;
+  double       * acc_days_ptr;
+  list_type    * tstep_list;
 }; 
 
 
@@ -122,13 +124,15 @@ void sched_kw_tstep_fprintf(const sched_kw_tstep_type *kw , FILE *stream , int l
 }
 
 
-sched_kw_tstep_type * sched_kw_tstep_alloc(int *next_tstep_ptr , double *acc_days_ptr){
+sched_kw_tstep_type * sched_kw_tstep_alloc(int *next_tstep_ptr , double *acc_days_ptr , const time_t * start_date){
   sched_kw_tstep_type *tstep = malloc(sizeof *tstep);
   tstep->tstep_list     = list_alloc();
   tstep->next_tstep_ptr = next_tstep_ptr;
   tstep->acc_days_ptr   = acc_days_ptr;
+  tstep->start_date     = start_date;
   return tstep;
 }
+
 
 void sched_kw_tstep_free(sched_kw_tstep_type * kw) {
   list_free(kw->tstep_list);
@@ -154,9 +158,9 @@ void sched_kw_tstep_fwrite(const sched_kw_tstep_type *kw , FILE *stream) {
 
 
 
-sched_kw_tstep_type * sched_kw_tstep_fread_alloc(int * next_tstep_ptr , double * acc_days_ptr , int last_tstep_nr ,time_t last_time , FILE *stream, bool *stop) {
+sched_kw_tstep_type * sched_kw_tstep_fread_alloc(int * next_tstep_ptr , double * acc_days_ptr , const time_t * start_date , int last_tstep_nr ,time_t last_time , FILE *stream, bool *stop) {
   int lines , line_nr;
-  sched_kw_tstep_type *kw = sched_kw_tstep_alloc(next_tstep_ptr , acc_days_ptr) ;
+  sched_kw_tstep_type *kw = sched_kw_tstep_alloc(next_tstep_ptr , acc_days_ptr , start_date) ;
   fread(&lines       , sizeof lines       , 1 , stream);
   line_nr = 0;
   while (!(*stop) && (line_nr < lines)) {
