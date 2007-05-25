@@ -20,14 +20,14 @@ struct multflt_config_struct {
 
 multflt_config_type * multflt_config_alloc(int , const char * , const char * );
 void                  multflt_config_free(multflt_config_type *);
-const          char * multflt_config_get_ensname_ref(const multflt_config_type * );
-const          char * multflt_config_get_eclname_ref(const multflt_config_type * );
+const          char * multflt_config_get_ensfile_ref(const multflt_config_type * );
+const          char * multflt_config_get_eclfile_ref(const multflt_config_type * );
 
 
 
 CONFIG_GET_SIZE_FUNC_HEADER(multflt);
-CONFIG_SET_ECL_FILE_HEADER_VOID(multflt);
-CONFIG_SET_ENS_FILE_HEADER_VOID(multflt);
+CONFIG_SET_ECLFILE_HEADER_VOID(multflt);
+CONFIG_SET_ENSFILE_HEADER_VOID(multflt);
 
 VOID_FUNC_HEADER(multflt_config_free);
 #endif

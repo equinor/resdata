@@ -33,6 +33,9 @@ void multflt_clear(multflt_type * multflt) {
 }
 
 
+char * multflt_alloc_ensfile(const multflt_type * multflt , const char * path) {
+  return util_alloc_full_path(path , multflt_config_get_ensfile_ref(multflt->config));
+}
 
 multflt_type * multflt_copyc(const multflt_type *multflt) {
   const int size = multflt_config_get_size(multflt->config);   
@@ -44,7 +47,7 @@ multflt_type * multflt_copyc(const multflt_type *multflt) {
 
 
 void multflt_ecl_write(const multflt_type * multflt, const char * path) {
-  char * ecl_file = util_alloc_full_path(path , multflt_config_get_eclname_ref(multflt->config));
+  char * ecl_file = util_alloc_full_path(path , multflt_config_get_eclfile_ref(multflt->config));
   FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
   {
     const multflt_config_type *config = multflt->config;
@@ -64,7 +67,7 @@ void multflt_ecl_write(const multflt_type * multflt, const char * path) {
 
 void multflt_ens_write(const multflt_type * multflt, const char * path) {
   const  multflt_config_type * config = multflt->config;
-  char * ens_file = util_alloc_full_path(path , multflt_config_get_ensname_ref(config));
+  char * ens_file = multflt_alloc_ensfile(multflt , path);
   FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
   fwrite(&config->size  , sizeof  config->size     , 1 , stream);
   enkf_util_fwrite(multflt->data    , sizeof *multflt->data    , config->size , stream , __func__);
@@ -74,7 +77,7 @@ void multflt_ens_write(const multflt_type * multflt, const char * path) {
 
 
 void multflt_ens_read(multflt_type * multflt , const char * path) {
-  char * ens_file = util_alloc_full_path(path , multflt_config_get_ensname_ref(multflt->config));
+  char * ens_file = multflt_alloc_ensfile(multflt , path);
   FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
   int  nz;
   fread(&nz , sizeof  nz     , 1 , stream);
@@ -126,6 +129,7 @@ void multflt_serialize(const multflt_type *multflt , double *serial_data , size_
 
 MATH_OPS(multflt);
 VOID_ALLOC(multflt);
+VOID_ALLOC_ENSFILE(multflt);
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

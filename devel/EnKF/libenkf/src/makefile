@@ -38,12 +38,13 @@ $(LIB): $(OBJECTS)
 enkf_ecl_kw_config.o : enkf_ecl_kw_config.c enkf_ecl_kw_config.h config.h
 enkf_ecl_kw.o  : enkf_util.h enkf_ecl_kw.c enkf_ecl_kw.h enkf_ecl_kw_config.o
 equil_config.o : enkf_util.h equil_config.c equil_config.h config.h
-enkf_state.o   : enkf_util.h enkf_state.c enkf_state.h enkf_node.o
-multflt.o      : enkf_util.h multflt.c multflt.h multflt_config.o enkf_util.o
+enkf_state.o   : enkf_util.h enkf_state.c enkf_state.h enkf_node.o config.h
+multflt_config.o : multflt_config.c multflt_config.h config.h
+multflt.o      : enkf_util.h multflt.c multflt.h multflt_config.o enkf_util.o 
 ecl_config.o   : enkf_util.h ecl_config.c ecl_config.h config.h
 multz_config.o : enkf_util.h multz_config.c multz_config.h config.h
 multz.o        : enkf_util.h multz.c multz.h multz_config.o
-enkf_node.o    : enkf_util.h enkf_node.h enkf_node.c
+enkf_node.o    : enkf_util.h enkf_node.h enkf_node.c config.h
 
 
 

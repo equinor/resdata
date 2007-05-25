@@ -23,6 +23,7 @@ static enkf_ecl_kw_type * enkf_ecl_kw_alloc2(const enkf_ecl_kw_config_type *conf
   enkf_ecl_kw_type   *  enkf_kw = malloc(sizeof *enkf_kw);
   
   enkf_kw->config     = config;
+  enkf_ecl_kw_realloc_data(enkf_kw);
   return enkf_kw;
 }
 
@@ -61,10 +62,10 @@ ecl_kw_type * enkf_ecl_kw_alloc_ecl_kw(const enkf_ecl_kw_type *enkf_kw , bool fm
 void enkf_ecl_kw_get_data(enkf_ecl_kw_type * enkf_kw , const ecl_kw_type *ecl_kw) {
   enkf_kw->ecl_type =  ecl_kw_get_type(ecl_kw);
   if (enkf_kw->ecl_type == ecl_double_type) 
-  ecl_kw_get_memcpy_data(ecl_kw , enkf_kw->data);
-  else if (enkf_kw->ecl_type == ecl_float_type) 
-  util_float_to_double(enkf_kw->data , ecl_kw_get_data_ref(ecl_kw) , ecl_kw_get_size(ecl_kw));
-  else {
+    ecl_kw_get_memcpy_data(ecl_kw , enkf_kw->data);
+  else if (enkf_kw->ecl_type == ecl_float_type) {
+    util_float_to_double(enkf_kw->data , ecl_kw_get_data_ref(ecl_kw) , ecl_kw_get_size(ecl_kw));
+}  else {
     fprintf(stderr,"%s fatal error ECLIPSE type:%s can not be used in EnKF - aborting \n",__func__  , ecl_kw_get_str_type_ref(ecl_kw));
     abort();
   }
@@ -90,24 +91,40 @@ char * enkf_ecl_kw_alloc_ensname(const enkf_ecl_kw_type *enkf_ecl_kw) {
   return ens_file;
 }
 
-void enkf_ecl_kw_ens_write(const enkf_ecl_kw_type * enkf_ecl_kw, const char * path) {
-  char * ens_file = "NULL";
-  FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
-  const int    size = enkf_ecl_kw_config_get_size(enkf_ecl_kw->config);
-  fwrite(&size    , sizeof  size     , 1 , stream);
-  enkf_util_fwrite(enkf_ecl_kw->data    , sizeof *enkf_ecl_kw->data    , size , stream , __func__);
-  fclose(stream);
-  free(ens_file);
+char * enkf_ecl_kw_alloc_ensfile(const enkf_ecl_kw_type * enkf_ecl_kw, const char * path) {
+  return util_alloc_full_path(path , enkf_ecl_kw_config_get_ensfile_ref(enkf_ecl_kw->config));
 }
 
+
+void enkf_ecl_kw_ens_write(const enkf_ecl_kw_type * enkf_ecl_kw, const char * path) {
+  char * ens_file = enkf_ecl_kw_alloc_ensfile(enkf_ecl_kw , path);
+  FILE * stream     = enkf_util_fopen_w(ens_file , __func__);
+  const int    size = enkf_ecl_kw_config_get_size(enkf_ecl_kw->config);
+  fwrite(&size    , sizeof  size     , 1 , stream);
+  {
+    float *tmp = enkf_util_calloc(size , sizeof *tmp , __func__);
+    util_double_to_float(tmp , enkf_ecl_kw->data , size);
+    enkf_util_fwrite(tmp    , sizeof *tmp  , size , stream , __func__);
+    free(tmp);
+  }
+  fclose(stream);
+  free( ens_file );
+}
+
+
 void enkf_ecl_kw_ens_read(enkf_ecl_kw_type * enkf_ecl_kw , const char * path) {
-  char * ens_file = "NULL";
+  const char * ens_file = enkf_ecl_kw_alloc_ensfile(enkf_ecl_kw , path);
   FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
   int  size;
   fread(&size , sizeof  size     , 1 , stream);
-  enkf_util_fread(enkf_ecl_kw->data , sizeof *enkf_ecl_kw->data , size , stream , __func__);
+  {
+    float *tmp = enkf_util_calloc(size , sizeof *tmp , __func__);
+    enkf_util_fread(tmp    , sizeof *tmp  , size , stream , __func__);
+    util_float_to_double(enkf_ecl_kw->data , tmp , size);
+    free(tmp);
+  }
   fclose(stream);
-  free(ens_file);
+  free((char *) ens_file);
 }
 
 void enkf_ecl_kw_free_data(enkf_ecl_kw_type *enkf_ecl_kw) {
@@ -144,6 +161,7 @@ VOID_REALLOC_DATA(enkf_ecl_kw)
 VOID_ENS_WRITE (enkf_ecl_kw)
 VOID_ENS_READ  (enkf_ecl_kw)
 VOID_COPYC(enkf_ecl_kw)
+VOID_ALLOC_ENSFILE(enkf_ecl_kw);
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

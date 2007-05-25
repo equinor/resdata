@@ -8,6 +8,7 @@
 struct enkf_node_struct {
   alloc_ftype     *alloc;
   ecl_write_ftype *ecl_write;
+  alloc_ensfile_ftype *alloc_ensfile;
   ens_read_ftype  *ens_read;
   ens_write_ftype *ens_write;
   sample_ftype    *sample;
@@ -20,6 +21,7 @@ struct enkf_node_struct {
   isqrt_ftype     *isqrt;
   iaddsqr_ftype   *iaddsqr;
 
+  char            *swapfile;
   char            *node_key;
   void            *data;
   const void      *config;
@@ -33,6 +35,7 @@ enkf_node_type * enkf_node_alloc(const char *node_key,
 				 const void * config, 
 				 alloc_ftype     * alloc     , 
 				 ecl_write_ftype * ecl_write , 
+				 alloc_ensfile_ftype * alloc_ensfile , 
 				 ens_read_ftype  * ens_read  , 
 				 ens_write_ftype * ens_write , 
 				 copyc_ftype     * copyc     ,
@@ -42,6 +45,7 @@ enkf_node_type * enkf_node_alloc(const char *node_key,
   enkf_node_type *node = malloc(sizeof *node);
   node->alloc     = alloc;
   node->ecl_write = ecl_write;
+  node->alloc_ensfile = alloc_ensfile;
   node->ens_read  = ens_read;
   node->ens_write = ens_write;
   node->sample    = sample;
@@ -50,7 +54,7 @@ enkf_node_type * enkf_node_alloc(const char *node_key,
   node->node_key  = util_alloc_string_copy(node_key);
   node->var_type  = var_type;
   node->config    = config;
-  
+  node->swapfile  = NULL;
   node->data      = node->alloc(node->config);
   return node;
 }
@@ -68,6 +72,7 @@ enkf_node_type * enkf_node_copyc(const enkf_node_type * src) {
 					   src->config,
 					   src->alloc,
 					   src->ecl_write,
+					   src->alloc_ensfile,
 					   src->ens_read,
 					   src->ens_write, 
 					   src->copyc,
@@ -148,10 +153,16 @@ void enkf_node_clear(enkf_node_type *enkf_node) {
   enkf_node->clear(enkf_node->data);
 }
 
+char * enkf_node_alloc_ensfile(const enkf_node_type *enkf_node , const char * path) {
+  FUNC_ASSERT(enkf_node->alloc_ensfile , "alloc_ensfile");
+  return enkf_node->alloc_ensfile(enkf_node->data , path);
+}
+
 void enkf_node_free(enkf_node_type *enkf_node) {
   if (enkf_node->freef != NULL)
     enkf_node->freef(enkf_node->data);
   free(enkf_node->node_key);
+  if (enkf_node->swapfile != NULL) free(enkf_node->swapfile);
   free(enkf_node);
 }
 

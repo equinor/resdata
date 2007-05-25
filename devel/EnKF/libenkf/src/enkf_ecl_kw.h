@@ -13,6 +13,7 @@ enkf_ecl_kw_type * enkf_ecl_kw_alloc(const enkf_ecl_kw_config_type * );
 void               enkf_ecl_kw_free(enkf_ecl_kw_type *);
 enkf_ecl_kw_type * enkf_ecl_kw_copyc(const enkf_ecl_kw_type * );
 
+VOID_ALLOC_ENSFILE_HEADER(enkf_ecl_kw);
 MATH_OPS_HEADER(enkf_ecl_kw);
 VOID_ALLOC_HEADER(enkf_ecl_kw);
 VOID_FREE_HEADER(enkf_ecl_kw);

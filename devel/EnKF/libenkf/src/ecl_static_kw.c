@@ -44,22 +44,31 @@ void ecl_static_kw_init(ecl_static_kw_type * ecl_static_kw, const ecl_kw_type * 
   ecl_static_kw->ecl_kw = ecl_kw_alloc_copy(ecl_kw);
 }
 
-void ecl_static_kw_ens_read(ecl_static_kw_type * ecl_static_kw , const char * path) {
-  
+
+char * ecl_static_kw_alloc_ensfile(const ecl_static_kw_type * ecl_static_kw , const char * path) {
+  return util_alloc_full_path(path , ecl_static_kw_config_get_ensname_ref(ecl_static_kw->config));
 }
 
+
+void ecl_static_kw_ens_read(ecl_static_kw_type * ecl_static_kw , const char * path) {
+  printf("%s - not implemented \n",__func__);
+  abort();
+}
+
+
 void ecl_static_kw_ens_write(const ecl_static_kw_type * ecl_static_kw , const char * path) {
-  char * ens_name = util_alloc_full_path(path , ecl_static_kw_config_get_ensname_ref(ecl_static_kw->config));
+  char * ens_name = ecl_static_kw_alloc_ensfile(ecl_static_kw , path);
   fortio_type * fortio = fortio_open(ens_name , "w" , ecl_kw_get_endian_convert(ecl_static_kw->ecl_kw));
   
   ecl_kw_fwrite(ecl_static_kw->ecl_kw , fortio);
   fortio_close(fortio);
 
-  free(ens_name);
+  free( ens_name);
 }
 
 
 
+VOID_ALLOC_ENSFILE(ecl_static_kw);
 /*****************************************************************/
 VOID_ALLOC(ecl_static_kw)
 VOID_FREE(ecl_static_kw)

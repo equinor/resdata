@@ -14,6 +14,15 @@ void * enkf_util_malloc(int byte_size , const char * caller) {
   return tmp;
 }
 
+void * enkf_util_calloc(int elements , int element_size , const char * caller) {
+  void *tmp = calloc(elements , element_size);
+  if (tmp == NULL) {
+    fprintf(stderr,"%s: failed to allocate %d bytes - aborting \n",caller , elements * element_size);
+    abort();
+  }
+  return tmp;
+}
+
 
 void * enkf_util_realloc(void *ptr , int byte_size , const char * caller) {
   void *tmp = realloc(ptr , byte_size);
@@ -45,6 +54,7 @@ FILE * enkf_util_fopen_r(const char * filename , const char * caller) {
 
 
 void enkf_util_fwrite(const void *ptr , int item_size, int items , FILE *stream , const char * caller) {
+  printf("%s:  item_size:%d  items:%d  caller:%s \n",__func__ , item_size , items , caller);
   if (fwrite(ptr , item_size , items , stream) != items) {
     fprintf(stderr,"%s: failed to write : %d bytes - aborting \n",caller , (item_size * items));
     abort();

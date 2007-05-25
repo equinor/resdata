@@ -16,6 +16,8 @@ void             equil_ecl_write(const equil_type * , const char *);
 void             equil_ens_write(const equil_type * , const char *);
 void             equil_ens_read(equil_type * , const char *);
 
+
+VOID_ALLOC_ENSFILE_HEADER(equil);
 VOID_ECL_WRITE_HEADER  (equil)
 VOID_ENS_WRITE_HEADER  (equil)
 VOID_ENS_READ_HEADER   (equil)

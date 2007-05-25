@@ -163,6 +163,7 @@ MUL_FUNC_HEADER  (prefix)
 /*****************************************************************/
 
 
+void * enkf_util_calloc(int , int , const char * );
 void * enkf_util_malloc (int , const char * );
 void * enkf_util_realloc(void * , int , const char * );
 FILE * enkf_util_fopen_r(const char * , const char * );

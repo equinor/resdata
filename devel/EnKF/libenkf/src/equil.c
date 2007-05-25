@@ -32,8 +32,8 @@ equil_type * equil_copyc(const equil_type * src) {
 
 
 void equil_ecl_write(const equil_type * equil, const char * path) {
-  char * ecl_file = util_alloc_full_path(path , equil_config_get_ecl_file_ref(equil->config));
-  FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
+  char * eclfile = util_alloc_full_path(path , equil_config_get_eclfile_ref(equil->config));
+  FILE * stream   = enkf_util_fopen_w(eclfile , __func__);
   {
     const int size = equil->config->size;
     int k;
@@ -41,31 +41,36 @@ void equil_ecl_write(const equil_type * equil, const char * path) {
       /*config_fprintf_layer(equil->config , k + 1 , equil->data[k] , stream);*/
       fprintf(stream , "FAULT:%3d ... %g \n",k,equil->data[k]);
   }
-  free(ecl_file);
+  free(eclfile);
   fclose(stream);
+}
+
+
+const char * equil_alloc_ensfile(const equil_type * equil, const char * path) {
+  return util_alloc_full_path(path , equil_config_get_ensfile_ref(equil->config));
 }
 
 
 void equil_ens_write(const equil_type * equil, const char * path) {
   const  equil_config_type * config = equil->config;
-  char * ens_file = util_alloc_full_path(path , equil_config_get_ens_file_ref(equil->config));
-  FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
+  const char * ensfile = equil_alloc_ensfile(equil , path);
+  FILE * stream  = enkf_util_fopen_w(ensfile , __func__);
   fwrite(&config->size  , sizeof  config->size     , 1 , stream);
   enkf_util_fwrite(equil->data    , sizeof *equil->data    , config->size , stream , __func__);
-  free(ens_file);
+  free((char *) ensfile);
   fclose(stream);
 }
 
 
 
 void equil_ens_read(equil_type * equil , const char * path) {
-  char * ens_file = util_alloc_full_path(path , equil_config_get_ens_file_ref(equil->config));
-  FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
+  const char * ensfile = equil_alloc_ensfile(equil , path);
+  FILE * stream   = enkf_util_fopen_r(ensfile , __func__);
   int  nz;
   fread(&nz , sizeof  nz     , 1 , stream);
   enkf_util_fread(equil->data , sizeof *equil->data , nz , stream , __func__);
   fclose(stream);
-  free(ens_file);
+  free((char *) ensfile);
 }
 
 
@@ -95,6 +100,7 @@ void equil_free(equil_type *equil) {
 
 MATH_OPS(equil);
 VOID_ALLOC(equil);
+VOID_ALLOC_ENSFILE(equil)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

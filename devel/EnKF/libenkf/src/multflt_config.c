@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <util.h>
 #include <ens_config.h>
 #include <multflt_config.h>
@@ -7,15 +8,15 @@
 
 
 
-multflt_config_type * multflt_config_alloc(int size, const char * ecl_file , const char * ens_file) {
+multflt_config_type * multflt_config_alloc(int size, const char * eclfile , const char * ensfile) {
   multflt_config_type *multflt_config = malloc(sizeof *multflt_config);
   
   multflt_config->size        = size;
   multflt_config->ecl_kw_name = NULL;
   multflt_config->var_type    = parameter;
   
-  multflt_config->ecl_file    = util_alloc_string_copy(ecl_file);
-  multflt_config->ens_file    = util_alloc_string_copy(ens_file);
+  multflt_config->eclfile    = util_alloc_string_copy(eclfile);
+  multflt_config->ensfile    = util_alloc_string_copy(ensfile);
   multflt_config->mean        = enkf_util_malloc(size * sizeof *multflt_config->mean        , __func__);
   multflt_config->std         = enkf_util_malloc(size * sizeof *multflt_config->std         ,  __func__);
   multflt_config->active      = enkf_util_malloc(size * sizeof *multflt_config->active      , __func__);
@@ -34,18 +35,18 @@ multflt_config_type * multflt_config_alloc(int size, const char * ecl_file , con
 }
 
 
-const char * multflt_config_get_ensname_ref(const multflt_config_type * multflt_config) {
-  return multflt_config->ens_file;
+const char * multflt_config_get_ensfile_ref(const multflt_config_type * multflt_config) {
+  return multflt_config->ensfile;
 }
 
-const char * multflt_config_get_eclname_ref(const multflt_config_type * multflt_config) {
-  return multflt_config->ecl_file;
+const char * multflt_config_get_eclfile_ref(const multflt_config_type * multflt_config) {
+  return multflt_config->eclfile;
 }
 
 
 void multflt_config_free(multflt_config_type * multflt_config) {
-  free(multflt_config->ecl_file);
-  free(multflt_config->ens_file);
+  free(multflt_config->eclfile);
+  free(multflt_config->ensfile);
   free(multflt_config->mean);
   free(multflt_config->std);
   free(multflt_config->active);
@@ -56,10 +57,10 @@ void multflt_config_free(multflt_config_type * multflt_config) {
 
 /*****************************************************************/
 
-CONFIG_SET_ECL_FILE(multflt);
-CONFIG_SET_ENS_FILE(multflt);
-CONFIG_SET_ECL_FILE_VOID(multflt);
-CONFIG_SET_ENS_FILE_VOID(multflt);
+CONFIG_SET_ECLFILE(multflt);
+CONFIG_SET_ENSFILE(multflt);
+CONFIG_SET_ECLFILE_VOID(multflt);
+CONFIG_SET_ENSFILE_VOID(multflt);
 CONFIG_GET_SIZE_FUNC(multflt);
 
 VOID_FUNC(multflt_config_free , multflt_config_type);

@@ -28,7 +28,9 @@ struct enkf_state_struct {
   hash_type    	   * enkf_types;
   hash_type    	   * enkf_var_types;
   pathv_type   	   * eclpath;
+  pathv_type   	   * enspath;
   enkf_config_type * config;
+  char             * eclbase;
 };
 
 
@@ -95,12 +97,21 @@ void enkf_state_ ## node_func(enkf_state_type * enkf_state , const char *path, i
 /*****************************************************************/
 
 
+void enkf_state_iset_enspath(enkf_state_type * enkf_state , int i , const char *path) {
+  pathv_iset(enkf_state->enspath , i , path);
+}
+
+const char * enkf_state_get_enspath_ref(const enkf_state_type * enkf_state) {
+  return pathv_get_ref(enkf_state->enspath);
+}
+
+
 void enkf_state_iset_eclpath(enkf_state_type * enkf_state , int i , const char *path) {
   pathv_iset(enkf_state->eclpath , i , path);
 }
 
 
-enkf_state_type *enkf_state_alloc(const enkf_config_type * config) {
+enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char * eclbase) {
   enkf_state_type * enkf_state = malloc(sizeof *enkf_state);
   
   enkf_state->config         = (enkf_config_type *) config;
@@ -109,6 +120,8 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config) {
   enkf_state->enkf_types     = hash_alloc(10);
   enkf_state->enkf_var_types = hash_alloc(10);
   enkf_state->eclpath        = pathv_alloc(enkf_config_get_eclpath_depth(config) , NULL);
+  enkf_state->enspath        = pathv_alloc(enkf_config_get_enspath_depth(config) , NULL);
+  enkf_state->eclbase        = util_alloc_string_copy(eclbase);
 
   hash_insert_int(enkf_state->enkf_types     , "MULTZ"      , MULTZ);
   hash_insert_int(enkf_state->enkf_types     , "MULTFLT"    , MULTFLT);
@@ -137,7 +150,7 @@ static void enkf_state_add_node__(enkf_state_type * enkf_state , const char * no
 
 
 enkf_state_type * enkf_state_copyc(const enkf_state_type * src) {
-  enkf_state_type * new = enkf_state_alloc(src->config);
+  enkf_state_type * new = enkf_state_alloc(src->config , src->eclbase);
   list_node_type *list_node;                                          
   list_node = list_get_head(src->node_list);                     
   printf("Totalt antall noder: %d \n",list_get_size(src->node_list));
@@ -187,13 +200,16 @@ void enkf_state_add_node(enkf_state_type * enkf_state , const char * type_str , 
     
     switch (type) {
     case(MULTZ):
-      enkf_node = enkf_node_alloc(type_str , var_type , config , multz_alloc__   , multz_ecl_write__ , multz_ens_read__ , multz_ens_write__ , multz_copyc__ , multz_sample__ , multz_free__);
+      enkf_node = enkf_node_alloc(type_str , var_type , config , multz_alloc__   , multz_ecl_write__ , multz_alloc_ensfile__ 
+				  , multz_ens_read__ , multz_ens_write__ , multz_copyc__ , multz_sample__ , multz_free__);
       break;
     case(MULTFLT):
-      enkf_node = enkf_node_alloc(type_str , var_type , config , multflt_alloc__ , multflt_ecl_write__ , multflt_ens_read__ , multflt_ens_write__ , multflt_copyc__ , multflt_sample__ , multflt_free__);
+      enkf_node = enkf_node_alloc(type_str , var_type , config , multflt_alloc__ , multflt_ecl_write__ , multflt_alloc_ensfile__ , 
+				  multflt_ens_read__ , multflt_ens_write__ , multflt_copyc__ , multflt_sample__ , multflt_free__);
       break;
     case(EQUIL):
-      enkf_node = enkf_node_alloc(type_str , var_type , config , equil_alloc__ , equil_ecl_write__ , equil_ens_read__ , equil_ens_write__ , equil_copyc__ , equil_sample__ , equil_free__);
+      enkf_node = enkf_node_alloc(type_str , var_type , config , equil_alloc__ , equil_ecl_write__ , equil_alloc_ensfile__, 
+				  equil_ens_read__ , equil_ens_write__ , equil_copyc__ , equil_sample__ , equil_free__);
       break;
     default:
       fprintf(stderr,"%s: Internal programming error --- aborting \n",__func__);
@@ -210,17 +226,23 @@ static void enkf_state_load_ecl_restart__(enkf_state_type * enkf_state , const e
     const char *kw        = ecl_kw_get_header_ref(ecl_kw);
     const bool restart_kw = enkf_config_restart_kw(enkf_state->config , kw);
 
-    if (!enkf_config_has_key(enkf_state->config , kw)) 
-      enkf_config_add_type(enkf_state->config , kw , enkf_ecl_kw_config_alloc(ecl_kw_get_size(ecl_kw) , kw , kw) , enkf_ecl_kw_config_free__);
+    if (!enkf_config_has_key(enkf_state->config , kw)) {
+      if (restart_kw)
+	enkf_config_add_type(enkf_state->config , kw , enkf_ecl_kw_config_alloc(ecl_kw_get_size(ecl_kw) , kw , kw) , enkf_ecl_kw_config_free__);
+      else
+	enkf_config_add_type(enkf_state->config , kw , ecl_static_kw_config_alloc(ecl_kw_get_size(ecl_kw) , kw , kw) , ecl_static_kw_config_free__);
+    }
     
     if (!enkf_state_has_node(enkf_state , kw)) {
       const enkf_ecl_kw_config_type *config = enkf_config_get_ref(enkf_state->config , kw);
       enkf_node_type * enkf_node;
       
       if (restart_kw) 
-	enkf_node = enkf_node_alloc(kw , ecl_restart , config , enkf_ecl_kw_alloc__ , NULL /* ecl_write */ , enkf_ecl_kw_ens_read__ , enkf_ecl_kw_ens_write__ , enkf_ecl_kw_copyc__ , NULL /* sample */ , enkf_ecl_kw_free__);
+	enkf_node = enkf_node_alloc(kw , ecl_restart , config , enkf_ecl_kw_alloc__ , NULL /* ecl_write */ , 
+				    enkf_ecl_kw_alloc_ensfile__ , enkf_ecl_kw_ens_read__ , enkf_ecl_kw_ens_write__ , enkf_ecl_kw_copyc__ , NULL /* sample */ , enkf_ecl_kw_free__);
       else
-	enkf_node = enkf_node_alloc(kw , ecl_static  , config , ecl_static_kw_alloc__ , NULL , ecl_static_kw_ens_read__ , ecl_static_kw_ens_write__ , ecl_static_kw_copyc__ , NULL , ecl_static_kw_free__);
+	enkf_node = enkf_node_alloc(kw , ecl_static  , config , ecl_static_kw_alloc__ , NULL , 
+				    ecl_static_kw_alloc_ensfile__ , ecl_static_kw_ens_read__ , ecl_static_kw_ens_write__ , ecl_static_kw_copyc__ , NULL , ecl_static_kw_free__);
       
       enkf_state_add_node__(enkf_state , kw , enkf_node);
     } 
@@ -239,6 +261,7 @@ static void enkf_state_load_ecl_restart__(enkf_state_type * enkf_state , const e
 }
 
 
+
 void enkf_state_load_ecl_restart(enkf_state_type * enkf_state , const char * restart_file , bool endian_swap , bool unified , int time_step) {
   bool at_eof;
   ecl_block_type       * ecl_block;
@@ -248,25 +271,25 @@ void enkf_state_load_ecl_restart(enkf_state_type * enkf_state , const char * res
   if (unified)
     ecl_block_fseek(time_step , fmt_file , true , fortio);
   
-  ecl_block = ecl_block_alloc(time_step , 10 , fmt_file , endian_swap , NULL);
-  ecl_block_fread(ecl_block , fortio , &at_eof , false);
+  ecl_block = ecl_block_alloc(time_step , 10 , fmt_file , endian_swap);
+  ecl_block_fread(ecl_block , fortio , &at_eof);
   fortio_close(fortio);
-  
+
   enkf_state_load_ecl_restart__(enkf_state , ecl_block);
   ecl_block_free(ecl_block);
 }
 
 
-void enkf_state_ecl_write(enkf_state_type * enkf_state , int mask , bool fmt_file , bool endian_swap , fortio_type * fortio ) {
-  /*  const int buffer_size = 16384;
-  char *buffer;
-  
-  buffer = malloc(buffer_size);
+
+void enkf_state_ecl_write(const enkf_state_type * enkf_state , const char * restart_file , int mask , bool fmt_file , bool endian_swap ) {
+  const int buffer_size = 16384;
+  fortio_type * fortio = fortio_open(restart_file , "w" , endian_swap);
+  void *buffer = malloc(buffer_size);
   list_node_type *list_node;                                            
+
   list_node = list_get_head(enkf_state->node_list);                     
   while (list_node != NULL) {                                           
-    list_node_type * next_node = list_node_get_next(list_node);
-    enkf_node_type *enkf_node  = list_node_value_ptr(list_node);         
+    enkf_node_type * enkf_node = list_node_value_ptr(list_node);         
 
     if (enkf_node_include_type(enkf_node , mask)) {
 
@@ -275,21 +298,43 @@ void enkf_state_ecl_write(enkf_state_type * enkf_state , int mask , bool fmt_fil
 	ecl_kw_fwrite(ecl_kw , fortio);
 	ecl_kw_free(ecl_kw);
       } else if (enkf_node_include_type(enkf_node , ecl_static)) {
-	char * ens_name      = "GARBAGE";
+	/*
+	  This is extremely fragile - because it requires the enspath
+	  variable still points to the same place as the last time
+	  ens_write() was called...  Maybe it would be better to use
+	  swapin / swapout - and store (swap) filename in the node
+	  variable.
+	*/
+
+	char * ens_name      = enkf_node_alloc_ensfile(enkf_node , pathv_get_ref(enkf_state->enspath));
 	FILE * target_stream = fortio_get_FILE(fortio);
-	FILE * src_stream    = fopen(ens_name , "r");
+	FILE * src_stream    = enkf_util_fopen_r(ens_name , __func__);
 	
 	util_copy_stream(src_stream , target_stream , buffer_size , buffer);
 	fclose(src_stream);
 	free(ens_name);
 	
       } else if (enkf_node_include_type(enkf_node , parameter))
-        enkf_node_ecl_write(enkf_node , path);
+        enkf_node_ecl_write(enkf_node , pathv_get_ref(enkf_state->eclpath));
     }
-    list_node = next_node;
-  } 
+    list_node = list_node_get_next(list_node);
+  }
+  fortio_close(fortio);
   free(buffer);
-  */
+}
+
+
+
+void enkf_state_ens_write(const enkf_state_type * enkf_state , int mask) {
+  const char *path = enkf_state_get_enspath_ref(enkf_state);
+  list_node_type *list_node;                                            
+  list_node  = list_get_head(enkf_state->node_list);                    
+  while (list_node != NULL) {                                           
+    enkf_node_type *enkf_node = list_node_value_ptr(list_node);        
+    if (enkf_node_include_type(enkf_node , mask))                       
+      enkf_node_ens_write(enkf_node , path);                       
+    list_node  = list_node_get_next(list_node);                         
+  }                                                                     
 }
 
 
@@ -315,6 +360,9 @@ void enkf_state_free(enkf_state_type *enkf_state) {
   hash_free(enkf_state->node_hash);
   hash_free(enkf_state->enkf_types);
   hash_free(enkf_state->enkf_var_types);
+  pathv_free(enkf_state->eclpath);
+  pathv_free(enkf_state->enspath);
+  free(enkf_state->eclbase);
   free(enkf_state);
 }
 
@@ -354,7 +402,6 @@ void enkf_state_del_node(enkf_state_type * enkf_state , const char * node_key) {
 /*****************************************************************/
 
 ENKF_STATE_APPLY_PATH(ens_read);
-ENKF_STATE_APPLY_PATH(ens_write);
 ENKF_STATE_APPLY(sample);
 ENKF_STATE_APPLY(clear);
 ENKF_STATE_APPLY_SCALAR(scale);

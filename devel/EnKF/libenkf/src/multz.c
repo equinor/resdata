@@ -16,9 +16,16 @@ struct multz_struct {
 };
 
 /*****************************************************************/
+void multz_clear(multz_type * multz) {
+  const int size = multz_config_get_size(multz->config);   
+  int k;
+  for (k = 0; k < size; k++)
+    multz->data[k] = 0.0;
+}
+
 
 void multz_realloc_data(multz_type *multz) {
-  multz->data = enkf_util_malloc(multz_config_get_size(multz->config) * sizeof *multz->data , __func__);
+  multz->data = enkf_util_calloc(multz_config_get_size(multz->config) , sizeof *multz->data , __func__);
 }
 
 
@@ -33,14 +40,9 @@ multz_type * multz_alloc(const multz_config_type * multz_config) {
 
 
 
-
-void multz_clear(multz_type * multz) {
-  const int size = multz_config_get_size(multz->config);   
-  int k;
-  for (k = 0; k < size; k++)
-    multz->data[k] = 0.0;
+const char * multz_alloc_ensfile(const multz_type * multz , const char * path) {
+  return util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
 }
-
 
 
 multz_type * multz_copyc(const multz_type *multz) {
@@ -48,7 +50,6 @@ multz_type * multz_copyc(const multz_type *multz) {
   multz_type * new = multz_alloc(multz->config);
   
   memcpy(new->data , multz->data , size * sizeof *multz->data);
-  printf("Har klonet et multz objekt \n");
   return new;
 }
 
@@ -56,8 +57,8 @@ multz_type * multz_copyc(const multz_type *multz) {
 
 
 void multz_ecl_write(const multz_type * multz , const char * path) {
-  char * ecl_file = util_alloc_full_path(path , multz_config_get_ecl_file_ref(multz->config));
-  FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
+  char * eclfile = util_alloc_full_path(path , multz_config_get_eclfile_ref(multz->config));
+  FILE * stream  = enkf_util_fopen_w(eclfile , __func__);
   {
     const int size = multz_config_get_size(multz->config);   
     int k;
@@ -65,31 +66,39 @@ void multz_ecl_write(const multz_type * multz , const char * path) {
       multz_config_fprintf_layer(multz->config , k , multz->data[k] , stream);
   }
   fclose(stream);
-  free(ecl_file);
+  free(eclfile);
 }
 
 
 
 void multz_ens_write(const multz_type * multz , const char * path) {
   const  multz_config_type * config = multz->config;
-  char * ens_file = util_alloc_full_path(path , multz_config_get_ens_file_ref(multz->config));
-  
-  FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
-  fwrite(&config->size    , sizeof  config->size     , 1 , stream);
+  char * ensfile = util_alloc_full_path(path , multz_config_get_ensfile_ref(config));
+  FILE * stream   = enkf_util_fopen_w(ensfile , __func__);
+
+  printf("Skal skrive til: <%s> \n",ensfile);
+
+  fwrite(&config->size         ,   sizeof  config->size     , 1 , stream);
   enkf_util_fwrite(multz->data    , sizeof *multz->data    , config->size , stream , __func__);
+  
+  if (stream == NULL)
+    printf("steam = NULL\n");
+  else
+    printf("stream OK \n");
+  
   fclose(stream);
-  free(ens_file);
+  free(ensfile);
 }
 
 
 void multz_ens_read(multz_type * multz , const char *path) {
-  char * ens_file = util_alloc_full_path(path , multz_config_get_ens_file_ref(multz->config));
-  FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
+  char * ensfile = util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
+  FILE * stream   = enkf_util_fopen_r(ensfile , __func__);
   int  size;
   fread(&size , sizeof  size     , 1 , stream);
   enkf_util_fread(multz->data , sizeof *multz->data , size , stream , __func__);
   fclose(stream);
-  free(ens_file);
+  free(ensfile);
 }
 
 
@@ -155,6 +164,7 @@ VOID_ECL_WRITE (multz)
 VOID_ENS_WRITE (multz)
 VOID_ENS_READ  (multz)
 VOID_COPYC     (multz)
+VOID_ALLOC_ENSFILE(multz)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

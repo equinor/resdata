@@ -11,15 +11,15 @@
 
 
 
-multz_config_type * multz_config_alloc(int nx , int ny , int nz , const char * ecl_name , const char * ens_name) {
+multz_config_type * multz_config_alloc(int nx , int ny , int nz , const char * eclfile , const char * ensfile) {
   multz_config_type *config = malloc(sizeof *config);
   config->ecl_kw_name = NULL;
   config->size        = nz;
   config->var_type    = parameter;
 
-  config->ecl_name = util_alloc_string_copy(ecl_name);
-  config->ens_name = util_alloc_string_copy(ens_name);
-  
+  config->eclfile = util_alloc_string_copy(eclfile);
+  config->ensfile = util_alloc_string_copy(ensfile);
+
   config->mean   = enkf_util_malloc(config->size * sizeof *config->mean   , __func__);
   config->std    = enkf_util_malloc(config->size * sizeof *config->std    , __func__);
   config->active = enkf_util_malloc(config->size * sizeof *config->active , __func__);
@@ -52,17 +52,16 @@ multz_config_type * multz_config_alloc(int nx , int ny , int nz , const char * e
       config->area[i] = (config->i2[i]- config->i1[i] + 1) * (config->j2[i]- config->j1[i] + 1);
   }
   
-  CONFIG_INIT_STD_FIELDS;
   return config;
 }
 
 
-const char * multz_config_get_ens_file_ref(const multz_config_type * config) {
-  return config->ens_file;
+const char * multz_config_get_ensfile_ref(const multz_config_type * config) {
+  return config->ensfile;
 }
 
-const char * multz_config_get_ecl_file_ref(const multz_config_type * config) {
-  return config->ecl_file;
+const char * multz_config_get_eclfile_ref(const multz_config_type * config) {
+  return config->eclfile;
 }
 
 
@@ -92,10 +91,10 @@ void multz_config_free(multz_config_type * config) {
 
 
 /*****************************************************************/
-CONFIG_SET_ECL_FILE(multz);
-CONFIG_SET_ENS_FILE(multz);
-CONFIG_SET_ECL_FILE_VOID(multz);
-CONFIG_SET_ENS_FILE_VOID(multz);
+CONFIG_SET_ECLFILE(multz);
+CONFIG_SET_ENSFILE(multz);
+CONFIG_SET_ECLFILE_VOID(multz);
+CONFIG_SET_ENSFILE_VOID(multz);
 CONFIG_GET_SIZE_FUNC(multz)
 
 VOID_FUNC(multz_config_free , multz_config_type);
