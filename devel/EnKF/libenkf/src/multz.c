@@ -29,6 +29,11 @@ void multz_realloc_data(multz_type *multz) {
 }
 
 
+void multz_free_data(multz_type *multz) {
+  free(multz->data);
+  multz->data = NULL;
+}
+
 
 multz_type * multz_alloc(const multz_config_type * multz_config) {
   multz_type * multz  = malloc(sizeof *multz);
@@ -40,7 +45,7 @@ multz_type * multz_alloc(const multz_config_type * multz_config) {
 
 
 
-const char * multz_alloc_ensfile(const multz_type * multz , const char * path) {
+char * multz_alloc_ensfile(const multz_type * multz , const char * path) {
   return util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
 }
 
@@ -53,6 +58,25 @@ multz_type * multz_copyc(const multz_type *multz) {
   return new;
 }
 
+
+void multz_fread(multz_type * multz , const char *file) {
+  FILE * stream   = enkf_util_fopen_r(file , __func__);
+  int  size;
+  fread(&size , sizeof  size     , 1 , stream);
+  enkf_util_fread(multz->data , sizeof *multz->data , size , stream , __func__);
+  fclose(stream);
+}
+
+
+void multz_fwrite(const multz_type * multz , const char *file) {
+  const  multz_config_type * config = multz->config;
+  FILE * stream   = enkf_util_fopen_w(file , __func__);
+
+  fwrite(&config->size         ,   sizeof  config->size     , 1 , stream);
+  enkf_util_fwrite(multz->data    , sizeof *multz->data    , config->size , stream , __func__);
+  
+  fclose(stream);
+}
 
 
 
@@ -71,35 +95,35 @@ void multz_ecl_write(const multz_type * multz , const char * path) {
 
 
 
-void multz_ens_write(const multz_type * multz , const char * path) {
-  const  multz_config_type * config = multz->config;
-  char * ensfile = util_alloc_full_path(path , multz_config_get_ensfile_ref(config));
-  FILE * stream   = enkf_util_fopen_w(ensfile , __func__);
-
-  printf("Skal skrive til: <%s> \n",ensfile);
-
-  fwrite(&config->size         ,   sizeof  config->size     , 1 , stream);
-  enkf_util_fwrite(multz->data    , sizeof *multz->data    , config->size , stream , __func__);
-  
-  if (stream == NULL)
-    printf("steam = NULL\n");
-  else
-    printf("stream OK \n");
-  
-  fclose(stream);
-  free(ensfile);
-}
-
-
 void multz_ens_read(multz_type * multz , const char *path) {
   char * ensfile = util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
-  FILE * stream   = enkf_util_fopen_r(ensfile , __func__);
-  int  size;
-  fread(&size , sizeof  size     , 1 , stream);
-  enkf_util_fread(multz->data , sizeof *multz->data , size , stream , __func__);
-  fclose(stream);
+  multz_fread(multz , ensfile);
   free(ensfile);
 }
+
+
+void multz_ens_write(const multz_type * multz , const char * path) {
+  char * ensfile = util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
+  multz_fwrite(multz , ensfile);
+  free(ensfile);
+}
+
+
+char * multz_swapout(multz_type * multz , const char * path) {
+  char * ensfile = util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
+  multz_fwrite(multz , ensfile);
+  multz_free_data(multz);
+  return ensfile;
+}
+
+
+void multz_swapin(multz_type * multz , const char *file) {
+  multz_realloc_data(multz);
+  multz_fread(multz  , file);
+}
+
+
+
 
 
 
@@ -119,10 +143,6 @@ void multz_sample(multz_type *multz) {
 }
 
 
-void multz_free_data(multz_type *multz) {
-  free(multz->data);
-  multz->data = NULL;
-}
 
 
 void multz_free(multz_type *multz) {
@@ -165,6 +185,8 @@ VOID_ENS_WRITE (multz)
 VOID_ENS_READ  (multz)
 VOID_COPYC     (multz)
 VOID_ALLOC_ENSFILE(multz)
+VOID_SWAPIN(multz)
+VOID_SWAPOUT(multz)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

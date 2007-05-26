@@ -24,10 +24,10 @@ int                   equil_config_get_nequil(const equil_config_type *);
 
 
 VOID_ALLOC_ENSFILE_HEADER(equil);
-CONFIG_GET_SIZE_FUNC_HEADER(equil);
+GET_SIZE_HEADER(equil);
+VOID_GET_SIZE_HEADER(equil);
 CONFIG_SET_ECLFILE_HEADER_VOID(equil);
 CONFIG_SET_ENSFILE_HEADER_VOID(equil);
-CONFIG_GET_SIZE_FUNC_HEADER(equil);
 
 VOID_FUNC_HEADER(equil_config_free);
 

@@ -54,12 +54,12 @@ FILE * enkf_util_fopen_r(const char * filename , const char * caller) {
 
 
 void enkf_util_fwrite(const void *ptr , int item_size, int items , FILE *stream , const char * caller) {
-  printf("%s:  item_size:%d  items:%d  caller:%s \n",__func__ , item_size , items , caller);
   if (fwrite(ptr , item_size , items , stream) != items) {
     fprintf(stderr,"%s: failed to write : %d bytes - aborting \n",caller , (item_size * items));
     abort();
   }
 }
+
 
 void enkf_util_fread(void *ptr , int item_size, int items , FILE *stream , const char * caller) {
   if (fread(ptr , item_size , items , stream) != items) {

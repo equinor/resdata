@@ -30,6 +30,7 @@ struct enkf_state_struct {
   pathv_type   	   * eclpath;
   pathv_type   	   * enspath;
   enkf_config_type * config;
+  double           * serial_data;
   char             * eclbase;
 };
 
@@ -122,6 +123,7 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char *
   enkf_state->eclpath        = pathv_alloc(enkf_config_get_eclpath_depth(config) , NULL);
   enkf_state->enspath        = pathv_alloc(enkf_config_get_enspath_depth(config) , NULL);
   enkf_state->eclbase        = util_alloc_string_copy(eclbase);
+  enkf_state->serial_data    = NULL;
 
   hash_insert_int(enkf_state->enkf_types     , "MULTZ"      , MULTZ);
   hash_insert_int(enkf_state->enkf_types     , "MULTFLT"    , MULTFLT);
@@ -201,15 +203,18 @@ void enkf_state_add_node(enkf_state_type * enkf_state , const char * type_str , 
     switch (type) {
     case(MULTZ):
       enkf_node = enkf_node_alloc(type_str , var_type , config , multz_alloc__   , multz_ecl_write__ , multz_alloc_ensfile__ 
-				  , multz_ens_read__ , multz_ens_write__ , multz_copyc__ , multz_sample__ , multz_free__);
+				  , multz_ens_read__ , multz_ens_write__ , multz_swapout__ , 
+				  multz_swapin__, 
+				  multz_copyc__ , multz_sample__ , multz_free__);
       break;
     case(MULTFLT):
       enkf_node = enkf_node_alloc(type_str , var_type , config , multflt_alloc__ , multflt_ecl_write__ , multflt_alloc_ensfile__ , 
-				  multflt_ens_read__ , multflt_ens_write__ , multflt_copyc__ , multflt_sample__ , multflt_free__);
+				  multflt_ens_read__ , multflt_ens_write__ , multflt_swapout__, 
+				  multz_swapin__, multflt_copyc__ , multflt_sample__ , multflt_free__);
       break;
     case(EQUIL):
       enkf_node = enkf_node_alloc(type_str , var_type , config , equil_alloc__ , equil_ecl_write__ , equil_alloc_ensfile__, 
-				  equil_ens_read__ , equil_ens_write__ , equil_copyc__ , equil_sample__ , equil_free__);
+				  equil_ens_read__ , equil_ens_write__ , equil_swapout__ , equil_swapin__ , equil_copyc__ , equil_sample__ , equil_free__);
       break;
     default:
       fprintf(stderr,"%s: Internal programming error --- aborting \n",__func__);
@@ -228,9 +233,9 @@ static void enkf_state_load_ecl_restart__(enkf_state_type * enkf_state , const e
 
     if (!enkf_config_has_key(enkf_state->config , kw)) {
       if (restart_kw)
-	enkf_config_add_type(enkf_state->config , kw , enkf_ecl_kw_config_alloc(ecl_kw_get_size(ecl_kw) , kw , kw) , enkf_ecl_kw_config_free__);
+	enkf_config_add_type(enkf_state->config , kw , enkf_ecl_kw_config_alloc(ecl_kw_get_size(ecl_kw) , kw , kw) , enkf_ecl_kw_config_free__ , enkf_ecl_kw_config_get_size__);
       else
-	enkf_config_add_type(enkf_state->config , kw , ecl_static_kw_config_alloc(ecl_kw_get_size(ecl_kw) , kw , kw) , ecl_static_kw_config_free__);
+	enkf_config_add_type(enkf_state->config , kw , ecl_static_kw_config_alloc(ecl_kw_get_size(ecl_kw) , kw , kw) , ecl_static_kw_config_free__ , ecl_static_kw_config_get_size__);
     }
     
     if (!enkf_state_has_node(enkf_state , kw)) {
@@ -239,10 +244,14 @@ static void enkf_state_load_ecl_restart__(enkf_state_type * enkf_state , const e
       
       if (restart_kw) 
 	enkf_node = enkf_node_alloc(kw , ecl_restart , config , enkf_ecl_kw_alloc__ , NULL /* ecl_write */ , 
-				    enkf_ecl_kw_alloc_ensfile__ , enkf_ecl_kw_ens_read__ , enkf_ecl_kw_ens_write__ , enkf_ecl_kw_copyc__ , NULL /* sample */ , enkf_ecl_kw_free__);
+				    enkf_ecl_kw_alloc_ensfile__ , enkf_ecl_kw_ens_read__ , 
+				    enkf_ecl_kw_ens_write__ , enkf_ecl_kw_swapout__ , enkf_ecl_kw_swapin__ , 
+				    enkf_ecl_kw_copyc__ , NULL /* sample */ , enkf_ecl_kw_free__);
       else
 	enkf_node = enkf_node_alloc(kw , ecl_static  , config , ecl_static_kw_alloc__ , NULL , 
-				    ecl_static_kw_alloc_ensfile__ , ecl_static_kw_ens_read__ , ecl_static_kw_ens_write__ , ecl_static_kw_copyc__ , NULL , ecl_static_kw_free__);
+				    ecl_static_kw_alloc_ensfile__ , ecl_static_kw_ens_read__ , 
+				    ecl_static_kw_ens_write__ , ecl_static_kw_swapout__, ecl_static_kw_swapin__ , 
+				    ecl_static_kw_copyc__ , NULL , ecl_static_kw_free__);
       
       enkf_state_add_node__(enkf_state , kw , enkf_node);
     } 
@@ -363,6 +372,8 @@ void enkf_state_free(enkf_state_type *enkf_state) {
   pathv_free(enkf_state->eclpath);
   pathv_free(enkf_state->enspath);
   free(enkf_state->eclbase);
+  if (enkf_state->serial_data != NULL)
+    free(enkf_state->serial_data);
   free(enkf_state);
 }
 

@@ -59,6 +59,7 @@ CONFIG_SET_ECLFILE(equil);
 CONFIG_SET_ENSFILE(equil);
 CONFIG_SET_ECLFILE_VOID(equil);
 CONFIG_SET_ENSFILE_VOID(equil);
-CONFIG_GET_SIZE_FUNC(equil);
+GET_SIZE(equil);
+VOID_GET_SIZE(equil);
 
 VOID_FUNC(equil_config_free , equil_config_type);

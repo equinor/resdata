@@ -17,10 +17,28 @@ struct multflt_struct {
 
 /*****************************************************************/
 
+void multflt_free_data(multflt_type *multflt) {
+  free(multflt->data);
+  multflt->data = NULL;
+}
+
+void multflt_free(multflt_type *multflt) {
+  multflt_free_data(multflt);
+  free(multflt);
+}
+
+
+
+void multflt_realloc_data(multflt_type *multflt) {
+  multflt->data  = enkf_util_realloc(multflt->data , multflt_config_get_size(multflt->config) * sizeof *multflt->data , __func__);
+}
+
+
 multflt_type * multflt_alloc(const multflt_config_type * config) {
   multflt_type * multflt  = malloc(sizeof *multflt);
   multflt->config = config;
-  multflt->data           = enkf_util_malloc(config->size * sizeof *multflt->data , __func__);
+  multflt->data   = NULL;
+  multflt_realloc_data(multflt);
   return multflt;
 }
 
@@ -65,30 +83,50 @@ void multflt_ecl_write(const multflt_type * multflt, const char * path) {
 }
 
 
-void multflt_ens_write(const multflt_type * multflt, const char * path) {
+void multflt_fwrite(const multflt_type *multflt , const char *file ) {
   const  multflt_config_type * config = multflt->config;
-  char * ens_file = multflt_alloc_ensfile(multflt , path);
-  FILE * stream   = enkf_util_fopen_w(ens_file , __func__);
+  FILE * stream   = enkf_util_fopen_w(file , __func__);
   fwrite(&config->size  , sizeof  config->size     , 1 , stream);
   enkf_util_fwrite(multflt->data    , sizeof *multflt->data    , config->size , stream , __func__);
   fclose(stream);
+}
+
+void multflt_ens_write(const multflt_type * multflt, const char * path) {
+  char * ens_file = multflt_alloc_ensfile(multflt , path);
+  multflt_fwrite(multflt,ens_file);
   free(ens_file);
+}
+
+void multflt_fread(multflt_type * multflt , const char * file) {
+  FILE * stream   = enkf_util_fopen_r(file , __func__);
+  int  nz;
+  fread(&nz , sizeof  nz     , 1 , stream);
+  enkf_util_fread(multflt->data , sizeof *multflt->data , nz , stream , __func__);
+  fclose(stream);
 }
 
 
 void multflt_ens_read(multflt_type * multflt , const char * path) {
   char * ens_file = multflt_alloc_ensfile(multflt , path);
-  FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
-  int  nz;
-  fread(&nz , sizeof  nz     , 1 , stream);
-  enkf_util_fread(multflt->data , sizeof *multflt->data , nz , stream , __func__);
-  fclose(stream);
+  multflt_fread(multflt , ens_file);
   free(ens_file);
 }
 
 
+char * multflt_swapout(multflt_type * multflt , const char * path) {
+  char * ensfile = multflt_alloc_ensfile(multflt , path);
+  multflt_fwrite(multflt , ensfile);
+  multflt_free_data(multflt);
+  return ensfile;
+}
 
-void multflt_sample(multflt_type *multflt) {
+void multflt_swapin(multflt_type * multflt , const char * file) {
+  multflt_realloc_data(multflt);
+  multflt_fread(multflt , file);
+}
+
+
+void  multflt_sample(multflt_type *multflt) {
   const multflt_config_type *config = multflt->config;
   const bool              *active   = config->active;
   const double            *std      = config->std;
@@ -102,11 +140,6 @@ void multflt_sample(multflt_type *multflt) {
   
 }
 
-
-void multflt_free(multflt_type *multflt) {
-  free(multflt->data);
-  free(multflt);
-}
 
 
 void multflt_serialize(const multflt_type *multflt , double *serial_data , size_t *_offset) {
@@ -130,6 +163,8 @@ void multflt_serialize(const multflt_type *multflt , double *serial_data , size_
 MATH_OPS(multflt);
 VOID_ALLOC(multflt);
 VOID_ALLOC_ENSFILE(multflt);
+VOID_SWAPOUT(multflt);
+VOID_SWAPIN(multflt);
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

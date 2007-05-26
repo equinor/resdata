@@ -96,9 +96,8 @@ char * enkf_ecl_kw_alloc_ensfile(const enkf_ecl_kw_type * enkf_ecl_kw, const cha
 }
 
 
-void enkf_ecl_kw_ens_write(const enkf_ecl_kw_type * enkf_ecl_kw, const char * path) {
-  char * ens_file = enkf_ecl_kw_alloc_ensfile(enkf_ecl_kw , path);
-  FILE * stream     = enkf_util_fopen_w(ens_file , __func__);
+void enkf_ecl_kw_fwrite(const enkf_ecl_kw_type * enkf_ecl_kw , const char * file) {
+  FILE * stream     = enkf_util_fopen_w(file , __func__);
   const int    size = enkf_ecl_kw_config_get_size(enkf_ecl_kw->config);
   fwrite(&size    , sizeof  size     , 1 , stream);
   {
@@ -108,13 +107,18 @@ void enkf_ecl_kw_ens_write(const enkf_ecl_kw_type * enkf_ecl_kw, const char * pa
     free(tmp);
   }
   fclose(stream);
+}
+
+
+void enkf_ecl_kw_ens_write(const enkf_ecl_kw_type * enkf_ecl_kw, const char * path) {
+  char * ens_file = enkf_ecl_kw_alloc_ensfile(enkf_ecl_kw , path);
+  enkf_ecl_kw_fwrite(enkf_ecl_kw , ens_file);
   free( ens_file );
 }
 
 
-void enkf_ecl_kw_ens_read(enkf_ecl_kw_type * enkf_ecl_kw , const char * path) {
-  const char * ens_file = enkf_ecl_kw_alloc_ensfile(enkf_ecl_kw , path);
-  FILE * stream   = enkf_util_fopen_r(ens_file , __func__);
+void enkf_ecl_kw_fread(enkf_ecl_kw_type * enkf_ecl_kw , const char * file) {
+  FILE * stream   = enkf_util_fopen_r(file , __func__);
   int  size;
   fread(&size , sizeof  size     , 1 , stream);
   {
@@ -124,7 +128,12 @@ void enkf_ecl_kw_ens_read(enkf_ecl_kw_type * enkf_ecl_kw , const char * path) {
     free(tmp);
   }
   fclose(stream);
-  free((char *) ens_file);
+}
+
+void enkf_ecl_kw_ens_read(enkf_ecl_kw_type * enkf_ecl_kw , const char * path) {
+  char * ens_file = enkf_ecl_kw_alloc_ensfile(enkf_ecl_kw , path);
+  enkf_ecl_kw_fread(enkf_ecl_kw , ens_file);
+  free( ens_file );
 }
 
 void enkf_ecl_kw_free_data(enkf_ecl_kw_type *enkf_ecl_kw) {
@@ -148,6 +157,19 @@ void enkf_ecl_kw_serialize(const enkf_ecl_kw_type *enkf_ecl_kw , double *serial_
 }
 
 
+char * enkf_ecl_kw_swapout(enkf_ecl_kw_type * enkf_ecl_kw , const char * path) {
+  char * ens_file = enkf_ecl_kw_alloc_ensfile(enkf_ecl_kw , path);
+  enkf_ecl_kw_fwrite(enkf_ecl_kw , ens_file);
+  enkf_ecl_kw_free_data(enkf_ecl_kw);
+  return ens_file;
+}
+
+
+void enkf_ecl_kw_swapin(enkf_ecl_kw_type * enkf_ecl_kw , const char * file) {
+  enkf_ecl_kw_realloc_data(enkf_ecl_kw);
+  enkf_ecl_kw_fread(enkf_ecl_kw , file);
+}
+
 
 /*
   MATH_OPS(enkf_ecl_kw);
@@ -162,6 +184,8 @@ VOID_ENS_WRITE (enkf_ecl_kw)
 VOID_ENS_READ  (enkf_ecl_kw)
 VOID_COPYC(enkf_ecl_kw)
 VOID_ALLOC_ENSFILE(enkf_ecl_kw);
+VOID_SWAPIN(enkf_ecl_kw)
+VOID_SWAPOUT(enkf_ecl_kw)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

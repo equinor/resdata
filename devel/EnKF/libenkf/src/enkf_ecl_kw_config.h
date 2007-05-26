@@ -18,5 +18,7 @@ void                      enkf_ecl_kw_config_free(enkf_ecl_kw_config_type *);
 
 
 VOID_FREE_HEADER(enkf_ecl_kw_config);
+GET_SIZE_HEADER(enkf_ecl_kw);
+VOID_GET_SIZE_HEADER(enkf_ecl_kw);
 
 #endif

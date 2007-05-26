@@ -95,7 +95,8 @@ CONFIG_SET_ECLFILE(multz);
 CONFIG_SET_ENSFILE(multz);
 CONFIG_SET_ECLFILE_VOID(multz);
 CONFIG_SET_ENSFILE_VOID(multz);
-CONFIG_GET_SIZE_FUNC(multz)
+GET_SIZE(multz)
+VOID_GET_SIZE(multz)
 
 VOID_FUNC(multz_config_free , multz_config_type);
 

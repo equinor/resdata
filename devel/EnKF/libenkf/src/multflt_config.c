@@ -61,6 +61,7 @@ CONFIG_SET_ECLFILE(multflt);
 CONFIG_SET_ENSFILE(multflt);
 CONFIG_SET_ECLFILE_VOID(multflt);
 CONFIG_SET_ENSFILE_VOID(multflt);
-CONFIG_GET_SIZE_FUNC(multflt);
+GET_SIZE(multflt);
+VOID_GET_SIZE(multflt);
 
 VOID_FUNC(multflt_config_free , multflt_config_type);

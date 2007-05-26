@@ -28,7 +28,7 @@ struct enkf_config_struct {
 
 typedef struct {
   config_free_ftype        *freef;
-
+  config_get_size_ftype    *get_size;
   void *data;
 } enkf_config_node_type;
 
@@ -38,11 +38,13 @@ typedef struct {
 /* enkf_config_node_type - entirely static. */
 
 static enkf_config_node_type * enkf_config_node_alloc(const void *data, 
-						      config_free_ftype        * freef ) {      
+						      config_free_ftype        * freef,
+						      config_get_size_ftype    * get_size) {
   
   enkf_config_node_type * node = malloc( sizeof *node);
   node->data = (void *) data;
   node->freef       = freef;
+  node->get_size    = get_size;
   
   return node;
 }
@@ -57,9 +59,24 @@ static void enkf_config_node_free__(void * void_node) {
   enkf_config_node_free(node);
 }
 
+static int enkf_config_node_get_size(const enkf_config_node_type * config_node) {
+  return config_node->get_size(config_node->data);
+}
 
 
 /*****************************************************************/
+
+int enkf_config_get_data_size(const enkf_config_type * config) {
+  int size = 0;
+  int i;
+  char **keylist = hash_alloc_keylist(config->config_hash);
+  for (i= 0; i < hash_get_size(config->config_hash); i++) {
+    enkf_config_node_type * config_node = hash_get(config->config_hash , keylist[i]);
+    size += enkf_config_node_get_size(config_node);
+  }
+  hash_free_ext_keylist(config->config_hash , keylist);
+  return size;
+}
 
 
 bool enkf_config_restart_kw(const enkf_config_type *enkf_config, const char * _ecl_kw_name) {
@@ -106,13 +123,13 @@ bool enkf_config_has_key(const enkf_config_type * enkf_config , const char * key
 }
 
 
-void enkf_config_add_type(enkf_config_type * enkf_config, const char * key , const void *data , config_free_ftype * freef) {
+void enkf_config_add_type(enkf_config_type * enkf_config, const char * key , const void *data , config_free_ftype * freef , config_get_size_ftype *get_size) {
   if (enkf_config_has_key(enkf_config , key)) {
     fprintf(stderr,"%s: a configuration object:%s has already been added - aborting \n",__func__ , key);
     abort();
   }
   {
-    enkf_config_node_type * node = enkf_config_node_alloc(data , freef);
+    enkf_config_node_type * node = enkf_config_node_alloc(data , freef , get_size);
     hash_insert_hash_owned_ref(enkf_config->config_hash , key , node , enkf_config_node_free__);
   }
 }

@@ -31,6 +31,7 @@ ecl_static_kw_type * ecl_static_kw_copyc(const ecl_static_kw_type *src) {
 
 void ecl_static_kw_free_data(ecl_static_kw_type * kw) {
   if (kw->ecl_kw != NULL) ecl_kw_free(kw->ecl_kw);
+  kw->ecl_kw = NULL;
 }
 
 
@@ -50,24 +51,57 @@ char * ecl_static_kw_alloc_ensfile(const ecl_static_kw_type * ecl_static_kw , co
 }
 
 
+void ecl_static_kw_fread(ecl_static_kw_type * ecl_static_kw , const char * file) {
+  if (ecl_static_kw->ecl_kw != NULL) {
+    fprintf(stderr,"%s: Internal  programming error - should be called with ecl_kw == NULL - aborting \n",__func__);
+    abort();
+  }
+  {
+    const bool endian_convert = true;  /* SHould be stored in config somewhere ... */ 
+    const bool fmt_file       = false;
+
+    fortio_type * fortio = fortio_open(file , "r" , endian_convert );
+    ecl_static_kw->ecl_kw = ecl_kw_fread_alloc( fortio , fmt_file , endian_convert);
+    fortio_close(fortio);
+  }
+}
+
 void ecl_static_kw_ens_read(ecl_static_kw_type * ecl_static_kw , const char * path) {
-  printf("%s - not implemented \n",__func__);
-  abort();
+  char * ensfile = ecl_static_kw_alloc_ensfile(ecl_static_kw , path);
+  ecl_static_kw_fread(ecl_static_kw , ensfile);
+  free( ensfile );
 }
 
 
-void ecl_static_kw_ens_write(const ecl_static_kw_type * ecl_static_kw , const char * path) {
-  char * ens_name = ecl_static_kw_alloc_ensfile(ecl_static_kw , path);
-  fortio_type * fortio = fortio_open(ens_name , "w" , ecl_kw_get_endian_convert(ecl_static_kw->ecl_kw));
-  
+void ecl_static_kw_fwrite(const ecl_static_kw_type * ecl_static_kw , const char * file) {
+  fortio_type * fortio = fortio_open(file , "w" , ecl_kw_get_endian_convert(ecl_static_kw->ecl_kw));
   ecl_kw_fwrite(ecl_static_kw->ecl_kw , fortio);
   fortio_close(fortio);
+}
 
-  free( ens_name);
+void ecl_static_kw_ens_write(const ecl_static_kw_type * ecl_static_kw , const char * path) {
+  char * ensfile = ecl_static_kw_alloc_ensfile(ecl_static_kw , path);
+  ecl_static_kw_fwrite(ecl_static_kw , ensfile);
+  free( ensfile );
+}
+
+
+char * ecl_static_kw_swapout(ecl_static_kw_type * ecl_static_kw , const char * path) {
+  char * ensfile = ecl_static_kw_alloc_ensfile(ecl_static_kw , path);
+  ecl_static_kw_fwrite(ecl_static_kw , ensfile);
+  ecl_static_kw_free_data(ecl_static_kw);
+  return ensfile;
 }
 
 
 
+void ecl_static_kw_swapin(ecl_static_kw_type * ecl_static_kw , const char * file) {
+  ecl_static_kw_fread(ecl_static_kw , file);
+}
+
+
+VOID_SWAPIN(ecl_static_kw);
+VOID_SWAPOUT(ecl_static_kw);
 VOID_ALLOC_ENSFILE(ecl_static_kw);
 /*****************************************************************/
 VOID_ALLOC(ecl_static_kw)

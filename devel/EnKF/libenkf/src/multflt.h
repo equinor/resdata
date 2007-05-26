@@ -20,6 +20,8 @@ VOID_ENS_WRITE_HEADER  (multflt)
 VOID_ENS_READ_HEADER   (multflt)
 VOID_COPYC_HEADER      (multflt);
 VOID_ALLOC_ENSFILE_HEADER(multflt);
+VOID_SWAPOUT_HEADER(multflt);
+VOID_SWAPIN_HEADER(multflt);
 
 VOID_FUNC_HEADER       (multflt_sample   );
 VOID_FUNC_HEADER       (multflt_free     );

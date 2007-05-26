@@ -16,7 +16,7 @@ int main(void) {
   enkf_state_type   * state;
   
   config = enkf_config_alloc(4, 2);
-  enkf_config_add_type(config , "MULTZ" , multz_config_alloc(100 , 100 , 100 , "MULTZ.INC" , "multz") , multz_config_free__);
+  enkf_config_add_type(config , "MULTZ" , multz_config_alloc(100 , 100 , 100 , "MULTZ.INC" , "multz") , multz_config_free__ , multz_config_get_size__  );
   
 
   enkf_config_add_restart_type(config , "PRESSURE");

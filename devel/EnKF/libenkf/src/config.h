@@ -12,8 +12,11 @@ enkf_var_type var_type;   \
 char * ensfile;          \
 char * eclfile;          
 
-#define CONFIG_GET_SIZE_FUNC(prefix)        int prefix ## _config_get_size (const prefix ## _config_type *arg) { return arg->size; }
-#define CONFIG_GET_SIZE_FUNC_HEADER(prefix) int prefix ## _config_get_size (const prefix ## _config_type *)
+#define GET_SIZE(prefix)             int prefix ## _config_get_size (const prefix ## _config_type *arg) { return arg->size; }
+#define GET_SIZE_HEADER(prefix)      int prefix ## _config_get_size (const prefix ## _config_type *)
+#define VOID_GET_SIZE(prefix)        int prefix ## _config_get_size__ (const void *void_arg) { return prefix ## _config_get_size((const prefix ## _config_type *) void_arg); }
+#define VOID_GET_SIZE_HEADER(prefix) int prefix ## _config_get_size__ (const void *)
+
 
 /*****************************************************************/
 
@@ -145,5 +148,22 @@ char * prefix ## _alloc_ensfile__(const void * void_arg, const char *path)      
 }
 
 #define VOID_ALLOC_ENSFILE_HEADER(prefix) char * prefix ## _alloc_ensfile__(const void * , const char *)
+
+/*****************************************************************/
+
+#define VOID_SWAPIN(prefix) \
+void prefix ## _swapin__(void *void_arg , const char * file) { \
+   prefix ## _swapin((prefix ## _type *) void_arg , file);     \
+}                                                            
+
+#define VOID_SWAPOUT(prefix) \
+char * prefix ## _swapout__(void *void_arg , const char * file) { \
+   return prefix ## _swapout((prefix ## _type *) void_arg , file);     \
+}                                                            
+
+
+#define VOID_SWAPIN_HEADER(prefix)  void prefix ## _swapin__(void * , const char * );
+#define VOID_SWAPOUT_HEADER(prefix) char * prefix ## _swapout__(void * , const char * );
+
 
 #endif

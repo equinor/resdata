@@ -12,6 +12,8 @@ typedef void   	      (ecl_write_ftype)         (const void * , const char *);
 typedef void   	      (ens_read_ftype)          (      void * , const char *);
 typedef void   	      (ens_write_ftype)         (const void * , const char *);
 typedef char *        (alloc_ensfile_ftype)     (const void * , const char *);
+typedef void          (swapin_ftype)      	(void * , const char *);
+typedef char *        (swapout_ftype)     	(void * , const char *);
 typedef void   	      (sample_ftype)     	(      void *);
 typedef void   	      (free_ftype)       	(      void *);
 typedef void   	      (clear_ftype)      	(      void *);
@@ -34,9 +36,11 @@ enkf_node_type * enkf_node_alloc(const char *  	       ,  /*  1  */
 				 alloc_ensfile_ftype * ,  /*  6  */
 				 ens_read_ftype *      ,  /*  7  */
 				 ens_write_ftype *     ,  /*  8  */
-				 copyc_ftype * 	       ,  /*  9  */
-				 sample_ftype *	       ,  /*  10 */    
-				 free_ftype);             /*  11 */ 
+				 swapout_ftype *       ,  /*  9  */ 
+				 swapin_ftype  *       ,  /* 10  */
+				 copyc_ftype * 	       ,  /* 11  */
+				 sample_ftype *	       ,  /* 12  */    
+				 free_ftype);             /* 13  */ 
 
 void             enkf_node_free(enkf_node_type *enkf_node);
 void             enkf_sample    (enkf_node_type *);

@@ -22,6 +22,7 @@ VOID_REALLOC_DATA_HEADER(enkf_ecl_kw);
 VOID_ENS_WRITE_HEADER(enkf_ecl_kw);
 VOID_ENS_READ_HEADER(enkf_ecl_kw);
 VOID_COPYC_HEADER(enkf_ecl_kw);
-
+VOID_SWAPIN_HEADER(enkf_ecl_kw)
+VOID_SWAPOUT_HEADER(enkf_ecl_kw)
 
 #endif
