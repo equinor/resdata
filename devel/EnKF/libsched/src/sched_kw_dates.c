@@ -6,6 +6,7 @@
 #include <util.h>
 #include <sched_util.h>
 #include <sched_kw_dates.h>
+#include <hist.h>
 #include "date_node.h"
 
 struct sched_kw_dates_struct {
@@ -17,11 +18,12 @@ struct sched_kw_dates_struct {
 /*****************************************************************/
 
 
-void sched_kw_dates_add_line(sched_kw_dates_type *kw , const char *line , const hash_type *month_hash, bool TSTEP) {
-  date_node_type * date_node = date_node_alloc(*kw->next_date_ptr , line , month_hash);
+void sched_kw_dates_add_line(sched_kw_dates_type *kw , const time_t * start_date , const char *line , const hash_type *month_hash, bool TSTEP) {
+  date_node_type * date_node = date_node_alloc_from_DATES_line(start_date , *kw->next_date_ptr , line , month_hash);
   list_append_list_owned_ref(kw->date_list , date_node , date_node_free__);
   (*kw->next_date_ptr) += 1;
 }
+
 
 
 void sched_kw_dates_fprintf(const sched_kw_dates_type *kw , FILE *stream , int last_date_nr , time_t last_time , bool *stop) {
@@ -78,7 +80,7 @@ sched_kw_dates_type * sched_kw_dates_fread_alloc(int * next_date_ptr , const tim
   fread(&lines       , sizeof lines       , 1 , stream);
   line_nr = 0;
   while (!(*stop) && (line_nr < lines)) {
-    date_node_type * date_node = date_node_fread_alloc(last_date_nr , last_time ,  stream , stop);
+    date_node_type * date_node = date_node_fread_alloc(start_date , last_date_nr , last_time ,  stream , stop);
     list_append_list_owned_ref(kw->date_list , date_node , date_node_free__);
     line_nr++;
   } 
@@ -90,4 +92,24 @@ void sched_kw_dates_iterate_current(const sched_kw_dates_type * kw , date_node_t
   (*current_date)     = list_node_value_ptr(list_get_tail(kw->date_list));
 }
 
+
+
+void sched_kw_dates_fprintf_days_dat(const sched_kw_dates_type * kw , FILE *stream) {
+  list_node_type *date_node = list_get_head(kw->date_list);
+  while (date_node != NULL) {
+    const date_node_type * date = list_node_value_ptr(date_node);
+    date_node_fprintf_days_line(date ,  stream);
+    date_node = list_node_get_next(date_node);
+  }
+}
+
+
+void sched_kw_dates_make_hist(const sched_kw_dates_type * kw , hist_type * hist) {
+  list_node_type *date_node = list_get_head(kw->date_list);
+  while (date_node != NULL) {
+    const date_node_type * date = list_node_value_ptr(date_node);
+    hist_add_date(hist , date);
+    date_node = list_node_get_next(date_node);
+  }
+}
 

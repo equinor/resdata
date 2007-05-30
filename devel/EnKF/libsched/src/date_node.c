@@ -7,16 +7,14 @@
 #include <hash.h>
 #include <sched_util.h>
 #include <stdbool.h>
-
-
 #include "date_node.h"
 
 
 struct date_node_struct {
-  bool     TStep;
-  time_t   time;
-  time_t  *start_time;
-  int      date_nr;
+  bool     	 TStep;
+  time_t   	 time; 
+  int            date_nr;
+  const time_t  *start_time;
 };
 
 
@@ -37,10 +35,16 @@ static const char month_table[12][4] = {{"JAN\0"},
 /*****************************************************************/
 
 
-date_node_type * date_node_alloc(int date_nr , const char *line , const hash_type *month_hash) {
+static date_node_type * date_node_alloc_empty(const time_t * start_time) {
   date_node_type *date_node = malloc(sizeof *date_node);
-  date_node->date_nr     = date_nr; 
-  
+  date_node->start_time = start_time;
+  return date_node;
+}
+
+
+date_node_type * date_node_alloc_from_DATES_line(const time_t * start_time , int date_nr , const char * line , const hash_type * month_hash) {
+  date_node_type *date_node = date_node_alloc_empty(start_time);
+  date_node->date_nr        = date_nr; 
   {
     int tokens;
     char **token_list;
@@ -58,13 +62,40 @@ date_node_type * date_node_alloc(int date_nr , const char *line , const hash_typ
   return date_node;
 }
 
+
+
+date_node_type * date_node_alloc_from_TSTEP_line(const time_t * start_time , int date_nr , const char * line , const hash_type * month_hash) {
+  date_node_type *date_node = date_node_alloc_empty(start_time);
+  date_node->date_nr        = date_nr; 
+  
+  date_node->TStep = true;
+  return date_node;
+}
+
+
+
 void date_node_free(date_node_type *date) {
   free(date);
 }
 
 
+
 void date_node_free__(void *__date) {
   date_node_free((date_node_type *) __date);
+}
+
+
+date_node_type * date_node_copyc(const date_node_type * node) {
+  date_node_type *new = date_node_alloc_empty(node->start_time);
+  new->TStep   = node->TStep;
+  new->time    = node->time;
+  new->date_nr = node->date_nr;
+  return new;
+}
+
+
+void * date_node_copyc__(const void * void_node) {
+  return date_node_copyc((const date_node_type *) void_node);
 }
 
 
@@ -93,8 +124,8 @@ void date_node_fwrite(const date_node_type * date_node , FILE *stream) {
 }
 
 
-date_node_type * date_node_fread_alloc(int last_date_nr , time_t last_time , FILE *stream, bool *stop) {
-  date_node_type * node = malloc(sizeof *node); /* SKipping spesific alloc routine - UGGLY */
+date_node_type * date_node_fread_alloc(const time_t * start_date , int last_date_nr , time_t last_time , FILE *stream, bool *stop) {
+  date_node_type * node = date_node_alloc_empty(start_date);
   fread(&node->time    , sizeof node->time    , 1 , stream);
   fread(&node->TStep   , sizeof node->TStep   , 1 , stream);
   fread(&node->date_nr , sizeof node->date_nr , 1 , stream);
@@ -128,10 +159,18 @@ void date_node_fprintf_rate_date(const date_node_type * date_node , const char *
     char *file     = malloc(strlen(_obs_path) + strlen(date_file) + 7);
     localtime_r(&date_node->time , &ts);
     sprintf(file , "%s/%04d/%s" , _obs_path , date_node->date_nr , date_file);
-    stream = util_fopen(file , false);
+    stream = util_fopen(file , "w");
     fprintf(stream , "%02d \'%s\' %4d  / -- Dates keyword: %3d \n" , ts.tm_mday , month_table[ts.tm_mon] , ts.tm_year + 1900 , date_node->date_nr);
     fclose(stream);
     free(file);
   }
   free(obs_path);
+}
+
+
+
+
+void date_node_fprintf_days_line(const date_node_type * date_node , FILE *stream) {
+  sched_util_fprintf_days_line(date_node->date_nr , *(date_node->start_time) , date_node->time , stream);
+  /*sched_util_fprintf_days_line(date_node->date_nr , date_node->time , date_node->time , stream);*/
 }

@@ -19,8 +19,10 @@ sched_kw_type   * sched_kw_alloc(const char * , sched_type_enum , bool , int * ,
 void              sched_kw_free(sched_kw_type * );
 void              sched_kw_free__(void * );
 void              sched_kw_fprintf(const sched_kw_type * kw , int , time_t , double , FILE *, bool *);
-void              sched_kw_add_line(sched_kw_type * , const char * , const hash_type * , bool *);
+void              sched_kw_add_line(sched_kw_type * , const char * , const time_t * , const hash_type * , bool *);
 sched_kw_type   * sched_kw_fread_alloc(int *, double * , const time_t * , int , time_t , double , FILE * , bool * , bool *);
 void              sched_kw_fwrite(const sched_kw_type *kw , FILE *);
 void              sched_kw_fprintf_rates(const sched_kw_type * , const char *, const char * , date_node_type **);
+void              sched_kw_fprintf_days_dat(const sched_kw_type * , FILE *);
+void              sched_kw_make_hist(const sched_kw_type *  , hist_type * , date_node_type **);
 #endif

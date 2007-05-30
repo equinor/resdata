@@ -88,7 +88,7 @@ void sched_kw_free__(void * void_kw) {
 
 
 
-void sched_kw_add_line(sched_kw_type * kw, const char * line, const hash_type *month_hash , bool *complete) {
+void sched_kw_add_line(sched_kw_type * kw, const char * line, const time_t *start_date , const hash_type *month_hash , bool *complete) {
   switch (kw->type) {
   case(COMPDAT):
     sched_kw_compdat_add_line(kw->data , line);
@@ -97,7 +97,7 @@ void sched_kw_add_line(sched_kw_type * kw, const char * line, const hash_type *m
     sched_kw_wconhist_add_line(kw->data , line);
     break;
   case(DATES):
-    sched_kw_dates_add_line(kw->data , line , month_hash , false);
+    sched_kw_dates_add_line(kw->data , start_date , line , month_hash , false);
     break;
   case(TSTEP):
     sched_kw_tstep_add_line(kw->data , line , complete);
@@ -190,9 +190,9 @@ sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , double *acc_days_ptr , 
   
   {
     char next_c = fgetc(stream);
-    if (feof(stream)) 
+    if (feof(stream)) {
       *at_eof = true;
-    else {
+    }else {
       *at_eof = false;
       ungetc(next_c , stream);
     }
@@ -210,6 +210,24 @@ void sched_kw_fprintf_rates(const sched_kw_type * kw , const char *obs_path , co
     date_node_fprintf_rate_date(*current_date , obs_path , "DATE");
   }
 }
+
+
+void sched_kw_fprintf_days_dat(const sched_kw_type * kw , FILE *stream) {
+  if (kw->type == DATES) 
+    sched_kw_dates_fprintf_days_dat(kw->data , stream);
+}
+
+
+void sched_kw_make_hist(const sched_kw_type * kw , hist_type * hist, date_node_type **current_date) {
+  if (kw->type == DATES) {
+    sched_kw_dates_make_hist(kw->data  , hist);
+    sched_kw_dates_iterate_current(kw->data , current_date);
+  }
+  else if (kw->type == WCONHIST)
+    sched_kw_wconhist_make_hist(kw->data , date_node_get_date_nr(*current_date) + 1 , hist);
+  
+}
+
 
 
 /*****************************************************************/

@@ -11,6 +11,7 @@
 #include <sched_kw_dates.h>
 #include <sched_kw.h>
 #include <sched_file.h>
+#include <hist.h>
 
 
 struct sched_file_struct {
@@ -29,7 +30,30 @@ struct sched_file_struct {
 
 
 
-sched_file_type * sched_file_alloc() {
+/*
+  start_date[0] = day
+  start_date[1] = month (1-12)
+  start_date[2] = year
+*/
+
+void sched_file_set_start_date(sched_file_type * s , const int * start_date) {
+  if (start_date == NULL)
+    s->start_date = 0;
+  else {
+    struct tm ts;
+    ts.tm_sec    = 0;
+    ts.tm_min    = 0;
+    ts.tm_hour   = 0;
+    ts.tm_mday   = start_date[0];
+    ts.tm_mon    = start_date[1] - 1;
+    ts.tm_year   = start_date[2] - 1900;
+    s->start_date = mktime( &ts );
+  }
+}
+
+
+
+sched_file_type * sched_file_alloc(const int *start_date) {
   sched_file_type * sched_file = malloc(sizeof *sched_file);
   {
     hash_type *month_hash = hash_alloc(24);
@@ -79,6 +103,7 @@ sched_file_type * sched_file_alloc() {
   sched_file->acc_days            = 0;
   sched_file->kw_list      	  = list_alloc();
   sched_file->dims                = malloc(3 * sizeof sched_file->dims);
+  sched_file_set_start_date(sched_file , start_date);
   return sched_file;
 }
 
@@ -119,8 +144,6 @@ void sched_file_free(sched_file_type *sched_file) {
   free(sched_file->dims);
   free(sched_file);
 }
-
-
 
 
 
@@ -169,7 +192,7 @@ void sched_file_parse(sched_file_type * sched_file , const char * filename) {
 	if (line[0] == '/') 
 	  active_kw = NULL;
 	else 
-	  sched_kw_add_line(active_kw , line , sched_file->month_hash , &complete);
+	  sched_kw_add_line(active_kw , line , &sched_file->start_date , sched_file->month_hash , &complete);
 	
 	if (one_line_kw && complete)
 	  active_kw = NULL;
@@ -269,9 +292,7 @@ void sched_file_set_conn_factor(sched_file_type * sched_file , const float * per
 }
 
 
-void sched_file_fwrite(const sched_file_type * sched_file , const char * filename) {
-  FILE *stream = util_fopen(filename , false);
-  
+void sched_file_fwrite(const sched_file_type * sched_file , FILE * stream) {
   {
     int len = list_get_size(sched_file->kw_list);
     fwrite(&len , sizeof len , 1 , stream);
@@ -289,17 +310,15 @@ void sched_file_fwrite(const sched_file_type * sched_file , const char * filenam
       list_node = list_node_get_next(list_node);
     }
   }
-  fclose(stream);
 }
 
 
-sched_file_type * sched_file_fread_alloc(const char * filename , int last_date_nr , time_t last_time , double last_day) {
+sched_file_type * sched_file_fread_alloc(FILE *stream, int last_date_nr , time_t last_time , double last_day) {
   bool cont , at_eof , stop;
   int len,kw_nr;
   sched_file_type * sched_file;
-  FILE *stream = util_fopen(filename , true);
   
-  sched_file = sched_file_alloc();
+  sched_file = sched_file_alloc(NULL);
   fread(&len                             , sizeof len                             , 1 , stream); 
   fread(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
   fread(sched_file->dims                 , sizeof sched_file->dims                , 3 , stream); 
@@ -318,9 +337,8 @@ sched_file_type * sched_file_fread_alloc(const char * filename , int last_date_n
   }
   
   if (kw_nr < len && !stop) 
-    fprintf(stderr,"%s: Warning premature end in schedule dump file:%s read %d/%d keywords.\n",__func__ , filename , kw_nr , len);
+    fprintf(stderr,"%s: Warning premature end in schedule dump file read %d/%d keywords.\n",__func__ , kw_nr , len);
   
-  fclose(stream);
   return sched_file;
 }
 
@@ -337,6 +355,38 @@ void sched_file_fprintf_rates(const sched_file_type * sched_file , const char * 
     list_node = list_node_get_next(list_node);
   }
   printf("complete \n");
+}
+
+
+
+void sched_file_fprintf_days_dat(const sched_file_type *s , const char *days_file) {
+  list_node_type *list_node = list_get_head(s->kw_list);
+  FILE * stream = util_fopen(days_file , "w");
+  sched_util_fprintf_days_line(0 , s->start_date , s->start_date , stream);
+  
+  while (list_node != NULL) {
+    const sched_kw_type * sched_kw = list_node_value_ptr(list_node);
+    sched_kw_fprintf_days_dat(sched_kw , stream);
+    list_node = list_node_get_next(list_node);
+  }
+  
+  fclose(stream);
+}
+
+
+
+hist_type * sched_file_alloc_hist(const sched_file_type *s) {
+  hist_type *hist              = hist_alloc(s->start_date);
+  list_node_type *list_node    = list_get_head(s->kw_list);
+  date_node_type *current_date = NULL;
+  
+  while (list_node != NULL) {
+    const sched_kw_type * sched_kw = list_node_value_ptr(list_node);
+    sched_kw_make_hist(sched_kw , hist , &current_date );
+    list_node = list_node_get_next(list_node);
+  }
+
+  return hist;
 }
 
 

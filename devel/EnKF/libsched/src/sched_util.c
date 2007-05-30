@@ -133,7 +133,7 @@ void sched_util_parse_file(const char *filename , int *_lines , char ***_line_li
   char **line_list;
   int    buffer_lines;
   bool   at_eof;
-  FILE *stream = fopen(filename , "r");
+  FILE *stream = util_fopen(filename , "r");
   
   lines        = 0;
   buffer_lines = 100;
@@ -332,5 +332,14 @@ int sched_util_atoi(const char *token) {
   else
     return 0;
 }
+
       
+
+void sched_util_fprintf_days_line(int date_nr , time_t t1 , time_t t2 , FILE *stream) {
+  struct tm ts;
+  double days;
+  localtime_r(&t2 , &ts);
+  days = difftime(t2 , t1) / (24 * 3600);
+  fprintf(stream , "%04d  %8.2f %4d %2d %2d\n",date_nr , days , ts.tm_year + 1900 , ts.tm_mon + 1, ts.tm_mday);
+}
 

@@ -5,12 +5,16 @@
 #include <time.h>
 
 typedef struct date_node_struct      date_node_type;
-date_node_type      * date_node_alloc(int , const char *, const hash_type *);
+date_node_type      * date_node_alloc_from_DATES_line(const time_t * , int , const char * , const hash_type * ); 
+date_node_type      * date_node_alloc_from_TSTEP_line(const time_t * , int , const char * , const hash_type * ); 
 int                   date_node_get_date_nr(const date_node_type * );
 void                  date_node_fprintf_rate_date(const date_node_type * , const char * , const char *);
 void                  date_node_fwrite(const date_node_type * , FILE *);
-date_node_type      * date_node_fread_alloc(int , time_t , FILE *, bool *);
+date_node_type      * date_node_fread_alloc(const time_t * , int , time_t , FILE *, bool *);
 void                  date_node_fprintf(const date_node_type * , FILE *, int , time_t , bool *);
+void                  date_node_free(date_node_type *);
 void                  date_node_free__(void *);
-
+void                  date_node_fprintf_days_line(const date_node_type * , FILE *);
+date_node_type      * date_node_copyc(const date_node_type * );
+void                * date_node_copyc__(const void * );
 #endif
