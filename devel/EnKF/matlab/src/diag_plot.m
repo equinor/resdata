@@ -1,4 +1,4 @@
-function diag_plot(path , VAR , NList , out_path, in_device)
+function diag_plot(year , month , day , path , VAR , NList , out_path, in_device)
 %diag_plot(year , month , day , path , VAR , NList , out_path , device)
 %
 %The diag_plot() function can be used to plot time-series of scalar 
@@ -28,11 +28,11 @@ function diag_plot(path , VAR , NList , out_path, in_device)
 %   [VAR]: This is the name of the variable you want to plot, it is
 %          typically 'multz', 'WOC' or 'multflt'.
 %
-%   [NList]: The scalar parameters are typically 'vectors' - i.e. 
+%   [NList]: The scalar parameters are typically 'vectors' - i.e. there 
 %            are for instance many fault multipliers. The NList 
 %            argument is to designate which (e.g.) fault multipliers
 %            to plot. For instance to fault multpliers 1 and 3 use 
-%            [1,3] as NLIst argument.
+%            [1,3] as NList argument.
 %
 %   The two last arguments are for generating hard copies:
 %
