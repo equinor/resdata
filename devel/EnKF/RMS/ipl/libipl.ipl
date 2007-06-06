@@ -1,0 +1,231 @@
+
+
+
+// Small utility function to convert an integer to
+// a four character long string with zero prefix, 
+// i.e. 16 -> "0016".
+
+String FUNCTION make_cnum(Int num)
+   String cnum
+   Int d4 = Int(num / 1000)
+   Int d3 = Int(num - d4 * 1000) / 100
+   Int d2 = Int(num - d4 * 1000 - d3 * 100) / 10
+   Int d1 = Int(num - d4 * 1000 - d3 * 100 - d2 * 10)
+
+   cnum = d4
+   cnum = cnum + d3
+   cnum = cnum + d2
+   cnum = cnum + d1
+   return(cnum)
+ENDFUNCTION
+
+
+
+
+//I have a directory contaning a number of ROFF files, each ROFF file is
+//a realization of three parameters PERMX, PERMZ and PORO. I want to
+//load all these files, and make non-shared parameters PERMX, PERMZ and PORO. 
+//
+//The current ipl script does unfortunately not work as intended, when the
+//second, third, fourth.... file is loaded, it is not realized that non-shared
+//parameters PERMX++ already exist, and instead a new parameter PERMX is included. 
+//I.e. the ImportRoffParameter is seemingly not aware that the parameter in 
+//question already exists.
+
+FUNCTION LoadField(Int zonenr , String path , String base , Int R1 , Int R2)
+   Int i
+   String file,cnum
+   Zone   Z = @ZONES[zonenr]
+   Parameter p   
+
+   SetNumberOfRealizations(R2 - R1 + 1)
+
+   FOR i FROM R1 to R2 DO
+      cnum = make_cnum(i)  
+      file = path + "/" + base + "_" + cnum + ".ROFF"
+      Print("Loading from: ",file)
+      SetCurrentRealization(i + 1 - R1)
+      IF i = R1 THEN
+         ImportRoffParameter(Z , file)
+      	 SetShared(Z , base , FALSE)
+      ELSE
+         ImportRoffParameter(Z , file , p) 
+	 SetParameter(Z , base , p)
+      ENDIF
+   ENDFOR
+
+ENDFUNCTION
+
+
+
+FUNCTION LoadStat(Int zonenr , String path , String base)
+   Int i
+   String file,cnum
+   Zone   Z = @ZONES[zonenr]
+
+   file = path + "/AVE-" + base + ".ROFF"
+   Print("Loading from: ",file)	
+   ImportRoffParameter(Z , file)
+
+   file = path + "/STD-" + base + ".ROFF"
+   Print("Loading from: ",file)	
+   ImportRoffParameter(Z , file)
+ENDFUNCTION
+
+
+
+
+FUNCTION LoadAll(Int zonenr , String path , Int R1 , Int R2)
+   Zone Z = @ZONES[zonenr]
+   LoadField(zonenr , path , "PERMX" , R1 , R2)
+   LoadField(zonenr , path , "PORO" , R1 , R2)
+   LoadStat(zonenr , path , "PERMX")
+   LoadStat(zonenr , path , "PORO")
+ENDFUNCTION
+
+
+
+
+
+//FUNCTION LoadAll(Int zonenr , String path , String base , Int iens1 , Int iens2)
+//  Int i
+//  String file
+//  String cnum
+//  Zone   Z = @ZONES[zonenr]
+//  Parameter p
+//
+//  file = path + "/" + base + "_" + make_cnum(iens1) + ".ROFF"
+//  SetNumberOfRealizations(iens2 - iens1 + 1)
+//  
+//
+//  p = CreateContinuousParameter(Z)
+//  Iconize(p , "PERMX")
+//  SetShared(Z , "PERMX" , FALSE)
+//
+//  Iconize(p , "PORO")
+//  SetShared(Z , "PORO" , FALSE)
+//
+//  FOR i FROM iens1 TO iens2 DO
+//     SetCurrentRealization(i + 1 - iens1)
+//     cnum = make_cnum(i)
+//     file = path + "/" + base + "_" + cnum + ".ROFF"
+//     Print("Loading : ",file)
+//     ImportRoffParameter(Z , file)
+//
+//     GetParameter(Z , "PERMX-" + cnum , p)
+//     SetParameter(Z , "PERMX" , p)
+//
+//     GetParameter(Z , "PORO-" + cnum , p)
+//     SetParameter(Z , "PORO" , p)
+//  ENDFOR
+//  ImportRoffParameter(Z , path + "/AVE.ROFF")
+//  ImportRoffParameter(Z , path + "/STD.ROFF")
+//ENDFUNCTION
+
+
+
+
+
+
+//FUNCTION LoadAll(Zone Z , String base_path , Int iDir1 , Int iDir2 ,   String tmpList[] , Float tmp [])
+//  Parameter poro,perm
+//  Int i
+//
+//  FOR i FROM iDir1 TO iDir2 DO
+//     SetCurrentRealization(i - iDir1 + 1)
+//     Print("Loading poro: ",i)
+//     poro = LoadEclParam(base_path + "/" + tmpList[i] + "/PORO.INC"  , Z , tmp)
+//     SetParameter(Z , "PORO" , poro)
+//     Print("Loading perm: ",i)	
+//     perm = LoadEclParam(base_path + "/" + tmpList[i] + "/PERMX.INC"  , Z , tmp)
+//     SetParameter(Z , "PERMX" , perm)
+//  ENDFOR
+//ENDFUNCTION
+//
+//
+//FUNCTION Init(Zone Z , String base_path , Int iDir1 , Int iDir2 , String tmpList[] , Float tmp [])
+//  Parameter poro, perm
+//  Make_tmpList(tmpList)
+//
+//  Print("Init poro:")
+//  poro = LoadEclParam(base_path + "/" + tmpList[1] + "/PORO.INC"  , Z , tmp)
+//
+//  Print("Init perm:")
+//  perm = LoadEclParam(base_path + "/" + tmpList[1] + "/PERMX.INC"  , Z , tmp)
+//
+//  SetNumberOfRealizations(iDir2 - iDir1 + 1)
+//  SetCurrentRealization(1)
+//  Iconize(perm , "PERMX")
+//  Iconize(poro , "PORO")
+//  SetSrkhared(Z , "PERMX" , FALSE)
+//  SetShared(Z , "PORO"  , FALSE)
+//ENDFUNCTION
+
+
+
+//SetParameter(Z , "PERMX" , P)
+//ExportRoffParameter(P , "M:/EnKF_ON/Run-FMT-Test/RMS-Export/PERMX.ROFF" , 1)
+//ExportRoffParameter(P , "M:/EnKF_ON/Run-FMT-Test/RMS-Export/PERMX.AROFF" , 0)
+//
+//ScaleParameter(P , nx , ny , nz , 0.10)
+//SetParameter(Z , "PERMZ" , P)
+//ExportRoffParameter(P , "M:/EnKF_ON/Run-FMT-Test/RMS-Export/PERMZ.ROFF" , 1)
+//ExportRoffParameter(P , "M:/EnKF_ON/Run-FMT-Test/RMS-Export/PERMZ.AROFF" , 0)
+//
+//
+//GetParameter(Z , "PORO" , P)
+//ExportRoffParameter(P , "M:/EnKF_ON/Run-FMT-Test/RMS-Export/PORO.ROFF" , 1)
+//ExportRoffParameter(P , "M:/EnKF_ON/Run-FMT-Test/RMS-Export/PORO.AROFF" , 0)
+
+
+//Z = @ZONES[5]
+//nx = Z.columns
+//ny = Z.rows
+//nz = Z.layers
+//GetParameter(Z , "Z" , P)
+//FOR k FROM 1 TO nz DO
+//   FOR j FROM 1 to ny DO
+//      FOR i FROM 1 to nx DO
+//         P[i,j,k] = k
+//      ENDFOR
+//   ENDFOR
+//ENDFOR
+//SetParameter(Z , "Z" , P)
+//ExportRoffParameter(P , "M:/EnKF_ON/Run-FMT-Test/RMS-Export/Z.ROFF" , 1)
+//
+//GetParameter(Z , "X" , P)
+//FOR k FROM 1 TO nz DO
+//   FOR j FROM 1 to ny DO
+//      FOR i FROM 1 to nx DO
+//         P[i,j,k] = i
+//      ENDFOR
+//   ENDFOR
+//ENDFOR
+//SetParameter(Z , "X" , P)
+//ExportRoffParameter(P , "M:/EnKF_ON/Run-FMT-Test/RMS-Export/X.ROFF" , 1)
+//
+//GetParameter(Z , "Y" , P)
+//FOR k FROM 1 TO nz DO
+//   FOR j FROM 1 to ny DO
+//      FOR i FROM 1 to nx DO
+//         P[i,j,k] = j
+//      ENDFOR
+//   ENDFOR
+//ENDFOR
+//SetParameter(Z , "Y" , P)
+//ExportRoffParameter(P , "M:/EnKF_ON/Run-FMT-Test/RMS-Export/Y.ROFF" , 1)
+
+
+
+
+//Int iDir1 = 1
+//Int iDir2 = 20
+//String tmpList[]
+//String path = "M:/EnKF_ON/Run-FMT-Test/PosteriorEns2"
+//Float tmp[]
+//Zone Z = @ZONES[3]
+//
+//Init(Z ,  path    , iDir1  , iDir2 , tmpList , tmp)
+//LoadAll(Z , path , iDir1  , iDir2 , tmpList , tmp)
+//Print("-----------------------------------------------------------------")
+//Print("Load complete")
