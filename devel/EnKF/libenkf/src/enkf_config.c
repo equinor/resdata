@@ -23,6 +23,7 @@ struct enkf_config_struct {
   hash_type        *enkf_ecl_kw;  
   int               enspath_depth;
   int               eclpath_depth;
+  bool              endian_swap;
 };
 
 
@@ -101,18 +102,20 @@ void enkf_config_add_restart_type(const enkf_config_type *enkf_config, const cha
 
 /*****************************************************************/
 
+bool enkf_config_get_endian_swap(const enkf_config_type * enkf_config) { return enkf_config->endian_swap; }
 
 int enkf_config_get_eclpath_depth(const enkf_config_type * enkf_config) { return enkf_config->eclpath_depth; }
 
 int enkf_config_get_enspath_depth(const enkf_config_type * enkf_config) { return enkf_config->enspath_depth; }
 
-enkf_config_type * enkf_config_alloc(int enspath_depth , int eclpath_depth) {
+enkf_config_type * enkf_config_alloc(int enspath_depth , int eclpath_depth, bool endian_swap) {
   enkf_config_type * enkf_config = malloc(sizeof *enkf_config);
   enkf_config->config_hash = hash_alloc(10);
   enkf_config->enkf_ecl_kw = hash_alloc(10);
-
+  
   enkf_config->eclpath_depth = eclpath_depth;
   enkf_config->enspath_depth = enspath_depth;
+  enkf_config->endian_swap   = endian_swap;
   return enkf_config;
 }
 

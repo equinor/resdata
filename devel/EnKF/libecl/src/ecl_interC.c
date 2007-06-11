@@ -332,19 +332,39 @@ void ecl_inter_diag_ens_interactive__(const char *_eclbase_dir  , const int *dir
   bool fmt_file = util_intptr_2bool(fmt_file_int);
   bool unified  = util_intptr_2bool(unified_int);
 
-  if (unified)
-    printf("Unified file:\n");
-  else
-    printf("Not unified file \n");
-  
   ecl_diag_ens_interactive(eclbase_dir , eclbase_name , fmt_file , unified);
   free(eclbase_dir);
   free(eclbase_name);
 }
-		       
-void ecl_inter_diag_make_gnuplot_interactive__() {
+
+
+void ecl_inter_avg_prod__(const char *_out_path     , const int *out_len,
+			  const char *_eclbase_dir  , const int *dir_len,
+			  const char *_avg_name     , const int *avg_len, 
+			  const char *_std_name     , const int *std_len, 
+			  int *fmt_file_int , int *unified_int) {
+  char *eclbase_dir  = util_alloc_cstring(_eclbase_dir  , dir_len);
+  char *avg_name = util_alloc_cstring(_avg_name , avg_len);
+  char *std_name = util_alloc_cstring(_std_name , std_len);
+  char *out_path = util_alloc_cstring(_out_path , out_len);
+  
+  bool fmt_file = util_intptr_2bool(fmt_file_int);
+  bool unified  = util_intptr_2bool(unified_int);
+
+  ecl_diag_avg_production_interactive(out_path , eclbase_dir , avg_name , std_name , fmt_file , unified);
+  free(eclbase_dir);
+  free(avg_name);
+  free(std_name);
+  free(out_path);
+}
+	
+
+	       
+/*
+  void ecl_inter_diag_make_gnuplot_interactive__() {
   ecl_diag_make_gnuplot_interactive();
 }
+*/
 
 
 void ecl_inter_unlink_path__(const char *_path , const int *path_len) {

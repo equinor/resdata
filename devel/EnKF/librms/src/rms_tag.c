@@ -198,7 +198,6 @@ void rms_tag_fwrite_eof(FILE *stream) {
 
 void rms_tag_fwrite_filedata(const char * filetype, FILE *stream) {
   rms_tag_type * tag = rms_tag_alloc("filedata");
-  
 
   rms_tag_add_tagkey(tag , rms_tagkey_alloc_byteswap()         , OWNED_REF);
   rms_tag_add_tagkey(tag , rms_tagkey_alloc_filetype(filetype) , OWNED_REF);
@@ -209,13 +208,18 @@ void rms_tag_fwrite_filedata(const char * filetype, FILE *stream) {
 }
 
 
-void rms_tag_fwrite_dimensions(int nX , int nY , int nZ , FILE *stream) {
+rms_tag_type * rms_tag_alloc_dimensions(int nX , int nY , int nZ) {
   rms_tag_type * tag = rms_tag_alloc("dimensions");
   
   rms_tag_add_tagkey(tag , rms_tagkey_alloc_dim("nX", nX) , OWNED_REF);
   rms_tag_add_tagkey(tag , rms_tagkey_alloc_dim("nY", nY) , OWNED_REF);
   rms_tag_add_tagkey(tag , rms_tagkey_alloc_dim("nZ", nZ) , OWNED_REF);
+  return tag;
+}
 
+
+void rms_tag_fwrite_dimensions(int nX , int nY , int nZ , FILE *stream) {
+  rms_tag_type * tag = rms_tag_alloc_dimensions(nX , nY , nZ);
   rms_tag_fwrite(tag , stream);
   rms_tag_free(tag);
 }

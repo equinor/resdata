@@ -16,6 +16,7 @@ struct hist_struct {
   time_t           start_date;
   hist_node_type **data;
   hash_type       *well_hash;
+  hash_type       *var_map;
 };
 
 
@@ -89,6 +90,7 @@ hist_node_type * hist_node_fread_alloc(const time_t * start_date , FILE *stream)
 
 
 
+
 /*****************************************************************/
 
 /*
@@ -117,16 +119,36 @@ static void hist_realloc_data(hist_type * hist , int alloc_size) {
 }
 
 
+static void hist_init_var_map(hist_type * hist) {
+  hash_insert_int(hist->var_map , "OPR"  , __RATE_ORAT);
+  hash_insert_int(hist->var_map , "ORAT" , __RATE_ORAT);
+  hash_insert_int(hist->var_map , "WOPR" , __RATE_ORAT);
+
+  hash_insert_int(hist->var_map , "GRAT" , __RATE_GRAT);
+  hash_insert_int(hist->var_map , "GPR"  , __RATE_GRAT);
+  hash_insert_int(hist->var_map , "WGPR" , __RATE_GRAT);
+
+  hash_insert_int(hist->var_map , "WRAT" , __RATE_WRAT);
+  hash_insert_int(hist->var_map , "WPR"  , __RATE_WRAT);
+  hash_insert_int(hist->var_map , "WWPR" , __RATE_WRAT);
+
+  hash_insert_int(hist->var_map , "BHP" , __RATE_BHP);
+  hash_insert_int(hist->var_map , "THP" , __RATE_THP);
+  
+}
+
 
 
 hist_type * hist_alloc(time_t start_date) {
   hist_type * hist = malloc(sizeof *hist);
   hist->size       = 0;
   hist->well_hash  = hash_alloc(10);
+  hist->var_map    = hash_alloc(10);
   hist->data       = NULL;
   hist->alloc_size = 0;
   hist->start_date = start_date;
   hist_realloc_data(hist , 5);
+  hist_init_var_map(hist);
   return hist;
 }
 
@@ -186,16 +208,22 @@ hist_node_type * hist_add_node(hist_type * hist , int time_step) {
 }
 
 
+bool hist_has_well(const hist_type * hist , const char * well) {
+  return hash_has_key(hist->well_hash , well);
+}
+    
+
+
 static const rate_type * hist_get_rate_node(const hist_type * hist , int time_step, const char * well) {
   const rate_type * rate = NULL;
 
-  if (time_step < hist->size) {
+  if (time_step <= hist->size) {
     const hist_node_type * hist_node = hist_get_node(hist , time_step); 
     if (hist_node != NULL) {
       if (hash_has_key(hist_node->data , well)) 
 	rate = hash_get(hist_node->data , well);
       else {
-	if (!hash_has_key(hist->well_hash , well)) {
+	if (!hist_has_well(hist , well)) {
 	  fprintf(stderr,"%s: The well:%s does not exist in the history object - aborting \n",__func__ , well);
 	  abort();
 	}
@@ -204,7 +232,10 @@ static const rate_type * hist_get_rate_node(const hist_type * hist , int time_st
       fprintf(stderr,"%s: asked for timestep:%d ... \n",__func__ , time_step);
       abort();
     }
-  }     
+  } else {
+    fprintf(stderr,"%s tried to ask for nonexistning time_step:%d - aborting \n",__func__ , time_step);
+    abort();
+  }
   
   return rate;
 }
@@ -212,7 +243,7 @@ static const rate_type * hist_get_rate_node(const hist_type * hist , int time_st
 
 static hist_node_type * hist_get_new_node(hist_type * hist , int date_nr) {
   hist_node_type * hist_node;
-
+  
   if (date_nr > hist->alloc_size) 
     hist_realloc_data(hist , (hist->alloc_size + date_nr));
   
@@ -227,14 +258,14 @@ static hist_node_type * hist_get_new_node(hist_type * hist , int date_nr) {
 }
 
 
-void hist_add_date(hist_type * hist, date_node_type * date) {
+void hist_add_date(hist_type * hist, const date_node_type * date) {
   int date_nr = date_node_get_date_nr(date);
   hist_node_type * hist_node = hist_get_new_node(hist , date_nr);
   hist_node->date = date_node_copyc(date);
 }
 
 
-void hist_add_rate(hist_type * hist , int date_nr , rate_type * rate) {
+void hist_add_rate(hist_type * hist , int date_nr , const rate_type * rate) {
   hist_node_type * hist_node = hist_get_new_node(hist , date_nr);
   if (hash_has_key(hist_node->data , rate_node_get_well_ref(rate))) {
     fprintf(stderr,"%s: INTERNAL error - tried adding the same well rate twice - aborting \n",__func__);
@@ -254,56 +285,101 @@ void hist_add_rate(hist_type * hist , int date_nr , rate_type * rate) {
 /*****************************************************************/
 
 
-double hist_get_ORAT(const hist_type * hist , int time_step , const char * well) {
+double hist_get_ORAT(const hist_type * hist , int time_step , const char * well, bool *def) {
   const rate_type *rate = hist_get_rate_node(hist , time_step , well);
   if (rate == NULL)
     return 0.0;
   else 
-    return rate_get_ORAT(rate);
+    return rate_get_ORAT(rate , def);
 }
 
-double hist_get_GRAT(const hist_type * hist , int time_step , const char * well) {
+double hist_get_GRAT(const hist_type * hist , int time_step , const char * well, bool *def) {
   const rate_type *rate = hist_get_rate_node(hist , time_step , well);
   if (rate == NULL)
     return 0.0;
   else 
-    return rate_get_GRAT(rate);
+    return rate_get_GRAT(rate , def);
 }
 
-double hist_get_WRAT(const hist_type * hist , int time_step , const char * well) {
+double hist_get_WRAT(const hist_type * hist , int time_step , const char * well, bool *def) {
   const rate_type *rate = hist_get_rate_node(hist , time_step , well);
   if (rate == NULL)
     return 0.0;
   else 
-    return rate_get_WRAT(rate);
+    return rate_get_WRAT(rate , def);
 }
 
-double hist_get_GOR(const hist_type * hist , int time_step , const char * well , bool *error) {
+
+double hist_get_GOR(const hist_type * hist , int time_step , const char * well , bool *error, bool *def) {
   const rate_type *rate = hist_get_rate_node(hist , time_step , well);
   if (rate == NULL)
     return 0.0;
   else 
-    return rate_get_GOR(rate , error);
+    return rate_get_GOR(rate , error , def);
 }
 
 
-double hist_get_WCT(const hist_type * hist , int time_step , const char * well , bool *error) {
+double hist_get_WCT(const hist_type * hist , int time_step , const char * well , bool *error, bool *def) {
   const rate_type *rate = hist_get_rate_node(hist , time_step , well);
   if (rate == NULL)
     return 0.0;
   else 
-    return rate_get_WCT(rate , error);
+    return rate_get_WCT(rate , error , def);
 }
+
+
+double hist_iget(const hist_type * hist , int time_step , const char * well , int var_index , bool *error , bool *def) {
+  const rate_type * rate = hist_get_rate_node(hist , time_step , well);
+  if (rate == NULL)
+    return 0.0;
+  else 
+    return rate_iget(rate , var_index , error , def);
+}
+
+
+
+int hist_get_var_index(const hist_type * hist , const char * var) {
+  if (hash_has_key(hist->var_map , var))
+    return hash_get_int(hist->var_map , var);
+  else {
+    fprintf(stderr,"%s: variable: %s not recognized - available variables are: \n",__func__ , var);
+    {
+      char **keyList = hash_alloc_keylist(hist->var_map);
+      int i;
+      
+      for (i=0; i < hash_get_size(hist->var_map); i++) 
+	printf("%s \n",keyList[i]);
+
+      hash_free_ext_keylist(hist->var_map , keyList);
+    }
+    fprintf(stderr,"aborting \n");
+    abort();
+  }
+}
+
+
+
+double hist_get(const hist_type * hist , int time_step , const char * well , const char * var) {
+  bool error;
+  bool def;
+  
+  return hist_iget(hist , time_step , well , hist_get_var_index(hist , var) , &error , &def);
+}
+  
+
 
 void hist_free(hist_type *hist) {
   int i;
-  for (i=0; i < hist->size; hist++) {
+  for (i=0; i < hist->size; i++) {
     if (hist->data[i] != NULL)
       hist_node_free(hist->data[i]);
   }
-
+  
+  
   free(hist->data);
+  hash_free(hist->var_map);
   hash_free(hist->well_hash);
+  free(hist);
 }
 
 

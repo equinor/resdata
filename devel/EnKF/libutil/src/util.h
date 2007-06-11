@@ -16,7 +16,7 @@ void         util_unlink_path(const char *);
 void         util_unlink_existing(const char *filename);
 void util_copy_stream(FILE *, FILE *, int , void * );
 
-FILE   * util_fopen(const char *  , bool );
+FILE   * util_fopen(const char *  , const char *);
 char   * util_realloc_full_path(char * , const char *, const char *);
 char   * util_alloc_full_path(const char *, const char *);
 char   * util_alloc_strip_copy(const char *);

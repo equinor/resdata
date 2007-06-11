@@ -96,7 +96,7 @@ void rms_stats_update_ens(const char *prior_path , const char *posterior_path , 
     {
       char * file_name    = util_alloc_full_path(posterior_path , file_list[iens]);
       rms_file_type *file = rms_file_alloc(file_name , false);
-      FILE *stream        = rms_file_fopen(file , false);
+      FILE *stream        = rms_file_fopen_w(file);
 
       printf("%s",file_name); fflush(stdout);
       rms_file_init_fwrite(file , "parameter" , stream);

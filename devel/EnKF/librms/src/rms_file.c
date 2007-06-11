@@ -33,6 +33,7 @@ struct rms_file_struct {
   bool         fmt_file;
   hash_type  * type_map;
   list_type  * tag_list;
+  FILE       * stream;
 };
 
 
@@ -43,10 +44,10 @@ struct rms_file_struct {
 
 
 
-static bool rms_fmt_file(const rms_file_type *rms_file , FILE *stream) {
+static bool rms_fmt_file(const rms_file_type *rms_file) {
   bool fmt_file;
   char filetype[9];
-  rms_util_fread_string( filetype , 9 , stream);
+  rms_util_fread_string( filetype , 9 , rms_file->stream);
 
   if (strncmp(filetype , rms_binary_header , 8) == 0)
     fmt_file = false;
@@ -66,11 +67,29 @@ static void rms_file_add_tag(rms_file_type *rms_file , const rms_tag_type *tag) 
 }
 
 
+void rms_file_add_dimensions(rms_file_type * rms_file , int nX , int nY , int nZ , bool save) {
+  if (rms_file_get_tag_ref(rms_file , "dimensions" , NULL , NULL , false) != NULL) {
+    fprintf(stderr,"%s: dimensions tag already persent in rms_file object - aborting \n",__func__);
+    abort();
+  }
+  {
+    rms_tag_type * dim_tag = rms_tag_alloc_dimensions(nX , nY , nZ);
+    rms_file_add_tag(rms_file , dim_tag);
+    if (save) 
+      rms_tag_fwrite(dim_tag , rms_file->stream);
+  }
+}
 
-rms_tag_type * rms_file_get_tag_ref(const rms_file_type *rms_file , const char *tagname, const char *keyname, const char *keyvalue) {
-  bool cont = true;
+
+rms_tag_type * rms_file_get_tag_ref(const rms_file_type *rms_file , const char *tagname, const char *keyname, const char *keyvalue, bool abort_on_error) {
+  bool cont;
   rms_tag_type *return_tag = NULL;
   list_node_type *tag_node = list_get_head(rms_file->tag_list);
+  if (tag_node != NULL)
+    cont = true;
+  else
+    cont = false;
+
   while (cont) {
     rms_tag_type *tag = list_node_value_ptr(tag_node);
     if (rms_tag_name_eq(tag , tagname , keyname , keyvalue)) {
@@ -81,7 +100,9 @@ rms_tag_type * rms_file_get_tag_ref(const rms_file_type *rms_file , const char *
     if (tag_node == NULL)
       cont = false;
   }
-  if (return_tag == NULL) {
+  
+
+  if (return_tag == NULL && abort_on_error) {
     if (keyname != NULL && keyvalue != NULL) 
       fprintf(stderr,"%s: failed to find tag:%s with key:%s=%s in file:%s - aborting \n",__func__ , tagname , keyname , keyvalue , rms_file->filename);
     else
@@ -110,6 +131,7 @@ rms_file_type * rms_file_alloc(const char *filename, bool fmt_file) {
   hash_insert_hash_owned_ref(rms_file->type_map , "char"   , rms_type_alloc(rms_char_type   , -1) ,  rms_type_free);   /* Char are a f*** mix of vector and scalar */
 
   rms_file->filename = NULL;
+  rms_file->stream   = NULL;
   rms_file_set_filename(rms_file , filename , fmt_file);
   return rms_file;
 }
@@ -167,7 +189,7 @@ static int rms_file_get_dim(const rms_tag_type *tag , const char *dim_name) {
 
 void rms_file_assert_dimensions(const rms_file_type *rms_file , int nx , int ny , int nz) {
   bool OK = true;  
-  rms_tag_type    *tag    = rms_file_get_tag_ref(rms_file , "dimensions" , NULL , NULL);
+  rms_tag_type    *tag    = rms_file_get_tag_ref(rms_file , "dimensions" , NULL , NULL , true);
   OK =       (nx == rms_file_get_dim(tag , "nX"));
   OK = OK && (ny == rms_file_get_dim(tag , "nY"));
   OK = OK && (nz == rms_file_get_dim(tag , "nZ"));
@@ -181,21 +203,30 @@ void rms_file_assert_dimensions(const rms_file_type *rms_file , int nx , int ny 
 }
 
 
+void rms_file_get_dims(const rms_file_type * rms_file , int * dims) {
+  rms_tag_type    *tag    = rms_file_get_tag_ref(rms_file , "dimensions" , NULL , NULL , true);
+  dims[0] = rms_file_get_dim(tag , "nX");
+  dims[1] = rms_file_get_dim(tag , "nY");
+  dims[2] = rms_file_get_dim(tag , "nZ");
+}
 
 
-static void rms_file_init_fread(rms_file_type * rms_file , FILE * stream) {
+FILE * rms_file_get_FILE(const rms_file_type * rms_file) { return rms_file->stream; }
 
-  rms_file->fmt_file = rms_fmt_file(rms_file , stream);
+
+static void rms_file_init_fread(rms_file_type * rms_file) {
+
+  rms_file->fmt_file = rms_fmt_file( rms_file );
   if (rms_file->fmt_file) {
     fprintf(stderr,"%s only binary files implemented - aborting \n",__func__);
     abort();
   }
   /* Skipping two comment lines ... */
-  rms_util_fskip_string(stream);
-  rms_util_fskip_string(stream);  
+  rms_util_fskip_string(rms_file->stream);
+  rms_util_fskip_string(rms_file->stream);  
   {
     bool eof_tag;
-    rms_tag_type    * filedata_tag = rms_tag_fread_alloc(stream , rms_file->type_map , rms_file->endian_convert , &eof_tag);
+    rms_tag_type    * filedata_tag = rms_tag_fread_alloc(rms_file->stream , rms_file->type_map , rms_file->endian_convert , &eof_tag);
     rms_tagkey_type * byteswap_key = rms_tag_get_key(filedata_tag , "byteswaptest");
     if (byteswap_key == NULL) {
       fprintf(stderr,"%s: failed to find filedata/byteswaptest - aborting \n", __func__);
@@ -208,53 +239,55 @@ static void rms_file_init_fread(rms_file_type * rms_file , FILE * stream) {
       rms_file->endian_convert = true;
     rms_tag_free(filedata_tag);
   }
-
 }
+
 
 
 rms_tag_type * rms_file_fread_alloc_tag(rms_file_type * rms_file , const char *tagname , const char * keyname , const char *keyvalue ) {
-  FILE *stream       = rms_file_fopen(rms_file , true);
-  rms_tag_type * tag = NULL;
-  bool cont          = true;
-  bool tag_found     = false;
-  long int start_pos = ftell(stream);
-  fseek(stream , 0 , SEEK_SET);
-  rms_file_init_fread(rms_file , stream);
-  while (cont) {
-    bool eof_tag;
-    rms_tag_type * tmp_tag = rms_tag_fread_alloc(stream , rms_file->type_map , rms_file->endian_convert , &eof_tag);
-    if (rms_tag_name_eq(tmp_tag , tagname , keyname , keyvalue)) {
-      tag_found = true;
-      tag = tmp_tag;
-    } else 
-      rms_tag_free(tmp_tag);
-    if (tag_found || eof_tag)
-      cont = false;
+  rms_file_fopen_r(rms_file);
+  {
+    rms_tag_type * tag = NULL;
+    bool cont          = true;
+    bool tag_found     = false;
+    long int start_pos = ftell(rms_file->stream);
+    fseek(rms_file->stream , 0 , SEEK_SET);
+    rms_file_init_fread(rms_file);
+    while (cont) {
+      bool eof_tag;
+      rms_tag_type * tmp_tag = rms_tag_fread_alloc(rms_file->stream , rms_file->type_map , rms_file->endian_convert , &eof_tag);
+      if (rms_tag_name_eq(tmp_tag , tagname , keyname , keyvalue)) {
+	tag_found = true;
+	tag = tmp_tag;
+      } else 
+	rms_tag_free(tmp_tag);
+      if (tag_found || eof_tag)
+	cont = false;
+    }
+    if (tag == NULL)
+      fseek(rms_file->stream , start_pos , SEEK_SET);
+    rms_file_fclose(rms_file);
+    return tag;
   }
-  if (tag == NULL)
-    fseek(stream , start_pos , SEEK_SET);
-  fclose(stream);
-  return tag;
 }
 
 
-FILE * rms_file_fopen(const rms_file_type *rms_file, bool _read) {
-  FILE * stream;
-  if (_read)
-    stream = fopen(rms_file->filename , "r");
-  else
-    stream = fopen(rms_file->filename , "w");
 
-  if (stream == NULL) {
-    fprintf(stderr,"%s: failed to open file: %s for ",__func__ , rms_file->filename);
-    if (_read) 
-      fprintf(stderr," reading - aborting \n");
-    else
-      fprintf(stderr," writing - aborting \n");
-    abort();
-  }
-  return stream;
+FILE * rms_file_fopen_r(rms_file_type *rms_file) {
+  rms_file->stream = util_fopen(rms_file->filename , "r");
+  return rms_file->stream;
 }
+
+
+FILE * rms_file_fopen_w(rms_file_type *rms_file) {
+  rms_file->stream = util_fopen(rms_file->filename , "w");
+  return rms_file->stream;
+}
+
+void rms_file_fclose(rms_file_type * rms_file) {
+  fclose(rms_file->stream);
+  rms_file->stream = NULL;
+}
+
 
 rms_tagkey_type * rms_file_fread_alloc_data_tagkey(rms_file_type * rms_file , const char *tagname , const char * keyname , const char *keyvalue) {
   rms_tag_type * tag = rms_file_fread_alloc_tag(rms_file , tagname , keyname , keyvalue);
@@ -269,14 +302,14 @@ rms_tagkey_type * rms_file_fread_alloc_data_tagkey(rms_file_type * rms_file , co
 
 
 void rms_file_fread(rms_file_type *rms_file) {
-  FILE *stream = rms_file_fopen(rms_file , true);
-  rms_file_init_fread(rms_file , stream);
+  rms_file_fopen_r(rms_file);
+  rms_file_init_fread(rms_file);
   
   /* The main read loop */
   {
     bool eof_tag = false;
     while (!eof_tag) {
-      rms_tag_type * tag = rms_tag_fread_alloc(stream ,  rms_file->type_map , rms_file->endian_convert , &eof_tag );
+      rms_tag_type * tag = rms_tag_fread_alloc(rms_file->stream ,  rms_file->type_map , rms_file->endian_convert , &eof_tag );
       if (!eof_tag)
 	rms_file_add_tag(rms_file , tag);
       else
@@ -284,45 +317,47 @@ void rms_file_fread(rms_file_type *rms_file) {
       
     }
   }
-  fclose(stream);
+  rms_file_fclose(rms_file);
 }
 
 
 
 /*static */
-void rms_file_init_fwrite(const rms_file_type * rms_file , const char * filetype , FILE *stream) {
+void rms_file_init_fwrite(const rms_file_type * rms_file , const char * filetype) {
   if (!rms_file->fmt_file)
-    rms_util_fwrite_string(rms_binary_header , stream);
+    rms_util_fwrite_string(rms_binary_header , rms_file->stream);
   else {
     fprintf(stderr,"%s: Sorry only binary writes implemented ... \n",__func__);
-    rms_util_fwrite_string(rms_ascii_header , stream);
+    rms_util_fwrite_string(rms_ascii_header , rms_file->stream);
   }
   
-  rms_util_fwrite_comment(rms_comment1 , stream);
-  rms_util_fwrite_comment(rms_comment2 , stream);
-  rms_tag_fwrite_filedata(filetype , stream);
+  rms_util_fwrite_comment(rms_comment1 , rms_file->stream);
+  rms_util_fwrite_comment(rms_comment2 , rms_file->stream);
+  rms_tag_fwrite_filedata(filetype , rms_file->stream);
 }
 
 
-void rms_file_complete_fwrite(const rms_file_type * rms_file , FILE * stream) {
-  rms_tag_fwrite_eof(stream);
+
+void rms_file_complete_fwrite(const rms_file_type * rms_file) {
+  rms_tag_fwrite_eof(rms_file->stream);
 }
 
 
-void rms_file_fwrite(const rms_file_type * rms_file, const char * filetype) {
-  FILE * stream = rms_file_fopen(rms_file , false);
-  rms_file_init_fwrite(rms_file , filetype , stream);
+
+void rms_file_fwrite(rms_file_type * rms_file, const char * filetype) {
+  rms_file_fopen_w(rms_file);
+  rms_file_init_fwrite(rms_file , filetype );
 
   {
     list_node_type * tag_node = list_get_head(rms_file->tag_list);
     while (tag_node != NULL) {
       const rms_tag_type *tag = list_node_value_ptr(tag_node);
-      rms_tag_fwrite(tag , stream);
+      rms_tag_fwrite(tag , rms_file->stream);
       tag_node = list_node_get_next(tag_node);
     }
   }
-  rms_file_complete_fwrite(rms_file , stream);
-  fclose(stream);
+  rms_file_complete_fwrite(rms_file );
+  rms_file_fclose(rms_file);
 }
 
 

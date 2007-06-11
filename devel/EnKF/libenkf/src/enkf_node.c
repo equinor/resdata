@@ -99,7 +99,18 @@ bool enkf_node_include_type(const enkf_node_type * enkf_node, int mask) {
   else
     return false;
 }
-       
+
+bool enkf_node_swapped(const enkf_node_type *enkf_node) {
+  if (enkf_node->swapfile == NULL)
+    return false;
+  else
+    return true;
+}
+
+const char * enkf_node_get_swapfile(const enkf_node_type * enkf_node) {
+  return enkf_node->swapfile;
+}
+
 
 #define FUNC_ASSERT(func,func_name) if (func == NULL) { fprintf(stderr,"%s: function handler: %s not registered when writing node:%s - aborting\n",__func__ , func_name , enkf_node->node_key); abort(); }
 

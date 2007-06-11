@@ -13,6 +13,7 @@ struct ecl_sum_struct {
   ecl_fstate_type * header;
   ecl_fstate_type * data;
   hash_type       * index_hash;
+  hash_type       *_index_hash;
   int               fmt_mode;
   int               Nwells , Nvars , param_offset;
   char            **well_list;
@@ -52,6 +53,7 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert , b
   ecl_sum->endian_convert = endian_convert;
   ecl_sum->unified        = unified;
   ecl_sum->index_hash     = hash_alloc(10);
+  ecl_sum->_index_hash    = hash_alloc(10);
   ecl_sum->header         = NULL;
   ecl_sum->data           = NULL;
   ecl_sum->well_list      = NULL;
@@ -65,6 +67,7 @@ static ecl_sum_type * ecl_sum_alloc_existing(const char *header_file , int fmt_m
   ecl_sum_type *ecl_sum   = ecl_sum_alloc_empty(fmt_mode , endian_convert , unified);
   ecl_sum->header         = ecl_fstate_load_unified(header_file , ecl_sum->fmt_mode , ecl_sum->endian_convert);
   {
+    char well[9] , kw[9];
     ecl_kw_type *wells     = ecl_fstate_get_kw(ecl_sum->header , 0 , "WGNAMES"); 
     ecl_kw_type *keywords  = ecl_fstate_get_kw(ecl_sum->header , 0 , "KEYWORDS"); 
     hash_type   *well_hash = hash_alloc(10);
@@ -73,14 +76,24 @@ static ecl_sum_type * ecl_sum_alloc_existing(const char *header_file , int fmt_m
       char well_kw[17];
       char *well_s;
       well_s = util_alloc_strip_copy(ecl_kw_iget_ptr(wells , index));
-      /*
-	printf("<%s> -> <%s> [%d->%d] \n" , ecl_kw_iget_ptr(wells , index) , well_s , strlen(ecl_kw_iget_ptr(wells , index)) , strlen(well_s));
-      */
       set_well_kw_string(ecl_kw_iget_ptr(wells , index) , ecl_kw_iget_ptr(keywords , index) , well_kw);
       hash_insert_int(ecl_sum->index_hash , well_kw , index);
       hash_insert_int(well_hash , ecl_kw_iget_ptr(wells , index) , 1);
       free(well_s);
     }
+    for (index=0; index < ecl_kw_get_size(wells); index++) {
+      util_set_strip_copy(well , ecl_kw_iget_ptr(wells    , index));
+      util_set_strip_copy(kw , ecl_kw_iget_ptr(keywords , index));
+
+      if (!hash_has_key(ecl_sum->_index_hash , well)) 
+	hash_insert_hash_owned_ref(ecl_sum->_index_hash , well , hash_alloc(10) , hash_free__);
+      
+      {
+	hash_type * var_hash = hash_get(ecl_sum->_index_hash , well);
+	hash_insert_int(var_hash , kw , index);
+      }
+    }
+    
     ecl_sum->Nwells    = hash_get_size(well_hash);
     ecl_sum->well_list = hash_alloc_keylist(well_hash);
     hash_free(well_hash);
@@ -114,7 +127,7 @@ ecl_sum_type * ecl_sum_alloc_new(const char *base_name , int Nwells, int Nvars, 
     else
       FMT_FILE = false;
     
-    ecl_block_type *header_block = ecl_block_alloc(0 , size , FMT_FILE , ecl_sum->endian_convert , NULL);
+    ecl_block_type *header_block = ecl_block_alloc(0 , size , FMT_FILE , ecl_sum->endian_convert);
     ecl_kw_type *kw       = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
     ecl_kw_type *units    = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
     ecl_kw_type *restart  = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
@@ -137,13 +150,13 @@ ecl_sum_type * ecl_sum_alloc_new(const char *base_name , int Nwells, int Nvars, 
     ecl_kw_set_header_alloc(nums     , "NUMS"     , size , "INTE");
     ecl_kw_set_header_alloc(startdat , "STARTDAT" , 3    , "INTE");
     
-    ecl_block_add_kw(header_block , restart);
-    ecl_block_add_kw(header_block , dimens);
-    ecl_block_add_kw(header_block , kw);
-    ecl_block_add_kw(header_block , wells);
-    ecl_block_add_kw(header_block , nums);
-    ecl_block_add_kw(header_block , units);
-    ecl_block_add_kw(header_block , startdat);
+    ecl_block_add_kw(header_block , restart, COPY);
+    ecl_block_add_kw(header_block , dimens , COPY);
+    ecl_block_add_kw(header_block , kw , COPY);
+    ecl_block_add_kw(header_block , wells , COPY);
+    ecl_block_add_kw(header_block , nums , COPY);
+    ecl_block_add_kw(header_block , units, COPY);
+    ecl_block_add_kw(header_block , startdat, COPY);
     
     ecl_fstate_add_block(ecl_sum->header , header_block);
   }
@@ -263,7 +276,7 @@ void ecl_sum_save(const ecl_sum_type * ecl_sum) {
 
 ecl_sum_type * ecl_sum_load_unified(const char * header_file , const char * data_file , int fmt_mode , bool endian_convert) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc_existing(header_file , fmt_mode , endian_convert , true);
-  ecl_sum->data   = ecl_fstate_load_unified(data_file  , ecl_sum->fmt_mode , ecl_sum->endian_convert);
+  ecl_sum->data = ecl_fstate_load_unified(data_file  , ecl_sum->fmt_mode , ecl_sum->endian_convert);
   return ecl_sum;
 }
 
@@ -303,6 +316,8 @@ int ecl_sum_iget1(const ecl_sum_type *ecl_sum , int istep , const char *well_nam
   char well_kw[17];
   int index;
   
+  
+
   set_well_kw_string(well_name , var_name , well_kw);
   if (!hash_has_key(ecl_sum->index_hash , well_kw)) {
     /*
@@ -312,6 +327,27 @@ int ecl_sum_iget1(const ecl_sum_type *ecl_sum , int istep , const char *well_nam
   }
   index = hash_get_int(ecl_sum->index_hash , well_kw);
   ecl_sum_iget2(ecl_sum , istep , index , value);
+  {
+    char well[9] , kw[9];
+    int _index;
+    util_set_strip_copy(well , well_name);
+    util_set_strip_copy(kw   , var_name);
+
+    if (hash_has_key(ecl_sum->_index_hash , well)) {
+      hash_type * var_hash = hash_get(ecl_sum->_index_hash , well);
+      if (hash_has_key(var_hash , kw))
+	_index = hash_get_int(var_hash , kw);
+      else
+	_index = -1;
+    } else
+      _index = -1;
+    
+    if (index != _index) {
+      fprintf(stderr,"%s fatal error _index != index - aborting \n",__func__);
+      abort();
+    }
+  }
+  
   return index;
 }
 
@@ -364,6 +400,7 @@ void ecl_sum_free(ecl_sum_type *ecl_sum) {
   ecl_fstate_free(ecl_sum->data);
 
   hash_free(ecl_sum->index_hash);
+  hash_free(ecl_sum->_index_hash);
 
   for (i=0; i < ecl_sum->Nwells; i++)
     free(ecl_sum->well_list[i]);

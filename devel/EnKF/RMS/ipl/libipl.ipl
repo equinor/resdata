@@ -62,14 +62,26 @@ FUNCTION LoadStat(Int zonenr , String path , String base)
 ENDFUNCTION
 
 
+FUNCTION LoadParam(Int zonenr , String path , String base , Int R1 , Int R2)
+   LoadField(zonenr , path , base , R1 , R2)
+   LoadStat(zonenr , path , base )
+ENDFUNCTION
 
 
-FUNCTION LoadAll(Int zonenr , String path , Int R1 , Int R2)
-   Zone Z = @ZONES[zonenr]
-   LoadField(zonenr , path , "PERMX" , R1 , R2)
-   LoadField(zonenr , path , "PORO" , R1 , R2)
-   LoadStat(zonenr , path , "PERMX")
-   LoadStat(zonenr , path , "PORO")
+
+
+
+// Include("/h/a152128/EnKF/devel/EnKF/RMS/ipl/libipl.ipl")
+// String PList[]
+// PList[1] = "PERMX"
+// PList[2] = "PRES"
+// LoadAll(3 , "/h/a152128/EnKF_ON/Run-FMT-Test/tmp-Test" , PList,  1 , 25)
+
+FUNCTION LoadAll(Int zonenr , String path , String  PList[],  Int R1 , Int R2)
+   Int ip
+   FOR ip FROM 1 to PList.length DO
+      LoadParam(zonenr , path , PList[ip] , R1 , R2)
+   ENDFOR
 ENDFUNCTION
 
 

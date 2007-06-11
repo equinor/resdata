@@ -203,10 +203,9 @@ static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int file
     fortio_type *fortio = fortio_open(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert);
     bool at_eof = false;
     int block_nr    = 0;
-    ecl_kw_type *first_kw = NULL;
     while (!at_eof) {
-      ecl_block_type *ecl_block = ecl_block_alloc(block_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert , first_kw);
-      first_kw = ecl_block_fread(ecl_block , fortio , &at_eof , false);
+      ecl_block_type *ecl_block = ecl_block_alloc(block_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+      ecl_block_fread(ecl_block , fortio , &at_eof);
       ecl_fstate_add_block(ecl_fstate , ecl_block);
       block_nr++;
     }
@@ -218,11 +217,11 @@ static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int file
       int block_nr = 0;
       for (file=0; file < files; file++) {
 	bool at_eof = false;
-	fortio_type *fortio       = fortio_open(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
-
+	fortio_type *fortio = fortio_open(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
+	
 	while (!at_eof) {
-	  ecl_block_type *ecl_block = ecl_block_alloc(block_nr /* Should get number from file */ , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert , NULL);
-	  ecl_block_fread(ecl_block , fortio , &at_eof , false);
+	  ecl_block_type *ecl_block = ecl_block_alloc(block_nr /* Should get number from file */ , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+	  ecl_block_fread(ecl_block , fortio , &at_eof );
 	  ecl_fstate_add_block(ecl_fstate , ecl_block);
 	  block_nr++;
 	}

@@ -30,6 +30,7 @@ struct rms_tagkey_struct {
   char                *name;
   void                *data;
   bool                 endian_convert;
+  bool                 shared_data;
 };
 
 
@@ -256,14 +257,18 @@ void rms_tagkey_free_(void *_tagkey) {
 
 
 static void rms_tagkey_alloc_data(rms_tagkey_type *tagkey) {
-  if (tagkey->data_size > tagkey->alloc_size) {
-    void *tmp = realloc(tagkey->data , tagkey->data_size);
-    if (tmp == NULL) {
-      fprintf(stderr,"%s: failed to allocate: %d bytes of storage - aborting \n",__func__ , tagkey->data_size);
-      abort();
-    } 
-    tagkey->data       = tmp;
-    tagkey->alloc_size = tagkey->data_size;
+  if (!tagkey->shared_data) {
+
+    if (tagkey->data_size > tagkey->alloc_size) {
+      void *tmp = realloc(tagkey->data , tagkey->data_size);
+      if (tmp == NULL) {
+	fprintf(stderr,"%s: failed to allocate: %d bytes of storage - aborting \n",__func__ , tagkey->data_size);
+	abort();
+      } 
+      tagkey->data       = tmp;
+      tagkey->alloc_size = tagkey->data_size;
+      
+    }
   }
 }
 
@@ -279,6 +284,7 @@ rms_tagkey_type * rms_tagkey_copyc(const rms_tagkey_type *tagkey) {
   new_tagkey->data_size      = tagkey->data_size;
   new_tagkey->rms_type       = tagkey->rms_type;
   new_tagkey->data           = NULL;
+  new_tagkey->shared_data    = tagkey->shared_data;
 
   rms_tagkey_alloc_data(new_tagkey);    
   memcpy(new_tagkey->data , tagkey->data , tagkey->data_size);
@@ -330,8 +336,12 @@ static void rms_tagkey_fread_data(rms_tagkey_type *tagkey , bool endian_convert 
 
 
 void rms_tagkey_set_data(rms_tagkey_type * tagkey , const void * data) {
-  memcpy(tagkey->data , data , tagkey->data_size);
+  if (tagkey->shared_data)
+    tagkey->data = (void *) data;
+  else
+    memcpy(tagkey->data , data , tagkey->data_size);
 }
+
 
 
 static void rms_fskip_tagkey_data(rms_tagkey_type *tagkey , FILE *stream) {
@@ -459,6 +469,7 @@ rms_tagkey_type * rms_tagkey_alloc_empty(bool endian_convert) {
   tagkey->name       	  = NULL;
   tagkey->data       	  = NULL;
   tagkey->endian_convert  = endian_convert;
+  tagkey->shared_data     = false;
   
   return tagkey;
   
@@ -476,17 +487,23 @@ static rms_tagkey_type * rms_tagkey_alloc_initialized(const char * name , int si
 }
 
 
-rms_tagkey_type * rms_tagkey_alloc_complete(const char * name , int size , rms_type_enum rms_type , const void * data) {
+rms_tagkey_type * rms_tagkey_alloc_complete(const char * name , int size , rms_type_enum rms_type , const void * data , bool shared_data) {
   rms_tagkey_type * tag = rms_tagkey_alloc_initialized(name , size , rms_type , false);
+  tag->shared_data = shared_data;
+
   rms_tagkey_alloc_data(tag);
   rms_tagkey_set_data(tag , data);
+  
   return tag;
 }
 
 
 void rms_tagkey_free(rms_tagkey_type *tagkey) {
   if (tagkey->name != NULL) free(tagkey->name);
-  if (tagkey->data != NULL) free(tagkey->data);
+
+  if (!tagkey->shared_data)
+    if (tagkey->data != NULL) free(tagkey->data);
+  
   free(tagkey);
 }
 

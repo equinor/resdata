@@ -46,7 +46,7 @@ date_node_type * date_node_alloc_from_DATES_line(const time_t * start_time , int
   date_node_type *date_node = date_node_alloc_empty(start_time);
   date_node->date_nr        = date_nr; 
   {
-    int tokens;
+    int tokens , i;
     char **token_list;
     struct tm ts;
     sched_util_parse_line(line, &tokens , &token_list , 3 , NULL);
@@ -57,6 +57,10 @@ date_node_type * date_node_alloc_from_DATES_line(const time_t * start_time , int
     ts.tm_mon    = hash_get_int(month_hash , token_list[1]);
     ts.tm_year   = atoi(token_list[2]) - 1900;
     date_node->time = mktime( &ts );
+    for (i=0; i < tokens; i++) {
+      if (token_list[i] != NULL) free(token_list[i]);
+    }
+    free(token_list);
   }
   date_node->TStep = false;
   return date_node;

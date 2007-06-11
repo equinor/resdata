@@ -34,20 +34,28 @@ static void pathv_iset__(pathv_type * pathv , int i , const char *path) {
 
 static void pathv_makeit(pathv_type * pathv) {
   int i;
+  int set_level = 0;
   bool all_set = true;
-  for (i=0; i < pathv->size; i++)
-    if (pathv->path_vector[i] == NULL)
+
+  for (i=0; i < pathv->size; i++) {
+    if (pathv->path_vector[i] == NULL) 
       all_set = false;
-  
-  if (all_set) {
+    else {
+      if (all_set) 
+	set_level = i+1;
+    }
+  }
+      
+
+  if (set_level > 0) {  
     int len;
     len = 0;
-    for (i = 0; i < pathv->size; i++)
+    for (i = 0; i < set_level; i++)
       len += strlen(pathv->path_vector[i]);
     len += pathv->size;
-    pathv->path = malloc(len);
+    pathv->path = realloc(pathv->path , len);
     pathv->path[0] = '\0';
-    for (i = 0; i < pathv->size; i++) {
+    for (i = 0; i < set_level; i++) {
       strcat(pathv->path , pathv->path_vector[i]);
       if (i < (pathv->size - 1))
 	strcat(pathv->path , "/");
@@ -88,7 +96,6 @@ pathv_type * pathv_alloc(int size , const char **path_vector) {
 
 void pathv_vset(pathv_type * pathv , const char **path_vector) {
   int i;
-
   for (i=0; i < pathv->size; i++)
     pathv_iset__(pathv , i , path_vector[i]);
   pathv_makeit(pathv);
@@ -102,11 +109,19 @@ void pathv_iset(pathv_type * pathv , int i, const char *path) {
 }
 
 
+void pathv_init(pathv_type *pathv , int i , const char * path) {
+  pathv_iset__(pathv , i , path);
+}
+
 
 void pathv_free(pathv_type * pathv) {
   int i;
   if (pathv->path != NULL) free(pathv->path);
   for (i=0; i < pathv->size; i++)
     if (pathv->path_vector[i] != NULL) free(pathv->path_vector[i]);
+
+  free(pathv->path_vector);
+  free(pathv);
 }
 
+const char     * pathv_get_ref(const pathv_type *pathv) { return pathv->path; }

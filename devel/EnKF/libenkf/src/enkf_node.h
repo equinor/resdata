@@ -55,6 +55,10 @@ void             enkf_node_ens_write (const enkf_node_type * , const char *);
 void             enkf_node_clear     (enkf_node_type *);
 void             enkf_node_ens_read  (enkf_node_type * , const char *);
 const char     * enkf_node_get_key_ref(const enkf_node_type * );
+bool enkf_node_swapped(const enkf_node_type *);
+const char * enkf_node_get_swapfile(const enkf_node_type *);
+void enkf_node_swapin(enkf_node_type *);
+void enkf_node_swapout(enkf_node_type * , const char *);
 
 char * enkf_node_alloc_ensfile(const enkf_node_type * , const char *);
 void   enkf_node_scale(enkf_node_type *   , double );

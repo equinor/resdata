@@ -7,6 +7,7 @@
 #include <util.h>
 
 
+
 typedef enum {LRAT , ORAT , RESV}  well_control_type;       
 typedef enum {OPEN , STOP , SHUT}  well_state_type;
 static const double RATE_ERROR = -1.0;
@@ -222,40 +223,90 @@ const void * rate_copyc__(const void *void_rate) {
 
 const char * rate_node_get_well_ref(const rate_type * rate) { return rate->well; }
 
-double rate_get_ORAT(const rate_type * rate) {
+double rate_get_ORAT(const rate_type * rate, bool *def) {
   return rate->ORAT;
 }
 
-double rate_get_GRAT(const rate_type * rate) {
+
+double rate_get_GRAT(const rate_type * rate, bool *def) {
   return rate->GRAT;
 }
 
-double rate_get_WRAT(const rate_type * rate) {
+
+double rate_get_WRAT(const rate_type * rate, bool *def) {
   return rate->WRAT;
 }
 
 
-double rate_get_GOR(const rate_type * rate, bool *error) {
+double rate_get_BHP(const rate_type * rate, bool *def) {
+
+  if (rate->def[BHP_index])
+    *def = true;
+  
+  return rate->BHP;
+}
+
+
+double rate_get_THP(const rate_type * rate, bool *def) {
+
+  if (rate->def[THP_index])
+    *def = true;
+  
+  return rate->THP;
+}
+
+
+double rate_get_GOR(const rate_type * rate, bool *error, bool *def) {
   double GOR;
   if (rate->ORAT != 0.0) {
     GOR = rate->GRAT / rate->ORAT;
     *error = false;
   } else {
-    GOR = RATE_ERROR;
-    *error = true;
+    if (rate->GRAT == 0.0) {
+      GOR = 0.0;
+      *error = false;
+    } else {
+      GOR = RATE_ERROR;
+      *error = true;
+    }
   }
   return GOR;
 }
 
 
-double rate_get_WCT(const rate_type * rate, bool *error) {
+double rate_get_WCT(const rate_type * rate, bool *error, bool *def) {
   double WCT;
   if ((rate->ORAT + rate->WRAT) != 0.0) {
     WCT = rate->WRAT / (rate->ORAT + rate->WRAT);
     *error = false;
   } else {
-    WCT = RATE_ERROR;
-    *error = true;
+    WCT = 0.0;
+    *error = false;
   }
   return WCT;
+}
+
+
+
+double rate_iget(const rate_type * rate , int var_index , bool *error , bool *def) {
+  switch (var_index) {
+  case(__RATE_ORAT):
+    return rate_get_ORAT(rate , def);
+    break;
+  case(__RATE_GRAT):
+    return rate_get_GRAT(rate , def);
+    break; 
+  case(__RATE_WRAT):
+    return rate_get_WRAT(rate , def);
+    break;
+  case(__RATE_GOR):
+    return rate_get_GOR(rate ,  error , def);
+    break;
+  case(__RATE_WCT):
+    return rate_get_WCT(rate , error , def);
+    break;
+  default:
+    fprintf(stderr,"%s: Internal error var_index = %d is not recognized - aborting \n",__func__ , var_index);
+    abort();
+  }
 }

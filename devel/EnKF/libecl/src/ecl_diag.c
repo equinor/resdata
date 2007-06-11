@@ -212,7 +212,7 @@ static void read_int(const char *prompt , int len , int *i) {
 }
 
 
-char ** fread_alloc_wells(const char *well_file , int *_nwell) {
+static char ** fread_alloc_wells(const char *well_file , int *_nwell) {
   FILE *fileH;
   char **well_list = NULL;
   char well[32];
@@ -236,128 +236,128 @@ char ** fread_alloc_wells(const char *well_file , int *_nwell) {
 }
 
 
-static void ecl_diag_add_subplot(FILE *stream , int prior_size , int posterior_size, double ps , double lw , int history_pt , int prior_lt , int posterior_lt,
-				 const char * history_title , const char *prior_title , const char * posterior_title,
-				 const char * prior_file , const char *posterior_file , const char *well, const char *var) {
-  int iens;
+/* static void ecl_diag_add_subplot(FILE *stream , int prior_size , int posterior_size, double ps , double lw , int history_pt , int prior_lt , int posterior_lt, */
+/* 				 const char * history_title , const char *prior_title , const char * posterior_title, */
+/* 				 const char * prior_file , const char *posterior_file , const char *well, const char *var) { */
+/*   int iens; */
 
-  fprintf(stream,"set pointsize %g\n" , ps);
-  fprintf(stream,"set xlabel \"Time (days)\" 0,0.50\n");
-  fprintf(stream,"set title \"%s %s\" 0,-0.50\n",well , var);
-  fprintf(stream,"plot \"%s\" u 1:2 t \"%s\" w p pt %d ,\\\n" , prior_file , history_title , history_pt);
-  for (iens = 0; iens < prior_size; iens++) {
-    if (iens == 0)
-      fprintf(stream , "\"\" u 1:%d t \"%s\" w l lt %d lw %g,  \\\n", iens+3 , prior_title , prior_lt , lw );
-    else
-      fprintf(stream , "\"\" u 1:%d t \"\" w l lt %d lw %g,  \\\n", iens+3 , prior_lt , lw );
-  }
+/*   fprintf(stream,"set pointsize %g\n" , ps); */
+/*   fprintf(stream,"set xlabel \"Time (days)\" 0,0.50\n"); */
+/*   fprintf(stream,"set title \"%s %s\" 0,-0.50\n",well , var); */
+/*   fprintf(stream,"plot \"%s\" u 1:2 t \"%s\" w p pt %d ,\\\n" , prior_file , history_title , history_pt); */
+/*   for (iens = 0; iens < prior_size; iens++) { */
+/*     if (iens == 0) */
+/*       fprintf(stream , "\"\" u 1:%d t \"%s\" w l lt %d lw %g,  \\\n", iens+3 , prior_title , prior_lt , lw ); */
+/*     else */
+/*       fprintf(stream , "\"\" u 1:%d t \"\" w l lt %d lw %g,  \\\n", iens+3 , prior_lt , lw ); */
+/*   } */
 
-  for (iens = 0; iens < posterior_size; iens++) {
-    if (iens == 0)
-      fprintf(stream , "\"%s\" u 1:%d t \"%s\" w l lt %d lw %g,  \\\n", posterior_file , iens+3 , posterior_title , posterior_lt , lw );
-    else if (iens == (posterior_size - 1))
-      fprintf(stream , "\"\" u 1:%d t \"\" w l lt %d lw %g \\\n", iens+3 , posterior_lt , lw );
-    else
-      fprintf(stream , "\"\" u 1:%d t \"\" w l lt %d lw %g, \\\n", iens+3 , posterior_lt , lw );
-  }
+/*   for (iens = 0; iens < posterior_size; iens++) { */
+/*     if (iens == 0) */
+/*       fprintf(stream , "\"%s\" u 1:%d t \"%s\" w l lt %d lw %g,  \\\n", posterior_file , iens+3 , posterior_title , posterior_lt , lw ); */
+/*     else if (iens == (posterior_size - 1)) */
+/*       fprintf(stream , "\"\" u 1:%d t \"\" w l lt %d lw %g \\\n", iens+3 , posterior_lt , lw ); */
+/*     else */
+/*       fprintf(stream , "\"\" u 1:%d t \"\" w l lt %d lw %g, \\\n", iens+3 , posterior_lt , lw ); */
+/*   } */
 
-  fprintf(stream , "\n");
-}
+/*   fprintf(stream , "\n"); */
+/* } */
 
 
 
-static void ecl_diag_make_gnuplot(int prior_size , int posterior_size , const char *prior_path , const char *posterior_path , const char *file , const char *plot_path) {
-  const char  *history_title     = "History";
-  const int    history_pt        = 6;
-  const char  *prior_title       = "Prior";
-  const char  *posterior_title   = "Posterior";
-  const int    prior_lt          = 3;
-  const int    posterior_lt      = 1;
-  const double lw               = 1.50;
-  const double ps               = 1.50;
+/* static void ecl_diag_make_gnuplot(int prior_size , int posterior_size , const char *prior_path , const char *posterior_path , const char *file , const char *plot_path) { */
+/*   const char  *history_title     = "History"; */
+/*   const int    history_pt        = 6; */
+/*   const char  *prior_title       = "Prior"; */
+/*   const char  *posterior_title   = "Posterior"; */
+/*   const int    prior_lt          = 3; */
+/*   const int    posterior_lt      = 1; */
+/*   const double lw               = 1.50; */
+/*   const double ps               = 1.50; */
 
-  char *plot_file      = malloc(strlen(plot_path)  + 1 + strlen(file) + 7);
-  char *prior_file     = malloc(strlen(prior_path) + 1 + strlen(file) + 1);
-  char *posterior_file = malloc(strlen(prior_path) + 1 + strlen(file) + 1);
-  char *ps_file        = malloc(strlen(prior_path) + 1 + strlen(file) + 4);
-  char *pdf_file       = malloc(strlen(prior_path) + 1 + strlen(file) + 5);
-  char *png_file       = malloc(strlen(prior_path) + 1 + strlen(file) + 5);
-  FILE *gplot_stream;
+/*   char *plot_file      = malloc(strlen(plot_path)  + 1 + strlen(file) + 7); */
+/*   char *prior_file     = malloc(strlen(prior_path) + 1 + strlen(file) + 1); */
+/*   char *posterior_file = malloc(strlen(prior_path) + 1 + strlen(file) + 1); */
+/*   char *ps_file        = malloc(strlen(prior_path) + 1 + strlen(file) + 4); */
+/*   char *pdf_file       = malloc(strlen(prior_path) + 1 + strlen(file) + 5); */
+/*   char *png_file       = malloc(strlen(prior_path) + 1 + strlen(file) + 5); */
+/*   FILE *gplot_stream; */
 
-  sprintf(png_file       , "%s/%s.png"   , plot_path      , file);
-  sprintf(pdf_file       , "%s/%s.pdf"   , plot_path      , file);
-  sprintf(ps_file        , "%s/%s.ps"    , plot_path      , file);
-  sprintf(plot_file  	 , "%s/%s.gplot" , plot_path      , file);
-  sprintf(prior_file 	 , "%s/%s"       , prior_path     , file);
-  sprintf(posterior_file , "%s/%s"       , posterior_path , file);
+/*   sprintf(png_file       , "%s/%s.png"   , plot_path      , file); */
+/*   sprintf(pdf_file       , "%s/%s.pdf"   , plot_path      , file); */
+/*   sprintf(ps_file        , "%s/%s.ps"    , plot_path      , file); */
+/*   sprintf(plot_file  	 , "%s/%s.gplot" , plot_path      , file); */
+/*   sprintf(prior_file 	 , "%s/%s"       , prior_path     , file); */
+/*   sprintf(posterior_file , "%s/%s"       , posterior_path , file); */
   
-  gplot_stream = fopen(plot_file , "w");
-  fprintf(gplot_stream , "set term post enhanced color blacktext solid \"Helvetica\" 14\n");
-  fprintf(gplot_stream , "set output \"%s\"\n" , ps_file);
+/*   gplot_stream = fopen(plot_file , "w"); */
+/*   fprintf(gplot_stream , "set term post enhanced color blacktext solid \"Helvetica\" 14\n"); */
+/*   fprintf(gplot_stream , "set output \"%s\"\n" , ps_file); */
 
 
-  {
-    char *well,*var;
+/*   { */
+/*     char *well,*var; */
     
-    set_well_var(file , &well , &var);
-    ecl_diag_add_subplot(gplot_stream , prior_size, posterior_size , ps , lw , history_pt , prior_lt , posterior_lt ,  history_title , prior_title , posterior_title , 
-			 prior_file , posterior_file , well , var);
+/*     set_well_var(file , &well , &var); */
+/*     ecl_diag_add_subplot(gplot_stream , prior_size, posterior_size , ps , lw , history_pt , prior_lt , posterior_lt ,  history_title , prior_title , posterior_title ,  */
+/* 			 prior_file , posterior_file , well , var); */
     
-    free(well);
-    free(var);
-  }
-  fprintf(gplot_stream, "!convert %s %s \n",ps_file , pdf_file);
-  fprintf(gplot_stream, "!convert -rotate 90 %s %s \n",ps_file , png_file);
-  fclose(gplot_stream);
+/*     free(well); */
+/*     free(var); */
+/*   } */
+/*   fprintf(gplot_stream, "!convert %s %s \n",ps_file , pdf_file); */
+/*   fprintf(gplot_stream, "!convert -rotate 90 %s %s \n",ps_file , png_file); */
+/*   fclose(gplot_stream); */
   
   
-  /*
-    free(png_file);
-    free(pdf_file);
-    free(ps_file);
-    free(plot_file);
-    free(prior_file);
-    free(posterior_file);
-  */
-}
+/*   /\* */
+/*     free(png_file); */
+/*     free(pdf_file); */
+/*     free(ps_file); */
+/*     free(plot_file); */
+/*     free(prior_file); */
+/*     free(posterior_file); */
+/*   *\/ */
+/* } */
 
 
 
-void ecl_diag_make_gnuplot_interactive() {
-  const int prompt_len = 30;
-  char prior_path[128];
-  char posterior_path[128];
-  char plot_path[128];
-  char posterior_file[128];
-  int  posterior_size , prior_size;
-  DIR * priorH;
-  struct dirent *dentry;
+/* void ecl_diag_make_gnuplot_interactive() { */
+/*   const int prompt_len = 30; */
+/*   char prior_path[128]; */
+/*   char posterior_path[128]; */
+/*   char plot_path[128]; */
+/*   char posterior_file[128]; */
+/*   int  posterior_size , prior_size; */
+/*   DIR * priorH; */
+/*   struct dirent *dentry; */
   
-  read_string("Path to prior" ,       	  prompt_len , prior_path);
-  read_int("Size of prior ensemble" , 	  prompt_len , &prior_size);
-  read_string("Path to posterior",    	  prompt_len , posterior_path);
-  read_int("Size of posterior ensemble" , prompt_len , &posterior_size);
-  read_string("Path to store plot files", prompt_len , plot_path);
+/*   read_string("Path to prior" ,       	  prompt_len , prior_path); */
+/*   read_int("Size of prior ensemble" , 	  prompt_len , &prior_size); */
+/*   read_string("Path to posterior",    	  prompt_len , posterior_path); */
+/*   read_int("Size of posterior ensemble" , prompt_len , &posterior_size); */
+/*   read_string("Path to store plot files", prompt_len , plot_path); */
 
-  if ( (priorH = opendir(prior_path)) == NULL) {
-    fprintf(stderr,"Opening directory: %s failed - returning" , prior_path);
-    return;
-  }
+/*   if ( (priorH = opendir(prior_path)) == NULL) { */
+/*     fprintf(stderr,"Opening directory: %s failed - returning" , prior_path); */
+/*     return; */
+/*   } */
 
-  util_make_path(plot_path);
-  while ((dentry = readdir (priorH)) != NULL) {
-    printf("Ser paa filen: %s \n",dentry->d_name);
-    if (!((strcmp(dentry->d_name , ".") == 0) || (strcmp(dentry->d_name , "..") == 0))) {
-      sprintf(posterior_file , "%s/%s" , posterior_path , dentry->d_name);
-      if (util_file_exists(posterior_file)) 
-	ecl_diag_make_gnuplot(prior_size , posterior_size , prior_path , posterior_path , dentry->d_name , plot_path);
-      else
-	fprintf(stderr,"Warning: file:%s exists only in directory:%s \n",dentry->d_name , prior_path);
-    }
-  }
-  closedir(priorH);
+/*   util_make_path(plot_path); */
+/*   while ((dentry = readdir (priorH)) != NULL) { */
+/*     printf("Ser paa filen: %s \n",dentry->d_name); */
+/*     if (!((strcmp(dentry->d_name , ".") == 0) || (strcmp(dentry->d_name , "..") == 0))) { */
+/*       sprintf(posterior_file , "%s/%s" , posterior_path , dentry->d_name); */
+/*       if (util_file_exists(posterior_file))  */
+/* 	ecl_diag_make_gnuplot(prior_size , posterior_size , prior_path , posterior_path , dentry->d_name , plot_path); */
+/*       else */
+/* 	fprintf(stderr,"Warning: file:%s exists only in directory:%s \n",dentry->d_name , prior_path); */
+/*     } */
+/*   } */
+/*   closedir(priorH); */
 
-}
+/* } */
 
 
 void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name , bool fmt_file , bool unified) {
@@ -419,7 +419,5 @@ void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name
   util_free_string_list(well_list , nwell);
   util_free_string_list(var_list  , nvar);
 }
-
-
 
 

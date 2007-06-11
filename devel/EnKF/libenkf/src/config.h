@@ -9,7 +9,7 @@
 int size;                 \
 const char * ecl_kw_name; \
 enkf_var_type var_type;   \
-char * ensfile;          \
+char * ensfile;           \
 char * eclfile;          
 
 #define GET_SIZE(prefix)             int prefix ## _config_get_size (const prefix ## _config_type *arg) { return arg->size; }

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <sched_kw_untyped.h>
 #include <list.h>
+#include <string.h>
 #include <list_node.h>
 #include <util.h>
 #include <stdbool.h>
@@ -70,6 +71,7 @@ void sched_kw_untyped_fwrite(const sched_kw_untyped_type *kw , FILE *stream) {
     list_node_type *line_node = list_get_head(kw->line_list);
     while (line_node != NULL) {
       util_fwrite_string(list_node_get_string(line_node) , stream);
+      /*printf("Skriver: <%s> %d \n",list_node_get_string(line_node) , strlen(list_node_get_string(line_node)));*/
       line_node = list_node_get_next(line_node);
     }
   }

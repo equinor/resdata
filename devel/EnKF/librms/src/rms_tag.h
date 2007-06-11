@@ -19,6 +19,7 @@ void       	  rms_tag_fwrite_eof(FILE *stream);
 void              rms_tag_fwrite(const rms_tag_type * , FILE * );
 void              rms_tag_printf(const rms_tag_type * , FILE * );
 const char      * rms_tag_name_ref(const rms_tag_type * );
+rms_tag_type    * rms_tag_alloc_dimensions(int  , int , int );
 void              rms_tag_fwrite_dimensions(int , int , int  , FILE *);
 void              rms_tag_fwrite_parameter(const char *, const rms_tagkey_type *, FILE *);
 #endif

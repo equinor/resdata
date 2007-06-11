@@ -60,14 +60,17 @@ static char * strip_line_alloc(const char * line) {
     */
 
     if (strip_mode & strip_space) {
-      while (line[offset + length - 1] == ' ')
-	length--;
+      if (offset + length > 0) {
+	while (line[offset + length - 1] == ' ') 
+	  length--;
+      }
     }
-  
+
     if (length > 0) 
       new_line = util_realloc_substring_copy(NULL , &line[offset] , length);
     else 
       new_line = NULL;
+    
   } 
   
   return new_line;
@@ -85,7 +88,7 @@ static char * alloc_line(FILE *stream , bool *at_eof) {
   
   len = 0;
   cont = true;
-  
+
   
   do {
     c = fgetc(stream);
@@ -107,7 +110,7 @@ static char * alloc_line(FILE *stream , bool *at_eof) {
     for (i=0; i < len; i++)
       tmp_line[i] = fgetc(stream);
     tmp_line[len] = '\0';
-    line = strip_line_alloc(tmp_line );
+    line = strip_line_alloc( tmp_line );
     free(tmp_line);
   }
   /*
@@ -121,7 +124,7 @@ static char * alloc_line(FILE *stream , bool *at_eof) {
     *at_eof = true;
   else
     *at_eof = false;
-
+  
   return line;
 }
 

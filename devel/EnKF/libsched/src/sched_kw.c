@@ -60,7 +60,7 @@ sched_kw_type * sched_kw_alloc(const char * kw_name , sched_type_enum type, bool
 void sched_kw_free(sched_kw_type * kw) {
   switch (kw->type) {
   case(COMPDAT):
-    kw->data = sched_kw_compdat_alloc();
+    sched_kw_compdat_free(kw->data);
     break;
   case(WCONHIST):
     sched_kw_wconhist_free(kw->data);

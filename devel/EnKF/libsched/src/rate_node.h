@@ -1,5 +1,16 @@
 #ifndef __RATE_NODE_H__
 #define __RATE_NODE_H__
+#include <stdbool.h>
+
+#define __RATE_ORAT   0
+#define __RATE_GRAT   1
+#define __RATE_WRAT   2
+#define __RATE_GOR    3
+#define __RATE_WCT    4
+#define __RATE_BHP    5
+#define __RATE_THP    6
+
+/*****************************************************************/
 
 typedef struct rate_struct rate_type;
 
@@ -14,12 +25,14 @@ const char * rate_get_well_ref(const rate_type * );
 const void * rate_copyc__(const void *);
 const char * rate_node_get_well_ref(const rate_type * );
 
-double 	   rate_get_ORAT(const rate_type * );
-double 	   rate_get_GRAT(const rate_type * );
-double 	   rate_get_WRAT(const rate_type * );
-double 	   rate_get_GOR(const rate_type * , bool *);
-double 	   rate_get_WCT(const rate_type * , bool *);
-
+double 	   rate_get_ORAT(const rate_type * , bool *);
+double 	   rate_get_GRAT(const rate_type * , bool *);
+double 	   rate_get_WRAT(const rate_type * , bool *);
+double 	   rate_get_GOR(const rate_type * , bool *, bool * );
+double 	   rate_get_WCT(const rate_type * , bool *, bool * );
+double     rate_get_THP(const rate_type * , bool *);
+double     rate_get_BHP(const rate_type * , bool *);
+double     rate_iget(const rate_type * , int , bool *, bool *);
 
 #endif
 

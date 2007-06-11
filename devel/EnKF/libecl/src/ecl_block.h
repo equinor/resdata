@@ -7,18 +7,23 @@
 
 typedef struct ecl_block_struct ecl_block_type;
 
+#define SHARED    0
+#define OWNED_REF 1
+#define COPY      2
+
+
 
 bool             ecl_block_fseek(int , bool , bool , fortio_type * );
 ecl_kw_type    * ecl_block_get_first_kw(const ecl_block_type * );
 ecl_kw_type    * ecl_block_get_next_kw(const ecl_block_type *  , const ecl_kw_type * );
 void 		 ecl_block_fread_kwlist(ecl_block_type *, fortio_type *, int , const char **);
-ecl_kw_type    * ecl_block_fread(ecl_block_type *, fortio_type * , bool * , bool); 
+void             ecl_block_fread(ecl_block_type *, fortio_type * , bool *); 
 ecl_kw_type    * ecl_block_get_kw(const ecl_block_type *, const char *);
 void           * ecl_block_get_data_ref(const ecl_block_type *, const char *);
-ecl_block_type * ecl_block_alloc(int , int , bool , bool , const ecl_kw_type *);
+ecl_block_type * ecl_block_alloc(int , int , bool , bool);
 ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *);
 void             ecl_block_free(ecl_block_type *);
-bool             ecl_block_add_kw(ecl_block_type * , const ecl_kw_type *);
+bool             ecl_block_add_kw(ecl_block_type * , const ecl_kw_type *, int );
 bool             ecl_block_add_kw_copy(ecl_block_type * , const ecl_kw_type *);
 void             ecl_block_fwrite(ecl_block_type * , fortio_type *);
 void             ecl_block_set_fmt_file(ecl_block_type *, bool);

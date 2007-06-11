@@ -88,9 +88,21 @@ char * util_alloc_dequoted_string(char *s) {
 void util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size , void * buffer) {
 
   while ( ! feof(src_stream)) {
-    int bytes;
-    bytes = fread (buffer , 1 , bytes , src_stream);
-    fwrite(buffer , 1 , bytes , target_stream);
+    int bytes_read;
+    int bytes_written;
+    bytes_read = fread (buffer , 1 , buffer_size , src_stream);
+    
+    if (bytes_read < buffer_size && !feof(src_stream)) {
+      fprintf(stderr,"%s: error when reading from src_stream - aborting \n",__func__);
+      abort();
+    }
+
+    bytes_written = fwrite(buffer , 1 , bytes_read , target_stream);
+
+    if (bytes_written < bytes_read) {
+      fprintf(stderr,"%s: not all bytes written to target stream - aboring \n",__func__);
+      abort();
+    }
   }
 
 }
@@ -117,12 +129,14 @@ bool util_file_exists(const char *filename) {
 bool util_path_exists(const char *pathname) {
   DIR *stream = opendir(pathname);
   bool ex;
+  
   if (stream == NULL) {
     ex = false;
   } else {
     closedir(stream);
     ex = true;
   }
+
   return ex;
 }
 
@@ -200,9 +214,13 @@ void util_make_path(const char *_path) {
       strncpy(active_path , _path , n + current_pos); 
       active_path[n+current_pos] = '\0';
       current_pos += n;
-      if (!util_path_exists(active_path))    
-	mkdir(active_path , 0775);
+      
+      if (!util_path_exists(active_path)) 
+	if (mkdir(active_path , 0775) != 0) 
+	  fprintf(stderr,"%s: failed to make directory:%s (ERROR:%d) - aborting \n",__func__ , active_path, errno);
+
     } while (strlen(active_path) < strlen(_path));
+    free(active_path);
   }
 }
 
@@ -541,15 +559,15 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
 
 void util_float_to_double(double *double_ptr , const float *float_ptr , int size) {
   int i;
-  for (i=0; i < size; i++)
-    double_ptr[i] = (double) float_ptr[i];
+  for (i=0; i < size; i++) 
+    double_ptr[i] = float_ptr[i];
 }
 
 
 void util_double_to_float(float *float_ptr , const double *double_ptr , int size) {
   int i;
   for (i=0; i < size; i++)
-    float_ptr[i] = (float) double_ptr[i];
+    float_ptr[i] = double_ptr[i];
 }
 
 
@@ -658,30 +676,32 @@ bool util_proc_alive(pid_t pid) {
 #define ABORT_READ  1
 #define ABORT_WRITE 2
 
-static FILE * util_fopen__(const char *filename , bool readonly, int abort_mode) {
+static FILE * util_fopen__(const char *filename , const char * mode, int abort_mode) {
   FILE *stream;
 
-  if (readonly) {
+  if (strcmp(mode , "r") == 0) {
     stream = fopen(filename , "r");
     if (stream == NULL) {
       fprintf(stderr,"%s: failed to open:%s for reading.\n",__func__ , filename);
       if (abort_mode & ABORT_READ) abort();
     }
-  } else {
+  } else if (strcmp(mode ,"w") == 0) {
     stream = fopen(filename , "w");
     if (stream == NULL) {
       fprintf(stderr,"%s: failed to open:%s for writing.\n",__func__ , filename);
       if (abort_mode & ABORT_WRITE) abort();
     }
+  } else {
+    fprintf(stderr,"%s: open mode: '%s' not implemented - aborting \n",__func__ , mode);
+    abort();
   }
   return stream;
 }
 
 
-FILE * util_fopen(const char * filename , bool readonly) {
-  return util_fopen__(filename , readonly , ABORT_READ + ABORT_WRITE);
+FILE * util_fopen(const char * filename , const char * mode) {
+  return util_fopen__(filename , mode , ABORT_READ + ABORT_WRITE);
 }
-
 
 #undef ABORT_READ
 #undef ABORT_WRITE

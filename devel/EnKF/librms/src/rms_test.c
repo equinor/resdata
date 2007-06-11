@@ -25,12 +25,12 @@ int main (int argc , char **argv) {
   rms_file_set_filename(file , "Stats.ROFF" , false);
 
   {
-    FILE *stream = rms_file_fopen(file , false);
-    rms_file_init_fwrite(file , "parameter" , stream);
+    FILE *stream = rms_file_fopen_w(file);
+    rms_file_init_fwrite(file , "parameter");
     rms_tag_fwrite(dim_tag , stream);
     rms_tag_fwrite_parameter("mean:PERMX" , mean , stream);
     rms_tag_fwrite_parameter("std:PERMX"  , std  , stream);
-    rms_file_complete_fwrite(file , stream);
+    rms_file_complete_fwrite(file);
     fclose(stream);
   }
   
@@ -63,8 +63,6 @@ int main (int argc , char **argv) {
     
     for (i=0; i < ens_size; i++)
       X[i][i] = 1.0;
-
-    
     
     rms_stats_update_ens("Posterior" , "Post2" , (const char **) file_list , "PERMX" , ens_size , (const double **) X);
     

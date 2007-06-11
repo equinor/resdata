@@ -141,6 +141,7 @@ void sched_file_free(sched_file_type *sched_file) {
   hash_free(sched_file->month_hash);
   hash_free(sched_file->one_line_kw);
   hash_free(sched_file->command_kw);
+  hash_free(sched_file->kw_types);
   free(sched_file->dims);
   free(sched_file);
 }

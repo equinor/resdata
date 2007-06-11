@@ -252,7 +252,9 @@ ecl_kw_type * ecl_kw_alloc_empty(bool fmt_file , bool endian_convert) {
   ecl_kw->data_size    = 0;
   ecl_kw->sizeof_ctype = 0;
   ecl_kw_set_fmt_file(ecl_kw , fmt_file);
+  
   return ecl_kw;
+
 }
 
 
@@ -263,6 +265,11 @@ void ecl_kw_free(ecl_kw_type *ecl_kw) {
   free(ecl_kw->header);
   if (!ecl_kw->shared_data) free(ecl_kw->data);
   free(ecl_kw);
+  
+}
+
+void ecl_kw_free__(void *void_ecl_kw) {
+  ecl_kw_free((ecl_kw_type *) void_ecl_kw);
 }
 
 
@@ -295,6 +302,10 @@ ecl_kw_type *ecl_kw_alloc_copy(const ecl_kw_type *src) {
   new = ecl_kw_alloc_empty(true , true);
   ecl_kw_memcpy(new , src);
   return new;
+}
+
+const void * ecl_kw_copyc__(const void * void_kw) {
+  return ecl_kw_alloc_copy((const ecl_kw_type *) void_kw); 
 }
 
 static void * ecl_kw_iget_ptr_static(const ecl_kw_type *ecl_kw , int i) {
@@ -387,10 +398,10 @@ static void ecl_kw_set_types(ecl_kw_type *ecl_kw, const char *ecl_str_type) {
   case (ecl_mess_type):
     ecl_kw->sizeof_ctype = sizeof(char);
 
-    ecl_kw->read_fmt = realloc(ecl_kw->read_fmt , 3);
+    ecl_kw->read_fmt = realloc(ecl_kw->read_fmt , 4);
     sprintf(ecl_kw->read_fmt , "%s%s" , "%" , "8c");
     
-    ecl_kw->write_fmt = realloc(ecl_kw->write_fmt , 3);
+    ecl_kw->write_fmt = realloc(ecl_kw->write_fmt , 4);
     sprintf(ecl_kw->write_fmt , "%ss" , "%");
 
     ecl_kw->fmt_linesize = 1;
@@ -853,7 +864,14 @@ static void __set_float_arg(float x , double *_arg_x , int *_pow_x ) {
  }                                                                                                                
 
 
-static void ecl_kw_fwrite_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
+
+/*
+  The function guarantees not net change to the data, 
+  but there is temporarry change - that is the reason
+  for the ugly (const casting).
+*/
+static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw, fortio_type *fortio) {
+  ecl_kw_type *ecl_kw = (ecl_kw_type *) _ecl_kw;
   const int blocks    = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
   FILE *stream        = fortio_get_FILE(fortio);
   int ib;
@@ -939,7 +957,7 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
 }
 
 
-void ecl_kw_fwrite(ecl_kw_type *ecl_kw , fortio_type *fortio) {
+void ecl_kw_fwrite(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
   ecl_kw_fwrite_header(ecl_kw , fortio);
   ecl_kw_fwrite_data(ecl_kw , fortio);
 }
