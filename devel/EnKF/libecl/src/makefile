@@ -28,6 +28,7 @@ INSTALL: $(LIB)
 #	install $(MOD_FILES) $(INSTALL_MOD_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
+	gcc -m32 -Wall ecl_submit.c -o /d/proj/bg/enkf/bin/ecl_submit.x
 
 
 $(LIB): $(OBJECTS)

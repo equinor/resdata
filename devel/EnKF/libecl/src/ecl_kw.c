@@ -113,6 +113,10 @@ void ecl_kw_select_binary(ecl_kw_type *ecl_kw) { ecl_kw_set_fmt_file(ecl_kw , fa
 
 const char * ecl_kw_get_header_ref(const ecl_kw_type *ecl_kw) { return ecl_kw->header; }
 
+char * ecl_kw_alloc_strip_header(const ecl_kw_type * ecl_kw) {
+  return util_alloc_strip_copy(ecl_kw->header);
+}
+
 void ecl_kw_get_memcpy_data(const ecl_kw_type *ecl_kw , void *target) {
   memcpy(target , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
 }
@@ -1052,14 +1056,20 @@ void ecl_kw_cfread(ecl_kw_type * ecl_kw , FILE *stream) {
 }
 
 
-void ecl_kw_fwrite_param(const char * filename , bool fmt_file , bool endian_convert , const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
+void ecl_kw_fwrite_param_fortio(fortio_type * fortio, bool fmt_file , bool endian_convert , const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
   ecl_kw_type   * ecl_kw = ecl_kw_alloc_complete_shared(fmt_file , endian_convert , header , size , ecl_type , data);
-  fortio_type   * fortio = fortio_open(filename , "w" , endian_convert);
-  
   ecl_kw_fwrite(ecl_kw , fortio);
-  fortio_close(fortio);
   ecl_kw_free(ecl_kw);
-
 }
     
+
+
+void ecl_kw_fwrite_param(const char * filename , bool fmt_file , bool endian_convert , const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
+  fortio_type   * fortio = fortio_open(filename , "w" , endian_convert);
+  ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_convert , header , ecl_type , size , data);
+  fortio_close(fortio);
+}
+    
+
+
 

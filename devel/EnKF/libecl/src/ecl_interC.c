@@ -222,17 +222,26 @@ void ecl_inter_fwrite_param__(const char *_filename    , const int *filename_len
 
 /*****************************************************************/
 
-void ecl_inter_init_lsf__(const int  * sleep_time , const int *max_running,  const int *subexit_int, 
+void ecl_inter_init_lsf__(const int  * sleep_time    , const int *max_running,  const int *subexit_int, 
 			  const char * _summary_path , const int * summary_path_len,
-			  const char * _summary_file , const int * summary_file_len) {
+			  const char * _summary_file , const int * summary_file_len,
+			  const int  * version_nr    , 
+			  const char * _queu         , const int * queu_len,
+			  const char * _request      , const int * request_len , 
+			  const char * _bin_path     , const int * bin_path_len) {
   
   char *summary_file = util_alloc_cstring(_summary_file , summary_file_len);
   char *summary_path = util_alloc_cstring(_summary_path , summary_path_len);
-  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , util_intptr_2bool(subexit_int) , summary_path , summary_file , "bjobs -a" , "/tmp");
+  char *bin_path     = util_alloc_cstring(_bin_path , bin_path_len);
+  char *request      = util_alloc_cstring(_request  , request_len);
+  char *queu         = util_alloc_cstring(_queu     , queu_len);
+  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , util_intptr_2bool(subexit_int) , *version_nr , queu , request , summary_path , summary_file , "bjobs -a" , bin_path , "/tmp");
   free(summary_path);
   free(summary_file);
+  free(bin_path);
+  free(request);
+  free(queu);
   printf("Submitting: <____>\b"); fflush(stdout);
-
 }
 
 
