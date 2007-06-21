@@ -165,5 +165,20 @@ char * prefix ## _swapout__(void *void_arg , const char * file) { \
 #define VOID_SWAPIN_HEADER(prefix)  void prefix ## _swapin__(void * , const char * );
 #define VOID_SWAPOUT_HEADER(prefix) char * prefix ## _swapout__(void * , const char * );
 
+/*****************************************************************/
+
+#define CONFIG_GET_ECL_KW_NAME(prefix)        const char * prefix ## _config_get_ecl_kw_name(const prefix ## _config_type * config) { return config->ecl_kw_name; }
+#define CONFIG_GET_ECL_KW_NAME_HEADER(prefix) const char * prefix ## _config_get_ecl_kw_name(const prefix ## _config_type * )
+
+
+/*****************************************************************/
+
+#define VOID_SERIALIZE(prefix)     \
+void prefix ## _serialize__(const void *void_arg, double *serial_data , size_t *_offset) { \
+   const prefix ## _type  *arg = (const prefix ## _type *) void_arg;       \
+   prefix ## _serialize (arg , serial_data , _offset);   \
+}
+
+#define VOID_SERIALIZE_HEADER(prefix) void prefix ## _serialize__(const void *, double *, size_t *);
 
 #endif

@@ -5,52 +5,58 @@
 #include <util.h>
 
 
+
 struct enkf_node_struct {
   alloc_ftype         *alloc;
   ecl_write_ftype     *ecl_write;
-  alloc_ensfile_ftype *alloc_ensfile;
   ens_read_ftype      *ens_read;
   ens_write_ftype     *ens_write;
-  swapin_ftype    *swapin;
-  swapout_ftype   *swapout;
-  
-  sample_ftype    *sample;
-  free_ftype      *freef;
-  clear_ftype     *clear;
-  copyc_ftype     *copyc;
-  scale_ftype     *scale;
-  iadd_ftype      *iadd;
-  imul_ftype      *imul;
-  isqrt_ftype     *isqrt;
-  iaddsqr_ftype   *iaddsqr;
+  swapin_ftype        *swapin;
+  swapout_ftype       *swapout;
 
-  char            *swapfile;
-  char            *node_key;
-  void            *data;
-  const void      *config;
-  enkf_var_type    var_type;
+  serialize_ftype    *serialize;
+  de_serialize_ftype *de_serialize;
+  
+  sample_ftype       *sample;
+  free_ftype         *freef;
+  clear_ftype        *clear;
+  copyc_ftype        *copyc;
+  scale_ftype        *scale;
+  iadd_ftype         *iadd;
+  imul_ftype         *imul;
+  isqrt_ftype        *isqrt;
+  iaddsqr_ftype      *iaddsqr;
+
+  char               *swapfile;
+  char               *node_key;
+  void               *data;
+  const void         *config;
+  enkf_var_type       enkf_type;
 };
 
 
+/*
+  All the function pointers REALLY should be in the config object ... 
+*/
 
 enkf_node_type * enkf_node_alloc(const char *node_key, 
-				 enkf_var_type var_type , 
-				 const void * config, 
-				 alloc_ftype     * alloc     , 
-				 ecl_write_ftype * ecl_write , 
-				 alloc_ensfile_ftype * alloc_ensfile , 
-				 ens_read_ftype  * ens_read  , 
-				 ens_write_ftype * ens_write , 
-				 swapout_ftype   * swapout   , 
-				 swapin_ftype    * swapin    ,
-				 copyc_ftype     * copyc     ,
-				 sample_ftype    * sample    , 
-				 free_ftype      * freef) {
+				 enkf_var_type     enkf_type , 
+				 const void         * config    , 
+				 alloc_ftype        * alloc     , 
+				 ecl_write_ftype    * ecl_write , 
+				 ens_read_ftype     * ens_read  , 
+				 ens_write_ftype    * ens_write , 
+				 swapout_ftype      * swapout   , 
+				 swapin_ftype       * swapin    ,
+				 copyc_ftype        * copyc     ,
+				 sample_ftype       * sample    , 
+				 serialize_ftype    * serialize , 
+				 de_serialize_ftype * de_serialize , 
+				 free_ftype         * freef) {
   
   enkf_node_type *node = malloc(sizeof *node);
   node->alloc     = alloc;
   node->ecl_write = ecl_write;
-  node->alloc_ensfile = alloc_ensfile;
   node->ens_read  = ens_read;
   node->ens_write = ens_write;
   node->swapin    = swapin;
@@ -58,11 +64,13 @@ enkf_node_type * enkf_node_alloc(const char *node_key,
   node->sample    = sample;
   node->freef     = freef;
   node->copyc     = copyc;
-  node->node_key  = util_alloc_string_copy(node_key);
-  node->var_type  = var_type;
+  node->enkf_type  = enkf_type;
   node->config    = config;
   node->swapfile  = NULL;
+  node->node_key  = util_alloc_string_copy(node_key);
   node->data      = node->alloc(node->config);
+  node->serialize = serialize;
+  node->de_serialize = de_serialize;
   return node;
 }
 
@@ -75,17 +83,18 @@ enkf_node_type * enkf_node_copyc(const enkf_node_type * src) {
   }
   {
     enkf_node_type * new = enkf_node_alloc(enkf_node_get_key_ref(src) , 
-					   src->var_type , 
+					   src->enkf_type , 
 					   src->config,
 					   src->alloc,
 					   src->ecl_write,
-					   src->alloc_ensfile,
 					   src->ens_read,
 					   src->ens_write, 
 					   src->swapout, 
 					   src->swapin,
 					   src->copyc,
 					   src->sample,
+					   src->serialize, 
+					   src->de_serialize,
 					   src->freef);
   return new;
   }
@@ -94,7 +103,8 @@ enkf_node_type * enkf_node_copyc(const enkf_node_type * src) {
 
 
 bool enkf_node_include_type(const enkf_node_type * enkf_node, int mask) {
-  if (enkf_node->var_type & mask)
+  printf("%s: this function should access a config object instead ... \n",__func__);
+  if (enkf_node->enkf_type & mask)
     return true;
   else
     return false;
@@ -135,6 +145,12 @@ void enkf_node_ens_read(enkf_node_type *enkf_node , const char * path) {
 void enkf_node_ens_clear(enkf_node_type *enkf_node) {
   FUNC_ASSERT(enkf_node->clear , "clear");
   enkf_node->clear(enkf_node->data);
+}
+
+void enkf_node_serialize(enkf_node_type *enkf_node , double *serial_data , size_t *_offset) {
+  FUNC_ASSERT(enkf_node->serialize , "serialize");
+  printf("Calling serialize on:%s \n",enkf_node->node_key);
+  enkf_node->serialize(enkf_node->data , serial_data , _offset);
 }
 
 void enkf_node_sqrt(enkf_node_type *enkf_node) {
@@ -189,10 +205,17 @@ void enkf_node_clear(enkf_node_type *enkf_node) {
   enkf_node->clear(enkf_node->data);
 }
 
-char * enkf_node_alloc_ensfile(const enkf_node_type *enkf_node , const char * path) {
+
+void enkf_node_printf(enkf_node_type *enkf_node) {
+  printf("%s \n",enkf_node->node_key);
+}
+
+/*
+  char * enkf_node_alloc_ensfile(const enkf_node_type *enkf_node , const char * path) {
   FUNC_ASSERT(enkf_node->alloc_ensfile , "alloc_ensfile");
   return enkf_node->alloc_ensfile(enkf_node->data , path);
 }
+*/
 
 void enkf_node_free(enkf_node_type *enkf_node) {
   if (enkf_node->freef != NULL)
@@ -200,7 +223,14 @@ void enkf_node_free(enkf_node_type *enkf_node) {
   free(enkf_node->node_key);
   if (enkf_node->swapfile != NULL) free(enkf_node->swapfile);
   free(enkf_node);
+  enkf_node = NULL;
 }
+
+
+void enkf_node_free__(void *void_node) {
+  enkf_node_free((enkf_node_type *) void_node);
+}
+
 
 const char *enkf_node_get_key_ref(const enkf_node_type * enkf_node) { return enkf_node->node_key; }
 

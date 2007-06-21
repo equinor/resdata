@@ -4,6 +4,7 @@
 #include <fortio.h>
 #include <stdbool.h>
 #include <enkf_config.h>
+#include <enkf_types.h>
 #include <enkf_node.h>
 #include <enkf_util.h>
 #include <ecl_block.h>
@@ -15,7 +16,7 @@ void              enkf_state_swapout(enkf_state_type * , int );
 void              enkf_state_swapin(enkf_state_type * , int );
 enkf_state_type * enkf_state_copyc(const enkf_state_type * );
 void              enkf_state_iset_eclpath(enkf_state_type * , int , const char *);
-void              enkf_state_add_node(enkf_state_type * , const char * , const char * );
+void              enkf_state_add_node(enkf_state_type * , enkf_impl_type , enkf_var_type enkf_type , const char * );
 enkf_state_type * enkf_state_alloc(const enkf_config_type * , const char *, bool );
 enkf_node_type  * enkf_state_get_node(const enkf_state_type * , const char * );
 void              enkf_state_del_node(enkf_state_type * , const char * );
@@ -29,4 +30,6 @@ void              enkf_state_ens_read(       enkf_state_type * , const char * , 
 void 		  enkf_state_ecl_write(const enkf_state_type * , int , int);
 void              enkf_state_ecl_read(enkf_state_type * , const ecl_block_type *);
 void              enkf_state_free(enkf_state_type * );
+void              enkf_state_apply(enkf_state_type * , enkf_node_ftype1 * , int );
+void              enkf_state_serialize(enkf_state_type * , double *);
 #endif

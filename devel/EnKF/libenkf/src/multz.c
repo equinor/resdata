@@ -157,7 +157,7 @@ void multz_serialize(const multz_type *multz , double *serial_data , size_t *_of
   const int                size     = config->size;
   int offset = *_offset;
   int i;
-  
+
   for (i=0; i < size; i++) 
     if (active[i]) {
       serial_data[offset] = multz->data[i];
@@ -184,14 +184,14 @@ VOID_ECL_WRITE (multz)
 VOID_ENS_WRITE (multz)
 VOID_ENS_READ  (multz)
 VOID_COPYC     (multz)
-VOID_ALLOC_ENSFILE(multz)
 VOID_SWAPIN(multz)
 VOID_SWAPOUT(multz)
+VOID_SERIALIZE(multz)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/
 
 VOID_FUNC      (multz_clear        , multz_type)
 VOID_FUNC      (multz_sample       , multz_type)
-VOID_SERIALIZE (multz_serialize    , multz_type)
+
 

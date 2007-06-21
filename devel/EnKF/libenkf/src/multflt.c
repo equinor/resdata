@@ -51,7 +51,7 @@ void multflt_clear(multflt_type * multflt) {
 }
 
 
-char * multflt_alloc_ensfile(const multflt_type * multflt , const char * path) {
+static char * multflt_alloc_ensfile(const multflt_type * multflt , const char * path) {
   return util_alloc_full_path(path , multflt_config_get_ensfile_ref(multflt->config));
 }
 
@@ -162,9 +162,9 @@ void multflt_serialize(const multflt_type *multflt , double *serial_data , size_
 
 MATH_OPS(multflt);
 VOID_ALLOC(multflt);
-VOID_ALLOC_ENSFILE(multflt);
 VOID_SWAPOUT(multflt);
 VOID_SWAPIN(multflt);
+VOID_SERIALIZE (multflt)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/
@@ -175,4 +175,4 @@ VOID_ENS_READ  (multflt)
 VOID_COPYC     (multflt)
 VOID_FUNC      (multflt_sample    , multflt_type)
 VOID_FUNC      (multflt_free      , multflt_type)
-VOID_SERIALIZE (multflt_serialize , multflt_type)
+

@@ -15,7 +15,8 @@
 #include <enkf_config.h>
 #include <enkf_types.h>
 #include <ecl_static_kw.h>
-#include <enkf_ecl_kw.h>
+#include <field.h>
+#include <field_config.h>
 
 #include <multz.h>
 #include <multflt.h>
@@ -25,8 +26,7 @@
 struct enkf_state_struct {
   list_type    	   * node_list;
   hash_type    	   * node_hash;
-  hash_type    	   * enkf_types;
-  hash_type    	   * enkf_var_types;
+  hash_type    	   * impl_types;
   pathv_type   	   * eclpath;
   pathv_type   	   * enspath;
   enkf_config_type * config;
@@ -34,6 +34,8 @@ struct enkf_state_struct {
   char             * eclbase;
   bool               fmt_file;
 };
+
+static void enkf_state_add_node__2(enkf_state_type * , const char * , const enkf_node_type * );
 
 
 /*****************************************************************/
@@ -49,6 +51,18 @@ void enkf_state_ ## node_func(enkf_state_type * enkf_state , int mask) { \
     list_node = list_node_get_next(list_node);                           \
   }                                                                      \
 }
+
+void enkf_state_apply(enkf_state_type * enkf_state , enkf_node_ftype1 * node_func , int mask) {
+  list_node_type *list_node;                                             
+  list_node = list_get_head(enkf_state->node_list);                      
+  while (list_node != NULL) {                                            
+    enkf_node_type *enkf_node = list_node_value_ptr(list_node);          
+    if (enkf_node_include_type(enkf_node , mask))                        
+      node_func (enkf_node);                               
+    list_node = list_node_get_next(list_node);                           
+  }                                                                      
+}
+
 
 /*****************************************************************/
 
@@ -119,21 +133,23 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char *
   enkf_state->config         = (enkf_config_type *) config;
   enkf_state->node_list      = list_alloc();
   enkf_state->node_hash      = hash_alloc(10);
-  enkf_state->enkf_types     = hash_alloc(10);
-  enkf_state->enkf_var_types = hash_alloc(10);
+  enkf_state->impl_types     = hash_alloc(10);
   enkf_state->eclpath        = pathv_alloc(enkf_config_get_eclpath_depth(config) , NULL);
   enkf_state->enspath        = pathv_alloc(enkf_config_get_enspath_depth(config) , NULL);
   enkf_state->eclbase        = util_alloc_string_copy(eclbase);
   enkf_state->fmt_file       = fmt_file;
   enkf_state->serial_data    = NULL;
 
-  hash_insert_int(enkf_state->enkf_types     , "MULTZ"      , MULTZ);
-  hash_insert_int(enkf_state->enkf_types     , "MULTFLT"    , MULTFLT);
-  hash_insert_int(enkf_state->enkf_types     , "EQUIL"      , EQUIL);
-  
-  hash_insert_int(enkf_state->enkf_var_types , "MULTZ"      , parameter);
-  hash_insert_int(enkf_state->enkf_var_types , "MULTFLT"    , parameter);
-  hash_insert_int(enkf_state->enkf_var_types , "EQUIL"      , parameter);
+
+  /* 
+     This information should really be in ia config object. Currently
+     not used, but could/will be used in a string based type lookup. 
+  */
+  hash_insert_int(enkf_state->impl_types     , "MULTZ"      , MULTZ);
+  hash_insert_int(enkf_state->impl_types     , "MULTFLT"    , MULTFLT);
+  hash_insert_int(enkf_state->impl_types     , "EQUIL"      , EQUIL);
+  hash_insert_int(enkf_state->impl_types     , "STATIC"     , STATIC);
+  hash_insert_int(enkf_state->impl_types     , "FIELD"      , FIELD);
   
   return enkf_state;
 }
@@ -143,14 +159,6 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char *
 */
 
 
-static void enkf_state_add_node__(enkf_state_type * enkf_state , const char * node_name , const enkf_node_type * node) {
-  list_node_type *list_node = list_append_ref(enkf_state->node_list , node);
-  /*
-    The hash contains a pointer to a list_node structure, which contain a pointer
-    to an enkf_node which contains a pointer to the actual enkf object.
-  */
-  hash_insert_ref(enkf_state->node_hash , node_name  , list_node);
-}
 
 
 enkf_state_type * enkf_state_copyc(const enkf_state_type * src) {
@@ -164,7 +172,7 @@ enkf_state_type * enkf_state_copyc(const enkf_state_type * src) {
     {
       enkf_node_type *enkf_node = list_node_value_ptr(list_node);         
       enkf_node_type *new_node  = enkf_node_copyc(enkf_node);
-      enkf_state_add_node__(new , enkf_node_get_key_ref(new_node) , new_node);
+      enkf_state_add_node__2(new , enkf_node_get_key_ref(new_node) , new_node);
       list_node = list_node_get_next(list_node);                          
     }
   }
@@ -180,14 +188,108 @@ static bool enkf_state_has_node(const enkf_state_type * enkf_state , const char 
 
 
 
-void enkf_state_add_node(enkf_state_type * enkf_state , const char * type_str , const char * node_name) {
-  if (enkf_state_has_node(enkf_state , node_name)) {
-    fprintf(stderr,"%s: node:%s already added  - aborting \n",__func__ , node_name);
+static void enkf_state_add_node__2(enkf_state_type * enkf_state , const char * node_name , const enkf_node_type * node) {
+  list_node_type *list_node = list_append_list_owned_ref(enkf_state->node_list , node , enkf_node_free__);
+  /*
+    The hash contains a pointer to a list_node structure, which contains a pointer
+    to an enkf_node which contains a pointer to the actual enkf object.
+  */
+  printf("Adding: %s \n",node_name);
+  hash_insert_ref(enkf_state->node_hash , node_name  , list_node);
+}
+
+
+
+static void enkf_state_add_node__1(enkf_state_type * enkf_state , const char * node_name , const void * config , enkf_var_type enkf_type , enkf_impl_type impl_type) {
+  enkf_node_type *enkf_node;
+  
+  switch (impl_type) {
+  case(MULTZ):
+    enkf_node = enkf_node_alloc(node_name , enkf_type , config , 
+				multz_alloc__     , 
+				multz_ecl_write__ ,
+				multz_ens_read__  , 
+				multz_ens_write__ , 
+				multz_swapout__   , 
+				multz_swapin__    , 
+				multz_copyc__     , 
+				multz_sample__    , 
+				multz_serialize__ , 
+				NULL              , 
+				multz_free__);
+    break;
+  case(MULTFLT):
+    enkf_node = enkf_node_alloc(node_name , enkf_type , config , 
+				multflt_alloc__      , 
+				multflt_ecl_write__  , 
+				multflt_ens_read__   , 
+				multflt_ens_write__  , 
+				multflt_swapout__    , 
+				multflt_swapin__     , 
+				multflt_copyc__      , 
+				multflt_sample__     , 
+				multflt_serialize__  , 
+				NULL                 , 
+				multflt_free__);
+    break;
+  case(EQUIL):
+    enkf_node = enkf_node_alloc(node_name , enkf_type , config , 
+				equil_alloc__     , 
+				equil_ecl_write__ , 
+				equil_ens_read__  ,  
+				equil_ens_write__ , 
+				equil_swapout__   , 
+				equil_swapin__    , 
+				equil_copyc__     , 
+				equil_sample__    , 
+				equil_serialize__ , 
+				NULL              , 
+				equil_free__);
+    break;
+  case(STATIC):
+    enkf_node = enkf_node_alloc(node_name , enkf_type , config , 
+				ecl_static_kw_alloc__     , 
+				NULL                      , 
+				ecl_static_kw_ens_read__  , 
+				ecl_static_kw_ens_write__ , 
+				ecl_static_kw_swapout__   , 
+				ecl_static_kw_swapin__    , 
+				ecl_static_kw_copyc__     , 
+				NULL                      , 
+				NULL                      , 
+				NULL                      ,
+				ecl_static_kw_free__);
+    break;
+  case(FIELD):
+    enkf_node = enkf_node_alloc(node_name , enkf_type , config , 
+				field_alloc__      , 
+				field_ecl_write__  , 
+				field_ens_read__   ,  
+				field_ens_write__  , 
+				field_swapout__    , 
+				field_swapin__     , 
+				field_copyc__      , 
+				NULL               , 
+				field_serialize__  , 
+				NULL               , 
+				field_free__);
+    break;
+  default:
+    fprintf(stderr,"%s: Trying to add nonexisting type:%d internal programming error --- aborting \n",__func__ , impl_type);
     abort();
   }
+  enkf_state_add_node__2(enkf_state , node_name , enkf_node);
+}
 
-  if (!hash_has_key(enkf_state->enkf_types , type_str)) {
-    fprintf(stderr,"%s: type:%s is not recognized - aborting \n",__func__ , type_str);
+
+
+/* Maybe this should just take implementation type
+   as an input integer, instead of going via the string type_str ??
+*/
+
+void enkf_state_add_node(enkf_state_type * enkf_state , enkf_impl_type impl_type , enkf_var_type enkf_type , const char * node_name) {
+  if (enkf_state_has_node(enkf_state , node_name)) {
+    fprintf(stderr,"%s: node:%s already added  - aborting \n",__func__ , node_name);
     abort();
   }
 
@@ -196,77 +298,73 @@ void enkf_state_add_node(enkf_state_type * enkf_state , const char * type_str , 
     abort();
   }
   
+  switch(impl_type) {
+  case(MULTZ):
+    break;
+  case(MULTFLT):
+    break;
+  case(STATIC):
+    break;
+  case(FIELD):
+    break;
+  case(EQUIL):
+    break;
+  default:
+    fprintf(stderr,"%s: implementation_type: %d - not implemented - aborting \n",__func__ , impl_type);
+    abort();
+  }
+  
   {
-    enkf_type     type     = hash_get_int(enkf_state->enkf_types     , type_str);
-    enkf_var_type var_type = hash_get_int(enkf_state->enkf_var_types , type_str);
-    const void *config     = enkf_config_get_ref(enkf_state->config , node_name);
-    enkf_node_type *enkf_node;
-    
-    switch (type) {
-    case(MULTZ):
-      enkf_node = enkf_node_alloc(type_str , var_type , config , multz_alloc__   , multz_ecl_write__ , multz_alloc_ensfile__ 
-				  , multz_ens_read__ , multz_ens_write__ , multz_swapout__ , 
-				  multz_swapin__, 
-				  multz_copyc__ , multz_sample__ , multz_free__);
-      break;
-    case(MULTFLT):
-      enkf_node = enkf_node_alloc(type_str , var_type , config , multflt_alloc__ , multflt_ecl_write__ , multflt_alloc_ensfile__ , 
-				  multflt_ens_read__ , multflt_ens_write__ , multflt_swapout__, 
-				  multz_swapin__, multflt_copyc__ , multflt_sample__ , multflt_free__);
-      break;
-    case(EQUIL):
-      enkf_node = enkf_node_alloc(type_str , var_type , config , equil_alloc__ , equil_ecl_write__ , equil_alloc_ensfile__, 
-				  equil_ens_read__ , equil_ens_write__ , equil_swapout__ , equil_swapin__ , equil_copyc__ , equil_sample__ , equil_free__);
-      break;
-    default:
-      fprintf(stderr,"%s: Internal programming error --- aborting \n",__func__);
-      abort();
-    }
-    enkf_state_add_node__(enkf_state , node_name , enkf_node);
+    const void *config       = enkf_config_get_ref(enkf_state->config  , node_name);
+    enkf_state_add_node__1(enkf_state , node_name , config , enkf_type , impl_type);
   }
 }
+
+
 
 
 static void enkf_state_load_ecl_restart__(enkf_state_type * enkf_state , const ecl_block_type *ecl_block) {
   ecl_kw_type * ecl_kw = ecl_block_get_first_kw(ecl_block);
   while (ecl_kw != NULL) {
-    const char *kw        = ecl_kw_get_header_ref(ecl_kw);
-    const bool restart_kw = enkf_config_restart_kw(enkf_state->config , kw);
+    char *kw                       = ecl_kw_alloc_strip_header(ecl_kw);
+    const enkf_impl_type impl_type = enkf_config_impl_type(enkf_state->config , kw);
+    enkf_var_type enkf_type;
 
-    if (!enkf_config_has_key(enkf_state->config , kw)) {
-      if (restart_kw)
-	enkf_config_add_type(enkf_state->config , kw , enkf_ecl_kw_config_alloc(ecl_kw_get_size(ecl_kw) , kw , kw) , enkf_ecl_kw_config_free__ , enkf_ecl_kw_config_get_size__);
-      else
-	enkf_config_add_type(enkf_state->config , kw , ecl_static_kw_config_alloc(ecl_kw_get_size(ecl_kw) , kw , kw) , ecl_static_kw_config_free__ , ecl_static_kw_config_get_size__);
-    }
+    switch (impl_type) {
+    case(FIELD):
+      enkf_type = ecl_restart;
+      break;
+    case(STATIC):
+      enkf_type = ecl_static;
+      break;
+    default:
+      fprintf(stderr,"%s internal error - when loading ECLIPSE restart files only FIELD and STATIC implementation types are (currently) recognized - aborting \n",__func__);
+      abort();
+    }    
+
+    if (!enkf_config_has_key(enkf_state->config , kw)) 
+      enkf_config_add_type0(enkf_state->config , kw , ecl_kw_get_size(ecl_kw) , enkf_type , impl_type);
     
-    if (!enkf_state_has_node(enkf_state , kw)) {
-      const enkf_ecl_kw_config_type *config = enkf_config_get_ref(enkf_state->config , kw);
-      enkf_node_type * enkf_node;
-      
-      if (restart_kw) 
-	enkf_node = enkf_node_alloc(kw , ecl_restart , config , enkf_ecl_kw_alloc__ , NULL /* ecl_write */ , 
-				    enkf_ecl_kw_alloc_ensfile__ , enkf_ecl_kw_ens_read__ , 
-				    enkf_ecl_kw_ens_write__ , enkf_ecl_kw_swapout__ , enkf_ecl_kw_swapin__ , 
-				    enkf_ecl_kw_copyc__ , NULL /* sample */ , enkf_ecl_kw_free__);
-      else
-	enkf_node = enkf_node_alloc(kw , ecl_static  , config , ecl_static_kw_alloc__ , NULL , 
-				    ecl_static_kw_alloc_ensfile__ , ecl_static_kw_ens_read__ , 
-				    ecl_static_kw_ens_write__ , ecl_static_kw_swapout__, ecl_static_kw_swapin__ , 
-				    ecl_static_kw_copyc__ , NULL , ecl_static_kw_free__);
-      
-      enkf_state_add_node__(enkf_state , kw , enkf_node);
-    } 
+    if (!enkf_state_has_node(enkf_state , kw)) 
+      enkf_state_add_node__1(enkf_state , kw , enkf_config_get_ref(enkf_state->config , kw) , enkf_type , impl_type); 
     
     {
       enkf_node_type * enkf_node = enkf_state_get_node(enkf_state , kw);
-      
-      if (restart_kw) 
-	enkf_ecl_kw_get_data(enkf_node_value_ptr(enkf_node) , ecl_kw);    
-      else 
+     
+      switch (impl_type)  {
+      case(FIELD):
+	field_get_ecl_kw_data(enkf_node_value_ptr(enkf_node) , ecl_kw);
+	break;
+      case(STATIC):
 	ecl_static_kw_init(enkf_node_value_ptr(enkf_node) , ecl_kw);
+	break;
+      default:
+	fprintf(stderr,"%s: internal error - can only get data from implementation types: FIELD and STATIC - aborting \n",__func__);
+	abort();
+      }
+
     }
-    
+    free(kw);
     ecl_kw = ecl_block_get_next_kw(ecl_block , ecl_kw);
   }
 }
@@ -323,9 +421,8 @@ void enkf_state_ecl_write(const enkf_state_type * enkf_state ,  int mask , int t
     if (enkf_node_include_type(enkf_node , mask)) {
 
       if (enkf_node_include_type(enkf_node , ecl_restart)) {      
-	ecl_kw_type * ecl_kw = enkf_ecl_kw_alloc_ecl_kw(enkf_node_value_ptr(enkf_node) , fmt_file , endian_swap);
-	ecl_kw_fwrite(ecl_kw , fortio);
-	ecl_kw_free(ecl_kw);
+	printf("%s: must verify implementation type + check ecl type \n",__func__);
+	field_ecl_write_fortio(enkf_node_value_ptr(enkf_node) , fortio , fmt_file , endian_swap , ecl_float_type);
       } else if (enkf_node_include_type(enkf_node , ecl_static)) {
 
 	if (enkf_node_swapped(enkf_node)) {
@@ -393,8 +490,8 @@ void enkf_state_free_nodes(enkf_state_type * enkf_state, int mask) {
   list_node = list_get_head(enkf_state->node_list);                     
   while (list_node != NULL) {                                           
     list_node_type * next_node = list_node_get_next(list_node);
-    enkf_node_type *enkf_node  = list_node_value_ptr(list_node);         
-
+    enkf_node_type * enkf_node = list_node_value_ptr(list_node);         
+    
     if (enkf_node_include_type(enkf_node , mask))      
       enkf_state_del_node(enkf_state , enkf_node_get_key_ref(enkf_node));
     
@@ -403,12 +500,27 @@ void enkf_state_free_nodes(enkf_state_type * enkf_state, int mask) {
 }
 
 
+void enkf_state_serialize(enkf_state_type * enkf_state, double *serial_data) {
+  list_node_type *list_node;                                            
+  list_node  = list_get_head(enkf_state->node_list);                    
+  size_t offset = 0;
+  while (list_node != NULL) {                                           
+    enkf_node_type *enkf_node = list_node_value_ptr(list_node);        
+    if (enkf_node_include_type(enkf_node , parameter + ecl_restart + ecl_summary))
+      enkf_node_serialize(enkf_node , serial_data , &offset);                       
+    list_node  = list_node_get_next(list_node);                         
+  }                                                                     
+}
+
+
+
 void enkf_state_free(enkf_state_type *enkf_state) {
-  enkf_state_free_nodes(enkf_state , all_types);
+  /*
+    enkf_state_free_nodes(enkf_state , all_types);
+  */
   list_free(enkf_state->node_list);
   hash_free(enkf_state->node_hash);
-  hash_free(enkf_state->enkf_types);
-  hash_free(enkf_state->enkf_var_types);
+  hash_free(enkf_state->impl_types);
   pathv_free(enkf_state->eclpath);
   pathv_free(enkf_state->enspath);
   free(enkf_state->eclbase);
@@ -435,11 +547,9 @@ enkf_node_type * enkf_state_get_node(const enkf_state_type * enkf_state , const 
 void enkf_state_del_node(enkf_state_type * enkf_state , const char * node_key) {
   if (hash_has_key(enkf_state->node_hash , node_key)) {
     list_node_type * list_node = hash_get(enkf_state->node_hash , node_key);
-    enkf_node_type * enkf_node = list_node_value_ptr(list_node);
     
-    list_del_node(enkf_state->node_list , list_node);
     hash_del(enkf_state->node_hash , node_key);
-    enkf_node_free(enkf_node);  /* If a destructor is supplied - it is done here, not in the container classes .*/
+    list_del_node(enkf_state->node_list , list_node);
     
   } else {
     fprintf(stderr,"%s: node:%s not found in state object - aborting \n",__func__ , node_key);

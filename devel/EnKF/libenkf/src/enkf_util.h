@@ -18,15 +18,10 @@ void func ## __(void *void_arg) { \
    func(arg);                     \
 }
 
-#define VOID_SERIALIZE(func , type)     \
-void func ## __(const void *void_arg, double *serial_data , size_t *_offset) { \
-   type *arg = (type *) void_arg;       \
-   func(arg , serial_data , _offset);   \
-}
+
 
 #define VOID_FUNC_HEADER(func) void func ## __(void *void_arg)
 #define VOID_FUNC_HEADER_CONST(func) void func ## __(const void *void_arg)
-#define VOID_SERIALIZE_HEADER(func) void func ## __(const void *void_arg , double *, size_t *)
 #define VOID_SCALE_FUNC_HEADER(func) void func ## __(void *, double )
 #define VOID_ADD_FUNC_HEADER(func) void func ## __(void *, const void *) 
 

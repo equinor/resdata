@@ -57,7 +57,8 @@ void equil_ecl_write(const equil_type * equil, const char * path) {
   fclose(stream);
 }
 
-char * equil_alloc_ensfile(const equil_type * equil, const char * path) {
+
+static char * equil_alloc_ensfile(const equil_type * equil, const char * path) {
   return util_alloc_full_path(path , equil_config_get_ensfile_ref(equil->config));
 }
 
@@ -127,6 +128,11 @@ void equil_free(equil_type *equil) {
 }
 
 
+void equil_serialize(const equil_type *equil , double *serial_data , size_t *_offset) {
+  printf("Warning:%s is not properly implemented ... \n",__func__);
+}
+
+
 
 
 VOID_SWAPOUT(equil);
@@ -134,7 +140,7 @@ VOID_SWAPIN(equil);
 
 MATH_OPS(equil);
 VOID_ALLOC(equil);
-VOID_ALLOC_ENSFILE(equil)
+VOID_SERIALIZE (equil);
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

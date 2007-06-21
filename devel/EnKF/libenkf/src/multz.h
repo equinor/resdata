@@ -26,7 +26,7 @@ VOID_COPYC_HEADER      (multz);
 VOID_ALLOC_ENSFILE_HEADER(multz);
 VOID_SWAPIN_HEADER(multz)
 VOID_SWAPOUT_HEADER(multz)
-
+VOID_SERIALIZE_HEADER  (multz)
 
 VOID_ECL_WRITE_HEADER (multz)
 VOID_ENS_WRITE_HEADER (multz)
@@ -35,5 +35,5 @@ VOID_ENS_READ_HEADER  (multz)
 
 VOID_FUNC_HEADER       (multz_sample   );
 VOID_FUNC_HEADER       (multz_isqrt    );
-VOID_SERIALIZE_HEADER  (multz_serialize);
+
 #endif

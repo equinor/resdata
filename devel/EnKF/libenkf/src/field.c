@@ -1,11 +1,295 @@
+#include <math.h>
 #include <stdlib.h>
 #include <enkf_config.h>
 #include <field.h>
-
+#include <util.h>
+#include <string.h>
+#include <fortio.h>
+#include <ecl_kw.h>
+#include <field_config.h>
+#include <rms_file.h>
+#include <rms_tagkey.h>
 
 struct field_struct {
-  field_config_type * config;
-  double *data;
+  const field_config_type * config;
+  double * data;
 };
+
+
+
+void field_clear(field_type * field) {
+  const int size = field_config_get_size(field->config);   
+  int k;
+  for (k = 0; k < size; k++)
+    field->data[k] = 0.0;
+}
+
+
+void field_realloc_data(field_type *field) {
+  field->data = enkf_util_calloc(field_config_get_size(field->config) , sizeof *field->data , __func__);
+}
+
+
+void field_free_data(field_type *field) {
+  free(field->data);
+  field->data = NULL;
+}
+
+
+field_type * field_alloc(const field_config_type * field_config) {
+  field_type * field  = malloc(sizeof *field);
+  field->config = field_config;
+  field->data = NULL;
+  field_realloc_data(field);
+  return field;
+}
+
+
+
+char * field_alloc_ensfile(const field_type * field , const char * path) {
+  return util_alloc_full_path(path , field_config_get_ensfile_ref(field->config));
+}
+
+
+field_type * field_copyc(const field_type *field) {
+  const int size = field_config_get_size(field->config);   
+  field_type * new = field_alloc(field->config);
+  
+  memcpy(new->data , field->data , size * sizeof *field->data);
+  return new;
+}
+
+
+void field_fread(field_type * field , const char *file) {
+  FILE * stream   = enkf_util_fopen_r(file , __func__);
+  int  size;
+  fread(&size , sizeof  size     , 1 , stream);
+  enkf_util_fread(field->data , sizeof *field->data , size , stream , __func__);
+  fclose(stream);
+}
+
+
+void field_fwrite(const field_type * field , const char *file) {
+  const int size = field_config_get_size(field->config);
+  FILE * stream   = enkf_util_fopen_w(file , __func__);
+
+  fwrite(&size                    ,   sizeof  size     , 1 , stream);
+  enkf_util_fwrite(field->data    , sizeof *field->data    , size , stream , __func__);
+  
+  fclose(stream);
+}
+
+
+void field_ecl_write_fortio(const field_type * field , fortio_type * fortio , bool fmt_file , bool endian_swap , ecl_type_enum ecl_type) {
+  const int size = field_config_get_size(field->config);
+  void *data;
+  if (ecl_type == ecl_float_type) {
+    data = enkf_util_calloc(size , sizeof(float) , __func__);
+    util_double_to_float(data , field->data , size );
+  } else 
+    data = field->data;
+
+  ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_swap , field_config_get_ecl_kw_name(field->config) , ecl_type, size , data);
+  if (ecl_type == ecl_float_type) 
+    free(data);
+}
+
+
+void field_ecl_write(const field_type * field , const char * path) {
+  fortio_type * fortio;
+  bool fmt_file , endian_swap;
+  ecl_type_enum ecl_type;
+  char * eclfile = util_alloc_full_path(path , field_config_get_eclfile_ref(field->config));
+
+  field_config_set_io_options(field->config , &fmt_file , &endian_swap, &ecl_type);
+  fortio = fortio_open(eclfile , "w" , endian_swap);
+
+  field_ecl_write_fortio(field , fortio , fmt_file , endian_swap , ecl_type);
+
+  fortio_close(fortio);
+  free(eclfile);
+}
+
+
+
+void field_ens_read(field_type * field , const char *path) {
+  char * ensfile = util_alloc_full_path(path , field_config_get_ensfile_ref(field->config));
+  field_fread(field , ensfile);
+  free(ensfile);
+}
+
+
+void field_ens_write(const field_type * field , const char * path) {
+  char * ensfile = util_alloc_full_path(path , field_config_get_ensfile_ref(field->config));
+  field_fwrite(field , ensfile);
+  free(ensfile);
+}
+
+
+char * field_swapout(field_type * field , const char * path) {
+  char * ensfile = util_alloc_full_path(path , field_config_get_ensfile_ref(field->config));
+  field_fwrite(field , ensfile);
+  field_free_data(field);
+  return ensfile;
+}
+
+
+void field_swapin(field_type * field , const char *file) {
+  field_realloc_data(field);
+  field_fread(field  , file);
+}
+
+
+
+
+
+
+void field_sample(field_type *field) {
+  printf("%s: Warning not implemented ... \n",__func__);
+}
+
+
+
+
+void field_free(field_type *field) {
+  field_free_data(field);
+  free(field);
+}
+
+
+void field_serialize(const field_type *field , double *serial_data , size_t *_offset) {
+  const field_config_type * config = field->config;
+  const int offset = *_offset;
+  memcpy(&serial_data[offset] , field->data , config->size);
+  (*_offset) += config->size; 
+}
+
+
+
+
+
+void field_get_ecl_kw_data(field_type * field , const ecl_kw_type * ecl_kw) {
+  const field_config_type * config = field->config;
+  if (config->size != ecl_kw_get_size(ecl_kw)) {
+    fprintf(stderr,"%s: fatal error - incorrect size for:%s [config:%d , file:%d] - aborting \n",__func__ , config->ecl_kw_name , config->size , ecl_kw_get_size(ecl_kw));
+    abort();
+  } 
+  {
+    void  *data;
+    ecl_type_enum ecl_type = config->ecl_type;
+    if (ecl_type == ecl_float_type) 
+      data = enkf_util_calloc(config->size , sizeof(float) , __func__ );
+    else 
+      data = field->data;
+    ecl_kw_get_memcpy_data(ecl_kw , data);
+    if (ecl_type == ecl_float_type) {
+      util_float_to_double(field->data , data , config->size);
+      free(data);
+    }
+  }
+}
+
+
+
+
+#define EXPORT_MACRO                                                                           \
+for (k=0; k < config->nz; k++) {                                                               \
+  for (j=0; j < config->ny; j++) {                                                             \
+    for (i=0; i < config->nx; i++) {                                                           \
+      int index1D = config->index_map[ k * config->nx * config->ny + j * config->nx + i];      \
+      int index3D;                                                                             \
+      if (rms_order)                                               		     	       \
+        index3D = i * config->ny*config->nz  +  j * config->ny + (config->nz - k);             \
+      else                                                                       	       \
+        index3D = i + j * config->ny + k* config->nx*config->ny;           	               \
+      if (index1D >= 0)                                                                        \
+	data[index3D] = field->data[index1D];                               	               \
+      else                                                                                     \
+	data[index3D] = fill_value;                                                            \
+     }                                                                                         \
+  }                                                                                            \
+}
+
+
+void field_export3D(const field_type * field , void *_data , bool rms_order , bool export_float , double fill_value) {
+  const field_config_type * config = field->config;
+  int i,j,k;
+  
+  if (export_float) {
+    float *data = (float *) _data;
+    EXPORT_MACRO
+ } else {
+    double *data = (double *) _data;
+    EXPORT_MACRO
+  }  
+
+}
+  
+
+/*****************************************************************/
+
+
+#define IMPORT_MACRO                                                                           \
+for (k=0; k < config->nz; k++) {                                                               \
+  for (j=0; j < config->ny; j++) {                                                             \
+    for (i=0; i < config->nx; i++) {                                                           \
+      int index1D = config->index_map[ k * config->nx * config->ny + j * config->nx + i];      \
+      int index3D;                                                                             \
+      if (index1D >= 0) {                                                                      \
+	if (rms_order)                                               		     	       \
+	  index3D = i * config->ny*config->nz  +  j * config->ny + (config->nz - k);           \
+	else                                                                       	       \
+	  index3D = i + j * config->ny + k* config->nx*config->ny;           	               \
+	field->data[index1D] = data[index3D] ;                               	               \
+     }                                                                                         \
+   }                                                                                           \
+  }                                                                                            \
+}
+
+
+void field_import3D(field_type * field , const void *_data , bool rms_order , bool import_float) {
+  const field_config_type * config = field->config;
+  int i,j,k;
+  
+  if (import_float) {
+    const float *data = (const float *) _data;
+    IMPORT_MACRO
+  } else {
+    const double *data = (const double *) _data;
+    IMPORT_MACRO
+  }  
+}
+
+/* Skal param_name vaere en variabel ?? */
+void field_rms_export_parameter(const field_type * field , const char * param_name , const float * data3D,  const rms_file_type * rms_file) {
+  const field_config_type * config = field->config;
+
+  /* Hardcoded rms_float_type */
+  rms_tagkey_type *tagkey = rms_tagkey_alloc_complete("data" , config->size , rms_float_type , data3D , true);
+  rms_tag_fwrite_parameter(param_name , tagkey , rms_file_get_FILE(rms_file));
+  rms_tagkey_free(tagkey);
+  
+}
+
+
+MATH_OPS(field)
+VOID_ALLOC(field)
+VOID_FREE(field)
+VOID_FREE_DATA(field)
+VOID_REALLOC_DATA(field)
+VOID_ECL_WRITE (field)
+VOID_ENS_WRITE (field)
+VOID_ENS_READ  (field)
+VOID_COPYC     (field)
+VOID_SWAPIN(field)
+VOID_SWAPOUT(field)
+VOID_SERIALIZE (field);
+/******************************************************************/
+/* Anonumously generated functions used by the enkf_node object   */
+/******************************************************************/
+
+VOID_FUNC      (field_clear        , field_type)
+VOID_FUNC      (field_sample       , field_type)
+
 
 
