@@ -25,8 +25,8 @@ const          char * multflt_config_get_eclfile_ref(const multflt_config_type *
 
 
 
-GET_SIZE_HEADER(multflt);
-VOID_GET_SIZE_HEADER(multflt);
+GET_SERIAL_SIZE_HEADER(multflt);
+VOID_GET_SERIAL_SIZE_HEADER(multflt);
 CONFIG_SET_ECLFILE_HEADER_VOID(multflt);
 CONFIG_SET_ENSFILE_HEADER_VOID(multflt);
 

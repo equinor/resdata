@@ -10,6 +10,10 @@
 #include <rms_file.h>
 #include <rms_tagkey.h>
 
+GET_DATA_SIZE_HEADER(field);
+
+/*****************************************************************/
+
 struct field_struct {
   const field_config_type * config;
   double * data;
@@ -18,15 +22,15 @@ struct field_struct {
 
 
 void field_clear(field_type * field) {
-  const int size = field_config_get_size(field->config);   
+  const int data_size = field_config_get_data_size(field->config);   
   int k;
-  for (k = 0; k < size; k++)
+  for (k = 0; k < data_size; k++)
     field->data[k] = 0.0;
 }
 
 
 void field_realloc_data(field_type *field) {
-  field->data = enkf_util_calloc(field_config_get_size(field->config) , sizeof *field->data , __func__);
+  field->data = enkf_util_calloc(field_config_get_data_size(field->config) , sizeof *field->data , __func__);
 }
 
 
@@ -52,44 +56,44 @@ char * field_alloc_ensfile(const field_type * field , const char * path) {
 
 
 field_type * field_copyc(const field_type *field) {
-  const int size = field_config_get_size(field->config);   
+  const int data_size = field_config_get_data_size(field->config);   
   field_type * new = field_alloc(field->config);
   
-  memcpy(new->data , field->data , size * sizeof *field->data);
+  memcpy(new->data , field->data , data_size * sizeof *field->data);
   return new;
 }
 
 
 void field_fread(field_type * field , const char *file) {
   FILE * stream   = enkf_util_fopen_r(file , __func__);
-  int  size;
-  fread(&size , sizeof  size     , 1 , stream);
-  enkf_util_fread(field->data , sizeof *field->data , size , stream , __func__);
+  int  data_size;
+  fread(&data_size , sizeof  data_size     , 1 , stream);
+  enkf_util_fread(field->data , sizeof *field->data , data_size , stream , __func__);
   fclose(stream);
 }
 
 
 void field_fwrite(const field_type * field , const char *file) {
-  const int size = field_config_get_size(field->config);
+  const int data_size = field_config_get_data_size(field->config);
   FILE * stream   = enkf_util_fopen_w(file , __func__);
 
-  fwrite(&size                    ,   sizeof  size     , 1 , stream);
-  enkf_util_fwrite(field->data    , sizeof *field->data    , size , stream , __func__);
+  fwrite(&data_size                    ,   sizeof  data_size     , 1 , stream);
+  enkf_util_fwrite(field->data    , sizeof *field->data    , data_size , stream , __func__);
   
   fclose(stream);
 }
 
 
 void field_ecl_write_fortio(const field_type * field , fortio_type * fortio , bool fmt_file , bool endian_swap , ecl_type_enum ecl_type) {
-  const int size = field_config_get_size(field->config);
+  const int data_size = field_config_get_data_size(field->config);
   void *data;
   if (ecl_type == ecl_float_type) {
-    data = enkf_util_calloc(size , sizeof(float) , __func__);
-    util_double_to_float(data , field->data , size );
+    data = enkf_util_calloc(data_size , sizeof(float) , __func__);
+    util_double_to_float(data , field->data , data_size );
   } else 
     data = field->data;
 
-  ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_swap , field_config_get_ecl_kw_name(field->config) , ecl_type, size , data);
+  ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_swap , field_config_get_ecl_kw_name(field->config) , ecl_type, data_size , data);
   if (ecl_type == ecl_float_type) 
     free(data);
 }
@@ -160,8 +164,9 @@ void field_free(field_type *field) {
 void field_serialize(const field_type *field , double *serial_data , size_t *_offset) {
   const field_config_type * config = field->config;
   const int offset = *_offset;
-  memcpy(&serial_data[offset] , field->data , config->size);
-  (*_offset) += config->size; 
+  const int data_size = field_config_get_data_size(config);
+  memcpy(&serial_data[offset] , field->data , data_size);
+  (*_offset) += data_size; 
 }
 
 
@@ -170,20 +175,21 @@ void field_serialize(const field_type *field , double *serial_data , size_t *_of
 
 void field_get_ecl_kw_data(field_type * field , const ecl_kw_type * ecl_kw) {
   const field_config_type * config = field->config;
-  if (config->size != ecl_kw_get_size(ecl_kw)) {
-    fprintf(stderr,"%s: fatal error - incorrect size for:%s [config:%d , file:%d] - aborting \n",__func__ , config->ecl_kw_name , config->size , ecl_kw_get_size(ecl_kw));
+  const int data_size = field_config_get_data_size(config);
+  if (data_size != ecl_kw_get_size(ecl_kw)) {
+    fprintf(stderr,"%s: fatal error - incorrect size for:%s [config:%d , file:%d] - aborting \n",__func__ , config->ecl_kw_name , data_size , ecl_kw_get_size(ecl_kw));
     abort();
   } 
   {
-    void  *data;
+    void *data;
     ecl_type_enum ecl_type = config->ecl_type;
     if (ecl_type == ecl_float_type) 
-      data = enkf_util_calloc(config->size , sizeof(float) , __func__ );
+      data = enkf_util_calloc(data_size , sizeof(float) , __func__ );
     else 
       data = field->data;
     ecl_kw_get_memcpy_data(ecl_kw , data);
     if (ecl_type == ecl_float_type) {
-      util_float_to_double(field->data , data , config->size);
+      util_float_to_double(field->data , data , data_size);
       free(data);
     }
   }
@@ -263,9 +269,10 @@ void field_import3D(field_type * field , const void *_data , bool rms_order , bo
 /* Skal param_name vaere en variabel ?? */
 void field_rms_export_parameter(const field_type * field , const char * param_name , const float * data3D,  const rms_file_type * rms_file) {
   const field_config_type * config = field->config;
-
+  const int data_size = field_config_get_data_size(config);
+  
   /* Hardcoded rms_float_type */
-  rms_tagkey_type *tagkey = rms_tagkey_alloc_complete("data" , config->size , rms_float_type , data3D , true);
+  rms_tagkey_type *tagkey = rms_tagkey_alloc_complete("data" , data_size , rms_float_type , data3D , true);
   rms_tag_fwrite_parameter(param_name , tagkey , rms_file_get_FILE(rms_file));
   rms_tagkey_free(tagkey);
   

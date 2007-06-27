@@ -10,6 +10,9 @@
 #include <math.h>
 
 
+GET_DATA_SIZE_HEADER(multflt);
+
+
 struct multflt_struct {
   const multflt_config_type *config;
   double                    *data;
@@ -30,7 +33,7 @@ void multflt_free(multflt_type *multflt) {
 
 
 void multflt_realloc_data(multflt_type *multflt) {
-  multflt->data  = enkf_util_realloc(multflt->data , multflt_config_get_size(multflt->config) * sizeof *multflt->data , __func__);
+  multflt->data  = enkf_util_realloc(multflt->data , multflt_config_get_data_size(multflt->config) * sizeof *multflt->data , __func__);
 }
 
 
@@ -44,7 +47,7 @@ multflt_type * multflt_alloc(const multflt_config_type * config) {
 
 
 void multflt_clear(multflt_type * multflt) {
-  const int size = multflt_config_get_size(multflt->config);   
+  const int size = multflt_config_get_data_size(multflt->config);   
   int k;
   for (k = 0; k < size; k++)
     multflt->data[k] = 0.0;
@@ -56,7 +59,7 @@ static char * multflt_alloc_ensfile(const multflt_type * multflt , const char * 
 }
 
 multflt_type * multflt_copyc(const multflt_type *multflt) {
-  const int size = multflt_config_get_size(multflt->config);   
+  const int size = multflt_config_get_data_size(multflt->config);   
   multflt_type * new = multflt_alloc(multflt->config);
   
   memcpy(new->data , multflt->data , size * sizeof *multflt->data);
@@ -69,11 +72,11 @@ void multflt_ecl_write(const multflt_type * multflt, const char * path) {
   FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
   {
     const multflt_config_type *config = multflt->config;
-    const int size        = config->size;
+    const int data_size      = multflt_config_get_data_size(config);
     const char **fault_names = (const char **) config->fault_names;
     int k;
     fprintf(stream , "MULTFLT\n");
-    for (k=0; k < size; k++)
+    for (k=0; k < data_size; k++)
       fprintf(stream , " \'%s\'      %g  / \n",fault_names[k] , multflt->data[k]);
     fprintf(stream , "/");
   }
@@ -85,9 +88,10 @@ void multflt_ecl_write(const multflt_type * multflt, const char * path) {
 
 void multflt_fwrite(const multflt_type *multflt , const char *file ) {
   const  multflt_config_type * config = multflt->config;
+  const int data_size      = multflt_config_get_data_size(config);
   FILE * stream   = enkf_util_fopen_w(file , __func__);
-  fwrite(&config->size  , sizeof  config->size     , 1 , stream);
-  enkf_util_fwrite(multflt->data    , sizeof *multflt->data    , config->size , stream , __func__);
+  fwrite(&data_size  , sizeof  data_size     , 1 , stream);
+  enkf_util_fwrite(multflt->data    , sizeof *multflt->data    , data_size , stream , __func__);
   fclose(stream);
 }
 
@@ -127,14 +131,14 @@ void multflt_swapin(multflt_type * multflt , const char * file) {
 
 
 void  multflt_sample(multflt_type *multflt) {
-  const multflt_config_type *config = multflt->config;
-  const bool              *active   = config->active;
-  const double            *std      = config->std;
-  const double            *mean     = config->mean;
-  const int                size  = config->size;
+  const multflt_config_type *config  = multflt->config;
+  const bool              *active    = config->active;
+  const double            *std       = config->std;
+  const double            *mean      = config->mean;
+  const int                data_size = multflt_config_get_data_size(config);
   int i;
   
-  for (i=0; i < size; i++) 
+  for (i=0; i < data_size; i++) 
     if (active[i])
       multflt->data[i] = enkf_util_rand_normal(mean[i] , std[i]);
   
@@ -143,13 +147,13 @@ void  multflt_sample(multflt_type *multflt) {
 
 
 void multflt_serialize(const multflt_type *multflt , double *serial_data , size_t *_offset) {
-  const multflt_config_type *config = multflt->config;
-  const bool              *active   = config->active;
-  const int                size  = config->size;
+  const multflt_config_type *config   = multflt->config;
+  const bool              *active     = config->active;
+  const int                data_size  = multflt_config_get_data_size(config);
   int offset = *_offset;
   int i;
   
-  for (i=0; i < size; i++) 
+  for (i=0; i < data_size; i++) 
     if (active[i]) {
       serial_data[offset] = multflt->data[i];
       offset++;

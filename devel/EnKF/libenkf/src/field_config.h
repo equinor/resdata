@@ -28,7 +28,7 @@ struct field_config_struct {
 
 const int         * field_config_alloc_index_map2(int, int , int, const int *  , int *);
 const int         * field_config_alloc_index_map1(const char * , bool , int *, int *, int *, int *);
-field_config_type * field_config_alloc(const char * ,  int , int , int , int , const int * , int , const char * , const char * );
+field_config_type * field_config_alloc(const char * , ecl_type_enum ,  int , int , int , int , const int * , int , const char * , const char * );
 void                field_config_free(field_config_type *);
 const        char * field_config_get_ensfile_ref(const field_config_type * );
 const        char * field_config_get_eclfile_ref(const field_config_type * );
@@ -36,8 +36,8 @@ void                field_config_set_io_options(const field_config_type * , bool
 
 /*Generated headers */
 CONFIG_GET_ECL_KW_NAME_HEADER(field);
-GET_SIZE_HEADER(field);
-VOID_GET_SIZE_HEADER(field);
+GET_SERIAL_SIZE_HEADER(field);
+VOID_GET_SERIAL_SIZE_HEADER(field);
 CONFIG_SET_ECLFILE_HEADER_VOID(field);
 CONFIG_SET_ENSFILE_HEADER_VOID(field);
 VOID_FUNC_HEADER(field_config_free);

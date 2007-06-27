@@ -9,6 +9,7 @@
 #include <enkf_util.h>
 
 
+GET_DATA_SIZE_HEADER(multz);
 
 struct multz_struct {
   const multz_config_type *config;
@@ -17,7 +18,7 @@ struct multz_struct {
 
 /*****************************************************************/
 void multz_clear(multz_type * multz) {
-  const int size = multz_config_get_size(multz->config);   
+  const int size = multz_config_get_serial_size(multz->config);   
   int k;
   for (k = 0; k < size; k++)
     multz->data[k] = 0.0;
@@ -25,7 +26,7 @@ void multz_clear(multz_type * multz) {
 
 
 void multz_realloc_data(multz_type *multz) {
-  multz->data = enkf_util_calloc(multz_config_get_size(multz->config) , sizeof *multz->data , __func__);
+  multz->data = enkf_util_calloc(multz_config_get_serial_size(multz->config) , sizeof *multz->data , __func__);
 }
 
 
@@ -51,7 +52,7 @@ char * multz_alloc_ensfile(const multz_type * multz , const char * path) {
 
 
 multz_type * multz_copyc(const multz_type *multz) {
-  const int size = multz_config_get_size(multz->config);   
+  const int size = multz_config_get_serial_size(multz->config);   
   multz_type * new = multz_alloc(multz->config);
   
   memcpy(new->data , multz->data , size * sizeof *multz->data);
@@ -70,10 +71,11 @@ void multz_fread(multz_type * multz , const char *file) {
 
 void multz_fwrite(const multz_type * multz , const char *file) {
   const  multz_config_type * config = multz->config;
+  const int data_size = multz_config_get_data_size(config);
   FILE * stream   = enkf_util_fopen_w(file , __func__);
-
-  fwrite(&config->size         ,   sizeof  config->size     , 1 , stream);
-  enkf_util_fwrite(multz->data    , sizeof *multz->data    , config->size , stream , __func__);
+  
+  fwrite(&data_size       ,   sizeof  data_size     , 1 , stream);
+  enkf_util_fwrite(multz->data    ,   sizeof *multz->data    ,data_size , stream , __func__);
   
   fclose(stream);
 }
@@ -84,9 +86,9 @@ void multz_ecl_write(const multz_type * multz , const char * path) {
   char * eclfile = util_alloc_full_path(path , multz_config_get_eclfile_ref(multz->config));
   FILE * stream  = enkf_util_fopen_w(eclfile , __func__);
   {
-    const int size = multz_config_get_size(multz->config);   
+    const int data_size = multz_config_get_data_size(multz->config);   
     int k;
-    for (k=0; k < size; k++)
+    for (k=0; k < data_size; k++)
       multz_config_fprintf_layer(multz->config , k , multz->data[k] , stream);
   }
   fclose(stream);
@@ -128,15 +130,14 @@ void multz_swapin(multz_type * multz , const char *file) {
 
 
 void multz_sample(multz_type *multz) {
-  const multz_config_type *config = multz->config;
-  const bool              *active = config->active;
-  const double            *std    = config->std;
-  const double            *mean   = config->mean;
-  const int                size     = multz_config_get_size(config);
+  const multz_config_type *config    = multz->config;
+  const bool              *active    = config->active;
+  const double            *std       = config->std;
+  const double            *mean      = config->mean;
+  const int                data_size = multz_config_get_data_size(config);
   int i;
-
   
-  for (i=0; i < size; i++) 
+  for (i=0; i < data_size; i++) 
     if (active[i])
       multz->data[i] = enkf_util_rand_normal(mean[i] , std[i]);
     
@@ -152,13 +153,13 @@ void multz_free(multz_type *multz) {
 
 
 void multz_serialize(const multz_type *multz , double *serial_data , size_t *_offset) {
-  const multz_config_type *config   = multz->config;
-  const bool              *active   = config->active;
-  const int                size     = config->size;
+  const multz_config_type *config     = multz->config;
+  const bool              *active     = config->active;
+  const int                data_size  = multz_config_get_data_size(config);
   int offset = *_offset;
   int i;
 
-  for (i=0; i < size; i++) 
+  for (i=0; i < data_size; i++) 
     if (active[i]) {
       serial_data[offset] = multz->data[i];
       offset++;

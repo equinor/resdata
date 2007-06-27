@@ -27,8 +27,8 @@ void                multz_config_fprintf_layer(const multz_config_type * , int ,
 
 /*Generated headers */
 
-GET_SIZE_HEADER(multz);
-VOID_GET_SIZE_HEADER(multz);
+GET_SERIAL_SIZE_HEADER(multz);
+VOID_GET_SERIAL_SIZE_HEADER(multz);
 CONFIG_SET_ECLFILE_HEADER_VOID(multz);
 CONFIG_SET_ENSFILE_HEADER_VOID(multz);
 

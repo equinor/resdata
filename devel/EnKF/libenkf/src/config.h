@@ -6,16 +6,24 @@
 #include <enkf_types.h>
 
 #define CONFIG_STD_FIELDS \
-int size;                 \
+int serial_size;          \
+int data_size;            \
 const char * ecl_kw_name; \
 enkf_var_type var_type;   \
 char * ensfile;           \
 char * eclfile;          
 
-#define GET_SIZE(prefix)             int prefix ## _config_get_size (const prefix ## _config_type *arg) { return arg->size; }
-#define GET_SIZE_HEADER(prefix)      int prefix ## _config_get_size (const prefix ## _config_type *)
-#define VOID_GET_SIZE(prefix)        int prefix ## _config_get_size__ (const void *void_arg) { return prefix ## _config_get_size((const prefix ## _config_type *) void_arg); }
-#define VOID_GET_SIZE_HEADER(prefix) int prefix ## _config_get_size__ (const void *)
+#define GET_SERIAL_SIZE(prefix)             int prefix ## _config_get_serial_size (const prefix ## _config_type *arg) { return arg->serial_size; }
+#define GET_SERIAL_SIZE_HEADER(prefix)      int prefix ## _config_get_serial_size (const prefix ## _config_type *)
+#define VOID_GET_SERIAL_SIZE(prefix)        int prefix ## _config_get_serial_size__ (const void *void_arg) { return prefix ## _config_get_serial_size((const prefix ## _config_type *) void_arg); }
+#define VOID_GET_SERIAL_SIZE_HEADER(prefix) int prefix ## _config_get_serial_size__ (const void *)
+
+#define GET_DATA_SIZE(prefix)               int prefix ## _config_get_data_size (const prefix ## _config_type *arg) { return arg->data_size; }
+#define GET_DATA_SIZE_HEADER(prefix)        int prefix ## _config_get_data_size (const prefix ## _config_type *)
+/*
+  #define VOID_GET_DATA_SIZE(prefix)          int prefix ## _config_get_data_size__ (const void *void_arg) { return prefix ## _config_get_data_size((const prefix ## _config_type *) void_arg); }
+  #define VOID_GET_DATA_SIZE_HEADER(prefix)   int prefix ## _config_get_data_size__ (const void *)
+*/
 
 
 /*****************************************************************/

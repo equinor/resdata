@@ -14,24 +14,25 @@
 multz_config_type * multz_config_alloc(int nx , int ny , int nz , const char * eclfile , const char * ensfile) {
   multz_config_type *config = malloc(sizeof *config);
   config->ecl_kw_name = NULL;
-  config->size        = nz;
+  config->data_size   = nz;
   config->var_type    = parameter;
 
   config->eclfile = util_alloc_string_copy(eclfile);
   config->ensfile = util_alloc_string_copy(ensfile);
 
-  config->mean   = enkf_util_malloc(config->size * sizeof *config->mean   , __func__);
-  config->std    = enkf_util_malloc(config->size * sizeof *config->std    , __func__);
-  config->active = enkf_util_malloc(config->size * sizeof *config->active , __func__);
-  config->i1     = enkf_util_malloc(config->size * sizeof *config->i1     , __func__);
-  config->i2     = enkf_util_malloc(config->size * sizeof *config->i2     , __func__);
-  config->j1     = enkf_util_malloc(config->size * sizeof *config->j1     , __func__);
-  config->j2     = enkf_util_malloc(config->size * sizeof *config->j2     , __func__);
-  config->k      = enkf_util_malloc(config->size * sizeof *config->k      , __func__);
-  config->area   = enkf_util_malloc(config->size * sizeof *config->area   , __func__);
+  config->mean   = enkf_util_malloc(config->data_size * sizeof *config->mean   , __func__);
+  config->std    = enkf_util_malloc(config->data_size * sizeof *config->std    , __func__);
+  config->active = enkf_util_malloc(config->data_size * sizeof *config->active , __func__);
+  config->i1     = enkf_util_malloc(config->data_size * sizeof *config->i1     , __func__);
+  config->i2     = enkf_util_malloc(config->data_size * sizeof *config->i2     , __func__);
+  config->j1     = enkf_util_malloc(config->data_size * sizeof *config->j1     , __func__);
+  config->j2     = enkf_util_malloc(config->data_size * sizeof *config->j2     , __func__);
+  config->k      = enkf_util_malloc(config->data_size * sizeof *config->k      , __func__);
+  config->area   = enkf_util_malloc(config->data_size * sizeof *config->area   , __func__);
+  config->serial_size = 0;
   { 
     int i;
-    for (i = 0; i < config->size; i++) {
+    for (i = 0; i < config->data_size; i++) {
       config->mean[i]   = 1.0;
       config->std[i]    = 1.0;
       config->active[i] = true;
@@ -43,12 +44,15 @@ multz_config_type * multz_config_alloc(int nx , int ny , int nz , const char * e
       config->j2[i]     = ny;
 
       config->k[i]      = i+1;
+
+      if (config->active[i])
+	config->serial_size++;
     }
   }
 
   { 
     int i;
-    for (i = 0; i < config->size; i++) 
+    for (i = 0; i < config->data_size; i++) 
       config->area[i] = (config->i2[i]- config->i1[i] + 1) * (config->j2[i]- config->j1[i] + 1);
   }
   
@@ -95,8 +99,9 @@ CONFIG_SET_ECLFILE(multz);
 CONFIG_SET_ENSFILE(multz);
 CONFIG_SET_ECLFILE_VOID(multz);
 CONFIG_SET_ENSFILE_VOID(multz);
-GET_SIZE(multz)
-VOID_GET_SIZE(multz)
+GET_SERIAL_SIZE(multz)
+GET_DATA_SIZE(multz)
+VOID_GET_SERIAL_SIZE(multz)
 
 VOID_FUNC(multz_config_free , multz_config_type);
 

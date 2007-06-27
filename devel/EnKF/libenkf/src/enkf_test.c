@@ -26,22 +26,38 @@ int main(void) {
   config = enkf_config_alloc(4, 2 , true);
   enkf_config_add_type(config , "MULTZ" , 
 		       parameter , MULTZ, 
-		       multz_config_alloc(100 , 100 , 100 , "MULTZ.INC" , "multz") , multz_config_free__ , multz_config_get_size__  );
+		       multz_config_alloc(100 , 100 , 100 , "MULTZ.INC" , "multz") , multz_config_free__ , multz_config_get_serial_size__  );
+
+  enkf_config_add_type(config , "EQUIL" , 
+		       parameter , EQUIL, 
+		       equil_config_alloc(10 , true , true , "EQUIL.INC" , "equil") , equil_config_free__ , equil_config_get_serial_size__  );
   
+  
+  enkf_config_add_type(config , "SWAT"  , ecl_restart , FIELD , 
+		       field_config_alloc("SWAT" , ecl_float_type   , nx , ny , nz , active_size , index_map , 1 , NULL , "SWAT")     , 
+		       field_config_free__ , field_config_get_serial_size__);
+
   enkf_config_add_type(config , "PRESSURE" , ecl_restart , FIELD , 
-		       field_config_alloc("PRESSURE"  , nx , ny , nz , active_size , index_map , 1 , NULL , "Pressure") , field_config_free__ , field_config_get_size__);
-  enkf_config_add_type(config , "SWAT"     , ecl_restart , FIELD , 
-		       field_config_alloc("SWAT"      , nx , ny , nz , active_size , index_map , 1 , NULL , "SWAT")     , field_config_free__ , field_config_get_size__);
-  enkf_config_add_type(config , "SGAS"     , ecl_restart , FIELD , 
-		       field_config_alloc("SGAS"      , nx , ny , nz , active_size , index_map , 1 , NULL , "SGAS")     , field_config_free__ , field_config_get_size__);
-  enkf_config_add_type(config , "RS"       , ecl_restart , FIELD , 
-		       field_config_alloc("RS"        , nx , ny , nz , active_size , index_map , 1 , NULL , "RS")       , field_config_free__ , field_config_get_size__);
-  enkf_config_add_type(config , "RV"       , ecl_restart , FIELD , 
-		       field_config_alloc("RV"        , nx , ny , nz , active_size , index_map , 1 , NULL , "RV")       , field_config_free__ , field_config_get_size__);
+		       field_config_alloc("PRESSURE"  , ecl_float_type , nx , ny , nz , active_size , index_map , 1 , NULL , "Pressure") , 
+		       field_config_free__ , field_config_get_serial_size__);
+
+  enkf_config_add_type(config , "SGAS"  , ecl_restart , FIELD , 
+		       field_config_alloc("SGAS" , ecl_float_type    , nx , ny , nz , active_size , index_map , 1 , NULL , "SGAS")     , 
+		       field_config_free__ , field_config_get_serial_size__);
+
+  enkf_config_add_type(config , "RS"     , ecl_restart , FIELD , 
+		       field_config_alloc("RS"  , ecl_float_type        , nx , ny , nz , active_size , index_map , 1 , NULL , "RS")       , 
+		       field_config_free__ , field_config_get_serial_size__);
+  
+  enkf_config_add_type(config , "RV"    , ecl_restart , FIELD , 
+		       field_config_alloc("RV"    , ecl_float_type       , nx , ny , nz , active_size , index_map , 1 , NULL , "RV")       , 
+		       field_config_free__ , field_config_get_serial_size__);
+
   
   state = enkf_state_alloc(config , "ECLIPSE" , false);
-  enkf_state_add_node(state , MULTZ , parameter , "MULTZ");
-  
+  enkf_state_add_node(state , MULTZ , "MULTZ");
+  enkf_state_add_node(state , EQUIL , "EQUIL");
+
   enkf_state_iset_eclpath(state , 0 , "RunPATH");
   enkf_state_iset_eclpath(state , 1 , "tmpdir_0001");
   

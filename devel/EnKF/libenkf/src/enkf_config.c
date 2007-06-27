@@ -30,14 +30,14 @@ struct enkf_config_struct {
 
 
 
-static int enkf_config_get_data_size__(const enkf_config_type * config , int mask) {
+static int enkf_config_get_serial_size__(const enkf_config_type * config , int mask) {
   int size = 0;
   int i;
   char **keylist = hash_alloc_keylist(config->config_hash);
   for (i= 0; i < hash_get_size(config->config_hash); i++) {
     enkf_config_node_type * config_node = hash_get(config->config_hash , keylist[i]);
     if (enkf_config_node_include_type(config_node , mask))
-      size += enkf_config_node_get_size(config_node);
+      size += enkf_config_node_get_serial_size(config_node);
   }
   hash_free_ext_keylist(config->config_hash , keylist);
   return size;
@@ -45,7 +45,7 @@ static int enkf_config_get_data_size__(const enkf_config_type * config , int mas
 
 
 int enkf_config_get_serial_size(const enkf_config_type * config) {
-  return enkf_config_get_data_size__(config , parameter + ecl_restart + ecl_summary);
+  return enkf_config_get_serial_size__(config , parameter + ecl_restart + ecl_summary);
 }
 
 
@@ -91,14 +91,21 @@ bool enkf_config_has_key(const enkf_config_type * enkf_config , const char * key
 
 
 
-void enkf_config_add_type(enkf_config_type * enkf_config, const char * key , enkf_var_type enkf_type , enkf_impl_type impl_type , const void *data , config_free_ftype * freef , config_get_size_ftype *get_size) {
+void enkf_config_add_type(enkf_config_type * enkf_config, 
+			  const char * key , 
+			  enkf_var_type enkf_type , 
+			  enkf_impl_type impl_type , 
+			  const void *data , 
+			  config_free_ftype * freef , 
+			  config_get_serial_size_ftype *get_serial_size) {
   if (enkf_config_has_key(enkf_config , key)) {
     fprintf(stderr,"%s: a configuration object:%s has already been added - aborting \n",__func__ , key);
     abort();
   }
   {
-    enkf_config_node_type * node = enkf_config_node_alloc(enkf_type , impl_type , data , freef , get_size);
+    enkf_config_node_type * node = enkf_config_node_alloc(enkf_type , impl_type , data , freef , get_serial_size);
     hash_insert_hash_owned_ref(enkf_config->config_hash , key , node , enkf_config_node_free__);
+    printf("Setter:%s -> %d \n",key , impl_type);
   }
 }
 
@@ -107,7 +114,7 @@ void enkf_config_add_type(enkf_config_type * enkf_config, const char * key , enk
 void enkf_config_add_type0(enkf_config_type * enkf_config , const char *key , int size, enkf_var_type enkf_type , enkf_impl_type impl_type) {
   switch(impl_type) {
   case(STATIC):
-    enkf_config_add_type(enkf_config , key , enkf_type , impl_type , ecl_static_kw_config_alloc(size , key , key) , ecl_static_kw_config_free__ , ecl_static_kw_config_get_size__);
+    enkf_config_add_type(enkf_config , key , enkf_type , impl_type , ecl_static_kw_config_alloc(size , key , key) , ecl_static_kw_config_free__ , ecl_static_kw_config_get_serial_size__);
     break;
   case(FIELD):
     /*
@@ -133,7 +140,7 @@ void enkf_config_free(enkf_config_type * enkf_config) {
 const void * enkf_config_get_ref(const enkf_config_type * config, const char * key) {
   if (hash_has_key(config->config_hash , key)) {
     enkf_config_node_type * node = hash_get(config->config_hash , key);
-    return enkf_config_node_get_ref(node);
+    return node;
   } else {
     fprintf(stderr,"%s: config node:%s does not exist \n",__func__ , key);
     abort();

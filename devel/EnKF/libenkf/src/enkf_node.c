@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <enkf_node.h>
+#include <enkf_config_node.h>
 #include <util.h>
 
 
@@ -30,8 +31,10 @@ struct enkf_node_struct {
   char               *swapfile;
   char               *node_key;
   void               *data;
-  const void         *config;
-  enkf_var_type       enkf_type;
+  const enkf_config_node_type *config;
+  /*
+    enkf_var_type       enkf_type;
+  */
 };
 
 
@@ -40,8 +43,7 @@ struct enkf_node_struct {
 */
 
 enkf_node_type * enkf_node_alloc(const char *node_key, 
-				 enkf_var_type     enkf_type , 
-				 const void         * config    , 
+				 const enkf_config_node_type * config    , 
 				 alloc_ftype        * alloc     , 
 				 ecl_write_ftype    * ecl_write , 
 				 ens_read_ftype     * ens_read  , 
@@ -64,11 +66,10 @@ enkf_node_type * enkf_node_alloc(const char *node_key,
   node->sample    = sample;
   node->freef     = freef;
   node->copyc     = copyc;
-  node->enkf_type  = enkf_type;
   node->config    = config;
   node->swapfile  = NULL;
   node->node_key  = util_alloc_string_copy(node_key);
-  node->data      = node->alloc(node->config);
+  node->data      = node->alloc(enkf_config_node_get_ref(node->config));
   node->serialize = serialize;
   node->de_serialize = de_serialize;
   return node;
@@ -83,7 +84,6 @@ enkf_node_type * enkf_node_copyc(const enkf_node_type * src) {
   }
   {
     enkf_node_type * new = enkf_node_alloc(enkf_node_get_key_ref(src) , 
-					   src->enkf_type , 
 					   src->config,
 					   src->alloc,
 					   src->ecl_write,
@@ -103,12 +103,16 @@ enkf_node_type * enkf_node_copyc(const enkf_node_type * src) {
 
 
 bool enkf_node_include_type(const enkf_node_type * enkf_node, int mask) {
-  printf("%s: this function should access a config object instead ... \n",__func__);
-  if (enkf_node->enkf_type & mask)
-    return true;
-  else
-    return false;
+  return enkf_config_node_include_type(enkf_node->config , mask);
 }
+
+
+
+enkf_impl_type enkf_node_get_impl_type(const enkf_node_type * enkf_node) {
+  printf("Ber om impl_type til %s -> %d \n",enkf_node_get_key_ref(enkf_node) , enkf_config_node_get_impl_type(enkf_node->config));
+  return enkf_config_node_get_impl_type(enkf_node->config);
+}
+
 
 bool enkf_node_swapped(const enkf_node_type *enkf_node) {
   if (enkf_node->swapfile == NULL)
