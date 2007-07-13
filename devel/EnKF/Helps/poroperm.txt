@@ -2,46 +2,30 @@
 -------------------------------------------------
 Definition of priors in real field experiments:
 
-PORO.INC, PERMX.INC, PERMZ.INC
+This is all a bit unclear........but:
 
-You need to place the original poro and perm files
-as included in your model in the Prior directory,
-and renamed as PORO.ORIG, PERMX.ORIG and PERMZ.ORIG.
-Also remember to remove the keyword in the files
-which should only contain numbers.
+--The Refcase:
+The Refcase is defined as a prior model, and
+it should be a consistent running Eclipse model
+before the EnKF is being set up.
 
-In the menu you will update the poro and perm files
-to a formatted version that fits the system.  
-In this case the .ORIG files are read and written
-in formatted form to .INC files.
+Thus, the Refcase directory should contain all files
+required to run a simulation.
 
+--The Random_Prior
+A random prior model can be generated as soon as
+all the needed EnKf files are generated, e.g.
+ECLIPSE_orig.DATA, SCHEDULE_orig.INC, petrostatistics.xls.
+etc.
 
-MULTFLT.INC
-If you are estimating fault multipliers by defining
-the MULTFLT define statement, you also need to 
-install a file MULTFLT.INC in the prior directory.
+The random prior is generated using the same statistics
+as defined in petrostatistics.xls, and is stored in 
+an ensemble file "random_prior.uf".  
 
-MULTZ.INC
-If you are estimating vertical multipliers by defining
-the MULTZ define statement, you also need to 
-install a file MULTZ.INC in the prior directory.
+A simulation of the random prior is submitted under menu 3b,
+and results are stored in the Random_Prior directory.
 
-EQUIL.INC
-If you specify uncertainty in the initial contacts
-through the EQUIL define statement, you also need
-to install a file EQUIL.INC in the prior directory.
-
-
-Note that these files should also be included at
-the appropriate locations in the ECLIPSE_orig.DATA
-file.
-
--------------------------------------------------
-Note that in simulated experiments it is also 
-possible to generate a new random prior, but 
-this requires the reference simulation to be 
-run first as well as the updating of the iniens
-program.  In this case iniens writes random
-priors to the .INC files.
+It is then possible to use the random prior simulation
+to simulate the production data in a twin experiment.
 
 -------------------------------------------------
