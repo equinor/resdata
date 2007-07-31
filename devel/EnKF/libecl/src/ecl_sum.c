@@ -281,6 +281,7 @@ ecl_sum_type * ecl_sum_load_unified(const char * header_file , const char * data
 }
 
 
+
 char ** ecl_sum_alloc_filelist(const char *path , const char *base , bool file_fmt, int *files) {
   if (file_fmt)
     return ecl_fstate_alloc_filelist(path , base , "A" , files);
@@ -312,17 +313,17 @@ void ecl_sum_iget2(const ecl_sum_type *ecl_sum , int istep , int index, void *va
 }
 
 
-int ecl_sum_iget1(const ecl_sum_type *ecl_sum , int istep , const char *well_name , const char *var_name ,  void *value) {
+
+int ecl_sum_iget1(const ecl_sum_type *ecl_sum , int istep , const char *well_name , const char *var_name ,  bool abort_on_error , void *value) {
   char well_kw[17];
   int index;
   
-  
-
   set_well_kw_string(well_name , var_name , well_kw);
   if (!hash_has_key(ecl_sum->index_hash , well_kw)) {
-    /*
-      fprintf(stderr,"%s could not find data for well/variable <%s/%s> \ key:<%s> n",__func__ , well_name , var_name , well_kw);
-    */
+    if (abort_on_error) {
+      fprintf(stderr,"%s could not find data for well/variable %s/%s in base file:%s - aborting \n",__func__ , well_name , var_name , ecl_sum->base_name);
+      abort();
+    }
     return -1;
   }
   index = hash_get_int(ecl_sum->index_hash , well_kw);

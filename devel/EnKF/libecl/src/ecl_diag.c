@@ -80,9 +80,9 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , const ecl_sum_type **
 
   for (istep = 0; istep < min_size;  istep++) {
     float history_value , time_value, value;
-    int index = ecl_sum_iget1(ecl_sum_list[0] , istep , well , var , &value);
+    int index = ecl_sum_iget1(ecl_sum_list[0] , istep , well , var , false , &value);
     if (index >= 0) {
-      ecl_sum_iget1(ecl_sum_list[0] , istep , well , hvar  , &history_value);
+      ecl_sum_iget1(ecl_sum_list[0] , istep , well , hvar  , false , &history_value);
       ecl_sum_iget2(ecl_sum_list[0] , istep , 0 , &time_value);
       fprintf(stream , " %9.4e %9.4e " , time_value , history_value);
       for (iens = iens1; iens <= iens2; iens++) {

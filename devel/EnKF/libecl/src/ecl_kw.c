@@ -39,12 +39,17 @@ struct ecl_kw_struct {
 #define ecl_type_len  4
 #define ecl_Ntype     6
 
+/*
 static const char ecl_type_map[ecl_Ntype][ecl_type_len + 1] = {{"CHAR\0"},
 							       {"REAL\0"},
 							       {"DOUB\0"},
 							       {"INTE\0"},
 							       {"LOGI\0"},
 							       {"MESS\0"}};
+*/
+
+static const char *ecl_type_map[] = {"CHAR","REAL","DOUB","INTE","MESS"};
+
 
 /*static const char *ecl_type_map[ecl_Ntype] = {"CHAR\0"},
 							       {"REAL\0"},

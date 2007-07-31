@@ -12,6 +12,12 @@
 struct ecl_block_struct {
   bool 	        fmt_file;
   bool 	        endian_convert;
+
+  /*
+    This code is programmed in terms of "report steps", in ECLIPSE speak,
+    it has no understanding of the socalled ministeps, and will probably break
+    badly if exposed to them.
+  */
   int           time_step;
   int           size;
   hash_type    *kw_hash;
@@ -112,18 +118,23 @@ ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
 }
 
 
+void ecl_block_set_time_step(ecl_block_type * block , int time_step) {
+  ecl_block->time_step      = time_step;
+}
+
+
 ecl_block_type * ecl_block_alloc(int time_step , int Nkw , bool fmt_file , bool endian_convert) {
   ecl_block_type *ecl_block;
   
   
   ecl_block = malloc(sizeof *ecl_block);
-  ecl_block->time_step      = time_step;
   ecl_block->fmt_file       = fmt_file;
   ecl_block->endian_convert = endian_convert;
   ecl_block->size           = 0;
   
   ecl_block->kw_hash = hash_alloc(2*Nkw);
   ecl_block->kw_list = list_alloc();
+  ecl_block_set_time_step(ecl_block , time_step);
   return ecl_block;
 }
 

@@ -72,10 +72,9 @@ static const char * license_server = "1700@osl001lic.hda.hydro.com:1700@osl002li
 static const int  max_cpu_sec  = 10000000;
 static const int  max_wall_sec = 99999999;
 
-
-
 /* End of global variables */
 /*****************************************************************/
+
 
 void print_usage(const char *exe) {
   int i;

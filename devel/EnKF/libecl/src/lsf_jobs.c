@@ -16,7 +16,7 @@
 
 
 
-enum lsf_status_enum_def {lsf_status_null , lsf_status_submitted , lsf_status_running , lsf_status_done , lsf_status_OK , lsf_status_exit , lsf_status_uerror};
+enum lsf_status_enum_def {lsf_status_null , lsf_status_submitted , lsf_status_running , lsf_status_done , lsf_status_OK , lsf_status_exit , lsf_status_complete_fail};
 #define STATUS_SIZE 6
 
 struct lsf_job_struct {
@@ -70,9 +70,16 @@ static void lsf_job_set_status(lsf_job_type *lsf_job , lsf_status_enum status) {
   lsf_job->status = status;
 }
 
+
 static lsf_status_enum lsf_job_get_status(const lsf_job_type *lsf_job) {
   return lsf_job->status;
 }
+
+
+static void lsf_job_inc_submit_count(lsf_job_type *lsf_job) {
+  lsf_job->submit_count++;
+}
+
 
 
 static void lsf_job_set_ctime(const char *file , time_t *ct) {
@@ -110,10 +117,10 @@ static void lsf_pool_exit_job(const lsf_pool_type *lsf_pool , int ijob , lsf_sta
   FILE *stream = fopen(job->fail_file , "w");
   if (status == lsf_status_exit) 
     fprintf(stream, "Job:%s/LSF:%d failed with EXIT status from the LSF que system.\n" , job->base , job->lsf_base);
-  else if (status == lsf_status_uerror)
+  else if (status == lsf_status_complete_fail)
     fprintf(stream , "Job:%s failed to produce resultfile:%s  after %d attempts - giving up.\n",job->base , job->restart_file , job->max_resubmit);
   else {
-    fprintf(stderr,"%s: internal programming error. Function reached with status != (lsf_status_exit, lsf_status_uerror) \n",__func__);
+    fprintf(stderr,"%s: internal programming error. Function reached with status != (lsf_status_exit, lsf_status_complete_fail) \n",__func__);
     abort();
   }
     
@@ -149,7 +156,7 @@ static void lsf_job_fprintf_status(lsf_job_type *lsf_job ,  FILE *stream) {
   case(lsf_status_exit):
     sprintf(job_status , "EXITED");
     break;
-  case(lsf_status_uerror):
+  case(lsf_status_complete_fail):
     sprintf(job_status , "Failed");
     break;
   default:
@@ -254,11 +261,7 @@ static void lsf_job_unlink_smspec(const lsf_job_type *lsf_job) {
 
 static int lsf_job_parse_bsub_stdout(const char * stdout_file) {
   int jobid;
-  FILE * stream = fopen(stdout_file , "r");
-  if (stream == NULL) {
-    fprintf(stderr,"%s: file:%s does not exist - aborting \n",__func__ , stdout_file );
-    abort();
-  }
+  FILE * stream = util_fopen(stdout_file , "r");
   {
     char buffer[16];
     int c;
@@ -289,18 +292,15 @@ static int lsf_job_submit(lsf_job_type *lsf_job , const char * submit_cmd_fmt , 
   {
     int job_id;
     sprintf(lsf_job->tmp_file , "%s/enkf-submit-%08d-%d" , tmp_path , getpid() , lsf_job->job_nr);
-    sprintf(lsf_job->submit_cmd , submit_cmd_fmt , lsf_job->base , lsf_job->base , lsf_job->run_path , lsf_job->base , lsf_job->tmp_file);
+    sprintf(lsf_job->submit_cmd , submit_cmd_fmt , lsf_job->run_path , lsf_job->base , lsf_job->base , lsf_job->run_path , lsf_job->base , lsf_job->tmp_file);
     
-    /*
-      printf("Submit command:%s \n" , lsf_job->submit_cmd);
-    */
     system(lsf_job->submit_cmd);
     
     job_id = lsf_job_parse_bsub_stdout(lsf_job->tmp_file);
+    lsf_job->lsf_base = job_id;
     util_unlink_existing(lsf_job->tmp_file); 
     return job_id;
   }
-  
 }
 	    
  /*  const char *tmp_file_static = "bsub-"; */
@@ -419,7 +419,8 @@ lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit,
   lsf_pool->total_status   = calloc(STATUS_SIZE , sizeof *lsf_pool->total_status);
   lsf_pool->submit_cmd_fmt = malloc(256);
   lsf_pool->version_nr     = version_nr;
-  sprintf(lsf_pool->submit_cmd_fmt , "bsub -o %s.stdout -q %s -J %s -R\"%s\" %s/ecl_submit.x %s %s %d > %s" , 
+  sprintf(lsf_pool->submit_cmd_fmt , "bsub -o %s/%s.stdout -q %s -J %s -R\"%s\" %s/ecl_submit.x %s %s %d > %s" , 
+	  "%s"                 ,
 	  "%s"                 , /* lsf stdout file */
 	  lsf_pool->queu       , 
 	  "%s"                 , /* lsf job name   */
@@ -440,10 +441,11 @@ static lsf_status_enum lsf_pool_iget_status(const lsf_pool_type *lsf_pool , int 
 }
 
 
+
 static void lsf_pool_iset_status(const lsf_pool_type *lsf_pool , int ijob , lsf_status_enum new_status) {
   const lsf_status_enum old_status = lsf_pool_iget_status(lsf_pool , ijob);
   
-  if (old_status != lsf_status_OK && old_status != lsf_status_exit) {
+  if (old_status != lsf_status_OK && old_status != lsf_status_complete_fail) {
     if (old_status != new_status) {
       switch(new_status) {
       case(lsf_status_submitted):
@@ -456,14 +458,15 @@ static void lsf_pool_iset_status(const lsf_pool_type *lsf_pool , int ijob , lsf_
 	lsf_job_set_complete_time(lsf_pool->jobList[ijob]);
 	break;
       case(lsf_status_exit):
-	lsf_pool_exit_job(lsf_pool , ijob , lsf_status_exit);
+	/*printf("job:%d  is exited ... \n",lsf_pool->jobList[ijob]->lsf_base);*/
+	/*lsf_pool_exit_job(lsf_pool , ijob , lsf_status_exit);*/
 	break;
-      case(lsf_status_uerror):
-	lsf_pool_exit_job(lsf_pool , ijob , lsf_status_uerror);
+      case(lsf_status_complete_fail):
+	lsf_pool_exit_job(lsf_pool , ijob , lsf_status_complete_fail);
 	break;
       default:
-	fprintf(stderr,"%s: Internal programming error - unexpected enum value - aborting \n",__func__);
-	abort();
+	/* No op */
+	break;
       }
     }
     lsf_job_set_status(lsf_pool->jobList[ijob] , new_status);
@@ -486,6 +489,7 @@ static void lsf_pool_isubmit(lsf_pool_type *lsf_pool , int ijob) {
     hash_insert_int(lsf_pool->jobs , char_base , ijob);
   }
   lsf_pool_iset_status(lsf_pool , ijob , lsf_status_submitted);
+  lsf_job_inc_submit_count(lsf_pool->jobList[ijob]);
 }
 
 
@@ -534,18 +538,39 @@ void lsf_pool_add_job(lsf_pool_type *lsf_pool , const char *base , const char *r
 
 
 
-
-
-static void lsf_pool_ireschedule(lsf_pool_type *lsf_pool , int ijob) {
+static void lsf_pool_delete_job(lsf_pool_type * lsf_pool , int ijob) {
   int old_base = lsf_pool->jobList[ijob]->lsf_base;
-  if (lsf_job_can_reschedule(lsf_pool->jobList[ijob])) {
-    char old_base_char[16];
-    lsf_pool_iset_status(lsf_pool , ijob ,  lsf_status_null);
-    sprintf(old_base_char , "%d" , old_base);
+  char old_base_char[16];
+  printf("Make a try ... \n"); 
+  sprintf(old_base_char , "%d" , old_base);
+  if (hash_has_key(lsf_pool->jobs , old_base_char)) {
+    printf("Have job: %s \n",old_base_char);
     hash_del(lsf_pool->jobs , old_base_char); /* We orphan the job which has completed */
-  } else 
-    lsf_pool_iset_status(lsf_pool , ijob , lsf_status_uerror);
+  }
+  else 
+    fprintf(stderr,"%s: Job:%s does not exist - internal ERROR \n",__func__ , old_base_char);
 }
+
+/* 
+   A problem is that the jobs with status EXIT are
+   left in the system for many iterations, but must
+   of course only be resubmitted once. 
+*/
+
+static bool lsf_pool_ireschedule(lsf_pool_type *lsf_pool , int ijob) {
+  if (lsf_job_can_reschedule(lsf_pool->jobList[ijob])) {
+    lsf_pool_delete_job(lsf_pool , ijob);
+    lsf_pool_iset_status(lsf_pool , ijob , lsf_status_null);
+    return true;
+  } else {
+    if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_done) {
+      lsf_pool_delete_job(lsf_pool , ijob);
+      lsf_pool_iset_status(lsf_pool , ijob , lsf_status_complete_fail);
+    }
+    return false;
+  }
+}
+
 
 
 static bool lsf_pool_complete_OK(const lsf_pool_type *lsf_pool , int ijob) {
@@ -636,8 +661,21 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
       */
       lsf_pool_update_status(lsf_pool);
       /*
-	Third step: check complete jobs.
+	Third step: check complete/EXIT jobs.
       */
+     
+      /*
+	Will reschedule jobs with EXIT status as well - they sometimes just fail to start ... */
+      for (ijob = 0; ijob < lsf_pool->size; ijob++) {
+	if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_exit) {
+	  if (lsf_pool_ireschedule(lsf_pool , ijob))
+	    printf("Job:%d returned with EXIT status - resubmitting [Attempt:%d] \n",ijob+1 ,  lsf_pool->jobList[ijob]->submit_count);
+	  else
+	    printf("Job:%d returned with EXIT status - no more resubmits \n",ijob+1);
+	}
+      }
+
+      
       for (ijob = 0; ijob < lsf_pool->size; ijob++) {
 	if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_done) {
 	  if (lsf_pool_complete_OK(lsf_pool , ijob)) { 
@@ -648,7 +686,8 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 	  }
 	}
       }
-    
+      
+
       if (lsf_pool->total_status[lsf_status_OK] + lsf_pool->total_status[lsf_status_exit] == lsf_pool->size)
 	cont = false;
     

@@ -134,7 +134,7 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
 			 void *value, int *index) {
   char *well = util_alloc_cstring(_well_name , well_len);
   char *var  = util_alloc_cstring(_var_name  , var_len);
-  *index = ecl_sum_iget1(ECL_SUM , 0 , well , var , value);
+  *index = ecl_sum_iget1(ECL_SUM , 0 , well , var , false , value);
   free(well);
   free(var);
 }
