@@ -7,6 +7,7 @@
 #include <hash.h>
 #include <list.h>
 #include <util.h>
+#include <time.h>
 
 
 struct ecl_block_struct {
@@ -18,10 +19,13 @@ struct ecl_block_struct {
     it has no understanding of the socalled ministeps, and will probably break
     badly if exposed to them.
   */
-  int           time_step;
+  
+  int           report_nr;
+  /*int           block_nr;*/
   int           size;
   hash_type    *kw_hash;
   list_type    *kw_list;
+  time_t        sim_time;
 };
 
 
@@ -94,7 +98,7 @@ ecl_kw_type * ecl_block_get_next_kw(const ecl_block_type * ecl_block , const ecl
 
 ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
   ecl_block_type * copy;
-  copy = ecl_block_alloc(src->time_step , src->size , src->fmt_file , src->endian_convert);
+  copy = ecl_block_alloc(src->report_nr , src->size , src->fmt_file , src->endian_convert);
   {
     list_node_type * kw_node = list_get_head(src->kw_list);
     while (kw_node != NULL) {
@@ -118,12 +122,13 @@ ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
 }
 
 
-void ecl_block_set_time_step(ecl_block_type * block , int time_step) {
-  ecl_block->time_step      = time_step;
+
+void ecl_block_set_report_nr(ecl_block_type * block , int report_nr) {
+  block->report_nr      = report_nr;
 }
 
 
-ecl_block_type * ecl_block_alloc(int time_step , int Nkw , bool fmt_file , bool endian_convert) {
+ecl_block_type * ecl_block_alloc(int report_nr , int Nkw , bool fmt_file , bool endian_convert) {
   ecl_block_type *ecl_block;
   
   
@@ -132,9 +137,10 @@ ecl_block_type * ecl_block_alloc(int time_step , int Nkw , bool fmt_file , bool 
   ecl_block->endian_convert = endian_convert;
   ecl_block->size           = 0;
   
-  ecl_block->kw_hash = hash_alloc(2*Nkw);
-  ecl_block->kw_list = list_alloc();
-  ecl_block_set_time_step(ecl_block , time_step);
+  ecl_block->kw_hash  = hash_alloc(2*Nkw);
+  ecl_block->kw_list  = list_alloc();
+  ecl_block->sim_time = -1;
+  ecl_block_set_report_nr(ecl_block , report_nr);
   return ecl_block;
 }
 
@@ -308,7 +314,7 @@ void ecl_block_fwrite(ecl_block_type *ecl_block , fortio_type *fortio) {
 
 
 int ecl_block_get_block(const ecl_block_type *ecl_block) {
-  return ecl_block->time_step;
+  return ecl_block->report_nr;
 }
 
 

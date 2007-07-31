@@ -621,6 +621,34 @@ bool ecl_kw_fseek_kw(const char * kw , bool fmt_file , bool rewind , bool abort_
 }
 
 
+
+bool ecl_kw_fseek_last_kw(const char * kw , bool fmt_file , bool abort_on_error , fortio_type *fortio) {
+  FILE *stream      = fortio_get_FILE(fortio);
+  long int init_pos = ftell(stream);
+  bool kw_found     = false;
+
+  fseek(stream , 0L , SEEK_SET);
+  kw_found = ecl_kw_fseek_kw(kw , fmt_file , false , false , fortio);
+  if (kw_found) {
+    bool cont = true;
+    do {
+      long int current_pos = ftell(stream);
+      printf("At position:%d \n",current_pos);
+      ecl_kw_fskip(fortio , fmt_file);
+      cont = ecl_kw_fseek_kw(kw , fmt_file , false , false , fortio);
+      if (!cont) fseek(stream , current_pos , SEEK_SET);
+    } while (cont);
+  } else {
+    if (abort_on_error) {
+      fprintf(stderr,"%s: could not locate keyword:%s - aborting \n",__func__ , kw);
+      abort();
+    } else
+      fseek(stream , init_pos , SEEK_SET);
+  }
+  return kw_found;
+}
+
+
 bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   const char null_char = '\0';
   FILE *stream = fortio_get_FILE(fortio);
@@ -719,9 +747,9 @@ bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   return OK;
 }
 
-ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio , bool fmt_file , bool endian_convert) {
+ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio , bool fmt_file) {
   bool OK;
-  ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_convert);
+  ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(fmt_file , fortio_get_endian_flip(fortio));
   OK = ecl_kw_fread_realloc(ecl_kw , fortio);
   
   if (!OK) {
@@ -753,9 +781,9 @@ void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 } 
 
 
-void ecl_kw_fskip(fortio_type *fortio , bool fmt_file , bool endian_flip) {
+void ecl_kw_fskip(fortio_type *fortio , bool fmt_file) {
   ecl_kw_type *tmp_kw;
-  tmp_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip);
+  tmp_kw = ecl_kw_fread_alloc(fortio , fmt_file);
   ecl_kw_free(tmp_kw);
 }
 

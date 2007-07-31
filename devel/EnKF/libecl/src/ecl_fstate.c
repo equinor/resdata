@@ -11,8 +11,17 @@
 #include <ecl_fstate.h>
 #include <dirent.h>
 #include <util.h>
+#include <time.h>
+#include <ecl_util.h>
 
 
+/*
+  summary files: param[0..4]      = {TIME , YEARS , DAY , MONTH , YEAR}.
+  smspec       : startdat[0..2]   = {day , month , year}
+  restart      : intehead[64..66] = {day , month , year}
+*/
+
+  
 
 struct ecl_fstate_struct {
   char 	      	 **filelist;
@@ -24,6 +33,7 @@ struct ecl_fstate_struct {
   int              N_blocks;
   int              block_size;
   ecl_block_type **block_list;
+  time_t           sim_start_time;
 };
 
 
@@ -67,33 +77,9 @@ bool ecl_fstate_fmt_file(const char *filename) {
 
 
 
-static int ecl_fstate_fname2time(const char *filename) {
-  const char char_X = 'X';
-  const char char_F = 'F';
-  const char char_S = 'S';
-  const char char_A = 'A';
-  
-  int block;
-  char *ext = strrchr(filename , '.');
-  if (ext == NULL) {
-    fprintf(stderr,"%s: can not determine timestep from filename:%s - aborting \n",__func__ , filename);
-    abort();
-  }
-  
-  if (ext[1] == char_X || ext[1] == char_F || ext[1] == char_S || ext[1] == char_A) 
-    block = atoi(&ext[2]);
-  else {
-    fprintf(stderr,"%s: Filename:%s not recognized - valid extensions: Annnn / Xnnnn / Fnnnn / Snnnn - aborting \n",__func__ , filename);
-    abort();
-  } 
-  
-  return block;
-}
-
-
 static int ecl_fstate_fname_cmp(const void *f1, const void *f2) {
-  int t1 = ecl_fstate_fname2time( *((const char **) f1) );
-  int t2 = ecl_fstate_fname2time( *((const char **) f2) );
+  int t1 = ecl_util_fname2time( *((const char **) f1) );
+  int t2 = ecl_util_fname2time( *((const char **) f2) );
   if (t1 < t2)
     return -1;
   else if (t1 > t2)
@@ -111,6 +97,7 @@ ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , bool endian_convert , bo
   ecl_fstate->N_blocks        = 0;
   ecl_fstate->filelist        = NULL;
   ecl_fstate->block_list      = NULL;
+  ecl_fstate->sim_start_time  = -1;
   return ecl_fstate;
 }
 
@@ -193,6 +180,19 @@ void ecl_fstate_set_multiple_files(ecl_fstate_type *ecl_fstate, const char * bas
   free(filelist);
 }
 
+
+
+/*
+  Should maybe get the first block number from 
+  ecl_fstate_fname2time() - and then continue from
+  there. Seems that actually is the best one can do??
+
+  Alternativly one could use proper time - which is
+  encoded in the items 65 - 67 in the INTEHEAD of the
+  restart files - in the summary files it does not 
+  seem to be available?
+*/
+  
 
 static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int files , const char ** filelist , int fmt_mode , bool endian_convert , bool unified) {
   ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(fmt_mode , endian_convert , unified);
