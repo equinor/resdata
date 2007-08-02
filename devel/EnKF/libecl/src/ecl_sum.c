@@ -65,7 +65,7 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert , b
 
 static ecl_sum_type * ecl_sum_alloc_existing(const char *header_file , int fmt_mode , bool endian_convert , bool unified) {
   ecl_sum_type *ecl_sum   = ecl_sum_alloc_empty(fmt_mode , endian_convert , unified);
-  ecl_sum->header         = ecl_fstate_load_unified_summary(header_file , ecl_sum->fmt_mode , ecl_sum->endian_convert);
+  ecl_sum->header         = ecl_fstate_load_unified(header_file , false , ecl_other_file , ecl_sum->fmt_mode , ecl_sum->endian_convert);
   {
     char well[9] , kw[9];
     ecl_kw_type *wells     = ecl_fstate_get_kw(ecl_sum->header , 0 , "WGNAMES"); 

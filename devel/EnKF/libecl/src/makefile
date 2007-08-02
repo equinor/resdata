@@ -17,7 +17,7 @@ ARFLAGS = -csr
 OBJECTS   = ecl_util.o sched.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o ext_job.o lsf_jobs.o ecl_parse.o ecl_diag.o str_buffer.o
 MOD_FILES = 
 INC_FILES = ecl_util.h sched.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h ext_job.h lsf_jobs.h ecl_parse.h ecl_diag.h str_buffer.h
-LIB       = libecl.a
+LIB       = libecl_devel.a
 
 
 
