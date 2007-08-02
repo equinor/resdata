@@ -120,6 +120,7 @@ static void rms_add_param(rms_file_type * rms_file , const char *param_name ,
   {
     rms_tagkey_type *tagkey = rms_tagkey_alloc_complete("data" , size , rms_float_type , work , true);
     rms_tag_fwrite_parameter(param_name , tagkey , rms_file_get_FILE(rms_file));
+    rms_tagkey_free(tagkey);
   }
 }
 

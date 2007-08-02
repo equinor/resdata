@@ -45,9 +45,6 @@ void rms_util_read_fortran_data(const void *_f90_data , void * _rms_data, int si
 
 
 
-/* 
-   These three should mayby be in an rms_util function.
-*/
 void rms_util_fskip_string(FILE *stream) {
   char c;
   bool cont = true;

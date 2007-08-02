@@ -10,7 +10,7 @@ INSTALL_INC_PATH = ../include
 INSTALL_LIB_PATH = ../lib
 INSTALL_MOD_PATH = ../mod
 #################################################################
-CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall -Wno-switch $(COMPILE_INCLUDE) 
+CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
 ARFLAGS = -csr
 #################################################################
 OBJECTS           = rms_interC.o rms_file.o rms_util.o rms_tag.o rms_type.o rms_tagkey.o rms_stats.o
@@ -26,6 +26,9 @@ INSTALL: $(LIB)
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
 	gcc -Wall -g -m32 -I./ -I../../libhash/include -I../../libutil/include rms_test.c -o rms.x -L./ -L../../libutil/lib -L../../libhash/lib -lrms -lutil -util -lhash -lm
+	gcc -Wall -g -m32 -I./ -I../../libhash/include -I../../libutil/include tag_list.c -o tag_list.x -L./ -L../../libutil/lib -L../../libhash/lib -lrms -lutil -util -lhash -lm
+	gcc -Wall -g -m32 -I./ -I../../libhash/include -I../../libutil/include rms_setname.c -o rms_setname.x -L./ -L../../libutil/lib -L../../libhash/lib -lrms -lutil -util -lhash -lm
+
 
 
 $(LIB): $(OBJECTS)

@@ -68,12 +68,17 @@ void rms_tagkey_clear(rms_tagkey_type * tagkey) {
       for (i=0; i < tagkey->size; i++)
 	tmp[i] = 0;
     }
+    break;
   case(rms_float_type):
     {
       float *tmp = (float *) tagkey->data;
       for (i=0; i < tagkey->size; i++)
 	tmp[i] = 0;
     }
+    break;
+  default:
+    fprintf(stderr,"%s: only implemented for rms_double_type and rms_float_type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -88,12 +93,19 @@ int i;
       for (i=0; i < tagkey->size; i++)
 	tmp[i] = f(tmp[i]);
     }
+    break;
+
   case(rms_float_type):
     {
       float *tmp = (float *) tagkey->data;
       for (i=0; i < tagkey->size; i++)
 	tmp[i] = f(tmp[i]);
     }
+    break;
+
+  default:
+    fprintf(stderr,"%s: only implemented for rms_double_type and rms_float_type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -108,12 +120,19 @@ void rms_tagkey_inplace_sqr(rms_tagkey_type * tagkey) {
       for (i=0; i < tagkey->size; i++)
 	tmp[i] *= tmp[i];
     }
+    break;
+
   case(rms_float_type):
     {
       float *tmp = (float *) tagkey->data;
       for (i=0; i < tagkey->size; i++)
 	tmp[i] *= tmp[i];
     }
+    break;
+
+  default:
+    fprintf(stderr,"%s: only implemented for rms_double_type and rms_float_type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -133,12 +152,19 @@ void rms_tagkey_inplace_log10(rms_tagkey_type * tagkey) {
       for (i=0; i < tagkey->size; i++)
 	tmp[i] = log10(tmp[i]);
     }
+    break;
+
   case(rms_float_type):
     {
       float *tmp = (float *) tagkey->data;
       for (i=0; i < tagkey->size; i++)
 	tmp[i] = log10(tmp[i]);
     }
+    break;
+    
+  default:
+    fprintf(stderr,"%s: only implemented for rms_double_type and rms_float_type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -153,12 +179,19 @@ void rms_tagkey_inplace_sqrt(rms_tagkey_type * tagkey) {
       for (i=0; i < tagkey->size; i++)
 	tmp[i] = sqrt(tmp[i]);
     }
+    break;
+    
   case(rms_float_type):
     {
       float *tmp = (float *) tagkey->data;
       for (i=0; i < tagkey->size; i++)
 	tmp[i] = sqrtf(tmp[i]);
     }
+    break;
+
+  default:
+    fprintf(stderr,"%s: only implemented for rms_double_type and rms_float_type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -173,12 +206,19 @@ void rms_tagkey_scale(rms_tagkey_type * tagkey , double scale_factor) {
       for (i=0; i < tagkey->size; i++)
 	tmp[i] *= scale_factor;
     }
+    break;
+
   case(rms_float_type):
     {
       float *tmp = (float *) tagkey->data;
       for (i=0; i < tagkey->size; i++)
 	tmp[i] *= scale_factor;
     }
+    break;
+
+  default:
+    fprintf(stderr,"%s: only implemented for rms_double_type and rms_float_type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -194,6 +234,8 @@ void rms_tagkey_inplace_add(rms_tagkey_type * tagkey , const rms_tagkey_type *de
       for (i=0; i < tagkey->size; i++)
 	tmp1[i] += tmp2[i];
     }
+    break;
+    
   case(rms_float_type):
     {
       float *tmp1       = (float *) tagkey->data;
@@ -201,6 +243,11 @@ void rms_tagkey_inplace_add(rms_tagkey_type * tagkey , const rms_tagkey_type *de
       for (i=0; i < tagkey->size; i++)
 	tmp1[i] += tmp2[i];
     }
+    break;
+
+  default:
+    fprintf(stderr,"%s: only implemented for rms_double_type and rms_float_type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -216,6 +263,8 @@ void rms_tagkey_inplace_add_scaled(rms_tagkey_type * tagkey , const rms_tagkey_t
       for (i=0; i < tagkey->size; i++)
 	tmp1[i] += tmp2[i] * factor;
     }
+    break;
+    
   case(rms_float_type):
     {
       float *tmp1       = (float *) tagkey->data;
@@ -223,6 +272,11 @@ void rms_tagkey_inplace_add_scaled(rms_tagkey_type * tagkey , const rms_tagkey_t
       for (i=0; i < tagkey->size; i++)
 	tmp1[i] += tmp2[i] * factor;
     }
+    break;
+
+  default:
+    fprintf(stderr,"%s: only implemented for rms_double_type and rms_float_type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -238,6 +292,8 @@ void rms_tagkey_inplace_mul(rms_tagkey_type * tagkey , const rms_tagkey_type *de
       for (i=0; i < tagkey->size; i++)
 	tmp1[i] *= tmp2[i];
     }
+    break;
+
   case(rms_float_type):
     {
       float *tmp1       = (float *) tagkey->data;
@@ -245,6 +301,11 @@ void rms_tagkey_inplace_mul(rms_tagkey_type * tagkey , const rms_tagkey_type *de
       for (i=0; i < tagkey->size; i++)
 	tmp1[i] *= tmp2[i];
     }
+    break;
+    
+  default:
+    fprintf(stderr,"%s: only implemented for rms_double_type and rms_float_type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -334,6 +395,10 @@ static void rms_tagkey_fread_data(rms_tagkey_type *tagkey , bool endian_convert 
       util_endian_flip_vector(tagkey->data , tagkey->sizeof_ctype , tagkey->size);
 }
 
+void rms_tagkey_manual_realloc_data(rms_tagkey_type * tagkey , int data_size) {
+  tagkey->data_size = data_size;
+  rms_tagkey_alloc_data(tagkey);
+}
 
 void rms_tagkey_set_data(rms_tagkey_type * tagkey , const void * data) {
   if (tagkey->shared_data)
