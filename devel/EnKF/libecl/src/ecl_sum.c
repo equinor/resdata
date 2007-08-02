@@ -65,7 +65,7 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert , b
 
 static ecl_sum_type * ecl_sum_alloc_existing(const char *header_file , int fmt_mode , bool endian_convert , bool unified) {
   ecl_sum_type *ecl_sum   = ecl_sum_alloc_empty(fmt_mode , endian_convert , unified);
-  ecl_sum->header         = ecl_fstate_load_unified(header_file , ecl_sum->fmt_mode , ecl_sum->endian_convert);
+  ecl_sum->header         = ecl_fstate_load_unified_summary(header_file , ecl_sum->fmt_mode , ecl_sum->endian_convert);
   {
     char well[9] , kw[9];
     ecl_kw_type *wells     = ecl_fstate_get_kw(ecl_sum->header , 0 , "WGNAMES"); 
@@ -112,8 +112,8 @@ static void ecl_sum_set_unified(ecl_sum_type *ecl_sum , bool unified) {
 
 ecl_sum_type * ecl_sum_alloc_new(const char *base_name , int Nwells, int Nvars, int param_offset , int fmt_mode , bool endian_convert , bool unified) {
   ecl_sum_type *ecl_sum = ecl_sum_alloc_empty(fmt_mode , endian_convert , unified);
-  ecl_sum->header       = ecl_fstate_alloc_empty(fmt_mode , endian_convert , true);
-  ecl_sum->data         = ecl_fstate_alloc_empty(fmt_mode , endian_convert , unified);
+  ecl_sum->header       = ecl_fstate_alloc_empty(fmt_mode , false , endian_convert , true);
+  ecl_sum->data         = ecl_fstate_alloc_empty(fmt_mode , false , endian_convert , unified);
   ecl_sum->base_name    = calloc(strlen(base_name) + 1 , sizeof *ecl_sum->base_name);
   ecl_sum->Nwells       = Nwells;
   ecl_sum->Nvars        = Nvars;
@@ -276,7 +276,7 @@ void ecl_sum_save(const ecl_sum_type * ecl_sum) {
 
 ecl_sum_type * ecl_sum_load_unified(const char * header_file , const char * data_file , int fmt_mode , bool endian_convert) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc_existing(header_file , fmt_mode , endian_convert , true);
-  ecl_sum->data = ecl_fstate_load_unified(data_file  , ecl_sum->fmt_mode , ecl_sum->endian_convert);
+  ecl_sum->data = ecl_fstate_load_unified_summary(data_file  , ecl_sum->fmt_mode , ecl_sum->endian_convert);
   return ecl_sum;
 }
 
@@ -293,7 +293,7 @@ char ** ecl_sum_alloc_filelist(const char *path , const char *base , bool file_f
 
 ecl_sum_type * ecl_sum_load_multiple(const char * header_file , int files , const char ** data_files , int fmt_mode , bool endian_convert) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc_existing(header_file , fmt_mode , endian_convert , false);
-  ecl_sum->data = ecl_fstate_load_multiple(files , data_files  , ecl_sum->fmt_mode , ecl_sum->endian_convert);
+  ecl_sum->data = ecl_fstate_load_multiple_summary(files , data_files  , false , ecl_sum->fmt_mode , ecl_sum->endian_convert);
   return ecl_sum;
 }
 

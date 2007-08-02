@@ -1,15 +1,26 @@
 #include <stdlib.h>
 #include <ecl_kw.h>
 #include <fortio.h>
+#include <string.h>
+
+static const char ecl_type_map1[6][5] = {{"CHAR\0"},
+					 {"REAL\0"},
+					 {"DOUB\0"},
+					 {"INTE\0"},
+					 {"LOGI\0"},
+					 {"MESS\0"}};
+
+
+
+static const char *ecl_type_map2[] = {"CHAR","REAL","DOUB","INTE","LOGI","MESS"};
+
+
 
 
 int main(int argc, char ** argv) {
-  fortio_type * fortio = fortio_open(argv[1] , "r" , true);
-  ecl_kw_fseek_last_kw("MINISTEPXX" , false , true , fortio);
-  {
-    ecl_kw_type * ecl_kw = ecl_kw_fread_alloc(fortio , false);
-    printf("Looking at: %s \n",ecl_kw_get_header_ref(ecl_kw));
-    ecl_kw_free(ecl_kw);
-  }
+  int i;
+  for (i=0; i < 6; i++) 
+    printf("%d:  <%s:%d>  <%s:%d>  \n",i , ecl_type_map1[i] , strlen(ecl_type_map1[i]) , ecl_type_map2[i] , strlen(ecl_type_map2[i]));
+
   return 0;
 }

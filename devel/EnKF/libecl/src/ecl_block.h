@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <ecl_kw.h>
 #include <fortio.h>
+#include <time.h>
 
 typedef struct ecl_block_struct ecl_block_type;
 
@@ -12,7 +13,11 @@ typedef struct ecl_block_struct ecl_block_type;
 #define COPY      2
 
 
-
+void             ecl_block_set_sim_time_restart(ecl_block_type * );
+void             ecl_block_set_sim_time_summary(ecl_block_type * );
+void             ecl_block_set_sim_time(ecl_block_type * , time_t );
+void             ecl_block_set_report_nr(ecl_block_type * , int );
+int              ecl_block_get_report_nr(const ecl_block_type * );
 bool             ecl_block_fseek(int , bool , bool , fortio_type * );
 ecl_kw_type    * ecl_block_get_first_kw(const ecl_block_type * );
 ecl_kw_type    * ecl_block_get_next_kw(const ecl_block_type *  , const ecl_kw_type * );
@@ -29,7 +34,6 @@ void             ecl_block_fwrite(ecl_block_type * , fortio_type *);
 void             ecl_block_set_fmt_file(ecl_block_type *, bool);
 void 	         ecl_block_select_formatted(ecl_block_type *);
 void 	         ecl_block_select_binary   (ecl_block_type *);
-int              ecl_block_get_block(const ecl_block_type *);
 void             ecl_block_printf_kwlist(const ecl_block_type *);
 ecl_kw_type    * ecl_block_detach_kw(ecl_block_type * , const char *);
 void             ecl_block_free_kw(ecl_block_type *, const char *);

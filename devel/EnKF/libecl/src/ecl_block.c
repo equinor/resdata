@@ -122,9 +122,62 @@ ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
 }
 
 
+void ecl_block_set_sim_time(ecl_block_type * block , time_t sim_time) {
+  block->sim_time = sim_time;
+}
+
+
+void ecl_block_set_sim_time_summary(ecl_block_type * block) {
+  float *date;
+  ecl_kw_type * param_kw = ecl_block_get_kw(block , "PARAMS");
+  if (param_kw == NULL) {
+    fprintf(stderr,"%s: fatal error - could not locate PARAMS keyword in summary file - aborting \n" , __func__);
+    abort();
+  }
+  date = ecl_kw_iget_ptr(param_kw , 0);
+
+  /*
+    date[2] = day
+    date[3] = month
+    date[4] = year
+    
+    Fractional days can in principle be extracted from date[0].
+  */
+
+  {
+    int sec  = 0;
+    int min  = 0;
+    int hour = 0;
+
+    int day   = date[2];
+    int month = date[3];
+    int year  = date[4];
+    ecl_block_set_sim_time(block , util_make_time2(sec , min , hour , day , month , year));
+  }
+}
+
+
+void ecl_block_set_sim_time_restart(ecl_block_type * block) {
+  int *date;
+  ecl_kw_type *intehead_kw = ecl_block_get_kw(block , "INTEHEAD");
+  
+  if (intehead_kw == NULL) {
+    fprintf(stderr,"%s: fatal error - could not locate INTEHEAD keyword in restart file - aborting \n",__func__);
+    abort();
+  }
+
+  date = ecl_kw_iget_ptr(intehead_kw , 64);
+  ecl_block_set_sim_time(block , util_make_time1(date[0] , date[1] , date[2]));
+}
+
+
 
 void ecl_block_set_report_nr(ecl_block_type * block , int report_nr) {
   block->report_nr      = report_nr;
+}
+
+int ecl_block_get_report_nr(const ecl_block_type * block) {
+  return block->report_nr;
 }
 
 
@@ -310,11 +363,6 @@ void ecl_block_fwrite(ecl_block_type *ecl_block , fortio_type *fortio) {
     }
     hash_free_ext_keylist(ecl_block->kw_hash , kw_list);
   */
-}
-
-
-int ecl_block_get_block(const ecl_block_type *ecl_block) {
-  return ecl_block->report_nr;
 }
 
 

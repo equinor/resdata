@@ -29,6 +29,7 @@ struct ecl_fstate_struct {
   int              fmt_mode;
   bool 	      	   endian_convert;
   bool        	   unified;
+  bool             summary_report_only;
   int         	   files;
   int              N_blocks;
   int              block_size;
@@ -78,8 +79,8 @@ bool ecl_fstate_fmt_file(const char *filename) {
 
 
 static int ecl_fstate_fname_cmp(const void *f1, const void *f2) {
-  int t1 = ecl_util_fname2time( *((const char **) f1) );
-  int t2 = ecl_util_fname2time( *((const char **) f2) );
+  int t1 = ecl_util_filename_report_nr( *((const char **) f1) );
+  int t2 = ecl_util_filename_report_nr( *((const char **) f2) );
   if (t1 < t2)
     return -1;
   else if (t1 > t2)
@@ -89,15 +90,16 @@ static int ecl_fstate_fname_cmp(const void *f1, const void *f2) {
 }
 
 
-ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , bool endian_convert , bool unified) {
-  ecl_fstate_type *ecl_fstate = malloc(sizeof *ecl_fstate);
-  ecl_fstate->unified  	      = unified;
-  ecl_fstate->fmt_mode 	      = fmt_mode;
-  ecl_fstate->endian_convert  = endian_convert;
-  ecl_fstate->N_blocks        = 0;
-  ecl_fstate->filelist        = NULL;
-  ecl_fstate->block_list      = NULL;
-  ecl_fstate->sim_start_time  = -1;
+ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , bool summary_report_only , bool endian_convert , bool unified) {
+  ecl_fstate_type *ecl_fstate 	 = malloc(sizeof *ecl_fstate);
+  ecl_fstate->unified  	      	 = unified;
+  ecl_fstate->fmt_mode 	      	 = fmt_mode;
+  ecl_fstate->endian_convert  	 = endian_convert;
+  ecl_fstate->N_blocks        	 = 0;
+  ecl_fstate->filelist        	 = NULL;
+  ecl_fstate->block_list      	 = NULL;
+  ecl_fstate->sim_start_time     = -1;
+  ecl_fstate->summary_report_only        = summary_report_only;
   return ecl_fstate;
 }
 
@@ -114,6 +116,9 @@ static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
   case ECL_FMT_AUTO:
     ecl_fstate->fmt_file = ecl_fstate_fmt_file(ecl_fstate->filelist[0]);
     break;
+  default:
+    fprintf(stderr,"%s: internal error - invalid fmt_mode - aborting \n",__func__);
+    abort();
   }
   if (ecl_fstate->fmt_file != existing_fmt) {
     int i;
@@ -121,6 +126,7 @@ static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
       ecl_block_set_fmt_file(ecl_fstate->block_list[i] , ecl_fstate->fmt_file);
   }
 }
+
 
 bool ecl_fstate_set_fmt_mode(ecl_fstate_type *ecl_fstate , int fmt_mode) {
   ecl_fstate->fmt_mode = fmt_mode;
@@ -171,7 +177,7 @@ void ecl_fstate_set_multiple_files(ecl_fstate_type *ecl_fstate, const char * bas
 
   for (i=0; i < ecl_fstate->N_blocks; i++) {
     filelist[i] = calloc(strlen(basename) + strlen(ext) + 1 + 1 + 4 , sizeof(char));
-    sprintf(filelist[i] , "%s.%s%04d" , basename , ext , ecl_block_get_block(ecl_fstate->block_list[i]));
+    sprintf(filelist[i] , "%s.%s%04d" , basename , ext , ecl_block_get_report_nr(ecl_fstate->block_list[i]));
   }
   ecl_fstate_init_files(ecl_fstate , NULL  , ecl_fstate->N_blocks , (const char **) filelist);
   
@@ -194,36 +200,75 @@ void ecl_fstate_set_multiple_files(ecl_fstate_type *ecl_fstate, const char * bas
 */
   
 
-static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int files , const char ** filelist , int fmt_mode , bool endian_convert , bool unified) {
-  ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(fmt_mode , endian_convert , unified);
+
+static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int files , const char ** filelist , bool summary_report_only , ecl_file_type file_type , int fmt_mode , bool endian_convert , bool unified) {
+  ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(fmt_mode , summary_report_only , endian_convert , unified);
   ecl_fstate->block_size  = 10;
   ecl_fstate->block_list  = calloc(ecl_fstate->block_size , sizeof *ecl_fstate->block_list);
   ecl_fstate_init_files(ecl_fstate , filename1 , files , filelist);
+
   if (unified) {
     fortio_type *fortio = fortio_open(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert);
     bool at_eof = false;
-    int block_nr    = 0;
+    int report_nr   = -1;
     while (!at_eof) {
-      ecl_block_type *ecl_block = ecl_block_alloc(block_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+      ecl_block_type *ecl_block = ecl_block_alloc(report_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
       ecl_block_fread(ecl_block , fortio , &at_eof);
+      if (file_type == ecl_restart_file) {
+	ecl_kw_type * seq_kw = ecl_block_get_kw(ecl_block , "SEQNUM");
+	ecl_kw_iget(seq_kw , 0 , &report_nr);
+	ecl_block_set_report_nr(ecl_block , report_nr);
+	ecl_block_set_sim_time_restart(ecl_block);
+      } else if (file_type == ecl_summary_file) 
+	/*
+	  Observe that when unified summary files are read in it is 
+	  *IMPOSSIBLE* to get hold of the report number. In this case
+	  the report number will be stuck at -1, and can *NOT* be used
+	  to access individual blocks.
+	*/
+	ecl_block_set_sim_time_summary(ecl_block);
+      
       ecl_fstate_add_block(ecl_fstate , ecl_block);
-      block_nr++;
     }
     fortio_close(fortio);
   } else {
     ecl_fstate->files = files;
     {
       int file;
-      int block_nr = 0;
       for (file=0; file < files; file++) {
 	bool at_eof = false;
 	fortio_type *fortio = fortio_open(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
+	int report_nr = -1;
 	
+	if (file_type == ecl_restart_file || file_type == ecl_summary_file)
+	  report_nr = ecl_util_filename_report_nr(ecl_fstate->filelist[file]);
+
+	if (report_nr == 1 && file_type == ecl_summary_file)
+	  report_nr = 0;
+
 	while (!at_eof) {
-	  ecl_block_type *ecl_block = ecl_block_alloc(block_nr /* Should get number from file */ , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+	  ecl_block_type *ecl_block = ecl_block_alloc(report_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
 	  ecl_block_fread(ecl_block , fortio , &at_eof );
+	  if (file_type == ecl_summary_file) 
+	    ecl_block_set_sim_time_summary(ecl_block);
+	  else if (file_type == ecl_restart_file)
+	    ecl_block_set_sim_time_restart(ecl_block);
+	
+	  ecl_block_set_report_nr(ecl_block , report_nr);
 	  ecl_fstate_add_block(ecl_fstate , ecl_block);
-	  block_nr++;
+	  
+	  if (file_type == ecl_summary_file) {
+	    if (report_nr == 0) 
+	      report_nr = 1;
+	    else {
+	      if (!at_eof) {
+		if (ecl_fstate->summary_report_only) {
+		  fprintf(stderr,"%s: several timesteps in one summary file allocated with summary_report_only = true - aborting \n",__func__);
+		  abort();
+		}
+	      }
+	    }
+	  }
 	}
 	fortio_close(fortio);
       }
@@ -356,45 +401,48 @@ void ecl_fstate_scandir_free(int files , char **filelist) {
   free(filelist);
 }
 
+/*****************************************************************/
 
-
-ecl_fstate_type * ecl_fstate_load_unified(const char *filename , int fmt_mode , bool endian_convert) {
+ecl_fstate_type * ecl_fstate_load_unified(const char *filename , bool summary_report_only , ecl_file_type file_type , int fmt_mode , bool endian_convert) {
   ecl_fstate_type *ecl_fstate;
-  ecl_fstate = ecl_fstate_load_static(filename , 1 , NULL , fmt_mode , endian_convert , true);
+  ecl_fstate = ecl_fstate_load_static(filename , 1 , NULL  , summary_report_only , file_type , fmt_mode , endian_convert , true);
   return ecl_fstate;
 }
 
-
-ecl_fstate_type * ecl_fstate_load_multiple(int files , const char **filelist , int fmt_mode , bool endian_convert) {
+ecl_fstate_type * ecl_fstate_load_multiple(int files , const char **filelist , bool summary_report_only , ecl_file_type file_type , int fmt_mode , bool endian_convert) {
   ecl_fstate_type *ecl_fstate;
-  ecl_fstate = ecl_fstate_load_static(NULL , files , filelist , fmt_mode , endian_convert , false);
+  ecl_fstate = ecl_fstate_load_static(NULL , files , filelist , summary_report_only , file_type , fmt_mode , endian_convert , false);
   return ecl_fstate;
 }
 
+ecl_fstate_type * ecl_fstate_load_unified_restart(const char *filename , int fmt_mode , bool endian_convert) {
+  return ecl_fstate_load_unified(filename , false , ecl_restart_file , fmt_mode , endian_convert);
+}
+
+ecl_fstate_type * ecl_fstate_load_multiple_restart(int files , const char **filelist , int fmt_mode , bool endian_convert) {
+  return ecl_fstate_load_multiple(files , filelist , false , ecl_restart_file , fmt_mode , endian_convert);
+}
+
+ecl_fstate_type * ecl_fstate_load_unified_summary(const char *filename , int fmt_mode , bool endian_convert) {
+  return ecl_fstate_load_unified(filename , ecl_summary_file , false , fmt_mode , endian_convert);
+}
+
+ecl_fstate_type * ecl_fstate_load_multiple_summary(int files , const char **filelist , bool summary_report_only , int fmt_mode , bool endian_convert) {
+  return ecl_fstate_load_multiple(files , filelist , ecl_summary_file , summary_report_only , fmt_mode , endian_convert);
+}
+
+/*****************************************************************/
 
 
-
-ecl_block_type * ecl_fstate_get_block(const ecl_fstate_type * ecl_fstate , int istep) {
+ecl_block_type * ecl_fstate_get_block(const ecl_fstate_type * ecl_fstate , int block_nr) {
   ecl_block_type *block = NULL;
-  int i;
 
+  if (block_nr < ecl_fstate->N_blocks && block_nr >= 0) 
+    block = ecl_fstate->block_list[block_nr];
   
-  if (istep < ecl_fstate->N_blocks) {
-    block = ecl_fstate->block_list[istep];
-    if (ecl_block_get_block(block) == istep) 
-      return block;
-  }
-  
-  /* else iterate through the list ... */
-
-  for (i = 0; i < ecl_fstate->N_blocks; i++) {
-    ecl_block_type *tmp_block = ecl_fstate->block_list[i];
-    if (ecl_block_get_block(block) == istep) {
-      block = tmp_block;
-    }
-  }
   return block;
 }
+
 
 ecl_kw_type  * ecl_fstate_get_kw(const ecl_fstate_type * ecl_fstate , int istep , const char *kw) {
   ecl_block_type * ecl_block = ecl_fstate_get_block(ecl_fstate , istep);

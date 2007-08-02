@@ -39,25 +39,20 @@ struct ecl_kw_struct {
 #define ecl_type_len  4
 #define ecl_Ntype     6
 
-/*
+
 static const char ecl_type_map[ecl_Ntype][ecl_type_len + 1] = {{"CHAR\0"},
 							       {"REAL\0"},
 							       {"DOUB\0"},
 							       {"INTE\0"},
 							       {"LOGI\0"},
 							       {"MESS\0"}};
+
+
+/*
+  static const char *ecl_type_map[] = {"CHAR","REAL","DOUB","INTE","LOGI","MESS"};
 */
 
-static const char *ecl_type_map[] = {"CHAR","REAL","DOUB","INTE","MESS"};
 
-
-/*static const char *ecl_type_map[ecl_Ntype] = {"CHAR\0"},
-							       {"REAL\0"},
-							       {"DOUB\0"},
-							       {"INTE\0"},
-							       {"LOGI\0"},
-							       {"MESS\0"}};
-*/
 static const char *ecl_kw_header_write_fmt = " '%-8s' %11d '%-4s'\n";
 
 
@@ -545,6 +540,9 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 	  case(ecl_mess_type):
 	    ecl_kw_fscanf_qstring(&ecl_kw->data[offset] , ecl_kw->read_fmt , 8 , stream);
 	    break;
+	  default:
+	    fprintf(stderr,"Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
+	    abort();
 	  }
 	  offset += ecl_kw->sizeof_ctype;
 	  index++;
@@ -633,7 +631,6 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool fmt_file , bool abort_on_error 
     bool cont = true;
     do {
       long int current_pos = ftell(stream);
-      printf("At position:%d \n",current_pos);
       ecl_kw_fskip(fortio , fmt_file);
       cont = ecl_kw_fseek_kw(kw , fmt_file , false , false , fortio);
       if (!cont) fseek(stream , current_pos , SEEK_SET);

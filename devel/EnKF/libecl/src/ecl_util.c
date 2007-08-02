@@ -5,7 +5,7 @@
 #include <ecl_util.h>
 
 
-int ecl_util_fname2time(const char *filename) {
+int ecl_util_filename_report_nr(const char *filename) {
   const char char_X = 'X';
   const char char_F = 'F';
   const char char_S = 'S';
