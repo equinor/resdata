@@ -16,8 +16,7 @@
 
 struct sched_file_struct {
   hash_type  *month_hash;
-  hash_type  *one_line_kw;
-  hash_type  *command_kw;
+  hash_type  *fixed_record_kw;
   hash_type  *kw_types;
   list_type  *kw_list;
   int         next_date_nr;
@@ -39,16 +38,8 @@ struct sched_file_struct {
 void sched_file_set_start_date(sched_file_type * s , const int * start_date) {
   if (start_date == NULL)
     s->start_date = 0;
-  else {
-    struct tm ts;
-    ts.tm_sec    = 0;
-    ts.tm_min    = 0;
-    ts.tm_hour   = 0;
-    ts.tm_mday   = start_date[0];
-    ts.tm_mon    = start_date[1] - 1;
-    ts.tm_year   = start_date[2] - 1900;
-    s->start_date = mktime( &ts );
-  }
+  else 
+    s->start_date = util_make_time1(start_date[0] , start_date[1] , start_date[2]);
 }
 
 
@@ -71,24 +62,19 @@ sched_file_type * sched_file_alloc(const int *start_date) {
     hash_insert_int(month_hash , "DEC" ,11);
     sched_file->month_hash = month_hash;
   }
+
   {
-    hash_type * one_line_kw = hash_alloc(10);
-    hash_insert_int(one_line_kw , "INCLUDE"  , 1);
-    hash_insert_int(one_line_kw , "RPTSCHED" , 1);
-    hash_insert_int(one_line_kw , "DRSDT"    , 1);
-    hash_insert_int(one_line_kw , "SKIPREST" , 1);
-    hash_insert_int(one_line_kw , "RPTRST"   , 1);
-    hash_insert_int(one_line_kw , "TSTEP"    , 1);
-    sched_file->one_line_kw = one_line_kw;
-  }
-  {
-    hash_type * command_kw = hash_alloc(10);
-    hash_insert_int(command_kw , "SKIPREST" , 1);
-    
-    sched_file->command_kw = command_kw;
+    hash_type * fixed_record_kw = hash_alloc(10);
+    hash_insert_int(fixed_record_kw , "INCLUDE"  , 1);
+    hash_insert_int(fixed_record_kw , "RPTSCHED" , 1);
+    hash_insert_int(fixed_record_kw , "DRSDT"    , 1);
+    hash_insert_int(fixed_record_kw , "SKIPREST" , 0);
+    hash_insert_int(fixed_record_kw , "RPTRST"   , 1);
+    hash_insert_int(fixed_record_kw , "TSTEP"    , 1);
+    hash_insert_int(fixed_record_kw , "TUNING"   , 3);
+    sched_file->fixed_record_kw = fixed_record_kw;
   }
   
-
   {
     hash_type * kw_types = hash_alloc(10);
     hash_insert_int(kw_types , "DATES"    , DATES);
@@ -117,19 +103,19 @@ void sched_file_add_kw__(sched_file_type *sched_file , const sched_kw_type *kw) 
 
 sched_kw_type * sched_file_add_kw(sched_file_type *sched_file , const char *kw_name) {
   sched_type_enum type;
-  bool            one_line_kw = false;
+  bool            fixed_record_kw = false;
   sched_kw_type   *kw;
 
   if (hash_has_key(sched_file->kw_types , kw_name)) 
     type = hash_get_int(sched_file->kw_types , kw_name);
   else {
     type = UNTYPED;
-    if (hash_has_key(sched_file->one_line_kw , kw_name))
-      one_line_kw = true;
+    if (hash_has_key(sched_file->fixed_record_kw , kw_name))
+      fixed_record_kw = true;
     else
-      one_line_kw = false;
+      fixed_record_kw = false;
   }
-  kw = sched_kw_alloc(kw_name , type , one_line_kw , &sched_file->next_date_nr , &sched_file->acc_days , &sched_file->start_date);
+  kw = sched_kw_alloc(kw_name , type , fixed_record_kw , &sched_file->next_date_nr , &sched_file->acc_days , &sched_file->start_date);
   sched_file_add_kw__(sched_file , kw);
   return kw;
 }
@@ -139,8 +125,7 @@ sched_kw_type * sched_file_add_kw(sched_file_type *sched_file , const char *kw_n
 void sched_file_free(sched_file_type *sched_file) {
   list_free(sched_file->kw_list);
   hash_free(sched_file->month_hash);
-  hash_free(sched_file->one_line_kw);
-  hash_free(sched_file->command_kw);
+  hash_free(sched_file->fixed_record_kw);
   hash_free(sched_file->kw_types);
   free(sched_file->dims);
   free(sched_file);
@@ -153,14 +138,15 @@ void sched_file_parse(sched_file_type * sched_file , const char * filename) {
   int             lines , linenr;
   char          **line_list;
   sched_kw_type  *active_kw;
-  bool            one_line_kw;
+  int             record_nr , record_size;
   bool            cont;
   
   sched_util_parse_file(filename , &lines , &line_list);
   linenr      = 0;
-  one_line_kw = false;
   active_kw   = NULL;
   cont        = true;
+  record_nr   = 0;
+  record_size     = -1;
   do {
     const char *line = line_list[linenr];
     if (strncmp(line , "END" , 3) == 0) {
@@ -170,6 +156,7 @@ void sched_file_parse(sched_file_type * sched_file , const char * filename) {
     } else {
       if (active_kw == NULL) {
 	const char * kw_name = line;
+	record_nr            = 0;
 	{
 	  int index = 0;
 	  while (index < strlen(line)) {
@@ -180,12 +167,13 @@ void sched_file_parse(sched_file_type * sched_file , const char * filename) {
 	    index++;
 	  }
 	}
-	if (hash_has_key(sched_file->one_line_kw , kw_name))
-	  one_line_kw = true;
+	if (hash_has_key(sched_file->fixed_record_kw , kw_name))
+	  record_size = hash_get_int(sched_file->fixed_record_kw , kw_name);
 	else
-	  one_line_kw = false;
+	  record_size = -1;
+
 	active_kw = sched_file_add_kw(sched_file , kw_name);
-	if (hash_has_key(sched_file->command_kw , kw_name))
+	if (record_size == 0) /* The keyword is already complete ... */
 	  active_kw = NULL;
       } else {
 	bool complete = true;
@@ -194,9 +182,17 @@ void sched_file_parse(sched_file_type * sched_file , const char * filename) {
 	  active_kw = NULL;
 	else 
 	  sched_kw_add_line(active_kw , line , &sched_file->start_date , sched_file->month_hash , &complete);
+	/*
+	  The complete variable signals that the current record is complete - i.e. the line terminated with a slash ...
+
+	  Not quite sure how well it handels continuation without a slash ??
+	*/
 	
-	if (one_line_kw && complete)
-	  active_kw = NULL;
+	if (record_size >= 1 && complete) {
+	  record_nr++;
+	  if (record_nr == record_size)
+	    active_kw = NULL;
+	}
       }
       
       linenr++;
@@ -241,13 +237,13 @@ void sched_file_init_conn_factor(sched_file_type * sched_file , const char * ini
   fortio_type * fortio = fortio_open(init_file , "r" , endian_flip);
 
   ecl_kw_fseek_kw("INTEHEAD" , fmt_file , true , true , fortio);
-  ihead_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
+  ihead_kw = ecl_kw_fread_alloc(fortio , fmt_file);
 
   ecl_kw_fseek_kw("PERMX" , fmt_file , true , true , fortio);
-  permx_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
+  permx_kw = ecl_kw_fread_alloc(fortio , fmt_file );
 
   ecl_kw_fseek_kw("PERMZ" , fmt_file , true , true , fortio);
-  permz_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
+  permz_kw = ecl_kw_fread_alloc(fortio , fmt_file );
   
   fortio_close(fortio);
 

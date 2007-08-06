@@ -51,6 +51,9 @@ sched_kw_type * sched_kw_alloc(const char * kw_name , sched_type_enum type, bool
   case(COMMAND):
     kw->data = sched_kw_cmd_alloc(kw_name );
     break;
+  default:
+    fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
+    abort();
   }
   return kw;
 }
@@ -77,6 +80,9 @@ void sched_kw_free(sched_kw_type * kw) {
   case(COMMAND):
     sched_kw_cmd_free(kw->data);
     break;
+  default:
+    fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
+    abort();
   }
   free(kw);
 }
@@ -108,6 +114,9 @@ void sched_kw_add_line(sched_kw_type * kw, const char * line, const time_t *star
   case(COMMAND):
     fprintf(stderr,"%s: Internal error - trying to add line info to a keyword which does not take arguments - aborting \n",__func__);
     abort();
+  default:
+    fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -134,6 +143,9 @@ void sched_kw_fprintf(const sched_kw_type * kw , int last_date_nr , time_t last_
   case(COMMAND):
     sched_kw_cmd_fprintf(kw->data , stream);
     break;
+  default:
+    fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -159,6 +171,9 @@ void sched_kw_fwrite(const sched_kw_type *kw , FILE *stream) {
   case(COMMAND):
     sched_kw_cmd_fwrite(kw->data , stream);
     break;
+  default:
+    fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
+    abort();
   }
 }
 
@@ -186,6 +201,9 @@ sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , double *acc_days_ptr , 
   case(COMMAND):
     kw->data = sched_kw_cmd_fread_alloc(stream);
     break;
+  default:
+    fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
+    abort();
   }
   
   {
@@ -223,7 +241,7 @@ void sched_kw_make_hist(const sched_kw_type * kw , hist_type * hist, date_node_t
     sched_kw_dates_make_hist(kw->data  , hist);
     sched_kw_dates_iterate_current(kw->data , current_date);
   }
-  else if (kw->type == WCONHIST)
+  else if (kw->type == WCONHIST) 
     sched_kw_wconhist_make_hist(kw->data , date_node_get_date_nr(*current_date) + 1 , hist);
   
 }

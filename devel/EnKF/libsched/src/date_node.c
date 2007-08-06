@@ -148,7 +148,7 @@ date_node_type * date_node_fread_alloc(const time_t * start_date , int last_date
 
 int date_node_get_date_nr(const date_node_type * date_node) { 
   if (date_node == NULL)
-    return 1;
+    return 0;
   else
     return date_node->date_nr; 
 }

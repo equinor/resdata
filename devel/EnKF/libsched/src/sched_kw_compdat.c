@@ -9,6 +9,8 @@
 #include <sched_util.h>
 #include <stdbool.h>
 
+static  const float Kmin = 1.0;
+
 typedef enum {X , Y , Z}  well_dir_type;       
 typedef enum {OPEN , AUTO , SHUT}   comp_state_type;
 
@@ -86,10 +88,14 @@ static void comp_sched_init_conn_factor(comp_type * comp , const float *permx_fi
     fprintf(stderr,"%s: comp->well_dir = %d - undefined INTERNAL ERROR - aborting \n", __func__ , comp->well_dir);
     abort();
   }
-  if (Keff == 0) {
+  if (Keff <= Kmin) {
     fprintf(stderr,"%s: In well:%s (cell: %d, %d, %d) the effective permeability: is zero - can *not* update connection factor for this cell. K = (%g,%g,%g), Cf = %g \n",__func__ , comp->well , (i+1) , (j+1) , (k+1),
 	    Kx,Ky,Kz,comp->conn_factor);
-    comp->conn_factor__ = 0;
+    comp->conn_factor__ = -1;
+    /* 
+       A negative value for conn_factor__ means that the original value is used for all members,
+       irrespective of permeability updates.
+    */
   } else
     comp->conn_factor__ = comp->conn_factor / Keff;
 }
@@ -97,30 +103,35 @@ static void comp_sched_init_conn_factor(comp_type * comp , const float *permx_fi
 
 
 static void comp_sched_set_conn_factor(comp_type * comp , const float *permx_field, const float *permz_field , const int * dims , const int * index_field) {
-  const int i         = comp->i  - 1;
-  const int j         = comp->j  - 1;
-  const int k         = comp->k1 - 1;
-  const int index_arg = i + j*dims[0] + k*dims[0] * dims[1];
-  const int index     = index_field[index_arg] - 1;
-  const float Kx      = permx_field[index];
-  const float Ky      = permx_field[index];
-  const float Kz      = permz_field[index];
-  
-  float Keff = 0;
-  
-  switch (comp->well_dir) {
-  case(X):
-    Keff = sqrt(Ky * Kz);
-    break;
-  case(Y):
-    Keff = sqrt(Kx * Kz);
-    break;
-  case(Z):
-    Keff = sqrt(Kx * Ky);
-    break;
-  }
-  comp->conn_factor = comp->conn_factor__ * Keff;
+  if (comp->conn_factor__ > 0) {
+    
+    const int i         = comp->i  - 1;
+    const int j         = comp->j  - 1;
+    const int k         = comp->k1 - 1;
+    const int index_arg = i + j*dims[0] + k*dims[0] * dims[1];
+    const int index     = index_field[index_arg] - 1;
+    const float Kx      = permx_field[index];
+    const float Ky      = permx_field[index];
+    const float Kz      = permz_field[index];
+    
+    float Keff = 0;
 
+    switch (comp->well_dir) {
+    case(X):
+      Keff = sqrt(Ky * Kz);
+      break;
+    case(Y):
+      Keff = sqrt(Kx * Kz);
+      break;
+    case(Z):
+      Keff = sqrt(Kx * Ky);
+      break;
+    default:
+      fprintf(stderr,"%s: internal error: variable comp->well_dir has an invalid value - aborting \n",__func__);
+      abort();
+    }
+    comp->conn_factor = comp->conn_factor__ * Keff;
+  }
 }
 
 

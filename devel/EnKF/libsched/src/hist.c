@@ -120,9 +120,10 @@ static void hist_realloc_data(hist_type * hist , int alloc_size) {
 
 
 static void hist_init_var_map(hist_type * hist) {
-  hash_insert_int(hist->var_map , "OPR"  , __RATE_ORAT);
-  hash_insert_int(hist->var_map , "ORAT" , __RATE_ORAT);
-  hash_insert_int(hist->var_map , "WOPR" , __RATE_ORAT);
+  hash_insert_int(hist->var_map , "OPR"   , __RATE_ORAT);
+  hash_insert_int(hist->var_map , "ORAT"  , __RATE_ORAT);
+  hash_insert_int(hist->var_map , "WOPR"  , __RATE_ORAT);
+  hash_insert_int(hist->var_map , "WOPRH" , __RATE_ORAT);  /* History */
 
   hash_insert_int(hist->var_map , "GRAT" , __RATE_GRAT);
   hash_insert_int(hist->var_map , "GPR"  , __RATE_GRAT);
@@ -132,9 +133,16 @@ static void hist_init_var_map(hist_type * hist) {
   hash_insert_int(hist->var_map , "WPR"  , __RATE_WRAT);
   hash_insert_int(hist->var_map , "WWPR" , __RATE_WRAT);
 
+  hash_insert_int(hist->var_map , "WCT"  , __RATE_WCT);
+  hash_insert_int(hist->var_map , "WWCT" , __RATE_WCT); 
+  hash_insert_int(hist->var_map , "WWCTH", __RATE_WCT);
+
+  hash_insert_int(hist->var_map , "GOR"   , __RATE_GOR);
+  hash_insert_int(hist->var_map , "WGOR"  , __RATE_GOR);
+  hash_insert_int(hist->var_map , "WGORH" , __RATE_GOR);
+
   hash_insert_int(hist->var_map , "BHP" , __RATE_BHP);
   hash_insert_int(hist->var_map , "THP" , __RATE_THP);
-  
 }
 
 
@@ -268,8 +276,12 @@ void hist_add_date(hist_type * hist, const date_node_type * date) {
 void hist_add_rate(hist_type * hist , int date_nr , const rate_type * rate) {
   hist_node_type * hist_node = hist_get_new_node(hist , date_nr);
   if (hash_has_key(hist_node->data , rate_node_get_well_ref(rate))) {
-    fprintf(stderr,"%s: INTERNAL error - tried adding the same well rate twice - aborting \n",__func__);
-    abort();
+    fprintf(stderr,"%s: Warning: tried to add well rate for:%s twice - only last instance stored\n",__func__ , rate_node_get_well_ref(rate));
+    /*
+      fprintf(stderr,"%s: INTERNAL error - tried adding the same well:%s rate twice - aborting \n",__func__ , );
+      abort();
+    */
+    hash_del(hist_node->data , rate_node_get_well_ref(rate));
   }
   
   hash_insert_copy(hist_node->data , rate_node_get_well_ref(rate) , rate , rate_copyc__ , rate_free__);
@@ -359,13 +371,38 @@ int hist_get_var_index(const hist_type * hist , const char * var) {
 
 
 
-double hist_get(const hist_type * hist , int time_step , const char * well , const char * var) {
+double hist_get(const hist_type * hist , int report_step , const char * well , const char * var) {
   bool error;
   bool def;
   
-  return hist_iget(hist , time_step , well , hist_get_var_index(hist , var) , &error , &def);
+  return hist_iget(hist , report_step , well , hist_get_var_index(hist , var) , &error , &def);
 }
   
+
+char ** hist_alloc_well_list(const hist_type *hist,  int report_step) {
+  int Nwells              = hash_get_size(hist->well_hash);
+  char ** total_well_list = hash_alloc_keylist(hist->well_hash);
+  char ** well_list;
+  int active = 0;
+  int iw;
+  for (iw = 0; iw < Nwells; iw++) {
+    if (hist_get_rate_node(hist , report_step , total_well_list[iw])) 
+      active++;
+  }
+  well_list = malloc(active * sizeof * well_list);
+
+  active = 0;
+  for (iw = 0; iw < Nwells; iw++) {
+    if (hist_get_rate_node(hist , report_step , total_well_list[iw])) {
+      well_list[active] = util_alloc_string_copy(total_well_list[iw]);
+      active++;
+    }
+  }
+
+  hash_free_ext_keylist(hist->well_hash , total_well_list);
+  return well_list;
+}
+
 
 
 void hist_free(hist_type *hist) {

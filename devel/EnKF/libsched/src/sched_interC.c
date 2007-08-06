@@ -149,13 +149,9 @@ static ecl_sum_type * ecl_diag_avg_load(const char * eclbase_dir , const char * 
   }
 
   if (unified) {
-    char unif_file[512];
-    if (fmt_file) 
-      sprintf(unif_file , "%s/%s.FUNSMRY" , eclbase_dir , eclbase_name);
-    else
-      sprintf(unif_file , "%s/%s.UNSMRY" , eclbase_dir , eclbase_name);
-    
+    char * unif_file = ecl_util_alloc_filename( eclbase_dir , eclbase_name , fmt_file , -1 , ecl_unified_summary_file);
     sum = ecl_sum_load_unified(spec_file , unif_file , fmt_mode , true);
+    free(unif_file);
   } else {
     int files;
     char **fileList;
@@ -185,15 +181,15 @@ static void ecl_diag_avg_production(const char *out_path , const hist_type * his
       stream = util_fopen(well_file , "w");
       for (istep = 0; istep < size; istep++) {
 	float time_value;
-	ecl_sum_iget2(avg , istep , 0 , &time_value);
+	ecl_sum_iget2(avg , istep , -1 , 0 , &time_value);
 	fprintf(stream , "%04d  %8.2f" , istep , time_value);
 	for (ivar = 0; ivar < nvar; ivar++) {
 	  float history_value , avg_value , std_value;
 	  const char *var = var_list[ivar];
 	  
 	  history_value = hist_get(hist , istep + 1 , well , var);
-	  ecl_sum_iget1(avg , istep , well ,  var , &avg_value);
-	  ecl_sum_iget1(std , istep , well ,  var , &std_value);
+	  ecl_sum_iget1(avg , -1, istep , well ,  var , false, &avg_value);
+	  ecl_sum_iget1(std , -1, istep , well ,  var , false, &std_value);
 	  
 	  fprintf(stream , "%16.7f   %16.7f  %16.7f " , history_value , avg_value , std_value);
 	}
@@ -254,11 +250,12 @@ void ecl_diag_avg_production_interactive(const char *out_path , const char * ecl
 }
 	  
 
-void sched_inter_hist_get__(const int *time_step , const char * _well , const int * well_len, const char * _var , const int * var_len , double * value) {
+
+void sched_inter_hist_get__(const int *report_step , const char * _well , const int * well_len, const char * _var , const int * var_len , double * value) {
   char *var  = util_alloc_cstring(_var  , var_len);
   char *well = util_alloc_cstring(_well , well_len);
 
-  *value = hist_get(GLOBAL_HIST , *time_step , well , var);
+  *value = hist_get(GLOBAL_HIST , *report_step , well , var);
   
   free(var);
   free(well);
