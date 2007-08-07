@@ -6,7 +6,7 @@
 #include <time.h>
 #include <sched_kw_dates.h>
 
-typedef enum {WCONHIST , UNTYPED , DATES , COMPDAT , COMMAND , TSTEP} sched_type_enum;
+typedef enum {WCONHIST=0 , UNTYPED , DATES , COMPDAT , TSTEP} sched_type_enum;
 
 typedef void  (add_line_ftype)  (void * , int , const char **);
 typedef void  (free_ftype)      (void *);

@@ -5,6 +5,9 @@
 #include <sched_util.h>
 #include <hist.h>
 #include <util.h>
+#include <sched_file.h>
+#include <sched_kw.h>
+#include <ecl_sum.h>
 #include "rate_node.h"
 #include "date_node.h"
 
@@ -183,7 +186,7 @@ void hist_fwrite(const hist_type * hist , FILE *stream) {
 
 
 hist_type * hist_fread_alloc(FILE *stream) {
-  hist_type * hist = hist_alloc(0);
+ hist_type * hist = hist_alloc(0);
  fread(&hist->size       , sizeof hist->size       , 1 , stream);
  fread(&hist->alloc_size , sizeof hist->alloc_size , 1 , stream);
  fread(&hist->start_date , sizeof hist->start_date , 1 , stream);
@@ -403,6 +406,25 @@ char ** hist_alloc_well_list(const hist_type *hist,  int report_step) {
   return well_list;
 }
 
+
+hist_type * hist_alloc_from_schedule(const sched_file_type *s) {
+  hist_type *hist              = hist_alloc(sched_file_get_start_date(s));
+  list_node_type *list_node    = list_get_head(sched_file_get_kw_list(s));
+  date_node_type *current_date = NULL;
+  
+  while (list_node != NULL) {
+    const sched_kw_type * sched_kw = list_node_value_ptr(list_node);
+    sched_kw_make_hist(sched_kw , hist , &current_date );
+    list_node = list_node_get_next(list_node);
+  }
+
+  return hist;
+}
+
+
+hist_type * hist_alloc_from_summary(const ecl_sum_type * sum) {
+  return NULL;
+}
 
 
 void hist_free(hist_type *hist) {

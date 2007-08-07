@@ -5,10 +5,11 @@
 #include <sched_file.h>
 #include <ecl_fstate.h>
 #include <ecl_sum.h>
+#include <hist.h>
 
 
-
-static hist_type *GLOBAL_HIST = NULL;
+static const bool ENDIAN_CONVERT  = true;
+static hist_type *GLOBAL_HIST     = NULL;
 
 /*****************************************************************/
 
@@ -33,6 +34,7 @@ void sched_parse_wconhist__(const char * _schedule_dump_file , const int * sched
   free(obs_path);
   free(obs_file);
 }
+
 
 
 void sched_update_compdat_fprintf_static(const char * _schedule_dump_file , const int * schedule_dump_len , 
@@ -92,7 +94,7 @@ void sched_update_compdat_fprintf__(const char * _schedule_dump_file , const int
 }
 
 
-
+ 
 
 void sched_init__(const char * _schedule_file  	   , const int * schedule_file_len,
 		  const char * _schedule_dump_file , const int * schedule_dump_len,
@@ -122,7 +124,7 @@ void sched_init__(const char * _schedule_file  	   , const int * schedule_file_l
       sched_file_fwrite(s , stream);
       fclose(stream);
     }
-    GLOBAL_HIST = sched_file_alloc_hist(s);
+    GLOBAL_HIST = hist_alloc_from_schedule(s);
     sched_file_free(s);
     free(init_file);
   }
@@ -135,37 +137,37 @@ void sched_init__(const char * _schedule_file  	   , const int * schedule_file_l
 /*****************************************************************/
 
 
-static ecl_sum_type * ecl_diag_avg_load(const char * eclbase_dir , const char * eclbase_name , bool fmt_file , bool unified) {
-  char spec_file[512];
+static ecl_sum_type * ecl_diag_avg_load(const char * eclbase_dir , const char * eclbase_name , bool fmt_file , bool unified , bool endian_convert) {
+  char *spec_file;
   ecl_sum_type *sum;
   int fmt_mode;
+  bool report_mode = false;
 
-  if (fmt_file) {
+  if (fmt_file) 
     fmt_mode = ECL_FORMATTED;
-    sprintf(spec_file , "%s/%s.FSMSPEC" , eclbase_dir , eclbase_name);
-  } else {
+  else 
     fmt_mode = ECL_BINARY;
-    sprintf(spec_file , "%s/%s.SMSPEC" , eclbase_dir , eclbase_name);
-  }
 
+  spec_file = ecl_util_alloc_filename(eclbase_dir , eclbase_name , fmt_file , -1 , ecl_summary_header_file);
   if (unified) {
     char * unif_file = ecl_util_alloc_filename( eclbase_dir , eclbase_name , fmt_file , -1 , ecl_unified_summary_file);
-    sum = ecl_sum_load_unified(spec_file , unif_file , fmt_mode , true);
+    sum = ecl_sum_fread_alloc(spec_file , 1 , (const char **) &unif_file , report_mode , endian_convert);
     free(unif_file);
   } else {
     int files;
     char **fileList;
-    fileList  = ecl_sum_alloc_filelist(eclbase_dir , eclbase_name , fmt_file , &files);
-    sum = ecl_sum_load_multiple(spec_file , files , (const char **) fileList , fmt_mode , true);
+    fileList  = ecl_util_alloc_filelist(eclbase_dir , eclbase_name , ecl_summary_file , fmt_file , &files);
+    sum       = ecl_sum_fread_alloc(spec_file , files , (const char **) fileList , report_mode , endian_convert);
     util_free_string_list(fileList , files);
   }
+  free(spec_file);
   return sum;
 }
 
 
-static void ecl_diag_avg_production(const char *out_path , const hist_type * hist , const char * eclbase_dir , const char * eclbase_avg , const char * eclbase_std , int nwell , const char **well_list , int nvar , const char **var_list , bool fmt_file , bool unified) {
-  ecl_sum_type *avg = ecl_diag_avg_load(eclbase_dir , eclbase_avg , fmt_file , unified);
-  ecl_sum_type *std = ecl_diag_avg_load(eclbase_dir , eclbase_std , fmt_file , unified);
+static void ecl_diag_avg_production(const char *out_path , const hist_type * hist , const char * eclbase_dir , const char * eclbase_avg , const char * eclbase_std , int nwell , const char **well_list , int nvar , const char **var_list , bool fmt_file , bool unified , bool endian_convert) {
+  ecl_sum_type *avg = ecl_diag_avg_load(eclbase_dir , eclbase_avg , fmt_file , unified, endian_convert);
+  ecl_sum_type *std = ecl_diag_avg_load(eclbase_dir , eclbase_std , fmt_file , unified, endian_convert);
   int iwell, ivar , size;
 
   size = ecl_sum_get_size(avg);
@@ -246,7 +248,7 @@ void ecl_diag_avg_production_interactive(const char *out_path , const char * ecl
   }
   /*var_list = defvar_list;*/
   nvar     = defvar_N;
-  ecl_diag_avg_production(out_path , GLOBAL_HIST , eclbase_dir , eclbase_avg , eclbase_std , nwell , (const char **) well_list , nvar , defvar_list , fmt_file , unified);
+  ecl_diag_avg_production(out_path , GLOBAL_HIST , eclbase_dir , eclbase_avg , eclbase_std , nwell , (const char **) well_list , nvar , defvar_list , fmt_file , unified , ENDIAN_CONVERT);
 }
 	  
 

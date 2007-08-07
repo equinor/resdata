@@ -35,6 +35,11 @@ struct sched_file_struct {
   start_date[2] = year
 */
 
+
+list_type * sched_file_get_kw_list(const sched_file_type * s) { return s->kw_list; }
+
+time_t sched_file_get_start_date(const sched_file_type * s) { return s->start_date; }
+
 void sched_file_set_start_date(sched_file_type * s , const int * start_date) {
   if (start_date == NULL)
     s->start_date = 0;
@@ -170,7 +175,11 @@ void sched_file_parse(sched_file_type * sched_file , const char * filename) {
 	if (hash_has_key(sched_file->fixed_record_kw , kw_name))
 	  record_size = hash_get_int(sched_file->fixed_record_kw , kw_name);
 	else
+	  /*
+	    Variable lengt keyword like e.g. COMPDAT.
+	  */
 	  record_size = -1;
+
 
 	active_kw = sched_file_add_kw(sched_file , kw_name);
 	if (record_size == 0) /* The keyword is already complete ... */
@@ -372,19 +381,6 @@ void sched_file_fprintf_days_dat(const sched_file_type *s , const char *days_fil
 
 
 
-hist_type * sched_file_alloc_hist(const sched_file_type *s) {
-  hist_type *hist              = hist_alloc(s->start_date);
-  list_node_type *list_node    = list_get_head(s->kw_list);
-  date_node_type *current_date = NULL;
-  
-  while (list_node != NULL) {
-    const sched_kw_type * sched_kw = list_node_value_ptr(list_node);
-    sched_kw_make_hist(sched_kw , hist , &current_date );
-    list_node = list_node_get_next(list_node);
-  }
-
-  return hist;
-}
 
 
 

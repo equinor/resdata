@@ -9,17 +9,12 @@
 #include <sched_kw_dates.h>
 #include <sched_kw_tstep.h>
 #include <sched_kw_untyped.h>
-#include <sched_kw_cmd.h>
-
-
 
 
 struct sched_kw_struct {
   sched_type_enum    type;
   void              *data;
 };
-
-
 
 
 /*****************************************************************/
@@ -48,9 +43,6 @@ sched_kw_type * sched_kw_alloc(const char * kw_name , sched_type_enum type, bool
   case(UNTYPED):
     kw->data = sched_kw_untyped_alloc(kw_name , one_line_kw);
     break;
-  case(COMMAND):
-    kw->data = sched_kw_cmd_alloc(kw_name );
-    break;
   default:
     fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
     abort();
@@ -76,9 +68,6 @@ void sched_kw_free(sched_kw_type * kw) {
     break;
   case(UNTYPED):
     sched_kw_untyped_free(kw->data);
-    break;
-  case(COMMAND):
-    sched_kw_cmd_free(kw->data);
     break;
   default:
     fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
@@ -111,11 +100,9 @@ void sched_kw_add_line(sched_kw_type * kw, const char * line, const time_t *star
   case(UNTYPED):
     sched_kw_untyped_add_line(kw->data , line);
     break;
-  case(COMMAND):
-    fprintf(stderr,"%s: Internal error - trying to add line info to a keyword which does not take arguments - aborting \n",__func__);
-    abort();
   default:
-    fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
+    fprintf(stderr,"%s: internal error - unknown value for kw->type:%d - aborting \n",__func__ , kw->type);
+    fprintf(stderr,"%s: current line: \"%s\" \n",__func__ , line);
     abort();
   }
 }
@@ -139,9 +126,6 @@ void sched_kw_fprintf(const sched_kw_type * kw , int last_date_nr , time_t last_
     break;
   case(UNTYPED):
     sched_kw_untyped_fprintf(kw->data , stream);
-    break;
-  case(COMMAND):
-    sched_kw_cmd_fprintf(kw->data , stream);
     break;
   default:
     fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
@@ -168,11 +152,8 @@ void sched_kw_fwrite(const sched_kw_type *kw , FILE *stream) {
   case(UNTYPED):
     sched_kw_untyped_fwrite(kw->data , stream);
     break;
-  case(COMMAND):
-    sched_kw_cmd_fwrite(kw->data , stream);
-    break;
   default:
-    fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);
+    fprintf(stderr,"%s: internal error - unknown value for kw->type=%d - aborting \n",__func__ , kw->type);
     abort();
   }
 }
@@ -197,9 +178,6 @@ sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , double *acc_days_ptr , 
     break;
   case(UNTYPED):
     kw->data = sched_kw_untyped_fread_alloc(stream);
-    break;
-  case(COMMAND):
-    kw->data = sched_kw_cmd_fread_alloc(stream);
     break;
   default:
     fprintf(stderr,"%s: internal error - unknown value for kw->type - aborting \n",__func__);

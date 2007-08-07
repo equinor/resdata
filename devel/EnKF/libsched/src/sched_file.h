@@ -3,11 +3,12 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <hist.h>
+#include <list.h>
 
 typedef struct sched_file_struct sched_file_type;
 
-hist_type       * sched_file_alloc_hist(const sched_file_type *);
+list_type       * sched_file_get_kw_list(const sched_file_type * );
+time_t            sched_file_get_start_date(const sched_file_type * );
 void 		  sched_file_init_conn_factor(sched_file_type * , const char *  , bool , const int * );
 void 		  sched_file_set_conn_factor(sched_file_type *  , const float * , const float * , const int * );
 sched_file_type * sched_file_alloc(const int *);
