@@ -84,10 +84,10 @@ const int * field_config_alloc_index_map1(const char * EGRID_file , bool endian_
 
   fortio_type * fortio = fortio_open(EGRID_file , "r" , endian_flip);
   ecl_kw_fseek_kw("GRIDHEAD" , fmt_file , true , true , fortio);
-  ihead_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
+  ihead_kw = ecl_kw_fread_alloc(fortio , fmt_file);
 
   ecl_kw_fseek_kw("ACTNUM" , fmt_file , true , true , fortio);
-  actnum_kw = ecl_kw_fread_alloc(fortio , fmt_file , endian_flip );
+  actnum_kw = ecl_kw_fread_alloc(fortio , fmt_file);
   fortio_close(fortio);
 
   ecl_kw_iget(ihead_kw , 1 , nx);

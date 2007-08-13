@@ -109,7 +109,6 @@ bool enkf_node_include_type(const enkf_node_type * enkf_node, int mask) {
 
 
 enkf_impl_type enkf_node_get_impl_type(const enkf_node_type * enkf_node) {
-  printf("Ber om impl_type til %s -> %d \n",enkf_node_get_key_ref(enkf_node) , enkf_config_node_get_impl_type(enkf_node->config));
   return enkf_config_node_get_impl_type(enkf_node->config);
 }
 

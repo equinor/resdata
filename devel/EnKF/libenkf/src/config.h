@@ -13,6 +13,8 @@ enkf_var_type var_type;   \
 char * ensfile;           \
 char * eclfile;          
 
+#define VOID_CONFIG_FREE(prefix)            void prefix ## _config_free__(void *void_arg) { prefix ## _config_free((prefix ## _config_type *) void_arg); }
+#define VOID_CONFIG_FREE_HEADER(prefix)     void prefix ## _config_free__(void *)
 #define GET_SERIAL_SIZE(prefix)             int prefix ## _config_get_serial_size (const prefix ## _config_type *arg) { return arg->serial_size; }
 #define GET_SERIAL_SIZE_HEADER(prefix)      int prefix ## _config_get_serial_size (const prefix ## _config_type *)
 #define VOID_GET_SERIAL_SIZE(prefix)        int prefix ## _config_get_serial_size__ (const void *void_arg) { return prefix ## _config_get_serial_size((const prefix ## _config_type *) void_arg); }

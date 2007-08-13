@@ -10,11 +10,18 @@
 #include <rms_file.h>
 #include <rms_tagkey.h>
 
+
+#define  DEBUG
+#define  TARGET_TYPE FIELD
+#include "enkf_debug.h"
+
+
 GET_DATA_SIZE_HEADER(field);
 
 /*****************************************************************/
 
 struct field_struct {
+  DEBUG_DECLARE
   const field_config_type * config;
   double * data;
 };
@@ -45,6 +52,7 @@ field_type * field_alloc(const field_config_type * field_config) {
   field->config = field_config;
   field->data = NULL;
   field_realloc_data(field);
+  DEBUG_ASSIGN(field)
   return field;
 }
 

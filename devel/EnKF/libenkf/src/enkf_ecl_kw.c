@@ -6,8 +6,14 @@
 #include <enkf_ecl_kw.h>
 #include <enkf_ecl_kw_config.h>
 
+#define  DEBUG
+#define  TARGET_TYPE FIELD
+#include "enkf_debug.h"
+
+
 
 struct enkf_ecl_kw_struct {
+  DEBUG_DECLARE
   ecl_type_enum                  ecl_type;
   const enkf_ecl_kw_config_type  *config;
   double                         *data;
@@ -24,6 +30,7 @@ static enkf_ecl_kw_type * enkf_ecl_kw_alloc2(const enkf_ecl_kw_config_type *conf
   
   enkf_kw->config     = config;
   enkf_ecl_kw_realloc_data(enkf_kw);
+  DEBUG_ASSIGN(enkf_kw)
   return enkf_kw;
 }
 

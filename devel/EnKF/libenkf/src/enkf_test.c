@@ -12,7 +12,7 @@
 #include <enkf_path.h>
 #include <enkf_types.h>
 #include <field_config.h>
-
+#include <well_config.h>
 
 
 int main(void) {
@@ -52,15 +52,18 @@ int main(void) {
   enkf_config_add_type(config , "RV"    , ecl_restart , FIELD , 
 		       field_config_alloc("RV"    , ecl_float_type       , nx , ny , nz , active_size , index_map , 1 , NULL , "RV")       , 
 		       field_config_free__ , field_config_get_serial_size__);
-
+  
+  enkf_config_add_well(config , "B-33A" , "well.ens" , 3 , (const char *[3]) {"WGPR" , "WWPR" , "WOPR"});
+  
   
   state = enkf_state_alloc(config , "ECLIPSE" , false);
-  enkf_state_add_node(state , MULTZ , "MULTZ");
-  enkf_state_add_node(state , EQUIL , "EQUIL");
+  enkf_state_add_node(state , "MULTZ"); 
+  enkf_state_add_node(state , "EQUIL");
 
   enkf_state_iset_eclpath(state , 0 , "RunPATH");
   enkf_state_iset_eclpath(state , 1 , "tmpdir_0001");
   
+  enkf_state_load_ecl_summary(state , false , 51);
   enkf_state_load_ecl_restart(state , false , 51);
 
   enkf_state_iset_enspath(state , 0 , "Ensemble");
@@ -74,6 +77,7 @@ int main(void) {
   
   enkf_state_iset_eclpath(state , 1 , "tmpdir_0002");
   enkf_state_ecl_write(state , all_types , 51);
+  
   enkf_state_swapin(state , ecl_static);
 
   {

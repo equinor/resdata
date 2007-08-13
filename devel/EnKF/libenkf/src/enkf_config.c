@@ -9,7 +9,7 @@
 #include <pathv.h>
 #include <ecl_static_kw_config.h>
 #include <enkf_types.h>
-
+#include <well_config.h>
 
   
 
@@ -19,15 +19,12 @@ struct enkf_config_struct {
   int               enspath_depth;
   int               eclpath_depth;
   bool              endian_swap;
+  int               Nwells;
+  char            **well_list;
 };
 
 
-
-
 /*****************************************************************/
-
-
-
 
 
 static int enkf_config_get_serial_size__(const enkf_config_type * config , int mask) {
@@ -64,12 +61,16 @@ enkf_impl_type enkf_config_impl_type(const enkf_config_type *enkf_config, const 
 
 
 /*****************************************************************/
+static void enkf_config_realloc_well_list(enkf_config_type * enkf_config) {
+  enkf_config->well_list = realloc(enkf_config->well_list , enkf_config->Nwells * sizeof * enkf_config->well_list);
+}
 
 bool enkf_config_get_endian_swap(const enkf_config_type * enkf_config) { return enkf_config->endian_swap; }
 
 int enkf_config_get_eclpath_depth(const enkf_config_type * enkf_config) { return enkf_config->eclpath_depth; }
 
 int enkf_config_get_enspath_depth(const enkf_config_type * enkf_config) { return enkf_config->enspath_depth; }
+
 
 enkf_config_type * enkf_config_alloc(int enspath_depth , int eclpath_depth, bool endian_swap) {
   enkf_config_type * enkf_config = malloc(sizeof *enkf_config);
@@ -78,6 +79,9 @@ enkf_config_type * enkf_config_alloc(int enspath_depth , int eclpath_depth, bool
   enkf_config->eclpath_depth = eclpath_depth;
   enkf_config->enspath_depth = enspath_depth;
   enkf_config->endian_swap   = endian_swap;
+  enkf_config->Nwells        = 0;
+  enkf_config->well_list     = NULL;
+  enkf_config_realloc_well_list(enkf_config);
   return enkf_config;
 }
 
@@ -87,6 +91,24 @@ bool enkf_config_has_key(const enkf_config_type * enkf_config , const char * key
   return hash_has_key(enkf_config->config_hash , key);
 }
 
+
+const char ** enkf_config_get_well_list_ref(const enkf_config_type * config , int *Nwells) {
+  *Nwells = config->Nwells;
+  return (const char **) config->well_list;
+}
+
+
+void enkf_config_add_well(enkf_config_type * enkf_config , const char *well_name , const char * ens_name , int size, const char ** var_list) {
+
+  enkf_config_add_type(enkf_config , well_name , ecl_summary , WELL,
+		       well_config_alloc(well_name , ens_name , size , var_list),
+		       well_config_free__ , 
+		       well_config_get_serial_size__);
+
+  enkf_config->Nwells++;
+  enkf_config_realloc_well_list(enkf_config);
+  enkf_config->well_list[enkf_config->Nwells - 1] = util_alloc_string_copy(well_name);
+}
 
 
 
@@ -105,16 +127,16 @@ void enkf_config_add_type(enkf_config_type * enkf_config,
   {
     enkf_config_node_type * node = enkf_config_node_alloc(enkf_type , impl_type , data , freef , get_serial_size);
     hash_insert_hash_owned_ref(enkf_config->config_hash , key , node , enkf_config_node_free__);
-    printf("Setter:%s -> %d \n",key , impl_type);
   }
 }
 
 
+			  
 
 void enkf_config_add_type0(enkf_config_type * enkf_config , const char *key , int size, enkf_var_type enkf_type , enkf_impl_type impl_type) {
   switch(impl_type) {
   case(STATIC):
-    enkf_config_add_type(enkf_config , key , enkf_type , impl_type , ecl_static_kw_config_alloc(size , key , key) , ecl_static_kw_config_free__ , ecl_static_kw_config_get_serial_size__);
+    enkf_config_add_type(enkf_config , key , enkf_type , impl_type , ecl_static_kw_config_alloc(size , key , key) , ecl_static_kw_config_free__ , NULL /*ecl_static_kw_config_get_serial_size__*/);
     break;
   case(FIELD):
     /*
@@ -131,13 +153,20 @@ void enkf_config_add_type0(enkf_config_type * enkf_config , const char *key , in
 
 
 
+
 void enkf_config_free(enkf_config_type * enkf_config) {  
   hash_free(enkf_config->config_hash);
+  {
+    int i;
+    for (i=0; i < enkf_config->Nwells; i++)
+      free(enkf_config->well_list[i]);
+    free(enkf_config->well_list);
+  }
   free(enkf_config);
 }
 
 
-const void * enkf_config_get_ref(const enkf_config_type * config, const char * key) {
+const enkf_config_node_type * enkf_config_get_ref(const enkf_config_type * config, const char * key) {
   if (hash_has_key(config->config_hash , key)) {
     enkf_config_node_type * node = hash_get(config->config_hash , key);
     return node;

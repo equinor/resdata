@@ -31,9 +31,9 @@ void func ## __(void *void_arg) { \
 void prefix ## _isqrt(void * void_arg) {            \
 prefix ## _type *arg = (prefix ## _type *) void_arg;\
 const prefix ## _config_type *config = arg->config; \
-const int data_size = config->data_size;                      \
+const int data_size = config->data_size;            \
 int i;                                              \
-for (i=0; i < data_size; i++)                            \
+for (i=0; i < data_size; i++)                       \
  arg->data[i] = sqrt(arg->data[i]);                 \
 }
 #define SQRT_FUNC_HEADER(prefix) void prefix ## _isqrt(void * )

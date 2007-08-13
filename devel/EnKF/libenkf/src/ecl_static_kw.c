@@ -59,11 +59,11 @@ void ecl_static_kw_fread(ecl_static_kw_type * ecl_static_kw , const char * file)
     abort();
   }
   {
-    const bool endian_convert = true;  /* SHould be stored in config somewhere ... */ 
+    const bool endian_convert = true;  /* Should be stored in config somewhere ... */ 
     const bool fmt_file       = false;
-
+    
     fortio_type * fortio = fortio_open(file , "r" , endian_convert );
-    ecl_static_kw->ecl_kw = ecl_kw_fread_alloc( fortio , fmt_file , endian_convert);
+    ecl_static_kw->ecl_kw = ecl_kw_fread_alloc( fortio , fmt_file);
     fortio_close(fortio);
   }
 }
