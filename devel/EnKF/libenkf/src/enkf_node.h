@@ -71,6 +71,6 @@ void   enkf_node_scale(enkf_node_type *   , double );
 void   enkf_node_iadd(enkf_node_type *    , const enkf_node_type * );
 void   enkf_node_iaddsqr(enkf_node_type * , const enkf_node_type * );
 void   enkf_node_imul(enkf_node_type *    , const enkf_node_type * );
-
+const  enkf_config_node_type * enkf_node_get_config(const enkf_node_type * );
 
 #endif

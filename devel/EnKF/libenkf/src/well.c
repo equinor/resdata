@@ -90,6 +90,7 @@ void well_fwrite(const well_type * well , const char *file) {
 }
 
 
+
 void well_ens_read(well_type * well , const char *path) {
   char * ensfile = util_alloc_full_path(path , well_config_get_ensfile_ref(well->config));
   well_fread(well , ensfile);

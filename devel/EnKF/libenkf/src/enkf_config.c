@@ -10,6 +10,10 @@
 #include <ecl_static_kw_config.h>
 #include <enkf_types.h>
 #include <well_config.h>
+#include <field_config.h>
+#include <equil_config.h>
+#include <multz_config.h>
+#include <multflt_config.h>
 
   
 
@@ -27,23 +31,6 @@ struct enkf_config_struct {
 /*****************************************************************/
 
 
-static int enkf_config_get_serial_size__(const enkf_config_type * config , int mask) {
-  int size = 0;
-  int i;
-  char **keylist = hash_alloc_keylist(config->config_hash);
-  for (i= 0; i < hash_get_size(config->config_hash); i++) {
-    enkf_config_node_type * config_node = hash_get(config->config_hash , keylist[i]);
-    if (enkf_config_node_include_type(config_node , mask))
-      size += enkf_config_node_get_serial_size(config_node);
-  }
-  hash_free_ext_keylist(config->config_hash , keylist);
-  return size;
-}
-
-
-int enkf_config_get_serial_size(const enkf_config_type * config) {
-  return enkf_config_get_serial_size__(config , parameter + ecl_restart + ecl_summary);
-}
 
 
 enkf_impl_type enkf_config_impl_type(const enkf_config_type *enkf_config, const char * ecl_kw_name) {
@@ -101,9 +88,8 @@ const char ** enkf_config_get_well_list_ref(const enkf_config_type * config , in
 void enkf_config_add_well(enkf_config_type * enkf_config , const char *well_name , const char * ens_name , int size, const char ** var_list) {
 
   enkf_config_add_type(enkf_config , well_name , ecl_summary , WELL,
-		       well_config_alloc(well_name , ens_name , size , var_list),
-		       well_config_free__ , 
-		       well_config_get_serial_size__);
+		       well_config_alloc(well_name , ens_name , size , var_list));
+
 
   enkf_config->Nwells++;
   enkf_config_realloc_well_list(enkf_config);
@@ -117,17 +103,57 @@ void enkf_config_add_type(enkf_config_type * enkf_config,
 			  const char * key , 
 			  enkf_var_type enkf_type , 
 			  enkf_impl_type impl_type , 
-			  const void *data , 
-			  config_free_ftype * freef , 
-			  config_get_serial_size_ftype *get_serial_size) {
+			  const void *data) {
   if (enkf_config_has_key(enkf_config , key)) {
     fprintf(stderr,"%s: a configuration object:%s has already been added - aborting \n",__func__ , key);
     abort();
   }
+
   {
-    enkf_config_node_type * node = enkf_config_node_alloc(enkf_type , impl_type , data , freef , get_serial_size);
-    hash_insert_hash_owned_ref(enkf_config->config_hash , key , node , enkf_config_node_free__);
+    config_free_ftype              * freef;
+    config_get_serial_size_ftype   * get_serial_size;
+    config_set_serial_offset_ftype * set_serial_offset;
+    switch(impl_type) {
+    case(FIELD):
+      freef             = field_config_free__;
+      get_serial_size   = field_config_get_serial_size__;
+      set_serial_offset = field_config_set_serial_offset__;
+      break;
+    case(MULTZ):
+      freef             = multz_config_free__;
+      get_serial_size   = multz_config_get_serial_size__;
+      set_serial_offset = multz_config_set_serial_offset__;
+      break;
+    case(WELL):
+      freef             = well_config_free__;
+      get_serial_size   = well_config_get_serial_size__;
+      set_serial_offset = well_config_set_serial_offset__;
+      break;
+    case(MULTFLT):
+      freef             = multflt_config_free__;
+      get_serial_size   = multflt_config_get_serial_size__;
+      set_serial_offset = multflt_config_set_serial_offset__;
+      break;
+    case(EQUIL):
+      freef             = equil_config_free__;
+      get_serial_size   = equil_config_get_serial_size__;
+      set_serial_offset = equil_config_set_serial_offset__;
+      break;
+    case(STATIC):
+      freef             = ecl_static_kw_config_free__;
+      get_serial_size   = NULL;
+      set_serial_offset = NULL;
+      break;
+    default:
+      fprintf(stderr,"%s : invalid implementation type: %d - aborting \n",__func__ , impl_type);
+      abort();
+    }
+    {
+      enkf_config_node_type * node = enkf_config_node_alloc(enkf_type , impl_type , data , freef , get_serial_size , set_serial_offset);
+      hash_insert_hash_owned_ref(enkf_config->config_hash , key , node , enkf_config_node_free__);
+    }
   }
+  
 }
 
 
@@ -136,7 +162,7 @@ void enkf_config_add_type(enkf_config_type * enkf_config,
 void enkf_config_add_type0(enkf_config_type * enkf_config , const char *key , int size, enkf_var_type enkf_type , enkf_impl_type impl_type) {
   switch(impl_type) {
   case(STATIC):
-    enkf_config_add_type(enkf_config , key , enkf_type , impl_type , ecl_static_kw_config_alloc(size , key , key) , ecl_static_kw_config_free__ , NULL /*ecl_static_kw_config_get_serial_size__*/);
+    enkf_config_add_type(enkf_config , key , enkf_type , impl_type , ecl_static_kw_config_alloc(size , key , key));
     break;
   case(FIELD):
     /*

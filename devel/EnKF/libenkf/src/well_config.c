@@ -9,6 +9,8 @@
 
 
 
+/*****************************************************************/
+
 
 int well_config_get_var_index(const well_config_type * config , const char * var) {
   int index , i;
@@ -96,3 +98,8 @@ GET_SERIAL_SIZE(well)
 GET_DATA_SIZE(well)
 VOID_GET_SERIAL_SIZE(well)
 VOID_CONFIG_FREE(well)
+
+SET_SERIAL_OFFSET(well)
+VOID_SET_SERIAL_OFFSET(well)
+GET_SERIAL_OFFSET(well)
+

@@ -68,3 +68,5 @@ GET_SERIAL_SIZE(multflt);
 VOID_GET_SERIAL_SIZE(multflt);
 GET_DATA_SIZE(multflt);
 VOID_FUNC(multflt_config_free , multflt_config_type);
+SET_SERIAL_OFFSET(multflt);
+VOID_SET_SERIAL_OFFSET(multflt);

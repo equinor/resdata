@@ -32,10 +32,11 @@ struct enkf_node_struct {
   char               *node_key;
   void               *data;
   const enkf_config_node_type *config;
-  /*
-    enkf_var_type       enkf_type;
-  */
 };
+
+
+
+const enkf_config_node_type * enkf_node_get_config(const enkf_node_type * node) { return node->config; }
 
 
 /*
@@ -236,6 +237,7 @@ void enkf_node_free__(void *void_node) {
 
 
 const char *enkf_node_get_key_ref(const enkf_node_type * enkf_node) { return enkf_node->node_key; }
+
 
 #undef FUNC_ASSERT
 

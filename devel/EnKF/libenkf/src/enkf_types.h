@@ -24,5 +24,9 @@ typedef enum {parameter = 1 , static_parameter = 2 , ecl_restart = 4 , ecl_summa
 */
 
 
+typedef enum {cond_off = 0 , cond_on = 1 , cond_at , cond_after , cond_before} enkf_cond_type;
+
+typedef enum {abs_err = 0  , rel_err = 1 , relmin_err = 2} enkf_obs_err_type;
+
 
 #endif

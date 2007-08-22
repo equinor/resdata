@@ -25,6 +25,7 @@
 #include <multflt.h>
 #include <equil.h>
 #include <well_config.h>
+#include <void_arg.h>
 
 
 struct enkf_state_struct {
@@ -218,7 +219,6 @@ static void enkf_state_add_node__2(enkf_state_type * enkf_state , const char * n
     The hash contains a pointer to a list_node structure, which contains a pointer
     to an enkf_node which contains a pointer to the actual enkf object.
   */
-  printf("Adding: %s \n",node_name);
   hash_insert_ref(enkf_state->node_hash , node_name  , list_node);
 }
 
@@ -434,6 +434,8 @@ void enkf_state_load_ecl_restart(enkf_state_type * enkf_state ,  bool unified , 
 
 
 
+
+
 void enkf_state_load_ecl_summary(enkf_state_type * enkf_state, bool unified , int report_step) {
   const bool fmt_file = enkf_state_fmt_file(enkf_state);
   ecl_sum_type * ecl_sum;
@@ -455,6 +457,58 @@ void enkf_state_load_ecl_summary(enkf_state_type * enkf_state, bool unified , in
   free(summary_file);
   free(header_file);
 }
+
+
+void enkf_state_load_ecl(enkf_state_type * enkf_state , bool unified , int report_step) {
+  enkf_state_load_ecl_restart(enkf_state , unified , report_step);
+  enkf_state_load_ecl_summary(enkf_state , unified , report_step);
+}
+
+
+void * enkf_state_load_ecl_summary_void(void * input_arg) {
+  void_arg_type * arg = (void_arg_type *) input_arg;
+  enkf_state_type * enkf_state;
+  bool unified;
+  int report_step;
+  
+  enkf_state = void_arg_get_ptr(arg , 0);
+  void_arg_unpack_ptr(arg , 1 , &unified);
+  void_arg_unpack_ptr(arg , 2 , &report_step);
+
+  enkf_state_load_ecl_summary(enkf_state , unified , report_step);
+  return NULL;
+}
+
+
+void * enkf_state_load_ecl_restart_void(void * input_arg) {
+  void_arg_type * arg = (void_arg_type *) input_arg;
+  enkf_state_type * enkf_state;
+  bool unified;
+  int report_step;
+  
+  enkf_state = void_arg_get_ptr(arg , 0);
+  void_arg_unpack_ptr(arg , 1 , &unified);
+  void_arg_unpack_ptr(arg , 2 , &report_step);
+
+  enkf_state_load_ecl_restart(enkf_state , unified , report_step);
+  return NULL;
+}
+
+
+void * enkf_state_load_ecl_void(void * input_arg) {
+  void_arg_type * arg = (void_arg_type *) input_arg;
+  enkf_state_type * enkf_state;
+  bool unified;
+  int report_step;
+  
+  enkf_state = void_arg_get_ptr(arg , 0);
+  void_arg_unpack_ptr(arg , 1 , &unified);
+  void_arg_unpack_ptr(arg , 2 , &report_step);
+  enkf_state_load_ecl(enkf_state , unified , report_step);
+  return NULL;
+}
+
+
 
 
 
@@ -557,32 +611,42 @@ void enkf_state_free_nodes(enkf_state_type * enkf_state, int mask) {
 }
 
 
-void enkf_state_serialize(enkf_state_type * enkf_state, double *serial_data) {
-  list_node_type *list_node;                                            
-  list_node  = list_get_head(enkf_state->node_list);                    
-  size_t offset = 0;
-  while (list_node != NULL) {                                           
-    enkf_node_type *enkf_node = list_node_value_ptr(list_node);        
-    if (enkf_node_include_type(enkf_node , parameter + ecl_restart + ecl_summary))
-      enkf_node_serialize(enkf_node , serial_data , &offset);                       
-    list_node  = list_node_get_next(list_node);                         
-  }                                                                     
+void enkf_state_set_serial_data(enkf_state_type * enkf_state , double * serial_data) {
+  enkf_state->serial_data = serial_data;
+}
+
+void enkf_state_clear_serial_data(enkf_state_type * enkf_state) {
+  enkf_state->serial_data = NULL;
+}
+
+
+void enkf_state_serialize(enkf_state_type * enkf_state) {
+  if (enkf_state->serial_data == NULL) {
+    fprintf(stderr,"%s: attempt to serialize data without prior call to enkf_state_set_serial_data - aborting.\n",__func__);
+    abort();
+  }
+  {
+    list_node_type *list_node;                                            
+    list_node  = list_get_head(enkf_state->node_list);                    
+    size_t offset = 0;
+    while (list_node != NULL) {                                           
+      enkf_node_type *enkf_node = list_node_value_ptr(list_node);        
+      if (enkf_node_include_type(enkf_node , parameter + ecl_restart + ecl_summary))
+      enkf_node_serialize(enkf_node , enkf_state->serial_data , &offset);                       
+      list_node  = list_node_get_next(list_node);                         
+    }             
+  }
 }
 
 
 
 void enkf_state_free(enkf_state_type *enkf_state) {
-  /*
-    enkf_state_free_nodes(enkf_state , all_types);
-  */
   list_free(enkf_state->node_list);
   hash_free(enkf_state->node_hash);
   hash_free(enkf_state->impl_types);
   pathv_free(enkf_state->eclpath);
   pathv_free(enkf_state->enspath);
   free(enkf_state->eclbase);
-  if (enkf_state->serial_data != NULL)
-    free(enkf_state->serial_data);
   free(enkf_state);
 }
 
@@ -613,6 +677,24 @@ void enkf_state_del_node(enkf_state_type * enkf_state , const char * node_key) {
     abort();
   } 
 }
+
+
+int enkf_state_get_serial_size(const enkf_state_type * state) {
+  int current_offset = 0;
+  int serial_size = 0;
+  list_node_type *list_node;                                             
+  list_node = list_get_head(state->node_list);                      
+  while (list_node != NULL) {                                            
+    enkf_node_type *enkf_node = list_node_value_ptr(list_node);          
+    if (enkf_node_include_type(enkf_node , parameter + ecl_restart + ecl_summary)) {
+      enkf_config_node_type * config_node = (enkf_config_node_type *) enkf_node_get_config(enkf_node);
+      serial_size += enkf_config_node_get_serial_size(config_node , &current_offset);
+    }
+    list_node = list_node_get_next(list_node);                           
+  }
+  return serial_size;
+}
+
 
 
 /*****************************************************************/

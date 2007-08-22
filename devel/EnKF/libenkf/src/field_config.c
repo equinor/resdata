@@ -7,6 +7,8 @@
 #include <ecl_kw.h>
 
 
+/*****************************************************************/
+
 field_config_type * field_config_alloc(const char * ecl_kw_name , ecl_type_enum ecl_type , int nx , int ny , int nz , int active_size , const int * index_map , int logmode , const char * eclfile , const char * ensfile) {
   field_config_type *config = malloc(sizeof *config);
   
@@ -112,3 +114,6 @@ CONFIG_SET_ENSFILE_VOID(field);
 VOID_GET_SERIAL_SIZE(field)
 GET_DATA_SIZE(field)
 VOID_FREE(field_config)
+SET_SERIAL_OFFSET(field)
+VOID_SET_SERIAL_OFFSET(field)
+GET_SERIAL_OFFSET(field)

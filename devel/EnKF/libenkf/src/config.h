@@ -8,17 +8,43 @@
 #define CONFIG_STD_FIELDS \
 int serial_size;          \
 int data_size;            \
+int serial_offset;        \
 const char * ecl_kw_name; \
 enkf_var_type var_type;   \
 char * ensfile;           \
 char * eclfile;          
 
+
 #define VOID_CONFIG_FREE(prefix)            void prefix ## _config_free__(void *void_arg) { prefix ## _config_free((prefix ## _config_type *) void_arg); }
 #define VOID_CONFIG_FREE_HEADER(prefix)     void prefix ## _config_free__(void *)
-#define GET_SERIAL_SIZE(prefix)             int prefix ## _config_get_serial_size (const prefix ## _config_type *arg) { return arg->serial_size; }
+
+/*****************************************************************/
+
+#define GET_SERIAL_SIZE(prefix)                                              \
+int prefix ## _config_get_serial_size (const prefix ## _config_type *arg) {  \
+   return arg->serial_size;                                                  \
+}
 #define GET_SERIAL_SIZE_HEADER(prefix)      int prefix ## _config_get_serial_size (const prefix ## _config_type *)
-#define VOID_GET_SERIAL_SIZE(prefix)        int prefix ## _config_get_serial_size__ (const void *void_arg) { return prefix ## _config_get_serial_size((const prefix ## _config_type *) void_arg); }
+#define VOID_GET_SERIAL_SIZE(prefix)        int prefix ## _config_get_serial_size__ (const void *void_arg ) { return prefix ## _config_get_serial_size((const prefix ## _config_type *) void_arg); }
 #define VOID_GET_SERIAL_SIZE_HEADER(prefix) int prefix ## _config_get_serial_size__ (const void *)
+
+/*****************************************************************/
+#define GET_SERIAL_OFFSET(prefix)                                              \
+int prefix ## _config_get_serial_offset (const prefix ## _config_type *arg) {  \
+   return arg->serial_offset;                                                  \
+}
+#define GET_SERIAL_OFFSET_HEADER(prefix)      int prefix ## _config_get_serial_offset (const prefix ## _config_type *)
+/*****************************************************************/
+
+#define SET_SERIAL_OFFSET(prefix)                                                           \
+void prefix ## _config_set_serial_offset (prefix ## _config_type *arg, int offset) {        \
+   arg->serial_offset = offset;                                                             \
+}
+#define SET_SERIAL_OFFSET_HEADER(prefix)      void prefix ## _config_set_serial_offset   ( prefix ## _config_type * , int)
+#define VOID_SET_SERIAL_OFFSET(prefix)        void prefix ## _config_set_serial_offset__ ( void *void_arg , int offset) { prefix ## _config_set_serial_offset(( prefix ## _config_type *) void_arg , offset); }
+#define VOID_SET_SERIAL_OFFSET_HEADER(prefix) void prefix ## _config_set_serial_offset__ ( void *, int )
+
+/*****************************************************************/
 
 #define GET_DATA_SIZE(prefix)               int prefix ## _config_get_data_size (const prefix ## _config_type *arg) { return arg->data_size; }
 #define GET_DATA_SIZE_HEADER(prefix)        int prefix ## _config_get_data_size (const prefix ## _config_type *)

@@ -21,6 +21,11 @@ enkf_state_type * enkf_state_alloc(const enkf_config_type * , const char *, bool
 enkf_node_type  * enkf_state_get_node(const enkf_state_type * , const char * );
 void              enkf_state_del_node(enkf_state_type * , const char * );
 void              enkf_state_load_ecl_summary(enkf_state_type * , bool , int );
+void            * enkf_state_load_ecl_summary_void(void * );
+void            * enkf_state_load_ecl_restart_void(void * );
+void            * enkf_state_load_ecl_void(void * );
+void              enkf_state_load_ecl(enkf_state_type * , bool , int );
+int               enkf_state_get_serial_size(const enkf_state_type * );
 
 void              enkf_state_iset_enspath(enkf_state_type * , int , const char *);
 const      char * enkf_state_get_enspath_ref(const enkf_state_type * );
@@ -32,5 +37,6 @@ void 		  enkf_state_ecl_write(const enkf_state_type * , int , int);
 void              enkf_state_ecl_read(enkf_state_type * , const ecl_block_type *);
 void              enkf_state_free(enkf_state_type * );
 void              enkf_state_apply(enkf_state_type * , enkf_node_ftype1 * , int );
-void              enkf_state_serialize(enkf_state_type * , double *);
+void              enkf_state_serialize(enkf_state_type *);
+void              enkf_state_set_serial_data(enkf_state_type * , double * );
 #endif

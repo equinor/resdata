@@ -102,6 +102,8 @@ CONFIG_SET_ENSFILE_VOID(multz);
 GET_SERIAL_SIZE(multz)
 GET_DATA_SIZE(multz)
 VOID_GET_SERIAL_SIZE(multz)
+SET_SERIAL_OFFSET(multz);
+VOID_SET_SERIAL_OFFSET(multz);
 
 
 VOID_FUNC(multz_config_free , multz_config_type);

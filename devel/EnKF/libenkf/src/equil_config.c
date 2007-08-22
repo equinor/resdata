@@ -95,3 +95,7 @@ GET_SERIAL_SIZE(equil);
 VOID_GET_SERIAL_SIZE(equil);
 GET_DATA_SIZE(equil);
 VOID_FUNC(equil_config_free , equil_config_type);
+SET_SERIAL_OFFSET(equil);
+VOID_SET_SERIAL_OFFSET(equil);
+
+
