@@ -9,7 +9,7 @@
 #include <ecl_fstate.h>
 #include <util.h>
 #include <ecl_sum.h>
-
+#include <ecl_diag.h>
 
 
 static const char * alloc_wellvar_name(const char *path , const char *well , const char *var) {
@@ -39,32 +39,12 @@ static void set_well_var(const char *file , char **_well , char **_var) {
 
 
 
-static void ecl_diag_make_plotfile(int iens1 , int iens2 , const ecl_sum_type **ecl_sum_list , const char *out_path , const char *well , const char *var, bool tecplot) {
+static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const ecl_sum_type **ecl_sum_list , const char *out_path , const char *well , const char *var, bool tecplot) {
   char *hvar           = malloc(strlen(var) + 2);
   const char *out_file = alloc_wellvar_name(out_path , well , var);
   FILE *stream;
   int items_written = 0;
   int iens,istep;
-  int min_size;
-  
-  {
-    bool size_eq = true;
-    int size0    = ecl_sum_get_size(ecl_sum_list[0]);
-    int iens;
-    min_size = size0;
-    for (iens = 1; iens <= (iens2 - iens1); iens++) {
-      int size = ecl_sum_get_size(ecl_sum_list[iens]);
-      size_eq = size_eq && (size == size0);
-      if (size < min_size)
-	min_size = size;
-    }
-    if (! size_eq) {
-      min_size--;  /* Do not understand why this is necessary ?? */
-      for (iens = 0; iens <= (iens2 - iens1); iens++)
-	printf("member:%3d   %d timestep \n",iens + 1, ecl_sum_get_size(ecl_sum_list[iens]));
-      printf("Data cut at timestep:%d \n",min_size);
-    }
-  }
   
   
   sprintf(hvar     , "%sH" , var);
@@ -79,14 +59,16 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , const ecl_sum_type **
   }
 
   for (istep = 0; istep < min_size;  istep++) {
-    float history_value , time_value, value;
-    int index = ecl_sum_iget1(ecl_sum_list[0] , istep , well , var , false , &value);
+    double history_value , time_value, value;
+    int    index;
+    index = ecl_sum_get_index(ecl_sum_list[0] , well , var);
     if (index >= 0) {
-      ecl_sum_iget1(ecl_sum_list[0] , istep , well , hvar  , false , &history_value);
-      ecl_sum_iget2(ecl_sum_list[0] , istep , 0 , &time_value);
+      history_value = ecl_sum_iget1(ecl_sum_list[0] , istep , well , hvar  ,  NULL);
+      time_value    = ecl_sum_iget2(ecl_sum_list[0] , istep , 0);
+
       fprintf(stream , " %9.4e %9.4e " , time_value , history_value);
       for (iens = iens1; iens <= iens2; iens++) {
-	ecl_sum_iget2(ecl_sum_list[iens - iens1]     , istep , index , &value);
+	value = ecl_sum_iget2(ecl_sum_list[iens - iens1]  , istep , index);
 	fprintf(stream , " %9.4e " , value );
       }
       fprintf(stream , "\n");
@@ -105,62 +87,74 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , const ecl_sum_type **
 
 
 
-static ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , const char *ens_path , const char *eclbase_dir , const char *eclbase, bool fmt_file, bool unified) {
+static ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , int * _min_size , const char *ens_path , const char *eclbase_dir , const char *eclbase , bool report_mode ,  bool fmt_file, bool unified , bool endian_convert) {
   ecl_sum_type **ecl_sum_list = calloc(iens2 - iens1 + 1 , sizeof(ecl_sum_type *));
-  char spec_file[512];
   int iens;
-  int fmt_mode;
+  int fmt_mode , min_size;
   if (fmt_file)
     fmt_mode = ECL_FORMATTED;
   else
     fmt_mode = ECL_BINARY;
 
   for (iens = iens1; iens <= iens2; iens++) {
-    if (fmt_file)
-      sprintf(spec_file , "%s/%s%04d/%s-%04d.FSMSPEC" , ens_path , eclbase_dir , iens, eclbase ,iens);
-    else
-      sprintf(spec_file , "%s/%s%04d/%s-%04d.SMSPEC" , ens_path , eclbase_dir , iens, eclbase ,iens);
+    char * spec_file;
+    char * path = malloc(strlen(ens_path) + 1 + strlen(eclbase_dir) + 4 + 1);
+    char * base = malloc(strlen(eclbase) + 1 + 4 + 1 );
+    sprintf(path , "%s/%s%04d" , ens_path, eclbase_dir , iens);
+    sprintf(base , "%s-%04d"  , eclbase , iens);
+    spec_file = ecl_util_alloc_exfilename(path , base , ecl_summary_header_file , fmt_file , -1);
     
     if (unified) {
-      char data_file[512];
-      if (fmt_file)
-	sprintf(data_file , "%s/%s%04d/%s-%04d.FUNSMRY" , ens_path , eclbase_dir , iens, eclbase ,iens);
-      else
-	sprintf(data_file , "%s/%s%04d/%s-%04d.UNSMRY" , ens_path , eclbase_dir , iens, eclbase ,iens);
+      char *data_file = ecl_util_alloc_exfilename(path , base , ecl_unified_summary_file , fmt_file , -1);
       printf("Loading file: %s ... ",data_file); fflush(stdout);
-      ecl_sum_list[iens - iens1] = ecl_sum_load_unified(spec_file , data_file , fmt_mode , true);
+      ecl_sum_list[iens - iens1] = ecl_sum_fread_alloc(spec_file , 1 , (const char **) &data_file , report_mode , endian_convert);
       printf("%d timestep \n",ecl_sum_get_size(ecl_sum_list[iens - iens1]));
+      free(data_file);
     } else {
       int files;
-      char _path[512];
-      char _base[512];
       char **fileList;
-      sprintf(_path , "%s/%s%04d" , ens_path , eclbase_dir , iens);
-      sprintf(_base , "%s-%04d"   , eclbase  , iens);
-      fileList  = ecl_sum_alloc_filelist(_path , _base , fmt_file , &files);
-      printf("Loading from directory: %s ... ",_path); fflush(stdout);
-      ecl_sum_list[iens - iens1] = ecl_sum_load_multiple(spec_file , files , (const char **) fileList , fmt_mode , true);
+      fileList = ecl_util_alloc_exfilelist(path , base , ecl_summary_file , fmt_file , &files); 
+      printf("Loading from directory: %s ... ",path); fflush(stdout);
+      ecl_sum_list[iens - iens1] = ecl_sum_fread_alloc(spec_file , files , (const char **) fileList , report_mode , endian_convert);
       printf("%d timestep \n",ecl_sum_get_size(ecl_sum_list[iens - iens1]));
       util_free_string_list(fileList , files);
     }
+
+    free(spec_file);
+    free(path);
+    free(base);
   }
+  {
+    bool size_eq = true;
+    int size0    = ecl_sum_get_size(ecl_sum_list[0]);
+    int iens;
+    min_size = size0;
+    for (iens = 1; iens <= (iens2 - iens1); iens++) {
+      int size = ecl_sum_get_size(ecl_sum_list[iens]);
+      size_eq = size_eq && (size == size0);
+      if (size < min_size)
+	min_size = size;
+    }
+    if (! size_eq) 
+      printf("Data cut at timestep:%d \n",min_size);
+  }
+  *_min_size = min_size;
   return ecl_sum_list;
 }
 
 
 
 
-void ecl_diag_ens(int iens1 , int iens2 , const char *out_path , int nwell , const char **well_list , int nvar , const char **var_list , const char *ens_path , const char *eclbase_dir , const char *eclbase, bool fmt_file, bool unified, bool tecplot) {
-  int i,iwell,ivar;
+void ecl_diag_ens(int iens1 , int iens2 , const char *out_path , int nwell , const char **well_list , int nvar , const char **var_list , const char *ens_path , const char *eclbase_dir , const char *eclbase, bool report_mode , bool fmt_file, bool unified, bool endian_convert , bool tecplot) {
+  int i,iwell,ivar,min_size;
   
-  ecl_sum_type **ecl_sum_list = ecl_diag_load_ensemble(iens1 , iens2 , ens_path , eclbase_dir , eclbase , fmt_file , unified);
+  ecl_sum_type **ecl_sum_list = ecl_diag_load_ensemble(iens1 , iens2 , &min_size , ens_path , eclbase_dir , eclbase , report_mode , fmt_file , unified , endian_convert);
   util_make_path(out_path);
   for (iwell = 0; iwell < nwell; iwell++) {
     for (ivar = 0; ivar < nvar; ivar++) {
-      ecl_diag_make_plotfile(iens1 , iens2 , (const ecl_sum_type **) ecl_sum_list , out_path , well_list[iwell] , var_list[ivar] , tecplot);
+      ecl_diag_make_plotfile(iens1 , iens2 , min_size , (const ecl_sum_type **) ecl_sum_list , out_path , well_list[iwell] , var_list[ivar] , tecplot);
     }
   }
-
   
   for (i=0; i <(iens2 - iens1); i++)
     ecl_sum_free(ecl_sum_list[i]);
@@ -360,8 +354,10 @@ static char ** fread_alloc_wells(const char *well_file , int *_nwell) {
 /* } */
 
 
-void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name , bool fmt_file , bool unified) {
+
+void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name , bool fmt_file , bool unified , bool endian_convert) {
 #define defvar_N 4
+  const bool report_mode = false;
   const int prompt_len = 68;
   char out_path[128];
   char ens_path[128];
@@ -412,9 +408,12 @@ void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name
   }
 
   read_string("Path to store the results" , prompt_len , out_path);
-  read_bool("Add tecplot header" , prompt_len , &tecplot);
-
-  ecl_diag_ens(iens1 , iens2 , out_path , nwell , (const char **) well_list , nvar , (const char **) var_list , ens_path , eclbase_dir , eclbase_name , fmt_file , unified , tecplot);
+  /*
+    read_bool("Add tecplot header" , prompt_len , &tecplot);
+  */
+  tecplot = false;
+  
+  ecl_diag_ens(iens1 , iens2 , out_path , nwell , (const char **) well_list , nvar , (const char **) var_list , ens_path , eclbase_dir , eclbase_name , report_mode , fmt_file , unified , endian_convert , tecplot);
 
   util_free_string_list(well_list , nwell);
   util_free_string_list(var_list  , nvar);

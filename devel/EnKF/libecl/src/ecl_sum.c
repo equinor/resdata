@@ -6,8 +6,11 @@
 #include <ecl_sum.h>
 #include <hash.h>
 #include <util.h>
+#include <time.h>
 
 #define ECL_DUMMY_WELL ":+:+:+:+"
+
+
 
 struct ecl_sum_struct {
   ecl_fstate_type * header;
@@ -20,7 +23,9 @@ struct ecl_sum_struct {
   char            * base_name;
   bool              endian_convert;
   bool              unified;
+  time_t            sim_start_time;
 };
+
 
 
 
@@ -46,32 +51,66 @@ static void set_well_kw_string(const char *well , const char *kw , char *well_kw
 
 
 
-static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert , bool unified) {
+static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
   ecl_sum_type *ecl_sum;
   ecl_sum = malloc(sizeof *ecl_sum);
   ecl_sum->fmt_mode       = fmt_mode;
   ecl_sum->endian_convert = endian_convert;
-  ecl_sum->unified        = unified;
+  ecl_sum->unified        = true;  /* Dummy */
   ecl_sum->index_hash     = hash_alloc(10);
   ecl_sum->_index_hash    = hash_alloc(10);
   ecl_sum->header         = NULL;
   ecl_sum->data           = NULL;
   ecl_sum->well_list      = NULL;
   ecl_sum->base_name      = NULL;
+  ecl_sum->sim_start_time = -1;
   return ecl_sum;
 }
 
 
 
-static ecl_sum_type * ecl_sum_alloc_existing(const char *header_file , int fmt_mode , bool endian_convert , bool unified) {
-  ecl_sum_type *ecl_sum   = ecl_sum_alloc_empty(fmt_mode , endian_convert , unified);
-  ecl_sum->header         = ecl_fstate_load_unified(header_file , false , ecl_other_file , ecl_sum->fmt_mode , ecl_sum->endian_convert);
+void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data_files , bool report_mode) {
+  if (files <= 0) {
+    fprintf(stderr,"%s: number of data files = %d - aborting \n",__func__ , files);
+    abort();
+  }
+  {
+    ecl_file_type file_type;
+    bool fmt_file;
+    int report_nr;
+    
+    ecl_util_get_file_type(data_files[0] , &file_type , &fmt_file , &report_nr);
+    sum->data  = ecl_fstate_fread_alloc(files , data_files   , file_type , report_mode , sum->endian_convert);
+    /*
+      Check size of PARAMS block...
+      {
+      ecl_block_type * data_block1 = ecl_fstate_get_block();
+      }
+    */
+  }
+}
+  
+
+ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const char **data_files , bool report_mode , bool endian_convert) {
+  ecl_sum_type *ecl_sum   = ecl_sum_alloc_empty(ECL_FMT_AUTO , endian_convert);
+  ecl_sum->header         = ecl_fstate_fread_alloc(1     , &header_file , ecl_summary_header_file , false , ecl_sum->endian_convert);
+  ecl_sum_fread_alloc_data(ecl_sum , files , data_files , report_mode);
   {
     char well[9] , kw[9];
-    ecl_kw_type *wells     = ecl_fstate_get_kw(ecl_sum->header , 0 , "WGNAMES"); 
-    ecl_kw_type *keywords  = ecl_fstate_get_kw(ecl_sum->header , 0 , "KEYWORDS"); 
+    int *date;
+    ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->header , 0);
+    ecl_kw_type *wells     = ecl_block_get_kw(block , "WGNAMES"); 
+    ecl_kw_type *keywords  = ecl_block_get_kw(block , "KEYWORDS"); 
+    ecl_kw_type *startdat  = ecl_block_get_kw(block , "STARTDAT");
     hash_type   *well_hash = hash_alloc(10);
     int index;
+      
+    if (startdat == NULL) {
+      fprintf(stderr,"%s could not locate STARTDAT keyword in header - aborting \n",__func__);
+      abort();
+    }
+    date = ecl_kw_get_data_ref(startdat);
+    ecl_sum->sim_start_time = util_make_time1(date[0] , date[1] , date[2]);
     for (index=0; index < ecl_kw_get_size(wells); index++) {
       char well_kw[17];
       char *well_s;
@@ -84,16 +123,16 @@ static ecl_sum_type * ecl_sum_alloc_existing(const char *header_file , int fmt_m
     for (index=0; index < ecl_kw_get_size(wells); index++) {
       util_set_strip_copy(well , ecl_kw_iget_ptr(wells    , index));
       util_set_strip_copy(kw , ecl_kw_iget_ptr(keywords , index));
-
+	
       if (!hash_has_key(ecl_sum->_index_hash , well)) 
 	hash_insert_hash_owned_ref(ecl_sum->_index_hash , well , hash_alloc(10) , hash_free__);
-      
+	
       {
 	hash_type * var_hash = hash_get(ecl_sum->_index_hash , well);
 	hash_insert_int(var_hash , kw , index);
       }
     }
-    
+      
     ecl_sum->Nwells    = hash_get_size(well_hash);
     ecl_sum->well_list = hash_alloc_keylist(well_hash);
     hash_free(well_hash);
@@ -110,10 +149,15 @@ static void ecl_sum_set_unified(ecl_sum_type *ecl_sum , bool unified) {
 
 
 
-ecl_sum_type * ecl_sum_alloc_new(const char *base_name , int Nwells, int Nvars, int param_offset , int fmt_mode , bool endian_convert , bool unified) {
-  ecl_sum_type *ecl_sum = ecl_sum_alloc_empty(fmt_mode , endian_convert , unified);
-  ecl_sum->header       = ecl_fstate_alloc_empty(fmt_mode , false , endian_convert , true);
-  ecl_sum->data         = ecl_fstate_alloc_empty(fmt_mode , false , endian_convert , unified);
+ecl_sum_type * ecl_sum_alloc_new(const char *base_name , int Nwells, int Nvars, int param_offset , int fmt_mode , bool report_mode , bool endian_convert , bool unified) {
+  ecl_sum_type *ecl_sum = ecl_sum_alloc_empty(fmt_mode , endian_convert );
+  ecl_sum_set_unified(ecl_sum , unified);
+  ecl_sum->header       = ecl_fstate_alloc_empty(fmt_mode , ecl_summary_header_file , false , endian_convert);
+  if (unified)
+    ecl_sum->data         = ecl_fstate_alloc_empty(fmt_mode , ecl_unified_summary_file , false , endian_convert);
+  else
+    ecl_sum->data         = ecl_fstate_alloc_empty(fmt_mode , ecl_summary_file , report_mode , endian_convert);
+
   ecl_sum->base_name    = calloc(strlen(base_name) + 1 , sizeof *ecl_sum->base_name);
   ecl_sum->Nwells       = Nwells;
   ecl_sum->Nvars        = Nvars;
@@ -127,7 +171,7 @@ ecl_sum_type * ecl_sum_alloc_new(const char *base_name , int Nwells, int Nvars, 
     else
       FMT_FILE = false;
     
-    ecl_block_type *header_block = ecl_block_alloc(0 , size , FMT_FILE , ecl_sum->endian_convert);
+    ecl_block_type *header_block = ecl_block_alloc(0 , FMT_FILE , ecl_sum->endian_convert);
     ecl_kw_type *kw       = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
     ecl_kw_type *units    = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
     ecl_kw_type *restart  = ecl_kw_alloc_empty(FMT_FILE , ecl_sum->endian_convert);
@@ -165,11 +209,8 @@ ecl_sum_type * ecl_sum_alloc_new(const char *base_name , int Nwells, int Nvars, 
 
 
 void ecl_sum_set_header_data(ecl_sum_type *ecl_sum , const char *kw , void *value_ptr) {
-  ecl_kw_type *ecl_kw = ecl_fstate_get_kw(ecl_sum->header , 0 , kw);
-  if (ecl_kw == NULL) {
-    fprintf(stderr,"%s: trying to set data for header:%s - does not exists in summary object - aborting \n",__func__ , kw);
-    abort();
-  }
+  ecl_block_type *   block = ecl_fstate_iget_block(ecl_sum->header , 0 );
+  ecl_kw_type     * ecl_kw = ecl_block_get_kw(block , kw);
   ecl_kw_set_memcpy_data(ecl_kw , value_ptr);
 }
 
@@ -190,11 +231,9 @@ void ecl_sum_set_header_data(ecl_sum_type *ecl_sum , const char *kw , void *valu
 
 
 void ecl_sum_set_well_header(ecl_sum_type *ecl_sum, const char **_well_list) {
-  ecl_kw_type *ecl_kw = ecl_fstate_get_kw(ecl_sum->header , 0 , "WGNAMES");
-  if (ecl_kw == NULL) {
-    fprintf(stderr,"Aborting \n");
-    abort();
-  } else {
+  ecl_block_type * block   = ecl_fstate_iget_block(ecl_sum->header , 0);
+  ecl_kw_type     * ecl_kw = ecl_block_get_kw(block , "WGNAMES");
+  {
     const char null_char = '\0';
     char *well_list = malloc(ecl_kw_get_size(ecl_kw) * (1 + ecl_str_len));
     char *well;
@@ -234,37 +273,35 @@ void ecl_sum_init_save(ecl_sum_type * ecl_sum , const char * base_name , int fmt
 
 void ecl_sum_save(const ecl_sum_type * ecl_sum) {
   char *summary_spec , ext[2] , *data_file;
+  bool fmt_file;
   if (ecl_sum->base_name == NULL || !(ecl_sum->fmt_mode == ECL_FORMATTED || ecl_sum->fmt_mode == ECL_BINARY)) {
     fprintf(stderr,"%s: must inititialise ecl_sum object prior to saving - aborting \n",__func__);
     abort();
   }
   
   if (ecl_sum->fmt_mode == ECL_FORMATTED) {
-    summary_spec = malloc( strlen(ecl_sum->base_name) + 9 );
-    sprintf(summary_spec , "%s.FSMSPEC" , ecl_sum->base_name);
+    fmt_file = true;
   } else {
-    summary_spec = malloc( strlen(ecl_sum->base_name) + 8);
-    sprintf(summary_spec , "%s.SMSPEC" , ecl_sum->base_name);
+    fmt_file = false;
     sprintf(ext , "S");
   }
-  ecl_fstate_set_unified_file(ecl_sum->header , summary_spec);
+  summary_spec = ecl_util_alloc_filename(NULL , ecl_sum->base_name ,  ecl_summary_header_file , fmt_file , -1);
+  ecl_fstate_set_files(ecl_sum->header , 1 , (const char **) &summary_spec);
+  
 
   if (ecl_sum->unified) {
-    if (ecl_sum->fmt_mode == ECL_FORMATTED) {
-      data_file = calloc(strlen(ecl_sum->base_name) + 9 , sizeof(char));
-      sprintf(data_file , "%s.FUNSMRY" , ecl_sum->base_name);
-    } else {
-      data_file = calloc(strlen(ecl_sum->base_name) + 8 , sizeof(char));
-      sprintf(data_file , "%s.UNSMRY" , ecl_sum->base_name);
-    }
-    ecl_fstate_set_unified_file(ecl_sum->data , data_file);
+    data_file = ecl_util_alloc_filename(NULL , ecl_sum->base_name ,  ecl_unified_summary_file , fmt_file , -1);
+    ecl_fstate_set_files(ecl_sum->data , 1 , (const char **) &data_file);
     free(data_file);
   } else {
-    if (ecl_sum->fmt_mode == ECL_FORMATTED) 
-      sprintf(ext , "A");
-    else
-      sprintf(ext , "S");
-    ecl_fstate_set_multiple_files(ecl_sum->data , ecl_sum->base_name , ext);
+    int files , report_nr1 , report_nr2;
+    char **filelist;
+
+    files = ecl_fstate_get_report_size(ecl_sum->data , &report_nr1 , &report_nr2);
+    filelist = ecl_util_alloc_filelist(NULL , ecl_sum->base_name , ecl_summary_file , fmt_file , report_nr1 , report_nr2);
+    ecl_fstate_set_files(ecl_sum->data , files , (const char **) filelist);
+    util_free_string_list(filelist , files);
+    
   }
   
   ecl_fstate_save(ecl_sum->header);
@@ -272,30 +309,6 @@ void ecl_sum_save(const ecl_sum_type * ecl_sum) {
   free(summary_spec);
 }
 
-
-
-ecl_sum_type * ecl_sum_load_unified(const char * header_file , const char * data_file , int fmt_mode , bool endian_convert) {
-  ecl_sum_type * ecl_sum = ecl_sum_alloc_existing(header_file , fmt_mode , endian_convert , true);
-  ecl_sum->data = ecl_fstate_load_unified_summary(data_file  , ecl_sum->fmt_mode , ecl_sum->endian_convert);
-  return ecl_sum;
-}
-
-
-
-char ** ecl_sum_alloc_filelist(const char *path , const char *base , bool file_fmt, int *files) {
-  if (file_fmt)
-    return ecl_fstate_alloc_filelist(path , base , "A" , files);
-  else
-    return ecl_fstate_alloc_filelist(path , base , "S" , files);
-}
-
-
-
-ecl_sum_type * ecl_sum_load_multiple(const char * header_file , int files , const char ** data_files , int fmt_mode , bool endian_convert) {
-  ecl_sum_type * ecl_sum = ecl_sum_alloc_existing(header_file , fmt_mode , endian_convert , false);
-  ecl_sum->data = ecl_fstate_load_multiple_summary(files , data_files  , false , ecl_sum->fmt_mode , ecl_sum->endian_convert);
-  return ecl_sum;
-}
 
 
 static void ecl_sum_assert_index(const ecl_kw_type *params_kw, int index) {
@@ -306,28 +319,47 @@ static void ecl_sum_assert_index(const ecl_kw_type *params_kw, int index) {
 }
 
 
-void ecl_sum_iget2(const ecl_sum_type *ecl_sum , int istep , int index, void *value) {
-  ecl_kw_type * data_kw = ecl_fstate_get_kw(ecl_sum->data , istep , "PARAMS");
-  ecl_sum_assert_index(data_kw , index);
-  ecl_kw_iget(data_kw , index , value);
+double ecl_sum_iget2(const ecl_sum_type *ecl_sum , int time_index , int sum_index) {
+  if (ecl_sum->data == NULL) {
+    fprintf(stderr,"%s: data not loaded - aborting \n",__func__);
+    abort();
+  }
+  {
+    float tmp;
+    ecl_block_type * block = ecl_fstate_get_block(ecl_sum->data , time_index);
+    ecl_kw_type * data_kw  = ecl_block_get_kw(block , "PARAMS");
+    ecl_sum_assert_index(data_kw , sum_index);
+    ecl_kw_iget(data_kw , sum_index , &tmp); /* PARAMS underlying data type is float. */
+    return tmp;
+  }
+}
+
+
+int ecl_sum_get_index(const ecl_sum_type * ecl_sum , const char * well_name , const char *var_name) {
+  char well_kw[17];
+  set_well_kw_string(well_name , var_name , well_kw);
+  if (!hash_has_key(ecl_sum->index_hash , well_kw)) 
+    return -1;
+  else
+    return hash_get_int(ecl_sum->index_hash , well_kw);
+}
+
+
+bool ecl_sum_has_kw(const ecl_sum_type * ecl_sum , const char * well_name , const char *var_name) {
+  if (ecl_sum_get_index(ecl_sum , well_name , var_name) >= 0)
+    return true;
+  else
+    return false;
 }
 
 
 
-int ecl_sum_iget1(const ecl_sum_type *ecl_sum , int istep , const char *well_name , const char *var_name ,  bool abort_on_error , void *value) {
-  char well_kw[17];
-  int index;
+double ecl_sum_iget1(const ecl_sum_type *ecl_sum , int time_index , const char *well_name , const char *var_name , int *_sum_index) {
+  int sum_index;
+  double value;
   
-  set_well_kw_string(well_name , var_name , well_kw);
-  if (!hash_has_key(ecl_sum->index_hash , well_kw)) {
-    if (abort_on_error) {
-      fprintf(stderr,"%s could not find data for well/variable %s/%s in base file:%s - aborting \n",__func__ , well_name , var_name , ecl_sum->base_name);
-      abort();
-    }
-    return -1;
-  }
-  index = hash_get_int(ecl_sum->index_hash , well_kw);
-  ecl_sum_iget2(ecl_sum , istep , index , value);
+  sum_index = ecl_sum_get_index(ecl_sum , well_name , var_name);
+  value = ecl_sum_iget2(ecl_sum , time_index , sum_index);
   {
     char well[9] , kw[9];
     int _index;
@@ -343,13 +375,15 @@ int ecl_sum_iget1(const ecl_sum_type *ecl_sum , int istep , const char *well_nam
     } else
       _index = -1;
     
-    if (index != _index) {
+    if (sum_index != _index) {
       fprintf(stderr,"%s fatal error _index != index - aborting \n",__func__);
       abort();
     }
   }
   
-  return index;
+  if (_sum_index != NULL)
+    *_sum_index = sum_index;
+  return value;
 }
 
 
@@ -395,10 +429,36 @@ int ecl_sum_get_size(const ecl_sum_type *ecl_sum) {
 }
 
 
+bool ecl_sum_get_report_mode(const ecl_sum_type * ecl_sum) {
+  return ecl_fstate_get_report_mode(ecl_sum->data);
+}
+
+
+time_t ecl_sum_get_start_time(const ecl_sum_type * ecl_sum) {
+  return ecl_sum->sim_start_time;
+}
+
+
+time_t ecl_sum_get_sim_time(const ecl_sum_type * ecl_sum , int index) {
+  ecl_block_type * block = ecl_fstate_get_block(ecl_sum->data , index);
+  return ecl_block_get_sim_time(block);
+}
+
+
+int ecl_sum_get_report_size(const ecl_sum_type * ecl_sum , int * first_report_nr , int * last_report_nr) {
+  return ecl_fstate_get_report_size(ecl_sum->data , first_report_nr , last_report_nr);
+}
+
+
+void ecl_sum_free_data(ecl_sum_type * ecl_sum) {
+  ecl_fstate_free(ecl_sum->data);
+  ecl_sum->data = NULL;
+}
+
+
 void ecl_sum_free(ecl_sum_type *ecl_sum) {
   int i;
   ecl_fstate_free(ecl_sum->header);
-  ecl_fstate_free(ecl_sum->data);
 
   hash_free(ecl_sum->index_hash);
   hash_free(ecl_sum->_index_hash);

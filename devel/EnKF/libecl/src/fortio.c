@@ -39,7 +39,7 @@ fortio_type *fortio_open(const char *filename , const char *mode, bool endian_fl
   fortio->endian_flip_header = endian_flip_header;
   fortio->stream             = fopen(fortio->filename , fortio->mode);
   if (fortio->stream == NULL) {
-    fprintf(stderr,"fortio_open() failed to open:%s with mode:%s - aborting \n", fortio->filename , fortio->mode);
+    fprintf(stderr,"%s: failed to open:%s with mode:%s - aborting \n", __func__ , fortio->filename , fortio->mode);
     fprintf(stderr,"%d:%s\n",errno, strerror(errno));
     abort();
   }
@@ -79,8 +79,8 @@ void fortio_complete_read(fortio_type *fortio) {
     util_endian_flip_vector(&trailer , sizeof trailer , 1);
   
   if (trailer != fortio->active_header) {
+    fprintf(stderr,"%s: fatal error reading record:%d in file: %s - aborting \n",__func__ , fortio->rec_nr , fortio->filename);
     fprintf(stderr,"\nHeader: %d   Trailer: %d \n",fortio->active_header , trailer);
-    fprintf(stderr,"Fatal error reading record:%d in file: %s - aborting \n",fortio->rec_nr , fortio->filename);
     abort();
   }
   fortio->active_header = 0;

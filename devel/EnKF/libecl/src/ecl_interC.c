@@ -21,7 +21,7 @@ static lsf_pool_type   * LSF_POOL       = NULL;
 
 void ecl_inter_load_file__(const char *__filename , const int *strlen) {
   char *filename = util_alloc_cstring(__filename , strlen);
-  ECL_FSTATE = ecl_fstate_load_unified(filename , ecl_other_file , true , ECL_FMT_AUTO , ENDIAN_CONVERT);
+  ECL_FSTATE = ecl_fstate_fread_alloc(1 , (const char **) &filename , ecl_other_file , false , ENDIAN_CONVERT);
   free(filename);
 }
 
@@ -50,17 +50,18 @@ void ecl_inter_get_nstep__(int *Nstep) {
 
 void ecl_inter_kw_iget__(const char *_kw , const int * kw_len , const int *istep , const int *iw , void *value) {
   char *kw = util_alloc_cstring(_kw , kw_len);
-  if (!ecl_fstate_kw_iget(ECL_FSTATE , (*istep) - 1 , kw  , (*iw) - 1 , value)) {
-    fprintf(stderr,"%s - failed to load kw:%s  timestep:%d  index:%d - aborting \n",__func__ , kw , *istep , *iw);
-    abort();
-  }
+  ecl_block_type * block   =  ecl_fstate_iget_block(ECL_FSTATE , (*istep) - 1);
+  ecl_kw_type    * ecl_kw  =  ecl_block_get_kw(block , kw);
+  ecl_kw_iget(ecl_kw , (*iw) - 1 , value);
   free(kw);
 }
 
 
 void ecl_inter_get_kw_size__(const char *_kw, const int *kw_len , const int *istep, int *size) {
   char *kw = util_alloc_cstring(_kw , kw_len);
-  *size = ecl_fstate_kw_get_size(ECL_FSTATE , (*istep) - 1 , kw);
+  ecl_block_type * block  = ecl_fstate_iget_block(ECL_FSTATE , (*istep) - 1);
+  ecl_kw_type    * ecl_kw = ecl_block_get_kw(block , kw);
+  *size = ecl_kw_get_size(ecl_kw);
   free(kw);
 }
   
@@ -68,10 +69,9 @@ void ecl_inter_get_kw_size__(const char *_kw, const int *kw_len , const int *ist
 
 void ecl_inter_kw_get_data__(const char *_kw , const int *kw_len , const int *istep , void *value) {
   char *kw = util_alloc_cstring(_kw , kw_len);
-  if (!ecl_fstate_kw_get_memcpy_data(ECL_FSTATE , (*istep) - 1, kw , value)) {
-    fprintf(stderr,"%s: failed to load kw:%s  timestep:%d - aborting.\n",__func__ , kw , *istep);
-    abort();
-  }
+  ecl_block_type * block  = ecl_fstate_iget_block(ECL_FSTATE , (*istep) - 1);
+  ecl_kw_type    * ecl_kw = ecl_block_get_kw(block , kw);
+  ecl_kw_get_memcpy_data(ecl_kw , value);    
   free(kw);
 }
 
@@ -79,7 +79,7 @@ void ecl_inter_kw_get_data__(const char *_kw , const int *kw_len , const int *is
 
 void ecl_inter_del_kw(const char *_kw, const int *kw_len , const int *istep) {
   char *kw = util_alloc_cstring(_kw , kw_len);
-  ecl_block_type *ecl_block = ecl_fstate_get_block(ECL_FSTATE , (*istep) - 1);
+  ecl_block_type *ecl_block = ecl_fstate_iget_block(ECL_FSTATE , (*istep) - 1);
   ecl_block_free_kw(ecl_block , kw);
   free(kw);
 }
@@ -87,8 +87,9 @@ void ecl_inter_del_kw(const char *_kw, const int *kw_len , const int *istep) {
 
 void ecl_inter_kw_exists__(const char *_kw , const int *kw_len , const int *istep , int *int_ex) {
   char *kw = util_alloc_cstring(_kw , kw_len);
+  ecl_block_type *ecl_block = ecl_fstate_iget_block(ECL_FSTATE , (*istep) - 1);
 
-  if (ecl_fstate_kw_exists(ECL_FSTATE ,  (*istep) - 1 , kw))
+  if (ecl_block_has_kw(ecl_block , kw))
     *int_ex = 1;
   else
     *int_ex =  0;
@@ -97,12 +98,12 @@ void ecl_inter_kw_exists__(const char *_kw , const int *kw_len , const int *iste
 }
 
 
-void ecl_inter_load_summary__(const char *__header_file , const int *header_len , const char *__data_file , const int *data_len) {
+void ecl_inter_load_summary__(const char *__header_file , const int *header_len , const char *__data_file , const int *data_len , const int *report_mode_int) {
   char * header_file = util_alloc_cstring(__header_file , header_len);
   char * data_file   = util_alloc_cstring(__data_file   , data_len);
-
-  ECL_SUM = ecl_sum_load_unified(header_file , data_file , ECL_FMT_AUTO , ENDIAN_CONVERT);
-  free(header_file);  
+  bool   report_mode = util_intptr_2bool(report_mode_int);
+  ECL_SUM = ecl_sum_fread_alloc(header_file , 1 , (const char **) &data_file , report_mode , ENDIAN_CONVERT);
+  free(header_file);
   free(data_file);
 }
 
@@ -134,7 +135,7 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
 			 void *value, int *index) {
   char *well = util_alloc_cstring(_well_name , well_len);
   char *var  = util_alloc_cstring(_var_name  , var_len);
-  *index = ecl_sum_iget1(ECL_SUM , 0 , well , var , false , value);
+  *index = ecl_sum_iget1(ECL_SUM , 0 , well , var , value);
   free(well);
   free(var);
 }
@@ -241,7 +242,7 @@ void ecl_inter_init_lsf__(const int  * sleep_time    , const int *max_running,  
   free(bin_path);
   free(request);
   free(queu);
-  printf("Submitting: <____>\b"); fflush(stdout);
+  printf("Submitting: "); fflush(stdout);
 }
 
 
@@ -270,8 +271,8 @@ void ecl_inter_add_lsf_job__(const int  *iens,
     free(id);
     free(fail_file);
     free(OK_file);
-    printf("\b\b\b\b");
     printf("%04d" , *iens); fflush(stdout);
+    printf("\b\b\b\b");
   }
 }
 
@@ -322,7 +323,7 @@ void ecl_inter_parse_grid__(const char *_refcase_path , const int * refcase_len,
   char *eclbase      = util_alloc_cstring(_eclbase      , eclbase_len);
   char *include_path = util_alloc_cstring(_include_path , include_len);
   
-  ecl_parse_grid(refcase_path , eclbase , include_path , fmt_file , ENDIAN_CONVERT);
+  ecl_parse_egrid(refcase_path , eclbase , include_path , fmt_file , ENDIAN_CONVERT);
 
   free(refcase_path);
   free(eclbase);
@@ -341,7 +342,7 @@ void ecl_inter_diag_ens_interactive__(const char *_eclbase_dir  , const int *dir
   bool fmt_file = util_intptr_2bool(fmt_file_int);
   bool unified  = util_intptr_2bool(unified_int);
 
-  ecl_diag_ens_interactive(eclbase_dir , eclbase_name , fmt_file , unified);
+  ecl_diag_ens_interactive(eclbase_dir , eclbase_name , fmt_file , unified , ENDIAN_CONVERT);
   free(eclbase_dir);
   free(eclbase_name);
 }

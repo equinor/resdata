@@ -37,7 +37,7 @@ struct ecl_block_struct {
 
 bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw, int mem_mode) {
   char kw[9];
-  if (ecl_block_get_kw(ecl_block , ecl_kw_get_header_ref(ecl_kw)))
+  if (ecl_block_has_kw(ecl_block , ecl_kw_get_header_ref(ecl_kw)))
     return false;
   else {
     list_node_type * list_node;
@@ -62,6 +62,11 @@ bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw, int
     
     return true;
   }
+}
+
+
+bool ecl_block_has_kw(const ecl_block_type * ecl_block, const char * kw) {
+  return hash_has_key(ecl_block->kw_hash , kw);
 }
 
 
@@ -98,7 +103,7 @@ ecl_kw_type * ecl_block_get_next_kw(const ecl_block_type * ecl_block , const ecl
 
 ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
   ecl_block_type * copy;
-  copy = ecl_block_alloc(src->report_nr , src->size , src->fmt_file , src->endian_convert);
+  copy = ecl_block_alloc(src->report_nr , src->fmt_file , src->endian_convert);
   {
     list_node_type * kw_node = list_get_head(src->kw_list);
     while (kw_node != NULL) {
@@ -130,14 +135,10 @@ void ecl_block_set_sim_time(ecl_block_type * block , time_t sim_time) {
 void ecl_block_set_sim_time_summary(ecl_block_type * block) {
   float *date;
   ecl_kw_type * param_kw = ecl_block_get_kw(block , "PARAMS");
-  if (param_kw == NULL) {
-    fprintf(stderr,"%s: fatal error - could not locate PARAMS keyword in summary file - aborting \n" , __func__);
-    abort();
-  }
   date = ecl_kw_iget_ptr(param_kw , 0);
 
   /*
-    date[2] = day
+    date[2] = day 
     date[3] = month
     date[4] = year
     
@@ -176,12 +177,16 @@ void ecl_block_set_report_nr(ecl_block_type * block , int report_nr) {
   block->report_nr      = report_nr;
 }
 
+
 int ecl_block_get_report_nr(const ecl_block_type * block) {
   return block->report_nr;
 }
 
+time_t ecl_block_get_sim_time(const ecl_block_type * block) {
+  return block->sim_time;
+}
 
-ecl_block_type * ecl_block_alloc(int report_nr , int Nkw , bool fmt_file , bool endian_convert) {
+ecl_block_type * ecl_block_alloc(int report_nr , bool fmt_file , bool endian_convert) {
   ecl_block_type *ecl_block;
   
   
@@ -190,7 +195,7 @@ ecl_block_type * ecl_block_alloc(int report_nr , int Nkw , bool fmt_file , bool 
   ecl_block->endian_convert = endian_convert;
   ecl_block->size           = 0;
   
-  ecl_block->kw_hash  = hash_alloc(2*Nkw);
+  ecl_block->kw_hash  = hash_alloc(10);
   ecl_block->kw_list  = list_alloc();
   ecl_block->sim_time = -1;
   ecl_block_set_report_nr(ecl_block , report_nr);
@@ -198,16 +203,25 @@ ecl_block_type * ecl_block_alloc(int report_nr , int Nkw , bool fmt_file , bool 
 }
 
 
+ecl_block_type * ecl_block_fread_alloc(int report_nr , bool fmt_file , bool endian_convert , fortio_type * fortio, bool *at_eof) {
+  ecl_block_type * ecl_block = ecl_block_alloc(report_nr , fmt_file , endian_convert);
+  ecl_block_fread(ecl_block , fortio , at_eof);
+  return ecl_block;
+}
 
 
 ecl_kw_type * ecl_block_get_kw(const ecl_block_type *ecl_block , const char *kw) {
   ecl_kw_type *ecl_kw = NULL;
   char kw_s[9];
   util_set_strip_copy(kw_s , kw);  
-  
+
   if (hash_has_key(ecl_block->kw_hash , kw_s)) 
     ecl_kw = list_node_value_ptr(hash_get(ecl_block->kw_hash , kw_s));
-  
+  else {
+    fprintf(stderr,"%s: could not locate kw:%s in block - aborting. \n",__func__ , kw);
+    ecl_block_summarize(ecl_block);
+    abort();
+  }
   return ecl_kw;
 }
 
@@ -215,12 +229,15 @@ ecl_kw_type * ecl_block_get_kw(const ecl_block_type *ecl_block , const char *kw)
 
 
 ecl_kw_type * ecl_block_detach_kw(ecl_block_type *ecl_block , const char *kw) {
-  ecl_kw_type *ecl_kw = ecl_block_get_kw(ecl_block , kw);
-  if (ecl_kw != NULL) {
+  ecl_kw_type *ecl_kw = NULL;
+
+  if (ecl_block_has_kw(ecl_block , kw)) {
+    ecl_kw = ecl_block_get_kw(ecl_block , kw);
     list_node_type *kw_node = hash_get(ecl_block->kw_hash , kw);
     hash_del(ecl_block->kw_hash , kw);
     list_del_node(ecl_block->kw_list , kw_node);
   }
+  
   return ecl_kw;
 }
 
@@ -271,25 +288,56 @@ bool ecl_block_fseek(int istep , bool fmt_file , bool abort_on_error , fortio_ty
 
 void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_eof) {
   ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty(ecl_block->fmt_file , ecl_block->endian_convert);
-  bool cont;
-  cont = true;
+  bool cont     = true;
+  bool first_kw = true;
   
+
   while (cont) {
     if (ecl_kw_fread_realloc(ecl_kw , fortio)) {
-      if (!ecl_block_add_kw(ecl_block , ecl_kw , COPY)) {
+      bool add_kw;
+
+      /*
+	This is *EXTREMELY UGLY* - when reading summary files we want
+	to ensure that the SEQHDR keyword is the first header in any
+	block (which contains the keyword).
+	
+	
+      */
+
+      if (ecl_kw_header_eq(ecl_kw , "SEQHDR") && !first_kw)
+	add_kw = false;
+      else 
+	add_kw = ecl_block_add_kw(ecl_block , ecl_kw , COPY);
+      
+      if (!add_kw) {
 	*at_eof = false;
 	cont    = false;
 	ecl_kw_rewind(ecl_kw , fortio);
-      }
+      } 
+
     } else {
       cont    = false;
       *at_eof = true;
     }
+    first_kw = false;
   }
-  
   ecl_kw_free(ecl_kw);
 }
 
+
+
+
+void ecl_block_summarize(const ecl_block_type * block) {
+  FILE * stream = stdout;
+  list_node_type * kw_node = list_get_head(block->kw_list);
+  fprintf(stream , "-----------------------------------------------------------------\n");
+  while (kw_node != NULL) {
+    ecl_kw_type *ecl_kw = list_node_value_ptr(kw_node);
+    ecl_kw_summarize(ecl_kw);
+    kw_node = list_node_get_next(kw_node);
+  }
+  fprintf(stream , "-----------------------------------------------------------------\n");
+}
 
 
 static bool ecl_block_include_kw(const ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw , int N_kw, const char **kwlist) {
@@ -351,28 +399,16 @@ void ecl_block_fwrite(ecl_block_type *ecl_block , fortio_type *fortio) {
     ecl_kw_set_fmt_file(ecl_kw , ecl_block->fmt_file);
     ecl_kw_fwrite(ecl_kw , fortio);
   }
-
-  /*
-    int ikw;
-    char **kw_list = hash_alloc_ordered_keylist(ecl_block->kw_hash);
-
-    for (ikw = 0; ikw < ecl_block->size; ikw++) {
-    ecl_kw_type *ecl_kw = ecl_block_get_kw(ecl_block , kw_list[ikw]);
-    ecl_kw_set_fmt_file(ecl_kw , ecl_block->fmt_file);
-    ecl_kw_fwrite(ecl_kw , fortio);
-    }
-    hash_free_ext_keylist(ecl_block->kw_hash , kw_list);
-  */
 }
 
 
 
 void * ecl_block_get_data_ref(const ecl_block_type *ecl_block, const char *kw) {
   if (ecl_block != NULL) {
-    ecl_kw_type *ecl_kw = ecl_block_get_kw(ecl_block , kw);
-    if (ecl_kw != NULL)
+    if (ecl_block_has_kw(ecl_block , kw)) {
+      ecl_kw_type *ecl_kw = ecl_block_get_kw(ecl_block , kw);
       return ecl_kw_get_data_ref(ecl_kw);
-    else
+    } else
       return NULL; 
   } else
     return NULL;

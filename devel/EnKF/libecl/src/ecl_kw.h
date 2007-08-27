@@ -24,6 +24,7 @@ ecl_kw_type * ecl_kw_alloc_empty(bool , bool);
 void          ecl_kw_rewind(const ecl_kw_type * , fortio_type *);
 void          ecl_kw_copy_data(const ecl_kw_type * , void *);
 bool          ecl_kw_fread_header(ecl_kw_type *, fortio_type *);
+void          ecl_kw_set_header_name(ecl_kw_type * , const char * );
 void          ecl_kw_set_header(ecl_kw_type  * , const char * , int , const char *);
 void          ecl_kw_set_header_alloc(ecl_kw_type  * , const char * , int , const char *);
 bool          ecl_kw_fseek_kw(const char * , bool , bool , bool , fortio_type *);
@@ -59,4 +60,5 @@ void          ecl_kw_cfread(ecl_kw_type *  , FILE *);
 bool          ecl_kw_get_endian_convert(const ecl_kw_type * );
 void          ecl_kw_fwrite_param(const char * , bool  , bool , const char * ,  ecl_type_enum , int , void * );
 void          ecl_kw_fwrite_param_fortio(fortio_type *, bool  , bool , const char * ,  ecl_type_enum , int , void * );
+void          ecl_kw_summarize(const ecl_kw_type * ecl_kw);
 #endif

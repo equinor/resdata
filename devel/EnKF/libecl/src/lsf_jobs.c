@@ -12,7 +12,7 @@
 #include <util.h>
 #include <hash.h>
 #include <lsf_jobs.h>
-/*#include <ext_job.h>*/
+#include <ecl_util.h>
 
 
 
@@ -47,6 +47,7 @@ struct lsf_pool_struct {
   int             version_nr;
   bool            sub_exit; 
 
+  int             *prev_total_status;
   int             *total_status;
   char            *summary_file;
   char            *tmp_path;
@@ -238,16 +239,17 @@ void lsf_job_free(lsf_job_type *lsf_job) {
   subsequent restarts in the same directory.
 */
 static void lsf_job_unlink_smspec(const lsf_job_type *lsf_job) {
-  char *file = malloc(strlen(lsf_job->run_path) + 1 + strlen(lsf_job->base) + 1 + 8);
+  char *file;
 
-  sprintf(file , "%s/%s.FSMSPEC" , lsf_job->run_path , lsf_job->base);
+  file = ecl_util_alloc_filename(lsf_job->run_path , lsf_job->base , ecl_summary_header_file , true , -1);
   if (util_file_exists(file)) unlink(file);
-
-  sprintf(file , "%s/%s.SMSPEC" , lsf_job->run_path , lsf_job->base);
+  free(file);
+  
+  file = ecl_util_alloc_filename(lsf_job->run_path , lsf_job->base , ecl_summary_header_file , false , -1);
   if (util_file_exists(file)) unlink(file);
-
   free(file);
 }
+
 
 
 
@@ -293,7 +295,6 @@ static int lsf_job_submit(lsf_job_type *lsf_job , const char * submit_cmd_fmt , 
     int job_id;
     sprintf(lsf_job->tmp_file , "%s/enkf-submit-%08d-%d" , tmp_path , getpid() , lsf_job->job_nr);
     sprintf(lsf_job->submit_cmd , submit_cmd_fmt , lsf_job->run_path , lsf_job->base , lsf_job->base , lsf_job->run_path , lsf_job->base , lsf_job->tmp_file);
-    
     system(lsf_job->submit_cmd);
     
     job_id = lsf_job_parse_bsub_stdout(lsf_job->tmp_file);
@@ -361,11 +362,11 @@ bool lsf_job_complete_OK(lsf_job_type *lsf_job) {
     if (buffer.st_size > 0) {
       lsf_job->complete_time = buffer.st_mtime;
 
-      
       stream = fopen(lsf_job->OK_file , "w");
       fprintf(stream , "Job: %s completed successfully \n",lsf_job->base);
       fclose(stream);
       return true;
+
     } else
       /* Zero size */
       return false;
@@ -417,6 +418,7 @@ lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit,
   lsf_pool->max_running    = max_running;
   lsf_pool->sub_exit       = sub_exit;
   lsf_pool->total_status   = calloc(STATUS_SIZE , sizeof *lsf_pool->total_status);
+  lsf_pool->prev_total_status = calloc(STATUS_SIZE , sizeof *lsf_pool->total_status);
   lsf_pool->submit_cmd_fmt = malloc(256);
   lsf_pool->version_nr     = version_nr;
   sprintf(lsf_pool->submit_cmd_fmt , "bsub -o %s/%s.stdout -q %s -J %s -R\"%s\" %s/ecl_submit.x %s %s %d > %s" , 
@@ -541,10 +543,8 @@ void lsf_pool_add_job(lsf_pool_type *lsf_pool , const char *base , const char *r
 static void lsf_pool_delete_job(lsf_pool_type * lsf_pool , int ijob) {
   int old_base = lsf_pool->jobList[ijob]->lsf_base;
   char old_base_char[16];
-  printf("Make a try ... \n"); 
   sprintf(old_base_char , "%d" , old_base);
   if (hash_has_key(lsf_pool->jobs , old_base_char)) {
-    printf("Have job: %s \n",old_base_char);
     hash_del(lsf_pool->jobs , old_base_char); /* We orphan the job which has completed */
   }
   else 
@@ -561,6 +561,7 @@ static bool lsf_pool_ireschedule(lsf_pool_type *lsf_pool , int ijob) {
   if (lsf_job_can_reschedule(lsf_pool->jobList[ijob])) {
     lsf_pool_delete_job(lsf_pool , ijob);
     lsf_pool_iset_status(lsf_pool , ijob , lsf_status_null);
+    lsf_job_unlink_smspec(lsf_pool->jobList[ijob]);
     return true;
   } else {
     if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_done) {
@@ -578,9 +579,23 @@ static bool lsf_pool_complete_OK(const lsf_pool_type *lsf_pool , int ijob) {
 }
 
 
+
 static void lsf_pool_update_status(lsf_pool_type *lsf_pool) {
-  system(lsf_pool->bsub_status_cmd);
-  if (util_file_size(lsf_pool->tmp_file_bjobs) > 0) {
+  {
+    int attempt = 0;
+    do {
+      system(lsf_pool->bsub_status_cmd);
+      attempt++;
+      if (!util_file_exists(lsf_pool->tmp_file_bjobs))
+	sleep(1);
+    } while (attempt < 10 && !util_file_exists(lsf_pool->tmp_file_bjobs));
+
+    if (!util_file_exists(lsf_pool->tmp_file_bjobs)) {
+      fprintf(stderr,"%s: failed to find status file:%s ... aborting \n", __func__ , lsf_pool->tmp_file_bjobs);
+      abort();
+    }
+  }
+  {
     const char newline = '\n';
     bool cont = true;
     int  jobbase_int;
@@ -593,41 +608,40 @@ static void lsf_pool_update_status(lsf_pool_type *lsf_pool) {
     
     do {
       c = fgetc(stream);
-    } while (c != newline);
-
-    do {
-      read = fscanf(stream , "%d %s %s",&jobbase_int , user , status);
-      if (read == 3) {
-	sprintf(jobbase,"%d" , jobbase_int);
-	do {
+    } while (c != newline && c != EOF);
+    
+    if (c != EOF) {
+      do {
+	read = fscanf(stream , "%d %s %s",&jobbase_int , user , status);
+	if (read == 3) {
+	  sprintf(jobbase,"%d" , jobbase_int);
+	  do {
+	    c = fgetc(stream);
+	  } while (c != newline && c != EOF);
+	  if (c == EOF) cont = false;
+	  if (hash_has_key(lsf_pool->jobs , jobbase)) {
+	    int job_nr = hash_get_int(lsf_pool->jobs , jobbase);
+	    lsf_pool_iset_status(lsf_pool , job_nr , hash_get_int(lsf_pool->status_tr , status));
+	  } 
+	} else if (read == 0) {
+	  do {
+	    c = fgetc(stream);
+	  } while (c != newline && c != EOF);
+	  if (c == EOF) cont = false;
+	}
+	
+	if (cont) {
 	  c = fgetc(stream);
-	} while (c != newline && c != EOF);
-	if (c == EOF) cont = false;
-	if (hash_has_key(lsf_pool->jobs , jobbase)) {
-	  int job_nr = hash_get_int(lsf_pool->jobs , jobbase);
-	  lsf_pool_iset_status(lsf_pool , job_nr , hash_get_int(lsf_pool->status_tr , status));
-	} 
-      } else if (read == 0) {
-	do {
-	  c = fgetc(stream);
-	} while (c != newline && c != EOF);
-	if (c == EOF) cont = false;
-      }
-      
-      if (cont) {
-	c = fgetc(stream);
-	if (c == EOF) 
-	  cont = false;
-	else
-	  ungetc(c , stream);
-      }
-    } while (cont);
+	  if (c == EOF) 
+	    cont = false;
+	  else
+	    ungetc(c , stream);
+	}
+      } while (cont);
+    }
     fclose(stream);
     unlink(lsf_pool->tmp_file_bjobs);
-  } else {
-    fprintf(stderr,"%s: failed to find status file:%s ... aborting \n", __func__ , lsf_pool->tmp_file_bjobs);
-    abort();
-  }
+  } 
 }
 
 
@@ -641,9 +655,18 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
     */
     return 0;
   else {
+    char spinner[4];
     bool cont;
-    int ijob;
+    int ijob , phase;
+    phase = 0;
+
+    spinner[0] = '-';
+    spinner[1] = '\\';
+    spinner[2] = '|';
+    spinner[3] = '/';
+    
     do {
+      memcpy(lsf_pool->prev_total_status , lsf_pool->total_status , sizeof * lsf_pool->total_status * STATUS_SIZE);
       cont = true;
       /* 
 	 First step: submitting basel(??) jobs 
@@ -665,13 +688,15 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
       */
      
       /*
-	Will reschedule jobs with EXIT status as well - they sometimes just fail to start ... */
+	Will reschedule jobs with EXIT status as well - they sometimes just fail to start ... 
+      */
       for (ijob = 0; ijob < lsf_pool->size; ijob++) {
 	if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_exit) {
+	  lsf_pool->prev_total_status[0] = -1; /* Force a reshow of total */
 	  if (lsf_pool_ireschedule(lsf_pool , ijob))
-	    printf("Job:%d returned with EXIT status - resubmitting [Attempt:%d] \n",ijob+1 ,  lsf_pool->jobList[ijob]->submit_count);
+	    printf("\nJob:%d returned with EXIT status - resubmitting [Attempt:%d] \n",ijob+1 ,  lsf_pool->jobList[ijob]->submit_count);
 	  else
-	    printf("Job:%d returned with EXIT status - no more resubmits \n",ijob+1);
+	    printf("\nJob:%d returned with EXIT status - no more resubmits \n",ijob+1);
 	}
       }
 
@@ -681,8 +706,12 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 	  if (lsf_pool_complete_OK(lsf_pool , ijob)) { 
 	    lsf_pool_iset_status(lsf_pool , ijob , lsf_status_OK);
 	  } else {
-	    printf("Could not find result_file: %s rescheduling: %s [Attempt:%d] \n",lsf_pool->jobList[ijob]->restart_file , lsf_pool->jobList[ijob]->base , lsf_pool->jobList[ijob]->submit_count);
-	    lsf_pool_ireschedule(lsf_pool , ijob);
+	    lsf_pool->prev_total_status[0] = -1; /* Force a reshow of total */
+	    printf("\nCould not find result_file: %s ",lsf_pool->jobList[ijob]->restart_file);
+	    if (lsf_pool_ireschedule(lsf_pool , ijob))
+	      printf("rescheduling: %s [Attempt:%d] \n",lsf_pool->jobList[ijob]->base , lsf_pool->jobList[ijob]->submit_count);
+	    else
+	      printf("no more attempts - job failed hard - about to exit.\n");
 	  }
 	}
       }
@@ -690,9 +719,39 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 
       if (lsf_pool->total_status[lsf_status_OK] + lsf_pool->total_status[lsf_status_exit] == lsf_pool->size)
 	cont = false;
-    
-      printf("total: %2d %2d %2d | %2d %2d %2d \n",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
-	     lsf_pool->total_status[4] , lsf_pool->total_status[5]);  
+      {
+	bool eq = true;
+	int i;
+
+	for (i=0; i < STATUS_SIZE; i++)
+	  if (lsf_pool->total_status[i] != lsf_pool->prev_total_status[i])
+	    eq = false;
+
+	if (eq) {
+	  phase = (phase + 1) % 4;
+	  printf("\b%c",spinner[phase]);	  
+	  fflush(stdout);
+	} else {
+	  struct tm ts;
+	  time_t t;  
+	  time(&t);
+	  localtime_r(&t , &ts);
+	  printf("\ntotal: %2d %2d %2d | %2d %2d %2d  | Last update: %02d:%02d : ",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
+		 lsf_pool->total_status[4] , lsf_pool->total_status[5] , ts.tm_hour, ts.tm_min);  
+	  fflush(stdout);
+	}
+      }
+
+
+      {
+	int total_jobs = 0;
+	for (ijob = 0; ijob < 6; ijob++)
+	  total_jobs += lsf_pool->total_status[ijob];
+	if (total_jobs != lsf_pool->size) {
+	  fprintf(stderr,"%s: Internal error: total number of jobs has changed %d -> %d - aborting.\n",__func__ , lsf_pool->size , total_jobs);
+	  abort();
+	}
+      }
     
       if (lsf_pool->summary_file != NULL) 
 	lsf_pool_fprintf_summary(lsf_pool);
@@ -747,5 +806,6 @@ void lsf_pool_free(lsf_pool_type *lsf_pool) {
   if (lsf_pool->summary_file != NULL)
     free(lsf_pool->summary_file);
   free(lsf_pool->total_status);
+  free(lsf_pool->prev_total_status);
   free(lsf_pool);
 }

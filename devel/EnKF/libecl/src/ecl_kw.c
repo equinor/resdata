@@ -514,8 +514,8 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 	    {
 	      double arg , value;
 	      int    power , iread;
-	      iread = fscanf(stream,ecl_kw->read_fmt,&arg , &power);
-	      if (iread != 1) {
+	      iread = fscanf(stream,ecl_kw->read_fmt , &arg , &power);
+	      if (iread != 2) {
 		fprintf(stderr,"%s: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
 		abort();
 	      }
@@ -715,6 +715,10 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 }
 
 
+void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
+  ecl_kw->header = realloc(ecl_kw->header , ecl_str_len + 1);
+  sprintf(ecl_kw->header , "%-8s" , header);
+}
 
 void ecl_kw_set_header(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *ecl_str_type ) {
   ecl_kw->ecl_type = __get_ecl_type(ecl_str_type);
@@ -723,8 +727,7 @@ void ecl_kw_set_header(ecl_kw_type *ecl_kw , const char *header ,  int size , co
     fprintf(stderr," Fatal error in %s ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
     abort();
   }
-  ecl_kw->header = realloc(ecl_kw->header , ecl_str_len + 1);
-  sprintf(ecl_kw->header , "%-8s" , header);
+  ecl_kw_set_header_name(ecl_kw , header);
   ecl_kw->size = size;
 }
 
@@ -1101,5 +1104,9 @@ void ecl_kw_fwrite_param(const char * filename , bool fmt_file , bool endian_con
 }
     
 
-
+void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
+  printf("%8s   %10d:%4s \n",ecl_kw_get_header_ref(ecl_kw),
+	 ecl_kw_get_size(ecl_kw),
+	 ecl_kw_get_str_type_ref(ecl_kw));
+}
 

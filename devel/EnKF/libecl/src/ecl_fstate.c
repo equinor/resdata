@@ -2,14 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include <stdbool.h>
 
 #include <fortio.h>
 #include <ecl_kw.h>
 #include <ecl_block.h>
 #include <ecl_fstate.h>
-#include <dirent.h>
 #include <util.h>
 #include <time.h>
 #include <ecl_util.h>
@@ -30,78 +28,58 @@ struct ecl_fstate_struct {
   bool 	      	   endian_convert;
   bool        	   unified;
   bool             summary_report_only;
+  bool             report_mode;
   int         	   files;
   int              N_blocks;
   int              block_size;
   ecl_block_type **block_list;
   time_t           sim_start_time;
+  ecl_file_type    file_type;
 };
 
-
-static void fmt_match(const char *filename , const char *substring , bool *fmt) {
-  if (strstr(filename , substring) != NULL)
-    *fmt = true;
-}
-
-
-static bool ecl_fstate_fmt_name(const char *filename) {
-  bool fmt = false;
-
-  fmt_match(filename , ".FSMSPEC" , &fmt);
-  fmt_match(filename , ".FUNSMRY" , &fmt);
-  fmt_match(filename , ".FUNRST"  , &fmt);
-  fmt_match(filename , ".FEGRID"  , &fmt);
-  fmt_match(filename , ".FGRID"   , &fmt);
-  fmt_match(filename , ".A"       , &fmt);
-  fmt_match(filename , ".F"       , &fmt);
-  fmt_match(filename , ".dat"     , &fmt);
-  
-  return fmt;
-}
 
 
 bool ecl_fstate_fmt_file(const char *filename) {
   const int min_size = 65536;
+  int report_nr;
+  ecl_file_type file_type;
+
   bool fmt_file;
   if (util_file_exists(filename)) {
     if (util_file_size(filename) > min_size)
       fmt_file = util_fmt_bit8(filename , min_size);
     else
-      fmt_file = ecl_fstate_fmt_name(filename);
+      ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
   } else
-    fmt_file = ecl_fstate_fmt_name(filename);
+    ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
+  
   return fmt_file;
 }
 
 
 
 
-
-
-static int ecl_fstate_fname_cmp(const void *f1, const void *f2) {
-  int t1 = ecl_util_filename_report_nr( *((const char **) f1) );
-  int t2 = ecl_util_filename_report_nr( *((const char **) f2) );
-  if (t1 < t2)
-    return -1;
-  else if (t1 > t2)
-    return 1;
-  else
-    return 0;
-}
-
-
-ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , bool summary_report_only , bool endian_convert , bool unified) {
+ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , ecl_file_type file_type , bool report_mode , bool endian_convert) {
+  
   ecl_fstate_type *ecl_fstate 	 = malloc(sizeof *ecl_fstate);
-  ecl_fstate->unified  	      	 = unified;
   ecl_fstate->fmt_mode 	      	 = fmt_mode;
   ecl_fstate->endian_convert  	 = endian_convert;
   ecl_fstate->N_blocks        	 = 0;
   ecl_fstate->filelist        	 = NULL;
   ecl_fstate->block_list      	 = NULL;
   ecl_fstate->sim_start_time     = -1;
-  ecl_fstate->summary_report_only        = summary_report_only;
+  ecl_fstate->report_mode        = report_mode;
+  ecl_fstate->file_type          = file_type;  
+  if (report_mode) {
+    if ( !(file_type == ecl_summary_file || file_type == ecl_restart_file || file_type == ecl_unified_restart_file)) {
+      fprintf(stderr,"%s: can not use report_mode=true for file_type:%d - aborting \n",__func__ , file_type);
+      abort();
+    }
+  }
+  
   return ecl_fstate;
 }
+
 
 
 static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
@@ -117,7 +95,7 @@ static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
     ecl_fstate->fmt_file = ecl_fstate_fmt_file(ecl_fstate->filelist[0]);
     break;
   default:
-    fprintf(stderr,"%s: internal error - invalid fmt_mode - aborting \n",__func__);
+    fprintf(stderr,"%s: internal error - fmt_mode=%d invalid - aborting \n",__func__ , ecl_fstate->fmt_mode);
     abort();
   }
   if (ecl_fstate->fmt_file != existing_fmt) {
@@ -145,81 +123,52 @@ void ecl_fstate_add_block(ecl_fstate_type *ecl_fstate , const ecl_block_type *ne
 }
 
 
-static void ecl_fstate_init_files(ecl_fstate_type *ecl_fstate , const char *filename1 , int files , const char ** filelist) {
-  if (ecl_fstate->unified) {
-    ecl_fstate->files = 1;
-    ecl_fstate->filelist = calloc(1 , sizeof *ecl_fstate->filelist);
-    ecl_fstate->filelist[0] = calloc(strlen(filename1) + 1 , 1);
-    strcpy(ecl_fstate->filelist[0] , filename1);
-  } else {
+void ecl_fstate_set_files(ecl_fstate_type *ecl_fstate , int files , const char ** filelist) {
+  ecl_fstate->files    = files;
+  ecl_fstate->filelist = calloc(files , sizeof *ecl_fstate->filelist);
+  ecl_fstate->unified  = ecl_util_unified(ecl_fstate->file_type); 
+  if (ecl_fstate->unified) 
+    ecl_fstate->filelist[0] = util_alloc_string_copy(filelist[0]);
+  else {
     int file;
-    ecl_fstate->filelist = calloc(files , sizeof *ecl_fstate->filelist);
     for (file=0; file < files; file++) 
       ecl_fstate->filelist[file] = util_alloc_string_copy(filelist[file]);
-
   }
   __ecl_fstate_set_fmt(ecl_fstate);
 }
 
 
-void ecl_fstate_set_unified_file(ecl_fstate_type *ecl_fstate, const char *filename1) {
-  ecl_fstate_init_files(ecl_fstate , filename1 , 0 , NULL);
-}
 
 void ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate , bool unified) {
   ecl_fstate->unified = unified;
 }
 
-void ecl_fstate_set_multiple_files(ecl_fstate_type *ecl_fstate, const char * basename , const char *ext) {
-  char **filelist;
-  int i;
-  filelist = calloc(ecl_fstate->N_blocks , sizeof(char *));
 
-  for (i=0; i < ecl_fstate->N_blocks; i++) {
-    filelist[i] = calloc(strlen(basename) + strlen(ext) + 1 + 1 + 4 , sizeof(char));
-    sprintf(filelist[i] , "%s.%s%04d" , basename , ext , ecl_block_get_report_nr(ecl_fstate->block_list[i]));
-  }
-  ecl_fstate_init_files(ecl_fstate , NULL  , ecl_fstate->N_blocks , (const char **) filelist);
+
+
+
+ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ecl_file_type file_type , bool report_mode , bool endian_convert) {
+  ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(ECL_FMT_AUTO , file_type , report_mode , endian_convert);
+  ecl_fstate_set_files(ecl_fstate , files , filelist);
   
-  for (i=0; i < ecl_fstate->N_blocks; i++) 
-    free(filelist[i]);
-  free(filelist);
-}
-
-
-
-/*
-  Should maybe get the first block number from 
-  ecl_fstate_fname2time() - and then continue from
-  there. Seems that actually is the best one can do??
-
-  Alternativly one could use proper time - which is
-  encoded in the items 65 - 67 in the INTEHEAD of the
-  restart files - in the summary files it does not 
-  seem to be available?
-*/
-  
-
-
-static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int files , const char ** filelist , bool summary_report_only , ecl_file_type file_type , int fmt_mode , bool endian_convert , bool unified) {
-  ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(fmt_mode , summary_report_only , endian_convert , unified);
   ecl_fstate->block_size  = 10;
   ecl_fstate->block_list  = calloc(ecl_fstate->block_size , sizeof *ecl_fstate->block_list);
-  ecl_fstate_init_files(ecl_fstate , filename1 , files , filelist);
+  
 
-  if (unified) {
+  if (ecl_fstate->unified) {
     fortio_type *fortio = fortio_open(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert);
     bool at_eof = false;
-    int report_nr   = -1;
     while (!at_eof) {
-      ecl_block_type *ecl_block = ecl_block_alloc(report_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+      ecl_block_type *ecl_block = ecl_block_alloc(-1 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
       ecl_block_fread(ecl_block , fortio , &at_eof);
-      if (file_type == ecl_restart_file) {
+      
+      if (file_type == ecl_unified_restart_file) {
+	int report_nr;
 	ecl_kw_type * seq_kw = ecl_block_get_kw(ecl_block , "SEQNUM");
 	ecl_kw_iget(seq_kw , 0 , &report_nr);
 	ecl_block_set_report_nr(ecl_block , report_nr);
 	ecl_block_set_sim_time_restart(ecl_block);
-      } else if (file_type == ecl_summary_file) 
+      } else if (file_type == ecl_unified_summary_file) 
 	/*
 	  Observe that when unified summary files are read in it is 
 	  *IMPOSSIBLE* to get hold of the report number. In this case
@@ -247,15 +196,27 @@ static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int file
 	  report_nr = 0;
 
 	while (!at_eof) {
-	  ecl_block_type *ecl_block = ecl_block_alloc(report_nr , 10 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+	  bool add_block = true;
+	  ecl_block_type *ecl_block = ecl_block_alloc(report_nr , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
 	  ecl_block_fread(ecl_block , fortio , &at_eof );
-	  if (file_type == ecl_summary_file) 
-	    ecl_block_set_sim_time_summary(ecl_block);
-	  else if (file_type == ecl_restart_file)
+
+	  if (file_type == ecl_summary_file) {
+	    if (ecl_block_has_kw(ecl_block , "MINISTEP")) 
+	      ecl_block_set_sim_time_summary(ecl_block);
+	    else
+	      add_block = false;
+	  } else if (file_type == ecl_restart_file)
 	    ecl_block_set_sim_time_restart(ecl_block);
-	
+
+	  /*
+	    In the case of summary files we can find incomplete files
+	    with only the SEQHDR keyword; they are not added to the
+	    fstate object.
+	  */
+	  
 	  ecl_block_set_report_nr(ecl_block , report_nr);
-	  ecl_fstate_add_block(ecl_fstate , ecl_block);
+	  if (add_block)
+	    ecl_fstate_add_block(ecl_fstate , ecl_block);
 	  
 	  if (file_type == ecl_summary_file) {
 	    if (report_nr == 0) 
@@ -263,7 +224,7 @@ static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int file
 	    else {
 	      if (!at_eof) {
 		if (ecl_fstate->summary_report_only) {
-		  fprintf(stderr,"%s: several timesteps in one summary file allocated with summary_report_only = true - aborting \n",__func__);
+		  fprintf(stderr,"%s: several timesteps in summary file:%s allocated with summary_report_only = true - aborting.\n",__func__ , ecl_fstate->filelist[file]);
 		  abort();
 		}
 	      }
@@ -278,226 +239,83 @@ static ecl_fstate_type * ecl_fstate_load_static(const char *filename1 , int file
 }
 
 
-static bool is_numeric(char c) {
-  if (c >= 48 && c <= 57)
-    return true;
-  else
-    return false;
-}
-
-
-bool ecl_fstate_include_file(const char *filename , const char *base, const char *ext_match) {
-  if (strstr(filename , base) == filename) {
-    char *substring_ptr = strstr(filename , ext_match);
-    if (substring_ptr == NULL) 
-      return false;
-    else {
-      bool include = true;
-      int i;
-      substring_ptr += strlen(ext_match);
-      if (strlen(substring_ptr) == 4) {
-	for (i=0; i < 4; i++)
-	  include = include && is_numeric(substring_ptr[i]);
-      } else 
-	include = false;
-      return include;
-    }
-  }  else return false;
-}
 
 
 
 
 
 
+/* 
+   The blocks in a fstat object can be indexed in two different ways:
 
-char ** ecl_fstate_alloc_filelist(const char *path , const char *base, const char *ext_char, int *_files) {
-  DIR * dirH = opendir(path);
-  struct dirent *dentry;
-  int files;
-  char **fileList;
-  char *ext_match = malloc(strlen(ext_char) + 2);
-  sprintf(ext_match , ".%s" , ext_char);
+   block_index: That is just the index of the block when it has been loaded. 
+                This method can always be used, but observe that there is no
+                link between 'true' simulation time and the block index.
+                The block index access mode can always be used.
+   
+   report_step: This is the report step from eclipse. It can always be used on
+                restart files, never on 'other' files, and for summary files
+                it can be used when the data has been loaded from multiple
+                files (i.e. with the report number in the filename), and with
+                summary_report_only set to true.
+
+   Only one of the lookup methods can be appplied at the time, the inactive
+   input variable should have a negative value.
+*/
+
+
+
+static ecl_block_type * ecl_fstate_get_block_static(const ecl_fstate_type * ecl_fstate , int index) {
+  ecl_block_type *block = NULL;
+
+  if (ecl_fstate->report_mode) {
+    int report_nr   = index;
+    int block_index = 0;
+    do {
+      if (report_nr == ecl_block_get_report_nr(ecl_fstate->block_list[block_index]))
+	block = ecl_fstate->block_list[block_index];
+      block_index++;
+    } while (block_index < ecl_fstate->N_blocks && block == NULL);
+  } else {
+    int block_index = index;
+    if (block_index >= 0 && block_index < ecl_fstate->N_blocks) 
+      block = ecl_fstate->block_list[block_index];
+  } 
   
-  if (dirH == NULL) {
-    fprintf(stderr,"\n%s: opening directory:%s failed - aborting \n",__func__ , path);
+  if (block == NULL) {
+    fprintf(stderr,"%s: could not find block:%d - aborting \n",__func__ , index);
     abort();
   }
 
-  files = 0;
-  while ((dentry = readdir (dirH)) != NULL) {
-    if (ecl_fstate_include_file(dentry->d_name , base, ext_match))
-      files++;
-  } 
-  rewinddir(dirH);
-
-  if (files == 0) 
-    fileList = NULL;
-  else {
-    fileList = calloc(files , sizeof *fileList);
-    files = 0;
-    while ((dentry = readdir (dirH)) != NULL) {
-      if (ecl_fstate_include_file(dentry->d_name , base , ext_match)) {
-	fileList[files] = malloc(strlen(path) + 1 + strlen(dentry->d_name) + 1);
-	sprintf(fileList[files] , "%s/%s" , path , dentry->d_name);
-	files++;
-      }
-    }
-  }
-  *_files = files;
-  
-  if (files > 0)
-    qsort(fileList , files , sizeof *fileList , &ecl_fstate_fname_cmp);
-  return fileList;
-}
-
-
-
-
-int ecl_fstate_scandir(const char *path , const char *glob , char ***_filelist) {
-  const char slash   = '/';
-  struct dirent **namelist;
-  bool add_slash;
-  char *slash_ptr;
-  char **filelist;
-  int files,i;
-
-  slash_ptr = strrchr(path , slash);
-  if (slash_ptr == NULL) 
-    add_slash = true;
-  else {
-    if (strlen(slash_ptr) != 1)
-      add_slash  = true;
-    else
-      add_slash = false;
-  }
-
-  files = scandir(path , &namelist , NULL , NULL);
-  if (files > 0) {
-    filelist = calloc(files , sizeof(char **));
-    for (i=0; i < files; i++) {
-      
-      if (add_slash) {
-	filelist[i] = calloc(strlen(namelist[i]->d_name) + strlen(path) + 2 , sizeof(char));
-	sprintf(filelist[i] , "%s/%s" , path , namelist[i]->d_name);
-      } else {
-	filelist[i] = calloc(strlen(namelist[i]->d_name) + strlen(path) + 1 , sizeof(char));
-	sprintf(filelist[i] , "%s%s" , path , namelist[i]->d_name);
-      }
-      free(namelist[i]);
-   }
-    free(namelist);
-    *_filelist = filelist;
-  } 
-  return files;
-}
-
-
-
-void ecl_fstate_scandir_free(int files , char **filelist) {
-  int i;
-  for (i=0; i < files; i++)
-    free(filelist[i]);
-  free(filelist);
-}
-
-/*****************************************************************/
-
-ecl_fstate_type * ecl_fstate_load_unified(const char *filename , bool summary_report_only , ecl_file_type file_type , int fmt_mode , bool endian_convert) {
-  ecl_fstate_type *ecl_fstate;
-  ecl_fstate = ecl_fstate_load_static(filename , 1 , NULL  , summary_report_only , file_type , fmt_mode , endian_convert , true);
-  return ecl_fstate;
-}
-
-ecl_fstate_type * ecl_fstate_load_multiple(int files , const char **filelist , bool summary_report_only , ecl_file_type file_type , int fmt_mode , bool endian_convert) {
-  ecl_fstate_type *ecl_fstate;
-  ecl_fstate = ecl_fstate_load_static(NULL , files , filelist , summary_report_only , file_type , fmt_mode , endian_convert , false);
-  return ecl_fstate;
-}
-
-ecl_fstate_type * ecl_fstate_load_unified_restart(const char *filename , int fmt_mode , bool endian_convert) {
-  return ecl_fstate_load_unified(filename , false , ecl_restart_file , fmt_mode , endian_convert);
-}
-
-ecl_fstate_type * ecl_fstate_load_multiple_restart(int files , const char **filelist , int fmt_mode , bool endian_convert) {
-  return ecl_fstate_load_multiple(files , filelist , false , ecl_restart_file , fmt_mode , endian_convert);
-}
-
-ecl_fstate_type * ecl_fstate_load_unified_summary(const char *filename , int fmt_mode , bool endian_convert) {
-  return ecl_fstate_load_unified(filename , ecl_summary_file , false , fmt_mode , endian_convert);
-}
-
-ecl_fstate_type * ecl_fstate_load_multiple_summary(int files , const char **filelist , bool summary_report_only , int fmt_mode , bool endian_convert) {
-  return ecl_fstate_load_multiple(files , filelist , ecl_summary_file , summary_report_only , fmt_mode , endian_convert);
-}
-
-/*****************************************************************/
-
-
-ecl_block_type * ecl_fstate_get_block(const ecl_fstate_type * ecl_fstate , int block_nr) {
-  ecl_block_type *block = NULL;
-
-  if (block_nr < ecl_fstate->N_blocks && block_nr >= 0) 
-    block = ecl_fstate->block_list[block_nr];
-  
   return block;
 }
 
 
-ecl_kw_type  * ecl_fstate_get_kw(const ecl_fstate_type * ecl_fstate , int istep , const char *kw) {
-  ecl_block_type * ecl_block = ecl_fstate_get_block(ecl_fstate , istep);
-  if (ecl_block == NULL) 
-    return NULL;
-  else 
-    return ecl_block_get_kw(ecl_block , kw);
+ecl_block_type * ecl_fstate_get_block(const ecl_fstate_type * ecl_fstate , int index) {
+  return ecl_fstate_get_block_static(ecl_fstate , index);
 }
 
 
-int ecl_fstate_kw_get_size(const ecl_fstate_type * ecl_fstate , int istep , const char *kw) {
-  ecl_kw_type *ecl_kw = ecl_fstate_get_kw(ecl_fstate , istep , kw);
-  if (ecl_kw == NULL) 
-    return 0;
-  else 
-    return ecl_kw_get_size(ecl_kw);
-} 
-
-bool ecl_fstate_kw_get_memcpy_data(const ecl_fstate_type * ecl_fstate , int istep , const char *kw , void *data) {
-  ecl_kw_type *ecl_kw = ecl_fstate_get_kw(ecl_fstate , istep , kw);
-  if (ecl_kw == NULL) 
-    return false;
-  else {
-    ecl_kw_get_memcpy_data(ecl_kw , data);
-    return true;
+ecl_block_type * ecl_fstate_iget_block(const ecl_fstate_type * ecl_fstate , int index) {
+  int block_index = index;
+  if (!(block_index >= 0 && block_index < ecl_fstate->N_blocks)) {
+    fprintf(stderr,"%s: index:%d invalid - legal range: [0,%d> - aborting \n",__func__ , index , ecl_fstate->N_blocks);
+    abort();
   }
+  return ecl_fstate->block_list[block_index];
 }
 
 
-bool ecl_fstate_kw_iget(const ecl_fstate_type * ecl_fstate , int istep , const char *kw , int iw , void *value) {
-  ecl_kw_type *ecl_kw = ecl_fstate_get_kw(ecl_fstate , istep , kw);
-  if (ecl_kw == NULL) 
+
+bool ecl_fstate_has_block(const ecl_fstate_type * ecl_fstate , int index) {
+  ecl_block_type * block = ecl_fstate_get_block_static(ecl_fstate , index);
+  if (block == NULL) 
     return false;
-  else {
-    ecl_kw_iget(ecl_kw , iw , value);
-    return true;
-  }
-}
-
-void * ecl_fstate_kw_get_data_ref(const ecl_fstate_type * ecl_fstate , int istep , const char *kw) {
-  ecl_kw_type *ecl_kw = ecl_fstate_get_kw(ecl_fstate , istep , kw);
-  if (ecl_kw == NULL) 
-    return NULL;
-  else 
-    return ecl_kw_get_data_ref(ecl_kw);
-}
-
-
-bool ecl_fstate_kw_exists(const ecl_fstate_type *ecl_fstate , int istep , const char *kw) {
-  ecl_kw_type *ecl_kw = ecl_fstate_get_kw(ecl_fstate , istep , kw);
-  if (ecl_kw == NULL) 
-    return false;
-  else 
+  else
     return true;
 }
+
+
 
 
 int ecl_fstate_get_Nstep(const ecl_fstate_type *ecl_fstate) {
@@ -543,6 +361,27 @@ void ecl_fstate_save(const ecl_fstate_type *ecl_fstate) {
   else
     ecl_fstate_save_multiple(ecl_fstate);
 }
+
+bool ecl_fstate_get_report_mode(const ecl_fstate_type * ecl_fstate) {
+  return ecl_fstate->report_mode;
+}
+
+
+int ecl_fstate_get_report_size(const ecl_fstate_type * ecl_fstate , int * first_report_nr , int * last_report_nr) {
+  if (!ecl_fstate->report_mode) {
+    /*
+      fprintf(stderr,"%s: not opened in report_mode - aborting \n",__func__);
+      abort();
+    */
+    *first_report_nr = 0;
+    *last_report_nr  = ecl_fstate->N_blocks - 1;
+  } else {
+    *first_report_nr = ecl_block_get_report_nr(ecl_fstate->block_list[0]);
+    *last_report_nr  = ecl_block_get_report_nr(ecl_fstate->block_list[ecl_fstate->N_blocks - 1]);
+  }
+  return ecl_fstate->N_blocks;
+}
+  
 
 
 
