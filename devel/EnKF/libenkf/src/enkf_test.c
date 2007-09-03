@@ -15,23 +15,47 @@
 #include <well_config.h>
 #include <thread_pool.h>
 #include <void_arg.h>
+#include <well_obs.h>
+#include <hist.h>
+#include <sched_file.h>
+#include <obs_data.h>
+#include <meas_data.h>
+#include <enkf_obs.h>
+#include <multflt_config.h>
+
+
 
 
 int main(void) {
 
+  enkf_obs_type      * enkf_obs;
+  obs_data_type      * obs_data;
+  meas_data_type     * meas_data;
   enkf_config_type   * config;
   enkf_state_type   ** state;
+
   const int *index_map;
   int nx,ny,nz,active_size;
   thread_pool_type * tp;
-							    
 
+  sched_file_type    * sched;
+  hist_type          * hist;
+
+  meas_data = meas_data_alloc();
+  obs_data  = obs_data_alloc();
+
+
+  sched     = sched_file_alloc((const int [3]) {1 , 1 , 1999});
+  sched_file_parse(sched , "SCHEDULE.INC");
+  hist      = hist_alloc_from_schedule(sched);
+ 
   index_map = field_config_alloc_index_map1("ECLIPSE.EGRID" , true , &nx , &ny , &nz , &active_size);
-
+  
   config = enkf_config_alloc(4, 2 , true);
   enkf_config_add_type(config , "MULTZ" , 
 		       parameter , MULTZ, 
-		       multz_config_alloc(100 , 100 , 100 , "MULTZ.INC" , "multz"));
+		       multz_config_fscanf_alloc("Config/multz" , 100 , 100 , 100 , "MULTZ.INC" , "multz"));
+  
 
   enkf_config_add_type(config , "EQUIL" , 
 		       parameter , EQUIL, 
@@ -55,8 +79,18 @@ int main(void) {
   enkf_config_add_type(config , "RV"    , ecl_restart , FIELD , 
 		       field_config_alloc("RV"    , ecl_float_type       , nx , ny , nz , active_size , index_map , 1 , NULL , "RV"));
   
-  enkf_config_add_well(config , "B-33A" , "well.ens" , 3 , (const char *[3]) {"WGPR" , "WWPR" , "WOPR"});
-  
+  enkf_config_add_well(config , "B-37T2" ,  4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
+  enkf_config_add_well(config , "B-33A"  ,  4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
+  enkf_config_add_well(config , "B-43A"  ,  4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
+  enkf_obs = enkf_obs_fscanf_alloc("Config/obs" , config , hist);
+
+  /*
+    enkf_obs_add_well_obs(enkf_obs , "B-33A"  , 3 , (const char *[3]) {"WGPR" , "WWPR" , "WOPR"});
+    enkf_obs_add_well_obs(enkf_obs , "B-37T2" , 3 , (const char *[3]) {"WGPR" , "WWPR" , "WOPR"});
+    enkf_obs_add_well_obs(enkf_obs , "B-43A"  , 4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
+  */
+
+
   tp = thread_pool_alloc(10);
   state = malloc(100 * sizeof *state);
   {
@@ -71,7 +105,7 @@ int main(void) {
       enkf_state_add_node(state[i] , "EQUIL");
 
       enkf_state_iset_eclpath(state[i] , 0 , "RunPATH");
-      sprintf(path , "tmpdir_%04d" , 0);
+      sprintf(path , "tmpdir_%04d" , i);
       enkf_state_iset_eclpath(state[i] , 1 , path);
       
       {
@@ -83,11 +117,6 @@ int main(void) {
 	void_arg_pack_ptr(load_arg[i] , 0 , &state[i]);
 	void_arg_pack_ptr(load_arg[i] , 1 , &unified);
 	void_arg_pack_ptr(load_arg[i] , 2 , &report_step);
-	
-	/*
-	  enkf_state_load_ecl_summary_void(load_arg[i]);
-	  enkf_state_load_ecl_restart_void(load_arg[i]);
-	*/
 	
 	thread_pool_add_job(tp , &enkf_state_load_ecl_summary_void , load_arg[i]);
 	thread_pool_add_job(tp , &enkf_state_load_ecl_restart_void , load_arg[i]);
@@ -120,20 +149,29 @@ int main(void) {
       */
     }
     thread_pool_join(tp);
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < 1; i++)
       {
 	const int serial_size = enkf_state_get_serial_size(state[i]);
 	double * serial_data = calloc(serial_size*100 , sizeof *serial_data);
 	
 	enkf_state_set_serial_data(state[i] , serial_data);
-	/*enkf_state_serialize(state[i]);*/
+	enkf_state_serialize(state[i]);
+
+	enkf_obs_get_observations(enkf_obs , 51 , obs_data);
+	enkf_obs_measure(enkf_obs , 51 , serial_data , meas_data);
+	obs_data_fprintf(obs_data , stdout);
+	meas_data_fprintf(meas_data , stdout);
 	free(serial_data);
       }
-
+    
     for (i=0; i < 100; i++)
       enkf_state_free(state[i]);
     
   }    
-
+  obs_data_reset(obs_data);
+  
+  obs_data_fprintf(obs_data , stdout);
   enkf_config_free(config);
+  enkf_obs_free(enkf_obs);
+  hist_free(hist);
 }

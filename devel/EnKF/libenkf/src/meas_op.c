@@ -11,9 +11,11 @@ struct meas_op_struct {
 
 meas_op_type * meas_op_alloc(int size) {
   meas_op_type * meas_op = malloc(sizeof * meas_op);
+
   meas_op->size = size;
   meas_op->weight_list = malloc(size * sizeof * meas_op->weight_list);
-  meas_op->index_list = malloc(size * sizeof * meas_op->index_list);
+  meas_op->index_list  = malloc(size * sizeof * meas_op->index_list);
+
   return meas_op;
 }
 
@@ -27,6 +29,11 @@ double meas_op_eval(const meas_op_type * meas_op, const double * serial_data) {
   return value;
 }
 
+
+void meas_op_set_scalar(meas_op_type * meas_op, int index) {
+  meas_op->index_list[0] = index;
+  meas_op->weight_list[0] = 1;
+}
 
 
 void meas_op_free(meas_op_type * meas_op) {

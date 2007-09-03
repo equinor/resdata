@@ -217,4 +217,22 @@ void prefix ## _serialize__(const void *void_arg, double *serial_data , size_t *
 
 #define VOID_SERIALIZE_HEADER(prefix) void prefix ## _serialize__(const void *, double *, size_t *);
 
+/*****************************************************************/
+
+#define VOID_GET_OBS(prefix)   \
+void prefix ## _get_observations__(const void * void_arg , int report_step, obs_data_type * obs_data) {   \
+   prefix ## _get_observations((prefix ## _type *) void_arg , report_step , obs_data); \
+}
+
+#define VOID_GET_OBS_HEADER(prefix) void prefix ## _get_observations__(const void * , int , obs_data_type *)
+
+/*****************************************************************/
+
+#define VOID_MEASURE(prefix)   \
+void prefix ## _measure__(const void * void_arg ,  const double * serial_data ,meas_data_type * meas_data) {   \
+   prefix ## _measure((const prefix ## _type *) void_arg , serial_data , meas_data); \
+}
+
+#define VOID_MEASURE_HEADER(prefix) void prefix ## _measure__(const void * ,  const double * , meas_data_type *)
+
 #endif

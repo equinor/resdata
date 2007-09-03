@@ -162,7 +162,7 @@ void well_load_summary_data(well_type * well , int report_step , const ecl_sum_t
     int ivar;
     
     for (ivar = 0; ivar < well_config_get_data_size(config); ivar++) 
-      well->data[ivar] = ecl_sum_iget1(ecl_sum , report_step , well_name , var_list[ivar] , NULL);
+  	well->data[ivar] = ecl_sum_iget1(ecl_sum , report_step , well_name , var_list[ivar] , NULL);
   }
 }
 

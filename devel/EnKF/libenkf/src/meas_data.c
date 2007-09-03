@@ -34,11 +34,18 @@ meas_data_type * meas_data_alloc() {
 
 void meas_data_add(meas_data_type * meas_data, double value) {
   if (meas_data->size == meas_data->alloc_size)
-    meas_data_realloc_data(meas_data , 2*meas_data->alloc_size);
+    meas_data_realloc_data(meas_data , 2*meas_data->alloc_size + 2);
   meas_data->data[meas_data->size] = value;
   meas_data->size++;
 }
 
+
+
+void meas_data_fprintf(const meas_data_type * meas_data , FILE *stream) {
+  int i;
+  for (i = 0; i < meas_data->size; i++)
+    fprintf(stream , "%-3d : %12.3f\n", i+1 , meas_data->data[i]);
+}
 
 
 void meas_data_free(meas_data_type * meas_data) {

@@ -16,6 +16,10 @@
 #include "enkf_debug.h"
 
 
+static inline int __global_index(const field_config_type * config , int i , int j , int k) {
+  return config->index_map[ k * config->nx * config->ny + j * config->nx + i];
+}
+
 GET_DATA_SIZE_HEADER(field);
 
 /*****************************************************************/
@@ -180,6 +184,42 @@ void field_serialize(const field_type *field , double *serial_data , size_t *_of
 
 
 
+/*
+  int index1D = config->index_map[ k * config->nx * config->ny + j * config->nx + i];      
+*/
+
+
+
+double field_ijk_get(const field_type * field , int i , int j , int k) {
+  int global_index = __global_index(field->config , i , j , k);
+  return field->data[global_index];
+}
+
+
+bool field_ijk_valid(const field_type * field , int i , int j , int k) {
+  int global_index = __global_index(field->config , i , j , k);
+  if (global_index >=0)
+    return true;
+  else
+    return false;
+}
+
+double field_ijk_get_if_valid(const field_type * field , int i , int j , int k , bool * valid) {
+  int global_index = __global_index(field->config , i , j , k);
+  if (global_index >=0) {
+    *valid = true;
+    return field->data[global_index];
+  } else {
+    *valid = false;
+    return 0.0;
+  }
+}
+
+
+int field_get_global_index(const field_type * field , int i , int j  , int k) {
+  return __global_index(field->config , i , j , k);
+}
+
 
 void field_get_ecl_kw_data(field_type * field , const ecl_kw_type * ecl_kw) {
   const field_config_type * config = field->config;
@@ -193,8 +233,12 @@ void field_get_ecl_kw_data(field_type * field , const ecl_kw_type * ecl_kw) {
     ecl_type_enum ecl_type = config->ecl_type;
     if (ecl_type == ecl_float_type) 
       data = enkf_util_calloc(data_size , sizeof(float) , __func__ );
-    else 
+    else if (ecl_type == ecl_double_type)
       data = field->data;
+    else {
+      fprintf(stderr,"%s: field->ecl_type = %d is not recognized - aborting \n",__func__ , ecl_type);
+      abort();
+    }
     ecl_kw_get_memcpy_data(ecl_kw , data);
     if (ecl_type == ecl_float_type) {
       util_float_to_double(field->data , data , data_size);
@@ -206,11 +250,12 @@ void field_get_ecl_kw_data(field_type * field , const ecl_kw_type * ecl_kw) {
 
 
 
+
 #define EXPORT_MACRO                                                                           \
 for (k=0; k < config->nz; k++) {                                                               \
   for (j=0; j < config->ny; j++) {                                                             \
     for (i=0; i < config->nx; i++) {                                                           \
-      int index1D = config->index_map[ k * config->nx * config->ny + j * config->nx + i];      \
+      int index1D = __global_index(config , i , j , k);                                        \
       int index3D;                                                                             \
       if (rms_order)                                               		     	       \
         index3D = i * config->ny*config->nz  +  j * config->ny + (config->nz - k);             \
@@ -247,7 +292,7 @@ void field_export3D(const field_type * field , void *_data , bool rms_order , bo
 for (k=0; k < config->nz; k++) {                                                               \
   for (j=0; j < config->ny; j++) {                                                             \
     for (i=0; i < config->nx; i++) {                                                           \
-      int index1D = config->index_map[ k * config->nx * config->ny + j * config->nx + i];      \
+      int index1D = __global_index(config , i , j , k);                                        \
       int index3D;                                                                             \
       if (index1D >= 0) {                                                                      \
 	if (rms_order)                                               		     	       \
@@ -274,6 +319,7 @@ void field_import3D(field_type * field , const void *_data , bool rms_order , bo
   }  
 }
 
+
 /* Skal param_name vaere en variabel ?? */
 void field_rms_export_parameter(const field_type * field , const char * param_name , const float * data3D,  const rms_file_type * rms_file) {
   const field_config_type * config = field->config;
@@ -284,6 +330,10 @@ void field_rms_export_parameter(const field_type * field , const char * param_na
   rms_tag_fwrite_parameter(param_name , tagkey , rms_file_get_FILE(rms_file));
   rms_tagkey_free(tagkey);
   
+}
+
+void field_get_dims(const field_type * field, int *nx, int *ny , int *nz) {
+  field_config_get_dims(field->config , nx , ny ,nz);
 }
 
 

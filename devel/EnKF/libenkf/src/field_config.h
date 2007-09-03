@@ -25,7 +25,7 @@ struct field_config_struct {
 
 
 
-
+void                field_config_get_dims(const field_config_type * , int * , int * , int *);
 const int         * field_config_alloc_index_map2(int, int , int, const int *  , int *);
 const int         * field_config_alloc_index_map1(const char * , bool , int *, int *, int *, int *);
 field_config_type * field_config_alloc(const char * , ecl_type_enum ,  int , int , int , int , const int * , int , const char * , const char * );

@@ -32,9 +32,18 @@ void multz_clear(multz_type * multz) {
     multz->data[k] = 0.0;
 }
 
+void multz_set_data(multz_type * multz , const double * data) {
+  memcpy(multz->data , data , multz_config_get_data_size(multz->config) * sizeof * data);
+}
+
+
+void multz_get_data(const multz_type * multz , double * data) {
+  memcpy(data , multz->data , multz_config_get_data_size(multz->config) * sizeof * data);
+}
+
 
 void multz_realloc_data(multz_type *multz) {
-  multz->data = enkf_util_calloc(multz_config_get_serial_size(multz->config) , sizeof *multz->data , __func__);
+  multz->data = enkf_util_calloc(multz_config_get_data_size(multz->config) , sizeof *multz->data , __func__);
 }
 
 
@@ -162,6 +171,7 @@ void multz_sample(multz_type *multz) {
     for (i=0; i < data_size; i++) 
       if (active[i])
 	multz->data[i] = enkf_util_rand_normal(mean[i] , std[i]);
+    
   }
 }
 

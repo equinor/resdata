@@ -14,12 +14,16 @@
 #include <equil_config.h>
 #include <multz_config.h>
 #include <multflt_config.h>
-
+#include <well_obs.h>
+#include <obs_node.h>
+#include <obs_data.h>
+#include <hist.h>
   
 
 struct enkf_config_struct {
   int  		    ens_size;
   hash_type        *config_hash;
+  hash_type        *obs_hash;
   int               enspath_depth;
   int               eclpath_depth;
   bool              endian_swap;
@@ -62,6 +66,7 @@ int enkf_config_get_enspath_depth(const enkf_config_type * enkf_config) { return
 enkf_config_type * enkf_config_alloc(int enspath_depth , int eclpath_depth, bool endian_swap) {
   enkf_config_type * enkf_config = malloc(sizeof *enkf_config);
   enkf_config->config_hash = hash_alloc(10);
+  enkf_config->obs_hash    = hash_alloc(10);
   
   enkf_config->eclpath_depth = eclpath_depth;
   enkf_config->enspath_depth = enspath_depth;
@@ -85,10 +90,9 @@ const char ** enkf_config_get_well_list_ref(const enkf_config_type * config , in
 }
 
 
-void enkf_config_add_well(enkf_config_type * enkf_config , const char *well_name , const char * ens_name , int size, const char ** var_list) {
-
+void enkf_config_add_well(enkf_config_type * enkf_config , const char *well_name , int size, const char ** var_list) {
   enkf_config_add_type(enkf_config , well_name , ecl_summary , WELL,
-		       well_config_alloc(well_name , ens_name , size , var_list));
+		       well_config_alloc(well_name , well_name , size , var_list));
 
 
   enkf_config->Nwells++;
@@ -153,11 +157,9 @@ void enkf_config_add_type(enkf_config_type * enkf_config,
       hash_insert_hash_owned_ref(enkf_config->config_hash , key , node , enkf_config_node_free__);
     }
   }
-  
 }
 
 
-			  
 
 void enkf_config_add_type0(enkf_config_type * enkf_config , const char *key , int size, enkf_var_type enkf_type , enkf_impl_type impl_type) {
   switch(impl_type) {
@@ -179,9 +181,9 @@ void enkf_config_add_type0(enkf_config_type * enkf_config , const char *key , in
 
 
 
-
 void enkf_config_free(enkf_config_type * enkf_config) {  
   hash_free(enkf_config->config_hash);
+  hash_free(enkf_config->obs_hash);
   {
     int i;
     for (i=0; i < enkf_config->Nwells; i++)
@@ -190,6 +192,7 @@ void enkf_config_free(enkf_config_type * enkf_config) {
   }
   free(enkf_config);
 }
+
 
 
 const enkf_config_node_type * enkf_config_get_ref(const enkf_config_type * config, const char * key) {
@@ -201,6 +204,9 @@ const enkf_config_node_type * enkf_config_get_ref(const enkf_config_type * confi
     abort();
   }
 }
+
+
+
 
 
 

@@ -15,6 +15,8 @@ struct well_config_struct {
 
 typedef struct well_config_struct well_config_type;
 
+const char       * well_config_get_config_txt_file_ref(const well_config_type * );
+well_config_type * well_config_fscanf_alloc(const char * , const char * , const char * );
 well_config_type * well_config_alloc(const char * , const char * , int , const char ** );
 void               well_config_free(well_config_type * );
 const char       * well_config_get_ensfile_ref(const well_config_type * );
@@ -23,7 +25,7 @@ const char       * well_config_get_well_name_ref(const well_config_type * );
 int                well_config_get_var_index(const well_config_type * , const char * );
 const char      ** well_config_get_var_list_ref(const well_config_type *);
 void               well_config_add_var(well_config_type *  , const char * );
-
+bool               well_config_has_var(const well_config_type * , const char * );
 
 
 

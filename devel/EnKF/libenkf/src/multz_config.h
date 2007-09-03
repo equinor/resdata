@@ -6,18 +6,20 @@
 #include <enkf_util.h>
 #include <config.h>
 #include <enkf_types.h>
+#include <logmode.h>
 
 typedef struct {
   CONFIG_STD_FIELDS;
   int *i1, *i2 , *j1 , *j2 , *k;
-  int *area;
-  bool     lognormal;
+  int 	 * area;
+  logmode_type **logmode;
   double * mean;
   double * std;
   bool   * active;
 } multz_config_type;
 
 
+multz_config_type * multz_config_fscanf_alloc(const char * , int , int , int , const char * , const char * );
 multz_config_type * multz_config_alloc(int , int , int , const char * , const char * );
 void                multz_config_free(multz_config_type *);
 const        char * multz_config_get_ensfile_ref(const multz_config_type * );

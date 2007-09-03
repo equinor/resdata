@@ -41,13 +41,6 @@ void enkf_config_node_free(enkf_config_node_type * node) {
 }
 
 
-void enkf_config_node_free__(void * void_node) {
-  enkf_config_node_type * node = (enkf_config_node_type *) void_node;
-  enkf_config_node_free(node);
-}
-
-
-
 
 int enkf_config_node_get_serial_size(enkf_config_node_type * config_node , int *current_offset) {
   int serial_size = config_node->get_serial_size(config_node->data );
@@ -71,3 +64,6 @@ const void *  enkf_config_node_get_ref(const enkf_config_node_type * node) {
 enkf_impl_type enkf_config_node_get_impl_type(const enkf_config_node_type *config_node) { 
   return config_node->impl_type; 
 }
+
+
+VOID_FREE(enkf_config_node)

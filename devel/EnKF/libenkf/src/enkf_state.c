@@ -423,7 +423,7 @@ void enkf_state_load_ecl_restart(enkf_state_type * enkf_state ,  bool unified , 
   if (unified)
     ecl_block_fseek(report_step , fmt_file , true , fortio);
   
-  ecl_block = ecl_block_alloc(report_step , 10 , fmt_file , endian_swap);
+  ecl_block = ecl_block_alloc(report_step , fmt_file , endian_swap);
   ecl_block_fread(ecl_block , fortio , &at_eof);
   fortio_close(fortio);
 

@@ -10,7 +10,7 @@ typedef struct multflt_config_struct multflt_config_type;
 
 struct multflt_config_struct {
   CONFIG_STD_FIELDS;
-  bool   lognormal;
+  int    * logmode;
   char  ** fault_names;
   double * mean;
   double * std;
@@ -18,7 +18,8 @@ struct multflt_config_struct {
 };
 
 
-multflt_config_type * multflt_config_alloc(int , const char * , const char * );
+multflt_config_type * multflt_config_fscanf_alloc(const char * , const char * , const char * );
+/*multflt_config_type * multflt_config_alloc(int , const char * , const char * );*/
 void                  multflt_config_free(multflt_config_type *);
 const          char * multflt_config_get_ensfile_ref(const multflt_config_type * );
 const          char * multflt_config_get_eclfile_ref(const multflt_config_type * );

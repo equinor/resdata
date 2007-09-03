@@ -27,6 +27,10 @@ field_config_type * field_config_alloc(const char * ecl_kw_name , ecl_type_enum 
   config->nx = nx;
   config->ny = ny;
   config->nz = nz;
+
+  config->sx = 1;
+  config->sy = nx;
+  config->sz = nx * ny;
   config->index_map = index_map;
   config->ecl_type  = ecl_type;
   
@@ -77,6 +81,17 @@ const int * field_config_alloc_index_map2(int nx, int ny, int nz, const int * ac
   return index_map;
 }
 
+
+/*int field_config_get_global_index(const field_config_type * field_config , int i , int j , int k) {
+  
+}
+*/
+
+void field_config_get_dims(const field_config_type * config , int *nx , int *ny , int *nz) {
+  *nx = config->nx;
+  *ny = config->ny;
+  *nz = config->nz;
+}
 
 
 const int * field_config_alloc_index_map1(const char * EGRID_file , bool endian_flip , int *nx , int *ny , int *nz , int *active_size) {
