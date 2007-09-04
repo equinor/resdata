@@ -31,6 +31,77 @@ struct field_struct {
 };
 
 
+#define EXPORT_MACRO                                                                           \
+for (k=0; k < config->nz; k++) {                                                               \
+  for (j=0; j < config->ny; j++) {                                                             \
+    for (i=0; i < config->nx; i++) {                                                           \
+      int index1D = __global_index(config , i , j , k);                                        \
+      int index3D;                                                                             \
+      if (rms_order)                                               		     	       \
+        index3D = i * config->ny*config->nz  +  j * config->ny + (config->nz - k);             \
+      else                                                                       	       \
+        index3D = i + j * config->nx + k* config->nx*config->ny;           	               \
+      if (index1D >= 0)                                                                        \
+	data[index3D] = field->data[index1D];                               	               \
+      else                                                                                     \
+	data[index3D] = fill_value;                                                            \
+     }                                                                                         \
+  }                                                                                            \
+}
+
+
+static void field_export3D(const field_type * field , void *_data , bool rms_order , bool export_float , double fill_value) {
+  const field_config_type * config = field->config;
+  int i,j,k;
+  
+  if (export_float) {
+    float *data = (float *) _data;
+    EXPORT_MACRO
+ } else {
+    double *data = (double *) _data;
+    EXPORT_MACRO
+  }  
+
+}
+  
+
+/*****************************************************************/
+
+
+#define IMPORT_MACRO                                                                           \
+for (k=0; k < config->nz; k++) {                                                               \
+  for (j=0; j < config->ny; j++) {                                                             \
+    for (i=0; i < config->nx; i++) {                                                           \
+      int index1D = __global_index(config , i , j , k);                                        \
+      int index3D;                                                                             \
+      if (index1D >= 0) {                                                                      \
+	if (rms_order)                                               		     	       \
+	  index3D = i * config->ny*config->nz  +  j * config->ny + (config->nz - k);           \
+	else                                                                       	       \
+	  index3D = i + j * config->nx + k* config->nx*config->ny;           	               \
+	field->data[index1D] = data[index3D] ;                               	               \
+     }                                                                                         \
+   }                                                                                           \
+  }                                                                                            \
+}
+
+
+static void field_import3D(field_type * field , const void *_data , bool rms_order , bool import_float) {
+  const field_config_type * config = field->config;
+  int i,j,k;
+  
+  if (import_float) {
+    const float *data = (const float *) _data;
+    IMPORT_MACRO
+  } else {
+    const double *data = (const double *) _data;
+    IMPORT_MACRO
+  }  
+}
+
+
+/*****************************************************************/
+
 
 void field_clear(field_type * field) {
   const int data_size = field_config_get_data_size(field->config);   
@@ -96,7 +167,10 @@ void field_fwrite(const field_type * field , const char *file) {
 }
 
 
-void field_ecl_write_fortio(const field_type * field , fortio_type * fortio , bool fmt_file , bool endian_swap , ecl_type_enum ecl_type) {
+
+
+
+void field_ecl_write1D_fortio(const field_type * field , fortio_type * fortio , bool fmt_file , bool endian_swap , ecl_type_enum ecl_type) {
   const int data_size = field_config_get_data_size(field->config);
   void *data;
   if (ecl_type == ecl_float_type) {
@@ -105,13 +179,30 @@ void field_ecl_write_fortio(const field_type * field , fortio_type * fortio , bo
   } else 
     data = field->data;
 
-  ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_swap , field_config_get_ecl_kw_name(field->config) , ecl_type, data_size , data);
+  ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_swap , field_config_get_ecl_kw_name(field->config), ecl_type , data_size , data);
   if (ecl_type == ecl_float_type) 
     free(data);
 }
 
 
-void field_ecl_write(const field_type * field , const char * path) {
+
+void field_ecl_write3D_fortio(const field_type * field , fortio_type * fortio , bool fmt_file , bool endian_swap , ecl_type_enum ecl_type) {
+  const int data_size = field_config_get_volume(field->config);
+  void *data;
+  bool export_float;
+  data = enkf_util_calloc(data_size , sizeof(float) , __func__);
+  if (ecl_type == ecl_float_type) 
+    export_float = true;
+  else
+    export_float = false;
+  field_export3D(field , data , false , export_float , 0.0);
+
+  ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_swap , field_config_get_ecl_kw_name(field->config), ecl_type , data_size , data);
+  free(data);
+}
+
+
+void field_ecl_write2(const field_type * field  , const char * path , bool write3D) {
   fortio_type * fortio;
   bool fmt_file , endian_swap;
   ecl_type_enum ecl_type;
@@ -120,10 +211,31 @@ void field_ecl_write(const field_type * field , const char * path) {
   field_config_set_io_options(field->config , &fmt_file , &endian_swap, &ecl_type);
   fortio = fortio_open(eclfile , "w" , endian_swap);
 
-  field_ecl_write_fortio(field , fortio , fmt_file , endian_swap , ecl_type);
+  if (write3D)
+    field_ecl_write3D_fortio(field , fortio , fmt_file , endian_swap , ecl_type);
+  else
+    field_ecl_write1D_fortio(field , fortio , fmt_file , endian_swap , ecl_type);
 
   fortio_close(fortio);
   free(eclfile);
+}
+
+
+
+
+void field_ecl_write3D(const field_type * field , const char * path) {
+  field_ecl_write2(field , path , true);
+}
+
+
+void field_ecl_write1D(const field_type * field , const char * path) {
+  field_ecl_write2(field , path , false);
+}
+
+
+
+void field_ecl_write(const field_type * field , const char * path) {
+  field_ecl_write1D(field , path);
 }
 
 
@@ -185,7 +297,7 @@ void field_serialize(const field_type *field , double *serial_data , size_t *_of
 
 
 /*
-  int index1D = config->index_map[ k * config->nx * config->ny + j * config->nx + i];      
+  int index05D = config->index_map[ k * config->nx * config->ny + j * config->nx + i];      2
 */
 
 
@@ -221,7 +333,7 @@ int field_get_global_index(const field_type * field , int i , int j  , int k) {
 }
 
 
-void field_get_ecl_kw_data(field_type * field , const ecl_kw_type * ecl_kw) {
+void field_copy_ecl_kw_data(field_type * field , const ecl_kw_type * ecl_kw) {
   const field_config_type * config = field->config;
   const int data_size = field_config_get_data_size(config);
   if (data_size != ecl_kw_get_size(ecl_kw)) {
@@ -249,75 +361,6 @@ void field_get_ecl_kw_data(field_type * field , const ecl_kw_type * ecl_kw) {
 
 
 
-
-
-#define EXPORT_MACRO                                                                           \
-for (k=0; k < config->nz; k++) {                                                               \
-  for (j=0; j < config->ny; j++) {                                                             \
-    for (i=0; i < config->nx; i++) {                                                           \
-      int index1D = __global_index(config , i , j , k);                                        \
-      int index3D;                                                                             \
-      if (rms_order)                                               		     	       \
-        index3D = i * config->ny*config->nz  +  j * config->ny + (config->nz - k);             \
-      else                                                                       	       \
-        index3D = i + j * config->ny + k* config->nx*config->ny;           	               \
-      if (index1D >= 0)                                                                        \
-	data[index3D] = field->data[index1D];                               	               \
-      else                                                                                     \
-	data[index3D] = fill_value;                                                            \
-     }                                                                                         \
-  }                                                                                            \
-}
-
-
-void field_export3D(const field_type * field , void *_data , bool rms_order , bool export_float , double fill_value) {
-  const field_config_type * config = field->config;
-  int i,j,k;
-  
-  if (export_float) {
-    float *data = (float *) _data;
-    EXPORT_MACRO
- } else {
-    double *data = (double *) _data;
-    EXPORT_MACRO
-  }  
-
-}
-  
-
-/*****************************************************************/
-
-
-#define IMPORT_MACRO                                                                           \
-for (k=0; k < config->nz; k++) {                                                               \
-  for (j=0; j < config->ny; j++) {                                                             \
-    for (i=0; i < config->nx; i++) {                                                           \
-      int index1D = __global_index(config , i , j , k);                                        \
-      int index3D;                                                                             \
-      if (index1D >= 0) {                                                                      \
-	if (rms_order)                                               		     	       \
-	  index3D = i * config->ny*config->nz  +  j * config->ny + (config->nz - k);           \
-	else                                                                       	       \
-	  index3D = i + j * config->ny + k* config->nx*config->ny;           	               \
-	field->data[index1D] = data[index3D] ;                               	               \
-     }                                                                                         \
-   }                                                                                           \
-  }                                                                                            \
-}
-
-
-void field_import3D(field_type * field , const void *_data , bool rms_order , bool import_float) {
-  const field_config_type * config = field->config;
-  int i,j,k;
-  
-  if (import_float) {
-    const float *data = (const float *) _data;
-    IMPORT_MACRO
-  } else {
-    const double *data = (const double *) _data;
-    IMPORT_MACRO
-  }  
-}
 
 
 /* Skal param_name vaere en variabel ?? */

@@ -7,11 +7,11 @@
 #include <config.h>
 #include <multz_config.h>
 #include <logmode.h>
-
+#include <util.h>
 
 
 /*
-  WARNING: Return the multz_config object in a completely unitialized state.
+  WARNING: Returns the multz_config object in a completely unitialized state.
 */
 static multz_config_type * __multz_config_alloc_empty(int size , const char * eclfile , const char * ensfile) {
 
@@ -40,37 +40,67 @@ static multz_config_type * __multz_config_alloc_empty(int size , const char * ec
 
 
 
-/*multz_config_type * multz_config_alloc(const int *i1, const int *i2 , const int *j1 , const int *j2, const char * eclfile , const char * ensfile) {
-  multz_config_type *config = __multz_config_alloc_empty(size , eclfile , ensfile);
-  { 
+
+
+void multz_config_fwrite(const multz_config_type * config , FILE * stream) {
+  /* Bootstrap is based on the three first fields. */
+  UTIL_FWRITE_SCALAR(config->data_size   , stream);
+  util_fwrite_string(config->ensfile     , stream);
+  util_fwrite_string(config->eclfile     , stream);
+  
+  UTIL_FWRITE_SCALAR(config->serial_size , stream);
+  util_fwrite_string(config->ecl_kw_name , stream);
+  UTIL_FWRITE_SCALAR(config->var_type    , stream);
+  UTIL_FWRITE_VECTOR(config->i1          , config->data_size , stream);
+  UTIL_FWRITE_VECTOR(config->i2          , config->data_size , stream);
+  UTIL_FWRITE_VECTOR(config->j1          , config->data_size , stream);
+  UTIL_FWRITE_VECTOR(config->j2          , config->data_size , stream);
+  UTIL_FWRITE_VECTOR(config->k           , config->data_size , stream);
+  UTIL_FWRITE_VECTOR(config->area        , config->data_size , stream);
+  UTIL_FWRITE_VECTOR(config->mean        , config->data_size , stream);
+  UTIL_FWRITE_VECTOR(config->std         , config->data_size , stream);
+  UTIL_FWRITE_VECTOR(config->active      , config->data_size , stream);
+  {
     int i;
-    for (i = 0; i < config->data_size; i++) {
-      config->mean[i]   = 1.0;
-      config->std[i]    = 1.0;
-      config->active[i] = true;
-
-      config->i1[i]     = i1[i];
-      config->i2[i]     = i2[i];
-
-      config->j1[i]     = j1[i];
-      config->j2[i]     = j2[i];
-      
-      config->k[i]      = i+1;
-
-      if (config->active[i])
-	config->serial_size++;
-    }
+    for (i=0; i < config->data_size; i++) 
+      logmode_fwrite(config->logmode[i] , stream);
   }
+}
 
-  { 
-    int i;
-    for (i = 0; i < config->data_size; i++) 
-      config->area[i] = (config->i2[i]- config->i1[i] + 1) * (config->j2[i]- config->j1[i] + 1);
+
+
+
+multz_config_type * multz_config_fread_alloc(FILE * stream) {
+  int size;
+  multz_config_type * config;
+  UTIL_FREAD_SCALAR(size , stream);
+  {
+    char * ensfile , *eclfile;
+    ensfile = util_fread_alloc_string(stream);
+    eclfile = util_fread_alloc_string(stream);
+    config = __multz_config_alloc_empty(size , eclfile , ensfile);
   }
   
+  UTIL_FREAD_SCALAR(config->serial_size , stream);
+  config->ecl_kw_name = util_fread_alloc_string(stream);
+  UTIL_FREAD_SCALAR(config->var_type    , stream);
+  UTIL_FREAD_VECTOR(config->i1          , config->data_size , stream);
+  UTIL_FREAD_VECTOR(config->i2          , config->data_size , stream);
+  UTIL_FREAD_VECTOR(config->j1          , config->data_size , stream);
+  UTIL_FREAD_VECTOR(config->j2          , config->data_size , stream);
+  UTIL_FREAD_VECTOR(config->k           , config->data_size , stream);
+  UTIL_FREAD_VECTOR(config->area        , config->data_size , stream);
+  UTIL_FREAD_VECTOR(config->mean        , config->data_size , stream);
+  UTIL_FREAD_VECTOR(config->std         , config->data_size , stream);
+  UTIL_FREAD_VECTOR(config->active      , config->data_size , stream);
+  {
+    int i;
+    for (i=0; i < config->data_size; i++) 
+      config->logmode[i] = logmode_fread_alloc(stream);
+  }
   return config;
 }
-*/
+
 
 
 
@@ -81,7 +111,7 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
   int size , line_nr;
   bool at_eof;
 
-  size = util_count_file_lines(stream);
+  size = util_count_content_file_lines(stream);
   fseek(stream , 0L , SEEK_SET);
   config  = __multz_config_alloc_empty(size , eclfile , ensfile);
   line_nr = -1;
@@ -93,55 +123,56 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
     line = util_fscanf_realloc_line(stream , &at_eof , line);
     if (!at_eof) {
       int scan_count = sscanf(line , "%d  %lg  %lg  %d  %d  %d  %d  %d" , &k , &mu , &sigma , &logmode , &i1 , &i2 , &j1 , &j2);
-      switch(scan_count) {
-      case(4):
-	line_nr++;
-	i1 = 1; 
-	i2 = nx;
-	j1 = 1;
-	j2 = ny;
-	break;
-      case(8):
-	line_nr++;
-	i1 = util_int_max(i1 , 1);
-	i2 = util_int_min(i2 , nx);
-	j1 = util_int_max(j1 , 1);
-	j2 = util_int_min(j1 , ny);
-	break;
-      default:
-	fprintf(stderr,"%s: line number %d in config file %s not recognized as valid format - aborting\n",__func__ , line_nr + 2 , filename);
-	abort();
+      if (scan_count == EOF) 
+	at_eof = true;
+      else {
+	switch(scan_count) {
+	case(4):
+	  line_nr++;
+	  i1 = 1; 
+	  i2 = nx;
+	  j1 = 1;
+	  j2 = ny;
+	  break;
+	case(8):
+	  line_nr++;
+	  i1 = util_int_max(i1 , 1);
+	  i2 = util_int_min(i2 , nx);
+	  j1 = util_int_max(j1 , 1);
+	  j2 = util_int_min(j2 , ny);
+	  break;
+	default:
+	  fprintf(stderr,"%s: line number %d in config file %s not recognized as valid format - aborting\n",__func__ , line_nr + 2 , filename);
+	  abort();
+	}
+	
+	if (logmode < 0 || logmode > log_all) {
+	  fprintf(stderr,"%s: line number %d in config file: %s  logmode=%d is invalid - aborting \n",__func__ , line_nr + 1 , filename , logmode);
+	  abort();
+	}
+	
+	if (k <= 0 || k > nz) {
+	  fprintf(stderr,"%s: invalid k:%d \n",__func__ , k);
+	  abort();
+	}
+	
+	config->mean[line_nr]    = mu;
+	config->std[line_nr]     = sigma;
+	config->active[line_nr]  = true;
+	config->logmode[line_nr] = logmode_alloc(10.0 , logmode);
+	config->k[line_nr]       = k;
+	config->i1[line_nr]      = i1;
+	config->i2[line_nr]      = i2;
+	config->j1[line_nr]      = j1;
+	config->j2[line_nr]      = j2;
+	config->area[line_nr]    = (config->i2[line_nr]- config->i1[line_nr] + 1) * (config->j2[line_nr]- config->j1[line_nr] + 1);
+	logmode_transform_input_distribution(config->logmode[line_nr], &config->mean[line_nr] , &config->std[line_nr]);
+	if (config->active[line_nr])
+	  config->serial_size++;
       }
-
-      if (logmode < 0 || logmode > log_all) {
-	fprintf(stderr,"%s: line number %d in config file: %s  logmode=%d is invalid - aborting \n",__func__ , line_nr + 1 , filename , logmode);
-	abort();
-      }
-
-      config->mean[line_nr]    = mu;
-      config->std[line_nr]     = sigma;
-      config->active[line_nr]  = true;
-      config->logmode[line_nr] = logmode_alloc(10.0 , logmode);
-      config->k[line_nr]       = k;
-      config->i1[line_nr]      = i1;
-      config->i2[line_nr]      = i2;
-      config->j1[line_nr]      = j1;
-      config->j2[line_nr]      = j2;
     }
   } while (! at_eof);
-    
-  {
-    int i;
-    for (i = 0; i < config->data_size; i++) {
-      double mu , std;
-      logmode_transform_input_distribution(config->logmode[i], config->mean[i] , config->std[i] , &mu , &std); 
-      config->mean[i] = mu;  config->std[i] = std;
-      
-      config->area[i] = (config->i2[i]- config->i1[i] + 1) * (config->j2[i]- config->j1[i] + 1);
-      if (config->active[i])
-	config->serial_size++;
-    }
-  }
+  
   fclose(stream);
   free(line);
   return config;
@@ -150,20 +181,28 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
 
 
 const char * multz_config_get_ensfile_ref(const multz_config_type * config) {
+  if (config->ensfile == NULL) {
+    fprintf(stderr,"%s: ensfile == NULL - aborting \n",__func__);
+    abort();
+  }
   return config->ensfile;
 }
 
 const char * multz_config_get_eclfile_ref(const multz_config_type * config) {
+  if (config->eclfile == NULL) {
+    fprintf(stderr,"%s: eclfile == NULL - aborting \n",__func__);
+    abort();
+  }
   return config->eclfile;
 }
 
 
 void multz_config_fprintf_layer(const multz_config_type * config , int ik , double multz_value , FILE *stream) {
-  fprintf(stream,"BOX\n   %5d %5d %5d %5d %5d %5d / \nMULTZ\n%d*%g /\nENDBOX\n\n" , 
+  fprintf(stream,"BOX\n   %5d %5d %5d %5d %5d %5d / \nMULTZ\n%d*%g /\nENDBOX\n\n\n" , 
 	  config->i1[ik]   , config->i2[ik] , 
 	  config->j1[ik]   , config->j2[ik] , 
 	  config->k[ik]    , config->k[ik]  , 
-	  config->area[ik] , multz_value);
+	  config->area[ik] , logmode_transform_output_scalar(config->logmode[ik] , multz_value));
 }
 
 
@@ -186,6 +225,10 @@ void multz_config_free(multz_config_type * config) {
   CONFIG_FREE_STD_FIELDS;
   free(config);
 }
+
+
+
+
 
 
 /*****************************************************************/

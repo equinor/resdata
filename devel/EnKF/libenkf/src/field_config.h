@@ -33,6 +33,9 @@ void                field_config_free(field_config_type *);
 const        char * field_config_get_ensfile_ref(const field_config_type * );
 const        char * field_config_get_eclfile_ref(const field_config_type * );
 void                field_config_set_io_options(const field_config_type * , bool *, bool * , ecl_type_enum *);
+int                 field_config_get_volume(const field_config_type * );
+void                field_config_set_ecl_kw_name(field_config_type * , const char * );
+void                field_config_set_eclfile(field_config_type * , const char * );
 
 /*Generated headers */
 CONFIG_GET_ECL_KW_NAME_HEADER(field);

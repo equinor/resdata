@@ -9,6 +9,13 @@
 
 /*****************************************************************/
 
+
+void field_config_set_ecl_kw_name(field_config_type * config , const char * ecl_kw_name) {
+  config->ecl_kw_name = util_realloc_string_copy(config->ecl_kw_name , ecl_kw_name);
+}
+
+
+
 field_config_type * field_config_alloc(const char * ecl_kw_name , ecl_type_enum ecl_type , int nx , int ny , int nz , int active_size , const int * index_map , int logmode , const char * eclfile , const char * ensfile) {
   field_config_type *config = malloc(sizeof *config);
   
@@ -19,8 +26,12 @@ field_config_type * field_config_alloc(const char * ecl_kw_name , ecl_type_enum 
   config->data_size        = active_size; 
   config->serial_size      = active_size;
 
+  
   config->ecl_kw_name = util_alloc_string_copy(ecl_kw_name);
-  config->eclfile = util_alloc_string_copy(eclfile);
+  config->eclfile = NULL;
+  config->ecl_kw_name = NULL;
+  field_config_set_eclfile(config , eclfile);
+  field_config_set_ecl_kw_name(config , ecl_kw_name);
   config->ensfile = util_alloc_string_copy(ensfile);
   config->logmode = logmode;
 
@@ -63,6 +74,10 @@ void field_config_free(field_config_type * config) {
   
 int field_config_get_serial_size(const field_config_type * config) {
   return config->serial_size;
+}
+
+int field_config_get_volume(const field_config_type * config) {
+  return config->nx * config->ny * config->nz;
 }
 
 

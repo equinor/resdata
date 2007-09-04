@@ -17,6 +17,7 @@ void             multz_ecl_write(const multz_type * , const char *);
 void             multz_ens_write(const multz_type * , const char *);
 void             multz_ens_read(multz_type * , const char *);
 void             multz_sample(multz_type *);
+void             multz_TEST(void);
 
 
 MATH_OPS_HEADER(multz);
@@ -33,7 +34,6 @@ VOID_SERIALIZE_HEADER  (multz)
 VOID_ECL_WRITE_HEADER (multz)
 VOID_ENS_WRITE_HEADER (multz)
 VOID_ENS_READ_HEADER  (multz)
-
 
 VOID_FUNC_HEADER       (multz_sample   );
 VOID_FUNC_HEADER       (multz_isqrt    );

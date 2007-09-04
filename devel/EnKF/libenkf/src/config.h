@@ -9,7 +9,7 @@
 int serial_size;          \
 int data_size;            \
 int serial_offset;        \
-const char * ecl_kw_name; \
+char * ecl_kw_name;       \
 enkf_var_type var_type;   \
 char * ensfile;           \
 char * eclfile;          

@@ -27,6 +27,8 @@ INSTALL: $(LIB)
 	install $(LIB) $(INSTALL_LIB_PATH)
 	gcc -std=gnu99 -Wall -g -m32 -I./ $(COMPILE_INCLUDE) enkf_test.c -o enkf.x -L./ $(COMPILE_LIB_PATH) -lenkf $(COMPILE_LIBS)
 	gcc -std=gnu99 -Wall -g -m32 -I./ $(COMPILE_INCLUDE) field_test.c -o field.x -L./ $(COMPILE_LIB_PATH) -lenkf $(COMPILE_LIBS)
+	gcc -std=gnu99 -Wall -g -m32 -I./ $(COMPILE_INCLUDE) swcr_init.c -o /d/proj/bg/enkf/bin/swcr_init.x  -L./ $(COMPILE_LIB_PATH) -lenkf $(COMPILE_LIBS)
+
 
 clean:
 	rm -f *.o *~

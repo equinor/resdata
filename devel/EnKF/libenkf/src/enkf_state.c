@@ -392,7 +392,7 @@ static void enkf_state_load_ecl_restart__(enkf_state_type * enkf_state , const e
      
       switch (impl_type)  {
       case(FIELD):
-	field_get_ecl_kw_data(enkf_node_value_ptr(enkf_node) , ecl_kw);
+	field_copy_ecl_kw_data(enkf_node_value_ptr(enkf_node) , ecl_kw);
 	break;
       case(STATIC):
 	ecl_static_kw_init(enkf_node_value_ptr(enkf_node) , ecl_kw);

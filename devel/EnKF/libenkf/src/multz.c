@@ -209,6 +209,35 @@ void multz_serialize(const multz_type *multz , double *serial_data , size_t *_of
 
 
 
+void multz_TEST() {
+  const char * config_file = "/tmp/multz_config.txt";
+  FILE * stream = util_fopen(config_file , "w");
+  fprintf(stream , "1  0.01  0.01   2  1 10 1 10\n");
+  fprintf(stream , "1  0.01  0.005  0  1 10 1 10\n");
+  fprintf(stream , "1 40.00 20.00   2  1 10 1 10\n");
+  fclose(stream);
+  
+  {
+    const int ens_size = 1000;
+    char path[64];
+    int iens;
+    multz_config_type  * config    = multz_config_fscanf_alloc(config_file , 10, 10 ,10 , "MULTZ.INC" , NULL);
+    multz_type        ** multz_ens = malloc(ens_size * sizeof * multz_ens);
+    
+    for (iens = 0; iens < ens_size; iens++) {
+      multz_ens[iens] = multz_alloc(config);
+      multz_sample(multz_ens[iens]);
+      sprintf(path , "/tmp/%04d" , iens + 1);
+      util_make_path(path);
+      multz_ecl_write(multz_ens[iens] , path);
+    }
+  }
+}
+
+
+
+
+
 
 
 

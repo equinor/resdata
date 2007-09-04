@@ -24,6 +24,10 @@
 #include <multflt_config.h>
 
 
+void TEST() {
+  multz_TEST();
+}
+
 
 
 int main(void) {
@@ -41,6 +45,8 @@ int main(void) {
   sched_file_type    * sched;
   hist_type          * hist;
 
+  TEST();
+  exit(1);
   meas_data = meas_data_alloc();
   obs_data  = obs_data_alloc();
 
