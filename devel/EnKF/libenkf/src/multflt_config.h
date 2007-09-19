@@ -5,16 +5,19 @@
 #include <stdbool.h>
 #include <enkf_util.h>
 #include <config.h>
+#include <logmode.h>
 
 typedef struct multflt_config_struct multflt_config_type;
 
 struct multflt_config_struct {
   CONFIG_STD_FIELDS;
-  int    * logmode;
-  char  ** fault_names;
-  double * mean;
-  double * std;
-  bool   * active;
+  logmode_type    ** logmode;
+  char            ** fault_names;
+  double 	   * mean;
+  double 	   * std;
+  bool   	   * active;
+  transform_ftype ** output_transform;
+  char            ** output_transform_name;
 };
 
 
@@ -23,7 +26,8 @@ multflt_config_type * multflt_config_fscanf_alloc(const char * , const char * , 
 void                  multflt_config_free(multflt_config_type *);
 const          char * multflt_config_get_ensfile_ref(const multflt_config_type * );
 const          char * multflt_config_get_eclfile_ref(const multflt_config_type * );
-
+double                multflt_config_transform(const multflt_config_type * , int , double );
+double                multflt_config_truncate(const multflt_config_type * , int , double );
 
 
 GET_SERIAL_SIZE_HEADER(multflt);

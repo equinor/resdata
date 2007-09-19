@@ -3,9 +3,9 @@
 #include <enkf_types.h>
 #include <config.h>
 
-typedef void (config_free_ftype)                (void *);
-typedef int  (config_get_serial_size_ftype)     (const void *);
-typedef void (config_set_serial_offset_ftype)   (void * , int);
+typedef void   (config_free_ftype)                (void *);
+typedef int    (config_get_serial_size_ftype)     (const void *);
+typedef void   (config_set_serial_offset_ftype)   (void * , int);
 
 typedef struct enkf_config_node_struct enkf_config_node_type;
 

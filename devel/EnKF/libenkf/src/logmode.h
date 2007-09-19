@@ -1,7 +1,6 @@
 #ifndef __LOGMODE_H__
 #define __LOGMODE_H__
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -20,6 +19,8 @@ void           logmode_transform_input_distribution(const logmode_type * ,  doub
 double         logmode_transform_output_scalar(const logmode_type *  , double );
 logmode_type * logmode_fread_alloc(FILE * );
 void           logmode_fwrite(const logmode_type * , FILE *);
+bool           logmode_logEnKF(const logmode_type * );
+
 #endif
 
 

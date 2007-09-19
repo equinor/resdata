@@ -131,3 +131,5 @@ void logmode_transform_input_distribution(const logmode_type * logmode , double 
   logmode_transform_distribution(logmode->base , logmode->log_input , logmode->log_enkf , mean , std);
 }
 
+
+bool logmode_logEnKF(const logmode_type * logmode) {  return logmode->log_enkf; }

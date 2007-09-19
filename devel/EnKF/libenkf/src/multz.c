@@ -7,6 +7,7 @@
 #include <multz_config.h>
 #include <multz.h>
 #include <enkf_util.h>
+#include <logmode.h>
 
 
 #define  DEBUG
@@ -207,14 +208,28 @@ void multz_serialize(const multz_type *multz , double *serial_data , size_t *_of
 
 
 
+void multz_truncate(multz_type * multz) {
+  DEBUG_ASSERT(multz)
+  {
+    const multz_config_type  *config     = multz->config;
+    const int                 data_size  = multz_config_get_data_size(config);
+    int i;
+    
+    for (i = 0; i < data_size; i++) 
+      multz->data[i] = multz_config_truncate(config , i , multz->data[i]);
+  }
+}
+
+
+/*****************************************************************/
 
 
 void multz_TEST() {
   const char * config_file = "/tmp/multz_config.txt";
   FILE * stream = util_fopen(config_file , "w");
-  fprintf(stream , "1  0.01  0.01   2  1 10 1 10\n");
-  fprintf(stream , "1  0.01  0.005  0  1 10 1 10\n");
-  fprintf(stream , "1 40.00 20.00   2  1 10 1 10\n");
+  fprintf(stream , "1  0.01  0.01   0  1 10 1 10\n");
+  fprintf(stream , "1  0.01  0.5    0  1 10 1 10\n");
+  fprintf(stream , "1 10.00 20.00   0  1 10 1 10\n");
   fclose(stream);
   
   {
@@ -230,6 +245,7 @@ void multz_TEST() {
       sprintf(path , "/tmp/%04d" , iens + 1);
       util_make_path(path);
       multz_ecl_write(multz_ens[iens] , path);
+      multz_truncate(multz_ens[iens]);
     }
   }
 }
@@ -254,6 +270,7 @@ VOID_COPYC     (multz)
 VOID_SWAPIN(multz)
 VOID_SWAPOUT(multz)
 VOID_SERIALIZE(multz)
+VOID_TRUNCATE(multz)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

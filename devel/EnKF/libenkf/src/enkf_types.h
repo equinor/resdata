@@ -1,5 +1,6 @@
 #ifndef __ENKF_TYPES_H__
 #define __ENKF_TYPES_H__
+typedef double (transform_ftype)                  (double );
 
 /*
   Observe that seemingly random numbers are used in these enum definitions, 

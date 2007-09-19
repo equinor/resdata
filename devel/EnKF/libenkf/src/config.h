@@ -235,4 +235,10 @@ void prefix ## _measure__(const void * void_arg ,  const double * serial_data ,m
 
 #define VOID_MEASURE_HEADER(prefix) void prefix ## _measure__(const void * ,  const double * , meas_data_type *)
 
+
+/*****************************************************************/
+
+#define VOID_TRUNCATE(prefix)         void prefix ## _truncate__(void * void_arg) { prefix ## _truncate( (prefix ## _type *) void_arg); }
+#define VOID_TRUNCATE_HEADER(prefix)  void prefix ## _truncate__(void * )
+
 #endif

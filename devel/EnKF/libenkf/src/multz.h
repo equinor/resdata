@@ -17,6 +17,7 @@ void             multz_ecl_write(const multz_type * , const char *);
 void             multz_ens_write(const multz_type * , const char *);
 void             multz_ens_read(multz_type * , const char *);
 void             multz_sample(multz_type *);
+void             multz_truncate(multz_type *);
 void             multz_TEST(void);
 
 
@@ -30,6 +31,7 @@ VOID_ALLOC_ENSFILE_HEADER(multz);
 VOID_SWAPIN_HEADER(multz)
 VOID_SWAPOUT_HEADER(multz)
 VOID_SERIALIZE_HEADER  (multz)
+     /*VOID_TRUNCATE_HEADER(multz)*/
 
 VOID_ECL_WRITE_HEADER (multz)
 VOID_ENS_WRITE_HEADER (multz)

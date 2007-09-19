@@ -8,6 +8,14 @@
 #include <multz_config.h>
 #include <logmode.h>
 #include <util.h>
+#include <trans_func.h>
+
+
+static void multz_config_set_output_transform(multz_config_type * config) {
+  int i;
+  for (i=0; i < config->data_size; i++)
+    config->output_transform[i] = trans_func_lookup(config->output_transform_name[i]);
+}
 
 
 /*
@@ -23,18 +31,20 @@ static multz_config_type * __multz_config_alloc_empty(int size , const char * ec
   config->eclfile = util_alloc_string_copy(eclfile);
   config->ensfile = util_alloc_string_copy(ensfile);
 
-  config->mean    = enkf_util_malloc(config->data_size * sizeof *config->mean    , __func__);
-  config->std     = enkf_util_malloc(config->data_size * sizeof *config->std     , __func__);
-  config->active  = enkf_util_malloc(config->data_size * sizeof *config->active  , __func__);
-  config->i1      = enkf_util_malloc(config->data_size * sizeof *config->i1      , __func__);
-  config->i2      = enkf_util_malloc(config->data_size * sizeof *config->i2      , __func__);
-  config->j1      = enkf_util_malloc(config->data_size * sizeof *config->j1      , __func__);
-  config->j2      = enkf_util_malloc(config->data_size * sizeof *config->j2      , __func__);
-  config->k       = enkf_util_malloc(config->data_size * sizeof *config->k       , __func__);
-  config->area    = enkf_util_malloc(config->data_size * sizeof *config->area    , __func__);
-  config->logmode = enkf_util_malloc(config->data_size * sizeof *config->logmode , __func__);
+  config->mean    	   	= enkf_util_malloc(config->data_size * sizeof *config->mean    , __func__);
+  config->std     	   	= enkf_util_malloc(config->data_size * sizeof *config->std     , __func__);
+  config->active  	   	= enkf_util_malloc(config->data_size * sizeof *config->active  , __func__);
+  config->i1      	   	= enkf_util_malloc(config->data_size * sizeof *config->i1      , __func__);
+  config->i2      	   	= enkf_util_malloc(config->data_size * sizeof *config->i2      , __func__);
+  config->j1      	   	= enkf_util_malloc(config->data_size * sizeof *config->j1      , __func__);
+  config->j2      	   	= enkf_util_malloc(config->data_size * sizeof *config->j2      , __func__);
+  config->k       	   	= enkf_util_malloc(config->data_size * sizeof *config->k       , __func__);
+  config->area    	   	= enkf_util_malloc(config->data_size * sizeof *config->area    , __func__);
+  config->logmode 	   	= enkf_util_malloc(config->data_size * sizeof *config->logmode , __func__);
+  config->output_transform 	= enkf_util_malloc(config->data_size * sizeof *config->output_transform , __func__);
+  config->output_transform_name = enkf_util_malloc(config->data_size * sizeof *config->output_transform_name , __func__);
+
   config->serial_size = 0;
-  
   return config;
 }
 
@@ -62,11 +72,12 @@ void multz_config_fwrite(const multz_config_type * config , FILE * stream) {
   UTIL_FWRITE_VECTOR(config->active      , config->data_size , stream);
   {
     int i;
-    for (i=0; i < config->data_size; i++) 
+    for (i=0; i < config->data_size; i++) {
       logmode_fwrite(config->logmode[i] , stream);
+      util_fwrite_string(config->output_transform_name[i] , stream);
+    }
   }
 }
-
 
 
 
@@ -95,9 +106,12 @@ multz_config_type * multz_config_fread_alloc(FILE * stream) {
   UTIL_FREAD_VECTOR(config->active      , config->data_size , stream);
   {
     int i;
-    for (i=0; i < config->data_size; i++) 
+    for (i=0; i < config->data_size; i++) {
       config->logmode[i] = logmode_fread_alloc(stream);
+      config->output_transform_name[i] = util_fread_alloc_string(stream);
+    }
   }
+  multz_config_set_output_transform(config);
   return config;
 }
 
@@ -111,7 +125,8 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
   int size , line_nr;
   bool at_eof;
 
-  size = util_count_content_file_lines(stream);
+  size = util_count_file_lines(stream);
+  printf("size:%d \n",size);
   fseek(stream , 0L , SEEK_SET);
   config  = __multz_config_alloc_empty(size , eclfile , ensfile);
   line_nr = -1;
@@ -156,16 +171,17 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
 	  abort();
 	}
 	
-	config->mean[line_nr]    = mu;
-	config->std[line_nr]     = sigma;
-	config->active[line_nr]  = true;
-	config->logmode[line_nr] = logmode_alloc(10.0 , logmode);
-	config->k[line_nr]       = k;
-	config->i1[line_nr]      = i1;
-	config->i2[line_nr]      = i2;
-	config->j1[line_nr]      = j1;
-	config->j2[line_nr]      = j2;
-	config->area[line_nr]    = (config->i2[line_nr]- config->i1[line_nr] + 1) * (config->j2[line_nr]- config->j1[line_nr] + 1);
+	config->output_transform_name[line_nr] = NULL;
+	config->mean[line_nr]    	       = mu;
+	config->std[line_nr]     	       = sigma;
+	config->active[line_nr]  	       = true;
+	config->logmode[line_nr] 	       = logmode_alloc(10.0 , logmode);
+	config->k[line_nr]       	       = k;
+	config->i1[line_nr]      	       = i1;
+	config->i2[line_nr]      	       = i2;
+	config->j1[line_nr]      	       = j1;
+	config->j2[line_nr]      	       = j2;
+	config->area[line_nr]    	       = (config->i2[line_nr]- config->i1[line_nr] + 1) * (config->j2[line_nr]- config->j1[line_nr] + 1);
 	logmode_transform_input_distribution(config->logmode[line_nr], &config->mean[line_nr] , &config->std[line_nr]);
 	if (config->active[line_nr])
 	  config->serial_size++;
@@ -175,6 +191,9 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
   
   fclose(stream);
   free(line);
+  printf("Skal sette output_tranmsform \n");
+  multz_config_set_output_transform(config);
+  printf("multz_config complete \n");
   return config;
 }
 
@@ -197,12 +216,21 @@ const char * multz_config_get_eclfile_ref(const multz_config_type * config) {
 }
 
 
-void multz_config_fprintf_layer(const multz_config_type * config , int ik , double multz_value , FILE *stream) {
+void multz_config_fprintf_layer(const multz_config_type * config , int ik , double org_value , FILE *stream) {
+  double new_value;
+  
+  if (config->output_transform[ik] == NULL)
+    new_value = org_value;
+  else
+    new_value = config->output_transform[ik](org_value);
+
+  new_value = logmode_transform_output_scalar(config->logmode[ik] , new_value);
   fprintf(stream,"BOX\n   %5d %5d %5d %5d %5d %5d / \nMULTZ\n%d*%g /\nENDBOX\n\n\n" , 
 	  config->i1[ik]   , config->i2[ik] , 
 	  config->j1[ik]   , config->j2[ik] , 
 	  config->k[ik]    , config->k[ik]  , 
-	  config->area[ik] , logmode_transform_output_scalar(config->logmode[ik] , multz_value));
+	  config->area[ik] , new_value);
+  
 }
 
 
@@ -218,8 +246,11 @@ void multz_config_free(multz_config_type * config) {
   free(config->i2);
   free(config->k);
   free(config->area);
-  for (i=0; i < config->data_size; i++)
+  for (i=0; i < config->data_size; i++) {
     logmode_free(config->logmode[i]);
+  }
+  util_free_string_list(config->output_transform_name , config->data_size);
+  free(config->output_transform);
   free(config->logmode);
   
   CONFIG_FREE_STD_FIELDS;
@@ -228,6 +259,16 @@ void multz_config_free(multz_config_type * config) {
 
 
 
+double multz_config_truncate(const multz_config_type * config , int i, double org_value) {
+  double new_value = org_value;
+  
+  if (config->active[i]) 
+    if (!logmode_logEnKF(config->logmode[i]))
+      if (config->output_transform[i] == NULL)
+	new_value = util_double_max(0.0 , org_value);
+
+  return new_value;
+}
 
 
 

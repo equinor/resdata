@@ -13,7 +13,7 @@ void multz_inter_init__(const char * _config_file, const int * config_file_len ,
   MULTZ_CONFIG = multz_config_fscanf_alloc(config_file , *nx , *ny , *nz , "MULTZ.INC" , NULL);
   
   if (*n_multz != multz_config_get_serial_size(MULTZ_CONFIG)) {
-    fprintf(stderr,"%s: size mismatch - aborting \n",__func__);
+    fprintf(stderr,"%s: size mismatch config_file:%d  mod_dimensions.F90/num_multz:%d - aborting \n",__func__ , multz_config_get_serial_size(MULTZ_CONFIG) , *n_multz);
     abort();
   }
 
@@ -23,6 +23,7 @@ void multz_inter_init__(const char * _config_file, const int * config_file_len ,
   for (iens = 0; iens < *ens_size; iens++) 
     MULTZ_LIST[iens] = multz_alloc(MULTZ_CONFIG);
 
+  printf("Skal kalle free(config_file) \n");
   free(config_file);
 }
 
@@ -43,7 +44,19 @@ void multz_inter_ecl_write__(const char *_path , const int * path_len , const do
 
 
 
+void multz_get_data__(const int * iens, double * data) {
+  multz_get_data(MULTZ_LIST[(*iens) - 1] , data);
+}
+
+
 void multz_inter_sample__(const int * iens, double * data) {
   multz_sample(MULTZ_LIST[(*iens) - 1]);
+  multz_get_data(MULTZ_LIST[(*iens) - 1] , data);
+}
+
+
+void multz_inter_truncate__(const int * iens , double * data) {
+  multz_set_data(MULTZ_LIST[(*iens) - 1] , data);
+  multz_truncate(MULTZ_LIST[(*iens) - 1]);
   multz_get_data(MULTZ_LIST[(*iens) - 1] , data);
 }

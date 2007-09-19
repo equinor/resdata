@@ -22,10 +22,12 @@
 #include <meas_data.h>
 #include <enkf_obs.h>
 #include <multflt_config.h>
+#include <multflt.h>
 
 
 void TEST() {
   multz_TEST();
+  multflt_TEST();
 }
 
 

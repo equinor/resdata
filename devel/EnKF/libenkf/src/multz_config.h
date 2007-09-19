@@ -11,14 +11,17 @@
 typedef struct {
   CONFIG_STD_FIELDS;
   int *i1, *i2 , *j1 , *j2 , *k;
-  int 	 * area;
-  logmode_type **logmode;
-  double * mean;
-  double * std;
-  bool   * active;
+  int 	           * area;
+  logmode_type     **logmode;
+  double 	   * mean;
+  double 	   * std;
+  bool   	   * active;
+  transform_ftype ** output_transform;
+  char            ** output_transform_name;
 } multz_config_type;
 
 
+double              multz_config_truncate(const multz_config_type * , int , double );
 multz_config_type * multz_config_fscanf_alloc(const char * , int , int , int , const char * , const char * );
 multz_config_type * multz_config_alloc(int , int , int , const char * , const char * );
 void                multz_config_free(multz_config_type *);
