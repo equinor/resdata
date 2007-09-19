@@ -3,8 +3,17 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <time.h>
+
+
+time_t       util_make_time2(int , int , int , int , int , int );
+time_t       util_make_time1(int , int , int);
+
+time_t       util_fscanf_date(FILE * );
+bool         util_fscanf_try_date(FILE * );
 
 bool 	     util_file_exists(const char *);
+int          util_get_path_length(const char * );
 bool 	     util_path_exists(const char *);
 bool 	     util_fmt_bit8   (const char *, int );
 void 	     util_make_path  (const char *);
@@ -14,14 +23,26 @@ bool         util_file_update_required(const char *, const char *);
 int          util_file_size(const char *);
 void         util_unlink_path(const char *);
 void         util_unlink_existing(const char *filename);
-void util_copy_stream(FILE *, FILE *, int , void * );
 
+void 	     util_copy_stream(FILE *, FILE *, int , void * );
+void 	     util_copy_file(const char * , const char * );
+
+int      util_forward_line(FILE * , bool * );
+void     util_rewind_line(FILE *);
+int      util_count_content_file_lines(FILE * );
+int      util_count_file_lines(FILE * );
 FILE   * util_fopen(const char *  , const char *);
+void     util_alloc_file_components(const char * , char ** , char **, char **);
 char   * util_realloc_full_path(char * , const char *, const char *);
+char   * util_alloc_tmp_file(const char * , const char * , bool );
+char   * util_fscanf_alloc_line(FILE *, bool *);
+char   * util_fscanf_realloc_line(FILE *, bool * , char *);
 char   * util_alloc_full_path(const char *, const char *);
 char   * util_alloc_strip_copy(const char *);
 void     util_set_strip_copy(char * , const char *);
+char   * util_alloc_string_sum(const char **  , int);
 char   * util_alloc_string_copy(const char *);
+char  ** util_alloc_stringlist_copy(const char **, int );
 void     util_split_string(const char *, const char *, int *, char ***);
 char   * util_realloc_string_copy(char * , const char *);
 char   * util_realloc_substring_copy(char * , const char *, int );
@@ -31,6 +52,7 @@ char  ** util_alloc_string_list(int , int );
 char   * util_alloc_substring_copy(const char *, int );
 
 bool     util_intptr_2bool(const int *);
+void     util_pad_f90string(char * , int );
 char *   util_alloc_cstring(const char *, const int *);
 char *   util_alloc_string_copy(const char *);
 void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
@@ -52,6 +74,18 @@ double 	 util_double_max(double  , double );
 float  	 util_float_min (float   , float );
 int    	 util_int_min   (int     , int);
 double 	 util_double_min(double  , double );
+void     util_fskip_lines(FILE * , int);
+bool     util_same_file(const char *  , const char * );
+void     util_read_path(const char * , int , bool , char *  );
+void     util_read_string(const char *  , int  , char * );
 
 #define UTIL_ABORT(msg) (util_abort(__func__, __FILE__, __LINE__ , msg))
+
+
+#define UTIL_FWRITE_SCALAR(s,stream) fwrite(&s , sizeof s , 1 , stream)
+#define UTIL_FREAD_SCALAR(s,stream)  fread(&s , sizeof s , 1 , stream)
+
+#define UTIL_FWRITE_VECTOR(s,n,stream) fwrite(s , sizeof s , (n) , stream)
+#define UTIL_FREAD_VECTOR(s,n,stream)  fread(s , sizeof s , (n) , stream)
+
 #endif

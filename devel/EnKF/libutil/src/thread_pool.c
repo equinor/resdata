@@ -10,6 +10,9 @@ struct thread_pool_struct {
 };
 
 
+
+
+
 static void thread_pool_resize(thread_pool_type * pool, int new_size) {
   pool->pool_size   = new_size;
   pool->thread_list = realloc(pool->thread_list , new_size * sizeof * pool->thread_list);
