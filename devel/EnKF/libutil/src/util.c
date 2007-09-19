@@ -152,10 +152,14 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
     char c;
     do {
       c = fgetc(stream);
-      if (EOL_CHAR(c))
+      if (c == EOF) 
 	cont = false;
-      else
-	len++;
+      else {
+	if (EOL_CHAR(c))
+	  cont = false;
+	else
+	  len++;
+      }
     } while (cont);
     if (c == '\r')
       dos_newline = true;
