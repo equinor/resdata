@@ -32,7 +32,7 @@ int ecl_util_filename_report_nr(const char *filename) {
 
 void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , bool *_fmt_file, int * _report_nr) {
   const bool ecl_other_ok = true;
-  ecl_file_type file_type = -1;
+  ecl_file_type file_type = ecl_other_file;
   bool fmt_file = true;
   int report_nr = -1;
 

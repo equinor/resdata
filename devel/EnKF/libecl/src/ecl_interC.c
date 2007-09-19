@@ -39,7 +39,7 @@ void ecl_inter_free__(void) {
 
 
 void ecl_inter_get_nstep__(int *Nstep) {
-  *Nstep = ecl_fstate_get_Nstep(ECL_FSTATE);
+  *Nstep = ecl_fstate_get_size(ECL_FSTATE);
 }
 
 
@@ -152,6 +152,20 @@ void ecl_inter_fwrite_param__(const char *_filename    , const int *filename_len
   free(filename);
   free(header);
 }
+
+
+
+
+void ecl_inter_fread_param__(const char *_filename    , const int *filename_len,
+			     const int  *fmt_file_int , double *data) {
+  
+  char *filename = util_alloc_cstring(_filename , filename_len);
+  bool fmt_file  = util_intptr_2bool(fmt_file_int);
+  ecl_kw_fread_double_param(filename , fmt_file , ENDIAN_CONVERT , data);
+  free(filename);
+
+}
+
 
 
 

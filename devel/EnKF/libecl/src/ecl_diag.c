@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+#include <set.h>
+#include <hash.h>
 #include <ecl_fstate.h>
 #include <util.h>
 #include <ecl_sum.h>
@@ -210,24 +212,23 @@ static char ** fread_alloc_wells(const char *well_file , int *_nwell) {
   FILE *fileH;
   char **well_list = NULL;
   char well[32];
-  int iwell;
-  int nwell = 0;
-  if (util_file_exists(well_file)) {
-    int nread;
-    fileH = fopen(well_file , "r");
-    while ( (nread = fscanf(fileH , "%s" , well)) == 1)
-      nwell++;
-    well_list = util_alloc_string_list(nwell , 32);
-    rewind(fileH);
+  set_type * well_set = set_alloc_empty();
 
-    iwell = 0;
-    while ( (nread = fscanf(fileH , "%s" , well_list[iwell])) == 1)
-      iwell++;
+  if (util_file_exists(well_file)) {
+    fileH = fopen(well_file , "r");
+    util_fskip_lines(fileH , 3);
+    while ( fscanf(fileH , "%s" , well) == 1) {
+      set_add_key(well_set , well);
+      util_fskip_lines(fileH , 1);
+    }
     fclose(fileH);
   }
-  *_nwell = nwell;
+  *_nwell = set_get_size(well_set);
+  well_list = set_alloc_keylist(well_set);
+  set_free(well_set);
   return well_list;
 }
+
 
 
 /* static void ecl_diag_add_subplot(FILE *stream , int prior_size , int posterior_size, double ps , double lw , int history_pt , int prior_lt , int posterior_lt, */
@@ -378,11 +379,11 @@ void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name
   read_int   ("First ensemble member " , prompt_len , &iens1);
   read_int   ("Last ensemble member " , prompt_len , &iens2);
 
-  read_int   ("Number of wells ...[0 to use all wells in wells.dat]" , prompt_len , &nwell);
+  read_int   ("Number of wells ...[0 to use all wells in prepobs.def]" , prompt_len , &nwell);
   if (nwell == 0) {
-    well_list = fread_alloc_wells("wells.dat" , &nwell);
+    well_list = fread_alloc_wells("prepobs.def" , &nwell);
     if (nwell == 0) {
-      fprintf(stderr,"Could not find well file: wells.dat - returning \n");
+      fprintf(stderr,"Could not find well file: prepobs.def - returning \n");
       return;
     }
   } else {

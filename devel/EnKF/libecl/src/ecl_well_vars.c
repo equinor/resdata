@@ -7,17 +7,19 @@
 
 static bool string_cmp_list(const char * var , int len , const char ** list) {
   bool eq = false;
-  int i;
-  for (i=0; i < len; i++)
+  int i = 0;
+  do {
     if (strcmp(var, list[i]) == 0) eq = true;
+    i++;
+  } while ((i < len) && (eq == false));
   return eq;
 }
 
 
 
-static well_var_type __ecl_well_var_get_type(const char *var , bool *invalid , bool *history) {
+static well_var_type __ecl_well_var_get_type(const char *var , bool *valid , bool *history) {
   well_var_type type;
-
+  *valid = true;
   if (string_cmp_list(var , 4 , (const char *[4]) {"OPR" , "ORAT" , "WOPR" , "WOPRH"})) 
     type = well_var_orat;
   else if (string_cmp_list(var , 4 , (const char *[4]) {"GPR" , "GRAT" , "WGPR" , "WGPRH"})) 
@@ -33,9 +35,10 @@ static well_var_type __ecl_well_var_get_type(const char *var , bool *invalid , b
   else if (string_cmp_list(var , 3 , (const char *[3]) {"GOR" , "WGOR" , "WGORH"}))
     type = well_var_gor;
   else {
-    *invalid = true;
+    *valid = false;
     type = -1;
   }
+  
   if (var[strlen(var) - 1] == 'H')
     *history = true;
   else
@@ -47,14 +50,16 @@ static well_var_type __ecl_well_var_get_type(const char *var , bool *invalid , b
 
 
 
-bool ecl_well_var_valid(const char * var) {
-  bool invalid;
+bool ecl_well_var_valid(const char * var, well_var_type *_type) {
+  bool valid;
   bool history;
-  __ecl_well_var_get_type(var , &invalid , &history);
-  if (invalid)
-    return false;
-  else
-    return true;
+  well_var_type type;
+  type = __ecl_well_var_get_type(var , &valid , &history);
+
+  if (_type != NULL)
+    *_type = type;
+  
+  return valid;
 }
 
 

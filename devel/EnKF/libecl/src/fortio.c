@@ -58,7 +58,6 @@ void fortio_close(fortio_type *fortio) {
 
 
 
-
 int fortio_init_read(fortio_type *fortio) {
   int elm_read;
   elm_read = fread(&fortio->active_header , sizeof(fortio->active_header) , 1 , fortio->stream);
@@ -71,6 +70,8 @@ int fortio_init_read(fortio_type *fortio) {
   } else 
     return -1;
 }
+
+
 
 void fortio_complete_read(fortio_type *fortio) {
   int trailer;

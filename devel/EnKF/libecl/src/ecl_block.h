@@ -13,8 +13,8 @@ typedef struct ecl_block_struct ecl_block_type;
 #define COPY      2
 
 
+void             ecl_block_set_sim_time_summary(ecl_block_type * , /*int time_index , int years_index , */ int , int , int );
 void             ecl_block_set_sim_time_restart(ecl_block_type * );
-void             ecl_block_set_sim_time_summary(ecl_block_type * );
 void             ecl_block_set_sim_time(ecl_block_type * , time_t );
 void             ecl_block_set_report_nr(ecl_block_type * , int );
 time_t           ecl_block_get_sim_time(const ecl_block_type * );

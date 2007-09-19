@@ -43,6 +43,7 @@ void 	      ecl_kw_select_binary   (ecl_kw_type *);
 ecl_kw_type * ecl_kw_alloc_copy (const ecl_kw_type *);
 const void  * ecl_kw_copyc__(const void *);
 void        * ecl_kw_get_data_ref(const ecl_kw_type *);
+void        * ecl_kw_get_safe_data_ref(const ecl_kw_type * , ecl_type_enum );
 void          ecl_kw_memcpy(ecl_kw_type *, const ecl_kw_type *);
 void          ecl_kw_get_memcpy_data(const ecl_kw_type *, void *);
 void          ecl_kw_set_memcpy_data(ecl_kw_type * , const void *);
@@ -61,4 +62,15 @@ bool          ecl_kw_get_endian_convert(const ecl_kw_type * );
 void          ecl_kw_fwrite_param(const char * , bool  , bool , const char * ,  ecl_type_enum , int , void * );
 void          ecl_kw_fwrite_param_fortio(fortio_type *, bool  , bool , const char * ,  ecl_type_enum , int , void * );
 void          ecl_kw_summarize(const ecl_kw_type * ecl_kw);
+void          ecl_kw_fread_double_param(const char * , bool , bool , double *);
+
+void ecl_kw_inplace_sub(ecl_kw_type * , const ecl_kw_type * );
+void ecl_kw_inplace_mul(ecl_kw_type * , const ecl_kw_type * );
+void ecl_kw_inplace_add(ecl_kw_type * , const ecl_kw_type * );
+void ecl_kw_inplace_div(ecl_kw_type * , const ecl_kw_type * );
+
+void ecl_kw_scalar_init(ecl_kw_type * , double );
+void ecl_kw_scale(ecl_kw_type * , double );
+void ecl_kw_shift(ecl_kw_type * , double );
+
 #endif

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <fortio.h>
 #include <ecl_kw.h>
 #include <ecl_block.h>
@@ -132,30 +133,6 @@ void ecl_block_set_sim_time(ecl_block_type * block , time_t sim_time) {
 }
 
 
-void ecl_block_set_sim_time_summary(ecl_block_type * block) {
-  float *date;
-  ecl_kw_type * param_kw = ecl_block_get_kw(block , "PARAMS");
-  date = ecl_kw_iget_ptr(param_kw , 0);
-
-  /*
-    date[2] = day 
-    date[3] = month
-    date[4] = year
-    
-    Fractional days can in principle be extracted from date[0].
-  */
-
-  {
-    int sec  = 0;
-    int min  = 0;
-    int hour = 0;
-
-    int day   = date[2];
-    int month = date[3];
-    int year  = date[4];
-    ecl_block_set_sim_time(block , util_make_time2(sec , min , hour , day , month , year));
-  }
-}
 
 
 void ecl_block_set_sim_time_restart(ecl_block_type * block) {
@@ -170,6 +147,28 @@ void ecl_block_set_sim_time_restart(ecl_block_type * block) {
   date = ecl_kw_iget_ptr(intehead_kw , 64);
   ecl_block_set_sim_time(block , util_make_time1(date[0] , date[1] , date[2]));
 }
+
+
+
+void ecl_block_set_sim_time_summary(ecl_block_type * block , /*int time_index , int years_index , */ int day_index , int month_index , int year_index) {
+  float *date;
+  ecl_kw_type * param_kw = ecl_block_get_kw(block , "PARAMS");
+  date = ecl_kw_iget_ptr(param_kw , 0);
+
+
+  {
+    int sec  = 0;
+    int min  = 0;
+    int hour = 0;
+
+    int day   = roundf(date[day_index]);
+    int month = roundf(date[month_index]);
+    int year  = roundf(date[year_index]);
+    ecl_block_set_sim_time(block , util_make_time2(sec , min , hour , day , month , year));
+  }
+}
+
+
 
 
 

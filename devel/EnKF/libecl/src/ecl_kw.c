@@ -324,6 +324,7 @@ static void ecl_kw_iget_static(const ecl_kw_type *ecl_kw , int i , void *iptr) {
   memcpy(iptr , ecl_kw_iget_ptr_static(ecl_kw , i) , ecl_kw->sizeof_ctype);  
 }
 
+
 static void ecl_kw_iset_static(ecl_kw_type *ecl_kw , int i , const void *iptr) {
 #ifdef DEBUG
   ecl_kw_assert_index(ecl_kw , i , __func__);
@@ -609,7 +610,7 @@ bool ecl_kw_fseek_kw(const char * kw , bool fmt_file , bool rewind , bool abort_
   }
   if (!kw_found) {
     if (abort_on_error) {
-      fprintf(stream,"%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , fortio_filename_ref(fortio));
+      fprintf(stderr,"%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , fortio_filename_ref(fortio));
       abort();
     }
     fseek(stream , init_pos , SEEK_SET);
@@ -746,6 +747,7 @@ bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   } 
   return OK;
 }
+
 
 ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio , bool fmt_file) {
   bool OK;
@@ -1004,6 +1006,16 @@ void * ecl_kw_get_data_ref(const ecl_kw_type *ecl_kw) {
   return ecl_kw->data;
 }
 
+void * ecl_kw_get_safe_data_ref(const ecl_kw_type *ecl_kw, ecl_type_enum ecl_type) {
+  if (ecl_type != ecl_kw->ecl_type) {
+    fprintf(stderr,"%s asked for type:%s  - internal ecl_kw_type is:%s - aborting \n",__func__ , __get_ecl_str_type(ecl_type) , __get_ecl_str_type(ecl_kw->ecl_type));
+    abort();
+  }
+  return ecl_kw->data;
+}
+
+
+
 int ecl_kw_get_size(const ecl_kw_type * ecl_kw) {
   return ecl_kw->size;
 }
@@ -1102,6 +1114,31 @@ void ecl_kw_fwrite_param(const char * filename , bool fmt_file , bool endian_con
   ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_convert , header , ecl_type , size , data);
   fortio_close(fortio);
 }
+
+
+void ecl_kw_fread_double_param(const char * filename , bool fmt_file , bool endian_convert, double * double_data) {
+  fortio_type   * fortio      = fortio_open(filename , "r" , endian_convert);
+  ecl_kw_type   * ecl_kw      = ecl_kw_fread_alloc(fortio , fmt_file);
+  fortio_close(fortio);
+  
+  if (ecl_kw == NULL) {
+    fprintf(stderr,"%s: fatal error: loading parameter from: %s failed - aborting \n",__func__ , filename);
+    abort();
+  }
+  
+  if (ecl_kw->ecl_type == ecl_double_type)
+    ecl_kw_get_memcpy_data(ecl_kw , double_data);
+  else {
+    if (ecl_kw->ecl_type == ecl_float_type)
+      util_float_to_double(double_data , (const float *) ecl_kw->data , ecl_kw->size);
+    else {
+      fprintf(stderr,"%s: type can not be converted to double - aborting \n",__func__);
+      ecl_kw_summarize(ecl_kw);
+      abort();
+    }
+  }
+  ecl_kw_free(ecl_kw);
+}
     
 
 void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
@@ -1109,4 +1146,249 @@ void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
 	 ecl_kw_get_size(ecl_kw),
 	 ecl_kw_get_str_type_ref(ecl_kw));
 }
+
+/*****************************************************************/
+
+
+void ecl_kw_scalar_init(ecl_kw_type * ecl_kw , double init_value) {
+  void * data = ecl_kw_get_data_ref(ecl_kw);
+  int    size = ecl_kw_get_size(ecl_kw);
+  int i;
+
+  switch (ecl_kw->ecl_type) {
+  case(ecl_double_type):
+    {
+      double *double_data = (double *) data;
+      for (i=0; i < size; i++)
+	double_data[i] = init_value;
+      break;
+    }
+  case(ecl_float_type):
+    {
+      float *float_data = (float *) data;
+      for (i=0; i < size; i++)
+	float_data[i] = init_value;
+      break;
+    }
+  default:
+    fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
+    abort();
+  }
+}
+
+
+void ecl_kw_shift(ecl_kw_type * ecl_kw , double shift_value) {
+  void * data = ecl_kw_get_data_ref(ecl_kw);
+  int    size = ecl_kw_get_size(ecl_kw);
+  int i;
+
+
+  switch (ecl_kw->ecl_type) {
+  case(ecl_double_type):
+    {
+      double *double_data = (double *) data;
+      for (i=0; i < size; i++)
+	double_data[i] += shift_value;
+      break;
+    }
+  case(ecl_float_type):
+    {
+      float *float_data = (float *) data;
+      for (i=0; i < size; i++)
+	float_data[i] += shift_value;
+      break;
+    }
+  default:
+    fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
+    abort();
+  }
+}
+
+
+void ecl_kw_scale(ecl_kw_type * ecl_kw , double scale_factor) {
+  void * data = ecl_kw_get_data_ref(ecl_kw);
+  int    size = ecl_kw_get_size(ecl_kw);
+  int i;
+
+  switch (ecl_kw->ecl_type) {
+  case(ecl_double_type):
+    {
+      double *double_data = (double *) data;
+      for (i=0; i < size; i++)
+	double_data[i] *= scale_factor;
+      break;
+    }
+  case(ecl_float_type):
+    {
+      float *float_data = (float *) data;
+      for (i=0; i < size; i++)
+	float_data[i] *= scale_factor;
+      break;
+    }
+  default:
+    fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
+    abort();
+  }
+}
+
+
+
+void ecl_kw_inplace_sub(ecl_kw_type * my_kw , const ecl_kw_type * sub_kw) {
+
+  int            size = ecl_kw_get_size(my_kw);
+  ecl_type_enum type = ecl_kw_get_type(my_kw);
+  if ((size != ecl_kw_get_size(sub_kw)) || (type != ecl_kw_get_type(sub_kw))) {
+    fprintf(stderr,"%s: attempt to subtract to fields of different size - aborting \n",__func__);
+    abort();
+  }
+  {
+    int i;
+    void * my_data        = ecl_kw_get_data_ref(my_kw);
+    const void * sub_data = ecl_kw_get_data_ref(sub_kw);
+
+    switch (type) {
+    case(ecl_double_type):
+      {
+	double *my_double        = (double *) my_data;
+	const double *sub_double = (const double *) sub_data;
+	for (i=0; i < size; i++)
+	  my_double[i] -= sub_double[i];
+	break;
+      }
+    case(ecl_float_type):
+      {
+	float *my_float        = (float *)       my_data;
+	const float *sub_float = (const float *) sub_data;
+	for (i=0; i < size; i++)
+	  my_float[i] -= sub_float[i];
+	break;
+      }
+    default:
+      fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
+      abort();
+    }
+
+  }
+}
+
+
+void ecl_kw_inplace_mul(ecl_kw_type * my_kw , const ecl_kw_type * mul_kw) {
+
+  int            size = ecl_kw_get_size(my_kw);
+  ecl_type_enum type = ecl_kw_get_type(my_kw);
+  if ((size != ecl_kw_get_size(mul_kw)) || (type != ecl_kw_get_type(mul_kw))) {
+    fprintf(stderr,"%s: attempt to multract to fields of different size - aborting \n",__func__);
+    abort();
+  }
+  {
+    int i;
+    void * my_data        = ecl_kw_get_data_ref(my_kw);
+    const void * mul_data = ecl_kw_get_data_ref(mul_kw);
+
+    switch (type) {
+    case(ecl_double_type):
+      {
+	double *my_double        = (double *) my_data;
+	const double *mul_double = (const double *) mul_data;
+	for (i=0; i < size; i++)
+	  my_double[i] *= mul_double[i];
+	break;
+      }
+    case(ecl_float_type):
+      {
+	float *my_float        = (float *)       my_data;
+	const float *mul_float = (const float *) mul_data;
+	for (i=0; i < size; i++)
+	  my_float[i] *= mul_float[i];
+	break;
+      }
+    default:
+      fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
+      abort();
+    }
+
+  }
+}
+
+
+void ecl_kw_inplace_div(ecl_kw_type * my_kw , const ecl_kw_type * div_kw) {
+
+  int            size = ecl_kw_get_size(my_kw);
+  ecl_type_enum type = ecl_kw_get_type(my_kw);
+  if ((size != ecl_kw_get_size(div_kw)) || (type != ecl_kw_get_type(div_kw))) {
+    fprintf(stderr,"%s: attempt to divtract to fields of different size - aborting \n",__func__);
+    abort();
+  }
+  {
+    int i;
+    void * my_data        = ecl_kw_get_data_ref(my_kw);
+    const void * div_data = ecl_kw_get_data_ref(div_kw);
+
+    switch (type) {
+    case(ecl_double_type):
+      {
+	double *my_double        = (double *) my_data;
+	const double *div_double = (const double *) div_data;
+	for (i=0; i < size; i++)
+	  my_double[i] /= div_double[i];
+	break;
+      }
+    case(ecl_float_type):
+      {
+	float *my_float        = (float *)       my_data;
+	const float *div_float = (const float *) div_data;
+	for (i=0; i < size; i++)
+	  my_float[i] /= div_float[i];
+	break;
+      }
+    default:
+      fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
+      abort();
+    }
+
+  }
+}
+
+
+
+void ecl_kw_inplace_add(ecl_kw_type * my_kw , const ecl_kw_type * add_kw) {
+
+  int            size = ecl_kw_get_size(my_kw);
+  ecl_type_enum type = ecl_kw_get_type(my_kw);
+  if ((size != ecl_kw_get_size(add_kw)) || (type != ecl_kw_get_type(add_kw))) {
+    fprintf(stderr,"%s: attempt to addtract to fields of different size - aborting \n",__func__);
+    abort();
+  }
+  {
+    int i;
+    void * my_data        = ecl_kw_get_data_ref(my_kw);
+    const void * add_data = ecl_kw_get_data_ref(add_kw);
+
+    switch (type) {
+    case(ecl_double_type):
+      {
+	double *my_double        = (double *) my_data;
+	const double *add_double = (const double *) add_data;
+	for (i=0; i < size; i++)
+	  my_double[i] += add_double[i];
+	break;
+      }
+
+    case(ecl_float_type):
+      {
+	float *my_float        = (float *)       my_data;
+	const float *add_float = (const float *) add_data;
+	for (i=0; i < size; i++)
+	  my_float[i] += add_float[i];
+	break;
+      }
+      
+    default:
+      fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
+      abort();
+    }
+
+  }
+}
+
 

@@ -10,9 +10,6 @@
 #include <ecl_util.h>
 #include <msg.h>
 
-#define READER_FMT_VAR  "read_fmt"
-#define WRITER_FMT_VAR  "write_fmt"
-
 #define VERB_SILENT 0
 #define VERB_DOT    1 
 #define VERB_NAME   2
@@ -112,7 +109,7 @@ static char * alloc_3string(const char *path , const char *prefix , const char *
 
 static FILE * fopen_printf(const char *name) {
   printf("   Writing include file: %s \n", name);
-  return fopen(name , "w");
+  return util_fopen(name , "w");
 }
 
 
@@ -135,7 +132,7 @@ void static ecl_parse_write_read_eclipse(const hash_type *var_hash , const hash_
     if (hash_has_key(special , var->name))
       fprintf(fileH , "    %s \n",hash_get_string(special , var->name));
     if (type != NULL)
-      fprintf(fileH , "    call %s(%s(%s),%s,%s(%s),%s) \n" , type->reader , size_arg , arg_index , var->name, type_arg , arg_index , READER_FMT_VAR);
+      fprintf(fileH , "    call %s(%s(%s),%s,%s(%s)) \n" , type->reader , size_arg , arg_index , var->name, type_arg , arg_index);
     fprintf(fileH , "\n");
   }
   fclose(fileH);
@@ -161,7 +158,7 @@ void static ecl_parse_write_decl(const hash_type *var_hash , const hash_type *ty
     const char * key          = keylist[i];
     const ecl_var_type  *var  = hash_get(var_hash , key);
     const ecl_type_node *type = hash_get(type_map , var->ecl_type);
-    
+
     if (type != NULL) {
       fprintf(declH    , "%s,  allocatable :: %s(:)\n", type->fortran_type , var->name);
       fprintf(allocH   , "allocate( %s(1) ) ; %s = %s \n" , var->name , var->name , type->default_value);
@@ -219,7 +216,7 @@ void static ecl_parse_res_write_eclipse2(hash_type *var_hash , const char *inclu
 
     fprintf(stream , "case(\"%s\")\n" , var->name);
     if (type != NULL) 
-      fprintf(stream , "   call %s(fieldname(i) , fieldsize(i) , fieldtype(i) , %s , %s)\n" , type->writer , var->name , WRITER_FMT_VAR);
+      fprintf(stream , "   call %s(fieldname(i) , fieldsize(i) , fieldtype(i) , %s )\n" , type->writer , var->name );
 
     if (hash_has_key(special , var->name))
       fprintf(stream, "   %s\n",hash_get_string(special , var->name));
@@ -340,17 +337,17 @@ static void ecl_parse_restart(const char *refcase_path , const char *ecl_base , 
       {
 	char tmp_string[256];
 	str_buffer_type *pressure_string = str_buffer_alloc(1);
-	str_buffer_type *sol_string      = str_buffer_alloc_with_string("call write_eclipse_kwheader(fieldname(i), fieldsize(i) , fieldtype(i) , 10 , write_fmt)\n");
+	str_buffer_type *sol_string      = str_buffer_alloc_with_string("call write_eclipse_kwheader(fieldname(i), fieldsize(i) , fieldtype(i) , 10)\n");
 	
-	sprintf(tmp_string , "   if (iopt == 22) call write_real('PERMX   ',ndim,'REAL',permx,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
-	sprintf(tmp_string , "      if (iopt == 22) call write_real('PERMZ   ',ndim,'REAL',permz,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
-	sprintf(tmp_string , "      if (iopt == 22) call write_real('PORO    ',ndim,'REAL',poro ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "   if (iopt == 22) call write_real('PERMX   ',ndim,'REAL',permx)\n" ); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('PERMZ   ',ndim,'REAL',permz)\n" ); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('PORO    ',ndim,'REAL',poro )\n" ); str_buffer_add_string(pressure_string , tmp_string);
 	str_buffer_add_string(pressure_string , "#ifdef MULTPV\n");
-	sprintf(tmp_string , "      if (iopt == 22) call write_real('MULTPV    ',ndim,'REAL',multpv ,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('MULTPV    ',ndim,'REAL',multpv )\n"); str_buffer_add_string(pressure_string , tmp_string);
 	str_buffer_add_string(pressure_string , "#endif\n");
 	str_buffer_add_string(pressure_string , "#ifdef GAUSS2\n");
-	sprintf(tmp_string , "      if (iopt == 22) call write_real('GAUSS1   ',ndim,'REAL',GAUSS ,mem4%%gauss1,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
-	sprintf(tmp_string , "      if (iopt == 22) call write_real('GAUSS2   ',ndim,'REAL',GAUSS ,mem4%%gauss2,%s)\n" , WRITER_FMT_VAR); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('GAUSS1   ',ndim,'REAL',GAUSS ,mem4%%gauss1)\n"); str_buffer_add_string(pressure_string , tmp_string);
+	sprintf(tmp_string , "      if (iopt == 22) call write_real('GAUSS2   ',ndim,'REAL',GAUSS ,mem4%%gauss2)\n"); str_buffer_add_string(pressure_string , tmp_string);
 	str_buffer_add_string(pressure_string , "#endif\n");
 	
 	hash_insert_string_copy(special , "PRESSURE" , str_buffer_get_char_ptr(pressure_string));
@@ -462,7 +459,6 @@ void ecl_parse_egrid(const char *refcase_path , const char *ecl_base , const cha
   free(egrid_file);
   ecl_fstate_free(egrid);
 }
-
 
 
 void ecl_parse(const char *refcase_path , const char *eclbase, const char *include_path, bool fmt_file , bool unified, bool endian_flip) {

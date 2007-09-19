@@ -25,13 +25,12 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_INC_PATH)
 	install -d $(INSTALL_LIB_PATH)
 	install -d $(INSTALL_MOD_PATH)
-#	install $(MOD_FILES) $(INSTALL_MOD_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
 	gcc -m32 -Wall ecl_submit.c -o /d/proj/bg/enkf/bin/ecl_submit.x
-	gcc -m32 -Wall -I$(INSTALL_INC_PATH) ecl_test.c -o ecl_test.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
-	gcc -Wall -g -m32 -O2 $(COMPILE_INCLUDE) -o convert.x convert.c -I./ -L./ -L../../libutil/lib -lecl -lm -lutil
-	gcc -Wall -g -m32 -O2 $(COMPILE_INCLUDE) -o swcr_init.x swcr_init.c -I./ -L./ -L./../../libhash/lib -L../../libutil/lib -lecl -lm -lutil -lhash
+	gcc -m32 -Wall -I$(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) ecl_test.c -o ecl_test.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
+	gcc -m32 -Wall -I$(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) make_SGU.c -o make_SGU.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
+	gcc -Wall -g -m32 -O2 $(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) -o convert.x convert.c -I./ -L./ -L../../libutil/lib -lecl -lm -lutil
 
 
 clean:

@@ -76,6 +76,7 @@ static const int  max_wall_sec = 99999999;
 /*****************************************************************/
 
 
+
 void print_usage(const char *exe) {
   int i;
   fprintf(stderr,"%s usage:\n\n   %s  run_path root_name version_id\n\n",exe,exe);
@@ -83,14 +84,13 @@ void print_usage(const char *exe) {
   fprintf(stderr,"is an integer which indicates which version to use:\n\n");
   
   
-  for (i=0; i < N_VERSION; i++) {
+  for (i=0; i < N_VERSION; i++) 
     fprintf(stderr,"  %4d: %s \n" , version_table[i].version_nr , version_table[i].executable);
-  }
+
   fprintf(stderr,"\n  %4d: Gives the Hydro default version    (%3d -> %3d) \n",DEFAULT_VERSION_INPUT , DEFAULT_VERSION_INPUT, DEFAULT_VERSION);
   fprintf(stderr,"  %4d: Gives the newest version available (%3d -> %3d) \n\n",NEWEST_VERSION_INPUT , NEWEST_VERSION_INPUT, NEWEST_VERSION);
   exit(1);
 }
-
 
 
 int main(int argc, char **argv) {

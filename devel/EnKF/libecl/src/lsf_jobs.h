@@ -11,4 +11,5 @@ void            lsf_pool_add_job(lsf_pool_type * , const char *, const char * , 
 int             lsf_pool_run_jobs(lsf_pool_type *);
 void            lsf_pool_set_fail_vector(const lsf_pool_type *  , int *);
 void            lsf_pool_free(lsf_pool_type *);
+void            lsf_pool_iactivate_job(lsf_pool_type *  , int );
 #endif

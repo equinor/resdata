@@ -45,6 +45,6 @@ bool              ecl_fstate_kw_exists(const ecl_fstate_type *, int, int  , cons
 
 int               ecl_fstate_get_report_size(const ecl_fstate_type * , int * , int * );
 bool              ecl_fstate_get_report_mode(const ecl_fstate_type * );
-int               ecl_fstate_get_Nstep(const ecl_fstate_type *);
+int               ecl_fstate_get_size(const ecl_fstate_type *);
 void              ecl_fstate_save(const ecl_fstate_type *);
 #endif

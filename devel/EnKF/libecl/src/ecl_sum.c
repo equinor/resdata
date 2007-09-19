@@ -7,6 +7,7 @@
 #include <hash.h>
 #include <util.h>
 #include <time.h>
+#include <set.h>
 
 #define ECL_DUMMY_WELL ":+:+:+:+"
 
@@ -17,6 +18,7 @@ struct ecl_sum_struct {
   ecl_fstate_type * data;
   hash_type       * index_hash;
   hash_type       *_index_hash;
+  hash_type       *kw_index_hash;
   int               fmt_mode;
   int               Nwells , Nvars , param_offset;
   char            **well_list;
@@ -59,6 +61,7 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
   ecl_sum->unified        = true;  /* Dummy */
   ecl_sum->index_hash     = hash_alloc(10);
   ecl_sum->_index_hash    = hash_alloc(10);
+  ecl_sum->kw_index_hash  = hash_alloc(10);
   ecl_sum->header         = NULL;
   ecl_sum->data           = NULL;
   ecl_sum->well_list      = NULL;
@@ -111,6 +114,18 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
     }
     date = ecl_kw_get_data_ref(startdat);
     ecl_sum->sim_start_time = util_make_time1(date[0] , date[1] , date[2]);
+    {
+      set_type * kw_set = set_alloc(0 , NULL);
+      for (index=0; index < ecl_kw_get_size(keywords); index++) {
+	char *kw_s;
+	kw_s = util_alloc_strip_copy(ecl_kw_iget_ptr(keywords , index));
+	if (set_add_key(kw_set , kw_s)) 
+	  hash_insert_int(ecl_sum->kw_index_hash , kw_s , index);
+      }
+      set_free(kw_set);
+    }
+    
+
     for (index=0; index < ecl_kw_get_size(wells); index++) {
       char well_kw[17];
       char *well_s;
@@ -137,6 +152,26 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
     ecl_sum->well_list = hash_alloc_keylist(well_hash);
     hash_free(well_hash);
   }
+  {
+    /*
+      Should probably check that they are in the table first ....
+    */
+    int iblock;
+    /*
+      int time_index  = hash_get_int(ecl_sum->kw_index_hash , "TIME");
+      int years_index = hash_get_int(ecl_sum->kw_index_hash , "YEARS");
+    */
+    int day_index   = hash_get_int(ecl_sum->kw_index_hash , "DAY");
+    int month_index = hash_get_int(ecl_sum->kw_index_hash , "MONTH");
+    int year_index  = hash_get_int(ecl_sum->kw_index_hash , "YEAR");
+
+    for (iblock = 0; iblock < ecl_fstate_get_size(ecl_sum->data); iblock++) {
+      ecl_block_type * block = ecl_fstate_get_block(ecl_sum->data , iblock);
+      ecl_block_set_sim_time_summary(block , /*time_index , years_index , */ day_index , month_index , year_index);
+    }
+  }
+  
+
   return ecl_sum;
 }
 	
@@ -425,7 +460,7 @@ char ** ecl_sum_alloc_well_names_copy(const ecl_sum_type *ecl_sum) {
 
 
 int ecl_sum_get_size(const ecl_sum_type *ecl_sum) {
-  return ecl_fstate_get_Nstep(ecl_sum->data);
+  return ecl_fstate_get_size(ecl_sum->data);
 }
 
 
@@ -462,6 +497,7 @@ void ecl_sum_free(ecl_sum_type *ecl_sum) {
 
   hash_free(ecl_sum->index_hash);
   hash_free(ecl_sum->_index_hash);
+  hash_free(ecl_sum->kw_index_hash);
 
   for (i=0; i < ecl_sum->Nwells; i++)
     free(ecl_sum->well_list[i]);

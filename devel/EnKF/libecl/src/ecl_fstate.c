@@ -168,14 +168,13 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	ecl_kw_iget(seq_kw , 0 , &report_nr);
 	ecl_block_set_report_nr(ecl_block , report_nr);
 	ecl_block_set_sim_time_restart(ecl_block);
-      } else if (file_type == ecl_unified_summary_file) 
-	/*
-	  Observe that when unified summary files are read in it is 
-	  *IMPOSSIBLE* to get hold of the report number. In this case
-	  the report number will be stuck at -1, and can *NOT* be used
-	  to access individual blocks.
-	*/
-	ecl_block_set_sim_time_summary(ecl_block);
+      } 
+      /*
+	Observe that when unified summary files are read in it is 
+	*IMPOSSIBLE* to get hold of the report number. In this case
+	the report number will be stuck at -1, and can *NOT* be used
+	to access individual blocks.
+      */
       
       ecl_fstate_add_block(ecl_fstate , ecl_block);
     }
@@ -200,12 +199,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	  ecl_block_type *ecl_block = ecl_block_alloc(report_nr , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
 	  ecl_block_fread(ecl_block , fortio , &at_eof );
 
-	  if (file_type == ecl_summary_file) {
-	    if (ecl_block_has_kw(ecl_block , "MINISTEP")) 
-	      ecl_block_set_sim_time_summary(ecl_block);
-	    else
-	      add_block = false;
-	  } else if (file_type == ecl_restart_file)
+	  if (file_type == ecl_restart_file)
 	    ecl_block_set_sim_time_restart(ecl_block);
 
 	  /*
@@ -213,7 +207,11 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	    with only the SEQHDR keyword; they are not added to the
 	    fstate object.
 	  */
-	  
+	  if (file_type == ecl_summary_file) {
+	    if (!ecl_block_has_kw(ecl_block , "MINISTEP")) 
+	      add_block = false;
+	  } 
+
 	  ecl_block_set_report_nr(ecl_block , report_nr);
 	  if (add_block)
 	    ecl_fstate_add_block(ecl_fstate , ecl_block);
@@ -317,8 +315,7 @@ bool ecl_fstate_has_block(const ecl_fstate_type * ecl_fstate , int index) {
 
 
 
-
-int ecl_fstate_get_Nstep(const ecl_fstate_type *ecl_fstate) {
+int ecl_fstate_get_size(const ecl_fstate_type *ecl_fstate) {
   return ecl_fstate->N_blocks;
 }
 
