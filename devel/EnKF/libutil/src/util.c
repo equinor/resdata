@@ -153,9 +153,9 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
     do {
       c = fgetc(stream);
       if (EOL_CHAR(c))
-	len++;
-      else
 	cont = false;
+      else
+	len++;
     } while (cont);
     if (c == '\r')
       dos_newline = true;
@@ -174,7 +174,7 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
   */
   fgetc(stream);
   if (dos_newline)
-    fgetc(stream);
+    fgetc(stream); 
  
   if (at_eof != NULL) {
     if (end_char == EOF)
