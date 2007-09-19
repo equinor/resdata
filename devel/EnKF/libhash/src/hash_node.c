@@ -10,11 +10,12 @@
 
 
 struct hash_node_struct {
-  char 	      	 *key;
-  uint32_t        insert_nr;
-  uint32_t     	  global_index;
-  uint32_t     	  table_index;
-  const void     *value;
+  char 	      	   *key;
+  /*hash_data_type    data_type;*/
+  uint32_t          insert_nr;
+  uint32_t     	    global_index;
+  uint32_t     	    table_index;
+  const void       *value;
   
   /*
     For the copy constructor and delete
@@ -96,6 +97,14 @@ void hash_node_free(hash_node_type *node) {
   free(node);
 }
 
+/*
+void hash_node_assert_type(const hash_node_type * node , hash_data_type data_type) {
+  if (node->data_type != data_type) {
+    fprintf(stderr,"%s: must use matching insert/get routines for key:%s - aborting \n",__func__ , node->key);
+    abort();
+  }
+}
+*/
 
 
 const void * copy10double(const void *src) {

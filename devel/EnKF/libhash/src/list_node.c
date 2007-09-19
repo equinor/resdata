@@ -44,7 +44,7 @@ void list_node_link(list_node_type *node1 , list_node_type *node2) {
 list_node_type * list_node_alloc_managed(const void *value_ptr , int value_size) {
   list_node_type *node;
   node_data_type list_data;
-  list_data.data      = value_ptr;
+  list_data.data      = (void *) value_ptr;
   list_data.byte_size = value_size;
   node = list_node_alloc(&list_data , node_data_copyc , node_data_free);
   return node;

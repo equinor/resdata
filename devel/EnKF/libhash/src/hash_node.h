@@ -6,7 +6,12 @@
 
 typedef struct hash_node_struct hash_node_type;
 typedef uint32_t     (  hashf_type) (const uint8_t *key, size_t len);
+typedef enum         {hash_ref_data , hash_int_data , hash_double_data , hash_string_data} hash_data_type;
 
+
+/*
+  void             hash_node_assert_type(const hash_node_type * , hash_data_type );
+*/
 bool             hash_node_key_eq(const hash_node_type * , uint32_t  , const char *);
 hash_node_type * hash_node_get_next(const hash_node_type * );
 uint32_t         hash_node_get_insert_nr(const hash_node_type * );

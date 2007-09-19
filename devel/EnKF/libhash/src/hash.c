@@ -9,6 +9,7 @@
 #include <hash_node.h>
 #include <node_data.h>
 
+
 struct hash_struct {
   uint32_t        global_insert_nr;
   uint32_t        size;
@@ -30,7 +31,7 @@ typedef struct hash_sort_node {
 
 #define HASH_GET_SCALAR(FUNC,TYPE) \
 TYPE FUNC (const hash_type *hash,  const char *key) { \
-   node_data_type *data = hash_get(hash , key);       \
+   node_data_type *data = hash_get(hash , key); \
    return *((TYPE *) data->data);                     \
 }
 
@@ -72,9 +73,10 @@ static void * __hash_get_node(const hash_type *hash , const char *key, bool abor
   const uint32_t global_index = hash->hashf(key , strlen(key));
   const uint32_t table_index  = (global_index % hash->size);
   hash_node_type *node        = hash_sll_get(hash->table[table_index] , global_index , key);
-  if (node != NULL)
+  if (node != NULL) {
+    /*hash_node_assert_type(node , data_type); */
     return node;
-  else {
+  } else {
     if (abort_on_error) {
       fprintf(stderr,"%s: tried to get from key:%s which does not exist - aborting \n",__func__ , key);
       abort();
@@ -84,7 +86,7 @@ static void * __hash_get_node(const hash_type *hash , const char *key, bool abor
 
 
 static int hash_get_insert_nr(const hash_type *hash , const char *key) {
-  hash_node_type * node = __hash_get_node(hash , key , true);
+  hash_node_type * node = __hash_get_node(hash , key , true );
   return hash_node_get_insert_nr(node);
 }
 
@@ -113,10 +115,12 @@ void hash_clear(hash_type *hash) {
 }
 
 
+
 void * hash_get(const hash_type *hash , const char *key) {
   hash_node_type * node = __hash_get_node(hash , key , true);
   return hash_node_value_ptr(node);
 }
+
 
 
 HASH_GET_SCALAR(hash_get_int    , int)
@@ -204,6 +208,7 @@ void hash_free(hash_type *hash) {
 void hash_free__(void *void_hash) {
   hash_free((hash_type *) void_hash);
 }
+
 
 static void hash_insert_node(hash_type *hash , hash_node_type *node) {
   uint32_t table_index = hash_node_get_table_index(node);
@@ -346,9 +351,6 @@ void hash_printf_keys(const hash_type *hash) {
     node = hash_iter_next(hash , node);
   }
 }
-
-
-
 
 
 char ** hash_alloc_keylist(const hash_type *hash) {
