@@ -5,6 +5,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <util.h>
+
+
 
 typedef struct {
   int          version_nr;
@@ -12,6 +15,12 @@ typedef struct {
   const char * lib_path;
   const char * desc;
 } version_type;
+
+
+#define I386   0
+#define X86_64 1
+#define IA64   2
+
 
 /*****************************************************************/
 
@@ -39,8 +48,52 @@ static const int NEWEST_VERSION_INPUT  = 100;    /* The user input number which 
    this is only used in the diagnostic routine print_usage().
 */
 
-static version_type version_table[N_VERSION] = {{1 , "/local/eclipse/Geoquest/2005a_1a/bin/linux/eclipse.exe" , NULL , "2005a_1a"},
-						{2 , "/local/eclipse/Geoquest/2006.2/bin/linux/eclipse.exe"   , NULL , "2006.2"  }};
+static version_type version_table_i386[N_VERSION] = {{1 , "/local/eclipse/Geoquest/2005a_1a/bin/linux/eclipse.exe" , NULL , "2005a_1a"},
+					    	     {2 , "/local/eclipse/Geoquest/2006.2/bin/linux/eclipse.exe"   , NULL , "2006.2"  }};
+
+static version_type version_table_x86_64[N_VERSION] = {{1 , "/local/eclipse/Geoquest/2005a_1a/bin/linux/x86_64/eclipse.exe" , NULL , "2005a_1a"},
+					    	       {2 , "/local/eclipse/Geoquest/2006.2/bin/linux_x86_64/eclipse.exe"   , NULL , "2006.2"  }};
+
+static version_type version_table_ia64[N_VERSION] = {{1 , "/local/eclipse/Geoquest/2005a_1a/bin/linux/ia64/eclipse.exe" , NULL , "2005a_1a"},
+					    	     {2 , "/local/eclipse/Geoquest/2006.2/bin/linux_ia64/eclipse.exe"   , NULL , "2006.2"  }};
+
+
+version_type * get_version_table() {
+  FILE * stream;
+  int cpu_version = -1;
+  char word[64];
+  system("uname -a > /tmp/uname.out");
+  stream = fopen("/tmp/uname.out" , "r");
+  
+  do {
+    int scan_count = fscanf(stream , "%s" , word);
+    if (scan_count != 1) {
+      fseek(stream , 0L , SEEK_SET);
+      fprintf(stderr,"%s/%s: failed to load string from uname output:\"%s\" - aborting \n",__FILE__ , __func__ , util_fscanf_alloc_line(stream , NULL));
+      abort();
+    }
+    if (strcmp(word , "x86_64") == 0) cpu_version = X86_64;
+    if (strcmp(word , "ia64")   == 0) cpu_version = IA64;
+    if (strcmp(word , "i686")   == 0) cpu_version = I386;
+    if (strcmp(word , "i386")   == 0) cpu_version = i386;
+    
+  } while (cpu_version < 0);
+
+  if (cpu_version == X86_64)
+    return version_table_x86_64;
+  else if (cpu_version == IA64)
+    return version_table_ia64;
+  else if (cpu_version == I386)
+    return version_table_i386;
+  else {
+    fprintf(stderr,"%s/%s - what ??? \n",__FILE__ , __func__);
+    abort();
+  }
+}
+
+
+
+
 
 /* 
    When adding a new version you must do the following:
@@ -77,7 +130,7 @@ static const int  max_wall_sec = 99999999;
 
 
 
-void print_usage(const char *exe) {
+void print_usage(const char *exe , const version_type * version_table) {
   int i;
   fprintf(stderr,"%s usage:\n\n   %s  run_path root_name version_id\n\n",exe,exe);
   fprintf(stderr,"Where run_path is the path to run eclipse from, root_name is the\nname of the ECLIPSE DATA file, without extension, and version_id\n");
@@ -99,11 +152,14 @@ int main(int argc, char **argv) {
   const char * base_name;
   const char * run_path;
   const char * title;
+  version_type * version_table;
   char stdout_file[128];
   char stderr_file[128];
   int version_nr;
 
-  if (argc != 4) print_usage(argv[0]);
+  version_table = get_version_table();
+
+  if (argc != 4) print_usage(argv[0] , version_table);
   run_path   = argv[1];
   base_name  = argv[2];
   version_nr = atoi(argv[3]);
@@ -120,8 +176,8 @@ int main(int argc, char **argv) {
     version_nr = NEWEST_VERSION;
 
   if (version_nr < VERSION_MIN || version_nr > VERSION_MAX)
-    print_usage(argv[0]);
-
+    print_usage(argv[0] , version_table);
+  
   executable = version_table[version_nr - VERSION_MIN].executable;
   lib_path   = version_table[version_nr - VERSION_MIN].lib_path;
   symlink(config_file, "ECL.CFG");

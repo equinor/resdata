@@ -27,7 +27,7 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_MOD_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	gcc -m32 -Wall ecl_submit.c -o /d/proj/bg/enkf/bin/ecl_submit.x
+	gcc -m32 -Wall -I$(COMPILE_INCLUDE) ecl_submit.c -o /d/proj/bg/enkf/bin/ecl_submit.x $(COMPILE_LIB_PATH)  $(COMPILE_LIBS)
 	gcc -m32 -Wall -I$(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) ecl_test.c -o ecl_test.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
 	gcc -m32 -Wall -I$(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) make_SGU.c -o make_SGU.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
 	gcc -Wall -g -m32 -O2 $(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) -o convert.x convert.c -I./ -L./ -L../../libutil/lib -lecl -lm -lutil
@@ -57,7 +57,7 @@ ecl_kw.o    : ecl_kw.c ecl_kw.h fortio.o
 ecl_block.o : ecl_block.c ecl_block.h ecl_kw.o
 ecl_fstate.o: ecl_fstate.c ecl_fstate.h ecl_block.o ecl_util.o ecl_kw.o
 ecl_sum.o   : ecl_sum.c ecl_sum.h ecl_fstate.o ecl_block.o ecl_kw.o ecl_util.o
-ecl_parse.o : ecl_parse.h ecl_parse.h o ecl_fstate.o ecl_util.o ecl_kw.o ecl_block.o
+ecl_parse.o : ecl_parse.h ecl_parse.h ecl_fstate.o ecl_util.o ecl_kw.o ecl_block.o
 ecl_diag.o  : ecl_diag.c ecl_diag.h ecl_sum.o ecl_fstate.o ecl_util.o
 ecl_interC.o: ecl_interC.c ecl_fstate.o ecl_sum.o ecl_parse.o lsf_jobs.o
 #ecl_interF.o: ecl_interF.f90 ecl_interC.o
