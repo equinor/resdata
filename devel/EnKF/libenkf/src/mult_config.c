@@ -17,19 +17,23 @@ static void mult_config_set_output_transform(mult_config_type * config) {
 }
 
 
+void mult_config_finalize_init(mult_config_type *config) {
+  mult_config_set_output_transform(config);
+}
+
 
 mult_config_type * mult_config_alloc_empty(int size, const char * eclfile , const char * ensfile) {
   mult_config_type *mult_config = malloc(sizeof *mult_config);
-  mult_config->data_size   = size;
-  mult_config->ecl_kw_name = NULL;
-  mult_config->var_type    = parameter;
+  mult_config->data_size   	     = size;
+  mult_config->ecl_kw_name 	     = NULL;
+  mult_config->var_type    	     = parameter;
   
-  mult_config->eclfile     = util_alloc_string_copy(eclfile);
-  mult_config->ensfile     = util_alloc_string_copy(ensfile);
-  mult_config->mean        = enkf_util_malloc(size * sizeof *mult_config->mean        , __func__);
-  mult_config->std         = enkf_util_malloc(size * sizeof *mult_config->std         ,  __func__);
-  mult_config->active      = enkf_util_malloc(size * sizeof *mult_config->active      , __func__);
-  mult_config->logmode     = enkf_util_malloc(size * sizeof *mult_config->logmode      , __func__);
+  mult_config->eclfile     	     = util_alloc_string_copy(eclfile);
+  mult_config->ensfile     	     = util_alloc_string_copy(ensfile);
+  mult_config->mean        	     = enkf_util_malloc(size * sizeof *mult_config->mean        , __func__);
+  mult_config->std         	     = enkf_util_malloc(size * sizeof *mult_config->std         ,  __func__);
+  mult_config->active      	     = enkf_util_malloc(size * sizeof *mult_config->active      , __func__);
+  mult_config->logmode     	     = enkf_util_malloc(size * sizeof *mult_config->logmode      , __func__);
   mult_config->output_transform      = enkf_util_malloc(mult_config->data_size * sizeof * mult_config->output_transform      , __func__);
   mult_config->output_transform_name = enkf_util_malloc(mult_config->data_size * sizeof * mult_config->output_transform_name , __func__);
   mult_config->serial_size           = 0;
@@ -38,33 +42,29 @@ mult_config_type * mult_config_alloc_empty(int size, const char * eclfile , cons
 }
 
 
-/*
-mult_config_type * mult_config_alloc(int size, const char * eclfile , const char * ensfile) {
-  mult_config_type *mult_config = __mult_config_alloc_empty(size , eclfile , ensfile);
-  { 
-    int i;
-    for (i = 0; i < size; i++) {
-      mult_config->output_transform_name = NULL;
-      mult_config->mean[i]   = 1.0;
-      mult_config->std[i]    = 0.25;
-      mult_config->active[i] = true;
-      if (mult_config->active[i])
-	mult_config->serial_size++;
-    }
+
+void mult_config_transform(const mult_config_type * config , const double * input_data , double *output_data) {
+  int index;
+  for (index = 0; index < config->data_size; index++) {
+    if (config->output_transform[index] == NULL)
+      output_data[index] = input_data[index];
+    else
+      output_data[index] = config->output_transform[index](input_data[index]);
   }
-  
-  mult_config_set_output_transform(mult_config);
-  return mult_config;
 }
-*/
 
 
-double mult_config_transform(const mult_config_type * config , int index , double value) {
-  if (config->output_transform[index] == NULL)
-    return value;
-  else
-    return config->output_transform[index](value);
+void mult_config_truncate(const mult_config_type * config , double *data) {
+  int i;
+  for (i=0; i < config->data_size; i++) {
+    if (config->active[i]) 
+      if (!logmode_logEnKF(config->logmode[i]))
+	if (config->output_transform[i] == NULL)
+	  data[i] = util_double_max(0.0 , data[i]);
+  }
 }
+
+
 
 
 
@@ -93,19 +93,6 @@ void mult_config_fscanf_line(mult_config_type * config , int line_nr , FILE * st
     config->output_transform_name[line_nr] = NULL;
   
 }
-
-
-double mult_config_truncate(const mult_config_type * config , int i, double org_value) {
-  double new_value = org_value;
-  if (config->active[i]) 
-    if (!logmode_logEnKF(config->logmode[i]))
-      if (config->output_transform[i] == NULL)
-	new_value = util_double_max(0.0 , org_value);
-  
-  return new_value;
-}
-
-
 
 
 const char * mult_config_get_ensfile_ref(const mult_config_type * mult_config) {

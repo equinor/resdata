@@ -23,8 +23,10 @@ mult_config_type *    mult_config_alloc_empty(int , const char * , const char * 
 void                  mult_config_free(mult_config_type *);
 const          char * mult_config_get_ensfile_ref(const mult_config_type * );
 const          char * mult_config_get_eclfile_ref(const mult_config_type * );
-double                mult_config_transform(const mult_config_type * , int , double );
+void                  mult_config_transform(const mult_config_type * , const double * , double *);
+void                  mult_config_truncate(const mult_config_type * config , double *);
 void                  mult_config_fscanf_line(mult_config_type * , int , FILE * );
+void                  mult_config_finalize_init(mult_config_type *config);
 
 
 GET_SERIAL_SIZE_HEADER(mult);
