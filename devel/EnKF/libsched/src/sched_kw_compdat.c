@@ -9,7 +9,7 @@
 #include <sched_util.h>
 #include <stdbool.h>
 
-static  const float Kmin = 1.0;
+static  const double Kmin = 0.10;
 
 typedef enum {X , Y , Z}  well_dir_type;       
 typedef enum {OPEN , AUTO , SHUT}   comp_state_type;
@@ -69,10 +69,10 @@ static void comp_sched_init_conn_factor(comp_type * comp , const float *permx_fi
   const int index_arg = i + j*dims[0] + k*dims[0] * dims[1];
   const int index     = index_field[index_arg] - 1;
   
-  const float Kx   = permx_field[index];
-  const float Ky   = permx_field[index];
-  const float Kz   = permz_field[index];
-  float Keff;
+  const double Kx   = permx_field[index];
+  const double Ky   = permx_field[index];
+  const double Kz   = permz_field[index];
+  double Keff;
   
   switch (comp->well_dir) {
   case(X):
@@ -110,11 +110,11 @@ static void comp_sched_set_conn_factor(comp_type * comp , const float *permx_fie
     const int k         = comp->k1 - 1;
     const int index_arg = i + j*dims[0] + k*dims[0] * dims[1];
     const int index     = index_field[index_arg] - 1;
-    const float Kx      = permx_field[index];
-    const float Ky      = permx_field[index];
-    const float Kz      = permz_field[index];
+    const double Kx      = permx_field[index];
+    const double Ky      = permx_field[index];
+    const double Kz      = permz_field[index];
     
-    float Keff = 0;
+    double Keff = 0;
 
     switch (comp->well_dir) {
     case(X):
@@ -294,8 +294,8 @@ static comp_type * comp_sched_fread_alloc(int kw_size , FILE * stream) {
 
 
 void sched_kw_compdat_init_conn_factor(sched_kw_compdat_type * kw , const ecl_kw_type *permx_kw, const ecl_kw_type * permz_kw , const int * dims , const int * index_field , bool *OK) {
-  float *permx = ecl_kw_get_data_ref(permx_kw);
-  float *permz = ecl_kw_get_data_ref(permz_kw);
+  float *permx = ecl_kw_get_safe_data_ref(permx_kw , ecl_float_type);
+  float *permz = ecl_kw_get_safe_data_ref(permz_kw , ecl_float_type);
   list_node_type *comp_node = list_get_head(kw->comp_list);
   while (comp_node != NULL) {
     comp_type * comp = list_node_value_ptr(comp_node);

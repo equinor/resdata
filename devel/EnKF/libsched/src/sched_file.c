@@ -36,6 +36,11 @@ struct sched_file_struct {
 */
 
 
+int sched_file_get_volume(const sched_file_type *s) {
+  return s->dims[0] * s->dims[1] * s->dims[2];
+}
+
+
 list_type * sched_file_get_kw_list(const sched_file_type * s) { return s->kw_list; }
 
 time_t sched_file_get_start_date(const sched_file_type * s) { return s->start_date; }
@@ -203,13 +208,12 @@ void sched_file_parse(sched_file_type * sched_file , const char * filename) {
 	    active_kw = NULL;
 	}
       }
-      
       linenr++;
       if (linenr == (lines - 1)) {
 	if (strncmp(line_list[linenr] , "END" , 3) == 0)
 	  cont = false;
 	else {
-	  fprintf(stderr,"%s: something is rotten when parsing: %s not END on last line - aborting \n" , __func__ , filename);
+	  fprintf(stderr,"%s: Error (internal ?) when parsing %s : not END on last line - aborting \n" , __func__ , filename);
 	  abort();
 	}
       }
@@ -292,7 +296,7 @@ void sched_file_set_conn_factor(sched_file_type * sched_file , const float * per
       list_node = list_node_get_next(list_node);
     }
   } else {
-    fprintf(stderr, "%s: must call shced_file_init_conn_factor first - aborting \n",__func__);
+    fprintf(stderr, "%s: must call sched_file_init_conn_factor first - aborting \n",__func__);
     abort();
   }
 }

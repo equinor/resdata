@@ -52,7 +52,7 @@ void sched_kw_wconhist_add_line(sched_kw_wconhist_type * kw , const char * line)
 
   sched_util_parse_line(line , &tokens , &token_list , kw->kw_size , NULL);
   {
-    rate_type * rate = rate_alloc(kw->kw_size , (const char **) token_list);
+    rate_type * rate = rate_alloc_from_token_list(kw->kw_size , (const char **) token_list);
     list_append_list_owned_ref(kw->rate_list , rate , rate_free__);
   }
   sched_util_free_token_list(tokens , token_list);

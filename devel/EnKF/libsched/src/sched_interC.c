@@ -37,13 +37,18 @@ void sched_parse_wconhist__(const char * _schedule_dump_file , const int * sched
 
 
 
-void sched_update_compdat_fprintf_static(const char * _schedule_dump_file , const int * schedule_dump_len , 
-					 const char * _schedule_file      , const int * schedule_file_len,
-					 const char * _last_date_str      , const int * last_date_len , 
-					 const float * permx , const float * permz, const int * index_map) {
+/* 
+   Fortran input is typically double - but internally this is done with float,
+   since that is how perm is stored in eclipse. Consistent??
+*/
+
+static void sched_update_compdat_fprintf_static(const char  * _schedule_dump_file , const int * schedule_dump_len , 
+						const char  * _schedule_file      , const int * schedule_file_len,
+						const char  * _last_date_str      , const int * last_date_len , 
+						const double * permx , const double * permz, const int * index_map , const int * nactive) {
   
   sched_file_type *s;
-  char * schedule_file      = util_alloc_cstring(_schedule_file , schedule_file_len);
+  char * schedule_file      = util_alloc_cstring(_schedule_file      , schedule_file_len);
   char * schedule_dump_file = util_alloc_cstring(_schedule_dump_file , schedule_dump_len);
   char * last_date_str      = util_alloc_cstring(_last_date_str      , last_date_len);
 
@@ -52,8 +57,21 @@ void sched_update_compdat_fprintf_static(const char * _schedule_dump_file , cons
     s = sched_file_fread_alloc( stream , atoi(last_date_str)  , -1 , -1.0);
     fclose(stream);
   }
-  if (permx != NULL) 
-    sched_file_set_conn_factor(s , permx , permz , index_map );
+
+  if (permx != NULL) {
+    int size        = *nactive;
+    float * permx_4 = malloc(size * sizeof * permx_4);
+    float * permz_4 = malloc(size * sizeof * permz_4);
+    if (permz_4 == NULL) {
+      fprintf(stderr,"%s: failed to malloc - aborting \n",__func__);
+      abort();
+    }
+    util_double_to_float(permx_4 , permx   , size);
+    util_double_to_float(permz_4 , permz   , size);
+    sched_file_set_conn_factor(s , permx_4 , permz_4 , index_map );
+    free(permx_4);
+    free(permz_4);
+  }
   
   sched_file_fprintf(s , atoi(last_date_str) , -1 , -1.0 , schedule_file);
   sched_file_free(s);
@@ -75,7 +93,7 @@ void sched_fprintf__(const char * _schedule_dump_file , const int * schedule_dum
   sched_update_compdat_fprintf_static(   _schedule_dump_file ,   schedule_dump_len , 
 					 _schedule_file      ,   schedule_file_len,
 					 _last_date_str      ,   last_date_len , 
-					 NULL , NULL , NULL);
+					 NULL , NULL , NULL , NULL);
   
 
 }
@@ -84,12 +102,12 @@ void sched_fprintf__(const char * _schedule_dump_file , const int * schedule_dum
 void sched_update_compdat_fprintf__(const char * _schedule_dump_file , const int * schedule_dump_len , 
 				    const char * _schedule_file      , const int * schedule_file_len,
 				    const char * _last_date_str      , const int * last_date_len , 
-				    const float * permx , const float * permy, const int * index_map) {
+				    const double * permx , const double * permy, const int * index_map, const int * nactive) {
 
   sched_update_compdat_fprintf_static(   _schedule_dump_file ,   schedule_dump_len , 
 					 _schedule_file      ,   schedule_file_len,
 					 _last_date_str      ,   last_date_len , 
-					 permx ,    permy,   index_map);
+					 permx ,    permy,   index_map , nactive);
   
 }
 
@@ -148,7 +166,7 @@ static ecl_sum_type * ecl_diag_avg_load(const char * eclbase_dir , const char * 
   else 
     fmt_mode = ECL_BINARY;
 
-  spec_file = ecl_util_alloc_filename(eclbase_dir , eclbase_name , fmt_file , -1 , ecl_summary_header_file);
+  spec_file = ecl_util_alloc_exfilename(eclbase_dir , eclbase_name , fmt_file , -1 , ecl_summary_header_file);
   if (unified) {
     char * unif_file = ecl_util_alloc_filename( eclbase_dir , eclbase_name , fmt_file , -1 , ecl_unified_summary_file);
     sum = ecl_sum_fread_alloc(spec_file , 1 , (const char **) &unif_file , report_mode , endian_convert);
@@ -156,7 +174,7 @@ static ecl_sum_type * ecl_diag_avg_load(const char * eclbase_dir , const char * 
   } else {
     int files;
     char **fileList;
-    fileList  = ecl_util_alloc_filelist(eclbase_dir , eclbase_name , ecl_summary_file , fmt_file , &files);
+    fileList  = ecl_util_alloc_exfilelist(eclbase_dir , eclbase_name , ecl_summary_file , fmt_file , &files);
     sum       = ecl_sum_fread_alloc(spec_file , files , (const char **) fileList , report_mode , endian_convert);
     util_free_string_list(fileList , files);
   }
@@ -182,16 +200,17 @@ static void ecl_diag_avg_production(const char *out_path , const hist_type * his
       sprintf(well_file , "%s/%s" , out_path , well_list[iwell]);
       stream = util_fopen(well_file , "w");
       for (istep = 0; istep < size; istep++) {
-	float time_value;
-	ecl_sum_iget2(avg , istep , -1 , 0 , &time_value);
+	double time_value;
+	time_value = ecl_sum_iget2(avg , istep , 0 );
 	fprintf(stream , "%04d  %8.2f" , istep , time_value);
 	for (ivar = 0; ivar < nvar; ivar++) {
-	  float history_value , avg_value , std_value;
+	  double history_value , avg_value , std_value;
+	  int index;
 	  const char *var = var_list[ivar];
 	  
 	  history_value = hist_get(hist , istep + 1 , well , var);
-	  ecl_sum_iget1(avg , -1, istep , well ,  var , false, &avg_value);
-	  ecl_sum_iget1(std , -1, istep , well ,  var , false, &std_value);
+	  avg_value = ecl_sum_iget1(avg , istep , well ,  var , &index);
+	  std_value = ecl_sum_iget1(std , istep , well ,  var , &index);
 	  
 	  fprintf(stream , "%16.7f   %16.7f  %16.7f " , history_value , avg_value , std_value);
 	}
@@ -263,6 +282,14 @@ void sched_inter_hist_get__(const int *report_step , const char * _well , const 
   free(well);
 }
 
+
+
+
+void sched_inter_get_report_date__(const int * report_step , int * day, int * month , int * year) {
+  time_t t = hist_get_report_date(GLOBAL_HIST , (*report_step) - 1);
+  util_set_date_values(t , day , month , year);
+  
+}
 
   
 

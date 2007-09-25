@@ -79,54 +79,14 @@ static char * strip_line_alloc(const char * line) {
 
 
 static char * alloc_line(FILE *stream , bool *at_eof) {
-  int init_pos = ftell(stream);
-  int len;
-  char *line;
-  char c , end_char;
-  bool cont;
-  bool dos_newline;
+  char *tmp_line = util_fscanf_alloc_line(stream , at_eof);
+  char * line    = strip_line_alloc( tmp_line );
   
-  len = 0;
-  cont = true;
-
-  
-  do {
-    c = fgetc(stream);
-    if (c != '\n' && c != '\r' && c != EOF)
-      len++;
-    else
-      cont = false;
-  } while (cont);
-  if (c == '\r')
-    dos_newline = true;
-  else
-    dos_newline = false;
-  end_char = c;
-
-  fseek(stream , init_pos , SEEK_SET);
-  {
-    char *tmp_line = malloc(len + 1);
-    int i;
-    for (i=0; i < len; i++)
-      tmp_line[i] = fgetc(stream);
-    tmp_line[len] = '\0';
-    line = strip_line_alloc( tmp_line );
-    free(tmp_line);
-  }
-  /*
-    Skipping the end of line marker(s).
-  */
-  fgetc(stream);
-  if (dos_newline)
-    fgetc(stream);
-  
-  if (end_char == EOF)
-    *at_eof = true;
-  else
-    *at_eof = false;
-  
+  free(tmp_line);
   return line;
 }
+
+
 
 
 /*****************************************************************/

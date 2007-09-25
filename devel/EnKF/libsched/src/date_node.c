@@ -35,9 +35,19 @@ static const char month_table[12][4] = {{"JAN\0"},
 /*****************************************************************/
 
 
+
+
 static date_node_type * date_node_alloc_empty(const time_t * start_time) {
   date_node_type *date_node = malloc(sizeof *date_node);
   date_node->start_time = start_time;
+  return date_node;
+}
+
+date_node_type * date_node_alloc_ext(bool TStep , time_t time , int date_nr , const time_t * start_time) {
+  date_node_type * date_node = date_node_alloc_empty(start_time);
+  date_node->time    = time;
+  date_node->date_nr = date_nr;
+  date_node->TStep   = TStep;
   return date_node;
 }
 
@@ -90,10 +100,7 @@ void date_node_free__(void *__date) {
 
 
 date_node_type * date_node_copyc(const date_node_type * node) {
-  date_node_type *new = date_node_alloc_empty(node->start_time);
-  new->TStep   = node->TStep;
-  new->time    = node->time;
-  new->date_nr = node->date_nr;
+  date_node_type *new = date_node_alloc_ext(node->TStep , node->time , node->date_nr , node->start_time);
   return new;
 }
 
@@ -151,6 +158,11 @@ int date_node_get_date_nr(const date_node_type * date_node) {
     return 0;
   else
     return date_node->date_nr; 
+}
+
+
+time_t date_node_get_date(const date_node_type * date_node) { 
+  return date_node->time; 
 }
 
 

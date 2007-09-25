@@ -13,7 +13,7 @@ FFLAGS  = -fpe0 -traceback -warn unused -CB -u -g -real_size 64 -assume byterecl
 ARFLAGS = -csr
 #################################################################
 OBJECTS   = hist.o rate_node.o date_node.o sched_interC.o sched_file.o sched_util.o sched_kw.o sched_kw_compdat.o sched_kw_wconhist.o sched_kw_dates.o sched_kw_untyped.o sched_kw_tstep.o
-INC_FILES = hist.h sched_file.h sched_util.h sched_kw.h sched_kw_compdat.h sched_kw_wconhist.h sched_kw_dates.h sched_kw_untyped.h sched_kw_tstep.h
+INC_FILES = date_node.h rate_node.h hist.h sched_file.h sched_util.h sched_kw.h sched_kw_compdat.h sched_kw_wconhist.h sched_kw_dates.h sched_kw_untyped.h sched_kw_tstep.h
 LIB       = libsched.a
 
 
@@ -23,8 +23,10 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_LIB_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	gcc -std=gnu99 -m32 -Wall -g $(COMPILE_INCLUDE) sched_test.c -o sched.x -L./ -L../../libutil/lib -L../../libhash/lib -L../../libecl/lib -lsched -lhash -lutil  -lecl -lm
+	gcc -std=gnu99 -m32 -Wall -g $(COMPILE_INCLUDE) sched_test.c -o sched.x -L./ -L../../libutil/lib -L../../libhash/lib -L../../libecl/lib -lsched -lecl -lhash -lutil -lm
 
+clean:
+	rm -f *.o *~ 
 
 $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)

@@ -7,6 +7,7 @@
 
 typedef struct sched_file_struct sched_file_type;
 
+int               sched_file_get_volume(const sched_file_type *);
 list_type       * sched_file_get_kw_list(const sched_file_type * );
 time_t            sched_file_get_start_date(const sched_file_type * );
 void 		  sched_file_init_conn_factor(sched_file_type * , const char *  , bool , const int * );
