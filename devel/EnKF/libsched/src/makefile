@@ -12,8 +12,8 @@ CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE)
 FFLAGS  = -fpe0 -traceback -warn unused -CB -u -g -real_size 64 -assume byterecl -assume nobuffered_io -convert big_endian
 ARFLAGS = -csr
 #################################################################
-OBJECTS   = hist.o rate_node.o date_node.o sched_interC.o sched_file.o sched_util.o sched_kw.o sched_kw_compdat.o sched_kw_wconhist.o sched_kw_dates.o sched_kw_untyped.o sched_kw_tstep.o
-INC_FILES = date_node.h rate_node.h hist.h sched_file.h sched_util.h sched_kw.h sched_kw_compdat.h sched_kw_wconhist.h sched_kw_dates.h sched_kw_untyped.h sched_kw_tstep.h
+OBJECTS   = history.o rate_node.o date_node.o sched_interC.o sched_file.o sched_util.o sched_kw.o sched_kw_compdat.o sched_kw_wconhist.o sched_kw_dates.o sched_kw_untyped.o sched_kw_tstep.o
+INC_FILES = date_node.h rate_node.h history.h sched_file.h sched_util.h sched_kw.h sched_kw_compdat.h sched_kw_wconhist.h sched_kw_dates.h sched_kw_untyped.h sched_kw_tstep.h
 LIB       = libsched.a
 
 
@@ -38,7 +38,7 @@ $(LIB): $(OBJECTS)
 	$(FC) -c $(FFLAGS) $< -o $@
 
 
-hist.o              : hist.c hist.h rate_node.o date_node.o sched_file.o
+history.o           : history.c history.h rate_node.o date_node.o sched_file.o
 rate_node.o         : rate_node.c rate_node.h
 sched_util.o        : sched_util.c sched_util.h 
 sched_kw_wconhist.o : sched_kw_wconhist.h sched_kw_wconhist.c sched_util.o rate_node.o

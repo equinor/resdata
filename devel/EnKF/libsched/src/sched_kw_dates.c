@@ -6,7 +6,7 @@
 #include <util.h>
 #include <sched_util.h>
 #include <sched_kw_dates.h>
-#include <hist.h>
+#include <history.h>
 #include "date_node.h"
 
 struct sched_kw_dates_struct {
@@ -104,11 +104,11 @@ void sched_kw_dates_fprintf_days_dat(const sched_kw_dates_type * kw , FILE *stre
 }
 
 
-void sched_kw_dates_make_hist(const sched_kw_dates_type * kw , hist_type * hist) {
+void sched_kw_dates_make_history(const sched_kw_dates_type * kw , history_type * hist) {
   list_node_type *date_node = list_get_head(kw->date_list);
   while (date_node != NULL) {
     const date_node_type * date = list_node_value_ptr(date_node);
-    hist_add_date(hist , date);
+    history_add_date(hist , date);
     date_node = list_node_get_next(date_node);
   }
 }

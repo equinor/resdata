@@ -214,13 +214,13 @@ void sched_kw_fprintf_days_dat(const sched_kw_type * kw , FILE *stream) {
 }
 
 
-void sched_kw_make_hist(const sched_kw_type * kw , hist_type * hist, date_node_type **current_date) {
+void sched_kw_make_history(const sched_kw_type * kw , history_type * history, date_node_type **current_date) {
   if (kw->type == DATES) {
-    sched_kw_dates_make_hist(kw->data  , hist);
+    sched_kw_dates_make_history(kw->data  , history);
     sched_kw_dates_iterate_current(kw->data , current_date);
   }
   else if (kw->type == WCONHIST) 
-    sched_kw_wconhist_make_hist(kw->data , date_node_get_date_nr(*current_date) + 1 , hist);
+    sched_kw_wconhist_make_history(kw->data , date_node_get_date_nr(*current_date) + 1 , history);
   
 }
 

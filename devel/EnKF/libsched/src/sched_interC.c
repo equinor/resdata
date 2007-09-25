@@ -5,11 +5,11 @@
 #include <sched_file.h>
 #include <ecl_fstate.h>
 #include <ecl_sum.h>
-#include <hist.h>
+#include <history.h>
 
 
 static const bool ENDIAN_CONVERT  = true;
-static hist_type *GLOBAL_HIST     = NULL;
+static history_type *GLOBAL_HISTORY     = NULL;
 
 /*****************************************************************/
 
@@ -142,7 +142,7 @@ void sched_init__(const char * _schedule_file  	   , const int * schedule_file_l
       sched_file_fwrite(s , stream);
       fclose(stream);
     }
-    GLOBAL_HIST = hist_alloc_from_schedule(s);
+    GLOBAL_HISTORY = history_alloc_from_schedule(s);
     sched_file_free(s);
     free(init_file);
   }
@@ -183,7 +183,7 @@ static ecl_sum_type * ecl_diag_avg_load(const char * eclbase_dir , const char * 
 }
 
 
-static void ecl_diag_avg_production(const char *out_path , const hist_type * hist , const char * eclbase_dir , const char * eclbase_avg , const char * eclbase_std , int nwell , const char **well_list , int nvar , const char **var_list , bool fmt_file , bool unified , bool endian_convert) {
+static void ecl_diag_avg_production(const char *out_path , const history_type * hist , const char * eclbase_dir , const char * eclbase_avg , const char * eclbase_std , int nwell , const char **well_list , int nvar , const char **var_list , bool fmt_file , bool unified , bool endian_convert) {
   ecl_sum_type *avg = ecl_diag_avg_load(eclbase_dir , eclbase_avg , fmt_file , unified, endian_convert);
   ecl_sum_type *std = ecl_diag_avg_load(eclbase_dir , eclbase_std , fmt_file , unified, endian_convert);
   int iwell, ivar , size;
@@ -191,7 +191,7 @@ static void ecl_diag_avg_production(const char *out_path , const hist_type * his
   size = ecl_sum_get_size(avg);
   printf("size: %d \n",size);
   for (iwell = 0; iwell < nwell; iwell++) {
-    if (hist_has_well(hist , well_list[iwell])) {
+    if (history_has_well(hist , well_list[iwell])) {
       FILE *stream;
       char * well_file = malloc(strlen(out_path) + 1 + strlen(well_list[iwell]) + 1);
       const char *well = well_list[iwell];
@@ -208,7 +208,7 @@ static void ecl_diag_avg_production(const char *out_path , const hist_type * his
 	  int index;
 	  const char *var = var_list[ivar];
 	  
-	  history_value = hist_get(hist , istep + 1 , well , var);
+	  history_value = history_get(hist , istep + 1 , well , var);
 	  avg_value = ecl_sum_iget1(avg , istep , well ,  var , &index);
 	  std_value = ecl_sum_iget1(std , istep , well ,  var , &index);
 	  
@@ -267,7 +267,7 @@ void ecl_diag_avg_production_interactive(const char *out_path , const char * ecl
   }
   /*var_list = defvar_list;*/
   nvar     = defvar_N;
-  ecl_diag_avg_production(out_path , GLOBAL_HIST , eclbase_dir , eclbase_avg , eclbase_std , nwell , (const char **) well_list , nvar , defvar_list , fmt_file , unified , ENDIAN_CONVERT);
+  ecl_diag_avg_production(out_path , GLOBAL_HISTORY , eclbase_dir , eclbase_avg , eclbase_std , nwell , (const char **) well_list , nvar , defvar_list , fmt_file , unified , ENDIAN_CONVERT);
 }
 	  
 
@@ -276,7 +276,7 @@ void sched_inter_hist_get__(const int *report_step , const char * _well , const 
   char *var  = util_alloc_cstring(_var  , var_len);
   char *well = util_alloc_cstring(_well , well_len);
 
-  *value = hist_get(GLOBAL_HIST , *report_step , well , var);
+  *value = history_get(GLOBAL_HISTORY , *report_step , well , var);
   
   free(var);
   free(well);
@@ -286,7 +286,7 @@ void sched_inter_hist_get__(const int *report_step , const char * _well , const 
 
 
 void sched_inter_get_report_date__(const int * report_step , int * day, int * month , int * year) {
-  time_t t = hist_get_report_date(GLOBAL_HIST , (*report_step) - 1);
+  time_t t = history_get_report_date(GLOBAL_HISTORY , (*report_step) - 1);
   util_set_date_values(t , day , month , year);
   
 }

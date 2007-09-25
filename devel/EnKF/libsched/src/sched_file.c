@@ -11,7 +11,7 @@
 #include <sched_kw_dates.h>
 #include <sched_kw.h>
 #include <sched_file.h>
-#include <hist.h>
+#include <history.h>
 
 
 struct sched_file_struct {

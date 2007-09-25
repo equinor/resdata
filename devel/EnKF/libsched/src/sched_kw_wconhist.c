@@ -8,7 +8,7 @@
 #include <sched_util.h>
 #include <stdbool.h>
 #include <rate_node.h>
-#include <hist.h>
+#include <history.h>
 
 
 
@@ -120,11 +120,11 @@ void sched_kw_wconhist_fprintf_rates(const sched_kw_wconhist_type * kw , const c
 
 
 
-void sched_kw_wconhist_make_hist(const sched_kw_wconhist_type * kw , int time_step , hist_type * hist) {
+void sched_kw_wconhist_make_history(const sched_kw_wconhist_type * kw , int time_step , history_type * history) {
   list_node_type *rate_node = list_get_head(kw->rate_list);
   while (rate_node != NULL) {
     const rate_type * rate = list_node_value_ptr(rate_node);
-    hist_add_rate(hist , time_step , rate);
+    history_add_rate(history , time_step , rate);
     rate_node = list_node_get_next(rate_node);
   }
 }

@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <sched_kw_dates.h>
+#include <history.h>
 
 typedef enum {WCONHIST=0 , UNTYPED , DATES , COMPDAT , TSTEP} sched_type_enum;
 
@@ -24,5 +25,5 @@ sched_kw_type   * sched_kw_fread_alloc(int *, double * , const time_t * , int , 
 void              sched_kw_fwrite(const sched_kw_type *kw , FILE *);
 void              sched_kw_fprintf_rates(const sched_kw_type * , const char *, const char * , date_node_type **);
 void              sched_kw_fprintf_days_dat(const sched_kw_type * , FILE *);
-void              sched_kw_make_hist(const sched_kw_type *  , hist_type * , date_node_type **);
+void              sched_kw_make_history(const sched_kw_type *  , history_type * , date_node_type **);
 #endif

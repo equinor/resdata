@@ -2,7 +2,7 @@
 #define __SCHED_KW_DATES__
 #include <hash.h>
 #include <stdbool.h>
-#include <hist.h>
+#include <history.h>
 #include "date_node.h"
 
 typedef struct sched_kw_dates_struct sched_kw_dates_type;
@@ -15,5 +15,5 @@ sched_kw_dates_type * sched_kw_dates_fread_alloc(int *  , const time_t * , int ,
 void                  sched_kw_dates_fwrite(const sched_kw_dates_type * , FILE *);
 void                  sched_kw_dates_iterate_current(const sched_kw_dates_type * , date_node_type **);
 void                  sched_kw_dates_fprintf_days_dat(const sched_kw_dates_type * , FILE *);
-void                  sched_kw_dates_make_hist(const sched_kw_dates_type * ,  hist_type * );
+void                  sched_kw_dates_make_history(const sched_kw_dates_type * ,  history_type * );
 #endif
