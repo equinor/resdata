@@ -170,7 +170,7 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
   
   fseek(stream , init_pos , SEEK_SET);
   new_line = realloc(line , len + 1);
-  fread(new_line , sizeof * new_line , len , stream);
+  util_fread(new_line , sizeof * new_line , len , stream , __func__);
   new_line[len] = '\0';
     
   /*
@@ -659,14 +659,14 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
   const int random_max    = 1000000;
 
   
-  pid_t pid             = getpid() % pid_max;
+  pid_t  pid            = getpid() % pid_max;
   char * file           = malloc(strlen(path) + 1 + strlen(prefix) + 1 + pid_digits + 1 + random_digits + 1);
   do {
     long int rand_int = random() % random_max;
     if (include_pid)
-      sprintf(file , "%s/%s-%d-%d" , path , prefix , pid , rand_int);
+      sprintf(file , "%s/%s-%d-%ld" , path , prefix , pid , rand_int);
     else
-      sprintf(file , "%s/%s-%d" , path , prefix , rand_int);
+      sprintf(file , "%s/%s-%ld" , path , prefix , rand_int);
   } while (util_file_exists(file));
   return file;
 }
@@ -706,6 +706,28 @@ bool util_file_update_required(const char *src_file , const char *target_file) {
     return false;
 }
 
+
+
+static void __util_set_timevalues(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year) {
+  struct tm ts;
+
+  localtime_r(&t , &ts);
+  if (sec   != NULL) *sec   = ts.tm_sec;
+  if (min   != NULL) *min   = ts.tm_min;
+  if (hour  != NULL) *hour  = ts.tm_hour;
+  if (mday  != NULL) *mday  = ts.tm_mday;
+  if (month != NULL) *month = ts.tm_mon;
+  if (year  != NULL) *year  = ts.tm_year + 1900;
+}
+
+void util_set_datetime_values(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year) {
+  __util_set_timevalues(t , sec , min , hour , mday , month , year);
+}
+
+
+void util_set_date_values(time_t t , int * mday , int * month , int * year) {
+  __util_set_timevalues(t , NULL , NULL , NULL , mday , month , year);
+}
 
 
 /*
@@ -1069,14 +1091,14 @@ void util_double_to_float(float *float_ptr , const double *double_ptr , int size
 
 /*****************************************************************/
 
-  void util_fwrite_string(const char * s, FILE *stream) {
+void util_fwrite_string(const char * s, FILE *stream) {
   int len = 0;
   if (s != NULL) {
     len = strlen(s);
-    fwrite(&len , sizeof len , 1       , stream);
-    fwrite(s    , 1          , len + 1 , stream);
+    util_fwrite(&len , sizeof len , 1       , stream , __func__);
+    util_fwrite(s    , 1          , len + 1 , stream , __func__);
   } else
-    fwrite(&len , sizeof len , 1       , stream);
+    util_fwrite(&len , sizeof len , 1       , stream , __func__);
 }
 
 
@@ -1084,10 +1106,10 @@ void util_double_to_float(float *float_ptr , const double *double_ptr , int size
 char * util_fread_alloc_string(FILE *stream) {
   int len;
   char *s = NULL;
-  fread(&len , sizeof len , 1 , stream);
+  util_fread(&len , sizeof len , 1 , stream , __func__);
   if (len > 0) {
     s = malloc(len + 1);
-    fread(s , 1 , len + 1 , stream);
+    util_fread(s , 1 , len + 1 , stream , __func__);
   } 
   return s;
 }
@@ -1095,7 +1117,7 @@ char * util_fread_alloc_string(FILE *stream) {
 
 void util_fskip_string(FILE *stream) {
   int len;
-  fread(&len , sizeof len , 1 , stream);
+  util_fread(&len , sizeof len , 1 , stream , __func__);
   fseek(stream , len + 1 , SEEK_CUR);
 }
 
@@ -1204,6 +1226,26 @@ static FILE * util_fopen__(const char *filename , const char * mode, int abort_m
 
 FILE * util_fopen(const char * filename , const char * mode) {
   return util_fopen__(filename , mode , ABORT_READ + ABORT_WRITE);
+}
+
+
+void util_fwrite(const void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {
+  int items_written = fwrite(ptr , element_size , items , stream);
+  if (items_written != items) {
+    fprintf(stderr,"%s/%s: only wrote %d/%d items to disk - aborting.\n",caller , __func__ , items_written , items);
+    fprintf(stderr,"%s\n",strerror(errno));
+    abort();
+  }
+}
+
+
+void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {
+  int items_read = fread(ptr , element_size , items , stream);
+  if (items_read != items) {
+    fprintf(stderr,"%s/%s: only read %d/%d items from disk - aborting.\n",caller , __func__ , items_read , items);
+    fprintf(stderr,"%s\n",strerror(errno));
+    abort();
+  }
 }
 
 #undef ABORT_READ

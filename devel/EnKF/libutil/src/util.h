@@ -51,6 +51,10 @@ void     util_free_string_list(char **, int );
 char  ** util_alloc_string_list(int , int );
 char   * util_alloc_substring_copy(const char *, int );
 
+void 	 util_set_datetime_values(time_t , int * , int * , int * , int * , int *  , int *);
+void 	 util_set_date_values(time_t , int * , int * , int * );
+
+
 bool     util_intptr_2bool(const int *);
 void     util_pad_f90string(char * , int );
 char *   util_alloc_cstring(const char *, const int *);
@@ -78,6 +82,9 @@ void     util_fskip_lines(FILE * , int);
 bool     util_same_file(const char *  , const char * );
 void     util_read_path(const char * , int , bool , char *  );
 void     util_read_string(const char *  , int  , char * );
+void     util_fread (void *, size_t , size_t , FILE * , const char * );
+void     util_fwrite(const void *, size_t , size_t , FILE * , const char * );
+
 
 #define UTIL_ABORT(msg) (util_abort(__func__, __FILE__, __LINE__ , msg))
 
