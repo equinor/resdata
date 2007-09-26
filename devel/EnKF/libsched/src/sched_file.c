@@ -305,12 +305,12 @@ void sched_file_set_conn_factor(sched_file_type * sched_file , const float * per
 void sched_file_fwrite(const sched_file_type * sched_file , FILE * stream) {
   {
     int len = list_get_size(sched_file->kw_list);
-    fwrite(&len , sizeof len , 1 , stream);
+    util_fwrite(&len , sizeof len , 1 , stream , __func__);
   }
 
-  fwrite(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
-  fwrite(sched_file->dims                 , sizeof sched_file->dims       	   , 3 , stream); 
-  fwrite(&sched_file->start_date          , sizeof sched_file->start_date 	   , 1 , stream);
+  util_fwrite(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream , __func__);
+  util_fwrite(sched_file->dims                 , sizeof sched_file->dims       	        , 3 , stream , __func__); 
+  util_fwrite(&sched_file->start_date          , sizeof sched_file->start_date 	        , 1 , stream , __func__);
 
   {
     list_node_type *list_node = list_get_head(sched_file->kw_list);
@@ -329,10 +329,10 @@ sched_file_type * sched_file_fread_alloc(FILE *stream, int last_date_nr , time_t
   sched_file_type * sched_file;
   
   sched_file = sched_file_alloc(NULL);
-  fread(&len                             , sizeof len                             , 1 , stream); 
-  fread(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream);
-  fread(sched_file->dims                 , sizeof sched_file->dims                , 3 , stream); 
-  fread(&sched_file->start_date          , sizeof sched_file->start_date          , 1 , stream); 
+  util_fread(&len                             , sizeof len                             , 1 , stream , __func__); 
+  util_fread(&sched_file->compdat_initialized , sizeof sched_file->compdat_initialized , 1 , stream , __func__);
+  util_fread(sched_file->dims                 , sizeof sched_file->dims                , 3 , stream , __func__); 
+  util_fread(&sched_file->start_date          , sizeof sched_file->start_date          , 1 , stream , __func__); 
   
   at_eof = false;
   stop   = false;

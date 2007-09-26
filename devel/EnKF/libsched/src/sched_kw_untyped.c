@@ -62,10 +62,10 @@ void sched_kw_untyped_free(sched_kw_untyped_type * kw) {
 
 void sched_kw_untyped_fwrite(const sched_kw_untyped_type *kw , FILE *stream) {
   util_fwrite_string(kw->kw_name , stream);
-  fwrite(&kw->one_line , sizeof kw->one_line , 1 , stream);
+  util_fwrite(&kw->one_line , sizeof kw->one_line , 1 , stream , __func__);
   {
     int lines = list_get_size(kw->line_list);
-    fwrite(&lines , sizeof lines , 1, stream);
+    util_fwrite(&lines , sizeof lines , 1, stream , __func__);
   }
   {
     list_node_type *line_node = list_get_head(kw->line_list);
@@ -82,11 +82,11 @@ void sched_kw_untyped_fwrite(const sched_kw_untyped_type *kw , FILE *stream) {
 sched_kw_untyped_type * sched_kw_untyped_fread_alloc(FILE *stream) {
   bool one_line;
   char *kw_name = util_fread_alloc_string(stream);
-  fread(&one_line , sizeof one_line , 1 , stream);
+  util_fread(&one_line , sizeof one_line , 1 , stream , __func__);
   {
     sched_kw_untyped_type *kw = sched_kw_untyped_alloc(kw_name , one_line);
     int lines , i;
-    fread(&lines       , sizeof lines       , 1 , stream);
+    util_fread(&lines       , sizeof lines       , 1 , stream , __func__);
     for (i=0; i < lines; i++) {
       char * line = util_fread_alloc_string(stream);
       list_append_string_copy(kw->line_list , line);

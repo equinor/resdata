@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <hash.h>
 #include <time.h>
+#include <util.h>
 #include <sched_kw.h>
 #include <sched_kw_compdat.h>
 #include <sched_kw_wconhist.h>
@@ -135,7 +136,7 @@ void sched_kw_fprintf(const sched_kw_type * kw , int last_date_nr , time_t last_
 
 
 void sched_kw_fwrite(const sched_kw_type *kw , FILE *stream) {
-  fwrite(&kw->type , sizeof kw->type , 1 , stream);
+  util_fwrite(&kw->type , sizeof kw->type , 1 , stream , __func__);
   switch (kw->type) {
   case(COMPDAT):
     sched_kw_compdat_fwrite(kw->data , stream);
@@ -161,7 +162,7 @@ void sched_kw_fwrite(const sched_kw_type *kw , FILE *stream) {
 
 sched_kw_type * sched_kw_fread_alloc(int *next_date_nr , double *acc_days_ptr , const time_t *start_date , int last_date_nr , time_t last_time , double last_day , FILE *stream , bool *at_eof, bool *stop) {
   sched_kw_type * kw = malloc(sizeof *kw);
-  fread(&kw->type  , sizeof kw->type , 1 , stream);
+  util_fread(&kw->type  , sizeof kw->type , 1 , stream , __func__);
 
   switch (kw->type) {
   case(COMPDAT):
@@ -221,7 +222,6 @@ void sched_kw_make_history(const sched_kw_type * kw , history_type * history, da
   }
   else if (kw->type == WCONHIST) 
     sched_kw_wconhist_make_history(kw->data , date_node_get_date_nr(*current_date) + 1 , history);
-  
 }
 
 

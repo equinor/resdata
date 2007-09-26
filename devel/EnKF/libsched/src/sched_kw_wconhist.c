@@ -69,7 +69,7 @@ void sched_kw_wconhist_free(sched_kw_wconhist_type * kw) {
 void sched_kw_wconhist_fwrite(const sched_kw_wconhist_type *kw , FILE *stream) {
   {
     int wconhist_lines = list_get_size(kw->rate_list);
-    fwrite(&wconhist_lines , sizeof wconhist_lines , 1, stream);
+    util_fwrite(&wconhist_lines , sizeof wconhist_lines , 1, stream , __func__);
   }
   {
     list_node_type *rate_node = list_get_head(kw->rate_list);
@@ -86,7 +86,7 @@ void sched_kw_wconhist_fwrite(const sched_kw_wconhist_type *kw , FILE *stream) {
 sched_kw_wconhist_type * sched_kw_wconhist_fread_alloc(FILE *stream) {
   sched_kw_wconhist_type *kw = sched_kw_wconhist_alloc();
   int lines , i;
-  fread(&lines       , sizeof lines       , 1 , stream);
+  util_fread(&lines       , sizeof lines       , 1 , stream , __func__);
   for (i=0; i < lines; i++) {
     rate_type * rate = rate_sched_fread_alloc(stream);
     list_append_list_owned_ref(kw->rate_list , rate , rate_free__);

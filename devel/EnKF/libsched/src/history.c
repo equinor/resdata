@@ -66,14 +66,14 @@ void history_node_fwrite(const history_node_type * history_node , FILE *stream) 
   else
     isNULL = false;
   
-  fwrite(&isNULL , sizeof isNULL , 1 , stream);
+  util_fwrite(&isNULL , sizeof isNULL , 1 , stream , __func__);
   if (!isNULL) {
     char **well_list;
     int    wells , i ;
     date_node_fwrite(history_node->date , stream);
     wells = hash_get_size(history_node->data);
     well_list = hash_alloc_keylist(history_node->data);
-    fwrite(&wells , sizeof wells , 1 , stream);
+    util_fwrite(&wells , sizeof wells , 1 , stream , __func__);
     for (i = 0; i < wells; i++)
       rate_sched_fwrite(hash_get(history_node->data , well_list[i]) , stream);
 
@@ -85,14 +85,14 @@ void history_node_fwrite(const history_node_type * history_node , FILE *stream) 
 history_node_type * history_node_fread_alloc(const time_t * start_date , FILE *stream) {
   history_node_type *history_node = NULL;
   bool isNULL;
-  fread(&isNULL , sizeof isNULL , 1 , stream);
+  util_fread(&isNULL , sizeof isNULL , 1 , stream , __func__);
   if (!isNULL) {
     int wells , i;
     rate_type *rate;
     bool stop;
     history_node = history_node_alloc();
     history_node->date = date_node_fread_alloc(start_date , -1 , -1 , stream , &stop);
-    fread(&wells , sizeof wells , 1 , stream);
+    util_fread(&wells , sizeof wells , 1 , stream , __func__);
     for (i=0; i < wells; i++) {
       rate = rate_sched_fread_alloc(stream);
       hash_insert_hash_owned_ref(history_node->data , rate_get_well_ref(rate) , rate , rate_free__);
@@ -154,19 +154,19 @@ history_type * history_alloc(time_t start_date) {
 
 
 void history_fwrite(const history_type * hist , FILE *stream) {
-  fwrite(&hist->creation_time , sizeof hist->creation_time , 1 , stream);
-  fwrite(&hist->history_mode  , sizeof hist->history_mode  , 1 , stream);
+  util_fwrite(&hist->creation_time , sizeof hist->creation_time , 1 , stream , __func__);
+  util_fwrite(&hist->history_mode  , sizeof hist->history_mode  , 1 , stream , __func__);
   util_fwrite_string(hist->data_src                        , stream);
-  fwrite(&hist->size          , sizeof hist->size          , 1 , stream);
-  fwrite(&hist->alloc_size    , sizeof hist->alloc_size    , 1 , stream);
-  fwrite(&hist->start_date    , sizeof hist->start_date    , 1 , stream);
+  util_fwrite(&hist->size          , sizeof hist->size          , 1 , stream , __func__);
+  util_fwrite(&hist->alloc_size    , sizeof hist->alloc_size    , 1 , stream , __func__);
+  util_fwrite(&hist->start_date    , sizeof hist->start_date    , 1 , stream , __func__);
   {
     int i , wells;
     char **well_list;
     for (i=0; i < hist->size; i++)
       history_node_fwrite(hist->data[i] , stream);
     
-    fwrite(&wells , sizeof wells , 1 , stream);
+    util_fwrite(&wells , sizeof wells , 1 , stream , __func__);
     well_list = hash_alloc_keylist(hist->well_hash);
     for (i=0; i < wells; i++)
       util_fwrite_string(well_list[i] , stream);
@@ -179,12 +179,12 @@ void history_fwrite(const history_type * hist , FILE *stream) {
 history_type * history_fread_alloc(FILE *stream) {
  history_type * hist = history_alloc(0);
 
- fread(&hist->creation_time , sizeof hist->creation_time , 1 , stream);
- fread(&hist->history_mode  , sizeof hist->history_mode  , 1 , stream);
+ util_fread(&hist->creation_time , sizeof hist->creation_time , 1 , stream , __func__);
+ util_fread(&hist->history_mode  , sizeof hist->history_mode  , 1 , stream , __func__);
  hist->data_src = util_fread_alloc_string(stream);
- fread(&hist->size       , sizeof hist->size       , 1 , stream);
- fread(&hist->alloc_size , sizeof hist->alloc_size , 1 , stream);
- fread(&hist->start_date , sizeof hist->start_date , 1 , stream);
+ util_fread(&hist->size       , sizeof hist->size       , 1 , stream , __func__);
+ util_fread(&hist->alloc_size , sizeof hist->alloc_size , 1 , stream , __func__);
+ util_fread(&hist->start_date , sizeof hist->start_date , 1 , stream , __func__);
  history_realloc_data(hist , hist->alloc_size);
  {
     int i , wells;
@@ -192,7 +192,7 @@ history_type * history_fread_alloc(FILE *stream) {
     for (i=0; i < hist->size; i++)
       hist->data[i] = history_node_fread_alloc(&hist->start_date , stream);
     
-    fread(&wells , sizeof wells , 1 , stream);
+    util_fread(&wells , sizeof wells , 1 , stream , __func__);
     for (i=0; i < wells; i++) {
       well = util_fread_alloc_string(stream);
       hash_insert_int(hist->well_hash , well , 1);

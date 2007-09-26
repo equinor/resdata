@@ -277,21 +277,21 @@ const char * rate_get_well_ref(const rate_type * rate) {
 
 
 void rate_sched_fwrite(const rate_type *rate , FILE *stream) {
-  fwrite(&rate->kw_size	 , sizeof rate->kw_size , 1 , stream);
+  util_fwrite(&rate->kw_size	 , sizeof rate->kw_size , 1 , stream , __func__);
 
   util_fwrite_string(rate->well , stream);
   
-  fwrite(&rate->cmode 	 , sizeof rate->cmode 	  , 1 , stream);
-  fwrite(&rate->state 	 , sizeof rate->state 	  , 1 , stream);
-  fwrite(&rate->ORAT  	 , sizeof rate->ORAT  	  , 1 , stream);
-  fwrite(&rate->WRAT     , sizeof rate->WRAT  	  , 1 , stream);
-  fwrite(&rate->GRAT     , sizeof rate->GRAT  	  , 1 , stream);
-  fwrite(&rate->VFPTable , sizeof rate->VFPTable  , 1 , stream);
-  fwrite(&rate->ALift    , sizeof rate->ALift     , 1 , stream);
-  fwrite(&rate->THP	 , sizeof rate->THP 	  , 1 , stream);
-  fwrite(&rate->BHP	 , sizeof rate->BHP 	  , 1 , stream);
-  fwrite(&rate->WGASRAT  , sizeof rate->WGASRAT   , 1 , stream);
-  fwrite(rate->def       , sizeof * rate->def     , rate->kw_size , stream);
+  util_fwrite(&rate->cmode    , sizeof rate->cmode     , 1 	       , stream ,__func__);
+  util_fwrite(&rate->state    , sizeof rate->state     , 1 	       , stream ,__func__);
+  util_fwrite(&rate->ORAT     , sizeof rate->ORAT      , 1 	       , stream ,__func__);
+  util_fwrite(&rate->WRAT     , sizeof rate->WRAT      , 1 	       , stream ,__func__);
+  util_fwrite(&rate->GRAT     , sizeof rate->GRAT      , 1 	       , stream ,__func__);
+  util_fwrite(&rate->VFPTable , sizeof rate->VFPTable  , 1 	       , stream ,__func__);
+  util_fwrite(&rate->ALift    , sizeof rate->ALift     , 1 	       , stream ,__func__);
+  util_fwrite(&rate->THP      , sizeof rate->THP       , 1 	       , stream ,__func__);
+  util_fwrite(&rate->BHP      , sizeof rate->BHP       , 1 	       , stream ,__func__);
+  util_fwrite(&rate->WGASRAT  , sizeof rate->WGASRAT   , 1 	       , stream ,__func__);  
+  util_fwrite(rate->def       , sizeof * rate->def     , rate->kw_size , stream ,__func__);
   
 }
 
@@ -302,21 +302,21 @@ rate_type * rate_sched_fread_alloc(FILE *stream) {
   rate_type *rate;
   int kw_size;
 
-  fread(&kw_size  , sizeof kw_size , 1 , stream);
+  util_fread(&kw_size  , sizeof kw_size , 1 , stream , __func__);
   rate  = rate_alloc_empty(kw_size);
   rate->well         = util_fread_alloc_string( stream ); 
   
-  fread(&rate->cmode     , sizeof rate->cmode     , 1 , stream);
-  fread(&rate->state 	 , sizeof rate->state 	  , 1 , stream);
-  fread(&rate->ORAT  	 , sizeof rate->ORAT  	  , 1 , stream);
-  fread(&rate->WRAT      , sizeof rate->WRAT  	  , 1 , stream);
-  fread(&rate->GRAT      , sizeof rate->GRAT  	  , 1 , stream);
-  fread(&rate->VFPTable  , sizeof rate->VFPTable  , 1 , stream);
-  fread(&rate->ALift     , sizeof rate->ALift     , 1 , stream);
-  fread(&rate->THP	 , sizeof rate->THP 	  , 1 , stream);
-  fread(&rate->BHP	 , sizeof rate->BHP 	  , 1 , stream);
-  fread(&rate->WGASRAT   , sizeof rate->WGASRAT   , 1 , stream);
-  fread(rate->def        , sizeof * rate->def     , rate->kw_size , stream);
+  util_fread(&rate->cmode     , sizeof rate->cmode        , 1 		  , stream , __func__);
+  util_fread(&rate->state     , sizeof rate->state 	  , 1 		  , stream , __func__);
+  util_fread(&rate->ORAT      , sizeof rate->ORAT  	  , 1 		  , stream , __func__);
+  util_fread(&rate->WRAT      , sizeof rate->WRAT  	  , 1 		  , stream , __func__);
+  util_fread(&rate->GRAT      , sizeof rate->GRAT  	  , 1 		  , stream , __func__);
+  util_fread(&rate->VFPTable  , sizeof rate->VFPTable     , 1 		  , stream , __func__);
+  util_fread(&rate->ALift     , sizeof rate->ALift        , 1 		  , stream , __func__);
+  util_fread(&rate->THP	      , sizeof rate->THP 	  , 1 		  , stream , __func__);
+  util_fread(&rate->BHP	      , sizeof rate->BHP 	  , 1 		  , stream , __func__);
+  util_fread(&rate->WGASRAT   , sizeof rate->WGASRAT      , 1 		  , stream , __func__);  
+  util_fread(rate->def        , sizeof * rate->def        , rate->kw_size , stream , __func__);
   
   return rate;
 }

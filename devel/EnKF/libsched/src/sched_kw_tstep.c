@@ -67,17 +67,17 @@ static void tstep_node_fprintf(const tstep_node_type * node, FILE *stream , int 
 }
 
 static void tstep_node_fwrite(const tstep_node_type * tstep_node , FILE *stream) {
-  fwrite(&tstep_node->acc_days   , sizeof tstep_node->acc_days   , 1 , stream);
-  fwrite(&tstep_node->step_days  , sizeof tstep_node->step_days  , 1 , stream);
-  fwrite(&tstep_node->tstep_nr   , sizeof tstep_node->tstep_nr   , 1 , stream);
+  util_fwrite(&tstep_node->acc_days   , sizeof tstep_node->acc_days   , 1 , stream , __func__);
+  util_fwrite(&tstep_node->step_days  , sizeof tstep_node->step_days  , 1 , stream , __func__);
+  util_fwrite(&tstep_node->tstep_nr   , sizeof tstep_node->tstep_nr   , 1 , stream , __func__);
 }
 
 
 static tstep_node_type * tstep_node_fread_alloc(int last_tstep_nr , double last_day , FILE *stream, bool *stop) {
   tstep_node_type * node = malloc(sizeof *node); /* SKipping spesific alloc routine - UGGLY */
-  fread(&node->acc_days    , sizeof node->acc_days    , 1 , stream);
-  fread(&node->step_days   , sizeof node->step_days   , 1 , stream);
-  fread(&node->tstep_nr    , sizeof node->tstep_nr    , 1 , stream);
+  util_fread(&node->acc_days    , sizeof node->acc_days    , 1 , stream , __func__);
+  util_fread(&node->step_days   , sizeof node->step_days   , 1 , stream , __func__);
+  util_fread(&node->tstep_nr    , sizeof node->tstep_nr    , 1 , stream , __func__);
 
   if (last_tstep_nr > 0) {
     if (node->tstep_nr >= last_tstep_nr)
@@ -144,7 +144,7 @@ void sched_kw_tstep_free(sched_kw_tstep_type * kw) {
 void sched_kw_tstep_fwrite(const sched_kw_tstep_type *kw , FILE *stream) {
   {
     int tstep_lines = list_get_size(kw->tstep_list);
-    fwrite(&tstep_lines , sizeof tstep_lines , 1, stream);
+    util_fwrite(&tstep_lines , sizeof tstep_lines , 1, stream , __func__);
   }
   {
     list_node_type *tstep_node = list_get_head(kw->tstep_list);
@@ -161,7 +161,7 @@ void sched_kw_tstep_fwrite(const sched_kw_tstep_type *kw , FILE *stream) {
 sched_kw_tstep_type * sched_kw_tstep_fread_alloc(int * next_tstep_ptr , double * acc_days_ptr , const time_t * start_date , int last_tstep_nr ,time_t last_time , FILE *stream, bool *stop) {
   int lines , line_nr;
   sched_kw_tstep_type *kw = sched_kw_tstep_alloc(next_tstep_ptr , acc_days_ptr , start_date) ;
-  fread(&lines       , sizeof lines       , 1 , stream);
+  util_fread(&lines       , sizeof lines       , 1 , stream , __func__);
   line_nr = 0;
   while (!(*stop) && (line_nr < lines)) {
     tstep_node_type * tstep_node = tstep_node_fread_alloc(last_tstep_nr , last_time ,  stream , stop);
