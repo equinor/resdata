@@ -58,15 +58,20 @@ void prefix ## _config_set_serial_offset (prefix ## _config_type *arg, int offse
 
 
 #define CONFIG_SET_ECLFILE(prefix)                                                            \
-void prefix ## _config_set_eclfile(prefix ## _config_type *config , const char * file) {       \
-  config->eclfile = realloc(config->eclfile , strlen(file) + 1);                             \
-  strcpy(config->eclfile , file);                                                             \
+void prefix ## _config_set_eclfile(prefix ## _config_type *config , const char * file) {      \
+  if (file != NULL) {                                                                         \
+     config->eclfile = realloc(config->eclfile , strlen(file) + 1);                           \
+     strcpy(config->eclfile , file);                                                          \
+  } else config->eclfile = NULL; 							      \
 }
 
-#define CONFIG_SET_ENSFILE(prefix)                                                            \
-void prefix ## _config_set_ensfile(prefix ## _config_type *config , const char * file) {       \
-  config->ensfile = realloc(config->ensfile , strlen(file) + 1);                             \
-  strcpy(config->ensfile , file);                                                             \
+
+#define CONFIG_SET_ENSFILE(prefix)                                                           \
+void prefix ## _config_set_ensfile(prefix ## _config_type *config , const char * file) {     \
+  if (file != NULL) {                                                                        \
+     config->ensfile = realloc(config->ensfile , strlen(file) + 1);                          \
+     strcpy(config->ensfile , file);                                                         \
+  } else config->ensfile = NULL;                                                             \
 }
 
 
@@ -240,5 +245,12 @@ void prefix ## _measure__(const void * void_arg ,  const double * serial_data ,m
 
 #define VOID_TRUNCATE(prefix)         void prefix ## _truncate__(void * void_arg) { prefix ## _truncate( (prefix ## _type *) void_arg); }
 #define VOID_TRUNCATE_HEADER(prefix)  void prefix ## _truncate__(void * )
+
+/*****************************************************************/
+
+#define CONFIG_GET_ENSFILE(prefix)       	     const char * prefix ## _config_get_ensfile_ref(const prefix ## _config_type * config) { return config->ensfile; }
+#define CONFIG_GET_ECLFILE(prefix)       	     const char * prefix ## _config_get_eclfile_ref(const prefix ## _config_type * config) { return config->eclfile; }
+#define CONFIG_GET_ENSFILE_HEADER(prefix)       const char * prefix ## _config_get_ensfile_ref(const prefix ## _config_type * )
+#define CONFIG_GET_ECLFILE_HEADER(prefix)       const char * prefix ## _config_get_eclfile_ref(const prefix ## _config_type * )
 
 #endif

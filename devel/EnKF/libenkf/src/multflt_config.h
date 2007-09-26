@@ -6,30 +6,31 @@
 #include <enkf_util.h>
 #include <config.h>
 #include <logmode.h>
+#include <mult_config.h>
+#include <mult.h>
 
 typedef struct multflt_config_struct multflt_config_type;
 
 struct multflt_config_struct {
-  CONFIG_STD_FIELDS;
-  logmode_type    ** logmode;
-  char            ** fault_names;
-  double 	   * mean;
-  double 	   * std;
-  bool   	   * active;
-  transform_ftype ** output_transform;
-  char            ** output_transform_name;
+  char              * ecl_kw_name;      
+  enkf_var_type       var_type;  
+  char 		    * ensfile;          
+  char 		    * eclfile;          
+  mult_config_type  * mult_config;
+  char             ** fault_names;
 };
 
 
 multflt_config_type * multflt_config_fscanf_alloc(const char * , const char * , const char * );
 /*multflt_config_type * multflt_config_alloc(int , const char * , const char * );*/
 void                  multflt_config_free(multflt_config_type *);
-const          char * multflt_config_get_ensfile_ref(const multflt_config_type * );
-const          char * multflt_config_get_eclfile_ref(const multflt_config_type * );
-double                multflt_config_transform(const multflt_config_type * , int , double );
-double                multflt_config_truncate(const multflt_config_type * , int , double );
+void                  multflt_config_transform(const multflt_config_type * , const double * , double *);
+void                  multflt_config_truncate(const multflt_config_type * , mult_type * );
 
-
+CONFIG_GET_ENSFILE_HEADER(multflt);
+CONFIG_GET_ECLFILE_HEADER(multflt);
+CONFIG_SET_ENSFILE_HEADER(multflt);
+CONFIG_SET_ECLFILE_HEADER(multflt);
 GET_SERIAL_SIZE_HEADER(multflt);
 VOID_GET_SERIAL_SIZE_HEADER(multflt);
 CONFIG_SET_ECLFILE_HEADER_VOID(multflt);

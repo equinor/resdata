@@ -24,8 +24,8 @@ static void multz_config_set_output_transform(multz_config_type * config) {
 static multz_config_type * __multz_config_alloc_empty(int size , const char * eclfile , const char * ensfile) {
 
   multz_config_type *config = malloc(sizeof *config);
-  config->ecl_kw_name = NULL;
   config->data_size   = size;
+  config->ecl_kw_name = NULL;
   config->var_type    = parameter;
   
   config->eclfile = util_alloc_string_copy(eclfile);

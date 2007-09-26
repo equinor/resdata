@@ -41,92 +41,84 @@ void mult_get_data(const mult_type * mult , double * data) {
 
 
 void mult_realloc_data(mult_type *mult) {
-  mult->data = enkf_util_calloc(mult_config_get_data_size(mult->config) , sizeof *mult->data , __func__);
+  mult->data        = enkf_util_calloc(mult_config_get_data_size(mult->config) , sizeof *mult->data        , __func__);
+  mult->output_data = enkf_util_calloc(mult_config_get_data_size(mult->config) , sizeof *mult->output_data , __func__);
 }
 
 
 void mult_free_data(mult_type *mult) {
   free(mult->data);
-  mult->data = NULL;
+  free(mult->output_data);
+  mult->data        = NULL;
+  mult->output_data = NULL;
 }
 
 
 mult_type * mult_alloc(const mult_config_type * mult_config) {
   mult_type * mult  = malloc(sizeof *mult);
   mult->config = mult_config;
-  mult->data = NULL;
+  mult->data        = NULL;
+  mult->output_data = NULL;
   mult_realloc_data(mult);
   return mult;
 }
 
 
 
-char * mult_alloc_ensfile(const mult_type * mult , const char * path) {
-  return util_alloc_full_path(path , mult_config_get_ensfile_ref(mult->config));
+
+void mult_memcpy(mult_type * new, const mult_type * old) {
+  int size = mult_config_get_data_size(old->config);
+  memcpy(new->data , old->data , size * sizeof *old->data);
 }
 
 
+
 mult_type * mult_copyc(const mult_type *mult) {
-  const int size = mult_config_get_serial_size(mult->config);   
   mult_type * new = mult_alloc(mult->config);
-  
-  memcpy(new->data , mult->data , size * sizeof *mult->data);
+  mult_memcpy(new , mult);
   return new;
 }
 
 
-void mult_fread(mult_type * mult , const char *file) {
-  FILE * stream   = enkf_util_fopen_r(file , __func__);
+void mult_stream_fread(mult_type * mult , FILE * stream) {
+
   int  size;
   fread(&size , sizeof  size     , 1 , stream);
   enkf_util_fread(mult->data , sizeof *mult->data , size , stream , __func__);
   fclose(stream);
+
 }
 
 
-void mult_fwrite(const mult_type * mult , const char *file) {
-  const  mult_config_type * config = mult->config;
-  const int data_size = mult_config_get_data_size(config);
-  FILE * stream   = enkf_util_fopen_w(file , __func__);
-  
+void mult_stream_fwrite(const mult_type * mult , FILE * stream) {
+
+  const int data_size = mult_config_get_data_size(mult->config);
   fwrite(&data_size              ,   sizeof  data_size     , 1 , stream);
   enkf_util_fwrite(mult->data    ,   sizeof *mult->data    ,data_size , stream , __func__);
   
-  fclose(stream);
 }
-
-
-
-void mult_ens_read(mult_type * mult , const char *path) {
-  char * ensfile = util_alloc_full_path(path , mult_config_get_ensfile_ref(mult->config));
-  mult_fread(mult , ensfile);
-  free(ensfile);
-}
-
-
-void mult_ens_write(const mult_type * mult , const char * path) {
-  char * ensfile = util_alloc_full_path(path , mult_config_get_ensfile_ref(mult->config));
-  mult_fwrite(mult , ensfile);
-  free(ensfile);
-}
-
 
 
 char * mult_swapout(mult_type * mult , const char * path) {
-  char * ensfile = util_alloc_full_path(path , mult_config_get_ensfile_ref(mult->config));
+  /*char * ensfile = util_alloc_full_path(path , mult_config_get_ensfile_ref(mult->config));
   mult_fwrite(mult , ensfile);
   mult_free_data(mult);
   return ensfile;
+  */
+  fprintf(stderr,"%s: not implemented - aborting \n",__func__);
+  abort();
 }
 
 
 
 void mult_swapin(mult_type * mult , const char *file) {
-  mult_realloc_data(mult);
-  mult_fread(mult  , file);
+  /*
+    mult_realloc_data(mult);
+    mult_fread(mult  , file);
+  */
+  fprintf(stderr,"%s: not implemented - aborting \n",__func__);
+  abort();
 }
-
-
 
 
 
@@ -169,7 +161,6 @@ void mult_serialize(const mult_type *mult , double *serial_data , size_t *_offse
 }
 
 
-
 void mult_truncate(mult_type * mult) {
   mult_config_truncate(mult->config , mult->data);
 }
@@ -178,6 +169,9 @@ void mult_truncate(mult_type * mult) {
 void mult_transform(mult_type * mult) {
   mult_config_transform(mult->config , mult->data , mult->output_data);
 }
+
+const double * mult_get_output_ref(const mult_type * mult) { return mult->output_data; }
+const double * mult_get_data_ref  (const mult_type * mult) { return mult->data; }
 
 
 /*****************************************************************/
@@ -196,6 +190,8 @@ void mult_TEST() {
 
 
 MATH_OPS(mult)
+
+/*
 VOID_ALLOC(mult)
 VOID_FREE(mult)
 VOID_FREE_DATA(mult)
@@ -207,11 +203,10 @@ VOID_SWAPIN(mult)
 VOID_SWAPOUT(mult)
 VOID_SERIALIZE(mult)
 VOID_TRUNCATE(mult)
-/******************************************************************/
-/* Anonumously generated functions used by the enkf_node object   */
-/******************************************************************/
+
+
 
 VOID_FUNC      (mult_clear        , mult_type)
 VOID_FUNC      (mult_sample       , mult_type)
-
+*/
 

@@ -1,0 +1,310 @@
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <thist.h>
+#include <util.h>
+#include <time.h>
+
+
+typedef struct thist_node_struct thist_node_type;
+
+
+struct thist_node_struct {
+  thist_data_type   data_type;
+  bool     	    use_true_time;
+  int      	    ens_size;
+  int      	    time_step;
+  time_t   	    true_time;
+  int     	  * set_mask;
+  double  	  * forecast_data;
+  double  	  * analyzed_data;
+
+  bool              _forecast;
+  bool              _analyzed;
+};
+
+
+static void thist_node_clear(thist_node_type * node) {
+  int i;
+  for (i=0; i < node->ens_size; i++)
+    node->set_mask[i] = 0;
+}
+
+    
+
+static thist_node_type * thist_node_alloc(int ens_size , int time_step , thist_data_type data_type) {
+  thist_node_type * node = malloc(sizeof * node);
+  node->ens_size      = ens_size;
+  node->time_step     = time_step;
+  node->use_true_time = false;
+  node->data_type     = data_type;
+  node->forecast_data = NULL;
+  node->analyzed_data = NULL;
+  node->set_mask      = malloc(ens_size * sizeof * node->set_mask);
+  node->_forecast     = false;
+  node->_analyzed     = false;
+  
+  if (node->data_type & thist_forecast) node->_forecast = true; 
+  if (node->data_type & thist_analyzed) node->_analyzed = true; 
+  if (node->_forecast) node->forecast_data = malloc(ens_size * sizeof * node->forecast_data);
+  if (node->_analyzed) node->analyzed_data = malloc(ens_size * sizeof * node->analyzed_data);
+  thist_node_clear(node);
+  
+  return node;
+}
+
+
+static void thist_node_set_mask(thist_node_type * node , int iens , thist_data_type mask) {
+  if ((node->set_mask[iens] & mask) == 0) node->set_mask[iens] += mask;
+}
+
+
+static void thist_node_update_scalar(thist_node_type * node , int iens, const double * forecast , const double * analyzed) {
+  if (iens >= 0 && iens < node->ens_size) {
+
+    if (node->_forecast && forecast != NULL) {
+      node->forecast_data[iens] = *forecast;
+      thist_node_set_mask(node , iens , thist_forecast);
+    }
+
+    if (node->_analyzed && analyzed != NULL) {
+      node->analyzed_data[iens] = *analyzed;
+      thist_node_set_mask(node , iens , thist_analyzed);
+    }
+    
+  } else {
+    fprintf(stderr,"%s: tried to update ens_member:%d ens_size:%d - aborting \n",__func__ , iens , node->ens_size);
+    abort();
+  }
+}
+
+
+static void thist_node_update_vector(thist_node_type * node , const double * forecast , const double * analyzed) {
+  int iens;
+  if (node->_forecast && forecast != NULL) {
+    memcpy(node->forecast_data , forecast , node->ens_size * sizeof * forecast);
+    for (iens = 0; iens < node->ens_size; iens++)
+      thist_node_set_mask(node , iens , thist_forecast);
+  }
+
+  if (node->_analyzed && analyzed != NULL) {
+    memcpy(node->analyzed_data , analyzed , node->ens_size * sizeof * analyzed);
+    for (iens = 0; iens < node->ens_size; iens++)
+      thist_node_set_mask(node , iens , thist_analyzed);
+  }
+}
+
+
+
+static void thist_node_free(thist_node_type * node) {
+  if (node->_forecast) free(node->forecast_data);
+  if (node->_analyzed) free(node->analyzed_data);
+  free(node->set_mask);
+}
+
+
+static void thist_node_set_true_time(thist_node_type * node , int day, int month , int year) {
+  node->true_time = util_make_time1(day , month , year);
+  node->use_true_time = true;
+}
+
+static void thist_node_matlab_dump(const thist_node_type * node , FILE *stream) {
+  const int active    = 1;
+  const int zero_size = 0;
+  util_fwrite(&active              , sizeof active              , 1 , stream , __func__);
+  util_fwrite(&node->time_step     , sizeof node->time_step     , 1 , stream , __func__);
+  util_fwrite(&node->true_time     , sizeof node->true_time     , 1 , stream , __func__);
+  util_fwrite(&node->use_true_time , sizeof node->use_true_time , 1 , stream , __func__);
+  if (node->data_type & thist_forecast) {
+    util_fwrite(&node->ens_size     , sizeof node->ens_size , 1 , stream , __func__);
+    util_fwrite(node->forecast_data , sizeof * node->forecast_data , node->ens_size , stream , __func__);
+  } else
+    util_fwrite(&zero_size , sizeof zero_size , 1 , stream , __func__);
+  
+  if (node->data_type & thist_analyzed) {
+    util_fwrite(&node->ens_size     , sizeof node->ens_size , 1 , stream , __func__);
+    util_fwrite(node->analyzed_data , sizeof * node->analyzed_data , node->ens_size , stream , __func__);
+  } else
+    util_fwrite(&zero_size , sizeof zero_size , 1 , stream , __func__);
+
+}
+
+
+/*****************************************************************/
+
+
+
+struct thist_struct {
+  bool forecast;
+  bool analyzed;
+  thist_data_type data_type;
+  int data_size;
+  int ens_size;
+  thist_node_type ** data;
+};
+
+
+
+static void thist_realloc_data(thist_type * thist , int new_size) {
+  thist_node_type **old_data;
+  int               old_size = thist->data_size;
+  int               i;
+
+  old_data    = thist->data;
+  thist->data = malloc(new_size * sizeof * thist->data);
+ for (i=0; i < new_size; i++)
+    thist->data[i] = NULL;
+  
+  for (i=0; i < old_size; i++)
+    thist->data[i] = old_data[i];
+  
+  thist->data_size = new_size;
+  free(old_data);
+}
+
+
+thist_type * thist_alloc(int ens_size , thist_data_type data_type) {
+  thist_type * thist = malloc(sizeof * thist);
+  thist->ens_size    = ens_size;
+  thist->data_type   = data_type;
+  thist->data_size   = 0;
+  thist->data        = NULL;
+
+  thist_realloc_data(thist , 100);
+  return thist;
+}
+
+
+
+void thist_free(thist_type * thist) {
+  int i;
+  for (i=0; i < thist->data_size; i++) 
+    if (thist->data[i] != NULL) thist_node_free(thist->data[i]);
+  
+  free(thist->data);
+  free(thist);
+}
+
+
+static void thist_assert_time_step(thist_type * thist, int time_step) {
+  if (time_step < 0) {
+    fprintf(stderr,"%s time_step=%d < 0 INVALID \n",__func__ , time_step);
+    abort();
+  }
+
+  if (time_step >= thist->data_size) 
+    thist_realloc_data(thist , 2 * (time_step + 1));
+
+  if (thist->data[time_step] == NULL)
+    thist->data[time_step] = thist_node_alloc(thist->ens_size , time_step , thist->data_type);
+}
+
+
+static void thist_assert_forecast_analyzed__(const thist_type * thist , thist_data_type data_type) {
+  if (thist->data_type != thist_both) {
+    if (thist->data_type != data_type) {
+      fprintf(stderr,"%s: invalid update - aborting \n",__func__);
+      abort();
+    }
+  }
+}
+
+
+
+
+static void thist_update_vector__(thist_type * thist , int time_step , const double * forecast_data , const double * analyzed_data) {
+  thist_assert_time_step(thist , time_step);
+  thist_node_update_vector(thist->data[time_step] , forecast_data , analyzed_data);
+}
+
+
+static void thist_update_scalar__(thist_type * thist , int time_step , int iens , double forecast_value , double analyzed_value) {
+  thist_assert_time_step(thist , time_step);
+  thist_node_update_scalar(thist->data[time_step] , iens , (const double *) &forecast_value , (const double *) &analyzed_value);
+}
+
+
+/*
+  Here comes the front ends ...
+*/
+
+void thist_update_scalar(thist_type * thist , int time_step , int iens , double forecast_value , double analyzed_value) {
+  thist_assert_forecast_analyzed__(thist , thist_both);
+  thist_update_scalar__(thist , time_step , iens , forecast_value , analyzed_value);
+}
+
+void thist_update_forecast_scalar(thist_type * thist , int time_step , int iens , double forecast_value) {
+  thist_assert_forecast_analyzed__(thist , thist_forecast);
+  thist_update_scalar__(thist , time_step , iens , forecast_value , 0);
+}
+
+void thist_update_analyzed_scalar(thist_type * thist , int time_step , int iens , double analyzed_value) {
+  thist_assert_forecast_analyzed__(thist , thist_analyzed);
+  thist_update_scalar__(thist , time_step , iens , 0 , analyzed_value);
+}
+
+void thist_update_vector(thist_type * thist , int time_step , const double *  forecast_data , const double *  analyzed_data) {
+  thist_assert_forecast_analyzed__(thist , thist_both);
+  thist_update_vector__(thist , time_step , forecast_data , analyzed_data);
+}
+
+void thist_update_forecast_vector(thist_type * thist , int time_step , const double *  forecast_data) {
+  thist_assert_forecast_analyzed__(thist , thist_forecast);
+  thist_update_vector__(thist , time_step , forecast_data , NULL);
+}
+
+void thist_update_analyzed_vector(thist_type * thist , int time_step , const double *  analyzed_data) {
+  thist_assert_forecast_analyzed__(thist , thist_analyzed);
+  thist_update_vector__(thist , time_step , NULL , analyzed_data);
+}
+
+
+
+/*
+string : title
+integer: length
+---- * length ----
+int active
+int time_step
+int true_time
+int use_true_time
+int forecast_size
+double forecast_data
+int analyzed_size
+double analyzed_data
+----
+*/
+
+
+void thist_matlab_dump(const thist_type * thist , const char * filename , const char * _title) {
+  char *path;
+  const char *title;
+  util_alloc_file_components(filename , &path , NULL , NULL);
+  if (!util_path_exists(path)) {
+    printf("Making directory %s ...\n",path);
+    util_make_path(path);
+  }
+  if (_title == NULL)
+    title = filename;
+  else
+    title = _title;
+  {
+    const int not_active = 0;
+    FILE *stream = util_fopen(filename,"w");
+    int time_step;
+    util_fwrite_string(title , stream);
+    util_fwrite(&thist->data_size , sizeof thist->data_size , 1 , stream , __func__);
+    for (time_step = 0; time_step < thist->data_size; time_step++) {
+      if (thist->data[time_step] != NULL) 
+	thist_node_matlab_dump(thist->data[time_step] , stream);
+      else
+	util_fwrite(&not_active , sizeof not_active , 1 , stream , __func__);
+    }
+    fclose(stream);
+  }
+  free(path);
+}
+
+
+

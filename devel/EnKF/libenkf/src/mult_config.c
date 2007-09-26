@@ -18,18 +18,21 @@ static void mult_config_set_output_transform(mult_config_type * config) {
 
 
 void mult_config_finalize_init(mult_config_type *config) {
+  int i;
+
+  config->serial_size = 0;
+  for (i=0; i < config->data_size; i++)
+    if (config->active[i])
+      config->serial_size++;
+
   mult_config_set_output_transform(config);
 }
 
 
-mult_config_type * mult_config_alloc_empty(int size, const char * eclfile , const char * ensfile) {
+mult_config_type * mult_config_alloc_empty(int size) {
   mult_config_type *mult_config = malloc(sizeof *mult_config);
   mult_config->data_size   	     = size;
-  mult_config->ecl_kw_name 	     = NULL;
-  mult_config->var_type    	     = parameter;
   
-  mult_config->eclfile     	     = util_alloc_string_copy(eclfile);
-  mult_config->ensfile     	     = util_alloc_string_copy(ensfile);
   mult_config->mean        	     = enkf_util_malloc(size * sizeof *mult_config->mean        , __func__);
   mult_config->std         	     = enkf_util_malloc(size * sizeof *mult_config->std         ,  __func__);
   mult_config->active      	     = enkf_util_malloc(size * sizeof *mult_config->active      , __func__);
@@ -45,11 +48,19 @@ mult_config_type * mult_config_alloc_empty(int size, const char * eclfile , cons
 
 void mult_config_transform(const mult_config_type * config , const double * input_data , double *output_data) {
   int index;
+
+  /*
+    Both log and another transform will induce chaos ...
+  */
+
   for (index = 0; index < config->data_size; index++) {
+
     if (config->output_transform[index] == NULL)
       output_data[index] = input_data[index];
     else
       output_data[index] = config->output_transform[index](input_data[index]);
+    
+    output_data[index] = logmode_transform_output_scalar( config->logmode[index] , output_data[index]);
   }
 }
 
@@ -71,11 +82,8 @@ void mult_config_truncate(const mult_config_type * config , double *data) {
 void mult_config_fscanf_line(mult_config_type * config , int line_nr , FILE * stream) {
   char output_transform[128];
   int logmode    = 0;
-
-  
   double   mu , sigma;
   int scan_count = fscanf(stream , "%lg  %lg  %d  %s" , &mu , &sigma , &logmode , output_transform);
-
   
   if (scan_count < 2 || scan_count > 4) {
     util_rewind_line(stream);
@@ -95,18 +103,10 @@ void mult_config_fscanf_line(mult_config_type * config , int line_nr , FILE * st
 }
 
 
-const char * mult_config_get_ensfile_ref(const mult_config_type * mult_config) {
-  return mult_config->ensfile;
-}
 
-const char * mult_config_get_eclfile_ref(const mult_config_type * mult_config) {
-  return mult_config->eclfile;
-}
 
 
 void mult_config_free(mult_config_type * mult_config) {
-  free(mult_config->eclfile);
-  free(mult_config->ensfile);
   free(mult_config->mean);
   free(mult_config->std);
   free(mult_config->active);
@@ -120,13 +120,10 @@ void mult_config_free(mult_config_type * mult_config) {
 
 /*****************************************************************/
 
-CONFIG_SET_ECLFILE(mult);
-CONFIG_SET_ENSFILE(mult);
-CONFIG_SET_ECLFILE_VOID(mult);
-CONFIG_SET_ENSFILE_VOID(mult);
 GET_SERIAL_SIZE(mult);
 VOID_GET_SERIAL_SIZE(mult);
 GET_DATA_SIZE(mult);
 VOID_FUNC(mult_config_free , mult_config_type);
 SET_SERIAL_OFFSET(mult);
+GET_SERIAL_OFFSET(mult);
 VOID_SET_SERIAL_OFFSET(mult);
