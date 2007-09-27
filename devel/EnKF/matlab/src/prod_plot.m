@@ -51,34 +51,19 @@ function prod_plot(year,month,day , path , well , out_path, in_device)
        device = in_device;
     end
 
-    var_plot(days , OPR , sprintf('%s - OPR' , well) , 1 , out_path , device);
-    var_plot(days , GOR , sprintf('%s - GOR' , well) , 2 , out_path , device);
-    var_plot(days , WCT , sprintf('%s - WCT' , well) , 3 , out_path , device);
-                
-  
+    if out_path == 0,
+       out_GOR = 0;
+       out_OPR = 0;
+       out_WCT = 0;
+    else
+       out_GOR = sprintf('%s%s%s-GOR' , out_path , sep , well);
+       out_OPR = sprintf('%s%s%s-OPR' , out_path , sep , well);
+       out_WCT = sprintf('%s%s%s-WCT' , out_path , sep , well);
+    end     
 
-  
-%&%    for i = 1:max(size(NList)),
-%&%        figure(i)
-%&%        N = NList(i);
-%&%        errorbar(days , ave(:,N+3) , std(:,N + 3) , '-ro','LineWidth',2 , 'MarkerSize',10, 'MarkerEdgeColor','k', 'MarkerFaceColor','g')
-%&%        xlabel('Time (days)')
-%&%        title(sprintf('%s %d' , VAR , N));
-%&%        if nargin >= 6,
-%&%            if out_path == 1,
-%&%                out_path = path;
-%&%            end
-%&%            if out_path ~= 0,
-%&%                out_file = sprintf('%s%s%s-%d',out_path , sep , VAR , N);
-%&%                if nargin == 7,
-%&%                    device = def_device;
-%&%                else
-%&%                    device = in_device;
-%&%                end
-%&%                print(i , strcat('-d',device) , out_file);
-%&%            end
-%&%        end
-%&%    end
-%&%end
+    var_plot(days , OPR , sprintf('%s - OPR' , well) , 1 , out_OPR , device);
+    var_plot(days , GOR , sprintf('%s - GOR' , well) , 2 , out_GOR , device);
+    var_plot(days , WCT , sprintf('%s - WCT' , well) , 3 , out_WCT , device);
+                
         
     

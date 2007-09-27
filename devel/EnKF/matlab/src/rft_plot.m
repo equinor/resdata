@@ -1,8 +1,9 @@
 function rft_plot(path , well , out_path , in_device)
+    sep = filesep;
     def_device = 'png';
-    true     = load(strcat(path,'\',well,'.T'));
-    forecast = load(strcat(path,'\',well,'.F'));
-    analyzed = load(strcat(path,'\',well,'.A'));
+    true     = load(strcat(path,sep,well,'.T'));
+    forecast = load(strcat(path,sep,well,'.F'));
+    analyzed = load(strcat(path,sep,well,'.A'));
     fig_nr = 1;
     shift = 0.10;
     
@@ -23,7 +24,7 @@ function rft_plot(path , well , out_path , in_device)
             out_path = path;
         end
         if out_path ~= 0,
-            out_file = sprintf('%s\\%s',out_path , well);
+            out_file = sprintf('%s%s%s',out_path , sep , well);
             if nargin == 3,
                 device = def_device;
             else

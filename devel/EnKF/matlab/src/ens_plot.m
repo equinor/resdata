@@ -21,11 +21,18 @@ function ens_plot(year,month,day,prior_path , posterior_path , well_list , var_l
 % The variables out_path and in_device are for saving to file, they are optional, see
 % the documentation of diag_plot() for details.
 
+   if nargin == 7
+      unit_list = var_list;
+   end
+
    if exist(prior_path,'dir') == 0
       disp(sprintf('Could not locate prior_path: %s - returning from ens_plot.' , prior_path));
       return;
    end
 
+   if posterior_path == 0
+      posterior_path = prior_path;
+   end
    if exist(posterior_path,'dir') == 0
       disp(sprintf('Could not locate posterior_path: %s - returning from ens_plot. ', posterior_path));
       return;
