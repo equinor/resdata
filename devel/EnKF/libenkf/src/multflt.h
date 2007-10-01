@@ -7,9 +7,11 @@
 
 typedef struct multflt_struct multflt_type;
 
+
 void             multflt_output_transform(const multflt_type * );
 const double   * multflt_get_output_ref(const multflt_type * );
 const double   * multflt_get_data_ref(const multflt_type * );
+void             multflt_get_output_data(const multflt_type * , double * );
 void             multflt_get_data(const multflt_type * , double * );
 void             multflt_set_data(multflt_type * , const double * );
 void             multflt_sample(multflt_type *);

@@ -58,6 +58,10 @@ void multflt_get_data(const multflt_type * multflt , double * data) {
   mult_get_data(multflt->mult , data);
 }
 
+void multflt_get_output_data(const multflt_type * multflt , double * output_data) {
+  mult_get_output_data(multflt->mult , output_data);
+}
+
 
 const double * multflt_get_data_ref(const multflt_type * multflt) {
   return mult_get_data_ref(multflt->mult);

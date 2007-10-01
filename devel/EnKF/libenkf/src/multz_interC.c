@@ -44,6 +44,15 @@ void multz_inter_ecl_write__(const char *_path , const int * path_len , const do
 
 
 
+/*
+void multz_inter_transform_multz_data__(const int * iens , const double * input_data , double * output_data) {
+  multz_set_data(MULTZ_LIST[(*iens) - 1] , input_data);
+  multz_output_transform(MULTZ_LIST[(*iens) - 1]);
+  multz_get_output_data(MULTZ_LIST[(*iens) - 1] , output_data);
+}
+*/
+
+
 void multz_get_data__(const int * iens, double * data) {
   multz_get_data(MULTZ_LIST[(*iens) - 1] , data);
 }

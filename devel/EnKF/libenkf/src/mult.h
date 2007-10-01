@@ -10,6 +10,7 @@ typedef struct mult_struct mult_type;
 void             mult_truncate(mult_type * );
 void             mult_transform(mult_type * );
 void             mult_get_data(const mult_type * , double * );
+void             mult_get_output_data(const mult_type * , double * );
 void             mult_set_data(mult_type * , const double * );
 char           * mult_alloc_ensfile(const mult_type * , const char *);
 mult_type      * mult_alloc(const mult_config_type * );

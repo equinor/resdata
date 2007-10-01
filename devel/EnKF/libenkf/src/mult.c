@@ -39,6 +39,10 @@ void mult_get_data(const mult_type * mult , double * data) {
   memcpy(data , mult->data , mult_config_get_data_size(mult->config) * sizeof * data);
 }
 
+void mult_get_output_data(const mult_type * mult , double * output_data) {
+  memcpy(output_data , mult->output_data , mult_config_get_data_size(mult->config) * sizeof * output_data);
+}
+
 
 void mult_realloc_data(mult_type *mult) {
   mult->data        = enkf_util_calloc(mult_config_get_data_size(mult->config) , sizeof *mult->data        , __func__);

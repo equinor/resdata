@@ -42,6 +42,14 @@ void multflt_inter_ecl_write__(const char *_path , const int * path_len , const 
 }
 
 
+void multflt_inter_transform_multflt_data__(const int * iens , const double * input_data , double * output_data) {
+  multflt_set_data(MULTFLT_LIST[(*iens) - 1] , input_data);
+  multflt_output_transform(MULTFLT_LIST[(*iens) - 1]);
+  multflt_get_output_data(MULTFLT_LIST[(*iens) - 1] , output_data);
+}
+
+
+
 void multflt_get_data__(const int * iens, double * data) {
   
   multflt_get_data(MULTFLT_LIST[(*iens) - 1] , data);
