@@ -2,6 +2,7 @@
 #define __ECL_SUM_H__
 
 #include <stdbool.h>
+#include <hash.h>
 
 typedef struct ecl_sum_struct ecl_sum_type;
 
@@ -33,4 +34,7 @@ bool           ecl_sum_get_report_mode(const ecl_sum_type * );
 time_t         ecl_sum_get_start_time(const ecl_sum_type * );
 time_t         ecl_sum_get_sim_time(const ecl_sum_type * , int );
 int            ecl_sum_get_report_size(const ecl_sum_type * , int * , int * );
+
+double         ecl_sum_eval_misfit(const ecl_sum_type * ecl_sum , int , const char ** , const double * , const hash_type * );
+double         ecl_sum_eval_well_misfit(const ecl_sum_type * , const char * , int , const char ** , const double * );
 #endif

@@ -67,7 +67,7 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const 
     if (index >= 0) {
       history_value = ecl_sum_iget1(ecl_sum_list[0] , istep , well , hvar  ,  NULL);
       time_value    = ecl_sum_iget2(ecl_sum_list[0] , istep , 0);
-
+      
       fprintf(stream , " %9.4e %9.4e " , time_value , history_value);
       for (iens = iens1; iens <= iens2; iens++) {
 	value = ecl_sum_iget2(ecl_sum_list[iens - iens1]  , istep , index);

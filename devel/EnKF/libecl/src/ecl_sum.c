@@ -485,6 +485,68 @@ int ecl_sum_get_report_size(const ecl_sum_type * ecl_sum , int * first_report_nr
 }
 
 
+double ecl_sum_eval_well_misfit(const ecl_sum_type * ecl_sum , const char * well , int nvar , const char ** var_list , const double * inv_covar) {
+  double  R2;
+  double *residual , *tmp;
+  char **hvar_list;
+  int istep,ivar;
+
+  hvar_list = malloc(nvar * sizeof * hvar_list);
+  for (ivar = 0; ivar < nvar; ivar++) {
+    hvar_list[ivar] = malloc(strlen(var_list[ivar]) + 2);
+    sprintf(hvar_list[ivar] , "%sH" , var_list[ivar]);
+  }
+  residual = malloc(nvar * sizeof * residual);
+  tmp      = malloc(nvar * sizeof * tmp);
+
+  R2 = 0;
+  for (istep = 0; istep < ecl_sum_get_size(ecl_sum);  istep++) {
+    double history_value , value;
+    int    index;
+    for (ivar = 0; ivar < nvar; ivar++) {
+      index = ecl_sum_get_index(ecl_sum , well , var_list[ivar]);
+      if (index >= 0) {
+	history_value = ecl_sum_iget1(ecl_sum , istep , well , hvar_list[ivar]  ,  NULL);
+	value         = ecl_sum_iget1(ecl_sum , istep , well , var_list[ivar]   , NULL);
+
+	residual[ivar] = (history_value - value);
+      }
+    }
+    {
+      int i,j;
+      for (i = 0; i < nvar; i++) {
+	tmp[i] = 0;
+	for (j = 0; j < nvar; j++)
+	  tmp[i] += residual[j] * inv_covar[j*nvar + i];
+	R2 += tmp[i] * residual[i];
+      }
+    }
+  }
+
+  free(tmp);
+  free(residual);
+  util_free_string_list(hvar_list , nvar);
+  return R2;
+}
+
+
+double ecl_sum_eval_misfit(const ecl_sum_type * ecl_sum , int nvar , const char ** var_list , const double * inv_covar, const hash_type * well_weights) {
+  int iwell;
+  double misfit = 0;
+
+  for (iwell = 0; iwell < ecl_sum->Nwells; iwell++) {
+    if (well_weights != NULL) {
+      double weight = hash_get_double(well_weights , ecl_sum->well_list[iwell]);
+      if (weight > 0)
+	misfit += weight * ecl_sum_eval_well_misfit(ecl_sum , ecl_sum->well_list[iwell] , nvar , var_list , inv_covar);
+    } else
+      misfit += ecl_sum_eval_well_misfit(ecl_sum , ecl_sum->well_list[iwell] , nvar , var_list ,inv_covar);
+  }
+  return misfit;
+}
+
+
+
 void ecl_sum_free_data(ecl_sum_type * ecl_sum) {
   ecl_fstate_free(ecl_sum->data);
   ecl_sum->data = NULL;
