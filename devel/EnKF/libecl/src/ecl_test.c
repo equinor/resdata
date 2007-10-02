@@ -11,6 +11,7 @@
 
 int main(int argc, char ** argv) {
 #define nvar 3
+#define nwell 4
   const double var_opr = 1000  * 1000;
   const double var_gpr = 10000 * 10000;
   const double var_wpr = 100 * 100;
@@ -18,6 +19,7 @@ int main(int argc, char ** argv) {
   const char * path = "/h/a152128/EnKF_OS/EnKF/Relperm_run1/PriorExp_a/tmpdir_0015";
   const char * base = "ECLIPSE-0015";
   char ** var_list;
+  char ** well_list;
   
   ecl_sum_type * ecl_sum;
   char ** fileList;
@@ -29,6 +31,12 @@ int main(int argc, char ** argv) {
   var_list[0] = util_alloc_string_copy("WOPR");
   var_list[1] = util_alloc_string_copy("WWPR");
   var_list[2] = util_alloc_string_copy("WGPR");
+
+  well_list    = malloc(nwell * sizeof * well_list);
+  well_list[0] = util_alloc_string_copy("F17B");
+  well_list[1] = util_alloc_string_copy("F19A");
+  well_list[2] = util_alloc_string_copy("F22T4");
+  well_list[3] = util_alloc_string_copy("F26AN");
   
   inv_covar = malloc(nvar * nvar * sizeof * inv_covar);
 
@@ -43,7 +51,7 @@ int main(int argc, char ** argv) {
   inv_covar[8] = 1.0 / var_gpr;
   
   {
-    double misfit = ecl_sum_eval_misfit(ecl_sum , nvar , (const char **) var_list , inv_covar , NULL);
+    double misfit = ecl_sum_eval_misfit(ecl_sum , nwell , (const char **) well_list , nvar , (const char **) var_list , NULL , inv_covar);
     printf("misfit: %g \n",misfit);
   }
 
