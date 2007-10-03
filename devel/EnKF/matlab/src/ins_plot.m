@@ -30,3 +30,16 @@ function [data] = ins_plot(filename)
 
   [data , plot_title] = fread_thist(filename);
   ins_plot__(data , plot_title , 1);
+  
+% Distribution test
+  alpha = 0.05;
+  [H_a,H_f]=distribution_test(data,alpha);
+  figure,plot(H_a)
+  title('Hypothesis plot for the analyzed data')
+  xlabel('Dataset number')
+  ylabel('Hypothesis test: H=0 accept, H=1 reject, H=-1 no values available') 
+  figure,plot(H_f)
+  title('Hypothesis plot for the forecast data')
+  xlabel('Dataset number')
+  ylabel('Hypothesis test: H=0 accept, H=1 reject, H=-1 no values available') 
+  
