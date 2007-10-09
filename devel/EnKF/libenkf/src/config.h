@@ -213,14 +213,13 @@ char * prefix ## _swapout__(void *void_arg , const char * file) { \
 
 
 /*****************************************************************/
-
 #define VOID_SERIALIZE(prefix)     \
-void prefix ## _serialize__(const void *void_arg, double *serial_data , size_t *_offset) { \
+int prefix ## _serialize__(const void *void_arg, double *serial_data , size_t stride , size_t offset) { \
    const prefix ## _type  *arg = (const prefix ## _type *) void_arg;       \
-   prefix ## _serialize (arg , serial_data , _offset);   \
+   return prefix ## _serialize (arg , serial_data , stride , offset);       \
 }
 
-#define VOID_SERIALIZE_HEADER(prefix) void prefix ## _serialize__(const void *, double *, size_t *);
+#define VOID_SERIALIZE_HEADER(prefix) int prefix ## _serialize__(const void *, double *, size_t , size_t);
 
 /*****************************************************************/
 

@@ -80,26 +80,41 @@ void mult_config_truncate(const mult_config_type * config , double *data) {
 
 
 void mult_config_fscanf_line(mult_config_type * config , int line_nr , FILE * stream) {
-  char output_transform[128];
   int logmode    = 0;
   double   mu , sigma;
-  int scan_count = fscanf(stream , "%lg  %lg  %d  %s" , &mu , &sigma , &logmode , output_transform);
+  int scan_count;
+  scan_count = fscanf(stream , "%lg  %lg",&mu,&sigma);
+  /*scan_count = fscanf(stream , "%lg  %lg  %d  %s" , &mu , &sigma , &logmode , output_transform);*/
   
-  if (scan_count < 2 || scan_count > 4) {
+  
+  if (scan_count != 2) {
     util_rewind_line(stream);
     fprintf(stderr,"%s error when loading line: %s - aborting \n",__func__ , util_fscanf_alloc_line(stream , NULL));
     abort();
   }
-
+  
   config->active[line_nr]  		 = true;
   config->mean[line_nr]    		 = mu;
   config->std[line_nr]     		 = sigma;
-  config->logmode[line_nr] 		 = logmode_alloc(10.0 , logmode);
-  if (scan_count == 4)
-    config->output_transform_name[line_nr] = util_alloc_string_copy(output_transform);
-  else
-    config->output_transform_name[line_nr] = NULL;
+  {
+    long int current_pos;
+    char * token;
+
+    current_pos = ftell(stream);
+    token       = util_fscanf_alloc_token(stream);
+    if (token != NULL) {
+
+      if (sscanf(token , "%d" , &logmode) != 1)
+	fseek(stream , current_pos , SEEK_SET);
+      else {
+	current_pos = ftell(stream);
+	config->output_transform_name[line_nr] = util_fscanf_alloc_token(stream);
+      }
+
+    }
+  }
   
+  config->logmode[line_nr] 		 = logmode_alloc(10.0 , logmode);
 }
 
 

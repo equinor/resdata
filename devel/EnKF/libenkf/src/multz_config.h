@@ -7,17 +7,16 @@
 #include <config.h>
 #include <enkf_types.h>
 #include <logmode.h>
+#include <mult.h>
 
 typedef struct {
-  CONFIG_STD_FIELDS;
+  char              * ecl_kw_name;      
+  enkf_var_type       var_type;  
+  char 		    * ensfile;          
+  char 		    * eclfile;          
+  mult_config_type  * mult_config;
   int *i1, *i2 , *j1 , *j2 , *k;
   int 	           * area;
-  logmode_type     **logmode;
-  double 	   * mean;
-  double 	   * std;
-  bool   	   * active;
-  transform_ftype ** output_transform;
-  char            ** output_transform_name;
 } multz_config_type;
 
 
@@ -27,17 +26,22 @@ multz_config_type * multz_config_alloc(int , int , int , const char * , const ch
 void                multz_config_free(multz_config_type *);
 const        char * multz_config_get_ensfile_ref(const multz_config_type * );
 const        char * multz_config_get_eclfile_ref(const multz_config_type * );
-void                multz_config_fprintf_layer(const multz_config_type * , int , double , FILE *);
+void                multz_config_ecl_write(const multz_config_type * , const double *, FILE *);
 
 
 /*Generated headers */
-
+CONFIG_GET_ENSFILE_HEADER(multz);
+CONFIG_GET_ECLFILE_HEADER(multz);
+CONFIG_SET_ENSFILE_HEADER(multz);
+CONFIG_SET_ECLFILE_HEADER(multz);
 GET_SERIAL_SIZE_HEADER(multz);
+GET_DATA_SIZE_HEADER(multz);
 VOID_GET_SERIAL_SIZE_HEADER(multz);
 CONFIG_SET_ECLFILE_HEADER_VOID(multz);
 CONFIG_SET_ENSFILE_HEADER_VOID(multz);
 SET_SERIAL_OFFSET_HEADER(multz);
 VOID_SET_SERIAL_OFFSET_HEADER(multz);
-
 VOID_FUNC_HEADER(multz_config_free);
+
+
 #endif

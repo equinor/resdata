@@ -6,6 +6,8 @@
 
 typedef struct multz_struct multz_type;
 
+void             multz_output_transform(const multz_type * );
+void             multz_get_output_data(const multz_type * , double * );
 void             multz_get_data(const multz_type * , double * );
 void             multz_set_data(multz_type * , const double * );
 char           * multz_alloc_ensfile(const multz_type * , const char *);
@@ -14,10 +16,12 @@ void             multz_free(multz_type *);
 char           * multz_alloc_ensname(const multz_type *);
 char           * multz_alloc_eclname(const multz_type *);
 void             multz_ecl_write(const multz_type * , const char *);
+/*void             multz_direct_ecl_write(const multz_type * , const char *);*/
 void             multz_ens_write(const multz_type * , const char *);
 void             multz_ens_read(multz_type * , const char *);
 void             multz_sample(multz_type *);
 void             multz_truncate(multz_type *);
+multz_type     * multz_alloc_mean(int , const multz_type **);
 void             multz_TEST(void);
 
 

@@ -7,19 +7,19 @@
 #include <enkf_config.h>
 #include <well_obs.h>
 #include <obs_node.h>
-#include <hist.h>
+#include <history.h>
 #include <enkf_util.h>
 
 struct enkf_obs_struct {
   const enkf_config_type * config;
-  const hist_type        * hist;
+  const history_type        * hist;
   hash_type * obs_hash;
 };
 
 
 
 
-enkf_obs_type * enkf_obs_alloc(const enkf_config_type * config , const hist_type * hist) {
+enkf_obs_type * enkf_obs_alloc(const enkf_config_type * config , const history_type * hist) {
   enkf_obs_type * enkf_obs = malloc(sizeof * enkf_obs);
   enkf_obs->config   = config;
   enkf_obs->obs_hash = hash_alloc(10);
@@ -53,7 +53,7 @@ void enkf_obs_add_obs(enkf_obs_type * enkf_obs, const char * key , const obs_nod
 
 
 
-enkf_obs_type * enkf_obs_fscanf_alloc(const char * filename , const enkf_config_type * config , const hist_type * hist) {
+enkf_obs_type * enkf_obs_fscanf_alloc(const char * filename , const enkf_config_type * config , const history_type * hist) {
   enkf_obs_type * enkf_obs = enkf_obs_alloc(config , hist);
   FILE * stream = enkf_util_fopen_r(filename , __func__);
   char *path;

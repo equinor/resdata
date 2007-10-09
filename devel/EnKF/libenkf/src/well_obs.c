@@ -8,7 +8,7 @@
 #include <meas_data.h>
 #include <hash.h>
 #include <list.h>
-#include <hist.h>
+#include <history.h>
 #include <well_config.h>
 
 
@@ -17,7 +17,7 @@
 struct well_obs_struct {
   const well_config_type * config;
   int    	           size;
-  const hist_type      	 *  hist;
+  const history_type      	 *  hist;
   char   	       	 ** var_list;
   double               	 *  abs_std;
   double 	       	 *  rel_std;   
@@ -32,7 +32,7 @@ struct well_obs_struct {
 
 
 
-static well_obs_type * __well_obs_alloc(const well_config_type * config , int size, const hist_type * hist) {
+static well_obs_type * __well_obs_alloc(const well_config_type * config , int size, const history_type * hist) {
   
   well_obs_type * well_obs = malloc(sizeof * well_obs);
   well_obs->size      	    = size;
@@ -52,7 +52,7 @@ static well_obs_type * __well_obs_alloc(const well_config_type * config , int si
 
 
 
-well_obs_type * well_obs_fscanf_alloc(const char * filename , const well_config_type * config , const hist_type * hist) {
+well_obs_type * well_obs_fscanf_alloc(const char * filename , const well_config_type * config , const history_type * hist) {
   FILE * stream = enkf_util_fopen_r(filename , __func__);
   int size      = util_count_file_lines(stream);
   well_obs_type * well_obs = __well_obs_alloc(config , size , hist);
@@ -104,7 +104,7 @@ well_obs_type * well_obs_fscanf_alloc(const char * filename , const well_config_
 
 
 
-well_obs_type * well_obs_alloc(const well_config_type * config , int NVar , const char ** var_list , const hist_type * hist) {
+well_obs_type * well_obs_alloc(const well_config_type * config , int NVar , const char ** var_list , const history_type * hist) {
   int i;
   well_obs_type * well_obs  = __well_obs_alloc(config , NVar , hist);
 
@@ -134,7 +134,7 @@ void well_obs_get_observations(const well_obs_type * well_obs , int report_step,
   for (i=0; i < well_obs->size; i++) 
     if (well_obs->current_active[i]) {
       bool default_used;
-      double d   = hist_get2(well_obs->hist , report_step , well_name , well_obs->var_list[i] , &default_used);
+      double d   = history_get2(well_obs->hist , report_step , well_name , well_obs->var_list[i] , &default_used);
       if (default_used) 
 	well_obs->current_active[i] = false;
       else {

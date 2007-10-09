@@ -253,7 +253,7 @@ static void thist_assert_time_step(thist_type * thist, int time_step) {
 static void thist_assert_forecast_analyzed__(const thist_type * thist , thist_data_type data_type) {
   if (thist->data_type != thist_both) {
     if (thist->data_type != data_type) {
-      fprintf(stderr,"%s: invalid update - aborting \n",__func__);
+      fprintf(stderr,"%s: thist->data_type:%d   input_type:%d   ---  invalid update - aborting \n",__func__ , thist->data_type , data_type);
       abort();
     }
   }

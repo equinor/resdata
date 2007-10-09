@@ -16,7 +16,7 @@
 #include <thread_pool.h>
 #include <void_arg.h>
 #include <well_obs.h>
-#include <hist.h>
+#include <history.h>
 #include <sched_file.h>
 #include <obs_data.h>
 #include <meas_data.h>
@@ -45,17 +45,15 @@ int main(void) {
   thread_pool_type * tp;
 
   sched_file_type    * sched;
-  hist_type          * hist;
+  history_type          * hist;
 
-  TEST();
-  exit(1);
   meas_data = meas_data_alloc();
   obs_data  = obs_data_alloc();
 
 
   sched     = sched_file_alloc((const int [3]) {1 , 1 , 1999});
   sched_file_parse(sched , "SCHEDULE.INC");
-  hist      = hist_alloc_from_schedule(sched);
+  hist      = history_alloc_from_schedule(sched);
  
   index_map = field_config_alloc_index_map1("ECLIPSE.EGRID" , true , &nx , &ny , &nz , &active_size);
   
@@ -163,7 +161,7 @@ int main(void) {
 	double * serial_data = calloc(serial_size*100 , sizeof *serial_data);
 	
 	enkf_state_set_serial_data(state[i] , serial_data);
-	enkf_state_serialize(state[i]);
+	enkf_state_serialize(state[i] , 100);
 
 	enkf_obs_get_observations(enkf_obs , 51 , obs_data);
 	enkf_obs_measure(enkf_obs , 51 , serial_data , meas_data);
@@ -181,5 +179,5 @@ int main(void) {
   obs_data_fprintf(obs_data , stdout);
   enkf_config_free(config);
   enkf_obs_free(enkf_obs);
-  hist_free(hist);
+  history_free(hist);
 }

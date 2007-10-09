@@ -24,7 +24,7 @@ int main(int argc , char ** argv)  {
   double *analyzed_data;
 
   thist_type * thist = thist_alloc(length + 2, ens_size , thist_both);
-
+  
   forecast_data = malloc(ens_size * sizeof * forecast_data);
   analyzed_data = malloc(ens_size * sizeof * analyzed_data);
   mu  = 0.0;
@@ -34,7 +34,7 @@ int main(int argc , char ** argv)  {
     for (iens = 0; iens < ens_size; iens++) 
       forecast_data[iens] = rand_normal(mu , std);
 
-    thist_update_vector_forecast(thist , time_step , forecast_data);
+    /*thist_update_vector_forecast(thist , time_step , forecast_data);*/
 
     mu  += rand_normal(0    , 0.15 * std);
     std *= rand_normal(0.75 , 0.10);

@@ -17,7 +17,7 @@
 #include <well_obs.h>
 #include <obs_node.h>
 #include <obs_data.h>
-#include <hist.h>
+#include <history.h>
   
 
 struct enkf_config_struct {

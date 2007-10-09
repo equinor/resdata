@@ -151,10 +151,10 @@ void enkf_node_ens_clear(enkf_node_type *enkf_node) {
   enkf_node->clear(enkf_node->data);
 }
 
-void enkf_node_serialize(enkf_node_type *enkf_node , double *serial_data , size_t *_offset) {
+int enkf_node_serialize(enkf_node_type *enkf_node , double *serial_data , size_t stride , size_t offset) {
   FUNC_ASSERT(enkf_node->serialize , "serialize");
   printf("Calling serialize on:%s \n",enkf_node->node_key);
-  enkf_node->serialize(enkf_node->data , serial_data , _offset);
+  return enkf_node->serialize(enkf_node->data , serial_data , stride , offset);
 }
 
 void enkf_node_sqrt(enkf_node_type *enkf_node) {

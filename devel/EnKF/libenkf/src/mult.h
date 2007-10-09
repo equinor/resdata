@@ -23,14 +23,15 @@ void             mult_ens_read(mult_type * , const char *);
 void             mult_sample(mult_type *);
 void             mult_truncate(mult_type *);
 void             mult_TEST(void);
+int              mult_serialize(const mult_type * , double *, size_t , size_t);
 void             mult_stream_fwrite(const mult_type * mult , FILE * );
 void             mult_stream_fread(mult_type * mult , FILE * );
 void             mult_realloc_data(mult_type * mult);
 void             mult_clear(mult_type * mult); 
-void             mult_serialize(const mult_type * , double *, size_t *);
 const double   * mult_get_output_ref(const mult_type * );
 const double   * mult_get_data_ref  (const mult_type * );
 void             mult_memcpy(mult_type * , const mult_type * );
+
 
 MATH_OPS_HEADER(mult);
 VOID_ALLOC_HEADER(mult);

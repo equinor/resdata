@@ -285,12 +285,14 @@ void field_free(field_type *field) {
 }
 
 
-void field_serialize(const field_type *field , double *serial_data , size_t *_offset) {
+int field_serialize(const field_type *field , double *serial_data , size_t stride , size_t offset) {
   const field_config_type * config = field->config;
-  const int offset = *_offset;
   const int data_size = field_config_get_data_size(config);
-  memcpy(&serial_data[offset] , field->data , data_size);
-  (*_offset) += data_size; 
+  int i;
+  for (i=0; i < data_size; i++)
+    serial_data[offset + i*stride] = field->data[i];
+  
+  return data_size;
 }
 
 

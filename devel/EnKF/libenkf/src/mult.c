@@ -20,6 +20,7 @@ struct mult_struct {
   const mult_config_type *config;
   double                  *data;
   double                  *output_data;
+  bool                     output_valid;
 };
 
 /*****************************************************************/
@@ -32,6 +33,7 @@ void mult_clear(mult_type * mult) {
 
 void mult_set_data(mult_type * mult , const double * data) {
   memcpy(mult->data , data , mult_config_get_data_size(mult->config) * sizeof * data);
+  mult->output_valid = false;
 }
 
 
@@ -68,11 +70,10 @@ mult_type * mult_alloc(const mult_config_type * mult_config) {
 }
 
 
-
-
 void mult_memcpy(mult_type * new, const mult_type * old) {
   int size = mult_config_get_data_size(old->config);
   memcpy(new->data , old->data , size * sizeof *old->data);
+  new->output_valid = false;
 }
 
 
@@ -90,6 +91,7 @@ void mult_stream_fread(mult_type * mult , FILE * stream) {
   fread(&size , sizeof  size     , 1 , stream);
   enkf_util_fread(mult->data , sizeof *mult->data , size , stream , __func__);
   fclose(stream);
+  mult->output_valid = false;
 
 }
 
@@ -138,6 +140,7 @@ void mult_sample(mult_type *mult) {
   for (i=0; i < data_size; i++) 
     if (active[i])
       mult->data[i] = enkf_util_rand_normal(mean[i] , std[i]);
+  mult->output_valid = false;
 }
 
 
@@ -149,19 +152,21 @@ void mult_free(mult_type *mult) {
 }
 
 
-void mult_serialize(const mult_type *mult , double *serial_data , size_t *_offset) {
+int mult_serialize(const mult_type *mult , double *serial_data , size_t stride , size_t offset) {
   const mult_config_type *config      = mult->config;
   const bool              *active     = config->active;
   const int                data_size  = mult_config_get_data_size(config);
-  int offset = *_offset;
+  int active_size = 0;
   int i;
   
-  for (i=0; i < data_size; i++) 
+  for (i=0; i < data_size; i++) {
     if (active[i]) {
-      serial_data[offset] = mult->data[i];
-      offset++;
+      serial_data[offset + i*stride] = mult->data[i];
+      active_size++;
     }
-  *_offset = offset;
+  }
+  
+  return active_size;
 }
 
 
@@ -172,10 +177,45 @@ void mult_truncate(mult_type * mult) {
 
 void mult_transform(mult_type * mult) {
   mult_config_transform(mult->config , mult->data , mult->output_data);
+  mult->output_valid = true;
 }
 
 const double * mult_get_output_ref(const mult_type * mult) { return mult->output_data; }
 const double * mult_get_data_ref  (const mult_type * mult) { return mult->data; }
+
+
+/*
+void mult_iadd(void *void_arg , const void *void_delta) {                
+  mult_type *arg         = (mult_type *)       void_arg;  	       
+  const mult_type *delta = (const mult_type *) void_delta;	       
+  const mult_config_type *config = arg->config; 			       
+  const int data_size = config->data_size;                      			       
+  int i;                                              			       
+  if (config != delta->config) {                                                 
+    fprintf(stderr,"%s:two multz object have different config objects - aborting \n",__func__);
+    abort();                                                                   
+  }                                                                              
+  for (i=0; i < data_size; i++) {                           			       
+    arg->data[i]        += delta->data[i];
+    arg->output_data[i] += delta->output_data[i];
+  }
+}
+
+
+void mult_iscale(void *void_arg , double scale_factor) {                
+  mult_type *arg                 = (mult_type *)       void_arg;  	       
+  const mult_config_type *config = arg->config; 			       
+  const int data_size            = config->data_size;                      			       
+  int i;                                              			       
+
+  for (i=0; i < data_size; i++) {                           			       
+    arg->data[i]        *= scale_factor;
+    arg->output_data[i] *= scale_factor;
+  }
+}
+*/
+
+
 
 
 /*****************************************************************/
@@ -184,11 +224,6 @@ const double * mult_get_data_ref  (const mult_type * mult) { return mult->data; 
 void mult_TEST() {
   return ;
 }
-
-
-
-
-
 
 
 

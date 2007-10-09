@@ -4,7 +4,7 @@ AR = ar
 #################################################################
 COMPILE_INCLUDE   = -I./ -I../../libutil/include -I../../libhash/include -I../../libecl/include -I../../librms/include -I../../libsched/include 
 COMPILE_LIB_PATH  = -L../../libhash/lib -L../../libecl/lib -L../../librms/lib -L../../libutil/lib -L../../libsched/lib
-COMPILE_LIBS      = -lrms -lpthread -lsched -lecl -lutil -lhash -lm
+COMPILE_LIBS      = -lrms -lsched -lecl -lutil -lhash -lm -lpthread 
 
 INSTALL_INC_PATH = ../include
 INSTALL_LIB_PATH = ../lib
@@ -25,7 +25,7 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_MOD_PATH)
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	gcc -std=gnu99 -Wall -g -m32 -I./ $(COMPILE_INCLUDE) enkf_test.c -o enkf.x -L./ $(COMPILE_LIB_PATH) -lenkf $(COMPILE_LIBS)
+	gcc -std=gnu99 -Wall -g -m32 -I./ $(COMPILE_INCLUDE) enkf_test.c -o enkf.x   -L./ $(COMPILE_LIB_PATH) -lenkf $(COMPILE_LIBS) 
 	gcc -std=gnu99 -Wall -g -m32 -I./ $(COMPILE_INCLUDE) thist_test.c -o thist.x -L./ $(COMPILE_LIB_PATH) -lenkf $(COMPILE_LIBS)
 	gcc -std=gnu99 -Wall -g -m32 -I./ $(COMPILE_INCLUDE) field_test.c -o field.x -L./ $(COMPILE_LIB_PATH) -lenkf $(COMPILE_LIBS)
 	gcc -std=gnu99 -Wall -g -m32 -I./ $(COMPILE_INCLUDE) swcr_init.c -o /d/proj/bg/enkf/bin/swcr_init.x  -L./ $(COMPILE_LIB_PATH) -lenkf $(COMPILE_LIBS)
@@ -33,6 +33,7 @@ INSTALL: $(LIB)
 
 clean:
 	rm -f *.o *~
+	rm -f $(INSTALL_INC_PATH)/*.h
 
 new:	clean INSTALL
 

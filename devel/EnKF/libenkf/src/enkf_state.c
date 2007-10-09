@@ -529,7 +529,7 @@ void enkf_state_ecl_write(const enkf_state_type * enkf_state ,  int mask , int r
 
       if (enkf_node_include_type(enkf_node , ecl_restart)) {      
 	if (enkf_node_get_impl_type(enkf_node) == FIELD)
-	  field_ecl_write_fortio(enkf_node_value_ptr(enkf_node) , fortio , fmt_file , endian_swap , ecl_float_type);
+	  field_ecl_write3D_fortio(enkf_node_value_ptr(enkf_node) , fortio , fmt_file , endian_swap , ecl_float_type);
 	else {
 	  fprintf(stderr,"%s: internal error wrong implementetion type:%d - node:%s aborting \n",__func__ , enkf_node_get_impl_type(enkf_node) , enkf_node_get_key_ref(enkf_node));
 	  abort();
@@ -620,7 +620,7 @@ void enkf_state_clear_serial_data(enkf_state_type * enkf_state) {
 }
 
 
-void enkf_state_serialize(enkf_state_type * enkf_state) {
+void enkf_state_serialize(enkf_state_type * enkf_state , size_t stride) {
   if (enkf_state->serial_data == NULL) {
     fprintf(stderr,"%s: attempt to serialize data without prior call to enkf_state_set_serial_data - aborting.\n",__func__);
     abort();
@@ -632,7 +632,7 @@ void enkf_state_serialize(enkf_state_type * enkf_state) {
     while (list_node != NULL) {                                           
       enkf_node_type *enkf_node = list_node_value_ptr(list_node);        
       if (enkf_node_include_type(enkf_node , parameter + ecl_restart + ecl_summary))
-      enkf_node_serialize(enkf_node , enkf_state->serial_data , &offset);                       
+	offset += stride * enkf_node_serialize(enkf_node , enkf_state->serial_data , stride , offset);                       
       list_node  = list_node_get_next(list_node);                         
     }             
   }

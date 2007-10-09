@@ -42,6 +42,25 @@ void multflt_inter_ecl_write__(const char *_path , const int * path_len , const 
 }
 
 
+
+void multflt_inter_ecl_write_avg__(const int * ens_size , const char *_path , const int * path_len) {
+  char *path = util_alloc_cstring(_path , path_len);
+  
+  multflt_type *avg_multflt = multflt_alloc_mean(*ens_size , (const multflt_type **) MULTFLT_LIST);
+  
+  /*
+    if (*avg_output == 1)
+    multflt_direct_ecl_write(avg_multflt , path);
+    else
+    multflt_ecl_write(avg_multflt , path);
+  */
+
+  multflt_free(avg_multflt);
+  free(path);
+}
+
+
+
 void multflt_inter_transform_multflt_data__(const int * iens , const double * input_data , double * output_data) {
   multflt_set_data(MULTFLT_LIST[(*iens) - 1] , input_data);
   multflt_output_transform(MULTFLT_LIST[(*iens) - 1]);
@@ -50,8 +69,9 @@ void multflt_inter_transform_multflt_data__(const int * iens , const double * in
 
 
 
+
+
 void multflt_get_data__(const int * iens, double * data) {
-  
   multflt_get_data(MULTFLT_LIST[(*iens) - 1] , data);
 }
 

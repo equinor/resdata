@@ -156,28 +156,32 @@ void equil_free(equil_type *equil) {
 }
 
 
-static void equil_serialize_component(int nequil , const double * data , const bool * active, double * serial_data , size_t *_offset) {
-  size_t offset = *_offset;
+static int equil_serialize_component(int nequil , const double * data , const bool * active, double * serial_data , size_t stride , size_t offset) {
+  int active_size = 0;
   int i;
 
   for (i=0; i < nequil; i++) 
     if (active[i]) {
-      serial_data[offset] = data[i];
-      offset++;
+      serial_data[offset + i*stride] = data[i];
+      active_size++;
     }
-  *_offset = offset;
+  return active_size;
 }
 
 
-void equil_serialize(const equil_type *equil , double *serial_data , size_t *_offset) {
+int equil_serialize(const equil_type *equil , double *serial_data , int ens_size , size_t offset) {
   const equil_config_type *config       = equil->config;
   const bool              *active_WOC   = config->active_WOC;
   const bool              *active_GOC   = config->active_GOC;
   const double            *data_WOC     = equil->data_WOC;
   const double            *data_GOC     = equil->data_GOC;
   int   nequil                          = equil_config_get_nequil(config);
-  equil_serialize_component(nequil , data_WOC , active_WOC , serial_data , _offset);
-  equil_serialize_component(nequil , data_GOC , active_GOC , serial_data , _offset);
+  int active_size;
+
+  active_size  = equil_serialize_component(nequil , data_WOC , active_WOC , serial_data , ens_size , offset);
+  active_size += equil_serialize_component(nequil , data_GOC , active_GOC , serial_data , ens_size , active_size + offset);
+  
+  return active_size;
 }
 
 

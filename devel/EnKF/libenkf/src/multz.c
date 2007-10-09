@@ -7,7 +7,7 @@
 #include <multz_config.h>
 #include <multz.h>
 #include <enkf_util.h>
-#include <logmode.h>
+#include <mult.h>
 
 
 #define  DEBUG
@@ -22,43 +22,61 @@ GET_DATA_SIZE_HEADER(multz);
 struct multz_struct {
   DEBUG_DECLARE
   const multz_config_type *config;
-  double                  *data;
+  mult_type               *mult;
 };
 
 /*****************************************************************/
 void multz_clear(multz_type * multz) {
-  const int size = multz_config_get_data_size(multz->config);   
-  int k;
-  for (k = 0; k < size; k++)
-    multz->data[k] = 0.0;
+  mult_clear(multz->mult);
+}
+
+
+
+
+void multz_output_transform(const multz_type * multz) {
+  mult_transform(multz->mult);
 }
 
 void multz_set_data(multz_type * multz , const double * data) {
-  memcpy(multz->data , data , multz_config_get_data_size(multz->config) * sizeof * data);
+  mult_set_data(multz->mult , data);
 }
 
 
 void multz_get_data(const multz_type * multz , double * data) {
-  memcpy(data , multz->data , multz_config_get_data_size(multz->config) * sizeof * data);
+  mult_get_data(multz->mult , data);
+}
+
+void multz_get_output_data(const multz_type * multz , double * output_data) {
+  mult_get_output_data(multz->mult , output_data);
 }
 
 
+const double * multz_get_data_ref(const multz_type * multz) {
+  return mult_get_data_ref(multz->mult);
+}
+
+
+const double * multz_get_output_ref(const multz_type * multz) {
+  return mult_get_output_ref(multz->mult);
+}
+
+
+
+
 void multz_realloc_data(multz_type *multz) {
-  multz->data = enkf_util_calloc(multz_config_get_data_size(multz->config) , sizeof *multz->data , __func__);
+  mult_realloc_data(multz->mult);
 }
 
 
 void multz_free_data(multz_type *multz) {
-  free(multz->data);
-  multz->data = NULL;
+  mult_free(multz->mult);
 }
 
 
 multz_type * multz_alloc(const multz_config_type * multz_config) {
   multz_type * multz  = malloc(sizeof *multz);
   multz->config = multz_config;
-  multz->data = NULL;
-  multz_realloc_data(multz);
+  multz->mult   = mult_alloc(multz_config->mult_config); 
   DEBUG_ASSIGN(multz)
   return multz;
 }
@@ -69,50 +87,54 @@ char * multz_alloc_ensfile(const multz_type * multz , const char * path) {
   return util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
 }
 
-
 multz_type * multz_copyc(const multz_type *multz) {
-  const int size = multz_config_get_serial_size(multz->config);   
-  multz_type * new = multz_alloc(multz->config);
-  
-  memcpy(new->data , multz->data , size * sizeof *multz->data);
-  return new;
+  multz_type * new = multz_alloc(multz->config); 
+  mult_memcpy(new->mult , multz->mult);
+  return new; 
 }
 
 
-void multz_fread(multz_type * multz , const char *file) {
-  FILE * stream   = enkf_util_fopen_r(file , __func__);
-  int  size;
-  fread(&size , sizeof  size     , 1 , stream);
-  enkf_util_fread(multz->data , sizeof *multz->data , size , stream , __func__);
+void multz_fwrite(const multz_type *multz , const char *file ) {
+  FILE * stream   = enkf_util_fopen_w(file , __func__);
+  mult_stream_fwrite(multz->mult , stream);
   fclose(stream);
 }
 
 
-void multz_fwrite(const multz_type * multz , const char *file) {
-  const  multz_config_type * config = multz->config;
-  const int data_size = multz_config_get_data_size(config);
-  FILE * stream   = enkf_util_fopen_w(file , __func__);
-  
-  fwrite(&data_size       ,   sizeof  data_size     , 1 , stream);
-  enkf_util_fwrite(multz->data    ,   sizeof *multz->data    ,data_size , stream , __func__);
-  
+void multz_fread(multz_type * multz , const char * file) {
+  FILE * stream   = enkf_util_fopen_r(file , __func__);
+  mult_stream_fread(multz->mult , stream);
   fclose(stream);
 }
 
 
 
 void multz_ecl_write(const multz_type * multz , const char * path) {
+  DEBUG_ASSERT(multz) 
+  {
+    char * eclfile = util_alloc_full_path(path , multz_config_get_eclfile_ref(multz->config));
+    FILE * stream  = enkf_util_fopen_w(eclfile , __func__);
+    
+    multz_output_transform(multz);
+    multz_config_ecl_write(multz->config , multz_get_output_ref(multz) , stream);
+    
+    fclose(stream);
+    free(eclfile);
+  }
+}
+
+
+
+/*void multz_direct_ecl_write(const multz_type * multz , const char * path) {
   char * eclfile = util_alloc_full_path(path , multz_config_get_eclfile_ref(multz->config));
   FILE * stream  = enkf_util_fopen_w(eclfile , __func__);
-  {
-    const int data_size = multz_config_get_data_size(multz->config);   
-    int k;
-    for (k=0; k < data_size; k++)
-      multz_config_fprintf_layer(multz->config , k , multz->data[k] , stream);
-  }
+
+  multz_config_ecl_write(multz->config , multz_get_output_ref(multz) , stream);
+  
   fclose(stream);
   free(eclfile);
 }
+*/
 
 
 
@@ -159,26 +181,6 @@ void multz_swapin(multz_type * multz , const char *file) {
 
 
 
-void multz_sample(multz_type *multz) {
-  DEBUG_ASSERT(multz)
-  {
-    const multz_config_type *config    = multz->config;
-    const bool              *active    = config->active;
-    const double            *std       = config->std;
-    const double            *mean      = config->mean;
-    const int                data_size = multz_config_get_data_size(config);
-    int i;
-    
-    for (i=0; i < data_size; i++) 
-      if (active[i])
-	multz->data[i] = enkf_util_rand_normal(mean[i] , std[i]);
-    
-  }
-}
-
-
-
-
 void multz_free(multz_type *multz) {
   DEBUG_ASSERT(multz)
   {
@@ -188,37 +190,37 @@ void multz_free(multz_type *multz) {
 }
 
 
-void multz_serialize(const multz_type *multz , double *serial_data , size_t *_offset) {
-  DEBUG_ASSERT(multz)
-  {  
-    const multz_config_type *config     = multz->config;
-    const bool              *active     = config->active;
-    const int                data_size  = multz_config_get_data_size(config);
-    int offset = *_offset;
-    int i;
-    
-    for (i=0; i < data_size; i++) 
-      if (active[i]) {
-	serial_data[offset] = multz->data[i];
-	offset++;
-      }
-    *_offset = offset;
-  }
+int multz_serialize(const multz_type *multz , double *serial_data , size_t stride , size_t offset) {
+  DEBUG_ASSERT(multz);
+  return mult_serialize(multz->mult , serial_data , stride , offset);
 }
-
 
 
 void multz_truncate(multz_type * multz) {
   DEBUG_ASSERT(multz)
-  {
-    const multz_config_type  *config     = multz->config;
-    const int                 data_size  = multz_config_get_data_size(config);
-    int i;
-    
-    for (i = 0; i < data_size; i++) 
-      multz->data[i] = multz_config_truncate(config , i , multz->data[i]);
-  }
+  mult_truncate( multz->mult );  
 }
+
+
+
+void  multz_sample(multz_type *multz) {
+  DEBUG_ASSERT(multz)
+  mult_sample(multz->mult);  
+}
+
+
+
+multz_type * multz_alloc_mean(int ens_size , const multz_type **multz_ens) {
+  int iens;
+  multz_type * avg_multz = multz_copyc(multz_ens[0]);
+  for (iens = 1; iens < ens_size; iens++) 
+    multz_iadd(avg_multz , multz_ens[iens]);
+  multz_iscale(avg_multz , 1.0 / ens_size);
+  return avg_multz;
+}
+
+
+
 
 
 /*****************************************************************/
@@ -227,9 +229,9 @@ void multz_truncate(multz_type * multz) {
 void multz_TEST() {
   const char * config_file = "/tmp/multz_config.txt";
   FILE * stream = util_fopen(config_file , "w");
-  fprintf(stream , "1  0.01  0.01   0  1 10 1 10\n");
-  fprintf(stream , "1  0.01  0.5    0  1 10 1 10\n");
-  fprintf(stream , "1 10.00 20.00   0  1 10 1 10\n");
+  fprintf(stream , "1  0.01  0.01   0  NONE 1 11 1 11\n");
+  fprintf(stream , "2  0.01  0.5    \n");
+  fprintf(stream , "3 10.00 20.00   0  NONE 3 33 3 33\n");
   fclose(stream);
   
   {
@@ -258,7 +260,9 @@ void multz_TEST() {
 
 
 
-MATH_OPS(multz)
+
+
+MATH_OPS_MULT(multz)
 VOID_ALLOC(multz)
 VOID_FREE(multz)
 VOID_FREE_DATA(multz)

@@ -100,7 +100,7 @@ multflt_type * multflt_copyc(const multflt_type *multflt) {
 
 
 
-void multflt_ecl_write(const multflt_type * multflt, const char * path) {
+static void __multflt_ecl_write(const multflt_type * multflt, const char * path , bool direct) {
   char * ecl_file = util_alloc_full_path(path , multflt_config_get_eclfile_ref(multflt->config));
   FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
   {
@@ -110,7 +110,9 @@ void multflt_ecl_write(const multflt_type * multflt, const char * path) {
     const double *output_data = mult_get_output_ref(multflt->mult);
     int k;
     
-    multflt_output_transform(multflt);
+    if (!direct) 
+      multflt_output_transform(multflt);
+    
     fprintf(stream , "MULTFLT\n");
     for (k=0; k < data_size; k++)
       fprintf(stream , " \'%s\'      %g  / \n",fault_names[k] , output_data[k]);
@@ -119,29 +121,18 @@ void multflt_ecl_write(const multflt_type * multflt, const char * path) {
   
   fclose(stream);
   free(ecl_file);
-
-
-  {
-    ecl_file = util_alloc_full_path(path , "MULTFLT.GAUSS");
-    FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
-    {
-      const multflt_config_type *config = multflt->config;
-      const int data_size       = multflt_config_get_data_size(config);
-      const char **fault_names  = (const char **) config->fault_names;
-      const double *data        = mult_get_data_ref(multflt->mult);
-      int k;
-      
-      for (k=0; k < data_size; k++)
-	fprintf(stream , " \'%s\'      %g  / \n",fault_names[k] , data[k]);
-    }
-    
-    fclose(stream);
-    free(ecl_file);
-  }
 }
 
 
+void multflt_ecl_write(const multflt_type * multflt, const char * path) {
+  __multflt_ecl_write(multflt , path , false);
+}
 
+
+/*void multflt_direct_ecl_write(const multflt_type * multflt, const char * path) {
+  __multflt_ecl_write(multflt , path , true);
+}
+*/
 
 
 void multflt_fwrite(const multflt_type *multflt , const char *file ) {
@@ -150,11 +141,6 @@ void multflt_fwrite(const multflt_type *multflt , const char *file ) {
   fclose(stream);
 }
 
-void multflt_ens_write(const multflt_type * multflt, const char * path) {
-  char * ens_file = multflt_alloc_ensfile(multflt , path);
-  multflt_fwrite(multflt,ens_file);
-  free(ens_file);
-}
 
 void multflt_fread(multflt_type * multflt , const char * file) {
   FILE * stream   = enkf_util_fopen_r(file , __func__);
@@ -166,6 +152,12 @@ void multflt_fread(multflt_type * multflt , const char * file) {
 void multflt_ens_read(multflt_type * multflt , const char * path) {
   char * ens_file = multflt_alloc_ensfile(multflt , path);
   multflt_fread(multflt , ens_file);
+  free(ens_file);
+}
+
+void multflt_ens_write(const multflt_type * multflt, const char * path) {
+  char * ens_file = multflt_alloc_ensfile(multflt , path);
+  multflt_fwrite(multflt,ens_file);
   free(ens_file);
 }
 
@@ -197,8 +189,19 @@ void  multflt_sample(multflt_type *multflt) {
 
 
 
-void multflt_serialize(const multflt_type *multflt , double *serial_data , size_t *offset) {
-  mult_serialize(multflt->mult , serial_data , offset);
+int multflt_serialize(const multflt_type *multflt , double *serial_data , size_t ens_size , size_t offset) {
+  DEBUG_ASSERT(multflt);
+  return mult_serialize(multflt->mult , serial_data , ens_size , offset);
+}
+
+
+multflt_type * multflt_alloc_mean(int ens_size , const multflt_type **multflt_ens) {
+  int iens;
+  multflt_type * avg_multflt = multflt_copyc(multflt_ens[0]);
+  for (iens = 1; iens < ens_size; iens++) 
+    multflt_iadd(avg_multflt , multflt_ens[iens]);
+  multflt_iscale(avg_multflt , 1.0 / ens_size);
+  return avg_multflt;
 }
 
 
@@ -210,7 +213,7 @@ void multflt_TEST() {
   const char * config_file = "/tmp/multflt_config.txt";
   FILE * stream = util_fopen(config_file , "w");
   fprintf(stream , "North  0.00  1.00   0  TANH \n");
-  fprintf(stream , "East   0.00  0.50   0  TANH \n");
+  fprintf(stream , "East   0.00  0.50   2  \n");
   fprintf(stream , "West   0.00  2.00   0  NULL \n");
   fclose(stream);
   
