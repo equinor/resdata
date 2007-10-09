@@ -39,8 +39,8 @@ function ens_plot(year,month,day,prior_path , posterior_path , well_list , var_l
    end
 
    def_device = 'png';
-   lw        = 1.00;
-   psize     = 2.00;
+   lw        = 0.75;
+   psize     = 4.00;
    nwell     = max(size(well_list));
    nvar      = max(size(var_list));
    sep       = filesep;
@@ -105,6 +105,9 @@ function ens_plot(year,month,day,prior_path , posterior_path , well_list , var_l
 	       plist = [plist , p];
            end
            plot(prior_dates , prior(:,2) , 'ko' , 'MarkerFaceColor','k', 'MarkerSize', psize);
+ %mean          posterior_size
+ %          hold on
+ %          plot(posterior_dates , posterior(:,23:23), 'g', 'LineWidth' , 2)
            hold off
 
 
