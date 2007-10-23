@@ -8,6 +8,51 @@
 
 
 
+char * ecl_util_alloc_base_guess(const char * path) {
+  char *base = NULL;
+  char *cwd  = NULL;
+  int   data_count = 0;
+  cwd  = getcwd(cwd , 0);
+  if (chdir(path) != 0) {
+    fprintf(stderr,"%s: failed to change to %s - aborting \n", __func__ , path);
+    abort();
+  } else {
+    struct dirent *dentry;
+    DIR *dirH;
+    dirH = opendir( "./" );  /* Have already changed into this directory with chdir() */
+    while ( (dentry = readdir(dirH)) != NULL) {
+      const char * entry = dentry->d_name;
+      char *this_base , *ext;
+      
+      if (entry[0] == '.') continue; 
+      util_alloc_file_components(entry , NULL , &this_base , &ext);
+      if (ext == NULL) continue;
+      
+      if ((strcmp(ext,"DATA") == 0) || (strcmp(ext , "data") == 0)) {
+	if (data_count == 0) 
+	  base = util_alloc_string_copy(this_base);
+	else {
+	  free(base);
+	  base = NULL;
+	}
+	data_count++;
+      }
+      free(this_base);
+      free(ext);
+    }
+    closedir(dirH);
+    chdir(cwd);
+    free(cwd);
+  }
+
+  if (data_count > 1)
+    fprintf(stderr,"%s: found several files with extension DATA in:%s  can not guess ECLIPSE base - returning NULL\n",__func__ , path);
+  else if (data_count == 0)
+    fprintf(stderr,"%s: could not find any files ending with data / DATA in:%s - can not guess ECLIPSE base - returning NULL \Dn",__func__ , path);
+  
+  return base;
+}
+
 
 
 int ecl_util_filename_report_nr(const char *filename) {
@@ -75,6 +120,12 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
     } else if (strcmp(ext , "FINIT") == 0) {
       file_type = ecl_init_file;
       fmt_file  = true;
+    } else if (strcmp(ext , "FRFT") == 0) {
+      file_type = ecl_rft_file;
+      fmt_file  = true;
+    } else if (strcmp(ext , "RFT") == 0) {
+      file_type = ecl_rft_file;
+      fmt_file  = false;
     } else {
       switch (ext[0]) {
       case('X'):
@@ -95,6 +146,7 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
 	break;
       default:
 	file_type = ecl_other_file;
+	fprintf(stderr,"*** Warning: *** %s failed to find type of file:%s \n",__func__ , filename);
       }
       if (file_type != ecl_other_file)
 	report_nr = atoi(&ext[1]);
@@ -403,6 +455,9 @@ bool ecl_util_unified(ecl_file_type file_type) {
     break;
   case(ecl_init_file):
     unified = false;
+    break;
+  case(ecl_rft_file):
+    unified = true;
     break;
   default:
     fprintf(stderr,"%s: internal error - file_type:%d invalid input - aborting \n",__func__ , file_type);

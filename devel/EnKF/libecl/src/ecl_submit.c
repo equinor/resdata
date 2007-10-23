@@ -5,7 +5,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <util.h>
+/*
+  #include <util.h>
+*/
 
 
 
@@ -17,7 +19,7 @@ typedef struct {
 } version_type;
 
 
-#define I386   0
+#define i386   0
 #define X86_64 1
 #define IA64   2
 
@@ -69,12 +71,16 @@ version_type * get_version_table() {
     int scan_count = fscanf(stream , "%s" , word);
     if (scan_count != 1) {
       fseek(stream , 0L , SEEK_SET);
-      fprintf(stderr,"%s/%s: failed to load string from uname output:\"%s\" - aborting \n",__FILE__ , __func__ , util_fscanf_alloc_line(stream , NULL));
+      
+      /*
+	Removing util dependancy by commenting this out
+	fprintf(stderr,"%s/%s: failed to load string from uname output:\"%s\" - aborting \n",__FILE__ , __func__ , util_fscanf_alloc_line(stream , NULL));
+      */
       abort();
     }
     if (strcmp(word , "x86_64") == 0) cpu_version = X86_64;
     if (strcmp(word , "ia64")   == 0) cpu_version = IA64;
-    if (strcmp(word , "i686")   == 0) cpu_version = I386;
+    if (strcmp(word , "i686")   == 0) cpu_version = i386;
     if (strcmp(word , "i386")   == 0) cpu_version = i386;
     
   } while (cpu_version < 0);
@@ -83,7 +89,7 @@ version_type * get_version_table() {
     return version_table_x86_64;
   else if (cpu_version == IA64)
     return version_table_ia64;
-  else if (cpu_version == I386)
+  else if (cpu_version == i386)
     return version_table_i386;
   else {
     fprintf(stderr,"%s/%s - what ??? \n",__FILE__ , __func__);

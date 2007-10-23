@@ -3,14 +3,12 @@
 #include <time.h>
 
 int main (int argc, char **argv) {
-  
-  struct tm ts;
-  time_t t;
-  
-  time(&t);
-  localtime_r(&t , &ts);
-  
-  printf("Now: %02d:%02d \n",ts.tm_hour , ts.tm_min);
+  char buffer[64];
+
+  sprintf(buffer,"Joakim");
+  printf("Navn: %s",buffer);
+  scanf("%s" , &buffer[6] );
+  printf("Ny: %s \n",buffer);
 
   return 0;
 }

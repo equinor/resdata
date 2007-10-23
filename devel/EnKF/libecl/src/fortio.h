@@ -8,7 +8,9 @@
 typedef struct fortio_struct fortio_type;
 
 void          fortio_copy_record(fortio_type * , fortio_type * , int , void * , bool *);
+fortio_type * fortio_alloc_FILE_wrapper(const char * , bool , FILE * );
 fortio_type * fortio_open(const char *, const char * , bool);
+void          fortio_free_FILE_wrapper(fortio_type *);
 void          fortio_close(fortio_type *);
 int           fortio_init_read(fortio_type *);
 void          fortio_complete_read(fortio_type *);

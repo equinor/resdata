@@ -14,9 +14,9 @@ CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE)
 FFLAGS  = -fpe0 -traceback -warn unused -CB -u -g -real_size 64 -assume byterecl -assume nobuffered_io -convert big_endian
 ARFLAGS = -csr
 #################################################################
-OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_diag.o 
+OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_diag.o ecl_rft_vector.o ecl_rft_node.o
 MOD_FILES = 
-INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h lsf_jobs.h ecl_parse.h ecl_diag.h 
+INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h lsf_jobs.h ecl_parse.h ecl_diag.h ecl_rft_vector.h ecl_rft_node.h 
 LIB       = libecl.a
 
 
@@ -27,14 +27,19 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_MOD_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	#gcc -m32 -Wall -I$(COMPILE_INCLUDE) ecl_submit.c -o /d/proj/bg/enkf/bin/ecl_submit.x $(COMPILE_LIB_PATH)  $(COMPILE_LIBS)
-	gcc -m32 -Wall -g -I$(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) ecl_test.c -o ecl_test.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
-	gcc -m32 -Wall -I$(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) make_SGU.c -o make_SGU.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
+	#gcc      -Wall -g $(COMPILE_INCLUDE) ecl_submit.c -o /d/proj/bg/enkf/bin/ecl_submit.x 
+	cp ecl_submit.py /d/proj/bg/enkf/bin/ecl_submit.x 
+	gcc -m32 -Wall -g $(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) ecl_test.c -o ecl_test.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
+	gcc -m32 -Wall -g $(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) summary_get_last.c -o summary_get_last.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
+	gcc -m32 -Wall -g $(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) make_SGU.c -o make_SGU.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
 	gcc -Wall -g -m32 -O2 $(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) -o convert.x convert.c -I./ -L./ -L../../libutil/lib -lecl -lm -lutil
 
 
 clean:
 	rm -f *.o *~ 
+	rm -f libecl.a
+	rm -f $(INSTALL_INC_PATH)/*.h
+
 
 new:	
 	make clean
@@ -50,6 +55,7 @@ $(LIB): $(OBJECTS)
 	$(FC) -c $(FFLAGS) $< -o $@
 
 
+ecl_rft_vector.o   : ecl_rft_vector.h ecl_rft_vector.c ecl_util.h ecl_kw.o ecl_fstate.o ecl_block.o ecl_rft_node.o
 ecl_util.o  : ecl_util.c ecl_util.h
 lsf_jobs.o  : lsf_jobs.c lsf_jobs.h 
 fortio.o    : fortio.c fortio.h 

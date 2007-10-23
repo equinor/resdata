@@ -2,12 +2,14 @@
 #include <stdbool.h>
 #include <ecl_kw.h>
 #include <ecl_block.h>
+#include <math.h>
 #include <ecl_fstate.h>
 #include <ecl_sum.h>
 #include <hash.h>
 #include <util.h>
 #include <time.h>
 #include <set.h>
+#include <util.h>
 
 #define ECL_DUMMY_WELL ":+:+:+:+"
 
@@ -94,6 +96,7 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
 }
   
 
+
 ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const char **data_files , bool report_mode , bool endian_convert) {
   ecl_sum_type *ecl_sum   = ecl_sum_alloc_empty(ECL_FMT_AUTO , endian_convert);
   ecl_sum->header         = ecl_fstate_fread_alloc(1     , &header_file , ecl_summary_header_file , false , ecl_sum->endian_convert);
@@ -132,31 +135,27 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
       well_s = util_alloc_strip_copy(ecl_kw_iget_ptr(wells , index));
       set_well_kw_string(ecl_kw_iget_ptr(wells , index) , ecl_kw_iget_ptr(keywords , index) , well_kw);
       hash_insert_int(ecl_sum->index_hash , well_kw , index);
-      /*hash_insert_int(well_hash , ecl_kw_iget_ptr(wells , index) , 1);*/
       set_add_key(well_set , well_s);
       free(well_s);
     }
+    
     for (index=0; index < ecl_kw_get_size(wells); index++) {
       util_set_strip_copy(well , ecl_kw_iget_ptr(wells    , index));
-      util_set_strip_copy(kw , ecl_kw_iget_ptr(keywords , index));
+      util_set_strip_copy(kw   , ecl_kw_iget_ptr(keywords , index));
 	
       if (!hash_has_key(ecl_sum->_index_hash , well)) 
 	hash_insert_hash_owned_ref(ecl_sum->_index_hash , well , hash_alloc(10) , hash_free__);
-	
+
       {
 	hash_type * var_hash = hash_get(ecl_sum->_index_hash , well);
 	hash_insert_int(var_hash , kw , index);
       }
+      
     }
     ecl_sum->Nwells    = set_get_size(well_set);
     ecl_sum->well_list = set_alloc_keylist(well_set);
     set_free(well_set);
       
-    /*
-      ecl_sum->Nwells    = hash_get_size(well_hash);
-      ecl_sum->well_list = hash_alloc_keylist(well_hash);
-      hash_free(well_hash);
-    */
   }
   {
     /*
@@ -170,9 +169,9 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
     int day_index   = hash_get_int(ecl_sum->kw_index_hash , "DAY");
     int month_index = hash_get_int(ecl_sum->kw_index_hash , "MONTH");
     int year_index  = hash_get_int(ecl_sum->kw_index_hash , "YEAR");
-
+    
     for (iblock = 0; iblock < ecl_fstate_get_size(ecl_sum->data); iblock++) {
-      ecl_block_type * block = ecl_fstate_get_block(ecl_sum->data , iblock);
+      ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , iblock);
       ecl_block_set_sim_time_summary(block , /*time_index , years_index , */ day_index , month_index , year_index);
     }
   }
@@ -377,16 +376,23 @@ double ecl_sum_iget2(const ecl_sum_type *ecl_sum , int time_index , int sum_inde
 
 
 int ecl_sum_get_index(const ecl_sum_type * ecl_sum , const char * well , const char *var) {
-  char well_kw[17];
   /*
+    char well_kw[17];
     set_well_kw_string(well_name , var_name , well_kw);
     if (!hash_has_key(ecl_sum->index_hash , well_kw)) 
     return -1;
     else
     return hash_get_int(ecl_sum->index_hash , well_kw);
   */
-  if (hash_hash_key(ecl_sum->_index_hash , well)) {
-    hash_type * var_hash = hash_get(ecl_sum->_index_hash , well)
+  int index = -1;
+
+  if (hash_has_key(ecl_sum->_index_hash , well)) {
+    hash_type * var_hash = hash_get(ecl_sum->_index_hash , well);
+    if (hash_has_key(var_hash , var))
+      index = hash_get_int(var_hash , var);
+  }
+  
+  return index;
 }
 
 
@@ -501,8 +507,6 @@ double ecl_sum_eval_well_misfit(const ecl_sum_type * ecl_sum , const char * well
   char **hvar_list;
   int istep,ivar;
 
-  printf("%s: well:<%s> \n",__func__ , well);
-
   hvar_list = malloc(nvar * sizeof * hvar_list);
   for (ivar = 0; ivar < nvar; ivar++) {
     hvar_list[ivar] = malloc(strlen(var_list[ivar]) + 2);
@@ -517,51 +521,83 @@ double ecl_sum_eval_well_misfit(const ecl_sum_type * ecl_sum , const char * well
     int    index;
     for (ivar = 0; ivar < nvar; ivar++) {
       index = ecl_sum_get_index(ecl_sum , well , hvar_list[ivar]);
-      printf("%s/%s => %d \n",well , hvar_list[ivar] , index);
       if (index >= 0) {
 	history_value = ecl_sum_iget1(ecl_sum , istep , well , hvar_list[ivar]  ,  NULL);
 	value         = ecl_sum_iget1(ecl_sum , istep , well , var_list[ivar]   , NULL);
-
+	
 	residual[ivar] = (history_value - value);
+	/*if (ivar == 1) {
+	  printf("History:%g  value:%g   std:%g  => %g \n",history_value , value , sqrt(1 / inv_covar[ivar * nvar +ivar]) , sqrt(residual[ivar] * residual[ivar] * inv_covar[ivar * nvar +ivar]));
+	}
+	printf("Adding %s: %g \n",var_list[ivar],sqrt(residual[ivar] * residual[ivar] * inv_covar[ivar * nvar +ivar]));
+	*/
       }
     }
+    
     {
       int i,j;
       for (i = 0; i < nvar; i++) {
 	tmp[i] = 0;
-	for (j = 0; j < nvar; j++)
+	for (j = 0; j < nvar; j++) 
 	  tmp[i] += residual[j] * inv_covar[j*nvar + i];
 	R2 += tmp[i] * residual[i];
       }
     }
   }
-
+  
   free(tmp);
   free(residual);
   util_free_string_list(hvar_list , nvar);
-  printf("R2: %g \n",R2);
   return R2;
 }
 
 
-double ecl_sum_eval_misfit(const ecl_sum_type * ecl_sum , int nwell , const char ** well_list , int nvar , const char ** var_list , const double * well_weights , const double * inv_covar) {
-  int iwell;
-  double misfit = 0;
-  
-  for (iwell = 0; iwell < nwell; iwell++) {
-    double weight;
-    if (well_weights != NULL) 
-      weight = well_weights[iwell];
-    else
-      weight = 1.0;
-    
-    printf("weight: %g \n",weight);
+void ecl_sum_well_max_min(const ecl_sum_type * ecl_sum, const char * well , int nvar , const char ** var_list , double *max , double *min, bool init) {
+  int istep,ivar;
 
-    if (weight > 0)
-      misfit += weight * ecl_sum_eval_well_misfit(ecl_sum , well_list[iwell] , nvar , var_list , inv_covar);
+  if (init) {
+    for (ivar = 0; ivar < nvar; ivar++) {
+      max[ivar] = -1e100;
+      min[ivar] =  1e100;
+    }
   }
-  return misfit;
+
+  for (istep = 0; istep < ecl_sum_get_size(ecl_sum);  istep++) {
+    double value;
+    int    index;
+    for (ivar = 0; ivar < nvar; ivar++) {
+      index = ecl_sum_get_index(ecl_sum , well , var_list[ivar]);
+      if (index >= 0) {
+	value = ecl_sum_iget2(ecl_sum , istep , index);
+	min[ivar]  = util_double_min(min[ivar] , value);
+	max[ivar]  = util_double_max(max[ivar] , value);
+      }
+    }
+  }
 }
+
+
+
+void ecl_sum_max_min(const ecl_sum_type * ecl_sum, int nwell , const char ** well_list , int nvar , const char ** var_list , double *max , double *min, bool init_maxmin) {
+  int iwell;
+  ecl_sum_well_max_min(ecl_sum , well_list[0] , nvar , var_list , max , min , init_maxmin);
+  for (iwell = 1; iwell < nwell; iwell++) 
+    ecl_sum_well_max_min(ecl_sum , well_list[iwell] , nvar , var_list , max , min , false);
+  
+}
+
+
+double  ecl_sum_eval_misfit(const ecl_sum_type * ecl_sum , int nwell , const char ** well_list , int nvar , const char ** var_list , const double * inv_covar, double * misfit) {
+  int    iwell;
+  double total_misfit = 0;
+  for (iwell = 0; iwell < nwell; iwell++) {
+    misfit[iwell] = ecl_sum_eval_well_misfit(ecl_sum , well_list[iwell] , nvar , var_list , inv_covar);
+    total_misfit += misfit[iwell];
+  }
+  return total_misfit;
+}
+
+
 
 
 

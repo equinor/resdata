@@ -167,11 +167,22 @@ void ecl_inter_fread_param__(const char *_filename    , const int *filename_len,
 }
 
 
-
+void ecl_inter_fscanf_include_param__(const char *_filename , const int * filename_len, const int * size, double * data) {
+  char *filename = util_alloc_cstring(_filename , filename_len);
+  ecl_kw_type * ecl_kw;
+  {
+    FILE * stream = util_fopen(filename , "r"); 
+    ecl_kw = ecl_kw_fscanf_alloc_parameter(stream , *size , ENDIAN_CONVERT);
+    fclose(stream);
+  }
+  ecl_kw_get_data_as_double(ecl_kw , data);
+  ecl_kw_free(ecl_kw);
+  free(filename);
+}
 
 /******************************************************************/
 
-/* static void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_restart , int *submit_list , const char *base_run_path , const char *eclipse_base , int time_step , int fmt_out , int *exit_on_submit_int , int *use_lsf_int) { */
+/* static*  void ecl_inter_run_eclipse_static(int jobs , int max_running , int max_restart , int *submit_list , const char *base_run_path , const char *eclipse_base , int time_step , int fmt_out , int *exit_on_submit_int , int *use_lsf_int) { */
 /*   const int sleep_time  = 2; */
 /*   int job , i , submit_jobs; */
 /*   ext_job_type ** jobList; */
@@ -426,36 +437,3 @@ void ecl_inter_unlink_path__(const char *_path , const int *path_len) {
 /* } */
 
 
-/*****************************************************************/
-
-void ecl_inter_parse_wconhist__(const double * missing_value, 
-				const char *_filename , const int *filename_len,
-				const char *_obs_path , const int *obs_path_len,
-				const char *_obs_file , const int *obs_file_len) {
-  char *filename = util_alloc_cstring(_filename , filename_len);
-  char *obs_path = util_alloc_cstring(_obs_path , obs_path_len);
-  char *obs_file = util_alloc_cstring(_obs_file , obs_file_len);
-  
-  sched_parse_wconhist(*missing_value , filename , obs_path , obs_file);
-  free(filename);
-  free(obs_path);
-  free(obs_file);
-
-}
-
-
-
-void ecl_inter_insert_sched_end__(const char *_src_file    , const int *src_file_len,
-				  const char *_target_file , const int *target_file_len,
-				  const char *_end_string  , const int *end_string_len) {
-
-  char * src_file    = util_alloc_cstring(_src_file    , src_file_len);
-  char * target_file = util_alloc_cstring(_target_file , target_file_len);
-  char * end_string  = util_alloc_cstring(_end_string  , end_string_len);
-
-  sched_insert_end(src_file , target_file , end_string);
-  
-  free(src_file);
-  free(target_file);
-  free(end_string);
-}

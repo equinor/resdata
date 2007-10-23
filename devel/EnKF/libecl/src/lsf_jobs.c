@@ -313,43 +313,11 @@ static int lsf_job_submit(lsf_job_type *lsf_job , const char * submit_cmd_fmt , 
   }
 }
 	    
- /*  const char *tmp_file_static = "bsub-"; */
-/*   char       *tmp_file = malloc(strlen(tmp_file_static) + 7); */
-/*   sprintf(tmp_file , "%s%06d" , tmp_file_static , getpid() % 1000000); */
-/*   { */
-/*     /\* The same storage is used for both the variables cmd and tmp_full_path ... *\/ */
-/*     char *cmd           = malloc(strlen(lsf_job->submit_cmd) + strlen(tmp_path) + strlen(tmp_file) + 3); */
-/*     char *tmp_full_path = cmd; */
-/*     lsf_job_unlink_smspec(lsf_job); */
-/*     sprintf(cmd , "%s %s/%s" , lsf_job->submit_cmd , tmp_path , tmp_file); */
-/*     system(cmd); */
-/*     sprintf(tmp_full_path , "%s/%s" , tmp_path , tmp_file); */
-/*     { */
-/*       FILE *stream = fopen(tmp_full_path , "r"); */
-/*       int read1; */
-/*       read1 = fscanf(stream , "%d" , &lsf_job->lsf_base); */
-/*       fclose(stream); */
-/*       if (read1 == 1)  */
-/* 	/\* */
-/* 	  Submit status is handled in the pool object. */
-/* 	*\/ */
-/* 	time(&lsf_job->submit_time); */
-/*       else { */
-/* 	fprintf(stderr,"*** Submitting job:%s failed - could not get LSF base \n",lsf_job->base); */
-/* 	fprintf(stderr,"*** Maybe you are trying to run from a machine without \n*** the que system installed?\n"); */
-/* 	abort(); */
-/*       } */
-/*     } */
-/*     util_unlink_existing(tmp_full_path); */
-/*   } */
-/*   free(tmp_file); */
-/*   lsf_job->submit_count++; */
-/*   return lsf_job->lsf_base; */
-/* } */
 
 
 
 static bool lsf_job_can_reschedule(lsf_job_type *lsf_job) {
+  printf("%s: sammenligner: %d og %d \n",__func__ , lsf_job->submit_count , lsf_job->max_resubmit);
   if (lsf_job->submit_count <= lsf_job->max_resubmit) {
     return true;
   } else 
@@ -561,12 +529,14 @@ static void lsf_pool_delete_job(lsf_pool_type * lsf_pool , int ijob) {
   int old_base = lsf_pool->jobList[ijob]->lsf_base;
   char old_base_char[16];
   sprintf(old_base_char , "%d" , old_base);
-  if (hash_has_key(lsf_pool->jobs , old_base_char)) {
+  if (hash_has_key(lsf_pool->jobs , old_base_char)) 
     hash_del(lsf_pool->jobs , old_base_char); /* We orphan the job which has completed */
-  }
-  else 
+  else {
     fprintf(stderr,"%s: Job:%s does not exist - internal ERROR \n",__func__ , old_base_char);
+    abort();
+  }
 }
+
 
 /* 
    A problem is that the jobs with status EXIT are
@@ -581,7 +551,7 @@ static bool lsf_pool_ireschedule(lsf_pool_type *lsf_pool , int ijob) {
     lsf_job_unlink_smspec(lsf_pool->jobList[ijob]);
     return true;
   } else {
-    if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_done) {
+    if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_done || lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_exit) {
       lsf_pool_delete_job(lsf_pool , ijob);
       lsf_pool_iset_status(lsf_pool , ijob , lsf_status_complete_fail);
     }
@@ -705,16 +675,18 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 	Third step: check complete/EXIT jobs.
       */
      
+      
       /*
 	Will reschedule jobs with EXIT status as well - they sometimes just fail to start ... 
       */
       for (ijob = 0; ijob < lsf_pool->size; ijob++) {
 	if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_exit) {
+	  const lsf_job_type * lsf_job = lsf_pool->jobList[ijob];
 	  redraw = true;
 	  if (lsf_pool_ireschedule(lsf_pool , ijob))
-	    printf("\b Job:%d returned with EXIT status - resubmitting [Attempt:%d] \n",ijob+1 ,  lsf_pool->jobList[ijob]->submit_count);
-	  else
-	    printf("\b Job:%d returned with EXIT status - no more resubmits \n",ijob+1);
+	    printf("\b Job:%d/%d returned with EXIT status - resubmitting [Attempt:%d/%d] \n",ijob+1 ,  lsf_job->lsf_base , lsf_job->submit_count , lsf_job->max_resubmit);
+	  else 
+	    printf("\b Job:%d/%d returned with EXIT status - no more resubmits  - aborting\n",lsf_job->lsf_base , ijob+1);
 	}
       }
 
@@ -724,10 +696,11 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 	  if (lsf_pool_complete_OK(lsf_pool , ijob)) { 
 	    lsf_pool_iset_status(lsf_pool , ijob , lsf_status_OK);
 	  } else {
+	    const lsf_job_type * lsf_job = lsf_pool->jobList[ijob];
 	    redraw = true;
-	    printf("\b Could not find result_file: %s ",lsf_pool->jobList[ijob]->restart_file);
+	    printf("\b Could not find result_file: %s ",lsf_job->restart_file);
 	    if (lsf_pool_ireschedule(lsf_pool , ijob))
-	      printf("rescheduling: %s [Attempt:%d] \n",lsf_pool->jobList[ijob]->base , lsf_pool->jobList[ijob]->submit_count);
+	      printf("rescheduling: %s [Attempt:%d] \n",lsf_job->base , lsf_job->submit_count);
 	    else
 	      printf("no more attempts - job failed hard - about to exit.\n");
 	  }

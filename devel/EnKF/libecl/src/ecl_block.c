@@ -37,10 +37,11 @@ struct ecl_block_struct {
 
 
 bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw, int mem_mode) {
-  char kw[9];
-  if (ecl_block_has_kw(ecl_block , ecl_kw_get_header_ref(ecl_kw)))
+  char * strip_kw = ecl_kw_alloc_strip_header(ecl_kw);
+  if (ecl_block_has_kw(ecl_block , strip_kw)) {
+    free(strip_kw);
     return false;
-  else {
+  } else {
     list_node_type * list_node;
     switch(mem_mode) {
     case(COPY):
@@ -57,13 +58,14 @@ bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw, int
       abort();
     }
     
-    util_set_strip_copy(kw , ecl_kw_get_header_ref(ecl_kw));
-    hash_insert_ref(ecl_block->kw_hash , kw , list_node);
+    hash_insert_ref(ecl_block->kw_hash , strip_kw , list_node);
     ecl_block->size++;
     
+    free(strip_kw);
     return true;
   }
 }
+
 
 
 bool ecl_block_has_kw(const ecl_block_type * ecl_block, const char * kw) {
@@ -289,12 +291,12 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
   ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty(ecl_block->fmt_file , ecl_block->endian_convert);
   bool cont     = true;
   bool first_kw = true;
-  
+
 
   while (cont) {
     if (ecl_kw_fread_realloc(ecl_kw , fortio)) {
       bool add_kw;
-
+      
       /*
 	This is *EXTREMELY UGLY* - when reading summary files we want
 	to ensure that the SEQHDR keyword is the first header in any
@@ -307,7 +309,7 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
 	add_kw = false;
       else 
 	add_kw = ecl_block_add_kw(ecl_block , ecl_kw , COPY);
-      
+
       if (!add_kw) {
 	*at_eof = false;
 	cont    = false;

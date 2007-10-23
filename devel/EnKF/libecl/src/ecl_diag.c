@@ -101,9 +101,14 @@ static ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , int * _min_
   for (iens = iens1; iens <= iens2; iens++) {
     char * spec_file;
     char * path = malloc(strlen(ens_path) + 1 + strlen(eclbase_dir) + 4 + 1);
-    char * base = malloc(strlen(eclbase) + 1 + 4 + 1 );
+    char * base;
+    /*char * base = malloc(strlen(eclbase) + 1 + 4 + 1 );*/
+    /*sprintf(base , "%s-%04d"  , eclbase , iens);*/
     sprintf(path , "%s/%s%04d" , ens_path, eclbase_dir , iens);
-    sprintf(base , "%s-%04d"  , eclbase , iens);
+    base = ecl_util_alloc_base_guess(path);
+    if (base == NULL) {
+      abort();
+    }
     spec_file = ecl_util_alloc_exfilename(path , base , ecl_summary_header_file , fmt_file , -1);
     
     if (unified) {
@@ -148,7 +153,7 @@ static ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , int * _min_
 
 
 void ecl_diag_ens(int iens1 , int iens2 , const char *out_path , int nwell , const char **well_list , int nvar , const char **var_list , const char *ens_path , const char *eclbase_dir , const char *eclbase, bool report_mode , bool fmt_file, bool unified, bool endian_convert , bool tecplot) {
-  int i,iwell,ivar,min_size;
+  int iwell,ivar,min_size;
   
   ecl_sum_type **ecl_sum_list = ecl_diag_load_ensemble(iens1 , iens2 , &min_size , ens_path , eclbase_dir , eclbase , report_mode , fmt_file , unified , endian_convert);
   util_make_path(out_path);
@@ -157,9 +162,78 @@ void ecl_diag_ens(int iens1 , int iens2 , const char *out_path , int nwell , con
       ecl_diag_make_plotfile(iens1 , iens2 , min_size , (const ecl_sum_type **) ecl_sum_list , out_path , well_list[iwell] , var_list[ivar] , tecplot);
     }
   }
+
+  {
+    char **hvar_list;
+    double *min , *max , *inv_covar;
+    double *std , *well_misfit;
+    int ivar , iens;
+    
+    hvar_list = malloc(nvar * sizeof * hvar_list);
+    for (ivar = 0; ivar < nvar; ivar++) {
+      hvar_list[ivar] = malloc(strlen(var_list[ivar]) + 2);
+      sprintf(hvar_list[ivar] , "%sH" , var_list[ivar]);
+    }
+    
+    min       	= malloc(nvar * sizeof  * min);
+    max       	= malloc(nvar * sizeof  * max);
+    std       	= malloc(nvar * sizeof  * std);
+    inv_covar 	= malloc(nvar * nvar * sizeof * inv_covar);
+    well_misfit = malloc(nwell * sizeof * well_misfit);
+    
+    for (iens = iens1; iens <= iens2; iens++)
+      ecl_sum_max_min(ecl_sum_list[iens - iens1] , nwell , (const char **) well_list , nvar , (const char **) hvar_list , max , min , (iens == iens1));
+    
+    for (ivar = 0; ivar < nvar*nvar; ivar++) 
+      inv_covar[ivar] = 0;
+
+    for (ivar = 0; ivar < nvar; ivar++) {
+      std[ivar] = 0.10 * max[ivar];
+      inv_covar[ivar*(nvar + 1)] = 1.0 / (std[ivar] * std[ivar]);
+    }
+    
+    {
+      char * out_file = util_alloc_full_path(out_path , "misfit.txt");
+      FILE * stream   = util_fopen(out_file , "w");
+
+      fprintf(stream,"Model number  ");
+      for (iwell = 0; iwell < nwell; iwell++)
+	fprintf(stream,"  %10s    |" , well_list[iwell]);
+      fprintf(stream,"  %10s\n" , "Total");
+      fprintf(stream,"--------------");
+      for (iwell = 0; iwell < nwell; iwell++)
+	fprintf(stream,"----------------|");
+      fprintf(stream,"---------------\n");;
+      
+      for (iens = iens1; iens <= iens2; iens++) {
+	double total_misfit = ecl_sum_eval_misfit(ecl_sum_list[iens - iens1] , nwell , (const char **) well_list , nvar , (const char **) var_list , inv_covar , well_misfit);
+	fprintf(stream,"%3d             ",iens);
+	for (iwell=0; iwell < nwell; iwell++) 
+	  fprintf(stream,"  %10.3f  |  ",well_misfit[iwell]);
+      fprintf(stream,"%12.3f \n",total_misfit);
+      }
+      
+      fprintf(stream,"--------------");
+      for (iwell = 0; iwell < nwell; iwell++)
+	fprintf(stream,"----------------|");
+      fprintf(stream,"---------------\n");;
+      
+      fclose(stream);
+      printf("Misfit information written to: %s \n",out_file);
+      free(out_file);
+    }
+    free(well_misfit);
+    free(min);
+    free(max);
+    free(inv_covar);
+    free(std);
+  }
   
-  for (i=0; i <(iens2 - iens1); i++)
-    ecl_sum_free(ecl_sum_list[i]);
+  {
+    int i;
+    for (i=0; i <(iens2 - iens1); i++)
+      ecl_sum_free(ecl_sum_list[i]);
+  }
   free(ecl_sum_list);
 }
 
@@ -413,8 +487,9 @@ void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name
     read_bool("Add tecplot header" , prompt_len , &tecplot);
   */
   tecplot = false;
-  
   ecl_diag_ens(iens1 , iens2 , out_path , nwell , (const char **) well_list , nvar , (const char **) var_list , ens_path , eclbase_dir , eclbase_name , report_mode , fmt_file , unified , endian_convert , tecplot);
+
+
 
   util_free_string_list(well_list , nwell);
   util_free_string_list(var_list  , nvar);

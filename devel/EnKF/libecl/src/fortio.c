@@ -18,28 +18,35 @@ extern int errno;
 struct fortio_struct {
   FILE    *stream;
   char    *filename;
-  char    *mode;
   int      active_header;
   int      rec_nr;
   bool     endian_flip_header;
 };
 
 
-fortio_type *fortio_open(const char *filename , const char *mode, bool endian_flip_header) {
-  fortio_type *fortio;
-  fortio = malloc(sizeof *fortio);
-  fortio->filename = malloc(strlen(filename) + 1);
-  fortio->mode     = malloc(strlen(mode)     + 1);
-  strcpy(fortio->filename , filename);
-  strcpy(fortio->mode     , mode);
-  
 
+static fortio_type * fortio_alloc__(const char *filename , bool endian_flip_header) {
+  fortio_type * fortio       = malloc(sizeof * fortio);
+  fortio->filename           = util_alloc_string_copy(filename);
+  fortio->endian_flip_header = endian_flip_header;
   fortio->active_header      = 0;
   fortio->rec_nr             = 0; 
-  fortio->endian_flip_header = endian_flip_header;
-  fortio->stream             = fopen(fortio->filename , fortio->mode);
+  return fortio;
+}
+
+
+fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_header , FILE * stream) {
+  fortio_type * fortio = fortio_alloc__(filename , endian_flip_header);
+  fortio->stream = stream;
+  return fortio;
+}
+
+fortio_type *fortio_open(const char *filename , const char *mode, bool endian_flip_header) {
+  fortio_type *fortio = fortio_alloc__(filename , endian_flip_header);
+
+  fortio->stream = fopen(fortio->filename , mode);
   if (fortio->stream == NULL) {
-    fprintf(stderr,"%s: failed to open:%s with mode:%s - aborting \n", __func__ , fortio->filename , fortio->mode);
+    fprintf(stderr,"%s: failed to open:%s with mode:%s - aborting \n", __func__ , fortio->filename , mode);
     fprintf(stderr,"%d:%s\n",errno, strerror(errno));
     abort();
   }
@@ -48,13 +55,22 @@ fortio_type *fortio_open(const char *filename , const char *mode, bool endian_fl
 
 
 
+static void fortio_free__(fortio_type * fortio) {
+  if (fortio->filename != NULL) free(fortio->filename);
+  free(fortio);
+}
+
+void fortio_free_FILE_wrapper(fortio_type * fortio) {
+  fortio_free__(fortio);
+}
+
 
 void fortio_close(fortio_type *fortio) {
   fclose(fortio->stream);
-  free(fortio->filename);
-  free(fortio->mode);
-  free(fortio);
+  fortio_free__(fortio);
 }
+
+
 
 
 

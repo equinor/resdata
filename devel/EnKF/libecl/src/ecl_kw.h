@@ -33,7 +33,9 @@ void          ecl_kw_fskip_data(ecl_kw_type * , fortio_type *);
 void          ecl_kw_fskip(fortio_type *, bool);
 void          ecl_kw_alloc_data(ecl_kw_type  *);
 bool          ecl_kw_fread_realloc(ecl_kw_type *, fortio_type *);
+ecl_kw_type * ecl_kw_fscanf_alloc_include_data(FILE * , int , ecl_type_enum , bool );
 ecl_kw_type * ecl_kw_fread_alloc(fortio_type * , bool);
+ecl_kw_type * ecl_kw_fscanf_alloc_parameter(FILE * , int , bool );
 void          ecl_kw_free_data(ecl_kw_type *);
 void          ecl_kw_free(ecl_kw_type *);
 void          ecl_kw_free__(void *);
@@ -63,6 +65,7 @@ void          ecl_kw_fwrite_param(const char * , bool  , bool , const char * ,  
 void          ecl_kw_fwrite_param_fortio(fortio_type *, bool  , bool , const char * ,  ecl_type_enum , int , void * );
 void          ecl_kw_summarize(const ecl_kw_type * ecl_kw);
 void          ecl_kw_fread_double_param(const char * , bool , bool , double *);
+void          ecl_kw_get_data_as_double(const ecl_kw_type *, double *);
 
 void ecl_kw_inplace_sub(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_mul(ecl_kw_type * , const ecl_kw_type * );

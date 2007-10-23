@@ -6,56 +6,33 @@
 #include <ecl_util.h>
 #include <ecl_sum.h>
 #include <hash.h>
-
+#include <stdbool.h>
+#include <ecl_rft_vector.h>
 
 
 int main(int argc, char ** argv) {
-#define nvar 3
-#define nwell 4
-  const double var_opr = 1000  * 1000;
-  const double var_gpr = 10000 * 10000;
-  const double var_wpr = 100 * 100;
+  /*  const double tvd[55] = {0.27258293E+04,   0.27365356E+04,   0.27514102E+04,   0.27539917E+04,
+			  0.27565728E+04,   0.27591538E+04,   0.27617351E+04,   0.27643162E+04,
+			  0.27668975E+04,   0.27694788E+04,   0.27720598E+04,   0.27746411E+04,
+			  0.27765449E+04,   0.27777712E+04,   0.27789976E+04,   0.27823044E+04,
+			  0.27827869E+04,   0.27832690E+04,   0.27837512E+04,   0.27842336E+04,
+			  0.27847158E+04,   0.27851982E+04,   0.27863728E+04,   0.27872747E+04,
+			  0.27881765E+04,   0.27890784E+04,   0.27899802E+04,   0.27908823E+04,
+			  0.27917842E+04,   0.27926860E+04,   0.27935881E+04,   0.27944902E+04,
+			  0.28107236E+04,   0.28117195E+04,   0.28127148E+04,   0.28143879E+04,
+			  0.28167388E+04,   0.28190894E+04,   0.28214399E+04,   0.28237903E+04,
+			  0.28261414E+04,   0.28284919E+04,   0.28308423E+04,   0.28331931E+04,
+			  0.28355437E+04,   0.28377681E+04,   0.28398660E+04,   0.28419641E+04,
+			  0.28440620E+04,   0.28461602E+04,   0.28482581E+04,   0.28503562E+04,
+			  0.28524541E+04,   0.28545518E+04,   0.28566501E+04};
+  int i[55];
+  int j[55];
+  int k[55];
 
-  const char * path = "/h/a152128/EnKF_OS/EnKF/Relperm_run1/PriorExp_a/tmpdir_0015";
-  const char * base = "ECLIPSE-0015";
-  char ** var_list;
-  char ** well_list;
-  
-  ecl_sum_type * ecl_sum;
-  char ** fileList;
-  char *  header_file;
-  int     files , i;
-  double  *inv_covar;
-  
-  var_list    = malloc(nvar * sizeof * var_list);
-  var_list[0] = util_alloc_string_copy("WOPR");
-  var_list[1] = util_alloc_string_copy("WWPR");
-  var_list[2] = util_alloc_string_copy("WGPR");
-
-  well_list    = malloc(nwell * sizeof * well_list);
-  well_list[0] = util_alloc_string_copy("F17B");
-  well_list[1] = util_alloc_string_copy("F19A");
-  well_list[2] = util_alloc_string_copy("F22T4");
-  well_list[3] = util_alloc_string_copy("F26AN");
-  
-  inv_covar = malloc(nvar * nvar * sizeof * inv_covar);
-
-  header_file = ecl_util_alloc_exfilename(path , base , ecl_summary_header_file , false , -1);
-  fileList = ecl_util_alloc_exfilelist(path , base , ecl_summary_file , false , &files); 
-  ecl_sum = ecl_sum_fread_alloc(header_file , files , (const char **) fileList , true , true);
-  for (i = 0; i < nvar*nvar; i++)
-    inv_covar[i] = 0.0;
-
-  inv_covar[0] = 1.0 / var_opr;
-  inv_covar[4] = 1.0 / var_wpr;
-  inv_covar[8] = 1.0 / var_gpr;
-  
-  {
-    double misfit = ecl_sum_eval_misfit(ecl_sum , nwell , (const char **) well_list , nvar , (const char **) var_list , NULL , inv_covar);
-    printf("misfit: %g \n",misfit);
-  }
-
-  printf("Summary loaded ...\n");
-  
+  ecl_rft_vector_type * rft_vector = ecl_rft_vector_alloc(argv[1] , true);
+  ecl_rft_vector_block(rft_vector , "B-43" , 55   , tvd , i , j  , k);
+  ecl_rft_vector_free(rft_vector);
+  */
+  printf("Gjetter: %s \n",ecl_util_alloc_base_guess("/h/a152128/EnKF_ON/Run-FMT-Test/PriorEns2/tmpdir_0004"));
   return 0;
 }

@@ -40,7 +40,7 @@ struct ecl_fstate_struct {
 
 
 bool ecl_fstate_fmt_file(const char *filename) {
-  const int min_size = 65536;
+  const int min_size = 32768;
   int report_nr;
   ecl_file_type file_type;
 

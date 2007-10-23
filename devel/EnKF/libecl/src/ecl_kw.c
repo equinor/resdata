@@ -89,7 +89,7 @@ static ecl_type_enum __get_ecl_type(const char *ecl_type_str) {
 	 ecl_type = i;
     }
     if (ecl_type == -1) {
-      fprintf(stderr," Fatal error: eclipse_type :%s not recognized - aborting \n",ecl_type_str);
+      fprintf(stderr,"%s: Fatal error: eclipse_type :%s not recognized - aborting \n",__func__ , ecl_type_str);
       abort();
     }
     return ecl_type;
@@ -347,8 +347,8 @@ void ecl_kw_iset(ecl_kw_type *ecl_kw , int i , const void *iptr) {
   ecl_kw_iset_static(ecl_kw , i , iptr);
 }
 
-static void ecl_kw_set_types(ecl_kw_type *ecl_kw, const char *ecl_str_type) {
-  ecl_kw->ecl_type = __get_ecl_type(ecl_str_type);
+static void ecl_kw_init_types(ecl_kw_type *ecl_kw, ecl_type_enum ecl_type) {
+  ecl_kw->ecl_type = ecl_type;
   switch(ecl_kw->ecl_type) {
   case (ecl_char_type):
     /*
@@ -583,6 +583,7 @@ void ecl_kw_rewind(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
 }
 
 
+
 bool ecl_kw_fseek_kw(const char * kw , bool fmt_file , bool rewind , bool abort_on_error , fortio_type *fortio) {
   ecl_kw_type *tmp_kw = ecl_kw_alloc_empty(fmt_file , fortio_get_endian_flip(fortio));     
   FILE *stream      = fortio_get_FILE(fortio);
@@ -721,9 +722,11 @@ void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
   sprintf(ecl_kw->header , "%-8s" , header);
 }
 
+
+
 void ecl_kw_set_header(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *ecl_str_type ) {
   ecl_kw->ecl_type = __get_ecl_type(ecl_str_type);
-  ecl_kw_set_types(ecl_kw , ecl_str_type);
+  ecl_kw_init_types(ecl_kw , __get_ecl_type(ecl_str_type));
   if (strlen(header) > ecl_str_len) {
     fprintf(stderr," Fatal error in %s ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
     abort();
@@ -760,6 +763,37 @@ ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio , bool fmt_file) {
   }
   
   return ecl_kw;
+}
+
+
+ecl_kw_type * ecl_kw_fscanf_alloc_include_data(FILE * stream , int size , ecl_type_enum ecl_type , bool endian_flip) {
+  char buffer[9];
+  
+  ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(true , endian_flip);
+  ecl_kw_init_types(ecl_kw , ecl_type);
+  ecl_kw->size     = size;
+  ecl_kw_alloc_data(ecl_kw);
+
+  fscanf(stream , "%s" , buffer);
+  ecl_kw_set_header_name(ecl_kw , buffer);
+  {
+    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , endian_flip , stream);
+    ecl_kw_fread_data(ecl_kw , fortio);
+    fscanf(stream , "%s" , buffer);
+
+    if (buffer[0] != '/') {
+      fprintf(stderr,"%s: Did not find '/' at end of %s \n",__func__ , ecl_kw->header);
+      abort();
+    }
+    fortio_free_FILE_wrapper(fortio);
+  }
+
+  return ecl_kw;
+}
+
+
+ecl_kw_type * ecl_kw_fscanf_alloc_parameter(FILE * stream , int size , bool endian_flip) {
+  return ecl_kw_fscanf_alloc_include_data(stream , size , ecl_float_type , endian_flip);
 }
 
 
@@ -1116,6 +1150,25 @@ void ecl_kw_fwrite_param(const char * filename , bool fmt_file , bool endian_con
 }
 
 
+
+void ecl_kw_get_data_as_double(const ecl_kw_type * ecl_kw , double * double_data) {
+
+  if (ecl_kw->ecl_type == ecl_double_type)
+    ecl_kw_get_memcpy_data(ecl_kw , double_data);
+  else {
+    if (ecl_kw->ecl_type == ecl_float_type) {
+      const float * float_data = (const float *) ecl_kw->data;
+      util_float_to_double(double_data , float_data  , ecl_kw->size);
+    }
+    else {
+      fprintf(stderr,"%s: type can not be converted to double - aborting \n",__func__);
+      ecl_kw_summarize(ecl_kw);
+      abort();
+    }
+  }
+}
+
+
 void ecl_kw_fread_double_param(const char * filename , bool fmt_file , bool endian_convert, double * double_data) {
   fortio_type   * fortio      = fortio_open(filename , "r" , endian_convert);
   ecl_kw_type   * ecl_kw      = ecl_kw_fread_alloc(fortio , fmt_file);
@@ -1125,18 +1178,7 @@ void ecl_kw_fread_double_param(const char * filename , bool fmt_file , bool endi
     fprintf(stderr,"%s: fatal error: loading parameter from: %s failed - aborting \n",__func__ , filename);
     abort();
   }
-  
-  if (ecl_kw->ecl_type == ecl_double_type)
-    ecl_kw_get_memcpy_data(ecl_kw , double_data);
-  else {
-    if (ecl_kw->ecl_type == ecl_float_type)
-      util_float_to_double(double_data , (const float *) ecl_kw->data , ecl_kw->size);
-    else {
-      fprintf(stderr,"%s: type can not be converted to double - aborting \n",__func__);
-      ecl_kw_summarize(ecl_kw);
-      abort();
-    }
-  }
+  ecl_kw_get_data_as_double(ecl_kw , double_data);
   ecl_kw_free(ecl_kw);
 }
     
@@ -1351,14 +1393,29 @@ void ecl_kw_inplace_div(ecl_kw_type * my_kw , const ecl_kw_type * div_kw) {
 
 
 
-void ecl_kw_inplace_add(ecl_kw_type * my_kw , const ecl_kw_type * add_kw) {
+static void ecl_kw_inplace_add__(ecl_kw_type * my_kw , int my_offset , const ecl_kw_type * add_kw , bool different_size_ok) {
+  ecl_type_enum type  = ecl_kw_get_type(my_kw);
+  int my_size         = ecl_kw_get_size(my_kw);
+  int add_size        = ecl_kw_get_size(add_kw);
+  int my_last_index   = my_offset + add_size;
 
-  int            size = ecl_kw_get_size(my_kw);
-  ecl_type_enum type = ecl_kw_get_type(my_kw);
-  if ((size != ecl_kw_get_size(add_kw)) || (type != ecl_kw_get_type(add_kw))) {
-    fprintf(stderr,"%s: attempt to addtract to fields of different size - aborting \n",__func__);
+  if (different_size_ok) {
+    if (my_last_index >= my_size) {
+      fprintf(stderr,"%s: the last index of the adder will extend beyond the size - aborting \n",__func__);
+      abort();
+    }
+  } else {
+    if (my_size != add_size || my_offset != 0) {
+      fprintf(stderr,"%s: attempt to add to fields of different size - aborting \n",__func__);
+      abort();
+    }
+  }
+
+  if (type != ecl_kw_get_type(add_kw)) {
+    fprintf(stderr,"%s: trying to add fields of different type - aborting \n",__func__);
     abort();
   }
+
   {
     int i;
     void * my_data        = ecl_kw_get_data_ref(my_kw);
@@ -1369,8 +1426,8 @@ void ecl_kw_inplace_add(ecl_kw_type * my_kw , const ecl_kw_type * add_kw) {
       {
 	double *my_double        = (double *) my_data;
 	const double *add_double = (const double *) add_data;
-	for (i=0; i < size; i++)
-	  my_double[i] += add_double[i];
+	for (i=0; i < add_size; i++)
+	  my_double[i + my_offset] += add_double[i];
 	break;
       }
 
@@ -1378,8 +1435,8 @@ void ecl_kw_inplace_add(ecl_kw_type * my_kw , const ecl_kw_type * add_kw) {
       {
 	float *my_float        = (float *)       my_data;
 	const float *add_float = (const float *) add_data;
-	for (i=0; i < size; i++)
-	  my_float[i] += add_float[i];
+	for (i=0; i < add_size; i++)
+	  my_float[i + my_offset] += add_float[i];
 	break;
       }
       
@@ -1392,3 +1449,11 @@ void ecl_kw_inplace_add(ecl_kw_type * my_kw , const ecl_kw_type * add_kw) {
 }
 
 
+void ecl_kw_inplace_add(ecl_kw_type * my_kw , const ecl_kw_type * add_kw) {
+  ecl_kw_inplace_add__(my_kw , 0 , add_kw , false);
+}
+
+
+void ecl_kw_inplace_add_subkw(ecl_kw_type * my_kw , int my_offset , const ecl_kw_type * add_kw) {
+  ecl_kw_inplace_add__(my_kw , my_offset , add_kw , true);
+}
