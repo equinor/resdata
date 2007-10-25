@@ -31,8 +31,8 @@ void mult_config_finalize_init(mult_config_type *config) {
 
 mult_config_type * mult_config_alloc_empty(int size) {
   mult_config_type *mult_config = malloc(sizeof *mult_config);
+
   mult_config->data_size   	     = size;
-  
   mult_config->mean        	     = enkf_util_malloc(size * sizeof *mult_config->mean        , __func__);
   mult_config->std         	     = enkf_util_malloc(size * sizeof *mult_config->std         ,  __func__);
   mult_config->active      	     = enkf_util_malloc(size * sizeof *mult_config->active      , __func__);
@@ -40,7 +40,8 @@ mult_config_type * mult_config_alloc_empty(int size) {
   mult_config->output_transform      = enkf_util_malloc(mult_config->data_size * sizeof * mult_config->output_transform      , __func__);
   mult_config->output_transform_name = enkf_util_malloc(mult_config->data_size * sizeof * mult_config->output_transform_name , __func__);
   mult_config->serial_size           = 0;
-
+  mult_config->internal_offset       = 0;
+  
   return mult_config;
 }
 

@@ -94,9 +94,6 @@ void prefix ## _config_set_eclfile__(void *void_config , const char * file) {   
 #define CONFIG_SET_ECLFILE_HEADER_VOID(prefix) void prefix ## _config_set_eclfile__(void *, const char * );
 #define CONFIG_SET_ENSFILE_HEADER_VOID(prefix) void prefix ## _config_set_ensfile__(void *, const char * );
 
-/*
-  #define CONFIG_INIT_STD_FIELDS     config->ecl_file = NULL; config->ens_file = NULL;
-*/
 
 #define CONFIG_FREE_STD_FIELDS  \
 if (config->ensfile != NULL) free(config->ensfile);    \
@@ -214,12 +211,12 @@ char * prefix ## _swapout__(void *void_arg , const char * file) { \
 
 /*****************************************************************/
 #define VOID_SERIALIZE(prefix)     \
-int prefix ## _serialize__(const void *void_arg, double *serial_data , size_t stride , size_t offset) { \
+int prefix ## _serialize__(const void *void_arg, size_t serial_data_size , double *serial_data , size_t stride , size_t offset) { \
    const prefix ## _type  *arg = (const prefix ## _type *) void_arg;       \
-   return prefix ## _serialize (arg , serial_data , stride , offset);       \
+   return prefix ## _serialize (arg , serial_data_size , serial_data , stride , offset);       \
 }
 
-#define VOID_SERIALIZE_HEADER(prefix) int prefix ## _serialize__(const void *, double *, size_t , size_t);
+#define VOID_SERIALIZE_HEADER(prefix) int prefix ## _serialize__(const void *, size_t , double *, size_t , size_t);
 
 /*****************************************************************/
 

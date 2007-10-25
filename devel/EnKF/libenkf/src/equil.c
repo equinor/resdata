@@ -169,7 +169,7 @@ static int equil_serialize_component(int nequil , const double * data , const bo
 }
 
 
-int equil_serialize(const equil_type *equil , double *serial_data , int ens_size , size_t offset) {
+int equil_serialize(const equil_type *equil , int serial_data_size , double *serial_data , int ens_size , size_t offset) {
   const equil_config_type *config       = equil->config;
   const bool              *active_WOC   = config->active_WOC;
   const bool              *active_GOC   = config->active_GOC;

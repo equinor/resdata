@@ -167,7 +167,7 @@ static void thist_node_fwrite_data(const thist_node_type * node , thist_data_typ
 static void thist_node_matlab_dump(const thist_node_type * node , FILE *stream) {
   const int one  = 1;
   const int zero = 0;
-  util_fwrite(&one                 , sizeof one              , 1 , stream , __func__);
+  util_fwrite(&one                 , sizeof one                 , 1 , stream , __func__);
   util_fwrite(&node->time_step     , sizeof node->time_step     , 1 , stream , __func__);
   util_fwrite(&node->true_time     , sizeof node->true_time     , 1 , stream , __func__);
   if (node->use_true_time)
@@ -364,8 +364,11 @@ void thist_matlab_dump(const thist_type * thist , const char * filename , const 
 void thist_clear(thist_type * thist) {
   int time_step;
   for (time_step = 0; time_step < thist->data_size; time_step++) 
-    if (thist->data[time_step] != NULL) 
+    if (thist->data[time_step] != NULL) {
       thist_node_clear(thist->data[time_step]);
+      thist->data[time_step] = NULL;
+    }
+  
 }
 
 

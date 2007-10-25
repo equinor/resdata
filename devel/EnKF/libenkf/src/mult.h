@@ -23,7 +23,7 @@ void             mult_ens_read(mult_type * , const char *);
 void             mult_sample(mult_type *);
 void             mult_truncate(mult_type *);
 void             mult_TEST(void);
-int              mult_serialize(const mult_type * , double *, size_t , size_t);
+int              mult_serialize(const mult_type * , size_t , double *, size_t , size_t);
 void             mult_stream_fwrite(const mult_type * mult , FILE * );
 void             mult_stream_fread(mult_type * mult , FILE * );
 void             mult_realloc_data(mult_type * mult);

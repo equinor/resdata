@@ -190,9 +190,9 @@ void multz_free(multz_type *multz) {
 }
 
 
-int multz_serialize(const multz_type *multz , double *serial_data , size_t stride , size_t offset) {
+int multz_serialize(const multz_type *multz , size_t serial_data_size , double *serial_data , size_t stride , size_t offset) {
   DEBUG_ASSERT(multz);
-  return mult_serialize(multz->mult , serial_data , stride , offset);
+  return mult_serialize(multz->mult , serial_data_size , serial_data , stride , offset);
 }
 
 

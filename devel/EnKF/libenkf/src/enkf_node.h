@@ -8,7 +8,11 @@
 
 /**********************************/
 
-typedef int   	      (serialize_ftype)      	(const void * , double * , size_t  , size_t);
+#define NODE_STD_FIELDS \
+int internal_offset;
+
+
+typedef int   	      (serialize_ftype)      	(const void * , size_t , double * , size_t  , size_t);
 typedef void   	      (de_serialize_ftype)      (void * , const double * , size_t *);
 typedef void * 	      (alloc_ftype)             (const void *);
 typedef void   	      (ecl_write_ftype)         (const void * , const char *);
@@ -58,7 +62,7 @@ void             enkf_node_ecl_write (const enkf_node_type *, const char *);
 void             enkf_node_sample(enkf_node_type *enkf_node);
 
 void             enkf_node_ens_write (const enkf_node_type * , const char *);
-int              enkf_node_serialize(enkf_node_type * , double * , size_t , size_t );
+int              enkf_node_serialize(enkf_node_type * , size_t , double * , size_t , size_t );
 void             enkf_node_clear     (enkf_node_type *);
 void             enkf_node_ens_read  (enkf_node_type * , const char *);
 const char     * enkf_node_get_key_ref(const enkf_node_type * );

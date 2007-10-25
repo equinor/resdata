@@ -189,9 +189,9 @@ void  multflt_sample(multflt_type *multflt) {
 
 
 
-int multflt_serialize(const multflt_type *multflt , double *serial_data , size_t ens_size , size_t offset) {
+int multflt_serialize(const multflt_type *multflt , size_t serial_data_size , double *serial_data , size_t ens_size , size_t offset) {
   DEBUG_ASSERT(multflt);
-  return mult_serialize(multflt->mult , serial_data , ens_size , offset);
+  return mult_serialize(multflt->mult , serial_data_size, serial_data , ens_size , offset);
 }
 
 

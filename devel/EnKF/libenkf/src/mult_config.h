@@ -16,6 +16,7 @@ struct mult_config_struct {
   int serial_size;          
   int data_size;            
   int serial_offset;        
+  int internal_offset;
   logmode_type    ** logmode;
   double 	   * mean;
   double 	   * std;

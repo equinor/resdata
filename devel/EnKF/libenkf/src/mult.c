@@ -152,21 +152,24 @@ void mult_free(mult_type *mult) {
 }
 
 
-int mult_serialize(const mult_type *mult , double *serial_data , size_t stride , size_t offset) {
+int mult_serialize(const mult_type *mult , size_t serial_data_size ,  double *serial_data , size_t stride , size_t offset) {
   const mult_config_type *config      = mult->config;
   const bool              *active     = config->active;
   const int                data_size  = mult_config_get_data_size(config);
-  int active_size = 0;
+  const int internal_offset = 0;
+  int elements_added = 0;
   int i;
   
-  for (i=0; i < data_size; i++) {
-    if (active[i]) {
-      serial_data[offset + i*stride] = mult->data[i];
-      active_size++;
-    }
-  }
-  
-  return active_size;
+  for (i=internal_offset; i < data_size; i++) {
+    size_t serial_index = offset + i*stride;
+    if (serial_index < serial_data_size) {
+      if (active[i]) {
+	serial_data[offset + i*stride] = mult->data[i];
+	elements_added++;
+      }
+    } else break;
+  } 
+  return elements_added;
 }
 
 

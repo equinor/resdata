@@ -629,10 +629,11 @@ void enkf_state_serialize(enkf_state_type * enkf_state , size_t stride) {
     list_node_type *list_node;                                            
     list_node  = list_get_head(enkf_state->node_list);                    
     size_t offset = 0;
+    size_t serial_data_size = 100;
     while (list_node != NULL) {                                           
       enkf_node_type *enkf_node = list_node_value_ptr(list_node);        
       if (enkf_node_include_type(enkf_node , parameter + ecl_restart + ecl_summary))
-	offset += stride * enkf_node_serialize(enkf_node , enkf_state->serial_data , stride , offset);                       
+	offset += stride * enkf_node_serialize(enkf_node , serial_data_size , enkf_state->serial_data , stride , offset);                       
       list_node  = list_node_get_next(list_node);                         
     }             
   }

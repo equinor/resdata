@@ -1,10 +1,19 @@
 #include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <enkf_node.h>
 #include <enkf_config_node.h>
 #include <util.h>
 
+
+typedef struct serial_state_struct serial_state_type;
+
+struct serial_state_struct {
+  int   internal_offset;
+  int   serial_size;
+  bool  serialize_complete;
+};
 
 
 struct enkf_node_struct {
@@ -28,6 +37,7 @@ struct enkf_node_struct {
   isqrt_ftype        *isqrt;
   iaddsqr_ftype      *iaddsqr;
 
+  serial_state_type  *serial_state;
   char               *swapfile;
   char               *node_key;
   void               *data;
@@ -38,6 +48,29 @@ struct enkf_node_struct {
 
 const enkf_config_node_type * enkf_node_get_config(const enkf_node_type * node) { return node->config; }
 
+/*****************************************************************/
+
+static serial_state_type * serial_state_alloc() {
+  serial_state_type * state = malloc(sizeof * state);
+  state->internal_offset    = 0;
+  state->serial_size        = 0;
+  return state;
+}
+
+
+static void serial_state_free(serial_state_type * state) {
+  free(state);
+  state = NULL;
+}
+
+static void serial_state_clear(serial_state_type * state) {
+  state->internal_offset    = 0;
+  state->serialize_complete = false;
+  state->serial_size        = 0;
+}
+
+
+/*****************************************************************/
 
 /*
   All the function pointers REALLY should be in the config object ... 
@@ -73,6 +106,7 @@ enkf_node_type * enkf_node_alloc(const char *node_key,
   node->data      = node->alloc(enkf_config_node_get_ref(node->config));
   node->serialize = serialize;
   node->de_serialize = de_serialize;
+  node->serial_state = serial_state_alloc();
   return node;
 }
 
@@ -151,10 +185,10 @@ void enkf_node_ens_clear(enkf_node_type *enkf_node) {
   enkf_node->clear(enkf_node->data);
 }
 
-int enkf_node_serialize(enkf_node_type *enkf_node , double *serial_data , size_t stride , size_t offset) {
+int enkf_node_serialize(enkf_node_type *enkf_node , size_t serial_data_size , double *serial_data , size_t stride , size_t offset) {
   FUNC_ASSERT(enkf_node->serialize , "serialize");
   printf("Calling serialize on:%s \n",enkf_node->node_key);
-  return enkf_node->serialize(enkf_node->data , serial_data , stride , offset);
+  return enkf_node->serialize(enkf_node->data , serial_data_size , serial_data , stride , offset);
 }
 
 void enkf_node_sqrt(enkf_node_type *enkf_node) {
@@ -226,6 +260,7 @@ void enkf_node_free(enkf_node_type *enkf_node) {
     enkf_node->freef(enkf_node->data);
   free(enkf_node->node_key);
   if (enkf_node->swapfile != NULL) free(enkf_node->swapfile);
+  serial_state_free(enkf_node->serial_state);
   free(enkf_node);
   enkf_node = NULL;
 }

@@ -19,17 +19,17 @@ equil_config_type * equil_config_alloc(int size, bool WOC , bool GOC , const cha
      => Can *NOT* tr/size/config->size/
   */
 
-  config->data_size    = size * 2; 
-  config->eclfile      = util_alloc_string_copy(eclfile);
-  config->ensfile      = util_alloc_string_copy(ensfile);
-  config->mean_WOC     = enkf_util_malloc(size * sizeof *config->mean_WOC , __func__);
-  config->std_WOC      = enkf_util_malloc(size * sizeof *config->std_WOC ,  __func__);
-  config->active_WOC   = enkf_util_malloc(size * sizeof *config->active_WOC , __func__);
+  config->data_size    	  = size * 2; 
+  config->eclfile      	  = util_alloc_string_copy(eclfile);
+  config->ensfile      	  = util_alloc_string_copy(ensfile);
+  config->mean_WOC     	  = enkf_util_malloc(size * sizeof *config->mean_WOC , __func__);
+  config->std_WOC      	  = enkf_util_malloc(size * sizeof *config->std_WOC ,  __func__);
+  config->active_WOC   	  = enkf_util_malloc(size * sizeof *config->active_WOC , __func__);
 
-  config->mean_GOC     = enkf_util_malloc(size * sizeof *config->mean_GOC , __func__);
-  config->std_GOC      = enkf_util_malloc(size * sizeof *config->std_GOC ,  __func__);
-  config->active_GOC   = enkf_util_malloc(size * sizeof *config->active_GOC , __func__);
-  config->serial_size  = 0;
+  config->mean_GOC     	  = enkf_util_malloc(size * sizeof *config->mean_GOC , __func__);
+  config->std_GOC      	  = enkf_util_malloc(size * sizeof *config->std_GOC ,  __func__);
+  config->active_GOC   	  = enkf_util_malloc(size * sizeof *config->active_GOC , __func__);
+  config->serial_size  	  = 0;
   
   { 
     int i;

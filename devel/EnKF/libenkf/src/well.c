@@ -130,13 +130,15 @@ void well_free(well_type *well) {
 
 
 
-int well_serialize(const well_type *well , double *serial_data , size_t stride , size_t offset) {
+int well_serialize(const well_type *well , size_t serial_data_size , double *serial_data , size_t stride , size_t offset) {
   DEBUG_ASSERT(well)
   {
      const well_config_type *config       = well->config;
      const int                data_size   = well_config_get_data_size(config);
+     int   internal_offset = 0;
      int i;
-     for (i = 0; i < data_size; i++)
+     
+     for (i = internal_offset; i < data_size; i++)
        serial_data[offset + i*stride] = well->data[i];
      
      return data_size;
