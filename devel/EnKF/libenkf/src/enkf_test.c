@@ -157,7 +157,7 @@ int main(void) {
     thread_pool_join(tp);
     for (i = 0; i < 1; i++)
       {
-	const int serial_size = enkf_state_get_serial_size(state[i]);
+	const int serial_size = 100000;
 	double * serial_data = calloc(serial_size*100 , sizeof *serial_data);
 	
 	enkf_state_set_serial_data(state[i] , serial_data);

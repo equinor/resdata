@@ -25,7 +25,6 @@ void            * enkf_state_load_ecl_summary_void(void * );
 void            * enkf_state_load_ecl_restart_void(void * );
 void            * enkf_state_load_ecl_void(void * );
 void              enkf_state_load_ecl(enkf_state_type * , bool , int );
-int               enkf_state_get_serial_size(const enkf_state_type * );
 
 void              enkf_state_iset_enspath(enkf_state_type * , int , const char *);
 const      char * enkf_state_get_enspath_ref(const enkf_state_type * );

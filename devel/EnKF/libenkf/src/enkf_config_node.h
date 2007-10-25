@@ -4,7 +4,6 @@
 #include <config.h>
 
 typedef void   (config_free_ftype)                (void *);
-typedef int    (config_get_serial_size_ftype)     (const void *);
 typedef void   (config_set_serial_offset_ftype)   (void * , int);
 
 typedef struct enkf_config_node_struct enkf_config_node_type;
@@ -13,7 +12,6 @@ enkf_config_node_type * enkf_config_node_alloc(enkf_var_type     	          ,
 					       enkf_impl_type    	          ,
 					       const void        	        * ,
 					       config_free_ftype 	        * ,
-					       config_get_serial_size_ftype     * ,
                                                config_set_serial_offset_ftype   *);
 
 

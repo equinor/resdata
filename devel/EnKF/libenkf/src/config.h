@@ -6,7 +6,6 @@
 #include <enkf_types.h>
 
 #define CONFIG_STD_FIELDS \
-int serial_size;          \
 int data_size;            \
 int serial_offset;        \
 char * ecl_kw_name;       \
@@ -19,7 +18,7 @@ char * eclfile;
 #define VOID_CONFIG_FREE_HEADER(prefix)     void prefix ## _config_free__(void *)
 
 /*****************************************************************/
-
+/*
 #define GET_SERIAL_SIZE(prefix)                                              \
 int prefix ## _config_get_serial_size (const prefix ## _config_type *arg) {  \
    return arg->serial_size;                                                  \
@@ -27,6 +26,7 @@ int prefix ## _config_get_serial_size (const prefix ## _config_type *arg) {  \
 #define GET_SERIAL_SIZE_HEADER(prefix)      int prefix ## _config_get_serial_size (const prefix ## _config_type *)
 #define VOID_GET_SERIAL_SIZE(prefix)        int prefix ## _config_get_serial_size__ (const void *void_arg ) { return prefix ## _config_get_serial_size((const prefix ## _config_type *) void_arg); }
 #define VOID_GET_SERIAL_SIZE_HEADER(prefix) int prefix ## _config_get_serial_size__ (const void *)
+*/
 
 /*****************************************************************/
 #define GET_SERIAL_OFFSET(prefix)                                              \

@@ -680,21 +680,6 @@ void enkf_state_del_node(enkf_state_type * enkf_state , const char * node_key) {
 }
 
 
-int enkf_state_get_serial_size(const enkf_state_type * state) {
-  int current_offset = 0;
-  int serial_size = 0;
-  list_node_type *list_node;                                             
-  list_node = list_get_head(state->node_list);                      
-  while (list_node != NULL) {                                            
-    enkf_node_type *enkf_node = list_node_value_ptr(list_node);          
-    if (enkf_node_include_type(enkf_node , parameter + ecl_restart + ecl_summary)) {
-      enkf_config_node_type * config_node = (enkf_config_node_type *) enkf_node_get_config(enkf_node);
-      serial_size += enkf_config_node_get_serial_size(config_node , &current_offset);
-    }
-    list_node = list_node_get_next(list_node);                           
-  }
-  return serial_size;
-}
 
 
 

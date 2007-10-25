@@ -115,37 +115,30 @@ void enkf_config_add_type(enkf_config_type * enkf_config,
 
   {
     config_free_ftype              * freef;
-    config_get_serial_size_ftype   * get_serial_size;
     config_set_serial_offset_ftype * set_serial_offset;
     switch(impl_type) {
     case(FIELD):
       freef             = field_config_free__;
-      get_serial_size   = field_config_get_serial_size__;
       set_serial_offset = field_config_set_serial_offset__;
       break;
     case(MULTZ):
       freef             = multz_config_free__;
-      get_serial_size   = multz_config_get_serial_size__;
       set_serial_offset = multz_config_set_serial_offset__;
       break;
     case(WELL):
       freef             = well_config_free__;
-      get_serial_size   = well_config_get_serial_size__;
       set_serial_offset = well_config_set_serial_offset__;
       break;
     case(MULTFLT):
       freef             = multflt_config_free__;
-      get_serial_size   = multflt_config_get_serial_size__;
       set_serial_offset = multflt_config_set_serial_offset__;
       break;
     case(EQUIL):
       freef             = equil_config_free__;
-      get_serial_size   = equil_config_get_serial_size__;
       set_serial_offset = equil_config_set_serial_offset__;
       break;
     case(STATIC):
       freef             = ecl_static_kw_config_free__;
-      get_serial_size   = NULL;
       set_serial_offset = NULL;
       break;
     default:
@@ -153,7 +146,7 @@ void enkf_config_add_type(enkf_config_type * enkf_config,
       abort();
     }
     {
-      enkf_config_node_type * node = enkf_config_node_alloc(enkf_type , impl_type , data , freef , get_serial_size , set_serial_offset);
+      enkf_config_node_type * node = enkf_config_node_alloc(enkf_type , impl_type , data , freef , set_serial_offset);
       hash_insert_hash_owned_ref(enkf_config->config_hash , key , node , enkf_config_node_free__);
     }
   }

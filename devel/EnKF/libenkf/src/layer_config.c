@@ -30,8 +30,6 @@ static layer_config_type * __layer_config_alloc(const char * ecl_kw , const char
   config->ensfile     = util_alloc_string_copy(ensfile);
   config->ecl_kw_name = util_alloc_string_copy(ecl_kw);
 
-  config->serial_size = -1;
-  
   if (target_config != NULL) {
     config->data_owner 	  = false;
     config->compact    	  = false;
@@ -47,7 +45,6 @@ static layer_config_type * __layer_config_alloc(const char * ecl_kw , const char
     if (index_map == NULL) {
       config->compact = true;
       config->index_map = NULL;
-      config->serial_size = nx * ny;
       config->data_size = nx * ny;
     } else {
       config->index_map = index_map;
@@ -58,13 +55,6 @@ static layer_config_type * __layer_config_alloc(const char * ecl_kw , const char
   /*
     Must determine size from index_map
   */
-  if (config->serial_size < 0) {
-    int index;
-    config->serial_size = 0;
-    for (index=0; index < config->nx*config->ny; index++)
-      if (config->index_map[index] >= 0)
-	config->serial_size++;
-  }
   return config;
 }
 

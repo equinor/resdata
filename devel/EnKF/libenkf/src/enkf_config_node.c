@@ -9,7 +9,6 @@ struct enkf_config_node_struct {
   config_free_ftype               *freef;
   enkf_impl_type  	    	   impl_type;
   enkf_var_type  	    	   enkf_type; 
-  config_get_serial_size_ftype    *get_serial_size;
   config_set_serial_offset_ftype  * set_serial_offset;
   void                     	  *data; /* This points to the config object of the actual implementation. */
 } ;
@@ -18,15 +17,13 @@ struct enkf_config_node_struct {
 
 enkf_config_node_type * enkf_config_node_alloc(enkf_var_type              enkf_type,
 					       enkf_impl_type             impl_type,
-					       const void               	      * data, 
-					       config_free_ftype        	      * freef,
-					       config_get_serial_size_ftype    * get_serial_size,
+					       const void                      * data, 
+					       config_free_ftype               * freef,
 					       config_set_serial_offset_ftype  * set_serial_offset) {
   
   enkf_config_node_type * node = malloc( sizeof *node);
   node->data = (void *) data;
   node->freef              = freef;
-  node->get_serial_size    = get_serial_size;
   node->set_serial_offset  = set_serial_offset;
   node->enkf_type     	   = enkf_type;
   node->impl_type     	   = impl_type;
@@ -41,13 +38,6 @@ void enkf_config_node_free(enkf_config_node_type * node) {
 }
 
 
-
-int enkf_config_node_get_serial_size(enkf_config_node_type * config_node , int *current_offset) {
-  int serial_size = config_node->get_serial_size(config_node->data );
-  config_node->set_serial_offset(config_node->data , *current_offset);
-  *current_offset = *current_offset + serial_size;
-  return serial_size;
-}
 
 
 bool enkf_config_node_include_type(const enkf_config_node_type * config_node , int mask) {

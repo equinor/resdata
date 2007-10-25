@@ -178,9 +178,7 @@ void multz_config_free(multz_config_type * config) {
 }
 
 
-int multz_config_get_serial_size(const multz_config_type * multz_config) {
-  return mult_config_get_serial_size(multz_config->mult_config);
-}
+
 
 
 int multz_config_get_data_size(const multz_config_type * multz_config) {
@@ -200,7 +198,6 @@ CONFIG_SET_ECLFILE(multz);
 CONFIG_SET_ENSFILE(multz);
 CONFIG_SET_ECLFILE_VOID(multz);
 CONFIG_SET_ENSFILE_VOID(multz);
-VOID_GET_SERIAL_SIZE(multz);
 VOID_FUNC(multz_config_free , multz_config_type);
 VOID_SET_SERIAL_OFFSET(multz);
 

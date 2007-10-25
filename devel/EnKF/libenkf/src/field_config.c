@@ -24,7 +24,6 @@ field_config_type * field_config_alloc(const char * ecl_kw_name , ecl_type_enum 
     and generally *not* equal to nx*ny*nz.
   */
   config->data_size        = active_size; 
-  config->serial_size      = active_size;
 
   
   config->ecl_kw_name = util_alloc_string_copy(ecl_kw_name);
@@ -72,9 +71,6 @@ void field_config_free(field_config_type * config) {
   free(config);
 }
   
-int field_config_get_serial_size(const field_config_type * config) {
-  return config->serial_size;
-}
 
 int field_config_get_volume(const field_config_type * config) {
   return config->nx * config->ny * config->nz;
@@ -141,7 +137,6 @@ CONFIG_SET_ECLFILE(field);
 CONFIG_SET_ENSFILE(field);
 CONFIG_SET_ECLFILE_VOID(field);
 CONFIG_SET_ENSFILE_VOID(field);
-VOID_GET_SERIAL_SIZE(field)
 GET_DATA_SIZE(field)
 VOID_FREE(field_config)
 SET_SERIAL_OFFSET(field)

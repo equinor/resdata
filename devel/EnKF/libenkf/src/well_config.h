@@ -30,8 +30,6 @@ bool               well_config_has_var(const well_config_type * , const char * )
 
 
 GET_DATA_SIZE_HEADER(well);
-GET_SERIAL_SIZE_HEADER(well);
-VOID_GET_SERIAL_SIZE_HEADER(well);
 CONFIG_SET_ECLFILE_HEADER_VOID(well);
 CONFIG_SET_ENSFILE_HEADER_VOID(well);
 VOID_CONFIG_FREE_HEADER(well);

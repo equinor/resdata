@@ -88,9 +88,6 @@ void multflt_config_free(multflt_config_type * multflt_config) {
   free(multflt_config);
 }
 
-int multflt_config_get_serial_size(const multflt_config_type * multflt_config) {
-  return mult_config_get_serial_size(multflt_config->mult_config);
-}
 
 int multflt_config_get_data_size(const multflt_config_type * multflt_config) {
   return mult_config_get_data_size(multflt_config->mult_config);
@@ -109,6 +106,5 @@ CONFIG_SET_ECLFILE(multflt);
 CONFIG_SET_ENSFILE(multflt);
 CONFIG_SET_ECLFILE_VOID(multflt);
 CONFIG_SET_ENSFILE_VOID(multflt);
-VOID_GET_SERIAL_SIZE(multflt);
 VOID_FUNC(multflt_config_free , multflt_config_type);
 VOID_SET_SERIAL_OFFSET(multflt);

@@ -39,8 +39,6 @@ void                field_config_set_eclfile(field_config_type * , const char * 
 
 /*Generated headers */
 CONFIG_GET_ECL_KW_NAME_HEADER(field);
-GET_SERIAL_SIZE_HEADER(field);
-VOID_GET_SERIAL_SIZE_HEADER(field);
 CONFIG_SET_ECLFILE_HEADER_VOID(field);
 CONFIG_SET_ENSFILE_HEADER_VOID(field);
 SET_SERIAL_OFFSET_HEADER(field);

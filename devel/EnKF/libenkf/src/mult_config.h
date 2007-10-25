@@ -13,7 +13,6 @@ typedef struct mult_config_struct mult_config_type;
 
 
 struct mult_config_struct {
-  int serial_size;          
   int data_size;            
   int serial_offset;        
   int internal_offset;
@@ -37,9 +36,7 @@ void                  mult_config_finalize_init(mult_config_type *config);
 
 CONFIG_SET_ECLFILE_HEADER(mult);
 CONFIG_SET_ENSFILE_HEADER(mult);
-GET_SERIAL_SIZE_HEADER(mult);
 GET_DATA_SIZE_HEADER(mult);
-VOID_GET_SERIAL_SIZE_HEADER(mult);
 CONFIG_SET_ECLFILE_HEADER_VOID(mult);
 CONFIG_SET_ENSFILE_HEADER_VOID(mult);
 SET_SERIAL_OFFSET_HEADER(mult);

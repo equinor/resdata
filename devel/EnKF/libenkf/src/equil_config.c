@@ -29,7 +29,6 @@ equil_config_type * equil_config_alloc(int size, bool WOC , bool GOC , const cha
   config->mean_GOC     	  = enkf_util_malloc(size * sizeof *config->mean_GOC , __func__);
   config->std_GOC      	  = enkf_util_malloc(size * sizeof *config->std_GOC ,  __func__);
   config->active_GOC   	  = enkf_util_malloc(size * sizeof *config->active_GOC , __func__);
-  config->serial_size  	  = 0;
   
   { 
     int i;
@@ -38,7 +37,6 @@ equil_config_type * equil_config_alloc(int size, bool WOC , bool GOC , const cha
       config->std_WOC[i]    = 0.25;
       if (WOC) {
 	config->active_WOC[i] = true;
-	config->serial_size++;
       } else
 	config->active_WOC[i] = false;
 
@@ -46,7 +44,6 @@ equil_config_type * equil_config_alloc(int size, bool WOC , bool GOC , const cha
       config->std_GOC[i]    = 0.25;
       if (GOC) {
 	config->active_GOC[i] = true;
-	config->serial_size++;
       } else
 	config->active_GOC[i] = false;
     }
@@ -91,8 +88,6 @@ CONFIG_SET_ECLFILE(equil);
 CONFIG_SET_ENSFILE(equil);
 CONFIG_SET_ECLFILE_VOID(equil);
 CONFIG_SET_ENSFILE_VOID(equil);
-GET_SERIAL_SIZE(equil);
-VOID_GET_SERIAL_SIZE(equil);
 GET_DATA_SIZE(equil);
 VOID_FUNC(equil_config_free , equil_config_type);
 SET_SERIAL_OFFSET(equil);

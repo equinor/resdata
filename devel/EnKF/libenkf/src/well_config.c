@@ -47,7 +47,6 @@ void well_config_add_var(well_config_type * config , const char * var) {
     All variables are (currently) active.
   */
   if (ecl_well_var_valid(var , NULL)) {
-    config->serial_size++;   
     config->data_size++;
     config->var_list = realloc(config->var_list , config->data_size * sizeof * config->var_list);
     config->var_list[config->data_size - 1] = util_alloc_string_copy(var);
@@ -65,7 +64,6 @@ static well_config_type * __well_config_alloc(const char * well_name , const cha
   config->ensfile     = util_alloc_string_copy(ensfile);
   config->well_name   = util_alloc_string_copy(well_name);
   config->data_size   = 0;
-  config->serial_size = 0;
   config->var_list    = NULL;
   return config;
 }
@@ -138,9 +136,7 @@ const char * well_config_get_well_name_ref(const well_config_type * config) {
 /*****************************************************************/
 CONFIG_SET_ENSFILE(well);
 CONFIG_SET_ENSFILE_VOID(well);
-GET_SERIAL_SIZE(well)
 GET_DATA_SIZE(well)
-VOID_GET_SERIAL_SIZE(well)
 VOID_CONFIG_FREE(well)
 
 SET_SERIAL_OFFSET(well)
