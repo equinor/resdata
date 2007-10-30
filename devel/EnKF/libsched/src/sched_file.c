@@ -57,7 +57,7 @@ void sched_file_set_start_date(sched_file_type * s , const int * start_date) {
 sched_file_type * sched_file_alloc(const int *start_date) {
   sched_file_type * sched_file = malloc(sizeof *sched_file);
   {
-    hash_type *month_hash = hash_alloc(24);
+    hash_type *month_hash = hash_alloc(48);
     hash_insert_int(month_hash , "JAN" , 0);
     hash_insert_int(month_hash , "FEB" , 1);
     hash_insert_int(month_hash , "MAR" , 2);
@@ -70,6 +70,32 @@ sched_file_type * sched_file_alloc(const int *start_date) {
     hash_insert_int(month_hash , "OCT" , 9);
     hash_insert_int(month_hash , "NOV" ,10);
     hash_insert_int(month_hash , "DEC" ,11);
+    
+    hash_insert_int(month_hash , "jan" , 0);
+    hash_insert_int(month_hash , "feb" , 1);
+    hash_insert_int(month_hash , "mar" , 2);
+    hash_insert_int(month_hash , "apr" , 3);
+    hash_insert_int(month_hash , "may" , 4);
+    hash_insert_int(month_hash , "jun" , 5);
+    hash_insert_int(month_hash , "jul" , 6);
+    hash_insert_int(month_hash , "aug" , 7);
+    hash_insert_int(month_hash , "sep" , 8);
+    hash_insert_int(month_hash , "oct" , 9);
+    hash_insert_int(month_hash , "nov" ,10);
+    hash_insert_int(month_hash , "dec" ,11);
+
+    hash_insert_int(month_hash , "Jan" , 0);
+    hash_insert_int(month_hash , "Feb" , 1);
+    hash_insert_int(month_hash , "Mar" , 2);
+    hash_insert_int(month_hash , "Apr" , 3);
+    hash_insert_int(month_hash , "May" , 4);
+    hash_insert_int(month_hash , "Jun" , 5);
+    hash_insert_int(month_hash , "Jul" , 6);
+    hash_insert_int(month_hash , "Aug" , 7);
+    hash_insert_int(month_hash , "Sep" , 8);
+    hash_insert_int(month_hash , "Oct" , 9);
+    hash_insert_int(month_hash , "Nov" ,10);
+    hash_insert_int(month_hash , "Dec" ,11);
     sched_file->month_hash = month_hash;
   }
 
@@ -387,18 +413,49 @@ void sched_file_fprintf_days_dat(const sched_file_type *s , const char *days_fil
 
 
 
+int sched_file_time_t_to_report_step(const sched_file_type * s , time_t t) {
+  int report_step = -1;
+  int status = -1;
+  if (difftime(t , s->start_date)  >= 0) {
+    list_node_type *list_node = list_get_head(s->kw_list);
+    while (list_node != NULL) {
+      const sched_kw_type * sched_kw = list_node_value_ptr(list_node);
+      sched_kw_get_report_step(sched_kw , t , &report_step);
 
-/*
-int main (void) {
-  sched_file_type *s = sched_file_alloc();
+      if (report_step != -1) {
+	status = 0;
+	list_node = NULL;
+      } else
+	list_node = list_node_get_next(list_node);
+    } 
+    if (report_step == -1) 
+      status = 1;
+  }
+  /*
+   *_status = status;
+   */
   
-  sched_file_parse(s , "SCHEDULE_orig.INC");
-  
-  sched_file_init_conn_factor(s , "OEAST.INIT" , true , NULL);
-  
-  sched_file_fprintf(s , -1 , -1 , "NEWS2");
+  if (status != 0) {
+    int year , mday , mon;
+    util_set_date_values(t , &mday , &mon , &year);
+    if (status < 0)
+      fprintf(stderr,"%s: *Warning* time %02d/%02d/%4d is before simulation start - report step = -1 is assigned. \n",__func__ , mday , mon , year);
+    else
+      fprintf(stderr,"%s: *Warning* time %02d/%02d/%4d is after simulation end - report step = -1 is assigned. \n",__func__ , mday , mon , year);
+  }
 
-  sched_file_free(s);
-  return 0;
+  return report_step;
 }
-*/
+
+
+int sched_file_int3_to_report_step(const sched_file_type * s , int mday, int mon , int year) {
+  time_t t         = util_make_time1(mday , mon , year);
+  return sched_file_time_t_to_report_step(s , t );
+}
+
+
+int sched_file_DATES_to_report_step(const sched_file_type * s , const char * DATES_line) {
+  return sched_file_time_t_to_report_step(s , date_node_parse_DATES_line(DATES_line , s->month_hash));
+}
+
+

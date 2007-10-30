@@ -214,6 +214,12 @@ void sched_kw_fprintf_days_dat(const sched_kw_type * kw , FILE *stream) {
     sched_kw_dates_fprintf_days_dat(kw->data , stream);
 }
 
+void sched_kw_get_report_step(const sched_kw_type * kw , time_t t , int * report_step) {
+  if (kw->type == DATES) 
+    sched_kw_dates_get_report_step(kw->data , t , report_step);
+}
+
+
 
 void sched_kw_make_history(const sched_kw_type * kw , history_type * history, date_node_type **current_date) {
   if (kw->type == DATES) {

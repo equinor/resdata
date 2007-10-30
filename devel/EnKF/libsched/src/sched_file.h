@@ -20,4 +20,8 @@ void              sched_file_parse(sched_file_type * , const char * );
 void              sched_file_free(sched_file_type *);
 void              sched_file_fprintf_rates(const sched_file_type * , const char * , const char *);
 void              sched_file_fprintf_days_dat(const sched_file_type * , const char *);
+int 		  sched_file_time_t_to_report_step(const sched_file_type *  , time_t );
+int 		  sched_file_int3_to_report_step(const sched_file_type * , int , int , int );
+int 		  sched_file_DATES_to_report_step(const sched_file_type * , const char * );
+
 #endif

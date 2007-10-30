@@ -52,26 +52,32 @@ date_node_type * date_node_alloc_ext(bool TStep , time_t time , int date_nr , co
 }
 
 
+time_t date_node_parse_DATES_line(const char * DATES_string , const hash_type * month_hash) {
+  int tokens , i;
+  char **token_list;
+  time_t time;
+  struct tm ts;
+  sched_util_parse_line(DATES_string , &tokens , &token_list , 3 , NULL);
+  ts.tm_sec    = 0;
+  ts.tm_min    = 0;
+  ts.tm_hour   = 0;
+  ts.tm_mday   = atoi(token_list[0]);
+  ts.tm_mon    = hash_get_int(month_hash , token_list[1]);
+  ts.tm_year   = atoi(token_list[2]) - 1900;
+  time = mktime( &ts );
+  for (i=0; i < tokens; i++) {
+    if (token_list[i] != NULL) free(token_list[i]);
+  }
+  free(token_list);
+
+  return time;
+}
+
+
 date_node_type * date_node_alloc_from_DATES_line(const time_t * start_time , int date_nr , const char * line , const hash_type * month_hash) {
   date_node_type *date_node = date_node_alloc_empty(start_time);
   date_node->date_nr        = date_nr; 
-  {
-    int tokens , i;
-    char **token_list;
-    struct tm ts;
-    sched_util_parse_line(line, &tokens , &token_list , 3 , NULL);
-    ts.tm_sec    = 0;
-    ts.tm_min    = 0;
-    ts.tm_hour   = 0;
-    ts.tm_mday   = atoi(token_list[0]);
-    ts.tm_mon    = hash_get_int(month_hash , token_list[1]);
-    ts.tm_year   = atoi(token_list[2]) - 1900;
-    date_node->time = mktime( &ts );
-    for (i=0; i < tokens; i++) {
-      if (token_list[i] != NULL) free(token_list[i]);
-    }
-    free(token_list);
-  }
+  date_node->time = date_node_parse_DATES_line(line , month_hash);
   date_node->TStep = false;
   return date_node;
 }
@@ -129,17 +135,17 @@ void date_node_fprintf(const date_node_type * node, FILE *stream , int last_date
 }
 
 void date_node_fwrite(const date_node_type * date_node , FILE *stream) {
-  fwrite(&date_node->time    , sizeof date_node->time    , 1 , stream);
-  fwrite(&date_node->TStep   , sizeof date_node->TStep   , 1 , stream);
-  fwrite(&date_node->date_nr , sizeof date_node->date_nr , 1 , stream);
+  util_fwrite(&date_node->time    , sizeof date_node->time    , 1 , stream , __func__);
+  util_fwrite(&date_node->TStep   , sizeof date_node->TStep   , 1 , stream , __func__);
+  util_fwrite(&date_node->date_nr , sizeof date_node->date_nr , 1 , stream , __func__);
 }
 
 
 date_node_type * date_node_fread_alloc(const time_t * start_date , int last_date_nr , time_t last_time , FILE *stream, bool *stop) {
   date_node_type * node = date_node_alloc_empty(start_date);
-  fread(&node->time    , sizeof node->time    , 1 , stream);
-  fread(&node->TStep   , sizeof node->TStep   , 1 , stream);
-  fread(&node->date_nr , sizeof node->date_nr , 1 , stream);
+  util_fread(&node->time    , sizeof node->time    , 1 , stream, __func__);
+  util_fread(&node->TStep   , sizeof node->TStep   , 1 , stream, __func__);
+  util_fread(&node->date_nr , sizeof node->date_nr , 1 , stream, __func__);
 
   if (last_date_nr > 0) {
     if (node->date_nr >= last_date_nr)
@@ -184,6 +190,18 @@ void date_node_fprintf_rate_date(const date_node_type * date_node , const char *
 }
 
 
+
+void date_node_get_report_step(const date_node_type * date , time_t t , int * report_step) {
+  if (difftime(date->time , t) >= 0) {
+    int y1,d1,m1,y2,d2,m2;
+    util_set_date_values(t          , &d1,&m1,&y1);
+    util_set_date_values(date->time , &d2,&m2,&y2);
+    printf("Fikk treff paa %02d/%02d/%4d \n",d2,m2,y2);
+    printf("Har selv       %02d/%02d/%4d \n",d1,m1,y1);
+    
+    *report_step = date->date_nr;
+  }
+}
 
 
 void date_node_fprintf_days_line(const date_node_type * date_node , FILE *stream) {

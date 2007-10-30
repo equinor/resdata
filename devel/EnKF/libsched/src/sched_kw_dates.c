@@ -10,7 +10,7 @@
 #include "date_node.h"
 
 struct sched_kw_dates_struct {
-  int *next_date_ptr;
+  int       *next_date_ptr;
   list_type *date_list;
 };
 
@@ -41,6 +41,18 @@ void sched_kw_dates_fprintf(const sched_kw_dates_type *kw , FILE *stream , int l
     fprintf(stream , "/\n\n");
   }
 }
+
+
+
+void sched_kw_dates_get_report_step(const sched_kw_dates_type *kw  , time_t t , int * report_step) {
+  list_node_type *date_node = list_get_head(kw->date_list);
+  while (date_node != NULL) {
+    const date_node_type * date = list_node_value_ptr(date_node);
+    date_node_get_report_step(date , t , report_step);
+    date_node = list_node_get_next(date_node);
+  }
+}
+
 
 
 sched_kw_dates_type * sched_kw_dates_alloc(int *next_date_ptr , const time_t * start_date){
