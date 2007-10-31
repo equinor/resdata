@@ -190,9 +190,14 @@ void multz_free(multz_type *multz) {
 }
 
 
-int multz_serialize(const multz_type *multz , size_t serial_data_size , double *serial_data , size_t stride , size_t offset) {
+int multz_serialize(const multz_type *multz , int internal_offset , size_t serial_data_size , double *serial_data , size_t stride , size_t offset, bool * complete) {
   DEBUG_ASSERT(multz);
-  return mult_serialize(multz->mult , serial_data_size , serial_data , stride , offset);
+  return mult_serialize(multz->mult , internal_offset , serial_data_size , serial_data , stride , offset , complete);
+}
+
+int multz_deserialize(multz_type *multz , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
+  DEBUG_ASSERT(multz);
+  return mult_deserialize(multz->mult , internal_offset , serial_size , serial_data , stride , offset);
 }
 
 
@@ -274,6 +279,7 @@ VOID_COPYC     (multz)
 VOID_SWAPIN(multz)
 VOID_SWAPOUT(multz)
 VOID_SERIALIZE(multz)
+VOID_DESERIALIZE(multz)
 VOID_TRUNCATE(multz)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */

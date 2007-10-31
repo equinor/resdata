@@ -23,7 +23,8 @@ void             mult_ens_read(mult_type * , const char *);
 void             mult_sample(mult_type *);
 void             mult_truncate(mult_type *);
 void             mult_TEST(void);
-int              mult_serialize(const mult_type * , size_t , double *, size_t , size_t);
+int              mult_serialize(const mult_type * , int , size_t , double *, size_t , size_t, bool *);
+int              mult_deserialize(mult_type * , int , size_t , const double * , size_t , size_t );
 void             mult_stream_fwrite(const mult_type * mult , FILE * );
 void             mult_stream_fread(mult_type * mult , FILE * );
 void             mult_realloc_data(mult_type * mult);
@@ -42,7 +43,9 @@ VOID_COPYC_HEADER      (mult);
 VOID_ALLOC_ENSFILE_HEADER(mult);
 VOID_SWAPIN_HEADER(mult)
 VOID_SWAPOUT_HEADER(mult)
-VOID_SERIALIZE_HEADER  (mult)
+     /*VOID_SERIALIZE_HEADER  (mult)
+       VOID_DESERIALIZE_HEADER (mult)
+     */
      /*VOID_TRUNCATE_HEADER(mult)*/
 
 VOID_ECL_WRITE_HEADER (mult)

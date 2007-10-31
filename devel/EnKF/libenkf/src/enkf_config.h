@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <enkf_config_node.h>
 #include <enkf_types.h>
-#include <history.h>
 #include <obs_data.h>
 
 #define LOG_INPUT    1

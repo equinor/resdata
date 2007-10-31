@@ -32,6 +32,7 @@ VOID_COPYC_HEADER      (multflt);
 VOID_SWAPOUT_HEADER(multflt);
 VOID_SWAPIN_HEADER(multflt);
 VOID_SERIALIZE_HEADER  (multflt);
+VOID_DESERIALIZE_HEADER  (multflt);
 
 
 VOID_FUNC_HEADER       (multflt_sample   );

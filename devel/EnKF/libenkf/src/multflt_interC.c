@@ -12,8 +12,8 @@ void multflt_inter_init__(const char * _config_file, const int * config_file_len
   char * config_file = util_alloc_cstring(_config_file , config_file_len);
   MULTFLT_CONFIG = multflt_config_fscanf_alloc(config_file , "MULTFLT.INC" , NULL);
   
-  if (*n_multflt != multflt_config_get_serial_size(MULTFLT_CONFIG)) {
-    fprintf(stderr,"%s: size mismatch config_file:%d  mod_dimensions.F90/num_multflt:%d - aborting \n",__func__ , multflt_config_get_serial_size(MULTFLT_CONFIG) , *n_multflt);
+  if (*n_multflt != multflt_config_get_data_size(MULTFLT_CONFIG)) {
+    fprintf(stderr,"%s: size mismatch config_file:%d  mod_dimensions.F90/num_multflt:%d - aborting \n",__func__ , multflt_config_get_data_size(MULTFLT_CONFIG) , *n_multflt);
     abort();
   }
 

@@ -285,17 +285,29 @@ void field_free(field_type *field) {
 }
 
 
-int field_serialize(const field_type *field , size_t serial_data_size, double *serial_data , size_t stride , size_t offset) {
-  const field_config_type * config = field->config;
-  const int data_size = field_config_get_data_size(config);
-  const int max_index = (serial_data_size - offset) / stride;
-  int internal_offset = 0;
-  
-  int i;
-  for (i=internal_offset; i < util_int_max(data_size , max_index); i++)
-    serial_data[offset + i*stride] = field->data[i];
-  
-  return (util_int_max(data_size , max_index) - internal_offset);
+
+int field_serialize(const field_type *field , int internal_offset , size_t serial_data_size, double *serial_data , size_t stride , size_t offset, bool * complete) {
+  DEBUG_ASSERT(field);
+  {
+    const field_config_type * config = field->config;
+    const int data_size              = field_config_get_data_size(config);
+    
+    return util_copy_strided_vector(&field->data[internal_offset] , data_size - internal_offset , 1 , &serial_data[offset] , stride , (serial_data_size - offset ) / stride , sizeof * serial_data , complete); 
+  }
+}
+
+
+
+int field_deserialize(field_type *field , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
+  DEBUG_ASSERT(field);
+  {
+    int internal_index;
+    
+    for (internal_index = internal_offset; internal_index < (serial_size + internal_offset); internal_index++)
+      field->data[internal_index] = serial_data[offset + internal_index*stride];
+    
+    return serial_size + internal_offset;
+  }
 }
 
 
@@ -397,6 +409,7 @@ VOID_COPYC     (field)
 VOID_SWAPIN(field)
 VOID_SWAPOUT(field)
 VOID_SERIALIZE (field);
+VOID_DESERIALIZE (field);
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

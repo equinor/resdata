@@ -140,6 +140,7 @@ void mult_sample(mult_type *mult) {
   for (i=0; i < data_size; i++) 
     if (active[i])
       mult->data[i] = enkf_util_rand_normal(mean[i] , std[i]);
+  
   mult->output_valid = false;
 }
 
@@ -152,24 +153,26 @@ void mult_free(mult_type *mult) {
 }
 
 
-int mult_serialize(const mult_type *mult , size_t serial_data_size ,  double *serial_data , size_t stride , size_t offset) {
+
+int mult_deserialize(mult_type * mult , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
   const mult_config_type *config      = mult->config;
   const bool              *active     = config->active;
   const int                data_size  = mult_config_get_data_size(config);
-  const int internal_offset = 0;
-  int elements_added = 0;
-  int i;
+
+  int new_internal_offset;
+  new_internal_offset = util_unpack_vector(&serial_data[offset] , serial_size , stride , mult->data , active , data_size , 1 , sizeof * serial_data);
+  return new_internal_offset;
+}
+
+
+
+
+int mult_serialize(const mult_type *mult , int internal_offset , size_t serial_data_size ,  double *serial_data , size_t stride , size_t offset , bool *complete) {
+  const mult_config_type *config      = mult->config;
+  const bool              *active     = config->active;
+  const int                data_size  = mult_config_get_data_size(config);
   
-  for (i=internal_offset; i < data_size; i++) {
-    size_t serial_index = offset + i*stride;
-    if (serial_index < serial_data_size) {
-      if (active[i]) {
-	serial_data[offset + i*stride] = mult->data[i];
-	elements_added++;
-      }
-    } else break;
-  } 
-  return elements_added;
+  return util_pack_vector(mult->data , active , data_size , 1 , &serial_data[offset] , stride , (serial_data_size - offset) , sizeof * serial_data , complete);
 }
 
 

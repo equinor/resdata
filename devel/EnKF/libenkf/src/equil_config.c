@@ -22,13 +22,18 @@ equil_config_type * equil_config_alloc(int size, bool WOC , bool GOC , const cha
   config->data_size    	  = size * 2; 
   config->eclfile      	  = util_alloc_string_copy(eclfile);
   config->ensfile      	  = util_alloc_string_copy(ensfile);
-  config->mean_WOC     	  = enkf_util_malloc(size * sizeof *config->mean_WOC , __func__);
-  config->std_WOC      	  = enkf_util_malloc(size * sizeof *config->std_WOC ,  __func__);
-  config->active_WOC   	  = enkf_util_malloc(size * sizeof *config->active_WOC , __func__);
+  
+  config->mean     	  = enkf_util_malloc(2 * size * sizeof *config->mean   , __func__);
+  config->std      	  = enkf_util_malloc(2 * size * sizeof *config->std    ,  __func__);
+  config->active   	  = enkf_util_malloc(2 * size * sizeof *config->active , __func__);
+  
+  config->mean_WOC     	  = config->mean;  
+  config->std_WOC      	  = config->std;   
+  config->active_WOC   	  = config->active;
 
-  config->mean_GOC     	  = enkf_util_malloc(size * sizeof *config->mean_GOC , __func__);
-  config->std_GOC      	  = enkf_util_malloc(size * sizeof *config->std_GOC ,  __func__);
-  config->active_GOC   	  = enkf_util_malloc(size * sizeof *config->active_GOC , __func__);
+  config->mean_GOC     	  = &config->mean[size];  
+  config->std_GOC      	  = &config->std[size];   
+  config->active_GOC   	  = &config->active[size];
   
   { 
     int i;
@@ -68,12 +73,9 @@ int equil_config_get_nequil(const equil_config_type * equil_config) {
 
 void equil_config_free(equil_config_type * config) {
   CONFIG_FREE_STD_FIELDS;
-  free(config->mean_WOC);
-  free(config->std_WOC);
-  free(config->active_WOC);
-  free(config->mean_GOC);
-  free(config->std_GOC);
-  free(config->active_GOC);
+  free(config->mean);
+  free(config->std);
+  free(config->active);
   free(config);
 }
 							 

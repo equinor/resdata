@@ -35,7 +35,6 @@ struct enkf_state_struct {
   pathv_type   	   * eclpath;
   pathv_type   	   * enspath;
   enkf_config_type * config;
-  double           * serial_data;
   char             * eclbase;
   bool              _fmt_file;  
 };
@@ -163,7 +162,6 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char *
   enkf_state->enspath        = pathv_alloc(enkf_config_get_enspath_depth(config) , NULL);
   enkf_state->eclbase        = util_alloc_string_copy(eclbase);
   enkf_state->_fmt_file      = fmt_file;
-  enkf_state->serial_data    = NULL;
 
 
   /* 
@@ -239,7 +237,7 @@ static void enkf_state_add_node__1(enkf_state_type * enkf_state , const char * n
 				multz_copyc__     , 
 				multz_sample__    , 
 				multz_serialize__ , 
-				NULL              , 
+				multz_deserialize__,
 				multz_free__);
     break;
   case(MULTFLT):
@@ -253,7 +251,7 @@ static void enkf_state_add_node__1(enkf_state_type * enkf_state , const char * n
 				multflt_copyc__      , 
 				multflt_sample__     , 
 				multflt_serialize__  , 
-				NULL                 , 
+				multflt_deserialize__,
 				multflt_free__);
     break;
   case(EQUIL):
@@ -267,7 +265,7 @@ static void enkf_state_add_node__1(enkf_state_type * enkf_state , const char * n
 				equil_copyc__     , 
 				equil_sample__    , 
 				equil_serialize__ , 
-				NULL              , 
+				equil_deserialize__,
 				equil_free__);
     break;
   case(STATIC):
@@ -295,7 +293,7 @@ static void enkf_state_add_node__1(enkf_state_type * enkf_state , const char * n
 				field_copyc__      , 
 				NULL               , 
 				field_serialize__  , 
-				NULL               , 
+				field_deserialize__,
 				field_free__);
     break;
   case(WELL):
@@ -309,7 +307,7 @@ static void enkf_state_add_node__1(enkf_state_type * enkf_state , const char * n
 				well_copyc__       , 
 				NULL               , 
 				well_serialize__   , 
-				NULL               , 
+				well_deserialize__ , 
 				well_free__);
     break;
   default:
@@ -611,20 +609,8 @@ void enkf_state_free_nodes(enkf_state_type * enkf_state, int mask) {
 }
 
 
-void enkf_state_set_serial_data(enkf_state_type * enkf_state , double * serial_data) {
-  enkf_state->serial_data = serial_data;
-}
-
-void enkf_state_clear_serial_data(enkf_state_type * enkf_state) {
-  enkf_state->serial_data = NULL;
-}
-
-
+/*
 void enkf_state_serialize(enkf_state_type * enkf_state , size_t stride) {
-  if (enkf_state->serial_data == NULL) {
-    fprintf(stderr,"%s: attempt to serialize data without prior call to enkf_state_set_serial_data - aborting.\n",__func__);
-    abort();
-  }
   {
     list_node_type *list_node;                                            
     list_node  = list_get_head(enkf_state->node_list);                    
@@ -638,7 +624,7 @@ void enkf_state_serialize(enkf_state_type * enkf_state , size_t stride) {
     }             
   }
 }
-
+*/
 
 
 void enkf_state_free(enkf_state_type *enkf_state) {
@@ -682,14 +668,118 @@ void enkf_state_del_node(enkf_state_type * enkf_state , const char * node_key) {
 
 
 
+static double * enkf_ensemble_alloc_serial_data(int ens_size , size_t target_serial_size , size_t * _serial_size) {
+  size_t   serial_size = target_serial_size / ens_size;
+  double * serial_data;
+  do {
+    serial_data = malloc(serial_size * ens_size * sizeof * serial_data);
+    if (serial_data == NULL) 
+      serial_size /= 2;
+  } while (serial_data == NULL);
+  *_serial_size = serial_size * ens_size;
+  return serial_data;
+}
+
+
+
+void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t target_serial_size , const double * X) {
+  const int update_mask = parameter + ecl_restart + ecl_summary;
+  int      iens,c;
+  size_t   serial_size;
+  double * serial_data   = enkf_ensemble_alloc_serial_data(ens_size , target_serial_size , &serial_size);
+  int      serial_stride = ens_size;
+  bool     state_complete = false;
+  list_node_type  ** start_node = malloc(ens_size * sizeof * start_node);
+  list_node_type  ** next_node  = malloc(ens_size * sizeof * next_node);
+  
+  for (iens = 0; iens < ens_size; iens++) {
+    enkf_state_type * enkf_state = enkf_ens[iens];
+    start_node[iens] = list_get_head(enkf_state->node_list);                    
+    enkf_state_apply(enkf_ens[iens] , enkf_node_clear_serial_state , update_mask);
+  }
+  
+  c = 0;
+  while (!state_complete) {
+    /* Serialize section */
+    for (iens = 0; iens < ens_size; iens++) {
+      enkf_state_type * enkf_state = enkf_ens[iens];
+      list_node_type  * list_node  = start_node[iens];
+      bool node_complete     = true;  
+      size_t   serial_offset = iens;
+      
+      while (node_complete) {                                           
+	enkf_node_type *enkf_node = list_node_value_ptr(list_node);        
+	if (iens == 0) printf("Starter med %s \n",enkf_node_get_key_ref(enkf_node));
+	if (enkf_node_include_type(enkf_node , update_mask)) {                       
+	  int elements_added = enkf_node_serialize(enkf_node , serial_size , serial_data , serial_stride , serial_offset , &node_complete);
+	  serial_offset += serial_stride * elements_added;
+	}
+	
+	if (node_complete) {
+	  list_node  = list_node_get_next(list_node);                         
+	  if (list_node == NULL) {
+	    if (node_complete) state_complete = true;
+	    break;
+	  }
+	}
+      }
+      /* Restart on this node */
+      next_node[iens] = list_node;
+    }
+    /* Update section */
+    printf("Serialize complete ... \n");
+  
+    
+
+    
+    
+    /* deserialize section */
+    for (iens = 0; iens < ens_size; iens++) {
+      enkf_state_type * enkf_state = enkf_ens[iens];
+      list_node_type  * list_node  = start_node[iens];
+      bool node_complete     = true;  
+      
+      while (1) {
+	enkf_node_type *enkf_node = list_node_value_ptr(list_node);        
+	if (enkf_node_include_type(enkf_node , update_mask)) 
+	  enkf_node_deserialize(enkf_node , serial_data , serial_stride , &node_complete);
+	
+	if (list_node == next_node[iens])
+	  break;
+	
+	list_node  = list_node_get_next(list_node);                         
+	if (list_node == NULL)
+	  break;
+      }
+    }
+    printf("deserialize complete \n");
+
+    
+    for (iens = 0; iens < ens_size; iens++) 
+      start_node[iens] = next_node[iens];
+      
+  
+    printf("state_complete:%d \n\n\n",state_complete);
+    c = c + 1;
+    if (c == 100) exit(1);
+  }
+
+  free(start_node);
+  free(serial_data);
+  free(next_node);
+}
+
+
 
 /*****************************************************************/
 /* Generatad functions - iterating through all members.          */
 /*****************************************************************/
 
+
 ENKF_STATE_APPLY_PATH(ens_read);
 ENKF_STATE_APPLY(sample);
 ENKF_STATE_APPLY(clear);
+ENKF_STATE_APPLY(clear_serial_state);
 ENKF_STATE_APPLY_SCALAR(scale);
 ENKF_STATE_APPLY2(imul);
 ENKF_STATE_APPLY2(iadd);

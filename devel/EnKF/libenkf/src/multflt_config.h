@@ -26,6 +26,7 @@ multflt_config_type * multflt_config_fscanf_alloc(const char * , const char * , 
 void                  multflt_config_free(multflt_config_type *);
 void                  multflt_config_transform(const multflt_config_type * , const double * , double *);
 void                  multflt_config_truncate(const multflt_config_type * , mult_type * );
+int                   multflt_config_get_data_size(const multflt_config_type * );
 
 CONFIG_GET_ENSFILE_HEADER(multflt);
 CONFIG_GET_ECLFILE_HEADER(multflt);

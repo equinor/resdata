@@ -12,8 +12,8 @@ void multz_inter_init__(const char * _config_file, const int * config_file_len ,
   char * config_file = util_alloc_cstring(_config_file , config_file_len);
   MULTZ_CONFIG = multz_config_fscanf_alloc(config_file , *nx , *ny , *nz , "MULTZ.INC" , NULL);
   
-  if (*n_multz != multz_config_get_serial_size(MULTZ_CONFIG)) {
-    fprintf(stderr,"%s: size mismatch config_file:%d  mod_dimensions.F90/num_multz:%d - aborting \n",__func__ , multz_config_get_serial_size(MULTZ_CONFIG) , *n_multz);
+  if (*n_multz != multz_config_get_data_size(MULTZ_CONFIG)) {
+    fprintf(stderr,"%s: size mismatch config_file:%d  mod_dimensions.F90/num_multz:%d - aborting \n",__func__ , multz_config_get_data_size(MULTZ_CONFIG) , *n_multz);
     abort();
   }
 

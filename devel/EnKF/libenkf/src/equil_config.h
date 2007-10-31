@@ -10,9 +10,14 @@ typedef struct equil_config_struct equil_config_type;
 
 struct equil_config_struct {
   CONFIG_STD_FIELDS;
+  double * mean;
+  double * std;
+  bool   * active;
+
   double * mean_WOC;
   double * std_WOC;
   bool   * active_WOC;
+  
   double * mean_GOC;
   double * std_GOC;
   bool   * active_GOC;

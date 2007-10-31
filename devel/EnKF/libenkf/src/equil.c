@@ -22,6 +22,9 @@ struct equil_struct {
   double                  *data;
   double                  *data_GOC;
   double                  *data_WOC;
+  /*
+    Only data is allocated storage - the other two point into that storage.
+  */
 };
 
 /*****************************************************************/
@@ -29,6 +32,8 @@ struct equil_struct {
 void equil_free_data(equil_type * equil) {
   free(equil->data);
   equil->data = NULL;
+  equil->data_GOC = NULL;
+  equil->data_WOC = NULL;
 }
 
 
@@ -156,34 +161,26 @@ void equil_free(equil_type *equil) {
 }
 
 
-static int equil_serialize_component(int nequil , const double * data , const bool * active, double * serial_data , size_t stride , size_t offset) {
-  int active_size = 0;
-  int i;
 
-  for (i=0; i < nequil; i++) 
-    if (active[i]) {
-      serial_data[offset + i*stride] = data[i];
-      active_size++;
-    }
-  return active_size;
+int equil_deserialize(const equil_type * equil , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
+  const equil_config_type *config      = equil->config;
+  const bool              *active     = config->active;
+  const int                data_size  = equil_config_get_data_size(config);
+
+  int new_internal_offset;
+  new_internal_offset = util_unpack_vector(&serial_data[offset] , serial_size , stride , equil->data , active , data_size , 1 , sizeof * serial_data);
+  return new_internal_offset;
 }
 
 
-int equil_serialize(const equil_type *equil , int serial_data_size , double *serial_data , int ens_size , size_t offset) {
-  const equil_config_type *config       = equil->config;
-  const bool              *active_WOC   = config->active_WOC;
-  const bool              *active_GOC   = config->active_GOC;
-  const double            *data_WOC     = equil->data_WOC;
-  const double            *data_GOC     = equil->data_GOC;
-  int   nequil                          = equil_config_get_nequil(config);
-  int active_size;
 
-  active_size  = equil_serialize_component(nequil , data_WOC , active_WOC , serial_data , ens_size , offset);
-  active_size += equil_serialize_component(nequil , data_GOC , active_GOC , serial_data , ens_size , active_size + offset);
-  
-  return active_size;
+
+int equil_serialize(const equil_type *equil , int internal_offset , size_t serial_data_size ,  double *serial_data , size_t stride , size_t offset , bool *complete) {
+  const equil_config_type *config      = equil->config;
+  const bool              *active     = config->active;
+  const int                data_size  = equil_config_get_data_size(config);
+  return util_pack_vector(equil->data , active , data_size , 1 , &serial_data[offset] , stride , (serial_data_size - offset) , sizeof * serial_data , complete);
 }
-
 
 
 
@@ -193,6 +190,7 @@ VOID_SWAPIN(equil);
 MATH_OPS(equil);
 VOID_ALLOC(equil);
 VOID_SERIALIZE (equil);
+VOID_DESERIALIZE (equil);
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

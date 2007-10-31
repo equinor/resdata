@@ -189,10 +189,18 @@ void  multflt_sample(multflt_type *multflt) {
 
 
 
-int multflt_serialize(const multflt_type *multflt , size_t serial_data_size , double *serial_data , size_t ens_size , size_t offset) {
+int multflt_serialize(const multflt_type *multflt , int internal_offset , size_t serial_data_size , double *serial_data , size_t ens_size , size_t offset, bool * complete) {
   DEBUG_ASSERT(multflt);
-  return mult_serialize(multflt->mult , serial_data_size, serial_data , ens_size , offset);
+  return mult_serialize(multflt->mult , internal_offset , serial_data_size, serial_data , ens_size , offset , complete);
 }
+
+
+int multflt_deserialize(multflt_type *multflt , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
+  DEBUG_ASSERT(multflt);
+  return mult_deserialize(multflt->mult , internal_offset , serial_size , serial_data , stride , offset);
+}
+
+
 
 
 multflt_type * multflt_alloc_mean(int ens_size , const multflt_type **multflt_ens) {
@@ -246,6 +254,7 @@ VOID_ALLOC(multflt);
 VOID_SWAPOUT(multflt);
 VOID_SWAPIN(multflt);
 VOID_SERIALIZE (multflt)
+VOID_DESERIALIZE (multflt)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

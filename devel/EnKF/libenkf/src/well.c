@@ -130,21 +130,39 @@ void well_free(well_type *well) {
 
 
 
-int well_serialize(const well_type *well , size_t serial_data_size , double *serial_data , size_t stride , size_t offset) {
-  DEBUG_ASSERT(well)
+int well_serialize(const well_type *well , int internal_offset , size_t serial_data_size , double *serial_data , size_t stride , size_t offset, bool * complete) {
+  DEBUG_ASSERT(well);
   {
-     const well_config_type *config       = well->config;
-     const int                data_size   = well_config_get_data_size(config);
-     int   internal_offset = 0;
-     int i;
-     
-     for (i = internal_offset; i < data_size; i++)
-       serial_data[offset + i*stride] = well->data[i];
-     
-     return data_size;
+    const well_config_type * config = well->config;
+    const int data_size          = well_config_get_data_size(config);
+    const int max_serial_index   = (serial_data_size - offset) / stride;
+    const int max_internal_index = util_int_min(data_size , max_serial_index);
+    int internal_index;
+    
+    for (internal_index = internal_offset; internal_index < max_internal_index; internal_index++)
+      serial_data[offset + internal_index*stride] = well->data[internal_index];
+    
+    if (max_internal_index < data_size)
+      *complete = false;
+    else
+    *complete = true;
+    
+    return (max_internal_index - internal_offset);
   }
 }
 
+
+int well_deserialize(well_type *well , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
+  DEBUG_ASSERT(well);
+  {
+    int internal_index;
+    
+    for (internal_index = internal_offset; internal_index < (serial_size + internal_offset); internal_index++)
+      well->data[internal_index] = serial_data[offset + internal_index*stride];
+    
+    return serial_size + internal_offset;
+  }
+}
 
 
 double well_get(const well_type * well, const char * var) {
@@ -183,6 +201,7 @@ VOID_COPYC     (well)
 VOID_SWAPIN(well)
 VOID_SWAPOUT(well)
 VOID_SERIALIZE(well)
+VOID_DESERIALIZE(well)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

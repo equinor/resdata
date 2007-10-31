@@ -37,5 +37,7 @@ void              enkf_state_ecl_read(enkf_state_type * , const ecl_block_type *
 void              enkf_state_free(enkf_state_type * );
 void              enkf_state_apply(enkf_state_type * , enkf_node_ftype1 * , int );
 void              enkf_state_serialize(enkf_state_type * , size_t);
-void              enkf_state_set_serial_data(enkf_state_type * , double * );
+
+
+void enkf_ensemble_update(enkf_state_type ** , int  , size_t , const double * );
 #endif

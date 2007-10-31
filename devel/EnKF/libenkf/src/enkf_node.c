@@ -2,17 +2,21 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include <enkf_node.h>
 #include <enkf_config_node.h>
 #include <util.h>
 
 
 typedef struct serial_state_struct serial_state_type;
+typedef enum   {forecast , serialized , analyzed} state_enum;
 
 struct serial_state_struct {
-  int   internal_offset;
-  int   serial_size;
-  bool  serialize_complete;
+  int        internal_offset;
+  int        serial_size;
+  size_t     offset;
+  bool       state_complete;
+  state_enum state;
 };
 
 
@@ -25,7 +29,7 @@ struct enkf_node_struct {
   swapout_ftype       *swapout;
 
   serialize_ftype    *serialize;
-  de_serialize_ftype *de_serialize;
+  deserialize_ftype *deserialize;
   
   sample_ftype       *sample;
   free_ftype         *freef;
@@ -50,10 +54,35 @@ const enkf_config_node_type * enkf_node_get_config(const enkf_node_type * node) 
 
 /*****************************************************************/
 
+/*
+  1. serialize: input : internal_offset
+                output: elements_added , state_complete
+     
+  2. serial_state_update_forecast()
+  
+  3. EnkF update multiply X * serial_state.
+
+  4. deserialize: input:  elements_added
+                  output: updated internal_offste , state_complete
+  
+  5. serial_state_update_serialized()
+*/
+
+
+
+
+static void serial_state_clear(serial_state_type * state) {
+  state->internal_offset    = 0;
+  state->state              = forecast;
+  state->serial_size        = 0;
+  state->state_complete     = false;
+  state->offset             = 0;
+}
+
+
 static serial_state_type * serial_state_alloc() {
   serial_state_type * state = malloc(sizeof * state);
-  state->internal_offset    = 0;
-  state->serial_size        = 0;
+  serial_state_clear(state);
   return state;
 }
 
@@ -63,10 +92,60 @@ static void serial_state_free(serial_state_type * state) {
   state = NULL;
 }
 
-static void serial_state_clear(serial_state_type * state) {
-  state->internal_offset    = 0;
-  state->serialize_complete = false;
-  state->serial_size        = 0;
+
+
+static bool serial_state_do_serialize(const serial_state_type * state) {
+  if (state->state == forecast)
+    return true;
+  else     
+    return false;
+}
+
+
+static bool serial_state_do_deserialize(const serial_state_type * state) {
+  if (state->state == serialized)
+    return true;
+  else     
+    return false;
+}
+
+
+static int serial_state_get_internal_offset(const serial_state_type * state) {
+  return state->internal_offset;
+}
+
+
+static void serial_state_update_forecast(serial_state_type * state , size_t offset , int elements_added , bool complete) {
+  state->serial_size    = elements_added;
+  state->state_complete = complete;
+  state->state          = serialized;
+  state->offset         = offset;
+  printf("Oppdater forecast: offset:%d   elements:%d  complete:%d \n",offset,elements_added , complete);
+  
+}
+
+
+
+static void serial_state_update_serialized(serial_state_type * state , int new_internal_offset) {
+  printf("Oppdaterer serialized: new_internal_offset:%d    complete:%d \n",new_internal_offset , state->state_complete);
+  if (state->state_complete) {
+    state->state           = analyzed;
+    state->serial_size     = -1;
+    state->internal_offset = -1;
+  } else {
+    state->state           = forecast;
+    state->serial_size     = -1;
+    state->state_complete  = false;
+    state->internal_offset = new_internal_offset;
+  }
+}
+
+
+static void serial_state_init_deserialize(const serial_state_type * serial_state , int * internal_offset , size_t * serial_offset, int * serial_size, bool * complete) {
+  *internal_offset = serial_state->internal_offset;
+  *serial_offset   = serial_state->offset;
+  *serial_size     = serial_state->serial_size;
+  *complete        = serial_state->state_complete;
 }
 
 
@@ -87,7 +166,7 @@ enkf_node_type * enkf_node_alloc(const char *node_key,
 				 copyc_ftype        * copyc     ,
 				 sample_ftype       * sample    , 
 				 serialize_ftype    * serialize , 
-				 de_serialize_ftype * de_serialize , 
+				 deserialize_ftype * deserialize , 
 				 free_ftype         * freef) {
   
   enkf_node_type *node = malloc(sizeof *node);
@@ -105,9 +184,14 @@ enkf_node_type * enkf_node_alloc(const char *node_key,
   node->node_key  = util_alloc_string_copy(node_key);
   node->data      = node->alloc(enkf_config_node_get_ref(node->config));
   node->serialize = serialize;
-  node->de_serialize = de_serialize;
+  node->deserialize = deserialize;
   node->serial_state = serial_state_alloc();
   return node;
+}
+
+
+void enkf_node_clear_serial_state(enkf_node_type * node) {
+  serial_state_clear(node->serial_state);
 }
 
 
@@ -129,7 +213,7 @@ enkf_node_type * enkf_node_copyc(const enkf_node_type * src) {
 					   src->copyc,
 					   src->sample,
 					   src->serialize, 
-					   src->de_serialize,
+					   src->deserialize,
 					   src->freef);
   return new;
   }
@@ -185,11 +269,38 @@ void enkf_node_ens_clear(enkf_node_type *enkf_node) {
   enkf_node->clear(enkf_node->data);
 }
 
-int enkf_node_serialize(enkf_node_type *enkf_node , size_t serial_data_size , double *serial_data , size_t stride , size_t offset) {
+
+int enkf_node_serialize(enkf_node_type *enkf_node , size_t serial_data_size , double *serial_data , size_t stride , size_t offset , bool *complete) {
   FUNC_ASSERT(enkf_node->serialize , "serialize");
-  printf("Calling serialize on:%s \n",enkf_node->node_key);
-  return enkf_node->serialize(enkf_node->data , serial_data_size , serial_data , stride , offset);
+  if (serial_state_do_serialize(enkf_node->serial_state)) {
+    int internal_offset = serial_state_get_internal_offset(enkf_node->serial_state);
+    int elements_added  = enkf_node->serialize(enkf_node->data , internal_offset , serial_data_size , serial_data , stride , offset , complete);
+    
+    printf("%s internal_offset:%d  elements_added:%d \n",enkf_node_get_key_ref(enkf_node) , internal_offset , elements_added);
+    
+    serial_state_update_forecast(enkf_node->serial_state , offset , elements_added , *complete);
+    return elements_added;
+  } else {
+    printf("Skipping serialize\n");
+    return 0;
+  }
 }
+
+
+
+void enkf_node_deserialize(enkf_node_type *enkf_node , double *serial_data , size_t stride ,  bool *complete) {
+  FUNC_ASSERT(enkf_node->serialize , "serialize");
+  if (serial_state_do_deserialize(enkf_node->serial_state)) {
+    int serial_size , internal_offset , new_internal_offset;
+    size_t serial_offset;
+
+    serial_state_init_deserialize(enkf_node->serial_state , &internal_offset , &serial_offset, &serial_size , complete);
+    new_internal_offset = enkf_node->deserialize(enkf_node->data , internal_offset , serial_size , serial_data , stride , serial_offset);
+    serial_state_update_serialized(enkf_node->serial_state , new_internal_offset);
+    
+  }
+}
+
 
 void enkf_node_sqrt(enkf_node_type *enkf_node) {
   FUNC_ASSERT(enkf_node->isqrt , "sqrt");

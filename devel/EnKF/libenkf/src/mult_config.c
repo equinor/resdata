@@ -18,13 +18,6 @@ static void mult_config_set_output_transform(mult_config_type * config) {
 
 
 void mult_config_finalize_init(mult_config_type *config) {
-  int i;
-
-  config->serial_size = 0;
-  for (i=0; i < config->data_size; i++)
-    if (config->active[i])
-      config->serial_size++;
-
   mult_config_set_output_transform(config);
 }
 
@@ -39,7 +32,6 @@ mult_config_type * mult_config_alloc_empty(int size) {
   mult_config->logmode     	     = enkf_util_malloc(size * sizeof *mult_config->logmode      , __func__);
   mult_config->output_transform      = enkf_util_malloc(mult_config->data_size * sizeof * mult_config->output_transform      , __func__);
   mult_config->output_transform_name = enkf_util_malloc(mult_config->data_size * sizeof * mult_config->output_transform_name , __func__);
-  mult_config->serial_size           = 0;
   mult_config->internal_offset       = 0;
   
   return mult_config;
@@ -114,7 +106,6 @@ void mult_config_fscanf_line(mult_config_type * config , int line_nr , FILE * st
 
     }
   }
-  
   config->logmode[line_nr] 		 = logmode_alloc(10.0 , logmode);
 }
 
@@ -136,8 +127,6 @@ void mult_config_free(mult_config_type * mult_config) {
 
 /*****************************************************************/
 
-GET_SERIAL_SIZE(mult);
-VOID_GET_SERIAL_SIZE(mult);
 GET_DATA_SIZE(mult);
 VOID_FUNC(mult_config_free , mult_config_type);
 SET_SERIAL_OFFSET(mult);

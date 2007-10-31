@@ -211,12 +211,19 @@ char * prefix ## _swapout__(void *void_arg , const char * file) { \
 
 /*****************************************************************/
 #define VOID_SERIALIZE(prefix)     \
-int prefix ## _serialize__(const void *void_arg, size_t serial_data_size , double *serial_data , size_t stride , size_t offset) { \
+int prefix ## _serialize__(const void *void_arg, int internal_offset , size_t serial_data_size , double *serial_data , size_t stride , size_t offset , bool *complete) { \
    const prefix ## _type  *arg = (const prefix ## _type *) void_arg;       \
-   return prefix ## _serialize (arg , serial_data_size , serial_data , stride , offset);       \
+   return prefix ## _serialize (arg , internal_offset , serial_data_size , serial_data , stride , offset , complete);       \
 }
+#define VOID_SERIALIZE_HEADER(prefix) int prefix ## _serialize__(const void *, int , size_t , double *, size_t , size_t , bool *);
 
-#define VOID_SERIALIZE_HEADER(prefix) int prefix ## _serialize__(const void *, size_t , double *, size_t , size_t);
+#define VOID_DESERIALIZE(prefix)     \
+int prefix ## _deserialize__(void *void_arg, int internal_offset , size_t serial_size , const double *serial_data , size_t stride , size_t offset) { \
+   const prefix ## _type  *arg = (prefix ## _type *) void_arg;       \
+   return prefix ## _deserialize (arg , internal_offset , serial_size , serial_data , stride , offset);       \
+}
+#define VOID_DESERIALIZE_HEADER(prefix) int prefix ## _deserialize__(void *, int , size_t , const double *, size_t , size_t);
+
 
 /*****************************************************************/
 
