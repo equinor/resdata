@@ -86,6 +86,18 @@ char * util_alloc_string_sum(const char ** string_list , int N) {
 }
 
 
+char * util_alloc_string_sum2(const char *s1 , const char *s2) {
+  char * buffer;
+  buffer = malloc(strlen(s1) + strlen(s2) + 1);
+  buffer[0] = '\0';
+  strcat(buffer , s1);
+  strcat(buffer , s2);
+  return buffer;
+}
+
+
+
+
 
 char * util_alloc_substring_copy(const char *src , int N) {
   char *copy;
@@ -221,9 +233,12 @@ static time_t __util_fscanf_date(FILE *stream , bool abort_on_error , bool *erro
 
    dd/mm/yyyy
 
-   Where mm is [0..11]
+   Where mm is [1..12]
+   yyyy ~2000
 
 */
+
+
 
 time_t util_fscanf_date(FILE * stream) {
   return __util_fscanf_date(stream , true , NULL);
@@ -280,7 +295,6 @@ int util_forward_line(FILE * stream , bool * at_eof) {
     if (c == EOF) {
       *at_eof = true;
       at_eol  = true;
-      printf("Setter EOF\n");
     } else {
       if (EOL_CHAR(c)) {
 	at_eol = true;
@@ -299,13 +313,115 @@ int util_forward_line(FILE * stream , bool * at_eof) {
 }
 
 
+
+bool util_char_in(char c , int set_size , const char * set) {
+  int i;
+  bool in = false;
+  for (i=0; i < set_size; i++)
+    if (set[i] == c)
+      in = true;
+  
+  return in;
+}
+
+
+void util_fskip_token(FILE * stream) {
+  char * tmp = util_fscanf_alloc_token(stream);
+  if (tmp != NULL)
+    free(tmp);
+}
+
+
+char * util_fscanf_alloc_token(FILE * stream) {
+  const char * space_set = " \t";
+  bool cont;
+  char * token = NULL;
+  char c;
+
+  
+  cont = true;
+
+  /* Skipping initial whitespace */
+  do {
+    int pos = ftell(stream);
+    c = fgetc(stream);
+    if (EOL_CHAR(c)) {
+      /* Going back to position at newline */
+      fseek(stream , pos , SEEK_SET);
+      cont = false;
+    } else if (c == EOF) 
+      cont = false;
+    else if (!util_char_in(c , 2 , space_set)) {
+      fseek(stream , pos , SEEK_SET);
+      cont = false;
+    }
+  } while (cont);
+  if (EOL_CHAR(c)) return NULL;
+  if (c == EOF)    return NULL;
+
+  
+
+  /* At this point we are guranteed to return something != NULL */
+  cont = true;
+  {
+    int length = 0;
+    long int token_start = ftell(stream);
+
+    do {
+      c = fgetc(stream);
+      if (c == EOF)
+	cont = false;
+      else if (EOL_CHAR(c))
+	cont = false;
+      else if (util_char_in(c , 2 , space_set))
+	cont = false;
+      else
+	length++;
+    } while (cont);
+    if (EOL_CHAR(c)) fseek(stream , -1 , SEEK_CUR);
+  
+    token = malloc(length + 1);
+    fseek(stream , token_start , SEEK_SET);
+    { 
+      int i;
+      for (i = 0; i < length; i++)
+	token[i] = fgetc(stream);
+      token[length] = '\0';
+    }
+  }
+  return token;
+}
+
+
+bool util_fscanf_int(FILE * stream , int * value) {
+  long int start_pos = ftell(stream);
+  char * token       = util_fscanf_alloc_token(stream);
+  char * error_ptr;
+  bool   value_OK = false;
+  
+  if (token != NULL) {
+    int tmp_value = strtol(token , &error_ptr , 10);
+    if (error_ptr[0] == '\0') {
+      value_OK = true; 
+      *value = tmp_value;
+    } else
+      fseek(stream , start_pos , SEEK_SET);
+    free(token);
+  }
+  return value_OK;
+}   
+
+
+
 int util_count_file_lines(FILE * stream) {
+  long int init_pos = ftell(stream);
   int lines = 0;
   bool at_eof = false;
   do {
     int col = util_forward_line(stream , &at_eof);
     if (col > 0) lines++;
   } while (!at_eof);
+  fseek(stream , init_pos , SEEK_SET);
   return lines;
 }
 
@@ -375,7 +491,6 @@ int util_count_content_file_lines(FILE * stream) {
       if (c != ' ')
 	col++;
     }
-    printf("%s: lines:%d \n",__func__ , lines);
   } while (! feof(stream) );
   if (col == 0) 
     /*
@@ -446,21 +561,44 @@ bool util_file_exists(const char *filename) {
 }
 
 
+bool util_is_directory(const char * path) {
+  struct stat stat_buffer;
+  stat(path , &stat_buffer);
+  return S_ISDIR(stat_buffer.st_mode);
+}
+
+
+bool util_is_link(const char * path) {
+  struct stat stat_buffer;
+  lstat(path , &stat_buffer);
+  return S_ISLNK(stat_buffer.st_mode);
+}
+
+
+
+
 
 int util_get_path_length(const char * file) {
-  char * last_slash = strrchr(file , '/');
-  if (last_slash == NULL)
-    return 0;
-  else
-    return last_slash - file;
+  if (util_is_directory(file)) 
+    return strlen(file);
+  else {
+    char * last_slash = strrchr(file , '/');
+    if (last_slash == NULL)
+      return 0;
+    else
+      return last_slash - file;
+  }
 }
+
 
 
 int util_get_base_length(const char * file) {
   int path_length   = util_get_path_length(file);
   char * base_start , *last_point;
-  
-  if (path_length == 0)
+
+  if (path_length == strlen(file))
+    return 0;
+  else if (path_length == 0)
     base_start = (char *) file;
   else 
     base_start = (char *) &file[path_length + 1];
@@ -476,15 +614,17 @@ int util_get_base_length(const char * file) {
 
 
 
+
 void util_alloc_file_components(const char * file, char **_path , char **_basename , char **_extension) {
   char *path      = NULL;
   char *basename  = NULL;
   char *extension = NULL;
-
+  
   int path_length = util_get_path_length(file);
   int base_length = util_get_base_length(file);
   int ext_length ;
   int slash_length = 1;
+
 
   if (path_length > 0) 
     path = util_alloc_substring_copy(file , path_length);
@@ -549,6 +689,15 @@ bool util_same_file(const char * file1 , const char * file2) {
 }
 
 
+void util_make_slink(const char *target , const char * link) {
+  if (symlink(target , link) != 0) {
+    fprintf(stderr,"%s: linking %s -> %s failed - aborting \n",__func__ , link , target);
+    fprintf(stderr,"%s\n",strerror(errno));
+    abort();
+  }
+}
+
+
 
 void util_unlink_existing(const char *filename) {
   if (util_file_exists(filename))
@@ -580,7 +729,7 @@ bool util_fmt_bit8(const char *filename , int buffer_size) {
     
     fclose(stream);
     free(buffer);
-    
+
     bit8set_fraction = 1.0 * N_bit8set / elm_read;
     if (bit8set_fraction < bit8set_limit) 
       return true;
@@ -611,9 +760,13 @@ void util_make_path(const char *_path) {
       active_path[n+current_pos] = '\0';
       current_pos += n;
       
-      if (!util_path_exists(active_path)) 
-	if (mkdir(active_path , 0775) != 0) 
-	  fprintf(stderr,"%s: failed to make directory:%s (ERROR:%d) - aborting \n",__func__ , active_path, errno);
+      if (!util_path_exists(active_path)) {
+	if (mkdir(active_path , 0775) != 0) { 
+	  fprintf(stderr,"%s: failed to make directory:%s - aborting \n",__func__ , active_path);
+	  fprintf(stderr,"%s \n",strerror(errno));
+	  abort();
+	}
+      }
 
     } while (strlen(active_path) < strlen(_path));
     free(active_path);
@@ -636,6 +789,7 @@ void util_make_path2(const char *path) {
       cwd = getcwd(cwd , 0);
       if (mkdir(sub_path , 0775) != 0) {
 	fprintf(stderr,"%s: failed to make directory:%s (ERROR:%d) - aborting \n",__func__ , sub_path, errno);
+	fprintf(stderr,"%s \n",strerror(errno));
 	abort();
       }
       chdir(sub_path);
@@ -716,7 +870,7 @@ static void __util_set_timevalues(time_t t , int * sec , int * min , int * hour 
   if (min   != NULL) *min   = ts.tm_min;
   if (hour  != NULL) *hour  = ts.tm_hour;
   if (mday  != NULL) *mday  = ts.tm_mday;
-  if (month != NULL) *month = ts.tm_mon;
+  if (month != NULL) *month = ts.tm_mon  + 1;
   if (year  != NULL) *year  = ts.tm_year + 1900;
 }
 
@@ -1035,8 +1189,9 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
     fprintf(stderr,"%s: failed to open directory: %s - aborting \n",__func__ , enspath);
     abort();
   }
-  
 }
+
+
 
 /*****************************************************************/
 
@@ -1087,6 +1242,84 @@ void util_double_to_float(float *float_ptr , const double *double_ptr , int size
   for (i=0; i < size; i++)
     float_ptr[i] = double_ptr[i];
 }
+
+
+/* 
+   Stride is a fucking mess here ....
+*/
+
+size_t util_pack_vector(const void * _src, const bool * active_src , size_t src_size , int src_stride , void * _target , int target_stride , size_t target_size ,  int type_size , bool * complete) {
+  const char * src    = (const char *) _src;
+  char       * target = (char *)       _target;
+  
+  size_t src_index;
+  size_t target_index = 0;
+
+  printf("%s: stride confusion in call \n",__func__); abort();
+
+  for (src_index = 0; src_index < src_size; src_index++) {
+    if (active_src[src_index]) {
+      size_t src_adress    = src_index    * type_size * src_stride;
+      size_t target_adress = target_index * type_size * target_stride;
+      memcpy(&target[target_adress] , &src[src_adress] , type_size);
+      target_index++;
+      if (target_index == target_size) {
+	if (src_index < (src_size - 1)) *complete = false;
+	break;
+      }
+    }
+  }
+  return target_index;
+}
+
+
+
+size_t util_unpack_vector(const void * _src, int src_size , int src_stride , void * _target , const bool * active_target , size_t target_size , int target_stride , int type_size) {
+  const char * src    = (const char *) _src;
+  char       * target = (char *)       _target;
+  
+  size_t src_index = 0;
+  size_t target_index;
+  size_t new_target_offset = 0;
+
+  for (target_index = 0; target_index < target_size; target_index++) {
+    if (active_target[target_index]) {
+      size_t src_adress    = src_index    * type_size * src_stride;
+      size_t target_adress = target_index * type_size * target_stride;
+      memcpy(&target[target_adress] , &src[src_adress] , type_size);
+      src_index++;
+      if (src_index == src_size) {
+	new_target_offset = target_index + 1;
+	break;
+      }
+    }
+  }
+  return new_target_offset;
+}
+
+
+size_t util_copy_strided_vector(const void * _src, size_t src_size , int src_stride , void * _target , int target_stride , size_t target_size ,  int type_size , bool * complete) {
+  const char * src    = (const char *) _src;
+  char       * target = (char *)       _target;
+  
+  size_t src_index;
+  size_t target_index = 0;
+
+  for (src_index = 0; src_index < src_size; src_index++) {
+    size_t src_adress    = src_index    * type_size * src_stride;
+    size_t target_adress = target_index * type_size * target_stride;
+    memcpy(&target[target_adress] , &src[src_adress] , type_size);
+    target_index++;
+    if (target_index == target_size) {
+      if (src_index < (src_size - 1)) *complete = false;
+      break;
+    }
+  }
+  return target_index;
+}
+
+
+
 
 
 /*****************************************************************/
@@ -1195,6 +1428,18 @@ bool util_proc_alive(pid_t pid) {
   return util_path_exists(proc_path);
 }
 
+
+int util_proc_mem_free(void) {
+  FILE *stream = util_fopen("/proc/meminfo" , "r");
+  int mem;
+  util_fskip_lines(stream , 1);
+  util_fskip_token(stream);
+  util_fscanf_int(stream , &mem);
+  fclose(stream);
+  return mem;
+}
+
+
 /*****************************************************************/
 
 
@@ -1251,13 +1496,24 @@ void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , 
 #undef ABORT_READ
 #undef ABORT_WRITE
 
+
 /*****************************************************************/
+
+
+void * util_malloc(size_t size , const char * caller) {
+  void *data = malloc(size);
+  if (data == NULL) {
+    fprintf(stderr,"%s: failed to allocate %d bytes - aborting \n",caller , size);
+    abort();
+  }
+  return data;
+}
 
 
 static void util_display_prompt(const char * prompt , int prompt_len2) {
   int i;
   printf("%s" , prompt);
-  for (i=0; i < prompt_len2 - strlen(prompt); i++)
+  for (i=0; i < util_int_max(strlen(prompt) , prompt_len2) - strlen(prompt); i++)
     fputc(' ' , stdout);
   printf(": ");
 }
@@ -1283,4 +1539,20 @@ void util_read_path(const char * prompt , int prompt_len , bool must_exist , cha
   }
 }
 
+
+/*void util_read_file(const char * _prompt , const char * path , bool must_exist , char * file) {
+  char * prompt = util_alloc_string_sum2(_prompt , path);
+  char _file[256];
+  bool ok = false;
+  while (!ok) {
+    util_read_string(prompt , strlen(prompt) + 5 , _file);
+    if (must_exist)
+      ok = util_path_exists(path);
+    else
+      ok = true;
+    if (!ok) 
+      fprintf(stderr,"Path: %s does not exist - try again.\n",path);
+  }
+}
+*/
   

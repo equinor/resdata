@@ -1,3 +1,4 @@
+MFLAG = m32
 CC = gcc
 FC = ifort
 AR = ar
@@ -8,32 +9,31 @@ COMPILE_LIBS      = -lm -lhash
 
 INSTALL_INC_PATH = ../include
 INSTALL_LIB_PATH = ../lib
-INSTALL_MOD_PATH = ../mod
 #################################################################
-CFLAGS  = -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
+CFLAGS  = -$(MFLAG) -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
 ARFLAGS = -csr
 #################################################################
 OBJECTS           = pathv.o util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o
 INC_FILES_INSTALL = pathv.h util.h thread_pool.h msg.h void_arg.h str_buffer.h
-LIB               = libutil.a
-
+LIB               = libutil_$(MFLAG).a
+LIB_LINK          = -lutil_$(MFLAG)
 
 
 INSTALL: $(LIB)
 	install -d $(INSTALL_INC_PATH)
 	install -d $(INSTALL_LIB_PATH)
-	install -d $(INSTALL_MOD_PATH)
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	gcc -g -Wall -m32 util-test.c -o util.x -I../include -L../lib -lutil
-	gcc -g -Wall -m32 eol-fix.c -o eol-fix.x -I../include -L../lib -lutil
-
-new:	
-	make clean
-	make INSTALL
+	gcc $(CFLAGS) util-test.c -o util.x -I../include    -L../lib $(LIB_LINK)
+	gcc $(CFLAGS) eol-fix.c -o eol-fix.x -I../include   -L../lib $(LIB_LINK)
+	gcc $(CFLAGS) mem_free.c -o mem_free.x -I../include -L../lib $(LIB_LINK)
 
 clean:
 	rm -f *.o *~ 
+	rm -f libutil_*
+	rm -f $(INSTALL_LIB_PATH)/$(LIB)
+	rm -f $(INSTALL_INC_PATH)/*.h
+
 
 $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
