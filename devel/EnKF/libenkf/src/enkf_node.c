@@ -120,14 +120,17 @@ static void serial_state_update_forecast(serial_state_type * state , size_t offs
   state->state_complete = complete;
   state->state          = serialized;
   state->offset         = offset;
-  printf("Oppdater forecast: offset:%d   elements:%d  complete:%d \n",offset,elements_added , complete);
-  
+  /*
+    printf("Oppdater forecast: offset:%d   elements:%d  complete:%d \n",offset,elements_added , complete);
+  */
 }
 
 
 
 static void serial_state_update_serialized(serial_state_type * state , int new_internal_offset) {
-  printf("Oppdaterer serialized: new_internal_offset:%d    complete:%d \n",new_internal_offset , state->state_complete);
+  /*
+    printf("Oppdaterer serialized: new_internal_offset:%d    complete:%d \n",new_internal_offset , state->state_complete);
+  */
   if (state->state_complete) {
     state->state           = analyzed;
     state->serial_size     = -1;
@@ -141,11 +144,10 @@ static void serial_state_update_serialized(serial_state_type * state , int new_i
 }
 
 
-static void serial_state_init_deserialize(const serial_state_type * serial_state , int * internal_offset , size_t * serial_offset, int * serial_size, bool * complete) {
+static void serial_state_init_deserialize(const serial_state_type * serial_state , int * internal_offset , size_t * serial_offset, int * serial_size) {
   *internal_offset = serial_state->internal_offset;
   *serial_offset   = serial_state->offset;
   *serial_size     = serial_state->serial_size;
-  *complete        = serial_state->state_complete;
 }
 
 
@@ -275,26 +277,25 @@ int enkf_node_serialize(enkf_node_type *enkf_node , size_t serial_data_size , do
   if (serial_state_do_serialize(enkf_node->serial_state)) {
     int internal_offset = serial_state_get_internal_offset(enkf_node->serial_state);
     int elements_added  = enkf_node->serialize(enkf_node->data , internal_offset , serial_data_size , serial_data , stride , offset , complete);
-    
-    printf("%s internal_offset:%d  elements_added:%d \n",enkf_node_get_key_ref(enkf_node) , internal_offset , elements_added);
+
+    /*
+      printf("%s internal_offset:%d  elements_added:%d \n",enkf_node_get_key_ref(enkf_node) , internal_offset , elements_added);
+    */
     
     serial_state_update_forecast(enkf_node->serial_state , offset , elements_added , *complete);
     return elements_added;
-  } else {
-    printf("Skipping serialize\n");
-    return 0;
-  }
+  } return 0;
 }
 
 
 
-void enkf_node_deserialize(enkf_node_type *enkf_node , double *serial_data , size_t stride ,  bool *complete) {
+void enkf_node_deserialize(enkf_node_type *enkf_node , double *serial_data , size_t stride) {
   FUNC_ASSERT(enkf_node->serialize , "serialize");
   if (serial_state_do_deserialize(enkf_node->serial_state)) {
     int serial_size , internal_offset , new_internal_offset;
     size_t serial_offset;
 
-    serial_state_init_deserialize(enkf_node->serial_state , &internal_offset , &serial_offset, &serial_size , complete);
+    serial_state_init_deserialize(enkf_node->serial_state , &internal_offset , &serial_offset, &serial_size );
     new_internal_offset = enkf_node->deserialize(enkf_node->data , internal_offset , serial_size , serial_data , stride , serial_offset);
     serial_state_update_serialized(enkf_node->serial_state , new_internal_offset);
     

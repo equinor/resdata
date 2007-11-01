@@ -217,6 +217,7 @@ int prefix ## _serialize__(const void *void_arg, int internal_offset , size_t se
 }
 #define VOID_SERIALIZE_HEADER(prefix) int prefix ## _serialize__(const void *, int , size_t , double *, size_t , size_t , bool *);
 
+
 #define VOID_DESERIALIZE(prefix)     \
 int prefix ## _deserialize__(void *void_arg, int internal_offset , size_t serial_size , const double *serial_data , size_t stride , size_t offset) { \
    const prefix ## _type  *arg = (prefix ## _type *) void_arg;       \

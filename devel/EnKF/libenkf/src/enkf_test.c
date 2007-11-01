@@ -155,7 +155,11 @@ int main(void) {
       */
     }
     thread_pool_join(tp);
-    enkf_ensemble_update(state , 1 , 1 * 128 , NULL);
+    {
+      double *X = calloc(100 * 100 , sizeof *X);
+      enkf_ensemble_update(state , 100 , 100 * 4096 , X);
+      free(X);
+    }
 
     for (i = 0; i < 1; i++)
       {

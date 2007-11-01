@@ -167,9 +167,7 @@ int equil_deserialize(const equil_type * equil , int internal_offset , size_t se
   const bool              *active     = config->active;
   const int                data_size  = equil_config_get_data_size(config);
 
-  int new_internal_offset;
-  new_internal_offset = util_unpack_vector(&serial_data[offset] , serial_size , stride , equil->data , active , data_size , 1 , sizeof * serial_data);
-  return new_internal_offset;
+  return enkf_util_deserialize(equil->data , active , internal_offset , data_size , serial_size , serial_data , offset , stride);
 }
 
 
@@ -179,7 +177,8 @@ int equil_serialize(const equil_type *equil , int internal_offset , size_t seria
   const equil_config_type *config      = equil->config;
   const bool              *active     = config->active;
   const int                data_size  = equil_config_get_data_size(config);
-  return util_pack_vector(equil->data , active , data_size , 1 , &serial_data[offset] , stride , (serial_data_size - offset) , sizeof * serial_data , complete);
+  
+  return enkf_util_serialize(equil->data , active , internal_offset , data_size , serial_data , serial_data_size , offset , stride , complete);
 }
 
 

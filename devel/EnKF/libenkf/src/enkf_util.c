@@ -1,8 +1,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <enkf_util.h>
-
+#include <util.h>
 
 
 void * enkf_util_malloc(int byte_size , const char * caller) {
@@ -84,3 +85,95 @@ double enkf_util_rand_normal(double mean , double std) {
   enkf_util_rand_dbl(2 , 1.0 , R);
   return mean + std * sqrt(-2.0 * log(R[0])) * cos(2.0 * pi * R[1]);
 }
+
+/*****************************************************************/
+
+
+
+size_t enkf_util_serialize(const double * node_data, const bool * active , size_t node_offset , size_t node_size , double * serial_data , 
+			   size_t serial_size , size_t serial_offset , int serial_stride ,  bool * complete) {
+  size_t node_index;
+  size_t serial_index = 0;
+
+  if (active != NULL) {
+    for (node_index = node_offset; node_index < node_size; node_index++) {
+      if (active[node_index]) {
+	serial_data[serial_offset + serial_stride * serial_index] = node_data[node_index];
+	serial_index++;
+	
+	if (serial_offset + serial_stride * serial_index >= serial_size) {
+	  if (node_index < (node_size - 1)) *complete = false;
+	  break;
+	}
+	
+      }
+    }
+  } else {
+    for (node_index = node_offset; node_index < node_size; node_index++) {
+      serial_data[serial_offset + serial_stride * serial_index] = node_data[node_index];
+      serial_index++;
+	
+      if (serial_offset + serial_stride * serial_index >= serial_size) {
+	if (node_index < (node_size - 1)) *complete = false;
+	break;
+      }
+    }
+  }
+  return serial_index;
+}
+
+
+
+
+size_t enkf_util_deserialize(double * node_data , const bool * active , size_t node_offset , size_t node_size , size_t node_serial_size , 
+			     const double * serial_data , size_t serial_offset , int serial_stride) {
+			     
+  size_t serial_index = 0;
+  size_t node_index;
+  size_t new_node_offset = 0;
+  int last_node_index = util_int_min(node_size , node_offset + node_serial_size);
+  if (last_node_index < (node_size - 1))
+    new_node_offset = last_node_index;
+  else
+    new_node_offset = 0;
+  
+  if (active != NULL) {
+    for (node_index = node_offset; node_index < last_node_index; node_index++) {
+      if (active[node_index]) {
+	node_data[node_index] = serial_data[serial_index * serial_stride + serial_offset];
+	serial_index++;
+      }
+    }
+  }  else {
+    for (node_index = node_offset; node_index < last_node_index; node_index++) {
+      node_data[node_index] = serial_data[serial_index * serial_stride + serial_offset];
+      serial_index++;
+    }
+  }
+  
+  return new_node_offset;
+}
+
+/*
+size_t util_copy_strided_vector(const void * _src, size_t src_size , int src_stride , void * _target , int target_stride , size_t target_size ,  int type_size , bool * complete) {
+  const char * src    = (const char *) _src;
+  char       * target = (char *)       _target;
+  
+  size_t src_index;
+  size_t target_index = 0;
+
+  for (src_index = 0; src_index < src_size; src_index++) {
+    size_t src_adress    = src_index    * type_size * src_stride;
+    size_t target_adress = target_index * type_size * target_stride;
+    memcpy(&target[target_adress] , &src[src_adress] , type_size);
+    target_index++;
+    if (target_index == target_size) {
+      if (src_index < (src_size - 1)) *complete = false;
+      break;
+    }
+  }
+  return target_index;
+}
+
+
+*/

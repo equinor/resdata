@@ -73,6 +73,7 @@ bool             enkf_node_include_type(const enkf_node_type * , int );
 void           * enkf_node_value_ptr(const enkf_node_type * );
 enkf_impl_type   enkf_node_get_impl_type(const enkf_node_type * );
 void             enkf_node_clear_serial_state(enkf_node_type * );
+void             enkf_node_deserialize(enkf_node_type * , double * , size_t );
 
 void             enkf_node_ecl_write (const enkf_node_type *, const char *);
 /*void             enkf_node_ecl_read  (enkf_node_type * , const char *);*/

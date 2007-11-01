@@ -49,6 +49,7 @@ layer_config.o       : layer_config.c layer_config.h field_config.o
 logmode.o            : logmode.c logmode.h enkf_types.h
 multflt_interC.o     : multflt_interC.c multflt.o multflt_config.o mult.o
 multz_interC.o       : multz_interC.c multz.o multz_config.o mult.o
+mult.o               : mult.h mult.c enkf_util.o
 enkf_types.o         : enkf_types.c enkf_types.h
 enkf_obs.o           : enkf_obs.c enkf_obs.h enkf_config.o obs_node.o
 obs_data.o           : obs_data.c obs_data.h

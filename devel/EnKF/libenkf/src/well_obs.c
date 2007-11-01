@@ -17,7 +17,7 @@
 struct well_obs_struct {
   const well_config_type * config;
   int    	           size;
-  const history_type      	 *  hist;
+  const history_type     *  hist;
   char   	       	 ** var_list;
   double               	 *  abs_std;
   double 	       	 *  rel_std;   
@@ -170,7 +170,19 @@ void well_obs_measure(const well_obs_type * well_obs , const double * serial_dat
 
 
 void well_obs_free(well_obs_type * well_obs) {
-  printf("********** WARNING:%s() does not free internal fields ********** \n",__func__);
+  util_free_string_list(well_obs->var_list , well_obs->size);
+  free(well_obs->abs_std);
+  free(well_obs->rel_std);
+  free(well_obs->error_mode);
+  free(well_obs->active);
+  free(well_obs->current_active);
+  free(well_obs->internal_offset);
+  {
+    int i;
+    for (i=0; i < well_obs->size; i++)
+      meas_op_free(well_obs->meas_op[i]);
+  }
+
   free(well_obs);
 }
 

@@ -253,8 +253,8 @@ MATH_OPS_MULT(multflt);
 VOID_ALLOC(multflt);
 VOID_SWAPOUT(multflt);
 VOID_SWAPIN(multflt);
-VOID_SERIALIZE (multflt)
-VOID_DESERIALIZE (multflt)
+VOID_SERIALIZE (multflt);
+VOID_DESERIALIZE (multflt);
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

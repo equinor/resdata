@@ -286,28 +286,21 @@ void field_free(field_type *field) {
 
 
 
-int field_serialize(const field_type *field , int internal_offset , size_t serial_data_size, double *serial_data , size_t stride , size_t offset, bool * complete) {
-  DEBUG_ASSERT(field);
-  {
-    const field_config_type * config = field->config;
-    const int data_size              = field_config_get_data_size(config);
-    
-    return util_copy_strided_vector(&field->data[internal_offset] , data_size - internal_offset , 1 , &serial_data[offset] , stride , (serial_data_size - offset ) / stride , sizeof * serial_data , complete); 
-  }
+int field_deserialize(const field_type * field , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
+  const field_config_type *config      = field->config;
+  const int                data_size  = field_config_get_data_size(config);
+
+  return enkf_util_deserialize(field->data , NULL , internal_offset , data_size , serial_size , serial_data , offset , stride);
 }
 
 
 
-int field_deserialize(field_type *field , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
-  DEBUG_ASSERT(field);
-  {
-    int internal_index;
-    
-    for (internal_index = internal_offset; internal_index < (serial_size + internal_offset); internal_index++)
-      field->data[internal_index] = serial_data[offset + internal_index*stride];
-    
-    return serial_size + internal_offset;
-  }
+
+int field_serialize(const field_type *field , int internal_offset , size_t serial_data_size ,  double *serial_data , size_t stride , size_t offset , bool *complete) {
+  const field_config_type *config      = field->config;
+  const int                data_size  = field_config_get_data_size(config);
+  
+  return enkf_util_serialize(field->data , NULL , internal_offset , data_size , serial_data , serial_data_size , offset , stride , complete);
 }
 
 

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <util.h>
+#include <enkf_util.h>
 #include <enkf_types.h>
 #include <mult_config.h>
 #include <mult.h>
@@ -158,10 +159,7 @@ int mult_deserialize(mult_type * mult , int internal_offset , size_t serial_size
   const mult_config_type *config      = mult->config;
   const bool              *active     = config->active;
   const int                data_size  = mult_config_get_data_size(config);
-
-  int new_internal_offset;
-  new_internal_offset = util_unpack_vector(&serial_data[offset] , serial_size , stride , mult->data , active , data_size , 1 , sizeof * serial_data);
-  return new_internal_offset;
+  return enkf_util_deserialize(mult->data , active , internal_offset , data_size , serial_size , serial_data , offset , stride);
 }
 
 
@@ -172,7 +170,7 @@ int mult_serialize(const mult_type *mult , int internal_offset , size_t serial_d
   const bool              *active     = config->active;
   const int                data_size  = mult_config_get_data_size(config);
   
-  return util_pack_vector(mult->data , active , data_size , 1 , &serial_data[offset] , stride , (serial_data_size - offset) , sizeof * serial_data , complete);
+  return enkf_util_serialize(mult->data , active , internal_offset , data_size , serial_data , serial_data_size , offset , stride , complete);
 }
 
 
