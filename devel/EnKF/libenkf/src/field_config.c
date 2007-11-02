@@ -16,6 +16,8 @@ void field_config_set_ecl_kw_name(field_config_type * config , const char * ecl_
 
 
 
+
+
 field_config_type * field_config_alloc(const char * ecl_kw_name , ecl_type_enum ecl_type , int nx , int ny , int nz , int active_size , const int * index_map , int logmode , const char * eclfile , const char * ensfile) {
   field_config_type *config = malloc(sizeof *config);
   

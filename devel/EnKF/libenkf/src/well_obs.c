@@ -24,9 +24,7 @@ struct well_obs_struct {
   double 	       	 *  rel_std;   
   bool                 	 *  active;
   bool                 	 *  current_active;
-  meas_op_type         	 ** meas_op;
   enkf_obs_err_type      *  error_mode;
-  int                    *  internal_offset;
 };
 
 
@@ -37,11 +35,9 @@ static well_obs_type * __well_obs_alloc(const well_config_type * config , int si
   
   well_obs_type * well_obs = malloc(sizeof * well_obs);
   well_obs->size      	    = size;
-  well_obs->meas_op   	    = enkf_util_malloc(size * sizeof * well_obs->meas_op , __func__);
   well_obs->var_list  	    = enkf_util_malloc(size * sizeof * well_obs->var_list, __func__);
   well_obs->active    	    = enkf_util_malloc(size * sizeof * well_obs->active, __func__);
   well_obs->current_active  = enkf_util_malloc(size * sizeof * well_obs->active, __func__);
-  well_obs->internal_offset = enkf_util_malloc(size * sizeof * well_obs->internal_offset , __func__);
   well_obs->error_mode      = enkf_util_malloc(size * sizeof * well_obs->error_mode , __func__);
   well_obs->abs_std         = enkf_util_malloc(size * sizeof * well_obs->abs_std , __func__);
   well_obs->rel_std         = enkf_util_malloc(size * sizeof * well_obs->rel_std , __func__);
@@ -92,8 +88,6 @@ well_obs_type * well_obs_fscanf_alloc(const char * filename , const well_config_
 	abort();
       }
     }
-    well_obs->meas_op[ivar] = meas_op_alloc(1);
-    well_obs->internal_offset[ivar] = well_config_get_var_index(config , well_obs->var_list[ivar]);
   } 
 
   free(line);
@@ -110,11 +104,9 @@ well_obs_type * well_obs_alloc(const well_config_type * config , int NVar , cons
   well_obs_type * well_obs  = __well_obs_alloc(config , NVar , hist);
 
   for (i=0; i < NVar; i++) {
-    if (well_config_has_var(config , var_list[i])) {
-      well_obs->meas_op[i] = meas_op_alloc(1);
+    if (well_config_has_var(config , var_list[i])) 
       well_obs->active[i]  = true;
-      well_obs->internal_offset[i] = well_config_get_var_index(config , var_list[i]);
-    } else {
+    else {
       fprintf(stderr,"%s: attempt to observe %s/%s but the variable:%s is not added to the state vector - aborting.\n",__func__ , well_config_get_well_name_ref(config) , var_list[i] , var_list[i]);
       abort();
     }
@@ -129,7 +121,6 @@ void well_obs_get_observations(const well_obs_type * well_obs , int report_step,
   const char *well_name = well_config_get_well_name_ref(well_obs->config);
   const int kw_len = 16;
   char kw[kw_len+1];
-  int serial_offset = well_config_get_serial_offset(well_obs->config);
   int i;
   memcpy(well_obs->current_active , well_obs->active , well_obs->size * sizeof * well_obs->active);
   for (i=0; i < well_obs->size; i++) 
@@ -147,14 +138,6 @@ void well_obs_get_observations(const well_obs_type * well_obs , int report_step,
       }
     }
   
-  
-  /*
-    Initialize the measurement operator.
-  */
-  for (i = 0; i < well_obs->size; i++) 
-    if (well_obs->current_active[i]) 
-      meas_op_set_scalar(well_obs->meas_op[i] , serial_offset + well_obs->internal_offset[i]);
-
 }
 
 
@@ -163,9 +146,8 @@ void well_obs_measure(const well_obs_type * well_obs , const well_type * well_st
   int i;
 
   for (i=0; i < well_obs->size; i++) 
-    if (well_obs->current_active[i])
-      /* Actual measurement implementation */
-      meas_data_add(meas_data , 1.0);
+    if (well_obs->current_active[i]) 
+      meas_data_add(meas_data , well_get(well_state , well_obs->var_list[i]));
   
 }
 
@@ -179,13 +161,6 @@ void well_obs_free(well_obs_type * well_obs) {
   free(well_obs->error_mode);
   free(well_obs->active);
   free(well_obs->current_active);
-  free(well_obs->internal_offset);
-  {
-    int i;
-    for (i=0; i < well_obs->size; i++)
-      meas_op_free(well_obs->meas_op[i]);
-  }
-
   free(well_obs);
 }
 
