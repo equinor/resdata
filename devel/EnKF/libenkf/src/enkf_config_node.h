@@ -1,7 +1,7 @@
 #ifndef __ENKF_CONFIG_NODE_H__
 #define __ENKF_CONFIG_NODE_H__
 #include <enkf_types.h>
-#include <config.h>
+#include <enkf_macros.h>
 
 typedef void   (config_free_ftype)                (void *);
 typedef void   (config_set_serial_offset_ftype)   (void * , int);

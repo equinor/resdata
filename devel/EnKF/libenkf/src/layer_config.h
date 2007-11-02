@@ -1,6 +1,6 @@
 #ifndef __LAYER_CONFIG_H__
 #define __LAYER_CONFIG_H__
-#include <config.h>
+#include <enkf_macros.h>
 #include <field_config.h>
 
 typedef struct layer_config_struct layer_config_type;

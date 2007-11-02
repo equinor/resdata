@@ -4,7 +4,7 @@
 #include <enkf_types.h>
 #include <enkf_util.h>
 #include <well_config.h>
-#include <config.h>
+#include <enkf_macros.h>
 #include <util.h>
 #include <ecl_well_vars.h>
 

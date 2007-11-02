@@ -3,7 +3,7 @@
 #include <enkf_types.h>
 #include <util.h>
 #include <field_config.h>
-#include <config.h>
+#include <enkf_macros.h>
 #include <ecl_kw.h>
 
 

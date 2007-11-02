@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <enkf_util.h>
-#include <config.h>
+#include <enkf_macros.h>
 #include <logmode.h>
 
 typedef struct mult_config_struct mult_config_type;

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <enkf_util.h>
-#include <config.h>
+#include <enkf_macros.h>
 #include <enkf_types.h>
 #include <ecl_kw.h>
 

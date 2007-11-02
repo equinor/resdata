@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include <config.h>
+#include <enkf_macros.h>
 
 struct well_config_struct {
   CONFIG_STD_FIELDS;

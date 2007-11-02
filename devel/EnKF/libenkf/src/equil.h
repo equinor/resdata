@@ -1,7 +1,7 @@
 #ifndef __EQUIL_H__
 #define __EQUIL_H__
 
-#include <config.h>
+#include <enkf_macros.h>
 #include <equil_config.h>
 #include <enkf_util.h>
 

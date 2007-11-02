@@ -4,7 +4,7 @@
 #include <enkf_util.h>
 #include <util.h>
 #include <ens_config.h>
-#include <config.h>
+#include <enkf_macros.h>
 #include <multz_config.h>
 #include <logmode.h>
 #include <util.h>

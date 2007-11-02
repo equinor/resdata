@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <config.h>
+#include <enkf_macros.h>
 #include <enkf_util.h>
 #include <util.h>
 #include <well.h>

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <enkf_util.h>
-#include <config.h>
+#include <enkf_config.h>
 
 typedef struct equil_config_struct equil_config_type;
 

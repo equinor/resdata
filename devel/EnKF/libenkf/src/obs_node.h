@@ -1,6 +1,6 @@
 #ifndef __OBS_NODE__
 #define __OBS_NODE__
-#include <config.h>
+#include <enkf_macros.h>
 #include <enkf_types.h>
 #include <obs_data.h>
 #include <meas_data.h>

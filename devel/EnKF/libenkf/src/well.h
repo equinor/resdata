@@ -1,6 +1,8 @@
 #ifndef __WELL_H__
 #define __WELL_H__
 #include <ecl_sum.h>
+#include <enkf_macros.h>
+#include <enkf_util.h>
 
 typedef struct well_struct well_type;
 

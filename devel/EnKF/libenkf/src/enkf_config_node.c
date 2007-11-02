@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <config.h>
+#include <enkf_macros.h>
 #include <enkf_config_node.h> 
 
 struct enkf_config_node_struct {

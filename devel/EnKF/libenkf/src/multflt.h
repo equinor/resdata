@@ -3,7 +3,7 @@
 
 #include <multflt_config.h>
 #include <enkf_util.h>
-#include <config.h>
+#include <enkf_macros.h>
 
 typedef struct multflt_struct multflt_type;
 

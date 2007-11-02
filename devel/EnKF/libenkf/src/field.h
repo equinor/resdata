@@ -2,7 +2,7 @@
 #define __FIELD_H__
 #include <fortio.h>
 #include <ecl_kw.h>
-#include <config.h>
+#include <enkf_macros.h>
 #include <enkf_util.h>
 #include <field_config.h>
 

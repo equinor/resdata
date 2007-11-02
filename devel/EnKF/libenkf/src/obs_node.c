@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <config.h>
+#include <enkf_macros.h>
 #include <obs_node.h>
 #include <enkf_types.h>
 #include <time.h>
