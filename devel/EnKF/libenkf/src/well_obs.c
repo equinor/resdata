@@ -10,6 +10,7 @@
 #include <list.h>
 #include <history.h>
 #include <well_config.h>
+#include <well.h>
 
 
 
@@ -158,14 +159,16 @@ void well_obs_get_observations(const well_obs_type * well_obs , int report_step,
 
 
 
-
-void well_obs_measure(const well_obs_type * well_obs , const double * serial_data , meas_data_type * meas_data) {
+void well_obs_measure(const well_obs_type * well_obs , const well_type * well_state , meas_data_type * meas_data) {
   int i;
 
   for (i=0; i < well_obs->size; i++) 
     if (well_obs->current_active[i])
-      meas_data_add(meas_data , meas_op_eval(well_obs->meas_op[i] , serial_data));
+      /* Actual measurement implementation */
+      meas_data_add(meas_data , 1.0);
+  
 }
+
 
 
 
@@ -191,4 +194,4 @@ void well_obs_free(well_obs_type * well_obs) {
 
 VOID_FREE(well_obs)
 VOID_GET_OBS(well_obs)
-VOID_MEASURE(well_obs)
+VOID_MEASURE(well)

@@ -60,13 +60,14 @@ void obs_node_get_observations(obs_node_type * node , int report_step, obs_data_
   }
 }
 
-void obs_node_measure(const obs_node_type * node , int report_step , const double * serial_data , meas_data_type * meas_data) {
+
+void obs_node_measure(const obs_node_type * node , int report_step , const void * enkf_node , meas_data_type * meas_data) {
   if (node->current_active) {
     if (report_step != node->obs_time) {
       fprintf(stderr,"%s: measuring at time:%d observations loaded at time:%d - aborting \n",__func__ , report_step , node->obs_time);
       abort();
     }
-    node->measure(node->obs , serial_data , meas_data);
+    node->measure(node->obs , enkf_node , meas_data);
   }
 }
 

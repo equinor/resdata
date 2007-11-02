@@ -711,16 +711,46 @@ void enkf_ensemble_mulX(double * serial_state , int serial_x_stride , int serial
 
 
 void * enkf_ensemble_serialize_threaded(void * _void_arg) {
+  const int update_mask = parameter + ecl_restart + ecl_summary;
   void_arg_type * void_arg     = ( void_arg_type * ) _void_arg;
-  int iens , iens1 , iens2;
-  
+  int iens , iens1 , iens2 , serial_stride;
+  size_t serial_size;
+  double *serial_data;
+
   void_arg_unpack_ptr(void_arg , 0 , &iens1);
   void_arg_unpack_ptr(void_arg , 1 , &iens2);
-  list_node_type ** start_node = void_arg_get_ptr(void_arg , 2);
-  size_t * member_serial_size  = void_arg_get_ptr(void_arg , 3);
-  bool   * member_complete     = void_arg_get_ptr(void_arg , 4);
+  void_arg_unpack_ptr(void_arg , 2 , &serial_size);
+  void_arg_unpack_ptr(void_arg , 3 , &serial_stride);
+  serial_data                  = void_arg_get_ptr(void_arg , 4);
+  list_node_type ** start_node = void_arg_get_ptr(void_arg , 5);
+  list_node_type ** next_node  = void_arg_get_ptr(void_arg , 6);
+  size_t * member_serial_size  = void_arg_get_ptr(void_arg , 7);
+  bool   * member_complete     = void_arg_get_ptr(void_arg , 8);
   
-  printf("Passing the void iens: %d -> %d \n",iens1 , iens2);
+  for (iens = iens1; iens < iens2; iens++) {
+    list_node_type  * list_node  = start_node[iens];
+    bool node_complete           = true;  
+    size_t   serial_offset       = iens;
+    
+    while (node_complete) {                                           
+      enkf_node_type *enkf_node = list_node_value_ptr(list_node);        
+      if (enkf_node_include_type(enkf_node , update_mask)) {                       
+	int elements_added = enkf_node_serialize(enkf_node , serial_size , serial_data , serial_stride , serial_offset , &node_complete);
+	serial_offset            += serial_stride * elements_added;  
+	member_serial_size[iens] += elements_added;
+      }
+      
+      if (node_complete) {
+	list_node  = list_node_get_next(list_node);                         
+	if (list_node == NULL) {
+	  if (node_complete) member_complete[iens] = true;
+	  break;
+	}
+      }
+    }
+      /* Restart on this node */
+    next_node[iens] = list_node;
+  }
   
   return NULL;
 }
@@ -760,7 +790,15 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
       iens1[ithread] = ithread * thread_block_size;
       iens2[ithread] = iens1[ithread] + thread_block_size;
       
-      void_arg[ithread] = void_arg_alloc5(sizeof iens1[0] , sizeof iens2[0] , sizeof * start_node , sizeof  member_serial_size , sizeof member_complete);
+      void_arg[ithread] = void_arg_alloc9(sizeof  iens1[0]      ,      /* 0 */
+					  sizeof  iens2[0]      ,      /* 1 */
+					  sizeof  serial_size   ,      /* 2 */
+					  sizeof  serial_stride ,      /* 3 */
+					  sizeof  serial_data   ,      /* 4 */
+					  sizeof  start_node    ,      /* 5 */
+					  sizeof  next_node     ,      /* 6 */
+					  sizeof  member_serial_size   /* 7 */, 
+					  sizeof  member_complete);    /* 8 */
     }
     iens2[threads-1] = ens_size;
   }
@@ -773,9 +811,13 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
     for (ithread =  0; ithread < threads; ithread++) {
       void_arg_pack_ptr(void_arg[ithread] , 0 , &iens1[ithread]);
       void_arg_pack_ptr(void_arg[ithread] , 1 , &iens2[ithread]);
-      void_arg_pack_ptr(void_arg[ithread] , 2 , start_node);
-      void_arg_pack_ptr(void_arg[ithread] , 3 , member_serial_size);
-      void_arg_pack_ptr(void_arg[ithread] , 4 , member_complete);
+      void_arg_pack_ptr(void_arg[ithread] , 2 , &serial_size);
+      void_arg_pack_ptr(void_arg[ithread] , 3 , &serial_stride);
+      void_arg_pack_ptr(void_arg[ithread] , 4 , &serial_data);
+      void_arg_pack_ptr(void_arg[ithread] , 5 , &start_node);
+      void_arg_pack_ptr(void_arg[ithread] , 6 , &next_node);
+      void_arg_pack_ptr(void_arg[ithread] , 7 , &member_serial_size);
+      void_arg_pack_ptr(void_arg[ithread] , 8 , &member_complete);
     }
     
     
@@ -784,30 +826,31 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
     thread_pool_join(tp);
     
     /* Serialize section */
-    for (iens = 0; iens < ens_size; iens++) {
-      list_node_type  * list_node  = start_node[iens];
-      bool node_complete           = true;  
-      size_t   serial_offset       = iens;
+/*     for (iens = 0; iens < ens_size; iens++) { */
+/*       list_node_type  * list_node  = start_node[iens]; */
+/*       bool node_complete           = true;   */
+/*       size_t   serial_offset       = iens; */
       
-      while (node_complete) {                                           
-	enkf_node_type *enkf_node = list_node_value_ptr(list_node);        
-	if (enkf_node_include_type(enkf_node , update_mask)) {                       
-	  int elements_added = enkf_node_serialize(enkf_node , serial_size , serial_data , serial_stride , serial_offset , &node_complete);
-	  serial_offset            += serial_stride * elements_added;  
-	  member_serial_size[iens] += elements_added;
-	}
+/*       while (node_complete) {                                            */
+/* 	enkf_node_type *enkf_node = list_node_value_ptr(list_node);         */
+/* 	if (enkf_node_include_type(enkf_node , update_mask)) {                        */
+/* 	  int elements_added = enkf_node_serialize(enkf_node , serial_size , serial_data , serial_stride , serial_offset , &node_complete); */
+/* 	  serial_offset            += serial_stride * elements_added;   */
+/* 	  member_serial_size[iens] += elements_added; */
+/* 	} */
 	
-	if (node_complete) {
-	  list_node  = list_node_get_next(list_node);                         
-	  if (list_node == NULL) {
-	    if (node_complete) member_complete[iens] = true;
-	    break;
-	  }
-	}
-      }
-      /* Restart on this node */
-      next_node[iens] = list_node;
-    }
+/* 	if (node_complete) { */
+/* 	  list_node  = list_node_get_next(list_node);                          */
+/* 	  if (list_node == NULL) { */
+/* 	    if (node_complete) member_complete[iens] = true; */
+/* 	    break; */
+/* 	  } */
+/* 	} */
+/*       } */
+/*       /\* Restart on this node *\/ */
+/*       next_node[iens] = list_node; */
+/*     } */
+
     for (iens=1; iens < ens_size; iens++) {
       if (member_complete[iens]    != member_complete[iens-1])    {  fprintf(stderr,"%s: member_complete difference    - INTERNAL ERROR - aborting \n",__func__); abort(); }
       if (member_serial_size[iens] != member_serial_size[iens-1]) {  fprintf(stderr,"%s: member_serial_size difference - INTERNAL ERROR - aborting \n",__func__); abort(); }

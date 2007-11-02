@@ -220,7 +220,7 @@ int prefix ## _serialize__(const void *void_arg, int internal_offset , size_t se
 
 #define VOID_DESERIALIZE(prefix)     \
 int prefix ## _deserialize__(void *void_arg, int internal_offset , size_t serial_size , const double *serial_data , size_t stride , size_t offset) { \
-   const prefix ## _type  *arg = (prefix ## _type *) void_arg;       \
+   prefix ## _type  *arg = (prefix ## _type *) void_arg;       \
    return prefix ## _deserialize (arg , internal_offset , serial_size , serial_data , stride , offset);       \
 }
 #define VOID_DESERIALIZE_HEADER(prefix) int prefix ## _deserialize__(void *, int , size_t , const double *, size_t , size_t);
@@ -238,11 +238,11 @@ void prefix ## _get_observations__(const void * void_arg , int report_step, obs_
 /*****************************************************************/
 
 #define VOID_MEASURE(prefix)   \
-void prefix ## _measure__(const void * void_arg ,  const double * serial_data ,meas_data_type * meas_data) {   \
-   prefix ## _measure((const prefix ## _type *) void_arg , serial_data , meas_data); \
+void prefix ## _obs_measure__(const void * void_arg ,  const void * domain_object , meas_data_type * meas_data) {         \
+   prefix ## _obs_measure((const prefix ## _obs_type *) void_arg , (const prefix ## _type  * ) domain_object , meas_data); \
 }
 
-#define VOID_MEASURE_HEADER(prefix) void prefix ## _measure__(const void * ,  const double * , meas_data_type *)
+#define VOID_MEASURE_HEADER(prefix) void prefix ## _obs_measure__(const void * ,  const void * , meas_data_type *)
 
 
 /*****************************************************************/

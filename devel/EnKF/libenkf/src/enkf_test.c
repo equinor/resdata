@@ -171,7 +171,7 @@ int main(void) {
 	*/
 
 	enkf_obs_get_observations(enkf_obs , 51 , obs_data);
-	enkf_obs_measure(enkf_obs , 51 , serial_data , meas_data);
+	enkf_obs_measure(enkf_obs , 51 , state[0] , meas_data);
 	obs_data_fprintf(obs_data , stdout);
 	meas_data_fprintf(meas_data , stdout);
 	free(serial_data);
