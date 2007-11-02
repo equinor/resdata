@@ -1,5 +1,5 @@
+MFLAG = m32
 CC = gcc
-FC = ifort
 AR = ar
 #################################################################
 COMPILE_INCLUDE   = -I./
@@ -8,15 +8,14 @@ COMPILE_LIBS      =
 
 INSTALL_INC_PATH = ../include
 INSTALL_LIB_PATH = ../lib
-INSTALL_MOD_PATH = ../include
 #################################################################
-CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
+CFLAGS  = -$(MFLAG) -O2 -std=gnu99 -g -Wall 
 ARFLAGS = -csr
 #################################################################
 OBJECTS   = set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o
 INC_FILES = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h
-LIB       = libhash.a
-
+LIB       = libhash_$(MFLAG).a
+LIB_LINK  = -lhash_$(MFLAG) -lutil_$(MFLAG)
 
 
 
@@ -25,21 +24,19 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_LIB_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	gcc -m32 -Wall -g -I./ hash_test.c -o hash.x -L./ -L../../libutil/lib -lhash -lutil
-
-new:	clean INSTALL
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) hash_test.c -o hash.x  -L../../libutil/lib -L$(INSTALL_LIB_PATH) $(LIB_LINK)
 
 clean:
 	rm -f *.o *~ 
+	rm -f libhash_*
+	rm -f $(INSTALL_INC_PATH)/*.h
+	rm -f $(INSTALL_LIB_PATH)/$(LIB)
 
 $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
-
-%.o : %.f90
-	$(FC) -c $(FFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE)  $(CPPFLAGS) $< -o $@
 
 
 set.o       : set.c set.h hash.o
