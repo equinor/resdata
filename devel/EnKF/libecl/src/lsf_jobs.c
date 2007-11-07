@@ -318,6 +318,7 @@ static int lsf_job_submit(lsf_job_type *lsf_job , const char * submit_cmd_fmt , 
 
 static bool lsf_job_can_reschedule(lsf_job_type *lsf_job) {
   printf("%s: sammenligner: %d og %d \n",__func__ , lsf_job->submit_count , lsf_job->max_resubmit);
+  return true;
   if (lsf_job->submit_count <= lsf_job->max_resubmit) {
     return true;
   } else 
@@ -719,7 +720,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 
 	if (!redraw) {
 	  phase = (phase + 1) % 4;
-	  printf("\b%c",spinner[phase]);	  
+	  printf("\b%c",spinner[phase]);	
 	  fflush(stdout);
 	} else {
 	  struct tm ts;

@@ -301,8 +301,6 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
 	This is *EXTREMELY UGLY* - when reading summary files we want
 	to ensure that the SEQHDR keyword is the first header in any
 	block (which contains the keyword).
-	
-	
       */
 
       if (ecl_kw_header_eq(ecl_kw , "SEQHDR") && !first_kw)

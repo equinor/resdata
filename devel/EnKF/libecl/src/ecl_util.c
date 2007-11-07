@@ -8,6 +8,74 @@
 
 
 
+
+
+struct ecl_box_struct {
+
+  int total_size[3];
+  int box_size[3];
+  int stride[3];
+  int box_offset;
+};
+
+
+/*
+  Eclipse indices on the way in - everywhere else the indices have
+  zero offset.
+*/
+
+void ecl_box_set_size(ecl_box_type * ecl_box , int x1,int x2 , int y1 , int y2 , int z1, int z2) {
+
+  ecl_box->box_size[0] = x2 - x1 + 1;
+  ecl_box->box_size[1] = y2 - y1 + 1;
+  ecl_box->box_size[2] = z2 - z1 + 1;
+  
+  ecl_box->box_offset = (x1 - 1) * ecl_box->stride[0] + (y1 - 1) * ecl_box->stride[1] + (z1 - 1) * ecl_box->stride[2];
+}
+
+
+ecl_box_type * ecl_box_alloc(int nx , int ny , int nz , int x1,int x2 , int y1 , int y2 , int z1, int z2) {
+  ecl_box_type * ecl_box = malloc(sizeof * ecl_box);
+  
+  ecl_box->total_size[0] = nx;
+  ecl_box->total_size[1] = ny;
+  ecl_box->total_size[2] = nz;
+  
+  ecl_box->stride[0]   = 1;
+  ecl_box->stride[1]   = nx;
+  ecl_box->stride[2]   = nx*ny;
+  
+  ecl_box_set_size(ecl_box , x1 , x2 , y1 , y2 , z1 , z2);
+  return ecl_box;
+}
+
+
+
+void ecl_box_free(ecl_box_type * ecl_box) { free(ecl_box); }
+
+
+
+void ecl_box_set_values(const ecl_box_type * ecl_box , char * main_field , const char * sub_field , int element_size) {
+  int i,j,k;
+
+  for (k=0; k < ecl_box->box_size[2]; k++) 
+    for(j=0; j < ecl_box->box_size[1]; j++)
+      for (i=0; i < ecl_box->box_size[0]; i++) {
+	int main_index = k*ecl_box->stride[2]   + j*ecl_box->stride[1]   + i*ecl_box->stride[0]   + ecl_box->box_offset;
+	int sub_index  = k*ecl_box->box_size[2] + j*ecl_box->box_size[1] + i*ecl_box->box_size[0];
+	memcpy(&main_field[main_index * element_size] , &sub_field[sub_index * element_size] , element_size);
+      }
+}
+
+
+int ecl_box_get_total_size(const ecl_box_type * ecl_box) { return ecl_box->total_size[0] * ecl_box->total_size[1] * ecl_box->total_size[2]; }
+
+int ecl_box_get_box_size(const ecl_box_type * ecl_box) { return ecl_box->box_size[0] * ecl_box->box_size[1] * ecl_box->box_size[2]; }
+
+
+/*****************************************************************/
+
+
 char * ecl_util_alloc_base_guess(const char * path) {
   char *base = NULL;
   char *cwd  = NULL;
@@ -26,19 +94,21 @@ char * ecl_util_alloc_base_guess(const char * path) {
       
       if (entry[0] == '.') continue; 
       util_alloc_file_components(entry , NULL , &this_base , &ext);
-      if (ext == NULL) continue;
-      
-      if ((strcmp(ext,"DATA") == 0) || (strcmp(ext , "data") == 0)) {
-	if (data_count == 0) 
-	  base = util_alloc_string_copy(this_base);
-	else {
-	  free(base);
-	  base = NULL;
+      if (ext != NULL) {
+	
+	if ((strcmp(ext,"DATA") == 0) || (strcmp(ext , "data") == 0)) {
+	  if (data_count == 0) 
+	    base = util_alloc_string_copy(this_base);
+	  else if (data_count == 1) {
+	    free(base);
+	    base = NULL;
+	  }
+	  data_count++;
 	}
-	data_count++;
+	
+	free(ext);
       }
-      free(this_base);
-      free(ext);
+      if (this_base != NULL) free(this_base);
     }
     closedir(dirH);
     chdir(cwd);
@@ -48,7 +118,7 @@ char * ecl_util_alloc_base_guess(const char * path) {
   if (data_count > 1)
     fprintf(stderr,"%s: found several files with extension DATA in:%s  can not guess ECLIPSE base - returning NULL\n",__func__ , path);
   else if (data_count == 0)
-    fprintf(stderr,"%s: could not find any files ending with data / DATA in:%s - can not guess ECLIPSE base - returning NULL \Dn",__func__ , path);
+    fprintf(stderr,"%s: could not find any files ending with data / DATA in:%s - can not guess ECLIPSE base - returning NULL \n",__func__ , path);
   
   return base;
 }
@@ -80,7 +150,7 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
   ecl_file_type file_type = ecl_other_file;
   bool fmt_file = true;
   int report_nr = -1;
-
+  
   char *ext = strrchr(filename , '.');
   if (ext != NULL) {
     ext++;
@@ -156,7 +226,6 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
   *_file_type = file_type;
   *_fmt_file  = fmt_file;
   *_report_nr = report_nr;
-
 
   if ( (file_type == ecl_other_file) && !ecl_other_ok) {
     fprintf(stderr,"%s: Can not determine type of:%s from filename - aborting \n",__func__ , filename);
@@ -261,7 +330,20 @@ char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl
     else
       strcpy(ext , "INIT");
     break;
-  
+
+  case(ecl_rft_file):
+    if (fmt_file)
+      ext_length = 4;
+    else
+      ext_length = 3;
+    ext = malloc(ext_length + 1);
+    if (fmt_file) 
+      strcpy(ext , "FRFT");
+    else
+      strcpy(ext , "RFT");
+    break;
+
+    
   default:
     fprintf(stderr,"%s: Invalid input file_type to ecl_util_alloc_filename - aborting \n",__func__);
     abort();

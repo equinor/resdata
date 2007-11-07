@@ -20,6 +20,7 @@ static bool string_cmp_list(const char * var , int len , const char ** list) {
 static well_var_type __ecl_well_var_get_type(const char *var , bool *valid , bool *history) {
   well_var_type type;
   *valid = true;
+
   if (string_cmp_list(var , 4 , (const char *[4]) {"OPR" , "ORAT" , "WOPR" , "WOPRH"})) 
     type = well_var_orat;
   else if (string_cmp_list(var , 4 , (const char *[4]) {"GPR" , "GRAT" , "WGPR" , "WGPRH"})) 

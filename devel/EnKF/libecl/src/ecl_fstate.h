@@ -5,6 +5,7 @@
 #include <ecl_kw.h>
 #include <ecl_block.h>
 #include <ecl_util.h>
+#include <hash.h>
 
 typedef struct ecl_fstate_struct ecl_fstate_type;
 
@@ -22,9 +23,6 @@ int               ecl_fstate_fname2time(const char *);
 bool              ecl_fstate_fmt_file(const char *filename);
 void              ecl_fstate_set_multiple_files(ecl_fstate_type *, const char * , const char *);
 void              ecl_fstate_set_files(ecl_fstate_type *, int , const char ** );
-/*
-  void              ecl_fstate_set_unified_file(ecl_fstate_type *, const char *);
-*/
 void              ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate_type , bool unified);
 void              ecl_fstate_add_block(ecl_fstate_type * , const ecl_block_type *);
 bool              ecl_fstate_set_fmt_mode(ecl_fstate_type * , int);
@@ -47,4 +45,6 @@ int               ecl_fstate_get_report_size(const ecl_fstate_type * , int * , i
 bool              ecl_fstate_get_report_mode(const ecl_fstate_type * );
 int               ecl_fstate_get_size(const ecl_fstate_type *);
 void              ecl_fstate_save(const ecl_fstate_type *);
+
+void              ecl_fstate_filter_file(const char * , const char *  , const hash_type * , bool );
 #endif

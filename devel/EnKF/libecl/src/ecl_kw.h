@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fortio.h>
+#include <ecl_util.h>
 
 #define ecl_str_len   8
 
@@ -33,7 +34,8 @@ void          ecl_kw_fskip_data(ecl_kw_type * , fortio_type *);
 void          ecl_kw_fskip(fortio_type *, bool);
 void          ecl_kw_alloc_data(ecl_kw_type  *);
 bool          ecl_kw_fread_realloc(ecl_kw_type *, fortio_type *);
-ecl_kw_type * ecl_kw_fscanf_alloc_include_data(FILE * , int , ecl_type_enum , bool );
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * , int , ecl_type_enum , bool );
+void          ecl_kw_fprintf_grdecl(ecl_kw_type *  , FILE * );
 ecl_kw_type * ecl_kw_fread_alloc(fortio_type * , bool);
 ecl_kw_type * ecl_kw_fscanf_alloc_parameter(FILE * , int , bool );
 void          ecl_kw_free_data(ecl_kw_type *);
@@ -72,8 +74,10 @@ void ecl_kw_inplace_mul(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_add(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_div(ecl_kw_type * , const ecl_kw_type * );
 
+void ecl_kw_inplace_inv(ecl_kw_type * my_kw);
 void ecl_kw_scalar_init(ecl_kw_type * , double );
 void ecl_kw_scale(ecl_kw_type * , double );
 void ecl_kw_shift(ecl_kw_type * , double );
+void ecl_kw_boxed_set(ecl_kw_type * , const ecl_kw_type * , const ecl_box_type * );
 
 #endif

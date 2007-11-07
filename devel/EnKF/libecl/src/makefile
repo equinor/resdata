@@ -1,58 +1,55 @@
+MFLAG = m32
 CC = gcc
-FC = ifort
 AR = ar
 #################################################################
 COMPILE_INCLUDE   = -I./ -I../../libhash/include -I../../libutil/include
-COMPILE_LIB_PATH  = -L../../libhash/lib -L../../libutil/lib
-COMPILE_LIBS      = -lm -lhash -lutil
 
 INSTALL_INC_PATH = ../include
 INSTALL_LIB_PATH = ../lib
-INSTALL_MOD_PATH = ../mod
 #################################################################
-CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
-FFLAGS  = -fpe0 -traceback -warn unused -CB -u -g -real_size 64 -assume byterecl -assume nobuffered_io -convert big_endian
+CFLAGS  = -O2 -$(MFLAG)  -std=gnu99 -g -Wall 
 ARFLAGS = -csr
 #################################################################
 OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_diag.o ecl_rft_vector.o ecl_rft_node.o
 MOD_FILES = 
 INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h lsf_jobs.h ecl_parse.h ecl_diag.h ecl_rft_vector.h ecl_rft_node.h 
-LIB       = libecl.a
+LIB       = libecl_$(MFLAG).a
 
+LIB_PATH  = -L../../libhash/lib -L../../libutil/lib -L$(INSTALL_LIB_PATH)
+LIB_LINK  = -lecl_$(MFLAG) -lhash_$(MFLAG) -lutil_$(MFLAG) -lm 
 
 
 INSTALL: $(LIB)
 	install -d $(INSTALL_INC_PATH)
 	install -d $(INSTALL_LIB_PATH)
-	install -d $(INSTALL_MOD_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	#gcc      -Wall -g $(COMPILE_INCLUDE) ecl_submit.c -o /d/proj/bg/enkf/bin/ecl_submit.x 
+#gcc      -Wall -g $(COMPILE_INCLUDE) ecl_submit.c -o /d/proj/bg/enkf/bin/ecl_submit.x 
 	cp ecl_submit.py /d/proj/bg/enkf/bin/ecl_submit.x 
-	gcc -m32 -Wall -g $(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) ecl_test.c -o ecl_test.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
-	gcc -m32 -Wall -g $(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) summary_get_last.c -o summary_get_last.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
-	gcc -m32 -Wall -g $(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) make_SGU.c -o make_SGU.x -L$(INSTALL_LIB_PATH) $(COMPILE_LIB_PATH) -lecl $(COMPILE_LIBS)
-	gcc -Wall -g -m32 -O2 $(COMPILE_INCLUDE) -I$(INSTALL_INC_PATH) -o convert.x convert.c -I./ -L./ -L../../libutil/lib -lecl -lm -lutil
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) ecl_test.c -o ecl_test.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) summary_get_last.c -o summary_get_last.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) make_SGU.c -o make_SGU.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) convert.c  -o convert.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o kw_list.x kw_list.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o ecl_rft.x ecl_rft.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o combine_grdecl.x combine_grdecl.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
+
+###     This only links to 64 bit libraries.
+#	gcc -O2 -m64 -std=gnu99 -g -Wall  -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) ecl_rft.c  -o ecl_rft.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  -lecl_m64 -lutil_m64 -lhash_m64 -lreadline -lncurses -lm
 
 
 clean:
 	rm -f *.o *~ 
-	rm -f libecl.a
+	rm -f libecl_*
 	rm -f $(INSTALL_INC_PATH)/*.h
 
 
-new:	
-	make clean
-	make INSTALL
 
 $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
-
-%.o : %.f90
-	$(FC) -c $(FFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $(CPPFLAGS) $< -o $@
 
 
 ecl_rft_vector.o   : ecl_rft_vector.h ecl_rft_vector.c ecl_util.h ecl_kw.o ecl_fstate.o ecl_block.o ecl_rft_node.o

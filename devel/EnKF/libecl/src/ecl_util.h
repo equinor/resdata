@@ -14,6 +14,22 @@ typedef enum {ecl_other_file           = 0 ,
               ecl_rft_file             = 9 }   ecl_file_type;
 
 
+typedef struct ecl_box_struct  ecl_box_type;
+
+
+
+void           ecl_box_set_size(ecl_box_type * , int  , int , int  , int , int ,int );
+ecl_box_type * ecl_box_alloc(int , int , int , int, int, int, int, int, int);
+void 	       ecl_box_free(ecl_box_type * );
+void 	       ecl_box_set_values(const ecl_box_type * , char * , const char * , int );
+int 	       ecl_box_get_total_size(const ecl_box_type * );
+int 	       ecl_box_get_box_size(const ecl_box_type * );
+
+
+/*****************************************************************/
+
+
+
 char          * ecl_util_alloc_base_guess(const char *);
 bool            ecl_util_unified(ecl_file_type );
 int             ecl_util_filename_report_nr(const char *);

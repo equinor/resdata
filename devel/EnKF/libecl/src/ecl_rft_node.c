@@ -17,7 +17,7 @@ typedef enum { RFT = 1 , PLT = 2 , SEGMENT } ecl_rft_enum;
 struct ecl_rft_node_struct {
   char   * well_name;
   int      size;
-  float   *i , *j , *k;
+  int    *i , *j , *k;
 
   ecl_rft_enum data_type;
   time_t       recording_time;
@@ -100,7 +100,7 @@ void ecl_rft_node_free(ecl_rft_node_type * rft_node) {
   free(rft_node->SWAT);
   free(rft_node->SGAS);
   free(rft_node->DEPTH);
-
+  free(rft_node->well_name);
   free(rft_node);
 }
 
@@ -110,9 +110,24 @@ void ecl_rft_node_free__(void * void_node) {
 
 
 
+void ecl_rft_node_summarize(const ecl_rft_node_type * rft_node) {
+  int i;
+  printf("Well...........: %s \n",rft_node->well_name);
+  printf("Completed cells: %d \n",rft_node->size);
+  printf("--------------------------------------------------------------\n");
+  for (i=0; i < rft_node->size; i++) {
+    printf("%3d %3d %3d \n",rft_node->i[i] , rft_node->j[i] , rft_node->k[i]);
+  }
+  printf("--------------------------------------------------------------\n");
+}
+
+
+
 void ecl_rft_node_block(const ecl_rft_node_type * rft_node , int size , const double * tvd , int * i, int * j , int *k) {
   const double epsilon = 10;
   int rft_index , tvd_index;
+  bool  * blocked      = util_malloc(rft_node->size * sizeof * blocked , __func__);
+
   for (tvd_index = 0; tvd_index < size; tvd_index++) {
     double min_diff       = 100000;
     int    min_diff_index = 0;
@@ -128,12 +143,69 @@ void ecl_rft_node_block(const ecl_rft_node_type * rft_node , int size , const do
       i[tvd_index] = rft_node->i[min_diff_index];
       j[tvd_index] = rft_node->j[min_diff_index];
       k[tvd_index] = rft_node->k[min_diff_index];
+      
+      blocked[min_diff_index] = true;
     } else {
       i[tvd_index] = -1;
       j[tvd_index] = -1;
       k[tvd_index] = -1;
       fprintf(stderr,"%s: Warning: True Vertical Depth:%g could not be mapped to well_path for well:%s \n",__func__ , tvd[tvd_index] , rft_node->well_name);
     }
-
   }
+  free(blocked);
 }
+
+
+
+void ecl_rft_node_fprintf_rft_obs(const ecl_rft_node_type * rft_node , const char * tvd_file , const char * target_file , double p_std) {
+  FILE * input_stream  = util_fopen(tvd_file    , "r" );
+  int size    	       = util_count_file_lines(input_stream);
+  double *p   	       = util_malloc(size * sizeof * p,   __func__);
+  double *tvd 	       = util_malloc(size * sizeof * tvd, __func__);
+  int    *i   	       = util_malloc(size * sizeof * i,   __func__);
+  int    *j   	       = util_malloc(size * sizeof * j,   __func__);
+  int    *k   	       = util_malloc(size * sizeof * k,   __func__);
+
+  {
+    int line;
+    for (line = 0; line < size; line++)
+      if (fscanf(input_stream , "%lg  %lg", &tvd[line] , &p[line]) != 2) {
+	fprintf(stderr,"%s: something wrong when reading: %s - aborting \n",__func__ , tvd_file);
+	abort();
+      }
+  }
+  fclose(input_stream);
+  ecl_rft_node_block(rft_node , size , tvd , i , j , k);
+
+  {
+    int active_lines = 0;
+    int line;
+    for (line = 0; line < size; line++)
+      if (i[line] != -1)
+	active_lines++;
+    
+    if (active_lines > 0) {
+      FILE * output_stream = util_fopen(target_file , "w" );
+      fprintf(output_stream,"%d\n" , active_lines);
+      for (line = 0; line < size; line++)
+	if (i[line] != -1)
+	  fprintf(output_stream , "%3d %3d %3d %g %g\n",i[line] , j[line] , k[line] , p[line] , p_std);
+      fclose(output_stream);
+    } else 
+      fprintf(stderr,"%s: Warning found no active cells when blocking well:%s to data_file:%s \n",__func__ , rft_node->well_name , tvd_file);
+  }
+  
+  free(p);
+  free(tvd);
+  free(i);
+  free(j);
+  free(k);
+}
+
+
+
+int         ecl_rft_node_get_size(const ecl_rft_node_type * rft_node) { return rft_node->size; }
+const int * ecl_rft_node_get_i (const ecl_rft_node_type * rft_node) { return rft_node->i; }
+const int * ecl_rft_node_get_j (const ecl_rft_node_type * rft_node) { return rft_node->j; }
+const int * ecl_rft_node_get_k (const ecl_rft_node_type * rft_node) { return rft_node->k; }
+time_t      ecl_rft_node_get_recording_time(const ecl_rft_node_type * rft_node) { return rft_node->recording_time; }

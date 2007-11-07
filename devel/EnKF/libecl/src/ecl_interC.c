@@ -167,7 +167,7 @@ void ecl_inter_fread_param__(const char *_filename    , const int *filename_len,
 }
 
 
-void ecl_inter_fscanf_include_param__(const char *_filename , const int * filename_len, const int * size, double * data) {
+void ecl_inter_fscanf_grdecl_param__(const char *_filename , const int * filename_len, const int * size, double * data) {
   char *filename = util_alloc_cstring(_filename , filename_len);
   ecl_kw_type * ecl_kw;
   {
@@ -394,12 +394,6 @@ void ecl_inter_avg_prod__(const char *_out_path     , const int *out_len,
 }
 	
 
-	       
-/*
-  void ecl_inter_diag_make_gnuplot_interactive__() {
-  ecl_diag_make_gnuplot_interactive();
-}
-*/
 
 
 void ecl_inter_unlink_path__(const char *_path , const int *path_len) {
@@ -412,28 +406,31 @@ void ecl_inter_unlink_path__(const char *_path , const int *path_len) {
 
 
 
-/*   void ecl_inter_new_file(const char * filename , int fmt_mode) { */
-/*   ECL_FSTATE = ecl_fstate_alloc(filename , 10 , fmt_mode , ENDIAN_CONVERT); */
-/*   } */
+void ecl_inter_update_init_file__(const char   *_src_file    , const int * src_file_len,
+				  const char   *_target_file , const int * target_file_len,
+				  const int    *_nactive,
+				  const double *poro , const double * permx , const double *permz) {
+  const int nactive  = *_nactive;
+  bool   fmt_file    = false; /* Will follow src_file anyhow */
+  char * src_file    = util_alloc_cstring(_src_file    , src_file_len);
+  char * target_file = util_alloc_cstring(_target_file , target_file_len);
+  float * float_data = util_malloc(nactive * sizeof * float_data , __func__);
+  hash_type * kw_hash = hash_alloc(10);
+
+  
+  util_double_to_float(float_data , poro  , nactive); hash_insert_hash_owned_ref(kw_hash , "PORO"  , ecl_kw_alloc_complete(fmt_file , ENDIAN_CONVERT , "PORO"  , nactive , ecl_float_type , float_data) , ecl_kw_free__);
+  util_double_to_float(float_data , permz , nactive); hash_insert_hash_owned_ref(kw_hash , "PERMZ" , ecl_kw_alloc_complete(fmt_file , ENDIAN_CONVERT , "PERMZ" , nactive , ecl_float_type , float_data) , ecl_kw_free__);
+  util_double_to_float(float_data , permx , nactive); hash_insert_hash_owned_ref(kw_hash , "PERMX" , ecl_kw_alloc_complete(fmt_file , ENDIAN_CONVERT , "PERMX" , nactive , ecl_float_type , float_data) , ecl_kw_free__);
+  util_double_to_float(float_data , permx , nactive); hash_insert_hash_owned_ref(kw_hash , "PERMY" , ecl_kw_alloc_complete(fmt_file , ENDIAN_CONVERT , "PERMY" , nactive , ecl_float_type , float_data) , ecl_kw_free__);
+  
+  ecl_fstate_filter_file(src_file , target_file , kw_hash , ENDIAN_CONVERT);
+
+  hash_free(kw_hash);
+  free(float_data);
+  free(src_file);
+  free(target_file);
+}
 
 
-/* void ecl_inter_get_kw_data(const char *header , char *buffer) { */
-/*   ecl_kw_type * ecl_kw = ecl_fstate_get_kw(ECL_FSTATE , header); */
-/*   ecl_kw_get_memcpy_data(ecl_kw , buffer); */
-/*   ecl_kw_free(ecl_kw); */
-/* } */
-
-
-/* void ecl_inter_add_kwc(const char *header  , const char *ecl_str_type ,  const char *buffer) { */
-/*   ecl_kw_type *ecl_kw = ecl_kw_alloc_complete(true , endian_convert , header , size , ecl_str_type ,  buffer); */
-/*   ecl_fstate_add_kw_copy(ECL_FSTATE , ecl_kw); */
-/*   ecl_kw_free(ecl_kw); */
-/* } */
-
-
-
-/* void ecl_inter_write_file() { */
-/*   ecl_fstate_fwrite(ECL_FSTATE); */
-/* } */
 
 

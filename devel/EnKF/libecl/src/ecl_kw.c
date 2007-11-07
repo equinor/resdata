@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -6,6 +5,7 @@
 #include <math.h>
 #include <inttypes.h>
 #include <ecl_kw.h>
+#include <ecl_util.h>
 #include <fortio.h>
 #include <util.h>
 
@@ -108,12 +108,16 @@ void ecl_kw_set_fmt_file(ecl_kw_type *ecl_kw , bool fmt_file) {
   ecl_kw->fmt_file = fmt_file;
 }
 
+bool ecl_kw_get_fmt_file(const ecl_kw_type *ecl_kw) {
+  return ecl_kw->fmt_file;
+}
+
 void ecl_kw_select_formatted(ecl_kw_type *ecl_kw) { ecl_kw_set_fmt_file(ecl_kw , true ); }
 void ecl_kw_select_binary(ecl_kw_type *ecl_kw) { ecl_kw_set_fmt_file(ecl_kw , false); }
 
 const char * ecl_kw_get_header_ref(const ecl_kw_type *ecl_kw) { return ecl_kw->header; }
 
-char * ecl_kw_alloc_strip_header(const ecl_kw_type * ecl_kw) {
+char * ecl_kw_alloc_strip_header(const ecl_kw_type *ecl_kw) {
   return util_alloc_strip_copy(ecl_kw->header);
 }
 
@@ -247,10 +251,10 @@ ecl_kw_type * ecl_kw_alloc_empty(bool fmt_file , bool endian_convert) {
 
   ecl_kw = malloc(sizeof *ecl_kw);
   ecl_kw->endian_convert = endian_convert;
-  ecl_kw->header    = NULL;
-  ecl_kw->read_fmt  = NULL;
-  ecl_kw->write_fmt = NULL;
-  ecl_kw->data 	    = NULL;
+  ecl_kw->header       = NULL;
+  ecl_kw->read_fmt     = NULL;
+  ecl_kw->write_fmt    = NULL;
+  ecl_kw->data 	       = NULL;
   ecl_kw->shared_data  = false;
   ecl_kw->size         = 0;
   ecl_kw->data_size    = 0;
@@ -697,7 +701,7 @@ void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
     tmp = realloc(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
     if (tmp == NULL) {
       if (ecl_kw->size * ecl_kw->sizeof_ctype != 0) {
-	fprintf(stderr,"Allocation of %d bytes in %s failed - aborting \n",ecl_kw->size * ecl_kw->sizeof_ctype , __func__);
+	fprintf(stderr,"%s: Allocation of %d bytes failed - aborting \n",__func__ , ecl_kw->size * ecl_kw->sizeof_ctype);
 	abort();
       }
     }
@@ -766,35 +770,6 @@ ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio , bool fmt_file) {
 }
 
 
-ecl_kw_type * ecl_kw_fscanf_alloc_include_data(FILE * stream , int size , ecl_type_enum ecl_type , bool endian_flip) {
-  char buffer[9];
-  
-  ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(true , endian_flip);
-  ecl_kw_init_types(ecl_kw , ecl_type);
-  ecl_kw->size     = size;
-  ecl_kw_alloc_data(ecl_kw);
-
-  fscanf(stream , "%s" , buffer);
-  ecl_kw_set_header_name(ecl_kw , buffer);
-  {
-    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , endian_flip , stream);
-    ecl_kw_fread_data(ecl_kw , fortio);
-    fscanf(stream , "%s" , buffer);
-
-    if (buffer[0] != '/') {
-      fprintf(stderr,"%s: Did not find '/' at end of %s \n",__func__ , ecl_kw->header);
-      abort();
-    }
-    fortio_free_FILE_wrapper(fortio);
-  }
-
-  return ecl_kw;
-}
-
-
-ecl_kw_type * ecl_kw_fscanf_alloc_parameter(FILE * stream , int size , bool endian_flip) {
-  return ecl_kw_fscanf_alloc_include_data(stream , size , ecl_float_type , endian_flip);
-}
 
 
 void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
@@ -1189,6 +1164,51 @@ void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
 	 ecl_kw_get_str_type_ref(ecl_kw));
 }
 
+void ecl_kw_fprintf_grdecl(ecl_kw_type * ecl_kw , FILE * stream) {
+  fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , stream);   /* Endian flip should *NOT* be used */
+  bool org_fmt = ecl_kw_get_fmt_file(ecl_kw);
+  ecl_kw_set_fmt_file(ecl_kw , true);
+  fprintf(stream,"%s\n" , ecl_kw_get_header_ref(ecl_kw));
+  ecl_kw_fwrite_data(ecl_kw , fortio);
+  fprintf(stream,"\n/"); /* Unsure about the leading newline ?? */
+  fortio_free_FILE_wrapper(fortio);
+  ecl_kw_set_fmt_file(ecl_kw , org_fmt);
+}
+
+
+
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_type_enum ecl_type , bool endian_flip) {
+  char buffer[9];
+  
+  ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(true , endian_flip);
+  ecl_kw_init_types(ecl_kw , ecl_type);
+  ecl_kw->size     = size;
+  ecl_kw_alloc_data(ecl_kw);
+
+  fscanf(stream , "%s" , buffer);
+  ecl_kw_set_header_name(ecl_kw , buffer);
+  {
+    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , endian_flip , stream);
+    ecl_kw_fread_data(ecl_kw , fortio);
+    fscanf(stream , "%s" , buffer);
+
+    if (buffer[0] != '/') {
+      fprintf(stderr,"%s: Did not find '/' at end of %s \n",__func__ , ecl_kw->header);
+      abort();
+    }
+    fortio_free_FILE_wrapper(fortio);
+  }
+
+  return ecl_kw;
+}
+
+
+ecl_kw_type * ecl_kw_fscanf_alloc_parameter(FILE * stream , int size , bool endian_flip) {
+  return ecl_kw_fscanf_alloc_grdecl_data(stream , size , ecl_float_type , endian_flip);
+}
+
+
+
 /*****************************************************************/
 
 
@@ -1392,6 +1412,36 @@ void ecl_kw_inplace_div(ecl_kw_type * my_kw , const ecl_kw_type * div_kw) {
 }
 
 
+void ecl_kw_inplace_inv(ecl_kw_type * my_kw) {
+  int            size = ecl_kw_get_size(my_kw);
+  ecl_type_enum type = ecl_kw_get_type(my_kw);
+  {
+    int i;
+    void * my_data        = ecl_kw_get_data_ref(my_kw);
+
+    switch (type) {
+    case(ecl_double_type):
+      {
+	double *my_double        = (double *) my_data;
+	for (i=0; i < size; i++)
+	  my_double[i] = 1.0/ my_double[i];
+	break;
+      }
+    case(ecl_float_type):
+      {
+	float *my_float        = (float *)       my_data;
+	for (i=0; i < size; i++)
+	  my_float[i] = 1.0 / my_float[i];
+	break;
+      }
+    default:
+      fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
+      abort();
+    }
+  }
+}
+
+
 
 static void ecl_kw_inplace_add__(ecl_kw_type * my_kw , int my_offset , const ecl_kw_type * add_kw , bool different_size_ok) {
   ecl_type_enum type  = ecl_kw_get_type(my_kw);
@@ -1457,3 +1507,25 @@ void ecl_kw_inplace_add(ecl_kw_type * my_kw , const ecl_kw_type * add_kw) {
 void ecl_kw_inplace_add_subkw(ecl_kw_type * my_kw , int my_offset , const ecl_kw_type * add_kw) {
   ecl_kw_inplace_add__(my_kw , my_offset , add_kw , true);
 }
+
+
+
+void ecl_kw_boxed_set(ecl_kw_type * main_kw , const ecl_kw_type * sub_kw , const ecl_box_type * ecl_box) {
+  if (main_kw->sizeof_ctype != sub_kw->sizeof_ctype) {
+    fprintf(stderr,"%s: trying to combine two different underlying datatypes - aborting \n",__func__);
+    abort();
+  }
+  if (ecl_kw_get_size(main_kw) != ecl_box_get_total_size(ecl_box)) {
+    fprintf(stderr,"%s box size and total_kw mismatch - aborting \n",__func__);
+    abort();
+  }
+  if (ecl_kw_get_size(sub_kw)   != ecl_box_get_box_size(ecl_box)) {
+    fprintf(stderr,"%s box size and total_kw mismatch - aborting \n",__func__);
+    abort();
+  }
+
+  ecl_box_set_values(ecl_box , ecl_kw_get_data_ref(main_kw) , ecl_kw_get_data_ref(sub_kw) , main_kw->sizeof_ctype);
+}
+
+
+

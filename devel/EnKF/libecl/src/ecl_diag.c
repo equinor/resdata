@@ -282,6 +282,7 @@ static void read_int(const char *prompt , int len , int *i) {
 }
 
 
+
 static char ** fread_alloc_wells(const char *well_file , int *_nwell) {
   FILE *fileH;
   char **well_list = NULL;
@@ -291,7 +292,7 @@ static char ** fread_alloc_wells(const char *well_file , int *_nwell) {
   if (util_file_exists(well_file)) {
     fileH = fopen(well_file , "r");
     util_fskip_lines(fileH , 3);
-    while ( fscanf(fileH , "%s" , well) == 1) {
+    while ( fscanf(fileH , "%s" , well ) == 1) {
       set_add_key(well_set , well);
       util_fskip_lines(fileH , 1);
     }
@@ -427,6 +428,7 @@ static char ** fread_alloc_wells(const char *well_file , int *_nwell) {
 /*   closedir(priorH); */
 
 /* } */
+
 
 
 

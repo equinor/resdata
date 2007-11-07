@@ -40,18 +40,30 @@ struct ecl_fstate_struct {
 
 
 bool ecl_fstate_fmt_file(const char *filename) {
-  const int min_size = 32768;
+  /*const int min_size = 32768;*/
+  const int min_size = 1024;
+  
   int report_nr;
   ecl_file_type file_type;
 
   bool fmt_file;
   if (util_file_exists(filename)) {
     if (util_file_size(filename) > min_size)
-      fmt_file = util_fmt_bit8(filename , min_size);
-    else
+      fmt_file = util_fmt_bit8(filename , 131072);
+    else {
       ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
-  } else
+      if (file_type == ecl_other_file) {
+	fprintf(stderr,"%s: sorry could not determine file type of file:%s - aborting \n",__func__ , filename);
+	abort();
+      }
+    }
+  } else {
     ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
+    if (file_type == ecl_other_file) {
+      fprintf(stderr,"%s: sorry could not determine file type of file:%s - aborting \n",__func__ , filename);
+      abort();
+    }
+  }
   
   return fmt_file;
 }
@@ -83,7 +95,7 @@ ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , ecl_file_type file_type 
 
 
 static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
-  const bool existing_fmt = ecl_fstate->fmt_file;
+
   switch(ecl_fstate->fmt_mode) {
   case ECL_FORMATTED:
     ecl_fstate->fmt_file = true;
@@ -98,7 +110,8 @@ static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
     fprintf(stderr,"%s: internal error - fmt_mode=%d invalid - aborting \n",__func__ , ecl_fstate->fmt_mode);
     abort();
   }
-  if (ecl_fstate->fmt_file != existing_fmt) {
+  
+  {
     int i;
     for (i=0; i < ecl_fstate->N_blocks; i++)
       ecl_block_set_fmt_file(ecl_fstate->block_list[i] , ecl_fstate->fmt_file);
@@ -381,160 +394,50 @@ int ecl_fstate_get_report_size(const ecl_fstate_type * ecl_fstate , int * first_
   
 
 
+/*****************************************************************/
 
-/* void ecl_fstate_set_filename(ecl_fstate_type *ecl_fstate , const char *filename) { */
-/*   ecl_fstate->filename = malloc(strlen(filename)+1); */
-/*   strcpy(ecl_fstate->filename , filename);   */
-/* } */
+/*****************************************************************/
 
 
-/* ecl_fstate_type * ecl_fstate_alloc(const char *filename , int Nkw , int fmt_mode , bool endian_convert) { */
-/*   ecl_fstate_type *ecl_fstate; */
-/*   bool fmt_file; */
-  
-/*   if (fmt_mode == 0) { */
-/*     if (file_exists(filename)) */
-/*       fmt_file = ecl_fstate_fmt(filename , 16384); */
-/*     else { */
-/*       fprintf(stderr,"Error in %s - can *not* be called with fmt_mode == 0 for nonexisting file \n",__func__); */
-/*       abort(); */
-/*     } */
-/*   } else if (fmt_mode > 0) */
-/*     fmt_file = true; */
-/*   else */
-/*     fmt_file = false; */
-  
-/*   ecl_fstate = malloc(sizeof *ecl_fstate); */
-/*   ecl_fstate_set_filename(ecl_fstate , filename); */
-/*   ecl_fstate->fmt_file       = fmt_file; */
-/*   ecl_fstate->endian_convert = endian_convert; */
-/*   ecl_fstate->size           = 0; */
-/*   ecl_fstate->kw_list_size   = Nkw; */
-/*   ecl_fstate->kw_list        = calloc(Nkw , sizeof(ecl_kw_type *)); */
-/*   ecl_fstate->unified        = false; */
-/*   { */
-/*     int i; */
-/*     for (i=0; i < ecl_fstate->kw_list_size; i++) */
-/*       ecl_fstate->kw_list[i] = NULL; */
-/*   } */
-  
-/*   return ecl_fstate; */
-/* } */
+/*
+  This function is spesifically made for the following:
+
+  o Read an INIT file and replace some of the keywords with updated
+    values.
+ 
+  o It does not work on a proper ecl_fstate object, and in particular 
+    does not handle replacing a keyword appearing several times in a 
+    decent way.
+*/
 
 
-/* void ecl_fstate_add_kw(ecl_fstate_type *ecl_fstate , const ecl_kw_type *ecl_kw) { */
-/*   if (ecl_fstate->size == ecl_fstate->kw_list_size) { */
-/*     ecl_fstate->kw_list_size *= 2; */
-/*     ecl_fstate->kw_list = realloc(ecl_fstate->kw_list , ecl_fstate->kw_list_size * sizeof(ecl_kw_type *)); */
-/*   } */
-/*   ecl_fstate->kw_list[ecl_fstate->size] = (ecl_kw_type *) ecl_kw; */
-/*   ecl_fstate->size++; */
-/* } */
-
-
-/* void ecl_fstate_add_kw_copy(ecl_fstate_type *ecl_fstate , const ecl_kw_type *src_kw) { */
-/*   ecl_kw_type *new_kw; */
-/*   new_kw = ecl_kw_alloc_clone(src_kw); */
-/*   ecl_fstate_add_kw(ecl_fstate , new_kw); */
-/* } */
-
-
-/* void ecl_fstate_load(ecl_fstate_type *ecl_fstate, int verbosity) { */
-/*   ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(ecl_fstate->fmt_file , ecl_fstate->endian_convert); */
-/*   fortio_type *fortio = fortio_open(ecl_fstate->filename , "r" , ecl_fstate->endian_convert); */
-/*   if (verbosity >= 1) */
-/*     printf("Loading:%s \n",ecl_fstate->filename); */
-
-/*   while (ecl_kw_fread_realloc(ecl_kw , fortio)) { */
-/*     ecl_fstate_add_kw_copy(ecl_fstate , ecl_kw); */
-/*     if (verbosity >= 2)  */
-/*       printf("Loading: %s/%s \n",ecl_fstate->filename , ecl_kw_get_header_ref(ecl_kw)); */
+void ecl_fstate_filter_file(const char * src_file , const char * target_file , const hash_type * kw_hash , bool endian_flip) {
+  if (util_same_file(src_file , target_file)) {
+    fprintf(stderr,"%s %s and %s are the same (physical) file - this is not supported - aborting \n",__func__ , src_file , target_file);
+    abort();
+  }
+  {
+    fortio_type * src    = fortio_open(src_file , "r" , endian_flip );
+    fortio_type * target = fortio_open(target_file , "w" , endian_flip);
+    bool fmt_file        = ecl_fstate_fmt_file(src_file);
+    ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_flip);
+    bool OK;
     
-/*   } */
-  
-/*   ecl_kw_free(ecl_kw); */
-/*   fortio_close(fortio); */
-/* } */
-
-
-/* static bool ecl_fstate_include_kw(const ecl_fstate_type *ecl_fstate , const ecl_kw_type *ecl_kw , int N_kw, const char **kwlist) { */
-/*   const char *kw = ecl_kw_get_header_ref(ecl_kw); */
-/*   bool inc = false; */
-/*   int i; */
-  
-/*   for (i=0; i < N_kw; i++) { */
-/*     if (strcmp(kwlist[i] , kw) == 0) { */
-/*       inc = true; */
-/*       break; */
-/*     } */
-/*   } */
-/*   return inc; */
-/* } */
-
-
-/* void ecl_fstate_set_fmt_file(ecl_fstate_type *ecl_fstate , bool fmt_file) { */
-/*   ecl_fstate->fmt_file = fmt_file; */
-/* } */
-
-/* void ecl_fstate_select_formatted(ecl_fstate_type *ecl_fstate) { ecl_fstate_set_fmt_file(ecl_fstate , true ); } */
-/* void ecl_fstate_select_binary(ecl_fstate_type *ecl_fstate) { ecl_fstate_set_fmt_file(ecl_fstate , false); } */
-
-
-/* void ecl_fstate_load_kwlist(ecl_fstate_type *ecl_fstate , int N_kw, const char **kwlist) { */
-/*   ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(ecl_fstate->fmt_file , ecl_fstate->endian_convert); */
-/*   fortio_type *fortio = fortio_open(ecl_fstate->filename , "r"  , ecl_fstate->endian_convert); */
-
-/*   while (ecl_kw_fread_header(ecl_kw , fortio)) { */
-/*     if (ecl_fstate_include_kw(ecl_fstate, ecl_kw , N_kw , kwlist)) { */
-/*       ecl_kw_alloc_data(ecl_kw); */
-/*       ecl_kw_fread_data(ecl_kw , fortio); */
-/*       ecl_fstate_add_kw_copy(ecl_fstate , ecl_kw); */
-/*     } else  */
-/*       ecl_kw_fskip_data(ecl_kw , fortio); */
-/*   } */
-/*   ecl_kw_free(ecl_kw); */
-/*   fortio_close(fortio); */
-/* } */
-
-
-/* void ecl_fstate_fwrite(ecl_fstate_type *ecl_fstate) { */
-/*   fortio_type *fortio = fortio_open(ecl_fstate->filename , "w" , ecl_fstate->endian_convert); */
-/*   int ikw; */
-/*   for (ikw = 0; ikw < ecl_fstate->size; ikw++) { */
-/*     ecl_kw_set_fmt_file(ecl_fstate->kw_list[ikw] , ecl_fstate->fmt_file); */
-/*     ecl_kw_fwrite(ecl_fstate->kw_list[ikw] , fortio); */
-/*   } */
-/*   fortio_close(fortio); */
-/* } */
-
-
-
-/* ecl_kw_type * ecl_fstate_get_kw(const ecl_fstate_type *ecl_fstate , const char *kw) { */
-/*   int i; */
-/*   ecl_kw_type *ecl_kw = NULL; */
-/*   for (i=0; i < ecl_fstate->size; i++) { */
-/*     if (strcmp(kw , ecl_kw_get_header_ref(ecl_fstate->kw_list[i])) == 0) { */
-/*       ecl_kw = ecl_fstate->kw_list[i]; */
-/*       break; */
-/*     } */
-/*   } */
-/*   return ecl_kw; */
-/* } */
-
-
-/* void * ecl_fstate_get_data_ref(const ecl_fstate_type *ecl_fstate, const char *kw) { */
-/*   if (ecl_fstate != NULL) { */
-/*     ecl_kw_type *ecl_kw = ecl_fstate_get_kw(ecl_fstate , kw); */
-/*     if (ecl_kw != NULL) */
-/*       return ecl_kw_get_data_ref(ecl_kw); */
-/*     else */
-/*       return NULL;  */
-/*   } else */
-/*     return NULL; */
-/* } */
-
-
-
-
-
-
+    do {
+      OK = ecl_kw_fread_realloc(ecl_kw , src);
+      if (OK) {
+	char * strip_kw = util_alloc_strip_copy(ecl_kw_get_header_ref(ecl_kw));
+	if (hash_has_key(kw_hash , strip_kw)) {
+	  ecl_kw_type * new_kw = hash_get(kw_hash , strip_kw);
+	  if (new_kw != NULL) 
+	    ecl_kw_fwrite(new_kw , target);
+	} else
+	  ecl_kw_fwrite(ecl_kw , target);
+	free(strip_kw);
+      }
+    } while (OK);
+    ecl_kw_free(ecl_kw);
+    fortio_close(src);
+    fortio_close(target);
+  }
+}

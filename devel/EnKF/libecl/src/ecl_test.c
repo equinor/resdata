@@ -11,28 +11,39 @@
 
 
 int main(int argc, char ** argv) {
-  /*  const double tvd[55] = {0.27258293E+04,   0.27365356E+04,   0.27514102E+04,   0.27539917E+04,
-			  0.27565728E+04,   0.27591538E+04,   0.27617351E+04,   0.27643162E+04,
-			  0.27668975E+04,   0.27694788E+04,   0.27720598E+04,   0.27746411E+04,
-			  0.27765449E+04,   0.27777712E+04,   0.27789976E+04,   0.27823044E+04,
-			  0.27827869E+04,   0.27832690E+04,   0.27837512E+04,   0.27842336E+04,
-			  0.27847158E+04,   0.27851982E+04,   0.27863728E+04,   0.27872747E+04,
-			  0.27881765E+04,   0.27890784E+04,   0.27899802E+04,   0.27908823E+04,
-			  0.27917842E+04,   0.27926860E+04,   0.27935881E+04,   0.27944902E+04,
-			  0.28107236E+04,   0.28117195E+04,   0.28127148E+04,   0.28143879E+04,
-			  0.28167388E+04,   0.28190894E+04,   0.28214399E+04,   0.28237903E+04,
-			  0.28261414E+04,   0.28284919E+04,   0.28308423E+04,   0.28331931E+04,
-			  0.28355437E+04,   0.28377681E+04,   0.28398660E+04,   0.28419641E+04,
-			  0.28440620E+04,   0.28461602E+04,   0.28482581E+04,   0.28503562E+04,
-			  0.28524541E+04,   0.28545518E+04,   0.28566501E+04};
-  int i[55];
-  int j[55];
-  int k[55];
-
-  ecl_rft_vector_type * rft_vector = ecl_rft_vector_alloc(argv[1] , true);
-  ecl_rft_vector_block(rft_vector , "B-43" , 55   , tvd , i , j  , k);
-  ecl_rft_vector_free(rft_vector);
-  */
-  printf("Gjetter: %s \n",ecl_util_alloc_base_guess("/h/a152128/EnKF_ON/Run-FMT-Test/PriorEns2/tmpdir_0004"));
+  ecl_rft_vector_type * rft_vector = ecl_rft_vector_alloc("/d/proj/bg/enkf/EnKF_OE/Refcase/ECLIPSE_030807.RFT", true);
+  {
+    int wells , i;
+    char ** well_list = ecl_rft_vector_alloc_well_list(rft_vector , &wells);
+    for (i=0; i < wells; i++)
+      printf("well[%2d] = %s \n",i,well_list[i]);
+  }
+  ecl_rft_vector_fprintf_rft_obs(rft_vector , "E4" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E4"       , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0007/RFT" , 1.0);
+  ecl_rft_vector_fprintf_rft_obs(rft_vector , "E6" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E6"       , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0020/RFT" , 1.0);  /* E6: To ganger */
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E14_RFT"  , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E14_RFT"  , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0022/RFT" , 1.0);*/
+  ecl_rft_vector_fprintf_rft_obs(rft_vector , "E6" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E6"       , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0027/RFT" , 1.0);
+  ecl_rft_vector_fprintf_rft_obs(rft_vector , "E1" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E1"       , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0030/RFT" , 1.0);
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E8_RFT" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E8_rft"   , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0039/RFT" , 1.0);
+    ecl_rft_vector_fprintf_rft_obs(rft_vector , "E9_RFT" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E9_rft"   , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0042/RFT" , 1.0);  E9_RFT to ganger */
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E12_RFT"  , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E12_rft"  , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0048/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E9_RFT" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E9_rft"   , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0051/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E9A_RFT"  , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E9A_rft"  , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0055/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E12W"     , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E12W"     , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0057/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E8" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E8"       , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0061/RFT" , 1.0); */ /* E8 to ganger */
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E5A_RFT"  , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E5A_rft"  , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0063/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E2" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E2"       , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0065/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E7" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E7"       , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0070/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E14W" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E14W"     , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0071/RFT" , 1.0);*/ /* E14W to ganger */
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E7A_RFT"  , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E7A_rft"  , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0074/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E11A_RFT" , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E11A_RFT" , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0078/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E12W" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E12W"     , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0082/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E7A" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E7A"      , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0087/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E15" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E15"      , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0088/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E1A" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E1A"      , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0095/RFT" , 1.0);*/
+  ecl_rft_vector_fprintf_rft_obs(rft_vector , "E6A" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E6A"      , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0103/RFT" , 1.0);
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E6B" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E6B"      , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0106/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E3A_RFT"  , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E3A_rft"  , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0129/RFT" , 1.0);*/
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E14W" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E14W"     , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0245/RFT" , 1.0); */
+  /*ecl_rft_vector_fprintf_rft_obs(rft_vector , "E8" 	 , "/d/proj/bg/enkf/EnKF_OE/Static/rft/E8"       , "/d/proj/bg/enkf/EnKF_OE/Run3/Observations/0246/RFT" , 1.0); */ /* E8 to ganger */
   return 0;
 }
