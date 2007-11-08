@@ -1510,7 +1510,7 @@ void ecl_kw_inplace_add_subkw(ecl_kw_type * my_kw , int my_offset , const ecl_kw
 
 
 
-void ecl_kw_boxed_set(ecl_kw_type * main_kw , const ecl_kw_type * sub_kw , const ecl_box_type * ecl_box) {
+void ecl_kw_merge(ecl_kw_type * main_kw , const ecl_kw_type * sub_kw , const ecl_box_type * ecl_box) {
   if (main_kw->sizeof_ctype != sub_kw->sizeof_ctype) {
     fprintf(stderr,"%s: trying to combine two different underlying datatypes - aborting \n",__func__);
     abort();
@@ -1529,3 +1529,90 @@ void ecl_kw_boxed_set(ecl_kw_type * main_kw , const ecl_kw_type * sub_kw , const
 
 
 
+/******************************************************************/
+
+bool ecl_kw_is_kw_file(FILE * stream , bool fmt_file , bool endian_flip) {
+  const long int init_pos = ftell(stream);
+  bool kw_file;
+  
+  {
+    ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_flip);
+    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , endian_flip , stream);
+    kw_file = ecl_kw_fread_header(ecl_kw , fortio);
+    fortio_free_FILE_wrapper(fortio);
+  }
+  
+  fseek(stream , init_pos , SEEK_SET);
+  return kw_file;
+}
+
+
+
+
+
+#define KW_MAX_MIN(type)                       		 \
+{                                              		 \
+  type * data = ecl_kw_get_data_ref(ecl_kw);   		 \
+  type max = -data[0];                         		 \
+  type min =  data[0];                         		 \
+  int i;                                       		 \
+  for (i=1; i < ecl_kw_get_size(ecl_kw); i++)  		 \
+      util_update_ ## type ## _max_min(data[i] , &max , &min); \
+  memcpy(_max , &max , ecl_kw->sizeof_ctype);            \
+  memcpy(_min , &min , ecl_kw->sizeof_ctype);            \
+}
+
+
+
+void ecl_kw_max_min(const ecl_kw_type * ecl_kw , void * _max , void *_min) {
+  switch (ecl_kw->ecl_type) {
+  case(ecl_float_type):
+    KW_MAX_MIN(float);
+    break;
+  case(ecl_double_type):
+    KW_MAX_MIN(double);
+    break;
+  case(ecl_int_type):
+    KW_MAX_MIN(int);
+    break;
+  default:
+    fprintf(stderr,"%s: invalid type for element sum \n",__func__);
+    abort();
+  }
+}
+
+#undef KW_MAX_MIN
+
+
+
+
+#define KW_SUM(type)                           \
+{                                              \
+  type * data = ecl_kw_get_data_ref(ecl_kw);   \
+  type sum = 0;                                \
+  int i;                                       \
+  for (i=0; i < ecl_kw_get_size(ecl_kw); i++)  \
+     sum += data[i];                           \
+  memcpy(_sum , &sum , ecl_kw->sizeof_ctype);  \
+}
+
+
+
+void ecl_kw_element_sum(const ecl_kw_type * ecl_kw , void * _sum) {
+  switch (ecl_kw->ecl_type) {
+  case(ecl_float_type):
+    KW_SUM(float);
+    break;
+  case(ecl_double_type):
+    KW_SUM(double);
+    break;
+  case(ecl_int_type):
+    KW_SUM(int);
+    break;
+  default:
+    fprintf(stderr,"%s: invalid type for element sum \n",__func__);
+    abort();
+  }
+}
+
+#undef KW_SUM

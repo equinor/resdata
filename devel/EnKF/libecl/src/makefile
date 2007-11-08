@@ -7,7 +7,7 @@ COMPILE_INCLUDE   = -I./ -I../../libhash/include -I../../libutil/include
 INSTALL_INC_PATH = ../include
 INSTALL_LIB_PATH = ../lib
 #################################################################
-CFLAGS  = -O2 -$(MFLAG)  -std=gnu99 -g -Wall 
+CFLAGS  = -O2 -$(MFLAG)  -std=gnu99 -g -Wall -fPIC
 ARFLAGS = -csr
 #################################################################
 OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_diag.o ecl_rft_vector.o ecl_rft_node.o

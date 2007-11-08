@@ -69,6 +69,7 @@ void          ecl_kw_summarize(const ecl_kw_type * ecl_kw);
 void          ecl_kw_fread_double_param(const char * , bool , bool , double *);
 void          ecl_kw_get_data_as_double(const ecl_kw_type *, double *);
 
+bool ecl_kw_is_kw_file(FILE * , bool , bool );
 void ecl_kw_inplace_sub(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_mul(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_add(ecl_kw_type * , const ecl_kw_type * );
@@ -78,6 +79,7 @@ void ecl_kw_inplace_inv(ecl_kw_type * my_kw);
 void ecl_kw_scalar_init(ecl_kw_type * , double );
 void ecl_kw_scale(ecl_kw_type * , double );
 void ecl_kw_shift(ecl_kw_type * , double );
-void ecl_kw_boxed_set(ecl_kw_type * , const ecl_kw_type * , const ecl_box_type * );
-
+void ecl_kw_merge(ecl_kw_type * , const ecl_kw_type * , const ecl_box_type * );
+void ecl_kw_element_sum(const ecl_kw_type * , void * );
+void ecl_kw_max_min(const ecl_kw_type * , void * , void *);
 #endif

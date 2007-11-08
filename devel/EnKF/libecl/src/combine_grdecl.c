@@ -15,10 +15,10 @@ int main(int argc, char ** argv) {
 
   ecl_kw_type  * main_kw;
   ecl_box_type * ecl_box;
-
+  
   printf("Main filename => "); 
   scanf("%s" , filename); 
-  printf("Total size of grid => ");
+  printf("Total size of grid (nx ny nz) => ");
   scanf("%d %d %d" , &nx , &ny , &nz);
   
   {
@@ -32,25 +32,38 @@ int main(int argc, char ** argv) {
     int scan_count;
     int x1,x2,y1,y2,z1,z2;
     do {
-      printf("Box: file x1 x2 y1 y2 z1 z2 (^D to exit): ");
+      printf("box: file x1 x2 y1 y2 z1 z2 (^d to exit): ");
       scan_count = scanf("%s %d %d %d %d %d %d" , filename , &x1 , &x2 , &y1 , &y2 , &z1 , &z2);
       if (scan_count == 7) {
 	ecl_box_set_size(ecl_box, x1,x2 , y1 , y2 , z1 , z2);
 	{
 	  FILE * stream = util_fopen(filename , "r");
 	  ecl_kw_type * sub_kw = ecl_kw_fscanf_alloc_grdecl_data(stream , ecl_box_get_box_size(ecl_box) , ecl_type , endian_flip);
-	  ecl_kw_boxed_set(main_kw , sub_kw , ecl_box);
+	  ecl_kw_merge(main_kw , sub_kw , ecl_box);
 	  ecl_kw_free(sub_kw);
 	  fclose(stream);
 	}
-      } else if (scan_count == 1) {
-	FILE * stream = util_fopen(filename , "w");
-	ecl_kw_fprintf_grdecl(main_kw , stream);
-	printf("New kw saved to: %s \n",filename);
-	fclose(stream);
+      } else if (scan_count == 2) {
+	int format = x1;
+
+	if (format == 1) {
+	  FILE * stream = util_fopen(filename , "w");
+	  ecl_kw_fprintf_grdecl(main_kw , stream);
+	  printf("New kw saved to: %s \n",filename);
+	  fclose(stream);
+	} else {
+	  fortio_type * fortio = fortio_open(filename , "w" , endian_flip);
+	  ecl_kw_set_fmt_file(main_kw , false);
+	  ecl_kw_fwrite(main_kw , fortio);
+	  printf("New kw saved to: %s \n",filename);
+	  fortio_close(fortio);
+	}
+	
       }
-    } while (scan_count == 7);
+    } while (scan_count != EOF);
   }
+  ecl_box_free(ecl_box);
+  ecl_kw_free(main_kw);
 
   exit(1);
 }
