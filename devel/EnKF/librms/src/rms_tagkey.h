@@ -42,5 +42,7 @@ void rms_tagkey_inplace_add(rms_tagkey_type * , const rms_tagkey_type *);
 void rms_tagkey_inplace_add_scaled(rms_tagkey_type * , const rms_tagkey_type * , double);
 void rms_tagkey_scale(rms_tagkey_type * , double );
 void rms_tagkey_clear(rms_tagkey_type *  );
+int  rms_tagkey_get_sizeof_ctype(const rms_tagkey_type * );
+void rms_tagkey_max_min(const rms_tagkey_type * , void *, void *);
 
 #endif

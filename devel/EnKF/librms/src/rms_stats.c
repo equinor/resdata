@@ -16,18 +16,18 @@ void rms_stats_mean_std(rms_tagkey_type * mean , rms_tagkey_type * std , const c
   rms_tagkey_clear(mean);
   rms_tagkey_clear(std);
 
+
   printf("Loading: ");
   for (filenr = 0; filenr < files; filenr++) {
     printf("%s",filelist[filenr]); fflush(stdout);
     {
-      rms_file_type *rms_file = rms_file_alloc(filelist[filenr] , false);
+      rms_file_type *rms_file    = rms_file_alloc(filelist[filenr] , false);
       rms_tagkey_type * file_tag = rms_file_fread_alloc_data_tagkey(rms_file, "parameter" , "name" , parameter_name);
-
+      
       if (log_transform)
 	rms_tagkey_inplace_log10(file_tag);
-
-      rms_tagkey_inplace_add_scaled(mean , file_tag , norm);
       
+      rms_tagkey_inplace_add_scaled(mean , file_tag , norm);
       rms_tagkey_inplace_sqr(file_tag);
       rms_tagkey_inplace_add_scaled(std , file_tag , norm);
       rms_tagkey_free(file_tag);
@@ -50,7 +50,18 @@ void rms_stats_mean_std(rms_tagkey_type * mean , rms_tagkey_type * std , const c
     rms_tagkey_inplace_sqrt(std);
     rms_tagkey_free(mean2);
   }
+
+  {
+    float max,min;
+    rms_tagkey_max_min(std, &max , &min);
+    printf("std: %g -> %g \n",min,max);
+
+    rms_tagkey_max_min(mean , &max , &min);
+    printf("avg: %g -> %g \n",min,max);
+    exit(1);
+  }
 }
+
 
 
 void rms_stats_update_ens(const char *prior_path , const char *posterior_path , const char **file_list , const char *param_name , int ens_size , const double **X) {
@@ -99,10 +110,10 @@ void rms_stats_update_ens(const char *prior_path , const char *posterior_path , 
       FILE *stream        = rms_file_fopen_w(file);
 
       printf("%s",file_name); fflush(stdout);
-      rms_file_init_fwrite(file , "parameter" , stream);
+      rms_file_init_fwrite(file , "parameter");
       rms_tag_fwrite(dim_tag , stream);
       rms_tag_fwrite_parameter(param_name , post , stream);
-      rms_file_complete_fwrite(file , stream);
+      rms_file_complete_fwrite(file);
       fclose(stream);
       rms_file_free(file);
       

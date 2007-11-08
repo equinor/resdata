@@ -10,6 +10,10 @@
 
 typedef struct rms_tag_struct rms_tag_type;
 
+int               rms_tag_get_datakey_sizeof_ctype(const rms_tag_type * );
+const char      * rms_tag_get_namekey_name(const rms_tag_type * );
+const char      * rms_tag_get_name(const rms_tag_type *);
+rms_tagkey_type * rms_tag_get_datakey(const rms_tag_type *);
 void           	  rms_tag_free(rms_tag_type *);
 rms_tag_type    * rms_tag_fread_alloc(FILE *, hash_type *, bool , bool *);
 bool           	  rms_tag_name_eq(const rms_tag_type *, const char * , const char *, const char *);

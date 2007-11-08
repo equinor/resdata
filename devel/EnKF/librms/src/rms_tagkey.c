@@ -310,6 +310,42 @@ void rms_tagkey_inplace_mul(rms_tagkey_type * tagkey , const rms_tagkey_type *de
 }
 
 
+#define TAGKEY_MAX_MIN(type)                       	 \
+{                                              		 \
+  type * data = rms_tagkey_get_data_ref(tagkey);         \
+  type max = -data[0];                         		 \
+  type min =  data[0];                         		 \
+  int i;                                       		 \
+  for (i=1; i < tagkey->size; i++)        		 \
+      util_update_ ## type ## _max_min(data[i] , &max , &min); \
+  memcpy(_max , &max , tagkey->sizeof_ctype);            \
+  memcpy(_min , &min , tagkey->sizeof_ctype);            \
+}
+
+
+
+void rms_tagkey_max_min(const rms_tagkey_type * tagkey , void * _max , void *_min) {
+  switch (tagkey->rms_type) {
+  case(rms_float_type):
+    TAGKEY_MAX_MIN(float);
+    break;
+  case(rms_double_type):
+    TAGKEY_MAX_MIN(double);
+    break;
+  case(rms_int_type):
+    TAGKEY_MAX_MIN(int);
+    break;
+  default:
+    fprintf(stderr,"%s: invalid type for element sum \n",__func__);
+    abort();
+  }
+}
+
+#undef TAGKEY_MAX_MIN
+
+
+
+
 
 void rms_tagkey_free_(void *_tagkey) {
   rms_tagkey_type * tagkey = (rms_tagkey_type *) _tagkey;
@@ -560,6 +596,11 @@ rms_tagkey_type * rms_tagkey_alloc_complete(const char * name , int size , rms_t
   rms_tagkey_set_data(tag , data);
   
   return tag;
+}
+
+
+int rms_tagkey_get_sizeof_ctype(const rms_tagkey_type * key) {
+  return key->sizeof_ctype;
 }
 
 

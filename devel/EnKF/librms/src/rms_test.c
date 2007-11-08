@@ -6,22 +6,24 @@
 #include <list.h>
 
 
+
+void convert_test(const char * rms_file, const char * ecl_path) {
+  rms_file_2eclipse(rms_file , ecl_path , false , true , 1);
+}
+
+
 int main (int argc , char **argv) {
   rms_tagkey_type *mean , *std;
   rms_tag_type    *dim_tag;
+  bool log_transform = false;
 
-  rms_file_type *file = rms_file_alloc("RMS.ROFF" , false);
-  rms_file_fread(file);
-  rms_file_printf(file , stdout);
-  
+  rms_file_type *file = rms_file_alloc(argv[1] , false);
   dim_tag = rms_file_fread_alloc_tag(file , "dimensions" , NULL , NULL);
   mean = rms_file_fread_alloc_data_tagkey(file , "parameter" , "name" , "PERMX");
   std  = rms_tagkey_copyc(mean); 
+
   rms_file_free_data(file);
-  rms_stats_mean_std(mean , std , "PERMX" , argc - 1 , (const char **) &argv[1] , true);
-  
-  
-  
+  rms_stats_mean_std(mean , std , "PERMX" , argc - 1 , (const char **) &argv[1] , log_transform);
   rms_file_set_filename(file , "Stats.ROFF" , false);
 
   {
@@ -40,6 +42,7 @@ int main (int argc , char **argv) {
   rms_file_free_data(file);  
   rms_file_free(file);
   
+  exit(1);
 
   {
     const int ens_size = 100;

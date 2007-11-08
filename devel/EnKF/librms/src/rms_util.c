@@ -45,6 +45,16 @@ void rms_util_read_fortran_data(const void *_f90_data , void * _rms_data, int si
 
 
 
+void rms_util_translate_undef(void * _data , int size , int sizeof_ctype , const void * old_undef , const void * new_undef) {
+  char * data = (char *) _data;
+  int i;
+  for (i=0; i < size; i++) {
+    if (memcmp( &data[i*sizeof_ctype] , old_undef , sizeof_ctype) == 0)
+      memcpy( &data[i*sizeof_ctype] , new_undef , sizeof_ctype);
+  }
+}
+
+
 void rms_util_fskip_string(FILE *stream) {
   char c;
   bool cont = true;
@@ -110,3 +120,5 @@ void rms_util_fwrite_comment(const char * comment , FILE *stream) {
 void rms_util_fwrite_newline(FILE *stream) {
   return;
 }
+
+

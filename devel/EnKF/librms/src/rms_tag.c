@@ -94,11 +94,38 @@ bool rms_tag_name_eq(const rms_tag_type *tag , const char * tagname , const char
 }
 
 
+
+
 rms_tagkey_type * rms_tag_get_key(const rms_tag_type *tag , const char *keyname) {
   if (hash_has_key(tag->key_hash , keyname)) 
     return list_node_value_ptr(hash_get(tag->key_hash, keyname));
   else 
     return NULL;
+}
+
+
+rms_tagkey_type * rms_tag_get_datakey(const rms_tag_type *tag) {
+  return rms_tag_get_key(tag , "data");
+}
+
+
+const char * rms_tag_get_namekey_name(const rms_tag_type * tag) {
+  rms_tagkey_type * name_key = rms_tag_get_key(tag , "name");
+  if (name_key == NULL) {
+    fprintf(stderr,"%s: no name tagkey defined for this tag - aborting \n",__func__);
+    abort();
+  }
+  return rms_tagkey_get_data_ref(name_key);
+}
+
+
+int rms_tag_get_datakey_sizeof_ctype(const rms_tag_type * tag) {
+  rms_tagkey_type * data_key = rms_tag_get_key(tag , "data");
+  if (data_key == NULL) {
+    fprintf(stderr,"%s: no data tagkey defined for this tag - aborting \n",__func__);
+    abort();
+  }
+  return rms_tagkey_get_sizeof_ctype(data_key);
 }
 
 

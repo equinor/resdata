@@ -1,33 +1,36 @@
+MFLAG = m32
 CC = gcc
-FC = ifort
 AR = ar
 #################################################################
-COMPILE_INCLUDE   = -I./ -I../../libhash/include -I../../libutil/include
-COMPILE_LIB_PATH  = -L../../libhash/lib
-COMPILE_LIBS      = -lm -lhash
-
+COMPILE_INCLUDE   = -I./ -I../../libhash/include -I../../libutil/include -I../../libecl/include
 INSTALL_INC_PATH = ../include
 INSTALL_LIB_PATH = ../lib
-INSTALL_MOD_PATH = ../mod
 #################################################################
-CFLAGS  = -O2 -m32 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
+CFLAGS  = -$(MFLAG) -O2 -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
 ARFLAGS = -csr
 #################################################################
 OBJECTS           = rms_interC.o rms_file.o rms_util.o rms_tag.o rms_type.o rms_tagkey.o rms_stats.o
 INC_FILES_INSTALL = rms_file.h rms_util.h rms_tag.h rms_type.h rms_tagkey.h rms_stats.h
-LIB               = librms.a
-
-
+LIB               = librms_$(MFLAG).a
+LIB_LINK          = -lrms_$(MFLAG) -lecl_$(MFLAG) -lhash_$(MFLAG) -lutil_$(MFLAG) -lm
+LIB_PATH          = -L../../libhash/lib -L../../libutil/lib -L../../libecl/lib -L$(INSTALL_LIB_PATH)
 
 INSTALL: $(LIB)
 	install -d $(INSTALL_INC_PATH)
 	install -d $(INSTALL_LIB_PATH)
-	install -d $(INSTALL_MOD_PATH)
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	gcc -Wall -g -m32 -I./ -I../../libhash/include -I../../libutil/include rms_test.c -o rms.x -L./ -L../../libutil/lib -L../../libhash/lib -lrms -lutil -util -lhash -lm
-	gcc -Wall -g -m32 -I./ -I../../libhash/include -I../../libutil/include tag_list.c -o tag_list.x -L./ -L../../libutil/lib -L../../libhash/lib -lrms -lutil -util -lhash -lm
-	gcc -Wall -g -m32 -I./ -I../../libhash/include -I../../libutil/include rms_setname.c -o rms_setname.x -L./ -L../../libutil/lib -L../../libhash/lib -lrms -lutil -util -lhash -lm
+	gcc $(CFLAGS) rms_test.c    -o rms.x               $(LIB_PATH)  $(LIB_LINK) 
+	gcc $(CFLAGS) tag_list.c    -o tag_list.x          $(LIB_PATH)  $(LIB_LINK) 
+	gcc $(CFLAGS) rms_extract.c -o rms_extract.x       $(LIB_PATH)  $(LIB_LINK) 
+	gcc $(CFLAGS) rms_setname.c -o rms_setname.x       $(LIB_PATH)  $(LIB_LINK) 
+	gcc $(CFLAGS) condor_import.c -o /d/proj/bg/enkf/bin/condor_import.x   $(LIB_PATH)  $(LIB_LINK) 
+
+clean:
+	rm -f *.o *~ 
+	rm -f $(LIB)
+	rm -f $(INSTALL_LIB_PATH)/$(LIB)
+	rm -f $(INSTALL_INC_PATH)/*.h
 
 
 

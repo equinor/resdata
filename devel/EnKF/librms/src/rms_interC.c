@@ -160,3 +160,20 @@ void rms_save_param__(const char *__filename , const int *strlen, const char *__
   free(param_name);
 }
 
+
+void rms_file_2eclipse__(const char * _rms_file , const int * rms_file_len , 
+			 const char * _ecl_path , const int * ecl_path_len , 
+			 const int * ecl_fmt_file_int,
+			 const int * ecl_endian_convert_int,
+			 const int * ecl_file_nr) {
+  char * rms_file   	  = util_alloc_cstring(_rms_file , rms_file_len);
+  char * ecl_path   	  = util_alloc_cstring(_ecl_path , ecl_path_len);
+  bool ecl_fmt_file 	  = util_intptr_2bool(ecl_fmt_file_int);
+  bool ecl_endian_convert = util_intptr_2bool(ecl_endian_convert_int);
+  
+
+  rms_file_2eclipse(rms_file , ecl_path , ecl_fmt_file , ecl_endian_convert , *ecl_file_nr);
+
+  free(rms_file);
+  free(ecl_path);
+}
