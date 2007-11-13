@@ -41,6 +41,7 @@ fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_
   return fortio;
 }
 
+
 fortio_type *fortio_open(const char *filename , const char *mode, bool endian_flip_header) {
   fortio_type *fortio = fortio_alloc__(filename , endian_flip_header);
 
@@ -71,7 +72,32 @@ void fortio_close(fortio_type *fortio) {
 }
 
 
+bool fortio_is_fortio_file(fortio_type * fortio) {
+  FILE * stream = fortio->stream;
+  int init_pos = ftell(stream);
+  int elm_read;
+  bool is_fortio_file = false;
+  elm_read = fread(&fortio->active_header , sizeof(fortio->active_header) , 1 , fortio->stream);
+  if (elm_read == 1) {
+    int trailer;
 
+    if (fortio->endian_flip_header)
+      util_endian_flip_vector(&fortio->active_header , sizeof fortio->active_header , 1);
+
+    if (fseek(stream , fortio->active_header , SEEK_CUR) == 0) {
+      if (fread(&trailer , sizeof(fortio->active_header) , 1 , fortio->stream) == 1) {
+	if (fortio->endian_flip_header)
+	  util_endian_flip_vector(&trailer , sizeof trailer , 1);
+	
+	if (trailer == fortio->active_header)
+	  is_fortio_file = true;
+      }
+    } 
+  }
+
+  fseek(stream , init_pos , SEEK_SET);
+  return is_fortio_file;
+}
 
 
 int fortio_init_read(fortio_type *fortio) {

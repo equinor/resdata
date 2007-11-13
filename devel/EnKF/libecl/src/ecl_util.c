@@ -5,6 +5,7 @@
 #include <ecl_util.h>
 #include <dirent.h>
 #include <util.h>
+#include <hash.h>
 
 
 
@@ -549,6 +550,58 @@ bool ecl_util_unified(ecl_file_type file_type) {
   return unified;
 }
 
+/*****************************************************************/
+
+int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
+  int sizeof_ctype;
+  switch (ecl_type) {
+  case(ecl_char_type):
+    sizeof_ctype = (ecl_str_len + 1) * sizeof(char);
+    break;
+  case(ecl_float_type):
+    sizeof_ctype = sizeof(float);
+    break;
+  case(ecl_double_type):
+    sizeof_ctype = sizeof(double);
+    break;
+  case(ecl_int_type):
+    sizeof_ctype = sizeof(int);
+    break;
+  case(ecl_bool_type):
+    sizeof_ctype = sizeof(int);
+    break;
+  case(ecl_mess_type):
+    sizeof_ctype = sizeof(char);
+    break;
+  default:
+    fprintf(stderr,"Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type);
+    abort();
+  }
+  return sizeof_ctype;
+}
 
 
+ecl_type_enum ecl_util_guess_type(const char * key){ 
+  hash_type * type_hash = hash_alloc(10);
+  ecl_type_enum type;
+
+  hash_insert_int(type_hash , "PERMX" , ecl_float_type);
+  hash_insert_int(type_hash , "PERMZ" , ecl_float_type);
+  hash_insert_int(type_hash , "PERMY" , ecl_float_type);
+  hash_insert_int(type_hash , "PORO"  , ecl_float_type);
+  hash_insert_int(type_hash , "COORD" , ecl_float_type);
+  hash_insert_int(type_hash , "ZCORN" , ecl_float_type);
+  hash_insert_int(type_hash , "ACTNUM" , ecl_int_type);
+  
+  if (hash_has_key(type_hash , key)) 
+    type = hash_get_int(type_hash , key);
+  else {
+    fprintf(stderr,"could not guess type of keyword %s - update the table in %s/%s - aborting \n",key , __FILE__ , __func__);
+    abort();
+  }
+  
+
+  hash_free(type_hash);
+  return type;
+}
 

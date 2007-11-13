@@ -7,12 +7,10 @@
 #include <fortio.h>
 #include <ecl_util.h>
 
-#define ecl_str_len   8
+
 
 
 typedef struct ecl_kw_struct      ecl_kw_type;
-typedef enum   ecl_type_enum_def  ecl_type_enum;
-enum ecl_type_enum_def {ecl_char_type , ecl_float_type , ecl_double_type , ecl_int_type , ecl_bool_type , ecl_mess_type};
 
 
 ecl_type_enum ecl_kw_get_type(const ecl_kw_type *);
@@ -69,6 +67,7 @@ void          ecl_kw_summarize(const ecl_kw_type * ecl_kw);
 void          ecl_kw_fread_double_param(const char * , bool , bool , double *);
 void          ecl_kw_get_data_as_double(const ecl_kw_type *, double *);
 
+bool ecl_kw_is_grdecl_file(FILE * );
 bool ecl_kw_is_kw_file(FILE * , bool , bool );
 void ecl_kw_inplace_sub(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_mul(ecl_kw_type * , const ecl_kw_type * );

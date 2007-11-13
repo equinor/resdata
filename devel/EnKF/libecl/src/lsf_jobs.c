@@ -27,8 +27,11 @@ struct lsf_job_struct {
   char             *fail_file;
   char             *OK_file;
   char             *special_cmd;
-  char              tmp_file[256];
-  char              submit_cmd[256];
+  /*
+    These are just 'big enough' - ugly ... 
+  */
+  char              tmp_file[1024]; 
+  char              submit_cmd[1024];
   time_t  	    submit_time;
   time_t  	    start_time;
   time_t  	    complete_time;
@@ -130,6 +133,7 @@ static void lsf_pool_exit_job(const lsf_pool_type *lsf_pool , int ijob , lsf_sta
     
   fclose(stream);
 }
+
 
 
 
@@ -261,6 +265,10 @@ static void lsf_job_unlink_smspec(const lsf_job_type *lsf_job) {
 
 
 
+static void lsf_job_summarize(const lsf_job_type * lsf_job) {
+  printf("%3d/%s  %d   %d  \n",lsf_job->job_nr , lsf_job->base,lsf_job->submit_count,lsf_job->max_resubmit);
+}
+
 
 /*  
     This function is custom made to parse a file like this: 
@@ -300,12 +308,13 @@ static int lsf_job_submit(lsf_job_type *lsf_job , const char * submit_cmd_fmt , 
     fprintf(stderr,"%s: fatal error when submitting job:%s - run_path:%s does not exist \n",__func__ , lsf_job->base , lsf_job->run_path);
     abort();
   }
+
   {
     int job_id;
-    sprintf(lsf_job->tmp_file , "%s/enkf-submit-%08d-%d" , tmp_path , getpid() , lsf_job->job_nr);
+    sprintf(lsf_job->tmp_file   , "%s/enkf-submit-%08d-%d" , tmp_path , getpid() , lsf_job->job_nr);
     sprintf(lsf_job->submit_cmd , submit_cmd_fmt , lsf_job->run_path , lsf_job->base , lsf_job->base , lsf_job->run_path , lsf_job->base , lsf_job->tmp_file);
     system(lsf_job->submit_cmd);
-    
+
     job_id = lsf_job_parse_bsub_stdout(lsf_job->tmp_file);
     lsf_job->lsf_base = job_id;
     util_unlink_existing(lsf_job->tmp_file); 
@@ -317,8 +326,6 @@ static int lsf_job_submit(lsf_job_type *lsf_job , const char * submit_cmd_fmt , 
 
 
 static bool lsf_job_can_reschedule(lsf_job_type *lsf_job) {
-  printf("%s: sammenligner: %d og %d \n",__func__ , lsf_job->submit_count , lsf_job->max_resubmit);
-  return true;
   if (lsf_job->submit_count <= lsf_job->max_resubmit) {
     return true;
   } else 
@@ -634,6 +641,11 @@ static void lsf_pool_update_status(lsf_pool_type *lsf_pool) {
 
 
 
+void lsf_pool_summarize(const lsf_pool_type * lsf_pool) {
+  int ijob;
+  for (ijob = 0; ijob < lsf_pool->size; ijob++)
+    lsf_job_summarize(lsf_pool->jobList[ijob]);
+}
 
 
 int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
@@ -730,6 +742,8 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 	  printf("\b \ntotal: %2d %2d %2d | %2d %2d %2d  | Last update: %02d:%02d:%02d :  ",lsf_pool->total_status[0] , lsf_pool->total_status[1] , lsf_pool->total_status[2] , lsf_pool->total_status[3],
 		 lsf_pool->total_status[4] , lsf_pool->total_status[5] , ts.tm_hour, ts.tm_min , ts.tm_sec);  
 	  fflush(stdout);
+
+	  /*lsf_pool_summarize(lsf_pool);*/
 	}
       }
 
