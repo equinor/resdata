@@ -344,6 +344,25 @@ void ecl_kw_iget(const ecl_kw_type *ecl_kw , int i , void *iptr) {
   ecl_kw_iget_static(ecl_kw , i , iptr);
 }
 
+
+#define ECL_KW_IGET_TYPED(type)                                						    \
+                                                                                                            \
+type ecl_kw_iget_ ## type(const ecl_kw_type * ecl_kw, int i) { 						    \
+  type value;                                                  						    \
+  if (ecl_kw_get_type(ecl_kw) != ecl_ ## type ## _type) {            						    \
+    fprintf(stderr,"%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header_ref(ecl_kw)); \
+    abort();                                                                                                \
+  }                                                                                                         \
+  ecl_kw_iget_static(ecl_kw , i , &value);                                                                  \
+ return value;                                                                                              \
+}                                                                                                           \
+
+ECL_KW_IGET_TYPED(double);
+ECL_KW_IGET_TYPED(float);
+ECL_KW_IGET_TYPED(int);
+
+#undef ECL_KW_IGET_TYPED
+
 void * ecl_kw_iget_ptr(const ecl_kw_type *ecl_kw , int i) { 
   return ecl_kw_iget_ptr_static(ecl_kw , i);
 }
@@ -781,7 +800,8 @@ ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio , bool fmt_file) {
     free(ecl_kw);
     ecl_kw = NULL;
   }
-  
+
+  if (ecl_kw == NULL) printf("%s: returning NULL \n",__func__);
   return ecl_kw;
 }
 

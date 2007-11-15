@@ -21,7 +21,6 @@ const char  * ecl_kw_get_header_ref(const ecl_kw_type *);
 char        * ecl_kw_alloc_strip_header(const ecl_kw_type * );
 ecl_kw_type * ecl_kw_alloc_empty(bool , bool);
 void          ecl_kw_rewind(const ecl_kw_type * , fortio_type *);
-void          ecl_kw_copy_data(const ecl_kw_type * , void *);
 bool          ecl_kw_fread_header(ecl_kw_type *, fortio_type *);
 void          ecl_kw_set_header_name(ecl_kw_type * , const char * );
 void          ecl_kw_set_header(ecl_kw_type  * , const char * , int , const char *);
@@ -55,7 +54,6 @@ void        * ecl_kw_iget_ptr(const ecl_kw_type *, int);
 int           ecl_kw_get_size(const ecl_kw_type *);
 bool          ecl_kw_header_eq(const ecl_kw_type *, const char *);
 bool          ecl_kw_ichar_eq(const ecl_kw_type *, int , const char *);
-void        * ecl_kw_alloc_data_copy(const ecl_kw_type *);
 ecl_kw_type * ecl_kw_alloc_complete(bool , bool , const char * ,  int , ecl_type_enum , const void * );
 ecl_kw_type * ecl_kw_alloc_complete_shared(bool , bool , const char * ,  int , ecl_type_enum , void * );
 void          ecl_kw_cfwrite(const ecl_kw_type *  , FILE *);
@@ -81,4 +79,11 @@ void ecl_kw_shift(ecl_kw_type * , double );
 void ecl_kw_merge(ecl_kw_type * , const ecl_kw_type * , const ecl_box_type * );
 void ecl_kw_element_sum(const ecl_kw_type * , void * );
 void ecl_kw_max_min(const ecl_kw_type * , void * , void *);
+
+#define ECL_KW_IGET_TYPED_HEADER(type) type ecl_kw_iget_ ## type(const ecl_kw_type * , int);
+ECL_KW_IGET_TYPED_HEADER(double);
+ECL_KW_IGET_TYPED_HEADER(float);
+ECL_KW_IGET_TYPED_HEADER(int);
+#undef ECL_KW_IGET_TYPED_HEADER
+
 #endif

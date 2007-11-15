@@ -581,6 +581,55 @@ int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
 }
 
 
+void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ecl_type_enum target_type , ecl_type_enum src_type, int size) {
+  int i;
+
+  if (target_type == src_type) 
+    memcpy(_target_data , _src_data , size * ecl_util_get_sizeof_ctype(src_type));
+  else {
+    switch (target_type) {
+    case(ecl_double_type):
+      {
+	double * target_data = (double *) _target_data;
+	switch(src_type) {
+	case(ecl_float_type):
+	  util_float_to_double(target_data , (const float *) _src_data , size);
+	  break;
+	case(ecl_int_type):
+	  for (i = 0; i < size; i++) 
+	    target_data[i] = ((int *) _src_data)[i];
+	  break;
+	default:
+	  fprintf(stderr,"%s: double type can only load from int/float/double - aborting \n",__func__);
+	  abort();
+	}
+	break;
+      }
+    case(ecl_float_type):
+      {
+	float * target_data = (float *) _target_data;
+	switch(src_type) {
+	case(ecl_float_type):
+	  util_double_to_float(target_data , (const double *) _src_data , size);
+	  break;
+	case(ecl_int_type):
+	  for (i = 0; i < size; i++) 
+	    target_data[i] = ((int *) _src_data)[i];
+	  break;
+	default:
+	  fprintf(stderr,"%s: float type can only load from int/float/double - aborting \n",__func__);
+	  abort();
+	}
+	break;
+      }
+    default:
+      fprintf(stderr,"%s con not convert %d -> %d \n",__func__ , src_type , target_type);
+      abort();
+    }
+  }
+}
+
+
 ecl_type_enum ecl_util_guess_type(const char * key){ 
   hash_type * type_hash = hash_alloc(10);
   ecl_type_enum type;
