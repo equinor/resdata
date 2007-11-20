@@ -7,15 +7,15 @@
 #include <enkf_macros.h>
 #include <logmode.h>
 #include <trans_func.h>
-#include <mult_config.h>
+#include <scalar_config.h>
 
 
 
 
 static multflt_config_type * __multflt_config_alloc_empty(int size, const char * eclfile , const char * ensfile) {
   multflt_config_type *multflt_config = malloc(sizeof *multflt_config);
-  multflt_config->fault_names = enkf_util_malloc(size * sizeof *multflt_config->fault_names , __func__);
-  multflt_config->mult_config = mult_config_alloc_empty(size);
+  multflt_config->fault_names   = enkf_util_malloc(size * sizeof *multflt_config->fault_names , __func__);
+  multflt_config->scalar_config = scalar_config_alloc_empty(size);
 
   multflt_config->ecl_kw_name = NULL;
   multflt_config->var_type    = parameter;
@@ -52,7 +52,7 @@ static multflt_config_type * __multflt_config_alloc_empty(int size, const char *
 
 
 void multflt_config_transform(const multflt_config_type * config , const double * input_data , double * output_data) {
-  mult_config_transform(config->mult_config , input_data , output_data);
+  scalar_config_transform(config->scalar_config , input_data , output_data);
 }
 
 
@@ -73,28 +73,28 @@ multflt_config_type * multflt_config_fscanf_alloc(const char * filename , const 
       abort();
     }
     config->fault_names[line_nr] = util_alloc_string_copy(name);
-    mult_config_fscanf_line(config->mult_config , line_nr , stream);
+    scalar_config_fscanf_line(config->scalar_config , line_nr , stream);
     line_nr++;
   } while ( line_nr < size );
   fclose(stream);
-  mult_config_finalize_init(config->mult_config);
+  scalar_config_finalize_init(config->scalar_config);
   
   return config;
 }
 
 void multflt_config_free(multflt_config_type * multflt_config) {
-  mult_config_free(multflt_config->mult_config);
-  util_free_string_list(multflt_config->fault_names , mult_config_get_data_size(multflt_config->mult_config));
+  scalar_config_free(multflt_config->scalar_config);
+  util_free_string_list(multflt_config->fault_names , scalar_config_get_data_size(multflt_config->scalar_config));
   free(multflt_config);
 }
 
 
 int multflt_config_get_data_size(const multflt_config_type * multflt_config) {
-  return mult_config_get_data_size(multflt_config->mult_config);
+  return scalar_config_get_data_size(multflt_config->scalar_config);
 }
 
 void multflt_config_set_serial_offset(multflt_config_type * multflt_config, int serial_offset ) {
-  mult_config_set_serial_offset(multflt_config->mult_config , serial_offset);
+  scalar_config_set_serial_offset(multflt_config->scalar_config , serial_offset);
 }
 
 

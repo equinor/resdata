@@ -93,8 +93,7 @@ const char ** enkf_config_get_well_list_ref(const enkf_config_type * config , in
 void enkf_config_add_well(enkf_config_type * enkf_config , const char *well_name , int size, const char ** var_list) {
   enkf_config_add_type(enkf_config , well_name , ecl_summary , WELL,
 		       well_config_alloc(well_name , well_name , size , var_list));
-
-
+  
   enkf_config->Nwells++;
   enkf_config_realloc_well_list(enkf_config);
   enkf_config->well_list[enkf_config->Nwells - 1] = util_alloc_string_copy(well_name);

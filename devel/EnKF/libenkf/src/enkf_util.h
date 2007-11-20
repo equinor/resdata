@@ -37,7 +37,7 @@ int i;                                              \
 for (i=0; i < data_size; i++)                       \
  arg->data[i] = sqrt(arg->data[i]);                 \
 }
-#define SQRT_FUNC_MULT(prefix)   void prefix ## _isqrt(void * void_arg) { mult_isqrt(((prefix ## _type *) void_arg)->mult); }
+#define SQRT_FUNC_SCALAR(prefix)   void prefix ## _isqrt(void * void_arg) { scalar_isqrt(((prefix ## _type *) void_arg)->scalar); }
 #define SQRT_FUNC_HEADER(prefix) void prefix ## _isqrt(void * )
 
 /*****************************************************************/
@@ -51,7 +51,7 @@ int i;                                              			   \
 for (i=0; i < data_size; i++)                            			   \
  arg->data[i] *= scale_factor;                  			   \
 }
-#define SCALE_FUNC_MULT(prefix)   void prefix ## _iscale(void * void_arg, double scale_factor) { mult_iscale(((prefix ## _type *) void_arg)->mult , scale_factor); }
+#define SCALE_FUNC_SCALAR(prefix)   void prefix ## _iscale(void * void_arg, double scale_factor) { scalar_iscale(((prefix ## _type *) void_arg)->scalar , scale_factor); }
 #define SCALE_FUNC_HEADER(prefix) void prefix ## _iscale(void * , double)
 
 /*****************************************************************/
@@ -65,7 +65,7 @@ int i;                                              			   \
 for (i=0; i < data_size; i++)                            			   \
  arg->data[i] = 0;                               			   \
 }
-#define RESET_FUNC_MULT(prefix)   void prefix ## _ireset(void * void_arg) { mult_ireset(((prefix ## _type *) void_arg)->mult); }
+#define RESET_FUNC_SCALAR(prefix)   void prefix ## _ireset(void * void_arg) { scalar_ireset(((prefix ## _type *) void_arg)->scalar); }
 #define RESET_FUNC_HEADER(prefix) void prefix ## _ireset(void *)
 
 /*****************************************************************/
@@ -85,7 +85,7 @@ for (i=0; i < data_size; i++)                            			       \
  arg->data[i] += delta->data[i];                                               \
 }
 
-#define ADD_FUNC_MULT(prefix)   void prefix ## _iadd(void *void_arg,  const void * void_factor) { mult_iadd( ((prefix ## _type *) void_arg)->mult , (( const prefix ## _type *) void_factor)->mult); }
+#define ADD_FUNC_SCALAR(prefix)   void prefix ## _iadd(void *void_arg,  const void * void_factor) { scalar_iadd( ((prefix ## _type *) void_arg)->scalar , (( const prefix ## _type *) void_factor)->scalar); }
 #define ADD_FUNC_HEADER(prefix) void prefix ## _iadd(void * , const void *)
 /*****************************************************************/
 
@@ -104,7 +104,7 @@ for (i=0; i < data_size; i++)                            			       \
  arg->data[i] -= diff->data[i];                                               \
 }
 
-#define SUB_FUNC_MULT(prefix)   void prefix ## _isub(void *void_arg,  const void * void_factor) { mult_isub( ((prefix ## _type *) void_arg)->mult , (( const prefix ## _type *) void_factor)->mult); }
+#define SUB_FUNC_SCALAR(prefix)   void prefix ## _isub(void *void_arg,  const void * void_factor) { scalar_isub( ((prefix ## _type *) void_arg)->scalar , (( const prefix ## _type *) void_factor)->scalar); }
 #define SUB_FUNC_HEADER(prefix) void prefix ## _isub(void * , const void *)
 /*****************************************************************/
 
@@ -122,7 +122,7 @@ if (config != factor->config) {                                                 
 for (i=0; i < data_size; i++)                            			       \
  arg->data[i] *= factor->data[i];                                               \
 }
-#define MUL_FUNC_MULT(prefix)   void prefix ## _imul(void *void_arg,  const void * void_factor) { mult_imul( ((prefix ## _type *) void_arg)->mult , (( const prefix ## _type *) void_factor)->mult); }
+#define MUL_FUNC_SCALAR(prefix)   void prefix ## _imul(void *void_arg,  const void * void_factor) { scalar_imul( ((prefix ## _type *) void_arg)->scalar , (( const prefix ## _type *) void_factor)->scalar); }
 #define MUL_FUNC_HEADER(prefix) void prefix ## _imul(void * , const void *)
 
 /*****************************************************************/
@@ -141,7 +141,7 @@ if (config != delta->config) {                                                 \
 for (i=0; i < data_size; i++)                            			       \
  arg->data[i] += delta->data[i] * delta->data[i];                              \
 }
-#define ADDSQR_FUNC_MULT(prefix)   void prefix ## _iaddsqr(void *void_arg,  const void * void_factor) { mult_iaddsqr( ((prefix ## _type *) void_arg)->mult , (( const prefix ## _type *) void_factor)->mult); }
+#define ADDSQR_FUNC_SCALAR(prefix)   void prefix ## _iaddsqr(void *void_arg,  const void * void_factor) { scalar_iaddsqr( ((prefix ## _type *) void_arg)->scalar , (( const prefix ## _type *) void_factor)->scalar); }
 #define ADDSQR_FUNC_HEADER(prefix) void prefix ## _iaddsqr(void * , const void *)
 
 
@@ -154,14 +154,14 @@ SUB_FUNC    (prefix) \
 RESET_FUNC  (prefix) \
 MUL_FUNC    (prefix)
 
-#define MATH_OPS_MULT(prefix) \
-SQRT_FUNC_MULT   (prefix) \
-SCALE_FUNC_MULT  (prefix) \
-ADD_FUNC_MULT    (prefix) \
-ADDSQR_FUNC_MULT (prefix) \
-SUB_FUNC_MULT    (prefix) \
-RESET_FUNC_MULT  (prefix) \
-MUL_FUNC_MULT    (prefix)
+#define MATH_OPS_SCALAR(prefix) \
+SQRT_FUNC_SCALAR   (prefix) \
+SCALE_FUNC_SCALAR  (prefix) \
+ADD_FUNC_SCALAR    (prefix) \
+ADDSQR_FUNC_SCALAR (prefix) \
+SUB_FUNC_SCALAR    (prefix) \
+RESET_FUNC_SCALAR  (prefix) \
+MUL_FUNC_SCALAR    (prefix)
 
 
 

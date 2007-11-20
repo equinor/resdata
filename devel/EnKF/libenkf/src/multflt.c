@@ -8,7 +8,7 @@
 #include <multflt.h>
 #include <enkf_util.h>
 #include <math.h>
-#include <mult.h>
+#include <scalar.h>
 
 
 #define  DEBUG
@@ -22,13 +22,13 @@ GET_DATA_SIZE_HEADER(multflt);
 struct multflt_struct {
   DEBUG_DECLARE
   const multflt_config_type *config;
-  mult_type                 *mult;
+  scalar_type               *scalar;
 };
 
 /*****************************************************************/
 
 void multflt_free_data(multflt_type *multflt) {
-  mult_free(multflt->mult);
+  scalar_free(multflt->scalar);
 }
 
 
@@ -41,49 +41,49 @@ void multflt_free(multflt_type *multflt) {
 
 
 void multflt_realloc_data(multflt_type *multflt) {
-  mult_realloc_data(multflt->mult);
+  scalar_realloc_data(multflt->scalar);
 }
 
 
 void multflt_output_transform(const multflt_type * multflt) {
-  mult_transform(multflt->mult);
+  scalar_transform(multflt->scalar);
 }
 
 void multflt_set_data(multflt_type * multflt , const double * data) {
-  mult_set_data(multflt->mult , data);
+  scalar_set_data(multflt->scalar , data);
 }
 
 
 void multflt_get_data(const multflt_type * multflt , double * data) {
-  mult_get_data(multflt->mult , data);
+  scalar_get_data(multflt->scalar , data);
 }
 
 void multflt_get_output_data(const multflt_type * multflt , double * output_data) {
-  mult_get_output_data(multflt->mult , output_data);
+  scalar_get_output_data(multflt->scalar , output_data);
 }
 
 
 const double * multflt_get_data_ref(const multflt_type * multflt) {
-  return mult_get_data_ref(multflt->mult);
+  return scalar_get_data_ref(multflt->scalar);
 }
 
 
 const double * multflt_get_output_ref(const multflt_type * multflt) {
-  return mult_get_output_ref(multflt->mult);
+  return scalar_get_output_ref(multflt->scalar);
 }
 
 
 multflt_type * multflt_alloc(const multflt_config_type * config) {
   multflt_type * multflt  = malloc(sizeof *multflt);
   multflt->config = config;
-  multflt->mult   = mult_alloc(config->mult_config); 
+  multflt->scalar   = scalar_alloc(config->scalar_config); 
   DEBUG_ASSIGN(multflt)
   return multflt;
 }
 
 
 void multflt_clear(multflt_type * multflt) {
-  mult_clear(multflt->mult);
+  scalar_clear(multflt->scalar);
 }
 
 
@@ -94,7 +94,7 @@ static char * multflt_alloc_ensfile(const multflt_type * multflt , const char * 
 
 multflt_type * multflt_copyc(const multflt_type *multflt) {
   multflt_type * new = multflt_alloc(multflt->config); 
-  mult_memcpy(new->mult , multflt->mult);
+  scalar_memcpy(new->scalar , multflt->scalar);
   return new; 
 }
 
@@ -107,7 +107,7 @@ static void __multflt_ecl_write(const multflt_type * multflt, const char * path 
     const multflt_config_type *config = multflt->config;
     const int data_size       = multflt_config_get_data_size(config);
     const char **fault_names  = (const char **) config->fault_names;
-    const double *output_data = mult_get_output_ref(multflt->mult);
+    const double *output_data = scalar_get_output_ref(multflt->scalar);
     int k;
     
     if (!direct) 
@@ -137,14 +137,14 @@ void multflt_ecl_write(const multflt_type * multflt, const char * path) {
 
 void multflt_fwrite(const multflt_type *multflt , const char *file ) {
   FILE * stream   = enkf_util_fopen_w(file , __func__);
-  mult_stream_fwrite(multflt->mult , stream);
+  scalar_stream_fwrite(multflt->scalar , stream);
   fclose(stream);
 }
 
 
 void multflt_fread(multflt_type * multflt , const char * file) {
   FILE * stream   = enkf_util_fopen_r(file , __func__);
-  mult_stream_fread(multflt->mult , stream);
+  scalar_stream_fread(multflt->scalar , stream);
   fclose(stream);
 }
 
@@ -177,27 +177,27 @@ void multflt_swapin(multflt_type * multflt , const char * file) {
 
 void multflt_truncate(multflt_type * multflt) {
   DEBUG_ASSERT(multflt)
-  mult_truncate( multflt->mult );  
+  scalar_truncate( multflt->scalar );  
 }
 
 
 
 void  multflt_sample(multflt_type *multflt) {
   DEBUG_ASSERT(multflt)
-  mult_sample(multflt->mult);  
+  scalar_sample(multflt->scalar);  
 }
 
 
 
 int multflt_serialize(const multflt_type *multflt , int internal_offset , size_t serial_data_size , double *serial_data , size_t ens_size , size_t offset, bool * complete) {
   DEBUG_ASSERT(multflt);
-  return mult_serialize(multflt->mult , internal_offset , serial_data_size, serial_data , ens_size , offset , complete);
+  return scalar_serialize(multflt->scalar , internal_offset , serial_data_size, serial_data , ens_size , offset , complete);
 }
 
 
 int multflt_deserialize(multflt_type *multflt , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
   DEBUG_ASSERT(multflt);
-  return mult_deserialize(multflt->mult , internal_offset , serial_size , serial_data , stride , offset);
+  return scalar_deserialize(multflt->scalar , internal_offset , serial_size , serial_data , stride , offset);
 }
 
 
@@ -249,7 +249,7 @@ void multflt_TEST() {
   Mathops not implemented ... 
 */
 
-MATH_OPS_MULT(multflt);
+MATH_OPS_SCALAR(multflt);
 VOID_ALLOC(multflt);
 VOID_SWAPOUT(multflt);
 VOID_SWAPIN(multflt);

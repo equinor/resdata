@@ -135,7 +135,7 @@ int well_deserialize(const well_type * well , int internal_offset , size_t seria
   const well_config_type *config      = well->config;
   const int                data_size  = well_config_get_data_size(config);
 
-  return enkf_util_deserialize(well->data , NULL , internal_offset , data_size , serial_size , serial_data , offset , stride);
+  return enkf_util_deserialize(&well->data[internal_offset] , NULL , internal_offset , data_size , serial_size , serial_data , offset , stride);
 }
 
 
@@ -150,13 +150,16 @@ int well_serialize(const well_type *well , int internal_offset , size_t serial_d
 
 
 double well_get(const well_type * well, const char * var) {
-  const well_config_type *config       = well->config;
-  int index                            = well_config_get_var_index(config , var);
-  if (index < 0) {
-    fprintf(stderr,"%s: well:%s does not have variable:%s - aborting \n",__func__ , well_config_get_well_name_ref(config) , var);
-    abort();
+  DEBUG_ASSERT(well)
+  {
+    const well_config_type *config       = well->config;
+    int index                            = well_config_get_var_index(config , var);
+    if (index < 0) {
+      fprintf(stderr,"%s: well:%s does not have variable:%s - aborting \n",__func__ , well_config_get_well_name_ref(config) , var);
+      abort();
+    }
+    return well->data[index];
   }
-  return well->data[index];
 }
 
 
@@ -169,7 +172,7 @@ void well_load_summary_data(well_type * well , int report_step , const ecl_sum_t
     int ivar;
     
     for (ivar = 0; ivar < well_config_get_data_size(config); ivar++) 
-  	well->data[ivar] = ecl_sum_iget1(ecl_sum , report_step , well_name , var_list[ivar] , NULL);
+      well->data[ivar] = ecl_sum_iget1(ecl_sum , report_step , well_name , var_list[ivar] , NULL);
   }
 }
 

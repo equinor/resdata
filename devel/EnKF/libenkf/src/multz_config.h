@@ -7,14 +7,15 @@
 #include <enkf_macros.h>
 #include <enkf_types.h>
 #include <logmode.h>
-#include <mult.h>
+#include <scalar.h>
+#include <scalar_config.h>
 
 typedef struct {
   char              * ecl_kw_name;      
   enkf_var_type       var_type;  
   char 		    * ensfile;          
   char 		    * eclfile;          
-  mult_config_type  * mult_config;
+  scalar_config_type  * scalar_config;
   int *i1, *i2 , *j1 , *j2 , *k;
   int 	           * area;
 } multz_config_type;

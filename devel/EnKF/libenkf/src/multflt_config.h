@@ -6,8 +6,8 @@
 #include <enkf_util.h>
 #include <enkf_macros.h>
 #include <logmode.h>
-#include <mult_config.h>
-#include <mult.h>
+#include <scalar_config.h>
+#include <scalar.h>
 
 typedef struct multflt_config_struct multflt_config_type;
 
@@ -16,7 +16,7 @@ struct multflt_config_struct {
   enkf_var_type       var_type;  
   char 		    * ensfile;          
   char 		    * eclfile;          
-  mult_config_type  * mult_config;
+  scalar_config_type  * scalar_config;
   char             ** fault_names;
 };
 
@@ -25,7 +25,7 @@ multflt_config_type * multflt_config_fscanf_alloc(const char * , const char * , 
 /*multflt_config_type * multflt_config_alloc(int , const char * , const char * );*/
 void                  multflt_config_free(multflt_config_type *);
 void                  multflt_config_transform(const multflt_config_type * , const double * , double *);
-void                  multflt_config_truncate(const multflt_config_type * , mult_type * );
+void                  multflt_config_truncate(const multflt_config_type * , scalar_type * );
 int                   multflt_config_get_data_size(const multflt_config_type * );
 
 CONFIG_GET_ENSFILE_HEADER(multflt);

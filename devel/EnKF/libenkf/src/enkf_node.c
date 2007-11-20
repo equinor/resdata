@@ -277,10 +277,6 @@ int enkf_node_serialize(enkf_node_type *enkf_node , size_t serial_data_size , do
   if (serial_state_do_serialize(enkf_node->serial_state)) {
     int internal_offset = serial_state_get_internal_offset(enkf_node->serial_state);
     int elements_added  = enkf_node->serialize(enkf_node->data , internal_offset , serial_data_size , serial_data , stride , offset , complete);
-
-    /*
-      printf("%s internal_offset:%d  elements_added:%d \n",enkf_node_get_key_ref(enkf_node) , internal_offset , elements_added);
-    */
     
     serial_state_update_forecast(enkf_node->serial_state , offset , elements_added , *complete);
     return elements_added;

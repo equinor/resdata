@@ -56,12 +56,10 @@ int main(void) {
   hist      = history_alloc_from_schedule(sched);
  
   index_map = field_config_alloc_index_map1("ECLIPSE.EGRID" , true , &nx , &ny , &nz , &active_size);
-  
   config = enkf_config_alloc(4, 2 , true);
   enkf_config_add_type(config , "MULTZ" , 
 		       parameter , MULTZ, 
 		       multz_config_fscanf_alloc("Config/multz" , 100 , 100 , 100 , "MULTZ.INC" , "multz"));
-  
 
   enkf_config_add_type(config , "EQUIL" , 
 		       parameter , EQUIL, 
@@ -70,8 +68,7 @@ int main(void) {
   
   enkf_config_add_type(config , "SWAT"  , ecl_restart , FIELD , 
 		       field_config_alloc("SWAT" , ecl_float_type   , nx , ny , nz , active_size , index_map , 1 , NULL , "SWAT"));
-
-
+  
   enkf_config_add_type(config , "PRESSURE" , ecl_restart , FIELD , 
 		       field_config_alloc("PRESSURE"  , ecl_float_type , nx , ny , nz , active_size , index_map , 1 , NULL , "Pressure"));
 
@@ -88,13 +85,16 @@ int main(void) {
   enkf_config_add_well(config , "B-37T2" ,  4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
   enkf_config_add_well(config , "B-33A"  ,  4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
   enkf_config_add_well(config , "B-43A"  ,  4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
-  enkf_obs = enkf_obs_fscanf_alloc("Config/obs" , config , hist);
 
+  enkf_obs = enkf_obs_alloc(config , sched);
+  enkf_obs_add_well_obs(enkf_obs , "B-33A"  , NULL, "Config/B-33A");
+  enkf_obs_add_well_obs(enkf_obs , "B-37T2" , NULL, "Config/B-43A");
+  enkf_obs_add_well_obs(enkf_obs , "B-43A"  , NULL, "Config/B-37T2");
+  
   /*
-    enkf_obs_add_well_obs(enkf_obs , "B-33A"  , 3 , (const char *[3]) {"WGPR" , "WWPR" , "WOPR"});
-    enkf_obs_add_well_obs(enkf_obs , "B-37T2" , 3 , (const char *[3]) {"WGPR" , "WWPR" , "WOPR"});
-    enkf_obs_add_well_obs(enkf_obs , "B-43A"  , 4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
+    enkf_obs_add_field_obs(enkf_obs , "PRES"  , 4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
   */
+
 
 
   tp = thread_pool_alloc(10);
@@ -157,26 +157,16 @@ int main(void) {
     thread_pool_join(tp);
     {
       double *X = calloc(100 * 100 , sizeof *X);
-      enkf_ensemble_update(state , 100 , 100 * 4096 , X);
+      enkf_ensemble_update(state , 100 , 100 * 4096 , X); 
       free(X);
     }
-
-    for (i = 0; i < 1; i++)
-      {
-	const int serial_size = 100000;
-	double * serial_data = calloc(serial_size*100 , sizeof *serial_data);
-	
-	/*
-	  enkf_state_serialize(state[i] , 100);
-	*/
-
-	enkf_obs_get_observations(enkf_obs , 51 , obs_data);
-	enkf_obs_measure(enkf_obs , 51 , state[0] , meas_data);
-	obs_data_fprintf(obs_data , stdout);
-	meas_data_fprintf(meas_data , stdout);
-	free(serial_data);
-      }
+    enkf_obs_get_observations(enkf_obs , 51 , obs_data);
+    obs_data_fprintf(obs_data   , stdout);
+    for (i = 0; i < 100; i++) 
+      enkf_obs_measure(enkf_obs   , 51 , state[i] , meas_data);
+    meas_data_fprintf(meas_data , stdout);
     
+
     for (i=0; i < 100; i++)
       enkf_state_free(state[i]);
     

@@ -1,24 +1,25 @@
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include <enkf_config.h>
 #include <field.h>
 #include <util.h>
 #include <string.h>
 #include <fortio.h>
 #include <ecl_kw.h>
+#include <ecl_fstate.h>
 #include <field_config.h>
 #include <rms_file.h>
 #include <rms_tagkey.h>
-
+#include <ecl_util.h>
+#include <rms_type.h>
+#include <fortio.h>
 
 #define  DEBUG
 #define  TARGET_TYPE FIELD
 #include "enkf_debug.h"
 
 
-static inline int __global_index(const field_config_type * config , int i , int j , int k) {
-  return config->index_map[ k * config->nx * config->ny + j * config->nx + i];
-}
 
 GET_DATA_SIZE_HEADER(field);
 
@@ -26,42 +27,93 @@ GET_DATA_SIZE_HEADER(field);
 
 struct field_struct {
   DEBUG_DECLARE
-  const field_config_type * config;
-  double * data;
+  const  field_config_type * config;
+  char  *data;
+
+  bool   shared_data;
+  int    shared_byte_size;
 };
+
 
 
 #define EXPORT_MACRO                                                                           \
 for (k=0; k < config->nz; k++) {                                                               \
   for (j=0; j < config->ny; j++) {                                                             \
     for (i=0; i < config->nx; i++) {                                                           \
-      int index1D = __global_index(config , i , j , k);                                        \
+      int index1D = field_config_global_index(config , i , j , k);                             \
       int index3D;                                                                             \
       if (rms_order)                                               		     	       \
         index3D = i * config->ny*config->nz  +  j * config->ny + (config->nz - k);             \
       else                                                                       	       \
         index3D = i + j * config->nx + k* config->nx*config->ny;           	               \
       if (index1D >= 0)                                                                        \
-	data[index3D] = field->data[index1D];                               	               \
+	target_data[index3D] = src_data[index1D];                               	       \
       else                                                                                     \
-	data[index3D] = fill_value;                                                            \
+        memcpy(&target_data[index3D] , fill_value , sizeof_ctype_target);                      \
      }                                                                                         \
   }                                                                                            \
 }
 
 
-static void field_export3D(const field_type * field , void *_data , bool rms_order , bool export_float , double fill_value) {
+void field_export3D(const field_type * field , void *_target_data , bool rms_order , ecl_type_enum target_type , void *fill_value) {
   const field_config_type * config = field->config;
+  int   sizeof_ctype_target = ecl_util_get_sizeof_ctype(target_type);
   int i,j,k;
-  
-  if (export_float) {
-    float *data = (float *) _data;
-    EXPORT_MACRO
- } else {
-    double *data = (double *) _data;
-    EXPORT_MACRO
-  }  
 
+  
+  switch(config->ecl_type) {
+  case(ecl_double_type):
+    {
+      const double * src_data = (const double *) field->data;
+      if (target_type == ecl_float_type) {
+	float *target_data = (float *) _target_data;
+	EXPORT_MACRO;
+      } else if (target_type == ecl_double_type) {
+	double *target_data = (double *) _target_data;
+	EXPORT_MACRO;
+      } else {
+	fprintf(stderr,"%s: double field can only export to double/float\n",__func__);
+	abort();
+      }
+    }
+    break;
+  case(ecl_float_type):
+    {
+      const float * src_data = (const float *) field->data;
+      if (target_type == ecl_float_type) {
+	float *target_data = (float *) _target_data;
+	EXPORT_MACRO;
+      } else if (target_type == ecl_double_type) {
+	double *target_data = (double *) _target_data;
+	EXPORT_MACRO;
+      } else {
+	fprintf(stderr,"%s: float field can only export to double/float\n",__func__);
+	abort();
+      }
+    }
+    break;
+  case(ecl_int_type):
+    {
+      const int * src_data = (const int *) field->data;
+      if (target_type == ecl_float_type) {
+	float *target_data = (float *) _target_data;
+	EXPORT_MACRO;
+      } else if (target_type == ecl_double_type) {
+	double *target_data = (double *) _target_data;
+	EXPORT_MACRO;
+      } else if (target_type == ecl_int_type) {
+	int *target_data = (int *) _target_data;
+	EXPORT_MACRO;
+      }  else {
+	fprintf(stderr,"%s: int field can only export to int/double/float\n",__func__);
+	abort();
+      }
+    }
+    break;
+  default:
+    fprintf(stderr,"%s: Sorry field has unexportable type ... \n",__func__);
+    break;
+  }
 }
   
 
@@ -72,63 +124,166 @@ static void field_export3D(const field_type * field , void *_data , bool rms_ord
 for (k=0; k < config->nz; k++) {                                                               \
   for (j=0; j < config->ny; j++) {                                                             \
     for (i=0; i < config->nx; i++) {                                                           \
-      int index1D = __global_index(config , i , j , k);                                        \
+      int index1D = field_config_global_index(config , i , j , k);                                        \
       int index3D;                                                                             \
       if (index1D >= 0) {                                                                      \
 	if (rms_order)                                               		     	       \
 	  index3D = i * config->ny*config->nz  +  j * config->ny + (config->nz - k);           \
 	else                                                                       	       \
 	  index3D = i + j * config->nx + k* config->nx*config->ny;           	               \
-	field->data[index1D] = data[index3D] ;                               	               \
+	target_data[index1D] = src_data[index3D] ;                               	       \
      }                                                                                         \
    }                                                                                           \
   }                                                                                            \
 }
 
 
-static void field_import3D(field_type * field , const void *_data , bool rms_order , bool import_float) {
+
+static void field_import3D(field_type * field , const void *_src_data , bool rms_order , ecl_type_enum src_type) {
   const field_config_type * config = field->config;
   int i,j,k;
+
   
-  if (import_float) {
-    const float *data = (const float *) _data;
-    IMPORT_MACRO
-  } else {
-    const double *data = (const double *) _data;
-    IMPORT_MACRO
-  }  
+  switch(config->ecl_type) {
+  case(ecl_double_type):
+    {
+      double * target_data = (double *) field->data;
+      if (src_type == ecl_float_type) {
+	float *src_data = (float *) _src_data;
+	IMPORT_MACRO;
+      } else if (src_type == ecl_double_type) {
+	double *src_data = (double *) _src_data;
+	IMPORT_MACRO;
+      } else if (src_type == ecl_int_type) {
+	int *src_data = (int *) _src_data;
+	IMPORT_MACRO;
+      } else {
+	fprintf(stderr,"%s: double field can only import from int/double/float\n",__func__);
+	abort();
+      }
+    }
+    break;
+  case(ecl_float_type):
+    {
+      float * target_data = (float *) field->data;
+      if (src_type == ecl_float_type) {
+	float *src_data = (float *) _src_data;
+	IMPORT_MACRO;
+      } else if (src_type == ecl_double_type) {
+	double *src_data = (double *) _src_data;
+	IMPORT_MACRO;
+      } else if (src_type == ecl_int_type) {
+	int *src_data = (int *) _src_data;
+	IMPORT_MACRO;
+      } else {
+	fprintf(stderr,"%s: double field can only import from int/double/float\n",__func__);
+	abort();
+      }
+    }
+    break;
+  case(ecl_int_type):
+    {
+      int * target_data = (int *) field->data;
+      if (src_type == ecl_int_type) {
+	int *src_data = (int *) _src_data;
+	IMPORT_MACRO;
+      }  else {
+	fprintf(stderr,"%s: int field can only import from int\n",__func__);
+	abort();
+      }
+    }
+    break;
+  default:
+    fprintf(stderr,"%s: Sorry field has unimportable type ... \n",__func__);
+    break;
+  }
 }
+
 
 
 /*****************************************************************/
 
-
+#define CLEAR_MACRO(d,s) { int k; for (k=0; k < (s); k++) (d)[k] = 0; }
 void field_clear(field_type * field) {
-  const int data_size = field_config_get_data_size(field->config);   
-  int k;
-  for (k = 0; k < data_size; k++)
-    field->data[k] = 0.0;
+  const ecl_type_enum ecl_type = field_config_get_ecl_type(field->config);
+  const int data_size          = field_config_get_data_size(field->config);   
+
+  switch (ecl_type) {
+  case(ecl_double_type):
+    {
+      double * data = (double *) field->data;
+      CLEAR_MACRO(data , data_size);
+      break;
+    }
+  case(ecl_float_type):
+    {
+      float * data = (float *) field->data;
+      CLEAR_MACRO(data , data_size);
+      break;
+    }
+  case(ecl_int_type):
+    {
+      int * data = (int *) field->data;
+      CLEAR_MACRO(data , data_size);
+      break;
+    }
+  default:
+    fprintf(stderr,"%s: not implemeneted for data_type: %d \n",__func__ , ecl_type);
+  }
 }
+#undef CLEAR_MACRO
 
 
 void field_realloc_data(field_type *field) {
-  field->data = enkf_util_calloc(field_config_get_data_size(field->config) , sizeof *field->data , __func__);
+  if (field->shared_data) {
+    if (field_config_get_byte_size(field->config) > field->shared_byte_size) {
+      fprintf(stderr,"%s: attempt to grow field with shared data - aborting \n",__func__);
+      abort();
+    }
+  } else 
+    field->data = enkf_util_malloc(field_config_get_byte_size(field->config) , __func__);
 }
 
 
+
 void field_free_data(field_type *field) {
-  free(field->data);
-  field->data = NULL;
+  if (!field->shared_data) {
+    free(field->data);
+    field->data = NULL;
+  }
+}
+
+
+
+
+static field_type * __field_alloc(const field_config_type * field_config , void * shared_data , int shared_byte_size) {
+  field_type * field  = malloc(sizeof *field);
+  field->config = field_config;
+  if (shared_data == NULL) {
+    field->data        = NULL;
+    field->shared_data = false;
+    field_realloc_data(field);
+  } else {
+    field->data             = shared_data;
+    field->shared_data      = true;
+    field->shared_byte_size = shared_byte_size;
+    if (shared_byte_size < field_config_get_byte_size(field->config)) {
+      fprintf(stderr,"%s: the shared buffer is to small to hold the input field - aborting \n",__func__);
+      abort();
+    }
+  }
+  DEBUG_ASSIGN(field)
+  return field;
 }
 
 
 field_type * field_alloc(const field_config_type * field_config) {
-  field_type * field  = malloc(sizeof *field);
-  field->config = field_config;
-  field->data = NULL;
-  field_realloc_data(field);
-  DEBUG_ASSIGN(field)
-  return field;
+  return __field_alloc(field_config , NULL , 0);
+}
+
+
+field_type * field_alloc_shared(const field_config_type * field_config, void * shared_data , int shared_byte_size) {
+  return __field_alloc(field_config , shared_data , shared_byte_size);
 }
 
 
@@ -139,30 +294,31 @@ char * field_alloc_ensfile(const field_type * field , const char * path) {
 
 
 field_type * field_copyc(const field_type *field) {
-  const int data_size = field_config_get_data_size(field->config);   
   field_type * new = field_alloc(field->config);
-  
-  memcpy(new->data , field->data , data_size * sizeof *field->data);
+  memcpy(new->data , field->data , field_config_get_byte_size(field->config));
   return new;
 }
 
 
 void field_fread(field_type * field , const char *file) {
   FILE * stream   = enkf_util_fopen_r(file , __func__);
-  int  data_size;
-  fread(&data_size , sizeof  data_size     , 1 , stream);
-  enkf_util_fread(field->data , sizeof *field->data , data_size , stream , __func__);
+  int  data_size , sizeof_ctype;
+  fread(&data_size    , sizeof  data_size     , 1 , stream);
+  fread(&sizeof_ctype , sizeof  sizeof_ctype     , 1 , stream);
+  enkf_util_fread(field->data , sizeof_ctype , data_size , stream , __func__);
   fclose(stream);
 }
 
 
 void field_fwrite(const field_type * field , const char *file) {
-  const int data_size = field_config_get_data_size(field->config);
+  const int data_size    = field_config_get_data_size(field->config);
+  const int sizeof_ctype = field_config_get_sizeof_ctype(field->config);
+
   FILE * stream   = enkf_util_fopen_w(file , __func__);
 
-  fwrite(&data_size                    ,   sizeof  data_size     , 1 , stream);
-  enkf_util_fwrite(field->data    , sizeof *field->data    , data_size , stream , __func__);
-  
+  fwrite(&data_size               ,   sizeof  data_size     , 1 , stream);
+  fwrite(&sizeof_ctype            ,   sizeof  sizeof_ctype     , 1 , stream);
+  enkf_util_fwrite(field->data    ,   sizeof_ctype , data_size , stream , __func__);
   fclose(stream);
 }
 
@@ -170,33 +326,36 @@ void field_fwrite(const field_type * field , const char *file) {
 
 
 
-void field_ecl_write1D_fortio(const field_type * field , fortio_type * fortio , bool fmt_file , bool endian_swap , ecl_type_enum ecl_type) {
+void field_ecl_write1D_fortio(const field_type * field , fortio_type * fortio , bool fmt_file , bool endian_swap ) {
   const int data_size = field_config_get_data_size(field->config);
-  void *data;
-  if (ecl_type == ecl_float_type) {
-    data = enkf_util_calloc(data_size , sizeof(float) , __func__);
-    util_double_to_float(data , field->data , data_size );
-  } else 
-    data = field->data;
-
-  ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_swap , field_config_get_ecl_kw_name(field->config), ecl_type , data_size , data);
-  if (ecl_type == ecl_float_type) 
-    free(data);
+  const ecl_type_enum ecl_type = field_config_get_ecl_type(field->config); 
+  
+  ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_swap , field_config_get_ecl_kw_name(field->config), ecl_type , data_size , field->data);
 }
 
 
 
-void field_ecl_write3D_fortio(const field_type * field , fortio_type * fortio , bool fmt_file , bool endian_swap , ecl_type_enum ecl_type) {
-  const int data_size = field_config_get_volume(field->config);
-  void *data;
-  bool export_float;
-  data = enkf_util_calloc(data_size , sizeof(float) , __func__);
-  if (ecl_type == ecl_float_type) 
-    export_float = true;
-  else
-    export_float = false;
-  field_export3D(field , data , false , export_float , 0.0);
+void field_ecl_write3D_fortio(const field_type * field , fortio_type * fortio , bool fmt_file , bool endian_swap ) {
+  const int data_size             = field_config_get_volume(field->config);
+  const ecl_type_enum target_type = field_config_get_ecl_type(field->config); /* Could/should in principle be input */
+  const ecl_type_enum ecl_type    = field_config_get_ecl_type(field->config);
 
+  void *data;
+  data = enkf_util_malloc(data_size * ecl_util_get_sizeof_ctype(target_type) , __func__);
+  if (ecl_type == ecl_double_type) {
+    double fill = 0.0;
+    field_export3D(field , data , false , target_type , &fill);
+  } else if (ecl_type == ecl_float_type) {
+    float fill = 0.0;
+    field_export3D(field , data , false , target_type , &fill);
+  } else if (ecl_type == ecl_int_type) {
+    int fill = 0;
+    field_export3D(field , data , false , target_type , &fill);
+  } else {
+    fprintf(stderr,"%s: trying to export type != int/float/double - aborting \n",__func__);
+    abort();
+  }
+  
   ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_swap , field_config_get_ecl_kw_name(field->config), ecl_type , data_size , data);
   free(data);
 }
@@ -205,16 +364,15 @@ void field_ecl_write3D_fortio(const field_type * field , fortio_type * fortio , 
 void field_ecl_write2(const field_type * field  , const char * path , bool write3D) {
   fortio_type * fortio;
   bool fmt_file , endian_swap;
-  ecl_type_enum ecl_type;
   char * eclfile = util_alloc_full_path(path , field_config_get_eclfile_ref(field->config));
 
-  field_config_set_io_options(field->config , &fmt_file , &endian_swap, &ecl_type);
+  field_config_set_io_options(field->config , &fmt_file , &endian_swap);
   fortio = fortio_open(eclfile , "w" , endian_swap);
 
   if (write3D)
-    field_ecl_write3D_fortio(field , fortio , fmt_file , endian_swap , ecl_type);
+    field_ecl_write3D_fortio(field , fortio , fmt_file , endian_swap );
   else
-    field_ecl_write1D_fortio(field , fortio , fmt_file , endian_swap , ecl_type);
+    field_ecl_write1D_fortio(field , fortio , fmt_file , endian_swap );
 
   fortio_close(fortio);
   free(eclfile);
@@ -288,19 +446,52 @@ void field_free(field_type *field) {
 
 int field_deserialize(const field_type * field , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
   const field_config_type *config      = field->config;
-  const int                data_size  = field_config_get_data_size(config);
+  const int                data_size   = field_config_get_data_size(config);
+  ecl_type_enum ecl_type               = field_config_get_ecl_type(config);
+  double *data;
+  int new_internal_offset;
 
-  return enkf_util_deserialize(field->data , NULL , internal_offset , data_size , serial_size , serial_data , offset , stride);
+  if (ecl_type == ecl_double_type)
+    data = &((double *) field->data)[internal_offset];
+  else if (ecl_type == ecl_float_type) 
+    data = enkf_util_malloc(serial_size * sizeof * data , __func__);
+  else {
+    fprintf(stderr,"%s: tried to deserialize field with type:%d different from float/double - aborting \n",__func__ , ecl_type);
+    abort();
+  }
+  new_internal_offset = enkf_util_deserialize(data , NULL , internal_offset , data_size , serial_size , serial_data , offset , stride);
+  if (ecl_type == ecl_float_type) {
+    util_double_to_float( &((float *) field->data)[internal_offset] , data , serial_size);
+    free(data);
+  }
+
+  return new_internal_offset;
 }
 
 
 
 
 int field_serialize(const field_type *field , int internal_offset , size_t serial_data_size ,  double *serial_data , size_t stride , size_t offset , bool *complete) {
-  const field_config_type *config      = field->config;
+  const field_config_type *config     = field->config;
+  ecl_type_enum ecl_type              = field_config_get_ecl_type(config);
   const int                data_size  = field_config_get_data_size(config);
+
+  int elements_added;
+  double *data;
   
-  return enkf_util_serialize(field->data , NULL , internal_offset , data_size , serial_data , serial_data_size , offset , stride , complete);
+  if (ecl_type == ecl_double_type)
+    data = (double *) field->data;
+  else if (ecl_type == ecl_float_type) {
+    data = enkf_util_malloc(data_size * sizeof * data , __func__);
+    util_float_to_double(data , (const float *) field->data , data_size);
+  } else {
+    fprintf(stderr,"%s: tried to serialize field with type:%d different from float/double - aborting \n",__func__ , ecl_type);
+    abort();
+  }
+  elements_added = enkf_util_serialize(data , NULL , internal_offset , data_size , serial_data , serial_data_size , offset , stride , complete);
+  
+  if (ecl_type == ecl_float_type) free(data);
+  return elements_added;
 }
 
 
@@ -312,65 +503,159 @@ int field_serialize(const field_type *field , int internal_offset , size_t seria
 
 
 
-double field_ijk_get(const field_type * field , int i , int j , int k) {
-  int global_index = __global_index(field->config , i , j , k);
-  return field->data[global_index];
+void field_ijk_get(const field_type * field , int i , int j , int k , void * value) {
+  int global_index = field_config_global_index(field->config , i , j , k);
+  int sizeof_ctype = field_config_get_sizeof_ctype(field->config);
+  memcpy(value , &field->data[global_index * sizeof_ctype] , sizeof_ctype);
 }
 
 
+
 bool field_ijk_valid(const field_type * field , int i , int j , int k) {
-  int global_index = __global_index(field->config , i , j , k);
+  int global_index = field_config_global_index(field->config , i , j , k);
   if (global_index >=0)
     return true;
   else
     return false;
 }
 
-double field_ijk_get_if_valid(const field_type * field , int i , int j , int k , bool * valid) {
-  int global_index = __global_index(field->config , i , j , k);
+
+void field_ijk_get_if_valid(const field_type * field , int i , int j , int k , void * value , bool * valid) {
+  int global_index = field_config_global_index(field->config , i , j , k);
   if (global_index >=0) {
     *valid = true;
-    return field->data[global_index];
-  } else {
+    field_ijk_get(field , i , j , k , value);
+  } else 
     *valid = false;
-    return 0.0;
-  }
 }
 
 
 int field_get_global_index(const field_type * field , int i , int j  , int k) {
-  return __global_index(field->config , i , j , k);
+  return field_config_global_index(field->config , i , j , k);
 }
 
 
 void field_copy_ecl_kw_data(field_type * field , const ecl_kw_type * ecl_kw) {
   const field_config_type * config = field->config;
-  const int data_size = field_config_get_data_size(config);
+  const int data_size      	   = field_config_get_data_size(config);
+  ecl_type_enum field_type 	   = field_config_get_ecl_type(field->config);
+  ecl_type_enum kw_type            = ecl_kw_get_type(ecl_kw);
   if (data_size != ecl_kw_get_size(ecl_kw)) {
     fprintf(stderr,"%s: fatal error - incorrect size for:%s [config:%d , file:%d] - aborting \n",__func__ , config->ecl_kw_name , data_size , ecl_kw_get_size(ecl_kw));
     abort();
   } 
+  ecl_util_memcpy_typed_data(field->data , ecl_kw_get_data_ref(ecl_kw) , field_type , kw_type , ecl_kw_get_size(ecl_kw));
+}
+
+
+
+/*****************************************************************/
+
+void field_fload_rms(field_type * field , const char * filename) {
+  const char * key = field_config_get_ecl_kw_name(field->config);
+  rms_file_type * rms_file   = rms_file_alloc(filename , false);
+  rms_tagkey_type * data_tag = rms_file_fread_alloc_data_tagkey(rms_file , "parameter" , "name" , key);
+  ecl_type_enum   ecl_type;
   {
-    void *data;
-    ecl_type_enum ecl_type = config->ecl_type;
-    if (ecl_type == ecl_float_type) 
-      data = enkf_util_calloc(data_size , sizeof(float) , __func__ );
-    else if (ecl_type == ecl_double_type)
-      data = field->data;
-    else {
-      fprintf(stderr,"%s: field->ecl_type = %d is not recognized - aborting \n",__func__ , ecl_type);
+    rms_type_enum   rms_type   = rms_tagkey_get_rms_type(data_tag);
+    switch (rms_type) {
+    case(rms_float_type):
+      ecl_type = ecl_float_type;
+      break;
+    case(rms_double_type):
+      ecl_type = ecl_double_type;
+      break;
+    case(rms_int_type):
+      ecl_type = ecl_int_type;
+      break;
+    default:
+      fprintf(stderr,"%s: sorry rms_type: %d not implemented - aborting \n",__func__ , rms_type);
       abort();
     }
-    ecl_kw_get_memcpy_data(ecl_kw , data);
-    if (ecl_type == ecl_float_type) {
-      util_float_to_double(field->data , data , data_size);
-      free(data);
+  }
+  field_import3D(field , rms_tagkey_get_data_ref(data_tag) , true , ecl_type);
+  rms_tagkey_free(data_tag);
+  rms_file_free(rms_file);
+}
+
+
+
+void field_fload_ecl_kw(field_type * field , const char * filename , bool endian_flip) {
+  const char * key = field_config_get_ecl_kw_name(field->config);
+  ecl_kw_type * ecl_kw;
+  
+  {
+    bool fmt_file        = ecl_fstate_fmt_file(filename);
+    fortio_type * fortio = fortio_open(filename , "r" , endian_flip);
+    ecl_kw_fseek_kw(key , fmt_file , true , true , fortio);
+    ecl_kw = ecl_kw_fread_alloc(fortio , false);
+    fortio_close(fortio);
+  }
+  
+  {
+    ecl_type_enum field_type = field_config_get_ecl_type(field->config);
+    ecl_type_enum kw_type    = ecl_kw_get_type(ecl_kw);
+    if (field_config_get_active_size(field->config) != ecl_kw_get_size(ecl_kw)) {
+      fprintf(stderr,"%s: trying to import ecl_kw(%s) of wrong size: field:%d  ecl_kw:%d \n",__func__ , ecl_kw_get_header_ref(ecl_kw) , field_config_get_active_size(field->config) , ecl_kw_get_size(ecl_kw));
+      abort();
     }
+    ecl_util_memcpy_typed_data(field->data , ecl_kw_get_data_ref(ecl_kw) , field_type , kw_type , ecl_kw_get_size(ecl_kw));
+  }
+  ecl_kw_free(ecl_kw);
+}
+
+
+
+/* No type translation possible */
+void field_fload_ecl_grdecl(field_type * field , const char * filename , bool endian_flip) {
+  const char * key = field_config_get_ecl_kw_name(field->config);
+  int size = field_config_get_volume(field->config);
+  ecl_type_enum ecl_type = field_config_get_ecl_type(field->config);
+  ecl_kw_type * ecl_kw;
+  {
+    FILE * stream = util_fopen(filename , "r");
+    ecl_kw = ecl_kw_fscanf_alloc_grdecl_data(stream , size , ecl_type , endian_flip);
+    fclose(stream);
+  }
+
+  if (strncmp(key , ecl_kw_get_header_ref(ecl_kw) , strlen(key)) != 0) {
+    fprintf(stderr,"%s: did not load keyword:%s from file:%s - seek() is not implemented for grdecl files - aborting \n",__func__ , key , filename);
+    abort();
+  }
+  
+  field_import3D(field , ecl_kw_get_data_ref(ecl_kw) , false , ecl_kw_get_type(ecl_kw));
+  ecl_kw_free(ecl_kw);
+}
+
+
+
+void field_fload_typed(field_type * field , const char * filename ,  bool endian_flip , field_file_type file_type) {
+  switch (file_type) {
+  case(rms_roff_file):
+    field_fload_rms(field , filename );
+    break;
+  case(ecl_kw_file):
+    field_fload_ecl_kw(field , filename  , endian_flip);
+    break;
+  case(ecl_grdecl_file):
+    field_fload_ecl_grdecl(field , filename  , endian_flip);
+    break;
+  default:
+    fprintf(stderr,"%s: file_type:%d not recognized - aborting \n",__func__ , file_type);
+    abort();
   }
 }
 
 
 
+void field_fload(field_type * field , const char * filename , bool endian_flip) {
+  field_file_type file_type = field_config_guess_file_type(filename , endian_flip);
+  if (file_type == unknown_file) file_type = field_config_manual_file_type(filename);
+  field_fload_typed(field , filename , endian_flip , file_type);
+}
+
+
+/*****************************************************************/
 
 
 /* Skal param_name vaere en variabel ?? */
@@ -387,6 +672,11 @@ void field_rms_export_parameter(const field_type * field , const char * param_na
 
 void field_get_dims(const field_type * field, int *nx, int *ny , int *nz) {
   field_config_get_dims(field->config , nx , ny ,nz);
+}
+
+
+void field_apply_limits(field_type * field) {
+  field_config_apply_limits(field->config , field->data);
 }
 
 

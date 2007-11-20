@@ -528,7 +528,7 @@ void enkf_state_ecl_write(const enkf_state_type * enkf_state ,  int mask , int r
 
       if (enkf_node_include_type(enkf_node , ecl_restart)) {      
 	if (enkf_node_get_impl_type(enkf_node) == FIELD)
-	  field_ecl_write3D_fortio(enkf_node_value_ptr(enkf_node) , fortio , fmt_file , endian_swap , ecl_float_type);
+	  field_ecl_write3D_fortio(enkf_node_value_ptr(enkf_node) , fortio , fmt_file , endian_swap);
 	else {
 	  fprintf(stderr,"%s: internal error wrong implementetion type:%d - node:%s aborting \n",__func__ , enkf_node_get_impl_type(enkf_node) , enkf_node_get_key_ref(enkf_node));
 	  abort();

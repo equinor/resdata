@@ -27,7 +27,7 @@ struct field_obs_struct {
 
 
 
-static field_obs_type * __field_obs_alloc(const field_config_type * config , const char * obs_name , int size , const int *i ,const int *j , const int *k) {
+static field_obs_type * __field_obs_alloc(const field_config_type * config , const char * obs_name , int size , const int *i ,const int *j , const int *k, const double * obs_value) {
   
   field_obs_type * field_obs = malloc(sizeof * field_obs);
   field_obs->size      	     = size;
@@ -41,11 +41,19 @@ static field_obs_type * __field_obs_alloc(const field_config_type * config , con
   field_obs->config          = config;
   field_obs->obs_name        = util_alloc_string_copy(obs_name);
 
-  memcpy(field_obs->i , i , sizeof *i * size);
-  memcpy(field_obs->j , j , sizeof *j * size);
-  memcpy(field_obs->k , k , sizeof *k * size);
+  memcpy(field_obs->i 	      , i 	  , sizeof *i 	      * size);
+  memcpy(field_obs->j 	      , j 	  , sizeof *j 	      * size);
+  memcpy(field_obs->k 	      , k 	  , sizeof *k 	      * size);
+  memcpy(field_obs->obs_value , obs_value , sizeof *obs_value * size);
   
   return field_obs;
+}
+
+
+
+
+field_obs_type * field_obs_alloc(const field_config_type * config , const char * obs_name , int size , const int *i , const int *j , const int * k, const double * obs_value) {
+  return __field_obs_alloc(config , obs_name , size , i , j , k, obs_value);
 }
 
 
@@ -54,6 +62,8 @@ field_obs_type * field_obs_fscanf_alloc(const char * filename , const field_conf
   fprintf(stderr,"%s: not implemented - aborting \n",__func__);
   return NULL;
 }
+
+
 
 
 
@@ -76,10 +86,12 @@ void field_obs_get_observations(const field_obs_type * field_obs , int report_st
 
 void field_obs_measure(const field_obs_type * field_obs , const field_type * field_state , meas_data_type * meas_data) {
   int i;
-  
-  for (i=0; i < field_obs->size; i++) 
-    meas_data_add(meas_data , field_ijk_get(field_state , field_obs->i[i] , field_obs->j[i] , field_obs->k[i]));
-  
+  double value;
+  /* Should check type of field */
+  for (i=0; i < field_obs->size; i++) {
+    field_ijk_get(field_state , field_obs->i[i] , field_obs->j[i] , field_obs->k[i] , &value);
+    meas_data_add(meas_data , value);
+  }
 }
 
 

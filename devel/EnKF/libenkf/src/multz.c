@@ -7,7 +7,7 @@
 #include <multz_config.h>
 #include <multz.h>
 #include <enkf_util.h>
-#include <mult.h>
+#include <scalar.h>
 
 
 #define  DEBUG
@@ -22,61 +22,61 @@ GET_DATA_SIZE_HEADER(multz);
 struct multz_struct {
   DEBUG_DECLARE
   const multz_config_type *config;
-  mult_type               *mult;
+  scalar_type             *scalar;
 };
 
 /*****************************************************************/
 void multz_clear(multz_type * multz) {
-  mult_clear(multz->mult);
+  scalar_clear(multz->scalar);
 }
 
 
 
 
 void multz_output_transform(const multz_type * multz) {
-  mult_transform(multz->mult);
+  scalar_transform(multz->scalar);
 }
 
 void multz_set_data(multz_type * multz , const double * data) {
-  mult_set_data(multz->mult , data);
+  scalar_set_data(multz->scalar , data);
 }
 
 
 void multz_get_data(const multz_type * multz , double * data) {
-  mult_get_data(multz->mult , data);
+  scalar_get_data(multz->scalar , data);
 }
 
 void multz_get_output_data(const multz_type * multz , double * output_data) {
-  mult_get_output_data(multz->mult , output_data);
+  scalar_get_output_data(multz->scalar , output_data);
 }
 
 
 const double * multz_get_data_ref(const multz_type * multz) {
-  return mult_get_data_ref(multz->mult);
+  return scalar_get_data_ref(multz->scalar);
 }
 
 
 const double * multz_get_output_ref(const multz_type * multz) {
-  return mult_get_output_ref(multz->mult);
+  return scalar_get_output_ref(multz->scalar);
 }
 
 
 
 
 void multz_realloc_data(multz_type *multz) {
-  mult_realloc_data(multz->mult);
+  scalar_realloc_data(multz->scalar);
 }
 
 
 void multz_free_data(multz_type *multz) {
-  mult_free(multz->mult);
+  scalar_free(multz->scalar);
 }
 
 
 multz_type * multz_alloc(const multz_config_type * multz_config) {
   multz_type * multz  = malloc(sizeof *multz);
   multz->config = multz_config;
-  multz->mult   = mult_alloc(multz_config->mult_config); 
+  multz->scalar   = scalar_alloc(multz_config->scalar_config); 
   DEBUG_ASSIGN(multz)
   return multz;
 }
@@ -89,21 +89,21 @@ char * multz_alloc_ensfile(const multz_type * multz , const char * path) {
 
 multz_type * multz_copyc(const multz_type *multz) {
   multz_type * new = multz_alloc(multz->config); 
-  mult_memcpy(new->mult , multz->mult);
+  scalar_memcpy(new->scalar , multz->scalar);
   return new; 
 }
 
 
 void multz_fwrite(const multz_type *multz , const char *file ) {
   FILE * stream   = enkf_util_fopen_w(file , __func__);
-  mult_stream_fwrite(multz->mult , stream);
+  scalar_stream_fwrite(multz->scalar , stream);
   fclose(stream);
 }
 
 
 void multz_fread(multz_type * multz , const char * file) {
   FILE * stream   = enkf_util_fopen_r(file , __func__);
-  mult_stream_fread(multz->mult , stream);
+  scalar_stream_fread(multz->scalar , stream);
   fclose(stream);
 }
 
@@ -192,25 +192,25 @@ void multz_free(multz_type *multz) {
 
 int multz_serialize(const multz_type *multz , int internal_offset , size_t serial_data_size , double *serial_data , size_t stride , size_t offset, bool * complete) {
   DEBUG_ASSERT(multz);
-  return mult_serialize(multz->mult , internal_offset , serial_data_size , serial_data , stride , offset , complete);
+  return scalar_serialize(multz->scalar , internal_offset , serial_data_size , serial_data , stride , offset , complete);
 }
 
 int multz_deserialize(multz_type *multz , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
   DEBUG_ASSERT(multz);
-  return mult_deserialize(multz->mult , internal_offset , serial_size , serial_data , stride , offset);
+  return scalar_deserialize(multz->scalar , internal_offset , serial_size , serial_data , stride , offset);
 }
 
 
 void multz_truncate(multz_type * multz) {
   DEBUG_ASSERT(multz)
-  mult_truncate( multz->mult );  
+  scalar_truncate( multz->scalar );  
 }
 
 
 
 void  multz_sample(multz_type *multz) {
   DEBUG_ASSERT(multz)
-  mult_sample(multz->mult);  
+  scalar_sample(multz->scalar);  
 }
 
 
@@ -267,7 +267,7 @@ void multz_TEST() {
 
 
 
-MATH_OPS_MULT(multz)
+MATH_OPS_SCALAR(multz)
 VOID_ALLOC(multz)
 VOID_FREE(multz)
 VOID_FREE_DATA(multz)

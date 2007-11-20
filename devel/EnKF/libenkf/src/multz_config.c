@@ -18,7 +18,7 @@
 static multz_config_type * __multz_config_alloc_empty(int size , const char * eclfile , const char * ensfile) {
 
   multz_config_type *multz_config = malloc(sizeof *multz_config);
-  multz_config->mult_config = mult_config_alloc_empty(size);
+  multz_config->scalar_config = scalar_config_alloc_empty(size);
   multz_config->ecl_kw_name = NULL;
   multz_config->var_type    = parameter;
   
@@ -128,7 +128,7 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
       fprintf(stderr,"%s: something wrong when reading: %s - aborting \n",__func__ , filename);
       abort();
     }
-    mult_config_fscanf_line(config->mult_config , line_nr , stream);
+    scalar_config_fscanf_line(config->scalar_config , line_nr , stream);
     util_fscanf_int(stream, &i1);  
     util_fscanf_int(stream, &i2);
     util_fscanf_int(stream, &j1);
@@ -143,7 +143,7 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
     line_nr++;
   } while ( line_nr < size );
 
-  mult_config_finalize_init(config->mult_config);
+  scalar_config_finalize_init(config->scalar_config);
   fclose(stream);
   return config;
 }
@@ -173,7 +173,7 @@ void multz_config_free(multz_config_type * config) {
   free(config->i2);
   free(config->k);
   free(config->area);
-  mult_config_free(config->mult_config);
+  scalar_config_free(config->scalar_config);
   free(config);
 }
 
@@ -182,11 +182,11 @@ void multz_config_free(multz_config_type * config) {
 
 
 int multz_config_get_data_size(const multz_config_type * multz_config) {
-  return mult_config_get_data_size(multz_config->mult_config);
+  return scalar_config_get_data_size(multz_config->scalar_config);
 }
 
 void multz_config_set_serial_offset(multz_config_type * multz_config, int serial_offset ) {
-  mult_config_set_serial_offset(multz_config->mult_config , serial_offset);
+  scalar_config_set_serial_offset(multz_config->scalar_config , serial_offset);
 }
 
 
