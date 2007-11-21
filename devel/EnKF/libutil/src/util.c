@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <util.h>
+#include <zlib.h>
+#include <math.h>
 
 
 
@@ -332,6 +334,36 @@ void util_fskip_token(FILE * stream) {
 }
 
 
+static void util_fskip_chars__(FILE * stream , const char * skip_set , bool complimentary_set , bool *at_eof) {
+  int set_len = strlen(skip_set);
+  bool in_set;
+  do {
+    int i;
+    int c = fgetc(stream);
+    in_set = false;
+    if (c == EOF) 
+      *at_eof = true;
+    else {
+      for (i=0; i < set_len; i++) {
+	if (skip_set[i] == c)
+	  in_set = true;
+      }
+    }
+  } while (in_set != complimentary_set);
+  fseek(stream , -1 , SEEK_CUR);
+}
+
+
+void util_fskip_chars(FILE * stream , const char * skip_set , bool *at_eof) {
+  util_fskip_chars__(stream , skip_set , false , at_eof);
+}
+
+
+void util_fskip_cchars(FILE * stream , const char * skip_set , bool *at_eof) {
+  util_fskip_chars__(stream , skip_set , true , at_eof);
+}
+
+
 char * util_fscanf_alloc_token(FILE * stream) {
   const char * space_set = " \t";
   bool cont;
@@ -578,6 +610,7 @@ bool util_is_link(const char * path) {
 
 
 
+
 int util_get_path_length(const char * file) {
   if (util_is_directory(file)) 
     return strlen(file);
@@ -676,24 +709,74 @@ int util_file_size(const char *file) {
 }
 
 
-bool util_same_file(const char * file1 , const char * file2) {
-  struct stat buffer1 , buffer2;
-  
-  stat(file1, &buffer1);
-  stat(file2, &buffer2);
+static char * util_alloc_link_target(const char * link) {
+  bool retry = true;
+  int target_length;
+  int buffer_size = 64;
+  char * buffer = NULL;
+  do {
+    buffer = util_realloc(buffer , buffer_size , __func__);
+    target_length = readlink(link , buffer , buffer_size);
+    if (target_length == -1) {
+      fprintf(stderr,"%s: readlink(%s,...) failed with errno:%d - aborting\n",__func__ , link , errno);
+      fprintf(stderr,"%s", strerror(errno));
+      abort();
+    }
 
-  if (buffer1.st_ino == buffer2.st_ino) 
-    return true;
-  else
-    return false;
+    if (target_length < buffer_size)
+      retry = false;
+    else
+      buffer_size *= 2;
+
+  } while (retry);
+  buffer[target_length] = '\0';
+  return buffer;
 }
 
 
+
+bool util_same_file(const char * file1 , const char * file2) {
+  char * target1 = (char *) file1;
+  char * target2 = (char *) file2;
+
+  if (util_is_link(file1)) target1 = util_alloc_link_target(file1);
+  if (util_is_link(file2)) target2 = util_alloc_link_target(file2);
+  {
+    struct stat buffer1 , buffer2;
+    
+    stat(target1, &buffer1);
+    stat(target2, &buffer2);
+
+    if (target1 != file1) free(target1);
+    if (target2 != file2) free(target2);
+    
+    if (buffer1.st_ino == buffer2.st_ino) 
+      return true;
+    else
+      return false;
+  }
+}
+
+
+
+
 void util_make_slink(const char *target , const char * link) {
-  if (symlink(target , link) != 0) {
-    fprintf(stderr,"%s: linking %s -> %s failed - aborting \n",__func__ , link , target);
-    fprintf(stderr,"%s\n",strerror(errno));
-    abort();
+  if (util_file_exists(link)) {
+    if (util_is_link(link)) {
+      if (!util_same_file(target , link)) {
+	fprintf(stderr,"%s: %s already exists - not pointing to: %s - aborting \n",__func__ , link , target);
+	abort();
+      }
+    } else {
+      fprintf(stderr,"%s: %s already exists - is not a link - aborting \n",__func__ , link);
+      abort();
+    }
+  } else {
+    if (symlink(target , link) != 0) {
+      fprintf(stderr,"%s: linking %s -> %s failed - aborting \n",__func__ , link , target);
+      fprintf(stderr,"%s\n",strerror(errno));
+      abort();
+    }
   }
 }
 
@@ -1244,82 +1327,6 @@ void util_double_to_float(float *float_ptr , const double *double_ptr , int size
 }
 
 
-/* 
-   Stride is a fucking mess here ....
-*/
-
-size_t util_pack_vector(const void * _src, const bool * active_src , size_t src_size , int src_stride , void * _target , int target_stride , size_t target_size ,  int type_size , bool * complete) {
-  const char * src    = (const char *) _src;
-  char       * target = (char *)       _target;
-  
-  size_t src_index;
-  size_t target_index = 0;
-
-  printf("%s: stride confusion in call \n",__func__); abort();
-
-  for (src_index = 0; src_index < src_size; src_index++) {
-    if (active_src[src_index]) {
-      size_t src_adress    = src_index    * type_size * src_stride;
-      size_t target_adress = target_index * type_size * target_stride;
-      memcpy(&target[target_adress] , &src[src_adress] , type_size);
-      target_index++;
-      if (target_index == target_size) {
-	if (src_index < (src_size - 1)) *complete = false;
-	break;
-      }
-    }
-  }
-  return target_index;
-}
-
-
-
-size_t util_unpack_vector(const void * _src, int src_size , int src_stride , void * _target , const bool * active_target , size_t target_size , int target_stride , int type_size) {
-  const char * src    = (const char *) _src;
-  char       * target = (char *)       _target;
-  
-  size_t src_index = 0;
-  size_t target_index;
-  size_t new_target_offset = 0;
-
-  for (target_index = 0; target_index < target_size; target_index++) {
-    if (active_target[target_index]) {
-      size_t src_adress    = src_index    * type_size * src_stride;
-      size_t target_adress = target_index * type_size * target_stride;
-      memcpy(&target[target_adress] , &src[src_adress] , type_size);
-      src_index++;
-      if (src_index == src_size) {
-	new_target_offset = target_index + 1;
-	break;
-      }
-    }
-  }
-  return new_target_offset;
-}
-
-
-size_t util_copy_strided_vector(const void * _src, size_t src_size , int src_stride , void * _target , int target_stride , size_t target_size ,  int type_size , bool * complete) {
-  const char * src    = (const char *) _src;
-  char       * target = (char *)       _target;
-  
-  size_t src_index;
-  size_t target_index = 0;
-
-  for (src_index = 0; src_index < src_size; src_index++) {
-    size_t src_adress    = src_index    * type_size * src_stride;
-    size_t target_adress = target_index * type_size * target_stride;
-    memcpy(&target[target_adress] , &src[src_adress] , type_size);
-    target_index++;
-    if (target_index == target_size) {
-      if (src_index < (src_size - 1)) *complete = false;
-      break;
-    }
-  }
-  return target_index;
-}
-
-
-
 
 
 /*****************************************************************/
@@ -1383,6 +1390,43 @@ float util_float_max(float a , float b) {;
   return (a > b) ? a : b;
 }
 
+void util_update_int_max_min(int value , int * max , int * min) {
+  *min = util_int_min(value , *min);
+  *max = util_int_max(value , *max);
+}
+
+void util_update_float_max_min(float value , float * max , float * min) {
+  *min = util_float_min(value , *min);
+  *max = util_float_max(value , *max);
+}
+
+void util_update_double_max_min(double value , double * max , double * min) {
+  *min = util_double_min(value , *min);
+  *max = util_double_max(value , *max);
+}
+  
+
+void util_apply_double_limits(double * value , double min_value , double max_value) {
+  if (*value < min_value)
+    *value = min_value;
+  else if (*value > max_value)
+    *value = max_value;
+}
+
+void util_apply_float_limits(float * value , float min_value , float max_value) {
+  if (*value < min_value)
+    *value = min_value;
+  else if (*value > max_value)
+    *value = max_value;
+}
+
+void util_apply_int_limits(int * value , int min_value , int max_value) {
+  if (*value < min_value)
+    *value = min_value;
+  else if (*value > max_value)
+    *value = max_value;
+}
+
 
 /*****************************************************************/
 
@@ -1415,7 +1459,8 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
       break;
     }
   default:
-    fprintf(stderr,"%s can only 1/2/4/8 byte variables - aborting \n",__func__);
+    fprintf(stderr,"%s: current element size: %d \n",__func__ , element_size);
+    fprintf(stderr,"%s: can only endian flip 1/2/4/8 byte variables - aborting \n",__func__);
     abort();
   }
 }
@@ -1499,6 +1544,15 @@ void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , 
 
 /*****************************************************************/
 
+void * util_realloc(void * old_ptr , size_t new_size , const char * caller) {
+  void * tmp = realloc(old_ptr , new_size);
+  if (tmp == NULL) {
+    fprintf(stderr,"%s: failed to realloc %d bytes - aborting \n",caller , new_size);
+    abort();
+  }
+  return tmp;
+}
+
 
 void * util_malloc(size_t size , const char * caller) {
   void *data = malloc(size);
@@ -1537,6 +1591,101 @@ void util_read_path(const char * prompt , int prompt_len , bool must_exist , cha
     if (!ok) 
       fprintf(stderr,"Path: %s does not exist - try again.\n",path);
   }
+}
+
+
+void util_read_filename(const char * prompt , int prompt_len , bool must_exist , char * filename) {
+  bool ok = false;
+  while (!ok) {
+    util_read_string(prompt , prompt_len , filename);
+    if (must_exist)
+      ok = util_file_exists(filename);
+    else
+      ok = true;
+    if (!ok) 
+      fprintf(stderr,"File: %s does not exist - try again.\n",filename);
+  }
+}
+
+
+/*****************************************************************/
+
+void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
+  const char * data = (const char *) _data;
+  const int max_buffer_size      = 1048580; 
+  int       required_buffer_size = (int) ceil(size * 1.001 + 12);
+  int       buffer_size , block_size;
+  void * zbuffer;
+  
+  buffer_size = util_int_min(required_buffer_size , max_buffer_size);
+  do {
+    zbuffer = malloc(buffer_size);
+    if (zbuffer == NULL)
+      buffer_size /= 2;
+  } while(zbuffer == NULL);
+  block_size = (int) (floor(buffer_size / 1.002) - 12);
+
+  fwrite(&size        , sizeof size        , 1 , stream);
+  fwrite(&buffer_size , sizeof buffer_size , 1 , stream);
+  
+  {
+    int offset = 0;
+    do {
+      unsigned long compressed_size = buffer_size;
+      int this_block_size = util_int_min(block_size , size - offset);
+      int compress_result;
+      
+      compress_result = compress(zbuffer , &compressed_size , &data[offset] , this_block_size);
+      if (compress_result != Z_OK) {
+	fprintf(stderr,"%s compress returned %d - aborting \n",__func__ , compress_result);
+	abort();
+      }
+      fwrite(&compressed_size , sizeof compressed_size , 1 , stream);
+      {
+	int bytes_written = fwrite(zbuffer , 1 , compressed_size , stream);
+	if (bytes_written < compressed_size) {
+	  fprintf(stderr,"%s: failed to write %ld bytes to compressed file  - aborting \n",__func__ , compressed_size);
+	  abort();
+	}
+      }
+      offset += this_block_size;
+    } while (offset < size);
+  }
+  free(zbuffer);
+}
+
+
+
+void util_fread_compressed(char *data , FILE * stream) {
+  int size , offset;
+  int buffer_size;
+  void * zbuffer;
+
+  fread(&size        , sizeof size        , 1 , stream);
+  fread(&buffer_size , sizeof buffer_size , 1 , stream);
+  zbuffer = util_malloc(buffer_size , __func__);
+  
+  offset = 0;
+  do {
+    int compressed_size;
+    unsigned long block_size = size - offset;
+    int compress_result;
+    fread(&compressed_size , sizeof compressed_size , 1 , stream);
+    {
+      int bytes_read = fread(zbuffer , 1 , compressed_size , stream);
+      if (bytes_read < compressed_size) {
+	fprintf(stderr,"%s: failed to read %d bytes from compressed file - aborting \n",__func__ , compressed_size);
+	abort();
+      }
+    }
+    compress_result = uncompress(&data[offset] , &block_size , zbuffer , compressed_size);
+    if (compress_result != Z_OK) {
+      fprintf(stderr,"%s compress returned %d - aborting \n",__func__ , compress_result);
+      abort();
+    }
+    offset += block_size;
+  } while (offset < size);
+  free(zbuffer);
 }
 
 

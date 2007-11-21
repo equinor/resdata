@@ -39,6 +39,8 @@ char   * util_fscanf_alloc_line(FILE *, bool *);
 char   * util_fscanf_realloc_line(FILE *, bool * , char *);
 char   * util_fscanf_alloc_token(FILE * );
 void     util_fskip_token(FILE * );
+void     util_fskip_chars(FILE * , const char * , bool *);
+void     util_fskip_cchars(FILE * , const char * , bool *);
 bool     util_fscanf_int(FILE * , int * );
 char   * util_alloc_full_path(const char *, const char *);
 char   * util_alloc_strip_copy(const char *);
@@ -68,11 +70,10 @@ char *   util_alloc_string_copy(const char *);
 void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
 
 void    util_abort(const char *, const char *, int , const char *);
+void *  util_realloc(void *  , size_t  , const char * );
 void *  util_malloc(size_t , const char * );
 void 	util_double_to_float(float  * , const double * , int );
 void 	util_float_to_double(double * , const float  * , int );
-size_t  util_unpack_vector(const void * , int , int , void * , const bool * , size_t , int , int );
-size_t  util_pack_vector(const void * , const bool * , size_t , int , void * , int , size_t ,  int , bool * );
 
 
 void    util_fwrite_string(const char * , FILE *);
@@ -82,6 +83,13 @@ void    util_endian_flip_vector(void *, int , int );
 bool    util_proc_alive(pid_t pid);
 int     util_proc_mem_free(void);
 
+
+void     util_apply_int_limits(int * , int , int );
+void     util_apply_float_limits(float * , float , float );
+void     util_apply_double_limits(double * , double , double );
+void     util_update_double_max_min(double , double * , double * );
+void     util_update_float_max_min(float , float * , float * );
+void     util_update_int_max_min(int , int * , int * );
 float  	 util_float_max (float   , float );
 int    	 util_int_max   (int     , int);
 double 	 util_double_max(double  , double );
@@ -91,11 +99,14 @@ double 	 util_double_min(double  , double );
 void     util_fskip_lines(FILE * , int);
 bool     util_same_file(const char *  , const char * );
 void     util_read_path(const char * , int , bool , char *  );
+void     util_read_filename(const char * , int , bool , char * );
 void     util_read_string(const char *  , int  , char * );
 void     util_fread (void *, size_t , size_t , FILE * , const char * );
 void     util_fwrite(const void *, size_t , size_t , FILE * , const char * );
 
 
+void util_fread_compressed(char * , FILE * );
+void util_fwrite_compressed(const void * , int , FILE * );
 
 #define UTIL_ABORT(msg) (util_abort(__func__, __FILE__, __LINE__ , msg))
 

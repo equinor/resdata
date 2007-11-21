@@ -4,11 +4,11 @@
 #include <void_arg.h>
 
 struct void_arg_struct {
-  int   arg_size;
-  int   byte_size;
-  int  *size_list;
-  int  *offset_list;
-  char *argList;
+  int      arg_size;
+  int      byte_size;
+  size_t  *size_list;
+  int  	  *offset_list;
+  char 	  *argList;
 };
 
 
@@ -45,6 +45,32 @@ void_arg_type * void_arg_alloc4(int size1, int size2, int size3, int size4) {
   return void_arg_alloc(4 , (const int[4]) {size1 , size2, size3, size4});
 }
 
+void_arg_type * void_arg_alloc5(int size1, int size2, int size3, int size4, int size5) {
+  return void_arg_alloc(5 , (const int[5]) {size1 , size2, size3, size4 , size5});
+}
+
+void_arg_type * void_arg_alloc6(int size1, int size2, int size3, int size4, int size5, int size6) {
+  return void_arg_alloc(6 , (const int[6]) {size1 , size2, size3, size4 , size5 , size6});
+}
+
+void_arg_type * void_arg_alloc7(int size1, int size2, int size3, int size4, int size5, int size6, int size7) {
+  return void_arg_alloc(7 , (const int[7]) {size1 , size2, size3, size4 , size5 , size6 , size7});
+}
+
+void_arg_type * void_arg_alloc8(int size1, int size2, int size3, int size4, int size5, int size6, int size7, int size8) {
+  return void_arg_alloc(8 , (const int[8]) {size1 , size2, size3, size4 , size5 , size6 , size7 , size8});
+}
+
+void_arg_type * void_arg_alloc9(int size1, int size2, int size3, int size4, int size5, int size6, int size7, int size8 , int size9) {
+  return void_arg_alloc(9 , (const int[9]) {size1 , size2, size3, size4 , size5 , size6 , size7 , size8, size9});
+}
+
+void_arg_type * void_arg_alloc10(int size1, int size2, int size3, int size4, int size5, int size6, int size7, int size8 , int size9, int size10) {
+  return void_arg_alloc(10 , (const int[10]) {size1 , size2, size3, size4 , size5 , size6 , size7 , size8, size9 , size10});
+}
+
+
+
 
 void void_arg_free(void_arg_type * arg) {
   free(arg->argList);
@@ -67,14 +93,56 @@ void void_arg_pack_ptr(void_arg_type * arg, int iarg , void * input) {
 }
 
 
-
-void void_arg_unpack_ptr(void_arg_type * arg , int iarg , void * output) {
+void void_arg_unpack_ptr(const void_arg_type * arg , int iarg , void * output) {
   __void_arg_assert_index(arg , iarg);
-  memcpy(output , &arg->argList[arg->offset_list[iarg]] , arg->size_list[iarg]);
+  memcpy(output , &arg->argList[arg->offset_list[iarg]] , (const size_t) arg->size_list[iarg]);
 }
 
 
-void * void_arg_get_ptr(void_arg_type * arg, int iarg) {
+void * void_arg_get_target_ptr(const void_arg_type * arg, int iarg) {
   __void_arg_assert_index(arg , iarg);
   return (void *) (*( (size_t *) &arg->argList[arg->offset_list[iarg]]));
+}
+
+void * void_arg_get_data_ptr(const void_arg_type * arg, int iarg) {
+  __void_arg_assert_index(arg , iarg);
+  return &arg->argList[arg->offset_list[iarg]];
+}
+
+
+
+void void_arg_fscanf(void_arg_type * arg, const char * fmt , FILE * stream) {
+  switch(arg->arg_size) {
+  case(0):
+    break;
+  case(1):
+    {
+      void   *arg;
+      arg = void_arg_get_data_ptr(arg , 0);
+      
+      fscanf(stream , fmt , arg);
+      break;
+    }
+  case(2):
+    {
+      void   *arg0, *arg1;
+      arg0 = void_arg_get_data_ptr(arg , 0);
+      arg1 = void_arg_get_data_ptr(arg , 1);
+
+      fscanf(stream , fmt , arg0 , arg1);
+      break;
+    }
+  case(3):
+    {
+      void   *arg0, *arg1 , *arg2;
+      arg0 = void_arg_get_data_ptr(arg , 0);
+      arg1 = void_arg_get_data_ptr(arg , 1);
+      arg2 = void_arg_get_data_ptr(arg , 2);
+      
+      fscanf(stream , fmt , arg0 , arg1 , arg2);
+      break;
+    }
+  default:
+    fprintf(stderr,"%s: sorry arg_fscanf() not allocated for %d arguments - pathettic ehhh?? \n",__func__ , arg->arg_size);
+  }
 }

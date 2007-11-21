@@ -10,13 +10,13 @@ COMPILE_LIBS      = -lm -lhash
 INSTALL_INC_PATH = ../include
 INSTALL_LIB_PATH = ../lib
 #################################################################
-CFLAGS  = -$(MFLAG) -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
+CFLAGS  = -$(MFLAG) -std=gnu99 -g -Wall $(COMPILE_INCLUDE) -fPIC
 ARFLAGS = -csr
 #################################################################
 OBJECTS           = pathv.o util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o
 INC_FILES_INSTALL = pathv.h util.h thread_pool.h msg.h void_arg.h str_buffer.h
 LIB               = libutil_$(MFLAG).a
-LIB_LINK          = -lutil_$(MFLAG)
+LIB_LINK          = -lutil_$(MFLAG) -lz -lm
 
 
 INSTALL: $(LIB)
