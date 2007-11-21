@@ -7,78 +7,76 @@
 #include <equil_config.h>
 #include <equil.h>
 #include <enkf_util.h>
+#include <scalar.h>
+#include <scalar_config.h>
+#include <enkf_macros.h>
 
+
+#define  DEBUG
+#define  TARGET_TYPE EQUIL
+#include "enkf_debug.h"
 
 GET_DATA_SIZE_HEADER(equil);
 
 /*****************************************************************/
 
-/* 
-   Storage is only in data.
-*/
 
 struct equil_struct {
+  DEBUG_DECLARE
   const equil_config_type *config;
-  double                  *data;
-  double                  *data_GOC;
-  double                  *data_WOC;
-  /*
-    Only data is allocated storage - the other two point into that storage.
-  */
+  scalar_type             *scalar;
 };
 
 /*****************************************************************/
 
 void equil_free_data(equil_type * equil) {
-  free(equil->data);
-  equil->data = NULL;
-  equil->data_GOC = NULL;
-  equil->data_WOC = NULL;
+  scalar_free_data(equil->scalar);
 }
 
 
 
 void equil_realloc_data(equil_type * equil) {
-  const int data_size = equil_config_get_data_size(equil->config);
-  equil->data         = enkf_util_realloc(equil->data , data_size * sizeof *equil->data , __func__);
-  equil->data_WOC     = equil->data;
-  equil->data_GOC     = &equil->data[equil_config_get_nequil(equil->config)];
+  scalar_realloc_data(equil->scalar);
 }
 
 
 equil_type * equil_alloc(const equil_config_type * config) {
   equil_type * equil    = malloc(sizeof *equil);
   equil->config         = config;
-  equil->data           = NULL;
-  equil->data_WOC       = NULL;
-  equil->data_GOC       = NULL;
-  equil_realloc_data(equil);
+  equil->scalar         = scalar_alloc(config->scalar_config);
+  DEBUG_ASSIGN(equil)
   return equil;
 }
 
 
 equil_type * equil_copyc(const equil_type * src) {
   equil_type * new = equil_alloc(src->config);
-  memcpy(new->data_WOC , src->data_WOC , equil_config_get_nequil(new->config) * sizeof * new->data_WOC);
-  memcpy(new->data_GOC , src->data_GOC , equil_config_get_nequil(new->config) * sizeof * new->data_GOC);
+  scalar_memcpy(new->scalar , src->scalar);
   return new;
 }
 
+
+void equil_output_transform(const equil_type * equil) {
+  scalar_transform(equil->scalar);
+}
+
+
+static void equil_get_woc_goc_ref(const equil_type * equil, const double **woc , const double **goc) {
+  const int data_size = equil_config_get_data_size(equil->config);
+  const double * data = scalar_get_output_ref(equil->scalar);
+  *woc = data;
+  *goc = &data[data_size];
+}
 
 
 
 void equil_ecl_write(const equil_type * equil, const char * path) {
   char * eclfile = util_alloc_full_path(path , equil_config_get_eclfile_ref(equil->config));
   FILE * stream   = enkf_util_fopen_w(eclfile , __func__);
-  {
-    const int nequil = equil_config_get_nequil(equil->config);
-    int k;
-    for (k=0; k < nequil; k++) {
-      /*config_fprintf_layer(equil->config , k + 1 , equil->data[k] , stream);*/
-      fprintf(stream , "FAULT:%3d ... %g \n",k,equil->data_WOC[k]);
-      fprintf(stream , "FAULT:%3d ... %g \n",k,equil->data_GOC[k]);
-    }
-  }
+  const double *woc , *goc;
+  equil_output_transform(equil);
+  equil_get_woc_goc_ref(equil , &woc , &goc);
+  equil_config_ecl_write(equil->config , woc , goc , stream);
   free(eclfile);
   fclose(stream);
 }
@@ -90,11 +88,8 @@ static char * equil_alloc_ensfile(const equil_type * equil, const char * path) {
 
 
 void equil_fwrite(const equil_type * equil, const char *file) {
-  const int data_size = equil_config_get_data_size(equil->config);
   FILE * stream       = enkf_util_fopen_w(file , __func__);
-  
-  fwrite(&data_size  , sizeof  data_size     , 1 , stream);
-  enkf_util_fwrite(equil->data ,  sizeof *equil->data    , data_size , stream , __func__);
+  scalar_stream_fwrite(equil->scalar , stream);
   fclose(stream);
 }
 
@@ -114,9 +109,7 @@ char * equil_swapout(equil_type * equil , const char * path) {
 
 void equil_fread(equil_type * equil , const char *file) {
   FILE * stream   = enkf_util_fopen_r(file , __func__);
-  int data_size;
-  fread(&data_size , sizeof  data_size  , 1 , stream);
-  enkf_util_fread(equil->data , sizeof *equil->data , data_size , stream , __func__);
+  scalar_stream_fread(equil->scalar , stream);
   fclose(stream);
 }
 
@@ -135,23 +128,7 @@ void equil_ens_read(equil_type * equil , const char * path) {
 
 
 void equil_sample(equil_type *equil) {
-  const equil_config_type *config   = equil->config;
-  const bool              *active_WOC   = config->active_WOC;
-  const double            *std_WOC      = config->std_WOC;
-  const double            *mean_WOC     = config->mean_WOC;
-  const bool              *active_GOC   = config->active_GOC;
-  const double            *std_GOC      = config->std_GOC;
-  const double            *mean_GOC     = config->mean_GOC;
-  const int                nequil       = equil_config_get_nequil(config);
-  int i;
-  
-  for (i=0; i < nequil; i++) {
-    if (active_WOC[i]) 
-      equil->data_WOC[i] = enkf_util_rand_normal(mean_WOC[i] , std_WOC[i]);
-    if (active_GOC[i]) 
-      equil->data_GOC[i] = enkf_util_rand_normal(mean_GOC[i] , std_GOC[i]);
-  }
-  
+  scalar_sample(equil->scalar);
 }
 
 
@@ -161,32 +138,22 @@ void equil_free(equil_type *equil) {
 }
 
 
-
-int equil_deserialize(const equil_type * equil , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
-  const equil_config_type *config      = equil->config;
-  const bool              *active     = config->active;
-  const int                data_size  = equil_config_get_data_size(config);
-
-  return enkf_util_deserialize(equil->data , active , internal_offset , data_size , serial_size , serial_data , offset , stride);
+int equil_serialize(const equil_type *equil , int internal_offset , size_t serial_data_size , double *serial_data , size_t stride , size_t offset, bool * complete) {
+  DEBUG_ASSERT(equil);
+  return scalar_serialize(equil->scalar , internal_offset , serial_data_size , serial_data , stride , offset , complete);
 }
 
-
-
-
-int equil_serialize(const equil_type *equil , int internal_offset , size_t serial_data_size ,  double *serial_data , size_t stride , size_t offset , bool *complete) {
-  const equil_config_type *config      = equil->config;
-  const bool              *active     = config->active;
-  const int                data_size  = equil_config_get_data_size(config);
-  
-  return enkf_util_serialize(equil->data , active , internal_offset , data_size , serial_data , serial_data_size , offset , stride , complete);
+int equil_deserialize(equil_type *equil , int internal_offset , size_t serial_size , const double * serial_data , size_t stride , size_t offset) {
+  DEBUG_ASSERT(equil);
+  return scalar_deserialize(equil->scalar , internal_offset , serial_size , serial_data , stride , offset);
 }
+
 
 
 
 VOID_SWAPOUT(equil);
 VOID_SWAPIN(equil);
-
-MATH_OPS(equil);
+MATH_OPS_SCALAR(equil);
 VOID_ALLOC(equil);
 VOID_SERIALIZE (equil);
 VOID_DESERIALIZE (equil);

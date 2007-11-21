@@ -1,6 +1,7 @@
 #ifndef __ENKF_TYPES_H__
 #define __ENKF_TYPES_H__
-typedef double (transform_ftype)                  (double , const void *);
+#include <void_arg.h>
+typedef double (transform_ftype)                  (double , const void_arg_type *);
 
 
 /*

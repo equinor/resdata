@@ -32,8 +32,6 @@ static multz_config_type * __multz_config_alloc_empty(int size , const char * ec
   multz_config->j2   	= enkf_util_malloc(size * sizeof *multz_config->j2      , __func__);
   multz_config->k    	= enkf_util_malloc(size * sizeof *multz_config->k       , __func__);
   multz_config->area 	= enkf_util_malloc(size * sizeof *multz_config->area    , __func__);
- 
-  
 
   return multz_config;
 }

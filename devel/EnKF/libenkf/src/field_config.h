@@ -25,9 +25,11 @@ struct field_config_struct {
   bool fmt_file;
   bool endian_swap;
   bool limits_set;
+  bool write_compressed;
 };
 
 
+bool                field_config_write_compressed(const field_config_type * );
 field_file_type     field_config_guess_file_type(const char * , bool);
 field_file_type     field_config_manual_file_type(const char * );
 ecl_type_enum       field_config_get_ecl_type(const field_config_type * );

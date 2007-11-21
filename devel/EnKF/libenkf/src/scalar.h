@@ -32,7 +32,7 @@ void             scalar_clear(scalar_type * scalar);
 const double   * scalar_get_output_ref(const scalar_type * );
 const double   * scalar_get_data_ref  (const scalar_type * );
 void             scalar_memcpy(scalar_type * , const scalar_type * );
-
+void             scalar_free_data(scalar_type *);
 
 MATH_OPS_HEADER(scalar);
 VOID_ALLOC_HEADER(scalar);

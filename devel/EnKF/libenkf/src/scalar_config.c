@@ -38,7 +38,15 @@ scalar_config_type * scalar_config_alloc_empty(int size) {
   scalar_config->output_transform_name = enkf_util_malloc(scalar_config->data_size * sizeof * scalar_config->output_transform_name , __func__);
   scalar_config->internal_offset       = 0;
   scalar_config->void_arg              = enkf_util_malloc(scalar_config->data_size * sizeof * scalar_config->void_arg , __func__);
-  
+
+  {
+    int i;
+    for (i=0; i < size; i++) {
+      scalar_config->output_transform_name[i] = NULL;
+      scalar_config->void_arg[i]              = NULL;
+      scalar_config->active[i]                = false;
+    }
+  }
   return scalar_config;
 }
 
@@ -91,9 +99,9 @@ void scalar_config_fscanf_line(scalar_config_type * config , int line_nr , FILE 
     abort();
   }
   
-  config->active[line_nr]  		 = true;
-  config->mean[line_nr]    		 = mu;
-  config->std[line_nr]     		 = sigma;
+  config->active[line_nr]  = true;
+  config->mean[line_nr]    = mu;
+  config->std[line_nr]     = sigma;
   {
     long int current_pos;
     char * token;

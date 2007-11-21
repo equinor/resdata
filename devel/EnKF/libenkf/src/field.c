@@ -303,9 +303,15 @@ field_type * field_copyc(const field_type *field) {
 void field_fread(field_type * field , const char *file) {
   FILE * stream   = enkf_util_fopen_r(file , __func__);
   int  data_size , sizeof_ctype;
-  fread(&data_size    , sizeof  data_size     , 1 , stream);
-  fread(&sizeof_ctype , sizeof  sizeof_ctype     , 1 , stream);
-  enkf_util_fread(field->data , sizeof_ctype , data_size , stream , __func__);
+  bool read_compressed;
+  fread(&data_size     	  , sizeof  data_size        , 1 , stream);
+  fread(&sizeof_ctype 	  , sizeof  sizeof_ctype     , 1 , stream);
+  fread(&read_compressed  , sizeof  read_compressed  , 1 , stream);
+  if (read_compressed)
+    util_fread_compressed(field->data , stream);
+  else
+    enkf_util_fread(field->data , sizeof_ctype , data_size , stream , __func__);
+
   fclose(stream);
 }
 
@@ -313,12 +319,18 @@ void field_fread(field_type * field , const char *file) {
 void field_fwrite(const field_type * field , const char *file) {
   const int data_size    = field_config_get_data_size(field->config);
   const int sizeof_ctype = field_config_get_sizeof_ctype(field->config);
+  bool  write_compressed = field_config_write_compressed(field->config);
 
   FILE * stream   = enkf_util_fopen_w(file , __func__);
 
-  fwrite(&data_size               ,   sizeof  data_size     , 1 , stream);
+  fwrite(&data_size               ,   sizeof  data_size        , 1 , stream);
   fwrite(&sizeof_ctype            ,   sizeof  sizeof_ctype     , 1 , stream);
-  enkf_util_fwrite(field->data    ,   sizeof_ctype , data_size , stream , __func__);
+  fwrite(&write_compressed        ,   sizeof  write_compressed , 1 , stream);
+  if (write_compressed)
+    util_fwrite_compressed(field->data , sizeof_ctype * data_size , stream);
+  else
+    enkf_util_fwrite(field->data    ,   sizeof_ctype , data_size , stream , __func__);
+  
   fclose(stream);
 }
 

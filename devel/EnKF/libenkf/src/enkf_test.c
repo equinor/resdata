@@ -25,9 +25,11 @@
 #include <multflt.h>
 
 
+transform_ftype * trans_func_lookup2(FILE * stream , char ** _func_name , void_arg_type **_void_arg);
+
 void TEST() {
-  multz_TEST();
-  multflt_TEST();
+  FILE * stream = fopen("Config/test" , "r");
+  trans_func_lookup2(stream , NULL , NULL);
 }
 
 
@@ -50,7 +52,7 @@ int main(void) {
   meas_data = meas_data_alloc();
   obs_data  = obs_data_alloc();
 
-
+  TEST();
   sched     = sched_file_alloc((const int [3]) {1 , 1 , 1999});
   sched_file_parse(sched , "SCHEDULE.INC");
   hist      = history_alloc_from_schedule(sched);
@@ -60,11 +62,10 @@ int main(void) {
   enkf_config_add_type(config , "MULTZ" , 
 		       parameter , MULTZ, 
 		       multz_config_fscanf_alloc("Config/multz" , 100 , 100 , 100 , "MULTZ.INC" , "multz"));
-
+  
   enkf_config_add_type(config , "EQUIL" , 
 		       parameter , EQUIL, 
-		       equil_config_alloc(10 , true , true , "EQUIL.INC" , "equil") );
-  
+		       equil_config_alloc(10 , "EQUIL.INC" , "equil") );
   
   enkf_config_add_type(config , "SWAT"  , ecl_restart , FIELD , 
 		       field_config_alloc("SWAT" , ecl_float_type   , nx , ny , nz , active_size , index_map , 1 , NULL , "SWAT"));
@@ -156,7 +157,10 @@ int main(void) {
     }
     thread_pool_join(tp);
     {
+      int i;
       double *X = calloc(100 * 100 , sizeof *X);
+      for (i=0; i < 100; i++)
+	X[i*100 + i] = 1.0;
       enkf_ensemble_update(state , 100 , 100 * 4096 , X); 
       free(X);
     }

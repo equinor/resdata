@@ -470,7 +470,7 @@ void * enkf_state_load_ecl_summary_void(void * input_arg) {
   bool unified;
   int report_step;
   
-  enkf_state = void_arg_get_ptr(arg , 0);
+  enkf_state = void_arg_get_target_ptr(arg , 0);
   void_arg_unpack_ptr(arg , 1 , &unified);
   void_arg_unpack_ptr(arg , 2 , &report_step);
 
@@ -485,7 +485,7 @@ void * enkf_state_load_ecl_restart_void(void * input_arg) {
   bool unified;
   int report_step;
   
-  enkf_state = void_arg_get_ptr(arg , 0);
+  enkf_state = void_arg_get_target_ptr(arg , 0);
   void_arg_unpack_ptr(arg , 1 , &unified);
   void_arg_unpack_ptr(arg , 2 , &report_step);
 
@@ -500,7 +500,7 @@ void * enkf_state_load_ecl_void(void * input_arg) {
   bool unified;
   int report_step;
   
-  enkf_state = void_arg_get_ptr(arg , 0);
+  enkf_state = void_arg_get_target_ptr(arg , 0);
   void_arg_unpack_ptr(arg , 1 , &unified);
   void_arg_unpack_ptr(arg , 2 , &report_step);
   enkf_state_load_ecl(enkf_state , unified , report_step);
@@ -711,8 +711,8 @@ void enkf_ensemble_mulX(double * serial_state , int serial_x_stride , int serial
 
 
 void * enkf_ensemble_serialize_threaded(void * _void_arg) {
-  const int update_mask = parameter + ecl_restart + ecl_summary;
   void_arg_type * void_arg     = ( void_arg_type * ) _void_arg;
+  int update_mask;
   int iens , iens1 , iens2 , serial_stride;
   size_t serial_size;
   double *serial_data;
@@ -721,12 +721,12 @@ void * enkf_ensemble_serialize_threaded(void * _void_arg) {
   void_arg_unpack_ptr(void_arg , 1 , &iens2);
   void_arg_unpack_ptr(void_arg , 2 , &serial_size);
   void_arg_unpack_ptr(void_arg , 3 , &serial_stride);
-  serial_data                  = void_arg_get_ptr(void_arg , 4);
-  list_node_type ** start_node = void_arg_get_ptr(void_arg , 5);
-  list_node_type ** next_node  = void_arg_get_ptr(void_arg , 6);
-  size_t * member_serial_size  = void_arg_get_ptr(void_arg , 7);
-  bool   * member_complete     = void_arg_get_ptr(void_arg , 8);
-  
+  serial_data                  = void_arg_get_target_ptr(void_arg , 4);
+  list_node_type ** start_node = void_arg_get_target_ptr(void_arg , 5);
+  list_node_type ** next_node  = void_arg_get_target_ptr(void_arg , 6);
+  size_t * member_serial_size  = void_arg_get_target_ptr(void_arg , 7);
+  bool   * member_complete     = void_arg_get_target_ptr(void_arg , 8);
+  void_arg_unpack_ptr(void_arg , 9 , &update_mask);
   for (iens = iens1; iens < iens2; iens++) {
     list_node_type  * list_node  = start_node[iens];
     bool node_complete           = true;  
@@ -759,8 +759,8 @@ void * enkf_ensemble_serialize_threaded(void * _void_arg) {
 
 void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t target_serial_size , const double * X) {
   const int threads = 4;
+  int update_mask = ecl_summary + ecl_restart + parameter;
   thread_pool_type * tp = thread_pool_alloc(threads);
-  const int update_mask = parameter + ecl_restart + ecl_summary;
   void_arg_type ** void_arg    = malloc(threads * sizeof * void_arg);
   int *     iens1              = malloc(threads * sizeof * iens1);
   int *     iens2              = malloc(threads * sizeof * iens2);
@@ -790,15 +790,16 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
       iens1[ithread] = ithread * thread_block_size;
       iens2[ithread] = iens1[ithread] + thread_block_size;
       
-      void_arg[ithread] = void_arg_alloc9(sizeof  iens1[0]      ,      /* 0 */
-					  sizeof  iens2[0]      ,      /* 1 */
-					  sizeof  serial_size   ,      /* 2 */
-					  sizeof  serial_stride ,      /* 3 */
-					  sizeof  serial_data   ,      /* 4 */
-					  sizeof  start_node    ,      /* 5 */
-					  sizeof  next_node     ,      /* 6 */
-					  sizeof  member_serial_size   /* 7 */, 
-					  sizeof  member_complete);    /* 8 */
+      void_arg[ithread] = void_arg_alloc10(sizeof  iens1[0]      ,      /* 0 */
+					   sizeof  iens2[0]      ,      /* 1 */
+					   sizeof  serial_size   ,      /* 2 */
+					   sizeof  serial_stride ,      /* 3 */
+					   sizeof  serial_data   ,      /* 4 */
+					   sizeof  start_node    ,      /* 5 */
+					   sizeof  next_node     ,      /* 6 */
+					   sizeof  member_serial_size   /* 7 */, 
+					   sizeof  member_complete,     /* 8 */ 
+					   sizeof  update_mask    );    /* 9 */
     }
     iens2[threads-1] = ens_size;
   }
@@ -818,6 +819,7 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
       void_arg_pack_ptr(void_arg[ithread] , 6 , &next_node);
       void_arg_pack_ptr(void_arg[ithread] , 7 , &member_serial_size);
       void_arg_pack_ptr(void_arg[ithread] , 8 , &member_complete);
+      void_arg_pack_ptr(void_arg[ithread] , 9 , &update_mask);
     }
     
     
@@ -861,7 +863,6 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
 
     /* Update section */
     enkf_ensemble_mulX(serial_data , 1 , ens_size , ens_size , member_serial_size[0] , X , ens_size , 1);
-    
 
     /* deserialize section */
     for (iens = 0; iens < ens_size; iens++) {
@@ -886,7 +887,7 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
   }
   for (ithread = 0; ithread < threads; ithread++) 
     void_arg_free(void_arg[ithread]);
-
+  
   free(member_complete);
   free(member_serial_size);
   free(iens1);

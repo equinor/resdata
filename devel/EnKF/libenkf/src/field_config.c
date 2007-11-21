@@ -83,7 +83,7 @@ field_file_type field_config_guess_file_type(const char * filename , bool endian
   else if (ecl_kw_is_grdecl_file(stream))  /* This is the weakest test - and should be last in a cascading if / else hierarchy. */
     file_type = ecl_grdecl_file;
   else 
-    file_type = unknown_file;  /* MUST Check on this return value */
+    file_type = unknown_file;              /* MUST Check on this return value */
 
   fclose(stream);
   return file_type;
@@ -119,16 +119,17 @@ field_config_type * field_config_alloc(const char * ecl_kw_name , ecl_type_enum 
   config->sz = nx * ny;
   config->index_map = index_map;
   
-  config->fmt_file    = false;
-  config->endian_swap = true;
-  config->limits_set  = false;
-  config->min_value   = malloc(config->sizeof_ctype);
-  config->max_value   = malloc(config->sizeof_ctype);
+  config->fmt_file    	   = false;
+  config->endian_swap 	   = true;
+  config->limits_set  	   = false;
+  config->min_value   	   = malloc(config->sizeof_ctype);
+  config->max_value   	   = malloc(config->sizeof_ctype);
+  config->write_compressed = true;
   return config;
 }
 
 
-
+bool field_config_write_compressed(const field_config_type * config) { return config->write_compressed; }
 
 
 void field_config_set_limits(field_config_type * config , void * min_value , void * max_value) {

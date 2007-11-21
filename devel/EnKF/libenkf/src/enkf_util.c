@@ -131,7 +131,7 @@ size_t enkf_util_deserialize(double * node_data , const bool * active , size_t n
   size_t serial_index = 0;
   size_t node_index;
   size_t new_node_offset = 0;
-  int last_node_index = util_int_min(node_size , node_offset + node_serial_size);
+  int    last_node_index = util_int_min(node_size , node_offset + node_serial_size);
   if (last_node_index < (node_size - 1))
     new_node_offset = last_node_index;
   else
