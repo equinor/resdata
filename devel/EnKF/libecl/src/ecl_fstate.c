@@ -88,7 +88,7 @@ ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , ecl_file_type file_type 
       abort();
     }
   }
-  
+  ecl_fstate->summary_report_only = report_mode;
   return ecl_fstate;
 }
 

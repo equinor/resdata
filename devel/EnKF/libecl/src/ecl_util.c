@@ -217,7 +217,9 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
 	break;
       default:
 	file_type = ecl_other_file;
-	fprintf(stderr,"*** Warning: *** %s failed to find type of file:%s \n",__func__ , filename);
+	/*
+	  fprintf(stderr,"*** Warning: *** %s failed to find type of file:%s \n",__func__ , filename);
+	*/
       }
       if (file_type != ecl_other_file)
 	report_nr = atoi(&ext[1]);
@@ -384,14 +386,6 @@ char * ecl_util_alloc_exfilename(const char * path, const char * base , ecl_file
 }
 
 
-static bool is_numeric(char c) {
-  if (c >= 48 && c <= 57)
-    return true;
-  else
-    return false;
-}
-
-
 static int ecl_util_fname_cmp(const void *f1, const void *f2) {
   int t1 = ecl_util_filename_report_nr( *((const char **) f1) );
   int t2 = ecl_util_filename_report_nr( *((const char **) f2) );
@@ -404,58 +398,26 @@ static int ecl_util_fname_cmp(const void *f1, const void *f2) {
 }
 
 
-static bool ecl_fstate_include_file(const char *filename , const char *base, const char *ext_match) {
-  if (strstr(filename , base) == filename) {
-    char *substring_ptr = strstr(filename , ext_match);
-    if (substring_ptr == NULL) 
-      return false;
-    else {
-      bool include = true;
-      int i;
-      substring_ptr += strlen(ext_match);
-      if (strlen(substring_ptr) == 4) {
-	for (i=0; i < 4; i++)
-	  include = include && is_numeric(substring_ptr[i]);
-      } else 
-	include = false;
-      return include;
-    }
-  }  else return false;
-}
-
-
-char ** ecl_util_alloc_filelist(const char *path , const char *base, ecl_file_type file_type , bool fmt_file , int report_nr1 , int report_nr2) {
-  char ** fileList = malloc(report_nr2 - report_nr1 + 1 * sizeof * fileList);
+static bool ecl_util_filetype_p(const char * filename , int type_mask , bool _fmt_file) {
+  ecl_file_type file_type;
   int report_nr;
-  for (report_nr = report_nr1; report_nr <= report_nr2; report_nr++)
-    fileList[report_nr - report_nr1] = ecl_util_alloc_filename_static(path , base , file_type , fmt_file , report_nr , false);
-  
-  return fileList;
+  bool fmt_file;
+  ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
+
+  if (fmt_file == _fmt_file) {
+    if ((type_mask & file_type) != 0)
+      return true;
+    else
+      return false;
+  } else
+    return false;
 }
 
 
-char ** ecl_util_alloc_exfilelist(const char *_path , const char *base, ecl_file_type file_type , bool fmt_file , int *_files) {
-  char *path , *ext_match;
-  switch (file_type) {
-  case (ecl_restart_file):
-    ext_match = malloc(3);
-    if (fmt_file)
-      strcpy(ext_match , ".F");
-    else
-      strcpy(ext_match , ".X");
-    break;
-  case(ecl_summary_file):
-    ext_match = malloc(3);
-    if (fmt_file)
-      strcpy(ext_match , ".A");
-    else
-      strcpy(ext_match , ".S");
-    break;
-  default:
-    fprintf(stderr,"%s: can (currently) only scan for restart and summary files - aborting \n",__func__);
-    abort();
-  }
 
+char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ecl_file_type file_type , bool fmt_file , int *_files) {
+  char *path; 
+  
   if (_path != NULL)
     path = (char *) _path;
   else 
@@ -474,7 +436,7 @@ char ** ecl_util_alloc_exfilelist(const char *_path , const char *base, ecl_file
 
     files = 0;
     while ((dentry = readdir (dirH)) != NULL) {
-      if (ecl_fstate_include_file(dentry->d_name , base, ext_match))
+      if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file))
 	files++;
     } 
     rewinddir(dirH);
@@ -485,7 +447,7 @@ char ** ecl_util_alloc_exfilelist(const char *_path , const char *base, ecl_file
       fileList = calloc(files , sizeof *fileList);
       files = 0;
       while ((dentry = readdir (dirH)) != NULL) {
-	if (ecl_fstate_include_file(dentry->d_name , base , ext_match)) {
+	if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file)) {
 	  fileList[files] = malloc(strlen(path) + 1 + strlen(dentry->d_name) + 1);
 	  sprintf(fileList[files] , "%s/%s" , path , dentry->d_name);
 	  files++;
@@ -493,7 +455,6 @@ char ** ecl_util_alloc_exfilelist(const char *_path , const char *base, ecl_file
       }
     }
     closedir(dirH);
-    free(ext_match);
 
     *_files = files;
     if (files > 0)
@@ -505,6 +466,15 @@ char ** ecl_util_alloc_exfilelist(const char *_path , const char *base, ecl_file
   }
 }
 
+
+char ** ecl_util_alloc_simple_filelist(const char *path , const char *base, ecl_file_type file_type , bool fmt_file , int report_nr1 , int report_nr2) {
+  char ** fileList = malloc((report_nr2 - report_nr1 + 1) * sizeof * fileList);
+  int report_nr;
+  for (report_nr = report_nr1; report_nr <= report_nr2; report_nr++) 
+    fileList[report_nr - report_nr1] = ecl_util_alloc_filename_static(path , base , file_type , fmt_file , report_nr , false);
+  
+  return fileList;
+}
 
 
 

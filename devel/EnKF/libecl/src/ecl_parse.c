@@ -291,7 +291,7 @@ static void ecl_parse_restart(const char *refcase_path , const char *ecl_base , 
     fileList    = calloc(1 , sizeof *fileList);
     fileList[0] = ecl_util_alloc_exfilename(refcase_path , ecl_base , ecl_unified_restart_file , fmt_file , -1);
   } else 
-    fileList = ecl_util_alloc_exfilelist(refcase_path , ecl_base , ecl_restart_file , fmt_file , &files);
+    fileList = ecl_util_alloc_scandir_filelist(refcase_path , ecl_base , ecl_restart_file , fmt_file , &files);
 
   
   {
@@ -376,7 +376,7 @@ static void ecl_parse_summary_data(const char *refcase_path , const char *ecl_ba
     fileList = calloc(1 , sizeof *fileList);
     fileList[0] = ecl_util_alloc_filename(refcase_path , ecl_base , ecl_unified_summary_file , fmt_file , -1);
   } else 
-    fileList = ecl_util_alloc_exfilelist(refcase_path , ecl_base , ecl_summary_file , fmt_file , &files);
+    fileList = ecl_util_alloc_scandir_filelist(refcase_path , ecl_base , ecl_summary_file , fmt_file , &files);
   
   {
     hash_type *hash = hash_alloc(10);

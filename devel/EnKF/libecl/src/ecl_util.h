@@ -2,16 +2,16 @@
 #define __ECL_UTIL_H__
 #include <stdbool.h>
 
-typedef enum {ecl_other_file           = 0 , 
-	      ecl_restart_file         = 1 , 
-	      ecl_unified_restart_file = 2 , 
-	      ecl_summary_file         = 3 , 
-	      ecl_unified_summary_file = 4 , 
-	      ecl_summary_header_file  = 5 , 
-	      ecl_grid_file            = 6 , 
-	      ecl_egrid_file           = 7 , 
-	      ecl_init_file            = 8 ,
-              ecl_rft_file             = 9 }   ecl_file_type;
+typedef enum {ecl_other_file           = 0   , 
+	      ecl_restart_file         = 1   , 
+	      ecl_unified_restart_file = 2   , 
+	      ecl_summary_file         = 4   , 
+	      ecl_unified_summary_file = 8   , 
+	      ecl_summary_header_file  = 16  , 
+	      ecl_grid_file            = 32  , 
+	      ecl_egrid_file           = 64  , 
+	      ecl_init_file            = 128 ,
+              ecl_rft_file             = 256 }   ecl_file_type;
 
 
 #define ecl_str_len   8
@@ -39,8 +39,8 @@ int             ecl_util_filename_report_nr(const char *);
 void            ecl_util_get_file_type(const char * , ecl_file_type * , bool * , int * );
 char          * ecl_util_alloc_filename(const char * /* path */, const char * /* base */, ecl_file_type , bool /* fmt_file */ , int /*report_nr*/);
 char          * ecl_util_alloc_exfilename(const char * /* path */, const char * /* base */, ecl_file_type , bool /* fmt_file */ , int /*report_nr*/);
-char         ** ecl_util_alloc_exfilelist(const char *, const char *,ecl_file_type , bool , int *);
-char         ** ecl_util_alloc_filelist(const char *, const char *, ecl_file_type , bool , int , int );
+char         ** ecl_util_alloc_scandir_filelist(const char *, const char *,ecl_file_type , bool , int *);
+char         ** ecl_util_alloc_simple_filelist(const char *, const char *, ecl_file_type , bool , int , int );
 void            ecl_util_memcpy_typed_data(void *, const void * , ecl_type_enum , ecl_type_enum , int );
 
 

@@ -273,7 +273,6 @@ void ecl_kw_free(ecl_kw_type *ecl_kw) {
   free(ecl_kw->header);
   if (!ecl_kw->shared_data) free(ecl_kw->data);
   free(ecl_kw);
-  
 }
 
 void ecl_kw_free__(void *void_ecl_kw) {
@@ -1699,5 +1698,7 @@ void ecl_kw_element_sum(const ecl_kw_type * ecl_kw , void * _sum) {
     abort();
   }
 }
-
 #undef KW_SUM
+
+
+

@@ -62,9 +62,8 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const 
 
   for (istep = 0; istep < min_size;  istep++) {
     double history_value , time_value, value;
-    int    index;
-    index = ecl_sum_get_index(ecl_sum_list[0] , well , var);
-    if (index >= 0) {
+    if (ecl_sum_has_well_var(ecl_sum_list[0] , well , var)) {
+      int index     = ecl_sum_get_index(ecl_sum_list[0] , well , var);
       history_value = ecl_sum_iget1(ecl_sum_list[0] , istep , well , hvar  ,  NULL);
       time_value    = ecl_sum_iget2(ecl_sum_list[0] , istep , 0);
       
@@ -120,7 +119,7 @@ static ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , int * _min_
     } else {
       int files;
       char **fileList;
-      fileList = ecl_util_alloc_exfilelist(path , base , ecl_summary_file , fmt_file , &files); 
+      fileList = ecl_util_alloc_scandir_filelist(path , base , ecl_summary_file , fmt_file , &files); 
       printf("Loading from directory: %s ... ",path); fflush(stdout);
       ecl_sum_list[iens - iens1] = ecl_sum_fread_alloc(spec_file , files , (const char **) fileList , report_mode , endian_convert);
       printf("%d timestep \n",ecl_sum_get_size(ecl_sum_list[iens - iens1]));

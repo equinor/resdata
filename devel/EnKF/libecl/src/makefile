@@ -16,7 +16,7 @@ INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum
 LIB       = libecl_$(MFLAG).a
 
 LIB_PATH  = -L../../libhash/lib -L../../libutil/lib -L$(INSTALL_LIB_PATH)
-LIB_LINK  = -lecl_$(MFLAG) -lhash_$(MFLAG) -lutil_$(MFLAG) -lm 
+LIB_LINK  = -lecl_$(MFLAG) -lhash_$(MFLAG) -lutil_$(MFLAG) -lm -lz
 
 
 INSTALL: $(LIB)
