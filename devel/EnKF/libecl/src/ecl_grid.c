@@ -1,0 +1,327 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <util.h>
+#include <ecl_kw.h>
+#include <ecl_grid.h>
+#include <stdbool.h>
+
+
+typedef struct ecl_point_struct ecl_point_type;
+
+struct ecl_point_struct {
+  double x,y,z;
+};
+
+
+
+
+
+typedef struct ecl_cell_struct ecl_cell_type;
+
+
+struct ecl_cell_struct {
+  bool active;
+  ecl_point_type center;
+  ecl_point_type corner_list[8];
+};
+
+
+struct ecl_grid_struct {
+  int nx , ny , nz , volume;
+  
+  ecl_cell_type * cells;
+};
+
+/*****************************************************************/
+
+ecl_point_type ecl_point_new(double x, double y , double z) {
+  ecl_point_type point;
+  point.x = x;
+  point.y = y;
+  point.z = z;
+
+  return point;
+}
+
+
+void ecl_point_inplace_set(ecl_point_type * point , double x, double y , double z) {
+  point->x = x;
+  point->y = y;
+  point->z = z;
+}
+
+
+void ecl_point_inplace_set_float_ptr(ecl_point_type * point , const float * pos) {
+  point->x = pos[0];
+  point->y = pos[1];
+  point->z = pos[2];
+}
+
+
+void ecl_point_inplace_add(ecl_point_type * point , ecl_point_type add) {
+  point->x += add.x;
+  point->y += add.y;
+  point->z += add.z;
+}
+
+void ecl_point_inplace_scale(ecl_point_type * point , double scale_factor) {
+  point->x *= scale_factor;
+  point->y *= scale_factor;
+  point->z *= scale_factor;
+}
+
+
+ecl_point_type ecl_point_copy(ecl_point_type src) {
+  return ecl_point_new(src.x , src.y , src.z);
+}
+
+
+void ecl_point_printf(const ecl_point_type p) {
+  printf("%g %g %g \n",p.x , p.y , p.z);
+}
+
+
+/*****************************************************************/
+
+static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
+  ecl_grid_type * grid = malloc(sizeof * grid);
+  grid->nx = nx;
+  grid->ny = ny;
+  grid->nz = nz;
+  grid->volume = nx*ny*nz;
+
+  grid->cells = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
+  return grid;
+}
+
+
+/*
+  This function wants C-based zero offset - ohh what a fuxxx mess.
+*/
+static int __ecl_grid_get_cell_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+  return i + j * ecl_grid->nx + k * ecl_grid->nx * ecl_grid->ny;
+}
+
+
+static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
+  int c , i;
+  for (i=0; i < ecl_grid->volume; i++) {
+    ecl_cell_type * cell = &ecl_grid->cells[i];
+    ecl_point_inplace_set(&cell->center , 0,0,0);
+    for (c = 0; c < 8; c++) 
+      ecl_point_inplace_add(&cell->center , cell->corner_list[c]);
+    ecl_point_inplace_scale(&cell->center , 1.0 / 8.0);
+  }
+}
+
+
+
+static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , int k , double x[4][2] , double y[4][2] , double z[4][2] , const int * actnum) {
+
+  const int cell_index   = __ecl_grid_get_cell_index(ecl_grid , i , j  , k );
+  ecl_cell_type * cell   = &ecl_grid->cells[cell_index];
+  int ip , iz;
+  
+  for (iz = 0; iz < 2; iz++) {
+    for (ip = 0; ip < 4; ip++) {
+      int c = ip + iz * 4;
+      ecl_point_inplace_set(&cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
+    }
+  }
+  cell->active = actnum[cell_index];
+}
+
+
+static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type * coords_kw , const ecl_kw_type * corners_kw) {
+  const int   * coords  = ecl_kw_get_int_ptr(coords_kw);  
+  const float * corners = ecl_kw_get_float_ptr(corners_kw);   
+  const int i  = coords[0]; /* ECLIPSE 1 offset */
+  const int j  = coords[1];
+  const int k  = coords[2];
+  const int cell_index   = __ecl_grid_get_cell_index(ecl_grid , i - 1, j - 1 , k - 1);
+  ecl_cell_type * cell   = &ecl_grid->cells[cell_index];
+  int c;
+
+
+  cell->active    = (coords[4] == 1) ? true : false;
+  for (c = 0; c < 8; c++) 
+    ecl_point_inplace_set_float_ptr(&cell->corner_list[c] , (const float *) &corners[c*3]);
+
+}
+
+
+void ecl_grid_pillar_cross_planes(const ecl_point_type * pillar , const double *z , double *x , double *y) {
+  double e_x , e_y , e_z;
+  int k;
+  e_x = pillar[1].x - pillar[0].x;
+  e_y = pillar[1].y - pillar[0].y;
+  e_z = pillar[1].z - pillar[0].z;
+
+  for (k=0; k < 2; k++) {
+    double t = (z[k] -  pillar[0].z) / e_z;
+    x[k] = pillar[0].x + t * e_x;
+    y[k] = pillar[0].y + t * e_y;
+  }
+}
+
+
+/*
+  2---3
+  |   |
+  0---1
+*/
+
+ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum) {
+  int i,j,k;
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(nx,ny,nz);
+  ecl_point_type pillars[4][2];
+  
+  for (j=0; j < ny; j++) {
+    for (i=0; i < nx; i++) {
+      int pillar_index[4];
+      int ip;
+      pillar_index[0] = 6 * ( j      * (nx + 1) + i    );
+      pillar_index[1] = 6 * ( j      * (nx + 1) + i + 1);
+      pillar_index[2] = 6 * ((j + 1) * (nx + 1) + i    );
+      pillar_index[3] = 6 * ((j + 1) * (nx + 1) + i + 1);
+      
+      for (ip = 0; ip < 4; ip++) {
+	ecl_point_inplace_set_float_ptr(&pillars[ip][0] , (const float *) &coord[pillar_index[ip]    ]);
+	ecl_point_inplace_set_float_ptr(&pillars[ip][1] , (const float *) &coord[pillar_index[ip] + 3]);
+      }
+
+
+      for (k=0; k < nz; k++) {
+	double x[4][2];
+	double y[4][2];
+	double z[4][2];
+	int c;
+
+	for (c = 0; c < 2; c++) {
+	  z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
+	  z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
+	  z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
+	  z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
+	}
+	
+	for (ip = 0; ip <  4; ip++)
+	  ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
+	
+	ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum);
+      }
+    }
+  }
+  
+  ecl_grid_set_center(ecl_grid);
+  return ecl_grid;
+}
+
+
+
+ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) {
+  fortio_type   * fortio = fortio_open(grid_file , "r" , endian_flip);
+  ecl_file_type   file_type;
+  bool            fmt_file;
+  ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
+  if (file_type != ecl_egrid_file) {
+    fprintf(stderr,"%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
+    abort();
+  }
+  {
+    ecl_grid_type * ecl_grid;
+    ecl_kw_type * gridhead_kw;
+    ecl_kw_type * zcorn_kw;
+    ecl_kw_type * coord_kw;
+    ecl_kw_type * actnum_kw;
+    int gtype, nx,ny,nz;
+
+    ecl_kw_fseek_kw("GRIDHEAD"  , fmt_file , true , true , fortio); gridhead_kw  = ecl_kw_fread_alloc(fortio , fmt_file);
+    gtype = ecl_kw_iget_int(gridhead_kw , 0);
+    nx 	  = ecl_kw_iget_int(gridhead_kw , 1);
+    ny 	  = ecl_kw_iget_int(gridhead_kw , 2);
+    nz 	  = ecl_kw_iget_int(gridhead_kw , 3);
+    ecl_kw_free(gridhead_kw);
+    if (gtype != 1) {
+      fprintf(stderr,"%s: gtype:%d fatal error when loading:%s - must have corner point grid - aborting\n",__func__ , gtype , grid_file);
+      abort();
+    }
+    
+    ecl_kw_fseek_kw("ZCORN"  , fmt_file , true , true , fortio); zcorn_kw  = ecl_kw_fread_alloc(fortio , fmt_file);
+    ecl_kw_fseek_kw("COORD"  , fmt_file , true , true , fortio); coord_kw  = ecl_kw_fread_alloc(fortio , fmt_file);
+    ecl_kw_fseek_kw("ACTNUM" , fmt_file , true , true , fortio); actnum_kw = ecl_kw_fread_alloc(fortio , fmt_file);
+    
+    ecl_grid = ecl_grid_alloc_GRDECL(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw));
+    ecl_kw_free(zcorn_kw);
+    ecl_kw_free(coord_kw);
+    ecl_kw_free(actnum_kw);
+    
+    return ecl_grid;
+  }
+}
+
+
+
+ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_flip) {
+  fortio_type   * fortio = fortio_open(grid_file , "r" , endian_flip);
+  ecl_file_type   file_type;
+  bool            fmt_file;
+  int             nx,ny,nz;
+  ecl_grid_type * grid;
+  
+  ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
+  if (file_type != ecl_grid_file) {
+    fprintf(stderr,"%s: %s wrong file type - expected .GRID file - aborting \n",__func__ , grid_file);
+    abort();
+  }
+  {
+    ecl_kw_type * dimens_kw = ecl_kw_fread_alloc(fortio , fmt_file);
+    nx = ecl_kw_iget_int(dimens_kw , 0);
+    ny = ecl_kw_iget_int(dimens_kw , 1);
+    nz = ecl_kw_iget_int(dimens_kw , 2);
+    ecl_kw_free(dimens_kw);
+    grid = ecl_grid_alloc_empty(nx , ny , nz);
+  }
+  ecl_kw_fseek_kw("COORDS" , fmt_file , false , true , fortio);
+  {
+    ecl_kw_type * coords_kw  = ecl_kw_fread_alloc(fortio , fmt_file);
+    ecl_kw_type * corners_kw = ecl_kw_fread_alloc(fortio , fmt_file);
+    int index;
+    ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
+    for (index = 1; index < nx*ny*nz; index++) {
+      ecl_kw_fread(coords_kw  , fortio);
+      ecl_kw_fread(corners_kw , fortio);
+      ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
+    }
+    ecl_kw_free(coords_kw);
+    ecl_kw_free(corners_kw);
+  }
+  fortio_close(fortio);
+  ecl_grid_set_center(grid);
+  return grid;
+}
+
+
+
+ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
+  ecl_file_type   file_type;
+  bool            fmt_file;
+  
+  ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
+  if (file_type == ecl_grid_file)
+    return ecl_grid_alloc_GRID(grid_file , endian_flip);
+  else if (file_type == ecl_egrid_file)
+    return ecl_grid_alloc_EGRID(grid_file , endian_flip);
+  else {
+    fprintf(stderr,"%s must have .GRID or .EGRID file - aborting \n",__func__);
+    abort();
+  }
+}
+
+
+
+
+
+void ecl_grid_free(ecl_grid_type * grid) {
+  free(grid->cells);
+  free(grid);
+}

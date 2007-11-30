@@ -228,7 +228,7 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
 
   *_file_type = file_type;
   *_fmt_file  = fmt_file;
-  *_report_nr = report_nr;
+  if (_report_nr != NULL)  *_report_nr = report_nr;
 
   if ( (file_type == ecl_other_file) && !ecl_other_ok) {
     fprintf(stderr,"%s: Can not determine type of:%s from filename - aborting \n",__func__ , filename);

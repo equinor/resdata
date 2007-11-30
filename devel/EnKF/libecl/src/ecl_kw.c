@@ -271,7 +271,7 @@ void ecl_kw_free(ecl_kw_type *ecl_kw) {
   if (ecl_kw->read_fmt != NULL) free(ecl_kw->read_fmt);
   free(ecl_kw->write_fmt);
   free(ecl_kw->header);
-  if (!ecl_kw->shared_data) free(ecl_kw->data);
+  ecl_kw_free_data(ecl_kw);
   free(ecl_kw);
 }
 
@@ -345,7 +345,6 @@ void ecl_kw_iget(const ecl_kw_type *ecl_kw , int i , void *iptr) {
 
 
 #define ECL_KW_IGET_TYPED(type)                                						    \
-                                                                                                            \
 type ecl_kw_iget_ ## type(const ecl_kw_type * ecl_kw, int i) { 						    \
   type value;                                                  						    \
   if (ecl_kw_get_type(ecl_kw) != ecl_ ## type ## _type) {            						    \
@@ -359,8 +358,27 @@ type ecl_kw_iget_ ## type(const ecl_kw_type * ecl_kw, int i) { 						    \
 ECL_KW_IGET_TYPED(double);
 ECL_KW_IGET_TYPED(float);
 ECL_KW_IGET_TYPED(int);
-
 #undef ECL_KW_IGET_TYPED
+
+
+
+#define ECL_KW_GET_TYPED_PTR(type)                                					    \
+type * ecl_kw_get_ ## type ## _ptr(const ecl_kw_type * ecl_kw) {       		                            \
+  if (ecl_kw_get_type(ecl_kw) != ecl_ ## type ## _type) {            					    \
+    fprintf(stderr,"%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header_ref(ecl_kw)); \
+    abort();                                                                                                \
+ }                                                                                                          \
+ return (type *) ecl_kw->data;                                                                              \
+}                                                                                                           
+
+ECL_KW_GET_TYPED_PTR(double);
+ECL_KW_GET_TYPED_PTR(float);
+ECL_KW_GET_TYPED_PTR(int);
+#undef ECL_KW_GET_TYPED_PTR
+
+
+
+
 
 void * ecl_kw_iget_ptr(const ecl_kw_type *ecl_kw , int i) { 
   return ecl_kw_iget_ptr_static(ecl_kw , i);
@@ -655,6 +673,7 @@ bool ecl_kw_fseek_kw(const char * kw , bool fmt_file , bool rewind , bool abort_
     fseek(stream , init_pos , SEEK_SET);
   }
   
+  ecl_kw_free(tmp_kw);
   return kw_found;
 }
 
@@ -730,29 +749,20 @@ void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
     fprintf(stderr,"%s: trying to allocate data for ecl_kw object which has been declared with shared storage - aborting \n",__func__);
     abort();
   }
-  {
-    char *tmp;
-    tmp = realloc(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
-    if (tmp == NULL) {
-      if (ecl_kw->size * ecl_kw->sizeof_ctype != 0) {
-	fprintf(stderr,"%s: Allocation of %d bytes failed - aborting \n",__func__ , ecl_kw->size * ecl_kw->sizeof_ctype);
-	abort();
-      }
-    }
-    if (ecl_kw->data != tmp) {
-      ecl_kw->data  = tmp;
-      ecl_kw->data_size = ecl_kw->size;
-    }
-  }
+  ecl_kw->data = util_realloc(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , __func__);
+  ecl_kw->data_size = ecl_kw->size;
 }
 
 
 
 
 void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
-  free(ecl_kw->data);
-  ecl_kw->data = NULL;
+  if (!ecl_kw->shared_data) {
+    if (ecl_kw->data != NULL)
+      free(ecl_kw->data);
+  } ecl_kw->data = NULL;
 }
+
 
 
 void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
@@ -787,6 +797,22 @@ bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
     ecl_kw_fread_data(ecl_kw , fortio);
   } 
   return OK;
+}
+
+
+void ecl_kw_fread(ecl_kw_type * ecl_kw , fortio_type * fortio) {
+  int current_size = ecl_kw->size;
+  if (!ecl_kw_fread_header(ecl_kw , fortio)) {
+    fprintf(stderr,"%s: failed to read header for ecl_kw - aborting \n",__func__);
+    abort();
+  }
+
+  if (ecl_kw->size == current_size) 
+    ecl_kw_fread_data(ecl_kw , fortio);
+  else {
+    fprintf(stderr,"%s: size mismatch - aborting \n",__func__);
+    abort();
+  }
 }
 
 

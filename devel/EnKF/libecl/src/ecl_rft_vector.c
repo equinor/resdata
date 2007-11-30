@@ -66,9 +66,9 @@ ecl_rft_node_type * ecl_rft_vector_get_node(const ecl_rft_vector_type * rft_vect
 }
 
 
-void ecl_rft_vector_block(const ecl_rft_vector_type * rft_vector , const char * well_name , int size , const double * tvd , int * i, int * j , int *k) {
+void ecl_rft_vector_block(const ecl_rft_vector_type * rft_vector , double epsilon , const char * well_name , int size , const double * tvd , int * i, int * j , int *k) {
   if (ecl_rft_vector_has_well(rft_vector , well_name)) 
-    ecl_rft_node_block(ecl_rft_vector_get_node(rft_vector , well_name) , size , tvd, i , j , k);
+    ecl_rft_node_block(ecl_rft_vector_get_node(rft_vector , well_name) , epsilon , size , tvd, i , j , k);
   else {
     fprintf(stderr,"%s: The rft file:%s does not contain RFT information for the well:%s  - aborting \n",__func__ , rft_vector->filename , well_name);
     abort();
@@ -76,8 +76,8 @@ void ecl_rft_vector_block(const ecl_rft_vector_type * rft_vector , const char * 
 }
 
 
-void ecl_rft_vector_fprintf_rft_obs(const ecl_rft_vector_type *rft_vector , const char * well_name , const char *tvd_file , const char *target_file, double p_std) {
-  ecl_rft_node_fprintf_rft_obs(ecl_rft_vector_get_node(rft_vector , well_name) , tvd_file , target_file , p_std);
+void ecl_rft_vector_fprintf_rft_obs(const ecl_rft_vector_type *rft_vector , double epsilon , const char * well_name ,const char *tvd_file , const char *target_file, double p_std) {
+  ecl_rft_node_fprintf_rft_obs(ecl_rft_vector_get_node(rft_vector , well_name) , epsilon , tvd_file , target_file , p_std);
 }
 
 char ** ecl_rft_vector_alloc_well_list(const ecl_rft_vector_type * rft_vector  , int * wells) {
@@ -94,4 +94,12 @@ void ecl_rft_vector_free(ecl_rft_vector_type * rft_vector) {
   rft_vector = NULL;
 }
 
+
+void ecl_rft_vector_summarize(const ecl_rft_vector_type * rft_vector , bool show_completions) {
+  int wells , iw;
+  char ** well_list = ecl_rft_vector_alloc_well_list(rft_vector , &wells);
+  for (iw = 0; iw < wells; iw++)
+    ecl_rft_node_summarize(ecl_rft_vector_get_node(rft_vector , well_list[iw]) , show_completions);
+  util_free_string_list(well_list , wells);
+}
 

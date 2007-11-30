@@ -10,7 +10,7 @@ INSTALL_LIB_PATH = ../lib
 CFLAGS  = -O2 -$(MFLAG)  -std=gnu99 -g -Wall -fPIC
 ARFLAGS = -csr
 #################################################################
-OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_diag.o ecl_rft_vector.o ecl_rft_node.o
+OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_diag.o ecl_rft_vector.o ecl_rft_node.o ecl_grid.o
 MOD_FILES = 
 INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h lsf_jobs.h ecl_parse.h ecl_diag.h ecl_rft_vector.h ecl_rft_node.h 
 LIB       = libecl_$(MFLAG).a
@@ -31,7 +31,6 @@ INSTALL: $(LIB)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) make_SGU.c -o make_SGU.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) convert.c  -o convert.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o kw_list.x kw_list.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
-	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o ecl_rft.x ecl_rft.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o combine_grdecl.x combine_grdecl.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 
 ###     This only links to 64 bit libraries.
@@ -63,5 +62,5 @@ ecl_sum.o   : ecl_sum.c ecl_sum.h ecl_fstate.o ecl_block.o ecl_kw.o ecl_util.o
 ecl_parse.o : ecl_parse.h ecl_parse.h ecl_fstate.o ecl_util.o ecl_kw.o ecl_block.o
 ecl_diag.o  : ecl_diag.c ecl_diag.h ecl_sum.o ecl_fstate.o ecl_util.o
 ecl_interC.o: ecl_interC.c ecl_fstate.o ecl_sum.o ecl_parse.o lsf_jobs.o
-#ecl_interF.o: ecl_interF.f90 ecl_interC.o
+ecl_grid.o  : ecl_grid.c ecl_grid.h ecl_kw.o fortio.o
 

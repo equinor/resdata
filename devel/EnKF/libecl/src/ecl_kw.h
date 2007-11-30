@@ -31,6 +31,7 @@ void          ecl_kw_fskip_data(ecl_kw_type * , fortio_type *);
 void          ecl_kw_fskip(fortio_type *, bool);
 void          ecl_kw_alloc_data(ecl_kw_type  *);
 bool          ecl_kw_fread_realloc(ecl_kw_type *, fortio_type *);
+void          ecl_kw_fread(ecl_kw_type * , fortio_type * );
 ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * , int , ecl_type_enum , bool );
 void          ecl_kw_fprintf_grdecl(ecl_kw_type *  , FILE * );
 ecl_kw_type * ecl_kw_fread_alloc(fortio_type * , bool);
@@ -85,5 +86,11 @@ ECL_KW_IGET_TYPED_HEADER(double);
 ECL_KW_IGET_TYPED_HEADER(float);
 ECL_KW_IGET_TYPED_HEADER(int);
 #undef ECL_KW_IGET_TYPED_HEADER
+
+#define ECL_KW_GET_TYPED_PTR_HEADER(type) type * ecl_kw_get_ ## type ## _ptr(const ecl_kw_type *);
+ECL_KW_GET_TYPED_PTR_HEADER(double);
+ECL_KW_GET_TYPED_PTR_HEADER(float);
+ECL_KW_GET_TYPED_PTR_HEADER(int);
+#undef ECL_KW_GET_TYPED_PTR_HEADER
 
 #endif
