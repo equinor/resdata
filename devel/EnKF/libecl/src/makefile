@@ -32,6 +32,7 @@ INSTALL: $(LIB)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) convert.c  -o convert.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o kw_list.x kw_list.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o combine_grdecl.x combine_grdecl.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o kw_extract.x kw_extract.c  -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 
 ###     This only links to 64 bit libraries.
 #	gcc -O2 -m64 -std=gnu99 -g -Wall  -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) ecl_rft.c  -o ecl_rft.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  -lecl_m64 -lutil_m64 -lhash_m64 -lreadline -lncurses -lm
@@ -52,15 +53,15 @@ $(LIB): $(OBJECTS)
 
 
 ecl_rft_vector.o   : ecl_rft_vector.h ecl_rft_vector.c ecl_util.h ecl_kw.o ecl_fstate.o ecl_block.o ecl_rft_node.o
-ecl_util.o  : ecl_util.c ecl_util.h
-lsf_jobs.o  : lsf_jobs.c lsf_jobs.h 
-fortio.o    : fortio.c fortio.h 
-ecl_kw.o    : ecl_kw.c ecl_kw.h fortio.o
-ecl_block.o : ecl_block.c ecl_block.h ecl_kw.o
-ecl_fstate.o: ecl_fstate.c ecl_fstate.h ecl_block.o ecl_util.o ecl_kw.o
-ecl_sum.o   : ecl_sum.c ecl_sum.h ecl_fstate.o ecl_block.o ecl_kw.o ecl_util.o
-ecl_parse.o : ecl_parse.h ecl_parse.h ecl_fstate.o ecl_util.o ecl_kw.o ecl_block.o
-ecl_diag.o  : ecl_diag.c ecl_diag.h ecl_sum.o ecl_fstate.o ecl_util.o
-ecl_interC.o: ecl_interC.c ecl_fstate.o ecl_sum.o ecl_parse.o lsf_jobs.o
-ecl_grid.o  : ecl_grid.c ecl_grid.h ecl_kw.o fortio.o
-
+ecl_util.o   : ecl_util.c ecl_util.h
+lsf_jobs.o   : lsf_jobs.c lsf_jobs.h 
+fortio.o     : fortio.c fortio.h 
+ecl_kw.o     : ecl_kw.c ecl_kw.h fortio.o
+ecl_block.o  : ecl_block.c ecl_block.h ecl_kw.o
+ecl_fstate.o : ecl_fstate.c ecl_fstate.h ecl_block.o ecl_util.o ecl_kw.o
+ecl_sum.o    : ecl_sum.c ecl_sum.h ecl_fstate.o ecl_block.o ecl_kw.o ecl_util.o
+ecl_parse.o  : ecl_parse.h ecl_parse.h ecl_fstate.o ecl_util.o ecl_kw.o ecl_block.o
+ecl_diag.o   : ecl_diag.c ecl_diag.h ecl_sum.o ecl_fstate.o ecl_util.o
+ecl_interC.o : ecl_interC.c ecl_fstate.o ecl_sum.o ecl_parse.o lsf_jobs.o
+ecl_grid.o   : ecl_grid.c ecl_grid.h ecl_kw.o fortio.o
+ecl_interC.o : ecl_sum.o ecl_kw.o ecl_fstate.o ecl_block.o

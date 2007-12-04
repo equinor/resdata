@@ -41,47 +41,87 @@ static void set_well_var(const char *file , char **_well , char **_var) {
 
 
 
-static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const ecl_sum_type **ecl_sum_list , const char *out_path , const char *well , const char *var, bool tecplot) {
+static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const ecl_sum_type **ecl_sum_list , const char *out_path , const char *well , const char *var) {
   char *hvar           = malloc(strlen(var) + 2);
   const char *out_file = alloc_wellvar_name(out_path , well , var);
   FILE *stream;
-  int items_written = 0;
   int iens,istep;
+  
+  if (!ecl_sum_has_well_var(ecl_sum_list[0] , well , var)) {
+    fprintf(stderr,"No data for %s/%s \n",well , var);
+    return;
+  }
   
   
   sprintf(hvar     , "%sH" , var);
-  stream = fopen(out_file , "w");
-  if (tecplot) {
+  stream = util_fopen(out_file , "w");
+  /*
+    TECPLOT:
+    =======
+    if (tecplot) {
     fprintf(stream , "TITLE=\"%s:%s\"\n",well , var);
     fprintf(stream , "VARIABLES=\"days\" \"history\" ");
     for (iens = iens1; iens <= iens2; iens++) 
       fprintf(stream , "\"mem%02d\"" , iens);
-    fprintf(stream , "\n");
-    fprintf(stream , "ZONE I=%d DATAPACKING=POINT\n" , min_size );
-  }
-
-  for (istep = 0; istep < min_size;  istep++) {
-    double history_value , time_value, value;
-    if (ecl_sum_has_well_var(ecl_sum_list[0] , well , var)) {
-      int index     = ecl_sum_get_index(ecl_sum_list[0] , well , var);
-      history_value = ecl_sum_iget1(ecl_sum_list[0] , istep , well , hvar  ,  NULL);
-      time_value    = ecl_sum_iget2(ecl_sum_list[0] , istep , 0);
-      
-      fprintf(stream , " %9.4e %9.4e " , time_value , history_value);
-      for (iens = iens1; iens <= iens2; iens++) {
-	value = ecl_sum_iget2(ecl_sum_list[iens - iens1]  , istep , index);
-	fprintf(stream , " %9.4e " , value );
-      }
       fprintf(stream , "\n");
-      items_written++;
+      fprintf(stream , "ZONE I=%d DATAPACKING=POINT\n" , min_size );
+      }
+  */
+
+
+  /*
+    Old format
+    for (istep = 0; istep < min_size;  istep++) {
+    double history_value , time_value, value;
+    int index     = ecl_sum_get_index(ecl_sum_list[0] , well , var);
+    if (ecl_sum_has_well_var(ecl_sum_list[0] , well , hvar))
+      history_value = ecl_sum_iget(ecl_sum_list[0] , istep , well , hvar);
+    else {
+      history_value = 0;
+      fprintf(stderr,"** Warning: history value: %s/%s does not exist - using %g. **\n",well,hvar,history_value);
     }
+    time_value    = ecl_sum_iget2(ecl_sum_list[0] , istep , 0);
+    
+    fprintf(stream , " %9.4e %9.4e " , time_value , history_value);
+    for (iens = iens1; iens <= iens2; iens++) {
+      value = ecl_sum_iget2(ecl_sum_list[iens - iens1]  , istep , index);
+      fprintf(stream , " %9.4e " , value );
+    }
+    fprintf(stream , "\n");
+    }
+    fclose(stream);
+  */
+
+
+  util_fwrite_string(well , stream); 					       /* Well name */
+  util_fwrite_string(var  , stream); 					       /* Variable name */                    
+  util_fwrite_string(ecl_sum_get_unit_ref(ecl_sum_list[0] , var) , stream);    /* Unit */
+  util_fwrite_int(iens2 - iens1 + 1 , stream);  			       /* Ensemble size */
+  util_fwrite_int(min_size , stream);           			       /* Member length */         
+  for (istep=0; istep < min_size; istep++) {
+    int date[3];
+    util_set_date_values(ecl_sum_get_sim_time(ecl_sum_list[0] , istep) , &date[0] , &date[1] , &date[2]);
+      util_fwrite_int_vector(date , 3 , stream , __func__);  /* True time  day/month/year */
+  }
+  for (istep=0; istep < min_size; istep++) {
+    double history_value;
+    if (ecl_sum_has_well_var(ecl_sum_list[0] , well , hvar))
+      history_value = ecl_sum_iget(ecl_sum_list[0] , istep , well , hvar);
+    else {
+      history_value = 0;
+      fprintf(stderr,"** Warning: history value: %s/%s does not exist - using %g. **\n",well,hvar,history_value);
+    }
+    util_fwrite_double(history_value , stream);                              /* History value */ 
   }
   
-  fclose(stream);
-  if (items_written == 0) {
-    fprintf(stderr,"No matching values for well:%s variable:%s  empty file:%s deleted\n",well , var , out_file);
-    unlink(out_file);
+  for (istep = 0; istep < min_size;  istep++) {                              /* Ensemble values: ensemble direction is the fast index */
+    int index     = ecl_sum_get_index(ecl_sum_list[0] , well , var);
+    for (iens = iens1; iens <= iens2; iens++) 
+      util_fwrite_double(ecl_sum_iget2(ecl_sum_list[iens - iens1]  , istep , index) , stream);
+    
   }
+  fclose(stream);
+
   free((char *) out_file);
   free(hvar);
 }
@@ -151,14 +191,14 @@ static ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , int * _min_
 
 
 
-void ecl_diag_ens(int iens1 , int iens2 , const char *out_path , int nwell , const char **well_list , int nvar , const char **var_list , const char *ens_path , const char *eclbase_dir , const char *eclbase, bool report_mode , bool fmt_file, bool unified, bool endian_convert , bool tecplot) {
+static void ecl_diag_ens(int iens1 , int iens2 , const char *out_path , int nwell , const char **well_list , int nvar , const char **var_list , const char *ens_path , const char *eclbase_dir , const char *eclbase, bool report_mode , bool fmt_file, bool unified, bool endian_convert) {
   int iwell,ivar,min_size;
   
   ecl_sum_type **ecl_sum_list = ecl_diag_load_ensemble(iens1 , iens2 , &min_size , ens_path , eclbase_dir , eclbase , report_mode , fmt_file , unified , endian_convert);
   util_make_path(out_path);
   for (iwell = 0; iwell < nwell; iwell++) {
     for (ivar = 0; ivar < nvar; ivar++) {
-      ecl_diag_make_plotfile(iens1 , iens2 , min_size , (const ecl_sum_type **) ecl_sum_list , out_path , well_list[iwell] , var_list[ivar] , tecplot);
+      ecl_diag_make_plotfile(iens1 , iens2 , min_size , (const ecl_sum_type **) ecl_sum_list , out_path , well_list[iwell] , var_list[ivar]);
     }
   }
 
@@ -209,7 +249,7 @@ void ecl_diag_ens(int iens1 , int iens2 , const char *out_path , int nwell , con
 	fprintf(stream,"%3d             ",iens);
 	for (iwell=0; iwell < nwell; iwell++) 
 	  fprintf(stream,"  %10.3f  |  ",well_misfit[iwell]);
-      fprintf(stream,"%12.3f \n",total_misfit);
+	fprintf(stream,"%12.3f \n",total_misfit);
       }
       
       fprintf(stream,"--------------");
@@ -226,11 +266,12 @@ void ecl_diag_ens(int iens1 , int iens2 , const char *out_path , int nwell , con
     free(max);
     free(inv_covar);
     free(std);
+    util_free_string_list(hvar_list , nvar);
   }
   
   {
     int i;
-    for (i=0; i <(iens2 - iens1); i++)
+    for (i=0; i <= (iens2 - iens1); i++)
       ecl_sum_free(ecl_sum_list[i]);
   }
   free(ecl_sum_list);
@@ -299,134 +340,12 @@ static char ** fread_alloc_wells(const char *well_file , int *_nwell) {
   }
   *_nwell = set_get_size(well_set);
   well_list = set_alloc_keylist(well_set);
+  
   set_free(well_set);
   return well_list;
 }
 
 
-
-/* static void ecl_diag_add_subplot(FILE *stream , int prior_size , int posterior_size, double ps , double lw , int history_pt , int prior_lt , int posterior_lt, */
-/* 				 const char * history_title , const char *prior_title , const char * posterior_title, */
-/* 				 const char * prior_file , const char *posterior_file , const char *well, const char *var) { */
-/*   int iens; */
-
-/*   fprintf(stream,"set pointsize %g\n" , ps); */
-/*   fprintf(stream,"set xlabel \"Time (days)\" 0,0.50\n"); */
-/*   fprintf(stream,"set title \"%s %s\" 0,-0.50\n",well , var); */
-/*   fprintf(stream,"plot \"%s\" u 1:2 t \"%s\" w p pt %d ,\\\n" , prior_file , history_title , history_pt); */
-/*   for (iens = 0; iens < prior_size; iens++) { */
-/*     if (iens == 0) */
-/*       fprintf(stream , "\"\" u 1:%d t \"%s\" w l lt %d lw %g,  \\\n", iens+3 , prior_title , prior_lt , lw ); */
-/*     else */
-/*       fprintf(stream , "\"\" u 1:%d t \"\" w l lt %d lw %g,  \\\n", iens+3 , prior_lt , lw ); */
-/*   } */
-
-/*   for (iens = 0; iens < posterior_size; iens++) { */
-/*     if (iens == 0) */
-/*       fprintf(stream , "\"%s\" u 1:%d t \"%s\" w l lt %d lw %g,  \\\n", posterior_file , iens+3 , posterior_title , posterior_lt , lw ); */
-/*     else if (iens == (posterior_size - 1)) */
-/*       fprintf(stream , "\"\" u 1:%d t \"\" w l lt %d lw %g \\\n", iens+3 , posterior_lt , lw ); */
-/*     else */
-/*       fprintf(stream , "\"\" u 1:%d t \"\" w l lt %d lw %g, \\\n", iens+3 , posterior_lt , lw ); */
-/*   } */
-
-/*   fprintf(stream , "\n"); */
-/* } */
-
-
-
-/* static void ecl_diag_make_gnuplot(int prior_size , int posterior_size , const char *prior_path , const char *posterior_path , const char *file , const char *plot_path) { */
-/*   const char  *history_title     = "History"; */
-/*   const int    history_pt        = 6; */
-/*   const char  *prior_title       = "Prior"; */
-/*   const char  *posterior_title   = "Posterior"; */
-/*   const int    prior_lt          = 3; */
-/*   const int    posterior_lt      = 1; */
-/*   const double lw               = 1.50; */
-/*   const double ps               = 1.50; */
-
-/*   char *plot_file      = malloc(strlen(plot_path)  + 1 + strlen(file) + 7); */
-/*   char *prior_file     = malloc(strlen(prior_path) + 1 + strlen(file) + 1); */
-/*   char *posterior_file = malloc(strlen(prior_path) + 1 + strlen(file) + 1); */
-/*   char *ps_file        = malloc(strlen(prior_path) + 1 + strlen(file) + 4); */
-/*   char *pdf_file       = malloc(strlen(prior_path) + 1 + strlen(file) + 5); */
-/*   char *png_file       = malloc(strlen(prior_path) + 1 + strlen(file) + 5); */
-/*   FILE *gplot_stream; */
-
-/*   sprintf(png_file       , "%s/%s.png"   , plot_path      , file); */
-/*   sprintf(pdf_file       , "%s/%s.pdf"   , plot_path      , file); */
-/*   sprintf(ps_file        , "%s/%s.ps"    , plot_path      , file); */
-/*   sprintf(plot_file  	 , "%s/%s.gplot" , plot_path      , file); */
-/*   sprintf(prior_file 	 , "%s/%s"       , prior_path     , file); */
-/*   sprintf(posterior_file , "%s/%s"       , posterior_path , file); */
-  
-/*   gplot_stream = fopen(plot_file , "w"); */
-/*   fprintf(gplot_stream , "set term post enhanced color blacktext solid \"Helvetica\" 14\n"); */
-/*   fprintf(gplot_stream , "set output \"%s\"\n" , ps_file); */
-
-
-/*   { */
-/*     char *well,*var; */
-    
-/*     set_well_var(file , &well , &var); */
-/*     ecl_diag_add_subplot(gplot_stream , prior_size, posterior_size , ps , lw , history_pt , prior_lt , posterior_lt ,  history_title , prior_title , posterior_title ,  */
-/* 			 prior_file , posterior_file , well , var); */
-    
-/*     free(well); */
-/*     free(var); */
-/*   } */
-/*   fprintf(gplot_stream, "!convert %s %s \n",ps_file , pdf_file); */
-/*   fprintf(gplot_stream, "!convert -rotate 90 %s %s \n",ps_file , png_file); */
-/*   fclose(gplot_stream); */
-  
-  
-/*   /\* */
-/*     free(png_file); */
-/*     free(pdf_file); */
-/*     free(ps_file); */
-/*     free(plot_file); */
-/*     free(prior_file); */
-/*     free(posterior_file); */
-/*   *\/ */
-/* } */
-
-
-
-/* void ecl_diag_make_gnuplot_interactive() { */
-/*   const int prompt_len = 30; */
-/*   char prior_path[128]; */
-/*   char posterior_path[128]; */
-/*   char plot_path[128]; */
-/*   char posterior_file[128]; */
-/*   int  posterior_size , prior_size; */
-/*   DIR * priorH; */
-/*   struct dirent *dentry; */
-  
-/*   read_string("Path to prior" ,       	  prompt_len , prior_path); */
-/*   read_int("Size of prior ensemble" , 	  prompt_len , &prior_size); */
-/*   read_string("Path to posterior",    	  prompt_len , posterior_path); */
-/*   read_int("Size of posterior ensemble" , prompt_len , &posterior_size); */
-/*   read_string("Path to store plot files", prompt_len , plot_path); */
-
-/*   if ( (priorH = opendir(prior_path)) == NULL) { */
-/*     fprintf(stderr,"Opening directory: %s failed - returning" , prior_path); */
-/*     return; */
-/*   } */
-
-/*   util_make_path(plot_path); */
-/*   while ((dentry = readdir (priorH)) != NULL) { */
-/*     printf("Ser paa filen: %s \n",dentry->d_name); */
-/*     if (!((strcmp(dentry->d_name , ".") == 0) || (strcmp(dentry->d_name , "..") == 0))) { */
-/*       sprintf(posterior_file , "%s/%s" , posterior_path , dentry->d_name); */
-/*       if (util_file_exists(posterior_file))  */
-/* 	ecl_diag_make_gnuplot(prior_size , posterior_size , prior_path , posterior_path , dentry->d_name , plot_path); */
-/*       else */
-/* 	fprintf(stderr,"Warning: file:%s exists only in directory:%s \n",dentry->d_name , prior_path); */
-/*     } */
-/*   } */
-/*   closedir(priorH); */
-
-/* } */
 
 
 
@@ -442,7 +361,6 @@ void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name
   const char *defvar_list[defvar_N] = {"WOPT" , "WOPR" , "WGOR" , "WWCT"};
   char **well_list;
   char **var_list;
-  bool tecplot;
   
   printf("-----------------------------------------------------------------\n");
   read_string("Path to ensemble" , prompt_len , ens_path);
@@ -487,8 +405,7 @@ void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name
   /*
     read_bool("Add tecplot header" , prompt_len , &tecplot);
   */
-  tecplot = false;
-  ecl_diag_ens(iens1 , iens2 , out_path , nwell , (const char **) well_list , nvar , (const char **) var_list , ens_path , eclbase_dir , eclbase_name , report_mode , fmt_file , unified , endian_convert , tecplot);
+  ecl_diag_ens(iens1 , iens2 , out_path , nwell , (const char **) well_list , nvar , (const char **) var_list , ens_path , eclbase_dir , eclbase_name , report_mode , fmt_file , unified , endian_convert );
 
 
 

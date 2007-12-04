@@ -87,6 +87,14 @@ ECL_KW_IGET_TYPED_HEADER(float);
 ECL_KW_IGET_TYPED_HEADER(int);
 #undef ECL_KW_IGET_TYPED_HEADER
 
+#define ECL_KW_ISET_TYPED_HEADER(type) void ecl_kw_iset_ ## type(ecl_kw_type * , int , type );
+ECL_KW_ISET_TYPED_HEADER(double);
+ECL_KW_ISET_TYPED_HEADER(float);
+ECL_KW_ISET_TYPED_HEADER(int);
+#undef ECL_KW_ISET_TYPED_HEADER
+
+
+
 #define ECL_KW_GET_TYPED_PTR_HEADER(type) type * ecl_kw_get_ ## type ## _ptr(const ecl_kw_type *);
 ECL_KW_GET_TYPED_PTR_HEADER(double);
 ECL_KW_GET_TYPED_PTR_HEADER(float);

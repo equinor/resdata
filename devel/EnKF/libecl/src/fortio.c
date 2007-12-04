@@ -44,13 +44,8 @@ fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_
 
 fortio_type *fortio_open(const char *filename , const char *mode, bool endian_flip_header) {
   fortio_type *fortio = fortio_alloc__(filename , endian_flip_header);
-
-  fortio->stream = fopen(fortio->filename , mode);
-  if (fortio->stream == NULL) {
-    fprintf(stderr,"%s: failed to open:%s with mode:%s - aborting \n", __func__ , fortio->filename , mode);
-    fprintf(stderr,"%d:%s\n",errno, strerror(errno));
-    abort();
-  }
+  
+  fortio->stream = util_fopen(fortio->filename , mode);
   return fortio;
 }
 

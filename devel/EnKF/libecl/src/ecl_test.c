@@ -12,28 +12,18 @@
 
 
 int main(int argc, char ** argv) {
-  ecl_grid_type * grid;
-  ecl_grid_type * egrid;
-  ecl_sum_type * ecl_sum;
   int files;
-
-  egrid = ecl_grid_alloc_EGRID("/h/a152128/EnKF_ON/Refcase/ECLIPSE.EGRID" , true);
-  grid  = ecl_grid_alloc_GRID("/h/a152128/EnKF_ON/Refcase/ECLIPSE.GRID" , true);
-  ecl_grid_free(grid);
-  ecl_grid_free(egrid);
-  exit(1);
-
-  char ** fileList = ecl_util_alloc_scandir_filelist("/h/a152128/EnKF_ON/Run-FMT-Test/PriorEns/tmpdir_0001" , "ECL-0001" , ecl_summary_file , false , &files);
-  printf("Grid complete ... \n");
-  exit(1);
-  ecl_sum = ecl_sum_fread_alloc("/h/a152128/EnKF_ON/Run-FMT-Test/PriorEns/tmpdir_0001/ECL-0001.SMSPEC", files, (const char **) fileList ,  false , true);
+  const char *path    = "/h/a152128/EnKF_ON/Run-FMT-Test/PriorEns/tmpdir_0001";
+  char ** file_list   = ecl_util_alloc_scandir_filelist(path , "ECL-0001" , ecl_summary_file , false , &files);
+  char  * header_file = ecl_util_alloc_exfilename(path , "ECL-0001" , ecl_summary_header_file , false , -1);
 
   {
-    int i;
-    for (i=0; i < files; i++) {
-      printf("%d  %g \n",i,ecl_sum_iget(ecl_sum , i , "B-43A" , "WGPRH") / ecl_sum_iget(ecl_sum , i , "B-43A" , "WGPR"));
-    }
+    ecl_sum_type * ecl_sum = ecl_sum_fread_alloc(header_file , files , (const char **) file_list , true , true);
+    ecl_sum_free(ecl_sum);
   }
 
-  ecl_sum_free(ecl_sum);
+  util_free_string_list(file_list , files);
+  free(header_file);
+
+  ecl_diag_ens_interactive("tmpdir_" , NULL , false , false , true);
 }

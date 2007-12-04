@@ -26,7 +26,7 @@ int main(int argc, char ** argv) {
     main_kw = ecl_kw_fscanf_alloc_grdecl_data(stream , nx*ny*nz , ecl_type , endian_flip);
     fclose(stream);
   }
-  ecl_box = ecl_box_alloc(nx,ny,nz,0,0,0,0,0,0);
+  ecl_box = ecl_box_alloc(nx,ny,nz,  0, 0 , 0 , 0,0,0);
   
   {
     int scan_count;

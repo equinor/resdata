@@ -361,6 +361,21 @@ ECL_KW_IGET_TYPED(int);
 #undef ECL_KW_IGET_TYPED
 
 
+#define ECL_KW_ISET_TYPED(type)                                						    \
+void ecl_kw_iset_ ## type(ecl_kw_type * ecl_kw, int i, type value) {    			            \
+  if (ecl_kw_get_type(ecl_kw) != ecl_ ## type ## _type) {            					    \
+    fprintf(stderr,"%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header_ref(ecl_kw)); \
+    abort();                                                                                                \
+  }                                                                                                         \
+  ecl_kw_iset_static(ecl_kw , i , &value);                                                                  \
+}                                                                                                           \
+
+ECL_KW_ISET_TYPED(double);
+ECL_KW_ISET_TYPED(float);
+ECL_KW_ISET_TYPED(int);
+#undef ECL_KW_ISET_TYPED
+
+
 
 #define ECL_KW_GET_TYPED_PTR(type)                                					    \
 type * ecl_kw_get_ ## type ## _ptr(const ecl_kw_type * ecl_kw) {       		                            \
@@ -375,8 +390,6 @@ ECL_KW_GET_TYPED_PTR(double);
 ECL_KW_GET_TYPED_PTR(float);
 ECL_KW_GET_TYPED_PTR(int);
 #undef ECL_KW_GET_TYPED_PTR
-
-
 
 
 

@@ -27,10 +27,23 @@ struct ecl_cell_struct {
 
 
 struct ecl_grid_struct {
-  int nx , ny , nz , volume;
+  int nx , ny , nz , size;
   
-  ecl_cell_type * cells;
+  ecl_cell_type ** cells;
 };
+
+void ecl_point_compare(const ecl_point_type *p1 , const ecl_point_type *p2) {
+  if ((abs(p1->x - p2->x) + abs(p1->y - p2->y) + abs(p1->z - p2->z)) > 0.10)
+    printf("ERROR");
+    
+}
+
+void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2) {
+  int i;
+  for (i=0; i < 8; i++) 
+    ecl_point_compare(&c1->corner_list[i] , &c2->corner_list[i]);
+  ecl_point_compare(&c1->center , &c2->center);
+}
 
 /*****************************************************************/
 
@@ -80,17 +93,32 @@ void ecl_point_printf(const ecl_point_type p) {
   printf("%g %g %g \n",p.x , p.y , p.z);
 }
 
-
 /*****************************************************************/
+
+static ecl_cell_type * ecl_cell_alloc(void) {
+  ecl_cell_type * cell = malloc(sizeof * cell);
+  return cell;
+}
+
+
+void ecl_cell_free(ecl_cell_type * cell) {
+  free(cell);
+}
+
 
 static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
   ecl_grid_type * grid = malloc(sizeof * grid);
   grid->nx = nx;
   grid->ny = ny;
   grid->nz = nz;
-  grid->volume = nx*ny*nz;
+  grid->size = nx*ny*nz;
 
   grid->cells = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
+  {
+    int i;
+    for (i=0; i < grid->size; i++)
+      grid->cells[i] = ecl_cell_alloc();
+  }
   return grid;
 }
 
@@ -105,8 +133,8 @@ static int __ecl_grid_get_cell_index(const ecl_grid_type * ecl_grid , int i , in
 
 static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   int c , i;
-  for (i=0; i < ecl_grid->volume; i++) {
-    ecl_cell_type * cell = &ecl_grid->cells[i];
+  for (i=0; i < ecl_grid->size; i++) {
+    ecl_cell_type * cell = ecl_grid->cells[i];
     ecl_point_inplace_set(&cell->center , 0,0,0);
     for (c = 0; c < 8; c++) 
       ecl_point_inplace_add(&cell->center , cell->corner_list[c]);
@@ -119,7 +147,7 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
 static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , int k , double x[4][2] , double y[4][2] , double z[4][2] , const int * actnum) {
 
   const int cell_index   = __ecl_grid_get_cell_index(ecl_grid , i , j  , k );
-  ecl_cell_type * cell   = &ecl_grid->cells[cell_index];
+  ecl_cell_type * cell   = ecl_grid->cells[cell_index];
   int ip , iz;
   
   for (iz = 0; iz < 2; iz++) {
@@ -139,7 +167,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
   const int j  = coords[1];
   const int k  = coords[2];
   const int cell_index   = __ecl_grid_get_cell_index(ecl_grid , i - 1, j - 1 , k - 1);
-  ecl_cell_type * cell   = &ecl_grid->cells[cell_index];
+  ecl_cell_type * cell   = ecl_grid->cells[cell_index];
   int c;
 
 
@@ -220,6 +248,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
 
 ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) {
   fortio_type   * fortio = fortio_open(grid_file , "r" , endian_flip);
+  ecl_grid_type * ecl_grid;
   ecl_file_type   file_type;
   bool            fmt_file;
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
@@ -228,7 +257,6 @@ ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) 
     abort();
   }
   {
-    ecl_grid_type * ecl_grid;
     ecl_kw_type * gridhead_kw;
     ecl_kw_type * zcorn_kw;
     ecl_kw_type * coord_kw;
@@ -255,8 +283,9 @@ ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) 
     ecl_kw_free(coord_kw);
     ecl_kw_free(actnum_kw);
     
-    return ecl_grid;
   }
+  fortio_close(fortio);
+  return ecl_grid;
 }
 
 
@@ -318,10 +347,23 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
 }
 
 
+void ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
+  int i;
+  for (i = 0; i < g1->size; i++) {
+    ecl_cell_type *c1 = g1->cells[i];
+    ecl_cell_type *c2 = g2->cells[i];
+    ecl_cell_compare(c1 , c2);
+  }
+  printf("Compare OK \n");
+}
+
 
 
 
 void ecl_grid_free(ecl_grid_type * grid) {
+  int i;
+  for (i=0; i < grid->size; i++)
+    ecl_cell_free(grid->cells[i]);
   free(grid->cells);
   free(grid);
 }

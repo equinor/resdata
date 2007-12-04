@@ -11,7 +11,8 @@ typedef enum {ecl_other_file           = 0   ,
 	      ecl_grid_file            = 32  , 
 	      ecl_egrid_file           = 64  , 
 	      ecl_init_file            = 128 ,
-              ecl_rft_file             = 256 }   ecl_file_type;
+              ecl_rft_file             = 256 ,
+              ecl_data_file            = 512 } ecl_file_type;   
 
 
 #define ecl_str_len   8

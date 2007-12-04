@@ -324,11 +324,11 @@ static void ecl_parse_restart(const char *refcase_path , const char *ecl_base , 
     
     {
       hash_type *special = hash_alloc(10);
-      hash_insert_string_copy(special , "PRESSURE"    , "ipres  = i");
-      hash_insert_string_copy(special , "SGAS"        , "isgas  = i");
-      hash_insert_string_copy(special , "SWAT"        , "iswat  = i");
-      hash_insert_string_copy(special , "RS"          , "irs    = i");
-      hash_insert_string_copy(special , "RV"          , "irv    = i");
+      hash_insert_string(special , "PRESSURE"    , "ipres  = i");
+      hash_insert_string(special , "SGAS"        , "isgas  = i");
+      hash_insert_string(special , "SWAT"        , "iswat  = i");
+      hash_insert_string(special , "RS"          , "irs    = i");
+      hash_insert_string(special , "RV"          , "irv    = i");
 
       ecl_parse_write_read_eclipse(hash , type_map , special, "res" , include_path , "fieldtype" , "fieldsize" , "i");
       ecl_parse_res_write_eclipse1(hash , include_path , special , type_map);
@@ -350,9 +350,9 @@ static void ecl_parse_restart(const char *refcase_path , const char *ecl_base , 
 	sprintf(tmp_string , "      if (iopt == 22) call write_real('GAUSS2   ',ndim,'REAL',GAUSS ,mem4%%gauss2)\n"); str_buffer_add_string(pressure_string , tmp_string);
 	str_buffer_add_string(pressure_string , "#endif\n");
 	
-	hash_insert_string_copy(special , "PRESSURE" , str_buffer_get_char_ptr(pressure_string));
-	hash_insert_string_copy(special , "STARTSOL" , str_buffer_get_char_ptr(sol_string));
-	hash_insert_string_copy(special , "ENDSOL"   , str_buffer_get_char_ptr(sol_string));
+	hash_insert_string(special , "PRESSURE" , str_buffer_get_char_ptr(pressure_string));
+	hash_insert_string(special , "STARTSOL" , str_buffer_get_char_ptr(sol_string));
+	hash_insert_string(special , "ENDSOL"   , str_buffer_get_char_ptr(sol_string));
 
 	str_buffer_free(pressure_string);
 	str_buffer_free(sol_string);
@@ -410,9 +410,9 @@ static void ecl_parse_summary_spec(const char *refcase_path , const char *ecl_ba
 
     {
       hash_type *special = hash_alloc(10);
-      hash_insert_string_copy(special , "KEYWORDS" , "ikeywords = ihead");
-      hash_insert_string_copy(special , "WGNAMES"  , "iwgnames  = ihead");
-      hash_insert_string_copy(special , "UNITS"    , "iunits    = ihead");
+      hash_insert_string(special , "KEYWORDS" , "ikeywords = ihead");
+      hash_insert_string(special , "WGNAMES"  , "iwgnames  = ihead");
+      hash_insert_string(special , "UNITS"    , "iunits    = ihead");
       ecl_parse_write_read_eclipse(hash , type_map , special, "fsm" , include_path , "headtype" , "headsize" , "ihead");
       hash_free(special);
     }

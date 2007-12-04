@@ -132,10 +132,19 @@ void ecl_inter_copy_well_names__(char *well_string) {
 
 void ecl_inter_sum_get__(const char *_well_name , const int *well_len, 
 			 const char *_var_name  , const int *var_len, 
-			 void *value, int *index) {
+			 double *_value, int *_index) {
   char *well = util_alloc_cstring(_well_name , well_len);
   char *var  = util_alloc_cstring(_var_name  , var_len);
-  *index = ecl_sum_iget1(ECL_SUM , 0 , well , var , value);
+
+  if (ecl_sum_has_well_var(ECL_SUM , well , var)) {
+    int index    = ecl_sum_get_index(ECL_SUM , well , var);
+    double value = ecl_sum_iget(ECL_SUM , 0 , well , var);
+
+    *_index = index;
+    *_value = value;
+  } else
+    *_index = -1;
+  
   free(well);
   free(var);
 }
@@ -383,10 +392,14 @@ void ecl_inter_avg_prod__(const char *_out_path     , const int *out_len,
   char *std_name = util_alloc_cstring(_std_name , std_len);
   char *out_path = util_alloc_cstring(_out_path , out_len);
   
-  bool fmt_file = util_intptr_2bool(fmt_file_int);
-  bool unified  = util_intptr_2bool(unified_int);
 
-  ecl_diag_avg_production_interactive(out_path , eclbase_dir , avg_name , std_name , fmt_file , unified);
+  /*
+    bool fmt_file = util_intptr_2bool(fmt_file_int);
+    bool unified  = util_intptr_2bool(unified_int);
+    ecl_diag_avg_production_interactive(out_path , eclbase_dir , avg_name , std_name , fmt_file , unified);
+  */
+  fprintf(stderr,"%s: sorry calling unimplented function : ecl_diag_avg_production_interactive \n",__func__);
+  abort();
   free(eclbase_dir);
   free(avg_name);
   free(std_name);
