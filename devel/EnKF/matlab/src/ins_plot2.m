@@ -1,4 +1,4 @@
-function [data1 , data2] = ins_plot2(prefix)
+function [data1 , data2] = ins_plot2(prefix , logy)
 
 %function [d_enkf , d_eclipse ] = ins_plot2(prefix)
 %
@@ -12,8 +12,11 @@ function [data1 , data2] = ins_plot2(prefix)
 %to the prefix to generate the filenames for plotting. Both data sets
 %are returned for subsequent analysis.
 
-  [data1 , title1] = fread_thist(strcat(prefix , '.enkf'));
-  [data2 , title2] = fread_thist(strcat(prefix , '.eclipse'));
+  [data1 , title1] = fread_thist(strcat(prefix , '.enkf' ) , 0);
+  [data2 , title2] = fread_thist(strcat(prefix , '.eclipse') , 1);
 
-  ins_plot__(data1 , title1, 1);
-  ins_plot__(data2 , title2, 2);
+  ins_plot__(data1 , title1, 1 , 0);
+  ins_plot__(data2 , title2, 2 , logy);
+
+  print(1 , '-dpng', strcat(prefix , '-enkf.png'));
+  print(2 , '-dpng', strcat(prefix , '-eclipse.png'));

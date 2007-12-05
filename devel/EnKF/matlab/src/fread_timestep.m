@@ -25,8 +25,10 @@ function [active,tstep] = fread_timestep(fid)
         analyzed_data = fread(fid , analyzed_size , 'double');
         tstep.analyzed_data = analyzed_data;
      end
-  end
-  
+     if tstep.analyzed_size + tstep.forecast_size == 0
+        active = 0;
+     end
+  end  
 
 
 

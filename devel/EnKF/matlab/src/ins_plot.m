@@ -1,4 +1,4 @@
-function [data] = ins_plot(filename)
+function [data] = ins_plot(filename,logy)
 % function d = ins_plot(filename)
 % 
 % This function is made to plot time histograms of quantities made with 
@@ -28,18 +28,6 @@ function [data] = ins_plot(filename)
 % analyzed_size / analyzed_data: as Same forecast_size/forecast_data for analyzed
 %     results.              
 
-  [data , plot_title] = fread_thist(filename);
-  ins_plot__(data , plot_title , 1);
-  
-% Distribution test
-  alpha = 0.05;
-  [H_a,H_f]=distribution_test(data,alpha);
-  figure,plot(H_a)
-  title('Hypothesis plot for the analyzed data')
-  xlabel('Dataset number')
-  ylabel('Hypothesis test: H=0 accept, H=1 reject, H=-1 no values available') 
-  figure,plot(H_f)
-  title('Hypothesis plot for the forecast data')
-  xlabel('Dataset number')
-  ylabel('Hypothesis test: H=0 accept, H=1 reject, H=-1 no values available') 
-  
+  [data , plot_title] = fread_thist(filename , 1);
+  ins_plot__(data , plot_title , 1 , logy);
+  print('-dpng', strcat(filename , '.png'));
