@@ -42,7 +42,7 @@ $(LIB): $(OBJECTS)
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 str_buffer.o  : str_buffer.c str_buffer.h
-void_arg.o    : void_arg.c void_arg.h
+void_arg.o    : void_arg.c void_arg.h util.o
 msg.o         : msg.c msg.h util.o
 thread_pool.o : thread_pool.c thread_pool.h
 util.o        : util.c util.h

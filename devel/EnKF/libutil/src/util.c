@@ -70,22 +70,6 @@ char * util_alloc_cstring(const char *fort_string , const int *strlen) {
 }
 
 
-char * util_alloc_string_sum(const char ** string_list , int N) {
-  int i , len;
-  char * buffer;
-  len = 0;
-  for (i=0; i < N; i++) {
-    if (string_list[i] != NULL)
-      len += strlen(string_list[i]);
-  }
-  buffer = malloc(len + 1);
-  buffer[0] = '\0';
-  for (i=0; i < N; i++) {
-    if (string_list[i] != NULL)
-      strcat(buffer , string_list[i]);
-  }
-  return buffer;
-}
 
 
 char * util_alloc_string_sum2(const char *s1 , const char *s2) {
@@ -611,18 +595,6 @@ bool util_is_link(const char * path) {
 
 
 
-int util_get_path_length(const char * file) {
-  if (util_is_directory(file)) 
-    return strlen(file);
-  else {
-    char * last_slash = strrchr(file , '/');
-    if (last_slash == NULL)
-      return 0;
-    else
-      return last_slash - file;
-  }
-}
-
 
 
 int util_get_base_length(const char * file) {
@@ -673,10 +645,24 @@ void util_alloc_file_components(const char * file, char **_path , char **_basena
   if (ext_length > 0)
     extension = util_alloc_substring_copy(&file[path_length + slash_length + base_length + 1] , ext_length);
 
+  if (_extension != NULL) 
+    *_extension = extension;
+  else 
+    if (extension != NULL) free(extension);
   
-  if (_extension != NULL) *_extension = extension;
-  if (_basename  != NULL) *_basename  = basename;
-  if (_path      != NULL) *_path      = path;
+
+  if (_basename != NULL) 
+    *_basename = basename;
+  else 
+    if (basename != NULL) free(basename);
+  
+
+  if (_path != NULL) 
+    *_path = path;
+  else 
+    if (path != NULL) free(path);
+  
+
 }
 
 
@@ -825,88 +811,8 @@ bool util_fmt_bit8(const char *filename , int buffer_size) {
 }
 
 
-void util_make_path(const char *_path) {
-  char *active_path;
-  char *path = (char *) _path;
-  int current_pos = 0;
-
-  if (!util_path_exists(path)) {
-    active_path = malloc(strlen(path) + 1);
-    int i = 0;
-    do {
-      int n = strcspn(path , "/");
-      if (n < strlen(path))
-	n += 1;
-      path += n;
-      i++;
-      strncpy(active_path , _path , n + current_pos); 
-      active_path[n+current_pos] = '\0';
-      current_pos += n;
-      
-      if (!util_path_exists(active_path)) {
-	if (mkdir(active_path , 0775) != 0) { 
-	  fprintf(stderr,"%s: failed to make directory:%s - aborting \n",__func__ , active_path);
-	  fprintf(stderr,"%s \n",strerror(errno));
-	  abort();
-	}
-      }
-
-    } while (strlen(active_path) < strlen(_path));
-    free(active_path);
-  }
-}
 
 
-void util_make_path2(const char *path) {
-  if (!util_path_exists(path)) {
-    int length;
-    int offset;
-    if (path[0] == '/')
-      offset = 1;
-    else
-      offset = 0;
-    length      = strcspn(&path[offset] , "/");
-    {
-      char * sub_path = util_alloc_substring_copy(&path[offset] , length);
-      char * cwd      = NULL;
-      cwd = getcwd(cwd , 0);
-      if (mkdir(sub_path , 0775) != 0) {
-	fprintf(stderr,"%s: failed to make directory:%s (ERROR:%d) - aborting \n",__func__ , sub_path, errno);
-	fprintf(stderr,"%s \n",strerror(errno));
-	abort();
-      }
-      chdir(sub_path);
-      free(sub_path);
-      util_make_path2(&path[offset + length + 1]);
-      chdir(cwd);
-    }
-  }
-}
-
-
-
-/*
-  path/prefix-pid-xxxxx
-*/
-
-char * util_alloc_tmp_file(const char * path, const char * prefix , bool include_pid ) {
-  const int pid_digits    = 6;
-  const int pid_max       = 1000000;
-  const int random_digits = 6;
-  const int random_max    = 1000000;
-
-  
-  pid_t  pid            = getpid() % pid_max;
-  char * file           = malloc(strlen(path) + 1 + strlen(prefix) + 1 + pid_digits + 1 + random_digits + 1);
-  do {
-    long int rand_int = random() % random_max;
-    if (include_pid)
-      sprintf(file , "%s/%s-%d-%ld" , path , prefix , pid , rand_int);
-    else
-      sprintf(file , "%s/%s-%ld" , path , prefix , rand_int);
-  } while (util_file_exists(file));
-  return file;
-}
 
 
 
@@ -1007,12 +913,17 @@ time_t util_make_time1(int mday , int month , int year) {
 void util_set_strip_copy(char * copy , const char *src) {
   const char null_char  = '\0';
   const char space_char = ' ';
-  int i = 0;
-  while (src[i] != null_char && src[i] != space_char) {
-    copy[i] = src[i];
-    i++;
+  int  src_index   = 0;
+  int target_index = 0;
+  while (src[src_index] == space_char)
+    src_index++;
+
+  while (src[src_index] != null_char && src[src_index] != space_char) {
+    copy[target_index] = src[src_index];
+    src_index++;
+    target_index++;
   }
-  copy[i] = null_char;
+  copy[target_index] = null_char;
 }
 
 
@@ -1073,28 +984,17 @@ char * util_realloc_substring_copy(char * old_string , const char *src , int len
 }
 
 
-char * util_alloc_full_path(const char *path , const char *file) {
-  char *copy = malloc(strlen(path) + strlen(file) + 2);
-  sprintf(copy , "%s/%s" , path , file);
-  return copy;
-}
-
-
-char * util_realloc_full_path(char *old_path , const char *path , const char *file) {
-  char *copy = realloc(old_path , strlen(path) + strlen(file) + 2);
-  sprintf(copy , "%s/%s" , path , file);
-  return copy;
-}
-
 
 
 void util_free_string_list(char **list , int N) {
   int i;
-  for (i=0; i < N; i++) {
-    if (list[i] != NULL)
-      free(list[i]);
+  if (list != NULL) {
+    for (i=0; i < N; i++) {
+      if (list[i] != NULL)
+	free(list[i]);
+    }
+    free(list);
   }
-  free(list);
 }
 
 
@@ -1105,6 +1005,36 @@ char ** util_alloc_string_list(int N, int len) {
     list[i] = malloc(len);
   return list;
 }
+
+
+char * util_strcat_realloc(char *s1 , const char * s2) {
+  if (s1 == NULL) 
+    s1 = util_alloc_string_copy(s2);
+  else {
+    s1 = realloc(s1 , strlen(s1) + strlen(s2) + 1);
+    strcat(s1 , s2);
+  }
+  return s1;
+}
+
+
+char * util_alloc_string_sum(const char ** string_list , int N) {
+  int i , len;
+  char * buffer;
+  len = 0;
+  for (i=0; i < N; i++) {
+    if (string_list[i] != NULL)
+      len += strlen(string_list[i]);
+  }
+  buffer = malloc(len + 1);
+  buffer[0] = '\0';
+  for (i=0; i < N; i++) {
+    if (string_list[i] != NULL)
+      strcat(buffer , string_list[i]);
+  }
+  return buffer;
+}
+
 
 /*****************************************************************/
 
@@ -1123,54 +1053,6 @@ void util_abort(const char *func, const char *file, int line, const char *messag
 /*****************************************************************/
 
 
-
-void util_unlink_path(const char *path) {
-  if (util_path_exists(path)) {
-    const uid_t uid = getuid();
-    char *cwd       = NULL;
-    struct dirent *dentry;
-    cwd  = getcwd(cwd , 0);
-    if (chdir(path) != 0) {
-      fprintf(stderr,"%s: failed to change to %s - aborting \n", __func__ , path);
-      abort();
-    } else {
-      DIR *dirH;
-      dirH = opendir( "./" );  /* Have already changed into this directory with chdir() */
-      while ( (dentry = readdir(dirH)) != NULL) {
-	struct stat buffer;
-	const char * entry = dentry->d_name;
-	mode_t mode;
-	if (lstat(entry , &buffer) != 0) {
-	  fprintf(stderr,"%s: failed to stat(%s/%s) - aborting \n",__func__ , cwd , entry);
-	  abort();
-	} else {
-	  mode = buffer.st_mode;
-
-	  if (S_ISDIR(mode)) {
-	    if ((strcmp(entry , ".") != 0) && (strcmp(entry , "..") != 0)) 
-	      util_unlink_path(entry);
-	  } else if (S_ISLNK(mode)) 
-	    /*
-	      Symbolic links are unconditionally removed.
-	    */
-	    unlink(entry);
-	  else if (S_ISREG(mode)) {
-	    if (buffer.st_uid == uid) 
-	      unlink(entry);
-	    else 
-	      fprintf(stderr,"Warning mismatch in uid of calling process and entry owner for:%s - entry *not* removed \n",entry);
-	  }
-	}
-      }
-      closedir(dirH);
-      chdir(cwd);
-      free(cwd);
-
-      if (rmdir(path) != 0) 
-	fprintf(stderr,"%s: Warning: failed to remove director:%s \n",__func__ , path);
-    }
-  }
-}
 
 
 /*****************************************************************/
@@ -1362,6 +1244,12 @@ void util_fskip_string(FILE *stream) {
 }
 
 
+void util_fwrite_int   (int value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
+void util_fwrite_double(double value , FILE * stream) { UTIL_FWRITE_SCALAR(value , stream); }
+
+void util_fwrite_int_vector   (const int * value    , int size , FILE * stream, const char * caller) { util_fwrite(value , sizeof * value, size , stream, caller); }
+void util_fwrite_double_vector(const double * value , int size , FILE * stream, const char * caller) { util_fwrite(value , sizeof * value, size , stream, caller); }
+
 
 /*****************************************************************/
 
@@ -1467,25 +1355,6 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
 
 /*****************************************************************/
 
-bool util_proc_alive(pid_t pid) {
-  char proc_path[16];
-  sprintf(proc_path , "/proc/%d" , pid);
-  return util_path_exists(proc_path);
-}
-
-
-int util_proc_mem_free(void) {
-  FILE *stream = util_fopen("/proc/meminfo" , "r");
-  int mem;
-  util_fskip_lines(stream , 1);
-  util_fskip_token(stream);
-  util_fscanf_int(stream , &mem);
-  fclose(stream);
-  return mem;
-}
-
-
-/*****************************************************************/
 
 
 #define ABORT_READ  1
@@ -1545,12 +1414,16 @@ void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , 
 /*****************************************************************/
 
 void * util_realloc(void * old_ptr , size_t new_size , const char * caller) {
-  void * tmp = realloc(old_ptr , new_size);
-  if (tmp == NULL) {
-    fprintf(stderr,"%s: failed to realloc %d bytes - aborting \n",caller , new_size);
-    abort();
+  if (new_size == 0)
+    return NULL;
+  else {
+    void * tmp = realloc(old_ptr , new_size);
+    if (tmp == NULL) {
+      fprintf(stderr,"%s: failed to realloc %d bytes - aborting \n",caller , new_size);
+      abort();
+    }
+    return tmp;
   }
-  return tmp;
 }
 
 
@@ -1688,6 +1561,8 @@ void util_fread_compressed(char *data , FILE * stream) {
   free(zbuffer);
 }
 
+
+#include "util_path.c"
 
 /*void util_read_file(const char * _prompt , const char * path , bool must_exist , char * file) {
   char * prompt = util_alloc_string_sum2(_prompt , path);

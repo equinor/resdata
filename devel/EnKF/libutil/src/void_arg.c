@@ -2,82 +2,50 @@
 #include <string.h>
 #include <stdio.h>
 #include <void_arg.h>
+#include <stdbool.h>
+#include <util.h>
 
 struct void_arg_struct {
-  int      arg_size;
-  int      byte_size;
-  size_t  *size_list;
-  int  	  *offset_list;
-  char 	  *argList;
+  int     	 arg_size;
+  int     	 byte_size;
+  size_t  	*size_list;
+  int  	  	*offset_list;
+  char 	  	*argBuffer;
+  void_arg_enum *arg_type;
 };
 
+/*****************************************************************/
 
-void_arg_type * void_arg_alloc(int arg_size , const int * size_list) {
-  int i;
-  void_arg_type * arg = malloc(sizeof *arg);
-  arg->arg_size  = arg_size;
-  arg->byte_size = 0;
-  arg->size_list   = calloc(arg_size , sizeof *arg->size_list);
-  arg->offset_list = calloc(arg_size , sizeof *arg->offset_list);
-  for (i=0; i < arg_size; i++) {
-    arg->size_list[i] = size_list[i];
-    arg->byte_size   += size_list[i];
-    if (i == 0)
-      arg->offset_list[i] = 0;
-    else
-      arg->offset_list[i] = arg->offset_list[i-1] + size_list[i-1];
+static int void_arg_sizeof(void_arg_enum arg_type) {
+  int size;
+  switch (arg_type) {
+  case(pointer_value):
+    size = sizeof( void * );
+    break;
+  case(int_value):
+    size = sizeof( int );
+    break;
+  case(double_value):
+    size = sizeof( double );
+    break;
+  case(float_value):
+    size = sizeof( float );
+    break;
+  case(bool_value):
+    size = sizeof( bool );
+    break;
+  case(char_value):
+    size = sizeof( char );
+    break;
+  case(size_t_value):
+    size = sizeof( size_t );
+    break;
+  default:
+    fprintf(stderr,"%s: arg_type:%d not recognized - aborting \n",__func__ , arg_type);
+    abort();
   }
-    
-  arg->argList = malloc(arg->byte_size * sizeof * arg->argList);
-  return arg;
+  return size;
 }
-
-
-void_arg_type * void_arg_alloc2(int size1, int size2) {
-  return void_arg_alloc(2 , (const int[2]) {size1 , size2});
-}
-
-void_arg_type * void_arg_alloc3(int size1, int size2, int size3) {
-  return void_arg_alloc(3 , (const int[3]) {size1 , size2, size3});
-}
-
-void_arg_type * void_arg_alloc4(int size1, int size2, int size3, int size4) {
-  return void_arg_alloc(4 , (const int[4]) {size1 , size2, size3, size4});
-}
-
-void_arg_type * void_arg_alloc5(int size1, int size2, int size3, int size4, int size5) {
-  return void_arg_alloc(5 , (const int[5]) {size1 , size2, size3, size4 , size5});
-}
-
-void_arg_type * void_arg_alloc6(int size1, int size2, int size3, int size4, int size5, int size6) {
-  return void_arg_alloc(6 , (const int[6]) {size1 , size2, size3, size4 , size5 , size6});
-}
-
-void_arg_type * void_arg_alloc7(int size1, int size2, int size3, int size4, int size5, int size6, int size7) {
-  return void_arg_alloc(7 , (const int[7]) {size1 , size2, size3, size4 , size5 , size6 , size7});
-}
-
-void_arg_type * void_arg_alloc8(int size1, int size2, int size3, int size4, int size5, int size6, int size7, int size8) {
-  return void_arg_alloc(8 , (const int[8]) {size1 , size2, size3, size4 , size5 , size6 , size7 , size8});
-}
-
-void_arg_type * void_arg_alloc9(int size1, int size2, int size3, int size4, int size5, int size6, int size7, int size8 , int size9) {
-  return void_arg_alloc(9 , (const int[9]) {size1 , size2, size3, size4 , size5 , size6 , size7 , size8, size9});
-}
-
-void_arg_type * void_arg_alloc10(int size1, int size2, int size3, int size4, int size5, int size6, int size7, int size8 , int size9, int size10) {
-  return void_arg_alloc(10 , (const int[10]) {size1 , size2, size3, size4 , size5 , size6 , size7 , size8, size9 , size10});
-}
-
-
-
-
-void void_arg_free(void_arg_type * arg) {
-  free(arg->argList);
-  free(arg->size_list);
-  free(arg);
-}
-
 
 static void __void_arg_assert_index(const void_arg_type * arg , int iarg) {
   if (iarg < 0 || iarg >= arg->arg_size) {
@@ -86,63 +54,247 @@ static void __void_arg_assert_index(const void_arg_type * arg , int iarg) {
   }
 }
 
+static void __void_arg_assert_type(const void_arg_type * arg , int iarg , void_arg_enum arg_type) {
+  if (arg_type != arg->arg_type[iarg]) {
+    fprintf(stderr,"%s: asked for type:%d not matching the alloc statement - aborting \n" , __func__ , arg_type);
+    abort();
+  }
+}
+
+/*****************************************************************/
+
+
+
+
+void_arg_type * void_arg_alloc__(int arg_size , const void_arg_enum * arg_type , const int * size_list) {
+  int i;
+  void_arg_type * arg = malloc(sizeof *arg);
+  arg->arg_size  = arg_size;
+  arg->byte_size = 0;
+  arg->size_list   = calloc(arg_size , sizeof *arg->size_list);
+  arg->offset_list = calloc(arg_size , sizeof *arg->offset_list);
+  arg->arg_type    = calloc(arg_size , sizeof *arg->arg_type);
+  for (i=0; i < arg_size; i++) {
+    arg->arg_type[i]  = arg_type[i];
+
+    if (arg_type[i] == buffer_value) {
+      if (size_list != NULL)
+	arg->size_list[i] = size_list[i];
+      else {
+	fprintf(stderr,"%s: when called arg_type = buffer_value - the buffersize *must* be specified in the corresponding size_list argument - aborting \n",__func__);
+	abort();
+      }
+    } else
+      arg->size_list[i] = void_arg_sizeof(arg_type[i]);
+    
+    arg->byte_size   += arg->size_list[i];
+    if (i == 0)
+      arg->offset_list[i] = 0;
+    else
+      arg->offset_list[i] = arg->offset_list[i-1] + arg->size_list[i-1];
+  }
+    
+  arg->argBuffer = malloc(arg->byte_size * sizeof * arg->argBuffer);
+  return arg;
+}
+
+void_arg_type * void_arg_alloc(int arg_size , const void_arg_enum * arg_type) {
+  return void_arg_alloc__(arg_size , arg_type , NULL);
+}
+
+void_arg_type * void_arg_alloc1(void_arg_enum type1) {
+  return void_arg_alloc(1 , (const void_arg_enum[1]) {type1 });
+}
+
+
+void_arg_type * void_arg_alloc2(void_arg_enum type1, void_arg_enum type2) {
+  return void_arg_alloc(2 , (const void_arg_enum[2]) {type1 , type2});
+}
+
+void_arg_type * void_arg_alloc3(void_arg_enum type1, void_arg_enum type2, void_arg_enum type3) {
+  return void_arg_alloc(3 , (const void_arg_enum[3]) {type1 , type2, type3});
+}
+
+void_arg_type * void_arg_alloc4(void_arg_enum type1, void_arg_enum type2, void_arg_enum type3, void_arg_enum type4) {
+  return void_arg_alloc(4 , (const void_arg_enum[4]) {type1 , type2, type3, type4});
+}
+
+void_arg_type * void_arg_alloc5(void_arg_enum type1, void_arg_enum type2, void_arg_enum type3, void_arg_enum type4, void_arg_enum type5) {
+  return void_arg_alloc(5 , (const void_arg_enum[5]) {type1 , type2, type3, type4 , type5});
+}
+
+void_arg_type * void_arg_alloc6(void_arg_enum type1, void_arg_enum type2, void_arg_enum type3, void_arg_enum type4, void_arg_enum type5, void_arg_enum type6) {
+  return void_arg_alloc(6 , (const void_arg_enum[6]) {type1 , type2, type3, type4 , type5 , type6});
+}
+
+void_arg_type * void_arg_alloc7(void_arg_enum type1, void_arg_enum type2, void_arg_enum type3, void_arg_enum type4, void_arg_enum type5, void_arg_enum type6, void_arg_enum type7) {
+  return void_arg_alloc(7 , (const void_arg_enum[7]) {type1 , type2, type3, type4 , type5 , type6 , type7});
+}
+
+void_arg_type * void_arg_alloc8(void_arg_enum type1, void_arg_enum type2, void_arg_enum type3, void_arg_enum type4, void_arg_enum type5, void_arg_enum type6, void_arg_enum type7, void_arg_enum type8) {
+  return void_arg_alloc(8 , (const void_arg_enum[8]) {type1 , type2, type3, type4 , type5 , type6 , type7 , type8});
+}
+
+void_arg_type * void_arg_alloc9(void_arg_enum type1, void_arg_enum type2, void_arg_enum type3, void_arg_enum type4, void_arg_enum type5, void_arg_enum type6, void_arg_enum type7, void_arg_enum type8 , void_arg_enum type9) {
+  return void_arg_alloc(9 , (const void_arg_enum[9]) {type1 , type2, type3, type4 , type5 , type6 , type7 , type8, type9});
+}
+
+void_arg_type * void_arg_alloc10(void_arg_enum type1, void_arg_enum type2, void_arg_enum type3, void_arg_enum type4, void_arg_enum type5, void_arg_enum type6, void_arg_enum type7, void_arg_enum type8 , void_arg_enum type9, void_arg_enum type10) {
+  return void_arg_alloc(10 , (const void_arg_enum[10]) {type1 , type2, type3, type4 , type5 , type6 , type7 , type8, type9 , type10});
+}
+
+
+void void_arg_free(void_arg_type * arg) {
+  free(arg->argBuffer);
+  free(arg->size_list);
+  free(arg->arg_type);
+  free(arg);
+}
+
+
+
 
 void void_arg_pack_ptr(void_arg_type * arg, int iarg , void * input) {
+  size_t input_adress = ( size_t ) input;
   __void_arg_assert_index(arg , iarg);
-  memcpy(&arg->argList[arg->offset_list[iarg]] , input , arg->size_list[iarg]);
+  __void_arg_assert_type(arg , iarg , pointer_value);
+  memcpy(&arg->argBuffer[arg->offset_list[iarg]] , &input_adress , arg->size_list[iarg]);
 }
 
 
-void void_arg_unpack_ptr(const void_arg_type * arg , int iarg , void * output) {
+void * void_arg_get_ptr(const void_arg_type * arg, int iarg) {
   __void_arg_assert_index(arg , iarg);
-  memcpy(output , &arg->argList[arg->offset_list[iarg]] , (const size_t) arg->size_list[iarg]);
+  __void_arg_assert_type(arg , iarg , pointer_value);
+  return (void *) (*( (size_t *) &arg->argBuffer[arg->offset_list[iarg]]));
 }
 
 
-void * void_arg_get_target_ptr(const void_arg_type * arg, int iarg) {
+void void_arg_pack_buffer(void_arg_type * arg, int iarg , void * input) {
   __void_arg_assert_index(arg , iarg);
-  return (void *) (*( (size_t *) &arg->argList[arg->offset_list[iarg]]));
+  memcpy(&arg->argBuffer[arg->offset_list[iarg]] , input , arg->size_list[iarg]);
 }
 
-void * void_arg_get_data_ptr(const void_arg_type * arg, int iarg) {
+void * void_arg_get_buffer(const void_arg_type * arg, int iarg) {
   __void_arg_assert_index(arg , iarg);
-  return &arg->argList[arg->offset_list[iarg]];
+  /* No type assert here - can always call pack/get buffer */
+  return &arg->argBuffer[arg->offset_list[iarg]];
 }
 
 
+/*****************************************************************/
+/* Typed access functions */
 
-void void_arg_fscanf(void_arg_type * arg, const char * fmt , FILE * stream) {
+
+#define VOID_ARG_TYPED_GET(type)                                                  \
+type void_arg_get_ ## type (const void_arg_type *arg , int iarg) { 		  \
+  type output;                                                     		  \
+  __void_arg_assert_index(arg , iarg);                             		  \
+  __void_arg_assert_type(arg , iarg , type ## _value);             		  \
+  memcpy(&output , &arg->argBuffer[arg->offset_list[iarg]] , arg->size_list[iarg]); \
+  return output;                                                                  \
+}
+
+
+VOID_ARG_TYPED_GET(int)
+VOID_ARG_TYPED_GET(char)
+VOID_ARG_TYPED_GET(float)
+VOID_ARG_TYPED_GET(double)
+VOID_ARG_TYPED_GET(size_t)
+VOID_ARG_TYPED_GET(bool)
+
+#undef VOID_ARG_TYPED_GET
+
+
+#define VOID_ARG_TYPED_PACK(type)                                               \
+void void_arg_pack_ ## type (void_arg_type *arg , int iarg , type input) {       \
+  __void_arg_assert_index(arg , iarg);                                          \
+  __void_arg_assert_type(arg , iarg , type ## _value);                          \
+  memcpy(&arg->argBuffer[arg->offset_list[iarg]] , &input , arg->size_list[iarg]); \
+}
+
+
+VOID_ARG_TYPED_PACK(int)
+VOID_ARG_TYPED_PACK(char)
+VOID_ARG_TYPED_PACK(float)
+VOID_ARG_TYPED_PACK(double)
+VOID_ARG_TYPED_PACK(size_t)
+VOID_ARG_TYPED_PACK(bool)
+
+#undef VOID_ARG_TYPED_PACK
+
+/*****************************************************************/
+
+static const char * void_arg_fmt(const void_arg_type * arg , int iarg) {
+  __void_arg_assert_index(arg , iarg);
+  switch (arg->arg_type[iarg]) {
+  case(int_value):
+    return " %d";
+    break;
+  case(double_value):
+    return " %lg";
+    break;
+  case(float_value):
+    return " %g";
+    break;
+  case(bool_value):
+    return " %d";
+    break;
+  case(char_value):
+    return " %d";
+    break;
+  case(size_t_value):
+    return " %d";
+    break;
+  default:
+    fprintf(stderr,"%s: arg_type:%d not recognized for scanning \n",__func__ , arg->arg_type[iarg]);
+    abort();
+  }
+}
+
+
+void void_arg_fscanf(void_arg_type * arg , FILE * stream) {
+  int iarg , scan_count;
+  char * fmt = NULL;
+  for (iarg = 0; iarg  < arg->arg_size; iarg++)
+    fmt = util_strcat_realloc(fmt , void_arg_fmt(arg , iarg));
+  
   switch(arg->arg_size) {
   case(0):
     break;
   case(1):
     {
-      void   *arg;
-      arg = void_arg_get_data_ptr(arg , 0);
-      
-      fscanf(stream , fmt , arg);
+      void *arg0;
+      arg0 = void_arg_get_buffer(arg , 0);
+      scan_count = fscanf(stream , fmt , arg0);
       break;
     }
   case(2):
     {
       void   *arg0, *arg1;
-      arg0 = void_arg_get_data_ptr(arg , 0);
-      arg1 = void_arg_get_data_ptr(arg , 1);
+      arg0 = void_arg_get_buffer(arg , 0);
+      arg1 = void_arg_get_buffer(arg , 1);
 
-      fscanf(stream , fmt , arg0 , arg1);
+      scan_count = fscanf(stream , fmt , arg0 , arg1);
       break;
     }
   case(3):
     {
       void   *arg0, *arg1 , *arg2;
-      arg0 = void_arg_get_data_ptr(arg , 0);
-      arg1 = void_arg_get_data_ptr(arg , 1);
-      arg2 = void_arg_get_data_ptr(arg , 2);
+      arg0 = void_arg_get_buffer(arg , 0);
+      arg1 = void_arg_get_buffer(arg , 1);
+      arg2 = void_arg_get_buffer(arg , 2);
       
-      fscanf(stream , fmt , arg0 , arg1 , arg2);
+      scan_count = fscanf(stream , fmt , arg0 , arg1 , arg2);
       break;
     }
   default:
-    fprintf(stderr,"%s: sorry arg_fscanf() not allocated for %d arguments - pathettic ehhh?? \n",__func__ , arg->arg_size);
+    fprintf(stderr,"%s: sorry %s not allocated for %d arguments - pathetic ehhh?? \n",__func__ , __func__ , arg->arg_size);
+    abort();
   }
+  if (scan_count != arg->arg_size) {
+    fprintf(stderr,"%s: wanted %d arguments - only found: %d \n", __func__ , arg->arg_size , scan_count);
+    abort();
+  }
+  
+  free(fmt);
 }

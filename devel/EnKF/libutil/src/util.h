@@ -46,6 +46,7 @@ char   * util_alloc_full_path(const char *, const char *);
 char   * util_alloc_strip_copy(const char *);
 void     util_set_strip_copy(char * , const char *);
 char   * util_alloc_string_sum(const char **  , int);
+char   * util_strcat_realloc(char *, const char * );
 char   * util_alloc_string_copy(const char *);
 char  ** util_alloc_stringlist_copy(const char **, int );
 void     util_split_string(const char *, const char *, int *, char ***);
@@ -103,14 +104,15 @@ void     util_read_filename(const char * , int , bool , char * );
 void     util_read_string(const char *  , int  , char * );
 void     util_fread (void *, size_t , size_t , FILE * , const char * );
 void     util_fwrite(const void *, size_t , size_t , FILE * , const char * );
-
+void 	 util_fwrite_int   (int    , FILE * );
+void 	 util_fwrite_double(double , FILE * );
+void 	 util_fwrite_int_vector   (const int     * , int , FILE * , const char * );
+void 	 util_fwrite_double_vector(const double  * , int , FILE * , const char * );
 
 void util_fread_compressed(char * , FILE * );
 void util_fwrite_compressed(const void * , int , FILE * );
 
 #define UTIL_ABORT(msg) (util_abort(__func__, __FILE__, __LINE__ , msg))
-
-
 #define UTIL_FWRITE_SCALAR(s,stream) fwrite(&s , sizeof s , 1 , stream)
 #define UTIL_FREAD_SCALAR(s,stream)  fread(&s , sizeof s , 1 , stream)
 
