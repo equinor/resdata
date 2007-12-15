@@ -411,9 +411,7 @@ void sched_file_fprintf_days_dat(const sched_file_type *s , const char *days_fil
 
 
 
-
-
-int sched_file_time_t_to_report_step(const sched_file_type * s , time_t t) {
+int sched_file_time_t_to_report_step(const sched_file_type * s , time_t t , int * _status) {
   int report_step = -1;
   int status = -1;
   if (difftime(t , s->start_date)  >= 0) {
@@ -435,27 +433,31 @@ int sched_file_time_t_to_report_step(const sched_file_type * s , time_t t) {
    *_status = status;
    */
   
-  if (status != 0) {
-    int year , mday , mon;
-    util_set_date_values(t , &mday , &mon , &year);
-    if (status < 0)
-      fprintf(stderr,"%s: *Warning* time %02d/%02d/%4d is before simulation start - report step = -1 is assigned. \n",__func__ , mday , mon , year);
-    else
-      fprintf(stderr,"%s: *Warning* time %02d/%02d/%4d is after simulation end - report step = -1 is assigned. \n",__func__ , mday , mon , year);
-  }
+  if (_status != NULL)
+    *_status = status;
 
+  if (status != 0) {
+    if (_status == NULL) {
+      int year , mday , mon;
+      util_set_date_values(t , &mday , &mon , &year);
+      if (status < 0)
+	fprintf(stderr,"%s: *Warning* time %02d/%02d/%4d is before simulation start - report step = -1 is assigned. \n",__func__ , mday , mon , year);
+      else
+	fprintf(stderr,"%s: *Warning* time %02d/%02d/%4d is after simulation end - report step = -1 is assigned. \n",__func__ , mday , mon , year);
+    }
+  }
   return report_step;
 }
 
 
-int sched_file_int3_to_report_step(const sched_file_type * s , int mday, int mon , int year) {
+int sched_file_int3_to_report_step(const sched_file_type * s , int mday, int mon , int year , int * status) {
   time_t t         = util_make_time1(mday , mon , year);
-  return sched_file_time_t_to_report_step(s , t );
+  return sched_file_time_t_to_report_step(s , t , status);
 }
 
 
-int sched_file_DATES_to_report_step(const sched_file_type * s , const char * DATES_line) {
-  return sched_file_time_t_to_report_step(s , date_node_parse_DATES_line(DATES_line , s->month_hash));
+int sched_file_DATES_to_report_step(const sched_file_type * s , const char * DATES_line , int * status) {
+  return sched_file_time_t_to_report_step(s , date_node_parse_DATES_line(DATES_line , s->month_hash) , status);
 }
 
 

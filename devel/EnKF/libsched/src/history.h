@@ -15,10 +15,12 @@ typedef struct history_struct history_type;
 
 void             history_free(history_type *);
 history_type * 	 history_alloc(time_t);
-history_type * 	 history_alloc_from_summary(const ecl_sum_type * , int , const char ** , bool);
+history_type *   history_fread_alloc(FILE *);
 history_type * 	 history_alloc_from_schedule(const sched_file_type * );
+history_type *   history_alloc_from_summary(const ecl_sum_type *  , bool );
 void   history_add_date(history_type *  , const date_node_type * );
 void   history_add_rate(history_type *  , int , const rate_type * );
+void   history_fwrite(const history_type * , FILE *);
 
 double history_get_ORAT(const history_type * , int , const char * ,  bool *);
 double history_get_WRAT(const history_type * , int , const char * ,  bool *);
@@ -34,5 +36,6 @@ double 	        history_get(const history_type * , int , const char * , const ch
 bool   	        history_has_well(const history_type * , const char * );
 /*well_var_type   history_get_var_type(const history_type *  , const char * );   */
 history_type     * history_alloc_from_schedule(const sched_file_type *);
+int                history_get_num_reports(const history_type * );
 
 #endif

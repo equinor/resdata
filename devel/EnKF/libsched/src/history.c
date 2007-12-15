@@ -165,10 +165,11 @@ void history_fwrite(const history_type * hist , FILE *stream) {
     char **well_list;
     for (i=0; i < hist->size; i++)
       history_node_fwrite(hist->data[i] , stream);
-    
+
+    wells = hash_get_size(hist->well_hash);
     util_fwrite(&wells , sizeof wells , 1 , stream , __func__);
     well_list = hash_alloc_keylist(hist->well_hash);
-    for (i=0; i < wells; i++)
+    for (i=0; i < wells; i++) 
       util_fwrite_string(well_list[i] , stream);
     
     hash_free_ext_keylist(hist->well_hash , well_list);
@@ -182,9 +183,9 @@ history_type * history_fread_alloc(FILE *stream) {
  util_fread(&hist->creation_time , sizeof hist->creation_time , 1 , stream , __func__);
  util_fread(&hist->history_mode  , sizeof hist->history_mode  , 1 , stream , __func__);
  hist->data_src = util_fread_alloc_string(stream);
- util_fread(&hist->size       , sizeof hist->size       , 1 , stream , __func__);
- util_fread(&hist->alloc_size , sizeof hist->alloc_size , 1 , stream , __func__);
- util_fread(&hist->start_date , sizeof hist->start_date , 1 , stream , __func__);
+ util_fread(&hist->size          , sizeof hist->size       , 1 , stream , __func__);
+ util_fread(&hist->alloc_size    , sizeof hist->alloc_size , 1 , stream , __func__);
+ util_fread(&hist->start_date    , sizeof hist->start_date , 1 , stream , __func__);
  history_realloc_data(hist , hist->alloc_size);
  {
     int i , wells;
@@ -198,7 +199,7 @@ history_type * history_fread_alloc(FILE *stream) {
       hash_insert_int(hist->well_hash , well , 1);
       free(well);
     }
-  }
+ }
  return hist;
 }
 
@@ -219,6 +220,18 @@ bool history_has_well(const history_type * hist , const char * well) {
 }
     
 
+void history_summarize(const history_type * hist) {
+  char ** well_list = hash_alloc_keylist(hist->well_hash);
+  int iw;
+  printf("-----------------------------------------------------------------\n");
+  for (iw = 0; iw < hash_get_size(hist->well_hash); iw++) 
+    printf("Well[%d] : <%s> \n",iw , well_list[iw]);
+  printf("-----------------------------------------------------------------\n");
+  hash_free_ext_keylist(hist->well_hash , well_list);
+}
+
+
+
 
 static const rate_type * history_get_rate_node(const history_type * hist , int time_step, const char * well) {
   const rate_type * rate = NULL;
@@ -230,6 +243,7 @@ static const rate_type * history_get_rate_node(const history_type * hist , int t
 	rate = hash_get(history_node->data , well);
       else {
 	if (!history_has_well(hist , well)) {
+          history_summarize(hist);
 	  fprintf(stderr,"%s: The well:%s does not exist in the history object - aborting \n",__func__ , well);
 	  abort();
 	}
@@ -418,12 +432,14 @@ history_type * history_alloc_from_schedule(const sched_file_type *s) {
 
 
 
-history_type * history_alloc_from_summary(const ecl_sum_type * sum , int Nwells , const char ** well_list , bool history_mode) {
+static  history_type * history_alloc_from_summary__(const ecl_sum_type * sum , int Nwells , const char ** well_list , bool history_mode) {
   if (ecl_sum_get_report_mode(sum)) {
     /*char ** well_list            = ecl_sum_alloc_well_names_copy(sum);*/
     history_type *hist              = history_alloc(ecl_sum_get_start_time(sum));
-    date_node_type *current_date = NULL;
-    /*Nwells                       = ecl_sum_get_Nwells(sum);*/
+    /*
+      date_node_type *current_date = NULL;
+      Nwells                       = ecl_sum_get_Nwells(sum);
+    */
     int    first_report , last_report , report_nr;
     time_t start_time = ecl_sum_get_start_time(sum);
     ecl_sum_get_report_size(sum , &first_report , &last_report);
@@ -465,6 +481,11 @@ history_type * history_alloc_from_summary(const ecl_sum_type * sum , int Nwells 
 }
 
 
+history_type * history_alloc_from_summary(const ecl_sum_type * ecl_sum , bool history_mode) {
+  return history_alloc_from_summary__(ecl_sum , ecl_sum_get_Nwells(ecl_sum) , ecl_sum_get_well_names_ref(ecl_sum) , history_mode);
+}
+
+
 time_t history_get_report_date(history_type * hist , int time_step) {
   const history_node_type * node = history_get_node(hist , time_step);
   if (node == NULL) {
@@ -474,6 +495,8 @@ time_t history_get_report_date(history_type * hist , int time_step) {
     return date_node_get_date(node->date);
 }
 
+
+int history_get_num_reports(const history_type * hist) { return hist->size; }
 
 
 void history_free(history_type *hist) {

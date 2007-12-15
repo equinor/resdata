@@ -8,8 +8,8 @@
 #include <history.h>
 
 
-static const bool ENDIAN_CONVERT  = true;
-static history_type *GLOBAL_HISTORY     = NULL;
+static const bool    ENDIAN_CONVERT  = true;
+static history_type *GLOBAL_HISTORY  = NULL;
 
 /*****************************************************************/
 
@@ -112,17 +112,46 @@ void sched_update_compdat_fprintf__(const char * _schedule_dump_file , const int
 }
 
 
+
+void sched_load_hist_from_schedule__(const char * _schedule_dump_file , const int * schedule_dump_len , 
+                                     const char * _hist_file , const int * hist_file_len) {
+
+  FILE * stream;
+  char * schedule_dump_file = util_alloc_cstring(_schedule_dump_file , schedule_dump_len);
+  char * hist_file          = util_alloc_cstring(_hist_file , hist_file_len);
+  sched_file_type * s;
+  stream = util_fopen(schedule_dump_file , "r");
+  s    = sched_file_fread_alloc(stream , -1 , -1 , -1.0);
+  fclose(stream);
+
+  if (GLOBAL_HISTORY != NULL) 
+    history_free(GLOBAL_HISTORY);
+
+  GLOBAL_HISTORY = history_alloc_from_schedule(s);
+  stream = util_fopen(hist_file , "w");
+  history_fwrite(GLOBAL_HISTORY  , stream);
+  fclose(stream);
+
+  sched_file_free(s);
+  free(hist_file);
+  free(schedule_dump_file);
+}
+
+
+
  
 
 void sched_init__(const char * _schedule_file  	   , const int * schedule_file_len,
 		  const char * _schedule_dump_file , const int * schedule_dump_len,
 		  const char * _init_file          , const int * init_file_len,
+		  const char * _hist_file          , const int * hist_file_len,
 		  const int  * start_date , 
 		  const int  * endian_flip_int , 
 		  const int  * index_map) {
 
   char * schedule_file      = util_alloc_cstring(_schedule_file , schedule_file_len);
   char * schedule_dump_file = util_alloc_cstring(_schedule_dump_file , schedule_dump_len);
+  char * hist_file          = util_alloc_cstring(_hist_file , hist_file_len);
   bool   update             = true;
 
   if (util_file_exists(schedule_dump_file)) 
@@ -142,15 +171,51 @@ void sched_init__(const char * _schedule_file  	   , const int * schedule_file_l
       sched_file_fwrite(s , stream);
       fclose(stream);
     }
-    GLOBAL_HISTORY = history_alloc_from_schedule(s);
+
+    if (util_file_exists(hist_file)) {
+      FILE * stream = util_fopen(hist_file , "r");
+      GLOBAL_HISTORY = history_fread_alloc(stream);
+      fclose(stream);
+    } else 
+      sched_load_hist_from_schedule__(_schedule_dump_file , schedule_dump_len , _hist_file , hist_file_len);
+    
     sched_file_free(s);
     free(init_file);
   }
   
   free(schedule_dump_file);
   free(schedule_file);
+  free(hist_file);
 }
-	
+  
+
+void sched_load_hist_from_summary__(const char * _hist_file , const int * hist_file_len) {
+  const bool history_mode = false;
+  char * hist_file        = util_alloc_cstring(_hist_file , hist_file_len);
+  ecl_sum_type * ecl_sum;
+  ecl_sum           = ecl_sum_fread_alloc_interactive(ENDIAN_CONVERT);
+
+  if (ecl_sum == NULL) {
+    fprintf(stderr,"%s: sorry returned with invalid ecl_sum object - aborting \n",__func__);
+    abort();
+  }
+
+  if (GLOBAL_HISTORY != NULL) 
+    history_free(GLOBAL_HISTORY);
+  GLOBAL_HISTORY = history_alloc_from_summary(ecl_sum , history_mode);
+  ecl_sum_free(ecl_sum);
+  free(hist_file);
+
+  {
+    FILE * stream = util_fopen(hist_file , "w");
+    history_fwrite(GLOBAL_HISTORY  , stream);
+    fclose(stream);
+  }
+}
+ 
+ 
+ 
+
 
 /*****************************************************************/
 
@@ -174,7 +239,7 @@ static ecl_sum_type * ecl_diag_avg_load(const char * eclbase_dir , const char * 
   } else {
     int files;
     char **fileList;
-    fileList  = ecl_util_alloc_exfilelist(eclbase_dir , eclbase_name , ecl_summary_file , fmt_file , &files);
+    fileList  = ecl_util_alloc_scandir_filelist(eclbase_dir , eclbase_name , ecl_summary_file , fmt_file , &files);
     sum       = ecl_sum_fread_alloc(spec_file , files , (const char **) fileList , report_mode , endian_convert);
     util_free_string_list(fileList , files);
   }
@@ -290,7 +355,6 @@ void sched_inter_get_report_date__(const int * report_step , int * day, int * mo
   util_set_date_values(t , day , month , year);
   
 }
-
   
 
 
