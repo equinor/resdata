@@ -613,8 +613,8 @@ int util_get_base_length(const char * file) {
     return strlen(base_start);
   else
     return last_point - base_start;
-}
 
+}
 
 
 
@@ -774,40 +774,55 @@ void util_unlink_existing(const char *filename) {
 }
 
 
-
-
-bool util_fmt_bit8(const char *filename , int buffer_size) {
-  const int min_read = 1024;
-  FILE *stream;
+bool util_fmt_bit8_stream(FILE * stream ) {
+  const int    min_read      = 1024;
   const double bit8set_limit = 0.00001;
-  double bit8set_fraction;
-  int N_bit8set = 0;
-  char *buffer;
-  int elm_read,i;
+  const int    buffer_size   = 131072;
+  long int start_pos         = ftell(stream);
+  bool fmt_file;
+  {
+    double bit8set_fraction;
+    int N_bit8set = 0;
+    int elm_read,i;
+    char *buffer = util_malloc(buffer_size , __func__);
 
-  if (util_file_exists(filename)) {
-    buffer = malloc(buffer_size);
-    stream = fopen(filename , "r");
     elm_read = fread(buffer , 1 , buffer_size , stream);
     if (elm_read < min_read) {
-      fprintf(stderr,"Error in %s: file:%s is too small to automatically determine formatted/unformatted status \n",__func__ , filename);
+      fprintf(stderr,"%s: file is too small to automatically determine formatted/unformatted status \n",__func__);
       abort();
     }
+    
     for (i=0; i < elm_read; i++)
       N_bit8set += (buffer[i] & (1 << 7)) >> 7;
     
-    fclose(stream);
+    
     free(buffer);
-
     bit8set_fraction = 1.0 * N_bit8set / elm_read;
     if (bit8set_fraction < bit8set_limit) 
-      return true;
+      fmt_file =  true;
     else 
-    return false;
+      fmt_file = false;
+  }
+  fseek(stream , start_pos , SEEK_SET);
+  return fmt_file;
+}  
+
+
+
+bool util_fmt_bit8(const char *filename ) {
+  FILE *stream;
+  bool fmt_file = true;
+
+  if (util_file_exists(filename)) {
+    stream   = fopen(filename , "r");
+    fmt_file = util_fmt_bit8_stream(stream);
+    fclose(stream);
   } else {
     fprintf(stderr,"%s: could not find file: %s - aborting \n",__func__ , filename);
     abort();
   }
+
+  return fmt_file;
 }
 
 

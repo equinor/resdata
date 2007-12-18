@@ -1,3 +1,4 @@
+
 int util_get_path_length(const char * file) {
   if (util_is_directory(file)) 
     return strlen(file);
