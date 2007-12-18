@@ -35,8 +35,6 @@ equil_config_type   * equil_config_fscanf_alloc(const char * , const char *  , c
 VOID_ALLOC_ENSFILE_HEADER(equil);
 CONFIG_SET_ECLFILE_HEADER_VOID(equil);
 CONFIG_SET_ENSFILE_HEADER_VOID(equil);
-SET_SERIAL_OFFSET_HEADER(equil);
-VOID_SET_SERIAL_OFFSET_HEADER(equil);
 
 VOID_FUNC_HEADER(equil_config_free);
 

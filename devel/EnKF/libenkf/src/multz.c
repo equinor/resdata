@@ -10,8 +10,8 @@
 #include <scalar.h>
 
 
-#define  DEBUG
 #define  TARGET_TYPE MULTZ
+#define  DEBUG
 #include "enkf_debug.h"
 
 
@@ -94,19 +94,19 @@ multz_type * multz_copyc(const multz_type *multz) {
 }
 
 
-void multz_fwrite(const multz_type *multz , const char *file ) {
-  FILE * stream   = enkf_util_fopen_w(file , __func__);
+void multz_fwrite(const multz_type *multz , FILE * stream) {
+  DEBUG_ASSERT(multz);
+  enkf_util_fwrite_target_type(stream , MULTZ);
   scalar_stream_fwrite(multz->scalar , stream);
-  fclose(stream);
 }
 
 
-void multz_fread(multz_type * multz , const char * file) {
-  FILE * stream   = enkf_util_fopen_r(file , __func__);
+
+void multz_fread(multz_type * multz , FILE * stream) {
+  DEBUG_ASSERT(multz); 
+  enkf_util_fread_assert_target_type(stream , MULTZ , __func__);
   scalar_stream_fread(multz->scalar , stream);
-  fclose(stream);
 }
-
 
 
 void multz_ecl_write(const multz_type * multz , const char * path) {
@@ -124,44 +124,14 @@ void multz_ecl_write(const multz_type * multz , const char * path) {
 }
 
 
-
-/*void multz_direct_ecl_write(const multz_type * multz , const char * path) {
-  char * eclfile = util_alloc_full_path(path , multz_config_get_eclfile_ref(multz->config));
-  FILE * stream  = enkf_util_fopen_w(eclfile , __func__);
-
-  multz_config_ecl_write(multz->config , multz_get_output_ref(multz) , stream);
-  
-  fclose(stream);
-  free(eclfile);
-}
-*/
-
-
-
-void multz_ens_read(multz_type * multz , const char *path) {
-  char * ensfile = util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
-  multz_fread(multz , ensfile);
-  free(ensfile);
-}
-
-
-void multz_ens_write(const multz_type * multz , const char * path) {
-  DEBUG_ASSERT(multz)
-  {
-     char * ensfile = util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
-     multz_fwrite(multz , ensfile);
-     free(ensfile);
-  }
-}
-
-
-
 char * multz_swapout(multz_type * multz , const char * path) {
   DEBUG_ASSERT(multz)
   {
     char * ensfile = util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
-    multz_fwrite(multz , ensfile);
+    FILE * stream  = util_fopen(ensfile , "w");
+    multz_fwrite(multz , stream);
     multz_free_data(multz);
+    fclose(stream);
     return ensfile;
   }
 }
@@ -171,8 +141,10 @@ char * multz_swapout(multz_type * multz , const char * path) {
 void multz_swapin(multz_type * multz , const char *file) {
   DEBUG_ASSERT(multz)
   {
+    FILE * stream  = util_fopen(file , "r");
     multz_realloc_data(multz);
-    multz_fread(multz  , file);
+    multz_fread(multz  , stream);
+    fclose(stream);
   }
 }
 
@@ -273,8 +245,8 @@ VOID_FREE(multz)
 VOID_FREE_DATA(multz)
 VOID_REALLOC_DATA(multz)
 VOID_ECL_WRITE (multz)
-VOID_ENS_WRITE (multz)
-VOID_ENS_READ  (multz)
+VOID_FWRITE    (multz)
+VOID_FREAD     (multz)
 VOID_COPYC     (multz)
 VOID_SWAPIN(multz)
 VOID_SWAPOUT(multz)

@@ -7,7 +7,6 @@
 
 #define CONFIG_STD_FIELDS \
 int data_size;            \
-int serial_offset;        \
 char * ecl_kw_name;       \
 enkf_var_type var_type;   \
 char * ensfile;           \
@@ -27,22 +26,6 @@ int prefix ## _config_get_serial_size (const prefix ## _config_type *arg) {  \
 #define VOID_GET_SERIAL_SIZE(prefix)        int prefix ## _config_get_serial_size__ (const void *void_arg ) { return prefix ## _config_get_serial_size((const prefix ## _config_type *) void_arg); }
 #define VOID_GET_SERIAL_SIZE_HEADER(prefix) int prefix ## _config_get_serial_size__ (const void *)
 */
-
-/*****************************************************************/
-#define GET_SERIAL_OFFSET(prefix)                                              \
-int prefix ## _config_get_serial_offset (const prefix ## _config_type *arg) {  \
-   return arg->serial_offset;                                                  \
-}
-#define GET_SERIAL_OFFSET_HEADER(prefix)      int prefix ## _config_get_serial_offset (const prefix ## _config_type *)
-/*****************************************************************/
-
-#define SET_SERIAL_OFFSET(prefix)                                                           \
-void prefix ## _config_set_serial_offset (prefix ## _config_type *arg, int offset) {        \
-   arg->serial_offset = offset;                                                             \
-}
-#define SET_SERIAL_OFFSET_HEADER(prefix)      void prefix ## _config_set_serial_offset   ( prefix ## _config_type * , int)
-#define VOID_SET_SERIAL_OFFSET(prefix)        void prefix ## _config_set_serial_offset__ ( void *void_arg , int offset) { prefix ## _config_set_serial_offset(( prefix ## _config_type *) void_arg , offset); }
-#define VOID_SET_SERIAL_OFFSET_HEADER(prefix) void prefix ## _config_set_serial_offset__ ( void *, int )
 
 /*****************************************************************/
 
@@ -112,18 +95,18 @@ void * prefix ## _alloc__(const void *void_config) {                      \
 
 /*****************************************************************/
 
-#define VOID_ENS_WRITE(prefix) \
-void prefix ## _ens_write__(const void * void_arg , const char * path) { \
-   prefix ## _ens_write((const prefix ## _type *) void_arg , path);      \
+#define VOID_FWRITE(prefix) \
+void prefix ## _fwrite__(const void * void_arg , FILE * stream) { \
+   prefix ## _fwrite((const prefix ## _type *) void_arg , stream);      \
 }
 
-#define VOID_ENS_READ(prefix) \
-void prefix ## _ens_read__(void * void_arg , const char * path) { \
-   prefix ## _ens_read((prefix ## _type *) void_arg , path);      \
+#define VOID_FREAD(prefix) \
+void prefix ## _fread__(void * void_arg , FILE * stream) { \
+   prefix ## _fread((prefix ## _type *) void_arg , stream);      \
 }
 
-#define VOID_ENS_WRITE_HEADER(prefix) void prefix ## _ens_write__(const void * , const char * );
-#define VOID_ENS_READ_HEADER(prefix) void prefix ## _ens_read__(void * , const char * );
+#define VOID_FWRITE_HEADER(prefix) void prefix ## _fwrite__(const void * , FILE *);
+#define VOID_FREAD_HEADER(prefix) void prefix ## _fread__(void * , FILE *);
 
 
 /*****************************************************************/

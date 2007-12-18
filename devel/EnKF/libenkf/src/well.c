@@ -69,56 +69,48 @@ well_type * well_copyc(const well_type *well) {
 }
 
 
-void well_fread(well_type * well , const char *file) {
-  FILE * stream   = enkf_util_fopen_r(file , __func__);
-  int  size;
-  fread(&size , sizeof  size , 1 , stream);
-  enkf_util_fread(well->data , sizeof *well->data , size , stream , __func__);
-  fclose(stream);
-}
-
-
-void well_fwrite(const well_type * well , const char *file) {
-  const  well_config_type * config = well->config;
-  const int data_size = well_config_get_data_size(config);
-  FILE * stream       = enkf_util_fopen_w(file , __func__);
-  
-  fwrite(&data_size            , sizeof  data_size     , 1 , stream);
-  enkf_util_fwrite(well->data  , sizeof *well->data    ,data_size , stream , __func__);
-  
-  fclose(stream);
-}
-
-
-
-void well_ens_read(well_type * well , const char *path) {
-  char * ensfile = util_alloc_full_path(path , well_config_get_ensfile_ref(well->config));
-  well_fread(well , ensfile);
-  free(ensfile);
-}
-
-
-void well_ens_write(const well_type * well , const char * path) {
-  DEBUG_ASSERT(well)
+void well_fread(well_type * well , FILE * stream) {
+  DEBUG_ASSERT(well); 
   {
-    char * ensfile = util_alloc_full_path(path , well_config_get_ensfile_ref(well->config));
-    well_fwrite(well , ensfile);
-    free(ensfile);
+    int  size;
+    enkf_util_fread_assert_target_type(stream , WELL , __func__);
+    fread(&size , sizeof  size , 1 , stream);
+    enkf_util_fread(well->data , sizeof *well->data , size , stream , __func__);
+  }
+}
+
+
+
+void well_fwrite(const well_type * well , FILE * stream) {
+  DEBUG_ASSERT(well); 
+  {
+    const  well_config_type * config = well->config;
+    const int data_size = well_config_get_data_size(config);
+    
+    enkf_util_fwrite_target_type(stream , WELL);
+    fwrite(&data_size            , sizeof  data_size     , 1 , stream);
+    enkf_util_fwrite(well->data  , sizeof *well->data    ,data_size , stream , __func__);
   }
 }
 
 
 char * well_swapout(well_type * well , const char * path) {
   char * ensfile = util_alloc_full_path(path , well_config_get_ensfile_ref(well->config));
-  well_fwrite(well , ensfile);
+  FILE * stream = util_fopen(ensfile , "w");
+
+  well_fwrite(well , stream);
   well_free_data(well);
+
+  fclose(stream);
   return ensfile;
 }
 
 
 void well_swapin(well_type * well , const char *file) {
+  FILE * stream = util_fopen(file , "r");
   well_realloc_data(well);
-  well_fread(well  , file);
+  well_fread(well  , stream);
+  fclose(stream);
 }
 
 
@@ -182,8 +174,8 @@ VOID_ALLOC(well)
 VOID_FREE(well)
 VOID_FREE_DATA(well)
 VOID_REALLOC_DATA(well)
-VOID_ENS_WRITE (well)
-VOID_ENS_READ  (well)
+VOID_FWRITE (well)
+VOID_FREAD  (well)
 VOID_COPYC     (well)
 VOID_SWAPIN(well)
 VOID_SWAPOUT(well)

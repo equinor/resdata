@@ -114,38 +114,31 @@ void enkf_config_add_type(enkf_config_type * enkf_config,
 
   {
     config_free_ftype              * freef;
-    config_set_serial_offset_ftype * set_serial_offset;
     switch(impl_type) {
     case(FIELD):
       freef             = field_config_free__;
-      set_serial_offset = field_config_set_serial_offset__;
       break;
     case(MULTZ):
       freef             = multz_config_free__;
-      set_serial_offset = multz_config_set_serial_offset__;
       break;
     case(WELL):
       freef             = well_config_free__;
-      set_serial_offset = well_config_set_serial_offset__;
       break;
     case(MULTFLT):
       freef             = multflt_config_free__;
-      set_serial_offset = multflt_config_set_serial_offset__;
       break;
     case(EQUIL):
       freef             = equil_config_free__;
-      set_serial_offset = equil_config_set_serial_offset__;
       break;
     case(STATIC):
       freef             = ecl_static_kw_config_free__;
-      set_serial_offset = NULL;
       break;
     default:
       fprintf(stderr,"%s : invalid implementation type: %d - aborting \n",__func__ , impl_type);
       abort();
     }
     {
-      enkf_config_node_type * node = enkf_config_node_alloc(enkf_type , impl_type , data , freef , set_serial_offset);
+      enkf_config_node_type * node = enkf_config_node_alloc(enkf_type , impl_type , data , freef);
       hash_insert_hash_owned_ref(enkf_config->config_hash , key , node , enkf_config_node_free__);
     }
   }

@@ -115,7 +115,5 @@ CONFIG_SET_ECLFILE_VOID(equil);
 CONFIG_SET_ENSFILE_VOID(equil);
 GET_DATA_SIZE(equil);
 VOID_FUNC(equil_config_free , equil_config_type);
-SET_SERIAL_OFFSET(equil);
-VOID_SET_SERIAL_OFFSET(equil);
 
 

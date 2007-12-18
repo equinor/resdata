@@ -26,8 +26,8 @@ multflt_type   * multflt_alloc_mean(int , const multflt_type **);
 void             multflt_TEST();
 
 VOID_ECL_WRITE_HEADER  (multflt)
-VOID_ENS_WRITE_HEADER  (multflt)
-VOID_ENS_READ_HEADER   (multflt)
+VOID_FWRITE_HEADER  (multflt)
+VOID_FREAD_HEADER   (multflt)
 VOID_COPYC_HEADER      (multflt);
 VOID_SWAPOUT_HEADER(multflt);
 VOID_SWAPIN_HEADER(multflt);

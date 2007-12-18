@@ -154,6 +154,23 @@ size_t enkf_util_deserialize(double * node_data , const bool * active , size_t n
   return new_node_offset;
 }
 
+
+
+void enkf_util_fread_assert_target_type(FILE * stream , enkf_impl_type target_type , const char *caller) {
+  enkf_impl_type file_type;
+  file_type = util_fread_int(stream);
+  if (file_type != target_type) {
+    fprintf(stderr,"%s/%s: wrong target type in file - aborting \n",__func__ , caller);
+    abort();
+  }
+}
+
+
+void enkf_util_fwrite_target_type(FILE * stream , enkf_impl_type target_type) {
+  util_fwrite_int(target_type , stream);
+}
+
+
 /*
 size_t util_copy_strided_vector(const void * _src, size_t src_size , int src_stride , void * _target , int target_stride , size_t target_size ,  int type_size , bool * complete) {
   const char * src    = (const char *) _src;

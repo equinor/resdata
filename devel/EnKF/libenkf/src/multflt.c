@@ -135,43 +135,35 @@ void multflt_ecl_write(const multflt_type * multflt, const char * path) {
 */
 
 
-void multflt_fwrite(const multflt_type *multflt , const char *file ) {
-  FILE * stream   = enkf_util_fopen_w(file , __func__);
+void multflt_fwrite(const multflt_type *multflt , FILE * stream) {
+  DEBUG_ASSERT(multflt);
+  enkf_util_fwrite_target_type(stream , MULTFLT);
   scalar_stream_fwrite(multflt->scalar , stream);
-  fclose(stream);
 }
 
 
-void multflt_fread(multflt_type * multflt , const char * file) {
-  FILE * stream   = enkf_util_fopen_r(file , __func__);
+void multflt_fread(multflt_type * multflt , FILE * stream) {
+  DEBUG_ASSERT(multflt);
+  enkf_util_fread_assert_target_type(stream , MULTFLT , __func__);
   scalar_stream_fread(multflt->scalar , stream);
-  fclose(stream);
 }
 
-
-void multflt_ens_read(multflt_type * multflt , const char * path) {
-  char * ens_file = multflt_alloc_ensfile(multflt , path);
-  multflt_fread(multflt , ens_file);
-  free(ens_file);
-}
-
-void multflt_ens_write(const multflt_type * multflt, const char * path) {
-  char * ens_file = multflt_alloc_ensfile(multflt , path);
-  multflt_fwrite(multflt,ens_file);
-  free(ens_file);
-}
 
 
 char * multflt_swapout(multflt_type * multflt , const char * path) {
   char * ensfile = multflt_alloc_ensfile(multflt , path);
-  multflt_fwrite(multflt , ensfile);
+  FILE * stream  = util_fopen(ensfile , "w");
+  multflt_fwrite(multflt , stream);
   multflt_free_data(multflt);
+  fclose(stream);
   return ensfile;
 }
 
 void multflt_swapin(multflt_type * multflt , const char * file) {
+  FILE * stream = util_fopen(file , "r");
   multflt_realloc_data(multflt);
-  multflt_fread(multflt , file);
+  multflt_fread(multflt , stream);
+  fclose(stream);
 }
 
 
@@ -260,9 +252,9 @@ VOID_DESERIALIZE (multflt);
 /******************************************************************/
 
 VOID_ECL_WRITE (multflt)
-VOID_ENS_WRITE (multflt)
-VOID_ENS_READ  (multflt)
-VOID_COPYC     (multflt)
-VOID_FUNC      (multflt_sample    , multflt_type)
-VOID_FUNC      (multflt_free      , multflt_type)
+VOID_FWRITE (multflt)
+VOID_FREAD  (multflt)
+VOID_COPYC  (multflt)
+VOID_FUNC   (multflt_sample    , multflt_type)
+VOID_FUNC   (multflt_free      , multflt_type)
 

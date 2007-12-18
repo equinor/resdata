@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <enkf_types.h>
 
 
 /*****************************************************************/
@@ -230,6 +231,7 @@ void   enkf_util_fwrite(const void *, int , int , FILE *, const char * );
 void   enkf_util_fread ( void *, int , int , FILE *, const char * );
 
 double enkf_util_rand_normal(double , double );
-
+void   enkf_util_fread_assert_target_type(FILE * , enkf_impl_type , const char *);
+void   enkf_util_fwrite_target_type(FILE * , enkf_impl_type);
 
 #endif

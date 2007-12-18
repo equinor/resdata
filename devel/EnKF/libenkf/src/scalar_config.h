@@ -15,7 +15,6 @@ typedef struct scalar_config_struct scalar_config_type;
 
 struct scalar_config_struct {
   int data_size;            
-  int serial_offset;        
   int internal_offset;
   logmode_type    ** logmode;
   double 	   * mean;
@@ -42,8 +41,5 @@ CONFIG_SET_ENSFILE_HEADER(scalar);
 GET_DATA_SIZE_HEADER(scalar);
 CONFIG_SET_ECLFILE_HEADER_VOID(scalar);
 CONFIG_SET_ENSFILE_HEADER_VOID(scalar);
-SET_SERIAL_OFFSET_HEADER(scalar);
-GET_SERIAL_OFFSET_HEADER(scalar);
-VOID_SET_SERIAL_OFFSET_HEADER(scalar);
 VOID_FUNC_HEADER(scalar_config_free);
 #endif

@@ -158,6 +158,3 @@ void scalar_config_free(scalar_config_type * scalar_config) {
 
 GET_DATA_SIZE(scalar);
 VOID_FUNC(scalar_config_free , scalar_config_type);
-SET_SERIAL_OFFSET(scalar);
-GET_SERIAL_OFFSET(scalar);
-VOID_SET_SERIAL_OFFSET(scalar);

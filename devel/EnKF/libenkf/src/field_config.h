@@ -57,8 +57,5 @@ void                field_config_get_ijk(const field_config_type * , int , int *
 CONFIG_GET_ECL_KW_NAME_HEADER(field);
 CONFIG_SET_ECLFILE_HEADER_VOID(field);
 CONFIG_SET_ENSFILE_HEADER_VOID(field);
-SET_SERIAL_OFFSET_HEADER(field);
-VOID_SET_SERIAL_OFFSET_HEADER(field);
-GET_SERIAL_OFFSET_HEADER(field);
 VOID_FUNC_HEADER(field_config_free);
 #endif

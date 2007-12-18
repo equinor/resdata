@@ -33,8 +33,8 @@ typedef int   	      (deserialize_ftype)       (void *       	, /* Node object  
 typedef void * 	      (fread_alloc_ftype)          (const void * , FILE *);
 typedef void * 	      (alloc_ftype)                (const void *);
 typedef void   	      (ecl_write_ftype)            (const void * , const char *);
-typedef void   	      (ens_read_ftype)             (      void * , const char *);
-typedef void   	      (ens_write_ftype)            (const void * , const char *);
+typedef void   	      (fread_ftype)                (      void * , FILE *);
+typedef void   	      (fwrite_ftype)               (const void * , FILE *);
 typedef void          (swapin_ftype)      	   (void * , const char *);
 typedef char *        (swapout_ftype)     	   (void * , const char *);
 typedef void   	      (sample_ftype)     	   (      void *);
@@ -60,8 +60,8 @@ enkf_node_type * enkf_node_alloc_old(const char *  	       ,  /*  1  */
 				 const enkf_config_node_type *  ,  /*  2  */
 				 alloc_ftype * 	       ,  /*  3  */    
 				 ecl_write_ftype *     ,  /*  4  */
-				 ens_read_ftype *      ,  /*  5  */
-				 ens_write_ftype *     ,  /*  6  */
+				 fread_ftype *         ,  /*  5  */
+				 fwrite_ftype *        ,  /*  6  */
 				 swapout_ftype *       ,  /*  7  */ 
 				 swapin_ftype  *       ,  /*  8  */
 				 copyc_ftype * 	       ,  /*  9  */
@@ -83,10 +83,10 @@ void             enkf_node_ecl_write (const enkf_node_type *, const char *);
 /*void             enkf_node_ecl_read  (enkf_node_type * , const char *);*/
 void             enkf_node_sample(enkf_node_type *enkf_node);
 
-void             enkf_node_ens_write (const enkf_node_type * , const char *);
+void             enkf_node_fwrite (const enkf_node_type * , const char *);
 int              enkf_node_serialize(enkf_node_type * , size_t , double * , size_t , size_t , bool *);
 void             enkf_node_clear     (enkf_node_type *);
-void             enkf_node_ens_read  (enkf_node_type * , const char *);
+void             enkf_node_fread  (enkf_node_type * , const char *);
 const char     * enkf_node_get_key_ref(const enkf_node_type * );
 bool enkf_node_swapped(const enkf_node_type *);
 const char * enkf_node_get_swapfile(const enkf_node_type *);

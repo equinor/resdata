@@ -60,54 +60,30 @@ char * ecl_static_kw_alloc_ensfile(const ecl_static_kw_type * ecl_static_kw , co
 }
 
 
-void ecl_static_kw_fread(ecl_static_kw_type * ecl_static_kw , const char * file) {
-  if (ecl_static_kw->ecl_kw != NULL) {
-    fprintf(stderr,"%s: Internal  programming error - should be called with ecl_kw == NULL - aborting \n",__func__);
-    abort();
-  }
-  {
-    const bool endian_convert = true;  /* Should be stored in config somewhere ... */ 
-    const bool fmt_file       = false;
-    
-    fortio_type * fortio = fortio_open(file , "r" , endian_convert );
-    ecl_static_kw->ecl_kw = ecl_kw_fread_alloc( fortio , fmt_file);
-    fortio_close(fortio);
-  }
-}
-
-void ecl_static_kw_ens_read(ecl_static_kw_type * ecl_static_kw , const char * path) {
-  char * ensfile = ecl_static_kw_alloc_ensfile(ecl_static_kw , path);
-  ecl_static_kw_fread(ecl_static_kw , ensfile);
-  free( ensfile );
+void ecl_static_kw_fread(ecl_static_kw_type * ecl_static_kw , FILE * stream) {
+  DEBUG_ASSERT(ecl_static_kw);
+  enkf_util_fread_assert_target_type(stream , STATIC , __func__);
+  ecl_kw_fread_realloc_compressed(ecl_static_kw->ecl_kw , stream);
 }
 
 
-void ecl_static_kw_fwrite(const ecl_static_kw_type * ecl_static_kw , const char * file) {
-  DEBUG_ASSERT(ecl_static_kw)
-  {
-    fortio_type * fortio = fortio_open(file , "w" , ecl_kw_get_endian_convert(ecl_static_kw->ecl_kw));
-    ecl_kw_fwrite(ecl_static_kw->ecl_kw , fortio);
-    fortio_close(fortio);
-  }
+void ecl_static_kw_fwrite(const ecl_static_kw_type * ecl_static_kw , FILE * stream) {
+  DEBUG_ASSERT(ecl_static_kw);
+  enkf_util_fwrite_target_type(stream , STATIC);
+  ecl_kw_fwrite_compressed(ecl_static_kw->ecl_kw , stream);
 }
 
 
-void ecl_static_kw_ens_write(const ecl_static_kw_type * ecl_static_kw , const char * path) {
-  DEBUG_ASSERT(ecl_static_kw)
-  {  
-    char * ensfile = ecl_static_kw_alloc_ensfile(ecl_static_kw , path);
-    ecl_static_kw_fwrite(ecl_static_kw , ensfile);
-    free( ensfile );
-  }
-}
 
 
 char * ecl_static_kw_swapout(ecl_static_kw_type * ecl_static_kw , const char * path) {
-  DEBUG_ASSERT(ecl_static_kw)
+  DEBUG_ASSERT(ecl_static_kw);
   {
     char * ensfile = ecl_static_kw_alloc_ensfile(ecl_static_kw , path);
-    ecl_static_kw_fwrite(ecl_static_kw , ensfile);
+    FILE * stream  = util_fopen(ensfile , "w");
+    ecl_static_kw_fwrite(ecl_static_kw , stream);
     ecl_static_kw_free_data(ecl_static_kw);
+    fclose(stream);
     return ensfile;
   }
 }
@@ -115,8 +91,12 @@ char * ecl_static_kw_swapout(ecl_static_kw_type * ecl_static_kw , const char * p
 
 
 void ecl_static_kw_swapin(ecl_static_kw_type * ecl_static_kw , const char * file) {
-  DEBUG_ASSERT(ecl_static_kw)
-  ecl_static_kw_fread(ecl_static_kw , file);
+  DEBUG_ASSERT(ecl_static_kw);
+  {
+    FILE *stream = util_fopen(file , "r");
+    ecl_static_kw_fread(ecl_static_kw , stream);
+    fclose(stream);
+  }
 }
 
 
@@ -127,7 +107,7 @@ VOID_ALLOC_ENSFILE(ecl_static_kw);
 VOID_ALLOC(ecl_static_kw)
 VOID_FREE(ecl_static_kw)
 VOID_FREE_DATA(ecl_static_kw)
-VOID_ENS_WRITE (ecl_static_kw)
-VOID_ENS_READ  (ecl_static_kw)
+VOID_FWRITE (ecl_static_kw)
+VOID_FREAD  (ecl_static_kw)
 VOID_COPYC(ecl_static_kw)
 

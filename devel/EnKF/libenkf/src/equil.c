@@ -87,43 +87,39 @@ static char * equil_alloc_ensfile(const equil_type * equil, const char * path) {
 }
 
 
-void equil_fwrite(const equil_type * equil, const char *file) {
-  FILE * stream       = enkf_util_fopen_w(file , __func__);
+void equil_fwrite(const equil_type * equil, FILE * stream) {
+  DEBUG_ASSERT(equil);
+  enkf_util_fwrite_target_type(stream , EQUIL);
   scalar_stream_fwrite(equil->scalar , stream);
-  fclose(stream);
 }
 
-void equil_ens_write(const equil_type * equil, const char * path) {
-  char * ensfile = equil_alloc_ensfile(equil , path);
-  equil_fwrite(equil , ensfile);
-  free(ensfile);
+void equil_fread(equil_type * equil , FILE * stream) {
+  DEBUG_ASSERT(equil);
+  enkf_util_fread_assert_target_type(stream , EQUIL , __func__);
+  scalar_stream_fread(equil->scalar , stream);
 }
+
 
 char * equil_swapout(equil_type * equil , const char * path) {
   char * ensfile = equil_alloc_ensfile(equil , path);
-  equil_fwrite(equil , ensfile);
+  FILE * stream  = util_fopen(ensfile , "w");
+  equil_fwrite(equil , stream);
   equil_free_data(equil);
+  fclose(stream);
   return ensfile;
 }
 
 
-void equil_fread(equil_type * equil , const char *file) {
-  FILE * stream   = enkf_util_fopen_r(file , __func__);
-  scalar_stream_fread(equil->scalar , stream);
+
+
+
+void equil_swapin(equil_type * equil , const char *file) {
+  FILE * stream = util_fopen(file , "r");
+  equil_realloc_data(equil);
+  equil_fread(equil , stream);
   fclose(stream);
 }
 
-void equil_swapin(equil_type * equil , const char *file) {
-  equil_realloc_data(equil);
-  equil_fread(equil , file);
-}
-
-
-void equil_ens_read(equil_type * equil , const char * path) {
-  char * ensfile = equil_alloc_ensfile(equil , path);
-  equil_fread(equil , ensfile);
-  free(ensfile);
-}
 
 
 
@@ -161,8 +157,8 @@ VOID_DESERIALIZE (equil);
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/
 VOID_ECL_WRITE (equil)
-VOID_ENS_WRITE (equil)
-VOID_ENS_READ  (equil)
+VOID_FWRITE (equil)
+VOID_FREAD  (equil)
 VOID_COPYC     (equil)
 VOID_FUNC      (equil_sample    , equil_type)
 VOID_FUNC      (equil_free      , equil_type)

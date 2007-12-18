@@ -11,7 +11,6 @@ struct enkf_config_node_struct {
   enkf_var_type  	    	   enkf_type; 
   char 		     * ensfile;          
   char 		     * eclfile;          
-  config_set_serial_offset_ftype   * set_serial_offset;
   void                      	   * data; /* This points to the config object of the actual implementation. */
 } ;
 
@@ -20,13 +19,11 @@ struct enkf_config_node_struct {
 enkf_config_node_type * enkf_config_node_alloc(enkf_var_type              enkf_type,
 					       enkf_impl_type             impl_type,
 					       const void                      * data, 
-					       config_free_ftype               * freef,
-					       config_set_serial_offset_ftype  * set_serial_offset) {
+					       config_free_ftype               * freef) {
   
   enkf_config_node_type * node = malloc( sizeof *node);
   node->data = (void *) data;
   node->freef              = freef;
-  node->set_serial_offset  = set_serial_offset;
   node->enkf_type     	   = enkf_type;
   node->impl_type     	   = impl_type;
   node->ensfile            = NULL;

@@ -183,11 +183,6 @@ int multz_config_get_data_size(const multz_config_type * multz_config) {
   return scalar_config_get_data_size(multz_config->scalar_config);
 }
 
-void multz_config_set_serial_offset(multz_config_type * multz_config, int serial_offset ) {
-  scalar_config_set_serial_offset(multz_config->scalar_config , serial_offset);
-}
-
-
 /*****************************************************************/
 
 CONFIG_GET_ENSFILE(multz);
@@ -197,7 +192,6 @@ CONFIG_SET_ENSFILE(multz);
 CONFIG_SET_ECLFILE_VOID(multz);
 CONFIG_SET_ENSFILE_VOID(multz);
 VOID_FUNC(multz_config_free , multz_config_type);
-VOID_SET_SERIAL_OFFSET(multz);
 
 							 
 

@@ -23,6 +23,8 @@ void             multz_sample(multz_type *);
 void             multz_truncate(multz_type *);
 multz_type     * multz_alloc_mean(int , const multz_type **);
 void             multz_TEST(void);
+void             multz_fread(multz_type * , FILE * );
+void             multz_fwrite(const multz_type * , FILE * );
 
 
 MATH_OPS_HEADER(multz);
@@ -39,8 +41,8 @@ VOID_SWAPOUT_HEADER(multz)
 VOID_SERIALIZE_HEADER  (multz)
 VOID_DESERIALIZE_HEADER  (multz)
 VOID_ECL_WRITE_HEADER (multz)
-VOID_ENS_WRITE_HEADER (multz)
-VOID_ENS_READ_HEADER  (multz)
+VOID_FWRITE_HEADER (multz)
+VOID_FREAD_HEADER  (multz)
 
 VOID_FUNC_HEADER       (multz_sample   );
 VOID_FUNC_HEADER       (multz_isqrt    );

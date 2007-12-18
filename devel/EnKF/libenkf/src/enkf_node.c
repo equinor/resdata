@@ -29,8 +29,8 @@ struct enkf_node_struct {
   alloc_ftype         *alloc;
   fread_alloc_ftype   *fread_alloc;
   ecl_write_ftype     *ecl_write;
-  ens_read_ftype      *ens_read;
-  ens_write_ftype     *ens_write;
+  fread_ftype         *fread_f;
+  fwrite_ftype        *fwrite_f;
   swapin_ftype        *swapin;
   swapout_ftype       *swapout;
 
@@ -174,7 +174,7 @@ void enkf_node_realloc_data(enkf_node_type * node) {
 
 
 
-
+/*
 enkf_node_type * enkf_node_alloc_old(const char *node_key, 
 				 const enkf_config_node_type * config    , 
 				 alloc_ftype        * alloc     , 
@@ -210,7 +210,7 @@ enkf_node_type * enkf_node_alloc_old(const char *node_key,
   enkf_node_realloc_data(node);
   return node;
 }
-
+*/
 
 
 
@@ -268,14 +268,16 @@ void enkf_node_ecl_write(const enkf_node_type *enkf_node , const char *path) {
   enkf_node->ecl_write(enkf_node->data , path);
 }
 
-void enkf_node_ens_write(const enkf_node_type *enkf_node , const char * path) {
-  FUNC_ASSERT(enkf_node->ens_write , "ens_write");
-  enkf_node->ens_write(enkf_node->data , path);
+void enkf_node_fwrite(const enkf_node_type *enkf_node , const char * path) {
+  FILE * stream = NULL;
+  FUNC_ASSERT(enkf_node->fwrite_f , "ens_write");
+  enkf_node->fwrite_f(enkf_node->data , stream);
 }
 
-void enkf_node_ens_read(enkf_node_type *enkf_node , const char * path) {
-  FUNC_ASSERT(enkf_node->ens_read , "ens_read");
-  enkf_node->ens_read(enkf_node->data , path);
+void enkf_node_fread(enkf_node_type *enkf_node , const char * path) {
+  FILE * stream = NULL;
+  FUNC_ASSERT(enkf_node->fread_f , "ens_read");
+  enkf_node->fread_f(enkf_node->data , stream);
 }
 
 void enkf_node_ens_clear(enkf_node_type *enkf_node) {
@@ -412,8 +414,8 @@ static enkf_node_type * enkf_node_alloc_empty(const char *node_key,  const enkf_
     node->alloc       = multz_alloc__;
     node->fread_alloc = NULL; /*multz_fread_alloc__;*/
     node->ecl_write   = multz_ecl_write__;
-    node->ens_read    = multz_ens_read__;
-    node->ens_write   = multz_ens_write__;
+    node->fread_f     = multz_fread__;
+    node->fwrite_f    = multz_fwrite__;
     node->swapout     = multz_swapout__;
     node->swapin      = multz_swapin__;
     node->copyc       = multz_copyc__;
@@ -426,8 +428,8 @@ static enkf_node_type * enkf_node_alloc_empty(const char *node_key,  const enkf_
     node->alloc       = multflt_alloc__;
     node->fread_alloc = NULL; /*multflt_fread_alloc__;*/
     node->ecl_write   = multflt_ecl_write__;
-    node->ens_read    = multflt_ens_read__;
-    node->ens_write   = multflt_ens_write__;
+    node->fread_f     = multflt_fread__;
+    node->fwrite_f    = multflt_fwrite__;
     node->swapout     = multflt_swapout__;
     node->swapin      = multflt_swapin__;
     node->copyc       = multflt_copyc__;
@@ -440,8 +442,8 @@ static enkf_node_type * enkf_node_alloc_empty(const char *node_key,  const enkf_
     node->alloc       = well_alloc__;
     node->fread_alloc = NULL; /*well_fread_alloc__;*/
     node->ecl_write   = NULL;
-    node->ens_read    = well_ens_read__;
-    node->ens_write   = well_ens_write__;
+    node->fread_f     = well_fread__;
+    node->fwrite_f    = well_fwrite__;
     node->swapout     = well_swapout__;
     node->swapin      = well_swapin__;
     node->copyc       = well_copyc__;
@@ -454,8 +456,8 @@ static enkf_node_type * enkf_node_alloc_empty(const char *node_key,  const enkf_
     node->alloc       = field_alloc__;
     node->fread_alloc = NULL; /*field_fread_alloc__;*/
     node->ecl_write   = field_ecl_write__;
-    node->ens_read    = field_ens_read__;
-    node->ens_write   = field_ens_write__;
+    node->fread_f     = field_fread__;
+    node->fwrite_f    = field_fwrite__;
     node->swapout     = field_swapout__;
     node->swapin      = field_swapin__;
     node->copyc       = field_copyc__;
@@ -468,8 +470,8 @@ static enkf_node_type * enkf_node_alloc_empty(const char *node_key,  const enkf_
     node->alloc       = equil_alloc__;
     node->fread_alloc = NULL; /*equil_fread_alloc__;*/
     node->ecl_write   = equil_ecl_write__;
-    node->ens_read    = equil_ens_read__;
-    node->ens_write   = equil_ens_write__;
+    node->fread_f     = equil_fread__;
+    node->fwrite_f    = equil_fwrite__;
     node->swapout     = equil_swapout__;
     node->swapin      = equil_swapin__;
     node->copyc       = equil_copyc__;
@@ -482,8 +484,8 @@ static enkf_node_type * enkf_node_alloc_empty(const char *node_key,  const enkf_
     node->alloc       = ecl_static_kw_alloc__;
     node->fread_alloc = NULL; /* ecl_static_kw_fread_alloc__;*/
     node->ecl_write   = NULL; /* ecl_static_kw_ecl_write__; */
-    node->ens_read    = ecl_static_kw_ens_read__;
-    node->ens_write   = ecl_static_kw_ens_write__;
+    node->fread_f     = ecl_static_kw_fread__;
+    node->fwrite_f    = ecl_static_kw_fwrite__;
     node->swapout     = ecl_static_kw_swapout__;
     node->swapin      = ecl_static_kw_swapin__;
     node->copyc       = ecl_static_kw_copyc__;

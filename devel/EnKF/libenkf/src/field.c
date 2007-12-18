@@ -300,10 +300,10 @@ field_type * field_copyc(const field_type *field) {
 }
 
 
-void field_fread(field_type * field , const char *file) {
-  FILE * stream   = enkf_util_fopen_r(file , __func__);
+void field_fread(field_type * field , FILE * stream) {
   int  data_size , sizeof_ctype;
   bool read_compressed;
+  enkf_util_fread_assert_target_type(stream , FIELD , __func__);
   fread(&data_size     	  , sizeof  data_size        , 1 , stream);
   fread(&sizeof_ctype 	  , sizeof  sizeof_ctype     , 1 , stream);
   fread(&read_compressed  , sizeof  read_compressed  , 1 , stream);
@@ -311,18 +311,16 @@ void field_fread(field_type * field , const char *file) {
     util_fread_compressed(field->data , stream);
   else
     enkf_util_fread(field->data , sizeof_ctype , data_size , stream , __func__);
-
-  fclose(stream);
 }
 
 
-void field_fwrite(const field_type * field , const char *file) {
+
+void field_fwrite(const field_type * field , FILE * stream) {
   const int data_size    = field_config_get_data_size(field->config);
   const int sizeof_ctype = field_config_get_sizeof_ctype(field->config);
   bool  write_compressed = field_config_write_compressed(field->config);
-
-  FILE * stream   = enkf_util_fopen_w(file , __func__);
-
+  
+  enkf_util_fwrite_target_type(stream , FIELD);
   fwrite(&data_size               ,   sizeof  data_size        , 1 , stream);
   fwrite(&sizeof_ctype            ,   sizeof  sizeof_ctype     , 1 , stream);
   fwrite(&write_compressed        ,   sizeof  write_compressed , 1 , stream);
@@ -331,7 +329,6 @@ void field_fwrite(const field_type * field , const char *file) {
   else
     enkf_util_fwrite(field->data    ,   sizeof_ctype , data_size , stream , __func__);
   
-  fclose(stream);
 }
 
 
@@ -410,31 +407,21 @@ void field_ecl_write(const field_type * field , const char * path) {
 
 
 
-void field_ens_read(field_type * field , const char *path) {
-  char * ensfile = util_alloc_full_path(path , field_config_get_ensfile_ref(field->config));
-  field_fread(field , ensfile);
-  free(ensfile);
-}
-
-
-void field_ens_write(const field_type * field , const char * path) {
-  char * ensfile = util_alloc_full_path(path , field_config_get_ensfile_ref(field->config));
-  field_fwrite(field , ensfile);
-  free(ensfile);
-}
-
-
 char * field_swapout(field_type * field , const char * path) {
   char * ensfile = util_alloc_full_path(path , field_config_get_ensfile_ref(field->config));
-  field_fwrite(field , ensfile);
+  FILE * stream  = util_fopen(path , "w");
+  field_fwrite(field , stream);
   field_free_data(field);
+  fclose(stream);
   return ensfile;
 }
 
 
 void field_swapin(field_type * field , const char *file) {
+  FILE * stream  = util_fopen(file , "r");
   field_realloc_data(field);
-  field_fread(field  , file);
+  field_fread(field  , stream);
+  fclose(stream);
 }
 
 
@@ -704,8 +691,8 @@ VOID_FREE(field)
 VOID_FREE_DATA(field)
 VOID_REALLOC_DATA(field)
 VOID_ECL_WRITE (field)
-VOID_ENS_WRITE (field)
-VOID_ENS_READ  (field)
+VOID_FWRITE (field)
+VOID_FREAD  (field)
 VOID_COPYC     (field)
 VOID_SWAPIN(field)
 VOID_SWAPOUT(field)

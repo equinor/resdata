@@ -17,8 +17,8 @@ VOID_ALLOC_ENSFILE_HEADER(ecl_static_kw);
 VOID_ALLOC_HEADER(ecl_static_kw);
 VOID_FREE_HEADER(ecl_static_kw);
 VOID_FREE_DATA_HEADER(ecl_static_kw);
-VOID_ENS_WRITE_HEADER(ecl_static_kw);
-VOID_ENS_READ_HEADER(ecl_static_kw);
+VOID_FWRITE_HEADER(ecl_static_kw);
+VOID_FREAD_HEADER(ecl_static_kw);
 VOID_COPYC_HEADER(ecl_static_kw);
 
 #endif

@@ -43,14 +43,11 @@ VOID_COPYC_HEADER      (scalar);
 VOID_ALLOC_ENSFILE_HEADER(scalar);
 VOID_SWAPIN_HEADER(scalar)
 VOID_SWAPOUT_HEADER(scalar)
-     /*VOID_SERIALIZE_HEADER  (scalar)
-       VOID_DESERIALIZE_HEADER (scalar)
-     */
-     /*VOID_TRUNCATE_HEADER(scalar)*/
-
 VOID_ECL_WRITE_HEADER (scalar)
-VOID_ENS_WRITE_HEADER (scalar)
-VOID_ENS_READ_HEADER  (scalar)
+
+     /*VOID_FWRITE_HEADER (scalar)
+       VOID_FREAD_HEADER  (scalar)
+     */
 
 VOID_FUNC_HEADER       (scalar_sample   );
 VOID_FUNC_HEADER       (scalar_isqrt    );
