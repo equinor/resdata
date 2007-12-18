@@ -204,7 +204,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
       ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , iblock);
       ecl_block_set_sim_time_summary(block , /*time_index , years_index , */ day_index , month_index , year_index);
     }
-  }
+  } 
 }
 
 
@@ -516,6 +516,11 @@ char ** ecl_sum_alloc_well_names_copy(const ecl_sum_type *ecl_sum) {
 }
 
 
+const char ** ecl_sum_get_well_names_ref(const ecl_sum_type * ecl_sum) {
+  return (const char **) ecl_sum->well_list;
+}
+
+
 int ecl_sum_get_size(const ecl_sum_type *ecl_sum) {
   return ecl_fstate_get_size(ecl_sum->data);
 }
@@ -651,3 +656,106 @@ void ecl_sum_free(ecl_sum_type *ecl_sum) {
   free(ecl_sum);
 }
 
+
+
+/*****************************************************************/
+
+ecl_sum_type * ecl_sum_fread_alloc_interactive(bool endian_convert) {
+  char ** file_list   = NULL;
+  char *  header_file = NULL;
+  int     files;
+  char * base;
+  char   path[256];
+  bool   report_mode = true;
+  ecl_sum_type * ecl_sum;
+  
+  util_read_path("Directory to load ECLIPSE summary from" , 50 , true , path);
+  base = ecl_util_alloc_base_guess(path);
+  if (base == NULL) {
+    base = util_malloc(9 , __func__);
+    util_read_string("Basename for ECLIPSE simulation" , 50 , base);
+  } else 
+    printf("%-50s: %s\n" , "Using ECLIPSE base",base);
+  
+  {
+    int formatted_files;
+    int unformatted_files;
+    int possibilities = 0;
+
+    char * unified_formatted   = ecl_util_alloc_filename(path , base , ecl_unified_summary_file , true  , 0 );
+    char * unified_unformatted = ecl_util_alloc_filename(path , base , ecl_unified_summary_file , false , 0 );
+
+    char ** formatted_list     = ecl_util_alloc_scandir_filelist(path , base , ecl_summary_file , true  , &formatted_files  );
+    char ** unformatted_list   = ecl_util_alloc_scandir_filelist(path , base , ecl_summary_file , false , &unformatted_files);
+    
+    char * formatted_header    = ecl_util_alloc_filename(path , base , ecl_summary_header_file , true  , 0 );
+    char * unformatted_header  = ecl_util_alloc_filename(path , base , ecl_summary_header_file , false , 0 );
+    
+    if (util_file_exists(unified_formatted))   possibilities++;
+    if (util_file_exists(unified_unformatted)) possibilities++;
+    if (formatted_files > 0)                   possibilities++;
+    if (unformatted_files > 0)                 possibilities++;
+
+    if (possibilities == 0) {
+      fprintf(stderr,"** WARNING: Could not find summary data in directory: %s ** \n",path);
+      files     = 0;
+      file_list = NULL;
+      header_file = NULL;
+    } else if (possibilities == 1) {
+      if (possibilities == 1) {
+	if (util_file_exists(unified_formatted)) {
+	  files = 1;
+	  file_list   = util_alloc_stringlist_copy((const char **) &unified_formatted , 1);
+	  header_file = util_alloc_string_copy(formatted_header);
+	} else if (util_file_exists(unified_unformatted)) {
+	  files = 1;
+	  file_list   = util_alloc_stringlist_copy((const char **) &unified_unformatted , 1);
+	  header_file = util_alloc_string_copy(unformatted_header);
+	} else if (formatted_files > 0) {
+	  files = formatted_files;
+	  file_list   = util_alloc_stringlist_copy((const char **) formatted_list , formatted_files);
+	  header_file = util_alloc_string_copy(formatted_header);
+	} else if (unformatted_files > 0) {
+	  files = unformatted_files;
+	  file_list   = util_alloc_stringlist_copy((const char **) unformatted_list , unformatted_files);
+	  header_file = util_alloc_string_copy(unformatted_header);
+	}
+      }
+    } else {
+      bool fmt , unified;
+      /* Should be read in interactively */  
+
+      unified = false;
+      fmt     = false;
+      if (unified) {
+	files = 1;
+	file_list = malloc(sizeof * file_list);
+	file_list[0] = ecl_util_alloc_exfilename(path , base , ecl_unified_summary_file , fmt  , 0 );
+      } else 
+	file_list = ecl_util_alloc_scandir_filelist(path , base , ecl_summary_file , fmt , &files);
+
+      if (fmt)
+	header_file = util_alloc_string_copy(formatted_header);
+      else
+	header_file = util_alloc_string_copy(unformatted_header);
+      
+    }
+    free(formatted_header);
+    free(unformatted_header);
+    free(unified_formatted);
+    free(unified_unformatted);
+    util_free_string_list(unformatted_list , unformatted_files);
+    util_free_string_list(formatted_list   , formatted_files);
+  }
+  
+  if (files > 0)
+    ecl_sum = ecl_sum_fread_alloc(header_file , files , (const char ** ) file_list , report_mode , endian_convert);
+  else
+    ecl_sum = NULL;
+
+  util_free_string_list(file_list , files); 
+  if (header_file != NULL) free(header_file);
+  free(base);
+
+  return ecl_sum;
+}

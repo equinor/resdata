@@ -45,7 +45,6 @@ void 	      ecl_kw_select_binary   (ecl_kw_type *);
 ecl_kw_type * ecl_kw_alloc_copy (const ecl_kw_type *);
 const void  * ecl_kw_copyc__(const void *);
 void        * ecl_kw_get_data_ref(const ecl_kw_type *);
-void        * ecl_kw_get_safe_data_ref(const ecl_kw_type * , ecl_type_enum );
 void          ecl_kw_memcpy(ecl_kw_type *, const ecl_kw_type *);
 void          ecl_kw_get_memcpy_data(const ecl_kw_type *, void *);
 void          ecl_kw_set_memcpy_data(ecl_kw_type * , const void *);
@@ -65,6 +64,12 @@ void          ecl_kw_fwrite_param_fortio(fortio_type *, bool  , bool , const cha
 void          ecl_kw_summarize(const ecl_kw_type * ecl_kw);
 void          ecl_kw_fread_double_param(const char * , bool , bool , double *);
 void          ecl_kw_get_data_as_double(const ecl_kw_type *, double *);
+int           ecl_kw_cmp(const ecl_kw_type *, const ecl_kw_type *, int *);
+
+
+void ecl_kw_fwrite_compressed(const ecl_kw_type * , fortio_type *);
+bool ecl_kw_fread_realloc_compressed(ecl_kw_type *  , fortio_type *);
+ecl_kw_type * ecl_kw_fread_alloc_compressed(fortio_type * );
 
 bool ecl_kw_is_grdecl_file(FILE * );
 bool ecl_kw_is_kw_file(FILE * , bool , bool );

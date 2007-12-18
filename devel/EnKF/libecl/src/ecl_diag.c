@@ -100,8 +100,13 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const 
   util_fwrite_int(min_size , stream);           			       /* Member length */         
   for (istep=0; istep < min_size; istep++) {
     int date[3];
-    util_set_date_values(ecl_sum_get_sim_time(ecl_sum_list[0] , istep) , &date[0] , &date[1] , &date[2]);
-      util_fwrite_int_vector(date , 3 , stream , __func__);  /* True time  day/month/year */
+    time_t sim_time = ecl_sum_get_sim_time(ecl_sum_list[0] , istep);
+    if (sim_time == -1) {
+      date[0] = 0; date[1] = 0; date[2] = 0;
+      fprintf(stderr,"** Warning: day/month/year not defined for summary_files \n");
+    } else util_set_date_values(ecl_sum_get_sim_time(ecl_sum_list[0] , istep) , &date[0] , &date[1] , &date[2]);
+    
+    util_fwrite_int_vector(date , 3 , stream , __func__);  /* True time  day/month/year */
   }
   for (istep=0; istep < min_size; istep++) {
     double history_value;

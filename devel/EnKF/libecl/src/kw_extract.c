@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <ecl_rft_vector.h>
 #include <ecl_grid.h>
+#include <ecl_fstate.h>
 
 
 int main(int argc, char ** argv) {
@@ -24,21 +25,23 @@ int main(int argc, char ** argv) {
     int num_kw = argc - 3;
     fortio_type * fortio_src;
     fortio_type * fortio_target;
-
-    bool fmt_file;
     int ikw;
+    bool fmt_src , fmt_target;
     
-    ecl_util_get_file_type(src_file , NULL , &fmt_file , NULL);
-    fortio_src    = fortio_open(src_file    , "r" , endian_convert);
-    fortio_target = fortio_open(target_file , "w" , endian_convert);
+    fmt_src           = ecl_fstate_fmt_file(src_file);
+    fortio_src        = fortio_open(src_file    , "r" , endian_convert);
+    fortio_target     = fortio_open(target_file , "w" , endian_convert);
+    fmt_target    = fmt_src; /* Can in principle be different */
     {
-      ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_convert);
+      ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(fmt_src , endian_convert);
       for (ikw = 0; ikw < num_kw; ikw++) {
-	if (ecl_kw_fseek_kw(kw_list[ikw] , fmt_file , true , false , fortio_src)) {
+	if (ecl_kw_fseek_kw(kw_list[ikw] , fmt_src , true , false , fortio_src)) {
+	  ecl_kw_set_fmt_file(ecl_kw , fmt_src);
 	  ecl_kw_fread_realloc(ecl_kw , fortio_src);
+	  ecl_kw_set_fmt_file(ecl_kw , fmt_target);
 	  ecl_kw_fwrite(ecl_kw , fortio_target);
 	} else 
-	  fprintf(stderr,"** Warning: could not locate keyword:%s in file:%s \n",kw_list[ikw] , src_file);
+	  fprintf(stderr,"** Warning: could not locate keyword:%s in file:%s **\n",kw_list[ikw] , src_file);
       }
       ecl_kw_free(ecl_kw);
     }

@@ -20,7 +20,6 @@
 struct ecl_kw_struct {
   bool  fmt_file;
   int   size;
-  int 	data_size;
   int 	sizeof_ctype;
   int   fmt_linesize;
   int   blocksize;
@@ -61,6 +60,13 @@ static const char *ecl_kw_header_write_fmt = " '%-8s' %11d '%-4s'\n";
 static void ecl_kw_assert_index(const ecl_kw_type *ecl_kw , int index, const char *caller) {
   if (index < 0 || index >= ecl_kw->size) {
     fprintf(stderr,"Invalid index lookup in:%s aborting \n",caller);
+    abort();
+  }
+}
+
+static void ecl_kw_assert_binary_file(const ecl_kw_type * ecl_kw , const char * caller) {
+  if (ecl_kw->fmt_file) {
+    fprintf(stderr,"%s: Attempt to read/write kewyord:%s compressed to formatted file - aborting \n",caller , ecl_kw_get_header_ref(ecl_kw));
     abort();
   }
 }
@@ -257,7 +263,6 @@ ecl_kw_type * ecl_kw_alloc_empty(bool fmt_file , bool endian_convert) {
   ecl_kw->data 	       = NULL;
   ecl_kw->shared_data  = false;
   ecl_kw->size         = 0;
-  ecl_kw->data_size    = 0;
   ecl_kw->sizeof_ctype = 0;
   ecl_kw_set_fmt_file(ecl_kw , fmt_file);
   
@@ -283,7 +288,6 @@ void ecl_kw_free__(void *void_ecl_kw) {
 void ecl_kw_memcpy(ecl_kw_type *target, const ecl_kw_type *src) {
   target->fmt_file     	      = src->fmt_file;
   target->size         	      = src->size;
-  target->data_size           = src->data_size;
   target->sizeof_ctype 	      = src->sizeof_ctype;
   target->fmt_linesize 	      = src->fmt_linesize;
   target->blocksize           = src->blocksize;
@@ -763,7 +767,6 @@ void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
     abort();
   }
   ecl_kw->data = util_realloc(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , __func__);
-  ecl_kw->data_size = ecl_kw->size;
 }
 
 
@@ -839,7 +842,6 @@ ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio , bool fmt_file) {
     ecl_kw = NULL;
   }
 
-  if (ecl_kw == NULL) printf("%s: returning NULL \n",__func__);
   return ecl_kw;
 }
 
@@ -1084,19 +1086,48 @@ void ecl_kw_fwrite(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
   ecl_kw_fwrite_data(ecl_kw , fortio);
 }
 
+void ecl_kw_fwrite_compressed(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
+  ecl_kw_assert_binary_file(ecl_kw , __func__);
+  ecl_kw_fwrite_header(ecl_kw , fortio);
+  /*
+    Dumps out nine characters - including a \0 - for every char variable 
+  */
+  util_fwrite_compressed(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , fortio_get_FILE(fortio));
+}
+
+
+bool ecl_kw_fread_realloc_compressed(ecl_kw_type * ecl_kw , fortio_type *fortio) {
+  bool OK;
+  ecl_kw_assert_binary_file(ecl_kw , __func__);
+  OK = ecl_kw_fread_header(ecl_kw , fortio);
+  if (OK) {
+    ecl_kw_alloc_data(ecl_kw);
+    util_fread_compressed(ecl_kw->data , fortio_get_FILE(fortio));
+  } 
+  return OK;
+}
+
+
+ecl_kw_type * ecl_kw_fread_alloc_compressed(fortio_type * fortio) {
+  bool OK;
+  bool fmt_file       = util_fmt_bit8_stream(fortio_get_FILE(fortio));
+  ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(fmt_file , fortio_get_endian_flip(fortio));
+  ecl_kw_assert_binary_file(ecl_kw , __func__);
+
+  OK = ecl_kw_fread_realloc_compressed(ecl_kw , fortio);
+  if (!OK) {
+    free(ecl_kw);
+    ecl_kw = NULL;
+  }
+
+  return ecl_kw;
+}
+
+
 
 void * ecl_kw_get_data_ref(const ecl_kw_type *ecl_kw) {
   return ecl_kw->data;
 }
-
-void * ecl_kw_get_safe_data_ref(const ecl_kw_type *ecl_kw, ecl_type_enum ecl_type) {
-  if (ecl_type != ecl_kw->ecl_type) {
-    fprintf(stderr,"%s asked for type:%s  - internal ecl_kw_type is:%s - aborting \n",__func__ , __get_ecl_str_type(ecl_type) , __get_ecl_str_type(ecl_kw->ecl_type));
-    abort();
-  }
-  return ecl_kw->data;
-}
-
 
 
 int ecl_kw_get_size(const ecl_kw_type * ecl_kw) {
@@ -1639,13 +1670,8 @@ bool ecl_kw_is_grdecl_file(FILE * stream) {
   const long int init_pos = ftell(stream);
   bool grdecl_file;
   bool at_eof = false;
-  /*printf("%s: starting at_eof:%d \n",__func__,at_eof);*/
   util_fskip_chars(stream ,  " \r\n\t"  , &at_eof); /* Skipping intial space */
-  /*printf("%s: Have skipped initial characters pos:%d at_eof:%d \n",__func__ , ftell(stream) , at_eof);*/
   util_fskip_cchars(stream , " \r\n\t" , &at_eof); /* Skipping PORO/PERMX/... */
-  /*printf("%s: Have skipped keyword name \n",__func__);
-  printf("%s current position:%d at_eof:%d \n",__func__,ftell(stream) , at_eof);
-  */
   if (at_eof) 
     grdecl_file = false;
   else {
@@ -1653,7 +1679,6 @@ bool ecl_kw_is_grdecl_file(FILE * stream) {
     {
       int c;
       do {
-	/*printf("%s: inner loop \n",__func__);*/
 	c = fgetc(stream);
 	if (c == '\r' || c == '\n') 
 	  break;

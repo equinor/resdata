@@ -11,7 +11,7 @@
 #include <util.h>
 #include <time.h>
 #include <ecl_util.h>
-
+#include <msg.h>
 
 /*
   summary files: param[0..4]      = {TIME , YEARS , DAY , MONTH , YEAR}.
@@ -49,7 +49,7 @@ bool ecl_fstate_fmt_file(const char *filename) {
   bool fmt_file;
   if (util_file_exists(filename)) {
     if (util_file_size(filename) > min_size)
-      fmt_file = util_fmt_bit8(filename , 131072);
+      fmt_file = util_fmt_bit8(filename);
     else {
       ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
       if (file_type == ecl_other_file) {
@@ -192,7 +192,11 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
       ecl_fstate_add_block(ecl_fstate , ecl_block);
     }
     fortio_close(fortio);
-  } else {
+  } else {    
+    /*
+      msg_type * msg = msg_alloc("Loading : ");
+      msg_show(msg);
+    */
     ecl_fstate->files = files;
     {
       int file;
@@ -200,6 +204,9 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	bool at_eof = false;
 	fortio_type *fortio = fortio_open(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
 	int report_nr = -1;
+	/*
+	  msg_update(msg , ecl_fstate->filelist[file]);
+	*/
 	
 	if (file_type == ecl_restart_file || file_type == ecl_summary_file)
 	  report_nr = ecl_util_filename_report_nr(ecl_fstate->filelist[file]);
@@ -244,13 +251,13 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	}
 	fortio_close(fortio);
       }
+      /*
+	msg_free(msg , true);
+      */
     }
   }
   return ecl_fstate;
 }
-
-
-
 
 
 

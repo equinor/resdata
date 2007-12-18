@@ -26,6 +26,7 @@ void           ecl_sum_set_fmt_mode(ecl_sum_type *, int );
 void           ecl_sum_save(const ecl_sum_type * );
 void           ecl_sum_set_header_data(ecl_sum_type * , const char * , void *);
 char        ** ecl_sum_alloc_well_names_copy(const ecl_sum_type *);
+const  char ** ecl_sum_get_well_names_ref(const ecl_sum_type * );
 bool           ecl_sum_get_report_mode(const ecl_sum_type * );
 time_t         ecl_sum_get_start_time(const ecl_sum_type * );
 time_t         ecl_sum_get_sim_time(const ecl_sum_type * , int );
@@ -36,4 +37,5 @@ void           ecl_sum_max_min(const ecl_sum_type * , int , const char ** , int 
 void           ecl_sum_well_max_min(const ecl_sum_type * , const char * , int  , const char **  , double *, double * , bool);
 double         ecl_sum_eval_well_misfit(const ecl_sum_type * , const char * , int , const char ** , const double * );
 double         ecl_sum_eval_misfit(const ecl_sum_type * , int , const char ** , int , const char ** ,  const double * , double * );
+ecl_sum_type * ecl_sum_fread_alloc_interactive(bool );
 #endif
