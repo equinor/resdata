@@ -281,6 +281,8 @@ VOID_SWAPOUT(multz)
 VOID_SERIALIZE(multz)
 VOID_DESERIALIZE(multz)
 VOID_TRUNCATE(multz)
+ENSEMBLE_MULX_VECTOR(multz)
+ENSEMBLE_MULX_VECTOR_VOID(multz)
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

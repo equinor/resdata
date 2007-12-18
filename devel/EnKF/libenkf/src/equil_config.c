@@ -34,28 +34,26 @@ equil_config_type * equil_config_alloc(int size, const char * eclfile , const ch
 }
 
 
-equil_config_type * equil_fscanf_alloc(const char * config_file, const char * eclfile , const char *ensfile) {
+equil_config_type * equil_config_fscanf_alloc(const char * config_file, const char * eclfile , const char *ensfile) {
   FILE * stream = util_fopen(config_file , "r");
   int size = util_count_file_lines(stream);
   int ieq;
   equil_config_type * config = equil_config_alloc(size , eclfile , ensfile);
   for (ieq = 0; ieq < size; ieq++) {
-    double woc,goc;
-    int elements_read = fscanf(stream , "%lg %lg %lg %lg %lg %lg %d %d %d" ,    
+    int elements_read = fscanf(stream , "%lg %lg %lg %lg %d %d %d" ,    
 			       &config->datum_depth[ieq]  		   , 
 			       &config->datum_P[ieq]      		   ,
-			       &woc                                        ,
 			       &config->oil_water_Pc[ieq] 		   , 
-			       &goc                                        ,
 			       &config->gas_oil_Pc[ieq]   		   ,           
 			       &config->live_oil_init_mode[ieq]            ,
 			       &config->black_oil_wgas_init_mode[ieq]      ,
 			       &config->init_accuracy[ieq]);
-    if (elements_read != 9) {
+    if (elements_read != 7) {
       fprintf(stderr,"%s: something wrong on line:%d in file: %s - aborting \n",__func__ , ieq + 1 , config_file);
       abort();
     }
-    
+    scalar_config_fscanf_line2(config->scalar_config , ieq        , stream);  /* WOC */
+    scalar_config_fscanf_line2(config->scalar_config , ieq + size , stream);  /* GOC */
   }
   
   fclose(stream);

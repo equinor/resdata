@@ -4,6 +4,7 @@
 typedef double (transform_ftype)                  (double , const void_arg_type *);
 
 
+
 /*
   Observe that seemingly random numbers are used in these enum definitions, 
   that is to be able to catch it if a wrong constant is used.

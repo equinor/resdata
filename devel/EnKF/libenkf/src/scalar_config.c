@@ -45,6 +45,8 @@ scalar_config_type * scalar_config_alloc_empty(int size) {
       scalar_config->output_transform_name[i] = NULL;
       scalar_config->void_arg[i]              = NULL;
       scalar_config->active[i]                = false;
+      scalar_config->std[i]                   = 1.0;
+      scalar_config->mean[i]                  = 0.0;
     }
   }
   return scalar_config;
@@ -89,9 +91,7 @@ void scalar_config_fscanf_line(scalar_config_type * config , int line_nr , FILE 
   int logmode    = 0;
   double   mu , sigma;
   int scan_count;
-  scan_count = fscanf(stream , "%lg  %lg",&mu,&sigma);
-  /*scan_count = fscanf(stream , "%lg  %lg  %d  %s" , &mu , &sigma , &logmode , output_transform);*/
-  
+  scan_count   = fscanf(stream , "%lg  %lg",&mu,&sigma);
   
   if (scan_count != 2) {
     util_rewind_line(stream);
@@ -120,6 +120,17 @@ void scalar_config_fscanf_line(scalar_config_type * config , int line_nr , FILE 
     }
   }
   config->logmode[line_nr] 		 = logmode_alloc(10.0 , logmode);
+}
+
+
+void scalar_config_fscanf_line2(scalar_config_type * config , int line_nr , FILE * stream) {
+  printf("line_nr:%d \n",line_nr);
+  config->output_transform[line_nr] = trans_func_lookup2(stream , &config->output_transform_name[line_nr] , &config->void_arg[line_nr] , &config->active[line_nr]);
+  
+  /*
+    On the way out .... 
+  */
+  config->logmode[line_nr] 		 = logmode_alloc(10.0 , 0);
 }
 
 

@@ -26,6 +26,8 @@ void             multz_TEST(void);
 
 
 MATH_OPS_HEADER(multz);
+ENSEMBLE_MULX_VECTOR_HEADER(multz);
+ENSEMBLE_MULX_VECTOR_VOID_HEADER(multz);
 VOID_ALLOC_HEADER(multz);
 VOID_FREE_HEADER(multz);
 VOID_FREE_DATA_HEADER(multz);

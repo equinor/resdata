@@ -26,11 +26,11 @@ struct equil_config_struct {
 void                  equil_config_ecl_write(const equil_config_type *   , const double *  , const double * , FILE * );
 int                   equil_config_get_nequil(const equil_config_type * );
 equil_config_type   * equil_config_alloc(int , const char * , const char * );
-equil_config_type   * equil_config_fscanf_alloc(const char * , const char * );
 void                  equil_config_free(equil_config_type *);
 const          char * equil_config_get_ensfile_ref(const equil_config_type * );
 const          char * equil_config_get_eclfile_ref(const equil_config_type * );
 int                   equil_config_get_nequil(const equil_config_type *);
+equil_config_type   * equil_config_fscanf_alloc(const char * , const char *  , const char *);
 
 VOID_ALLOC_ENSFILE_HEADER(equil);
 CONFIG_SET_ECLFILE_HEADER_VOID(equil);

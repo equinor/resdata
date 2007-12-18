@@ -23,13 +23,13 @@
 #include <enkf_obs.h>
 #include <multflt_config.h>
 #include <multflt.h>
+#include <equil_config.h>
+#include <trans_func.h>
 
 
-transform_ftype * trans_func_lookup2(FILE * stream , char ** _func_name , void_arg_type **_void_arg);
 
 void TEST() {
-  FILE * stream = fopen("Config/test" , "r");
-  trans_func_lookup2(stream , NULL , NULL);
+  return ; 
 }
 
 
@@ -65,7 +65,7 @@ int main(void) {
   
   enkf_config_add_type(config , "EQUIL" , 
 		       parameter , EQUIL, 
-		       equil_config_alloc(10 , "EQUIL.INC" , "equil") );
+		       equil_config_fscanf_alloc("Config/equil" , "EQUIL.INC" , "equil") );
   
   enkf_config_add_type(config , "SWAT"  , ecl_restart , FIELD , 
 		       field_config_alloc("SWAT" , ecl_float_type   , nx , ny , nz , active_size , index_map , 1 , NULL , "SWAT"));
@@ -119,11 +119,11 @@ int main(void) {
 	bool unified    = false;
 	int report_step = 51;
 
-	load_arg[i] = void_arg_alloc3(sizeof state[i] , sizeof unified, sizeof report_step);
+	load_arg[i] = void_arg_alloc3(pointer_value , bool_value , int_value);
 	
-	void_arg_pack_ptr(load_arg[i] , 0 , &state[i]);
-	void_arg_pack_ptr(load_arg[i] , 1 , &unified);
-	void_arg_pack_ptr(load_arg[i] , 2 , &report_step);
+	void_arg_pack_ptr(load_arg[i]  , 0 , state[i]);
+	void_arg_pack_bool(load_arg[i] , 1 , unified);
+	void_arg_pack_int(load_arg[i]  , 2 , report_step);
 	
 	thread_pool_add_job(tp , &enkf_state_load_ecl_summary_void , load_arg[i]);
 	thread_pool_add_job(tp , &enkf_state_load_ecl_restart_void , load_arg[i]);

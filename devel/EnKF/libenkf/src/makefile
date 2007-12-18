@@ -62,7 +62,7 @@ well.o               : well.c well.h well_config.o
 enkf_config_node.o   : enkf_config.c enkf_config.h enkf_types.h enkf_macros.h
 field_config.o       : field_config.c field_config.h enkf_types.h
 field.o              : field.c field.h field_config.o enkf_types.h enkf_macros.h
-equil_config.o : enkf_util.h equil_config.c equil_config.h enkf_macros.h
+equil_config.o : enkf_util.h equil_config.c equil_config.h enkf_macros.h scalar_config.o
 equil.o        : equil.c equil_config.o equil.h enkf_macros.h enkf_types.h
 enkf_state.o   : enkf_util.h enkf_state.c enkf_state.h enkf_node.o enkf_macros.h field.o field_config.o multz.o multflt.o equil.o multz_config.o multflt_config.o equil_config.o well.o well_config.o
 multflt_config.o : multflt_config.c multflt_config.h enkf_macros.h
@@ -73,5 +73,5 @@ multz.o        : enkf_util.h multz.c multz.h multz_config.o logmode.o
 enkf_node.o    : enkf_util.h enkf_node.h enkf_node.c enkf_macros.h
 field_interC.o : field_interC.c field.o field_config.o
 field_obs.o    : field_obs.c field_obs.h field.o field_config.o
-
-
+scalar_config.o : scalar_config.c scalar_config.h enkf_macros.h trans_func.o
+trans_func.o    : trans_func.h trans_func.h 

@@ -585,6 +585,10 @@ void field_fload_rms(field_type * field , const char * filename) {
       abort();
     }
   }
+  if (rms_tagkey_get_size(data_tag) != field_config_get_volume(field->config)) {
+    fprintf(stderr,"%s: trying to import rms_data_tag from:%s with wrong size - aborting \n",__func__ , filename);
+    abort();
+  }
   field_import3D(field , rms_tagkey_get_data_ref(data_tag) , true , ecl_type);
   rms_tagkey_free(data_tag);
   rms_file_free(rms_file);
@@ -604,14 +608,16 @@ void field_fload_ecl_kw(field_type * field , const char * filename , bool endian
     fortio_close(fortio);
   }
   
-  {
+  if (field_config_get_volume(field->config) == ecl_kw_get_size(ecl_kw)) 
+    field_import3D(field , ecl_kw_get_data_ref(ecl_kw) , false , ecl_kw_get_type(ecl_kw));
+  else if (field_config_get_active_size(field->config) == ecl_kw_get_size(ecl_kw)) {
+    /* Keyword is already packed - e.g. from a restart file */
     ecl_type_enum field_type = field_config_get_ecl_type(field->config);
     ecl_type_enum kw_type    = ecl_kw_get_type(ecl_kw);
-    if (field_config_get_active_size(field->config) != ecl_kw_get_size(ecl_kw)) {
-      fprintf(stderr,"%s: trying to import ecl_kw(%s) of wrong size: field:%d  ecl_kw:%d \n",__func__ , ecl_kw_get_header_ref(ecl_kw) , field_config_get_active_size(field->config) , ecl_kw_get_size(ecl_kw));
-      abort();
-    }
     ecl_util_memcpy_typed_data(field->data , ecl_kw_get_data_ref(ecl_kw) , field_type , kw_type , ecl_kw_get_size(ecl_kw));
+  } else {
+    fprintf(stderr,"%s: trying to import ecl_kw(%s) of wrong size: field:%d  ecl_kw:%d \n",__func__ , ecl_kw_get_header_ref(ecl_kw) , field_config_get_active_size(field->config) , ecl_kw_get_size(ecl_kw));
+    abort();
   }
   ecl_kw_free(ecl_kw);
 }
@@ -705,6 +711,7 @@ VOID_SWAPIN(field)
 VOID_SWAPOUT(field)
 VOID_SERIALIZE (field);
 VOID_DESERIALIZE (field);
+ENSEMBLE_MULX_VECTOR(field);
 /******************************************************************/
 /* Anonumously generated functions used by the enkf_node object   */
 /******************************************************************/

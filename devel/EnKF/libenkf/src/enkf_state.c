@@ -223,98 +223,8 @@ static void enkf_state_add_node__2(enkf_state_type * enkf_state , const char * n
 
 
 
-static void enkf_state_add_node__1(enkf_state_type * enkf_state , const char * node_name , const enkf_config_node_type * config , enkf_impl_type impl_type) {
-  enkf_node_type *enkf_node;
-  
-  switch (impl_type) {
-  case(MULTZ):
-    enkf_node = enkf_node_alloc(node_name , config , 
-				multz_alloc__     , 
-				multz_ecl_write__ ,
-				multz_ens_read__  , 
-				multz_ens_write__ , 
-				multz_swapout__   , 
-				multz_swapin__    , 
-				multz_copyc__     , 
-				multz_sample__    , 
-				multz_serialize__ , 
-				multz_deserialize__,
-				multz_free__);
-    break;
-  case(MULTFLT):
-    enkf_node = enkf_node_alloc(node_name , config , 
-				multflt_alloc__      , 
-				multflt_ecl_write__  , 
-				multflt_ens_read__   , 
-				multflt_ens_write__  , 
-				multflt_swapout__    , 
-				multflt_swapin__     , 
-				multflt_copyc__      , 
-				multflt_sample__     , 
-				multflt_serialize__  , 
-				multflt_deserialize__,
-				multflt_free__);
-    break;
-  case(EQUIL):
-    enkf_node = enkf_node_alloc(node_name , config , 
-				equil_alloc__     , 
-				equil_ecl_write__ , 
-				equil_ens_read__  ,  
-				equil_ens_write__ , 
-				equil_swapout__   , 
-				equil_swapin__    , 
-				equil_copyc__     , 
-				equil_sample__    , 
-				equil_serialize__ , 
-				equil_deserialize__,
-				equil_free__);
-    break;
-  case(STATIC):
-    enkf_node = enkf_node_alloc(node_name , config , 
-				ecl_static_kw_alloc__     , 
-				NULL                      , 
-				ecl_static_kw_ens_read__  , 
-				ecl_static_kw_ens_write__ , 
-				ecl_static_kw_swapout__   , 
-				ecl_static_kw_swapin__    , 
-				ecl_static_kw_copyc__     , 
-				NULL                      , 
-				NULL                      , 
-				NULL                      ,
-				ecl_static_kw_free__);
-    break;
-  case(FIELD):
-    enkf_node = enkf_node_alloc(node_name , config , 
-				field_alloc__      , 
-				field_ecl_write__  , 
-				field_ens_read__   ,  
-				field_ens_write__  , 
-				field_swapout__    , 
-				field_swapin__     , 
-				field_copyc__      , 
-				NULL               , 
-				field_serialize__  , 
-				field_deserialize__,
-				field_free__);
-    break;
-  case(WELL):
-    enkf_node = enkf_node_alloc(node_name , config , 
-				well_alloc__       , 
-				NULL               , 
-				well_ens_read__    ,  
-				well_ens_write__   , 
-				well_swapout__     , 
-				well_swapin__      , 
-				well_copyc__       , 
-				NULL               , 
-				well_serialize__   , 
-				well_deserialize__ , 
-				well_free__);
-    break;
-  default:
-    fprintf(stderr,"%s: Trying to add nonexisting type:%d internal programming error --- aborting \n",__func__ , impl_type);
-    abort();
-  }
+static void enkf_state_add_node__1(enkf_state_type * enkf_state , const char * node_name , const enkf_config_node_type * config) {
+  enkf_node_type *enkf_node = enkf_node_alloc(node_name , config);
   enkf_state_add_node__2(enkf_state , node_name , enkf_node);
 }
 
@@ -336,25 +246,7 @@ void enkf_state_add_node(enkf_state_type * enkf_state , const char * node_name) 
   }
   {
     const enkf_config_node_type *config  = enkf_config_get_ref(enkf_state->config  , node_name);
-    enkf_impl_type impl_type = enkf_config_node_get_impl_type( config );
-  
-    switch(impl_type) {
-    case(MULTZ):
-      break;
-    case(MULTFLT):
-      break;
-    case(STATIC):
-      break;
-    case(FIELD):
-      break;
-    case(EQUIL):
-      break;
-    default:
-      fprintf(stderr,"%s: implementation_type: %d - not implemented - aborting \n",__func__ , impl_type);
-      abort();
-    }
-
-    enkf_state_add_node__1(enkf_state , node_name , config , impl_type);
+    enkf_state_add_node__1(enkf_state , node_name , config);
   }
 }
 
@@ -384,7 +276,7 @@ static void enkf_state_load_ecl_restart__(enkf_state_type * enkf_state , const e
       enkf_config_add_type0(enkf_state->config , kw , ecl_kw_get_size(ecl_kw) , enkf_type , impl_type);
     
     if (!enkf_state_has_node(enkf_state , kw)) 
-      enkf_state_add_node__1(enkf_state , kw , enkf_config_get_ref(enkf_state->config , kw) , impl_type); 
+      enkf_state_add_node__1(enkf_state , kw , enkf_config_get_ref(enkf_state->config , kw)); 
     
     {
       enkf_node_type * enkf_node = enkf_state_get_node(enkf_state , kw);
@@ -446,7 +338,7 @@ void enkf_state_load_ecl_summary(enkf_state_type * enkf_state, bool unified , in
   ecl_sum = ecl_sum_fread_alloc(header_file , 1 , (const char **) &summary_file , true , enkf_config_get_endian_swap(enkf_state->config));
   for (iwell = 0; iwell < Nwells; iwell++) {
     if (! enkf_state_has_node(enkf_state , well_list[iwell])) 
-      enkf_state_add_node__1(enkf_state , well_list[iwell] , enkf_config_get_ref(enkf_state->config , well_list[iwell]) , WELL); 
+      enkf_state_add_node__1(enkf_state , well_list[iwell] , enkf_config_get_ref(enkf_state->config , well_list[iwell])); 
     {
       enkf_node_type * enkf_node = enkf_state_get_node(enkf_state , well_list[iwell]);
       well_load_summary_data(enkf_node_value_ptr(enkf_node) , report_step , ecl_sum);
@@ -470,9 +362,9 @@ void * enkf_state_load_ecl_summary_void(void * input_arg) {
   bool unified;
   int report_step;
   
-  enkf_state = void_arg_get_target_ptr(arg , 0);
-  void_arg_unpack_ptr(arg , 1 , &unified);
-  void_arg_unpack_ptr(arg , 2 , &report_step);
+  enkf_state  = void_arg_get_ptr(arg , 0);
+  unified     = void_arg_get_bool(arg , 1 );
+  report_step = void_arg_get_int(arg , 2 );
 
   enkf_state_load_ecl_summary(enkf_state , unified , report_step);
   return NULL;
@@ -485,9 +377,9 @@ void * enkf_state_load_ecl_restart_void(void * input_arg) {
   bool unified;
   int report_step;
   
-  enkf_state = void_arg_get_target_ptr(arg , 0);
-  void_arg_unpack_ptr(arg , 1 , &unified);
-  void_arg_unpack_ptr(arg , 2 , &report_step);
+  enkf_state  = void_arg_get_ptr(arg , 0);
+  unified     = void_arg_get_bool(arg , 1 );
+  report_step = void_arg_get_int(arg , 2 );
 
   enkf_state_load_ecl_restart(enkf_state , unified , report_step);
   return NULL;
@@ -500,9 +392,9 @@ void * enkf_state_load_ecl_void(void * input_arg) {
   bool unified;
   int report_step;
   
-  enkf_state = void_arg_get_target_ptr(arg , 0);
-  void_arg_unpack_ptr(arg , 1 , &unified);
-  void_arg_unpack_ptr(arg , 2 , &report_step);
+  enkf_state  = void_arg_get_ptr(arg , 0);
+  unified     = void_arg_get_bool(arg , 1 );
+  report_step = void_arg_get_int(arg , 2 );
   enkf_state_load_ecl(enkf_state , unified , report_step);
   return NULL;
 }
@@ -716,17 +608,21 @@ void * enkf_ensemble_serialize_threaded(void * _void_arg) {
   int iens , iens1 , iens2 , serial_stride;
   size_t serial_size;
   double *serial_data;
-
-  void_arg_unpack_ptr(void_arg , 0 , &iens1);
-  void_arg_unpack_ptr(void_arg , 1 , &iens2);
-  void_arg_unpack_ptr(void_arg , 2 , &serial_size);
-  void_arg_unpack_ptr(void_arg , 3 , &serial_stride);
-  serial_data                  = void_arg_get_target_ptr(void_arg , 4);
-  list_node_type ** start_node = void_arg_get_target_ptr(void_arg , 5);
-  list_node_type ** next_node  = void_arg_get_target_ptr(void_arg , 6);
-  size_t * member_serial_size  = void_arg_get_target_ptr(void_arg , 7);
-  bool   * member_complete     = void_arg_get_target_ptr(void_arg , 8);
-  void_arg_unpack_ptr(void_arg , 9 , &update_mask);
+  size_t * member_serial_size;
+  bool   * member_complete;
+  list_node_type ** start_node; 
+  list_node_type ** next_node;  
+  
+  iens1       	     = void_arg_get_int(void_arg , 0 );
+  iens2       	     = void_arg_get_int(void_arg , 1 );
+  serial_size 	     = void_arg_get_size_t(void_arg , 2);
+  serial_stride      = void_arg_get_int(void_arg , 3);
+  serial_data        = void_arg_get_ptr(void_arg , 4);
+  start_node 	     = void_arg_get_ptr(void_arg , 5);
+  next_node  	     = void_arg_get_ptr(void_arg , 6);
+  member_serial_size = void_arg_get_ptr(void_arg , 7);
+  member_complete    = void_arg_get_ptr(void_arg , 8);
+  update_mask        = void_arg_get_int(void_arg , 9);
   for (iens = iens1; iens < iens2; iens++) {
     list_node_type  * list_node  = start_node[iens];
     bool node_complete           = true;  
@@ -790,16 +686,16 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
       iens1[ithread] = ithread * thread_block_size;
       iens2[ithread] = iens1[ithread] + thread_block_size;
       
-      void_arg[ithread] = void_arg_alloc10(sizeof  iens1[0]      ,      /* 0 */
-					   sizeof  iens2[0]      ,      /* 1 */
-					   sizeof  serial_size   ,      /* 2 */
-					   sizeof  serial_stride ,      /* 3 */
-					   sizeof  serial_data   ,      /* 4 */
-					   sizeof  start_node    ,      /* 5 */
-					   sizeof  next_node     ,      /* 6 */
-					   sizeof  member_serial_size   /* 7 */, 
-					   sizeof  member_complete,     /* 8 */ 
-					   sizeof  update_mask    );    /* 9 */
+      void_arg[ithread] = void_arg_alloc10(int_value 	 ,     /* 0 */
+					   int_value 	 ,     /* 1 */
+					   size_t_value  ,     /* 2 */
+					   int_value     ,     /* 3 */
+					   pointer_value ,     /* 4 */
+					   pointer_value ,     /* 5 */
+					   pointer_value ,     /* 6 */
+					   pointer_value ,     /* 7 */
+					   pointer_value ,     /* 8 */ 
+					   int_value       );  /* 9 */
     }
     iens2[threads-1] = ens_size;
   }
@@ -810,16 +706,16 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
       member_serial_size[iens] = 0;
     
     for (ithread =  0; ithread < threads; ithread++) {
-      void_arg_pack_ptr(void_arg[ithread] , 0 , &iens1[ithread]);
-      void_arg_pack_ptr(void_arg[ithread] , 1 , &iens2[ithread]);
-      void_arg_pack_ptr(void_arg[ithread] , 2 , &serial_size);
-      void_arg_pack_ptr(void_arg[ithread] , 3 , &serial_stride);
-      void_arg_pack_ptr(void_arg[ithread] , 4 , &serial_data);
-      void_arg_pack_ptr(void_arg[ithread] , 5 , &start_node);
-      void_arg_pack_ptr(void_arg[ithread] , 6 , &next_node);
-      void_arg_pack_ptr(void_arg[ithread] , 7 , &member_serial_size);
-      void_arg_pack_ptr(void_arg[ithread] , 8 , &member_complete);
-      void_arg_pack_ptr(void_arg[ithread] , 9 , &update_mask);
+      void_arg_pack_int(void_arg[ithread]     , 0 , iens1[ithread]);
+      void_arg_pack_int(void_arg[ithread]     , 1 , iens2[ithread]);
+      void_arg_pack_size_t(void_arg[ithread]  , 2 , serial_size);
+      void_arg_pack_int(void_arg[ithread]     , 3 , serial_stride);
+      void_arg_pack_ptr(void_arg[ithread]     , 4 , serial_data);
+      void_arg_pack_ptr(void_arg[ithread]     , 5 , start_node);
+      void_arg_pack_ptr(void_arg[ithread]     , 6 , next_node);
+      void_arg_pack_ptr(void_arg[ithread]     , 7 , member_serial_size);
+      void_arg_pack_ptr(void_arg[ithread]     , 8 , member_complete);
+      void_arg_pack_int (void_arg[ithread]    , 9 , update_mask);
     }
     
     

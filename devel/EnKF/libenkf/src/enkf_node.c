@@ -6,7 +6,12 @@
 #include <enkf_node.h>
 #include <enkf_config_node.h>
 #include <util.h>
-
+#include <multz.h>
+#include <multflt.h>
+#include <equil.h>
+#include <field.h>
+#include <well.h>
+#include <ecl_static_kw.h>
 
 typedef struct serial_state_struct serial_state_type;
 typedef enum   {forecast , serialized , analyzed} state_enum;
@@ -22,6 +27,7 @@ struct serial_state_struct {
 
 struct enkf_node_struct {
   alloc_ftype         *alloc;
+  fread_alloc_ftype   *fread_alloc;
   ecl_write_ftype     *ecl_write;
   ens_read_ftype      *ens_read;
   ens_write_ftype     *ens_write;
@@ -157,7 +163,19 @@ static void serial_state_init_deserialize(const serial_state_type * serial_state
   All the function pointers REALLY should be in the config object ... 
 */
 
-enkf_node_type * enkf_node_alloc(const char *node_key, 
+void enkf_node_realloc_data(enkf_node_type * node) {
+  if (node->data != NULL)
+    node->freef(node->data);
+
+  node->data = node->alloc(enkf_config_node_get_ref(node->config));
+}
+
+
+
+
+
+
+enkf_node_type * enkf_node_alloc_old(const char *node_key, 
 				 const enkf_config_node_type * config    , 
 				 alloc_ftype        * alloc     , 
 				 ecl_write_ftype    * ecl_write , 
@@ -168,7 +186,7 @@ enkf_node_type * enkf_node_alloc(const char *node_key,
 				 copyc_ftype        * copyc     ,
 				 sample_ftype       * sample    , 
 				 serialize_ftype    * serialize , 
-				 deserialize_ftype * deserialize , 
+				 deserialize_ftype  * deserialize , 
 				 free_ftype         * freef) {
   
   enkf_node_type *node = malloc(sizeof *node);
@@ -184,12 +202,16 @@ enkf_node_type * enkf_node_alloc(const char *node_key,
   node->config    = config;
   node->swapfile  = NULL;
   node->node_key  = util_alloc_string_copy(node_key);
-  node->data      = node->alloc(enkf_config_node_get_ref(node->config));
-  node->serialize = serialize;
-  node->deserialize = deserialize;
+  node->data      = NULL;
+
+  node->serialize    = serialize;
+  node->deserialize  = deserialize;
   node->serial_state = serial_state_alloc();
+  enkf_node_realloc_data(node);
   return node;
 }
+
+
 
 
 void enkf_node_clear_serial_state(enkf_node_type * node) {
@@ -204,20 +226,10 @@ enkf_node_type * enkf_node_copyc(const enkf_node_type * src) {
     abort();
   }
   {
-    enkf_node_type * new = enkf_node_alloc(enkf_node_get_key_ref(src) , 
-					   src->config,
-					   src->alloc,
-					   src->ecl_write,
-					   src->ens_read,
-					   src->ens_write, 
-					   src->swapout, 
-					   src->swapin,
-					   src->copyc,
-					   src->sample,
-					   src->serialize, 
-					   src->deserialize,
-					   src->freef);
-  return new;
+    enkf_node_type * new = enkf_node_alloc(enkf_node_get_key_ref(src) , src->config);
+    printf("%s: not properly implemented ... \n",__func__);
+    abort();
+    return new;
   }
 }
 
@@ -378,11 +390,124 @@ void enkf_node_free__(void *void_node) {
   enkf_node_free((enkf_node_type *) void_node);
 }
 
-
 const char *enkf_node_get_key_ref(const enkf_node_type * enkf_node) { return enkf_node->node_key; }
-
-
 #undef FUNC_ASSERT
+
+
+
+/*****************************************************************/
+
+
+/* Manual inheritance - .... */
+static enkf_node_type * enkf_node_alloc_empty(const char *node_key,  const enkf_config_node_type * config) {
+  enkf_node_type * node = util_malloc(sizeof * node , __func__);
+  node->config          = config;
+  node->node_key        = util_alloc_string_copy(node_key);
+  node->swapfile        = NULL;
+  node->data            = NULL;
+  
+  enkf_impl_type impl_type = enkf_config_node_get_impl_type(config);
+  switch (impl_type) {
+  case(MULTZ):
+    node->alloc       = multz_alloc__;
+    node->fread_alloc = NULL; /*multz_fread_alloc__;*/
+    node->ecl_write   = multz_ecl_write__;
+    node->ens_read    = multz_ens_read__;
+    node->ens_write   = multz_ens_write__;
+    node->swapout     = multz_swapout__;
+    node->swapin      = multz_swapin__;
+    node->copyc       = multz_copyc__;
+    node->sample      = multz_sample__;
+    node->serialize   = multz_serialize__;
+    node->deserialize = multz_deserialize__;
+    node->freef       = multz_free__;
+    break;
+  case(MULTFLT):
+    node->alloc       = multflt_alloc__;
+    node->fread_alloc = NULL; /*multflt_fread_alloc__;*/
+    node->ecl_write   = multflt_ecl_write__;
+    node->ens_read    = multflt_ens_read__;
+    node->ens_write   = multflt_ens_write__;
+    node->swapout     = multflt_swapout__;
+    node->swapin      = multflt_swapin__;
+    node->copyc       = multflt_copyc__;
+    node->sample      = multflt_sample__;
+    node->serialize   = multflt_serialize__;
+    node->deserialize = multflt_deserialize__;
+    node->freef       = multflt_free__;
+    break;
+  case(WELL):
+    node->alloc       = well_alloc__;
+    node->fread_alloc = NULL; /*well_fread_alloc__;*/
+    node->ecl_write   = NULL;
+    node->ens_read    = well_ens_read__;
+    node->ens_write   = well_ens_write__;
+    node->swapout     = well_swapout__;
+    node->swapin      = well_swapin__;
+    node->copyc       = well_copyc__;
+    node->sample      = NULL;
+    node->serialize   = well_serialize__;
+    node->deserialize = well_deserialize__;
+    node->freef       = well_free__;
+    break;
+  case(FIELD):
+    node->alloc       = field_alloc__;
+    node->fread_alloc = NULL; /*field_fread_alloc__;*/
+    node->ecl_write   = field_ecl_write__;
+    node->ens_read    = field_ens_read__;
+    node->ens_write   = field_ens_write__;
+    node->swapout     = field_swapout__;
+    node->swapin      = field_swapin__;
+    node->copyc       = field_copyc__;
+    node->sample      = field_sample__;
+    node->serialize   = field_serialize__;
+    node->deserialize = field_deserialize__;
+    node->freef       = field_free__;
+    break;
+  case(EQUIL):
+    node->alloc       = equil_alloc__;
+    node->fread_alloc = NULL; /*equil_fread_alloc__;*/
+    node->ecl_write   = equil_ecl_write__;
+    node->ens_read    = equil_ens_read__;
+    node->ens_write   = equil_ens_write__;
+    node->swapout     = equil_swapout__;
+    node->swapin      = equil_swapin__;
+    node->copyc       = equil_copyc__;
+    node->sample      = equil_sample__;
+    node->serialize   = equil_serialize__;
+    node->deserialize = equil_deserialize__;
+    node->freef       = equil_free__;
+    break;
+  case(STATIC):
+    node->alloc       = ecl_static_kw_alloc__;
+    node->fread_alloc = NULL; /* ecl_static_kw_fread_alloc__;*/
+    node->ecl_write   = NULL; /* ecl_static_kw_ecl_write__; */
+    node->ens_read    = ecl_static_kw_ens_read__;
+    node->ens_write   = ecl_static_kw_ens_write__;
+    node->swapout     = ecl_static_kw_swapout__;
+    node->swapin      = ecl_static_kw_swapin__;
+    node->copyc       = ecl_static_kw_copyc__;
+    node->sample      = NULL; 
+    node->serialize   = NULL; 
+    node->deserialize = NULL;
+    node->freef       = ecl_static_kw_free__;
+    break;
+    
+  default:
+    fprintf(stderr,"%s: implementation type: %d unknown - all hell is loose - aborting \n",__func__ , impl_type);
+    abort();
+  }
+  node->serial_state = serial_state_alloc();
+  return node;
+}
+
+
+
+enkf_node_type * enkf_node_alloc(const char *node_key,  const enkf_config_node_type * config) {
+  enkf_node_type * node = enkf_node_alloc_empty(node_key , config);
+  enkf_node_realloc_data(node);
+  return node;
+}
 
 
 

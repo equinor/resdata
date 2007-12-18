@@ -72,7 +72,7 @@ field_file_type field_config_manual_file_type(const char * filename) {
 
 
 field_file_type field_config_guess_file_type(const char * filename , bool endian_flip) {
-  bool fmt_file = util_fmt_bit8(filename , 131072);
+  bool fmt_file = util_fmt_bit8(filename );
   FILE * stream = util_fopen(filename , "r");
 
   field_file_type file_type;
@@ -290,7 +290,7 @@ void field_config_get_dims(const field_config_type * config , int *nx , int *ny 
 const int * field_config_alloc_index_map1(const char * EGRID_file , bool endian_flip , int *nx , int *ny , int *nz , int *active_size) {
   ecl_kw_type * actnum_kw , *ihead_kw;
   const int *index_map;
-  bool fmt_file        = util_fmt_bit8(EGRID_file , 2 * 8192);
+  bool fmt_file        = util_fmt_bit8(EGRID_file);
 
   fortio_type * fortio = fortio_open(EGRID_file , "r" , endian_flip);
   ecl_kw_fseek_kw("GRIDHEAD" , fmt_file , true , true , fortio);

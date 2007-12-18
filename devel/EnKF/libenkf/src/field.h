@@ -29,6 +29,7 @@ void         field_export3D(const field_type * , void *, bool , ecl_type_enum , 
 
 
 MATH_OPS_HEADER(field);
+ENSEMBLE_MULX_VECTOR_HEADER(field);
 VOID_ALLOC_HEADER(field);
 VOID_FREE_HEADER(field);
 VOID_FREE_DATA_HEADER(field);

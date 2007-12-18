@@ -257,4 +257,7 @@ void prefix ## _obs_measure__(const void * void_arg ,  const void * domain_objec
 #define CONFIG_GET_ENSFILE_HEADER(prefix)       const char * prefix ## _config_get_ensfile_ref(const prefix ## _config_type * )
 #define CONFIG_GET_ECLFILE_HEADER(prefix)       const char * prefix ## _config_get_eclfile_ref(const prefix ## _config_type * )
 
+
+
+
 #endif

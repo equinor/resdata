@@ -26,13 +26,14 @@ struct scalar_config_struct {
   void_arg_type   ** void_arg;        
 };
 
-scalar_config_type *    scalar_config_alloc_empty(int);
+scalar_config_type *  scalar_config_alloc_empty(int);
 void                  scalar_config_free(scalar_config_type *);
 const          char * scalar_config_get_ensfile_ref(const scalar_config_type * );
 const          char * scalar_config_get_eclfile_ref(const scalar_config_type * );
 void                  scalar_config_transform(const scalar_config_type * , const double * , double *);
 void                  scalar_config_truncate(const scalar_config_type * config , double *);
 void                  scalar_config_fscanf_line(scalar_config_type * , int , FILE * );
+void                  scalar_config_fscanf_line2(scalar_config_type * , int , FILE * );
 void                  scalar_config_finalize_init(scalar_config_type *config);
 
 

@@ -9,8 +9,10 @@ struct enkf_config_node_struct {
   config_free_ftype               *freef;
   enkf_impl_type  	    	   impl_type;
   enkf_var_type  	    	   enkf_type; 
-  config_set_serial_offset_ftype  * set_serial_offset;
-  void                     	  *data; /* This points to the config object of the actual implementation. */
+  char 		     * ensfile;          
+  char 		     * eclfile;          
+  config_set_serial_offset_ftype   * set_serial_offset;
+  void                      	   * data; /* This points to the config object of the actual implementation. */
 } ;
 
 
@@ -27,16 +29,19 @@ enkf_config_node_type * enkf_config_node_alloc(enkf_var_type              enkf_t
   node->set_serial_offset  = set_serial_offset;
   node->enkf_type     	   = enkf_type;
   node->impl_type     	   = impl_type;
-  
+  node->ensfile            = NULL;
+  node->eclfile            = NULL;
+
   return node;
 }
 
 
 void enkf_config_node_free(enkf_config_node_type * node) {
-  if (node->freef != NULL) node->freef(node->data);
+  if (node->freef   != NULL) node->freef(node->data);
+  if (node->ensfile != NULL) free(node->ensfile);
+  if (node->eclfile != NULL) free(node->eclfile);
   free(node);
 }
-
 
 
 
