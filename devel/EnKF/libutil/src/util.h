@@ -79,6 +79,7 @@ void 	util_float_to_double(double * , const float  * , int );
 
 
 void    util_fwrite_string(const char * , FILE *);
+char *  util_fread_realloc_string(char *  , FILE *);
 char *  util_fread_alloc_string(FILE *);
 void    util_fskip_string(FILE *stream);
 void    util_endian_flip_vector(void *, int , int );
@@ -105,6 +106,7 @@ void     util_read_filename(const char * , int , bool , char * );
 void     util_read_string(const char *  , int  , char * );
 void     util_fread (void *, size_t , size_t , FILE * , const char * );
 void     util_fwrite(const void *, size_t , size_t , FILE * , const char * );
+int      util_fread_int(FILE * );
 void 	 util_fwrite_int   (int    , FILE * );
 void 	 util_fwrite_double(double , FILE * );
 void 	 util_fwrite_int_vector   (const int     * , int , FILE * , const char * );
@@ -119,5 +121,6 @@ void util_fwrite_compressed(const void * , int , FILE * );
 
 #define UTIL_FWRITE_VECTOR(s,n,stream) fwrite(s , sizeof s , (n) , stream)
 #define UTIL_FREAD_VECTOR(s,n,stream)  fread(s , sizeof s , (n) , stream)
+
 
 #endif

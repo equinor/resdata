@@ -13,8 +13,8 @@ INSTALL_LIB_PATH = ../lib
 CFLAGS  = -$(MFLAG) -std=gnu99 -g -Wall $(COMPILE_INCLUDE) -fPIC
 ARFLAGS = -csr
 #################################################################
-OBJECTS           = pathv.o util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o
-INC_FILES_INSTALL = pathv.h util.h thread_pool.h msg.h void_arg.h str_buffer.h
+OBJECTS           = pathv.o util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o path_fmt.o
+INC_FILES_INSTALL = pathv.h util.h thread_pool.h msg.h void_arg.h str_buffer.h path_fmt.h
 LIB               = libutil_$(MFLAG).a
 LIB_LINK          = -lutil_$(MFLAG) -lz -lm
 
@@ -48,4 +48,4 @@ thread_pool.o : thread_pool.c thread_pool.h
 util.o        : util.c util.h
 util_interC.o : util_interC.c util.o
 pathv.o       : pathv.c pathv.h util.o
-
+path_fmt.o    : path_fmt.c path_fmt.h util.o

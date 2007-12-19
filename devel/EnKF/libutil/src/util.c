@@ -1252,18 +1252,36 @@ char * util_fread_alloc_string(FILE *stream) {
 }
 
 
+char * util_fread_realloc_string(char * old_s , FILE *stream) {
+  int len;
+  char *s = NULL;
+  util_fread(&len , sizeof len , 1 , stream , __func__);
+  if (len > 0) {
+    s = util_realloc(old_s , len + 1 , __func__);
+    util_fread(s , 1 , len + 1 , stream , __func__);
+  } 
+  return s;
+}
+
+
 void util_fskip_string(FILE *stream) {
   int len;
   util_fread(&len , sizeof len , 1 , stream , __func__);
   fseek(stream , len + 1 , SEEK_CUR);
 }
 
-
 void util_fwrite_int   (int value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_double(double value , FILE * stream) { UTIL_FWRITE_SCALAR(value , stream); }
 
 void util_fwrite_int_vector   (const int * value    , int size , FILE * stream, const char * caller) { util_fwrite(value , sizeof * value, size , stream, caller); }
 void util_fwrite_double_vector(const double * value , int size , FILE * stream, const char * caller) { util_fwrite(value , sizeof * value, size , stream, caller); }
+
+
+int util_fread_int(FILE * stream) {
+  int file_value;
+  UTIL_FREAD_SCALAR(file_value , stream);
+  return file_value;
+}
 
 
 /*****************************************************************/
