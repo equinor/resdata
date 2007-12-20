@@ -12,7 +12,7 @@ ARFLAGS = -csr
 OBJECTS           = rms_interC.o rms_file.o rms_util.o rms_tag.o rms_type.o rms_tagkey.o rms_stats.o
 INC_FILES_INSTALL = rms_file.h rms_util.h rms_tag.h rms_type.h rms_tagkey.h rms_stats.h
 LIB               = librms_$(MFLAG).a
-LIB_LINK          = -lrms_$(MFLAG) -lecl_$(MFLAG) -lhash_$(MFLAG) -lutil_$(MFLAG) -lm
+LIB_LINK          = -lrms_$(MFLAG) -lecl_$(MFLAG) -lhash_$(MFLAG) -lutil_$(MFLAG) -lm -lz
 LIB_PATH          = -L../../libhash/lib -L../../libutil/lib -L../../libecl/lib -L$(INSTALL_LIB_PATH)
 
 INSTALL: $(LIB)
@@ -21,6 +21,7 @@ INSTALL: $(LIB)
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
 	gcc $(CFLAGS) rms_test.c    -o rms.x               $(LIB_PATH)  $(LIB_LINK) 
+	gcc $(CFLAGS) rms_stat.c    -o rms_stat.x          $(LIB_PATH)  $(LIB_LINK) 
 	gcc $(CFLAGS) tag_list.c    -o tag_list.x          $(LIB_PATH)  $(LIB_LINK) 
 	gcc $(CFLAGS) rms_extract.c -o rms_extract.x       $(LIB_PATH)  $(LIB_LINK) 
 	gcc $(CFLAGS) rms_setname.c -o rms_setname.x       $(LIB_PATH)  $(LIB_LINK) 

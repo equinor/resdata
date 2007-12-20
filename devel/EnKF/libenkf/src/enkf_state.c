@@ -479,6 +479,8 @@ void enkf_state_ecl_write(const enkf_state_type * enkf_state ,  int mask , int r
     enkf_node_type * enkf_node = list_node_value_ptr(list_node);         
 
     if (enkf_node_include_type(enkf_node , mask)) {
+      bool swapped = enkf_node_swapped(enkf_node);
+      if (swapped) enkf_node_swapin(enkf_node , path_fmt_get_path(enkf_state->ens_path_static));
 
       if (enkf_node_include_type(enkf_node , ecl_restart)) {      
 	/* Pressure and saturations */
@@ -489,14 +491,12 @@ void enkf_state_ecl_write(const enkf_state_type * enkf_state ,  int mask , int r
 	  abort();
 	}	  
       } else if (enkf_node_include_type(enkf_node , ecl_static)) {
-	bool swapped = enkf_node_swapped(enkf_node);
 
-	if (swapped) enkf_node_swapin(enkf_node , path_fmt_get_path(enkf_state->ens_path_static));
 	ecl_kw_fwrite(ecl_static_kw_ecl_kw_ptr((const ecl_static_kw_type *) enkf_node_value_ptr(enkf_node)) , fortio);
-	if (swapped) enkf_node_swapout(enkf_node , path_fmt_get_path(enkf_state->ens_path_static));
-	
       } else if (enkf_node_include_type(enkf_node , parameter + static_parameter))
         enkf_node_ecl_write(enkf_node , run_path);
+      
+      if (swapped) enkf_node_swapout(enkf_node , path_fmt_get_path(enkf_state->ens_path_static));
     }
     list_node = list_node_get_next(list_node);
   }

@@ -129,6 +129,9 @@ int rms_tag_get_datakey_sizeof_ctype(const rms_tag_type * tag) {
 }
 
 
+
+
+
 static void rms_tag_add_tagkey(const rms_tag_type *tag , const rms_tagkey_type *tagkey, int mem_mode) {
   list_node_type * list_node = NULL;
   switch (mem_mode) {

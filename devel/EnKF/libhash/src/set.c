@@ -44,6 +44,7 @@ char ** set_alloc_keylist(const set_type * set) { return hash_alloc_keylist(set-
 
 void set_free(set_type * set) {
   hash_free(set->key_hash);
+  free(set);
 }
 
 

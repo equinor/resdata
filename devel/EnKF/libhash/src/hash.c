@@ -285,9 +285,10 @@ void hash_insert_managed_ref(hash_type *hash , const char *key , const void *val
 }
 
 
-void hash_insert_string_copy(hash_type *hash, const char *key , const char *value) {
+void hash_insert_string(hash_type *hash, const char *key , const char *value) {
   hash_insert_managed_copy(hash , key , value , strlen(value) + 1);
 }
+
 
 
 

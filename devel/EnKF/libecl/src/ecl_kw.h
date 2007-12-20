@@ -67,9 +67,9 @@ void          ecl_kw_get_data_as_double(const ecl_kw_type *, double *);
 int           ecl_kw_cmp(const ecl_kw_type *, const ecl_kw_type *, int *);
 
 
-void ecl_kw_fwrite_compressed(const ecl_kw_type * , fortio_type *);
-bool ecl_kw_fread_realloc_compressed(ecl_kw_type *  , fortio_type *);
-ecl_kw_type * ecl_kw_fread_alloc_compressed(fortio_type * );
+void ecl_kw_fwrite_compressed(const ecl_kw_type * , FILE *);
+void ecl_kw_fread_realloc_compressed(ecl_kw_type *  , FILE *);
+ecl_kw_type * ecl_kw_fread_alloc_compressed(FILE * );
 
 bool ecl_kw_is_grdecl_file(FILE * );
 bool ecl_kw_is_kw_file(FILE * , bool , bool );

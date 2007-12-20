@@ -272,7 +272,7 @@ void sched_file_fprintf(const sched_file_type * sched_file , int last_date_nr , 
 void sched_file_init_conn_factor(sched_file_type * sched_file , const char * init_file , bool endian_flip , const int * index_map) {
   bool OK;
   ecl_kw_type * permx_kw , *ihead_kw , *permz_kw;
-  bool fmt_file        = util_fmt_bit8(init_file , 2 * 8192);
+  bool fmt_file        = util_fmt_bit8(init_file );
   fortio_type * fortio = fortio_open(init_file , "r" , endian_flip);
 
   ecl_kw_fseek_kw("INTEHEAD" , fmt_file , true , true , fortio);

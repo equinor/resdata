@@ -177,7 +177,7 @@ void rms_tagkey_inplace_sqrt(rms_tagkey_type * tagkey) {
     {
       double *tmp = (double *) tagkey->data;
       for (i=0; i < tagkey->size; i++)
-	tmp[i] = sqrt(tmp[i]);
+	tmp[i] = sqrt(util_double_max(0.0 , tmp[i]));
     }
     break;
     
@@ -185,7 +185,7 @@ void rms_tagkey_inplace_sqrt(rms_tagkey_type * tagkey) {
     {
       float *tmp = (float *) tagkey->data;
       for (i=0; i < tagkey->size; i++)
-	tmp[i] = sqrtf(tmp[i]);
+	tmp[i] = sqrtf(util_float_max(0.0 , tmp[i]));
     }
     break;
 
@@ -603,6 +603,10 @@ int rms_tagkey_get_sizeof_ctype(const rms_tagkey_type * key) {
   return key->sizeof_ctype;
 }
 
+rms_type_enum rms_tagkey_get_rms_type(const rms_tagkey_type * key) {
+  return key->rms_type;
+}
+
 
 void rms_tagkey_free(rms_tagkey_type *tagkey) {
   if (tagkey->name != NULL) free(tagkey->name);
@@ -670,3 +674,5 @@ rms_tagkey_type * rms_tagkey_alloc_dim(const char * dim, int value) {
   return tagkey;
 }
 
+
+int rms_tagkey_get_size(const rms_tagkey_type * tagkey) { return tagkey->size; }

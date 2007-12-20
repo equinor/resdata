@@ -256,9 +256,10 @@ static void rms_file_init_fread(rms_file_type * rms_file) {
 
 
 rms_tag_type * rms_file_fread_alloc_tag(rms_file_type * rms_file , const char *tagname , const char * keyname , const char *keyvalue ) {
+  rms_tag_type * tag = NULL;
   rms_file_fopen_r(rms_file);
   {
-    rms_tag_type * tag = NULL;
+  
     bool cont          = true;
     bool tag_found     = false;
     long int start_pos = ftell(rms_file->stream);
@@ -280,10 +281,9 @@ rms_tag_type * rms_file_fread_alloc_tag(rms_file_type * rms_file , const char *t
       fprintf(stderr,"%s: could not find tag: \"%s\" (with %s=%s) in file:%s - aborting.\n",__func__ , tagname , keyname , keyvalue , rms_file->filename);
       abort();
     }
-
-    rms_file_fclose(rms_file);
-    return tag;
   }
+  rms_file_fclose(rms_file);
+  return tag;
 }
 
 
@@ -457,8 +457,9 @@ bool rms_file_is_roff(FILE * stream) {
   char *header         	     = malloc(strlen(rms_comment1) + 1);
   const long int current_pos = ftell(stream);
   bool roff_file             = false;
-    
-  rms_util_fread_string(header , len + 1 , stream);
+
+  fseek(stream , 1 + 1 + 8 , SEEK_CUR); /* Skipping #roff-bin#0#  WILL Fail with formatted files */
+  rms_util_fread_string(header , len+1 , stream);
   if (strncmp(rms_comment1 , header , len) == 0)
     roff_file = true;
   

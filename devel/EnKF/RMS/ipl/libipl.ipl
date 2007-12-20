@@ -31,7 +31,7 @@ FUNCTION LoadField(Int zonenr , String path , String base , Int R1 , Int R2)
 
    FOR i FROM R1 to R2 DO
       cnum = make_cnum(i)  
-      file = path + "/" + base + "_" + cnum + ".ROFF"
+      file = path + base + "_" + cnum + ".ROFF"
       Print("Loading from: ",file)
       SetCurrentRealization(i + 1 - R1)
       IF i = R1 THEN
@@ -52,11 +52,11 @@ FUNCTION LoadStat(Int zonenr , String path , String base)
    String file,cnum
    Zone   Z = @ZONES[zonenr]
 
-   file = path + "/AVE-" + base + ".ROFF"
+   file = path + "AVE-" + base + ".ROFF"
    Print("Loading from: ",file)	
    ImportRoffParameter(Z , file)
 
-   file = path + "/STD-" + base + ".ROFF"
+   file = path + "STD-" + base + ".ROFF"
    Print("Loading from: ",file)	
    ImportRoffParameter(Z , file)
 ENDFUNCTION
@@ -70,12 +70,26 @@ ENDFUNCTION
 
 
 
+// This code should be inserted in the RMS ipl window:
+//
+//Include("/h/a152128/EnKF/devel/EnKF/RMS/ipl/libipl.ipl")
+//String PList[]
+//PList[1] = "PERMX"
+//PList[2] = "PRES"
+//LoadAll(3 , "/h/a152128/EnKF_ON/Run-FMT-Test/tmp-Test" , PList,  1 , 25)
 
-// Include("/h/a152128/EnKF/devel/EnKF/RMS/ipl/libipl.ipl")
-// String PList[]
-// PList[1] = "PERMX"
-// PList[2] = "PRES"
-// LoadAll(3 , "/h/a152128/EnKF_ON/Run-FMT-Test/tmp-Test" , PList,  1 , 25)
+
+//The arguments to LoadAll are:
+//
+//1. zonenr - the zone number you want to load into.
+//2. Path to where the RMS roff files are located; observe that to be platform
+//   independent the libipl.ipl code does not append '/' (on Unix) or '\' (on Windows),
+//   you therefor must call LoadAll *with* the trailing '/' or '\' - depending on
+//   platform.
+//3. A list of strings containing the names of the parameters you want to load.
+//4. The number of the first realization to load.
+//5. The number of the last realization to load.
+
 
 FUNCTION LoadAll(Int zonenr , String path , String  PList[],  Int R1 , Int R2)
    Int ip

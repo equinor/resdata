@@ -293,8 +293,8 @@ static comp_type * comp_sched_fread_alloc(int kw_size , FILE * stream) {
 
 
 void sched_kw_compdat_init_conn_factor(sched_kw_compdat_type * kw , const ecl_kw_type *permx_kw, const ecl_kw_type * permz_kw , const int * dims , const int * index_field , bool *OK) {
-  float *permx = ecl_kw_get_safe_data_ref(permx_kw , ecl_float_type);
-  float *permz = ecl_kw_get_safe_data_ref(permz_kw , ecl_float_type);
+  float *permx = ecl_kw_get_float_ptr(permx_kw);
+  float *permz = ecl_kw_get_float_ptr(permz_kw);
   list_node_type *comp_node = list_get_head(kw->comp_list);
   while (comp_node != NULL) {
     comp_type * comp = list_node_value_ptr(comp_node);

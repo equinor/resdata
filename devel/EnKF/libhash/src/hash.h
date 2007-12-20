@@ -18,7 +18,7 @@ void              hash_free__(void *);
 void        	  hash_insert_ref(hash_type * , const char * , const void *);
 void              hash_insert_managed_ref(hash_type *, const char *, const void *, del_type *);
 void        	  hash_insert_copy(hash_type *, const char * , const void *, copyc_type *, del_type *);
-void        	  hash_insert_string_copy(hash_type *, const char *, const char *);
+void        	  hash_insert_string(hash_type *, const char *, const char *);
 bool        	  hash_has_key(const hash_type *, const char *);
 void        	* hash_get(const hash_type *, const char *);
 char        	* hash_get_string(const hash_type * , const char *);

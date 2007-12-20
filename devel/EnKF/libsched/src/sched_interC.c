@@ -204,13 +204,14 @@ void sched_load_hist_from_summary__(const char * _hist_file , const int * hist_f
     history_free(GLOBAL_HISTORY);
   GLOBAL_HISTORY = history_alloc_from_summary(ecl_sum , history_mode);
   ecl_sum_free(ecl_sum);
-  free(hist_file);
 
   {
     FILE * stream = util_fopen(hist_file , "w");
     history_fwrite(GLOBAL_HISTORY  , stream);
     fclose(stream);
   }
+  
+  free(hist_file);
 }
  
  

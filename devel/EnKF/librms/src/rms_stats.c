@@ -40,7 +40,7 @@ void rms_stats_mean_std(rms_tagkey_type * mean , rms_tagkey_type * std , const c
     }
   }
   printf("\n");
-
+  
   {
     rms_tagkey_type * mean2;
     mean2 = rms_tagkey_copyc(mean);
@@ -49,16 +49,6 @@ void rms_stats_mean_std(rms_tagkey_type * mean , rms_tagkey_type * std , const c
     rms_tagkey_inplace_add_scaled(std , mean2 , -1.0);
     rms_tagkey_inplace_sqrt(std);
     rms_tagkey_free(mean2);
-  }
-
-  {
-    float max,min;
-    rms_tagkey_max_min(std, &max , &min);
-    printf("std: %g -> %g \n",min,max);
-
-    rms_tagkey_max_min(mean , &max , &min);
-    printf("avg: %g -> %g \n",min,max);
-    exit(1);
   }
 }
 

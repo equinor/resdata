@@ -37,6 +37,15 @@ path_fmt_type * path_fmt_alloc(const char * fmt) {
 }
 
 
+path_fmt_type * path_fmt_copyc(const path_fmt_type *path) {
+  path_fmt_type *new_path = path_fmt_alloc(path->fmt);
+  return new_path;
+}
+
+
+void path_fmt_make_path(const path_fmt_type * path) {
+  util_make_path(path->path);
+}
 
 void path_fmt_set_va(path_fmt_type * path , va_list ap) {
   int path_length;
@@ -46,14 +55,13 @@ void path_fmt_set_va(path_fmt_type * path , va_list ap) {
     vsnprintf(path->path , path->buffer_size , path->fmt , ap);
   }
   path->path_set = true;
-  util_make_path(path->path);
 }
 
 
 void path_fmt_set(path_fmt_type * path , ...) {
   va_list ap;
-
-  va_start(ap , path->fmt);
+  
+  va_start(ap , path);
   path_fmt_set_va(path , ap);
   va_end(ap);
   
@@ -74,6 +82,8 @@ const char * path_fmt_get_path(const path_fmt_type * path) {
 const char * path_fmt_get_fmt(const path_fmt_type * path) {
   return path->fmt;
 }
+
+
 
 
 void path_fmt_free(path_fmt_type * path) {

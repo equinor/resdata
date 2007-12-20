@@ -201,7 +201,11 @@ static double __sum_get(const ecl_sum_type * sum , int report_nr , const char * 
 rate_type * rate_alloc_from_summary(bool history_mode , const ecl_sum_type * sum , int report_nr , const char * well) {
   int   cmode ;
   
-  cmode = round(ecl_sum_iget1(sum , report_nr , well , "WMCTL" ,  NULL));
+  if (ecl_sum_has_well_var(sum , well , "WMCTL"))
+    cmode = round(ecl_sum_iget(sum , report_nr , well , "WMCTL"));
+  else
+    cmode = 0;
+  
   if (cmode == 0) return NULL;
   {
     rate_type * rate = rate_alloc_empty(11);

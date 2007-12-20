@@ -17,6 +17,7 @@ function ens_plot(prior_path , posterior_path , well_list , var_list , out_path 
 % The variables out_path and in_device are for saving to file, they are optional, see
 % the documentation of diag_plot() for details.
 
+
    if exist(prior_path,'dir') == 0
       disp(sprintf('Could not locate prior_path: %s - returning from ens_plot.' , prior_path));
       return;
@@ -45,10 +46,6 @@ function ens_plot(prior_path , posterior_path , well_list , var_list , out_path 
            
            if posterior_path ~= 0
               posterior_file = strcat(posterior_path , sep , well , '.' , var);
-	      if exist(prior_file , 'file') == 0;
-	         disp(sprintf('Could not find file: %s - returning from ens_plot',prior_file));
-	         return;
-   	      end
 
    	      if exist(posterior_file , 'file') == 0;
 	         disp(sprintf('Could not find file: %s - returning from ens_plot',posterior_file));
@@ -59,6 +56,10 @@ function ens_plot(prior_path , posterior_path , well_list , var_list , out_path 
            end
 
            prior_file     = strcat(prior_path , sep , well , '.' , var);
+           if exist(prior_file , 'file') == 0;
+	      disp(sprintf('Could not find file: %s - returning from ens_plot',prior_file));
+   	      return;
+   	   end
            [well , var , unit , time_step , prior_dates , history , prior] = ens_load(prior_file);
            prior_size = size(prior , 2);
         
@@ -84,7 +85,7 @@ function ens_plot(prior_path , posterior_path , well_list , var_list , out_path 
 
 
 
-           xlabel('Time (days)')
+           xlabel('Date');
            ylabel(sprintf('%s (%s)',var,unit));
            title(sprintf('%s: %s',well,var));
    

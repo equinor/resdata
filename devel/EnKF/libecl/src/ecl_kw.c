@@ -1086,42 +1086,6 @@ void ecl_kw_fwrite(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
   ecl_kw_fwrite_data(ecl_kw , fortio);
 }
 
-void ecl_kw_fwrite_compressed(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
-  ecl_kw_assert_binary_file(ecl_kw , __func__);
-  ecl_kw_fwrite_header(ecl_kw , fortio);
-  /*
-    Dumps out nine characters - including a \0 - for every char variable 
-  */
-  util_fwrite_compressed(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , fortio_get_FILE(fortio));
-}
-
-
-bool ecl_kw_fread_realloc_compressed(ecl_kw_type * ecl_kw , fortio_type *fortio) {
-  bool OK;
-  ecl_kw_assert_binary_file(ecl_kw , __func__);
-  OK = ecl_kw_fread_header(ecl_kw , fortio);
-  if (OK) {
-    ecl_kw_alloc_data(ecl_kw);
-    util_fread_compressed(ecl_kw->data , fortio_get_FILE(fortio));
-  } 
-  return OK;
-}
-
-
-ecl_kw_type * ecl_kw_fread_alloc_compressed(fortio_type * fortio) {
-  bool OK;
-  bool fmt_file       = util_fmt_bit8_stream(fortio_get_FILE(fortio));
-  ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(fmt_file , fortio_get_endian_flip(fortio));
-  ecl_kw_assert_binary_file(ecl_kw , __func__);
-
-  OK = ecl_kw_fread_realloc_compressed(ecl_kw , fortio);
-  if (!OK) {
-    free(ecl_kw);
-    ecl_kw = NULL;
-  }
-
-  return ecl_kw;
-}
 
 
 
@@ -1145,7 +1109,7 @@ bool ecl_kw_get_endian_convert(const ecl_kw_type * ecl_kw) { return ecl_kw->endi
 
 /******************************************************************/
 
-void ecl_kw_cfwrite(const ecl_kw_type * ecl_kw , FILE *stream) {
+void ecl_kw_cfwrite_header(const ecl_kw_type * ecl_kw , FILE *stream) {
   fwrite(&ecl_kw->fmt_file     	 , sizeof ecl_kw->fmt_file , 1 , stream);
   fwrite(&ecl_kw->sizeof_ctype 	 , sizeof ecl_kw->sizeof_ctype , 1 , stream);
   fwrite(&ecl_kw->size         	 , sizeof ecl_kw->size , 1 , stream);
@@ -1153,18 +1117,14 @@ void ecl_kw_cfwrite(const ecl_kw_type * ecl_kw , FILE *stream) {
   fwrite(&ecl_kw->blocksize    	 , sizeof ecl_kw->blocksize , 1 , stream);
   fwrite(&ecl_kw->endian_convert , sizeof ecl_kw->endian_convert , 1 , stream);
   fwrite(&ecl_kw->ecl_type       , sizeof ecl_kw->ecl_type   , 1 , stream);
-  {
-    int tmp_len;
-    tmp_len = strlen(ecl_kw->header);
-    fwrite(&tmp_len , sizeof tmp_len , 1 , stream); 
-    fwrite(ecl_kw->header   , sizeof ecl_kw->header  , tmp_len + 1 , stream);          /* The terminating \0 is included */
-    
-    fwrite(&tmp_len , sizeof tmp_len , 1 , stream);
-    fwrite(ecl_kw->write_fmt   , sizeof ecl_kw->write_fmt  , tmp_len + 1 , stream);    /* The terminating \0 is included */
+  util_fwrite_string(ecl_kw->header    , stream);
+  util_fwrite_string(ecl_kw->write_fmt , stream);
+  util_fwrite_string(ecl_kw->read_fmt  , stream);
+}
 
-    fwrite(&tmp_len , sizeof tmp_len , 1 , stream);
-    fwrite(ecl_kw->read_fmt   , sizeof ecl_kw->read_fmt  , tmp_len + 1 , stream);      /* The terminating \0 is included */
-  }
+
+void ecl_kw_cfwrite(const ecl_kw_type * ecl_kw , FILE *stream) {
+  ecl_kw_cfwrite_header(ecl_kw , stream);
   {
     int items_written = fwrite(ecl_kw->data , ecl_kw->sizeof_ctype , ecl_kw->size , stream);
     if (items_written != ecl_kw->size) {
@@ -1175,36 +1135,25 @@ void ecl_kw_cfwrite(const ecl_kw_type * ecl_kw , FILE *stream) {
 }
 
 
-
-void ecl_kw_cfread(ecl_kw_type * ecl_kw , FILE *stream) {
+void ecl_kw_cfread_header(ecl_kw_type * ecl_kw , FILE * stream) {
   fread(&ecl_kw->fmt_file     	 , sizeof ecl_kw->fmt_file , 1 , stream);
   fread(&ecl_kw->sizeof_ctype 	 , sizeof ecl_kw->sizeof_ctype , 1 , stream);
-  {
-    int file_size;
-    fread(&file_size , sizeof file_size , 1 , stream);
-    if (file_size != ecl_kw->size) 
-      ecl_kw_alloc_data(ecl_kw);
-  }
-      
+  fread(&ecl_kw->size    	 , sizeof ecl_kw->size         , 1 , stream);
   fread(&ecl_kw->fmt_linesize 	 , sizeof ecl_kw->fmt_linesize , 1 , stream);
   fread(&ecl_kw->blocksize    	 , sizeof ecl_kw->blocksize , 1 , stream);
   fread(&ecl_kw->endian_convert  , sizeof ecl_kw->endian_convert , 1 , stream);
   fread(&ecl_kw->ecl_type        , sizeof ecl_kw->ecl_type   , 1 , stream);
-  {
-    int tmp_len;
-    tmp_len = strlen(ecl_kw->header);
-    fread(&tmp_len , sizeof tmp_len , 1 , stream);
-    ecl_kw->header = realloc(ecl_kw->header , tmp_len + 1);
-    fread(ecl_kw->header   , sizeof ecl_kw->header  , tmp_len + 1 , stream);        /* The terminating \0 is included */
-    
-    fread(&tmp_len , sizeof tmp_len , 1 , stream);
-    ecl_kw->write_fmt = realloc(ecl_kw->write_fmt , tmp_len + 1);
-    fread(ecl_kw->write_fmt   , sizeof ecl_kw->write_fmt  , tmp_len + 1 , stream);  /* The terminating \0 is included */
-    
-    fread(&tmp_len , sizeof tmp_len , 1 , stream);
-    ecl_kw->read_fmt = realloc(ecl_kw->read_fmt , tmp_len + 1);
-    fread(ecl_kw->read_fmt   , sizeof ecl_kw->read_fmt  , tmp_len + 1 , stream);    /* The terminating \0 is included */
-  }
+
+  ecl_kw->header    = util_fread_realloc_string(ecl_kw->header    , stream);
+  ecl_kw->write_fmt = util_fread_realloc_string(ecl_kw->write_fmt , stream);
+  ecl_kw->read_fmt  = util_fread_realloc_string(ecl_kw->read_fmt  , stream);
+}
+
+
+
+void ecl_kw_cfread(ecl_kw_type * ecl_kw , FILE *stream) {
+  ecl_kw_cfread_header(ecl_kw , stream);
+  ecl_kw_alloc_data(ecl_kw);
   {
     int items_written = fread(ecl_kw->data , sizeof *ecl_kw->data , ecl_kw->size , stream);
     if (items_written != ecl_kw->size) {
@@ -1213,6 +1162,35 @@ void ecl_kw_cfread(ecl_kw_type * ecl_kw , FILE *stream) {
     }
   }
 }
+
+
+void ecl_kw_fwrite_compressed(const ecl_kw_type *ecl_kw , FILE * stream) {
+  ecl_kw_assert_binary_file(ecl_kw , __func__);
+  ecl_kw_cfwrite_header(ecl_kw , stream);
+  /*
+    Dumps out nine characters - including a \0 - for every char variable 
+  */
+  util_fwrite_compressed(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , stream);
+}
+
+
+
+void ecl_kw_fread_realloc_compressed(ecl_kw_type * ecl_kw , FILE * stream) {
+  ecl_kw_assert_binary_file(ecl_kw , __func__);
+  ecl_kw_cfread_header(ecl_kw , stream); 
+  ecl_kw_alloc_data(ecl_kw);
+  util_fread_compressed(ecl_kw->data , stream);
+}
+
+
+ecl_kw_type * ecl_kw_fread_alloc_compressed(FILE * stream) {
+  bool fmt_file       = util_fmt_bit8_stream(stream);
+  ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(fmt_file , false);
+  ecl_kw_assert_binary_file(ecl_kw , __func__);
+  ecl_kw_fread_realloc_compressed(ecl_kw , stream);
+  return ecl_kw;
+}
+
 
 
 void ecl_kw_fwrite_param_fortio(fortio_type * fortio, bool fmt_file , bool endian_convert , const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
