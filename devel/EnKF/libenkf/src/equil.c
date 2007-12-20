@@ -82,10 +82,6 @@ void equil_ecl_write(const equil_type * equil, const char * path) {
 }
 
 
-static char * equil_alloc_ensfile(const equil_type * equil, const char * path) {
-  return util_alloc_full_path(path , equil_config_get_ensfile_ref(equil->config));
-}
-
 
 void equil_fwrite(const equil_type * equil, FILE * stream) {
   DEBUG_ASSERT(equil);
@@ -100,24 +96,15 @@ void equil_fread(equil_type * equil , FILE * stream) {
 }
 
 
-char * equil_swapout(equil_type * equil , const char * path) {
-  char * ensfile = equil_alloc_ensfile(equil , path);
-  FILE * stream  = util_fopen(ensfile , "w");
+void equil_swapout(equil_type * equil , FILE * stream) {
   equil_fwrite(equil , stream);
   equil_free_data(equil);
-  fclose(stream);
-  return ensfile;
 }
 
 
-
-
-
-void equil_swapin(equil_type * equil , const char *file) {
-  FILE * stream = util_fopen(file , "r");
+void equil_swapin(equil_type * equil , FILE * stream) {
   equil_realloc_data(equil);
   equil_fread(equil , stream);
-  fclose(stream);
 }
 
 

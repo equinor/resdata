@@ -57,5 +57,8 @@ enkf_impl_type enkf_config_node_get_impl_type(const enkf_config_node_type *confi
   return config_node->impl_type; 
 }
 
+const char * enkf_config_node_get_ensfile_ref(const enkf_config_node_type * config_node) { return config_node->ensfile; }
+const char * enkf_config_node_get_eclfile_ref(const enkf_config_node_type * config_node) { return config_node->eclfile; }
+
 
 VOID_FREE(enkf_config_node)

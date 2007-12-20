@@ -94,23 +94,15 @@ void well_fwrite(const well_type * well , FILE * stream) {
 }
 
 
-char * well_swapout(well_type * well , const char * path) {
-  char * ensfile = util_alloc_full_path(path , well_config_get_ensfile_ref(well->config));
-  FILE * stream = util_fopen(ensfile , "w");
-
+void well_swapout(well_type * well , FILE * stream) {
   well_fwrite(well , stream);
   well_free_data(well);
-
-  fclose(stream);
-  return ensfile;
 }
 
 
-void well_swapin(well_type * well , const char *file) {
-  FILE * stream = util_fopen(file , "r");
+void well_swapin(well_type * well , FILE * stream) {
   well_realloc_data(well);
   well_fread(well  , stream);
-  fclose(stream);
 }
 
 

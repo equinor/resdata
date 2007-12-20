@@ -407,21 +407,16 @@ void field_ecl_write(const field_type * field , const char * path) {
 
 
 
-char * field_swapout(field_type * field , const char * path) {
-  char * ensfile = util_alloc_full_path(path , field_config_get_ensfile_ref(field->config));
-  FILE * stream  = util_fopen(path , "w");
+void field_swapout(field_type * field , FILE * stream) {
   field_fwrite(field , stream);
   field_free_data(field);
-  fclose(stream);
-  return ensfile;
 }
 
 
-void field_swapin(field_type * field , const char *file) {
-  FILE * stream  = util_fopen(file , "r");
+
+void field_swapin(field_type * field , FILE * stream) {
   field_realloc_data(field);
   field_fread(field  , stream);
-  fclose(stream);
 }
 
 

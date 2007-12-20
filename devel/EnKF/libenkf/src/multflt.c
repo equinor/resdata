@@ -87,10 +87,6 @@ void multflt_clear(multflt_type * multflt) {
 }
 
 
-static char * multflt_alloc_ensfile(const multflt_type * multflt , const char * path) {
-  return util_alloc_full_path(path , multflt_config_get_ensfile_ref(multflt->config));
-}
-
 
 multflt_type * multflt_copyc(const multflt_type *multflt) {
   multflt_type * new = multflt_alloc(multflt->config); 
@@ -150,20 +146,15 @@ void multflt_fread(multflt_type * multflt , FILE * stream) {
 
 
 
-char * multflt_swapout(multflt_type * multflt , const char * path) {
-  char * ensfile = multflt_alloc_ensfile(multflt , path);
-  FILE * stream  = util_fopen(ensfile , "w");
+void multflt_swapout(multflt_type * multflt , FILE * stream) {
   multflt_fwrite(multflt , stream);
   multflt_free_data(multflt);
-  fclose(stream);
-  return ensfile;
 }
 
-void multflt_swapin(multflt_type * multflt , const char * file) {
-  FILE * stream = util_fopen(file , "r");
+
+void multflt_swapin(multflt_type * multflt , FILE * stream) {
   multflt_realloc_data(multflt);
   multflt_fread(multflt , stream);
-  fclose(stream);
 }
 
 

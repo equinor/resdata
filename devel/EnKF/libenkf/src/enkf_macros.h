@@ -173,18 +173,18 @@ char * prefix ## _alloc_ensfile__(const void * void_arg, const char *path)      
 /*****************************************************************/
 
 #define VOID_SWAPIN(prefix) \
-void prefix ## _swapin__(void *void_arg , const char * file) { \
-   prefix ## _swapin((prefix ## _type *) void_arg , file);     \
+void prefix ## _swapin__(void *void_arg , FILE * stream) { \
+   prefix ## _swapin((prefix ## _type *) void_arg , stream);     \
 }                                                            
 
 #define VOID_SWAPOUT(prefix) \
-char * prefix ## _swapout__(void *void_arg , const char * file) { \
-   return prefix ## _swapout((prefix ## _type *) void_arg , file);     \
+void prefix ## _swapout__(void *void_arg , FILE * stream) { \
+   prefix ## _swapout((prefix ## _type *) void_arg , stream);     \
 }                                                            
 
 
-#define VOID_SWAPIN_HEADER(prefix)  void prefix ## _swapin__(void * , const char * );
-#define VOID_SWAPOUT_HEADER(prefix) char * prefix ## _swapout__(void * , const char * );
+#define VOID_SWAPIN_HEADER(prefix)  void prefix ## _swapin__(void *  , FILE * );
+#define VOID_SWAPOUT_HEADER(prefix) void prefix ## _swapout__(void * , FILE * );
 
 /*****************************************************************/
 

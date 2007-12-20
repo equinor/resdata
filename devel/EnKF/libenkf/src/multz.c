@@ -124,27 +124,21 @@ void multz_ecl_write(const multz_type * multz , const char * path) {
 }
 
 
-char * multz_swapout(multz_type * multz , const char * path) {
+void multz_swapout(multz_type * multz , FILE * stream) {
   DEBUG_ASSERT(multz)
   {
-    char * ensfile = util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
-    FILE * stream  = util_fopen(ensfile , "w");
     multz_fwrite(multz , stream);
     multz_free_data(multz);
-    fclose(stream);
-    return ensfile;
   }
 }
 
 
 
-void multz_swapin(multz_type * multz , const char *file) {
+void multz_swapin(multz_type * multz , FILE * stream) {
   DEBUG_ASSERT(multz)
   {
-    FILE * stream  = util_fopen(file , "r");
     multz_realloc_data(multz);
     multz_fread(multz  , stream);
-    fclose(stream);
   }
 }
 

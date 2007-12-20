@@ -12,8 +12,8 @@
 
 typedef struct enkf_state_struct enkf_state_type;
 
-void              enkf_state_swapout(enkf_state_type * , int );
-void              enkf_state_swapin(enkf_state_type * , int );
+void              enkf_state_swapout(enkf_state_type * , int , bool );
+void              enkf_state_swapin(enkf_state_type * , int , bool);
 enkf_state_type * enkf_state_copyc(const enkf_state_type * );
 void              enkf_state_iset_eclpath(enkf_state_type * , int , const char *);
 void              enkf_state_add_node(enkf_state_type * , const char * );
@@ -26,8 +26,7 @@ void            * enkf_state_load_ecl_restart_void(void * );
 void            * enkf_state_load_ecl_void(void * );
 void              enkf_state_load_ecl(enkf_state_type * , bool , int );
 
-void              enkf_state_iset_enspath(enkf_state_type * , int , const char *);
-const      char * enkf_state_get_enspath_ref(const enkf_state_type * );
+void              enkf_state_set_run_path(enkf_state_type *  , ...);
 void              enkf_state_load_ecl_restart(enkf_state_type * , bool , int );
 void              enkf_state_sample(enkf_state_type * , int);
 void              enkf_state_ens_write(const enkf_state_type * , int);
@@ -37,6 +36,12 @@ void              enkf_state_ecl_read(enkf_state_type * , const ecl_block_type *
 void              enkf_state_free(enkf_state_type * );
 void              enkf_state_apply(enkf_state_type * , enkf_node_ftype1 * , int );
 void              enkf_state_serialize(enkf_state_type * , size_t);
+
+void 		  enkf_state_set_run_path(enkf_state_type * , ...);
+void 		  enkf_state_set_ens_path_static(enkf_state_type * , ...);
+void 		  enkf_state_set_ens_path_parameter(enkf_state_type * , ...);
+void 		  enkf_state_set_ens_path_dynamic_forecast(enkf_state_type * , ...);
+void 		  enkf_state_set_ens_path_dynamic_analyzed(enkf_state_type * , ...);
 
 
 void enkf_ensemble_update(enkf_state_type ** , int  , size_t , const double * );

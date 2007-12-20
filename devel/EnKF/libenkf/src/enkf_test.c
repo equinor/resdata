@@ -58,7 +58,7 @@ int main(void) {
   hist      = history_alloc_from_schedule(sched);
  
   index_map = field_config_alloc_index_map1("ECLIPSE.EGRID" , true , &nx , &ny , &nz , &active_size);
-  config = enkf_config_alloc(4, 2 , true);
+  config = enkf_config_alloc("RunPATH/tmpdir_%04d" , "Ensemble/%04d/Static/mem%04d" , "Ensemble/%04d/Parameters/mem%04d" , "Ensemble/%04d/Dynamic/Forecast/mem%04d" , "Ensemble/%04d/Dynamic/Analyzed/mem%04d" , true);
   enkf_config_add_type(config , "MULTZ" , 
 		       parameter , MULTZ, 
 		       multz_config_fscanf_alloc("Config/multz" , 100 , 100 , 100 , "MULTZ.INC" , "multz"));
@@ -110,11 +110,12 @@ int main(void) {
       state[i] = enkf_state_alloc(config , "ECLIPSE" , false);
       enkf_state_add_node(state[i] , "MULTZ"); 
       enkf_state_add_node(state[i] , "EQUIL");
+      enkf_state_set_run_path(state[i] , i);
+      enkf_state_set_ens_path_static(state[i]    , 0 , i);
+      enkf_state_set_ens_path_parameter(state[i] , 0 , i);
+      enkf_state_set_ens_path_dynamic_forecast(state[i] , 0 , i);
+      enkf_state_set_ens_path_dynamic_analyzed(state[i] , 0 , i);
 
-      enkf_state_iset_eclpath(state[i] , 0 , "RunPATH");
-      sprintf(path , "tmpdir_%04d" , i);
-      enkf_state_iset_eclpath(state[i] , 1 , path);
-      
       {
 	bool unified    = false;
 	int report_step = 51;

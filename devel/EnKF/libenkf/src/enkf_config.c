@@ -6,7 +6,7 @@
 #include <multz_config.h>
 #include <enkf_config.h>
 #include <enkf_config_node.h>
-#include <pathv.h>
+#include <path_fmt.h>
 #include <ecl_static_kw_config.h>
 #include <enkf_types.h>
 #include <well_config.h>
@@ -20,17 +20,7 @@
 #include <history.h>
   
 
-struct enkf_config_struct {
-  int  		    ens_size;
-  hash_type        *config_hash;
-  hash_type        *obs_hash;
-  int               enspath_depth;
-  int               eclpath_depth;
-  bool              endian_swap;
-  int               Nwells;
-  char            **well_list;
-};
-
+#include "enkf_config_decl.h"
 
 /*****************************************************************/
 
@@ -58,22 +48,24 @@ static void enkf_config_realloc_well_list(enkf_config_type * enkf_config) {
 
 bool enkf_config_get_endian_swap(const enkf_config_type * enkf_config) { return enkf_config->endian_swap; }
 
-int enkf_config_get_eclpath_depth(const enkf_config_type * enkf_config) { return enkf_config->eclpath_depth; }
 
-int enkf_config_get_enspath_depth(const enkf_config_type * enkf_config) { return enkf_config->enspath_depth; }
+enkf_config_type * enkf_config_alloc(const char * run_path , const char * ens_path_static , const char * ens_path_parameter , const char * ens_path_dynamic_forecast , const char * ens_path_dynamic_analyzed , bool endian_swap) {
 
-
-enkf_config_type * enkf_config_alloc(int enspath_depth , int eclpath_depth, bool endian_swap) {
   enkf_config_type * enkf_config = malloc(sizeof *enkf_config);
   enkf_config->config_hash = hash_alloc(10);
   enkf_config->obs_hash    = hash_alloc(10);
   
-  enkf_config->eclpath_depth = eclpath_depth;
-  enkf_config->enspath_depth = enspath_depth;
   enkf_config->endian_swap   = endian_swap;
   enkf_config->Nwells        = 0;
   enkf_config->well_list     = NULL;
   enkf_config_realloc_well_list(enkf_config);
+  
+  enkf_config->run_path           	    = path_fmt_alloc(run_path);
+  enkf_config->ens_path_parameter 	    = path_fmt_alloc(ens_path_parameter);
+  enkf_config->ens_path_static    	    = path_fmt_alloc(ens_path_static);
+  enkf_config->ens_path_dynamic_forecast    = path_fmt_alloc(ens_path_dynamic_forecast);
+  enkf_config->ens_path_dynamic_analyzed    = path_fmt_alloc(ens_path_dynamic_analyzed);
+
   return enkf_config;
 }
 
@@ -175,6 +167,11 @@ void enkf_config_free(enkf_config_type * enkf_config) {
       free(enkf_config->well_list[i]);
     free(enkf_config->well_list);
   }
+  path_fmt_free(enkf_config->run_path);
+  path_fmt_free(enkf_config->ens_path_parameter);
+  path_fmt_free(enkf_config->ens_path_static);
+  path_fmt_free(enkf_config->ens_path_dynamic_forecast);
+  path_fmt_free(enkf_config->ens_path_dynamic_analyzed);
   free(enkf_config);
 }
 

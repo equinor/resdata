@@ -18,9 +18,7 @@ typedef struct enkf_config_struct enkf_config_type;
 
 const char      ** enkf_config_get_well_list_ref(const enkf_config_type * , int *);
 bool               enkf_config_get_endian_swap(const enkf_config_type * );
-int                enkf_config_get_eclpath_depth(const enkf_config_type * );
-int                enkf_config_get_enspath_depth(const enkf_config_type * );
-enkf_config_type * enkf_config_alloc(int , int , bool);
+enkf_config_type * enkf_config_alloc(const char * , const char * , const char * , const char * , const char * , bool);
 enkf_impl_type     enkf_config_impl_type(const enkf_config_type *, const char * );
 bool               enkf_config_has_key(const enkf_config_type * , const char *);
 void               enkf_config_add_type(enkf_config_type * , const char * , enkf_var_type , enkf_impl_type , const void *);

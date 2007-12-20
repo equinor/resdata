@@ -48,9 +48,9 @@ struct enkf_node_struct {
   iaddsqr_ftype      *iaddsqr;
 
   serial_state_type  *serial_state;
-  char               *swapfile;
   char               *node_key;
   void               *data;
+  bool                swapped;
   const enkf_config_node_type *config;
 };
 
@@ -200,7 +200,6 @@ enkf_node_type * enkf_node_alloc_old(const char *node_key,
   node->freef     = freef;
   node->copyc     = copyc;
   node->config    = config;
-  node->swapfile  = NULL;
   node->node_key  = util_alloc_string_copy(node_key);
   node->data      = NULL;
 
@@ -247,15 +246,9 @@ enkf_impl_type enkf_node_get_impl_type(const enkf_node_type * enkf_node) {
 
 
 bool enkf_node_swapped(const enkf_node_type *enkf_node) {
-  if (enkf_node->swapfile == NULL)
-    return false;
-  else
-    return true;
+  return enkf_node->swapped;
 }
 
-const char * enkf_node_get_swapfile(const enkf_node_type * enkf_node) {
-  return enkf_node->swapfile;
-}
 
 
 #define FUNC_ASSERT(func,func_name) if (func == NULL) { fprintf(stderr,"%s: function handler: %s not registered when writing node:%s - aborting\n",__func__ , func_name , enkf_node->node_key); abort(); }
@@ -269,16 +262,24 @@ void enkf_node_ecl_write(const enkf_node_type *enkf_node , const char *path) {
 }
 
 void enkf_node_fwrite(const enkf_node_type *enkf_node , const char * path) {
-  FILE * stream = NULL;
-  FUNC_ASSERT(enkf_node->fwrite_f , "ens_write");
+  char * ensfile = util_alloc_full_path(path , enkf_config_node_get_ensfile_ref(enkf_node->config));
+  FILE * stream  = util_fopen(ensfile , "w");
+  FUNC_ASSERT(enkf_node->fwrite_f , "fwrite_f");
   enkf_node->fwrite_f(enkf_node->data , stream);
+  free(ensfile);
 }
 
+
 void enkf_node_fread(enkf_node_type *enkf_node , const char * path) {
-  FILE * stream = NULL;
-  FUNC_ASSERT(enkf_node->fread_f , "ens_read");
+  char * ensfile = util_alloc_full_path(path , enkf_config_node_get_ensfile_ref(enkf_node->config));
+  FILE * stream  = util_fopen(ensfile , "r");
+
+  FUNC_ASSERT(enkf_node->fread_f , "fread_f");
   enkf_node->fread_f(enkf_node->data , stream);
+  free(ensfile);
 }
+
+
 
 void enkf_node_ens_clear(enkf_node_type *enkf_node) {
   FUNC_ASSERT(enkf_node->clear , "clear");
@@ -344,21 +345,28 @@ void enkf_node_sample(enkf_node_type *enkf_node) {
   enkf_node->sample(enkf_node->data);
 }
 
-void enkf_node_swapin(enkf_node_type *enkf_node) {
+
+void enkf_node_swapin(enkf_node_type *enkf_node , const char * path) {
   FUNC_ASSERT(enkf_node->swapin , "swapin");
-  if (enkf_node->swapfile == NULL) {
-    fprintf(stderr,"%s: swapfile == NULL - probably forgot to call swapout first - aborting \n",__func__);
-    abort();
+  if (enkf_node_swapped(enkf_node)) {
+    char * ensfile = util_alloc_full_path(path , enkf_config_node_get_ensfile_ref(enkf_node->config));
+    FILE * stream  = util_fopen(ensfile , "r");
+    enkf_node->swapin(enkf_node->data , stream);
+    enkf_node->swapped = false;
+    fclose(stream);
   }
-  enkf_node->swapin(enkf_node->data , enkf_node->swapfile);
-  free(enkf_node->swapfile);
-  enkf_node->swapfile = NULL;
 }
 
+
 void enkf_node_swapout(enkf_node_type *enkf_node, const char *path) {
+  char * ensfile = util_alloc_full_path(path , enkf_config_node_get_ensfile_ref(enkf_node->config));
+  FILE * stream  = util_fopen(ensfile , "w");
   FUNC_ASSERT(enkf_node->swapout , "swapout");
-  enkf_node->swapfile = enkf_node->swapout(enkf_node->data , path);
+  enkf_node->swapout(enkf_node->data , stream);
+  enkf_node->swapped = true;
+  fclose(stream);
 }
+
 
 void enkf_node_clear(enkf_node_type *enkf_node) {
   FUNC_ASSERT(enkf_node->clear , "clear");
@@ -381,7 +389,6 @@ void enkf_node_free(enkf_node_type *enkf_node) {
   if (enkf_node->freef != NULL)
     enkf_node->freef(enkf_node->data);
   free(enkf_node->node_key);
-  if (enkf_node->swapfile != NULL) free(enkf_node->swapfile);
   serial_state_free(enkf_node->serial_state);
   free(enkf_node);
   enkf_node = NULL;
@@ -405,9 +412,9 @@ static enkf_node_type * enkf_node_alloc_empty(const char *node_key,  const enkf_
   enkf_node_type * node = util_malloc(sizeof * node , __func__);
   node->config          = config;
   node->node_key        = util_alloc_string_copy(node_key);
-  node->swapfile        = NULL;
   node->data            = NULL;
-  
+  node->swapped         = false;
+
   enkf_impl_type impl_type = enkf_config_node_get_impl_type(config);
   switch (impl_type) {
   case(MULTZ):
