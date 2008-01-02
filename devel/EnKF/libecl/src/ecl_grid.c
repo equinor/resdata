@@ -4,9 +4,10 @@
 #include <ecl_kw.h>
 #include <ecl_grid.h>
 #include <stdbool.h>
-
+#include <ecl_util.h>
 
 typedef struct ecl_point_struct ecl_point_type;
+
 
 struct ecl_point_struct {
   double x,y,z;
@@ -21,6 +22,7 @@ typedef struct ecl_cell_struct ecl_cell_type;
 
 struct ecl_cell_struct {
   bool active;
+  int  active_index;
   ecl_point_type center;
   ecl_point_type corner_list[8];
 };
@@ -31,6 +33,7 @@ struct ecl_grid_struct {
   
   ecl_cell_type ** cells;
 };
+
 
 void ecl_point_compare(const ecl_point_type *p1 , const ecl_point_type *p2) {
   if ((abs(p1->x - p2->x) + abs(p1->y - p2->y) + abs(p1->z - p2->z)) > 0.10)
@@ -156,7 +159,7 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
       ecl_point_inplace_set(&cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
     }
   }
-  cell->active = actnum[cell_index];
+  cell->active       = actnum[cell_index];
 }
 
 
@@ -170,15 +173,32 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
   ecl_cell_type * cell   = ecl_grid->cells[cell_index];
   int c;
 
-
   cell->active    = (coords[4] == 1) ? true : false;
   for (c = 0; c < 8; c++) 
     ecl_point_inplace_set_float_ptr(&cell->corner_list[c] , (const float *) &corners[c*3]);
-
 }
 
 
-void ecl_grid_pillar_cross_planes(const ecl_point_type * pillar , const double *z , double *x , double *y) {
+
+static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
+  int i,j,k;
+  int active_index = 0;
+  for (k=0; k < ecl_grid->nz; k++) 
+    for (j=0; j < ecl_grid->ny; j++) 
+      for (i=0; i < ecl_grid->nx; i++) {
+	const int cell_index   = __ecl_grid_get_cell_index(ecl_grid , i , j , k );
+	ecl_cell_type * cell   = ecl_grid->cells[cell_index];
+	if (cell->active) {
+	  cell->active_index = active_index;
+	  active_index++;
+	} else
+	  cell->active_index = -1;
+      }
+}
+
+
+
+static void ecl_grid_pillar_cross_planes(const ecl_point_type * pillar , const double *z , double *x , double *y) {
   double e_x , e_y , e_z;
   int k;
   e_x = pillar[1].x - pillar[0].x;
@@ -241,6 +261,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
   }
   
   ecl_grid_set_center(ecl_grid);
+  ecl_grid_set_active_index(ecl_grid);
   return ecl_grid;
 }
 
@@ -326,6 +347,7 @@ ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_flip) {
   }
   fortio_close(fortio);
   ecl_grid_set_center(grid);
+  ecl_grid_set_active_index(grid);
   return grid;
 }
 
@@ -366,4 +388,48 @@ void ecl_grid_free(ecl_grid_type * grid) {
     ecl_cell_free(grid->cells[i]);
   free(grid->cells);
   free(grid);
+}
+
+
+
+void ecl_grid_set_box_active_list(ecl_grid_type * grid , ecl_box_type * box , int * active_index_list) {
+  int i1,i2,j1,j2,k1,k2;
+  int i,j,k;
+  int active_count = 0;
+  ecl_box_set_limits(box , &i1 , &i2 , &j1 , &j2 , &k1 , &k2); 
+
+  for (k = k1; k <= k2; k++) {
+    for (j= j1; j <= j2; j++) {
+      for (i=i1; i <= i2; i++) {
+	const int cell_index   = __ecl_grid_get_cell_index(grid , i , j , k );
+	ecl_cell_type * cell   = grid->cells[cell_index];
+	if (cell->active) {
+	  active_index_list[active_count] = cell->active_index;
+	  active_count++;
+	}
+      }
+    }
+  }
+}
+
+
+
+int ecl_grid_count_box_active(ecl_grid_type * grid , ecl_box_type * box) {
+  int i1,i2,j1,j2,k1,k2;
+  int i,j,k;
+  int active_count = 0;
+  ecl_box_set_limits(box , &i1 , &i2 , &j1 , &j2 , &k1 , &k2); 
+
+  for (k = k1; k <= k2; k++) {
+    for (j= j1; j <= j2; j++) {
+      for (i=i1; i <= i2; i++) {
+	const int cell_index   = __ecl_grid_get_cell_index(grid , i , j , k );
+	ecl_cell_type * cell   = grid->cells[cell_index];
+	if (cell->active)
+	  active_count++;
+      }
+    }
+  }
+  
+  return active_count;
 }

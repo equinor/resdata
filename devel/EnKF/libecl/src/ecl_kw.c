@@ -8,6 +8,7 @@
 #include <ecl_util.h>
 #include <fortio.h>
 #include <util.h>
+#include <ecl_box.h>
 
 
 #define DEBUG 1

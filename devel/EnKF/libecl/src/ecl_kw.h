@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <fortio.h>
 #include <ecl_util.h>
-
+#include <ecl_box.h>
 
 
 

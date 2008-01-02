@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <util.h>
+#include <ecl_box.h>
 
 
 int main(int argc, char ** argv) {
