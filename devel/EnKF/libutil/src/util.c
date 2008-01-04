@@ -1447,16 +1447,12 @@ void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , 
 /*****************************************************************/
 
 void * util_realloc(void * old_ptr , size_t new_size , const char * caller) {
-  if (new_size == 0)
-    return NULL;
-  else {
-    void * tmp = realloc(old_ptr , new_size);
-    if (tmp == NULL) {
-      fprintf(stderr,"%s: failed to realloc %d bytes - aborting \n",caller , new_size);
-      abort();
-    }
-    return tmp;
+  void * tmp = realloc(old_ptr , new_size);
+  if ((tmp == NULL) && (new_size > 0)) {
+    fprintf(stderr,"%s: failed to realloc %d bytes - aborting \n",caller , new_size);
+    abort();
   }
+  return tmp;
 }
 
 
