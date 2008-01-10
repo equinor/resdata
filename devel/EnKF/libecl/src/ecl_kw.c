@@ -268,7 +268,6 @@ ecl_kw_type * ecl_kw_alloc_empty(bool fmt_file , bool endian_convert) {
   ecl_kw_set_fmt_file(ecl_kw , fmt_file);
   
   return ecl_kw;
-
 }
 
 
@@ -762,6 +761,7 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
 }
 
 
+
 void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
   if (ecl_kw->shared_data) {
     fprintf(stderr,"%s: trying to allocate data for ecl_kw object which has been declared with shared storage - aborting \n",__func__);
@@ -769,7 +769,6 @@ void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
   }
   ecl_kw->data = util_realloc(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , __func__);
 }
-
 
 
 
@@ -805,6 +804,7 @@ void ecl_kw_set_header_alloc(ecl_kw_type *ecl_kw , const char *header ,  int siz
   ecl_kw_set_header(ecl_kw , header , size , ecl_str_type);
   ecl_kw_alloc_data(ecl_kw);
 }
+
 
 bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   bool OK;

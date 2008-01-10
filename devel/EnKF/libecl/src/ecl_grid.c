@@ -29,8 +29,7 @@ struct ecl_cell_struct {
 
 
 struct ecl_grid_struct {
-  int nx , ny , nz , size;
-  
+  int nx , ny , nz , size , total_active;
   ecl_cell_type ** cells;
 };
 
@@ -65,6 +64,7 @@ void ecl_point_inplace_set(ecl_point_type * point , double x, double y , double 
   point->y = y;
   point->z = z;
 }
+
 
 
 void ecl_point_inplace_set_float_ptr(ecl_point_type * point , const float * pos) {
@@ -183,6 +183,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
 static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
   int i,j,k;
   int active_index = 0;
+
   for (k=0; k < ecl_grid->nz; k++) 
     for (j=0; j < ecl_grid->ny; j++) 
       for (i=0; i < ecl_grid->nx; i++) {
@@ -194,6 +195,8 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
 	} else
 	  cell->active_index = -1;
       }
+  
+  ecl_grid->total_active = active_index;
 }
 
 
@@ -310,6 +313,21 @@ ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) 
 }
 
 
+const int * ecl_grid_alloc_index_map(const ecl_grid_type * ecl_grid) {
+  int * index_map  = util_malloc(ecl_grid->size * sizeof * index_map, __func__);
+  int   index;
+
+  for (index = 0; index < ecl_grid->size; index++) {
+    const ecl_cell_type * cell = ecl_grid->cells[index];
+    if (cell->active) 
+      index_map[index] = cell->active_index;
+    else
+      index_map[index] = -1;
+  }
+
+  return index_map;
+}
+
 
 ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_flip) {
   fortio_type   * fortio = fortio_open(grid_file , "r" , endian_flip);
@@ -349,6 +367,14 @@ ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_flip) {
   ecl_grid_set_center(grid);
   ecl_grid_set_active_index(grid);
   return grid;
+}
+
+
+void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * nz , int * active_size) {
+  if (nx != NULL) *nx 	       		= grid->nx;
+  if (ny != NULL) *ny 	       		= grid->ny;
+  if (nz != NULL) *nz 	       		= grid->nz;
+  if (active_size != NULL) *active_size = grid->total_active;
 }
 
 
@@ -392,7 +418,8 @@ void ecl_grid_free(ecl_grid_type * grid) {
 
 
 
-void ecl_grid_set_box_active_list(ecl_grid_type * grid , ecl_box_type * box , int * active_index_list) {
+
+void ecl_grid_set_box_active_list(const ecl_grid_type * grid , const ecl_box_type * box , int * active_index_list) {
   int i1,i2,j1,j2,k1,k2;
   int i,j,k;
   int active_count = 0;
@@ -414,7 +441,8 @@ void ecl_grid_set_box_active_list(ecl_grid_type * grid , ecl_box_type * box , in
 
 
 
-int ecl_grid_count_box_active(ecl_grid_type * grid , ecl_box_type * box) {
+
+int ecl_grid_count_box_active(const ecl_grid_type * grid , const ecl_box_type * box) {
   int i1,i2,j1,j2,k1,k2;
   int i,j,k;
   int active_count = 0;
