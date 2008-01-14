@@ -9,6 +9,8 @@
 #include <list.h>
 #include <util.h>
 #include <time.h>
+#include <restart_kw_list.h>
+
 
 
 struct ecl_block_struct {
@@ -27,6 +29,7 @@ struct ecl_block_struct {
   hash_type    *kw_hash;
   list_type    *kw_list;
   time_t        sim_time;
+  restart_kw_list_type *_kw_list;
 };
 
 
@@ -116,16 +119,6 @@ ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
     }
   }
     
-  /*  
-      {
-      int i;
-      char **kwlist = hash_alloc_ordered_keylist(src->kw_hash);
-      for (i=0; i  < src->size; i++)
-      ecl_block_add_kw_copy(copy , hash_get(src->kw_hash , kwlist[i]));
-      hash_free_ext_keylist(src->kw_hash , kwlist);
-      }
-  */
-
   return copy;
 }
 
@@ -187,6 +180,7 @@ time_t ecl_block_get_sim_time(const ecl_block_type * block) {
   return block->sim_time;
 }
 
+
 ecl_block_type * ecl_block_alloc(int report_nr , bool fmt_file , bool endian_convert) {
   ecl_block_type *ecl_block;
   
@@ -195,7 +189,8 @@ ecl_block_type * ecl_block_alloc(int report_nr , bool fmt_file , bool endian_con
   ecl_block->fmt_file       = fmt_file;
   ecl_block->endian_convert = endian_convert;
   ecl_block->size           = 0;
-  
+  ecl_block->_kw_list       = restart_kw_list_alloc();
+
   ecl_block->kw_hash  = hash_alloc(10);
   ecl_block->kw_list  = list_alloc();
   ecl_block->sim_time = -1;
@@ -243,13 +238,13 @@ ecl_kw_type * ecl_block_detach_kw(ecl_block_type *ecl_block , const char *kw) {
 }
 
 
-
+/*
 void ecl_block_free_kw(ecl_block_type *ecl_block , const char *kw) {
   ecl_kw_type *ecl_kw = ecl_block_detach_kw(ecl_block , kw);
   if (ecl_kw != NULL) 
     ecl_kw_free(ecl_kw);
 }
-
+*/
 
 
 
@@ -418,6 +413,7 @@ void * ecl_block_get_data_ref(const ecl_block_type *ecl_block, const char *kw) {
 void ecl_block_free(ecl_block_type *ecl_block) {
   hash_free(ecl_block->kw_hash);
   list_free(ecl_block->kw_list);
+  restart_kw_list_free(ecl_block->_kw_list);
   free(ecl_block);
 }
 

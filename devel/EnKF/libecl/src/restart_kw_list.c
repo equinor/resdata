@@ -60,6 +60,7 @@ void restart_kw_list_add(restart_kw_list_type * kw_list , const char * kw) {
 }
 
 
+
 const char * restart_kw_list_get_next(restart_kw_list_type * kw_list) {
   if (kw_list->mode == writing) {
     fprintf(stderr,"%s: restart_kw_list object is in writing  mode - must switch with restart_kw_list_reset() - aborting \n",__func__);
