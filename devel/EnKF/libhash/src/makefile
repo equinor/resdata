@@ -15,7 +15,7 @@ ARFLAGS = -csr
 OBJECTS   = set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o
 INC_FILES = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h
 LIB       = libhash_$(MFLAG).a
-LIB_LINK  = -lhash_$(MFLAG) -lutil_$(MFLAG)
+LIB_LINK  = -lhash_$(MFLAG) -lutil_$(MFLAG) -lz -lm 
 
 
 

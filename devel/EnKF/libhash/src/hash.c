@@ -11,7 +11,7 @@
 
 
 struct hash_struct {
-  uint32_t        global_insert_nr;
+  /*uint32_t        global_insert_nr;*/
   uint32_t        size;
   uint32_t        elements;
   double          resize_fill;
@@ -195,6 +195,7 @@ static void hash_resize(hash_type *hash, int new_size) {
 hash_type * hash_alloc(int size) {
   return __hash_alloc(size , 0.50 , hash_index);
 }
+
 
 
 void hash_free(hash_type *hash) {
