@@ -31,11 +31,13 @@ double trans_derrf(double x , const void_arg_type * arg) {
 
 
 double trans_dunif(double x , const void_arg_type * arg) {
-  int steps = 6;
   double y;
-  /*steps = void_arg_get_int(arg , 0);*/
+  int    steps = void_arg_get_int(arg , 0);
+  double min   = void_arg_get_double(arg , 1);
+  double max   = void_arg_get_double(arg , 2);
+  
   y = 0.5*(1 + erf(x/sqrt(2.0))); /* 0 - 1 */
-  return floor( y * steps) / (steps - 1);
+  return (floor( y * steps) / (steps - 1)) * (max - min) + min;
 }
 
 
@@ -47,13 +49,18 @@ double trans_normal(double x , const void_arg_type * arg) {
 }
 
 
-transform_ftype * trans_func_lookup2(FILE * stream , char ** _func_name , void_arg_type **_void_arg , bool *active) {
+transform_ftype * trans_func_lookup(FILE * stream , char ** _func_name , void_arg_type **_void_arg , bool *active) {
   char            * func_name;
   void_arg_type   * void_arg = NULL;
   transform_ftype * transf;
 
   *active = true;
   func_name = util_fscanf_alloc_token(stream);
+  if (func_name == NULL) {
+    fprintf(stderr,"%s: could not locate name of transformation - aborting \n",__func__);
+    abort();
+  }
+
   if (strcmp(func_name , "NORMAL") == 0) {
     /* Normal distribution */
     /* NORMAL mu std       */
@@ -64,6 +71,11 @@ transform_ftype * trans_func_lookup2(FILE * stream , char ** _func_name , void_a
     /* UNIFORM min max      */
     transf   = trans_unif;
     void_arg = void_arg_alloc2(double_value , double_value);
+  } else if (strcmp(func_name , "DUNIF") == 0) {
+    /* Uniform distribution */
+    /* DUNIF steps min max */
+    transf   = trans_unif;
+    void_arg = void_arg_alloc3(int_value , double_value , double_value);
   } else if (strcmp(func_name , "CONST") == 0) {
     /* Constant    */
     /* CONST value */
@@ -82,7 +94,7 @@ transform_ftype * trans_func_lookup2(FILE * stream , char ** _func_name , void_a
 }
 
 
-transform_ftype * trans_func_lookup(const char * func_name , FILE * stream , void_arg_type **void_arg) {
+transform_ftype * trans_func_lookup_old(const char * func_name , FILE * stream , void_arg_type **void_arg) {
   *void_arg = NULL;
   if (func_name == NULL) 
     return NULL;

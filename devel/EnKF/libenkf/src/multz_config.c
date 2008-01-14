@@ -6,7 +6,6 @@
 #include <ens_config.h>
 #include <enkf_macros.h>
 #include <multz_config.h>
-#include <logmode.h>
 #include <util.h>
 #include <trans_func.h>
 
@@ -109,7 +108,7 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
 
   size = util_count_file_lines(stream);
   fseek(stream , 0L , SEEK_SET);
-  config  = __multz_config_alloc_empty(size );
+  config  = __multz_config_alloc_empty( size );
   line_nr = 0;
   do {
     int i1 = 1;
@@ -122,22 +121,20 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
       fprintf(stderr,"%s: something wrong when reading: %s - aborting \n",__func__ , filename);
       abort();
     }
-    scalar_config_fscanf_line(config->scalar_config , line_nr , stream);
     util_fscanf_int(stream, &i1);  
     util_fscanf_int(stream, &i2);
     util_fscanf_int(stream, &j1);
     util_fscanf_int(stream, &j2);
-    
-    config->k[line_nr]     = k;
+
     config->i1[line_nr]    = util_int_max(i1 , 1);
     config->i2[line_nr]    = util_int_min(i2 , nx);
     config->j1[line_nr]    = util_int_max(j1 , 1);
     config->j2[line_nr]    = util_int_min(j2 , ny);
     config->area[line_nr]  = (config->i2[line_nr]- config->i1[line_nr] + 1) * (config->j2[line_nr]- config->j1[line_nr] + 1);
+    
+    scalar_config_fscanf_line(config->scalar_config , line_nr , stream);
     line_nr++;
   } while ( line_nr < size );
-
-  scalar_config_finalize_init(config->scalar_config);
   fclose(stream);
   return config;
 }

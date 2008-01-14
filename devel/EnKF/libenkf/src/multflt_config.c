@@ -5,7 +5,6 @@
 #include <multflt_config.h>
 #include <enkf_util.h>
 #include <enkf_macros.h>
-#include <logmode.h>
 #include <trans_func.h>
 #include <scalar_config.h>
 
@@ -72,8 +71,6 @@ multflt_config_type * multflt_config_fscanf_alloc(const char * filename ) {
     line_nr++;
   } while ( line_nr < size );
   fclose(stream);
-  scalar_config_finalize_init(config->scalar_config);
-  
   return config;
 }
 

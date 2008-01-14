@@ -50,8 +50,8 @@ equil_config_type * equil_config_fscanf_alloc(const char * config_file) {
       fprintf(stderr,"%s: something wrong on line:%d in file: %s - aborting \n",__func__ , ieq + 1 , config_file);
       abort();
     }
-    scalar_config_fscanf_line2(config->scalar_config , ieq        , stream);  /* WOC */
-    scalar_config_fscanf_line2(config->scalar_config , ieq + size , stream);  /* GOC */
+    scalar_config_fscanf_line(config->scalar_config , ieq        , stream);  /* WOC */
+    scalar_config_fscanf_line(config->scalar_config , ieq + size , stream);  /* GOC */
   }
   
   fclose(stream);

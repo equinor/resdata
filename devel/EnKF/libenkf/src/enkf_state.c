@@ -30,22 +30,25 @@
 #include <void_arg.h>
 #include <pgbox_config.h>
 #include <pgbox.h>
+#include <restart_kw_list.h>
 
 #include "enkf_config_decl.h"
 
 
 struct enkf_state_struct {
-  list_type    	   * node_list;
-  hash_type    	   * node_hash;
-  hash_type    	   * impl_types;
-  path_fmt_type    * run_path;
-  path_fmt_type    * ens_path_parameter;
-  path_fmt_type    * ens_path_static;
-  path_fmt_type    * ens_path_dynamic_forecast;
-  path_fmt_type    * ens_path_dynamic_analyzed;
-  enkf_config_type * config;
-  char             * eclbase;
-  bool              _fmt_file;  
+  restart_kw_list_type  * restart_kw_list;
+  list_type    	   	* node_list;
+  hash_type    	   	* node_hash;
+  hash_type    	   	* impl_types;
+  
+  path_fmt_type    	* run_path;
+  path_fmt_type    	* ens_path_parameter;
+  path_fmt_type    	* ens_path_static;
+  path_fmt_type    	* ens_path_dynamic_forecast;
+  path_fmt_type    	* ens_path_dynamic_analyzed;
+  enkf_config_type 	* config;
+  char             	* eclbase;
+  bool             	 _fmt_file;  
 };
 
 
@@ -65,6 +68,20 @@ void enkf_state_ ## node_func(enkf_state_type * enkf_state , int mask) { \
     list_node = list_node_get_next(list_node);                           \
   }                                                                      \
 }
+
+
+void enkf_state_apply_NEW(enkf_state_type * enkf_state , enkf_node_ftype1 * node_func , int mask) {
+  enkf_node_type * enkf_node;
+  bool cont;
+  enkf_node = hash_iter_get_first(enkf_state->node_hash , &cont);
+  while (cont) {
+    if (enkf_node_include_type(enkf_node , mask))                        
+      node_func(enkf_node);                               
+    enkf_node = hash_iter_get_next(enkf_state->node_hash , &cont);
+  }                                                                      
+}
+
+
 
 void enkf_state_apply(enkf_state_type * enkf_state , enkf_node_ftype1 * node_func , int mask) {
   list_node_type *list_node;                                             
@@ -183,12 +200,13 @@ static const char * enkf_state_select_ens_path(const enkf_state_type * enkf_stat
 enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char * eclbase, bool fmt_file) {
   enkf_state_type * enkf_state = malloc(sizeof *enkf_state);
   
-  enkf_state->config         = (enkf_config_type *) config;
-  enkf_state->node_list      = list_alloc();
-  enkf_state->node_hash      = hash_alloc(10);
-  enkf_state->impl_types     = hash_alloc(10);
-  enkf_state->eclbase        = util_alloc_string_copy(eclbase);
-  enkf_state->_fmt_file      = fmt_file;
+  enkf_state->config          = (enkf_config_type *) config;
+  enkf_state->node_list       = list_alloc();
+  enkf_state->node_hash       = hash_alloc(10);
+  enkf_state->impl_types      = hash_alloc(10);
+  enkf_state->eclbase         = util_alloc_string_copy(eclbase);
+  enkf_state->_fmt_file       = fmt_file;
+  enkf_state->restart_kw_list = restart_kw_list_alloc();
 
   enkf_state->run_path           	   = path_fmt_copyc(config->run_path);
   enkf_state->ens_path_parameter 	   = path_fmt_copyc(config->ens_path_parameter);
@@ -283,7 +301,8 @@ static void enkf_state_add_node__1(enkf_state_type * enkf_state , const char * n
 
 
 
-/* Maybe this should just take implementation type
+/* 
+   Maybe this should just take implementation type
    as an input integer, instead of going via the string type_str ??
 */
 
@@ -308,6 +327,7 @@ void enkf_state_add_node(enkf_state_type * enkf_state , const char * node_name) 
 
 static void enkf_state_load_ecl_restart__(enkf_state_type * enkf_state , const ecl_block_type *ecl_block) {
   ecl_kw_type * ecl_kw = ecl_block_get_first_kw(ecl_block);
+  restart_kw_list_reset(enkf_state->restart_kw_list);
   while (ecl_kw != NULL) {
     char *kw                       = ecl_kw_alloc_strip_header(ecl_kw);
     const enkf_impl_type impl_type = enkf_config_impl_type(enkf_state->config , kw);
@@ -324,6 +344,7 @@ static void enkf_state_load_ecl_restart__(enkf_state_type * enkf_state , const e
       fprintf(stderr,"%s internal error - when loading ECLIPSE restart files only FIELD and STATIC implementation types are (currently) recognized - aborting \n",__func__);
       abort();
     }    
+    restart_kw_list_add(enkf_state->restart_kw_list , kw);
 
     if (!enkf_config_has_key(enkf_state->config , kw)) 
       enkf_config_add_type0(enkf_state->config , kw , ecl_kw_get_size(ecl_kw) , enkf_type , impl_type);
@@ -348,7 +369,7 @@ static void enkf_state_load_ecl_restart__(enkf_state_type * enkf_state , const e
 
     }
     free(kw);
-    ecl_kw = ecl_block_get_next_kw(ecl_block , ecl_kw);
+    ecl_kw = ecl_block_get_next_kw(ecl_block);
   }
 }
 
@@ -610,6 +631,7 @@ void enkf_state_free(enkf_state_type *enkf_state) {
   path_fmt_free(enkf_state->ens_path_static);
   path_fmt_free(enkf_state->ens_path_dynamic_forecast);
   path_fmt_free(enkf_state->ens_path_dynamic_analyzed);
+  restart_kw_list_free(enkf_state->restart_kw_list);
   free(enkf_state->eclbase);
   free(enkf_state);
 }

@@ -8,7 +8,6 @@
 #include <scalar_config.h>
 #include <scalar.h>
 #include <enkf_util.h>
-#include <logmode.h>
 
 
 
