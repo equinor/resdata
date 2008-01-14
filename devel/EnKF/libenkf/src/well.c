@@ -55,10 +55,6 @@ well_type * well_alloc(const well_config_type * well_config) {
 
 
 
-char * well_alloc_ensfile(const well_type * well , const char * path) {
-  return util_alloc_full_path(path , well_config_get_ensfile_ref(well->config));
-}
-
 
 well_type * well_copyc(const well_type *well) {
   const int size = well_config_get_data_size(well->config);   

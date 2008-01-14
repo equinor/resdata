@@ -10,7 +10,7 @@ static multz_type        ** MULTZ_LIST        = NULL;
 void multz_inter_init__(const char * _config_file, const int * config_file_len , const int * ens_size, const int * n_multz, const int *nx , const int * ny , const int * nz) {
   int iens;
   char * config_file = util_alloc_cstring(_config_file , config_file_len);
-  MULTZ_CONFIG = multz_config_fscanf_alloc(config_file , *nx , *ny , *nz , "MULTZ.INC" , NULL);
+  MULTZ_CONFIG = multz_config_fscanf_alloc(config_file , *nx , *ny , *nz);
   
   if (*n_multz != multz_config_get_data_size(MULTZ_CONFIG)) {
     fprintf(stderr,"%s: size mismatch config_file:%d  mod_dimensions.F90/num_multz:%d - aborting \n",__func__ , multz_config_get_data_size(MULTZ_CONFIG) , *n_multz);
@@ -33,11 +33,13 @@ void multz_inter_init__(const char * _config_file, const int * config_file_len ,
 */
 
 void multz_inter_ecl_write__(const char *_path , const int * path_len , const double *data , const int *iens) {
-  char *path = util_alloc_cstring(_path , path_len);
+  char *path  = util_alloc_cstring(_path , path_len);
+  char * file = util_alloc_full_path(path , "MULTZ.INC");
 
-  multz_set_data(MULTZ_LIST[(*iens) - 1] , data);
-  multz_ecl_write(MULTZ_LIST[(*iens) - 1] , path);
-  
+  multz_set_data(MULTZ_LIST[(*iens) - 1]  , data);
+  multz_ecl_write(MULTZ_LIST[(*iens) - 1] , file);
+
+  free(file);
   free(path);
 }
 

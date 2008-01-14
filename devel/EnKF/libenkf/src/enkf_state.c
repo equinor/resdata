@@ -28,6 +28,8 @@
 #include <equil.h>
 #include <well_config.h>
 #include <void_arg.h>
+#include <pgbox_config.h>
+#include <pgbox.h>
 
 #include "enkf_config_decl.h"
 
@@ -256,7 +258,27 @@ static void enkf_state_add_node__2(enkf_state_type * enkf_state , const char * n
 
 static void enkf_state_add_node__1(enkf_state_type * enkf_state , const char * node_name , const enkf_config_node_type * config) {
   enkf_node_type *enkf_node = enkf_node_alloc(node_name , config);
-  enkf_state_add_node__2(enkf_state , node_name , enkf_node);
+  enkf_state_add_node__2(enkf_state , node_name , enkf_node);    
+
+  /* All code below here is special code for plurigaussian fields */
+  {
+    enkf_impl_type impl_type = enkf_config_node_get_impl_type(config);
+    if (impl_type == PGBOX) {
+      const pgbox_config_type * pgbox_config = enkf_config_node_get_ref(config);
+      const char * target_key = pgbox_config_get_target_key(pgbox_config);
+      if (enkf_state_has_node(enkf_state , target_key)) {
+	enkf_node_type * target_node = enkf_state_get_node(enkf_state , target_key);
+	if (enkf_node_get_impl_type(target_node) != FIELD) {
+	  fprintf(stderr,"%s: target node:%s is not of type field - aborting \n",__func__ , target_key);
+	  abort();
+	}
+	pgbox_set_target_field(enkf_node_value_ptr(enkf_node) , enkf_node_value_ptr(target_node));
+      } else {
+	fprintf(stderr,"%s: target field:%s must be added to the state object *BEFORE* the pgbox object - aborting \n" , __func__ , target_key);
+	abort();
+      }
+    }
+  }
 }
 
 
@@ -777,7 +799,7 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
       void_arg_pack_ptr(void_arg[ithread]     , 6 , next_node);
       void_arg_pack_ptr(void_arg[ithread]     , 7 , member_serial_size);
       void_arg_pack_ptr(void_arg[ithread]     , 8 , member_complete);
-      void_arg_pack_int (void_arg[ithread]    , 9 , update_mask);
+      void_arg_pack_int(void_arg[ithread]    , 9 , update_mask);
     }
     
     
@@ -785,6 +807,7 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
       thread_pool_add_job(tp , &enkf_ensemble_serialize_threaded , void_arg[ithread]);
     thread_pool_join(tp);
     
+
     /* Serialize section */
 /*     for (iens = 0; iens < ens_size; iens++) { */
 /*       list_node_type  * list_node  = start_node[iens]; */
@@ -845,7 +868,9 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
   }
   for (ithread = 0; ithread < threads; ithread++) 
     void_arg_free(void_arg[ithread]);
-  
+  thread_pool_free(tp);
+
+  free(void_arg);
   free(member_complete);
   free(member_serial_size);
   free(iens1);

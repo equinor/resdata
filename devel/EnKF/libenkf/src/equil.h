@@ -18,8 +18,6 @@ VOID_SERIALIZE_HEADER(equil);
 VOID_DESERIALIZE_HEADER(equil);
 VOID_SWAPOUT_HEADER(equil);
 VOID_SWAPIN_HEADER(equil);
-VOID_ALLOC_ENSFILE_HEADER(equil);
-VOID_ECL_WRITE_HEADER  (equil)
 VOID_FWRITE_HEADER  (equil)
 VOID_FREAD_HEADER   (equil)
 VOID_FUNC_HEADER       (equil_sample   );
@@ -27,5 +25,6 @@ VOID_FUNC_HEADER       (equil_free     );
 VOID_COPYC_HEADER      (equil);
 MATH_OPS_HEADER(equil);
 VOID_ALLOC_HEADER(equil);
+VOID_ECL_WRITE_HEADER(equil);
 
 #endif

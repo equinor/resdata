@@ -12,27 +12,18 @@
 typedef struct multflt_config_struct multflt_config_type;
 
 struct multflt_config_struct {
-  char              * ecl_kw_name;      
-  enkf_var_type       var_type;  
-  char 		    * ensfile;          
-  char 		    * eclfile;          
+  char                * ecl_kw_name;      
+  enkf_var_type         var_type;  
   scalar_config_type  * scalar_config;
-  char             ** fault_names;
+  char               ** fault_names;
 };
 
 
-multflt_config_type * multflt_config_fscanf_alloc(const char * , const char * , const char * );
-/*multflt_config_type * multflt_config_alloc(int , const char * , const char * );*/
+multflt_config_type * multflt_config_fscanf_alloc(const char *);
 void                  multflt_config_free(multflt_config_type *);
 void                  multflt_config_transform(const multflt_config_type * , const double * , double *);
 void                  multflt_config_truncate(const multflt_config_type * , scalar_type * );
 int                   multflt_config_get_data_size(const multflt_config_type * );
 
-CONFIG_GET_ENSFILE_HEADER(multflt);
-CONFIG_GET_ECLFILE_HEADER(multflt);
-CONFIG_SET_ENSFILE_HEADER(multflt);
-CONFIG_SET_ECLFILE_HEADER(multflt);
-CONFIG_SET_ECLFILE_HEADER_VOID(multflt);
-CONFIG_SET_ENSFILE_HEADER_VOID(multflt);
 VOID_FUNC_HEADER(multflt_config_free);
 #endif

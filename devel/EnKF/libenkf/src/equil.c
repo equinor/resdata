@@ -70,14 +70,12 @@ static void equil_get_woc_goc_ref(const equil_type * equil, const double **woc ,
 
 
 
-void equil_ecl_write(const equil_type * equil, const char * path) {
-  char * eclfile = util_alloc_full_path(path , equil_config_get_eclfile_ref(equil->config));
+void equil_ecl_write(const equil_type * equil, const char * eclfile) {
   FILE * stream   = enkf_util_fopen_w(eclfile , __func__);
   const double *woc , *goc;
   equil_output_transform(equil);
   equil_get_woc_goc_ref(equil , &woc , &goc);
   equil_config_ecl_write(equil->config , woc , goc , stream);
-  free(eclfile);
   fclose(stream);
 }
 
@@ -116,7 +114,8 @@ void equil_sample(equil_type *equil) {
 
 
 void equil_free(equil_type *equil) {
-  equil_free_data(equil);
+  DEBUG_ASSERT(equil)
+  scalar_free(equil->scalar);  
   free(equil);
 }
 

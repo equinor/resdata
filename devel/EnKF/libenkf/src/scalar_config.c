@@ -109,7 +109,7 @@ void scalar_config_fscanf_line(scalar_config_type * config , int line_nr , FILE 
     current_pos = ftell(stream);
     token       = util_fscanf_alloc_token(stream);
     if (token != NULL) {
-
+      
       if (sscanf(token , "%d" , &logmode) != 1)
 	fseek(stream , current_pos , SEEK_SET);
       else {
@@ -117,6 +117,8 @@ void scalar_config_fscanf_line(scalar_config_type * config , int line_nr , FILE 
 	config->output_transform_name[line_nr] = util_fscanf_alloc_token(stream);
 	config->output_transform[line_nr]      = trans_func_lookup(config->output_transform_name[line_nr] , stream , &config->void_arg[line_nr]);
       }
+      
+      free(token);
     }
   }
   config->logmode[line_nr] 		 = logmode_alloc(10.0 , logmode);

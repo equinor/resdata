@@ -8,6 +8,7 @@
 #include <fortio.h>
 #include <field_config.h>
 #include <field.h>
+#include <ecl_grid.h>
 
 const char * add_NOSIM_exe = "/d/proj/bg/enkf/bin/add_NOSIM";
 const char * del_NOSIM_exe = "/d/proj/bg/enkf/bin/del_NOSIM";
@@ -27,7 +28,9 @@ void doit(const char * path, const char * base_name , const char *swcr_file , co
   {
     int nx,ny,nz,active_size;
     char * EGRID_file             = ecl_util_alloc_filename(path , base_name , ecl_egrid_file  , fmt_file , 0);
-    const int * index_map         = field_config_alloc_index_map1(EGRID_file , true , &nx , &ny , &nz , &active_size);
+    ecl_grid_type * ecl_grid      = ecl_grid_alloc_EGRID(EGRID_file , true);
+    const int * index_map         = ecl_grid_alloc_index_map(ecl_grid);
+    ecl_grid_get_dims(ecl_grid , &nx , &ny , &nz , &active_size);
     
     ecl_kw_type    * sowcr_kw;    
     ecl_kw_type    * swcr_kw;

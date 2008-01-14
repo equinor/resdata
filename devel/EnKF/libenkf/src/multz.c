@@ -83,10 +83,6 @@ multz_type * multz_alloc(const multz_config_type * multz_config) {
 
 
 
-char * multz_alloc_ensfile(const multz_type * multz , const char * path) {
-  return util_alloc_full_path(path , multz_config_get_ensfile_ref(multz->config));
-}
-
 multz_type * multz_copyc(const multz_type *multz) {
   multz_type * new = multz_alloc(multz->config); 
   scalar_memcpy(new->scalar , multz->scalar);
@@ -150,7 +146,7 @@ void multz_swapin(multz_type * multz , FILE * stream) {
 void multz_free(multz_type *multz) {
   DEBUG_ASSERT(multz)
   {
-     multz_free_data(multz);
+     scalar_free(multz->scalar);  
      free(multz);
   }
 }
@@ -209,13 +205,13 @@ void multz_TEST() {
     const int ens_size = 1000;
     char path[64];
     int iens;
-    multz_config_type  * config    = multz_config_fscanf_alloc(config_file , 10, 10 ,10 , "MULTZ.INC" , NULL);
+    multz_config_type  * config    = multz_config_fscanf_alloc(config_file , 10, 10 ,10);
     multz_type        ** multz_ens = malloc(ens_size * sizeof * multz_ens);
     
     for (iens = 0; iens < ens_size; iens++) {
       multz_ens[iens] = multz_alloc(config);
       multz_sample(multz_ens[iens]);
-      sprintf(path , "/tmp/%04d" , iens + 1);
+      sprintf(path , "/tmp/%04d/MULTZ.INC" , iens + 1);
       util_make_path(path);
       multz_ecl_write(multz_ens[iens] , path);
       multz_truncate(multz_ens[iens]);

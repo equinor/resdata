@@ -25,7 +25,7 @@ typedef enum {parameter = 1 , static_parameter = 2 , ecl_restart = 4 , ecl_summa
 /*
   These correspond to implementation types.
 */
-typedef enum {STATIC = 100 , MULTZ , MULTFLT , EQUIL , FIELD , WELL} enkf_impl_type;
+typedef enum {STATIC = 100 , MULTZ , MULTFLT , EQUIL , FIELD , WELL , PGBOX} enkf_impl_type;
 
 
 /*

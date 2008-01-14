@@ -15,17 +15,13 @@
 /*
   WARNING: Returns the multz_config object in a completely unitialized state.
 */
-static multz_config_type * __multz_config_alloc_empty(int size , const char * eclfile , const char * ensfile) {
-
+static multz_config_type * __multz_config_alloc_empty(int size ) {
+  
   multz_config_type *multz_config = malloc(sizeof *multz_config);
   multz_config->scalar_config = scalar_config_alloc_empty(size);
   multz_config->ecl_kw_name = NULL;
   multz_config->var_type    = parameter;
   
-  multz_config->eclfile = NULL;
-  multz_config->ensfile = NULL;
-  multz_config_set_eclfile(multz_config , eclfile);
-  multz_config_set_ensfile(multz_config , ensfile);
   multz_config->i1   	= enkf_util_malloc(size * sizeof *multz_config->i1      , __func__);
   multz_config->i2   	= enkf_util_malloc(size * sizeof *multz_config->i2      , __func__);
   multz_config->j1   	= enkf_util_malloc(size * sizeof *multz_config->j1      , __func__);
@@ -106,14 +102,14 @@ static multz_config_type * __multz_config_alloc_empty(int size , const char * ec
 
 
 
-multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , int ny , int nz , const char * eclfile , const char * ensfile) {
+multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , int ny , int nz) {
   multz_config_type * config;
   FILE * stream = util_fopen(filename , "r");
   int size , line_nr;
 
   size = util_count_file_lines(stream);
   fseek(stream , 0L , SEEK_SET);
-  config  = __multz_config_alloc_empty(size , eclfile , ensfile);
+  config  = __multz_config_alloc_empty(size );
   line_nr = 0;
   do {
     int i1 = 1;

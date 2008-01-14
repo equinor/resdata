@@ -12,7 +12,7 @@
 
 
 
-static multflt_config_type * __multflt_config_alloc_empty(int size, const char * eclfile , const char * ensfile) {
+static multflt_config_type * __multflt_config_alloc_empty(int size) {
   multflt_config_type *multflt_config = malloc(sizeof *multflt_config);
   multflt_config->fault_names   = enkf_util_malloc(size * sizeof *multflt_config->fault_names , __func__);
   multflt_config->scalar_config = scalar_config_alloc_empty(size);
@@ -20,11 +20,6 @@ static multflt_config_type * __multflt_config_alloc_empty(int size, const char *
   multflt_config->ecl_kw_name = NULL;
   multflt_config->var_type    = parameter;
 
-  multflt_config->eclfile = NULL;
-  multflt_config->ensfile = NULL;
-  multflt_config_set_eclfile(multflt_config , eclfile);
-  multflt_config_set_ensfile(multflt_config , ensfile);
-  
   return multflt_config;
 }
 
@@ -57,7 +52,7 @@ void multflt_config_transform(const multflt_config_type * config , const double 
 
 
 
-multflt_config_type * multflt_config_fscanf_alloc(const char * filename , const char * eclfile , const char * ensfile) {
+multflt_config_type * multflt_config_fscanf_alloc(const char * filename ) {
   multflt_config_type * config;
   FILE * stream = util_fopen(filename , "r");
   int line_nr = 0;
@@ -65,7 +60,7 @@ multflt_config_type * multflt_config_fscanf_alloc(const char * filename , const 
 
   size = util_count_file_lines(stream);
   fseek(stream , 0L , SEEK_SET);
-  config = __multflt_config_alloc_empty(size , eclfile , ensfile);
+  config = __multflt_config_alloc_empty(size);
   do {
     char name[128];  /* UGGLY HARD CODED LIMIT */
     if (fscanf(stream , "%s" , name) != 1) {
@@ -95,10 +90,4 @@ int multflt_config_get_data_size(const multflt_config_type * multflt_config) {
 
 /*****************************************************************/
 
-CONFIG_GET_ENSFILE(multflt);
-CONFIG_GET_ECLFILE(multflt);
-CONFIG_SET_ECLFILE(multflt);
-CONFIG_SET_ENSFILE(multflt);
-CONFIG_SET_ECLFILE_VOID(multflt);
-CONFIG_SET_ENSFILE_VOID(multflt);
 VOID_FUNC(multflt_config_free , multflt_config_type);

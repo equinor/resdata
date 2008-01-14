@@ -57,11 +57,9 @@ void well_config_add_var(well_config_type * config , const char * var) {
 }
 
 
-static well_config_type * __well_config_alloc(const char * well_name , const char * ensfile) {
+static well_config_type * __well_config_alloc(const char * well_name) {
   well_config_type * config = malloc(sizeof *config);
 
-  config->eclfile     = NULL;
-  config->ensfile     = util_alloc_string_copy(ensfile);
   config->well_name   = util_alloc_string_copy(well_name);
   config->data_size   = 0;
   config->var_list    = NULL;
@@ -69,8 +67,9 @@ static well_config_type * __well_config_alloc(const char * well_name , const cha
 }
 
 
-well_config_type * well_config_alloc(const char * well_name , const char * ensfile , int size , const char ** var_list) {
-  well_config_type * config = __well_config_alloc(well_name , ensfile);
+
+well_config_type * well_config_alloc(const char * well_name , int size , const char ** var_list) {
+  well_config_type * config = __well_config_alloc(well_name);
   int i;
   for (i=0; i < size; i++) 
     well_config_add_var(config , var_list[i]);
@@ -80,7 +79,7 @@ well_config_type * well_config_alloc(const char * well_name , const char * ensfi
 
 
 
-well_config_type * well_config_fscanf_alloc(const char * well_name , const char * filename , const char * ensfile) {
+well_config_type * well_config_fscanf_alloc(const char * well_name , const char * filename) {
   FILE * stream = util_fopen(filename , "r");
   char * line   = NULL;
   int ivar;
@@ -88,7 +87,7 @@ well_config_type * well_config_fscanf_alloc(const char * well_name , const char 
   bool at_eof;
 
   fseek(stream , 0L , SEEK_SET);
-  well_config_type * config = __well_config_alloc(well_name , ensfile);
+  well_config_type * config = __well_config_alloc(well_name);
   for (ivar = 0; ivar < size; ivar++) {
     char var[32];
     line = util_fscanf_realloc_line(stream , &at_eof , line);
@@ -110,21 +109,14 @@ well_config_type * well_config_fscanf_alloc(const char * well_name , const char 
 
 
 void well_config_free(well_config_type * config) {
-  CONFIG_FREE_STD_FIELDS;
-  { 
-    int i;
-    for (i = 0; i < config->data_size; i++)
-      free(config->var_list[i]);
-    free(config->var_list);
-  }
-
+  int i;
+  for (i = 0; i < config->data_size; i++)
+    free(config->var_list[i]);
+  free(config->var_list);
   free(config);
 }
 
 
-const char * well_config_get_ensfile_ref(const well_config_type * config) {
-  return config->ensfile;
-}
 
 const char * well_config_get_well_name_ref(const well_config_type * config) {
   return config->well_name;
@@ -134,8 +126,6 @@ const char * well_config_get_well_name_ref(const well_config_type * config) {
 
 
 /*****************************************************************/
-CONFIG_SET_ENSFILE(well);
-CONFIG_SET_ENSFILE_VOID(well);
 GET_DATA_SIZE(well)
 VOID_CONFIG_FREE(well)
 

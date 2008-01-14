@@ -9,7 +9,6 @@
 #include <equil.h>
 #include <ecl_kw.h>
 #include <ecl_block.h>
-#include <enkf_path.h>
 #include <enkf_types.h>
 #include <field_config.h>
 #include <well_config.h>
@@ -25,6 +24,17 @@
 #include <multflt.h>
 #include <equil_config.h>
 #include <trans_func.h>
+#include <ecl_grid.h>
+#include <pgbox_config.h>
+
+
+
+double pgfilter(const double *data , const void_arg_type * arg) {
+  double x = data[0];
+  double y = data[1];
+
+  return x + y;
+}
 
 
 
@@ -48,7 +58,7 @@ int main(void) {
 
   sched_file_type    * sched;
   history_type          * hist;
-
+  ecl_grid_type * grid      = ecl_grid_alloc_EGRID("ECLIPSE.EGRID" , true);
   meas_data = meas_data_alloc();
   obs_data  = obs_data_alloc();
 
@@ -56,32 +66,42 @@ int main(void) {
   sched     = sched_file_alloc((const int [3]) {1 , 1 , 1999});
   sched_file_parse(sched , "SCHEDULE.INC");
   hist      = history_alloc_from_schedule(sched);
- 
-  index_map = field_config_alloc_index_map1("ECLIPSE.EGRID" , true , &nx , &ny , &nz , &active_size);
+  index_map = ecl_grid_alloc_index_map(grid);
+  ecl_grid_get_dims(grid , &nx , &ny , &nz , &active_size);
+  
+
   config = enkf_config_alloc("RunPATH/tmpdir_%04d" , "Ensemble/%04d/Static/mem%04d" , "Ensemble/%04d/Parameters/mem%04d" , "Ensemble/%04d/Dynamic/Forecast/mem%04d" , "Ensemble/%04d/Dynamic/Analyzed/mem%04d" , true);
   enkf_config_add_type(config , "MULTZ" , 
 		       parameter , MULTZ, 
-		       multz_config_fscanf_alloc("Config/multz" , 100 , 100 , 100 , "MULTZ.INC" , "multz"));
+		       multz_config_fscanf_alloc("Config/multz" , 100 , 100 , 100));
   
   enkf_config_add_type(config , "EQUIL" , 
 		       parameter , EQUIL, 
-		       equil_config_fscanf_alloc("Config/equil" , "EQUIL.INC" , "equil") );
+		       equil_config_fscanf_alloc("Config/equil"));
   
   enkf_config_add_type(config , "SWAT"  , ecl_restart , FIELD , 
-		       field_config_alloc("SWAT" , ecl_float_type   , nx , ny , nz , active_size , index_map , 1 , NULL , "SWAT"));
+		       field_config_alloc("SWAT" , ecl_float_type   , nx , ny , nz , active_size , index_map , 1));
   
   enkf_config_add_type(config , "PRESSURE" , ecl_restart , FIELD , 
-		       field_config_alloc("PRESSURE"  , ecl_float_type , nx , ny , nz , active_size , index_map , 1 , NULL , "Pressure"));
+		       field_config_alloc("PRESSURE"  , ecl_float_type , nx , ny , nz , active_size , index_map , 1));
 
   enkf_config_add_type(config , "SGAS"  , ecl_restart , FIELD , 
-		       field_config_alloc("SGAS" , ecl_float_type    , nx , ny , nz , active_size , index_map , 1 , NULL , "SGAS"));
+		       field_config_alloc("SGAS" , ecl_float_type    , nx , ny , nz , active_size , index_map , 1 ));
 
 
   enkf_config_add_type(config , "RS"     , ecl_restart , FIELD , 
-		       field_config_alloc("RS"  , ecl_float_type        , nx , ny , nz , active_size , index_map , 1 , NULL , "RS"));
+		       field_config_alloc("RS"  , ecl_float_type        , nx , ny , nz , active_size , index_map , 1 ));
   
   enkf_config_add_type(config , "RV"    , ecl_restart , FIELD , 
-		       field_config_alloc("RV"    , ecl_float_type       , nx , ny , nz , active_size , index_map , 1 , NULL , "RV"));
+		       field_config_alloc("RV"    , ecl_float_type       , nx , ny , nz , active_size , index_map , 1 ));
+
+  {
+    field_config_type * permx_config = field_config_alloc("PERMX" , ecl_float_type , nx , ny , nz , active_size , index_map , 1 );
+    
+    enkf_config_add_type(config , "PERMX" , parameter , FIELD , permx_config);  /* This is released by the config object */
+    enkf_config_add_type(config , "PG"    , parameter , PGBOX , pgbox_config_alloc(grid , pgfilter , NULL , 2 , 1 , nx , 1 , ny , 1 , 10 , permx_config));
+  }
+
   
   enkf_config_add_well(config , "B-37T2" ,  4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
   enkf_config_add_well(config , "B-33A"  ,  4 , (const char *[4]) {"WGPR" , "WWPR" , "WOPR" , "WBHP"});
@@ -103,13 +123,14 @@ int main(void) {
   {
     void_arg_type ** load_arg = calloc(100 , sizeof * load_arg);
     int i;
-    char path[100];
     
     for (i=0; i < 100; i++) {
-      
       state[i] = enkf_state_alloc(config , "ECLIPSE" , false);
       enkf_state_add_node(state[i] , "MULTZ"); 
       enkf_state_add_node(state[i] , "EQUIL");
+      enkf_state_add_node(state[i] , "PERMX");
+      enkf_state_add_node(state[i] , "PG");
+      
       enkf_state_set_run_path(state[i] , i);
       enkf_state_set_ens_path_static(state[i]    , 0 , i);
       enkf_state_set_ens_path_parameter(state[i] , 0 , i);
@@ -129,40 +150,17 @@ int main(void) {
 	thread_pool_add_job(tp , &enkf_state_load_ecl_summary_void , load_arg[i]);
 	thread_pool_add_job(tp , &enkf_state_load_ecl_restart_void , load_arg[i]);
       }
-      
-      
-      /*
-	enkf_state_load_ecl_summary(state[i] , false , 51);
-	enkf_state_load_ecl_restart(state[i] , false , 51);
-      */
-
-      
-      /*
-	enkf_state_iset_enspath(state[i] , 0 , "Ensemble");
-
-	sprintf(path , "%04d" , i);
-	enkf_state_iset_enspath(state[i] , 1 , "1");
-	enkf_state_iset_enspath(state[i] , 2 , path);
-	enkf_state_iset_enspath(state[i] , 3 , "Forecast");
-	enkf_state_ens_write(state[i] , all_types - ecl_static );
-	
-	enkf_state_iset_enspath(state[i] , 3 , "Static");
-	enkf_state_swapout(state[i] , ecl_static);
-	
-	sprintf(path , "tmpdir_%04d" , i);
-	enkf_state_iset_eclpath(state[i] , 1 , path);
-	enkf_state_ecl_write(state[i] , all_types , 51);
-	
-	enkf_state_swapin(state[i] , ecl_static);
-      */
     }
     thread_pool_join(tp);
+    for (i=0; i < 100; i++) 
+      void_arg_free(load_arg[i]);
+
     {
       int i;
       double *X = calloc(100 * 100 , sizeof *X);
       for (i=0; i < 100; i++)
 	X[i*100 + i] = 1.0;
-      enkf_ensemble_update(state , 100 , 100 * 4096 , X); 
+      enkf_ensemble_update(state , 100 , 100 * 100000 , X); 
       free(X);
     }
     enkf_obs_get_observations(enkf_obs , 51 , obs_data);
@@ -176,10 +174,12 @@ int main(void) {
       enkf_state_free(state[i]);
     
   }    
+  free((int *) index_map);
+  ecl_grid_free(grid);
   obs_data_reset(obs_data);
-  
   obs_data_fprintf(obs_data , stdout);
   enkf_config_free(config);
   enkf_obs_free(enkf_obs);
   history_free(hist);
+  sched_file_free(sched);
 }

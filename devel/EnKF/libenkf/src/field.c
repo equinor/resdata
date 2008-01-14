@@ -29,7 +29,7 @@ struct field_struct {
   DEBUG_DECLARE
   const  field_config_type * config;
   char  *data;
-
+  
   bool   shared_data;
   int    shared_byte_size;
 };
@@ -241,7 +241,7 @@ void field_realloc_data(field_type *field) {
       abort();
     }
   } else 
-    field->data = enkf_util_malloc(field_config_get_byte_size(field->config) , __func__);
+    field->data = util_malloc(field_config_get_byte_size(field->config) , __func__);
 }
 
 
@@ -284,12 +284,6 @@ field_type * field_alloc(const field_config_type * field_config) {
 
 field_type * field_alloc_shared(const field_config_type * field_config, void * shared_data , int shared_byte_size) {
   return __field_alloc(field_config , shared_data , shared_byte_size);
-}
-
-
-
-char * field_alloc_ensfile(const field_type * field , const char * path) {
-  return util_alloc_full_path(path , field_config_get_ensfile_ref(field->config));
 }
 
 
@@ -370,10 +364,9 @@ void field_ecl_write3D_fortio(const field_type * field , fortio_type * fortio , 
 }
 
 
-void field_ecl_write2(const field_type * field  , const char * path , bool write3D) {
+void field_ecl_write_allD(const field_type * field  , const char * eclfile , bool write3D) {
   fortio_type * fortio;
   bool fmt_file , endian_swap;
-  char * eclfile = util_alloc_full_path(path , field_config_get_eclfile_ref(field->config));
 
   field_config_set_io_options(field->config , &fmt_file , &endian_swap);
   fortio = fortio_open(eclfile , "w" , endian_swap);
@@ -384,19 +377,18 @@ void field_ecl_write2(const field_type * field  , const char * path , bool write
     field_ecl_write1D_fortio(field , fortio , fmt_file , endian_swap );
 
   fortio_close(fortio);
-  free(eclfile);
 }
 
 
 
 
 void field_ecl_write3D(const field_type * field , const char * path) {
-  field_ecl_write2(field , path , true);
+  field_ecl_write_allD(field , path , true);
 }
 
 
 void field_ecl_write1D(const field_type * field , const char * path) {
-  field_ecl_write2(field , path , false);
+  field_ecl_write_allD(field , path , false);
 }
 
 
@@ -505,6 +497,68 @@ void field_ijk_get(const field_type * field , int i , int j , int k , void * val
 
 
 
+void field_ijk_set(field_type * field , int i , int j , int k , const void * value) {
+  int global_index = field_config_global_index(field->config , i , j , k);
+  int sizeof_ctype = field_config_get_sizeof_ctype(field->config);
+  memcpy(&field->data[global_index * sizeof_ctype] , value , sizeof_ctype);
+}
+
+
+#define INDEXED_SET_MACRO(t,s,n,index) \
+{                                      \
+   int i;                              \
+   for (i=0; i < (n); i++)             \
+       (t)[i] = (s)[i];                \
+}                                      \
+
+
+void field_indexed_set(field_type * field, ecl_type_enum src_type , int len , const int * index_list , const void * __value_list) {
+  const char * value_list = (const char *) __value_list;
+  int sizeof_ctype = field_config_get_sizeof_ctype(field->config);
+  ecl_type_enum target_type = field_config_get_ecl_type(field->config);
+
+  if (src_type == target_type) {
+    /* Same type */
+    int i;
+    for (i=0; i < len; i++) 
+      memcpy(&field->data[index_list[i] * sizeof_ctype] , &value_list[i * sizeof_ctype] , sizeof_ctype);
+  } else {
+    switch (target_type) {
+    case(ecl_float_type):
+      /* double -> float */
+      {
+	float * field_data = (float *) field->data;
+	if (src_type == ecl_double_type) {
+	  double * src_data = (double *) __value_list;
+	  INDEXED_SET_MACRO(field_data , src_data , len , index_list);
+	} else {
+	  fprintf(stderr,"%s both existing field - and indexed values must be float / double - aborting\n",__func__);
+	  abort();
+	}
+      }
+      break;
+    case(ecl_double_type):
+      /* float -> double  */
+      {
+	double * field_data = (double *) field->data;
+	if (src_type == ecl_float_type) {
+	  float * src_data = (float *) __value_list;
+	  INDEXED_SET_MACRO(field_data , src_data , len , index_list);
+	} else {
+	  fprintf(stderr,"%s both existing field - and indexed values must be float / double - aborting\n",__func__);
+	  abort();
+	}
+      }
+      break;
+    default:
+      fprintf(stderr,"%s existing field must be of type float/double - aborting \n",__func__);
+      abort();
+    }
+  }
+}
+
+
+
 bool field_ijk_valid(const field_type * field , int i , int j , int k) {
   int global_index = field_config_global_index(field->config , i , j , k);
   if (global_index >=0)
@@ -527,6 +581,7 @@ void field_ijk_get_if_valid(const field_type * field , int i , int j , int k , v
 int field_get_global_index(const field_type * field , int i , int j  , int k) {
   return field_config_global_index(field->config , i , j , k);
 }
+
 
 
 void field_copy_ecl_kw_data(field_type * field , const ecl_kw_type * ecl_kw) {

@@ -8,9 +8,8 @@
 #define CONFIG_STD_FIELDS \
 int data_size;            \
 char * ecl_kw_name;       \
-enkf_var_type var_type;   \
-char * ensfile;           \
-char * eclfile;          
+enkf_var_type var_type;
+
 
 
 #define VOID_CONFIG_FREE(prefix)            void prefix ## _config_free__(void *void_arg) { prefix ## _config_free((prefix ## _config_type *) void_arg); }
@@ -76,11 +75,6 @@ void prefix ## _config_set_eclfile__(void *void_config , const char * file) {   
 #define CONFIG_SET_ENSFILE_HEADER(prefix) 	void prefix ## _config_set_ensfile  (prefix ## _config_type *, const char * );
 #define CONFIG_SET_ECLFILE_HEADER_VOID(prefix) void prefix ## _config_set_eclfile__(void *, const char * );
 #define CONFIG_SET_ENSFILE_HEADER_VOID(prefix) void prefix ## _config_set_ensfile__(void *, const char * );
-
-
-#define CONFIG_FREE_STD_FIELDS  \
-if (config->ensfile != NULL) free(config->ensfile);    \
-if (config->eclfile != NULL) free(config->eclfile);
 
 
 /*****************************************************************/
@@ -163,14 +157,6 @@ void * prefix ## _copyc__(const void * void_arg) {    \
 #define VOID_COPYC_HEADER(prefix) void * prefix ## _copyc__(const void * )
 
 /*****************************************************************/
-#define VOID_ALLOC_ENSFILE(prefix)                                     \
-char * prefix ## _alloc_ensfile__(const void * void_arg, const char *path)        {\
-   return prefix ## _alloc_ensfile((const prefix ##_type *) void_arg , path); \
-}
-
-#define VOID_ALLOC_ENSFILE_HEADER(prefix) char * prefix ## _alloc_ensfile__(const void * , const char *)
-
-/*****************************************************************/
 
 #define VOID_SWAPIN(prefix) \
 void prefix ## _swapin__(void *void_arg , FILE * stream) { \
@@ -235,11 +221,15 @@ void prefix ## _obs_measure__(const void * void_arg ,  const void * domain_objec
 
 /*****************************************************************/
 
+#define VOID_FREE_CONFIG(prefix)        void prefix ## _config_free__(void * void_arg) { prefix ## _config_free( (prefix ## _config_type *) void_arg); }
+#define VOID_FREE_CONFIG_HEADER(prefix) void prefix ## _config_free__(void * )
+
+/*****************************************************************/
+
 #define CONFIG_GET_ENSFILE(prefix)       	     const char * prefix ## _config_get_ensfile_ref(const prefix ## _config_type * config) { return config->ensfile; }
 #define CONFIG_GET_ECLFILE(prefix)       	     const char * prefix ## _config_get_eclfile_ref(const prefix ## _config_type * config) { return config->eclfile; }
 #define CONFIG_GET_ENSFILE_HEADER(prefix)       const char * prefix ## _config_get_ensfile_ref(const prefix ## _config_type * )
 #define CONFIG_GET_ECLFILE_HEADER(prefix)       const char * prefix ## _config_get_eclfile_ref(const prefix ## _config_type * )
-
 
 
 

@@ -28,13 +28,13 @@ struct multflt_struct {
 /*****************************************************************/
 
 void multflt_free_data(multflt_type *multflt) {
-  scalar_free(multflt->scalar);
+  scalar_free_data(multflt->scalar);
 }
 
 
 
 void multflt_free(multflt_type *multflt) {
-  multflt_free_data(multflt);
+  scalar_free(multflt->scalar);
   free(multflt);
 }
 
@@ -96,9 +96,8 @@ multflt_type * multflt_copyc(const multflt_type *multflt) {
 
 
 
-static void __multflt_ecl_write(const multflt_type * multflt, const char * path , bool direct) {
-  char * ecl_file = util_alloc_full_path(path , multflt_config_get_eclfile_ref(multflt->config));
-  FILE * stream   = enkf_util_fopen_w(ecl_file , __func__);
+static void __multflt_ecl_write(const multflt_type * multflt, const char * eclfile , bool direct) {
+  FILE * stream   = enkf_util_fopen_w(eclfile , __func__);
   {
     const multflt_config_type *config = multflt->config;
     const int data_size       = multflt_config_get_data_size(config);
@@ -116,19 +115,12 @@ static void __multflt_ecl_write(const multflt_type * multflt, const char * path 
   }
   
   fclose(stream);
-  free(ecl_file);
 }
 
 
-void multflt_ecl_write(const multflt_type * multflt, const char * path) {
-  __multflt_ecl_write(multflt , path , false);
+void multflt_ecl_write(const multflt_type * multflt, const char * eclfile) {
+  __multflt_ecl_write(multflt , eclfile , false);
 }
-
-
-/*void multflt_direct_ecl_write(const multflt_type * multflt, const char * path) {
-  __multflt_ecl_write(multflt , path , true);
-}
-*/
 
 
 void multflt_fwrite(const multflt_type *multflt , FILE * stream) {
@@ -212,13 +204,13 @@ void multflt_TEST() {
     const int ens_size = 1000;
     char path[64];
     int iens;
-    multflt_config_type  * config      = multflt_config_fscanf_alloc(config_file , "MULTFLT.INC" , NULL);
+    multflt_config_type  * config      = multflt_config_fscanf_alloc(config_file);
     multflt_type        ** multflt_ens = malloc(ens_size * sizeof * multflt_ens);
     
     for (iens = 0; iens < ens_size; iens++) {
       multflt_ens[iens] = multflt_alloc(config);
       multflt_sample(multflt_ens[iens]);
-      sprintf(path , "/tmp/%04d" , iens + 1);
+      sprintf(path , "/tmp/%04d/MULTZ.INC" , iens + 1);
       util_make_path(path);
       multflt_ecl_write(multflt_ens[iens] , path);
     }

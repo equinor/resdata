@@ -13,7 +13,6 @@ const ecl_kw_type  * ecl_static_kw_ecl_kw_ptr(const ecl_static_kw_type * );
 
 VOID_SWAPIN_HEADER(ecl_static_kw);
 VOID_SWAPOUT_HEADER(ecl_static_kw);
-VOID_ALLOC_ENSFILE_HEADER(ecl_static_kw);
 VOID_ALLOC_HEADER(ecl_static_kw);
 VOID_FREE_HEADER(ecl_static_kw);
 VOID_FREE_DATA_HEADER(ecl_static_kw);

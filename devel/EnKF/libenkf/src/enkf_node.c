@@ -12,6 +12,7 @@
 #include <field.h>
 #include <well.h>
 #include <ecl_static_kw.h>
+#include <pgbox.h>
 
 typedef struct serial_state_struct serial_state_type;
 typedef enum   {forecast , serialized , analyzed} state_enum;
@@ -407,6 +408,8 @@ const char *enkf_node_get_key_ref(const enkf_node_type * enkf_node) { return enk
 /*****************************************************************/
 
 
+
+
 /* Manual inheritance - .... */
 static enkf_node_type * enkf_node_alloc_empty(const char *node_key,  const enkf_config_node_type * config) {
   enkf_node_type * node = util_malloc(sizeof * node , __func__);
@@ -472,6 +475,20 @@ static enkf_node_type * enkf_node_alloc_empty(const char *node_key,  const enkf_
     node->serialize   = field_serialize__;
     node->deserialize = field_deserialize__;
     node->freef       = field_free__;
+    break;
+  case(PGBOX):
+    node->alloc       = pgbox_alloc__;
+    node->fread_alloc = NULL; /*pgbox_fread_alloc__; */
+    node->ecl_write   = NULL; /* pgbox_ecl_write__;  */
+    node->fread_f     = pgbox_fread__;
+    node->fwrite_f    = pgbox_fwrite__;
+    node->swapout     = pgbox_swapout__;
+    node->swapin      = pgbox_swapin__;
+    node->copyc       = pgbox_copyc__;
+    node->sample      = pgbox_sample__;
+    node->serialize   = pgbox_serialize__;
+    node->deserialize = pgbox_deserialize__;
+    node->freef       = pgbox_free__;
     break;
   case(EQUIL):
     node->alloc       = equil_alloc__;

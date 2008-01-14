@@ -1,3 +1,4 @@
+
 #ifndef __MULTZ_H__
 #define __MULTZ_H__
 #include <enkf_util.h>
@@ -10,7 +11,6 @@ void             multz_output_transform(const multz_type * );
 void             multz_get_output_data(const multz_type * , double * );
 void             multz_get_data(const multz_type * , double * );
 void             multz_set_data(multz_type * , const double * );
-char           * multz_alloc_ensfile(const multz_type * , const char *);
 multz_type     * multz_alloc(const multz_config_type * );
 void             multz_free(multz_type *);
 char           * multz_alloc_ensname(const multz_type *);
@@ -35,7 +35,6 @@ VOID_FREE_HEADER(multz);
 VOID_FREE_DATA_HEADER(multz);
 VOID_REALLOC_DATA_HEADER(multz);
 VOID_COPYC_HEADER      (multz);
-VOID_ALLOC_ENSFILE_HEADER(multz);
 VOID_SWAPIN_HEADER(multz)
 VOID_SWAPOUT_HEADER(multz)
 VOID_SERIALIZE_HEADER  (multz)

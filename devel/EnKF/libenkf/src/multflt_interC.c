@@ -10,7 +10,7 @@ static multflt_type        ** MULTFLT_LIST        = NULL;
 void multflt_inter_init__(const char * _config_file, const int * config_file_len , const int * ens_size, const int * n_multflt, const int *nx , const int * ny , const int * nflt) {
   int iens;
   char * config_file = util_alloc_cstring(_config_file , config_file_len);
-  MULTFLT_CONFIG = multflt_config_fscanf_alloc(config_file , "MULTFLT.INC" , NULL);
+  MULTFLT_CONFIG = multflt_config_fscanf_alloc(config_file);
   
   if (*n_multflt != multflt_config_get_data_size(MULTFLT_CONFIG)) {
     fprintf(stderr,"%s: size mismatch config_file:%d  mod_dimensions.F90/num_multflt:%d - aborting \n",__func__ , multflt_config_get_data_size(MULTFLT_CONFIG) , *n_multflt);
@@ -33,11 +33,13 @@ void multflt_inter_init__(const char * _config_file, const int * config_file_len
 */
 
 void multflt_inter_ecl_write__(const char *_path , const int * path_len , const double *data , const int *iens) {
-  char *path = util_alloc_cstring(_path , path_len);
+  char *path  = util_alloc_cstring(_path , path_len);
+  char * file = util_alloc_full_path(path , "MULTFLT.INC");
 
   multflt_set_data(MULTFLT_LIST[(*iens) - 1] , data);
-  multflt_ecl_write(MULTFLT_LIST[(*iens) - 1] , path);
+  multflt_ecl_write(MULTFLT_LIST[(*iens) - 1] , file);
   
+  free(file);
   free(path);
 }
 

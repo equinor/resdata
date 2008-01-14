@@ -15,6 +15,7 @@
 #include <multz_config.h>
 #include <multflt_config.h>
 #include <well_obs.h>
+#include <pgbox_config.h>
 #include <obs_node.h>
 #include <obs_data.h>
 #include <history.h>
@@ -84,7 +85,7 @@ const char ** enkf_config_get_well_list_ref(const enkf_config_type * config , in
 
 void enkf_config_add_well(enkf_config_type * enkf_config , const char *well_name , int size, const char ** var_list) {
   enkf_config_add_type(enkf_config , well_name , ecl_summary , WELL,
-		       well_config_alloc(well_name , well_name , size , var_list));
+		       well_config_alloc(well_name , size , var_list));
   
   enkf_config->Nwells++;
   enkf_config_realloc_well_list(enkf_config);
@@ -124,6 +125,9 @@ void enkf_config_add_type(enkf_config_type * enkf_config,
       break;
     case(STATIC):
       freef             = ecl_static_kw_config_free__;
+      break;
+    case(PGBOX):
+      freef             = pgbox_config_free__;
       break;
     default:
       fprintf(stderr,"%s : invalid implementation type: %d - aborting \n",__func__ , impl_type);

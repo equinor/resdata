@@ -10,12 +10,10 @@
 
 /*****************************************************************/
 
-equil_config_type * equil_config_alloc(int size, const char * eclfile , const char * ensfile) {
+equil_config_type * equil_config_alloc(int size) {
   equil_config_type *config        = malloc(sizeof *config);
 
   config->data_size    	  	   = size;
-  config->eclfile      	  	   = util_alloc_string_copy(eclfile);
-  config->ensfile      	  	   = util_alloc_string_copy(ensfile);
                             
   config->datum_depth  	     	   = enkf_util_malloc(size * sizeof * config->datum_depth  	       , __func__);
   config->datum_P      	     	   = enkf_util_malloc(size * sizeof * config->datum_P      	       , __func__);
@@ -34,11 +32,11 @@ equil_config_type * equil_config_alloc(int size, const char * eclfile , const ch
 }
 
 
-equil_config_type * equil_config_fscanf_alloc(const char * config_file, const char * eclfile , const char *ensfile) {
+equil_config_type * equil_config_fscanf_alloc(const char * config_file) {
   FILE * stream = util_fopen(config_file , "r");
   int size = util_count_file_lines(stream);
   int ieq;
-  equil_config_type * config = equil_config_alloc(size , eclfile , ensfile);
+  equil_config_type * config = equil_config_alloc(size);
   for (ieq = 0; ieq < size; ieq++) {
     int elements_read = fscanf(stream , "%lg %lg %lg %lg %d %d %d" ,    
 			       &config->datum_depth[ieq]  		   , 
@@ -60,15 +58,6 @@ equil_config_type * equil_config_fscanf_alloc(const char * config_file, const ch
   return config;
 }
 
-const char * equil_config_get_ensfile_ref(const equil_config_type * equil_config) {
-  return equil_config->ensfile;
-}
-
-
-const char * equil_config_get_eclfile_ref(const equil_config_type * equil_config) {
-  return equil_config->eclfile;
-}
-
 
 int equil_config_get_nequil(const equil_config_type * equil_config) {
   return equil_config->data_size ;
@@ -76,7 +65,6 @@ int equil_config_get_nequil(const equil_config_type * equil_config) {
     
 
 void equil_config_free(equil_config_type * config) {
-  CONFIG_FREE_STD_FIELDS;
   free(config->datum_depth);
   free(config->datum_P);
   free(config->oil_water_Pc);
@@ -109,10 +97,6 @@ void equil_config_ecl_write(const equil_config_type * config  , const double * w
 
 /*****************************************************************/
 
-CONFIG_SET_ECLFILE(equil);
-CONFIG_SET_ENSFILE(equil);
-CONFIG_SET_ECLFILE_VOID(equil);
-CONFIG_SET_ENSFILE_VOID(equil);
 GET_DATA_SIZE(equil);
 VOID_FUNC(equil_config_free , equil_config_type);
 
