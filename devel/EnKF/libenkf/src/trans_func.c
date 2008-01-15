@@ -17,7 +17,6 @@ double trans_step(double x, const void_arg_type * arg) { return (x < 0) ? 0 : 1;
 
 double trans_const(double x , const void_arg_type * arg) { return void_arg_get_double(arg , 0); }
 
-double trans_unif(double x , const void_arg_type * arg) { abort(); return -1; }
 
 
 double trans_derrf(double x , const void_arg_type * arg) {
@@ -28,6 +27,17 @@ double trans_derrf(double x , const void_arg_type * arg) {
   y = floor(steps*0.5*(1 + erf((x - mu)/(std * sqrt(2.0))))) / steps;
   return y;
 }
+
+
+double trans_unif(double x , const void_arg_type * arg) {
+  double y;
+  double min   = void_arg_get_double(arg , 0);
+  double max   = void_arg_get_double(arg , 1);
+  
+  y = 0.5*(1 + erf(x/sqrt(2.0))); /* 0 - 1 */
+  return y * (max - min) + min;
+}
+
 
 
 double trans_dunif(double x , const void_arg_type * arg) {
