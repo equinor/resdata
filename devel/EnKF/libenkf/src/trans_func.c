@@ -33,7 +33,6 @@ double trans_unif(double x , const void_arg_type * arg) {
   double y;
   double min   = void_arg_get_double(arg , 0);
   double max   = void_arg_get_double(arg , 1);
-  
   y = 0.5*(1 + erf(x/sqrt(2.0))); /* 0 - 1 */
   return y * (max - min) + min;
 }
@@ -84,12 +83,12 @@ transform_ftype * trans_func_lookup(FILE * stream , char ** _func_name , void_ar
   } else if (strcmp(func_name , "DUNIF") == 0) {
     /* DUNIF distribution */
     /* DUNIF steps min max */
-    transf   = trans_unif;
+    transf   = trans_dunif;
     void_arg = void_arg_alloc3(int_value , double_value , double_value);
   } else if (strcmp(func_name , "DERRF") == 0) {
     /* DERRF distribution */
     /* DUNIF steps mu std */
-    transf   = trans_unif;
+    transf   = trans_derrf;
     void_arg = void_arg_alloc3(int_value , double_value , double_value);
   } else if (strcmp(func_name , "CONST") == 0) {
     /* Constant    */
