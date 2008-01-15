@@ -2,7 +2,7 @@ MFLAG = m32
 CC = gcc
 AR = ar
 #################################################################
-COMPILE_INCLUDE   = -I./
+COMPILE_INCLUDE   = -I./ -I../../libutil/include
 COMPILE_LIB_PATH  = 
 COMPILE_LIBS      = 
 

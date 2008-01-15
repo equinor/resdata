@@ -11,8 +11,6 @@
 
 struct hash_node_struct {
   char 	      	   *key;
-  /*hash_data_type    data_type;*/
-  uint32_t          insert_nr;
   uint32_t     	    global_index;
   uint32_t     	    table_index;
   const void       *value;
@@ -48,7 +46,6 @@ const char * hash_node_get_keyref(const hash_node_type * node)   { return node->
 
 hash_node_type * hash_node_get_next(const hash_node_type * node) { return node->next_node; }
 
-uint32_t hash_node_get_insert_nr(const hash_node_type * node) { return node->insert_nr; }
 
 void * hash_node_value_ptr(const hash_node_type *node) { return (void *) node->value; }
 
@@ -77,12 +74,9 @@ hash_node_type * hash_node_alloc_new(const char *key, const void *value , copyc_
   node->next_node = NULL;
 
   node->global_index = hashf(node->key , strlen(node->key));
-  node->insert_nr    = 0;
   hash_node_set_table_index(node , table_size);
   return node;
 }
-
-void hash_node_set_insert_nr(hash_node_type *node , uint32_t insert_nr) { node->insert_nr = insert_nr; }
 
 void hash_node_printf_key(const hash_node_type *node) {
   printf("%u/%u  %s \n",node->table_index , node->global_index , node->key);
@@ -97,20 +91,5 @@ void hash_node_free(hash_node_type *node) {
   free(node);
 }
 
-/*
-void hash_node_assert_type(const hash_node_type * node , hash_data_type data_type) {
-  if (node->data_type != data_type) {
-    fprintf(stderr,"%s: must use matching insert/get routines for key:%s - aborting \n",__func__ , node->key);
-    abort();
-  }
-}
-*/
-
-
-const void * copy10double(const void *src) {
-  double *target = calloc(10 , sizeof *target);
-  memcpy(target , src , 10 * sizeof *target);
-  return target;
-}
 
 

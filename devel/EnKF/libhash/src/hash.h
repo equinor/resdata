@@ -16,7 +16,6 @@ hash_type   	* hash_alloc(int);
 void        	  hash_free(hash_type *);
 void              hash_free__(void *);
 void        	  hash_insert_ref(hash_type * , const char * , const void *);
-void              hash_insert_managed_ref(hash_type *, const char *, const void *, del_type *);
 void        	  hash_insert_copy(hash_type *, const char * , const void *, copyc_type *, del_type *);
 void        	  hash_insert_string(hash_type *, const char *, const char *);
 bool        	  hash_has_key(const hash_type *, const char *);
@@ -31,9 +30,13 @@ char           ** hash_alloc_keylist(const hash_type *);
 void              hash_free_ext_keylist(const hash_type *, char **);
 hash_node_type  * hash_iter_init(const hash_type *);
 hash_node_type  * hash_iter_next(const hash_type *, const hash_node_type * );
-char           ** hash_alloc_ordered_keylist(const hash_type *hash);
 char           ** hash_alloc_sorted_keylist(const hash_type *);
 void              hash_insert_hash_owned_ref(hash_type *, const char * , const void *, del_type *);
+const char 	* hash_iter_get_next_key(hash_type * );
+const char 	* hash_iter_get_first_key(hash_type * );
+void            * hash_iter_get_first(hash_type * , bool *);
+void            * hash_iter_get_next(hash_type *  , bool *);
+
 
 
 HASH_GET_SCALAR(hash_get_int       , int);
