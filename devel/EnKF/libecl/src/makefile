@@ -31,6 +31,7 @@ INSTALL: $(LIB)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) make_SGU.c -o make_SGU.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) convert.c  -o convert.x -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o kw_list.x kw_list.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o kw_cmp.x kw_cmp.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o combine_grdecl.x combine_grdecl.c -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) -o kw_extract.x kw_extract.c  -I./ -L$(INSTALL_LIB_PATH) $(LIB_PATH)  $(LIB_LINK)
 

@@ -6,7 +6,6 @@
 #include <ecl_block.h>
 #include <errno.h>
 #include <hash.h>
-#include <list.h>
 #include <util.h>
 #include <time.h>
 #include <restart_kw_list.h>
@@ -27,7 +26,6 @@ struct ecl_block_struct {
   /*int           block_nr;*/
   int           size;
   hash_type    *kw_hash;
-  list_type    *kw_list;
   time_t        sim_time;
   restart_kw_list_type *_kw_list;
 };
@@ -41,28 +39,28 @@ struct ecl_block_struct {
 
 bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw, int mem_mode) {
   char * strip_kw = ecl_kw_alloc_strip_header(ecl_kw);
+
   if (ecl_block_has_kw(ecl_block , strip_kw)) {
     free(strip_kw);
     return false;
   } else {
-    list_node_type * list_node;
+
     switch(mem_mode) {
     case(COPY):
-      list_node = list_append_copy(ecl_block->kw_list , ecl_kw , ecl_kw_copyc__ , ecl_kw_free__);
+      hash_insert_copy(ecl_block->kw_hash , strip_kw , ecl_kw , ecl_kw_copyc__ , ecl_kw_free__);
       break;
     case(OWNED_REF):
-      list_node = list_append_list_owned_ref(ecl_block->kw_list , ecl_kw , ecl_kw_free__ );
+      hash_insert_hash_owned_ref(ecl_block->kw_hash , strip_kw , ecl_kw , ecl_kw_free__ );
       break;
     case(SHARED):
-      list_node = list_append_ref(ecl_block->kw_list , ecl_kw);
+      hash_insert_ref(ecl_block->kw_hash , strip_kw , ecl_kw);
       break;
     default:
       fprintf(stderr,"%s: internal programming error - aborting \n",__func__);
       abort();
     }
-    
-    hash_insert_ref(ecl_block->kw_hash , strip_kw , list_node);
     ecl_block->size++;
+    restart_kw_list_add(ecl_block->_kw_list , strip_kw);
     
     free(strip_kw);
     return true;
@@ -76,33 +74,21 @@ bool ecl_block_has_kw(const ecl_block_type * ecl_block, const char * kw) {
 }
 
 
-
 ecl_kw_type * ecl_block_get_first_kw(const ecl_block_type * src) {
-  list_node_type *kw_node = list_get_head(src->kw_list);
-  if (kw_node != NULL)
-    return list_node_value_ptr(kw_node);
+  const char * kw = restart_kw_list_get_first(src->_kw_list);
+  if (kw != NULL) 
+    return ecl_block_get_kw(src , kw);
   else
     return NULL;
 }
   
 
-ecl_kw_type * ecl_block_get_next_kw(const ecl_block_type * ecl_block , const ecl_kw_type * ecl_kw) {
-  char kw_s[9];
-  list_node_type *kw_node;
-  list_node_type *next_node;
-  util_set_strip_copy(kw_s , ecl_kw_get_header_ref(ecl_kw));
-  
-  kw_node   = hash_get(ecl_block->kw_hash , kw_s);
-  if (kw_node == NULL) {
-    fprintf(stderr,"%s internal error in ecl_block.c - aborting \n",__func__);
-    abort();
-  } else {
-    next_node = list_node_get_next(kw_node);
-    if (next_node != NULL)
-      return list_node_value_ptr(next_node);
-    else
-      return NULL;
-  }
+ecl_kw_type * ecl_block_get_next_kw(const ecl_block_type * ecl_block) {
+  const char * kw = restart_kw_list_get_next(ecl_block->_kw_list);
+  if (kw != NULL) 
+    return ecl_block_get_kw(ecl_block, kw);
+  else
+    return NULL;
 }
 
 
@@ -111,14 +97,15 @@ ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
   ecl_block_type * copy;
   copy = ecl_block_alloc(src->report_nr , src->fmt_file , src->endian_convert);
   {
-    list_node_type * kw_node = list_get_head(src->kw_list);
-    while (kw_node != NULL) {
-      const ecl_kw_type *kw = list_node_value_ptr(kw_node);
-      ecl_block_add_kw(copy , kw , COPY);
-      kw_node = list_node_get_next(kw_node);
+    ecl_kw_type * ecl_kw;
+    bool cont;
+    ecl_kw = hash_iter_get_first(src->kw_hash , &cont);
+    while (cont) {
+      ecl_block_add_kw(copy , ecl_kw , COPY);
+      ecl_kw = hash_iter_get_next(src->kw_hash , &cont);
     }
   }
-    
+  
   return copy;
 }
 
@@ -192,7 +179,6 @@ ecl_block_type * ecl_block_alloc(int report_nr , bool fmt_file , bool endian_con
   ecl_block->_kw_list       = restart_kw_list_alloc();
 
   ecl_block->kw_hash  = hash_alloc(10);
-  ecl_block->kw_list  = list_alloc();
   ecl_block->sim_time = -1;
   ecl_block_set_report_nr(ecl_block , report_nr);
   return ecl_block;
@@ -212,7 +198,7 @@ ecl_kw_type * ecl_block_get_kw(const ecl_block_type *ecl_block , const char *kw)
   util_set_strip_copy(kw_s , kw);  
 
   if (hash_has_key(ecl_block->kw_hash , kw_s)) 
-    ecl_kw = list_node_value_ptr(hash_get(ecl_block->kw_hash , kw_s));
+    ecl_kw = hash_get(ecl_block->kw_hash , kw_s);
   else {
     fprintf(stderr,"%s: could not locate kw:%s in block - aborting. \n",__func__ , kw);
     ecl_block_summarize(ecl_block);
@@ -220,31 +206,6 @@ ecl_kw_type * ecl_block_get_kw(const ecl_block_type *ecl_block , const char *kw)
   }
   return ecl_kw;
 }
-
-
-
-
-ecl_kw_type * ecl_block_detach_kw(ecl_block_type *ecl_block , const char *kw) {
-  ecl_kw_type *ecl_kw = NULL;
-
-  if (ecl_block_has_kw(ecl_block , kw)) {
-    ecl_kw = ecl_block_get_kw(ecl_block , kw);
-    list_node_type *kw_node = hash_get(ecl_block->kw_hash , kw);
-    hash_del(ecl_block->kw_hash , kw);
-    list_del_node(ecl_block->kw_list , kw_node);
-  }
-  
-  return ecl_kw;
-}
-
-
-/*
-void ecl_block_free_kw(ecl_block_type *ecl_block , const char *kw) {
-  ecl_kw_type *ecl_kw = ecl_block_detach_kw(ecl_block , kw);
-  if (ecl_kw != NULL) 
-    ecl_kw_free(ecl_kw);
-}
-*/
 
 
 
@@ -323,13 +284,18 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
 
 void ecl_block_summarize(const ecl_block_type * block) {
   FILE * stream = stdout;
-  list_node_type * kw_node = list_get_head(block->kw_list);
+  const char * kw;
+
   fprintf(stream , "-----------------------------------------------------------------\n");
-  while (kw_node != NULL) {
-    ecl_kw_type *ecl_kw = list_node_value_ptr(kw_node);
+
+  restart_kw_list_reset(block->_kw_list);
+  kw = restart_kw_list_get_first(block->_kw_list);
+  while (kw != NULL) {
+    ecl_kw_type *ecl_kw = hash_get(block->kw_hash , kw);
     ecl_kw_summarize(ecl_kw);
-    kw_node = list_node_get_next(kw_node);
+    kw = restart_kw_list_get_next(block->_kw_list);
   }
+  
   fprintf(stream , "-----------------------------------------------------------------\n");
 }
 
@@ -352,14 +318,11 @@ static bool ecl_block_include_kw(const ecl_block_type *ecl_block , const ecl_kw_
 void ecl_block_set_fmt_file(ecl_block_type *ecl_block , bool fmt_file) {
   ecl_block->fmt_file = fmt_file;
   {
-    /*
-      This could be done with a for loop - it is a good stress test of
-      the hash algorithm though.
-    */
-    hash_node_type *kw_node = hash_iter_init(ecl_block->kw_hash);
-    while (kw_node != NULL) {
-      ecl_kw_set_fmt_file(list_node_value_ptr(hash_node_value_ptr(kw_node)), ecl_block->fmt_file);
-      kw_node = hash_iter_next(ecl_block->kw_hash , kw_node);
+    bool cont;
+    ecl_kw_type *ecl_kw = hash_iter_get_first(ecl_block->kw_hash , &cont);
+    while (cont) {
+      ecl_kw_set_fmt_file(ecl_kw , ecl_block->fmt_file);
+      ecl_kw = hash_iter_get_next(ecl_block->kw_hash , &cont);
     }
   }
 }
@@ -387,13 +350,17 @@ void ecl_block_fread_kwlist(ecl_block_type *ecl_block , fortio_type *fortio , in
 
 
 void ecl_block_fwrite(ecl_block_type *ecl_block , fortio_type *fortio) {
-  list_node_type * kw_node = list_get_head(ecl_block->kw_list);
-  while (kw_node != NULL) {
-    ecl_kw_type *ecl_kw = list_node_value_ptr(kw_node);
+  const char * kw;
+  restart_kw_list_reset(ecl_block->_kw_list);
+  kw = restart_kw_list_get_first(ecl_block->_kw_list);
+  while (kw != NULL) {
+    ecl_kw_type *ecl_kw = hash_get(ecl_block->kw_hash , kw);
     ecl_kw_set_fmt_file(ecl_kw , ecl_block->fmt_file);
     ecl_kw_fwrite(ecl_kw , fortio);
+    kw = restart_kw_list_get_next(ecl_block->_kw_list);
   }
 }
+
 
 
 
@@ -412,7 +379,6 @@ void * ecl_block_get_data_ref(const ecl_block_type *ecl_block, const char *kw) {
 
 void ecl_block_free(ecl_block_type *ecl_block) {
   hash_free(ecl_block->kw_hash);
-  list_free(ecl_block->kw_list);
   restart_kw_list_free(ecl_block->_kw_list);
   free(ecl_block);
 }

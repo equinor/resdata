@@ -76,14 +76,14 @@ void ecl_inter_kw_get_data__(const char *_kw , const int *kw_len , const int *is
 }
 
 
-
+/*
 void ecl_inter_del_kw(const char *_kw, const int *kw_len , const int *istep) {
   char *kw = util_alloc_cstring(_kw , kw_len);
   ecl_block_type *ecl_block = ecl_fstate_iget_block(ECL_FSTATE , (*istep) - 1);
   ecl_block_free_kw(ecl_block , kw);
   free(kw);
 }
-
+*/
 
 void ecl_inter_kw_exists__(const char *_kw , const int *kw_len , const int *istep , int *int_ex) {
   char *kw = util_alloc_cstring(_kw , kw_len);

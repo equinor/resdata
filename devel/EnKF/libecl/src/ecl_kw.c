@@ -199,7 +199,7 @@ int ecl_kw_cmp(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2 , int *ind
     
     for (i=0; i < ecl_kw1->size * ecl_kw1->sizeof_ctype; i++) {
       if (d1[i] != d2[i]) {
-	printf("byte:%d differs: %03d  %03d  \n",i,d1[i],d2[i]);
+	/*printf("byte:%d differs: %03d  %03d  \n",i,d1[i],d2[i]);*/
 	*index = i / ecl_kw1->sizeof_ctype;
 	diff_site = data_diff;
 	break;
@@ -208,6 +208,7 @@ int ecl_kw_cmp(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2 , int *ind
   }
   return diff_site;
 }
+
 
 void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
   if (!ecl_kw->shared_data) {

@@ -6,7 +6,7 @@
 typedef enum {initialized , writing , reading} _mode_enum;
 
 struct restart_kw_list_struct {
-  _mode_enum    mode;
+  _mode_enum   mode;
   int  	       buffer_size;        /* The total number of char* elements we have allocated space for. */
   int  	       current_kw_index;   /* The keyword index we are currently going to read / write. */
   int  	       active_elements;    /* The number of elements which have been added */
@@ -77,6 +77,12 @@ const char * restart_kw_list_get_next(restart_kw_list_type * kw_list) {
 }
 
 
+const char * restart_kw_list_get_first(restart_kw_list_type * kw_list) {
+  restart_kw_list_reset(kw_list);
+  return restart_kw_list_get_next(kw_list);
+}
+
+
 void restart_kw_list_free(restart_kw_list_type * kw_list) {
   int i;
   for (i=0; i < kw_list->buffer_size; i++) 
@@ -85,4 +91,16 @@ void restart_kw_list_free(restart_kw_list_type * kw_list) {
   free(kw_list->kw_list);
   free(kw_list);
   kw_list = NULL;
+}
+
+
+void restart_kw_list_memcpy(restart_kw_list_type * src , restart_kw_list_type * target) {
+  const char * kw;
+
+  restart_kw_list_reset(target);
+  restart_kw_list_reset(src);
+  kw = restart_kw_list_get_first(src);
+  while (kw != NULL) 
+    restart_kw_list_add(target , kw);
+  
 }
