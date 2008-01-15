@@ -9,13 +9,6 @@
 
 
 
-/*
-static void scalar_config_set_output_transform(scalar_config_type * config) {
-  int i;
-  for (i=0; i < config->data_size; i++) 
-    config->output_transform[i] = trans_func_lookup(config->output_transform_name[i] , &config->void_arg[i]);
-}
-*/
 
 
 scalar_config_type * scalar_config_alloc_empty(int size) {
@@ -67,35 +60,6 @@ void scalar_config_truncate(const scalar_config_type * config , double *data) {
 }
 
 
-void scalar_config_fscanf_line_old(scalar_config_type * config , int line_nr , FILE * stream) {
-  double   mu , sigma;
-  int scan_count;
-  scan_count   = fscanf(stream , "%lg  %lg",&mu,&sigma);
-  
-  if (scan_count != 2) {
-    util_rewind_line(stream);
-    fprintf(stderr,"%s error when loading line: %s - aborting \n",__func__ , util_fscanf_alloc_line(stream , NULL));
-    abort();
-  }
-  
-  config->active[line_nr]  = true;
-  config->mean[line_nr]    = mu;
-  config->std[line_nr]     = sigma;
-  {
-    long int current_pos;
-    char * token;
-
-    current_pos = ftell(stream);
-    token       = util_fscanf_alloc_token(stream);
-    if (token != NULL) {
-      current_pos = ftell(stream);
-      config->output_transform_name[line_nr] = util_fscanf_alloc_token(stream);
-      config->output_transform[line_nr]      = trans_func_lookup_old(config->output_transform_name[line_nr] , stream , &config->void_arg[line_nr]);
-      
-      free(token);
-    }
-  }
-}
 
 
 void scalar_config_fscanf_line(scalar_config_type * config , int line_nr , FILE * stream) {

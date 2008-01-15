@@ -32,7 +32,6 @@ const          char * scalar_config_get_eclfile_ref(const scalar_config_type * )
 void                  scalar_config_transform(const scalar_config_type * , const double * , double *);
 void                  scalar_config_truncate(const scalar_config_type * config , double *);
 void                  scalar_config_fscanf_line(scalar_config_type * , int , FILE * );
-void                  scalar_config_fscanf_line2(scalar_config_type * , int , FILE * );
 
 
 CONFIG_SET_ECLFILE_HEADER(scalar);

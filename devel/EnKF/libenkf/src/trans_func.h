@@ -13,7 +13,6 @@ double             trans_step   (double  , const void_arg_type *);
 double             trans_const  (double  , const void_arg_type *);
 double             trans_normal (double  , const void_arg_type *);
 double             trans_unif   (double  , const void_arg_type *);
-transform_ftype  * trans_func_lookup_old(const char * , FILE * stream, void_arg_type **);
 transform_ftype  * trans_func_lookup(FILE * stream, char ** , void_arg_type ** , bool *);
 
 #endif
