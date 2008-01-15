@@ -973,7 +973,7 @@ char * util_alloc_string_copy(const char *src ) {
 
 char * util_realloc_string_copy(char * old_string , const char *src ) {
   if (src != NULL) {
-    char *copy = realloc(old_string , (strlen(src) + 1) * sizeof *copy);
+    char *copy = util_realloc(old_string , (strlen(src) + 1) * sizeof *copy , __func__);
     strcpy(copy , src);
     return copy;
   } else 
