@@ -188,17 +188,15 @@ multz_type * multz_alloc_mean(int ens_size , const multz_type **multz_ens) {
 
 
 
-
-
 /*****************************************************************/
 
 
 void multz_TEST() {
   const char * config_file = "/tmp/multz_config.txt";
   FILE * stream = util_fopen(config_file , "w");
-  fprintf(stream , "1  0.01  0.01   0  NONE 1 11 1 11\n");
-  fprintf(stream , "2  0.01  0.5    \n");
-  fprintf(stream , "3 10.00 20.00   0  NONE 3 33 3 33\n");
+  fprintf(stream , "1 1 10 1 10 0  CONST 1\n");
+  fprintf(stream , "2 1 10         UNIFORM 0 1\n");
+  fprintf(stream , "3     0        DUNIF   5 0 1\n");
   fclose(stream);
   
   {
