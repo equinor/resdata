@@ -72,13 +72,13 @@ transform_ftype * trans_func_lookup(FILE * stream , char ** _func_name , void_ar
     transf   = trans_unif;
     void_arg = void_arg_alloc2(double_value , double_value);
   } else if (strcmp(func_name , "DUNIF") == 0) {
-    /* Uniform distribution */
+    /* DUNIF distribution */
     /* DUNIF steps min max */
     transf   = trans_unif;
     void_arg = void_arg_alloc3(int_value , double_value , double_value);
   } else if (strcmp(func_name , "DERRF") == 0) {
-    /* Uniform distribution */
-    /* DUNIF steps min max */
+    /* DERRF distribution */
+    /* DUNIF steps mu std */
     transf   = trans_unif;
     void_arg = void_arg_alloc3(int_value , double_value , double_value);
   } else if (strcmp(func_name , "CONST") == 0) {
