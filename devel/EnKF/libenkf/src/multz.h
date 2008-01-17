@@ -25,6 +25,7 @@ multz_type     * multz_alloc_mean(int , const multz_type **);
 void             multz_TEST(void);
 void             multz_fread(multz_type * , FILE * );
 void             multz_fwrite(const multz_type * , FILE * );
+char           * multz_alloc_description(const multz_type * , int );
 
 
 MATH_OPS_HEADER(multz);

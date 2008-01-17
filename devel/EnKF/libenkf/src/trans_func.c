@@ -3,13 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <void_arg.h>
+#include <void_arg.h> 
 #include <util.h>
 
-
-double trans_pow10(double x, const void_arg_type * arg) { return exp(log(10.0) * x); }
-
-double trans_exp(double x, const void_arg_type * arg) { return exp(x); }
 
 double trans_errf(double x, const void_arg_type * arg) { return 0.5*(1 + erf(x/sqrt(2.0))); }
 
@@ -19,12 +15,25 @@ double trans_const(double x , const void_arg_type * arg) { return void_arg_get_d
 
 
 
+
+/* Observe that the argument of the shift should be "+" */
 double trans_derrf(double x , const void_arg_type * arg) {
   double y;
   int steps  = void_arg_get_int(arg , 0);
   double mu  = void_arg_get_double(arg , 1);
   double std = void_arg_get_double(arg , 2);
-  y = floor(steps*0.5*(1 + erf((x - mu)/(std * sqrt(2.0))))) / steps;
+  y = floor(steps*0.5*(1 + erf((x + mu)/(std * sqrt(2.0))))) / (steps - 1);
+  return y;
+}
+
+
+/* This should be removed - old legacy shit from Oseberg East */
+double trans_derrf_OE(double x , const void_arg_type * arg) {
+  double y;
+  int steps  = void_arg_get_int(arg , 0);
+  double mu  = void_arg_get_double(arg , 1);
+  double std = void_arg_get_double(arg , 2);
+  y = floor(steps*0.5*(1 + erf(x/sqrt(2.0)))) / (steps - 1);
   return y;
 }
 
@@ -89,6 +98,11 @@ transform_ftype * trans_func_lookup(FILE * stream , char ** _func_name , void_ar
     /* DERRF distribution */
     /* DUNIF steps mu std */
     transf   = trans_derrf;
+    void_arg = void_arg_alloc3(int_value , double_value , double_value);
+  } else if (strcmp(func_name , "DERRF-OE") == 0) {
+    /* DERRF distribution */
+    /* DUNIF steps mu std */
+    transf   = trans_derrf_OE;
     void_arg = void_arg_alloc3(int_value , double_value , double_value);
   } else if (strcmp(func_name , "CONST") == 0) {
     /* Constant    */

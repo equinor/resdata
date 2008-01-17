@@ -85,6 +85,18 @@ int multflt_config_get_data_size(const multflt_config_type * multflt_config) {
   return scalar_config_get_data_size(multflt_config->scalar_config);
 }
 
+
+const char * multflt_config_get_name(const multflt_config_type * config, int fault_nr) {
+  const int size = multflt_config_get_data_size(config);
+  if (fault_nr >= 0 && fault_nr < size) 
+    return config->fault_names[fault_nr];
+  else {
+    fprintf(stderr,"%s: asked for fault number:%d - valid interval: [0,%d] - aborting \n",__func__ , fault_nr , size - 1);
+    abort();
+  }
+}
+
+
 /*****************************************************************/
 
 VOID_FUNC(multflt_config_free , multflt_config_type);

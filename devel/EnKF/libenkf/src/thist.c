@@ -191,6 +191,7 @@ struct thist_struct {
   int data_size;
   int ens_size;
   thist_node_type ** data;
+  char             * title;
 };
 
 
@@ -213,13 +214,20 @@ static void thist_realloc_data(thist_type * thist , int new_size) {
 }
 
 
-thist_type * thist_alloc(int length , int ens_size , thist_data_type data_type) {
+void thist_set_title(thist_type * thist , const char * title) {
+  thist->title = util_realloc_string_copy(thist->title , title);
+}
+	
+							   
+
+thist_type * thist_alloc(int length , int ens_size , thist_data_type data_type , const char * title) {
   thist_type * thist = malloc(sizeof * thist);
   thist->ens_size    = ens_size;
   thist->data_type   = data_type;
   thist->data_size   = 0;
   thist->data        = NULL;
-
+  thist->title       = NULL;
+  thist_set_title(thist , title);
   thist_realloc_data(thist , length);
   return thist;
 }
@@ -231,6 +239,8 @@ void thist_free(thist_type * thist) {
   for (i=0; i < thist->data_size; i++) 
     if (thist->data[i] != NULL) thist_node_free(thist->data[i]);
   
+  if (thist->title != NULL)
+    free(thist->title);
   free(thist->data);
   free(thist);
 }
@@ -328,21 +338,24 @@ double analyzed_data
 */
 
 
+
 /*
   matlob code to load this in ../../matlab/src/ins_plot.m
 */
-void thist_matlab_dump(const thist_type * thist , const char * filename , const char * _title) {
+void thist_matlab_dump(const thist_type * thist , const char * filename) {
+  const char * title;
   char *path;
-  const char *title;
   util_alloc_file_components(filename , &path , NULL , NULL);
   if (!util_path_exists(path)) {
     printf("Making directory %s ...\n",path);
     util_make_path(path);
   }
-  if (_title == NULL)
+  
+  if (thist->title == NULL)
     title = filename;
   else
-    title = _title;
+    title = thist->title;
+
   {
     const int not_active = 0;
     FILE *stream = util_fopen(filename,"w");
@@ -368,7 +381,7 @@ void thist_clear(thist_type * thist) {
       thist_node_clear(thist->data[time_step]);
       thist->data[time_step] = NULL;
     }
-  
+  thist_set_title(thist , NULL);
 }
 
 

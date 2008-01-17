@@ -85,3 +85,10 @@ void multz_inter_truncate__(const int * iens , double * data) {
   multz_truncate(MULTZ_LIST[(*iens) - 1]);
   multz_get_data(MULTZ_LIST[(*iens) - 1] , data);
 }
+
+
+void multz_inter_get_description__(const int * multz_nr , char * _description , const int * description_len) {
+  char * description = multz_alloc_description(MULTZ_LIST[0] , (*multz_nr) - 1);
+  util_memcpy_string_C2f90(description , _description , *description_len);
+  free(description);
+}

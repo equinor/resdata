@@ -218,6 +218,9 @@ void multflt_TEST() {
 }							 
 
 
+const char * multflt_get_name(const multflt_type * multflt, int fault_nr) {
+  return  multflt_config_get_name(multflt->config , fault_nr);
+}
 
 
 /*

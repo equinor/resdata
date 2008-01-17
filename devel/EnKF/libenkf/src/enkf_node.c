@@ -17,6 +17,7 @@
 typedef struct serial_state_struct serial_state_type;
 typedef enum   {forecast , serialized , analyzed} state_enum;
 
+
 struct serial_state_struct {
   int        internal_offset;
   int        serial_size;
@@ -36,7 +37,7 @@ struct enkf_node_struct {
   swapout_ftype       *swapout;
 
   serialize_ftype    *serialize;
-  deserialize_ftype *deserialize;
+  deserialize_ftype  *deserialize;
   
   sample_ftype       *sample;
   free_ftype         *freef;

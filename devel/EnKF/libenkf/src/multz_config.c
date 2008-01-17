@@ -121,6 +121,8 @@ multz_config_type * multz_config_fscanf_alloc(const char * filename , int nx , i
       fprintf(stderr,"%s: something wrong when reading: %s - aborting \n",__func__ , filename);
       abort();
     }
+    config->k[line_nr]     = k;
+
     util_fscanf_int(stream, &i1);  
     util_fscanf_int(stream, &i2);
     util_fscanf_int(stream, &j1);
@@ -170,11 +172,26 @@ void multz_config_free(multz_config_type * config) {
 
 
 
-
-
 int multz_config_get_data_size(const multz_config_type * multz_config) {
   return scalar_config_get_data_size(multz_config->scalar_config);
 }
+
+
+
+char * multz_config_alloc_description(const multz_config_type * config, int multz_nr) {
+  const int size = multz_config_get_data_size(config);
+  if (multz_nr >= 0 && multz_nr < size) {
+    char * description = util_malloc(48 * sizeof * description , __func__);
+    printf("multz_nr:%d  k:%d \n",multz_nr , config->k[multz_nr]);
+    sprintf(description , "k: %d  i: %d - %d  j: %d - %d" , config->k[multz_nr] , config->i1[multz_nr] , config->i2[multz_nr] , config->j1[multz_nr] , config->j2[multz_nr]);
+    return description;
+  } else {
+    fprintf(stderr,"%s: asked for multz number:%d - valid interval: [0,%d] - aborting \n",__func__ , multz_nr , size - 1);
+    abort();
+  }
+}
+
+
 
 /*****************************************************************/
 

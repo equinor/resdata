@@ -218,7 +218,9 @@ void multz_TEST() {
 }
 
 
-
+char * multz_alloc_description(const multz_type * multz , int multz_nr) {
+  return multz_config_alloc_description(multz->config , multz_nr);
+}
 
 
 

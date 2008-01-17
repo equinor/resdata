@@ -28,6 +28,7 @@ void                multz_config_free(multz_config_type *);
 const        char * multz_config_get_ensfile_ref(const multz_config_type * );
 const        char * multz_config_get_eclfile_ref(const multz_config_type * );
 void                multz_config_ecl_write(const multz_config_type * , const double *, FILE *);
+char              * multz_config_alloc_description(const multz_config_type * , int );
 
 
 /*Generated headers */

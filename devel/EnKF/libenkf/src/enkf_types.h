@@ -15,12 +15,18 @@ typedef double enkf_float_type;
 /*
   Observe that these are used as bitmask's, i.e. they must be power of 2 series.
 */
-typedef enum {parameter = 1 , static_parameter = 2 , ecl_restart = 4 , ecl_summary = 8 , ecl_static = 16 , all_types = 31} enkf_var_type;
+typedef enum {constant         = 1  , /* A parameter which is constant both in time, and between members                         */
+	      static_parameter = 2  , /* A parameter which is not updated with enkf - can be different between different members */
+              parameter        = 4  , /* A parameter which is updated with enkf                                                  */
+	      ecl_restart      = 8  , /* Dynamic data - read from Eclipse restart files, typically PRESSURE and SATURATIONS      */
+	      ecl_summary      = 16 , /* Dynamic data - summary data from Eclipse summary files                                  */ 
+	      ecl_static       = 32 , /* Keywords like XCON++ from eclipse restart files - which are just dragged along          */ 
+	      all_types        = 63 }  enkf_var_type;
+
 /* 
    For instance the pressure is implemented with a field, and behaves as a ecl_restart variable. The
    permeability is also implemented as a field, but this is a parameter.
 */
-
 
 /*
   These correspond to implementation types.

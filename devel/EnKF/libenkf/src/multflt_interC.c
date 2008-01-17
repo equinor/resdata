@@ -89,3 +89,11 @@ void multflt_inter_truncate__(const int * iens , double * data) {
   multflt_truncate(MULTFLT_LIST[(*iens) - 1]);
   multflt_get_data(MULTFLT_LIST[(*iens) - 1] , data);
 }
+
+
+
+
+void multflt_inter_get_description__(const int * multflt_nr , char * _description , const int * description_len) {
+  const char * description = multflt_get_name(MULTFLT_LIST[0] , (*multflt_nr) - 1);
+  util_memcpy_string_C2f90(description , _description , *description_len);
+}
