@@ -3,7 +3,6 @@
 #include <string.h>
 #include <inttypes.h>
 #include <dirent.h>
-#include <util.h>
 
 #include <hash.h>
 #include <hash_sll.h>
@@ -203,7 +202,16 @@ hash_type * hash_alloc(int size) {
 
 
 static void hash_iter_free_keylist(hash_type * hash) {
-  util_free_string_list(hash->iter_keylist , hash->iter_size);
+  {
+    int i;
+    if (hash->iter_keylist != NULL) {
+      for (i=0; i < hash->iter_size; i++) {
+	if (hash->iter_keylist[i] != NULL)
+	  free(hash->iter_keylist[i]);
+      }
+      free(hash->iter_keylist);
+    }
+  }
   hash->iter_keylist = NULL;
   hash->iter_mode    = iter_invalid;
 }
