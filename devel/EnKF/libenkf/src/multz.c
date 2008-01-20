@@ -105,17 +105,15 @@ void multz_fread(multz_type * multz , FILE * stream) {
 }
 
 
-void multz_ecl_write(const multz_type * multz , const char * path) {
+void multz_ecl_write(const multz_type * multz , const char * eclfile) {
   DEBUG_ASSERT(multz) 
   {
-    char * eclfile = util_alloc_full_path(path , multz_config_get_eclfile_ref(multz->config));
     FILE * stream  = enkf_util_fopen_w(eclfile , __func__);
     
     multz_output_transform(multz);
     multz_config_ecl_write(multz->config , multz_get_output_ref(multz) , stream);
     
     fclose(stream);
-    free(eclfile);
   }
 }
 

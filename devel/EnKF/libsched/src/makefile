@@ -1,15 +1,13 @@
+include path_config
 MFLAG = m32
 CC = gcc
 AR = ar
 #################################################################
-COMPILE_INCLUDE   = -I./ -I../../libhash/include -I../../libutil/include -I../../libecl/include 
-COMPILE_LIB_PATH  = -L../../libhash/lib -L../../libutil/lib  -L../../libecl/lib
-COMPILE_LIBS      = -lm -lhash -lutil -lecl
-
-INSTALL_INC_PATH = ../include
-INSTALL_LIB_PATH = ../lib
+COMPILE_INCLUDE  = -I$(LIBSCHED_HOME)/src -I$(LIBECL_HOME)/include -I$(LIBUTIL_HOME)/include -I$(LIBHASH_HOME)/include
+INSTALL_INC_PATH =   $(LIBSCHED_HOME)/include
+INSTALL_LIB_PATH =   $(LIBSCHED_HOME)/lib
 #################################################################
-CFLAGS  = -O2 -$(MFLAG) -std=gnu99 -g -Wall $(COMPILE_INCLUDE) 
+CFLAGS  = -O2 -$(MFLAG) -std=gnu99 -g -Wall 
 FFLAGS  = -fpe0 -traceback -warn unused -CB -u -g -real_size 64 -assume byterecl -assume nobuffered_io -convert big_endian
 ARFLAGS = -csr
 #################################################################
@@ -17,15 +15,16 @@ OBJECTS   = history.o rate_node.o date_node.o sched_interC.o sched_file.o sched_
 INC_FILES = date_node.h rate_node.h history.h sched_file.h sched_util.h sched_kw.h sched_kw_compdat.h sched_kw_wconhist.h sched_kw_dates.h sched_kw_untyped.h sched_kw_tstep.h
 LIB       = libsched_$(MFLAG).a
 LIB_LINK  = -lsched_$(MFLAG) -lecl_$(MFLAG) -lhash_$(MFLAG) -lutil_$(MFLAG) -lm -lz
-LIB_PATH  = -L../../libhash/lib -L../../libutil/lib -L../../libecl/lib -L$(INSTALL_LIB_PATH)
+LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L$(LIBHASH_HOME)/lib -L$(LIBECL_HOME)/lib -L$(LIBSCHED_HOME)/lib
+TARGET_INCLUDE = -I$(LIBECL_HOME)/include -I$(LIBUTIL_HOME)/include -I$(LIBHASH_HOME)/include -I$(LIBSCHED_HOME)/include
 
 INSTALL: $(LIB)
 	install -d $(INSTALL_INC_PATH)
 	install -d $(INSTALL_LIB_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	gcc $(CFLAGS) sched_test.c -o sched.x $(LIB_PATH) $(LIB_LINK)
-	gcc $(CFLAGS) ecl_rft.c    -o rft.x $(LIB_PATH) $(LIB_LINK)
+	gcc $(CFLAGS) $(TARGET_INCLUDE) sched_test.c -o sched.x $(LIB_PATH) $(LIB_LINK)
+	gcc $(CFLAGS) $(TARGET_INCLUDE) ecl_rft.c    -o rft.x   $(LIB_PATH) $(LIB_LINK)
 
 clean:
 	rm -f *.o *~ 
@@ -39,7 +38,7 @@ $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $< -o $@
 
 %.o : %.f90
 	$(FC) -c $(FFLAGS) $< -o $@

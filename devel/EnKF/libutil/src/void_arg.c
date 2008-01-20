@@ -5,7 +5,11 @@
 #include <stdbool.h>
 #include <util.h>
 
+
+#define VOID_ARG_TYPE_SIGNATURE 7651
+
 struct void_arg_struct {
+  int            __type_signature;
   int     	 arg_size;
   int     	 byte_size;
   size_t  	*size_list;
@@ -47,6 +51,13 @@ static int void_arg_sizeof(void_arg_enum arg_type) {
   return size;
 }
 
+static void __void_arg_assert_cast(const void_arg_type * arg) {
+  if (arg->__type_signature != VOID_ARG_TYPE_SIGNATURE) {
+    fprintf(stderr,"%s: hmmm - the cast to void_arg_type seemed to fail at runtime - aborting\n",__func__);
+    abort();
+  }
+}
+
 static void __void_arg_assert_index(const void_arg_type * arg , int iarg) {
   if (iarg < 0 || iarg >= arg->arg_size) {
     fprintf(stderr,"%s: void_arg() object allocated with %d arguments - %d invalid argument number - aborting \n",__func__ , arg->arg_size , iarg);
@@ -56,7 +67,7 @@ static void __void_arg_assert_index(const void_arg_type * arg , int iarg) {
 
 static void __void_arg_assert_type(const void_arg_type * arg , int iarg , void_arg_enum arg_type) {
   if (arg_type != arg->arg_type[iarg]) {
-    fprintf(stderr,"%s: asked for type:%d not matching the alloc statement - aborting \n" , __func__ , arg_type);
+    fprintf(stderr,"%s: asked for type:%d  alloc statement:%d  - aborting \n" , __func__ , arg_type , arg->arg_type[iarg]);
     abort();
   }
 }
@@ -69,6 +80,7 @@ static void __void_arg_assert_type(const void_arg_type * arg , int iarg , void_a
 void_arg_type * void_arg_alloc__(int arg_size , const void_arg_enum * arg_type , const int * size_list) {
   int i;
   void_arg_type * arg = malloc(sizeof *arg);
+  arg->__type_signature = VOID_ARG_TYPE_SIGNATURE;
   arg->arg_size  = arg_size;
   arg->byte_size = 0;
   arg->size_list   = calloc(arg_size , sizeof *arg->size_list);
@@ -148,10 +160,13 @@ void void_arg_free(void_arg_type * arg) {
   free(arg->argBuffer);
   free(arg->size_list);
   free(arg->arg_type);
+  free(arg->offset_list);
   free(arg);
 }
 
-
+void void_arg_free__(void * void_arg) {
+  void_arg_free((void_arg_type *) void_arg);
+}
 
 
 void void_arg_pack_ptr(void_arg_type * arg, int iarg , void * input) {
@@ -175,6 +190,7 @@ void void_arg_pack_buffer(void_arg_type * arg, int iarg , void * input) {
 }
 
 void * void_arg_get_buffer(const void_arg_type * arg, int iarg) {
+  __void_arg_assert_cast(arg);
   __void_arg_assert_index(arg , iarg);
   /* No type assert here - can always call pack/get buffer */
   return &arg->argBuffer[arg->offset_list[iarg]];
@@ -188,6 +204,7 @@ void * void_arg_get_buffer(const void_arg_type * arg, int iarg) {
 #define VOID_ARG_TYPED_GET(type)                                                  \
 type void_arg_get_ ## type (const void_arg_type *arg , int iarg) { 		  \
   type output;                                                     		  \
+  __void_arg_assert_cast(arg);                                                    \
   __void_arg_assert_index(arg , iarg);                             		  \
   __void_arg_assert_type(arg , iarg , type ## _value);             		  \
   memcpy(&output , &arg->argBuffer[arg->offset_list[iarg]] , arg->size_list[iarg]); \
@@ -287,6 +304,30 @@ void void_arg_fscanf(void_arg_type * arg , FILE * stream) {
       scan_count = fscanf(stream , fmt , arg0 , arg1 , arg2);
       break;
     }
+  case(4):
+    {
+      void   *arg0, *arg1 , *arg2 , *arg3;
+      arg0 = void_arg_get_buffer(arg , 0);
+      arg1 = void_arg_get_buffer(arg , 1);
+      arg2 = void_arg_get_buffer(arg , 2);
+      arg2 = void_arg_get_buffer(arg , 3);
+      
+      scan_count = fscanf(stream , fmt , arg0 , arg1 , arg2 , arg3);
+      break;
+    }
+  case(5):
+    {
+      void   *arg0, *arg1 , *arg2 , *arg3, *arg4;
+      arg0 = void_arg_get_buffer(arg , 0);
+      arg1 = void_arg_get_buffer(arg , 1);
+      arg2 = void_arg_get_buffer(arg , 2);
+      arg2 = void_arg_get_buffer(arg , 3);
+      arg2 = void_arg_get_buffer(arg , 4);
+
+      scan_count = fscanf(stream , fmt , arg0 , arg1 , arg2 , arg3 , arg4);
+      break;
+    }
+
   default:
     fprintf(stderr,"%s: sorry %s not allocated for %d arguments - pathetic ehhh?? \n",__func__ , __func__ , arg->arg_size);
     abort();
@@ -297,4 +338,68 @@ void void_arg_fscanf(void_arg_type * arg , FILE * stream) {
   }
   
   free(fmt);
+}
+
+
+/*****************************************************************/
+
+/* 
+   These functions are used to create a void_arg instance which
+   a type flag according to the void_arg_enum type and a value.
+
+   usage:
+
+   void_arg_type *void_double = void_arg_alloc_double(78.78);
+   void_arg_type *void_int    = void_arg_alloc_int(13);
+   ...
+   ...
+   type = vodi_arg->arg_type[0];
+   if (type == double_value) {
+      double value = void_arg_get_double(void_arg , 0);
+      printf("The input was a double with value: %g \n",value);
+   } else if (type == int_value) {
+      int value = void_arg_get_int(void_arg , 0);
+      printf("The input was an int with value: %d \n",value);
+   }
+*/
+
+
+void_arg_type * void_arg_alloc_double(double value) {
+  void_arg_type *arg = void_arg_alloc1(double_value);
+  void_arg_pack_double(arg , 0 , value);
+  return arg;
+}
+
+
+void_arg_type * void_arg_alloc_int(int value) {
+  void_arg_type *arg = void_arg_alloc1(int_value);
+  void_arg_pack_int(arg , 0 , value);
+  return arg;
+}
+
+
+void_arg_type * void_arg_alloc_ptr(void *ptr) {
+  void_arg_type *arg = void_arg_alloc1(pointer_value);
+  void_arg_pack_ptr(arg , 0 , ptr );
+  return arg;
+}
+
+
+
+void void_arg_fprintf_typed(const void_arg_type * void_arg , FILE * stream) {
+  void_arg_enum type = void_arg->arg_type[0];
+  switch (type) {
+  case(pointer_value):
+    fprintf(stream , "%s" , (char *) void_arg_get_ptr(void_arg , 0));
+    break;
+  case(int_value):
+    fprintf(stream , "%d" , void_arg_get_int(void_arg , 0));
+    break;
+  case(double_value):
+    fprintf(stream , "%g" , void_arg_get_double(void_arg , 0));
+    break;
+  default:
+    fprintf(stderr,"%s: sorry type:%d not (yet) implemented - aborting\n" , __func__ , type);
+    abort();
+  }
 }

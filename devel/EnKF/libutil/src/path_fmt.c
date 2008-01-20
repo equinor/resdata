@@ -9,71 +9,96 @@
 struct path_fmt_struct {
   int   buffer_size;
   char *fmt;
-  char *path;
-  bool  path_set;
+  char *file_fmt;
+  bool  is_directory;
+  bool  auto_mkdir;
 };
 
 
-static void path_fmt_realloc(path_fmt_type * path, int new_buffer_size) {
-  path->path = realloc(path->path , new_buffer_size + 1); /* One extra to include \0 */
-  path->buffer_size = new_buffer_size;
-}
 
 
 void path_fmt_reset_fmt(path_fmt_type * path , const char * fmt) {
   path->fmt = util_realloc_string_copy(path->fmt , fmt);
-  path->path_set = false;
+  if (path->is_directory) 
+    path->file_fmt = util_alloc_string_sum((const char *[2]) {path->fmt , "/%s"} , 2);
 }
 
 
-path_fmt_type * path_fmt_alloc(const char * fmt) {
+
+static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory , bool auto_mkdir) {
   path_fmt_type * path = util_malloc(sizeof * path , __func__);
-  path->fmt         = NULL;
-  path->path        = NULL;
+  path->fmt          = NULL;
+  path->file_fmt     = NULL;
+  path->is_directory = is_directory;
+  path->auto_mkdir   = auto_mkdir;
   
   path_fmt_reset_fmt(path , fmt);
-  path_fmt_realloc(path , 2 * strlen(path->fmt));
   return path;
 }
 
 
+path_fmt_type * path_fmt_alloc_directory_fmt(const char * fmt , bool auto_mkdir) {
+  return path_fmt_alloc__(fmt , true , auto_mkdir);
+}
+
+
+path_fmt_type * path_fmt_alloc_file_fmt(const char * fmt) {
+  return path_fmt_alloc__(fmt , false , false);
+}
+
+
 path_fmt_type * path_fmt_copyc(const path_fmt_type *path) {
-  path_fmt_type *new_path = path_fmt_alloc(path->fmt);
+  path_fmt_type *new_path = path_fmt_alloc__(path->fmt , path->is_directory , path->auto_mkdir);
   return new_path;
 }
 
 
-void path_fmt_make_path(const path_fmt_type * path) {
-  util_make_path(path->path);
-}
-
-void path_fmt_set_va(path_fmt_type * path , va_list ap) {
-  int path_length;
-  path_length = vsnprintf(path->path , path->buffer_size , path->fmt , ap);
-  if (path_length >= path->buffer_size) {
-    path_fmt_realloc(path , path_length + 10);
-    vsnprintf(path->path , path->buffer_size , path->fmt , ap);
-  }
-  path->path_set = true;
+static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
+  char * new_path;
+  int path_length = vsnprintf(new_path , 0 , fmt , ap);
+  new_path = malloc(path_length + 1);
+  vsnprintf(new_path , path_length + 1 , fmt , ap);
+  return new_path;
 }
 
 
-void path_fmt_set(path_fmt_type * path , ...) {
+char * path_fmt_alloc_path_va(path_fmt_type * path , va_list ap) {
+  char * new_path = __fmt_alloc_path_va__(path->fmt , ap);
+  if (path->auto_mkdir)
+    util_make_path(new_path);
+  return new_path;
+}
+
+
+char * path_fmt_alloc_path(path_fmt_type * path , ...) {
+  char * new_path;
   va_list ap;
-  
   va_start(ap , path);
-  path_fmt_set_va(path , ap);
+  new_path = path_fmt_alloc_path_va(path , ap);
   va_end(ap);
-  
+  return new_path;
 }
 
 
 
-const char * path_fmt_get_path(const path_fmt_type * path) {
-  if (path->path_set)
-    return path->path;
-  else {
-    fprintf(stderr,"%s: must call path_fmt_set() first - aborting \n",__func__);
+char * path_fmt_alloc_file(path_fmt_type * path , ...) {
+  if (path->is_directory) {
+    char * filename;
+    va_list ap;
+    va_start(ap , path);
+    filename = __fmt_alloc_path_va__(path->file_fmt , ap);
+    if (path->auto_mkdir) {
+      if (! util_file_exists(filename)) {
+	const char * __path = __fmt_alloc_path_va__(path->fmt , ap); 
+	util_make_path(__path);
+	free((char *) __path);
+      }
+    }
+
+    va_end(ap);
+    return filename;
+  } else {
+    fprintf(stderr,"%s: tried to allocate filename from a path_fmt object which already is of file type - aborting\n",__func__);
     abort();
   }
 }
@@ -84,10 +109,7 @@ const char * path_fmt_get_fmt(const path_fmt_type * path) {
 }
 
 
-
-
 void path_fmt_free(path_fmt_type * path) {
-  free(path->path);
   free(path->fmt);
   free(path);
 }

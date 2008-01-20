@@ -182,7 +182,6 @@ char * multz_config_alloc_description(const multz_config_type * config, int mult
   const int size = multz_config_get_data_size(config);
   if (multz_nr >= 0 && multz_nr < size) {
     char * description = util_malloc(48 * sizeof * description , __func__);
-    printf("multz_nr:%d  k:%d \n",multz_nr , config->k[multz_nr]);
     sprintf(description , "k: %d  i: %d - %d  j: %d - %d" , config->k[multz_nr] , config->i1[multz_nr] , config->i2[multz_nr] , config->j1[multz_nr] , config->j2[multz_nr]);
     return description;
   } else {

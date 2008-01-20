@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+#include <hash.h>
 
 
 time_t       util_make_time2(int , int , int , int , int , int );
@@ -66,7 +67,8 @@ void 	 util_set_date_values(time_t , int * , int * , int * );
 
 
 bool     util_intptr_2bool(const int *);
-void     util_pad_f90string(char * , int );
+void     util_memcpy_string_C2f90(const char *  , char *  , int );
+void     util_pad_f90string(char * , int , int );
 char *   util_alloc_cstring(const char *, const int *);
 char *   util_alloc_string_copy(const char *);
 void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
@@ -78,6 +80,8 @@ void 	util_double_to_float(float  * , const double * , int );
 void 	util_float_to_double(double * , const float  * , int );
 
 
+void    util_filter_file(const char * , const char * , char , char , const hash_type * );
+char *  util_fread_alloc_file_content(const char * , int *);
 void    util_fwrite_string(const char * , FILE *);
 char *  util_fread_realloc_string(char *  , FILE *);
 char *  util_fread_alloc_string(FILE *);

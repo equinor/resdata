@@ -1,22 +1,22 @@
+include path_config
 MFLAG = m32
 CC = gcc
-FC = ifort
 AR = ar
 #################################################################
-COMPILE_INCLUDE  = -I./ -I../../libutil/include -I../../libhash/include -I../../libecl/include -I../../librms/include -I../../libsched/include 
-INSTALL_INC_PATH = ../include
-INSTALL_LIB_PATH = ../lib
+COMPILE_INCLUDE  = -I$(LIBENKF_HOME)/src -I$(LIBECL_HOME)/include -I$(LIBUTIL_HOME)/include -I$(LIBHASH_HOME)/include -I$(LIBSCHED_HOME)/include -I$(LIBRMS_HOME)/include
+INSTALL_INC_PATH =   $(LIBENKF_HOME)/include
+INSTALL_LIB_PATH =   $(LIBENKF_HOME)/lib
 #################################################################
-CFLAGS  = -$(MFLAG) -O3 -std=gnu99 -g -Wall  $(COMPILE_INCLUDE) 
+CFLAGS  = -$(MFLAG) -O3 -std=gnu99 -g -Wall 
 ARFLAGS = -csr
 #################################################################
-OBJECTS           = field_interC.o thist_interC.o thist.o scalar.o scalar_config.o trans_func.o logmode.o multflt_interC.o multz_interC.o enkf_types.o enkf_obs.o obs_data.o obs_node.o well_obs.o field_obs.o meas_op.o meas_data.o well_config.o well.o enkf_config_node.o field_config.o field.o ecl_static_kw_config.o ecl_static_kw.o equil_config.o equil.o enkf_state.o multflt.o enkf_util.o multflt_config.o enkf_config.o multz.o multz_config.o enkf_node.o pgbox_config.o pgbox.o enkf_fs.o
-INC_FILES_INSTALL = thist.h scalar.h scalar_config.h trans_func.h logmode.h enkf_obs.h obs_data.h obs_node.h well_obs.h meas_op.h meas_data.h well_config.h well.h enkf_config_node.h field_obs.h field_config.h field.h enkf_macros.h ecl_static_kw_config.h ecl_static_kw.h equil_config.h equil.h enkf_state.h multflt.h enkf_util.h multflt_config.h enkf_config.h multz.h multz_config.h enkf_node.h pgbox_config.h pgbox.h enkf_fs.h
+OBJECTS           = field_interC.o thist_interC.o thist.o scalar.o scalar_config.o trans_func.o logmode.o multflt_interC.o multz_interC.o enkf_types.o enkf_obs.o obs_data.o obs_node.o well_obs.o field_obs.o meas_op.o meas_data.o well_config.o well.o enkf_config_node.o field_config.o field.o ecl_static_kw_config.o ecl_static_kw.o equil_config.o equil.o enkf_state.o multflt.o enkf_util.o multflt_config.o enkf_config.o multz.o multz_config.o enkf_node.o pgbox_config.o pgbox.o enkf_fs.o gen_kw_config.o gen_kw.o gen_kw_interC.o
+INC_FILES_INSTALL = thist.h scalar.h scalar_config.h trans_func.h logmode.h enkf_obs.h obs_data.h obs_node.h well_obs.h meas_op.h meas_data.h well_config.h well.h enkf_config_node.h field_obs.h field_config.h field.h enkf_macros.h ecl_static_kw_config.h ecl_static_kw.h equil_config.h equil.h enkf_state.h multflt.h enkf_util.h multflt_config.h enkf_config.h multz.h multz_config.h enkf_node.h pgbox_config.h pgbox.h enkf_fs.h gen_kw_config.h gen_kw.h enkf_types.h
 
 LIB_LINK          = -lenkf_$(MFLAG) -lsched_$(MFLAG) -lrms_$(MFLAG) -lecl_$(MFLAG) -lhash_$(MFLAG) -lutil_$(MFLAG) -lm -lpthread -lz
-LIB_PATH          = -L../../libhash/lib -L../../libutil/lib -L../../libecl/lib -L../../librms/lib -L../../libsched/lib -L$(INSTALL_LIB_PATH)
+LIB_PATH          = -L$(LIBUTIL_HOME)/lib -L$(LIBHASH_HOME)/lib -L$(LIBECL_HOME)/lib -L$(LIBSCHED_HOME)/lib -L$(LIBRMS_HOME)/lib -L$(LIBENKF_HOME)/lib
 LIB               = libenkf_$(MFLAG).a
-
+TARGET_INCLUDE    = -I$(LIBENKF_HOME)/include -I$(LIBECL_HOME)/include -I$(LIBUTIL_HOME)/include -I$(LIBHASH_HOME)/include -I$(LIBSCHED_HOME)/include -I$(LIBRMS_HOME)/include
 
 
 INSTALL: $(LIB)
@@ -24,10 +24,10 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_LIB_PATH)
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	gcc $(CFLAGS) enkf_test.c -o enkf.x   -L./ $(LIB_PATH) $(LIB_LINK) 
-	gcc $(CFLAGS) thist_test.c -o thist.x -L./ $(LIB_PATH) $(LIB_LINK)
-	gcc $(CFLAGS) field_test.c -o field.x -L./ $(LIB_PATH) $(LIB_LINK)
-	gcc $(CFLAGS) swcr_init.c -o /d/proj/bg/enkf/bin/swcr_init.x  -L./ $(LIB_PATH) $(LIB_LINK)
+	gcc $(CFLAGS) $(TARGET_INCLUDE) enkf_test.c  -o enkf.x  $(LIB_PATH) $(LIB_LINK) 
+	gcc $(CFLAGS) $(TARGET_INCLUDE) thist_test.c -o thist.x $(LIB_PATH) $(LIB_LINK)
+	gcc $(CFLAGS) $(TARGET_INCLUDE) field_test.c -o field.x $(LIB_PATH) $(LIB_LINK)
+	gcc $(CFLAGS) $(TARGET_INCLUDE) swcr_init.c  -o /d/proj/bg/enkf/bin/swcr_init.x  $(LIB_PATH) $(LIB_LINK)
 
 
 clean:
@@ -41,7 +41,7 @@ $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $< -o $@
 
 thist_interC.o       : thist.o
 thist.o              : thist.c thist.h

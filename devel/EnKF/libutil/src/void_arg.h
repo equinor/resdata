@@ -19,11 +19,18 @@ void_arg_type * void_arg_alloc8(void_arg_enum , void_arg_enum , void_arg_enum, v
 void_arg_type * void_arg_alloc9(void_arg_enum , void_arg_enum , void_arg_enum, void_arg_enum , void_arg_enum ,void_arg_enum , void_arg_enum , void_arg_enum , void_arg_enum);
 void_arg_type * void_arg_alloc10(void_arg_enum , void_arg_enum , void_arg_enum, void_arg_enum , void_arg_enum ,void_arg_enum , void_arg_enum , void_arg_enum , void_arg_enum , void_arg_enum);
 void            void_arg_free(void_arg_type * );
+void            void_arg_free__(void *);
 void            void_arg_pack_ptr(void_arg_type * , int , void * );
 void *          void_arg_get_ptr(const void_arg_type * , int );
 void            void_arg_pack_buffer(void_arg_type * , int , void * );
 void *          void_arg_get_buffer(const void_arg_type * , int );
 void            void_arg_fscanf(void_arg_type * , FILE * );
+
+void_arg_type * void_arg_alloc_double(double );
+void_arg_type * void_arg_alloc_int(int   );
+void_arg_type * void_arg_alloc_ptr(void  *);
+void            void_arg_fprintf_typed(const void_arg_type * , FILE * );
+
 
 #define VOID_ARG_TYPED_PACK_HEADER(type) void void_arg_pack_ ## type (void_arg_type * , int  , type );
 #define VOID_ARG_TYPED_GET_HEADER(type)  type void_arg_get_  ## type (const void_arg_type *, int );

@@ -1,13 +1,11 @@
+include path_config
 MFLAG = m32
 CC = gcc
 AR = ar
 #################################################################
-COMPILE_INCLUDE   = -I./ 
-COMPILE_LIB_PATH  = 
-COMPILE_LIBS      = 
-
-INSTALL_INC_PATH = ../include
-INSTALL_LIB_PATH = ../lib
+COMPILE_INCLUDE   = -I$(LIBHASH_HOME)/src
+INSTALL_INC_PATH  = $(LIBHASH_HOME)/include
+INSTALL_LIB_PATH  = $(LIBHASH_HOME)/lib
 #################################################################
 CFLAGS  = -$(MFLAG) -O2 -std=gnu99 -g -Wall -fPIC
 ARFLAGS = -csr
@@ -24,7 +22,7 @@ INSTALL: $(LIB)
 	install -d $(INSTALL_LIB_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
-	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) hash_test.c -o hash.x  -L../../libutil/lib -L$(INSTALL_LIB_PATH) $(LIB_LINK)
+	gcc $(CFLAGS) -I$(INSTALL_INC_PATH) hash_test.c -o hash.x  -L$(INSTALL_LIB_PATH) $(LIB_LINK)
 
 clean:
 	rm -f *.o *~ 

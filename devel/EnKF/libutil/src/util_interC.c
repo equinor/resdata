@@ -28,7 +28,7 @@ void util_enkf_unlink_ensfiles__(const char *_enspath , const int *enspath_len ,
 
 void util_getcwd__(char *cwd , int *f90_length) {
   getcwd(cwd , (*f90_length) - 1);
-  util_pad_f90string(cwd , *f90_length);
+  util_pad_f90string(cwd , strlen(cwd) , *f90_length);
 }
 
 
@@ -62,14 +62,14 @@ void util_path_exists__(const char * _path , const int * path_len , int *result)
 void util_read_path__(const char * _prompt, const int *prompt_len1, const int * prompt_len2 , const int * must_exist_int , char *path , const int * path_length) {
   char * prompt = util_alloc_cstring(_prompt , prompt_len1);
   util_read_path(prompt , *prompt_len2 , util_intptr_2bool(must_exist_int) , path);
-  util_pad_f90string(path , *path_length);
+  util_pad_f90string(path , strlen(path) , *path_length);
   free(prompt);
 }
 
 void util_read_filename__(const char * _prompt, const int *prompt_len1, const int * prompt_len2 , const int * must_exist_int , char *path , const int * path_length) {
   char * prompt = util_alloc_cstring(_prompt , prompt_len1);
   util_read_filename(prompt , *prompt_len2 , util_intptr_2bool(must_exist_int) , path);
-  util_pad_f90string(path , *path_length);
+  util_pad_f90string(path , strlen(path) , *path_length);
   free(prompt);
 }
 
@@ -77,7 +77,7 @@ void util_read_filename__(const char * _prompt, const int *prompt_len1, const in
 void util_read_string__(const char * _prompt, const int *prompt_len1, const int * prompt_len2 , char *string , const int * string_length) {
   char * prompt = util_alloc_cstring(_prompt , prompt_len1);
   util_read_string(prompt , *prompt_len2 , string);
-  util_pad_f90string(string , *string_length);
+  util_pad_f90string(string , strlen(string) ,  *string_length);
   free(prompt);
 }
 
@@ -86,7 +86,7 @@ void util_make_path_interactive__(const char *_prompt , const int *prompt_len1 ,
   char * prompt = util_alloc_cstring(_prompt , prompt_len1);
   util_read_path(prompt , *prompt_len2 , false , path);
   util_make_path(path);
-  util_pad_f90string(path , *f90_length);
+  util_pad_f90string(path , strlen(path) , *f90_length);
   free(prompt);
 }
 
@@ -130,7 +130,7 @@ void util_make_enkf_run_path__(const char *_run_path_root , const int * run_path
       }
     }
     util_make_slink(run_path , run_path_link);
-    util_pad_f90string(run_path , *run_path_len);
+    util_pad_f90string(run_path , strlen(run_path) , *run_path_len);
   }
   free(run_path_root);
 }

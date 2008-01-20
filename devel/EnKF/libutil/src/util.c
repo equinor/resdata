@@ -12,6 +12,9 @@
 #include <util.h>
 #include <zlib.h>
 #include <math.h>
+#include <hash.h>
+#include <void_arg.h>
+
 
 
 
@@ -53,13 +56,6 @@ bool util_intptr_2bool(const int *iptr) {
 
 
 
-void util_pad_f90string(char *c_string , int f90_length) {
-  int i;
-  for (i=strlen(c_string); i < f90_length; i++)
-    c_string[i] = ' ';
-}
-
-
 
 char * util_alloc_cstring(const char *fort_string , const int *strlen) {
   const char null_char = '\0';
@@ -70,6 +66,17 @@ char * util_alloc_cstring(const char *fort_string , const int *strlen) {
 }
 
 
+void util_pad_f90string(char *string , int c_strlen , int f90_length) {
+  int i;
+  for (i=c_strlen; i < f90_length; i++) 
+    string[i] = ' ';
+}
+
+
+void util_memcpy_string_C2f90(const char * c_input_string , char * fortran_output_string , int fortran_length) {
+  strncpy(fortran_output_string , c_input_string , strlen(c_input_string));
+  util_pad_f90string(fortran_output_string , strlen(c_input_string) , fortran_length);
+}
 
 
 char * util_alloc_string_sum2(const char *s1 , const char *s2) {
@@ -519,6 +526,27 @@ int util_count_content_file_lines(FILE * stream) {
 
 /******************************************************************/
 
+
+char * util_fread_alloc_file_content(const char * filename , int * buffer_size) {
+  int file_size = util_file_size(filename);
+  char * buffer = malloc(file_size + 1);
+  if (buffer != NULL) {
+    FILE * stream = util_fopen(filename , "r");
+    int byte_read = fread(buffer , 1 , file_size , stream);
+    if (byte_read != file_size) {
+      fprintf(stderr,"%s: something failed when reading: %s - aborting \n",__func__ , filename);
+      abort();
+    }
+    fclose(stream);
+  }
+  *buffer_size = file_size;
+  buffer[file_size] = '\0';
+  return buffer;
+}
+
+
+
+
 void util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size , void * buffer) {
 
   while ( ! feof(src_stream)) {
@@ -688,6 +716,10 @@ int util_file_size(const char *file) {
   int fildes;
   
   fildes = open(file , O_RDONLY);
+  if (fildes == -1) {
+    fprintf(stderr,"%s: failed to open:%s - %s \n",__func__ , file , strerror(errno));
+    abort();
+  }
   fstat(fildes, &buffer);
   close(fildes);
   
@@ -976,9 +1008,13 @@ char * util_realloc_string_copy(char * old_string , const char *src ) {
     char *copy = util_realloc(old_string , (strlen(src) + 1) * sizeof *copy , __func__);
     strcpy(copy , src);
     return copy;
-  } else 
+  } else {
+    if (old_string != NULL)
+      free(old_string);
     return NULL;
+  }
 }
+
 
 char * util_realloc_substring_copy(char * old_string , const char *src , int len) {
   if (src != NULL) {
@@ -997,7 +1033,6 @@ char * util_realloc_substring_copy(char * old_string , const char *src , int len
   } else 
     return NULL;
 }
-
 
 
 
@@ -1590,6 +1625,47 @@ void util_fread_compressed(char *data , FILE * stream) {
   free(zbuffer);
 }
 
+
+void util_filter_file(const char * src_file , const char * target_file , char start_char , char end_char , const hash_type * kw_hash) {
+  int    index, buffer_size;
+  char * buffer = util_fread_alloc_file_content(src_file , &buffer_size);
+  FILE * stream = util_fopen(target_file , "w");
+  char * kw     = NULL;
+  index = 0;
+  while (index < buffer_size) {
+    if (buffer[index] == start_char) {
+      int start_pos = index;
+      int end_pos;
+      index++;
+      while (buffer[index] != end_char && !EOL_CHAR(buffer[index]) && index < buffer_size && buffer[index] != ' ') 
+	index++;
+      end_pos = index; 
+
+      {
+	bool write_src = true;
+
+	if (buffer[index] == end_char) {
+	  if (end_pos - start_pos > 1) {
+	    kw = util_realloc_substring_copy(kw , &buffer[start_pos + 1] , end_pos - start_pos - 1);
+	    if (hash_has_key(kw_hash , kw)) {
+	      void_arg_fprintf_typed(hash_get(kw_hash , kw) , stream);
+	      write_src = false;
+	      index++;
+	    } else 
+	      fprintf(stderr,"** Warning ** no defintion for keyword:%s \n",kw);
+	  }
+	}
+	if (write_src)
+	  fwrite(&buffer[start_pos] , 1 , end_pos - start_pos + 1 , stream);
+      }
+    } else {
+      fputc(buffer[index] , stream);
+      index++;
+    }
+  }
+  free(kw);
+  free(buffer);
+}
 
 #include "util_path.c"
 
