@@ -168,7 +168,6 @@ static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf
   hash->resize_fill  = resize_fill;
   hash->iter_mode    = iter_invalid;
   hash->iter_keylist = NULL;
-  hash->__keylist    = NULL;
   pthread_mutex_init( &hash->iter_mutex , NULL);
   return hash;
 }
