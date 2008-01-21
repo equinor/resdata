@@ -10,19 +10,22 @@
 #include <node_data.h>
 
 
+
 typedef enum {iter_invalid , iter_active , iter_complete} __iter_mode;
 
 
 struct hash_struct {
-  uint32_t        size;
-  uint32_t        elements;
-  double          resize_fill;
-  hash_sll_type **table;
-  hashf_type     *hashf;
+  pthread_mutex_t  iter_mutex;
+  uint32_t         size;
+  uint32_t         elements;
+  double           resize_fill;
+  hash_sll_type  **table;
+  hashf_type      *hashf;
 
-  char          **iter_keylist;
-  __iter_mode     iter_mode;
-  int             iter_index , iter_size;
+  char           **__keylist;
+  char           **iter_keylist;
+  __iter_mode      iter_mode;
+  int              iter_index , iter_size;
 };
 
 
@@ -161,6 +164,8 @@ static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf
   hash->resize_fill  = resize_fill;
   hash->iter_mode    = iter_invalid;
   hash->iter_keylist = NULL;
+  hash->__keylist    = NULL;
+  pthread_mutex_init( &hash->iter_mutex , NULL);
   return hash;
 }
 
@@ -188,8 +193,6 @@ static void hash_resize(hash_type *hash, int new_size) {
     free(hash->table[i]);
   
   free(hash->table);
-  
-
   hash->size     = new_size;
   hash->table    = new_table;
 }
@@ -217,10 +220,19 @@ static void hash_iter_free_keylist(hash_type * hash) {
 }
 
 
+void hash_iter_complete(hash_type * hash) {
+   if (hash->iter_mode == iter_active) {
+   	  hash->iter_mode = iter_complete;
+   	  pthread_mutex_unlock( &hash->iter_mutex );
+   }
+}
+	
+
+
 const char * hash_iter_get_next_key(hash_type * hash) {
   if (hash->iter_mode == iter_active) {
     if (hash->iter_index == hash_get_size(hash)) {
-      hash->iter_mode = iter_complete;
+      hash_iter_complete(hash);
       return NULL;
     } else {
       const char * key = hash->iter_keylist[hash->iter_index];
@@ -234,11 +246,11 @@ const char * hash_iter_get_next_key(hash_type * hash) {
 }
 
 
-
 const char * hash_iter_get_first_key(hash_type * hash) {
   if (hash->iter_mode == iter_invalid || hash->iter_mode == iter_complete) 
     hash_iter_free_keylist(hash);
-  
+ 
+  pthread_mutex_lock( &hash->iter_mutex );
   hash->iter_keylist = hash_alloc_keylist(hash);
   hash->iter_mode  = iter_active;
   hash->iter_index = 0;
@@ -382,12 +394,12 @@ bool hash_has_key(const hash_type *hash , const char *key) {
 
 
 
-/* Old iter code -not much used */
-hash_node_type * hash_iter_init(const hash_type *hash) {
+
+static hash_node_type * hash_iter_init(const hash_type *hash) {
   uint32_t i = 0;
   while (i < hash->size && hash_sll_empty(hash->table[i]))
     i++;
-
+	
   if (i < hash->size) 
     return hash_sll_get_head(hash->table[i]);
   else
@@ -395,27 +407,27 @@ hash_node_type * hash_iter_init(const hash_type *hash) {
 }
 
 
-hash_node_type * hash_iter_next(const hash_type *hash , const hash_node_type * node) {
+static hash_node_type * hash_iter_next(const hash_type *hash , const hash_node_type * node) {
   hash_node_type *next_node = hash_node_get_next(node);
   if (next_node == NULL) {
     const uint32_t table_index = hash_node_get_table_index(node);
     if (table_index < hash->size) {
       uint32_t i = table_index + 1;
       while (i < hash->size && hash_sll_empty(hash->table[i]))
-	i++;
+		i++;
       if (i < hash->size) 
-	next_node = hash_sll_get_head(hash->table[i]);
+		next_node = hash_sll_get_head(hash->table[i]);
     }
   }
   return next_node;
 }
 
 
-void hash_printf_keys(const hash_type *hash) {
-  hash_node_type *node = hash_iter_init(hash);
-  while (node != NULL) {
-    hash_node_printf_key(node);
-    node = hash_iter_next(hash , node);
+void hash_printf_keys(hash_type *hash) {
+  const char * key = hash_iter_get_first_key(hash);
+  while (key != NULL) {
+  	printf("%s \n",key);
+  	key = hash_iter_get_next_key(hash);
   }
 }
 
@@ -547,3 +559,5 @@ int i;
 #undef HASH_INSERT_ARRAY
 #undef HASH_GET_ARRAY_PTR
 #undef HASH_NODE_AS
+
+

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-
+#include <pthread.h>
 #include <inttypes.h>
 #include <hash_node.h>
 
@@ -72,7 +72,7 @@ hash_node_type * hash_node_alloc_new(const char *key, const void *value , copyc_
   else
     node->value   = value;
   node->next_node = NULL;
-
+	
   node->global_index = hashf(node->key , strlen(node->key));
   hash_node_set_table_index(node , table_size);
   return node;

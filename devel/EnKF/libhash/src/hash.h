@@ -13,6 +13,7 @@ typedef struct hash_struct hash_type;
 
 
 hash_type   	* hash_alloc(int);
+void              hash_iter_comlete(hash_type * );
 void        	  hash_free(hash_type *);
 void              hash_free__(void *);
 void        	  hash_insert_ref(hash_type * , const char * , const void *);
@@ -23,7 +24,7 @@ void        	* hash_get(const hash_type *, const char *);
 char        	* hash_get_string(const hash_type * , const char *);
 void        	  hash_del(hash_type *, const char *);
 void              hash_clear(hash_type *);
-void        	  hash_printf_keys(const hash_type *hash);
+void        	  hash_printf_keys(hash_type *hash);
 int         	  hash_get_size(const hash_type *);
 void        	  hash_set_keylist(const hash_type * , char **);
 char           ** hash_alloc_keylist(const hash_type *);
