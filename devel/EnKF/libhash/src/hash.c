@@ -22,7 +22,6 @@ struct hash_struct {
   hash_sll_type  **table;
   hashf_type      *hashf;
 
-  char           **__keylist;
   char           **iter_keylist;
   __iter_mode      iter_mode;
   int              iter_index , iter_size;
