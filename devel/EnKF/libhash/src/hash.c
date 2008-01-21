@@ -94,6 +94,11 @@ static void * __hash_get_node(const hash_type *hash , const char *key, bool abor
 }
 
 
+void test(hash_type * hash) {
+	hash = hash_alloc(10);
+	hash_free(hash);
+}
+
 
 void hash_del(hash_type *hash , const char *key) {
   const uint32_t global_index = hash->hashf(key , strlen(key));
@@ -446,6 +451,7 @@ char ** hash_alloc_keylist(const hash_type *hash) {
   }
   return keylist;
 }
+
 
 
 void hash_set_keylist(const hash_type *hash , char **keylist) {
