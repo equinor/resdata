@@ -1631,6 +1631,7 @@ void util_filter_file(const char * src_file , const char * target_file , char st
   char * buffer = util_fread_alloc_file_content(src_file , &buffer_size);
   FILE * stream = util_fopen(target_file , "w");
   char * kw     = NULL;
+  printf("Skal skrive til %s \n",target_file);
   index = 0;
   while (index < buffer_size) {
     if (buffer[index] == start_char) {
@@ -1663,6 +1664,7 @@ void util_filter_file(const char * src_file , const char * target_file , char st
       index++;
     }
   }
+  fclose(stream);
   free(kw);
   free(buffer);
 }
