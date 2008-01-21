@@ -206,8 +206,8 @@ static void hash_iter_free_keylist(hash_type * hash) {
     int i;
     if (hash->iter_keylist != NULL) {
       for (i=0; i < hash->iter_size; i++) {
-	if (hash->iter_keylist[i] != NULL)
-	  free(hash->iter_keylist[i]);
+		if (hash->iter_keylist[i] != NULL)
+	  		free(hash->iter_keylist[i]);
       }
       free(hash->iter_keylist);
     }
