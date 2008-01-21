@@ -19,7 +19,7 @@ LIB_LINK          = -lutil_$(MFLAG) -lhash_$(MFLAG) -lz -lm
 LINK_LIB_PATH     = -L$(LIBUTIL_HOME)/lib -L$(LIBHASH_HOME)/lib
 FINAL_INC_PATH    = -I$(LIBUTIL_HOME)/include -I$(LIBHASH_HOME)/include
 
-INSTALL: $(LIB)
+all: $(LIB)
 	install -d $(INSTALL_INC_PATH)
 	install -d $(INSTALL_LIB_PATH)
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
