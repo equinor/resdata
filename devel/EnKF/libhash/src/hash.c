@@ -398,6 +398,7 @@ bool hash_has_key(const hash_type *hash , const char *key) {
 
 
 
+
 static hash_node_type * hash_iter_init(const hash_type *hash) {
   uint32_t i = 0;
   while (i < hash->size && hash_sll_empty(hash->table[i]))
