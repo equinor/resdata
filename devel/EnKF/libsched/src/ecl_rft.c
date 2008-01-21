@@ -53,7 +53,9 @@ int main(int argc, char ** argv) {
 	  util_forward_line(stream , &at_eof);
 	  sprintf(obs_file , "%s/%04d/RFT" , obs_path , report_step);
 	  printf("Blocking well: %-8s %-54s ->  %s\n",well,tvd_file,obs_file);
-	  ecl_rft_vector_fprintf_rft_obs(rft_vector , 10.0 , well , order_tvd_p , tvd_file , obs_file , 1.0);
+	  /*
+         ecl_rft_vector_fprintf_rft_obs(rft_vector , 10.0 , well , order_tvd_p , tvd_file , obs_file , 1.0);
+      */
 	  free(well);
 	  free(tvd_file);
 	  ecl_rft_node_export_DEPTH(rft_node , "/d/proj/bg/enkf/EnKF_OS2/Static/RFT");
