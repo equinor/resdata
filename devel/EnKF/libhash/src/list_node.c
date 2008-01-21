@@ -29,6 +29,8 @@ struct list_node_struct {
 
 
 
+
+
 list_node_type * list_node_get_next(const list_node_type * node) { return node->next_node; }
 list_node_type * list_node_get_prev(const list_node_type * node) { return node->prev_node; }
 
