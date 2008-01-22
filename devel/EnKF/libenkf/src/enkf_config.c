@@ -61,12 +61,13 @@ enkf_config_type * enkf_config_alloc(const char * run_path , const char * ens_pa
   enkf_config->well_list     = NULL;
   enkf_config_realloc_well_list(enkf_config);
   
-  enkf_config->run_path           	    = path_fmt_alloc(run_path);
-  enkf_config->ens_path_parameter 	    = path_fmt_alloc(ens_path_parameter);
-  enkf_config->ens_path_static    	    = path_fmt_alloc(ens_path_static);
-  enkf_config->ens_path_dynamic_forecast    = path_fmt_alloc(ens_path_dynamic_forecast);
-  enkf_config->ens_path_dynamic_analyzed    = path_fmt_alloc(ens_path_dynamic_analyzed);
-
+  enkf_config->run_path           	    = path_fmt_alloc_directory_fmt(run_path , true);
+  /*
+  enkf_config->ens_path_parameter 	    = path_fmt_alloc_directory_fmt(ens_path_parameter , true);
+  enkf_config->ens_path_static    	    = path_fmt_alloc_directory_fmt(ens_path_static , true);
+  enkf_config->ens_path_dynamic_forecast    = path_fmt_alloc_directory_fmt(ens_path_dynamic_forecast , true);
+  enkf_config->ens_path_dynamic_analyzed    = path_fmt_alloc_directory_fmt(ens_path_dynamic_analyzed , true);
+  */
   return enkf_config;
 }
 
@@ -172,10 +173,12 @@ void enkf_config_free(enkf_config_type * enkf_config) {
     free(enkf_config->well_list);
   }
   path_fmt_free(enkf_config->run_path);
-  path_fmt_free(enkf_config->ens_path_parameter);
-  path_fmt_free(enkf_config->ens_path_static);
-  path_fmt_free(enkf_config->ens_path_dynamic_forecast);
-  path_fmt_free(enkf_config->ens_path_dynamic_analyzed);
+  /*
+    path_fmt_free(enkf_config->ens_path_parameter);
+    path_fmt_free(enkf_config->ens_path_static);
+    path_fmt_free(enkf_config->ens_path_dynamic_forecast);
+    path_fmt_free(enkf_config->ens_path_dynamic_analyzed);
+  */
   free(enkf_config);
 }
 

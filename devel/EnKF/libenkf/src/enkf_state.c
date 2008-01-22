@@ -31,7 +31,7 @@
 #include <pgbox_config.h>
 #include <pgbox.h>
 #include <restart_kw_list.h>
-
+#include <enkf_fs.h>
 #include "enkf_config_decl.h"
 
 
@@ -41,14 +41,12 @@ struct enkf_state_struct {
   hash_type    	   	* node_hash;
   hash_type    	   	* impl_types;
   
-  path_fmt_type    	* run_path;
-  path_fmt_type    	* ens_path_parameter;
-  path_fmt_type    	* ens_path_static;
-  path_fmt_type    	* ens_path_dynamic_forecast;
-  path_fmt_type    	* ens_path_dynamic_analyzed;
+  enkf_fs_type          * enkf_fs;
   enkf_config_type 	* config;
   char             	* eclbase;
+  char                  * run_path;
   bool             	 _fmt_file;  
+  int                     my_iens;
 };
 
 
@@ -170,7 +168,20 @@ static const char * enkf_state_select_ens_path(const enkf_state_type * enkf_stat
 }
 
 
-enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char * eclbase, bool fmt_file) {
+void enkf_state_set_run_path(enkf_state_type * enkf_state) {
+  if (enkf_state->run_path != NULL)
+    free(enkf_state->run_path);
+  
+  enkf_state->run_path        = path_fmt_alloc_path(enkf_state->config->run_path , enkf_state->my_iens);
+}
+
+void enkf_state_set_iens(enkf_state_type * enkf_state , int iens) {
+  enkf_state->my_iens         = iens;
+}
+
+
+
+enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char * eclbase, int iens , bool fmt_file) {
   enkf_state_type * enkf_state = malloc(sizeof *enkf_state);
   
   enkf_state->config          = (enkf_config_type *) config;
@@ -180,20 +191,13 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char *
   enkf_state->eclbase         = util_alloc_string_copy(eclbase);
   enkf_state->_fmt_file       = fmt_file;
   enkf_state->restart_kw_list = restart_kw_list_alloc();
-
-  enkf_state->run_path           	   = path_fmt_copyc(config->run_path);
-  enkf_state->ens_path_parameter 	   = path_fmt_copyc(config->ens_path_parameter);
-  enkf_state->ens_path_static    	   = path_fmt_copyc(config->ens_path_static);
-  enkf_state->ens_path_dynamic_forecast    = path_fmt_copyc(config->ens_path_dynamic_forecast);
-  enkf_state->ens_path_dynamic_analyzed    = path_fmt_copyc(config->ens_path_dynamic_analyzed);
-  
-
-
+  enkf_state_set_iens(enkf_state , iens);
+  enkf_state->run_path        = NULL;
+  enkf_state_set_run_path(enkf_state);
   /* 
      This information should really be in a config object. Currently
      not used, but could/will be used in a string based type lookup. 
   */
-  
   hash_insert_int(enkf_state->impl_types     , "WELL"       , WELL);
   hash_insert_int(enkf_state->impl_types     , "MULTZ"      , MULTZ);
   hash_insert_int(enkf_state->impl_types     , "MULTFLT"    , MULTFLT);
@@ -212,7 +216,7 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char *
 
 
 enkf_state_type * enkf_state_copyc(const enkf_state_type * src) {
-  enkf_state_type * new = enkf_state_alloc(src->config , src->eclbase, enkf_state_fmt_file(src));
+  enkf_state_type * new = enkf_state_alloc(src->config , src->eclbase, src->my_iens , enkf_state_fmt_file(src));
   list_node_type *list_node;                                          
   list_node = list_get_head(src->node_list);                     
 
@@ -354,10 +358,7 @@ void enkf_state_load_ecl_restart(enkf_state_type * enkf_state ,  bool unified , 
   const bool fmt_file  = enkf_state_fmt_file(enkf_state);
   bool endian_swap     = enkf_config_get_endian_swap(enkf_state->config);
   ecl_block_type       * ecl_block;
-  char * ecl_path      = path_fmt_alloc_path(enkf_state->run_path , 0 , 0); 
-  char * restart_file  = ecl_util_alloc_exfilename(ecl_path , enkf_state->eclbase , ecl_restart_file , fmt_file , report_step);
-
-
+  char * restart_file  = ecl_util_alloc_exfilename(enkf_state->run_path , enkf_state->eclbase , ecl_restart_file , fmt_file , report_step);
 
   fortio_type * fortio = fortio_open(restart_file , "r" , endian_swap);
   
@@ -367,11 +368,10 @@ void enkf_state_load_ecl_restart(enkf_state_type * enkf_state ,  bool unified , 
   ecl_block = ecl_block_alloc(report_step , fmt_file , endian_swap);
   ecl_block_fread(ecl_block , fortio , &at_eof);
   fortio_close(fortio);
-
+  
   enkf_state_load_ecl_restart__(enkf_state , ecl_block);
   ecl_block_free(ecl_block);
   free(restart_file);
-  free(ecl_path);
 }
 
 
@@ -383,9 +383,8 @@ void enkf_state_load_ecl_summary(enkf_state_type * enkf_state, bool unified , in
   ecl_sum_type * ecl_sum;
   int Nwells;
   const char ** well_list = enkf_config_get_well_list_ref(enkf_state->config , &Nwells);
-  char * run_path         = path_fmt_alloc_path(enkf_state->run_path , 0 , 0); 
-  char * summary_file     = ecl_util_alloc_exfilename(run_path , enkf_state->eclbase , ecl_summary_file        , fmt_file ,  report_step);
-  char * header_file      = ecl_util_alloc_exfilename(run_path , enkf_state->eclbase , ecl_summary_header_file , fmt_file , -1);
+  char * summary_file     = ecl_util_alloc_exfilename(enkf_state->run_path , enkf_state->eclbase , ecl_summary_file        , fmt_file ,  report_step);
+  char * header_file      = ecl_util_alloc_exfilename(enkf_state->run_path , enkf_state->eclbase , ecl_summary_header_file , fmt_file , -1);
 
   int iwell;
   ecl_sum = ecl_sum_fread_alloc(header_file , 1 , (const char **) &summary_file , true , enkf_config_get_endian_swap(enkf_state->config));
@@ -398,7 +397,6 @@ void enkf_state_load_ecl_summary(enkf_state_type * enkf_state, bool unified , in
     }
   }
   ecl_sum_free(ecl_sum);
-  free(run_path);
   free(summary_file);
   free(header_file);
 }
@@ -454,58 +452,27 @@ void * enkf_state_load_ecl_void(void * input_arg) {
 }
 
 
-/*
-#define SET_PATH(last_var , path)  \
-{                                  \
-  va_list ap;                      \
-  va_start(ap , last_var);         \
-  path_fmt_set_va(path , ap);      \
-  va_end(ap);                      \
-}
-
-void enkf_state_set_run_path(enkf_state_type * enkf_state , ...) {
-  SET_PATH(enkf_state , enkf_state->run_path);
-}
-
-void enkf_state_set_ens_path_static(enkf_state_type * enkf_state , ...) {
-  SET_PATH(enkf_state , enkf_state->ens_path_static);
-}
-
-void enkf_state_set_ens_path_parameter(enkf_state_type * enkf_state , ...) {
-  SET_PATH(enkf_state , enkf_state->ens_path_parameter);
-}
-
-void enkf_state_set_ens_path_dynamic_forecast(enkf_state_type * enkf_state , ...) {
-  SET_PATH(enkf_state , enkf_state->ens_path_dynamic_forecast);
-}
-
-void enkf_state_set_ens_path_dynamic_analyzed(enkf_state_type * enkf_state , ...) {
-  SET_PATH(enkf_state , enkf_state->ens_path_dynamic_analyzed);
-}
-
-#undef SET_PATH
-*/
-
-
 
 void enkf_state_ecl_write(const enkf_state_type * enkf_state ,  int mask , int report_step) {
   const int buffer_size = 65536;
   const bool fmt_file   = enkf_state_fmt_file(enkf_state);
   bool endian_swap      = enkf_config_get_endian_swap(enkf_state->config);
-  char * run_path       = path_fmt_alloc_path(enkf_state->run_path , 0 , 0);
-  char  * restart_file  = ecl_util_alloc_filename(run_path , enkf_state->eclbase , ecl_restart_file , fmt_file , report_step);
+  char  * restart_file  = ecl_util_alloc_filename(enkf_state->run_path , enkf_state->eclbase , ecl_restart_file , fmt_file , report_step);
   fortio_type * fortio  = fortio_open(restart_file , "w" , endian_swap);
   void *buffer          = malloc(buffer_size);
   list_node_type *list_node;                                            
 
-  path_fmt_make_path(enkf_state->run_path);
+  util_make_path(enkf_state->run_path);
   list_node = list_get_head(enkf_state->node_list);                     
   while (list_node != NULL) {                                           
     enkf_node_type * enkf_node = list_node_value_ptr(list_node);         
 
     if (enkf_node_include_type(enkf_node , mask)) {
       bool swapped = enkf_node_swapped(enkf_node);
-      if (swapped) enkf_node_swapin(enkf_node , path_fmt_get_path(enkf_state->ens_path_static));
+      {
+	bool analyzed = true;
+	if (swapped) enkf_fs_swapin_node(enkf_state->enkf_fs , enkf_node , report_step , enkf_state->my_iens , analyzed);
+      }
 
       if (enkf_node_include_type(enkf_node , ecl_restart)) {      
 	/* Pressure and saturations */
@@ -519,13 +486,15 @@ void enkf_state_ecl_write(const enkf_state_type * enkf_state ,  int mask , int r
 
 	ecl_kw_fwrite(ecl_static_kw_ecl_kw_ptr((const ecl_static_kw_type *) enkf_node_value_ptr(enkf_node)) , fortio);
       } else if (enkf_node_include_type(enkf_node , parameter + static_parameter))
-        enkf_node_ecl_write(enkf_node , run_path);
+        enkf_node_ecl_write(enkf_node , enkf_state->run_path);
       
-      if (swapped) enkf_node_swapout(enkf_node , path_fmt_get_path(enkf_state->ens_path_static));
+      {
+	bool analyzed = true;
+	if (swapped) enkf_fs_swapout_node(enkf_state->enkf_fs , enkf_node , report_step , enkf_state->my_iens , analyzed);
+      }
     }
     list_node = list_node_get_next(list_node);
   }
-  free(run_path);
   free(restart_file);
   fortio_close(fortio);
   free(buffer);
@@ -609,11 +578,8 @@ void enkf_state_free(enkf_state_type *enkf_state) {
   list_free(enkf_state->node_list);
   hash_free(enkf_state->node_hash);
   hash_free(enkf_state->impl_types);
-  path_fmt_free(enkf_state->run_path);
-  path_fmt_free(enkf_state->ens_path_parameter);
-  path_fmt_free(enkf_state->ens_path_static);
-  path_fmt_free(enkf_state->ens_path_dynamic_forecast);
-  path_fmt_free(enkf_state->ens_path_dynamic_analyzed);
+  free(enkf_state->run_path);
+  enkf_fs_free(enkf_state->enkf_fs);
   restart_kw_list_free(enkf_state->restart_kw_list);
   free(enkf_state->eclbase);
   free(enkf_state);

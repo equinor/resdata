@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <enkf_node.h>
 #include <enkf_config_node.h>
 #include <util.h>
@@ -58,7 +57,10 @@ struct enkf_node_struct {
 
 
 
-const enkf_config_node_type * enkf_node_get_config(const enkf_node_type * node) { return node->config; }
+
+const enkf_config_node_type * enkf_node_get_config(const enkf_node_type * node) { 
+  return node->config; 
+}
 
 /*****************************************************************/
 
@@ -75,6 +77,7 @@ const enkf_config_node_type * enkf_node_get_config(const enkf_node_type * node) 
   
   5. serial_state_update_serialized()
 */
+
 
 
 
@@ -247,6 +250,11 @@ enkf_impl_type enkf_node_get_impl_type(const enkf_node_type * enkf_node) {
 }
 
 
+enkf_var_type enkf_node_get_var_type(const enkf_node_type * enkf_node) {
+  return enkf_config_node_get_var_type(enkf_node->config);
+}
+
+
 bool enkf_node_swapped(const enkf_node_type *enkf_node) {
   return enkf_node->swapped;
 }
@@ -255,7 +263,9 @@ bool enkf_node_swapped(const enkf_node_type *enkf_node) {
 
 #define FUNC_ASSERT(func,func_name) if (func == NULL) { fprintf(stderr,"%s: function handler: %s not registered when writing node:%s - aborting\n",__func__ , func_name , enkf_node->node_key); abort(); }
 
-void * enkf_node_value_ptr(const enkf_node_type * enkf_node) { return enkf_node->data; }
+void * enkf_node_value_ptr(const enkf_node_type * enkf_node) { 
+  return enkf_node->data; 
+}
 
 
 void enkf_node_ecl_write(const enkf_node_type *enkf_node , const char *path) {
@@ -263,22 +273,19 @@ void enkf_node_ecl_write(const enkf_node_type *enkf_node , const char *path) {
   enkf_node->ecl_write(enkf_node->data , path);
 }
 
-void enkf_node_fwrite(const enkf_node_type *enkf_node , const char * path) {
-  char * ensfile = util_alloc_full_path(path , enkf_config_node_get_ensfile_ref(enkf_node->config));
-  FILE * stream  = util_fopen(ensfile , "w");
+void enkf_node_fwrite(const enkf_node_type *enkf_node , const char * filename) {
+  FILE * stream  = util_fopen(filename , "w");
   FUNC_ASSERT(enkf_node->fwrite_f , "fwrite_f");
   enkf_node->fwrite_f(enkf_node->data , stream);
-  free(ensfile);
+  fclose(stream);
 }
 
 
-void enkf_node_fread(enkf_node_type *enkf_node , const char * path) {
-  char * ensfile = util_alloc_full_path(path , enkf_config_node_get_ensfile_ref(enkf_node->config));
-  FILE * stream  = util_fopen(ensfile , "r");
-
+void enkf_node_fread(enkf_node_type *enkf_node , const char * filename) {
+  FILE * stream  = util_fopen(filename , "r");
   FUNC_ASSERT(enkf_node->fread_f , "fread_f");
   enkf_node->fread_f(enkf_node->data , stream);
-  free(ensfile);
+  fclose(stream);
 }
 
 
@@ -348,26 +355,25 @@ void enkf_node_sample(enkf_node_type *enkf_node) {
 }
 
 
-void enkf_node_swapin(enkf_node_type *enkf_node , const char * path) {
+void enkf_node_swapin(enkf_node_type *enkf_node , const char * filename) {
   FUNC_ASSERT(enkf_node->swapin , "swapin");
   if (enkf_node_swapped(enkf_node)) {
-    char * ensfile = util_alloc_full_path(path , enkf_config_node_get_ensfile_ref(enkf_node->config));
-    FILE * stream  = util_fopen(ensfile , "r");
+    FILE * stream  = util_fopen(filename , "r");
     enkf_node->swapin(enkf_node->data , stream);
-    enkf_node->swapped = false;
     fclose(stream);
   }
 }
 
 
-void enkf_node_swapout(enkf_node_type *enkf_node, const char *path) {
-  char * ensfile = util_alloc_full_path(path , enkf_config_node_get_ensfile_ref(enkf_node->config));
-  FILE * stream  = util_fopen(ensfile , "w");
-  FUNC_ASSERT(enkf_node->swapout , "swapout");
+void enkf_node_swapout(enkf_node_type *enkf_node , const char * filename) {
+  FUNC_ASSERT(enkf_node->swapin , "swapout");
+  FILE * stream  = util_fopen(filename , "r");
   enkf_node->swapout(enkf_node->data , stream);
   enkf_node->swapped = true;
   fclose(stream);
 }
+
+
 
 
 void enkf_node_clear(enkf_node_type *enkf_node) {
@@ -376,7 +382,7 @@ void enkf_node_clear(enkf_node_type *enkf_node) {
 }
 
 
-void enkf_node_printf(enkf_node_type *enkf_node) {
+void enkf_node_printf(const enkf_node_type *enkf_node) {
   printf("%s \n",enkf_node->node_key);
 }
 
@@ -535,7 +541,6 @@ enkf_node_type * enkf_node_alloc(const char *node_key,  const enkf_config_node_t
   enkf_node_realloc_data(node);
   return node;
 }
-
 
 
 

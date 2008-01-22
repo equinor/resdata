@@ -23,7 +23,7 @@ int main(int argc , char ** argv)  {
   double *forecast_data;
   double *analyzed_data;
 
-  thist_type * thist = thist_alloc(length + 2, ens_size , thist_both);
+  thist_type * thist = thist_alloc(length + 2, ens_size , thist_both , "Tittel");
   
   forecast_data = malloc(ens_size * sizeof * forecast_data);
   analyzed_data = malloc(ens_size * sizeof * analyzed_data);
@@ -46,7 +46,7 @@ int main(int argc , char ** argv)  {
     mu  += rand_normal(0    , 0.50 * std);
     std *= rand_normal(1.10 , 0.15);
   }
-  thist_matlab_dump(thist , "Testing/inspection/synthetic" , NULL);
+  thist_matlab_dump(thist , "Testing/inspection/synthetic");
   printf("OK .... \n");
   thist_free(thist);
 }

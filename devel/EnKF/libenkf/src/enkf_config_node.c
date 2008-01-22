@@ -7,8 +7,8 @@
 
 struct enkf_config_node_struct {
   config_free_ftype               *freef;
-  enkf_impl_type  	    	   impl_type;
-  enkf_var_type  	    	   enkf_type; 
+  enkf_impl_type       impl_type;
+  enkf_var_type        var_type; 
   char 		     * ensfile;          
   char 		     * eclfile;          
   void                      	   * data; /* This points to the config object of the actual implementation. */
@@ -16,7 +16,7 @@ struct enkf_config_node_struct {
 
 
 
-enkf_config_node_type * enkf_config_node_alloc(enkf_var_type              enkf_type,
+enkf_config_node_type * enkf_config_node_alloc(enkf_var_type              var_type,
 					       enkf_impl_type             impl_type,
 					       const void                      * data, 
 					       config_free_ftype               * freef) {
@@ -24,7 +24,7 @@ enkf_config_node_type * enkf_config_node_alloc(enkf_var_type              enkf_t
   enkf_config_node_type * node = malloc( sizeof *node);
   node->data = (void *) data;
   node->freef              = freef;
-  node->enkf_type     	   = enkf_type;
+  node->var_type     	   = var_type;
   node->impl_type     	   = impl_type;
   node->ensfile            = NULL;
   node->eclfile            = NULL;
@@ -43,7 +43,7 @@ void enkf_config_node_free(enkf_config_node_type * node) {
 
 
 bool enkf_config_node_include_type(const enkf_config_node_type * config_node , int mask) {
-  if (config_node->enkf_type & mask)
+  if (config_node->var_type & mask)
     return true;
   else
     return false;
@@ -55,6 +55,10 @@ const void *  enkf_config_node_get_ref(const enkf_config_node_type * node) {
 
 enkf_impl_type enkf_config_node_get_impl_type(const enkf_config_node_type *config_node) { 
   return config_node->impl_type; 
+}
+
+enkf_var_type enkf_config_node_get_var_type(const enkf_config_node_type *config_node) { 
+  return config_node->var_type; 
 }
 
 const char * enkf_config_node_get_ensfile_ref(const enkf_config_node_type * config_node) { return config_node->ensfile; }

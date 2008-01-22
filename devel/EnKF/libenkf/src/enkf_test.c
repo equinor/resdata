@@ -125,18 +125,11 @@ int main(void) {
     int i;
     
     for (i=0; i < 100; i++) {
-      state[i] = enkf_state_alloc(config , "ECLIPSE" , false);
+      state[i] = enkf_state_alloc(config , "ECLIPSE" , i , false);
       enkf_state_add_node(state[i] , "MULTZ"); 
       enkf_state_add_node(state[i] , "EQUIL");
       enkf_state_add_node(state[i] , "PERMX");
       enkf_state_add_node(state[i] , "PG");
-      
-      enkf_state_set_run_path(state[i] , i);
-      enkf_state_set_ens_path_static(state[i]    , 0 , i);
-      enkf_state_set_ens_path_parameter(state[i] , 0 , i);
-      enkf_state_set_ens_path_dynamic_forecast(state[i] , 0 , i);
-      enkf_state_set_ens_path_dynamic_analyzed(state[i] , 0 , i);
-
       {
 	bool unified    = false;
 	int report_step = 51;
