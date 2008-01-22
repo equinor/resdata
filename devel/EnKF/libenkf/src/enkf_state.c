@@ -181,7 +181,7 @@ void enkf_state_set_iens(enkf_state_type * enkf_state , int iens) {
 
 
 
-enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char * eclbase, int iens , bool fmt_file) {
+enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char * eclbase, int iens , enkf_fs_type * fs , bool fmt_file) {
   enkf_state_type * enkf_state = malloc(sizeof *enkf_state);
   
   enkf_state->config          = (enkf_config_type *) config;
@@ -194,6 +194,7 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char *
   enkf_state_set_iens(enkf_state , iens);
   enkf_state->run_path        = NULL;
   enkf_state_set_run_path(enkf_state);
+  enkf_state->enkf_fs         = fs;
   /* 
      This information should really be in a config object. Currently
      not used, but could/will be used in a string based type lookup. 
@@ -216,7 +217,7 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char *
 
 
 enkf_state_type * enkf_state_copyc(const enkf_state_type * src) {
-  enkf_state_type * new = enkf_state_alloc(src->config , src->eclbase, src->my_iens , enkf_state_fmt_file(src));
+  enkf_state_type * new = enkf_state_alloc(src->config , src->eclbase, src->my_iens , NULL , enkf_state_fmt_file(src));
   list_node_type *list_node;                                          
   list_node = list_get_head(src->node_list);                     
 

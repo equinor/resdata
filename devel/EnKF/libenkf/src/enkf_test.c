@@ -26,7 +26,7 @@
 #include <trans_func.h>
 #include <ecl_grid.h>
 #include <pgbox_config.h>
-
+#include <enkf_fs.h>
 
 
 double pgfilter(const double *data , const void_arg_type * arg) {
@@ -46,6 +46,7 @@ void TEST() {
 
 int main(void) {
 
+  enkf_fs_type       * enkf_fs;
   enkf_obs_type      * enkf_obs;
   obs_data_type      * obs_data;
   meas_data_type     * meas_data;
@@ -125,7 +126,7 @@ int main(void) {
     int i;
     
     for (i=0; i < 100; i++) {
-      state[i] = enkf_state_alloc(config , "ECLIPSE" , i , false);
+      state[i] = enkf_state_alloc(config , "ECLIPSE" , i , NULL , false);
       enkf_state_add_node(state[i] , "MULTZ"); 
       enkf_state_add_node(state[i] , "EQUIL");
       enkf_state_add_node(state[i] , "PERMX");
