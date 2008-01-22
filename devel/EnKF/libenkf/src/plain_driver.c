@@ -60,12 +60,22 @@ void plain_driver_swapin_node(void * _driver , int report_step , int iens , bool
 }
 
 
+void plain_driver_free(void *_driver) {
+  plain_driver_type * driver = (plain_driver_type *) _driver;
+  plain_driver_assert_cast(driver);
+  path_fmt_free(driver->path);
+  free(driver);
+}
+
+
 plain_driver_type * plain_driver_alloc(path_fmt_type * path) {
   plain_driver_type * driver = malloc(sizeof * driver);
-  driver->load    = plain_driver_load_node;
-  driver->save    = plain_driver_save_node;
-  driver->swapout = plain_driver_swapout_node;
-  driver->swapin  = plain_driver_swapin_node;
+  driver->load        = plain_driver_load_node;
+  driver->save        = plain_driver_save_node;
+  driver->swapout     = plain_driver_swapout_node;
+  driver->swapin      = plain_driver_swapin_node;
+  driver->free_driver = plain_driver_free;
+  driver->path        = path_fmt_copyc(path);
   driver->plain_driver_id = PLAIN_DRIVER_ID;
   {
     basic_driver_type * basic_driver = (basic_driver_type *) driver;

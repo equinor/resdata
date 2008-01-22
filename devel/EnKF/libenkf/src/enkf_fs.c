@@ -4,7 +4,6 @@
 #include <path_fmt.h>
 #include <enkf_node.h>
 #include <basic_driver.h>
-#include "drivers.h"
 
 
 
@@ -29,10 +28,6 @@ enkf_fs_type * enkf_fs_alloc(path_fmt_type * dynamic_analyzed_path , path_fmt_ty
   return fs;
 }
 
-
-void enkf_fs_free(enkf_fs_type * fs) {
-  free(fs);
-}
 
 
 
@@ -69,9 +64,22 @@ static basic_driver_type * enkf_fs_select_driver(enkf_fs_type * fs , const enkf_
     enkf_node_printf(enkf_node);
     abort();
   }
+  basic_driver_assert_cast(driver);
   return driver;
 }
 
+
+static void enkf_fs_free_driver(basic_driver_type * driver) {
+  driver->free_driver(driver);
+}
+
+
+void enkf_fs_free(enkf_fs_type * fs) {
+  enkf_fs_free_driver(fs->dynamic_analyzed);
+  enkf_fs_free_driver(fs->dynamic_forecast);
+  enkf_fs_free_driver(fs->parameter);
+  enkf_fs_free_driver(fs->eclipse_static);
+}
 
 
 void enkf_fs_swapin_node(enkf_fs_type * enkf_fs , enkf_node_type * enkf_node , int report_step , int iens , bool analyzed) {
