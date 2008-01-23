@@ -67,6 +67,7 @@ void 	 util_set_date_values(time_t , int * , int * , int * );
 
 
 bool     util_intptr_2bool(const int *);
+int      util_C2f90_bool(bool );
 void     util_memcpy_string_C2f90(const char *  , char *  , int );
 void     util_pad_f90string(char * , int , int );
 char *   util_alloc_cstring(const char *, const int *);

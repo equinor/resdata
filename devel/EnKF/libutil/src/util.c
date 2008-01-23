@@ -47,16 +47,6 @@ static bool EOL_CHAR(char c) {
 }
 
 
-bool util_intptr_2bool(const int *iptr) {
-  if ( (*iptr) == 0)
-    return false;
-  else
-    return true;
-}
-
-
-
-
 char * util_alloc_cstring(const char *fort_string , const int *strlen) {
   const char null_char = '\0';
   char *new_string = malloc(*strlen + 1);
@@ -71,6 +61,27 @@ void util_pad_f90string(char *string , int c_strlen , int f90_length) {
   for (i=c_strlen; i < f90_length; i++) 
     string[i] = ' ';
 }
+
+
+
+bool util_intptr_2bool(const int *iptr) {
+  if ( (*iptr) == 0)
+    return false;
+  else
+    return true;
+}
+
+
+
+int util_C2f90_bool(bool c_bool) {
+  /* This is true for the ifort compiler ... */
+  if (c_bool)
+    return -1;
+  else
+    return 0;
+}
+  
+
 
 
 void util_memcpy_string_C2f90(const char * c_input_string , char * fortran_output_string , int fortran_length) {
@@ -1547,6 +1558,25 @@ void util_read_filename(const char * prompt , int prompt_len , bool must_exist ,
 
 /*****************************************************************/
 
+/*
+uncompressed total size
+size of compression buffer
+----
+compressed size
+compressed block
+current uncompressed offset
+....
+compressed size
+compressed block
+current uncompressed offset
+....
+compressed size
+compressed block
+current uncompressed offset
+----
+*/
+
+
 void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
   const char * data = (const char *) _data;
   const int max_buffer_size      = 1048580; 
@@ -1586,6 +1616,7 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
 	}
       }
       offset += this_block_size;
+      /*fwrite(&offset , sizeof offset , 1 , stream);*/
     } while (offset < size);
   }
   free(zbuffer);
@@ -1620,10 +1651,16 @@ void util_fread_compressed(char *data , FILE * stream) {
       fprintf(stderr,"%s compress returned %d - aborting \n",__func__ , compress_result);
       abort();
     }
+    /*fread(&offset , sizeof offset , 1 , stream); */
     offset += block_size;
   } while (offset < size);
   free(zbuffer);
 }
+
+/* 
+   Formatet må være slik at fskip er enkel 
+*/    
+
 
 
 void util_filter_file(const char * src_file , const char * target_file , char start_char , char end_char , const hash_type * kw_hash) {
@@ -1639,23 +1676,23 @@ void util_filter_file(const char * src_file , const char * target_file , char st
       int end_pos;
       index++;
       while (buffer[index] != end_char && !EOL_CHAR(buffer[index]) && index < buffer_size && buffer[index] != ' ') 
-	index++;
-      end_pos = index; 
+		index++;
+      	end_pos = index; 
 
       {
-	bool write_src = true;
+		bool write_src = true;
 
-	if (buffer[index] == end_char) {
-	  if (end_pos - start_pos > 1) {
-	    kw = util_realloc_substring_copy(kw , &buffer[start_pos + 1] , end_pos - start_pos - 1);
-	    if (hash_has_key(kw_hash , kw)) {
-	      void_arg_fprintf_typed(hash_get(kw_hash , kw) , stream);
-	      write_src = false;
-	      index++;
-	    } else 
-	      fprintf(stderr,"** Warning ** no defintion for keyword:%s \n",kw);
-	  }
-	}
+		if (buffer[index] == end_char) {
+	  		if (end_pos - start_pos > 1) {
+	    	kw = util_realloc_substring_copy(kw , &buffer[start_pos + 1] , end_pos - start_pos - 1);
+	    	if (hash_has_key(kw_hash , kw)) {
+	      		void_arg_fprintf_typed(hash_get(kw_hash , kw) , stream);
+	      		write_src = false;
+	      		index++;
+	    	} else 
+	      		fprintf(stderr,"** Warning ** no defintion for keyword:%s \n",kw);
+	  	}
+	}	
 	if (write_src)
 	  fwrite(&buffer[start_pos] , 1 , end_pos - start_pos + 1 , stream);
       }

@@ -146,3 +146,9 @@ void util_inter_file_slink__(const char *_target , const int * target_len , cons
   free(target);
   free(link);
 }
+
+/*
+void util_bool_test__(const int * f90_input) {
+  printf("Har fått inn : %d \n", *f90_input);
+}
+*/
