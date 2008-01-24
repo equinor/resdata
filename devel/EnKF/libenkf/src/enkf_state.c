@@ -217,7 +217,7 @@ enkf_state_type *enkf_state_alloc(const enkf_config_type * config , const char *
 
 
 enkf_state_type * enkf_state_copyc(const enkf_state_type * src) {
-  enkf_state_type * new = enkf_state_alloc(src->config , src->eclbase, src->my_iens , NULL , enkf_state_fmt_file(src));
+  enkf_state_type * new = enkf_state_alloc(src->config , src->eclbase, src->my_iens , src->enkf_fs , enkf_state_fmt_file(src));
   list_node_type *list_node;                                          
   list_node = list_get_head(src->node_list);                     
 

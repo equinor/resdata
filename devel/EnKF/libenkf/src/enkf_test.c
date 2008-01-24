@@ -27,6 +27,7 @@
 #include <ecl_grid.h>
 #include <pgbox_config.h>
 #include <enkf_fs.h>
+#include <plain_driver.h>
 
 
 double pgfilter(const double *data , const void_arg_type * arg) {
@@ -70,6 +71,8 @@ int main(void) {
   index_map = ecl_grid_alloc_index_map(grid);
   ecl_grid_get_dims(grid , &nx , &ny , &nz , &active_size);
   
+
+  enkf_fs = enkf_fs_alloc( plain_driver_alloc("path1") , plain_driver_alloc("path2") , plain_driver_alloc("path3") , plain_driver_alloc("path4"));
 
   config = enkf_config_alloc("RunPATH/tmpdir_%04d" , "Ensemble/%04d/Static/mem%04d" , "Ensemble/%04d/Parameters/mem%04d" , "Ensemble/%04d/Dynamic/Forecast/mem%04d" , "Ensemble/%04d/Dynamic/Analyzed/mem%04d" , true);
   enkf_config_add_type(config , "MULTZ" , 

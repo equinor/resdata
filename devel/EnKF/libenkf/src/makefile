@@ -10,8 +10,8 @@ INSTALL_LIB_PATH =   $(LIBENKF_HOME)/lib
 CFLAGS  = -$(MFLAG) -O3 -std=gnu99 -g -Wall 
 ARFLAGS = -csr
 #################################################################
-OBJECTS           = field_interC.o thist_interC.o thist.o scalar.o scalar_config.o trans_func.o logmode.o multflt_interC.o multz_interC.o enkf_types.o enkf_obs.o obs_data.o obs_node.o well_obs.o field_obs.o meas_op.o meas_data.o well_config.o well.o enkf_config_node.o field_config.o field.o ecl_static_kw_config.o ecl_static_kw.o equil_config.o equil.o enkf_state.o multflt.o enkf_util.o multflt_config.o enkf_config.o multz.o multz_config.o enkf_node.o pgbox_config.o pgbox.o enkf_fs.o gen_kw_config.o gen_kw.o gen_kw_interC.o enkf_fs.o basic_driver.o
-INC_FILES_INSTALL = thist.h scalar.h scalar_config.h trans_func.h logmode.h enkf_obs.h obs_data.h obs_node.h well_obs.h meas_op.h meas_data.h well_config.h well.h enkf_config_node.h field_obs.h field_config.h field.h enkf_macros.h ecl_static_kw_config.h ecl_static_kw.h equil_config.h equil.h enkf_state.h multflt.h enkf_util.h multflt_config.h enkf_config.h multz.h multz_config.h enkf_node.h pgbox_config.h pgbox.h enkf_fs.h gen_kw_config.h gen_kw.h enkf_types.h basic_driver.h
+OBJECTS           = field_interC.o thist_interC.o thist.o scalar.o scalar_config.o trans_func.o logmode.o multflt_interC.o multz_interC.o enkf_types.o enkf_obs.o obs_data.o obs_node.o well_obs.o field_obs.o meas_op.o meas_data.o well_config.o well.o enkf_config_node.o field_config.o field.o ecl_static_kw_config.o ecl_static_kw.o equil_config.o equil.o enkf_state.o multflt.o enkf_util.o multflt_config.o enkf_config.o multz.o multz_config.o enkf_node.o pgbox_config.o pgbox.o enkf_fs.o gen_kw_config.o gen_kw.o gen_kw_interC.o enkf_fs.o basic_driver.o plain_driver.o m_enkfX5.o mod_anafunc.o analysis.o
+INC_FILES_INSTALL = thist.h scalar.h scalar_config.h trans_func.h logmode.h enkf_obs.h obs_data.h obs_node.h well_obs.h meas_op.h meas_data.h well_config.h well.h enkf_config_node.h field_obs.h field_config.h field.h enkf_macros.h ecl_static_kw_config.h ecl_static_kw.h equil_config.h equil.h enkf_state.h multflt.h enkf_util.h multflt_config.h enkf_config.h multz.h multz_config.h enkf_node.h pgbox_config.h pgbox.h enkf_fs.h gen_kw_config.h gen_kw.h enkf_types.h basic_driver.h plain_driver.h analysis.h
 
 LIB_LINK          = -lenkf_$(MFLAG) -lsched_$(MFLAG) -lrms_$(MFLAG) -lecl_$(MFLAG) -lutil_$(MFLAG) -lhash_$(MFLAG) -lm -lpthread -lz
 LIB_PATH          = -L$(LIBUTIL_HOME)/lib -L$(LIBHASH_HOME)/lib -L$(LIBECL_HOME)/lib -L$(LIBSCHED_HOME)/lib -L$(LIBRMS_HOME)/lib -L$(LIBENKF_HOME)/lib
@@ -63,7 +63,7 @@ field_config.o       : field_config.c field_config.h enkf_types.h
 field.o              : field.c field.h field_config.o enkf_types.h enkf_macros.h
 equil_config.o : enkf_util.h equil_config.c equil_config.h enkf_macros.h scalar_config.o
 equil.o        : equil.c equil_config.o equil.h enkf_macros.h enkf_types.h
-enkf_state.o   : enkf_util.h enkf_state.c enkf_state.h enkf_node.o enkf_macros.h field.o field_config.o multz.o multflt.o equil.o multz_config.o multflt_config.o equil_config.o well.o well_config.o enkf_fs.o 
+enkf_state.o   : enkf_util.h enkf_state.c enkf_state.h enkf_node.o enkf_macros.h field.o field_config.o multz.o multflt.o equil.o multz_config.o multflt_config.o equil_config.o well.o well_config.o enkf_fs.o analysis.o
 multflt_config.o : multflt_config.c multflt_config.h enkf_macros.h
 multflt.o      : enkf_util.h multflt.c multflt.h multflt_config.o enkf_util.o logmode.o
 ecl_config.o   : enkf_util.h ecl_config.c ecl_config.h enkf_macros.h enkf_config_node.o
@@ -76,5 +76,7 @@ scalar_config.o : scalar_config.c scalar_config.h enkf_macros.h trans_func.o
 trans_func.o    : trans_func.h trans_func.h 
 pgbox_config.o  : pgbox_config.c pgbox_config.h
 pgbox.o         : pgbox.c pgbox.h pgbox_config.o
-enkf_fs.o       : enkf_fs.c enkf_fs.h basic_driver.o 
+enkf_fs.o       : enkf_fs.c enkf_fs.h basic_driver.o plain_driver.o
 basic_driver.o  : basic_driver.c basic_driver.h
+plain_driver.o  : plain_driver.c plain_driver.h
+

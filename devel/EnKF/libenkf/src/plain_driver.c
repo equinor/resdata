@@ -1,7 +1,8 @@
 #include <stdlib.h>
-#include <drivers.h>
 #include <enkf_node.h>
 #include <basic_driver.h>
+#include <plain_driver.h>
+#include <path_fmt.h>
 
 #define PLAIN_DRIVER_ID 1001
 
@@ -12,7 +13,7 @@ struct plain_driver_struct {
 };
 
 
-static plain_driver_assert_cast(plain_driver_type * plain_driver) {
+static void plain_driver_assert_cast(plain_driver_type * plain_driver) {
   if (plain_driver->plain_driver_id != PLAIN_DRIVER_ID) {
     fprintf(stderr,"%s: internal error - cast failed - aborting \n",__func__);
     abort();
@@ -20,7 +21,7 @@ static plain_driver_assert_cast(plain_driver_type * plain_driver) {
 }
 
 
-void plain_driver_load_node(void * _driver , int report_step , int iens , bool analyzed , enkf_node_type * enkf_node) {
+void plain_driver_load_node(void * _driver , int report_step , int iens , bool analyzed , enkf_node_type * node) {
   plain_driver_type * driver = (plain_driver_type *) _driver;
   plain_driver_assert_cast(driver);
   {
@@ -30,7 +31,7 @@ void plain_driver_load_node(void * _driver , int report_step , int iens , bool a
 }
 
 
-void plain_driver_save_node(void * _driver , int report_step , int iens , bool analyzed , enkf_node_type * enkf_node) {
+void plain_driver_save_node(void * _driver , int report_step , int iens , bool analyzed , enkf_node_type * node) {
   plain_driver_type * driver = (plain_driver_type *) _driver;
   plain_driver_assert_cast(driver);
   {
@@ -40,7 +41,7 @@ void plain_driver_save_node(void * _driver , int report_step , int iens , bool a
 }
 
 
-void plain_driver_swapout_node(void * _driver , int report_step , int iens , bool analyzed , enkf_node_type * enkf_node) {
+void plain_driver_swapout_node(void * _driver , int report_step , int iens , bool analyzed , enkf_node_type * node) {
   plain_driver_type * driver = (plain_driver_type *) _driver;
   plain_driver_assert_cast(driver);
   {
@@ -50,7 +51,7 @@ void plain_driver_swapout_node(void * _driver , int report_step , int iens , boo
 }
 
 
-void plain_driver_swapin_node(void * _driver , int report_step , int iens , bool analyzed , enkf_node_type * enkf_node) {
+void plain_driver_swapin_node(void * _driver , int report_step , int iens , bool analyzed , enkf_node_type * node) {
   plain_driver_type * driver = (plain_driver_type *) _driver;
   plain_driver_assert_cast(driver);
   {
@@ -68,14 +69,18 @@ void plain_driver_free(void *_driver) {
 }
 
 
-plain_driver_type * plain_driver_alloc(path_fmt_type * path) {
+/*
+  The driver takes a copy of the path object, i.e. it can be free in
+  the calling scope after calling plain_driver_alloc().
+*/
+void * plain_driver_alloc(const char * path) {
   plain_driver_type * driver = malloc(sizeof * driver);
   driver->load        = plain_driver_load_node;
   driver->save        = plain_driver_save_node;
   driver->swapout     = plain_driver_swapout_node;
   driver->swapin      = plain_driver_swapin_node;
   driver->free_driver = plain_driver_free;
-  driver->path        = path_fmt_copyc(path);
+  driver->path        = path_fmt_alloc_directory_fmt(path , true);
   driver->plain_driver_id = PLAIN_DRIVER_ID;
   {
     basic_driver_type * basic_driver = (basic_driver_type *) driver;

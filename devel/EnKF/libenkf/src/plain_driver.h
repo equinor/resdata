@@ -3,10 +3,9 @@
 #include <path_fmt.h>
 
 
-
 typedef struct plain_driver_struct plain_driver_type;
 
 
-plain_driver_type * plain_driver_alloc(path_fmt_type * path);
+void * plain_driver_alloc(const char *);
 
 #endif

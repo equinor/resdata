@@ -1,0 +1,2 @@
+
+void initX(int , int );

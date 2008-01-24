@@ -17,13 +17,18 @@ struct enkf_fs_struct {
 
 
 
-enkf_fs_type * enkf_fs_alloc(path_fmt_type * dynamic_analyzed_path , path_fmt_type * dynamic_forecast_path , path_fmt_type * eclipse_static_path , path_fmt_type * parameter_path) {
+enkf_fs_type * enkf_fs_alloc(void * dynamic_analyzed , void * dynamic_forecast , void * eclipse_static , void * parameter) {
   enkf_fs_type * fs = malloc(sizeof * fs);
 
-  fs->dynamic_analyzed  = NULL;
-  fs->dynamic_forecast  = NULL;
-  fs->eclipse_static    = NULL;
-  fs->parameter         = NULL;
+  fs->dynamic_analyzed  = (basic_driver_type *) dynamic_analyzed;   
+  fs->dynamic_forecast  = (basic_driver_type *) dynamic_forecast;
+  fs->eclipse_static    = (basic_driver_type *) eclipse_static;
+  fs->parameter         = (basic_driver_type *) parameter;
+  
+  basic_driver_assert_cast(fs->dynamic_analyzed);
+  basic_driver_assert_cast(fs->dynamic_forecast);
+  basic_driver_assert_cast(fs->eclipse_static);
+  basic_driver_assert_cast(fs->parameter);
   
   return fs;
 }
