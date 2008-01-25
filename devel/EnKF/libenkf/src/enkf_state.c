@@ -511,7 +511,7 @@ void enkf_state_ens_write(const enkf_state_type * enkf_state , int mask) {
   while (list_node != NULL) {                                           
     enkf_node_type *enkf_node = (enkf_node_type *) list_node_value_ptr(list_node);        
     if (enkf_node_include_type(enkf_node , mask))                       
-      enkf_node_fwrite(enkf_node , path);                       
+      /*enkf_node_fwrite(enkf_node , path);                       */
     list_node  = list_node_get_next(list_node);                         
   }                                                                     
 }
@@ -861,7 +861,7 @@ void enkf_ensemble_update(enkf_state_type ** enkf_ens , int ens_size , size_t ta
 /*****************************************************************/
 
 
-ENKF_STATE_APPLY_PATH(fread);
+/*ENKF_STATE_APPLY_PATH(fread);*/
 ENKF_STATE_APPLY(sample);
 ENKF_STATE_APPLY(clear);
 ENKF_STATE_APPLY(clear_serial_state);

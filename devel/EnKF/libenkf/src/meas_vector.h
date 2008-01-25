@@ -2,11 +2,13 @@
 #define __MEAS_DATA_H__
 #include <stdio.h>
 
-typedef struct meas_data_struct meas_data_type;
+typedef struct meas_vector_struct meas_vector_type;
 
-meas_data_type * meas_data_alloc();
-void           meas_data_free(meas_data_type *);
-void           meas_data_add(meas_data_type * , double );
-void           meas_data_reset(meas_data_type * );
-void           meas_data_fprintf(const meas_data_type *  , FILE *);
+meas_vector_type * meas_vector_alloc();
+void           meas_vector_free(meas_vector_type *);
+void           meas_vector_add(meas_vector_type * , double );
+void           meas_vector_reset(meas_vector_type * );
+void           meas_vector_fprintf(const meas_vector_type *  , FILE *);
+int            meas_vector_get_nrobs(const meas_vector_type * );
+const double * meas_vector_get_data_ref(const meas_vector_type * );
 #endif

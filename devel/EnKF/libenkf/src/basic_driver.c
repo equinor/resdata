@@ -8,9 +8,12 @@ void basic_driver_init(basic_driver_type * driver) {
 }
 
 
+
 void basic_driver_assert_cast(const basic_driver_type * driver) {
   if (driver->basic_type_id != BASIC_TYPE_ID) {
     fprintf(stderr,"%s: internal error - incorrect cast() - aborting \n" , __func__);
     abort();
   }
 }
+
+

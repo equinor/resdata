@@ -6,7 +6,7 @@
 #include <field_obs.h> 
 #include <obs_data.h>
 #include <meas_op.h>
-#include <meas_data.h>
+#include <meas_vector.h>
 #include <hash.h>
 #include <list.h>
 #include <field_config.h>
@@ -84,13 +84,13 @@ void field_obs_get_observations(const field_obs_type * field_obs , int report_st
 
 
 
-void field_obs_measure(const field_obs_type * field_obs , const field_type * field_state , meas_data_type * meas_data) {
+void field_obs_measure(const field_obs_type * field_obs , const field_type * field_state , meas_vector_type * meas_vector) {
   int i;
   double value;
   /* Should check type of field */
   for (i=0; i < field_obs->size; i++) {
     field_ijk_get(field_state , field_obs->i[i] , field_obs->j[i] , field_obs->k[i] , &value);
-    meas_data_add(meas_data , value);
+    meas_vector_add(meas_vector , value);
   }
 }
 

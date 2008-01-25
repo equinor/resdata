@@ -5,7 +5,7 @@
 #include <enkf_util.h>
 #include <well_obs.h>
 #include <meas_op.h>
-#include <meas_data.h>
+#include <meas_vector.h>
 #include <hash.h>
 #include <list.h>
 #include <history.h>
@@ -257,12 +257,12 @@ void well_obs_get_observations(const well_obs_type * well_obs , int report_step,
 
 
 
-void well_obs_measure(const well_obs_type * well_obs , const well_type * well_state , meas_data_type * meas_data) {
+void well_obs_measure(const well_obs_type * well_obs , const well_type * well_state , meas_vector_type * meas_vector) {
   int i;
 
   for (i=0; i < well_obs->size; i++) 
     if (well_obs->currently_active[i])
-      meas_data_add(meas_data , well_get(well_state , well_obs->var_list[i]));
+      meas_vector_add(meas_vector , well_get(well_state , well_obs->var_list[i]));
   
 }
 

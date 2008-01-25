@@ -35,7 +35,18 @@
 
 
 
-void analysis_initS(
+void analysis_set_stride(int ens_size , int nrobs , int * ens_stride , int * obs_stride) {
+  *ens_stride = nrobs;
+  *obs_stride = 1;
+}
+
+
+
+
+void analysis_initS(void) {
+
+}
+
 
 void m_enkfx5_mp_enkfx5_(double * X , const double *R , const double * E , const double * S , const double * D , const double * innov , const int * nrens , 
 			 const int * nrobs , const int * verbose , const double * truncation , const int * mode , const int * update_randrot , const int * istep , const char * xpath);

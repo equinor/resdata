@@ -3,6 +3,7 @@
 #include <enkf_util.h>
 #include <obs_data.h>
 #include <util.h>
+#include <analysis.h>
 
 struct obs_data_struct {
   int      size;
@@ -73,3 +74,23 @@ void obs_data_fprintf(const obs_data_type * obs_data , FILE *stream) {
   for (i = 0; i < obs_data->size; i++)
     fprintf(stream , "%-3d : %-16s  %12.3f +/- %12.3f \n", i+1 , obs_data->keyword[i] , obs_data->value[i] , obs_data->std[i]);
 }
+
+
+
+double * obs_data_allocD(const obs_data_type * obs_data , int ens_size, const double * S , const double * meanS) {
+  double *D;
+  int iens, iobs, nrobs;
+  int ens_stride , obs_stride;
+  nrobs = obs_data->size;
+  analysis_set_stride(ens_size , nrobs , &ens_stride , &obs_stride);
+  D = util_malloc(nrobs * ens_size * sizeof * D , __func__);
+  for  (iens = 0; iens < ens_size; iens++) {
+    for (iobs = 0; iobs < nrobs; iobs++) {
+      int index = iens * ens_stride + iobs * obs_stride;
+      D[index] = obs_data->value[iobs] - (S[index] + meanS[iobs]);
+    }
+  }
+  return D;
+}
+
+

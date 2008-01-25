@@ -207,11 +207,11 @@ void prefix ## _get_observations__(const void * void_arg , int report_step, obs_
 /*****************************************************************/
 
 #define VOID_MEASURE(prefix)   \
-void prefix ## _obs_measure__(const void * void_arg ,  const void * domain_object , meas_data_type * meas_data) {         \
-   prefix ## _obs_measure((const prefix ## _obs_type *) void_arg , (const prefix ## _type  * ) domain_object , meas_data); \
+void prefix ## _obs_measure__(const void * void_arg ,  const void * domain_object , meas_vector_type * meas_vector) {         \
+   prefix ## _obs_measure((const prefix ## _obs_type *) void_arg , (const prefix ## _type  * ) domain_object , meas_vector); \
 }
 
-#define VOID_MEASURE_HEADER(prefix) void prefix ## _obs_measure__(const void * ,  const void * , meas_data_type *)
+#define VOID_MEASURE_HEADER(prefix) void prefix ## _obs_measure__(const void * ,  const void * , meas_vector_type *)
 
 
 /*****************************************************************/

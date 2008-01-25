@@ -18,7 +18,7 @@
 #include <history.h>
 #include <sched_file.h>
 #include <obs_data.h>
-#include <meas_data.h>
+#include <meas_vector.h>
 #include <enkf_obs.h>
 #include <multflt_config.h>
 #include <multflt.h>
@@ -50,7 +50,7 @@ int main(void) {
   enkf_fs_type       * enkf_fs;
   enkf_obs_type      * enkf_obs;
   obs_data_type      * obs_data;
-  meas_data_type     * meas_data;
+  meas_vector_type     * meas_vector;
   enkf_config_type   * config;
   enkf_state_type   ** state;
 
@@ -61,7 +61,7 @@ int main(void) {
   sched_file_type    * sched;
   history_type          * hist;
   ecl_grid_type * grid      = ecl_grid_alloc_EGRID("ECLIPSE.EGRID" , true);
-  meas_data = meas_data_alloc();
+  meas_vector = meas_vector_alloc();
   obs_data  = obs_data_alloc();
 
   TEST();
@@ -163,8 +163,8 @@ int main(void) {
     enkf_obs_get_observations(enkf_obs , 51 , obs_data);
     obs_data_fprintf(obs_data   , stdout);
     for (i = 0; i < 100; i++) 
-      enkf_obs_measure(enkf_obs   , 51 , state[i] , meas_data);
-    meas_data_fprintf(meas_data , stdout);
+      enkf_obs_measure(enkf_obs   , 51 , state[i] , meas_vector);
+    meas_vector_fprintf(meas_vector , stdout);
     
 
     for (i=0; i < 100; i++)

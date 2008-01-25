@@ -273,19 +273,15 @@ void enkf_node_ecl_write(const enkf_node_type *enkf_node , const char *path) {
   enkf_node->ecl_write(enkf_node->data , path);
 }
 
-void enkf_node_fwrite(const enkf_node_type *enkf_node , const char * filename) {
-  FILE * stream  = util_fopen(filename , "w");
+void enkf_node_fwrite(const enkf_node_type *enkf_node , FILE *stream) {
   FUNC_ASSERT(enkf_node->fwrite_f , "fwrite_f");
   enkf_node->fwrite_f(enkf_node->data , stream);
-  fclose(stream);
 }
 
 
-void enkf_node_fread(enkf_node_type *enkf_node , const char * filename) {
-  FILE * stream  = util_fopen(filename , "r");
+void enkf_node_fread(enkf_node_type *enkf_node , FILE * stream) {
   FUNC_ASSERT(enkf_node->fread_f , "fread_f");
   enkf_node->fread_f(enkf_node->data , stream);
-  fclose(stream);
 }
 
 

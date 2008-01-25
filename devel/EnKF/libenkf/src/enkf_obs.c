@@ -239,13 +239,13 @@ void enkf_obs_get_observations(enkf_obs_type * enkf_obs , int report_step , obs_
 
 
 
-void enkf_obs_measure(const enkf_obs_type * enkf_obs , int report_step , const enkf_state_type * enkf_state , meas_data_type * meas_data) {
+void enkf_obs_measure(const enkf_obs_type * enkf_obs , int report_step , const enkf_state_type * enkf_state , meas_vector_type * meas_vector) {
   char ** kw_list = hash_alloc_keylist(enkf_obs->obs_hash);
   int iobs;
   for (iobs = 0; iobs < hash_get_size(enkf_obs->obs_hash); iobs++) {
     obs_node_type * obs_node   = hash_get(enkf_obs->obs_hash , kw_list[iobs]);
     enkf_node_type * enkf_node = enkf_state_get_node(enkf_state , kw_list[iobs]);
-    obs_node_measure(obs_node , report_step , enkf_node , meas_data);
+    obs_node_measure(obs_node , report_step , enkf_node , meas_vector);
   }
   hash_free_ext_keylist(enkf_obs->obs_hash , kw_list);
 }
