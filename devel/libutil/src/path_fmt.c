@@ -62,7 +62,7 @@ static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
 }
 
 
-char * path_fmt_alloc_path_va(path_fmt_type * path , va_list ap) {
+char * path_fmt_alloc_path_va(const path_fmt_type * path , va_list ap) {
   char * new_path = __fmt_alloc_path_va__(path->fmt , ap);
   if (path->auto_mkdir)
     util_make_path(new_path);
@@ -70,7 +70,7 @@ char * path_fmt_alloc_path_va(path_fmt_type * path , va_list ap) {
 }
 
 
-char * path_fmt_alloc_path(path_fmt_type * path , ...) {
+char * path_fmt_alloc_path(const path_fmt_type * path , ...) {
   char * new_path;
   va_list ap;
   va_start(ap , path);
@@ -81,7 +81,7 @@ char * path_fmt_alloc_path(path_fmt_type * path , ...) {
 
 
 
-char * path_fmt_alloc_file(path_fmt_type * path , ...) {
+char * path_fmt_alloc_file(const path_fmt_type * path , ...) {
   if (path->is_directory) {
     char * filename;
     va_list ap;
