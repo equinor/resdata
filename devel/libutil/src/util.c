@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <time.h>
 #include <inttypes.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -131,6 +132,12 @@ char * util_alloc_dequoted_string(char *s) {
   new = util_alloc_substring_copy(&s[offset] , len);
   free(s);
   return new;
+}
+
+void util_strupr(char *s) {
+  int i;
+  for (i=0; i < strlen(s); i++)
+    s[i] = toupper(s[i]);
 }
 
 

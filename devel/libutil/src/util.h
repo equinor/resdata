@@ -25,7 +25,7 @@ bool         util_file_update_required(const char *, const char *);
 int          util_file_size(const char *);
 void         util_unlink_path(const char *);
 void         util_unlink_existing(const char *filename);
-
+void         util_strupr(char *);
 void 	     util_copy_stream(FILE *, FILE *, int , void * );
 void 	     util_copy_file(const char * , const char * );
 
