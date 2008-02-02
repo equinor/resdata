@@ -1583,7 +1583,6 @@ current uncompressed offset
 ----
 */
 
-
 void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
   if (size == 0) {
     fwrite(&size        , sizeof size        , 1 , stream);
@@ -1599,8 +1598,8 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
     buffer_size = util_int_min(required_buffer_size , max_buffer_size);
     do {
       zbuffer = malloc(buffer_size);
-    if (zbuffer == NULL)
-      buffer_size /= 2;
+      if (zbuffer == NULL)
+	buffer_size /= 2;
     } while(zbuffer == NULL);
     block_size = (int) (floor(buffer_size / 1.002) - 12);
     
@@ -1616,8 +1615,8 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
 	
 	compress_result = compress(zbuffer , &compressed_size , &data[offset] , this_block_size);
 	if (compress_result != Z_OK) {
-	  fprintf(stderr,"%s compress returned %d - aborting \n",__func__ , compress_result);
-	  abort();
+	fprintf(stderr,"%s compress returned %d - aborting \n",__func__ , compress_result);
+	abort();
 	}
 	fwrite(&compressed_size , sizeof compressed_size , 1 , stream);
 	{
@@ -1626,14 +1625,15 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
 	    fprintf(stderr,"%s: failed to write %ld bytes to compressed file  - aborting \n",__func__ , compressed_size);
 	    abort();
 	  }
-      }
+	}
 	offset += this_block_size;
-	/*fwrite(&offset , sizeof offset , 1 , stream);*/
+      fwrite(&offset , sizeof offset , 1 , stream);
       } while (offset < size);
     }
     free(zbuffer);
   }
 }
+
 
 
 void util_fread_compressed(char *data , FILE * stream) {
@@ -1644,10 +1644,9 @@ void util_fread_compressed(char *data , FILE * stream) {
   fread(&size        , sizeof size        , 1 , stream); 
   if (size == 0) return;
 
-  
+
   fread(&buffer_size , sizeof buffer_size , 1 , stream);
   zbuffer = util_malloc(buffer_size , __func__);
-  
   offset = 0;
   do {
     int compressed_size;
@@ -1666,15 +1665,36 @@ void util_fread_compressed(char *data , FILE * stream) {
       fprintf(stderr,"%s compress returned %d - aborting \n",__func__ , compress_result);
       abort();
     }
-    /*fread(&offset , sizeof offset , 1 , stream); */
     offset += block_size;
+    {
+      int file_offset;
+      fread(&file_offset , sizeof offset , 1 , stream); 
+      if (file_offset != offset) {
+	fprintf(stderr,"%s: something wrong when reding compressed stream - aborting \n",__func__);
+	abort();
+      }
+    }
   } while (offset < size);
   free(zbuffer);
 }
 
-/* 
-   Formatet må være slik at fskip er enkel 
-*/    
+
+void util_fskip_compressed(FILE * stream) {
+  int size , offset;
+  int buffer_size;
+  fread(&size        , sizeof size        , 1 , stream);
+  if (size == 0) return;
+
+  
+  fread(&buffer_size , sizeof buffer_size , 1 , stream);
+  do {
+    int compressed_size;
+    fread(&compressed_size , sizeof compressed_size , 1 , stream);
+    fseek(stream  , compressed_size , SEEK_CUR);
+    fread(&offset , sizeof offset , 1 , stream);
+  } while (offset < size);
+}
+
 
 
 
@@ -1683,7 +1703,6 @@ void util_filter_file(const char * src_file , const char * target_file , char st
   char * buffer = util_fread_alloc_file_content(src_file , &buffer_size);
   FILE * stream = util_fopen(target_file , "w");
   char * kw     = NULL;
-  printf("Skal skrive til %s \n",target_file);
   index = 0;
   while (index < buffer_size) {
     if (buffer[index] == start_char) {
@@ -1708,7 +1727,7 @@ void util_filter_file(const char * src_file , const char * target_file , char st
 	  }
 	}	
 	if (write_src)
-	  fwrite(&buffer[start_pos] , 1 , end_pos - start_pos + 1 , stream);
+	  fwrite(&buffer[start_pos] , 1 , end_pos - start_pos , stream);
       }
     } else {
       fputc(buffer[index] , stream);
