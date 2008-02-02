@@ -124,6 +124,7 @@ void ecl_kw_select_binary(ecl_kw_type *ecl_kw) { ecl_kw_set_fmt_file(ecl_kw , fa
 
 const char * ecl_kw_get_header_ref(const ecl_kw_type *ecl_kw) { return ecl_kw->header; }
 
+
 char * ecl_kw_alloc_strip_header(const ecl_kw_type *ecl_kw) {
   return util_alloc_strip_copy(ecl_kw->header);
 }

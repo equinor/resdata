@@ -286,6 +286,10 @@ char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl
       strcpy(ext , "RFT");
     break;
 
+  case(ecl_data_file):
+    ext_length = 4;
+    ext = util_alloc_string_copy("DATA");
+    break;
     
   default:
     fprintf(stderr,"%s: Invalid input file_type to ecl_util_alloc_filename - aborting \n",__func__);
