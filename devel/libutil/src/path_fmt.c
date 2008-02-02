@@ -111,5 +111,7 @@ const char * path_fmt_get_fmt(const path_fmt_type * path) {
 
 void path_fmt_free(path_fmt_type * path) {
   free(path->fmt);
+  if (path->is_directory)
+    free(path->file_fmt);
   free(path);
 }

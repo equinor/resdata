@@ -184,7 +184,7 @@ void * void_arg_get_ptr(const void_arg_type * arg, int iarg) {
 }
 
 
-void void_arg_pack_buffer(void_arg_type * arg, int iarg , void * input) {
+void void_arg_pack_buffer(void_arg_type * arg, int iarg , const void * input) {
   __void_arg_assert_index(arg , iarg);
   memcpy(&arg->argBuffer[arg->offset_list[iarg]] , input , arg->size_list[iarg]);
 }
@@ -385,10 +385,21 @@ void_arg_type * void_arg_alloc_ptr(void *ptr) {
 }
 
 
+void_arg_type * void_arg_alloc_buffer(int buffer_size, const void * buffer) {
+  void_arg_type *arg = void_arg_alloc__(1 , (const void_arg_enum[1]) { buffer_value } , (const int[1]) {buffer_size});
+  void_arg_pack_buffer(arg , 0 , buffer );
+  return arg;
+}
+
+
+/* Null'en her er ganske tilfeldig ...*/
 
 void void_arg_fprintf_typed(const void_arg_type * void_arg , FILE * stream) {
   void_arg_enum type = void_arg->arg_type[0];
   switch (type) {
+  case(buffer_value):
+    fprintf(stream , "%s" , (char *) void_arg_get_buffer(void_arg , 0));
+    break;
   case(pointer_value):
     fprintf(stream , "%s" , (char *) void_arg_get_ptr(void_arg , 0));
     break;

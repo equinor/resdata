@@ -1585,50 +1585,55 @@ current uncompressed offset
 
 
 void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
-  const char * data = (const char *) _data;
-  const int max_buffer_size      = 1048580; 
-  int       required_buffer_size = (int) ceil(size * 1.001 + 12);
-  int       buffer_size , block_size;
-  void * zbuffer;
-  
-  buffer_size = util_int_min(required_buffer_size , max_buffer_size);
-  do {
-    zbuffer = malloc(buffer_size);
+  if (size == 0) {
+    fwrite(&size        , sizeof size        , 1 , stream);
+    return;
+  }
+  {
+    const char * data = (const char *) _data;
+    const int max_buffer_size      = 1048580; 
+    int       required_buffer_size = (int) ceil(size * 1.001 + 12);
+    int       buffer_size , block_size;
+    void * zbuffer;
+    
+    buffer_size = util_int_min(required_buffer_size , max_buffer_size);
+    do {
+      zbuffer = malloc(buffer_size);
     if (zbuffer == NULL)
       buffer_size /= 2;
-  } while(zbuffer == NULL);
-  block_size = (int) (floor(buffer_size / 1.002) - 12);
-
-  fwrite(&size        , sizeof size        , 1 , stream);
-  fwrite(&buffer_size , sizeof buffer_size , 1 , stream);
-  
-  {
-    int offset = 0;
-    do {
-      unsigned long compressed_size = buffer_size;
-      int this_block_size = util_int_min(block_size , size - offset);
-      int compress_result;
-      
-      compress_result = compress(zbuffer , &compressed_size , &data[offset] , this_block_size);
-      if (compress_result != Z_OK) {
-	fprintf(stderr,"%s compress returned %d - aborting \n",__func__ , compress_result);
-	abort();
-      }
-      fwrite(&compressed_size , sizeof compressed_size , 1 , stream);
-      {
-	int bytes_written = fwrite(zbuffer , 1 , compressed_size , stream);
-	if (bytes_written < compressed_size) {
-	  fprintf(stderr,"%s: failed to write %ld bytes to compressed file  - aborting \n",__func__ , compressed_size);
+    } while(zbuffer == NULL);
+    block_size = (int) (floor(buffer_size / 1.002) - 12);
+    
+    fwrite(&size        , sizeof size        , 1 , stream);
+    fwrite(&buffer_size , sizeof buffer_size , 1 , stream);
+    
+    {
+      int offset = 0;
+      do {
+	unsigned long compressed_size = buffer_size;
+	int this_block_size = util_int_min(block_size , size - offset);
+	int compress_result;
+	
+	compress_result = compress(zbuffer , &compressed_size , &data[offset] , this_block_size);
+	if (compress_result != Z_OK) {
+	  fprintf(stderr,"%s compress returned %d - aborting \n",__func__ , compress_result);
 	  abort();
 	}
+	fwrite(&compressed_size , sizeof compressed_size , 1 , stream);
+	{
+	  int bytes_written = fwrite(zbuffer , 1 , compressed_size , stream);
+	  if (bytes_written < compressed_size) {
+	    fprintf(stderr,"%s: failed to write %ld bytes to compressed file  - aborting \n",__func__ , compressed_size);
+	    abort();
+	  }
       }
-      offset += this_block_size;
-      /*fwrite(&offset , sizeof offset , 1 , stream);*/
-    } while (offset < size);
+	offset += this_block_size;
+	/*fwrite(&offset , sizeof offset , 1 , stream);*/
+      } while (offset < size);
+    }
+    free(zbuffer);
   }
-  free(zbuffer);
 }
-
 
 
 void util_fread_compressed(char *data , FILE * stream) {
@@ -1636,7 +1641,10 @@ void util_fread_compressed(char *data , FILE * stream) {
   int buffer_size;
   void * zbuffer;
 
-  fread(&size        , sizeof size        , 1 , stream);
+  fread(&size        , sizeof size        , 1 , stream); 
+  if (size == 0) return;
+
+  
   fread(&buffer_size , sizeof buffer_size , 1 , stream);
   zbuffer = util_malloc(buffer_size , __func__);
   
@@ -1683,22 +1691,21 @@ void util_filter_file(const char * src_file , const char * target_file , char st
       int end_pos;
       index++;
       while (buffer[index] != end_char && !EOL_CHAR(buffer[index]) && index < buffer_size && buffer[index] != ' ') 
-		index++;
-      	end_pos = index; 
-
+	index++;
+      end_pos = index; 
       {
-		bool write_src = true;
-
-		if (buffer[index] == end_char) {
-	  		if (end_pos - start_pos > 1) {
-	    	kw = util_realloc_substring_copy(kw , &buffer[start_pos + 1] , end_pos - start_pos - 1);
-	    	if (hash_has_key(kw_hash , kw)) {
-	      		void_arg_fprintf_typed(hash_get(kw_hash , kw) , stream);
-	      		write_src = false;
-	      		index++;
-	    	} else 
-	      		fprintf(stderr,"** Warning ** no defintion for keyword:%s \n",kw);
-	  	}
+	bool write_src = true;
+	
+	if (buffer[index] == end_char) {
+	  if (end_pos - start_pos > 1) {
+	    kw = util_realloc_substring_copy(kw , &buffer[start_pos + 1] , end_pos - start_pos - 1);
+	    if (hash_has_key(kw_hash , kw)) {
+	      void_arg_fprintf_typed(hash_get(kw_hash , kw) , stream);
+	      write_src = false;
+	      index++;
+	    } else 
+	      fprintf(stderr,"** Warning ** no defintion for keyword:%s \n",kw);
+	  }
 	}	
 	if (write_src)
 	  fwrite(&buffer[start_pos] , 1 , end_pos - start_pos + 1 , stream);
