@@ -14,6 +14,9 @@ struct restart_kw_list_struct {
 };
 
 
+
+
+
 static void restart_kw_list_realloc(restart_kw_list_type * kw_list , int new_size) {
   int old_size = kw_list->buffer_size;
   kw_list->kw_list = util_realloc(kw_list->kw_list , new_size * sizeof * kw_list->kw_list , __func__);
@@ -23,6 +26,34 @@ static void restart_kw_list_realloc(restart_kw_list_type * kw_list , int new_siz
       kw_list->kw_list[i] = NULL;
   }
   kw_list->buffer_size = new_size;
+}
+
+void restart_kw_list_fwrite(const restart_kw_list_type * kw_list , FILE * stream) {
+  int ikw;
+  util_fwrite_int(kw_list->active_elements , stream);
+  for (ikw = 0; ikw < kw_list->active_elements; ikw++)
+    util_fwrite_string(kw_list->kw_list[ikw] , stream);
+}
+
+
+void restart_kw_list_fread(restart_kw_list_type * kw_list , FILE * stream) {
+  int ikw , file_size;
+  file_size = util_fread_int(stream);
+  if (file_size > kw_list->buffer_size)
+    restart_kw_list_realloc(kw_list , file_size);
+  kw_list->active_elements = file_size;
+
+  for (ikw = 0; ikw < kw_list->active_elements; ikw++) 
+    kw_list->kw_list[ikw] = util_fread_realloc_string(kw_list->kw_list[ikw] , stream);
+
+  restart_kw_list_reset(kw_list);
+}
+
+
+restart_kw_list_type * restart_kw_list_fread_alloc(FILE * stream) {
+  restart_kw_list_type * kw_list = restart_kw_list_alloc();
+  restart_kw_list_fread(kw_list , stream);
+  return kw_list;
 }
 
 
@@ -104,3 +135,5 @@ void restart_kw_list_memcpy(restart_kw_list_type * src , restart_kw_list_type * 
     restart_kw_list_add(target , kw);
   
 }
+
+
