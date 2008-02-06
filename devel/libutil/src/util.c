@@ -1232,14 +1232,16 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
   int offset;
   int tokens , token , token_length;
   char **token_list;
-  
-  offset = strspn(line , sep);
+
+  offset = strspn(line , sep); 
   tokens = 0;
   do {
     token_length = strcspn(&line[offset] , sep);
     if (token_length > 0)
       tokens++;
+    
     offset += token_length;
+    offset += strspn(&line[offset] , sep);
   } while (line[offset] != '\0');
   token_list = malloc(tokens * sizeof * token_list);
   
@@ -1254,6 +1256,7 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
       token_list[token] = NULL;
     
     offset += token_length;
+    offset += strspn(&line[offset] , sep);
   } while (line[offset] != '\0');
   
   *_tokens     = tokens;
