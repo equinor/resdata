@@ -434,18 +434,27 @@ char * util_fscanf_alloc_token(FILE * stream) {
 }
 
 
+bool util_sscanf_int(const char * buffer , int * value) {
+  bool value_OK = false;
+  char * error_ptr;
+
+  int tmp_value = strtol(buffer , &error_ptr , 10);
+  if (error_ptr[0] == '\0') {
+    value_OK = true; 
+    *value = tmp_value;
+  } 
+  return value_OK;
+}
+
+
 bool util_fscanf_int(FILE * stream , int * value) {
   long int start_pos = ftell(stream);
   char * token       = util_fscanf_alloc_token(stream);
-  char * error_ptr;
-  bool   value_OK = false;
   
+  bool   value_OK = false;
   if (token != NULL) {
-    int tmp_value = strtol(token , &error_ptr , 10);
-    if (error_ptr[0] == '\0') {
-      value_OK = true; 
-      *value = tmp_value;
-    } else
+    value_OK = util_sscanf_int(token , value);
+    if (!value_OK)
       fseek(stream , start_pos , SEEK_SET);
     free(token);
   }
@@ -959,7 +968,7 @@ time_t util_make_time2(int sec, int min, int hour , int mday , int month , int y
   {
     time_t t = mktime( &ts );
     if (t == -1) {
-      fprintf(stderr,"%s: failed to make a time_t instance of %02d/%02d%4d  %02d:%02d:%02d - aborting \n",__func__ , mday,month,year,hour,min,sec);
+      fprintf(stderr,"%s: failed to make a time_t instance of %02d/%02d/%4d  %02d:%02d:%02d - aborting \n",__func__ , mday,month,year,hour,min,sec);
       abort();
     }
     return t;
@@ -970,6 +979,56 @@ time_t util_make_time2(int sec, int min, int hour , int mday , int month , int y
 
 time_t util_make_time1(int mday , int month , int year) {
   return util_make_time2(0 , 0 , 0 , mday , month , year);
+}
+
+
+
+static int util_get_month_nr__(const char * _month_name) {
+  int month_nr = -1;
+  char * month_name = util_alloc_string_copy(_month_name);
+  util_strupr(month_name);
+  if (strncmp(month_name , "JAN" , 3)) 
+    month_nr = 1;
+  else if (strncmp(month_name , "FEB" , 3)) 
+    month_nr = 2;
+  else if (strncmp(month_name , "MAR" , 3)) 
+    month_nr = 3;
+  else if (strncmp(month_name , "APR" , 3)) 
+    month_nr = 4;
+  else if (strncmp(month_name , "MAI" , 3)) 
+    month_nr = 5;
+  else if (strncmp(month_name , "MAY" , 3)) 
+    month_nr = 5;
+  else if (strncmp(month_name , "JUN" , 3)) 
+    month_nr = 6;
+  else if (strncmp(month_name , "JUL" , 3)) 
+    month_nr = 7;
+  else if (strncmp(month_name , "AUG" , 3)) 
+    month_nr = 8;
+  else if (strncmp(month_name , "SEP" , 3)) 
+    month_nr = 9;
+  else if (strncmp(month_name , "OKT" , 3)) 
+    month_nr = 10;
+  else if (strncmp(month_name , "NOV" , 3)) 
+    month_nr = 11;
+  else if (strncmp(month_name , "DES" , 3)) 
+    month_nr = 12;
+  free(month_name);
+  return month_nr;
+}
+
+int util_get_month_nr(const char * month_name) {
+  int month_nr = util_get_month_nr__(month_name);
+  if (month_nr < 0) {
+    fprintf(stderr,"%s: %s not a valid month name - aborting \n",__func__ , month_name);
+    abort();
+  }
+  return month_nr;
+}
+
+
+int util_check_month(const char * month_name) {
+  return util_get_month_nr__(month_name);
 }
 
 

@@ -14,5 +14,6 @@ void                   restart_kw_list_memcpy(restart_kw_list_type * , restart_k
 void 		       restart_kw_list_fwrite(const restart_kw_list_type *  , FILE * );
 void 		       restart_kw_list_fread(restart_kw_list_type * , FILE * );
 restart_kw_list_type * restart_kw_list_fread_alloc(FILE * );
+bool                   restart_kw_list_modified(const restart_kw_list_type * );
 
 #endif

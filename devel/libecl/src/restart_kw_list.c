@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <restart_kw_list.h>
 #include <util.h>
@@ -11,8 +12,8 @@ struct restart_kw_list_struct {
   int  	       current_kw_index;   /* The keyword index we are currently going to read / write. */
   int  	       active_elements;    /* The number of elements which have been added */
   char 	    ** kw_list;            /* The actual keywords */
+  bool         modified;
 };
-
 
 
 
@@ -60,6 +61,7 @@ restart_kw_list_type * restart_kw_list_fread_alloc(FILE * stream) {
 void restart_kw_list_reset(restart_kw_list_type * kw_list) {
   kw_list->current_kw_index = 0;
   kw_list->mode             = initialized;
+  kw_list->modified         = false;
 }
 
 
@@ -85,11 +87,20 @@ void restart_kw_list_add(restart_kw_list_type * kw_list , const char * kw) {
   kw_list->mode = writing;
   if (kw_list->current_kw_index == kw_list->buffer_size) 
     restart_kw_list_realloc(kw_list , kw_list->buffer_size * 2 + 2);
-  kw_list->kw_list[kw_list->current_kw_index] = util_realloc_string_copy(kw_list->kw_list[kw_list->current_kw_index] , kw );
+  
+  if ((kw_list->kw_list[kw_list->current_kw_index] == NULL) || (strcmp(kw_list->kw_list[kw_list->current_kw_index] , kw) != 0)) {
+    kw_list->kw_list[kw_list->current_kw_index] = util_realloc_string_copy(kw_list->kw_list[kw_list->current_kw_index] , kw );
+    kw_list->modified = true;
+  }
+  
   kw_list->current_kw_index +=  1;
   kw_list->active_elements   =  kw_list->current_kw_index;
 }
 
+
+bool restart_kw_list_modified(const restart_kw_list_type * kw_list) {
+  return kw_list->modified;
+}
 
 
 const char * restart_kw_list_get_next(restart_kw_list_type * kw_list) {

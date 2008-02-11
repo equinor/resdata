@@ -44,6 +44,7 @@ void     util_fskip_token(FILE * );
 void     util_fskip_chars(FILE * , const char * , bool *);
 void     util_fskip_cchars(FILE * , const char * , bool *);
 bool     util_fscanf_int(FILE * , int * );
+bool     util_sscanf_int(const char * , int * );
 char   * util_alloc_full_path(const char *, const char *);
 char   * util_alloc_strip_copy(const char *);
 void     util_set_strip_copy(char * , const char *);
@@ -80,6 +81,8 @@ void *  util_malloc(size_t , const char * );
 void 	util_double_to_float(float  * , const double * , int );
 void 	util_float_to_double(double * , const float  * , int );
 
+int 	util_get_month_nr(const char * );
+int 	util_check_month(const char * );
 
 void    util_filter_file(const char * , const char * , char , char , const hash_type * );
 char *  util_fread_alloc_file_content(const char * , int *);
