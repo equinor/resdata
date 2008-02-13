@@ -223,30 +223,27 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
 }
 
 
-static time_t __util_sscanf_date(const char * date_token , bool abort_on_error , bool *error) {
+bool util_sscanf_date(const char * date_token , time_t * t) {
   int day   , month , year;
   char sep1 , sep2;
   
-  if (sscanf(date_token , "%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) 
-    return util_make_time1(day , month , year );  
-  else {
-    if (abort_on_error) {
-      fprintf(stderr,"%s: failed to parse a valid date  - aborting \n",__func__);
-      abort();
-    }
-    if (error != NULL)
-      *error = true;
-    return -1;
+  if (sscanf(date_token , "%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) {
+    *t = util_make_time1(day , month , year );  
+    return true;
+  } else {
+    *t = -1;
+    return false;
   }
 }
 
 
-static time_t __util_fscanf_date(FILE *stream , bool abort_on_error , bool *error) {
-  time_t t;
+bool util_fscanf_date(FILE *stream , time_t *t)  {
+  int init_pos = ftell(stream);
   char * date_token = util_fscanf_alloc_token(stream);
-  t = __util_sscanf_date(date_token , abort_on_error , error);
+  bool return_value = util_sscanf_date(date_token , t);
+  if (!return_value) fseek(stream , init_pos , SEEK_SET);
   free(date_token);
-  return t;
+  return return_value;
 }
 
 /* 
@@ -260,31 +257,6 @@ static time_t __util_fscanf_date(FILE *stream , bool abort_on_error , bool *erro
 */
 
 
-
-time_t util_fscanf_date(FILE * stream) {
-  return __util_fscanf_date(stream , true , NULL);
-}
-
-
-bool util_fscanf_try_date(FILE * stream) {
-  long int start_pos = ftell(stream);
-  bool error;
-  __util_fscanf_date(stream , true , &error);
-  fseek(stream , start_pos , SEEK_SET);
-  return error;
-}
-
-
-time_t util_sscanf_date(const char * date_string) {
-  return __util_sscanf_date(date_string , true , NULL);
-}
-
-
-bool util_sscanf_try_date(const char * date_string) {
-  bool error;
-  __util_sscanf_date(date_string , false , &error);
-  return error;
-}
 
 
 

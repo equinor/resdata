@@ -10,10 +10,8 @@
 time_t       util_make_time2(int , int , int , int , int , int );
 time_t       util_make_time1(int , int , int);
 
-time_t       util_fscanf_date(FILE * );
-bool         util_fscanf_try_date(FILE * );
-bool         util_sscanf_try_date(const char * );
-time_t       util_sscanf_date(const char * );
+bool         util_fscanf_date(FILE * , time_t *);
+bool         util_sscanf_date(const char * , time_t *);
 
 bool 	     util_file_exists(const char *);
 int          util_get_path_length(const char * );
