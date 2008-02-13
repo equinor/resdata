@@ -222,11 +222,12 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
   return util_fscanf_alloc_line__(stream , at_eof , line);
 }
 
-static time_t __util_fscanf_date(FILE *stream , bool abort_on_error , bool *error) {
-  int day,month,year;
-  char sep1,sep2;
+
+static time_t __util_sscanf_date(const char * date_token , bool abort_on_error , bool *error) {
+  int day   , month , year;
+  char sep1 , sep2;
   
-  if (fscanf(stream,"%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) 
+  if (sscanf(date_token , "%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) 
     return util_make_time1(day , month , year );  
   else {
     if (abort_on_error) {
@@ -237,6 +238,15 @@ static time_t __util_fscanf_date(FILE *stream , bool abort_on_error , bool *erro
       *error = true;
     return -1;
   }
+}
+
+
+static time_t __util_fscanf_date(FILE *stream , bool abort_on_error , bool *error) {
+  time_t t;
+  char * date_token = util_fscanf_alloc_token(stream);
+  t = __util_sscanf_date(date_token , abort_on_error , error);
+  free(date_token);
+  return t;
 }
 
 /* 
@@ -263,6 +273,21 @@ bool util_fscanf_try_date(FILE * stream) {
   fseek(stream , start_pos , SEEK_SET);
   return error;
 }
+
+
+time_t util_sscanf_date(const char * date_string) {
+  return __util_sscanf_date(date_string , true , NULL);
+}
+
+
+bool util_sscanf_try_date(const char * date_string) {
+  bool error;
+  __util_sscanf_date(date_string , false , &error);
+  return error;
+}
+
+
+
 
 
 void util_fskip_lines(FILE * stream , int lines) {
@@ -601,14 +626,21 @@ void util_copy_file(const char * src_file , const char * target_file) {
   if (strcmp(src_file , target_file) == 0) 
     fprintf(stderr,"%s Warning: trying to copy %s onto itself - noting done\n",__func__ , src_file);
   else {
-    const int buffer_size  = 65536;
-    char * buffer          = malloc(buffer_size);
-    FILE * src_stream      = util_fopen(src_file    , "r");
-    FILE * target_stream   = util_fopen(target_file , "w");
+    void * buffer   = NULL;
+    int buffer_size = util_file_size(src_file);
+    do {
+      buffer = malloc(buffer_size);
+      if (buffer == NULL) buffer_size /= 2;
+    } while (buffer == NULL);
     
-    util_copy_stream(src_stream , target_stream , buffer_size , buffer);
-    fclose(src_stream);
-    fclose(target_stream);
+    {
+      FILE * src_stream      = util_fopen(src_file     , "r");
+      FILE * target_stream   = util_fopen(target_file  , "w");
+    
+      util_copy_stream(src_stream , target_stream , buffer_size , buffer);
+      fclose(src_stream);
+      fclose(target_stream);
+    }
     free(buffer);
   }
 }
