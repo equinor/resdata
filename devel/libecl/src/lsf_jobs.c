@@ -60,7 +60,7 @@ struct lsf_pool_struct {
   char            *tmp_path;
   char 		  *tmp_file_bjobs;
   char 		  *tmp_file_submit;
-  char            *bin_path;
+  char            *submit_cmd;
   char 		  *bsub_status_cmd;
   char            *submit_cmd_fmt;
   char            *queu;
@@ -305,7 +305,7 @@ static int lsf_job_parse_bsub_stdout(const char * stdout_file) {
 
 
 
-static int lsf_job_submit(lsf_job_type *lsf_job , const char * submit_cmd_fmt ,  const char * bin_path , const char * tmp_path ) {
+static int lsf_job_submit(lsf_job_type *lsf_job , const char * submit_cmd_fmt , const char * tmp_path ) {
   if (!util_file_exists(lsf_job->run_path)) {
     fprintf(stderr,"%s: fatal error when submitting job:%s - run_path:%s does not exist \n",__func__ , lsf_job->base , lsf_job->run_path);
     abort();
@@ -366,7 +366,7 @@ bool lsf_job_complete_OK(lsf_job_type *lsf_job) {
 
 
 lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit, int version_nr , const char * queu , const char * request, 
-			       const char * summary_path , const char * summary_file , const char *bsub_status_cmd , const char * bin_path , 
+			       const char * summary_path , const char * summary_file , const char *bsub_status_cmd , const char * submit_cmd,
 			       const char *tmp_path) {
   const char *tmp_file = "bjobs.jobList";
   lsf_pool_type *lsf_pool = malloc(sizeof *lsf_pool);
@@ -379,7 +379,7 @@ lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit,
   } else
     lsf_pool->summary_file = NULL;
   
-  lsf_pool->bin_path 	   = util_alloc_string_copy(bin_path);
+  lsf_pool->submit_cmd 	   = util_alloc_string_copy(submit_cmd);
   lsf_pool->tmp_path 	   = util_alloc_string_copy(tmp_path);
   lsf_pool->request  	   = util_alloc_string_copy(request);
   lsf_pool->queu     	   = util_alloc_string_copy(queu);
@@ -401,20 +401,20 @@ lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit,
   hash_insert_int(lsf_pool->status_tr , "DONE"   , lsf_status_done);
   hash_insert_int(lsf_pool->status_tr , "UNKWN"  , lsf_status_exit); /* Uncertain about this one */
   
-  lsf_pool->sleep_time     = sleep_time;
-  lsf_pool->max_running    = max_running;
-  lsf_pool->sub_exit       = sub_exit;
-  lsf_pool->total_status   = calloc(STATUS_SIZE , sizeof *lsf_pool->total_status);
+  lsf_pool->sleep_time        = sleep_time;
+  lsf_pool->max_running       = max_running;
+  lsf_pool->sub_exit          = sub_exit;
+  lsf_pool->total_status      = calloc(STATUS_SIZE , sizeof *lsf_pool->total_status);
   lsf_pool->prev_total_status = calloc(STATUS_SIZE , sizeof *lsf_pool->total_status);
-  lsf_pool->submit_cmd_fmt = malloc(256);
-  lsf_pool->version_nr     = version_nr;
-  sprintf(lsf_pool->submit_cmd_fmt , "bsub -o %s/%s.stdout -q %s -J %s -R\"%s\" %s/ecl_submit.x %s %s %d > %s" , 
+  lsf_pool->submit_cmd_fmt    = malloc(1024);
+  lsf_pool->version_nr        = version_nr;
+  sprintf(lsf_pool->submit_cmd_fmt , "bsub -o %s/%s.stdout -q %s -J %s -R\"%s\" %s %s %s %d > %s" , 
 	  "%s"                 ,
 	  "%s"                 , /* lsf stdout file */
 	  lsf_pool->queu       , 
 	  "%s"                 , /* lsf job name   */
 	  lsf_pool->request    , 
-	  lsf_pool->bin_path   , 
+	  lsf_pool->submit_cmd , 
 	  "%s"                 , /* Run path       */
 	  "%s"                 , /* Base name      */
 	  lsf_pool->version_nr , 
@@ -475,7 +475,7 @@ static void lsf_pool_isubmit(lsf_pool_type *lsf_pool , int ijob) {
   if (lsf_pool->jobList[ijob]->active) {
     {
       char char_base[16];
-      int new_base = lsf_job_submit(lsf_pool->jobList[ijob] , lsf_pool->submit_cmd_fmt ,  lsf_pool->bin_path , lsf_pool->tmp_path);
+      int new_base = lsf_job_submit(lsf_pool->jobList[ijob] , lsf_pool->submit_cmd_fmt ,  lsf_pool->tmp_path);
       sprintf(char_base , "%d" , new_base);
       hash_insert_int(lsf_pool->jobs , char_base , ijob);
     }
@@ -804,7 +804,7 @@ void lsf_pool_free(lsf_pool_type *lsf_pool) {
   free(lsf_pool->tmp_path);
   free(lsf_pool->tmp_file_bjobs);
   free(lsf_pool->bsub_status_cmd);
-  free(lsf_pool->bin_path);
+  free(lsf_pool->submit_cmd);
   free(lsf_pool->submit_cmd_fmt);
   free(lsf_pool->queu);
   free(lsf_pool->request);

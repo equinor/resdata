@@ -263,17 +263,17 @@ void ecl_inter_init_lsf__(const int  * sleep_time    , const int *max_running,  
 			  const int  * version_nr    , 
 			  const char * _queu         , const int * queu_len,
 			  const char * _request      , const int * request_len , 
-			  const char * _bin_path     , const int * bin_path_len) {
+			  const char * _submit_cmd   , const int * submit_cmd_len) {
   
   char *summary_file = util_alloc_cstring(_summary_file , summary_file_len);
   char *summary_path = util_alloc_cstring(_summary_path , summary_path_len);
-  char *bin_path     = util_alloc_cstring(_bin_path , bin_path_len);
+  char *submit_cmd     = util_alloc_cstring(_submit_cmd , submit_cmd_len);
   char *request      = util_alloc_cstring(_request  , request_len);
   char *queu         = util_alloc_cstring(_queu     , queu_len);
-  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , util_intptr_2bool(subexit_int) , *version_nr , queu , request , summary_path , summary_file , "bjobs -a" , bin_path , "/tmp");
+  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , util_intptr_2bool(subexit_int) , *version_nr , queu , request , summary_path , summary_file , "bjobs -a" , submit_cmd , "/tmp");
   free(summary_path);
   free(summary_file);
-  free(bin_path);
+  free(submit_cmd);
   free(request);
   free(queu);
   printf("Submitting: "); fflush(stdout);
