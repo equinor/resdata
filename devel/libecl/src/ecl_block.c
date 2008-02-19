@@ -338,7 +338,7 @@ void ecl_block_set_fmt_file(ecl_block_type *ecl_block , bool fmt_file) {
 
 
 void ecl_block_select_formatted(ecl_block_type *ecl_block) { ecl_block_set_fmt_file(ecl_block , true ); }
-void ecl_block_select_binary(ecl_block_type *ecl_block) { ecl_block_set_fmt_file(ecl_block , false); }
+void ecl_block_select_binary(ecl_block_type *ecl_block)    { ecl_block_set_fmt_file(ecl_block , false); }
 
 
 void ecl_block_fread_kwlist(ecl_block_type *ecl_block , fortio_type *fortio , int N_kw, const char **kwlist) {

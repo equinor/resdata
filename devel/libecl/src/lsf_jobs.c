@@ -14,6 +14,7 @@
 #include <lsf_jobs.h>
 #include <ecl_util.h>
 #include <msg.h>
+#include <pthread.h>
 
 
 
@@ -67,6 +68,7 @@ struct lsf_pool_struct {
   lsf_job_type   **jobList;
   hash_type       *jobs;
   hash_type       *status_tr;
+  pthread_mutex_t  mutex;
 };
 
 
@@ -419,6 +421,7 @@ lsf_pool_type * lsf_pool_alloc(int sleep_time , int max_running , bool sub_exit,
 	  "%s"                 ); /* tmp file       */
   
   lsf_pool->size = 0;
+  pthread_mutex_init( &lsf_pool->mutex , NULL);
   return lsf_pool;
 }
 
@@ -515,6 +518,7 @@ void lsf_pool_iactivate_job(lsf_pool_type * lsf_pool , int ijob) {
 void lsf_pool_add_job(lsf_pool_type *lsf_pool , const char *base , const char *run_path , const char *restart_file, const char *OK_file, const char *fail_file , int max_resubmit) {
   lsf_job_type *new_job = lsf_job_alloc(lsf_pool->size , base , run_path , restart_file , OK_file , fail_file , lsf_pool->tmp_path , max_resubmit);
 
+  pthread_mutex_lock( &lsf_pool->mutex );
   if (lsf_pool->size == lsf_pool->alloc_size) {
     lsf_pool->alloc_size *= 2;
     lsf_pool->jobList = realloc(lsf_pool->jobList , lsf_pool->alloc_size * sizeof *lsf_pool->jobList);
@@ -529,6 +533,8 @@ void lsf_pool_add_job(lsf_pool_type *lsf_pool , const char *base , const char *r
   lsf_pool->total_status[lsf_status_null]++;
   if (lsf_pool_get_active(lsf_pool) < lsf_pool->max_running || lsf_pool->sub_exit)
     lsf_pool_isubmit(lsf_pool , lsf_pool->size - 1);
+
+  pthread_mutex_unlock( &lsf_pool->mutex );
 }
 
 
