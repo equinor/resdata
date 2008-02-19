@@ -28,6 +28,7 @@ struct ecl_block_struct {
   hash_type    *kw_hash;
   time_t        sim_time;
   restart_kw_list_type *_kw_list;
+  char         *src_file;
 };
 
 
@@ -173,6 +174,7 @@ ecl_block_type * ecl_block_alloc(int report_nr , bool fmt_file , bool endian_con
   
   
   ecl_block = malloc(sizeof *ecl_block);
+  ecl_block->src_file       = NULL;
   ecl_block->fmt_file       = fmt_file;
   ecl_block->endian_convert = endian_convert;
   ecl_block->size           = 0;
@@ -241,14 +243,18 @@ bool ecl_block_fseek(int istep , bool fmt_file , bool abort_on_error , fortio_ty
   }
 }
 
+static void ecl_block_set_src_file(ecl_block_type * ecl_block , const char * src_file) {
+  ecl_block->src_file = util_realloc_string_copy(ecl_block->src_file , src_file);
+}
 
 
 void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_eof) {
   ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty(ecl_block->fmt_file , ecl_block->endian_convert);
+  
   bool cont     = true;
   bool first_kw = true;
-
-
+  
+  
   while (cont) {
     if (ecl_kw_fread_realloc(ecl_kw , fortio)) {
       bool add_kw;
@@ -277,6 +283,7 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
     first_kw = false;
   }
   ecl_kw_free(ecl_kw);
+  ecl_block_set_src_file(ecl_block , fortio_filename_ref(fortio));
 }
 
 
@@ -285,9 +292,11 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
 void ecl_block_summarize(const ecl_block_type * block) {
   FILE * stream = stdout;
   const char * kw;
-
+  
+  if (block->src_file != NULL)
+    fprintf(stream , "Source file: %s \n",block->src_file);
+  
   fprintf(stream , "-----------------------------------------------------------------\n");
-
   restart_kw_list_reset(block->_kw_list);
   kw = restart_kw_list_get_first(block->_kw_list);
   while (kw != NULL) {
@@ -380,6 +389,7 @@ void * ecl_block_get_data_ref(const ecl_block_type *ecl_block, const char *kw) {
 void ecl_block_free(ecl_block_type *ecl_block) {
   hash_free(ecl_block->kw_hash);
   restart_kw_list_free(ecl_block->_kw_list);
+  if (ecl_block->src_file != NULL) free(ecl_block->src_file);
   free(ecl_block);
 }
 

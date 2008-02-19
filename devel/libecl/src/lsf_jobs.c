@@ -648,6 +648,7 @@ void lsf_pool_summarize(const lsf_pool_type * lsf_pool) {
 }
 
 
+
 int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
   if (lsf_pool->sub_exit) 
     /*
@@ -777,7 +778,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
     }
     return lsf_pool->total_status[lsf_status_exit];
   }
-  }
+}
 
 
 void lsf_pool_set_fail_vector(const lsf_pool_type * lsf_pool , int *fail_vector) {

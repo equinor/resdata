@@ -114,6 +114,7 @@ static void ecl_sum_init_header(ecl_sum_type * ecl_sum , int n_wells ,  const ch
 
 static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_file) {
   ecl_sum->header         = ecl_fstate_fread_alloc(1     , &header_file , ecl_summary_header_file , false , ecl_sum->endian_convert);
+  printf("Er kommet til: %s \n",__func__);
   {
     char well[9] , kw[9];
     int *date;
