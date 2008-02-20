@@ -2,22 +2,22 @@
 #define __VOID_ARG_H__
 #include <stdio.h>
 #include <stdbool.h>
+#include <node_ctype.h>
 
 typedef struct void_arg_struct void_arg_type;
-typedef enum  {buffer_value = 0 , pointer_value = 1, int_value = 2, double_value = 3, float_value = 4 , char_value = 5 , bool_value = 6 , size_t_value = 7} void_arg_enum;
 
-void_arg_type * void_arg_alloc(int   , const void_arg_enum * );
-void_arg_type * void_arg_alloc__(int , const void_arg_enum * , const int * );
-void_arg_type * void_arg_alloc1(void_arg_enum );
-void_arg_type * void_arg_alloc2(void_arg_enum , void_arg_enum );
-void_arg_type * void_arg_alloc3(void_arg_enum , void_arg_enum , void_arg_enum);
-void_arg_type * void_arg_alloc4(void_arg_enum , void_arg_enum , void_arg_enum, void_arg_enum);
-void_arg_type * void_arg_alloc5(void_arg_enum , void_arg_enum , void_arg_enum, void_arg_enum , void_arg_enum);
-void_arg_type * void_arg_alloc6(void_arg_enum , void_arg_enum , void_arg_enum, void_arg_enum , void_arg_enum ,void_arg_enum);
-void_arg_type * void_arg_alloc7(void_arg_enum , void_arg_enum , void_arg_enum, void_arg_enum , void_arg_enum ,void_arg_enum , void_arg_enum);
-void_arg_type * void_arg_alloc8(void_arg_enum , void_arg_enum , void_arg_enum, void_arg_enum , void_arg_enum ,void_arg_enum , void_arg_enum , void_arg_enum);
-void_arg_type * void_arg_alloc9(void_arg_enum , void_arg_enum , void_arg_enum, void_arg_enum , void_arg_enum ,void_arg_enum , void_arg_enum , void_arg_enum , void_arg_enum);
-void_arg_type * void_arg_alloc10(void_arg_enum , void_arg_enum , void_arg_enum, void_arg_enum , void_arg_enum ,void_arg_enum , void_arg_enum , void_arg_enum , void_arg_enum , void_arg_enum);
+void_arg_type * void_arg_alloc(int   , const node_ctype * );
+void_arg_type * void_arg_alloc__(int , const node_ctype * , const int * );
+void_arg_type * void_arg_alloc1(node_ctype );
+void_arg_type * void_arg_alloc2(node_ctype , node_ctype );
+void_arg_type * void_arg_alloc3(node_ctype , node_ctype , node_ctype);
+void_arg_type * void_arg_alloc4(node_ctype , node_ctype , node_ctype, node_ctype);
+void_arg_type * void_arg_alloc5(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype);
+void_arg_type * void_arg_alloc6(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype ,node_ctype);
+void_arg_type * void_arg_alloc7(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype ,node_ctype , node_ctype);
+void_arg_type * void_arg_alloc8(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype ,node_ctype , node_ctype , node_ctype);
+void_arg_type * void_arg_alloc9(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype ,node_ctype , node_ctype , node_ctype , node_ctype);
+void_arg_type * void_arg_alloc10(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype ,node_ctype , node_ctype , node_ctype , node_ctype , node_ctype);
 void            void_arg_free(void_arg_type * );
 void            void_arg_free__(void *);
 void            void_arg_pack_ptr(void_arg_type * , int , void * );

@@ -1291,6 +1291,19 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
 
 /*****************************************************************/
 
+/*
+Invalid write of size 4
+==29134==    at 0x80775CA: util_split_string (util.c:1332)
+==29134==    by 0x804C6F2: enkf_config_fscanf_alloc (enkf_config.c:309)
+==29134==    by 0x804A266: main (main.c:36)
+==29134==  Address 0x6BBA498 is 0 bytes after a block of size 0 alloc'd
+==29134==    at 0x4416405: malloc (vg_replace_malloc.c:149)
+==29134==    by 0x807754F: util_split_string (util.c:1322)
+==29134==    by 0x804C6F2: enkf_config_fscanf_alloc (enkf_config.c:309)
+==29134==    by 0x804A266: main (main.c:36)
+*/
+
+
 void util_split_string(const char *line , const char *sep, int *_tokens, char ***_token_list) {
   int offset;
   int tokens , token , token_length;
@@ -1306,21 +1319,24 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
     offset += token_length;
     offset += strspn(&line[offset] , sep);
   } while (line[offset] != '\0');
-  token_list = malloc(tokens * sizeof * token_list);
-  
-  offset = strspn(line , sep);
-  token  = 0;
-  do {
-    token_length = strcspn(&line[offset] , sep);
-    if (token_length > 0) {
-      token_list[token] = util_alloc_substring_copy(&line[offset] , token_length);
-      token++;
-    } else
-      token_list[token] = NULL;
-    
-    offset += token_length;
-    offset += strspn(&line[offset] , sep);
-  } while (line[offset] != '\0');
+
+  if (tokens > 0) {
+    token_list = malloc(tokens * sizeof * token_list);
+    offset = strspn(line , sep);
+    token  = 0;
+    do {
+      token_length = strcspn(&line[offset] , sep);
+      if (token_length > 0) {
+	token_list[token] = util_alloc_substring_copy(&line[offset] , token_length);
+	token++;
+      } else
+	token_list[token] = NULL;
+      
+      offset += token_length;
+      offset += strspn(&line[offset] , sep);
+    } while (line[offset] != '\0');
+  } else
+    token_list = NULL;
   
   *_tokens     = tokens;
   *_token_list = token_list;
@@ -1784,7 +1800,7 @@ void util_filter_file(const char * src_file , const char * target_file , char st
 	if (buffer[index] == end_char) {
 	  if (end_pos - start_pos > 1) {
 	    kw = util_realloc_substring_copy(kw , &buffer[start_pos + 1] , end_pos - start_pos - 1);
-	    if (hash_has_key(kw_hash , kw)) {
+            if (hash_has_key(kw_hash , kw)) {
 	      void_arg_fprintf_typed(hash_get(kw_hash , kw) , stream);
 	      write_src = false;
 	      index++;
