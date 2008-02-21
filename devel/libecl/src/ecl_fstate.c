@@ -242,7 +242,8 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	    else {
 	      if (!at_eof) {
 		if (ecl_fstate->summary_report_only) {
-		  fprintf(stderr,"%s: several timesteps in summary file:%s allocated with summary_report_only = true - aborting.\n",__func__ , ecl_fstate->filelist[file]);
+		  fprintf(stderr,"\n%s: Several timesteps in summary file:%s allocated with summary_report_only = true - aborting.\n",__func__ , ecl_fstate->filelist[file]);
+		  fprintf(stderr,"%s: Maybe you have forgot the keyword: \'RPTONLY\' in the datafile?\n",__func__);
 		  abort();
 		}
 	      }
