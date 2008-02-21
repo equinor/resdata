@@ -1,7 +1,8 @@
 #ifndef __ECL_GRID_H__
 #define __ECL_GRID_H__
-
+#include <stdbool.h>
 #include <ecl_box.h>
+
 
 typedef struct ecl_grid_struct ecl_grid_type;
 

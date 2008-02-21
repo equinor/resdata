@@ -257,7 +257,8 @@ void ecl_inter_fscanf_grdecl_param__(const char *_filename , const int * filenam
 
 /*****************************************************************/
 
-void ecl_inter_init_lsf__(const int  * sleep_time    , const int *max_running,  const int *subexit_int, 
+void ecl_inter_init_lsf__(const int  * ens_size , 
+			  const int  * sleep_time    , const int *max_running,  const int *subexit_int, 
 			  const char * _summary_path , const int * summary_path_len,
 			  const char * _summary_file , const int * summary_file_len,
 			  const int  * version_nr    , 
@@ -270,7 +271,7 @@ void ecl_inter_init_lsf__(const int  * sleep_time    , const int *max_running,  
   char *submit_cmd     = util_alloc_cstring(_submit_cmd , submit_cmd_len);
   char *request      = util_alloc_cstring(_request  , request_len);
   char *queu         = util_alloc_cstring(_queu     , queu_len);
-  LSF_POOL = lsf_pool_alloc(*sleep_time , *max_running , util_intptr_2bool(subexit_int) , *version_nr , queu , request , summary_path , summary_file , "bjobs -a" , submit_cmd , "/tmp");
+  LSF_POOL = lsf_pool_alloc(*ens_size , *sleep_time , *max_running , util_intptr_2bool(subexit_int) , *version_nr , queu , request , summary_path , summary_file , "bjobs -a" , submit_cmd , "/tmp");
   free(summary_path);
   free(summary_file);
   free(submit_cmd);
@@ -299,7 +300,7 @@ void ecl_inter_add_lsf_job__(const int  *iens,
     char *fail_file     = util_alloc_cstring(_fail_file     , fail_file_len);
     char *OK_file       = util_alloc_cstring(_OK_file       , OK_file_len);
       
-    lsf_pool_add_job(LSF_POOL , id, run_path , restart_file , OK_file , fail_file , *max_resubmit);
+    lsf_pool_add_job(LSF_POOL , *iens , id, run_path , restart_file , OK_file , fail_file , *max_resubmit);
     free(run_path);
     free(restart_file);
     free(id);

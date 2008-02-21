@@ -33,6 +33,7 @@ INSTALL: $(LIB)
 	gcc $(CFLAGS) $(TARGET_INCLUDE) kw_cmp.c           -o kw_cmp.x  	  $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) $(TARGET_INCLUDE) combine_grdecl.c   -o combine_grdecl.x    $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) $(TARGET_INCLUDE) kw_extract.c       -o kw_extract.x        $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) $(TARGET_INCLUDE) grid_info.c        -o grid_info.x         $(LIB_PATH)  $(LIB_LINK)
 
 ###     This only links to 64 bit libraries.
 #	gcc -O2 -m64 -std=gnu99 -g -Wall  -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) ecl_rft.c  -o ecl_rft.x  $(LIB_PATH)  -lecl_m64 -lutil_m64 -lhash_m64 -lreadline -lncurses -lm
