@@ -53,7 +53,7 @@ struct lsf_pool_struct {
   int             max_running;
   int             version_nr;
   bool            sub_exit; 
-
+  
   int             *prev_total_status;
   int             *total_status;
   char            *summary_file;
@@ -417,8 +417,8 @@ lsf_pool_type * lsf_pool_alloc(int total_size , int sleep_time , int max_running
   lsf_pool->sleep_time        = sleep_time;
   lsf_pool->max_running       = max_running;
   lsf_pool->sub_exit          = sub_exit;
-  lsf_pool->total_status      = calloc(STATUS_SIZE , sizeof *lsf_pool->total_status);
-  lsf_pool->prev_total_status = calloc(STATUS_SIZE , sizeof *lsf_pool->total_status);
+  lsf_pool->total_status      = calloc(STATUS_SIZE , sizeof * lsf_pool->total_status);
+  lsf_pool->prev_total_status = calloc(STATUS_SIZE , sizeof * lsf_pool->total_status);
   lsf_pool->submit_cmd_fmt    = malloc(1024);
   lsf_pool->version_nr        = version_nr;
   sprintf(lsf_pool->submit_cmd_fmt , "bsub -o %s/%s.stdout -q %s -J %s -R\"%s\" %s %s %s %d > %s" , 
@@ -717,7 +717,6 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
       /*
 	Third step: check complete/EXIT jobs.
       */
-     
       
       /*
 	Will reschedule jobs with EXIT status as well - they sometimes just fail to start ... 
@@ -733,7 +732,6 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 	}
       }
 
-      
       for (ijob = 0; ijob < lsf_pool->active_size; ijob++) {
 	if (lsf_pool_iget_status(lsf_pool , ijob) == lsf_status_done) {
 	  if (lsf_pool_complete_OK(lsf_pool , ijob)) { 
@@ -751,7 +749,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
       }
       
 
-      if (lsf_pool->total_status[lsf_status_OK] + lsf_pool->total_status[lsf_status_exit] == lsf_pool->active_size)
+      if (lsf_pool->total_status[lsf_status_OK] + lsf_pool->total_status[lsf_status_exit] == lsf_pool->total_size)
 	cont = false;
       {
 	int i;
@@ -777,7 +775,6 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 	}
       }
 
-
       {
 	int total_jobs = 0;
 	for (ijob = 0; ijob < 6; ijob++)
@@ -787,7 +784,7 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 	  abort();
 	}
       }
-    
+      
       if (lsf_pool->summary_file != NULL) 
 	lsf_pool_fprintf_summary(lsf_pool);
 
@@ -805,9 +802,11 @@ int lsf_pool_run_jobs(lsf_pool_type *lsf_pool) {
 	  printf("Job : %04d / %s failed \n",ijob + 1,lsf_pool->jobList[ijob]->base);
       }
     }
+    printf("\n");
     return lsf_pool->total_status[lsf_status_exit];
   }
 }
+
 
 void * lsf_pool_run_jobs__(void * _lsf_jobs) {
   lsf_pool_run_jobs((lsf_pool_type *) _lsf_jobs);

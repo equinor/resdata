@@ -32,6 +32,8 @@ int             ecl_util_filename_report_nr(const char *);
 void            ecl_util_get_file_type(const char * , ecl_file_type * , bool * , int * );
 char          * ecl_util_alloc_filename(const char * /* path */, const char * /* base */, ecl_file_type , bool /* fmt_file */ , int /*report_nr*/);
 char          * ecl_util_alloc_exfilename(const char * /* path */, const char * /* base */, ecl_file_type , bool /* fmt_file */ , int /*report_nr*/);
+char         ** ecl_util_alloc_filelist(const char * /* path */, const char * /* base */, ecl_file_type , bool /* fmt_file */ , int /*report_nr*/ , int);
+char         ** ecl_util_alloc_exfilelist(const char * /* path */, const char * /* base */, ecl_file_type , bool /* fmt_file */ , int /*report_nr*/ , int);
 char         ** ecl_util_alloc_scandir_filelist(const char *, const char *,ecl_file_type , bool , int *);
 char         ** ecl_util_alloc_simple_filelist(const char *, const char *, ecl_file_type , bool , int , int );
 void            ecl_util_memcpy_typed_data(void *, const void * , ecl_type_enum , ecl_type_enum , int );

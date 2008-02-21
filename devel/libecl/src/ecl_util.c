@@ -325,6 +325,30 @@ char * ecl_util_alloc_filename(const char * path, const char * base , ecl_file_t
   return ecl_util_alloc_filename_static(path , base , file_type ,fmt_file , report_nr , false);
 }
 
+
+static char ** ecl_util_alloc_filelist_static(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr1 , int report_nr2, bool must_exist) {
+  if (report_nr2 < report_nr1) {
+    fprintf(stderr,"%s: Invalid input report_nr1:%d > report_nr:%d - aborting \n",__func__ , report_nr1 , report_nr2);
+    abort();
+  }
+  {
+    char ** file_list = util_malloc((report_nr2 - report_nr1 + 1) * sizeof * file_list , __func__);
+    int report_nr;
+    for (report_nr = report_nr1; report_nr <= report_nr2; report_nr++)
+      file_list[report_nr - report_nr1] = ecl_util_alloc_filename_static(path , base , file_type , fmt_file , report_nr , must_exist);
+    return file_list;
+  }
+}
+
+char ** ecl_util_alloc_filelist(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr1 , int report_nr2) {
+  return ecl_util_alloc_filelist_static(path , base , file_type , fmt_file , report_nr1 , report_nr2 , false);
+}
+
+char ** ecl_util_alloc_exfilelist(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr1 , int report_nr2) {
+  return ecl_util_alloc_filelist_static(path , base , file_type , fmt_file , report_nr1 , report_nr2 , true);
+}
+
+
 char * ecl_util_alloc_exfilename(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr) {
   return ecl_util_alloc_filename_static(path , base , file_type ,fmt_file , report_nr , true);
 }
