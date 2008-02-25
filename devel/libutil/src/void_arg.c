@@ -354,7 +354,7 @@ void void_arg_fscanf(void_arg_type * arg , FILE * stream) {
    void_arg_type *void_int    = void_arg_alloc_int(13);
    ...
    ...
-   type = vodi_arg->arg_type[0];
+   type = void_arg->arg_type[0];
    if (type == double_value) {
       double value = void_arg_get_double(void_arg , 0);
       printf("The input was a double with value: %g \n",value);
