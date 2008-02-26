@@ -10,9 +10,9 @@ INSTALL_LIB_PATH =  $(LIBECL_HOME)/lib
 CFLAGS  = -O2 -$(MFLAG)  -std=gnu99 -g -Wall -fPIC
 ARFLAGS = -csr
 #################################################################
-OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_diag.o ecl_rft_vector.o ecl_rft_node.o ecl_grid.o ecl_box.o restart_kw_list.o ecl_queue.o
+OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_diag.o ecl_rft_vector.o ecl_rft_node.o ecl_grid.o ecl_box.o restart_kw_list.o 
 MOD_FILES = 
-INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h lsf_jobs.h ecl_parse.h ecl_diag.h ecl_rft_vector.h ecl_rft_node.h ecl_box.h ecl_grid.h restart_kw_list.h ecl_queue.h
+INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h lsf_jobs.h ecl_parse.h ecl_diag.h ecl_rft_vector.h ecl_rft_node.h ecl_box.h ecl_grid.h restart_kw_list.h 
 LIB       = libecl_$(MFLAG).a
 LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L$(LIBHASH_HOME)/lib -L$(LIBECL_HOME)/lib
 LIB_LINK  = -lecl_$(MFLAG) -lhash_$(MFLAG) -lutil_$(MFLAG) -lm -lz
@@ -66,4 +66,3 @@ ecl_interC.o : ecl_interC.c ecl_fstate.o ecl_sum.o ecl_parse.o lsf_jobs.o
 ecl_grid.o   : ecl_grid.c ecl_grid.h ecl_kw.o fortio.o
 ecl_interC.o : ecl_sum.o ecl_kw.o ecl_fstate.o ecl_block.o
 ecl_box.o    : ecl_box.c ecl_box.h
-ecl_queue.o  : ecl_queue.c ecl_queue.h
