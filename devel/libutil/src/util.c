@@ -1291,17 +1291,28 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
 
 /*****************************************************************/
 
-/*
-Invalid write of size 4
-==29134==    at 0x80775CA: util_split_string (util.c:1332)
-==29134==    by 0x804C6F2: enkf_config_fscanf_alloc (enkf_config.c:309)
-==29134==    by 0x804A266: main (main.c:36)
-==29134==  Address 0x6BBA498 is 0 bytes after a block of size 0 alloc'd
-==29134==    at 0x4416405: malloc (vg_replace_malloc.c:149)
-==29134==    by 0x807754F: util_split_string (util.c:1322)
-==29134==    by 0x804C6F2: enkf_config_fscanf_alloc (enkf_config.c:309)
-==29134==    by 0x804A266: main (main.c:36)
-*/
+char * util_alloc_joined_string(const char ** item_list , int len , const char * sep) {
+  if (len <= 0)
+    return NULL;
+  else {
+    char * joined_string;
+    int sep_length   = strlen(sep);
+    int total_length = 0;
+    int i;
+    for (i=0; i < len; i++)
+      total_length += strlen(item_list[i]);
+    total_length += (len - 1) * sep_length + 1;
+    joined_string = util_malloc(total_length , __func__);
+    strcpy(joined_string , item_list[0]);
+
+    for (i=1; i < len; i++) {
+      strcat(joined_string , sep);
+      strcat(joined_string , item_list[i]);
+    }
+    
+    return joined_string;
+  }
+}
 
 
 void util_split_string(const char *line , const char *sep, int *_tokens, char ***_token_list) {
