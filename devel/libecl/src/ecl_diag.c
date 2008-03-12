@@ -111,7 +111,7 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const 
   for (istep=0; istep < min_size; istep++) {
     double history_value;
     if (ecl_sum_has_well_var(ecl_sum_list[0] , well , hvar))
-      history_value = ecl_sum_iget(ecl_sum_list[0] , istep , well , hvar);
+      history_value = ecl_sum_get_well_var(ecl_sum_list[0] , istep , well , hvar);
     else {
       history_value = 0;
       fprintf(stderr,"** Warning: history value: %s/%s does not exist - using %g. **\n",well,hvar,history_value);
@@ -120,9 +120,9 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const 
   }
   
   for (istep = 0; istep < min_size;  istep++) {                              /* Ensemble values: ensemble direction is the fast index */
-    int index     = ecl_sum_get_index(ecl_sum_list[0] , well , var);
+    int index     = ecl_sum_get_well_var_index(ecl_sum_list[0] , well , var);
     for (iens = iens1; iens <= iens2; iens++) 
-      util_fwrite_double(ecl_sum_iget2(ecl_sum_list[iens - iens1]  , istep , index) , stream);
+      util_fwrite_double(ecl_sum_get_with_index(ecl_sum_list[iens - iens1]  , istep , index) , stream);
     
   }
   fclose(stream);

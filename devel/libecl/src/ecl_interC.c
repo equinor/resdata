@@ -137,8 +137,8 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
   char *var  = util_alloc_cstring(_var_name  , var_len);
 
   if (ecl_sum_has_well_var(ECL_SUM , well , var)) {
-    int index    = ecl_sum_get_index(ECL_SUM , well , var);
-    double value = ecl_sum_iget(ECL_SUM , 0 , well , var);
+    int index    = ecl_sum_get_well_var_index(ECL_SUM , well , var);
+    double value = ecl_sum_get_with_index(ECL_SUM , 0 , index);
 
     *_index = index;
     *_value = value;
