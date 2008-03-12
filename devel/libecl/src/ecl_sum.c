@@ -12,6 +12,20 @@
 #include <util.h>
 
 #define ECL_DUMMY_WELL ":+:+:+:+"
+/** 
+
+ECLIPSE vector naming conventions - initial letter:
+
+ G : Group data
+ R : Region data 
+ W : Well data
+ F : Field data
+ ....
+
+*/
+
+
+
 
 
 struct ecl_sum_struct {
@@ -20,6 +34,7 @@ struct ecl_sum_struct {
   hash_type       * index_hash;
   hash_type       * kw_index_hash;
   hash_type       * unit_hash;
+  hash_type       * field_index;
   int               fmt_mode;
   int               Nwells , Nvars , param_offset;
   char            **well_list;
@@ -132,7 +147,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
     ecl_sum->sim_start_time = util_make_time1(date[0] , date[1] , date[2]);
     {
       /*
-	Fills a kw_index_hash pointing to first occurnce of a certain
+	Fills a kw_index_hash pointing to first occurence of a certain
 	variable - not very sensible for the well variables like
 	WOPR. And additionally a unit_hash: unit_hash["WOPR"] =
 	"Barels/day"...
@@ -140,7 +155,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	
       set_type  * kw_set    = set_alloc_empty();
       for (index=0; index < ecl_kw_get_size(keywords); index++) {
-	util_set_strip_copy(kw   , ecl_kw_iget_ptr(keywords , index));
+	util_set_strip_copy(kw , ecl_kw_iget_ptr(keywords , index));
 	if (set_add_key(kw_set , kw)) {
 	  char * unit = util_alloc_strip_copy(ecl_kw_iget_ptr(units , index));
 	  hash_insert_int(ecl_sum->kw_index_hash , kw , index);
