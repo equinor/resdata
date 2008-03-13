@@ -16,5 +16,6 @@ int             ecl_grid_count_box_active(const ecl_grid_type * , const ecl_box_
 void            ecl_grid_set_box_active_list(const ecl_grid_type * , const ecl_box_type * , int * );
 void            ecl_grid_get_dims(const ecl_grid_type * , int *, int * , int * , int *);
 const int     * ecl_grid_alloc_index_map(const ecl_grid_type * );
+void            ecl_grid_get_ijk(const ecl_grid_type * , int , int *, int * , int *);
 
 #endif

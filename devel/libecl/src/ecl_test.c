@@ -25,7 +25,7 @@ int main(int argc, char ** argv) {
       printf("Region pressure: %g \n",ecl_sum_get_region_var(ecl_sum , 400 , 0 , "RPR"));
       printf("Group OPT : %g \n",ecl_sum_get_group_var(ecl_sum , 400 , "SOUTH"  , "GOPT"));
       printf("Group OPT : %g \n",ecl_sum_get_group_var(ecl_sum , 400 , "SADDLE" , "GOPT"));
-      
+      printf("Field WIT : %g %s \n",ecl_sum_get_field_var(ecl_sum , 400 , "FWIT") , ecl_sum_get_unit_ref(ecl_sum , "FWIT"));
       ecl_sum_free(ecl_sum);
     }
   }

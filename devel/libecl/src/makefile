@@ -25,6 +25,7 @@ INSTALL: $(LIB)
 	install $(LIB) $(INSTALL_LIB_PATH)
 #gcc      -Wall -g $(COMPILE_INCLUDE) ecl_submit.c -o /d/proj/bg/enkf/bin/ecl_submit.x 
 	gcc $(CFLAGS) $(TARGET_INCLUDE) ecl_test.c         -o ecl_test.x          $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) $(TARGET_INCLUDE) kari.c             -o kari.x              $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) $(TARGET_INCLUDE) summary_get_last.c -o summary_get_last.x  $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) $(TARGET_INCLUDE) make_SGU.c         -o make_SGU.x  	  $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) $(TARGET_INCLUDE) convert.c          -o convert.x   	  $(LIB_PATH)  $(LIB_LINK)

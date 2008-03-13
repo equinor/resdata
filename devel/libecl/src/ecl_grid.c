@@ -133,6 +133,15 @@ static int __ecl_grid_get_cell_index(const ecl_grid_type * ecl_grid , int i , in
   return i + j * ecl_grid->nx + k * ecl_grid->nx * ecl_grid->ny;
 }
 
+/* 
+   This function returns C-based zero offset indices 
+*/
+void ecl_grid_get_ijk(const ecl_grid_type * grid , int cell_nr, int *i, int *j , int *k) {
+  *k = cell_nr / (grid->nx * grid->ny); cell_nr -= (*k) * (grid->nx * grid->ny);
+  *j = cell_nr / grid->nx;              cell_nr -= (*j) *  grid->nx;
+  *i = cell_nr;
+}
+
 
 static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   int c , i;
@@ -376,6 +385,8 @@ void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * n
   if (nz != NULL) *nz 	       		= grid->nz;
   if (active_size != NULL) *active_size = grid->total_active;
 }
+
+
 
 
 

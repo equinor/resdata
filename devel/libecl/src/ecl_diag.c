@@ -39,101 +39,76 @@ static void set_well_var(const char *file , char **_well , char **_var) {
   }
 }
 
-
-
-static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const ecl_sum_type **ecl_sum_list , const char *out_path , const char *well , const char *var) {
-  char *hvar           = malloc(strlen(var) + 2);
-  const char *out_file = alloc_wellvar_name(out_path , well , var);
+void ecl_diag_imake_plotfile(int iens1 , int iens2 , int min_size , const ecl_sum_type **ecl_sum_list , const char *out_file , const char * title , const char * var, int index , int history_index) {
   FILE *stream;
   int iens,istep;
   
-  if (!ecl_sum_has_well_var(ecl_sum_list[0] , well , var)) {
-    fprintf(stderr,"No data for %s/%s \n",well , var);
-    return;
-  }
-  
-  
-  sprintf(hvar     , "%sH" , var);
   stream = util_fopen(out_file , "w");
-  /*
-    TECPLOT:
-    =======
-    if (tecplot) {
-    fprintf(stream , "TITLE=\"%s:%s\"\n",well , var);
-    fprintf(stream , "VARIABLES=\"days\" \"history\" ");
-    for (iens = iens1; iens <= iens2; iens++) 
-      fprintf(stream , "\"mem%02d\"" , iens);
-      fprintf(stream , "\n");
-      fprintf(stream , "ZONE I=%d DATAPACKING=POINT\n" , min_size );
-      }
-  */
-
-
-  /*
-    Old format
-    for (istep = 0; istep < min_size;  istep++) {
-    double history_value , time_value, value;
-    int index     = ecl_sum_get_index(ecl_sum_list[0] , well , var);
-    if (ecl_sum_has_well_var(ecl_sum_list[0] , well , hvar))
-      history_value = ecl_sum_iget(ecl_sum_list[0] , istep , well , hvar);
-    else {
-      history_value = 0;
-      fprintf(stderr,"** Warning: history value: %s/%s does not exist - using %g. **\n",well,hvar,history_value);
-    }
-    time_value    = ecl_sum_iget2(ecl_sum_list[0] , istep , 0);
-    
-    fprintf(stream , " %9.4e %9.4e " , time_value , history_value);
-    for (iens = iens1; iens <= iens2; iens++) {
-      value = ecl_sum_iget2(ecl_sum_list[iens - iens1]  , istep , index);
-      fprintf(stream , " %9.4e " , value );
-    }
-    fprintf(stream , "\n");
-    }
-    fclose(stream);
-  */
-
-
-  util_fwrite_string(well , stream); 					       /* Well name */
-  util_fwrite_string(var  , stream); 					       /* Variable name */                    
+  util_fwrite_string(title , stream); 					       /* Plot title */
+  util_fwrite_string(var   , stream); 					       /* Variable name */                    
   util_fwrite_string(ecl_sum_get_unit_ref(ecl_sum_list[0] , var) , stream);    /* Unit */
   util_fwrite_int(iens2 - iens1 + 1 , stream);  			       /* Ensemble size */
   util_fwrite_int(min_size , stream);           			       /* Member length */         
+
   for (istep=0; istep < min_size; istep++) {
     int date[3];
-    time_t sim_time = ecl_sum_get_sim_time(ecl_sum_list[0] , istep);
+    time_t sim_time = ecl_sum_get_sim_time(ecl_sum_list[0] , istep );
     if (sim_time == -1) {
       date[0] = 0; date[1] = 0; date[2] = 0;
       fprintf(stderr,"** Warning: day/month/year not defined in summary_files. \n");
-    } else util_set_date_values(ecl_sum_get_sim_time(ecl_sum_list[0] , istep) , &date[0] , &date[1] , &date[2]);
+    } else 
+      util_set_date_values(ecl_sum_get_sim_time(ecl_sum_list[0] , istep) , &date[0] , &date[1] , &date[2]);
     
     util_fwrite_int_vector(date , 3 , stream , __func__);  /* True time  day/month/year */
   }
+
   for (istep=0; istep < min_size; istep++) {
     double history_value;
-    if (ecl_sum_has_well_var(ecl_sum_list[0] , well , hvar))
-      history_value = ecl_sum_get_well_var(ecl_sum_list[0] , istep , well , hvar);
-    else {
+    if (history_index >= 0) 
+      history_value = ecl_sum_get_with_index(ecl_sum_list[0] , istep , history_index);
+    else 
       history_value = 0;
-      fprintf(stderr,"** Warning: history value: %s/%s does not exist - using %g. **\n",well,hvar,history_value);
-    }
+
     util_fwrite_double(history_value , stream);                              /* History value */ 
   }
   
   for (istep = 0; istep < min_size;  istep++) {                              /* Ensemble values: ensemble direction is the fast index */
-    int index     = ecl_sum_get_well_var_index(ecl_sum_list[0] , well , var);
     for (iens = iens1; iens <= iens2; iens++) 
       util_fwrite_double(ecl_sum_get_with_index(ecl_sum_list[iens - iens1]  , istep , index) , stream);
     
   }
   fclose(stream);
+}
 
+
+
+static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const ecl_sum_type **ecl_sum_list , const char *out_path , const char *well , const char *var) {
+  char *hvar           = util_malloc(strlen(var) + 2 , __func__ );
+  const char *out_file = alloc_wellvar_name(out_path , well , var);
+  char * title         = util_malloc(strlen(well) + 3 + strlen(var) + 1 , __func__); 
+  int index , history_index;
+  
+  if (!ecl_sum_has_well_var(ecl_sum_list[0] , well , var)) {
+    fprintf(stderr,"No data for %s/%s \n",well , var);
+    return;
+  }
+  sprintf(hvar     , "%sH" , var);
+  sprintf(title , "%s : %s" , well , var);
+  index = ecl_sum_get_well_var_index(ecl_sum_list[0] , well , var);
+  if (ecl_sum_has_well_var(ecl_sum_list[0] , well , hvar))
+    history_index = ecl_sum_get_well_var_index(ecl_sum_list[0] , well , var);
+  else {
+    history_index = -1;
+    fprintf(stderr,"** Warning: history value: %s does not exist - using %g. **\n",hvar,0.0);
+  }
+  ecl_diag_imake_plotfile(iens1 , iens2 , min_size , ecl_sum_list , out_file , title , var , index , history_index);
+  
   free((char *) out_file);
   free(hvar);
 }
 
 
-
-static ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , int * _min_size , const char *ens_path , const char *eclbase_dir , const char *eclbase , bool report_mode ,  bool fmt_file, bool unified , bool endian_convert) {
+ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , int * _min_size , const char *ens_path , const char *eclbase_dir , const char *eclbase , bool report_mode ,  bool fmt_file, bool unified , bool endian_convert) {
   ecl_sum_type **ecl_sum_list = calloc(iens2 - iens1 + 1 , sizeof(ecl_sum_type *));
   int iens;
   int fmt_mode , min_size;
