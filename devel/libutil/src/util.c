@@ -636,6 +636,13 @@ bool util_file_exists(const char *filename) {
 }
 
 
+/*bool util_is_file(const char * path) {
+  struct stat stat_buffer;
+  stat(path , &stat_buffer);
+  return S_ISFILE(stat_buffer.st_mode);
+}
+*/
+
 bool util_is_directory(const char * path) {
   struct stat stat_buffer;
   stat(path , &stat_buffer);
@@ -651,6 +658,10 @@ bool util_is_link(const char * path) {
 
 
 
+bool util_is_executable(const char * path) {
+  fprintf(stderr,"%s: not implemented \n",__func__);
+  abort();
+}
 
 
 

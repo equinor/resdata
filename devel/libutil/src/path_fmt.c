@@ -56,6 +56,8 @@ path_fmt_type * path_fmt_copyc(const path_fmt_type *path) {
 static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
   char * new_path;
   int path_length = vsnprintf(new_path , 0 , fmt , ap);
+  va_end(ap);
+  va_start(fmt , ap);
   new_path = malloc(path_length + 1);
   vsnprintf(new_path , path_length + 1 , fmt , ap);
   return new_path;
