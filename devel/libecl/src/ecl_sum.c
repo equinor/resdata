@@ -98,7 +98,6 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
 static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_file) {
   ecl_sum->header         = ecl_fstate_fread_alloc(1     , &header_file , ecl_summary_header_file , false , ecl_sum->endian_convert);
   {
-    char well[9] , kw[9];
     int *date;
     ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->header , 0);
     ecl_kw_type *wells     = ecl_block_get_kw(block , "WGNAMES"); 
@@ -110,7 +109,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
     ecl_sum->num_regions     = 0;
     
     if (startdat == NULL) {
-      fprintf(stderr,"%s could not locate STARTDAT keyword in header - aborting \n",__func__);
+      fprintf(stderr,"%s: could not locate STARTDAT keyword in header - aborting \n",__func__);
       abort();
     }
     if (ecl_block_has_kw(block , "NUMS"))
@@ -124,11 +123,12 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
       */
 	
       for (index=0; index < ecl_kw_get_size(keywords); index++) {
-	util_set_strip_copy(kw , ecl_kw_iget_ptr(keywords , index));
+	char * kw = util_alloc_strip_copy( ecl_kw_iget_ptr(keywords , index));
 	if (!hash_has_key(ecl_sum->unit_hash , kw)) {
 	  char * unit = util_alloc_strip_copy(ecl_kw_iget_ptr(units , index));
 	  hash_insert_hash_owned_ref(ecl_sum->unit_hash , kw , unit , free);
 	}
+	free(kw);
       }
     }
     
@@ -137,10 +137,10 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
       bool misc_var;
       int num = -1;
       for (index=0; index < ecl_kw_get_size(wells); index++) {
+	char * well = util_alloc_strip_copy(ecl_kw_iget_ptr(wells    , index));
+	char * kw   = util_alloc_strip_copy(ecl_kw_iget_ptr(keywords , index));
 	ecl_sum->var_type[index] = ecl_sum_NOT_IMPLEMENTED_var;
 	misc_var = false;
-	util_set_strip_copy(well , ecl_kw_iget_ptr(wells    , index));
-	util_set_strip_copy(kw , ecl_kw_iget_ptr(keywords , index));
 	if (nums != NULL) num = ecl_kw_iget_int(nums , index);
 	if (strlen(well) > 0) {
 	  /* See table 3.4 in the ECLIPSE file format reference manual. */
@@ -245,6 +245,8 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	  hash_insert_int(ecl_sum->misc_var_index , kw , index);
 	  ecl_sum->var_type[index] = ecl_sum_misc_var;
 	}
+	free(kw);
+	free(well);
       }
       ecl_sum->Nwells    = set_get_size(well_set);
       ecl_sum->well_list = set_alloc_keylist(well_set);
@@ -349,7 +351,7 @@ void ecl_sum_save(const ecl_sum_type * ecl_sum) {
 
 static void ecl_sum_assert_index(const ecl_sum_type * ecl_sum, int index) {
   if (index < 0 || index >= ecl_sum->params_size) {
-    fprintf(stderr,"%s index:%d invalid - aborting \n",__func__ , index);
+    fprintf(stderr,"%s: index:%d invalid - aborting \n",__func__ , index);
     abort();
   }
 }
@@ -487,7 +489,7 @@ int ecl_sum_get_field_var_index(const ecl_sum_type * ecl_sum , const char *var) 
   if (hash_has_key(ecl_sum->field_var_index , var)) 
     index = hash_get_int(ecl_sum->field_var_index , var); 
   else {
-    fprintf(stderr,"%s summary object does not have field variable: %s  \n",__func__ , var);
+    fprintf(stderr,"%s: summary object does not have field variable: %s  \n",__func__ , var);
     abort(); 
   }
   
@@ -501,7 +503,7 @@ int ecl_sum_get_misc_var_index(const ecl_sum_type * ecl_sum , const char *var) {
   if (hash_has_key(ecl_sum->misc_var_index , var)) 
     index = hash_get_int(ecl_sum->misc_var_index , var); 
   else {
-    fprintf(stderr,"%s summary object does not have misc variable: %s  \n",__func__ , var);
+    fprintf(stderr,"%s: summary object does not have misc variable: %s  \n",__func__ , var);
     abort(); 
   }
   
@@ -532,7 +534,7 @@ int ecl_sum_get_region_var_index(const ecl_sum_type * ecl_sum , int region_nr , 
   if (hash_has_key(ecl_sum->region_var_index , var)) 
     index = region_nr + hash_get_int(ecl_sum->region_var_index , var); 
   else {
-    fprintf(stderr,"%s summary object does not have region variable: %s  \n",__func__ , var);
+    fprintf(stderr,"%s: summary object does not have region variable: %s  \n",__func__ , var);
     abort(); 
   }
   

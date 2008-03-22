@@ -43,7 +43,7 @@ clean:
 	rm -f *.o *~ 
 	rm -f libecl_*
 	rm -f $(INSTALL_INC_PATH)/*.h
-	rm -f $(INSTALL_LIB_PATH)/*.a
+	rm -f $(INSTALL_LIB_PATH)/libecl_$(MFLAG).a
 
 
 $(LIB): $(OBJECTS)

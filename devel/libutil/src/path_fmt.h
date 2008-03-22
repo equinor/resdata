@@ -9,7 +9,7 @@ typedef struct path_fmt_struct path_fmt_type;
 path_fmt_type * path_fmt_alloc_directory_fmt(const char * , bool );
 path_fmt_type * path_fmt_alloc_file_fmt(const char * );
 path_fmt_type * path_fmt_copyc(const path_fmt_type *);
-char          * path_fmt_alloc_path_va(const path_fmt_type * , va_list );
+/*char          * path_fmt_alloc_path_va(const path_fmt_type * , va_list );*/
 char          * path_fmt_alloc_path(const path_fmt_type * , ...);
 char          * path_fmt_alloc_file(const path_fmt_type * , ...);
 void 		path_fmt_free(path_fmt_type * );

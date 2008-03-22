@@ -13,6 +13,7 @@ time_t       util_make_time1(int , int , int);
 bool         util_fscanf_date(FILE * , time_t *);
 bool         util_sscanf_date(const char * , time_t *);
 
+bool         util_is_executable(const char * );
 bool 	     util_file_exists(const char *);
 int          util_get_path_length(const char * );
 bool 	     util_path_exists(const char *);
@@ -47,6 +48,7 @@ bool     util_fscanf_int(FILE * , int * );
 bool     util_sscanf_int(const char * , int * );
 char   * util_alloc_full_path(const char *, const char *);
 char   * util_alloc_strip_copy(const char *);
+char   * util_realloc_strip_copy(char *);
 void     util_set_strip_copy(char * , const char *);
 char   * util_alloc_string_sum(const char **  , int);
 char   * util_strcat_realloc(char *, const char * );

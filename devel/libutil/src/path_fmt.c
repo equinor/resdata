@@ -55,9 +55,13 @@ path_fmt_type * path_fmt_copyc(const path_fmt_type *path) {
 
 static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
   char * new_path;
-  int path_length = vsnprintf(new_path , 0 , fmt , ap);
-  va_end(ap);
-  va_start(fmt , ap);
+  int path_length;
+  {
+    va_list tmp_va;
+    va_copy(tmp_va , ap);
+    path_length = vsnprintf(new_path , 0 , fmt , tmp_va);
+  }
+
   new_path = malloc(path_length + 1);
   vsnprintf(new_path , path_length + 1 , fmt , ap);
   return new_path;
@@ -91,12 +95,11 @@ char * path_fmt_alloc_file(const path_fmt_type * path , ...) {
     filename = __fmt_alloc_path_va__(path->file_fmt , ap);
     if (path->auto_mkdir) {
       if (! util_file_exists(filename)) {
-	const char * __path = __fmt_alloc_path_va__(path->fmt , ap); 
+	const char * __path = __fmt_alloc_path_va__(path->fmt , ap);
 	util_make_path(__path);
 	free((char *) __path);
       }
     }
-
     va_end(ap);
     return filename;
   } else {

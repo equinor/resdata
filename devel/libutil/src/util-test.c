@@ -9,6 +9,13 @@
 
 
 int main (int argc , char **argv) {
-  char * s = util_alloc_joined_string((const char *[4]) {"Hei","Joakim Hove" ,"Henrik Mohnsvei 6" , "5067 Bergen"} , 4 , "<X>");
-  printf("s: %s \n",s);
+  char *s1 = "  Hei  ";
+  char *s2 = "Joakim Hove";
+  char *s3 = "            ";
+  char *s4 = "Test1  ";
+
+  printf("<%s> -> <%s> \n",s1 , util_alloc_strip_copy(s1));
+  printf("<%s> -> <%s> \n",s2 , util_alloc_strip_copy(s2));
+  printf("<%s> -> <%s> \n",s3 , util_alloc_strip_copy(s3));
+  printf("<%s> -> <%s> \n",s4 , util_alloc_strip_copy(s4));
 }

@@ -50,7 +50,7 @@ static bool EOL_CHAR(char c) {
 
 char * util_alloc_cstring(const char *fort_string , const int *strlen) {
   const char null_char = '\0';
-  char *new_string = malloc(*strlen + 1);
+  char *new_string = util_malloc(*strlen + 1 , __func__);
   strncpy(new_string , fort_string , *strlen);
   new_string[*strlen] = null_char;
   return new_string;
@@ -93,7 +93,7 @@ void util_memcpy_string_C2f90(const char * c_input_string , char * fortran_outpu
 
 char * util_alloc_string_sum2(const char *s1 , const char *s2) {
   char * buffer;
-  buffer = malloc(strlen(s1) + strlen(s2) + 1);
+  buffer = util_malloc(strlen(s1) + strlen(s2) + 1 , __func__);
   buffer[0] = '\0';
   strcat(buffer , s1);
   strcat(buffer , s2);
@@ -107,7 +107,7 @@ char * util_alloc_string_sum2(const char *s1 , const char *s2) {
 char * util_alloc_substring_copy(const char *src , int N) {
   char *copy;
   if (N < strlen(src)) {
-    copy = malloc(N + 1);
+    copy = util_malloc(N + 1 , __func__);
     strncpy(copy , src , N);
     copy[N] = 0;
   } else 
@@ -199,6 +199,7 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
   /*
     Skipping the end of line marker(s).
   */
+
   fgetc(stream);
   if (dos_newline)
     fgetc(stream); 
@@ -209,7 +210,13 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
     else
       *at_eof = false;
   }
-  return new_line;
+  
+  {
+    char * strip_line = util_alloc_strip_copy(new_line);
+    free(new_line);
+    
+    return strip_line;
+  }
 }
 
 
@@ -418,7 +425,7 @@ char * util_fscanf_alloc_token(FILE * stream) {
     } while (cont);
     if (EOL_CHAR(c)) fseek(stream , -1 , SEEK_CUR);
   
-    token = malloc(length + 1);
+    token = util_malloc(length + 1 , __func__);
     fseek(stream , token_start , SEEK_SET);
     { 
       int i;
@@ -553,7 +560,7 @@ int util_count_content_file_lines(FILE * stream) {
 
 char * util_fread_alloc_file_content(const char * filename , int * buffer_size) {
   int file_size = util_file_size(filename);
-  char * buffer = malloc(file_size + 1);
+  char * buffer = util_malloc(file_size + 1 , __func__);
   if (buffer != NULL) {
     FILE * stream = util_fopen(filename , "r");
     int byte_read = fread(buffer , 1 , file_size , stream);
@@ -657,10 +664,15 @@ bool util_is_link(const char * path) {
 }
 
 
-
 bool util_is_executable(const char * path) {
-  fprintf(stderr,"%s: not implemented \n",__func__);
-  abort();
+  if (util_file_exists(path)) {
+    struct stat stat_buffer;
+    stat(path , &stat_buffer);
+    return (stat_buffer.st_mode & S_IXUSR);
+  } else {
+    fprintf(stderr,"%s: file:%s does not exist - aborting \n",__func__ , path);
+    abort();
+  }
 }
 
 
@@ -1066,18 +1078,58 @@ void util_set_strip_copy(char * copy , const char *src) {
 }
 
 
+/**
+   The function will allocate a new copy of src where leading and
+   trailing whitespace has been stripped off. If the source string is
+   all blanks a string of length one - only containing \0 is returned,
+   i.e. not NULL.
+
+   If src is NULL the function will return NULL. The incoming source
+   string is not modified, see the function util_realloc_strip_copy()
+   for a similar function implementing realloc() semantics.
+*/
+
+
 char * util_alloc_strip_copy(const char *src) {
-  char *tmp = malloc(strlen(src) + 1);
-  util_set_strip_copy(tmp , src);
-  tmp = realloc(tmp , strlen(tmp) + 1);
-  return tmp;
+  char * target;
+  int strip_length = 0;
+  int end_index   = strlen(src) - 1;
+  while (end_index >= 0 && src[end_index] == ' ')
+    end_index--;
+
+  if (end_index >= 0) {
+
+    int start_index = 0;
+    while (src[start_index] == ' ')
+      start_index++;
+    strip_length = end_index - start_index + 1;
+    target = util_malloc(strip_length + 1 , __func__);
+    memcpy(target , &src[start_index] , strip_length);
+  } else 
+    /* A blank string */
+    target = util_malloc(strip_length + 1 , __func__);
+
+  target[strip_length] = '\0';
+  return target;
+}
+
+
+
+char * util_realloc_strip_copy(char *src) {
+  if (src == NULL)
+    return NULL;
+  else {
+    char * strip_copy = util_alloc_strip_copy(src);
+    free(src);
+    return strip_copy;
+  }
 }
 
 
 char ** util_alloc_stringlist_copy(const char **src, int len) {
   if (src != NULL) {
     int i;
-    char ** copy = calloc(len , sizeof * copy);
+    char ** copy = util_malloc(len * sizeof * copy , __func__);
     for (i=0; i < len; i++)
       copy[i] = util_alloc_string_copy(src[i]);
     return copy;
@@ -1085,14 +1137,17 @@ char ** util_alloc_stringlist_copy(const char **src, int len) {
     return NULL;
 }
 
+
 char * util_alloc_string_copy(const char *src ) {
   if (src != NULL) {
-    char *copy = calloc(strlen(src) + 1 , sizeof *copy);
+    char *copy = util_malloc((strlen(src) + 1) * sizeof *copy , __func__);
     strcpy(copy , src);
     return copy;
   } else 
     return NULL;
 }
+
+
 
 
 char * util_realloc_string_copy(char * old_string , const char *src ) {
@@ -1144,7 +1199,7 @@ char ** util_alloc_string_list(int N, int len) {
   int i;
   char **list = calloc(N , sizeof *list);
   for (i=0; i < N; i++)
-    list[i] = malloc(len);
+    list[i] = util_malloc(len , __func__);
   return list;
 }
 
@@ -1168,7 +1223,7 @@ char * util_alloc_string_sum(const char ** string_list , int N) {
     if (string_list[i] != NULL)
       len += strlen(string_list[i]);
   }
-  buffer = malloc(len + 1);
+  buffer = util_malloc(len + 1 , __func__);
   buffer[0] = '\0';
   for (i=0; i < N; i++) {
     if (string_list[i] != NULL)
@@ -1253,7 +1308,7 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
       return;
     }
     
-    fileList = malloc(files * sizeof *fileList);
+    fileList = util_malloc(files * sizeof *fileList , __func__);
     
     filenr = 0;
     rewinddir(dir_stream);
@@ -1343,7 +1398,7 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
   } while (line[offset] != '\0');
 
   if (tokens > 0) {
-    token_list = malloc(tokens * sizeof * token_list);
+    token_list = util_malloc(tokens * sizeof * token_list , __func__);
     offset = strspn(line , sep);
     token  = 0;
     do {
@@ -1402,7 +1457,7 @@ char * util_fread_alloc_string(FILE *stream) {
   char *s = NULL;
   util_fread(&len , sizeof len , 1 , stream , __func__);
   if (len > 0) {
-    s = malloc(len + 1);
+    s = util_malloc(len + 1 , __func__);
     util_fread(s , 1 , len + 1 , stream , __func__);
   } 
   return s;
