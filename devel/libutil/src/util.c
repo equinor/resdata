@@ -15,8 +15,8 @@
 #include <math.h>
 #include <hash.h>
 #include <void_arg.h>
-
-
+#include <stdarg.h>
+#include <execinfo.h>
 
 
 #define FLIP16(var) (((var >> 8) & 0x00ff) | ((var << 8) & 0xff00))
@@ -558,21 +558,62 @@ int util_count_content_file_lines(FILE * stream) {
 /******************************************************************/
 
 
-char * util_fread_alloc_file_content(const char * filename , int * buffer_size) {
+char * util_fread_alloc_file_content(const char * filename , const char * comment, int * buffer_size) {
   int file_size = util_file_size(filename);
   char * buffer = util_malloc(file_size + 1 , __func__);
-  if (buffer != NULL) {
-    FILE * stream = util_fopen(filename , "r");
-    int byte_read = fread(buffer , 1 , file_size , stream);
-    if (byte_read != file_size) {
-      fprintf(stderr,"%s: something failed when reading: %s - aborting \n",__func__ , filename);
-      abort();
-    }
-    fclose(stream);
+  FILE * stream = util_fopen(filename , "r");
+  int byte_read = fread(buffer , 1 , file_size , stream);
+  if (byte_read != file_size) {
+    fprintf(stderr,"%s: something failed when reading: %s - aborting \n",__func__ , filename);
+    abort();
   }
-  *buffer_size = file_size;
-  buffer[file_size] = '\0';
-  return buffer;
+  fclose(stream);
+  
+  if (comment != NULL) {
+    char * src_buffer    = buffer;
+    char * target_buffer = util_malloc(file_size + 1 , __func__);
+    bool comment_on      = false;
+    int src_pos          = 0;
+    int target_pos       = 0;
+    int comment_length;
+
+    do {
+      if (!comment_on) {
+	/* Turning on comment */
+	if (strncmp(&src_buffer[src_pos] , comment , strlen(comment)) == 0) {
+	  comment_on     = true;
+	  comment_length = 0;
+	} else {
+	  /*Plain character transfer */
+	  target_buffer[target_pos] = src_buffer[src_pos];
+	  target_pos++;
+	}
+      } else {
+	/* We are in a comment - should maybe turn it off?? Turning off on \n */
+	if (src_buffer[src_pos] == '\n') {
+	  comment_on = false;
+	  if (src_buffer[src_pos - 1] == '\r') {
+	    target_buffer[target_pos] = '\r';
+	    target_pos++;
+	  }
+	  target_buffer[target_pos] = '\n';
+	  target_pos++;
+	} else 
+	  comment_length++;
+      }
+      src_pos++;
+    } while (src_pos <= file_size); 
+    target_buffer[target_pos] = '\0';
+    free(src_buffer);
+    
+    target_buffer = realloc(target_buffer , strlen(target_buffer) + 1);
+    *buffer_size  = strlen(target_buffer);
+    return target_buffer;
+  } else {
+    *buffer_size = file_size;
+    buffer[file_size] = '\0';
+    return buffer;
+  }
 }
 
 
@@ -1233,24 +1274,6 @@ char * util_alloc_string_sum(const char ** string_list , int N) {
 }
 
 
-/*****************************************************************/
-
-void util_abort(const char *func, const char *file, int line, const char *message) {
-  fprintf(stderr,"%s (%s:%d) %s - aborting \n",func,file,line,message);
-  abort();
-}
-
-
-/*****************************************************************/
-
-
-
-
-
-/*****************************************************************/
-
-
-
 
 /*****************************************************************/
 
@@ -1357,6 +1380,13 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
 
 /*****************************************************************/
 
+/**
+  Allocates a new string consisting of all the elements in item_list,
+  joined together with sep as separator. Elements in item_list can be
+  NULL, this will be replaced with the empty string.
+*/
+
+
 char * util_alloc_joined_string(const char ** item_list , int len , const char * sep) {
   if (len <= 0)
     return NULL;
@@ -1364,19 +1394,28 @@ char * util_alloc_joined_string(const char ** item_list , int len , const char *
     char * joined_string;
     int sep_length   = strlen(sep);
     int total_length = 0;
+    int eff_len = 0;
     int i;
-    for (i=0; i < len; i++)
-      total_length += strlen(item_list[i]);
-    total_length += (len - 1) * sep_length + 1;
-    joined_string = util_malloc(total_length , __func__);
-    strcpy(joined_string , item_list[0]);
+    for (i=0; i < len; i++) 
+      if (item_list[i] != NULL) {
+	total_length += strlen(item_list[i]);
+	eff_len++;
+      }
 
-    for (i=1; i < len; i++) {
-      strcat(joined_string , sep);
-      strcat(joined_string , item_list[i]);
-    }
-    
-    return joined_string;
+    if (eff_len > 0) {
+      total_length += (eff_len - 1) * sep_length + 1;
+      joined_string = util_malloc(total_length , __func__);
+      joined_string[0] = '\0';
+      for (i=0; i < len; i++) {
+	if (item_list[i] != NULL) {
+	  if (i > 0)
+	    strcat(joined_string , sep);
+	  strcat(joined_string , item_list[i]);
+	}
+      }
+      return joined_string;
+    } else
+      return NULL;
   }
 }
 
@@ -1857,9 +1896,9 @@ void util_fskip_compressed(FILE * stream) {
 
 
 
-void util_filter_file(const char * src_file , const char * target_file , char start_char , char end_char , const hash_type * kw_hash) {
+void util_filter_file(const char * src_file , const char * comment , const char * target_file , char start_char , char end_char , const hash_type * kw_hash) {
   int    index, buffer_size;
-  char * buffer = util_fread_alloc_file_content(src_file , &buffer_size);
+  char * buffer = util_fread_alloc_file_content(src_file , comment , &buffer_size);
   FILE * stream = util_fopen(target_file , "w");
   char * kw     = NULL;
   index = 0;
@@ -1897,6 +1936,32 @@ void util_filter_file(const char * src_file , const char * target_file , char st
   free(kw);
   free(buffer);
 }
+
+
+void util_abort(const char * fmt , ...) {
+  const bool include_backtrace = true;
+  va_list ap;
+  va_start(ap , fmt);
+  vfprintf(stderr , fmt , ap);
+  va_end(ap);
+  if (include_backtrace) {
+    const int max_bt = 10;
+    void *array[max_bt];
+    char **strings;
+    int    size,i;
+
+    size    = backtrace(array , max_bt);
+    strings = backtrace_symbols(array , size);
+    for (i=0; i < size; i++)
+      fprintf(stderr,"%s\n",strings[i]);
+    
+    free(strings);
+  }
+
+  abort();
+}
+
+
 
 #include "util_path.c"
 

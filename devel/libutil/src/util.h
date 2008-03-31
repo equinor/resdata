@@ -6,6 +6,8 @@
 #include <time.h>
 #include <hash.h>
 
+#define UTIL_PATH_SEP "/"
+
 
 time_t       util_make_time2(int , int , int , int , int , int );
 time_t       util_make_time1(int , int , int);
@@ -78,7 +80,7 @@ char *   util_alloc_cstring(const char *, const int *);
 char *   util_alloc_string_copy(const char *);
 void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
 
-void    util_abort(const char *, const char *, int , const char *);
+void    util_abort(const char * fmt , ...);
 void *  util_realloc(void *  , size_t  , const char * );
 void *  util_malloc(size_t , const char * );
 void 	util_double_to_float(float  * , const double * , int );
@@ -87,8 +89,8 @@ void 	util_float_to_double(double * , const float  * , int );
 int 	util_get_month_nr(const char * );
 int 	util_check_month(const char * );
 
-void    util_filter_file(const char * , const char * , char , char , const hash_type * );
-char *  util_fread_alloc_file_content(const char * , int *);
+void    util_filter_file(const char * , const char * , const char * , char , char , const hash_type * );
+char *  util_fread_alloc_file_content(const char * , const char * , int *);
 void    util_fwrite_string(const char * , FILE *);
 char *  util_fread_realloc_string(char *  , FILE *);
 char *  util_fread_alloc_string(FILE *);
