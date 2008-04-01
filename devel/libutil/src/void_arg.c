@@ -341,6 +341,12 @@ void void_arg_fscanf(void_arg_type * arg , FILE * stream) {
   free(fmt);
 }
 
+void_arg_type * void_arg_safe_cast(void * __void_arg) {
+  void_arg_type * void_arg = (void_arg_type * ) __void_arg;
+  __void_arg_assert_cast(void_arg);
+  return void_arg;
+}
+
 
 /*****************************************************************/
 

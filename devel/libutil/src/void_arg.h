@@ -7,6 +7,7 @@
 typedef struct void_arg_struct void_arg_type;
 
 void_arg_type * void_arg_alloc(int   , const node_ctype * );
+void_arg_type * void_arg_safe_cast(void * );
 void_arg_type * void_arg_alloc__(int , const node_ctype * , const int * );
 void_arg_type * void_arg_alloc1(node_ctype );
 void_arg_type * void_arg_alloc2(node_ctype , node_ctype );
