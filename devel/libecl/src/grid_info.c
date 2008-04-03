@@ -13,13 +13,17 @@ int main(int argc, char ** argv) {
       bool endian_flip = true;
       ecl_grid_type * ecl_grid;
       const char    * grid_file = argv[1];
-      int             active_cells;
+      int             active_cells , nx,ny,nz;
       
       ecl_grid = ecl_grid_alloc(grid_file , endian_flip);
 
-      ecl_grid_get_dims(ecl_grid , NULL , NULL , NULL , &active_cells);
-      printf("Grid file .......: %s  \n",grid_file);
-      printf("Active cells ....: %8d \n",active_cells);
+      ecl_grid_get_dims(ecl_grid , &nx , &ny , &nz , &active_cells);
+      printf("	Grid file .......: %s  \n",grid_file);
+      printf("	Active cells ....: %d \n",active_cells);
+      printf("	nx ..............: %d \n",nx);
+      printf("	ny ..............: %d \n",ny);
+      printf("	nz ..............: %d \n",nz);
+      printf("	Volume ..........: %d \n",nx*ny*nz);
       ecl_grid_free(ecl_grid);
   }
 }

@@ -1,3 +1,18 @@
+/*
+#0  0xffffe410 in __kernel_vsyscall ()
+#1  0x0016f815 in raise () from /lib/tls/libc.so.6
+#2  0x00171279 in abort () from /lib/tls/libc.so.6
+#3  0x08071ed4 in ecl_fstate_iget_block (ecl_fstate=0x913cd50, index=5) at ecl_fstate.c:312
+#4  0x08072e42 in ecl_sum_get_with_index (ecl_sum=0x91446e8, time_index=0, sum_index=1049) at ecl_sum.c:375
+#5  0x080736b3 in ecl_sum_get_well_var (ecl_sum=0x91446e8, time_index=0, well_name=0x0, var_name=0x0) at ecl_sum.c:608
+#6  0x08052862 in well_load_summary_data (well=0x9094658, report_step=5, ecl_sum=0x91446e8) at well.c:143
+#7  0x08057a93 in enkf_state_load_ecl_summary (enkf_state=0x8d56748, unified=false, report_step=5) at enkf_state.c:488
+#8  0x080580e6 in enkf_state_load_ecl (enkf_state=0x8d56748, enkf_obs=0x8d2d870, unified=false, report_step1=0, report_step2=5) at enkf_state.c:529
+#9  0x08058fab in enkf_state_run_eclipse__ (_void_arg=0x913be60) at enkf_state.c:840
+#10 0x0033a3cc in start_thread () from /lib/tls/libpthread.so.0
+#11 0x002111ae in clone () from /lib/tls/libc.so.6
+*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -307,7 +322,7 @@ ecl_block_type * ecl_fstate_get_block(const ecl_fstate_type * ecl_fstate , int i
 
 ecl_block_type * ecl_fstate_iget_block(const ecl_fstate_type * ecl_fstate , int index) {
   int block_index = index;
-  if (!(block_index >= 0 && block_index < ecl_fstate->N_blocks)) {
+  if (block_index < 0 || block_index >= ecl_fstate->N_blocks) {
     fprintf(stderr,"%s: index:%d invalid - legal range: [0,%d> - aborting \n",__func__ , index , ecl_fstate->N_blocks);
     abort();
   }

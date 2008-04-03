@@ -8,12 +8,35 @@
 
 extern int errno;
 
-/*
-#define FLIP32(var) (((var >> 24) & 0x000000ff) | \
-		     ((var >>  8) & 0x0000ff00) | \
-		     ((var <<  8) & 0x00ff0000) | \
-		     ((var << 24) & 0xff000000))
+/**
+The fortio struct is implemented to handle fortran io. The problem is
+that when a Fotran program writes unformatted data to file in a
+statemente like:
+
+   integer array(100)
+   write(unit) array
+
+it actually writes a head and tail in addition to the actual
+data. The header and tail is a 4 byte integer, which value is the
+number of bytes in the immediately following record. I.e. what is
+actually found on disk after the Fotran code above is:
+
+  | 400 | array ...... | 400 |
+
+Where the "400" head and tail is the number of bytes in the following
+record. Fortran IO handles this transparently, but when mixing with
+other programming languages care must be taken. This file implements
+functionality to read and write these fortran generated files
+transparently. The three functions: 
+
+  1. fortio_open()
+  2. fortio_read_record()
+  3. fortio_write_record()
+
+together constitute something very similar to fopen() , fread() and
+fwrite() from the standard library.
 */
+
 
 struct fortio_struct {
   FILE    *stream;

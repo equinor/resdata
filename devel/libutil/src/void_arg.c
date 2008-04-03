@@ -223,10 +223,10 @@ VOID_ARG_TYPED_GET(bool)
 #undef VOID_ARG_TYPED_GET
 
 
-#define VOID_ARG_TYPED_PACK(type)                                               \
-void void_arg_pack_ ## type (void_arg_type *arg , int iarg , type input) {       \
-  __void_arg_assert_index(arg , iarg);                                          \
-  __void_arg_assert_type(arg , iarg , type ## _value);                          \
+#define VOID_ARG_TYPED_PACK(type)                                                  \
+void void_arg_pack_ ## type (void_arg_type *arg , int iarg , type input) {         \
+  __void_arg_assert_index(arg , iarg);                                             \
+  __void_arg_assert_type(arg , iarg , type ## _value);                             \
   memcpy(&arg->argBuffer[arg->offset_list[iarg]] , &input , arg->size_list[iarg]); \
 }
 

@@ -115,6 +115,7 @@ void ecl_kw_set_fmt_file(ecl_kw_type *ecl_kw , bool fmt_file) {
   ecl_kw->fmt_file = fmt_file;
 }
 
+
 bool ecl_kw_get_fmt_file(const ecl_kw_type *ecl_kw) {
   return ecl_kw->fmt_file;
 }

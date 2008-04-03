@@ -204,7 +204,7 @@ static void lsf_job_fprintf_status(lsf_job_type *lsf_job ,  FILE *stream) {
 
 
 
-lsf_job_type * lsf_job_alloc(int external_id , const char *base , const char *run_path ,  const char *restart_file, const char *OK_file , const char *fail_file , const char *tmp_path, int max_resubmit) {
+lsf_job_type * __lsf_job_alloc(int external_id , const char *base , const char *run_path ,  const char *restart_file, const char *OK_file , const char *fail_file , const char *tmp_path, int max_resubmit) {
   /*
     const char *submit_cmd = "@eclipse < eclipse.in  2> /dev/null | grep \"Job <\" | cut -f2 -d\"<\" | cut -f1 -d\">\" > ";
   */
@@ -241,7 +241,7 @@ static void lsf_job_activate(lsf_job_type * job) {
 }
 
 
-void lsf_job_free(lsf_job_type *lsf_job) {
+void __lsf_job_free(lsf_job_type *lsf_job) {
   /*free(lsf_job->submit_cmd);*/
   free(lsf_job->run_path);
   free(lsf_job->base);
@@ -529,7 +529,7 @@ int lsf_pool_get_active(const lsf_pool_type *lsf_pool) {
 
 
 void lsf_pool_add_job(lsf_pool_type *lsf_pool , int external_id , const char *base , const char *run_path , const char *restart_file, const char *OK_file, const char *fail_file , int max_resubmit) {
-  lsf_job_type *new_job = lsf_job_alloc(external_id , base , run_path , restart_file , OK_file , fail_file , lsf_pool->tmp_path , max_resubmit);
+  lsf_job_type *new_job = __lsf_job_alloc(external_id , base , run_path , restart_file , OK_file , fail_file , lsf_pool->tmp_path , max_resubmit);
   
   pthread_mutex_lock( &lsf_pool->mutex );
   if (lsf_pool->active_size == lsf_pool->total_size) {
@@ -866,7 +866,7 @@ void lsf_pool_free(lsf_pool_type *lsf_pool) {
   {
     int i;
     for (i=0; i < lsf_pool->active_size; i++)
-      lsf_job_free(lsf_pool->jobList[i]);
+      __lsf_job_free(lsf_pool->jobList[i]);
     free(lsf_pool->jobList);
   }
   if (lsf_pool->summary_file != NULL)

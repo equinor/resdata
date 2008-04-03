@@ -27,6 +27,7 @@ struct ecl_sum_struct {
   hash_type        * misc_var_index;
   hash_type        * unit_hash;
   ecl_sum_var_type * var_type;
+  int               report_offset;
   int               num_regions;
   int               fmt_mode;
   int               Nwells , param_offset;
@@ -49,19 +50,20 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
   ecl_sum->fmt_mode           	     = fmt_mode;
   ecl_sum->endian_convert     	     = endian_convert;
   ecl_sum->unified            	     = true;  /* Dummy */
-  ecl_sum->well_var_index     	     = hash_alloc(10);
-  ecl_sum->well_completion_var_index = hash_alloc(10);
-  ecl_sum->group_var_index    	     = hash_alloc(10);
-  ecl_sum->field_var_index    	     = hash_alloc(10);
-  ecl_sum->region_var_index   	     = hash_alloc(10);
-  ecl_sum->misc_var_index     	     = hash_alloc(10);
-  ecl_sum->unit_hash          	     = hash_alloc(10);
+  ecl_sum->well_var_index     	     = hash_alloc();
+  ecl_sum->well_completion_var_index = hash_alloc();
+  ecl_sum->group_var_index    	     = hash_alloc();
+  ecl_sum->field_var_index    	     = hash_alloc();
+  ecl_sum->region_var_index   	     = hash_alloc();
+  ecl_sum->misc_var_index     	     = hash_alloc();
+  ecl_sum->unit_hash          	     = hash_alloc();
   ecl_sum->var_type           	     = NULL;
   ecl_sum->header             	     = NULL;
   ecl_sum->data               	     = NULL;
   ecl_sum->well_list          	     = NULL;
   ecl_sum->base_name          	     = NULL;
   ecl_sum->sim_start_time     	     = -1;  
+  ecl_sum->report_offset             = 0;
   return ecl_sum;
 }
 
@@ -154,12 +156,12 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	    if (!DUMMY_WELL(well) && num >= 0) {
 	      char cell_str[16];
 	      if (!hash_has_key(ecl_sum->well_completion_var_index , well)) 
-		hash_insert_hash_owned_ref(ecl_sum->well_completion_var_index , well , hash_alloc(10) , hash_free__);
+		hash_insert_hash_owned_ref(ecl_sum->well_completion_var_index , well , hash_alloc() , hash_free__);
 	      {
 		hash_type * cell_hash = hash_get(ecl_sum->well_completion_var_index , well);
 		sprintf(cell_str , "%d" , num);
 		if (!hash_has_key(cell_hash , cell_str)) 
-		  hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc(10) , hash_free__);
+		  hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
 		{
 		  hash_type * var_hash = hash_get(cell_hash , cell_str);
 		  hash_insert_int(var_hash , kw , index);
@@ -179,7 +181,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	      const char * group = well;
 	      if (!DUMMY_WELL(well)) {
 		if (!hash_has_key(ecl_sum->group_var_index , group)) 
-		  hash_insert_hash_owned_ref(ecl_sum->group_var_index , group , hash_alloc(10) , hash_free__);
+		  hash_insert_hash_owned_ref(ecl_sum->group_var_index , group , hash_alloc() , hash_free__);
 		{
 		  hash_type * var_hash = hash_get(ecl_sum->group_var_index , group);
 		  hash_insert_int(var_hash , kw , index);
@@ -224,7 +226,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	      if (!DUMMY_WELL(well)) {
 		set_add_key(well_set , well);
 		if (!hash_has_key(ecl_sum->well_var_index , well)) {
-		  hash_insert_hash_owned_ref(ecl_sum->well_var_index , well , hash_alloc(10) , hash_free__);
+		  hash_insert_hash_owned_ref(ecl_sum->well_var_index , well , hash_alloc() , hash_free__);
 		}
 		{
 		  hash_type * var_hash = hash_get(ecl_sum->well_var_index , well);
@@ -350,10 +352,8 @@ void ecl_sum_save(const ecl_sum_type * ecl_sum) {
 
 
 static void ecl_sum_assert_index(const ecl_sum_type * ecl_sum, int index) {
-  if (index < 0 || index >= ecl_sum->params_size) {
-    fprintf(stderr,"%s: index:%d invalid - aborting \n",__func__ , index);
-    abort();
-  }
+  if (index < 0 || index >= ecl_sum->params_size) 
+    util_abort("%s: index:%d invalid - aborting \n",__func__ , index);
 }
 
 
@@ -366,10 +366,8 @@ double ecl_sum_get_with_index(const ecl_sum_type *ecl_sum , int time_index , int
   /*
     fprintf(stderr,"%s: ** Warning ** incorrectly using ecl_fstate_iget_block() - should use ecl_fstate_get_block() \n",__func__);
   */
-  if (ecl_sum->data == NULL) {
-    fprintf(stderr,"%s: data not loaded - aborting \n",__func__);
-    abort();
-  }
+  if (ecl_sum->data == NULL) 
+    util_abort("%s: data not loaded - aborting \n",__func__);
   ecl_sum_assert_index(ecl_sum , sum_index);
   {
     ecl_block_type * block    = ecl_fstate_iget_block(ecl_sum->data , time_index);
