@@ -12,6 +12,7 @@
 
 
 
+
 char * ecl_util_alloc_base_guess(const char * path) {
   char *base = NULL;
   char *cwd  = NULL;
@@ -78,6 +79,25 @@ int ecl_util_filename_report_nr(const char *filename) {
   
   return report_nr;
 }
+
+/*
+bool ecl_util_numeric_extension(const char * extension) {
+  
+  const char digit_ascii_min = 48;
+  const char digit_ascii_max = 57;
+  bool valid = true;
+  int pos = 1;
+  while (valid && pos <= 5) {
+    char c = extension[pos];
+    valid = (valid & (c >= digit_ascii_min && c <= digit_ascii_max));
+    if (!valid)
+      break;
+  }
+  
+  return valid;
+}
+*/
+
 
 
 
@@ -156,8 +176,9 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
 	  fprintf(stderr,"*** Warning: *** %s failed to find type of file:%s \n",__func__ , filename);
 	*/
       }
-      if (file_type != ecl_other_file)
-	report_nr = atoi(&ext[1]);
+      if (file_type != ecl_other_file) 
+	if (!util_sscanf_int(&ext[1] , &report_nr))
+	  file_type = ecl_other_file;
     }
   }
 
@@ -406,6 +427,8 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
     while ((dentry = readdir (dirH)) != NULL) {
       if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file))
 	files++;
+      if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file))
+	printf("Including: %s \n",dentry->d_name);
     } 
     rewinddir(dirH);
     

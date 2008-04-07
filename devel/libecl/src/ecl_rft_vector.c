@@ -36,12 +36,12 @@ static void ecl_rft_vector_add_node(ecl_rft_vector_type * rft_vector , const ecl
 
 ecl_rft_vector_type * ecl_rft_vector_alloc(const char * filename , bool endian_convert) {
   ecl_rft_vector_type * rft_vector = ecl_rft_vector_alloc_empty(filename);
-  ecl_fstate_type     * fstate     = ecl_fstate_fread_alloc(1 , (const char **) &filename , ecl_rft_file , false , endian_convert);
+  ecl_fstate_type     * fstate     = ecl_fstate_fread_alloc(1 , (const char **) &filename , ecl_rft_file , endian_convert);
   int size                         = ecl_fstate_get_size(fstate);
   int block_nr;
 
   for (block_nr = 0; block_nr < size; block_nr++) {
-    ecl_rft_node_type *rft_node = ecl_rft_node_alloc(ecl_fstate_get_block(fstate , block_nr));
+    ecl_rft_node_type *rft_node = ecl_rft_node_alloc(ecl_fstate_iget_block(fstate , block_nr));
     if (rft_node != NULL) 
       ecl_rft_vector_add_node(rft_vector , rft_node);
   }

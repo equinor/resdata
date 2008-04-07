@@ -21,7 +21,7 @@ static lsf_pool_type   * LSF_POOL       = NULL;
 
 void ecl_inter_load_file__(const char *__filename , const int *strlen) {
   char *filename = util_alloc_cstring(__filename , strlen);
-  ECL_FSTATE = ecl_fstate_fread_alloc(1 , (const char **) &filename , ecl_other_file , false , ENDIAN_CONVERT);
+  ECL_FSTATE = ecl_fstate_fread_alloc(1 , (const char **) &filename , ecl_other_file , ENDIAN_CONVERT);
   free(filename);
 }
 

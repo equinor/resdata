@@ -1,18 +1,3 @@
-/*
-#0  0xffffe410 in __kernel_vsyscall ()
-#1  0x0016f815 in raise () from /lib/tls/libc.so.6
-#2  0x00171279 in abort () from /lib/tls/libc.so.6
-#3  0x08071ed4 in ecl_fstate_iget_block (ecl_fstate=0x913cd50, index=5) at ecl_fstate.c:312
-#4  0x08072e42 in ecl_sum_get_with_index (ecl_sum=0x91446e8, time_index=0, sum_index=1049) at ecl_sum.c:375
-#5  0x080736b3 in ecl_sum_get_well_var (ecl_sum=0x91446e8, time_index=0, well_name=0x0, var_name=0x0) at ecl_sum.c:608
-#6  0x08052862 in well_load_summary_data (well=0x9094658, report_step=5, ecl_sum=0x91446e8) at well.c:143
-#7  0x08057a93 in enkf_state_load_ecl_summary (enkf_state=0x8d56748, unified=false, report_step=5) at enkf_state.c:488
-#8  0x080580e6 in enkf_state_load_ecl (enkf_state=0x8d56748, enkf_obs=0x8d2d870, unified=false, report_step1=0, report_step2=5) at enkf_state.c:529
-#9  0x08058fab in enkf_state_run_eclipse__ (_void_arg=0x913be60) at enkf_state.c:840
-#10 0x0033a3cc in start_thread () from /lib/tls/libpthread.so.0
-#11 0x002111ae in clone () from /lib/tls/libc.so.6
-*/
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -42,8 +27,7 @@ struct ecl_fstate_struct {
   int              fmt_mode;
   bool 	      	   endian_convert;
   bool        	   unified;
-  bool             summary_report_only;
-  bool             report_mode;
+  bool             __RPTONLY;
   int         	   files;
   int              N_blocks;
   int              block_size;
@@ -86,7 +70,7 @@ bool ecl_fstate_fmt_file(const char *filename) {
 
 
 
-ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , ecl_file_type file_type , bool report_mode , bool endian_convert) {
+ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , ecl_file_type file_type , bool endian_convert) {
   
   ecl_fstate_type *ecl_fstate 	 = malloc(sizeof *ecl_fstate);
   ecl_fstate->fmt_mode 	      	 = fmt_mode;
@@ -95,15 +79,8 @@ ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , ecl_file_type file_type 
   ecl_fstate->filelist        	 = NULL;
   ecl_fstate->block_list      	 = NULL;
   ecl_fstate->sim_start_time     = -1;
-  ecl_fstate->report_mode        = report_mode;
   ecl_fstate->file_type          = file_type;  
-  if (report_mode) {
-    if ( !(file_type == ecl_summary_file || file_type == ecl_restart_file || file_type == ecl_unified_restart_file)) {
-      fprintf(stderr,"%s: can not use report_mode=true for file_type:%d - aborting \n",__func__ , file_type);
-      abort();
-    }
-  }
-  ecl_fstate->summary_report_only = report_mode;
+  ecl_fstate->__RPTONLY = false;
   return ecl_fstate;
 }
 
@@ -175,8 +152,8 @@ void ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate , bool unified) {
 
 
 
-ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ecl_file_type file_type , bool report_mode , bool endian_convert) {
-  ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(ECL_FMT_AUTO , file_type , report_mode , endian_convert);
+ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ecl_file_type file_type , bool endian_convert) {
+  ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(ECL_FMT_AUTO , file_type , endian_convert);
   ecl_fstate_set_files(ecl_fstate , files , filelist);
   
   ecl_fstate->block_size  = 10;
@@ -185,6 +162,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 
   if (ecl_fstate->unified) {
     fortio_type *fortio = fortio_open(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert);
+    int  summary_report_nr = 0;
     bool at_eof = false;
     while (!at_eof) {
       ecl_block_type *ecl_block = ecl_block_alloc(-1 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
@@ -196,15 +174,21 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	ecl_kw_iget(seq_kw , 0 , &report_nr);
 	ecl_block_set_report_nr(ecl_block , report_nr);
 	ecl_block_set_sim_time_restart(ecl_block);
-      } 
+      } else if (file_type == ecl_unified_summary_file) 
+	if (ecl_fstate->__RPTONLY)
+	  ecl_block_set_report_nr(ecl_block , summary_report_nr);
+
       /*
-	Observe that when unified summary files are read in it is 
-	*IMPOSSIBLE* to get hold of the report number. In this case
-	the report number will be stuck at -1, and can *NOT* be used
-	to access individual blocks.
+	Observe that when unified summary files are read in it is in
+	general impossible to get hold of the report nr. **IF** the
+	rptonly keyword has been present in the datafile (which we can
+	only hope). It will be correct to just count blocks; that is
+	what is done, but it is impossible to verify the correctness
+	of this approach.
       */
       
       ecl_fstate_add_block(ecl_fstate , ecl_block);
+      summary_report_nr++;
     }
     fortio_close(fortio);
   } else {    
@@ -218,10 +202,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	
 	if (file_type == ecl_restart_file || file_type == ecl_summary_file)
 	  report_nr = ecl_util_filename_report_nr(ecl_fstate->filelist[file]);
-
-	if (report_nr == 1 && file_type == ecl_summary_file)
-	  report_nr = 0;
-
+	
 	while (!at_eof) {
 	  bool add_block = true;
 	  ecl_block_type *ecl_block = ecl_block_alloc(report_nr , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
@@ -249,7 +230,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	      report_nr = 1;
 	    else {
 	      if (!at_eof) {
-		if (ecl_fstate->summary_report_only) {
+		if (ecl_fstate->__RPTONLY) {
 		  fprintf(stderr,"\n%s: Several timesteps in summary file:%s allocated with summary_report_only = true - aborting.\n",__func__ , ecl_fstate->filelist[file]);
 		  fprintf(stderr,"%s: Maybe you have forgot the keyword: \'RPTONLY\' in the datafile?\n",__func__);
 		  abort();
@@ -266,57 +247,54 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 }
 
 
+/**
+When you call this routine you *PROMISE* that the RPTONLY keyword has
+been used in the ECLIPSE datafile, this is impossible to check, but if
+called incorrectly (i.e. without having RPTONLY in the restart file),
+temporal indexing of summary data will give wrong data - WITHOUT ANY
+WARNING.
+*/
 
 
+void ecl_fstate_promise_RPTONLY(ecl_fstate_type * fstate) {
+  fstate->__RPTONLY = true;
+}
 
-/* 
+
+/** 
    The blocks in a fstat object can be indexed in two different ways:
 
-   block_index: That is just the index of the block when it has been loaded. 
-                This method can always be used, but observe that there is no
-                link between 'true' simulation time and the block index.
-                The block index access mode can always be used.
+   block_index: That is just the index of the block when it has been
+                loaded. This method can always be used, but observe
+                that there is no link between 'true' simulation time
+                and the block index. To get a block with this method
+                you should use ecl_fstate_iget_block().
+		
    
-   report_step: This is the report step from eclipse. It can always be used on
-                restart files, never on 'other' files, and for summary files
-                it can be used when the data has been loaded from multiple
-                files (i.e. with the report number in the filename), and with
-                summary_report_only set to true.
-
-   Only one of the lookup methods can be appplied at the time, the inactive
-   input variable should have a negative value.
+   report_step: This is the report step from eclipse. It can always be
+                used on restart files, never on 'other' files, and for
+                summary files it can be used when the variable
+                summary_report_only is true. This must be ensured with
+                a call to ecl_fstate_summary_promise_rptonly().
 */
 
 
 
-static ecl_block_type * ecl_fstate_get_block_static(const ecl_fstate_type * ecl_fstate , int index) {
-  ecl_block_type *block = NULL;
 
-  if (ecl_fstate->report_mode) {
-    int report_nr   = index;
-    int block_index = 0;
-    do {
-      if (report_nr == ecl_block_get_report_nr(ecl_fstate->block_list[block_index]))
-	block = ecl_fstate->block_list[block_index];
-      block_index++;
-    } while (block_index < ecl_fstate->N_blocks && block == NULL);
-  } else {
-    int block_index = index;
-    if (block_index >= 0 && block_index < ecl_fstate->N_blocks) 
+ecl_block_type * ecl_fstate_get_block_by_report_nr(const ecl_fstate_type * ecl_fstate , int report_nr) {
+  ecl_block_type *block = NULL;
+  int block_index = 0;
+  do {
+    if (report_nr == ecl_block_get_report_nr(ecl_fstate->block_list[block_index]))
       block = ecl_fstate->block_list[block_index];
-  } 
-  
+    block_index++;
+  } while (block_index < ecl_fstate->N_blocks && block == NULL);
+
   if (block == NULL) {
-    fprintf(stderr,"%s: could not find block:%d - aborting \n",__func__ , index);
+    fprintf(stderr,"%s: could not find report nr:%d - aborting \n",__func__ , report_nr);
     abort();
   }
-
   return block;
-}
-
-
-ecl_block_type * ecl_fstate_get_block(const ecl_fstate_type * ecl_fstate , int index) {
-  return ecl_fstate_get_block_static(ecl_fstate , index);
 }
 
 
@@ -331,14 +309,13 @@ ecl_block_type * ecl_fstate_iget_block(const ecl_fstate_type * ecl_fstate , int 
 
 
 
-bool ecl_fstate_has_block(const ecl_fstate_type * ecl_fstate , int index) {
-  ecl_block_type * block = ecl_fstate_get_block_static(ecl_fstate , index);
+bool ecl_fstate_has_report_nr(const ecl_fstate_type * ecl_fstate , int report_nr) {
+  ecl_block_type * block = ecl_fstate_get_block_by_report_nr(ecl_fstate , report_nr);
   if (block == NULL) 
     return false;
   else
     return true;
 }
-
 
 
 int ecl_fstate_get_size(const ecl_fstate_type *ecl_fstate) {
@@ -385,22 +362,15 @@ void ecl_fstate_save(const ecl_fstate_type *ecl_fstate) {
     ecl_fstate_save_multiple(ecl_fstate);
 }
 
-bool ecl_fstate_get_report_mode(const ecl_fstate_type * ecl_fstate) {
-  return ecl_fstate->report_mode;
-}
 
 
 int ecl_fstate_get_report_size(const ecl_fstate_type * ecl_fstate , int * first_report_nr , int * last_report_nr) {
-  if (!ecl_fstate->report_mode) {
-    /*
-      fprintf(stderr,"%s: not opened in report_mode - aborting \n",__func__);
-      abort();
-    */
-    *first_report_nr = 0;
-    *last_report_nr  = ecl_fstate->N_blocks - 1;
-  } else {
+  if (ecl_fstate->__RPTONLY) {
     *first_report_nr = ecl_block_get_report_nr(ecl_fstate->block_list[0]);
     *last_report_nr  = ecl_block_get_report_nr(ecl_fstate->block_list[ecl_fstate->N_blocks - 1]);
+  } else {
+    *first_report_nr = 0;
+    *last_report_nr  = ecl_fstate->N_blocks - 1;
   }
   return ecl_fstate->N_blocks;
 }

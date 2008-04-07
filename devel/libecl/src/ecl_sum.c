@@ -80,7 +80,7 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
     int report_nr;
 
     ecl_util_get_file_type(data_files[0] , &file_type , &fmt_file , &report_nr);
-    sum->data     = ecl_fstate_fread_alloc(files , data_files   , file_type , report_mode , sum->endian_convert);
+    sum->data     = ecl_fstate_fread_alloc(files , data_files   , file_type , sum->endian_convert);
     /*
       Check size of PARAMS block...
     */
@@ -90,6 +90,8 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
       sum->params_size                   = ecl_kw_get_size(params_kw);
     }
     sum->var_type = util_malloc( sum->params_size * sizeof * sum->var_type , __func__);
+    if (report_mode)
+      ecl_fstate_promise_RPTONLY( sum->data );
   }
 }
   
@@ -98,7 +100,7 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
 
 
 static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_file) {
-  ecl_sum->header         = ecl_fstate_fread_alloc(1     , &header_file , ecl_summary_header_file , false , ecl_sum->endian_convert);
+  ecl_sum->header         = ecl_fstate_fread_alloc(1     , &header_file , ecl_summary_header_file , ecl_sum->endian_convert);
   {
     int *date;
     ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->header , 0);
@@ -362,7 +364,7 @@ static void ecl_sum_assert_index(const ecl_sum_type * ecl_sum, int index) {
 /*
   time_index is zero based anyway ..... not nice 
 */
-double ecl_sum_get_with_index(const ecl_sum_type *ecl_sum , int time_index , int sum_index) {
+double ecl_sum_get_with_index(const ecl_sum_type *ecl_sum , int report_nr , int sum_index) {
   /*
     fprintf(stderr,"%s: ** Warning ** incorrectly using ecl_fstate_iget_block() - should use ecl_fstate_get_block() \n",__func__);
   */
@@ -370,7 +372,7 @@ double ecl_sum_get_with_index(const ecl_sum_type *ecl_sum , int time_index , int
     util_abort("%s: data not loaded - aborting \n",__func__);
   ecl_sum_assert_index(ecl_sum , sum_index);
   {
-    ecl_block_type * block    = ecl_fstate_iget_block(ecl_sum->data , time_index);
+    ecl_block_type * block    = ecl_fstate_get_block_by_report_nr(ecl_sum->data , report_nr);
     ecl_kw_type    * data_kw  = ecl_block_get_kw(block , "PARAMS");
     
     /* PARAMS underlying data type is float. */
@@ -709,10 +711,6 @@ int ecl_sum_get_size(const ecl_sum_type *ecl_sum) {
   return ecl_fstate_get_size(ecl_sum->data);
 }
 
-
-bool ecl_sum_get_report_mode(const ecl_sum_type * ecl_sum) {
-  return ecl_fstate_get_report_mode(ecl_sum->data);
-}
 
 
 time_t ecl_sum_get_start_time(const ecl_sum_type * ecl_sum) {
