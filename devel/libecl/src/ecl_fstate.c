@@ -282,7 +282,7 @@ void ecl_fstate_promise_RPTONLY(ecl_fstate_type * fstate) {
 ecl_block_type * ecl_fstate_get_block_by_report_nr(const ecl_fstate_type * ecl_fstate , int report_nr) {
   if (ecl_fstate->file_type == ecl_unified_summary_file || ecl_fstate->file_type == ecl_summary_file) {
     if (!ecl_fstate->__RPTONLY) 
-      util_abort("%s: when using report_nr to look up summary block you *MUST* have RPTONLY in the DATA file, and call ecl_fstate_promise_RPTONLY() - aborting \n",__func__);
+      util_abort("%s: When using report_nr to look up summary block you *MUST* have RPTONLY in the DATA file, and call ecl_fstate_promise_RPTONLY() - aborting \n",__func__);
   } else if (!(ecl_fstate->file_type == ecl_restart_file || ecl_fstate->file_type == ecl_unified_restart_file))
     util_abort("%s: can only use report_nr to look up restart & summary files - aborting.\n",__func__);
 

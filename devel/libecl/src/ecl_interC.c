@@ -102,7 +102,7 @@ void ecl_inter_load_summary__(const char *__header_file , const int *header_len 
   char * header_file = util_alloc_cstring(__header_file , header_len);
   char * data_file   = util_alloc_cstring(__data_file   , data_len);
   bool   report_mode = util_intptr_2bool(report_mode_int);
-  ECL_SUM = ecl_sum_fread_alloc(header_file , 1 , (const char **) &data_file , report_mode , ENDIAN_CONVERT);
+  ECL_SUM = ecl_sum_fread_alloc(header_file , 1 , (const char **) &data_file , false , ENDIAN_CONVERT);
   free(header_file);
   free(data_file);
 }
@@ -138,7 +138,7 @@ void ecl_inter_sum_get__(const char *_well_name , const int *well_len,
 
   if (ecl_sum_has_well_var(ECL_SUM , well , var)) {
     int index    = ecl_sum_get_well_var_index(ECL_SUM , well , var);
-    double value = ecl_sum_get_with_index(ECL_SUM , 0 , index);
+    double value = ecl_sum_iget_with_index(ECL_SUM , 0 , index);
 
     *_index = index;
     *_value = value;
