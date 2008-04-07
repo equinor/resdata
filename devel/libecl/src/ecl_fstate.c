@@ -279,22 +279,27 @@ void ecl_fstate_promise_RPTONLY(ecl_fstate_type * fstate) {
 */
 
 
-
-
 ecl_block_type * ecl_fstate_get_block_by_report_nr(const ecl_fstate_type * ecl_fstate , int report_nr) {
-  ecl_block_type *block = NULL;
-  int block_index = 0;
-  do {
-    if (report_nr == ecl_block_get_report_nr(ecl_fstate->block_list[block_index]))
-      block = ecl_fstate->block_list[block_index];
-    block_index++;
-  } while (block_index < ecl_fstate->N_blocks && block == NULL);
+  if (ecl_fstate->file_type == ecl_unified_summary_file || ecl_fstate->file_type == ecl_summary_file) {
+    if (!ecl_fstate->__RPTONLY) 
+      util_abort("%s: when using report_nr to look up summary block you *MUST* have RPTONLY in the DATA file, and call ecl_fstate_promise_RPTONLY() - aborting \n",__func__);
+  } else if (!(ecl_fstate->file_type == ecl_restart_file || ecl_fstate->file_type == ecl_unified_restart_file))
+    util_abort("%s: can only use report_nr to look up restart & summary files - aborting.\n",__func__);
 
-  if (block == NULL) {
-    fprintf(stderr,"%s: could not find report nr:%d - aborting \n",__func__ , report_nr);
-    abort();
+  {
+    ecl_block_type *block = NULL;
+    int block_index = 0;
+    do {
+      if (report_nr == ecl_block_get_report_nr(ecl_fstate->block_list[block_index]))
+	block = ecl_fstate->block_list[block_index];
+      block_index++;
+    } while (block_index < ecl_fstate->N_blocks && block == NULL);
+    
+    if (block == NULL) 
+      util_abort("%s: could not find report nr:%d - aborting \n",__func__ , report_nr);
+    
+    return block;
   }
-  return block;
 }
 
 

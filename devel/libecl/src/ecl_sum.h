@@ -27,6 +27,7 @@ double         	 ecl_sum_get_group_var(const ecl_sum_type *, int , const char *,
 double         	 ecl_sum_get_region_var(const ecl_sum_type *, int , int , const char *);
 double         	 ecl_sum_get_field_var(const ecl_sum_type *,  int , const char *);
 double         	 ecl_sum_get_with_index(const ecl_sum_type *, int , int);
+double         	 ecl_sum_iget_with_index(const ecl_sum_type *, int , int);
 double           ecl_sum_get_well_completion_var(const ecl_sum_type * , int , const char * , const char * , int );
 
 void           	 ecl_sum_free_data(ecl_sum_type * );

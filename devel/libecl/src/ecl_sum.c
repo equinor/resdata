@@ -17,8 +17,8 @@
 
 
 struct ecl_sum_struct {
-  ecl_fstate_type  * header;
   ecl_fstate_type  * data;
+  ecl_fstate_type  * header;
   hash_type        * well_var_index;
   hash_type        * well_completion_var_index;
   hash_type        * group_var_index;
@@ -365,14 +365,25 @@ static void ecl_sum_assert_index(const ecl_sum_type * ecl_sum, int index) {
   time_index is zero based anyway ..... not nice 
 */
 double ecl_sum_get_with_index(const ecl_sum_type *ecl_sum , int report_nr , int sum_index) {
-  /*
-    fprintf(stderr,"%s: ** Warning ** incorrectly using ecl_fstate_iget_block() - should use ecl_fstate_get_block() \n",__func__);
-  */
   if (ecl_sum->data == NULL) 
     util_abort("%s: data not loaded - aborting \n",__func__);
   ecl_sum_assert_index(ecl_sum , sum_index);
   {
     ecl_block_type * block    = ecl_fstate_get_block_by_report_nr(ecl_sum->data , report_nr);
+    ecl_kw_type    * data_kw  = ecl_block_get_kw(block , "PARAMS");
+    
+    /* PARAMS underlying data type is float. */
+    return (double) ecl_kw_iget_float(data_kw , sum_index);    
+  }
+}
+
+
+double ecl_sum_iget_with_index(const ecl_sum_type *ecl_sum , int block_nr , int sum_index) {
+  if (ecl_sum->data == NULL) 
+    util_abort("%s: data not loaded - aborting \n",__func__);
+  ecl_sum_assert_index(ecl_sum , sum_index);
+  {
+    ecl_block_type * block    = ecl_fstate_iget_block(ecl_sum->data , block_nr);
     ecl_kw_type    * data_kw  = ecl_block_get_kw(block , "PARAMS");
     
     /* PARAMS underlying data type is float. */

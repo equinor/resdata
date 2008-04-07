@@ -427,9 +427,7 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
     while ((dentry = readdir (dirH)) != NULL) {
       if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file))
 	files++;
-      if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file))
-	printf("Including: %s \n",dentry->d_name);
-    } 
+    }
     rewinddir(dirH);
     
     if (files == 0) 
@@ -615,3 +613,24 @@ ecl_type_enum ecl_util_guess_type(const char * key){
   return type;
 }
 
+
+/**
+This little function escapes eclipse keyword names so that they can be
+safely used as filenames, i.e for instance the substitution:
+
+   1/FVFGAS -> 1-FVFGAS
+
+*/
+void ecl_util_escape_kw(char * kw) {
+  int index;
+  for (index = 0; index < strlen(kw); index++) {
+    switch (kw[index]) {
+    case('/'):
+      kw[index] = '-';
+      break;
+    case('\\'):
+      kw[index] = '-';
+      break;
+    }
+  }
+}
