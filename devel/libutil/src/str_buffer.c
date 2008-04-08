@@ -2,6 +2,7 @@
 #include <str_buffer.h>
 
 #define NULL_CHAR  '\0'
+
 struct str_buffer_struct {
   int   size;
   int   len;
@@ -40,8 +41,6 @@ static void __str_buffer_fprintf_substring(str_buffer_type *str_buffer, int i1, 
       fprintf(stream,"%c",str_buffer->buffer[i]);
   }
 }
-
-
 
 str_buffer_type * str_buffer_alloc(int size) {
   str_buffer_type *str_buffer = malloc(sizeof *str_buffer);

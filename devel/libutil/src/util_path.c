@@ -3,10 +3,10 @@ int util_get_path_length(const char * file) {
   if (util_is_directory(file)) 
     return strlen(file);
   else {
-    char * last_slash = strrchr(file , '/');
+    char * last_slash = strrchr(file , UTIL_PATH_SEP_CHAR);
     if (last_slash == NULL)
       return 0;
-    else
+    else 
       return last_slash - file;
   }
 }
@@ -21,7 +21,7 @@ void util_make_path(const char *_path) {
     active_path = malloc(strlen(path) + 1);
     int i = 0;
     do {
-      int n = strcspn(path , "/");
+      int n = strcspn(path , UTIL_PATH_SEP_STRING);
       if (n < strlen(path))
 	n += 1;
       path += n;
@@ -48,11 +48,11 @@ void util_make_path2(const char *path) {
   if (!util_path_exists(path)) {
     int length;
     int offset;
-    if (path[0] == '/')
+    if (path[0] == UTIL_PATH_SEP_CHAR)
       offset = 1;
     else
       offset = 0;
-    length      = strcspn(&path[offset] , "/");
+    length      = strcspn(&path[offset] , UTIL_PATH_SEP_STRING);
     {
       char * sub_path = util_alloc_substring_copy(&path[offset] , length);
       char * cwd      = NULL;
@@ -87,25 +87,35 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
   do {
     long int rand_int = random() % random_max;
     if (include_pid)
-      sprintf(file , "%s/%s-%d-%ld" , path , prefix , pid , rand_int);
+      sprintf(file , "%s%c%s-%d-%ld" , path , UTIL_PATH_SEP_CHAR , prefix , pid , rand_int);
     else
-      sprintf(file , "%s/%s-%ld" , path , prefix , rand_int);
+      sprintf(file , "%s%c%s-%ld" , path , UTIL_PATH_SEP_CHAR , prefix , rand_int);
   } while (util_file_exists(file));
   return file;
 }
 
 
+/**
+  This function takes a path and a file as input. It allocated a new
+  string containg "the sum" of the two, with UTIL_PATH_SEP between.
+
+  If path == NULL - a copy of file is returned.
+*/
+
 
 char * util_alloc_full_path(const char *path , const char *file) {
-  char *copy = malloc(strlen(path) + strlen(file) + 2);
-  sprintf(copy , "%s/%s" , path , file);
-  return copy;
+  if (path != NULL) {
+    char *copy = util_malloc(strlen(path) + strlen(file) + 2 , __func__);
+    sprintf(copy , "%s%c%s" , path , UTIL_PATH_SEP_CHAR ,  file);
+    return copy;
+  } else
+    return util_alloc_string_copy(file);
 }
 
 
 char * util_realloc_full_path(char *old_path , const char *path , const char *file) {
   char *copy = realloc(old_path , strlen(path) + strlen(file) + 2);
-  sprintf(copy , "%s/%s" , path , file);
+  sprintf(copy , "%s%c%s" , path , UTIL_PATH_SEP_CHAR , file);
   return copy;
 }
 
@@ -122,7 +132,8 @@ void util_unlink_path(const char *path) {
       abort();
     } else {
       DIR *dirH;
-      dirH = opendir( "./" );  /* Have already changed into this directory with chdir() */
+      char * new_cwd = getcwd(new_cwd , 0);
+      dirH = opendir( new_cwd );  /* Have already changed into this directory with chdir() */
       while ( (dentry = readdir(dirH)) != NULL) {
 	struct stat buffer;
 	const char * entry = dentry->d_name;
@@ -149,6 +160,7 @@ void util_unlink_path(const char *path) {
 	  }
 	}
       }
+      free(new_cwd);
       closedir(dirH);
       chdir(cwd);
       free(cwd);

@@ -46,7 +46,7 @@ str_buffer.o  : str_buffer.c str_buffer.h
 void_arg.o    : void_arg.c void_arg.h util.o
 msg.o         : msg.c msg.h util.o
 thread_pool.o : thread_pool.c thread_pool.h
-util.o        : util.c util.h
+util.o        : util.c util.h util_path.c
 util_interC.o : util_interC.c util.o
 pathv.o       : pathv.c pathv.h util.o
 path_fmt.o    : path_fmt.c path_fmt.h util.o

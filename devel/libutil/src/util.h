@@ -6,7 +6,8 @@
 #include <time.h>
 #include <hash.h>
 
-#define UTIL_PATH_SEP "/"
+#define UTIL_PATH_SEP_STRING "/"   /* A \0 terminated separator used when we want a (char *) instance.                   */
+#define UTIL_PATH_SEP_CHAR   '/'   /* A simple character used when we want an actual char instance (i.e. not a pointer). */
 
 typedef enum {util_filter_warn0 , util_filter_warn_unused = 1, util_filter_warn_unknown = 2 , util_filter_warn_all = 3} util_filter_warn_type;
 
@@ -127,10 +128,10 @@ void 	 util_fwrite_double(double , FILE * );
 void 	 util_fwrite_int_vector   (const int     * , int , FILE * , const char * );
 void 	 util_fwrite_double_vector(const double  * , int , FILE * , const char * );
 
-void util_fread_compressed(char * , FILE * );
-void util_fwrite_compressed(const void * , int , FILE * );
+void 	 util_compress_buffer(const void * , int , void * , unsigned long * );
+void 	 util_fread_compressed(char * , FILE * );
+void 	 util_fwrite_compressed(const void * , int , FILE * );
 
-#define UTIL_ABORT(msg) (util_abort(__func__, __FILE__, __LINE__ , msg))
 #define UTIL_FWRITE_SCALAR(s,stream) fwrite(&s , sizeof s , 1 , stream)
 #define UTIL_FREAD_SCALAR(s,stream)  fread(&s , sizeof s , 1 , stream)
 

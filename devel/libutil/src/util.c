@@ -1,3 +1,16 @@
+/**
+
+  This file contains a large number of utility functions for memory
+  handling, string handling and file handling. Observe that all these
+  functions are just that - functions - there is no associated state
+  with any of these functions.
+
+  The file util_path.c is included in this, and contains path
+  manipulation functions which explicitly use the PATH_SEP
+
+*/
+
+
 #include <errno.h>
 #include <time.h>
 #include <inttypes.h>
@@ -110,7 +123,7 @@ char * util_alloc_substring_copy(const char *src , int N) {
   if (N < strlen(src)) {
     copy = util_malloc(N + 1 , __func__);
     strncpy(copy , src , N);
-    copy[N] = 0;
+    copy[N] = '\0';
   } else 
     copy = util_alloc_string_copy(src);
   return copy;
@@ -692,17 +705,42 @@ bool util_file_exists(const char *filename) {
 }
 */
 
+
+
+/**
+  This function return true if path corresponds to an existing
+  directory, if stat() fail errno is checked for the value ENOENT, in
+  which case a false is returned.
+*/
 bool util_is_directory(const char * path) {
   struct stat stat_buffer;
-  stat(path , &stat_buffer);
-  return S_ISDIR(stat_buffer.st_mode);
+
+  if (stat(path , &stat_buffer) == 0)
+    return S_ISDIR(stat_buffer.st_mode);
+  else if (errno == ENOENT)
+    /*Path does not exist at all. */
+    return false;
+  else {
+    util_abort("%s: stat(%s) failed: %s \n",__func__ , path , strerror(errno));
+    return false; /* Dummy to shut the compiler warning */
+  }
 }
 
 
+/**
+  This function returns true if path is a symbolic link.
+*/
 bool util_is_link(const char * path) {
   struct stat stat_buffer;
-  lstat(path , &stat_buffer);
-  return S_ISLNK(stat_buffer.st_mode);
+  if (lstat(path , &stat_buffer) == 0)
+    return S_ISLNK(stat_buffer.st_mode);
+  else if (errno == ENOENT)
+    /*Path does not exist at all. */
+    return false;
+  else {
+    util_abort("%s: stat(%s) failed: %s \n",__func__ , path , strerror(errno));
+    return false;
+  }
 }
 
 
@@ -718,19 +756,17 @@ bool util_is_executable(const char * path) {
 }
 
 
-
-
-
 int util_get_base_length(const char * file) {
   int path_length   = util_get_path_length(file);
-  char * base_start , *last_point;
+  const char * base_start;
+  const char * last_point;
 
   if (path_length == strlen(file))
     return 0;
   else if (path_length == 0)
-    base_start = (char *) file;
+    base_start = file;
   else 
-    base_start = (char *) &file[path_length + 1];
+    base_start = &file[path_length + 1];
   
   last_point  = strrchr(base_start , '.');
   if (last_point == NULL)
@@ -743,6 +779,39 @@ int util_get_base_length(const char * file) {
 
 
 
+/**
+   This function splits a filename into three parts:
+
+    1. A leading path.
+    2. A base name.
+    3. An extension.
+
+   In the calling scope you should pass in references to pointers to
+   char for the fields, you are interested in:
+
+   Example:
+   --------
+
+   char * path;
+   char * base;
+   char * ext;
+
+   util_alloc_file_components("/path/to/some/file.txt" , &path , &base , &ext);
+   util_alloc_file_components("/path/to/some/file.txt" , &path , &base , NULL); 
+
+   In the second example we were not interested in the extension, and
+   just passed in NULL. Before use in the calling scope it is
+   essential to check the values of base, path and ext:
+
+   util_alloc_file_components("/path/to/some/file" , &path , &base , &ext);
+   if (ext != NULL)
+      printf("File: has extension: %s \n",ext);
+   else
+      printf("File does *not* have an extension \n");
+
+   The memory allocated in util_alloc_file_components must be freed by
+   the calling unit.
+*/
 
 void util_alloc_file_components(const char * file, char **_path , char **_basename , char **_extension) {
   char *path      = NULL;
@@ -753,8 +822,7 @@ void util_alloc_file_components(const char * file, char **_path , char **_basena
   int base_length = util_get_base_length(file);
   int ext_length ;
   int slash_length = 1;
-
-
+  
   if (path_length > 0) 
     path = util_alloc_substring_copy(file , path_length);
   else
@@ -1764,22 +1832,56 @@ void util_read_filename(const char * prompt , int prompt_len , bool must_exist ,
 
 /*****************************************************************/
 
+/**
+  This function reads data from the input pointer data, and writes a
+  compressed copy into to the target buffer zbuffer. On input
+  data_size should be the *number of bytes* in data compressed_size
+  should be a reference to the size (in bytes) of zbuffer, on return
+  this has been updated to reflect the new compressed size.
+*/
+void util_compress_buffer(const void * data , int data_size , void * zbuffer , unsigned long * compressed_size) {
+  int compress_result;
+  compress_result = compress(zbuffer , compressed_size , data , data_size);
+  if (compress_result != Z_OK) 
+    util_abort("%s: returned %d - different from Z_OK - aborting\n",__func__ , compress_result);
+}
+
+
+
+/**
+  This function allocates a new buffer which is a compressed version
+  of the input buffer data. The input variable data_size, and the
+  output * compressed_size are the size - *in bytes* - of input and
+  output.
+*/
+void * util_alloc_compressed_buffer(const void * data , int data_size , unsigned long * compressed_size) {
+  void * zbuffer = util_malloc(data_size , __func__);
+  *compressed_size = data_size;
+  util_compress_buffer(data , data_size , zbuffer , compressed_size);
+  zbuffer = util_realloc(zbuffer , *compressed_size , __func__ );
+  return zbuffer;
+}
+
+
 /*
-uncompressed total size
-size of compression buffer
-----
-compressed size
-compressed block
-current uncompressed offset
-....
-compressed size
-compressed block
-current uncompressed offset
-....
-compressed size
-compressed block
-current uncompressed offset
-----
+Layout on disk when using util_fwrite_compressed:
+
+  /-------------------------------
+  |uncompressed total size
+  |size of compression buffer
+  |----
+  |compressed size
+  |compressed block
+  |current uncompressed offset
+  |....
+  |compressed size
+  |compressed block
+  |current uncompressed offset
+  |....
+  |compressed size
+  |compressed block
+  |current uncompressed offset
+  \------------------------------
 */
 
 void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
@@ -1789,7 +1891,7 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
   }
   {
     const char * data = (const char *) _data;
-    const int max_buffer_size      = 1048580; 
+    const int max_buffer_size      = 128 * 1048580; /* 128 MB */
     int       required_buffer_size = (int) ceil(size * 1.001 + 12);
     int       buffer_size , block_size;
     void * zbuffer;
@@ -1810,13 +1912,7 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
       do {
 	unsigned long compressed_size = buffer_size;
 	int this_block_size = util_int_min(block_size , size - offset);
-	int compress_result;
-	
-	compress_result = compress(zbuffer , &compressed_size , &data[offset] , this_block_size);
-	if (compress_result != Z_OK) {
-	fprintf(stderr,"%s compress returned %d - aborting \n",__func__ , compress_result);
-	abort();
-	}
+	util_compress_buffer(&data[offset] , this_block_size , zbuffer , &compressed_size);
 	fwrite(&compressed_size , sizeof compressed_size , 1 , stream);
 	{
 	  int bytes_written = fwrite(zbuffer , 1 , compressed_size , stream);
@@ -1892,6 +1988,22 @@ void util_fskip_compressed(FILE * stream) {
     fseek(stream  , compressed_size , SEEK_CUR);
     fread(&offset , sizeof offset , 1 , stream);
   } while (offset < size);
+}
+
+
+/** 
+    This is the core filtering function. Based on this we can do the following filtering:
+
+    buffer -> existing buffer (can fail if target buffer is to small).
+    buffer -> newly allocated buffer
+    buffer -> file
+    file   -> file
+    
+*/
+
+
+static bool util_filter_buffer(const char * src_buffer , const char * target_file , char ** _target_buffer, int * _target_buffer_size , bool target_buffer_can_resize , char start_char , char end_char , const hash_type * kw_hash , util_filter_warn_type warning_mode) {
+  return true;
 }
 
 
@@ -1986,6 +2098,14 @@ void util_filter_file(const char * src_file , const char * comment , const char 
   }
 }
 
+/**
+This function prints a message to stderr and aborts. The function is
+implemented with the help of a variable length argument list - just
+like printf(fmt , arg1, arg2 , arg3 ...);
+
+A backtrace is also included, unfortunately this does not include
+linenumbers, and is therefor not very useful.
+*/
 
 void util_abort(const char * fmt , ...) {
   const bool include_backtrace = true;
@@ -1994,16 +2114,17 @@ void util_abort(const char * fmt , ...) {
   vfprintf(stderr , fmt , ap);
   va_end(ap);
   if (include_backtrace) {
-    const int max_bt = 10;
+    const int max_bt = 25;
     void *array[max_bt];
     char **strings;
     int    size,i;
 
     size    = backtrace(array , max_bt);
     strings = backtrace_symbols(array , size);
+    fprintf(stderr , "-----------------------------------------------------------------\n");
     for (i=0; i < size; i++)
       fprintf(stderr,"%s\n",strings[i]);
-    
+    fprintf(stderr , "-----------------------------------------------------------------\n");
     free(strings);
   }
 
