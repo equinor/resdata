@@ -540,6 +540,12 @@ int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
 }
 
 
+/**
+ This function copies size elements from _src_data to target_data. If
+ src_type == target_type the copy is a simple memcpy, otherwise the
+ appropriate numerical conversion is applied.
+*/
+
 void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ecl_type_enum target_type , ecl_type_enum src_type, int size) {
   int i;
 
@@ -593,12 +599,12 @@ ecl_type_enum ecl_util_guess_type(const char * key){
   hash_type * type_hash = hash_alloc(10);
   ecl_type_enum type;
 
-  hash_insert_int(type_hash , "PERMX" , ecl_float_type);
-  hash_insert_int(type_hash , "PERMZ" , ecl_float_type);
-  hash_insert_int(type_hash , "PERMY" , ecl_float_type);
-  hash_insert_int(type_hash , "PORO"  , ecl_float_type);
-  hash_insert_int(type_hash , "COORD" , ecl_float_type);
-  hash_insert_int(type_hash , "ZCORN" , ecl_float_type);
+  hash_insert_int(type_hash , "PERMX"  , ecl_float_type);
+  hash_insert_int(type_hash , "PERMZ"  , ecl_float_type);
+  hash_insert_int(type_hash , "PERMY"  , ecl_float_type);
+  hash_insert_int(type_hash , "PORO"   , ecl_float_type);
+  hash_insert_int(type_hash , "COORD"  , ecl_float_type);
+  hash_insert_int(type_hash , "ZCORN"  , ecl_float_type);
   hash_insert_int(type_hash , "ACTNUM" , ecl_int_type);
   
   if (hash_has_key(type_hash , key)) 
@@ -612,6 +618,8 @@ ecl_type_enum ecl_util_guess_type(const char * key){
   hash_free(type_hash);
   return type;
 }
+
+
 
 
 /**

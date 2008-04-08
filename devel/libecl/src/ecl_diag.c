@@ -65,7 +65,7 @@ void ecl_diag_imake_plotfile(int iens1 , int iens2 , int min_size , const ecl_su
   for (istep=0; istep < min_size; istep++) {
     double history_value;
     if (history_index >= 0) 
-      history_value = ecl_sum_get_with_index(ecl_sum_list[0] , istep , history_index);
+      history_value = ecl_sum_iget_with_index(ecl_sum_list[0] , istep , history_index);
     else 
       history_value = 0;
 
@@ -74,7 +74,7 @@ void ecl_diag_imake_plotfile(int iens1 , int iens2 , int min_size , const ecl_su
   
   for (istep = 0; istep < min_size;  istep++) {                              /* Ensemble values: ensemble direction is the fast index */
     for (iens = iens1; iens <= iens2; iens++) 
-      util_fwrite_double(ecl_sum_get_with_index(ecl_sum_list[iens - iens1]  , istep , index) , stream);
+      util_fwrite_double(ecl_sum_iget_with_index(ecl_sum_list[iens - iens1]  , istep , index) , stream);
     
   }
   fclose(stream);

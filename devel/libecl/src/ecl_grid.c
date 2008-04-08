@@ -1,3 +1,10 @@
+/**
+  This function implements functionality to load ECLISPE grid files, 
+  both .EGRID and .GRID files.
+  
+  
+*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <util.h>
@@ -132,6 +139,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
 static int __ecl_grid_get_cell_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
   return i + j * ecl_grid->nx + k * ecl_grid->nx * ecl_grid->ny;
 }
+
 
 /* 
    This function returns C-based zero offset indices 
