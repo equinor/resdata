@@ -12,6 +12,7 @@
 #include <util.h>
 #include <ecl_sum.h>
 #include <ecl_diag.h>
+#include <history.h> /* Ugly - circumventing dependencies for a quick hack. */
 
 
 static const char * alloc_wellvar_name(const char *path , const char *well , const char *var) {
@@ -39,9 +40,10 @@ static void set_well_var(const char *file , char **_well , char **_var) {
   }
 }
 
-void ecl_diag_imake_plotfile(int iens1 , int iens2 , int min_size , const ecl_sum_type **ecl_sum_list , const char *out_file , const char * title , const char * var, int index , int history_index) {
+void ecl_diag_imake_plotfile(int iens1 , int iens2 , int min_size , const ecl_sum_type **ecl_sum_list , const char *out_file , const char * title , const char * well , const char * var, int index , history_type * history) {
   FILE *stream;
   int iens,istep;
+
   
   stream = util_fopen(out_file , "w");
   util_fwrite_string(title , stream); 					       /* Plot title */
@@ -63,12 +65,7 @@ void ecl_diag_imake_plotfile(int iens1 , int iens2 , int min_size , const ecl_su
   }
 
   for (istep=0; istep < min_size; istep++) {
-    double history_value;
-    if (history_index >= 0) 
-      history_value = ecl_sum_iget_with_index(ecl_sum_list[0] , istep , history_index);
-    else 
-      history_value = 0;
-
+    double history_value = history_get(history , istep , well , var);
     util_fwrite_double(history_value , stream);                              /* History value */ 
   }
   
@@ -82,11 +79,11 @@ void ecl_diag_imake_plotfile(int iens1 , int iens2 , int min_size , const ecl_su
 
 
 
-static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const ecl_sum_type **ecl_sum_list , const char *out_path , const char *well , const char *var) {
+static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const ecl_sum_type **ecl_sum_list , const char *out_path , const char *well , const char *var, history_type * history) {
   char *hvar           = util_malloc(strlen(var) + 2 , __func__ );
   const char *out_file = alloc_wellvar_name(out_path , well , var);
   char * title         = util_malloc(strlen(well) + 3 + strlen(var) + 1 , __func__); 
-  int index , history_index;
+  int index;
   
   if (!ecl_sum_has_well_var(ecl_sum_list[0] , well , var)) {
     fprintf(stderr,"No data for %s/%s \n",well , var);
@@ -95,20 +92,14 @@ static void ecl_diag_make_plotfile(int iens1 , int iens2 , int min_size , const 
   sprintf(hvar     , "%sH" , var);
   sprintf(title , "%s : %s" , well , var);
   index = ecl_sum_get_well_var_index(ecl_sum_list[0] , well , var);
-  if (ecl_sum_has_well_var(ecl_sum_list[0] , well , hvar))
-    history_index = ecl_sum_get_well_var_index(ecl_sum_list[0] , well , var);
-  else {
-    history_index = -1;
-    fprintf(stderr,"** Warning: history value: %s does not exist - using %g. **\n",hvar,0.0);
-  }
-  ecl_diag_imake_plotfile(iens1 , iens2 , min_size , ecl_sum_list , out_file , title , var , index , history_index);
+  ecl_diag_imake_plotfile(iens1 , iens2 , min_size , ecl_sum_list , out_file , title , well , var , index , history);
   
   free((char *) out_file);
   free(hvar);
 }
 
 
-ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , int * _min_size , const char *ens_path , const char *eclbase_dir , const char *eclbase , bool report_mode ,  bool fmt_file, bool unified , bool endian_convert) {
+ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , int * _min_size , const char *ens_path , const char *eclbase_dir , const char *eclbase , bool report_mode ,  bool fmt_file, bool unified , bool endian_convert , history_type * history) {
   ecl_sum_type **ecl_sum_list = calloc(iens2 - iens1 + 1 , sizeof(ecl_sum_type *));
   int iens;
   int fmt_mode , min_size;
@@ -171,14 +162,14 @@ ecl_sum_type ** ecl_diag_load_ensemble(int iens1, int iens2 , int * _min_size , 
 
 
 
-static void ecl_diag_ens(int iens1 , int iens2 , const char *out_path , int nwell , const char **well_list , int nvar , const char **var_list , const char *ens_path , const char *eclbase_dir , const char *eclbase, bool report_mode , bool fmt_file, bool unified, bool endian_convert) {
+static void ecl_diag_ens(int iens1 , int iens2 , const char *out_path , int nwell , const char **well_list , int nvar , const char **var_list , const char *ens_path , const char *eclbase_dir , const char *eclbase, bool report_mode , bool fmt_file, bool unified, bool endian_convert , history_type * history) {
   int iwell,ivar,min_size;
   
-  ecl_sum_type **ecl_sum_list = ecl_diag_load_ensemble(iens1 , iens2 , &min_size , ens_path , eclbase_dir , eclbase , report_mode , fmt_file , unified , endian_convert);
+  ecl_sum_type **ecl_sum_list = ecl_diag_load_ensemble(iens1 , iens2 , &min_size , ens_path , eclbase_dir , eclbase , report_mode , fmt_file , unified , endian_convert , history);
   util_make_path(out_path);
   for (iwell = 0; iwell < nwell; iwell++) {
     for (ivar = 0; ivar < nvar; ivar++) {
-      ecl_diag_make_plotfile(iens1 , iens2 , min_size , (const ecl_sum_type **) ecl_sum_list , out_path , well_list[iwell] , var_list[ivar]);
+      ecl_diag_make_plotfile(iens1 , iens2 , min_size , (const ecl_sum_type **) ecl_sum_list , out_path , well_list[iwell] , var_list[ivar] , history);
     }
   }
 
@@ -330,7 +321,7 @@ static char ** fread_alloc_wells(const char *well_file , int *_nwell) {
 
 
 
-void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name , bool fmt_file , bool unified , bool endian_convert) {
+void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name , bool fmt_file , bool unified , bool endian_convert, history_type * history) {
 #define defvar_N 4
   const bool report_mode = false;
   const int prompt_len = 68;
@@ -385,7 +376,7 @@ void ecl_diag_ens_interactive(const char *eclbase_dir , const char *eclbase_name
   /*
     read_bool("Add tecplot header" , prompt_len , &tecplot);
   */
-  ecl_diag_ens(iens1 , iens2 , out_path , nwell , (const char **) well_list , nvar , (const char **) var_list , ens_path , eclbase_dir , eclbase_name , report_mode , fmt_file , unified , endian_convert );
+  ecl_diag_ens(iens1 , iens2 , out_path , nwell , (const char **) well_list , nvar , (const char **) var_list , ens_path , eclbase_dir , eclbase_name , report_mode , fmt_file , unified , endian_convert , history);
 
 
 

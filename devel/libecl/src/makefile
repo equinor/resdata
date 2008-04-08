@@ -48,6 +48,14 @@ clean:
 $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
 
+ecl_diag.o : ecl_diag.c
+	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) -I$(LIBSCHED_HOME)/include $(CPPFLAGS) $< -o $@
+
+ecl_interC.o : ecl_interC.c
+	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) -I$(LIBSCHED_HOME)/include $(CPPFLAGS) $< -o $@
+
+
+
 %.o : %.c
 	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $(CPPFLAGS) $< -o $@
 
@@ -64,5 +72,5 @@ ecl_parse.o  : ecl_parse.h ecl_parse.h ecl_fstate.o ecl_util.o ecl_kw.o ecl_bloc
 ecl_diag.o   : ecl_diag.c ecl_diag.h ecl_sum.o ecl_fstate.o ecl_util.o
 ecl_interC.o : ecl_interC.c ecl_fstate.o ecl_sum.o ecl_parse.o lsf_jobs.o
 ecl_grid.o   : ecl_grid.c ecl_grid.h ecl_kw.o fortio.o
-ecl_interC.o : ecl_sum.o ecl_kw.o ecl_fstate.o ecl_block.o
+ecl_interC.o : ecl_sum.o ecl_kw.o ecl_fstate.o ecl_block.o ecl_diag.o
 ecl_box.o    : ecl_box.c ecl_box.h
