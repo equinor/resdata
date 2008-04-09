@@ -9,8 +9,6 @@
 
 
 int main (int argc , char **argv) {
-  printf("util_path_exist() : %d \n",util_path_exists("/tmp/Funny/Path"));
-  printf("util_file_exist() : %d \n",util_file_exists("/tmp/Funny/Path"));
-  printf("util_path_exist() : %d \n",util_path_exists("/tmp/file"));
-  printf("util_file_exist() : %d \n",util_file_exists("/tmp/file"));
+  char * cwd = util_alloc_cwd();
+  printf("Jeg er i %s \n",cwd);
 }

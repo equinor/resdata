@@ -9,6 +9,8 @@
 #define UTIL_PATH_SEP_STRING "/"   /* A \0 terminated separator used when we want a (char *) instance.                   */
 #define UTIL_PATH_SEP_CHAR   '/'   /* A simple character used when we want an actual char instance (i.e. not a pointer). */
 
+#define UTIL_NEWLINE_STRING "\n"
+
 typedef enum {util_filter_warn0 , util_filter_warn_unused = 1, util_filter_warn_unknown = 2 , util_filter_warn_all = 3} util_filter_warn_type;
 
 
@@ -30,10 +32,12 @@ double       util_file_difftime(const char * , const char *);
 bool         util_file_update_required(const char *, const char *);
 int          util_file_size(const char *);
 void         util_unlink_path(const char *);
+void         util_unlink_path_TESTING(const char *);
 void         util_unlink_existing(const char *filename);
 void         util_strupr(char *);
 void 	     util_copy_stream(FILE *, FILE *, int , void * );
 void 	     util_copy_file(const char * , const char * );
+char       * util_alloc_cwd(void);
 
 int      util_forward_line(FILE * , bool * );
 void     util_rewind_line(FILE *);
@@ -61,6 +65,7 @@ char   * util_alloc_string_copy(const char *);
 char  ** util_alloc_stringlist_copy(const char **, int );
 void     util_split_string(const char *, const char *, int *, char ***);
 char   * util_alloc_joined_string(const char **  , int , const char * );
+char   * util_alloc_multiline_string(const char ** , int );
 char   * util_realloc_string_copy(char * , const char *);
 char   * util_realloc_substring_copy(char * , const char *, int );
 char   * util_alloc_string_sum2(const char *, const char *);

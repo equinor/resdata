@@ -121,54 +121,72 @@ char * util_realloc_full_path(char *old_path , const char *path , const char *fi
 
 
 
-void util_unlink_path(const char *path) {
+void static util_unlink_path_static(const char *path , bool test_mode) {
   if (util_path_exists(path)) {
     const uid_t uid = getuid();
-    char *cwd       = NULL;
+    DIR  *dirH;
     struct dirent *dentry;
-    cwd  = getcwd(cwd , 0);
-    if (chdir(path) != 0) {
-      fprintf(stderr,"%s: failed to change to %s - aborting \n", __func__ , path);
-      abort();
-    } else {
-      DIR *dirH;
-      char * new_cwd = getcwd(new_cwd , 0);
-      dirH = opendir( new_cwd );  /* Have already changed into this directory with chdir() */
-      while ( (dentry = readdir(dirH)) != NULL) {
-	struct stat buffer;
-	const char * entry = dentry->d_name;
-	mode_t mode;
-	if (lstat(entry , &buffer) != 0) {
-	  fprintf(stderr,"%s: failed to stat(%s/%s) - aborting \n",__func__ , cwd , entry);
-	  abort();
+    dirH = opendir( path );  
+
+    while ( (dentry = readdir(dirH)) != NULL) {
+      struct stat buffer;
+      mode_t mode;
+      const char * entry_name = dentry->d_name;
+      if ((strcmp(entry_name , ".") != 0) && (strcmp(entry_name , "..") != 0)) {
+	char * full_path = util_alloc_full_path(path , entry_name);
+
+	if (lstat(full_path , &buffer) != 0) {
+	  fprintf(stderr,"%s: failed to stat: %s entry not removed.\n",__func__ , full_path);
 	} else {
 	  mode = buffer.st_mode;
-
+	  
 	  if (S_ISDIR(mode)) {
-	    if ((strcmp(entry , ".") != 0) && (strcmp(entry , "..") != 0)) 
-	      util_unlink_path(entry);
-	  } else if (S_ISLNK(mode)) 
+	    util_unlink_path_static(full_path, test_mode);
+	  } else if (S_ISLNK(mode)) {
 	    /*
 	      Symbolic links are unconditionally removed.
 	    */
-	    unlink(entry);
+	    if (test_mode)
+	      printf("%s [TEST:] removing symbolic link: %s \n",__func__ , full_path);
+	    else
+	      unlink(full_path);
+	  }
 	  else if (S_ISREG(mode)) {
-	    if (buffer.st_uid == uid) 
-	      unlink(entry);
-	    else 
-	      fprintf(stderr,"Warning mismatch in uid of calling process and entry owner for:%s - entry *not* removed \n",entry);
+	    if (buffer.st_uid == uid) {
+	      if (test_mode)
+		printf("%s [TEST:] removing file: %s \n",__func__ , full_path);
+	      else {
+		if (unlink(full_path) != 0) {
+		  fprintf(stderr,"%s: failed to unlink: %s ?? \n",__func__ , full_path);
+		  fprintf(stderr,"%s: %s(%d) \n",__func__ , strerror(errno) , errno);
+		}
+	      }
+	    } else 
+	      fprintf(stderr,"Warning mismatch in uid of calling process and owner for:%s - entry *not* removed \n",full_path);
 	  }
 	}
+	free(full_path);
       }
-      free(new_cwd);
-      closedir(dirH);
-      chdir(cwd);
-      free(cwd);
-
-      if (rmdir(path) != 0) 
-	fprintf(stderr,"%s: Warning: failed to remove director:%s \n",__func__ , path);
     }
+    
+    closedir(dirH);
+    if (test_mode)
+      printf("%s: [TEST:] removing directory: %s \n",__func__ , path);
+    else 
+      if (rmdir(path) != 0) 
+	fprintf(stderr,"%s: Warning: failed to remove directory:%s \n",__func__ , path);
+    
   }
+}
+
+
+
+void util_unlink_path(const char *path) {
+  util_unlink_path_static(path , false);
+}
+
+void util_unlink_path_TESTING(const char *path) {
+  util_unlink_path_static(path , true);
 }
 
 

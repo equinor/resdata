@@ -244,6 +244,26 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
 }
 
 
+char * util_alloc_cwd(void) {
+  char * result_ptr;
+  char * cwd;
+  int buffer_size = 128;
+  do {
+    cwd = util_malloc(buffer_size , __func__);
+    result_ptr = getcwd(cwd , buffer_size - 1);
+    if (result_ptr == NULL) {
+      if (errno == ERANGE) {
+	buffer_size *= 2;
+	free(cwd);
+      }
+    }
+  } while ( result_ptr == NULL );
+  cwd = util_realloc(cwd , strlen(cwd) + 1 , __func__);
+  return cwd;
+}
+
+
+
 bool util_sscanf_date(const char * date_token , time_t * t) {
   int day   , month , year;
   char sep1 , sep2;
@@ -1026,7 +1046,6 @@ bool util_fmt_bit8(const char *filename ) {
 
 
 
-
 double util_file_difftime(const char *file1 , const char *file2) {
   struct stat b1, b2;
   int f1,f2;
@@ -1449,6 +1468,7 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
 
 /*****************************************************************/
 
+
 /**
   Allocates a new string consisting of all the elements in item_list,
   joined together with sep as separator. Elements in item_list can be
@@ -1486,6 +1506,19 @@ char * util_alloc_joined_string(const char ** item_list , int len , const char *
     } else
       return NULL;
   }
+}
+
+
+/**
+  New string is allocated by joining the elements in item_list, with
+  "\n" character as separator; an extra "\n" is also added at the end
+  of the list.
+*/
+char * util_alloc_multiline_string(const char ** item_list , int len) {
+  char * multiline_string = util_alloc_joined_string(item_list , len , UTIL_NEWLINE_STRING);
+  multiline_string = util_realloc(multiline_string , (strlen(multiline_string) + strlen(UTIL_NEWLINE_STRING) + 1) * sizeof * multiline_string , __func__ );
+  strcat(multiline_string , UTIL_NEWLINE_STRING);
+  return multiline_string;
 }
 
 
@@ -1726,6 +1759,10 @@ static FILE * util_fopen__(const char *filename , const char * mode, int abort_m
     stream = fopen(filename , "w");
     if (stream == NULL) {
       fprintf(stderr,"%s: failed to open:%s for writing: %s \n",__func__ , filename, strerror(errno));
+      {
+	char * cwd = util_alloc_cwd();
+	fprintf(stderr,"%s: cwd:%s \n",__func__ , cwd);
+      }
       if (abort_mode & ABORT_WRITE) abort();
     }
   } else {
