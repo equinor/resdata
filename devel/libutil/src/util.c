@@ -1753,6 +1753,11 @@ static FILE * util_fopen__(const char *filename , const char * mode, int abort_m
     stream = fopen(filename , "r");
     if (stream == NULL) {
       fprintf(stderr,"%s: failed to open:%s for reading: %s \n",__func__ , filename , strerror(errno));
+      {
+	char * cwd = util_alloc_cwd();
+	fprintf(stderr,"%s: cwd:%s \n",__func__ , cwd);
+	free(cwd);
+      }
       if (abort_mode & ABORT_READ) abort();
     }
   } else if (strcmp(mode ,"w") == 0) {
@@ -1762,6 +1767,7 @@ static FILE * util_fopen__(const char *filename , const char * mode, int abort_m
       {
 	char * cwd = util_alloc_cwd();
 	fprintf(stderr,"%s: cwd:%s \n",__func__ , cwd);
+	free(cwd);
       }
       if (abort_mode & ABORT_WRITE) abort();
     }
@@ -1769,6 +1775,7 @@ static FILE * util_fopen__(const char *filename , const char * mode, int abort_m
     fprintf(stderr,"%s: open mode: '%s' not implemented - aborting \n",__func__ , mode);
     abort();
   }
+
   return stream;
 }
 
@@ -2039,9 +2046,11 @@ void util_fskip_compressed(FILE * stream) {
 */
 
 
+/*
 static bool util_filter_buffer(const char * src_buffer , const char * target_file , char ** _target_buffer, int * _target_buffer_size , bool target_buffer_can_resize , char start_char , char end_char , const hash_type * kw_hash , util_filter_warn_type warning_mode) {
   return true;
 }
+*/
 
 
 

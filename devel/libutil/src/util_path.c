@@ -32,41 +32,16 @@ void util_make_path(const char *_path) {
       
       if (!util_path_exists(active_path)) {
 	if (mkdir(active_path , 0775) != 0) { 
-	  fprintf(stderr,"%s: failed to make directory:%s - aborting \n",__func__ , active_path);
-	  fprintf(stderr,"%s \n",strerror(errno));
-	  abort();
+	  if (!((errno == EEXIST) && util_is_directory(active_path))) {  /* errnoe == EEXIST another thread might have made it for us.... */
+	    fprintf(stderr,"%s: failed to make directory:%s - aborting \n",__func__ , active_path);
+	    fprintf(stderr,"%s \n",strerror(errno));
+	    abort();
+	  }
 	}
       }
-
+      
     } while (strlen(active_path) < strlen(_path));
     free(active_path);
-  }
-}
-
-
-void util_make_path2(const char *path) {
-  if (!util_path_exists(path)) {
-    int length;
-    int offset;
-    if (path[0] == UTIL_PATH_SEP_CHAR)
-      offset = 1;
-    else
-      offset = 0;
-    length      = strcspn(&path[offset] , UTIL_PATH_SEP_STRING);
-    {
-      char * sub_path = util_alloc_substring_copy(&path[offset] , length);
-      char * cwd      = NULL;
-      cwd = getcwd(cwd , 0);
-      if (mkdir(sub_path , 0775) != 0) {
-	fprintf(stderr,"%s: failed to make directory:%s (ERROR:%d) - aborting \n",__func__ , sub_path, errno);
-	fprintf(stderr,"%s \n",strerror(errno));
-	abort();
-      }
-      chdir(sub_path);
-      free(sub_path);
-      util_make_path2(&path[offset + length + 1]);
-      chdir(cwd);
-    }
   }
 }
 
