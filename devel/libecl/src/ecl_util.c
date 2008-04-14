@@ -628,6 +628,7 @@ safely used as filenames, i.e for instance the substitution:
 
    1/FVFGAS -> 1-FVFGAS
 
+The escape process is done 'in-place' memory-wise.
 */
 void ecl_util_escape_kw(char * kw) {
   int index;

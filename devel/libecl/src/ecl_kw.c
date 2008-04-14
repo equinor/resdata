@@ -1169,7 +1169,6 @@ void ecl_kw_cfread(ecl_kw_type * ecl_kw , FILE *stream) {
 
 
 void ecl_kw_fwrite_compressed(const ecl_kw_type *ecl_kw , FILE * stream) {
-  ecl_kw_assert_binary_file(ecl_kw , __func__);
   ecl_kw_cfwrite_header(ecl_kw , stream);
   /*
     Dumps out nine characters - including a \0 - for every char variable 
@@ -1180,7 +1179,6 @@ void ecl_kw_fwrite_compressed(const ecl_kw_type *ecl_kw , FILE * stream) {
 
 
 void ecl_kw_fread_realloc_compressed(ecl_kw_type * ecl_kw , FILE * stream) {
-  ecl_kw_assert_binary_file(ecl_kw , __func__);
   ecl_kw_cfread_header(ecl_kw , stream); 
   ecl_kw_alloc_data(ecl_kw);
   util_fread_compressed(ecl_kw->data , stream);
@@ -1188,9 +1186,7 @@ void ecl_kw_fread_realloc_compressed(ecl_kw_type * ecl_kw , FILE * stream) {
 
 
 ecl_kw_type * ecl_kw_fread_alloc_compressed(FILE * stream) {
-  bool fmt_file       = util_fmt_bit8_stream(stream);
-  ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(fmt_file , false);
-  ecl_kw_assert_binary_file(ecl_kw , __func__);
+  ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(false , false);
   ecl_kw_fread_realloc_compressed(ecl_kw , stream);
   return ecl_kw;
 }

@@ -1,8 +1,6 @@
 /**
   This function implements functionality to load ECLISPE grid files, 
-  both .EGRID and .GRID files.
-  
-  
+  both .EGRID and .GRID files - in a transparent fashion.
 */
 
 #include <stdlib.h>

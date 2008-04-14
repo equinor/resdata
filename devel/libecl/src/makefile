@@ -10,9 +10,9 @@ INSTALL_LIB_PATH =  $(LIBECL_HOME)/lib
 CFLAGS  = -O2 -$(MFLAG)  -std=gnu99 -g -Wall -fPIC
 ARFLAGS = -csr
 #################################################################
-OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_diag.o ecl_rft_vector.o ecl_rft_node.o ecl_grid.o ecl_box.o restart_kw_list.o 
+OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_rft_vector.o ecl_rft_node.o ecl_grid.o ecl_box.o restart_kw_list.o 
 MOD_FILES = 
-INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h lsf_jobs.h ecl_parse.h ecl_diag.h ecl_rft_vector.h ecl_rft_node.h ecl_box.h ecl_grid.h restart_kw_list.h 
+INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h lsf_jobs.h ecl_parse.h ecl_rft_vector.h ecl_rft_node.h ecl_box.h ecl_grid.h restart_kw_list.h 
 LIB       = libecl_$(MFLAG).a
 LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L$(LIBHASH_HOME)/lib -L$(LIBECL_HOME)/lib
 LIB_LINK  = -lecl_$(MFLAG) -lutil_$(MFLAG) -lhash_$(MFLAG) -lm -lz
@@ -33,6 +33,7 @@ INSTALL: $(LIB)
 	gcc $(CFLAGS) $(TARGET_INCLUDE) combine_grdecl.c   -o combine_grdecl.x    $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) $(TARGET_INCLUDE) kw_extract.c       -o kw_extract.x        $(LIB_PATH)  $(LIB_LINK)
 	gcc $(CFLAGS) $(TARGET_INCLUDE) grid_info.c        -o grid_info.x         $(LIB_PATH)  $(LIB_LINK)
+	gcc $(CFLAGS) -I$(LIBSCHED_HOME)/include $(TARGET_INCLUDE) kari.c      -o kari.x     $(LIB_PATH)  -L$(LIBSCHED_HOME)/lib -lsched_$(MFLAG) $(LIB_LINK) 
 
 ###     This only links to 64 bit libraries.
 #	gcc -O2 -m64 -std=gnu99 -g -Wall  -I$(INSTALL_INC_PATH) $(COMPILE_INCLUDE) ecl_rft.c  -o ecl_rft.x  $(LIB_PATH)  -lecl_m64 -lutil_m64 -lhash_m64 -lreadline -lncurses -lm
@@ -47,12 +48,6 @@ clean:
 
 $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
-
-ecl_diag.o : ecl_diag.c
-	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) -I$(LIBSCHED_HOME)/include $(CPPFLAGS) $< -o $@
-
-ecl_interC.o : ecl_interC.c
-	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) -I$(LIBSCHED_HOME)/include $(CPPFLAGS) $< -o $@
 
 
 
@@ -69,8 +64,7 @@ ecl_block.o  : ecl_block.c ecl_block.h ecl_kw.o
 ecl_fstate.o : ecl_fstate.c ecl_fstate.h ecl_block.o ecl_util.o ecl_kw.o
 ecl_sum.o    : ecl_sum.c ecl_sum.h ecl_fstate.o ecl_block.o ecl_kw.o ecl_util.o
 ecl_parse.o  : ecl_parse.h ecl_parse.h ecl_fstate.o ecl_util.o ecl_kw.o ecl_block.o
-ecl_diag.o   : ecl_diag.c ecl_diag.h ecl_sum.o ecl_fstate.o ecl_util.o
 ecl_interC.o : ecl_interC.c ecl_fstate.o ecl_sum.o ecl_parse.o lsf_jobs.o
 ecl_grid.o   : ecl_grid.c ecl_grid.h ecl_kw.o fortio.o
-ecl_interC.o : ecl_sum.o ecl_kw.o ecl_fstate.o ecl_block.o ecl_diag.o
+ecl_interC.o : ecl_sum.o ecl_kw.o ecl_fstate.o ecl_block.o 
 ecl_box.o    : ecl_box.c ecl_box.h

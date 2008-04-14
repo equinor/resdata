@@ -5,10 +5,8 @@
 #include <ext_job.h>
 #include <lsf_jobs.h>
 #include <ecl_parse.h>
-#include <ecl_diag.h>
 #include <util.h>
 #include <sched.h>
-#include <history.h>
 
 
 static ecl_fstate_type * ECL_FSTATE     = NULL;
@@ -377,24 +375,25 @@ void ecl_inter_diag_ens_interactive__(const char *_eclbase_dir  , const int *dir
   char *eclbase_dir  = util_alloc_cstring(_eclbase_dir  , dir_len);
   char *eclbase_name = util_alloc_cstring(_eclbase_name , name_len);
   char *history_file = util_alloc_cstring(_history_file , history_len);
-  history_type * history;
+  util_abort("%s: currently not implemented \n",__func__);
+/*   history_type * history; */
   
-  bool fmt_file = util_intptr_2bool(fmt_file_int);
-  bool unified  = util_intptr_2bool(unified_int);
+/*   bool fmt_file = util_intptr_2bool(fmt_file_int); */
+/*   bool unified  = util_intptr_2bool(unified_int); */
 
-  {
-    FILE * stream = util_fopen(history_file , "r");
-    history = history_fread_alloc(stream);
-    printf("History loaded from: %s \n",history_file);
-    fclose(stream);
-  }
+/*   { */
+/*     FILE * stream = util_fopen(history_file , "r"); */
+/*     history = history_fread_alloc(stream); */
+/*     printf("History loaded from: %s \n",history_file); */
+/*     fclose(stream); */
+/*   } */
   
   
-  ecl_diag_ens_interactive(eclbase_dir , eclbase_name , fmt_file , unified , ENDIAN_CONVERT, history);
-  free(eclbase_dir);
-  free(eclbase_name);
-  free(history_file);
-  history_free(history);
+/*   ecl_diag_ens_interactive(eclbase_dir , eclbase_name , fmt_file , unified , ENDIAN_CONVERT, history); */
+/*   free(eclbase_dir); */
+/*   free(eclbase_name); */
+/*   free(history_file); */
+/*  history_free(history); */
 }
 
 
