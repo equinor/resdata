@@ -153,6 +153,7 @@ void ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate , bool unified) {
 
 
 ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ecl_file_type file_type , bool endian_convert) {
+  const bool include_first_summary_block = true;
   ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(ECL_FMT_AUTO , file_type , endian_convert);
   ecl_fstate_set_files(ecl_fstate , files , filelist);
   
@@ -219,22 +220,37 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	  if (file_type == ecl_summary_file) {
 	    if (!ecl_block_has_kw(ecl_block , "MINISTEP")) 
 	      add_block = false;
+
+	    /* The first summary file: X.S0001 contains two param
+	       blocks - one initial (with all zeros), and one for the
+	       first report with actual results.
+	    */
+	    if (report_nr == 1)
+	      ecl_block_set_report_nr(ecl_block , 0);
+	    
+	    if (!include_first_summary_block)
+	      add_block = false;
 	  } 
 
-	  ecl_block_set_report_nr(ecl_block , report_nr);
+
 	  if (add_block)
 	    ecl_fstate_add_block(ecl_fstate , ecl_block);
 	  
+	  if (file_type == ecl_summary_file && report_nr == 1) {
+	    /* Loading next block in the pathological first summary file */
+	    ecl_block_type *ecl_block = ecl_block_alloc(report_nr , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+	    ecl_block_fread(ecl_block , fortio , &at_eof );
+	    ecl_fstate_add_block(ecl_fstate , ecl_block);
+	  }
+	  
+	  
+	  
 	  if (file_type == ecl_summary_file) {
-	    if (report_nr == 0) 
-	      report_nr = 1;
-	    else {
-	      if (!at_eof) {
-		if (ecl_fstate->__RPTONLY) {
-		  fprintf(stderr,"\n%s: Several timesteps in summary file:%s allocated with summary_report_only = true - aborting.\n",__func__ , ecl_fstate->filelist[file]);
-		  fprintf(stderr,"%s: Maybe you have forgot the keyword: \'RPTONLY\' in the datafile?\n",__func__);
-		  abort();
-		}
+	    if (!at_eof) {
+	      if (ecl_fstate->__RPTONLY) {
+		fprintf(stderr,"\n%s: Several timesteps in summary file:%s allocated with summary_report_only = true - aborting.\n",__func__ , ecl_fstate->filelist[file]);
+		fprintf(stderr,"%s: Maybe you have forgot the keyword: \'RPTONLY\' in the datafile?\n",__func__);
+		abort();
 	      }
 	    }
 	  }

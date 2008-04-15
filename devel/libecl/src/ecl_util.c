@@ -15,48 +15,42 @@
 
 char * ecl_util_alloc_base_guess(const char * path) {
   char *base = NULL;
-  char *cwd  = NULL;
   int   data_count = 0;
-  cwd  = getcwd(cwd , 0);
-  if (chdir(path) != 0) {
-    fprintf(stderr,"%s: failed to change to %s - aborting \n", __func__ , path);
-    abort();
-  } else {
-    struct dirent *dentry;
-    DIR *dirH;
-    dirH = opendir( "./" );  /* Have already changed into this directory with chdir() */
-    while ( (dentry = readdir(dirH)) != NULL) {
-      const char * entry = dentry->d_name;
-      char *this_base , *ext;
+  struct dirent *dentry;
+  DIR *dirH;
+  dirH = opendir( path ); 
+  if (dirH == NULL)
+    util_abort("%s: failed to open directory: %s - aborting.\n",__func__ , path);
+  
+  while ( (dentry = readdir(dirH)) != NULL) {
+    const char * entry = dentry->d_name;
+    char *this_base , *ext;
+    
+    if (entry[0] == '.') continue; 
+    util_alloc_file_components(entry , NULL , &this_base , &ext);
+    if (ext != NULL) {
       
-      if (entry[0] == '.') continue; 
-      util_alloc_file_components(entry , NULL , &this_base , &ext);
-      if (ext != NULL) {
-	
-	if ((strcmp(ext,"DATA") == 0) || (strcmp(ext , "data") == 0)) {
-	  if (data_count == 0) 
-	    base = util_alloc_string_copy(this_base);
-	  else if (data_count == 1) {
-	    free(base);
-	    base = NULL;
-	  }
-	  data_count++;
+      if ((strcmp(ext,"DATA") == 0) || (strcmp(ext , "data") == 0)) {
+	if (data_count == 0) 
+	  base = util_alloc_string_copy(this_base);
+	else if (data_count == 1) {
+	  free(base);
+	  base = NULL;
 	}
-	
-	free(ext);
+	data_count++;
       }
-      if (this_base != NULL) free(this_base);
+      
+      free(ext);
     }
-    closedir(dirH);
-    chdir(cwd);
-    free(cwd);
+    if (this_base != NULL) free(this_base);
+    
   }
-
+  closedir(dirH);
+  
   if (data_count > 1)
     fprintf(stderr,"%s: found several files with extension DATA in:%s  can not guess ECLIPSE base - returning NULL\n",__func__ , path);
   else if (data_count == 0)
     fprintf(stderr,"%s: could not find any files ending with data / DATA in:%s - can not guess ECLIPSE base - returning NULL \n",__func__ , path);
-  
   return base;
 }
 
@@ -619,6 +613,126 @@ ecl_type_enum ecl_util_guess_type(const char * key){
   return type;
 }
 
+
+/**
+   This routine allocates summary header and data files from a
+   directory; path and base are input. For the header file there are
+   two possible files:
+
+     1. X.FSMSPEC
+     2. X.SMSPEEC
+
+   For the data there are four different possibilities:
+
+     1. X.A0001, X.A0002, X.A0003, ... 
+     2. X.FUNSMRY
+     3. X.S0001, X.S0002, X.S0003, ... 
+     4. X.UNSMRY
+  
+   In principle a directory can contain all different (altough that is
+   probably not typical). The algorithm is a a two step algorithm:
+
+     1. Determine wether to use X.FSMSPEC or X.SMSPEC based on which
+        is the newest. This also implies a decision of wether to use
+        formatted, or unformatted filed.
+ 
+     2. Use formatted or unformatted files according to 1. above, and
+        then choose either a list of files or unified files according
+        to which is the newest.
+   
+   This algorithm should work in most practical cases, but it is
+   surely possible to fool it.
+*/
+
+
+void ecl_util_alloc_summary_files(const char * path , const char * _base , char ** _header_file , char *** _data_files , int * _num_data_files , bool * _fmt_file , bool * _unified) {
+  bool    fmt_file    	 = true; 
+  bool    unified     	 = true;
+  char  * header_file 	 = NULL;
+  char ** data_files  	 = NULL;
+  int     num_data_files = 0;
+  char  * base;
+
+  if (_base == NULL)
+    base = ecl_util_alloc_base_guess(path);
+  else
+    base = (char *) _base;
+  
+  {
+    char * fsmspec_file = ecl_util_alloc_filename(path , base , ecl_summary_header_file , true  , -1);
+    char *  smspec_file = ecl_util_alloc_filename(path , base , ecl_summary_header_file , false , -1);
+    if (util_file_exists(fsmspec_file) && util_file_exists(smspec_file)) {
+      if (util_file_difftime(fsmspec_file , smspec_file) < 0) {
+	header_file = fsmspec_file;
+	free(smspec_file);
+	fmt_file = true;
+      } else {
+	header_file = smspec_file;
+	free(fsmspec_file);
+	fmt_file = false;
+      }
+    } else if (util_file_exists(fsmspec_file)) {
+      header_file = fsmspec_file;
+      free(smspec_file);
+      fmt_file = true;
+    } else if (util_file_exists(smspec_file)) {
+      header_file = smspec_file;
+      free(fsmspec_file);
+      fmt_file = false;
+    } else 
+      util_abort("%s: could not find either %s or %s - can not load summary data from %s/%s.DATA \n",__func__ , fsmspec_file , smspec_file , path , base);
+  }
+  {
+    int files;
+    char  * unif_data_file = ecl_util_alloc_filename(path , base , ecl_unified_summary_file , fmt_file , -1);
+    char ** file_list      = ecl_util_alloc_scandir_filelist(path , base , ecl_summary_file , fmt_file , &files); 
+    bool    unif_exists    = util_file_exists(unif_data_file);            
+    
+    if ((files > 0) && unif_exists) {
+      bool unified_newest = true;
+      int file_nr = 0;
+      while (unified_newest && (file_nr < files)) {
+	if (util_file_difftime(file_list[file_nr] , unif_data_file) < 0) 
+	  unified_newest = false;
+	file_nr++;
+      }
+
+      if (unified_newest) {
+	util_free_string_list( file_list , files );
+	data_files     = util_malloc( sizeof * data_files , __func__);
+	data_files[0]  = unif_data_file;
+	unified        = true;
+	num_data_files = 1;
+      } else {
+	free(unif_data_file);
+	unified    = false;
+	data_files = file_list;
+	num_data_files = files;
+      }
+    } else if (files > 0) {
+      free(unif_data_file);
+      unified    = false;
+      data_files = file_list;
+      num_data_files = files;
+    } else if (unif_exists) {
+      util_free_string_list( file_list , files );
+      data_files     = util_malloc( sizeof * data_files , __func__);
+      data_files[0]  = unif_data_file;
+      unified        = true;
+      num_data_files = 1;
+    } else 
+      util_abort("%s: could not find summary data in %s - aborting.\n",__func__ , path );
+  }
+  
+  if (_base == NULL)
+    free(base);
+
+  *_fmt_file  	   = fmt_file;
+  *_unified   	   = unified;
+  *_num_data_files = num_data_files;
+  *_header_file    = header_file;
+  *_data_files     = data_files;
+}
 
 
 

@@ -80,7 +80,7 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
     int report_nr;
 
     ecl_util_get_file_type(data_files[0] , &file_type , &fmt_file , &report_nr);
-    sum->data     = ecl_fstate_fread_alloc(files , data_files   , file_type , sum->endian_convert);
+    sum->data     = ecl_fstate_fread_alloc(files  , data_files   , file_type , sum->endian_convert);
     /*
       Check size of PARAMS block...
     */
@@ -729,10 +729,17 @@ time_t ecl_sum_get_start_time(const ecl_sum_type * ecl_sum) {
 }
 
 
-time_t ecl_sum_get_sim_time(const ecl_sum_type * ecl_sum , int index) {
+time_t ecl_sum_iget_sim_time(const ecl_sum_type * ecl_sum , int index) {
   ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , index);
   return ecl_block_get_sim_time(block);
 }
+
+
+time_t ecl_sum_get_sim_time(const ecl_sum_type * ecl_sum , int report_step) {
+  ecl_block_type * block = ecl_fstate_get_block_by_report_nr(ecl_sum->data , report_step);
+  return ecl_block_get_sim_time(block);
+}
+
 
 
 int ecl_sum_get_report_size(const ecl_sum_type * ecl_sum , int * first_report_nr , int * last_report_nr) {
@@ -854,6 +861,25 @@ void ecl_sum_free(ecl_sum_type *ecl_sum) {
   free(ecl_sum);
 }
 
+
+/**
+   This is actually not a proper report_step - but rather an index ...
+*/
+void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nwells , int nvars , const char ** well_list , const char ** well_var_list) {
+  int report_step , first_report_step , last_report_step;
+  ecl_sum_get_report_size(ecl_sum , &first_report_step , &last_report_step);
+  printf("report_step: %d -> %d \n",first_report_step , last_report_step);
+  for (report_step = first_report_step; report_step <= last_report_step; report_step++) {
+    int day,month,year,ivar,iwell;
+    util_set_date_values(ecl_sum_get_sim_time(ecl_sum , report_step) , &day , &month, &year); 
+    fprintf(stream , "%04d   %02d/%02d/%04d   ",report_step , day , month , year);
+
+    for (iwell=0; iwell < nwells; iwell++)
+      for (ivar = 0; ivar < nvars; ivar++)
+	fprintf(stream , " %12.3f " , ecl_sum_get_well_var(ecl_sum , report_step , well_list[iwell] , well_var_list[ivar]));
+    fprintf(stream , "\n");
+  }
+}
 
 
 /*****************************************************************/
