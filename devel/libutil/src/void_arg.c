@@ -68,7 +68,7 @@ static void __void_arg_assert_index(const void_arg_type * arg , int iarg) {
 
 static void __void_arg_assert_type(const void_arg_type * arg , int iarg , node_ctype arg_type) {
   if (arg_type != arg->arg_type[iarg]) {
-    fprintf(stderr,"%s: asked for type:%d  alloc statement:%d  - aborting \n" , __func__ , arg_type , arg->arg_type[iarg]);
+    fprintf(stderr,"%s: asked for type:\'%s\'  alloc statement:\'%s\'  - aborting \n" , __func__ , node_ctype_name(arg_type) , node_ctype_name(arg->arg_type[iarg]));
     abort();
   }
 }

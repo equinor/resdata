@@ -1,3 +1,18 @@
+/**
+  This little function checks if the supplied path is an abolute path,
+  or a relative path. The check is extremely simple - if the first
+  character equals "/" (on Unix) it is interpreted as an abolute path, 
+  otherwise not.
+*/
+
+
+bool util_is_abs_path(const char * path) {
+  if (path[0] == UTIL_PATH_SEP_CHAR)
+    return true;
+  else
+    return false;
+}
+
 
 int util_get_path_length(const char * file) {
   if (util_is_directory(file)) 
@@ -28,7 +43,7 @@ void util_make_path(const char *_path) {
       i++;
       strncpy(active_path , _path , n + current_pos); 
       active_path[n+current_pos] = '\0';
-      current_pos += n;
+      current_pos += n; 
       
       if (!util_path_exists(active_path)) {
 	if (mkdir(active_path , 0775) != 0) { 
@@ -46,8 +61,21 @@ void util_make_path(const char *_path) {
 }
 
 
-/*
-  path/prefix-pid-xxxxx
+/**
+   This function will allocate a unique filename with a random part in
+   it. If the the path corresponding to the first argument does not
+   exist it is created.
+
+   If the value include_pid is true, the pid of the calling process is
+   included in the filename, the resulting filename will be:
+
+      path/prefix-pid-RANDOM
+
+   if include_pi is false the resulting file will be:
+
+      path/prefix-RANDOM
+
+   Observe that prefix can *NOT* contain any path sections, i.e. '/'.
 */
 
 char * util_alloc_tmp_file(const char * path, const char * prefix , bool include_pid ) {
@@ -58,7 +86,18 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
 
   
   pid_t  pid            = getpid() % pid_max;
-  char * file           = malloc(strlen(path) + 1 + strlen(prefix) + 1 + pid_digits + 1 + random_digits + 1);
+  char * file           = util_malloc(strlen(path) + 1 + strlen(prefix) + 1 + pid_digits + 1 + random_digits + 1 , __func__);
+  
+  if (!util_is_directory(path))
+    util_make_path(path);
+  {
+    int i;
+    for (i = 0; i < strlen(prefix); i++)
+      if (prefix[i] == UTIL_PATH_SEP_CHAR)
+	util_abort("%s: prefix:%s invalid - can not contain path separator:\'%s\' - aborting\n",__func__ , prefix , UTIL_PATH_SEP_STRING);
+  }
+
+  
   do {
     long int rand_int = random() % random_max;
     if (include_pid)
@@ -67,7 +106,10 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
       sprintf(file , "%s%c%s-%ld" , path , UTIL_PATH_SEP_CHAR , prefix , rand_int);
   } while (util_file_exists(file));
   return file;
+
 }
+
+
 
 
 /**
@@ -149,7 +191,7 @@ void static util_unlink_path_static(const char *path , bool test_mode) {
       printf("%s: [TEST:] removing directory: %s \n",__func__ , path);
     else 
       if (rmdir(path) != 0) 
-	fprintf(stderr,"%s: Warning: failed to remove directory:%s \n",__func__ , path);
+	fprintf(stderr,"%s: Warning: failed to remove directory:%s - %s \n",__func__ , path , strerror(errno));
     
   }
 }

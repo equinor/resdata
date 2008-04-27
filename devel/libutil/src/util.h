@@ -24,6 +24,7 @@ bool         util_is_executable(const char * );
 bool 	     util_file_exists(const char *);
 int          util_get_path_length(const char * );
 bool 	     util_path_exists(const char *);
+bool         util_is_abs_path(const char * );
 bool 	     util_fmt_bit8   (const char *);
 bool         util_fmt_bit8_stream(FILE * );
 void 	     util_make_path  (const char *);
@@ -136,6 +137,8 @@ void 	 util_fwrite_double_vector(const double  * , int , FILE * , const char * )
 void 	 util_compress_buffer(const void * , int , void * , unsigned long * );
 void 	 util_fread_compressed(char * , FILE * );
 void 	 util_fwrite_compressed(const void * , int , FILE * );
+void     util_block_growing_file(const char * );
+void     util_block_growing_directory(const char * );
 
 #define UTIL_FWRITE_SCALAR(s,stream) fwrite(&s , sizeof s , 1 , stream)
 #define UTIL_FREAD_SCALAR(s,stream)  fread(&s , sizeof s , 1 , stream)

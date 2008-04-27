@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <util.h>
 #include <stdbool.h>
+#include <node_ctype.h>
 
 struct path_fmt_struct {
   int   buffer_size;
@@ -36,6 +37,34 @@ static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory , b
   return path;
 }
 
+/**
+
+  This function is used to allocate a path_fmt instance which is
+  intended to hold a directory, if the second argument is true, the
+  resulting directory will be automatically created when
+  path_fmt_alloc_path() is later invoked.
+
+  Example:
+  -------
+  path_fmt_type * path_fmt = path_fmt_alloc_directory_fmt("/tmp/scratch/member%d/%d.%d" , true);
+  ....
+  ....
+  char * path = path_fmt_alloc_path(path_fmt , 10 , 12 , 15);
+  char * file = path_fmt_alloc_file(path_fmt ,  8 , 12 , 17, "SomeFile");
+
+  After the two last function calls we will have:
+
+   o path = "/tmp/scratch/member10/12.15" - and this directory has
+     been created. 
+
+   o file = "/tmp/scratch/member8/12.17/SomeFile - and the directory
+     /tmp/scratch/member8/12.17 has been created.
+
+     
+  Observe that the functionality is implemented with the help av
+  variable length argument lists, and **NO** checking of argument list
+  versus format string is performed.
+*/
 
 path_fmt_type * path_fmt_alloc_directory_fmt(const char * fmt , bool auto_mkdir) {
   return path_fmt_alloc__(fmt , true , auto_mkdir);
@@ -108,6 +137,28 @@ char * path_fmt_alloc_file(const path_fmt_type * path , ...) {
   }
 }
 
+/**
+   This function is used to assert that the format in a path_fmt
+   instance is according to specification. What is checked is that the
+   format string contains %d, %lfg and %s in as specified in the
+   input_types vector.
+
+   Observe that %s is mapped to void_pointer - as the node_ctype does not
+   have typed pointers.
+*/
+
+
+/*
+void path_fmt_assert_fmt(const path_fmt_type * path , int num_input , const node_ctype * input_types) {
+  int input_nr = 0;
+  int char_nr  = 0;
+  do {
+    if (path->fmt[char_nr] == '%') {
+
+    }
+  }
+}
+*/
 
 const char * path_fmt_get_fmt(const path_fmt_type * path) {
   return path->fmt;
