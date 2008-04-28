@@ -46,31 +46,24 @@ static int void_arg_sizeof(node_ctype arg_type) {
     size = sizeof( size_t );
     break;
   default:
-    fprintf(stderr,"%s: arg_type:%d not recognized - aborting \n",__func__ , arg_type);
-    abort();
+    util_abort("%s: arg_type:%d not recognized - aborting \n",__func__ , arg_type);
   }
   return size;
 }
 
 static void __void_arg_assert_cast(const void_arg_type * arg) {
-  if (arg->__type_signature != VOID_ARG_TYPE_SIGNATURE) {
-    fprintf(stderr,"%s: hmmm - the cast to void_arg_type seemed to fail at runtime - aborting\n",__func__);
-    abort();
-  }
+  if (arg->__type_signature != VOID_ARG_TYPE_SIGNATURE) 
+    util_abort("%s: hmmm - the cast to void_arg_type seemed to fail at runtime - aborting\n",__func__);
 }
 
 static void __void_arg_assert_index(const void_arg_type * arg , int iarg) {
-  if (iarg < 0 || iarg >= arg->arg_size) {
-    fprintf(stderr,"%s: void_arg() object allocated with %d arguments - %d invalid argument number - aborting \n",__func__ , arg->arg_size , iarg);
-    abort();
-  }
+  if (iarg < 0 || iarg >= arg->arg_size) 
+    util_abort("%s: void_arg() object allocated with %d arguments - %d invalid argument number - aborting \n",__func__ , arg->arg_size , iarg);
 }
 
 static void __void_arg_assert_type(const void_arg_type * arg , int iarg , node_ctype arg_type) {
-  if (arg_type != arg->arg_type[iarg]) {
-    fprintf(stderr,"%s: asked for type:\'%s\'  alloc statement:\'%s\'  - aborting \n" , __func__ , node_ctype_name(arg_type) , node_ctype_name(arg->arg_type[iarg]));
-    abort();
-  }
+  if (arg_type != arg->arg_type[iarg]) 
+    util_abort("%s: asked for type:\'%s\'  alloc statement:\'%s\'  - aborting \n" , __func__ , node_ctype_name(arg_type) , node_ctype_name(arg->arg_type[iarg]));
 }
 
 /*****************************************************************/
@@ -93,10 +86,8 @@ void_arg_type * void_arg_alloc__(int arg_size , const node_ctype * arg_type , co
     if (arg_type[i] == void_buffer) {
       if (size_list != NULL)
 	arg->size_list[i] = size_list[i];
-      else {
-	fprintf(stderr,"%s: when called arg_type = buffer_value - the buffersize *must* be specified in the corresponding size_list argument - aborting \n",__func__);
-	abort();
-      }
+      else 
+	util_abort("%s: when called arg_type = buffer_value - the buffersize *must* be specified in the corresponding size_list argument - aborting \n",__func__);
     } else
       arg->size_list[i] = void_arg_sizeof(arg_type[i]);
     
@@ -264,8 +255,8 @@ static const char * void_arg_fmt(const void_arg_type * arg , int iarg) {
     return " %d";
     break;
   default:
-    fprintf(stderr,"%s: arg_type:%d not recognized for scanning \n",__func__ , arg->arg_type[iarg]);
-    abort();
+    util_abort("%s: arg_type:%d not recognized for scanning \n",__func__ , arg->arg_type[iarg]);
+    return ""; /* Dummy to shut up compiler */
   }
 }
 
@@ -330,14 +321,12 @@ void void_arg_fscanf(void_arg_type * arg , FILE * stream) {
     }
 
   default:
-    fprintf(stderr,"%s: sorry %s not allocated for %d arguments - pathetic ehhh?? \n",__func__ , __func__ , arg->arg_size);
-    abort();
-  }
-  if (scan_count != arg->arg_size) {
-    fprintf(stderr,"%s: wanted %d arguments - only found: %d \n", __func__ , arg->arg_size , scan_count);
-    abort();
+    util_abort("%s: sorry %s not allocated for %d arguments - pathetic ehhh?? \n",__func__ , __func__ , arg->arg_size);
   }
   
+  if (scan_count != arg->arg_size) 
+    util_abort("%s: wanted %d arguments - only found: %d \n", __func__ , arg->arg_size , scan_count);
+    
   free(fmt);
 }
 
@@ -419,7 +408,6 @@ void void_arg_fprintf_typed(const void_arg_type * void_arg , FILE * stream) {
     fprintf(stream , "%g" , void_arg_get_double(void_arg , 0));
     break;
   default:
-    fprintf(stderr,"%s: sorry type:%d not (yet) implemented - aborting\n" , __func__ , type);
-    abort();
+    util_abort("%s: sorry type:%d not (yet) implemented - aborting\n" , __func__ , type);
   }
 }

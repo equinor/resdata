@@ -131,10 +131,8 @@ char * path_fmt_alloc_file(const path_fmt_type * path , ...) {
     }
     va_end(ap);
     return filename;
-  } else {
-    fprintf(stderr,"%s: tried to allocate filename from a path_fmt object which already is of file type - aborting\n",__func__);
-    abort();
-  }
+  } else 
+    util_abort("%s: tried to allocate filename from a path_fmt object which already is of file type - aborting\n",__func__);
 }
 
 /**

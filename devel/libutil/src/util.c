@@ -596,10 +596,9 @@ char * util_fread_alloc_file_content(const char * filename , const char * commen
   char * buffer = util_malloc(file_size + 1 , __func__);
   FILE * stream = util_fopen(filename , "r");
   int byte_read = fread(buffer , 1 , file_size , stream);
-  if (byte_read != file_size) {
-    fprintf(stderr,"%s: something failed when reading: %s - aborting \n",__func__ , filename);
-    abort();
-  }
+  if (byte_read != file_size) 
+    util_abort("%s: something failed when reading: %s - aborting \n",__func__ , filename);
+  
   fclose(stream);
   
   if (comment != NULL) {
@@ -659,17 +658,13 @@ void util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size ,
     int bytes_written;
     bytes_read = fread (buffer , 1 , buffer_size , src_stream);
     
-    if (bytes_read < buffer_size && !feof(src_stream)) {
-      fprintf(stderr,"%s: error when reading from src_stream - aborting \n",__func__);
-      abort();
-    }
+    if (bytes_read < buffer_size && !feof(src_stream)) 
+      util_abort("%s: error when reading from src_stream - aborting \n",__func__);
 
     bytes_written = fwrite(buffer , 1 , bytes_read , target_stream);
 
-    if (bytes_written < bytes_read) {
-      fprintf(stderr,"%s: not all bytes written to target stream - aboring \n",__func__);
-      abort();
-    }
+    if (bytes_written < bytes_read) 
+      util_abort("%s: not all bytes written to target stream - aboring \n",__func__);
   }
 
 }
@@ -705,10 +700,8 @@ bool util_file_exists(const char *filename) {
   if (stream == NULL) {
     if (errno == ENOENT)
       ex = false;
-    else {
-      fprintf(stderr,"file: %s exists but open failed - aborting \n",filename);
-      abort();
-    }
+    else 
+      util_abort("file: %s exists but open failed - aborting \n",filename);
   } else {
     fclose(stream);
     ex = true;
@@ -771,8 +764,8 @@ bool util_is_executable(const char * path) {
     stat(path , &stat_buffer);
     return (stat_buffer.st_mode & S_IXUSR);
   } else {
-    fprintf(stderr,"%s: file:%s does not exist - aborting \n",__func__ , path);
-    abort();
+    util_abort("%s: file:%s does not exist - aborting \n",__func__ , path);
+    return false; /* Dummy to shut up compiler */
   }
 }
 
@@ -901,10 +894,9 @@ int util_file_size(const char *file) {
   int fildes;
   
   fildes = open(file , O_RDONLY);
-  if (fildes == -1) {
-    fprintf(stderr,"%s: failed to open:%s - %s \n",__func__ , file , strerror(errno));
-    abort();
-  }
+  if (fildes == -1) 
+    util_abort("%s: failed to open:%s - %s \n",__func__ , file , strerror(errno));
+  
   fstat(fildes, &buffer);
   close(fildes);
   
@@ -920,11 +912,8 @@ static char * util_alloc_link_target(const char * link) {
   do {
     buffer = util_realloc(buffer , buffer_size , __func__);
     target_length = readlink(link , buffer , buffer_size);
-    if (target_length == -1) {
-      fprintf(stderr,"%s: readlink(%s,...) failed with errno:%d - aborting\n",__func__ , link , errno);
-      fprintf(stderr,"%s", strerror(errno));
-      abort();
-    }
+    if (target_length == -1) 
+      util_abort("%s: readlink(%s,...) failed with error:%s - aborting\n",__func__ , link , strerror(errno));
 
     if (target_length < buffer_size)
       retry = false;
@@ -966,20 +955,13 @@ bool util_same_file(const char * file1 , const char * file2) {
 void util_make_slink(const char *target , const char * link) {
   if (util_file_exists(link)) {
     if (util_is_link(link)) {
-      if (!util_same_file(target , link)) {
-	fprintf(stderr,"%s: %s already exists - not pointing to: %s - aborting \n",__func__ , link , target);
-	abort();
-      }
-    } else {
-      fprintf(stderr,"%s: %s already exists - is not a link - aborting \n",__func__ , link);
-      abort();
-    }
+      if (!util_same_file(target , link)) 
+	util_abort("%s: %s already exists - not pointing to: %s - aborting \n",__func__ , link , target);
+    } else 
+      util_abort("%s: %s already exists - is not a link - aborting \n",__func__ , link);
   } else {
-    if (symlink(target , link) != 0) {
-      fprintf(stderr,"%s: linking %s -> %s failed - aborting \n",__func__ , link , target);
-      fprintf(stderr,"%s\n",strerror(errno));
-      abort();
-    }
+    if (symlink(target , link) != 0) 
+      util_abort("%s: linking %s -> %s failed - aborting: %s \n",__func__ , link , target , strerror(errno));
   }
 }
 
@@ -1004,10 +986,8 @@ bool util_fmt_bit8_stream(FILE * stream ) {
     char *buffer = util_malloc(buffer_size , __func__);
 
     elm_read = fread(buffer , 1 , buffer_size , stream);
-    if (elm_read < min_read) {
-      fprintf(stderr,"%s: file is too small to automatically determine formatted/unformatted status \n",__func__);
-      abort();
-    }
+    if (elm_read < min_read) 
+      util_abort("%s: file is too small to automatically determine formatted/unformatted status \n",__func__);
     
     for (i=0; i < elm_read; i++)
       N_bit8set += (buffer[i] & (1 << 7)) >> 7;
@@ -1034,10 +1014,8 @@ bool util_fmt_bit8(const char *filename ) {
     stream   = fopen(filename , "r");
     fmt_file = util_fmt_bit8_stream(stream);
     fclose(stream);
-  } else {
-    fprintf(stderr,"%s: could not find file: %s - aborting \n",__func__ , filename);
-    abort();
-  }
+  } else 
+    util_abort("%s: could not find file: %s - aborting \n",__func__ , filename);
 
   return fmt_file;
 }
@@ -1127,10 +1105,9 @@ time_t util_make_time2(int sec, int min, int hour , int mday , int month , int y
   ts.tm_year   = year  - 1900;
   {
     time_t t = mktime( &ts );
-    if (t == -1) {
-      fprintf(stderr,"%s: failed to make a time_t instance of %02d/%02d/%4d  %02d:%02d:%02d - aborting \n",__func__ , mday,month,year,hour,min,sec);
-      abort();
-    }
+    if (t == -1) 
+      util_abort("%s: failed to make a time_t instance of %02d/%02d/%4d  %02d:%02d:%02d - aborting \n",__func__ , mday,month,year,hour,min,sec);
+    
     return t;
   }
 }
@@ -1179,10 +1156,9 @@ static int util_get_month_nr__(const char * _month_name) {
 
 int util_get_month_nr(const char * month_name) {
   int month_nr = util_get_month_nr__(month_name);
-  if (month_nr < 0) {
-    fprintf(stderr,"%s: %s not a valid month name - aborting \n",__func__ , month_name);
-    abort();
-  }
+  if (month_nr < 0) 
+    util_abort("%s: %s not a valid month name - aborting \n",__func__ , month_name);
+  
   return month_nr;
 }
 
@@ -1462,10 +1438,8 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
     for (filenr = 0; filenr < files; filenr++) 
       free((char *) fileList[filenr].filename);
     free(fileList);
-  } else {
-    fprintf(stderr,"%s: failed to open directory: %s - aborting \n",__func__ , enspath);
-    abort();
-  }
+  } else 
+    util_abort("%s: failed to open directory: %s - aborting \n",__func__ , enspath);
 }
 
 
@@ -1738,8 +1712,7 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
     }
   default:
     fprintf(stderr,"%s: current element size: %d \n",__func__ , element_size);
-    fprintf(stderr,"%s: can only endian flip 1/2/4/8 byte variables - aborting \n",__func__);
-    abort();
+    util_abort("%s: can only endian flip 1/2/4/8 byte variables - aborting \n",__func__);
   }
 }
 
@@ -1762,7 +1735,7 @@ static FILE * util_fopen__(const char *filename , const char * mode, int abort_m
 	fprintf(stderr,"%s: cwd:%s \n",__func__ , cwd);
 	free(cwd);
       }
-      if (abort_mode & ABORT_READ) abort();
+      if (abort_mode & ABORT_READ) util_abort("%s: ABORT_READ",__func__);
     }
   } else if (strcmp(mode ,"w") == 0) {
     stream = fopen(filename , "w");
@@ -1773,12 +1746,10 @@ static FILE * util_fopen__(const char *filename , const char * mode, int abort_m
 	fprintf(stderr,"%s: cwd:%s \n",__func__ , cwd);
 	free(cwd);
       }
-      if (abort_mode & ABORT_WRITE) abort();
+      if (abort_mode & ABORT_WRITE) util_abort("%s: ABORT_WRITE \n",__func__);
     }
-  } else {
-    fprintf(stderr,"%s: open mode: '%s' not implemented - aborting \n",__func__ , mode);
-    abort();
-  }
+  } else 
+    util_abort("%s: open mode: '%s' not implemented - aborting \n",__func__ , mode);
 
   return stream;
 }
@@ -1791,21 +1762,15 @@ FILE * util_fopen(const char * filename , const char * mode) {
 
 void util_fwrite(const void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {
   int items_written = fwrite(ptr , element_size , items , stream);
-  if (items_written != items) {
-    fprintf(stderr,"%s/%s: only wrote %d/%d items to disk - aborting.\n",caller , __func__ , items_written , items);
-    fprintf(stderr,"%s\n",strerror(errno));
-    abort();
-  }
+  if (items_written != items) 
+    util_abort("%s/%s: only wrote %d/%d items to disk - aborting\n %s .\n",caller , __func__ , items_written , items , strerror(errno));
 }
 
 
 void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {
   int items_read = fread(ptr , element_size , items , stream);
-  if (items_read != items) {
-    fprintf(stderr,"%s/%s: only read %d/%d items from disk - aborting.\n",caller , __func__ , items_read , items);
-    fprintf(stderr,"%s\n",strerror(errno));
-    abort();
-  }
+  if (items_read != items) 
+    util_abort("%s/%s: only read %d/%d items from disk - aborting.\n %s \n",caller , __func__ , items_read , items , strerror(errno));
 }
 
 #undef ABORT_READ
@@ -1816,21 +1781,20 @@ void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , 
 
 void * util_realloc(void * old_ptr , size_t new_size , const char * caller) {
   void * tmp = realloc(old_ptr , new_size);
-  if ((tmp == NULL) && (new_size > 0)) {
-    fprintf(stderr,"%s: failed to realloc %d bytes - aborting \n",caller , new_size);
-    abort();
-  }
+  if ((tmp == NULL) && (new_size > 0)) 
+    util_abort("%s: failed to realloc %d bytes - aborting \n",caller , new_size);
+  
   return tmp;
 }
 
 
 void * util_malloc(size_t size , const char * caller) {
   void *data = malloc(size);
-  if (data == NULL) {
-    fprintf(stderr,"%s: failed to allocate %d bytes - aborting \n",caller , size);
-    abort();
-  }
-  /* Initializing with something different from zero - hopefully
+  if (data == NULL) 
+    util_abort("%s: failed to allocate %d bytes - aborting \n",caller , size);
+
+  /* 
+     Initializing with something different from zero - hopefully
      errors will pop up more easily this way?
   */
   memset(data , 255 , size);
@@ -2006,18 +1970,15 @@ void util_fread_compressed(char *data , FILE * stream) {
       
     }
     compress_result = uncompress(&data[offset] , &block_size , zbuffer , compressed_size);
-    if (compress_result != Z_OK) {
-      fprintf(stderr,"%s compress returned %d - aborting \n",__func__ , compress_result);
-      abort();
-    }
+    if (compress_result != Z_OK) 
+      util_abort("%s: compress returned %d - aborting \n",__func__ , compress_result);
+    
     offset += block_size;
     {
       int file_offset;
       fread(&file_offset , sizeof offset , 1 , stream); 
-      if (file_offset != offset) {
-	fprintf(stderr,"%s: something wrong when reding compressed stream - aborting \n",__func__);
-	abort();
-      }
+      if (file_offset != offset) 
+	util_abort("%s: something wrong when reding compressed stream - aborting \n",__func__);
     }
   } while (offset < size);
   free(zbuffer);
@@ -2268,7 +2229,7 @@ void util_abort(const char * fmt , ...) {
 
     {
       char fmt[64];
-      sprintf(fmt, " #%s02d %s-%ds in %ss \n" , "%" , "%" , max_func_length , "%");
+      sprintf(fmt, " #%s02d %s-%ds(..) in %ss \n" , "%" , "%" , max_func_length , "%");
       fprintf(stderr , "--------------------------------------------------------------------------------\n");
       for (i=0; i < size; i++) 
 	fprintf(stderr, fmt , i , func_list[i], file_line_list[i]);

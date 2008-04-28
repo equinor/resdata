@@ -47,11 +47,8 @@ void util_make_path(const char *_path) {
       
       if (!util_path_exists(active_path)) {
 	if (mkdir(active_path , 0775) != 0) { 
-	  if (!((errno == EEXIST) && util_is_directory(active_path))) {  /* errnoe == EEXIST another thread might have made it for us.... */
-	    fprintf(stderr,"%s: failed to make directory:%s - aborting \n",__func__ , active_path);
-	    fprintf(stderr,"%s \n",strerror(errno));
-	    abort();
-	  }
+	  if (!((errno == EEXIST) && util_is_directory(active_path)))   /* errnoe == EEXIST another thread might have made it for us.... */
+	    util_abort("%s: failed to make directory:%s - aborting.\n %s \n",__func__ , active_path , strerror(errno));
 	}
       }
       
