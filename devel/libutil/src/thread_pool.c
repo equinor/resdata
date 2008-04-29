@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <thread_pool.h>
+#include <util.h>
 
 struct thread_pool_struct {
   int        pool_size;
@@ -52,10 +53,8 @@ void thread_pool_add_job(thread_pool_type * pool ,
     
     {
       int pthread_return = pthread_create(&pool->thread_list[pool->jobs_running] , NULL , start_func , arg);
-      if (pthread_return != 0) {
-	fprintf(stderr,"%s: failed to add new job pthread_create return: %d.\n",__func__ , pthread_return);
-	abort();
-      }
+      if (pthread_return != 0) 
+	util_abort("%s: failed to add new job pthread_create return: %d.\n",__func__ , pthread_return);
     }
     pool->jobs_running++;
   }

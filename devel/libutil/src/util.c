@@ -2171,10 +2171,10 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
 static char * util_bt_alloc_current_executable(const char * bt_symbol) {
   int paren_pos = 0;
   char * path;
-  while (bt_symbol[paren_pos] != '(')
+  while (bt_symbol[paren_pos] != '(' && bt_symbol[paren_pos] != ' ')
     paren_pos++;
   
-  path = util_alloc_substring_copy(bt_symbol , paren_pos );
+  path = util_alloc_substring_copy(bt_symbol , paren_pos);
   if (util_is_abs_path(path))
     return path;
   else {
@@ -2217,7 +2217,6 @@ void util_abort(const char * fmt , ...) {
     strings    = backtrace_symbols(array , size);
     executable = util_bt_alloc_current_executable(strings[0]);
     
-
     size -= 2; /* The two last symbols in the backtrace are libc functions which are not available anyway. */ 
     func_list      = util_malloc(size * sizeof * func_list      , __func__);
     file_line_list = util_malloc(size * sizeof * file_line_list , __func__);
