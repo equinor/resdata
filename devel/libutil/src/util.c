@@ -1902,7 +1902,7 @@ Layout on disk when using util_fwrite_compressed:
 
 void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
   if (size == 0) {
-    fwrite(&size        , sizeof size        , 1 , stream);
+    fwrite(&size , sizeof size , 1 , stream);
     return;
   }
   {
@@ -1927,7 +1927,7 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
       int offset = 0;
       do {
 	unsigned long compressed_size = buffer_size;
-	int this_block_size = util_int_min(block_size , size - offset);
+	int this_block_size           = util_int_min(block_size , size - offset);
 	util_compress_buffer(&data[offset] , this_block_size , zbuffer , &compressed_size);
 	fwrite(&compressed_size , sizeof compressed_size , 1 , stream);
 	{
@@ -1959,8 +1959,8 @@ void util_fread_compressed(char *data , FILE * stream) {
   zbuffer = util_malloc(buffer_size , __func__);
   offset = 0;
   do {
-    int compressed_size;
-    unsigned long block_size = size - offset;
+    unsigned long compressed_size;
+    int block_size = size - offset;
     int compress_result;
     fread(&compressed_size , sizeof compressed_size , 1 , stream);
     {
@@ -1971,7 +1971,7 @@ void util_fread_compressed(char *data , FILE * stream) {
     }
     compress_result = uncompress(&data[offset] , &block_size , zbuffer , compressed_size);
     if (compress_result != Z_OK) 
-      util_abort("%s: compress returned %d - aborting \n",__func__ , compress_result);
+      util_abort("%s: uncompress returned %d - aborting \n",__func__ , compress_result);
     
     offset += block_size;
     {
@@ -1994,7 +1994,7 @@ void util_fskip_compressed(FILE * stream) {
   
   fread(&buffer_size , sizeof buffer_size , 1 , stream);
   do {
-    int compressed_size;
+    unsigned long compressed_size;
     fread(&compressed_size , sizeof compressed_size , 1 , stream);
     fseek(stream  , compressed_size , SEEK_CUR);
     fread(&offset , sizeof offset , 1 , stream);
@@ -2216,7 +2216,8 @@ void util_abort(const char * fmt , ...) {
     size       = backtrace(array , max_bt);
     strings    = backtrace_symbols(array , size);
     executable = util_bt_alloc_current_executable(strings[0]);
-    
+    printf("Parsing executable:%s -> <%s> \n",strings[0] , executable);
+
     size -= 2; /* The two last symbols in the backtrace are libc functions which are not available anyway. */ 
     func_list      = util_malloc(size * sizeof * func_list      , __func__);
     file_line_list = util_malloc(size * sizeof * file_line_list , __func__);

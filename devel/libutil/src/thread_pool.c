@@ -48,14 +48,16 @@ void thread_pool_add_job(thread_pool_type * pool ,
   if (pool->pool_size == 0) 
     start_func(arg);
   else {
+
     if (pool->jobs_running == pool->pool_size) 
       thread_pool_join(pool);
     
     {
       int pthread_return = pthread_create(&pool->thread_list[pool->jobs_running] , NULL , start_func , arg);
       if (pthread_return != 0) 
-	util_abort("%s: failed to add new job pthread_create return: %d.\n",__func__ , pthread_return);
+	util_abort("%s: failed to add new job pthread_create return value: %d.\n",__func__ , pthread_return);
     }
+
     pool->jobs_running++;
   }
   

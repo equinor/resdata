@@ -116,17 +116,37 @@ char * path_fmt_alloc_path(const path_fmt_type * path , ...) {
 
 
 
+/**
+
+  This function is used to allocate a filename (full path) from a
+  path_fmt instance: 
+
+  Eaxample:
+
+    path_fmt_type * path_fmt = path_fmt_alloc_directory("/tmp/path%d/X.%02d");
+    char * file = path_fmt_alloc_file(path_fmt , 100 , 78 , "SomeFile.txt")
+
+  This will allocate the filename: /tmp/path100/X.78/SomeFile.txt; it
+  it does not already exist, the underlying directory will be
+  created. Observe that there is nothing special about the filename
+  argument (i.e. 'SomeFile.txt' in the current example), it is just
+  the final argument to the path_fmt_alloc_file() function call.
+
+*/
+
+
 char * path_fmt_alloc_file(const path_fmt_type * path , ...) {
   if (path->is_directory) {
     char * filename;
-    va_list ap;
+    va_list tmp_va , ap;
     va_start(ap , path);
+    va_copy(tmp_va , ap);
     filename = __fmt_alloc_path_va__(path->file_fmt , ap);
     if (path->auto_mkdir) {
       if (! util_file_exists(filename)) {
-	const char * __path = __fmt_alloc_path_va__(path->fmt , ap);
-	util_make_path(__path);
-	free((char *) __path);
+	const char * __path = __fmt_alloc_path_va__(path->fmt , tmp_va);
+	util_make_path( __path );
+	free((char *) __path );
       }
     }
     va_end(ap);
