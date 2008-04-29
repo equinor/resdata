@@ -7,18 +7,36 @@
 #include <stdarg.h>
 #include <hash.h>
 
+int main(int argc , char ** argv) {
+  const int size = 2000000;
+  long * data;
+  long * copy;
+  int i;
 
-void func2(int arg1 , int arg2) {
-  util_abort("%s: gir opp ... \n",__func__);
-}
+  data = util_malloc(size * sizeof * data , __func__);
+  copy = util_malloc(size * sizeof * copy , __func__);
+  for (i=0; i < size; i++) {
+    data[i] = random();
+    copy[i] = data[i];
+  }
 
-void func1(int arg1 , int arg2) {
-  func2(arg1 , arg2 + arg1);
-}
+  {
+    FILE * stream = util_fopen("/tmp/compress.gz" , "w");
+    util_fwrite_compressed(data , size * sizeof * data , stream);
+    fclose(stream);
+  }
+  for (i=0; i < size; i++) 
+    data[i] = random();
 
-
-int main (int argc , char **argv) {
-  char * cwd = util_alloc_cwd();
-  printf("Jeg er i %s \n",cwd);
-  func1(10 , 11);
+  {
+    FILE * stream = util_fopen("/tmp/compress.gz" , "r");
+    util_fread_compressed(data , stream);
+    fclose(stream);
+  }
+  
+  for (i=0; i < size; i++) 
+    if (data[i] != copy[i]) 
+      printf("ERROR \n");
+  
+  printf("Check OK \n");
 }

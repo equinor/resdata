@@ -1879,7 +1879,7 @@ void * util_alloc_compressed_buffer(const void * data , int data_size , unsigned
 }
 
 
-/*
+/**
 Layout on disk when using util_fwrite_compressed:
 
   /-------------------------------
@@ -1898,6 +1898,11 @@ Layout on disk when using util_fwrite_compressed:
   |compressed block
   |current uncompressed offset
   \------------------------------
+
+Observe that the functions util_fwrite_compressed() and
+util_fread_compressed must be used as a pair, the files can **N O T**
+be interchanged with normal calls to gzip/gunzip. To avoid confusion
+it is therefor strongly advised NOT to give the files a .gz extension.
 */
 
 void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
@@ -1946,7 +1951,8 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
 
 
 
-void util_fread_compressed(char *data , FILE * stream) {
+void util_fread_compressed(void *__data , FILE * stream) {
+  char * data = (char *) __data;
   int size , offset;
   int buffer_size;
   void * zbuffer;
@@ -1960,7 +1966,7 @@ void util_fread_compressed(char *data , FILE * stream) {
   offset = 0;
   do {
     unsigned long compressed_size;
-    int block_size = size - offset;
+    unsigned long block_size = size - offset;
     int compress_result;
     fread(&compressed_size , sizeof compressed_size , 1 , stream);
     {

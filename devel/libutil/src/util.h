@@ -135,7 +135,7 @@ void 	 util_fwrite_int_vector   (const int     * , int , FILE * , const char * )
 void 	 util_fwrite_double_vector(const double  * , int , FILE * , const char * );
 
 void 	 util_compress_buffer(const void * , int , void * , unsigned long * );
-void 	 util_fread_compressed(char * , FILE * );
+void 	 util_fread_compressed(void * , FILE * );
 void 	 util_fwrite_compressed(const void * , int , FILE * );
 void     util_block_growing_file(const char * );
 void     util_block_growing_directory(const char * );
