@@ -152,11 +152,11 @@ void ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate , bool unified) {
 
 
 
-ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ecl_file_type file_type , bool endian_convert) {
+ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ecl_file_type file_type , bool endian_convert, bool RPTONLY) {
   const bool include_first_summary_block = true;
   ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(ECL_FMT_AUTO , file_type , endian_convert);
   ecl_fstate_set_files(ecl_fstate , files , filelist);
-  
+  ecl_fstate_set_RPTONLY(ecl_fstate , RPTONLY);
   ecl_fstate->block_size  = 10;
   ecl_fstate->block_list  = calloc(ecl_fstate->block_size , sizeof *ecl_fstate->block_list);
   
@@ -176,9 +176,9 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	ecl_block_set_report_nr(ecl_block , report_nr);
 	ecl_block_set_sim_time_restart(ecl_block);
       } else if (file_type == ecl_unified_summary_file) 
-	if (ecl_fstate->__RPTONLY)
+	if (ecl_fstate->__RPTONLY) 
 	  ecl_block_set_report_nr(ecl_block , summary_report_nr);
-
+      
       /*
 	Observe that when unified summary files are read in it is in
 	general impossible to get hold of the report nr. **IF** the
@@ -220,27 +220,26 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	  if (file_type == ecl_summary_file) {
 	    if (!ecl_block_has_kw(ecl_block , "MINISTEP")) 
 	      add_block = false;
-
-	    /* The first summary file: X.S0001 contains two param
+	    /* 
+	       The first summary file: X.S0001 can contain two param
 	       blocks - one initial (with all zeros), and one for the
 	       first report with actual results.
 	    */
-	    if (report_nr == 1)
-	      ecl_block_set_report_nr(ecl_block , 0);
-	    
 	    if (!include_first_summary_block)
 	      add_block = false;
 	  } 
-
 
 	  if (add_block)
 	    ecl_fstate_add_block(ecl_fstate , ecl_block);
 	  
 	  if (file_type == ecl_summary_file && report_nr == 1) {
-	    /* Loading next block in the pathological first summary file */
-	    ecl_block_type *ecl_block = ecl_block_alloc(report_nr , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
-	    ecl_block_fread(ecl_block , fortio , &at_eof );
-	    ecl_fstate_add_block(ecl_fstate , ecl_block);
+	    /* Checking for next block in the pathological first summary file */
+	    ecl_block_type *next_block = ecl_block_alloc(report_nr , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
+	    ecl_block_fread(next_block , fortio , &at_eof );
+	    if (ecl_block_has_kw(next_block , "PARAMS")) {
+	      ecl_block_set_report_nr(ecl_block , 0); /* Setting the previous to zero */ 
+	      ecl_fstate_add_block(ecl_fstate , next_block);
+	    }
 	  }
 	  
 	  
@@ -272,8 +271,8 @@ WARNING.
 */
 
 
-void ecl_fstate_promise_RPTONLY(ecl_fstate_type * fstate) {
-  fstate->__RPTONLY = true;
+void ecl_fstate_set_RPTONLY(ecl_fstate_type * fstate, bool RPTONLY) {
+  fstate->__RPTONLY = RPTONLY;
 }
 
 
@@ -306,11 +305,13 @@ ecl_block_type * ecl_fstate_get_block_by_report_nr(const ecl_fstate_type * ecl_f
     ecl_block_type *block = NULL;
     int block_index = 0;
     do {
+
       if (report_nr == ecl_block_get_report_nr(ecl_fstate->block_list[block_index]))
 	block = ecl_fstate->block_list[block_index];
+      
       block_index++;
     } while (block_index < ecl_fstate->N_blocks && block == NULL);
-    
+
     if (block == NULL) 
       util_abort("%s: could not find report nr:%d - aborting \n",__func__ , report_nr);
     
@@ -331,11 +332,16 @@ ecl_block_type * ecl_fstate_iget_block(const ecl_fstate_type * ecl_fstate , int 
 
 
 bool ecl_fstate_has_report_nr(const ecl_fstate_type * ecl_fstate , int report_nr) {
-  ecl_block_type * block = ecl_fstate_get_block_by_report_nr(ecl_fstate , report_nr);
-  if (block == NULL) 
-    return false;
-  else
-    return true;
+  bool has_report = false;
+  int block_index = 0;
+  do {
+    if (report_nr == ecl_block_get_report_nr(ecl_fstate->block_list[block_index])) {
+      has_report = true;
+      break;
+    }
+    block_index++;
+  } while (block_index < ecl_fstate->N_blocks);
+  return has_report;
 }
 
 
@@ -445,3 +451,10 @@ void ecl_fstate_filter_file(const char * src_file , const char * target_file , c
     fortio_close(target);
   }
 }
+
+
+void ecl_fstate_fprintf(const ecl_fstate_type *fstate) {
+  printf("N_blocks: %d \n", fstate->N_blocks);
+  printf("__RPTONLY:%d \n", fstate->__RPTONLY);
+}
+

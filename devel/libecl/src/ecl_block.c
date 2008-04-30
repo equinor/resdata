@@ -17,9 +17,9 @@ struct ecl_block_struct {
   bool 	        endian_convert;
 
   /*
-    This code is programmed in terms of "report steps", in ECLIPSE speak,
-    it has no understanding of the socalled ministeps, and will probably break
-    badly if exposed to them.
+    This code is programmed in terms of "report steps", in ECLIPSE
+    speak, it has no understanding of the socalled ministeps, and will
+    probably break badly if exposed to them.
   */
   
   int           report_nr;
@@ -196,16 +196,16 @@ ecl_block_type * ecl_block_fread_alloc(int report_nr , bool fmt_file , bool endi
 
 ecl_kw_type * ecl_block_get_kw(const ecl_block_type *ecl_block , const char *kw) {
   ecl_kw_type *ecl_kw = NULL;
-  char kw_s[9];
-  util_set_strip_copy(kw_s , kw);  
+  char * kw_s = util_alloc_strip_copy(kw);
 
   if (hash_has_key(ecl_block->kw_hash , kw_s)) 
     ecl_kw = hash_get(ecl_block->kw_hash , kw_s);
   else {
-    fprintf(stderr,"%s: could not locate kw:%s in block - aborting. \n",__func__ , kw);
+    fprintf(stderr,"%s: could not locate kw:[%s/%s] in block - aborting. \n",__func__ , kw , kw_s);
     ecl_block_summarize(ecl_block);
     abort();
   }
+  free(kw_s);
   return ecl_kw;
 }
 
@@ -305,7 +305,7 @@ void ecl_block_summarize(const ecl_block_type * block) {
     kw = restart_kw_list_get_next(block->_kw_list);
   }
   
-  fprintf(stream , "-----------------------------------------------------------------\n");
+  fprintf(stream , "-----------------------------------------------------------------\n\n");
 }
 
 

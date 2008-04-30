@@ -428,7 +428,7 @@ void ecl_parse_egrid(const char *refcase_path , const char *ecl_base , const cha
   ecl_fstate_type *egrid;
   char * egrid_file = ecl_util_alloc_filename(refcase_path , ecl_base , ecl_egrid_file , fmt_file , -1);
   printf("Parsing: %s\n",egrid_file); 
-  egrid = ecl_fstate_fread_alloc(1 , (const char **) &egrid_file , ecl_egrid_file , endian_flip);
+  egrid = ecl_fstate_fread_alloc(1 , (const char **) &egrid_file , ecl_egrid_file , endian_flip , false);
   {
     FILE *fileH;
     ecl_block_type * block     = ecl_fstate_iget_block(egrid , 0);

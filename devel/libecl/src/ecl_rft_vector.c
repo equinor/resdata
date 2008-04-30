@@ -36,7 +36,7 @@ static void ecl_rft_vector_add_node(ecl_rft_vector_type * rft_vector , const ecl
 
 ecl_rft_vector_type * ecl_rft_vector_alloc(const char * filename , bool endian_convert) {
   ecl_rft_vector_type * rft_vector = ecl_rft_vector_alloc_empty(filename);
-  ecl_fstate_type     * fstate     = ecl_fstate_fread_alloc(1 , (const char **) &filename , ecl_rft_file , endian_convert);
+  ecl_fstate_type     * fstate     = ecl_fstate_fread_alloc(1 , (const char **) &filename , ecl_rft_file , endian_convert , false);
   int size                         = ecl_fstate_get_size(fstate);
   int block_nr;
 

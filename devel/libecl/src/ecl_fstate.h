@@ -16,7 +16,7 @@ typedef struct ecl_fstate_struct ecl_fstate_type;
 #define ECL_FMT_AUTO_NAME 4
 
 
-ecl_fstate_type * ecl_fstate_fread_alloc(int , const char ** , ecl_file_type , bool );
+ecl_fstate_type * ecl_fstate_fread_alloc(int , const char ** , ecl_file_type , bool , bool);
 
 
 int               ecl_fstate_fname2time(const char *);
@@ -32,7 +32,7 @@ void              ecl_fstate_free(ecl_fstate_type *);
 ecl_block_type  * ecl_fstate_get_block_by_report_nr(const ecl_fstate_type * , int );
 ecl_block_type  * ecl_fstate_iget_block(const ecl_fstate_type * , int );
 bool              ecl_fstate_has_report_nr(const ecl_fstate_type * , int );
-void              ecl_fstate_promise_RPTONLY(ecl_fstate_type * );
+void              ecl_fstate_set_RPTONLY(ecl_fstate_type * , bool);
 /*
 void            * ecl_fstate_kw_get_data_ref(const ecl_fstate_type * , int , int , const char *);
 bool              ecl_fstate_kw_iget(const ecl_fstate_type * , int , int , const char *, int , void *);
@@ -47,4 +47,5 @@ int               ecl_fstate_get_size(const ecl_fstate_type *);
 void              ecl_fstate_save(const ecl_fstate_type *);
 
 void              ecl_fstate_filter_file(const char * , const char *  , const hash_type * , bool );
+void              ecl_fstate_fprintf(const ecl_fstate_type *);
 #endif

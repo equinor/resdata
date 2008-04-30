@@ -5,7 +5,21 @@
 #include <hash.h>
 
 typedef struct ecl_sum_struct ecl_sum_type;
-typedef enum {ecl_sum_well_var , ecl_sum_region_var , ecl_sum_field_var , ecl_sum_group_var , ecl_sum_misc_var , ecl_sum_completion_var , ecl_sum_NOT_IMPLEMENTED_var} ecl_sum_var_type;
+typedef enum {ecl_sum_aquifer_var, 
+              ecl_sum_well_var   , 
+	      ecl_sum_region_var , 
+	      ecl_sum_field_var  , 
+	      ecl_sum_group_var  , 
+	      ecl_sum_block_var  , 
+	      ecl_sum_completion_var ,
+	      ecl_sum_local_block_var,
+	      ecl_sum_local_completion_var,
+	      ecl_sum_local_well_var,
+	      ecl_sum_network_var,
+	      ecl_sum_region_2_region_var,
+	      ecl_sum_segment_var,
+	      ecl_sum_misc_var}  ecl_sum_var_type;
+
 
 void             ecl_sum_fread_alloc_data(ecl_sum_type * , int , const char ** , bool);
 ecl_sum_type   * ecl_sum_fread_alloc(const char * , int , const char **, bool  , bool );
@@ -14,7 +28,8 @@ int            	 ecl_sum_get_Nwells(const ecl_sum_type *);
 void           	 ecl_sum_copy_well_names(const ecl_sum_type * , char **);
 void           	 ecl_sum_init_save(ecl_sum_type * , const char * , int , bool);
 bool           	 ecl_sum_has_well_var(const ecl_sum_type * , const char * , const char *);
-bool           	 ecl_sum_has_var(const ecl_sum_type * , const char *);
+bool           	 ecl_sum_has_misc_var(const ecl_sum_type * , const char *);
+bool           	 ecl_sum_has_general_var(const ecl_sum_type * , const char *);
 
 
 int            	 ecl_sum_get_well_var_index(const ecl_sum_type * , const char * , const char *);
@@ -24,6 +39,7 @@ int              ecl_sum_get_field_var_index(const ecl_sum_type * , const char *
 int              ecl_sum_get_well_completion_var_index(const ecl_sum_type * , const char * , const char * , int );
 double         	 ecl_sum_get_well_var(const ecl_sum_type *, int , const char *, const char *);
 double         	 ecl_sum_get_group_var(const ecl_sum_type *, int , const char *, const char *);
+double           ecl_sum_get_general_var(const ecl_sum_type * , int , const char * );
 double         	 ecl_sum_get_region_var(const ecl_sum_type *, int , int , const char *);
 double         	 ecl_sum_get_field_var(const ecl_sum_type *,  int , const char *);
 double         	 ecl_sum_get_with_index(const ecl_sum_type *, int , int);
@@ -54,5 +70,5 @@ void           	 ecl_sum_well_max_min(const ecl_sum_type * , const char * , int 
 double         	 ecl_sum_eval_well_misfit(const ecl_sum_type * , const char * , int , const char ** , const double * );
 double         	 ecl_sum_eval_misfit(const ecl_sum_type * , int , const char ** , int , const char ** ,  const double * , double * );
 ecl_sum_type * 	 ecl_sum_fread_alloc_interactive(bool );
-void             ecl_sum_fprintf(const ecl_sum_type * , FILE * , int , int , const char **  , const char ** );
+void             ecl_sum_fprintf(const ecl_sum_type * , FILE * , int , const char **  );
 #endif

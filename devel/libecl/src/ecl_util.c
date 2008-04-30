@@ -307,9 +307,12 @@ char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl
     break;
     
   default:
-    fprintf(stderr,"%s: Invalid input file_type to ecl_util_alloc_filename - aborting \n",__func__);
-    abort();
+    util_abort("%s: Invalid input file_type to ecl_util_alloc_filename - aborting \n",__func__);
+    /* Dummy to shut up compiler */
+    ext_length = 0;
+    ext        = NULL;
   }
+
   if (path != NULL) {
     filename = malloc(strlen(path) + 1 + strlen(base) + 1 + ext_length + 1);
     sprintf(filename , "%s/%s.%s" , path , base , ext);
@@ -321,14 +324,35 @@ char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl
   free(ext);
 
   if (must_exist) {
-    if (!util_file_exists(filename)) {
-      /*
-	If aborting is not permissible you must first allocate the name
-	in the normal way, and then check whether it existst in the calling
-	unit. Tough luck ...
-      */
-      fprintf(stderr,"%s: file:%s does not exist - aborting \n",__func__ , filename);
-      abort();
+    const int max_usleep_time = 10000;
+    const int usleep_time     =   200;
+    int   total_usleep_time   =     0;
+
+
+    /*
+      If we require the file to exist we do several attempts, waiting
+      up to ten seconds. The reason for this funny approach is that we
+      have quite a lot of problems with file-system synchronization (I
+      think ...). Where a file which clearly "is there" fails to show
+      up.
+    */
+
+
+    while (1) {
+      if (util_file_exists(filename)) 
+	break;
+      else {
+	if (total_usleep_time >= max_usleep_time) 
+	  util_abort("%s: file:%s does not exist - aborting \n",__func__ , filename);
+	
+	total_usleep_time += usleep_time;
+	usleep(usleep_time);
+	/*
+	  If aborting is not permissible you must first allocate the name
+	  in the normal way, and then check whether it existst in the calling
+	  unit. Tough luck ...
+	*/
+      }
     }
   }
   
@@ -696,7 +720,7 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
 	  unified_newest = false;
 	file_nr++;
       }
-
+      
       if (unified_newest) {
 	util_free_string_list( file_list , files );
 	data_files     = util_malloc( sizeof * data_files , __func__);
@@ -734,6 +758,39 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
   *_data_files     = data_files;
 }
 
+
+/**
+  This little function will take an ecl_type_enum variable as input,
+  and return a constant string description of the type. Observe that
+  these strings can *NOT* be used when writing eclipse files; then
+  internal functionality in ecl_kw.c should be used.
+*/
+
+
+const char * ecl_util_type_name(ecl_type_enum ecl_type) {
+  switch (ecl_type) {
+  case(ecl_char_type):
+    return "ecl_char_type";
+    break;
+  case(ecl_float_type):
+    return "ecl_float_type";
+    break;
+  case(ecl_double_type):
+    return "ecl_double_type";
+    break;
+  case(ecl_int_type):
+    return "ecl_int_type";
+    break;
+  case(ecl_bool_type):
+    return "ecl_bool_type";
+    break;
+  case(ecl_mess_type):
+    return "ecl_mess_type";
+    break;
+  default:
+    util_abort("%s: unrecognized ecl_type value:%d - aborting \n",__func__ , ecl_type);
+  }
+}
 
 
 /**

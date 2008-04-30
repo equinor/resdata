@@ -76,11 +76,18 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
   }
   {
     ecl_file_type file_type;
+    bool promise_RPTONLY = false;
     bool fmt_file;
     int report_nr;
-
+    
     ecl_util_get_file_type(data_files[0] , &file_type , &fmt_file , &report_nr);
-    sum->data     = ecl_fstate_fread_alloc(files  , data_files   , file_type , sum->endian_convert);
+    /*
+      Burde kanskje vaere litt forsiktig med dette loftet
+      for unified filer??
+    */
+    if (report_mode)
+      promise_RPTONLY = true;
+    sum->data     = ecl_fstate_fread_alloc(files  , data_files   , file_type , sum->endian_convert , promise_RPTONLY);
     /*
       Check size of PARAMS block...
     */
@@ -90,17 +97,74 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
       sum->params_size                   = ecl_kw_get_size(params_kw);
     }
     sum->var_type = util_malloc( sum->params_size * sizeof * sum->var_type , __func__);
-    if (report_mode)
-      ecl_fstate_promise_RPTONLY( sum->data );
   }
 }
   
 
+/* See table 3.4 in the ECLIPSE file format reference manual. */
+
+static ecl_sum_var_type __ecl_sum_identify_var_type(const char * var) {
+  ecl_sum_var_type var_type = ecl_sum_misc_var;
+  switch(var[0]) {
+  case('A'):
+    var_type = ecl_sum_aquifer_var;
+    break;
+  case('B'):
+    var_type = ecl_sum_block_var;
+    break;
+  case('C'):
+    var_type = ecl_sum_completion_var;
+    break;
+  case('F'):
+    var_type = ecl_sum_field_var;
+    break;
+  case('G'):
+    var_type = ecl_sum_group_var;
+    break;
+  case('L'): 
+    switch(var[1]) {
+    case('B'):
+      var_type = ecl_sum_local_block_var;
+      break;
+    case('C'):
+      var_type = ecl_sum_local_completion_var;
+      break;
+    case('W'):
+      var_type = ecl_sum_local_well_var;
+      break;
+    default:
+      util_abort("%s: not recognized: %s \n",__func__ , var);
+    }
+    break;
+  case('N'):
+    var_type = ecl_sum_network_var;
+    break;
+  case('R'):
+    if (var[2] == 'F')
+      var_type  = ecl_sum_region_2_region_var;
+    else
+      var_type  = ecl_sum_region_var;
+    break;
+  case('S'):
+    var_type = ecl_sum_segment_var;
+    break;
+  case('W'):
+    var_type = ecl_sum_well_var;
+    break;
+  default:
+    /*
+      It is unfortunately impossible to recognize an error situation -
+      the rest just goes in "other" variables.
+    */
+    var_type = ecl_sum_misc_var;
+  }
+  return var_type;
+}
 
 
 
 static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_file) {
-  ecl_sum->header         = ecl_fstate_fread_alloc(1     , &header_file , ecl_summary_header_file , ecl_sum->endian_convert);
+  ecl_sum->header         = ecl_fstate_fread_alloc(1     , &header_file , ecl_summary_header_file , ecl_sum->endian_convert , false);
   {
     int *date;
     ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->header , 0);
@@ -138,116 +202,84 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
     
     {
       set_type *well_set  = set_alloc_empty();
-      bool misc_var;
       int num = -1;
       for (index=0; index < ecl_kw_get_size(wells); index++) {
 	char * well = util_alloc_strip_copy(ecl_kw_iget_ptr(wells    , index));
 	char * kw   = util_alloc_strip_copy(ecl_kw_iget_ptr(keywords , index));
-	ecl_sum->var_type[index] = ecl_sum_NOT_IMPLEMENTED_var;
-	misc_var = false;
 	if (nums != NULL) num = ecl_kw_iget_int(nums , index);
-	if (strlen(well) > 0) {
-	  /* See table 3.4 in the ECLIPSE file format reference manual. */
-	  switch(kw[0]) {
-	  case('A'):
-	    break;
-	  case('B'):
-	    break;
-	  case('C'):
-	    /* Three level indexing: well -> string(cell_nr) -> variable */
-	    if (!DUMMY_WELL(well) && num >= 0) {
-	      char cell_str[16];
-	      if (!hash_has_key(ecl_sum->well_completion_var_index , well)) 
+	ecl_sum->var_type[index] = __ecl_sum_identify_var_type(kw);
+	/* See table 3.4 in the ECLIPSE file format reference manual. */
+	switch(ecl_sum->var_type[index]) {
+	case(ecl_sum_completion_var):
+	  /* Three level indexing: well -> string(cell_nr) -> variable */
+	  if (!DUMMY_WELL(well)) {
+	    /* Seems I have to accept nums < 0 to get thit through ??? */
+	    char cell_str[16];
+	    if (!hash_has_key(ecl_sum->well_completion_var_index , well)) 
 		hash_insert_hash_owned_ref(ecl_sum->well_completion_var_index , well , hash_alloc() , hash_free__);
+	    {
+	      hash_type * cell_hash = hash_get(ecl_sum->well_completion_var_index , well);
+	      sprintf(cell_str , "%d" , num);
+	      if (!hash_has_key(cell_hash , cell_str)) 
+		hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
 	      {
-		hash_type * cell_hash = hash_get(ecl_sum->well_completion_var_index , well);
-		sprintf(cell_str , "%d" , num);
-		if (!hash_has_key(cell_hash , cell_str)) 
-		  hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
-		{
-		  hash_type * var_hash = hash_get(cell_hash , cell_str);
-		  hash_insert_int(var_hash , kw , index);
-		}
+		hash_type * var_hash = hash_get(cell_hash , cell_str);
+		hash_insert_int(var_hash , kw , index);
 	      }
 	    }
-	    break;
-	  case('F'):
-	    /* 
-	       Field variable 
-	    */
-	    hash_insert_int(ecl_sum->field_var_index , kw , index);
-	    ecl_sum->var_type[index] = ecl_sum_field_var;
-	    break;
-	  case('G'):
-	    {
-	      const char * group = well;
-	      if (!DUMMY_WELL(well)) {
-		if (!hash_has_key(ecl_sum->group_var_index , group)) 
-		  hash_insert_hash_owned_ref(ecl_sum->group_var_index , group , hash_alloc() , hash_free__);
-		{
-		  hash_type * var_hash = hash_get(ecl_sum->group_var_index , group);
-		  hash_insert_int(var_hash , kw , index);
-		}
-	      }
-	      ecl_sum->var_type[index] = ecl_sum_group_var;
-	    }
-	    break;
-	  case('L'):
-	    {
-	      switch(kw[1]) {
-	      case('B'):
-		break;
-	      case('C'):
-		break;
-	      case('W'):
-		break;
-	      default:
-		break;
+	  } else 
+	    util_abort("%s: incorrectly formatted completion var in SMSPEC. num:%d kw:\"%s\"  well:\"%s\" \n",__func__ , num , kw , well);
+	  break;
+	case(ecl_sum_field_var):
+	  /* 
+	     Field variable 
+	  */
+	  hash_insert_int(ecl_sum->field_var_index , kw , index);
+	  break;
+	case(ecl_sum_group_var):
+	  {
+	    const char * group = well;
+	    if (!DUMMY_WELL(well)) {
+	      if (!hash_has_key(ecl_sum->group_var_index , group)) 
+		hash_insert_hash_owned_ref(ecl_sum->group_var_index , group , hash_alloc() , hash_free__);
+	      {
+		hash_type * var_hash = hash_get(ecl_sum->group_var_index , group);
+		hash_insert_int(var_hash , kw , index);
 	      }
 	    }
-	    break;
-	  case('N'):
-	    break;
-	  case('R'):
-	    if (kw[2] == 'F') {
-	      /*
-		 This is a region --> region flow situation 
-	      */
-	    } else {
-	      if (!hash_has_key(ecl_sum->region_var_index , kw)) 
-		hash_insert_int(ecl_sum->region_var_index , kw , index);
-	      ecl_sum->var_type[index] = ecl_sum_region_var;
-	    }
+	  }
+	  break;
+	case(ecl_sum_region_var):
+	  if (!hash_has_key(ecl_sum->region_var_index , kw)) 
+	      hash_insert_int(ecl_sum->region_var_index , kw , index);
 	    ecl_sum->num_regions = util_int_max(ecl_sum->num_regions , num);  
 	    break;
-	  case('S'):
-	    /* Some special cases on Sxxxx not handled */
-	    break;
-	  case ('W'):
+	case (ecl_sum_well_var):
+	  if (!DUMMY_WELL(well)) {
+	    /* 
+	       It seems we can have e.g. WOPR associated with the dummy well, 
+	       there is no limit to the stupidity of these programmers.
+	    */
+	    set_add_key(well_set , well);
+	    if (!hash_has_key(ecl_sum->well_var_index , well)) 
+	      hash_insert_hash_owned_ref(ecl_sum->well_var_index , well , hash_alloc() , hash_free__);
 	    {
-	      if (!DUMMY_WELL(well)) {
-		set_add_key(well_set , well);
-		if (!hash_has_key(ecl_sum->well_var_index , well)) {
-		  hash_insert_hash_owned_ref(ecl_sum->well_var_index , well , hash_alloc() , hash_free__);
-		}
-		{
-		  hash_type * var_hash = hash_get(ecl_sum->well_var_index , well);
-		  hash_insert_int(var_hash , kw , index);
-		}   
-		ecl_sum->var_type[index] = ecl_sum_well_var;
-	      }
-	    }
-	    break;
-	  default:
-	    misc_var = true;
-	    break;
+	      hash_type * var_hash = hash_get(ecl_sum->well_var_index , well);
+	      hash_insert_int(var_hash , kw , index);
+	    }   
 	  }
-	} else 
-	  misc_var = true;
-	
-	if (misc_var) {
-	  hash_insert_int(ecl_sum->misc_var_index , kw , index);
-	  ecl_sum->var_type[index] = ecl_sum_misc_var;
+	  break;
+	case(ecl_sum_misc_var):
+	  /* 
+	     Possibly we must have the possibility to alter 
+	     reclassify - so this last switch must be done
+	     in two passes?
+	  */
+	  hash_insert_int(ecl_sum->misc_var_index , kw , index);	    
+	  break;
+	default:
+	  /* Lots of legitimate alternatives which are not handled .. */
+	  break;
 	}
 	free(kw);
 	free(well);
@@ -257,13 +289,14 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
       set_free(well_set);
     }
   }
+}
 
 
-  /*
-    This is the only place the misc_var_index field
-    is used - maybe a bit overkill?
-  */
+ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const char **data_files , bool report_mode , bool endian_convert) {
+  ecl_sum_type *ecl_sum   = ecl_sum_alloc_empty(ECL_FMT_AUTO , endian_convert);
 
+  ecl_sum_fread_alloc_data(ecl_sum , files , data_files , report_mode);
+  ecl_sum_fread_header(ecl_sum , header_file);
   if (hash_has_key(ecl_sum->misc_var_index , "DAY")) {
     int iblock;
     int day_index   = hash_get_int(ecl_sum->misc_var_index , "DAY");
@@ -275,13 +308,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
       ecl_block_set_sim_time_summary(block , /*time_index , years_index , */ day_index , month_index , year_index);
     }
   } 
-}
-
-
-ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const char **data_files , bool report_mode , bool endian_convert) {
-  ecl_sum_type *ecl_sum   = ecl_sum_alloc_empty(ECL_FMT_AUTO , endian_convert);
-  ecl_sum_fread_alloc_data(ecl_sum , files , data_files , report_mode);
-  ecl_sum_fread_header(ecl_sum , header_file);
+  
   return ecl_sum;
 }
 	
@@ -361,6 +388,10 @@ static void ecl_sum_assert_index(const ecl_sum_type * ecl_sum, int index) {
 
 
 
+bool ecl_sum_has_report_nr(const ecl_sum_type * ecl_sum, int report_nr) {
+  return ecl_fstate_has_report_nr(ecl_sum->data , report_nr);
+}
+
 /*
   time_index is zero based anyway ..... not nice 
 */
@@ -370,9 +401,10 @@ double ecl_sum_get_with_index(const ecl_sum_type *ecl_sum , int report_nr , int 
   ecl_sum_assert_index(ecl_sum , sum_index);
   {
     ecl_block_type * block    = ecl_fstate_get_block_by_report_nr(ecl_sum->data , report_nr);
-    ecl_kw_type    * data_kw  = ecl_block_get_kw(block , "PARAMS");
-    
-    /* PARAMS underlying data type is float. */
+    ecl_kw_type    * data_kw;
+    if (block == NULL) 
+      util_abort("%s: failed to get report_nr:%d - something broken ?! \n",__func__ , report_nr);
+    data_kw  = ecl_block_get_kw(block , "PARAMS");
     return (double) ecl_kw_iget_float(data_kw , sum_index);    
   }
 }
@@ -536,7 +568,6 @@ static void ecl_sum_assert_region_nr(const ecl_sum_type * ecl_sum , int region_n
 
 
 
-
 int ecl_sum_get_region_var_index(const ecl_sum_type * ecl_sum , int region_nr , const char *var) {
   int index = -1;
   
@@ -551,6 +582,8 @@ int ecl_sum_get_region_var_index(const ecl_sum_type * ecl_sum , int region_nr , 
   
   return index;
 }
+
+
 
 
 
@@ -583,22 +616,96 @@ bool ecl_sum_has_well_var(const ecl_sum_type * ecl_sum , const char * well , con
 bool ecl_sum_has_group_var(const ecl_sum_type * ecl_sum , const char * group , const char *var) {
   if (hash_has_key(ecl_sum->group_var_index , group)) {
     hash_type * var_hash = hash_get(ecl_sum->group_var_index , group);
-    if (hash_has_key(var_hash , var))
-      return true;
-    else 
-      return false;
+    return hash_has_key(var_hash , var);
   } else 
     return false;
 }
 
 
 
-bool ecl_sum_has_var(const ecl_sum_type * ecl_sum , const char *var) {
-  if (hash_has_key(ecl_sum->misc_var_index , var))
-    return true;
-  else
-    return false;
+
+#define __ASSERT_ARGC(argc , target_argc , s , t) if (argc != target_argc) util_abort("%s: string:%s is not recognized for lookup of %s." , __func__ , s , t);
+int ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lookup_kw) {
+  int     index = -1;
+  char ** argv;
+  int     argc;
+  ecl_sum_var_type var_type;
+  util_split_string(lookup_kw , ":" , &argc , &argv);
+  var_type = __ecl_sum_identify_var_type(argv[0]);
+
+
+  switch(var_type) {
+  case(ecl_sum_misc_var):
+    index = ecl_sum_get_misc_var_index(ecl_sum , argv[0]);
+    break;
+  case(ecl_sum_well_var):
+    __ASSERT_ARGC(argc , 2 , lookup_kw , "Wells");
+    index = ecl_sum_get_well_var_index(ecl_sum , argv[1] , argv[0]);
+    break;
+  case(ecl_sum_region_var):
+    __ASSERT_ARGC(argc , 2 , lookup_kw , "Regions");
+    {
+      int region_nr;
+      if (!util_sscanf_int(argv[1] , &region_nr)) 
+	util_abort("%s: failed to parse %s to an integer - aborting. \n",__func__ , argv[1]);
+      index = ecl_sum_get_region_var_index(ecl_sum , region_nr , argv[0]);
+    }
+    break;
+  case(ecl_sum_field_var):
+    index = ecl_sum_get_field_var_index(ecl_sum , argv[0]);
+    break;
+  case(ecl_sum_group_var):
+    __ASSERT_ARGC(argc , 2 , lookup_kw , "Groups");
+    index = ecl_sum_get_group_var_index(ecl_sum , argv[1] , argv[0]);
+    break;
+  default:
+    util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
+  }
+  util_free_string_list(argv , argc);
+  return index;
 }
+
+
+bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw) {
+  bool    has_var = false;
+  char ** argv;
+  int     argc;
+  ecl_sum_var_type var_type;
+  util_split_string(lookup_kw , ":" , &argc , &argv);
+  var_type = __ecl_sum_identify_var_type(argv[0]);
+
+  switch(var_type) {
+  case(ecl_sum_misc_var):
+    has_var = ecl_sum_has_misc_var(ecl_sum , argv[0]);
+    break;
+  case(ecl_sum_well_var):
+    __ASSERT_ARGC(argc , 2 , lookup_kw , "Wells");
+    has_var = ecl_sum_has_well_var(ecl_sum , argv[1] , argv[0]);
+    break;
+  case(ecl_sum_region_var):
+    __ASSERT_ARGC(argc , 2 , lookup_kw , "Regions");
+    {
+      int region_nr;
+      if (!util_sscanf_int(argv[1] , &region_nr)) 
+	util_abort("%s: failed to parse %s to an integer - aborting. \n",__func__ , argv[1]);
+      has_var = ecl_sum_has_region_var(ecl_sum , region_nr , argv[0]);
+    }
+    break;
+  case(ecl_sum_field_var):
+    has_var = ecl_sum_has_field_var(ecl_sum , argv[0]);
+    break;
+  case(ecl_sum_group_var):
+    __ASSERT_ARGC(argc , 2 , lookup_kw , "Groups");
+    has_var = ecl_sum_has_group_var(ecl_sum , argv[1] , argv[0]);
+    break;
+  default:
+    util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
+  }
+  util_free_string_list(argv , argc);
+  return has_var;
+}
+#undef __ASSERT_ARGC    
+
 
 
 const char * ecl_sum_get_unit_ref(const ecl_sum_type * ecl_sum , const char *var) {
@@ -673,6 +780,17 @@ double ecl_sum_get_region_var(const ecl_sum_type * ecl_sum , int time_index , in
   value     = ecl_sum_get_with_index(ecl_sum , time_index , sum_index);
   return value;
 }
+
+
+double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , const char * lookup_string) {
+  int sum_index;
+  double value;
+  
+  sum_index = ecl_sum_get_general_var_index(ecl_sum , lookup_string);
+  value     = ecl_sum_get_with_index(ecl_sum , time_index , sum_index);
+  return value;
+}
+
 
 
 
@@ -865,20 +983,23 @@ void ecl_sum_free(ecl_sum_type *ecl_sum) {
 /**
    This is actually not a proper report_step - but rather an index ...
 */
-void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nwells , int nvars , const char ** well_list , const char ** well_var_list) {
+void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , const char ** var_list) {
   int report_step , first_report_step , last_report_step;
   ecl_sum_get_report_size(ecl_sum , &first_report_step , &last_report_step);
-  printf("report_step: %d -> %d \n",first_report_step , last_report_step);
-  for (report_step = first_report_step; report_step <= last_report_step; report_step++) {
-    int day,month,year,ivar,iwell;
-    util_set_date_values(ecl_sum_get_sim_time(ecl_sum , report_step) , &day , &month, &year); 
-    fprintf(stream , "%04d   %02d/%02d/%04d   ",report_step , day , month , year);
 
-    for (iwell=0; iwell < nwells; iwell++)
+  for (report_step = first_report_step; report_step <= last_report_step; report_step++) {
+    if (ecl_sum_has_report_nr(ecl_sum , report_step)) {
+      int day,month,year,ivar;
+      util_set_date_values(ecl_sum_get_sim_time(ecl_sum , report_step) , &day , &month, &year); 
+      fprintf(stream , "%04d   %02d/%02d/%04d   ",report_step , day , month , year);
+
       for (ivar = 0; ivar < nvars; ivar++)
-	fprintf(stream , " %12.3f " , ecl_sum_get_well_var(ecl_sum , report_step , well_list[iwell] , well_var_list[ivar]));
-    fprintf(stream , "\n");
+	fprintf(stream , " %12.3f " , ecl_sum_get_general_var(ecl_sum , report_step , var_list[ivar]));
+      
+      fprintf(stream , "\n");
+    }
   }
+  
 }
 
 
