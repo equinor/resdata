@@ -194,8 +194,8 @@ void static util_unlink_path_static(const char *path , bool test_mode) {
 	around - so this warning is masked out.
       */
       
-      if (rmdir_return != 0 && rmdir_return != ENOTEMPTY) 
-	fprintf(stderr,"%s: Warning: failed to remove directory:%s - %s \n",__func__ , path , strerror(errno));
+      if ((rmdir_return != 0) && (rmdir_return != ENOTEMPTY)) 
+	fprintf(stderr,"%s: Warning: failed to remove directory:%s: %s \n",__func__ , path , strerror(errno));
     }
   }
 }

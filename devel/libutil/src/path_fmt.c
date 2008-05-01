@@ -7,6 +7,35 @@
 #include <stdbool.h>
 #include <node_ctype.h>
 
+/**
+The basic idea of the path_fmt_type is that it should be possible for
+a user to specify an arbirtrary path *WITH* embedded format
+strings. It is implemented with the the help av variable length
+argument lists. This has the following disadvantages:
+
+ o The code gets ugly - really ugly.
+
+ o It is difficult to provide type-safety on user input.
+
+Example:
+
+
+path_fmt_type * path_fmt = path_fmt_alloc_directory_fmt("/tmp/ECLIPSE/%s/Run-%d");
+
+
+Here we have allocated a path_fmt instance which will require two
+additional arguments when a full path is created, a string for the
+"%s" placeholder and an integer for the %d placeholder:
+
+char * path = path_fmt_alloc(path_fmt , "BaseCase" , 67);
+
+=> path = /tmp/ECLIPSE/Basecase/Run-67
+
+*/
+
+
+   
+
 struct path_fmt_struct {
   int   buffer_size;
   char *fmt;
@@ -36,6 +65,7 @@ static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory , b
   path_fmt_reset_fmt(path , fmt);
   return path;
 }
+
 
 /**
 
@@ -117,7 +147,6 @@ char * path_fmt_alloc_path(const path_fmt_type * path , ...) {
 
 
 /**
-
   This function is used to allocate a filename (full path) from a
   path_fmt instance: 
 
@@ -126,12 +155,14 @@ char * path_fmt_alloc_path(const path_fmt_type * path , ...) {
     path_fmt_type * path_fmt = path_fmt_alloc_directory("/tmp/path%d/X.%02d");
     char * file = path_fmt_alloc_file(path_fmt , 100 , 78 , "SomeFile.txt")
 
-  This will allocate the filename: /tmp/path100/X.78/SomeFile.txt; it
+  This will allocate the filename: /tmp/path100/X.78/SomeFile.txt; if
   it does not already exist, the underlying directory will be
   created. Observe that there is nothing special about the filename
   argument (i.e. 'SomeFile.txt' in the current example), it is just
-  the final argument to the path_fmt_alloc_file() function call.
+  the last argument to the path_fmt_alloc_file() function call.
 
+  Observe that the handling of the variable length argument lists gets
+  seriously ugly.
 */
 
 
@@ -151,8 +182,10 @@ char * path_fmt_alloc_file(const path_fmt_type * path , ...) {
     }
     va_end(ap);
     return filename;
-  } else 
+  } else {
     util_abort("%s: tried to allocate filename from a path_fmt object which already is of file type - aborting\n",__func__);
+    return NULL;  /* Pure dummy to shut up the compiler. */
+  }
 }
 
 /**

@@ -52,6 +52,10 @@ static int void_arg_sizeof(node_ctype arg_type) {
 }
 
 static void __void_arg_assert_cast(const void_arg_type * arg) {
+  
+  if (arg == NULL) 
+    util_abort("%s: arrived with arg = NULL - this is broken !! \n",__func__);
+  
   if (arg->__type_signature != VOID_ARG_TYPE_SIGNATURE) 
     util_abort("%s: hmmm - the cast to void_arg_type seemed to fail at runtime - aborting\n",__func__);
 }

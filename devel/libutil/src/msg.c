@@ -15,10 +15,8 @@ struct msg_struct {
 
 
 static void __msg_assert_visible(const msg_type * msg) {
-  if (!msg->visible) {
-    fprintf(stderr,"%s: you must call msg_show() first - aborting\n",__func__);
-    abort();
-  }
+  if (!msg->visible) 
+    util_abort("%s: you must call msg_show() first - aborting.\n",__func__);
 }
 
 
@@ -26,10 +24,13 @@ static void __blank_string(int len) {
     int i;
   for (i = 0; i < len; i++)
     fputc('\b' , stdout);
+
   for (i = 0; i < len; i++)
     fputc(' ' , stdout);
+
   for (i = 0; i < len; i++)
     fputc('\b' , stdout);
+
 }
 
 
@@ -63,10 +64,9 @@ void msg_set_prompt(msg_type * msg , const char * prompt) {
 
 
 void msg_print_msg(const msg_type * msg) {
-  if (msg->msg != NULL) {
+  if (msg->msg != NULL) 
     printf("%s" , msg->msg);
-    fflush(stdout);
-  }
+  fflush(stdout);
 }
 
 

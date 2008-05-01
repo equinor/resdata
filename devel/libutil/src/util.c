@@ -1855,6 +1855,7 @@ void util_read_filename(const char * prompt , int prompt_len , bool must_exist ,
   should be a reference to the size (in bytes) of zbuffer, on return
   this has been updated to reflect the new compressed size.
 */
+
 void util_compress_buffer(const void * data , int data_size , void * zbuffer , unsigned long * compressed_size) {
   int compress_result;
   compress_result = compress(zbuffer , compressed_size , data , data_size);
@@ -1949,15 +1950,20 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
   }
 }
 
+/**
+  This function is used to read compressed data from file, observe
+  that the file must have been created with util_fwrite_compressed()
+  first. Trying to read a file compressed with gzip will fail.
+*/
 
 
 void util_fread_compressed(void *__data , FILE * stream) {
   char * data = (char *) __data;
-  int size , offset;
   int buffer_size;
+  int size , offset;
   void * zbuffer;
 
-  fread(&size        , sizeof size        , 1 , stream); 
+  fread(&size  , sizeof size        , 1 , stream); 
   if (size == 0) return;
 
 
@@ -1989,6 +1995,30 @@ void util_fread_compressed(void *__data , FILE * stream) {
   } while (offset < size);
   free(zbuffer);
 }
+
+
+/**
+Allocates storage and reads in from compressed data from disk. If the
+data on disk have zero size, NULL is returned.
+*/
+
+void * util_fread_alloc_compressed(FILE * stream) {
+  long   current_pos = ftell(stream);
+  char * data;
+  int    size;
+
+  fread(&size  , sizeof size , 1 , stream); 
+  if (size == 0) 
+    return NULL;
+  else {
+    fseek(stream , current_pos , SEEK_SET);
+    data = util_malloc(size , __func__);
+    util_fread_compressed(data , stream);
+    return data;
+  }
+}
+
+
 
 
 void util_fskip_compressed(FILE * stream) {
@@ -2218,11 +2248,22 @@ void util_abort(const char * fmt , ...) {
     char ** file_line_list;
     int    max_func_length = 0;
     int    size,i;
+    
+    fprintf(stderr,"****************************************************************************\n");
+    fprintf(stderr,"**                                                                        **\n");
+    fprintf(stderr,"**  A fatal error occured in the EnKF program, and we have to abort.      **\n");
+    fprintf(stderr,"**  We now *try* to provide a backtrace, which would be very useful       **\n");
+    fprintf(stderr,"**  when debugging. The process of making a (human readable) backtrace    **\n");
+    fprintf(stderr,"**  is quite complex, among other things it involves several calls to the **\n");
+    fprintf(stderr,"**  external program addr2line. We have arrived here because the program  **\n");
+    fprintf(stderr,"**  state is already quite broken, so the backtrace might be (seriously)  **\n");
+    fprintf(stderr,"**  broken (not thread-safe) as well. But anyway - here comes an attempt: **\n");
+    fprintf(stderr,"**                                                                        **\n");
+    fprintf(stderr,"****************************************************************************\n");
 
     size       = backtrace(array , max_bt);
     strings    = backtrace_symbols(array , size);
     executable = util_bt_alloc_current_executable(strings[0]);
-    printf("Parsing executable:%s -> <%s> \n",strings[0] , executable);
 
     size -= 2; /* The two last symbols in the backtrace are libc functions which are not available anyway. */ 
     func_list      = util_malloc(size * sizeof * func_list      , __func__);
@@ -2235,7 +2276,7 @@ void util_abort(const char * fmt , ...) {
 
     {
       char fmt[64];
-      sprintf(fmt, " #%s02d %s-%ds(..) in %ss \n" , "%" , "%" , max_func_length , "%");
+      sprintf(fmt, " #%s02d %s-%ds(..) in %ss   **\n" , "%" , "%" , max_func_length , "%");
       fprintf(stderr , "--------------------------------------------------------------------------------\n");
       for (i=0; i < size; i++) 
 	fprintf(stderr, fmt , i , func_list[i], file_line_list[i]);
@@ -2259,7 +2300,7 @@ void util_abort(const char * fmt , ...) {
 */
 
 void util_block_growing_file(const char * file) {
-  const int usleep_time = 250; 
+  const int usleep_time = 10000; /* 1/100 of a second */
   int prev_size;
   int current_size = 0;
   do {
@@ -2269,15 +2310,17 @@ void util_block_growing_file(const char * file) {
   } while (current_size != prev_size);
 }
 
+
 /**
    This is much similar to the preivious function, this function
    blocks until the number of entries in directory is constant (it
-   does not consider wether the size of the files is changing, again
-   this is quite special-purpose function for the enkf + ECLIPSE cooperation.
+   does not consider wether the size of the files is changing), again
+   this is quite special-purpose function for the enkf + ECLIPSE
+   cooperation.
 */ 
 
 void util_block_growing_directory(const char * directory) {
-  const int usleep_time = 250; 
+  const int usleep_time = 10000; /* 1/100 of a second */
   int prev_size;
   int current_size = 0;
   do {
