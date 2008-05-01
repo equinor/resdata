@@ -74,6 +74,7 @@ int ecl_util_filename_report_nr(const char *filename) {
   return report_nr;
 }
 
+
 /*
 bool ecl_util_numeric_extension(const char * extension) {
   
@@ -93,6 +94,16 @@ bool ecl_util_numeric_extension(const char * extension) {
 */
 
 
+
+/** 
+This function takes an eclipse filename as input - looks at the
+extension, and uses that to determine the type of file. In addition to
+the fundamental type, it is also determined whether the file is
+formatted or not, and in the case of summary/restart files, which
+report number this corresponds to.
+
+The function itself returns void, all the results are by reference.
+*/
 
 
 void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , bool *_fmt_file, int * _report_nr) {
@@ -185,10 +196,8 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
   if (_report_nr != NULL)  
     *_report_nr = report_nr;
   
-  if ( (file_type == ecl_other_file) && !ecl_other_ok) {
-    fprintf(stderr,"%s: Can not determine type of:%s from filename - aborting \n",__func__ , filename);
-    abort();
-  }
+  if ( (file_type == ecl_other_file) && !ecl_other_ok) 
+    util_abort("%s: Can not determine type of:%s from filename - aborting \n",__func__ , filename);
   
 }
 
@@ -324,9 +333,9 @@ char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl
   free(ext);
 
   if (must_exist) {
-    const int max_usleep_time = 10000;
-    const int usleep_time     =   200;
-    int   total_usleep_time   =     0;
+    const int max_usleep_time = 10000000;  /* 10 seconds   */ 
+    const int usleep_time     =    10000;  /* 1/100 second */
+    int   total_usleep_time   =        0;
 
 
     /*
@@ -342,16 +351,16 @@ char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl
       if (util_file_exists(filename)) 
 	break;
       else {
-	if (total_usleep_time >= max_usleep_time) 
-	  util_abort("%s: file:%s does not exist - aborting \n",__func__ , filename);
-	
-	total_usleep_time += usleep_time;
-	usleep(usleep_time);
 	/*
 	  If aborting is not permissible you must first allocate the name
 	  in the normal way, and then check whether it existst in the calling
 	  unit. Tough luck ...
 	*/
+	if (total_usleep_time >= max_usleep_time) 
+	  util_abort("%s: file:%s does not exist - aborting \n",__func__ , filename);
+	
+	total_usleep_time += usleep_time;
+	usleep(usleep_time);
       }
     }
   }
