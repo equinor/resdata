@@ -410,6 +410,58 @@ void util_fskip_cchars(FILE * stream , const char * skip_set , bool *at_eof) {
 }
 
 
+
+
+/** 
+    This functions reads a token[1] from stream, allocates storage for
+    the it, and returns the newly allocated storage. Observe that the
+    function does *NOT* read past end of line. If no token can be the
+    function will return NULL.
+
+    Example:
+    --------
+
+    File:
+     ________________
+    /
+    | This is a file
+    | Line2
+    | Line3
+    \________________
+
+
+   bool at_eof = 0;
+   char * token;
+   while (!at_eof) {
+      token = util_fscanf_alloc_token(stream);
+      if (token != NULL) {
+         printf("Have read token:%s \n",token);  
+         free(token);
+      } else {
+         printf("Have reached EOL/EOF \n");
+         util_forward_line(stream , &at_eof);
+      }
+   }
+
+   This will produce the output:
+   Have read token: This
+   Have read token: is
+   Have read token: a 
+   Have read token: file
+   Have reached EOL/EOF
+   Have read token: Line2
+   Have reached EOL/EOF
+   Have read token: Line3
+   Have reached EOL/EOF
+
+
+   [1]: A token is defined as a sequence of characters separated by
+    white-space or tab.
+*/
+    
+
+
+
 char * util_fscanf_alloc_token(FILE * stream) {
   const char * space_set = " \t";
   bool cont;
@@ -2037,9 +2089,31 @@ void util_fskip_compressed(FILE * stream) {
   } while (offset < size);
 }
 
+/**
+   These small functions write formatted values onto a stream. The main point about these
+   functions is to avoid creating small one-off format strings.
+*/
+
+void util_fprintf_double(double value , int width , int decimals , FILE * stream) {
+  char fmt[32];
+  sprintf(fmt , "%%%d.%dg" , width , decimals);
+  fprintf(stream , fmt , value);
+}
+
+
+void util_fprintf_string(const char * s , int width , bool left_pad , FILE * stream) {
+  char fmt[32];
+  if (left_pad)
+    sprintf(fmt , "%%%ds" , width);
+  else
+    sprintf(fmt , "%%-%ds" , width);
+  fprintf(stream , fmt , s);
+}
+
 
 /** 
-    This is the core filtering function. Based on this we can do the following filtering:
+    This (should be...) is the core filtering function. Based on this
+    we can do the following filtering:
 
     buffer -> existing buffer (can fail if target buffer is to small).
     buffer -> newly allocated buffer
@@ -2234,10 +2308,13 @@ static char * util_bt_alloc_current_executable(const char * bt_symbol) {
 
 
 void util_abort(const char * fmt , ...) {
+  int   current_errno = errno;
   const bool include_backtrace = true;
   va_list ap;
   va_start(ap , fmt);
   vfprintf(stderr , fmt , ap);
+  if (current_errno != 0) 
+    fprintf(stderr,"errno is set: errno:%d  strerror:%s \n",errno , strerror(errno));
   va_end(ap);
   if (include_backtrace) {
     const int max_bt = 50;
@@ -2249,6 +2326,7 @@ void util_abort(const char * fmt , ...) {
     int    max_func_length = 0;
     int    size,i;
     
+    fprintf(stderr,"\n");
     fprintf(stderr,"****************************************************************************\n");
     fprintf(stderr,"**                                                                        **\n");
     fprintf(stderr,"**  A fatal error occured in the EnKF program, and we have to abort.      **\n");
@@ -2257,7 +2335,7 @@ void util_abort(const char * fmt , ...) {
     fprintf(stderr,"**  is quite complex, among other things it involves several calls to the **\n");
     fprintf(stderr,"**  external program addr2line. We have arrived here because the program  **\n");
     fprintf(stderr,"**  state is already quite broken, so the backtrace might be (seriously)  **\n");
-    fprintf(stderr,"**  broken (not thread-safe) as well. But anyway - here comes an attempt: **\n");
+    fprintf(stderr,"**  broken as well. In particular it is not thread safe:                  **\n");
     fprintf(stderr,"**                                                                        **\n");
     fprintf(stderr,"****************************************************************************\n");
 
@@ -2276,7 +2354,7 @@ void util_abort(const char * fmt , ...) {
 
     {
       char fmt[64];
-      sprintf(fmt, " #%s02d %s-%ds(..) in %ss   **\n" , "%" , "%" , max_func_length , "%");
+      sprintf(fmt, " #%s02d %s-%ds(..) in %ss   \n" , "%" , "%" , max_func_length , "%");
       fprintf(stderr , "--------------------------------------------------------------------------------\n");
       for (i=0; i < size; i++) 
 	fprintf(stderr, fmt , i , func_list[i], file_line_list[i]);
@@ -2297,6 +2375,8 @@ void util_abort(const char * fmt , ...) {
     This funny function is used to block execution while a file is
     growing. It is a completely heuristic attempt to ensure that the
     writing of a certain file is finished before execution continues.
+
+    It is assumed (and not checked for) that the file already exists.
 */
 
 void util_block_growing_file(const char * file) {
@@ -2312,11 +2392,10 @@ void util_block_growing_file(const char * file) {
 
 
 /**
-   This is much similar to the preivious function, this function
-   blocks until the number of entries in directory is constant (it
-   does not consider wether the size of the files is changing), again
-   this is quite special-purpose function for the enkf + ECLIPSE
-   cooperation.
+   This is much similar to the previous function, this function blocks
+   until the number of entries in directory is constant (it does not
+   consider wether the size of the files is changing), again this is
+   quite special-purpose function for the enkf + ECLIPSE cooperation.
 */ 
 
 void util_block_growing_directory(const char * directory) {

@@ -8,35 +8,12 @@
 #include <hash.h>
 
 int main(int argc , char ** argv) {
-  const int size = 2000000;
-  long * data;
-  long * copy;
-  int i;
-
-  data = util_malloc(size * sizeof * data , __func__);
-  copy = util_malloc(size * sizeof * copy , __func__);
-  for (i=0; i < size; i++) {
-    data[i] = random();
-    copy[i] = data[i];
-  }
-
-  {
-    FILE * stream = util_fopen("/tmp/compress.gz" , "w");
-    util_fwrite_compressed(data , size * sizeof * data , stream);
-    fclose(stream);
-  }
-  for (i=0; i < size; i++) 
-    data[i] = random();
-
-  {
-    FILE * stream = util_fopen("/tmp/compress.gz" , "r");
-    util_fread_compressed(data , stream);
-    fclose(stream);
-  }
-  
-  for (i=0; i < size; i++) 
-    if (data[i] != copy[i]) 
-      printf("ERROR \n");
-  
-  printf("Check OK \n");
+  util_fprintf_double(1.78       , 10 , 6 , stdout);
+  printf("\n");
+  util_fprintf_double(3.14159265 , 12 , 6 , stdout);
+  printf("\n");
+  util_fprintf_string("Hei Joakim" , 50, true , stdout);
+  printf("\n");
+  util_fprintf_string("Hei Joakim" , 50, false , stdout);
+  printf("\n");
 }
