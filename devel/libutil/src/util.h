@@ -17,6 +17,7 @@ typedef enum {util_filter_warn0 , util_filter_warn_unused = 1, util_filter_warn_
 time_t       util_make_time2(int , int , int , int , int , int );
 time_t       util_make_time1(int , int , int);
 
+void         util_fprintf_int(int , int , FILE * );
 void         util_fprintf_string(const char *  , int , bool  , FILE * );
 void         util_fprintf_double(double , int , int , FILE *);
 bool         util_fscanf_date(FILE * , time_t *);
@@ -94,6 +95,7 @@ void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
 void    util_abort(const char * fmt , ...);
 void *  util_realloc(void *  , size_t  , const char * );
 void *  util_malloc(size_t , const char * );
+void *  util_malloc_copy(const void * , size_t , const char * );
 void 	util_double_to_float(float  * , const double * , int );
 void 	util_float_to_double(double * , const float  * , int );
 

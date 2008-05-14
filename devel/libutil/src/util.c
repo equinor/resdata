@@ -551,6 +551,12 @@ bool util_fscanf_int(FILE * stream , int * value) {
 }   
 
 
+/**
+   This function counts the number of lines from the current position
+   in the file, to the end of line. The file pointer is repositioned
+   at the end of the counting.
+*/
+
 
 int util_count_file_lines(FILE * stream) {
   long int init_pos = ftell(stream);
@@ -1840,6 +1846,16 @@ void * util_realloc(void * old_ptr , size_t new_size , const char * caller) {
 }
 
 
+/**
+   This function is a super-thin wrapper around malloc. It allocates
+   the number of bytes you ask for. If the return value from malloc()
+   is NULL the routine will abort().
+
+   If you are actually interested in handling malloc() failures in a
+   decent way, you should not use this routine.
+*/
+
+
 void * util_malloc(size_t size , const char * caller) {
   void *data = malloc(size);
   if (data == NULL) 
@@ -1851,6 +1867,17 @@ void * util_malloc(size_t size , const char * caller) {
   */
   memset(data , 255 , size);
   return data;
+}
+
+/**
+   Allocates byte_size bytes of storage, and initializes content with the
+   value found in src.
+*/
+
+void * util_malloc_copy(const void * src , size_t byte_size , const char * caller) {
+  void * new = util_malloc(byte_size , caller);
+  memcpy(new , src , byte_size);
+  return new;
 }
 
 
@@ -2097,6 +2124,13 @@ void util_fskip_compressed(FILE * stream) {
 void util_fprintf_double(double value , int width , int decimals , FILE * stream) {
   char fmt[32];
   sprintf(fmt , "%%%d.%dg" , width , decimals);
+  fprintf(stream , fmt , value);
+}
+
+
+void util_fprintf_int(int value , int width , FILE * stream) {
+  char fmt[32];
+  sprintf(fmt , "%%%dd" , width);
   fprintf(stream , fmt , value);
 }
 
