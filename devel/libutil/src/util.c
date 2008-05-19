@@ -173,7 +173,6 @@ void util_rewind_line(FILE *stream) {
 
 
 
-
 static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line) {
   int init_pos = ftell(stream);
   char * new_line;
@@ -205,10 +204,10 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
   }
   
   fseek(stream , init_pos , SEEK_SET);
-  new_line = realloc(line , len + 1);
+  new_line = util_realloc(line , len + 1 , __func__);
   util_fread(new_line , sizeof * new_line , len , stream , __func__);
   new_line[len] = '\0';
-    
+  
   /*
     Skipping the end of line marker(s).
   */
@@ -224,12 +223,13 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
       *at_eof = false;
   }
   
-  {
+  if (new_line != NULL) {
     char * strip_line = util_alloc_strip_copy(new_line);
     free(new_line);
     
     return strip_line;
-  }
+  } else
+    return NULL;
 }
 
 
@@ -337,6 +337,7 @@ void util_fskip_lines(FILE * stream , int lines) {
   
 int util_forward_line(FILE * stream , bool * at_eof) {
   bool at_eol = false;
+  *at_eof     = false;
   int col = 0;
   do {
     char c = fgetc(stream);
@@ -523,6 +524,19 @@ char * util_fscanf_alloc_token(FILE * stream) {
 }
 
 
+bool util_sscanf_double(const char * buffer , double * value) {
+  bool value_OK = false;
+  char * error_ptr;
+
+  int tmp_value = strtod(buffer , &error_ptr);
+  if (error_ptr[0] == '\0') {
+    value_OK = true; 
+    *value = tmp_value;
+  } 
+  return value_OK;
+}
+
+
 bool util_sscanf_int(const char * buffer , int * value) {
   bool value_OK = false;
   char * error_ptr;
@@ -569,44 +583,6 @@ int util_count_file_lines(FILE * stream) {
   fseek(stream , init_pos , SEEK_SET);
   return lines;
 }
-
-
-
-/* int util_count_file_lines(FILE * stream) { */
-/*   int lines       = 0; */
-/*   int empty_lines = 0; */
-/*   int col         = 0; */
-/*   char    c; */
-  
-/*   do { */
-/*     c = fgetc(stream); */
-/*     if (EOL_CHAR(c)) { */
-/*       printf("lines: %d   empty_lines:%d EOL \n",lines,empty_lines); */
-/*       if (col == 0) */
-/* 	empty_lines++; */
-/*       else { */
-/* 	lines       += empty_lines + 1; */
-/* 	empty_lines  = 0; */
-/*       } */
-/*       col = 0; */
-/*       c = fgetc(stream); */
-/*       if ( !feof(stream) ) { */
-/* 	if (! EOL_CHAR(c) )  */
-/* 	  fseek(stream , -1 , SEEK_CUR); */
-/*       } */
-/*     } else if (c == EOF) */
-/*       lines++; */
-/*     else  */
-/*       col++; */
-/*   } while (! feof(stream) ); */
-/*   if (col == 0)  */
-/*     /\* */
-/*       Not counting empty last line. */
-/*     *\/ */
-/*     lines--; */
-/*   printf("Returning: lines:%d \n",lines); */
-/*   return lines; */
-/* } */
 
 
 int util_count_content_file_lines(FILE * stream) {
@@ -779,7 +755,7 @@ bool util_file_exists(const char *filename) {
 
 /**
   This function return true if path corresponds to an existing
-  directory, if stat() fail errno is checked for the value ENOENT, in
+  directory, if stat() fails errno is checked for the value ENOENT, in
   which case a false is returned.
 */
 bool util_is_directory(const char * path) {
@@ -1305,6 +1281,46 @@ char ** util_alloc_stringlist_copy(const char **src, int len) {
 }
 
 
+/**
+   This function reallocates the string_list pointer, making room for
+   one more char *, this newly allocated slot is then set to point to
+   (a copy of) the new string. The newly reallocated char ** instance
+   is the return value from this function.
+
+   Example:
+   --------
+   char ** string_list  = (char *[2]) {"One" , "Two"};
+   char  * three_string = "Three";
+   
+   string_list = util_stringlist_append_copy(string_list , 2 , three_string);
+
+   This function does allocate memory - but does not have *alloc* in
+   the name - hmmmm....??
+*/
+
+
+
+
+char ** util_stringlist_append_copy(char ** string_list, int size , const char * append_string) {
+  return util_stringlist_append_ref(string_list , size , util_alloc_string_copy(append_string));
+}
+
+
+/**
+   This is nearly the same as util_stringlist_append_copy(), but for
+   this case only a refernce to the new string is appended.
+
+   Slightly more dangerous to use ...
+*/
+
+char ** util_stringlist_append_ref(char ** string_list, int size , const char * append_string) {
+  string_list = util_realloc(string_list , (size + 1) * sizeof * string_list , __func__);
+  string_list[size] = (char *) append_string;
+  return string_list;
+}
+
+
+
 char * util_alloc_string_copy(const char *src ) {
   if (src != NULL) {
     char *copy = util_malloc((strlen(src) + 1) * sizeof *copy , __func__);
@@ -1793,7 +1809,7 @@ static FILE * util_fopen__(const char *filename , const char * mode, int abort_m
 	fprintf(stderr,"%s: cwd:%s \n",__func__ , cwd);
 	free(cwd);
       }
-      if (abort_mode & ABORT_READ) util_abort("%s: ABORT_READ",__func__);
+      if (abort_mode & ABORT_READ) util_abort("%s: ABORT_READ \n",__func__);
     }
   } else if (strcmp(mode ,"w") == 0) {
     stream = fopen(filename , "w");
@@ -1874,7 +1890,7 @@ void * util_malloc(size_t size , const char * caller) {
    value found in src.
 */
 
-void * util_malloc_copy(const void * src , size_t byte_size , const char * caller) {
+void * util_alloc_copy(const void * src , size_t byte_size , const char * caller) {
   void * new = util_malloc(byte_size , caller);
   memcpy(new , src , byte_size);
   return new;
@@ -2187,12 +2203,17 @@ There are two types of situtations where warnings could be interesting:
 
 The warning_mode variable can have the following values:
 
- util_filter_warn0        : No warning will be issued in either of the two cases.
- util_filter_warn_unknown : A warning will be issued in the first case.
- util_filter_warn_unused  : A warning will be issued in the first case.
- util_filter_warn_all     : A warning will be issued in both cases.
+  util_filter_warn0         = 0 
+  util_filter_warn_unused   = 1 
+  util_filter_warn_unknown  = 2 
+  util_filter_fatal_unused  = 4 
+  util_filter_fatal_unknown = 8 
+
+These can be added togeheter. The xxx_fatal_xxx mode will lead to an abort
+if the warning situation arises.
 
 */
+
 
 void util_filter_file(const char * src_file , const char * comment , const char * target_file , char start_char , char end_char , const hash_type * kw_hash , util_filter_warn_type warning_mode) {
   set_type * used_set;
@@ -2202,7 +2223,7 @@ void util_filter_file(const char * src_file , const char * comment , const char 
   char * kw     = NULL;
   
 
-  if ((warning_mode & util_filter_warn_unused) != 0) {
+  if ((warning_mode & (util_filter_warn_unused + util_filter_fatal_unused)) != 0) {
     char ** key_list = hash_alloc_keylist(kw_hash);
     used_set = set_alloc(hash_get_size(kw_hash) , (const char **) key_list);
     hash_free_ext_keylist(kw_hash , key_list);
@@ -2227,12 +2248,15 @@ void util_filter_file(const char * src_file , const char * comment , const char 
 	      void_arg_fprintf_typed(hash_get(kw_hash , kw) , stream);
 	      write_src = false;
 	      index++;
-	      if ((warning_mode & util_filter_warn_unused) != 0) 
+	      if ((warning_mode & (util_filter_fatal_unused + util_filter_warn_unused)) != 0) 
 		if (set_has_key(used_set , kw))
 		  set_remove_key(used_set , kw);
-	    } else 
+	    } else {
 	      if ((warning_mode & util_filter_warn_unknown) != 0) 
 		fprintf(stderr," ** Warning ** no defintion for keyword:%s \n",kw);
+	      else if ((warning_mode & util_filter_fatal_unknown) != 0) 
+		util_abort("%s: There is no defintion for the keyword:%s - and you have requested warning->error.\n",__func__ , kw);
+	    }
 	  }
 	}	
 	if (write_src)
@@ -2247,11 +2271,13 @@ void util_filter_file(const char * src_file , const char * comment , const char 
   free(kw);
   free(buffer);
 
-  if (((warning_mode & util_filter_warn_unused) != 0) && (set_get_size(used_set) > 0)) {
+  if (((warning_mode & (util_filter_fatal_unused + util_filter_warn_unused)) != 0) && (set_get_size(used_set) > 0)) {
     fprintf(stderr," ** Warning the following keys were not used when filtering \"%s -> %s\": (",src_file, target_file);
     set_fprintf(used_set , stderr);
     fprintf(stderr,")\n");
     set_free(used_set);
+    if (warning_mode & util_filter_fatal_unused) 
+      util_abort("%s: you have requested warning->error semantics - aborting \n",__func__);
   }
 }
 
@@ -2363,7 +2389,8 @@ void util_abort(const char * fmt , ...) {
     fprintf(stderr,"\n");
     fprintf(stderr,"****************************************************************************\n");
     fprintf(stderr,"**                                                                        **\n");
-    fprintf(stderr,"**  A fatal error occured in the EnKF program, and we have to abort.      **\n");
+    fprintf(stderr,"**           A fatal error occured, and we have to abort.                 **\n");
+    fprintf(stderr,"**                                                                        **\n");
     fprintf(stderr,"**  We now *try* to provide a backtrace, which would be very useful       **\n");
     fprintf(stderr,"**  when debugging. The process of making a (human readable) backtrace    **\n");
     fprintf(stderr,"**  is quite complex, among other things it involves several calls to the **\n");

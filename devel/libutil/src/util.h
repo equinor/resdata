@@ -11,8 +11,11 @@
 
 #define UTIL_NEWLINE_STRING "\n"
 
-typedef enum {util_filter_warn0 , util_filter_warn_unused = 1, util_filter_warn_unknown = 2 , util_filter_warn_all = 3} util_filter_warn_type;
-
+typedef enum {util_filter_warn0         = 0 , 
+	      util_filter_warn_unused   = 1 , 
+	      util_filter_warn_unknown  = 2 , 
+	      util_filter_fatal_unused  = 4 ,                         /* Will abort */
+	      util_filter_fatal_unknown = 8 } util_filter_warn_type;  /* Will abort */
 
 time_t       util_make_time2(int , int , int , int , int , int );
 time_t       util_make_time1(int , int , int);
@@ -59,6 +62,7 @@ void     util_fskip_chars(FILE * , const char * , bool *);
 void     util_fskip_cchars(FILE * , const char * , bool *);
 bool     util_fscanf_int(FILE * , int * );
 bool     util_sscanf_int(const char * , int * );
+bool     util_sscanf_double(const char * , double * );
 char   * util_alloc_full_path(const char *, const char *);
 char   * util_alloc_strip_copy(const char *);
 char   * util_realloc_strip_copy(char *);
@@ -66,6 +70,8 @@ void     util_set_strip_copy(char * , const char *);
 char   * util_alloc_string_sum(const char **  , int);
 char   * util_strcat_realloc(char *, const char * );
 char   * util_alloc_string_copy(const char *);
+char  ** util_stringlist_append_copy(char **  , int , const char * );
+char  ** util_stringlist_append_ref(char **  , int , const char * );
 char  ** util_alloc_stringlist_copy(const char **, int );
 void     util_split_string(const char *, const char *, int *, char ***);
 char   * util_alloc_joined_string(const char **  , int , const char * );
@@ -95,7 +101,7 @@ void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
 void    util_abort(const char * fmt , ...);
 void *  util_realloc(void *  , size_t  , const char * );
 void *  util_malloc(size_t , const char * );
-void *  util_malloc_copy(const void * , size_t , const char * );
+void *  util_alloc_copy(const void * , size_t , const char * );
 void 	util_double_to_float(float  * , const double * , int );
 void 	util_float_to_double(double * , const float  * , int );
 
