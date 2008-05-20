@@ -524,8 +524,28 @@ char * util_fscanf_alloc_token(FILE * stream) {
 }
 
 
-bool util_sscanf_double(const char * buffer , double * value) {
-  bool value_OK = false;
+
+/**
+  This function parses a string literal (hopfully) containing a
+  represantation of a double. The return value is true|false depending
+  on the success of the parse operation, the parsed value is returned
+  by reference.
+
+
+  Example:
+  --------
+  const char * s = "78.92"
+  double value;
+  
+  if (util_sscanf_double(s , &value)) 
+    printf("%s is a valid double\n");
+  else
+    printf("%s is NOT a valid double\n");
+
+*/
+ 
+bool util_sscanf_double(const char * buffer , double * value) { 
+  bool value_OK = false; 
   char * error_ptr;
 
   int tmp_value = strtod(buffer , &error_ptr);
@@ -535,6 +555,8 @@ bool util_sscanf_double(const char * buffer , double * value) {
   } 
   return value_OK;
 }
+
+
 
 
 bool util_sscanf_int(const char * buffer , int * value) {
@@ -1629,8 +1651,6 @@ void util_double_to_float(float *float_ptr , const double *double_ptr , int size
 }
 
 
-
-
 /*****************************************************************/
 
 void util_fwrite_string(const char * s, FILE *stream) {
@@ -2151,14 +2171,24 @@ void util_fprintf_int(int value , int width , FILE * stream) {
 }
 
 
-void util_fprintf_string(const char * s , int width , bool left_pad , FILE * stream) {
+
+void util_fprintf_string(const char * s , int width , string_alignement_type alignement , FILE * stream) {
   char fmt[32];
-  if (left_pad)
+  if (alignement == left_pad) {
     sprintf(fmt , "%%%ds" , width);
-  else
+    fprintf(stream , fmt , s);
+  } else if (alignement == right_pad) {
     sprintf(fmt , "%%-%ds" , width);
-  fprintf(stream , fmt , s);
+    fprintf(stream , fmt , s);
+  } else {
+    int half_width = width / 2;
+    int i;
+    util_fprintf_string(s , half_width , left_pad , stream);
+    for (i=0; i < (width - half_width); i++)
+      fputc(' ' , stream);
+  }
 }
+
 
 
 /** 

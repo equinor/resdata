@@ -6,14 +6,22 @@
 #include <path_fmt.h>
 #include <stdarg.h>
 #include <hash.h>
+#include <unistd.h>
+#include <thread_pool.h>
+
+
+void * thread_sleep(void * arg) {
+  sleep(1);
+  return NULL;
+}
 
 int main(int argc , char ** argv) {
-  util_fprintf_double(1.78       , 10 , 6 , stdout);
-  printf("\n");
-  util_fprintf_double(3.14159265 , 12 , 6 , stdout);
-  printf("\n");
-  util_fprintf_string("Hei Joakim" , 50, true , stdout);
-  printf("\n");
-  util_fprintf_string("Hei Joakim" , 50, false , stdout);
-  printf("\n");
+  const int N = 10;
+  int i;
+  thread_pool_type * tp = thread_pool_alloc(N);
+  for (i=0; i < 10*N; i++)
+    thread_pool_add_job(tp , thread_sleep , NULL);
+  
+  thread_pool_join(tp);
+  thread_pool_free(tp);
 }

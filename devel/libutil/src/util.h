@@ -17,11 +17,15 @@ typedef enum {util_filter_warn0         = 0 ,
 	      util_filter_fatal_unused  = 4 ,                         /* Will abort */
 	      util_filter_fatal_unknown = 8 } util_filter_warn_type;  /* Will abort */
 
+typedef enum {left_pad  = 0,
+	      right_pad = 1,
+	      center    = 2} string_alignement_type;
+
 time_t       util_make_time2(int , int , int , int , int , int );
 time_t       util_make_time1(int , int , int);
 
 void         util_fprintf_int(int , int , FILE * );
-void         util_fprintf_string(const char *  , int , bool  , FILE * );
+void         util_fprintf_string(const char *  , int , string_alignement_type ,  FILE * );
 void         util_fprintf_double(double , int , int , FILE *);
 bool         util_fscanf_date(FILE * , time_t *);
 bool         util_sscanf_date(const char * , time_t *);
