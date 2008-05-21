@@ -35,6 +35,7 @@ struct ecl_cell_struct {
 
 struct ecl_grid_struct {
   int nx , ny , nz , size , total_active;
+  int            * index_map;
   ecl_cell_type ** cells;
 };
 
@@ -120,8 +121,9 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
   grid->ny = ny;
   grid->nz = nz;
   grid->size = nx*ny*nz;
-
-  grid->cells = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
+  
+  grid->index_map = NULL;
+  grid->cells     = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
   {
     int i;
     for (i=0; i < grid->size; i++)
@@ -328,7 +330,27 @@ ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) 
 }
 
 
-const int * ecl_grid_alloc_index_map(const ecl_grid_type * ecl_grid) {
+
+const int * ecl_grid_get_index_map_ref(const ecl_grid_type * grid) {
+  return grid->index_map;
+}
+
+
+
+/**
+   This function allocates a copy of the index_map and returns it.
+*/
+int * ecl_grid_alloc_index_map_copy(const ecl_grid_type * ecl_grid) {
+  return util_alloc_copy(ecl_grid->index_map , ecl_grid->size * sizeof * ecl_grid->index_map , __func__);
+}
+
+
+
+/**
+   This function allocates the internal index_map field. 
+*/
+
+static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
   int * index_map  = util_malloc(ecl_grid->size * sizeof * index_map, __func__);
   int   index;
 
@@ -339,9 +361,11 @@ const int * ecl_grid_alloc_index_map(const ecl_grid_type * ecl_grid) {
     else
       index_map[index] = -1;
   }
-
-  return index_map;
+  
+  ecl_grid->index_map = index_map;
 }
+
+
 
 
 ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_flip) {
@@ -395,21 +419,43 @@ void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * n
 
 
 
+/**
+   This function will allocate a ecl_grid instance. As input it takes
+   a filename, which can be both a GRID file and an EGRID file (both
+   formatted and unformatted). 
+
+   If the variable with_index_map is true, the function allocates an
+   internal index_map before leaving. This can then be exported later.
+*/
 
 ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
-  ecl_file_type   file_type;
-  bool            fmt_file;
+  ecl_file_type    file_type;
+  bool             fmt_file;
+  ecl_grid_type  * ecl_grid;
   
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
   if (file_type == ecl_grid_file)
-    return ecl_grid_alloc_GRID(grid_file , endian_flip);
+    ecl_grid = ecl_grid_alloc_GRID(grid_file , endian_flip);
   else if (file_type == ecl_egrid_file)
-    return ecl_grid_alloc_EGRID(grid_file , endian_flip);
+    ecl_grid = ecl_grid_alloc_EGRID(grid_file , endian_flip);
   else {
     fprintf(stderr,"%s must have .GRID or .EGRID file - aborting \n",__func__);
     abort();
   }
+  ecl_grid_alloc_index_map(ecl_grid);
+  return ecl_grid;
 }
+
+/**
+   This function returns a pointer to the internal index_map field of
+   the grid structure. Observe that the calling scope is *NOT* allowed
+   to write on this. 
+
+   If the internal index map has not been allocated (third argument
+   true) to ecl_grid_alloc(), the function will fail.
+*/
+
+
 
 
 void ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
@@ -430,6 +476,7 @@ void ecl_grid_free(ecl_grid_type * grid) {
   for (i=0; i < grid->size; i++)
     ecl_cell_free(grid->cells[i]);
   free(grid->cells);
+  if (grid->index_map != NULL) free(grid->index_map);
   free(grid);
 }
 
