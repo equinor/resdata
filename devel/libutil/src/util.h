@@ -103,6 +103,7 @@ char *   util_alloc_string_copy(const char *);
 void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
 
 void    util_abort(const char * fmt , ...);
+void    util_abort_signal(int );
 void *  util_realloc(void *  , size_t  , const char * );
 void *  util_malloc(size_t , const char * );
 void *  util_alloc_copy(const void * , size_t , const char * );

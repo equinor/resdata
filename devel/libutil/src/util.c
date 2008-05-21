@@ -2462,6 +2462,27 @@ void util_abort(const char * fmt , ...) {
 
 
 
+/**
+  This function is intended to be installed as a signal
+  handler, so we can get a traceback from signals like SIGSEGV.
+  
+  To install the signal handler:
+
+  #include <signal.h>
+  ....
+  ....
+  signal(SIGSEGV , util_abort_signal);
+
+
+  The various signals can be found in: /usr/include/bits/signum.h
+*/
+  
+
+void util_abort_signal(int signal) {
+  util_abort("Program recieved signal:%d" , signal);
+}
+
+
 /** 
     This funny function is used to block execution while a file is
     growing. It is a completely heuristic attempt to ensure that the
