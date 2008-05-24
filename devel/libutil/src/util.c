@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -2434,7 +2436,6 @@ void util_abort(const char * fmt , ...) {
     strings    = backtrace_symbols(array , size);
     executable = util_bt_alloc_current_executable(strings[0]);
 
-    size -= 2; /* The two last symbols in the backtrace are libc functions which are not available anyway. */ 
     func_list      = util_malloc(size * sizeof * func_list      , __func__);
     file_line_list = util_malloc(size * sizeof * file_line_list , __func__);
     
@@ -2479,8 +2480,10 @@ void util_abort(const char * fmt , ...) {
   
 
 void util_abort_signal(int signal) {
-  util_abort("Program recieved signal:%d" , signal);
+  util_abort("Program recieved signal:%d\n" , signal);
 }
+
+
 
 
 /** 
@@ -2527,6 +2530,71 @@ void util_block_growing_directory(const char * directory) {
       closedir(dirH);
     }
   } while (current_size != prev_size);
+}
+
+
+/** 
+    A small function used to redirect a file descriptior,
+    only used as a helper utility for util_fork_exec().
+*/
+    
+static void __util_redirect(int src_fd , const char * target_file , int open_flags) {
+  int new_fd = open(target_file , open_flags , 0644);
+  dup2(new_fd , src_fd);
+  close(new_fd);
+}
+
+
+
+
+/**
+   This function does the following:
+   1. Fork current process.
+   2. The child execs() to run executable.
+   3. Parent can wait (blocking = true) on the child to complete executable.
+
+   If stdout_file =! NULL it is redirected to the file
+   stdin_file. Same with stdin_file and stderr_file. 
+
+   If target_file != NULL, the parent will check that the target_file
+   has been created before returning; and abort if not.
+*/
+
+pid_t util_fork_exec(const char * executable , bool blocking , const char * target_file , const char * stdin_file , const char * stdout_file , const char * stderr_file) {
+  pid_t child_pid;
+  if (!util_is_executable(executable))
+    util_abort("%s: cmd:%s is not executable - aborting.\n",__func__ , executable);
+  child_pid = fork();
+
+  if (child_pid == -1)
+    util_abort("%s: fork() failed when trying to run external command:%s \n",__func__ , executable);
+
+  if (target_file != NULL && blocking == false) 
+    util_abort("%s: When giving a target_file != NULL - you must use the blocking semantics. \n",__func__);
+  
+  if (child_pid == 0) {
+    char  * args[2];
+    /* This is the child */
+    
+    if (stdin_file  != NULL) __util_redirect(0 , stdin_file  , O_RDONLY);
+    if (stderr_file != NULL) __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
+    if (stdout_file != NULL) __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
+    args[0] = (char *) executable;
+    args[1] = NULL;
+    
+    execv( executable , args );
+  }  else {
+    /* Parent */
+    if (blocking) {
+      int child_status;
+      waitpid(child_pid , &child_status , 0);
+
+      if (target_file != NULL)
+	if (!util_file_exists(target_file))
+	  util_abort("%s: %s failed to produce target_file:%s aborting \n",__func__ , executable , target_file);
+    }
+  }
+  return child_pid;
 }
 
 
