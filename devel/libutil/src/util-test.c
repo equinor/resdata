@@ -12,7 +12,7 @@
 
 
 int main(int argc , char ** argv) {
-  util_fork_exec("./test.py" , true , "test.out" , NULL , "f.stdout" , "f.stderr");
+  util_fork_exec("./test.py" , 0 , NULL , true , "test.out" , NULL , "f.stdout" , "f.stderr");
   printf("-----------------------------------------------------------------\n");
-  util_fork_exec("./test.py" , true , "test.out" , NULL , NULL , NULL);
+  util_fork_exec("./test.py" , 0 , NULL , true , "test.out" , NULL , NULL , NULL);
 }

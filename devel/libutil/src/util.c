@@ -2553,14 +2553,17 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
    2. The child execs() to run executable.
    3. Parent can wait (blocking = true) on the child to complete executable.
 
-   If stdout_file =! NULL it is redirected to the file
-   stdin_file. Same with stdin_file and stderr_file. 
+   If stdout_file != NULL stdout is redirected to this file.  Same
+   with stdin_file and stderr_file.
 
    If target_file != NULL, the parent will check that the target_file
-   has been created before returning; and abort if not.
+   has been created before returning; and abort if not. In this case
+   you *MUST* have blocking == true, otherwise it will abort on
+   internal error.
 */
 
-pid_t util_fork_exec(const char * executable , bool blocking , const char * target_file , const char * stdin_file , const char * stdout_file , const char * stderr_file) {
+pid_t util_fork_exec(const char * executable , int argc , const char ** argv , 
+		     bool blocking , const char * target_file , const char * stdin_file , const char * stdout_file , const char * stderr_file) {
   pid_t child_pid;
   if (!util_is_executable(executable))
     util_abort("%s: cmd:%s is not executable - aborting.\n",__func__ , executable);
@@ -2573,16 +2576,21 @@ pid_t util_fork_exec(const char * executable , bool blocking , const char * targ
     util_abort("%s: When giving a target_file != NULL - you must use the blocking semantics. \n",__func__);
   
   if (child_pid == 0) {
-    char  * args[2];
+    int iarg;
+    const char  ** __argv;
     /* This is the child */
     
     if (stdin_file  != NULL) __util_redirect(0 , stdin_file  , O_RDONLY);
     if (stderr_file != NULL) __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
     if (stdout_file != NULL) __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
-    args[0] = (char *) executable;
-    args[1] = NULL;
     
-    execv( executable , args );
+    __argv = util_malloc((argc + 2) * sizeof * __argv , __func__);
+    __argv[0]        = executable;
+    for (iarg = 0; iarg < argc; iarg++)
+      __argv[iarg+1] = argv[iarg];
+    __argv[argc + 1] = NULL;
+    
+    execv( executable , (char **) __argv);
   }  else {
     /* Parent */
     if (blocking) {
