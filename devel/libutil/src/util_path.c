@@ -228,3 +228,11 @@ int util_proc_mem_free(void) {
   fclose(stream);
   return mem;
 }
+
+
+char * util_alloc_realpath(const char * src) {
+  char * new_path = util_malloc(4096 , __func__);
+  realpath(src , new_path);
+  new_path = util_realloc(new_path , strlen(new_path) + 1 , __func__);
+  return new_path;
+}

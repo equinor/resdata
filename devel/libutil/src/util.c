@@ -2484,6 +2484,15 @@ void util_abort_signal(int signal) {
 }
 
 
+void util_exit(const char * fmt , ...) {
+  va_list ap;
+  va_start(ap , fmt);
+  vfprintf(stderr , fmt , ap);
+  exit(1);
+}
+    
+  
+
 
 
 /** 
@@ -2553,6 +2562,11 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
    2. The child execs() to run executable.
    3. Parent can wait (blocking = true) on the child to complete executable.
 
+   argc / argv are the number of arguments and their value to the
+   external executable. Observe that prior to calling execv the argv
+   list is prepended with the name of the executable (convention), and
+   a NULL pointer is appended (requirement by execv).
+
    If stdout_file != NULL stdout is redirected to this file.  Same
    with stdin_file and stderr_file.
 
@@ -2560,6 +2574,24 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
    has been created before returning; and abort if not. In this case
    you *MUST* have blocking == true, otherwise it will abort on
    internal error.
+
+
+   The return value from the function is the pid of the child process;
+   this is (obviously ?) only interesting if the blocking argument is
+   'false'.
+
+   Example:
+   --------
+   util_fork_exec("/local/gnu/bin/ls" , 1 , (const char *[1]) {"-l"} ,
+   true , NULL , NULL , "listing" , NULL);
+
+   
+   This program will run the command 'ls', with the argument '-l'. The
+   main process will block, i.e. wait until the 'ls' process is
+   complete, and the results of the 'ls' operation will be stored in
+   the file "listing". If the 'ls' should want to print something on
+   stderr, it will go there, as stderr is not redirected.
+
 */
 
 pid_t util_fork_exec(const char * executable , int argc , const char ** argv , 
@@ -2567,24 +2599,24 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
   pid_t child_pid;
   if (!util_is_executable(executable))
     util_abort("%s: cmd:%s is not executable - aborting.\n",__func__ , executable);
-  child_pid = fork();
-
-  if (child_pid == -1)
-    util_abort("%s: fork() failed when trying to run external command:%s \n",__func__ , executable);
 
   if (target_file != NULL && blocking == false) 
     util_abort("%s: When giving a target_file != NULL - you must use the blocking semantics. \n",__func__);
-  
+
+  child_pid = fork();
+  if (child_pid == -1)
+    util_abort("%s: fork() failed when trying to run external command:%s \n",__func__ , executable);
+
   if (child_pid == 0) {
+    /* This is the child */
     int iarg;
     const char  ** __argv;
-    /* This is the child */
     
     if (stdin_file  != NULL) __util_redirect(0 , stdin_file  , O_RDONLY);
     if (stderr_file != NULL) __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
     if (stdout_file != NULL) __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
     
-    __argv = util_malloc((argc + 2) * sizeof * __argv , __func__);
+    __argv = util_malloc((argc + 2) * sizeof * __argv , __func__);  /* This is not freed - because of the execv() */
     __argv[0]        = executable;
     for (iarg = 0; iarg < argc; iarg++)
       __argv[iarg+1] = argv[iarg];

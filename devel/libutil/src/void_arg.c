@@ -102,9 +102,10 @@ void_arg_type * void_arg_alloc__(int arg_size , const node_ctype * arg_type , co
       arg->offset_list[i] = arg->offset_list[i-1] + arg->size_list[i-1];
   }
     
-  arg->argBuffer = malloc(arg->byte_size * sizeof * arg->argBuffer);
+  arg->argBuffer = util_malloc(arg->byte_size * sizeof * arg->argBuffer , __func__);
   return arg;
 }
+
 
 void_arg_type * void_arg_alloc(int arg_size , const node_ctype * arg_type) {
   return void_arg_alloc__(arg_size , arg_type , NULL);
@@ -190,6 +191,20 @@ void * void_arg_get_buffer(const void_arg_type * arg, int iarg) {
   __void_arg_assert_index(arg , iarg);
   /* No type assert here - can always call pack/get buffer */
   return &arg->argBuffer[arg->offset_list[iarg]];
+}
+
+
+void_arg_type * void_arg_copyc(const void_arg_type * void_arg) {
+  int i;
+  int *tmp_size_list = util_malloc( void_arg->arg_size * sizeof * tmp_size_list , __func__);
+  for (i=0; i < void_arg->arg_size; i++)
+    tmp_size_list[i] = void_arg->size_list[i];
+  
+  void_arg_type * new_arg = void_arg_alloc__(void_arg->arg_size , void_arg->arg_type , tmp_size_list);
+  free(tmp_size_list);
+
+  memcpy(new_arg->argBuffer , void_arg->argBuffer , void_arg->byte_size * sizeof * void_arg->argBuffer);
+  return new_arg;
 }
 
 

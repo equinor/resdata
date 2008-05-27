@@ -102,6 +102,7 @@ char *   util_alloc_cstring(const char *, const int *);
 char *   util_alloc_string_copy(const char *);
 void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
 
+void    util_exit(const char * fmt , ...);
 void    util_abort(const char * fmt , ...);
 void    util_abort_signal(int );
 void *  util_realloc(void *  , size_t  , const char * );
@@ -155,6 +156,7 @@ void 	 util_fwrite_compressed(const void * , int , FILE * );
 void     util_block_growing_file(const char * );
 void     util_block_growing_directory(const char * );
 pid_t    util_fork_exec(const char *  , int , const char ** , bool , const char *  , const char * , const char *  , const char * );
+char   * util_alloc_realpath(const char * );
 
 #define UTIL_FWRITE_SCALAR(s,stream) fwrite(&s , sizeof s , 1 , stream)
 #define UTIL_FREAD_SCALAR(s,stream)  fread(&s , sizeof s , 1 , stream)
