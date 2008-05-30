@@ -1057,6 +1057,7 @@ static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw, fortio_type *fortio) 
 	fortio_write_record(fortio , &ecl_kw->data[ib * ecl_kw->blocksize * ecl_kw->sizeof_ctype] , sizeof_ctype * elements);
     }
   }
+
   /* Convert back - the in-memory representation should always be "correct". */
   if (local_endian_flip) 
     ecl_kw_endian_convert_data(ecl_kw);

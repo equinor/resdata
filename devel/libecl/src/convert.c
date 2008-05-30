@@ -16,7 +16,6 @@ void file_convert(const char * src_file , const char * target_file) {
 
   printf("Converting %s -> %s \n",src_file , target_file);
   if (util_fmt_bit8(src_file)) {
-    printf("%s is formatted according to bit8  \n",src_file);
     formatted_src = true;
   }  else
     formatted_src = false;

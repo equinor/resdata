@@ -8,8 +8,25 @@
 #include <hash.h>
 
 
+/**
+   This little function writes the pathetic little file read by
+   ECLIPSE on startup. This is actually read from stdin, so on startup
+   of ECLIPSE stdin must be redirected to this file.
+*/
+   
 
+static void ecl_util_init_stdin__(const char * stdin_file , const char * ecl_base , int max_cpu_sec , int max_wall_sec) {
+  FILE * stream = util_fopen(stdin_file , "w");
+  fprintf(stream , "%s\n" , ecl_base);
+  fprintf(stream , "%s\n" , ecl_base);
+  fprintf(stream , "%d\n" , max_cpu_sec);
+  fprintf(stream , "%d\n" , max_wall_sec);
+  fclose(stream);
+}
 
+void ecl_util_init_stdin(const char * stdin_file) {
+  ecl_util_init_stdin__(stdin_file , 10000000 , 99999999);  /* Default values applied at Hydro Sandsli. */ 
+}
 
 
 
