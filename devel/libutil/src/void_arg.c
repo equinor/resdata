@@ -406,6 +406,10 @@ void_arg_type * void_arg_alloc_buffer(int buffer_size, const void * buffer) {
   return arg;
 }
 
+void_arg_type * void_arg_alloc_string(const char * s) {
+  return void_arg_alloc_buffer(strlen(s) + 1 , s);
+}
+
 
 /* Null'en her er ganske tilfeldig ...*/
 

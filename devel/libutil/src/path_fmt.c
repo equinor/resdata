@@ -121,7 +121,7 @@ static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
     path_length = vsnprintf(new_path , 0 , fmt , tmp_va);
   }
 
-  new_path = malloc(path_length + 1);
+  new_path = util_malloc(path_length + 1 , __func__);
   vsnprintf(new_path , path_length + 1 , fmt , ap);
   return new_path;
 }

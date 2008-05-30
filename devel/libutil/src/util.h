@@ -24,6 +24,7 @@ typedef enum {left_pad  = 0,
 time_t       util_make_time2(int , int , int , int , int , int );
 time_t       util_make_time1(int , int , int);
 
+char       * util_alloc_sprintf(const char *  , ...);
 void         util_fprintf_int(int , int , FILE * );
 void         util_fprintf_string(const char *  , int , string_alignement_type ,  FILE * );
 void         util_fprintf_double(double , int , int , FILE *);
@@ -115,6 +116,7 @@ void 	util_float_to_double(double * , const float  * , int );
 int 	util_get_month_nr(const char * );
 int 	util_check_month(const char * );
 
+void    util_filtered_fprintf(const char * , int , FILE * , char , char , const hash_type * , util_filter_warn_type  );
 void    util_filter_file(const char * , const char * , const char * , char , char , const hash_type * , util_filter_warn_type);
 char *  util_fread_alloc_file_content(const char * , const char * , int *);
 void    util_fwrite_string(const char * , FILE *);

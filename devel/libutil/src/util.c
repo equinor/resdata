@@ -2197,6 +2197,39 @@ void util_fprintf_string(const char * s , int width , string_alignement_type ali
   }
 }
 
+/**
+   This function allocates a string acoording to the fmt
+   specification, and arguments. The arguments (except the format) are
+   entered as a variable length argument list, and the function is
+   basically a thin wrapper around vsnprintf().
+   
+   Example of usage:
+   
+   char * s = util_alloc_sprintf("/%s/File:%04d/%s" , "prefix" , 67 , "Suffix");
+   
+   => s = /prefix/File:0067/Suffix
+   
+   Observe that when it is based in vsnprintf() essentially no
+   error-checking is performed.
+*/
+
+
+char * util_alloc_sprintf(const char * fmt , ...) {
+  char *s;
+  va_list ap;
+  va_start(ap , fmt);
+  {
+    int length;
+    va_list tmp_va;
+    va_copy(tmp_va , ap);
+    length = vsnprintf(s , 0 , fmt , tmp_va);
+    s = util_malloc(length + 1 , __func__);
+  }
+  vsprintf(s , fmt , ap);
+  va_end(ap);
+  return s;
+}
+
 
 
 /** 
@@ -2219,54 +2252,17 @@ static bool util_filter_buffer(const char * src_buffer , const char * target_fil
 
 
 
-/**
-This funtion does template substitution. It scans through the src_file
-looking for keywords. The keywords are stored in a hash_table as
-void_arg instances, that way the function can substitute
-int/double/char * /... values reasonably transparent. 
-
-The keywords which are replaced with values, are supposed to be
-bracketed with the two characters start_char and end_char; if comment
-!= NULL comments in src_file are stripped out.
-
-There are two types of situtations where warnings could be interesting:
-
- o If the src_file contains a keyword <ABC> (assuming start_char and
-   end_char equal '<' and '>' respectively), but the kw_hash table
-   does *NOT* have the "ABC" keyword, the string <ABC> is passed
-   through literally.
-
- o The opposite situtation, the table contains a certain keyword "XYZ"
-   which is not found in the template file.
-
-The warning_mode variable can have the following values:
-
-  util_filter_warn0         = 0 
-  util_filter_warn_unused   = 1 
-  util_filter_warn_unknown  = 2 
-  util_filter_fatal_unused  = 4 
-  util_filter_fatal_unknown = 8 
-
-These can be added togeheter. The xxx_fatal_xxx mode will lead to an abort
-if the warning situation arises.
-
-*/
-
-
-void util_filter_file(const char * src_file , const char * comment , const char * target_file , char start_char , char end_char , const hash_type * kw_hash , util_filter_warn_type warning_mode) {
+void util_filtered_fprintf(const char * buffer , int buffer_size , FILE * stream , char start_char , char end_char , const hash_type * kw_hash , util_filter_warn_type  warning_mode) { 
   set_type * used_set;
-  int    index, buffer_size;
-  char * buffer = util_fread_alloc_file_content(src_file , comment , &buffer_size);
-  FILE * stream = util_fopen(target_file , "w");
+  int index;
   char * kw     = NULL;
-  
 
   if ((warning_mode & (util_filter_warn_unused + util_filter_fatal_unused)) != 0) {
     char ** key_list = hash_alloc_keylist(kw_hash);
     used_set = set_alloc(hash_get_size(kw_hash) , (const char **) key_list);
     hash_free_ext_keylist(kw_hash , key_list);
   }
-
+  
   index = 0;
   while (index < buffer_size) {
     if (buffer[index] == start_char) {
@@ -2305,18 +2301,62 @@ void util_filter_file(const char * src_file , const char * comment , const char 
       index++;
     }
   }
-  fclose(stream);
-  free(kw);
-  free(buffer);
 
   if (((warning_mode & (util_filter_fatal_unused + util_filter_warn_unused)) != 0) && (set_get_size(used_set) > 0)) {
-    fprintf(stderr," ** Warning the following keys were not used when filtering \"%s -> %s\": (",src_file, target_file);
+    fprintf(stderr," ** Warning the following keys were not used when filtering: \n");
     set_fprintf(used_set , stderr);
     fprintf(stderr,")\n");
     set_free(used_set);
     if (warning_mode & util_filter_fatal_unused) 
       util_abort("%s: you have requested warning->error semantics - aborting \n",__func__);
   }
+  util_safe_free(kw);
+}
+
+
+/**
+This funtion does template substitution. It scans through the src_file
+looking for keywords. The keywords are stored in a hash_table as
+void_arg instances, that way the function can substitute
+int/double/char * /... values reasonably transparent. 
+
+The keywords which are replaced with values, are supposed to be
+bracketed with the two characters start_char and end_char; if comment
+!= NULL comments in src_file are stripped out.
+
+There are two types of situtations where warnings could be interesting:
+
+ o If the src_file contains a keyword <ABC> (assuming start_char and
+   end_char equal '<' and '>' respectively), but the kw_hash table
+   does *NOT* have the "ABC" keyword, the string <ABC> is passed
+   through literally.
+
+ o The opposite situtation, the table contains a certain keyword "XYZ"
+   which is not found in the template file.
+
+The warning_mode variable can have the following values:
+
+  util_filter_warn0         = 0 
+  util_filter_warn_unused   = 1 
+  util_filter_warn_unknown  = 2 
+  util_filter_fatal_unused  = 4 
+  util_filter_fatal_unknown = 8 
+
+These can be added togeheter. The xxx_fatal_xxx mode will lead to an abort
+if the warning situation arises.
+
+*/
+
+
+void util_filter_file(const char * src_file , const char * comment , const char * target_file , char start_char , char end_char , const hash_type * kw_hash , util_filter_warn_type warning_mode) {
+  int    buffer_size;
+  char * buffer = util_fread_alloc_file_content(src_file , comment , &buffer_size);
+  FILE * stream = util_fopen(target_file , "w");
+  
+  util_filtered_fprintf( buffer , buffer_size , stream , start_char , end_char , kw_hash , warning_mode);
+
+  fclose(stream);
+  free(buffer);
 }
 
 

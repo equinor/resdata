@@ -32,6 +32,7 @@ void_arg_type * void_arg_alloc_double(double );
 void_arg_type * void_arg_alloc_int(int   );
 void_arg_type * void_arg_alloc_ptr(void  *);
 void_arg_type * void_arg_alloc_buffer(int , const void *);
+void_arg_type * void_arg_alloc_string(const char *);
 void            void_arg_fprintf_typed(const void_arg_type * , FILE * );
 
 
