@@ -816,7 +816,7 @@ const char * ecl_util_type_name(ecl_type_enum ecl_type) {
   default:
     util_abort("%s: unrecognized ecl_type value:%d - aborting \n",__func__ , ecl_type);
   }
-  
+  return -1;  /* This should never happen */
 }
 
 
