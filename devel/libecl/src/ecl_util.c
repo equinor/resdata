@@ -24,8 +24,8 @@ static void ecl_util_init_stdin__(const char * stdin_file , const char * ecl_bas
   fclose(stream);
 }
 
-void ecl_util_init_stdin(const char * stdin_file) {
-  ecl_util_init_stdin__(stdin_file , 10000000 , 99999999);  /* Default values applied at Hydro Sandsli. */ 
+void ecl_util_init_stdin(const char * stdin_file, const char * ecl_base) {
+  ecl_util_init_stdin__(stdin_file , ecl_base , 10000000 , 99999999);  /* Default values applied at Hydro Sandsli. */ 
 }
 
 
@@ -816,6 +816,7 @@ const char * ecl_util_type_name(ecl_type_enum ecl_type) {
   default:
     util_abort("%s: unrecognized ecl_type value:%d - aborting \n",__func__ , ecl_type);
   }
+  
 }
 
 
