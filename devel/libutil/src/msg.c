@@ -91,6 +91,13 @@ void msg_update(msg_type * msg , const char * new_msg) {
 }
 
 
+void msg_update_int(msg_type * msg , const char * fmt , int value) {
+  char buffer[16];
+  sprintf(buffer , fmt , value);
+  msg_update(msg , buffer);
+}
+
+
 msg_type * msg_alloc(const char * prompt) {
   msg_type * msg = malloc(sizeof * msg);
   msg->prompt = util_alloc_string_copy(prompt);

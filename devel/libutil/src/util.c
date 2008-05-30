@@ -1390,6 +1390,12 @@ char * util_realloc_substring_copy(char * old_string , const char *src , int len
 
 
 
+void util_safe_free(void *ptr) {
+  if (ptr != NULL) free(ptr);
+}
+
+
+
 void util_free_string_list(char **list , int N) {
   int i;
   if (list != NULL) {
@@ -2400,13 +2406,10 @@ static char * util_bt_alloc_current_executable(const char * bt_symbol) {
 
 
 void util_abort(const char * fmt , ...) {
-  int   current_errno = errno;
   const bool include_backtrace = true;
   va_list ap;
   va_start(ap , fmt);
   vfprintf(stderr , fmt , ap);
-  if (current_errno != 0) 
-    fprintf(stderr,"errno is set: errno:%d  strerror:%s \n",errno , strerror(errno));
   va_end(ap);
   if (include_backtrace) {
     const int max_bt = 50;
@@ -2603,9 +2606,12 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
   if (target_file != NULL && blocking == false) 
     util_abort("%s: When giving a target_file != NULL - you must use the blocking semantics. \n",__func__);
 
+  printf("%s: %s \n",__func__ , executable);
   child_pid = fork();
-  if (child_pid == -1)
+  if (child_pid == -1) {
+    fprintf(stderr,"Error: %s(%d) \n",strerror(errno) , errno);
     util_abort("%s: fork() failed when trying to run external command:%s \n",__func__ , executable);
+  }
 
   if (child_pid == 0) {
     /* This is the child */
@@ -2616,19 +2622,18 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
     if (stderr_file != NULL) __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
     if (stdout_file != NULL) __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
     
-    __argv = util_malloc((argc + 2) * sizeof * __argv , __func__);  /* This is not freed - because of the execv() */
-    __argv[0]        = executable;
+    __argv        = util_malloc((argc + 2) * sizeof * __argv , __func__);  /* This is not freed - because of the execv() */
+    __argv[0]     = executable;
     for (iarg = 0; iarg < argc; iarg++)
       __argv[iarg+1] = argv[iarg];
     __argv[argc + 1] = NULL;
-    
     execv( executable , (char **) __argv);
   }  else {
     /* Parent */
     if (blocking) {
       int child_status;
       waitpid(child_pid , &child_status , 0);
-
+      
       if (target_file != NULL)
 	if (!util_file_exists(target_file))
 	  util_abort("%s: %s failed to produce target_file:%s aborting \n",__func__ , executable , target_file);
