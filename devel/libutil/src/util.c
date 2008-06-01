@@ -2637,8 +2637,9 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
 
 */
 
-pid_t util_fork_exec(const char * executable , int argc , const char ** argv , 
+pid_t util_vfork_exec(const char * executable , int argc , const char ** argv , 
 		     bool blocking , const char * target_file , const char * stdin_file , const char * stdout_file , const char * stderr_file) {
+  const char  ** __argv = NULL;
   pid_t child_pid;
   if (!util_is_executable(executable))
     util_abort("%s: cmd:%s is not executable - aborting.\n",__func__ , executable);
@@ -2646,8 +2647,7 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
   if (target_file != NULL && blocking == false) 
     util_abort("%s: When giving a target_file != NULL - you must use the blocking semantics. \n",__func__);
 
-  printf("%s: %s \n",__func__ , executable);
-  child_pid = fork();
+  child_pid = vfork();
   if (child_pid == -1) {
     fprintf(stderr,"Error: %s(%d) \n",strerror(errno) , errno);
     util_abort("%s: fork() failed when trying to run external command:%s \n",__func__ , executable);
@@ -2656,13 +2656,13 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
   if (child_pid == 0) {
     /* This is the child */
     int iarg;
-    const char  ** __argv;
+    
     
     if (stdin_file  != NULL) __util_redirect(0 , stdin_file  , O_RDONLY);
     if (stderr_file != NULL) __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
     if (stdout_file != NULL) __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
     
-    __argv        = util_malloc((argc + 2) * sizeof * __argv , __func__);  /* This is not freed - because of the execv() */
+    __argv        = util_malloc((argc + 2) * sizeof * __argv , __func__);  
     __argv[0]     = executable;
     for (iarg = 0; iarg < argc; iarg++)
       __argv[iarg+1] = argv[iarg];
@@ -2679,6 +2679,8 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
 	  util_abort("%s: %s failed to produce target_file:%s aborting \n",__func__ , executable , target_file);
     }
   }
+
+  util_safe_free( __argv );
   return child_pid;
 }
 

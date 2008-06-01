@@ -158,7 +158,7 @@ void 	 util_fread_compressed(void * , FILE * );
 void 	 util_fwrite_compressed(const void * , int , FILE * );
 void     util_block_growing_file(const char * );
 void     util_block_growing_directory(const char * );
-pid_t    util_fork_exec(const char *  , int , const char ** , bool , const char *  , const char * , const char *  , const char * );
+pid_t    util_vfork_exec(const char *  , int , const char ** , bool , const char *  , const char * , const char *  , const char * );
 char   * util_alloc_realpath(const char * );
 
 #define UTIL_FWRITE_SCALAR(s,stream) fwrite(&s , sizeof s , 1 , stream)
