@@ -20,7 +20,7 @@ static void ecl_util_init_stdin__(const char * stdin_file , const char * ecl_bas
   fprintf(stream , "%s\n" , ecl_base);
   fprintf(stream , "%s\n" , ecl_base);
   fprintf(stream , "%d\n" , max_cpu_sec);
-  fprintf(stream , "%d\n" , max_wall_sec);
+  fprintf(stream , "%d\n\n" , max_wall_sec);
   fclose(stream);
 }
 
@@ -748,7 +748,7 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
       }
       
       if (unified_newest) {
-	util_free_string_list( file_list , files );
+	util_free_stringlist( file_list , files );
 	data_files     = util_malloc( sizeof * data_files , __func__);
 	data_files[0]  = unif_data_file;
 	unified        = true;
@@ -765,7 +765,7 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
       data_files = file_list;
       num_data_files = files;
     } else if (unif_exists) {
-      util_free_string_list( file_list , files );
+      util_free_stringlist( file_list , files );
       data_files     = util_malloc( sizeof * data_files , __func__);
       data_files[0]  = unif_data_file;
       unified        = true;
@@ -816,7 +816,7 @@ const char * ecl_util_type_name(ecl_type_enum ecl_type) {
   default:
     util_abort("%s: unrecognized ecl_type value:%d - aborting \n",__func__ , ecl_type);
   }
-  return -1;  /* This should never happen */
+  return NULL;  /* This should never happen */
 }
 
 

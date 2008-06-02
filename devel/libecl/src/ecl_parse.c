@@ -136,7 +136,7 @@ void static ecl_parse_write_read_eclipse(const hash_type *var_hash , const hash_
     fprintf(fileH , "\n");
   }
   fclose(fileH);
-  util_free_string_list(keylist , hash_get_size(var_hash));
+  util_free_stringlist(keylist , hash_get_size(var_hash));
   free(read_file);
 }
 
@@ -169,7 +169,7 @@ void static ecl_parse_write_decl(const hash_type *var_hash , const hash_type *ty
   fclose(allocH);
   fclose(deallocH);
   
-  util_free_string_list(keylist , hash_get_size(var_hash));
+  util_free_stringlist(keylist , hash_get_size(var_hash));
   free(decl_file);
   free(alloc_file);
   free(dealloc_file);
@@ -182,7 +182,7 @@ void static ecl_parse_write_res_iostatic(hash_type *var_hash , hash_type *dynami
   char tmp_buffer[128];
   int i;
   str_buffer_type *str_buffer = str_buffer_alloc(1);
-  char **keyList = hash_alloc_sorted_keylist(var_hash);
+  char **keyList = hash_alloc_keylist(var_hash);
 
   for (i=0; i < hash_get_size(var_hash); i++) {
     if (! hash_has_key(dynamic , keyList[i])) {
@@ -197,7 +197,7 @@ void static ecl_parse_write_res_iostatic(hash_type *var_hash , hash_type *dynami
   fprintf(stream , "\n");
   fclose(stream);
   
-  util_free_string_list(keyList , hash_get_size(var_hash));
+  util_free_stringlist(keyList , hash_get_size(var_hash));
   str_buffer_free(str_buffer);
   free(file);
 }
@@ -222,7 +222,7 @@ void static ecl_parse_res_write_eclipse2(hash_type *var_hash , const char *inclu
       fprintf(stream, "   %s\n",hash_get_string(special , var->name));
     fprintf(stream , "\n");
   }
-  util_free_string_list(keyList , hash_get_size(var_hash));
+  util_free_stringlist(keyList , hash_get_size(var_hash));
   free(filename);
   fclose(stream);
 }
@@ -250,7 +250,7 @@ void static ecl_parse_res_write_eclipse1(hash_type *var_hash , const char *inclu
       fprintf(stream, "   %s\n",hash_get_string(special , var->name));
     fprintf(stream , "\n");
   }
-  util_free_string_list(keyList , hash_get_size(var_hash));
+  util_free_stringlist(keyList , hash_get_size(var_hash));
   free(filename);
   fclose(stream);
 }
@@ -363,7 +363,7 @@ static void ecl_parse_restart(const char *refcase_path , const char *ecl_base , 
     hash_free(hash);
   }
 
-  util_free_string_list(fileList , files);
+  util_free_stringlist(fileList , files);
 }
 
 
@@ -395,7 +395,7 @@ static void ecl_parse_summary_data(const char *refcase_path , const char *ecl_ba
   }
   
   
-  util_free_string_list(fileList , files);
+  util_free_stringlist(fileList , files);
 }
 
 

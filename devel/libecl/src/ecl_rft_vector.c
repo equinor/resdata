@@ -100,6 +100,6 @@ void ecl_rft_vector_summarize(const ecl_rft_vector_type * rft_vector , bool show
   char ** well_list = ecl_rft_vector_alloc_well_list(rft_vector , &wells);
   for (iw = 0; iw < wells; iw++)
     ecl_rft_node_summarize(ecl_rft_vector_get_node(rft_vector , well_list[iw]) , show_completions);
-  util_free_string_list(well_list , wells);
+  util_free_stringlist(well_list , wells);
 }
 

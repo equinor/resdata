@@ -370,7 +370,7 @@ void ecl_sum_save(const ecl_sum_type * ecl_sum) {
     files = ecl_fstate_get_report_size(ecl_sum->data , &report_nr1 , &report_nr2);
     filelist = ecl_util_alloc_simple_filelist(NULL , ecl_sum->base_name , ecl_summary_file , fmt_file , report_nr1 , report_nr2);
     ecl_fstate_set_files(ecl_sum->data , files , (const char **) filelist);
-    util_free_string_list(filelist , files);
+    util_free_stringlist(filelist , files);
   }
   
   ecl_fstate_save(ecl_sum->header);
@@ -661,7 +661,7 @@ int ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lo
   default:
     util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
   }
-  util_free_string_list(argv , argc);
+  util_free_stringlist(argv , argc);
   return index;
 }
 
@@ -701,7 +701,7 @@ bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_
   default:
     util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
   }
-  util_free_string_list(argv , argc);
+  util_free_stringlist(argv , argc);
   return has_var;
 }
 #undef __ASSERT_ARGC    
@@ -904,7 +904,7 @@ double ecl_sum_eval_well_misfit(const ecl_sum_type * ecl_sum , const char * well
   
   free(tmp);
   free(residual);
-  util_free_string_list(hvar_list , nvar);
+  util_free_stringlist(hvar_list , nvar);
   return R2;
 }
 
@@ -971,7 +971,7 @@ void ecl_sum_free(ecl_sum_type *ecl_sum) {
   hash_free(ecl_sum->region_var_index);
   hash_free(ecl_sum->misc_var_index);
   hash_free(ecl_sum->unit_hash);
-  util_free_string_list(ecl_sum->well_list  , ecl_sum->Nwells);
+  util_free_stringlist(ecl_sum->well_list  , ecl_sum->Nwells);
   free(ecl_sum->var_type);
 
   if (ecl_sum->base_name != NULL)
@@ -1089,8 +1089,8 @@ ecl_sum_type * ecl_sum_fread_alloc_interactive(bool endian_convert) {
     free(unformatted_header);
     free(unified_formatted);
     free(unified_unformatted);
-    util_free_string_list(unformatted_list , unformatted_files);
-    util_free_string_list(formatted_list   , formatted_files);
+    util_free_stringlist(unformatted_list , unformatted_files);
+    util_free_stringlist(formatted_list   , formatted_files);
   }
   
   
@@ -1099,7 +1099,7 @@ ecl_sum_type * ecl_sum_fread_alloc_interactive(bool endian_convert) {
   else 
     ecl_sum = NULL;
   
-  util_free_string_list(file_list , files); 
+  util_free_stringlist(file_list , files); 
   if (header_file != NULL) free(header_file);
   free(base);
 

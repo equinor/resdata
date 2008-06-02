@@ -1306,17 +1306,17 @@ char ** util_alloc_stringlist_copy(const char **src, int len) {
 
 
 /**
-   This function reallocates the string_list pointer, making room for
+   This function reallocates the stringlist pointer, making room for
    one more char *, this newly allocated slot is then set to point to
    (a copy of) the new string. The newly reallocated char ** instance
    is the return value from this function.
 
    Example:
    --------
-   char ** string_list  = (char *[2]) {"One" , "Two"};
+   char ** stringlist  = (char *[2]) {"One" , "Two"};
    char  * three_string = "Three";
    
-   string_list = util_stringlist_append_copy(string_list , 2 , three_string);
+   stringlist = util_stringlist_append_copy(stringlist , 2 , three_string);
 
    This function does allocate memory - but does not have *alloc* in
    the name - hmmmm....??
@@ -1396,7 +1396,7 @@ void util_safe_free(void *ptr) {
 
 
 
-void util_free_string_list(char **list , int N) {
+void util_free_stringlist(char **list , int N) {
   int i;
   if (list != NULL) {
     for (i=0; i < N; i++) {
@@ -1408,7 +1408,7 @@ void util_free_string_list(char **list , int N) {
 }
 
 
-char ** util_alloc_string_list(int N, int len) {
+char ** util_alloc_stringlist(int N, int len) {
   int i;
   char **list = calloc(N , sizeof *list);
   for (i=0; i < N; i++)
@@ -2494,8 +2494,8 @@ void util_abort(const char * fmt , ...) {
       for (i=0; i < size; i++) 
 	fprintf(stderr, fmt , i , func_list[i], file_line_list[i]);
       fprintf(stderr , "--------------------------------------------------------------------------------\n");
-      util_free_string_list(func_list      , size);
-      util_free_string_list(file_line_list , size);
+      util_free_stringlist(func_list      , size);
+      util_free_stringlist(file_line_list , size);
     }
     free(strings);
     free(executable);
