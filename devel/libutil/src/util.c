@@ -1850,7 +1850,19 @@ static FILE * util_fopen__(const char *filename , const char * mode, int abort_m
       }
       if (abort_mode & ABORT_WRITE) util_abort("%s: ABORT_WRITE \n",__func__);
     }
-  } else 
+  } else if (strcmp(mode , "a") == 0) {
+    stream = fopen(filename , "a");
+    if (stream == NULL) {
+      fprintf(stderr,"%s: failed to open:%s for appending: %s \n",__func__ , filename, strerror(errno));
+      {
+	char * cwd = util_alloc_cwd();
+	fprintf(stderr,"%s: cwd:%s \n",__func__ , cwd);
+	free(cwd);
+      }
+      if (abort_mode & ABORT_WRITE) util_abort("%s: ABORT_WRITE \n",__func__);
+    }
+  }
+  else 
     util_abort("%s: open mode: '%s' not implemented - aborting \n",__func__ , mode);
 
   return stream;
