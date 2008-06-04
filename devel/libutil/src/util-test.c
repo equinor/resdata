@@ -8,11 +8,17 @@
 #include <hash.h>
 #include <unistd.h>
 #include <thread_pool.h>
-
+#include <config_item.h>
+#include <config.h> 
 
 
 int main(int argc , char ** argv) {
-  util_vfork_exec("./test.py" , 0 , NULL , true , "test.out" , NULL , "f.stdout" , "f.stderr");
-  printf("-----------------------------------------------------------------\n");
-  util_vfork_exec("./test.py" , 0 , NULL , true , "test.out" , NULL , NULL , NULL);
+  config_type * config = config_alloc( false );
+  config_init_item(config , "GRID" , 0 , NULL , true , false , 0 , NULL , NULL);
+  config_init_item(config , "INIT" , 1 , (const char *[1]) {"DEFAULT/init"} , true , false , 0 , NULL , NULL);
+  config_parse(config , "config.txt" , "--");
+
+  printf("GRID: %s \n",config_get(config , "GRID"));
+  printf("INIT: %s \n",config_get(config , "INIT"));
+  config_free(config);
 }

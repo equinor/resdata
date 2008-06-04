@@ -221,6 +221,7 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
 
 
 char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr, bool must_exist) {
+  const bool upper_case = isupper(base[0]);
   char * filename;
   char * ext;
   int ext_length;
@@ -329,7 +330,10 @@ char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl
 
   case(ecl_data_file):
     ext_length = 4;
-    ext = util_alloc_string_copy("DATA");
+    if (upper_case)
+      ext = util_alloc_string_copy("DATA");
+    else
+      ext = util_alloc_string_copy("data");
     break;
     
   default:
