@@ -13,8 +13,8 @@ CFLAGS  = -$(MFLAG) -std=gnu99 -g -Wall -fPIC
 ARFLAGS = -csr
 LDFLAGS = -rdynamic
 #################################################################
-OBJECTS           = pathv.o util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o path_fmt.o config.o
-INC_FILES_INSTALL = pathv.h util.h thread_pool.h msg.h void_arg.h str_buffer.h path_fmt.h  config.h
+OBJECTS           = util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o path_fmt.o config.o
+INC_FILES_INSTALL = util.h thread_pool.h msg.h void_arg.h str_buffer.h path_fmt.h  config.h
 LIB               = libutil_$(MFLAG).a
 LIB_LINK          = -lutil_$(MFLAG) -lhash_$(MFLAG) -lz -lpthread -lm
 LINK_LIB_PATH     = -L$(LIBUTIL_HOME)/lib -L$(LIBHASH_HOME)/lib
@@ -48,7 +48,6 @@ msg.o         : msg.c msg.h util.o
 thread_pool.o : thread_pool.c thread_pool.h
 util.o        : util.c util.h util_path.c
 util_interC.o : util_interC.c util.o
-pathv.o       : pathv.c pathv.h util.o
 path_fmt.o    : path_fmt.c path_fmt.h util.o
 config.o      : config.c config.h util.o 
  

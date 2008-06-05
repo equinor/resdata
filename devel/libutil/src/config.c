@@ -23,6 +23,8 @@ struct config_item_struct {
   bool                          currently_set;
   bool                          append_arg;
   bool                          required_set;
+  char                       ** selection_set;
+  int                           selection_size;  
   char                       ** required_children;
   int                           num_children;
   config_item_validate_ftype  * validator;
@@ -51,6 +53,8 @@ config_item_type * config_item_alloc(const char * kw) {
   item->validator         = NULL;
   item->argc_min          = -1;  /* -1 - not applicable */
   item->argc_max          = -1;
+  item->selection_set     = NULL;
+  item->selection_size    = 0;
   return item;
 }
 
@@ -149,6 +153,7 @@ void config_item_free( config_item_type * item) {
   free(item->kw);
   util_free_stringlist(item->argv              , item->argc);
   util_free_stringlist(item->required_children , item->num_children);
+  util_free_stringlist(item->selection_set     , item->selection_size);
   free(item);
 }
 

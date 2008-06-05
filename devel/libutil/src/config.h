@@ -1,7 +1,7 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-typedef struct config_struct config_type;
+typedef struct config_struct      config_type;
 typedef struct config_item_struct config_item_type;
 
 typedef bool ( config_item_validate_ftype ) (const config_type *, 
