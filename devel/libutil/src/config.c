@@ -7,6 +7,7 @@
 #include <hash.h>
 
 struct config_struct {
+  int          parse_count;
   hash_type  * items;
   bool         auto_add;
 };
@@ -111,10 +112,16 @@ void config_item_init(config_item_type * item,
 
 bool config_item_validate(const config_type * config , const config_item_type * item) {
   bool OK = true;
-  if (item->validator != NULL) 
-    OK = OK && item->validator(config , item);
+  if (item->required_set && !item->currently_set) {
+    fprintf(stderr , "**ERROR: item:%s has not been set \n",item->kw);
+    OK = false;
+  } else {
+    if (item->validator != NULL) 
+      OK = item->validator(config , item);
+  }
   return OK;
 }
+
 
 
 int config_item_get_argc(const config_item_type * item ) {
@@ -169,8 +176,9 @@ bool config_item_is_set(const config_item_type * item) {
 
 config_type * config_alloc(bool auto_add) {
   config_type *config = util_malloc(sizeof * config  , __func__);
-  config->auto_add = auto_add;
-  config->items    = hash_alloc();
+  config->auto_add    = auto_add;
+  config->items       = hash_alloc();
+  config->parse_count = 0;
   return config;
 }
 
@@ -257,45 +265,69 @@ char ** config_alloc_active_list(const config_type * config, int * _active_size)
 
 
 
+
+static void config_validate(const config_type * config, const char * filename) {
+  int size = hash_get_size(config->items);
+  char ** key_list = hash_alloc_keylist(config->items);
+  int ikey;
+  bool OK = true;
+  for (ikey = 0; ikey < size; ikey++) {
+    const config_item_type * item = config_get_item(config , key_list[ikey]);
+    OK = config_item_validate(config , item);
+  }
+  util_free_stringlist(key_list , size);
+  if (!OK) 
+    util_exit("There were errors when parsing configuration file:%s \n",filename);
+  
+}
+
+
 void config_parse(config_type * config , const char * filename, const char * comment_string) {
-  FILE * stream = util_fopen(filename , "r");
-  bool   at_eof = false;
-
-  while (!at_eof) {
-    int i , tokens;
-    int active_tokens;
-    char **token_list;
-    char  *line;
-
-    line  = util_fscanf_alloc_line(stream , &at_eof);
-    if (line != NULL) {
-      util_split_string(line , " " , &tokens , &token_list);
+  if (config->parse_count > 0) 
+    util_abort("%s: Sorry config_parse can only be called once on one config instance\n",__func__);
+  {  
+    FILE * stream = util_fopen(filename , "r");
+    bool   at_eof = false;
+    
+    while (!at_eof) {
+      int i , tokens;
+      int active_tokens;
+      char **token_list;
+      char  *line;
       
-      active_tokens = tokens;
-      for (i = 0; i < tokens; i++) {
-	char * comment_ptr = strstr(token_list[i] , comment_string);
-	if (comment_ptr != NULL) {
-	  if (comment_ptr == token_list[i])
-	    active_tokens = i;
-	  else
-	    active_tokens = i + 1;
-	  break;
+      line  = util_fscanf_alloc_line(stream , &at_eof);
+      if (line != NULL) {
+	util_split_string(line , " " , &tokens , &token_list);
+	
+	active_tokens = tokens;
+	for (i = 0; i < tokens; i++) {
+	  char * comment_ptr = strstr(token_list[i] , comment_string);
+	  if (comment_ptr != NULL) {
+	    if (comment_ptr == token_list[i])
+	      active_tokens = i;
+	    else
+	      active_tokens = i + 1;
+	    break;
+	  }
 	}
-      }
-      if (active_tokens > 0) {
-	const char * kw = token_list[0];
-	if (!config_has_item(config , kw) && config->auto_add) {
-	  config_item_type * new_item = config_item_alloc(kw);
-	  config_add_item(config , kw , new_item);
+	if (active_tokens > 0) {
+	  const char * kw = token_list[0];
+	  if (!config_has_item(config , kw) && config->auto_add) {
+	    config_item_type * new_item = config_item_alloc(kw);
+	    config_add_item(config , kw , new_item);
+	  }
+	  if (config_has_item(config , kw)) {
+	    config_item_type * item = config_get_item(config , kw);
+	    config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1]);
+	  } else 
+	    fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n",kw,filename);
+	  
 	}
-	if (config_has_item(config , kw)) {
-	  config_item_type * item = config_get_item(config , kw);
-	  config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1]);
-	} else 
-	  fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n",kw,filename);
-
       }
     }
+    config_validate(config , filename);
+    fclose(stream);
   }
-  fclose(stream);
 }
+
+
