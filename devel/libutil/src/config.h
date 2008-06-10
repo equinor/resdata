@@ -22,6 +22,7 @@ config_type * config_alloc( bool );
 void               config_item_free__ (void * );
 void               config_item_free( config_item_type * );
 config_item_type * config_item_alloc(const char * );
+config_item_type * config_get_item(const config_type *, const char *);
 const char       * config_iget_arg(const config_item_type * , int);
 int                config_item_get_argc(const config_item_type *);
 const char      ** config_item_get_argv(const config_item_type * , int * );
