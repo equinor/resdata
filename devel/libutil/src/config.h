@@ -39,6 +39,22 @@ void config_item_init(config_item_type * ,
 const char * config_item_iget_argv(const config_item_type * , int );
 bool 	   config_item_is_set(const config_item_type * );
 void 	   config_item_set_arg(config_item_type *  , int , const char **);
-int        config_item_get_argc(const config_item_type * );
+int      config_item_get_argc(const config_item_type * );
+
+void config_init_item(config_type *, 
+                      const char * ,
+                      int          ,
+                      const char **,
+                      bool         ,
+                      bool         ,
+                      int          ,
+                      const char **,
+                      int          ,
+                      int          ,
+                      config_item_validate_ftype *);
+
+void config_parse(config_type *,
+                  const char  *,
+                  const char  *);
 
 #endif
