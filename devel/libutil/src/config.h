@@ -15,10 +15,11 @@ const char ** config_get_argv(const config_type *  , const char *);
 const char *  config_get(const config_type *  , const char *);
 void          config_free(config_type *);
 config_type * config_alloc( bool );
+void          config_parse(config_type * , const char * , const char * );
 
 /*****************************************************************/
 
-
+bool               config_item_set(const config_type * , const char * );
 void               config_item_free__ (void * );
 void               config_item_free( config_item_type * );
 config_item_type * config_item_alloc(const char * );
@@ -27,14 +28,14 @@ const char       * config_iget_arg(const config_item_type * , int);
 int                config_item_get_argc(const config_item_type *);
 const char      ** config_item_get_argv(const config_item_type * , int * );
 
-void config_item_init(config_item_type * ,
-		      int ,
-		      const char ** ,
-		      bool ,
-		      bool ,
-		      int ,
-		      const char ** ,
-		      int , int, 
+
+void config_init_item(config_type * , 
+		      const char * , 
+		      int   , const char ** , 
+		      bool  , 
+		      bool    ,
+		      int   , const char ** ,
+		      int       , int ,
 		      config_item_validate_ftype * );
 
 const char * config_item_iget_argv(const config_item_type * , int );

@@ -13,8 +13,8 @@
 
 int main(int argc , char ** argv) {
   config_type * config = config_alloc( false );
-  config_init_item(config , "GRID" , 0 , NULL , true , false , 0 , NULL , NULL);
-  config_init_item(config , "INIT" , 1 , (const char *[1]) {"DEFAULT/init"} , true , false , 0 , NULL , NULL);
+  config_init_item(config , "GRID" , 0 , NULL , true , false , 0 , NULL , -1, -1 , NULL);
+  config_init_item(config , "INIT" , 1 , (const char *[1]) {"DEFAULT/init"} , true , false , 0 , NULL , -1 , -1 , NULL);
   config_parse(config , "config.txt" , "--");
 
   printf("GRID: %s \n",config_get(config , "GRID"));

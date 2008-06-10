@@ -287,7 +287,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
 
 
 
-ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) {
+static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) {
   fortio_type   * fortio = fortio_open(grid_file , "r" , endian_flip);
   ecl_grid_type * ecl_grid;
   ecl_file_type   file_type;
@@ -368,7 +368,7 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
 
 
 
-ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_flip) {
+static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_flip) {
   fortio_type   * fortio = fortio_open(grid_file , "r" , endian_flip);
   ecl_file_type   file_type;
   bool            fmt_file;
@@ -423,9 +423,6 @@ void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * n
    This function will allocate a ecl_grid instance. As input it takes
    a filename, which can be both a GRID file and an EGRID file (both
    formatted and unformatted). 
-
-   If the variable with_index_map is true, the function allocates an
-   internal index_map before leaving. This can then be exported later.
 */
 
 ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
