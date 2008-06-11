@@ -231,10 +231,18 @@ void config_set_arg(config_type * config , const char * kw, int argc , const cha
 }
 
 
-const char ** config_get_argv(const config_type * config , const char *kw) {
-  int argc;
+/**
+   Can take argc == NULL
+*/
+const char ** config_get_argv(const config_type * config , const char *kw , int *argc) {
+  int local_argc;
   config_item_type * item = config_get_item(config , kw);
-  return config_item_get_argv(item , &argc);
+  
+  if (argc == NULL)
+    return config_item_get_argv(item , &local_argc);
+  else
+    return config_item_get_argv(item , argc);
+
 }
 
 
