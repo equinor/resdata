@@ -226,6 +226,10 @@ bool config_item_set(const config_type * config , const char * kw) {
   return config_item_is_set(hash_get(config->items , kw));
 }
 
+void config_set_arg(config_type * config , const char * kw, int argc , const char **argv) {
+  config_item_set_arg(config_get_item(config , kw) , argc , argv);
+}
+
 
 const char ** config_get_argv(const config_type * config , const char *kw) {
   int argc;
