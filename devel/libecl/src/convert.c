@@ -9,17 +9,21 @@
 
 
 
-void file_convert(const char * src_file , const char * target_file) {
+void file_convert(const char * src_file , const char * target_file, ecl_file_type file_type , bool fmt_src) {
   fortio_type *src , *target;
   ecl_kw_type * ecl_kw;
   bool formatted_src;
 
   printf("Converting %s -> %s \n",src_file , target_file);
-  if (util_fmt_bit8(src_file)) {
-    formatted_src = true;
-  }  else
-    formatted_src = false;
-
+  if (file_type != ecl_other_file)
+    formatted_src = fmt_src;
+  else {
+    if (util_fmt_bit8(src_file)) 
+      formatted_src = true;
+    else
+      formatted_src = false;
+  }
+  
   target = fortio_open(target_file , "w" , true);
   src    = fortio_open(src_file , "r" , true);
   ecl_kw = ecl_kw_fread_alloc(src , formatted_src);
@@ -61,7 +65,7 @@ int main (int argc , char **argv) {
 	exit(0);
       }
       target_file = argv[2];
-      file_convert(src_file , target_file);
+      file_convert(src_file , target_file , file_type , fmt_file);
     } else {
       int file_nr;
       for (file_nr = 1; file_nr < argc; file_nr++) {
@@ -78,7 +82,7 @@ int main (int argc , char **argv) {
 	util_alloc_file_components(src_file , &path , &basename , &extension);
 	
 	target_file = ecl_util_alloc_filename(path, basename , file_type , !fmt_file , report_nr);
-	file_convert(src_file , target_file);
+	file_convert(src_file , target_file , file_type , fmt_file);
 	
 	free(path);
 	free(basename);
