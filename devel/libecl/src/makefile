@@ -8,6 +8,7 @@ INSTALL_INC_PATH =  $(LIBECL_HOME)/include
 INSTALL_LIB_PATH =  $(LIBECL_HOME)/lib
 #################################################################
 CFLAGS  = -O2 -$(MFLAG)  -std=gnu99 -g -Wall -fPIC
+LDFLAGS = 
 ARFLAGS = -csr
 #################################################################
 SDP_ROOT      = /project/res/$(shell /private/joaho/bin/res_target.py)
@@ -29,7 +30,7 @@ LOCAL: LIB BIN
 
 SDP_INSTALL: LIB BIN
 	install $(LIB) $(SDP_ROOT)/lib/$(LIB_ROOT).a
-	install $(BIN_FILES) $(SDP_ROOT)/bin
+	install $(BIN_FILES_SDP_INSTALL) $(SDP_ROOT)/bin
 	install $(INC_FILES) $(SDP_ROOT)/include
 
 clean:
@@ -65,12 +66,12 @@ ecl_box.o    : ecl_box.c ecl_box.h
 
 
 # Source code for binaries - based on library
-ecl_test.o     : ecl_test.c $(LIB)
-convert.o      : convert.c $(LIB)
-kw_list.o      : kw_list.c $(LIB)
-kw_extract.o   : kw_extract.c $(LIB)
-grid_info.o    : grid_info.c $(LIB)
-view_summary.o : view_summary.c $(LIB)
+ecl_test.o     : ecl_test.c 	
+convert.o      : convert.c  	
+kw_list.o      : kw_list.c  	
+kw_extract.o   : kw_extract.c   
+grid_info.o    : grid_info.c    
+view_summary.o : view_summary.c 
 
 
 #################################################################
@@ -79,25 +80,26 @@ view_summary.o : view_summary.c $(LIB)
 # in the source directory - and not the installed files. This is to
 
 
-BIN	:  ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x	
 BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x
+BIN	:  $(SDP_INSTALL)
+BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x
 
 ecl_test.x: $(LIB) ecl_test.o
-	gcc ecl_test.o -o ecl_test.x $(LIB_PATH) $(LIB_LINK)
+	gcc $(LDFLAGS) ecl_test.o -o ecl_test.x $(LIB_PATH) $(LIB_LINK)
 
 convert.x: $(LIB) convert.o
-	gcc $(CFLAGS)  convert.o -o convert.x $(LIB_PATH)  $(LIB_LINK)
+	gcc $(LDFLAGS)  convert.o -o convert.x $(LIB_PATH)  $(LIB_LINK)
 
 kw_list.x: $(LIB) kw_list.o
-	gcc $(CFLAGS)  kw_list.o -o kw_list.x $(LIB_PATH)  $(LIB_LINK)
+	gcc $(LDFLAGS)  kw_list.o -o kw_list.x $(LIB_PATH)  $(LIB_LINK)
 
 kw_extract.x: $(LIB) kw_extract.o
-	gcc $(CFLAGS)  kw_extract.o -o kw_extract.x $(LIB_PATH)  $(LIB_LINK)
+	gcc $(LDFLAGS)  kw_extract.o -o kw_extract.x $(LIB_PATH)  $(LIB_LINK)
 
 grid_info.x: $(LIB) grid_info.o
-	gcc $(CFLAGS)  grid_info.o -o grid_info.x $(LIB_PATH)  $(LIB_LINK)
+	gcc $(LDFLAGS)  grid_info.o -o grid_info.x $(LIB_PATH)  $(LIB_LINK)
 
 summary.x: $(LIB) view_summary.o
-	gcc $(CFLAGS)  view_summary.o -o summary.x $(LIB_PATH)  $(LIB_LINK)
+	gcc $(LDFLAGS)  view_summary.o -o summary.x $(LIB_PATH)  $(LIB_LINK)
 
 
