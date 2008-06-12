@@ -107,6 +107,39 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
 }
 
 
+/**
+   This file allocates a filename consisting of a leading path, a
+   basename and an extension. Both the path and the extension can be
+   NULL.
+*/
+char * util_alloc_filename(const char * path , const char * basename , const char * extension) {
+  bool   include_path = false;
+  char * file;
+  int    length;
+  
+  if (path != NULL) {
+    include_path = true;
+    length = strlen(path) + 1;
+  }
+  if (extension != NULL)
+    length += strlen(extension) + 1;
+
+  file = util_malloc(length + strlen(basename) + 1 , __func__);
+
+  if (path == NULL) {
+    if (extension == NULL)
+      memcpy(file , basename , strlen(basename) + 1);
+    else
+      sprintf(file , "%s.%s" , basename , extension);
+  } else {
+    if (extension == NULL)
+      sprintf(file , "%s%c%s" , path , UTIL_PATH_SEP_CHAR , basename);
+    else
+      sprintf(file , "%s%c%s.%s" , path , UTIL_PATH_SEP_CHAR , basename , extension);
+  }
+  return file;
+}
+
 
 
 /**
@@ -206,6 +239,7 @@ void util_unlink_path(const char *path) {
   util_unlink_path_static(path , false);
 }
 
+
 void util_unlink_path_TESTING(const char *path) {
   util_unlink_path_static(path , true);
 }
@@ -231,7 +265,7 @@ int util_proc_mem_free(void) {
 
 
 char * util_alloc_realpath(const char * src) {
-  char * new_path = util_malloc(4096 , __func__);
+  char * new_path = util_malloc(4096 , __func__); 
   realpath(src , new_path);
   new_path = util_realloc(new_path , strlen(new_path) + 1 , __func__);
   return new_path;

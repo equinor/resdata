@@ -68,12 +68,12 @@ mem_free.o  : mem_free.c
 BIN:	util.x eol-fix.x mem_free.x
 BIN_FILES = util.x eol-fix.x mem_free.x
  
-util.x: util-test.o
+util.x: util-test.o $(LIB)
 	gcc $(LDFLAGS) util-test.o -o util.x     $(LINK_LIB_PATH) $(LIB_LINK) 
 
-eol-fix.x: eol-fix.o
+eol-fix.x: eol-fix.o $(LIB)
 	gcc $(LDFLAGS) eol-fix.o -o eol-fix.x    $(LINK_LIB_PATH) $(LIB_LINK)
 
-mem_free.x: mem_free.o
+mem_free.x: mem_free.o $(LIB)
 	gcc $(LDFLAGS) mem_free.o -o mem_free.x  $(LINK_LIB_PATH) $(LIB_LINK)
 

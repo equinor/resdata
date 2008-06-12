@@ -69,6 +69,7 @@ bool     util_fscanf_int(FILE * , int * );
 bool     util_sscanf_int(const char * , int * );
 bool     util_sscanf_double(const char * , double * );
 char   * util_alloc_full_path(const char *, const char *);
+char   * util_alloc_filename(const char * , const char *  , const char * );
 char   * util_alloc_strip_copy(const char *);
 char   * util_realloc_strip_copy(char *);
 void     util_set_strip_copy(char * , const char *);

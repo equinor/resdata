@@ -2617,6 +2617,10 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
    2. The child execs() to run executable.
    3. Parent can wait (blocking = true) on the child to complete executable.
 
+   If the executable is an absolute path it will run the command with
+   execv(), otherwise it will use execvp() which will (try) to look up
+   the executable with the PATH variable.
+
    argc / argv are the number of arguments and their value to the
    external executable. Observe that prior to calling execv the argv
    list is prepended with the name of the executable (convention), and
@@ -2647,14 +2651,19 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
    the file "listing". If the 'ls' should want to print something on
    stderr, it will go there, as stderr is not redirected.
 
+   
+
+
 */
 
 pid_t util_vfork_exec(const char * executable , int argc , const char ** argv , 
 		     bool blocking , const char * target_file , const char * stdin_file , const char * stdout_file , const char * stderr_file) {
   const char  ** __argv = NULL;
   pid_t child_pid;
-  if (!util_is_executable(executable))
-    util_abort("%s: cmd:%s is not executable - aborting.\n",__func__ , executable);
+
+  if (util_is_abs_path(executable))
+    if (!util_is_executable(executable))
+      util_abort("%s: cmd:%s is not executable - aborting.\n",__func__ , executable);
 
   if (target_file != NULL && blocking == false) 
     util_abort("%s: When giving a target_file != NULL - you must use the blocking semantics. \n",__func__);
@@ -2679,7 +2688,12 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
     for (iarg = 0; iarg < argc; iarg++)
       __argv[iarg+1] = argv[iarg];
     __argv[argc + 1] = NULL;
-    execv( executable , (char **) __argv);
+
+    if (util_is_abs_path( executable))
+      execv( executable , (char **) __argv);
+    else 
+      /* Using PATH to locate the executable */
+      execvp( executable , (char **) __argv);
   }  else {
     /* Parent */
     if (blocking) {
