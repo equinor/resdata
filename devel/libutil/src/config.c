@@ -362,13 +362,6 @@ void config_parse(config_type * config , const char * filename, const char * com
 
 
 
-static int key_cmp(const char *key1, const char *key2)
-{
-  return strcmp(key1,key2);
-}
-
-
-
 bool config_has_keys(const config_type * config, const char **ext_keys, int ext_num_keys, bool exactly)
 {
   int i;
