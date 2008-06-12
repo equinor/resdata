@@ -62,4 +62,9 @@ void config_parse(config_type *,
                   const char  *,
                   const char  *);
 
+bool config_has_keys(const config_type *,
+                     const char       **,
+                     int                ,
+                     bool               );
+
 #endif

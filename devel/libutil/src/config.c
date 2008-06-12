@@ -361,3 +361,40 @@ void config_parse(config_type * config , const char * filename, const char * com
 }
 
 
+
+static int key_cmp(const char *key1, const char *key2)
+{
+  return strcmp(key1,key2);
+}
+
+
+
+bool config_has_keys(const config_type * config, const char **ext_keys, int ext_num_keys, bool exactly)
+{
+  int i;
+  bool has_keys;
+
+  int     config_num_keys;
+  char ** config_keys;
+
+  config_keys = config_alloc_active_list(config, &config_num_keys);
+
+  if(exactly && (config_num_keys != ext_num_keys))
+  {
+    util_free_stringlist(config_keys,config_num_keys);
+    return false;
+  }
+
+  has_keys = true;
+  for(i=0; i<ext_num_keys; i++)
+  {
+    if(!config_has_item(config,ext_keys[i]))
+    {
+      has_keys = false;
+      break;
+    }
+  }
+ 
+  util_free_stringlist(config_keys,config_num_keys);
+  return has_keys;
+}
