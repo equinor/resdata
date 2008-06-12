@@ -61,7 +61,7 @@ int main (int argc , char **argv) {
     
     if (file_type == ecl_other_file) {
       if (argc != 3) {
-	fprintf(stderr,"When the file can not be recognized on the name as an ECLIPSE file you must give output_file as second (and last) argument \n");
+	fprintf(stderr,"When the file can not be recognized on the name as an ECLIPSE file you must give output_file as second (and final) argument \n");
 	exit(0);
       }
       target_file = argv[2];
@@ -77,7 +77,7 @@ int main (int argc , char **argv) {
 	if (file_type == ecl_other_file) {
 	  fprintf(stderr,"File: %s - problem \n",src_file);
 	  fprintf(stderr,"In a list of many files ALL must be recognizable by their name. \n");
-	  abort();
+	  exit(1);
 	}
 	util_alloc_file_components(src_file , &path , &basename , &extension);
 	

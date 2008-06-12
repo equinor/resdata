@@ -113,13 +113,13 @@ bool ecl_util_numeric_extension(const char * extension) {
 
 
 /** 
-This function takes an eclipse filename as input - looks at the
-extension, and uses that to determine the type of file. In addition to
-the fundamental type, it is also determined whether the file is
-formatted or not, and in the case of summary/restart files, which
-report number this corresponds to.
+  This function takes an eclipse filename as input - looks at the
+  extension, and uses that to determine the type of file. In addition
+  to the fundamental type, it is also determined whether the file is
+  formatted or not, and in the case of summary/restart files, which
+  report number this corresponds to.
 
-The function itself returns void, all the results are by reference.
+  The function itself returns void, all the results are by reference.
 */
 
 
@@ -220,8 +220,13 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
 
 
 
-char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr, bool must_exist) {
-  const bool upper_case = isupper(base[0]);
+/**
+   This function takes a path, along with a filetype as input and
+   allocates a new string with the filename. If path == NULL, the
+   filename is allocated without a leading path component.
+*/
+
+static char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr, bool must_exist) {
   char * filename;
   char * ext;
   int ext_length;
@@ -330,10 +335,7 @@ char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl
 
   case(ecl_data_file):
     ext_length = 4;
-    if (upper_case)
-      ext = util_alloc_string_copy("DATA");
-    else
-      ext = util_alloc_string_copy("data");
+    ext = util_alloc_string_copy("DATA");
     break;
     
   default:
