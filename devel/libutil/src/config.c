@@ -262,6 +262,19 @@ const char * config_get(const config_type * config , const char * kw) {
 }
 
 
+
+const char * config_iget(const config_type * config , const char * kw, int iarg) {
+  config_item_type * item = config_get_item(config , kw);
+  const int argc = config_item_get_argc(item);
+  if (argc < iarg) 
+    util_abort("%s: (internal ?) error when calling %s, trying to fetch item out of bounds. %s has %i items, trying to fetch item %i (zero offset).\n",__func__,__func__,kw,argc,iarg);
+  else if(iarg < 0)
+    util_abort("%s: (internal ?) error when calling %s, trying to fetch item out of bounds, item requested was %i.\n ",__func__,__func__,iarg);
+
+  return config_item_iget_argv(item , iarg);
+}
+
+
 char ** config_alloc_active_list(const config_type * config, int * _active_size) {
   char ** complete_key_list = hash_alloc_keylist(config->items);
   char ** active_key_list = NULL;

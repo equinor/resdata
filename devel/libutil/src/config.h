@@ -13,6 +13,7 @@ typedef bool ( config_item_validate_ftype ) (const config_type *,
 int           config_get_argc(const config_type *  , const char *);
 const char ** config_get_argv(const config_type *  , const char * , int *);
 const char *  config_get(const config_type *  , const char *);
+const char *  config_iget(const config_type *  , const char *, int);
 void          config_free(config_type *);
 config_type * config_alloc( bool );
 void          config_parse(config_type * , const char * , const char * );
