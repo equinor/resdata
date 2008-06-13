@@ -327,19 +327,19 @@ void config_parse(config_type * config , const char * filename, const char * com
       
       line  = util_fscanf_alloc_line(stream , &at_eof);
       if (line != NULL) {
-	util_split_string(line , " " , &tokens , &token_list);
+        util_split_string(line , " " , &tokens , &token_list);
 	
-	active_tokens = tokens;
-	for (i = 0; i < tokens; i++) {
-	  char * comment_ptr = strstr(token_list[i] , comment_string);
-	  if (comment_ptr != NULL) {
-	    if (comment_ptr == token_list[i])
-	      active_tokens = i;
-	    else
-	      active_tokens = i + 1;
-	    break;
-	  }
-	}
+      active_tokens = tokens;
+      for (i = 0; i < tokens; i++) {
+        char * comment_ptr = strstr(token_list[i] , comment_string);
+        if (comment_ptr != NULL) {
+          if (comment_ptr == token_list[i])
+            active_tokens = i;
+          else
+            active_tokens = i + 1;
+          break;
+        }
+	    }
 	if (active_tokens > 0) {
 	  const char * kw = token_list[0];
 	  if (!config_has_item(config , kw) && config->auto_add) {
@@ -354,6 +354,8 @@ void config_parse(config_type * config , const char * filename, const char * com
 	  
 	}
       }
+      util_free_stringlist(token_list,tokens);
+      free(line);
     }
     config_validate(config , filename);
     fclose(stream);
@@ -365,7 +367,6 @@ void config_parse(config_type * config , const char * filename, const char * com
 bool config_has_keys(const config_type * config, const char **ext_keys, int ext_num_keys, bool exactly)
 {
   int i;
-  bool has_keys;
 
   int     config_num_keys;
   char ** config_keys;
@@ -378,16 +379,15 @@ bool config_has_keys(const config_type * config, const char **ext_keys, int ext_
     return false;
   }
 
-  has_keys = true;
   for(i=0; i<ext_num_keys; i++)
   {
     if(!config_has_item(config,ext_keys[i]))
     {
-      has_keys = false;
-      break;
+      util_free_stringlist(config_keys,config_num_keys);
+      return false;
     }
   }
  
   util_free_stringlist(config_keys,config_num_keys);
-  return has_keys;
+  return true;
 }
