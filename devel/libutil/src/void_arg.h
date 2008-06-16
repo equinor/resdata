@@ -20,6 +20,8 @@ void_arg_type * void_arg_alloc7(node_ctype , node_ctype , node_ctype, node_ctype
 void_arg_type * void_arg_alloc8(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype ,node_ctype , node_ctype , node_ctype);
 void_arg_type * void_arg_alloc9(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype ,node_ctype , node_ctype , node_ctype , node_ctype);
 void_arg_type * void_arg_alloc10(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype ,node_ctype , node_ctype , node_ctype , node_ctype , node_ctype);
+void_arg_type * void_arg_alloc11(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype ,node_ctype , node_ctype , node_ctype , node_ctype , node_ctype, node_ctype);
+void_arg_type * void_arg_alloc12(node_ctype , node_ctype , node_ctype, node_ctype , node_ctype ,node_ctype , node_ctype , node_ctype , node_ctype , node_ctype, node_ctype, node_ctype);
 void            void_arg_free(void_arg_type * );
 void            void_arg_free__(void *);
 void            void_arg_pack_ptr(void_arg_type * , int , void * );
@@ -56,3 +58,4 @@ VOID_ARG_TYPED_PACK_HEADER(bool)
 #undef VOID_ARG_TYPED_PACK_HEADER
 #undef VOID_ARG_TYPED_GET_HEADER
 #endif
+     

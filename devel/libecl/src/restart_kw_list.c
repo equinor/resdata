@@ -4,6 +4,30 @@
 #include <restart_kw_list.h>
 #include <util.h>
 
+/**
+
+   This file implements a small object - restart_kw_list - which is
+   designed to maintain the ordering of keywords in the ECLIPSE
+   restart files. In a typical EnKF setup the restart data is treated
+   as follows:
+
+    1. The restart files are loaded - the interesting solution data is
+       extracted for EnKF analysis, and the uninteresting static data
+       is dumped straight to disk.
+
+    2. EnKF analysis - updating pressure and saturations.
+
+    3. A new and updated restart file is written to disk, containing
+       the updated values of pressure and saturations, and the static
+       date shuffled straight to disk in step 1. Now - the point is
+       that ordering of data from the original restart file must be
+       preserved (maybe not stricly), and that ordering is the sole
+       purpose of this object.
+
+*/
+
+
+
 typedef enum {initialized , writing , reading} _mode_enum;
 
 struct restart_kw_list_struct {
@@ -37,6 +61,12 @@ void restart_kw_list_fwrite(const restart_kw_list_type * kw_list , FILE * stream
 }
 
 
+
+/** 
+    Observe that this function will reallocate storage as needed by
+    the file content.
+*/
+    
 void restart_kw_list_fread(restart_kw_list_type * kw_list , FILE * stream) {
   int ikw , file_size;
   file_size = util_fread_int(stream);
