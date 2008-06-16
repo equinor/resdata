@@ -2660,11 +2660,7 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
 		     bool blocking , const char * target_file , const char * stdin_file , const char * stdout_file , const char * stderr_file) {
   const char  ** __argv = NULL;
   pid_t child_pid;
-
-  if (util_is_abs_path(executable))
-    if (!util_is_executable(executable))
-      util_abort("%s: cmd:%s is not executable - aborting.\n",__func__ , executable);
-
+  
   if (target_file != NULL && blocking == false) 
     util_abort("%s: When giving a target_file != NULL - you must use the blocking semantics. \n",__func__);
 
@@ -2694,6 +2690,9 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
     else 
       /* Using PATH to locate the executable */
       execvp( executable , (char **) __argv);
+    /* Exec has returned - an error .. */
+    util_abort("%s: failed to execute external command: \'%s\': %s \n",__func__ , executable , strerror(errno));
+    
   }  else {
     /* Parent */
     if (blocking) {
