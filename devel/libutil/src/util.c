@@ -32,6 +32,7 @@
 #include <void_arg.h>
 #include <stdarg.h>
 #include <execinfo.h>
+#include <pthread.h>
 
 
 #define FLIP16(var) (((var >> 8) & 0x00ff) | ((var << 8) & 0xff00))
@@ -2371,6 +2372,49 @@ void util_filter_file(const char * src_file , const char * comment , const char 
   free(buffer);
 }
 
+/**
+   This function searches through the content of the (currently set)
+   PATH variable, and allocates a string containing the full path
+   (first match) to the executable given as input. 
+
+   * If the entered executable already is an absolute path, a copy of
+     the input is returned *WITHOUT* consulting the PATH variable (or
+     checking that it exists).
+
+   * If the executable is not found in the PATH list NULL is returned.
+*/
+   
+
+char * util_alloc_PATH_executable(const char * executable) {
+  if (util_is_abs_path(executable))
+    return util_alloc_string_copy(executable);
+  else {
+    char *  full_path = NULL;
+    char *  path_env  = getenv("PATH");
+    if (path_env != NULL) {
+      bool    cont = true;
+      char ** path_list;
+      int     path_size , ipath;
+
+      ipath = 0;
+      util_split_string(getenv("PATH") , ":" , &path_size , &path_list);
+      while ( cont ) {
+	char * current_attempt = util_alloc_full_path(path_list[ipath] , executable);
+	if ( util_file_exists( current_attempt ) && util_is_executable( current_attempt )) {
+	  full_path = current_attempt;
+	  cont = false;
+	} else {
+	  free(current_attempt);
+	  ipath++;
+	  if (ipath == path_size)
+	    cont = false;
+	}
+      }
+      util_free_stringlist(path_list , path_size);
+    }
+    return full_path;
+  }
+}
 
 /**
   This function uses the external program addr2line to convert the
@@ -2438,7 +2482,7 @@ static char * util_bt_alloc_current_executable(const char * bt_symbol) {
   if (util_is_abs_path(path))
     return path;
   else {
-    char * full_path = util_alloc_full_path(getenv("PWD") , path);
+    char * full_path = util_alloc_PATH_executable( path );
     free(path);
     return full_path;
   }
@@ -2457,9 +2501,11 @@ static char * util_bt_alloc_current_executable(const char * bt_symbol) {
 */
 
 
+static pthread_mutex_t __abort_mutex = PTHREAD_MUTEX_INITIALIZER; /* Used purely to serialize the util_abort() routine. */
 void util_abort(const char * fmt , ...) {
   const bool include_backtrace = true;
   va_list ap;
+  pthread_mutex_lock( &__abort_mutex ); /* Abort before unlock() */
   va_start(ap , fmt);
   fprintf(stderr,"\n\n");
   vfprintf(stderr , fmt , ap);
@@ -2484,32 +2530,36 @@ void util_abort(const char * fmt , ...) {
     fprintf(stderr,"**  is quite complex, among other things it involves several calls to the **\n");
     fprintf(stderr,"**  external program addr2line. We have arrived here because the program  **\n");
     fprintf(stderr,"**  state is already quite broken, so the backtrace might be (seriously)  **\n");
-    fprintf(stderr,"**  broken as well. In particular it is not thread safe:                  **\n");
+    fprintf(stderr,"**  broken as well.                                                       **\n");
     fprintf(stderr,"**                                                                        **\n");
     fprintf(stderr,"****************************************************************************\n");
 
     size       = backtrace(array , max_bt);
-    strings    = backtrace_symbols(array , size);
+    strings    = backtrace_symbols(array , size);    
     executable = util_bt_alloc_current_executable(strings[0]);
+    if (executable != NULL) {
 
-    func_list      = util_malloc(size * sizeof * func_list      , __func__);
-    file_line_list = util_malloc(size * sizeof * file_line_list , __func__);
+      func_list      = util_malloc(size * sizeof * func_list      , __func__);
+      file_line_list = util_malloc(size * sizeof * file_line_list , __func__);
     
-    for (i=0; i < size; i++) {
-      util_addr2line_lookup(executable , strings[i] , &func_list[i] , &file_line_list[i]);
-      max_func_length = util_int_max(max_func_length , strlen(func_list[i]));
-    }
-
-    {
-      char fmt[64];
-      sprintf(fmt, " #%s02d %s-%ds(..) in %ss   \n" , "%" , "%" , max_func_length , "%");
-      fprintf(stderr , "--------------------------------------------------------------------------------\n");
-      for (i=0; i < size; i++) 
-	fprintf(stderr, fmt , i , func_list[i], file_line_list[i]);
-      fprintf(stderr , "--------------------------------------------------------------------------------\n");
-      util_free_stringlist(func_list      , size);
-      util_free_stringlist(file_line_list , size);
-    }
+      for (i=0; i < size; i++) {
+	util_addr2line_lookup(executable , strings[i] , &func_list[i] , &file_line_list[i]);
+	max_func_length = util_int_max(max_func_length , strlen(func_list[i]));
+      }
+      
+      {
+	char fmt[64];
+	sprintf(fmt, " #%s02d %s-%ds(..) in %ss   \n" , "%" , "%" , max_func_length , "%");
+	fprintf(stderr , "--------------------------------------------------------------------------------\n");
+	for (i=0; i < size; i++) 
+	  fprintf(stderr, fmt , i , func_list[i], file_line_list[i]);
+	fprintf(stderr , "--------------------------------------------------------------------------------\n");
+	util_free_stringlist(func_list      , size);
+	util_free_stringlist(file_line_list , size);
+      }
+    } else
+      fprintf(stderr,"Could not determine executable file for:%s - no backtrace. \n",strings[0]);
+    
     free(strings);
     free(executable);
   }

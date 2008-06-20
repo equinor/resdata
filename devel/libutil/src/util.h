@@ -31,6 +31,7 @@ void         util_fprintf_double(double , int , int , FILE *);
 bool         util_fscanf_date(FILE * , time_t *);
 bool         util_sscanf_date(const char * , time_t *);
 
+char       * util_alloc_PATH_executable(const char * );
 bool         util_is_executable(const char * );
 bool 	     util_file_exists(const char *);
 int          util_get_path_length(const char * );
