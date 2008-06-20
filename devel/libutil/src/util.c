@@ -2381,6 +2381,8 @@ void util_filter_file(const char * src_file , const char * comment , const char 
      the input is returned *WITHOUT* consulting the PATH variable (or
      checking that it exists).
 
+   * If the executable starts with "./" getenv("PWD") is prepended. 
+
    * If the executable is not found in the PATH list NULL is returned.
 */
    
@@ -2388,14 +2390,18 @@ void util_filter_file(const char * src_file , const char * comment , const char 
 char * util_alloc_PATH_executable(const char * executable) {
   if (util_is_abs_path(executable))
     return util_alloc_string_copy(executable);
+  else if (strncmp(executable , "./" , 2) == 0) 
+    /* The program has been invoked as ./xxxx */
+    return util_alloc_full_path(getenv("PWD") , &executable[2]);
   else {
     char *  full_path = NULL;
     char *  path_env  = getenv("PATH");
     if (path_env != NULL) {
       bool    cont = true;
+      char  * exe = executable; 
       char ** path_list;
       int     path_size , ipath;
-
+      
       ipath = 0;
       util_split_string(getenv("PATH") , ":" , &path_size , &path_list);
       while ( cont ) {
@@ -2533,11 +2539,11 @@ void util_abort(const char * fmt , ...) {
     fprintf(stderr,"**  broken as well.                                                       **\n");
     fprintf(stderr,"**                                                                        **\n");
     fprintf(stderr,"****************************************************************************\n");
-
     size       = backtrace(array , max_bt);
     strings    = backtrace_symbols(array , size);    
     executable = util_bt_alloc_current_executable(strings[0]);
     if (executable != NULL) {
+      fprintf(stderr,"Current executable : %s \n",executable);
 
       func_list      = util_malloc(size * sizeof * func_list      , __func__);
       file_line_list = util_malloc(size * sizeof * file_line_list , __func__);
