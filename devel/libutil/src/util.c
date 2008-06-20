@@ -2461,6 +2461,7 @@ void util_abort(const char * fmt , ...) {
   const bool include_backtrace = true;
   va_list ap;
   va_start(ap , fmt);
+  fprintf(stderr,"\n\n");
   vfprintf(stderr , fmt , ap);
   va_end(ap);
   if (include_backtrace) {
@@ -2690,7 +2691,12 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
     else 
       /* Using PATH to locate the executable */
       execvp( executable , (char **) __argv);
-    /* Exec has returned - an error .. */
+    
+    /* 
+       Exec should *NOT* return - if this code is executed
+       the exec??? function has indeed returned, and this is
+       an error.
+    */
     util_abort("%s: failed to execute external command: \'%s\': %s \n",__func__ , executable , strerror(errno));
     
   }  else {
