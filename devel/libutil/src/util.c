@@ -1894,7 +1894,6 @@ void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , 
     util_abort("%s/%s: only read %d/%d items from disk - aborting.\n %s \n",caller , __func__ , items_read , items , strerror(errno));
 }
 
-|
 
 #undef ABORT_READ
 #undef ABORT_WRITE
