@@ -2444,7 +2444,7 @@ char * util_alloc_PATH_executable(const char * executable) {
 */
 
 static void util_addr2line_lookup(const char * executable , const char * bt_symbol , char ** func_name , char ** file_line) {
-  const char *tmp_file = "/tmp/addr2line";
+  char *tmp_file = util_alloc_tmp_file("/tmp" , "addr2line" , true);
   char * adress;
   char * cmd;
   {
@@ -2460,8 +2460,21 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
     adress = util_alloc_substring_copy( &bt_symbol[start_pos + 1] , end_pos - start_pos - 1 );
   }
   
-  cmd = util_alloc_joined_string((const char *[6]) {"addr2line --functions --exe=" , executable , " " , adress , " > " , tmp_file} , 6 , "");
-  system(cmd);
+  /*
+    cmd = util_alloc_joined_string((const char *[6]) {"addr2line --functions --exe=" , executable , " " , adress , " > " , tmp_file} , 6 , "");
+    system(cmd);
+  */
+  {
+    char ** argv;
+
+    argv    = util_malloc(3 * sizeof * argv , __func__);
+    argv[0] = util_alloc_string_copy("--functions");
+    argv[1] = util_alloc_sprintf("--exe=%s" , executable);
+    argv[2] = util_alloc_string_copy(adress);
+    
+    util_vfork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , tmp_file , NULL);
+    util_free_stringlist(argv , 3);
+  }
   {
     bool at_eof;
     FILE * stream = util_fopen(tmp_file , "r");
@@ -2469,8 +2482,10 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
     *file_line = util_fscanf_alloc_line(stream , &at_eof);
     fclose(stream);
   }
+  util_unlink_existing(tmp_file);
   free(adress);
   free(cmd);
+  free(tmp_file);
 }
 
 
