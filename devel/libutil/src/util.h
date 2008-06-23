@@ -151,9 +151,11 @@ void     util_fread (void *, size_t , size_t , FILE * , const char * );
 void     util_fwrite(const void *, size_t , size_t , FILE * , const char * );
 int      util_fread_int(FILE * );
 void 	 util_fwrite_int   (int    , FILE * );
+void 	 util_fwrite_bool   (bool    , FILE * );
 void 	 util_fwrite_double(double , FILE * );
 void 	 util_fwrite_int_vector   (const int     * , int , FILE * , const char * );
 void 	 util_fwrite_double_vector(const double  * , int , FILE * , const char * );
+void     util_fread_char_vector(char * , int , FILE * , const char * );
 
 void 	 util_compress_buffer(const void * , int , void * , unsigned long * );
 void 	 util_fread_compressed(void * , FILE * );
@@ -163,7 +165,7 @@ void     util_block_growing_directory(const char * );
 pid_t    util_vfork_exec(const char *  , int , const char ** , bool , const char *  , const char * , const char *  , const char * );
 char   * util_alloc_realpath(const char * );
 
-#define UTIL_FWRITE_SCALAR(s,stream) fwrite(&s , sizeof s , 1 , stream)
+#define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_SCALAR(s,stream)  fread(&s , sizeof s , 1 , stream)
 
 #define UTIL_FWRITE_VECTOR(s,n,stream) fwrite(s , sizeof s , (n) , stream)

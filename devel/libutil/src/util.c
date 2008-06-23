@@ -1,12 +1,11 @@
 /**
-
   This file contains a large number of utility functions for memory
   handling, string handling and file handling. Observe that all these
   functions are just that - functions - there is no associated state
   with any of these functions.
 
   The file util_path.c is included in this, and contains path
-  manipulation functions which explicitly use the PATH_SEP
+  manipulation functions which explicitly use the PATH_SEP variable.
 */
 
 
@@ -1704,11 +1703,18 @@ void util_fskip_string(FILE *stream) {
   fseek(stream , len + 1 , SEEK_CUR);
 }
 
+void util_fwrite_bool  (bool value , FILE * stream)   { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_int   (int value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_double(double value , FILE * stream) { UTIL_FWRITE_SCALAR(value , stream); }
 
 void util_fwrite_int_vector   (const int * value    , int size , FILE * stream, const char * caller) { util_fwrite(value , sizeof * value, size , stream, caller); }
 void util_fwrite_double_vector(const double * value , int size , FILE * stream, const char * caller) { util_fwrite(value , sizeof * value, size , stream, caller); }
+void util_fwrite_char_vector  (const char * value   , int size , FILE * stream, const char * caller) { util_fwrite(value , sizeof * value, size , stream, caller); }
+
+void util_fread_char_vector(char * ptr , int size , FILE * stream , const char * caller) {
+  util_fread(ptr , sizeof * ptr , size , stream , caller);
+}
+
 
 
 int util_fread_int(FILE * stream) {
@@ -1887,6 +1893,8 @@ void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , 
   if (items_read != items) 
     util_abort("%s/%s: only read %d/%d items from disk - aborting.\n %s \n",caller , __func__ , items_read , items , strerror(errno));
 }
+
+|
 
 #undef ABORT_READ
 #undef ABORT_WRITE
@@ -2398,7 +2406,6 @@ char * util_alloc_PATH_executable(const char * executable) {
     char *  path_env  = getenv("PATH");
     if (path_env != NULL) {
       bool    cont = true;
-      char  * exe = executable; 
       char ** path_list;
       int     path_size , ipath;
       
