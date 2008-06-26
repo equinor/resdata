@@ -11,6 +11,21 @@
 #include <ecl_grid.h>
 
 
+void test_file(const char * filename) {
+  bool endian_swap;
+  FILE * stream = util_fopen(filename , "r");
+  if (fortio_is_fortran_stream(stream , &endian_swap)) 
+    printf("File:%s comes from fortran. Endian_swap:%d \n",filename , endian_swap);
+  else
+    printf("File:%s does not come from fortran. \n",filename);
+  fclose(stream);
+}
+
+
+
 int main(int argc, char ** argv) {
-  
+
+  test_file("fortio.o");
+  test_file("/d/felles/bg/scratch/Gurbat/RunPath/tmpdir_81/EXAMPLE_01_BASE_0081.GRID");
+
 }

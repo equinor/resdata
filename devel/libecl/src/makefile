@@ -11,7 +11,7 @@ CFLAGS  = -O2 -$(MFLAG)  -std=gnu99 -g -Wall -fPIC
 LDFLAGS = 
 ARFLAGS = -csr
 #################################################################
-SDP_ROOT      = /project/res/$(shell /private/joaho/bin/res_target.py)
+__SDP_ROOT  	   = $(SDP_ROOT)/$(shell res_target.py)
 LIB_OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_rft_vector.o ecl_rft_node.o ecl_grid.o ecl_box.o restart_kw_list.o 
 MOD_FILES = 
 INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h lsf_jobs.h ecl_parse.h ecl_rft_vector.h ecl_rft_node.h ecl_box.h ecl_grid.h restart_kw_list.h 
@@ -29,9 +29,9 @@ LOCAL: LIB BIN
 
 
 SDP_INSTALL: LIB BIN
-	install $(LIB) $(SDP_ROOT)/lib/$(LIB_ROOT).a
-	install $(BIN_FILES_SDP_INSTALL) $(SDP_ROOT)/bin
-	install $(INC_FILES) $(SDP_ROOT)/include
+	install $(LIB) $(__SDP_ROOT)/lib/$(LIB_ROOT).a
+	install $(BIN_FILES_SDP_INSTALL) $(__SDP_ROOT)/bin
+	install $(INC_FILES) $(__SDP_ROOT)/include
 
 clean:
 	rm -f *.o *~ 
@@ -81,7 +81,7 @@ view_summary.o : view_summary.c
 
 
 BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x
-BIN	:  $(SDP_INSTALL)
+BIN	:  $(BIN_FILES)
 BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x
 
 ecl_test.x: $(LIB) ecl_test.o

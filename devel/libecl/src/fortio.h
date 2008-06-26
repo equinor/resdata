@@ -7,6 +7,8 @@
 
 typedef struct fortio_struct fortio_type;
 
+
+bool          fortio_is_fortran_stream(FILE * , bool * );
 void          fortio_copy_record(fortio_type * , fortio_type * , int , void * , bool *);
 fortio_type * fortio_alloc_FILE_wrapper(const char * , bool , FILE * );
 fortio_type * fortio_open(const char *, const char * , bool);

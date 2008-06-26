@@ -66,7 +66,7 @@ static fortio_type * fortio_alloc__(const char *filename , bool endian_flip_head
 static bool __read_int(FILE * stream , int * value, bool endian_flip) {
   if (fread(value , sizeof * value , 1 , stream) == 1) {
     if (endian_flip)
-      util_endian_flip_vector(&value , sizeof value , 1);
+      util_endian_flip_vector(value , sizeof * value , 1);
     return true;
   } else
     return false;
@@ -95,12 +95,24 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
 	       OK - now we have read a header and a tail - it might be 
 	       a fortran file.
 	    */
-	    
-	    if (header == tail && header != 0) {
-	      /* This is a fortran file */
-	      /* We are happy with one positive ... */
-	      is_fortran_stream = true;
+	    printf("Comparing: %d %d \n",header , tail);
+	    if (header == tail) {
+	      if (header != 0) {
+		/* This is a fortran file */
+		is_fortran_stream = true;
+		/* 
+		   With cont = true we will require that *ALL* records
+		   in the file are fortran formatted. With cont = false, 
+		   we will jump out with positive result if the first 
+		   record (with header != 0) is fortran formatted.
+		*/
+		cont = true;  
+	      }
+	      /* Header == tail == 0 - we don't make any inference on this. */
+	    } else {
+	      /* Header != tail => this is *not* a fortran file */
 	      cont = false;
+	      is_fortran_stream = false;
 	    }
 	  }
 	}
