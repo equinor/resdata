@@ -252,10 +252,18 @@ void fortio_complete_read(fortio_type *fortio) {
   fortio->active_header = 0;
 }
 
-void fortio_read_record(fortio_type *fortio, char *buffer) {
+/**
+   This function reads one record from the fortio stream, and fills
+   the buffer with the content. The return value is the number of bytes read.
+*/
+
+int fortio_read_record(fortio_type *fortio, char *buffer) {
+  int record_size;
   fortio_init_read(fortio);
+  record_size = fortio->active_header;
   fread(buffer , 1 , fortio->active_header , fortio->stream);
   fortio_complete_read(fortio);
+  return record_size;
 }
 
 
