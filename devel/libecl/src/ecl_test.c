@@ -13,12 +13,10 @@
 
 void test_file(const char * filename) {
   bool endian_swap;
-  FILE * stream = util_fopen(filename , "r");
-  if (fortio_is_fortran_stream(stream , &endian_swap)) 
+  if (fortio_is_fortran_file(filename , &endian_swap)) 
     printf("File:%s comes from fortran. Endian_swap:%d \n",filename , endian_swap);
   else
     printf("File:%s does not come from fortran. \n",filename);
-  fclose(stream);
 }
 
 

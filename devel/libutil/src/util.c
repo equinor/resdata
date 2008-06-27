@@ -2446,7 +2446,6 @@ char * util_alloc_PATH_executable(const char * executable) {
 static void util_addr2line_lookup(const char * executable , const char * bt_symbol , char ** func_name , char ** file_line) {
   char *tmp_file = util_alloc_tmp_file("/tmp" , "addr2line" , true);
   char * adress;
-  char * cmd;
   {
     int start_pos = 0;
     int end_pos;   
@@ -2459,11 +2458,6 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
     
     adress = util_alloc_substring_copy( &bt_symbol[start_pos + 1] , end_pos - start_pos - 1 );
   }
-  
-  /*
-    cmd = util_alloc_joined_string((const char *[6]) {"addr2line --functions --exe=" , executable , " " , adress , " > " , tmp_file} , 6 , "");
-    system(cmd);
-  */
   {
     char ** argv;
 
@@ -2472,7 +2466,7 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
     argv[1] = util_alloc_sprintf("--exe=%s" , executable);
     argv[2] = util_alloc_string_copy(adress);
     
-    util_vfork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , tmp_file , NULL);
+    util_vfork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , NULL , tmp_file , NULL);
     util_free_stringlist(argv , 3);
   }
   {
@@ -2484,7 +2478,6 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
   }
   util_unlink_existing(tmp_file);
   free(adress);
-  free(cmd);
   free(tmp_file);
 }
 
@@ -2677,7 +2670,7 @@ void util_block_growing_directory(const char * directory) {
 
 /** 
     A small function used to redirect a file descriptior,
-    only used as a helper utility for util_fork_exec().
+    only used as a helper utility for util_vfork_exec().
 */
     
 static void __util_redirect(int src_fd , const char * target_file , int open_flags) {
@@ -2692,8 +2685,9 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
 /**
    This function does the following:
    1. Fork current process.
-   2. The child execs() to run executable.
-   3. Parent can wait (blocking = true) on the child to complete executable.
+   2. if (run_path != NULL) chdir(run_path)
+   3. The child execs() to run executable.
+   4. Parent can wait (blocking = true) on the child to complete executable.
 
    If the executable is an absolute path it will run the command with
    execv(), otherwise it will use execvp() which will (try) to look up
@@ -2720,7 +2714,7 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
    Example:
    --------
    util_fork_exec("/local/gnu/bin/ls" , 1 , (const char *[1]) {"-l"} ,
-   true , NULL , NULL , "listing" , NULL);
+   true , NULL , NULL , NULL , "listing" , NULL);
 
    
    This program will run the command 'ls', with the argument '-l'. The
@@ -2729,13 +2723,11 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
    the file "listing". If the 'ls' should want to print something on
    stderr, it will go there, as stderr is not redirected.
 
-   
-
-
 */
 
 pid_t util_vfork_exec(const char * executable , int argc , const char ** argv , 
-		     bool blocking , const char * target_file , const char * stdin_file , const char * stdout_file , const char * stderr_file) {
+		      bool blocking , const char * target_file , const char  * run_path , 
+		      const char * stdin_file , const char * stdout_file , const char * stderr_file) {
   const char  ** __argv = NULL;
   pid_t child_pid;
   
@@ -2752,10 +2744,14 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
     /* This is the child */
     int iarg;
     
-    
+    if (run_path != NULL) {
+      if (chdir(run_path) != 0) 
+	util_abort("%s: failed to change to directory:%s  %s \n",__func__ , run_path , strerror(errno));
+    }
+
     if (stdin_file  != NULL) __util_redirect(0 , stdin_file  , O_RDONLY);
-    if (stderr_file != NULL) __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
     if (stdout_file != NULL) __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
+    if (stderr_file != NULL) __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
     
     __argv        = util_malloc((argc + 2) * sizeof * __argv , __func__);  
     __argv[0]     = executable;

@@ -73,14 +73,15 @@ static bool __read_int(FILE * stream , int * value, bool endian_flip) {
 }
 
 /**
-   Helper function for fortio_is_fortran_stream(). Checks whether a
+   Helper function for fortio_is_fortran_file(). Checks whether a
    particular stream is formatted according to fortran io, for a fixed
    endian ness.
 */
 
 static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
-  long init_pos          = ftell(stream);
-  bool is_fortran_stream = false;
+  const bool strict_checking = true;          /* True: requires that *ALL* records in the file are fortran formatted */
+  long init_pos              = ftell(stream);
+  bool is_fortran_stream     = false;
   int header , tail;
   bool cont;
 
@@ -92,21 +93,17 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
 	  if (__read_int(stream , &tail , endian_flip)) {
 	    cont = true;
 	    /* 
-	       OK - now we have read a header and a tail - it might be 
+	       OK - now we have read a header and a tail - it might be
 	       a fortran file.
 	    */
-	    printf("Comparing: %d %d \n",header , tail);
 	    if (header == tail) {
 	      if (header != 0) {
-		/* This is a fortran file */
+		/* This is (most probably) a fortran file */
 		is_fortran_stream = true;
-		/* 
-		   With cont = true we will require that *ALL* records
-		   in the file are fortran formatted. With cont = false, 
-		   we will jump out with positive result if the first 
-		   record (with header != 0) is fortran formatted.
-		*/
-		cont = true;  
+		if (strict_checking)
+		  cont = true;  
+		else
+		  cont = false;
 	      }
 	      /* Header == tail == 0 - we don't make any inference on this. */
 	    } else {
@@ -126,9 +123,9 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
 
 /**
    This function tries (using some heuristic) to guess whether a
-   particular opened stream is a Fortran file. To complicate the
-   matters further we make no assumptions regarding endian ness, if it
-   is indeed determined that this is fortran file, the endian ness is
+   particular file is a Fortran file. To complicate the matters
+   further we make no assumptions regarding endian ness, if it is
+   indeed determined that this is fortran file, the endian ness is
    returned by reference.
 
    The heuristic algorithm which is used is as follows:
@@ -142,14 +139,15 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
     1. If header == tail. This is (probably) a fortran file, however
        if header == 0, we might have a normal file with two
        consequitive zeroes. In that case it is difficult to determine,
-       and we recursively call again.
+       and we continue.
 
     2. If header != tail we try to reinterpret header with an endian
        swap and read a new tail. If they are now equal we repeat test1, or
        return false (i.e. *not* a fortran file).
 */
 
-bool fortio_is_fortran_stream(FILE * stream , bool * _endian_flip) {
+bool fortio_is_fortran_file(const char * filename, bool * _endian_flip) {
+  FILE * stream = util_fopen(filename , "r");
   bool endian_flip = false;          
   bool is_fortran_stream = fortio_is_fortran_stream__(stream , endian_flip);
   if (!is_fortran_stream) {
@@ -158,6 +156,7 @@ bool fortio_is_fortran_stream(FILE * stream , bool * _endian_flip) {
   }
 
   *_endian_flip = endian_flip;
+  fclose(stream);
   return is_fortran_stream;
 }
 
