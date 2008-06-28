@@ -267,6 +267,27 @@ int fortio_read_record(fortio_type *fortio, char *buffer) {
 }
 
 
+/**
+   This function fills the buffer with 'buffer_size' bytes from the
+   fortio stream. The function works by repeated calls to
+   fortio_read_record(), until the desired number of bytes of been
+   read. The point of this is to handle the ECLIPSE system with blocks
+   of e.g. 1000 floats (which then become one fortran record), in a
+   transparent, low-level way.
+*/
+
+void fortio_fread_buffer(fortio_type * fortio, char * buffer , int buffer_size) {
+  int bytes_read = 0;
+  while (bytes_read < buffer_size) {
+    char * buffer_ptr = &buffer[bytes_read];
+    bytes_read += fortio_read_record(fortio , buffer_ptr);
+  }
+  if (bytes_read > buffer_size) 
+    util_abort("%s: hmmmm - something is broken. The individual records in %s did not sum up to the expected buffer size \n",__func__ , fortio->filename);
+
+}
+
+
 void fortio_skip_record(fortio_type *fortio) {
   int record_size = fortio_init_read(fortio);
   fseek(fortio->stream , record_size , SEEK_CUR);

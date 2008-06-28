@@ -526,6 +526,7 @@ static bool ecl_kw_fscanf_qstring(char *s , const char *fmt , int len, FILE *str
   return OK;
 }
 
+
 /*
   true  => -1             -1 : 1  11111111  11111111  11111111  1111111
   false =>  0              0 : 0  00000000  00000000  00000000  0000000
@@ -626,10 +627,13 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 	}
       }
     } else {
-      const int blocks = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
-      int ib;
-      for (ib = 0; ib < blocks; ib++) {
-	if (ecl_kw->ecl_type == ecl_char_type || ecl_kw->ecl_type == ecl_mess_type) {
+      
+      
+
+      if (ecl_kw->ecl_type == ecl_char_type || ecl_kw->ecl_type == ecl_mess_type) {
+	const int blocks = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
+	int ib;
+	for (ib = 0; ib < blocks; ib++) {
 	  /* 
 	     Due to the necessaary terminating \0 characters there is
 	     not a continous file/memory mapping.
@@ -643,10 +647,14 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 	    ecl_kw->data[(ib * ecl_kw->blocksize + ir) * ecl_kw->sizeof_ctype + ecl_str_len] = null_char;
 	  }
 	  fortio_complete_read(fortio);
-	} else
-	  fortio_read_record(fortio , &ecl_kw->data[ib * ecl_kw->blocksize * ecl_kw->sizeof_ctype]);
-      }
-
+	} 
+      } else
+	/**
+	   This function handles the fuc***g blocks transparently at a
+	   low level.
+	*/
+	fortio_fread_buffer(fortio , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
+      
       if (ecl_kw->endian_convert)
 	 ecl_kw_endian_convert_data(ecl_kw);
     }

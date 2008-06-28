@@ -81,7 +81,7 @@ view_summary.o : view_summary.c
 
 
 BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x
-BIN	:  $(BIN_FILES)
+BIN	:  $(BIN_FILES) 
 BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x
 
 ecl_test.x: $(LIB) ecl_test.o

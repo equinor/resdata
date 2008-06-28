@@ -20,6 +20,7 @@ void          fortio_init_write(fortio_type * , int);
 void          fortio_complete_write(fortio_type *);
 void          fortio_skip_record(fortio_type *);
 int           fortio_read_record(fortio_type * , char *buffer);
+void          fortio_fread_buffer(fortio_type * , char * , int );
 void          fortio_write_record(fortio_type * , const char *, int);
 FILE        * fortio_get_FILE(const fortio_type *);
 int           fortio_get_record_size(const fortio_type *);
