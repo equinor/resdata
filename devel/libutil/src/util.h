@@ -150,6 +150,7 @@ void     util_read_string(const char *  , int  , char * );
 void     util_fread (void *, size_t , size_t , FILE * , const char * );
 void     util_fwrite(const void *, size_t , size_t , FILE * , const char * );
 int      util_fread_int(FILE * );
+bool     util_fread_bool(FILE * );
 void 	 util_fwrite_int   (int    , FILE * );
 void 	 util_fwrite_bool   (bool    , FILE * );
 void 	 util_fwrite_double(double , FILE * );

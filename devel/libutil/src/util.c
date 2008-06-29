@@ -1724,6 +1724,13 @@ int util_fread_int(FILE * stream) {
 }
 
 
+bool util_fread_bool(FILE * stream) {
+  bool file_value;
+  UTIL_FREAD_SCALAR(file_value , stream);
+  return file_value;
+}
+
+
 /*****************************************************************/
 
 
