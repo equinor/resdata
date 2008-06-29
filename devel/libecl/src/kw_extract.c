@@ -29,8 +29,8 @@ int main(int argc, char ** argv) {
     bool fmt_src , fmt_target;
     
     fmt_src           = ecl_fstate_fmt_file(src_file);
-    fortio_src        = fortio_open(src_file    , "r" , endian_convert);
-    fortio_target     = fortio_open(target_file , "w" , endian_convert);
+    fortio_src        = fortio_fopen(src_file    , "r" , endian_convert);
+    fortio_target     = fortio_fopen(target_file , "w" , endian_convert);
     fmt_target    = fmt_src; /* Can in principle be different */
     {
       ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(fmt_src , endian_convert);
@@ -45,7 +45,7 @@ int main(int argc, char ** argv) {
       }
       ecl_kw_free(ecl_kw);
     }
-    fortio_close(fortio_src);
-    fortio_close(fortio_target);
+    fortio_fclose(fortio_src);
+    fortio_fclose(fortio_target);
   }
 }

@@ -13,14 +13,14 @@ void kw_list(const char *filename) {
 
   printf("-----------------------------------------------------------------\n");
   printf("%s: \n",filename); 
-  fortio = fortio_open(filename , "r" , true);
+  fortio = fortio_fopen(filename , "r" , true);
   ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(fmt_file , true);
   while(  ecl_kw_fread_realloc(ecl_kw , fortio) ) 
     ecl_kw_summarize(ecl_kw);
   printf("-----------------------------------------------------------------\n");
 
   ecl_kw_free(ecl_kw);
-  fortio_close(fortio);
+  fortio_fclose(fortio);
 }
 
 

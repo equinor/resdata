@@ -29,9 +29,9 @@ other programming languages care must be taken. This file implements
 functionality to read and write these fortran generated files
 transparently. The three functions: 
 
-  1. fortio_open()
-  2. fortio_read_record()
-  3. fortio_write_record()
+  1. fortio_fopen()
+  2. fortio_fread_record()
+  3. fortio_fwrite_record()
 
 together constitute something very similar to fopen() , fread() and
 fwrite() from the standard library.
@@ -126,7 +126,8 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
    particular file is a Fortran file. To complicate the matters
    further we make no assumptions regarding endian ness, if it is
    indeed determined that this is fortran file, the endian ness is
-   returned by reference.
+   returned by reference (if it is not recognized as a fortran file, 
+   the returned endian ness will be garbage).
 
    The heuristic algorithm which is used is as follows:
    
@@ -170,7 +171,7 @@ fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_
 }
 
 
-fortio_type *fortio_open(const char *filename , const char *mode, bool endian_flip_header) {
+fortio_type *fortio_fopen(const char *filename , const char *mode, bool endian_flip_header) {
   fortio_type *fortio = fortio_alloc__(filename , endian_flip_header);
   
   fortio->stream = util_fopen(fortio->filename , mode);
@@ -189,7 +190,7 @@ void fortio_free_FILE_wrapper(fortio_type * fortio) {
 }
 
 
-void fortio_close(fortio_type *fortio) {
+void fortio_fclose(fortio_type *fortio) {
   fclose(fortio->stream);
   fortio_free__(fortio);
 }
@@ -257,7 +258,7 @@ void fortio_complete_read(fortio_type *fortio) {
    the buffer with the content. The return value is the number of bytes read.
 */
 
-int fortio_read_record(fortio_type *fortio, char *buffer) {
+int fortio_fread_record(fortio_type *fortio, char *buffer) {
   int record_size;
   fortio_init_read(fortio);
   record_size = fortio->active_header;
@@ -280,7 +281,7 @@ void fortio_fread_buffer(fortio_type * fortio, char * buffer , int buffer_size) 
   int bytes_read = 0;
   while (bytes_read < buffer_size) {
     char * buffer_ptr = &buffer[bytes_read];
-    bytes_read += fortio_read_record(fortio , buffer_ptr);
+    bytes_read += fortio_fread_record(fortio , buffer_ptr);
   }
   if (bytes_read > buffer_size) 
     util_abort("%s: hmmmm - something is broken. The individual records in %s did not sum up to the expected buffer size \n",__func__ , fortio->filename);
@@ -288,7 +289,7 @@ void fortio_fread_buffer(fortio_type * fortio, char * buffer , int buffer_size) 
 }
 
 
-void fortio_skip_record(fortio_type *fortio) {
+void fortio_fskip_record(fortio_type *fortio) {
   int record_size = fortio_init_read(fortio);
   fseek(fortio->stream , record_size , SEEK_CUR);
   fortio_complete_read(fortio);
@@ -354,7 +355,7 @@ void fortio_complete_write(fortio_type *fortio) {
 }
 
 
-void fortio_write_record(fortio_type *fortio, const char *buffer , int record_size) {
+void fortio_fwrite_record(fortio_type *fortio, const char *buffer , int record_size) {
   fortio_init_write(fortio , record_size);
   fwrite(buffer , 1 , record_size , fortio->stream);
   fortio_complete_write(fortio);

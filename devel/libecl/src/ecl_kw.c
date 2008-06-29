@@ -627,9 +627,6 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 	}
       }
     } else {
-      
-      
-
       if (ecl_kw->ecl_type == ecl_char_type || ecl_kw->ecl_type == ecl_mess_type) {
 	const int blocks = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
 	int ib;
@@ -874,7 +871,7 @@ void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
       const int blocks = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
       int ib;
       for (ib = 0; ib < blocks; ib++) 
-	fortio_skip_record(fortio);
+	fortio_fskip_record(fortio);
     }
   }
 } 
@@ -1062,7 +1059,7 @@ static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw, fortio_type *fortio) 
 	  fwrite(&ecl_kw->data[(ib * ecl_kw->blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ecl_str_len , stream);
 	fortio_complete_write(fortio);
       } else
-	fortio_write_record(fortio , &ecl_kw->data[ib * ecl_kw->blocksize * ecl_kw->sizeof_ctype] , sizeof_ctype * elements);
+	fortio_fwrite_record(fortio , &ecl_kw->data[ib * ecl_kw->blocksize * ecl_kw->sizeof_ctype] , sizeof_ctype * elements);
     }
   }
 
@@ -1211,9 +1208,9 @@ void ecl_kw_fwrite_param_fortio(fortio_type * fortio, bool fmt_file , bool endia
 
 
 void ecl_kw_fwrite_param(const char * filename , bool fmt_file , bool endian_convert , const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
-  fortio_type   * fortio = fortio_open(filename , "w" , endian_convert);
+  fortio_type   * fortio = fortio_fopen(filename , "w" , endian_convert);
   ecl_kw_fwrite_param_fortio(fortio , fmt_file , endian_convert , header , ecl_type , size , data);
-  fortio_close(fortio);
+  fortio_fclose(fortio);
 }
 
 
@@ -1237,9 +1234,9 @@ void ecl_kw_get_data_as_double(const ecl_kw_type * ecl_kw , double * double_data
 
 
 void ecl_kw_fread_double_param(const char * filename , bool fmt_file , bool endian_convert, double * double_data) {
-  fortio_type   * fortio      = fortio_open(filename , "r" , endian_convert);
+  fortio_type   * fortio      = fortio_fopen(filename , "r" , endian_convert);
   ecl_kw_type   * ecl_kw      = ecl_kw_fread_alloc(fortio , fmt_file);
-  fortio_close(fortio);
+  fortio_fclose(fortio);
   
   if (ecl_kw == NULL) {
     fprintf(stderr,"%s: fatal error: loading parameter from: %s failed - aborting \n",__func__ , filename);

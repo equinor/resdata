@@ -288,7 +288,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
 
 
 static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) {
-  fortio_type   * fortio = fortio_open(grid_file , "r" , endian_flip);
+  fortio_type   * fortio = fortio_fopen(grid_file , "r" , endian_flip);
   ecl_grid_type * ecl_grid;
   ecl_file_type   file_type;
   bool            fmt_file;
@@ -325,7 +325,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
     ecl_kw_free(actnum_kw);
     
   }
-  fortio_close(fortio);
+  fortio_fclose(fortio);
   return ecl_grid;
 }
 
@@ -369,7 +369,7 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
 
 
 static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_flip) {
-  fortio_type   * fortio = fortio_open(grid_file , "r" , endian_flip);
+  fortio_type   * fortio = fortio_fopen(grid_file , "r" , endian_flip);
   ecl_file_type   file_type;
   bool            fmt_file;
   int             nx,ny,nz;
@@ -402,7 +402,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_
     ecl_kw_free(coords_kw);
     ecl_kw_free(corners_kw);
   }
-  fortio_close(fortio);
+  fortio_fclose(fortio);
   ecl_grid_set_center(grid);
   ecl_grid_set_active_index(grid);
   return grid;

@@ -162,7 +162,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
   
 
   if (ecl_fstate->unified) {
-    fortio_type *fortio = fortio_open(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert);
+    fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert);
     int  summary_report_nr = 0;
     bool at_eof = false;
     while (!at_eof) {
@@ -191,14 +191,14 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
       ecl_fstate_add_block(ecl_fstate , ecl_block);
       summary_report_nr++;
     }
-    fortio_close(fortio);
+    fortio_fclose(fortio);
   } else {    
     ecl_fstate->files = files;
     {
       int file;
       for (file=0; file < files; file++) {
 	bool at_eof = false;
-	fortio_type *fortio = fortio_open(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
+	fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
 	int report_nr = -1;
 	
 	if (file_type == ecl_restart_file || file_type == ecl_summary_file)
@@ -254,7 +254,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	    }
 	  }
 	}
-	fortio_close(fortio);
+	fortio_fclose(fortio);
       }
     }
   }
@@ -368,18 +368,18 @@ void ecl_fstate_free(ecl_fstate_type *ecl_fstate) {
 static void ecl_fstate_save_multiple(const ecl_fstate_type *ecl_fstate) {
   int block;
   for (block = 0; block < ecl_fstate->N_blocks; block++) {
-    fortio_type *fortio = fortio_open(ecl_fstate->filelist[block] , "w" , ecl_fstate->endian_convert);
+    fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[block] , "w" , ecl_fstate->endian_convert);
     ecl_block_fwrite(ecl_fstate->block_list[block] , fortio);
-    fortio_close(fortio);
+    fortio_fclose(fortio);
   }
 }
 
 static void ecl_fstate_save_unified(const ecl_fstate_type *ecl_fstate) {
   int block;
-  fortio_type *fortio = fortio_open(ecl_fstate->filelist[0] , "w" , ecl_fstate->endian_convert);
+  fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[0] , "w" , ecl_fstate->endian_convert);
   for (block = 0; block < ecl_fstate->N_blocks; block++) 
     ecl_block_fwrite(ecl_fstate->block_list[block] , fortio);
-  fortio_close(fortio);
+  fortio_fclose(fortio);
 }
 
 void ecl_fstate_save(const ecl_fstate_type *ecl_fstate) {
@@ -427,8 +427,8 @@ void ecl_fstate_filter_file(const char * src_file , const char * target_file , c
     abort();
   }
   {
-    fortio_type * src    = fortio_open(src_file , "r" , endian_flip );
-    fortio_type * target = fortio_open(target_file , "w" , endian_flip);
+    fortio_type * src    = fortio_fopen(src_file , "r" , endian_flip );
+    fortio_type * target = fortio_fopen(target_file , "w" , endian_flip);
     bool fmt_file        = ecl_fstate_fmt_file(src_file);
     ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_flip);
     bool OK;
@@ -447,8 +447,8 @@ void ecl_fstate_filter_file(const char * src_file , const char * target_file , c
       }
     } while (OK);
     ecl_kw_free(ecl_kw);
-    fortio_close(src);
-    fortio_close(target);
+    fortio_fclose(src);
+    fortio_fclose(target);
   }
 }
 

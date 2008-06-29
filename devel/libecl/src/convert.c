@@ -24,8 +24,8 @@ void file_convert(const char * src_file , const char * target_file, ecl_file_typ
       formatted_src = false;
   }
   
-  target = fortio_open(target_file , "w" , true);
-  src    = fortio_open(src_file , "r" , true);
+  target = fortio_fopen(target_file , "w" , true);
+  src    = fortio_fopen(src_file , "r" , true);
   ecl_kw = ecl_kw_fread_alloc(src , formatted_src);
   if (ecl_kw == NULL) {
     fprintf(stderr,"Loading: %s failed - maybe you forgot the header? \n", src_file);
@@ -40,8 +40,8 @@ void file_convert(const char * src_file , const char * target_file, ecl_file_typ
     ecl_kw = ecl_kw_fread_alloc(src , formatted_src);
   }
   if (ecl_kw != NULL) ecl_kw_free(ecl_kw);
-  fortio_close(src);
-  fortio_close(target);
+  fortio_fclose(src);
+  fortio_fclose(target);
 }
 
 

@@ -260,7 +260,7 @@ void static ecl_parse_res_write_eclipse1(hash_type *var_hash , const char *inclu
 
 static void ecl_parse_file(hash_type *hash , const char *filename, const hash_type *type_map , bool endian_flip , int verbosity) {
   bool fmt_file       = ecl_fstate_fmt_file(filename);
-  fortio_type *fortio = fortio_open(filename , "r" , endian_flip);
+  fortio_type *fortio = fortio_fopen(filename , "r" , endian_flip);
   ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_flip);
 
   if (verbosity == VERB_DOT)
