@@ -16,6 +16,7 @@ const char *  config_get(const config_type *  , const char *);
 const char *  config_iget(const config_type *  , const char *, int);
 void          config_free(config_type *);
 config_type * config_alloc( bool );
+char       ** config_alloc_active_list(const config_type * , int * );
 void          config_parse(config_type * , const char * , const char * );
 bool          config_has_item(const config_type * config , const char * kw);
 void          config_set_arg(config_type * config , const char * , int , const char **);

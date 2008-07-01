@@ -351,8 +351,9 @@ void config_parse(config_type * config , const char * filename, const char * com
 	    config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1]);
 	  } else 
 	    fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n",kw,filename);
-	  
 	}
+	util_free_stringlist(token_list , tokens);
+	free(line);
       }
       util_free_stringlist(token_list,tokens);
       free(line);
