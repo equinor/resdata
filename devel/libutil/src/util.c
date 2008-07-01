@@ -2767,12 +2767,11 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
       __argv[iarg+1] = argv[iarg];
     __argv[argc + 1] = NULL;
 
-    if (util_is_abs_path( executable))
-      execv( executable , (char **) __argv);
-    else 
-      /* Using PATH to locate the executable */
-      execvp( executable , (char **) __argv);
-    
+    /* 
+       If executable is an absolute path, it is invoked directly, 
+       otherwise PATH is used to locate the executable.
+    */
+    execvp( executable , (char **) __argv);
     /* 
        Exec should *NOT* return - if this code is executed
        the exec??? function has indeed returned, and this is
