@@ -329,17 +329,17 @@ void config_parse(config_type * config , const char * filename, const char * com
       if (line != NULL) {
         util_split_string(line , " " , &tokens , &token_list);
 	
-      active_tokens = tokens;
-      for (i = 0; i < tokens; i++) {
-        char * comment_ptr = strstr(token_list[i] , comment_string);
-        if (comment_ptr != NULL) {
-          if (comment_ptr == token_list[i])
-            active_tokens = i;
-          else
-            active_tokens = i + 1;
-          break;
-        }
-	    }
+	active_tokens = tokens;
+	for (i = 0; i < tokens; i++) {
+	  char * comment_ptr = strstr(token_list[i] , comment_string);
+	  if (comment_ptr != NULL) {
+	    if (comment_ptr == token_list[i])
+	      active_tokens = i;
+	    else
+	      active_tokens = i + 1;
+	    break;
+	  }
+	}
 	if (active_tokens > 0) {
 	  const char * kw = token_list[0];
 	  if (!config_has_item(config , kw) && config->auto_add) {
@@ -355,8 +355,6 @@ void config_parse(config_type * config , const char * filename, const char * com
 	util_free_stringlist(token_list , tokens);
 	free(line);
       }
-      util_free_stringlist(token_list,tokens);
-      free(line);
     }
     config_validate(config , filename);
     fclose(stream);
