@@ -2750,6 +2750,7 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
   if (child_pid == 0) {
     /* This is the child */
     int iarg;
+    nice(19);    /* Remote process is run with nice(19). */
     
     if (run_path != NULL) {
       if (chdir(run_path) != 0) 
