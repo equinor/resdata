@@ -1912,6 +1912,10 @@ void * util_realloc(void * old_ptr , size_t new_size , const char * caller) {
   void * tmp = realloc(old_ptr , new_size);
   if ((tmp == NULL) && (new_size > 0)) 
     util_abort("%s: failed to realloc %d bytes - aborting \n",caller , new_size);
+
+  /* The realloc documentation as ambigous regarding realloc() with size 0. */
+  if (new_size == 0)  
+    tmp = NULL;
   
   return tmp;
 }
@@ -1928,15 +1932,21 @@ void * util_realloc(void * old_ptr , size_t new_size , const char * caller) {
 
 
 void * util_malloc(size_t size , const char * caller) {
-  void *data = malloc(size);
-  if (data == NULL) 
-    util_abort("%s: failed to allocate %d bytes - aborting \n",caller , size);
+  void * data;
+  if (size == 0) 
+    /* Not entirely clear from documentation what you get when you call malloc( 0 ); */
+    data = NULL;
+  else {
+    data = malloc(size);
+    if (data == NULL) 
+      util_abort("%s: failed to allocate %d bytes - aborting \n",caller , size);
 
-  /* 
-     Initializing with something different from zero - hopefully
-     errors will pop up more easily this way?
-  */
-  memset(data , 255 , size);
+    /* 
+       Initializing with something different from zero - hopefully
+       errors will pop up more easily this way?
+    */
+    memset(data , 255 , size);
+  }
   return data;
 }
 
