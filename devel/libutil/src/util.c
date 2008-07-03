@@ -1161,7 +1161,7 @@ time_t util_make_time2(int sec, int min, int hour , int mday , int month , int y
   ts.tm_mday   = mday;
   ts.tm_mon    = month - 1;
   ts.tm_year   = year  - 1900;
-  ts.isdst     = -1;    /* Negative value means mktime tries to determine automagically whether Daylight Saving Time is in effect. */
+  ts.tm_isdst  = -1;    /* Negative value means mktime tries to determine automagically whether Daylight Saving Time is in effect. */
   {
     time_t t = mktime( &ts );
     if (t == -1) 
