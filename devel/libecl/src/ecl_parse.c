@@ -117,7 +117,7 @@ void static ecl_parse_write_read_eclipse(const hash_type *var_hash , const hash_
 					 const char *type_arg, const char *size_arg , const char *arg_index) {
   char *read_file = alloc_3string(path , prefix , "readeclipse");
   FILE *fileH     = fopen_printf(read_file );
-  char **keylist  = hash_alloc_keylist(var_hash);
+  char **keylist  = hash_alloc_keylist( (hash_type *) var_hash);
   int i;
   for (i=0; i < hash_get_size(var_hash); i++) {
     const char * key          = keylist[i];
@@ -151,7 +151,7 @@ void static ecl_parse_write_decl(const hash_type *var_hash , const hash_type *ty
   FILE * allocH   = fopen_printf(alloc_file);
   FILE * deallocH = fopen_printf(dealloc_file);
   
-  char **keylist = hash_alloc_keylist(var_hash);
+  char **keylist = hash_alloc_keylist( (hash_type *) var_hash);
   int i;
   
   for (i=0; i < hash_get_size(var_hash); i++) {

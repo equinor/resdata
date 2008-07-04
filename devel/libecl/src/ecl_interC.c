@@ -100,7 +100,6 @@ void ecl_inter_kw_exists__(const char *_kw , const int *kw_len , const int *iste
 void ecl_inter_load_summary__(const char *__header_file , const int *header_len , const char *__data_file , const int *data_len , const int *report_mode_int) {
   char * header_file = util_alloc_cstring(__header_file , header_len);
   char * data_file   = util_alloc_cstring(__data_file   , data_len);
-  bool   report_mode = util_intptr_2bool(report_mode_int);
   ECL_SUM = ecl_sum_fread_alloc(header_file , 1 , (const char **) &data_file , false , ENDIAN_CONVERT);
   free(header_file);
   free(data_file);
@@ -372,9 +371,11 @@ void ecl_inter_diag_ens_interactive__(const char *_eclbase_dir  , const int *dir
 				      const char *_history_file , const int *history_len , 
 				      int *fmt_file_int , int *unified_int) {
 
-  char *eclbase_dir  = util_alloc_cstring(_eclbase_dir  , dir_len);
-  char *eclbase_name = util_alloc_cstring(_eclbase_name , name_len);
-  char *history_file = util_alloc_cstring(_history_file , history_len);
+  /*
+    char *eclbase_dir  = util_alloc_cstring(_eclbase_dir  , dir_len);
+    char *eclbase_name = util_alloc_cstring(_eclbase_name , name_len);
+    char *history_file = util_alloc_cstring(_history_file , history_len);
+  */
   util_abort("%s: currently not implemented \n",__func__);
 /*   history_type * history; */
   

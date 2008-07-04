@@ -97,16 +97,18 @@ ecl_kw_type * ecl_block_get_next_kw(const ecl_block_type * ecl_block) {
 ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
   ecl_block_type * copy;
   copy = ecl_block_alloc(src->report_nr , src->fmt_file , src->endian_convert);
+  hash_lock( src->kw_hash );
   {
-    ecl_kw_type * ecl_kw;
-    bool cont;
-    ecl_kw = hash_iter_get_first(src->kw_hash , &cont);
-    while (cont) {
+    char ** key_list = hash_alloc_keylist(src->kw_hash);
+    int i;
+
+    for (i = 0; i < hash_get_size( src->kw_hash ); i++) {
+      ecl_kw_type * ecl_kw = hash_get(src->kw_hash , key_list[i]);
       ecl_block_add_kw(copy , ecl_kw , COPY);
-      ecl_kw = hash_iter_get_next(src->kw_hash , &cont);
     }
+    util_free_stringlist( key_list , hash_get_size( src->kw_hash ));
   }
-  
+  hash_unlock( src->kw_hash );
   return copy;
 }
 
@@ -326,14 +328,19 @@ static bool ecl_block_include_kw(const ecl_block_type *ecl_block , const ecl_kw_
 
 void ecl_block_set_fmt_file(ecl_block_type *ecl_block , bool fmt_file) {
   ecl_block->fmt_file = fmt_file;
+  hash_lock( ecl_block->kw_hash );
   {
-    bool cont;
-    ecl_kw_type *ecl_kw = hash_iter_get_first(ecl_block->kw_hash , &cont);
-    while (cont) {
+    char ** key_list = hash_alloc_keylist(ecl_block->kw_hash);
+    int i;
+
+    for (i = 0; i < hash_get_size( ecl_block->kw_hash ); i++) {
+      ecl_kw_type * ecl_kw = hash_get(ecl_block->kw_hash , key_list[i]);
       ecl_kw_set_fmt_file(ecl_kw , ecl_block->fmt_file);
-      ecl_kw = hash_iter_get_next(ecl_block->kw_hash , &cont);
     }
+    util_free_stringlist( key_list , hash_get_size( ecl_block->kw_hash ));
+
   }
+  hash_unlock( ecl_block->kw_hash );
 }
 
 

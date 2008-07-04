@@ -1146,8 +1146,8 @@ void util_set_date_values(time_t t , int * mday , int * month , int * year) {
 /*
   Observe that this routine does the following transform before calling mktime:
 
-    1. month -> month - 1;
-    2. year  -> year  - 1900;
+  1. month -> month - 1;
+  2. year  -> year  - 1900;
 
   Then it is on the format which mktime expects.
 
@@ -2296,9 +2296,9 @@ void util_filtered_fprintf(const char * buffer , int buffer_size , FILE * stream
   char * kw     = NULL;
 
   if ((warning_mode & (util_filter_warn_unused + util_filter_fatal_unused)) != 0) {
-    char ** key_list = hash_alloc_keylist(kw_hash);
+    char ** key_list = hash_alloc_keylist( (hash_type *) kw_hash);
     used_set = set_alloc(hash_get_size(kw_hash) , (const char **) key_list);
-    hash_free_ext_keylist(kw_hash , key_list);
+    util_free_stringlist( key_list , hash_get_size( kw_hash ));
   }
   
   index = 0;
@@ -2541,68 +2541,70 @@ static char * util_bt_alloc_current_executable(const char * bt_symbol) {
 
 static pthread_mutex_t __abort_mutex = PTHREAD_MUTEX_INITIALIZER; /* Used purely to serialize the util_abort() routine. */
 void util_abort(const char * fmt , ...) {
-  const bool include_backtrace = true;
-  va_list ap;
   pthread_mutex_lock( &__abort_mutex ); /* Abort before unlock() */
-  va_start(ap , fmt);
-  fprintf(stderr,"\n\n");
-  vfprintf(stderr , fmt , ap);
-  va_end(ap);
-  if (include_backtrace) {
-    const int max_bt = 50;
-    char *executable;
-    void *array[max_bt];
-    char **strings;
-    char ** func_list;
-    char ** file_line_list;
-    int    max_func_length = 0;
-    int    size,i;
-    
-    fprintf(stderr,"\n");
-    fprintf(stderr,"****************************************************************************\n");
-    fprintf(stderr,"**                                                                        **\n");
-    fprintf(stderr,"**           A fatal error occured, and we have to abort.                 **\n");
-    fprintf(stderr,"**                                                                        **\n");
-    fprintf(stderr,"**  We now *try* to provide a backtrace, which would be very useful       **\n");
-    fprintf(stderr,"**  when debugging. The process of making a (human readable) backtrace    **\n");
-    fprintf(stderr,"**  is quite complex, among other things it involves several calls to the **\n");
-    fprintf(stderr,"**  external program addr2line. We have arrived here because the program  **\n");
-    fprintf(stderr,"**  state is already quite broken, so the backtrace might be (seriously)  **\n");
-    fprintf(stderr,"**  broken as well.                                                       **\n");
-    fprintf(stderr,"**                                                                        **\n");
-    fprintf(stderr,"****************************************************************************\n");
-    size       = backtrace(array , max_bt);
-    strings    = backtrace_symbols(array , size);    
-    executable = util_bt_alloc_current_executable(strings[0]);
-    if (executable != NULL) {
-      fprintf(stderr,"Current executable : %s \n",executable);
-
-      func_list      = util_malloc(size * sizeof * func_list      , __func__);
-      file_line_list = util_malloc(size * sizeof * file_line_list , __func__);
-    
-      for (i=0; i < size; i++) {
-	util_addr2line_lookup(executable , strings[i] , &func_list[i] , &file_line_list[i]);
-	max_func_length = util_int_max(max_func_length , strlen(func_list[i]));
-      }
+  {
+    const bool include_backtrace = true;
+    va_list ap;
+    va_start(ap , fmt);
+    fprintf(stderr,"\n\n");
+    vfprintf(stderr , fmt , ap);
+    va_end(ap);
+    if (include_backtrace) {
+      const int max_bt = 50;
+      char *executable;
+      void *array[max_bt];
+      char **strings;
+      char ** func_list;
+      char ** file_line_list;
+      int    max_func_length = 0;
+      int    size,i;
       
-      {
-	char fmt[64];
-	sprintf(fmt, " #%s02d %s-%ds(..) in %ss   \n" , "%" , "%" , max_func_length , "%");
-	fprintf(stderr , "--------------------------------------------------------------------------------\n");
-	for (i=0; i < size; i++) 
-	  fprintf(stderr, fmt , i , func_list[i], file_line_list[i]);
-	fprintf(stderr , "--------------------------------------------------------------------------------\n");
-	util_free_stringlist(func_list      , size);
-	util_free_stringlist(file_line_list , size);
-      }
-    } else
-      fprintf(stderr,"Could not determine executable file for:%s - no backtrace. \n",strings[0]);
-    
-    free(strings);
-    free(executable);
+      fprintf(stderr,"\n");
+      fprintf(stderr,"****************************************************************************\n");
+      fprintf(stderr,"**                                                                        **\n");
+      fprintf(stderr,"**           A fatal error occured, and we have to abort.                 **\n");
+      fprintf(stderr,"**                                                                        **\n");
+      fprintf(stderr,"**  We now *try* to provide a backtrace, which would be very useful       **\n");
+      fprintf(stderr,"**  when debugging. The process of making a (human readable) backtrace    **\n");
+      fprintf(stderr,"**  is quite complex, among other things it involves several calls to the **\n");
+      fprintf(stderr,"**  external program addr2line. We have arrived here because the program  **\n");
+      fprintf(stderr,"**  state is already quite broken, so the backtrace might be (seriously)  **\n");
+      fprintf(stderr,"**  broken as well.                                                       **\n");
+      fprintf(stderr,"**                                                                        **\n");
+      fprintf(stderr,"****************************************************************************\n");
+      size       = backtrace(array , max_bt);
+      strings    = backtrace_symbols(array , size);    
+      executable = util_bt_alloc_current_executable(strings[0]);
+      if (executable != NULL) {
+	fprintf(stderr,"Current executable : %s \n",executable);
+	
+	func_list      = util_malloc(size * sizeof * func_list      , __func__);
+	file_line_list = util_malloc(size * sizeof * file_line_list , __func__);
+	
+	for (i=0; i < size; i++) {
+	  util_addr2line_lookup(executable , strings[i] , &func_list[i] , &file_line_list[i]);
+	  max_func_length = util_int_max(max_func_length , strlen(func_list[i]));
+	}
+	
+	{
+	  char fmt[64];
+	  sprintf(fmt, " #%s02d %s-%ds(..) in %ss   \n" , "%" , "%" , max_func_length , "%");
+	  fprintf(stderr , "--------------------------------------------------------------------------------\n");
+	  for (i=0; i < size; i++) 
+	    fprintf(stderr, fmt , i , func_list[i], file_line_list[i]);
+	  fprintf(stderr , "--------------------------------------------------------------------------------\n");
+	  util_free_stringlist(func_list      , size);
+	  util_free_stringlist(file_line_list , size);
+	}
+      } else
+	fprintf(stderr,"Could not determine executable file for:%s - no backtrace. \n",strings[0]);
+      
+      free(strings);
+      free(executable);
+    }
+    abort();
   }
-  
-  abort();
+  pthread_mutex_unlock( &__abort_mutex );
 }
 
 
