@@ -6,6 +6,7 @@
 #include <ecl_block.h>
 #include <errno.h>
 #include <hash.h>
+#include <set.h>
 #include <util.h>
 #include <time.h>
 #include <restart_kw_list.h>
@@ -29,6 +30,19 @@ struct ecl_block_struct {
   time_t        sim_time;
   restart_kw_list_type *_kw_list;
   char         *src_file;
+  set_type     *__overwrite_kw_set;   
+
+  /* 
+     Some FU***NG keywords which suddenly appeared in the PUNQS3 case
+     can appear several times in a restart file. That breaks the whole
+     unique keys assumption of the ecl_block implementation. 
+
+     A temporary (desparate) fix is implemented with
+     __overwrite_kw_set(), which is a set of keys which do not trigger
+     'block_complete' action on repeated occurence, however the first
+     instance will be overwritten, i.e. we can no longer regenerate
+     the exact same restart file.
+  */
 };
 
 
@@ -39,13 +53,17 @@ struct ecl_block_struct {
 
 
 bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw, int mem_mode) {
+  bool add_kw = true;
   char * strip_kw = ecl_kw_alloc_strip_header(ecl_kw);
 
-  if (ecl_block_has_kw(ecl_block , strip_kw)) {
-    free(strip_kw);
-    return false;
-  } else {
 
+  if ( !(set_has_key(ecl_block->__overwrite_kw_set , strip_kw)) )
+    if (ecl_block_has_kw(ecl_block , strip_kw)) {
+      free(strip_kw);
+      add_kw = false;
+    }
+  
+  if (add_kw) {
     switch(mem_mode) {
     case(COPY):
       hash_insert_copy(ecl_block->kw_hash , strip_kw , ecl_kw , ecl_kw_copyc__ , ecl_kw_free__);
@@ -64,8 +82,8 @@ bool ecl_block_add_kw(ecl_block_type *ecl_block , const ecl_kw_type *ecl_kw, int
     restart_kw_list_add(ecl_block->_kw_list , strip_kw);
     
     free(strip_kw);
-    return true;
   }
+  return add_kw;
 }
 
 
@@ -173,7 +191,7 @@ ecl_block_type * ecl_block_alloc(int report_nr , bool fmt_file , bool endian_con
   ecl_block_type *ecl_block;
   
   
-  ecl_block = malloc(sizeof *ecl_block);
+  ecl_block = util_malloc(sizeof *ecl_block , __func__);
   ecl_block->src_file       = NULL;
   ecl_block->fmt_file       = fmt_file;
   ecl_block->endian_convert = endian_convert;
@@ -183,6 +201,7 @@ ecl_block_type * ecl_block_alloc(int report_nr , bool fmt_file , bool endian_con
   ecl_block->kw_hash  = hash_alloc(10);
   ecl_block->sim_time = -1;
   ecl_block_set_report_nr(ecl_block , report_nr);
+  ecl_block->__overwrite_kw_set = set_alloc(6 , (const char *[6]) {"ICAQNUM" , "ICAQ" , "SCAQNUM" , "SCAQ" , "ACAQNUM" , "ACAQ"});
   return ecl_block;
 }
 
@@ -258,7 +277,6 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
   while (cont) {
     if (ecl_kw_fread_realloc(ecl_kw , fortio)) {
       bool add_kw;
-      
       /*
 	This is *EXTREMELY UGLY* - when reading summary files we want
 	to ensure that the SEQHDR keyword is the first header in any
@@ -390,6 +408,7 @@ void ecl_block_free(ecl_block_type *ecl_block) {
   hash_free(ecl_block->kw_hash);
   restart_kw_list_free(ecl_block->_kw_list);
   if (ecl_block->src_file != NULL) free(ecl_block->src_file);
+  set_free(ecl_block->__overwrite_kw_set);
   free(ecl_block);
 }
 
