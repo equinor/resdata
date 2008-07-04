@@ -307,7 +307,8 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
       ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , iblock);
       ecl_block_set_sim_time_summary(block , /*time_index , years_index , */ day_index , month_index , year_index);
     }
-  } 
+  } else 
+    fprintf(stderr,"** Warning: could not locate DAY / MONTH / YEAR in %s - dates will be defaulted.\n", header_file);
   
   return ecl_sum;
 }
@@ -449,7 +450,7 @@ static void ecl_sum_list_wells(const ecl_sum_type * ecl_sum) {
   char ** well_list = hash_alloc_keylist(ecl_sum->well_var_index);
   for (iw = 0; iw < hash_get_size(ecl_sum->well_var_index); iw++)
     printf("well[%03d] = %s \n",iw , well_list[iw]);
-  hash_free_ext_keylist(ecl_sum->well_var_index , well_list);
+  util_free_stringlist(well_list , hash_get_size(ecl_sum->well_var_index));
 }
 
 

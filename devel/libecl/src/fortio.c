@@ -289,10 +289,20 @@ void fortio_fread_buffer(fortio_type * fortio, char * buffer , int buffer_size) 
 }
 
 
-void fortio_fskip_record(fortio_type *fortio) {
+int fortio_fskip_record(fortio_type *fortio) {
   int record_size = fortio_init_read(fortio);
   fseek(fortio->stream , record_size , SEEK_CUR);
   fortio_complete_read(fortio);
+  return record_size;
+}
+
+void fortio_fskip_buffer(fortio_type * fortio, int buffer_size) {
+  int bytes_skipped = 0;
+  while (bytes_skipped < buffer_size) 
+    bytes_skipped += fortio_fskip_record(fortio);
+
+  if (bytes_skipped > buffer_size) 
+    util_abort("%s: hmmmm - something is broken. The individual records in %s did not sum up to the expected buffer size \n",__func__ , fortio->filename);
 }
 
 
