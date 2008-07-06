@@ -74,19 +74,15 @@ char * ecl_util_alloc_base_guess(const char * path) {
 
 
 int ecl_util_filename_report_nr(const char *filename) {
-  int report_nr;
+  int report_nr = -1;
   char *ext = strrchr(filename , '.');
-  if (ext == NULL) {
-    fprintf(stderr,"%s: can not determine timestep from filename:%s - aborting \n",__func__ , filename);
-    abort();
-  }
+  if (ext == NULL) 
+    util_abort("%s: can not determine timestep from filename:%s - aborting \n",__func__ , filename);
   
   if (ext[1] == 'X' || ext[1] == 'F' || ext[1] == 'S' || ext[1] == 'A') 
     report_nr = atoi(&ext[2]);
-  else {
-    fprintf(stderr,"%s: Filename:%s not recognized - valid extensions: Annnn / Xnnnn / Fnnnn / Snnnn - aborting \n",__func__ , filename);
-    abort();
-  } 
+  else 
+    util_abort("%s: Filename:%s not recognized - valid extensions: Annnn / Xnnnn / Fnnnn / Snnnn - aborting \n",__func__ , filename);
   
   return report_nr;
 }
@@ -398,10 +394,9 @@ char * ecl_util_alloc_filename(const char * path, const char * base , ecl_file_t
 
 
 static char ** ecl_util_alloc_filelist_static(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr1 , int report_nr2, bool must_exist) {
-  if (report_nr2 < report_nr1) {
-    fprintf(stderr,"%s: Invalid input report_nr1:%d > report_nr:%d - aborting \n",__func__ , report_nr1 , report_nr2);
-    abort();
-  }
+  if (report_nr2 < report_nr1) 
+    util_abort("%s: Invalid input report_nr1:%d > report_nr:%d - aborting \n",__func__ , report_nr1 , report_nr2);
+
   {
     char ** file_list = util_malloc((report_nr2 - report_nr1 + 1) * sizeof * file_list , __func__);
     int report_nr;
@@ -468,10 +463,8 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
     char **fileList;
     
     int files;
-    if (dirH == NULL) {
-      fprintf(stderr,"\n%s: opening directory:%s failed - aborting \n",__func__ , path);
-      abort();
-    }
+    if (dirH == NULL) 
+      util_abort("\n%s: opening directory:%s failed - aborting \n",__func__ , path);
 
     files = 0;
     while ((dentry = readdir (dirH)) != NULL) {
@@ -552,8 +545,7 @@ bool ecl_util_unified(ecl_file_type file_type) {
     unified = true;
     break;
   default:
-    fprintf(stderr,"%s: internal error - file_type:%d invalid input - aborting \n",__func__ , file_type);
-    abort();
+    util_abort("%s: internal error - file_type:%d invalid input - aborting \n",__func__ , file_type);
   }
 
   return unified;
@@ -562,7 +554,7 @@ bool ecl_util_unified(ecl_file_type file_type) {
 /*****************************************************************/
 
 int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
-  int sizeof_ctype;
+  int sizeof_ctype = -1;
   switch (ecl_type) {
   case(ecl_char_type):
     sizeof_ctype = (ecl_str_len + 1) * sizeof(char);
@@ -583,8 +575,7 @@ int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
     sizeof_ctype = sizeof(char);
     break;
   default:
-    fprintf(stderr,"Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type);
-    abort();
+    util_abort("Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type);
   }
   return sizeof_ctype;
 }
@@ -615,8 +606,7 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 	    target_data[i] = ((int *) _src_data)[i];
 	  break;
 	default:
-	  fprintf(stderr,"%s: double type can only load from int/float/double - aborting \n",__func__);
-	  abort();
+	  util_abort("%s: double type can only load from int/float/double - aborting \n",__func__);
 	}
 	break;
       }
@@ -632,14 +622,12 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 	    target_data[i] = ((int *) _src_data)[i];
 	  break;
 	default:
-	  fprintf(stderr,"%s: float type can only load from int/float/double - aborting \n",__func__);
-	  abort();
+	  util_abort("%s: float type can only load from int/float/double - aborting \n",__func__);
 	}
 	break;
       }
     default:
-      fprintf(stderr,"%s con not convert %d -> %d \n",__func__ , src_type , target_type);
-      abort();
+      util_abort("%s con not convert %d -> %d \n",__func__ , src_type , target_type);
     }
   }
 }
@@ -659,10 +647,9 @@ ecl_type_enum ecl_util_guess_type(const char * key){
   
   if (hash_has_key(type_hash , key)) 
     type = hash_get_int(type_hash , key);
-  else {
-    fprintf(stderr,"could not guess type of keyword %s - update the table in %s/%s - aborting \n",key , __FILE__ , __func__);
-    abort();
-  }
+  else 
+    util_abort("could not guess type of keyword %s - update the table in %s/%s - aborting \n",key , __FILE__ , __func__);
+
   
 
   hash_free(type_hash);
