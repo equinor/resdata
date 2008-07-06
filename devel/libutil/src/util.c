@@ -1390,9 +1390,20 @@ char * util_realloc_substring_copy(char * old_string , const char *src , int len
 }
 
 
+/**
+   This function check that a pointer is different from NULL, and
+   frees the memory if that is the case. Observe that the function
+   always returns NULL, this means that you can use:
 
-void util_safe_free(void *ptr) {
-  if (ptr != NULL) free(ptr);
+      p = util_safe_free( p );
+
+   Which will both free the memory of p, and set p -> NULL.
+*/
+ 
+
+void * util_safe_free(void *ptr) { 
+  if (ptr != NULL) free(ptr); 
+  return NULL; 
 }
 
 
