@@ -331,7 +331,10 @@ void config_parse(config_type * config , const char * filename, const char * com
 	
 	active_tokens = tokens;
 	for (i = 0; i < tokens; i++) {
-	  char * comment_ptr = strstr(token_list[i] , comment_string);
+    char * comment_ptr = NULL;
+    if(comment_string != NULL)
+	    comment_ptr = strstr(token_list[i] , comment_string);
+
 	  if (comment_ptr != NULL) {
 	    if (comment_ptr == token_list[i])
 	      active_tokens = i;

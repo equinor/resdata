@@ -1,8 +1,11 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+#include <stdbool.h>
+
 #define ECL_COM_KW "--"
 #define ENKF_COM_KW "--"
+
 
 typedef struct config_struct      config_type;
 typedef struct config_item_struct config_item_type;
@@ -10,6 +13,7 @@ typedef struct config_item_struct config_item_type;
 typedef bool ( config_item_validate_ftype ) (const config_type *, 
 					     const config_item_type *);
 
+char       ** config_alloc_active_list(const config_type *, int *);
 int           config_get_argc(const config_type *  , const char *);
 const char ** config_get_argv(const config_type *  , const char * , int *);
 const char *  config_get(const config_type *  , const char *);
