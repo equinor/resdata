@@ -23,6 +23,12 @@ int main(int argc , char ** argv) {
     ecl_util_alloc_summary_files( path , base , &header_file , &summary_file_list , &files , &fmt_file , &unified);
     ecl_sum = ecl_sum_fread_alloc( header_file , files , (const char **) summary_file_list , true , true );
     ecl_sum_fprintf(ecl_sum , stdout , argc - 2 , (const char **) &argv[2]);
+
+    util_safe_free(header_file);
+    util_safe_free(base);
+    util_safe_free(path);
+    util_free_stringlist(summary_file_list, files);
+    ecl_sum_free(ecl_sum);
   }
     
 
