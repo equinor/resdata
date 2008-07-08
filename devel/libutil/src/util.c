@@ -550,7 +550,7 @@ bool util_sscanf_double(const char * buffer , double * value) {
   bool value_OK = false; 
   char * error_ptr;
 
-  int tmp_value = strtod(buffer , &error_ptr);
+  double tmp_value = strtod(buffer , &error_ptr);
   if (error_ptr[0] == '\0') {
     value_OK = true; 
     *value = tmp_value;
