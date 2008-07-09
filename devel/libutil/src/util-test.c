@@ -9,11 +9,15 @@
 #include <unistd.h>
 #include <thread_pool.h>
 #include <config.h> 
-
+#include <stringlist.h>
 
 int main(int argc , char ** argv) {
-  
-  printf("OK - I am aborting \n");
-  util_abort("%s: failing \n",__func__);
-  
+  stringlist_type * stringlist = stringlist_alloc_new();
+
+
+  stringlist_append_copy(stringlist , "Hei");
+  stringlist_append_copy(stringlist , "Hei");
+  stringlist_append_copy(stringlist , "Hei");
+  stringlist_free(stringlist);
+
 }

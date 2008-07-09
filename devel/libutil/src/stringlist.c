@@ -62,6 +62,11 @@ void static stringlist_grow__(stringlist_type * stringlist , int num_append) {
 }
 
 
+void stringlist_assert_index(const stringlist_type * stringlist , int index) {
+  if (index >= stringlist->size || index <0 ) 
+    util_abort("%s: sorry length(stringlist) = %d - index:%d invalid. \n",__func__ , stringlist->size , index); 
+}
+
 /**
    Sets element nr i in the stringlist to the input string 's'. If the
    list does not have that many elements we die (could grow as well??).
@@ -69,9 +74,7 @@ void static stringlist_grow__(stringlist_type * stringlist , int num_append) {
 */
 
 static void stringlist_iset__(stringlist_type * stringlist , int index , const char * s , owner_type owner) {
-  if (index >= stringlist->size) 
-    util_abort("%s: sorry length(stringlist) = %d - index:%d invalid. \n",__func__ , stringlist->size , index); 
-
+  stringlist_assert_index(stringlist , index);
   if (stringlist->owner[index] != ref)
     util_safe_free(stringlist->strings[index]);
   
@@ -128,17 +131,36 @@ static stringlist_type * stringlist_alloc_empty() {
 }
 
 
-/*
-static stringlist_type * stringlist_alloc__(int size , const char ** strings) {
-
-
-}
-*/
-
 
 
 stringlist_type * stringlist_alloc_new() {
   return stringlist_alloc_empty();
+}
+
+
+static stringlist_type * stringlist_alloc__(const char ** argv , int argc , owner_type owner) {
+
+  stringlist_type * stringlist = stringlist_alloc_empty();
+  stringlist_grow__(stringlist , argc);
+  {
+    int iarg;
+    for (iarg = 0; iarg < argc; iarg++)
+      stringlist_iset__(stringlist , iarg , argv[iarg] , owner);
+  }
+  return stringlist;
+}
+
+
+stringlist_type * stringlist_alloc_argv_copy(const char ** argv , int argc) {
+  return stringlist_alloc__(argv , argc , copy);
+}
+
+stringlist_type * stringlist_alloc_argv_ref(const char ** argv , int argc) {
+  return stringlist_alloc__(argv , argc , ref);
+}
+
+stringlist_type * stringlist_alloc_argv_owned_ref(const char ** argv , int argc) {
+  return stringlist_alloc__(argv , argc , list_owned);
 }
 
 
@@ -162,5 +184,13 @@ void stringlist_free(stringlist_type * stringlist) {
 
 
 
+const char * stringlist_iget(const stringlist_type * stringlist , int index) {
+  stringlist_assert_index(stringlist ,index);
+  return stringlist->strings[index];
+}
 
 
+
+int stringlist_get_size(const stringlist_type * stringlist) {
+    return stringlist->size;
+}

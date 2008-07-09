@@ -327,12 +327,12 @@ void config_parse(config_type * config , const char * filename, const char * com
       
       line  = util_fscanf_alloc_line(stream , &at_eof);
       if (line != NULL) {
-        util_split_string(line , " " , &tokens , &token_list);
+        util_split_string(line , " \t" , &tokens , &token_list);
 	
 	active_tokens = tokens;
 	for (i = 0; i < tokens; i++) {
-    char * comment_ptr = NULL;
-    if(comment_string != NULL)
+	  char * comment_ptr = NULL;
+	  if(comment_string != NULL)
 	    comment_ptr = strstr(token_list[i] , comment_string);
 
 	  if (comment_ptr != NULL) {
