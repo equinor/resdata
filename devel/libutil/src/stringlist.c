@@ -144,8 +144,10 @@ static stringlist_type * stringlist_alloc__(const char ** argv , int argc , owne
   stringlist_grow__(stringlist , argc);
   {
     int iarg;
-    for (iarg = 0; iarg < argc; iarg++)
+    for (iarg = 0; iarg < argc; iarg++) {
+      printf("Adding argv[%d/%d] = %s \n",iarg , argc , argv[iarg]);
       stringlist_iset__(stringlist , iarg , argv[iarg] , owner);
+    }
   }
   return stringlist;
 }
@@ -164,7 +166,31 @@ stringlist_type * stringlist_alloc_argv_owned_ref(const char ** argv , int argc)
 }
 
 
+static stringlist_type * stringlist_alloc_copy__(const stringlist_type * stringlist, bool deep_copy) {
+  owner_type owner;
+  if (deep_copy)
+    owner = copy;
+  else
+    owner = ref;
+  return stringlist_alloc__((const char **) stringlist->strings , stringlist->size , owner);
+}
 
+
+/** 
+    Allocates a new stringlist instance where all the new string are references to the
+    string found in the existing stringlist instance.
+*/ 
+stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type * stringlist) { 
+  return stringlist_alloc_copy__(stringlist , false);
+}
+
+
+/**
+    Allocates a new stringlist, where all the string are also copies.
+*/
+stringlist_type * stringlist_alloc_deep_copy(const stringlist_type * stringlist) { 
+  return stringlist_alloc_copy__(stringlist , true);
+}
 
 
 void stringlist_free(stringlist_type * stringlist) {
@@ -193,4 +219,11 @@ const char * stringlist_iget(const stringlist_type * stringlist , int index) {
 
 int stringlist_get_size(const stringlist_type * stringlist) {
     return stringlist->size;
+}
+
+
+void stringlist_fprintf(const stringlist_type * stringlist, FILE * stream) {
+  int i;
+  for (i = 0; i < stringlist->size; i++)
+    fprintf(stream , "%s ",stringlist->strings[i]);
 }
