@@ -1640,6 +1640,7 @@ bool ecl_kw_is_kw_file(FILE * stream , bool fmt_file , bool endian_flip) {
     } 
 
     fortio_free_FILE_wrapper(fortio);
+    ecl_kw_free(ecl_kw);
   }
   
   fseek(stream , init_pos , SEEK_SET);
