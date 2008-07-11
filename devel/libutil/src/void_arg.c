@@ -160,6 +160,10 @@ void_arg_type * void_arg_alloc12(node_ctype type1, node_ctype type2, node_ctype 
   return void_arg_alloc(12 , (const node_ctype[12]) {type1 , type2, type3, type4 , type5 , type6 , type7 , type8, type9 , type10 , type11, type12});
 }
 
+void_arg_type * void_arg_alloc13(node_ctype type1, node_ctype type2, node_ctype type3, node_ctype type4, node_ctype type5, node_ctype type6, node_ctype type7, node_ctype type8 , node_ctype type9, node_ctype type10, node_ctype type11, node_ctype type12, node_ctype type13) {
+  return void_arg_alloc(13 , (const node_ctype[13]) {type1 , type2, type3, type4 , type5 , type6 , type7 , type8, type9 , type10 , type11, type12 , type13});
+}
+
 
 void void_arg_free(void_arg_type * arg) {
   free(arg->argBuffer);

@@ -144,10 +144,8 @@ static stringlist_type * stringlist_alloc__(const char ** argv , int argc , owne
   stringlist_grow__(stringlist , argc);
   {
     int iarg;
-    for (iarg = 0; iarg < argc; iarg++) {
-      printf("Adding argv[%d/%d] = %s \n",iarg , argc , argv[iarg]);
+    for (iarg = 0; iarg < argc; iarg++) 
       stringlist_iset__(stringlist , iarg , argv[iarg] , owner);
-    }
   }
   return stringlist;
 }
@@ -219,6 +217,15 @@ const char * stringlist_iget(const stringlist_type * stringlist , int index) {
 
 int stringlist_get_size(const stringlist_type * stringlist) {
     return stringlist->size;
+}
+
+int stringlist_get_argc(const stringlist_type * stringlist) {
+    return stringlist->size;
+}
+
+
+const char ** stringlist_get_argv(const stringlist_type * stringlist) {
+  return (const char **) stringlist->strings;
 }
 
 

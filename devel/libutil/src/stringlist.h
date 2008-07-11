@@ -24,4 +24,8 @@ void              stringlist_fprintf(const stringlist_type * , FILE *);
 stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type *);
 stringlist_type * stringlist_alloc_deep_copy(const stringlist_type *);
 
+int           stringlist_get_argc(const stringlist_type * );
+const char ** stringlist_get_argv(const stringlist_type * );
+
+
 #endif
