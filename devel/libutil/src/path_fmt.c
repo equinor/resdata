@@ -41,7 +41,6 @@ struct path_fmt_struct {
   char *fmt;
   char *file_fmt;
   bool  is_directory;
-  bool  auto_mkdir;
 };
 
 
@@ -55,12 +54,11 @@ void path_fmt_reset_fmt(path_fmt_type * path , const char * fmt) {
 
 
 
-static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory , bool auto_mkdir) {
+static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory) {
   path_fmt_type * path = util_malloc(sizeof * path , __func__);
   path->fmt          = NULL;
   path->file_fmt     = NULL;
   path->is_directory = is_directory;
-  path->auto_mkdir   = auto_mkdir;
   
   path_fmt_reset_fmt(path , fmt);
   return path;
@@ -96,18 +94,18 @@ static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory , b
   versus format string is performed.
 */
 
-path_fmt_type * path_fmt_alloc_directory_fmt(const char * fmt , bool auto_mkdir) {
-  return path_fmt_alloc__(fmt , true , auto_mkdir);
+path_fmt_type * path_fmt_alloc_directory_fmt(const char * fmt) {
+  return path_fmt_alloc__(fmt , true);
 }
 
 
 path_fmt_type * path_fmt_alloc_file_fmt(const char * fmt) {
-  return path_fmt_alloc__(fmt , false , false);
+  return path_fmt_alloc__(fmt , false );
 }
 
 
 path_fmt_type * path_fmt_copyc(const path_fmt_type *path) {
-  path_fmt_type *new_path = path_fmt_alloc__(path->fmt , path->is_directory , path->auto_mkdir);
+  path_fmt_type *new_path = path_fmt_alloc__(path->fmt , path->is_directory);
   return new_path;
 }
 
@@ -127,19 +125,20 @@ static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
 }
 
 
-char * path_fmt_alloc_path_va(const path_fmt_type * path , va_list ap) {
+char * path_fmt_alloc_path_va(const path_fmt_type * path ,bool auto_mkdir,  va_list ap) {
   char * new_path = __fmt_alloc_path_va__(path->fmt , ap);
-  if (path->auto_mkdir)
-    util_make_path(new_path);
+  if (auto_mkdir)
+    if (! util_path_exists(new_path) )
+      util_make_path(new_path);
   return new_path;
 }
 
 
-char * path_fmt_alloc_path(const path_fmt_type * path , ...) {
+char * path_fmt_alloc_path(const path_fmt_type * path , bool auto_mkdir , ...) {
   char * new_path;
   va_list ap;
-  va_start(ap , path);
-  new_path = path_fmt_alloc_path_va(path , ap);
+  va_start(ap , auto_mkdir);
+  new_path = path_fmt_alloc_path_va(path ,auto_mkdir ,  ap);
   va_end(ap);
   return new_path;
 }
@@ -166,19 +165,18 @@ char * path_fmt_alloc_path(const path_fmt_type * path , ...) {
 */
 
 
-char * path_fmt_alloc_file(const path_fmt_type * path , ...) {
+char * path_fmt_alloc_file(const path_fmt_type * path , bool auto_mkdir , ...) {
   if (path->is_directory) {
     char * filename;
     va_list tmp_va , ap;
-    va_start(ap , path);
+    va_start(ap , auto_mkdir);
     va_copy(tmp_va , ap);
     filename = __fmt_alloc_path_va__(path->file_fmt , ap);
-    if (path->auto_mkdir) {
-      if (! util_file_exists(filename)) {
-	const char * __path = __fmt_alloc_path_va__(path->fmt , tmp_va);
+    if (auto_mkdir) {
+      const char * __path = __fmt_alloc_path_va__(path->fmt , tmp_va);
+      if (! util_path_exists(__path)) 
 	util_make_path( __path );
-	free((char *) __path );
-      }
+      free((char *) __path );
     }
     va_end(ap);
     return filename;
