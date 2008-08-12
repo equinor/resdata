@@ -14,8 +14,8 @@ ARFLAGS = -csr
 LDFLAGS = -rdynamic
 #################################################################
 SDP_ROOT          = /project/res/$(shell /private/joaho/bin/res_target.py)
-OBJECTS           = util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o path_fmt.o config.o stringlist.o
-INC_FILES_INSTALL = util.h thread_pool.h msg.h void_arg.h str_buffer.h path_fmt.h  config.h stringlist.h
+OBJECTS           = util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o path_fmt.o config.o stringlist.o menu.o
+INC_FILES_INSTALL = util.h thread_pool.h msg.h void_arg.h str_buffer.h path_fmt.h  config.h stringlist.h menu.h
 LIB_ROOT          = libutil
 LIB               = $(LIB_ROOT)_$(MFLAG).a
 LIB_LINK          = -lutil_$(MFLAG) -lhash_$(MFLAG) -lz -lpthread -lm
@@ -57,7 +57,7 @@ util.o        : util.c util.h util_path.c
 util_interC.o : util_interC.c util.o
 path_fmt.o    : path_fmt.c path_fmt.h util.o
 config.o      : config.c config.h util.o 
-
+menu.o        : menu.h menu.c util.o
 
 # Binaries
 util-test.o : util-test.c 
