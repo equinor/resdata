@@ -47,6 +47,7 @@
 typedef struct menu_item_struct menu_item_type;
 
 struct menu_item_struct {
+  bool             separator; /* If this is a separator - in that case all the following fields are moot. */ 
   char    	 * key_set;   /* The characters which will activate this item , e.g. "sS" - must be a \0 terminated string */
   char    	 * label;     /* The label/description of this menu item */
   menu_func_type * func;      /* The function called when this item is activated. */
@@ -101,6 +102,29 @@ menu_type * menu_alloc(const char * title , const char * quit_keys) {
   return menu;
 }
 
+static menu_item_type * menu_item_alloc_empty() {
+  menu_item_type * item = util_malloc(sizeof * item , __func__);
+
+  item->label   = NULL; 
+  item->key_set = NULL; 
+  item->func    = NULL;
+  item->arg     = NULL;
+  item->separator = false;
+
+  return item;
+}
+
+
+/**
+   Low level function doing the actual append of a complete item.
+*/
+static void menu_append_item__(menu_type * menu ,  menu_item_type * item) {
+  menu->size += 1;
+  menu->items = util_realloc(menu->items , menu->size * sizeof * menu->items , __func__);
+  menu->items[menu->size - 1] = item;
+}
+
+
 
 /**
   Adds (appends) an item to the menu. 
@@ -115,41 +139,91 @@ void menu_add_item(menu_type * menu , const char * label , const char * key_set 
   if (__string_contains(menu->complete_key_set , key_set)) 
     util_abort("%s:fatal error when building menu - key(s) in:%s already in use \n",__func__ , key_set);
   {
-    menu_item_type * item = util_malloc(sizeof * item , __func__);
+    menu_item_type * item = menu_item_alloc_empty();
     item->label   = util_alloc_string_copy(label);
     item->key_set = util_alloc_string_copy(key_set);
     item->func    = func;
     item->arg     = arg;
-    menu->size += 1;
-    menu->items = util_realloc(menu->items , menu->size * sizeof * menu->items , __func__);
-    menu->items[menu->size - 1] = item;
+    item->separator = false;
+    menu_append_item__(menu , item);
     menu->max_label_length = util_int_max(menu->max_label_length , strlen(label));
     menu->complete_key_set = util_strcat_realloc(menu->complete_key_set , key_set);
   }
 }
 
 
+
+
+/**
+   Will add a '-------------' line to the menu.
+*/
+void menu_add_separator(menu_type * menu) {
+  menu_item_type * item = menu_item_alloc_empty();
+  item->separator = true;
+  menu_append_item__(menu , item);
+}
+
+
+
+
+
+
 /**
    Free's the menu occupied by one menu item.
 */
 static void menu_item_free(menu_item_type * item) {
-  free(item->key_set);
-  free(item->label);
+  if (!item->separator) {
+    free(item->key_set);
+    free(item->label);
+  }
   free(item);
 }
 
 
 
+
+
+static void __print_line(int c , int l) {
+  int i;
+  for (i=0; i < l; i++)
+    fputc(c , stdout);
+  fputc('\n' , stdout);
+}
+  
+static void __print_sep(int l) {
+  int i;
+  printf("#");
+  for (i=0; i < l; i++)
+    fputc('-' , stdout);
+  printf("#\n");
+}
+
+
 static void menu_display(const menu_type * menu) {
   int i;
-  printf("-----------------------------------------------------------------\n");
-  printf("%s\n",menu->title);
+  int length = util_int_max(menu->max_label_length , strlen(menu->title));
+  
+  __print_line('#' , length + 10);
+  printf("# ");   util_fprintf_string(menu->title , length + 6 , center , stdout);  printf(" #\n");
+  __print_line('#' , length + 10);
   for (i=0; i < menu->size; i++) {
     const menu_item_type * item = menu->items[i];
-    printf("%c: %s \n",item->key_set[0] , item->label);
+    if (item->separator) 
+      __print_sep(length + 8);
+    else {
+      printf("# %c: ", item->key_set[0]);
+      util_fprintf_string(item->label , length + 3 , right_pad , stdout);
+      printf(" #\n");
+    }
   }
-  printf("%c: %s \n",menu->quit_keys[0] , "Quit");
+  __print_sep(length + 8);
+  printf("# %c: ",menu->quit_keys[0]);
+  util_fprintf_string("Quit" , length + 3 , right_pad , stdout);
+  printf(" #\n");
+  __print_line('#' , length + 10);
+  printf("\n");
 }
+
 
 
 /**
@@ -167,7 +241,6 @@ static int menu_read_cmd(const menu_type * menu) {
     fflush(stdout); fscanf(stdin , "%s" , cmd); /* We read a full string -
 						   but we only consider it if it is exactly *ONE* character long. */
   } while ((strchr(menu->complete_key_set , cmd[0]) == NULL) || strlen(cmd) > 1);
-  printf("-----------------------------------------------------------------\n");
   return cmd[0];
 }
 
@@ -190,12 +263,14 @@ void menu_run(const menu_type * menu) {
       int item_index = 0;
       while (1) {
 	const menu_item_type * item = menu->items[item_index];
-	if (strchr(item->key_set , cmd) != NULL) {
-	  /* Calling the function ... */
-	  item->func(item->arg);
-	  break;
-	} else
-	  item_index++;
+	if (!item->separator) {
+	  if (strchr(item->key_set , cmd) != NULL) {
+	    /* Calling the function ... */
+	    item->func(item->arg);
+	    break;
+	  }
+	}
+	item_index++;
       }
     }
   }

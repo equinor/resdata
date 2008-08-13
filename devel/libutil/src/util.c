@@ -2231,17 +2231,24 @@ void util_fprintf_int(int value , int width , FILE * stream) {
 
 void util_fprintf_string(const char * s , int width , string_alignement_type alignement , FILE * stream) {
   char fmt[32];
+  int i;
   if (alignement == left_pad) {
-    sprintf(fmt , "%%%ds" , width);
-    fprintf(stream , fmt , s);
+    i = 0;
+    if (width > strlen(s)) {
+      for (i=0; i < (width - strlen(s)); i++) 
+	fputc(' ' , stream);
+    }
+    fprintf(stream , s);
   } else if (alignement == right_pad) {
     sprintf(fmt , "%%-%ds" , width);
     fprintf(stream , fmt , s);
   } else {
-    int half_width = width / 2;
+    int total_pad  = width - strlen(s);
+    int front_pad  = total_pad / 2;
+    int back_pad   = total_pad - front_pad;
     int i;
-    util_fprintf_string(s , half_width , left_pad , stream);
-    for (i=0; i < (width - half_width); i++)
+    util_fprintf_string(s , front_pad + strlen(s) , left_pad , stream);
+    for (i=0; i < back_pad; i++)
       fputc(' ' , stream);
   }
 }

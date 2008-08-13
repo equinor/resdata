@@ -31,10 +31,13 @@ void print3(void * _arg) {
 
 
 int main(int argc , char ** argv) {
-  menu_type * menu = menu_alloc("Hovedmeny ..","qQ");
-  menu_add_item(menu , "Print1" , "1a" , print1 , "Hei");
-  menu_add_item(menu , "Print1" , "2bB" , print2 , "Hei");
-  menu_add_item(menu , "Print1" , "3t" , print3 , "Hei");
-  menu_run(menu);
-  menu_free(menu);
+  {
+    menu_type * menu = menu_alloc("Hovedmeny","qQ");
+    menu_add_item(menu , "Print1" , "1a" , print1 , "Hei");
+    menu_add_item(menu , "Print1" , "2bB" , print2 , "Hei");
+    menu_add_item(menu , "Print1" , "3t" , print3 , "Hei");
+    menu_run(menu);
+    menu_free(menu);
+  }
+  exit(1);
 }
