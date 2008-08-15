@@ -12,9 +12,9 @@ LDFLAGS =
 ARFLAGS = -csr
 #################################################################
 __SDP_ROOT  	   = $(SDP_ROOT)/$(shell res_target.py)
-LIB_OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o lsf_jobs.o ecl_parse.o ecl_rft_vector.o ecl_rft_node.o ecl_grid.o ecl_box.o restart_kw_list.o 
+LIB_OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o ecl_parse.o ecl_rft_vector.o ecl_rft_node.o ecl_grid.o ecl_box.o restart_kw_list.o 
 MOD_FILES = 
-INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h lsf_jobs.h ecl_parse.h ecl_rft_vector.h ecl_rft_node.h ecl_box.h ecl_grid.h restart_kw_list.h 
+INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h ecl_parse.h ecl_rft_vector.h ecl_rft_node.h ecl_box.h ecl_grid.h restart_kw_list.h 
 LIB_ROOT  = libecl
 LIB       = $(LIB_ROOT)_$(MFLAG).a
 LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L$(LIBHASH_HOME)/lib -L./
@@ -52,14 +52,13 @@ $(LIB): $(LIB_OBJECTS)
 # Library source code
 ecl_rft_vector.o   : ecl_rft_vector.h ecl_rft_vector.c ecl_util.h ecl_kw.o ecl_fstate.o ecl_block.o ecl_rft_node.o
 ecl_util.o   : ecl_util.c ecl_util.h
-lsf_jobs.o   : lsf_jobs.c lsf_jobs.h 
 fortio.o     : fortio.c fortio.h 
 ecl_kw.o     : ecl_kw.c ecl_kw.h fortio.o
 ecl_block.o  : ecl_block.c ecl_block.h ecl_kw.o
 ecl_fstate.o : ecl_fstate.c ecl_fstate.h ecl_block.o ecl_util.o ecl_kw.o
 ecl_sum.o    : ecl_sum.c ecl_sum.h ecl_fstate.o ecl_block.o ecl_kw.o ecl_util.o
 ecl_parse.o  : ecl_parse.h ecl_parse.h ecl_fstate.o ecl_util.o ecl_kw.o ecl_block.o
-ecl_interC.o : ecl_interC.c ecl_fstate.o ecl_sum.o ecl_parse.o lsf_jobs.o
+ecl_interC.o : ecl_interC.c ecl_fstate.o ecl_sum.o ecl_parse.o
 ecl_grid.o   : ecl_grid.c ecl_grid.h ecl_kw.o fortio.o
 ecl_interC.o : ecl_sum.o ecl_kw.o ecl_fstate.o ecl_block.o 
 ecl_box.o    : ecl_box.c ecl_box.h

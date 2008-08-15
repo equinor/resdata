@@ -178,3 +178,23 @@ void restart_kw_list_memcpy(restart_kw_list_type * src , restart_kw_list_type * 
 }
 
 
+
+/**
+   Returns true if the kw_list instance is empty.
+*/
+bool restart_kw_list_empty(const restart_kw_list_type * kw_list) {
+  if (kw_list->active_elements == 0)
+    return true;
+  else
+    return false;
+}
+
+void restart_kw_list_fprintf(const restart_kw_list_type * kw_list , FILE * stream) {
+  int ikey;
+  fprintf(stream,"----------------------------------------\n");
+  for (ikey = 0; ikey < kw_list->active_elements; ikey++) 
+    fprintf(stream , "%s \n",kw_list->kw_list[ikey]);
+  fprintf(stream,"----------------------------------------\n");
+}
+
+

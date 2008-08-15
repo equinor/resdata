@@ -7,12 +7,6 @@
 #include <util.h>
 #include <hash.h>
 
-/*
-
-
-
-
-
 
 
 /**
@@ -642,7 +636,7 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 
 ecl_type_enum ecl_util_guess_type(const char * key){ 
   hash_type * type_hash = hash_alloc(10);
-  ecl_type_enum type;
+  ecl_type_enum type = ecl_float_type;  /* Keep compiler silent / happy .*/
 
   hash_insert_int(type_hash , "PERMX"  , ecl_float_type);
   hash_insert_int(type_hash , "PERMZ"  , ecl_float_type);
