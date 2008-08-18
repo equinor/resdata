@@ -574,6 +574,7 @@ bool util_sscanf_int(const char * buffer , int * value) {
 }
 
 
+
 bool util_fscanf_int(FILE * stream , int * value) {
   long int start_pos = ftell(stream);
   char * token       = util_fscanf_alloc_token(stream);
@@ -587,6 +588,26 @@ bool util_fscanf_int(FILE * stream , int * value) {
   }
   return value_OK;
 }   
+
+
+/**
+   This functions presents the user with a prompt, and reads an
+   integer - the integer value is returned. The functions will loop
+   indefinitely until a valid integer is entered.
+*/
+
+int util_scanf_int(const char * prompt) {
+  char input[256];
+  int  int_value;
+  bool OK;
+  do {
+    printf("%s" , prompt);
+    scanf(input);
+    OK = util_sscanf_int(input , &int_value);
+  } while (!OK);
+  return int_value;
+}
+
 
 
 /**

@@ -68,6 +68,7 @@ void     util_fskip_chars(FILE * , const char * , bool *);
 void     util_fskip_cchars(FILE * , const char * , bool *);
 bool     util_fscanf_int(FILE * , int * );
 bool     util_sscanf_int(const char * , int * );
+int      util_scanf_int(const char * );
 bool     util_sscanf_double(const char * , double * );
 char   * util_alloc_full_path(const char *, const char *);
 char   * util_alloc_filename(const char * , const char *  , const char * );

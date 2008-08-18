@@ -177,50 +177,71 @@ static void menu_item_free(menu_item_type * item) {
     free(item->label);
   }
   free(item);
-}
+} 
 
 
+/** level == 0 : top line
+    level == 1 : separator line 
+    level == 2 : bottom line
+*/
 
-
-
-static void __print_line(int c , int l) {
+static void __print_line(int l , int level) {                                                                
   int i;
-  for (i=0; i < l; i++)
-    fputc(c , stdout);
+  if (level == 0)
+    fputc('/' , stdout);
+  else if (level == 1)
+    fputc('|' , stdout);
+  else
+    fputc('\\' , stdout);
+
+  
+  for (i=1; i < (l - 1); i++)
+    fputc('-' , stdout);
+
+
+  if (level == 0)
+    fputc('\\' , stdout);
+  else if (level == 1)
+    fputc('|' , stdout);
+  else
+    fputc('/' , stdout);
+
+
   fputc('\n' , stdout);
 }
   
 static void __print_sep(int l) {
   int i;
-  printf("#");
+  printf("| ");
   for (i=0; i < l; i++)
     fputc('-' , stdout);
-  printf("#\n");
+  printf(" |\n");
 }
 
 
 static void menu_display(const menu_type * menu) {
   int i;
   int length = util_int_max(menu->max_label_length , strlen(menu->title));
-  
-  __print_line('#' , length + 10);
-  printf("# ");   util_fprintf_string(menu->title , length + 6 , center , stdout);  printf(" #\n");
-  __print_line('#' , length + 10);
+
+  printf("\n");
+  __print_line(length + 10 , 0);
+  printf("| ");   util_fprintf_string(menu->title , length + 6 , center , stdout);  printf(" |\n");
+  __print_line(length + 10 , 1);
   for (i=0; i < menu->size; i++) {
     const menu_item_type * item = menu->items[i];
     if (item->separator) 
-      __print_sep(length + 8);
+      __print_sep(length + 6);
     else {
-      printf("# %c: ", item->key_set[0]);
+      printf("| %c: ", item->key_set[0]);
       util_fprintf_string(item->label , length + 3 , right_pad , stdout);
-      printf(" #\n");
+      printf(" |\n");
     }
   }
-  __print_sep(length + 8);
-  printf("# %c: ",menu->quit_keys[0]);
+  __print_sep(length + 6);
+  printf("| %c: ",menu->quit_keys[0]);
   util_fprintf_string("Quit" , length + 3 , right_pad , stdout);
-  printf(" #\n");
-  __print_line('#' , length + 10);
+  printf(" |\n");
+  __print_line(length + 10 , 2);
   printf("\n");
 }
 
