@@ -69,6 +69,18 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
 
 
 
+
+/**
+   This looks up the last PARAMS instance - an EnKF adaption.
+*/
+static ecl_kw_type * ecl_sum_get_PARAMS_kw(const ecl_block_type * ecl_block) {
+  ecl_kw_type    * params_kw   = ecl_block_get_last_kw(ecl_block , "PARAMS");       /* enkf adaption by taking the last */
+  return params_kw;
+}
+
+
+
+
 void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data_files , bool report_mode) {
   if (files <= 0) {
     fprintf(stderr,"%s: number of data files = %d - aborting \n",__func__ , files);
@@ -93,10 +105,9 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
     */
     {
       const ecl_block_type * data_block  = ecl_fstate_iget_block(sum->data , 0);
-      const ecl_kw_type    * params_kw   = ecl_block_get_kw(data_block , "PARAMS");
-      sum->params_size                   = ecl_kw_get_size(params_kw);
+      sum->params_size = ecl_kw_get_size(ecl_sum_get_PARAMS_kw(data_block));
     }
-    sum->var_type = util_malloc( sum->params_size * sizeof * sum->var_type , __func__);
+    sum->var_type    = util_malloc( sum->params_size * sizeof * sum->var_type , __func__);
   }
 }
   
@@ -389,6 +400,7 @@ static void ecl_sum_assert_index(const ecl_sum_type * ecl_sum, int index) {
 
 
 
+
 bool ecl_sum_has_report_nr(const ecl_sum_type * ecl_sum, int report_nr) {
   return ecl_fstate_has_report_nr(ecl_sum->data , report_nr);
 }
@@ -405,7 +417,8 @@ double ecl_sum_get_with_index(const ecl_sum_type *ecl_sum , int report_nr , int 
     ecl_kw_type    * data_kw;
     if (block == NULL) 
       util_abort("%s: failed to get report_nr:%d - something broken ?! \n",__func__ , report_nr);
-    data_kw  = ecl_block_get_kw(block , "PARAMS");
+    
+    data_kw  = ecl_sum_get_PARAMS_kw(block);
     return (double) ecl_kw_iget_float(data_kw , sum_index);    
   }
 }
@@ -417,9 +430,11 @@ double ecl_sum_iget_with_index(const ecl_sum_type *ecl_sum , int block_nr , int 
   ecl_sum_assert_index(ecl_sum , sum_index);
   {
     ecl_block_type * block    = ecl_fstate_iget_block(ecl_sum->data , block_nr);
-    ecl_kw_type    * data_kw  = ecl_block_get_kw(block , "PARAMS");
+    ecl_kw_type    * data_kw;
+    if (block == NULL) 
+      util_abort("%s: failed to get report_nr:%d - something broken ?! \n",__func__ , block_nr);
     
-    /* PARAMS underlying data type is float. */
+    data_kw  = ecl_sum_get_PARAMS_kw(block);
     return (double) ecl_kw_iget_float(data_kw , sum_index);    
   }
 }
@@ -445,6 +460,7 @@ int ecl_sum_get_num_regions(const ecl_sum_type * ecl_sum) {
 }
 
 
+/*
 static void ecl_sum_list_wells(const ecl_sum_type * ecl_sum) {
   int iw;
   char ** well_list = hash_alloc_keylist(ecl_sum->well_var_index);
@@ -452,7 +468,7 @@ static void ecl_sum_list_wells(const ecl_sum_type * ecl_sum) {
     printf("well[%03d] = %s \n",iw , well_list[iw]);
   util_free_stringlist(well_list , hash_get_size(ecl_sum->well_var_index));
 }
-
+*/
 
 
 int ecl_sum_get_well_var_index(const ecl_sum_type * ecl_sum , const char * well , const char *var) {

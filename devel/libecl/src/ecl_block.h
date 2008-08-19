@@ -5,13 +5,13 @@
 #include <ecl_kw.h>
 #include <fortio.h>
 #include <time.h>
-
+#include <restart_kw_list.h>
 
 
 typedef struct ecl_block_struct ecl_block_type;
 
 
-
+restart_kw_list_type * ecl_block_get_restart_kw_list(const ecl_block_type * );
 void             ecl_block_set_sim_time_summary(ecl_block_type * , /*int time_index , int years_index , */ int , int , int );
 void             ecl_block_set_sim_time_restart(ecl_block_type * );
 void             ecl_block_set_sim_time(ecl_block_type * , time_t );
@@ -27,7 +27,7 @@ void             ecl_block_fread(ecl_block_type *, fortio_type * , bool *);
 bool             ecl_block_has_kw(const ecl_block_type * , const char * );
 ecl_kw_type    * ecl_block_get_kw(const ecl_block_type *, const char *);
 ecl_kw_type    * ecl_block_iget_kw(const ecl_block_type *, const char *, int);
-ecl_kw_type    * ecl_block_get_kw_last(const ecl_block_type *, const char*);
+ecl_kw_type    * ecl_block_get_last_kw(const ecl_block_type *, const char*);
 /* void           * ecl_block_get_data_ref(const ecl_block_type *, const char *); */
 ecl_block_type * ecl_block_alloc(int , bool , bool);
 ecl_block_type * ecl_block_fread_alloc(int , bool , bool , fortio_type * , bool *);
