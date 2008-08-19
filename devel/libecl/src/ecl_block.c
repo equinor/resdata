@@ -35,7 +35,8 @@ struct ecl_block_struct {
     NB!
 
     As of 19.08.2008, kw_hash now contains ecl_block_node_type items,
-    *NOT* ecl_kw_type items! This is to fix the aquifer bug.
+    *NOT* ecl_kw_type items! This is to support multiple occurences
+    of one kw in a single block, e.g. aquifers.
   */
   hash_type    *kw_hash;
   time_t        sim_time;
@@ -295,7 +296,7 @@ ecl_kw_type * ecl_block_get_kw(const ecl_block_type *ecl_block , const char *kw)
   if (hash_has_key(ecl_block->kw_hash , kw_s)){ 
     ecl_block_node_type * node = hash_get(ecl_block->kw_hash, kw_s);
     if(node->size > 1){
-      util_abort("%s: keyword has more than one occurence, must use ecl_block_iget_ecl_kw.\n", __func__);
+      util_abort("%s: keyword has more than one occurence, must use ecl_block_iget_kw.\n", __func__);
       return NULL;
     }
     else{
