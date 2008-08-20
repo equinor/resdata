@@ -407,7 +407,6 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
   ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty(ecl_block->fmt_file , ecl_block->endian_convert);
   
   bool read_next_kw  = true;
-  bool read_first_kw = true;
   bool is_first_kw   = true;
 
   char * first_kw = NULL;
@@ -417,7 +416,6 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
       if(is_first_kw)
       {
         first_kw = util_alloc_string_copy(ecl_kw_get_header_ref(ecl_kw));
-        read_first_kw = false;
       }
 
       if (ecl_kw_header_eq(ecl_kw , first_kw) && !is_first_kw)
