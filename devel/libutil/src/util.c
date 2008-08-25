@@ -560,6 +560,12 @@ bool util_sscanf_double(const char * buffer , double * value) {
 
 
 
+/**
+   Takes a char buffer as input, and parses it as an integer. Returns
+   true if the parsing succeeded, and false otherwise. If parsing
+   succeded, the integer value is returned by reference.
+*/
+
 
 bool util_sscanf_int(const char * buffer , int * value) {
   bool value_OK = false;
@@ -574,6 +580,17 @@ bool util_sscanf_int(const char * buffer , int * value) {
 }
 
 
+/**
+   Takes a stream as input. Reads one string token from the stream,
+   and tries to interpret the token as an integer with the function
+   util_sscanf_int(). Returns true if the parsing succeeded, and false
+   otherwise. If parsing succeded, the integer value is returned by
+   reference.
+
+   If the parsing fails the stream is repositioned at the location it
+   had on entry to the function.
+*/
+   
 
 bool util_fscanf_int(FILE * stream , int * value) {
   long int start_pos = ftell(stream);
@@ -591,21 +608,76 @@ bool util_fscanf_int(FILE * stream , int * value) {
 
 
 /**
+   Prompt .........====>
+   <-------1------><-2-> 
+
+   The section marked with 1 above is the prompt length, i.e. the
+   input prompt is padded wth one blank, and then padded with
+   'fill_char' (in the case above that is '.') characters up to a
+   total length of prompt_len. Then the the termnation string ("===>"
+   above) s added. Observe the following:
+
+   * A space is _always_ added after the prompt, even though it is to
+     long n the first place.
+
+   * No space is added at the end of the termination character. If
+     you want a space, that should be included in the termination
+     string.
+
+*/
+
+
+void util_printf_prompt(const char * prompt , int prompt_len, char fill_char , const char * termination) {
+  printf("%s ",prompt);  /* Observe that one ' ' is forced in here. */ 
+  if ((strlen(prompt) + 1) < prompt_len) {
+    int i;
+    for (i=0; i < (prompt_len - (strlen(prompt) + 1)); i++)
+      fputc(fill_char , stdout);
+  }
+  printf("%s" , termination);
+}
+
+
+/**
    This functions presents the user with a prompt, and reads an
    integer - the integer value is returned. The functions will loop
    indefinitely until a valid integer is entered.
 */
 
-int util_scanf_int(const char * prompt) {
+int util_scanf_int(const char * prompt , int prompt_len) {
   char input[256];
   int  int_value;
   bool OK;
   do {
-    printf("%s" , prompt);
-    scanf(input);
+    util_printf_prompt(prompt , prompt_len, '=', "=> ");
+    scanf("%s" , input);
     OK = util_sscanf_int(input , &int_value);
   } while (!OK);
   return int_value;
+}
+
+
+/** 
+    The limits are inclusive.
+*/
+int util_scanf_int_with_limits(const char * prompt , int prompt_len , int min_value , int max_value) {
+  int value;
+  char * new_prompt = util_alloc_sprintf("%s [%d,%d]" , prompt , min_value , max_value);
+  do {
+    value = util_scanf_int(new_prompt , prompt_len);
+  } while (value < min_value || value > max_value);
+  free(new_prompt);
+  return value;
+}
+
+
+
+
+char * util_scanf_alloc_string(const char * prompt) {
+  char input[256];
+  printf("%s" , prompt);
+  scanf("%256s" , input);
+  return util_alloc_string_copy(input);
 }
 
 
@@ -1450,7 +1522,14 @@ char ** util_alloc_stringlist(int N, int len) {
 }
 
 
-char * util_strcat_realloc(char *s1 , const char * s2) {
+
+/**
+   This function will reallocate the string s1 to become the sum of s1
+   and s2.
+*/
+
+
+  char * util_strcat_realloc(char *s1 , const char * s2) {
   if (s1 == NULL) 
     s1 = util_alloc_string_copy(s2);
   else {

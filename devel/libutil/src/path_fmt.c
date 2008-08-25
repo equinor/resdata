@@ -94,15 +94,32 @@ static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory) {
   versus format string is performed.
 */
 
+
 path_fmt_type * path_fmt_alloc_directory_fmt(const char * fmt) {
   return path_fmt_alloc__(fmt , true);
 }
 
 
-path_fmt_type * path_fmt_alloc_file_fmt(const char * fmt) {
+
+/* Most general. Can afterwards be used to allocate strings
+   representing both directories and files.
+ */
+path_fmt_type * path_fmt_alloc_path_fmt(const char * fmt) {
   return path_fmt_alloc__(fmt , false );
 }
 
+
+
+/**
+   Present the user with a prompt, and reads format specifier string
+   from stdin. Currently not possible to specify argument types.
+*/
+
+path_fmt_type * path_fmt_scanf_alloc(const char * prompt , int types , const node_ctype * type_list, bool is_directory) {
+  char * fmt;
+  fmt = util_scanf_alloc_string(prompt);
+  return path_fmt_alloc__(fmt , is_directory);
+}
 
 path_fmt_type * path_fmt_copyc(const path_fmt_type *path) {
   path_fmt_type *new_path = path_fmt_alloc__(path->fmt , path->is_directory);
@@ -158,10 +175,24 @@ char * path_fmt_alloc_path(const path_fmt_type * path , bool auto_mkdir , ...) {
   it does not already exist, the underlying directory will be
   created. Observe that there is nothing special about the filename
   argument (i.e. 'SomeFile.txt' in the current example), it is just
-  the last argument to the path_fmt_alloc_file() function call.
+  the last argument to the path_fmt_alloc_file() function call -
+  however it must be a string; i.e. if you are making a purely numeric
+  filename you must convert to a string.
 
   Observe that the handling of the variable length argument lists gets
   seriously ugly.
+
+  -----------------------------------------------------------------
+  
+  If auto_mkdir == true the function behaves in two different ways
+  depending on whether the path_instance was allocated as a directory
+  or as a path:
+
+   * [Directory]: When the path_fmt instance was allocated as a
+     directory, "/%s" format decriptor will be appended to the format.
+
+   * [Path]: The resulting string will be split on "/", and the path
+     component will be created.
 */
 
 
@@ -181,10 +212,25 @@ char * path_fmt_alloc_file(const path_fmt_type * path , bool auto_mkdir , ...) {
     va_end(ap);
     return filename;
   } else {
-    util_abort("%s: tried to allocate filename from a path_fmt object which already is of file type - aborting\n",__func__);
-    return NULL;  /* Pure dummy to shut up the compiler. */
+
+    char * filename;
+    va_list tmp_va , ap;
+    va_start(ap , auto_mkdir);
+    va_copy(tmp_va , ap);
+    filename = __fmt_alloc_path_va__(path->fmt , ap);
+    if (auto_mkdir) {
+      char * __path;
+      util_alloc_file_components(filename , &__path , NULL , NULL);
+      util_make_path(__path);
+      free(__path);
+    }
+    va_end(ap);
+
+    return filename;
   }
 }
+
+
 
 /**
    This function is used to assert that the format in a path_fmt
