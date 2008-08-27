@@ -2,6 +2,7 @@
 #define __CONFIG_H__
 
 #include <stdbool.h>
+#include <stringlist.h>
 
 #define ECL_COM_KW "--"
 #define ENKF_COM_KW "--"
@@ -13,17 +14,18 @@ typedef struct config_item_struct config_item_type;
 typedef bool ( config_item_validate_ftype ) (const config_type *, 
 					     const config_item_type *);
 
-char       ** config_alloc_active_list(const config_type *, int *);
-int           config_get_argc(const config_type *  , const char *);
-const char ** config_get_argv(const config_type *  , const char * , int *);
-const char *  config_get(const config_type *  , const char *);
-const char *  config_iget(const config_type *  , const char *, int);
-void          config_free(config_type *);
-config_type * config_alloc( bool );
-char       ** config_alloc_active_list(const config_type * , int * );
-void          config_parse(config_type * , const char * , const char * );
-bool          config_has_item(const config_type * config , const char * kw);
-void          config_set_arg(config_type * config , const char * , int , const char **);
+char       ** 	  config_alloc_active_list(const config_type *, int *);
+int           	  config_get_argc(const config_type *  , const char *);
+const char ** 	  config_get_argv(const config_type *  , const char * , int *);
+const char *  	  config_get(const config_type *  , const char *);
+const char *  	  config_iget(const config_type *  , const char *, int);
+void          	  config_free(config_type *);
+config_type * 	  config_alloc( bool );
+char       ** 	  config_alloc_active_list(const config_type * , int * );
+void          	  config_parse(config_type * , const char * , const char * );
+bool          	  config_has_item(const config_type * config , const char * kw);
+void          	  config_set_arg(config_type * config , const char * , int , const char **);
+stringlist_type * config_get_stringlist(const config_item_type * );
 
 /*****************************************************************/
 

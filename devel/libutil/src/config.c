@@ -5,6 +5,7 @@
 #include <util.h>
 #include <config.h>
 #include <hash.h>
+#include <stringlist.h>
 
 struct config_struct {
   int          parse_count;
@@ -14,11 +15,11 @@ struct config_struct {
 
 #define __TYPE__ 6751
 
+
 struct config_item_struct {
-  int     __id;
-  char  * kw;
-  int     argc;
-  char  **argv;
+  int                         __id;   /* Used for run-time checking */
+  char                        * kw;   /* The kw which identifies this item· */
+  stringlist_type             * stringlist;
   /**************************/
   bool                          currently_set;
   bool                          append_arg;
@@ -42,8 +43,7 @@ config_item_type * config_item_alloc(const char * kw) {
 
   item->__id = __TYPE__;
   item->kw   = util_alloc_string_copy(kw);
-  item->argc = 0;
-  item->argv = NULL;
+  item->stringlist = stringlist_alloc_new();
 
   item->currently_set = false;
   item->append_arg    = false;
@@ -61,10 +61,8 @@ config_item_type * config_item_alloc(const char * kw) {
 
 static void config_item_append_arg(config_item_type * item , int argc , const char ** argv) {
   int iarg;
-  item->argv = util_realloc( item->argv , (argc + item->argc) * sizeof * item->argv , __func__);
   for (iarg = 0; iarg < argc; iarg++)
-    item->argv[iarg + item->argc] = util_alloc_string_copy(argv[iarg]);
-  item->argc += argc;
+    stringlist_append_copy(item->stringlist , argv[iarg]);
 }
 
 
@@ -84,11 +82,8 @@ void config_item_set_arg(config_item_type * item , int argc , const char **argv)
     }
   }
 
-  if (!item->append_arg) {
-    util_free_stringlist(item->argv , item->argc);
-    item->argc = 0;
-    item->argv = NULL;
-  }
+  if (!item->append_arg) 
+    stringlist_clear(item->stringlist);
   
   config_item_append_arg(item , argc , argv);
   item->currently_set = true;
@@ -129,21 +124,21 @@ bool config_item_validate(const config_type * config , const config_item_type * 
 
 
 int config_item_get_argc(const config_item_type * item ) {
-  return item->argc;
+  return stringlist_get_argc(item->stringlist);
 }
 
 const char ** config_item_get_argv(const config_item_type * item , int * argc) {
-  *argc = item->argc;
-  return (const char **) item->argv;
+  *argc = stringlist_get_argc(item->stringlist);
+  return stringlist_get_argv(item->stringlist);
 }
 
+stringlist_type * config_get_stringlist(const config_item_type * item) {
+  return item->stringlist;
+}
+
+
 const char * config_item_iget_argv(const config_item_type * item , int iarg) {
-  if (item->argc > iarg)
-    return item->argv[iarg];
-  else {
-    util_abort("%s: asked for argument nr:%d - the keyword only has %d arguments \n",__func__ , iarg + 1 , item->kw , item->argc);
-    return NULL;
-  }
+  return stringlist_iget(item->stringlist , iarg);
 }
 
 
@@ -151,11 +146,12 @@ const char * config_item_iget_argv(const config_item_type * item , int iarg) {
 
 void config_item_free( config_item_type * item) {
   free(item->kw);
-  util_free_stringlist(item->argv              , item->argc);
+  stringlist_free(item->stringlist);
   util_free_stringlist(item->required_children , item->num_children);
   util_free_stringlist(item->selection_set     , item->selection_size);
   free(item);
 }
+
 
 void config_item_free__ (void * void_item) {
   config_item_type * item = (config_item_type *) void_item;

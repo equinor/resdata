@@ -191,17 +191,29 @@ stringlist_type * stringlist_alloc_deep_copy(const stringlist_type * stringlist)
 }
 
 
-void stringlist_free(stringlist_type * stringlist) {
-  int i;
-  if (stringlist->size > 0) {
+/** 
+    Frees all the memory contained by the stringlist.
+*/
+void stringlist_clear(stringlist_type * stringlist) {
+int i;
 
-    for (i = 0; i < stringlist->size; i++)
+ if (stringlist->size > 0) {
+
+   for (i = 0; i < stringlist->size; i++)
       if (stringlist->owner[i] != ref)
 	util_safe_free(stringlist->strings[i]);
-    free(stringlist->strings);
-    free(stringlist->owner);
+   free(stringlist->strings);
+   free(stringlist->owner);
+   
+   stringlist->strings = NULL;
+   stringlist->size    = 0;
+   stringlist->owner   = NULL;
+ }
+}
 
-  }
+
+void stringlist_free(stringlist_type * stringlist) {
+  stringlist_clear(stringlist);
   free(stringlist);
 }
 

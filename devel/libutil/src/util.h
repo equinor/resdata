@@ -137,6 +137,7 @@ int     util_proc_mem_free(void);
 void     util_apply_int_limits(int * , int , int );
 void     util_apply_float_limits(float * , float , float );
 void     util_apply_double_limits(double * , double , double );
+void     util_double_vector_max_min(int  , const double *, double * , double *);
 void     util_update_double_max_min(double , double * , double * );
 void     util_update_float_max_min(float , float * , float * );
 void     util_update_int_max_min(int , int * , int * );

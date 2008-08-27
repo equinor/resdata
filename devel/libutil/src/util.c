@@ -8,7 +8,7 @@
   manipulation functions which explicitly use the PATH_SEP variable.
 */
 
-
+#include <limits.h>
 #include <errno.h>
 #include <time.h>
 #include <inttypes.h>
@@ -614,13 +614,13 @@ bool util_fscanf_int(FILE * stream , int * value) {
    The section marked with 1 above is the prompt length, i.e. the
    input prompt is padded wth one blank, and then padded with
    'fill_char' (in the case above that is '.') characters up to a
-   total length of prompt_len. Then the the termnation string ("===>"
-   above) s added. Observe the following:
+   total length of prompt_len. Then the the termination string ("===>"
+   above) is added. Observe the following:
 
-   * A space is _always_ added after the prompt, even though it is to
-     long n the first place.
+   * A space is _always_ added after the prompt, even if the prompt is
+     too long in the first place.
 
-   * No space is added at the end of the termination character. If
+   * No space is added at the end of the termination string. If
      you want a space, that should be included in the termination
      string.
 
@@ -628,13 +628,15 @@ bool util_fscanf_int(FILE * stream , int * value) {
 
 
 void util_printf_prompt(const char * prompt , int prompt_len, char fill_char , const char * termination) {
+  int current_len = strlen(prompt) + 1;
   printf("%s ",prompt);  /* Observe that one ' ' is forced in here. */ 
-  if ((strlen(prompt) + 1) < prompt_len) {
-    int i;
-    for (i=0; i < (prompt_len - (strlen(prompt) + 1)); i++)
-      fputc(fill_char , stdout);
+  
+  while (current_len < prompt_len) {
+    fputc(fill_char , stdout);
+    current_len++;
   }
   printf("%s" , termination);
+
 }
 
 
@@ -662,7 +664,7 @@ int util_scanf_int(const char * prompt , int prompt_len) {
 */
 int util_scanf_int_with_limits(const char * prompt , int prompt_len , int min_value , int max_value) {
   int value;
-  char * new_prompt = util_alloc_sprintf("%s [%d,%d]" , prompt , min_value , max_value);
+  char * new_prompt = util_alloc_sprintf("%s [%d:%d]" , prompt , min_value , max_value);
   do {
     value = util_scanf_int(new_prompt , prompt_len);
   } while (value < min_value || value > max_value);
@@ -1905,6 +1907,27 @@ void util_apply_int_limits(int * value , int min_value , int max_value) {
     *value = min_value;
   else if (*value > max_value)
     *value = max_value;
+}
+
+
+
+/**
+   Scans through a vector of doubles, and finds min and max
+   values. They are returned by reference.
+*/
+  
+void util_double_vector_max_min(int N , const double *vector, double *_max , double *_min) {
+  double min =  1e100; /* How should this be done ??? */
+  double max = -1e100;
+  int i;
+  for (i = 0; i < N; i++) {
+    if (vector[i] > max)
+      max = vector[i];
+    else if (vector[i] < min)
+      min = vector[i];
+  }
+  *_max = max;
+  *_min = min;
 }
 
 
