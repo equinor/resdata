@@ -11,25 +11,22 @@ struct config_struct {
   int          parse_count;
   hash_type  * items;
   bool         auto_add;
+  bool         append_arg_default_value;
 };
 
 #define __TYPE__ 6751
 
 
 struct config_item_struct {
-  int                         __id;   /* Used for run-time checking */
-  char                        * kw;   /* The kw which identifies this item· */
-  stringlist_type             * stringlist;
-  /**************************/
-  bool                          currently_set;
-  bool                          append_arg;
-  bool                          required_set;
-  char                       ** selection_set;
-  int                           selection_size;  
-  char                       ** required_children;
-  int                           num_children;
-  config_item_validate_ftype  * validator;
-  int                           argc_min;  /* Observe that these are NOT for the total - but pr line */
+  int                         __id;   			 /* Used for run-time checking */
+  char                        * kw;   			 /* The kw which identifies this item· */
+  stringlist_type             * stringlist;     	 /* The values which have been set. */
+  bool                          append_arg;     	 /* Should the values be appended if a keyword appears several times in the config file. */
+  bool                          currently_set;           /* Has a value been assigned to this keyword. */
+  bool                          required_set;            
+  stringlist_type             * selection_set;           /* A list of strings which the value(s) must match */
+  stringlist_type             * required_children;       /* A list of item's which must also be set (if this item is set). */
+  int                           argc_min;                /* Observe that these are NOT for the total - but pr line */
   int                           argc_max;
 };
 
@@ -38,31 +35,35 @@ struct config_item_struct {
 
 
 
-config_item_type * config_item_alloc(const char * kw) {
+config_item_type * config_item_alloc(const char * kw , bool required , bool append_arg) {
   config_item_type * item = util_malloc(sizeof * item , __func__);
 
-  item->__id = __TYPE__;
-  item->kw   = util_alloc_string_copy(kw);
+  item->__id       = __TYPE__;
+  item->kw         = util_alloc_string_copy(kw);
   item->stringlist = stringlist_alloc_new();
 
-  item->currently_set = false;
-  item->append_arg    = false;
-  item->required_set  = false;
-  item->required_children = NULL;
-  item->num_children      = 0;
-  item->validator         = NULL;
+  item->currently_set 	  = false;
+  item->append_arg    	  = append_arg;
+  item->required_set  	  = required;
   item->argc_min          = -1;  /* -1 - not applicable */
   item->argc_max          = -1;
   item->selection_set     = NULL;
-  item->selection_size    = 0;
+  item->required_children = NULL;
   return item;
 }
 
 
 static void config_item_append_arg(config_item_type * item , int argc , const char ** argv) {
   int iarg;
-  for (iarg = 0; iarg < argc; iarg++)
+  for (iarg = 0; iarg < argc; iarg++) {
+    if (item->selection_set != NULL) 
+      if (!stringlist_contains(item->selection_set , argv[iarg])) {
+	fprintf(stderr,"Valid values for:%s : ",item->kw);
+	stringlist_fprintf(item->selection_set , stderr);
+	util_abort("%s: value:%s is not valid for key:%s \n",__func__ , argv[iarg] , item->kw);
+      }
     stringlist_append_copy(item->stringlist , argv[iarg]);
+  }
 }
 
 
@@ -90,34 +91,12 @@ void config_item_set_arg(config_item_type * item , int argc , const char **argv)
 }
 
 
-void config_item_init(config_item_type * item, 
-		      int default_argc  , const char ** default_argv , 
-		      bool required_set , 
-		      bool append_arg   ,
-		      int num_children  , const char ** required_children,
-		      int argc_min      , int argc_max,
-		      config_item_validate_ftype * validator) {
-  item->required_set = required_set;
-  item->append_arg   = append_arg;
-  item->validator    = validator;
-  if (default_argc > 0)
-    config_item_set_arg(item , default_argc , default_argv);
-  item->num_children = num_children;
-  item->required_children = util_alloc_stringlist_copy(required_children , num_children);
-  item->argc_min = argc_min;
-  item->argc_max = argc_max;
-}  
-
-
 bool config_item_validate(const config_type * config , const config_item_type * item) {
   bool OK = true;
   if (item->required_set && !item->currently_set) {
     fprintf(stderr , "**ERROR: item:%s has not been set \n",item->kw);
     OK = false;
-  } else {
-    if (item->validator != NULL) 
-      OK = item->validator(config , item);
-  }
+  } 
   return OK;
 }
 
@@ -147,8 +126,8 @@ const char * config_item_iget_argv(const config_item_type * item , int iarg) {
 void config_item_free( config_item_type * item) {
   free(item->kw);
   stringlist_free(item->stringlist);
-  util_free_stringlist(item->required_children , item->num_children);
-  util_free_stringlist(item->selection_set     , item->selection_size);
+  if (item->required_children != NULL) stringlist_free(item->required_children);
+  if (item->selection_set != NULL)     stringlist_free(item->selection_set);
   free(item);
 }
 
@@ -166,7 +145,21 @@ bool config_item_is_set(const config_item_type * item) {
   return item->currently_set;
 }
 
+void config_item_set_selection_set(config_item_type * item , stringlist_type * stringlist) {
+  item->selection_set = stringlist_alloc_deep_copy(stringlist);
+}
+
+void config_item_set_required_children(config_item_type * item , stringlist_type * stringlist) {
+  item->required_children = stringlist_alloc_deep_copy(stringlist);
+}
+
+void config_item_set_argc_minmax(config_item_type * item , int argc_min , int argc_max) {
+  item->argc_min = argc_min;
+  item->argc_max = argc_max;
+}
   
+
+
 #undef __TYPE__
 
 
@@ -176,10 +169,11 @@ bool config_item_is_set(const config_item_type * item) {
 
 
 config_type * config_alloc(bool auto_add) {
-  config_type *config = util_malloc(sizeof * config  , __func__);
-  config->auto_add    = auto_add;
-  config->items       = hash_alloc();
-  config->parse_count = 0;
+  config_type *config 		   = util_malloc(sizeof * config  , __func__);
+  config->auto_add    		   = auto_add;
+  config->items       		   = hash_alloc();
+  config->parse_count 		   = 0;         
+  config->append_arg_default_value = false;
   return config;
 }
 
@@ -190,24 +184,30 @@ void config_free(config_type * config) {
 }
 
 
-void config_add_item(config_type * config, const char * kw , const config_item_type * item) {
+
+
+/**
+   This function allocates a simple item with all values
+   defaulted. The item is added to the config object, and a pointer is
+   returned to the calling scope. If you want to change the properties
+   of the item you can do that with config_item_set_xxxx() functions
+   from the calling scope.
+*/
+
+
+config_item_type * config_add_item(config_type * config , 
+				   const char  * kw, 
+				   bool  required  , 
+				   bool  append_arg) {
+  
+  config_item_type * item = config_item_alloc( kw , required , append_arg);
   hash_insert_hash_owned_ref(config->items , kw , item , config_item_free__);
+  
+  return item;
 }
 
 
-void config_init_item(config_type * config , 
-		      const char * kw, 
-		      int default_argc  , const char ** default_argv , 
-		      bool required_set , 
-		      bool append_arg   ,
-		      int num_children  , const char ** required_children,
-		      int argc_min      , int argc_max,
-		      config_item_validate_ftype * validator) {
 
-  config_item_type * item = config_item_alloc( kw );
-  config_item_init(item , default_argc , default_argv , required_set , append_arg , num_children , required_children , argc_min , argc_max , validator);
-  config_add_item(config , kw , item);
-}
 
 
 bool config_has_item(const config_type * config , const char * kw) {
@@ -341,10 +341,9 @@ void config_parse(config_type * config , const char * filename, const char * com
 	}
 	if (active_tokens > 0) {
 	  const char * kw = token_list[0];
-	  if (!config_has_item(config , kw) && config->auto_add) {
-	    config_item_type * new_item = config_item_alloc(kw);
-	    config_add_item(config , kw , new_item);
-	  }
+	  if (!config_has_item(config , kw) && config->auto_add) 
+	    config_add_item(config , kw , false , config->append_arg_default_value);
+
 	  if (config_has_item(config , kw)) {
 	    config_item_type * item = config_get_item(config , kw);
 	    config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1]);

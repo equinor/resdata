@@ -219,7 +219,6 @@ void stringlist_free(stringlist_type * stringlist) {
 
 
 
-
 const char * stringlist_iget(const stringlist_type * stringlist , int index) {
   stringlist_assert_index(stringlist ,index);
   return stringlist->strings[index];
@@ -245,4 +244,22 @@ void stringlist_fprintf(const stringlist_type * stringlist, FILE * stream) {
   int i;
   for (i = 0; i < stringlist->size; i++)
     fprintf(stream , "%s ",stringlist->strings[i]);
+}
+
+
+/** 
+    Scans the stringlist (linear scan) to see if it contains (at
+    least) on occurence of 's';
+*/
+
+bool stringlist_contains(const stringlist_type * stringlist , const char * s) {
+  int  index;
+  bool contains = false;
+  while ((index < stringlist->size) && (!contains)) {
+    const char * istring = stringlist->strings[index];
+    if (istring != NULL)
+      if (strcmp(istring , s) == 0) contains = true;
+    index++;
+  }
+  return contains;
 }
