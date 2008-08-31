@@ -21,7 +21,7 @@ stringlist_type * stringlist_alloc_argv_copy(const char **      , int );
 stringlist_type * stringlist_alloc_argv_ref (const char **      , int );
 stringlist_type * stringlist_alloc_argv_owned_ref(const char ** , int );
 int               stringlist_get_size(const stringlist_type * );
-void              stringlist_fprintf(const stringlist_type * , FILE *);
+void              stringlist_fprintf(const stringlist_type * , const char * , FILE *);
 stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type *);
 stringlist_type * stringlist_alloc_deep_copy(const stringlist_type *);
 

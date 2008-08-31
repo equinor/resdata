@@ -240,10 +240,10 @@ const char ** stringlist_get_argv(const stringlist_type * stringlist) {
 }
 
 
-void stringlist_fprintf(const stringlist_type * stringlist, FILE * stream) {
+void stringlist_fprintf(const stringlist_type * stringlist, const char * sep , FILE * stream) {
   int i;
   for (i = 0; i < stringlist->size; i++)
-    fprintf(stream , "%s ",stringlist->strings[i]);
+    fprintf(stream , "%s%s",stringlist->strings[i] , sep);
 }
 
 
@@ -253,7 +253,7 @@ void stringlist_fprintf(const stringlist_type * stringlist, FILE * stream) {
 */
 
 bool stringlist_contains(const stringlist_type * stringlist , const char * s) {
-  int  index;
+  int  index    = 0;
   bool contains = false;
   while ((index < stringlist->size) && (!contains)) {
     const char * istring = stringlist->strings[index];

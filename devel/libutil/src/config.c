@@ -7,15 +7,50 @@
 #include <hash.h>
 #include <stringlist.h>
 
+/**
+   Structure to parse configuration files of this type:
+
+KEYWORD1  ARG2   ARG2  ARG3
+KEYWORD2  ARG1-2
+....
+KEYWORDN  
+
+
+
+Validating
+----------
+The config object implements three different ways of validating the input:
+
+ 1. If the xx__argc_minmax() function has been called, a line will not
+    be accepted if the number of arguments is not within this range.
+
+ 2. If the type_map has been installed for the item (with the
+    xx_arg_minmax function), it is checked the arguments of the item
+    are in accordance with this typemap.
+
+ 3. If the item is added with required_set == true, the validate
+    routine will fail if the item is not set.
+
+Observe that the two first steps are checked when the item is parsed
+(however the error is not reported before after the parsing is
+complete),  whereas the last is checked when the parsing is
+complete. Observe that is ABSOLUTELY ESSENTIAL that the final call
+to config_parse() is with validate == true, otherwise the validation 
+will not be performed / acted upon.
+*/
+
+
+
 struct config_struct {
-  int          parse_count;
-  hash_type  * items;
-  bool         auto_add;
-  bool         append_arg_default_value;
+  hash_type  	  * items;             	       /* A hash of config_items - the actual content. */
+  bool       	    auto_add;          	       /* Whether unknown items should be added */
+  bool       	    append_arg_default_value;  /* When we dynamically add a new item - should that be initialized with append_arg == true ? */
+  stringlist_type * parse_errors;              /* A stringlist containg the errors found when parsing.*/
+  int               error_count;               /* The number of errors found when parsing. */
 };
 
-#define __TYPE__ 6751
 
+#define __TYPE__ 6751
 
 struct config_item_struct {
   int                         __id;   			 /* Used for run-time checking */
@@ -24,10 +59,11 @@ struct config_item_struct {
   bool                          append_arg;     	 /* Should the values be appended if a keyword appears several times in the config file. */
   bool                          currently_set;           /* Has a value been assigned to this keyword. */
   bool                          required_set;            
-  stringlist_type             * selection_set;           /* A list of strings which the value(s) must match */
-  stringlist_type             * required_children;       /* A list of item's which must also be set (if this item is set). */
-  int                           argc_min;                /* Observe that these are NOT for the total - but pr line */
-  int                           argc_max;
+  stringlist_type             * selection_set;           /* A list of strings which the value(s) must match (can be NULL) */
+  stringlist_type             * required_children;       /* A list of item's which must also be set (if this item is set). (can be NULL) */
+  int                           argc_min;                /* The minimum number of arguments for this keyword -1 means no lower limit. */
+  int                           argc_max;                /* The maximum number of arguments for this keyword (on one line) -1 means no limit. */   
+  config_item_types           * type_map;                /* A list of types for the items - can be NULL. Set along with argc_minmax(); */
 };
 
 /*****************************************************************/
@@ -49,62 +85,92 @@ config_item_type * config_item_alloc(const char * kw , bool required , bool appe
   item->argc_max          = -1;
   item->selection_set     = NULL;
   item->required_children = NULL;
+  item->type_map          = NULL;
   return item;
 }
 
 
-static void config_item_append_arg(config_item_type * item , int argc , const char ** argv) {
-  int iarg;
-  for (iarg = 0; iarg < argc; iarg++) {
-    if (item->selection_set != NULL) 
-      if (!stringlist_contains(item->selection_set , argv[iarg])) {
-	fprintf(stderr,"Valid values for:%s : ",item->kw);
-	stringlist_fprintf(item->selection_set , stderr);
-	util_abort("%s: value:%s is not valid for key:%s \n",__func__ , argv[iarg] , item->kw);
-      }
-    stringlist_append_copy(item->stringlist , argv[iarg]);
+static void config_add_error(config_type * config , const char * error_message) {
+  if (error_message != NULL) {
+    config->error_count++;
+    stringlist_append_owned_ref(config->parse_errors , util_alloc_sprintf("%02d: %s" , config->error_count , error_message));
   }
 }
 
 
-void config_item_set_arg(config_item_type * item , int argc , const char **argv) {
+/*
+  The last argument (config_file) is only used for printing
+  informative error messages, and can be NULL.
+
+  Returns a string with an error description, or NULL if the supplied
+  arguments were OK. The string is allocated here, but is assumed that
+  calling scope will free it.
+*/
+
+static char * config_item_append_arg(config_item_type * item , int argc , const char ** argv , const char * config_file) {
+  char * error_message = NULL;
+  int iarg;
   bool OK;
+  
   if (item->argc_min >= 0) {
     if (argc < item->argc_min) {
       OK = false;
-      fprintf(stderr,"Error when parsing. Keyword:%s must have at least %d arguments \n",item->kw , item->argc_min);
+      
+      if (config_file != NULL)
+	error_message = util_alloc_sprintf("Error when parsing config_file:\"%s\" Keyword:%s must have at least %d arguments.",config_file , item->kw , item->argc_min);
+      else
+	error_message = util_alloc_sprintf("Error:: Keyword:%s must have at least %d arguments.",item->kw , item->argc_min);
     }
   }
 
   if (item->argc_max >= 0) {
     if (argc > item->argc_max) {
       OK = false;
-      fprintf(stderr , "Error when parsing. Keyword:%s must have maximum %d arguments \n",item->kw , item->argc_max);
+      if (config_file != NULL)
+	error_message = util_alloc_sprintf("Error when parsing config_file:\"%s\" Keyword:%s must have maximum %d arguments.",config_file , item->kw , item->argc_min);
+      else
+	error_message = util_alloc_sprintf("Error:: Keyword:%s must have maximum %d arguments.",item->kw , item->argc_min);
     }
   }
 
+  for (iarg = 0; iarg < argc; iarg++) {
+    bool OK = true;
+
+    if (item->selection_set != NULL) {
+      if (!stringlist_contains(item->selection_set , argv[iarg])) {
+	error_message = util_alloc_sprintf("%s: is not a valid value for: %s.",argv[iarg] , item->kw);
+	OK = false;
+      } 
+    }
+    if (OK) stringlist_append_copy(item->stringlist , argv[iarg]);
+  }
+  return error_message;
+}
+
+
+char * config_item_set_arg(config_item_type * item , int argc , const char **argv , const char * config_file) {
   if (!item->append_arg) 
     stringlist_clear(item->stringlist);
   
-  config_item_append_arg(item , argc , argv);
   item->currently_set = true;
+  return config_item_append_arg(item , argc , argv , config_file);
 }
 
 
-bool config_item_validate(const config_type * config , const config_item_type * item) {
-  bool OK = true;
+
+void config_item_validate(config_type * config , const config_item_type * item) {
   if (item->required_set && !item->currently_set) {
-    fprintf(stderr , "**ERROR: item:%s has not been set \n",item->kw);
-    OK = false;
-  } 
-  return OK;
+    char * error_message = util_alloc_sprintf("Item:%s must be set with a value.",item->kw);
+    config_add_error(config , error_message);
+    free(error_message);
+  }
 }
-
 
 
 int config_item_get_argc(const config_item_type * item ) {
   return stringlist_get_argc(item->stringlist);
 }
+
 
 const char ** config_item_get_argv(const config_item_type * item , int * argc) {
   *argc = stringlist_get_argc(item->stringlist);
@@ -114,6 +180,7 @@ const char ** config_item_get_argv(const config_item_type * item , int * argc) {
 stringlist_type * config_get_stringlist(const config_item_type * item) {
   return item->stringlist;
 }
+
 
 
 const char * config_item_iget_argv(const config_item_type * item , int iarg) {
@@ -128,6 +195,7 @@ void config_item_free( config_item_type * item) {
   stringlist_free(item->stringlist);
   if (item->required_children != NULL) stringlist_free(item->required_children);
   if (item->selection_set != NULL)     stringlist_free(item->selection_set);
+  util_safe_free(item->type_map);
   free(item);
 }
 
@@ -145,17 +213,43 @@ bool config_item_is_set(const config_item_type * item) {
   return item->currently_set;
 }
 
-void config_item_set_selection_set(config_item_type * item , stringlist_type * stringlist) {
+void config_item_set_selection_set(config_item_type * item , const stringlist_type * stringlist) {
+  if (item->selection_set != NULL)
+    stringlist_free(item->selection_set);
+  
   item->selection_set = stringlist_alloc_deep_copy(stringlist);
 }
+
+void config_item_add_to_selection(config_item_type * item , const char *value) {
+  if (item->selection_set == NULL)
+    item->selection_set = stringlist_alloc_new();
+  stringlist_append_copy(item->selection_set , value);
+}
+
+
 
 void config_item_set_required_children(config_item_type * item , stringlist_type * stringlist) {
   item->required_children = stringlist_alloc_deep_copy(stringlist);
 }
 
-void config_item_set_argc_minmax(config_item_type * item , int argc_min , int argc_max) {
+
+/**
+   This function is used to set the minimum and maximum number of
+   arguments for an item. In addition you can pass in a pointer to an
+   array of config_item_types values which will be used for validation
+   of the input. This vector must be argc_max elements long; it can be
+   NULL.
+*/
+
+
+void config_item_set_argc_minmax(config_item_type * item , int argc_min , int argc_max, const config_item_types * type_map) {
   item->argc_min = argc_min;
   item->argc_max = argc_max;
+
+  util_safe_free(item->type_map);
+  if (type_map != NULL)
+    item->type_map = util_alloc_copy(type_map , argc_max * sizeof * type_map , __func__);
+  
 }
   
 
@@ -172,14 +266,16 @@ config_type * config_alloc(bool auto_add) {
   config_type *config 		   = util_malloc(sizeof * config  , __func__);
   config->auto_add    		   = auto_add;
   config->items       		   = hash_alloc();
-  config->parse_count 		   = 0;         
   config->append_arg_default_value = false;
+  config->parse_errors             = stringlist_alloc_new();
+  config->error_count              = 0;
   return config;
 }
 
 
 void config_free(config_type * config) {
   hash_free(config->items);
+  stringlist_free(config->parse_errors);
   free(config);
 }
 
@@ -210,6 +306,8 @@ config_item_type * config_add_item(config_type * config ,
 
 
 
+
+
 bool config_has_item(const config_type * config , const char * kw) {
   return hash_has_key(config->items , kw);
 }
@@ -223,7 +321,8 @@ bool config_item_set(const config_type * config , const char * kw) {
 }
 
 void config_set_arg(config_type * config , const char * kw, int argc , const char **argv) {
-  config_item_set_arg(config_get_item(config , kw) , argc , argv);
+  char * error_message = config_item_set_arg(config_get_item(config , kw) , argc , argv , NULL);
+  config_add_error(config , error_message);
 }
 
 
@@ -292,45 +391,42 @@ char ** config_alloc_active_list(const config_type * config, int * _active_size)
 
 
 
-static void config_validate(const config_type * config, const char * filename) {
+static void config_validate(config_type * config, const char * filename) {
   int size = hash_get_size(config->items);
   char ** key_list = hash_alloc_keylist(config->items);
   int ikey;
-  bool OK = true;
   for (ikey = 0; ikey < size; ikey++) {
     const config_item_type * item = config_get_item(config , key_list[ikey]);
-    OK = config_item_validate(config , item);
+    config_item_validate(config , item);
   }
   util_free_stringlist(key_list , size);
-  if (!OK) 
-    util_exit("There were errors when parsing configuration file:%s \n",filename);
-  
+  if (config->error_count > 0) {
+    stringlist_fprintf(config->parse_errors , "\n", stderr);
+    util_exit("");
+  }
 }
 
 
-void config_parse(config_type * config , const char * filename, const char * comment_string) {
-  if (config->parse_count > 0) 
-    util_abort("%s: Sorry config_parse can only be called once on one config instance\n",__func__);
-  {  
-    FILE * stream = util_fopen(filename , "r");
-    bool   at_eof = false;
+void config_parse(config_type * config , const char * filename, const char * comment_string , bool validate) {
+  FILE * stream = util_fopen(filename , "r");
+  bool   at_eof = false;
+  
+  while (!at_eof) {
+    int i , tokens;
+    int active_tokens;
+    char **token_list;
+    char  *line;
     
-    while (!at_eof) {
-      int i , tokens;
-      int active_tokens;
-      char **token_list;
-      char  *line;
+    line  = util_fscanf_alloc_line(stream , &at_eof);
+    if (line != NULL) {
+      util_split_string(line , " \t" , &tokens , &token_list);
       
-      line  = util_fscanf_alloc_line(stream , &at_eof);
-      if (line != NULL) {
-        util_split_string(line , " \t" , &tokens , &token_list);
-	
 	active_tokens = tokens;
 	for (i = 0; i < tokens; i++) {
 	  char * comment_ptr = NULL;
 	  if(comment_string != NULL)
 	    comment_ptr = strstr(token_list[i] , comment_string);
-
+	  
 	  if (comment_ptr != NULL) {
 	    if (comment_ptr == token_list[i])
 	      active_tokens = i;
@@ -346,17 +442,17 @@ void config_parse(config_type * config , const char * filename, const char * com
 
 	  if (config_has_item(config , kw)) {
 	    config_item_type * item = config_get_item(config , kw);
-	    config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1]);
+	    config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1] , filename);
 	  } else 
 	    fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n",kw,filename);
+	  
 	}
 	util_free_stringlist(token_list , tokens);
 	free(line);
-      }
     }
-    config_validate(config , filename);
-    fclose(stream);
   }
+  if (validate) config_validate(config , filename);
+  fclose(stream);
 }
 
 
