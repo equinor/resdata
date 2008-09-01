@@ -1278,31 +1278,35 @@ static int util_get_month_nr__(const char * _month_name) {
   int month_nr = -1;
   char * month_name = util_alloc_string_copy(_month_name);
   util_strupr(month_name);
-  if (strncmp(month_name , "JAN" , 3)) 
+  if (strncmp(month_name , "JAN" , 3)      == 0) 
     month_nr = 1;
-  else if (strncmp(month_name , "FEB" , 3)) 
+  else if (strncmp(month_name , "FEB" , 3) == 0) 
     month_nr = 2;
-  else if (strncmp(month_name , "MAR" , 3)) 
+  else if (strncmp(month_name , "MAR" , 3) == 0) 
     month_nr = 3;
-  else if (strncmp(month_name , "APR" , 3)) 
+  else if (strncmp(month_name , "APR" , 3) == 0) 
     month_nr = 4;
-  else if (strncmp(month_name , "MAI" , 3)) 
+  else if (strncmp(month_name , "MAI" , 3) == 0) 
     month_nr = 5;
-  else if (strncmp(month_name , "MAY" , 3)) 
+  else if (strncmp(month_name , "MAY" , 3) == 0) 
     month_nr = 5;
-  else if (strncmp(month_name , "JUN" , 3)) 
+  else if (strncmp(month_name , "JUN" , 3) == 0) 
     month_nr = 6;
-  else if (strncmp(month_name , "JUL" , 3)) 
+  else if (strncmp(month_name , "JUL" , 3) == 0) 
     month_nr = 7;
-  else if (strncmp(month_name , "AUG" , 3)) 
+  else if (strncmp(month_name , "AUG" , 3) == 0) 
     month_nr = 8;
-  else if (strncmp(month_name , "SEP" , 3)) 
+  else if (strncmp(month_name , "SEP" , 3) == 0) 
     month_nr = 9;
-  else if (strncmp(month_name , "OKT" , 3)) 
+  else if (strncmp(month_name , "OCT" , 3) == 0) 
     month_nr = 10;
-  else if (strncmp(month_name , "NOV" , 3)) 
+  else if (strncmp(month_name , "OKT" , 3) == 0) 
+    month_nr = 10;
+  else if (strncmp(month_name , "NOV" , 3) == 0) 
     month_nr = 11;
-  else if (strncmp(month_name , "DES" , 3)) 
+  else if (strncmp(month_name , "DEC" , 3) == 0) 
+    month_nr = 12;
+  else if (strncmp(month_name , "DES" , 3) == 0) 
     month_nr = 12;
   free(month_name);
   return month_nr;
