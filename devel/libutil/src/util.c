@@ -2992,7 +2992,7 @@ bool util_try_lockf(const char * lockfile , mode_t mode , int * __fd) {
   if (lock_fd == -1) 
     util_abort("%s: failed to open lockfile:%s \n",__func__ , lockfile);
 
-  fchmod(lock_fd , S_IWUSR);
+  fchmod(lock_fd , mode);
   status = lockf(lock_fd , F_TLOCK , 0);
   if (status == 0)
     /* We got the lock for exclusive access - all is hunkadory.*/
