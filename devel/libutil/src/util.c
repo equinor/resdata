@@ -744,6 +744,11 @@ int util_count_content_file_lines(FILE * stream) {
 /******************************************************************/
 
 
+/** 
+    buffer_size is _only_ for a return (by reference) of thesize of the allocation. Can pass in NULL
+    if that size is not interesting.
+*/
+
 char * util_fread_alloc_file_content(const char * filename , const char * comment, int * buffer_size) {
   int file_size = util_file_size(filename);
   char * buffer = util_malloc(file_size + 1 , __func__);
@@ -792,10 +797,10 @@ char * util_fread_alloc_file_content(const char * filename , const char * commen
     free(src_buffer);
     
     target_buffer = realloc(target_buffer , strlen(target_buffer) + 1);
-    *buffer_size  = strlen(target_buffer);
+    if (buffer_size != NULL) *buffer_size  = strlen(target_buffer);
     return target_buffer;
   } else {
-    *buffer_size = file_size;
+    if (buffer_size != NULL) *buffer_size = file_size;
     buffer[file_size] = '\0';
     return buffer;
   }
@@ -2908,8 +2913,8 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
   if (child_pid == 0) {
     /* This is the child */
     int iarg;
+
     nice(19);    /* Remote process is run with nice(19). */
-    
     if (run_path != NULL) {
       if (chdir(run_path) != 0) 
 	util_abort("%s: failed to change to directory:%s  %s \n",__func__ , run_path , strerror(errno));
@@ -2953,6 +2958,54 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
   return child_pid;
 }
 
+
+
+/** 
+    This function will TRY to aquire an exclusive lock to the file
+    filename. If the file does not exist it will be created. The mode
+    will be changed to 'mode' (irrespictive of whether it exists
+    already or not).
+
+    Observe that before the lockf() call we *MUST* succeed in opening
+    the file, that means that if we do not have the necessary rights
+    to open the file (with modes O_WRONLY + O_CREATE), the function
+    will fail hard before even reaching the lockf system call.
+
+    If the lock is aquired the function will return true, otherwise it
+    will return false. The lock is only active as long as the lockfile
+    is open, we therefor have to keep track of the relevant file
+    descriptor; it is passed back to the calling scope through a
+    reference. 
+
+    When the calling scope is no longer interested in locking the
+    resource it should close the file descriptor.
+
+    ** Observe that with this locking scheme the existence of a lockfile
+       is not really interesting. **
+*/
+    
+
+bool util_try_lockf(const char * lockfile , mode_t mode , int * __fd) {
+  int status;
+  int lock_fd;
+  lock_fd = open(lockfile , O_WRONLY + O_CREAT); *__fd = lock_fd;
+  if (lock_fd == -1) 
+    util_abort("%s: failed to open lockfile:%s \n",__func__ , lockfile);
+
+  fchmod(lock_fd , S_IWUSR);
+  status = lockf(lock_fd , F_TLOCK , 0);
+  if (status == 0)
+    /* We got the lock for exclusive access - all is hunkadory.*/
+    return true;
+  else {
+    if (errno == EACCES || errno == EAGAIN) 
+      return false;
+    else {
+      util_abort("%s: lockf() system call failed:%d/%s \n",__func__ , errno , strerror(errno));
+      return false; /* Compiler shut up. */
+    }
+  }
+}
 
 
 #include "util_path.c"
