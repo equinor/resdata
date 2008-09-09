@@ -11,6 +11,7 @@
 typedef struct ecl_block_struct ecl_block_type;
 
 
+ecl_block_type * ecl_block_safe_cast(const void * );
 restart_kw_list_type * ecl_block_get_restart_kw_list(const ecl_block_type * );
 void             ecl_block_set_sim_time_summary(ecl_block_type * , /*int time_index , int years_index , */ int , int , int );
 void             ecl_block_set_sim_time_restart(ecl_block_type * );

@@ -14,9 +14,11 @@
 
 
 #define DUMMY_WELL(well) (strcmp((well) , ":+:+:+:+") == 0)
+#define ECL_SUM_ID 89067
 
 
 struct ecl_sum_struct {
+  int                __id;                      /* Funny integer used for for "safe" run-time casting. */
   ecl_fstate_type  * data;
   ecl_fstate_type  * header;
   hash_type        * well_var_index;
@@ -46,7 +48,7 @@ struct ecl_sum_struct {
 
 static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
   ecl_sum_type *ecl_sum;
-  ecl_sum = malloc(sizeof *ecl_sum);
+  ecl_sum = util_malloc(sizeof *ecl_sum , __func__);
   ecl_sum->fmt_mode           	     = fmt_mode;
   ecl_sum->endian_convert     	     = endian_convert;
   ecl_sum->unified            	     = true;  /* Dummy */
@@ -64,6 +66,7 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
   ecl_sum->base_name          	     = NULL;
   ecl_sum->sim_start_time     	     = -1;  
   ecl_sum->report_offset             = 0;
+  ecl_sum->__id                      = ECL_SUM_ID;
   return ecl_sum;
 }
 
@@ -79,6 +82,13 @@ static ecl_kw_type * ecl_sum_get_PARAMS_kw(const ecl_block_type * ecl_block) {
 }
 
 
+
+ecl_sum_type * ecl_sum_safe_cast(const void * __ecl_sum) {
+  ecl_sum_type * ecl_sum = (ecl_sum_type *) __ecl_sum;
+  if (ecl_sum->__id != ECL_SUM_ID)
+    util_abort("%s: runtime cast failed - aborting. \n",__func__);
+  return ecl_sum;
+}
 
 
 void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data_files , bool report_mode) {
@@ -1122,3 +1132,6 @@ ecl_sum_type * ecl_sum_fread_alloc_interactive(bool endian_convert) {
 
   return ecl_sum;
 }
+
+
+#undef ECL_SUM_ID

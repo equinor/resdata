@@ -104,6 +104,7 @@ path_fmt_type * path_fmt_alloc_directory_fmt(const char * fmt) {
 /* Most general. Can afterwards be used to allocate strings
    representing both directories and files.
  */
+
 path_fmt_type * path_fmt_alloc_path_fmt(const char * fmt) {
   return path_fmt_alloc__(fmt , false );
 }

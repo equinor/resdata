@@ -11,7 +11,8 @@ typedef enum {CONFIG_STRING 	   = 0,
 	      CONFIG_INT    	   = 1,
 	      CONFIG_FLOAT  	   = 2,   
 	      CONIFG_EXISTING_FILE = 3,
-	      CONFIG_EXISTING_DIR  = 4} config_item_types;
+	      CONFIG_EXISTING_DIR  = 4,
+              CONFIG_BOOLEAN       = 5} config_item_types;
 
 
 typedef struct config_struct      config_type;
@@ -24,9 +25,9 @@ const char ** 	  config_get_argv(const config_type *  , const char * , int *);
 const char *  	  config_get(const config_type *  , const char *);
 const char *  	  config_iget(const config_type *  , const char *, int);
 void          	  config_free(config_type *);
-config_type * 	  config_alloc( bool );
+config_type * 	  config_alloc( );
 char       ** 	  config_alloc_active_list(const config_type * , int * );
-void          	  config_parse(config_type * , const char * , const char * , bool);
+void          	  config_parse(config_type * , const char * , const char * , bool , bool);
 bool          	  config_has_item(const config_type * config , const char * kw);
 void    	  config_set_arg(config_type * config , const char * , int , const char **);
 stringlist_type * config_get_stringlist(const config_item_type * );
@@ -56,11 +57,6 @@ config_item_type * config_add_item(config_type *,
 				   bool         ,
 				   bool);
 
-
-void config_parse(config_type *,
-                  const char  *,
-                  const char  *, 
-		  bool);
 
 bool config_has_keys(const config_type *,
                      const char       **,

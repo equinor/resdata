@@ -21,6 +21,7 @@ typedef enum {ecl_sum_aquifer_var,
 	      ecl_sum_misc_var}  ecl_sum_var_type;
 
 
+ecl_sum_type   * ecl_sum_safe_cast(const void * );
 void             ecl_sum_fread_alloc_data(ecl_sum_type * , int , const char ** , bool);
 ecl_sum_type   * ecl_sum_fread_alloc(const char * , int , const char **, bool  , bool );
 ecl_sum_var_type ecl_sum_iget_var_type(const ecl_sum_type * , int );

@@ -43,7 +43,6 @@ will not be performed / acted upon.
 
 struct config_struct {
   hash_type  	  * items;             	       /* A hash of config_items - the actual content. */
-  bool       	    auto_add;          	       /* Whether unknown items should be added */
   bool       	    append_arg_default_value;  /* When we dynamically add a new item - should that be initialized with append_arg == true ? */
   stringlist_type * parse_errors;              /* A stringlist containg the errors found when parsing.*/
   int               error_count;               /* The number of errors found when parsing. */
@@ -262,9 +261,8 @@ void config_item_set_argc_minmax(config_item_type * item , int argc_min , int ar
 
 
 
-config_type * config_alloc(bool auto_add) {
+config_type * config_alloc() {
   config_type *config 		   = util_malloc(sizeof * config  , __func__);
-  config->auto_add    		   = auto_add;
   config->items       		   = hash_alloc();
   config->append_arg_default_value = false;
   config->parse_errors             = stringlist_alloc_new();
@@ -407,7 +405,7 @@ static void config_validate(config_type * config, const char * filename) {
 }
 
 
-void config_parse(config_type * config , const char * filename, const char * comment_string , bool validate) {
+void config_parse(config_type * config , const char * filename, const char * comment_string , bool auto_add , bool validate) {
   FILE * stream = util_fopen(filename , "r");
   bool   at_eof = false;
   
@@ -437,7 +435,7 @@ void config_parse(config_type * config , const char * filename, const char * com
 	}
 	if (active_tokens > 0) {
 	  const char * kw = token_list[0];
-	  if (!config_has_item(config , kw) && config->auto_add) 
+	  if (!config_has_item(config , kw) && auto_add) 
 	    config_add_item(config , kw , false , config->append_arg_default_value);
 
 	  if (config_has_item(config , kw)) {

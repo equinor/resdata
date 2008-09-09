@@ -10,6 +10,9 @@
 #include <time.h>
 #include <restart_kw_list.h>
 
+
+#define ECL_BLOCK_ID 6708999
+
 typedef struct ecl_block_node_struct ecl_block_node_type;
 
 
@@ -22,6 +25,7 @@ struct ecl_block_node_struct {
 
 
 struct ecl_block_struct {
+  int          __id;             /* Integer identifier used to run-time check a cast. */
   bool         fmt_file;
   bool         endian_convert;
 
@@ -68,6 +72,10 @@ static ecl_block_node_type * ecl_block_node_alloc_empty()
 }
 
 
+/**
+   Observe that the input ecl_kw instance is *copied* before it is
+   inserted.
+*/
 
 static void ecl_block_node_add_kw(ecl_block_node_type * node, const ecl_kw_type * ecl_kw)
 {
@@ -273,18 +281,25 @@ time_t ecl_block_get_sim_time(const ecl_block_type * block) {
 }
 
 
+ecl_block_type * ecl_block_safe_cast(const void * __block) {
+  ecl_block_type * ecl_block = (ecl_block_type * ) __block;
+  if (ecl_block->__id != ECL_BLOCK_ID)
+    util_abort("%s: runtime cast failed - aborting \n",__func__);
+  return ecl_block;
+}
+
 
 ecl_block_type * ecl_block_alloc(int report_nr , bool fmt_file , bool endian_convert) {
   ecl_block_type *ecl_block;
   
   
-  ecl_block = malloc(sizeof *ecl_block);
+  ecl_block = util_malloc(sizeof *ecl_block , __func__);
   ecl_block->src_file       = NULL;
   ecl_block->fmt_file       = fmt_file;
   ecl_block->endian_convert = endian_convert;
   ecl_block->size           = 0;
-  ecl_block->kw_list       = restart_kw_list_alloc();
-
+  ecl_block->kw_list        = restart_kw_list_alloc();
+  ecl_block->__id           = ECL_BLOCK_ID;
   ecl_block->kw_hash  = hash_alloc(10);
   ecl_block->sim_time = -1;
   ecl_block_set_report_nr(ecl_block , report_nr);
@@ -590,4 +605,4 @@ void ecl_block_free(ecl_block_type *ecl_block) {
   free(ecl_block);
 }
 
-
+#undef ECL_BLOCK_ID

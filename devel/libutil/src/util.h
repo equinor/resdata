@@ -48,6 +48,7 @@ void         util_unlink_path(const char *);
 void         util_unlink_path_TESTING(const char *);
 void         util_unlink_existing(const char *filename);
 void         util_strupr(char *);
+void         util_string_tr(char * , char , char);
 void 	     util_copy_stream(FILE *, FILE *, int , void * );
 void 	     util_copy_file(const char * , const char * );
 char       * util_alloc_cwd(void);

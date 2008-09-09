@@ -156,6 +156,17 @@ void util_strupr(char *s) {
 }
 
 
+
+/** 
+    Replaces all occurences of c1 in s with c2.
+*/
+void util_string_tr(char * s, char c1, char c2) {
+  int i;
+  for (i=0; i < strlen(s);i++)
+    if (s[i] == c1) s[i] = c2;
+}
+
+
 void util_rewind_line(FILE *stream) {
   bool at_eol = false;
   int c;
@@ -2975,7 +2986,8 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
     will return false. The lock is only active as long as the lockfile
     is open, we therefor have to keep track of the relevant file
     descriptor; it is passed back to the calling scope through a
-    reference. 
+    reference. Observe that if the locking fails we close the file
+    immediately, and return -1 in the file descriptor argument.
 
     When the calling scope is no longer interested in locking the
     resource it should close the file descriptor.
@@ -2988,19 +3000,22 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
 bool util_try_lockf(const char * lockfile , mode_t mode , int * __fd) {
   int status;
   int lock_fd;
-  lock_fd = open(lockfile , O_WRONLY + O_CREAT); *__fd = lock_fd;
+  lock_fd = open(lockfile , O_WRONLY + O_CREAT); 
   if (lock_fd == -1) 
-    util_abort("%s: failed to open lockfile:%s \n",__func__ , lockfile);
+    util_abort("%s: failed to open lockfile:%s %d/%s\n",__func__ , lockfile,errno , strerror(errno));
 
   fchmod(lock_fd , mode);
   status = lockf(lock_fd , F_TLOCK , 0);
-  if (status == 0)
+  if (status == 0) {
     /* We got the lock for exclusive access - all is hunkadory.*/
+    *__fd = lock_fd;
     return true;
-  else {
-    if (errno == EACCES || errno == EAGAIN) 
+  } else {
+    if (errno == EACCES || errno == EAGAIN) {
+      close(lock_fd);
+      *__fd = -1;
       return false;
-    else {
+    } else {
       util_abort("%s: lockf() system call failed:%d/%s \n",__func__ , errno , strerror(errno));
       return false; /* Compiler shut up. */
     }
