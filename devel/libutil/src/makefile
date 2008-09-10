@@ -63,14 +63,18 @@ menu.o        : menu.h menu.c util.o
 util-test.o : util-test.c 
 eol-fix.o   : eol-fix.c  
 mem_free.o  : mem_free.c 
+config_test.o : config_test.c
 
 #################################################################
 
-BIN:	util.x eol-fix.x mem_free.x
-BIN_FILES = util.x eol-fix.x mem_free.x
+BIN:	util.x eol-fix.x mem_free.x config_test.x
+BIN_FILES = util.x eol-fix.x mem_free.x config_test.x
  
 util.x: util-test.o $(LIB)
 	gcc -$(MFLAG) $(LDFLAGS) util-test.o -o util.x     $(LINK_LIB_PATH) $(LIB_LINK) 
+
+config_test.x: config_test.o $(LIB)
+	gcc -$(MFLAG) $(LDFLAGS) config_test.o -o config_test.x     $(LINK_LIB_PATH) $(LIB_LINK) 
 
 eol-fix.x: eol-fix.o $(LIB)
 	gcc -$(MFLAG) $(LDFLAGS) eol-fix.o -o eol-fix.x    $(LINK_LIB_PATH) $(LIB_LINK)

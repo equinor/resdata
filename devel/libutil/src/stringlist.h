@@ -1,6 +1,7 @@
 #ifndef __STRINGLIST_H__
 #define __STRINGLIST_H__
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef struct stringlist_struct stringlist_type;
 

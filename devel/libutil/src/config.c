@@ -110,9 +110,7 @@ corresponding to 'optimize cache=1' would be present.
 
 struct config_struct {
   hash_type  	  * items;             	       /* A hash of config_items - the actual content. */
-  bool       	    append_arg_default_value;  /* When we dynamically add a new item - should that be initialized with append_arg == true ? */
   stringlist_type * parse_errors;              /* A stringlist containg the errors found when parsing.*/
-  int               error_count;               /* The number of errors found when parsing. */
 };
 
 
@@ -314,8 +312,8 @@ config_item_type * config_item_alloc(const char * kw , bool required , bool appe
 
 static void config_add_error(config_type * config , const char * error_message) {
   if (error_message != NULL) {
-    config->error_count++;
-    stringlist_append_owned_ref(config->parse_errors , util_alloc_sprintf("%02d: %s" , config->error_count , error_message));
+    int error_nr = stringlist_get_size(config->parse_errors) + 1;
+    stringlist_append_owned_ref(config->parse_errors , util_alloc_sprintf("%02d: %s" , error_nr , error_message));
   }
 }
 
@@ -483,9 +481,7 @@ void config_item_set_argc_minmax(config_item_type * item , int argc_min , int ar
 config_type * config_alloc() {
   config_type *config 		   = util_malloc(sizeof * config  , __func__);
   config->items       		   = hash_alloc();
-  config->append_arg_default_value = false; /* This is exported behaviour ... */
   config->parse_errors             = stringlist_alloc_new();
-  config->error_count              = 0;
   return config;
 }
 
@@ -540,6 +536,7 @@ bool config_item_set(const config_type * config , const char * kw) {
 void config_set_arg(config_type * config , const char * kw, int argc , const char **argv) {
   char * error_message = config_item_set_arg(config_get_item(config , kw) , argc , argv , NULL);
   config_add_error(config , error_message);
+  util_safe_free(error_message);
 }
 
 
@@ -579,7 +576,7 @@ static void config_validate(config_type * config, const char * filename) {
     config_item_validate(config , item);
   }
   util_free_stringlist(key_list , size);
-  if (config->error_count > 0) {
+  if (stringlist_get_size(config->parse_errors) > 0) {
     stringlist_fprintf(config->parse_errors , "\n", stderr);
     util_exit("");
   }
@@ -617,7 +614,7 @@ void config_parse(config_type * config , const char * filename, const char * com
 	if (active_tokens > 0) {
 	  const char * kw = token_list[0];
 	  if (!config_has_item(config , kw) && auto_add) 
-	    config_add_item(config , kw , false , config->append_arg_default_value);
+	    config_add_item(config , kw , true , false);  /* Auto created items get append_arg == false, and required == true (which is trivially satisfied). */
 
 	  if (config_has_item(config , kw)) {
 	    config_item_type * item = config_get_item(config , kw);
@@ -751,9 +748,9 @@ It is enforced that:
 
  * item is allocated with append_arg = true
  * item is allocated with argc_minmax = 2,2
-
- The hash takes ownership of the values in the hash, so a call to
- hash_free() in the calling scope should free all this storage.
+ 
+ The hash takes copy of the values in the hash so the config object
+ can safefly be freed (opposite if copy == false).
 */
 
 
