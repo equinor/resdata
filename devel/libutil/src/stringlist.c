@@ -191,6 +191,19 @@ stringlist_type * stringlist_alloc_deep_copy(const stringlist_type * stringlist)
 }
 
 
+void stringlist_insert_stringlist_copy(stringlist_type * stringlist , const stringlist_type * src) {
+  int i;
+  for (i = 0; i < src->size; i++)
+    stringlist_append_copy(stringlist , stringlist_iget(src , i));
+}
+
+void stringlist_insert_stringlist_ref(stringlist_type * stringlist , const stringlist_type * src) {
+  int i;
+  for (i = 0; i < src->size; i++)
+    stringlist_append_ref(stringlist , stringlist_iget(src , i));
+}
+
+
 /** 
     Frees all the memory contained by the stringlist.
 */
@@ -262,4 +275,9 @@ bool stringlist_contains(const stringlist_type * stringlist , const char * s) {
     index++;
   }
   return contains;
+}
+
+
+char * stringlist_alloc_joined_string(const stringlist_type * s , const char * sep) {
+  return util_alloc_joined_string((const char **) s->strings , s->size , sep);
 }

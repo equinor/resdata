@@ -166,6 +166,7 @@ void     util_fread_char_vector(char * , int , FILE * , const char * );
 
 void 	 util_compress_buffer(const void * , int , void * , unsigned long * );
 void 	 util_fread_compressed(void * , FILE * );
+void   * util_fread_alloc_compressed(FILE * );
 void 	 util_fwrite_compressed(const void * , int , FILE * );
 void     util_block_growing_file(const char * );
 void     util_block_growing_directory(const char * );

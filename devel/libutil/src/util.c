@@ -2313,8 +2313,8 @@ void util_fread_compressed(void *__data , FILE * stream) {
 
 
 /**
-Allocates storage and reads in from compressed data from disk. If the
-data on disk have zero size, NULL is returned.
+   Allocates storage and reads in from compressed data from disk. If the
+   data on disk have zero size, NULL is returned.
 */
 
 void * util_fread_alloc_compressed(FILE * stream) {
