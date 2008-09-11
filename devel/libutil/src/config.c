@@ -434,7 +434,7 @@ void config_item_validate(config_type * config , const config_item_type * item) 
     free(error_message);
   }
 
-  if (item->required_children != NULL) {
+  if (item->currently_set && (item->required_children != NULL)) {
     int i;
     for (i = 0; i < stringlist_get_size(item->required_children); i++) {
       if (!config_has_set_item(config , stringlist_iget(item->required_children , i))) {
@@ -832,9 +832,11 @@ hash_type * config_alloc_hash(const config_type * config , const char * kw) {
 }
 
 
+
 bool config_has_set_item(const config_type * config , const char * kw) {
   if (config_has_item(config , kw)) {
     config_item_type * item = config_get_item(config , kw);
+    printf("Har :%s \n",kw);
     return config_item_is_set(item);
   } else
     return false;

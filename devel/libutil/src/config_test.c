@@ -20,6 +20,9 @@ int main(void) {
     config_item_set_required_children(item , children);
     stringlist_free(children);
   }
+  item = config_add_item(config , "CHILD1"  , false , false);
+  config_item_set_argc_minmax(item , 1 , 1 , (const config_item_types [1]) {CONFIG_INT});
+  
   config_parse(config , config_file , "--" , true , true);
   
 

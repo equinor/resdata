@@ -59,6 +59,7 @@ char * 	     config_item_set_arg(config_item_type *  , int , const char **, cons
 void         config_item_set_argc_minmax(config_item_type * , int  , int , const config_item_types * );
 void         config_item_set_selection_set(config_item_type * , const stringlist_type *);
 void         config_item_add_to_selection(config_item_type *  , const char *);
+void         config_item_set_required_children(config_item_type * , stringlist_type * );
 
 config_item_type * config_add_item(config_type *, 
 				   const char * ,
