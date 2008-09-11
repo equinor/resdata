@@ -8,6 +8,10 @@
 #define ECL_COM_KW "--"
 #define ENKF_COM_KW "--"
 
+
+/** 
+    Types used for validation of config items.
+*/
 typedef enum {CONFIG_STRING 	   = 0,
 	      CONFIG_INT    	   = 1,
 	      CONFIG_FLOAT  	   = 2,   
