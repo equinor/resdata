@@ -11,7 +11,7 @@
 typedef enum {CONFIG_STRING 	   = 0,
 	      CONFIG_INT    	   = 1,
 	      CONFIG_FLOAT  	   = 2,   
-	      CONIFG_EXISTING_FILE = 3,
+	      CONFIG_EXISTING_FILE = 3,
 	      CONFIG_EXISTING_DIR  = 4,
               CONFIG_BOOLEAN       = 5} config_item_types;
 
@@ -72,10 +72,11 @@ bool config_has_keys(const config_type *,
                      bool               );
 
 
-
+const char            * config_iget(const config_type * , const char * , int );
 const char            * config_get(const config_type * , const char * );
 stringlist_type       * config_alloc_complete_stringlist(const config_type*  , const char * );
 hash_type             * config_alloc_hash(const config_type *  , const char * );
 const stringlist_type * config_get_stringlist_ref(const config_type *  , const char * );
+bool                    config_has_set_item(const config_type *  , const char * );
 
 #endif

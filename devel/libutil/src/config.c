@@ -161,6 +161,43 @@ static void config_item_node_free(config_item_node_type * node) {
 }
 
 
+static char * config_item_node_validate( const config_item_node_type * node , const config_item_types * type_map) {
+  int i;
+  char * error_message = NULL;
+  for (i = 0; i < stringlist_get_size( node->stringlist ); i++) {
+    const char * value = stringlist_iget(node->stringlist , i);
+    switch (type_map[i]) {
+    case(CONFIG_STRING): /* This never fails ... */
+      break;
+    case(CONFIG_INT):
+      if (!util_sscanf_int( value , NULL ))
+	error_message = util_alloc_sprintf("Failed to parse:%s as an integer.",value);
+      break;
+    case(CONFIG_FLOAT):
+      if (!util_sscanf_double( value , NULL ))
+	error_message = util_alloc_sprintf("Failed to parse:%s as a floating point number.", value);
+      break;
+    case(CONFIG_EXISTING_FILE):
+      if (!util_file_exists(value))
+	error_message = util_alloc_sprintf("Can not find file: %s. \n",value);
+      break;
+    case(CONFIG_EXISTING_DIR):
+      if (!util_is_directory(value))
+	error_message = util_alloc_sprintf("Can not find directory: %s. \n",value);
+      break;
+    case(CONFIG_BOOLEAN):
+      if (!util_sscanf_bool( value , NULL ))
+	error_message = util_alloc_sprintf("Failed to parse:%s as a boolean.", value);
+      break;
+    default:
+      util_abort("%s: config_item_type:%d not recognized \n",__func__ , type_map[i]);
+    }
+  }
+  return error_message;
+}
+
+
+
 
 static void config_item_realloc_nodes(config_item_type * item , int new_size) {
   const int old_size = item->alloc_size;
@@ -313,7 +350,7 @@ config_item_type * config_item_alloc(const char * kw , bool required , bool appe
 static void config_add_error(config_type * config , const char * error_message) {
   if (error_message != NULL) {
     int error_nr = stringlist_get_size(config->parse_errors) + 1;
-    stringlist_append_owned_ref(config->parse_errors , util_alloc_sprintf("%02d: %s" , error_nr , error_message));
+    stringlist_append_owned_ref(config->parse_errors , util_alloc_sprintf("  %02d: %s" , error_nr , error_message));
   }
 }
 
@@ -395,6 +432,28 @@ void config_item_validate(config_type * config , const config_item_type * item) 
     char * error_message = util_alloc_sprintf("Item:%s must be set with a value.",item->kw);
     config_add_error(config , error_message);
     free(error_message);
+  }
+
+  if (item->required_children != NULL) {
+    int i;
+    for (i = 0; i < stringlist_get_size(item->required_children); i++) {
+      if (!config_has_set_item(config , stringlist_iget(item->required_children , i))) {
+	char * error_message = util_alloc_sprintf("When:%s is set - you also must set:%s.",item->kw , stringlist_iget(item->required_children , i));
+	config_add_error(config , error_message);
+	free(error_message);
+      }
+    }
+  }
+
+  if (item->type_map != NULL) {
+    int inode;
+    for (inode = 0; inode < item->node_size; inode++) {
+      char * error_message = config_item_node_validate(item->nodes[inode] , item->type_map);
+      if (error_message != NULL) {
+	config_add_error(config , error_message);
+	free(error_message);
+      }
+    }
   }
 }
 
@@ -577,6 +636,7 @@ static void config_validate(config_type * config, const char * filename) {
   }
   util_free_stringlist(key_list , size);
   if (stringlist_get_size(config->parse_errors) > 0) {
+    fprintf(stderr,"Parsing errors:\n");
     stringlist_fprintf(config->parse_errors , "\n", stderr);
     util_exit("");
   }
@@ -686,6 +746,17 @@ const char * config_get(const config_type * config , const char * kw) {
 
 
 
+/** 
+    As the config_get function, but the argc_minmax requiremnt has been removed.
+*/
+const char * config_iget(const config_type * config , const char * kw, int index) {
+  config_item_type * item = config_get_item(config , kw);
+
+  return config_item_iget(item , index);
+}
+
+
+
 /**
    This returns A REFERENCE to the stringlist of an item, assuming the
    item corresponding to 'kw':
@@ -760,6 +831,14 @@ hash_type * config_alloc_hash(const config_type * config , const char * kw) {
   return config_item_alloc_hash(item , copy);
 }
 
+
+bool config_has_set_item(const config_type * config , const char * kw) {
+  if (config_has_item(config , kw)) {
+    config_item_type * item = config_get_item(config , kw);
+    return config_item_is_set(item);
+  } else
+    return false;
+}
 
 
 

@@ -68,6 +68,7 @@ void     util_fskip_token(FILE * );
 void     util_fskip_chars(FILE * , const char * , bool *);
 void     util_fskip_cchars(FILE * , const char * , bool *);
 bool     util_fscanf_int(FILE * , int * );
+bool     util_sscanf_bool(const char * , bool *);
 bool     util_sscanf_int(const char * , int * );
 int      util_scanf_int_with_limits(const char * , int  , int  , int );
 void     util_printf_prompt(const char * , int , char , const char *);

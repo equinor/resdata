@@ -564,7 +564,8 @@ bool util_sscanf_double(const char * buffer , double * value) {
   double tmp_value = strtod(buffer , &error_ptr);
   if (error_ptr[0] == '\0') {
     value_OK = true; 
-    *value = tmp_value;
+    if (value != NULL)
+      *value = tmp_value;
   } 
   return value_OK;
 }
@@ -585,9 +586,57 @@ bool util_sscanf_int(const char * buffer , int * value) {
   int tmp_value = strtol(buffer , &error_ptr , 10);
   if (error_ptr[0] == '\0') {
     value_OK = true; 
-    *value = tmp_value;
+    if (value != NULL)
+      *value = tmp_value;
   } 
   return value_OK;
+}
+
+
+
+/** 
+    Succesfully parses:
+
+      1 , T (not 't') , True (with any case) => true
+      0 , F (not 'f') , False(with any case) => false
+      
+    Else the parsing fails.
+*/
+
+
+bool util_sscanf_bool(const char * buffer , bool * _value) {
+  bool parse_OK = false;
+  bool value;
+
+  if (strcmp(buffer,"1") == 0) {
+    parse_OK = true;
+    value = true;
+  } else if (strcmp(buffer , "0") == 0) {
+    parse_OK = true;
+    value = false;
+  } else if (strcmp(buffer , "T") == 0) {
+    parse_OK = true;
+    value = true;
+  } else if (strcmp(buffer , "F") == 0) {
+    parse_OK = true;
+    value = false;
+  } else {
+    char * local_buffer = util_alloc_string_copy(buffer);
+    util_strupr(local_buffer);
+
+    if (strcmp(local_buffer , "TRUE") == 0) {
+      parse_OK = true;
+      value = false;
+    } else if (strcmp(local_buffer , "FALSE") == 0) {
+      parse_OK = true;
+      value = false;
+    } 
+
+    free(local_buffer);
+  }
+  if (_value != NULL)
+    *_value = value;
+  return parse_OK;
 }
 
 
@@ -863,19 +912,36 @@ void util_copy_file(const char * src_file , const char * target_file) {
 }
 
 
+
+
 bool util_file_exists(const char *filename) {
-  FILE *stream = fopen(filename , "r");
-  bool ex;
-  if (stream == NULL) {
+  struct stat stat_buffer;
+  int stat_return = stat(filename , &stat_buffer);
+  if (stat_return == 0)
+    return true;
+  else {
     if (errno == ENOENT)
-      ex = false;
+      return false;
+    else {
+      util_abort("%s: error checking for file:%s  %d/%s \n",__func__ , filename , errno , strerror(errno));
+      return false;
+    }
+  }
+  
+  /*
+    FILE *stream = fopen(filename , "r");
+    bool ex;
+    if (stream == NULL) {
+    if (errno == ENOENT)
+    ex = false;
     else 
-      util_abort("file: %s exists but open failed - aborting \n",filename);
-  } else {
+    util_abort("file: %s exists but open failed - aborting \n",filename);
+    } else {
     fclose(stream);
     ex = true;
-  }
-  return ex;
+    }
+    return ex;
+  */
 }
 
 
