@@ -11,10 +11,10 @@ int main(void) {
   
   item = config_add_item(config , "KEY1" , true  , true);
   item = config_add_item(config , "KEY2" , true  , false);
-  config_item_set_argc_minmax(item , 4 , 4 , (const config_item_types [4]) {CONFIG_INT , CONFIG_EXISTING_FILE , CONFIG_BOOLEAN , CONFIG_BOOLEAN});
+  config_item_set_argc_minmax(item , 1 , 4 , (const config_item_types [4]) {CONFIG_INT , CONFIG_EXISTING_FILE , CONFIG_BOOLEAN , CONFIG_BOOLEAN});
 
 
-  item = config_add_item(config , "OPTIONS"  , false , false);
+  item = config_add_item(config , "FATHER"  , false , false);
   {
     stringlist_type * children = stringlist_alloc_argv_ref( (const char *[2]) {"CHILD1" , "CHILD2"} , 2);
     config_item_set_required_children(item , children);

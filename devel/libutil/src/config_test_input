@@ -1,7 +1,9 @@
 KEY1  ARG1 ARG2 ARG3
 KEY2  1    /tmp/Gurbat/Ensemble/enkf_mount_info 1 F 
 KEY1  PISS OFF
---OPTIONS 
-CHILD1 1g
+KEY2  __RESET__
+KEY2  13
+FATHER
+CHILD1 1
 --CHILD2 2
 

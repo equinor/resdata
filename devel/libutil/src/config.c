@@ -7,6 +7,11 @@
 #include <hash.h>
 #include <stringlist.h>
 
+
+#define CLEAR_STRING "__RESET__"
+
+
+
 /**
    Structure to parse configuration files of this type:
 
@@ -354,6 +359,31 @@ static void config_add_error(config_type * config , const char * error_message) 
   }
 }
 
+/**
+   Used to reset an item is the special string 'CLEAR_STRING'
+   is found as the only argument:
+
+   OPTION V1
+   OPTION V2 V3 V4
+   OPTION __RESET__ 
+   OPTION V6
+
+   In this case OPTION will get the value 'V6'. The example given
+   above is a bit contrived; this option is designed for situations
+   where several config files are parsed serially; and the user can
+   not/will not update the first.
+*/
+
+static void config_item_clear( config_item_type * item ) {
+  int i;
+  for (i = 0; i < item->node_size; i++)
+    config_item_node_free( item->nodes[i] );
+  item->nodes = util_safe_free(item->nodes);
+  item->node_size     = 0;
+  item->currently_set = false;
+  config_item_realloc_nodes(item , 1);
+}
+
 
 /*
   The last argument (config_file) is only used for printing
@@ -365,60 +395,66 @@ static void config_add_error(config_type * config , const char * error_message) 
 */
 
 char * config_item_set_arg(config_item_type * item , int argc , const char ** argv , const char * config_file) {
-  char * error_message = NULL;
-  int iarg;
-  bool OK            = true;
-  bool currently_set = false;
-  config_item_node_type * node;
-  
-  if (item->append_arg)
-    node = config_item_get_new_node(item);
-  else {
-    node = config_item_get_first_node(item);
-    config_item_node_clear(node);
-  }
-  
-  
-  if (item->argc_min >= 0) {
-    if (argc < item->argc_min) {
-      OK = false;
-      
-      if (config_file != NULL)
-	error_message = util_alloc_sprintf("Error when parsing config_file:\"%s\" Keyword:%s must have at least %d arguments.",config_file , item->kw , item->argc_min);
-      else
-	error_message = util_alloc_sprintf("Error:: Keyword:%s must have at least %d arguments.",item->kw , item->argc_min);
+  if (argc == 1 && (strcmp(argv[0] , CLEAR_STRING) == 0)) {
+    config_item_clear(item);
+    return NULL;
+  } else {
+    char * error_message = NULL;
+    int iarg;
+    bool OK            = true;
+    bool currently_set = false;
+    config_item_node_type * node;
+    
+    if (item->append_arg)
+      node = config_item_get_new_node(item);
+    else {
+      node = config_item_get_first_node(item);
+      config_item_node_clear(node);
     }
-  }
-
-  if (item->argc_max >= 0) {
-    if (argc > item->argc_max) {
-      OK = false;
-      if (config_file != NULL)
-	error_message = util_alloc_sprintf("Error when parsing config_file:\"%s\" Keyword:%s must have maximum %d arguments.",config_file , item->kw , item->argc_min);
-      else
-	error_message = util_alloc_sprintf("Error:: Keyword:%s must have maximum %d arguments.",item->kw , item->argc_min);
-    }
-  }
-
-  if (OK) {
-    for (iarg = 0; iarg < argc; iarg++) {
-      OK = true;
-      if (item->selection_set != NULL) {
-	if (!stringlist_contains(item->selection_set , argv[iarg])) {
-	  error_message = util_alloc_sprintf("%s: is not a valid value for: %s.",argv[iarg] , item->kw);
-	  OK = false;
-	} 
-      }
-      if (OK) {
-	config_item_node_append(node , argv[iarg]);
-	currently_set = true;
+    
+    
+    if (item->argc_min >= 0) {
+      if (argc < item->argc_min) {
+	OK = false;
+	
+	if (config_file != NULL)
+	  error_message = util_alloc_sprintf("Error when parsing config_file:\"%s\" Keyword:%s must have at least %d arguments.",config_file , item->kw , item->argc_min);
+	else
+	  error_message = util_alloc_sprintf("Error:: Keyword:%s must have at least %d arguments.",item->kw , item->argc_min);
       }
     }
+    
+    if (item->argc_max >= 0) {
+      if (argc > item->argc_max) {
+	OK = false;
+	if (config_file != NULL)
+	  error_message = util_alloc_sprintf("Error when parsing config_file:\"%s\" Keyword:%s must have maximum %d arguments.",config_file , item->kw , item->argc_min);
+	else
+	  error_message = util_alloc_sprintf("Error:: Keyword:%s must have maximum %d arguments.",item->kw , item->argc_min);
+      }
+    }
+    
+    if (OK) {
+      for (iarg = 0; iarg < argc; iarg++) {
+	OK = true;
+	if (item->selection_set != NULL) {
+	  if (!stringlist_contains(item->selection_set , argv[iarg])) {
+	    error_message = util_alloc_sprintf("%s: is not a valid value for: %s.",argv[iarg] , item->kw);
+	    OK = false;
+	  } 
+	}
+	if (OK) {
+	  config_item_node_append(node , argv[iarg]);
+	  currently_set = true;
+	}
+      }
+    }
+    if (currently_set)
+      item->currently_set = true;
+    return error_message;
   }
-  if (currently_set)
-    item->currently_set = true;
-  return error_message;
 }
+
 
 
 
@@ -473,6 +509,9 @@ void config_item_free( config_item_type * item) {
   util_safe_free(item->type_map);
   free(item);
 }
+
+
+
 
 
 void config_item_free__ (void * void_item) {
