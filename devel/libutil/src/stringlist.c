@@ -12,7 +12,7 @@
    Most of the functionality is implemented through stateless
    functions in util.c
 */
-   
+
 typedef enum {ref         = 0,    /* Means that the stringlist only has reference to the item,
 				     and it is the responsibility of the calling scope to free 
 				     the memory of this string. */
@@ -37,9 +37,10 @@ struct stringlist_struct {
 
 /**
    this function appends num_append new items to the
-   stringlist. observe that this functions does not assign values
+   stringlist. Observe that this functions does not assign values
    (apart from trivial null initialization) to the newly appended
-   memory, i.e. it is esential that the calling routine (from this file) has
+   memory, i.e. it is esential that the calling routine (from this
+   file) has
 
    stringlist->xx = yy;
 
@@ -47,7 +48,7 @@ struct stringlist_struct {
 */
 
    
-void static stringlist_grow__(stringlist_type * stringlist , int num_append) {
+static void stringlist_grow__(stringlist_type * stringlist , int num_append) {
   int old_size = stringlist->size;
   stringlist->size += num_append;
   stringlist->strings = util_realloc(stringlist->strings , stringlist->size * sizeof * stringlist->strings , __func__);
@@ -262,7 +263,7 @@ void stringlist_fprintf(const stringlist_type * stringlist, const char * sep , F
 
 /** 
     Scans the stringlist (linear scan) to see if it contains (at
-    least) on occurence of 's';
+    least) one occurence of 's';
 */
 
 bool stringlist_contains(const stringlist_type * stringlist , const char * s) {

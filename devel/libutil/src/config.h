@@ -17,7 +17,8 @@ typedef enum {CONFIG_STRING 	   = 0,
 	      CONFIG_FLOAT  	   = 2,   
 	      CONFIG_EXISTING_FILE = 3,
 	      CONFIG_EXISTING_DIR  = 4,
-              CONFIG_BOOLEAN       = 5} config_item_types;
+              CONFIG_BOOLEAN       = 5,
+	      CONFIG_CONFIG        = 6} config_item_types;
 
 
 typedef struct config_struct           config_type;

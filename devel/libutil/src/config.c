@@ -352,10 +352,17 @@ config_item_type * config_item_alloc(const char * kw , bool required , bool appe
 }
 
 
-static void config_add_error(config_type * config , const char * error_message) {
+
+/* 
+   Observe that this function is a bit funny - because it will
+   actually free the incoming message.
+*/
+
+static void config_add_and_free_error(config_type * config , char * error_message) {
   if (error_message != NULL) {
     int error_nr = stringlist_get_size(config->parse_errors) + 1;
     stringlist_append_owned_ref(config->parse_errors , util_alloc_sprintf("  %02d: %s" , error_nr , error_message));
+    free(error_message);
   }
 }
 
@@ -435,17 +442,21 @@ char * config_item_set_arg(config_item_type * item , int argc , const char ** ar
     }
     
     if (OK) {
-      for (iarg = 0; iarg < argc; iarg++) {
-	OK = true;
-	if (item->selection_set != NULL) {
-	  if (!stringlist_contains(item->selection_set , argv[iarg])) {
-	    error_message = util_alloc_sprintf("%s: is not a valid value for: %s.",argv[iarg] , item->kw);
-	    OK = false;
-	  } 
-	}
-	if (OK) {
-	  config_item_node_append(node , argv[iarg]);
-	  currently_set = true;
+      if (argc == 0) /* It is OK to set without arguments */
+	currently_set = true;
+      else {
+	for (iarg = 0; iarg < argc; iarg++) {
+	  OK = true;
+	  if (item->selection_set != NULL) {
+	    if (!stringlist_contains(item->selection_set , argv[iarg])) {
+	      error_message = util_alloc_sprintf("%s: is not a valid value for: %s.",argv[iarg] , item->kw);
+	      OK = false;
+	    } 
+	  }
+	  if (OK) {
+	    config_item_node_append(node , argv[iarg]);
+	    currently_set = true;
+	  }
 	}
       }
     }
@@ -464,32 +475,30 @@ static int config_item_get_occurences(const config_item_type * item) {
 
 
 void config_item_validate(config_type * config , const config_item_type * item) {
-  if (item->required_set && !item->currently_set) {
-    char * error_message = util_alloc_sprintf("Item:%s must be set with a value.",item->kw);
-    config_add_error(config , error_message);
-    free(error_message);
-  }
-
-  if (item->currently_set && (item->required_children != NULL)) {
-    int i;
-    for (i = 0; i < stringlist_get_size(item->required_children); i++) {
-      if (!config_has_set_item(config , stringlist_iget(item->required_children , i))) {
-	char * error_message = util_alloc_sprintf("When:%s is set - you also must set:%s.",item->kw , stringlist_iget(item->required_children , i));
-	config_add_error(config , error_message);
-	free(error_message);
+  
+  if (item->currently_set) {
+    if (item->required_children != NULL) {
+      int i;
+      for (i = 0; i < stringlist_get_size(item->required_children); i++) {
+	if (!config_has_set_item(config , stringlist_iget(item->required_children , i))) {
+	  char * error_message = util_alloc_sprintf("When:%s is set - you also must set:%s.",item->kw , stringlist_iget(item->required_children , i));
+	  config_add_and_free_error(config , error_message);
+	}
       }
     }
-  }
 
-  if (item->type_map != NULL) {
-    int inode;
-    for (inode = 0; inode < item->node_size; inode++) {
-      char * error_message = config_item_node_validate(item->nodes[inode] , item->type_map);
-      if (error_message != NULL) {
-	config_add_error(config , error_message);
-	free(error_message);
+    if (item->type_map != NULL) {
+      int inode;
+      for (inode = 0; inode < item->node_size; inode++) {
+	char * error_message = config_item_node_validate(item->nodes[inode] , item->type_map);
+	if (error_message != NULL) {
+	  config_add_and_free_error(config , error_message);
+	}
       }
     }
+  }  else if (item->required_set) {
+    char * error_message = util_alloc_sprintf("Item:%s must be set.",item->kw);
+    config_add_and_free_error(config , error_message);
   }
 }
 
@@ -633,8 +642,7 @@ bool config_item_set(const config_type * config , const char * kw) {
 
 void config_set_arg(config_type * config , const char * kw, int argc , const char **argv) {
   char * error_message = config_item_set_arg(config_get_item(config , kw) , argc , argv , NULL);
-  config_add_error(config , error_message);
-  util_safe_free(error_message);
+  config_add_and_free_error(config , error_message);
 }
 
 
@@ -875,7 +883,6 @@ hash_type * config_alloc_hash(const config_type * config , const char * kw) {
 bool config_has_set_item(const config_type * config , const char * kw) {
   if (config_has_item(config , kw)) {
     config_item_type * item = config_get_item(config , kw);
-    printf("Har :%s \n",kw);
     return config_item_is_set(item);
   } else
     return false;

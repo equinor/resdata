@@ -2773,6 +2773,7 @@ void util_abort(const char * fmt , ...) {
     const bool include_backtrace = true;
     va_list ap;
     va_start(ap , fmt);
+    printf("\n\n");
     fprintf(stderr,"\n\n");
     vfprintf(stderr , fmt , ap);
     va_end(ap);

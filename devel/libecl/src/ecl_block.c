@@ -129,11 +129,9 @@ static int ecl_block_node_get_size(const ecl_block_node_type * node)
 int ecl_block_get_kw_size(const ecl_block_type * ecl_block, const char * kw)
 {
   char * kw_s = util_alloc_strip_copy(kw);
-  if(!hash_has_key(ecl_block->kw_hash, kw_s))
-  {
-    fprintf(stderr,"%s: could not locate kw:[%s / %s] in block - aborting. \n",__func__ , kw , kw_s);
+  if(!hash_has_key(ecl_block->kw_hash, kw_s)) {
     ecl_block_summarize(ecl_block);
-    util_abort("%s \n",__func__);
+    util_abort("%s: could not locate kw:[%s / %s] in block - aborting. \n",__func__ , kw , kw_s);
   }
   ecl_block_node_type * node = hash_get(ecl_block->kw_hash, kw);
   free(kw_s);
@@ -355,9 +353,8 @@ ecl_kw_type * ecl_block_iget_kw(const ecl_block_type * ecl_block, const char * k
     }
   }
   else {
-    fprintf(stderr,"%s: could not locate kw:[%s/%s] in block - aborting. \n",__func__ , kw , kw_s);
     ecl_block_summarize(ecl_block);
-    util_abort("%s\n",__func__);
+    util_abort("%s: could not locate kw:[%s/%s] in block - aborting. \n",__func__ , kw , kw_s);
     return NULL;
   }
 }
