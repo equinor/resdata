@@ -133,7 +133,7 @@ int ecl_block_get_kw_size(const ecl_block_type * ecl_block, const char * kw)
   {
     fprintf(stderr,"%s: could not locate kw:[%s / %s] in block - aborting. \n",__func__ , kw , kw_s);
     ecl_block_summarize(ecl_block);
-    abort();
+    util_abort("%s \n",__func__);
   }
   ecl_block_node_type * node = hash_get(ecl_block->kw_hash, kw);
   free(kw_s);
@@ -357,7 +357,7 @@ ecl_kw_type * ecl_block_iget_kw(const ecl_block_type * ecl_block, const char * k
   else {
     fprintf(stderr,"%s: could not locate kw:[%s/%s] in block - aborting. \n",__func__ , kw , kw_s);
     ecl_block_summarize(ecl_block);
-    abort();
+    util_abort("%s\n",__func__);
     return NULL;
   }
 }
@@ -402,10 +402,8 @@ bool ecl_block_fseek(int istep , bool fmt_file , bool abort_on_error , fortio_ty
 
     if (!block_found) {
       fseek(stream , init_pos , SEEK_SET);
-      if (abort_on_error) {
-        fprintf(stderr,"%s: failed to locate block number:%d - aborting \n",__func__ , istep);
-        abort();
-      }
+      if (abort_on_error) 
+        util_abort("%s: failed to locate block number:%d - aborting \n",__func__ , istep);
     }
     return block_found;
   }
@@ -418,12 +416,12 @@ static void ecl_block_set_src_file(ecl_block_type * ecl_block , const char * src
 }
 
 
-void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_eof) {
+void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *_at_eof) {
   ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty(ecl_block->fmt_file , ecl_block->endian_convert);
   
   bool read_next_kw  = true;
   bool is_first_kw   = true;
-
+  bool   at_eof      = false;
   char * first_kw = NULL;
   
   do {
@@ -435,7 +433,7 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
 
       if (ecl_kw_header_eq(ecl_kw , first_kw) && !is_first_kw)
       {
-        *at_eof = false;
+        at_eof = false;
         read_next_kw = false;
         ecl_kw_rewind(ecl_kw , fortio);
       }
@@ -444,7 +442,7 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
 
     } else {
       read_next_kw   = false;
-      *at_eof        = true;
+      at_eof         = true;
     }
 
     is_first_kw = false;
@@ -453,6 +451,8 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *at_e
   util_safe_free(first_kw);
   ecl_kw_free(ecl_kw);
   ecl_block_set_src_file(ecl_block , fortio_filename_ref(fortio));
+  if (_at_eof != NULL)
+    *_at_eof = at_eof;
 }
 
 
