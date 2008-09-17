@@ -167,7 +167,9 @@ char * util_realloc_full_path(char *old_path , const char *path , const char *fi
 }
 
 
-
+/**
+   Only removes the last component in path.
+*/
 void static util_unlink_path_static(const char *path , bool test_mode) {
   if (util_path_exists(path)) {
     const uid_t uid = getuid();
@@ -264,9 +266,15 @@ int util_proc_mem_free(void) {
 }
 
 
-char * util_alloc_realpath(const char * src) {
-  char * new_path = util_malloc(4096 , __func__); 
-  realpath(src , new_path);
-  new_path = util_realloc(new_path , strlen(new_path) + 1 , __func__);
+char * util_alloc_realpath(const char * input_path) {
+  char * buffer   = util_malloc(PATH_MAX + 1 , __func__);
+  char * new_path = NULL;
+
+  new_path = realpath( input_path , buffer);
+  if (new_path == NULL) 
+    util_abort("%s: failed %d/%s \n",__func__ , errno , strerror(errno));
+  else 
+    new_path = util_realloc(new_path , strlen(new_path) + 1, __func__);
+  
   return new_path;
 }
