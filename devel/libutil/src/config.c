@@ -194,6 +194,10 @@ static char * config_item_node_validate( const config_item_node_type * node , co
       if (!util_sscanf_bool( value , NULL ))
 	error_message = util_alloc_sprintf("Failed to parse:%s as a boolean.", value);
       break;
+    case(CONFIG_BYTESIZE):
+      if (!util_sscanf_bytesize( value , NULL))
+	error_message = util_alloc_sprintf("Failed to parse:\"%s\" as number of bytes." , value);
+      break;
     default:
       util_abort("%s: config_item_type:%d not recognized \n",__func__ , type_map[i]);
     }

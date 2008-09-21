@@ -648,8 +648,11 @@ bool util_sscanf_int(const char * buffer , int * value) {
    allowed); if no suffix is appended the buffer is assumed to contain
    a memory size already specified in bytes.
    
-   An arbitrary number of spaces(including zero) is allowed between
-   the integer literal and the suffix string.
+
+   Observe that __this_function__ allows an arbitrary number of spaces
+   between between the integer literal and the suffix string; however
+   this might be tricky when parsing. It is probably best to disallow
+   these spaces?
 
    "1GB", "1 GB", "1    gB"
 
@@ -658,7 +661,7 @@ bool util_sscanf_int(const char * buffer , int * value) {
       KB => *= 1024
       MB => *= 1024 * 1024;
       GB => *= 1024 * 1024 * 1024;
-
+      
    Observe that if the functions fails to parse/interpret the string
    it will return false, and set the reference value to 0. However it
    will not fail with an abort. Overflows are *NOT* checked for.
@@ -693,10 +696,12 @@ bool util_sscanf_bytesize(const char * buffer, size_t *size) {
     }
   } 
 
-  if (parse_OK)
-    *size = value * factor;
-  else
-    *size = 0;
+  if (size != NULL) {
+    if (parse_OK)
+      *size = value * factor;
+    else
+      *size = 0;
+  }
   
   return parse_OK;
 }
