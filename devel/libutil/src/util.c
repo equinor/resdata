@@ -216,7 +216,9 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
     end_char = c;
   }
   
-  fseek(stream , init_pos , SEEK_SET);
+  if (fseek(stream , init_pos , SEEK_SET) != 0) 
+    util_abort("%s: fseek failed: %d/%s \n",__func__ , errno , strerror(errno));
+
   new_line = util_realloc(line , len + 1 , __func__);
   util_fread(new_line , sizeof * new_line , len , stream , __func__);
   new_line[len] = '\0';
@@ -254,6 +256,34 @@ char * util_fscanf_alloc_line(FILE *stream , bool *at_eof) {
 char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
   return util_fscanf_alloc_line__(stream , at_eof , line);
 }
+
+/**
+   Reads characters from stdin until EOL is detected. A \0 is appended
+   to the resulting string before it is returned.
+*/
+
+char * util_alloc_stdin_line() {
+  int input_size = 256;
+  char * input = util_malloc(input_size, __func__);
+  int index = 0;
+  bool eol = false;
+  int c;
+  do {
+    c = getchar();
+    if (!EOL_CHAR(c)) {
+      input[index] = c;
+      index++;
+      if (index == (input_size - 1)) { /* Reserve space for terminating \0 */
+	input_size *= 2;
+	input = util_realloc(input , input_size , __func__);
+      }
+    } else eol = true;
+  } while (!eol);
+  input[index] = '\0';  
+  input = util_realloc(input , strlen(input) + 1 , __func__);
+  return input;
+}
+
 
 
 char * util_alloc_cwd(void) {
@@ -681,8 +711,8 @@ bool util_fscanf_int(FILE * stream , int * value) {
    total length of prompt_len. Then the the termination string ("===>"
    above) is added. Observe the following:
 
-   * A space is _always_ added after the prompt, even if the prompt is
-     too long in the first place.
+   * A space is _always_ added after the prompt, before the fill char
+     comes, even if the prompt is too long in the first place.
 
    * No space is added at the end of the termination string. If
      you want a space, that should be included in the termination
