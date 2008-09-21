@@ -642,6 +642,67 @@ bool util_sscanf_int(const char * buffer , int * value) {
 
 
 
+/**
+   This function will parse string containing an integer, and an
+   optional suffix. The valid suffizes are KB,MB and GB (any case is
+   allowed); if no suffix is appended the buffer is assumed to contain
+   a memory size already specified in bytes.
+   
+   An arbitrary number of spaces(including zero) is allowed between
+   the integer literal and the suffix string.
+
+   "1GB", "1 GB", "1    gB"
+
+   are all legitimate. The universal factor used is 1024:
+
+      KB => *= 1024
+      MB => *= 1024 * 1024;
+      GB => *= 1024 * 1024 * 1024;
+
+   Observe that if the functions fails to parse/interpret the string
+   it will return false, and set the reference value to 0. However it
+   will not fail with an abort. Overflows are *NOT* checked for.
+*/
+
+
+bool util_sscanf_bytesize(const char * buffer, size_t *size) {
+  size_t value;
+  char * suffix_ptr;
+  size_t KB_factor = 1024;
+  size_t MB_factor = 1024 * 1024;
+  size_t GB_factor = 1024 * 1024 * 1024;
+  size_t factor    = 1;
+  bool   parse_OK  = true;
+
+  value = strtol(buffer , &suffix_ptr , 10);
+  if (suffix_ptr[0] != '\0') {
+    while (isspace(suffix_ptr[0])) 
+      suffix_ptr++;
+    {
+      char * upper = util_alloc_string_copy(suffix_ptr);
+      if (strcmp(upper,"KB") == 0)
+	factor = KB_factor;
+      else if (strcmp(upper,"MB") == 0)
+	factor = MB_factor;
+      else if (strcmp(upper , "GB") == 0)
+	factor = GB_factor;
+      else
+	parse_OK = false;
+      /* else - failed to parse - returning false. */
+      free(upper);
+    }
+  } 
+
+  if (parse_OK)
+    *size = value * factor;
+  else
+    *size = 0;
+  
+  return parse_OK;
+}
+
+
+
 /** 
     Succesfully parses:
 

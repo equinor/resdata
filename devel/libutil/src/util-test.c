@@ -13,31 +13,14 @@
 #include <menu.h>
 
 
-void print1(void * _arg) {
-  char * arg = (char *) _arg;
-  printf("%s\n",arg);
-}
-
-void print2(void * _arg) {
-  char * arg = (char *) _arg;
-  printf("%s%s\n",arg,arg);
-}
-
-void print3(void * _arg) {
-  char * arg = (char *) _arg;
-  printf("%s%s%s\n",arg,arg,arg);
-}
 
 
 
 int main(int argc , char ** argv) {
-  {
-    menu_type * menu = menu_alloc("H O V E D M E N Y","qQ");
-    menu_add_item(menu , "Print1" , "1a" , print1 , "Hei");
-    menu_add_item(menu , "Print2 - denne er skikkelig lang og fael" , "2bB" , print2 , "Hei");
-    menu_add_item(menu , "Print1" , "3t" , print3 , "Hei");
-    menu_run(menu);
-    menu_free(menu);
-  }
-  exit(1);
+  size_t value;
+
+  if (util_sscanf_bytesize(argv[1] , &value))
+    printf("%s -> %d \n",argv[1],value);
+  else
+    printf("Failed to parse:%s \n",argv[1]);
 }
