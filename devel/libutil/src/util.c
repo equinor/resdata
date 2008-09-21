@@ -257,31 +257,45 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
   return util_fscanf_alloc_line__(stream , at_eof , line);
 }
 
+
+
 /**
    Reads characters from stdin until EOL is detected. A \0 is appended
    to the resulting string before it is returned.
 */
 
 char * util_alloc_stdin_line() {
-  int input_size = 256;
-  char * input = util_malloc(input_size, __func__);
-  int index = 0;
-  bool eol = false;
-  int c;
+  /* 
+     Skipping possible \n which were left in the stdin buffer from a
+     previous (scanf based) read. 
+  */
+  int first_char;
   do {
-    c = getchar();
-    if (!EOL_CHAR(c)) {
-      input[index] = c;
-      index++;
-      if (index == (input_size - 1)) { /* Reserve space for terminating \0 */
-	input_size *= 2;
-	input = util_realloc(input , input_size , __func__);
-      }
-    } else eol = true;
-  } while (!eol);
-  input[index] = '\0';  
-  input = util_realloc(input , strlen(input) + 1 , __func__);
-  return input;
+    first_char = getchar();
+  } while (EOL_CHAR(first_char));
+  
+  {
+    int input_size = 256;
+    char * input = util_malloc(input_size, __func__);
+    int index = 0;
+    bool eol = false;
+    int c;
+    input[index] = first_char; index++; /* ungetc - ugly */
+    do {
+      c = getchar();
+      if (!EOL_CHAR(c)) {
+	input[index] = c;
+	index++;
+	if (index == (input_size - 1)) { /* Reserve space for terminating \0 */
+	  input_size *= 2;
+	  input = util_realloc(input , input_size , __func__);
+	}
+      } else eol = true;
+    } while (!eol);
+    input[index] = '\0';  
+    input = util_realloc(input , strlen(input) + 1 , __func__);
+    return input;
+  }
 }
 
 
