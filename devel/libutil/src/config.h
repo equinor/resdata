@@ -66,6 +66,7 @@ void         config_item_set_argc_minmax(config_item_type * , int  , int , const
 void         config_item_set_selection_set(config_item_type * , const stringlist_type *);
 void         config_item_add_to_selection(config_item_type *  , const char *);
 void         config_item_set_required_children(config_item_type * , stringlist_type * );
+void         config_item_set_required_children_on_value(config_item_type * , const char * , stringlist_type * );
 
 config_item_type * config_add_item(config_type *, 
 				   const char * ,

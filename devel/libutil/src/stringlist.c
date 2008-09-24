@@ -4,6 +4,8 @@
 #include <util.h>
 #include <stringlist.h>
 
+#define STRINGLIST_ID 671855
+
 /**
    This file implements a very thin wrapper around a list (vector) of
    strings, and the total number of strings. It is mostly to avoid
@@ -26,6 +28,7 @@ typedef enum {ref         = 0,    /* Means that the stringlist only has referenc
 
 
 struct stringlist_struct {
+  int           __id;       /* ID used to do run-time check of casts. */
   int           size;       /* The number of elements */
   char        **strings;    /* The actual strings - NB we allow NULL strings */
   owner_type * owner;
@@ -125,6 +128,7 @@ void stringlist_append_owned_ref(stringlist_type * stringlist , const char * s) 
 
 static stringlist_type * stringlist_alloc_empty() {
   stringlist_type * stringlist = util_malloc(sizeof * stringlist , __func__);
+  stringlist->__id    = STRINGLIST_ID;
   stringlist->strings = NULL;
   stringlist->size    = 0;
   stringlist->owner   = NULL;
@@ -229,6 +233,19 @@ int i;
 void stringlist_free(stringlist_type * stringlist) {
   stringlist_clear(stringlist);
   free(stringlist);
+}
+
+
+static stringlist_type * stringlist_safe_cast(void *_stringlist) {
+  stringlist_type * stringlist = (stringlist_type *) _stringlist;
+  if (stringlist->__id != STRINGLIST_ID)
+    util_abort("%s: run-time cast failed - aborting \n",__func__);
+}
+
+
+void stringlist_free__(void * _stringlist) {
+  stringlist_type * stringlist = stringlist_safe_cast(_stringlist);
+  stringlist_free( stringlist );
 }
 
 

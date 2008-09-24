@@ -7,6 +7,7 @@ typedef struct stringlist_struct stringlist_type;
 
 
 stringlist_type * stringlist_alloc_new();
+void              stringlist_free__(void * );
 void              stringlist_free(stringlist_type *);
 void              stringlist_clear(stringlist_type * );
 void              stringlist_append_copy(stringlist_type * , const char *);

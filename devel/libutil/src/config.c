@@ -134,6 +134,7 @@ struct config_item_struct {
   bool                          required_set;            
   stringlist_type             * selection_set;           /* A list of strings which the value(s) must match (can be NULL) */
   stringlist_type             * required_children;       /* A list of item's which must also be set (if this item is set). (can be NULL) */
+  hash_type                   * required_children_value; /* A list of item's which must also be set - depending on the value of this item. (can be NULL) (This one is complex). */
   int                           argc_min;                /* The minimum number of arguments for this keyword -1 means no lower limit. */
   int                           argc_max;                /* The maximum number of arguments for this keyword (on one line) -1 means no limit. */   
   config_item_types           * type_map;                /* A list of types for the items - can be NULL. Set along with argc_minmax(); */
@@ -184,11 +185,11 @@ static char * config_item_node_validate( const config_item_node_type * node , co
       break;
     case(CONFIG_EXISTING_FILE):
       if (!util_file_exists(value))
-	error_message = util_alloc_sprintf("Can not find file: %s. \n",value);
+	error_message = util_alloc_sprintf("Can not find file: %s. ",value);
       break;
     case(CONFIG_EXISTING_DIR):
       if (!util_is_directory(value))
-	error_message = util_alloc_sprintf("Can not find directory: %s. \n",value);
+	error_message = util_alloc_sprintf("Can not find directory: %s. ",value);
       break;
     case(CONFIG_BOOLEAN):
       if (!util_sscanf_bool( value , NULL ))
@@ -349,9 +350,10 @@ config_item_type * config_item_alloc(const char * kw , bool required , bool appe
   item->required_set  	  = required;
   item->argc_min          = -1;  /* -1 - not applicable */
   item->argc_max          = -1;
-  item->selection_set     = NULL;
-  item->required_children = NULL;
-  item->type_map          = NULL;
+  item->selection_set     	= NULL;
+  item->required_children 	= NULL;
+  item->required_children_value = NULL;
+  item->type_map                = NULL;
   return item;
 }
 
@@ -481,6 +483,16 @@ static int config_item_get_occurences(const config_item_type * item) {
 void config_item_validate(config_type * config , const config_item_type * item) {
   
   if (item->currently_set) {
+    if (item->type_map != NULL) {
+      int inode;
+      for (inode = 0; inode < item->node_size; inode++) {
+	char * error_message = config_item_node_validate(item->nodes[inode] , item->type_map);
+	if (error_message != NULL) {
+	  config_add_and_free_error(config , error_message);
+	}
+      }
+    }
+
     if (item->required_children != NULL) {
       int i;
       for (i = 0; i < stringlist_get_size(item->required_children); i++) {
@@ -491,16 +503,30 @@ void config_item_validate(config_type * config , const config_item_type * item) 
       }
     }
 
-    if (item->type_map != NULL) {
+    if (item->required_children_value != NULL) {
       int inode;
-      for (inode = 0; inode < item->node_size; inode++) {
-	char * error_message = config_item_node_validate(item->nodes[inode] , item->type_map);
-	if (error_message != NULL) {
-	  config_add_and_free_error(config , error_message);
+      for (inode = 0; inode < config_item_get_occurences(item); inode++) {
+	config_item_node_type * node   = config_item_iget_node(item , inode);
+	stringlist_type       * values = node->stringlist;
+	int is;
+
+	for (is = 0; is < stringlist_get_size(values); is++) {
+	  const char * value = stringlist_iget(values , is);
+	  if (hash_has_key(item->required_children_value , value)) {
+	    stringlist_type * children = hash_get(item->required_children_value , value);
+	    int ic;
+	    for (ic = 0; ic < stringlist_get_size( children ); ic++) {
+	      const char * req_child = stringlist_iget( children , ic );
+	      if (!config_has_set_item(config , req_child )) {
+		char * error_message = util_alloc_sprintf("When:%s is set to:%s - you also must set:%s.",item->kw , value , req_child );
+		config_add_and_free_error(config , error_message);
+	      }
+	    }
+	  }
 	}
       }
     }
-  }  else if (item->required_set) {
+  } else if (item->required_set) {  /* The item is not set ... */
     char * error_message = util_alloc_sprintf("Item:%s must be set.",item->kw);
     config_add_and_free_error(config , error_message);
   }
@@ -517,7 +543,8 @@ void config_item_free( config_item_type * item) {
       config_item_node_free( item->nodes[i] );
     free(item->nodes);
   }
-  if (item->required_children != NULL) stringlist_free(item->required_children);
+  if (item->required_children       != NULL) stringlist_free(item->required_children);
+  if (item->required_children_value != NULL) hash_free(item->required_children_value);
   if (item->selection_set != NULL)     stringlist_free(item->selection_set);
   util_safe_free(item->type_map);
   free(item);
@@ -553,10 +580,39 @@ void config_item_add_to_selection(config_item_type * item , const char *value) {
   stringlist_append_copy(item->selection_set , value);
 }
 
-
+static bool config_item_has_selection_item(config_item_type * item, const char * value) {
+  bool has_item = false;
+  if (item->selection_set != NULL) {
+    if (stringlist_contains(item->selection_set , value))
+      has_item = true;
+  }
+  return has_item;
+}
 
 void config_item_set_required_children(config_item_type * item , stringlist_type * stringlist) {
   item->required_children = stringlist_alloc_deep_copy(stringlist);
+}
+
+
+
+/**
+   This works in the following way: 
+
+     if item == value {
+        All children in child_list must also be set.
+     }
+
+     
+*/	
+
+
+void config_item_set_required_children_on_value(config_item_type * item , const char * value , stringlist_type * child_list) {
+  if (config_item_has_selection_item(item , value)) {
+    if (item->required_children_value == NULL)
+      item->required_children_value = hash_alloc();
+    hash_insert_hash_owned_ref( item->required_children_value , value , stringlist_alloc_deep_copy(child_list) , stringlist_free__);
+  } else 
+    util_abort("%s: must install selection set which includes:%s first \n",__func__ , value);
 }
 
 
@@ -864,7 +920,7 @@ ENV   LD_LIBARRY_PATH   /some/other/path
 ENV   MALLOC            STRICT
 ....
 
-the returned hash tbale will be: {"PATH": "/som/path", "LD_LIBARRY_PATH": "/some/other_path" , "MALLOC": "STRICT"}
+the returned hash table will be: {"PATH": "/som/path", "LD_LIBARRY_PATH": "/some/other_path" , "MALLOC": "STRICT"}
 
 It is enforced that:
 
