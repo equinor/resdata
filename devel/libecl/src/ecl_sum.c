@@ -329,7 +329,7 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
       ecl_block_set_sim_time_summary(block , /*time_index , years_index , */ day_index , month_index , year_index);
     }
   } else 
-    fprintf(stderr,"** Warning: could not locate DAY / MONTH / YEAR in %s - dates will be defaulted.\n", header_file);
+    fprintf(stderr,"** Warning: could not locate DAY / MONTH / YEAR in %s - dates will be defaulted. Add 'DATE' to the summary section in the .DATA file to prevent this problem.\n", header_file);
   
   return ecl_sum;
 }

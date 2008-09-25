@@ -48,28 +48,28 @@ will not be performed / acted upon.
 /**
 
                                                               
-		 	  =============================                                
-		 	  | config_type object        |
-		 	  |                           |                                
-		 	  | Contains 'all' the        |                                
-		 	  | configuration information.|                                
-		 	  |                           |                                
-		 	  =============================                                
-		               |                   |
-		               |                   \________________________	   				  
-		               |                                            \	  
-		              KEY1                                         KEY2   
-		               |                                             |  
-		              \|/                                           \|/ 
-		   =========================    		  =========================          
-		   | config_item object    |    		  | config_item object    | 	  	  
-		   |                       |    		  |                       | 	  	  
-		   | Indexed by a keyword  |    		  | Indexed by a keyword  | 	  	  
-		   | which is the first    |    		  | which is the first    | 	  	  
-		   | string in the         |    		  | string in the         | 	  	  
-		   | config file.          |    		  | config file.          | 	  	  
-		   |                       |    		  |                       |                                                                           
-		   =========================    		  ========================= 	  	  
+                           =============================                                
+                           | config_type object        |
+                           |                           |                                
+                           | Contains 'all' the        |                                
+                           | configuration information.|                                
+                           |                           |                                
+                           =============================                                
+                               |                   |
+                               |                   \________________________                                             
+                               |                                            \          
+                              KEY1                                         KEY2   
+                               |                                             |  
+                              \|/                                           \|/ 
+                   =========================                      =========================          
+                   | config_item object    |                      | config_item object    |                     
+                   |                       |                      |                       |                     
+                   | Indexed by a keyword  |                      | Indexed by a keyword  |                     
+                   | which is the first    |                      | which is the first    |                     
+                   | string in the         |                      | string in the         |                     
+                   | config file.          |                      | config file.          |                     
+                   |                       |                      |                       |                                                                           
+                   =========================                      =========================                     
                        |             |                                        |
                        |             |                                        |
                       \|/           \|/                                      \|/  
@@ -114,7 +114,7 @@ corresponding to 'optimize cache=1' would be present.
 
 
 struct config_struct {
-  hash_type  	  * items;             	       /* A hash of config_items - the actual content. */
+  hash_type            * items;                            /* A hash of config_items - the actual content. */
   stringlist_type * parse_errors;              /* A stringlist containg the errors found when parsing.*/
 };
 
@@ -122,14 +122,14 @@ struct config_struct {
 
 #define CONFIG_ITEM_ID 6751
 struct config_item_struct {
-  int                         __id;   			 /* Used for run-time checking */
-  char                        * kw;   			 /* The kw which identifies this item· */
+  int                         __id;                            /* Used for run-time checking */
+  char                        * kw;                            /* The kw which identifies this item· */
 
   int                           alloc_size;              /* The number of nodes which have been allocated. */  
   int                           node_size;               /* The number of active nodes.*/
   config_item_node_type      ** nodes;                   /* A vector of config_item_node_type instances. */
 
-  bool                          append_arg;     	 /* Should the values be appended if a keyword appears several times in the config file. */
+  bool                          append_arg;              /* Should the values be appended if a keyword appears several times in the config file. */
   bool                          currently_set;           /* Has a value been assigned to this keyword. */
   bool                          required_set;            
   stringlist_type             * selection_set;           /* A list of strings which the value(s) must match (can be NULL) */
@@ -142,7 +142,7 @@ struct config_item_struct {
 
 
 struct config_item_node_struct {
-  stringlist_type             * stringlist;     	 /* The values which have been set. */
+  stringlist_type             * stringlist;              /* The values which have been set. */
 };
 
 /*****************************************************************/
@@ -177,27 +177,27 @@ static char * config_item_node_validate( const config_item_node_type * node , co
       break;
     case(CONFIG_INT):
       if (!util_sscanf_int( value , NULL ))
-	error_message = util_alloc_sprintf("Failed to parse:%s as an integer.",value);
+        error_message = util_alloc_sprintf("Failed to parse:%s as an integer.",value);
       break;
     case(CONFIG_FLOAT):
       if (!util_sscanf_double( value , NULL ))
-	error_message = util_alloc_sprintf("Failed to parse:%s as a floating point number.", value);
+        error_message = util_alloc_sprintf("Failed to parse:%s as a floating point number.", value);
       break;
     case(CONFIG_EXISTING_FILE):
       if (!util_file_exists(value))
-	error_message = util_alloc_sprintf("Can not find file: %s. ",value);
+        error_message = util_alloc_sprintf("Can not find file: %s. ",value);
       break;
     case(CONFIG_EXISTING_DIR):
       if (!util_is_directory(value))
-	error_message = util_alloc_sprintf("Can not find directory: %s. ",value);
+        error_message = util_alloc_sprintf("Can not find directory: %s. ",value);
       break;
     case(CONFIG_BOOLEAN):
       if (!util_sscanf_bool( value , NULL ))
-	error_message = util_alloc_sprintf("Failed to parse:%s as a boolean.", value);
+        error_message = util_alloc_sprintf("Failed to parse:%s as a boolean.", value);
       break;
     case(CONFIG_BYTESIZE):
       if (!util_sscanf_bytesize( value , NULL))
-	error_message = util_alloc_sprintf("Failed to parse:\"%s\" as number of bytes." , value);
+        error_message = util_alloc_sprintf("Failed to parse:\"%s\" as number of bytes." , value);
       break;
     default:
       util_abort("%s: config_item_type:%d not recognized \n",__func__ , type_map[i]);
@@ -345,13 +345,13 @@ config_item_type * config_item_alloc(const char * kw , bool required , bool appe
   item->nodes      = NULL;
   config_item_realloc_nodes(item , 1);
 
-  item->currently_set 	  = false;
-  item->append_arg    	  = append_arg;
-  item->required_set  	  = required;
+  item->currently_set           = false;
+  item->append_arg              = append_arg;
+  item->required_set            = required;
   item->argc_min          = -1;  /* -1 - not applicable */
   item->argc_max          = -1;
-  item->selection_set     	= NULL;
-  item->required_children 	= NULL;
+  item->selection_set             = NULL;
+  item->required_children         = NULL;
   item->required_children_value = NULL;
   item->type_map                = NULL;
   return item;
@@ -428,42 +428,42 @@ char * config_item_set_arg(config_item_type * item , int argc , const char ** ar
     
     if (item->argc_min >= 0) {
       if (argc < item->argc_min) {
-	OK = false;
-	
-	if (config_file != NULL)
-	  error_message = util_alloc_sprintf("Error when parsing config_file:\"%s\" Keyword:%s must have at least %d arguments.",config_file , item->kw , item->argc_min);
-	else
-	  error_message = util_alloc_sprintf("Error:: Keyword:%s must have at least %d arguments.",item->kw , item->argc_min);
+        OK = false;
+        
+        if (config_file != NULL)
+          error_message = util_alloc_sprintf("Error when parsing config_file:\"%s\" Keyword:%s must have at least %d arguments.",config_file , item->kw , item->argc_min);
+        else
+          error_message = util_alloc_sprintf("Error:: Keyword:%s must have at least %d arguments.",item->kw , item->argc_min);
       }
     }
     
     if (item->argc_max >= 0) {
       if (argc > item->argc_max) {
-	OK = false;
-	if (config_file != NULL)
-	  error_message = util_alloc_sprintf("Error when parsing config_file:\"%s\" Keyword:%s must have maximum %d arguments.",config_file , item->kw , item->argc_min);
-	else
-	  error_message = util_alloc_sprintf("Error:: Keyword:%s must have maximum %d arguments.",item->kw , item->argc_min);
+        OK = false;
+        if (config_file != NULL)
+          error_message = util_alloc_sprintf("Error when parsing config_file:\"%s\" Keyword:%s must have maximum %d arguments.",config_file , item->kw , item->argc_min);
+        else
+          error_message = util_alloc_sprintf("Error:: Keyword:%s must have maximum %d arguments.",item->kw , item->argc_min);
       }
     }
     
     if (OK) {
       if (argc == 0) /* It is OK to set without arguments */
-	currently_set = true;
+        currently_set = true;
       else {
-	for (iarg = 0; iarg < argc; iarg++) {
-	  OK = true;
-	  if (item->selection_set != NULL) {
-	    if (!stringlist_contains(item->selection_set , argv[iarg])) {
-	      error_message = util_alloc_sprintf("%s: is not a valid value for: %s.",argv[iarg] , item->kw);
-	      OK = false;
-	    } 
-	  }
-	  if (OK) {
-	    config_item_node_append(node , argv[iarg]);
-	    currently_set = true;
-	  }
-	}
+        for (iarg = 0; iarg < argc; iarg++) {
+          OK = true;
+          if (item->selection_set != NULL) {
+            if (!stringlist_contains(item->selection_set , argv[iarg])) {
+              error_message = util_alloc_sprintf("%s: is not a valid value for: %s.",argv[iarg] , item->kw);
+              OK = false;
+            } 
+          }
+          if (OK) {
+            config_item_node_append(node , argv[iarg]);
+            currently_set = true;
+          }
+        }
       }
     }
     if (currently_set)
@@ -486,44 +486,44 @@ void config_item_validate(config_type * config , const config_item_type * item) 
     if (item->type_map != NULL) {
       int inode;
       for (inode = 0; inode < item->node_size; inode++) {
-	char * error_message = config_item_node_validate(item->nodes[inode] , item->type_map);
-	if (error_message != NULL) {
-	  config_add_and_free_error(config , error_message);
-	}
+        char * error_message = config_item_node_validate(item->nodes[inode] , item->type_map);
+        if (error_message != NULL) {
+          config_add_and_free_error(config , error_message);
+        }
       }
     }
 
     if (item->required_children != NULL) {
       int i;
       for (i = 0; i < stringlist_get_size(item->required_children); i++) {
-	if (!config_has_set_item(config , stringlist_iget(item->required_children , i))) {
-	  char * error_message = util_alloc_sprintf("When:%s is set - you also must set:%s.",item->kw , stringlist_iget(item->required_children , i));
-	  config_add_and_free_error(config , error_message);
-	}
+        if (!config_has_set_item(config , stringlist_iget(item->required_children , i))) {
+          char * error_message = util_alloc_sprintf("When:%s is set - you also must set:%s.",item->kw , stringlist_iget(item->required_children , i));
+          config_add_and_free_error(config , error_message);
+        }
       }
     }
 
     if (item->required_children_value != NULL) {
       int inode;
       for (inode = 0; inode < config_item_get_occurences(item); inode++) {
-	config_item_node_type * node   = config_item_iget_node(item , inode);
-	stringlist_type       * values = node->stringlist;
-	int is;
+        config_item_node_type * node   = config_item_iget_node(item , inode);
+        stringlist_type       * values = node->stringlist;
+        int is;
 
-	for (is = 0; is < stringlist_get_size(values); is++) {
-	  const char * value = stringlist_iget(values , is);
-	  if (hash_has_key(item->required_children_value , value)) {
-	    stringlist_type * children = hash_get(item->required_children_value , value);
-	    int ic;
-	    for (ic = 0; ic < stringlist_get_size( children ); ic++) {
-	      const char * req_child = stringlist_iget( children , ic );
-	      if (!config_has_set_item(config , req_child )) {
-		char * error_message = util_alloc_sprintf("When:%s is set to:%s - you also must set:%s.",item->kw , value , req_child );
-		config_add_and_free_error(config , error_message);
-	      }
-	    }
-	  }
-	}
+        for (is = 0; is < stringlist_get_size(values); is++) {
+          const char * value = stringlist_iget(values , is);
+          if (hash_has_key(item->required_children_value , value)) {
+            stringlist_type * children = hash_get(item->required_children_value , value);
+            int ic;
+            for (ic = 0; ic < stringlist_get_size( children ); ic++) {
+              const char * req_child = stringlist_iget( children , ic );
+              if (!config_has_set_item(config , req_child )) {
+                char * error_message = util_alloc_sprintf("When:%s is set to:%s - you also must set:%s.",item->kw , value , req_child );
+                config_add_and_free_error(config , error_message);
+              }
+            }
+          }
+        }
       }
     }
   } else if (item->required_set) {  /* The item is not set ... */
@@ -603,7 +603,7 @@ void config_item_set_required_children(config_item_type * item , stringlist_type
      }
 
      
-*/	
+*/        
 
 
 void config_item_set_required_children_on_value(config_item_type * item , const char * value , stringlist_type * child_list) {
@@ -646,8 +646,8 @@ void config_item_set_argc_minmax(config_item_type * item , int argc_min , int ar
 
 
 config_type * config_alloc() {
-  config_type *config 		   = util_malloc(sizeof * config  , __func__);
-  config->items       		   = hash_alloc();
+  config_type *config                    = util_malloc(sizeof * config  , __func__);
+  config->items                          = hash_alloc();
   config->parse_errors             = stringlist_alloc_new();
   return config;
 }
@@ -672,9 +672,9 @@ void config_free(config_type * config) {
 
 
 config_item_type * config_add_item(config_type * config , 
-				   const char  * kw, 
-				   bool  required  , 
-				   bool  append_arg) {
+                                   const char  * kw, 
+                                   bool  required  , 
+                                   bool  append_arg) {
   
   config_item_type * item = config_item_alloc( kw , required , append_arg);
   hash_insert_hash_owned_ref(config->items , kw , item , config_item_free__);
@@ -764,34 +764,34 @@ void config_parse(config_type * config , const char * filename, const char * com
     if (line != NULL) {
       util_split_string(line , " \t" , &tokens , &token_list);
       
-	active_tokens = tokens;
-	for (i = 0; i < tokens; i++) {
-	  char * comment_ptr = NULL;
-	  if(comment_string != NULL)
-	    comment_ptr = strstr(token_list[i] , comment_string);
-	  
-	  if (comment_ptr != NULL) {
-	    if (comment_ptr == token_list[i])
-	      active_tokens = i;
-	    else
-	      active_tokens = i + 1;
-	    break;
-	  }
-	}
-	if (active_tokens > 0) {
-	  const char * kw = token_list[0];
-	  if (!config_has_item(config , kw) && auto_add) 
-	    config_add_item(config , kw , true , false);  /* Auto created items get append_arg == false, and required == true (which is trivially satisfied). */
+        active_tokens = tokens;
+        for (i = 0; i < tokens; i++) {
+          char * comment_ptr = NULL;
+          if(comment_string != NULL)
+            comment_ptr = strstr(token_list[i] , comment_string);
+          
+          if (comment_ptr != NULL) {
+            if (comment_ptr == token_list[i])
+              active_tokens = i;
+            else
+              active_tokens = i + 1;
+            break;
+          }
+        }
+        if (active_tokens > 0) {
+          const char * kw = token_list[0];
+          if (!config_has_item(config , kw) && auto_add) 
+            config_add_item(config , kw , true , false);  /* Auto created items get append_arg == false, and required == true (which is trivially satisfied). */
 
-	  if (config_has_item(config , kw)) {
-	    config_item_type * item = config_get_item(config , kw);
-	    config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1] , filename);
-	  } else 
-	    fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n",kw,filename);
-	  
-	}
-	util_free_stringlist(token_list , tokens);
-	free(line);
+          if (config_has_item(config , kw)) {
+            config_item_type * item = config_get_item(config , kw);
+            config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1] , filename);
+          } else 
+            fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n",kw,filename);
+          
+        }
+        util_free_stringlist(token_list , tokens);
+        free(line);
     }
   }
   if (validate) config_validate(config , filename);
