@@ -309,4 +309,5 @@ void menu_free(menu_type * menu) {
       menu_item_free(menu->items[i]);
     free(menu->items);
   }
+  free(menu);
 }

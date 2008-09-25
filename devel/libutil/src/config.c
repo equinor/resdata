@@ -263,7 +263,7 @@ static config_item_node_type * config_item_get_first_node(config_item_type * ite
 
 const char * config_item_iget(const config_item_type * item , int index) {
   if (item->append_arg) 
-    util_abort("%s: this function can only be used on items added with append_arg == FALSE\n" , __func__);
+    util_abort("%s: kw:%s this function can only be used on items added with append_arg == FALSE\n" , __func__ , item->kw);
   {
     config_item_node_type * node = config_item_iget_node(item , 0);  
     return stringlist_iget( node->stringlist , index );
@@ -277,7 +277,7 @@ const char * config_item_get(const config_item_type * item) {
   if ((item->argc_min == 1) && (item->argc_max == 1))
     return config_item_iget(item , 0);
   else {
-    util_abort("%s: sorry - this function requires that argc_minmax = 1,1 \n",__func__);
+    util_abort("%s: kw:%s sorry - this function requires that argc_minmax = 1,1 \n",__func__ , item->kw);
     return NULL;
   }
 }
@@ -832,7 +832,10 @@ bool config_has_keys(const config_type * config, const char **ext_keys, int ext_
 
 
 /*****************************************************************/
-/* Here comes some xxx_get() functions - many of them will fail if...*/
+/* Here comes some xxx_get() functions - many of them will fail if
+   the item has not been added in the right way (this is to ensure that
+   the xxx_get() request is unambigous. */
+
 
 /**
    This function can be used to get the value of a config
