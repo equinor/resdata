@@ -175,6 +175,8 @@ static char * config_item_node_validate( const config_item_node_type * node , co
     switch (type_map[i]) {
     case(CONFIG_STRING): /* This never fails ... */
       break;
+    case(CONFIG_EXECUTABLE):
+      break;
     case(CONFIG_INT):
       if (!util_sscanf_int( value , NULL ))
         error_message = util_alloc_sprintf("Failed to parse:%s as an integer.",value);
