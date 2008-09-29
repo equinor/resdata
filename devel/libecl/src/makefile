@@ -1,15 +1,8 @@
 include global_config
-MFLAG = m64
-CC = gcc
-AR = ar
 #################################################################
 COMPILE_INCLUDE  = -I$(LIBECL_HOME)/src -I$(LIBUTIL_HOME)/include -I$(LIBHASH_HOME)/include 
 INSTALL_INC_PATH =  $(LIBECL_HOME)/include
 INSTALL_LIB_PATH =  $(LIBECL_HOME)/lib
-#################################################################
-CFLAGS  = -O2 -$(MFLAG)  -std=gnu99 -g -Wall -fPIC
-LDFLAGS = 
-ARFLAGS = -csr
 #################################################################
 __SDP_ROOT  	   = $(SDP_ROOT)/$(shell res_target.py)
 LIB_OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o ecl_interC.o fortio.o ecl_parse.o ecl_rft_vector.o ecl_rft_node.o ecl_grid.o ecl_box.o restart_kw_list.o 

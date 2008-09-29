@@ -1,17 +1,10 @@
 include global_config
-MFLAG = m64
-CC = gcc
-AR = ar
 #################################################################
 COMPILE_INCLUDE   = -I./  -I$(LIBHASH_HOME)/include
 COMPILE_LIB_PATH  = -L$(LIBHASH_HOME)/lib
 
 INSTALL_INC_PATH = $(LIBUTIL_HOME)/include
 INSTALL_LIB_PATH = $(LIBUTIL_HOME)/lib
-#################################################################
-CFLAGS  = -$(MFLAG) -std=gnu99 -g -Wall -fPIC
-ARFLAGS = -csr
-LDFLAGS = -rdynamic
 #################################################################
 SDP_ROOT          = /project/res/$(shell /private/joaho/bin/res_target.py)
 OBJECTS           = util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o path_fmt.o config.o stringlist.o menu.o
