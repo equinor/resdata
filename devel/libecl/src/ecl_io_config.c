@@ -132,5 +132,7 @@ ecl_io_config_type * ecl_io_config_alloc(bool formatted , bool endian_flip , boo
   
   
   
-  
+void ecl_io_config_free(ecl_io_config_type * io_config) {
+  free(io_config);
+}
   
