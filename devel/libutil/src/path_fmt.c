@@ -129,7 +129,7 @@ path_fmt_type * path_fmt_copyc(const path_fmt_type *path) {
 
 
 static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
-  char * new_path;
+  char * new_path = NULL;
   int path_length;
   {
     va_list tmp_va;

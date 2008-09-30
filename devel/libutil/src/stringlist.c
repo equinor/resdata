@@ -37,6 +37,21 @@ struct stringlist_struct {
 
 
 
+static void stringlist_fprintf__(const stringlist_type * stringlist, const char * sep , FILE * stream , bool debug) {
+  if (debug) 
+    for (int i = 0; i < stringlist->size; i++)
+      fprintf(stream , "%s[%d]%s",stringlist->strings[i] , stringlist->owner[i], sep );
+  else 
+    for (int i = 0; i < stringlist->size; i++)
+      fprintf(stream , "%s%s",stringlist->strings[i] , sep);
+}
+
+
+void stringlist_fprintf(const stringlist_type * stringlist, const char * sep , FILE * stream) {
+  stringlist_fprintf__(stringlist , sep , stream , false);
+}
+
+
 
 /**
    this function appends num_append new items to the
@@ -45,7 +60,7 @@ struct stringlist_struct {
    memory, i.e. it is esential that the calling routine (from this
    file) has
 
-   stringlist->xx = yy;
+     stringlist->xx = yy;
 
    statements.
 */
@@ -60,7 +75,7 @@ static void stringlist_grow__(stringlist_type * stringlist , int num_append) {
     int i;
     for (i = old_size; i < stringlist->size; i++) {
       stringlist->strings[i] = NULL;
-      stringlist->owner[i]   = ref;
+      stringlist->owner[i]   = ref;  
     }
   }
 }
@@ -216,10 +231,10 @@ void stringlist_clear(stringlist_type * stringlist) {
 int i;
 
  if (stringlist->size > 0) {
-
+   
    for (i = 0; i < stringlist->size; i++)
-      if (stringlist->owner[i] != ref)
-	util_safe_free(stringlist->strings[i]);
+     if (stringlist->owner[i] != ref)
+       util_safe_free(stringlist->strings[i]);
    free(stringlist->strings);
    free(stringlist->owner);
    
@@ -238,8 +253,11 @@ void stringlist_free(stringlist_type * stringlist) {
 
 static stringlist_type * stringlist_safe_cast(void *_stringlist) {
   stringlist_type * stringlist = (stringlist_type *) _stringlist;
-  if (stringlist->__id != STRINGLIST_ID)
+  if (stringlist->__id != STRINGLIST_ID) {
     util_abort("%s: run-time cast failed - aborting \n",__func__);
+    return NULL;  /* Compiler shut up */
+  } else 
+    return stringlist;
 }
 
 
@@ -271,11 +289,6 @@ const char ** stringlist_get_argv(const stringlist_type * stringlist) {
 }
 
 
-void stringlist_fprintf(const stringlist_type * stringlist, const char * sep , FILE * stream) {
-  int i;
-  for (i = 0; i < stringlist->size; i++)
-    fprintf(stream , "%s%s",stringlist->strings[i] , sep);
-}
 
 
 /** 

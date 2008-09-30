@@ -115,16 +115,16 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
 char * util_alloc_filename(const char * path , const char * basename , const char * extension) {
   bool   include_path = false;
   char * file;
-  int    length;
+  int    length = strlen(basename) + 1;
   
   if (path != NULL) {
     include_path = true;
-    length = strlen(path) + 1;
+    length += strlen(path) + 1;
   }
   if (extension != NULL)
     length += strlen(extension) + 1;
 
-  file = util_malloc(length + strlen(basename) + 1 , __func__);
+  file = util_malloc(length , __func__);
 
   if (path == NULL) {
     if (extension == NULL)

@@ -46,6 +46,7 @@ static int void_arg_sizeof(node_ctype arg_type) {
     size = sizeof( size_t );
     break;
   default:
+    size = -1; /* Compiler shut up */
     util_abort("%s: arg_type:%d not recognized - aborting \n",__func__ , arg_type);
   }
   return size;
@@ -297,7 +298,8 @@ static const char * void_arg_fmt(const void_arg_type * arg , int iarg) {
 
 
 void void_arg_fscanf(void_arg_type * arg , FILE * stream) {
-  int iarg , scan_count;
+  int scan_count = 0;
+  int iarg;
   char * fmt = NULL;
   for (iarg = 0; iarg  < arg->arg_size; iarg++)
     fmt = util_strcat_realloc(fmt , void_arg_fmt(arg , iarg));
@@ -337,7 +339,7 @@ void void_arg_fscanf(void_arg_type * arg , FILE * stream) {
       arg0 = void_arg_get_buffer(arg , 0);
       arg1 = void_arg_get_buffer(arg , 1);
       arg2 = void_arg_get_buffer(arg , 2);
-      arg2 = void_arg_get_buffer(arg , 3);
+      arg3 = void_arg_get_buffer(arg , 3);
       
       scan_count = fscanf(stream , fmt , arg0 , arg1 , arg2 , arg3);
       break;
@@ -348,8 +350,8 @@ void void_arg_fscanf(void_arg_type * arg , FILE * stream) {
       arg0 = void_arg_get_buffer(arg , 0);
       arg1 = void_arg_get_buffer(arg , 1);
       arg2 = void_arg_get_buffer(arg , 2);
-      arg2 = void_arg_get_buffer(arg , 3);
-      arg2 = void_arg_get_buffer(arg , 4);
+      arg3 = void_arg_get_buffer(arg , 3);
+      arg4 = void_arg_get_buffer(arg , 4);
 
       scan_count = fscanf(stream , fmt , arg0 , arg1 , arg2 , arg3 , arg4);
       break;

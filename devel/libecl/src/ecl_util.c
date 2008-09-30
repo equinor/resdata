@@ -835,3 +835,56 @@ void ecl_util_escape_kw(char * kw) {
     }
   }
 }
+
+
+
+/*
+  I have *intentionally* dived straight at the problem of extracting
+  the start_date; otherwise one might quite quickly end up with a
+  half-baked DATA-file parser. I think that path leads straight to an
+  asylum.
+
+    ECLIPSE100 has default date: 1. of january 1983.
+    ECLIPSE300 has default date: 1. of january 1990.
+
+  They don't have much style those fuckers in Schlum ...
+*/
+
+
+
+time_t ecl_util_get_start_date(const char * data_file) { 
+  FILE * stream = util_fopen(data_file , "r");
+  char * line   = NULL;
+  bool   at_eof = false;
+  bool   start_found = false;
+  int    line_start;
+  
+  do {
+    char * start_pos;
+    line_start = ftell(stream);
+    line = util_fscanf_realloc_line(stream , &at_eof , line);
+    util_strupr(line);
+    start_pos = strstr(line , "START");
+    if (start_pos != NULL) {
+      /* 
+	 OK - we have found START - must go back and check that it
+	 is not in a section which is commented out. 
+      */
+      char * comment_start = strstr(line , "--");
+      start_found = true;
+      if (comment_start != NULL)
+	if (comment_start < start_pos)
+	  start_found = false; /* Sorry - it was in a comment */
+    }
+    free(line);
+  } while (!start_found && !at_eof);
+  if (!start_found) 
+    util_abort("%s: sorry - could not find START in DATA file %s \n",__func__ , data_file);
+  
+  {
+    
+  }
+  
+  fclose(stream);
+  return -1;
+}

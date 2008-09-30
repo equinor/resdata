@@ -720,7 +720,7 @@ bool util_sscanf_bytesize(const char * buffer, size_t *size) {
 
 bool util_sscanf_bool(const char * buffer , bool * _value) {
   bool parse_OK = false;
-  bool value;
+  bool value    = false; /* Compiler shut up */
 
   if (strcmp(buffer,"1") == 0) {
     parse_OK = true;
@@ -2175,7 +2175,7 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
 #define ABORT_WRITE 2
 
 static FILE * util_fopen__(const char *filename , const char * mode, int abort_mode) {
-  FILE *stream;
+  FILE *stream = NULL; 
 
   if (strcmp(mode , "r") == 0) {
     stream = fopen(filename , "r");
@@ -2210,8 +2210,7 @@ static FILE * util_fopen__(const char *filename , const char * mode, int abort_m
       }
       if (abort_mode & ABORT_WRITE) util_abort("%s: ABORT_WRITE \n",__func__);
     }
-  }
-  else 
+  } else 
     util_abort("%s: open mode: '%s' not implemented - aborting \n",__func__ , mode);
 
   return stream;
@@ -2594,7 +2593,7 @@ void util_fprintf_string(const char * s , int width , string_alignement_type ali
 
 
 char * util_alloc_sprintf(const char * fmt , ...) {
-  char *s;
+  char *s = NULL;
   va_list ap;
   va_start(ap , fmt);
   {
@@ -2631,8 +2630,9 @@ static bool util_filter_buffer(const char * src_buffer , const char * target_fil
 
 
 
+
 void util_filtered_fprintf(const char * buffer , int buffer_size , FILE * stream , char start_char , char end_char , const hash_type * kw_hash , util_filter_warn_type  warning_mode) { 
-  set_type * used_set;
+  set_type * used_set = NULL; /* Compiler shut up. */
   int index;
   char * kw     = NULL;
 
@@ -2754,12 +2754,21 @@ void util_filter_file(const char * src_file , const char * comment , const char 
    
 
 char * util_alloc_PATH_executable(const char * executable) {
-  if (util_is_abs_path(executable))
-    return util_alloc_string_copy(executable);
-  else if (strncmp(executable , "./" , 2) == 0) 
+  if (util_is_abs_path(executable)) {
+    if (util_is_executable(executable))
+      return util_alloc_string_copy(executable);
+    else
+      return NULL;
+  } else if (strncmp(executable , "./" , 2) == 0) {
+    char * path = util_alloc_full_path(getenv("PWD") , &executable[2]);
     /* The program has been invoked as ./xxxx */
-    return util_alloc_full_path(getenv("PWD") , &executable[2]);
-  else {
+    if (util_is_executable( path ))
+      return path; 
+    else {
+	free( path );
+	return NULL;
+    }
+  } else {
     char *  full_path = NULL;
     char *  path_env  = getenv("PATH");
     if (path_env != NULL) {

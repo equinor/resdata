@@ -6,6 +6,7 @@
 #include <config.h>
 #include <hash.h>
 #include <stringlist.h>
+#include <set.h>
 
 
 #define CLEAR_STRING "__RESET__"
@@ -114,8 +115,9 @@ corresponding to 'optimize cache=1' would be present.
 
 
 struct config_struct {
-  hash_type            * items;                            /* A hash of config_items - the actual content. */
-  stringlist_type * parse_errors;              /* A stringlist containg the errors found when parsing.*/
+  hash_type            * items;                     /* A hash of config_items - the actual content. */
+  stringlist_type      * parse_errors;              /* A stringlist containg the errors found when parsing.*/
+  set_type             * parsed_files;              /* A set of config files whcih have been parsed - to protect against circular includes. */
 };
 
 
@@ -148,6 +150,12 @@ struct config_item_node_struct {
 /*****************************************************************/
 
 
+static void config_item_node_fprintf(config_item_node_type * node , int node_nr , FILE * stream) {
+  fprintf(stream , "   %02d: ",node_nr);
+  stringlist_fprintf(node->stringlist , " " , stream);
+  fprintf(stream , "\n");
+}
+
 
 static config_item_node_type * config_item_node_alloc() {
   config_item_node_type * node = util_malloc(sizeof * node , __func__);
@@ -176,6 +184,13 @@ static char * config_item_node_validate( const config_item_node_type * node , co
     case(CONFIG_STRING): /* This never fails ... */
       break;
     case(CONFIG_EXECUTABLE):
+      {
+	char * executable = util_alloc_PATH_executable( value );
+	if (executable == NULL) 
+	  error_message = util_alloc_sprintf("Could not locate executable:%s ", value);
+	else
+	  free(executable);
+      }
       break;
     case(CONFIG_INT):
       if (!util_sscanf_int( value , NULL ))
@@ -233,6 +248,7 @@ static config_item_node_type * config_item_iget_node(const config_item_type * it
     util_abort("%s: error - asked for node nr:%d available: [0,%d> \n",__func__ , index , item->node_size);
   return item->nodes[index];
 }
+
 
 /** 
     Adds a new node as side-effect ... 
@@ -352,8 +368,8 @@ config_item_type * config_item_alloc(const char * kw , bool required , bool appe
   item->required_set            = required;
   item->argc_min          = -1;  /* -1 - not applicable */
   item->argc_max          = -1;
-  item->selection_set             = NULL;
-  item->required_children         = NULL;
+  item->selection_set           = NULL;
+  item->required_children       = NULL;
   item->required_children_value = NULL;
   item->type_map                = NULL;
   return item;
@@ -535,9 +551,30 @@ void config_item_validate(config_type * config , const config_item_type * item) 
 }
 
 
+void config_item_fprintf(const config_item_type * item , FILE * stream) {
+  fprintf(stream, "%s \n",item->kw);
+  for (int i=0; i < item->node_size; i++) 
+    config_item_node_fprintf(item->nodes[i] , i , stream);
+
+  if (item->required_children_value != NULL) {
+    char ** values = hash_alloc_keylist( item->required_children_value );
+    
+    for (int i=0; i < hash_get_size(item->required_children_value ); i++) {
+      fprintf(stream , "  %-10s: ",values[i]);
+      stringlist_fprintf(hash_get( item->required_children_value , values[i]) , " " , stream);
+      fprintf(stream , "\n");
+    }
+    
+    util_free_stringlist( values , hash_get_size( item->required_children_value ));
+  }
+}
 
 
 void config_item_free( config_item_type * item) {
+  /*
+    printf("%s / %s: \n",__func__ , item->kw);
+    config_item_fprintf(item , stdout);
+  */
   free(item->kw);
   {
     int i;
@@ -546,8 +583,8 @@ void config_item_free( config_item_type * item) {
     free(item->nodes);
   }
   if (item->required_children       != NULL) stringlist_free(item->required_children);
-  if (item->required_children_value != NULL) hash_free(item->required_children_value);
-  if (item->selection_set != NULL)     stringlist_free(item->selection_set);
+  if (item->required_children_value != NULL) hash_free(item->required_children_value); 
+  if (item->selection_set != NULL)           stringlist_free(item->selection_set);
   util_safe_free(item->type_map);
   free(item);
 }
@@ -648,9 +685,10 @@ void config_item_set_argc_minmax(config_item_type * item , int argc_min , int ar
 
 
 config_type * config_alloc() {
-  config_type *config                    = util_malloc(sizeof * config  , __func__);
-  config->items                          = hash_alloc();
-  config->parse_errors             = stringlist_alloc_new();
+  config_type *config     = util_malloc(sizeof * config  , __func__);
+  config->items           = hash_alloc();
+  config->parse_errors    = stringlist_alloc_new();
+  config->parsed_files    = set_alloc_empty();
   return config;
 }
 
@@ -658,6 +696,7 @@ config_type * config_alloc() {
 void config_free(config_type * config) {
   hash_free(config->items);
   stringlist_free(config->parse_errors);
+  set_free(config->parsed_files);
   free(config);
 }
 
@@ -752,19 +791,45 @@ static void config_validate(config_type * config, const char * filename) {
 }
 
 
-void config_parse(config_type * config , const char * filename, const char * comment_string , bool auto_add , bool validate) {
-  FILE * stream = util_fopen(filename , "r");
-  bool   at_eof = false;
+
+/**
+   This function parses the config file 'filename', and updated the
+   internal state of the config object as parsing proceeds. If
+   comment_string != NULL everything following 'comment_string' on a
+   line is discarded.
+
+   include_kw is a string identifier for an include functionality, if
+   an include is encountered, the included file is parsed immediately
+   (through a recursive call to config_parse). if include_kw == NULL,
+   include files are not supported.
+
+   auto_add: whether unrecognized keywords should be added to the the
+             config object.  
+
+   validate: whether we should validate when complete, that should
+             typically only be done at the last parsing.
+
+*/
+
+
+void config_parse(config_type * config , const char * filename, const char * comment_string , const char * include_kw ,bool auto_add , bool validate) {
+  char * abs_filename = util_alloc_realpath(filename);
+
+  if (!set_add_key(config->parsed_files , abs_filename)) 
+    util_exit("%s: file:%s already parsed - circular include ? \n",__func__ , filename);
+  else {
+    FILE * stream = util_fopen(filename , "r");
+    bool   at_eof = false;
   
-  while (!at_eof) {
-    int i , tokens;
-    int active_tokens;
-    char **token_list;
-    char  *line;
+    while (!at_eof) {
+      int i , tokens;
+      int active_tokens;
+      char **token_list;
+      char  *line;
     
-    line  = util_fscanf_alloc_line(stream , &at_eof);
-    if (line != NULL) {
-      util_split_string(line , " \t" , &tokens , &token_list);
+      line  = util_fscanf_alloc_line(stream , &at_eof);
+      if (line != NULL) {
+	util_split_string(line , " \t" , &tokens , &token_list);
       
         active_tokens = tokens;
         for (i = 0; i < tokens; i++) {
@@ -780,24 +845,32 @@ void config_parse(config_type * config , const char * filename, const char * com
             break;
           }
         }
+
         if (active_tokens > 0) {
           const char * kw = token_list[0];
-          if (!config_has_item(config , kw) && auto_add) 
-            config_add_item(config , kw , true , false);  /* Auto created items get append_arg == false, and required == true (which is trivially satisfied). */
-
-          if (config_has_item(config , kw)) {
-            config_item_type * item = config_get_item(config , kw);
-            config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1] , filename);
-          } else 
-            fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n",kw,filename);
-          
+	  if (include_kw != NULL && (strcmp(include_kw , kw) == 0)) {
+	    if (active_tokens != 2) 
+	      util_abort("%s: keyword:%s must have exactly one argument. \n",__func__ ,include_kw);
+	    config_parse(config , token_list[1] , comment_string , include_kw , auto_add , false); /* Recursive call */
+	  } else {
+	    if (!config_has_item(config , kw) && auto_add) 
+	      config_add_item(config , kw , true , false);  /* Auto created items get append_arg == false, and required == true (which is trivially satisfied). */
+	    
+	    if (config_has_item(config , kw)) {
+	      config_item_type * item = config_get_item(config , kw);
+	      config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1] , filename);
+	    } else 
+	      fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n",kw,filename);
+	  }
         }
         util_free_stringlist(token_list , tokens);
         free(line);
+      }
     }
+    if (validate) config_validate(config , filename);
+    fclose(stream);
   }
-  if (validate) config_validate(config , filename);
-  fclose(stream);
+  free(abs_filename);
 }
 
 
