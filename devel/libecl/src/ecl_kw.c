@@ -1253,6 +1253,7 @@ void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
 	 ecl_kw_get_str_type_ref(ecl_kw));
 }
 
+
 void ecl_kw_fprintf_grdecl(ecl_kw_type * ecl_kw , FILE * stream) {
   fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , stream);   /* Endian flip should *NOT* be used */
   bool org_fmt = ecl_kw_get_fmt_file(ecl_kw);
@@ -1282,11 +1283,10 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
     ecl_kw_fread_data(ecl_kw , fortio);
     util_fskip_chars(stream , " \n\r" , &at_eof);
     fscanf(stream , "%s" , buffer);
-
-    if (buffer[0] != '/') {
-      fprintf(stderr,"%s: Did not find '/' at end of %s \n",__func__ , ecl_kw->header);
-      abort();
-    }
+    
+    if (buffer[0] != '/') 
+      util_abort("%s: Did not find '/' at end of %s - size mismatch / malformed file ??\n",__func__ , ecl_kw->header);
+    
     fortio_free_FILE_wrapper(fortio);
   }
 
@@ -1655,8 +1655,8 @@ bool ecl_kw_is_grdecl_file(FILE * stream) {
   const long int init_pos = ftell(stream);
   bool grdecl_file;
   bool at_eof = false;
-  util_fskip_chars(stream ,  " \r\n\t"  , &at_eof); /* Skipping intial space */
-  util_fskip_cchars(stream , " \r\n\t" , &at_eof); /* Skipping PORO/PERMX/... */
+  util_fskip_chars(stream ,  " \r\n\t"  , &at_eof);  /* Skipping intial space */
+  util_fskip_cchars(stream , " \r\n\t"  , &at_eof);  /* Skipping PORO/PERMX/... */
   if (at_eof) 
     grdecl_file = false;
   else {
