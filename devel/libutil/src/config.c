@@ -178,12 +178,18 @@ static void config_item_node_free(config_item_node_type * node) {
 }
 
 static char * __alloc_relocated(const config_item_node_type * node , const char * value) {
-  /* Actually rewriting the config item to reflect changing paths ... */
-  char * file = util_alloc_full_path(node->config_cwd , value);
+  char * file;
+  
+  if (util_is_abs_path(value))
+    file = util_alloc_string_copy( value );
+  else
+    file = util_alloc_full_path(node->config_cwd , value);
+  
   return file;
 }
 
 static char * config_item_node_validate( const config_item_node_type * node , const config_item_types * type_map) {
+
   int i;
   char * error_message = NULL;
   for (i = 0; i < stringlist_get_size( node->stringlist ); i++) {
@@ -216,7 +222,8 @@ static char * config_item_node_validate( const config_item_node_type * node , co
 	char * file = __alloc_relocated(node , value);
 	if (!util_file_exists(file))
 	  error_message = util_alloc_sprintf("Can not find file %s in %s ",value , node->config_cwd);
-	stringlist_iset_owned_ref(node->stringlist , i , file);
+	else
+	  stringlist_iset_owned_ref(node->stringlist , i , file);
       }
       break;
     case(CONFIG_EXISTING_DIR):
@@ -224,7 +231,8 @@ static char * config_item_node_validate( const config_item_node_type * node , co
 	char * dir = __alloc_relocated(node , value);
 	if (!util_is_directory(value))
 	  error_message = util_alloc_sprintf("Can not find directory: %s. ",value);
-	stringlist_iset_owned_ref(node->stringlist , i , dir);
+	else
+	  stringlist_iset_owned_ref(node->stringlist , i , dir);
       }
       break;
     case(CONFIG_BOOLEAN):
@@ -865,7 +873,7 @@ static void config_validate(config_type * config, const char * filename) {
 static void config_parse__(config_type * config , const char * config_cwd , const char * _config_file, const char * comment_string , const char * include_kw ,bool auto_add , bool validate) {
   char * config_file  = util_alloc_full_path(config_cwd , _config_file);
   char * abs_filename = util_alloc_realpath(config_file);
-
+  
   if (!set_add_key(config->parsed_files , abs_filename)) 
     util_exit("%s: file:%s already parsed - circular include ? \n",__func__ , config_file);
   else {
@@ -903,21 +911,34 @@ static void config_parse__(config_type * config , const char * config_cwd , cons
 	    if (active_tokens != 2) 
 	      util_abort("%s: keyword:%s must have exactly one argument. \n",__func__ ,include_kw);
 	    {
-	      char *tmp_path     = NULL;
-	      char *include_path = NULL;
-	      char *include_file = NULL;
+	      char *include_path  = NULL;
+	      char *extension     = NULL;
+	      char *include_file  = NULL;
 
-	      util_alloc_file_components(token_list[1] , &tmp_path , &include_file , NULL);
-	      if (!util_is_abs_path(tmp_path)) 
-		include_path = util_alloc_full_path(config_cwd , tmp_path);
-	      else
-		include_path = tmp_path;
-	      
+	      {
+		char * tmp_path;
+		char * tmp_file;
+		util_alloc_file_components(token_list[1] , &tmp_path , &tmp_file , &extension);
+
+		/* Allocating a new path with current config_cwd and the (relative) path to the new config_file */
+		if (!util_is_abs_path(tmp_path)) 
+		  include_path = util_alloc_full_path(config_cwd , tmp_path);
+		else
+		  include_path = util_alloc_string_copy(tmp_path);
+		
+		/* Allocating a new filename **with** extension */
+		if (extension != NULL) 
+		  include_file = util_alloc_filename(NULL , tmp_file , extension);
+		else
+		  include_file = util_alloc_string_copy(tmp_file);
+
+		free(tmp_file);
+		free(tmp_path);
+	      }
+
 	      config_parse__(config , include_path , include_file , comment_string , include_kw , auto_add , false); /* Recursive call */
-	      
 	      util_safe_free(include_file);
 	      util_safe_free(include_path);
-	      util_safe_free(tmp_path);
 	    }
 	  } else {
 	    if (!config_has_item(config , kw) && auto_add) 
@@ -945,10 +966,15 @@ static void config_parse__(config_type * config , const char * config_cwd , cons
 void config_parse(config_type * config , const char * filename, const char * comment_string , const char * include_kw ,bool auto_add , bool validate) {
   char * config_path;
   char * config_file;
-  util_alloc_file_components(filename , &config_path , &config_file , NULL);
-  
+  char * tmp_file;
+  char * extension;
+
+  util_alloc_file_components(filename , &config_path , &tmp_file , &extension);
+  config_file = util_alloc_filename(NULL , tmp_file , extension);
   config_parse__(config , config_path , config_file , comment_string , include_kw , auto_add , validate);
 
+  util_safe_free(tmp_file);
+  util_safe_free(extension);
   util_safe_free(config_path);
   util_safe_free(config_file);
 }

@@ -1,6 +1,7 @@
 #ifndef __ECL_UTIL_H__
 #define __ECL_UTIL_H__
 #include <stdbool.h>
+#include <time.h>
 
 typedef enum {ecl_other_file           = 0   , 
 	      ecl_restart_file         = 1   , 
@@ -40,5 +41,6 @@ void            ecl_util_memcpy_typed_data(void *, const void * , ecl_type_enum 
 void            ecl_util_escape_kw(char * kw);
 void            ecl_util_alloc_summary_files(const char * , const char * , char ** , char *** , int *  , bool * , bool * );
 const    char * ecl_util_type_name(ecl_type_enum );
+time_t          ecl_util_get_start_date(const char * );
 
 #endif

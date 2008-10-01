@@ -86,7 +86,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_block_type * rft_block) {
 
  
     ecl_kw_get_memcpy_data(ecl_block_get_kw(rft_block , "DATE") , time3);
-    rft_node->recording_time = util_make_time1(time3[0] , time3[1] , time3[2]);
+    rft_node->recording_time = util_make_date(time3[0] , time3[1] , time3[2]);
     {
       int i;
       rft_node->vertical_well = true;

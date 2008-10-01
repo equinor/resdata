@@ -205,7 +205,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
       nums = ecl_block_get_kw(block , "NUMS");
 
     date = ecl_kw_get_int_ptr(startdat);
-    ecl_sum->sim_start_time = util_make_time1(date[0] , date[1] , date[2]);
+    ecl_sum->sim_start_time = util_make_date(date[0] , date[1] , date[2]);
     {
       /*
 	Fills a unit_hash: unit_hash["WOPR"] =	"Barels/day"...

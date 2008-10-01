@@ -329,7 +329,7 @@ bool util_sscanf_date(const char * date_token , time_t * t) {
   char sep1 , sep2;
   
   if (sscanf(date_token , "%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) {
-    *t = util_make_time1(day , month , year );  
+    *t = util_make_date(day , month , year );  
     return true;
   } else {
     *t = -1;
@@ -443,22 +443,26 @@ void util_fskip_token(FILE * stream) {
 
 
 static void util_fskip_chars__(FILE * stream , const char * skip_set , bool complimentary_set , bool *at_eof) {
-  int set_len = strlen(skip_set);
-  bool in_set;
+  bool cont     = true;
   do {
-    int i;
     int c = fgetc(stream);
-    in_set = false;
-    if (c == EOF) 
+    if (c == EOF) {
       *at_eof = true;
-    else {
-      for (i=0; i < set_len; i++) {
-	if (skip_set[i] == c)
-	  in_set = true;
+      cont = false;
+    } else {
+      if (strchr(skip_set , c) == NULL) {
+	/* c is not in skip_set */
+	if (!complimentary_set)
+	  cont = false;
+      } else {
+	/* c is in skip_set */
+	if (complimentary_set)
+	  cont = false;
       }
     }
-  } while (in_set != complimentary_set);
-  fseek(stream , -1 , SEEK_CUR);
+  } while (cont);
+  if (!*at_eof)
+    fseek(stream , -1 , SEEK_CUR);
 }
 
 
@@ -1173,7 +1177,10 @@ int util_get_base_length(const char * file) {
       printf("File does *not* have an extension \n");
 
    The memory allocated in util_alloc_file_components must be freed by
-   the calling unit.
+   the calling unit. 
+
+   Observe that it is easy to be fooled by the optional existence of
+   an extension (badly desgined API).
 */
 
 void util_alloc_file_components(const char * file, char **_path , char **_basename , char **_extension) {
@@ -1444,7 +1451,7 @@ void util_set_date_values(time_t t , int * mday , int * month , int * year) {
 
 */
 
-time_t util_make_time2(int sec, int min, int hour , int mday , int month , int year) {
+time_t util_make_datetime(int sec, int min, int hour , int mday , int month , int year) {
   struct tm ts;
   ts.tm_sec    = sec;
   ts.tm_min    = min;
@@ -1464,8 +1471,8 @@ time_t util_make_time2(int sec, int min, int hour , int mday , int month , int y
 
 
 
-time_t util_make_time1(int mday , int month , int year) {
-  return util_make_time2(0 , 0 , 0 , mday , month , year);
+time_t util_make_date(int mday , int month , int year) {
+  return util_make_datetime(0 , 0 , 0 , mday , month , year);
 }
 
 

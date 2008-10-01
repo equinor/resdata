@@ -21,8 +21,8 @@ typedef enum {left_pad  = 0,
 	      right_pad = 1,
 	      center    = 2} string_alignement_type;
 
-time_t       util_make_time2(int , int , int , int , int , int );
-time_t       util_make_time1(int , int , int);
+time_t       util_make_datetime(int , int , int , int , int , int );
+time_t       util_make_date(int , int , int);
 
 char       * util_alloc_sprintf(const char *  , ...);
 void         util_fprintf_int(int , int , FILE * );

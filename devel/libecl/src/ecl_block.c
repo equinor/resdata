@@ -237,7 +237,7 @@ void ecl_block_set_sim_time_restart(ecl_block_type * block) {
   
 
   date = ecl_kw_iget_ptr(intehead_kw , 64);
-  ecl_block_set_sim_time(block , util_make_time1(date[0] , date[1] , date[2]));
+  ecl_block_set_sim_time(block , util_make_date(date[0] , date[1] , date[2]));
 }
 
 
@@ -256,7 +256,7 @@ void ecl_block_set_sim_time_summary(ecl_block_type * block , /*int time_index , 
     int day   = roundf(date[day_index]);
     int month = roundf(date[month_index]);
     int year  = roundf(date[year_index]);
-    ecl_block_set_sim_time(block , util_make_time2(sec , min , hour , day , month , year));
+    ecl_block_set_sim_time(block , util_make_datetime(sec , min , hour , day , month , year));
   }
 }
 

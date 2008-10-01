@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <ecl_util.h>
 #include <dirent.h>
@@ -842,20 +843,22 @@ void ecl_util_escape_kw(char * kw) {
   I have *intentionally* dived straight at the problem of extracting
   the start_date; otherwise one might quite quickly end up with a
   half-baked DATA-file parser. I think that path leads straight to an
-  asylum.
+  asylum. But of course - not many points are awarded for pointing out
+  that this parsing is extremly ugly.
 
     ECLIPSE100 has default date: 1. of january 1983.
     ECLIPSE300 has default date: 1. of january 1990.
 
-  They don't have much style those fuckers in Schlum ...
+  They don't have much style those fuckers at Schlum ...
 */
 
 
 
 time_t ecl_util_get_start_date(const char * data_file) { 
-  FILE * stream = util_fopen(data_file , "r");
-  char * line   = NULL;
-  bool   at_eof = false;
+  time_t start_date  = -1;
+  FILE * stream      = util_fopen(data_file , "r");
+  char * line        = NULL;
+  bool   at_eof      = false;
   bool   start_found = false;
   int    line_start;
   
@@ -867,8 +870,8 @@ time_t ecl_util_get_start_date(const char * data_file) {
     start_pos = strstr(line , "START");
     if (start_pos != NULL) {
       /* 
-	 OK - we have found START - must go back and check that it
-	 is not in a section which is commented out. 
+	 OK - we have found START - must go back and check that it is
+	 not in a section which is commented out.
       */
       char * comment_start = strstr(line , "--");
       start_found = true;
@@ -876,15 +879,73 @@ time_t ecl_util_get_start_date(const char * data_file) {
 	if (comment_start < start_pos)
 	  start_found = false; /* Sorry - it was in a comment */
     }
-    free(line);
   } while (!start_found && !at_eof);
+  free(line);
   if (!start_found) 
     util_abort("%s: sorry - could not find START in DATA file %s \n",__func__ , data_file);
   
   {
+    int c;
+    int buffer_length = 0;
+    char * buffer;
+
+
+    fseek(stream , line_start , SEEK_SET);
+    /* This will be fooled by a commented out termination '/' */
+    do {
+      c = fgetc(stream);
+      buffer_length++;
+    } while (c != '/');
+    buffer = util_malloc(buffer_length + 1 , __func__);
+
+    {
+      int comment_mode = 0;
+      int pos      = 0;
+      int file_pos = 0;
+
+      fseek(stream , line_start , SEEK_SET);
+      do {
+	c = fgetc(stream);
+	file_pos++;
+	if (c == '-')
+	  comment_mode++;
+	else 
+	  if (comment_mode == 0) {
+	    if (!(c == '\r' || c == '\n')) {
+	      buffer[pos] = c;
+	      pos++;
+	    }
+	  } else {
+	    /* Just looking for newline */
+	    if (c == '\r' || c == '\n')
+	      comment_mode = 0;
+	  }
+      } while (file_pos < buffer_length);
+    } 
     
+
+    
+    /* Searching for the first numeric character */
+    {
+      int pos = 0;
+      while (!isdigit(buffer[pos]) && pos <= buffer_length) 
+	pos++;
+
+      if (!isdigit(buffer[pos])) 
+	util_abort("%s: sorry - failed to detect start date from DATA file \n",__func__);
+      
+      {
+	int day, year, month_nr;
+	char month_str[8];
+	sscanf(&buffer[pos] , "%d %s %d" , &day , month_str , &year);
+
+	month_nr   = util_get_month_nr(month_str);
+	start_date = util_make_date(day , month_nr , year );
+      }
+    }
+    free(buffer);
   }
   
   fclose(stream);
-  return -1;
+  return start_date;
 }
