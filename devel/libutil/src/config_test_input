@@ -6,6 +6,6 @@ KEY2  ssXX
 FATHER
 --CHILD1 1
 --CHILD2 2
-INCLUDE config_test_input2
+INCLUDE Path/config_test_input2
 
 

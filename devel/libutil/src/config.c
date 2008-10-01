@@ -145,6 +145,7 @@ struct config_item_struct {
 
 struct config_item_node_struct {
   stringlist_type             * stringlist;              /* The values which have been set. */
+  char                        * config_cwd;              /* The currently active cwd (relative or absolute) of the parser when this item is set. */
 };
 
 /*****************************************************************/
@@ -153,13 +154,14 @@ struct config_item_node_struct {
 static void config_item_node_fprintf(config_item_node_type * node , int node_nr , FILE * stream) {
   fprintf(stream , "   %02d: ",node_nr);
   stringlist_fprintf(node->stringlist , " " , stream);
-  fprintf(stream , "\n");
+  fprintf(stream,"     config_CWD: %s \n",node->config_cwd);
 }
 
 
 static config_item_node_type * config_item_node_alloc() {
   config_item_node_type * node = util_malloc(sizeof * node , __func__);
   node->stringlist = stringlist_alloc_new();
+  node->config_cwd = NULL;
   return node;
 }
 
@@ -171,9 +173,15 @@ static void config_item_node_append(config_item_node_type * node , const char * 
 
 static void config_item_node_free(config_item_node_type * node) {
   stringlist_free(node->stringlist);
+  util_safe_free(node->config_cwd);
   free(node);
 }
 
+static char * __alloc_relocated(const config_item_node_type * node , const char * value) {
+  /* Actually rewriting the config item to reflect changing paths ... */
+  char * file = util_alloc_full_path(node->config_cwd , value);
+  return file;
+}
 
 static char * config_item_node_validate( const config_item_node_type * node , const config_item_types * type_map) {
   int i;
@@ -185,11 +193,14 @@ static char * config_item_node_validate( const config_item_node_type * node , co
       break;
     case(CONFIG_EXECUTABLE):
       {
+	/* Should also use config_cwd */
+	char * new_exe    = __alloc_relocated(node , value);
 	char * executable = util_alloc_PATH_executable( value );
 	if (executable == NULL) 
 	  error_message = util_alloc_sprintf("Could not locate executable:%s ", value);
-	else
-	  free(executable);
+	else 
+	  stringlist_iset_owned_ref(node->stringlist , i , executable);
+	free(new_exe);
       }
       break;
     case(CONFIG_INT):
@@ -201,12 +212,20 @@ static char * config_item_node_validate( const config_item_node_type * node , co
         error_message = util_alloc_sprintf("Failed to parse:%s as a floating point number.", value);
       break;
     case(CONFIG_EXISTING_FILE):
-      if (!util_file_exists(value))
-        error_message = util_alloc_sprintf("Can not find file: %s. ",value);
+      {
+	char * file = __alloc_relocated(node , value);
+	if (!util_file_exists(file))
+	  error_message = util_alloc_sprintf("Can not find file %s in %s ",value , node->config_cwd);
+	stringlist_iset_owned_ref(node->stringlist , i , file);
+      }
       break;
     case(CONFIG_EXISTING_DIR):
-      if (!util_is_directory(value))
-        error_message = util_alloc_sprintf("Can not find directory: %s. ",value);
+      {
+	char * dir = __alloc_relocated(node , value);
+	if (!util_is_directory(value))
+	  error_message = util_alloc_sprintf("Can not find directory: %s. ",value);
+	stringlist_iset_owned_ref(node->stringlist , i , dir);
+      }
       break;
     case(CONFIG_BOOLEAN):
       if (!util_sscanf_bool( value , NULL ))
@@ -240,6 +259,7 @@ static void config_item_realloc_nodes(config_item_type * item , int new_size) {
 
 static void config_item_node_clear(config_item_node_type * node) {
   stringlist_clear( node->stringlist );
+  node->config_cwd = util_safe_free(node->config_cwd);
 }
 
 
@@ -425,7 +445,7 @@ static void config_item_clear( config_item_type * item ) {
   calling scope will free it.
 */
 
-char * config_item_set_arg(config_item_type * item , int argc , const char ** argv , const char * config_file) {
+char * config_item_set_arg(config_item_type * item , int argc , const char ** argv , const char * config_file , const char * config_cwd) {
   if (argc == 1 && (strcmp(argv[0] , CLEAR_STRING) == 0)) {
     config_item_clear(item);
     return NULL;
@@ -484,8 +504,15 @@ char * config_item_set_arg(config_item_type * item , int argc , const char ** ar
         }
       }
     }
-    if (currently_set)
+    if (currently_set) {
       item->currently_set = true;
+
+      if (config_cwd != NULL)
+	node->config_cwd = util_alloc_string_copy( config_cwd );
+      else
+	node->config_cwd = util_alloc_cwd(  );  /* For use from external scope. */
+    }
+
     return error_message;
   }
 }
@@ -741,8 +768,11 @@ bool config_item_set(const config_type * config , const char * kw) {
   return config_item_is_set(hash_get(config->items , kw));
 }
 
+
+
+
 void config_set_arg(config_type * config , const char * kw, int argc , const char **argv) {
-  char * error_message = config_item_set_arg(config_get_item(config , kw) , argc , argv , NULL);
+  char * error_message = config_item_set_arg(config_get_item(config , kw) , argc , argv , NULL , NULL);
   config_add_and_free_error(config , error_message);
 }
 
@@ -800,8 +830,28 @@ static void config_validate(config_type * config, const char * filename) {
 
    include_kw is a string identifier for an include functionality, if
    an include is encountered, the included file is parsed immediately
-   (through a recursive call to config_parse). if include_kw == NULL,
+   (through a recursive call to config_parse__). if include_kw == NULL,
    include files are not supported.
+
+   Observe that use of include, relative paths and all that shit is
+   quite tricky. The following is currently implemented:
+
+    1. The front_end function will split the path to the config file
+       in a path_name component and a file component.
+
+    2. Recursive calls to config_parse__() will keep control of the
+       parsers notion of cwd (note that the real OS'wise cwd never
+       changes), and every item is tagged with the config_cwd
+       currently active.
+
+    3. When an item has been entered with type CONFIG_FILE /
+       CONFIG_DIRECTORY / CONFIG_EXECUTABLE - the item is updated to
+       reflect to be relative (iff it is relative in the first place)
+       to the path of the root config file.
+
+   These are not strict rules - it is possible to get other things to
+   work as well, but the problem is that it very quickly becomes
+   dependant on 'arbitrariness' in the parsing configuration.
 
    auto_add: whether unrecognized keywords should be added to the the
              config object.  
@@ -812,13 +862,14 @@ static void config_validate(config_type * config, const char * filename) {
 */
 
 
-void config_parse(config_type * config , const char * filename, const char * comment_string , const char * include_kw ,bool auto_add , bool validate) {
-  char * abs_filename = util_alloc_realpath(filename);
+static void config_parse__(config_type * config , const char * config_cwd , const char * _config_file, const char * comment_string , const char * include_kw ,bool auto_add , bool validate) {
+  char * config_file  = util_alloc_full_path(config_cwd , _config_file);
+  char * abs_filename = util_alloc_realpath(config_file);
 
   if (!set_add_key(config->parsed_files , abs_filename)) 
-    util_exit("%s: file:%s already parsed - circular include ? \n",__func__ , filename);
+    util_exit("%s: file:%s already parsed - circular include ? \n",__func__ , config_file);
   else {
-    FILE * stream = util_fopen(filename , "r");
+    FILE * stream = util_fopen(config_file , "r");
     bool   at_eof = false;
   
     while (!at_eof) {
@@ -851,26 +902,55 @@ void config_parse(config_type * config , const char * filename, const char * com
 	  if (include_kw != NULL && (strcmp(include_kw , kw) == 0)) {
 	    if (active_tokens != 2) 
 	      util_abort("%s: keyword:%s must have exactly one argument. \n",__func__ ,include_kw);
-	    config_parse(config , token_list[1] , comment_string , include_kw , auto_add , false); /* Recursive call */
+	    {
+	      char *tmp_path     = NULL;
+	      char *include_path = NULL;
+	      char *include_file = NULL;
+
+	      util_alloc_file_components(token_list[1] , &tmp_path , &include_file , NULL);
+	      if (!util_is_abs_path(tmp_path)) 
+		include_path = util_alloc_full_path(config_cwd , tmp_path);
+	      else
+		include_path = tmp_path;
+	      
+	      config_parse__(config , include_path , include_file , comment_string , include_kw , auto_add , false); /* Recursive call */
+	      
+	      util_safe_free(include_file);
+	      util_safe_free(include_path);
+	      util_safe_free(tmp_path);
+	    }
 	  } else {
 	    if (!config_has_item(config , kw) && auto_add) 
 	      config_add_item(config , kw , true , false);  /* Auto created items get append_arg == false, and required == true (which is trivially satisfied). */
 	    
 	    if (config_has_item(config , kw)) {
 	      config_item_type * item = config_get_item(config , kw);
-	      config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1] , filename);
+	      config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1] , config_file , config_cwd);
 	    } else 
-	      fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n",kw,filename);
+	      fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n" , kw , config_file);
 	  }
         }
         util_free_stringlist(token_list , tokens);
         free(line);
       }
     }
-    if (validate) config_validate(config , filename);
+    if (validate) config_validate(config , config_file);
     fclose(stream);
   }
   free(abs_filename);
+  free(config_file);
+}
+
+
+void config_parse(config_type * config , const char * filename, const char * comment_string , const char * include_kw ,bool auto_add , bool validate) {
+  char * config_path;
+  char * config_file;
+  util_alloc_file_components(filename , &config_path , &config_file , NULL);
+  
+  config_parse__(config , config_path , config_file , comment_string , include_kw , auto_add , validate);
+
+  util_safe_free(config_path);
+  util_safe_free(config_file);
 }
 
 
