@@ -124,8 +124,8 @@ struct config_struct {
 
 #define CONFIG_ITEM_ID 6751
 struct config_item_struct {
-  int                         __id;                            /* Used for run-time checking */
-  char                        * kw;                            /* The kw which identifies this item· */
+  int                         __id;                      /* Used for run-time checking */
+  char                        * kw;                      /* The kw which identifies this item· */
 
   int                           alloc_size;              /* The number of nodes which have been allocated. */  
   int                           node_size;               /* The number of active nodes.*/
@@ -737,6 +737,13 @@ void config_free(config_type * config) {
 
 
 
+static void config_insert_item__(config_type * config , const char * kw , const config_item_type * item , bool ref) {
+  if (ref)
+    hash_insert_ref(config->items , kw , item);
+  else
+    hash_insert_hash_owned_ref(config->items , kw , item , config_item_free__);
+}
+
 
 /**
    This function allocates a simple item with all values
@@ -753,8 +760,7 @@ config_item_type * config_add_item(config_type * config ,
                                    bool  append_arg) {
   
   config_item_type * item = config_item_alloc( kw , required , append_arg);
-  hash_insert_hash_owned_ref(config->items , kw , item , config_item_free__);
-  
+  config_insert_item__(config , kw , item , false);
   return item;
 }
 
@@ -1133,6 +1139,19 @@ bool config_has_set_item(const config_type * config , const char * kw) {
 }
 
 
+/**
+   This function adds an alias to an existing item; so that the value+++ of 
+   an item can be referred to by two different names.    
+*/
+
+
+void config_add_alias(config_type * config , const char * src , const char * alias) {
+  if (config_has_item(config , src)) {
+    config_item_type * item = config_get_item(config , src);
+    config_insert_item__(config , alias , item , true);
+  } else
+    util_exit("%s: item:%s not recognized \n",__func__ , src);
+}
 
 
 
