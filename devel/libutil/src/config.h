@@ -53,6 +53,7 @@ void               config_item_free( config_item_type * );
 config_item_type * config_item_alloc(const char * , bool , bool);
 config_item_type * config_get_item(const config_type *, const char *);
 void               config_add_alias(config_type * , const char * , const char * );
+void               config_install_message(config_type * , const char * , const char * );
 /*
 const char       * config_iget_arg(const config_item_type * , int);
 int                config_item_get_argc(const config_item_type *);
@@ -85,6 +86,7 @@ bool config_has_keys(const config_type *,
 const char            * config_iget(const config_type * , const char * , int );
 const char            * config_get(const config_type * , const char * );
 stringlist_type       * config_alloc_complete_stringlist(const config_type*  , const char * );
+stringlist_type       * config_alloc_stringlist(const config_type * config , const char * );
 hash_type             * config_alloc_hash(const config_type *  , const char * );
 const stringlist_type * config_get_stringlist_ref(const config_type *  , const char * );
 bool                    config_has_set_item(const config_type *  , const char * );

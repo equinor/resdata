@@ -118,6 +118,7 @@ struct config_struct {
   hash_type            * items;                     /* A hash of config_items - the actual content. */
   stringlist_type      * parse_errors;              /* A stringlist containg the errors found when parsing.*/
   set_type             * parsed_files;              /* A set of config files whcih have been parsed - to protect against circular includes. */
+  hash_type            * messages;                  /* Can print a (warning) message when a keyword is encountered. */
 };
 
 
@@ -344,6 +345,7 @@ static const stringlist_type * config_item_get_stringlist_ref(const config_item_
    config object is freed - your call.
 */
    
+
 static stringlist_type * config_item_alloc_complete_stringlist(const config_item_type * item, bool copy) {
   int inode;
   stringlist_type * stringlist = stringlist_alloc_new();
@@ -358,6 +360,30 @@ static stringlist_type * config_item_alloc_complete_stringlist(const config_item
 
   return stringlist;
 }
+
+
+
+/**
+   If copy == false - the stringlist will break down when/if the
+   config object is freed - your call.
+*/
+
+static stringlist_type * config_item_alloc_stringlist(const config_item_type * item, bool copy) {
+  if (item->append_arg) {
+    util_abort("%s: item:%s must be initialized with append_arg == false for this call. \n",__func__);
+    return NULL;
+  } else {
+    stringlist_type * stringlist = stringlist_alloc_new();
+
+    if (copy)
+      stringlist_insert_stringlist_copy( stringlist , item->nodes[0]->stringlist );
+    else
+      stringlist_insert_stringlist_ref( stringlist , item->nodes[0]->stringlist );  
+    
+    return stringlist;
+  }
+}
+
 
 
 /**
@@ -446,7 +472,8 @@ static void config_item_clear( config_item_type * item ) {
 
 /*
   The last argument (config_file) is only used for printing
-  informative error messages, and can be NULL.
+  informative error messages, and can be NULL. The config_cwd is
+  essential if we are looking up a filename, otherwise it can be NULL.
 
   Returns a string with an error description, or NULL if the supplied
   arguments were OK. The string is allocated here, but is assumed that
@@ -724,12 +751,14 @@ config_type * config_alloc() {
   config->items           = hash_alloc();
   config->parse_errors    = stringlist_alloc_new();
   config->parsed_files    = set_alloc_empty();
+  config->messages        = hash_alloc();
   return config;
 }
 
 
 void config_free(config_type * config) {
   hash_free(config->items);
+  hash_free(config->messages);
   stringlist_free(config->parse_errors);
   set_free(config->parsed_files);
   free(config);
@@ -786,11 +815,9 @@ bool config_item_set(const config_type * config , const char * kw) {
 
 
 void config_set_arg(config_type * config , const char * kw, int argc , const char **argv) {
-  char * error_message = config_item_set_arg(config_get_item(config , kw) , argc , argv , NULL , NULL);
+  char * error_message = config_item_set_arg( config_get_item(config , kw) , argc , argv , NULL , NULL);
   config_add_and_free_error(config , error_message);
 }
-
-
 
 
 
@@ -947,12 +974,17 @@ static void config_parse__(config_type * config , const char * config_cwd , cons
 	      util_safe_free(include_path);
 	    }
 	  } else {
+	    if (hash_has_key(config->messages , kw))
+	      printf("%s \n",(char *) hash_get(config->messages , kw));
+	    
 	    if (!config_has_item(config , kw) && auto_add) 
 	      config_add_item(config , kw , true , false);  /* Auto created items get append_arg == false, and required == true (which is trivially satisfied). */
 	    
 	    if (config_has_item(config , kw)) {
+	      char * error_message;
 	      config_item_type * item = config_get_item(config , kw);
-	      config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1] , config_file , config_cwd);
+	      error_message = config_item_set_arg(item , active_tokens - 1, (const char **) &token_list[1] , config_file , config_cwd);
+	      config_add_and_free_error(config , error_message);
 	    } else 
 	      fprintf(stderr,"** Warning keyword:%s not recognized when parsing:%s - ignored \n" , kw , config_file);
 	  }
@@ -1092,6 +1124,17 @@ stringlist_type * config_alloc_complete_stringlist(const config_type* config , c
 }
 
 
+
+/**
+   It is enforced that kw-item has been added with append_arg == false.
+*/
+stringlist_type * config_alloc_stringlist(const config_type * config , const char * kw) {
+  config_item_type * item = config_get_item(config , kw);
+  return config_item_alloc_stringlist(item , true);
+}
+
+
+
 /**
    Return the number of times a keyword has been set - dies on unknown 'kw';
 */
@@ -1140,8 +1183,8 @@ bool config_has_set_item(const config_type * config , const char * kw) {
 
 
 /**
-   This function adds an alias to an existing item; so that the value+++ of 
-   an item can be referred to by two different names.    
+   This function adds an alias to an existing item; so that the
+   value+++ of an item can be referred to by two different names.
 */
 
 
@@ -1150,10 +1193,14 @@ void config_add_alias(config_type * config , const char * src , const char * ali
     config_item_type * item = config_get_item(config , src);
     config_insert_item__(config , alias , item , true);
   } else
-    util_exit("%s: item:%s not recognized \n",__func__ , src);
+    util_abort("%s: item:%s not recognized \n",__func__ , src);
 }
 
 
+
+void config_install_message(config_type * config , const char * kw, const char * message) {
+  hash_insert_hash_owned_ref(config->messages , kw , util_alloc_string_copy(message) , free);
+}
 
 
 
