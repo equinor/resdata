@@ -35,4 +35,5 @@ void              stringlist_insert_stringlist_ref(stringlist_type *   , const s
 bool              stringlist_contains(const stringlist_type *  , const char * );
 int           stringlist_get_argc(const stringlist_type * );
 const char ** stringlist_get_argv(const stringlist_type * );
+const char ** stringlist_iget_argv(const stringlist_type * , int );
 #endif

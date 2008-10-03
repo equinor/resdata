@@ -289,6 +289,16 @@ const char ** stringlist_get_argv(const stringlist_type * stringlist) {
 }
 
 
+const char ** stringlist_iget_argv(const stringlist_type * stringlist, int index) {
+  if (index < stringlist->size)
+    return (const char **) stringlist->strings[index];
+  else {
+    util_abort("%s: index:%d invald \n",__func__ , index);
+    return NULL; /* Compiler shut up. */
+  }
+}
+
+
 
 
 /** 

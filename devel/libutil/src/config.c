@@ -135,7 +135,7 @@ struct config_item_struct {
   bool                          append_arg;              /* Should the values be appended if a keyword appears several times in the config file. */
   bool                          currently_set;           /* Has a value been assigned to this keyword. */
   bool                          required_set;            
-  stringlist_type             * selection_set;           /* A list of strings which the value(s) must match (can be NULL) */
+  stringlist_type             * selection_set;           /* A list of strings which the value(s) must match (can be NULL) (Can currently not differentiate between different arguments) */
   stringlist_type             * required_children;       /* A list of item's which must also be set (if this item is set). (can be NULL) */
   hash_type                   * required_children_value; /* A list of item's which must also be set - depending on the value of this item. (can be NULL) (This one is complex). */
   int                           argc_min;                /* The minimum number of arguments for this keyword -1 means no lower limit. */
@@ -330,13 +330,17 @@ const char * config_item_get(const config_item_type * item) {
 }
 
 
+static const stringlist_type * config_item_iget_stringlist_ref(const config_item_type * item, int occurence) {
+  config_item_node_type * node = config_item_iget_node(item , 0);  
+  return node->stringlist;
+}
+
+
+
 static const stringlist_type * config_item_get_stringlist_ref(const config_item_type * item) {
   if (item->append_arg) 
     util_abort("%s: this function can only be used on items added with append_arg == FALSE\n" , __func__);
-  {
-    config_item_node_type * node = config_item_iget_node(item , 0);  
-    return node->stringlist;
-  }
+  return config_item_iget_stringlist_ref(item , 0);
 }
 
 
@@ -526,6 +530,10 @@ char * config_item_set_arg(config_item_type * item , int argc , const char ** ar
       else {
         for (iarg = 0; iarg < argc; iarg++) {
           OK = true;
+	  /*
+	    Selection set is checked here - to not overwrite a valid value with an invalid,
+	    which could happen if selection set was only checked when validating.
+	  */
           if (item->selection_set != NULL) {
             if (!stringlist_contains(item->selection_set , argv[iarg])) {
               error_message = util_alloc_sprintf("%s: is not a valid value for: %s.",argv[iarg] , item->kw);
@@ -1104,6 +1112,14 @@ const stringlist_type * config_get_stringlist_ref(const config_type * config , c
 }
 
 
+
+const stringlist_type * config_iget_stringlist_ref(const config_type * config , const char * kw, int occurence) {
+  config_item_type * item = config_get_item(config , kw);
+  
+  return config_item_iget_stringlist_ref(item , occurence);
+}
+
+
 /**
   This function allocates a new stringlist containing *ALL* the
   arguements for an item. With reference to the illustrated example at
@@ -1132,6 +1148,7 @@ stringlist_type * config_alloc_stringlist(const config_type * config , const cha
   config_item_type * item = config_get_item(config , kw);
   return config_item_alloc_stringlist(item , true);
 }
+
 
 
 
