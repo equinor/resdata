@@ -30,7 +30,7 @@ typedef enum {ref         = 0,    /* Means that the stringlist only has referenc
 struct stringlist_struct {
   int           __id;       /* ID used to do run-time check of casts. */
   int           size;       /* The number of elements */
-  char        **strings;    /* The actual strings - NB we allow NULL strings */
+  char        **strings;    /* The actual strings - NB we allow NULL strings: Observe that  char ** implementation is implicitly exported. */
   owner_type * owner;
 };
 
@@ -274,6 +274,10 @@ const char * stringlist_iget(const stringlist_type * stringlist , int index) {
 }
 
 
+char * stringlist_iget_copy(const stringlist_type * stringlist , int index) {
+  return util_alloc_string_copy(stringlist_iget(stringlist , index));
+}
+
 
 int stringlist_get_size(const stringlist_type * stringlist) {
     return stringlist->size;
@@ -291,7 +295,7 @@ const char ** stringlist_get_argv(const stringlist_type * stringlist) {
 
 const char ** stringlist_iget_argv(const stringlist_type * stringlist, int index) {
   if (index < stringlist->size)
-    return (const char **) stringlist->strings[index];
+    return (const char **) &stringlist->strings[index];
   else {
     util_abort("%s: index:%d invald \n",__func__ , index);
     return NULL; /* Compiler shut up. */

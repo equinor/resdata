@@ -7,8 +7,8 @@ INSTALL_INC_PATH = $(LIBUTIL_HOME)/include
 INSTALL_LIB_PATH = $(LIBUTIL_HOME)/lib
 #################################################################
 SDP_ROOT          = /project/res/$(shell /private/joaho/bin/res_target.py)
-OBJECTS           = util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o path_fmt.o config.o stringlist.o menu.o
-INC_FILES_INSTALL = util.h thread_pool.h msg.h void_arg.h str_buffer.h path_fmt.h  config.h stringlist.h menu.h
+OBJECTS           = util.o util_interC.o thread_pool.o msg.o void_arg.o str_buffer.o path_fmt.o stringlist.o menu.o
+INC_FILES_INSTALL = util.h thread_pool.h msg.h void_arg.h str_buffer.h path_fmt.h  stringlist.h menu.h
 LIB_ROOT          = libutil
 LIB               = $(LIB_ROOT)_$(MFLAG).a
 LIB_LINK          = -lutil_$(MFLAG) -lhash_$(MFLAG) -lz -lpthread -lm
@@ -49,25 +49,20 @@ thread_pool.o : thread_pool.c thread_pool.h
 util.o        : util.c util.h util_path.c
 util_interC.o : util_interC.c util.o
 path_fmt.o    : path_fmt.c path_fmt.h util.o
-config.o      : config.c config.h util.o 
 menu.o        : menu.h menu.c util.o
 
 # Binaries
 util-test.o : util-test.c 
 eol-fix.o   : eol-fix.c  
 mem_free.o  : mem_free.c 
-config_test.o : config_test.c
 
 #################################################################
 
-BIN:	util.x eol-fix.x mem_free.x config_test.x
-BIN_FILES = util.x eol-fix.x mem_free.x config_test.x
+BIN:	util.x eol-fix.x mem_free.x 
+BIN_FILES = util.x eol-fix.x mem_free.x 
  
 util.x: util-test.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) util-test.o -o util.x     $(LINK_LIB_PATH) $(LIB_LINK) 
-
-config_test.x: config_test.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) config_test.o -o config_test.x     $(LINK_LIB_PATH) $(LIB_LINK) 
 
 eol-fix.x: eol-fix.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) eol-fix.o -o eol-fix.x    $(LINK_LIB_PATH) $(LIB_LINK)

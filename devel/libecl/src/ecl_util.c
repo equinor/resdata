@@ -897,6 +897,7 @@ time_t ecl_util_get_start_date(const char * data_file) {
       buffer_length++;
     } while (c != '/');
     buffer = util_malloc(buffer_length + 1 , __func__);
+    buffer[buffer_length] = '\0';
 
     {
       int comment_mode = 0;

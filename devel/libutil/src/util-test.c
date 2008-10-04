@@ -8,7 +8,6 @@
 #include <hash.h>
 #include <unistd.h>
 #include <thread_pool.h>
-#include <config.h> 
 #include <stringlist.h>
 #include <menu.h>
 

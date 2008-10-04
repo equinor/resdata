@@ -77,21 +77,21 @@ BIN	:  $(BIN_FILES)
 BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x
 
 ecl_test.x: $(LIB) ecl_test.o
-	gcc -$(MFLAG) $(LDFLAGS) ecl_test.o -o ecl_test.x $(LIB_PATH) $(LIB_LINK)
+	$(LD) -$(MFLAG) $(LDFLAGS) ecl_test.o -o ecl_test.x $(LIB_PATH) $(LIB_LINK)
 
 convert.x: $(LIB) convert.o
-	gcc -$(MFLAG) $(LDFLAGS)  convert.o -o convert.x $(LIB_PATH)  $(LIB_LINK)
+	$(LD) -$(MFLAG) $(LDFLAGS)  convert.o -o convert.x $(LIB_PATH)  $(LIB_LINK)
 
 kw_list.x: $(LIB) kw_list.o
-	gcc -$(MFLAG) $(LDFLAGS)  kw_list.o -o kw_list.x $(LIB_PATH)  $(LIB_LINK)
+	$(LD) -$(MFLAG) $(LDFLAGS)  kw_list.o -o kw_list.x $(LIB_PATH)  $(LIB_LINK)
 
 kw_extract.x: $(LIB) kw_extract.o
-	gcc -$(MFLAG) $(LDFLAGS)  kw_extract.o -o kw_extract.x $(LIB_PATH)  $(LIB_LINK)
+	$(LD) -$(MFLAG) $(LDFLAGS)  kw_extract.o -o kw_extract.x $(LIB_PATH)  $(LIB_LINK)
 
 grid_info.x: $(LIB) grid_info.o
-	gcc -$(MFLAG) $(LDFLAGS)  grid_info.o -o grid_info.x $(LIB_PATH)  $(LIB_LINK)
+	$(LD) -$(MFLAG) $(LDFLAGS)  grid_info.o -o grid_info.x $(LIB_PATH)  $(LIB_LINK)
 
 summary.x: $(LIB) view_summary.o
-	gcc -$(MFLAG) $(LDFLAGS)  view_summary.o -o summary.x $(LIB_PATH)  $(LIB_LINK)
+	$(LD) -$(MFLAG) $(LDFLAGS)  view_summary.o -o summary.x $(LIB_PATH)  $(LIB_LINK)
 
 
