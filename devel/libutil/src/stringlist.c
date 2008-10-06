@@ -141,6 +141,7 @@ void stringlist_append_owned_ref(stringlist_type * stringlist , const char * s) 
 
 
 
+
 static stringlist_type * stringlist_alloc_empty() {
   stringlist_type * stringlist = util_malloc(sizeof * stringlist , __func__);
   stringlist->__id    = STRINGLIST_ID;
