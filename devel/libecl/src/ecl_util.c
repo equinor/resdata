@@ -938,9 +938,13 @@ time_t ecl_util_get_start_date(const char * data_file) {
       {
 	int day, year, month_nr;
 	char * month_str = util_malloc(32 , __func__);
-	sscanf(&buffer[pos] , "%d %s %d" , &day , month_str , &year);
+	{
+	  int scanf_count = sscanf(&buffer[pos] , "%d %s %d" , &day , month_str , &year);
+	  if (scanf_count != 3)
+	    util_abort("%s: failed to parse DAY MONTH YEAR from: %s \n",__func__ , &buffer[pos]);
+	}
 	month_str = util_alloc_dequoted_string( month_str );
-
+	
 	month_nr   = util_get_month_nr(month_str);
 	start_date = util_make_date(day , month_nr , year );
 	free(month_str);
