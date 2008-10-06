@@ -937,11 +937,13 @@ time_t ecl_util_get_start_date(const char * data_file) {
       
       {
 	int day, year, month_nr;
-	char month_str[8];
+	char * month_str = util_malloc(32 , __func__);
 	sscanf(&buffer[pos] , "%d %s %d" , &day , month_str , &year);
+	month_str = util_alloc_dequoted_string( month_str );
 
 	month_nr   = util_get_month_nr(month_str);
 	start_date = util_make_date(day , month_nr , year );
+	free(month_str);
       }
     }
     free(buffer);
