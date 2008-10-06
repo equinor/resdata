@@ -1481,6 +1481,7 @@ static int util_get_month_nr__(const char * _month_name) {
   int month_nr = -1;
   char * month_name = util_alloc_string_copy(_month_name);
   util_strupr(month_name);
+  
   if (strncmp(month_name , "JAN" , 3)      == 0) 
     month_nr = 1;
   else if (strncmp(month_name , "FEB" , 3) == 0) 
