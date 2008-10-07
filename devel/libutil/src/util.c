@@ -2017,10 +2017,45 @@ char * util_string_replace_alloc(const char * buff_org, const char * expr, const
     {
       strcpy(buff_new_pos, buff_org_pos);
       int size = strlen(buff_new);
-      buff_new = realloc(buff_new, (size + 1) * sizeof * buff_new);
+      buff_new = util_realloc(buff_new, (size + 1) * sizeof * buff_new, __func__);
       return buff_new;
     }
   }
+}
+
+
+
+/**
+  This will alloc a new string were char's in the last strings are removed.
+*/
+char * util_string_strip_chars_alloc(const char * buff_org, const char * chars)
+{
+  int len_org = strlen(buff_org);
+  int pos_org = 0;
+  int pos_new = 0;
+
+  char * buff_new = util_malloc( (len_org +1) * sizeof * buff_new, __func__);
+
+  while(pos_org < len_org)
+  {
+    int pos_off = strcspn(buff_org + pos_org, chars);
+    if(pos_off > 0)
+    {
+      memmove(buff_new + pos_new, buff_org + pos_org, pos_off * sizeof * buff_new);  
+      pos_org += pos_off;
+      pos_new += pos_off;
+    }
+
+    pos_off = strspn(buff_org + pos_org, chars);
+    if(pos_off > 0)
+    {
+      pos_org += pos_off;
+    }
+  }
+  buff_new[pos_new + 1] = '\0';
+  buff_new = util_realloc(buff_new, (pos_new + 1) * sizeof buff_new, __func__);
+
+  return buff_new;
 }
 
 

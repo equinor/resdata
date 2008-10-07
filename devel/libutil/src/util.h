@@ -92,6 +92,7 @@ void     util_split_string(const char *, const char *, int *, char ***);
 char   * util_alloc_joined_string(const char **  , int , const char * );
 char   * util_alloc_multiline_string(const char ** , int );
 char   * util_string_replace_alloc(const char *, const char *, const char *);
+char   * util_string_strip_chars_alloc(const char *, const char * );
 char   * util_realloc_string_copy(char * , const char *);
 char   * util_realloc_substring_copy(char * , const char *, int );
 char   * util_alloc_string_sum2(const char *, const char *);
