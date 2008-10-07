@@ -971,7 +971,12 @@ char * util_fread_alloc_file_content(const char * filename , const char * commen
       }
       src_pos++;
     } while (src_pos <= file_size); 
-    target_buffer[target_pos] = '\0';
+    
+    if(target_buffer[target_pos-1] == EOF)
+        target_buffer[target_pos-1] = '\0';
+    else 
+        target_buffer[target_pos] = '\0';
+
     free(src_buffer);
     
     target_buffer = realloc(target_buffer , strlen(target_buffer) + 1);
@@ -979,6 +984,7 @@ char * util_fread_alloc_file_content(const char * filename , const char * commen
     return target_buffer;
   } else {
     if (buffer_size != NULL) *buffer_size = file_size;
+
     buffer[file_size] = '\0';
     return buffer;
   }
@@ -2015,7 +2021,21 @@ char * util_string_replace_alloc(const char * buff_org, const char * expr, const
     }
     else
     {
-      strcpy(buff_new_pos, buff_org_pos);
+      int block_size = strlen(buff_org_pos);
+
+      if(block_size + size_used > size_alloc)
+      {
+        // This is the exact size we need after next repalce
+        size_alloc = block_size + size_used;
+
+        char * buff_new_tmp = util_realloc(buff_new, (size_alloc + 1) * sizeof * buff_new, __func__);
+
+        buff_new_pos = buff_new_tmp + (buff_new_pos - buff_new);
+        buff_new  = buff_new_tmp;
+      }
+      memmove(buff_new_pos, buff_org_pos, block_size * sizeof * buff_new_pos);
+      buff_new_pos[block_size] = '\0';
+
       int size = strlen(buff_new);
       buff_new = util_realloc(buff_new, (size + 1) * sizeof * buff_new, __func__);
       return buff_new;
