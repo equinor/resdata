@@ -1965,7 +1965,69 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
 }
 
 
+
+/**
+  This allocates a copy of buff_org where occurences of the string expr are replaced with subs.
+*/
+char * util_string_replace_alloc(const char * buff_org, const char * expr, const char * subs)
+{
+  int len_expr = strlen(expr);
+  int len_subs = strlen(subs);
+
+  int size  = strlen(buff_org);
+  char * buff_new = util_malloc( (size + 1) * sizeof * buff_new, __func__);
+
+  char * buff_new_pos = buff_new;
+  const char * buff_org_pos = buff_org;
+
+  int size_alloc = size;
+  int size_used  = 0;
+
+  for(;;)
+  {
+    char * match = strstr(buff_org_pos, expr);
+
+    if(match != NULL)
+    {
+      int block_size = match - buff_org_pos;
+
+      if(block_size + len_subs + size_used > size_alloc)
+      {
+        // This is the exact size we need after next repalce
+        size_alloc = block_size + len_subs + size_used;
+        // Double it
+        size_alloc *= 2;
+
+        char * buff_new_tmp = util_realloc(buff_new, (size_alloc + 1) * sizeof * buff_new, __func__);
+
+        buff_new_pos = buff_new_tmp + (buff_new_pos - buff_new);
+        buff_new  = buff_new_tmp;
+      }
+      memmove(buff_new_pos, buff_org_pos, block_size * sizeof * buff_new_pos);
+      buff_new_pos += block_size;
+      buff_org_pos += block_size;
+      size_used    += block_size;
+
+      memmove(buff_new_pos, subs, len_subs * sizeof * subs);
+      buff_new_pos += len_subs;
+      buff_org_pos += len_expr;
+      size_used += len_subs;
+    }
+    else
+    {
+      strcpy(buff_new_pos, buff_org_pos);
+      int size = strlen(buff_new);
+      buff_new = realloc(buff_new, (size + 1) * sizeof * buff_new);
+      return buff_new;
+    }
+  }
+}
+
+
+
 /*****************************************************************/
+
+
 
 void util_float_to_double(double *double_ptr , const float *float_ptr , int size) {
   int i;

@@ -24,6 +24,7 @@ typedef enum {left_pad  = 0,
 time_t       util_make_datetime(int , int , int , int , int , int );
 time_t       util_make_date(int , int , int);
 
+bool         util_char_in(char c, int , const char *);
 char       * util_alloc_sprintf(const char *  , ...);
 void         util_fprintf_int(int , int , FILE * );
 void         util_fprintf_string(const char *  , int , string_alignement_type ,  FILE * );
@@ -90,6 +91,7 @@ char  ** util_alloc_stringlist_copy(const char **, int );
 void     util_split_string(const char *, const char *, int *, char ***);
 char   * util_alloc_joined_string(const char **  , int , const char * );
 char   * util_alloc_multiline_string(const char ** , int );
+char   * util_string_replace_alloc(const char *, const char *, const char *);
 char   * util_realloc_string_copy(char * , const char *);
 char   * util_realloc_substring_copy(char * , const char *, int );
 char   * util_alloc_string_sum2(const char *, const char *);
