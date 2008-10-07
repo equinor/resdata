@@ -16,10 +16,16 @@
 
 
 int main(int argc , char ** argv) {
-  size_t value;
+  if(argc < 4)
+  {
+    printf("Usage: util.x string expr subs\n");
+    return 0;
+  }
+  printf("original : %s\n", argv[1]);
+  printf("replacing: %s --> %s\n", argv[2], argv[3]);
 
-  if (util_sscanf_bytesize(argv[1] , &value))
-    printf("%s -> %d \n",argv[1],value);
-  else
-    printf("Failed to parse:%s \n",argv[1]);
+  char * rep = util_string_replace_alloc(argv[1], argv[2], argv[3]);
+  printf("replaced : %s\n", rep);
+  free(rep);
+  return 0;
 }
