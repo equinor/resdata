@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <util.h>
 #include <hash.h>
+#include <stringlist.h>
 
 
 
@@ -227,130 +228,81 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
 static char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr, bool must_exist) {
   char * filename;
   char * ext;
-  int ext_length;
   switch (file_type) {
   case(ecl_restart_file):
-    ext_length = 5;
-    ext = malloc(ext_length + 1);
     if (fmt_file)
-      sprintf(ext , "F%04d" , report_nr);
+      ext = util_alloc_sprintf("F%04d" , report_nr);
     else
-      sprintf(ext , "X%04d" , report_nr);
+      ext = util_alloc_sprintf("X%04d" , report_nr);
     break;
 
   case(ecl_unified_restart_file):
-    if (fmt_file) 
-      ext_length = 6;
-    else
-      ext_length = 5;
-    ext = malloc(ext_length + 1);
     if (fmt_file)
-      strcpy(ext , "FUNRST");
+      ext = util_alloc_string_copy("FUNRST");
     else
-      strcpy(ext , "UNRST");
+      ext = util_alloc_string_copy("UNRST");
     break;
 
   case(ecl_summary_file):
-    ext_length = 5;
-    ext = malloc(ext_length + 1);
     if (fmt_file)
-      sprintf(ext , "A%04d" , report_nr);
+      ext = util_alloc_sprintf("A%04d" , report_nr);
     else
-      sprintf(ext , "S%04d" , report_nr);
+      ext = util_alloc_sprintf("S%04d" , report_nr);
     break;
     
   case(ecl_unified_summary_file):
     if (fmt_file)
-      ext_length = 7;
+      ext = util_alloc_string_copy("FUNSMRY");
     else
-      ext_length = 6;
-    ext = malloc(ext_length + 1);
-    if (fmt_file)
-      strcpy(ext , "FUNSMRY");
-    else
-      strcpy(ext , "UNSMRY");
+      ext = util_alloc_string_copy("UNSMRY");
     break;
 
   case(ecl_summary_header_file):
-    if (fmt_file)
-      ext_length = 7;
-    else
-      ext_length = 6;
-    ext = malloc(ext_length + 1);
     if (fmt_file) 
-      strcpy(ext , "FSMSPEC");
+      ext = util_alloc_string_copy("FSMSPEC");
     else
-      strcpy(ext , "SMSPEC");
+      ext = util_alloc_string_copy("SMSPEC");
     break;
 
   case(ecl_grid_file):
-    if (fmt_file)
-      ext_length = 5;
-    else
-      ext_length = 4;
-    ext = malloc(ext_length + 1);
     if (fmt_file) 
-      strcpy(ext , "FGRID");
+      ext = util_alloc_string_copy("FGRID");
     else
-      strcpy(ext , "GRID");
+      ext = util_alloc_string_copy("GRID");
     break;
     
   case(ecl_egrid_file):
-    if (fmt_file)
-      ext_length = 6;
-    else
-      ext_length = 5;
-    ext = malloc(ext_length + 1);
     if (fmt_file) 
-      strcpy(ext , "FEGRID");
+      ext = util_alloc_string_copy("FEGRID");
     else
-      strcpy(ext , "EGRID");
+      ext = util_alloc_string_copy("EGRID");
     break;
 
   case(ecl_init_file):
-    if (fmt_file)
-      ext_length = 5;
-    else
-      ext_length = 4;
-    ext = malloc(ext_length + 1);
     if (fmt_file) 
-      strcpy(ext , "FINIT");
+      ext = util_alloc_string_copy("FINIT");
     else
-      strcpy(ext , "INIT");
+      ext = util_alloc_string_copy("INIT");
     break;
 
   case(ecl_rft_file):
-    if (fmt_file)
-      ext_length = 4;
-    else
-      ext_length = 3;
-    ext = malloc(ext_length + 1);
     if (fmt_file) 
-      strcpy(ext , "FRFT");
+      ext = util_alloc_string_copy("FRFT");
     else
-      strcpy(ext , "RFT");
+      ext = util_alloc_string_copy("RFT");
     break;
 
   case(ecl_data_file):
-    ext_length = 4;
     ext = util_alloc_string_copy("DATA");
     break;
     
   default:
     util_abort("%s: Invalid input file_type to ecl_util_alloc_filename - aborting \n",__func__);
     /* Dummy to shut up compiler */
-    ext_length = 0;
     ext        = NULL;
   }
 
-  if (path != NULL) {
-    filename = malloc(strlen(path) + 1 + strlen(base) + 1 + ext_length + 1);
-    sprintf(filename , "%s/%s.%s" , path , base , ext);
-  } else {
-    filename = malloc(strlen(base) + 1 + ext_length + 1);
-    sprintf(filename , "%s.%s" , base , ext);
-  }
-  
+  filename = util_alloc_filename(path , base , ext);
   free(ext);
 
   if (must_exist) {
@@ -366,7 +318,7 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
       think ...). Where a file which clearly "is there" fails to show
       up.
     */
-
+    
 
     while (1) {
       if (util_file_exists(filename)) 
@@ -457,19 +409,19 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
   if (_path != NULL)
     path = (char *) _path;
   else 
-    path = util_alloc_string_copy(".");
-      
+    path = util_alloc_cwd();
+  
   {
-    DIR * dirH = opendir(path);
     struct dirent *dentry;
     char **fileList;
-    
     int files;
+    DIR * dirH = opendir(path);
+    
     if (dirH == NULL) 
       util_abort("\n%s: opening directory:%s failed - aborting \n",__func__ , path);
 
     files = 0;
-    while ((dentry = readdir (dirH)) != NULL) {
+    while ((dentry = readdir(dirH)) != NULL) {
       if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file))
 	files++;
     }
@@ -478,12 +430,11 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
     if (files == 0) 
       fileList = NULL;
     else {
-      fileList = calloc(files , sizeof *fileList);
+      fileList = util_malloc(files * sizeof *fileList , __func__ );
       files = 0;
       while ((dentry = readdir (dirH)) != NULL) {
 	if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file)) {
-	  fileList[files] = malloc(strlen(path) + 1 + strlen(dentry->d_name) + 1);
-	  sprintf(fileList[files] , "%s/%s" , path , dentry->d_name);
+	  fileList[files] = util_alloc_full_path(path , dentry->d_name);
 	  files++;
 	}
       }
@@ -726,12 +677,16 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
       fmt_file = false;
     } else 
       util_abort("%s: could not find either %s or %s - can not load summary data from %s/%s.DATA \n",__func__ , fsmspec_file , smspec_file , path , base);
+
+    printf("Using: %s \n",header_file);
   }
   {
     int files;
     char  * unif_data_file = ecl_util_alloc_filename(path , base , ecl_unified_summary_file , fmt_file , -1);
     char ** file_list      = ecl_util_alloc_scandir_filelist(path , base , ecl_summary_file , fmt_file , &files); 
     bool    unif_exists    = util_file_exists(unif_data_file);            
+    
+    
     
     if ((files > 0) && unif_exists) {
       bool unified_newest = true;
@@ -943,7 +898,7 @@ time_t ecl_util_get_start_date(const char * data_file) {
 	  if (scanf_count != 3)
 	    util_abort("%s: failed to parse DAY MONTH YEAR from: %s \n",__func__ , &buffer[pos]);
 	}
-	month_str = util_alloc_dequoted_string( month_str );
+	month_str = util_realloc_dequoted_string( month_str );
 	
 	month_nr   = util_get_month_nr(month_str);
 	start_date = util_make_date(day , month_nr , year );

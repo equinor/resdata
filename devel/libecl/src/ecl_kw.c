@@ -1266,7 +1266,10 @@ void ecl_kw_fprintf_grdecl(ecl_kw_type * ecl_kw , FILE * stream) {
 }
 
 
-
+/**
+   These files are tricky to load - if there is something wrong
+   it is nearly impossible to detect.
+*/
 ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_type_enum ecl_type , bool endian_flip) {
   char buffer[9];
   
@@ -1284,9 +1287,12 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
     util_fskip_chars(stream , " \n\r" , &at_eof);
     fscanf(stream , "%s" , buffer);
     
-    if (buffer[0] != '/') 
+    if (buffer[0] != '/') {
+      fprintf(stderr,"Have read:%d items \n",size);
+      fprintf(stderr,"File is malformed for some reason ...\n");
+      fprintf(stderr,"Looking at: %s \n",buffer);
       util_abort("%s: Did not find '/' at end of %s - size mismatch / malformed file ??\n",__func__ , ecl_kw->header);
-    
+    }
     fortio_free_FILE_wrapper(fortio);
   }
 
