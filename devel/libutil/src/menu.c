@@ -44,14 +44,14 @@
 
 
 
-typedef struct menu_item_struct menu_item_type;
 
 struct menu_item_struct {
-  bool             separator; /* If this is a separator - in that case all the following fields are moot. */ 
-  char    	 * key_set;   /* The characters which will activate this item , e.g. "sS" - must be a \0 terminated string */
-  char    	 * label;     /* The label/description of this menu item */
-  menu_func_type * func;      /* The function called when this item is activated. */
-  void           * arg;       /* The argument passed to func. */
+  bool             separator; 	 /* If this is a separator - in that case all the following fields are moot. */ 
+  char    	 * key_set;   	 /* The characters which will activate this item , e.g. "sS" - must be a \0 terminated string */
+  char    	 * label;     	 /* The label/description of this menu item */
+  menu_func_type * func;      	 /* The function called when this item is activated. */
+  void           * arg;       	 /* The argument passed to func. */
+  int              label_length; /* The length of the label - zero for separators. */
 };
 
 
@@ -61,7 +61,6 @@ struct menu_struct {
   char            * quit_keys;         /* The keys which can be used to quit from this menu - typically "qQ" */
   char            * title;             /* The title of this menu */
   char            * complete_key_set;  /* A string containing all the allowed characters - to validata input */
-  int               max_label_length;  /* The length of longest label - for a nice display only */
 };
 
 
@@ -97,7 +96,6 @@ menu_type * menu_alloc(const char * title , const char * quit_keys) {
   menu->size      = 0;
   menu->items     = NULL;
   menu->complete_key_set = util_alloc_string_copy( quit_keys );
-  menu->max_label_length = 0;
 
   return menu;
 }
@@ -109,7 +107,8 @@ static menu_item_type * menu_item_alloc_empty() {
   item->key_set = NULL; 
   item->func    = NULL;
   item->arg     = NULL;
-  item->separator = false;
+  item->separator    = false;
+  item->label_length = 0;
 
   return item;
 }
@@ -126,6 +125,10 @@ static void menu_append_item__(menu_type * menu ,  menu_item_type * item) {
 
 
 
+void menu_item_set_label(menu_item_type * item , const char * label) {
+  item->label = util_realloc_string_copy(item->label , label);
+  item->label_length = strlen(item->label);
+}
 /**
   Adds (appends) an item to the menu. 
 
@@ -135,19 +138,19 @@ static void menu_append_item__(menu_type * menu ,  menu_item_type * item) {
   when the menu is printed on stdout.
 */
 
-void menu_add_item(menu_type * menu , const char * label , const char * key_set , menu_func_type * func, void * arg) {
+menu_item_type * menu_add_item(menu_type * menu , const char * label , const char * key_set , menu_func_type * func, void * arg) {
   if (__string_contains(menu->complete_key_set , key_set)) 
     util_abort("%s:fatal error when building menu - key(s) in:%s already in use \n",__func__ , key_set);
   {
     menu_item_type * item = menu_item_alloc_empty();
-    item->label   = util_alloc_string_copy(label);
     item->key_set = util_alloc_string_copy(key_set);
     item->func    = func;
     item->arg     = arg;
     item->separator = false;
     menu_append_item__(menu , item);
-    menu->max_label_length = util_int_max(menu->max_label_length , strlen(label));
+    menu_item_set_label(item , label);
     menu->complete_key_set = util_strcat_realloc(menu->complete_key_set , key_set);
+    return item;
   }
 }
 
@@ -221,7 +224,10 @@ static void __print_sep(int l) {
 
 static void menu_display(const menu_type * menu) {
   int i;
-  int length = util_int_max(menu->max_label_length , strlen(menu->title));
+  int length = strlen(menu->title);
+  for (i = 0; i < menu->size; i++) 
+    length = util_int_max(length , menu->items[i]->label_length);
+
 
   printf("\n");
   __print_line(length + 10 , 0);
@@ -263,6 +269,27 @@ static int menu_read_cmd(const menu_type * menu) {
 						   but we only consider it if it is exactly *ONE* character long. */
   } while ((strchr(menu->complete_key_set , cmd[0]) == NULL) || strlen(cmd) > 1);
   return cmd[0];
+}
+
+
+
+menu_item_type * menu_get_item(const menu_type * menu, char cmd) {
+  int item_index = 0;
+  menu_item_type * item = NULL;
+  while (item_index < menu->size) {
+    menu_item_type * current_item = menu->items[item_index];
+    if (!current_item->separator) {
+      if (strchr(current_item->key_set , cmd) != NULL) {
+	item = current_item;
+	break;
+      }
+      item_index++;
+    }
+  }
+
+  if (item == NULL)
+    util_abort("%s: could not locate item with key: %c \n",__func__ , cmd);
+  return item;
 }
 
 

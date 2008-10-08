@@ -131,17 +131,24 @@ char * util_alloc_substring_copy(const char *src , int N) {
 }
 
 
-char * util_alloc_dequoted_string(char *s) {
+/**
+   The input string is freed, and a new storage
+   without quotes is returned. 
+*/
+char * util_realloc_dequoted_string(char *s) {
+  char first_char = s[0];
+  char last_char  = s[strlen(s) - 1];
   char *new;
-  int offset,len;
-  if (s[0] == '\'')
+  int offset , len;
+
+  if ((first_char == '\'') || (first_char == '\"'))
     offset = 1;
   else 
     offset = 0;
   
-  if (s[strlen(s)] == '\'')
-    len = strlen(s) - 1 - offset;
-  else
+  if ((last_char == '\'') || (last_char == '\"'))
+    len = strlen(s) - offset - 1;
+  else 
     len = strlen(s) - offset;
   
   new = util_alloc_substring_copy(&s[offset] , len);
@@ -155,6 +162,12 @@ void util_strupr(char *s) {
     s[i] = toupper(s[i]);
 }
 
+
+char * util_alloc_strupr_copy(const char * s) {
+  char * c = util_alloc_string_copy(s);
+  util_strupr(c);
+  return c;
+}
 
 
 /** 
@@ -923,8 +936,8 @@ int util_count_content_file_lines(FILE * stream) {
 
 
 /** 
-    buffer_size is _only_ for a return (by reference) of thesize of the allocation. Can pass in NULL
-    if that size is not interesting.
+    buffer_size is _only_ for a return (by reference) of the size of
+    the allocation. Can pass in NULL if that size is not interesting.
 */
 
 char * util_fread_alloc_file_content(const char * filename , const char * comment, int * buffer_size) {
@@ -979,12 +992,12 @@ char * util_fread_alloc_file_content(const char * filename , const char * commen
 
     free(src_buffer);
     
-    target_buffer = realloc(target_buffer , strlen(target_buffer) + 1);
+    target_buffer = util_realloc(target_buffer , strlen(target_buffer) + 1 , __func__);
     if (buffer_size != NULL) *buffer_size  = strlen(target_buffer);
     return target_buffer;
   } else {
     if (buffer_size != NULL) *buffer_size = file_size;
-
+    
     buffer[file_size] = '\0';
     return buffer;
   }
@@ -1932,6 +1945,10 @@ char * util_alloc_multiline_string(const char ** item_list , int len) {
 }
 
 
+/**
+   sep = string with various charcaters, i.e. " \t" to split on.
+*/
+
 void util_split_string(const char *line , const char *sep, int *_tokens, char ***_token_list) {
   int offset;
   int tokens , token , token_length;
@@ -1972,76 +1989,143 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
 
 
 
+
+void static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
+  char * buffer      = *_buffer;
+  int    buffer_size = *_buffer_size;
+  int len_expr  = strlen(expr);
+  int len_subs  = strlen(subs);
+  int    size   = strlen(buffer);
+  int    offset = 0;
+
+  char  * match = NULL;
+  do {
+    match = strstr(&buffer[offset] ,  expr);
+    
+    if (match != NULL) {
+      /* 
+	 Can not use pointer arithmetic here - because the underlying
+	 buffer pointer might be realloced.
+      */
+      int    start_offset  = match            - buffer;
+      int    end_offset    = match + len_expr - buffer;
+      int    target_offset = match + len_subs - buffer;
+      int    new_size      = size  + len_subs - len_expr;
+      if (new_size >= (buffer_size - 1)) {
+	buffer_size += buffer_size + 2*len_subs;
+	buffer = util_realloc( buffer , buffer_size , __func__);
+      }
+      {
+	char * target    = &buffer[target_offset];
+	char * match_end = &buffer[end_offset];
+	memmove(target , match_end , 1 + size - offset - len_expr);
+      }
+      
+      memcpy(&buffer[start_offset] , subs , len_subs);
+      offset = start_offset + len_subs;
+      size   = new_size;
+    }
+  } while (match != NULL && offset < strlen(buffer));
+    
+    
+  *_buffer      = buffer;
+  *_buffer_size = buffer_size;
+}
+
+
+
+void util_string_replace_inplace(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
+  util_string_replace_inplace__(_buffer , _buffer_size , expr , subs);
+}
+
+
+
+
 /**
   This allocates a copy of buff_org where occurences of the string expr are replaced with subs.
 */
 char * util_string_replace_alloc(const char * buff_org, const char * expr, const char * subs)
 {
-  int len_expr = strlen(expr);
-  int len_subs = strlen(subs);
-
-  int size  = strlen(buff_org);
-  char * buff_new = util_malloc( (size + 1) * sizeof * buff_new, __func__);
-
-  char * buff_new_pos = buff_new;
-  const char * buff_org_pos = buff_org;
-
-  int size_alloc = size;
-  int size_used  = 0;
-
-  for(;;)
+  int buffer_size   = strlen(buff_org) * 2;
+  char * new_buffer = util_malloc(buffer_size * sizeof * new_buffer , __func__);
+  memcpy(new_buffer , buff_org , strlen(buff_org) + 1);
+  util_string_replace_inplace__( &new_buffer , &buffer_size , expr , subs);
+  
   {
-    char * match = strstr(buff_org_pos, expr);
-
-    if(match != NULL)
-    {
-      int block_size = match - buff_org_pos;
-
-      if(block_size + len_subs + size_used > size_alloc)
-      {
-        // This is the exact size we need after next repalce
-        size_alloc = block_size + len_subs + size_used;
-        // Double it
-        size_alloc *= 2;
-
-        char * buff_new_tmp = util_realloc(buff_new, (size_alloc + 1) * sizeof * buff_new, __func__);
-
-        buff_new_pos = buff_new_tmp + (buff_new_pos - buff_new);
-        buff_new  = buff_new_tmp;
-      }
-      memmove(buff_new_pos, buff_org_pos, block_size * sizeof * buff_new_pos);
-      buff_new_pos += block_size;
-      buff_org_pos += block_size;
-      size_used    += block_size;
-
-      memmove(buff_new_pos, subs, len_subs * sizeof * subs);
-      buff_new_pos += len_subs;
-      buff_org_pos += len_expr;
-      size_used += len_subs;
-    }
-    else
-    {
-      int block_size = strlen(buff_org_pos);
-
-      if(block_size + size_used > size_alloc)
-      {
-        // This is the exact size we need after next repalce
-        size_alloc = block_size + size_used;
-
-        char * buff_new_tmp = util_realloc(buff_new, (size_alloc + 1) * sizeof * buff_new, __func__);
-
-        buff_new_pos = buff_new_tmp + (buff_new_pos - buff_new);
-        buff_new  = buff_new_tmp;
-      }
-      memmove(buff_new_pos, buff_org_pos, block_size * sizeof * buff_new_pos);
-      buff_new_pos[block_size] = '\0';
-
-      int size = strlen(buff_new);
-      buff_new = util_realloc(buff_new, (size + 1) * sizeof * buff_new, __func__);
-      return buff_new;
-    }
+    int size = strlen(new_buffer);
+    new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer, __func__);
   }
+
+  return new_buffer;
 }
+  
+
+
+//   int len_expr = strlen(expr);
+//   int len_subs = strlen(subs);
+// 
+//   int size  = strlen(buff_org);
+//   char * buff_new = util_malloc( (size + 1) * sizeof * buff_new, __func__);
+// 
+//   char * buff_new_pos = buff_new;
+//   const char * buff_org_pos = buff_org;
+// 
+//   int size_alloc = size;
+//   int size_used  = 0;
+// 
+//   for(;;)
+//   {
+//     char * match = strstr(buff_org_pos, expr);
+// 
+//     if(match != NULL)
+//     {
+//       int block_size = match - buff_org_pos;
+// 
+//       if(block_size + len_subs + size_used > size_alloc)
+//       {
+//         // This is the exact size we need after next repalce
+//         size_alloc = block_size + len_subs + size_used;
+//         // Double it
+//         size_alloc *= 2;
+// 
+//         char * buff_new_tmp = util_realloc(buff_new, (size_alloc + 1) * sizeof * buff_new, __func__);
+// 
+//         buff_new_pos = buff_new_tmp + (buff_new_pos - buff_new);
+//         buff_new  = buff_new_tmp;
+//       }
+//       memmove(buff_new_pos, buff_org_pos, block_size * sizeof * buff_new_pos);
+//       buff_new_pos += block_size;
+//       buff_org_pos += block_size;
+//       size_used    += block_size;
+// 
+//       memmove(buff_new_pos, subs, len_subs * sizeof * subs);
+//       buff_new_pos += len_subs;
+//       buff_org_pos += len_expr;
+//       size_used += len_subs;
+//     }
+//     else
+//     {
+//       int block_size = strlen(buff_org_pos);
+// 
+//       if(block_size + size_used > size_alloc)
+//       {
+//         // This is the exact size we need after next repalce
+//         size_alloc = block_size + size_used;
+// 
+//         char * buff_new_tmp = util_realloc(buff_new, (size_alloc + 1) * sizeof * buff_new, __func__);
+// 
+//         buff_new_pos = buff_new_tmp + (buff_new_pos - buff_new);
+//         buff_new  = buff_new_tmp;
+//       }
+//       memmove(buff_new_pos, buff_org_pos, block_size * sizeof * buff_new_pos);
+//       buff_new_pos[block_size] = '\0';
+// 
+//       int size = strlen(buff_new);
+//       buff_new = util_realloc(buff_new, (size + 1) * sizeof * buff_new, __func__);
+//       return buff_new;
+//     }
+//   }
+//}
 
 
 

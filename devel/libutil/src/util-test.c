@@ -16,16 +16,18 @@
 
 
 int main(int argc , char ** argv) {
-  if(argc < 4)
+  int    buffer_size;
+  /*char * buffer      = util_fread_alloc_file_content("input" , NULL , &buffer_size);*/
+  char * buffer      = util_alloc_sprintf("XXXXXXXXXXXXX");
+  buffer_size = strlen(buffer + 1);
+  
+  
+  util_string_replace_inplace(&buffer , &buffer_size , "X" , "GGGGGGGGGGGGG");
+  util_string_replace_inplace(&buffer , &buffer_size , "K" , "J");
   {
-    printf("Usage: util.x string expr subs\n");
-    return 0;
+    FILE * stream = util_fopen("/tmp/kast.txt" , "w");
+    fwrite( buffer , 1 , strlen(buffer) , stream);
+    fclose( stream );
   }
-  printf("original : %s\n", argv[1]);
-  printf("replacing: %s --> %s\n", argv[2], argv[3]);
-
-  char * rep = util_string_replace_alloc(argv[1], argv[2], argv[3]);
-  printf("replaced : %s\n", rep);
-  free(rep);
-  return 0;
+  free(buffer);
 }
