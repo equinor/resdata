@@ -2069,79 +2069,30 @@ char * util_string_replace_alloc(const char * buff_org, const char * expr, const
 
   return new_buffer;
 }
-  
-
-
-//   int len_expr = strlen(expr);
-//   int len_subs = strlen(subs);
-// 
-//   int size  = strlen(buff_org);
-//   char * buff_new = util_malloc( (size + 1) * sizeof * buff_new, __func__);
-// 
-//   char * buff_new_pos = buff_new;
-//   const char * buff_org_pos = buff_org;
-// 
-//   int size_alloc = size;
-//   int size_used  = 0;
-// 
-//   for(;;)
-//   {
-//     char * match = strstr(buff_org_pos, expr);
-// 
-//     if(match != NULL)
-//     {
-//       int block_size = match - buff_org_pos;
-// 
-//       if(block_size + len_subs + size_used > size_alloc)
-//       {
-//         // This is the exact size we need after next repalce
-//         size_alloc = block_size + len_subs + size_used;
-//         // Double it
-//         size_alloc *= 2;
-// 
-//         char * buff_new_tmp = util_realloc(buff_new, (size_alloc + 1) * sizeof * buff_new, __func__);
-// 
-//         buff_new_pos = buff_new_tmp + (buff_new_pos - buff_new);
-//         buff_new  = buff_new_tmp;
-//       }
-//       memmove(buff_new_pos, buff_org_pos, block_size * sizeof * buff_new_pos);
-//       buff_new_pos += block_size;
-//       buff_org_pos += block_size;
-//       size_used    += block_size;
-// 
-//       memmove(buff_new_pos, subs, len_subs * sizeof * subs);
-//       buff_new_pos += len_subs;
-//       buff_org_pos += len_expr;
-//       size_used += len_subs;
-//     }
-//     else
-//     {
-//       int block_size = strlen(buff_org_pos);
-// 
-//       if(block_size + size_used > size_alloc)
-//       {
-//         // This is the exact size we need after next repalce
-//         size_alloc = block_size + size_used;
-// 
-//         char * buff_new_tmp = util_realloc(buff_new, (size_alloc + 1) * sizeof * buff_new, __func__);
-// 
-//         buff_new_pos = buff_new_tmp + (buff_new_pos - buff_new);
-//         buff_new  = buff_new_tmp;
-//       }
-//       memmove(buff_new_pos, buff_org_pos, block_size * sizeof * buff_new_pos);
-//       buff_new_pos[block_size] = '\0';
-// 
-//       int size = strlen(buff_new);
-//       buff_new = util_realloc(buff_new, (size + 1) * sizeof * buff_new, __func__);
-//       return buff_new;
-//     }
-//   }
-//}
 
 
 
 /**
-  This will alloc a new string were char's in the last strings are removed.
+  This allocates a copy of buff_org where occurences of expr[i] are replaced with subs[i] for i=1,..,num_expr.
+*/
+char * util_string_replacen_alloc(const char * buff_org, int num_expr, const char ** expr, const char ** subs)
+{
+  int buffer_size   = strlen(buff_org) * 2;
+  char * new_buffer = util_malloc(buffer_size * sizeof * new_buffer , __func__);
+  memcpy(new_buffer , buff_org , strlen(buff_org) + 1);
+
+  for(int i=0; i<num_expr; i++)
+    util_string_replace_inplace__( &new_buffer , &buffer_size , expr[i] , subs[i]);
+  
+  int size = strlen(new_buffer);
+  new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer, __func__);
+
+  return new_buffer;
+}
+
+
+/**
+  This will alloc a copy of buff_org were char's in the last strings are removed.
 */
 char * util_string_strip_chars_alloc(const char * buff_org, const char * chars)
 {
