@@ -1957,6 +1957,11 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
   offset = strspn(line , sep); 
   tokens = 0;
   do {
+    /*
+      if (line[offset] == '\"') {
+      seek for terminating ".
+      }
+    */
     token_length = strcspn(&line[offset] , sep);
     if (token_length > 0)
       tokens++;
@@ -1989,14 +1994,18 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
 
 
 
-
-void static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
-  char * buffer      = *_buffer;
-  int    buffer_size = *_buffer_size;
-  int len_expr  = strlen(expr);
-  int len_subs  = strlen(subs);
-  int    size   = strlen(buffer);
-  int    offset = 0;
+/**
+   Returns true if at least one substitution has been performed.
+*/
+  
+bool static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
+  bool   substitution_done = false;
+  char * buffer      	   = *_buffer;
+  int    buffer_size 	   = *_buffer_size;
+  int len_expr  	   = strlen(expr);
+  int len_subs  	   = strlen(subs);
+  int    size   	   = strlen(buffer);
+  int    offset 	   = 0;     
 
   char  * match = NULL;
   do {
@@ -2024,18 +2033,20 @@ void static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , 
       memcpy(&buffer[start_offset] , subs , len_subs);
       offset = start_offset + len_subs;
       size   = new_size;
+      substitution_done = true;
     }
   } while (match != NULL && offset < strlen(buffer));
     
     
   *_buffer      = buffer;
   *_buffer_size = buffer_size;
+  return substitution_done;
 }
 
 
 
-void util_string_replace_inplace(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
-  util_string_replace_inplace__(_buffer , _buffer_size , expr , subs);
+bool util_string_replace_inplace(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
+  return util_string_replace_inplace__(_buffer , _buffer_size , expr , subs);
 }
 
 
