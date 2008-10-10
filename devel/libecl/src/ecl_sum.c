@@ -579,7 +579,7 @@ int ecl_sum_get_block_var_index(const ecl_sum_type * ecl_sum , const char * bloc
     if (hash_has_key(block_hash , block_nr))
       index = hash_get_int(block_hash , block_nr); 
     else 
-      util_abort("%s: summary object does not have %s:%s combination: %s/%s  \n",__func__ , block_var , block_nr);
+      util_abort("%s: summary object does not have %s:%s combination. \n",__func__ , block_var , block_nr);
   } else 
     util_abort("%s: summary object does not contain group: block variable: \n",__func__ , block_var);
 
@@ -683,6 +683,14 @@ bool ecl_sum_has_group_var(const ecl_sum_type * ecl_sum , const char * group , c
 }
 
 
+bool ecl_sum_has_block_var(const ecl_sum_type * ecl_sum , const char * block_var , const char *block_nr) {
+  if (hash_has_key(ecl_sum->block_var_index , block_var)) {
+    hash_type * var_hash = hash_get(ecl_sum->block_var_index , block_nr);
+    return hash_has_key(var_hash , block_nr);
+  } else 
+    return false;
+}
+
 
 
 #define __ASSERT_ARGC(argc , target_argc , s , t) if (argc != target_argc) util_abort("%s: string:%s is not recognized for lookup of %s." , __func__ , s , t);
@@ -693,7 +701,6 @@ int ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lo
   ecl_sum_var_type var_type;
   util_split_string(lookup_kw , ":" , &argc , &argv);
   var_type = __ecl_sum_identify_var_type(argv[0]);
-
 
   switch(var_type) {
   case(ecl_sum_misc_var):
@@ -762,6 +769,10 @@ bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_
   case(ecl_sum_group_var):
     __ASSERT_ARGC(argc , 2 , lookup_kw , "Groups");
     has_var = ecl_sum_has_group_var(ecl_sum , argv[1] , argv[0]);
+    break;
+  case(ecl_sum_block_var):
+    __ASSERT_ARGC(argc , 2 , lookup_kw , "Block");
+    has_var = ecl_sum_has_block_var(ecl_sum , argv[0] , argv[1]);
     break;
   default:
     util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);

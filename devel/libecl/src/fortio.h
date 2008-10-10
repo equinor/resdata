@@ -7,7 +7,7 @@
 
 typedef struct fortio_struct fortio_type;
 
-
+bool          fortio_guess_endian_flip(const char * , bool *);
 bool          fortio_is_fortran_file(const char *  , bool * );
 void          fortio_copy_record(fortio_type * , fortio_type * , int , void * , bool *);
 fortio_type * fortio_alloc_FILE_wrapper(const char * , bool , FILE * );

@@ -428,17 +428,16 @@ void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * n
 ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
   ecl_file_type    file_type;
   bool             fmt_file;
-  ecl_grid_type  * ecl_grid;
+  ecl_grid_type  * ecl_grid = NULL;
   
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
   if (file_type == ecl_grid_file)
     ecl_grid = ecl_grid_alloc_GRID(grid_file , endian_flip);
   else if (file_type == ecl_egrid_file)
     ecl_grid = ecl_grid_alloc_EGRID(grid_file , endian_flip);
-  else {
-    fprintf(stderr,"%s must have .GRID or .EGRID file - aborting \n",__func__);
-    abort();
-  }
+  else 
+    util_abort("%s must have .GRID or .EGRID file - %s not recognized \n", __func__ , grid_file);
+  
   ecl_grid_alloc_index_map(ecl_grid);
   return ecl_grid;
 }

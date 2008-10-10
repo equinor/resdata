@@ -72,6 +72,7 @@ static bool __read_int(FILE * stream , int * value, bool endian_flip) {
     return false;
 }
 
+
 /**
    Helper function for fortio_is_fortran_file(). Checks whether a
    particular stream is formatted according to fortran io, for a fixed
@@ -160,6 +161,24 @@ bool fortio_is_fortran_file(const char * filename, bool * _endian_flip) {
   fclose(stream);
   return is_fortran_stream;
 }
+
+
+/**
+   This function tries to determine automatically whether a certain
+   file has endian flip or not. 
+
+   Observe that the return value is whether we managed to determine the
+   endian-ness or not, whereas the endian_flip flag is returned by
+   reference.
+
+   To be able to determine endianness the file *must* be a binary
+   fortran file - this is essentially the return value.
+*/
+
+bool fortio_guess_endian_flip(const char * filename , bool * _endian_flip) {
+  return fortio_is_fortran_file(filename , _endian_flip);
+}
+
 
 
 
