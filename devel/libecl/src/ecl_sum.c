@@ -28,6 +28,7 @@ struct ecl_sum_struct {
   hash_type        * region_var_index;
   hash_type        * misc_var_index;
   hash_type        * unit_hash;
+  hash_type        * block_var_index; 
   ecl_sum_var_type * var_type;
   int               report_offset;
   int               num_regions;
@@ -59,6 +60,7 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
   ecl_sum->region_var_index   	     = hash_alloc();
   ecl_sum->misc_var_index     	     = hash_alloc();
   ecl_sum->unit_hash          	     = hash_alloc();
+  ecl_sum->block_var_index           = hash_alloc();
   ecl_sum->var_type           	     = NULL;
   ecl_sum->header             	     = NULL;
   ecl_sum->data               	     = NULL;
@@ -234,7 +236,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	case(ecl_sum_completion_var):
 	  /* Three level indexing: well -> string(cell_nr) -> variable */
 	  if (!DUMMY_WELL(well)) {
-	    /* Seems I have to accept nums < 0 to get thit through ??? */
+	    /* Seems I have to accept nums < 0 to get shit through ??? */
 	    char cell_str[16];
 	    if (!hash_has_key(ecl_sum->well_completion_var_index , well)) 
 		hash_insert_hash_owned_ref(ecl_sum->well_completion_var_index , well , hash_alloc() , hash_free__);
@@ -298,6 +300,18 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	  */
 	  hash_insert_int(ecl_sum->misc_var_index , kw , index);	    
 	  break;
+	case(ecl_sum_block_var):
+	  /* A block variable */
+	  {
+	    char * block_nr  = util_alloc_sprintf("%d" , num);
+	    if (!hash_has_key(ecl_sum->block_var_index , kw))
+	      hash_insert_hash_owned_ref(ecl_sum->block_var_index , kw , hash_alloc() , hash_free__);
+	    {
+	      hash_type * block_hash = hash_get(ecl_sum->block_var_index , kw);
+	      hash_insert_int(block_hash , block_nr , index);	    
+	    }
+	    free(block_nr);
+	  }
 	default:
 	  /* Lots of legitimate alternatives which are not handled .. */
 	  break;
@@ -552,6 +566,26 @@ int ecl_sum_get_group_var_index(const ecl_sum_type * ecl_sum , const char * grou
 }
 
 
+/**
+   Observe that block_nr is represented as char literal,
+   i.e. "2345". This is because it will be used as a hash key.
+*/
+
+int ecl_sum_get_block_var_index(const ecl_sum_type * ecl_sum , const char * block_var , const char *block_nr) {
+  int index = -1;
+  
+  if (hash_has_key(ecl_sum->block_var_index , block_var)) {
+    hash_type * block_hash = hash_get(ecl_sum->block_var_index , block_var);
+    if (hash_has_key(block_hash , block_nr))
+      index = hash_get_int(block_hash , block_nr); 
+    else 
+      util_abort("%s: summary object does not have %s:%s combination: %s/%s  \n",__func__ , block_var , block_nr);
+  } else 
+    util_abort("%s: summary object does not contain group: block variable: \n",__func__ , block_var);
+
+  return index;
+}
+
 
 int ecl_sum_get_field_var_index(const ecl_sum_type * ecl_sum , const char *var) {
   int index;
@@ -684,6 +718,10 @@ int ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lo
   case(ecl_sum_group_var):
     __ASSERT_ARGC(argc , 2 , lookup_kw , "Groups");
     index = ecl_sum_get_group_var_index(ecl_sum , argv[1] , argv[0]);
+    break;
+  case(ecl_sum_block_var):
+    __ASSERT_ARGC(argc , 2 , lookup_kw , "Block");
+    index = ecl_sum_get_block_var_index(ecl_sum , argv[0] , argv[1]);
     break;
   default:
     util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);

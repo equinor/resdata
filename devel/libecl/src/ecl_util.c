@@ -677,8 +677,6 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
       fmt_file = false;
     } else 
       util_abort("%s: could not find either %s or %s - can not load summary data from %s/%s.DATA \n",__func__ , fsmspec_file , smspec_file , path , base);
-
-    printf("Using: %s \n",header_file);
   }
   {
     int files;
