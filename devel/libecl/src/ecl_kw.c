@@ -29,8 +29,8 @@ struct ecl_kw_struct {
   char  *header;
   char  *read_fmt, *write_fmt;
   char  *data;
-  bool  shared_data;
-  long  int _start_pos;
+  bool  shared_data;       /* Whether this keyword has shared data or not. */ 
+  long  int _start_pos;    /* The in-file position of the start of this keyword. */
 };
 
 
@@ -703,6 +703,15 @@ bool ecl_kw_fseek_kw(const char * kw , bool fmt_file , bool rewind , bool abort_
 }
 
 
+bool ecl_kw_ifseek_kw(const char * kw , bool fmt_file , fortio_type * fortio , int index) {
+  int i = 0;
+  do {
+    ecl_kw_fseek_kw(kw , fmt_file , false , true , fortio);
+    i++;
+  } while (i <= index);
+  return true;
+}
+
 
 bool ecl_kw_fseek_last_kw(const char * kw , bool fmt_file , bool abort_on_error , fortio_type *fortio) {
   FILE *stream      = fortio_get_FILE(fortio);
@@ -781,10 +790,10 @@ void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
 
 
 void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
-  if (!ecl_kw->shared_data) {
-    if (ecl_kw->data != NULL)
-      free(ecl_kw->data);
-  } ecl_kw->data = NULL;
+  if (!ecl_kw->shared_data) 
+    util_safe_free(ecl_kw->data);
+  
+  ecl_kw->data = NULL;
 }
 
 
@@ -827,17 +836,13 @@ bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
 
 void ecl_kw_fread(ecl_kw_type * ecl_kw , fortio_type * fortio) {
   int current_size = ecl_kw->size;
-  if (!ecl_kw_fread_header(ecl_kw , fortio)) {
-    fprintf(stderr,"%s: failed to read header for ecl_kw - aborting \n",__func__);
-    abort();
-  }
+  if (!ecl_kw_fread_header(ecl_kw , fortio)) 
+    util_abort("%s: failed to read header for ecl_kw - aborting \n",__func__);
 
   if (ecl_kw->size == current_size) 
     ecl_kw_fread_data(ecl_kw , fortio);
-  else {
-    fprintf(stderr,"%s: size mismatch - aborting \n",__func__);
-    abort();
-  }
+  else 
+    util_abort("%s: size mismatch - aborting \n",__func__);
 }
 
 
@@ -1624,6 +1629,27 @@ void ecl_kw_merge(ecl_kw_type * main_kw , const ecl_kw_type * sub_kw , const ecl
   ecl_box_set_values(ecl_box , ecl_kw_get_data_ref(main_kw) , ecl_kw_get_data_ref(sub_kw) , main_kw->sizeof_ctype);
 }
 
+
+void ecl_kw_inplace_update_file(const ecl_kw_type * ecl_kw , const char * filename, int index) {
+  bool fmt_file    = false;
+  bool endian_flip = true;
+  fortio_type * fortio =  fortio_fopen(filename , "r+" , endian_flip);
+  ecl_kw_ifseek_kw(ecl_kw_get_header_ref(ecl_kw) , fmt_file , fortio , index);
+  {
+    ecl_kw_type *file_kw = ecl_kw_alloc_empty(fmt_file , endian_flip);
+    ecl_kw_fread_header(file_kw , fortio);
+    ecl_kw_rewind(file_kw , fortio);
+
+    printf("Har lest:%s %d/%d \n",file_kw->header , file_kw->size , file_kw->ecl_type);
+    if (!((file_kw->size == ecl_kw->size) && (file_kw->ecl_type == ecl_kw->ecl_type)))
+      util_abort("%s: header mismatch when trying to update:%s in %s \n",__func__ , ecl_kw_get_header_ref(ecl_kw) , filename);
+    ecl_kw_free(file_kw);
+  }
+  
+  fortio_fflush(fortio);
+  ecl_kw_fwrite(ecl_kw , fortio);
+  fortio_fclose(fortio);
+}
 
 
 /******************************************************************/

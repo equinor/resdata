@@ -266,8 +266,7 @@ void fortio_complete_read(fortio_type *fortio) {
   
   if (trailer != fortio->active_header) {
     fprintf(stderr,"%s: fatal error reading record:%d in file: %s - aborting \n",__func__ , fortio->rec_nr , fortio->filename);
-    fprintf(stderr,"\nHeader: %d   Trailer: %d \n",fortio->active_header , trailer);
-    abort();
+    util_abort("%s: Header: %d   Trailer: %d \n",__func__ , fortio->active_header , trailer);
   }
   fortio->active_header = 0;
 }
@@ -343,10 +342,9 @@ void fortio_copy_record(fortio_type * src_stream , fortio_type * target_stream ,
       ok = true;
       ok =        (fread (buffer , 1 , bytes , src_stream->stream)    == bytes);
       ok = (ok && (fwrite(buffer , 1 , bytes , target_stream->stream) == bytes));
-      if (!ok) {
-	fprintf(stderr,"%s: failed to read/write %d bytes - aborting \n",__func__ , bytes);
-	abort();
-      }
+      if (!ok) 
+	util_abort("%s: failed to read/write %d bytes - aborting \n",__func__ , bytes);
+
     }
     bytes_read += bytes;
   }
@@ -402,7 +400,7 @@ void * fortio_fread_alloc_record(fortio_type * fortio) {
 
 
 /*****************************************************************/
-
+void          fortio_fflush(fortio_type * fortio) { fflush( fortio->stream); }
 FILE        * fortio_get_FILE(const fortio_type *fortio)        { return fortio->stream; }
 int           fortio_get_record_size(const fortio_type *fortio) { return fortio->active_header; }
 bool          fortio_get_endian_flip(const fortio_type *fortio) { return fortio->endian_flip_header; }

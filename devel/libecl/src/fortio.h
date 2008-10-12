@@ -24,6 +24,7 @@ int           fortio_fread_record(fortio_type * , char *buffer);
 void          fortio_fread_buffer(fortio_type * , char * , int );
 void          fortio_fwrite_record(fortio_type * , const char *, int);
 FILE        * fortio_get_FILE(const fortio_type *);
+void          fortio_fflush(fortio_type * ) ;
 int           fortio_get_record_size(const fortio_type *);
 bool          fortio_get_endian_flip(const fortio_type *);
 bool          fortio_is_fortio_file(fortio_type * );
