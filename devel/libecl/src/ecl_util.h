@@ -18,7 +18,7 @@ typedef enum {ecl_other_file           = 0   ,
 
 #define ecl_str_len   8
 typedef enum   ecl_type_enum_def  ecl_type_enum;
-enum           ecl_type_enum_def {ecl_char_type , ecl_float_type , ecl_double_type , ecl_int_type , ecl_bool_type , ecl_mess_type};
+enum           ecl_type_enum_def {ecl_char_type , ecl_float_type , ecl_double_type , ecl_int_type , ecl_bool_type , ecl_mess_type};  /* This is used as index in ecl_kw.c - don't touch. */
 
 
 int            ecl_util_get_sizeof_ctype(ecl_type_enum );

@@ -368,14 +368,14 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
 
 
 
-static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_flip) {
+static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_flip) {
+
   fortio_type   * fortio = fortio_fopen(grid_file , "r" , endian_flip);
   ecl_file_type   file_type;
   bool            fmt_file;
   int             nx,ny,nz;
   ecl_grid_type * grid;
-  
-  ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
+  ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);  
   if (file_type != ecl_grid_file) {
     fprintf(stderr,"%s: %s wrong file type - expected .GRID file - aborting \n",__func__ , grid_file);
     abort();
@@ -395,8 +395,8 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file , bool endian_
     int index;
     ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
     for (index = 1; index < nx*ny*nz; index++) {
-      ecl_kw_fread(coords_kw  , fortio);
-      ecl_kw_fread(corners_kw , fortio);
+      ecl_kw_fread(coords_kw  , fmt_file , fortio);
+      ecl_kw_fread(corners_kw , fmt_file , fortio);
       ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
     }
     ecl_kw_free(coords_kw);

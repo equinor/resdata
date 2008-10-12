@@ -36,10 +36,8 @@ int main(int argc, char ** argv) {
       ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(fmt_src , endian_convert);
       for (ikw = 0; ikw < num_kw; ikw++) {
 	if (ecl_kw_fseek_kw(kw_list[ikw] , fmt_src , true , false , fortio_src)) {
-	  ecl_kw_set_fmt_file(ecl_kw , fmt_src);
-	  ecl_kw_fread_realloc(ecl_kw , fortio_src);
-	  ecl_kw_set_fmt_file(ecl_kw , fmt_target);
-	  ecl_kw_fwrite(ecl_kw , fortio_target);
+	  ecl_kw_fread_realloc(ecl_kw , fmt_src , fortio_src);
+	  ecl_kw_fwrite(ecl_kw , fmt_target , fortio_target);
 	} else 
 	  fprintf(stderr,"** Warning: could not locate keyword:%s in file:%s **\n",kw_list[ikw] , src_file);
       }

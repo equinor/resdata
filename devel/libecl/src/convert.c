@@ -33,8 +33,7 @@ void file_convert(const char * src_file , const char * target_file, ecl_file_typ
   }
 
   while (ecl_kw != NULL) {
-    ecl_kw_set_fmt_file(ecl_kw , !formatted_src);
-    ecl_kw_fwrite(ecl_kw , target);
+    ecl_kw_fwrite(ecl_kw , !formatted_src , target);
     
     ecl_kw_free(ecl_kw);
     ecl_kw = ecl_kw_fread_alloc(src , formatted_src);

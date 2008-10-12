@@ -2341,55 +2341,11 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
 /*****************************************************************/
 
 
-
-#define ABORT_READ  1
-#define ABORT_WRITE 2
-
-static FILE * util_fopen__(const char *filename , const char * mode, int abort_mode) {
-  FILE *stream = NULL; 
-
-  if (strcmp(mode , "r") == 0) {
-    stream = fopen(filename , "r");
-    if (stream == NULL) {
-      fprintf(stderr,"%s: failed to open:%s for reading: %s \n",__func__ , filename , strerror(errno));
-      {
-	char * cwd = util_alloc_cwd();
-	fprintf(stderr,"%s: cwd:%s \n",__func__ , cwd);
-	free(cwd);
-      }
-      if (abort_mode & ABORT_READ) util_abort("%s: ABORT_READ \n",__func__);
-    }
-  } else if (strcmp(mode ,"w") == 0) {
-    stream = fopen(filename , "w");
-    if (stream == NULL) {
-      fprintf(stderr,"%s: failed to open:%s for writing: %s \n",__func__ , filename, strerror(errno));
-      {
-	char * cwd = util_alloc_cwd();
-	fprintf(stderr,"%s: cwd:%s \n",__func__ , cwd);
-	free(cwd);
-      }
-      if (abort_mode & ABORT_WRITE) util_abort("%s: ABORT_WRITE \n",__func__);
-    }
-  } else if (strcmp(mode , "a") == 0) {
-    stream = fopen(filename , "a");
-    if (stream == NULL) {
-      fprintf(stderr,"%s: failed to open:%s for appending: %s \n",__func__ , filename, strerror(errno));
-      {
-	char * cwd = util_alloc_cwd();
-	fprintf(stderr,"%s: cwd:%s \n",__func__ , cwd);
-	free(cwd);
-      }
-      if (abort_mode & ABORT_WRITE) util_abort("%s: ABORT_WRITE \n",__func__);
-    }
-  } else 
-    util_abort("%s: open mode: '%s' not implemented - aborting \n",__func__ , mode);
-
-  return stream;
-}
-
-
 FILE * util_fopen(const char * filename , const char * mode) {
-  return util_fopen__(filename , mode , ABORT_READ + ABORT_WRITE);
+  FILE * stream = fopen(filename , mode);
+  if (stream == NULL) 
+    util_abort("%s: failed to open:%s - error:%s \n",__func__ , filename , strerror(errno));
+  return stream;
 }
 
 

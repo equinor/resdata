@@ -379,7 +379,7 @@ bool ecl_block_fseek(int istep , bool fmt_file , bool abort_on_error , fortio_ty
   if (istep == 0) 
     return true;
   else {
-    ecl_kw_type *tmp_kw = ecl_kw_alloc_empty(fmt_file , fortio_get_endian_flip(fortio));     
+    ecl_kw_type *tmp_kw = ecl_kw_alloc_empty();
     FILE *stream        = fortio_get_FILE(fortio);
     long int init_pos   = ftell(stream);
     char *first_kw;
@@ -387,7 +387,7 @@ bool ecl_block_fseek(int istep , bool fmt_file , bool abort_on_error , fortio_ty
     bool block_found;
     step_nr = 1;
     
-    if (ecl_kw_fread_header(tmp_kw , fortio)) {
+    if (ecl_kw_fread_header(tmp_kw , fmt_file , fortio)) {
       first_kw = util_alloc_string_copy(ecl_kw_get_header_ref(tmp_kw));
       block_found = true;
       do {
@@ -414,15 +414,15 @@ static void ecl_block_set_src_file(ecl_block_type * ecl_block , const char * src
 
 
 void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *_at_eof) {
-  ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty(ecl_block->fmt_file , ecl_block->endian_convert);
-  
+  ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty();
+  bool fmt_file      = ecl_block->fmt_file;
   bool read_next_kw  = true;
   bool is_first_kw   = true;
   bool   at_eof      = false;
   char * first_kw = NULL;
   
   do {
-    if (ecl_kw_fread_realloc(ecl_kw , fortio)) {
+    if (ecl_kw_fread_realloc(ecl_kw , fmt_file , fortio)) {
       if(is_first_kw)
       {
         first_kw = util_alloc_string_copy(ecl_kw_get_header_ref(ecl_kw));
@@ -503,23 +503,6 @@ static bool ecl_block_include_kw(const ecl_kw_type *ecl_kw , int N_kw, const cha
 
 void ecl_block_set_fmt_file(ecl_block_type *ecl_block , bool fmt_file) {
   ecl_block->fmt_file = fmt_file;
-  hash_lock( ecl_block->kw_hash );
-  {
-    char ** key_list = hash_alloc_keylist(ecl_block->kw_hash);
-    int i,j;
-
-    for (i = 0; i < hash_get_size( ecl_block->kw_hash ); i++) {
-      int kw_size = ecl_block_get_kw_size(ecl_block, key_list[i]);
-      for(j = 0; j < kw_size; j++)
-      {
-        ecl_kw_type * ecl_kw = ecl_block_iget_kw(ecl_block, key_list[i], j);
-        ecl_kw_set_fmt_file(ecl_kw , ecl_block->fmt_file);
-      }
-    }
-    util_free_stringlist( key_list , hash_get_size( ecl_block->kw_hash ));
-
-  }
-  hash_unlock( ecl_block->kw_hash );
 }
 
 
@@ -550,7 +533,8 @@ void ecl_block_fread_kwlist(ecl_block_type *ecl_block , fortio_type *fortio , in
 
 
 void ecl_block_fwrite(ecl_block_type *ecl_block , fortio_type *fortio) {
-  hash_type * kw_counter = hash_alloc();
+  hash_type  * kw_counter = hash_alloc();
+  bool fmt_file = ecl_block->fmt_file;
   const char * kw;
   restart_kw_list_reset(ecl_block->kw_list);
   kw = restart_kw_list_get_first(ecl_block->kw_list);
@@ -570,10 +554,11 @@ void ecl_block_fwrite(ecl_block_type *ecl_block , fortio_type *fortio) {
       hash_insert_int(kw_counter, kw, counter);
     }
 
-    ecl_kw_type * ecl_kw = ecl_block_iget_kw(ecl_block, kw, hash_get_int(kw_counter, kw));
-    ecl_kw_set_fmt_file(ecl_kw , ecl_block->fmt_file);
-    ecl_kw_fwrite(ecl_kw , fortio);
-    kw = restart_kw_list_get_next(ecl_block->kw_list);
+    {
+      ecl_kw_type * ecl_kw = ecl_block_iget_kw(ecl_block, kw, hash_get_int(kw_counter, kw));
+      ecl_kw_fwrite(ecl_kw , fmt_file , fortio);
+      kw = restart_kw_list_get_next(ecl_block->kw_list);
+    }
   }
 
   hash_free(kw_counter);

@@ -51,17 +51,13 @@ bool ecl_fstate_fmt_file(const char *filename) {
       fmt_file = util_fmt_bit8(filename);
     else {
       ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
-      if (file_type == ecl_other_file) {
-	fprintf(stderr,"%s: sorry could not determine file type of file:%s - aborting \n",__func__ , filename);
-	abort();
-      }
+      if (file_type == ecl_other_file) 
+	util_abort("%s: sorry could not determine file type of file:%s - aborting \n",__func__ , filename);
     }
   } else {
     ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
-    if (file_type == ecl_other_file) {
-      fprintf(stderr,"%s: sorry could not determine file type of file:%s - aborting \n",__func__ , filename);
-      abort();
-    }
+    if (file_type == ecl_other_file) 
+      util_abort("%s: sorry could not determine file type of file:%s - aborting \n",__func__ , filename);
   }
   
   return fmt_file;
@@ -429,20 +425,21 @@ void ecl_fstate_filter_file(const char * src_file , const char * target_file , c
   {
     fortio_type * src    = fortio_fopen(src_file , "r" , endian_flip );
     fortio_type * target = fortio_fopen(target_file , "w" , endian_flip);
-    bool fmt_file        = ecl_fstate_fmt_file(src_file);
-    ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(fmt_file , endian_flip);
+    bool src_fmt         = ecl_fstate_fmt_file(src_file);
+    bool target_fmt      = src_fmt;
+    ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
     bool OK;
     
     do {
-      OK = ecl_kw_fread_realloc(ecl_kw , src);
+      OK = ecl_kw_fread_realloc(ecl_kw , src_fmt , src);
       if (OK) {
 	char * strip_kw = util_alloc_strip_copy(ecl_kw_get_header_ref(ecl_kw));
 	if (hash_has_key(kw_hash , strip_kw)) {
 	  ecl_kw_type * new_kw = hash_get(kw_hash , strip_kw);
 	  if (new_kw != NULL) 
-	    ecl_kw_fwrite(new_kw , target);
+	    ecl_kw_fwrite(new_kw , target_fmt , target);
 	} else
-	  ecl_kw_fwrite(ecl_kw , target);
+	  ecl_kw_fwrite(ecl_kw , target_fmt , target);
 	free(strip_kw);
       }
     } while (OK);
