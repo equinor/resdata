@@ -26,8 +26,11 @@ struct ecl_block_node_struct {
 
 struct ecl_block_struct {
   int          __id;             /* Integer identifier used to run-time check a cast. */
-  bool         fmt_file;
-  bool         endian_convert;
+
+  /*
+    bool         fmt_file;
+    bool         endian_convert;
+  */
 
   /*
     This code is programmed in terms of "report steps", in ECLIPSE
