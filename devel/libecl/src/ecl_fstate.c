@@ -99,11 +99,6 @@ static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
     abort();
   }
   
-  {
-    int i;
-    for (i=0; i < ecl_fstate->N_blocks; i++)
-      ecl_block_set_fmt_file(ecl_fstate->block_list[i] , ecl_fstate->fmt_file);
-  }
 }
 
 
@@ -162,8 +157,8 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
     int  summary_report_nr = 0;
     bool at_eof = false;
     while (!at_eof) {
-      ecl_block_type *ecl_block = ecl_block_alloc(-1 , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
-      ecl_block_fread(ecl_block , fortio , &at_eof);
+      ecl_block_type *ecl_block = ecl_block_alloc(-1);
+      ecl_block_fread(ecl_block , ecl_fstate->fmt_file , fortio , &at_eof);
       
       if (file_type == ecl_unified_restart_file) {
 	int report_nr;
@@ -202,8 +197,8 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	
 	while (!at_eof) {
 	  bool add_block = true;
-	  ecl_block_type *ecl_block = ecl_block_alloc(report_nr , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
-	  ecl_block_fread(ecl_block , fortio , &at_eof );
+	  ecl_block_type *ecl_block = ecl_block_alloc(report_nr );
+	  ecl_block_fread(ecl_block , ecl_fstate->fmt_file , fortio , &at_eof );
 
 	  if (file_type == ecl_restart_file)
 	    ecl_block_set_sim_time_restart(ecl_block);
@@ -230,8 +225,8 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	  
 	  if (file_type == ecl_summary_file && report_nr == 1) {
 	    /* Checking for next block in the pathological first summary file */
-	    ecl_block_type *next_block = ecl_block_alloc(report_nr , ecl_fstate->fmt_file , ecl_fstate->endian_convert);
-	    ecl_block_fread(next_block , fortio , &at_eof );
+	    ecl_block_type *next_block = ecl_block_alloc(report_nr);
+	    ecl_block_fread(next_block , ecl_fstate->fmt_file , fortio , &at_eof );
 	    if (ecl_block_has_kw(next_block , "PARAMS")) {
 	      ecl_block_set_report_nr(ecl_block , 0); /* Setting the previous to zero */ 
 	      ecl_fstate_add_block(ecl_fstate , next_block);
@@ -365,7 +360,7 @@ static void ecl_fstate_save_multiple(const ecl_fstate_type *ecl_fstate) {
   int block;
   for (block = 0; block < ecl_fstate->N_blocks; block++) {
     fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[block] , "w" , ecl_fstate->endian_convert);
-    ecl_block_fwrite(ecl_fstate->block_list[block] , fortio);
+    ecl_block_fwrite(ecl_fstate->block_list[block] , ecl_fstate->fmt_file , fortio);
     fortio_fclose(fortio);
   }
 }
@@ -374,7 +369,7 @@ static void ecl_fstate_save_unified(const ecl_fstate_type *ecl_fstate) {
   int block;
   fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[0] , "w" , ecl_fstate->endian_convert);
   for (block = 0; block < ecl_fstate->N_blocks; block++) 
-    ecl_block_fwrite(ecl_fstate->block_list[block] , fortio);
+    ecl_block_fwrite(ecl_fstate->block_list[block] , ecl_fstate->fmt_file , fortio);
   fortio_fclose(fortio);
 }
 

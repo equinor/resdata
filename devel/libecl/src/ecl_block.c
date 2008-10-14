@@ -28,11 +28,6 @@ struct ecl_block_struct {
   int          __id;             /* Integer identifier used to run-time check a cast. */
 
   /*
-    bool         fmt_file;
-    bool         endian_convert;
-  */
-
-  /*
     This code is programmed in terms of "report steps", in ECLIPSE
     speak, it has no understanding of the socalled ministeps, and will
     probably break badly if exposed to them.
@@ -206,7 +201,7 @@ ecl_kw_type * ecl_block_get_next_kw(const ecl_block_type * ecl_block) {
 
 ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
   ecl_block_type * copy;
-  copy = ecl_block_alloc(src->report_nr , src->fmt_file , src->endian_convert);
+  copy = ecl_block_alloc(src->report_nr );
   hash_lock( src->kw_hash );
   {
     char ** key_list = hash_alloc_keylist(src->kw_hash);
@@ -290,14 +285,12 @@ ecl_block_type * ecl_block_safe_cast(const void * __block) {
 }
 
 
-ecl_block_type * ecl_block_alloc(int report_nr , bool fmt_file , bool endian_convert) {
+ecl_block_type * ecl_block_alloc(int report_nr) {
   ecl_block_type *ecl_block;
   
   
   ecl_block = util_malloc(sizeof *ecl_block , __func__);
   ecl_block->src_file       = NULL;
-  ecl_block->fmt_file       = fmt_file;
-  ecl_block->endian_convert = endian_convert;
   ecl_block->size           = 0;
   ecl_block->kw_list        = restart_kw_list_alloc();
   ecl_block->__id           = ECL_BLOCK_ID;
@@ -309,9 +302,9 @@ ecl_block_type * ecl_block_alloc(int report_nr , bool fmt_file , bool endian_con
 
 
 
-ecl_block_type * ecl_block_fread_alloc(int report_nr , bool fmt_file , bool endian_convert , fortio_type * fortio, bool *at_eof) {
-  ecl_block_type * ecl_block = ecl_block_alloc(report_nr , fmt_file , endian_convert);
-  ecl_block_fread(ecl_block , fortio , at_eof);
+ecl_block_type * ecl_block_fread_alloc(int report_nr , bool fmt_file , fortio_type * fortio, bool *at_eof) {
+  ecl_block_type * ecl_block = ecl_block_alloc(report_nr);
+  ecl_block_fread(ecl_block , fmt_file , fortio , at_eof);
   return ecl_block;
 }
 
@@ -416,9 +409,8 @@ static void ecl_block_set_src_file(ecl_block_type * ecl_block , const char * src
 }
 
 
-void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *_at_eof) {
+void ecl_block_fread(ecl_block_type *ecl_block, bool fmt_file , fortio_type *fortio , bool *_at_eof) {
   ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty();
-  bool fmt_file      = ecl_block->fmt_file;
   bool read_next_kw  = true;
   bool is_first_kw   = true;
   bool   at_eof      = false;
@@ -504,15 +496,6 @@ static bool ecl_block_include_kw(const ecl_kw_type *ecl_kw , int N_kw, const cha
 
 
 
-void ecl_block_set_fmt_file(ecl_block_type *ecl_block , bool fmt_file) {
-  ecl_block->fmt_file = fmt_file;
-}
-
-
-
-void ecl_block_select_formatted(ecl_block_type *ecl_block) { ecl_block_set_fmt_file(ecl_block , true ); }
-void ecl_block_select_binary(ecl_block_type *ecl_block)    { ecl_block_set_fmt_file(ecl_block , false); }
-
 
 
 /*
@@ -535,9 +518,8 @@ void ecl_block_fread_kwlist(ecl_block_type *ecl_block , fortio_type *fortio , in
 
 
 
-void ecl_block_fwrite(ecl_block_type *ecl_block , fortio_type *fortio) {
+void ecl_block_fwrite(ecl_block_type *ecl_block , bool fmt_file , fortio_type *fortio) {
   hash_type  * kw_counter = hash_alloc();
-  bool fmt_file = ecl_block->fmt_file;
   const char * kw;
   restart_kw_list_reset(ecl_block->kw_list);
   kw = restart_kw_list_get_first(ecl_block->kw_list);
