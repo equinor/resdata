@@ -19,9 +19,6 @@ struct ecl_point_struct {
 };
 
 
-
-
-
 typedef struct ecl_cell_struct ecl_cell_type;
 
 
@@ -105,7 +102,7 @@ void ecl_point_printf(const ecl_point_type p) {
 /*****************************************************************/
 
 static ecl_cell_type * ecl_cell_alloc(void) {
-  ecl_cell_type * cell = malloc(sizeof * cell);
+  ecl_cell_type * cell = util_malloc(sizeof * cell , __func__);
   return cell;
 }
 
@@ -116,7 +113,7 @@ void ecl_cell_free(ecl_cell_type * cell) {
 
 
 static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
-  ecl_grid_type * grid = malloc(sizeof * grid);
+  ecl_grid_type * grid = util_malloc(sizeof * grid , __func__);
   grid->nx = nx;
   grid->ny = ny;
   grid->nz = nz;
@@ -134,11 +131,24 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
 
 
 /*
-  This function wants C-based zero offset - ohh what a fuxxx mess.
+  This function wants C-based zero offset on i,j,k - ohh what a fuxxx mess.
 */
-static int __ecl_grid_get_cell_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+
+static inline int ecl_grid_get_cell_index__(const ecl_grid_type * ecl_grid , int i , int j , int k) {
   return i + j * ecl_grid->nx + k * ecl_grid->nx * ecl_grid->ny;
 }
+
+  
+
+int ecl_grid_safe_get_cell_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+  if (ecl_grid_ijk_valid(ecl_grid , i , j , k))
+    return ecl_grid_get_cell_index__(ecl_grid , i , j , k);
+  else {
+    util_abort("%s: i,j,k = (%d,%d,%d) is invalid:\n\n  nx: [0,%d>\n  ny: [0,%d>\n  nz: [0,%d>\n",__func__ , i,j,k,ecl_grid->nx,ecl_grid->ny,ecl_grid->nz);
+    return -1; /* Compiler shut up. */
+  }
+}
+
 
 
 /* 
@@ -166,7 +176,7 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
 
 static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , int k , double x[4][2] , double y[4][2] , double z[4][2] , const int * actnum) {
 
-  const int cell_index   = __ecl_grid_get_cell_index(ecl_grid , i , j  , k );
+  const int cell_index   = ecl_grid_get_cell_index__(ecl_grid , i , j  , k );
   ecl_cell_type * cell   = ecl_grid->cells[cell_index];
   int ip , iz;
   
@@ -186,7 +196,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
   const int i  = coords[0]; /* ECLIPSE 1 offset */
   const int j  = coords[1];
   const int k  = coords[2];
-  const int cell_index   = __ecl_grid_get_cell_index(ecl_grid , i - 1, j - 1 , k - 1);
+  const int cell_index   = ecl_grid_get_cell_index__(ecl_grid , i - 1, j - 1 , k - 1);
   ecl_cell_type * cell   = ecl_grid->cells[cell_index];
   int c;
 
@@ -204,7 +214,7 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
   for (k=0; k < ecl_grid->nz; k++) 
     for (j=0; j < ecl_grid->ny; j++) 
       for (i=0; i < ecl_grid->nx; i++) {
-	const int cell_index   = __ecl_grid_get_cell_index(ecl_grid , i , j , k );
+	const int cell_index   = ecl_grid_get_cell_index__(ecl_grid , i , j , k );
 	ecl_cell_type * cell   = ecl_grid->cells[cell_index];
 	if (cell->active) {
 	  cell->active_index = active_index;
@@ -293,10 +303,9 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
   ecl_file_type   file_type;
   bool            fmt_file;
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
-  if (file_type != ecl_egrid_file) {
-    fprintf(stderr,"%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
-    abort();
-  }
+  if (file_type != ecl_egrid_file) 
+    util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
+  
   {
     ecl_kw_type * gridhead_kw;
     ecl_kw_type * zcorn_kw;
@@ -310,10 +319,8 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
     ny 	  = ecl_kw_iget_int(gridhead_kw , 2);
     nz 	  = ecl_kw_iget_int(gridhead_kw , 3);
     ecl_kw_free(gridhead_kw);
-    if (gtype != 1) {
-      fprintf(stderr,"%s: gtype:%d fatal error when loading:%s - must have corner point grid - aborting\n",__func__ , gtype , grid_file);
-      abort();
-    }
+    if (gtype != 1) 
+      util_abort("%s: gtype:%d fatal error when loading:%s - must have corner point grid - aborting\n",__func__ , gtype , grid_file);
     
     ecl_kw_fseek_kw("ZCORN"  , fmt_file , true , true , fortio); zcorn_kw  = ecl_kw_fread_alloc(fortio , fmt_file);
     ecl_kw_fseek_kw("COORD"  , fmt_file , true , true , fortio); coord_kw  = ecl_kw_fread_alloc(fortio , fmt_file);
@@ -376,10 +383,9 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
   int             nx,ny,nz;
   ecl_grid_type * grid;
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);  
-  if (file_type != ecl_grid_file) {
-    fprintf(stderr,"%s: %s wrong file type - expected .GRID file - aborting \n",__func__ , grid_file);
-    abort();
-  }
+  if (file_type != ecl_grid_file) 
+    util_abort("%s: %s wrong file type - expected .GRID file - aborting \n",__func__ , grid_file);
+  
   {
     ecl_kw_type * dimens_kw = ecl_kw_fread_alloc(fortio , fmt_file);
     nx = ecl_kw_iget_int(dimens_kw , 0);
@@ -417,6 +423,21 @@ void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * n
 }
 
 
+/** 
+    Input is assumed to be C-based zero offset.
+*/
+
+inline bool ecl_grid_ijk_valid(const ecl_grid_type * grid , int i , int j , int k) {
+  bool OK = false;
+
+  if (i > 0 && i < grid->nx)
+    if (j > 0 && j < grid->ny)
+      if (k > 0 && k < grid->nz)
+	OK = true;
+  
+  return OK;
+}
+
 
 
 /**
@@ -441,6 +462,7 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
   ecl_grid_alloc_index_map(ecl_grid);
   return ecl_grid;
 }
+
 
 /**
    This function returns a pointer to the internal index_map field of
@@ -488,7 +510,7 @@ void ecl_grid_set_box_active_list(const ecl_grid_type * grid , const ecl_box_typ
   for (k = k1; k <= k2; k++) {
     for (j= j1; j <= j2; j++) {
       for (i=i1; i <= i2; i++) {
-	const int cell_index   = __ecl_grid_get_cell_index(grid , i , j , k );
+	const int cell_index   = ecl_grid_get_cell_index__(grid , i , j , k );
 	ecl_cell_type * cell   = grid->cells[cell_index];
 	if (cell->active) {
 	  active_index_list[active_count] = cell->active_index;
@@ -511,7 +533,7 @@ int ecl_grid_count_box_active(const ecl_grid_type * grid , const ecl_box_type * 
   for (k = k1; k <= k2; k++) {
     for (j= j1; j <= j2; j++) {
       for (i=i1; i <= i2; i++) {
-	const int cell_index   = __ecl_grid_get_cell_index(grid , i , j , k );
+	const int cell_index   = ecl_grid_get_cell_index__(grid , i , j , k );
 	ecl_cell_type * cell   = grid->cells[cell_index];
 	if (cell->active)
 	  active_count++;
@@ -521,3 +543,17 @@ int ecl_grid_count_box_active(const ecl_grid_type * grid , const ecl_box_type * 
   
   return active_count;
 }
+
+
+
+void ecl_grid_get_distance(const ecl_grid_type * grid , int cell_index1, int cell_index2 , double *dx , double *dy , double *dz) {
+  const ecl_cell_type * cell1 = grid->cells[cell_index1];
+  const ecl_cell_type * cell2 = grid->cells[cell_index2];
+  
+  *dx = cell1->center.x - cell2->center.x;
+  *dy = cell1->center.y - cell2->center.y;
+  *dz = cell1->center.z - cell2->center.z;
+  
+}
+
+

@@ -16,6 +16,7 @@ void 		       restart_kw_list_fread(restart_kw_list_type * , FILE * );
 restart_kw_list_type * restart_kw_list_fread_alloc(FILE * );
 bool                   restart_kw_list_modified(const restart_kw_list_type * );
 bool                   restart_kw_list_empty(const restart_kw_list_type * );
+bool                   restart_kw_list_has_kw(const restart_kw_list_type *  , const char * );
 void                   restart_kw_list_fprintf(const restart_kw_list_type * , FILE * );
 
 #endif

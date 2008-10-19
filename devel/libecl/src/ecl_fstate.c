@@ -81,9 +81,7 @@ ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , ecl_file_type file_type 
 }
 
 
-
-static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
-
+static void ecl_fstate_set_fmt__(ecl_fstate_type * ecl_fstate) {
   switch(ecl_fstate->fmt_mode) {
   case ECL_FORMATTED:
     ecl_fstate->fmt_file = true;
@@ -95,17 +93,14 @@ static void __ecl_fstate_set_fmt(ecl_fstate_type *ecl_fstate) {
     ecl_fstate->fmt_file = ecl_fstate_fmt_file(ecl_fstate->filelist[0]);
     break;
   default:
-    fprintf(stderr,"%s: internal error - fmt_mode=%d invalid - aborting \n",__func__ , ecl_fstate->fmt_mode);
-    abort();
+    util_abort("%s: internal error - fmt_mode=%d invalid - aborting \n",__func__ , ecl_fstate->fmt_mode);
   }
-  
+
 }
 
-
-bool ecl_fstate_set_fmt_mode(ecl_fstate_type *ecl_fstate , int fmt_mode) {
+void ecl_fstate_set_fmt_mode(ecl_fstate_type *ecl_fstate , int fmt_mode) {
   ecl_fstate->fmt_mode = fmt_mode;
-  __ecl_fstate_set_fmt(ecl_fstate);
-  return ecl_fstate->fmt_mode;
+  ecl_fstate_set_fmt__(ecl_fstate);
 }
 
 
@@ -130,7 +125,7 @@ void ecl_fstate_set_files(ecl_fstate_type *ecl_fstate , int files , const char *
     for (file=0; file < files; file++) 
       ecl_fstate->filelist[file] = util_alloc_string_copy(filelist[file]);
   }
-  __ecl_fstate_set_fmt(ecl_fstate);
+  ecl_fstate_set_fmt__(ecl_fstate);
 }
 
 
@@ -313,10 +308,9 @@ ecl_block_type * ecl_fstate_get_block_by_report_nr(const ecl_fstate_type * ecl_f
 
 ecl_block_type * ecl_fstate_iget_block(const ecl_fstate_type * ecl_fstate , int index) {
   int block_index = index;
-  if (block_index < 0 || block_index >= ecl_fstate->N_blocks) {
-    fprintf(stderr,"%s: index:%d invalid - legal range: [0,%d> - aborting \n",__func__ , index , ecl_fstate->N_blocks);
-    abort();
-  }
+  if (block_index < 0 || block_index >= ecl_fstate->N_blocks) 
+    util_abort("%s: index:%d invalid - legal range: [0,%d> - aborting \n",__func__ , index , ecl_fstate->N_blocks);
+  
   return ecl_fstate->block_list[block_index];
 }
 

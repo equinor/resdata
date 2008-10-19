@@ -25,7 +25,7 @@ void              ecl_fstate_set_multiple_files(ecl_fstate_type *, const char * 
 void              ecl_fstate_set_files(ecl_fstate_type *, int , const char ** );
 void              ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate_type , bool unified);
 void              ecl_fstate_add_block(ecl_fstate_type * , const ecl_block_type *);
-bool              ecl_fstate_set_fmt_mode(ecl_fstate_type * , int);
+void              ecl_fstate_set_fmt_mode(ecl_fstate_type * , int);
 ecl_fstate_type * ecl_fstate_alloc_empty(int , ecl_file_type , bool);
 void              ecl_fstate_free(ecl_fstate_type *);
 

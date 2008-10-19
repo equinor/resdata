@@ -177,6 +177,19 @@ void restart_kw_list_memcpy(restart_kw_list_type * src , restart_kw_list_type * 
   
 }
 
+/**
+   Checks if the restart_kw_list contains a keyword.
+*/
+bool restart_kw_list_has_kw(const restart_kw_list_type * kw_list , const char * kw) {
+  bool has_kw = false;
+  for (int i=0; i < kw_list->active_elements; i++) {
+    if (strcmp(kw , kw_list->kw_list[i]) == 0) {
+      has_kw = true;
+      break;
+    }
+  }
+  return has_kw;
+}
 
 
 /**
