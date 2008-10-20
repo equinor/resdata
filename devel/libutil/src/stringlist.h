@@ -33,6 +33,7 @@ stringlist_type * stringlist_alloc_deep_copy(const stringlist_type *);
 void              stringlist_insert_stringlist_copy(stringlist_type *  , const stringlist_type * );
 void              stringlist_insert_stringlist_ref(stringlist_type *   , const stringlist_type * );
 
+bool              stringlist_equal(const stringlist_type *  , const stringlist_type *);
 bool              stringlist_contains(const stringlist_type *  , const char * );
 int           stringlist_get_argc(const stringlist_type * );
 const char ** stringlist_get_argv(const stringlist_type * );

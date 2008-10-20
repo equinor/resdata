@@ -324,6 +324,20 @@ bool stringlist_contains(const stringlist_type * stringlist , const char * s) {
 }
 
 
+bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
+  if (s1->size == s2->size) {
+    bool equal = true;
+    for (int i = 0; i < s1->size; i++) {
+      if (strcmp(s1->strings[i] , s2->strings[i]) != 0) {
+	equal = false;
+	break;
+      }
+    }
+    return equal;
+  } else
+    return false;
+}
+
 char * stringlist_alloc_joined_string(const stringlist_type * s , const char * sep) {
   return util_alloc_joined_string((const char **) s->strings , s->size , sep);
 }

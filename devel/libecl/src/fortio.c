@@ -10,7 +10,7 @@ extern int errno;
 
 /**
 The fortio struct is implemented to handle fortran io. The problem is
-that when a Fotran program writes unformatted data to file in a
+that when a Fortran program writes unformatted data to file in a
 statemente like:
 
    integer array(100)
@@ -19,7 +19,7 @@ statemente like:
 it actually writes a head and tail in addition to the actual
 data. The header and tail is a 4 byte integer, which value is the
 number of bytes in the immediately following record. I.e. what is
-actually found on disk after the Fotran code above is:
+actually found on disk after the Fortran code above is:
 
   | 400 | array ...... | 400 |
 
