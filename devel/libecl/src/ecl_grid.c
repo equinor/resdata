@@ -298,7 +298,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
 
 
 static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) {
-  fortio_type   * fortio = fortio_fopen(grid_file , "r" , endian_flip);
+  fortio_type   * fortio;
   ecl_grid_type * ecl_grid;
   ecl_file_type   file_type;
   bool            fmt_file;
@@ -306,6 +306,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
   if (file_type != ecl_egrid_file) 
     util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
   
+  fortio = fortio_fopen(grid_file , "r" , endian_flip , fmt_file);
   {
     ecl_kw_type * gridhead_kw;
     ecl_kw_type * zcorn_kw;
@@ -313,7 +314,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
     ecl_kw_type * actnum_kw;
     int gtype, nx,ny,nz;
 
-    ecl_kw_fseek_kw("GRIDHEAD"  , fmt_file , true , true , fortio); gridhead_kw  = ecl_kw_fread_alloc(fortio , fmt_file);
+    ecl_kw_fseek_kw("GRIDHEAD"  , true , true , fortio); gridhead_kw  = ecl_kw_fread_alloc(fortio);
     gtype = ecl_kw_iget_int(gridhead_kw , 0);
     nx 	  = ecl_kw_iget_int(gridhead_kw , 1);
     ny 	  = ecl_kw_iget_int(gridhead_kw , 2);
@@ -322,9 +323,9 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
     if (gtype != 1) 
       util_abort("%s: gtype:%d fatal error when loading:%s - must have corner point grid - aborting\n",__func__ , gtype , grid_file);
     
-    ecl_kw_fseek_kw("ZCORN"  , fmt_file , true , true , fortio); zcorn_kw  = ecl_kw_fread_alloc(fortio , fmt_file);
-    ecl_kw_fseek_kw("COORD"  , fmt_file , true , true , fortio); coord_kw  = ecl_kw_fread_alloc(fortio , fmt_file);
-    ecl_kw_fseek_kw("ACTNUM" , fmt_file , true , true , fortio); actnum_kw = ecl_kw_fread_alloc(fortio , fmt_file);
+    ecl_kw_fseek_kw("ZCORN"  , true , true , fortio); zcorn_kw  = ecl_kw_fread_alloc(fortio);
+    ecl_kw_fseek_kw("COORD"  , true , true , fortio); coord_kw  = ecl_kw_fread_alloc(fortio);
+    ecl_kw_fseek_kw("ACTNUM" , true , true , fortio); actnum_kw = ecl_kw_fread_alloc(fortio);
     
     ecl_grid = ecl_grid_alloc_GRDECL(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw));
     ecl_kw_free(zcorn_kw);
@@ -377,7 +378,7 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
 
 static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_flip) {
 
-  fortio_type   * fortio = fortio_fopen(grid_file , "r" , endian_flip);
+  fortio_type   * fortio;
   ecl_file_type   file_type;
   bool            fmt_file;
   int             nx,ny,nz;
@@ -385,24 +386,25 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);  
   if (file_type != ecl_grid_file) 
     util_abort("%s: %s wrong file type - expected .GRID file - aborting \n",__func__ , grid_file);
-  
+
+  fortio = fortio_fopen(grid_file , "r" , endian_flip , fmt_file);
   {
-    ecl_kw_type * dimens_kw = ecl_kw_fread_alloc(fortio , fmt_file);
+    ecl_kw_type * dimens_kw = ecl_kw_fread_alloc(fortio);
     nx = ecl_kw_iget_int(dimens_kw , 0);
     ny = ecl_kw_iget_int(dimens_kw , 1);
     nz = ecl_kw_iget_int(dimens_kw , 2);
     ecl_kw_free(dimens_kw);
     grid = ecl_grid_alloc_empty(nx , ny , nz);
   }
-  ecl_kw_fseek_kw("COORDS" , fmt_file , false , true , fortio);
+  ecl_kw_fseek_kw("COORDS" , false , true , fortio);
   {
-    ecl_kw_type * coords_kw  = ecl_kw_fread_alloc(fortio , fmt_file);
-    ecl_kw_type * corners_kw = ecl_kw_fread_alloc(fortio , fmt_file);
+    ecl_kw_type * coords_kw  = ecl_kw_fread_alloc(fortio);
+    ecl_kw_type * corners_kw = ecl_kw_fread_alloc(fortio);
     int index;
     ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
     for (index = 1; index < nx*ny*nz; index++) {
-      ecl_kw_fread(coords_kw  , fmt_file , fortio);
-      ecl_kw_fread(corners_kw , fmt_file , fortio);
+      ecl_kw_fread(coords_kw  , fortio);
+      ecl_kw_fread(corners_kw , fortio);
       ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
     }
     ecl_kw_free(coords_kw);

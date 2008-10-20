@@ -44,16 +44,18 @@ struct fortio_struct {
   int      active_header;
   int      rec_nr;
   bool     endian_flip_header;
+  bool     fmt_file;            /* This is not really used by the fortio instance - but it is very convenient to store it here. */
 };
 
 
 
-static fortio_type * fortio_alloc__(const char *filename , bool endian_flip_header) {
+static fortio_type * fortio_alloc__(const char *filename , bool endian_flip_header, bool fmt_file) {
   fortio_type * fortio       = malloc(sizeof * fortio);
   fortio->filename           = util_alloc_string_copy(filename);
   fortio->endian_flip_header = endian_flip_header;
   fortio->active_header      = 0;
   fortio->rec_nr             = 0; 
+  fortio->fmt_file           = fmt_file;
   return fortio;
 }
 
@@ -183,15 +185,15 @@ bool fortio_guess_endian_flip(const char * filename , bool * _endian_flip) {
 
 
 
-fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_header , FILE * stream) {
-  fortio_type * fortio = fortio_alloc__(filename , endian_flip_header);
+fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_header , bool fmt_file , FILE * stream) {
+  fortio_type * fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
   fortio->stream = stream;
   return fortio;
 }
 
 
-fortio_type *fortio_fopen(const char *filename , const char *mode, bool endian_flip_header) {
-  fortio_type *fortio = fortio_alloc__(filename , endian_flip_header);
+fortio_type *fortio_fopen(const char *filename , const char *mode, bool endian_flip_header , bool fmt_file) {
+  fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
   
   fortio->stream = util_fopen(fortio->filename , mode);
   return fortio;
@@ -403,6 +405,7 @@ void * fortio_fread_alloc_record(fortio_type * fortio) {
 void          fortio_fflush(fortio_type * fortio) { fflush( fortio->stream); }
 FILE        * fortio_get_FILE(const fortio_type *fortio)        { return fortio->stream; }
 int           fortio_get_record_size(const fortio_type *fortio) { return fortio->active_header; }
-bool          fortio_endian_flip(const fortio_type *fortio) { return fortio->endian_flip_header; }
+bool          fortio_endian_flip(const fortio_type *fortio) 	{ return fortio->endian_flip_header; }
+bool          fortio_fmt_file(const fortio_type *fortio)    	{ return fortio->fmt_file; }
 void          fortio_rewind(const fortio_type *fortio)          { rewind(fortio->stream); }
 const char  * fortio_filename_ref(const fortio_type * fortio)   { return (const char *) fortio->filename; }

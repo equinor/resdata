@@ -302,9 +302,9 @@ ecl_block_type * ecl_block_alloc(int report_nr) {
 
 
 
-ecl_block_type * ecl_block_fread_alloc(int report_nr , bool fmt_file , fortio_type * fortio, bool *at_eof) {
+ecl_block_type * ecl_block_fread_alloc(int report_nr , fortio_type * fortio, bool *at_eof) {
   ecl_block_type * ecl_block = ecl_block_alloc(report_nr);
-  ecl_block_fread(ecl_block , fmt_file , fortio , at_eof);
+  ecl_block_fread(ecl_block , fortio , at_eof);
   return ecl_block;
 }
 
@@ -371,7 +371,7 @@ restart_kw_list_type * ecl_block_get_restart_kw_list(const ecl_block_type * ecl_
 
 
 
-bool ecl_block_fseek(int istep , bool fmt_file , bool abort_on_error , fortio_type * fortio) {
+bool ecl_block_fseek(int istep , bool abort_on_error , fortio_type * fortio) {
   if (istep == 0) 
     return true;
   else {
@@ -383,11 +383,11 @@ bool ecl_block_fseek(int istep , bool fmt_file , bool abort_on_error , fortio_ty
     bool block_found;
     step_nr = 1;
     
-    if (ecl_kw_fread_header(tmp_kw , fmt_file , fortio)) {
+    if (ecl_kw_fread_header(tmp_kw , fortio)) {
       first_kw = util_alloc_string_copy(ecl_kw_get_header_ref(tmp_kw));
       block_found = true;
       do {
-        block_found = ecl_kw_fseek_kw(first_kw , fmt_file , false , false , fortio);
+        block_found = ecl_kw_fseek_kw(first_kw , false , false , fortio);
         step_nr++;
       } while (block_found && (step_nr < istep));
     } else block_found = false;
@@ -409,7 +409,7 @@ static void ecl_block_set_src_file(ecl_block_type * ecl_block , const char * src
 }
 
 
-void ecl_block_fread(ecl_block_type *ecl_block, bool fmt_file , fortio_type *fortio , bool *_at_eof) {
+void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *_at_eof) {
   ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty();
   bool read_next_kw  = true;
   bool is_first_kw   = true;
@@ -417,7 +417,7 @@ void ecl_block_fread(ecl_block_type *ecl_block, bool fmt_file , fortio_type *for
   char * first_kw = NULL;
   
   do {
-    if (ecl_kw_fread_realloc(ecl_kw , fmt_file , fortio)) {
+    if (ecl_kw_fread_realloc(ecl_kw , fortio)) {
       if(is_first_kw)
       {
         first_kw = util_alloc_string_copy(ecl_kw_get_header_ref(ecl_kw));
@@ -478,47 +478,9 @@ void ecl_block_summarize(const ecl_block_type * ecl_block) {
 }
 
 
-/*
-static bool ecl_block_include_kw(const ecl_kw_type *ecl_kw , int N_kw, const char **kwlist) {
-  const char *kw = ecl_kw_get_header_ref(ecl_kw);
-  bool inc = false;
-  int i;
-  
-  for (i=0; i < N_kw; i++) {
-    if (strcmp(kwlist[i] , kw) == 0) {
-      inc = true;
-      break;
-    }
-  }
-  return inc;
-}
-*/
 
 
-
-
-
-/*
-void ecl_block_fread_kwlist(ecl_block_type *ecl_block , fortio_type *fortio , int N_kw, const char **kwlist) {
-  ecl_kw_type *ecl_kw  = ecl_kw_alloc_empty(ecl_block->fmt_file , ecl_block->endian_convert);
-  hash_type   *kw_hash = hash_alloc(N_kw * 2);
-  
-  while (ecl_kw_fread_header(ecl_kw , fortio)) {
-    if (ecl_block_include_kw(ecl_kw , N_kw , kwlist)) {
-      ecl_kw_alloc_data(ecl_kw);
-      ecl_kw_fread_data(ecl_kw , fortio);
-      ecl_block_add_kw(ecl_block , ecl_kw);
-    } else 
-      ecl_kw_fskip_data(ecl_kw , fortio);
-  }
-  ecl_kw_free(ecl_kw);
-  hash_free(kw_hash);
-}
-*/
-
-
-
-void ecl_block_fwrite(ecl_block_type *ecl_block , bool fmt_file , fortio_type *fortio) {
+void ecl_block_fwrite(ecl_block_type *ecl_block , fortio_type *fortio) {
   hash_type  * kw_counter = hash_alloc();
   const char * kw;
   restart_kw_list_reset(ecl_block->kw_list);
@@ -541,7 +503,7 @@ void ecl_block_fwrite(ecl_block_type *ecl_block , bool fmt_file , fortio_type *f
 
     {
       ecl_kw_type * ecl_kw = ecl_block_iget_kw(ecl_block, kw, hash_get_int(kw_counter, kw));
-      ecl_kw_fwrite(ecl_kw , fmt_file , fortio);
+      ecl_kw_fwrite(ecl_kw , fortio);
       kw = restart_kw_list_get_next(ecl_block->kw_list);
     }
   }

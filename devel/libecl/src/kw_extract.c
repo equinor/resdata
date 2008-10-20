@@ -29,15 +29,16 @@ int main(int argc, char ** argv) {
     bool fmt_src , fmt_target;
     
     fmt_src           = ecl_fstate_fmt_file(src_file);
-    fortio_src        = fortio_fopen(src_file    , "r" , endian_convert);
-    fortio_target     = fortio_fopen(target_file , "w" , endian_convert);
-    fmt_target    = fmt_src; /* Can in principle be different */
+    fmt_target        = fmt_src; /* Can in principle be different */
+    fortio_src        = fortio_fopen(src_file    , "r" , endian_convert , fmt_src);
+    fortio_target     = fortio_fopen(target_file , "w" , endian_convert , fmt_target);
+
     {
-      ecl_kw_type * ecl_kw = ecl_kw_alloc_empty(fmt_src , endian_convert);
+      ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
       for (ikw = 0; ikw < num_kw; ikw++) {
-	if (ecl_kw_fseek_kw(kw_list[ikw] , fmt_src , true , false , fortio_src)) {
-	  ecl_kw_fread_realloc(ecl_kw , fmt_src , fortio_src);
-	  ecl_kw_fwrite(ecl_kw , fmt_target , fortio_target);
+	if (ecl_kw_fseek_kw(kw_list[ikw] , true , false , fortio_src)) {
+	  ecl_kw_fread_realloc(ecl_kw , fortio_src);
+	  ecl_kw_fwrite(ecl_kw , fortio_target);
 	} else 
 	  fprintf(stderr,"** Warning: could not locate keyword:%s in file:%s **\n",kw_list[ikw] , src_file);
       }

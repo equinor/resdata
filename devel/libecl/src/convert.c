@@ -24,19 +24,19 @@ void file_convert(const char * src_file , const char * target_file, ecl_file_typ
       formatted_src = false;
   }
   
-  target = fortio_fopen(target_file , "w" , true);
-  src    = fortio_fopen(src_file , "r" , true);
-  ecl_kw = ecl_kw_fread_alloc(src , formatted_src);
+  target = fortio_fopen(target_file , "w" , true , !formatted_src);
+  src    = fortio_fopen(src_file , "r" , true , formatted_src);
+  ecl_kw = ecl_kw_fread_alloc(src);
   if (ecl_kw == NULL) {
     fprintf(stderr,"Loading: %s failed - maybe you forgot the header? \n", src_file);
     abort();
   }
 
   while (ecl_kw != NULL) {
-    ecl_kw_fwrite(ecl_kw , !formatted_src , target);
+    ecl_kw_fwrite(ecl_kw , target);
     
     ecl_kw_free(ecl_kw);
-    ecl_kw = ecl_kw_fread_alloc(src , formatted_src);
+    ecl_kw = ecl_kw_fread_alloc(src);
   }
   if (ecl_kw != NULL) ecl_kw_free(ecl_kw);
   fortio_fclose(src);

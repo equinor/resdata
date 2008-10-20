@@ -148,12 +148,12 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
   
 
   if (ecl_fstate->unified) {
-    fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert);
+    fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert ,ecl_fstate->fmt_file);
     int  summary_report_nr = 0;
     bool at_eof = false;
     while (!at_eof) {
       ecl_block_type *ecl_block = ecl_block_alloc(-1);
-      ecl_block_fread(ecl_block , ecl_fstate->fmt_file , fortio , &at_eof);
+      ecl_block_fread(ecl_block , fortio , &at_eof);
       
       if (file_type == ecl_unified_restart_file) {
 	int report_nr;
@@ -184,7 +184,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
       int file;
       for (file=0; file < files; file++) {
 	bool at_eof = false;
-	fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert);
+	fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert , ecl_fstate->fmt_file);
 	int report_nr = -1;
 	
 	if (file_type == ecl_restart_file || file_type == ecl_summary_file)
@@ -193,7 +193,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	while (!at_eof) {
 	  bool add_block = true;
 	  ecl_block_type *ecl_block = ecl_block_alloc(report_nr );
-	  ecl_block_fread(ecl_block , ecl_fstate->fmt_file , fortio , &at_eof );
+	  ecl_block_fread(ecl_block , fortio , &at_eof );
 
 	  if (file_type == ecl_restart_file)
 	    ecl_block_set_sim_time_restart(ecl_block);
@@ -221,7 +221,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	  if (file_type == ecl_summary_file && report_nr == 1) {
 	    /* Checking for next block in the pathological first summary file */
 	    ecl_block_type *next_block = ecl_block_alloc(report_nr);
-	    ecl_block_fread(next_block , ecl_fstate->fmt_file , fortio , &at_eof );
+	    ecl_block_fread(next_block , fortio , &at_eof );
 	    if (ecl_block_has_kw(next_block , "PARAMS")) {
 	      ecl_block_set_report_nr(ecl_block , 0); /* Setting the previous to zero */ 
 	      ecl_fstate_add_block(ecl_fstate , next_block);
@@ -353,17 +353,17 @@ void ecl_fstate_free(ecl_fstate_type *ecl_fstate) {
 static void ecl_fstate_save_multiple(const ecl_fstate_type *ecl_fstate) {
   int block;
   for (block = 0; block < ecl_fstate->N_blocks; block++) {
-    fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[block] , "w" , ecl_fstate->endian_convert);
-    ecl_block_fwrite(ecl_fstate->block_list[block] , ecl_fstate->fmt_file , fortio);
+    fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[block] , "w" , ecl_fstate->endian_convert , ecl_fstate->fmt_file );
+    ecl_block_fwrite(ecl_fstate->block_list[block] , fortio);
     fortio_fclose(fortio);
   }
 }
 
 static void ecl_fstate_save_unified(const ecl_fstate_type *ecl_fstate) {
   int block;
-  fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[0] , "w" , ecl_fstate->endian_convert);
+  fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[0] , "w" , ecl_fstate->endian_convert , ecl_fstate->fmt_file );
   for (block = 0; block < ecl_fstate->N_blocks; block++) 
-    ecl_block_fwrite(ecl_fstate->block_list[block] , ecl_fstate->fmt_file , fortio);
+    ecl_block_fwrite(ecl_fstate->block_list[block] , fortio);
   fortio_fclose(fortio);
 }
 
@@ -412,23 +412,23 @@ void ecl_fstate_filter_file(const char * src_file , const char * target_file , c
     abort();
   }
   {
-    fortio_type * src    = fortio_fopen(src_file , "r" , endian_flip );
-    fortio_type * target = fortio_fopen(target_file , "w" , endian_flip);
     bool src_fmt         = ecl_fstate_fmt_file(src_file);
     bool target_fmt      = src_fmt;
+    fortio_type * src    = fortio_fopen(src_file , "r" , endian_flip  , src_fmt);
+    fortio_type * target = fortio_fopen(target_file , "w" , endian_flip , target_fmt);
     ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
     bool OK;
     
     do {
-      OK = ecl_kw_fread_realloc(ecl_kw , src_fmt , src);
+      OK = ecl_kw_fread_realloc(ecl_kw , src);
       if (OK) {
 	char * strip_kw = util_alloc_strip_copy(ecl_kw_get_header_ref(ecl_kw));
 	if (hash_has_key(kw_hash , strip_kw)) {
 	  ecl_kw_type * new_kw = hash_get(kw_hash , strip_kw);
 	  if (new_kw != NULL) 
-	    ecl_kw_fwrite(new_kw , target_fmt , target);
+	    ecl_kw_fwrite(new_kw , target);
 	} else
-	  ecl_kw_fwrite(ecl_kw , target_fmt , target);
+	  ecl_kw_fwrite(ecl_kw , target);
 	free(strip_kw);
       }
     } while (OK);

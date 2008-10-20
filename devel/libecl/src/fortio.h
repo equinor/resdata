@@ -10,8 +10,8 @@ typedef struct fortio_struct fortio_type;
 bool          fortio_guess_endian_flip(const char * , bool *);
 bool          fortio_is_fortran_file(const char *  , bool * );
 void          fortio_copy_record(fortio_type * , fortio_type * , int , void * , bool *);
-fortio_type * fortio_alloc_FILE_wrapper(const char * , bool , FILE * );
-fortio_type * fortio_fopen(const char *, const char * , bool);
+fortio_type * fortio_alloc_FILE_wrapper(const char * , bool , bool , FILE * );
+fortio_type * fortio_fopen(const char *, const char * , bool , bool);
 void          fortio_free_FILE_wrapper(fortio_type *);
 void          fortio_fclose(fortio_type *);
 int           fortio_init_read(fortio_type *);
@@ -30,4 +30,5 @@ bool          fortio_endian_flip(const fortio_type *);
 bool          fortio_is_fortio_file(fortio_type * );
 void          fortio_rewind(const fortio_type *fortio);
 const char  * fortio_filename_ref(const fortio_type * );
+bool          fortio_fmt_file(const fortio_type *);
 #endif

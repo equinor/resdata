@@ -510,12 +510,13 @@ static bool ecl_kw_fscanf_qstring(char *s , const char *fmt , int len, FILE *str
   false =>  0              0 : 0  00000000  00000000  00000000  0000000
 */
 
-static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, bool fmt_file , fortio_type *fortio) {
+static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
   const char null_char         = '\0';
   const char char_true         = 84;
   const char char_false        = 70;
   const int  fortran_int_true  = -1;
   const int  fortran_int_false = 0;
+  bool fmt_file                = fortio_fmt_file( fortio );
   if (ecl_kw->size > 0) {
     if (fmt_file) {
       const int blocks = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
@@ -641,29 +642,31 @@ void ecl_kw_rewind(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
   fseek(fortio_get_FILE(fortio) , ecl_kw->_start_pos , SEEK_SET);
 }
 
-static void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, bool fmt_file , fortio_type *fortio) {
- if (ecl_kw->size > 0) {
-   if (fmt_file) {
-     if (ecl_kw->data != NULL) 
-       ecl_kw_fread_data(ecl_kw , fmt_file , fortio);
-     else {
-       ecl_kw_alloc_data(ecl_kw);
-       ecl_kw_fread_data(ecl_kw , fmt_file , fortio);
-       ecl_kw_free_data(ecl_kw);
-     }
-   } else {
-     const int blocks = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
-     int ib;
-     for (ib = 0; ib < blocks; ib++) 
-       fortio_fskip_record(fortio);
-   }
- }
+static void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
+  bool fmt_file = fortio_fmt_file(fortio);
+  if (ecl_kw->size > 0) {
+    if (fmt_file) {
+      if (ecl_kw->data != NULL) 
+	ecl_kw_fread_data(ecl_kw , fortio);
+      else {
+	ecl_kw_alloc_data(ecl_kw);
+	ecl_kw_fread_data(ecl_kw , fortio);
+	ecl_kw_free_data(ecl_kw);
+      }
+    } else {
+      const int blocks = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
+      int ib;
+      for (ib = 0; ib < blocks; ib++) 
+	fortio_fskip_record(fortio);
+    }
+  }
 } 
 
 
-bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , bool fmt_file , fortio_type *fortio) {
+bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   const char null_char = '\0';
-  FILE *stream = fortio_get_FILE(fortio);
+  FILE *stream  = fortio_get_FILE(fortio);
+  bool fmt_file = fortio_fmt_file( fortio );
   char header[ecl_str_len + 1];
   char ecl_type_str[ecl_type_len + 1];
   int record_size;
@@ -701,7 +704,7 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , bool fmt_file , fortio_type *fort
 
 
 
-bool ecl_kw_fseek_kw(const char * kw , bool fmt_file , bool rewind , bool abort_on_error , fortio_type *fortio) {
+bool ecl_kw_fseek_kw(const char * kw , bool rewind , bool abort_on_error , fortio_type *fortio) {
   ecl_kw_type *tmp_kw = ecl_kw_alloc_empty();
   FILE *stream      = fortio_get_FILE(fortio);
   long int init_pos = ftell(stream);
@@ -710,14 +713,14 @@ bool ecl_kw_fseek_kw(const char * kw , bool fmt_file , bool rewind , bool abort_
   cont     = true;
   kw_found = false;
   while (cont) {
-    bool header_OK = ecl_kw_fread_header(tmp_kw , fmt_file , fortio);
+    bool header_OK = ecl_kw_fread_header(tmp_kw , fortio);
     if (header_OK) {
       if (ecl_kw_string_eq(ecl_kw_get_header_ref(tmp_kw) , kw)) {
 	ecl_kw_rewind(tmp_kw, fortio);
 	kw_found = true;
 	cont = false;
       } else
-	ecl_kw_fskip_data(tmp_kw , fmt_file , fortio);
+	ecl_kw_fskip_data(tmp_kw , fortio);
     } else {
       if (rewind) {
 	fortio_rewind(fortio);
@@ -739,29 +742,29 @@ bool ecl_kw_fseek_kw(const char * kw , bool fmt_file , bool rewind , bool abort_
 }
 
 
-bool ecl_kw_ifseek_kw(const char * kw , bool fmt_file , fortio_type * fortio , int index) {
+bool ecl_kw_ifseek_kw(const char * kw , fortio_type * fortio , int index) {
   int i = 0;
   do {
-    ecl_kw_fseek_kw(kw , fmt_file , false , true , fortio);
+    ecl_kw_fseek_kw(kw , false , true , fortio);
     i++;
   } while (i <= index);
   return true;
 }
 
 
-bool ecl_kw_fseek_last_kw(const char * kw , bool fmt_file , bool abort_on_error , fortio_type *fortio) {
+bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *fortio) {
   FILE *stream      = fortio_get_FILE(fortio);
   long int init_pos = ftell(stream);
   bool kw_found     = false;
 
   fseek(stream , 0L , SEEK_SET);
-  kw_found = ecl_kw_fseek_kw(kw , fmt_file , false , false , fortio);
+  kw_found = ecl_kw_fseek_kw(kw ,  false , false , fortio);
   if (kw_found) {
     bool cont = true;
     do {
       long int current_pos = ftell(stream);
-      ecl_kw_fskip(fortio , fmt_file);
-      cont = ecl_kw_fseek_kw(kw , fmt_file , false , false , fortio);
+      ecl_kw_fskip(fortio);
+      cont = ecl_kw_fseek_kw(kw , false , false , fortio);
       if (!cont) fseek(stream , current_pos , SEEK_SET);
     } while (cont);
   } else {
@@ -821,33 +824,33 @@ void ecl_kw_set_header_alloc(ecl_kw_type *ecl_kw , const char *header ,  int siz
 }
 
 
-bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , bool fmt_file , fortio_type *fortio) {
+bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   bool OK;
-  OK = ecl_kw_fread_header(ecl_kw , fmt_file , fortio);
+  OK = ecl_kw_fread_header(ecl_kw , fortio);
   if (OK) {
     ecl_kw_alloc_data(ecl_kw);
-    ecl_kw_fread_data(ecl_kw , fmt_file , fortio);
+    ecl_kw_fread_data(ecl_kw , fortio);
   } 
   return OK;
 }
 
 
-void ecl_kw_fread(ecl_kw_type * ecl_kw , bool fmt_file , fortio_type * fortio) {
+void ecl_kw_fread(ecl_kw_type * ecl_kw , fortio_type * fortio) {
   int current_size = ecl_kw->size;
-  if (!ecl_kw_fread_header(ecl_kw ,fmt_file ,  fortio)) 
+  if (!ecl_kw_fread_header(ecl_kw , fortio)) 
     util_abort("%s: failed to read header for ecl_kw - aborting \n",__func__);
 
   if (ecl_kw->size == current_size) 
-    ecl_kw_fread_data(ecl_kw , fmt_file , fortio);
+    ecl_kw_fread_data(ecl_kw , fortio);
   else 
     util_abort("%s: size mismatch - aborting \n",__func__);
 }
 
 
-ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio , bool fmt_file) {
+ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio) {
   bool OK;
   ecl_kw_type *ecl_kw = ecl_kw_alloc_empty();
-  OK = ecl_kw_fread_realloc(ecl_kw , fmt_file , fortio);
+  OK = ecl_kw_fread_realloc(ecl_kw , fortio);
   
   if (!OK) {
     free(ecl_kw);
@@ -862,9 +865,9 @@ ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio , bool fmt_file) {
 
 
 
-void ecl_kw_fskip(fortio_type *fortio , bool fmt_file) {
+void ecl_kw_fskip(fortio_type *fortio) {
   ecl_kw_type *tmp_kw;
-  tmp_kw = ecl_kw_fread_alloc(fortio , fmt_file);
+  tmp_kw = ecl_kw_fread_alloc(fortio );
   ecl_kw_free(tmp_kw);
 }
 
@@ -988,12 +991,14 @@ static void __set_float_arg(float x , double *_arg_x , int *_pow_x ) {
   but there is temporarry change - that is the reason
   for the ugly (const casting).
 */
-static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , bool fmt_file , fortio_type *fortio) {
+static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio) {
   ecl_kw_type *ecl_kw = (ecl_kw_type *) _ecl_kw;
   const int blocks    = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
   FILE *stream        = fortio_get_FILE(fortio);
+  bool  fmt_file      = fortio_fmt_file( fortio );
   int ib;
   bool local_endian_flip = false;
+
 
   if (!fmt_file) { 
     if (fortio_endian_flip(fortio)) {
@@ -1057,8 +1062,9 @@ static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , bool fmt_file , fort
 
 
 
-void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , bool fmt_file , fortio_type *fortio) {
-  FILE *stream = fortio_get_FILE(fortio);
+void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
+  FILE *stream  = fortio_get_FILE(fortio);
+  bool fmt_file = fortio_fmt_file(fortio);
   if (fmt_file) 
     fprintf(stream , ecl_kw_header_write_fmt ,ecl_kw->header , ecl_kw->size, __get_ecl_str_type(ecl_kw->ecl_type));
   else {
@@ -1076,9 +1082,9 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , bool fmt_file , fortio_typ
 }
 
 
-void ecl_kw_fwrite(const ecl_kw_type *ecl_kw , bool fmt_file , fortio_type *fortio) {
-  ecl_kw_fwrite_header(ecl_kw , fmt_file , fortio);
-  ecl_kw_fwrite_data(ecl_kw   , fmt_file , fortio);
+void ecl_kw_fwrite(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
+  ecl_kw_fwrite_header(ecl_kw ,  fortio);
+  ecl_kw_fwrite_data(ecl_kw   ,  fortio);
 }
 
 
@@ -1198,17 +1204,17 @@ ecl_kw_type * ecl_kw_fread_alloc_compressed(FILE * stream) {
 
 
 
-void ecl_kw_fwrite_param_fortio(fortio_type * fortio, bool fmt_file , const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
+void ecl_kw_fwrite_param_fortio(fortio_type * fortio, const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
   ecl_kw_type   * ecl_kw = ecl_kw_alloc_complete_shared(header , size , ecl_type , data);
-  ecl_kw_fwrite(ecl_kw , fmt_file , fortio);
+  ecl_kw_fwrite(ecl_kw , fortio);
   ecl_kw_free(ecl_kw);
 }
     
 
 
 void ecl_kw_fwrite_param(const char * filename , bool fmt_file , bool endian_convert , const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
-  fortio_type   * fortio = fortio_fopen(filename , "w" , endian_convert);
-  ecl_kw_fwrite_param_fortio(fortio , fmt_file , header , ecl_type , size , data);
+  fortio_type   * fortio = fortio_fopen(filename , "w" , endian_convert , fmt_file);
+  ecl_kw_fwrite_param_fortio(fortio , header , ecl_type , size , data);
   fortio_fclose(fortio);
 }
 
@@ -1233,8 +1239,8 @@ void ecl_kw_get_data_as_double(const ecl_kw_type * ecl_kw , double * double_data
 
 
 void ecl_kw_fread_double_param(const char * filename , bool fmt_file , bool endian_convert, double * double_data) {
-  fortio_type   * fortio      = fortio_fopen(filename , "r" , endian_convert);
-  ecl_kw_type   * ecl_kw      = ecl_kw_fread_alloc(fortio , fmt_file);
+  fortio_type   * fortio      = fortio_fopen(filename , "r" , endian_convert , fmt_file);
+  ecl_kw_type   * ecl_kw      = ecl_kw_fread_alloc(fortio);
   fortio_fclose(fortio);
   
   if (ecl_kw == NULL) {
@@ -1254,9 +1260,9 @@ void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
 
 
 void ecl_kw_fprintf_grdecl(ecl_kw_type * ecl_kw , FILE * stream) {
-  fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , stream);   /* Endian flip should *NOT* be used */
+  fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , true , stream);   /* Endian flip should *NOT* be used */
   fprintf(stream,"%s\n" , ecl_kw_get_header_ref(ecl_kw));
-  ecl_kw_fwrite_data(ecl_kw , true , fortio);
+  ecl_kw_fwrite_data(ecl_kw , fortio);
   fprintf(stream,"\n/\n"); /* Unsure about the leading newline ?? */
   fortio_free_FILE_wrapper(fortio);
 }
@@ -1278,8 +1284,8 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
   ecl_kw_set_header_name(ecl_kw , buffer);
   {
     bool at_eof;
-    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL ,true , stream);  /* The endian flip is not used. */
-    ecl_kw_fread_data(ecl_kw , true , fortio);
+    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL ,true , true , stream);  /* The endian flip is not used. */
+    ecl_kw_fread_data(ecl_kw , fortio);
     util_fskip_chars(stream , " \n\r" , &at_eof);
     fscanf(stream , "%s" , buffer);
     
@@ -1631,11 +1637,11 @@ void ecl_kw_inplace_update_file(const ecl_kw_type * ecl_kw , const char * filena
 	util_abort("%s: could not determine endian ness of: %s \n",__func__ , filename);
 
     {
-      fortio_type * fortio =  fortio_fopen(filename , "r+" , endian_flip);
-      ecl_kw_ifseek_kw(ecl_kw_get_header_ref(ecl_kw) , fmt_file , fortio , index);
+      fortio_type * fortio =  fortio_fopen(filename , "r+" , endian_flip , fmt_file);
+      ecl_kw_ifseek_kw(ecl_kw_get_header_ref(ecl_kw) , fortio , index);
       {
 	ecl_kw_type *file_kw = ecl_kw_alloc_empty();
-	ecl_kw_fread_header(file_kw , fmt_file , fortio);
+	ecl_kw_fread_header(file_kw , fortio);
 	ecl_kw_rewind(file_kw , fortio);
 	
 	if (!((file_kw->size == ecl_kw->size) && (file_kw->ecl_type == ecl_kw->ecl_type)))
@@ -1645,7 +1651,7 @@ void ecl_kw_inplace_update_file(const ecl_kw_type * ecl_kw , const char * filena
 
   
       fortio_fflush(fortio);
-      ecl_kw_fwrite(ecl_kw , fmt_file , fortio);
+      ecl_kw_fwrite(ecl_kw , fortio);
       fortio_fclose(fortio);
     }
   }
@@ -1660,13 +1666,13 @@ bool ecl_kw_is_kw_file(FILE * stream , bool fmt_file , bool endian_flip) {
   
   {
     ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
-    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , endian_flip , stream);
-
+    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , endian_flip , fmt_file , stream);
+    
     if (fmt_file) 
-      kw_file = ecl_kw_fread_header(ecl_kw , fmt_file , fortio);
+      kw_file = ecl_kw_fread_header(ecl_kw , fortio);
     else {
       if (fortio_is_fortio_file(fortio)) 
-	kw_file = ecl_kw_fread_header(ecl_kw , fmt_file , fortio);
+	kw_file = ecl_kw_fread_header(ecl_kw , fortio);
       else
 	kw_file = false;
     } 
