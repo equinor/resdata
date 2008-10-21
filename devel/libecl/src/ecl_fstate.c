@@ -47,11 +47,11 @@ bool ecl_fstate_fmt_file(const char *filename) {
 
   bool fmt_file;
   if (util_file_exists(filename)) {
-    if (util_file_size(filename) > min_size)
-      fmt_file = util_fmt_bit8(filename);
-    else {
-      ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
-      if (file_type == ecl_other_file) 
+    ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
+    if (file_type == ecl_other_file) {
+      if (util_file_size(filename) > min_size)
+	fmt_file = util_fmt_bit8(filename);
+      else 
 	util_abort("%s: sorry could not determine formatted|unformatted of file:%s file_size:%d - aborting \n",__func__ , filename , util_file_size(filename));
     }
   } else {
