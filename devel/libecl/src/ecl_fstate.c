@@ -40,7 +40,7 @@ struct ecl_fstate_struct {
 
 bool ecl_fstate_fmt_file(const char *filename) {
   /*const int min_size = 32768;*/
-  const int min_size = 1024;
+  const int min_size = 256; /* Veeeery small */
   
   int report_nr;
   ecl_file_type file_type;
@@ -52,12 +52,12 @@ bool ecl_fstate_fmt_file(const char *filename) {
     else {
       ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
       if (file_type == ecl_other_file) 
-	util_abort("%s: sorry could not determine file type of file:%s - aborting \n",__func__ , filename);
+	util_abort("%s: sorry could not determine formatted|unformatted of file:%s file_size:%d - aborting \n",__func__ , filename , util_file_size(filename));
     }
   } else {
     ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
     if (file_type == ecl_other_file) 
-      util_abort("%s: sorry could not determine file type of file:%s - aborting \n",__func__ , filename);
+      util_abort("%s: sorry could not determine formatted|unformatted of file:%s - aborting \n",__func__ , filename);
   }
   
   return fmt_file;
