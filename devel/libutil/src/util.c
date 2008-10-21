@@ -100,10 +100,32 @@ int util_C2f90_bool(bool c_bool) {
 
 
 
+
+void util_fread_dev_random(int buffer_size , char * buffer) {
+  FILE * stream = util_fopen("/dev/random" , "r");
+  if (fread(buffer , 1 , buffer_size , stream) != buffer_size)
+    util_abort("%s: failed to read:%d bytes from /dev/random \n",__func__ , buffer_size);
+  
+  fclose(stream);
+}
+
+
+void util_fread_dev_urandom(int buffer_size , char * buffer) {
+  FILE * stream = util_fopen("/dev/urandom" , "r");
+  if (fread(buffer , 1 , buffer_size , stream) != buffer_size)
+    util_abort("%s: failed to read:%d bytes from /dev/random \n",__func__ , buffer_size);
+  
+  fclose(stream);
+}
+
+
+
 void util_memcpy_string_C2f90(const char * c_input_string , char * fortran_output_string , int fortran_length) {
   strncpy(fortran_output_string , c_input_string , strlen(c_input_string));
   util_pad_f90string(fortran_output_string , strlen(c_input_string) , fortran_length);
 }
+
+
 
 
 char * util_alloc_string_sum2(const char *s1 , const char *s2) {

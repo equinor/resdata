@@ -111,6 +111,8 @@ void 	 util_set_datetime_values(time_t , int * , int * , int * , int * , int *  
 void 	 util_set_date_values(time_t , int * , int * , int * );
 
 
+void     util_fread_dev_random(int , char * );
+void     util_fread_dev_urandom(int , char * );
 bool     util_intptr_2bool(const int *);
 int      util_C2f90_bool(bool );
 void     util_memcpy_string_C2f90(const char *  , char *  , int );
