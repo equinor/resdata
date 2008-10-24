@@ -2049,7 +2049,7 @@ bool static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , 
       {
 	char * target    = &buffer[target_offset];
 	char * match_end = &buffer[end_offset];
-	memmove(target , match_end , 1 + size - offset - len_expr);
+	memmove(target , match_end , 1 + size - end_offset);
       }
       
       memcpy(&buffer[start_offset] , subs , len_subs);
