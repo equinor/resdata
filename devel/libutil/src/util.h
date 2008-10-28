@@ -105,6 +105,7 @@ void     util_free_stringlist(char **, int );
 char  ** util_alloc_stringlist(int , int );
 char   * util_alloc_substring_copy(const char *, int );
 bool     util_is_directory(const char * );
+bool     util_is_file(const char * );
 bool     util_is_link(const char * );
 void     util_make_slink(const char *, const char * );
 void 	 util_set_datetime_values(time_t , int * , int * , int * , int * , int *  , int *);

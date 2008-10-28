@@ -1104,13 +1104,6 @@ bool util_file_exists(const char *filename) {
 }
 
 
-/*bool util_is_file(const char * path) {
-  struct stat stat_buffer;
-  stat(path , &stat_buffer);
-  return S_ISFILE(stat_buffer.st_mode);
-}
-*/
-
 
 
 /**
@@ -1123,6 +1116,22 @@ bool util_is_directory(const char * path) {
 
   if (stat(path , &stat_buffer) == 0)
     return S_ISDIR(stat_buffer.st_mode);
+  else if (errno == ENOENT)
+    /*Path does not exist at all. */
+    return false;
+  else {
+    util_abort("%s: stat(%s) failed: %s \n",__func__ , path , strerror(errno));
+    return false; /* Dummy to shut the compiler warning */
+  }
+}
+
+
+
+bool util_is_file(const char * path) {
+  struct stat stat_buffer;
+
+  if (stat(path , &stat_buffer) == 0)
+    return S_ISREG(stat_buffer.st_mode);
   else if (errno == ENOENT)
     /*Path does not exist at all. */
     return false;
@@ -2911,11 +2920,11 @@ char * util_alloc_PATH_executable(const char * executable) {
   } else if (strncmp(executable , "./" , 2) == 0) {
     char * path = util_alloc_full_path(getenv("PWD") , &executable[2]);
     /* The program has been invoked as ./xxxx */
-    if (util_is_executable( path ))
+    if (util_is_file(path) && util_is_executable( path )) 
       return path; 
     else {
-	free( path );
-	return NULL;
+      free( path );
+      return NULL;
     }
   } else {
     char *  full_path = NULL;
@@ -2929,7 +2938,7 @@ char * util_alloc_PATH_executable(const char * executable) {
       util_split_string(getenv("PATH") , ":" , &path_size , &path_list);
       while ( cont ) {
 	char * current_attempt = util_alloc_full_path(path_list[ipath] , executable);
-	if ( util_file_exists( current_attempt ) && util_is_executable( current_attempt )) {
+	if ( util_is_file( current_attempt ) && util_is_executable( current_attempt )) {
 	  full_path = current_attempt;
 	  cont = false;
 	} else {
