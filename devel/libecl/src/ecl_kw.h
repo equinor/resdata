@@ -1,6 +1,8 @@
 #ifndef __ECL_KW_H__
 #define __ECL_KW_H__
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -102,4 +104,7 @@ ECL_KW_GET_TYPED_PTR_HEADER(float);
 ECL_KW_GET_TYPED_PTR_HEADER(int);
 #undef ECL_KW_GET_TYPED_PTR_HEADER
 
+#ifdef __cplusplus
+}
+#endif
 #endif

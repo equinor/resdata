@@ -1,6 +1,8 @@
 #ifndef __ECL_FSTATE_H__
 #define __ECL_FSTATE_H__
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdbool.h>
 #include <ecl_kw.h>
 #include <ecl_block.h>
@@ -48,4 +50,7 @@ void              ecl_fstate_save(const ecl_fstate_type *);
 
 void              ecl_fstate_filter_file(const char * , const char *  , const hash_type * , bool );
 void              ecl_fstate_fprintf(const ecl_fstate_type *);
+#ifdef __cplusplus
+}
+#endif
 #endif

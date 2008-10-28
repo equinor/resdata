@@ -1,6 +1,8 @@
 #ifndef __ECL_SUM_H__
 #define __ECL_SUM_H__
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdbool.h>
 #include <hash.h>
 
@@ -73,4 +75,7 @@ double         	 ecl_sum_eval_well_misfit(const ecl_sum_type * , const char * , 
 double         	 ecl_sum_eval_misfit(const ecl_sum_type * , int , const char ** , int , const char ** ,  const double * , double * );
 ecl_sum_type * 	 ecl_sum_fread_alloc_interactive(bool );
 void             ecl_sum_fprintf(const ecl_sum_type * , FILE * , int , const char **  );
+#ifdef __cplusplus
+}
+#endif
 #endif

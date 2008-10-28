@@ -1,5 +1,8 @@
 #ifndef __ECL_GRID_H__
 #define __ECL_GRID_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdbool.h>
 #include <ecl_box.h>
 
@@ -18,4 +21,7 @@ int           * ecl_grid_alloc_index_map_copy(const ecl_grid_type * );
 void            ecl_grid_get_ijk(const ecl_grid_type * , int , int *, int * , int *);
 const int     * ecl_grid_get_index_map_ref(const ecl_grid_type * );
 
+#ifdef __cplusplus
+}
+#endif
 #endif

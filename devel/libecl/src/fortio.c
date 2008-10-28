@@ -50,7 +50,7 @@ struct fortio_struct {
 
 
 static fortio_type * fortio_alloc__(const char *filename , bool endian_flip_header, bool fmt_file) {
-  fortio_type * fortio       = malloc(sizeof * fortio);
+  fortio_type * fortio       = (fortio_type *) util_malloc(sizeof * fortio , __func__);
   fortio->filename           = util_alloc_string_copy(filename);
   fortio->endian_flip_header = endian_flip_header;
   fortio->active_header      = 0;

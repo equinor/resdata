@@ -1,5 +1,8 @@
 #ifndef __ECL_RFT_NODE_H__
 #define __ECL_RFT_NODE_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <ecl_block.h>
 #include <stdbool.h>
 
@@ -21,5 +24,8 @@ void                ecl_rft_node_summarize(const ecl_rft_node_type * , bool );
 
 void ecl_rft_node_export_DEPTH(const ecl_rft_node_type * , const char * );
 
+#ifdef __cplusplus
+}
+#endif
 #endif
 

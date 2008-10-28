@@ -1,4 +1,5 @@
 include global_config
+#CC = g++
 #################################################################
 COMPILE_INCLUDE  = -I$(LIBECL_HOME)/src -I$(LIBUTIL_HOME)/include -I$(LIBHASH_HOME)/include 
 INSTALL_INC_PATH =  $(LIBECL_HOME)/include

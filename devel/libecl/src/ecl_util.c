@@ -352,7 +352,7 @@ static char ** ecl_util_alloc_filelist_static(const char * path, const char * ba
     util_abort("%s: Invalid input report_nr1:%d > report_nr:%d - aborting \n",__func__ , report_nr1 , report_nr2);
 
   {
-    char ** file_list = util_malloc((report_nr2 - report_nr1 + 1) * sizeof * file_list , __func__);
+    char ** file_list = (char **) util_malloc((report_nr2 - report_nr1 + 1) * sizeof * file_list , __func__);
     int report_nr;
     for (report_nr = report_nr1; report_nr <= report_nr2; report_nr++)
       file_list[report_nr - report_nr1] = ecl_util_alloc_filename_static(path , base , file_type , fmt_file , report_nr , must_exist);
@@ -430,7 +430,7 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
     if (files == 0) 
       fileList = NULL;
     else {
-      fileList = util_malloc(files * sizeof *fileList , __func__ );
+      fileList = (char **) util_malloc(files * sizeof *fileList , __func__ );
       files = 0;
       while ((dentry = readdir (dirH)) != NULL) {
 	if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file)) {
@@ -453,7 +453,7 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
 
 
 char ** ecl_util_alloc_simple_filelist(const char *path , const char *base, ecl_file_type file_type , bool fmt_file , int report_nr1 , int report_nr2) {
-  char ** fileList = malloc((report_nr2 - report_nr1 + 1) * sizeof * fileList);
+  char ** fileList = (char **) util_malloc((report_nr2 - report_nr1 + 1) * sizeof * fileList , __func__);
   int report_nr;
   for (report_nr = report_nr1; report_nr <= report_nr2; report_nr++) 
     fileList[report_nr - report_nr1] = ecl_util_alloc_filename_static(path , base , file_type , fmt_file , report_nr , false);
@@ -587,7 +587,7 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 
 
 ecl_type_enum ecl_util_guess_type(const char * key){ 
-  hash_type * type_hash = hash_alloc(10);
+  hash_type * type_hash = hash_alloc( );
   ecl_type_enum type = ecl_float_type;  /* Keep compiler silent / happy .*/
 
   hash_insert_int(type_hash , "PERMX"  , ecl_float_type);
@@ -599,7 +599,7 @@ ecl_type_enum ecl_util_guess_type(const char * key){
   hash_insert_int(type_hash , "ACTNUM" , ecl_int_type);
   
   if (hash_has_key(type_hash , key)) 
-    type = hash_get_int(type_hash , key);
+    type = (ecl_type_enum) hash_get_int(type_hash , key);
   else 
     util_abort("could not guess type of keyword %s - update the table in %s/%s - aborting \n",key , __FILE__ , __func__);
 
@@ -697,7 +697,7 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
       
       if (unified_newest) {
 	util_free_stringlist( file_list , files );
-	data_files     = util_malloc( sizeof * data_files , __func__);
+	data_files     = (char **) util_malloc( sizeof * data_files , __func__);
 	data_files[0]  = unif_data_file;
 	unified        = true;
 	num_data_files = 1;
@@ -714,7 +714,7 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
       num_data_files = files;
     } else if (unif_exists) {
       util_free_stringlist( file_list , files );
-      data_files     = util_malloc( sizeof * data_files , __func__);
+      data_files     = (char **) util_malloc( sizeof * data_files , __func__);
       data_files[0]  = unif_data_file;
       unified        = true;
       num_data_files = 1;
@@ -777,7 +777,7 @@ safely used as filenames, i.e for instance the substitution:
 The escape process is done 'in-place' memory-wise.
 */
 void ecl_util_escape_kw(char * kw) {
-  int index;
+  uint index;
   for (index = 0; index < strlen(kw); index++) {
     switch (kw[index]) {
     case('/'):
@@ -849,7 +849,7 @@ time_t ecl_util_get_start_date(const char * data_file) {
       c = fgetc(stream);
       buffer_length++;
     } while (c != '/');
-    buffer = util_malloc(buffer_length + 1 , __func__);
+    buffer = (char *) util_malloc(buffer_length + 1 , __func__);
     buffer[buffer_length] = '\0';
 
     {
@@ -890,7 +890,7 @@ time_t ecl_util_get_start_date(const char * data_file) {
       
       {
 	int day, year, month_nr;
-	char * month_str = util_malloc(32 , __func__);
+	char * month_str = (char *) util_malloc(32 , __func__);
 	{
 	  int scanf_count = sscanf(&buffer[pos] , "%d %s %d" , &day , month_str , &year);
 	  if (scanf_count != 3)

@@ -1,6 +1,8 @@
 #ifndef __ECL_BLOCK_H__
 #define __ECL_BLOCK_H__
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdbool.h>
 #include <ecl_kw.h>
 #include <fortio.h>
@@ -42,4 +44,7 @@ ecl_kw_type    * ecl_block_detach_kw(ecl_block_type * , const char *);
 void             ecl_block_free_kw(ecl_block_type *, const char *);
 void             ecl_block_set_time_step(ecl_block_type * , int );
 void             ecl_block_summarize(const ecl_block_type * );
+#ifdef __cplusplus
+}
+#endif
 #endif

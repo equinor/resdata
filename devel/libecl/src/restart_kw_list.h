@@ -1,5 +1,8 @@
 #ifndef __RESTART_KW_LIST_H__
 #define __RESTART_KW_LIST_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdio.h>
 
 typedef struct restart_kw_list_struct restart_kw_list_type;
@@ -19,4 +22,7 @@ bool                   restart_kw_list_empty(const restart_kw_list_type * );
 bool                   restart_kw_list_has_kw(const restart_kw_list_type *  , const char * );
 void                   restart_kw_list_fprintf(const restart_kw_list_type * , FILE * );
 
+#ifdef __cplusplus
+}
+#endif
 #endif

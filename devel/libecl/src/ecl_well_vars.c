@@ -37,7 +37,7 @@ static well_var_type __ecl_well_var_get_type(const char *var , bool *valid , boo
     type = well_var_gor;
   else {
     *valid = false;
-    type = -1;
+    type = well_var_invalid;
   }
   
   if (var[strlen(var) - 1] == 'H')

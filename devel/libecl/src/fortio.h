@@ -1,5 +1,8 @@
 #ifndef __FORTIO_H__
 #define __FORTIO_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,4 +34,7 @@ bool          fortio_is_fortio_file(fortio_type * );
 void          fortio_rewind(const fortio_type *fortio);
 const char  * fortio_filename_ref(const fortio_type * );
 bool          fortio_fmt_file(const fortio_type *);
+#ifdef __cplusplus
+}
+#endif
 #endif

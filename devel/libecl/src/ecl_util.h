@@ -1,5 +1,8 @@
 #ifndef __ECL_UTIL_H__
 #define __ECL_UTIL_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdbool.h>
 #include <time.h>
 
@@ -17,8 +20,8 @@ typedef enum {ecl_other_file           = 0   ,
 
 
 #define ecl_str_len   8
-typedef enum   ecl_type_enum_def  ecl_type_enum;
 enum           ecl_type_enum_def {ecl_char_type , ecl_float_type , ecl_double_type , ecl_int_type , ecl_bool_type , ecl_mess_type};  /* This is used as index in ecl_kw.c - don't touch. */
+typedef enum   ecl_type_enum_def  ecl_type_enum;
 
 
 int            ecl_util_get_sizeof_ctype(ecl_type_enum );
@@ -43,4 +46,7 @@ void            ecl_util_alloc_summary_files(const char * , const char * , char 
 const    char * ecl_util_type_name(ecl_type_enum );
 time_t          ecl_util_get_start_date(const char * );
 
+#ifdef __cplusplus
+}
+#endif
 #endif
