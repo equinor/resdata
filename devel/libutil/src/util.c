@@ -63,7 +63,7 @@ static bool EOL_CHAR(char c) {
 }
 
 
-char * util_alloc_cstring(const char *fort_string , const int *strlen) {
+char * util_alloc_gcstring(const char *fort_string , const int *strlen) {
   const char null_char = '\0';
   char *new_string = util_malloc(*strlen + 1 , __func__);
   strncpy(new_string , fort_string , *strlen);
