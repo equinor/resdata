@@ -153,6 +153,19 @@ int ecl_grid_safe_get_cell_index(const ecl_grid_type * ecl_grid , int i , int j 
 }
 
 
+/**
+   Return the global cell index (of the active cells) of the cell
+   i,j,k. Will happily return -1 if the cell is not active.
+*/
+int ecl_grid_get_active_cell_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+  int global_index = ecl_grid_safe_get_cell_index(ecl_grid , i,j,k);
+  if (global_index >= 0)
+    return ecl_grid->inv_index_map[global_index];
+  else
+    return global_index;
+}
+
+
 
 /* 
    This function returns C-based zero offset indices 
@@ -162,6 +175,16 @@ void ecl_grid_get_ijk(const ecl_grid_type * grid , int cell_nr, int *i, int *j ,
   *j = cell_nr / grid->nx;              cell_nr -= (*j) *  grid->nx;
   *i = cell_nr;
 }
+
+
+void ecl_grid_get_ijk_from_active_index(const ecl_grid_type *ecl_grid , int active_index , int *i, int * j, int * k) {
+  if (active_index >= 0 && active_index < ecl_grid->total_active) {
+    int global_index = ecl_grid->inv_index_map[active_index];
+    ecl_grid_get_ijk(ecl_grid , global_index , i,j,k);
+  } else
+    util_abort("%s: error active_index:%d invalid - grid has only:%d active cells. \n",__func__ , active_index , ecl_grid->total_active);
+}
+
 
 
 static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
@@ -351,9 +374,13 @@ const int * ecl_grid_get_index_map_ref(const ecl_grid_type * grid) {
 /**
    This function allocates a copy of the index_map and returns it.
 */
-int * ecl_grid_alloc_index_map_copy(const ecl_grid_type * ecl_grid) {
+
+
+/*
+  int * ecl_grid_alloc_index_map_copy(const ecl_grid_type * ecl_grid) {
   return util_alloc_copy(ecl_grid->index_map , ecl_grid->size * sizeof * ecl_grid->index_map , __func__);
-}
+  }
+*/
 
 
 
