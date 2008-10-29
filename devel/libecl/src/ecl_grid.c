@@ -32,9 +32,11 @@ struct ecl_cell_struct {
 
 struct ecl_grid_struct {
   int nx , ny , nz , size , total_active;
-  int            * index_map;
+  int            * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
+  int            * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
   ecl_cell_type ** cells;
 };
+
 
 
 void ecl_point_compare(const ecl_point_type *p1 , const ecl_point_type *p2) {
@@ -118,9 +120,10 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
   grid->ny = ny;
   grid->nz = nz;
   grid->size = nx*ny*nz;
-  
-  grid->index_map = NULL;
-  grid->cells     = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
+
+  grid->inv_index_map = NULL;
+  grid->index_map     = NULL;
+  grid->cells         = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
   {
     int i;
     for (i=0; i < grid->size; i++)
@@ -355,22 +358,25 @@ int * ecl_grid_alloc_index_map_copy(const ecl_grid_type * ecl_grid) {
 
 
 /**
-   This function allocates the internal index_map field. 
+   This function allocates the internal index_map and inv_index_map fields. 
 */
 
 static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
-  int * index_map  = util_malloc(ecl_grid->size * sizeof * index_map, __func__);
+  int * index_map     = util_malloc(ecl_grid->size         * sizeof * index_map     , __func__);
+  int * inv_index_map = util_malloc(ecl_grid->total_active * sizeof * inv_index_map , __func__);  
   int   index;
 
   for (index = 0; index < ecl_grid->size; index++) {
     const ecl_cell_type * cell = ecl_grid->cells[index];
-    if (cell->active) 
+    if (cell->active) {
       index_map[index] = cell->active_index;
-    else
+      inv_index_map[cell->active_index] = index;
+    } else
       index_map[index] = -1;
   }
   
-  ecl_grid->index_map = index_map;
+  ecl_grid->inv_index_map = inv_index_map;
+  ecl_grid->index_map     = index_map;
 }
 
 
@@ -496,7 +502,8 @@ void ecl_grid_free(ecl_grid_type * grid) {
   for (i=0; i < grid->size; i++)
     ecl_cell_free(grid->cells[i]);
   free(grid->cells);
-  if (grid->index_map != NULL) free(grid->index_map);
+  util_safe_free(grid->index_map);
+  util_safe_free(grid->inv_index_map);
   free(grid);
 }
 
