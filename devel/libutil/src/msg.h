@@ -1,5 +1,8 @@
 #ifndef __MSG_H__
 #define __MSG_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdbool.h>
 
@@ -17,4 +20,7 @@ void         msg_hide(msg_type *);
 void         msg_clear_msg(msg_type * msg);
 
 
+#ifdef __cplusplus
+}
+#endif
 #endif

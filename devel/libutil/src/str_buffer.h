@@ -1,5 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef __cplusplus
+extern "C" {
+#ifdef __cplusplus
+}
+#endif
+#endif
 
 typedef struct str_buffer_struct str_buffer_type;
 

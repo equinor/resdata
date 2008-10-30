@@ -1,5 +1,9 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
+#ifdef __cplusplus
+extern"C" {
+#endif
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -192,5 +196,7 @@ bool     util_sscanf_bytesize(const char * , size_t *);
 #define UTIL_FWRITE_VECTOR(s,n,stream) fwrite(s , sizeof s , (n) , stream)
 #define UTIL_FREAD_VECTOR(s,n,stream)  fread(s , sizeof s , (n) , stream)
 
-
+#ifdef __cplusplus
+}
+#endif
 #endif

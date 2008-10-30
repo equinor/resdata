@@ -1,5 +1,8 @@
 #ifndef __VOID_ARG_H__
 #define __VOID_ARG_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdio.h>
 #include <stdbool.h>
 #include <node_ctype.h>
@@ -61,5 +64,8 @@ VOID_ARG_TYPED_PACK_HEADER(bool)
 
 #undef VOID_ARG_TYPED_PACK_HEADER
 #undef VOID_ARG_TYPED_GET_HEADER
+#ifdef __cplusplus
+}
+#endif
 #endif
      
