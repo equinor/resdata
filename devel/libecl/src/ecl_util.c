@@ -675,8 +675,12 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
       header_file = smspec_file;
       free(fsmspec_file);
       fmt_file = false;
-    } else 
-      util_abort("%s: could not find either %s or %s - can not load summary data from %s/%s.DATA \n",__func__ , fsmspec_file , smspec_file , path , base);
+    } else {
+      if (path == NULL)
+	util_abort("%s: could not find either %s or %s - can not load summary data from %s.DATA \n",__func__ , fsmspec_file , smspec_file , base);
+      else
+	util_abort("%s: could not find either %s or %s - can not load summary data from %s/%s.DATA \n",__func__ , fsmspec_file , smspec_file , path , base);
+    }
   }
   {
     int files;
