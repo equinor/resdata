@@ -3371,6 +3371,100 @@ bool util_try_lockf(const char * lockfile , mode_t mode , int * __fd) {
 }
 
 
+
+
+/* 
+   This functions parses an input string 'range_string' of the type:
+
+     "0,1,8, 10 - 20 , 15,17-21"
+ 
+   I.e. integers separated by "," and "-". The integer values are
+   parsed out, and the corresponding entries are marked as active in
+   the active array. The active array must be allocated by the calling
+   scope, with length (at least) "max_value + 1".
+   
+   On start all elements in active are initialized to false.
+*/
+   
+
+void util_sscanf_active_range(const char * range_string , int max_value , bool * active) {
+  int iens,iens1,iens2;
+  char  * start_ptr = (char *) range_string;
+  char  * end_ptr;
+  for (iens = 0; iens <= max_value; iens++)
+    active[iens] = false;
+
+  while (start_ptr != NULL) {
+    iens1 = strtol(start_ptr , &end_ptr , 10);
+    if (iens1 > max_value)
+      util_abort("%s: to large value \n",__func__);
+
+    if (end_ptr == start_ptr) 
+      util_abort("%s: failed to parse integer from: %s \n",__func__ , start_ptr);
+    
+    /* OK - we have found the first integer, now there are three possibilities:
+       
+    1. The string contains nothing more (except) possibly whitespace.
+    2. The next characters are " , " - with more or less whitespace.
+    3. The next characters are " - " - with more or less whitespace.
+    
+    Otherwise it is a an invalid string.
+    */
+    /*
+      Starting with skipping whitespace.
+    */
+    active[iens1] = true;
+    start_ptr = end_ptr;
+    while (start_ptr[0] != '\0' && start_ptr[0] == ' ')
+      start_ptr++;
+    
+    if (start_ptr[0] == '\0') /* We have found the end */
+      start_ptr = NULL;
+    else {
+      /* OK - now we can point at "," or "-" - else malformed string. */
+      if (start_ptr[0] == ',' || start_ptr[0] == '-') {
+	if (start_ptr[0] == '-') {
+	  start_ptr++; /* Skipping the "-" */
+	  while (start_ptr[0] != '\0' && start_ptr[0] == ' ')
+	    start_ptr++;
+	  if (start_ptr[0] == '\0')
+	    util_abort("%s[0]: malformed string: %s \n",__func__ , start_ptr);
+	  iens2 = strtol(start_ptr , &end_ptr , 10);
+	  if (iens2 > max_value)
+	    util_abort("%s: to large value \n",__func__);
+	  
+	  if (end_ptr == start_ptr) 
+	    util_abort("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
+	  
+	  if (iens2 < iens1)
+	    util_abort("%s[2]: invalid interval - must have increasing range \n",__func__);
+	  
+	  start_ptr = end_ptr;
+	  { 
+	    int iens;
+	    for (iens = iens1; iens <= iens2; iens++)
+	      active[iens] = true;
+	  }
+	  
+	  while (start_ptr[0] != '\0' && start_ptr[0] == ' ')
+	    start_ptr++;
+	  
+	  if (start_ptr[0] == '\0')
+	    start_ptr = NULL; /* We are done */
+	  else {
+	    if (start_ptr[0] == ',')
+	      start_ptr++;
+	    else
+	      util_abort("%s[3]: malformed string: %s \n",__func__ , start_ptr);
+	  }
+	} else 
+	  start_ptr++;  /* Skipping "," */
+      } else 
+	util_abort("%s[4]: malformed string: %s \n",__func__ , start_ptr);
+    }
+  }
+}
+
 #include "util_path.c"
 
 /*void util_read_file(const char * _prompt , const char * path , bool must_exist , char * file) {
