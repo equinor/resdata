@@ -522,14 +522,14 @@ static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 	    {
 	      int iread = fscanf(stream , ecl_kw->read_fmt , (int *) &ecl_kw->data[offset]);
 	      if (iread != 1) 
-		util_abort("%s: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
+		util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header , fortio_filename_ref(fortio));
 	    }
 	    break;
 	  case(ecl_float_type): 
 	    {
 	      int iread = fscanf(stream , ecl_kw->read_fmt , (float *) &ecl_kw->data[offset]);
 	      if (iread != 1) 
-		util_abort("%s: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
+		util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header , fortio_filename_ref(fortio));
 	    }
 	    break;
 	  case(ecl_double_type):
@@ -552,9 +552,9 @@ static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 		  end_ptr1 = end_ptr2;
 		}
 		if (end_ptr1[0] != '\0') 
-		  util_abort("%s: 2: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
+		  util_abort("%s: 2: after reading %d values reading of keyword:%s failed - aborting (FILE: %s)\n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header , fortio_filename_ref(fortio));
 	      } else 
-		util_abort("%s: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
+		util_abort("%s: after reading %d values reading of keyword:%s failed - aborting (FILE: %s) \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header , fortio_filename_ref(fortio));
 
 	      ecl_kw_iset(ecl_kw , index , &value);
 	    }

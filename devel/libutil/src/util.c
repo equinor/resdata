@@ -3467,19 +3467,3 @@ void util_sscanf_active_range(const char * range_string , int max_value , bool *
 
 #include "util_path.c"
 
-/*void util_read_file(const char * _prompt , const char * path , bool must_exist , char * file) {
-  char * prompt = util_alloc_string_sum2(_prompt , path);
-  char _file[256];
-  bool ok = false;
-  while (!ok) {
-    util_read_string(prompt , strlen(prompt) + 5 , _file);
-    if (must_exist)
-      ok = util_path_exists(path);
-    else
-      ok = true;
-    if (!ok) 
-      fprintf(stderr,"Path: %s does not exist - try again.\n",path);
-  }
-}
-*/
-  
