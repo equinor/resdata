@@ -60,10 +60,8 @@ static const char *ecl_kw_header_write_fmt = " '%-8s' %11d '%-4s'\n";
 /******************************************************************/
 
 static void ecl_kw_assert_index(const ecl_kw_type *ecl_kw , int index, const char *caller) {
-  if (index < 0 || index >= ecl_kw->size) {
-    fprintf(stderr,"Invalid index lookup in:%s aborting \n",caller);
-    abort();
-  }
+  if (index < 0 || index >= ecl_kw->size) 
+    util_abort("%s: Invalid index lookup. \n",caller);
 }
 
 
@@ -79,9 +77,9 @@ static const char * __get_ecl_str_type(ecl_type_enum ecl_type) {
 static ecl_type_enum __get_ecl_type(const char *ecl_type_str) {
   if (strlen(ecl_type_str) != ecl_type_len) {
     fprintf(stderr,"Type string: <%s> \n",ecl_type_str);
-    fprintf(stderr,"Fatal error in %s eclipse_type:%s not %d characters long - aborting \n",__func__,ecl_type_str, ecl_type_len);
-    abort();
+    util_abort("%s: Fatal error: eclipse_type:%s not %d characters long - aborting \n",__func__,ecl_type_str, ecl_type_len);
   }
+
   {
     int i, ecl_type;
     ecl_type = -1;
@@ -89,10 +87,9 @@ static ecl_type_enum __get_ecl_type(const char *ecl_type_str) {
       if (strncmp(ecl_type_str , ecl_type_map[i] , ecl_type_len) == 0)
 	 ecl_type = i;
     }
-    if (ecl_type == -1) {
-      fprintf(stderr,"%s: Fatal error: eclipse_type :%s not recognized - aborting \n",__func__ , ecl_type_str);
-      abort();
-    }
+    if (ecl_type == -1) 
+      util_abort("%s: Fatal error: eclipse_type :%s not recognized - aborting \n",__func__ , ecl_type_str);
+    
     return ecl_type;
   }
 }
@@ -129,10 +126,9 @@ static bool ecl_kw_string_eq(const char *s1 , const char *s2) {
   const int  len2       = strlen(short_kw);
   int index;
   bool eq = true;
-  if (len1 > ecl_str_len) {
-    fprintf(stderr,"%s : eclipse keyword:%s is too long - aborting \n",__func__ , long_kw);
-    abort();
-  }
+  if (len1 > ecl_str_len) 
+    util_abort("%s : eclipse keyword:%s is too long - aborting \n",__func__ , long_kw);
+  
   for (index = 0; index < len2; index++)
     eq = eq & (long_kw[index] == short_kw[index]);
   if (eq) {
@@ -195,20 +191,17 @@ int ecl_kw_cmp(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2 , int *ind
 
 
 void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
-  if (!ecl_kw->shared_data) {
-    fprintf(stderr,"%s: trying to set shared data reference for ecl_kw object which has been allocated with private storage - aborting \n",__func__);
-    abort();
-  }
+  if (!ecl_kw->shared_data) 
+    util_abort("%s: trying to set shared data reference for ecl_kw object which has been allocated with private storage - aborting \n",__func__);
+  
   ecl_kw->data = data_ptr;
 }
 
 
 static void ecl_kw_set_shared(ecl_kw_type * ecl_kw) {
   if (!ecl_kw->shared_data) {
-    if (ecl_kw->data != NULL) {
-      fprintf(stderr,"%s: can not change to shared for keyword with allocated storage - aborting \n",__func__);
-      abort();
-    }
+    if (ecl_kw->data != NULL) 
+      util_abort("%s: can not change to shared for keyword with allocated storage - aborting \n",__func__);
   }
   ecl_kw->shared_data = true;
 }
@@ -332,12 +325,10 @@ void ecl_kw_iget(const ecl_kw_type *ecl_kw , int i , void *iptr) {
 #define ECL_KW_IGET_TYPED(type)                                						    \
 type ecl_kw_iget_ ## type(const ecl_kw_type * ecl_kw, int i) { 						    \
   type value;                                                  						    \
-  if (ecl_kw_get_type(ecl_kw) != ecl_ ## type ## _type) {            						    \
-    fprintf(stderr,"%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header_ref(ecl_kw)); \
-    abort();                                                                                                \
-  }                                                                                                         \
+  if (ecl_kw_get_type(ecl_kw) != ecl_ ## type ## _type)             					    \
+    util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header_ref(ecl_kw));     \
   ecl_kw_iget_static(ecl_kw , i , &value);                                                                  \
- return value;                                                                                              \
+  return value;                                                                                             \
 }                                                                                                           \
 
 ECL_KW_IGET_TYPED(double);
@@ -348,10 +339,8 @@ ECL_KW_IGET_TYPED(int);
 
 #define ECL_KW_ISET_TYPED(type)                                						    \
 void ecl_kw_iset_ ## type(ecl_kw_type * ecl_kw, int i, type value) {    			            \
-  if (ecl_kw_get_type(ecl_kw) != ecl_ ## type ## _type) {            					    \
-    fprintf(stderr,"%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header_ref(ecl_kw)); \
-    abort();                                                                                                \
-  }                                                                                                         \
+  if (ecl_kw_get_type(ecl_kw) != ecl_ ## type ## _type)             					    \
+    util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header_ref(ecl_kw));     \
   ecl_kw_iset_static(ecl_kw , i , &value);                                                                  \
 }                                                                                                           \
 
@@ -364,11 +353,9 @@ ECL_KW_ISET_TYPED(int);
 
 #define ECL_KW_GET_TYPED_PTR(type)                                					    \
 type * ecl_kw_get_ ## type ## _ptr(const ecl_kw_type * ecl_kw) {       		                            \
-  if (ecl_kw_get_type(ecl_kw) != ecl_ ## type ## _type) {            					    \
-    fprintf(stderr,"%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header_ref(ecl_kw)); \
-    abort();                                                                                                \
- }                                                                                                          \
- return (type *) ecl_kw->data;                                                                              \
+  if (ecl_kw_get_type(ecl_kw) != ecl_ ## type ## _type)             					    \
+    util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header_ref(ecl_kw));     \
+  return (type *) ecl_kw->data;                                                                             \
 }                                                                                                           
 
 ECL_KW_GET_TYPED_PTR(double);
@@ -388,6 +375,7 @@ void * ecl_kw_iget_ptr(const ecl_kw_type *ecl_kw , int i) {
 void ecl_kw_iset(ecl_kw_type *ecl_kw , int i , const void *iptr) { 
   ecl_kw_iset_static(ecl_kw , i , iptr);
 }
+
 
 static void ecl_kw_init_types(ecl_kw_type *ecl_kw, ecl_type_enum ecl_type) {
   ecl_kw->ecl_type = ecl_type;
@@ -460,8 +448,7 @@ static void ecl_kw_init_types(ecl_kw_type *ecl_kw, ecl_type_enum ecl_type) {
     ecl_kw->blocksize    = ecl_num_blocksize;
     break;
   default:
-    fprintf(stderr,"Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
-    abort();
+    util_abort("%s: Internal error: internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
   }
 }
 
@@ -534,19 +521,15 @@ static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 	  case(ecl_int_type):
 	    {
 	      int iread = fscanf(stream , ecl_kw->read_fmt , (int *) &ecl_kw->data[offset]);
-	      if (iread != 1) {
-		fprintf(stderr,"%s: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
-		abort();
-	      }
+	      if (iread != 1) 
+		util_abort("%s: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
 	    }
 	    break;
 	  case(ecl_float_type): 
 	    {
 	      int iread = fscanf(stream , ecl_kw->read_fmt , (float *) &ecl_kw->data[offset]);
-	      if (iread != 1) {
-		fprintf(stderr,"%s: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
-		abort();
-	      }
+	      if (iread != 1) 
+		util_abort("%s: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
 	    }
 	    break;
 	  case(ecl_double_type):
@@ -568,14 +551,10 @@ static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 		  value *= exp(log(10.0) * power);
 		  end_ptr1 = end_ptr2;
 		}
-		if (end_ptr1[0] != '\0') {
-		  fprintf(stderr,"%s: 2: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
-		  abort();
-		}
-	      } else {
-		fprintf(stderr,"%s: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
-		abort();
-	      }
+		if (end_ptr1[0] != '\0') 
+		  util_abort("%s: 2: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
+	      } else 
+		util_abort("%s: after reading %d values reading of keyword:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header);
 
 	      ecl_kw_iset(ecl_kw , index , &value);
 	    }
@@ -588,18 +567,15 @@ static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 		ecl_kw_iset(ecl_kw , index , &fortran_int_true);
 	      else if (bool_char == char_false)
 		ecl_kw_iset(ecl_kw , index , &fortran_int_false);
-	      else {
-		printf("Logical value: [%c] not recogniced - aborting \n", bool_char);
-		exit(1);
-	      }
+	      else 
+		util_abort("%s: Logical value: [%c] not recogniced - aborting \n", __func__ , bool_char);
 	    }
 	    break;
 	  case(ecl_mess_type):
 	    ecl_kw_fscanf_qstring(&ecl_kw->data[offset] , ecl_kw->read_fmt , 8 , stream);
 	    break;
 	  default:
-	    fprintf(stderr,"Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
-	    abort();
+	    util_abort("%s: Internal error: internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
 	  }
 	  offset += ecl_kw->sizeof_ctype;
 	  index++;
@@ -730,10 +706,9 @@ bool ecl_kw_fseek_kw(const char * kw , bool rewind , bool abort_on_error , forti
     }
   }
   if (!kw_found) {
-    if (abort_on_error) {
-      fprintf(stderr,"%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , fortio_filename_ref(fortio));
-      abort();
-    }
+    if (abort_on_error) 
+      util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , fortio_filename_ref(fortio));
+    
     fseek(stream , init_pos , SEEK_SET);
   }
   
@@ -768,10 +743,9 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
       if (!cont) fseek(stream , current_pos , SEEK_SET);
     } while (cont);
   } else {
-    if (abort_on_error) {
-      fprintf(stderr,"%s: could not locate keyword:%s - aborting \n",__func__ , kw);
-      abort();
-    } else
+    if (abort_on_error) 
+      util_abort("%s: could not locate keyword:%s - aborting \n",__func__ , kw);
+    else
       fseek(stream , init_pos , SEEK_SET);
   }
   return kw_found;
@@ -781,10 +755,9 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
 
 
 void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
-  if (ecl_kw->shared_data) {
-    fprintf(stderr,"%s: trying to allocate data for ecl_kw object which has been declared with shared storage - aborting \n",__func__);
-    abort();
-  }
+  if (ecl_kw->shared_data) 
+    util_abort("%s: trying to allocate data for ecl_kw object which has been declared with shared storage - aborting \n",__func__);
+  
   ecl_kw->data = util_realloc(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , __func__);
 }
 
@@ -809,10 +782,9 @@ void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
 void ecl_kw_set_header(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *ecl_str_type ) {
   ecl_kw->ecl_type = __get_ecl_type(ecl_str_type);
   ecl_kw_init_types(ecl_kw , __get_ecl_type(ecl_str_type));
-  if (strlen(header) > ecl_str_len) {
-    fprintf(stderr," Fatal error in %s ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
-    abort();
-  }
+  if (strlen(header) > ecl_str_len) 
+    util_abort("%s: Fatal error: ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
+  
   ecl_kw_set_header_name(ecl_kw , header);
   ecl_kw->size = size;
 }
@@ -1032,8 +1004,7 @@ static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio)
 	FPRINTF_BLOCK_BOOL(ecl_kw , elements , tmp_bool , stream);
 	break;
       default:
-	 fprintf(stderr,"Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
-	 abort();
+	util_abort("%s: Internal error:  internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
       }
     } else {
       int sizeof_ctype = (ecl_kw->ecl_type == ecl_char_type) ? ecl_str_len * sizeof(char) : ecl_kw->sizeof_ctype;
@@ -1142,10 +1113,8 @@ void ecl_kw_cfwrite(const ecl_kw_type * ecl_kw , FILE *stream) {
   ecl_kw_cfwrite_header(ecl_kw , stream);
   {
     int items_written = fwrite(ecl_kw->data , ecl_kw->sizeof_ctype , ecl_kw->size , stream);
-    if (items_written != ecl_kw->size) {
-      fprintf(stderr,"%s: failed to write all data to disk - aborting. \n",__func__);
-      abort();
-    }
+    if (items_written != ecl_kw->size) 
+      util_abort("%s: failed to write all data to disk - aborting. \n",__func__);
   }
 }
 
@@ -1243,10 +1212,9 @@ void ecl_kw_fread_double_param(const char * filename , bool fmt_file , bool endi
   ecl_kw_type   * ecl_kw      = ecl_kw_fread_alloc(fortio);
   fortio_fclose(fortio);
   
-  if (ecl_kw == NULL) {
-    fprintf(stderr,"%s: fatal error: loading parameter from: %s failed - aborting \n",__func__ , filename);
-    abort();
-  }
+  if (ecl_kw == NULL) 
+    util_abort("%s: fatal error: loading parameter from: %s failed - aborting \n",__func__ , filename);
+
   ecl_kw_get_data_as_double(ecl_kw , double_data);
   ecl_kw_free(ecl_kw);
 }
@@ -1332,8 +1300,7 @@ void ecl_kw_scalar_init(ecl_kw_type * ecl_kw , double init_value) {
       break;
     }
   default:
-    fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
-    abort();
+    util_abort("%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
   }
 }
 
@@ -1360,8 +1327,7 @@ void ecl_kw_shift(ecl_kw_type * ecl_kw , double shift_value) {
       break;
     }
   default:
-    fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
-    abort();
+    util_abort("%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
   }
 }
 
@@ -1387,8 +1353,7 @@ void ecl_kw_scale(ecl_kw_type * ecl_kw , double scale_factor) {
       break;
     }
   default:
-    fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
-    abort();
+    util_abort("%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
   }
 }
 
@@ -1398,10 +1363,9 @@ void ecl_kw_inplace_sub(ecl_kw_type * my_kw , const ecl_kw_type * sub_kw) {
 
   int            size = ecl_kw_get_size(my_kw);
   ecl_type_enum type = ecl_kw_get_type(my_kw);
-  if ((size != ecl_kw_get_size(sub_kw)) || (type != ecl_kw_get_type(sub_kw))) {
-    fprintf(stderr,"%s: attempt to subtract to fields of different size - aborting \n",__func__);
-    abort();
-  }
+  if ((size != ecl_kw_get_size(sub_kw)) || (type != ecl_kw_get_type(sub_kw))) 
+    util_abort("%s: attempt to subtract to fields of different size - aborting \n",__func__);
+  
   {
     int i;
     void * my_data        = ecl_kw_get_data_ref(my_kw);
@@ -1425,8 +1389,7 @@ void ecl_kw_inplace_sub(ecl_kw_type * my_kw , const ecl_kw_type * sub_kw) {
 	break;
       }
     default:
-      fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
-      abort();
+      util_abort("%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
     }
 
   }
@@ -1437,10 +1400,8 @@ void ecl_kw_inplace_mul(ecl_kw_type * my_kw , const ecl_kw_type * mul_kw) {
 
   int            size = ecl_kw_get_size(my_kw);
   ecl_type_enum type = ecl_kw_get_type(my_kw);
-  if ((size != ecl_kw_get_size(mul_kw)) || (type != ecl_kw_get_type(mul_kw))) {
-    fprintf(stderr,"%s: attempt to multract to fields of different size - aborting \n",__func__);
-    abort();
-  }
+  if ((size != ecl_kw_get_size(mul_kw)) || (type != ecl_kw_get_type(mul_kw))) 
+    util_abort("%s: attempt to multract to fields of different size - aborting \n",__func__);
   {
     int i;
     void * my_data        = ecl_kw_get_data_ref(my_kw);
@@ -1464,8 +1425,7 @@ void ecl_kw_inplace_mul(ecl_kw_type * my_kw , const ecl_kw_type * mul_kw) {
 	break;
       }
     default:
-      fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
-      abort();
+      util_abort("%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
     }
 
   }
@@ -1476,10 +1436,9 @@ void ecl_kw_inplace_div(ecl_kw_type * my_kw , const ecl_kw_type * div_kw) {
 
   int            size = ecl_kw_get_size(my_kw);
   ecl_type_enum type = ecl_kw_get_type(my_kw);
-  if ((size != ecl_kw_get_size(div_kw)) || (type != ecl_kw_get_type(div_kw))) {
-    fprintf(stderr,"%s: attempt to divtract to fields of different size - aborting \n",__func__);
-    abort();
-  }
+  if ((size != ecl_kw_get_size(div_kw)) || (type != ecl_kw_get_type(div_kw))) 
+    util_abort("%s: attempt to divtract to fields of different size - aborting \n",__func__);
+    
   {
     int i;
     void * my_data        = ecl_kw_get_data_ref(my_kw);
@@ -1503,8 +1462,7 @@ void ecl_kw_inplace_div(ecl_kw_type * my_kw , const ecl_kw_type * div_kw) {
 	break;
       }
     default:
-      fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
-      abort();
+      util_abort("%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
     }
 
   }
@@ -1534,8 +1492,7 @@ void ecl_kw_inplace_inv(ecl_kw_type * my_kw) {
 	break;
       }
     default:
-      fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
-      abort();
+      util_abort("%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
     }
   }
 }
@@ -1549,21 +1506,15 @@ static void ecl_kw_inplace_add__(ecl_kw_type * my_kw , int my_offset , const ecl
   int my_last_index   = my_offset + add_size;
 
   if (different_size_ok) {
-    if (my_last_index >= my_size) {
-      fprintf(stderr,"%s: the last index of the adder will extend beyond the size - aborting \n",__func__);
-      abort();
-    }
+    if (my_last_index >= my_size) 
+      util_abort("%s: the last index of the adder will extend beyond the size - aborting \n",__func__);
   } else {
-    if (my_size != add_size || my_offset != 0) {
-      fprintf(stderr,"%s: attempt to add to fields of different size - aborting \n",__func__);
-      abort();
-    }
+    if (my_size != add_size || my_offset != 0) 
+      util_abort("%s: attempt to add to fields of different size - aborting \n",__func__);
   }
 
-  if (type != ecl_kw_get_type(add_kw)) {
-    fprintf(stderr,"%s: trying to add fields of different type - aborting \n",__func__);
-    abort();
-  }
+  if (type != ecl_kw_get_type(add_kw)) 
+    util_abort("%s: trying to add fields of different type - aborting \n",__func__);
 
   {
     int i;
@@ -1590,8 +1541,7 @@ static void ecl_kw_inplace_add__(ecl_kw_type * my_kw , int my_offset , const ecl
       }
       
     default:
-      fprintf(stderr,"%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
-      abort();
+      util_abort("%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
     }
 
   }
@@ -1610,18 +1560,14 @@ void ecl_kw_inplace_add_subkw(ecl_kw_type * my_kw , int my_offset , const ecl_kw
 
 
 void ecl_kw_merge(ecl_kw_type * main_kw , const ecl_kw_type * sub_kw , const ecl_box_type * ecl_box) {
-  if (main_kw->sizeof_ctype != sub_kw->sizeof_ctype) {
-    fprintf(stderr,"%s: trying to combine two different underlying datatypes - aborting \n",__func__);
-    abort();
-  }
-  if (ecl_kw_get_size(main_kw) != ecl_box_get_total_size(ecl_box)) {
-    fprintf(stderr,"%s box size and total_kw mismatch - aborting \n",__func__);
-    abort();
-  }
-  if (ecl_kw_get_size(sub_kw)   != ecl_box_get_box_size(ecl_box)) {
-    fprintf(stderr,"%s box size and total_kw mismatch - aborting \n",__func__);
-    abort();
-  }
+  if (main_kw->sizeof_ctype != sub_kw->sizeof_ctype) 
+    util_abort("%s: trying to combine two different underlying datatypes - aborting \n",__func__);
+
+  if (ecl_kw_get_size(main_kw) != ecl_box_get_total_size(ecl_box)) 
+    util_abort("%s box size and total_kw mismatch - aborting \n",__func__);
+
+  if (ecl_kw_get_size(sub_kw)   != ecl_box_get_box_size(ecl_box)) 
+    util_abort("%s box size and total_kw mismatch - aborting \n",__func__);
 
   ecl_box_set_values(ecl_box , ecl_kw_get_data_ref(main_kw) , ecl_kw_get_data_ref(sub_kw) , main_kw->sizeof_ctype);
 }
@@ -1747,8 +1693,7 @@ void ecl_kw_max_min(const ecl_kw_type * ecl_kw , void * _max , void *_min) {
     KW_MAX_MIN(int);
     break;
   default:
-    fprintf(stderr,"%s: invalid type for element sum \n",__func__);
-    abort();
+    util_abort("%s: invalid type for element sum \n",__func__);
   }
 }
 
@@ -1781,8 +1726,7 @@ void ecl_kw_element_sum(const ecl_kw_type * ecl_kw , void * _sum) {
     KW_SUM(int);
     break;
   default:
-    fprintf(stderr,"%s: invalid type for element sum \n",__func__);
-    abort();
+    util_abort("%s: invalid type for element sum \n",__func__);
   }
 }
 #undef KW_SUM
