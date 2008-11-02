@@ -49,7 +49,28 @@ static void subst_list_insert__(subst_list_type * subst_list , const char * key 
 }
 
 
+/**
+   There are three different functions for inserting a key-value pair
+   in the subst_list instance. The difference between the three is in
+   which scope takes/has ownership of 'value'. The alternatives are:
 
+    subst_list_insert_ref: In this case the calling scope has full
+       ownership of value, and is consquently responsible for freeing
+       it, and ensuring that stays a valid pointer for the subst_list
+       instance. Probably the most natural function to use when used
+       with static storage, i.e. typically string literals.
+
+    subst_list_insert_owned_ref: In this case the subst_list takes
+       ownership of the value reference, in the sense that it will
+       free it when it is done.
+
+    subst_list_insert_copy: In this case the subst_list takes a copy
+       of value and inserts it. Meaning that the substs_list instance
+       takes repsonibility of freeing, _AND_ the calling scope is free
+       to do wahtever it wants with the value pointer.
+
+*/
+   
 void subst_list_insert_ref(subst_list_type * subst_list , const char * key , const char * value) {
   subst_list_insert__(subst_list , key , value , subst_shared_ref);
 }
@@ -91,6 +112,15 @@ static void subst_list_inplace_update_buffer__(const subst_list_type * subst_lis
 
 
 
+/**
+   This function reads the content of a file, and writes a new file
+   where all substitutions in subst_list have been performed. Observe
+   that target_file and src_file *CAN* point to the same file, in
+   which case this will amount to an inplace update. In that case a
+   backup file is written, and held uring the execution of this
+   function.
+*/
+
 
 void subst_list_filter_file(const subst_list_type * subst_list , const char * src_file , const char * target_file) {
   char * buffer;
@@ -124,15 +154,27 @@ void subst_list_filter_file(const subst_list_type * subst_list , const char * sr
 }
 
 
+/**
+   This function does search-replace on a file inplace.
+*/
 void subst_list_update_file(const subst_list_type * subst_list , const char * file) {
   subst_list_filter_file( subst_list , file , file );
 }
 
 
+/**
+   This function does search-replace on string instance inplace.
+*/
 void subst_list_update_string(const subst_list_type * subst_list , char ** string) {
   subst_list_inplace_update_buffer__(subst_list , string);
 }
 
+
+/**
+   This function allocates a new string where the search-replace
+   operation has been performed.
+*/
+  
 
 char * subst_list_alloc_filtered_string(const subst_list_type * subst_list , const char * string) {
   char * buffer = util_alloc_string_copy( string );
