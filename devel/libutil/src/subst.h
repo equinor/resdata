@@ -13,6 +13,13 @@ void                 subst_list_insert_copy(subst_list_type *  , const char * , 
 void                 subst_list_insert_ref(subst_list_type *  , const char * , const char * );
 void                 subst_list_insert_owned_ref(subst_list_type *  , const char * , const char * );
 
+void 	subst_list_filter_file(const subst_list_type * , const char * , const  char * );
+void 	subst_list_update_file(const subst_list_type * , const char * );
+void    subst_list_update_string(const subst_list_type * , char ** );
+char  * subst_list_alloc_filtered_string(const subst_list_type * , const char * );
+
+
+
 
 #ifdef __cplusplus 
 }
