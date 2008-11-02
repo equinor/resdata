@@ -2026,7 +2026,15 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
 
 
 /**
-   Returns true if at least one substitution has been performed.
+   Returns true if at least one substitution has been
+   performed. Observe that the variable _buffer_size should point to
+   an integer which contains the size of the buffer; this will be
+   updated during run. Observe that *_buffer_size should be the TOTAL
+   size of the buffer, i.e. if if the buffer is terminated with '\0'
+   that should be included in the buffer_size. 
+
+   This function itself does not assume that buffer is '\0' terminated
+   (however expr ans subs must be).
 */
   
 bool static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
