@@ -465,9 +465,9 @@ void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * n
 inline bool ecl_grid_ijk_valid(const ecl_grid_type * grid , int i , int j , int k) {
   bool OK = false;
 
-  if (i > 0 && i < grid->nx)
-    if (j > 0 && j < grid->ny)
-      if (k > 0 && k < grid->nz)
+  if (i >= 0 && i < grid->nx)
+    if (j >= 0 && j < grid->ny)
+      if (k >= 0 && k < grid->nz)
 	OK = true;
   
   return OK;
