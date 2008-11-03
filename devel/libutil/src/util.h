@@ -15,12 +15,6 @@ extern"C" {
 
 #define UTIL_NEWLINE_STRING "\n"
 
-typedef enum {util_filter_warn0         = 0 , 
-	      util_filter_warn_unused   = 1 , 
-	      util_filter_warn_unknown  = 2 , 
-	      util_filter_fatal_unused  = 4 ,                         /* Will abort */
-	      util_filter_fatal_unknown = 8 } util_filter_warn_type;  /* Will abort */
-
 typedef enum {left_pad  = 0,
 	      right_pad = 1,
 	      center    = 2} string_alignement_type;
@@ -138,8 +132,6 @@ void 	util_float_to_double(double * , const float  * , int );
 int 	util_get_month_nr(const char * );
 int 	util_check_month(const char * );
 
-void    util_filtered_fprintf(const char * , int , FILE * , char , char , const hash_type * , util_filter_warn_type  );
-void    util_filter_file(const char * , const char * , const char * , char , char , const hash_type * , util_filter_warn_type);
 char *  util_fread_alloc_file_content(const char * , const char * , int *);
 void    util_fwrite_string(const char * , FILE *);
 char *  util_fread_realloc_string(char *  , FILE *);

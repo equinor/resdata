@@ -6,7 +6,7 @@
 /**
    This file implements a small support struct for search-replace
    operations, along with wrapped calls to
-   util_string_replace_inplace(). 
+   util_string_replace_inplace().
    
    Substitutions can be carried out on files and string in memory
    (char * with \0 termination); and the operations can be carried out
@@ -221,14 +221,22 @@ void subst_list_update_string(const subst_list_type * subst_list , char ** strin
 }
 
 
+
 /**
    This function allocates a new string where the search-replace
    operation has been performed.
 */
-  
 
 char * subst_list_alloc_filtered_string(const subst_list_type * subst_list , const char * string) {
   char * buffer = util_alloc_string_copy( string );
   subst_list_inplace_update_buffer__(subst_list , &buffer);
   return buffer;
+}
+
+
+void subst_list_filtered_fprintf(const subst_list_type * subst_list , const char * string , FILE * stream) {
+  char * copy = util_alloc_string_copy(string);
+  subst_list_inplace_update_buffer__(subst_list , &copy);
+  fprintf(stream , "%s" , copy);  
+  free(copy);
 }
