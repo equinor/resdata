@@ -14,9 +14,9 @@
 */
 
 
-typedef enum { subst_deep_copy   = 1,
+typedef enum { subst_deep_copy   = 1,     
 	       subst_managed_ref = 2,
-	       subst_shared_ref  = 3} subst_insert_type;
+	       subst_shared_ref  = 3} subst_insert_type; /* Mode used in the subst_list_insert__() function */
   
 
 struct subst_list_struct {
@@ -24,6 +24,60 @@ struct subst_list_struct {
 };
 
 
+
+/* 
+   The subst_list type is implemented as a hash of subst_list_node
+   instances. This node type is not exported out of this file scope at
+   all.
+*/
+   
+
+typedef struct {  
+  bool       value_owner;     /* Wether the memory pointed to by value should bee freed.*/
+  char     * value;
+} subst_list_node_type;
+
+
+
+/** Allocates an empty instance with no values. */
+static subst_list_node_type * subst_list_node_alloc() {
+  subst_list_node_type * node = util_malloc(sizeof * node , __func__);
+  node->value       = NULL;
+  node->value_owner = false;
+  return node;
+}
+
+
+static void subst_list_node_free(subst_list_node_type * node) {
+  if (node->value_owner)
+    util_safe_free(node->value);
+  free(node);
+}
+
+
+static void subst_list_node_free__(void * node) {
+  subst_list_node_free( (subst_list_node_type *) node );
+}
+
+
+static void subst_list_node_set(subst_list_node_type * node, const char * __value , subst_insert_type insert_mode) {
+  char * value;
+  /* Free the current content of the node. */
+  if (node->value_owner)
+    node->value = util_safe_free(node->value);
+
+  if (insert_mode == subst_deep_copy)
+    value = util_alloc_string_copy(__value);
+  else
+    value = (char *) __value;
+  
+  if (insert_mode == subst_shared_ref)
+    node->value_owner = false;
+  else
+    node->value_owner = true;
+
+  node->value = value;
+}
 
 subst_list_type * subst_list_alloc() {
   subst_list_type * subst_list = util_malloc(sizeof * subst_list , __func__);
@@ -33,18 +87,11 @@ subst_list_type * subst_list_alloc() {
 
 
 static void subst_list_insert__(subst_list_type * subst_list , const char * key , const char * value , subst_insert_type insert_mode) {
-  switch(insert_mode) {
-  case(subst_deep_copy):
-    hash_insert_hash_owned_ref(subst_list->data , key , util_alloc_string_copy(value) , free);
-    break;
-  case(subst_managed_ref):
-    hash_insert_hash_owned_ref(subst_list->data , key , value , free);
-    break;
-  case(subst_shared_ref):
-    hash_insert_ref(subst_list->data , key , value);
-    break;
-  default:
-    util_abort("%s: internal error : invalid value in switch statement \n",__func__);
+  if (!hash_has_key(subst_list->data , key))
+    hash_insert_hash_owned_ref(subst_list->data , key , subst_list_node_alloc() , subst_list_node_free__);
+  {
+    subst_list_node_type * node = hash_get(subst_list->data , key);
+    subst_list_node_set(node , value , insert_mode);
   }
 }
 
@@ -103,8 +150,11 @@ static void subst_list_inplace_update_buffer__(const subst_list_type * subst_lis
 
   {
     int ikey;
-    for (ikey = 0; ikey < keys; ikey++)
-      util_string_replace_inplace( buffer , &buffer_size , key_list[ikey] , hash_get( subst_list->data , key_list[ikey]));
+    for (ikey = 0; ikey < keys; ikey++) {
+      const subst_list_node_type * node = hash_get( subst_list->data , key_list[ikey]);
+      const char * value = node->value;
+      util_string_replace_inplace( buffer , &buffer_size , key_list[ikey] , value);
+    }
   }
 
   util_free_stringlist(key_list , keys);
@@ -117,7 +167,7 @@ static void subst_list_inplace_update_buffer__(const subst_list_type * subst_lis
    where all substitutions in subst_list have been performed. Observe
    that target_file and src_file *CAN* point to the same file, in
    which case this will amount to an inplace update. In that case a
-   backup file is written, and held uring the execution of this
+   backup file is written, and held, during the execution of the
    function.
 */
 
@@ -148,6 +198,7 @@ void subst_list_filter_file(const subst_list_type * subst_list , const char * sr
     util_fwrite( buffer , 1 , strlen(buffer) , stream , __func__);
     fclose(stream);
   }
+
   /* OK - all went hunka dory - unlink the backup file and leave the building. */
   if (backup_file != NULL) unlink( backup_file );
   free(buffer);

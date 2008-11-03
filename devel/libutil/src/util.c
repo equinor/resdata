@@ -2026,22 +2026,24 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
 
 
 /**
-   Returns true if at least one substitution has been
-   performed. Observe that the variable _buffer_size should point to
-   an integer which contains the size of the buffer; this will be
-   updated during run. Observe that *_buffer_size should be the TOTAL
-   size of the buffer, i.e. if if the buffer is terminated with '\0'
-   that should be included in the buffer_size. 
+   The return value is the number of substitutions which have been
+   performed.
+
+   Observe that the variable _buffer_size should point to an integer
+   which contains the size of the buffer; this will be updated during
+   run. Observe that *_buffer_size should be the TOTAL size of the
+   buffer, i.e. if if the buffer is terminated with '\0' that should
+   be included in the buffer_size.
 */
   
-bool static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
-  bool   substitution_done = false;
+int static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
   char * buffer      	   = *_buffer;
   int    buffer_size 	   = *_buffer_size;
   int len_expr  	   = strlen(expr);
   int len_subs  	   = strlen(subs);
   int    size   	   = strlen(buffer);
   int    offset 	   = 0;     
+  int    match_count       = 0;
 
   char  * match = NULL;
   do {
@@ -2069,19 +2071,19 @@ bool static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , 
       memcpy(&buffer[start_offset] , subs , len_subs);
       offset = start_offset + len_subs;
       size   = new_size;
-      substitution_done = true;
+      match_count++;
     }
   } while (match != NULL && offset < strlen(buffer));
     
     
   *_buffer      = buffer;
   *_buffer_size = buffer_size;
-  return substitution_done;
+  return match_count;
 }
 
 
 
-bool util_string_replace_inplace(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
+int util_string_replace_inplace(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
   return util_string_replace_inplace__(_buffer , _buffer_size , expr , subs);
 }
 
