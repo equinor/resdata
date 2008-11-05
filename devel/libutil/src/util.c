@@ -649,6 +649,12 @@ bool util_sscanf_double(const char * buffer , double * value) {
   char * error_ptr;
 
   double tmp_value = strtod(buffer , &error_ptr);
+  /*
+    Skip trailing white-space
+  */
+  while (error_ptr[0] != '\0' && isspace(error_ptr[0]))
+    error_ptr++;
+  
   if (error_ptr[0] == '\0') {
     value_OK = true; 
     if (value != NULL)
@@ -671,6 +677,14 @@ bool util_sscanf_int(const char * buffer , int * value) {
   char * error_ptr;
 
   int tmp_value = strtol(buffer , &error_ptr , 10);
+
+  /*
+    Skip trailing white-space
+  */
+
+  while (error_ptr[0] != '\0' && isspace(error_ptr[0]))
+    error_ptr++;
+
   if (error_ptr[0] == '\0') {
     value_OK = true; 
     if (value != NULL)

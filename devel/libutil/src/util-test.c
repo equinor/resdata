@@ -24,4 +24,11 @@ int main(int argc , char ** argv) {
   list = util_sscanf_alloc_active_list("1,3,5-10,4-6,1-3" , &length);
   for (int i = 0; i < length; i++)
     printf("list[%d] = %d \n",i , list[i]);
+
+  if (util_sscanf_int("10   " , NULL))
+     printf("OK \n");
+  else
+    printf("ERROR \n");
+		      
 }
+
