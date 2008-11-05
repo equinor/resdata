@@ -2469,9 +2469,13 @@ void * util_malloc(size_t size , const char * caller) {
 */
 
 void * util_alloc_copy(const void * src , size_t byte_size , const char * caller) {
-  void * new = util_malloc(byte_size , caller);
-  memcpy(new , src , byte_size);
-  return new;
+  if (byte_size == 0 && src == NULL)
+    return NULL;
+  {
+    void * new = util_malloc(byte_size , caller);
+    memcpy(new , src , byte_size);
+    return new;
+  }
 }
 
 
@@ -3325,7 +3329,7 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
     iens1 = strtol(start_ptr , &end_ptr , 10);
     if (active != NULL)
       if (iens1 > max_value)
-	util_abort("%s: to large value \n",__func__);
+	fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",iens1 , max_value);
 
     if (end_ptr == start_ptr) 
       util_abort("%s: failed to parse integer from: %s \n",__func__ , start_ptr);
@@ -3341,9 +3345,9 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
     /*
       Starting with skipping whitespace.
     */
-    if (active != NULL)
-      active[iens1] = true;
-    else 
+    if (active != NULL) {
+      if (iens1 <= max_value) active[iens1] = true;
+    } else 
       __add_item__(&active_list , &current_length , &list_length , iens1);
     
     
@@ -3365,7 +3369,7 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
 	  iens2 = strtol(start_ptr , &end_ptr , 10);
 	  if (active != NULL)
 	    if (iens2 > max_value)
-	      util_abort("%s: to large value \n",__func__);
+	      fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",iens1 , max_value);
 	  
 	  if (end_ptr == start_ptr) 
 	    util_abort("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
@@ -3377,9 +3381,9 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
 	  { 
 	    int iens;
 	    for (iens = iens1 + 1; iens <= iens2; iens++) {
-	      if (active != NULL) 
-		active[iens] = true;
-	      else
+	      if (active != NULL) {
+		if (iens <= max_value) active[iens] = true;
+	      } else
 		__add_item__(&active_list , &current_length , &list_length , iens);
 	    }
 	  }
