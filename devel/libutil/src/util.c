@@ -3251,6 +3251,24 @@ bool util_try_lockf(const char * lockfile , mode_t mode , int * __fd) {
 
 
 
+static void  __add_item__(int **_active_list , int * _current_length , int *_list_length , int value) {
+  int *active_list    = *_active_list;
+  int  current_length = *_current_length;
+  int  list_length    = *_list_length;
+
+  active_list[current_length] = value;
+  current_length++;
+  if (current_length == list_length) {
+    list_length *= 2;
+    active_list  = util_realloc( active_list , list_length * sizeof * active_list , __func__);
+    
+    *_active_list = active_list;
+    *_list_length = list_length;
+  }
+  *_current_length = current_length;
+}
+
+
 
 /* 
    This functions parses an input string 'range_string' of the type:
@@ -3258,25 +3276,42 @@ bool util_try_lockf(const char * lockfile , mode_t mode , int * __fd) {
      "0,1,8, 10 - 20 , 15,17-21"
  
    I.e. integers separated by "," and "-". The integer values are
-   parsed out, and the corresponding entries are marked as active in
-   the active array. The active array must be allocated by the calling
-   scope, with length (at least) "max_value + 1".
-   
-   On start all elements in active are initialized to false.
+   parsed out. The result can be returned in two different ways:
+
+
+    o If active != NULL the entries in active (corresponding to the
+      values in the range) are marked as true. All other entries are
+      marked as false. The active array must be allocated by the
+      calling scope, with length (at least) "max_value + 1".
+
+    o If active == NULL - an (int *) pointer is allocated, and filled
+      with the active indices.
+
 */
    
 
-void util_sscanf_active_range(const char * range_string , int max_value , bool * active) {
-  int iens,iens1,iens2;
+static int * util_sscanf_active_range__(const char * range_string , int max_value , bool * active , int * _list_length) {
+  int *active_list    = NULL;
+  int  current_length = 0;
+  int  list_length;
+  int  iens,iens1,iens2;
   char  * start_ptr = (char *) range_string;
   char  * end_ptr;
-  for (iens = 0; iens <= max_value; iens++)
-    active[iens] = false;
+  
+  if (active != NULL) {
+    for (iens = 0; iens <= max_value; iens++)
+      active[iens] = false;
+  } else {
+    list_length = 10;
+    active_list = util_malloc( list_length * sizeof * active_list , __func__);
+  }
+    
 
   while (start_ptr != NULL) {
     iens1 = strtol(start_ptr , &end_ptr , 10);
-    if (iens1 > max_value)
-      util_abort("%s: to large value \n",__func__);
+    if (active != NULL)
+      if (iens1 > max_value)
+	util_abort("%s: to large value \n",__func__);
 
     if (end_ptr == start_ptr) 
       util_abort("%s: failed to parse integer from: %s \n",__func__ , start_ptr);
@@ -3292,7 +3327,12 @@ void util_sscanf_active_range(const char * range_string , int max_value , bool *
     /*
       Starting with skipping whitespace.
     */
-    active[iens1] = true;
+    if (active != NULL)
+      active[iens1] = true;
+    else 
+      __add_item__(&active_list , &current_length , &list_length , iens1);
+    
+    
     start_ptr = end_ptr;
     while (start_ptr[0] != '\0' && start_ptr[0] == ' ')
       start_ptr++;
@@ -3309,8 +3349,9 @@ void util_sscanf_active_range(const char * range_string , int max_value , bool *
 	  if (start_ptr[0] == '\0')
 	    util_abort("%s[0]: malformed string: %s \n",__func__ , start_ptr);
 	  iens2 = strtol(start_ptr , &end_ptr , 10);
-	  if (iens2 > max_value)
-	    util_abort("%s: to large value \n",__func__);
+	  if (active != NULL)
+	    if (iens2 > max_value)
+	      util_abort("%s: to large value \n",__func__);
 	  
 	  if (end_ptr == start_ptr) 
 	    util_abort("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
@@ -3321,8 +3362,12 @@ void util_sscanf_active_range(const char * range_string , int max_value , bool *
 	  start_ptr = end_ptr;
 	  { 
 	    int iens;
-	    for (iens = iens1; iens <= iens2; iens++)
-	      active[iens] = true;
+	    for (iens = iens1 + 1; iens <= iens2; iens++) {
+	      if (active != NULL) 
+		active[iens] = true;
+	      else
+		__add_item__(&active_list , &current_length , &list_length , iens);
+	    }
 	  }
 	  
 	  while (start_ptr[0] != '\0' && start_ptr[0] == ' ')
@@ -3342,7 +3387,21 @@ void util_sscanf_active_range(const char * range_string , int max_value , bool *
 	util_abort("%s[4]: malformed string: %s \n",__func__ , start_ptr);
     }
   }
+  if (_list_length != NULL)
+    *_list_length = current_length;
+
+  return active_list;
 }
+
+
+void util_sscanf_active_range(const char * range_string , int max_value , bool * active) {
+  util_sscanf_active_range__(range_string , max_value , active , NULL);
+}
+
+int * util_sscanf_alloc_active_list(const char * range_string , int * list_length) {
+  return util_sscanf_active_range__(range_string , 0 , NULL , list_length);
+}
+
 
 #include "util_path.c"
 

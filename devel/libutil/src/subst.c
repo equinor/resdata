@@ -153,7 +153,8 @@ static void subst_list_inplace_update_buffer__(const subst_list_type * subst_lis
     for (ikey = 0; ikey < keys; ikey++) {
       const subst_list_node_type * node = hash_get( subst_list->data , key_list[ikey]);
       const char * value = node->value;
-      util_string_replace_inplace( buffer , &buffer_size , key_list[ikey] , value);
+      if (value != NULL)
+	util_string_replace_inplace( buffer , &buffer_size , key_list[ikey] , value);
     }
   }
 
