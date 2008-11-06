@@ -56,6 +56,7 @@ ecl_box.o          : ecl_box.c ecl_box.h
 ecl_io_config.o    : ecl_io_config.c ecl_io_config.h ecl_util.o
 
 # Source code for binaries - based on library
+view_rft.o     : view_rft.c 	
 ecl_test.o     : ecl_test.c 	
 convert.o      : convert.c  	
 kw_list.o      : kw_list.c  	
@@ -70,9 +71,9 @@ view_summary.o : view_summary.c
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x
 BIN	:  $(BIN_FILES) 
-BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x
+BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x
 
 ecl_test.x: $(LIB) ecl_test.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_test.o -o ecl_test.x $(LIB_PATH) $(LIB_LINK)
@@ -91,5 +92,8 @@ grid_info.x: $(LIB) grid_info.o
 
 summary.x: $(LIB) view_summary.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  view_summary.o -o summary.x $(LIB_PATH)  $(LIB_LINK)
+
+rft.x: $(LIB) view_rft.o
+	$(LD) -$(MFLAG) $(LDFLAGS)  view_rft.o -o rft.x $(LIB_PATH)  $(LIB_LINK)
 
 

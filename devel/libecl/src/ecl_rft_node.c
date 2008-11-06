@@ -21,7 +21,8 @@ struct ecl_rft_node_struct {
 
   bool    vertical_well;
   ecl_rft_enum data_type;
-  time_t       recording_time;
+  time_t       recording_date;
+  double       days;
   /*float        double_time;*/
   double       *P , *SWAT , *SGAS, *DEPTH;
 };
@@ -62,10 +63,8 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_block_type * rft_block) {
       rft_node->data_type = RFT;
     else if (strchr(tmp , 'S') != NULL)
       rft_node->data_type = SEGMENT;
-    else {
-      fprintf(stderr,"%s: Could not determine type of RFT/PLT/SEGMENT data - aborting\n",__func__);
-      abort();
-    }
+    else 
+      util_abort("%s: Could not determine type of RFT/PLT/SEGMENT data - aborting\n",__func__);
   }
   /*
     Should check type before allocating .... 
@@ -86,7 +85,8 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_block_type * rft_block) {
 
  
     ecl_kw_get_memcpy_data(ecl_block_get_kw(rft_block , "DATE") , time3);
-    rft_node->recording_time = util_make_date(time3[0] , time3[1] , time3[2]);
+    rft_node->recording_date = util_make_date(time3[0] , time3[1] , time3[2]);
+    rft_node->days           = ecl_kw_iget_float( ecl_block_get_kw( rft_block , "TIME" ) , 0);
     {
       int i;
       rft_node->vertical_well = true;
@@ -133,8 +133,8 @@ void ecl_rft_node_summarize(const ecl_rft_node_type * rft_node , bool print_cell
   printf("Vertical well....: %d \n",rft_node->vertical_well);
   {
     int day , month , year;
-    util_set_date_values(rft_node->recording_time , &day , &month , &year);
-    printf("Recording time...: %02d/%02d/%4d\n" , day , month , year);
+    util_set_date_values(rft_node->recording_date , &day , &month , &year);
+    printf("Recording time...: %02d/%02d/%4d / %g days \n" , day , month , year , rft_node->days);
   }
   printf("--------------------------------------------------------------\n");
   if (print_cells) {
@@ -364,4 +364,4 @@ int         ecl_rft_node_get_size(const ecl_rft_node_type * rft_node) { return r
 const int * ecl_rft_node_get_i (const ecl_rft_node_type * rft_node) { return rft_node->i; }
 const int * ecl_rft_node_get_j (const ecl_rft_node_type * rft_node) { return rft_node->j; }
 const int * ecl_rft_node_get_k (const ecl_rft_node_type * rft_node) { return rft_node->k; }
-time_t      ecl_rft_node_get_recording_time(const ecl_rft_node_type * rft_node) { return rft_node->recording_time; }
+time_t      ecl_rft_node_get_recording_date(const ecl_rft_node_type * rft_node) { return rft_node->recording_date; }

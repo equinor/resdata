@@ -34,20 +34,24 @@ static void ecl_rft_vector_add_node(ecl_rft_vector_type * rft_vector , const ecl
 
 
 
-ecl_rft_vector_type * ecl_rft_vector_alloc(const char * filename , bool endian_convert) {
-  ecl_rft_vector_type * rft_vector = ecl_rft_vector_alloc_empty(filename);
-  ecl_fstate_type     * fstate     = ecl_fstate_fread_alloc(1 , (const char **) &filename , ecl_rft_file , endian_convert , false);
-  int size                         = ecl_fstate_get_size(fstate);
-  int block_nr;
-
-  for (block_nr = 0; block_nr < size; block_nr++) {
-    ecl_rft_node_type *rft_node = ecl_rft_node_alloc(ecl_fstate_iget_block(fstate , block_nr));
-    if (rft_node != NULL) 
-      ecl_rft_vector_add_node(rft_vector , rft_node);
+ecl_rft_vector_type * ecl_rft_vector_alloc(const char * filename) {
+  bool endian_flip;
+  fortio_guess_endian_flip( filename , &endian_flip);
+  {
+    ecl_rft_vector_type * rft_vector = ecl_rft_vector_alloc_empty(filename);
+    ecl_fstate_type     * fstate     = ecl_fstate_fread_alloc(1 , (const char **) &filename , ecl_rft_file , endian_flip , false);
+    int size                         = ecl_fstate_get_size(fstate);
+    int block_nr;
+    
+    for (block_nr = 0; block_nr < size; block_nr++) {
+      ecl_rft_node_type *rft_node = ecl_rft_node_alloc(ecl_fstate_iget_block(fstate , block_nr));
+      if (rft_node != NULL) 
+	ecl_rft_vector_add_node(rft_vector , rft_node);
+    }
+    
+    ecl_fstate_free(fstate);
+    return rft_vector;
   }
-  
-  ecl_fstate_free(fstate);
-  return rft_vector;
 }
 
 
@@ -98,8 +102,10 @@ void ecl_rft_vector_free(ecl_rft_vector_type * rft_vector) {
 void ecl_rft_vector_summarize(const ecl_rft_vector_type * rft_vector , bool show_completions) {
   int wells , iw;
   char ** well_list = ecl_rft_vector_alloc_well_list(rft_vector , &wells);
-  for (iw = 0; iw < wells; iw++)
+  for (iw = 0; iw < wells; iw++) {
     ecl_rft_node_summarize(ecl_rft_vector_get_node(rft_vector , well_list[iw]) , show_completions);
+    printf("\n");
+  }
   util_free_stringlist(well_list , wells);
 }
 
