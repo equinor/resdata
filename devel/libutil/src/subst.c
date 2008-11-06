@@ -59,7 +59,9 @@ static void subst_list_node_free__(void * node) {
   subst_list_node_free( (subst_list_node_type *) node );
 }
 
-
+/**
+   __value can be NULL. 
+*/
 static void subst_list_node_set(subst_list_node_type * node, const char * __value , subst_insert_type insert_mode) {
   char * value;
   /* Free the current content of the node. */
@@ -75,7 +77,7 @@ static void subst_list_node_set(subst_list_node_type * node, const char * __valu
     node->value_owner = false;
   else
     node->value_owner = true;
-
+  
   node->value = value;
 }
 

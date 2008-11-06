@@ -3287,6 +3287,32 @@ static void  __add_item__(int **_active_list , int * _current_length , int *_lis
 }
 
 
+/**
+   This function finds the current linenumber (by counting '\n'
+   characters) in a currently open stream. It is an extremely
+   primitive routine, and should only be used exceptionally.
+
+   Observe that it implements "natural" counting, starting at line_nr
+   1, and not line_nr 0.
+*/
+
+int util_get_current_linenr(FILE * stream) {
+  long init_pos = ftell(stream);
+  int line_nr   = 0;
+  fseek( stream , 0L , SEEK_SET);
+  {
+    int char_nr;
+    int c;
+    for (char_nr = 0; char_nr < init_pos; char_nr++) {
+      c = fgetc(stream);
+      if (c == '\n')
+	line_nr++;
+    }
+  }
+  return line_nr;
+}
+
+
 
 /* 
    This functions parses an input string 'range_string' of the type:
@@ -3312,13 +3338,13 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
   int *active_list    = NULL;
   int  current_length = 0;
   int  list_length;
-  int  iens,iens1,iens2;
+  int  value,value1,value2;
   char  * start_ptr = (char *) range_string;
   char  * end_ptr;
   
   if (active != NULL) {
-    for (iens = 0; iens <= max_value; iens++)
-      active[iens] = false;
+    for (value = 0; value <= max_value; value++)
+      active[value] = false;
   } else {
     list_length = 10;
     active_list = util_malloc( list_length * sizeof * active_list , __func__);
@@ -3326,11 +3352,10 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
     
 
   while (start_ptr != NULL) {
-    iens1 = strtol(start_ptr , &end_ptr , 10);
-    if (active != NULL)
-      if (iens1 > max_value)
-	fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",iens1 , max_value);
-
+    value1 = strtol(start_ptr , &end_ptr , 10);
+    if (active != NULL && value1 > max_value)
+      fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value1 , max_value);
+    
     if (end_ptr == start_ptr) 
       util_abort("%s: failed to parse integer from: %s \n",__func__ , start_ptr);
     
@@ -3342,54 +3367,61 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
     
     Otherwise it is a an invalid string.
     */
-    /*
-      Starting with skipping whitespace.
-    */
+
+
+    /* Storing the value. */
     if (active != NULL) {
-      if (iens1 <= max_value) active[iens1] = true;
+      if (value1 <= max_value) active[value1] = true;
     } else 
-      __add_item__(&active_list , &current_length , &list_length , iens1);
-    
-    
+      __add_item__(&active_list , &current_length , &list_length , value1);
+
+
+
+    /* Skipping trailing whitespace. */
     start_ptr = end_ptr;
-    while (start_ptr[0] != '\0' && start_ptr[0] == ' ')
+    while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
       start_ptr++;
+    
     
     if (start_ptr[0] == '\0') /* We have found the end */
       start_ptr = NULL;
     else {
       /* OK - now we can point at "," or "-" - else malformed string. */
       if (start_ptr[0] == ',' || start_ptr[0] == '-') {
-	if (start_ptr[0] == '-') {
+	if (start_ptr[0] == '-') {  /* This is a range */
 	  start_ptr++; /* Skipping the "-" */
-	  while (start_ptr[0] != '\0' && start_ptr[0] == ' ')
+	  while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
 	    start_ptr++;
-	  if (start_ptr[0] == '\0')
-	    util_abort("%s[0]: malformed string: %s \n",__func__ , start_ptr);
-	  iens2 = strtol(start_ptr , &end_ptr , 10);
-	  if (active != NULL)
-	    if (iens2 > max_value)
-	      fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",iens1 , max_value);
 	  
+	  if (start_ptr[0] == '\0') 
+	    /* The range just ended - without second value. */
+	    util_abort("%s[0]: malformed string: %s \n",__func__ , start_ptr);
+
+	  value2 = strtol(start_ptr , &end_ptr , 10);
 	  if (end_ptr == start_ptr) 
 	    util_abort("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
+
+	  if (active != NULL && value2 > max_value)
+	    fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value1 , max_value);
 	  
-	  if (iens2 < iens1)
+	  if (value2 < value1)
 	    util_abort("%s[2]: invalid interval - must have increasing range \n",__func__);
 	  
 	  start_ptr = end_ptr;
 	  { 
-	    int iens;
-	    for (iens = iens1 + 1; iens <= iens2; iens++) {
+	    int value;
+	    for (value = value1 + 1; value <= value2; value++) {
 	      if (active != NULL) {
-		if (iens <= max_value) active[iens] = true;
+		if (value <= max_value) active[value] = true;
 	      } else
-		__add_item__(&active_list , &current_length , &list_length , iens);
+		__add_item__(&active_list , &current_length , &list_length , value);
 	    }
 	  }
 	  
-	  while (start_ptr[0] != '\0' && start_ptr[0] == ' ')
+	  /* Skipping trailing whitespace. */
+	  while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
 	    start_ptr++;
+	  
 	  
 	  if (start_ptr[0] == '\0')
 	    start_ptr = NULL; /* We are done */
@@ -3401,6 +3433,19 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
 	  }
 	} else 
 	  start_ptr++;  /* Skipping "," */
+
+	/**
+	   When this loop is finished the start_ptr should point at a
+	   valid integer. I.e. for instance for the following input
+	   string:  "1-3 , 78"
+	                   ^
+			   
+	   The start_ptr should point at "78".
+	*/
+
+
+
+
       } else 
 	util_abort("%s[4]: malformed string: %s \n",__func__ , start_ptr);
     }
