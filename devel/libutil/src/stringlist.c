@@ -341,3 +341,26 @@ bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
 char * stringlist_alloc_joined_string(const stringlist_type * s , const char * sep) {
   return util_alloc_joined_string((const char **) s->strings , s->size , sep);
 }
+
+
+/*****************************************************************/
+
+void stringlist_fwrite(const stringlist_type * s, FILE * stream) {
+  int i;
+  util_fwrite_int( s->size , stream);
+  for (i=0; i < s->size; i++)
+    util_fwrite_string(s->strings[i] , stream);
+}
+
+
+
+stringlist_type * stringlist_fread_alloc(FILE * stream) {
+  stringlist_type * s = stringlist_alloc_empty();
+  int size = util_fread_int(stream);
+  int i;
+
+  for (i=0; i < size; i++)
+    stringlist_append_owned_ref( s , util_fread_alloc_string( stream ));
+
+  return s;
+}
