@@ -293,6 +293,21 @@ const char ** stringlist_get_argv(const stringlist_type * stringlist) {
   return (const char **) stringlist->strings;
 }
 
+/*
+  Return NULL if the list has zero entries. 
+*/
+char ** stringlist_alloc_char_copy(const stringlist_type * stringlist) {
+  char ** strings = NULL;
+  if (stringlist->size > 0) {
+    int size = stringlist->size;
+    strings = util_malloc(size * sizeof * strings , __func__);
+    for (int i = 0; i <size; i++)
+      strings[i] = util_alloc_string_copy( stringlist->strings[i] );
+  }
+  return strings;
+}
+
+
 
 const char ** stringlist_iget_argv(const stringlist_type * stringlist, int index) {
   if (index < stringlist->size)
@@ -352,15 +367,20 @@ void stringlist_fwrite(const stringlist_type * s, FILE * stream) {
     util_fwrite_string(s->strings[i] , stream);
 }
 
-
+/* 
+   When a stringlist is loaded from file the current content of the
+   stringlist is discarded.
+*/
+void  stringlist_fread(stringlist_type * s, FILE * stream) {
+  int size = util_fread_int(stream);
+  int i;
+  stringlist_clear(s);
+  for (i=0; i < size; i++)
+    stringlist_append_owned_ref( s , util_fread_alloc_string( stream ));
+}
 
 stringlist_type * stringlist_fread_alloc(FILE * stream) {
   stringlist_type * s = stringlist_alloc_empty();
-  int size = util_fread_int(stream);
-  int i;
-
-  for (i=0; i < size; i++)
-    stringlist_append_owned_ref( s , util_fread_alloc_string( stream ));
-
+  stringlist_fread(s , stream);
   return s;
 }

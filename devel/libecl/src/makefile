@@ -33,6 +33,7 @@ clean:
 	rm -f $(INSTALL_INC_PATH)/*.h
 	rm -f $(INSTALL_LIB_PATH)/libecl_$(MFLAG).a
 
+rebuild: clean LOCAL
 
 LIB:	$(LIB)
 

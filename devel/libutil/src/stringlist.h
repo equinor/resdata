@@ -40,6 +40,8 @@ bool              stringlist_contains(const stringlist_type *  , const char * );
 int   	          stringlist_get_argc(const stringlist_type * );
 const 	  char ** stringlist_get_argv(const stringlist_type * );
 const 	  char ** stringlist_iget_argv(const stringlist_type * , int );
+char           ** stringlist_alloc_char_copy(const stringlist_type * );
+void              stringlist_fread(stringlist_type * , FILE * );
 void              stringlist_fwrite(const stringlist_type * , FILE * );
 stringlist_type * stringlist_fread_alloc(FILE * );
 #endif

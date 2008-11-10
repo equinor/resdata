@@ -3,7 +3,7 @@
   handling, string handling and file handling. Observe that all these
   functions are just that - functions - there is no associated state
   with any of these functions.
-
+  
   The file util_path.c is included in this, and contains path
   manipulation functions which explicitly use the PATH_SEP variable.
 */
@@ -2945,6 +2945,7 @@ static char * util_bt_alloc_current_executable(const char * bt_symbol) {
 
 
 static pthread_mutex_t __abort_mutex = PTHREAD_MUTEX_INITIALIZER; /* Used purely to serialize the util_abort() routine. */
+
 void util_abort(const char * fmt , ...) {
   pthread_mutex_lock( &__abort_mutex ); /* Abort before unlock() */
   {
@@ -2993,11 +2994,17 @@ void util_abort(const char * fmt , ...) {
 	}
 	
 	{
-	  char fmt[64];
-	  sprintf(fmt, " #%s02d %s-%ds(..) in %ss   \n" , "%" , "%" , max_func_length , "%");
+	  char string_fmt[64];
+	  sprintf(string_fmt, " #%s02d %s-%ds(..) in %ss   \n" , "%" , "%" , max_func_length , "%");
 	  fprintf(stderr , "--------------------------------------------------------------------------------\n");
-	  for (i=0; i < size; i++) 
-	    fprintf(stderr, fmt , i , func_list[i], file_line_list[i]);
+	  for (i=0; i < size; i++) {
+	    
+	    int line_nr;
+	    if (util_sscanf_int(file_line_list[i] , line_nr))
+	      fprintf(stderr, string_fmt , i , func_list[i], file_line_list[i]);
+	    else
+	      fprintf(stderr, string_fmt , i , func_list[i], file_line_list[i]);
+	  }
 	  fprintf(stderr , "--------------------------------------------------------------------------------\n");
 	  util_free_stringlist(func_list      , size);
 	  util_free_stringlist(file_line_list , size);

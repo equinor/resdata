@@ -147,11 +147,7 @@ static inline int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid , i
 }
 
   
-/*
-  This function is "safe" in the sense that invalid (i,j,k) are not
-  allowed to propaget.
-*/
-int ecl_grid_safe_get_global_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+int ecl_grid_get_global_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
   if (ecl_grid_ijk_valid(ecl_grid , i , j , k))
     return ecl_grid_get_global_index__(ecl_grid , i , j , k);
   else {
@@ -167,7 +163,7 @@ int ecl_grid_safe_get_global_index(const ecl_grid_type * ecl_grid , int i , int 
 */
 
 int ecl_grid_get_active_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
-  int global_index = ecl_grid_safe_get_global_index(ecl_grid , i,j,k);  /* In range: [0,nx*ny*nz) */
+  int global_index = ecl_grid_get_global_index(ecl_grid , i,j,k);  /* In range: [0,nx*ny*nz) */
   return ecl_grid->index_map[global_index];
 }
 
@@ -596,6 +592,7 @@ void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int g
   *dz = cell1->center.z - cell2->center.z;
   
 }
+
 
 
 void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
