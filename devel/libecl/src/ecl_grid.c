@@ -1,6 +1,11 @@
 /**
   This function implements functionality to load ECLISPE grid files, 
   both .EGRID and .GRID files - in a transparent fashion.
+
+  Observe the following convention:
+  
+    global_index:  [0 , nx*ny*nz)
+    active_index:  [0 , nactive)
 */
 
 #include <stdlib.h>
@@ -137,15 +142,18 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
   This function wants C-based zero offset on i,j,k - ohh what a fuxxx mess.
 */
 
-static inline int ecl_grid_get_cell_index__(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+static inline int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid , int i , int j , int k) {
   return i + j * ecl_grid->nx + k * ecl_grid->nx * ecl_grid->ny;
 }
 
   
-
-int ecl_grid_safe_get_cell_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+/*
+  This function is "safe" in the sense that invalid (i,j,k) are not
+  allowed to propaget.
+*/
+int ecl_grid_safe_get_global_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
   if (ecl_grid_ijk_valid(ecl_grid , i , j , k))
-    return ecl_grid_get_cell_index__(ecl_grid , i , j , k);
+    return ecl_grid_get_global_index__(ecl_grid , i , j , k);
   else {
     util_abort("%s: i,j,k = (%d,%d,%d) is invalid:\n\n  nx: [0,%d>\n  ny: [0,%d>\n  nz: [0,%d>\n",__func__ , i,j,k,ecl_grid->nx,ecl_grid->ny,ecl_grid->nz);
     return -1; /* Compiler shut up. */
@@ -154,26 +162,23 @@ int ecl_grid_safe_get_cell_index(const ecl_grid_type * ecl_grid , int i , int j 
 
 
 /**
-   Return the global cell index (of the active cells) of the cell
+   Return the active cell index (of the active cells) of the cell
    i,j,k. Will happily return -1 if the cell is not active.
 */
-int ecl_grid_get_active_cell_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
-  int global_index = ecl_grid_safe_get_cell_index(ecl_grid , i,j,k);
-  if (global_index >= 0)
-    return ecl_grid->inv_index_map[global_index];
-  else
-    return global_index;
+
+int ecl_grid_get_active_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+  int global_index = ecl_grid_safe_get_global_index(ecl_grid , i,j,k);  /* In range: [0,nx*ny*nz) */
+  return ecl_grid->index_map[global_index];
 }
 
 
-
 /* 
-   This function returns C-based zero offset indices 
+   This function returns C-based zero offset indices. cell_
 */
-void ecl_grid_get_ijk(const ecl_grid_type * grid , int cell_nr, int *i, int *j , int *k) {
-  *k = cell_nr / (grid->nx * grid->ny); cell_nr -= (*k) * (grid->nx * grid->ny);
-  *j = cell_nr / grid->nx;              cell_nr -= (*j) *  grid->nx;
-  *i = cell_nr;
+void ecl_grid_get_ijk(const ecl_grid_type * grid , int global_index, int *i, int *j , int *k) {
+  *k = global_index / (grid->nx * grid->ny); global_index -= (*k) * (grid->nx * grid->ny);
+  *j = global_index / grid->nx;              global_index -= (*j) *  grid->nx;
+  *i = global_index;
 }
 
 
@@ -202,8 +207,8 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
 
 static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , int k , double x[4][2] , double y[4][2] , double z[4][2] , const int * actnum) {
 
-  const int cell_index   = ecl_grid_get_cell_index__(ecl_grid , i , j  , k );
-  ecl_cell_type * cell   = ecl_grid->cells[cell_index];
+  const int global_index   = ecl_grid_get_global_index__(ecl_grid , i , j  , k );
+  ecl_cell_type * cell     = ecl_grid->cells[global_index];
   int ip , iz;
   
   for (iz = 0; iz < 2; iz++) {
@@ -212,7 +217,7 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
       ecl_point_inplace_set(&cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
     }
   }
-  cell->active       = actnum[cell_index];
+  cell->active       = actnum[global_index];
 }
 
 
@@ -222,8 +227,8 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
   const int i  = coords[0]; /* ECLIPSE 1 offset */
   const int j  = coords[1];
   const int k  = coords[2];
-  const int cell_index   = ecl_grid_get_cell_index__(ecl_grid , i - 1, j - 1 , k - 1);
-  ecl_cell_type * cell   = ecl_grid->cells[cell_index];
+  const int global_index   = ecl_grid_get_global_index__(ecl_grid , i - 1, j - 1 , k - 1);
+  ecl_cell_type * cell   = ecl_grid->cells[global_index];
   int c;
 
   cell->active    = (coords[4] == 1) ? true : false;
@@ -240,8 +245,8 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
   for (k=0; k < ecl_grid->nz; k++) 
     for (j=0; j < ecl_grid->ny; j++) 
       for (i=0; i < ecl_grid->nx; i++) {
-	const int cell_index   = ecl_grid_get_cell_index__(ecl_grid , i , j , k );
-	ecl_cell_type * cell   = ecl_grid->cells[cell_index];
+	const int global_index   = ecl_grid_get_global_index__(ecl_grid , i , j , k );
+	ecl_cell_type * cell   = ecl_grid->cells[global_index];
 	if (cell->active) {
 	  cell->active_index = active_index;
 	  active_index++;
@@ -546,8 +551,8 @@ void ecl_grid_set_box_active_list(const ecl_grid_type * grid , const ecl_box_typ
   for (k = k1; k <= k2; k++) {
     for (j= j1; j <= j2; j++) {
       for (i=i1; i <= i2; i++) {
-	const int cell_index   = ecl_grid_get_cell_index__(grid , i , j , k );
-	ecl_cell_type * cell   = grid->cells[cell_index];
+	const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
+	ecl_cell_type * cell   = grid->cells[global_index];
 	if (cell->active) {
 	  active_index_list[active_count] = cell->active_index;
 	  active_count++;
@@ -569,8 +574,8 @@ int ecl_grid_count_box_active(const ecl_grid_type * grid , const ecl_box_type * 
   for (k = k1; k <= k2; k++) {
     for (j= j1; j <= j2; j++) {
       for (i=i1; i <= i2; i++) {
-	const int cell_index   = ecl_grid_get_cell_index__(grid , i , j , k );
-	ecl_cell_type * cell   = grid->cells[cell_index];
+	const int global_index   = ecl_grid_get_global_index__(grid , i , j , k );
+	ecl_cell_type * cell   = grid->cells[global_index];
 	if (cell->active)
 	  active_count++;
       }
@@ -582,9 +587,9 @@ int ecl_grid_count_box_active(const ecl_grid_type * grid , const ecl_box_type * 
 
 
 
-void ecl_grid_get_distance(const ecl_grid_type * grid , int cell_index1, int cell_index2 , double *dx , double *dy , double *dz) {
-  const ecl_cell_type * cell1 = grid->cells[cell_index1];
-  const ecl_cell_type * cell2 = grid->cells[cell_index2];
+void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int global_index2 , double *dx , double *dy , double *dz) {
+  const ecl_cell_type * cell1 = grid->cells[global_index1];
+  const ecl_cell_type * cell2 = grid->cells[global_index2];
   
   *dx = cell1->center.x - cell2->center.x;
   *dy = cell1->center.y - cell2->center.y;
@@ -593,3 +598,12 @@ void ecl_grid_get_distance(const ecl_grid_type * grid , int cell_index1, int cel
 }
 
 
+void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
+  int             active_cells , nx,ny,nz;
+  ecl_grid_get_dims(ecl_grid , &nx , &ny , &nz , &active_cells);
+  printf("	Active cells ....: %d \n",active_cells);
+  printf("	nx ..............: %d \n",nx);
+  printf("	ny ..............: %d \n",ny);
+  printf("	nz ..............: %d \n",nz);
+  printf("	Volume ..........: %d \n",nx*ny*nz);
+}

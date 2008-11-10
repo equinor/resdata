@@ -134,7 +134,7 @@ void ecl_rft_node_summarize(const ecl_rft_node_type * rft_node , bool print_cell
   {
     int day , month , year;
     util_set_date_values(rft_node->recording_date , &day , &month , &year);
-    printf("Recording time...: %02d/%02d/%4d / %g days \n" , day , month , year , rft_node->days);
+    printf("Recording date...: %02d/%02d/%4d / %g days \n" , day , month , year , rft_node->days);
   }
   printf("--------------------------------------------------------------\n");
   if (print_cells) {

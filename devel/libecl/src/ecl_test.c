@@ -10,20 +10,11 @@
 #include <ecl_rft_vector.h>
 #include <ecl_grid.h>
 
-
-void test_file(const char * filename) {
-  bool endian_swap;
-  if (fortio_is_fortran_file(filename , &endian_swap)) 
-    printf("File:%s comes from fortran. Endian_swap:%d \n",filename , endian_swap);
-  else
-    printf("File:%s does not come from fortran. \n",filename);
-}
-
-
-
 int main(int argc, char ** argv) {
-
-  test_file("fortio.o");
-  test_file("/d/felles/bg/scratch/Gurbat/RunPath/tmpdir_81/EXAMPLE_01_BASE_0081.GRID");
-
+  ecl_grid_type * ecl_grid = ecl_grid_alloc("/d/proj/bg/enkf/share/Gurbat2/HM_ENKF/STFO/REF/STFO2008_REF.EGRID" , true);
+  ecl_grid_summarize(ecl_grid);
+  ecl_grid_get_active_index( ecl_grid , 35 , 74 , 7);
+  ecl_grid_get_active_index( ecl_grid , 35 , 74 ,14);
+  ecl_grid_get_active_index( ecl_grid , 34 , 74 ,18);
+  ecl_grid_get_active_index( ecl_grid , 34 , 74 ,21);
 }
