@@ -2763,13 +2763,14 @@ void util_fskip_compressed(FILE * stream) {
 }
 
 /**
-   These small functions write formatted values onto a stream. The main point about these
-   functions is to avoid creating small one-off format strings.
+   These small functions write formatted values onto a stream. The
+   main point about these functions is to avoid creating small one-off
+   format strings. The character fmt0 should be 'f' or 'g'
 */
 
-void util_fprintf_double(double value , int width , int decimals , FILE * stream) {
+void util_fprintf_double(double value , int width , int decimals , char fmt0 , FILE * stream) {
   char fmt[32];
-  sprintf(fmt , "%%%d.%dg" , width , decimals);
+  sprintf(fmt , "%%%d.%d%c" , width , decimals , fmt0);
   fprintf(stream , fmt , value);
 }
 
