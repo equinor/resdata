@@ -105,7 +105,7 @@ static void subst_list_insert__(subst_list_type * subst_list , const char * key 
 
     subst_list_insert_ref: In this case the calling scope has full
        ownership of value, and is consquently responsible for freeing
-       it, and ensuring that stays a valid pointer for the subst_list
+       it, and ensuring that it stays a valid pointer for the subst_list
        instance. Probably the most natural function to use when used
        with static storage, i.e. typically string literals.
 
@@ -116,7 +116,7 @@ static void subst_list_insert__(subst_list_type * subst_list , const char * key 
     subst_list_insert_copy: In this case the subst_list takes a copy
        of value and inserts it. Meaning that the substs_list instance
        takes repsonibility of freeing, _AND_ the calling scope is free
-       to do wahtever it wants with the value pointer.
+       to do whatever it wants with the value pointer.
 
 */
    
@@ -237,6 +237,10 @@ char * subst_list_alloc_filtered_string(const subst_list_type * subst_list , con
 }
 
 
+
+/**
+   This function writes a filtered version of string to a file.
+*/
 void subst_list_filtered_fprintf(const subst_list_type * subst_list , const char * string , FILE * stream) {
   char * copy = util_alloc_string_copy(string);
   subst_list_inplace_update_buffer__(subst_list , &copy);

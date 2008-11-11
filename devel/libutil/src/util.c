@@ -2762,16 +2762,17 @@ void util_fskip_compressed(FILE * stream) {
   } while (offset < size);
 }
 
+
 /**
    These small functions write formatted values onto a stream. The
    main point about these functions is to avoid creating small one-off
-   format strings. The character fmt0 should be 'f' or 'g'
+   format strings. The character base_fmt should be 'f' or 'g'
 */
 
-void util_fprintf_double(double value , int width , int decimals , char fmt0 , FILE * stream) {
-  char fmt[32];
-  sprintf(fmt , "%%%d.%d%c" , width , decimals , fmt0);
+void util_fprintf_double(double value , int width , int decimals , char base_fmt , FILE * stream) {
+  char * fmt = util_alloc_sprintf("%c%d.%d%c" , '%' , width , decimals , base_fmt);
   fprintf(stream , fmt , value);
+  free(fmt);
 }
 
 
