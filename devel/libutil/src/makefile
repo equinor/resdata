@@ -2,7 +2,6 @@ include global_config
 #################################################################
 COMPILE_INCLUDE   = -I./  -I$(LIBHASH_HOME)/include
 COMPILE_LIB_PATH  = -L$(LIBHASH_HOME)/lib
-
 INSTALL_INC_PATH = $(LIBUTIL_HOME)/include
 INSTALL_LIB_PATH = $(LIBUTIL_HOME)/lib
 #################################################################

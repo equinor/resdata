@@ -21,6 +21,8 @@ typedef enum {left_pad  = 0,
 
 time_t       util_make_datetime(int , int , int , int , int , int );
 time_t       util_make_date(int , int , int);
+void         util_inplace_forward_days(time_t *  , double);
+double       util_difftime(time_t  , time_t  , int *  , int *  , int *  , int *);
 
 bool         util_char_in(char c, int , const char *);
 char       * util_alloc_sprintf(const char *  , ...);

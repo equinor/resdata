@@ -26,8 +26,6 @@
 #include <util.h>
 #include <zlib.h>
 #include <math.h>
-#include <hash.h>
-#include <set.h>
 #include <void_arg.h>
 #include <stdarg.h>
 #include <execinfo.h>
@@ -1502,6 +1500,56 @@ void util_set_datetime_values(time_t t , int * sec , int * min , int * hour , in
 
 void util_set_date_values(time_t t , int * mday , int * month , int * year) {
   __util_set_timevalues(t , NULL , NULL , NULL , mday , month , year);
+}
+
+
+static void util_inplace_forward_seconds__(time_t * t , int seconds) {
+  (*t) += seconds;
+}
+
+
+void util_inplace_forward_days(time_t * t , double days) {
+  util_inplace_forward_seconds__(t , (int) days * 3600 * 24);
+}
+
+
+/**
+   This function computes the difference in time between times time1
+   and time0: time1 - time0. The return value is the difference in
+   seconds (straight difftime output). Observe that the ordering of
+   time_t arguments is switched with respect to the difftime
+   arguments.
+
+   In addition the difference can be broken down in days, hours,
+   minutes and seconds if the appropriate pointers are passed in.
+*/
+
+   
+double util_difftime(time_t start_time , time_t end_time , int * _days , int * _hours , int * _minutes , int *_seconds) {
+  int sec_min  = 60;
+  int sec_hour = 3600;
+  int sec_day  = 24 * 3600;
+  double dt = difftime(end_time , start_time);
+  double dt0 = dt;
+  int days , hours, minutes , seconds;
+
+  days = (int) floor(dt / sec_day );
+  dt  -= days * sec_day;
+  
+  hours = (int) floor(dt / sec_hour);
+  dt   -= hours * sec_hour;
+  
+  minutes = (int) floor(dt / sec_min);
+  dt     -= minutes * sec_min;
+
+  seconds = (int) dt;
+
+  if (_seconds != NULL) *_seconds = seconds;
+  if (_minutes != NULL) *_minutes = minutes;
+  if (_hours   != NULL) *_hours   = hours;
+  if (_days    != NULL) *_days    = days;
+  
+  return dt0;
 }
 
 
@@ -3000,7 +3048,7 @@ void util_abort(const char * fmt , ...) {
 	  for (i=0; i < size; i++) {
 	    
 	    int line_nr;
-	    if (util_sscanf_int(file_line_list[i] , line_nr))
+	    if (util_sscanf_int(file_line_list[i] , &line_nr))
 	      fprintf(stderr, string_fmt , i , func_list[i], file_line_list[i]);
 	    else
 	      fprintf(stderr, string_fmt , i , func_list[i], file_line_list[i]);
