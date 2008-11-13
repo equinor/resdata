@@ -245,6 +245,10 @@ bool fortio_is_fortio_file(fortio_type * fortio) {
 }
 
 
+/*
+  This function returns -1 on error - it does *NOT* fail.
+*/
+
 int fortio_init_read(fortio_type *fortio) {
   int elm_read;
   elm_read = fread(&fortio->active_header , sizeof(fortio->active_header) , 1 , fortio->stream);
@@ -262,7 +266,9 @@ int fortio_init_read(fortio_type *fortio) {
 
 void fortio_complete_read(fortio_type *fortio) {
   int trailer;
-  fread(&trailer , sizeof(fortio->active_header) , 1 , fortio->stream);
+  if (fread(&trailer , sizeof(fortio->active_header) , 1 , fortio->stream) != 1)
+    util_abort("%s: failed to read tail in file: %s : %s \n",__func__ , fortio->filename , strerror(errno));
+  
   if (fortio->endian_flip_header)
     util_endian_flip_vector(&trailer , sizeof trailer , 1);
   
@@ -273,16 +279,20 @@ void fortio_complete_read(fortio_type *fortio) {
   fortio->active_header = 0;
 }
 
+
 /**
    This function reads one record from the fortio stream, and fills
    the buffer with the content. The return value is the number of bytes read.
 */
 
 int fortio_fread_record(fortio_type *fortio, char *buffer) {
-  int record_size;
   fortio_init_read(fortio);
-  record_size = fortio->active_header;
-  fread(buffer , 1 , fortio->active_header , fortio->stream);
+  int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
+  {
+    int items_read = fread(buffer , 1 , fortio->active_header , fortio->stream);
+    if (items_read != fortio->active_header) 
+      util_abort("%s: only read %d/%d bytes from file: %s: %s \n",__func__ , items_read , fortio->active_header , fortio->filename , strerror(errno));
+  }
   fortio_complete_read(fortio);
   return record_size;
 }
