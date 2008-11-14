@@ -2651,8 +2651,13 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
     } while(zbuffer == NULL);
     block_size = (int) (floor(buffer_size / 1.002) - 12);
     
-    fwrite(&size        , sizeof size        , 1 , stream);
-    fwrite(&buffer_size , sizeof buffer_size , 1 , stream);
+    {
+      int header_write;
+      header_write  = fwrite(&size        , sizeof size        , 1 , stream);
+      header_write += fwrite(&buffer_size , sizeof buffer_size , 1 , stream);
+      if (header_write != 2)
+	util_abort("%s: failed to write header to disk: %s \n",__func__ , strerror(errno));
+    }
     
     {
       int offset = 0;
@@ -2665,10 +2670,10 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
 	  int bytes_written = fwrite(zbuffer , 1 , compressed_size , stream);
 	  if (bytes_written < compressed_size) 
 	    util_abort("%s: wrote only %d/%ld bytes to compressed file  - aborting \n",__func__ , bytes_written , compressed_size);
-
+	  
 	}
 	offset += this_block_size;
-      fwrite(&offset , sizeof offset , 1 , stream);
+	fwrite(&offset , sizeof offset , 1 , stream);
       } while (offset < size);
     }
     free(zbuffer);
