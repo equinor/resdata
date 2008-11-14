@@ -202,7 +202,6 @@ ecl_kw_type * ecl_block_get_next_kw(const ecl_block_type * ecl_block) {
 ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
   ecl_block_type * copy;
   copy = ecl_block_alloc(src->report_nr );
-  hash_lock( src->kw_hash );
   {
     char ** key_list = hash_alloc_keylist(src->kw_hash);
     int i;
@@ -214,7 +213,6 @@ ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
     }
     util_free_stringlist( key_list , hash_get_size( src->kw_hash ));
   }
-  hash_unlock( src->kw_hash );
   return copy;
 }
 
@@ -461,7 +459,6 @@ void ecl_block_summarize(const ecl_block_type * ecl_block) {
   {
     int i;
     char ** key_list = hash_alloc_keylist(ecl_block->kw_hash);
-    hash_lock(ecl_block->kw_hash );
     for(i=0; i<hash_get_size(ecl_block->kw_hash); i++)
     {
       int j;
@@ -471,7 +468,6 @@ void ecl_block_summarize(const ecl_block_type * ecl_block) {
         ecl_kw_summarize(ecl_block_iget_kw(ecl_block, key_list[i], j));
       }
     }
-    hash_unlock(ecl_block->kw_hash);
     util_free_stringlist(key_list, hash_get_size(ecl_block->kw_hash));
   }  
   fprintf(stream , "-----------------------------------------------------------------\n\n");

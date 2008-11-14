@@ -12,7 +12,7 @@ INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum
 LIB_ROOT  = libecl
 LIB       = $(LIB_ROOT)_$(MFLAG).a
 LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L$(LIBHASH_HOME)/lib -L./
-LIB_LINK  = -lecl_$(MFLAG) -lutil_$(MFLAG) -lhash_$(MFLAG) -lm -lz
+LIB_LINK  = -lecl_$(MFLAG) -lutil_$(MFLAG) -lhash_$(MFLAG) -lm -lz -lpt
 
 
 LOCAL: LIB BIN

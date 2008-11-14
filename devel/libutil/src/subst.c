@@ -89,7 +89,7 @@ subst_list_type * subst_list_alloc() {
 
 
 static void subst_list_insert__(subst_list_type * subst_list , const char * key , const char * value , subst_insert_type insert_mode) {
-  if (!hash_has_key(subst_list->data , key))
+  if (!hash_has_key(subst_list->data , key)) 
     hash_insert_hash_owned_ref(subst_list->data , key , subst_list_node_alloc() , subst_list_node_free__);
   {
     subst_list_node_type * node = hash_get(subst_list->data , key);
@@ -147,14 +147,17 @@ void subst_list_free(subst_list_type * subst_list) {
 
 static void subst_list_inplace_update_buffer__(const subst_list_type * subst_list , char ** buffer) {
   int buffer_size  = strlen( *buffer );
-  int keys         = hash_iter_init( subst_list->data );
-  for (int ikey = 0; ikey < keys; ikey++) {
-    const char * key                  = hash_iter_get_next_key( subst_list->data );
+  hash_iter_init( subst_list->data );
+  char * key = hash_iter_get_first_key( subst_list->data );
+
+  while (key != NULL) {
     const subst_list_node_type * node = hash_get( subst_list->data , key);
     const char * value = node->value;
     if (value != NULL)
       util_string_replace_inplace( buffer , &buffer_size , key , value);
+    key = hash_iter_get_next_key( subst_list->data );
   }
+
 }
     
 /*  
