@@ -3523,9 +3523,6 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
 	   The start_ptr should point at "78".
 	*/
 
-
-
-
       } else 
 	util_abort("%s[4]: malformed string: %s \n",__func__ , start_ptr);
     }

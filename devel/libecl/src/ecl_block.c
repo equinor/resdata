@@ -219,8 +219,9 @@ ecl_block_type * ecl_block_alloc_copy(const ecl_block_type *src) {
 
 
 
-void ecl_block_set_sim_time(ecl_block_type * block , time_t sim_time) {
+static void ecl_block_set_sim_time(ecl_block_type * block , time_t sim_time, double sim_days) {
   block->sim_time = sim_time;
+  block->sim_days = sim_days; 
 }
 
 
@@ -228,12 +229,16 @@ void ecl_block_set_sim_time(ecl_block_type * block , time_t sim_time) {
 void ecl_block_set_sim_time_restart(ecl_block_type * block) {
   int *date;
   ecl_kw_type *intehead_kw = ecl_block_iget_kw(block , "INTEHEAD" , 0);
-  
+  ecl_kw_type *doubhead_kw = ecl_block_iget_kw(block , "DOUBHEAD" , 0);
+
   if (intehead_kw == NULL) 
     util_abort("%s: fatal error - could not locate INTEHEAD keyword in restart file - aborting \n",__func__);
   
+  if (doubhead_kw == NULL)
+    util_abort("%s: fatal error - could not locate DOUBHEAD keyword in restart file - aborting \n",__func__);
+  
   date = ecl_kw_iget_ptr(intehead_kw , 64); /* OK - that is a fucking magic number ... */
-  ecl_block_set_sim_time(block , util_make_date(date[0] , date[1] , date[2]));
+  ecl_block_set_sim_time(block , util_make_date(date[0] , date[1] , date[2]) , ecl_kw_iget_double(doubhead_kw , 0));
 }
 
 
@@ -241,7 +246,6 @@ void ecl_block_set_sim_time_restart(ecl_block_type * block) {
 void ecl_block_set_sim_time_summary(ecl_block_type * block , /*int time_index , int years_index , */ int day_index , int month_index , int year_index) {
   ecl_kw_type * param_kw = ecl_block_get_last_kw(block , "PARAMS");
   float  * date = ecl_kw_iget_ptr(param_kw , 0);
-
 
   {
     int sec  = 0;
@@ -251,7 +255,8 @@ void ecl_block_set_sim_time_summary(ecl_block_type * block , /*int time_index , 
     int day   = roundf(date[day_index]);
     int month = roundf(date[month_index]);
     int year  = roundf(date[year_index]);
-    ecl_block_set_sim_time(block , util_make_datetime(sec , min , hour , day , month , year));
+    double sim_days = ecl_kw_iget_float( param_kw , 0);
+    ecl_block_set_sim_time(block , util_make_datetime(sec , min , hour , day , month , year) , sim_days);
   }
 }
 
@@ -271,6 +276,11 @@ int ecl_block_get_report_nr(const ecl_block_type * block) {
 
 time_t ecl_block_get_sim_time(const ecl_block_type * block) {
   return block->sim_time;
+}
+
+
+double ecl_block_get_sim_days(const ecl_block_type * block) {
+  return block->sim_days;
 }
 
 

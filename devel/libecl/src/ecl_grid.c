@@ -168,6 +168,11 @@ int ecl_grid_get_active_index(const ecl_grid_type * ecl_grid , int i , int j , i
 }
 
 
+int ecl_grid_get_active_index_from_global(const ecl_grid_type * ecl_grid , int global_index) {
+  return ecl_grid->index_map[global_index];
+}
+
+
 /* 
    This function returns C-based zero offset indices. cell_
 */

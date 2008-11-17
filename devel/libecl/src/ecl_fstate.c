@@ -139,6 +139,7 @@ void ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate , bool unified) {
 
 
 ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ecl_file_type file_type , bool endian_convert, bool RPTONLY) {
+  bool verbose = false;
   const bool include_first_summary_block = true;
   ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(ECL_FMT_AUTO , file_type , endian_convert);
   ecl_fstate_set_files(ecl_fstate , files , filelist);
@@ -151,6 +152,14 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
     fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[0] , "r" , ecl_fstate->endian_convert ,ecl_fstate->fmt_file);
     int  summary_report_nr = 0;
     bool at_eof = false;
+    msg_type * msg;
+    if (verbose) {
+      char * prompt = util_alloc_sprintf("Loading file: %s : " , ecl_fstate->filelist[0]);
+      msg = msg_alloc( prompt );
+      free( prompt );
+      msg_show(msg);
+    }
+    
     while (!at_eof) {
       ecl_block_type *ecl_block = ecl_block_alloc(-1);
       ecl_block_fread(ecl_block , fortio , &at_eof);
@@ -176,16 +185,26 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
       
       ecl_fstate_add_block(ecl_fstate , ecl_block);
       summary_report_nr++;
+      if (verbose) msg_update_int(msg , "%04d" , summary_report_nr);
     }
     fortio_fclose(fortio);
+    if (verbose)  msg_free(msg , true);
   } else {    
     ecl_fstate->files = files;
     {
       int file;
+      msg_type * msg;
+      if (verbose) {
+	msg = msg_alloc( "Loading file: ");
+	msg_show(msg);
+      }
+      
       for (file=0; file < files; file++) {
 	bool at_eof = false;
 	fortio_type *fortio = fortio_fopen(ecl_fstate->filelist[file] , "r" , ecl_fstate->endian_convert , ecl_fstate->fmt_file);
 	int report_nr = -1;
+
+	if (verbose) msg_update(msg , ecl_fstate->filelist[file]);
 	
 	if (file_type == ecl_restart_file || file_type == ecl_summary_file)
 	  report_nr = ecl_util_filename_report_nr(ecl_fstate->filelist[file]);
@@ -229,7 +248,6 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	  }
 	  
 	  
-	  
 	  if (file_type == ecl_summary_file) {
 	    if (!at_eof) {
 	      if (ecl_fstate->__RPTONLY) {
@@ -242,6 +260,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	}
 	fortio_fclose(fortio);
       }
+      if (verbose)  msg_free(msg , true);
     }
   }
   return ecl_fstate;
