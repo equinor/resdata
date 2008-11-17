@@ -173,6 +173,9 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
     } else if (strcmp(ext , "RFT") == 0) {
       file_type = ecl_rft_file;
       fmt_file  = false;
+    } else if (strcmp(ext , "DATA") == 0) {
+      file_type = ecl_data_file;
+      fmt_file  = true;  /* Not really relevant ... */
     } else {
       switch (ext[0]) {
       case('X'):
@@ -735,6 +738,101 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
   *_header_file    = header_file;
   *_data_files     = data_files;
 }
+
+
+
+void ecl_util_alloc_restart_files(const char * path , const char * _base , char *** _restart_files , int * num_restart_files , bool * _fmt_file , bool * _unified) {
+  char * base = NULL;
+  if (_base == NULL)
+    base = ecl_util_alloc_base_guess(path);
+  else
+    base = (char *) _base;
+  {
+    int num_F_files;
+    int num_X_files;
+
+    char *  unrst_file  = ecl_util_alloc_filename(path , base , ecl_unified_restart_file , false , -1);  
+    char *  funrst_file = ecl_util_alloc_filename(path , base , ecl_unified_restart_file , true  , -1);
+    char *  unif_file   = NULL; 
+
+    char ** F_files     = ecl_util_alloc_scandir_filelist(path , base , ecl_restart_file , true  , &num_F_files); 
+    char ** X_files     = ecl_util_alloc_scandir_filelist(path , base , ecl_restart_file , false , &num_X_files); 
+    char *  FX_file      = NULL;
+    char *  final_file; 
+
+    /*
+      Ok now we have formatted/unformatted unified and not
+      unified: Time to check what exists in the filesystem, and which
+      is the newest.
+    */
+    unif_file = util_newest_file(unrst_file , funrst_file);
+    
+    if (num_F_files > 0 || num_X_files > 0) {    
+      if (num_F_files > 0 && num_X_files > 0) {
+	/* 
+	   We have both a list of .Fnnnn and a list of .Xnnnn files; if
+	   the length of lists is not equal we take the longest,
+	   otherwise we compare the dates of the last files in the
+	   list. 
+	*/
+	if (num_F_files == num_X_files) {
+	  FX_file = util_newest_file( F_files[num_F_files - 1] , X_files[num_X_files - 1]);
+	} else if (num_F_files > num_X_files)
+	  FX_file = F_files[num_F_files - 1];
+	else
+	  FX_file = X_files[num_X_files - 1];
+      } else if (num_F_files > 0)
+	FX_file = F_files[num_F_files - 1];
+      else
+	FX_file = X_files[num_X_files - 1];
+
+      if (unif_file != NULL)
+	final_file = util_newest_file(unif_file , FX_file);
+      else
+	final_file = FX_file;
+    } else
+      final_file = unif_file;
+      
+    
+    if (final_file == NULL) 
+      util_abort("%s: could not find any restart data in %s/%s \n",__func__ , path , base);
+    
+
+    /* 
+       Determine type of final_file. Thois block is where the return
+       values are actually set.
+    */
+    {
+      char ** restart_files;
+      bool fmt_file , unified;
+      ecl_file_type file_type;
+      
+      ecl_util_get_file_type( final_file , &file_type , &fmt_file , NULL);
+      if (file_type == ecl_unified_restart_file) {
+	*num_restart_files = 1;
+	restart_files = util_malloc(sizeof * restart_files, __func__);
+	restart_files[0] = util_alloc_string_copy( final_file );
+	unified = true;
+      } else {
+	restart_files = ecl_util_alloc_scandir_filelist( path , base , ecl_restart_file , fmt_file , num_restart_files);
+	unified = false;
+      }
+      *_restart_files = restart_files;
+
+      if (_fmt_file != NULL) *_fmt_file = fmt_file;
+      if (_unified  != NULL) *_unified  = unified; 
+    }
+
+    util_free_stringlist(F_files , num_F_files);
+    util_free_stringlist(X_files , num_X_files);
+    free(unrst_file);
+    free(funrst_file);
+  }
+
+  if (_base == NULL)
+    free(base);
+}
+
 
 
 /**

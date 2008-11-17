@@ -41,7 +41,7 @@ bool         util_is_abs_path(const char * );
 bool 	     util_fmt_bit8   (const char *);
 bool         util_fmt_bit8_stream(FILE * );
 void 	     util_make_path  (const char *);
-const char * util_newest_file(const char *, const char *);
+char       * util_newest_file(const char *, const char *);
 double       util_file_difftime(const char * , const char *);
 bool         util_file_update_required(const char *, const char *);
 int          util_file_size(const char *);

@@ -46,7 +46,8 @@ struct ecl_block_struct {
 
 
   hash_type             *kw_hash;    /* A hash table of ecl_block_node instances. */
-  time_t                 sim_time;
+  time_t                 sim_time;   /* The wall-clock (in simulation coordnates) when this block was saved. */
+  double                 sim_days;   /* How many days been simulated. */ 
   restart_kw_list_type  *kw_list;    /* A simple list implemented to remember the order of the ecl_kw_instances (ordering is lost in the hash table). */
   char                  *src_file;   /* The src_file this block is loaded from - just for information. */
 };
@@ -231,17 +232,15 @@ void ecl_block_set_sim_time_restart(ecl_block_type * block) {
   if (intehead_kw == NULL) 
     util_abort("%s: fatal error - could not locate INTEHEAD keyword in restart file - aborting \n",__func__);
   
-
-  date = ecl_kw_iget_ptr(intehead_kw , 64);
+  date = ecl_kw_iget_ptr(intehead_kw , 64); /* OK - that is a fucking magic number ... */
   ecl_block_set_sim_time(block , util_make_date(date[0] , date[1] , date[2]));
 }
 
 
 
 void ecl_block_set_sim_time_summary(ecl_block_type * block , /*int time_index , int years_index , */ int day_index , int month_index , int year_index) {
-  float *date;
   ecl_kw_type * param_kw = ecl_block_get_last_kw(block , "PARAMS");
-  date = ecl_kw_iget_ptr(param_kw , 0);
+  float  * date = ecl_kw_iget_ptr(param_kw , 0);
 
 
   {
@@ -294,6 +293,7 @@ ecl_block_type * ecl_block_alloc(int report_nr) {
   ecl_block->__id           = ECL_BLOCK_ID;
   ecl_block->kw_hash  = hash_alloc(10);
   ecl_block->sim_time = -1;
+  ecl_block->sim_days = -1; 
   ecl_block_set_report_nr(ecl_block , report_nr);
   return ecl_block;
 }

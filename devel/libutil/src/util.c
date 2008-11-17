@@ -1280,7 +1280,7 @@ void util_alloc_file_components(const char * file, char **_path , char **_basena
   else 
     if (basename != NULL) free(basename);
   
-
+  
   if (_path != NULL) 
     *_path = path;
   else 
@@ -1464,11 +1464,29 @@ double util_file_difftime(const char *file1 , const char *file2) {
   return difftime(t1 , t2);
 }
 
-const char * util_newest_file(const char *file1 , const char *file2) {
-  if (util_file_difftime(file1 , file2) < 0)
-    return file1;
-  else
-    return file2;
+
+/** 
+    This function will return a pointer to the newest of the two
+    files. If one of the files does not exist - the other is
+    returned. If none of the files exist - NULL is returned.
+*/
+
+char * util_newest_file(const char *file1 , const char *file2) {
+  if (util_file_exists(file1)) {
+    if (util_file_exists(file2)) {
+      /* Actual comparison of two existing files. */
+      if (util_file_difftime(file1 , file2) < 0)
+	return (char *) file1;
+      else
+	return (char *) file2;
+    } else
+      return (char *)file1;   /* Only file1 exists. */
+  } else {
+    if (util_file_exists(file2))
+      return (char *) file2; /* Only file2 exists. */
+    else
+      return NULL;   /* None of the files exist. */
+  }
 }
 
 

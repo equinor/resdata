@@ -64,6 +64,7 @@ kw_list.o      : kw_list.c
 kw_extract.o   : kw_extract.c   
 grid_info.o    : grid_info.c    
 view_summary.o : view_summary.c 
+view_restart.o : view_restart.c 
 
 
 #################################################################
@@ -72,7 +73,7 @@ view_summary.o : view_summary.c
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x
 BIN	:  $(BIN_FILES) 
 BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x
 
@@ -93,6 +94,9 @@ grid_info.x: $(LIB) grid_info.o
 
 summary.x: $(LIB) view_summary.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  view_summary.o -o summary.x $(LIB_PATH)  $(LIB_LINK)
+
+restart.x: $(LIB) view_restart.o
+	$(LD) -$(MFLAG) $(LDFLAGS)  view_restart.o -o restart.x $(LIB_PATH)  $(LIB_LINK)
 
 rft.x: $(LIB) view_rft.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  view_rft.o -o rft.x $(LIB_PATH)  $(LIB_LINK)
