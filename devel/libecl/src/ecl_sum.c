@@ -21,14 +21,16 @@ struct ecl_sum_struct {
   int                __id;                      /* Funny integer used for for "safe" run-time casting. */
   ecl_fstate_type  * data;
   ecl_fstate_type  * header;
-  hash_type        * well_var_index;
-  hash_type        * well_completion_var_index;
-  hash_type        * group_var_index;
+
+  hash_type        * well_var_index;             /* Indexes for all well variables. */
+  hash_type        * well_completion_var_index;  /* Indexes for completion indexes .*/
+  hash_type        * group_var_index;            /* Indexes for group variables.*/ 
   hash_type        * field_var_index;
-  hash_type        * region_var_index;   /* The stored index is an offset. */
+  hash_type        * region_var_index;           /* The stored index is an offset. */
   hash_type        * misc_var_index; 
   hash_type        * unit_hash;
   hash_type        * block_var_index; 
+
   ecl_sum_var_type * var_type;
   int               report_offset;
   int               num_regions;
@@ -42,7 +44,12 @@ struct ecl_sum_struct {
   time_t            sim_start_time;
 };
 
+/**
+   About indexing:
+   ---------------
 
+
+*/
 
 
 
