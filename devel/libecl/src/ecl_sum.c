@@ -25,8 +25,8 @@ struct ecl_sum_struct {
   hash_type        * well_completion_var_index;
   hash_type        * group_var_index;
   hash_type        * field_var_index;
-  hash_type        * region_var_index;
-  hash_type        * misc_var_index;
+  hash_type        * region_var_index;   /* The stored index is an offset. */
+  hash_type        * misc_var_index; 
   hash_type        * unit_hash;
   hash_type        * block_var_index; 
   ecl_sum_var_type * var_type;
@@ -274,9 +274,9 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	  break;
 	case(ecl_sum_region_var):
 	  if (!hash_has_key(ecl_sum->region_var_index , kw)) 
-	      hash_insert_int(ecl_sum->region_var_index , kw , index);
-	    ecl_sum->num_regions = util_int_max(ecl_sum->num_regions , num);  
-	    break;
+	    hash_insert_int(ecl_sum->region_var_index , kw , index);
+	  ecl_sum->num_regions = util_int_max(ecl_sum->num_regions , num);  
+	  break;
 	case (ecl_sum_well_var):
 	  if (!DUMMY_WELL(well)) {
 	    /* 
@@ -588,59 +588,51 @@ int ecl_sum_get_block_var_index(const ecl_sum_type * ecl_sum , const char * bloc
 
 
 int ecl_sum_get_field_var_index(const ecl_sum_type * ecl_sum , const char *var) {
-  int index;
+  int index = -1;
 
   if (hash_has_key(ecl_sum->field_var_index , var)) 
     index = hash_get_int(ecl_sum->field_var_index , var); 
-  else {
-    fprintf(stderr,"%s: summary object does not have field variable: %s  \n",__func__ , var);
-    abort(); 
-  }
-  
+  else 
+    util_abort("%s: summary object does not have field variable: %s  \n",__func__ , var);
+    
   return index;
 }
 
 
 int ecl_sum_get_misc_var_index(const ecl_sum_type * ecl_sum , const char *var) {
-  int index;
+  int index = -1;
 
   if (hash_has_key(ecl_sum->misc_var_index , var)) 
     index = hash_get_int(ecl_sum->misc_var_index , var); 
-  else {
-    fprintf(stderr,"%s: summary object does not have misc variable: %s  \n",__func__ , var);
-    abort(); 
-  }
-  
+  else 
+    util_abort("%s: summary object does not have misc variable: %s  \n",__func__ , var);
+
   return index;
 }
 
 
 
 /**
-   region_nr: 0...num_regions-1 (C-based indexing)
+   region_nr: [1...num_regions] (NOT C-based indexing)
 */
 
 static void ecl_sum_assert_region_nr(const ecl_sum_type * ecl_sum , int region_nr) {
-  if (region_nr < 0 || region_nr >= ecl_sum->num_regions) {
-    fprintf(stderr,"%s: region_nr:%d not in valid range: [%d,%d) - aborting \n",__func__ , region_nr , 0 , ecl_sum->num_regions);
-    abort();
-  }
+  if (region_nr <= 0 || region_nr > ecl_sum->num_regions) 
+    util_abort("%s: region_nr:%d not in valid range: [1,%d] - aborting \n",__func__ , region_nr , ecl_sum->num_regions);
 }
+
 
 
 
 int ecl_sum_get_region_var_index(const ecl_sum_type * ecl_sum , int region_nr , const char *var) {
   int index = -1;
   
-
   ecl_sum_assert_region_nr(ecl_sum , region_nr);
   if (hash_has_key(ecl_sum->region_var_index , var)) 
-    index = region_nr + hash_get_int(ecl_sum->region_var_index , var); 
-  else {
-    fprintf(stderr,"%s: summary object does not have region variable: %s  \n",__func__ , var);
-    abort(); 
-  }
-  
+    index = region_nr + hash_get_int(ecl_sum->region_var_index , var) - 1;
+  else 
+    util_abort("%s: summary object does not have region variable: %s  \n",__func__ , var);
+     
   return index;
 }
 
@@ -716,7 +708,7 @@ int ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lo
       int region_nr;
       if (!util_sscanf_int(argv[1] , &region_nr)) 
 	util_abort("%s: failed to parse %s to an integer - aborting. \n",__func__ , argv[1]);
-      index = ecl_sum_get_region_var_index(ecl_sum , region_nr , argv[0]);
+      index = ecl_sum_get_region_var_index( ecl_sum , region_nr , argv[0]);
     }
     break;
   case(ecl_sum_field_var):
@@ -864,6 +856,7 @@ double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , c
   
   sum_index = ecl_sum_get_general_var_index(ecl_sum , lookup_string);
   value     = ecl_sum_get_with_index(ecl_sum , time_index , sum_index);
+  
   return value;
 }
 
@@ -1068,7 +1061,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
       int day,month,year,ivar;
       util_set_date_values(ecl_sum_get_sim_time(ecl_sum , report_step) , &day , &month, &year); 
       fprintf(stream , "%04d   %02d/%02d/%04d   ",report_step , day , month , year);
-
+      
       for (ivar = 0; ivar < nvars; ivar++)
 	fprintf(stream , " %12.3f " , ecl_sum_get_general_var(ecl_sum , report_step , var_list[ivar]));
       
