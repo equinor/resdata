@@ -48,7 +48,7 @@ struct ecl_sum_struct {
    About indexing:
    ---------------
 
-
+   
 */
 
 
@@ -60,6 +60,7 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
   ecl_sum->fmt_mode           	     = fmt_mode;
   ecl_sum->endian_convert     	     = endian_convert;
   ecl_sum->unified            	     = true;  /* Dummy */
+  
   ecl_sum->well_var_index     	     = hash_alloc();
   ecl_sum->well_completion_var_index = hash_alloc();
   ecl_sum->group_var_index    	     = hash_alloc();
@@ -68,6 +69,7 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
   ecl_sum->misc_var_index     	     = hash_alloc();
   ecl_sum->unit_hash          	     = hash_alloc();
   ecl_sum->block_var_index           = hash_alloc();
+  
   ecl_sum->var_type           	     = NULL;
   ecl_sum->header             	     = NULL;
   ecl_sum->data               	     = NULL;

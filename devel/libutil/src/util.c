@@ -1521,13 +1521,16 @@ void util_set_date_values(time_t t , int * mday , int * month , int * year) {
 }
 
 
-static void util_inplace_forward_seconds__(time_t * t , int seconds) {
-  (*t) += seconds;
-}
 
 
 void util_inplace_forward_days(time_t * t , double days) {
-  util_inplace_forward_seconds__(t , (int) days * 3600 * 24);
+  struct tm ts;
+  int isdst;
+
+  isdst = ts.tm_isdst;
+  (*t) += (int) (days * 3600 * 24);
+  localtime_r(t , &ts);
+  (*t) += 3600 * (isdst - ts.tm_isdst);  /* Extra adjustment of +/- one hour if we have crossed a daylight savings border. */
 }
 
 
