@@ -6,8 +6,8 @@ INSTALL_INC_PATH = $(LIBUTIL_HOME)/include
 INSTALL_LIB_PATH = $(LIBUTIL_HOME)/lib
 #################################################################
 SDP_ROOT          = /project/res/$(shell /private/joaho/bin/res_target.py)
-OBJECTS           = util.o thread_pool.o msg.o void_arg.o str_buffer.o path_fmt.o stringlist.o menu.o subst.o
-INC_FILES_INSTALL = util.h thread_pool.h msg.h void_arg.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h
+OBJECTS           = util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o stringlist.o menu.o subst.o
+INC_FILES_INSTALL = util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h
 LIB_ROOT          = libutil
 LIB               = $(LIB_ROOT)_$(MFLAG).a
 LIB_LINK          = -lutil_$(MFLAG) -lhash_$(MFLAG) -lz -lpthread -lm

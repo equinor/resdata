@@ -45,8 +45,40 @@ struct ecl_sum_struct {
 };
 
 /**
-   About indexing:
-   ---------------
+About indexing:
+---------------
+
+The ECLISPE summary files are organised (roughly) like this:
+
+ 1. A header-file called xxx.SMPSEC is written, which is common to
+    every timestep.  
+
+ 2. For each timestep the summary vector is written in the form of a
+    vector 'PARAMS' of length N with floats. In the PARAMS vector all
+    types of data are stacked togeheter, and one must use the header
+    info in the SMSPEC file to disentangle the summary data.
+
+Here I will try to describe how the header in SMSPEC is organised, and
+how that support is imlemented here. The SMSPEC header is organized
+around three character vectors, of length N. To find the position in
+the PARAMS vector of a certain quantity, you must consult one, two or
+all three of these vectors. The most important vecor - which must
+always be consulted is the KEYWORDS vector, then it is the WGNAMES and
+NUMS (integer) vectors whcih must be consulted for some variable
+types.
+
+
+Let us a consider a system consiting of:
+
+  Two wells: P1 and P2 - for each well we have variables WOPR, WWCT and WGOR.
+  Three regions: For each region we have variables RPR and RXX(??)
+  We have stored field properties:
+
+
+KEYWORDS = ['TIME','FOPR','FPR','FWCT',']
+       ....
+
+
 
    
 */

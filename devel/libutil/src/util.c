@@ -26,7 +26,6 @@
 #include <util.h>
 #include <zlib.h>
 #include <math.h>
-#include <void_arg.h>
 #include <stdarg.h>
 #include <execinfo.h>
 #include <pthread.h>
