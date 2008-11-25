@@ -7,24 +7,76 @@
 #include <node_ctype.h>
 
 
+/**
+   This file implements a arg_pack structure which is a small
+   convienence utility to pack several arguments into one
+   argument. The generic use situtation is when calling functions like
+   e.g. pthread_create() which take one (void *) as argument. You can
+   then pack several arguments into one arg_pack instance, and then
+   unpack them at the other end.
+
+   The content of the arg_pack is inserted by appending - there is no
+   possibility to set a specified index to a value. When you take them
+   out again that is done with indexed get.
+
+   When elements are inserted into the arg_pack, they are inserted
+   with a (limited) type information (implictly given by the function
+   invoked to insert the argument), and the corresponding typed get
+   must be used to unpack the argument again afterwards. The
+   excepetion is with the function arg_pack_iget_adress() which can be
+   used to extract the referenc of a scalar.
+
+
+
+   Example:
+   --------
+
+   void some_function(const char * arg1 , int arg2 , double arg3) {
+      .....
+   }  
+
+   
+   void some_function__(void * __arg_pack) {
+      arg_pack_type * arg_pack = arg_pack_safe_cast( __arg_pack );
+      const char * arg1 = arg_pack_iget_ptr( arg_pack , 0);
+      int          arg2 = arg_pack_iget_int( arg_pack , 1);
+      double       arg3 = arg_pack_iget_double(arg_pack , 2); 
+
+      some_function( arg1 , arg2 , arg3 );
+   }
+
+
+   .....
+   arg_pack_type * arg_pack = arg_pack_alloc();
+   arg_pack_append_ptr(arg_pack , "ARG1"); 
+   arg_pack_append_int(arg_pack , 1);
+   arg_pack_append_double(arg_pack , 3.14159265);
+
+   pthread_create( ,  , some_function__ , arg_pack);
+
+*/
+
+  
+
+
 #define VOID_ARG_TYPE_SIGNATURE 7651
 
 
 typedef struct {
-  void 	      	       * buffer;
-  node_ctype  	         ctype;
-  arg_node_free_ftype  * destructor;
-  arg_node_copyc_ftype * copyc; 
+  void 	      	       * buffer;        /* This is the actual content - can either point to a remote object, or to storage managed by the arg_pack instance. */
+  node_ctype  	         ctype;         /* The type of the data which is stored. */
+  arg_node_free_ftype  * destructor;    /* destructor called on buffer - can be NULL. */
+  arg_node_copyc_ftype * copyc;         /* copy constructor - will typically be NULL. */
 } arg_node_type;
 
 
 
 struct arg_pack_struct {
-  int             __type_signature;
-  int             size;
-  int             alloc_size;
-  bool            locked;
-  arg_node_type **nodes;
+  int             __type_signature;    /* Used to to check run-time casts. */ 
+  int             size;                /* The number of arguments appended to this arg_pack instance. */     
+  int             alloc_size;          /* The number of nodes allocated to this arg_pack - will in general be greater than size. */
+  bool            locked;              /* To insure against unwaranted modifictaions - you can explicitly lock the arg_pack instance. */ 
+  arg_node_type **nodes;               /* Vector of nodes */ 
 };
 
 
@@ -76,10 +128,9 @@ GET_TYPED(size_t);
 #undef GET_TYPED
 
 /**
-   Observe that you can __ALWAYS__ call the arg_node_get_ptr function,
-   irrespective of the type of element. If it is inserted as a
-   pointer, you get that pointer back. If you have inserted a scalar,
-   you will get the adress of that scalar.
+   If the argument is inserted as a pointer, you must use get_ptr ==
+   true, otherwise you must use get_ptr == false, and this will give
+   you the adress of the scalar.
 
    Observe that if you call XX_get_ptr() on a pointer which is still
    owned by the arg_pack, you must be careful when freeing the
@@ -87,7 +138,14 @@ GET_TYPED(size_t);
 */
 
   
-static void * arg_node_get_ptr(arg_node_type * node) {
+static void * arg_node_get_ptr(arg_node_type * node , bool get_ptr) {
+  if (get_ptr) {
+    if (node->ctype != void_pointer)
+      util_abort("%s: tried to get pointer from something not a pointer\n",__func__);
+  } else {
+    if (node->ctype == void_pointer)
+      util_abort("%s: tried to get adress to something already a ponter\n",__func__);
+  }
   return node->buffer;
 }
 
@@ -338,7 +396,13 @@ IGET_TYPED(size_t);
 
 void * arg_pack_iget_ptr(const arg_pack_type * arg , int iarg) {
   __arg_pack_assert_index(arg , iarg);
-  return arg_node_get_ptr(arg->nodes[iarg]);
+  return arg_node_get_ptr(arg->nodes[iarg] , true);
+}
+
+
+void * arg_pack_iget_address(const arg_pack_type * arg , int iarg) {
+  __arg_pack_assert_index(arg , iarg);
+  return arg_node_get_ptr(arg->nodes[iarg] , false);
 }
 
 
