@@ -75,7 +75,7 @@ Let us a consider a system consiting of:
   We have stored field properties:
 
 
-KEYWORDS = ['TIME','FOPR','FPR','FWCT',']
+KEYWORDS = ['TIME','FOPR','FPR','FWCT','WOPR','WOPR,'WWCT','WWCT]
        ....
 
 
@@ -167,7 +167,7 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
 
 /* See table 3.4 in the ECLIPSE file format reference manual. */
 
-static ecl_sum_var_type __ecl_sum_identify_var_type(const char * var) {
+ecl_sum_var_type ecl_sum_identify_var_type(const char * var) {
   ecl_sum_var_type var_type = ecl_sum_misc_var;
   switch(var[0]) {
   case('A'):
@@ -271,7 +271,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	char * well = util_alloc_strip_copy(ecl_kw_iget_ptr(wells    , index));
 	char * kw   = util_alloc_strip_copy(ecl_kw_iget_ptr(keywords , index));
 	if (nums != NULL) num = ecl_kw_iget_int(nums , index);
-	ecl_sum->var_type[index] = __ecl_sum_identify_var_type(kw);
+	ecl_sum->var_type[index] = ecl_sum_identify_var_type(kw);
 	/* See table 3.4 in the ECLIPSE file format reference manual. */
 	switch(ecl_sum->var_type[index]) {
 	case(ecl_sum_completion_var):
@@ -733,7 +733,7 @@ int ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lo
   int     argc;
   ecl_sum_var_type var_type;
   util_split_string(lookup_kw , ":" , &argc , &argv);
-  var_type = __ecl_sum_identify_var_type(argv[0]);
+  var_type = ecl_sum_identify_var_type(argv[0]);
 
   switch(var_type) {
   case(ecl_sum_misc_var):
@@ -777,7 +777,7 @@ bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_
   int     argc;
   ecl_sum_var_type var_type;
   util_split_string(lookup_kw , ":" , &argc , &argv);
-  var_type = __ecl_sum_identify_var_type(argv[0]);
+  var_type = ecl_sum_identify_var_type(argv[0]);
 
   switch(var_type) {
   case(ecl_sum_misc_var):

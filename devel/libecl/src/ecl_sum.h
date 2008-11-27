@@ -33,7 +33,7 @@ void           	 ecl_sum_init_save(ecl_sum_type * , const char * , int , bool);
 bool           	 ecl_sum_has_well_var(const ecl_sum_type * , const char * , const char *);
 bool           	 ecl_sum_has_misc_var(const ecl_sum_type * , const char *);
 bool           	 ecl_sum_has_general_var(const ecl_sum_type * , const char *);
-
+ecl_sum_var_type ecl_sum_identify_var_type(const char * );
 
 int            	 ecl_sum_get_well_var_index(const ecl_sum_type * , const char * , const char *);
 int            	 ecl_sum_get_region_var_index(const ecl_sum_type * , int , const char *);
