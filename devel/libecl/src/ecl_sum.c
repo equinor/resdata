@@ -543,14 +543,11 @@ int ecl_sum_get_well_var_index(const ecl_sum_type * ecl_sum , const char * well 
     hash_type * var_hash = hash_get(ecl_sum->well_var_index , well);
     if (hash_has_key(var_hash , var))
       index = hash_get_int(var_hash , var); 
-    else {
-      fprintf(stderr,"%s: summary object does not have well/variable combination: %s/%s  \n",__func__ , well , var);
-      abort(); 
-    }   
-  } else {
-    fprintf(stderr,"%s: summary object does not contain well: %s \n",__func__ , well);
-    abort(); 
-  }
+    else 
+      util_abort("%s: summary object does not have well/variable combination: %s/%s  \n",__func__ , well , var);
+  } else 
+    util_abort("%s: summary object does not contain well: %s \n",__func__ , well);
+
   return index;
 }
 
