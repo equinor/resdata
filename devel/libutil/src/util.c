@@ -2414,7 +2414,10 @@ void util_double_vector_max_min(int N , const double *vector, double *_max , dou
   for (i = 0; i < N; i++) {
     if (vector[i] > max)
       max = vector[i];
-    else if (vector[i] < min)
+
+    /* Can not have else here - because same item might succed on both tests. */
+    
+    if (vector[i] < min)
       min = vector[i];
   }
   *_max = max;
