@@ -5,10 +5,12 @@ are closely linked to the concept of ECLIPSE files. In addition to the
 various files in this library, the library needs access to the
 libraries libutil and libhash.
 
-Observe that in the diagram below only explicit dependencies are
-illustrated, for instance the ecl_block.c will indirectly depend on
-ecl_util.h through ecl_kw.c, however this dependance is not
-illustrated.
+The diagrm below illustrates the (main) files in libecl, and how they
+depend on eachother. The dependencies follow the links, i.e. one file
+depends (explicitly) on all the files it points at. Observe that in
+the diagram below only explicit dependencies are illustrated, for
+instance the ecl_block.c will indirectly depend on ecl_util.h through
+ecl_kw.c, however this dependance is not illustrated.
 
 
 
@@ -20,77 +22,77 @@ illustrated.
 		        | The file ecl_sum.c implements the        |
 		        | ecl_sum_type which is used to work with  |
 		        | (read) summary files. The ecl_sum_type   |
-		        | loads the summary header (SMSPEC) and the|
-		        | summary data (*.Snnnn / *.UNSMRY). When  |
-		        | the data has been loaded we can query the|
-		        | ecl_sum object for summary variables,    |
-		        | like well rates and region properties.   |
-		         \________________________________________/
-		                              
-
-
-
-                        ________________________________________
-                       /                                        \
-                      |             ecl_fstate.c                 |
-                      | ---------------------------------------- |
-                      | The ecl_fstate file implements the       |
-                      | ecl_fstate_type. The 'fstate' is meant to|
-                      | indicate "File State", i.e. some ECLIPSE |
-            __________| state fully specified on file. The reason|______________
-           /          | for this somewhat contrived type is that |              \
-          |           | it should be possible to manipulate      |               |
-          |           | either a set of NOT unified restart files|		 |
-          |           | , or ONE UNIFIED restart file in the same|		 |
-          |           | manner.                                  |		 |
-          |            \________________________________________/		 |
-          |                               |					 |
-          |                               |					 |
-          |                               |					 |
-         \|/                              |					 |
-          |                               |					 |
-          |              ________________\|/_____________________		 |
-          |             /                                        \		 |
-          |            |               ecl_block.c                |		 |
-          |            | ---------------------------------------- |		 |
-          |            | Several unique ecl_kw instances are coll-|		 |
-          |            | ected in one ecl_block_type instance. For|		\|/
-         _|____________| instance one (non unified) restart file  |		 |
-        /              | like ECLIPSE.X0025 contains many ecl_kw  |		 |
-        |              | instances which together constitute one  |		 |
-        |              | ecl_block instance.                      |		 |        ________________________________________
-        |               \________________________________________/		 |	 /                                        \
-        |                                 |					 |	|              ecl_grid.c                  |
-        |                                 |					 |	| ---------------------------------------- |
-        |                                 |		    /--------------------+------| The file ecl_grid.c implements the type  |
-        |                                 |		    |  			 |	| ecl_grid_type. The functionality impl-   |
-        |                                 |		    |			 |	| emented in ecl_grid.c is to load itself  |
-        |               _________________\|/_______________\|/__		 |	| from an existing EGRID or GRID file.     |
-        |              /                                        \		 |	 \________________________________________/
-        |             |              ecl_kw.c                    |		 |	                     |
-        |             | ---------------------------------------- |		 |			     |
-        |             | The file ecl_kw.c implements the type    |		 |      		     |
-        |             | ecl_kw_type. This is the lowest level    |		 |			     |
-        |             | function in the libecl type hierarchy.   |		 |			     |
-        |             |                                          |<--------------|			     |
-        |             | ECLIPSE restart files, summary files,    |		 |			     |
-        |             | the INIT file, GRID/EGRID files, RFT     |		 |			     |
-        |             | file +++ all consist of basic building   |		 |			     |
-        |             | blocks consisting of:                    |		 |			     |
-        |             |   * NAME                                 |		 |			     |
-        |             |   * SIZE (number of elements)            |		 |			    \|/
-        |             |   * TYPE (float/double/int/logical/char) |		 |			     |
-        |             |   * DATA                                 |		 |			     |
-        |             | An ecl_kw instance contains one such     |		 |			     |
-        |             | basic building block.                    |		 |			     |
-        |              \________________________________________/		 |			     |
-        |                                 ||					 |			     |
-        |                                 ||					 |			     |
-        |                _________________/\_________________			 |			     |
-        |               /                                    \			 |			     |
-        |               |                                    |			 |			     |
-        |               |                                    |			 |			     |
-  _____\|/_____________\|/________________         _________\|/_________________\|/_____		     |
+		        | loads the summary header (SMSPEC) and the|____
+		        | summary data (*.Snnnn / *.UNSMRY). When  |	\
+		        | the data has been loaded we can query the|     |
+		        | ecl_sum object for summary variables,    |	 |
+		        | like well rates and region properties.   |	 |
+		         \________________________________________/	 |
+		                             |			      	 |
+					     |			       	\|/
+					     |			   	 |
+					     |			   	 |
+                        ____________________\|/_________________   	 |
+                       /                                        \  	 |
+                      |             ecl_fstate.c                 | 	 |
+                      | ---------------------------------------- |       |
+                      | The ecl_fstate file implements the       |   	 |
+                      | ecl_fstate_type. The 'fstate' is meant to|   	 |
+                      | indicate "File State", i.e. some ECLIPSE | 	 |
+            __________| state fully specified on file. The reason|_______|______
+           /          | for this somewhat contrived type is that |       |      \
+          |           | it should be possible to manipulate      |       |       |
+          |           | either a set of NOT unified restart files|  	 | 	 |
+          |           | , or ONE UNIFIED restart file in the same|  	 | 	 |
+          |           | manner.                                  |  	 | 	 |
+          |            \________________________________________/   	 | 	 |
+          |                               |			    	 | 	 |
+          |                               |			    	 | 	 |
+          |                               |			    	\|/	 |
+         \|/                              |			    	 | 	 |
+          |                               |			    	 | 	 |
+          |              ________________\|/_____________________   	 | 	 |
+          |             /                                        \  	 | 	 |
+          |            |               ecl_block.c                | 	 | 	 |
+          |            | ---------------------------------------- | 	 | 	 |
+          |            | Several unique ecl_kw instances are coll-| 	 | 	 |
+          |            | ected in one ecl_block_type instance. For|<-----| 	\|/
+         _|____________| instance one (non unified) restart file  |    	 | 	 |
+        /              | like ECLIPSE.X0025 contains many ecl_kw  | 	 | 	 |
+        |              | instances which together constitute one  | 	 | 	 |
+        |              | ecl_block instance.                      | 	 | 	 |        ________________________________________
+        |               \________________________________________/  	 | 	 |	 /                                        \
+        |                                 |			    	 | 	 |	|              ecl_grid.c                  |
+        |                                 |			    	 | 	 |	| ---------------------------------------- |
+        |                                 |		    /------------+-------+------| The file ecl_grid.c implements the type  |
+        |                                 |		    |  	    	 | 	 |	| ecl_grid_type. The functionality impl-   |
+        |                                 |		    |	    	 | 	 |	| emented in ecl_grid.c is to load itself  |
+        |               _________________\|/_______________\|/__    	 | 	 |	| from an existing EGRID or GRID file.     |
+        |              /                                        \   	 | 	 |	 \________________________________________/
+        |             |              ecl_kw.c                    | 	 | 	 |	                     |
+        |             | ---------------------------------------- | 	 | 	 |			     |
+        |             | The file ecl_kw.c implements the type    |<------| 	 |      		     |
+        |             | ecl_kw_type. This is the lowest level    | 	 | 	 |			     |
+        |             | function in the libecl type hierarchy.   | 	 | 	 |			     |
+        |             |                                          |<------|-------|			     |
+        |             | ECLIPSE restart files, summary files,    | 	 | 	 |			     |
+        |             | the INIT file, GRID/EGRID files, RFT     | 	 | 	 |			     |
+        |             | file +++ all consist of basic building   | 	 | 	 |			     |
+        |             | blocks consisting of:                    | 	 | 	 |			     |
+        |             |   * NAME                                 | 	 | 	 |			     |
+        |             |   * SIZE (number of elements)            | 	 | 	 |			    \|/
+        |             |   * TYPE (float/double/int/logical/char) | 	 | 	 |			     |
+        |             |   * DATA                                 | 	 | 	 |			     |
+        |             | An ecl_kw instance contains one such     | 	 | 	 |			     |
+        |             | basic building block.                    | 	 | 	 |			     |
+        |              \________________________________________/  	 | 	 |			     |
+        |                                 ||			   	 | 	 |			     |
+        |                                 ||			   	 | 	 |			     |
+        |                _________________/\_________________	   	 | 	 |			     |
+        |               /                                    \	   	 | 	 |			     |
+        |               |                                    |	   	 | 	 |			     |
+        |               |                                    |	   	 | 	 |			     |
+  _____\|/_____________\|/________________         _________\|/_________\|/_____\|/_____		     |
  /                                        \       /                                     \		     |
 |               fortio.c                   |     |               ecl_util.c              |		     |
 | ---------------------------------------- |     | ------------------------------------- |		     |
@@ -106,7 +108,7 @@ illustrated.
                      /|\                          \_____________________________________/		     |
 		      |											     |
 		      |											     |
-		      |______________________________________________________________________________________|
+		      \______________________________________________________________________________________/
 
 
 
