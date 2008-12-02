@@ -69,11 +69,14 @@ NUMS (integer) vectors whcih must be consulted for some variable
 types.
 
 
-Let us a consider a system consiting of:
+Let us a consider a system consisting of:
 
-  Two wells: P1 and P2 - for each well we have variables WOPR, WWCT and WGOR.
-  Three regions: For each region we have variables RPR and RXX(??)
-  We have stored field properties:
+  * Two wells: P1 and P2 - for each well we have variables WOPR, WWCT
+    and WGOR.
+
+  * Three regions: For each region we have variables RPR and RXX(??)
+
+  * We have stored field properties FOPT and FWPT
 
 
 KEYWORDS = ['TIME','FOPR','FPR','FWCT','WOPR','WOPR,'WWCT','WWCT]

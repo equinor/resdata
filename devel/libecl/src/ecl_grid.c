@@ -4,8 +4,8 @@
 
   Observe the following convention:
   
-    global_index:  [0 , nx*ny*nz)
-    active_index:  [0 , nactive)
+  global_index:  [0 , nx*ny*nz)
+  active_index:  [0 , nactive)
 */
 
 #include <stdlib.h>
@@ -48,8 +48,8 @@ struct ecl_grid_struct {
 void ecl_point_compare(const ecl_point_type *p1 , const ecl_point_type *p2) {
   if ((abs(p1->x - p2->x) + abs(p1->y - p2->y) + abs(p1->z - p2->z)) > 0.10)
     printf("ERROR");
-    
 }
+
 
 void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2) {
   int i;
@@ -148,6 +148,10 @@ static inline int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid , i
 }
 
   
+
+/**
+   i,j,k have zero based offset.
+*/
 int ecl_grid_get_global_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
   if (ecl_grid_ijk_valid(ecl_grid , i , j , k))
     return ecl_grid_get_global_index__(ecl_grid , i , j , k);
@@ -160,7 +164,9 @@ int ecl_grid_get_global_index(const ecl_grid_type * ecl_grid , int i , int j , i
 
 /**
    Return the active cell index (of the active cells) of the cell
-   i,j,k. Will happily return -1 if the cell is not active.
+   i,j,k. (with zero based offset).
+
+   Will return -1 if the cell is not active.
 */
 
 int ecl_grid_get_active_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
@@ -381,14 +387,6 @@ const int * ecl_grid_get_index_map_ref(const ecl_grid_type * grid) {
 /**
    This function allocates a copy of the index_map and returns it.
 */
-
-
-/*
-  int * ecl_grid_alloc_index_map_copy(const ecl_grid_type * ecl_grid) {
-  return util_alloc_copy(ecl_grid->index_map , ecl_grid->size * sizeof * ecl_grid->index_map , __func__);
-  }
-*/
-
 
 
 /**
