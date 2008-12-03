@@ -3565,7 +3565,7 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
 	    util_abort("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
 
 	  if (active != NULL && value2 > max_value)
-	    fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value1 , max_value);
+	    fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value2 , max_value);
 	  
 	  if (value2 < value1)
 	    util_abort("%s[2]: invalid interval - must have increasing range \n",__func__);
