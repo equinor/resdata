@@ -692,6 +692,84 @@ bool util_sscanf_int(const char * buffer , int * value) {
 
 
 
+
+/**
+   This function parses the string 's' for an integer. The return
+   value is a pointer to the first character which is not an integer
+   literal, or NULL if the whole string is read.
+
+   The actual integer value is returned by reference. In addition a
+   bool 'OK' is returned by reference, observe that that the bool OK
+   is checked on function entry, and must point to true then.
+
+   The somewhat contrived interface is to facilitate repeated calls on
+   the same string to get out all the integers, typically to be used
+   together with util_skip_sep().
+
+   Example
+   -------
+
+   s = "1, 10, 78, 67";
+         |   |   |   NULL
+         1   2   3   3
+         
+   The vertical bars indicate the return values.	 
+
+*/
+
+  
+const char * util_parse_int(const char * s , int * value, bool *OK) {
+  if (*OK) {
+    char * error_ptr;
+    *value = strtol(s , &error_ptr , 10);
+    if (error_ptr == s) *OK = false;
+    return error_ptr;
+  } else
+    return NULL;
+}
+
+
+
+/**
+   This function will skip the characters in s which are in the string
+   'sep_set' and return a pointer to the first character NOT in
+   'sep_set'; this is basically strspn() functionality. But it will
+   update a reference bool OK if no characters are skipped -
+   i.e. there should be some characters to skip. Typically used
+   together with util_parse_int():
+
+
+   Example
+   -------
+
+   const char * s = "1, 6 , 79 , 89 , 782";
+   const char * current_ptr = s;
+   bool OK = true;
+   while (OK) {
+      int value;
+      current_ptr = util_parse_int(current_ptr , &value , &OK);
+      if (OK) 
+         printf("Found:%d \n",value);
+      current_ptr = util_skip_sep(current_ptr , " ," , &OK);
+   }
+
+   
+*/
+
+const char * util_skip_sep(const char * s, const char * sep_set, bool *OK) {
+  if (*OK) {
+    int sep_length = strspn(s , sep_set);
+    if (sep_length == 0)
+      *OK = false;
+    return &s[sep_length];
+  } else 
+    return NULL;
+}
+
+
+
+
+
 /**
    This function will parse string containing an integer, and an
    optional suffix. The valid suffizes are KB,MB and GB (any case is
@@ -3446,9 +3524,9 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
     
     /* OK - we have found the first integer, now there are three possibilities:
        
-    1. The string contains nothing more (except) possibly whitespace.
-    2. The next characters are " , " - with more or less whitespace.
-    3. The next characters are " - " - with more or less whitespace.
+      1. The string contains nothing more (except) possibly whitespace.
+      2. The next characters are " , " - with more or less whitespace.
+      3. The next characters are " - " - with more or less whitespace.
     
     Otherwise it is a an invalid string.
     */
