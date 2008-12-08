@@ -1,17 +1,17 @@
 include global_config
 #################################################################
-COMPILE_INCLUDE   = -I./  -I$(LIBHASH_HOME)/include
-COMPILE_LIB_PATH  = -L$(LIBHASH_HOME)/lib
+COMPILE_INCLUDE   = -I./  
+COMPILE_LIB_PATH  = 
 INSTALL_INC_PATH = $(LIBUTIL_HOME)/include
 INSTALL_LIB_PATH = $(LIBUTIL_HOME)/lib
 #################################################################
 SDP_ROOT          = /project/res/$(shell /private/joaho/bin/res_target.py)
-OBJECTS           = util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o stringlist.o menu.o subst.o
-INC_FILES_INSTALL = util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h
+OBJECTS           = set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o node_ctype.o util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o stringlist.o menu.o subst.o
+INC_FILES_INSTALL = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h
 LIB_ROOT          = libutil
 LIB               = $(LIB_ROOT)_$(MFLAG).a
-LIB_LINK          = -lutil_$(MFLAG) -lhash_$(MFLAG) -lz -lpthread -lm
-LINK_LIB_PATH     = -L./ -L$(LIBHASH_HOME)/lib
+LIB_LINK          = -lutil_$(MFLAG) -lz -lpthread -lm
+LINK_LIB_PATH     = -L./ 
 
 LOCAL: LIB BIN
 	install -d $(INSTALL_INC_PATH)
@@ -41,6 +41,14 @@ $(LIB): $(OBJECTS)
 	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $(CPPFLAGS) $< -o $@
 
 #Library source code:
+node_ctype.o  : node_ctype.h node_ctype.c
+set.o         : set.c set.h hash.o
+node_data.o   : node_data.c node_data.h
+list_node.o   : list_node.c list_node.h
+list.o        : list.c list.h list_node.o node_data.o
+hash_node.o   : hash_node.c hash_node.h
+hash_sll.o    : hash_sll.c hash_sll.h hash_node.o
+hash.o        : hash.c hash.h hash_sll.o node_data.o
 stringlist.o  : stringlist.h stringlist.c util.o
 str_buffer.o  : str_buffer.c str_buffer.h
 void_arg.o    : void_arg.c void_arg.h util.o
@@ -52,14 +60,18 @@ menu.o        : menu.h menu.c util.o
 subst.o       : subst.h subst.c util.o
 
 # Binaries
+hash_test.o : hash_test.c
 util-test.o : util-test.c 
 eol-fix.o   : eol-fix.c  
 mem_free.o  : mem_free.c 
 
 #################################################################
 
-BIN:	util.x eol-fix.x mem_free.x 
-BIN_FILES = util.x eol-fix.x mem_free.x 
+BIN:	hash.x util.x eol-fix.x mem_free.x 
+BIN_FILES = hash.x util.x eol-fix.x mem_free.x 
+
+hash.x: hash_test.o $(LIB)
+	gcc $(LDFLAGS) -$(MFLAG) hash_test.o -o hash.x     $(LINK_LIB_PATH) $(LIB_LINK) 
  
 util.x: util-test.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) util-test.o -o util.x     $(LINK_LIB_PATH) $(LIB_LINK) 

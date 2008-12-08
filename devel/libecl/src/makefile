@@ -1,7 +1,7 @@
 include global_config
 #CC = g++
 #################################################################
-COMPILE_INCLUDE  = -I$(LIBECL_HOME)/src -I$(LIBUTIL_HOME)/include -I$(LIBHASH_HOME)/include 
+COMPILE_INCLUDE  = -I$(LIBECL_HOME)/src -I$(LIBUTIL_HOME)/include 
 INSTALL_INC_PATH =  $(LIBECL_HOME)/include
 INSTALL_LIB_PATH =  $(LIBECL_HOME)/lib
 #################################################################
@@ -11,8 +11,8 @@ MOD_FILES =
 INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h ecl_rft_vector.h ecl_rft_node.h ecl_box.h ecl_grid.h restart_kw_list.h  ecl_io_config.h
 LIB_ROOT  = libecl
 LIB       = $(LIB_ROOT)_$(MFLAG).a
-LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L$(LIBHASH_HOME)/lib -L./
-LIB_LINK  = -lecl_$(MFLAG) -lutil_$(MFLAG) -lhash_$(MFLAG) -lm -lz -lpt
+LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L./
+LIB_LINK  = -lecl_$(MFLAG) -lutil_$(MFLAG) -lm -lz -lpt
 
 
 LOCAL: LIB BIN
