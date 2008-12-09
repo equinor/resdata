@@ -148,6 +148,9 @@ static void * __hash_get_node_unlocked(const hash_type *__hash , const char *key
   This function looks up a hash_node from the hash. This is the common
   low-level function to get content from the hash. The function takes
   read-lock which is held during execution.
+
+  Would strongly preferred that the hash_type * was const - but that is
+  difficult due to locking requirements.
 */
 
 static void * __hash_get_node(hash_type *hash , const char *key, bool abort_on_error) {
@@ -283,8 +286,9 @@ static hash_node_type * hash_internal_iter_next(const hash_type *hash , const ha
    If the hash table is empty NULL is returned.
 */
 
-static char ** hash_alloc_keylist__(const hash_type *hash) {
+static char ** hash_alloc_keylist__(hash_type *hash , bool lock) {
   char **keylist;
+  if (lock) __hash_rdlock( hash );
   {
     if (hash->elements > 0) {
       int i = 0;
@@ -307,6 +311,7 @@ static char ** hash_alloc_keylist__(const hash_type *hash) {
       }
     } else keylist = NULL;
   }
+  if (lock) __hash_unlock( hash );
   return keylist;
 }
 
@@ -395,7 +400,7 @@ void hash_clear(hash_type *hash) {
   {
     int old_size = hash_get_size(hash);
     if (old_size > 0) {
-      char **keyList = hash_alloc_keylist__( hash );
+      char **keyList = hash_alloc_keylist__( hash , false);
       int i;
       for (i=0; i < old_size; i++) {
 	hash_del_unlocked__(hash , keyList[i]);
@@ -463,7 +468,7 @@ void hash_free__(void *void_hash) {
 
 
 char ** hash_alloc_keylist(hash_type *hash) {
-  return hash_alloc_keylist__(hash );
+  return hash_alloc_keylist__(hash , true);
 }
 
 
@@ -789,7 +794,7 @@ void hash_iter_init(hash_type * hash) {
   
   __hash_rdlock( hash ); /* Until _finalize */
   {
-    hash->__iter_keylist = hash_alloc_keylist__( hash );
+    hash->__iter_keylist = hash_alloc_keylist__( hash , false);
     hash->__iter_index   = 0;
     hash->__iter_active  = true;
   }
