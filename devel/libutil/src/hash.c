@@ -283,9 +283,8 @@ static hash_node_type * hash_internal_iter_next(const hash_type *hash , const ha
    If the hash table is empty NULL is returned.
 */
 
-static char ** hash_alloc_keylist__(hash_type *hash , bool lock) {
+static char ** hash_alloc_keylist__(const hash_type *hash) {
   char **keylist;
-  if (lock) __hash_rdlock( hash );
   {
     if (hash->elements > 0) {
       int i = 0;
@@ -308,9 +307,12 @@ static char ** hash_alloc_keylist__(hash_type *hash , bool lock) {
       }
     } else keylist = NULL;
   }
-  if (lock) __hash_unlock( hash );
   return keylist;
 }
+
+
+
+
 
 
 /*****************************************************************/
@@ -326,6 +328,7 @@ static void hash_insert_managed_copy(hash_type *hash, const char *key, const voi
   node_data_type *node_data = node_data_alloc(value_size , value_ptr);
   node = hash_node_alloc_new(key , node_data , node_data_copyc , node_data_free , hash->hashf , hash->size);
   __hash_insert_node(hash , node);
+
   /* This only frees the container - actual storage is freed when the hash table is deleted */
   free(node_data);
 }
@@ -392,7 +395,7 @@ void hash_clear(hash_type *hash) {
   {
     int old_size = hash_get_size(hash);
     if (old_size > 0) {
-      char **keyList = hash_alloc_keylist__(hash , false);
+      char **keyList = hash_alloc_keylist__( hash );
       int i;
       for (i=0; i < old_size; i++) {
 	hash_del_unlocked__(hash , keyList[i]);
@@ -460,7 +463,7 @@ void hash_free__(void *void_hash) {
 
 
 char ** hash_alloc_keylist(hash_type *hash) {
-  return hash_alloc_keylist__(hash , true);
+  return hash_alloc_keylist__(hash );
 }
 
 
@@ -683,7 +686,7 @@ bool hash_key_list_compare(hash_type * hash1, hash_type * hash2)
         hash_iter_init().
 
 
-     2. Iterate through the hash with hash_iter_get_next_key() and
+     2. Iterate through the hash with hash_iter_get_next_key() or
         hash_iter_get_next_value(). 
 
 
@@ -754,8 +757,6 @@ Recursive : careful with that!
 
 
 
-
-
 void hash_iter_finalize(hash_type * hash) {
   if (hash->__iter_active) {
     if (hash->elements > 0) {
@@ -788,7 +789,7 @@ void hash_iter_init(hash_type * hash) {
   
   __hash_rdlock( hash ); /* Until _finalize */
   {
-    hash->__iter_keylist = hash_alloc_keylist__(hash , false);
+    hash->__iter_keylist = hash_alloc_keylist__( hash );
     hash->__iter_index   = 0;
     hash->__iter_active  = true;
   }
@@ -830,7 +831,7 @@ const char * hash_iter_get_next_key(hash_type * hash) {
    This function will return the next value (by calling get_next_key
    first). If the iteration is complete the function will return NULL.
 
-   If you have inserted NULL in the hash table, you can not use that
+   If you have not inserted NULL in the hash table, you can not use that
    return value to signal a complete iteration. If you pass in a (bool
    *) to complete that will be set to true when the iteration is
    complete.
