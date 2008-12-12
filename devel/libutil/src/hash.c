@@ -394,6 +394,18 @@ void hash_del(hash_type *hash , const char *key) {
   __hash_unlock( hash );
 }
 
+/**
+   This function will delete the key if it exists in the hash, but it
+   will NOT fail if the key is not already in the hash table.
+*/
+   
+void hash_safe_del(hash_type * hash , const char * key) {
+  __hash_wrlock( hash );
+  if (__hash_get_node_unlocked(hash , key , false))
+    hash_del_unlocked__(hash , key);
+  __hash_unlock( hash );
+}
+
 
 void hash_clear(hash_type *hash) {
   __hash_wrlock( hash );

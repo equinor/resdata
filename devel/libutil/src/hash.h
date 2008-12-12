@@ -29,6 +29,7 @@ bool        	  hash_has_key(const hash_type *, const char *);
 void        	* hash_get(const hash_type *, const char *);
 const char      * hash_get_string(const hash_type * , const char *);
 void        	  hash_del(hash_type *, const char *);
+void              hash_safe_del(hash_type * , const char * );
 void              hash_clear(hash_type *);
 int         	  hash_get_size(const hash_type *);
 void        	  hash_set_keylist(const hash_type * , char **);
