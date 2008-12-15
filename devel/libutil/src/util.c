@@ -2541,6 +2541,13 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
 
 /*****************************************************************/
 
+int util_open(const char * filename, int flags) {
+  int fd = open(pathname , flags);
+  if (fd == -1) 
+    util_abort("%s: failed to open:%s with flags:%d \n",__func__ , filename , flags);
+  return fd;
+}
+
 
 FILE * util_fopen(const char * filename , const char * mode) {
   FILE * stream = fopen(filename , mode);
