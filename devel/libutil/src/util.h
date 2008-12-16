@@ -60,7 +60,7 @@ int    	     util_forward_line(FILE * , bool * );
 void   	     util_rewind_line(FILE *);
 int    	     util_count_content_file_lines(FILE * );
 int    	     util_count_file_lines(FILE * );
-int          util_open(const char * , int );
+FILE       * util_fopen_lockf(const char * , const char * );
 FILE   	   * util_fopen(const char *  , const char *);
 void   	     util_alloc_file_components(const char * , char ** , char **, char **);
 char   	   * util_realloc_full_path(char * , const char *, const char *);

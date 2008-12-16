@@ -2541,12 +2541,32 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
 
 /*****************************************************************/
 
-int util_open(const char * filename, int flags) {
-  int fd = open(filename , flags);
+
+/* 
+   Opens a file, and locks it for exclusive acces. fclose() will
+   release all locks. 
+*/
+
+FILE * util_fopen_lockf(const char * filename, const char * mode) {
+  int flags = 0; /* Compiler shut up */
+  int fd;
+  int lock_status;
+
+  flags = O_RDWR;  /* Observe that the open call must have write option to be able to place a lock - even though we only attempt to read from the file. */
+  if (strcmp(mode , "w") == 0)
+    flags += O_CREAT;
+  
+  fd = open(filename , flags);
   if (fd == -1) 
     util_abort("%s: failed to open:%s with flags:%d \n",__func__ , filename , flags);
-  return fd;
+  
+  lock_status = lockf(fd , F_LOCK , 0);
+  if (lock_status != 0)
+    util_abort("%s: failed to lock file: %s %s(%d) \n",__func__ , filename , strerror(errno) , errno);
+  
+  return fdopen(fd , mode);
 }
+
 
 
 FILE * util_fopen(const char * filename , const char * mode) {

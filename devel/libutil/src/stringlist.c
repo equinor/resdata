@@ -384,3 +384,8 @@ stringlist_type * stringlist_fread_alloc(FILE * stream) {
   stringlist_fread(s , stream);
   return s;
 }
+
+
+/*****************************************************************/
+
+
