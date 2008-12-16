@@ -22,6 +22,7 @@ void            ecl_grid_summarize(const ecl_grid_type * );
 void            ecl_grid_get_ijk(const ecl_grid_type * , int , int *, int * , int *);
 void            ecl_grid_get_ijk_from_active_index(const ecl_grid_type *, int , int *, int * , int * );
 const int     * ecl_grid_get_index_map_ref(const ecl_grid_type * );
+void            ecl_grid_get_pos(const ecl_grid_type * , int , int , int , double * , double * , double *);
 
 #ifdef __cplusplus
 }

@@ -598,6 +598,19 @@ void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int g
 }
 
 
+/*
+  ijk are C-based zero offset.
+*/
+void ecl_grid_get_pos(const ecl_grid_type * grid , int i, int j , int k, double *xpos , double *ypos , double *zpos) {
+  const int global_index     = ecl_grid_get_global_index__(grid , i , j , k );
+  const ecl_cell_type * cell = grid->cells[global_index];
+
+  *xpos = cell->center.x;
+  *ypos = cell->center.y;
+  *zpos = cell->center.z;
+}
+
+
 
 void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
   int             active_cells , nx,ny,nz;
