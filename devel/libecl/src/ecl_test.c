@@ -11,10 +11,11 @@
 #include <ecl_grid.h>
 
 int main(int argc, char ** argv) {
-  ecl_grid_type * ecl_grid = ecl_grid_alloc("/d/proj/bg/enkf/share/Gurbat2/HM_ENKF/STFO/REF/STFO2008_REF.EGRID" , true);
-  ecl_grid_summarize(ecl_grid);
-  ecl_grid_get_active_index( ecl_grid , 35 , 74 , 7);
-  ecl_grid_get_active_index( ecl_grid , 35 , 74 ,14);
-  ecl_grid_get_active_index( ecl_grid , 34 , 74 ,18);
-  ecl_grid_get_active_index( ecl_grid , 34 , 74 ,21);
+  const char * filename = "test.GRDECL";
+  FILE * stream = util_fopen(filename , "r");
+  ecl_kw_grdecl_fseek_kw("PORO" , true , false ,stream , filename);
+  ecl_kw_grdecl_fseek_kw("PERMX" , true , false ,stream , filename);
+  ecl_kw_grdecl_fseek_kw("PERMZ" , true , false ,stream , filename);
+  ecl_kw_grdecl_fseek_kw("GRIDHEAD" , true , false ,stream , filename);
+  fclose(stream);
 }

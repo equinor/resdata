@@ -679,6 +679,19 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
 }
 
 
+/**
+   Will seek through the open fortio file and search for a keyword with
+   header 'kw'.It will always start the search from the present
+   position in the file, but if rewind is true it will rewind the
+   fortio file if not finding 'kw' between current offset and EOF.
+
+   If the kw is found the fortio pointer is positioned at the
+   beginning of the keyword, and the function returns true. If the the
+   'kw' is NOT found the file will be repositioned to the initial
+   position, and the function will return false; unlessa bort_on_error
+   == true in which case the function will abort if the 'kw' s not found.
+*/
+   
 
 bool ecl_kw_fseek_kw(const char * kw , bool rewind , bool abort_on_error , fortio_type *fortio) {
   ecl_kw_type *tmp_kw = ecl_kw_alloc_empty();
@@ -751,6 +764,69 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
   return kw_found;
 }
 
+
+/** 
+  This function weill search through a GRDECL file to look for the
+  'kw'; input variables and return vales are similar to
+  ecl_kw_fseek_kw(). The filename argument is ONLY used for printing a
+  sensible error message when/if aborting.
+
+  Observe that the GRDECL files are exteremly weakly structured, it is
+  therefor veeeery easy to fool this function with a malformed GRDECL
+  file. The current implementation just does string-search for 'kw'.
+*/
+
+bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error , FILE * stream, const char * filename) {
+  char *file_kw     = util_alloc_string_copy( kw );
+  long int init_pos = ftell(stream);
+  bool cont, kw_found;
+  
+  cont     = true;
+  kw_found = false;
+  while (cont) {
+    int c;
+    bool at_EOF   = false;
+    do {
+      c = getc( stream );
+    } while (c != kw[0] && c != EOF);
+    if (c == EOF) at_EOF = true;
+
+    if ( !at_EOF ) {
+      /*
+	Now we have found a character which is equal to the first character in kw - this might be it! 
+      */
+      if (fread(&file_kw[1] , 1 , strlen(kw) - 1 , stream) == (strlen(kw) - 1)) {
+	/* OK - we have read in the remaining number of characters - let us compare! */
+	if (strcmp(file_kw , kw) == 0) {
+	  kw_found = true;
+	  cont = false;
+	} else
+	  fseek(stream , -(strlen(kw) - 1) , SEEK_CUR);
+      } else at_EOF = true;
+    }
+    
+    if (!kw_found) {
+      if (at_EOF) {
+	if (rewind) {
+	  fseek(stream , 0L , SEEK_SET); /* Go to beginning of file */
+	  rewind = false;                /* No more rewinds ... */
+	} else
+	  cont = false;                  /* OK - give up with kw_found == false. */
+      }
+    }
+  }
+	  
+  if (!kw_found) {
+    if (abort_on_error) 
+      util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , filename);
+    
+    fseek(stream , init_pos , SEEK_SET);     /* Repositioning to the initial position. */
+  } else
+    fseek(stream , -strlen(kw) , SEEK_CUR);  /* Reposition to the beginning of kw */
+  
+  free(file_kw);
+  return kw_found;
+}
 
 
 
