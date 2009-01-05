@@ -16,7 +16,8 @@
 
 
 int main(int argc , char ** argv) {
-  FILE * stream = util_fopen("link" , "r");
+  FILE * stream1 = util_fopen("link" , "r");
+  FILE * stream2 = util_fopen("fileXX" , "w");
   
   printf("Succesfully opened /tmp for reading ... \n");
 }
