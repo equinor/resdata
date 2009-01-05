@@ -502,9 +502,37 @@ void util_fskip_chars(FILE * stream , const char * skip_set , bool *at_eof) {
   util_fskip_chars__(stream , skip_set , false , at_eof);
 }
 
-
 void util_fskip_cchars(FILE * stream , const char * skip_set , bool *at_eof) {
   util_fskip_chars__(stream , skip_set , true , at_eof);
+}
+
+
+static void util_fskip_space__(FILE * stream , bool complimentary_set , bool *at_eof) {
+  bool cont     = true;
+  do {
+    int c = fgetc(stream);
+    if (c == EOF) {
+      *at_eof = true;
+      cont = false;
+    } else {
+      if (!isspace(c)) {
+	/* c is not in space set. */
+	if (!complimentary_set)
+	  cont = false;
+      } else {
+	/* c is in skip_set */
+	if (complimentary_set)
+	  cont = false;
+      }
+    }
+  } while (cont);
+  if (!*at_eof)
+    fseek(stream , -1 , SEEK_CUR);
+}
+
+
+void util_fskip_space(FILE * stream ,  bool *at_eof) {
+  util_fskip_space__(stream , false , at_eof);
 }
 
 
@@ -2540,6 +2568,20 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
 }
 
 /*****************************************************************/
+
+
+   
+/**
+   This function will update *value so that on return ALL bits which
+   are set in bitmask, are also set in value. No other bits in *value
+   should be modified - i.e. it is a logical or.
+*/
+
+void util_bitmask_on(int * value , int mask) {
+  int tmp = *value;
+  tmp = (tmp | mask);
+  *value = tmp;
+}
 
 
 /* 

@@ -19,6 +19,7 @@ typedef enum {left_pad  = 0,
 	      right_pad = 1,
 	      center    = 2} string_alignement_type;
 
+void         util_bitmask_on(int *  , int );
 time_t       util_make_datetime(int , int , int , int , int , int );
 time_t       util_make_date(int , int , int);
 void         util_inplace_forward_days(time_t *  , double);
@@ -69,6 +70,7 @@ char   	   * util_fscanf_alloc_line(FILE *, bool *);
 char   	   * util_fscanf_realloc_line(FILE *, bool * , char *);
 char   	   * util_fscanf_alloc_token(FILE * );
 void   	     util_fskip_token(FILE * );
+void         util_fskip_space(FILE *  ,  bool *);
 void   	     util_fskip_chars(FILE * , const char * , bool *);
 void   	     util_fskip_cchars(FILE * , const char * , bool *);
 bool   	     util_fscanf_int(FILE * , int * );
