@@ -47,6 +47,8 @@ void            * hash_iter_get_next_value(hash_type *  , bool * );
 const      char * hash_iter_get_first_key(hash_type * );
 void            * hash_iter_get_first_value(hash_type * , bool * );
 
+hash_type       * hash_alloc_from_options(int  , const char ** );
+
 HASH_GET_SCALAR(hash_get_int       , int);
 HASH_GET_SCALAR(hash_get_double    , double);
 HASH_INSERT_SCALAR(hash_insert_int    , int);

@@ -11,6 +11,7 @@
 #include <node_data.h>
 #include <pthread.h>
 #include <errno.h>
+#include <util.h>
 
 #define HASH_DEFAULT_SIZE 16
 
@@ -889,6 +890,42 @@ void * hash_iter_get_first_value(hash_type * hash, bool * complete) {
   return hash_iter_get_next_value(hash , complete);
 }
 
+
+/*****************************************************************/
+/**
+   This function will take a list of strings of type: 
+
+     ["OPT1:Value1" , "MIN:0.0001" , "MAX:1.00" , "FILE:XX"]
+
+   and build a hash table where the element in front of ':' is used as
+   key, and the element behind the ':' is used as value. The value is
+   internalized as a (char *) pointer with no type conversion. 
+
+   In the calling scope the values should be extracted with hash_get().
+*/
+
+
+hash_type * hash_alloc_from_options(int num_options , const char ** options) {
+  hash_type * opt_hash = hash_alloc();
+  int iopt;
+
+  for (iopt = 0; iopt < num_options; iopt++) {
+    char ** tokens;
+    int     num_tokens;
+    util_split_string(options[iopt] , ":" , &num_tokens , &tokens);
+    if (num_tokens != 2)
+      fprintf(stderr,"** Warning the option: \"%s\" could not be interpredet as \"OPTION:VALUE\" - ignored. \n", options[iopt]);
+    else {
+      const char * option = tokens[0];
+      const char * value  = tokens[1];
+      
+      hash_insert_hash_owned_ref( opt_hash , option , util_alloc_string_copy(value) , free);
+    }
+    util_free_stringlist( tokens , num_tokens );
+  }
+  
+  return opt_hash;
+}
 
 
 #undef HASH_GET_SCALAR
