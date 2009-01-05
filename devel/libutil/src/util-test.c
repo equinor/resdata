@@ -16,18 +16,7 @@
 
 
 int main(int argc , char ** argv) {
-  arg_pack_type * arg_pack = arg_pack_alloc();
-
-  arg_pack_append_int(arg_pack , 1);
-  arg_pack_append_int(arg_pack , 2);
-  {
-    FILE * stream = util_fopen("arg_text.txt" , "r");
-    arg_pack_fscanf(arg_pack , stream);
-    fclose(stream);
-  }
+  FILE * stream = util_fopen("link" , "r");
   
-  arg_pack_fprintf(arg_pack , stdout);
-
-  arg_pack_free( arg_pack );
-
+  printf("Succesfully opened /tmp for reading ... \n");
 }

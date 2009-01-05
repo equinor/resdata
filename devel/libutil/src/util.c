@@ -2612,10 +2612,16 @@ FILE * util_fopen_lockf(const char * filename, const char * mode) {
 
 
 FILE * util_fopen(const char * filename , const char * mode) {
-  FILE * stream = fopen(filename , mode);
-  if (stream == NULL) 
-    util_abort("%s: failed to open:%s - error:%s \n",__func__ , filename , strerror(errno));
-  return stream;
+  if (strcmp(mode , "r") == 0)
+    if (!util_is_file( filename )) 
+      util_abort("%s: tried to open:%s for reading. Is not regular file.\n",__func__ , filename);
+  
+  {
+    FILE * stream = fopen(filename , mode);
+    if (stream == NULL) 
+      util_abort("%s: failed to open:%s - error:%s \n",__func__ , filename , strerror(errno));
+    return stream;
+  }
 }
 
 
