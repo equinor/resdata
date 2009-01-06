@@ -2586,7 +2586,7 @@ void util_bitmask_on(int * value , int mask) {
 
 /* 
    Opens a file, and locks it for exclusive acces. fclose() will
-   release all locks. 
+   release all locks.
 */
 
 FILE * util_fopen_lockf(const char * filename, const char * mode) {
@@ -2614,7 +2614,7 @@ FILE * util_fopen_lockf(const char * filename, const char * mode) {
 FILE * util_fopen(const char * filename , const char * mode) {
   if (strcmp(mode , "r") == 0)
     if (!util_is_file( filename )) 
-      util_abort("%s: tried to open:%s for reading. Is not regular file.\n",__func__ , filename);
+      util_abort("%s: tried to open:%s for reading. Is not a regular file.\n",__func__ , filename);
   
   {
     FILE * stream = fopen(filename , mode);
@@ -2861,7 +2861,6 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
   that the file must have been created with util_fwrite_compressed()
   first. Trying to read a file compressed with gzip will fail.
 */
-
 
 void util_fread_compressed(void *__data , FILE * stream) {
   char * data = (char *) __data;
