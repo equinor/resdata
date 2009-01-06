@@ -22,13 +22,13 @@
   
 
 struct ecl_fstate_struct {
+  int         	   files;
   char 	      	 **filelist;
   bool 	      	   fmt_file;
   int              fmt_mode;
   bool 	      	   endian_convert;
   bool        	   unified;
   bool             __RPTONLY;
-  int         	   files;
   int              N_blocks;
   int              block_size;
   ecl_block_type **block_list;
@@ -327,9 +327,16 @@ ecl_block_type * ecl_fstate_get_block_by_report_nr(const ecl_fstate_type * ecl_f
 
 ecl_block_type * ecl_fstate_iget_block(const ecl_fstate_type * ecl_fstate , int index) {
   int block_index = index;
-  if (block_index < 0 || block_index >= ecl_fstate->N_blocks) 
+
+  if (block_index < 0 || block_index >= ecl_fstate->N_blocks) {
+    int i;
+    fprintf(stderr,"Fatal error when working with file(s): ");
+    for (i = 0; i < ecl_fstate->files; i++)
+      fprintf(stderr," %s",ecl_fstate->filelist[i]);
+    fprintf(stderr,"\n");
     util_abort("%s: index:%d invalid - legal range: [0,%d> - aborting \n",__func__ , index , ecl_fstate->N_blocks);
-  
+  }
+
   return ecl_fstate->block_list[block_index];
 }
 

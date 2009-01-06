@@ -1333,6 +1333,7 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
     fscanf(stream , "%s" , buffer);
     
     if (buffer[0] != '/') {
+      fprintf(stderr,"\n");
       fprintf(stderr,"Have read:%d items \n",size);
       fprintf(stderr,"File is malformed for some reason ...\n");
       fprintf(stderr,"Looking at: %s \n",buffer);
