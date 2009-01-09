@@ -39,9 +39,10 @@ struct ecl_sum_struct {
   int               Nwells , param_offset;
   int               params_size;
   char            **well_list;
-  char            * base_name;
+  char            * simulation_case;        /* This should be full path and basename - without any extension. */
   bool              endian_convert;
   bool              unified;
+  bool              has_sim_time;           /* True if the summary files have DAY / MONTH / YEAR information.*/
   time_t            sim_start_time;
 };
 
@@ -90,7 +91,7 @@ KEYWORDS = ['TIME','FOPR','FPR','FWCT','WOPR','WOPR,'WWCT','WWCT]
 
 
 
-static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
+static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert , const char * path , const char * base_name) {
   ecl_sum_type *ecl_sum;
   ecl_sum = util_malloc(sizeof *ecl_sum , __func__);
   ecl_sum->fmt_mode           	     = fmt_mode;
@@ -110,10 +111,11 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert) {
   ecl_sum->header             	     = NULL;
   ecl_sum->data               	     = NULL;
   ecl_sum->well_list          	     = NULL;
-  ecl_sum->base_name          	     = NULL;
   ecl_sum->sim_start_time     	     = -1;  
   ecl_sum->report_offset             = 0;
   ecl_sum->__id                      = ECL_SUM_ID;
+  ecl_sum->has_sim_time              = false;
+  ecl_sum->simulation_case           = util_alloc_full_path(path , base_name);
   return ecl_sum;
 }
 
@@ -373,26 +375,51 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 
 
 ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const char **data_files , bool report_mode , bool endian_convert) {
-  ecl_sum_type *ecl_sum   = ecl_sum_alloc_empty(ECL_FMT_AUTO , endian_convert);
+  ecl_sum_type *ecl_sum;
+  
+  {
+    char * base_name , *path;
+    util_alloc_file_components(header_file , &path , &base_name , NULL);
+    ecl_sum = ecl_sum_alloc_empty(ECL_FMT_AUTO , endian_convert , path , base_name);
+    util_safe_free(base_name);
+    util_safe_free(path);
+  }
 
   ecl_sum_fread_alloc_data(ecl_sum , files , data_files , report_mode);
   ecl_sum_fread_header(ecl_sum , header_file);
-  if (hash_has_key(ecl_sum->misc_var_index , "DAY")) {
+  if (hash_has_key(ecl_sum->misc_var_index , "TIME")) {
+    int time_index = hash_get_int(ecl_sum->misc_var_index , "TIME");
     int iblock;
-    int day_index   = hash_get_int(ecl_sum->misc_var_index , "DAY");
-    int month_index = hash_get_int(ecl_sum->misc_var_index , "MONTH");
-    int year_index  = hash_get_int(ecl_sum->misc_var_index , "YEAR");
     
-    for (iblock = 0; iblock < ecl_fstate_get_size(ecl_sum->data); iblock++) {
-      ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , iblock);
-      ecl_block_set_sim_time_summary(block , /*time_index , years_index , */ day_index , month_index , year_index);
+    if (hash_has_key(ecl_sum->misc_var_index , "DAY")) {
+      int day_index   = hash_get_int(ecl_sum->misc_var_index , "DAY");
+      int month_index = hash_get_int(ecl_sum->misc_var_index , "MONTH");
+      int year_index  = hash_get_int(ecl_sum->misc_var_index , "YEAR");
+      
+      /** Setting simulation time from DAY/MONTH/YEAR */
+      for (iblock = 0; iblock < ecl_fstate_get_size(ecl_sum->data); iblock++) {
+	ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , iblock);
+	ecl_block_set_sim_time_summary_dmy(block , time_index , day_index , month_index , year_index);
+      }
+    } else {
+      /** Setting simulation time from elapsed days. */
+      for (iblock = 0; iblock < ecl_fstate_get_size(ecl_sum->data); iblock++) {
+	ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , iblock);
+	ecl_block_set_sim_time_summary_days(block , ecl_sum->sim_start_time , time_index);
+      }
     }
-  } else 
+    ecl_sum->has_sim_time = true;
+    
+  } else {
     fprintf(stderr,"** Warning: could not locate DAY / MONTH / YEAR in %s - dates will be defaulted. Add 'DATE' to the summary section in the .DATA file to prevent this problem.\n", header_file);
+    ecl_sum->has_sim_time = false;
+  }
   
   return ecl_sum;
 }
 	
+
+
 
 									
 static void ecl_sum_set_unified(ecl_sum_type *ecl_sum , bool unified) {
@@ -412,20 +439,20 @@ void ecl_sum_set_header_data(ecl_sum_type *ecl_sum , const char *kw , void *valu
 
 
 
-void ecl_sum_init_save(ecl_sum_type * ecl_sum , const char * base_name , int fmt_mode , bool unified) {
-  ecl_sum->base_name = calloc(strlen(base_name) + 1 , sizeof *ecl_sum->base_name);
-  strcpy(ecl_sum->base_name , base_name);
-
+/*void ecl_sum_init_save(ecl_sum_type * ecl_sum , const char * base_name , int fmt_mode , bool unified) {
   ecl_sum_set_fmt_mode(ecl_sum , fmt_mode);
   ecl_sum_set_unified(ecl_sum , unified);
 }
+*/
 
 
 
 void ecl_sum_save(const ecl_sum_type * ecl_sum) {
+  char * base_name;
   char *summary_spec , ext[2] , *data_file;
   bool fmt_file;
-  if (ecl_sum->base_name == NULL || !(ecl_sum->fmt_mode == ECL_FORMATTED || ecl_sum->fmt_mode == ECL_BINARY)) {
+  /*if (ecl_sum->base_name == NULL || !(ecl_sum->fmt_mode == ECL_FORMATTED || ecl_sum->fmt_mode == ECL_BINARY)) {*/
+  if (true) {
     fprintf(stderr,"%s: must inititialise ecl_sum object prior to saving - aborting \n",__func__);
     abort();
   }
@@ -436,12 +463,12 @@ void ecl_sum_save(const ecl_sum_type * ecl_sum) {
     fmt_file = false;
     sprintf(ext , "S");
   }
-  summary_spec = ecl_util_alloc_filename(NULL , ecl_sum->base_name ,  ecl_summary_header_file , fmt_file , -1);
+  summary_spec = ecl_util_alloc_filename(NULL , base_name ,  ecl_summary_header_file , fmt_file , -1);
   ecl_fstate_set_files(ecl_sum->header , 1 , (const char **) &summary_spec);
   
 
   if (ecl_sum->unified) {
-    data_file = ecl_util_alloc_filename(NULL , ecl_sum->base_name ,  ecl_unified_summary_file , fmt_file , -1);
+    data_file = ecl_util_alloc_filename(NULL , base_name ,  ecl_unified_summary_file , fmt_file , -1);
     ecl_fstate_set_files(ecl_sum->data , 1 , (const char **) &data_file);
     free(data_file);
   } else {
@@ -449,7 +476,7 @@ void ecl_sum_save(const ecl_sum_type * ecl_sum) {
     char **filelist;
     
     files = ecl_fstate_get_report_size(ecl_sum->data , &report_nr1 , &report_nr2);
-    filelist = ecl_util_alloc_simple_filelist(NULL , ecl_sum->base_name , ecl_summary_file , fmt_file , report_nr1 , report_nr2);
+    filelist = ecl_util_alloc_simple_filelist(NULL , base_name , ecl_summary_file , fmt_file , report_nr1 , report_nr2);
     ecl_fstate_set_files(ecl_sum->data , files , (const char **) filelist);
     util_free_stringlist(filelist , files);
   }
@@ -473,6 +500,9 @@ static void ecl_sum_assert_index(const ecl_sum_type * ecl_sum, int index) {
 bool ecl_sum_has_report_nr(const ecl_sum_type * ecl_sum, int report_nr) {
   return ecl_fstate_has_report_nr(ecl_sum->data , report_nr);
 }
+
+
+
 
 /*
   time_index is zero based anyway ..... not nice 
@@ -541,7 +571,7 @@ static void ecl_sum_list_wells(const ecl_sum_type * ecl_sum) {
 
 
 int ecl_sum_get_well_var_index(const ecl_sum_type * ecl_sum , const char * well , const char *var) {
-  int index;
+  int index = -1; /* Compiler shut up. */
 
   if (hash_has_key(ecl_sum->well_var_index , well)) {
     hash_type * var_hash = hash_get(ecl_sum->well_var_index , well);
@@ -957,11 +987,20 @@ time_t ecl_sum_get_start_time(const ecl_sum_type * ecl_sum) {
   return ecl_sum->sim_start_time;
 }
 
+/**
+   If the summary file does not contain timing information this
+   function will (happily) return -1. It is the responsability of the
+   calling scope to check that return value.
+*/
 
 time_t ecl_sum_iget_sim_time(const ecl_sum_type * ecl_sum , int index) {
-  ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , index);
-  return ecl_block_get_sim_time(block);
+  if (ecl_sum->has_sim_time) {
+    ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , index);
+    return ecl_block_get_sim_time(block);
+  } else
+    return -1;
 }
+
 
 
 time_t ecl_sum_get_sim_time(const ecl_sum_type * ecl_sum , int report_step) {
@@ -969,6 +1008,15 @@ time_t ecl_sum_get_sim_time(const ecl_sum_type * ecl_sum , int report_step) {
   return ecl_block_get_sim_time(block);
 }
 
+
+
+bool ecl_sum_has_sim_time(const ecl_sum_type * ecl_sum) {
+  return ecl_sum->has_sim_time;
+}
+
+const char * ecl_sum_get_simulation_case(const ecl_sum_type * ecl_sum) {
+  return ecl_sum->simulation_case;
+}
 
 
 int ecl_sum_get_report_size(const ecl_sum_type * ecl_sum , int * first_report_nr , int * last_report_nr) {
@@ -1084,9 +1132,7 @@ void ecl_sum_free(ecl_sum_type *ecl_sum) {
   hash_free(ecl_sum->unit_hash);
   util_free_stringlist(ecl_sum->well_list  , ecl_sum->Nwells);
   free(ecl_sum->var_type);
-
-  if (ecl_sum->base_name != NULL)
-    free(ecl_sum->base_name);
+  free(ecl_sum->simulation_case);
   free(ecl_sum);
 }
 

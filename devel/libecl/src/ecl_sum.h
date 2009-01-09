@@ -23,6 +23,8 @@ typedef enum {ecl_sum_aquifer_var,
 	      ecl_sum_misc_var}  ecl_sum_var_type;
 
 
+bool             ecl_sum_has_sim_time(const ecl_sum_type * );
+const char     * ecl_sum_get_simulation_case(const ecl_sum_type * );
 ecl_sum_type   * ecl_sum_safe_cast(const void * );
 void             ecl_sum_fread_alloc_data(ecl_sum_type * , int , const char ** , bool);
 ecl_sum_type   * ecl_sum_fread_alloc(const char * , int , const char **, bool  , bool );

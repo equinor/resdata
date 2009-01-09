@@ -541,7 +541,7 @@ static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 	      */
 	      char   *end_ptr1 = NULL;
 	      char   *end_ptr2 = NULL;
-	      char   token[16];
+	      char   token[32];
 	      double value;
 	      int iread = fscanf(stream , "%s" , token);
 	      if (iread == 1) {
@@ -551,8 +551,10 @@ static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 		  value *= exp(log(10.0) * power);
 		  end_ptr1 = end_ptr2;
 		}
-		if (end_ptr1[0] != '\0') 
+		if (end_ptr1[0] != '\0') {
+		  fprintf(stderr,"Have read:\"%s\"  end_ptr1[0] == %c \n",token , end_ptr1);
 		  util_abort("%s: 2: after reading %d values reading of keyword:%s failed - aborting (FILE: %s)\n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header , fortio_filename_ref(fortio));
+		}
 	      } else 
 		util_abort("%s: after reading %d values reading of keyword:%s failed - aborting (FILE: %s) \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header , fortio_filename_ref(fortio));
 
