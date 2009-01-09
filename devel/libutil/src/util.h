@@ -30,6 +30,7 @@ char       * util_alloc_sprintf(const char *  , ...);
 void         util_fprintf_int(int , int , FILE * );
 void         util_fprintf_string(const char *  , int , string_alignement_type ,  FILE * );
 void         util_fprintf_double(double , int , int , char , FILE *);
+void         util_fprintf_data_summary(const double ** , const char ** , int , int , const char *);
 bool         util_fscanf_date(FILE * , time_t *);
 bool         util_sscanf_date(const char * , time_t *);
 char       * util_alloc_stdin_line();
