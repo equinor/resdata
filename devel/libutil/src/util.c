@@ -3039,12 +3039,18 @@ void util_fprintf_data_summary(const double ** data, const char ** column_names,
   double   * mean   = util_malloc(num_columns * sizeof * mean,   __func__);
   double   * stddev = util_malloc(num_columns * sizeof * stddev, __func__);
 
-  /* FIXME Should check the column_names here. */
+  /* Check the column_names. */
+  for(int column_nr = 0; column_nr < num_columns; column_nr++)
+  {
+    if(column_names[column_nr] == NULL)
+      util_abort("%s: Trying to dereference NULL pointer.\n", __func__);
+  }
 
   /* Calculate the width of each column and the total width. */
   width[0] = strlen("Member #|");
   total_width = width[0];
   for (int column_nr = 0; column_nr < num_columns; column_nr++) {
+    if(column_names[column_nr] != NULL)
     width[column_nr + 1]  = util_int_max(strlen(column_names[column_nr]), 2 * float_width + 5) + 1;  /* Must accomodate A +/- B */
     width[column_nr + 1] += ( 1 - (width[column_nr + 1] & 1)); /* Ensure odd length */
     total_width += width[column_nr + 1] + 1;
