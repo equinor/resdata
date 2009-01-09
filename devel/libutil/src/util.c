@@ -2531,6 +2531,38 @@ void util_double_vector_max_min(int N , const double *vector, double *_max , dou
 }
 
 
+
+double util_double_vector_mean(int N, const double * vector) {
+  double mean = 0.0;
+  
+  for(int i=0; i<N; i++)
+    mean = mean + vector[i];
+
+  return mean / N;
+}
+
+
+
+double util_double_vector_stddev(int N, const double * vector) {
+  if(N <= 1)
+    return 0.0;
+  
+  double   stddev         = 0.0;
+  double   mean           = util_double_vector_mean(N, vector);
+  double * vector_shifted = util_malloc(N * sizeof *vector_shifted, __func__);
+
+  for(int i=0; i<N; i++)
+    vector_shifted[i] = vector[i] - mean;
+
+  for(int i=0; i<N; i++)
+    stddev = stddev + vector_shifted[i] * vector_shifted[i];
+
+  free(vector_shifted);
+
+  return sqrt( stddev / (N-1));
+}
+
+
 /*****************************************************************/
 
 

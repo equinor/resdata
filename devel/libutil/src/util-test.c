@@ -16,8 +16,10 @@
 
 
 int main(int argc , char ** argv) {
-  FILE * stream1 = util_fopen("link" , "r");
-  FILE * stream2 = util_fopen("fileXX" , "w");
-  
-  printf("Succesfully opened /tmp for reading ... \n");
+  double data[3] = {1.0, 2.0, 3.0};
+
+  printf("mean  : %f\n", util_double_vector_mean(3, data));
+  printf("stddev: %f\n", util_double_vector_stddev(3, data));
+
+  return 0;
 }
