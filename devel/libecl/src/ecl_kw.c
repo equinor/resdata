@@ -551,10 +551,8 @@ static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 		  value *= exp(log(10.0) * power);
 		  end_ptr1 = end_ptr2;
 		}
-		if (end_ptr1[0] != '\0') {
-		  fprintf(stderr,"Have read:\"%s\"  end_ptr1[0] == %c \n",token , end_ptr1);
+		if (end_ptr1[0] != '\0') 
 		  util_abort("%s: 2: after reading %d values reading of keyword:%s failed - aborting (FILE: %s)\n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header , fortio_filename_ref(fortio));
-		}
 	      } else 
 		util_abort("%s: after reading %d values reading of keyword:%s failed - aborting (FILE: %s) \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header , fortio_filename_ref(fortio));
 
@@ -1329,7 +1327,6 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
   fscanf(stream , "%s" , buffer);
   ecl_kw_set_header_name(ecl_kw , buffer);
   {
-    bool at_eof;
     fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL ,true , true , stream);  /* The endian flip is not used. */
     ecl_kw_fread_data(ecl_kw , fortio);
     fscanf(stream , "%s" , buffer);
@@ -1339,7 +1336,7 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
       fprintf(stderr,"Have read:%d items \n",size);
       fprintf(stderr,"File is malformed for some reason ...\n");
       fprintf(stderr,"Looking at: %s \n",buffer);
-      fprintf(stderr,"Current buffer position: %i \n", ftell(stream));
+      fprintf(stderr,"Current buffer position: %ld \n", ftell(stream));
       util_abort("%s: Did not find '/' at end of %s - size mismatch / malformed file ??\n",__func__ , ecl_kw->header);
     }
     fortio_free_FILE_wrapper(fortio);
