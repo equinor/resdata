@@ -1626,8 +1626,27 @@ void util_set_date_values(time_t t , int * mday , int * month , int * year) {
 }
 
 
+void util_fprintf_datetime(time_t t , FILE * stream) {
+  int sec,min,hour;
+  int mday,year,month;
+  
+  util_set_datetime_values(t , &sec , &min , &hour , &mday , &month , &year);
+  fprintf(stream , "%02d/%02d/%4d  %02d:%02d:%02d", mday,month,year,hour,min,sec);
+}
 
 
+void util_fprintf_date(time_t t , FILE * stream) {
+  int mday,year,month;
+  
+  util_set_datetime_values(t , NULL , NULL , NULL , &mday , &month , &year);
+  fprintf(stream , "%02d/%02d/%4d", mday,month,year);
+}
+
+
+
+/* 
+   This code produced erroneus results when compiled with -pg for profiling.
+*/
 void util_inplace_forward_days(time_t * t , double days) {
   struct tm ts;
   int isdst;
@@ -1635,7 +1654,8 @@ void util_inplace_forward_days(time_t * t , double days) {
   isdst = ts.tm_isdst;
   (*t) += (int) (days * 3600 * 24);
   localtime_r(t , &ts);
-  (*t) += 3600 * (isdst - ts.tm_isdst);  /* Extra adjustment of +/- one hour if we have crossed a daylight savings border. */
+  (*t) += 3600 * (isdst - ts.tm_isdst);  /* Extra adjustment of +/- one hour if we have crossed exactly one daylight savings border. */
+
 }
 
 
@@ -2372,11 +2392,35 @@ void util_double_to_float(float *float_ptr , const double *double_ptr , int size
 
 /*****************************************************************/
 
+/*  
+   The util_fwrite_string / util_fread_string are BROKEN when it comes
+   to NULL / versus an empty string "":
+
+    1. Writing a "" string what is actually written to disk is: "0\0",
+       whereas the disk content when writing NULL is "0".
+
+    2. When reading back we find the '0' - but it is impossible to
+       determine whether we should interpret this as a NUL or as "".
+
+   When the harm was done, with files allover the place, it is "solved"
+   as follows:
+
+    1. Nothing is changed when writing NULL => '0' to disk.
+    
+    2. When writing "" => '0-1\0' to disk. The -1 is the magic length
+       signifying that the following string is "".
+*/
+
+
+
 void util_fwrite_string(const char * s, FILE *stream) {
   int len = 0;
   if (s != NULL) {
     len = strlen(s);
-    util_fwrite(&len , sizeof len , 1       , stream , __func__);
+    if (len == 0) 
+      util_fwrite_int(-1 , stream);  /* Writing magic string for "" */
+    else
+      util_fwrite(&len , sizeof len , 1       , stream , __func__);
     util_fwrite(s    , 1          , len + 1 , stream , __func__);
   } else
     util_fwrite(&len , sizeof len , 1       , stream , __func__);
@@ -2391,7 +2435,10 @@ char * util_fread_alloc_string(FILE *stream) {
   if (len > 0) {
     s = util_malloc(len + 1 , __func__);
     util_fread(s , 1 , len + 1 , stream , __func__);
-  } 
+  } else if (len == -1) /* Magic length for "" */ {
+    s = util_malloc(1 , __func__);
+    util_fread(s , 1 , 1 , stream , __func__);
+  }
   return s;
 }
 
@@ -2403,6 +2450,9 @@ char * util_fread_realloc_string(char * old_s , FILE *stream) {
   if (len > 0) {
     s = util_realloc(old_s , len + 1 , __func__);
     util_fread(s , 1 , len + 1 , stream , __func__);
+  } else if (len == -1) /* Magic length for "" */ {
+    s = util_realloc(s , 1 , __func__);
+    util_fread(s , 1 , 1 , stream , __func__);
   } 
   return s;
 }
@@ -2411,8 +2461,12 @@ char * util_fread_realloc_string(char * old_s , FILE *stream) {
 void util_fskip_string(FILE *stream) {
   int len;
   util_fread(&len , sizeof len , 1 , stream , __func__);
+  if (len == -1) /* Magig string for "" - skip the '\0' */
+    len = 0;
   fseek(stream , len + 1 , SEEK_CUR);
 }
+
+
 
 void util_fwrite_bool  (bool value , FILE * stream)   { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_int   (int value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }

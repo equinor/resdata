@@ -21,6 +21,8 @@ typedef enum {left_pad  = 0,
 
 void         util_bitmask_on(int *  , int );
 time_t       util_make_datetime(int , int , int , int , int , int );
+void         util_fprintf_datetime(time_t  , FILE * );
+void         util_fprintf_date(time_t  , FILE * );
 time_t       util_make_date(int , int , int);
 void         util_inplace_forward_days(time_t *  , double);
 double       util_difftime(time_t  , time_t  , int *  , int *  , int *  , int *);
