@@ -52,6 +52,7 @@ struct menu_item_struct {
   menu_func_type * func;      	 /* The function called when this item is activated. */
   void           * arg;       	 /* The argument passed to func. */
   int              label_length; /* The length of the label - zero for separators. */
+  arg_free_ftype * free_arg; 
 };
 
 
@@ -109,7 +110,8 @@ static menu_item_type * menu_item_alloc_empty() {
   item->arg     = NULL;
   item->separator    = false;
   item->label_length = 0;
-
+  item->free_arg = NULL;
+  
   return item;
 }
 
@@ -138,7 +140,7 @@ void menu_item_set_label(menu_item_type * item , const char * label) {
   when the menu is printed on stdout.
 */
 
-menu_item_type * menu_add_item(menu_type * menu , const char * label , const char * key_set , menu_func_type * func, void * arg) {
+menu_item_type * menu_add_item(menu_type * menu , const char * label , const char * key_set , menu_func_type * func, void * arg , arg_free_ftype * free_arg) {
   if (__string_contains(menu->complete_key_set , key_set)) 
     util_abort("%s:fatal error when building menu - key(s) in:%s already in use \n",__func__ , key_set);
   {
@@ -147,6 +149,7 @@ menu_item_type * menu_add_item(menu_type * menu , const char * label , const cha
     item->func    = func;
     item->arg     = arg;
     item->separator = false;
+    item->free_arg  = free_arg;
     menu_append_item__(menu , item);
     menu_item_set_label(item , label);
     menu->complete_key_set = util_strcat_realloc(menu->complete_key_set , key_set);
@@ -179,6 +182,10 @@ static void menu_item_free(menu_item_type * item) {
     free(item->key_set);
     free(item->label);
   }
+
+  if (item->free_arg != NULL)
+    item->free_arg(item->arg);
+
   free(item);
 } 
 

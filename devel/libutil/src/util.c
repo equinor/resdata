@@ -2470,6 +2470,7 @@ void util_fskip_string(FILE *stream) {
 
 void util_fwrite_bool  (bool value , FILE * stream)   { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_int   (int value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
+void util_fwrite_long  (long value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_double(double value , FILE * stream) { UTIL_FWRITE_SCALAR(value , stream); }
 
 void util_fwrite_int_vector   (const int * value    , int size , FILE * stream, const char * caller) { util_fwrite(value , sizeof * value, size , stream, caller); }
@@ -2484,6 +2485,12 @@ void util_fread_char_vector(char * ptr , int size , FILE * stream , const char *
 
 int util_fread_int(FILE * stream) {
   int file_value;
+  UTIL_FREAD_SCALAR(file_value , stream);
+  return file_value;
+}
+
+long util_fread_long(FILE * stream) {
+  long file_value;
   UTIL_FREAD_SCALAR(file_value , stream);
   return file_value;
 }
@@ -2698,7 +2705,7 @@ FILE * util_fopen_lockf(const char * filename, const char * mode) {
 
 
 FILE * util_fopen(const char * filename , const char * mode) {
-  if (strcmp(mode , "r") == 0)
+  if (mode[0] == 'r')
     if (!util_is_file( filename )) 
       util_abort("%s: tried to open:%s for reading. Is not a regular file.\n",__func__ , filename);
   
