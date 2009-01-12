@@ -1124,7 +1124,6 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
     fwrite(&size    			        , sizeof(int)     , 1            , stream);
     fwrite(__get_ecl_str_type(ecl_kw->ecl_type) , sizeof(char)    , ecl_type_len , stream);
     fortio_complete_write(fortio);
-
   }
 }
 
