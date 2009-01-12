@@ -415,7 +415,7 @@ static void ecl_kw_init_types(ecl_kw_type *ecl_kw, ecl_type_enum ecl_type) {
     */
     ecl_kw->write_fmt = realloc(ecl_kw->write_fmt , 20);
     sprintf(ecl_kw->write_fmt , "  %s17.14fD%s+03d" , "%" , "%");
-
+    
     ecl_kw->fmt_linesize = 3;
     ecl_kw->blocksize    = ecl_num_blocksize;
     break;

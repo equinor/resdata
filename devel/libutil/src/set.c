@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <set.h>
 #include <string.h>
+#include <util.h>
 
 
 struct set_struct {
@@ -101,30 +102,6 @@ void set_free(set_type * set) {
 
 
 
-/* Wrong(??) depenendency between libutil and libhash ... */
-static void __fwrite_string(const char * s, FILE *stream) {
-  int len = 0;
-  if (s != NULL) {
-    len = strlen(s);
-    fwrite(&len , sizeof len , 1       , stream);
-    fwrite(s    , 1          , len + 1 , stream);
-  } else
-    fwrite(&len , sizeof len , 1       , stream);
-}
-
-
-static char * __fread_alloc_string(FILE *stream) {
-  int len;
-  char *s = NULL;
-  fread(&len , sizeof len , 1 , stream );
-  if (len > 0) {
-    s = malloc(len + 1 );
-    fread(s , 1 , len + 1 , stream );
-  } 
-  return s;
-}
-
-
 
 void set_fwrite(const set_type * set, FILE * stream) {
   char ** key_list = set_alloc_keylist(set);
@@ -132,7 +109,7 @@ void set_fwrite(const set_type * set, FILE * stream) {
   int i;
   fwrite(&size , sizeof size , 1 , stream);
   for (i=0; i < size; i++) {
-    __fwrite_string(key_list[i] , stream);
+    util_fwrite_string(key_list[i] , stream);
     free(key_list[i]);
   }
   free(key_list);
@@ -143,7 +120,7 @@ void set_fread(set_type * set , FILE * stream) {
   int size, i;
   fread(&size , sizeof size , 1 , stream);
   for (i=0; i < size; i++) {
-    char * key = __fread_alloc_string(stream);
+    char * key = util_fread_alloc_string(stream);
     set_add_key(set , key);
     free(key);
   }
