@@ -327,8 +327,9 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	case (ecl_sum_well_var):
 	  if (!DUMMY_WELL(well)) {
 	    /* 
-	       It seems we can have e.g. WOPR associated with the dummy well, 
-	       there is no limit to the stupidity of these programmers.
+	       It seems we can have e.g. WOPR associated with the
+	       dummy well, there is no limit to the stupidity of these
+	       programmers.
 	    */
 	    set_add_key(well_set , well);
 	    if (!hash_has_key(ecl_sum->well_var_index , well)) 
