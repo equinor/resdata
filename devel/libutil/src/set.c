@@ -61,6 +61,7 @@ void set_remove_key(set_type * set, const char * key) {
   hash_del(set->key_hash  , key);
 }
 
+
 bool set_has_key(const set_type * set, const char * key) {
   return hash_has_key(set->key_hash, key);
 }

@@ -61,6 +61,7 @@ struct menu_struct {
   menu_item_type ** items;             /* The vector of items */
   char            * quit_keys;         /* The keys which can be used to quit from this menu - typically "qQ" */
   char            * title;             /* The title of this menu */
+  char            * quit_label;        /* The text printed on the back/quit item at the bottom. */
   char            * complete_key_set;  /* A string containing all the allowed characters - to validata input */
 };
 
@@ -89,7 +90,7 @@ static bool __string_contains(const char * string , const char * char_set) {
    entered. */
 
 
-menu_type * menu_alloc(const char * title , const char * quit_keys) {
+menu_type * menu_alloc(const char * title , const char * quit_label , const char * quit_keys) {
   menu_type * menu = util_malloc(sizeof * menu , __func__);
   
   menu->title     = util_alloc_string_copy( title );
@@ -97,7 +98,8 @@ menu_type * menu_alloc(const char * title , const char * quit_keys) {
   menu->size      = 0;
   menu->items     = NULL;
   menu->complete_key_set = util_alloc_string_copy( quit_keys );
-
+  menu->quit_label = util_alloc_string_copy( quit_label );
+  
   return menu;
 }
 
@@ -252,7 +254,7 @@ static void menu_display(const menu_type * menu) {
   }
   __print_sep(length + 6);
   printf("| %c: ",menu->quit_keys[0]);
-  util_fprintf_string("Quit" , length + 3 , right_pad , stdout);
+  util_fprintf_string(menu->quit_label , length + 3 , right_pad , stdout);
   printf(" |\n");
   __print_line(length + 10 , 2);
   printf("\n");

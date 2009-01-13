@@ -308,7 +308,7 @@ char * util_alloc_stdin_line() {
   
   {
     int input_size = 256;
-    char * input = util_malloc(input_size, __func__);
+    char * input   = util_malloc(input_size, __func__);
     int index = 0;
     bool eol = false;
     int c;
@@ -2185,15 +2185,15 @@ char * util_alloc_multiline_string(const char ** item_list , int len) {
 
 
 /**
-   sep = string with various charcaters, i.e. " \t" to split on.
+   sep_set = string with various characters, i.e. " \t" to split on.
 */
 
-void util_split_string(const char *line , const char *sep, int *_tokens, char ***_token_list) {
+void util_split_string(const char *line , const char *sep_set, int *_tokens, char ***_token_list) {
   int offset;
   int tokens , token , token_length;
   char **token_list;
 
-  offset = strspn(line , sep); 
+  offset = strspn(line , sep_set); 
   tokens = 0;
   do {
     /*
@@ -2201,20 +2201,20 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
       seek for terminating ".
       }
     */
-    token_length = strcspn(&line[offset] , sep);
+    token_length = strcspn(&line[offset] , sep_set);
     if (token_length > 0)
       tokens++;
     
     offset += token_length;
-    offset += strspn(&line[offset] , sep);
+    offset += strspn(&line[offset] , sep_set);
   } while (line[offset] != '\0');
 
   if (tokens > 0) {
     token_list = util_malloc(tokens * sizeof * token_list , __func__);
-    offset = strspn(line , sep);
+    offset = strspn(line , sep_set);
     token  = 0;
     do {
-      token_length = strcspn(&line[offset] , sep);
+      token_length = strcspn(&line[offset] , sep_set);
       if (token_length > 0) {
 	token_list[token] = util_alloc_substring_copy(&line[offset] , token_length);
 	token++;
@@ -2222,7 +2222,7 @@ void util_split_string(const char *line , const char *sep, int *_tokens, char **
 	token_list[token] = NULL;
       
       offset += token_length;
-      offset += strspn(&line[offset] , sep);
+      offset += strspn(&line[offset] , sep_set);
     } while (line[offset] != '\0');
   } else
     token_list = NULL;
