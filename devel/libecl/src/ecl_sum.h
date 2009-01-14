@@ -71,10 +71,6 @@ int            	 ecl_sum_get_report_size(const ecl_sum_type * , int * , int * );
 int 		 ecl_sum_get_num_groups(const ecl_sum_type * ecl_sum);
 int 		 ecl_sum_get_num_regions(const ecl_sum_type * ecl_sum);
 
-void           	 ecl_sum_max_min(const ecl_sum_type * , int , const char ** , int , const char ** , double *, double *, bool);
-void           	 ecl_sum_well_max_min(const ecl_sum_type * , const char * , int  , const char **  , double *, double * , bool);
-double         	 ecl_sum_eval_well_misfit(const ecl_sum_type * , const char * , int , const char ** , const double * );
-double         	 ecl_sum_eval_misfit(const ecl_sum_type * , int , const char ** , int , const char ** ,  const double * , double * );
 ecl_sum_type * 	 ecl_sum_fread_alloc_interactive(bool );
 void             ecl_sum_fprintf(const ecl_sum_type * , FILE * , int , const char **  );
 #ifdef __cplusplus
