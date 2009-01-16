@@ -849,13 +849,27 @@ bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_
 
 
 
-const char * ecl_sum_get_unit_ref(const ecl_sum_type * ecl_sum , const char *var) {
+/**
+   The var variable can either be just "WOPR", "RPR" or the like. Or
+   it can be a ":" variable like "WOPR:OP_3". If the unit_hash does
+   not have the variable, in either format, NULL is returned.
+*/
+
+const char * ecl_sum_get_unit(const ecl_sum_type * ecl_sum , const char *var) {
+  const char * unit = NULL;
   if (hash_has_key(ecl_sum->unit_hash , var))
-    return hash_get(ecl_sum->unit_hash , var);
+    unit = hash_get(ecl_sum->unit_hash , var);
   else {
-    fprintf(stderr,"%s: variable:%s not defined - aborting \n",__func__ , var);
-    abort();
+    int var_length = strcspn(var , ":");
+    if (var_length < strlen(var)) {
+      const char * unit;
+      char * tmp_var = util_alloc_substring_copy(var , var_length);
+      if (hash_has_key(ecl_sum->unit_hash , tmp_var))
+	unit = hash_get(ecl_sum->unit_hash , tmp_var);
+      free(tmp_var);
+    }
   }
+  return unit;
 }
 
 
