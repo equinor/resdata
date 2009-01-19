@@ -17,9 +17,8 @@ int main(void) {
   hash_get_string(h , "legning");
   
 
-  hash_iter_init(h);
   {
-    char * key;
+    char * key = hash_iter_get_first_key( h );
     do {
       key = hash_iter_get_next_key(h);
       if (key != NULL) {

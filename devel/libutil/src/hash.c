@@ -43,14 +43,14 @@ struct hash_struct {
   hash_sll_type   **table;
   hashf_type       *hashf;
   pthread_rwlock_t  rwlock;
-  
   /** 
       All variables with __iter prefix are internal variables used to
       support iteration over the keys in the hash table.
   */
   char           ** __iter_keylist;
-  bool              __iter_active;
+  bool              __iter_active;    /* Cooperation with iter_mutex not really OK. */
   int               __iter_index;
+  pthread_mutex_t   iter_mutex;       /* Can only have one iteration active at any time. */
 };
 
 
@@ -447,7 +447,7 @@ static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf
   hash->resize_fill  = resize_fill;
   hash->__iter_active  = false;
   hash->__iter_keylist = NULL;
-  
+  pthread_mutex_init( &hash->iter_mutex , NULL);
   if (pthread_rwlock_init( &hash->rwlock , NULL) != 0) 
     util_abort("%s: failed to initialize rwlock \n",__func__);
   
@@ -467,6 +467,7 @@ void hash_free(hash_type *hash) {
   free(hash->table);
   hash_iter_finalize(hash);
   pthread_rwlock_destroy( &hash->rwlock );
+  pthread_mutex_destroy( &hash->iter_mutex );
   free(hash);
 }
 
@@ -738,7 +739,9 @@ This will deadlock:
    ....
    hash_insert(hash , key , value);  -- The readlock from the iteration is still present => deadlock.
  
-To ensure against deadlock in this case, you must have a call hash_iter_finalize() after the while() statement.
+To ensure against deadlock in this case, you must have a call
+hash_iter_finalize() after the while() statement.  In addition there
+is a mutex held during the iteration.
 
 
 
@@ -779,6 +782,7 @@ void hash_iter_finalize(hash_type * hash) {
     hash->__iter_keylist = NULL;
     hash->__iter_active  = false;
     __hash_unlock( hash );
+    pthread_mutex_unlock( &hash->iter_mutex );
   }
 }
 
@@ -787,25 +791,24 @@ void hash_iter_finalize(hash_type * hash) {
 /**
    This function initializes an iteration. That means the following:
 
-     1. Finalize any currently active iterators.
+     1. Take the iter_mutex - only ONE iteration active at a time. 
      2. Take read-lock - this is held all the time until we call hash_iter_finalize().
      3. Initilize the internal list of keys - __iter_keylist.
      4. Reset the __iter_index.
 
 */
-     
-void hash_iter_init(hash_type * hash) {
-  __hash_rdlock( hash ); /* Just for this function. */
-  if (hash->__iter_active)
-    hash_iter_finalize(hash);
-  
-  __hash_rdlock( hash ); /* Until _finalize */
+
+static void hash_iter_init(hash_type * hash) {
+  pthread_mutex_lock( &hash->iter_mutex );  /* Repeated calls to hash_iter_init() without calls to hash_iter_finalize() will deadlock. */
+  __hash_rdlock( hash );                    /* Just for this function. */
+  __hash_rdlock( hash );                    /* Until _finalize */
   {
     hash->__iter_keylist = hash_alloc_keylist__( hash , false);
     hash->__iter_index   = 0;
     hash->__iter_active  = true;
   }
   __hash_unlock( hash );
+  
 }
 
 

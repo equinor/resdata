@@ -149,7 +149,6 @@ void subst_list_free(subst_list_type * subst_list) {
 
 static void subst_list_inplace_update_buffer__(const subst_list_type * subst_list , char ** buffer) {
   int buffer_size  = strlen( *buffer );
-  hash_iter_init( subst_list->data );
   const char * key = hash_iter_get_first_key( subst_list->data );
 
   while (key != NULL) {
@@ -162,23 +161,6 @@ static void subst_list_inplace_update_buffer__(const subst_list_type * subst_lis
 
 }
     
-/*  
-  int keys         = hash_get_size( subst_list->data );
-  char ** key_list = hash_alloc_keylist(subst_list->data);
-  {
-    int ikey;
-    for (ikey = 0; ikey < keys; ikey++) {
-      const subst_list_node_type * node = hash_get( subst_list->data , key_list[ikey]);
-      const char * value = node->value;
-      if (value != NULL)
-	util_string_replace_inplace( buffer , &buffer_size , key_list[ikey] , value);
-    }
-  }
-
-  util_free_stringlist(key_list , keys);
-}
-*/
-
 
 
 /**
