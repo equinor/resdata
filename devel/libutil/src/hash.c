@@ -83,7 +83,7 @@ static void __hash_deadlock_abort(hash_type * hash) {
     printf("]\n");
     printf("__iter_index: %d \n",hash->__iter_index);
   } else printf(" None ??? \n");
-  abort();
+  util_abort("%s: \n",__func__);
 }
 
 
@@ -136,10 +136,9 @@ static void * __hash_get_node_unlocked(const hash_type *__hash , const char *key
     const uint32_t table_index  = (global_index % hash->size);
     
     node = hash_sll_get(hash->table[table_index] , global_index , key);
-    if (node == NULL && abort_on_error) {
-      fprintf(stderr,"%s: tried to get from key:%s which does not exist - aborting \n",__func__ , key);
-      abort();
-    }
+    if (node == NULL && abort_on_error) 
+      util_abort("%s: tried to get from key:%s which does not exist - aborting \n",__func__ , key);
+    
   }
   return node;
 }
@@ -240,10 +239,9 @@ static void hash_del_unlocked__(hash_type *hash , const char *key) {
   const uint32_t table_index  = (global_index % hash->size);
   hash_node_type *node        = hash_sll_get(hash->table[table_index] , global_index , key);
   
-  if (node == NULL) {
-    fprintf(stderr,"%s: hash does not contain key:%s - aborting \n",__func__ , key);
-    abort();
-  } else
+  if (node == NULL) 
+    util_abort("%s: hash does not contain key:%s - aborting \n",__func__ , key);
+  else
     hash_sll_del_node(hash->table[table_index] , node);
   
   hash->elements--;
@@ -450,10 +448,8 @@ static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf
   hash->__iter_active  = false;
   hash->__iter_keylist = NULL;
   
-  if (pthread_rwlock_init( &hash->rwlock , NULL) != 0) {
-    fprintf(stderr , "%s: failed to initialize rwlock \n",__func__);
-    abort();
-  }
+  if (pthread_rwlock_init( &hash->rwlock , NULL) != 0) 
+    util_abort("%s: failed to initialize rwlock \n",__func__);
   
   return hash;
 }
@@ -508,10 +504,9 @@ char ** hash_alloc_keylist(hash_type *hash) {
 
 void hash_insert_copy(hash_type *hash , const char *key , const void *value , copyc_type *copyc , del_type *del) {
   hash_node_type *node;
-  if (copyc == NULL || del == NULL) {
-    fprintf(stderr,"%s: must provide copy constructer and delete operator for insert copy - aborting \n",__func__);
-    abort();
-  }
+  if (copyc == NULL || del == NULL) 
+    util_abort("%s: must provide copy constructer and delete operator for insert copy - aborting \n",__func__);
+
   node = hash_node_alloc_new(key , value , copyc , del , hash->hashf , hash->size);
   __hash_insert_node(hash , node);
 }
@@ -530,10 +525,9 @@ void hash_insert_copy(hash_type *hash , const char *key , const void *value , co
 
 void hash_insert_hash_owned_ref(hash_type *hash , const char *key , const void *value , del_type *del) {
   hash_node_type *node;
-  if (del == NULL) {
-    fprintf(stderr,"%s: must provide delete operator for insert hash_owned_ref - aborting \n",__func__);
-    abort();
-  }
+  if (del == NULL) 
+    util_abort("%s: must provide delete operator for insert hash_owned_ref - aborting \n",__func__);
+
   node = hash_node_alloc_new(key , value , NULL , del , hash->hashf , hash->size);
   __hash_insert_node(hash , node);
 }
@@ -838,10 +832,8 @@ const char * hash_iter_get_next_key(hash_type * hash) {
       hash->__iter_index++;
     }
     return key;
-  } else {
-    fprintf(stderr,"%s: no iteration active - aborting \n",__func__);
-    abort();
-  }
+  } else 
+    util_abort("%s: no iteration active - aborting \n",__func__);
 }
 
 
