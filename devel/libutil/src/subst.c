@@ -81,6 +81,8 @@ static void subst_list_node_set(subst_list_node_type * node, const char * __valu
   node->value = value;
 }
 
+
+
 subst_list_type * subst_list_alloc() {
   subst_list_type * subst_list = util_malloc(sizeof * subst_list , __func__);
   subst_list->data = hash_alloc();
@@ -148,7 +150,7 @@ void subst_list_free(subst_list_type * subst_list) {
 static void subst_list_inplace_update_buffer__(const subst_list_type * subst_list , char ** buffer) {
   int buffer_size  = strlen( *buffer );
   hash_iter_init( subst_list->data );
-  char * key = hash_iter_get_first_key( subst_list->data );
+  const char * key = hash_iter_get_first_key( subst_list->data );
 
   while (key != NULL) {
     const subst_list_node_type * node = hash_get( subst_list->data , key);
@@ -260,4 +262,24 @@ void subst_list_filtered_fprintf(const subst_list_type * subst_list , const char
   subst_list_inplace_update_buffer__(subst_list , &copy);
   fprintf(stream , "%s" , copy);  
   free(copy);
+}
+
+
+
+/**
+   This allocates a new subst_list instance, the copy process is deep,
+   in the sense that all srings inserted in the new subst_list
+   instance have their own storage, irrespective of the ownership in
+   the original subst_list instance.
+*/
+
+subst_list_type * subst_list_alloc_deep_copy(const subst_list_type * src) {
+  subst_list_type * copy = subst_list_alloc();
+  const char * key = hash_iter_get_first_key( src->data );
+  while (key != NULL) {
+    subst_list_node_type * node = hash_get( src->data , key );
+    subst_list_insert__( copy , key , node->value , subst_deep_copy);
+    key = hash_iter_get_next_key( src->data );
+  }
+  return copy;
 }

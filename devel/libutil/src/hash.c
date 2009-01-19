@@ -441,7 +441,7 @@ void * hash_get(const hash_type *hash , const char *key) {
 
 static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf) {
   hash_type* hash;
-  hash = malloc(sizeof *hash);
+  hash = util_malloc(sizeof *hash , __func__);
   hash->size  	 = size;
   hash->hashf 	 = hashf;
   hash->table 	 = hash_sll_alloc_table(hash->size);
