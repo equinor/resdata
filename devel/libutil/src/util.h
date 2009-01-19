@@ -29,6 +29,7 @@ double       util_difftime(time_t  , time_t  , int *  , int *  , int *  , int *)
 
 bool         util_char_in(char c, int , const char *);
 char       * util_alloc_sprintf(const char *  , ...);
+char       * util_realloc_sprintf(char * , const char *  , ...);
 void         util_fprintf_int(int , int , FILE * );
 void         util_fprintf_string(const char *  , int , string_alignement_type ,  FILE * );
 void         util_fprintf_double(double , int , int , char , FILE *);

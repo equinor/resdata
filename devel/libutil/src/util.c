@@ -3121,6 +3121,23 @@ char * util_alloc_sprintf(const char * fmt , ...) {
 
 
 
+char * util_realloc_sprintf(char * s , const char * fmt , ...) {
+  va_list ap;
+  va_start(ap , fmt);
+  {
+    int length;
+    va_list tmp_va;
+    va_copy(tmp_va , ap);
+    length = vsnprintf(s , 0 , fmt , tmp_va);
+    s = util_realloc(s , length + 1 , __func__);
+  }
+  vsprintf(s , fmt , ap);
+  va_end(ap);
+  return s;
+}
+
+
+
 /**
    This function searches through the content of the (currently set)
    PATH variable, and allocates a string containing the full path
