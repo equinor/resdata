@@ -126,7 +126,7 @@ static void unlink_old_file(const ext_job_type *ext_job) {
 
 ext_job_type * ext_job_alloc(const char *id , const char *run_cmd , const char *abort_cmd , const char * run_path , const char *run_file , const char * complete_file , int max_restart , int sleep_time , bool do_fork , bool use_lsf) {
   ext_job_type * ext_job;
-  ext_job = malloc(sizeof *ext_job);
+  ext_job = util_malloc(sizeof *ext_job , __func__);
   if (id == NULL)
     ext_job->id            = alloc_string_copy(run_path , true);
   else
