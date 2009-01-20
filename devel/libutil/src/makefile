@@ -10,7 +10,7 @@ OBJECTS           = set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_
 INC_FILES_INSTALL = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h
 LIB_ROOT          = libutil
 LIB               = $(LIB_ROOT)_$(MFLAG).a
-LIB_LINK          = -lutil_$(MFLAG) -lz -lpthread -lm
+LIB_LINK          = -lutil_$(MFLAG) -lz -lpt -lm
 LINK_LIB_PATH     = -L./ 
 
 LOCAL: LIB BIN

@@ -835,8 +835,10 @@ const char * hash_iter_get_next_key(hash_type * hash) {
       hash->__iter_index++;
     }
     return key;
-  } else 
+  } else {
     util_abort("%s: no iteration active - aborting \n",__func__);
+    return NULL;  /* Compiler shut up */
+  }
 }
 
 

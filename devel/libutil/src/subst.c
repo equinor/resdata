@@ -222,6 +222,20 @@ void subst_list_update_string(const subst_list_type * subst_list , char ** strin
 }
 
 
+void subst_list_fprintf(const subst_list_type * subst_list , FILE * stream) {
+  int size         = hash_get_size( subst_list->data );
+  int index = 0;
+  const char * key = hash_iter_get_first_key(subst_list->data);
+
+  while (key != NULL) {
+    subst_list_node_type * node = hash_get( subst_list->data , key);
+    fprintf(stream , "%s = %s" , key , node->value);
+    index++;
+    if (index <= (size - 1))
+      fprintf(stream , " , ");
+    key = hash_iter_get_next_key( subst_list->data );
+  }
+}
 
 /**
    This function allocates a new string where the search-replace
