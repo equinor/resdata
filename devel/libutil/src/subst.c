@@ -19,6 +19,7 @@ typedef enum { subst_deep_copy   = 1,
 	       subst_shared_ref  = 3} subst_insert_type; /* Mode used in the subst_list_insert__() function */
   
 
+
 struct subst_list_struct {
   hash_type * data;
 };
