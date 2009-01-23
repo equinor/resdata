@@ -6,7 +6,7 @@ extern "C" {
 #include <stdbool.h>
 #include <hash.h>
 
-typedef struct ecl_sum_struct ecl_sum_type;
+typedef struct ecl_sum_struct       ecl_sum_type;
 typedef enum {ecl_sum_aquifer_var, 
               ecl_sum_well_var   , 
 	      ecl_sum_region_var , 

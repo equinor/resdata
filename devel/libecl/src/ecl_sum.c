@@ -18,6 +18,9 @@
 #define ECL_SUM_ID 89067
 
 
+
+
+
 struct ecl_sum_struct {
   int                __id;                      /* Funny integer used for for "safe" run-time casting. */
   ecl_fstate_type  * data;
@@ -1017,10 +1020,24 @@ time_t ecl_sum_iget_sim_time(const ecl_sum_type * ecl_sum , int index) {
 }
 
 
-
 time_t ecl_sum_get_sim_time(const ecl_sum_type * ecl_sum , int report_step) {
   ecl_block_type * block = ecl_fstate_get_block_by_report_nr(ecl_sum->data , report_step);
   return ecl_block_get_sim_time(block);
+}
+
+
+double ecl_sum_iget_sim_days(const ecl_sum_type * ecl_sum , int index) {
+  if (ecl_sum->has_sim_time) {
+    ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , index);
+    return ecl_block_get_sim_days(block);
+  } else
+    return -1;
+}
+
+
+double ecl_sum_get_sim_days(const ecl_sum_type * ecl_sum , int report_step) {
+  ecl_block_type * block = ecl_fstate_get_block_by_report_nr(ecl_sum->data , report_step);
+  return ecl_block_get_sim_days(block);
 }
 
 
@@ -1062,6 +1079,7 @@ void ecl_sum_free(ecl_sum_type *ecl_sum) {
   free(ecl_sum->simulation_case);
   free(ecl_sum);
 }
+
 
 
 /**
