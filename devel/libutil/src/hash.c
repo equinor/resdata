@@ -161,6 +161,15 @@ static void * __hash_get_node(hash_type *hash , const char *key, bool abort_on_e
   return node;
 }
 
+
+static node_data_type * hash_get_node_data(hash_type *hash , const char *key) {
+  hash_node_type * node = __hash_get_node(hash , key , true);
+  return hash_node_get_node_data(node);
+}
+
+
+
+
 /**
    This function resizes the hash table when it has become to full.
    The table only grows - this funuction is called from
@@ -326,64 +335,42 @@ static char ** hash_alloc_keylist__(hash_type *hash , bool lock) {
    copies of various types.
 */
 
-
-static void hash_insert_managed_copy(hash_type *hash, const char *key, const void *value_ptr , int value_size) {
-  hash_node_type *node; 
-  node_data_type *node_data = node_data_alloc(value_size , value_ptr);
-  node = hash_node_alloc_new(key , node_data , node_data_copyc , node_data_free , hash->hashf , hash->size);
-  __hash_insert_node(hash , node);
-
-  /* This only frees the container - actual storage is freed when the hash table is deleted */
-  free(node_data);
+void hash_insert_string(hash_type * hash , const char * key , const char * value) {
+  node_data_type * node_data = node_data_alloc_string( value );
+  hash_node_type * hash_node = hash_node_alloc_new(key , node_data , hash->hashf , hash->size);
+  __hash_insert_node(hash , hash_node);
 }
 
 
-#define HASH_INSERT_SCALAR(FUNC,TYPE) \
-void FUNC(hash_type *hash , const char *key , TYPE value) {     \
-  hash_insert_managed_copy(hash , key , &value , sizeof value); \
-}
-
-#define HASH_INSERT_ARRAY(FUNC,TYPE)                                   \
-void FUNC(hash_type *hash, const char *key , TYPE *value, int SIZE) {  \
-  hash_insert_managed_copy(hash , key , value , SIZE * sizeof *value); \
-}
-
-void hash_insert_string(hash_type *hash, const char *key , const char *value) {
-  hash_insert_managed_copy(hash , key , value , strlen(value) + 1);
-}
-
-const char * hash_get_string(const hash_type *hash , const char *key) {
-  node_data_type *node_data = hash_get(hash , key);
-  if (node_data != NULL)
-    return node_data_get_data(node_data);
-  else
-    return NULL;
-}
-
-HASH_INSERT_SCALAR(hash_insert_int          , int)
-HASH_INSERT_SCALAR(hash_insert_double       , double)
-HASH_INSERT_ARRAY (hash_insert_int_array    , int)
-HASH_INSERT_ARRAY (hash_insert_double_array , double)
-
-
-#define HASH_GET_SCALAR(FUNC,TYPE) \
-TYPE FUNC (const hash_type *hash,  const char *key) { \
-   node_data_type *node_data = hash_get(hash , key); \
-   return *((TYPE *) node_data_get_data(node_data)); \
+char * hash_get_string(hash_type * hash , const char * key) {
+  node_data_type * node_data = hash_get_node_data(hash , key);
+  return node_data_get_string( node_data );
 }
 
 
-#define HASH_GET_ARRAY_PTR(FUNC,TYPE)\
-TYPE * FUNC(const hash_type * hash, const char *key) { \
-   node_data_type *node_data = hash_get(hash , key);   \
-   return ((TYPE *) node_data_get_data(node_data));    \
+void hash_insert_int(hash_type * hash , const char * key , int value) {
+  node_data_type * node_data = node_data_alloc_int( value );
+  hash_node_type * hash_node = hash_node_alloc_new(key , node_data , hash->hashf , hash->size);
+  __hash_insert_node(hash , hash_node);
 }
 
 
-HASH_GET_SCALAR(hash_get_int    , int)
-HASH_GET_SCALAR(hash_get_double , double)
-HASH_GET_ARRAY_PTR(hash_get_double_ptr , double)
-HASH_GET_ARRAY_PTR(hash_get_int_ptr    , int)
+int hash_get_int(hash_type * hash , const char * key) {
+  node_data_type * node_data = hash_get_node_data(hash , key);
+  return node_data_get_int( node_data );
+}
+
+void hash_insert_double(hash_type * hash , const char * key , double value) {
+  node_data_type * node_data = node_data_alloc_double( value );
+  hash_node_type * hash_node = hash_node_alloc_new(key , node_data , hash->hashf , hash->size);
+  __hash_insert_node(hash , hash_node);
+}
+
+double hash_get_double(hash_type * hash , const char * key) {
+  node_data_type * node_data = hash_get_node_data(hash , key);
+  return node_data_get_double( node_data );
+}
+
 
 /*****************************************************************/
 
@@ -428,6 +415,8 @@ void * hash_get(const hash_type *hash , const char *key) {
   hash_node_type * node = __hash_get_node(hash , key , true);
   return hash_node_value_ptr(node);
 }
+
+
 
 
 
@@ -504,12 +493,14 @@ char ** hash_alloc_keylist(hash_type *hash) {
 
 
 void hash_insert_copy(hash_type *hash , const char *key , const void *value , copyc_type *copyc , del_type *del) {
-  hash_node_type *node;
+  hash_node_type *hash_node;
   if (copyc == NULL || del == NULL) 
     util_abort("%s: must provide copy constructer and delete operator for insert copy - aborting \n",__func__);
-
-  node = hash_node_alloc_new(key , value , copyc , del , hash->hashf , hash->size);
-  __hash_insert_node(hash , node);
+  {
+    node_data_type * data_node = node_data_alloc_ptr( value , copyc , del );
+    hash_node                  = hash_node_alloc_new(key , data_node , hash->hashf , hash->size);
+    __hash_insert_node(hash , hash_node);
+  }
 }
 
 
@@ -525,19 +516,24 @@ void hash_insert_copy(hash_type *hash , const char *key , const void *value , co
 */
 
 void hash_insert_hash_owned_ref(hash_type *hash , const char *key , const void *value , del_type *del) {
-  hash_node_type *node;
+  hash_node_type *hash_node;
   if (del == NULL) 
     util_abort("%s: must provide delete operator for insert hash_owned_ref - aborting \n",__func__);
-
-  node = hash_node_alloc_new(key , value , NULL , del , hash->hashf , hash->size);
-  __hash_insert_node(hash , node);
+  {
+    node_data_type * data_node = node_data_alloc_ptr( value , NULL , del );
+    hash_node                  = hash_node_alloc_new(key , data_node , hash->hashf , hash->size);
+    __hash_insert_node(hash , hash_node);
+  }
 }
 
 
 void hash_insert_ref(hash_type *hash , const char *key , const void *value) {
-  hash_node_type *node;
-  node = hash_node_alloc_new(key , value , NULL , NULL , hash->hashf , hash->size );
-  __hash_insert_node(hash , node);
+  hash_node_type *hash_node;
+  {
+    node_data_type * data_node = node_data_alloc_ptr( value , NULL , NULL);
+    hash_node                  = hash_node_alloc_new(key , data_node , hash->hashf , hash->size);
+    __hash_insert_node(hash , hash_node);
+  }
 }
 
 

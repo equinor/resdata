@@ -8,22 +8,22 @@
 
 int main(void) {
   hash_type * h = hash_alloc();
-  hash_insert_string(h , "Navn"    , "Joakim Hove");
-  hash_insert_string(h , "Adresse" , "Henrik Mohnsvei 6");
-  hash_insert_string(h , "legning" , "????");
+  hash_insert_ref(h , "Navn"    , "Joakim Hove");
+  hash_insert_ref(h , "Adresse" , "Henrik Mohnsvei 6");
+  hash_insert_ref(h , "legning" , "????");
 
-  hash_get_string(h , "Navn");
-  hash_get_string(h , "Adresse");
-  hash_get_string(h , "legning");
+  hash_get(h , "Navn");
+  hash_get(h , "Adresse");
+  hash_get(h , "legning");
   
 
   {
     char * key = hash_iter_get_first_key( h );
     do {
-      key = hash_iter_get_next_key(h);
       if (key != NULL) {
-	printf("%s -> %s \n",key,hash_get_string(h , key));
+	printf("%s -> %s \n",key,hash_get(h , key));
       } else printf(" key == NULL \n");
+      key = hash_iter_get_next_key(h);
     } while (key != NULL);
   }
   hash_free(h);

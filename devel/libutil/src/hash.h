@@ -9,13 +9,6 @@ typedef struct hash_struct hash_type;
 
 #include <hash_node.h>
 
-#define HASH_GET_SCALAR(FUNC,TYPE)    	   TYPE   FUNC(const hash_type *, const char *)
-#define HASH_GET_ARRAY_PTR(FUNC,TYPE) 	   TYPE * FUNC(const hash_type *, const char *)
-#define HASH_INSERT_SCALAR(FUNC,TYPE)      void FUNC(hash_type * , const char * , TYPE )
-#define HASH_INSERT_ARRAY(FUNC,TYPE)       void FUNC(hash_type * , const char * , TYPE * , int)
-#define HASH_NODE_AS(FUNC,TYPE)            TYPE FUNC(const hash_node_type * node)
-
-
 void 		  hash_lock  (hash_type * );
 void 		  hash_unlock(hash_type * );
 hash_type   	* hash_alloc();
@@ -27,7 +20,7 @@ void        	  hash_insert_copy(hash_type *, const char * , const void *, copyc_
 void        	  hash_insert_string(hash_type *, const char *, const char *);
 bool        	  hash_has_key(const hash_type *, const char *);
 void        	* hash_get(const hash_type *, const char *);
-const char      * hash_get_string(const hash_type * , const char *);
+char            * hash_get_string(hash_type * , const char *);
 void        	  hash_del(hash_type *, const char *);
 void              hash_safe_del(hash_type * , const char * );
 void              hash_clear(hash_type *);
@@ -48,23 +41,11 @@ void            * hash_iter_get_first_value(hash_type * , bool * );
 
 hash_type       * hash_alloc_from_options(int  , const char ** );
 
-HASH_GET_SCALAR(hash_get_int       , int);
-HASH_GET_SCALAR(hash_get_double    , double);
-HASH_INSERT_SCALAR(hash_insert_int    , int);
-HASH_INSERT_SCALAR(hash_insert_double , double);
-HASH_INSERT_ARRAY(hash_insert_int_array    , int);
-HASH_INSERT_ARRAY(hash_insert_double_array , double);
-HASH_GET_ARRAY_PTR(hash_get_double_ptr , double);
-HASH_GET_ARRAY_PTR(hash_get_int_ptr    , int);
 
-HASH_NODE_AS(hash_node_as_int    , int);
-HASH_NODE_AS(hash_node_as_double , double);
-
-#undef HASH_GET_SCALAR
-#undef HASH_INSERT_SCALAR
-#undef HASH_INSERT_ARRAY
-#undef HASH_GET_ARRAY_PTR
-#undef HASH_NODE_AS
+void              hash_insert_int(hash_type * , const char * , int);
+int               hash_get_int(hash_type * , const char *);
+void              hash_insert_double(hash_type * , const char * , double);
+double               hash_get_double(hash_type * , const char *);
 
 #ifdef __cplusplus
 }

@@ -11,10 +11,19 @@
 #include <menu.h>
 #include <subst.h>
 #include <arg_pack.h>
-
+#include <vector.h>
 
 
 
 int main(int argc , char ** argv) {
-  return 0;
+  int buffer_size = 256;
+  
+  vector_type * vector = vector_alloc_new();
+  void * buffer = util_malloc( buffer_size , __func__);
+  vector_append_buffer( vector , buffer , buffer_size);
+  vector_append_buffer( vector , buffer , buffer_size);
+  vector_append_buffer( vector , buffer , buffer_size);
+  vector_append_owned_ref( vector , buffer , free );
+
+  vector_free( vector );
 }
