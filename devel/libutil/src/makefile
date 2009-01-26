@@ -5,7 +5,7 @@ COMPILE_LIB_PATH  =
 INSTALL_INC_PATH = $(LIBUTIL_HOME)/include
 INSTALL_LIB_PATH = $(LIBUTIL_HOME)/lib
 #################################################################
-SDP_ROOT          = /project/res/$(shell /private/joaho/bin/res_target.py)
+SDP_ROOT          = $(shell get_sdp_root.py)
 OBJECTS           = set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o node_ctype.o util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o stringlist.o menu.o subst.o vector.o
 INC_FILES_INSTALL = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h vector.h
 LIB_ROOT          = libutil
@@ -19,7 +19,7 @@ LOCAL: LIB BIN
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
 
-SDP_INSTALL: LIB BIN
+SDP_INSTALL: LIB BIN 
 	install $(LIB) $(SDP_ROOT)/lib/$(LIB_ROOT).a
 	install $(BIN_FILES) $(SDP_ROOT)/bin
 	install $(INC_FILES_INSTALL) $(SDP_ROOT)/include

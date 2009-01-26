@@ -44,6 +44,11 @@ vector_type * vector_alloc_new() {
 }
 
 
+/**
+   This is the low-level append node function which actually "does
+   it", the node has been allocated in one of the front-end functions.
+*/
+
 static void vector_append_node(vector_type * vector , node_data_type * node) {
   if (vector->size == vector->alloc_size)
     vector_resize__(vector , 2*(vector->alloc_size + 1));
@@ -54,8 +59,8 @@ static void vector_append_node(vector_type * vector , node_data_type * node) {
 
 
 /**
-   Append a user-pointer which comes without both copy constructor and
-   destructor, this implies that the calling scope has FULL
+   Append a user-pointer which comes without either copy constructor
+   or destructor, this implies that the calling scope has FULL
    responsabilty for the storage of the data added to the vector.
 */
 
@@ -81,7 +86,7 @@ void vector_append_owned_ref(vector_type * vector , const void * data , del_type
 }
 
 
-/*
+/**
   This function appends a COPY of user object. This implies that the
   calling scope is still responsible for the instance declared and
   used in that scope, whereas the vector takes responsability of
@@ -98,7 +103,7 @@ void vector_append_copy(vector_type * vector , const void * data , copyc_type * 
 
 /**
    A buffer is unstructured storage (i.e. a void *) which is destroyed
-   wth free, and copied with malloc + memcpy. The vector takesa copy
+   with free, and copied with malloc + memcpy. The vector takes a copy
    of the buffer which is inserted (and freed on vector destruction).
 */
    
@@ -107,7 +112,6 @@ void vector_append_buffer(vector_type * vector , const void * buffer, int buffer
   node_data_type * node = node_data_alloc_buffer( buffer , buffer_size );
   vector_append_node(vector , node);
 }
-
 
 
 
@@ -120,7 +124,6 @@ const void * vector_iget(const vector_type * vector, int index) {
     return NULL;
   }
 }
-
 
 
 /**

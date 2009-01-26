@@ -66,23 +66,3 @@ int list_node_as_int(const list_node_type * node) {
   return node_data_get_int(node->node_data);
 }
 
-//const char * list_node_get_string(list_node_type *node) {
-//  node_data_type *node_data = list_node_value_ptr(node);
-//  return (const char *) node_data_get_data(node_data);
-//}
-//
-//
-///*****************************************************************/
-//
-//#define LIST_NODE_AS_SCALAR(FUNC,TYPE)                         \
-//TYPE FUNC(const list_node_type * node) {                       \
-//   node_data_type *node_data = list_node_value_ptr(node);      \
-//   return *((TYPE *) node_data_get_data(node_data));           \
-//} 
-//
-//
-//LIST_NODE_AS_SCALAR(list_node_as_int    , int)
-//LIST_NODE_AS_SCALAR(list_node_as_double , double)
-//
-//
-//#undef LIST_NODE_AS_SCALAR

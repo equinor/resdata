@@ -1,11 +1,10 @@
 include global_config
-#CC = g++
+SDP_ROOT	= $(shell get_sdp_root.py)
 #################################################################
 COMPILE_INCLUDE  = -I$(LIBECL_HOME)/src -I$(LIBUTIL_HOME)/include 
 INSTALL_INC_PATH =  $(LIBECL_HOME)/include
 INSTALL_LIB_PATH =  $(LIBECL_HOME)/lib
 #################################################################
-__SDP_ROOT    = $(SDP_ROOT)/$(shell res_target.py)
 LIB_OBJECTS   = ecl_well_vars.o ecl_util.o ecl_kw.o ecl_block.o ecl_fstate.o ecl_sum.o fortio.o ecl_rft_vector.o ecl_rft_node.o ecl_grid.o ecl_box.o restart_kw_list.o ecl_io_config.o 
 MOD_FILES = 
 INC_FILES = ecl_well_vars.h ecl_util.h ecl_kw.h ecl_block.h ecl_fstate.h ecl_sum.h fortio.h ecl_rft_vector.h ecl_rft_node.h ecl_box.h ecl_grid.h restart_kw_list.h  ecl_io_config.h
@@ -23,9 +22,9 @@ LOCAL: LIB BIN
 
 
 SDP_INSTALL: LIB BIN
-	install $(LIB) $(__SDP_ROOT)/lib/$(LIB_ROOT).a
-	install $(BIN_FILES_SDP_INSTALL) $(__SDP_ROOT)/bin
-	install $(INC_FILES) $(__SDP_ROOT)/include
+	install $(LIB) $(SDP_ROOT)/lib/$(LIB_ROOT).a
+	install $(BIN_FILES_SDP_INSTALL) $(SDP_ROOT)/bin
+	install $(INC_FILES) $(SDP_ROOT)/include
 
 clean:
 	rm -f *.o *~ 
@@ -43,18 +42,10 @@ $(LIB): $(LIB_OBJECTS)
 %.o : %.c
 	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $(CPPFLAGS) $< -o $@
 
+new: 
+	../../Scripts/cdep.py all_include.h 0
 
-# Library source code
-ecl_rft_vector.o   : ecl_rft_vector.h ecl_rft_vector.c ecl_util.h ecl_kw.o ecl_fstate.o ecl_block.o ecl_rft_node.o
-ecl_util.o   	   : ecl_util.c ecl_util.h
-fortio.o     	   : fortio.c fortio.h 
-ecl_kw.o     	   : ecl_kw.c ecl_kw.h fortio.o
-ecl_block.o  	   : ecl_block.c ecl_block.h ecl_kw.o
-ecl_fstate.o 	   : ecl_fstate.c ecl_fstate.h ecl_block.o ecl_util.o ecl_kw.o
-ecl_sum.o    	   : ecl_sum.c ecl_sum.h ecl_fstate.o ecl_block.o ecl_kw.o ecl_util.o
-ecl_grid.o   	   : ecl_grid.c ecl_grid.h ecl_kw.o fortio.o
-ecl_box.o          : ecl_box.c ecl_box.h
-ecl_io_config.o    : ecl_io_config.c ecl_io_config.h ecl_util.o
+include dependencies
 
 # Source code for binaries - based on library
 view_rft.o     : view_rft.c 	
