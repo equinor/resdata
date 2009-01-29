@@ -3827,5 +3827,28 @@ int * util_sscanf_alloc_active_list(const char * range_string , int * list_lengt
 }
 
 
+/**
+   This function updates an environment variable representing a path,
+   i.e. ":" separated. 
+*/
+
+void util_update_path_var(const char * variable, const char * value, bool append) {
+  if (getenv(variable) == NULL)
+    /* The (path) variable is not currently set. */
+    setenv( variable , value , 1);
+  else {
+    char * new_value;
+    if (append)
+      new_value = util_alloc_sprintf("%s:%s" , getenv( variable ) , value);
+    else
+      new_value = util_alloc_sprintf("%s:%s" , value , getenv( variable ));
+
+    unsetenv( variable );
+    setenv( variable , new_value , 1);
+    free( new_value);
+  }
+}
+
+
 #include "util_path.c"
 

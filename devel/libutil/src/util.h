@@ -199,6 +199,7 @@ bool     util_sscanf_bytesize(const char * , size_t *);
 void     util_sscanf_active_range(const char *  , int , bool * );
 int    * util_sscanf_alloc_active_list(const char *  , int * );
 int      util_get_current_linenr(FILE * stream);
+void     util_update_path_var(const char * , const char * , bool );
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_SCALAR(s,stream)  { if (fread(&s , sizeof s , 1 , stream) != 1) util_abort("%s: read failed: %s\n",__func__ , strerror(errno)); }
