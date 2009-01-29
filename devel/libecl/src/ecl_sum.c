@@ -423,6 +423,47 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
 }
 	
 
+/**
+   This file takes an input file, and loads the corresponding
+   summary. The function extracts the path part, and the basename from
+   the input file. The extension is not considered (and need to even
+   be a valid file). In principle a simulation directory with a given
+   basename can contain four different simulation cases:
+
+    * Formatted and unformatted.
+    * Unified and not unified.
+
+   The program will load the most recent dataset.
+
+   ----
+
+   The variable report_mode should be true if this summary will be
+   used in an EnKF setting (The ECLIPSE file MUST have RPTONLY),
+   otherwise you should use report_mode = false.
+*/
+
+
+
+
+ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , bool report_mode , bool endian_convert){ 
+  ecl_sum_type * ecl_sum;
+  char * path , * base;
+  char * header_file;
+  char ** summary_file_list;
+  int     files;
+  bool    fmt_file , unified; 
+
+  util_alloc_file_components( input_file , &path , &base , NULL);
+  ecl_util_alloc_summary_files( path , base , &header_file , &summary_file_list , &files , &fmt_file , &unified);
+  ecl_sum = ecl_sum_fread_alloc( header_file , files , (const char **) summary_file_list , report_mode , endian_convert );
+  
+  free(base);
+  util_safe_free(path);
+  free(header_file);
+  util_free_stringlist( summary_file_list , files );
+
+  return ecl_sum;
+}
 
 
 									
@@ -1081,6 +1122,10 @@ void ecl_sum_free(ecl_sum_type *ecl_sum) {
 }
 
 
+void ecl_sum_free__(void * __ecl_sum) {
+  ecl_sum_type * ecl_sum = ecl_sum_safe_cast( __ecl_sum);
+  ecl_sum_free( ecl_sum );
+}
 
 /**
    This is actually not a proper report_step - but rather an index ...

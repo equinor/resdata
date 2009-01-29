@@ -244,7 +244,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 	    if (ecl_block_has_kw(next_block , "PARAMS")) {
 	      ecl_block_set_report_nr(ecl_block , 0); /* Setting the previous to zero */ 
 	      ecl_fstate_add_block(ecl_fstate , next_block);
-	    }
+	    } /* Seems it will leak next_block ... */
 	  }
 	  
 	  

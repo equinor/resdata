@@ -317,6 +317,7 @@ ecl_block_type * ecl_block_alloc(int report_nr) {
   ecl_block->sim_days = -1; 
   ecl_block_set_report_nr(ecl_block , report_nr);
   return ecl_block;
+  
 }
 
 
@@ -447,8 +448,7 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *_at_
         at_eof = false;
         read_next_kw = false;
         ecl_kw_rewind(ecl_kw , fortio);
-      }
-      else 
+      } else 
         ecl_block_add_kw(ecl_block , ecl_kw);
 
     } else {

@@ -28,6 +28,7 @@ const char     * ecl_sum_get_simulation_case(const ecl_sum_type * );
 ecl_sum_type   * ecl_sum_safe_cast(const void * );
 void             ecl_sum_fread_alloc_data(ecl_sum_type * , int , const char ** , bool);
 ecl_sum_type   * ecl_sum_fread_alloc(const char * , int , const char **, bool  , bool );
+ecl_sum_type   * ecl_sum_fread_alloc_case(const char *  , bool  , bool );
 ecl_sum_var_type ecl_sum_iget_var_type(const ecl_sum_type * , int );
 int            	 ecl_sum_get_Nwells(const ecl_sum_type *);
 void           	 ecl_sum_copy_well_names(const ecl_sum_type * , char **);
@@ -53,6 +54,7 @@ double           ecl_sum_get_well_completion_var(const ecl_sum_type * , int , co
 
 void           	 ecl_sum_free_data(ecl_sum_type * );
 void           	 ecl_sum_free(ecl_sum_type *);
+void             ecl_sum_free__(void * );
 int            	 ecl_sum_get_size(const ecl_sum_type *);
 void           	 ecl_sum_set_fmt_mode(ecl_sum_type *, int );
 void           	 ecl_sum_save(const ecl_sum_type * );
