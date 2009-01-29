@@ -147,6 +147,10 @@ void * vector_iget(const vector_type * vector, int index) {
 
 
 
+int vector_get_size( const vector_type * vector) {
+  return vector->size;
+}
+
 
 /**
    This vector frees all the storage of the vector, including all the

@@ -20,7 +20,7 @@ void          vector_append_buffer(vector_type * , const void * , int);
 int           vector_get_size(const vector_type * );
 const void  * vector_iget_const(const vector_type * , int );
 void        * vector_iget(const vector_type * , int );
-
+int           vector_get_size( const vector_type * );
 
 #ifdef __cplusplus
 }
