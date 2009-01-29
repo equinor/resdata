@@ -3176,6 +3176,7 @@ char * util_alloc_PATH_executable(const char * executable) {
       char ** path_list;
       int     path_size , ipath;
       
+      printf("PATH:%s \n",path_env);
       ipath = 0;
       util_split_string(getenv("PATH") , ":" , &path_size , &path_list);
       while ( cont ) {
@@ -3192,6 +3193,7 @@ char * util_alloc_PATH_executable(const char * executable) {
       }
       util_free_stringlist(path_list , path_size);
     }
+    printf("Retuning:%s \n",full_path);
     return full_path;
   }
 }
