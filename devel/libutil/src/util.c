@@ -2845,7 +2845,7 @@ void util_read_filename(const char * prompt , int prompt_len , bool must_exist ,
 /**
   This function reads data from the input pointer data, and writes a
   compressed copy into to the target buffer zbuffer. On input
-  data_size should be the *number of bytes* in data compressed_size
+  data_size should be the *number of bytes* in data. compressed_size
   should be a reference to the size (in bytes) of zbuffer, on return
   this has been updated to reflect the new compressed size.
 */

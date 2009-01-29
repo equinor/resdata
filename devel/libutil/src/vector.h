@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 
+typedef void ( vector_func_type ) (void * , void *);
+
 typedef struct vector_struct vector_type;
 
 
@@ -16,7 +18,8 @@ void          vector_append_copy(vector_type * , const void *, copyc_type *, del
 void          vector_free(vector_type * ); 
 void          vector_append_buffer(vector_type * , const void * , int);
 int           vector_get_size(const vector_type * );
-const void  * vector_iget(const vector_type * , int );
+const void  * vector_iget_const(const vector_type * , int );
+void        * vector_iget(const vector_type * , int );
 
 
 #ifdef __cplusplus

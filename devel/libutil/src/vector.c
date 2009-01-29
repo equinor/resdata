@@ -115,7 +115,7 @@ void vector_append_buffer(vector_type * vector , const void * buffer, int buffer
 
 
 
-const void * vector_iget(const vector_type * vector, int index) {
+const void * vector_iget_const(const vector_type * vector, int index) {
   if ((index >= 0) && (index < vector->size)) {
     const node_data_type * node = vector->data[index];
     return node_data_get_ptr( node );
@@ -124,6 +124,28 @@ const void * vector_iget(const vector_type * vector, int index) {
     return NULL;
   }
 }
+
+
+void * vector_iget(const vector_type * vector, int index) {
+  if ((index >= 0) && (index < vector->size)) {
+    const node_data_type * node = vector->data[index];
+    return node_data_get_ptr( node );
+  } else {
+    util_abort("%s: Invald index:%d  Valid range: [0,%d> \n",__func__ , index , vector->size);
+    return NULL;
+  }
+}
+
+
+//void vector_for_each(vector_type * vector , vector_func_type * func , void * arg) {
+//  int i;
+//  for (i = 0; i < vector->size; i++) {
+//    node_data_type * node = vector->data[index];
+//    
+//    
+//}
+
+
 
 
 /**

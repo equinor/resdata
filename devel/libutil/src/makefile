@@ -8,9 +8,8 @@ INSTALL_LIB_PATH = $(LIBUTIL_HOME)/lib
 SDP_ROOT          = $(shell get_sdp_root.py)
 OBJECTS           = set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o node_ctype.o util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o stringlist.o menu.o subst.o vector.o
 INC_FILES_INSTALL = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h vector.h
-LIB_ROOT          = libutil
-LIB               = $(LIB_ROOT)_$(MFLAG).a
-LIB_LINK          = -lutil_$(MFLAG) -lz -lpthread -lm
+LIB               = libutil.a
+LIB_LINK          = -lutil -lz -lpthread -lm
 LINK_LIB_PATH     = -L./ 
 
 LOCAL: LIB BIN
@@ -20,7 +19,7 @@ LOCAL: LIB BIN
 	install $(LIB) $(INSTALL_LIB_PATH)
 
 SDP_INSTALL: LIB BIN 
-	install $(LIB) $(SDP_ROOT)/lib/$(LIB_ROOT).a
+	install $(LIB) $(SDP_ROOT)/lib/$(LIB)
 	install $(BIN_FILES) $(SDP_ROOT)/bin
 	install $(INC_FILES_INSTALL) $(SDP_ROOT)/include
 
@@ -57,7 +56,7 @@ BIN:	hash.x util.x eol-fix.x mem_free.x
 BIN_FILES = hash.x util.x eol-fix.x mem_free.x 
 
 hash.x: hash_test.o $(LIB)
-	gcc $(LDFLAGS) -$(MFLAG) hash_test.o -o hash.x     $(LINK_LIB_PATH) $(LIB_LINK) 
+	$(CC) $(LDFLAGS) -$(MFLAG) hash_test.o -o hash.x     $(LINK_LIB_PATH) $(LIB_LINK) 
  
 util.x: util-test.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) util-test.o -o util.x     $(LINK_LIB_PATH) $(LIB_LINK) 

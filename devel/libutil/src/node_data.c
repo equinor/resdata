@@ -106,7 +106,11 @@ void node_data_free(node_data_type * node_data) {
 }
 
 
-const void * node_data_get_ptr(const node_data_type * node_data) {
+const void * node_data_get_const_ptr(const node_data_type * node_data) {
+  return node_data->data;
+}
+
+void * node_data_get_ptr(const node_data_type * node_data) {
   return node_data->data;
 }
 
