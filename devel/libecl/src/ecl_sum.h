@@ -23,6 +23,7 @@ typedef enum {ecl_sum_aquifer_var,
 	      ecl_sum_misc_var}  ecl_sum_var_type;
 
 
+double           ecl_sum_get_sim_days(const ecl_sum_type * , int );
 bool             ecl_sum_has_sim_time(const ecl_sum_type * );
 const char     * ecl_sum_get_simulation_case(const ecl_sum_type * );
 ecl_sum_type   * ecl_sum_safe_cast(const void * );
