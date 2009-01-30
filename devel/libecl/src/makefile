@@ -21,7 +21,7 @@ LOCAL: LIB BIN
 
 
 SDP_INSTALL: LIB BIN
-	install $(LIB) $(SDP_ROOT)/lib/$(LIB_ROOT).a
+	install $(LIB) $(SDP_ROOT)/lib
 	install $(BIN_FILES_SDP_INSTALL) $(SDP_ROOT)/bin
 	install $(INC_FILES) $(SDP_ROOT)/include
 
