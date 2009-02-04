@@ -9,18 +9,18 @@
 #include <ecl_rft_vector.h>
 #include <ecl_rft_node.h>
 #include <hash.h>
-
+#include <vector.h>
 
 struct ecl_rft_vector_struct {
-  char * filename;
-  hash_type * well_hash;
+  char        * filename;
+  vector_type * data;
 };
 
 
 
 static ecl_rft_vector_type * ecl_rft_vector_alloc_empty(const char * filename) {
-  ecl_rft_vector_type * rft_vector = malloc(sizeof * rft_vector);
-  rft_vector->well_hash = hash_alloc();
+  ecl_rft_vector_type * rft_vector = util_malloc(sizeof * rft_vector , __func__);
+  rft_vector->data     = vector_alloc_new();
   rft_vector->filename  = util_alloc_string_copy(filename);
   return rft_vector;
 }
@@ -28,7 +28,7 @@ static ecl_rft_vector_type * ecl_rft_vector_alloc_empty(const char * filename) {
 
 
 static void ecl_rft_vector_add_node(ecl_rft_vector_type * rft_vector , const ecl_rft_node_type * rft_node) {
-  hash_insert_hash_owned_ref(rft_vector->well_hash , ecl_rft_node_well_name_ref(rft_node) , rft_node , ecl_rft_node_free__);
+  vector_append_owned_ref( rft_vector->data , rft_node , ecl_rft_node_free__);
 }
 
 
@@ -55,59 +55,20 @@ ecl_rft_vector_type * ecl_rft_vector_alloc(const char * filename) {
 }
 
 
-bool ecl_rft_vector_has_well(const ecl_rft_vector_type * rft_vector , const char * well_name) {
-  return hash_has_key(rft_vector->well_hash , well_name);
-}
-
-
-ecl_rft_node_type * ecl_rft_vector_get_node(const ecl_rft_vector_type * rft_vector , const char * well_name) {
-  if (ecl_rft_vector_has_well(rft_vector , well_name))
-    return hash_get(rft_vector->well_hash , well_name);
-  else {
-    fprintf(stderr,"%s: RFT vector does not have a well:%s - aborting \n",__func__ , well_name);
-    abort();
-  }
-}
-
-
-void ecl_rft_vector_block(const ecl_rft_vector_type * rft_vector , double epsilon , const char * well_name , int size , const double * tvd , int * i, int * j , int *k) {
-  if (ecl_rft_vector_has_well(rft_vector , well_name)) 
-    ecl_rft_node_block(ecl_rft_vector_get_node(rft_vector , well_name) , epsilon , size , tvd, i , j , k);
-  else {
-    fprintf(stderr,"%s: The rft file:%s does not contain RFT information for the well:%s  - aborting \n",__func__ , rft_vector->filename , well_name);
-    abort();
-  }
-}
-
-
-void ecl_rft_vector_fprintf_rft_obs(const ecl_rft_vector_type *rft_vector , double epsilon , const char * well_name ,const char *tvd_file , const char *target_file, double p_std) {
-  ecl_rft_node_fprintf_rft_obs(ecl_rft_vector_get_node(rft_vector , well_name) , epsilon , tvd_file , target_file , p_std);
-}
-
-char ** ecl_rft_vector_alloc_well_list(const ecl_rft_vector_type * rft_vector  , int * wells) {
-  if (wells != NULL) *wells = hash_get_size(rft_vector->well_hash);
-  return hash_alloc_keylist(rft_vector->well_hash);
-}
-
 
 
 void ecl_rft_vector_free(ecl_rft_vector_type * rft_vector) {
-  hash_free(rft_vector->well_hash);
+  vector_free(rft_vector->data);
   free(rft_vector->filename);
   free(rft_vector);
-  rft_vector = NULL;
 }
 
 
 void ecl_rft_vector_summarize(const ecl_rft_vector_type * rft_vector , bool show_completions) {
-  int wells , iw;
-  char ** well_list = ecl_rft_vector_alloc_well_list(rft_vector , &wells);
-  printf("%s: wells:%d \n",__func__ , wells);
-  for (iw = 0; iw < wells; iw++) {
-    printf("Well:%s \n",well_list[iw]);
-    ecl_rft_node_summarize(ecl_rft_vector_get_node(rft_vector , well_list[iw]) , show_completions);
+  int iw;
+  for (iw = 0; iw < vector_get_size( rft_vector->data ); iw++) {
+    ecl_rft_node_summarize(vector_iget( rft_vector->data , iw) , show_completions);
     printf("\n");
   }
-  util_free_stringlist(well_list , wells);
 }
 

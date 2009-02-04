@@ -11,6 +11,15 @@
 #include <hash.h>
 #include <time.h>
 
+/** 
+    The RFT's from several wells, and possibly also several timesteps
+    are lumped togeheter in one .RFT file. The ecl_rft_node
+    implemented in this file contains the information for one
+    well/report step. In tersms of the basic ecl_xxx types on
+    ecl_rft_node corresponds to one ecl_block instance. 
+*/
+    
+
 
 typedef enum { RFT     = 1 , 
 	       PLT     = 2 , 
@@ -21,115 +30,231 @@ typedef enum { RFT     = 1 ,
   not really supported.
 */
 
+/** 
+    Here comes some small structs containing various pieces of
+    information. Observe the following which is common to all these
+    structs:
 
-struct   ecl_rft_node_struct {
-  char   * well_name;          /* Name of the well. */
-  int      size;               /* The number of entries in this RFT vector (i.e. the number of cells) .*/
-  int    *i , *j , *k;         /* ijk for the actual cells. */
+     * In the implementation only 'full instance' are employed, and
+       not pointers. This implies that the code does not provide
+       xxx_alloc() and xx_free() functions.
 
-  bool         vertical_well;
-  ecl_rft_enum data_type;
-  time_t       recording_date;
-  double       days;
-  double       *P , *SWAT , *SGAS, *DEPTH;
+     * They should NOT be exported out of this file.
+
+*/
+
+
+/** 
+    This type is used to hold the coordinates of a perforated
+    cell. This type is used irrespective of whether this is a simple
+    RFT or a PLT.
+*/
+
+typedef struct {
+  int 	 i;
+  int 	 j;
+  int 	 k; 
+  double depth;
+  double pressure; /* both CONPRES from PLT and PRESSURE from RFT are internalized in the cell_type. */
+} cell_type;
+
+/*-----------------------------------------------------------------*/
+/** 
+    Type which contains the information for one cell in an RFT.
+*/
+typedef struct {
+  double swat;
+  double sgas;
+} rft_data_type;
+
+
+/*-----------------------------------------------------------------*/
+/** 
+    Type which contains the information for one cell in an PLT.
+*/
+typedef struct {
+  double orat;
+  double grat;
+  double wrat;
+  /* There is quite a lot of more information in the PLT - not yet internalized. */
+} plt_data_type;
+
+
+
+
+
+/* This is not implemented at all ..... */
+typedef struct {
+  double data;
+} segment_data_type;
+
+
+
+struct ecl_rft_node_struct {
+  char       * well_name;     	       /* Name of the well. */
+  int          size;          	       /* The number of entries in this RFT vector (i.e. the number of cells) .*/
+
+  ecl_rft_enum data_type;     	       /* What type of data: RFT|PLT|SEGMENT */
+  time_t       recording_date;         /* When was the RFT recorded - date.*/ 
+  double       days;                   /* When was the RFT recorded - days after simulaton start. */
+  cell_type    *cells;                 /* Coordinates and depth of the well cells. */
+
+  /* Only one of segment_data, rft_data or plt_data can be != NULL */
+  segment_data_type * segment_data;    
+  rft_data_type     * rft_data;
+  plt_data_type     * plt_data;
+
+  bool         __vertical_well;        /* Internal variable - when this is true we can try to block - otherwise it is NO FUXXXX WAY. */
 };
 
 
 
-static ecl_rft_node_type * ecl_rft_node_alloc_empty(int size) {
-  ecl_rft_node_type * rft_node = malloc(sizeof * rft_node);
+static ecl_rft_node_type * ecl_rft_node_alloc_empty(int size , const char * data_type_string) {
+  ecl_rft_enum data_type = SEGMENT;
 
-  rft_node->i 	  = util_malloc(size * sizeof * rft_node->i    	, __func__);
-  rft_node->j 	  = util_malloc(size * sizeof * rft_node->j    	, __func__);
-  rft_node->k 	  = util_malloc(size * sizeof * rft_node->k    	, __func__);
-  rft_node->P 	  = util_malloc(size * sizeof * rft_node->P    	, __func__);
-  rft_node->SWAT  = util_malloc(size * sizeof * rft_node->SWAT 	, __func__);
-  rft_node->SGAS  = util_malloc(size * sizeof * rft_node->SGAS 	, __func__);
-  rft_node->DEPTH = util_malloc(size * sizeof * rft_node->DEPTH , __func__);
-  rft_node->data_type = RFT;
-  rft_node->size  = size;
-  return rft_node;
-}
-
-
-
-ecl_rft_node_type * ecl_rft_node_alloc(const ecl_block_type * rft_block) {
+  /* According to the ECLIPSE documentaton. */
+  if (strchr(data_type_string , 'P') != NULL)
+    data_type = PLT;
+  else if (strchr(data_type_string, 'R') != NULL)
+    data_type = RFT;
+  else if (strchr(data_type_string , 'S') != NULL)
+    data_type = SEGMENT;
+  else 
+    util_abort("%s: Could not determine type of RFT/PLT/SEGMENT data - aborting\n",__func__);
   
-  ecl_kw_type       * ecl_kw   = ecl_block_get_kw(rft_block , "CONIPOS");
-  ecl_rft_node_type * rft_node = ecl_rft_node_alloc_empty(ecl_kw_get_size(ecl_kw));
-
-  {
-    char * tmp;
-    tmp = ecl_kw_iget_ptr(ecl_block_get_kw(rft_block , "WELLETC") , 1);
-    rft_node->well_name = util_alloc_strip_copy(tmp);
-    printf("Adding well:%s \n",rft_node->well_name);
-    
-    tmp = ecl_kw_iget_ptr(ecl_block_get_kw(rft_block , "WELLETC") , 5);
-    if (strchr(tmp , 'P') != NULL)
-      rft_node->data_type = PLT;
-    else if (strchr(tmp, 'R') != NULL)
-      rft_node->data_type = RFT;
-    else if (strchr(tmp , 'S') != NULL)
-      rft_node->data_type = SEGMENT;
-    else 
-      util_abort("%s: Could not determine type of RFT/PLT/SEGMENT data - aborting\n",__func__);
-
-    if (rft_node->data_type == SEGMENT) {
-      ecl_rft_node_free(rft_node);
-      fprintf(stderr,"%s: sorry SEGMENT PLT/RFT is not supported - file a ccomplaint. \n",__func__);
-      return NULL;
-    }
+  if (data_type == SEGMENT) {
+    fprintf(stderr,"%s: sorry SEGMENT PLT/RFT is not supported - file a complaint. \n",__func__);
+    return NULL;
   }
 
   {
-    int time3[3];
-    ecl_kw_get_memcpy_data(ecl_block_get_kw(rft_block , "CONIPOS") , rft_node->i);
-    ecl_kw_get_memcpy_data(ecl_block_get_kw(rft_block , "CONJPOS") , rft_node->j);
-    ecl_kw_get_memcpy_data(ecl_block_get_kw(rft_block , "CONKPOS") , rft_node->k);
+    ecl_rft_node_type * rft_node = util_malloc(sizeof * rft_node , __func__);
+    rft_node->plt_data 	   = NULL;
+    rft_node->rft_data 	   = NULL;
+    rft_node->segment_data = NULL;
     
-    ecl_kw_get_memcpy_data(ecl_block_get_kw(rft_block , "DATE") , time3);
-    rft_node->recording_date = util_make_date(time3[0] , time3[1] , time3[2]);
-    rft_node->days           = ecl_kw_iget_float( ecl_block_get_kw( rft_block , "TIME" ) , 0);
+    rft_node->cells = util_malloc( size * sizeof * rft_node->cells , __func__);
+    if (data_type == RFT)
+      rft_node->rft_data = util_malloc( size * sizeof * rft_node->rft_data , __func__);
+    else if (data_type == PLT)
+      rft_node->plt_data = util_malloc( size * sizeof * rft_node->plt_data , __func__);
+    else if (data_type == SEGMENT)
+      rft_node->segment_data = util_malloc( size * sizeof * rft_node->segment_data , __func__);
+    
+    rft_node->__vertical_well = false;
+    rft_node->size = size;
+    rft_node->data_type = data_type;
 
-    if (rft_node->data_type == RFT) {
-      ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "PRESSURE") , rft_node->P);
-      ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "SWAT")     , rft_node->SWAT);
-      ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "SGAS")     , rft_node->SGAS);
-      ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "DEPTH")    , rft_node->DEPTH);
-      
-      {
-	int i;
-	rft_node->vertical_well = true;
-	double first_delta = rft_node->DEPTH[1] - rft_node->DEPTH[0];
-	for (i = 1; i < (rft_node->size - 1); i++) {
-	  double delta = rft_node->DEPTH[i + 1] - rft_node->DEPTH[i];
-	  if (fabs(delta) > 0) {
-	    if (first_delta * delta < 0)
-	      rft_node->vertical_well = false;
-	  }
-	}
-      }
-    }  else if (rft_node->data_type == PLT) {
-      printf("Warning: %s is not fully implemented for PLT \n",__func__);
-    }
     return rft_node;
   }
 }
 
 
-const char * ecl_rft_node_well_name_ref(const ecl_rft_node_type * rft_node) { return rft_node->well_name; }
+
+ecl_rft_node_type * ecl_rft_node_alloc(const ecl_block_type * rft_block) {
+  ecl_kw_type       * conipos   = ecl_block_get_kw(rft_block , "CONIPOS");
+  ecl_kw_type       * welletc   = ecl_block_get_kw(rft_block , "WELLETC");
+  ecl_rft_node_type * rft_node  = ecl_rft_node_alloc_empty(ecl_kw_get_size(conipos) , ecl_kw_iget_ptr(welletc , 5));
+
+  if (rft_node != NULL) {
+    ecl_kw_type * date_kw = ecl_block_get_kw( rft_block , "DATE" );
+    ecl_kw_type * conjpos = ecl_block_get_kw( rft_block , "CONJPOS" );
+    ecl_kw_type * conkpos = ecl_block_get_kw( rft_block , "CONKPOS" );
+    ecl_kw_type * depth_kw;
+    if (rft_node->data_type == RFT)
+      depth_kw = ecl_block_get_kw( rft_block , "DEPTH");
+    else
+      depth_kw = ecl_block_get_kw( rft_block , "CONDEPTH");
+    rft_node->well_name = util_alloc_strip_copy( ecl_kw_iget_ptr(welletc , 1));
+
+    /* Time information. */
+    {
+      int * time = ecl_kw_get_data_ref( date_kw );
+      rft_node->recording_date = util_make_date( time[0] , time[1] , time[2]);
+    }
+    rft_node->days = ecl_kw_iget_float( ecl_block_get_kw( rft_block , "TIME" ) , 0);
+
+    
+    /* Cell information */
+    {
+      const int   * i 	   = ecl_kw_get_int_ptr( conipos );
+      const int   * j 	   = ecl_kw_get_int_ptr( conjpos );
+      const int   * k 	   = ecl_kw_get_int_ptr( conkpos );
+      const float * depth  = ecl_kw_get_float_ptr( depth_kw );
+
+      int c;
+      for (c = 0; c < rft_node->size; c++) {
+	rft_node->cells[c].i 	 = i[c];
+	rft_node->cells[c].j 	 = j[c];
+	rft_node->cells[c].k 	 = k[c];
+	rft_node->cells[c].depth = depth[c];
+      }
+	
+    }
+
+    /* Now we are done with the information which is common to both RFT and PLT. */
+    
+    if (rft_node->data_type == RFT) {
+      const float * SW = ecl_kw_get_float_ptr( ecl_block_get_kw( rft_block , "SWAT"));
+      const float * SG = ecl_kw_get_float_ptr( ecl_block_get_kw( rft_block , "SGAS")); 
+      const float * P  = ecl_kw_get_float_ptr( ecl_block_get_kw( rft_block , "PRESSURE"));
+
+      int c;
+      for (c = 0; c < rft_node->size; c++) {
+	rft_node->rft_data[c].swat     = SW[c];
+	rft_node->rft_data[c].sgas     = SG[c];
+	rft_node->cells[c].pressure     = P[c];
+      }
+    } else if (rft_node->data_type == PLT) {
+      /* For PLT there is quite a lot of extra information which is not yet internalized. */
+      const float * WR = ecl_kw_get_float_ptr( ecl_block_get_kw( rft_block , "CONWRAT"));
+      const float * GR = ecl_kw_get_float_ptr( ecl_block_get_kw( rft_block , "CONGRAT")); 
+      const float * OR = ecl_kw_get_float_ptr( ecl_block_get_kw( rft_block , "CONORAT")); 
+      const float * P  = ecl_kw_get_float_ptr( ecl_block_get_kw( rft_block , "CONPRES"));
+
+      int c;
+      for (c = 0; c < rft_node->size; c++) {
+	rft_node->plt_data[c].orat     = OR[c];
+	rft_node->plt_data[c].grat     = GR[c];
+	rft_node->plt_data[c].wrat     = WR[c];
+	rft_node->cells[c].pressure     = P[c];   
+      }
+    } else {
+      /* Segmnet code - not implemented. */
+    }
+
+    /* 
+       Checking if the well is monotone in the z-direction; if it is we can
+       reasonably safely try som eblocking.
+    */
+    {
+      int i;
+      rft_node->__vertical_well = true;
+      double first_delta = rft_node->cells[1].depth - rft_node->cells[0].depth;
+      for (i = 1; i < (rft_node->size - 1); i++) {
+	double delta = rft_node->cells[i+1].depth - rft_node->cells[i].depth;
+	if (fabs(delta) > 0) {
+	  if (first_delta * delta < 0)
+	    rft_node->__vertical_well = false;
+	}
+      }
+    }
+  }
+  return rft_node;
+}
+
+
+const char * ecl_rft_node_get_well_name(const ecl_rft_node_type * rft_node) { 
+  return rft_node->well_name; 
+}
 
 
 void ecl_rft_node_free(ecl_rft_node_type * rft_node) {
-  free(rft_node->i);	 
-  free(rft_node->j);	 
-  free(rft_node->k);	 
-  free(rft_node->P);	 
-  free(rft_node->SWAT);
-  free(rft_node->SGAS);
-  free(rft_node->DEPTH);
   free(rft_node->well_name);
-  free(rft_node);
+  free(rft_node->cells);
+  util_safe_free(rft_node->segment_data);
+  util_safe_free(rft_node->rft_data);
+  util_safe_free(rft_node->plt_data);
 }
 
 void ecl_rft_node_free__(void * void_node) {
@@ -143,21 +268,26 @@ void ecl_rft_node_summarize(const ecl_rft_node_type * rft_node , bool print_cell
   printf("--------------------------------------------------------------\n");
   printf("Well.............: %s \n",rft_node->well_name);
   printf("Completed cells..: %d \n",rft_node->size);
-  printf("Vertical well....: %d \n",rft_node->vertical_well);
+  printf("Vertical well....: %d \n",rft_node->__vertical_well);
   {
     int day , month , year;
     util_set_date_values(rft_node->recording_date , &day , &month , &year);
-    printf("Recording date...: %02d/%02d/%4d / %g days \n" , day , month , year , rft_node->days);
+    printf("Recording date...: %02d/%02d/%4d / %g days after simulation start.\n" , day , month , year , rft_node->days);
   }
-  printf("--------------------------------------------------------------\n");
+  printf("-----------------------------------------\n");
   if (print_cells) {
-    for (i=0; i < rft_node->size; i++) {
-      printf("%d: %3d %3d %3d | %g %g \n",i,rft_node->i[i] , rft_node->j[i] , rft_node->k[i] , rft_node->DEPTH[i] , rft_node->P[i]);
-    }
-    printf("--------------------------------------------------------------\n");
+    printf("     i   j   k       Depth       Pressure\n");
+    printf("-----------------------------------------\n");
+    for (i=0; i < rft_node->size; i++) 
+      printf("%2d: %3d %3d %3d | %10.2f %10.2f \n",i,
+	     rft_node->cells[i].i , 
+	     rft_node->cells[i].j , 
+	     rft_node->cells[i].k , 
+	     rft_node->cells[i].depth,
+	     rft_node->cells[i].pressure);
+    printf("-----------------------------------------\n");
   }
 }
-
 
 
 
@@ -169,9 +299,9 @@ void ecl_rft_node_block(const ecl_rft_node_type * rft_node , double epsilon , in
   int last_rft_index   = 0;
   bool  * blocked      = util_malloc(rft_node->size * sizeof * blocked , __func__);
 
-  if (!rft_node->vertical_well) {
+  if (!rft_node->__vertical_well) {
     fprintf(stderr,"**************************************************************************\n");
-    fprintf(stderr,"** WARNING: Trying to block horizontal well: %s from only tvd, this **\n", ecl_rft_node_well_name_ref(rft_node));
+    fprintf(stderr,"** WARNING: Trying to block horizontal well: %s from only tvd, this **\n", ecl_rft_node_get_well_name(rft_node));
     fprintf(stderr,"** is extremely error prone - blocking should be carefully checked.     **\n");
     fprintf(stderr,"**************************************************************************\n");
   }
@@ -179,9 +309,9 @@ void ecl_rft_node_block(const ecl_rft_node_type * rft_node , double epsilon , in
   for (tvd_index = 0; tvd_index < size; tvd_index++) {
     double min_diff       = 100000;
     int    min_diff_index = 0;
-    if (rft_node->vertical_well) {
+    if (rft_node->__vertical_well) {
       for (rft_index = last_rft_index; rft_index < rft_node->size; rft_index++) {      
-	double diff = fabs(tvd[tvd_index] - rft_node->DEPTH[rft_index]);
+	double diff = fabs(tvd[tvd_index] - rft_node->cells[rft_index].depth);
 	if (diff < min_diff) {
 	  min_diff = diff;
 	  min_diff_index = rft_index;
@@ -190,22 +320,23 @@ void ecl_rft_node_block(const ecl_rft_node_type * rft_node , double epsilon , in
     } else {
       for (rft_index = last_rft_index; rft_index < (rft_node->size - 1); rft_index++) {      
 	int next_rft_index = rft_index + 1;
-	if ((rft_node->DEPTH[next_rft_index] - tvd[tvd_index]) * (tvd[tvd_index] - rft_node->DEPTH[rft_index]) > 0) {
+	if ((rft_node->cells[next_rft_index].depth - tvd[tvd_index]) * (tvd[tvd_index] - rft_node->cells[rft_index].depth) > 0) {
 	  /*
 	    We have bracketing ... !!
 	  */
 	  min_diff_index = rft_index;
 	  min_diff = 0;
-	  printf("Bracketing:  %g  |  %g  | %g \n",rft_node->DEPTH[next_rft_index] , tvd[tvd_index] , rft_node->DEPTH[rft_index]);
+	  printf("Bracketing:  %g  |  %g  | %g \n",rft_node->cells[next_rft_index].depth , 
+		 tvd[tvd_index] , rft_node->cells[rft_index].depth);
 	  break;
 	}
       }
     }
 
     if (min_diff < epsilon) {
-      i[tvd_index] = rft_node->i[min_diff_index];
-      j[tvd_index] = rft_node->j[min_diff_index];
-      k[tvd_index] = rft_node->k[min_diff_index];
+      i[tvd_index] = rft_node->cells[min_diff_index].i;
+      j[tvd_index] = rft_node->cells[min_diff_index].j;
+      k[tvd_index] = rft_node->cells[min_diff_index].k;
       
       blocked[min_diff_index] = true;
       last_rft_index          = min_diff_index;
@@ -242,9 +373,9 @@ void ecl_rft_node_block_static(const ecl_rft_node_type * rft_node , int rft_inde
     j[index] = -1;
     k[index] = -1;
   }
-  i[md_index_offset] = rft_node->i[rft_index_offset];
-  j[md_index_offset] = rft_node->j[rft_index_offset];
-  k[md_index_offset] = rft_node->k[rft_index_offset];
+  i[md_index_offset] = rft_node->cells[rft_index_offset].i;
+  j[md_index_offset] = rft_node->cells[rft_index_offset].j;
+  k[md_index_offset] = rft_node->cells[rft_index_offset].k;
   
 
   free(well_md);
@@ -273,7 +404,7 @@ void ecl_rft_node_block2(const ecl_rft_node_type * rft_node , int tvd_size , con
     
     while (min_diff > epsilon) {
       for (rft_index = 0; rft_index < rft_node->size; rft_index++) {      
-	double diff = fabs(tvd[tvd_index] - rft_node->DEPTH[rft_index]);
+	double diff = fabs(tvd[tvd_index] - rft_node->cells[rft_index].depth);
 	if (diff < min_diff) {
 	  min_diff = diff;
 	  min_diff_index = rft_index;
@@ -355,7 +486,7 @@ void ecl_rft_node_fprintf_rft_obs(const ecl_rft_node_type * rft_node , double ep
 void ecl_rft_node_export_DEPTH(const ecl_rft_node_type * rft_node , const char * path) {
   FILE * stream;
   char * full;
-  char * filename = util_alloc_string_copy(ecl_rft_node_well_name_ref(rft_node));
+  char * filename = util_alloc_string_copy(ecl_rft_node_get_well_name(rft_node));
   int i;
   
   filename = util_strcat_realloc(filename , ".DEPTH");
@@ -363,7 +494,7 @@ void ecl_rft_node_export_DEPTH(const ecl_rft_node_type * rft_node , const char *
 
   stream = fopen(full , "w");
   for (i=0; i < rft_node->size; i++) 
-    fprintf(stream , "%d  %g \n",i , rft_node->DEPTH[i]);
+    fprintf(stream , "%d  %g \n",i , rft_node->cells[i].depth);
   fclose(stream);
 
   /*
@@ -374,7 +505,4 @@ void ecl_rft_node_export_DEPTH(const ecl_rft_node_type * rft_node , const char *
 
 
 int         ecl_rft_node_get_size(const ecl_rft_node_type * rft_node) { return rft_node->size; }
-const int * ecl_rft_node_get_i (const ecl_rft_node_type * rft_node) { return rft_node->i; }
-const int * ecl_rft_node_get_j (const ecl_rft_node_type * rft_node) { return rft_node->j; }
-const int * ecl_rft_node_get_k (const ecl_rft_node_type * rft_node) { return rft_node->k; }
 time_t      ecl_rft_node_get_recording_date(const ecl_rft_node_type * rft_node) { return rft_node->recording_date; }
