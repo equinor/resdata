@@ -12,18 +12,25 @@
 #include <time.h>
 
 
-typedef enum { RFT = 1 , PLT = 2 , SEGMENT } ecl_rft_enum;
+typedef enum { RFT     = 1 , 
+	       PLT     = 2 , 
+	       SEGMENT = 3} ecl_rft_enum;
+/*
+  If the type is RFT, PLT or SEGMENT depends on the options used when
+  the .RFT file is created. RFT and PLT are quite similar, SEGMENT is
+  not really supported.
+*/
 
-struct ecl_rft_node_struct {
-  char   * well_name;
-  int      size;
-  int    *i , *j , *k;
 
-  bool    vertical_well;
+struct   ecl_rft_node_struct {
+  char   * well_name;          /* Name of the well. */
+  int      size;               /* The number of entries in this RFT vector (i.e. the number of cells) .*/
+  int    *i , *j , *k;         /* ijk for the actual cells. */
+
+  bool         vertical_well;
   ecl_rft_enum data_type;
   time_t       recording_date;
   double       days;
-  /*float        double_time;*/
   double       *P , *SWAT , *SGAS, *DEPTH;
 };
 
@@ -55,6 +62,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_block_type * rft_block) {
     char * tmp;
     tmp = ecl_kw_iget_ptr(ecl_block_get_kw(rft_block , "WELLETC") , 1);
     rft_node->well_name = util_alloc_strip_copy(tmp);
+    printf("Adding well:%s \n",rft_node->well_name);
     
     tmp = ecl_kw_iget_ptr(ecl_block_get_kw(rft_block , "WELLETC") , 5);
     if (strchr(tmp , 'P') != NULL)
@@ -65,39 +73,44 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_block_type * rft_block) {
       rft_node->data_type = SEGMENT;
     else 
       util_abort("%s: Could not determine type of RFT/PLT/SEGMENT data - aborting\n",__func__);
+
+    if (rft_node->data_type == SEGMENT) {
+      ecl_rft_node_free(rft_node);
+      fprintf(stderr,"%s: sorry SEGMENT PLT/RFT is not supported - file a ccomplaint. \n",__func__);
+      return NULL;
+    }
   }
-  /*
-    Should check type before allocating .... 
-  */
-  if (rft_node->data_type != RFT) {
-    ecl_rft_node_free(rft_node);
-    return NULL;
-  } else {
+
+  {
     int time3[3];
     ecl_kw_get_memcpy_data(ecl_block_get_kw(rft_block , "CONIPOS") , rft_node->i);
     ecl_kw_get_memcpy_data(ecl_block_get_kw(rft_block , "CONJPOS") , rft_node->j);
     ecl_kw_get_memcpy_data(ecl_block_get_kw(rft_block , "CONKPOS") , rft_node->k);
     
-    ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "PRESSURE") , rft_node->P);
-    ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "SWAT")     , rft_node->SWAT);
-    ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "SGAS")     , rft_node->SGAS);
-    ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "DEPTH")    , rft_node->DEPTH);
-
- 
     ecl_kw_get_memcpy_data(ecl_block_get_kw(rft_block , "DATE") , time3);
     rft_node->recording_date = util_make_date(time3[0] , time3[1] , time3[2]);
     rft_node->days           = ecl_kw_iget_float( ecl_block_get_kw( rft_block , "TIME" ) , 0);
-    {
-      int i;
-      rft_node->vertical_well = true;
-      double first_delta = rft_node->DEPTH[1] - rft_node->DEPTH[0];
-      for (i = 1; i < (rft_node->size - 1); i++) {
-	double delta = rft_node->DEPTH[i + 1] - rft_node->DEPTH[i];
-	if (fabs(delta) > 0) {
-	  if (first_delta * delta < 0)
-	    rft_node->vertical_well = false;
+
+    if (rft_node->data_type == RFT) {
+      ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "PRESSURE") , rft_node->P);
+      ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "SWAT")     , rft_node->SWAT);
+      ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "SGAS")     , rft_node->SGAS);
+      ecl_kw_get_data_as_double(ecl_block_get_kw(rft_block , "DEPTH")    , rft_node->DEPTH);
+      
+      {
+	int i;
+	rft_node->vertical_well = true;
+	double first_delta = rft_node->DEPTH[1] - rft_node->DEPTH[0];
+	for (i = 1; i < (rft_node->size - 1); i++) {
+	  double delta = rft_node->DEPTH[i + 1] - rft_node->DEPTH[i];
+	  if (fabs(delta) > 0) {
+	    if (first_delta * delta < 0)
+	      rft_node->vertical_well = false;
+	  }
 	}
       }
+    }  else if (rft_node->data_type == PLT) {
+      printf("Warning: %s is not fully implemented for PLT \n",__func__);
     }
     return rft_node;
   }

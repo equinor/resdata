@@ -46,6 +46,7 @@ int main (int argc , char ** argv) {
       free( path );
     }
     
+    printf("Loading RFT file:%s \n",rft_file);
     rft_vector = ecl_rft_vector_alloc(rft_file);
     ecl_rft_vector_summarize( rft_vector , true);
     ecl_rft_vector_free( rft_vector );

@@ -20,7 +20,7 @@ struct ecl_rft_vector_struct {
 
 static ecl_rft_vector_type * ecl_rft_vector_alloc_empty(const char * filename) {
   ecl_rft_vector_type * rft_vector = malloc(sizeof * rft_vector);
-  rft_vector->well_hash = hash_alloc(10);
+  rft_vector->well_hash = hash_alloc();
   rft_vector->filename  = util_alloc_string_copy(filename);
   return rft_vector;
 }
@@ -102,7 +102,9 @@ void ecl_rft_vector_free(ecl_rft_vector_type * rft_vector) {
 void ecl_rft_vector_summarize(const ecl_rft_vector_type * rft_vector , bool show_completions) {
   int wells , iw;
   char ** well_list = ecl_rft_vector_alloc_well_list(rft_vector , &wells);
+  printf("%s: wells:%d \n",__func__ , wells);
   for (iw = 0; iw < wells; iw++) {
+    printf("Well:%s \n",well_list[iw]);
     ecl_rft_node_summarize(ecl_rft_vector_get_node(rft_vector , well_list[iw]) , show_completions);
     printf("\n");
   }
