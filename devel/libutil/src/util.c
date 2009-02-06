@@ -302,9 +302,7 @@ char * util_alloc_stdin_line() {
      previous (scanf based) read. 
   */
   int first_char;
-  do {
-    first_char = getchar();
-  } while (EOL_CHAR(first_char));
+  first_char = getchar();
   
   {
     int input_size = 256;
@@ -312,7 +310,11 @@ char * util_alloc_stdin_line() {
     int index = 0;
     bool eol = false;
     int c;
-    input[index] = first_char; index++; /* ungetc - ugly */
+    if (!EOL_CHAR(first_char)) {
+      /* ungetc - ugly */
+      input[index] = first_char; 
+      index++; 
+    }
     do {
       c = getchar();
       if (!EOL_CHAR(c)) {
