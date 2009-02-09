@@ -2,6 +2,8 @@
 #include <util.h>
 #include <hash.h>
 #include <subst.h>
+#include <vector.h>
+
 
 /**
    This file implements a small support struct for search-replace
@@ -21,7 +23,8 @@ typedef enum { subst_deep_copy   = 1,
 
 
 struct subst_list_struct {
-  hash_type * data;
+  hash_type   * __data;
+  vector_type *   data;
 };
 
 
@@ -86,16 +89,17 @@ static void subst_list_node_set(subst_list_node_type * node, const char * __valu
 
 subst_list_type * subst_list_alloc() {
   subst_list_type * subst_list = util_malloc(sizeof * subst_list , __func__);
-  subst_list->data = hash_alloc();
+  subst_list->__data = hash_alloc();
+  subst_list->data   = vector_alloc_new();
   return subst_list;
 }
 
 
 static void subst_list_insert__(subst_list_type * subst_list , const char * key , const char * value , subst_insert_type insert_mode) {
-  if (!hash_has_key(subst_list->data , key)) 
-    hash_insert_hash_owned_ref(subst_list->data , key , subst_list_node_alloc() , subst_list_node_free__);
+  if (!hash_has_key(subst_list->__data , key)) 
+    hash_insert_hash_owned_ref(subst_list->__data , key , subst_list_node_alloc() , subst_list_node_free__);
   {
-    subst_list_node_type * node = hash_get(subst_list->data , key);
+    subst_list_node_type * node = hash_get(subst_list->__data , key);
     subst_list_node_set(node , value , insert_mode);
   }
 }
@@ -137,7 +141,8 @@ void subst_list_insert_copy(subst_list_type * subst_list , const char * key , co
 
 
 void subst_list_free(subst_list_type * subst_list) {
-  hash_free( subst_list->data );
+  hash_free( subst_list->__data );
+  vector_free( subst_list->data );
   free(subst_list);
 }
 
@@ -150,14 +155,14 @@ void subst_list_free(subst_list_type * subst_list) {
 
 static void subst_list_inplace_update_buffer__(const subst_list_type * subst_list , char ** buffer) {
   int buffer_size  = strlen( *buffer );
-  const char * key = hash_iter_get_first_key( subst_list->data );
+  const char * key = hash_iter_get_first_key( subst_list->__data );
 
   while (key != NULL) {
-    const subst_list_node_type * node = hash_get( subst_list->data , key);
+    const subst_list_node_type * node = hash_get( subst_list->__data , key);
     const char * value = node->value;
     if (value != NULL)
       util_string_replace_inplace( buffer , &buffer_size , key , value);
-    key = hash_iter_get_next_key( subst_list->data );
+    key = hash_iter_get_next_key( subst_list->__data );
   }
 
 }
@@ -224,17 +229,17 @@ void subst_list_update_string(const subst_list_type * subst_list , char ** strin
 
 
 void subst_list_fprintf(const subst_list_type * subst_list , FILE * stream) {
-  int size         = hash_get_size( subst_list->data );
+  int size         = hash_get_size( subst_list->__data );
   int index = 0;
-  const char * key = hash_iter_get_first_key(subst_list->data);
+  const char * key = hash_iter_get_first_key(subst_list->__data);
 
   while (key != NULL) {
-    subst_list_node_type * node = hash_get( subst_list->data , key);
+    subst_list_node_type * node = hash_get( subst_list->__data , key);
     fprintf(stream , "%s = %s" , key , node->value);
     index++;
     if (index <= (size - 1))
       fprintf(stream , " , ");
-    key = hash_iter_get_next_key( subst_list->data );
+    key = hash_iter_get_next_key( subst_list->__data );
   }
 }
 
@@ -272,11 +277,11 @@ void subst_list_filtered_fprintf(const subst_list_type * subst_list , const char
 
 subst_list_type * subst_list_alloc_deep_copy(const subst_list_type * src) {
   subst_list_type * copy = subst_list_alloc();
-  const char * key = hash_iter_get_first_key( src->data );
+  const char * key = hash_iter_get_first_key( src->__data );
   while (key != NULL) {
-    subst_list_node_type * node = hash_get( src->data , key );
+    subst_list_node_type * node = hash_get( src->__data , key );
     subst_list_insert__( copy , key , node->value , subst_deep_copy);
-    key = hash_iter_get_next_key( src->data );
+    key = hash_iter_get_next_key( src->__data );
   }
   return copy;
 }

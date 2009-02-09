@@ -28,7 +28,9 @@ static void vector_resize__(vector_type * vector, int new_alloc_size) {
   } 
   
   vector->data = util_realloc( vector->data , new_alloc_size * sizeof * vector->data , __func__);  
-  /* The new node_data pointers point anywhere - but that really should not be a problem ... */
+  for (i = vector->alloc_size; i < new_alloc_size; i++)
+    vector->data[i] = NULL; /* nitialising new nodes to NULL */
+
   vector->alloc_size = new_alloc_size;
 }
 
@@ -44,17 +46,32 @@ vector_type * vector_alloc_new() {
 }
 
 
+/** 
+    This function assumes that the index is *inside* the vector,
+    otherwise it will fail HARD. Should NOT be exported (then we
+    suddenly have to check for 'holes' in the vector.
+*/
+
+static void vector_iset__(vector_type * vector , int index , node_data_type * node) {
+  if (index >= vector->size) 
+    util_abort("%s: called with index:%d  max_value:%d \n",__func__ , index , vector->size - 1);
+
+  if (vector->data[index] != NULL)
+    node_data_free( vector->data[index] );
+
+  vector->data[index] = node;
+}
+
 /**
    This is the low-level append node function which actually "does
    it", the node has been allocated in one of the front-end functions.
 */
-
 static void vector_append_node(vector_type * vector , node_data_type * node) {
   if (vector->size == vector->alloc_size)
     vector_resize__(vector , 2*(vector->alloc_size + 1));
   
-  vector->data[vector->size] = node;
   vector->size++;
+  vector_iset__(vector , vector->size - 1 , node);
 }
 
 
@@ -68,6 +85,11 @@ static void vector_append_node(vector_type * vector , node_data_type * node) {
 void vector_append_ref(vector_type * vector , const void * data) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , NULL);
   vector_append_node(vector , node);
+}
+
+void vector_insert_ref(vector_type * vector , int index , const void * data) {
+  node_data_type * node = node_data_alloc_ptr( data, NULL , NULL);
+  vector_iset__(vector , index , node);
 }
 
 
@@ -85,6 +107,11 @@ void vector_append_owned_ref(vector_type * vector , const void * data , del_type
   vector_append_node(vector , node);
 }
 
+void vector_insert_owned_ref(vector_type * vector , int index , const void * data , del_type * del) {
+  node_data_type * node = node_data_alloc_ptr( data, NULL , del);
+  vector_iset__(vector , index , node);
+}
+
 
 /**
   This function appends a COPY of user object. This implies that the
@@ -100,6 +127,12 @@ void vector_append_copy(vector_type * vector , const void * data , copyc_type * 
 }
 
 
+void vector_insert_copy(vector_type * vector , int index , const void * data , copyc_type * copyc , del_type * del) {
+  node_data_type * node = node_data_alloc_ptr( data, copyc , del);
+  vector_iset__(vector , index , node);
+}
+
+
 
 /**
    A buffer is unstructured storage (i.e. a void *) which is destroyed
@@ -112,6 +145,13 @@ void vector_append_buffer(vector_type * vector , const void * buffer, int buffer
   node_data_type * node = node_data_alloc_buffer( buffer , buffer_size );
   vector_append_node(vector , node);
 }
+
+void vector_insert_buffer(vector_type * vector , int index , const void * buffer, int buffer_size) {
+  node_data_type * node = node_data_alloc_buffer( buffer , buffer_size );
+  vector_iset__(vector , index , node);
+}
+
+
 
 
 
