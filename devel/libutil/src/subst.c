@@ -285,3 +285,8 @@ subst_list_type * subst_list_alloc_deep_copy(const subst_list_type * src) {
   }
   return copy;
 }
+
+
+int subst_list_get_size( const subst_list_type * subst_list) {
+  return hash_get_size(subst_list->__data);
+}
