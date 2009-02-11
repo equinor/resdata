@@ -6,8 +6,8 @@ INSTALL_INC_PATH = $(LIBUTIL_HOME)/include
 INSTALL_LIB_PATH = $(LIBUTIL_HOME)/lib
 #################################################################
 SDP_ROOT          = $(shell get_sdp_root.py)
-OBJECTS           = set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o node_ctype.o util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o stringlist.o menu.o subst.o vector.o
-INC_FILES_INSTALL = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h vector.h
+OBJECTS           = set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o node_ctype.o util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o stringlist.o menu.o subst.o vector.o double_vector.o int_vector.o
+INC_FILES_INSTALL = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h vector.h double_vector.h int_vector.h 
 LIB               = libutil.a
 LIB_LINK          = -lutil -lz -lpthread -lm
 LINK_LIB_PATH     = -L./ 
@@ -25,6 +25,7 @@ SDP_INSTALL: LIB BIN
 
 clean:
 	rm -f *.o *~ 
+	rm -f int_vector.c int_vector.h double_vector.c double_vector.h
 	rm -f libutil_*
 	rm -f $(INSTALL_LIB_PATH)/$(LIB)
 	rm -f $(INSTALL_INC_PATH)/*.h
@@ -39,8 +40,23 @@ new:
 $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
 
+int_vector.h: vector_template.h
+	sed -e 's/<TYPE>/int/g' vector_template.h > int_vector.h
+
+int_vector.c: vector_template.c int_vector.h util.o
+	sed -e 's/<TYPE>/int/g' vector_template.c > int_vector.c
+
+double_vector.h: vector_template.h	
+	sed -e 's/<TYPE>/double/g' vector_template.h > double_vector.h
+
+double_vector.c: vector_template.h double_vector.h util.h
+	sed -e 's/<TYPE>/double/g' vector_template.c > double_vector.c
+
+
 %.o : %.c
 	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $(CPPFLAGS) $< -o $@
+
+
 
 include dependencies
 
