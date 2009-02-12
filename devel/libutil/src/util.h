@@ -1,8 +1,5 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
-#ifdef __cplusplus
-extern"C" {
-#endif
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -14,6 +11,12 @@ extern"C" {
 #define UTIL_PATH_SEP_CHAR   '/'   /* A simple character used when we want an actual char instance (i.e. not a pointer). */
 
 #define UTIL_NEWLINE_STRING "\n"
+
+
+#ifdef __cplusplus
+extern"C" {
+#endif
+
 
 typedef enum {left_pad  = 0,
 	      right_pad = 1,

@@ -8,6 +8,7 @@
   manipulation functions which explicitly use the PATH_SEP variable.
 */
 
+#include <string.h>
 #include <limits.h>
 #include <errno.h>
 #include <time.h>
@@ -15,7 +16,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -23,12 +23,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
-#include <util.h>
 #include <zlib.h>
 #include <math.h>
 #include <stdarg.h>
 #include <execinfo.h>
 #include <pthread.h>
+#include <util.h>
 
 
 #define FLIP16(var) (((var >> 8) & 0x00ff) | ((var << 8) & 0xff00))
@@ -59,6 +59,7 @@ static bool EOL_CHAR(char c) {
     return false;
 }
 
+#undef strncpy // This is for some reason needed in RH3
 
 char * util_alloc_gcstring(const char *fort_string , const int *strlen) {
   const char null_char = '\0';
