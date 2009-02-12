@@ -333,6 +333,11 @@ char * util_alloc_stdin_line() {
 }
 
 
+char * util_realloc_stdin_line(char * p) {
+  util_safe_free(p);
+  return util_alloc_stdin_line();
+}
+
 
 char * util_alloc_cwd(void) {
   char * result_ptr;
