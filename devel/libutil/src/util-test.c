@@ -12,18 +12,15 @@
 #include <subst.h>
 #include <arg_pack.h>
 #include <vector.h>
-
+#include <double_vector.h>
 
 
 int main(int argc , char ** argv) {
-  int buffer_size = 256;
-  
-  vector_type * vector = vector_alloc_new();
-  void * buffer = util_malloc( buffer_size , __func__);
-  vector_append_buffer( vector , buffer , buffer_size);
-  vector_append_buffer( vector , buffer , buffer_size);
-  vector_append_buffer( vector , buffer , buffer_size);
-  vector_append_owned_ref( vector , buffer , free );
+  int  new_line = '\n';
+  char * line;
 
-  vector_free( vector );
+  printf("new_line:%d   EOF:%d\n",new_line,EOF);
+  line = util_blocking_alloc_stdin_line(1000);   free(line);
+  line = util_blocking_alloc_stdin_line(1000);   free(line);
+  
 }

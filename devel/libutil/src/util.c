@@ -293,8 +293,10 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
 
 
 /**
-   Reads characters from stdin until EOL is detected. A \0 is appended
-   to the resulting string before it is returned.
+   Reads characters from stdin until EOL/EOF is detected. A '\0' is
+   appended to the resulting string before it is returned. If the
+   function reads an immediate EOF (i.e. there is no input waiting)
+   NULL is returned.
 */
 
 char * util_alloc_stdin_line() {
@@ -304,12 +306,14 @@ char * util_alloc_stdin_line() {
   */
   int first_char;
   first_char = getchar();
-  
-  {
+
+  if (first_char == EOF)
+    return NULL;  /* Nothing to find ... */
+  else {
     int input_size = 256;
-    char * input   = util_malloc(input_size, __func__);
+    char * input   = util_malloc(input_size , __func__);
     int index = 0;
-    bool eol = false;
+    bool end = false;
     int c;
     if (!EOL_CHAR(first_char)) {
       /* ungetc - ugly */
@@ -318,15 +322,15 @@ char * util_alloc_stdin_line() {
     }
     do {
       c = getchar();
-      if (!EOL_CHAR(c)) {
+      if ((!EOL_CHAR(c)) && (c != EOF)) {
 	input[index] = c;
 	index++;
 	if (index == (input_size - 1)) { /* Reserve space for terminating \0 */
 	  input_size *= 2;
 	  input = util_realloc(input , input_size , __func__);
 	}
-      } else eol = true;
-    } while (!eol);
+      } else end = true;
+    } while (!end);
     input[index] = '\0';  
     input = util_realloc(input , strlen(input) + 1 , __func__);
     return input;
@@ -337,6 +341,26 @@ char * util_alloc_stdin_line() {
 char * util_realloc_stdin_line(char * p) {
   util_safe_free(p);
   return util_alloc_stdin_line();
+}
+
+
+
+/**
+   This function will allocate and read a line from stdin. If there is
+   no input waiting on stdin (this typically only applies if stdin is
+   redirected from a file/PIPE), the function will sleep for 'usec'
+   microseconds and try again.
+*/
+   
+
+char * util_blocking_alloc_stdin_line(unsigned long usec) {
+  char * line;
+  do {
+    line = util_alloc_stdin_line();
+    if (line == NULL) 
+      usleep(usec);
+  } while (line == NULL);
+  return line;
 }
 
 
@@ -1624,6 +1648,14 @@ static void __util_set_timevalues(time_t t , int * sec , int * min , int * hour 
   if (year  != NULL) *year  = ts.tm_year + 1900;
 }
 
+
+/*
+  This function takes a time_t instance as input, and 
+  returns the the time broken down in sec:min:hour  mday:month:year.
+
+  The return values are by pointers - you can pass in NULL to any of
+  the fields.
+*/
 void util_set_datetime_values(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year) {
   __util_set_timevalues(t , sec , min , hour , mday , month , year);
 }

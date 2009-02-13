@@ -110,12 +110,13 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
 /**
    This file allocates a filename consisting of a leading path, a
    basename and an extension. Both the path and the extension can be
-   NULL.
+   NULL, but not the basename. 
 */
+
 char * util_alloc_filename(const char * path , const char * basename , const char * extension) {
   bool   include_path = false;
   char * file;
-  int    length = strlen(basename) + 1;
+  int    length = strlen(basename) + 1; 
   
   if (path != NULL) {
     include_path = true;
