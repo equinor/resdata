@@ -111,6 +111,10 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
    This file allocates a filename consisting of a leading path, a
    basename and an extension. Both the path and the extension can be
    NULL, but not the basename. 
+
+   Observe that this function does pure string manipulation; there is
+   no input check on whether path exists, if basaneme contains "."
+   (or even a '/') and so on.
 */
 
 char * util_alloc_filename(const char * path , const char * basename , const char * extension) {
@@ -142,30 +146,36 @@ char * util_alloc_filename(const char * path , const char * basename , const cha
 }
 
 
-
-/**
-  This function takes a path and a file as input. It allocated a new
-  string containg "the sum" of the two, with UTIL_PATH_SEP between.
-
-  If path == NULL - a copy of file is returned.
-*/
-
-
-char * util_alloc_full_path(const char *path , const char *file) {
-  if (path != NULL) {
-    char *copy = util_malloc(strlen(path) + strlen(file) + 2 , __func__);
-    sprintf(copy , "%s%c%s" , path , UTIL_PATH_SEP_CHAR ,  file);
-    return copy;
-  } else
-    return util_alloc_string_copy(file);
+char * util_realloc_filename(char * filename , const char * path , const char * basename , const char * extension) {
+  util_safe_free(filename);
+  return util_alloc_filename( path , basename , extension );
 }
 
 
-char * util_realloc_full_path(char *old_path , const char *path , const char *file) {
-  char *copy = realloc(old_path , strlen(path) + strlen(file) + 2);
-  sprintf(copy , "%s%c%s" , path , UTIL_PATH_SEP_CHAR , file);
-  return copy;
-}
+
+/* /\** */
+/*   This function takes a path and a file as input. It allocated a new */
+/*   string containg "the sum" of the two, with UTIL_PATH_SEP between. */
+
+/*   If path == NULL - a copy of file is returned. */
+/* *\/ */
+
+
+/* char * util_alloc_full_path(const char *path , const char *file) { */
+/*   if (path != NULL) { */
+/*     char *copy = util_malloc(strlen(path) + strlen(file) + 2 , __func__); */
+/*     sprintf(copy , "%s%c%s" , path , UTIL_PATH_SEP_CHAR ,  file); */
+/*     return copy; */
+/*   } else */
+/*     return util_alloc_string_copy(file); */
+/* } */
+
+
+/* char * util_realloc_full_path(char *old_path , const char *path , const char *file) { */
+/*   char *copy = realloc(old_path , strlen(path) + strlen(file) + 2); */
+/*   sprintf(copy , "%s%c%s" , path , UTIL_PATH_SEP_CHAR , file); */
+/*   return copy; */
+/* } */
 
 
 /**
@@ -183,7 +193,7 @@ void static util_unlink_path_static(const char *path , bool test_mode) {
       mode_t mode;
       const char * entry_name = dentry->d_name;
       if ((strcmp(entry_name , ".") != 0) && (strcmp(entry_name , "..") != 0)) {
-	char * full_path = util_alloc_full_path(path , entry_name);
+	char * full_path = util_alloc_filename(path , entry_name , NULL);
 
 	if (lstat(full_path , &buffer) != 0) {
 	  fprintf(stderr,"%s: failed to stat: %s entry not removed.\n",__func__ , full_path);

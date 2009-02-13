@@ -437,7 +437,7 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
       files = 0;
       while ((dentry = readdir (dirH)) != NULL) {
 	if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file)) {
-	  fileList[files] = util_alloc_full_path(path , dentry->d_name);
+	  fileList[files] = util_alloc_filename(path , dentry->d_name , NULL);
 	  files++;
 	}
       }

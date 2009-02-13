@@ -490,7 +490,7 @@ void ecl_rft_node_export_DEPTH(const ecl_rft_node_type * rft_node , const char *
   int i;
   
   filename = util_strcat_realloc(filename , ".DEPTH");
-  full = util_alloc_full_path(path , filename);
+  full     = util_alloc_filename(path , filename , NULL);
 
   stream = fopen(full , "w");
   for (i=0; i < rft_node->size; i++) 

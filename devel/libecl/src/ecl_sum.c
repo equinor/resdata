@@ -118,7 +118,7 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert , c
   ecl_sum->report_offset             = 0;
   ecl_sum->__id                      = ECL_SUM_ID;
   ecl_sum->has_sim_time              = false;
-  ecl_sum->simulation_case           = util_alloc_full_path(path , base_name);
+  ecl_sum->simulation_case           = util_alloc_filename(path , base_name , NULL);
   return ecl_sum;
 }
 

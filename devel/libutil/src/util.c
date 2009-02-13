@@ -338,6 +338,7 @@ char * util_alloc_stdin_line() {
 }
 
 
+
 char * util_realloc_stdin_line(char * p) {
   util_safe_free(p);
   return util_alloc_stdin_line();
@@ -351,7 +352,6 @@ char * util_realloc_stdin_line(char * p) {
    redirected from a file/PIPE), the function will sleep for 'usec'
    microseconds and try again.
 */
-   
 
 char * util_blocking_alloc_stdin_line(unsigned long usec) {
   char * line;
@@ -2129,7 +2129,7 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
     rewinddir(dir_stream);
     while ( (entry = readdir(dir_stream)) ) {
       if (strncmp(ensbase , entry->d_name , len_ensbase) == 0) {
-	fileList[filenr].filename   = util_alloc_full_path(enspath , entry->d_name);
+	fileList[filenr].filename   = util_alloc_filename(enspath , entry->d_name , NULL);
 	fileList[filenr].num_offset = num_offset;
 	{
 	  int num = enkf_filenr(fileList[filenr]);
@@ -3200,7 +3200,7 @@ char * util_alloc_PATH_executable(const char * executable) {
     else
       return NULL;
   } else if (strncmp(executable , "./" , 2) == 0) {
-    char * path = util_alloc_full_path(getenv("PWD") , &executable[2]);
+    char * path = util_alloc_filename(getenv("PWD") , &executable[2] , NULL);
     /* The program has been invoked as ./xxxx */
     if (util_is_file(path) && util_is_executable( path )) 
       return path; 
@@ -3219,7 +3219,7 @@ char * util_alloc_PATH_executable(const char * executable) {
       ipath = 0;
       util_split_string(getenv("PATH") , ":" , &path_size , &path_list);
       while ( cont ) {
-	char * current_attempt = util_alloc_full_path(path_list[ipath] , executable);
+	char * current_attempt = util_alloc_filename(path_list[ipath] , executable , NULL);
 	if ( util_is_file( current_attempt ) && util_is_executable( current_attempt )) {
 	  full_path = current_attempt;
 	  cont = false;
