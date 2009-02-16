@@ -64,7 +64,8 @@
        able to write in index 6, as a results there are now many slots
        in the vector which contain uninitialized data (marked with 'X'
        above)'. If you query the vector for element 3, 4 or 5 the
-       vector will happily return an unitiialized value.
+       vector will return the default value (set on allocation). Askin
+       for element 7 will abort().
 */
 
 
@@ -75,16 +76,19 @@
 struct <TYPE>_vector_struct {
   int      alloc_size;    /* The alloceted size of data. */
   int      size;          /* The index of the last valid - i.e. actively set - element in the vector. */
+  <TYPE>   default_value; /* The data vector is initialized with this value. */
   <TYPE> * data;          /* The actual data. */
 };
 
 
 
 static void <TYPE>_vector_realloc_data__(<TYPE>_vector_type * vector , int new_alloc_size) {
-  if (new_alloc_size > 0)
-    /* Obseve that theres is _no_ initialization of the new vector content. */
+  if (new_alloc_size > 0) {
+    int i;
     vector->data = util_realloc(vector->data , new_alloc_size * sizeof * vector->data , __func__);
-  else {
+    for (i=vector->alloc_size;  i < new_alloc_size; i++)
+      vector->data[i] = vector->default_value;
+  } else {
     if (vector->alloc_size > 0) {
       free(vector->data);
       vector->data = NULL;
@@ -104,10 +108,12 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
    needed.
 */
    
-<TYPE>_vector_type * <TYPE>_vector_alloc(int alloc_size) {
+<TYPE>_vector_type * <TYPE>_vector_alloc(int alloc_size , <TYPE> default_value) {
   <TYPE>_vector_type * vector = util_malloc( sizeof * vector , __func__);
-  vector->data = NULL;
-  vector->size = 0;
+  vector->data 	     = NULL;
+  vector->size 	     = 0;  
+  vector->alloc_size = 0;
+  vector->default_value = default_value;
   <TYPE>_vector_realloc_data__(vector , alloc_size);
   return vector;
 }
