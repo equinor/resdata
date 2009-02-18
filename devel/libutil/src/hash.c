@@ -903,18 +903,16 @@ hash_type * hash_alloc_from_options(int num_options , const char ** options) {
   int iopt;
 
   for (iopt = 0; iopt < num_options; iopt++) {
-    char ** tokens;
-    int     num_tokens;
-    util_split_string(options[iopt] , ":" , &num_tokens , &tokens);
-    if (num_tokens != 2)
-      fprintf(stderr,"** Warning the option: \"%s\" could not be interpredet as \"OPTION:VALUE\" - ignored. \n", options[iopt]);
-    else {
-      const char * option = tokens[0];
-      const char * value  = tokens[1];
-      
+    char * option;
+    char * value;
+    util_binary_split_string( options[iopt] , ":" , true , &option , &value);
+    if ((option != NULL) && (value != NULL)) 
       hash_insert_hash_owned_ref( opt_hash , option , util_alloc_string_copy(value) , free);
-    }
-    util_free_stringlist( tokens , num_tokens );
+    else
+      fprintf(stderr,"** Warning: could not interpret %s as KEY:VALUE - ignored\n",options[iopt]);
+    
+    util_safe_free(option);
+    util_safe_free(value);
   }
   
   return opt_hash;

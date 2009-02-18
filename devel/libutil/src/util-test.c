@@ -15,12 +15,18 @@
 #include <double_vector.h>
 
 
-int main(int argc , char ** argv) {
-  int  new_line = '\n';
-  char * line;
-
-  printf("new_line:%d   EOF:%d\n",new_line,EOF);
-  line = util_blocking_alloc_stdin_line(1000);   free(line);
-  line = util_blocking_alloc_stdin_line(1000);   free(line);
+void test_split(const char *s, const char * sep, bool split_on_first) {
+  char * s1 , *s2;
+  util_binary_split_string(s , sep , split_on_first , &s1 , &s2);
+  printf("%s -> <%s> + <%s> \n",s , s1 , s2);
+  util_safe_free(s1);
+  util_safe_free(s2);
   
+}
+
+
+
+int main(int argc , char ** argv) {
+  test_split(":Navn" , ":" , false);
+  test_split(":Navn:" , ":" , true);
 }

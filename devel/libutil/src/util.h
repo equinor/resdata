@@ -104,6 +104,7 @@ char  ** util_stringlist_append_copy(char **  , int , const char * );
 char  ** util_stringlist_append_ref(char **  , int , const char * );
 char  ** util_alloc_stringlist_copy(const char **, int );
 void     util_split_string(const char *, const char *, int *, char ***);
+void     util_binary_split_string(const char * , const char * , bool  , char ** , char ** );
 char   * util_alloc_joined_string(const char **  , int , const char * );
 char   * util_alloc_multiline_string(const char ** , int );
 char   * util_string_replace_alloc(const char *, const char *, const char *);

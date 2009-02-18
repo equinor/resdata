@@ -125,14 +125,22 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
 }
 
 /**
-   Observe that this function will grow the vector if necessary.
+   Observe that this function will grow the vector if necessary. If
+   index > size - i.e. leaving holes in the vector, these are
+   explicitly set to the default value. If a reallocation is needed it
+   is done in the realloc routine, otherwise it is done here.
 */
+
 void <TYPE>_vector_iset(<TYPE>_vector_type * vector , int index , <TYPE> value) {
   if (vector->alloc_size <= index)
     <TYPE>_vector_realloc_data__(vector , 2 * index);
   vector->data[index] = value;
-  if (index >= vector->size)
+  if (index >= vector->size) {
+    int i;
+    for (i=vector->size; i < index; i++)
+      vector->data[i] = vector->default_value;
     vector->size = index + 1;
+  }
 }
 
 

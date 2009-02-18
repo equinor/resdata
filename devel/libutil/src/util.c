@@ -151,6 +151,8 @@ char * util_alloc_substring_copy(const char *src , int N) {
 }
 
 
+
+
 /**
    The input string is freed, and a new storage
    without quotes is returned. 
@@ -1690,7 +1692,8 @@ void util_fprintf_date(time_t t , FILE * stream) {
 void util_inplace_forward_days(time_t * t , double days) {
   struct tm ts;
   int isdst;
-
+  
+  localtime_r(t , &ts);
   isdst = ts.tm_isdst;
   (*t) += (int) (days * 3600 * 24);
   localtime_r(t , &ts);
@@ -2271,6 +2274,126 @@ void util_split_string(const char *line , const char *sep_set, int *_tokens, cha
   *_token_list = token_list;
 }
 
+
+/**
+   This function will split the input string in two parts, it will
+   split on occurence of one or several of the characters in
+   sep_set. 
+
+
+   o If split_on_first is true it will split on the first occurence of
+     split_set, and otherwise it will split on the last:
+
+       util_binary_split_string("A:B:C:D , ":" , true  , ) => "A"     & "B:C:D"
+       util_binary_split_string("A:B:C:D , ":" , false , ) => "A:B:C" & "D"
+
+
+   o Characters in the split_set at the front (or back if
+     split_on_first == false) are discarded _before_ the actual
+     splitting process.
+
+       util_binary_split_string(":::A:B:C:D" , ":" , true , )  => "A" & "B:C:D"
+
+
+   o If no split is found the whole content is in first_part, and
+     second_part is NULL. If the input string == NULL, both return
+     strings will be NULL.
+
+*/
+
+
+void util_binary_split_string(const char * __src , const char * sep_set, bool split_on_first , char ** __first_part , char ** __second_part) {
+  char * first_part = NULL;
+  char * second_part = NULL;
+  if (__src != NULL) {
+    char * src;
+    int pos;
+    if (split_on_first) {
+      /* Removing leading separators. */
+      pos = 0;
+      while ((pos < strlen(__src)) && (strchr(sep_set , __src[pos]) != NULL))
+	pos += 1;
+      if (pos == strlen(__src))  /* The string consisted ONLY of separators. */
+	src = NULL;
+      else
+	src = util_alloc_string_copy(&__src[pos]);
+    } else {
+      /*Remove trailing separators. */
+      pos = strlen(__src) - 1;
+      while ((pos >= 0) && (strchr(sep_set , __src[pos]) != NULL))
+	pos -= 1;
+      if (pos < 0)
+	src = NULL;
+      else
+	src = util_alloc_substring_copy(__src , pos + 1);
+    }
+
+    
+    /* 
+       OK - we have removed all leading (or trailing) separators, and we have
+       a valid string which we can continue with.
+    */
+    if (src != NULL) {
+      int pos;
+      int start_pos , delta , end_pos;
+      if (split_on_first) {
+	start_pos = 0;
+	delta     = 1;
+	end_pos   = strlen(src);
+      } else {
+	start_pos = strlen(src) - 1;
+	delta     = -1;
+	end_pos   = -1;
+      }
+
+      pos = start_pos;
+      while ((pos != end_pos) && (strchr(sep_set , src[pos]) == NULL)) 
+	pos += delta;
+      /* 
+	 OK - now we have either iterated through the whole string - or
+	 we hav found a character in the sep_set. 
+      */
+      if (pos == end_pos) {
+	/* There was no split. */
+	first_part = util_alloc_string_copy( src );
+	second_part   = NULL;
+      } else {
+	int sep_start = 0;
+	int sep_end   = 0;
+	if (split_on_first)
+	  sep_start = pos;
+	else
+	  sep_end = pos;
+	/* Iterate through the separation string - can be e.g. many " " */
+	while ((pos != end_pos) && (strchr(sep_set , src[pos]) != NULL))
+	  pos += delta;
+
+	if (split_on_first) {
+	  sep_end = pos;
+	  first_part = util_alloc_substring_copy(src , sep_start);
+	  
+	  if (sep_end == end_pos)
+	    second_part = NULL;
+	  else
+	    second_part = util_alloc_string_copy( &src[sep_end] );
+	} else {
+	  sep_start = pos;
+	  if (sep_start == end_pos) {
+	    // ":String" => (NULL , "String")
+	    first_part = NULL;
+	    second_part = util_alloc_string_copy( &src[sep_end+1] );
+	  } else {
+	    first_part  = util_alloc_substring_copy( src , sep_start + 1);
+	    second_part = util_alloc_string_copy( &src[sep_end + 1]);
+	  }
+	}
+      }
+      free(src);
+    }
+  }
+  *__first_part  = first_part;
+  *__second_part = second_part;
+}
 
 
 /**
@@ -2893,8 +3016,14 @@ void util_read_filename(const char * prompt , int prompt_len , bool must_exist ,
 void util_compress_buffer(const void * data , int data_size , void * zbuffer , unsigned long * compressed_size) {
   int compress_result;
   compress_result = compress(zbuffer , compressed_size , data , data_size);
-  if (compress_result != Z_OK) 
+  if (compress_result != Z_OK) {
+    const int * int_data = (const int * ) data;
+    int i;
+    for (i=0; i < (data_size / 4); i++)
+      printf("%010d ",int_data[i]);
+    printf("\n");
     util_abort("%s: returned %d - different from Z_OK - aborting\n",__func__ , compress_result);
+  }
 }
 
 
@@ -2948,9 +3077,9 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
   {
     const char * data = (const char *) _data;
     const int max_buffer_size      = 128 * 1048580; /* 128 MB */
-    int       required_buffer_size = (int) ceil(size * 1.001 + 12);
+    int       required_buffer_size = (int) ceil(size * 1.001 + 64);
     int       buffer_size , block_size;
-    void * zbuffer;
+    void *    zbuffer;
     
     buffer_size = util_int_min(required_buffer_size , max_buffer_size);
     do {
@@ -2958,7 +3087,8 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
       if (zbuffer == NULL)
 	buffer_size /= 2;
     } while(zbuffer == NULL);
-    block_size = (int) (floor(buffer_size / 1.002) - 12);
+    memset(zbuffer , 0 , buffer_size);
+    block_size = (int) (floor(buffer_size / 1.002) - 64);
     
     {
       int header_write;
@@ -2979,7 +3109,6 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
 	  int bytes_written = fwrite(zbuffer , 1 , compressed_size , stream);
 	  if (bytes_written < compressed_size) 
 	    util_abort("%s: wrote only %d/%ld bytes to compressed file  - aborting \n",__func__ , bytes_written , compressed_size);
-	  
 	}
 	offset += this_block_size;
 	fwrite(&offset , sizeof offset , 1 , stream);
