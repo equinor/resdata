@@ -1800,6 +1800,8 @@ static int util_get_month_nr__(const char * _month_name) {
     month_nr = 6;
   else if (strncmp(month_name , "JUL" , 3) == 0) 
     month_nr = 7;
+  else if (strncmp(month_name , "JLY" , 3) == 0)   /* ECLIPSE ambigus on July. */
+    month_nr = 7;
   else if (strncmp(month_name , "AUG" , 3) == 0) 
     month_nr = 8;
   else if (strncmp(month_name , "SEP" , 3) == 0) 
