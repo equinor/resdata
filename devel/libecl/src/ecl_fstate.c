@@ -268,11 +268,11 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 
 
 /**
-When you call this routine you *PROMISE* that the RPTONLY keyword has
-been used in the ECLIPSE datafile, this is impossible to check, but if
-called incorrectly (i.e. without having RPTONLY in the restart file),
-temporal indexing of summary data will give wrong data - WITHOUT ANY
-WARNING.
+   When you call this routine you *PROMISE* that the RPTONLY keyword has
+   been used in the ECLIPSE datafile, this is impossible to check, but if
+   called incorrectly (i.e. without having RPTONLY in the restart file),
+   temporal indexing of summary data will give wrong data - WITHOUT ANY
+   WARNING.
 */
 
 

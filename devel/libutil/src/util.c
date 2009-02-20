@@ -1687,7 +1687,9 @@ void util_fprintf_date(time_t t , FILE * stream) {
 
 
 /* 
-   This code produced erroneus results when compiled with -pg for profiling.
+   This code produced erroneus results when compiled with -pg for
+   profiling. (Maybe because the ts variable was not properly
+   initialized when reading off the first isdst setting??)
 */
 void util_inplace_forward_days(time_t * t , double days) {
   struct tm ts;
@@ -1698,7 +1700,6 @@ void util_inplace_forward_days(time_t * t , double days) {
   (*t) += (int) (days * 3600 * 24);
   localtime_r(t , &ts);
   (*t) += 3600 * (isdst - ts.tm_isdst);  /* Extra adjustment of +/- one hour if we have crossed exactly one daylight savings border. */
-
 }
 
 

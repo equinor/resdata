@@ -156,7 +156,7 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
     
     ecl_util_get_file_type(data_files[0] , &file_type , &fmt_file , &report_nr);
     /*
-      Burde kanskje vaere litt forsiktig med dette loftet
+      Burde kanskje vaere litt forsiktig med dette løftet
       for unified filer??
     */
     if (report_mode)
@@ -260,7 +260,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
     ecl_sum->sim_start_time = util_make_date(date[0] , date[1] , date[2]);
     {
       /*
-	Fills a unit_hash: unit_hash["WOPR"] =	"Barels/day"...
+	Fills a unit_hash: unit_hash["WOPR"] =	"Barrels/day"...
       */
 	
       for (index=0; index < ecl_kw_get_size(keywords); index++) {
@@ -399,7 +399,7 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
       int day_index   = hash_get_int(ecl_sum->misc_var_index , "DAY");
       int month_index = hash_get_int(ecl_sum->misc_var_index , "MONTH");
       int year_index  = hash_get_int(ecl_sum->misc_var_index , "YEAR");
-      
+
       /** Setting simulation time from DAY/MONTH/YEAR */
       for (iblock = 0; iblock < ecl_fstate_get_size(ecl_sum->data); iblock++) {
 	ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->data , iblock);
@@ -484,52 +484,47 @@ void ecl_sum_set_header_data(ecl_sum_type *ecl_sum , const char *kw , void *valu
 
 
 
-/*void ecl_sum_init_save(ecl_sum_type * ecl_sum , const char * base_name , int fmt_mode , bool unified) {
-  ecl_sum_set_fmt_mode(ecl_sum , fmt_mode);
-  ecl_sum_set_unified(ecl_sum , unified);
-}
-*/
 
 
 
-void ecl_sum_save(const ecl_sum_type * ecl_sum) {
-  char * base_name;
-  char *summary_spec , ext[2] , *data_file;
-  bool fmt_file;
-  /*if (ecl_sum->base_name == NULL || !(ecl_sum->fmt_mode == ECL_FORMATTED || ecl_sum->fmt_mode == ECL_BINARY)) {*/
-  if (true) {
-    fprintf(stderr,"%s: must inititialise ecl_sum object prior to saving - aborting \n",__func__);
-    abort();
-  }
-  
-  if (ecl_sum->fmt_mode == ECL_FORMATTED) {
-    fmt_file = true;
-  } else {
-    fmt_file = false;
-    sprintf(ext , "S");
-  }
-  summary_spec = ecl_util_alloc_filename(NULL , base_name ,  ecl_summary_header_file , fmt_file , -1);
-  ecl_fstate_set_files(ecl_sum->header , 1 , (const char **) &summary_spec);
-  
-
-  if (ecl_sum->unified) {
-    data_file = ecl_util_alloc_filename(NULL , base_name ,  ecl_unified_summary_file , fmt_file , -1);
-    ecl_fstate_set_files(ecl_sum->data , 1 , (const char **) &data_file);
-    free(data_file);
-  } else {
-    int files , report_nr1 , report_nr2;
-    char **filelist;
-    
-    files = ecl_fstate_get_report_size(ecl_sum->data , &report_nr1 , &report_nr2);
-    filelist = ecl_util_alloc_simple_filelist(NULL , base_name , ecl_summary_file , fmt_file , report_nr1 , report_nr2);
-    ecl_fstate_set_files(ecl_sum->data , files , (const char **) filelist);
-    util_free_stringlist(filelist , files);
-  }
-  
-  ecl_fstate_save(ecl_sum->header);
-  ecl_fstate_save(ecl_sum->data);
-  free(summary_spec);
-}
+//void ecl_sum_save(const ecl_sum_type * ecl_sum) {
+//  char * base_name;
+//  char *summary_spec , ext[2] , *data_file;
+//  bool fmt_file;
+//  /*if (ecl_sum->base_name == NULL || !(ecl_sum->fmt_mode == ECL_FORMATTED || ecl_sum->fmt_mode == ECL_BINARY)) {*/
+//  if (true) {
+//    fprintf(stderr,"%s: must inititialise ecl_sum object prior to saving - aborting \n",__func__);
+//    abort();
+//  }
+//  
+//  if (ecl_sum->fmt_mode == ECL_FORMATTED) {
+//    fmt_file = true;
+//  } else {
+//    fmt_file = false;
+//    sprintf(ext , "S");
+//  }
+//  summary_spec = ecl_util_alloc_filename(NULL , base_name ,  ecl_summary_header_file , fmt_file , -1);
+//  ecl_fstate_set_files(ecl_sum->header , 1 , (const char **) &summary_spec);
+//  
+//
+//  if (ecl_sum->unified) {
+//    data_file = ecl_util_alloc_filename(NULL , base_name ,  ecl_unified_summary_file , fmt_file , -1);
+//    ecl_fstate_set_files(ecl_sum->data , 1 , (const char **) &data_file);
+//    free(data_file);
+//  } else {
+//    int files , report_nr1 , report_nr2;
+//    char **filelist;
+//    
+//    files = ecl_fstate_get_report_size(ecl_sum->data , &report_nr1 , &report_nr2);
+//    filelist = ecl_util_alloc_simple_filelist(NULL , base_name , ecl_summary_file , fmt_file , report_nr1 , report_nr2);
+//    ecl_fstate_set_files(ecl_sum->data , files , (const char **) filelist);
+//    util_free_stringlist(filelist , files);
+//  }
+//  
+//  ecl_fstate_save(ecl_sum->header);
+//  ecl_fstate_save(ecl_sum->data);
+//  free(summary_spec);
+//}
 
 
 

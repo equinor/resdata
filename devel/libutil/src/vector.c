@@ -176,6 +176,18 @@ void * vector_iget(const vector_type * vector, int index) {
   }
 }
 
+/** 
+    Will abort if the vector is empty. 
+*/
+void * vector_get_last(const vector_type * vector) {
+  if (vector->size == 0)
+    util_abort("%s: asking to get the last element in an empty vector - impossible ... \n",__func__);
+  {
+    const node_data_type * node = vector->data[vector->size - 1];
+    return node_data_get_ptr( node );
+  }
+}
+
 
 //void vector_for_each(vector_type * vector , vector_func_type * func , void * arg) {
 //  int i;

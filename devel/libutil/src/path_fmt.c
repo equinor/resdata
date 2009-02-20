@@ -281,3 +281,4 @@ void path_fmt_free(path_fmt_type * path) {
     free(path->file_fmt);
   free(path);
 }
+

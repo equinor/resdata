@@ -119,10 +119,28 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
 }
 
 
+
 <TYPE> <TYPE>_vector_iget(const <TYPE>_vector_type * vector , int index) {
   <TYPE>_vector_assert_index(vector , index);
   return vector->data[index];
 }
+
+
+/* Will return default value if index > size. */
+<TYPE> <TYPE>_vector_safe_iget(const <TYPE>_vector_type * vector, int index) {
+  if (index >= vector->size)
+    return vector->default_value;
+  else
+    return vector->data[index];
+}
+
+/** Will abort is size == 0 */
+<TYPE> <TYPE>_vector_get_last(const <TYPE>_vector_type * vector) {
+  return <TYPE>_vector_iget(vector , vector->size - 1);
+}
+
+
+
 
 /**
    Observe that this function will grow the vector if necessary. If
@@ -146,7 +164,6 @@ void <TYPE>_vector_iset(<TYPE>_vector_type * vector , int index , <TYPE> value) 
 
 void <TYPE>_vector_append(<TYPE>_vector_type * vector , <TYPE> value) {
   <TYPE>_vector_iset(vector , vector->size , value);
-  vector->size++;
 }
 
 
