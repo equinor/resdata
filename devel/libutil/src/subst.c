@@ -7,12 +7,11 @@
 
 /**
    This file implements a small support struct for search-replace
-   operations, along with wrapped calls to
-   util_string_replace_inplace().
+   operations, along with wrapped calls to util_string_replace_inplace().
    
-   Substitutions can be carried out on files and string in memory
-   (char * with \0 termination); and the operations can be carried out
-   inplace, or in a filtering mode where a new file/string is created.
+   Substitutions can be carried out on files and string in memory (char *
+   with \0 termination); and the operations can be carried out inplace, or
+   in a filtering mode where a new file/string is created.
 */
 
 
@@ -20,7 +19,6 @@ typedef enum { subst_deep_copy   = 1,
 	       subst_managed_ref = 2,
 	       subst_shared_ref  = 3} subst_insert_type; /* Mode used in the subst_list_insert__() function */
   
-
 
 struct subst_list_struct {
   hash_type   * __data;
@@ -39,15 +37,17 @@ struct subst_list_struct {
 typedef struct {  
   bool       value_owner;     /* Wether the memory pointed to by value should bee freed.*/
   char     * value;
+  char     * key;
 } subst_list_node_type;
 
 
 
 /** Allocates an empty instance with no values. */
-static subst_list_node_type * subst_list_node_alloc() {
+static subst_list_node_type * subst_list_node_alloc(const char * key) {
   subst_list_node_type * node = util_malloc(sizeof * node , __func__);
   node->value       = NULL;
   node->value_owner = false;
+  node->key         = util_alloc_string_copy( key );
   return node;
 }
 
@@ -55,6 +55,7 @@ static subst_list_node_type * subst_list_node_alloc() {
 static void subst_list_node_free(subst_list_node_type * node) {
   if (node->value_owner)
     util_safe_free(node->value);
+  free(node->key);
   free(node);
 }
 
@@ -62,6 +63,7 @@ static void subst_list_node_free(subst_list_node_type * node) {
 static void subst_list_node_free__(void * node) {
   subst_list_node_free( (subst_list_node_type *) node );
 }
+
 
 /**
    __value can be NULL. 
@@ -87,6 +89,20 @@ static void subst_list_node_set(subst_list_node_type * node, const char * __valu
 
 
 
+static subst_list_node_type * subst_list_get_node(subst_list_type * subst_list , const char * key) {
+  return hash_get( subst_list->__data , key);
+}
+
+static bool subst_list_has_key(const subst_list_type * subst_list , const char * key) {
+  return hash_has_key( subst_list->__data , key );
+}
+
+
+static void subst_list_insert_new_node(subst_list_type * subst_list , const char * key) {
+  hash_insert_hash_owned_ref(subst_list->__data , key , subst_list_node_alloc(key) , subst_list_node_free__);
+}
+
+
 subst_list_type * subst_list_alloc() {
   subst_list_type * subst_list = util_malloc(sizeof * subst_list , __func__);
   subst_list->__data = hash_alloc();
@@ -96,10 +112,10 @@ subst_list_type * subst_list_alloc() {
 
 
 static void subst_list_insert__(subst_list_type * subst_list , const char * key , const char * value , subst_insert_type insert_mode) {
-  if (!hash_has_key(subst_list->__data , key)) 
-    hash_insert_hash_owned_ref(subst_list->__data , key , subst_list_node_alloc() , subst_list_node_free__);
+  if (!subst_list_has_key(subst_list , key)) 
+    subst_list_insert_new_node(subst_list , key);
   {
-    subst_list_node_type * node = hash_get(subst_list->__data , key);
+    subst_list_node_type * node = subst_list_get_node(subst_list , key);
     subst_list_node_set(node , value , insert_mode);
   }
 }
@@ -207,7 +223,10 @@ void subst_list_filter_file(const subst_list_type * subst_list , const char * sr
   }
 
   /* OK - all went hunka dory - unlink the backup file and leave the building. */
-  if (backup_file != NULL) unlink( backup_file );
+  if (backup_file != NULL) {
+    unlink( backup_file );
+    free( backup_file );
+  }
   free(buffer);
 }
 
