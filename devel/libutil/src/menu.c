@@ -128,6 +128,11 @@ static void menu_append_item__(menu_type * menu ,  menu_item_type * item) {
 }
 
 
+void menu_set_title(menu_type * menu, const char * title) {
+  menu->title = util_realloc_string_copy(menu->title, title);
+}
+
+
 
 void menu_item_set_label(menu_item_type * item , const char * label) {
   item->label = util_realloc_string_copy(item->label , label);

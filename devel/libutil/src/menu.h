@@ -14,6 +14,7 @@ menu_item_type * menu_get_item(const menu_type * , char );
 menu_item_type * menu_add_item(menu_type *, const char * , const char * , menu_func_type * , void * , arg_free_ftype * );
 void             menu_add_separator(menu_type * );
 menu_item_type * menu_get_item(const menu_type * , char );
+void             menu_set_title(menu_type *, const char *);
 void             menu_item_set_label( menu_item_type * , const char *);
 
 #endif
