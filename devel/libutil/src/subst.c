@@ -33,14 +33,13 @@
        
     4. Free the subst_list and go home.
 
-
    Internally the (key,value) pairs used for substitutions are stored in a
    vector, preserving insert order. If you insert the cascade
 
-   ("A","B")
-   ("B","C")
-   .....
-   ("Y","Z")
+     ("A","B")
+     ("B","C")
+       .....
+     ("Y","Z")
 
    You will eventually end up with a string where all capital letters have
    been transformed to 'Z'.
