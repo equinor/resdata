@@ -64,7 +64,7 @@ void          ecl_kw_summarize(const ecl_kw_type * ecl_kw);
 void          ecl_kw_fread_double_param(const char * , bool , bool , double *);
 void          ecl_kw_get_data_as_double(const ecl_kw_type *, double *);
 int           ecl_kw_cmp(const ecl_kw_type *, const ecl_kw_type *, int *);
-
+ecl_kw_type * ecl_kw_alloc_scalar(const char *  , int  , ecl_type_enum  , double );
 
 void ecl_kw_fwrite_compressed(const ecl_kw_type * , FILE *);
 void ecl_kw_fread_realloc_compressed(ecl_kw_type *  , FILE *);

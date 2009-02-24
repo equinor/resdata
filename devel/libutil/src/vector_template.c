@@ -217,3 +217,12 @@ void <TYPE>_vector_set_many(<TYPE>_vector_type * vector , int index , const <TYP
 void <TYPE>_vector_shrink(<TYPE>_vector_type * vector) {
   <TYPE>_vector_realloc_data__(vector , vector->size);
 }
+
+
+<TYPE> <TYPE>_vector_sum(const <TYPE>_vector_type * vector) {
+  int i;
+  <TYPE> sum = 0;
+  for (i=0; i < vector->size; i++)
+    sum += vector->data[i];
+  return sum;
+}

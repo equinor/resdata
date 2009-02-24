@@ -219,6 +219,16 @@ ecl_kw_type * ecl_kw_alloc_complete(const char * header ,  int size, ecl_type_en
 }
 
 
+ecl_kw_type * ecl_kw_alloc_scalar(const char * header , int size , ecl_type_enum ecl_type , double init_value) {
+  ecl_kw_type *ecl_kw;
+  ecl_kw = ecl_kw_alloc_empty();
+  ecl_kw_set_header(ecl_kw , header , size , __get_ecl_str_type(ecl_type));
+  ecl_kw_alloc_data(ecl_kw);
+  ecl_kw_scalar_init(ecl_kw , init_value);
+  return ecl_kw;
+}
+
+
 
 ecl_kw_type * ecl_kw_alloc_complete_shared(const char * header ,  int size, ecl_type_enum ecl_type , void * data) {
   ecl_kw_type *ecl_kw;
@@ -1378,6 +1388,9 @@ void ecl_kw_scalar_init(ecl_kw_type * ecl_kw , double init_value) {
     util_abort("%s: can only be called on ecl_float_type and ecl_double_type - aborting \n",__func__);
   }
 }
+
+
+
 
 
 void ecl_kw_shift(ecl_kw_type * ecl_kw , double shift_value) {

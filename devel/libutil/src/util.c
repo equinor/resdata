@@ -3461,8 +3461,8 @@ static char * util_bt_alloc_current_executable(const char * bt_symbol) {
 */
 
 
-static pthread_mutex_t __abort_mutex = PTHREAD_MUTEX_INITIALIZER; /* Used purely to serialize the util_abort() routine. */
-static char * __abort_program_message  = NULL;                      /* Can use util_abort_append_version_info() to fill this with version info+++ wich will be printed when util_abort() is called. */
+static pthread_mutex_t __abort_mutex  = PTHREAD_MUTEX_INITIALIZER; /* Used purely to serialize the util_abort() routine. */
+static char * __abort_program_message = NULL;                      /* Can use util_abort_append_version_info() to fill this with version info+++ wich will be printed when util_abort() is called. */
 
 void util_abort_append_version_info(const char * msg) {
   __abort_program_message = util_strcat_realloc( __abort_program_message , msg );
@@ -3490,9 +3490,9 @@ void util_abort(const char * fmt , ...) {
       int    size,i;
   
       if (__abort_program_message != NULL) {
-	fprintf(stderr,"-----------------------------------------------------------------\n");
+	fprintf(stderr,"--------------------------------------------------------------------------------\n");
 	fprintf(stderr,"%s",__abort_program_message);
-	fprintf(stderr,"-----------------------------------------------------------------\n");
+	fprintf(stderr,"--------------------------------------------------------------------------------\n");
       }
 
       fprintf(stderr,"\n");
