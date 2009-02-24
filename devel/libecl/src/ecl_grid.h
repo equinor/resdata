@@ -5,8 +5,9 @@ extern "C" {
 #endif
 #include <stdbool.h>
 #include <ecl_box.h>
+#include <double_vector.h>
 
-
+typedef double (block_function_ftype) ( const double_vector_type *); 
 typedef struct ecl_grid_struct ecl_grid_type;
 
 inline bool     ecl_grid_ijk_valid(const ecl_grid_type * , int  , int , int ); 
@@ -23,6 +24,22 @@ void            ecl_grid_get_ijk(const ecl_grid_type * , int , int *, int * , in
 void            ecl_grid_get_ijk_from_active_index(const ecl_grid_type *, int , int *, int * , int * );
 const int     * ecl_grid_get_index_map_ref(const ecl_grid_type * );
 void            ecl_grid_get_pos(const ecl_grid_type * , int , int , int , double * , double * , double *);
+
+
+
+void            ecl_grid_alloc_blocking_variables(ecl_grid_type * , int );
+void            ecl_grid_init_blocking(ecl_grid_type * );
+void            ecl_grid_do_blocking(ecl_grid_type * , block_function_ftype * );
+bool            ecl_grid_blocked_cell_active_2d(const ecl_grid_type * , int , int );
+bool            ecl_grid_blocked_cell_active_3d(const ecl_grid_type * , int , int , int);
+double 		ecl_grid_get_blocked_value_2d(const ecl_grid_type * , int  , int );
+double 		ecl_grid_get_blocked_value_2d(const ecl_grid_type * , int  , int );
+double 		ecl_grid_get_blocked_value_3d(const ecl_grid_type * , int  , int  , int);
+double 		ecl_grid_get_blocked_value_3d(const ecl_grid_type * , int  , int  , int);
+
+bool            ecl_grid_block_value_2d(ecl_grid_type * , double  , double  ,double );
+bool            ecl_grid_block_value_3d(ecl_grid_type * , double  , double  ,double , double);
+
 
 #ifdef __cplusplus
 }

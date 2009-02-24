@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <ecl_util.h>
 #include <fortio.h>
+#include <double_vector.h>
 
 typedef struct ecl_point_struct ecl_point_type;
 
@@ -38,15 +39,22 @@ struct ecl_cell_struct {
 
 struct ecl_grid_struct {
   int nx , ny , nz , size , total_active;
-  int            * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
-  int            * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
+  int                 * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
+  int                 * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
   ecl_cell_type ** cells;
+  /*------------------------------: The fields below this line are used for blocking algorithms - and not allocated by default.*/
+  int                    block_dim; /* == 2 for maps and 3 for fields. 0 when not in use. */
+  int                    block_size;
+  int                    last_block_index;
+  double_vector_type  ** values;
+  double               * blocked_values;
+  bool                 * blocked_active;   
 };
 
 
 
 void ecl_point_compare(const ecl_point_type *p1 , const ecl_point_type *p2) {
-  if ((abs(p1->x - p2->x) + abs(p1->y - p2->y) + abs(p1->z - p2->z)) > 0.10)
+  if ((abs(p1->x - p2->x) + abs(p1->y - p2->y) + abs(p1->z - p2->z)) > 0.001)
     printf("ERROR");
 }
 
@@ -57,6 +65,50 @@ void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2) {
     ecl_point_compare(&c1->corner_list[i] , &c2->corner_list[i]);
   ecl_point_compare(&c1->center , &c2->center);
 }
+
+
+void ecl_point_printf(const ecl_point_type * p, const char * label, bool newline) {
+  if (label != NULL)
+    printf("%s:  <%10.3f, %10.3f, %10.3f>",label , p->x, p->y ,p->z);
+  else
+    printf("<%10.3f, %10.3f, %10.3f>",p->x, p->y ,p->z);
+
+  if (newline)
+    printf("\n");
+}
+
+
+
+
+
+void __printf_min_max(const char * label , double *x , FILE * stream) {
+  double min = 100000000000000000;
+  double max = -min;
+  int i;
+  for (i=0; i < 8; i++)
+    util_update_double_max_min(x[i] , &max , &min);
+  
+  fprintf(stream , "%s:  [%g,%g]   \n",label,min,max);
+  
+}
+
+void ecl_cell_fprintf_extremes(ecl_cell_type * cell , FILE * stream) {
+  double x[8];
+  double y[8];
+  double z[8];
+  int i;
+  for (i=0; i < 8; i++) {
+    x[i] = cell->corner_list[i].x;
+    y[i] = cell->corner_list[i].y;
+    z[i] = cell->corner_list[i].z;
+  }
+  __printf_min_max("X: ",x,stream);
+  __printf_min_max("Y: ",y,stream);
+  __printf_min_max("Z: ",z,stream);
+  fprintf(stream,"\n");
+}
+
+
 
 /*****************************************************************/
 
@@ -91,6 +143,12 @@ void ecl_point_inplace_add(ecl_point_type * point , ecl_point_type add) {
   point->z += add.z;
 }
 
+void ecl_point_inplace_sub(ecl_point_type * point , ecl_point_type sub) {
+  point->x -= sub.x;
+  point->y -= sub.y;
+  point->z -= sub.z;
+}
+
 void ecl_point_inplace_scale(ecl_point_type * point , double scale_factor) {
   point->x *= scale_factor;
   point->y *= scale_factor;
@@ -103,9 +161,6 @@ ecl_point_type ecl_point_copy(ecl_point_type src) {
 }
 
 
-void ecl_point_printf(const ecl_point_type p) {
-  printf("%g %g %g \n",p.x , p.y , p.z);
-}
 
 /*****************************************************************/
 
@@ -114,6 +169,239 @@ static ecl_cell_type * ecl_cell_alloc(void) {
   return cell;
 }
 
+
+/** 
+    Well this is actually quite difficult - the current implementation
+    is total and utter crap.
+*/
+
+
+
+
+/*
+  A x B = [(Ay*Bz - Az*By) , -(Ax*Bz - Az*Bx) , (Ax*By - Bx*Ay)]
+*/
+
+/* 
+   Computes the signed distance from the point p the plane spanned by
+   the two vectors (p1 - p0) x (p2 - p0).
+*/
+
+
+static void __set_normal_vector3d(ecl_point_type * n , ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2 , bool right_hand) {
+  ecl_point_type v1 = p1;
+  ecl_point_type v2 = p2;
+  
+  ecl_point_inplace_sub(&v1 , p0);
+  ecl_point_inplace_sub(&v2 , p0);
+  n->x =  (v1.y*v2.z - v1.z*v2.y);
+  n->y = -(v1.x*v2.z - v1.z*v2.x);
+  n->z =  (v1.x*v2.y - v1.y*v2.x);
+  if (!right_hand) 
+    ecl_point_inplace_scale(n , -1);
+}
+
+
+static double __signed_distance3d(ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2 , bool right_hand , ecl_point_type p) {
+  ecl_point_type n;
+  __set_normal_vector3d(&n , p0,p1,p2 ,right_hand);
+  ecl_point_inplace_sub(&p  , p0);
+  {
+    double d = n.x*p.x + n.y*p.y + n.z*p.z;
+    return d;
+  }
+}
+
+static bool __positive_distance3d(ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2 , bool right_hand , ecl_point_type p) {
+  double d = __signed_distance3d(p0 , p1 , p2 , right_hand , p);
+  if (d >= 0)
+    return true;
+  else
+    return false;
+}
+
+
+
+static void __set_normal_vector2d(ecl_point_type * n , ecl_point_type p0 , ecl_point_type p1 , bool right_hand) {
+  ecl_point_type v = p1;
+  
+  ecl_point_inplace_sub(&v , p0);
+  n->x = -v.y;
+  n->y =  v.x;
+  n->z =  0;
+  if (!right_hand)
+    ecl_point_inplace_scale(n , -1.0);
+
+}
+
+
+static double __signed_distance2d(ecl_point_type p0 , ecl_point_type p1 , bool right_hand , ecl_point_type p) {
+  ecl_point_type n;
+  __set_normal_vector2d(&n  ,  p0 , p1 , right_hand);
+  ecl_point_inplace_sub(&p  ,  p0);
+  {
+    double d = n.x*p.x + n.y*p.y;
+    return d;
+  }
+}
+
+static bool __positive_distance2d(ecl_point_type p0 , ecl_point_type p1 , bool right_hand , ecl_point_type p) {
+  double d = __signed_distance2d(p0 , p1 , right_hand , p);
+  if (d >= 0)
+    return true;
+  else
+    return false;
+}
+
+
+
+/*
+
+  6---7
+  |   |
+  4---5
+
+
+
+Lower layer:
+
+  2---3
+  |   |
+  0---1
+
+*/
+
+static bool ecl_cell_contains_3d(const ecl_cell_type * cell , ecl_point_type p) {
+  ecl_point_type p0 = cell->corner_list[0];
+  ecl_point_type p1 = cell->corner_list[1];
+  ecl_point_type p2 = cell->corner_list[2];
+  ecl_point_type p3 = cell->corner_list[3];
+  ecl_point_type p4 = cell->corner_list[4];
+  ecl_point_type p5 = cell->corner_list[5];
+  ecl_point_type p6 = cell->corner_list[6];
+  //ecl_point_type p7 = cell->corner_list[7];
+  bool  contains = false;
+  
+  if (__positive_distance3d(p0 , p1 , p2 , true , p))        	/* Z1 */
+    if (__positive_distance3d(p4 , p5 , p6 , false , p))     	/* Z2 */
+      if (__positive_distance3d(p0 , p4 , p2 , true , p))    	/* X1 */
+	if (__positive_distance3d(p1 , p5 , p3 , false , p)) 	/* X2 */
+	  if (__positive_distance3d(p0 , p4 , p1 , true , p))   /* Y1 */
+	    if (__positive_distance3d(p2 , p6 , p3 , false , p))  /* Y2 */
+	      contains = true;
+
+  return contains;
+}
+
+
+static void ecl_cell_printf_2dlayer(const ecl_cell_type * cell , bool lower) {
+  int offset;
+  if (lower)
+    offset = 0;
+  else
+    offset = 4;
+
+  printf("         < %10.3f,%10.3f >              < %10.3f , %10.3f> \n" , cell->corner_list[2+offset].x , cell->corner_list[2+ offset].y , cell->corner_list[3+offset].x , cell->corner_list[3+offset].y);
+  printf("                    |                               | \n");
+  printf("                    |                               | \n");
+  printf("                    |                               | \n");
+  printf("                    |                               | \n");
+  printf("         < %10.3f,%10.3f >              < %10.3f , %10.3f> \n" , cell->corner_list[0+offset].x , cell->corner_list[0+ offset].y , cell->corner_list[1+offset].x , cell->corner_list[1+offset].y);
+
+}
+
+
+static bool ecl_cell_contains_2d(const ecl_cell_type * cell , ecl_point_type p) {
+  bool contains = false;
+  ecl_point_type p0 = cell->corner_list[0];
+  ecl_point_type p1 = cell->corner_list[1];
+  ecl_point_type p2 = cell->corner_list[2];
+  ecl_point_type p3 = cell->corner_list[3];
+  
+  if (__positive_distance2d(p0 , p2 , false , p))
+    if (__positive_distance2d(p0 , p1 , true , p))
+      if (__positive_distance2d(p1 , p3 , true , p))
+	if (__positive_distance2d(p2 , p3 , false , p))
+	  contains = true;
+  
+  /*
+    ecl_cell_printf_2dlayer(cell , true);
+    ecl_point_printf(&p , "Point " , true);
+    printf("d1 /·: %g \n" , __signed_distance2d(p0 , p2 , false , p));
+    printf("d2 . : %g \n" , __signed_distance2d(p0 , p1 , true  , p));
+    printf("d3   : %g \n" , __signed_distance2d(p1 , p3 , true  , p));
+    printf("d4   : %g \n" , __signed_distance2d(p2 , p3 , false , p));
+    printf("-----------------------------------------------------------------\n\n\n");
+  */
+  
+  return contains;
+}
+
+
+
+
+
+
+
+static int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z , int last_index) {
+  int global_index;
+  ecl_point_type p;
+  p.x = x;
+  p.y = y;
+  p.z = z;
+  {
+    int index    = 0;
+    bool cont    = true;
+    global_index = -1;
+
+    do {
+      int active_index = ((index + last_index) % grid->block_size);
+      bool cell_contains;
+      cell_contains = ecl_cell_contains_3d(grid->cells[active_index] , p);
+
+      if (cell_contains) {
+	global_index = active_index;
+	cont = false;
+      }
+      index++;
+      if (index == grid->block_size)
+	cont = false;
+    } while (cont);
+  }
+  return global_index;
+}
+
+
+
+static int ecl_grid_get_global_index_from_xy(const ecl_grid_type * grid , double x , double y , int last_index) {
+  int global_index;
+  ecl_point_type p;
+  p.x = x;
+  p.y = y;
+  p.z = -1;
+  {
+    int index    = 0;
+    bool cont    = true;
+    global_index = -1;
+
+    do {
+      int active_index = ((index + last_index) % grid->block_size);
+      bool cell_contains;
+      cell_contains = ecl_cell_contains_2d(grid->cells[active_index] , p);
+      
+      if (cell_contains) {
+	global_index = active_index;
+	cont = false;
+      } 
+      index++;
+      if (index == grid->block_size)
+	cont = false;
+    } while (cont);
+  }
+  return global_index;
+}
+      
+  
 
 void ecl_cell_free(ecl_cell_type * cell) {
   free(cell);
@@ -135,6 +423,10 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
     for (i=0; i < grid->size; i++)
       grid->cells[i] = ecl_cell_alloc();
   }
+  grid->block_dim      = 0;
+  grid->values         = NULL;
+  grid->blocked_values = NULL;
+  grid->blocked_active = NULL;
   return grid;
 }
 
@@ -451,6 +743,8 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
   fortio_fclose(fortio);
   ecl_grid_set_center(grid);
   ecl_grid_set_active_index(grid);
+
+  
   return grid;
 }
 
@@ -504,15 +798,6 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
 }
 
 
-/**
-   This function returns a pointer to the internal index_map field of
-   the grid structure. Observe that the calling scope is *NOT* allowed
-   to write on this. 
-
-   If the internal index map has not been allocated (third argument
-   true) to ecl_grid_alloc(), the function will fail.
-*/
-
 
 
 
@@ -528,6 +813,110 @@ void ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
 
 
 
+void ecl_grid_alloc_blocking_variables(ecl_grid_type * grid, int block_dim) {
+  int index;
+  grid->block_dim = block_dim;
+  if (block_dim == 2)
+    grid->block_size = grid->nx* grid->ny;
+  else if (block_dim == 3)
+    grid->block_size = grid->size;
+  else
+    util_abort("%: valid values are two and three. Value:%d invaid \n",__func__ , block_dim);
+  
+  grid->blocked_active = util_malloc( grid->block_size * sizeof * grid->blocked_active , __func__);
+  grid->blocked_values = util_malloc( grid->block_size * sizeof * grid->blocked_values , __func__);
+  grid->values         = util_malloc( grid->block_size * sizeof * grid->values , __func__);
+  for (index = 0; index < grid->block_size; index++) 
+    grid->values[index] = double_vector_alloc(4 , 0.0);
+}
+
+
+
+void ecl_grid_init_blocking(ecl_grid_type * grid) {
+  int index;
+  for (index = 0; index < grid->block_size; index++) 
+    double_vector_reset(grid->values[index]);
+  grid->last_block_index = 0;
+}
+
+
+
+
+bool ecl_grid_block_value_3d(ecl_grid_type * grid, double x , double y , double z , double value) {
+  if (grid->block_dim != 3) 
+    util_abort("%s: Wrong blocking dimension \n",__func__);
+  {
+    int global_index = ecl_grid_get_global_index_from_xyz( grid , x , y , z , grid->last_block_index);
+    if (global_index >= 0) {
+      double_vector_append( grid->values[global_index] , value);
+      grid->last_block_index = global_index;
+      return true;
+    } else
+      return false;
+  }
+}
+
+
+bool ecl_grid_block_value_2d(ecl_grid_type * grid, double x , double y ,double value) {
+  if (grid->block_dim != 2) 
+    util_abort("%s: Wrong blocking dimension \n",__func__);
+  {
+    int global_index = ecl_grid_get_global_index_from_xy( grid , x , y , grid->last_block_index);
+    if (global_index >= 0) {
+      double_vector_append( grid->values[global_index] , value);
+      grid->last_block_index = global_index;
+      return true;
+    } else
+      return false;
+  }
+}
+
+
+
+void ecl_grid_do_blocking(ecl_grid_type * grid , block_function_ftype * blockf ) {
+  int index;
+  for (index = 0; index < grid->block_size; index++) {
+    if (double_vector_size( grid->values[index] ) > 0) {
+      grid->blocked_values[index] = blockf(grid->values[index]);
+      grid->blocked_active[index] = true;
+    } else
+      grid->blocked_active[index] = false;
+  }
+}
+
+
+static double ecl_grid_get_blocked_value__(const ecl_grid_type * grid, int i , int j , int k) {
+  int global_index = ecl_grid_get_global_index(grid , i,j,k);
+  return grid->blocked_values[global_index];
+}
+
+
+double ecl_grid_get_blocked_value_2d(const ecl_grid_type * grid, int i , int j ) {
+  return ecl_grid_get_blocked_value__(grid , i , j , 0);
+}
+
+
+double ecl_grid_get_blocked_value_3d(const ecl_grid_type * grid, int i , int j , int k) {
+  return ecl_grid_get_blocked_value__(grid , i , j , k);
+}
+
+
+static bool ecl_grid_blocked_cell_active__(const ecl_grid_type * grid, int i , int j , int k) {
+  int global_index = ecl_grid_get_global_index(grid , i,j,k);
+  return grid->blocked_active[global_index];
+}
+
+
+bool ecl_grid_blocked_cell_active_2d(const ecl_grid_type * grid, int i , int j ) {
+  return ecl_grid_blocked_cell_active__(grid , i , j , 0);
+}
+
+
+bool ecl_grid_blocked_cell_active_3d(const ecl_grid_type * grid, int i , int j , int k) {
+  return ecl_grid_blocked_cell_active__(grid , i , j , k);
+}
+
+
 
 void ecl_grid_free(ecl_grid_type * grid) {
   int i;
@@ -536,6 +925,15 @@ void ecl_grid_free(ecl_grid_type * grid) {
   free(grid->cells);
   util_safe_free(grid->index_map);
   util_safe_free(grid->inv_index_map);
+
+  util_safe_free(grid->blocked_values);
+  util_safe_free(grid->blocked_active);
+  if (grid->values != NULL) {
+    int i;
+    for (i=0; i < grid->block_size; i++)
+      double_vector_free( grid->values[i] );
+    free( grid->values );
+  }
   free(grid);
 }
 
