@@ -927,10 +927,10 @@ bool util_sscanf_bool(const char * buffer , bool * _value) {
   } else {
     char * local_buffer = util_alloc_string_copy(buffer);
     util_strupr(local_buffer);
-
+    
     if (strcmp(local_buffer , "TRUE") == 0) {
       parse_OK = true;
-      value = false;
+      value = true;
     } else if (strcmp(local_buffer , "FALSE") == 0) {
       parse_OK = true;
       value = false;
