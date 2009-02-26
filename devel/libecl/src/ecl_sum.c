@@ -840,6 +840,8 @@ int ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lo
   util_free_stringlist(argv , argc);
   return index;
 }
+#undef __ASSERT_ARGC    
+
 
 
 bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw) {
@@ -855,28 +857,28 @@ bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_
     has_var = ecl_sum_has_misc_var(ecl_sum , argv[0]);
     break;
   case(ecl_sum_well_var):
-    __ASSERT_ARGC(argc , 2 , lookup_kw , "Wells");
-    has_var = ecl_sum_has_well_var(ecl_sum , argv[1] , argv[0]);
+    if (argc == 2)
+      has_var = ecl_sum_has_well_var(ecl_sum , argv[1] , argv[0]);
     break;
   case(ecl_sum_region_var):
-    __ASSERT_ARGC(argc , 2 , lookup_kw , "Regions");
+    if (argc == 2) 
     {
       int region_nr;
       if (!util_sscanf_int(argv[1] , &region_nr)) 
 	util_abort("%s: failed to parse %s to an integer - aborting. \n",__func__ , argv[1]);
       has_var = ecl_sum_has_region_var(ecl_sum , region_nr , argv[0]);
-    }
+    } 
     break;
   case(ecl_sum_field_var):
     has_var = ecl_sum_has_field_var(ecl_sum , argv[0]);
     break;
   case(ecl_sum_group_var):
-    __ASSERT_ARGC(argc , 2 , lookup_kw , "Groups");
-    has_var = ecl_sum_has_group_var(ecl_sum , argv[1] , argv[0]);
+    if (argc == 2)
+      has_var = ecl_sum_has_group_var(ecl_sum , argv[1] , argv[0]);
     break;
   case(ecl_sum_block_var):
-    __ASSERT_ARGC(argc , 2 , lookup_kw , "Block");
-    has_var = ecl_sum_has_block_var(ecl_sum , argv[0] , argv[1]);
+    if (argc == 2)
+      has_var = ecl_sum_has_block_var(ecl_sum , argv[0] , argv[1]);
     break;
   default:
     util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
@@ -884,7 +886,6 @@ bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_
   util_free_stringlist(argv , argc);
   return has_var;
 }
-#undef __ASSERT_ARGC    
 
 
 

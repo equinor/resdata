@@ -80,36 +80,6 @@ void ecl_point_printf(const ecl_point_type * p, const char * label, bool newline
 
 
 
-
-void __printf_min_max(const char * label , double *x , FILE * stream) {
-  double min = 100000000000000000;
-  double max = -min;
-  int i;
-  for (i=0; i < 8; i++)
-    util_update_double_max_min(x[i] , &max , &min);
-  
-  fprintf(stream , "%s:  [%g,%g]   \n",label,min,max);
-  
-}
-
-void ecl_cell_fprintf_extremes(ecl_cell_type * cell , FILE * stream) {
-  double x[8];
-  double y[8];
-  double z[8];
-  int i;
-  for (i=0; i < 8; i++) {
-    x[i] = cell->corner_list[i].x;
-    y[i] = cell->corner_list[i].y;
-    z[i] = cell->corner_list[i].z;
-  }
-  __printf_min_max("X: ",x,stream);
-  __printf_min_max("Y: ",y,stream);
-  __printf_min_max("Z: ",z,stream);
-  fprintf(stream,"\n");
-}
-
-
-
 /*****************************************************************/
 
 ecl_point_type ecl_point_new(double x, double y , double z) {
