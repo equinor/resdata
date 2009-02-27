@@ -113,6 +113,13 @@ void ecl_kw_get_memcpy_data(const ecl_kw_type *ecl_kw , void *target) {
   memcpy(target , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
 }
 
+/** Allocates a untyped buffer with exactly the same content as the ecl_kw instances data. */
+void * ecl_kw_alloc_data_copy(const ecl_kw_type * ecl_kw) {
+  void * buffer = util_alloc_copy( ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , __func__);
+  return buffer;
+}
+
+
 void ecl_kw_set_memcpy_data(ecl_kw_type *ecl_kw , const void *src) {
   memcpy(ecl_kw->data , src , ecl_kw->size * ecl_kw->sizeof_ctype);
 }

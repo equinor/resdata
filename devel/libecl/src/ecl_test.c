@@ -9,13 +9,19 @@
 #include <stdbool.h>
 #include <ecl_rft_vector.h>
 #include <ecl_grid.h>
+#include <ecl_smspec.h>
+#include <ecl_sum_data.h>
 
 int main(int argc, char ** argv) {
-  const char * filename = "test.GRDECL";
-  FILE * stream = util_fopen(filename , "r");
-  ecl_kw_grdecl_fseek_kw("PORO" , true , false ,stream , filename);
-  ecl_kw_grdecl_fseek_kw("PERMX" , true , false ,stream , filename);
-  ecl_kw_grdecl_fseek_kw("PERMZ" , true , false ,stream , filename);
-  ecl_kw_grdecl_fseek_kw("GRIDHEAD" , true , false ,stream , filename);
-  fclose(stream);
+  ecl_smspec_type   * smspec = ecl_smspec_fread_alloc("Gurbat/EXAMPLE_01_BASE.SMSPEC" , true);
+  ecl_sum_data_type * data   = ecl_sum_data_fread_alloc(smspec , argc - 1 , (const char **) &argv[1] , true);  
+  
+  {
+    int i;
+    for (i=0; i < 500; i++)
+      printf("%03d: %d \n",i,ecl_sum_data_has_ministep( data , i ));
+  }
+  
+  ecl_sum_data_free( data );
+  ecl_smspec_free( smspec );
 }

@@ -216,7 +216,7 @@ ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ec
 
 	  if (file_type == ecl_restart_file)
 	    ecl_block_set_sim_time_restart(ecl_block);
-
+	  
 	  /*
 	    In the case of summary files we can find incomplete files
 	    with only the SEQHDR keyword; they are not added to the

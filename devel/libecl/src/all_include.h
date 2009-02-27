@@ -11,4 +11,5 @@
 #include <ecl_grid.h> 
 #include <restart_kw_list.h> 
 #include <ecl_io_config.h>
-
+#include <ecl_smspec.h>
+#include <ecl_sum_data.h>

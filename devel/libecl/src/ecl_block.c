@@ -125,6 +125,9 @@ static int ecl_block_node_get_size(const ecl_block_node_type * node)
 
 
 
+/**
+   Returns the number of 'kw' instances in the block. 
+*/
 int ecl_block_get_kw_size(const ecl_block_type * ecl_block, const char * kw)
 {
   char * kw_s = util_alloc_strip_copy(kw);

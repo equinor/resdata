@@ -11,13 +11,72 @@
 #include <time.h>
 #include <set.h>
 #include <util.h>
+#include <vector.h>
+#include <int_vector.h>
+#include <ecl_smspec.h>
+#include <ecl_sum_data.h>
+
+
+/*****************************************************************/
+/*
+   About ministeps and report steps.
+   ---------------------------------
+
+   A sequence of summary data will typically look like this:
+
+   ------------------
+   SEQHDR            \
+   MINISTEP  0        |     
+   DATA      .....    |
+   MINISTEP  1        |==> This is REPORT STEP 1, in file BASE.S00001
+   DATA      .....    |
+   MINISTEP  2        |
+   DATA      .....   /
+   ------------------
+   SEQHDR            \
+   MINISTEP  3        |
+   DATA      .....    |
+   MINISTEP  4	      |
+   DATA      .....    |
+   MINISTEP  5	      |==> This is REPORT STEP 2, in file BASE.S0002
+   DATA      .....    |
+   MINISTEP  6	      |
+   DATA      .....    |
+   SEQHDR	      |
+   MINISTEP  7	      |
+   DATA      .....   /
+   ------------------
+
+
+   Observe the following:
+
+     * The MINISTEP counter runs continously, and does not
+       differentiate between unified files and not unified files.
+
+     * When using multiple files we can read off the report number
+       from the filename, for unified files this is IMPOSSIBLE, and we
+       just have to assume that the first block corresponds to
+       report_step 1 and then count afterwards. 
+
+     * When asking for a summary variable at a particular REPORT STEP
+       (as we do in enkf) it is ambigous as to which ministep within
+       the block one should use. The convention we have employed
+       (which corresponds to the old RPTONLY based behaviour) is to
+       use the last ministep in the block.
+
+     * There is no BASE.SOOOO file.
+
+*/   
+
+
+
 
 
 
 #define DUMMY_WELL(well) (strcmp((well) , ":+:+:+:+") == 0)
-#define ECL_SUM_ID 89067
+#define ECL_SUM_ID          89067
 
-
+/*****************************************************************/
 
 
 
@@ -28,12 +87,12 @@ struct ecl_sum_struct {
 
   hash_type        * well_var_index;             /* Indexes for all well variables. */
   hash_type        * well_completion_var_index;  /* Indexes for completion indexes .*/
-  hash_type        * group_var_index;            /* Indexes for group variables.*/ 
+  hash_type        * group_var_index;            /* Indexes for group variables.*/
   hash_type        * field_var_index;
   hash_type        * region_var_index;           /* The stored index is an offset. */
-  hash_type        * misc_var_index; 
+  hash_type        * misc_var_index;
   hash_type        * unit_hash;
-  hash_type        * block_var_index; 
+  hash_type        * block_var_index;
 
   ecl_sum_var_type * var_type;
   int               report_offset;
@@ -56,7 +115,7 @@ About indexing:
 The ECLISPE summary files are organised (roughly) like this:
 
  1. A header-file called xxx.SMPSEC is written, which is common to
-    every timestep.  
+    every timestep.
 
  2. For each timestep the summary vector is written in the form of a
     vector 'PARAMS' of length N with floats. In the PARAMS vector all
@@ -88,7 +147,7 @@ KEYWORDS = ['TIME','FOPR','FPR','FWCT','WOPR','WOPR,'WWCT','WWCT]
 
 
 
-   
+
 */
 
 
@@ -100,7 +159,7 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert , c
   ecl_sum->fmt_mode           	     = fmt_mode;
   ecl_sum->endian_convert     	     = endian_convert;
   ecl_sum->unified            	     = true;  /* Dummy */
-  
+
   ecl_sum->well_var_index     	     = hash_alloc();
   ecl_sum->well_completion_var_index = hash_alloc();
   ecl_sum->group_var_index    	     = hash_alloc();
@@ -109,12 +168,12 @@ static ecl_sum_type * ecl_sum_alloc_empty(int fmt_mode , bool endian_convert , c
   ecl_sum->misc_var_index     	     = hash_alloc();
   ecl_sum->unit_hash          	     = hash_alloc();
   ecl_sum->block_var_index           = hash_alloc();
-  
+
   ecl_sum->var_type           	     = NULL;
   ecl_sum->header             	     = NULL;
   ecl_sum->data               	     = NULL;
   ecl_sum->well_list          	     = NULL;
-  ecl_sum->sim_start_time     	     = -1;  
+  ecl_sum->sim_start_time     	     = -1;
   ecl_sum->report_offset             = 0;
   ecl_sum->__id                      = ECL_SUM_ID;
   ecl_sum->has_sim_time              = false;
@@ -153,7 +212,7 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
     bool promise_RPTONLY = false;
     bool fmt_file;
     int report_nr;
-    
+
     ecl_util_get_file_type(data_files[0] , &file_type , &fmt_file , &report_nr);
     /*
       Burde kanskje vaere litt forsiktig med dette løftet
@@ -172,7 +231,7 @@ void ecl_sum_fread_alloc_data(ecl_sum_type * sum , int files , const char **data
     sum->var_type    = util_malloc( sum->params_size * sizeof * sum->var_type , __func__);
   }
 }
-  
+
 
 /* See table 3.4 in the ECLIPSE file format reference manual. */
 
@@ -194,7 +253,7 @@ ecl_sum_var_type ecl_sum_identify_var_type(const char * var) {
   case('G'):
     var_type = ecl_sum_group_var;
     break;
-  case('L'): 
+  case('L'):
     switch(var[1]) {
     case('B'):
       var_type = ecl_sum_local_block_var;
@@ -241,14 +300,14 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
   {
     int *date;
     ecl_block_type * block = ecl_fstate_iget_block(ecl_sum->header , 0);
-    ecl_kw_type *wells     = ecl_block_get_kw(block , "WGNAMES"); 
-    ecl_kw_type *keywords  = ecl_block_get_kw(block , "KEYWORDS"); 
+    ecl_kw_type *wells     = ecl_block_get_kw(block , "WGNAMES");
+    ecl_kw_type *keywords  = ecl_block_get_kw(block , "KEYWORDS");
     ecl_kw_type *startdat  = ecl_block_get_kw(block , "STARTDAT");
     ecl_kw_type *units     = ecl_block_get_kw(block , "UNITS");
     ecl_kw_type *nums      = NULL;
     int index;
     ecl_sum->num_regions     = 0;
-    
+
     if (startdat == NULL) {
       fprintf(stderr,"%s: could not locate STARTDAT keyword in header - aborting \n",__func__);
       abort();
@@ -262,7 +321,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
       /*
 	Fills a unit_hash: unit_hash["WOPR"] =	"Barrels/day"...
       */
-	
+
       for (index=0; index < ecl_kw_get_size(keywords); index++) {
 	char * kw = util_alloc_strip_copy( ecl_kw_iget_ptr(keywords , index));
 	if (!hash_has_key(ecl_sum->unit_hash , kw)) {
@@ -272,7 +331,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	free(kw);
       }
     }
-    
+
     {
       set_type *well_set  = set_alloc_empty();
       int num = -1;
@@ -288,24 +347,24 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	  if (!DUMMY_WELL(well)) {
 	    /* Seems I have to accept nums < 0 to get shit through ??? */
 	    char cell_str[16];
-	    if (!hash_has_key(ecl_sum->well_completion_var_index , well)) 
+	    if (!hash_has_key(ecl_sum->well_completion_var_index , well))
 		hash_insert_hash_owned_ref(ecl_sum->well_completion_var_index , well , hash_alloc() , hash_free__);
 	    {
 	      hash_type * cell_hash = hash_get(ecl_sum->well_completion_var_index , well);
 	      sprintf(cell_str , "%d" , num);
-	      if (!hash_has_key(cell_hash , cell_str)) 
+	      if (!hash_has_key(cell_hash , cell_str))
 		hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
 	      {
 		hash_type * var_hash = hash_get(cell_hash , cell_str);
 		hash_insert_int(var_hash , kw , index);
 	      }
 	    }
-	  } else 
+	  } else
 	    util_abort("%s: incorrectly formatted completion var in SMSPEC. num:%d kw:\"%s\"  well:\"%s\" \n",__func__ , num , kw , well);
 	  break;
 	case(ecl_sum_field_var):
-	  /* 
-	     Field variable 
+	  /*
+	     Field variable
 	  */
 	  hash_insert_int(ecl_sum->field_var_index , kw , index);
 	  break;
@@ -313,7 +372,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	  {
 	    const char * group = well;
 	    if (!DUMMY_WELL(well)) {
-	      if (!hash_has_key(ecl_sum->group_var_index , group)) 
+	      if (!hash_has_key(ecl_sum->group_var_index , group))
 		hash_insert_hash_owned_ref(ecl_sum->group_var_index , group , hash_alloc() , hash_free__);
 	      {
 		hash_type * var_hash = hash_get(ecl_sum->group_var_index , group);
@@ -323,33 +382,33 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	  }
 	  break;
 	case(ecl_sum_region_var):
-	  if (!hash_has_key(ecl_sum->region_var_index , kw)) 
+	  if (!hash_has_key(ecl_sum->region_var_index , kw))
 	    hash_insert_int(ecl_sum->region_var_index , kw , index);
-	  ecl_sum->num_regions = util_int_max(ecl_sum->num_regions , num);  
+	  ecl_sum->num_regions = util_int_max(ecl_sum->num_regions , num);
 	  break;
 	case (ecl_sum_well_var):
 	  if (!DUMMY_WELL(well)) {
-	    /* 
+	    /*
 	       It seems we can have e.g. WOPR associated with the
 	       dummy well, there is no limit to the stupidity of these
 	       programmers.
 	    */
 	    set_add_key(well_set , well);
-	    if (!hash_has_key(ecl_sum->well_var_index , well)) 
+	    if (!hash_has_key(ecl_sum->well_var_index , well))
 	      hash_insert_hash_owned_ref(ecl_sum->well_var_index , well , hash_alloc() , hash_free__);
 	    {
 	      hash_type * var_hash = hash_get(ecl_sum->well_var_index , well);
 	      hash_insert_int(var_hash , kw , index);
-	    }   
+	    }
 	  }
 	  break;
 	case(ecl_sum_misc_var):
-	  /* 
-	     Possibly we must have the possibility to alter 
+	  /*
+	     Possibly we must have the possibility to alter
 	     reclassify - so this last switch must be done
 	     in two passes?
 	  */
-	  hash_insert_int(ecl_sum->misc_var_index , kw , index);	    
+	  hash_insert_int(ecl_sum->misc_var_index , kw , index);
 	  break;
 	case(ecl_sum_block_var):
 	  /* A block variable */
@@ -359,7 +418,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 	      hash_insert_hash_owned_ref(ecl_sum->block_var_index , kw , hash_alloc() , hash_free__);
 	    {
 	      hash_type * block_hash = hash_get(ecl_sum->block_var_index , kw);
-	      hash_insert_int(block_hash , block_nr , index);	    
+	      hash_insert_int(block_hash , block_nr , index);
 	    }
 	    free(block_nr);
 	  }
@@ -380,7 +439,7 @@ static void ecl_sum_fread_header(ecl_sum_type * ecl_sum, const char * header_fil
 
 ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const char **data_files , bool report_mode , bool endian_convert) {
   ecl_sum_type *ecl_sum;
-  
+
   {
     char * base_name , *path;
     util_alloc_file_components(header_file , &path , &base_name , NULL);
@@ -394,7 +453,7 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
   if (hash_has_key(ecl_sum->misc_var_index , "TIME")) {
     int time_index = hash_get_int(ecl_sum->misc_var_index , "TIME");
     int iblock;
-    
+
     if (hash_has_key(ecl_sum->misc_var_index , "DAY")) {
       int day_index   = hash_get_int(ecl_sum->misc_var_index , "DAY");
       int month_index = hash_get_int(ecl_sum->misc_var_index , "MONTH");
@@ -413,15 +472,15 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
       }
     }
     ecl_sum->has_sim_time = true;
-    
+
   } else {
     fprintf(stderr,"** Warning: could not locate DAY / MONTH / YEAR in %s - dates will be defaulted. Add 'DATE' to the summary section in the .DATA file to prevent this problem.\n", header_file);
     ecl_sum->has_sim_time = false;
   }
-  
+
   return ecl_sum;
 }
-	
+
 
 /**
    This file takes an input file, and loads the corresponding
@@ -445,18 +504,18 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
 
 
 
-ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , bool report_mode , bool endian_convert){ 
+ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , bool report_mode , bool endian_convert){
   ecl_sum_type * ecl_sum;
   char * path , * base;
   char * header_file;
   char ** summary_file_list;
   int     files;
-  bool    fmt_file , unified; 
+  bool    fmt_file , unified;
 
   util_alloc_file_components( input_file , &path , &base , NULL);
   ecl_util_alloc_summary_files( path , base , &header_file , &summary_file_list , &files , &fmt_file , &unified);
   ecl_sum = ecl_sum_fread_alloc( header_file , files , (const char **) summary_file_list , report_mode , endian_convert );
-  
+
   free(base);
   util_safe_free(path);
   free(header_file);
@@ -466,7 +525,7 @@ ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , bool report_mo
 }
 
 
-									
+
 static void ecl_sum_set_unified(ecl_sum_type *ecl_sum , bool unified) {
   ecl_sum->unified = unified;
   ecl_fstate_set_unified(ecl_sum->data , unified);
@@ -496,7 +555,7 @@ void ecl_sum_set_header_data(ecl_sum_type *ecl_sum , const char *kw , void *valu
 //    fprintf(stderr,"%s: must inititialise ecl_sum object prior to saving - aborting \n",__func__);
 //    abort();
 //  }
-//  
+//
 //  if (ecl_sum->fmt_mode == ECL_FORMATTED) {
 //    fmt_file = true;
 //  } else {
@@ -505,7 +564,7 @@ void ecl_sum_set_header_data(ecl_sum_type *ecl_sum , const char *kw , void *valu
 //  }
 //  summary_spec = ecl_util_alloc_filename(NULL , base_name ,  ecl_summary_header_file , fmt_file , -1);
 //  ecl_fstate_set_files(ecl_sum->header , 1 , (const char **) &summary_spec);
-//  
+//
 //
 //  if (ecl_sum->unified) {
 //    data_file = ecl_util_alloc_filename(NULL , base_name ,  ecl_unified_summary_file , fmt_file , -1);
@@ -514,13 +573,13 @@ void ecl_sum_set_header_data(ecl_sum_type *ecl_sum , const char *kw , void *valu
 //  } else {
 //    int files , report_nr1 , report_nr2;
 //    char **filelist;
-//    
+//
 //    files = ecl_fstate_get_report_size(ecl_sum->data , &report_nr1 , &report_nr2);
 //    filelist = ecl_util_alloc_simple_filelist(NULL , base_name , ecl_summary_file , fmt_file , report_nr1 , report_nr2);
 //    ecl_fstate_set_files(ecl_sum->data , files , (const char **) filelist);
 //    util_free_stringlist(filelist , files);
 //  }
-//  
+//
 //  ecl_fstate_save(ecl_sum->header);
 //  ecl_fstate_save(ecl_sum->data);
 //  free(summary_spec);
@@ -529,7 +588,7 @@ void ecl_sum_set_header_data(ecl_sum_type *ecl_sum , const char *kw , void *valu
 
 
 static void ecl_sum_assert_index(const ecl_sum_type * ecl_sum, int index) {
-  if (index < 0 || index >= ecl_sum->params_size) 
+  if (index < 0 || index >= ecl_sum->params_size)
     util_abort("%s: index:%d invalid - aborting \n",__func__ , index);
 }
 
@@ -545,36 +604,36 @@ bool ecl_sum_has_report_nr(const ecl_sum_type * ecl_sum, int report_nr) {
 
 
 /*
-  time_index is zero based anyway ..... not nice 
+  time_index is zero based anyway ..... not nice
 */
 double ecl_sum_get_with_index(const ecl_sum_type *ecl_sum , int report_nr , int sum_index) {
-  if (ecl_sum->data == NULL) 
+  if (ecl_sum->data == NULL)
     util_abort("%s: data not loaded - aborting \n",__func__);
   ecl_sum_assert_index(ecl_sum , sum_index);
   {
     ecl_block_type * block    = ecl_fstate_get_block_by_report_nr(ecl_sum->data , report_nr);
     ecl_kw_type    * data_kw;
-    if (block == NULL) 
+    if (block == NULL)
       util_abort("%s: failed to get report_nr:%d - something broken ?! \n",__func__ , report_nr);
-    
+
     data_kw  = ecl_sum_get_PARAMS_kw(block);
-    return (double) ecl_kw_iget_float(data_kw , sum_index);    
+    return (double) ecl_kw_iget_float(data_kw , sum_index);
   }
 }
 
 
 double ecl_sum_iget_with_index(const ecl_sum_type *ecl_sum , int block_nr , int sum_index) {
-  if (ecl_sum->data == NULL) 
+  if (ecl_sum->data == NULL)
     util_abort("%s: data not loaded - aborting \n",__func__);
   ecl_sum_assert_index(ecl_sum , sum_index);
   {
     ecl_block_type * block    = ecl_fstate_iget_block(ecl_sum->data , block_nr);
     ecl_kw_type    * data_kw;
-    if (block == NULL) 
+    if (block == NULL)
       util_abort("%s: failed to get report_nr:%d - something broken ?! \n",__func__ , block_nr);
-    
+
     data_kw  = ecl_sum_get_PARAMS_kw(block);
-    return (double) ecl_kw_iget_float(data_kw , sum_index);    
+    return (double) ecl_kw_iget_float(data_kw , sum_index);
   }
 }
 
@@ -616,10 +675,10 @@ int ecl_sum_get_well_var_index(const ecl_sum_type * ecl_sum , const char * well 
   if (hash_has_key(ecl_sum->well_var_index , well)) {
     hash_type * var_hash = hash_get(ecl_sum->well_var_index , well);
     if (hash_has_key(var_hash , var))
-      index = hash_get_int(var_hash , var); 
-    else 
+      index = hash_get_int(var_hash , var);
+    else
       util_abort("%s: summary object does not have well/variable combination: %s/%s  \n",__func__ , well , var);
-  } else 
+  } else
     util_abort("%s: summary object does not contain well: %s \n",__func__ , well);
 
   return index;
@@ -630,12 +689,12 @@ int ecl_sum_get_well_var_index(const ecl_sum_type * ecl_sum , const char * well 
 
 static int ecl_sum_get_well_completion_var_index__(const ecl_sum_type * ecl_sum , const char * well , const char *var, int cell_nr) {
   int index = -1;
-  
+
   if (hash_has_key(ecl_sum->well_completion_var_index , well)) {
     char cell_str[16];
     hash_type * cell_hash = hash_get(ecl_sum->well_completion_var_index , well);
     sprintf(cell_str , "%d" , cell_nr);
-    
+
     if (hash_has_key(cell_hash , cell_str)) {
       hash_type * var_hash = hash_get(cell_hash , cell_str);
       if (hash_has_key(var_hash , var))
@@ -651,7 +710,7 @@ int ecl_sum_get_well_completion_var_index(const ecl_sum_type * ecl_sum , const c
   int index = ecl_sum_get_well_completion_var_index__(ecl_sum , well , var , cell_nr);
   if (index < 0) {
     fprintf(stderr,"%s: summary object does not have completion data for well:%s  variable:%s  cell_nr:%d \n",__func__ , well , var , cell_nr);
-    abort(); 
+    abort();
   }
   return index;
 }
@@ -665,14 +724,14 @@ int ecl_sum_get_group_var_index(const ecl_sum_type * ecl_sum , const char * grou
   if (hash_has_key(ecl_sum->group_var_index , group)) {
     hash_type * var_hash = hash_get(ecl_sum->group_var_index , group);
     if (hash_has_key(var_hash , var))
-      index = hash_get_int(var_hash , var); 
+      index = hash_get_int(var_hash , var);
     else {
       fprintf(stderr,"%s: summary object does not have group/variable combination: %s/%s  \n",__func__ , group , var);
-      abort(); 
-    }   
+      abort();
+    }
   } else {
     fprintf(stderr,"%s: summary object does not contain group: %s \n",__func__ , group);
-    abort(); 
+    abort();
   }
   return index;
 }
@@ -685,14 +744,14 @@ int ecl_sum_get_group_var_index(const ecl_sum_type * ecl_sum , const char * grou
 
 int ecl_sum_get_block_var_index(const ecl_sum_type * ecl_sum , const char * block_var , const char *block_nr) {
   int index = -1;
-  
+
   if (hash_has_key(ecl_sum->block_var_index , block_var)) {
     hash_type * block_hash = hash_get(ecl_sum->block_var_index , block_var);
     if (hash_has_key(block_hash , block_nr))
-      index = hash_get_int(block_hash , block_nr); 
-    else 
+      index = hash_get_int(block_hash , block_nr);
+    else
       util_abort("%s: summary object does not have %s:%s combination. \n",__func__ , block_var , block_nr);
-  } else 
+  } else
     util_abort("%s: summary object does not contain group: block variable: \n",__func__ , block_var);
 
   return index;
@@ -702,11 +761,11 @@ int ecl_sum_get_block_var_index(const ecl_sum_type * ecl_sum , const char * bloc
 int ecl_sum_get_field_var_index(const ecl_sum_type * ecl_sum , const char *var) {
   int index = -1;
 
-  if (hash_has_key(ecl_sum->field_var_index , var)) 
-    index = hash_get_int(ecl_sum->field_var_index , var); 
-  else 
+  if (hash_has_key(ecl_sum->field_var_index , var))
+    index = hash_get_int(ecl_sum->field_var_index , var);
+  else
     util_abort("%s: summary object does not have field variable: %s  \n",__func__ , var);
-    
+
   return index;
 }
 
@@ -714,9 +773,9 @@ int ecl_sum_get_field_var_index(const ecl_sum_type * ecl_sum , const char *var) 
 int ecl_sum_get_misc_var_index(const ecl_sum_type * ecl_sum , const char *var) {
   int index = -1;
 
-  if (hash_has_key(ecl_sum->misc_var_index , var)) 
-    index = hash_get_int(ecl_sum->misc_var_index , var); 
-  else 
+  if (hash_has_key(ecl_sum->misc_var_index , var))
+    index = hash_get_int(ecl_sum->misc_var_index , var);
+  else
     util_abort("%s: summary object does not have misc variable: %s  \n",__func__ , var);
 
   return index;
@@ -729,7 +788,7 @@ int ecl_sum_get_misc_var_index(const ecl_sum_type * ecl_sum , const char *var) {
 */
 
 static void ecl_sum_assert_region_nr(const ecl_sum_type * ecl_sum , int region_nr) {
-  if (region_nr <= 0 || region_nr > ecl_sum->num_regions) 
+  if (region_nr <= 0 || region_nr > ecl_sum->num_regions)
     util_abort("%s: region_nr:%d not in valid range: [1,%d] - aborting \n",__func__ , region_nr , ecl_sum->num_regions);
 }
 
@@ -738,13 +797,13 @@ static void ecl_sum_assert_region_nr(const ecl_sum_type * ecl_sum , int region_n
 
 int ecl_sum_get_region_var_index(const ecl_sum_type * ecl_sum , int region_nr , const char *var) {
   int index = -1;
-  
+
   ecl_sum_assert_region_nr(ecl_sum , region_nr);
-  if (hash_has_key(ecl_sum->region_var_index , var)) 
+  if (hash_has_key(ecl_sum->region_var_index , var))
     index = region_nr + hash_get_int(ecl_sum->region_var_index , var) - 1;
-  else 
+  else
     util_abort("%s: summary object does not have region variable: %s  \n",__func__ , var);
-     
+
   return index;
 }
 
@@ -772,9 +831,9 @@ bool ecl_sum_has_well_var(const ecl_sum_type * ecl_sum , const char * well , con
     hash_type * var_hash = hash_get(ecl_sum->well_var_index , well);
     if (hash_has_key(var_hash , var))
       return true;
-    else 
+    else
       return false;
-  } else 
+  } else
     return false;
 }
 
@@ -782,7 +841,7 @@ bool ecl_sum_has_group_var(const ecl_sum_type * ecl_sum , const char * group , c
   if (hash_has_key(ecl_sum->group_var_index , group)) {
     hash_type * var_hash = hash_get(ecl_sum->group_var_index , group);
     return hash_has_key(var_hash , var);
-  } else 
+  } else
     return false;
 }
 
@@ -791,7 +850,7 @@ bool ecl_sum_has_block_var(const ecl_sum_type * ecl_sum , const char * block_var
   if (hash_has_key(ecl_sum->block_var_index , block_var)) {
     hash_type * var_hash = hash_get(ecl_sum->block_var_index , block_nr);
     return hash_has_key(var_hash , block_nr);
-  } else 
+  } else
     return false;
 }
 
@@ -818,7 +877,7 @@ int ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lo
     __ASSERT_ARGC(argc , 2 , lookup_kw , "Regions");
     {
       int region_nr;
-      if (!util_sscanf_int(argv[1] , &region_nr)) 
+      if (!util_sscanf_int(argv[1] , &region_nr))
 	util_abort("%s: failed to parse %s to an integer - aborting. \n",__func__ , argv[1]);
       index = ecl_sum_get_region_var_index( ecl_sum , region_nr , argv[0]);
     }
@@ -840,7 +899,7 @@ int ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lo
   util_free_stringlist(argv , argc);
   return index;
 }
-#undef __ASSERT_ARGC    
+#undef __ASSERT_ARGC
 
 
 
@@ -861,13 +920,13 @@ bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_
       has_var = ecl_sum_has_well_var(ecl_sum , argv[1] , argv[0]);
     break;
   case(ecl_sum_region_var):
-    if (argc == 2) 
+    if (argc == 2)
     {
       int region_nr;
-      if (!util_sscanf_int(argv[1] , &region_nr)) 
+      if (!util_sscanf_int(argv[1] , &region_nr))
 	util_abort("%s: failed to parse %s to an integer - aborting. \n",__func__ , argv[1]);
       has_var = ecl_sum_has_region_var(ecl_sum , region_nr , argv[0]);
-    } 
+    }
     break;
   case(ecl_sum_field_var):
     has_var = ecl_sum_has_field_var(ecl_sum , argv[0]);
@@ -916,20 +975,20 @@ const char * ecl_sum_get_unit(const ecl_sum_type * ecl_sum , const char *var) {
 double ecl_sum_get_well_var(const ecl_sum_type *ecl_sum , int time_index , const char *well_name , const char *var_name) {
   int sum_index;
   double value;
-  
+
   sum_index = ecl_sum_get_well_var_index(ecl_sum , well_name , var_name);
   value     = ecl_sum_get_with_index(ecl_sum , time_index , sum_index);
-  
+
   return value;
 }
 
 double ecl_sum_get_well_completion_var(const ecl_sum_type *ecl_sum , int time_index , const char *well_name , const char *var_name , int completion_nr) {
   int sum_index;
   double value;
-  
+
   sum_index = ecl_sum_get_well_completion_var_index(ecl_sum , well_name , var_name , completion_nr);
   value     = ecl_sum_get_with_index(ecl_sum , time_index , sum_index);
-  
+
   return value;
 }
 
@@ -937,10 +996,10 @@ double ecl_sum_get_well_completion_var(const ecl_sum_type *ecl_sum , int time_in
 double ecl_sum_get_group_var(const ecl_sum_type *ecl_sum , int time_index , const char *group_name , const char *var_name) {
   int sum_index;
   double value;
-  
+
   sum_index = ecl_sum_get_group_var_index(ecl_sum , group_name , var_name);
   value     = ecl_sum_get_with_index(ecl_sum , time_index , sum_index);
-  
+
   return value;
 }
 
@@ -980,10 +1039,10 @@ double ecl_sum_get_region_var(const ecl_sum_type * ecl_sum , int time_index , in
 double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , const char * lookup_string) {
   int sum_index;
   double value;
-  
+
   sum_index = ecl_sum_get_general_var_index(ecl_sum , lookup_string);
   value     = ecl_sum_get_with_index(ecl_sum , time_index , sum_index);
-  
+
   return value;
 }
 
@@ -1008,7 +1067,7 @@ int ecl_sum_get_Nwells(const ecl_sum_type *ecl_sum) {
 void ecl_sum_copy_well_names(const ecl_sum_type *ecl_sum , char **well_list) {
   int iw;
 
-  for (iw=0; iw < ecl_sum->Nwells; iw++) 
+  for (iw=0; iw < ecl_sum->Nwells; iw++)
     strcpy(well_list[iw] , ecl_sum->well_list[iw]);
 
 }
@@ -1133,16 +1192,16 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
   for (report_step = first_report_step; report_step <= last_report_step; report_step++) {
     if (ecl_sum_has_report_nr(ecl_sum , report_step)) {
       int day,month,year,ivar;
-      util_set_date_values(ecl_sum_get_sim_time(ecl_sum , report_step) , &day , &month, &year); 
+      util_set_date_values(ecl_sum_get_sim_time(ecl_sum , report_step) , &day , &month, &year);
       fprintf(stream , "%04d   %02d/%02d/%04d   ",report_step , day , month , year);
-      
+
       for (ivar = 0; ivar < nvars; ivar++)
 	fprintf(stream , " %12.3f " , ecl_sum_get_general_var(ecl_sum , report_step , var_list[ivar]));
-      
+
       fprintf(stream , "\n");
     }
   }
-  
+
 }
 
 
@@ -1162,9 +1221,9 @@ ecl_sum_type * ecl_sum_fread_alloc_interactive(bool endian_convert) {
   if (base == NULL) {
     base = util_malloc(9 , __func__);
     util_read_string("Basename for ECLIPSE simulation" , 50 , base);
-  } else 
+  } else
     printf("%-50s: %s\n" , "Using ECLIPSE base",base);
-  
+
   {
     int formatted_files;
     int unformatted_files;
@@ -1175,10 +1234,10 @@ ecl_sum_type * ecl_sum_fread_alloc_interactive(bool endian_convert) {
 
     char ** formatted_list     = ecl_util_alloc_scandir_filelist(path , base , ecl_summary_file , true  , &formatted_files  );
     char ** unformatted_list   = ecl_util_alloc_scandir_filelist(path , base , ecl_summary_file , false , &unformatted_files);
-    
+
     char * formatted_header    = ecl_util_alloc_filename(path , base , ecl_summary_header_file , true  , 0 );
     char * unformatted_header  = ecl_util_alloc_filename(path , base , ecl_summary_header_file , false , 0 );
-    
+
     if (util_file_exists(unified_formatted))   possibilities++;
     if (util_file_exists(unified_unformatted)) possibilities++;
     if (formatted_files > 0)                   possibilities++;
@@ -1211,7 +1270,7 @@ ecl_sum_type * ecl_sum_fread_alloc_interactive(bool endian_convert) {
       }
     } else {
       bool fmt , unified;
-      /* Should be read in interactively */  
+      /* Should be read in interactively */
 
       unified = false;
       fmt     = false;
@@ -1219,14 +1278,14 @@ ecl_sum_type * ecl_sum_fread_alloc_interactive(bool endian_convert) {
 	files = 1;
 	file_list = malloc(sizeof * file_list);
 	file_list[0] = ecl_util_alloc_exfilename(path , base , ecl_unified_summary_file , fmt  , 0 );
-      } else 
+      } else
 	file_list = ecl_util_alloc_scandir_filelist(path , base , ecl_summary_file , fmt , &files);
 
       if (fmt)
 	header_file = util_alloc_string_copy(formatted_header);
       else
 	header_file = util_alloc_string_copy(unformatted_header);
-      
+
     }
     free(formatted_header);
     free(unformatted_header);
@@ -1235,14 +1294,14 @@ ecl_sum_type * ecl_sum_fread_alloc_interactive(bool endian_convert) {
     util_free_stringlist(unformatted_list , unformatted_files);
     util_free_stringlist(formatted_list   , formatted_files);
   }
-  
-  
-  if (files > 0) 
+
+
+  if (files > 0)
     ecl_sum = ecl_sum_fread_alloc(header_file , files , (const char ** ) file_list , report_mode , endian_convert);
-  else 
+  else
     ecl_sum = NULL;
-  
-  util_free_stringlist(file_list , files); 
+
+  util_free_stringlist(file_list , files);
   if (header_file != NULL) free(header_file);
   free(base);
 
