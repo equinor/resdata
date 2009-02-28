@@ -17,56 +17,6 @@
 #include <ecl_sum_data.h>
 
 
-/*****************************************************************/
-/*
-   About ministeps and report steps.
-   ---------------------------------
-
-   A sequence of summary data will typically look like this:
-
-   ------------------
-   SEQHDR            \
-   MINISTEP  0        |     
-   DATA      .....    |
-   MINISTEP  1        |==> This is REPORT STEP 1, in file BASE.S00001
-   DATA      .....    |
-   MINISTEP  2        |
-   DATA      .....   /
-   ------------------
-   SEQHDR            \
-   MINISTEP  3        |
-   DATA      .....    |
-   MINISTEP  4	      |
-   DATA      .....    |
-   MINISTEP  5	      |==> This is REPORT STEP 2, in file BASE.S0002
-   DATA      .....    |
-   MINISTEP  6	      |
-   DATA      .....    |
-   SEQHDR	      |
-   MINISTEP  7	      |
-   DATA      .....   /
-   ------------------
-
-
-   Observe the following:
-
-     * The MINISTEP counter runs continously, and does not
-       differentiate between unified files and not unified files.
-
-     * When using multiple files we can read off the report number
-       from the filename, for unified files this is IMPOSSIBLE, and we
-       just have to assume that the first block corresponds to
-       report_step 1 and then count afterwards. 
-
-     * When asking for a summary variable at a particular REPORT STEP
-       (as we do in enkf) it is ambigous as to which ministep within
-       the block one should use. The convention we have employed
-       (which corresponds to the old RPTONLY based behaviour) is to
-       use the last ministep in the block.
-
-     * There is no BASE.SOOOO file.
-
-*/   
 
 
 
