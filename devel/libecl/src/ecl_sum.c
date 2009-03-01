@@ -79,6 +79,21 @@ void ecl_sum_free( ecl_sum_type * ecl_sum ) {
 }
 
 
+ecl_sum_type * ecl_sum_safe_cast(const void * __ecl_sum) {
+  ecl_sum_type * ecl_sum = (ecl_sum_type *) __ecl_sum;
+  if (ecl_sum->__id != ECL_SUM_ID)
+    util_abort("%s: runtime cast failed - aborting. \n",__func__);
+  return ecl_sum;
+}
+
+
+void ecl_sum_free__(void * __ecl_sum) {
+  ecl_sum_type * ecl_sum = ecl_sum_safe_cast( __ecl_sum);
+  ecl_sum_free( ecl_sum );
+}
+
+
+
 
 /**
    This file takes an input file, and loads the corresponding

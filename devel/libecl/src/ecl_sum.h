@@ -13,6 +13,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
 
 void             ecl_sum_fread_realloc_data(ecl_sum_type *, int , const char ** , bool);
 void             ecl_sum_free_data(ecl_sum_type * );
+void             ecl_sum_free__(void * );
 void             ecl_sum_free(ecl_sum_type * );
 ecl_sum_type   * ecl_sum_fread_alloc(const char * , int , const char **, bool);
 ecl_sum_type   * ecl_sum_fread_alloc_case(const char *  , bool );
