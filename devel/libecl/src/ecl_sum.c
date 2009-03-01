@@ -273,6 +273,10 @@ time_t ecl_sum_get_sim_time( const ecl_sum_type * ecl_sum , int ministep ) {
   return ecl_sum_data_get_sim_time( ecl_sum->data , ministep);
 }
 
+time_t ecl_sum_get_start_time( const ecl_sum_type * ecl_sum) {
+  return ecl_smspec_get_start_time( ecl_sum->smspec );
+}
+
 
 double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep ) {
   return ecl_sum_data_get_sim_days( ecl_sum->data , ministep);

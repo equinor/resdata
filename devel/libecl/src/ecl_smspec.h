@@ -4,6 +4,9 @@
 extern "C" {
 #endif
 
+#include <time.h>
+#include <stdbool.h>
+
 typedef struct ecl_smspec_struct ecl_smspec_type; 
 
 typedef enum {ecl_smspec_aquifer_var, 
@@ -52,6 +55,7 @@ bool              ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl
 int               ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
 bool              ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
 
+time_t            ecl_smspec_get_start_time(const ecl_smspec_type * );
 /*****************************************************************/
 const char  * ecl_smspec_get_simulation_case(const ecl_smspec_type * );
 int           ecl_smspec_get_num_wells(const ecl_smspec_type * );

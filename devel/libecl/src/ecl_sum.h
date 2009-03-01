@@ -5,6 +5,7 @@ extern "C" {
 #endif
 #include <stdbool.h>
 #include <hash.h>
+#include <time.h>
 
 typedef struct ecl_sum_struct       ecl_sum_type;
 
@@ -59,7 +60,7 @@ void   ecl_sum_report2ministep_range(const ecl_sum_type * ecl_sum , int report_s
 time_t ecl_sum_get_sim_time( const ecl_sum_type * ecl_sum , int ministep );
 double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep );
 
-
+time_t       ecl_sum_get_start_time(const ecl_sum_type * );
 const char * ecl_sum_get_simulation_case(const ecl_sum_type * );
 /*****************************************************************/
 /* Legacy shit: */
