@@ -246,34 +246,6 @@ void ecl_block_set_sim_time_restart(ecl_block_type * block) {
 
 
 
-void ecl_block_set_sim_time_summary_dmy(ecl_block_type * block , int time_index , int day_index , int month_index , int year_index) {
-  ecl_kw_type * param_kw = ecl_block_get_last_kw(block , "PARAMS");
-  float  * date = ecl_kw_iget_ptr(param_kw , 0);
-
-  {
-    int sec  = 0;
-    int min  = 0;
-    int hour = 0;
-
-    int day   = roundf(date[day_index]);
-    int month = roundf(date[month_index]);
-    int year  = roundf(date[year_index]);
-    double sim_days = ecl_kw_iget_float( param_kw , time_index);
-    ecl_block_set_sim_time(block , util_make_datetime(sec , min , hour , day , month , year) , sim_days);
-  }
-}
-
-
-void ecl_block_set_sim_time_summary_days(ecl_block_type * block , time_t start_time , int time_index) {
-  ecl_kw_type * param_kw = ecl_block_get_last_kw(block , "PARAMS");
-  {
-    double sim_days = ecl_kw_iget_float( param_kw , time_index);
-    time_t sim_time = start_time;
-    util_inplace_forward_days( &sim_time , sim_days);
-    ecl_block_set_sim_time(block , sim_time , sim_days);
-  }
-}
-
 
 
 void ecl_block_set_report_nr(ecl_block_type * block , int report_nr) {

@@ -21,12 +21,42 @@ typedef enum {ecl_smspec_aquifer_var,
 	      ecl_smspec_segment_var,
 	      ecl_smspec_misc_var}  ecl_smspec_var_type;
 
-
+ecl_smspec_var_type ecl_smspec_identify_var_type(const char * );
 
 
 ecl_smspec_type * ecl_smspec_fread_alloc(const char * , bool );
 void              ecl_smspec_free( ecl_smspec_type *);
 void              ecl_smspec_set_time_info( const ecl_smspec_type *  , const float *  , double *  , time_t * );
+
+int               ecl_smspec_get_well_var_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var);
+bool              ecl_smspec_has_well_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var);
+
+int               ecl_smspec_get_group_var_index(const ecl_smspec_type * ecl_smspec , const char * group , const char *var);
+bool              ecl_smspec_has_group_var(const ecl_smspec_type * ecl_smspec , const char * group , const char *var);
+
+int               ecl_smspec_get_field_var_index(const ecl_smspec_type * ecl_smspec , const char *var);
+bool              ecl_smspec_has_field_var(const ecl_smspec_type * ecl_smspec , const char *var);
+
+int               ecl_smspec_get_block_var_index(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr);
+bool              ecl_smspec_has_block_var(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr);
+
+int               ecl_smspec_get_region_var_index(const ecl_smspec_type * ecl_smspec , int region_nr , const char *var);
+bool              ecl_smspec_has_region_var(const ecl_smspec_type * ecl_smspec , int region_nr , const char *var);
+
+int               ecl_smspec_get_misc_var_index(const ecl_smspec_type * ecl_smspec , const char *var);
+bool              ecl_smspec_has_misc_var(const ecl_smspec_type * ecl_smspec , const char *var);
+
+int               ecl_smspec_get_well_completion_var_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr);
+bool              ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr);
+
+int               ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
+bool              ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
+
+/*****************************************************************/
+const char  * ecl_smspec_get_simulation_case(const ecl_smspec_type * );
+int           ecl_smspec_get_num_wells(const ecl_smspec_type * );
+const char ** ecl_smspec_get_well_names(const ecl_smspec_type * );
+
 
 
 #ifdef __cplsplus

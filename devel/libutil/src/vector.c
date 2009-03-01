@@ -64,14 +64,17 @@ static void vector_iset__(vector_type * vector , int index , node_data_type * no
 
 /**
    This is the low-level append node function which actually "does
-   it", the node has been allocated in one of the front-end functions.
+   it", the node has been allocated in one of the front-end
+   functions. The return value is the index of the node (which can
+   subsequently be used in a vector_iget() call)).
 */
-static void vector_append_node(vector_type * vector , node_data_type * node) {
+static int vector_append_node(vector_type * vector , node_data_type * node) {
   if (vector->size == vector->alloc_size)
     vector_resize__(vector , 2*(vector->alloc_size + 1));
   
   vector->size++;
   vector_iset__(vector , vector->size - 1 , node);
+  return vector->size - 1;
 }
 
 
@@ -82,9 +85,9 @@ static void vector_append_node(vector_type * vector , node_data_type * node) {
 */
 
 
-void vector_append_ref(vector_type * vector , const void * data) {
+int vector_append_ref(vector_type * vector , const void * data) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , NULL);
-  vector_append_node(vector , node);
+  return vector_append_node(vector , node);
 }
 
 void vector_insert_ref(vector_type * vector , int index , const void * data) {
@@ -102,10 +105,11 @@ void vector_insert_ref(vector_type * vector , int index , const void * data) {
 */
 
 
-void vector_append_owned_ref(vector_type * vector , const void * data , del_type * del) {
+int vector_append_owned_ref(vector_type * vector , const void * data , del_type * del) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , del);
-  vector_append_node(vector , node);
+  return vector_append_node(vector , node);
 }
+
 
 void vector_insert_owned_ref(vector_type * vector , int index , const void * data , del_type * del) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , del);
@@ -121,9 +125,9 @@ void vector_insert_owned_ref(vector_type * vector , int index , const void * dat
 */
 
 
-void vector_append_copy(vector_type * vector , const void * data , copyc_type * copyc , del_type * del) {
+int  vector_append_copy(vector_type * vector , const void * data , copyc_type * copyc , del_type * del) {
   node_data_type * node = node_data_alloc_ptr( data, copyc , del);
-  vector_append_node(vector , node);
+  return vector_append_node(vector , node);
 }
 
 
@@ -187,6 +191,22 @@ void * vector_get_last(const vector_type * vector) {
     return node_data_get_ptr( node );
   }
 }
+
+
+/** 
+    Will abort if the vector is empty. 
+*/
+const void * vector_get_last_const(const vector_type * vector) {
+  if (vector->size == 0)
+    util_abort("%s: asking to get the last element in an empty vector - impossible ... \n",__func__);
+  {
+    const node_data_type * node = vector->data[vector->size - 1];
+    return node_data_get_ptr( node );
+  }
+}
+
+
+
 
 
 //void vector_for_each(vector_type * vector , vector_func_type * func , void * arg) {

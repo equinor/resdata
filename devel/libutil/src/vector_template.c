@@ -184,6 +184,12 @@ void <TYPE>_vector_free(<TYPE>_vector_type * vector) {
 }
 
 
+void <TYPE>_vector_free__(void * __vector) {
+  <TYPE>_vector_type * vector = (<TYPE>_vector_type *) vector;
+  <TYPE>_vector_free( vector );
+}
+
+
 
 int <TYPE>_vector_size(const <TYPE>_vector_type * vector) {
   return vector->size;

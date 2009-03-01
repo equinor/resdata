@@ -119,9 +119,9 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(int fmt_mode , bool endian_conve
   ecl_smspec->header             	     = NULL;
   ecl_smspec->well_list          	     = NULL;
   ecl_smspec->sim_start_time     	     = -1;
-  ecl_smspec->report_offset             = 0;
-  ecl_smspec->__id                      = ECL_SMSPEC_ID;
-  ecl_smspec->simulation_case           = util_alloc_filename(path , base_name , NULL);
+  ecl_smspec->report_offset                  = 0;
+  ecl_smspec->__id                           = ECL_SMSPEC_ID;
+  ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
 
   ecl_smspec->time_index  = -1;
   ecl_smspec->day_index   = -1;
@@ -404,31 +404,192 @@ int ecl_smspec_get_num_regions(const ecl_smspec_type * ecl_smspec) {
 }
 
 
+
+
+
+
+/******************************************************************/
+/* 
+   For each type of summary data (according to the types in
+   ecl_smcspec_var_type there are a set accessor functions:
+
+    xx_get_xx: This function will take the apropriate input, and
+       return a double value. The function will fail with util_abort()
+       if the ecl_smspec object can not recognize the input. THis
+       function is not here.
+
+    xxx_has_xx: Ths will return true / false depending on whether the
+       ecl_smspec object the variable we ask for.
+
+    xxx_get_xxx_index: This function will rerturn an (internal)
+       integer index of where the variable in question is stored, this
+       index can then be subsequently used for faster lookup. If the
+       variable can not be found, the function will return -1.
+
+    In general the index function is the real function, the others are
+    only wrappers around this. In addition there are specialized
+    functions, like get_well_names() and so on.
+*/
+
+
+/******************************************************************/
+/* Well variables */
+
 int ecl_smspec_get_well_var_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var) {
-  int index = -1; /* Compiler shut up. */
+  int index = -1; /* This is returned if we can not find it. */
 
   if (hash_has_key(ecl_smspec->well_var_index , well)) {
     hash_type * var_hash = hash_get(ecl_smspec->well_var_index , well);
     if (hash_has_key(var_hash , var))
       index = hash_get_int(var_hash , var);
-    else
-      util_abort("%s: summary object does not have well/variable combination: %s/%s  \n",__func__ , well , var);
-  } else
-    util_abort("%s: summary object does not contain well: %s \n",__func__ , well);
+  }
+  return index;
+}
+
+
+
+bool ecl_smspec_has_well_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var) {
+  int index = ecl_smspec_get_well_var_index(ecl_smspec , well ,var);
+  if (index >= 0)
+    return true;
+  else
+    return false;
+}
+
+
+/*****************************************************************/
+/* Group variables */
+
+int ecl_smspec_get_group_var_index(const ecl_smspec_type * ecl_smspec , const char * group , const char *var) {
+  int index = -1;
+
+  if (hash_has_key(ecl_smspec->group_var_index , group)) {
+    hash_type * var_hash = hash_get(ecl_smspec->group_var_index , group);
+    if (hash_has_key(var_hash , var))
+      index = hash_get_int(var_hash , var);
+  }
+  return index;
+}
+
+
+bool ecl_smspec_has_group_var(const ecl_smspec_type * ecl_smspec , const char * group , const char *var) {
+  if (ecl_smspec_get_group_var_index(ecl_smspec , group , var) >= 0)
+    return true;
+  else
+    return false;
+}
+
+
+/*****************************************************************/
+/* Field variables */
+int ecl_smspec_get_field_var_index(const ecl_smspec_type * ecl_smspec , const char *var) {
+  int index = -1;
+
+  if (hash_has_key(ecl_smspec->field_var_index , var))
+    index = hash_get_int(ecl_smspec->field_var_index , var);
+  
+  return index;
+}
+
+
+
+bool ecl_smspec_has_field_var(const ecl_smspec_type * ecl_smspec , const char *var) {
+  return hash_has_key(ecl_smspec->field_var_index , var);
+}
+
+/*****************************************************************/
+/* Block variables */
+
+/**
+   Observe that block_nr is represented as char literal,
+   i.e. "2345". This is because it will be used as a hash key.
+*/
+
+static int ecl_smspec_get_block_var_index_string(const ecl_smspec_type * ecl_smspec , const char * block_var , const char * block_str) {
+  int index = -1;
+  if (hash_has_key(ecl_smspec->block_var_index , block_var)) {
+    hash_type * block_hash = hash_get(ecl_smspec->block_var_index , block_var);
+    if (hash_has_key(block_hash , block_str))
+      index = hash_get_int(block_hash , block_str);
+  }
 
   return index;
 }
 
 
 
+int ecl_smspec_get_block_var_index(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr) {
+  int index;
+  char * block_str = util_alloc_sprintf("%d" , block_nr);
+  index = ecl_smspec_get_block_var_index_string(ecl_smspec , block_var , block_str);
+  free( block_str );
+  return index;
+}
 
-static int ecl_smspec_get_well_completion_var_index__(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr) {
+
+
+bool ecl_smspec_has_block_var(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr) {
+  if (ecl_smspec_get_block_var_index( ecl_smspec , block_var , block_nr) >= 0)
+    return true;
+  else
+    return false;
+}  
+
+
+
+/*****************************************************************/
+/* Region variables */
+/**
+   region_nr: [1...num_regions] (NOT C-based indexing)
+*/
+
+static void ecl_smspec_assert_region_nr(const ecl_smspec_type * ecl_smspec , int region_nr) {
+  if (region_nr <= 0 || region_nr > ecl_smspec->num_regions)
+    util_abort("%s: region_nr:%d not in valid range: [1,%d] - aborting \n",__func__ , region_nr , ecl_smspec->num_regions);
+}
+
+
+int ecl_smspec_get_region_var_index(const ecl_smspec_type * ecl_smspec , int region_nr , const char *var) {
   int index = -1;
 
+  ecl_smspec_assert_region_nr(ecl_smspec , region_nr);
+  if (hash_has_key(ecl_smspec->region_var_index , var))
+    index = region_nr + hash_get_int(ecl_smspec->region_var_index , var) - 1;
+  
+  return index;
+}
+
+bool ecl_smspec_has_region_var(const ecl_smspec_type * ecl_smspec , int region_nr , const char *var) {
+  if (ecl_smspec_get_region_var_index( ecl_smspec , region_nr , var) >= 0)
+    return true;
+  else
+    return false;
+}
+
+/*****************************************************************/
+/* Misc variables */
+
+int ecl_smspec_get_misc_var_index(const ecl_smspec_type * ecl_smspec , const char *var) {
+  int index = -1;
+
+  if (hash_has_key(ecl_smspec->misc_var_index , var))
+    index = hash_get_int(ecl_smspec->misc_var_index , var);
+  
+  return index;
+}
+
+
+bool ecl_smspec_has_misc_var(const ecl_smspec_type * ecl_smspec , const char *var) {
+  return hash_has_key(ecl_smspec->misc_var_index , var);
+}
+
+/*****************************************************************/
+/* Well completion - not fully implemented ?? */
+
+static int ecl_smspec_get_well_completion_var_index_string(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, const char * cell_str) {
+  int index = -1;
   if (hash_has_key(ecl_smspec->well_completion_var_index , well)) {
-    char cell_str[16];
     hash_type * cell_hash = hash_get(ecl_smspec->well_completion_var_index , well);
-    sprintf(cell_str , "%d" , cell_nr);
 
     if (hash_has_key(cell_hash , cell_str)) {
       hash_type * var_hash = hash_get(cell_hash , cell_str);
@@ -440,158 +601,29 @@ static int ecl_smspec_get_well_completion_var_index__(const ecl_smspec_type * ec
 }
 
 
-
 int ecl_smspec_get_well_completion_var_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr) {
-  int index = ecl_smspec_get_well_completion_var_index__(ecl_smspec , well , var , cell_nr);
-  if (index < 0) {
-    fprintf(stderr,"%s: summary object does not have completion data for well:%s  variable:%s  cell_nr:%d \n",__func__ , well , var , cell_nr);
-    abort();
-  }
-  return index;
-}
-
-
-
-
-int ecl_smspec_get_group_var_index(const ecl_smspec_type * ecl_smspec , const char * group , const char *var) {
   int index;
-
-  if (hash_has_key(ecl_smspec->group_var_index , group)) {
-    hash_type * var_hash = hash_get(ecl_smspec->group_var_index , group);
-    if (hash_has_key(var_hash , var))
-      index = hash_get_int(var_hash , var);
-    else {
-      fprintf(stderr,"%s: summary object does not have group/variable combination: %s/%s  \n",__func__ , group , var);
-      abort();
-    }
-  } else {
-    fprintf(stderr,"%s: summary object does not contain group: %s \n",__func__ , group);
-    abort();
-  }
+  char * cell_str = util_alloc_sprintf("%d" , cell_nr);
+  index = ecl_smspec_get_well_completion_var_index_string( ecl_smspec , well , var , cell_str);
+  free(cell_str);
   return index;
 }
 
 
-/**
-   Observe that block_nr is represented as char literal,
-   i.e. "2345". This is because it will be used as a hash key.
-*/
-
-int ecl_smspec_get_block_var_index(const ecl_smspec_type * ecl_smspec , const char * block_var , const char *block_nr) {
-  int index = -1;
-
-  if (hash_has_key(ecl_smspec->block_var_index , block_var)) {
-    hash_type * block_hash = hash_get(ecl_smspec->block_var_index , block_var);
-    if (hash_has_key(block_hash , block_nr))
-      index = hash_get_int(block_hash , block_nr);
-    else
-      util_abort("%s: summary object does not have %s:%s combination. \n",__func__ , block_var , block_nr);
-  } else
-    util_abort("%s: summary object does not contain group: block variable: \n",__func__ , block_var);
-
-  return index;
-}
-
-
-int ecl_smspec_get_field_var_index(const ecl_smspec_type * ecl_smspec , const char *var) {
-  int index = -1;
-
-  if (hash_has_key(ecl_smspec->field_var_index , var))
-    index = hash_get_int(ecl_smspec->field_var_index , var);
+bool  ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr) {
+  if (ecl_smspec_get_well_completion_var_index( ecl_smspec , well , var , cell_nr) >= 0)
+    return true;
   else
-    util_abort("%s: summary object does not have field variable: %s  \n",__func__ , var);
-
-  return index;
-}
-
-
-int ecl_smspec_get_misc_var_index(const ecl_smspec_type * ecl_smspec , const char *var) {
-  int index = -1;
-
-  if (hash_has_key(ecl_smspec->misc_var_index , var))
-    index = hash_get_int(ecl_smspec->misc_var_index , var);
-  else
-    util_abort("%s: summary object does not have misc variable: %s  \n",__func__ , var);
-
-  return index;
-}
-
-
-
-/**
-   region_nr: [1...num_regions] (NOT C-based indexing)
-*/
-
-static void ecl_smspec_assert_region_nr(const ecl_smspec_type * ecl_smspec , int region_nr) {
-  if (region_nr <= 0 || region_nr > ecl_smspec->num_regions)
-    util_abort("%s: region_nr:%d not in valid range: [1,%d] - aborting \n",__func__ , region_nr , ecl_smspec->num_regions);
-}
-
-
-
-
-int ecl_smspec_get_region_var_index(const ecl_smspec_type * ecl_smspec , int region_nr , const char *var) {
-  int index = -1;
-
-  ecl_smspec_assert_region_nr(ecl_smspec , region_nr);
-  if (hash_has_key(ecl_smspec->region_var_index , var))
-    index = region_nr + hash_get_int(ecl_smspec->region_var_index , var) - 1;
-  else
-    util_abort("%s: summary object does not have region variable: %s  \n",__func__ , var);
-
-  return index;
-}
-
-
-
-
-
-bool ecl_smspec_has_field_var(const ecl_smspec_type * ecl_smspec , const char *var) {
-  return hash_has_key(ecl_smspec->field_var_index , var);
-}
-
-bool ecl_smspec_has_misc_var(const ecl_smspec_type * ecl_smspec , const char *var) {
-  return hash_has_key(ecl_smspec->misc_var_index , var);
-}
-
-
-bool ecl_smspec_has_region_var(const ecl_smspec_type * ecl_smspec , int region_nr , const char *var) {
-  ecl_smspec_assert_region_nr(ecl_smspec , region_nr);
-  return hash_has_key(ecl_smspec->region_var_index , var);
-}
-
-
-bool ecl_smspec_has_well_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var) {
-  if (hash_has_key(ecl_smspec->well_var_index , well)) {
-    hash_type * var_hash = hash_get(ecl_smspec->well_var_index , well);
-    if (hash_has_key(var_hash , var))
-      return true;
-    else
-      return false;
-  } else
-    return false;
-}
-
-bool ecl_smspec_has_group_var(const ecl_smspec_type * ecl_smspec , const char * group , const char *var) {
-  if (hash_has_key(ecl_smspec->group_var_index , group)) {
-    hash_type * var_hash = hash_get(ecl_smspec->group_var_index , group);
-    return hash_has_key(var_hash , var);
-  } else
     return false;
 }
 
 
-bool ecl_smspec_has_block_var(const ecl_smspec_type * ecl_smspec , const char * block_var , const char *block_nr) {
-  if (hash_has_key(ecl_smspec->block_var_index , block_var)) {
-    hash_type * var_hash = hash_get(ecl_smspec->block_var_index , block_nr);
-    return hash_has_key(var_hash , block_nr);
-  } else
-    return false;
-}
+/*****************************************************************/
+/* General variables ... */
 
 
-
-#define __ASSERT_ARGC(argc , target_argc , s , t) if (argc != target_argc) util_abort("%s: string:%s is not recognized for lookup of %s." , __func__ , s , t);
+/* There is a quite wide range of error which are just returned as "Not found" - but that is OK. */
+/* Completions not supported yet. */
 int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
   int     index = -1;
   char ** argv;
@@ -599,34 +631,33 @@ int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const 
   ecl_smspec_var_type var_type;
   util_split_string(lookup_kw , ":" , &argc , &argv);
   var_type = ecl_smspec_identify_var_type(argv[0]);
-
+  
   switch(var_type) {
   case(ecl_smspec_misc_var):
     index = ecl_smspec_get_misc_var_index(ecl_smspec , argv[0]);
     break;
   case(ecl_smspec_well_var):
-    __ASSERT_ARGC(argc , 2 , lookup_kw , "Wells");
-    index = ecl_smspec_get_well_var_index(ecl_smspec , argv[1] , argv[0]);
+    if (argc == 2)
+      index = ecl_smspec_get_well_var_index(ecl_smspec , argv[1] , argv[0]);
     break;
   case(ecl_smspec_region_var):
-    __ASSERT_ARGC(argc , 2 , lookup_kw , "Regions");
-    {
+    if ( argc ==2 ) {
       int region_nr;
-      if (!util_sscanf_int(argv[1] , &region_nr))
-	util_abort("%s: failed to parse %s to an integer - aborting. \n",__func__ , argv[1]);
-      index = ecl_smspec_get_region_var_index( ecl_smspec , region_nr , argv[0]);
+      if (util_sscanf_int(argv[1] , &region_nr))
+	index = ecl_smspec_get_region_var_index( ecl_smspec , region_nr , argv[0]);
     }
     break;
   case(ecl_smspec_field_var):
-    index = ecl_smspec_get_field_var_index(ecl_smspec , argv[0]);
+    if (argc == 1)
+      index = ecl_smspec_get_field_var_index(ecl_smspec , argv[0]);
     break;
   case(ecl_smspec_group_var):
-    __ASSERT_ARGC(argc , 2 , lookup_kw , "Groups");
-    index = ecl_smspec_get_group_var_index(ecl_smspec , argv[1] , argv[0]);
+    if (argc == 2)
+      index = ecl_smspec_get_group_var_index(ecl_smspec , argv[1] , argv[0]);
     break;
   case(ecl_smspec_block_var):
-    __ASSERT_ARGC(argc , 2 , lookup_kw , "Block");
-    index = ecl_smspec_get_block_var_index(ecl_smspec , argv[0] , argv[1]);
+    if (argc ==2 )
+      index = ecl_smspec_get_block_var_index_string(ecl_smspec , argv[0] , argv[1]);
     break;
   default:
     util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
@@ -634,52 +665,18 @@ int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const 
   util_free_stringlist(argv , argc);
   return index;
 }
-#undef __ASSERT_ARGC
-
 
 
 bool ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
-  bool    has_var = false;
-  char ** argv;
-  int     argc;
-  ecl_smspec_var_type var_type;
-  util_split_string(lookup_kw , ":" , &argc , &argv);
-  var_type = ecl_smspec_identify_var_type(argv[0]);
+  if (ecl_smspec_get_general_var_index( ecl_smspec , lookup_kw ) >= 0)
+    return true;
+  else
+    return false;
+} 
 
-  switch(var_type) {
-  case(ecl_smspec_misc_var):
-    has_var = ecl_smspec_has_misc_var(ecl_smspec , argv[0]);
-    break;
-  case(ecl_smspec_well_var):
-    if (argc == 2)
-      has_var = ecl_smspec_has_well_var(ecl_smspec , argv[1] , argv[0]);
-    break;
-  case(ecl_smspec_region_var):
-    if (argc == 2)
-    {
-      int region_nr;
-      if (!util_sscanf_int(argv[1] , &region_nr))
-	util_abort("%s: failed to parse %s to an integer - aborting. \n",__func__ , argv[1]);
-      has_var = ecl_smspec_has_region_var(ecl_smspec , region_nr , argv[0]);
-    }
-    break;
-  case(ecl_smspec_field_var):
-    has_var = ecl_smspec_has_field_var(ecl_smspec , argv[0]);
-    break;
-  case(ecl_smspec_group_var):
-    if (argc == 2)
-      has_var = ecl_smspec_has_group_var(ecl_smspec , argv[1] , argv[0]);
-    break;
-  case(ecl_smspec_block_var):
-    if (argc == 2)
-      has_var = ecl_smspec_has_block_var(ecl_smspec , argv[0] , argv[1]);
-    break;
-  default:
-    util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
-  }
-  util_free_stringlist(argv , argc);
-  return has_var;
-}
+/*****************************************************************/
+
+
 
 
 
@@ -708,9 +705,6 @@ const char * ecl_smspec_get_unit(const ecl_smspec_type * ecl_smspec , const char
 
 
 
-int ecl_smspec_get_Nwells(const ecl_smspec_type *ecl_smspec) {
-  return ecl_smspec->Nwells;
-}
 
 
 void ecl_smspec_copy_well_names(const ecl_smspec_type *ecl_smspec , char **well_list) {
@@ -726,18 +720,14 @@ char ** ecl_smspec_alloc_well_names_copy(const ecl_smspec_type *ecl_smspec) {
   char **well_list;
   int iw;
   well_list = calloc(ecl_smspec->Nwells , sizeof *well_list);
-  for (iw = 0; iw < ecl_smspec->Nwells; iw++) {
-    well_list[iw] = malloc(strlen(ecl_smspec->well_list[iw]) + 1);
-    well_list[iw][0] = '\0';
-  }
+  for (iw = 0; iw < ecl_smspec->Nwells; iw++) 
+    well_list[iw] = util_alloc_string_copy( ecl_smspec->well_list[iw] );
+  
   ecl_smspec_copy_well_names(ecl_smspec , well_list);
   return well_list;
 }
 
 
-const char ** ecl_smspec_get_well_names_ref(const ecl_smspec_type * ecl_smspec) {
-  return (const char **) ecl_smspec->well_list;
-}
 
 
 
@@ -777,6 +767,12 @@ void ecl_smspec_free__(void * __ecl_smspec) {
 
 
 
+/*
+  This function just 'exports functionality', the point is that the
+  ecl_smspec object has all the information about indices, whereas the
+  data object owns the final (pr. timestep) time information.
+*/
+
 void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * param_data , double * _sim_days , time_t * _sim_time) {
   double sim_days;
   time_t sim_time;
@@ -799,6 +795,20 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
   }
   *_sim_days = sim_days;
   *_sim_time= sim_time;
+}
+
+
+
+/*****************************************************************/
+/* Legacy shit */
+
+int ecl_smspec_get_num_wells(const ecl_smspec_type * smspec) {
+  return smspec->Nwells;
+}
+
+
+const char ** ecl_smspec_get_well_names(const ecl_smspec_type * ecl_smspec) {
+  return (const char **) ecl_smspec->well_list;
 }
 
 

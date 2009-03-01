@@ -1743,6 +1743,15 @@ double util_difftime(time_t start_time , time_t end_time , int * _days , int * _
 }
 
 
+
+/* Is this dst safe ??? */
+double util_difftime_days(time_t start_time , time_t end_time) {
+  double dt = difftime(end_time , start_time);
+  return dt / (24 * 3600);
+}
+
+
+
 /*
   Observe that this routine does the following transform before calling mktime:
 
@@ -2878,7 +2887,7 @@ FILE * util_fopen(const char * filename , const char * mode) {
   {
     FILE * stream = fopen(filename , mode);
     if (stream == NULL) 
-      util_abort("%s: failed to open:%s - error:%s \n",__func__ , filename , strerror(errno));
+      util_abort("%s: failed to open:%s with mode:\'%s\' - error:%s \n",__func__ , filename , mode , strerror(errno));
     return stream;
   }
 }

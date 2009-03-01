@@ -1,7 +1,7 @@
 #include <ecl_util.h>
 #include <util.h>
-#include <ecl_smspec.h>
 #include <string.h>
+#include <ecl_smspec.h>
 #include <ecl_sum_data.h>
 #include <ecl_kw.h>
 #include <ecl_block.h>
@@ -89,26 +89,27 @@ typedef struct ecl_sum_ministep_struct ecl_sum_ministep_type;
 
 
 struct ecl_sum_ministep_struct {
-  int           __id;
-  float       * data;          /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
-  time_t        sim_time;      
-  int           ministep;      
-  int           report_step;
-  double        sim_days;
-  int           data_size;     /* NUmber of elements in data - only used for checking indices. */
+  int         		   __id;
+  float       		 * data;          /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
+  time_t      		   sim_time;      
+  int         		   ministep;      
+  int         		   report_step;
+  double      		   sim_days;
+  int         		   data_size;     /* NUmber of elements in data - only used for checking indices. */
 };
 
 
 
 
 struct ecl_sum_data_struct {
-  vector_type 	   * data;                   /* Vector of ecl_sum_ministep_type instances. */
-  int                first_ministep;
-  int                last_ministep; 
-  int_vector_type  * report_first_ministep ; /* Indexed by report_step - giving first ministep in report_step.   */
-  int_vector_type  * report_last_ministep;   /* Indexed by report_step - giving last ministep in report_step.    */   
-  int_vector_type  * ministep_index;         /* Indexed by ministep - gives index in data - 
-						observe that we make no assumtpitons of time-ordering of the input - flexible ehh !? */
+  vector_type 	         * data;                   /* Vector of ecl_sum_ministep_type instances. */
+  const ecl_smspec_type  * smspec;                 /* A shared reference - only used for providing good error messages. */
+  int                	   first_ministep;
+  int                	   last_ministep; 
+  int_vector_type  	 * report_first_ministep ; /* Indexed by report_step - giving first ministep in report_step.   */
+  int_vector_type  	 * report_last_ministep;   /* Indexed by report_step - giving last ministep in report_step.    */   
+  int_vector_type  	 * ministep_index;         /* Indexed by ministep - gives index in data - 
+						      observe that we make no assumtpitons of time-ordering of the input - flexible ehh !? */
 };
 
 
@@ -193,7 +194,7 @@ static double ecl_sum_ministep_get_sim_days(const ecl_sum_ministep_type * minist
 
 
 
-static ecl_sum_data_type * ecl_sum_data_alloc() {
+static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
   ecl_sum_data_type * data = util_malloc( sizeof * data , __func__);
   data->data         = vector_alloc_new();
   data->first_ministep = -1;
@@ -201,6 +202,7 @@ static ecl_sum_data_type * ecl_sum_data_alloc() {
   data->report_first_ministep = int_vector_alloc(10 , -1);
   data->report_last_ministep  = int_vector_alloc(10 , -1);
   data->ministep_index        = int_vector_alloc(10 , -1);
+  data->smspec                = smspec;
   return data;
 }
 
@@ -242,7 +244,7 @@ static void ecl_sum_data_add_block(ecl_sum_data_type * data         ,
 }
 
 
-static void ecl_sum_data_add_file(ecl_sum_data_type * data , const ecl_smspec_type * smspec , const char * file  , ecl_file_type target_type , bool endian_convert ) {
+static void ecl_sum_data_add_file(ecl_sum_data_type * data , const char * file  , ecl_file_type target_type , bool endian_convert ) {
   ecl_file_type file_type;
   ecl_util_get_file_type( file , &file_type , NULL , NULL);
   if (file_type != target_type)
@@ -256,7 +258,7 @@ static void ecl_sum_data_add_file(ecl_sum_data_type * data , const ecl_smspec_ty
       if (file_type == ecl_summary_file)
 	ecl_util_get_file_type( file , NULL , NULL , &report_step );
 
-      ecl_sum_data_add_block(  data , report_step , ecl_fstate_iget_block( fstate , ib ) , smspec);
+      ecl_sum_data_add_block(  data , report_step , ecl_fstate_iget_block( fstate , ib ) , data->smspec);
       report_step++;  /* For unified files - they got to be sorted internally .... */
     }
     
@@ -272,9 +274,9 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , in
     util_abort("%s: internal error - when calling with more than one file - you can not supply a unified file - come on?! \n",__func__);
   {
     int filenr;
-    ecl_sum_data_type * data = ecl_sum_data_alloc();
+    ecl_sum_data_type * data = ecl_sum_data_alloc(smspec);
     for (filenr = 0; filenr < files; filenr++)
-      ecl_sum_data_add_file( data , smspec , filelist[filenr] , file_type , endian_convert);
+      ecl_sum_data_add_file( data , filelist[filenr] , file_type , endian_convert);
     /* OK - now we have loaded all the actual data. Must build up the report -> ministep mapping. */
 
     {
@@ -312,7 +314,7 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , in
 static const ecl_sum_ministep_type * ecl_sum_data_get_ministep( const ecl_sum_data_type * data , int ministep_nr) {
   int internal_index = int_vector_safe_iget( data->ministep_index , ministep_nr );
   if (internal_index < 0) {
-    util_abort("%s: Summary object has no data for MINISTEP:%d - abortng \n",__func__ , ministep_nr);
+    util_abort("%s: Summary:%s object has no data for MINISTEP:%d - abortng \n",__func__ , ecl_smspec_get_simulation_case( data->smspec ) , ministep_nr);
     return NULL;
   }
   return vector_iget_const( data->data , internal_index );

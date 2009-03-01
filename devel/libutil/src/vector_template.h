@@ -12,6 +12,7 @@ typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 void                 <TYPE>_vector_iset(<TYPE>_vector_type *       , int , <TYPE>);
 void                 <TYPE>_vector_append(<TYPE>_vector_type *     , <TYPE>);
 void                 <TYPE>_vector_free(<TYPE>_vector_type *);  
+void                 <TYPE>_vector_free__(void *);  
 void                 <TYPE>_vector_free_data(<TYPE>_vector_type *);  
 void                 <TYPE>_vector_reset(<TYPE>_vector_type *);  
 int                  <TYPE>_vector_size(const <TYPE>_vector_type * );
