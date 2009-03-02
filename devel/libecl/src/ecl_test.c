@@ -15,6 +15,7 @@
 int main(int argc, char ** argv) {
   ecl_smspec_type   * smspec = ecl_smspec_fread_alloc("Gurbat/EXAMPLE_01_BASE.SMSPEC" , true);
   ecl_sum_data_type * data   = ecl_sum_data_fread_alloc(smspec , argc - 1 , (const char **) &argv[1] , true);  
+  
   int ministep1 , ministep2 , ministep;
   ecl_sum_data_get_ministep_range( data , &ministep1 , &ministep2);
   printf(" Ministep:%d %d \n",ministep1 , ministep2);
@@ -29,7 +30,7 @@ int main(int argc, char ** argv) {
       int m1,m2;
       printf("%d  %d \n",report_step , ecl_sum_data_has_report_step( data , report_step));
       ecl_sum_data_report2ministep_range(data , report_step , &m1 , &m2);
-      printf("%d -> [%d,%d] \n" , report_step , m1 , m2);
+      printf("%d -> [%d,%d] %g\n" , report_step , m1 , m2);
     }
     
     ecl_sum_data_free( data );

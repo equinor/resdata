@@ -42,6 +42,8 @@ bool              ecl_smspec_has_field_var(const ecl_smspec_type * ecl_smspec , 
 
 int               ecl_smspec_get_block_var_index(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr);
 bool              ecl_smspec_has_block_var(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr);
+int               ecl_smspec_get_block_var_index_ijk(const ecl_smspec_type * ecl_smspec , const char * block_var , int i , int j , int k);
+bool              ecl_smspec_has_block_var_ijk(const ecl_smspec_type * ecl_smspec , const char * block_var , int i , int j , int k);
 
 int               ecl_smspec_get_region_var_index(const ecl_smspec_type * ecl_smspec , int region_nr , const char *var);
 bool              ecl_smspec_has_region_var(const ecl_smspec_type * ecl_smspec , int region_nr , const char *var);

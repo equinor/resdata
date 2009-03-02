@@ -39,9 +39,8 @@ struct ecl_smspec_struct {
   hash_type        * block_var_index;
 
   ecl_smspec_var_type * var_type;
-  int               report_offset;
+  int               grid_nx , grid_ny , grid_nz; /* Grid dimensions - in DIMENS[1,2,3] */
   int               num_regions;
-  int               fmt_mode;
   int               Nwells , param_offset;
   int               params_size;
   char            **well_list;
@@ -100,10 +99,9 @@ KEYWORDS = ['TIME','FOPR','FPR','FWCT','WOPR','WOPR,'WWCT','WWCT]
 
 
 
-static ecl_smspec_type * ecl_smspec_alloc_empty(int fmt_mode , bool endian_convert , const char * path , const char * base_name) {
+static ecl_smspec_type * ecl_smspec_alloc_empty(bool endian_convert , const char * path , const char * base_name) {
   ecl_smspec_type *ecl_smspec;
   ecl_smspec = util_malloc(sizeof *ecl_smspec , __func__);
-  ecl_smspec->fmt_mode           	     = fmt_mode;
   ecl_smspec->endian_convert     	     = endian_convert;
 
   ecl_smspec->well_var_index     	     = hash_alloc();
@@ -119,7 +117,6 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(int fmt_mode , bool endian_conve
   ecl_smspec->header             	     = NULL;
   ecl_smspec->well_list          	     = NULL;
   ecl_smspec->sim_start_time     	     = -1;
-  ecl_smspec->report_offset                  = 0;
   ecl_smspec->__id                           = ECL_SMSPEC_ID;
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
 
@@ -217,6 +214,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_kw_type *keywords  = ecl_block_get_kw(block , "KEYWORDS");
     ecl_kw_type *startdat  = ecl_block_get_kw(block , "STARTDAT");
     ecl_kw_type *units     = ecl_block_get_kw(block , "UNITS");
+    ecl_kw_type *dimens    = ecl_block_get_kw(block , "DIMENS");
     ecl_kw_type *nums      = NULL;
     int index;
     ecl_smspec->num_regions     = 0;
@@ -244,6 +242,9 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
       }
     }
     
+    ecl_smspec->grid_nx = ecl_kw_iget_int(dimens , 1);
+    ecl_smspec->grid_ny = ecl_kw_iget_int(dimens , 2);
+    ecl_smspec->grid_nz = ecl_kw_iget_int(dimens , 3);
     ecl_smspec->params_size = ecl_kw_get_size(keywords);
     ecl_smspec->var_type    = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->var_type , __func__);
 
@@ -359,7 +360,7 @@ ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file , bool endian_c
   {
     char * base_name , *path;
     util_alloc_file_components(header_file , &path , &base_name , NULL);
-    ecl_smspec = ecl_smspec_alloc_empty(ECL_FMT_AUTO , endian_convert , path , base_name);
+    ecl_smspec = ecl_smspec_alloc_empty(endian_convert , path , base_name);
     util_safe_free(base_name);
     util_safe_free(path);
   }
@@ -404,6 +405,16 @@ int ecl_smspec_get_num_regions(const ecl_smspec_type * ecl_smspec) {
 }
 
 
+/**
+  Input i,j,k are assumed to be in the interval [1..nx] , [1..ny],
+  [1..nz], return value is a global index which can be used in the
+  xxx_block_xxx routines.
+*/
+
+
+static int ecl_smspec_get_global_grid_index(const ecl_smspec_type * smspec , int i , int j , int k) {
+  return i + (j - 1) * smspec->grid_nx + (k - 1) * smspec->grid_nx * smspec->grid_ny;
+}
 
 
 
@@ -516,6 +527,26 @@ static int ecl_smspec_get_block_var_index_string(const ecl_smspec_type * ecl_sms
   return index;
 }
 
+/*
+  Here the block_str can either be "i,j,k" or "6362".
+*/
+
+static int ecl_smspec_get_block_var_index_gen_string(const ecl_smspec_type * ecl_smspec , const char * block_var , const char * block_str) {
+  int i,j,k,global_index;
+  
+  if (sscanf(block_str , "%d,%d,%d" , &i,&j,&k) == 3) {
+    /* We read three comma separated integers - this is ijk*/
+    global_index = ecl_smspec_get_global_grid_index( ecl_smspec , i,j,k);
+    return ecl_smspec_get_block_var_index( ecl_smspec , block_var , global_index );
+  } else
+    return ecl_smspec_get_block_var_index_string( ecl_smspec , block_var , block_str);
+
+}
+
+
+int ecl_smspec_get_block_var_index_ijk(const ecl_smspec_type * ecl_smspec , const char * block_var , int i , int j , int k) {
+  return ecl_smspec_get_block_var_index( ecl_smspec , block_var , ecl_smspec_get_global_grid_index( ecl_smspec , i,j,k) );
+}
 
 
 int ecl_smspec_get_block_var_index(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr) {
@@ -534,6 +565,11 @@ bool ecl_smspec_has_block_var(const ecl_smspec_type * ecl_smspec , const char * 
   else
     return false;
 }  
+
+
+bool ecl_smspec_has_block_var_ijk(const ecl_smspec_type * ecl_smspec , const char * block_var , int i , int j , int k) {
+  return ecl_smspec_has_block_var( ecl_smspec , block_var , ecl_smspec_get_global_grid_index( ecl_smspec , i,j,k) );
+}
 
 
 
@@ -657,7 +693,7 @@ int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const 
     break;
   case(ecl_smspec_block_var):
     if (argc ==2 )
-      index = ecl_smspec_get_block_var_index_string(ecl_smspec , argv[0] , argv[1]);
+      index = ecl_smspec_get_block_var_index_gen_string(ecl_smspec , argv[0] , argv[1]);
     break;
   default:
     util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
