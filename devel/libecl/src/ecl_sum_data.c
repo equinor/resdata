@@ -311,9 +311,30 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , in
 }
 
 
+static void ecl_sum_data_summarize(const ecl_sum_data_type * data) { 
+  printf("REPORT         MINISTEP               DATE                 DAYS\n");
+  printf("---------------------------------------------------------------\n");
+  {
+    int ministep;
+    for (ministep = 0; ministep < vector_get_size( data->data ); ministep++) {
+      int internal_index = int_vector_safe_iget( data->ministep_index , ministep );
+      if (internal_index >= 0) {
+	const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , internal_index);
+	int day,month,year;
+	util_set_date_values( ministep->sim_time , &day, &month , &year);
+	printf("%04d          %6d               %02d/%02d/%4d           %7.2f \n", ministep->report_step , ministep->ministep , day,month,year, ministep->sim_days);
+      }
+    }
+  }
+  printf("---------------------------------------------------------------\n");
+}
+
+
 static const ecl_sum_ministep_type * ecl_sum_data_get_ministep( const ecl_sum_data_type * data , int ministep_nr) {
   int internal_index = int_vector_safe_iget( data->ministep_index , ministep_nr );
   if (internal_index < 0) {
+    ecl_sum_data_summarize( data );
+    
     util_abort("%s: Summary:%s object has no data for MINISTEP:%d - abortng \n",__func__ , ecl_smspec_get_simulation_case( data->smspec ) , ministep_nr);
     return NULL;
   }
