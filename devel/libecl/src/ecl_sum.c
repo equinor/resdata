@@ -58,6 +58,7 @@ void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , int files , const char 
 
 ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const char **data_files , bool endian_convert) {
   ecl_sum_type *ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
+  ecl_sum->__id   = ECL_SUM_ID;
   ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , endian_convert); 
   ecl_sum->data   = NULL;
   ecl_sum_fread_realloc_data(ecl_sum , files , data_files , endian_convert);
