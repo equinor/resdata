@@ -120,6 +120,10 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
 
 
 
+<TYPE> <TYPE>_vector_get_default(const <TYPE>_vector_type * vector) {
+  return vector->default_value;
+}
+
 <TYPE> <TYPE>_vector_iget(const <TYPE>_vector_type * vector , int index) {
   <TYPE>_vector_assert_index(vector , index);
   return vector->data[index];
