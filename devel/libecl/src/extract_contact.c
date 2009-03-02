@@ -35,7 +35,7 @@ int main (int argc , char ** argv) {
 
   int nx,ny,nz,active_size;
   bool fmt_file;
-  ecl_file_type fie_type;
+  ecl_file_type file_type;
   ecl_grid_type * grid = ecl_grid_alloc( grid_file , true );
   ecl_kw_type 	* swat1 = NULL;
   ecl_kw_type 	* swat2 = NULL;
@@ -43,6 +43,8 @@ int main (int argc , char ** argv) {
   
   ecl_grid_get_dims( grid , &nx , &ny , &nz , &active_size );
   ecl_util_get_file_type( restart_file1 , &file_type , &fmt_file , NULL);
+  if (file_type != ecl_restart_file)
+    util_exit("Files must be of type not unified restart_file \n");
   {
     fortio_type * fortio = fortio_fopen(restart_file1 , "r" , true , fmt_file);
     if (ecl_kw_fseek_kw("SWAT" , true , false , fortio))
@@ -71,7 +73,6 @@ int main (int argc , char ** argv) {
     fclose(stream);
   }
 
-  extract_contact( lower_kw , upper_kw , grid , ilist , jlist , contact);
   ecl_kw_free(swat1);
   ecl_kw_free(swat2);
   ecl_grid_free( grid );
