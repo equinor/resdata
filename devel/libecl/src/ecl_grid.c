@@ -294,16 +294,6 @@ static bool ecl_cell_contains_2d(const ecl_cell_type * cell , ecl_point_type p) 
 	if (__positive_distance2d(p2 , p3 , false , p))
 	  contains = true;
   
-  /*
-    ecl_cell_printf_2dlayer(cell , true);
-    ecl_point_printf(&p , "Point " , true);
-    printf("d1 /·: %g \n" , __signed_distance2d(p0 , p2 , false , p));
-    printf("d2 . : %g \n" , __signed_distance2d(p0 , p1 , true  , p));
-    printf("d3   : %g \n" , __signed_distance2d(p1 , p3 , true  , p));
-    printf("d4   : %g \n" , __signed_distance2d(p2 , p3 , false , p));
-    printf("-----------------------------------------------------------------\n\n\n");
-  */
-  
   return contains;
 }
 
@@ -434,6 +424,15 @@ int ecl_grid_get_global_index(const ecl_grid_type * ecl_grid , int i , int j , i
 int ecl_grid_get_active_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
   int global_index = ecl_grid_get_global_index(ecl_grid , i,j,k);  /* In range: [0,nx*ny*nz) */
   return ecl_grid->index_map[global_index];
+}
+
+
+bool ecl_grid_ijk_active(const ecl_grid_type * ecl_grid, int i , int j , int k) {
+  int active_index = ecl_grid_get_active_index( ecl_grid , i , j , k);
+  if (active_index >= 0)
+    return true;
+  else
+    return false;
 }
 
 

@@ -292,7 +292,7 @@ void subst_list_fprintf(const subst_list_type * subst_list , FILE * stream) {
   for (index=0; index < vector_get_size( subst_list->data ); index++) {
     const subst_list_node_type * node = vector_iget_const( subst_list->data , index );
     fprintf(stream , "%s = %s" , node->key , node->value);
-    if (index <= (vector_get_size(subst_list->data) - 1))
+    if (index < (vector_get_size(subst_list->data) - 1))
       fprintf(stream , " , ");
   }
 }

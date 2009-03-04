@@ -514,6 +514,9 @@ bool ecl_smspec_has_field_var(const ecl_smspec_type * ecl_smspec , const char *v
 /**
    Observe that block_nr is represented as char literal,
    i.e. "2345". This is because it will be used as a hash key.
+   
+   This is the final low level function which actually consults the
+   hash tables.
 */
 
 static int ecl_smspec_get_block_var_index_string(const ecl_smspec_type * ecl_smspec , const char * block_var , const char * block_str) {
@@ -526,6 +529,7 @@ static int ecl_smspec_get_block_var_index_string(const ecl_smspec_type * ecl_sms
 
   return index;
 }
+
 
 /*
   Here the block_str can either be "i,j,k" or "6362".

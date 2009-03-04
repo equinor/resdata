@@ -270,7 +270,6 @@ void path_fmt_assert_fmt(const path_fmt_type * path , int num_input , const node
 */
 
 const char * path_fmt_get_fmt(const path_fmt_type * path) {
-  path_fmt_safe_cast(path);
   return path->fmt;
 }
 

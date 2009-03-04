@@ -45,7 +45,13 @@ struct ecl_sum_struct {
 
 
 
-
+/**
+   Reads the data from ECLIPSE summary files, can either be a list of
+   files BASE.S0000, BASE.S0001, BASE.S0002,.. or one unified
+   file. Formatted/unformatted is detected automagically. 
+   
+   The actual loading is implemented in the ecl_sum_data.c file.
+*/
 
 
 void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , int files , const char ** data_files , bool endian_convert ) {
@@ -66,12 +72,16 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const c
 }
 
 
-
+/**
+   This function frees the data from the ecl_sum instance and sets the
+   data pointer to NULL. The SMSPEC data is still valid, and can be
+   reused with calls to ecl_sum_fread_realloc_data().
+*/
+  
 void ecl_sum_free_data( ecl_sum_type * ecl_sum ) {
   ecl_sum_data_free( ecl_sum->data );
   ecl_sum->data = NULL;
 }
-
 
 
 void ecl_sum_free( ecl_sum_type * ecl_sum ) {
@@ -187,11 +197,25 @@ double ecl_sum_get_field_var(const ecl_sum_type * ecl_sum , int ministep , const
 
 int  ecl_sum_get_block_var_index(const ecl_sum_type * ecl_sum , const char * block_var , int block_nr) { return ecl_smspec_get_block_var_index( ecl_sum->smspec , block_var , block_nr ); }
 bool ecl_sum_has_block_var(const ecl_sum_type * ecl_sum , const char * block_var , int block_nr)       { return ecl_smspec_has_block_var( ecl_sum->smspec , block_var , block_nr ); }
-
 double ecl_sum_get_block_var(const ecl_sum_type * ecl_sum , int ministep , const char * block_var , int block_nr) {
   int index = ecl_sum_get_block_var_index( ecl_sum ,  block_var , block_nr);
   return ecl_sum_data_get( ecl_sum->data , ministep , index);
 }
+
+
+int  ecl_sum_get_block_var_index_ijk(const ecl_sum_type * ecl_sum , const char * block_var , int i, int j , int k ) { 
+  return ecl_smspec_get_block_var_index_ijk( ecl_sum->smspec , block_var , i , j , k); 
+}
+
+bool ecl_sum_has_block_var_ijk(const ecl_sum_type * ecl_sum , const char * block_var , int i, int j , int k) { 
+  return ecl_smspec_has_block_var_ijk( ecl_sum->smspec , block_var , i ,j , k); 
+}
+
+double ecl_sum_get_block_var_ijk(const ecl_sum_type * ecl_sum , int ministep , const char * block_var , int i , int j , int k) {
+  int index = ecl_sum_get_block_var_index_ijk( ecl_sum ,  block_var , i , j , k);
+  return ecl_sum_data_get( ecl_sum->data , ministep , index);
+}
+
 
 /*****************************************************************/
 /* Region variables */

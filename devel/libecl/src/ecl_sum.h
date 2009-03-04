@@ -34,6 +34,9 @@ bool              ecl_sum_has_field_var(const ecl_sum_type * ecl_sum , const cha
 double            ecl_sum_get_block_var(const ecl_sum_type * ecl_sum , int ministep , const char * block_var , int block_nr);
 int               ecl_sum_get_block_var_index(const ecl_sum_type * ecl_sum , const char * block_var , int block_nr);
 bool              ecl_sum_has_block_var(const ecl_sum_type * ecl_sum , const char * block_var , int block_nr);
+double            ecl_sum_get_block_var_ijk(const ecl_sum_type * ecl_sum , int ministep , const char * block_var , int i , int j , int k);
+int               ecl_sum_get_block_var_index_ijk(const ecl_sum_type * ecl_sum , const char * block_var , int i , int j , int k);
+bool              ecl_sum_has_block_var_ijk(const ecl_sum_type * ecl_sum , const char * block_var , int i , int j , int k);
 
 double            ecl_sum_get_region_var(const ecl_sum_type * ecl_sum , int ministep , int region_nr , const char *var);
 int               ecl_sum_get_region_var_index(const ecl_sum_type * ecl_sum , int region_nr , const char *var);

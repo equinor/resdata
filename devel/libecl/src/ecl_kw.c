@@ -339,6 +339,21 @@ void ecl_kw_iget(const ecl_kw_type *ecl_kw , int i , void *iptr) {
 }
 
 
+/**
+   Will return a double value for underlying data types of double and float.
+*/
+double ecl_kw_iget_as_double(const ecl_kw_type * ecl_kw , int i) {
+  if (ecl_kw->ecl_type == ecl_float_type) 
+    return ecl_kw_iget_float( ecl_kw , i);
+  else if (ecl_kw->ecl_type == ecl_double_type)
+    return ecl_kw_iget_double( ecl_kw, i);
+  else {
+    util_abort("%s: can not be converted to double - no data for you! \n",__func__);
+    return -1;
+  }
+}
+
+
 #define ECL_KW_IGET_TYPED(type)                                						    \
 type ecl_kw_iget_ ## type(const ecl_kw_type * ecl_kw, int i) { 						    \
   type value;                                                  						    \

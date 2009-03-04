@@ -10,6 +10,7 @@ extern "C" {
 typedef double (block_function_ftype) ( const double_vector_type *); 
 typedef struct ecl_grid_struct ecl_grid_type;
 
+bool            ecl_grid_ijk_active(const ecl_grid_type * , int  , int  , int );
 inline bool     ecl_grid_ijk_valid(const ecl_grid_type * , int  , int , int ); 
 inline int      ecl_grid_get_global_index(const ecl_grid_type * , int  , int , int );
 ecl_grid_type * ecl_grid_alloc_GRDECL(int , int , int , const float *  , const float *  , const int * );

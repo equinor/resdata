@@ -86,6 +86,9 @@ void ecl_kw_merge(ecl_kw_type * , const ecl_kw_type * , const ecl_box_type * );
 void ecl_kw_element_sum(const ecl_kw_type * , void * );
 void ecl_kw_max_min(const ecl_kw_type * , void * , void *);
 
+
+double   ecl_kw_iget_as_double(const ecl_kw_type *  , int );
+
 #define ECL_KW_IGET_TYPED_HEADER(type) type ecl_kw_iget_ ## type(const ecl_kw_type * , int);
 ECL_KW_IGET_TYPED_HEADER(double);
 ECL_KW_IGET_TYPED_HEADER(float);
