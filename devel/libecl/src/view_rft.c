@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <ecl_rft_vector.h>
+#include <ecl_util.h>
 #include <util.h>
 
 
@@ -13,7 +14,7 @@ int main (int argc , char ** argv) {
   {
     char * input_file = argv[1];
     char * rft_file   = NULL;
-    ecl_file_type input_type;
+    ecl_file_enum input_type;
 
     ecl_rft_vector_type * rft_vector;
 

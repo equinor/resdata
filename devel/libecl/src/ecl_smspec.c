@@ -1,7 +1,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ecl_kw.h>
-#include <ecl_block.h>
 #include <math.h>
 #include <ecl_util.h>
 #include <hash.h>

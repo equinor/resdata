@@ -17,7 +17,7 @@ int main(int argc , char ** argv) {
       const char * first_arg = argv[1];
       char * base;
       char * path;
-      ecl_file_type file_type;
+      ecl_file_enum file_type;
       
       ecl_util_get_file_type(first_arg , &file_type , NULL , NULL);
       if (file_type == ecl_grid_file || file_type == ecl_egrid_file)

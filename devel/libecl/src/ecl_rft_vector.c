@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <util.h>
 #include <ecl_kw.h>
-#include <ecl_block.h>
 #include <ecl_rft_vector.h>
 #include <ecl_rft_node.h>
 #include <hash.h>

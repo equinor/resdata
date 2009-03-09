@@ -66,7 +66,7 @@ int main (int argc , char ** argv) {
 
     int nx,ny,nz,active_size;
     bool fmt_file;
-    ecl_file_type file_type;
+    ecl_file_enum file_type;
     ecl_grid_type * grid = ecl_grid_alloc( grid_file , true );
     ecl_kw_type 	* swat1 = NULL;
     ecl_kw_type 	* swat2 = NULL;

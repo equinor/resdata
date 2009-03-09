@@ -4,7 +4,6 @@
 #include <ecl_smspec.h>
 #include <ecl_sum_data.h>
 #include <ecl_kw.h>
-#include <ecl_block.h>
 #include <vector.h>
 #include <ecl_file.h>
 
