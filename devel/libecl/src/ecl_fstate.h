@@ -18,17 +18,16 @@ typedef struct ecl_fstate_struct ecl_fstate_type;
 #define ECL_FMT_AUTO_NAME 4
 
 
-ecl_fstate_type * ecl_fstate_fread_alloc(int , const char ** , ecl_file_type , bool , bool);
+ecl_fstate_type * ecl_fstate_fread_alloc(int , const char ** , ecl_file_enum , bool , bool);
 
 
 int               ecl_fstate_fname2time(const char *);
-bool              ecl_fstate_fmt_file(const char *filename);
 void              ecl_fstate_set_multiple_files(ecl_fstate_type *, const char * , const char *);
 void              ecl_fstate_set_files(ecl_fstate_type *, int , const char ** );
 void              ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate_type , bool unified);
 void              ecl_fstate_add_block(ecl_fstate_type * , const ecl_block_type *);
 void              ecl_fstate_set_fmt_mode(ecl_fstate_type * , int);
-ecl_fstate_type * ecl_fstate_alloc_empty(int , ecl_file_type , bool);
+ecl_fstate_type * ecl_fstate_alloc_empty(int , ecl_file_enum , bool);
 void              ecl_fstate_free(ecl_fstate_type *);
 
 ecl_block_type  * ecl_fstate_get_block_by_report_nr(const ecl_fstate_type * , int );

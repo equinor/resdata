@@ -122,9 +122,9 @@ bool ecl_util_numeric_extension(const char * extension) {
 */
 
 
-void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , bool *_fmt_file, int * _report_nr) {
+void ecl_util_get_file_type(const char * filename, ecl_file_enum * _file_type , bool *_fmt_file, int * _report_nr) {
   const bool ecl_other_ok = true;
-  ecl_file_type file_type = ecl_other_file;
+  ecl_file_enum file_type = ecl_other_file;
   bool fmt_file = true;
   int report_nr = -1;
   
@@ -228,7 +228,7 @@ void ecl_util_get_file_type(const char * filename, ecl_file_type * _file_type , 
    filename is allocated without a leading path component.
 */
 
-static char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr, bool must_exist) {
+static char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file, int report_nr, bool must_exist) {
   char * filename;
   char * ext;
   switch (file_type) {
@@ -345,12 +345,12 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
 }
 
 
-char * ecl_util_alloc_filename(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr) {
+char * ecl_util_alloc_filename(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file, int report_nr) {
   return ecl_util_alloc_filename_static(path , base , file_type ,fmt_file , report_nr , false);
 }
 
 
-static char ** ecl_util_alloc_filelist_static(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr1 , int report_nr2, bool must_exist) {
+static char ** ecl_util_alloc_filelist_static(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file, int report_nr1 , int report_nr2, bool must_exist) {
   if (report_nr2 < report_nr1) 
     util_abort("%s: Invalid input report_nr1:%d > report_nr:%d - aborting \n",__func__ , report_nr1 , report_nr2);
 
@@ -363,16 +363,16 @@ static char ** ecl_util_alloc_filelist_static(const char * path, const char * ba
   }
 }
 
-char ** ecl_util_alloc_filelist(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr1 , int report_nr2) {
+char ** ecl_util_alloc_filelist(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file, int report_nr1 , int report_nr2) {
   return ecl_util_alloc_filelist_static(path , base , file_type , fmt_file , report_nr1 , report_nr2 , false);
 }
 
-char ** ecl_util_alloc_exfilelist(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr1 , int report_nr2) {
+char ** ecl_util_alloc_exfilelist(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file, int report_nr1 , int report_nr2) {
   return ecl_util_alloc_filelist_static(path , base , file_type , fmt_file , report_nr1 , report_nr2 , true);
 }
 
 
-char * ecl_util_alloc_exfilename(const char * path, const char * base , ecl_file_type file_type , bool fmt_file, int report_nr) {
+char * ecl_util_alloc_exfilename(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file, int report_nr) {
   return ecl_util_alloc_filename_static(path , base , file_type ,fmt_file , report_nr , true);
 }
 
@@ -390,7 +390,7 @@ static int ecl_util_fname_cmp(const void *f1, const void *f2) {
 
 
 static bool ecl_util_filetype_p(const char * filename , int type_mask , bool _fmt_file) {
-  ecl_file_type file_type;
+  ecl_file_enum file_type;
   int report_nr;
   bool fmt_file;
   ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
@@ -406,7 +406,7 @@ static bool ecl_util_filetype_p(const char * filename , int type_mask , bool _fm
 
 
 
-char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ecl_file_type file_type , bool fmt_file , int *_files) {
+char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ecl_file_enum file_type , bool fmt_file , int *_files) {
   char *path; 
   
   if (_path != NULL)
@@ -455,7 +455,7 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
 }
 
 
-char ** ecl_util_alloc_simple_filelist(const char *path , const char *base, ecl_file_type file_type , bool fmt_file , int report_nr1 , int report_nr2) {
+char ** ecl_util_alloc_simple_filelist(const char *path , const char *base, ecl_file_enum file_type , bool fmt_file , int report_nr1 , int report_nr2) {
   char ** fileList = (char **) util_malloc((report_nr2 - report_nr1 + 1) * sizeof * fileList , __func__);
   int report_nr;
   for (report_nr = report_nr1; report_nr <= report_nr2; report_nr++) 
@@ -466,7 +466,7 @@ char ** ecl_util_alloc_simple_filelist(const char *path , const char *base, ecl_
 
 
 
-bool ecl_util_unified(ecl_file_type file_type) {
+bool ecl_util_unified(ecl_file_enum file_type) {
   bool unified = true;
 
   switch (file_type) {
@@ -506,6 +506,35 @@ bool ecl_util_unified(ecl_file_type file_type) {
 
   return unified;
 }
+
+
+
+bool ecl_util_fmt_file(const char *filename) {
+  /*const int min_size = 32768;*/
+  const int min_size = 256; /* Veeeery small */
+  
+  int report_nr;
+  ecl_file_enum file_type;
+
+  bool fmt_file;
+  if (util_file_exists(filename)) {
+    ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
+    if (file_type == ecl_other_file) {
+      if (util_file_size(filename) > min_size)
+	fmt_file = util_fmt_bit8(filename);
+      else 
+	util_abort("%s: sorry could not determine formatted|unformatted of file:%s file_size:%d - aborting \n",__func__ , filename , util_file_size(filename));
+    }
+  } else {
+    ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
+    if (file_type == ecl_other_file) 
+      util_abort("%s: sorry could not determine formatted|unformatted of file:%s - aborting \n",__func__ , filename);
+  }
+  
+  return fmt_file;
+}
+
+
 
 /*****************************************************************/
 
@@ -805,7 +834,7 @@ void ecl_util_alloc_restart_files(const char * path , const char * _base , char 
     {
       char ** restart_files;
       bool fmt_file , unified;
-      ecl_file_type file_type;
+      ecl_file_enum file_type;
       
       ecl_util_get_file_type( final_file , &file_type , &fmt_file , NULL);
       if (file_type == ecl_unified_restart_file) {

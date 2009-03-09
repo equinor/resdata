@@ -9,7 +9,6 @@
 #include <stdbool.h>
 #include <ecl_rft_vector.h>
 #include <ecl_grid.h>
-#include <ecl_fstate.h>
 
 
 int main(int argc, char ** argv) {
@@ -28,7 +27,7 @@ int main(int argc, char ** argv) {
     int ikw;
     bool fmt_src , fmt_target;
     
-    fmt_src           = ecl_fstate_fmt_file(src_file);
+    fmt_src           = ecl_util_fmt_file(src_file);
     fmt_target        = fmt_src; /* Can in principle be different */
     fortio_src        = fortio_fopen(src_file    , "r" , endian_convert , fmt_src);
     fortio_target     = fortio_fopen(target_file , "w" , endian_convert , fmt_target);

@@ -13,3 +13,5 @@
 #include <ecl_io_config.h>
 #include <ecl_smspec.h>
 #include <ecl_sum_data.h>
+#include <ecl_file.h>
+

@@ -4,12 +4,12 @@
 #include <ecl_kw.h>
 #include <fortio.h>
 #include <string.h>
-#include <ecl_fstate.h>
+#include <ecl_util.h>
 
 
 void kw_list(const char *filename) {
   fortio_type *fortio;
-  bool fmt_file = ecl_fstate_fmt_file(filename);
+  bool fmt_file = ecl_util_fmt_file(filename);
 
   printf("-----------------------------------------------------------------\n");
   printf("%s: \n",filename); 

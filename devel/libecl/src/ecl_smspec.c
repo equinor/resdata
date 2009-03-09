@@ -3,7 +3,6 @@
 #include <ecl_kw.h>
 #include <ecl_block.h>
 #include <math.h>
-#include <ecl_fstate.h>
 #include <ecl_util.h>
 #include <hash.h>
 #include <util.h>
@@ -13,6 +12,7 @@
 #include <vector.h>
 #include <int_vector.h>
 #include <ecl_smspec.h>
+#include <ecl_fstate.h>
 
 
 /**

@@ -3,7 +3,6 @@
 #include <ecl_kw.h>
 #include <ecl_block.h>
 #include <math.h>
-#include <ecl_fstate.h>
 #include <ecl_util.h>
 #include <ecl_sum.h>
 #include <hash.h>

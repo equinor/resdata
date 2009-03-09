@@ -33,40 +33,16 @@ struct ecl_fstate_struct {
   int              block_size;
   ecl_block_type **block_list;
   time_t           sim_start_time;
-  ecl_file_type    file_type;
+  ecl_file_enum    file_type;
 };
 
 
 
-bool ecl_fstate_fmt_file(const char *filename) {
-  /*const int min_size = 32768;*/
-  const int min_size = 256; /* Veeeery small */
-  
-  int report_nr;
-  ecl_file_type file_type;
-
-  bool fmt_file;
-  if (util_file_exists(filename)) {
-    ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
-    if (file_type == ecl_other_file) {
-      if (util_file_size(filename) > min_size)
-	fmt_file = util_fmt_bit8(filename);
-      else 
-	util_abort("%s: sorry could not determine formatted|unformatted of file:%s file_size:%d - aborting \n",__func__ , filename , util_file_size(filename));
-    }
-  } else {
-    ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
-    if (file_type == ecl_other_file) 
-      util_abort("%s: sorry could not determine formatted|unformatted of file:%s - aborting \n",__func__ , filename);
-  }
-  
-  return fmt_file;
-}
 
 
 
 
-ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , ecl_file_type file_type , bool endian_convert) {
+ecl_fstate_type * ecl_fstate_alloc_empty(int fmt_mode , ecl_file_enum file_type , bool endian_convert) {
   
   ecl_fstate_type *ecl_fstate 	 = malloc(sizeof *ecl_fstate);
   ecl_fstate->fmt_mode 	      	 = fmt_mode;
@@ -90,7 +66,7 @@ static void ecl_fstate_set_fmt__(ecl_fstate_type * ecl_fstate) {
     ecl_fstate->fmt_file = false;
     break;
   case ECL_FMT_AUTO:
-    ecl_fstate->fmt_file = ecl_fstate_fmt_file(ecl_fstate->filelist[0]);
+    ecl_fstate->fmt_file = ecl_util_fmt_file(ecl_fstate->filelist[0]);
     break;
   default:
     util_abort("%s: internal error - fmt_mode=%d invalid - aborting \n",__func__ , ecl_fstate->fmt_mode);
@@ -138,7 +114,7 @@ void ecl_fstate_set_unified(ecl_fstate_type *ecl_fstate , bool unified) {
 
 
 
-ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ecl_file_type file_type , bool endian_convert, bool RPTONLY) {
+ecl_fstate_type * ecl_fstate_fread_alloc(int files , const char ** filelist , ecl_file_enum file_type , bool endian_convert, bool RPTONLY) {
   bool verbose = false;
   const bool include_first_summary_block = true;
   ecl_fstate_type *ecl_fstate = ecl_fstate_alloc_empty(ECL_FMT_AUTO , file_type , endian_convert);
@@ -438,7 +414,7 @@ void ecl_fstate_filter_file(const char * src_file , const char * target_file , c
     abort();
   }
   {
-    bool src_fmt         = ecl_fstate_fmt_file(src_file);
+    bool src_fmt         = ecl_util_fmt_file(src_file);
     bool target_fmt      = src_fmt;
     fortio_type * src    = fortio_fopen(src_file , "r" , endian_flip  , src_fmt);
     fortio_type * target = fortio_fopen(target_file , "w" , endian_flip , target_fmt);

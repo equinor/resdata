@@ -5,9 +5,8 @@
 #include <ecl_sum_data.h>
 #include <ecl_kw.h>
 #include <ecl_block.h>
-#include <ecl_fstate.h>
 #include <vector.h>
-
+#include <ecl_fstate.h>
 
 
 
@@ -244,14 +243,15 @@ static void ecl_sum_data_add_block(ecl_sum_data_type * data         ,
 }
 
 
-static void ecl_sum_data_add_file(ecl_sum_data_type * data , const char * file  , ecl_file_type target_type , bool endian_convert ) {
-  ecl_file_type file_type;
+static void ecl_sum_data_add_file(ecl_sum_data_type * data , const char * file  , ecl_file_enum target_type , bool endian_convert ) {
+  ecl_file_enum file_type;
   ecl_util_get_file_type( file , &file_type , NULL , NULL);
   if (file_type != target_type)
     util_abort("%s: file:%s has wrong type \n",__func__ , file);
   
   {
     ecl_fstate_type * fstate = ecl_fstate_fread_alloc( 1 , (const char **) &file , file_type , endian_convert , false);
+
     int report_step = 1;  /* Corresponding to the first report_step in unified files - by assumption. */
     int ib;
     for (ib=0; ib < ecl_fstate_get_size( fstate ); ib++) {
@@ -268,7 +268,7 @@ static void ecl_sum_data_add_file(ecl_sum_data_type * data , const char * file  
 
 
 ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , int files , const char ** filelist , bool endian_convert) {
-  ecl_file_type file_type;
+  ecl_file_enum file_type;
   ecl_util_get_file_type( filelist[0] , &file_type , NULL , NULL);
   if ((files > 1) && (file_type != ecl_summary_file))
     util_abort("%s: internal error - when calling with more than one file - you can not supply a unified file - come on?! \n",__func__);
