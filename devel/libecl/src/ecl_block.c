@@ -404,6 +404,9 @@ static void ecl_block_set_src_file(ecl_block_type * ecl_block , const char * src
 }
 
 
+/**
+  Read a ecl_block from a restart file.
+*/
 void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *_at_eof) {
   ecl_kw_type *ecl_kw    = ecl_kw_alloc_empty();
   bool read_next_kw  = true;
@@ -413,18 +416,20 @@ void ecl_block_fread(ecl_block_type *ecl_block, fortio_type *fortio , bool *_at_
   
   do {
     if (ecl_kw_fread_realloc(ecl_kw , fortio)) {
-      if(is_first_kw)
-      {
-        first_kw = util_alloc_string_copy(ecl_kw_get_header_ref(ecl_kw));
-      }
-
-      if (ecl_kw_header_eq(ecl_kw , first_kw) && !is_first_kw)
+      /**
+        If we read a SEQNUM, then we have entered the next
+        restart in a unified restart file. Rewind and exit.
+      */
+      if (ecl_kw_header_eq(ecl_kw , "SEQNUM") && !is_first_kw)
       {
         at_eof = false;
         read_next_kw = false;
         ecl_kw_rewind(ecl_kw , fortio);
-      } else 
+      }
+      else 
+      {
         ecl_block_add_kw(ecl_block , ecl_kw);
+      }
 
     } else {
       read_next_kw   = false;
