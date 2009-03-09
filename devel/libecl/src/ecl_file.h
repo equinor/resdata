@@ -17,7 +17,7 @@ void            ecl_file_free( ecl_file_type * );
 void            ecl_file_free__(void * );
 ecl_kw_type   * ecl_file_iget_kw( const ecl_file_type *  , const char * , int);
 bool            ecl_file_has_kw( const ecl_file_type *  , const char * );
-int             ecl_file_num_kw(const ecl_file_type * , const char * );
+int             ecl_file_get_num_kw(const ecl_file_type * , const char * );
 ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * );
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * );
 ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type * );

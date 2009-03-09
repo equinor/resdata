@@ -25,6 +25,13 @@ struct ecl_file_struct {
 
 
 /*
+  This illustrates the indexing. The ecl_file instance contains in
+  total 7 ecl_kw instances, the global index [0...6] is the internal
+  way to access the various keywords. The kw_index is a hash table
+  with entries 'SEQHDR', 'MINISTEP' and 'PARAMS'. Each entry in the
+  hash table is an integer vector which again contains the internal
+  index of the various occurences:
+  
    ------------------
    SEQHDR            \
    MINISTEP  0        |     
@@ -35,8 +42,7 @@ struct ecl_file_struct {
    PARAMS    .....   /
    ------------------
 
-
-   kw_index = {"SEQHDR": <0>, "MINISTEP": <1,3,5>, "PARAMS": <2,4,6>}
+   kw_index = {"SEQHDR": [0], "MINISTEP": [1,3,5], "PARAMS": [2,4,6]}
    
 */
 
@@ -157,9 +163,15 @@ ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
 }
 
 
+
+/*
+  The SEQNUM number found in unified restart files corresponds to the 
+  REPORT_STEP.
+*/
 ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "SEQNUM");
 }
+
 
 ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "TIME");
@@ -207,7 +219,7 @@ bool ecl_file_has_kw( const ecl_file_type * ecl_file , const char * kw) {
   ecl_file instance. Will return 0 if the keyword can not be found.
 */
 
-int ecl_file_num_kw(const ecl_file_type * ecl_file , const char * kw) {
+int ecl_file_get_num_kw(const ecl_file_type * ecl_file , const char * kw) {
   if (hash_has_key(ecl_file->kw_index , kw)) {
     const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
     return int_vector_size( index_vector );

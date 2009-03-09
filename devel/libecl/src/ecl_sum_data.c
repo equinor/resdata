@@ -213,7 +213,7 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
 				      const ecl_file_type   * ecl_file , 
 				      const ecl_smspec_type * smspec) {
   
-  int num_ministep  = ecl_file_num_kw( ecl_file , "PARAMS");
+  int num_ministep  = ecl_file_get_num_kw( ecl_file , "PARAMS");
   int ikw;
   for (ikw = 0; ikw < num_ministep; ikw++) {
     ecl_kw_type * ministep_kw = ecl_file_iget_kw( ecl_file , "MINISTEP" , ikw);

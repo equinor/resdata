@@ -38,11 +38,13 @@ struct ecl_cell_struct {
 };
 
 
+
+
 struct ecl_grid_struct {
   int nx , ny , nz , size , total_active;
   int                 * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
-  ecl_cell_type ** cells;
+  ecl_cell_type      ** cells;
   /*------------------------------: The fields below this line are used for blocking algorithms - and not allocated by default.*/
   int                    block_dim; /* == 2 for maps and 3 for fields. 0 when not in use. */
   int                    block_size;
@@ -135,8 +137,17 @@ ecl_point_type ecl_point_copy(ecl_point_type src) {
 
 /*****************************************************************/
 
+
+/**
+   Observe that when allocating based on a GRID file not all cells are
+   necessarily accessed beyond this function. In general not all cells
+   will have a COORDS/CORNERS section in the GRID file.
+*/
+
+
 static ecl_cell_type * ecl_cell_alloc(void) {
   ecl_cell_type * cell = util_malloc(sizeof * cell , __func__);
+  cell->active         = false;
   return cell;
 }
 
@@ -498,10 +509,26 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
   const int j  = coords[1];
   const int k  = coords[2];
   const int global_index   = ecl_grid_get_global_index__(ecl_grid , i - 1, j - 1 , k - 1);
-  ecl_cell_type * cell   = ecl_grid->cells[global_index];
+  ecl_cell_type * cell     = ecl_grid->cells[global_index];
   int c;
 
-  cell->active    = (coords[4] == 1) ? true : false;
+  /* The coords keyword can optionally contain 4,5 or 7 elements: 
+
+     	coords[0..2] = i,j,k
+     	coords[3]    = global_cell number (not used here)
+     	----
+     	coords[4]    = active
+     	coords[5..6] = lgr stuff
+
+     If coords[4] is not present it is assumed that the cell is active.
+  */
+     
+  
+  if (ecl_kw_get_size(coords_kw) >= 5)
+    cell->active  = (coords[4] == 1) ? true : false;
+  else
+    cell->active = true;
+  
   for (c = 0; c < 8; c++) 
     ecl_point_inplace_set_float_ptr(&cell->corner_list[c] , (const float *) &corners[c*3]);
 }
@@ -516,7 +543,7 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
     for (j=0; j < ecl_grid->ny; j++) 
       for (i=0; i < ecl_grid->nx; i++) {
 	const int global_index   = ecl_grid_get_global_index__(ecl_grid , i , j , k );
-	ecl_cell_type * cell   = ecl_grid->cells[global_index];
+	ecl_cell_type * cell     = ecl_grid->cells[global_index];
 	if (cell->active) {
 	  cell->active_index = active_index;
 	  active_index++;
@@ -686,8 +713,8 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
       nz = ecl_kw_iget_int(dimens_kw , 2);
       grid = ecl_grid_alloc_empty(nx , ny , nz);
     }
-  
-    for (index = 0; index < nx*ny*nz; index++) {
+    
+    for (index = 0; index < ecl_file_get_num_kw( ecl_file , "COORDS"); index++) {
       ecl_kw_type * coords_kw  = ecl_file_iget_kw(ecl_file , "COORDS"  , index);
       ecl_kw_type * corners_kw = ecl_file_iget_kw(ecl_file , "CORNERS" , index);
       ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
