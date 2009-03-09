@@ -86,6 +86,7 @@ void ecl_sum_free_data( ecl_sum_type * ecl_sum ) {
 void ecl_sum_free( ecl_sum_type * ecl_sum ) {
   ecl_sum_free_data( ecl_sum );
   ecl_smspec_free( ecl_sum->smspec );
+  free( ecl_sum );
 }
 
 

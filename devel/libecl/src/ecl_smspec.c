@@ -12,7 +12,7 @@
 #include <vector.h>
 #include <int_vector.h>
 #include <ecl_smspec.h>
-#include <ecl_fstate.h>
+#include <ecl_file.h>
 
 
 /**
@@ -27,7 +27,6 @@
 
 struct ecl_smspec_struct {
   int                __id;                      /* Funny integer used for for "safe" run-time casting. */
-  ecl_fstate_type  * header;
 
   hash_type        * well_var_index;             /* Indexes for all well variables. */
   hash_type        * well_completion_var_index;  /* Indexes for completion indexes .*/
@@ -114,7 +113,6 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(bool endian_convert , const char
   ecl_smspec->block_var_index                = hash_alloc();
 
   ecl_smspec->var_type           	     = NULL;
-  ecl_smspec->header             	     = NULL;
   ecl_smspec->well_list          	     = NULL;
   ecl_smspec->sim_start_time     	     = -1;
   ecl_smspec->__id                           = ECL_SMSPEC_ID;
@@ -206,25 +204,23 @@ ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var) {
 
 
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file) {
-  ecl_smspec->header = ecl_fstate_fread_alloc(1     , &header_file , ecl_summary_header_file , ecl_smspec->endian_convert , false);
+  ecl_file_type * header = ecl_file_fread_alloc( header_file , ecl_smspec->endian_convert );
   {
     int *date;
-    ecl_block_type * block = ecl_fstate_iget_block(ecl_smspec->header , 0);
-    ecl_kw_type *wells     = ecl_block_get_kw(block , "WGNAMES");
-    ecl_kw_type *keywords  = ecl_block_get_kw(block , "KEYWORDS");
-    ecl_kw_type *startdat  = ecl_block_get_kw(block , "STARTDAT");
-    ecl_kw_type *units     = ecl_block_get_kw(block , "UNITS");
-    ecl_kw_type *dimens    = ecl_block_get_kw(block , "DIMENS");
+    ecl_kw_type *wells     = ecl_file_iget_kw(header, "WGNAMES" , 0);
+    ecl_kw_type *keywords  = ecl_file_iget_kw(header, "KEYWORDS", 0);
+    ecl_kw_type *startdat  = ecl_file_iget_kw(header, "STARTDAT" , 0);
+    ecl_kw_type *units     = ecl_file_iget_kw(header, "UNITS" , 0 );
+    ecl_kw_type *dimens    = ecl_file_iget_kw(header, "DIMENS", 0);
     ecl_kw_type *nums      = NULL;
     int index;
     ecl_smspec->num_regions     = 0;
-    if (startdat == NULL) {
-      fprintf(stderr,"%s: could not locate STARTDAT keyword in header - aborting \n",__func__);
-      abort();
-    }
-    if (ecl_block_has_kw(block , "NUMS"))
-      nums = ecl_block_get_kw(block , "NUMS");
-
+    if (startdat == NULL) 
+      util_abort("%s: could not locate STARTDAT keyword in header - aborting \n",__func__);
+    
+    if (ecl_file_has_kw(header , "NUMS"))
+      nums = ecl_file_iget_kw(header , "NUMS" , 0);
+    
     date = ecl_kw_get_int_ptr(startdat);
     ecl_smspec->sim_start_time = util_make_date(date[0] , date[1] , date[2]);
     {
@@ -350,6 +346,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
       set_free(well_set);
     }
   }
+  ecl_file_free( header );
 }
 
 
@@ -784,7 +781,6 @@ const char * ecl_smspec_get_simulation_case(const ecl_smspec_type * ecl_smspec) 
 
 
 void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
-  ecl_fstate_free(ecl_smspec->header);
   hash_free(ecl_smspec->well_var_index);
   hash_free(ecl_smspec->well_completion_var_index);
   hash_free(ecl_smspec->group_var_index);

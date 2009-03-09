@@ -99,6 +99,7 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
 	}
       }
     }
+    
     if (ecl_kw != NULL) {
       int index = vector_append_owned_ref( ecl_file->kw_list , ecl_kw , ecl_kw_free__);
       char * header = ecl_kw_alloc_strip_header( ecl_kw );
@@ -117,9 +118,9 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
   if (vector_get_size(ecl_file->kw_list) == 0) {
     ecl_file_free( ecl_file );
     ecl_file = NULL;
-  }
-
-  ecl_file->src_file = util_alloc_string_copy( fortio_filename_ref( fortio ) );
+  } else 
+    ecl_file->src_file = util_alloc_string_copy( fortio_filename_ref( fortio ) );
+  
   return ecl_file;
 }
 
@@ -152,13 +153,17 @@ ecl_file_type * ecl_file_fread_alloc(const char * filename , bool endian_flip) {
 */
 
 
-ecl_file_type * ecl_file_alloc_summary_section(fortio_type * fortio) {
+ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "SEQHDR");
 }
 
 
-ecl_file_type * ecl_file_alloc_restart_section(fortio_type * fortio) {
+ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "SEQNUM");
+}
+
+ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type * fortio) {
+  return ecl_file_fread_alloc_fortio(fortio , "TIME");
 }
 
 
@@ -191,3 +196,22 @@ ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * ecl_file , const char * kw
   return vector_iget( ecl_file->kw_list , global_index );
 }
 
+
+  
+bool ecl_file_has_kw( const ecl_file_type * ecl_file , const char * kw) {
+  return hash_has_key( ecl_file->kw_index , kw );
+}
+
+
+/*
+  Will return the number of times a particular keyword occurs in a
+  ecl_file instance. Will return 0 if the keyword can not be found.
+*/
+
+int ecl_file_num_kw(const ecl_file_type * ecl_file , const char * kw) {
+  if (hash_has_key(ecl_file->kw_index , kw)) {
+    const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
+    return int_vector_size( index_vector );
+  } else
+    return 0;
+}

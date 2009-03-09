@@ -3,13 +3,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <ecl_block.h>
+#include <ecl_file.h>
 #include <stdbool.h>
 
 typedef struct ecl_rft_node_struct ecl_rft_node_type;
 
 void                ecl_rft_node_fprintf_rft_obs(const ecl_rft_node_type * , double , const char * , const char * , double );
-ecl_rft_node_type * ecl_rft_node_alloc(const ecl_block_type * );
+ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * );
 const char        * ecl_rft_node_get_well_name(const ecl_rft_node_type * );
 void                ecl_rft_node_free(ecl_rft_node_type * );
 void                ecl_rft_node_free__(void * );

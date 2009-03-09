@@ -6,7 +6,7 @@
 #include <ecl_kw.h>
 #include <ecl_block.h>
 #include <vector.h>
-#include <ecl_fstate.h>
+#include <ecl_file.h>
 
 
 
@@ -207,18 +207,19 @@ static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
 
 
 /* 
-   One ecl_block corresponds to one report_step (limited by SEQHDR). 
+   One ecl_file corresponds to one report_step (limited by SEQHDR). 
 */
-static void ecl_sum_data_add_block(ecl_sum_data_type * data         , 
-			    int   report_step , 
-				 const ecl_block_type * ecl_block , 
-			    const ecl_smspec_type * smspec) {
-
-  int block_size  = ecl_block_get_kw_size( ecl_block , "PARAMS");
+static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         , 
+				      int   report_step                , 
+				      const ecl_file_type   * ecl_file , 
+				      const ecl_smspec_type * smspec) {
+  
+  int num_ministep  = ecl_file_num_kw( ecl_file , "PARAMS");
   int ikw;
-  for (ikw = 0; ikw < block_size; ikw++) {
-    ecl_kw_type * ministep_kw = ecl_block_iget_kw( ecl_block , "MINISTEP" , ikw);
-    ecl_kw_type * param_kw    = ecl_block_iget_kw( ecl_block , "PARAMS"    , ikw);
+  for (ikw = 0; ikw < num_ministep; ikw++) {
+    ecl_kw_type * ministep_kw = ecl_file_iget_kw( ecl_file , "MINISTEP" , ikw);
+    ecl_kw_type * param_kw    = ecl_file_iget_kw( ecl_file , "PARAMS"   , ikw);
+
     ecl_sum_ministep_type * ministep;
     int ministep_nr = ecl_kw_iget_int( ministep_kw , 0 );
     ministep = ecl_sum_ministep_alloc( ministep_nr,
@@ -243,29 +244,6 @@ static void ecl_sum_data_add_block(ecl_sum_data_type * data         ,
 }
 
 
-static void ecl_sum_data_add_file(ecl_sum_data_type * data , const char * file  , ecl_file_enum target_type , bool endian_convert ) {
-  ecl_file_enum file_type;
-  ecl_util_get_file_type( file , &file_type , NULL , NULL);
-  if (file_type != target_type)
-    util_abort("%s: file:%s has wrong type \n",__func__ , file);
-  
-  {
-    ecl_fstate_type * fstate = ecl_fstate_fread_alloc( 1 , (const char **) &file , file_type , endian_convert , false);
-
-    int report_step = 1;  /* Corresponding to the first report_step in unified files - by assumption. */
-    int ib;
-    for (ib=0; ib < ecl_fstate_get_size( fstate ); ib++) {
-      if (file_type == ecl_summary_file)
-	ecl_util_get_file_type( file , NULL , NULL , &report_step );
-
-      ecl_sum_data_add_block(  data , report_step , ecl_fstate_iget_block( fstate , ib ) , data->smspec);
-      report_step++;  /* For unified files - they got to be sorted internally .... */
-    }
-    
-    ecl_fstate_free( fstate );
-  }
-}
-
 
 ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , int files , const char ** filelist , bool endian_convert) {
   ecl_file_enum file_type;
@@ -275,8 +253,39 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , in
   {
     int filenr;
     ecl_sum_data_type * data = ecl_sum_data_alloc(smspec);
-    for (filenr = 0; filenr < files; filenr++)
-      ecl_sum_data_add_file( data , filelist[filenr] , file_type , endian_convert);
+    if (file_type == ecl_summary_file) {
+
+      /* Not unified. */
+      for (filenr = 0; filenr < files; filenr++) {
+	ecl_file_enum file_type;
+	int report_step;
+	ecl_util_get_file_type( filelist[filenr] , &file_type , NULL , &report_step);
+	if (file_type != ecl_summary_file)
+	  util_abort("%s: file:%s has wrong type \n",__func__ , filelist[filenr]);
+	{
+	  ecl_file_type * ecl_file = ecl_file_fread_alloc( filelist[filenr] , endian_convert );
+	  ecl_sum_data_add_ecl_file( data , report_step , ecl_file , smspec);
+	  ecl_file_free( ecl_file );
+	}
+      }
+    } else if (file_type == ecl_unified_summary_file) {
+      /* Loading a unified summary file. */
+      bool fmt_file = ecl_util_fmt_file( filelist[0] );
+      fortio_type * fortio = fortio_fopen( filelist[0] , "r" , endian_convert , fmt_file);
+      bool complete = false;
+      int report_step = 1; /* Corresponding to the first report_step in unified files - by assumption. */
+      do {
+	ecl_file_type * ecl_file = ecl_file_fread_alloc_summary_section( fortio );
+	if (ecl_file != NULL) {
+	  ecl_sum_data_add_ecl_file( data , report_step , ecl_file , smspec);
+	  ecl_file_free( ecl_file );
+	  report_step++;
+	} else complete = true;
+      } while ( !complete );
+      fortio_fclose(fortio);
+    } else
+      util_abort("%s: invalid file type \n",__func__);
+
     /* OK - now we have loaded all the actual data. Must build up the report -> ministep mapping. */
 
     {
