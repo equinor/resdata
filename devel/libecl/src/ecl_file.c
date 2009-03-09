@@ -152,7 +152,6 @@ ecl_file_type * ecl_file_fread_alloc(const char * filename , bool endian_flip) {
    way to the next 'SEQHDR' keyword.
 */
 
-
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "SEQHDR");
 }
