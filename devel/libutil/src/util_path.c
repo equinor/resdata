@@ -153,29 +153,6 @@ char * util_realloc_filename(char * filename , const char * path , const char * 
 
 
 
-/* /\** */
-/*   This function takes a path and a file as input. It allocated a new */
-/*   string containg "the sum" of the two, with UTIL_PATH_SEP between. */
-
-/*   If path == NULL - a copy of file is returned. */
-/* *\/ */
-
-
-/* char * util_alloc_full_path(const char *path , const char *file) { */
-/*   if (path != NULL) { */
-/*     char *copy = util_malloc(strlen(path) + strlen(file) + 2 , __func__); */
-/*     sprintf(copy , "%s%c%s" , path , UTIL_PATH_SEP_CHAR ,  file); */
-/*     return copy; */
-/*   } else */
-/*     return util_alloc_string_copy(file); */
-/* } */
-
-
-/* char * util_realloc_full_path(char *old_path , const char *path , const char *file) { */
-/*   char *copy = realloc(old_path , strlen(path) + strlen(file) + 2); */
-/*   sprintf(copy , "%s%c%s" , path , UTIL_PATH_SEP_CHAR , file); */
-/*   return copy; */
-/* } */
 
 
 /**

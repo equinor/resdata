@@ -155,7 +155,7 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
 
 void <TYPE>_vector_iset(<TYPE>_vector_type * vector , int index , <TYPE> value) {
   if (vector->alloc_size <= index)
-    <TYPE>_vector_realloc_data__(vector , 2 * index);
+    <TYPE>_vector_realloc_data__(vector , 2 * (index + 1));  /* Must have ( + 1) here to ensure we are not doing 2*0 */
   vector->data[index] = value;
   if (index >= vector->size) {
     int i;
