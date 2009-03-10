@@ -1,5 +1,4 @@
 ecl_util.o                          : ecl_util.c ecl_util.h  
-ecl_block.o                         : ecl_block.c ecl_block.h fortio.o ecl_kw.o restart_kw_list.o  
 ecl_sum_data.o                      : ecl_sum_data.c ecl_sum_data.h ecl_util.o ecl_smspec.o ecl_kw.o ecl_file.o  
 ecl_grid.o                          : ecl_grid.c ecl_grid.h ecl_kw.o ecl_util.o fortio.o ecl_file.o  
 restart_kw_list.o                   : restart_kw_list.c restart_kw_list.h  
@@ -13,4 +12,3 @@ ecl_rft_vector.o                    : ecl_rft_vector.c ecl_rft_vector.h ecl_kw.o
 ecl_smspec.o                        : ecl_smspec.c ecl_smspec.h ecl_kw.o ecl_util.o ecl_file.o  
 ecl_kw.o                            : ecl_kw.c ecl_kw.h ecl_util.o fortio.o ecl_box.o  
 ecl_io_config.o                     : ecl_io_config.c ecl_io_config.h ecl_util.o  
-ecl_fstate.o                        : ecl_fstate.c ecl_fstate.h fortio.o ecl_kw.o ecl_block.o ecl_util.o  
