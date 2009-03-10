@@ -153,19 +153,19 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(int size , const char * data
 
 
 ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
-  ecl_kw_type       * conipos   = ecl_file_iget_kw(rft_file , "CONIPOS" , 0);
-  ecl_kw_type       * welletc   = ecl_file_iget_kw(rft_file , "WELLETC" , 0);
+  ecl_kw_type       * conipos   = ecl_file_iget_named_kw(rft_file , "CONIPOS" , 0);
+  ecl_kw_type       * welletc   = ecl_file_iget_named_kw(rft_file , "WELLETC" , 0);
   ecl_rft_node_type * rft_node  = ecl_rft_node_alloc_empty(ecl_kw_get_size(conipos) , ecl_kw_iget_ptr(welletc , 5));
   
   if (rft_node != NULL) {
-    ecl_kw_type * date_kw = ecl_file_iget_kw( rft_file , "DATE" , 0);
-    ecl_kw_type * conjpos = ecl_file_iget_kw( rft_file , "CONJPOS" , 0);
-    ecl_kw_type * conkpos = ecl_file_iget_kw( rft_file , "CONKPOS" , 0);
+    ecl_kw_type * date_kw = ecl_file_iget_named_kw( rft_file , "DATE" , 0);
+    ecl_kw_type * conjpos = ecl_file_iget_named_kw( rft_file , "CONJPOS" , 0);
+    ecl_kw_type * conkpos = ecl_file_iget_named_kw( rft_file , "CONKPOS" , 0);
     ecl_kw_type * depth_kw;
     if (rft_node->data_type == RFT)
-      depth_kw = ecl_file_iget_kw( rft_file , "DEPTH" , 0);
+      depth_kw = ecl_file_iget_named_kw( rft_file , "DEPTH" , 0);
     else
-      depth_kw = ecl_file_iget_kw( rft_file , "CONDEPTH" , 0);
+      depth_kw = ecl_file_iget_named_kw( rft_file , "CONDEPTH" , 0);
     rft_node->well_name = util_alloc_strip_copy( ecl_kw_iget_ptr(welletc , 1));
 
     /* Time information. */
@@ -173,7 +173,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
       int * time = ecl_kw_get_data_ref( date_kw );
       rft_node->recording_date = util_make_date( time[0] , time[1] , time[2]);
     }
-    rft_node->days = ecl_kw_iget_float( ecl_file_iget_kw( rft_file , "TIME" , 0 ) , 0);
+    rft_node->days = ecl_kw_iget_float( ecl_file_iget_named_kw( rft_file , "TIME" , 0 ) , 0);
 
     
     /* Cell information */
@@ -196,9 +196,9 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
     /* Now we are done with the information which is common to both RFT and PLT. */
     
     if (rft_node->data_type == RFT) {
-      const float * SW = ecl_kw_get_float_ptr( ecl_file_iget_kw( rft_file , "SWAT" , 0));
-      const float * SG = ecl_kw_get_float_ptr( ecl_file_iget_kw( rft_file , "SGAS" , 0)); 
-      const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_kw( rft_file , "PRESSURE" , 0));
+      const float * SW = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "SWAT" , 0));
+      const float * SG = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "SGAS" , 0)); 
+      const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "PRESSURE" , 0));
 
       int c;
       for (c = 0; c < rft_node->size; c++) {
@@ -208,10 +208,10 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
       }
     } else if (rft_node->data_type == PLT) {
       /* For PLT there is quite a lot of extra information which is not yet internalized. */
-      const float * WR = ecl_kw_get_float_ptr( ecl_file_iget_kw( rft_file , "CONWRAT" , 0));
-      const float * GR = ecl_kw_get_float_ptr( ecl_file_iget_kw( rft_file , "CONGRAT" , 0)); 
-      const float * OR = ecl_kw_get_float_ptr( ecl_file_iget_kw( rft_file , "CONORAT" , 0)); 
-      const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_kw( rft_file , "CONPRES" , 0));
+      const float * WR = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "CONWRAT" , 0));
+      const float * GR = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "CONGRAT" , 0)); 
+      const float * OR = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "CONORAT" , 0)); 
+      const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "CONPRES" , 0));
 
       int c;
       for (c = 0; c < rft_node->size; c++) {

@@ -11,9 +11,24 @@
 #include <vector.h>
 #include <int_vector.h>
 
+/**
+   This file implements functionality to load an entire ECLIPSE file
+   in ecl_kw format. In addition to loading a complete file it can
+   also load a section, by stopping when it meets a certain
+   keyword. This latter functionality is suitable for loading parts
+   (i.e. one report step) of unified files.
+
+   The ecl_file struct is quite simply a vector of ecl_kw instances,
+   it has no knowledge of report steps and such, and does not know
+   whether it build from a complete file, or only from a part of
+   unified file.
+*/
+
+
+
+
 
 #define ECL_FILE_ID 776107
-
 
 
 struct ecl_file_struct {
@@ -88,14 +103,23 @@ ecl_file_type * ecl_file_alloc_empty( ) {
 
 
 static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const char * stop_kw) {
+  bool first_kw            = true;
   int stop_count           = 0;
   ecl_file_type * ecl_file = ecl_file_alloc_empty();
   ecl_kw_type   * ecl_kw;
+
+  ecl_file->src_file = util_alloc_string_copy( fortio_filename_ref( fortio ) );
   do {
     ecl_kw = ecl_kw_fread_alloc( fortio );
     if (ecl_kw != NULL) {
       if (stop_kw != NULL) {
-	if (ecl_kw_header_eq( ecl_kw , stop_kw))
+	bool eq = ecl_kw_header_eq( ecl_kw , stop_kw);
+	
+	if (first_kw) 
+	  if (!eq)
+	    util_abort("%s: expected to find:%s as first keyword - aborting \n",__func__ , stop_kw);
+	
+	if (eq)
 	  stop_count++;
 	
 	if (stop_count == 2) { /* Two strikes and you are out ... */
@@ -106,6 +130,11 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
       }
     }
     
+    /* 
+       Must have a new check on NULL - because the ecl_kw instance can
+       be freed and set to to NULL in the preceeding block. 
+    */
+
     if (ecl_kw != NULL) {
       int index = vector_append_owned_ref( ecl_file->kw_list , ecl_kw , ecl_kw_free__);
       char * header = ecl_kw_alloc_strip_header( ecl_kw );
@@ -117,6 +146,7 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
       }
       free(header);
     }
+    first_kw = false;
   } while (ecl_kw != NULL);
   
   
@@ -124,8 +154,8 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
   if (vector_get_size(ecl_file->kw_list) == 0) {
     ecl_file_free( ecl_file );
     ecl_file = NULL;
-  } else 
-    ecl_file->src_file = util_alloc_string_copy( fortio_filename_ref( fortio ) );
+  } 
+    
   
   return ecl_file;
 }
@@ -137,8 +167,8 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
 
 /*
   This is the generic - "load a file" function. It will take ANY
-  ECLIPSE file and internalize all the keywords as ecl_kw instances in
-  one long vector.
+  ECLIPSE file with ecl_kw format and internalize all the keywords as
+  ecl_kw instances in one long vector.
 */
 
 ecl_file_type * ecl_file_fread_alloc(const char * filename , bool endian_flip) {
@@ -155,7 +185,8 @@ ecl_file_type * ecl_file_fread_alloc(const char * filename , bool endian_flip) {
 
 /* 
    This function will allocate a ecl_file_type instance going all the
-   way to the next 'SEQHDR' keyword.
+   way to the NEXT 'SEQHDR' keyword. Observe that it is assumed that
+   the fortio instance is already positioned at a SEQHDR keyword.
 */
 
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
@@ -201,7 +232,7 @@ void ecl_file_free__(void * arg) {
 */
    
 
-ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * ecl_file , const char * kw, int ith) {
+ecl_kw_type * ecl_file_iget_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith) {
   const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
   int global_index = int_vector_iget( index_vector , ith);
   return vector_iget( ecl_file->kw_list , global_index );
@@ -209,20 +240,23 @@ ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * ecl_file , const char * kw
 
 
   
-bool ecl_file_has_kw( const ecl_file_type * ecl_file , const char * kw) {
-  return hash_has_key( ecl_file->kw_index , kw );
-}
-
-
 /*
   Will return the number of times a particular keyword occurs in a
   ecl_file instance. Will return 0 if the keyword can not be found.
 */
 
-int ecl_file_get_num_kw(const ecl_file_type * ecl_file , const char * kw) {
+int ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw) {
   if (hash_has_key(ecl_file->kw_index , kw)) {
     const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
     return int_vector_size( index_vector );
   } else
     return 0;
 }
+
+
+
+bool ecl_file_has_kw( const ecl_file_type * ecl_file , const char * kw) {
+  return hash_has_key( ecl_file->kw_index , kw );
+}
+
+

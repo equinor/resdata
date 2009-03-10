@@ -635,7 +635,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
   
   {
     ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file , endian_flip );
-    ecl_kw_type * gridhead_kw = ecl_file_iget_kw( ecl_file , "GRIDHEAD" , 0);
+    ecl_kw_type * gridhead_kw = ecl_file_iget_named_kw( ecl_file , "GRIDHEAD" , 0);
     int gtype, nx,ny,nz;
     
     gtype = ecl_kw_iget_int(gridhead_kw , 0);
@@ -645,9 +645,9 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
     if (gtype != 1) 
       util_abort("%s: gtype:%d fatal error when loading:%s - must have corner point grid - aborting\n",__func__ , gtype , grid_file);
     {
-      ecl_kw_type * zcorn_kw    = ecl_file_iget_kw( ecl_file , "ZCORN"   	, 0);
-      ecl_kw_type * coord_kw    = ecl_file_iget_kw( ecl_file , "COORD"   	, 0);
-      ecl_kw_type * actnum_kw   = ecl_file_iget_kw( ecl_file , "ACTNUM"  	, 0);
+      ecl_kw_type * zcorn_kw    = ecl_file_iget_named_kw( ecl_file , "ZCORN"   	, 0);
+      ecl_kw_type * coord_kw    = ecl_file_iget_named_kw( ecl_file , "COORD"   	, 0);
+      ecl_kw_type * actnum_kw   = ecl_file_iget_named_kw( ecl_file , "ACTNUM"  	, 0);
       
       ecl_grid = ecl_grid_alloc_GRDECL(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw));
     }
@@ -707,16 +707,16 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
     ecl_file_type * ecl_file = ecl_file_fread_alloc( grid_file , endian_flip );
     
     {
-      ecl_kw_type * dimens_kw = ecl_file_iget_kw( ecl_file , "DIMENS" , 0);
+      ecl_kw_type * dimens_kw = ecl_file_iget_named_kw( ecl_file , "DIMENS" , 0);
       nx = ecl_kw_iget_int(dimens_kw , 0);
       ny = ecl_kw_iget_int(dimens_kw , 1);
       nz = ecl_kw_iget_int(dimens_kw , 2);
       grid = ecl_grid_alloc_empty(nx , ny , nz);
     }
     
-    for (index = 0; index < ecl_file_get_num_kw( ecl_file , "COORDS"); index++) {
-      ecl_kw_type * coords_kw  = ecl_file_iget_kw(ecl_file , "COORDS"  , index);
-      ecl_kw_type * corners_kw = ecl_file_iget_kw(ecl_file , "CORNERS" , index);
+    for (index = 0; index < ecl_file_get_num_named_kw( ecl_file , "COORDS"); index++) {
+      ecl_kw_type * coords_kw  = ecl_file_iget_named_kw(ecl_file , "COORDS"  , index);
+      ecl_kw_type * corners_kw = ecl_file_iget_named_kw(ecl_file , "CORNERS" , index);
       ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
     }
     

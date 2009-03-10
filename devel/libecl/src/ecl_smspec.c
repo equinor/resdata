@@ -206,11 +206,11 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
   ecl_file_type * header = ecl_file_fread_alloc( header_file , ecl_smspec->endian_convert );
   {
     int *date;
-    ecl_kw_type *wells     = ecl_file_iget_kw(header, "WGNAMES" , 0);
-    ecl_kw_type *keywords  = ecl_file_iget_kw(header, "KEYWORDS", 0);
-    ecl_kw_type *startdat  = ecl_file_iget_kw(header, "STARTDAT" , 0);
-    ecl_kw_type *units     = ecl_file_iget_kw(header, "UNITS" , 0 );
-    ecl_kw_type *dimens    = ecl_file_iget_kw(header, "DIMENS", 0);
+    ecl_kw_type *wells     = ecl_file_iget_named_kw(header, "WGNAMES" , 0);
+    ecl_kw_type *keywords  = ecl_file_iget_named_kw(header, "KEYWORDS", 0);
+    ecl_kw_type *startdat  = ecl_file_iget_named_kw(header, "STARTDAT" , 0);
+    ecl_kw_type *units     = ecl_file_iget_named_kw(header, "UNITS" , 0 );
+    ecl_kw_type *dimens    = ecl_file_iget_named_kw(header, "DIMENS", 0);
     ecl_kw_type *nums      = NULL;
     int index;
     ecl_smspec->num_regions     = 0;
@@ -218,7 +218,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
       util_abort("%s: could not locate STARTDAT keyword in header - aborting \n",__func__);
     
     if (ecl_file_has_kw(header , "NUMS"))
-      nums = ecl_file_iget_kw(header , "NUMS" , 0);
+      nums = ecl_file_iget_named_kw(header , "NUMS" , 0);
     
     date = ecl_kw_get_int_ptr(startdat);
     ecl_smspec->sim_start_time = util_make_date(date[0] , date[1] , date[2]);
