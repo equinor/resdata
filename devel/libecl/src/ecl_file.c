@@ -10,6 +10,7 @@
 #include <time.h>
 #include <vector.h>
 #include <int_vector.h>
+#include <stringlist.h>
 
 /**
    This file implements functionality to load an entire ECLIPSE file
@@ -32,10 +33,11 @@
 
 
 struct ecl_file_struct {
-  int           __id;
-  char        * src_file;  /* The name of the file currently loaded - as returned from fortio. */
-  vector_type * kw_list;   /* This is a vector of ecl_kw instances corresponding to the content of the file. */
-  hash_type   * kw_index;  /* A hash table with integer vectors of indices - see comment below. */
+  int         	    __id;
+  char        	  * src_file;  	  /* The name of the file currently loaded - as returned from fortio. */
+  vector_type 	  * kw_list;   	  /* This is a vector of ecl_kw instances corresponding to the content of the file. */
+  hash_type   	  * kw_index;  	  /* A hash table with integer vectors of indices - see comment below. */
+  stringlist_type * distinct_kw;  /* A stringlist of the keywords occuring in the file - each string occurs ONLY ONCE. */
 };
 
 
@@ -57,7 +59,9 @@ struct ecl_file_struct {
    PARAMS    .....   /
    ------------------
 
-   kw_index = {"SEQHDR": [0], "MINISTEP": [1,3,5], "PARAMS": [2,4,6]}
+   kw_index    = {"SEQHDR": [0], "MINISTEP": [1,3,5], "PARAMS": [2,4,6]}    <== This is hash table.
+   kw_list     = [SEQHDR , MINISTEP , PARAMS , MINISTEP , PARAMS , MINISTEP , PARAMS]
+   distinct_kw = [SEQHDR , MINISTEP , PARAMS]
    
 */
 
@@ -77,12 +81,13 @@ static ecl_file_type * ecl_file_safe_cast( void * arg) {
 
 
 
-ecl_file_type * ecl_file_alloc_empty( ) {
+static ecl_file_type * ecl_file_alloc_empty( ) {
   ecl_file_type * ecl_file = util_malloc( sizeof * ecl_file , __func__);
-  ecl_file->kw_list  = vector_alloc_new();
-  ecl_file->__id     = ECL_FILE_ID;
-  ecl_file->kw_index = hash_alloc();
-  ecl_file->src_file = NULL;
+  ecl_file->kw_list  	= vector_alloc_new();
+  ecl_file->__id     	= ECL_FILE_ID;
+  ecl_file->kw_index 	= hash_alloc();
+  ecl_file->src_file 	= NULL;
+  ecl_file->distinct_kw = stringlist_alloc_new();
   return ecl_file;
 }
 
@@ -138,8 +143,11 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
     if (ecl_kw != NULL) {
       int index = vector_append_owned_ref( ecl_file->kw_list , ecl_kw , ecl_kw_free__);
       char * header = ecl_kw_alloc_strip_header( ecl_kw );
-      if (! hash_has_key( ecl_file->kw_index , header )) 
+      if (! hash_has_key( ecl_file->kw_index , header )) {
 	hash_insert_hash_owned_ref( ecl_file->kw_index , header , int_vector_alloc(0 , -1) , int_vector_free__);
+	stringlist_append_copy( ecl_file->distinct_kw , header);
+      }
+
       {
 	int_vector_type * index_vector = hash_get( ecl_file->kw_index , header);
 	int_vector_append( index_vector , index);
@@ -213,6 +221,7 @@ void ecl_file_free(ecl_file_type * ecl_file) {
   vector_free( ecl_file->kw_list );
   hash_free( ecl_file->kw_index );
   util_safe_free( ecl_file->src_file );
+  stringlist_free( ecl_file->distinct_kw );
   free(ecl_file);
 }
 
@@ -223,6 +232,45 @@ void ecl_file_free__(void * arg) {
 
 
 /*****************************************************************/
+/*
+  Here comes several functions for querying the ecl_file instance, and
+  getting pointers to the ecl_kw content of the ecl_file. For getting
+  ecl_kw instances there are two principally different access methods:
+
+    * ecl_file_iget_named_kw(): This function will take a keyword
+      (char *) and an integer as input. The integer corresponds to the
+      ith occurence of the keyword in the file.
+
+    * ecl_file_iget_kw(): This function just takes an integer index as
+      input, and returns the corresponding ecl_kw instance - without
+      considering which keyword it is.
+
+  -------
+
+  In addition the functions ecl_file_get_num_distinct_kw() and
+  ecl_file_iget_distinct_kw() will return the number of distinct
+  keywords, and distinct keyword keyword nr i (as a const char *).
+
+
+  Possible usage pattern:
+
+  ....
+  for (ikw = 0; ikw < ecl_file_get_num_distinct_kw(ecl_file); ikw++) {
+     const char * kw = ecl_file_iget_distinct_kw(ecl_file , ikw);
+     
+     printf("The file contains: %d occurences of \'%s\' \n",ecl_file_get_num_named_kw( ecl_file , kw) , kw);
+  }
+  ....
+
+  For the summary file showed in the top this code will produce:
+
+    The file contains 1 occurences of 'SEQHDR'
+    The file contains 3 occurences of 'MINISTEP'
+    The file contains 3 occurences of 'PARAMS'
+  
+*/
+
+
 
 
 /* 
@@ -255,8 +303,31 @@ int ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw) 
 
 
 
+/**
+   This will just return ecl_kw nr i - without looking at the names.
+*/
+ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * ecl_file , int index) {
+  return vector_iget( ecl_file->kw_list , index);
+}
+
+
+int ecl_file_get_num_kw( const ecl_file_type * ecl_file ){
+  return vector_get_size( ecl_file->kw_list );
+}
+
+
 bool ecl_file_has_kw( const ecl_file_type * ecl_file , const char * kw) {
   return hash_has_key( ecl_file->kw_index , kw );
+}
+
+
+int ecl_file_get_num_distinct_kw(const ecl_file_type * ecl_file) {
+  return stringlist_get_size( ecl_file->distinct_kw );
+}
+
+
+const char * ecl_file_iget_distinct_kw(const ecl_file_type * ecl_file, int index) {
+  return stringlist_iget( ecl_file->distinct_kw , index);
 }
 
 

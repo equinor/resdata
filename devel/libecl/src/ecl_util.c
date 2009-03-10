@@ -950,7 +950,7 @@ time_t ecl_util_get_start_date(const char * data_file) {
     char * start_pos;
     line_start = ftell(stream);
     line = util_fscanf_realloc_line(stream , &at_eof , line);
-    util_strupr(line);
+    //util_strupr(line);
     start_pos = strstr(line , "START");
     if (start_pos != NULL) {
       /* 
