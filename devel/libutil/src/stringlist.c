@@ -369,7 +369,8 @@ void stringlist_fwrite(const stringlist_type * s, FILE * stream) {
 
 /* 
    When a stringlist is loaded from file the current content of the
-   stringlist is discarded.
+   stringlist is discarded; and the stringlist becomes the owner of
+   all the data read in.
 */
 void  stringlist_fread(stringlist_type * s, FILE * stream) {
   int size = util_fread_int(stream);

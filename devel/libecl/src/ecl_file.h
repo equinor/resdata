@@ -22,6 +22,7 @@ int             ecl_file_get_num_kw( const ecl_file_type * );
 ecl_kw_type   * ecl_file_iget_kw( const ecl_file_type *  , int);
 int             ecl_file_get_num_distinct_kw(const ecl_file_type * );
 const char    * ecl_file_iget_distinct_kw(const ecl_file_type * , int );
+int             ecl_file_iget_occurence( const ecl_file_type *  , int );
 
 ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * );
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * );

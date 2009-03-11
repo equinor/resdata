@@ -67,15 +67,21 @@ struct ecl_file_struct {
 
 
 
-static ecl_file_type * ecl_file_safe_cast( void * arg) {
-  ecl_file_type * ecl_file = (ecl_file_type * ) arg;
-
+static bool ecl_file_assert_type(const ecl_file_type * ecl_file) {
   if (ecl_file->__id != ECL_FILE_ID) {
     util_abort("%s: run_time cast failed - aborting \n",__func__);
-    ecl_file = NULL;
-  }
+    return false;
+  } else
+    return true;
+}
 
-  return ecl_file;
+
+static ecl_file_type * ecl_file_safe_cast( void * arg) {
+  ecl_file_type * ecl_file = (ecl_file_type * ) arg;
+  if (ecl_file_assert_type(ecl_file))
+    return ecl_file;
+  else
+    return NULL;
 }
   
 
@@ -281,9 +287,12 @@ void ecl_file_free__(void * arg) {
    
 
 ecl_kw_type * ecl_file_iget_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith) {
-  const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
-  int global_index = int_vector_iget( index_vector , ith);
-  return vector_iget( ecl_file->kw_list , global_index );
+  ecl_file_assert_type(ecl_file);
+  {
+    const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
+    int global_index = int_vector_iget( index_vector , ith);
+    return vector_iget( ecl_file->kw_list , global_index );
+  }
 }
 
 
@@ -309,6 +318,49 @@ int ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw) 
 ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * ecl_file , int index) {
   return vector_iget( ecl_file->kw_list , index);
 }
+
+
+
+/**
+   This function does the following:
+
+    1. Takes an input index which goes in to the global kw_list vector.
+    2. Looks up the corresponding keyword.
+    3. Return the number of this particular keyword instance, among
+       the other instance with the same header.
+
+   With the example above we get:
+
+     ecl_file_iget_occurence(ecl_file , 2) -> 0; Global index 2 will
+        look up the first occurence of PARAMS.
+  
+     ecl_file_iget_occurence(ecl_file , 5) -> 2; Global index 5 will
+        look up th third occurence of MINISTEP.
+
+   The enkf layer uses this funny functionality.
+*/
+
+
+int ecl_file_iget_occurence( const ecl_file_type * ecl_file , int index) {
+  const ecl_kw_type * ecl_kw = ecl_file_iget_kw( ecl_file , index );
+  char * header = ecl_kw_alloc_strip_header( ecl_kw );
+  const int_vector_type * index_vector = hash_get(ecl_file->kw_index , header );
+  const int * index_data = int_vector_get_const_ptr( index_vector );
+  
+  int occurence = -1;
+  {
+    /* Manual reverse lookup. */
+    for (int i=0; i < int_vector_size( index_vector ); i++)
+      if (index_data[i] == index)
+	occurence = i;
+  }
+  free(header);
+  if (occurence < 0)
+    util_abort("%s: internal error ... \n" , __func__);
+  
+  return occurence;
+}
+
 
 
 int ecl_file_get_num_kw( const ecl_file_type * ecl_file ){
