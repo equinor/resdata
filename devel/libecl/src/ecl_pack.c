@@ -22,7 +22,7 @@ int main(int argc, char ** argv) {
     else if (file_type == ecl_restart_file)
       target_type = ecl_unified_restart_file;
     else {
-      fprintf(stderr , "The ecl_pack program can only be used with restart files or summary files.\n");
+      fprintf(stderr , "The ecl_pack program can only be used with ECLIPSE restart files or summary files.\n");
       exit(1);
     }
     
@@ -39,12 +39,13 @@ int main(int argc, char ** argv) {
 	int dummy;
 	seqnum_kw = ecl_kw_alloc_complete("SEQNUM" , 1 , ecl_int_type , &dummy);
       } 
-
+      
       {
 	char * msg_format = util_alloc_sprintf("Packing %s <= " , target_file_name);
 	msg = msg_alloc( msg_format );
 	free( msg_format );
       }
+      
       msg_show( msg );
       qsort(filelist , num_files , sizeof *filelist , &ecl_util_fname_cmp);
       prev_report_step = -1;
@@ -63,7 +64,7 @@ int main(int argc, char ** argv) {
 	      ecl_kw_iset_int(seqnum_kw , 0 , report_step);
 	      ecl_kw_fwrite( seqnum_kw , target );
 	    }
-	    ecl_file_fwrite_fortio( src_file , target);
+	    ecl_file_fwrite_fortio( src_file , target , 0);
 	    ecl_file_free( src_file );
 	  }
 	}  /* Else skipping file of incorrect type. */

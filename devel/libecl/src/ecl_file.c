@@ -224,9 +224,9 @@ ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type * fortio) {
 /*****************************************************************/
 /* fwrite functions */
 
-void ecl_file_fwrite_fortio(const ecl_file_type * ecl_file , fortio_type * fortio) {
+void ecl_file_fwrite_fortio(const ecl_file_type * ecl_file , fortio_type * fortio, int offset) {
   int index;
-  for (index = 0; index < vector_get_size( ecl_file->kw_list ); index++)
+  for (index = offset; index < vector_get_size( ecl_file->kw_list ); index++)
     ecl_kw_fwrite( vector_iget( ecl_file->kw_list , index ) , fortio);
 }
 
@@ -246,7 +246,7 @@ void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, boo
   
   {
     fortio_type * fortio = fortio_fopen( filename , "w", endian_flip , __fmt_file);
-    ecl_file_fwrite_fortio( ecl_file , fortio );
+    ecl_file_fwrite_fortio( ecl_file , fortio , 0);
     fortio_fclose( fortio );
   }
 }
