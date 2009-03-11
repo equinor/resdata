@@ -28,7 +28,8 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * );
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * );
 ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type * );
 
-
+void 		ecl_file_fwrite_fortio(const ecl_file_type *  , fortio_type * );
+void 		ecl_file_fwrite(const ecl_file_type *  , const char * , bool , bool );
 
 #ifdef __cplusplus
 }

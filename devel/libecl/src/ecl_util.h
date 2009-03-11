@@ -47,6 +47,7 @@ void            ecl_util_alloc_restart_files(const char *  , const char *  , cha
 const    char * ecl_util_type_name(ecl_type_enum );
 time_t          ecl_util_get_start_date(const char * );
 bool            ecl_util_fmt_file(const char *);
+int             ecl_util_fname_cmp(const void *, const void *);
 
 #ifdef __cplusplus
 }

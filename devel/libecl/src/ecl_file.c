@@ -221,6 +221,37 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "TIME");
 }
+/*****************************************************************/
+/* fwrite functions */
+
+void ecl_file_fwrite_fortio(const ecl_file_type * ecl_file , fortio_type * fortio) {
+  int index;
+  for (index = 0; index < vector_get_size( ecl_file->kw_list ); index++)
+    ecl_kw_fwrite( vector_iget( ecl_file->kw_list , index ) , fortio);
+}
+
+
+/* 
+   Observe : if the filename is a standard filename which can be used
+   to infer formatted/unformatted automagically the fmt_file variable is NOT consulted.
+*/
+  
+void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, bool fmt_file, bool endian_flip) {
+  bool __fmt_file;
+  ecl_file_enum file_type;
+  
+  ecl_util_get_file_type( filename , &file_type , &__fmt_file , NULL);
+  if (file_type == ecl_other_file)
+    __fmt_file = fmt_file;
+  
+  {
+    fortio_type * fortio = fortio_fopen( filename , "w", endian_flip , __fmt_file);
+    ecl_file_fwrite_fortio( ecl_file , fortio );
+    fortio_fclose( fortio );
+  }
+}
+
+
 
 
 void ecl_file_free(ecl_file_type * ecl_file) {

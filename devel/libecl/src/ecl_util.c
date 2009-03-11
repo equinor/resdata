@@ -111,6 +111,8 @@ bool ecl_util_numeric_extension(const char * extension) {
 
 
 
+
+
 /** 
   This function takes an eclipse filename as input - looks at the
   extension, and uses that to determine the type of file. In addition
@@ -377,7 +379,7 @@ char * ecl_util_alloc_exfilename(const char * path, const char * base , ecl_file
 }
 
 
-static int ecl_util_fname_cmp(const void *f1, const void *f2) {
+int ecl_util_fname_cmp(const void *f1, const void *f2) {
   int t1 = ecl_util_filename_report_nr( *((const char **) f1) );
   int t2 = ecl_util_filename_report_nr( *((const char **) f2) );
   if (t1 < t2)

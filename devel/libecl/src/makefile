@@ -57,7 +57,7 @@ view_summary.o : view_summary.c
 view_restart.o : view_restart.c 
 block_owc.o    : block_owc.c 
 extract_contact.o : extract_contact.c
-
+ecl_pack.o        : ecl_pack.c
 
 #################################################################
 # Binaries
@@ -65,9 +65,12 @@ extract_contact.o : extract_contact.c
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_contact.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_contact.x ecl_pack.x
 BIN	:  $(BIN_FILES) 
-BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x
+BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x ecl_pack.x
+
+ecl_pack.x: $(LIB) ecl_pack.o
+	$(LD) -$(MFLAG) $(LDFLAGS) ecl_pack.o -o ecl_pack.x $(LIB_PATH) $(LIB_LINK)
 
 ecl_test.x: $(LIB) ecl_test.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_test.o -o ecl_test.x $(LIB_PATH) $(LIB_LINK)
