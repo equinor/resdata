@@ -99,7 +99,7 @@ void msg_update_int(msg_type * msg , const char * fmt , int value) {
 
 
 msg_type * msg_alloc(const char * prompt) {
-  msg_type * msg = malloc(sizeof * msg);
+  msg_type * msg = util_malloc(sizeof * msg , __func__);
   msg->prompt = util_alloc_string_copy(prompt);
   
   msg->msg     = NULL;
