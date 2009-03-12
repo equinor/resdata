@@ -1190,7 +1190,7 @@ void util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size ,
       util_abort("%s: error when reading from src_stream - aborting \n",__func__);
 
     bytes_written = fwrite(buffer , 1 , bytes_read , target_stream);
-
+    
     if (bytes_written < bytes_read) 
       util_abort("%s: not all bytes written to target stream - aboring \n",__func__);
   }
@@ -1199,11 +1199,11 @@ void util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size ,
 
 
 void util_copy_file(const char * src_file , const char * target_file) {
-  if (strcmp(src_file , target_file) == 0) 
+  if (util_same_file(src_file , target_file)) 
     fprintf(stderr,"%s Warning: trying to copy %s onto itself - noting done\n",__func__ , src_file);
   else {
     void * buffer   = NULL;
-    int buffer_size = util_file_size(src_file);
+    int buffer_size = util_int_max( 32 , util_file_size(src_file) );  /* The copy stream function will hang if buffer size == 0 */
     do {
       buffer = malloc(buffer_size);
       if (buffer == NULL) buffer_size /= 2;
@@ -1218,6 +1218,36 @@ void util_copy_file(const char * src_file , const char * target_file) {
       fclose(target_stream);
     }
     free(buffer);
+  }
+}
+
+
+/** Equivalant to 'cp -r'. */
+/* Does not handle symlinks. */
+
+void util_copy_directory(const char * src_path , const char * target_path ) {
+  util_make_path(target_path);
+  {
+    DIR * dirH = opendir( src_path );
+    if (dirH == NULL) 
+      util_abort("%s: failed to open directory:%s / %s \n",__func__ , src_path , strerror(errno));
+    {
+      struct dirent * dp;
+      do {
+	dp = readdir(dirH);
+	if (dp != NULL) {
+	  if (dp->d_name[0] != '.') {
+	    const char * full_src_path    = util_alloc_filename(src_path , dp->d_name , NULL);
+	    const char * full_target_path = util_alloc_filename(target_path , dp->d_name , NULL);
+	    if (util_is_file( full_src_path )) 
+	      util_copy_file( full_src_path , full_target_path);
+	    else
+	      util_copy_directory( full_src_path , full_target_path);
+	  }
+	}
+      } while (dp != NULL);
+    }
+    closedir( dirH );
   }
 }
 
