@@ -68,7 +68,7 @@ void util_make_path(const char *_path) {
 
       path/prefix-pid-RANDOM
 
-   if include_pi is false the resulting file will be:
+   if include_pid is false the resulting file will be:
 
       path/prefix-RANDOM
 
@@ -265,4 +265,9 @@ char * util_alloc_realpath(const char * input_path) {
     new_path = util_realloc(new_path , strlen(new_path) + 1, __func__);
   
   return new_path;
+}
+
+
+void util_path_split(const char *line , int *_tokens, char ***_token_list) {
+  util_split_string( line , UTIL_PATH_SEP_STRING , _tokens , _token_list);
 }

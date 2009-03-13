@@ -1192,40 +1192,60 @@ void util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size ,
     bytes_written = fwrite(buffer , 1 , bytes_read , target_stream);
     
     if (bytes_written < bytes_read) 
-      util_abort("%s: not all bytes written to target stream - aboring \n",__func__);
+      util_abort("%s: not all bytes written to target stream - aborting \n",__func__);
   }
 
 }
 
 
-void util_copy_file(const char * src_file , const char * target_file) {
+static void util_copy_file__(const char * src_file , const char * target_file, int buffer_size , void * buffer) {
   if (util_same_file(src_file , target_file)) 
     fprintf(stderr,"%s Warning: trying to copy %s onto itself - noting done\n",__func__ , src_file);
   else {
-    void * buffer   = NULL;
-    int buffer_size = util_int_max( 32 , util_file_size(src_file) );  /* The copy stream function will hang if buffer size == 0 */
-    do {
-      buffer = malloc(buffer_size);
-      if (buffer == NULL) buffer_size /= 2;
-    } while (buffer == NULL);
-    
     {
       FILE * src_stream      = util_fopen(src_file     , "r");
       FILE * target_stream   = util_fopen(target_file  , "w");
-    
+      
       util_copy_stream(src_stream , target_stream , buffer_size , buffer);
       fclose(src_stream);
       fclose(target_stream);
     }
-    free(buffer);
   }
 }
 
 
-/** Equivalant to 'cp -r'. */
-/* Does not handle symlinks. */
 
-void util_copy_directory(const char * src_path , const char * target_path ) {
+void util_copy_file(const char * src_file , const char * target_file) {
+  void * buffer   = NULL;
+  int buffer_size = util_int_max( 32 , util_file_size(src_file) );  /* The copy stream function will hang if buffer size == 0 */
+  do {
+    buffer = malloc(buffer_size);
+    if (buffer == NULL) buffer_size /= 2;
+  } while ((buffer == NULL) && (buffer_size > 0));
+  
+  if (buffer_size == 0)
+    util_abort("%s: failed to allocate any memory ?? \n",__func__);
+  
+  util_copy_file__(src_file , target_file , buffer_size , buffer);
+  free(buffer);
+}
+
+
+
+/** Equivalant to 'cp -r'.    */
+/*  Does not handle symlinks. */
+
+static void util_copy_directory__(const char * src_path , const char * __target_path , int buffer_size , void * buffer) {
+  int     num_components;
+  char ** path_parts;
+  char  * path_tail;
+  char  * target_path;
+  if (!util_is_directory(src_path))
+    util_abort("%s: %s is not a directory \n",__func__ , src_path);
+
+  util_path_split(src_path , &num_components , &path_parts);
+  path_tail   = path_parts[num_components - 1];
+  target_path = util_alloc_filename(__target_path , path_tail , NULL);
   util_make_path(target_path);
   {
     DIR * dirH = opendir( src_path );
@@ -1240,17 +1260,34 @@ void util_copy_directory(const char * src_path , const char * target_path ) {
 	    const char * full_src_path    = util_alloc_filename(src_path , dp->d_name , NULL);
 	    const char * full_target_path = util_alloc_filename(target_path , dp->d_name , NULL);
 	    if (util_is_file( full_src_path )) 
-	      util_copy_file( full_src_path , full_target_path);
+	      util_copy_file__( full_src_path , full_target_path , buffer_size , buffer);
 	    else
-	      util_copy_directory( full_src_path , full_target_path);
+	      util_copy_directory__( full_src_path , full_target_path , buffer_size , buffer);
 	  }
 	}
       } while (dp != NULL);
     }
     closedir( dirH );
   }
+  free(target_path);
+  util_free_stringlist( path_parts , num_components );
 }
 
+
+void util_copy_directory(const char * src_path , const char * __target_path) {
+  void * buffer   = NULL;
+  int buffer_size = 512 * 1024 * 1024; /* 512 MB */
+  do {
+    buffer = malloc(buffer_size);
+    if (buffer == NULL) buffer_size /= 2;
+  } while ((buffer == NULL) && (buffer_size > 0));
+  
+  if (buffer_size == 0)
+    util_abort("%s: failed to allocate any memory ?? \n",__func__);
+  
+  util_copy_directory__(src_path , __target_path , buffer_size , buffer);
+  free( buffer );
+}
 
 
 
@@ -2937,6 +2974,15 @@ void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , 
 }
 
 
+
+void util_fread_from_buffer(void * ptr , size_t element_size , size_t items , char ** buffer) {
+  int bytes = element_size * items;
+  memcpy( ptr , *buffer , bytes);
+  *buffer += bytes;
+}
+
+
+
 #undef ABORT_READ
 #undef ABORT_WRITE
 
@@ -3173,8 +3219,8 @@ void util_fread_compressed(void *__data , FILE * stream) {
   int buffer_size;
   int size , offset;
   void * zbuffer;
-
-  fread(&size  , sizeof size        , 1 , stream); 
+  
+  fread(&size  , sizeof size , 1 , stream); 
   if (size == 0) return;
 
 
@@ -4062,6 +4108,7 @@ void util_update_path_var(const char * variable, const char * value, bool append
     free( new_value);
   }
 }
+
 
 
 #include "util_path.c"

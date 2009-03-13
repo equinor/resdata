@@ -106,6 +106,7 @@ char  ** util_stringlist_append_copy(char **  , int , const char * );
 char  ** util_stringlist_append_ref(char **  , int , const char * );
 char  ** util_alloc_stringlist_copy(const char **, int );
 void     util_split_string(const char *, const char *, int *, char ***);
+void     util_path_split(const char * , int *, char ***);
 void     util_binary_split_string(const char * , const char * , bool  , char ** , char ** );
 char   * util_alloc_joined_string(const char **  , int , const char * );
 char   * util_alloc_multiline_string(const char ** , int );
@@ -128,6 +129,8 @@ void     util_make_slink(const char *, const char * );
 void 	 util_set_datetime_values(time_t , int * , int * , int * , int * , int *  , int *);
 void 	 util_set_date_values(time_t , int * , int * , int * );
 
+
+void     util_fread_from_buffer(void *  , size_t  , size_t , char ** );
 
 void     util_fread_dev_random(int , char * );
 void     util_fread_dev_urandom(int , char * );
