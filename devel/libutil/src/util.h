@@ -63,7 +63,7 @@ char       * util_alloc_strupr_copy(const char * );
 void         util_string_tr(char * , char , char);
 void 	     util_copy_stream(FILE *, FILE *, int , void * );
 void 	     util_copy_file(const char * , const char * );
-void         util_copy_directory(const char *  , const char * );
+void         util_copy_directory(const char *  , const char * , const char *);
 char       * util_alloc_cwd(void);
 char       * util_alloc_realpath(const char * );
 
