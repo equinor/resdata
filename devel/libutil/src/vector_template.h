@@ -16,6 +16,7 @@ void                 <TYPE>_vector_free__(void *);
 void                 <TYPE>_vector_free_data(<TYPE>_vector_type *);  
 void                 <TYPE>_vector_reset(<TYPE>_vector_type *);  
 int                  <TYPE>_vector_size(const <TYPE>_vector_type * );
+<TYPE>               <TYPE>_vector_pop(<TYPE>_vector_type * vector);
 <TYPE>               <TYPE>_vector_get_last(const <TYPE>_vector_type * );
 <TYPE> *             <TYPE>_vector_get_ptr(const <TYPE>_vector_type * );
 const <TYPE> *       <TYPE>_vector_get_const_ptr(const <TYPE>_vector_type * );

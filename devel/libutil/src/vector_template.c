@@ -200,6 +200,19 @@ int <TYPE>_vector_size(const <TYPE>_vector_type * vector) {
 }
 
 
+<TYPE> <TYPE>_vector_pop(<TYPE>_vector_type * vector) {
+  if (vector->size > 0) {
+    <TYPE> value = vector->data[vector->size - 1];
+    vector->size--;
+    return value;
+  } else {
+    util_abort("%s: trying to pop from empty vector \n",__func__);
+    return -1;   /* Compiler shut up. */
+  }
+}
+
+
+
 <TYPE> * <TYPE>_vector_get_ptr(const <TYPE>_vector_type * vector) {
   return vector->data;
 }
