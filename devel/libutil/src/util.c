@@ -1232,20 +1232,11 @@ void util_copy_file(const char * src_file , const char * target_file) {
 
 
 
-/** Equivalant to 'cp -r'.    */
-/*  Does not handle symlinks. */
 
-static void util_copy_directory__(const char * src_path , const char * __target_path , int buffer_size , void * buffer) {
-  int     num_components;
-  char ** path_parts;
-  char  * path_tail;
-  char  * target_path;
+static void util_copy_directory__(const char * src_path , const char * target_path , int buffer_size , void * buffer) {
   if (!util_is_directory(src_path))
     util_abort("%s: %s is not a directory \n",__func__ , src_path);
-
-  util_path_split(src_path , &num_components , &path_parts);
-  path_tail   = path_parts[num_components - 1];
-  target_path = util_alloc_filename(__target_path , path_tail , NULL);
+  
   util_make_path(target_path);
   {
     DIR * dirH = opendir( src_path );
@@ -1269,12 +1260,21 @@ static void util_copy_directory__(const char * src_path , const char * __target_
     }
     closedir( dirH );
   }
-  free(target_path);
-  util_free_stringlist( path_parts , num_components );
+  
 }
 
+/** 
+    Equivalent to shell command cp -r src_path target_path
+*/
+
+/*  Does not handle symlinks (I think ...). */
 
 void util_copy_directory(const char * src_path , const char * __target_path) {
+  int     num_components;
+  char ** path_parts;
+  char  * path_tail;
+  char  * target_path;
+
   void * buffer   = NULL;
   int buffer_size = 512 * 1024 * 1024; /* 512 MB */
   do {
@@ -1284,9 +1284,15 @@ void util_copy_directory(const char * src_path , const char * __target_path) {
   
   if (buffer_size == 0)
     util_abort("%s: failed to allocate any memory ?? \n",__func__);
-  
-  util_copy_directory__(src_path , __target_path , buffer_size , buffer);
+
+  util_path_split(src_path , &num_components , &path_parts);
+  path_tail   = path_parts[num_components - 1];
+  target_path = util_alloc_filename(__target_path , path_tail , NULL);
+
+  util_copy_directory__(src_path , target_path , buffer_size , buffer);
   free( buffer );
+  free(target_path);
+  util_free_stringlist( path_parts , num_components );
 }
 
 
