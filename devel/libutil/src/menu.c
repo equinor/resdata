@@ -4,6 +4,7 @@
 #include <string.h>
 #include <util.h>
 #include <menu.h>
+#include <vector.h>
 
 /**
    This file implements a simple character based menu system. The menu
@@ -58,12 +59,34 @@ struct menu_item_struct {
 
 struct menu_struct {
   int               size;              /* The number of items in the menu */
-  menu_item_type ** items;             /* The vector of items */
+  vector_type     * items;             /* Vector of menu_item_type instances */
   char            * quit_keys;         /* The keys which can be used to quit from this menu - typically "qQ" */
   char            * title;             /* The title of this menu */
   char            * quit_label;        /* The text printed on the back/quit item at the bottom. */
   char            * complete_key_set;  /* A string containing all the allowed characters - to validata input */
 };
+
+
+
+/**
+   Free's the menu occupied by one menu item.
+*/
+static void menu_item_free(menu_item_type * item) {
+  if (!item->separator) {
+    free(item->key_set);
+    free(item->label);
+  }
+
+  if (item->free_arg != NULL)
+    item->free_arg(item->arg);
+
+  free(item);
+} 
+
+static void menu_item_free__(void * arg) {
+  menu_item_free( (menu_item_type *) arg );
+}
+
 
 
 /**
@@ -96,7 +119,7 @@ menu_type * menu_alloc(const char * title , const char * quit_label , const char
   menu->title     = util_alloc_string_copy( title );
   menu->quit_keys = util_alloc_string_copy( quit_keys );
   menu->size      = 0;
-  menu->items     = NULL;
+  menu->items     = vector_alloc_new();
   menu->complete_key_set = util_alloc_string_copy( quit_keys );
   menu->quit_label = util_alloc_string_copy( quit_label );
   
@@ -122,9 +145,10 @@ static menu_item_type * menu_item_alloc_empty() {
    Low level function doing the actual append of a complete item.
 */
 static void menu_append_item__(menu_type * menu ,  menu_item_type * item) {
-  menu->size += 1;
-  menu->items = util_realloc(menu->items , menu->size * sizeof * menu->items , __func__);
-  menu->items[menu->size - 1] = item;
+  vector_append_owned_ref( menu->items , item , menu_item_free__);
+  //menu->size += 1;
+  //menu->items = util_realloc(menu->items , menu->size * sizeof * menu->items , __func__);
+  //menu->items[menu->size - 1] = item;
 }
 
 
@@ -181,21 +205,6 @@ void menu_add_separator(menu_type * menu) {
 
 
 
-/**
-   Free's the menu occupied by one menu item.
-*/
-static void menu_item_free(menu_item_type * item) {
-  if (!item->separator) {
-    free(item->key_set);
-    free(item->label);
-  }
-
-  if (item->free_arg != NULL)
-    item->free_arg(item->arg);
-
-  free(item);
-} 
-
 
 /** level == 0 : top line
     level == 1 : separator line 
@@ -239,8 +248,10 @@ static void __print_sep(int l) {
 static void menu_display(const menu_type * menu) {
   int i;
   int length = strlen(menu->title);
-  for (i = 0; i < menu->size; i++) 
-    length = util_int_max(length , menu->items[i]->label_length);
+  for (i = 0; i < vector_get_size(menu->items); i++) {
+    const menu_item_type * item = vector_iget_const( menu->items , i);
+    length = util_int_max(length , item->label_length);
+  }
 
 
   printf("\n");
@@ -248,7 +259,7 @@ static void menu_display(const menu_type * menu) {
   printf("| ");   util_fprintf_string(menu->title , length + 6 , center , stdout);  printf(" |\n");
   __print_line(length + 10 , 1);
   for (i=0; i < menu->size; i++) {
-    const menu_item_type * item = menu->items[i];
+    const menu_item_type * item = vector_iget_const( menu->items , i);
     if (item->separator) 
       __print_sep(length + 6);
     else {
@@ -291,7 +302,7 @@ menu_item_type * menu_get_item(const menu_type * menu, char cmd) {
   int item_index = 0;
   menu_item_type * item = NULL;
   while (item_index < menu->size) {
-    menu_item_type * current_item = menu->items[item_index];
+    menu_item_type * current_item = vector_iget(menu->items , item_index);
     if (!current_item->separator) {
       if (strchr(current_item->key_set , cmd) != NULL) {
 	item = current_item;
@@ -324,7 +335,7 @@ void menu_run(const menu_type * menu) {
     {
       int item_index = 0;
       while (1) {
-	const menu_item_type * item = menu->items[item_index];
+	const menu_item_type * item = vector_iget_const(menu->items , item_index);
 	if (!item->separator) {
 	  if (strchr(item->key_set , cmd) != NULL) {
 	    /* Calling the function ... */
@@ -344,11 +355,6 @@ void menu_free(menu_type * menu) {
   free(menu->quit_keys);
   free(menu->title);
   free(menu->complete_key_set);
-  {
-    int i;
-    for (i = 0; i < menu->size; i++) 
-      menu_item_free(menu->items[i]);
-    free(menu->items);
-  }
+  vector_free(menu->items);
   free(menu);
 }

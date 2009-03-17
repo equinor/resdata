@@ -139,11 +139,7 @@ void     util_fread_from_buffer(void *  , size_t  , size_t , char ** );
 
 void     util_fread_dev_random(int , char * );
 void     util_fread_dev_urandom(int , char * );
-bool     util_intptr_2bool(const int *);
 int      util_C2f90_bool(bool );
-void     util_memcpy_string_C2f90(const char *  , char *  , int );
-void     util_pad_f90string(char * , int , int );
-char *   util_alloc_cstring(const char *, const int *);
 char *   util_alloc_string_copy(const char *);
 void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
 

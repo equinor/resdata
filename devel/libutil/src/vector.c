@@ -206,6 +206,26 @@ const void * vector_get_last_const(const vector_type * vector) {
 }
 
 
+/**
+   This function removes the last element from the vector and returns
+   it to the calling scope. Irrespective of whether the element _was_
+   inserted with a destructor: when calling vector_pop() the calling
+   scope takes responsability for freeing data.
+*/
+
+
+void * vector_pop(vector_type * vector) {
+  if (vector->size == 0)
+    util_abort("%s: asking to get the last element in an empty vector - impossible ... \n",__func__);
+  {
+    node_data_type * node = vector->data[vector->size - 1];
+    void * data = node_data_get_ptr( node );
+    
+    node_data_free_container( node );  /* Free the container holding data. */
+    vector->size--;                    /* Shrink the vector */
+    return data;
+  }
+}
 
 
 

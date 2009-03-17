@@ -13,6 +13,7 @@ typedef struct node_data_struct node_data_type;
 
 
 void                       node_data_free(node_data_type *);
+void                       node_data_free_container(node_data_type * );
 node_data_type     	 * node_data_alloc_deep_copy(const node_data_type * );
 node_data_type     	 * node_data_alloc_shallow_copy(const node_data_type * );
 void     		 * node_data_get_ptr(const node_data_type *);

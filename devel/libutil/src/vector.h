@@ -27,6 +27,7 @@ void        * vector_iget(const vector_type * , int );
 void        * vector_get_last(const vector_type * );
 const void  * vector_get_last_const(const vector_type * );
 int           vector_get_size( const vector_type * );
+void        * vector_pop(vector_type * );
 
 #ifdef __cplusplus
 }

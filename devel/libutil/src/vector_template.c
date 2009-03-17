@@ -200,6 +200,11 @@ int <TYPE>_vector_size(const <TYPE>_vector_type * vector) {
 }
 
 
+/**
+   The pop function will remove the last element from the vector and
+   return it. If the vector is empty - it will abort.
+*/
+
 <TYPE> <TYPE>_vector_pop(<TYPE>_vector_type * vector) {
   if (vector->size > 0) {
     <TYPE> value = vector->data[vector->size - 1];

@@ -61,31 +61,6 @@ static bool EOL_CHAR(char c) {
 
 #undef strncpy // This is for some reason needed in RH3
 
-char * util_alloc_gcstring(const char *fort_string , const int *strlen) {
-  const char null_char = '\0';
-  char *new_string = util_malloc(*strlen + 1 , __func__);
-  strncpy(new_string , fort_string , *strlen);
-  new_string[*strlen] = null_char;
-  return new_string;
-}
-
-
-void util_pad_f90string(char *string , int c_strlen , int f90_length) {
-  int i;
-  for (i=c_strlen; i < f90_length; i++) 
-    string[i] = ' ';
-}
-
-
-
-bool util_intptr_2bool(const int *iptr) {
-  if ( (*iptr) == 0)
-    return false;
-  else
-    return true;
-}
-
-
 
 int util_C2f90_bool(bool c_bool) {
   /* This is true for the ifort compiler ... */
@@ -93,8 +68,7 @@ int util_C2f90_bool(bool c_bool) {
     return -1;
   else
     return 0;
-}
-  
+}  
 
 
 
@@ -118,10 +92,6 @@ void util_fread_dev_urandom(int buffer_size , char * buffer) {
 
 
 
-void util_memcpy_string_C2f90(const char * c_input_string , char * fortran_output_string , int fortran_length) {
-  strncpy(fortran_output_string , c_input_string , strlen(c_input_string));
-  util_pad_f90string(fortran_output_string , strlen(c_input_string) , fortran_length);
-}
 
 
 
@@ -3227,6 +3197,7 @@ Observe that the functions util_fwrite_compressed() and
 util_fread_compressed must be used as a pair, the files can **N O T**
 be interchanged with normal calls to gzip/gunzip. To avoid confusion
 it is therefor strongly advised NOT to give the files a .gz extension.
+
 */
 
 void util_fwrite_compressed(const void * _data , int size , FILE * stream) {

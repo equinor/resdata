@@ -13,7 +13,7 @@
 
 struct node_data_struct {
   node_ctype        ctype;
-  const void       *data;
+  void             *data;
   int               buffer_size;  /* This is to facilitate deep copies of buffers. */
   
   /*
@@ -22,8 +22,8 @@ struct node_data_struct {
     
     if they are present they are used.
   */
-  copyc_type  	 *copyc;  /* Not in use yet ... */
-  del_type    	 *del;    /* Not in use yet ... */
+  copyc_type  	 *copyc;  /* Copy constructor - can be NULL. */
+  del_type    	 *del;    /* Destructor - can be NULL. */ 
 };
 
 
@@ -43,7 +43,7 @@ static node_data_type * node_data_alloc__(const void * data , node_ctype ctype ,
   if (node->copyc != NULL)
     node->data = node->copyc( data );
   else
-    node->data = data;
+    node->data = (void *) data;
   
   return node;
 }
@@ -98,11 +98,21 @@ node_data_type * node_data_alloc_shallow_copy(const node_data_type * node) {
 }
 
 
+/**
+   This function does NOT call the destructor on the data. That means
+   that calling scope is responsible for freeing the data; used by the
+   vector_pop function.
+*/
+void node_data_free_container(node_data_type * node_data) {
+  free(node_data);
+}
+
+
 void node_data_free(node_data_type * node_data) {
   if (node_data->del != NULL)
     node_data->del( (void *) node_data->data );
     
-  free(node_data);
+  node_data_free_container( node_data );
 }
 
 
