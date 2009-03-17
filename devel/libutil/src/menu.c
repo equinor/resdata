@@ -58,7 +58,6 @@ struct menu_item_struct {
 
 
 struct menu_struct {
-  int               size;              /* The number of items in the menu */
   vector_type     * items;             /* Vector of menu_item_type instances */
   char            * quit_keys;         /* The keys which can be used to quit from this menu - typically "qQ" */
   char            * title;             /* The title of this menu */
@@ -118,7 +117,6 @@ menu_type * menu_alloc(const char * title , const char * quit_label , const char
   
   menu->title     = util_alloc_string_copy( title );
   menu->quit_keys = util_alloc_string_copy( quit_keys );
-  menu->size      = 0;
   menu->items     = vector_alloc_new();
   menu->complete_key_set = util_alloc_string_copy( quit_keys );
   menu->quit_label = util_alloc_string_copy( quit_label );
@@ -146,9 +144,6 @@ static menu_item_type * menu_item_alloc_empty() {
 */
 static void menu_append_item__(menu_type * menu ,  menu_item_type * item) {
   vector_append_owned_ref( menu->items , item , menu_item_free__);
-  //menu->size += 1;
-  //menu->items = util_realloc(menu->items , menu->size * sizeof * menu->items , __func__);
-  //menu->items[menu->size - 1] = item;
 }
 
 
@@ -258,7 +253,7 @@ static void menu_display(const menu_type * menu) {
   __print_line(length + 10 , 0);
   printf("| ");   util_fprintf_string(menu->title , length + 6 , center , stdout);  printf(" |\n");
   __print_line(length + 10 , 1);
-  for (i=0; i < menu->size; i++) {
+  for (i=0; i < vector_get_size(menu->items); i++) {
     const menu_item_type * item = vector_iget_const( menu->items , i);
     if (item->separator) 
       __print_sep(length + 6);
@@ -301,7 +296,7 @@ static int menu_read_cmd(const menu_type * menu) {
 menu_item_type * menu_get_item(const menu_type * menu, char cmd) {
   int item_index = 0;
   menu_item_type * item = NULL;
-  while (item_index < menu->size) {
+  while (item_index < vector_get_size(menu->items)) {
     menu_item_type * current_item = vector_iget(menu->items , item_index);
     if (!current_item->separator) {
       if (strchr(current_item->key_set , cmd) != NULL) {
