@@ -44,4 +44,5 @@ char           ** stringlist_alloc_char_copy(const stringlist_type * );
 void              stringlist_fread(stringlist_type * , FILE * );
 void              stringlist_fwrite(const stringlist_type * , FILE * );
 stringlist_type * stringlist_fread_alloc(FILE * );
+void              stringlist_sort(stringlist_type *);
 #endif

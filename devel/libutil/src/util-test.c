@@ -23,20 +23,21 @@ void test(char ** ptr) {
 
 
 int main(int argc , char ** argv) {
-  double * buffer = util_malloc( 3 * sizeof * buffer , __func__);
-  util_copy_directory("/h/joaho/EnKF/devel/EnKF/libutil" , "/tmp/EnKF/devel", NULL);
+  stringlist_type * list = stringlist_alloc_new();
 
-  buffer[0] = 123;
-  buffer[1] = 456;
-  buffer[2] = 789;
+  stringlist_append_copy(list, "svada");
+  stringlist_append_copy(list, "bjarne");
+  stringlist_append_copy(list, "per");
+  stringlist_append_copy(list, "jada");
+  stringlist_append_copy(list, "mer_svada");
 
-  {
-    double value;
-    char * ptr = (char *) buffer;
-    test( &ptr );
-    test( &ptr );
-    test( &ptr );
-  }
-  
+  stringlist_sort(list);
+
+  int size = stringlist_get_size(list);
+
+  for(int i= 0; i<size; i++)
+    printf("elem %d: %s\n", i, stringlist_iget(list, i));
+
+  stringlist_free(list); 
   
 }
