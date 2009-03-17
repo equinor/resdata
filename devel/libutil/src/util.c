@@ -1241,6 +1241,8 @@ void         msg_show(msg_type * );
 void         msg_free(msg_type *  , bool);
 void         msg_update(msg_type * , const char * );
 
+
+
 static void util_copy_directory__(const char * src_path , const char * target_path , int buffer_size , void * buffer , msg_type * msg) {
   if (!util_is_directory(src_path))
     util_abort("%s: %s is not a directory \n",__func__ , src_path);
@@ -1250,27 +1252,30 @@ static void util_copy_directory__(const char * src_path , const char * target_pa
     DIR * dirH = opendir( src_path );
     if (dirH == NULL) 
       util_abort("%s: failed to open directory:%s / %s \n",__func__ , src_path , strerror(errno));
+
     {
       struct dirent * dp;
       do {
 	dp = readdir(dirH);
 	if (dp != NULL) {
 	  if (dp->d_name[0] != '.') {
-	    const char * full_src_path    = util_alloc_filename(src_path , dp->d_name , NULL);
-	    const char * full_target_path = util_alloc_filename(target_path , dp->d_name , NULL);
+	    char * full_src_path    = util_alloc_filename(src_path , dp->d_name , NULL);
+	    char * full_target_path = util_alloc_filename(target_path , dp->d_name , NULL);
 	    if (util_is_file( full_src_path )) {
 	      if (msg != NULL)
 		msg_update( msg , full_src_path);
 	      util_copy_file__( full_src_path , full_target_path , buffer_size , buffer);
-	    } else
+	    } else 
 	      util_copy_directory__( full_src_path , full_target_path , buffer_size , buffer , msg);
+
+	    free( full_src_path );
+	    free( full_target_path );
 	  }
 	}
       } while (dp != NULL);
     }
     closedir( dirH );
   }
-  
 }
 
 /** 
@@ -1327,23 +1332,65 @@ bool util_file_exists(const char *filename) {
       return false;
     }
   }
-  
-  /*
-    FILE *stream = fopen(filename , "r");
-    bool ex;
-    if (stream == NULL) {
-    if (errno == ENOENT)
-    ex = false;
-    else 
-    util_abort("file: %s exists but open failed - aborting \n",filename);
-    } else {
-    fclose(stream);
-    ex = true;
-    }
-    return ex;
-  */
 }
 
+
+/**
+   This function will start at 'root_path' and then recursively go
+   through all file/subdirectore located below root_path. For each
+   file in this tree it will call the user-supplied funtion
+   'file_callback'. The arguments to file_callback will be:
+   (root_path, file , callback_arg).
+
+   Example
+   -------
+   Root
+   Root/File1
+   Root/File2
+   Root/dir
+   Root/dir/fileXX
+
+   The call:
+      util_walk_path("Root" , callback , arg);
+      
+   Will result in the following calls to the callback:
+      callback("Root" , "File1" , arg); 
+      callback("Root" , "File1" , arg); 
+      callback("Root/dir" , "fileXX" , arg); 
+
+  Symlinks are ignored when descending into subdirectories.     
+*/
+
+
+void util_walk_directory(const char * root_path , file_callback_ftype * file_callback , void * callback_arg) {
+  {
+    DIR * dirH = opendir( root_path );
+    if (dirH == NULL) 
+      util_abort("%s: failed to open directory:%s / %s \n",__func__ , root_path , strerror(errno));
+
+    {
+      struct dirent * dp;
+      do {
+	dp = readdir(dirH);
+	if (dp != NULL) {
+	  if (dp->d_name[0] != '.') {
+	    char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
+
+	    if (util_is_file( full_path )) 
+	      file_callback( root_path , dp->d_name , callback_arg);
+	    else {
+	      if ((util_is_directory( full_path) && (!util_is_link(full_path)))) 
+		util_walk_directory( full_path , file_callback, callback_arg );
+	    }
+
+	    free(full_path);
+	  }
+	}
+      } while (dp != NULL);
+    }
+    closedir( dirH );
+  }
+}
 
 
 

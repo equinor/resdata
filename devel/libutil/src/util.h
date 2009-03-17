@@ -18,6 +18,10 @@ extern"C" {
 #endif
 
 
+typedef void (file_callback_ftype)   (const char * , /* The current directory */
+				      const char * , /* The current file */
+				      void *);       /* Arbitrary argument */
+
 typedef enum {left_pad  = 0,
 	      right_pad = 1,
 	      center    = 2} string_alignement_type;
@@ -64,6 +68,7 @@ void         util_string_tr(char * , char , char);
 void 	     util_copy_stream(FILE *, FILE *, int , void * );
 void 	     util_copy_file(const char * , const char * );
 void         util_copy_directory(const char *  , const char * , const char *);
+void         util_walk_directory(const char * root_path , file_callback_ftype * file_callback , void * callback_arg);
 char       * util_alloc_cwd(void);
 char       * util_alloc_realpath(const char * );
 
