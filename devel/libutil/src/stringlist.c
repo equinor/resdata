@@ -395,7 +395,6 @@ void stringlist_sort(stringlist_type * s)
     const char ** s2 = (const char **) __s2;
     return strcmp( *s1, *s2);
   }
-  printf("s->size: %d\n", s->size);
   qsort(s->strings, s->size, sizeof(char *),  strcmp__);
 }
 
