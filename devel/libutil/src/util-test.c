@@ -24,7 +24,7 @@ void test(char ** ptr) {
 
 int main(int argc , char ** argv) {
   double * buffer = util_malloc( 3 * sizeof * buffer , __func__);
-  util_copy_directory("/h/joaho/EnKF/devel/EnKF/libutil" , "/tmp/EnKF/devel");
+  util_copy_directory("/h/joaho/EnKF/devel/EnKF/libutil" , "/tmp/EnKF/devel", NULL);
 
   buffer[0] = 123;
   buffer[1] = 456;
