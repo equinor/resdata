@@ -180,8 +180,9 @@ stringlist_type * stringlist_alloc_argv_ref(const char ** argv , int argc) {
   return stringlist_alloc__(argv , argc , ref);
 }
 
-stringlist_type * stringlist_alloc_argv_owned_ref(const char ** argv , int argc) {
-  return stringlist_alloc__(argv , argc , list_owned);
+stringlist_type * stringlist_alloc_argv_owned_ref(char ** argv , int argc) {
+  /** Cast to shut-up compiler. */
+  return stringlist_alloc__( (const char **) argv , argc , list_owned);
 }
 
 
@@ -389,7 +390,7 @@ stringlist_type * stringlist_fread_alloc(FILE * stream) {
 
 void stringlist_sort(stringlist_type * s)
 {
-  int strcmp__(const void ** __s1, const void ** __s2)
+  int strcmp__(const void * __s1, const void * __s2)
   {
     const char ** s1 = (const char **) __s1;
     const char ** s2 = (const char **) __s2;
