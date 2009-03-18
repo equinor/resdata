@@ -15,3 +15,4 @@ hash_sll.o                          : hash_sll.c hash_sll.h hash_node.o
 str_buffer.o                        : str_buffer.c str_buffer.h  
 list_node.o                         : list_node.c list_node.h util.o node_data.o  
 util.o                              : util.c util.h util_path.c  
+tokenizer.o                         : util.c util.h stringlist.c stringlist.h tokenizer.c tokenizer.h

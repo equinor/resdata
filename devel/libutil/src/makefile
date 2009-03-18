@@ -9,8 +9,8 @@ VECTOR_HEADERS    = int_vector.h double_vector.h float_vector.h bool_vector.h ti
 VECTOR_OBJECTS    = int_vector.o double_vector.o float_vector.o bool_vector.o time_t_vector.o
 VECTOR_SOURCE     = int_vector.c double_vector.c float_vector.c bool_vector.c time_t_vector.c
 SDP_ROOT          = $(shell get_sdp_root.py)
-OBJECTS           = set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o node_ctype.o util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o stringlist.o menu.o subst.o vector.o $(VECTOR_OBJECTS)
-INC_FILES_INSTALL = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h vector.h $(VECTOR_HEADERS)
+OBJECTS           = set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o node_ctype.o util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o stringlist.o menu.o subst.o vector.o tokenizer.o $(VECTOR_OBJECTS)
+INC_FILES_INSTALL = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h vector.h tokenizer.h $(VECTOR_HEADERS)
 LIB               = libutil.a
 LIB_LINK          = -lutil -lz -lpthread -lm
 LINK_LIB_PATH     = -L./ 
@@ -72,8 +72,8 @@ mem_free.o  : mem_free.c
 
 #################################################################
 
-BIN:	hash.x util.x eol-fix.x mem_free.x 
-BIN_FILES = hash.x util.x eol-fix.x mem_free.x 
+BIN:	hash.x util.x eol-fix.x mem_free.x tokenizer_test.x
+BIN_FILES = hash.x util.x eol-fix.x mem_free.x tokenizer_test.x
 
 hash.x: hash_test.o $(LIB)
 	$(CC) $(LDFLAGS) -$(MFLAG) hash_test.o -o hash.x     $(LINK_LIB_PATH) $(LIB_LINK) 
@@ -87,3 +87,5 @@ eol-fix.x: eol-fix.o $(LIB)
 mem_free.x: mem_free.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) mem_free.o -o mem_free.x  $(LINK_LIB_PATH) $(LIB_LINK)
 
+tokenizer_test.x: tokenizer_test.o $(LIB)
+	$(LD) -$(MFLAG) $(LDFLAGS) tokenizer_test.o -o tokenizer_test.x  $(LINK_LIB_PATH) $(LIB_LINK)
