@@ -2,9 +2,12 @@
 
 int main(int argc, char ** argv)
 {
-  tokenizer_type * tokenizer = tokenizer_alloc(" \t\r\n", NULL, NULL, "##", "##");
+  tokenizer_type * tokenizer = tokenizer_alloc(" \t\r\n", "\"", NULL, "##", "##");
 
-  stringlist_type * tokens = tokenize_buffer( tokenizer, "svada bjarne spiser mye gress ## Kommentar som ikke skal syntes ## fordi han tror han er \n en ku.", true);
+  if(argc < 2 )
+    return 1;
+
+  stringlist_type * tokens = tokenize_file( tokenizer, argv[1] , true);
 
   int num_tokens = stringlist_get_size(tokens);
 

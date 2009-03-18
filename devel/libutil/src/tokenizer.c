@@ -201,11 +201,11 @@ int length_of_quotation(
   char current = buffer[1]; 
 
   bool escaped = false;
-  while(current != '\0' && current != target && !escaped)
+  while(current != '\0' &&  !(current == target && !escaped ))
   {
+    escaped = is_escape(current);
     length += 1;
     current = buffer[length];
-    escaped = is_escape(current);
   }
   length += 1;
 
