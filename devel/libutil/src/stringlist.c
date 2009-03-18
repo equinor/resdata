@@ -213,13 +213,13 @@ stringlist_type * stringlist_alloc_deep_copy(const stringlist_type * stringlist)
 }
 
 
-void stringlist_insert_stringlist_copy(stringlist_type * stringlist , const stringlist_type * src) {
+void stringlist_append_stringlist_copy(stringlist_type * stringlist , const stringlist_type * src) {
   int i;
   for (i = 0; i < src->size; i++)
     stringlist_append_copy(stringlist , stringlist_iget(src , i));
 }
 
-void stringlist_insert_stringlist_ref(stringlist_type * stringlist , const stringlist_type * src) {
+void stringlist_append_stringlist_ref(stringlist_type * stringlist , const stringlist_type * src) {
   int i;
   for (i = 0; i < src->size; i++)
     stringlist_append_ref(stringlist , stringlist_iget(src , i));
