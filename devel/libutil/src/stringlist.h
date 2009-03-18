@@ -34,6 +34,7 @@ stringlist_type * stringlist_alloc_deep_copy(const stringlist_type *);
 
 void              stringlist_append_stringlist_copy(stringlist_type *  , const stringlist_type * );
 void              stringlist_append_stringlist_ref(stringlist_type *   , const stringlist_type * );
+void              stringlist_insert_stringlist_copy(stringlist_type *  , const stringlist_type *, int);
 
 bool              stringlist_equal(const stringlist_type *  , const stringlist_type *);
 bool              stringlist_contains(const stringlist_type *  , const char * );

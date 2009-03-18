@@ -226,6 +226,36 @@ void stringlist_append_stringlist_ref(stringlist_type * stringlist , const strin
 }
 
 
+/**
+  Insert a copy of a stringlist in some position.
+
+  Can probably be made more efficient.
+*/
+void stringlist_insert_stringlist_copy(stringlist_type * stringlist, const stringlist_type * src, int pos) {
+  int size_old  = stringlist_get_size(stringlist);
+
+  /** Cannot use assert_index here. */
+  if(pos < 0 || pos > size_old)
+    util_abort("%s: Position %d is out of bounds. Min: 0 Max: %d\n", pos, size_old);
+
+  stringlist_type * start = stringlist_alloc_new();
+  stringlist_type * end   = stringlist_alloc_new();
+  stringlist_type * new   = stringlist_alloc_new();
+
+  for(int i=0; i<pos; i++)
+    stringlist_append_ref(start, stringlist_iget(stringlist, i));
+  for(int i=pos; i<size_old; i++)
+    stringlist_append_ref(end  , stringlist_iget(stringlist, i));
+
+  stringlist_append_stringlist_copy(new, start);
+  stringlist_append_stringlist_copy(new, src  );
+  stringlist_append_stringlist_copy(new, end  );
+
+  stringlist_free(stringlist);
+  stringlist = new;
+}
+
+
 /** 
     Frees all the memory contained by the stringlist.
 */
