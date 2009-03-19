@@ -4,7 +4,6 @@
 #include <tokenizer.h>
 
 #define TOKENIZER_ESCAPE_CHAR '\\'
-#define TOKENIZER_COMMENT     "--"
 
 
 

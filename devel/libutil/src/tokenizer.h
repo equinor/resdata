@@ -80,24 +80,21 @@ typedef struct tokenizer_struct tokenizer_type;
 
   To use one of the quoter characters in a string,
   place a "\" in front of it. Building on our previous
-  example, let the string be "my_file = 'my \'doc.txt'
+  example, let the string be "my_file = 'my \'doc.txt'"
   Tokenzing this with strip_quote_marks set to true
   would give:
 
   Token number 0 is "my_file"
   Token number 1 is "="
-  Token number 2 is "my doc.txt"
+  Token number 2 is "my 'doc.txt"
 
-  Note that the "\" has been removed. However,
-  if strip_quote_marks is set to false, the result is:
+  Note that the "\" in front of"'" has been removed.
+  If strip_quote_marks is set to false, the result is:
+  
 
   Token number 0 is "my_file"
   Token number 1 is "="
   Token number 2 is "'my \'doc.txt'"
-
-
-
-  
 
 */
 
