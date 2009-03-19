@@ -41,6 +41,7 @@ struct ecl_cell_struct {
 
 
 struct ecl_grid_struct {
+  char                *     filename;
   int nx , ny , nz , size , total_active;
   int                 * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
@@ -773,9 +774,15 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
     ecl_grid = ecl_grid_alloc_EGRID(grid_file , endian_flip);
   else 
     util_abort("%s must have .GRID or .EGRID file - %s not recognized \n", __func__ , grid_file);
-  
+
+  ecl_grid->filename = util_alloc_string_copy( grid_file );
   ecl_grid_alloc_index_map(ecl_grid);
   return ecl_grid;
+}
+
+
+const char * ecl_grid_get_filename( const ecl_grid_type * ecl_grid ) {
+  return ecl_grid->filename;
 }
 
 
@@ -915,7 +922,8 @@ void ecl_grid_free(ecl_grid_type * grid) {
       double_vector_free( grid->values[i] );
     free( grid->values );
   }
-  free(grid);
+  free( grid->filename );
+  free( grid );
 }
 
 
