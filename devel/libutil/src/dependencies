@@ -1,10 +1,10 @@
 set.o                               : set.c set.h hash.o util.o  
-stringlist.o                        : stringlist.c stringlist.h util.o  
-hash.o                              : hash.c hash.h hash_sll.o hash_node.o node_data.o util.o  
+stringlist.o                        : stringlist.c stringlist.h util.o vector.o  
+hash.o                              : hash.c hash.h hash_sll.o hash_node.o node_data.o util.o stringlist.o  
 hash_node.o                         : hash_node.c hash_node.h util.o node_data.o  
 arg_pack.o                          : arg_pack.c arg_pack.h util.o node_ctype.o  
 list.o                              : list.c list.h list_node.o  
-menu.o                              : menu.c menu.h util.o  
+menu.o                              : menu.c menu.h util.o vector.o  
 thread_pool.o                       : thread_pool.c thread_pool.h util.o  
 node_data.o                         : node_data.c node_data.h util.o node_ctype.o  
 path_fmt.o                          : path_fmt.c path_fmt.h util.o node_ctype.o  
@@ -15,4 +15,3 @@ hash_sll.o                          : hash_sll.c hash_sll.h hash_node.o
 str_buffer.o                        : str_buffer.c str_buffer.h  
 list_node.o                         : list_node.c list_node.h util.o node_data.o  
 util.o                              : util.c util.h util_path.c  
-tokenizer.o                         : util.c util.h stringlist.c stringlist.h tokenizer.c tokenizer.h

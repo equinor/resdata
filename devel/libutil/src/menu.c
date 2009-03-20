@@ -53,7 +53,7 @@ struct menu_item_struct {
   menu_func_type * func;      	 /* The function called when this item is activated. */
   void           * arg;       	 /* The argument passed to func. */
   int              label_length; /* The length of the label - zero for separators. */
-  arg_free_ftype * free_arg; 
+  arg_free_ftype * free_arg;     /* Destructor for the argument - will typically be NULL */
 };
 
 

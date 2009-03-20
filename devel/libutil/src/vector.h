@@ -7,6 +7,7 @@ extern "C" {
 
 
 typedef void ( vector_func_type ) (void * , void *);
+typedef int  ( vector_cmp_ftype)  (const void * , const void *);
 
 typedef struct vector_struct vector_type;
 
@@ -19,15 +20,26 @@ int           vector_append_copy(vector_type * , const void *, copyc_type *, del
 void 	      vector_insert_ref( vector_type * , int , const void *);
 void 	      vector_insert_owned_ref( vector_type * , int , const void * , del_type * del);
 void          vector_insert_copy(vector_type * , int , const void *, copyc_type *, del_type *);
+void 	      vector_push_ref( vector_type * ,  const void *);
+void 	      vector_push_owned_ref( vector_type * ,  const void * , del_type * del);
+void          vector_push_copy(vector_type * ,  const void *, copyc_type *, del_type *);
+void          vector_clear(vector_type * vector);
 void          vector_free(vector_type * ); 
 void          vector_append_buffer(vector_type * , const void * , int);
+void          vector_push_buffer(vector_type * , const void * , int);
 int           vector_get_size(const vector_type * );
 const void  * vector_iget_const(const vector_type * , int );
 void        * vector_iget(const vector_type * , int );
+void          vector_idel(vector_type * vector , int index);
 void        * vector_get_last(const vector_type * );
 const void  * vector_get_last_const(const vector_type * );
 int           vector_get_size( const vector_type * );
 void        * vector_pop(vector_type * );
+void          vector_sort(vector_type * vector , vector_cmp_ftype * cmp);
+vector_type * vector_alloc_copy(const vector_type * src , bool deep_copy);
+
+void          vector_insert_buffer(vector_type * vector , int index , const void * buffer, int buffer_size);
+
 
 #ifdef __cplusplus
 }

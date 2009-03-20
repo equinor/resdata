@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <util.h>
 #include <stringlist.h>
+#include <vector.h>
 
 #define STRINGLIST_ID 671855
 
@@ -10,114 +11,35 @@
    This file implements a very thin wrapper around a list (vector) of
    strings, and the total number of strings. It is mostly to avoid
    sending both argc and argv.
-
-   Most of the functionality is implemented through stateless
-   functions in util.c
+   
+   Most of the functionality is implemented through vector.c and
+   stateless functions in util.c
 */
-
-typedef enum {ref         = 0,    /* Means that the stringlist only has reference to the item,
-				     and it is the responsibility of the calling scope to free 
-				     the memory of this string. */
-	      list_owned  = 1 ,   /* The stringlist has taken ownership to a reference , i.e. it
-				     is the stringlist's responsibility to free this memory.*/
-	      copy        = 2}    /* The stringlist has taken a copy of the string, it is
-				     obsviously the responsibility of the stringlist to
-				     free this memory, whereas it is the responsibility of
-				     the calling scope to handle the input string.*/ owner_type;
-
 
 
 struct stringlist_struct {
   int           __id;       /* ID used to do run-time check of casts. */
-  int           size;       /* The number of elements */
-  char        **strings;    /* The actual strings - NB we allow NULL strings: Observe that  char ** implementation is implicitly exported. */
-  owner_type * owner;
+  vector_type * __strings;
 };
 
 
 
 
-static void stringlist_fprintf__(const stringlist_type * stringlist, const char * sep , FILE * stream , bool debug) {
-  if (debug) 
-    for (int i = 0; i < stringlist->size; i++)
-      fprintf(stream , "%s[%d]%s",stringlist->strings[i] , stringlist->owner[i], sep );
-  else 
-    for (int i = 0; i < stringlist->size; i++)
-      fprintf(stream , "%s%s",stringlist->strings[i] , sep);
-}
-
-
-void stringlist_fprintf(const stringlist_type * stringlist, const char * sep , FILE * stream) {
-  stringlist_fprintf__(stringlist , sep , stream , false);
-}
-
-
-
-/**
-   this function appends num_append new items to the
-   stringlist. Observe that this functions does not assign values
-   (apart from trivial null initialization) to the newly appended
-   memory, i.e. it is esential that the calling routine (from this
-   file) has
-
-     stringlist->xx = yy;
-
-   statements.
-*/
-
-   
-static void stringlist_grow__(stringlist_type * stringlist , int num_append) {
-  int old_size = stringlist->size;
-  stringlist->size += num_append;
-  stringlist->strings = util_realloc(stringlist->strings , stringlist->size * sizeof * stringlist->strings , __func__);
-  stringlist->owner   = util_realloc(stringlist->owner   , stringlist->size * sizeof * stringlist->owner   , __func__);
-  {
-    int i;
-    for (i = old_size; i < stringlist->size; i++) {
-      stringlist->strings[i] = NULL;
-      stringlist->owner[i]   = ref;  
-    }
+static void stringlist_fprintf__(const stringlist_type * stringlist, const char * sep , FILE * stream) {
+  int i;
+  for (i=0; i < vector_get_size( stringlist->__strings ); i++) {
+    const char * s = stringlist_iget(stringlist , i);
+    fprintf(stream , "%s%s", s  , sep);
   }
 }
 
 
-void stringlist_assert_index(const stringlist_type * stringlist , int index) {
-  if (index >= stringlist->size || index <0 ) 
-    util_abort("%s: sorry length(stringlist) = %d - index:%d invalid. \n",__func__ , stringlist->size , index); 
-}
-
-/**
-   Sets element nr i in the stringlist to the input string 's'. If the
-   list does not have that many elements we die (could grow as well??).
-
-*/
-
-static void stringlist_iset__(stringlist_type * stringlist , int index , const char * s , owner_type owner) {
-  stringlist_assert_index(stringlist , index);
-  if (stringlist->owner[index] != ref)
-    util_safe_free(stringlist->strings[index]);
-  
-  stringlist->owner[index] = owner;
-  if (owner == copy)
-    stringlist->strings[index] = util_alloc_string_copy(s);
-  else
-    stringlist->strings[index] = (char *) s;
+void stringlist_fprintf(const stringlist_type * stringlist, const char * sep , FILE * stream) {
+  stringlist_fprintf__(stringlist , sep , stream);
 }
 
 
 
-
-void stringlist_iset_copy(stringlist_type * stringlist , int index , const char *s) {
-  stringlist_iset__(stringlist , index , s , copy);
-}
-
-void stringlist_iset_ref(stringlist_type * stringlist , int index , const char *s) {
-  stringlist_iset__(stringlist , index , s , ref);
-}
-
-void stringlist_iset_owned_ref(stringlist_type * stringlist , int index , const char *s) {
-  stringlist_iset__(stringlist , index , s , list_owned);
-}
 
 
 
@@ -125,29 +47,39 @@ void stringlist_iset_owned_ref(stringlist_type * stringlist , int index , const 
    This function appends a copy of s into the stringlist.
 */
 void stringlist_append_copy(stringlist_type * stringlist , const char * s) {
-  stringlist_grow__(stringlist , 1);
-  stringlist_iset_copy(stringlist , stringlist->size - 1 , s);
+  vector_append_buffer(stringlist->__strings , s , strlen(s) + 1);
 }
 
 void stringlist_append_ref(stringlist_type * stringlist , const char * s) {
-  stringlist_grow__(stringlist , 1);
-  stringlist_iset_ref(stringlist , stringlist->size - 1 , s);
+  vector_append_ref(stringlist->__strings , s);
 }
 
 void stringlist_append_owned_ref(stringlist_type * stringlist , const char * s) {
-  stringlist_grow__(stringlist , 1);
-  stringlist_iset_owned_ref(stringlist , stringlist->size - 1 , s);
+  vector_append_owned_ref(stringlist->__strings , s , free);
+}
+
+
+void stringlist_iset_copy(stringlist_type * stringlist , int index , const char * s) {
+  vector_insert_buffer(stringlist->__strings , index , s , strlen(s) + 1);
+}
+
+void stringlist_iset_ref(stringlist_type * stringlist , int index , const char * s) {
+  vector_insert_ref(stringlist->__strings , index , s);
+}
+
+void stringlist_iset_owned_ref(stringlist_type * stringlist , int index , const char * s) {
+  vector_insert_owned_ref(stringlist->__strings , index , s , free);
 }
 
 
 
-
-static stringlist_type * stringlist_alloc_empty() {
+static stringlist_type * stringlist_alloc_empty( bool alloc_vector ) {
   stringlist_type * stringlist = util_malloc(sizeof * stringlist , __func__);
-  stringlist->__id    = STRINGLIST_ID;
-  stringlist->strings = NULL;
-  stringlist->size    = 0;
-  stringlist->owner   = NULL;
+  stringlist->__id      = STRINGLIST_ID;
+  if (alloc_vector)
+    stringlist->__strings = vector_alloc_new();
+  else
+    stringlist->__strings = NULL;
   return stringlist;
 }
 
@@ -155,73 +87,78 @@ static stringlist_type * stringlist_alloc_empty() {
 
 
 stringlist_type * stringlist_alloc_new() {
-  return stringlist_alloc_empty();
+  return stringlist_alloc_empty( true );
 }
 
 
-static stringlist_type * stringlist_alloc__(const char ** argv , int argc , owner_type owner) {
 
-  stringlist_type * stringlist = stringlist_alloc_empty();
-  stringlist_grow__(stringlist , argc);
-  {
-    int iarg;
-    for (iarg = 0; iarg < argc; iarg++) 
-      stringlist_iset__(stringlist , iarg , argv[iarg] , owner);
-  }
+stringlist_type * stringlist_alloc_argv_copy(const char ** argv , int argc) {
+  int iarg;
+  stringlist_type * stringlist = stringlist_alloc_empty( true);
+  for (iarg = 0; iarg < argc; iarg++) 
+    stringlist_append_copy( stringlist , argv[iarg]);
+  
   return stringlist;
 }
 
 
-stringlist_type * stringlist_alloc_argv_copy(const char ** argv , int argc) {
-  return stringlist_alloc__(argv , argc , copy);
-}
-
 stringlist_type * stringlist_alloc_argv_ref(const char ** argv , int argc) {
-  return stringlist_alloc__(argv , argc , ref);
+  int iarg;
+  stringlist_type * stringlist = stringlist_alloc_empty( true );
+  for (iarg = 0; iarg < argc; iarg++) 
+    stringlist_append_ref( stringlist , argv[iarg]);
+
+  return stringlist;
 }
 
-stringlist_type * stringlist_alloc_argv_owned_ref(char ** argv , int argc) {
-  /** Cast to shut-up compiler. */
-  return stringlist_alloc__( (const char **) argv , argc , list_owned);
+
+stringlist_type * stringlist_alloc_argv_owned_ref(const char ** argv , int argc) {
+  int iarg;
+  stringlist_type * stringlist = stringlist_alloc_empty( true );
+  for (iarg = 0; iarg < argc; iarg++) 
+    stringlist_append_owned_ref( stringlist , argv[iarg]);
+  
+  return stringlist;
 }
 
-
-static stringlist_type * stringlist_alloc_copy__(const stringlist_type * stringlist, bool deep_copy) {
-  owner_type owner;
-  if (deep_copy)
-    owner = copy;
-  else
-    owner = ref;
-  return stringlist_alloc__((const char **) stringlist->strings , stringlist->size , owner);
-}
 
 
 /** 
     Allocates a new stringlist instance where all the new string are references to the
     string found in the existing stringlist instance.
 */ 
-stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type * stringlist) { 
-  return stringlist_alloc_copy__(stringlist , false);
+stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type * src) {
+  stringlist_type * copy = stringlist_alloc_empty( false );
+  copy->__strings = vector_alloc_copy( src->__strings , false);
+  return copy;
 }
 
 
-/**
-    Allocates a new stringlist, where all the string are also copies.
+/*
+  Can not use vector_deep copy - because we might not have the constructor registered, 
+  in the node_data instance; but in this case we know the copy constructor.
 */
-stringlist_type * stringlist_alloc_deep_copy(const stringlist_type * stringlist) { 
-  return stringlist_alloc_copy__(stringlist , true);
+
+stringlist_type * stringlist_alloc_deep_copy(const stringlist_type * src) {
+  stringlist_type * copy = stringlist_alloc_empty( true );
+  int i;
+  for (i = 0; i < stringlist_get_size( src ); i++) 
+    stringlist_append_copy( copy , stringlist_iget( src , i));
+  return copy;
 }
+
 
 
 void stringlist_append_stringlist_copy(stringlist_type * stringlist , const stringlist_type * src) {
   int i;
-  for (i = 0; i < src->size; i++)
+  for (i = 0; i < stringlist_get_size( src ); i++)
     stringlist_append_copy(stringlist , stringlist_iget(src , i));
 }
 
+
 void stringlist_append_stringlist_ref(stringlist_type * stringlist , const stringlist_type * src) {
   int i;
-  for (i = 0; i < src->size; i++)
+  for (i = 0; i < stringlist_get_size( src ); i++)
     stringlist_append_ref(stringlist , stringlist_iget(src , i));
 }
 
@@ -244,6 +181,7 @@ void stringlist_insert_stringlist_copy(stringlist_type * stringlist, const strin
 
   for(int i=0; i<pos; i++)
     stringlist_append_ref(start, stringlist_iget(stringlist, i));
+
   for(int i=pos; i<size_old; i++)
     stringlist_append_ref(end  , stringlist_iget(stringlist, i));
 
@@ -260,20 +198,7 @@ void stringlist_insert_stringlist_copy(stringlist_type * stringlist, const strin
     Frees all the memory contained by the stringlist.
 */
 void stringlist_clear(stringlist_type * stringlist) {
-int i;
-
- if (stringlist->size > 0) {
-   
-   for (i = 0; i < stringlist->size; i++)
-     if (stringlist->owner[i] != ref)
-       util_safe_free(stringlist->strings[i]);
-   free(stringlist->strings);
-   free(stringlist->owner);
-   
-   stringlist->strings = NULL;
-   stringlist->size    = 0;
-   stringlist->owner   = NULL;
- }
+  vector_clear( stringlist->__strings );
 }
 
 
@@ -293,16 +218,19 @@ static stringlist_type * stringlist_safe_cast(void *_stringlist) {
 }
 
 
-void stringlist_free__(void * _stringlist) {
-  stringlist_type * stringlist = stringlist_safe_cast(_stringlist);
+void stringlist_free__(void * __stringlist) {
+  stringlist_type * stringlist = stringlist_safe_cast(__stringlist);
   stringlist_free( stringlist );
 }
 
 
+void stringlist_idel(stringlist_type * stringlist , int index) {
+  vector_idel( stringlist->__strings , index);
+}
+
 
 const char * stringlist_iget(const stringlist_type * stringlist , int index) {
-  stringlist_assert_index(stringlist ,index);
-  return stringlist->strings[index];
+  return vector_iget(stringlist->__strings ,index);
 }
 
 
@@ -312,42 +240,24 @@ char * stringlist_iget_copy(const stringlist_type * stringlist , int index) {
 
 
 int stringlist_get_size(const stringlist_type * stringlist) {
-    return stringlist->size;
+  return vector_get_size(stringlist->__strings);
 }
 
-int stringlist_get_argc(const stringlist_type * stringlist) {
-    return stringlist->size;
-}
-
-
-const char ** stringlist_get_argv(const stringlist_type * stringlist) {
-  return (const char **) stringlist->strings;
-}
 
 /*
   Return NULL if the list has zero entries. 
 */
 char ** stringlist_alloc_char_copy(const stringlist_type * stringlist) {
   char ** strings = NULL;
-  if (stringlist->size > 0) {
-    int size = stringlist->size;
+  int size = stringlist_get_size( stringlist );
+  if (size > 0) {
     strings = util_malloc(size * sizeof * strings , __func__);
     for (int i = 0; i <size; i++)
-      strings[i] = util_alloc_string_copy( stringlist->strings[i] );
+      strings[i] = stringlist_iget_copy( stringlist , i);
   }
   return strings;
 }
 
-
-
-const char ** stringlist_iget_argv(const stringlist_type * stringlist, int index) {
-  if (index < stringlist->size)
-    return (const char **) &stringlist->strings[index];
-  else {
-    util_abort("%s: index:%d invald \n",__func__ , index);
-    return NULL; /* Compiler shut up. */
-  }
-}
 
 
 
@@ -358,10 +268,12 @@ const char ** stringlist_iget_argv(const stringlist_type * stringlist, int index
 */
 
 bool stringlist_contains(const stringlist_type * stringlist , const char * s) {
+  int  size     = stringlist_get_size( stringlist );
   int  index    = 0;
   bool contains = false;
-  while ((index < stringlist->size) && (!contains)) {
-    const char * istring = stringlist->strings[index];
+  
+  while ((index < size) && (!contains)) {
+    const char * istring = stringlist_iget(stringlist , index);
     if (istring != NULL)
       if (strcmp(istring , s) == 0) contains = true;
     index++;
@@ -370,11 +282,14 @@ bool stringlist_contains(const stringlist_type * stringlist , const char * s) {
 }
 
 
+
 bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
-  if (s1->size == s2->size) {
+  int size1 = stringlist_get_size( s1 );
+  int size2 = stringlist_get_size( s2 );
+  if (size1 == size2) {
     bool equal = true;
-    for (int i = 0; i < s1->size; i++) {
-      if (strcmp(s1->strings[i] , s2->strings[i]) != 0) {
+    for (int i = 0; i < size1; i++) {
+      if (strcmp(stringlist_iget(s1 , i) , stringlist_iget(s2 , i)) != 0) {
 	equal = false;
 	break;
       }
@@ -384,18 +299,27 @@ bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
     return false;
 }
 
-char * stringlist_alloc_joined_string(const stringlist_type * s , const char * sep) {
-  return util_alloc_joined_string((const char **) s->strings , s->size , sep);
-}
 
+char * stringlist_alloc_joined_string(const stringlist_type * s , const char * sep) {
+  char * string = NULL;
+  int size = stringlist_get_size( s );
+  int i;
+  for (i = 0; i < size; i ++) {
+    string = util_strcat_realloc(string , stringlist_iget( s , i));
+    if (i < (size - 1))
+      string = util_strcat_realloc(string , sep);
+  }
+  return string;
+}
 
 /*****************************************************************/
 
 void stringlist_fwrite(const stringlist_type * s, FILE * stream) {
   int i;
-  util_fwrite_int( s->size , stream);
-  for (i=0; i < s->size; i++)
-    util_fwrite_string(s->strings[i] , stream);
+  int size = stringlist_get_size( s );
+  util_fwrite_int( size , stream);
+  for (i=0; i < size; i++) 
+    util_fwrite_string(stringlist_iget(s , i) , stream);
 }
 
 /* 
@@ -411,22 +335,25 @@ void  stringlist_fread(stringlist_type * s, FILE * stream) {
     stringlist_append_owned_ref( s , util_fread_alloc_string( stream ));
 }
 
+
 stringlist_type * stringlist_fread_alloc(FILE * stream) {
-  stringlist_type * s = stringlist_alloc_empty();
+  stringlist_type * s = stringlist_alloc_empty( true );
   stringlist_fread(s , stream);
   return s;
 }
 
 
+static int strcmp__(const void * __s1, const void * __s2)
+{
+  const char ** s1 = (const char **) __s1;
+  const char ** s2 = (const char **) __s2;
+  return strcmp( *s1, *s2);
+}
+
+
 void stringlist_sort(stringlist_type * s)
 {
-  int strcmp__(const void * __s1, const void * __s2)
-  {
-    const char ** s1 = (const char **) __s1;
-    const char ** s2 = (const char **) __s2;
-    return strcmp( *s1, *s2);
-  }
-  qsort(s->strings, s->size, sizeof(char *),  strcmp__);
+  vector_sort( s->__strings , strcmp__);
 }
 
 

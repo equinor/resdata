@@ -2158,8 +2158,7 @@ char ** util_alloc_stringlist(int N, int len) {
    and s2.
 */
 
-
-  char * util_strcat_realloc(char *s1 , const char * s2) {
+char * util_strcat_realloc(char *s1 , const char * s2) {
   if (s1 == NULL) 
     s1 = util_alloc_string_copy(s2);
   else {

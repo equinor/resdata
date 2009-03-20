@@ -5,6 +5,7 @@ extern"C" {
 #endif
 
 #include <stdlib.h>
+#include <stringlist.h>
 typedef struct hash_struct hash_type;
 
 #include <hash_node.h>
@@ -39,7 +40,7 @@ void            * hash_iter_get_next_value(hash_type *  , bool * );
 const      char * hash_iter_get_first_key(hash_type * );
 void            * hash_iter_get_first_value(hash_type * , bool * );
 
-hash_type       * hash_alloc_from_options(int  , const char ** );
+hash_type       * hash_alloc_from_options(const stringlist_type *);
 
 
 void              hash_insert_int(hash_type * , const char * , int);

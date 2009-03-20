@@ -61,6 +61,10 @@ node_data_type * node_data_alloc_buffer(const void * data, int buffer_size) {  /
 
 
 
+/*
+  When calling deep_copy the node MUST have a registered constructor,
+  otherwise it will go belly up. HARD.
+*/ 
 
 
 static node_data_type * node_data_copyc(const node_data_type * src , bool deep_copy) {
@@ -77,7 +81,8 @@ static node_data_type * node_data_copyc(const node_data_type * src , bool deep_c
       new  = node_data_alloc__(src->data , src->ctype , src->buffer_size , NULL , NULL);  /* The copy does not have destructor. */
   } else {
     if (deep_copy) {
-      if (src->copyc == NULL) util_abort("%s \n",__func__);
+      if (src->copyc == NULL) 
+	util_abort("%s: Tried allocate deep_copy of mnode with no constructor - aborting. \n",__func__);  
       new = node_data_alloc__(src->data , src->ctype , 0 , src->copyc , src->del);
     } else
       new = node_data_alloc__(src->data , src->ctype , 0 , NULL , NULL); /*shallow copy - we 'hide' constructor and destructor. */
@@ -86,6 +91,9 @@ static node_data_type * node_data_copyc(const node_data_type * src , bool deep_c
   return new;
 }
 
+node_data_type * node_data_alloc_copy(const node_data_type * node , bool deep_copy) {
+  return node_data_copyc( node , deep_copy );
+}
 
 
 node_data_type * node_data_alloc_deep_copy(const node_data_type * node) {

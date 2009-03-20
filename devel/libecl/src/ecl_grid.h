@@ -27,7 +27,7 @@ void            ecl_grid_get_ijk_from_active_index(const ecl_grid_type *, int , 
 const int     * ecl_grid_get_index_map_ref(const ecl_grid_type * );
 void            ecl_grid_get_pos(const ecl_grid_type * , int , int , int , double * , double * , double *);
 
-
+void            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2);
 
 void            ecl_grid_alloc_blocking_variables(ecl_grid_type * , int );
 void            ecl_grid_init_blocking(ecl_grid_type * );

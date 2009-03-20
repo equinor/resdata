@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <util.h>
+#include <stringlist.h>
 
 #define HASH_DEFAULT_SIZE 16
 
@@ -898,18 +899,20 @@ void * hash_iter_get_first_value(hash_type * hash, bool * complete) {
 */
 
 
-hash_type * hash_alloc_from_options(int num_options , const char ** options) {
+hash_type * hash_alloc_from_options(const stringlist_type * options) {
+  int num_options = stringlist_get_size( options );
   hash_type * opt_hash = hash_alloc();
   int iopt;
 
   for (iopt = 0; iopt < num_options; iopt++) {
     char * option;
     char * value;
-    util_binary_split_string( options[iopt] , ":" , true , &option , &value);
+    
+    util_binary_split_string( stringlist_iget(options , iopt) , ":" , true , &option , &value);
     if ((option != NULL) && (value != NULL)) 
       hash_insert_hash_owned_ref( opt_hash , option , util_alloc_string_copy(value) , free);
     else
-      fprintf(stderr,"** Warning: could not interpret %s as KEY:VALUE - ignored\n",options[iopt]);
+      fprintf(stderr,"** Warning: could not interpret %s as KEY:VALUE - ignored\n",stringlist_iget(options , iopt));
     
     util_safe_free(option);
     util_safe_free(value);
