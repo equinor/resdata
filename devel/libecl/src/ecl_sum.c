@@ -1,6 +1,5 @@
 #include <string.h>
 #include <stdbool.h>
-#include <ecl_kw.h>
 #include <math.h>
 #include <ecl_util.h>
 #include <ecl_sum.h>

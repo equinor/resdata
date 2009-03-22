@@ -15,7 +15,6 @@
 #include <ecl_grid.h>
 #include <stdbool.h>
 #include <ecl_util.h>
-#include <fortio.h>
 #include <double_vector.h>
 #include <ecl_file.h>
 
