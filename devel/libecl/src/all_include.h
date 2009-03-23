@@ -3,7 +3,7 @@
 #include <ecl_kw.h> 
 #include <ecl_sum.h> 
 #include <fortio.h> 
-#include <ecl_rft_vector.h> 
+#include <ecl_rft_file.h> 
 #include <ecl_rft_node.h> 
 #include <ecl_box.h> 
 #include <ecl_grid.h> 

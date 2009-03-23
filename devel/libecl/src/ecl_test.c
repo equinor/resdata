@@ -7,7 +7,7 @@
 #include <ecl_sum.h>
 #include <hash.h>
 #include <stdbool.h>
-#include <ecl_rft_vector.h>
+#include <ecl_rft_file.h>
 #include <ecl_grid.h>
 #include <ecl_smspec.h>
 #include <ecl_sum_data.h>
