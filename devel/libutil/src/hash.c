@@ -44,15 +44,8 @@ struct hash_struct {
   hash_sll_type   **table;
   hashf_type       *hashf;
   pthread_rwlock_t  rwlock;
-  /** 
-      All variables with __iter prefix are internal variables used to
-      support iteration over the keys in the hash table.
-  */
-  char           ** __iter_keylist;
-  bool              __iter_active;    /* Cooperation with iter_mutex not really OK. */
-  int               __iter_index;
-  pthread_mutex_t   iter_mutex;       /* Can only have one iteration active at any time. */
 };
+
 
 
 typedef struct hash_sort_node {
@@ -72,19 +65,7 @@ static char * alloc_string_copy(const char *src) {
 /*****************************************************************/
 
 static void __hash_deadlock_abort(hash_type * hash) {
-  printf("A deadlock condition has been detected in the hash routine - and the program will abort.\n");
-  printf("Currently active hash iterator: ");
-  if (hash->__iter_active) {
-    printf("\n __iter_keys: [");
-    for (int i = 0; i < hash->elements; i++) {
-      printf("\'%s\'" , hash->__iter_keylist[i]);
-      if (i < (hash->elements - 1))
-	printf(", ");
-    }
-    printf("]\n");
-    printf("__iter_index: %d \n",hash->__iter_index);
-  } else printf(" None ??? \n");
-  util_abort("%s: \n",__func__);
+  util_abort("%s: A deadlock condition has been detected in the hash routine - and the program will abort.\n", __func__);
 }
 
 
@@ -435,9 +416,6 @@ static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf
   hash->table 	 = hash_sll_alloc_table(hash->size);
   hash->elements = 0;
   hash->resize_fill  = resize_fill;
-  hash->__iter_active  = false;
-  hash->__iter_keylist = NULL;
-  pthread_mutex_init( &hash->iter_mutex , NULL);
   if (pthread_rwlock_init( &hash->rwlock , NULL) != 0) 
     util_abort("%s: failed to initialize rwlock \n",__func__);
   
@@ -455,9 +433,7 @@ void hash_free(hash_type *hash) {
   for (i=0; i < hash->size; i++) 
     hash_sll_free(hash->table[i]);
   free(hash->table);
-  hash_iter_finalize(hash);
   pthread_rwlock_destroy( &hash->rwlock );
-  pthread_mutex_destroy( &hash->iter_mutex );
   free(hash);
 }
 
@@ -683,206 +659,7 @@ bool hash_key_list_compare(hash_type * hash1, hash_type * hash2)
   
 }
 
-/******************************************************************/
-/*                        Iteration                               */
-/******************************************************************/
 
-/**
-   The general usage of the iteration interface is as follows:
-
-     1. Initialize the iteration - this is either done with an
-        explicit call to hash_iter_init(), or by calling
-        hash_get_first_key() / hash_get_first_value(), which will call
-        hash_iter_init().
-
-
-     2. Iterate through the hash with hash_iter_get_next_key() or
-        hash_iter_get_next_value(). 
-
-
-     3. The hash signals that the iteration is complete by returning
-        NULL - both for _next_key() and _next_value(). The latter in
-        addition has a pointer to bool which will be set to true when
-        the iteration is complete.
-	
-	When the iteration is complete the hash will automagically
-	call hash_iter_finalize() which will release the resources
-	held internally to support the iteration.
-
-
-     4. If the hash has been iterated all the way through there is no
-        need to explicitly finalize the iteration, but if you quit the
-        iteration before it is complete you MUST EXPLICITLY CALL
-        hash_iter_finalize(). Otherwise the implementation WILL
-        DEADLOCK.
-	
-	It is always OK to call hash_iter_finalize().
-
-
-Deadlock
---------
-The hash grabs a read_lock when the iteration is initialized, this
-lock is held all the time until the iteration is complete. If you exit
-the iteration before it is complete, the implementation will deadlock
-on the next hash_insert() call.
-
-This will deadlock:
-
-   hash_iter_init(hash);
-   do {
-      char * key = hash_iter_get_next_key(hash);
-   } while (key != NULL && strcmp(key , "HEI") != 0)  -- This will abort the iteration when/if the key "HEI" is found.
-   ....
-   ....
-   hash_insert(hash , key , value);  -- The readlock from the iteration is still present => deadlock.
- 
-To ensure against deadlock in this case, you must have a call
-hash_iter_finalize() after the while() statement.  In addition there
-is a mutex held during the iteration.
-
-
-
-key/value:
----------
-Observe that __get_next_key() and __get_next_value() share the same internal state, so with code like this:
-
-  key1   = hash_iter_get_next_key(hash);
-  value2 = hash_iter_get_next_value(hash);
-
-value2 will **NOT** be the value corresponding to key1.
-
-
-Recursive : careful with that!
-
-*/
-
-
-/**
-   This function will free all the internal resources related to an
-   iteration. It is always OK to call hash_iter_finalize.
-
-   Observe that when an iteration has completed naturally it is
-   automatically finalized. The only situation where it is necessary
-   to explicitly call hash_iter_finalize() is when the iteration has
-   been explicitly terminated before completion.
-*/
-
-
-
-void hash_iter_finalize(hash_type * hash) {
-  if (hash->__iter_active) {
-    if (hash->elements > 0) {
-      for (int ikey = 0; ikey < hash->elements; ikey++)
-	free(hash->__iter_keylist[ikey]);
-      free(hash->__iter_keylist);
-    }
-    hash->__iter_keylist = NULL;
-    hash->__iter_active  = false;
-    __hash_unlock( hash );
-    pthread_mutex_unlock( &hash->iter_mutex );
-  }
-}
-
-
-
-/**
-   This function initializes an iteration. That means the following:
-
-     1. Take the iter_mutex - only ONE iteration active at a time. 
-     2. Take read-lock - this is held all the time until we call hash_iter_finalize().
-     3. Initilize the internal list of keys - __iter_keylist.
-     4. Reset the __iter_index.
-
-*/
-
-static void hash_iter_init(hash_type * hash) {
-  pthread_mutex_lock( &hash->iter_mutex );  /* Repeated calls to hash_iter_init() without calls to hash_iter_finalize() will deadlock. */
-  __hash_rdlock( hash );                    /* Just for this function. */
-  __hash_rdlock( hash );                    /* Until _finalize */
-  {
-    hash->__iter_keylist = hash_alloc_keylist__( hash , false);
-    hash->__iter_index   = 0;
-    hash->__iter_active  = true;
-  }
-  __hash_unlock( hash );
-  
-}
-
-
-
-/**
-   This functions gets the next key in an ongoing iteration. If there
-   is not an ongoing iteration, the function will fail hard. If the
-   iteration is complete, the function will return NULL, and finalize
-   the iteration.
-
-   Observe that the calling scope should *NOT* retain a reference to
-   the keys returned from hash_iter_get_next_key() - they will be
-   free'd when the iteration is complete. In that case the calling
-   scope should take a copy of the key.
-*/
-
-const char * hash_iter_get_next_key(hash_type * hash) {
-  char * key = NULL;
-  if (hash->__iter_active) {
-    if (hash->__iter_index == hash->elements)  /* We are through */ 
-      hash_iter_finalize(hash);
-    else {
-      key = hash->__iter_keylist[hash->__iter_index];
-      hash->__iter_index++;
-    }
-    return key;
-  } else {
-    util_abort("%s: no iteration active - aborting \n",__func__);
-    return NULL;  /* Compiler shut up */
-  }
-}
-
-
-/**
-   This function will return the next value (by calling get_next_key
-   first). If the iteration is complete the function will return NULL.
-
-   If you have not inserted NULL in the hash table, you can not use that
-   return value to signal a complete iteration. If you pass in a (bool
-   *) to complete that will be set to true when the iteration is
-   complete.
-*/
-  
-void * hash_iter_get_next_value(hash_type * hash , bool * complete) {
-  const char * key = hash_iter_get_next_key(hash);
-  void       * value;
-  if (key == NULL) {
-    if (complete != NULL)
-      *complete = true;
-    value  = NULL;
-  } else {
-    if (complete != NULL)
-      *complete = false;
-    value = hash_get(hash , key);
-  }
-  return value;
-}
-
-
-/**
-   This function will initialize an iteration, and then return the
-   first key.
-*/
-const char * hash_iter_get_first_key(hash_type * hash) {
-  hash_iter_init( hash );
-  return hash_iter_get_next_key(hash);
-}
-
-
-/**
-   This function will initialize an iteration, and then return the
-   first value.
-*/
-void * hash_iter_get_first_value(hash_type * hash, bool * complete) {
-  hash_iter_init( hash );
-  return hash_iter_get_next_value(hash , complete);
-}
 
 
 /*****************************************************************/
@@ -920,6 +697,87 @@ hash_type * hash_alloc_from_options(const stringlist_type * options) {
   
   return opt_hash;
 }
+
+
+
+/*****************************************************************/
+
+
+
+/**
+  This is a **VERY** simple iteration object.
+
+  Do **NOT** use with multi-threading.
+*/
+struct hash_iter_struct {
+  const hash_type  * hash;
+  char            ** keylist;
+  int                num_keys;
+  int                current_key; 
+};
+
+
+
+hash_iter_type * hash_iter_alloc(const hash_type * hash) {
+  hash_iter_type * iter = util_malloc(sizeof * iter, __func__); 
+
+  iter->hash            = hash;
+  iter->num_keys        = hash_get_size(hash);
+  iter->keylist         = hash_alloc_keylist( (hash_type *) hash);
+  iter->current_key     = 0;
+
+  return iter;
+}
+
+
+
+void hash_iter_free(hash_iter_type * iter) {
+  util_free_stringlist(iter->keylist, iter->num_keys);
+  free(iter);
+}
+
+
+
+bool hash_iter_is_complete(hash_iter_type * iter) {
+  if(iter->current_key == iter->num_keys)
+    return true;
+  else
+    return false;
+}
+
+
+
+/**
+  Get the next key.
+
+  Returns NULL if the iteration has ended.
+*/
+const char * hash_iter_get_next_key(hash_iter_type * iter) {
+  const char * key;
+
+  if(iter->current_key == iter->num_keys)
+    return NULL;
+
+  key = iter->keylist[iter->current_key];
+  iter->current_key++;
+
+  if(!hash_has_key(iter->hash, key))
+    util_abort("%s: Programming error. Using hash_iter with multi-threading??\n", __func__);
+
+  return key;
+}
+
+
+
+void * hash_iter_get_next_value(hash_iter_type * iter) {
+  const char * key = hash_iter_get_next_key(iter);
+
+  if(key != NULL)
+    return hash_get(iter->hash, key);
+  else
+    return NULL;
+}
+
 
 
 #undef HASH_GET_SCALAR

@@ -1,5 +1,5 @@
 set.o                               : set.c set.h hash.o util.o  
-stringlist.o                        : stringlist.c stringlist.h util.o vector.o  
+stringlist.o                        : stringlist.c stringlist.h util.o vector.o int_vector.h
 hash.o                              : hash.c hash.h hash_sll.o hash_node.o node_data.o util.o stringlist.o  
 hash_node.o                         : hash_node.c hash_node.h util.o node_data.o  
 arg_pack.o                          : arg_pack.c arg_pack.h util.o node_ctype.o  
@@ -14,4 +14,4 @@ msg.o                               : msg.c msg.h util.o
 hash_sll.o                          : hash_sll.c hash_sll.h hash_node.o  
 str_buffer.o                        : str_buffer.c str_buffer.h  
 list_node.o                         : list_node.c list_node.h util.o node_data.o  
-util.o                              : util.c util.h util_path.c  
+util.o                              : util.c util.h util_path.c hash.h 

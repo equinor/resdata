@@ -17,14 +17,31 @@ int main(void) {
   hash_get(h , "legning");
   
 
+  /**
+    Iteration style no 1.
+  */
   {
-    char * key = hash_iter_get_first_key( h );
-    do {
-      if (key != NULL) {
-	printf("%s -> %s \n",key,hash_get(h , key));
-      } else printf(" key == NULL \n");
-      key = hash_iter_get_next_key(h);
-    } while (key != NULL);
+    hash_iter_type * iter = hash_iter_alloc(h);
+    while ( !hash_iter_is_complete(iter) ) {
+      const char * key = hash_iter_get_next_key(iter);
+      printf("%s -> %s \n",key,hash_get(h , key));
+    }
+    hash_iter_free(iter);
   }
+
+
+  /**
+    Iteration style no 2.
+  */
+  {
+    hash_iter_type * iter = hash_iter_alloc(h);
+    const char     * key  = hash_iter_get_next_key(iter);
+    while ( key != NULL ) {
+      printf("%s -> %s \n",key,hash_get(h , key));
+      key = hash_iter_get_next_key(iter);
+    }
+    hash_iter_free(iter);
+  }
+
   hash_free(h);
 }

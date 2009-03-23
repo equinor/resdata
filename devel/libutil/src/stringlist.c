@@ -283,6 +283,26 @@ bool stringlist_contains(const stringlist_type * stringlist , const char * s) {
 
 
 
+/**
+  Finds the indicies of the entries matching 's'.
+*/
+int_vector_type * stringlist_find(const stringlist_type * stringlist, const char * s) {
+  int_vector_type * indicies = int_vector_alloc(0, -1);
+  int  size     = stringlist_get_size( stringlist );
+  int  index    = 0;
+  
+  while (index < size ) {
+    const char * istring = stringlist_iget(stringlist , index);
+    if (istring != NULL)
+      if (strcmp(istring , s) == 0)
+        int_vector_append(indicies, index);
+    index++;
+  }
+  return indicies;
+}
+
+
+
 bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
   int size1 = stringlist_get_size( s1 );
   int size2 = stringlist_get_size( s2 );

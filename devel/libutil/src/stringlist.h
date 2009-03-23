@@ -2,6 +2,7 @@
 #define __STRINGLIST_H__
 #include <stdbool.h>
 #include <stdio.h>
+#include <int_vector.h>
 
 typedef struct stringlist_struct stringlist_type;
 
@@ -39,6 +40,7 @@ void              stringlist_insert_stringlist_copy(stringlist_type *  , const s
 
 bool              stringlist_equal(const stringlist_type *  , const stringlist_type *);
 bool              stringlist_contains(const stringlist_type *  , const char * );
+int_vector_type * stringlist_find(const stringlist_type *, const char *);
 int   	          stringlist_get_argc(const stringlist_type * );
 char           ** stringlist_alloc_char_copy(const stringlist_type * );
 void              stringlist_fread(stringlist_type * , FILE * );

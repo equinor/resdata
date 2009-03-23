@@ -173,13 +173,3 @@ void set_union(set_type * set1 , const set_type * set2) {
 
 
 
-/*****************************************************************/
-
-const char * set_iter_get_first_key(set_type * set) {
-  return hash_iter_get_first_key(set->key_hash);
-}
-
-
-const char * set_iter_get_next_key(set_type * set) {
-  return hash_iter_get_next_key(set->key_hash);
-}
