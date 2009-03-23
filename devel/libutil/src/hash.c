@@ -757,7 +757,7 @@ const char * hash_iter_get_next_key(hash_iter_type * iter) {
   if(iter->current_key_num == iter->num_keys)
     return NULL;
 
-  key = iter->keylist[iter->current_key];
+  key = iter->keylist[iter->current_key_num];
   iter->current_key_num++;
 
   if(!hash_has_key(iter->hash, key))
