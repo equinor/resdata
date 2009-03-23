@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <util.h>
-#include <ecl_kw.h>
 #include <ecl_rft_file.h>
 #include <ecl_rft_node.h>
 #include <hash.h>
