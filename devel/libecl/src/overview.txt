@@ -3,14 +3,12 @@ in the libecl library. The library is written to read/write ECLIPSE
 files in restart format, the organsiation of the units in the library
 are closely linked to the concept of ECLIPSE files. In addition to the
 various files in this library, the library needs access to the
-libraries libutil and libhash.
+library libutil.
 
 The diagram below illustrates the (main) files in libecl, and how they
 depend on eachother. The dependencies follow the links, i.e. one file
 depends (explicitly) on all the files it points at. Observe that in
-the diagram below only explicit dependencies are illustrated, for
-instance the ecl_block.c will indirectly depend on ecl_util.h through
-ecl_kw.c, however this dependance is not illustrated.
+the diagram below only explicit dependencies are illustrated.
 
 ----------------------------------------------------------------------
 
