@@ -703,17 +703,16 @@ hash_type * hash_alloc_from_options(const stringlist_type * options) {
 /*****************************************************************/
 
 
-
 /**
   This is a **VERY** simple iteration object.
 
   Do **NOT** use with multi-threading.
 */
 struct hash_iter_struct {
-  const hash_type  * hash;
-  char            ** keylist;
-  int                num_keys;
-  int                current_key; 
+  const hash_type  * hash;            /* The hash we are iterating over. */
+  char            ** keylist;         /* The keys in the hash table - at the moment of hash_iter_alloc(). */ 
+  int                num_keys;        
+  int                current_key_num; /* This integer retains the state. */ 
 };
 
 
@@ -724,7 +723,7 @@ hash_iter_type * hash_iter_alloc(const hash_type * hash) {
   iter->hash            = hash;
   iter->num_keys        = hash_get_size(hash);
   iter->keylist         = hash_alloc_keylist( (hash_type *) hash);
-  iter->current_key     = 0;
+  iter->current_key_num = 0;
 
   return iter;
 }
@@ -739,7 +738,7 @@ void hash_iter_free(hash_iter_type * iter) {
 
 
 bool hash_iter_is_complete(hash_iter_type * iter) {
-  if(iter->current_key == iter->num_keys)
+  if(iter->current_key_num == iter->num_keys)
     return true;
   else
     return false;
@@ -755,11 +754,11 @@ bool hash_iter_is_complete(hash_iter_type * iter) {
 const char * hash_iter_get_next_key(hash_iter_type * iter) {
   const char * key;
 
-  if(iter->current_key == iter->num_keys)
+  if(iter->current_key_num == iter->num_keys)
     return NULL;
 
   key = iter->keylist[iter->current_key];
-  iter->current_key++;
+  iter->current_key_num++;
 
   if(!hash_has_key(iter->hash, key))
     util_abort("%s: Programming error. Using hash_iter with multi-threading??\n", __func__);
