@@ -17,11 +17,22 @@
 
 
 int main(int argc , char ** argv) {
-  matrix_type * matrix = matrix_alloc(3,3);
-  matrix_set_all( matrix , 0);
-  matrix_set(matrix , 0 , 0 , 1);
-  matrix_set(matrix , 1 , 1 , 1);
-  matrix_set(matrix , 2 , 2 , 1);
-  matrix_fprintf(matrix , "%10.4f ", stdout);
-  matrix_free(matrix);
+  matrix_type * A     = matrix_alloc(2,2);
+  matrix_type * B     = matrix_alloc(2,2);
+  matrix_set( A , 0);
+  matrix_set( B , 0);
+  matrix_iset(A , 0 , 0 , 1);
+  matrix_iset(A , 1 , 1 , 1);
+
+  matrix_iset(B , 0 , 0 , 15);
+  matrix_iset(B , 1 , 1 , 22);
+  matrix_iset(B , 1 , 0 , -1);
+  matrix_iset(B , 0 , 1 , -65);
+
+  matrix_pretty_print(B , "B" , "%10.4f ");
+  matrix_inplace_matmul(B , A);
+  printf("\n");
+  matrix_pretty_print(B , "B" , "%10.4f ");
+  matrix_free( A );
+  matrix_free( B );
 }
