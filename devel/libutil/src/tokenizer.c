@@ -19,20 +19,23 @@ struct tokenizer_struct
 
 
 tokenizer_type * tokenizer_alloc(
-  const char * whitespace,       /** Need to contain at least one non '\0' char. */
+  const char * whitespace,       /** Set to NULL if not interessting.            */
   const char * quoters,          /** Set to NULL if not interessting.            */
   const char * specials,         /** Set to NULL if not interessting.            */
   const char * comment_start,    /** Set to NULL if not interessting.            */
-  const char * comment_end)      /** Set to NULL  if not interessting.            */
+  const char * comment_end)      /** Set to NULL  if not interessting.           */
 {
-  assert( whitespace    != NULL );
-
   tokenizer_type * tokenizer = util_malloc(sizeof * tokenizer, __func__);
 
-  tokenizer->whitespace = util_alloc_string_copy( whitespace ); 
 
-  if( strlen(whitespace) == 0)
-    util_abort("%s: Need at least one non '\\0' whitespace character.\n", __func__);
+  if( whitespace != NULL)
+  {
+    if( strlen(whitespace) == 0)
+      util_abort("%s: Need at least one non '\\0' whitespace character.\n", __func__);
+    tokenizer->whitespace = util_alloc_string_copy( whitespace ); 
+  }
+  else
+    tokenizer->whitespace = NULL;
 
   if( quoters != NULL )
   {
@@ -125,7 +128,9 @@ bool is_whitespace(
   const char             c,
   const tokenizer_type * tokenizer)
 {
-  if( strchr( tokenizer->whitespace, (int) c) != NULL)
+  if( tokenizer->whitespace == NULL)
+    return false;
+  else if( strchr( tokenizer->whitespace, (int) c) != NULL)
     return true;
   else
     return false;

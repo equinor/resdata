@@ -72,8 +72,8 @@ mem_free.o  : mem_free.c
 
 #################################################################
 
-BIN:	hash.x util.x eol-fix.x mem_free.x tokenizer_test.x
-BIN_FILES = hash.x util.x eol-fix.x mem_free.x tokenizer_test.x
+BIN:	hash.x util.x eol-fix.x mem_free.x tokenizer_test.x grdecl_to_ascii.x
+BIN_FILES = hash.x util.x eol-fix.x mem_free.x tokenizer_test.x grdecl_to_ascii.x
 
 hash.x: hash_test.o $(LIB)
 	$(CC) $(LDFLAGS) -$(MFLAG) hash_test.o -o hash.x     $(LINK_LIB_PATH) $(LIB_LINK) 
@@ -89,3 +89,6 @@ mem_free.x: mem_free.o $(LIB)
 
 tokenizer_test.x: tokenizer_test.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) tokenizer_test.o -o tokenizer_test.x  $(LINK_LIB_PATH) $(LIB_LINK)
+
+grdecl_to_ascii.x: grdecl_to_ascii.o $(LIB)
+	$(LD) -$(MFLAG) $(LDFLAGS) grdecl_to_ascii.o -o grdecl_to_ascii.x  $(LINK_LIB_PATH) $(LIB_LINK)
