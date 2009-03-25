@@ -26,6 +26,7 @@ set_type   * set_fread_alloc(FILE *);
 void         set_fprintf(const set_type * , FILE * );
 void         set_intersect(set_type * , const set_type * );
 void         set_union(set_type * , const set_type * );
+void         set_minus(set_type * , const set_type * );
 set_type   * set_copyc(const set_type *);
 
 

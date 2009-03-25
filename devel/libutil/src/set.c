@@ -174,6 +174,24 @@ void set_union(set_type * set1 , const set_type * set2) {
 
 
 /**
+  set1 is updated so that any keys that are both in set1 and set2
+  are removed from set1.
+*/
+
+void set_minus(set_type * set1, const set_type * set2) {
+  char ** key_list2 = set_alloc_keylist(set2);
+  int size2 = set_get_size(set2);
+  for (int i=0; i < size2; i++) {
+    if( set_has_key(set1 , key_list2[i]) )
+      set_remove_key(set1, key_list2[i]);
+    free(key_list2[i]);
+  }
+  free(key_list2);
+}
+
+
+
+/**
   This is a **VERY** simple iteration object.
 
   Do **NOT** use with multi-threading.
