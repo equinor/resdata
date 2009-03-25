@@ -100,11 +100,11 @@ typedef struct tokenizer_struct tokenizer_type;
 
 
 tokenizer_type * tokenizer_alloc(
-  const char * whitespace,       /** Need to contain at least one non '\0' char. */
+  const char * whitespace,       /** Set to NULL if not interessting.            */
   const char * quoters,          /** Set to NULL if not interessting.            */
   const char * specials,         /** Set to NULL if not interessting.            */
   const char * comment_start,    /** Set to NULL if not interessting.            */
-  const char * comment_end);     /** Set to NULL  if not interessting.            */
+  const char * comment_end);     /** Set to NULL if not interessting.            */
 
 void tokenizer_free(
   tokenizer_type * tokenizer);
