@@ -10,6 +10,8 @@ extern "C" {
 #include <hash.h>
 
 typedef struct set_struct set_type;
+typedef struct set_iter_struct set_iter_type;
+
 void         set_remove_key(set_type * , const char * );
 set_type   * set_alloc(int , const char ** );
 set_type   * set_alloc_empty();
@@ -25,6 +27,13 @@ void         set_fprintf(const set_type * , FILE * );
 void         set_intersect(set_type * , const set_type * );
 void         set_union(set_type * , const set_type * );
 set_type   * set_copyc(const set_type *);
+
+
+set_iter_type * set_iter_alloc(const set_type * set);
+void set_iter_free(set_iter_type * set_iter);
+bool set_iter_is_complete(const set_iter_type * set_iter);
+const char * set_iter_get_next_key(set_iter_type * set_iter);
+
 
 #ifdef __cplusplus
 }

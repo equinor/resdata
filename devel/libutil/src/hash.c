@@ -737,7 +737,7 @@ void hash_iter_free(hash_iter_type * iter) {
 
 
 
-bool hash_iter_is_complete(hash_iter_type * iter) {
+bool hash_iter_is_complete(const hash_iter_type * iter) {
   if(iter->current_key_num == iter->num_keys)
     return true;
   else

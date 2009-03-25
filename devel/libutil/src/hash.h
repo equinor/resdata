@@ -38,7 +38,7 @@ void              hash_insert_hash_owned_ref(hash_type *, const char * , const v
 
 hash_iter_type  * hash_iter_alloc(const hash_type *);
 void              hash_iter_free(hash_iter_type *);
-bool              hash_iter_is_complete(hash_iter_type *);
+bool              hash_iter_is_complete(const hash_iter_type *);
 const      char * hash_iter_get_next_key(hash_iter_type *);
 void            * hash_iter_get_next_value(hash_iter_type *);
 

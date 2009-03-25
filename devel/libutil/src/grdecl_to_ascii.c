@@ -38,4 +38,6 @@ int main(int argc, char ** argv)
   }
 
   tokenizer_free(tokenizer);
+  
+  return 0;
 }

@@ -173,3 +173,42 @@ void set_union(set_type * set1 , const set_type * set2) {
 
 
 
+/**
+  This is a **VERY** simple iteration object.
+
+  Do **NOT** use with multi-threading.
+*/
+
+
+struct set_iter_struct
+{
+  hash_iter_type * hash_iter;
+};
+
+
+set_iter_type * set_iter_alloc(const set_type * set)
+{
+  set_iter_type * set_iter = util_malloc(sizeof * set_iter, __func__);
+  set_iter->hash_iter = hash_iter_alloc(set->key_hash);
+  return set_iter;
+}
+
+
+void set_iter_free(set_iter_type * set_iter)
+{
+  hash_iter_free(set_iter->hash_iter);
+  free(set_iter);
+}
+
+
+
+bool set_iter_is_complete(const set_iter_type * set_iter)
+{
+  return hash_iter_is_complete(set_iter->hash_iter);
+}
+
+
+const char * set_iter_get_next_key(set_iter_type * set_iter)
+{
+  return hash_iter_get_next_key(set_iter->hash_iter);
+}
