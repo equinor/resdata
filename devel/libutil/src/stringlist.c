@@ -204,6 +204,7 @@ void stringlist_clear(stringlist_type * stringlist) {
 
 void stringlist_free(stringlist_type * stringlist) {
   stringlist_clear(stringlist);
+  vector_free(stringlist->__strings);
   free(stringlist);
 }
 

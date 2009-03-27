@@ -1446,7 +1446,6 @@ int util_get_base_length(const char * file) {
 
 
 
-
 /**
    This function splits a filename into three parts:
 
@@ -1500,11 +1499,12 @@ int util_get_base_length(const char * file) {
         ext  -> NULL
 	
 	
+
       Ex2: input is NOT an existing directory:
       ------------------------------------
       util_alloc_file_components("/some/random/not_existing/path" , &path , &base , &ext)
-
-        path -> "/some/random/not_existing"
+      
+      path -> "/some/random/not_existing"
         base -> "path"
         ext  -> NULL
 	

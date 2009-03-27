@@ -150,7 +150,7 @@ static subst_list_node_type * subst_list_insert_new_node(subst_list_type * subst
 
 subst_list_type * subst_list_alloc() {
   subst_list_type * subst_list = util_malloc(sizeof * subst_list , __func__);
-  subst_list->data   = vector_alloc_new();
+  subst_list->data = vector_alloc_new();
   return subst_list;
 }
 

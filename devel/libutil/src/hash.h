@@ -30,6 +30,7 @@ void              hash_clear(hash_type *);
 int               hash_get_size(const hash_type *);
 void              hash_set_keylist(const hash_type * , char **);
 char           ** hash_alloc_keylist(hash_type *);
+stringlist_type * hash_alloc_stringlist(hash_type * );
 
 char           ** hash_alloc_sorted_keylist (hash_type *hash , int ( hash_get_cmp_value ) (const void *));
 char           ** hash_alloc_key_sorted_list(hash_type *hash, int (*cmp)(const void *, const void *));

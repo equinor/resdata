@@ -456,6 +456,18 @@ char ** hash_alloc_keylist(hash_type *hash) {
   return hash_alloc_keylist__(hash , true);
 }
 
+stringlist_type * hash_alloc_stringlist(hash_type * hash) {
+  stringlist_type * stringlist = stringlist_alloc_new();
+  char ** keylist = hash_alloc_keylist__(hash , true);
+  int i;
+  for (i = 0; i < hash_get_size( hash ); i++)
+    stringlist_append_owned_ref( stringlist , keylist[i] );
+  
+  free( keylist );
+  return stringlist;
+}
+
+
 
 /*****************************************************************/
 /** 
