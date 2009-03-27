@@ -14,6 +14,7 @@ typedef struct hash_iter_struct hash_iter_type;
 void              hash_lock  (hash_type * );
 void              hash_unlock(hash_type * );
 hash_type       * hash_alloc();
+hash_type       * hash_safe_cast( void * arg);
 void              hash_iter_complete(hash_type * );
 void              hash_free(hash_type *);
 void              hash_free__(void *);

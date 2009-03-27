@@ -16,6 +16,8 @@
 
 #define HASH_DEFAULT_SIZE 16
 
+#define HASH_TYPE_ID 771065
+
 /**
    This is **THE** hash function - which actually does the hashing.
 */
@@ -38,6 +40,7 @@ static uint32_t hash_index(const char *key, size_t len) {
 
 
 struct hash_struct {
+  int               __type_id; 
   uint32_t          size;            /* This is the size of the internal table **NOT**NOT** the number of elements in the table. */
   uint32_t          elements;        /* The number of elements in the hash table. */
   double            resize_fill;
@@ -53,12 +56,6 @@ typedef struct hash_sort_node {
   int       cmp_value;
 } hash_sort_type;
 
-
-static char * alloc_string_copy(const char *src) {
-  char *new = malloc(strlen(src) + 1);
-  strcpy(new , src);
-  return new;
-}
 
 /*****************************************************************/
 /*                          locking                              */
@@ -295,7 +292,7 @@ static char ** hash_alloc_keylist__(hash_type *hash , bool lock) {
       
       while (node != NULL) {
 	const char *key = hash_node_get_keyref(node); 
-	keylist[i] = alloc_string_copy(key);
+	keylist[i] = util_alloc_string_copy(key);
 	node = hash_internal_iter_next(hash , node);
 	i++;
       }
@@ -411,10 +408,11 @@ void * hash_get(const hash_type *hash , const char *key) {
 static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf) {
   hash_type* hash;
   hash = util_malloc(sizeof *hash , __func__);
-  hash->size  	 = size;
-  hash->hashf 	 = hashf;
-  hash->table 	 = hash_sll_alloc_table(hash->size);
-  hash->elements = 0;
+  hash->__type_id = HASH_TYPE_ID;
+  hash->size  	  = size;
+  hash->hashf 	  = hashf;
+  hash->table 	  = hash_sll_alloc_table(hash->size);
+  hash->elements  = 0;
   hash->resize_fill  = resize_fill;
   if (pthread_rwlock_init( &hash->rwlock , NULL) != 0) 
     util_abort("%s: failed to initialize rwlock \n",__func__);
@@ -426,6 +424,17 @@ static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf
 hash_type * hash_alloc() {
   return __hash_alloc(HASH_DEFAULT_SIZE , 0.50 , hash_index);
 }
+
+hash_type * hash_safe_cast( void * arg) {
+  hash_type * hash = (hash_type *) arg;
+  if (hash->__type_id == HASH_TYPE_ID)
+    return hash;
+  else {
+    util_abort("%s: runtime cast failed - aborting \n",__func__);
+    return NULL;
+  }
+}
+
 
 
 void hash_free(hash_type *hash) {
@@ -541,7 +550,7 @@ static hash_sort_type * hash_alloc_sort_list(const hash_type *hash ,
 
   int i; hash_sort_type * sort_list = calloc(hash_get_size(hash) , sizeof * sort_list); 
   for (i=0; i < hash_get_size(hash); i++) 
-    sort_list[i].key = alloc_string_copy(keylist[i]);
+    sort_list[i].key = util_alloc_string_copy(keylist[i]);
   
   return sort_list;
 }
@@ -579,7 +588,7 @@ static char ** __hash_alloc_ordered_keylist(hash_type *hash , int ( hash_get_cmp
   qsort(sort_list , hash_get_size(hash) , sizeof *sort_list , &hash_sortlist_cmp);
   sorted_keylist = calloc(hash_get_size(hash) , sizeof *sorted_keylist);
   for (i = 0; i < hash_get_size(hash); i++) {
-    sorted_keylist[i] = alloc_string_copy(sort_list[i].key);
+    sorted_keylist[i] = util_alloc_string_copy(sort_list[i].key);
     free(tmp_keylist[i]);
   }
   free(tmp_keylist);

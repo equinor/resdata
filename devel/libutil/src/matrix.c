@@ -4,12 +4,12 @@
 #include <util.h>
 #include <matrix.h>
 
-
-typedef enum {
-  DEFAULT = 10,    /* Default is currently FORTRAN layout */
-  MANUAL  = 11,    /* Allocated with explicit values of stride. */
-  FORTRAN = 12     /* Allocated with fortran ordering of the indices. */
-} matrix_stride_enum ;
+/**
+   This is V E R Y  S I M P L E matrix implementation. It is not
+   designed to be fast/efficient or anything. It is purely a minor
+   support functionality for the enkf program, and should N O T be
+   considered as general matrix functionality.
+*/
 
 
 
@@ -23,14 +23,18 @@ struct matrix_struct {
   int    		  columns;        /* The number of columns in the matrix. */
   int    		  row_stride;     /* The distance in data between two conscutive row values. */
   int    		  column_stride;  /* The distance in data between to consecutive column values. */
-
-  matrix_stride_enum      stride_type;    /* What type of stride: {DEFAULT, MANUAL, FORTRAN} */
+  
+  /* 
+     Observe that the stride is considered an internal property - if
+     the matrix is stored to disk and then recovered the strides might
+     change ??
+  */
 };
 
 
 #define GET_INDEX(m,i,j) (m->row_stride * (i) + m->column_stride * (j))
 
-static int matrix_init_header(matrix_type * matrix , int rows , int columns , int row_stride , int column_stride, matrix_stride_enum stride_type) {
+static int matrix_init_header(matrix_type * matrix , int rows , int columns , int row_stride , int column_stride) {
   int data_size = -1;
 
   if (column_stride * columns <= row_stride)                                /* Column index is running the fastest. */
@@ -45,33 +49,43 @@ static int matrix_init_header(matrix_type * matrix , int rows , int columns , in
   matrix->columns    	= columns;
   matrix->row_stride 	= row_stride;
   matrix->column_stride = column_stride;
-  matrix->stride_type   = stride_type;
   return data_size;
 }
 
 
-
-/*
-  The freshly allocated matrix is explicitly initialized to zero.
+/**
+   Is not really __realloc__ - because content is NOT preserved. 
 */
-static matrix_type * matrix_alloc_with_stride(int rows , int columns , int row_stride , int column_stride, matrix_stride_enum stride_type , bool try) {
-  matrix_type * matrix = util_malloc( sizeof * matrix, __func__);
-  matrix->data_size     = matrix_init_header( matrix , rows , columns , row_stride , column_stride , stride_type);
-  matrix->data_owner    = true;
-  
+
+static void matrix_realloc_data( matrix_type * matrix , bool try ) {
   if (try) {
     /* 
        If try == true it is 'OK' to fail in the allocation,
        otherwise we use util_malloc() which will abort if the memory is not available.
     */
-    matrix->data = malloc( sizeof * matrix->data * matrix->data_size );
-    if (matrix->data == NULL) {
-      free(matrix); 
-      matrix = NULL;
-    }
+    matrix->data = realloc( matrix->data , sizeof * matrix->data * matrix->data_size );
   } else
-    matrix->data = util_malloc( sizeof * matrix->data * matrix->data_size , __func__);
-  matrix_set( matrix , 0 );
+    matrix->data = util_realloc( matrix->data , sizeof * matrix->data * matrix->data_size , __func__);
+  {
+    int i;
+    for ( i = 0; i < matrix->data_size; i++)
+      matrix->data[i] = 0;
+  }
+}
+
+
+/*
+  The freshly allocated matrix is explicitly initialized to zero.
+*/
+static matrix_type * matrix_alloc_with_stride(int rows , int columns , int row_stride , int column_stride, bool try) {
+  matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
+  matrix->data_size     = matrix_init_header( matrix , rows , columns , row_stride , column_stride);
+  matrix->data_owner    = true;
+  matrix->data          = NULL;
+  matrix_realloc_data( matrix , try);
+  if (matrix->data == NULL) {
+    util_abort("%s: Alloc failed \n",__func__);
+  }
 
   return matrix;
 }
@@ -82,7 +96,7 @@ static matrix_type * matrix_alloc_with_stride(int rows , int columns , int row_s
    This function will allocate a matrix object where the data is
    shared with the 'src' matrix. A matrix allocated in this way can be
    used with all the matrix_xxx functions, but you should be careful
-   when exporting the data pointer to e.g. Lapack routines.
+   when exporting the data pointer to e.g. lapack routines.
 */
 
 matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column , int rows , int columns) {
@@ -91,7 +105,7 @@ matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column
   {
     matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
     
-    matrix->data_size     = matrix_init_header( matrix , rows , columns , src->row_stride , src->column_stride , MANUAL);
+    matrix->data_size     = matrix_init_header( matrix , rows , columns , src->row_stride , src->column_stride);
     matrix->data_owner    = false;
     matrix->data          = &src->data[ GET_INDEX(src , row , column) ];
     matrix->data_owner    = false;
@@ -101,13 +115,39 @@ matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column
 }
 
 
-
-
-
+/**
+   Will not respect strides - low level data layout. 
+*/
+matrix_type * matrix_alloc_copy( const matrix_type * src) {
+  matrix_type * copy = matrix_alloc( matrix_get_rows( src ), matrix_get_columns( src ));
+  matrix_assign(copy , src);
+  return copy;
+}
 
 
 matrix_type * matrix_alloc(int rows, int columns) {
-  return matrix_alloc_with_stride( rows , columns , 1 , rows , DEFAULT , false);
+  return matrix_alloc_with_stride( rows , columns , 1 , rows , false);
+}
+
+
+void matrix_resize(matrix_type * matrix , int rows , int columns) {
+  if (!matrix->data_owner)
+    util_abort("%s: sorry - can not resize shared matrizes. \n",__func__);
+  {
+    matrix_type * tmp      = matrix_alloc_copy( matrix );
+    matrix_type * old_view;
+    matrix_type * new_view; 
+    int view_rows    = util_int_min( rows    , tmp->rows );
+    int view_columns = util_int_min( columns , tmp->columns);
+    matrix_init_header(matrix , rows , columns , 1 , rows);
+    matrix_realloc_data( matrix , false);
+    old_view = matrix_alloc_shared(tmp    , 0 , 0 , view_rows , view_columns);
+    new_view = matrix_alloc_shared(matrix , 0 , 0 , view_rows , view_columns);
+    matrix_assign( new_view , old_view );
+    matrix_free(old_view);
+    matrix_free(new_view);
+    matrix_free(tmp);    
+  }
 }
 
 
@@ -141,6 +181,11 @@ void matrix_pretty_print(const matrix_type * matrix , const char * name , const 
 }
 
 
+
+/* Discard the strides?? */
+void matrix_fwrite(const matrix_type * matrix , FILE * stream) {
+  
+}
 
 
 
@@ -324,4 +369,66 @@ void matrix_matmul(matrix_type * A, const matrix_type *B , const matrix_type * C
     }
   } else
     util_abort("%s: size mismatch \n",__func__);
+}
+
+
+/*****************************************************************/
+/* Row/column functions                                          */
+
+double matrix_get_row_sum(const matrix_type * matrix , int row) {
+  double sum = 0;
+  int j;
+  for (j=0; j < matrix->columns; j++)
+    sum += matrix->data[ GET_INDEX( matrix , row , j ) ];
+  return sum;
+}
+
+
+double matrix_get_column_sum(const matrix_type * matrix , int column) {
+  double sum = 0;
+  int i;
+  for (i=0; i < matrix->rows; i++)
+    sum += matrix->data[ GET_INDEX( matrix , i , column ) ];
+  return sum;
+}
+
+
+/*****************************************************************/
+/** 
+   This function will return the double data pointer of the matrix,
+   when you use this explicitly you ARE ON YOUR OWN. 
+*/
+
+double * matrix_get_data(const matrix_type * matrix) {
+  return matrix->data;
+}
+
+/**
+   The query functions below can be used to ask for the dimensions &
+   strides of the matrix.
+*/
+
+int matrix_get_rows(const matrix_type * matrix) {
+  return matrix->rows;
+}
+
+int matrix_get_columns(const matrix_type * matrix) {
+  return matrix->columns;
+}
+
+int matrix_get_row_stride(const matrix_type * matrix) {
+  return matrix->row_stride;
+}
+
+int matrix_get_column_stride(const matrix_type * matrix) {
+  return matrix->column_stride;
+}
+
+void matrix_get_dims(const matrix_type * matrix ,  int * rows , int * columns , int * row_stride , int * column_stride) {
+
+  *rows       	 = matrix->rows;
+  *columns    	 = matrix->columns;
+  *row_stride 	 = matrix->row_stride;
+  *column_stride = matrix->column_stride;
+  
 }

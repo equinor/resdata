@@ -139,7 +139,6 @@ void     util_fread_from_buffer(void *  , size_t  , size_t , char ** );
 
 void     util_fread_dev_random(int , char * );
 void     util_fread_dev_urandom(int , char * );
-int      util_C2f90_bool(bool );
 char *   util_alloc_string_copy(const char *);
 void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
 

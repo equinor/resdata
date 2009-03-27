@@ -62,13 +62,6 @@ static bool EOL_CHAR(char c) {
 #undef strncpy // This is for some reason needed in RH3
 
 
-int util_C2f90_bool(bool c_bool) {
-  /* This is true for the ifort compiler ... */
-  if (c_bool)
-    return -1;
-  else
-    return 0;
-}  
 
 
 
@@ -1487,8 +1480,34 @@ int util_get_base_length(const char * file) {
    The memory allocated in util_alloc_file_components must be freed by
    the calling unit. 
 
-   Observe that it is easy to be fooled by the optional existence of
-   an extension (badly desgined API).
+   Observe the following: 
+
+    * It is easy to be fooled by the optional existence of an extension
+      (badly desgined API).
+
+    * The function is **NOT** based purely on string parsing, but also
+      on checking stat() output to check if the argument you send in
+      is an existing directory (that is done through the
+      util_get_path_length() function).
+
+
+      Ex1: input is an existing directory:
+      ------------------------------------
+      util_alloc_file_components("/some/existing/path" , &path , &base , &ext)
+
+        path -> "/some/existing/path"
+        base -> NULL
+        ext  -> NULL
+	
+	
+      Ex2: input is NOT an existing directory:
+      ------------------------------------
+      util_alloc_file_components("/some/random/not_existing/path" , &path , &base , &ext)
+
+        path -> "/some/random/not_existing"
+        base -> "path"
+        ext  -> NULL
+	
 */
 
 void util_alloc_file_components(const char * file, char **_path , char **_basename , char **_extension) {
