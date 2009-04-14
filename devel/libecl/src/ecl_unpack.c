@@ -74,7 +74,7 @@ void unpack_file(const char * filename) {
 
 int main(int argc , char ** argv) {
   if (argc == 1)
-    util_exit("ecl_unpack UNFIIED_FILE1   UNIFIED_FILE2   ...\n");
+    util_exit("ecl_unpack UNIFIED_FILE1   UNIFIED_FILE2   ...\n");
   {
     int iarg;
     for (iarg = 1; iarg < argc; iarg++)
