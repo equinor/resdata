@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <ecl_util.h>
 #include <double_vector.h>
+#include <int_vector.h>
 #include <ecl_file.h>
 
 typedef struct ecl_point_struct ecl_point_type;
@@ -45,13 +46,12 @@ struct ecl_grid_struct {
   int                 * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
   ecl_cell_type      ** cells;
+
   /*------------------------------: The fields below this line are used for blocking algorithms - and not allocated by default.*/
   int                    block_dim; /* == 2 for maps and 3 for fields. 0 when not in use. */
   int                    block_size;
   int                    last_block_index;
   double_vector_type  ** values;
-  double               * blocked_values;
-  bool                 * blocked_active;   
 };
 
 
@@ -397,8 +397,6 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
   }
   grid->block_dim      = 0;
   grid->values         = NULL;
-  grid->blocked_values = NULL;
-  grid->blocked_active = NULL;
   return grid;
 }
 
@@ -452,6 +450,15 @@ int ecl_grid_get_active_index_from_global(const ecl_grid_type * ecl_grid , int g
   return ecl_grid->index_map[global_index];
 }
 
+int ecl_grid_get_global_index_from_active(const ecl_grid_type * ecl_grid , int active_index) {
+  return ecl_grid->inv_index_map[active_index];
+}
+
+
+int ecl_grid_get_size( const ecl_grid_type * grid) {
+  return grid->size;
+}
+
 
 /* 
    This function returns C-based zero offset indices. cell_
@@ -465,7 +472,7 @@ void ecl_grid_get_ijk(const ecl_grid_type * grid , int global_index, int *i, int
 
 void ecl_grid_get_ijk_from_active_index(const ecl_grid_type *ecl_grid , int active_index , int *i, int * j, int * k) {
   if (active_index >= 0 && active_index < ecl_grid->total_active) {
-    int global_index = ecl_grid->inv_index_map[active_index];
+    int global_index = ecl_grid_get_global_index_from_active( ecl_grid , active_index );
     ecl_grid_get_ijk(ecl_grid , global_index , i,j,k);
   } else
     util_abort("%s: error active_index:%d invalid - grid has only:%d active cells. \n",__func__ , active_index , ecl_grid->total_active);
@@ -810,8 +817,6 @@ void ecl_grid_alloc_blocking_variables(ecl_grid_type * grid, int block_dim) {
   else
     util_abort("%: valid values are two and three. Value:%d invaid \n",__func__ , block_dim);
   
-  grid->blocked_active = util_malloc( grid->block_size * sizeof * grid->blocked_active , __func__);
-  grid->blocked_values = util_malloc( grid->block_size * sizeof * grid->blocked_values , __func__);
   grid->values         = util_malloc( grid->block_size * sizeof * grid->values , __func__);
   for (index = 0; index < grid->block_size; index++) 
     grid->values[index] = double_vector_alloc(4 , 0.0);
@@ -860,49 +865,27 @@ bool ecl_grid_block_value_2d(ecl_grid_type * grid, double x , double y ,double v
 
 
 
-void ecl_grid_do_blocking(ecl_grid_type * grid , block_function_ftype * blockf ) {
-  int index;
-  for (index = 0; index < grid->block_size; index++) {
-    if (double_vector_size( grid->values[index] ) > 0) {
-      grid->blocked_values[index] = blockf(grid->values[index]);
-      grid->blocked_active[index] = true;
-    } else
-      grid->blocked_active[index] = false;
-  }
+double ecl_grid_block_eval2d(ecl_grid_type * grid , int i, int j , block_function_ftype * blockf ) {
+  int global_index = ecl_grid_get_global_index(grid , i,j,0);
+  return blockf( grid->values[global_index]);
 }
 
 
-static double ecl_grid_get_blocked_value__(const ecl_grid_type * grid, int i , int j , int k) {
+double ecl_grid_block_eval3d(ecl_grid_type * grid , int i, int j , int k ,block_function_ftype * blockf ) {
   int global_index = ecl_grid_get_global_index(grid , i,j,k);
-  return grid->blocked_values[global_index];
+  return blockf( grid->values[global_index]);
+}
+
+int ecl_grid_get_block_count2d(const ecl_grid_type * grid , int i , int j) {
+  int global_index = ecl_grid_get_global_index(grid , i,j,0);
+  return double_vector_size( grid->values[global_index]);
 }
 
 
-double ecl_grid_get_blocked_value_2d(const ecl_grid_type * grid, int i , int j ) {
-  return ecl_grid_get_blocked_value__(grid , i , j , 0);
-}
-
-
-double ecl_grid_get_blocked_value_3d(const ecl_grid_type * grid, int i , int j , int k) {
-  return ecl_grid_get_blocked_value__(grid , i , j , k);
-}
-
-
-static bool ecl_grid_blocked_cell_active__(const ecl_grid_type * grid, int i , int j , int k) {
+int ecl_grid_get_block_count3d(const ecl_grid_type * grid , int i , int j, int k) {
   int global_index = ecl_grid_get_global_index(grid , i,j,k);
-  return grid->blocked_active[global_index];
+  return double_vector_size( grid->values[global_index]);
 }
-
-
-bool ecl_grid_blocked_cell_active_2d(const ecl_grid_type * grid, int i , int j ) {
-  return ecl_grid_blocked_cell_active__(grid , i , j , 0);
-}
-
-
-bool ecl_grid_blocked_cell_active_3d(const ecl_grid_type * grid, int i , int j , int k) {
-  return ecl_grid_blocked_cell_active__(grid , i , j , k);
-}
-
 
 
 void ecl_grid_free(ecl_grid_type * grid) {
@@ -913,8 +896,6 @@ void ecl_grid_free(ecl_grid_type * grid) {
   util_safe_free(grid->index_map);
   util_safe_free(grid->inv_index_map);
 
-  util_safe_free(grid->blocked_values);
-  util_safe_free(grid->blocked_active);
   if (grid->values != NULL) {
     int i;
     for (i=0; i < grid->block_size; i++)
@@ -1006,4 +987,63 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
   printf("	ny ..............: %d \n",ny);
   printf("	nz ..............: %d \n",nz);
   printf("	Volume ..........: %d \n",nx*ny*nz);
+}
+
+
+
+/*****************************************************************/
+/**
+   This function will look up all the indices in the grid where the
+   region_kw has a certan value (region_value). The ecl_kw instance
+   must be loaded beforehand, typically with the functions
+   ecl_kw_grdecl_fseek_kw / ecl_kw_fscanf_alloc_grdecl_data.
+   
+   The two boolean flags active_only and export_active_index determine
+   how active/inactive indieces should be handled:
+
+     active_only: Means that only cells which match the required
+        region_value AND are also active are stored. If active_only is
+        set to false, ALL cells matching region value are stored in
+        index_list.
+
+     export_active_index: if this value is true the the index of the
+        cell is in the space of active cells, otherwise it is in terms
+        of the gloabl indexing.
+  
+   Observe the following about the ecl_kw instance wth region data:
+
+    * It must be of type integer - otherwise we blow up hard.  The
+    * size must be the total number of cells (should handle boxes and
+      so on ...)
+
+   Observe that there is no way to get ijk from this function, then
+   you must call ecl_grid_get_ijk() afterwards. the return value is
+   the number of cells found.
+*/
+
+int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type * region_kw , int region_value , bool active_only, bool export_active_index , int_vector_type * index_list) {
+  int cells_found = 0;
+  if (ecl_kw_get_size( region_kw ) == ecl_grid->size) {
+    if (ecl_kw_get_type( region_kw ) == ecl_int_type) {
+      int_vector_reset( index_list );
+      const int * region_ptr = ecl_kw_iget_ptr( region_kw , 0);
+      int global_index;
+      for (global_index = 0; global_index < ecl_grid->size; global_index++) {
+	if (region_ptr[global_index] == region_value) {
+	  if (!active_only || (ecl_grid->index_map[global_index] >= 0)) {
+	    /* Okay - this index should be included */
+	    if (export_active_index)
+	      int_vector_iset(index_list , cells_found , ecl_grid->index_map[global_index]);
+	    else
+	      int_vector_iset(index_list , cells_found , global_index);
+	    cells_found++;
+	  }
+	}
+      }
+    }  else
+      util_abort("%s: type mismatch - regions_kw must be of type integer \n",__func__);
+    
+  } else
+    util_abort("%s: size mismatch grid has %d cells - region specifier:%d \n",__func__ , ecl_grid->size , ecl_kw_get_size( region_kw ));
+  return cells_found;
 }

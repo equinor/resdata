@@ -798,7 +798,7 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
 
 
 /** 
-  This function weill search through a GRDECL file to look for the
+  This function will search through a GRDECL file to look for the
   'kw'; input variables and return vales are similar to
   ecl_kw_fseek_kw(). The filename argument is ONLY used for printing a
   sensible error message when/if aborting.

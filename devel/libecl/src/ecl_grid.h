@@ -6,6 +6,8 @@ extern "C" {
 #include <stdbool.h>
 #include <ecl_box.h>
 #include <double_vector.h>
+#include <int_vector.h>
+#include <ecl_kw.h>
 
 typedef double (block_function_ftype) ( const double_vector_type *); 
 typedef struct ecl_grid_struct ecl_grid_type;
@@ -31,17 +33,25 @@ void            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type 
 
 void            ecl_grid_alloc_blocking_variables(ecl_grid_type * , int );
 void            ecl_grid_init_blocking(ecl_grid_type * );
-void            ecl_grid_do_blocking(ecl_grid_type * , block_function_ftype * );
-bool            ecl_grid_blocked_cell_active_2d(const ecl_grid_type * , int , int );
-bool            ecl_grid_blocked_cell_active_3d(const ecl_grid_type * , int , int , int);
-double 		ecl_grid_get_blocked_value_2d(const ecl_grid_type * , int  , int );
-double 		ecl_grid_get_blocked_value_2d(const ecl_grid_type * , int  , int );
-double 		ecl_grid_get_blocked_value_3d(const ecl_grid_type * , int  , int  , int);
-double 		ecl_grid_get_blocked_value_3d(const ecl_grid_type * , int  , int  , int);
+double 		ecl_grid_block_eval2d(ecl_grid_type * grid , int i, int j , block_function_ftype * blockf );
+double 		ecl_grid_block_eval3d(ecl_grid_type * grid , int i, int j , int k ,block_function_ftype * blockf );
 
+int ecl_grid_get_block_count3d(const ecl_grid_type * ecl_grid , int i , int j, int k);
+int ecl_grid_get_block_count2d(const ecl_grid_type * ecl_grid , int i , int j);
+
+//void            ecl_grid_do_blocking(ecl_grid_type * , block_function_ftype * );
+//bool            ecl_grid_blocked_cell_active_2d(const ecl_grid_type * , int , int );
+//bool            ecl_grid_blocked_cell_active_3d(const ecl_grid_type * , int , int , int);
+//double 		ecl_grid_get_blocked_value_2d(const ecl_grid_type * , int  , int );
+//double 		ecl_grid_get_blocked_value_2d(const ecl_grid_type * , int  , int );
+//double 		ecl_grid_get_blocked_value_3d(const ecl_grid_type * , int  , int  , int);
+//double 		ecl_grid_get_blocked_value_3d(const ecl_grid_type * , int  , int  , int);
+//
 bool            ecl_grid_block_value_2d(ecl_grid_type * , double  , double  ,double );
 bool            ecl_grid_block_value_3d(ecl_grid_type * , double  , double  ,double , double);
 
+int             ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type * region_kw , int region_value , bool active_only, bool export_active_index , int_vector_type * index_list);
+int             ecl_grid_get_size( const ecl_grid_type * grid);
 
 #ifdef __cplusplus
 }

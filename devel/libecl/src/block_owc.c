@@ -17,12 +17,29 @@ double __avg(const double_vector_type * x) {
 }
 
 
-void block_file(ecl_grid_type * ecl_grid ,const char * filename) {
-  FILE * stream = util_fopen(filename , "r");
-  char * basename  , *path;
+double __error(const double_vector_type * x) {
+  double min =  9999999999.0;
+  double max = -min;
+  int size = double_vector_size(x);
+  if (size > 0) {
+    int i;
+    for (i = 0; i < size; i++) {
+      double value = double_vector_iget( x , i);
+      if (value > max)
+	max = value;
+      if (value < min)
+	min = value;
+    }
+    return (max - min) / 2;
+  } else return 0;
+}
+
+
+
+void block_file(ecl_grid_type * ecl_grid ,const char * raw_data, const char * index_read_file , const char * blocked_file, const char * index_write_file) {
+  FILE * stream = util_fopen(raw_data , "r");
   int read_count;
 
-  util_alloc_file_components(filename , &path , &basename , NULL);
   ecl_grid_init_blocking( ecl_grid );
   do {
     double xpos,ypos,owc;
@@ -30,35 +47,44 @@ void block_file(ecl_grid_type * ecl_grid ,const char * filename) {
     if (read_count == 3)
       ecl_grid_block_value_2d(ecl_grid , xpos , ypos , owc);
   } while (read_count == 3);
-  ecl_grid_do_blocking( ecl_grid , __avg);
+  fclose(stream );
 
   {
     int i;
-    int j;
+    int j , index;
     int nx,ny,nz,active;
-    char * index_file = util_alloc_filename(path , basename , "active");
-    char * owc_file   = util_alloc_filename(path , basename , "owc");
-
-    FILE * indexH = util_fopen(index_file , "w");
-    FILE * owcH   = util_fopen(owc_file   , "w");
-    
-    printf("Blocking %s -> [%s , %s] \n",filename , owc_file , index_file);
-    ecl_grid_get_dims(ecl_grid , &nx,&ny,&nz,&active);
-    for (j=0; j < ny; j++) {
-      for (i=0; i < nx; i++)
-	if (ecl_grid_blocked_cell_active_2d(ecl_grid , i , j)) {
-	  fprintf(owcH , " %g \n",ecl_grid_get_blocked_value_2d(ecl_grid , i , j));
-	  fprintf(indexH , "%03d  %03d  \n",i,j);
+    int_vector_type * ilist = int_vector_alloc(100 , -1);
+    int_vector_type * jlist = int_vector_alloc(100 , -1);
+    FILE * owcH;
+    FILE * index_writeH;
+    {
+      FILE * stream = util_fopen(index_read_file , "r");
+      int read_count;
+      do {
+	read_count = fscanf(stream , "%d %d" , &i , &j);
+	if (read_count == 2) {
+	  int_vector_append(ilist , i);
+	  int_vector_append(jlist , j);
 	}
+      } while (read_count == 2);
+      fclose(stream);
+    }
+    
+    
+    owcH   = util_fopen(blocked_file   , "w");
+    index_writeH = util_fopen(index_write_file , "w");
+    ecl_grid_get_dims(ecl_grid , &nx,&ny,&nz,&active);
+    for (index = 0; index < int_vector_size( ilist ); index++) {
+      i = int_vector_iget( ilist , index );
+      j = int_vector_iget( jlist , index );
+      if (ecl_grid_get_block_count2d(ecl_grid , i , j) > 2) {
+	fprintf(owcH , " %g  %g \n",ecl_grid_block_eval2d(ecl_grid , i , j , __avg) , ecl_grid_block_eval2d(ecl_grid , i , j , __error));
+	fprintf(index_writeH , "%d  %d \n",i,j);
       }
-    fclose(indexH);
+    }
+    fclose(index_writeH);
     fclose(owcH);
-    free(index_file);
-    free(owc_file);
   }
-  free(basename);
-  free(path);
-  fclose(stream);
 }
 
 
@@ -66,14 +92,18 @@ void block_file(ecl_grid_type * ecl_grid ,const char * filename) {
 
 
 int main(int argc , char ** argv) {
-  int iarg;
-  ecl_grid_type * ecl_grid  = ecl_grid_alloc( argv[1] , true);
-
-  
-  ecl_grid_alloc_blocking_variables( ecl_grid , 2);
-  for (iarg = 2; iarg < argc; iarg++)
-    block_file (ecl_grid , argv[iarg]);
-
-  ecl_grid_free( ecl_grid );
+  if (argc != 6)
+    util_exit("Usage: GRID_FILE  RAW_OWC  IJ_index   OUTFILE_woc   OUTFILE_index\n");
+  {
+    ecl_grid_type * ecl_grid     = ecl_grid_alloc( argv[1] , true);
+    const char    * raw_file     = argv[2];
+    const char    * index_file   = argv[3];
+    const char    * blocked_file = argv[4];
+    const char    * blocked_index_file = argv[5];
+    
+    ecl_grid_alloc_blocking_variables( ecl_grid , 2);
+    block_file (ecl_grid , raw_file , index_file , blocked_file , blocked_index_file);
+    ecl_grid_free( ecl_grid );
+  }
 
 }
