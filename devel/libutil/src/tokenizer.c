@@ -118,7 +118,10 @@ int length_of_initial_whitespace(
   assert( buffer_position != NULL );
   assert( tokenizer       != NULL );
 
-  return strspn( buffer_position, tokenizer->whitespace );
+  if( tokenizer->whitespace == NULL)
+    return 0;
+  else
+    return strspn( buffer_position, tokenizer->whitespace );
 }
 
 
