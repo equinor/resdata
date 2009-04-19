@@ -4,6 +4,7 @@
 #include <util.h>
 #include <matrix.h>
 
+
 /**
    This is V E R Y  S I M P L E matrix implementation. It is not
    designed to be fast/efficient or anything. It is purely a minor
@@ -12,12 +13,31 @@
 */
 
 
+/*
+  Many of matrix functions can potentially involve laaarge amounts of
+  memory. The functions:
+
+   o matrix_alloc(), matrix_resize() and matrix_alloc_copy() will
+     abort with util_abort() if the memory requirements can not be
+     satisfied.
+
+   o The corresponding functions matrix_safe_alloc(),
+     matrix_safe_resize() and matrix_safe_alloc_copy() will not abort,
+     instead NULL or an unchanged matrix will be returned. When using
+     these functons it is the responsability of the calling scopy to
+     check return values.
+
+  So the expression "safe" should be interpreted as 'can not abort' -
+  however the responsability of the calling scope is greater when it
+  comes to using these functions.
+*/
+
 
 
 struct matrix_struct {
   double 		* data;           /* The actual storage */
   bool   		  data_owner;     /* is this matrix instance the owner of data? */
-  int    		  data_size;      /* What is the length of data (number of double values). */
+  size_t    		  data_size;      /* What is the length of data (number of double values). */
 
   int    		  rows;           /* The number of rows in the matrix. */
   int    		  columns;        /* The number of columns in the matrix. */
@@ -34,8 +54,8 @@ struct matrix_struct {
 
 #define GET_INDEX(m,i,j) (m->row_stride * (i) + m->column_stride * (j))
 
-static int matrix_init_header(matrix_type * matrix , int rows , int columns , int row_stride , int column_stride) {
-  int data_size = -1;
+static void matrix_init_header(matrix_type * matrix , int rows , int columns , int row_stride , int column_stride) {
+  size_t data_size = -1;
 
   if (column_stride * columns <= row_stride)                                /* Column index is running the fastest. */
     data_size = (rows * row_stride) * (columns * column_stride);
@@ -44,49 +64,94 @@ static int matrix_init_header(matrix_type * matrix , int rows , int columns , in
   else
     util_abort("%s: invalid stride combination \n",__func__);
 
-  
   matrix->rows       	= rows;
   matrix->columns    	= columns;
   matrix->row_stride 	= row_stride;
   matrix->column_stride = column_stride;
-  return data_size;
+  matrix->data_size     = data_size;
 }
 
 
 /**
-   Is not really __realloc__ - because content is NOT preserved. 
+   This is the low-level function allocating storage. If the input
+   flag 'safe_mode' is equal to true, the function will return NULL if the
+   allocation fails, otherwise the function will abort() if the
+   allocation fails.
+
+   Before returning all elements will be set to zero.
 */
 
-static void matrix_realloc_data( matrix_type * matrix , bool try ) {
-  if (try) {
+static double * __alloc_data( int data_size , bool safe_mode ) {
+  double * data;
+  if (safe_mode) {
     /* 
-       If try == true it is 'OK' to fail in the allocation,
+       If safe_mode == true it is 'OK' to fail in the allocation,
        otherwise we use util_malloc() which will abort if the memory is not available.
     */
-    matrix->data = realloc( matrix->data , sizeof * matrix->data * matrix->data_size );
+    data = malloc( sizeof * data * data_size );
   } else
-    matrix->data = util_realloc( matrix->data , sizeof * matrix->data * matrix->data_size , __func__);
-  {
-    int i;
-    for ( i = 0; i < matrix->data_size; i++)
-      matrix->data[i] = 0;
-  }
+    data = util_malloc( sizeof * data * data_size , __func__);
+
+  if (data != NULL) 
+    for (int i = 0; i < data_size; i++)
+      data[i] = 0;
+
+  return data;
+}
+
+
+static bool __realloc_data( double ** _data , int data_size , bool safe_mode ) {
+  double * data = *_data;
+  double * tmp;
+  if (safe_mode) {
+    /* 
+       If safe_mode == true it is 'OK' to fail in the allocation,
+       otherwise we use util_malloc() which will abort if the memory is not available.
+    */
+    tmp = realloc( data , sizeof * data * data_size );
+  } else
+    tmp = util_realloc( data , sizeof * data * data_size , __func__);
+  
+  if (tmp != NULL) {
+    /* realloc() succeeded */
+    data = tmp;
+    /* 
+       We initialize to zero, because the differnt matrices involved
+       might have different data-layout, so the realloc() will
+       (probably) not have preserved data (in matrix respect)
+       anyway. That is handled at the calling scope.
+    */
+    for (int i = 0; i < data_size; i++)
+      data[i] = 0;
+  
+    *_data = data;
+    return true;
+  } else 
+    return false;
+
 }
 
 
 /*
-  The freshly allocated matrix is explicitly initialized to zero.
+  The freshly allocated matrix is explicitly initialized to zero. If
+  the variable safe_mode equals true the function will return NULL if the
+  allocation of data fails, otherwise it will abort() if the
+  allocation fails.
 */
-static matrix_type * matrix_alloc_with_stride(int rows , int columns , int row_stride , int column_stride, bool try) {
+static matrix_type * matrix_alloc_with_stride(int rows , int columns , int row_stride , int column_stride, bool safe_mode) {
   matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
-  matrix->data_size     = matrix_init_header( matrix , rows , columns , row_stride , column_stride);
-  matrix->data_owner    = true;
-  matrix->data          = NULL;
-  matrix_realloc_data( matrix , try);
-  if (matrix->data == NULL) {
-    util_abort("%s: Alloc failed \n",__func__);
-  }
 
+  matrix_init_header( matrix , rows , columns , row_stride , column_stride);
+  matrix->data_owner    = true;
+  matrix->data          = __alloc_data( matrix->data_size , safe_mode );
+  if (safe_mode) {
+    if (matrix->data == NULL) {  
+      /* Allocation failed - we return NULL */
+      matrix_free(matrix);
+      matrix = NULL;
+    }
+  }
+  
   return matrix;
 }
 
@@ -105,7 +170,7 @@ matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column
   {
     matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
     
-    matrix->data_size     = matrix_init_header( matrix , rows , columns , src->row_stride , src->column_stride);
+    matrix_init_header( matrix , rows , columns , src->row_stride , src->column_stride);
     matrix->data_owner    = false;
     matrix->data          = &src->data[ GET_INDEX(src , row , column) ];
     matrix->data_owner    = false;
@@ -115,46 +180,105 @@ matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column
 }
 
 
-/**
-   Will not respect strides - low level data layout. 
-*/
-matrix_type * matrix_alloc_copy( const matrix_type * src) {
-  matrix_type * copy = matrix_alloc( matrix_get_rows( src ), matrix_get_columns( src ));
-  matrix_assign(copy , src);
-  return copy;
+
+/*****************************************************************/
+
+static matrix_type * matrix_alloc__(int rows, int columns , bool safe_mode) {
+  return matrix_alloc_with_stride( rows , columns , 1 , rows , safe_mode);
 }
 
 
 matrix_type * matrix_alloc(int rows, int columns) {
-  return matrix_alloc_with_stride( rows , columns , 1 , rows , false);
+  return matrix_alloc__( rows , columns , false );
 }
 
+matrix_type * matrix_safe_alloc(int rows, int columns) {
+  return matrix_alloc__( rows , columns , true );
+}
 
-void matrix_resize(matrix_type * matrix , int rows , int columns) {
+/*****************************************************************/
+
+/**
+   Will not respect strides - that is considered low level data
+   layout.
+*/
+static matrix_type * matrix_alloc_copy__( const matrix_type * src , bool safe_mode) {
+  matrix_type * copy = matrix_alloc__( matrix_get_rows( src ), matrix_get_columns( src ) , safe_mode);
+  if (copy != NULL) 
+    matrix_assign(copy , src);
+  return copy;
+}
+
+matrix_type * matrix_alloc_copy(const matrix_type * src) {
+  return matrix_alloc_copy__(src , false );
+}
+
+/**
+   Will return NULL if allocation of the copy failed. 
+*/
+
+matrix_type * matrix_safe_alloc_copy(const matrix_type * src) {
+  return matrix_alloc_copy__(src , true);
+}
+
+/*****************************************************************/
+
+static bool matrix_resize__(matrix_type * matrix , int rows , int columns , bool safe_mode) {
   if (!matrix->data_owner)
     util_abort("%s: sorry - can not resize shared matrizes. \n",__func__);
   {
-    matrix_type * tmp      = matrix_alloc_copy( matrix );
-    matrix_type * old_view;
-    matrix_type * new_view; 
-    int view_rows    = util_int_min( rows    , tmp->rows );
-    int view_columns = util_int_min( columns , tmp->columns);
-    matrix_init_header(matrix , rows , columns , 1 , rows);
-    matrix_realloc_data( matrix , false);
-    old_view = matrix_alloc_shared(tmp    , 0 , 0 , view_rows , view_columns);
-    new_view = matrix_alloc_shared(matrix , 0 , 0 , view_rows , view_columns);
-    matrix_assign( new_view , old_view );
-    matrix_free(old_view);
-    matrix_free(new_view);
-    matrix_free(tmp);    
+    bool resize_OK           = true;
+    int copy_rows    	     = util_int_min( rows    , matrix->rows );
+    int copy_columns 	     = util_int_min( columns , matrix->columns);
+    matrix_type * copy_view  = matrix_alloc_shared( matrix , 0 , 0 , copy_rows , copy_columns);   /* This is the part of the old matrix which should be copied over to the new. */
+    matrix_type * copy       = matrix_alloc_copy__( copy_view , safe_mode );                            /* Now copy contains the part of the old matrix which should be copied over - with private storage. */
+
+    {
+      int old_rows , old_columns, old_row_stride , old_column_stride;
+      matrix_get_dims( matrix , &old_rows , &old_columns , &old_row_stride , &old_column_stride);        /* Storing the old header information - in case the realloc() fails. */
+      
+      matrix_init_header(matrix , rows , columns , 1 , rows);               /* Resetting the header for the matrix */
+      if (__realloc_data(&matrix->data , matrix->data_size , safe_mode)) {  /* Realloc succeeded */
+	matrix_type * target_view = matrix_alloc_shared(matrix , 0 , 0 , copy_rows , copy_columns);
+	matrix_assign( target_view , copy);
+	matrix_free( target_view );
+      } else {                                                              /* Failed to realloc new storage - recovering the old matrix, and returning false. */
+	matrix_init_header(matrix , old_rows , old_columns , old_row_stride , old_column_stride);
+	resize_OK = false;
+      }
+    }
+
+    matrix_free(copy_view);
+    matrix_free(copy);
+    
+    return resize_OK;
   }
 }
 
 
+/** 
+    Will alwasy return true (or abort). 
+*/
+bool matrix_resize(matrix_type * matrix , int rows , int columns ) {
+  return matrix_resize__(matrix , rows , columns , false);
+}
+
+/**
+   Return true if the resize succeded, otherwise it will return false
+   and leave the matrix unchanged. When resize implies expanding a
+   dimension, the newly created elements will be explicitly
+   initialized to zero.
+*/
+
+bool matrix_safe_resize(matrix_type * matrix , int rows , int columns ) {
+  return matrix_resize__(matrix , rows , columns , true);
+}
+
+/*****************************************************************/
 
 void matrix_free(matrix_type * matrix) {
   if (matrix->data_owner)
-    free(matrix->data);
+    util_safe_free(matrix->data);
   free(matrix);
 }
 
@@ -285,7 +409,7 @@ void matrix_inplace_mul(matrix_type * A , const matrix_type * B) {
 }
 
 
-/* Updates matrix A by subtracting in matrix B - elementwise. */
+/* Updates matrix A by subtracting matrix B - elementwise. */
 void matrix_inplace_sub(matrix_type * A , const matrix_type * B) {
   if ((A->rows == B->rows) && (A->columns == B->columns)) {
     int i,j;
@@ -299,7 +423,7 @@ void matrix_inplace_sub(matrix_type * A , const matrix_type * B) {
 }
 
 
-/* Updates matrix A by subtracting in matrix B - elementwise. */
+/* Updates matrix A by dividing matrix B - elementwise. */
 void matrix_inplace_div(matrix_type * A , const matrix_type * B) {
   if ((A->rows == B->rows) && (A->columns == B->columns)) {
     int i,j;
@@ -356,7 +480,7 @@ void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
    the result in A.
 */
 
-void matrix_matmul(matrix_type * A, const matrix_type *B , const matrix_type * C) {
+void matrix_matmul(matrix_type * A, const matrix_type * B , const matrix_type * C) {
   if ((A->columns == C->columns) && (A->rows == B->rows) && (B->columns == C->rows)) {
     int i,j,k;
     for (i=0; i < A->rows; i++) {
@@ -423,6 +547,7 @@ int matrix_get_row_stride(const matrix_type * matrix) {
 int matrix_get_column_stride(const matrix_type * matrix) {
   return matrix->column_stride;
 }
+
 
 void matrix_get_dims(const matrix_type * matrix ,  int * rows , int * columns , int * row_stride , int * column_stride) {
 
