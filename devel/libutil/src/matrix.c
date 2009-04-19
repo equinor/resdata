@@ -184,9 +184,8 @@ matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column
 /*****************************************************************/
 
 static matrix_type * matrix_alloc__(int rows, int columns , bool safe_mode) {
-  return matrix_alloc_with_stride( rows , columns , 1 , rows , safe_mode);
+  return matrix_alloc_with_stride( rows , columns , 1 , rows , safe_mode );    /* Must be the stride (1,rows) to use the lapack routines. */
 }
-
 
 matrix_type * matrix_alloc(int rows, int columns) {
   return matrix_alloc__( rows , columns , false );
@@ -208,6 +207,7 @@ static matrix_type * matrix_alloc_copy__( const matrix_type * src , bool safe_mo
     matrix_assign(copy , src);
   return copy;
 }
+
 
 matrix_type * matrix_alloc_copy(const matrix_type * src) {
   return matrix_alloc_copy__(src , false );
@@ -577,3 +577,5 @@ void matrix_diag_set(matrix_type * matrix , const double * diag) {
   } else
     util_abort("%s: size mismatch \n",__func__);
 }
+
+

@@ -3005,16 +3005,10 @@ FILE * util_fopen_lockf(const char * filename, const char * mode) {
 
 
 FILE * util_fopen(const char * filename , const char * mode) {
-  if (mode[0] == 'r')
-    if (!util_is_file( filename )) 
-      util_abort("%s: tried to open:%s for reading. Is not a regular file.\n",__func__ , filename);
-  
-  {
-    FILE * stream = fopen(filename , mode);
-    if (stream == NULL) 
-      util_abort("%s: failed to open:%s with mode:\'%s\' - error:%s \n",__func__ , filename , mode , strerror(errno));
-    return stream;
-  }
+  FILE * stream = fopen(filename , mode);
+  if (stream == NULL) 
+    util_abort("%s: failed to open:%s with mode:\'%s\' - error:%s \n",__func__ , filename , mode , strerror(errno));
+  return stream;
 }
 
 

@@ -14,6 +14,7 @@ struct tokenizer_struct
   char * specials;      
   char * comment_start; 
   char * comment_end;   
+  char * stop_set;
 };
 
 
@@ -26,7 +27,7 @@ tokenizer_type * tokenizer_alloc(
   const char * comment_end)      /** Set to NULL  if not interessting.           */
 {
   tokenizer_type * tokenizer = util_malloc(sizeof * tokenizer, __func__);
-
+  
 
   if( whitespace != NULL)
   {
@@ -77,6 +78,8 @@ tokenizer_type * tokenizer_alloc(
     util_abort("%s: Need to have comment_start when comment_end is set.\n", __func__);
   if(comment_start != NULL && comment_end == NULL)
     util_abort("%s: Need to have comment_end when comment_start is set.\n", __func__);
+  
+  tokenizer->stop_set = NULL;
 
   return tokenizer;
 }
@@ -92,7 +95,7 @@ void tokenizer_free(
  util_safe_free( tokenizer->specials      ); 
  util_safe_free( tokenizer->comment_start );
  util_safe_free( tokenizer->comment_end   );
-
+ util_safe_free( tokenizer->stop_set      );
  free( tokenizer     );
 }
 
@@ -141,6 +144,19 @@ bool is_whitespace(
 
 
 
+static 
+bool is_stop_char(const char c,
+			 const tokenizer_type * tokenizer) {
+  if (tokenizer->stop_set == NULL)
+    return false;
+  else if( strchr( tokenizer->stop_set, (int) c) != NULL)
+    return true;
+  else
+    return false;
+}
+
+
+
 static
 bool is_special(
   const char             c,
@@ -179,8 +195,8 @@ bool is_in_quoters(
 
 
 /**
-  This finds the number of characters up til
-  and including the next occurence of buffer[0].
+  This finds the number of characters up til and including the next
+  occurence of buffer[0].
 
   E.g. using this funciton on
 
@@ -188,13 +204,12 @@ bool is_in_quoters(
 
   should return 4.
 
-  If the character can not be found, it will
-  return the length of the buffer.
+  If the character can not be found, it will return the length of the
+  buffer.
 
-  Escaped occurences of the first character are
-  not counted. E.g. if TOKENIZER_ESCAPE_CHAR
-  occurs in front of a new occurence of the first
-  character, this is *NOT* regarded as the end.
+  Escaped occurences of the first character are not counted. E.g. if
+  TOKENIZER_ESCAPE_CHAR occurs in front of a new occurence of the
+  first character, this is *NOT* regarded as the end.
   
 */
 static
@@ -342,88 +357,111 @@ int length_of_normal_non_whitespace(
 }
 
 
+/**
+
+   This is the lowest level tokenizer - which actually does the
+   job. This function will tokenize until either the buffer is
+   exhausted, or characters in the stop_set are encountered. The
+   return value is the number of characters actually parsed from the
+   buffer.
+
+   Typical usage:
+
+   stringlist_type * tokens = stringlist_alloc_new();
+   int buffer_position = 0;
+   while (buffer_position < buffer_size) {
+       buffer_position += tokenizer_buffer__( tokenizer , &buffer[buffer_position] , strip_quote_marks , tokens);
+       //Do something with the tokens 
+   }
+   stringlist_free( tokens );
+
+   
+*/
 
 
-stringlist_type * tokenize_buffer(
-  const tokenizer_type * tokenizer,
-  const char           * buffer,
-  bool                   strip_quote_marks)
-{
-  int position          = 0;
-  int buffer_size       = strlen(buffer);
-  int whitespace_length = 0;
-  int comment_length    = 0;
 
-  stringlist_type * tokens = stringlist_alloc_new();
 
-  while( position < buffer_size )
-  {
-    /** 
-      Skip initial whitespace.
-    */
-    whitespace_length = length_of_initial_whitespace( &buffer[position], tokenizer );
-    if(whitespace_length > 0)
-    {
-      position += whitespace_length;
+static int tokenize_buffer__(const tokenizer_type * tokenizer , const char * buffer , bool strip_quote_marks, stringlist_type * tokens) {
+  int  buffer_size = strlen( buffer );
+  int  position = 0;
+  bool complete = false;
+  stringlist_clear( tokens );
+  while( !complete ) {
+    if (position >= buffer_size) {
+      complete = true;
       continue;
     }
-
-
+    
+    /** 
+	Skip initial whitespace.
+    */
+    {
+      int whitespace_length = length_of_initial_whitespace( &buffer[position], tokenizer );
+      if(whitespace_length > 0) {
+	position += whitespace_length;
+	continue;
+      }
+    }
+    
+    
     /**
-      Skip comments.
+       Skip comments.
     */
-    comment_length = length_of_comment( &buffer[position], tokenizer);
-    if(comment_length > 0)
     {
-      position += comment_length;
-      continue;
+      int comment_length = length_of_comment( &buffer[position], tokenizer);
+      if(comment_length > 0) {
+	position += comment_length;
+	continue;
+      }
     }
-
+    
+    
 
     /** 
-       Copy the character if it is in the special set,
+	Copy the character if it is in the special set,
     */
     if( is_special( buffer[position], tokenizer ) )
-    {
-      char key[2];
-      key[0] = buffer[position];
-      key[1] = '\0';
-      stringlist_append_copy( tokens, key );
-      position += 1;
-      continue;
-    }
-
+      {
+	char key[2];
+	key[0] = buffer[position];
+	key[1] = '\0';
+	stringlist_append_copy( tokens, key );
+	position += 1;
+	continue;
+      }
+    
     /**
-      If the character is a quotation start,
-      we copy the whole quotation.
+       If the character is a quotation start,
+       we copy the whole quotation.
     */
     if( is_in_quoters( buffer[position], tokenizer ) )
-    {
-      int length = length_of_quotation( &buffer[position] );
-      char * token = alloc_quoted_token( &buffer[position], length, strip_quote_marks );
-      stringlist_append_owned_ref( tokens, token );
-      position += length;
-      continue;
-    }
-
+      {
+	int length = length_of_quotation( &buffer[position] );
+	char * token = alloc_quoted_token( &buffer[position], length, strip_quote_marks );
+	stringlist_append_owned_ref( tokens, token );
+	position += length;
+	continue;
+      }
+    
+    
     /**
-      If we are here, we are guaranteed that that
-      buffer[position] is not:
-
-      1. Whitespace.
-      2. The start of a comment.
-      3. A special character.
-      4. The start of a quotation.
-
-      In other words, it is the start of plain
-      non-whitespace. Now we need to find the
-      length of the non-whitespace until:
-
-      1. Whitespace starts.
-      2. A comment starts.
-      3. A special character occur.
-      4. A quotation starts.
+       If we are here, we are guaranteed that that buffer[position] is
+       not:
+       
+       1. Whitespace.
+       2. The start of a comment.
+       3. A special character.
+       4. The start of a quotation.
+       
+       In other words, it is the start of plain non-whitespace. Now we
+       need to find the length of the non-whitespace until:
+       
+       1. Whitespace starts.
+       2. A comment starts.
+       3. A special character occur.
+       4. A quotation starts.
     */
+    
     {
       int length = length_of_normal_non_whitespace( &buffer[position], tokenizer );
       char * token = util_malloc( (length + 1) * sizeof * token, __func__ );
@@ -434,8 +472,25 @@ stringlist_type * tokenize_buffer(
       continue;
     }
   }
+  return position;
+}
 
+
+
+stringlist_type * tokenize_buffer(
+  const tokenizer_type * tokenizer,
+  const char           * buffer,
+  bool                   strip_quote_marks)
+{
+  bool complete          = false;
+  int  position          = 0;
+  int  buffer_size       = strlen(buffer);
+
+  
+  stringlist_type * tokens = stringlist_alloc_new();
+  position += tokenize_buffer__(tokenizer , buffer , strip_quote_marks , tokens);
   return tokens;
+
 }
 
 
@@ -450,4 +505,6 @@ stringlist_type * tokenize_file(
   tokens = tokenize_buffer( tokenizer, buffer, strip_quote_marks );
   free(buffer);
   return tokens;
-}
+} 
+
+

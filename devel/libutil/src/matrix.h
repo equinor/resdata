@@ -2,6 +2,7 @@
 #define __MATRIX_H__
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus 
 extern "C" {

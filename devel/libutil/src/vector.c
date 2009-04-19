@@ -303,9 +303,10 @@ void * vector_pop(vector_type * vector) {
 
 
 /* 
-   Removes the first element from the vector and returns it - similar to vector_pop():
+   Removes the first element from the vector and returns it - similar
+   to vector_pop():
 */
-   
+
 void * vector_unshift(vector_type * vector ) {
   if (vector->size == 0)
     util_abort("%s: asking to get the last element in an empty vector - impossible ... \n",__func__);
