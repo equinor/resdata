@@ -57,7 +57,6 @@ struct matrix_struct {
 
 
 static void matrix_init_header(matrix_type * matrix , int rows , int columns , int row_stride , int column_stride) {
-  size_t data_size = -1;
 
   if (!((column_stride * columns <= row_stride) || (row_stride * rows <= column_stride)))
     util_abort("%s: invalid stride combination \n",__func__);
@@ -67,7 +66,6 @@ static void matrix_init_header(matrix_type * matrix , int rows , int columns , i
   matrix->columns    	= columns;
   matrix->row_stride 	= row_stride;
   matrix->column_stride = column_stride;
-  matrix->data_size     = data_size;
 }
 
 
