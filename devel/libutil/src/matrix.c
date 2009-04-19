@@ -13,7 +13,8 @@
 */
 
 
-/*
+
+/**
   Many of matrix functions can potentially involve laaarge amounts of
   memory. The functions:
 
@@ -24,12 +25,12 @@
    o The corresponding functions matrix_safe_alloc(),
      matrix_safe_resize() and matrix_safe_alloc_copy() will not abort,
      instead NULL or an unchanged matrix will be returned. When using
-     these functons it is the responsability of the calling scopy to
+     these functons it is the responsability of the calling scope to
      check return values.
 
   So the expression "safe" should be interpreted as 'can not abort' -
   however the responsability of the calling scope is greater when it
-  comes to using these functions.
+  comes to using these functions - things can surely blow up!
 */
 
 
@@ -47,23 +48,21 @@ struct matrix_struct {
   /* 
      Observe that the stride is considered an internal property - if
      the matrix is stored to disk and then recovered the strides might
-     change ??
+     change, and alos matrix_alloc_copy() will not respect strides.
   */
 };
 
 
 #define GET_INDEX(m,i,j) (m->row_stride * (i) + m->column_stride * (j))
 
+
 static void matrix_init_header(matrix_type * matrix , int rows , int columns , int row_stride , int column_stride) {
   size_t data_size = -1;
 
-  if (column_stride * columns <= row_stride)                                /* Column index is running the fastest. */
-    data_size = (rows * row_stride) * (columns * column_stride);
-  else if (row_stride * rows <= column_stride)                              /* Row index is running fastest ~ Fortran layout. */ 
-    data_size = (rows * row_stride) * (columns * column_stride);
-  else
+  if (!((column_stride * columns <= row_stride) || (row_stride * rows <= column_stride)))
     util_abort("%s: invalid stride combination \n",__func__);
-
+  
+  matrix->data_size     = (rows * row_stride) * (columns * column_stride);
   matrix->rows       	= rows;
   matrix->columns    	= columns;
   matrix->row_stride 	= row_stride;
@@ -100,6 +99,9 @@ static double * __alloc_data( int data_size , bool safe_mode ) {
 }
 
 
+/**
+   Corresponding to __alloc_data() - but based on reallocation of data.
+*/
 static bool __realloc_data( double ** _data , int data_size , bool safe_mode ) {
   double * data = *_data;
   double * tmp;
@@ -116,10 +118,10 @@ static bool __realloc_data( double ** _data , int data_size , bool safe_mode ) {
     /* realloc() succeeded */
     data = tmp;
     /* 
-       We initialize to zero, because the differnt matrices involved
+       We initialize to zero, because the differnet matrices involved
        might have different data-layout, so the realloc() will
-       (probably) not have preserved data (in matrix respect)
-       anyway. That is handled at the calling scope.
+       (probably) not have preserved matrix ordered data anyway; that
+       is handled in the calling scope.
     */
     for (int i = 0; i < data_size; i++)
       data[i] = 0;
@@ -230,7 +232,7 @@ static bool matrix_resize__(matrix_type * matrix , int rows , int columns , bool
     bool resize_OK           = true;
     int copy_rows    	     = util_int_min( rows    , matrix->rows );
     int copy_columns 	     = util_int_min( columns , matrix->columns);
-    matrix_type * copy_view  = matrix_alloc_shared( matrix , 0 , 0 , copy_rows , copy_columns);   /* This is the part of the old matrix which should be copied over to the new. */
+    matrix_type * copy_view  = matrix_alloc_shared( matrix , 0 , 0 , copy_rows , copy_columns);         /* This is the part of the old matrix which should be copied over to the new. */
     matrix_type * copy       = matrix_alloc_copy__( copy_view , safe_mode );                            /* Now copy contains the part of the old matrix which should be copied over - with private storage. */
 
     {
@@ -556,4 +558,24 @@ void matrix_get_dims(const matrix_type * matrix ,  int * rows , int * columns , 
   *row_stride 	 = matrix->row_stride;
   *column_stride = matrix->column_stride;
   
+}
+
+
+/*****************************************************************/
+/* Various special matrices */
+
+
+/** 
+    Will set the diagonal elements in matrix to the values in diag,
+    and all remaining elements to zero. Assumes that matrix is
+    rectangular.
+*/
+
+void matrix_diag_set(matrix_type * matrix , const double * diag) {
+  if (matrix->rows == matrix->columns) {
+    matrix_set(matrix , 0);
+    for (int i=0; i < matrix->rows; i++)
+      matrix->data[ GET_INDEX(matrix , i , i) ] = diag[i];
+  } else
+    util_abort("%s: size mismatch \n",__func__);
 }
