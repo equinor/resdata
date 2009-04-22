@@ -24,5 +24,8 @@ void                 <TYPE>_vector_set_many(<TYPE>_vector_type *  , int  , const
 void                 <TYPE>_vector_shrink(<TYPE>_vector_type * );
 <TYPE>               <TYPE>_vector_sum(const <TYPE>_vector_type * );
 <TYPE>               <TYPE>_vector_get_default(const <TYPE>_vector_type * );
+void                 <TYPE>_vector_sort(<TYPE>_vector_type * vector);
+void                 <TYPE>_vector_permute(<TYPE>_vector_type * vector , const int * perm);
+int *                <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * vector);
 
 #endif

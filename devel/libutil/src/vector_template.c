@@ -81,6 +81,18 @@ struct <TYPE>_vector_struct {
 };
 
 
+/**
+   This datatype is used when allocating a permutation list
+   corresponding to a sorted a xxx_vector instance. This permutation
+   list can then be used to reorder several xxx_vector instances.
+*/
+
+typedef struct {
+  int    index;
+  <TYPE> value;
+} sort_node_type;
+
+
 
 static void <TYPE>_vector_realloc_data__(<TYPE>_vector_type * vector , int new_alloc_size) {
   if (new_alloc_size > 0) {
@@ -117,7 +129,6 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
   <TYPE>_vector_realloc_data__(vector , alloc_size);
   return vector;
 }
-
 
 
 <TYPE> <TYPE>_vector_get_default(const <TYPE>_vector_type * vector) {
@@ -253,4 +264,76 @@ void <TYPE>_vector_shrink(<TYPE>_vector_type * vector) {
   for (i=0; i < vector->size; i++)
     sum += vector->data[i];
   return sum;
+}
+
+/*****************************************************************/
+/* Functions for sorting a vector instance. */
+
+
+static int <TYPE>_vector_cmp(const void *_a, const void *_b) {
+  <TYPE> a = *((<TYPE> *) _a);
+  <TYPE> b = *((<TYPE> *) _b);
+
+  if (a < b)
+    return -1;
+  
+  if (a > b)
+    return 1;
+
+  return 0;
+}
+
+
+
+/* 
+   Inplace numerical sort of the vector. 
+*/
+void <TYPE>_vector_sort(<TYPE>_vector_type * vector) {
+  qsort(vector->data , vector->size , sizeof * vector->data ,  <TYPE>_vector_cmp);
+}
+
+
+
+
+
+static int <TYPE>_vector_cmp_node(const void *_a, const void *_b) {
+  sort_node_type a = *((sort_node_type *) _a);
+  sort_node_type b = *((sort_node_type *) _b);
+
+  if (a.value < b.value)
+    return -1;
+  
+  if (a.value > b.value)
+    return 1;
+  
+  return 0;
+}
+
+
+
+int * <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * vector) {
+  int * sort_perm             = util_malloc( vector->size * sizeof * sort_perm , __func__);
+  sort_node_type * sort_nodes = util_malloc( vector->size * sizeof * sort_nodes , __func__);
+  int i;
+  for (i=0; i < vector->size; i++) {
+    sort_nodes[i].index = i;
+    sort_nodes[i].value = vector->data[i];
+  }
+  qsort(sort_nodes , vector->size , sizeof * sort_nodes ,  <TYPE>_vector_cmp_node);
+    
+  for (i=0; i < vector->size; i++)
+    sort_perm[i] = sort_nodes[i].index;
+  
+  free( sort_nodes );
+  return sort_perm;
+}
+
+
+
+void <TYPE>_vector_permute(<TYPE>_vector_type * vector , const int * perm) {
+  int i;
+  <TYPE> * tmp = util_alloc_copy( vector->data , sizeof * tmp * vector->size , __func__);
+  for (i=0; i < vector->size; i++) 
+    vector->data[i] = tmp[perm[i]];
+  free( tmp );
 }

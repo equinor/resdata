@@ -394,7 +394,7 @@ static int vector_cmp(const void * s1 , const void * s2) {
 
    Here we have inserted one (char *) and one (double *). When the
    these elements arrive in the sort function they will just be (void
-   *), and the comparison might be quite meaningless(??).
+   *), and the comparison will be quite meaningless(??).
 */
 
 
