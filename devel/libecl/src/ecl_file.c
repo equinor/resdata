@@ -12,6 +12,7 @@
 #include <int_vector.h>
 #include <stringlist.h>
 
+
 /**
    This file implements functionality to load an entire ECLIPSE file
    in ecl_kw format. In addition to loading a complete file it can
@@ -21,8 +22,8 @@
 
    The ecl_file struct is quite simply a vector of ecl_kw instances,
    it has no knowledge of report steps and such, and does not know
-   whether it build from a complete file, or only from a part of
-   unified file.
+   whether it has been built from a complete file, or only from a part
+   of a unified file.
 */
 
 
@@ -98,6 +99,37 @@ static ecl_file_type * ecl_file_alloc_empty( ) {
 }
 
 
+/**
+   This function iterates over the kw_list vector and builds the
+   internal index fields 'kw_index' and 'distinct_kw'. This function
+   must be called everytime the content of the kw_list vector is
+   modified (otherwise the ecl_file instance will be in an
+   inconsistent state).
+*/
+
+static void ecl_file_make_index( ecl_file_type * ecl_file ) {
+  stringlist_clear( ecl_file->distinct_kw );
+  hash_clear( ecl_file->kw_index );
+  {
+    int i;
+    for (i=0; i < vector_get_size( ecl_file->kw_list ); i++) {
+      const ecl_kw_type * ecl_kw = vector_iget_const( ecl_file->kw_list , i);
+      char              * header = ecl_kw_alloc_strip_header( ecl_kw );
+      
+      if (! hash_has_key( ecl_file->kw_index , header )) {
+	hash_insert_hash_owned_ref( ecl_file->kw_index , header , int_vector_alloc(0 , -1) , int_vector_free__);
+	stringlist_append_copy( ecl_file->distinct_kw , header);
+      }
+      
+      {
+	int_vector_type * index_vector = hash_get( ecl_file->kw_index , header);
+	int_vector_append( index_vector , i);
+      }
+      free(header);
+    }
+  }
+}
+
 
 
 
@@ -106,7 +138,8 @@ static ecl_file_type * ecl_file_alloc_empty( ) {
    open fortio instance. If stop_kw != NULL the function will return
    __THE_SECOND_TIME__ stop_kw is encountered, leaving the fortio
    pointer looking at the stop_kw keyword. If stop_kw == NULL the
-   function will read the complete file.
+   function will read the complete file. The stop_kw parameter is used
+   to support partial reading of unified files (RFT/SUMMARY/RESTART).
 
    If no keywords are read in the function will return NULL (and not
    an empty ecl_file skeleton).
@@ -145,30 +178,21 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
        Must have a new check on NULL - because the ecl_kw instance can
        be freed and set to to NULL in the preceeding block. 
     */
-
-    if (ecl_kw != NULL) {
-      int index = vector_append_owned_ref( ecl_file->kw_list , ecl_kw , ecl_kw_free__);
-      char * header = ecl_kw_alloc_strip_header( ecl_kw );
-      if (! hash_has_key( ecl_file->kw_index , header )) {
-	hash_insert_hash_owned_ref( ecl_file->kw_index , header , int_vector_alloc(0 , -1) , int_vector_free__);
-	stringlist_append_copy( ecl_file->distinct_kw , header);
-      }
-
-      {
-	int_vector_type * index_vector = hash_get( ecl_file->kw_index , header);
-	int_vector_append( index_vector , index);
-      }
-      free(header);
-    }
+    if (ecl_kw != NULL) 
+      vector_append_owned_ref( ecl_file->kw_list , ecl_kw , ecl_kw_free__);
+    
     first_kw = false;
   } while (ecl_kw != NULL);
+
   
   
   /* Returning NULL for an empty file. */
   if (vector_get_size(ecl_file->kw_list) == 0) {
     ecl_file_free( ecl_file );
     ecl_file = NULL;
-  } 
+  } else
+    /* Building up the index for keyword/occurence based lookup. */
+    ecl_file_make_index( ecl_file );
     
   
   return ecl_file;
@@ -208,7 +232,6 @@ ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
 }
 
 
-
 /*
   The SEQNUM number found in unified restart files corresponds to the 
   REPORT_STEP.
@@ -221,6 +244,7 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "TIME");
 }
+
 /*****************************************************************/
 /* fwrite functions */
 
@@ -233,7 +257,8 @@ void ecl_file_fwrite_fortio(const ecl_file_type * ecl_file , fortio_type * forti
 
 /* 
    Observe : if the filename is a standard filename which can be used
-   to infer formatted/unformatted automagically the fmt_file variable is NOT consulted.
+   to infer formatted/unformatted automagically the fmt_file variable
+   is NOT consulted.
 */
   
 void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, bool fmt_file, bool endian_flip) {
@@ -268,8 +293,9 @@ void ecl_file_free__(void * arg) {
 }
 
 
+
 /*****************************************************************/
-/*
+/**
   Here comes several functions for querying the ecl_file instance, and
   getting pointers to the ecl_kw content of the ecl_file. For getting
   ecl_kw instances there are two principally different access methods:
@@ -385,20 +411,27 @@ int ecl_file_iget_occurence( const ecl_file_type * ecl_file , int index) {
       if (index_data[i] == index)
 	occurence = i;
   }
-  free(header);
   if (occurence < 0)
     util_abort("%s: internal error ... \n" , __func__);
-  
+
+  free(header);
   return occurence;
 }
 
 
-
+/** 
+    Returns the total number of ecl_kw instances in the ecl_file
+    instance.
+*/
 int ecl_file_get_num_kw( const ecl_file_type * ecl_file ){
   return vector_get_size( ecl_file->kw_list );
 }
 
 
+/**
+   Returns true if the ecl_file instance has at-least one occurence of
+   ecl_kw 'kw'.
+*/
 bool ecl_file_has_kw( const ecl_file_type * ecl_file , const char * kw) {
   return hash_has_key( ecl_file->kw_index , kw );
 }

@@ -18,18 +18,22 @@
 
 
 int main(int argc , char ** argv) {
-  matrix_type * A     = matrix_alloc(3 , 3);
-  matrix_type * B     = matrix_alloc(3 , 1);
+  const int n         = 3;
+  const int m         = 4;
+  double * S          = util_malloc( n * sizeof * S , __func__);
+  matrix_type * A     = matrix_alloc(n , m);
+  matrix_type * U     = matrix_alloc(n , n);
+  matrix_type * VT    = matrix_alloc(m , m);
 
-  matrix_iset(A , 0,0 , 1.0);
-  matrix_iset(A , 1,1 , 2.0);
-  matrix_iset(A , 2,2 , 3.0);
-
-  matrix_set(B , 1.0);
-  
-  matrix_dgesv(A , B);
-  matrix_pretty_print( B , "X" , " % 10.7f ");
-
-  matrix_free(A);
-  matrix_free(B);
+  matrix_random_init( A );
+  matrix_pretty_print( A , "A" , " %10.7f ");
+  matrix_dgesvd(DGESVD_ALL , DGESVD_ALL , A , S , U , VT);
+  printf("\n\n");
+  matrix_pretty_print(U , "U"   , " %10.7f ");
+  printf("\n\n");
+  matrix_pretty_print(VT , "VT" , " %10.7f ");
+  matrix_free( A );
+  matrix_free( U );
+  matrix_free( VT );
+  free( S );
 }

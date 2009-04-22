@@ -53,7 +53,13 @@ struct matrix_struct {
 };
 
 
-#define GET_INDEX(m,i,j) (m->row_stride * (i) + m->column_stride * (j))
+/*#define GET_INDEX(m,i,j) (m->row_stride * (i) + m->column_stride * (j))*/
+
+static inline int GET_INDEX( const matrix_type * m , int i , int j) {
+  return m->row_stride *i + m->column_stride *j;
+}
+
+
 
 
 static void matrix_init_header(matrix_type * matrix , int rows , int columns , int row_stride , int column_stride) {
@@ -579,3 +585,14 @@ void matrix_diag_set(matrix_type * matrix , const double * diag) {
 }
 
 
+
+/**
+   Fills the matrix with uniformly distributed random numbers.
+*/
+
+void matrix_random_init(matrix_type * matrix) {
+  int i,j;
+  for (i=0; i < matrix->rows; i++)
+    for (j=0; j < matrix->columns; j++)
+      matrix->data[ GET_INDEX(matrix , i , j) ] = 1.0 * rand() / RAND_MAX;
+}

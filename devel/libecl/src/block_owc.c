@@ -36,7 +36,7 @@ double __error(const double_vector_type * x) {
 
 
 
-void block_file(ecl_grid_type * ecl_grid ,const char * raw_data, const char * index_read_file , const char * blocked_file, const char * index_write_file) {
+void block_file(ecl_grid_type * ecl_grid ,const char * raw_data, const char * index_read_file , const char * blocked_file, const char * index_write_file, double owc_std) {
   FILE * stream = util_fopen(raw_data , "r");
   int read_count;
 
@@ -78,7 +78,7 @@ void block_file(ecl_grid_type * ecl_grid ,const char * raw_data, const char * in
       i = int_vector_iget( ilist , index );
       j = int_vector_iget( jlist , index );
       if (ecl_grid_get_block_count2d(ecl_grid , i , j) > 2) {
-	fprintf(owcH , " %g  %g \n",ecl_grid_block_eval2d(ecl_grid , i , j , __avg) , ecl_grid_block_eval2d(ecl_grid , i , j , __error));
+	fprintf(owcH , " %g  %g \n",ecl_grid_block_eval2d(ecl_grid , i , j , __avg) , owc_std);
 	fprintf(index_writeH , "%d  %d \n",i,j);
       }
     }
@@ -92,17 +92,18 @@ void block_file(ecl_grid_type * ecl_grid ,const char * raw_data, const char * in
 
 
 int main(int argc , char ** argv) {
-  if (argc != 6)
-    util_exit("Usage: GRID_FILE  RAW_OWC  IJ_index   OUTFILE_woc   OUTFILE_index\n");
+  if (argc != 7)
+    util_exit("Usage: GRID_FILE  RAW_OWC  IJ_index   OUTFILE_woc   OUTFILE_index  OWC_STD\n");
   {
     ecl_grid_type * ecl_grid     = ecl_grid_alloc( argv[1] , true);
     const char    * raw_file     = argv[2];
     const char    * index_file   = argv[3];
     const char    * blocked_file = argv[4];
     const char    * blocked_index_file = argv[5];
+    double          owc_std            = atof(argv[6]);
     
     ecl_grid_alloc_blocking_variables( ecl_grid , 2);
-    block_file (ecl_grid , raw_file , index_file , blocked_file , blocked_index_file);
+    block_file (ecl_grid , raw_file , index_file , blocked_file , blocked_index_file , owc_std);
     ecl_grid_free( ecl_grid );
   }
 

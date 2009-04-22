@@ -3594,6 +3594,10 @@ static char * util_bt_alloc_current_executable(const char * bt_symbol) {
   implemented with the help of a variable length argument list - just
   like printf(fmt , arg1, arg2 , arg3 ...);
 
+  Observe that it is __VERY__ important that the arguments and the
+  format string match up, otherwise the util_abort() routine will hang
+  indefinetely.
+
   A backtrace is also included, with the help of the exernal utility
   addr2line, this backtrace is converted into usable
   function/file/line information (provided the required debugging
