@@ -130,6 +130,13 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
   return vector;
 }
 
+<TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src) {
+  <TYPE>_vector_type * copy = <TYPE>_vector_alloc( src->alloc_size , src->default_value );
+  copy->size = src->size;
+  memcpy(copy->data , src->data , src->alloc_size * sizeof * src->data );
+  return copy;
+}
+
 
 <TYPE> <TYPE>_vector_get_default(const <TYPE>_vector_type * vector) {
   return vector->default_value;
@@ -266,24 +273,22 @@ void <TYPE>_vector_shrink(<TYPE>_vector_type * vector) {
   return sum;
 }
 
+
 /*****************************************************************/
 /* Functions for sorting a vector instance. */
-
 
 static int <TYPE>_vector_cmp(const void *_a, const void *_b) {
   <TYPE> a = *((<TYPE> *) _a);
   <TYPE> b = *((<TYPE> *) _b);
 
-  if (a < b)
-    return -1;
-  
   if (a > b)
     return 1;
+  
+  if (a < b)
+    return -1;
 
   return 0;
 }
-
-
 
 /* 
    Inplace numerical sort of the vector. 
@@ -336,4 +341,24 @@ void <TYPE>_vector_permute(<TYPE>_vector_type * vector , const int * perm) {
   for (i=0; i < vector->size; i++) 
     vector->data[i] = tmp[perm[i]];
   free( tmp );
+}
+
+
+/*****************************************************************/
+
+
+void <TYPE>_vector_fprintf(const <TYPE>_vector_type * vector , FILE * stream , const char * name , const char * fmt) {
+  int i;
+  if (name != NULL)
+    fprintf(stream , "%s = [" , name);
+  else
+    fprintf(stream , "[");
+
+  for (i = 0; i < vector->size; i++) {
+    fprintf(stream , fmt , vector->data[i]);
+    if (i < (vector->size - 1))
+      fprintf(stream , ", ");
+  }
+
+  fprintf(stream , "]\n");
 }
