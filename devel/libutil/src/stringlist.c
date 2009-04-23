@@ -134,6 +134,24 @@ stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type * src) {
 }
 
 
+/**
+  Allocates a new stringlist where the strings are references to the num_strings found
+  in stringlist from start.
+
+*/
+stringlist_type * stringlist_alloc_shallow_copy_with_limits(const stringlist_type * stringlist, int start, int num_strings) {
+  stringlist_type * copy = stringlist_alloc_empty( true );
+
+  for(int i=0; i<num_strings; i++)
+  {
+    const char * str = stringlist_iget(stringlist, i + start);
+    vector_append_ref(copy->__strings, str);
+  }
+
+  return copy;
+}
+
+
 /*
   Can not use vector_deep copy - because we might not have the constructor registered, 
   in the node_data instance; but in this case we know the copy constructor.

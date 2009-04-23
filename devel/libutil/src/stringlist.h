@@ -33,6 +33,8 @@ void              stringlist_fprintf(const stringlist_type * , const char * , FI
 stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type *);
 stringlist_type * stringlist_alloc_deep_copy(const stringlist_type *);
 stringlist_type * stringlist_alloc_shallow_copy_with_offset(const stringlist_type * stringlist, int offset);
+stringlist_type * stringlist_alloc_shallow_copy_with_limits(const stringlist_type * stringlist, int start, int num_strings);
+ 
 
 void              stringlist_append_stringlist_copy(stringlist_type *  , const stringlist_type * );
 void              stringlist_append_stringlist_ref(stringlist_type *   , const stringlist_type * );

@@ -2,12 +2,15 @@
 
 int main(int argc, char ** argv)
 {
-  tokenizer_type * tokenizer = tokenizer_alloc(" \t\r\n", "\"'", "=;,()[]{}", "--", "\n");
+  tokenizer_type * tokenizer = tokenizer_alloc(" \t\n\r,;", "'\"", "[]{}", "--", "\n");
 
   if(argc < 2 )
+  {
+    printf("Usage: tokenizer_test.x file.txt\n");
     return 1;
+  }
 
-  stringlist_type * tokens = tokenize_file( tokenizer, argv[1] , true);
+  stringlist_type * tokens = tokenize_file(tokenizer, argv[1] , true);
 
   int num_tokens = stringlist_get_size(tokens);
 
