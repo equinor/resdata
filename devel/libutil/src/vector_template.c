@@ -130,6 +130,7 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
   return vector;
 }
 
+
 <TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src) {
   <TYPE>_vector_type * copy = <TYPE>_vector_alloc( src->alloc_size , src->default_value );
   copy->size = src->size;
@@ -290,14 +291,13 @@ static int <TYPE>_vector_cmp(const void *_a, const void *_b) {
   return 0;
 }
 
-/* 
-   Inplace numerical sort of the vector. 
+
+/**
+   Inplace numerical sort of the vector; sorted in increasing order.
 */
 void <TYPE>_vector_sort(<TYPE>_vector_type * vector) {
   qsort(vector->data , vector->size , sizeof * vector->data ,  <TYPE>_vector_cmp);
 }
-
-
 
 
 
@@ -315,7 +315,31 @@ static int <TYPE>_vector_cmp_node(const void *_a, const void *_b) {
 }
 
 
+/**
+   This function will allocate a (int *) pointer of indices,
+   corresponding to the permutations of the elements in the vector to
+   get it into sorted order. This permutation can then be used to sort
+   several vectors identically:
 
+   int_vector_type    * v1;
+   bool_vector_type   * v2;
+   double_vector_type * v2;
+   .....
+   .....
+
+   {
+      int * sort_perm = int_vector_alloc_sort_perm( v1 );
+      int_vector_permute( v1 , sort_perm );
+      bool_vector_permute( v2 , sort_perm );
+      double_vector_permute( v3 , sort_perm );
+      free(sort_perm);
+   }
+   
+*/
+
+
+
+   
 int * <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * vector) {
   int * sort_perm             = util_malloc( vector->size * sizeof * sort_perm , __func__);
   sort_node_type * sort_nodes = util_malloc( vector->size * sizeof * sort_nodes , __func__);
