@@ -207,8 +207,9 @@ void stringlist_insert_stringlist_copy(stringlist_type * stringlist, const strin
   stringlist_append_stringlist_copy(new, src  );
   stringlist_append_stringlist_copy(new, end  );
 
-  stringlist_free(stringlist);
-  stringlist = new;
+  stringlist_clear(stringlist);
+  stringlist_append_stringlist_copy(stringlist, new);
+  stringlist_free(new);
 }
 
 
