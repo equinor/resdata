@@ -3012,6 +3012,19 @@ FILE * util_fopen(const char * filename , const char * mode) {
 }
 
 
+
+bool util_fopen_test(const char * filename, const char * mode) {
+  FILE * stream = fopen(filename , mode);
+  if (stream == NULL) 
+    return false;
+  else
+  {
+    fclose(stream);
+    return true;
+  }
+}
+
+
 void util_fwrite(const void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {
   int items_written = fwrite(ptr , element_size , items , stream);
   if (items_written != items) 

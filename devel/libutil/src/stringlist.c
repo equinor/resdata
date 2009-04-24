@@ -322,6 +322,34 @@ int_vector_type * stringlist_find(const stringlist_type * stringlist, const char
 }
 
 
+/**
+  Find the index of the first index matching 's'.
+  Returns -1 if 's' cannot be found.
+*/
+int stringlist_find_first(const stringlist_type * stringlist, const char * s) {
+  bool found = false;
+  int size   = stringlist_get_size( stringlist );
+  int index = 0;
+
+  while( index < size && !found )
+  {
+    const char * istring = stringlist_iget(stringlist , index);
+    if (istring != NULL)
+      if (strcmp(istring , s) == 0)
+      {
+        found = true;
+        continue;
+      }
+    index++;
+  }
+
+  if(found)
+    return index;
+  else
+    return -1;
+}
+
+
 
 bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
   int size1 = stringlist_get_size( s1 );

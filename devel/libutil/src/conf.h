@@ -6,8 +6,11 @@
 extern "C" {
 #endif
 
-#define CONF_OK           0
-#define CONF_PARSE_ERROR  1
+#define CONF_OK                      0
+#define CONF_PARSE_ERROR             1
+#define CONF_RECURSIVE_INCLUDE_ERROR 2
+#define CONF_UNEXPECTED_EOF_ERROR    3
+
 const 
 
 

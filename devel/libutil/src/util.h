@@ -78,6 +78,7 @@ int    	     util_count_content_file_lines(FILE * );
 int    	     util_count_file_lines(FILE * );
 FILE       * util_fopen_lockf(const char * , const char * );
 FILE   	   * util_fopen(const char *  , const char *);
+bool         util_fopen_test(const char *, const char *);
 void   	     util_alloc_file_components(const char * , char ** , char **, char **);
   //char   	   * util_realloc_full_path(char * , const char *, const char *);
 char   	   * util_alloc_tmp_file(const char * , const char * , bool );
