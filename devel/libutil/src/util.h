@@ -71,6 +71,7 @@ void         util_copy_directory(const char *  , const char * , const char *);
 void         util_walk_directory(const char * root_path , file_callback_ftype * file_callback , void * callback_arg);
 char       * util_alloc_cwd(void);
 char       * util_alloc_realpath(const char * );
+bool         util_try_alloc_realpath(const char *);
 
 int    	     util_forward_line(FILE * , bool * );
 void   	     util_rewind_line(FILE *);

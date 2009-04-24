@@ -131,31 +131,41 @@ bool string_is_special(
   from another file.
 */
 static
-char * alloc_included_realpath(
-  const char * current_file_realpath,
-  const char * include_file
+int alloc_included_realpath(
+  const char  * current_file_realpath,
+  const char  * include_file,
+  char       ** include_file_realpath
 )
 {
   assert(current_file_realpath != NULL);
   assert(include_file          != NULL);
 
+  bool realpath_ok;
+  char * path;
+
   if( util_is_abs_path(include_file) )
-    return util_alloc_string_copy(include_file);
+    path = util_alloc_string_copy(include_file);
   else
   {
-    char * path;
     util_alloc_file_components(current_file_realpath, &path, NULL, NULL);
     if( path == NULL )
       path = util_alloc_string_copy("/");
     path = util_strcat_realloc(path, "/");
     path = util_strcat_realloc(path, include_file);
-
-
-    char * included_file_realpath = util_alloc_realpath(path);
-                                                        
-    free(path);
-    return included_file_realpath;
   }
+
+  realpath_ok = util_try_alloc_realpath(path);
+  if( realpath_ok )
+    *include_file_realpath = util_alloc_realpath(path);
+  else
+    *include_file_realpath = NULL;
+                                                      
+  free(path);
+
+  if( realpath_ok )
+    return CONF_OK;
+  else
+    return CONF_UNABLE_TO_OPEN_FILE;
 }
 
 
@@ -176,8 +186,6 @@ int create_token_buffer__(
 {
   int status;
 
-  printf("filename: %s\n", filename);
-
   stringlist_type * tokens__;
   stringlist_type * src_files__;
   
@@ -188,23 +196,30 @@ int create_token_buffer__(
   if( !set_has_key(sources, filename) )
     status = CONF_OK;
   else
+  {
+    /**
+      TODO Add errror message.
+    */
     status = CONF_RECURSIVE_INCLUDE_ERROR;
-
-
-  printf("filename: %s\n", filename);
+  }
 
 
   /**
     Check that we can open the file.  
   */
-  //if( status == CONF_OK && !util_fopen_test(filename, "r") )
-  //  status = CONF_UNABLE_TO_OPEN_FILE;
+  if( status == CONF_OK && !util_fopen_test(filename, "r") )
+  { 
+    /**
+      TODO Add errror message.
+    */
+    status = CONF_UNABLE_TO_OPEN_FILE;
+  }
 
 
   if( status != CONF_OK )
   {
     /**
-      Create empty tokens and src_files__ list to return.
+      Create empty tokens__ and src_files__ list to return.
     */
     tokens__    = stringlist_alloc_new();
     src_files__ = stringlist_alloc_new();
@@ -236,8 +251,8 @@ int create_token_buffer__(
       while( i != -1)
       {
         char * include_file;
-        stringlist_type * included_tokens;
-        stringlist_type * included_src_files;
+        stringlist_type * included_tokens    = NULL;
+        stringlist_type * included_src_files = NULL;
 
         /**
           Check that the next token actually exists.
@@ -247,22 +262,40 @@ int create_token_buffer__(
           status = CONF_UNEXPECTED_EOF_ERROR;
 
           /**
+           TODO Add error message.
            Delete the last tokens, so that the output is still meaningful.
           */
           stringlist_idel(tokens__, i);
           stringlist_idel(src_files__, i);
           break;
         }
-        include_file = alloc_included_realpath(filename, 
-                                               stringlist_iget(tokens__, i+1));
 
         /**
-          Recursive call.
+          Check that the file exists.
         */
-        status = create_token_buffer__(&included_tokens, &included_src_files,
-                                     sources, tokenizer, include_file);
-        free(include_file);
+        status = alloc_included_realpath(filename, 
+                                         stringlist_iget(tokens__, i+1),
+                                         &include_file);
+        if( status == CONF_OK )
+        {
+          /**
+            Recursive call.
+          */
+          int last_status = create_token_buffer__(&included_tokens,
+                                                 &included_src_files,
+                                                 sources__, tokenizer, 
+                                                 include_file);
+          if( last_status != CONF_OK)
+            status = last_status;
 
+          free(include_file);
+        }
+        else
+        {
+          /**
+            TODO Add error message.
+          */
+        }
           
 
         /**
@@ -273,14 +306,16 @@ int create_token_buffer__(
         stringlist_idel(src_files__, i+1);
         stringlist_idel(src_files__, i);
 
-
-        /**
-          Replace the deleted items.
-        */
-        stringlist_insert_stringlist_copy(tokens__, included_tokens, i);
-        stringlist_free(included_tokens);
-        stringlist_insert_stringlist_copy(src_files__, included_src_files, i);
-        stringlist_free(included_src_files);
+        if(included_tokens != NULL && included_src_files != NULL)
+        {
+          /**
+            Replace the deleted items.
+          */
+          stringlist_insert_stringlist_copy(tokens__, included_tokens, i);
+          stringlist_free(included_tokens);
+          stringlist_insert_stringlist_copy(src_files__, included_src_files, i);
+          stringlist_free(included_src_files);
+        }
         
 
         /**

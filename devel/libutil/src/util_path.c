@@ -1,3 +1,4 @@
+#include <stdlib.h>
 /**
   This little function checks if the supplied path is an abolute path,
   or a relative path. The check is extremely simple - if the first
@@ -266,6 +267,22 @@ char * util_alloc_realpath(const char * input_path) {
   
   return new_path;
 }
+
+
+
+bool util_try_alloc_realpath(const char * input_path) {
+  char * buffer   = util_malloc(PATH_MAX + 1 , __func__);
+  char * new_path = NULL;
+
+  new_path = realpath( input_path , buffer);
+  free(buffer);
+  if (new_path == NULL) 
+    return false;
+  else 
+    return true;
+}
+
+
 
 
 void util_path_split(const char *line , int *_tokens, char ***_token_list) {
