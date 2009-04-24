@@ -10,6 +10,7 @@ extern "C" {
 #define CONF_PARSE_ERROR             1
 #define CONF_RECURSIVE_INCLUDE_ERROR 2
 #define CONF_UNEXPECTED_EOF_ERROR    3
+#define CONF_UNABLE_TO_OPEN_FILE     4
 
 const 
 
@@ -21,6 +22,11 @@ typedef int (validator_ftype)(conf_type * conf);
 
 
 
+int create_token_buffer(
+  stringlist_type ** tokens,
+  stringlist_type ** src_files,
+  const char       * filename
+);
 
 #ifdef __cplusplus
 }

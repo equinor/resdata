@@ -15,31 +15,25 @@
 #include <double_vector.h>
 #include <matrix.h>
 #include <matrix_lapack.h>
+#include <conf.h>
 
 
 int main(int argc , char ** argv) {
-  stringlist_type * a = stringlist_alloc_new();
-  stringlist_type * b = stringlist_alloc_new();
-  
-  stringlist_append_copy(a, "foo");
-  stringlist_append_copy(a, "bar");
-  stringlist_append_copy(a, "svada");
-
-  stringlist_append_copy(b, "blah");
-  stringlist_append_copy(b, "kølle");
-
-  stringlist_insert_stringlist_copy(a, b, 1);
-
-  for(int i=0; i<stringlist_get_size(a); i++)
-    printf("%s\n", stringlist_iget(a,i));
-
-
-  stringlist_free(a);
-  stringlist_free(b);
-
-  for(int i = 0; i < 10; )
+  if(argc < 2 )
   {
-    i++;
-    printf("i: %i\n", i);
+    return 1;
   }
+  stringlist_type * tokens;
+  stringlist_type * src_files;
+
+  int status = create_token_buffer(&tokens, &src_files, argv[1]);
+
+  for(int i=0; i<stringlist_get_size(tokens); i++)
+  {
+    printf("Token no %i is \"%s\". Source file is \"%s\".\n", i, stringlist_iget(tokens, i), stringlist_iget(src_files, i));
+  }
+
+  stringlist_free(tokens);
+  stringlist_free(src_files);
+
 }
