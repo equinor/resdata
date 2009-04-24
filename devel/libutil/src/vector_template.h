@@ -1,6 +1,6 @@
 #ifndef __<TYPE>_VECTOR_H__
 #define __<TYPE>_VECTOR_H__
-
+#include <stdio.h>
 
 typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 

@@ -344,7 +344,7 @@ void ecl_kw_iget(const ecl_kw_type *ecl_kw , int i , void *iptr) {
 */
 double ecl_kw_iget_as_double(const ecl_kw_type * ecl_kw , int i) {
   if (ecl_kw->ecl_type == ecl_float_type) 
-    return ecl_kw_iget_float( ecl_kw , i);
+    return ecl_kw_iget_float( ecl_kw , i); /* Here the compiler will silently insert a float -> double conversion. */
   else if (ecl_kw->ecl_type == ecl_double_type)
     return ecl_kw_iget_double( ecl_kw, i);
   else {
@@ -382,6 +382,8 @@ ECL_KW_ISET_TYPED(int);
 #undef ECL_KW_ISET_TYPED
 
 
+/*****************************************************************/
+/* Various ways to get pointers to the underlying data. */
 
 #define ECL_KW_GET_TYPED_PTR(type)                                					    \
 type * ecl_kw_get_ ## type ## _ptr(const ecl_kw_type * ecl_kw) {       		                            \
@@ -395,6 +397,11 @@ ECL_KW_GET_TYPED_PTR(float);
 ECL_KW_GET_TYPED_PTR(int);
 #undef ECL_KW_GET_TYPED_PTR
 
+void * ecl_kw_get_void_ptr(const ecl_kw_type * ecl_kw) {
+  return ecl_kw->data;
+}
+
+/*****************************************************************/
 
 
 void * ecl_kw_iget_ptr(const ecl_kw_type *ecl_kw , int i) { 
@@ -1168,7 +1175,7 @@ void ecl_kw_fwrite(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
 
 
 
-void * ecl_kw_get_data_ref(const ecl_kw_type *ecl_kw) {
+static void * ecl_kw_get_data_ref(const ecl_kw_type *ecl_kw) {
   return ecl_kw->data;
 }
 

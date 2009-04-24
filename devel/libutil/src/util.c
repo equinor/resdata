@@ -2803,6 +2803,19 @@ bool util_fread_bool(FILE * stream) {
 }
 
 
+void util_fskip_int(FILE * stream) {
+  fseek( stream , sizeof (int) , SEEK_CUR);
+}
+
+void util_fskip_long(FILE * stream) {
+  fseek( stream , sizeof (long) , SEEK_CUR);
+}
+
+void util_fskip_bool(FILE * stream) {
+  fseek( stream , sizeof (bool) , SEEK_CUR);
+}
+
+
 /*****************************************************************/
 
 

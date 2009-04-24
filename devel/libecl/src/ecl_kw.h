@@ -43,7 +43,7 @@ void          ecl_kw_free(ecl_kw_type *);
 void          ecl_kw_free__(void *);
 ecl_kw_type * ecl_kw_alloc_copy (const ecl_kw_type *);
 const void  * ecl_kw_copyc__(const void *);
-void        * ecl_kw_get_data_ref(const ecl_kw_type *);
+//void        * ecl_kw_get_data_ref(const ecl_kw_type *);
 void        * ecl_kw_alloc_data_copy(const ecl_kw_type * );
 void          ecl_kw_memcpy(ecl_kw_type *, const ecl_kw_type *);
 void          ecl_kw_get_memcpy_data(const ecl_kw_type *, void *);
@@ -78,14 +78,14 @@ void ecl_kw_inplace_mul(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_add(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_div(ecl_kw_type * , const ecl_kw_type * );
 
-void ecl_kw_inplace_inv(ecl_kw_type * my_kw);
-void ecl_kw_scalar_init(ecl_kw_type * , double );
-void ecl_kw_scale(ecl_kw_type * , double );
-void ecl_kw_shift(ecl_kw_type * , double );
-void ecl_kw_merge(ecl_kw_type * , const ecl_kw_type * , const ecl_box_type * );
-void ecl_kw_element_sum(const ecl_kw_type * , void * );
-void ecl_kw_max_min(const ecl_kw_type * , void * , void *);
-
+void   ecl_kw_inplace_inv(ecl_kw_type * my_kw);
+void   ecl_kw_scalar_init(ecl_kw_type * , double );
+void   ecl_kw_scale(ecl_kw_type * , double );
+void   ecl_kw_shift(ecl_kw_type * , double );
+void   ecl_kw_merge(ecl_kw_type * , const ecl_kw_type * , const ecl_box_type * );
+void   ecl_kw_element_sum(const ecl_kw_type * , void * );
+void   ecl_kw_max_min(const ecl_kw_type * , void * , void *);
+void * ecl_kw_get_void_ptr(const ecl_kw_type * ecl_kw);
 
 double   ecl_kw_iget_as_double(const ecl_kw_type *  , int );
 

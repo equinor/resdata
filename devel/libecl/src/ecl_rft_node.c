@@ -170,7 +170,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
 
     /* Time information. */
     {
-      int * time = ecl_kw_get_data_ref( date_kw );
+      int * time = ecl_kw_get_int_ptr( date_kw );
       rft_node->recording_date = util_make_date( time[0] , time[1] , time[2]);
     }
     rft_node->days = ecl_kw_iget_float( ecl_file_iget_named_kw( rft_file , "TIME" , 0 ) , 0);
