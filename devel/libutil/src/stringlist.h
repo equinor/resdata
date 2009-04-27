@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <int_vector.h>
+#include <subst.h>
 
 typedef struct stringlist_struct stringlist_type;
 
@@ -50,4 +51,5 @@ void              stringlist_fread(stringlist_type * , FILE * );
 void              stringlist_fwrite(const stringlist_type * , FILE * );
 stringlist_type * stringlist_fread_alloc(FILE * );
 void              stringlist_sort(stringlist_type *);
-#endif
+void              stringlist_apply_subst(stringlist_type * stringlist , const subst_list_type * subst_list); 
+#endif 

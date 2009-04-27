@@ -6,7 +6,7 @@
 #define TOKENIZER_ESCAPE_CHAR '\\'
 
 
-
+/** These items are documented in the header file tokenizer.h */ 
 struct tokenizer_struct
 {
   char * whitespace;    
