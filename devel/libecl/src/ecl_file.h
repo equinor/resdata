@@ -25,6 +25,8 @@ int             ecl_file_get_num_distinct_kw(const ecl_file_type * ecl_file);
 const char    * ecl_file_iget_distinct_kw(const ecl_file_type * ecl_file , int index);
 int             ecl_file_iget_occurence( const ecl_file_type *  ecl_file , int index);
 
+ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int index , bool endian_flip);
+ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step , bool endian_flip);
 ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio);
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio);
 ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type *     fortio);

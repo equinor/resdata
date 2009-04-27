@@ -159,42 +159,25 @@ bool ecl_kw_header_eq(const ecl_kw_type *ecl_kw , const char *kw) {
 }
 
 
-int ecl_kw_cmp(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2 , int *index) {
-  const int header_diff = 1;
-  const int data_diff   = 2;
-  const int header_header_diff_index = 0;
-  const int header_size_diff_index   = 1;
-  const int header_type_diff_index   = 2;
-  int diff_site;
+/**
+   This function compares two ecl_kw instances, and returns true if they are equal.
+*/
 
-  diff_site = 0;
-  *index    = 0;
-  if (strcmp(ecl_kw1->header , ecl_kw2->header) != 0) {
-    diff_site = header_diff;
-    *index = header_header_diff_index;
-  } else if (ecl_kw1->size != ecl_kw2->size) {
-    diff_site = header_diff;
-    *index = header_size_diff_index;
-  } else if (ecl_kw1->ecl_type != ecl_kw2->ecl_type) {
-    diff_site = header_diff;
-    *index = header_type_diff_index;
-  } else {
-    int i;
-    char *d1, *d2;
-    d1 = ecl_kw1->data;
-    d2 = ecl_kw2->data;
-    
-    for (i=0; i < ecl_kw1->size * ecl_kw1->sizeof_ctype; i++) {
-      if (d1[i] != d2[i]) {
-	/*printf("byte:%d differs: %03d  %03d  \n",i,d1[i],d2[i]);*/
-	*index = i / ecl_kw1->sizeof_ctype;
-	diff_site = data_diff;
-	break;
-      }
-    }
-  }
-  return diff_site;
+bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
+  bool  equal = true;
+
+  if (strcmp(ecl_kw1->header , ecl_kw2->header) != 0)            
+    equal  = false;
+  else if (ecl_kw1->size != ecl_kw2->size) 
+    equal = false;
+  else if (ecl_kw1->ecl_type != ecl_kw2->ecl_type) 
+    equal = false;
+  else if (memcmp(ecl_kw1->data , ecl_kw2->data , ecl_kw1->size * ecl_kw1->sizeof_ctype) != 0) /** OK the headers are identical - time to compare the data content. */
+    equal = false;
+
+  return equal;
 }
+
 
 
 void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
@@ -657,10 +640,12 @@ void ecl_kw_rewind(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
   fseek(fortio_get_FILE(fortio) , ecl_kw->_start_pos , SEEK_SET);
 }
 
-static void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
+
+void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
   bool fmt_file = fortio_fmt_file(fortio);
   if (ecl_kw->size > 0) {
     if (fmt_file) {
+      /* Formatted skipping actually involves reading the data - nice ??? */
       if (ecl_kw->data != NULL) 
 	ecl_kw_fread_data(ecl_kw , fortio);
       else {

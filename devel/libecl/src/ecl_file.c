@@ -132,6 +132,61 @@ static void ecl_file_make_index( ecl_file_type * ecl_file ) {
 
 
 
+/**
+   This function will seek for occurence nr 'occurence' of 'kw' in the
+   fortio instance, and position the stream pointer there. If the
+   occuerence is found, the function will return true, otherwise it
+   will return false, and reposition the stream pointer at position it
+   had prior to the call.
+
+   Observe that the occurence variable is a 'normal' C-based index,
+   i.e. to find the first occurence of e.g. 'PRESSURE' you issue the
+   call:
+
+       ecl_file_ifseek_kw(fortio , "PRESSURE" , 0);
+
+   This function is used when loading report_step nr xxx from a
+   unified summary file. (For unified restart files, better
+   alternatives exist).  
+*/
+
+
+static bool ecl_file_ifseek_kw(fortio_type * fortio, const char * kw , int occurence) {
+  FILE * stream    = fortio_get_FILE( fortio ); 
+  bool pos_found   = false;
+  bool cont        = true;
+  int  find_count  = 0;
+  long start_pos   = ftell( stream );
+  long last_pos;
+  ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
+  do {
+    last_pos = ftell( stream );
+    
+    if (ecl_kw_fread_header(ecl_kw , fortio)) {
+      if (ecl_kw_header_eq(ecl_kw , kw)) {
+	if (find_count == occurence) {
+	  pos_found = true;
+	  cont      = false;
+	}
+	find_count++;
+      }
+      /* Skip the data section of the keyword and continue. */
+      ecl_kw_fskip_data( ecl_kw , fortio );
+    } else
+      cont = false;
+  } while (cont);
+  ecl_kw_free( ecl_kw );
+
+  if (pos_found) 
+    fseek( stream , last_pos , SEEK_SET);  /* Reposition to the top of the last keyword - that was the one we wanted. */
+  else
+    fseek( stream , start_pos , SEEK_SET); /* Reposition to the initial position and return false. */
+  
+  return pos_found;
+}
+
+
+
 
 /* 
    This function will allocate and read a ecl_file instance from an
@@ -225,11 +280,50 @@ ecl_file_type * ecl_file_fread_alloc(const char * filename , bool endian_flip) {
    This function will allocate a ecl_file_type instance going all the
    way to the NEXT 'SEQHDR' keyword. Observe that it is assumed that
    the fortio instance is already positioned at a SEQHDR keyword.
+
+   Will return NULL if the fortio pointer is already at the end of the
+   file.
 */
 
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "SEQHDR");
 }
+
+
+/**
+   This file will read and allocate section (i.e. corresponding to one
+   report step), for a unified summary file. If you are going to
+   allocate the whole damned file, you are better off with using
+   ecl_file_fread_alloc_summary_section().
+
+   Observe that there is some counting-fuckup here: The libecl library
+   generally follows C conventions, with all counters starting at
+   zero. However the first report_step in a summary file has (by
+   defintion number 1, i.e. the first summary file is ECLIPSE.S0001),
+   hence this function assumes index to be 1 offset (Ohhh this is so
+   ugly), and then shift it before going further.
+
+   If the occurence you are asking for can not be found the whole
+   function will return NULL - calling scope has to check this.
+*/
+
+
+ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int index , bool endian_flip) {
+  bool          fmt_file   = ecl_util_fmt_file( filename );
+  fortio_type * fortio     = fortio_fopen(filename , "r" , endian_flip , fmt_file);
+  ecl_file_type * ecl_file = NULL;
+
+  if (ecl_file_ifseek_kw( fortio , "SEQHDR" , index - 1)) 
+    ecl_file = ecl_file_fread_alloc_summary_section(fortio);
+  else
+    util_abort("%s: sorry - could not lcoate summary report:%d in file:%s \n",__func__ , index , filename);
+  
+  fortio_fclose( fortio );
+  
+  return ecl_file;
+}
+
+
 
 
 /*
@@ -238,6 +332,48 @@ ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
 */
 ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "SEQNUM");
+}
+
+
+/**
+   Will look through the unified restart file and load the section
+   corresponding to report_step 'report_step'. If that report_step can
+   not be found the function will return NULL.
+*/
+
+ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step , bool endian_flip) {
+  ecl_kw_type * seqnum_kw  = ecl_kw_alloc_complete( "SEQNUM" , 1 , ecl_int_type , &report_step);  /* We will use ecl_kw_equal() based on this kw to find the correct location in the file. */  
+  bool          fmt_file   = ecl_util_fmt_file( filename );
+  fortio_type * fortio     = fortio_fopen(filename , "r" , endian_flip , fmt_file);
+  FILE * stream            = fortio_get_FILE( fortio );
+  ecl_file_type * ecl_file = NULL;
+  long read_pos;
+  bool section_found       = false;
+  bool cont                = true;
+
+  do {
+    if (ecl_kw_fseek_kw("SEQNUM" , false, false , fortio)) {
+      read_pos              = ftell( stream );
+      ecl_kw_type * file_kw = ecl_kw_fread_alloc( fortio );
+      if (file_kw != NULL) {
+	if (ecl_kw_equal( file_kw , seqnum_kw )) {
+	  section_found = true;
+	  cont          = false;
+	}
+      } else
+	cont = false;
+      ecl_kw_free( file_kw );
+    } else cont = false;
+  } while (cont);
+
+  if (section_found) {
+    fseek(stream , read_pos , SEEK_SET);
+    ecl_file = ecl_file_fread_alloc_restart_section( fortio );
+  } 
+  fortio_fclose( fortio );
+  ecl_kw_free( seqnum_kw );
+  
+  return ecl_file;
 }
 
 
@@ -253,6 +389,7 @@ void ecl_file_fwrite_fortio(const ecl_file_type * ecl_file , fortio_type * forti
   for (index = offset; index < vector_get_size( ecl_file->kw_list ); index++)
     ecl_kw_fwrite( vector_iget( ecl_file->kw_list , index ) , fortio);
 }
+
 
 
 /* 
