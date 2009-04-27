@@ -431,7 +431,17 @@ void stringlist_sort(stringlist_type * s)
 
 /**
    This function will perform subst-based substitution on all the
-   elements in the stringlist. 
+   elements in the stringlist. The stringlist is modified in place,
+   and the following applies to memory:
+
+    o Elements inserted with _ref() are just dropped on the floor,
+      they were the responsability of the calling scope anyway.
+
+    o Elements inserted with _owned_ref() are freed - INVALIDATING A
+      POSSIBLE POINTER IN THE CALLING SCOPE.
+
+    o The newly inserted element is inserted as _owned_ref() -
+      i.e. with a destructor.
 */
 
 
