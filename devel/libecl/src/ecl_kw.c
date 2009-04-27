@@ -515,11 +515,13 @@ static bool ecl_kw_fscanf_qstring(char *s , const char *fmt , int len, FILE *str
 
 
 /*
+  Boolean mapping:
+  ----------------
   true  => -1             -1 : 1  11111111  11111111  11111111  1111111
   false =>  0              0 : 0  00000000  00000000  00000000  0000000
 */
 
-static void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
+void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
   const char null_char         = '\0';
   const char char_true         = 84;
   const char char_false        = 70;

@@ -302,9 +302,15 @@ ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
    defintion number 1, i.e. the first summary file is ECLIPSE.S0001),
    hence this function assumes index to be 1 offset (Ohhh this is so
    ugly), and then shift it before going further.
-
+   
    If the occurence you are asking for can not be found the whole
    function will return NULL - calling scope has to check this.
+
+   The functions ecl_file_fread_alloc_unsmry_section() and
+   ecl_file_fread_alloc_summary_section() can be considered a pair,
+   where the first is the high level function operating with a
+   filename, and the second (which actually does the work) operates on
+   a fortio instance.
 */
 
 
@@ -335,10 +341,16 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 }
 
 
+
 /**
    Will look through the unified restart file and load the section
    corresponding to report_step 'report_step'. If that report_step can
    not be found the function will return NULL.
+
+   The ecl_file_fread_alloc_unrst_section() function positions the
+   fortio pointer correctly in the file, and then calls the
+   ecl_file_fread_alloc_restart_section() function which does the
+   actual loading.
 */
 
 ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step , bool endian_flip) {
@@ -347,24 +359,29 @@ ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int r
   fortio_type * fortio     = fortio_fopen(filename , "r" , endian_flip , fmt_file);
   FILE * stream            = fortio_get_FILE( fortio );
   ecl_file_type * ecl_file = NULL;
-  long read_pos;
+  long read_pos            = 0;
   bool section_found       = false;
   bool cont                = true;
-
+  ecl_kw_type * file_kw    = ecl_kw_alloc_empty();
   do {
     if (ecl_kw_fseek_kw("SEQNUM" , false, false , fortio)) {
       read_pos              = ftell( stream );
-      ecl_kw_type * file_kw = ecl_kw_fread_alloc( fortio );
-      if (file_kw != NULL) {
-	if (ecl_kw_equal( file_kw , seqnum_kw )) {
-	  section_found = true;
-	  cont          = false;
-	}
+      if (ecl_kw_fread_header( file_kw , fortio )) {
+	if (ecl_kw_header_eq( file_kw , "SEQNUM")) {
+	  ecl_kw_alloc_data( file_kw );  /* If we have the right header we continue to read in data. */
+	  ecl_kw_fread_data( file_kw , fortio );
+	  if (ecl_kw_equal( file_kw , seqnum_kw )) {
+	    section_found = true;
+	    cont          = false;
+	  }
+	  ecl_kw_free_data( file_kw ); /* Discard the data */
+	} else
+	  ecl_kw_fskip_data( file_kw , fortio );
       } else
 	cont = false;
-      ecl_kw_free( file_kw );
     } else cont = false;
   } while (cont);
+  ecl_kw_free( file_kw );
 
   if (section_found) {
     fseek(stream , read_pos , SEEK_SET);
