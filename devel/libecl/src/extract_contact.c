@@ -79,7 +79,7 @@ void extract_contact(const ecl_kw_type   * swat1    ,
       
       for (k=0; k < nz; k++) 
 	if (fabs(diff[k]) < 1)
-	  fprintf(stream , "%d   %g  %g  %g   %g   \n",k , sw1[k] , sw2[k] , diff[k] , z[k]);
+	  fprintf(stream , "%4d   %6.4f  %6.4f   %7.4f   %12.6f   \n",k+1 , sw1[k] , sw2[k] , diff[k] , z[k]);
       
       fclose(stream);
       free(filename);
@@ -90,7 +90,7 @@ void extract_contact(const ecl_kw_type   * swat1    ,
       if (surf_stream != NULL) {
 	double xpos,ypos,zpos;
 	ecl_grid_get_pos(ecl_grid , i , j , k_diffmax , &xpos , &ypos , &zpos);
-	fprintf(surf_stream   , "%12.6f  %12.6f  %12.6f  \n",xpos,ypos,z_owc);
+	fprintf(surf_stream   , "%18.6f  %18.6f  %12.6f  \n",xpos,ypos,z_owc);
       }
       fprintf(target_stream , "%g\n", z_owc);
     } else
