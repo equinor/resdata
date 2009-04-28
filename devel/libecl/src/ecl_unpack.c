@@ -6,7 +6,8 @@
 #include <msg.h>
 
 void unpack_file(const char * filename) {
-  ecl_file_enum file_type , target_type;
+  ecl_file_enum target_type = ecl_other_file;
+  ecl_file_enum file_type;
   bool fmt_file;
   ecl_util_get_file_type(filename , &file_type , &fmt_file , NULL);
   if (file_type == ecl_unified_summary_file)

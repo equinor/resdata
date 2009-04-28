@@ -57,6 +57,7 @@ view_summary.o : view_summary.c
 view_restart.o : view_restart.c 
 block_owc.o    : block_owc.c 
 extract_contact.o : extract_contact.c
+extract_IJ.o : extract_IJ.c
 ecl_pack.o        : ecl_pack.c
 ecl_unpack.o        : ecl_unpack.c
 
@@ -66,15 +67,18 @@ ecl_unpack.o        : ecl_unpack.c
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x
 BIN	:  $(BIN_FILES) 
-BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x extract_owc.x block_owc.x ecl_pack.x ecl_unpack.x
+BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x extract_owc.x block_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x
 
 ecl_pack.x: $(LIB) ecl_pack.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_pack.o -o ecl_pack.x $(LIB_PATH) $(LIB_LINK)
 
 ecl_unpack.x: $(LIB) ecl_unpack.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_unpack.o -o ecl_unpack.x $(LIB_PATH) $(LIB_LINK)
+
+extract_IJ.x: $(LIB) extract_IJ.o
+	$(LD) -$(MFLAG) $(LDFLAGS) extract_IJ.o -o extract_IJ.x $(LIB_PATH) $(LIB_LINK)
 
 ecl_test.x: $(LIB) ecl_test.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_test.o -o ecl_test.x $(LIB_PATH) $(LIB_LINK)
