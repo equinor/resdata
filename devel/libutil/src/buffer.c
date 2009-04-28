@@ -30,17 +30,19 @@
 
 struct buffer_struct {
   size_t     __id;
-  char     * data;      /* The actual storage */
-  size_t     size;      /* The total byte size of the buffer. */
-  size_t     pos;       /* The byte position in the buffer - this defines the meaningful content of the buffer. */
+  char     * data;             /* The actual storage. */
+  size_t     alloc_size;       /* The total byte size of the buffer. */
+  size_t     content_size;     /* The extent of initialized data in the buffer.*/
+  size_t     pos;              /* The current byte position in the buffer.*/
 };
 
 
 /*****************************************************************/
 
 
-static void buffer_reset(buffer_type * buffer) {
-  buffer->pos = 0;
+void buffer_reset(buffer_type * buffer) {
+  buffer->pos          = 0;
+  buffer->content_size = 0;
 }
 
 
@@ -61,14 +63,16 @@ static void buffer_reset(buffer_type * buffer) {
 static void buffer_resize__(buffer_type * buffer , size_t new_size, bool abort_on_error) {
   if (abort_on_error) {
     buffer->data = util_realloc(buffer->data , new_size , __func__);
-    buffer->size = new_size;
+    buffer->alloc_size = new_size;
   } else {
     void * tmp   = realloc(buffer->data , new_size);
     if (tmp != NULL) {
       buffer->data = tmp;
-      buffer->size = new_size;
+      buffer->alloc_size = new_size;
     }
   }
+  buffer->content_size = util_size_t_min( buffer->content_size , new_size ); /* If the buffer has actually shrinked. */
+  buffer->pos          = util_size_t_min( buffer->pos          , new_size);  /* If the buffer has actually shrinked. */
 }
 
 
@@ -76,7 +80,7 @@ buffer_type * buffer_alloc( size_t buffer_size ) {
   buffer_type * buffer = util_malloc( sizeof * buffer , __func__);
   buffer->__id = BUFFER_TYPE_ID;
   buffer->data = NULL;
-  buffer->size = 0;
+  buffer->alloc_size = 0;
   buffer_resize__( buffer , buffer_size , true);
   buffer_reset( buffer );
   return buffer;
@@ -106,14 +110,14 @@ void buffer_free( buffer_type * buffer) {
 
 
 static size_t buffer_fread__(buffer_type * buffer , void * target_ptr , size_t item_size , size_t items, bool abort_on_error) {
-  size_t remaining_size  = buffer->size - buffer->pos;
+  size_t remaining_size  = buffer->content_size - buffer->pos;
   size_t remaining_items = remaining_size / item_size;
   size_t read_items      = util_size_t_min( items , remaining_items );
   size_t read_bytes      = read_items * item_size;
-
+  
   memcpy( target_ptr , &buffer->data[buffer->pos] , read_bytes );
   buffer->pos += read_bytes;
-
+  
   if (read_items < items) {
     /* The buffer was not large enough - what to do now???? */
     if (abort_on_error)
@@ -141,14 +145,14 @@ size_t buffer_fread(buffer_type * buffer , void * target_ptr , size_t item_size 
 
 
 static size_t buffer_fwrite__(buffer_type * buffer , const void * src_ptr , size_t item_size , size_t items, bool abort_on_error) {
-  size_t remaining_size  = buffer->size - buffer->pos;
+  size_t remaining_size  = buffer->alloc_size - buffer->pos;
   size_t target_size     = item_size * items;
   if (target_size < remaining_size)
     buffer_resize__(buffer , buffer->pos + 2*(item_size * items) , abort_on_error);
   /**
      OK - now we have the buffer size we are going to get.
   */
-  remaining_size = buffer->size - buffer->pos;
+  remaining_size = buffer->alloc_size - buffer->pos;
   {
     size_t remaining_items = remaining_size / item_size;
     size_t write_items     = util_size_t_min( items , remaining_items );
@@ -156,7 +160,7 @@ static size_t buffer_fwrite__(buffer_type * buffer , const void * src_ptr , size
 
     memcpy( &buffer->data[buffer->pos] , src_ptr , write_bytes );
     buffer->pos += write_bytes;
-
+    
     if (write_items < items) {
       /* The buffer was not large enough - what to do now???? */
       if (abort_on_error)
@@ -165,6 +169,7 @@ static size_t buffer_fwrite__(buffer_type * buffer , const void * src_ptr , size
 	/* OK we emulate fwrite() behaviour - setting errno to ENOMEM */
 	errno = ENOMEM;
     }
+    buffer->content_size = util_size_t_max(buffer->content_size , buffer->pos);
     return write_items;
   }
 }
@@ -207,7 +212,7 @@ void buffer_fwrite_int(buffer_type * buffer , int value) {
 
 void buffer_fread_realloc(buffer_type * buffer , const char * filename) {
   size_t file_size     = util_file_size( filename );
-  if (buffer->size < file_size)
+  if (buffer->alloc_size < file_size)
     buffer_resize__(buffer , file_size , true);
   {
     FILE * stream        = util_fopen(filename , "r");
@@ -215,7 +220,8 @@ void buffer_fread_realloc(buffer_type * buffer , const char * filename) {
       util_abort("%s: failed to read all elements in file:%s \n",__func__ , filename);
     fclose( stream );
   }
-  buffer_reset( buffer ); /* Positioning the pos pointer at the start of the buffer */
+  buffer->pos          = 0;
+  buffer->content_size = file_size;
 }
 
 
@@ -227,11 +233,12 @@ buffer_type * buffer_fread_alloc(const char * filename) {
 }
 
 
-
 void buffer_fsave(const buffer_type * buffer , const char * filename) {
   FILE * stream        = util_fopen(filename , "w");
-  if (fwrite( buffer->data , 1 , buffer->pos , stream ) != buffer->pos) 
+  if (fwrite( buffer->data , 1 , buffer->content_size , stream ) != buffer->pos) 
     util_abort("%s: failed to write all elements to file:%s \n",__func__ , filename);
   fclose( stream );
 }
+
+
 
