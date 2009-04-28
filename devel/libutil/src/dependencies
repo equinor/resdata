@@ -7,6 +7,7 @@ arg_pack.o                          : arg_pack.c arg_pack.h util.o node_ctype.o
 list.o                              : list.c list.h list_node.o  
 matrix_blas.o                       : matrix_blas.c matrix_blas.h matrix.o  
 menu.o                              : menu.c menu.h util.o vector.o  
+buffer.o                            : buffer.c buffer.h util.o  
 thread_pool.o                       : thread_pool.c thread_pool.h util.o  
 node_data.o                         : node_data.c node_data.h util.o node_ctype.o  
 path_fmt.o                          : path_fmt.c path_fmt.h util.o node_ctype.o  

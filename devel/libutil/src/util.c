@@ -2818,6 +2818,9 @@ void util_fskip_bool(FILE * stream) {
 
 /*****************************************************************/
 
+size_t util_size_t_min(size_t a , size_t b) {
+  return (a < b) ? a : b;
+}
 
 int util_int_min(int a , int b) {
   return (a < b) ? a : b;

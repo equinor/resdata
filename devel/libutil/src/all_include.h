@@ -19,3 +19,4 @@
 #include <matrix.h>
 #include <matrix_lapack.h>
 #include <matrix_blas.h>
+#include <buffer.h>

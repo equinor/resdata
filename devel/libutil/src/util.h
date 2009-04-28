@@ -181,6 +181,7 @@ int    	 util_int_max   (int     , int);
 double 	 util_double_max(double  , double );
 float  	 util_float_min (float   , float );
 int    	 util_int_min   (int     , int);
+size_t   util_size_t_min(size_t a , size_t b);
 double 	 util_double_min(double  , double );
 void     util_fskip_lines(FILE * , int);
 bool     util_same_file(const char *  , const char * );
