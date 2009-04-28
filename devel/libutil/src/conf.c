@@ -13,14 +13,30 @@
 /******************************************************************************/
 
 
+/**
+  Defining parameters for the file inclusion and tokenizing.
+*/
+#define __CONF_INCLUDE    "include"
+#define __CONF_WHITESPACE " \t\n\r,;"
+#define __CONF_COM_START  "--"
+#define __CONF_COM_STOP   "\n"
+#define __CONF_SPECIAL    "[]{}="
+#define __CONF_QUOTERS    "'\""
 
-#define CONF_INCLUDE_STRING "include"
+#define __CONF_VEC_START "["
+#define __CONF_VEC_STOP  "]"
+#define __CONF_EXP_START "{"
+#define __CONF_EXP_STOP  "}"
+#define __CONF_ASSIGN    "="
 
 
 
-#define CONF_SPEC_ID 132489012
-#define CONF_ITEM_ID 342349032
-#define CONF_ID      314234239
+/**
+  Defining random numbers for safe run time casting.
+*/
+#define __CONF_SPEC_ID 132489012
+#define __CONF_ITEM_ID 342349032
+#define __CONF_ID      314234239
 
 
 
@@ -30,31 +46,32 @@
 
 struct conf_spec_struct
 {
-  int                    __id;
-  char                 * name;
-  const conf_spec_type * super;
-  hash_type            * specs;
-  validator_ftype      * validator;
+  int                    __id;      /** Used for safe run time casting.       */
+  char                 * name;      /** Name used to identify this class.     */
+  const conf_spec_type * super;     /** Mother. Can be NULL for the root.     */
+  hash_type            * specs;     /** Hash of conf_spec_type's.             */
+  validator_ftype      * validator; /** Function used to validate a conf_type.*/
 };
 
 
 
 struct conf_struct
 {
-  int               __id; 
-  conf_type       * super;
-  char            * type;
-  char            * name;
-  vector_type     * confs;
-  hash_type       * items;
+  int               __id;  /** Used for safe run time casting.                */
+  conf_type       * super; /** Mother. Can be NULL for the root.              */
+  char            * type;  /** Name used to identify the class.               */
+  char            * name;  /** Name used to identify the instance.            */
+  vector_type     * confs; /** Vector of conf_type's.                         */
+  hash_type       * items; /** Hash of conf_item_type's. Indexed by name.     */
 };
 
 
 
 struct conf_item_struct
 {
-  int               __id;
-  stringlist_type * values;
+  int               __id;   /** Used for safe run time casting.               */
+  conf_type       * super;  /** Mother. Can not be NULL.                      */
+  stringlist_type * values; /** Raw tokens read from file.                    */
 };
 
 
@@ -76,22 +93,30 @@ bool strings_are_equal(
 
 
 
+/**
+  Check if a string is equal one of the characters in the special set.
+*/
 static
 bool string_is_special(
   const char * str)
 {
-  if(      strings_are_equal(str, "{") )
-    return true;
-  else if( strings_are_equal(str, "}") )
-    return true;
-  else if( strings_are_equal(str, "[") )
-    return true;
-  else if( strings_are_equal(str, "]") )
-    return true;
-  else if( strings_are_equal(str, "=") )
-    return true;
-  else
+  if( strlen(str) != 1 )
+  {
+    /**
+      Cannot be in the special set if it's not a single character.
+    */
     return false;
+  }
+  else
+  {
+    int num_special_chars = strlen(__CONF_SPECIAL);
+    for(int i=0; i<num_special_chars; i++)
+    {
+      if( str[0] == __CONF_SPECIAL[i])
+        return true;
+    }
+    return false;
+  }
 }
 
 
@@ -225,7 +250,7 @@ int create_token_buffer__(
       Handle any include statements by recursion.
     */
     {
-      int i = stringlist_find_first(tokens__, CONF_INCLUDE_STRING);
+      int i = stringlist_find_first(tokens__, __CONF_INCLUDE);
       while( i != -1)
       {
         const char * include_file;
@@ -240,7 +265,7 @@ int create_token_buffer__(
         {
           char * err = util_alloc_sprintf("Unexpected end of file in \"%s\". "
                                           "Expected a file name after \"%s\".",
-                                          filename, CONF_INCLUDE_STRING);
+                                          filename, __CONF_INCLUDE);
           stringlist_append_owned_ref(errors, err);
           status = CONF_UNEXPECTED_EOF_ERROR;
 
@@ -308,7 +333,7 @@ int create_token_buffer__(
         /**
           Find next include statement.
         */
-        i = stringlist_find_first(tokens__, CONF_INCLUDE_STRING);
+        i = stringlist_find_first(tokens__, __CONF_INCLUDE);
       }
     }
 
@@ -352,8 +377,12 @@ int create_token_buffer(
 
   if( util_fopen_test(filename, "r") )
   {
-    tokenizer_type * tokenizer   = tokenizer_alloc(" \t\n\r,;", "'\"", "[]{}",
-                                                 "--", "\n");
+    tokenizer_type * tokenizer   = tokenizer_alloc(__CONF_WHITESPACE,
+                                                   __CONF_QUOTERS,
+                                                   __CONF_SPECIAL,
+                                                   __CONF_COM_START,
+                                                   __CONF_COM_STOP);
+
     set_type * sources           = set_alloc_empty();
     char     * realpath_filename = util_alloc_realpath(filename);
 
@@ -389,21 +418,15 @@ int create_token_buffer(
 
 
 static
-conf_type * conf_alloc(
-  conf_type       * super,
-  const char      * type,
-  const char      * name
-)
+conf_type * conf_alloc_root()
 {
-  assert(type != NULL);
-  assert(name != NULL);
 
   conf_type * conf = util_malloc(sizeof * conf, __func__);
 
-  conf->__id  = CONF_ID;
-  conf->super = super;
-  conf->type  = util_alloc_string_copy(type);
-  conf->name  = util_alloc_string_copy(name);
+  conf->__id  = __CONF_ID;
+  conf->super = NULL;
+  conf->type  = util_alloc_string_copy("root");
+  conf->name  = util_alloc_string_copy("root");
 
   conf->confs = vector_alloc_new();
   conf->items = hash_alloc();
@@ -419,7 +442,7 @@ conf_type * conf_safe_cast(
 )
 {
   conf_type * __conf = (conf_type *) conf;
-  if( __conf->__id != CONF_ID )
+  if( __conf->__id != __CONF_ID )
     util_abort("%s: Internal error. Run time cast failed.\n", __func__);
   return __conf;
 }
@@ -452,22 +475,12 @@ void conf_free__(
 
 
 static
-conf_item_type * conf_item_alloc()
-{
-  conf_item_type * item = util_malloc(sizeof * item, __func__);
-  item->__id   = CONF_ITEM_ID;
-  item->values = stringlist_alloc_new();
-}
-
- 
-
-static
 conf_item_type * conf_item_safe_cast(
   void * item
 )
 {
   conf_item_type * __item = (conf_item_type *) item;
-  if( __item->__id != CONF_ITEM_ID)
+  if( __item->__id != __CONF_ITEM_ID)
     util_abort("%s: Internal error. Run time cast failed.\n", __func__);
   return __item;
 }
@@ -501,31 +514,49 @@ void conf_item_free__(
 
 
 static
-void conf_insert_item(
+conf_item_type * conf_insert_item(
   conf_type      * conf,
-  const char     * name,
-  conf_item_type * item
+  const char     * name
 )
 {
   assert(conf != NULL);
   assert(name != NULL);
-  assert(item != NULL);
+
+  conf_item_type * item = util_malloc(sizeof * item, __func__);
+  item->__id   = __CONF_ITEM_ID;
+  item->values = stringlist_alloc_new();
 
   hash_insert_hash_owned_ref(conf->items, name, item, conf_item_free__);
+
+  return item;
 }
 
 
 
 static
-void conf_append_child(
-  conf_type * conf,
-  conf_type * conf_child
+conf_type * conf_append_child(
+  conf_type  * conf,
+  const char * type,
+  const char * name
 )
 {
-  assert(conf       != NULL);
-  assert(conf_child != NULL);
+  assert(conf != NULL);
+  assert(type != NULL );
+  assert(name != NULL );
 
-  vector_append_owned_ref(conf->confs, conf_child, conf_free__);
+  conf_type * child = util_malloc(sizeof * child, __func__);
+
+  child->__id  = __CONF_ID;
+  child->super = NULL;
+  child->type  = util_alloc_string_copy("root");
+  child->name  = util_alloc_string_copy("root");
+
+  child->confs = vector_alloc_new();
+  child->items = hash_alloc();
+
+  vector_append_owned_ref(conf->confs, child, conf_free__);
+
+  return child;
 }
 
 
@@ -537,3 +568,82 @@ conf_type * conf_get_super(
 {
   return conf->super;
 }
+
+
+
+static
+void conf_item_append_data(
+  conf_item_type * item,
+  const char     * data
+)
+{
+  stringlist_append_copy(item->values, data);  
+}
+
+
+
+/******************************************************************************/
+
+
+
+static
+int conf_alloc_from_tokens(
+  const stringlist_type * tokens,
+  stringlist_type       * errors,
+  conf_type            ** conf__
+)
+{
+  assert(tokens != NULL);
+  assert(errors != NULL);
+
+  typedef enum {IN_ROOT, IN_CLASS, IN_ITEM, IN_VEC_ITEM} PARSER_STATE;
+  PARSER_STATE state = IN_ROOT;
+
+  int position   = 0;
+  int num_tokens = stringlist_get_size(tokens);
+
+  conf_type * root = conf_alloc_root();
+
+  conf_type      * current_conf  = root;
+  conf_item_type * current_item;
+
+  while(position <  num_tokens)
+  {
+    /**
+      On entering this loop, stringlist_iget(tokens, position)
+      shall always be a non-special token.
+    */
+
+    const char * current_token = stringlist_iget(tokens, position);
+    const char * next_token;
+    switch(state)
+    {
+      case(IN_ROOT):
+        if( position+1 >= num_tokens)
+        {
+          /** 
+            TODO
+            It is really an error if this ever happens. Add a warning.
+          */
+          position++;
+          continue;
+        }
+
+        next_token = stringlist_iget(tokens, position+1);
+        if( strings_are_equal(next_token, "__CONF_ASSIGN") )
+        {
+
+        }
+        continue;
+      case(IN_CLASS):
+        continue;
+      case(IN_ITEM):
+        continue;
+      case(IN_VEC_ITEM):
+        continue;
+      default:
+        continue;
+    }
+  }
+}
+  
