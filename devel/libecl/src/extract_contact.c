@@ -132,7 +132,7 @@ void extract_contact(const ecl_kw_type   * swat1    ,
   for (index = 0; index < int_vector_size( ilist ); index++) {
     int i 	 = int_vector_iget( ilist , index);
     int j 	 = int_vector_iget( jlist , index);
-    
+
     {
       int k = 0;
       double owc = -1;
@@ -140,12 +140,26 @@ void extract_contact(const ecl_kw_type   * swat1    ,
       while (1) {
 	int active_index = ecl_grid_get_active_index( ecl_grid , i , j , k);
 	if (active_index >= 0) {
+	  double dk;
 	  sw1[k] = ecl_kw_iget_as_double( swat1 , active_index );
 	  sw2[k] = ecl_kw_iget_as_double( swat2 , active_index );
 	  
-	  if ((sw2[k] - sw1[k]) > DETECTION_LIMIT) {
-	    /*OK - WE GOT IT ... */
-	    ecl_grid_get_pos(ecl_grid , i , j , k , &xpos , &ypos , &owc);
+	  dk = sw2[k] - sw1[k];
+	  if (dk > DETECTION_LIMIT) {
+	    double zk,zk1,dk1;
+	    ecl_grid_get_pos(ecl_grid , i , j , k , &xpos , &ypos , &zk);
+	    owc = zk;
+
+	    if (k > 0) {
+	      /* Try a basic linear interpolation. */
+	      int prev_active_index = ecl_grid_get_active_index( ecl_grid , i , j , k - 1);
+	      if (prev_active_index >= 0) {
+		ecl_grid_get_pos(ecl_grid , i , j , k - 1 , &xpos , &ypos , &zk1);
+		dk1 = sw2[k - 1] - sw1[k -1];
+		
+		owc = (0.20 - dk) * (zk - zk1)/(dk - dk1) + zk;
+	      }
+	    }
 	    break;
 	  }
 	}
