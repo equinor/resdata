@@ -4,18 +4,11 @@
 #include <bool_vector.h>
 #include <util.h>
 
-
-/*
-  build:
-
-  gcc4 -I./ -I../..//libutil/include extract_IJ.c -L../../libutil/lib -L./ -lecl -lutil -lm -lpt -lz
-*/
-
 int main (int argc , char ** argv) {
   if (argc != 5)
     util_exit("Usage:  GRID_FILE  REGIONS_FILE   REGION_KW   REGION_VALUE \n");
   {
-    char * grid_file      = argv[1];
+    char * grid_file       = argv[1];
     char * regions_file    = argv[2];
     char * kw              = argv[3];
     char * region_value_st = argv[4];

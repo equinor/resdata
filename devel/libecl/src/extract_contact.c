@@ -11,15 +11,16 @@
 #include <math.h>
 
 
-#define SDP_url "http://sdp.statoil.no/wiki/index.php/Res:Available_forward_models#EXTRACT_OWC"
+#define SDP_url          "http://sdp.statoil.no/wiki/index.php/Res:Available_forward_models#EXTRACT_OWC"
+#define DETECTION_LIMIT  0.20
 
-void extract_contact(const ecl_kw_type   * swat1    , 
-		     const ecl_kw_type   * swat2    , 
-		     const ecl_grid_type * ecl_grid , 
-		     const int_vector_type * ilist  , 
-		     const int_vector_type * jlist  , 
-		     const char * target_file,
-		     const char * surf_file) {
+void extract_contact_peak(const ecl_kw_type   * swat1    , 
+			  const ecl_kw_type   * swat2    , 
+			  const ecl_grid_type * ecl_grid , 
+			  const int_vector_type * ilist  , 
+			  const int_vector_type * jlist  , 
+			  const char * target_file,
+			  const char * surf_file) {
 
   const char * profile_path = "Profiles";
   int index,k,nz,active_size,nx,ny;
@@ -97,11 +98,74 @@ void extract_contact(const ecl_kw_type   * swat1    ,
       fprintf(target_stream , "0.0\n");
     
   }
+  if (surf_stream != NULL)
+    fclose(surf_stream);
   fclose( target_stream );
   free( diff );
   free( sw1 );
   free( sw2 );
   free( z );
+}
+
+
+
+void extract_contact(const ecl_kw_type   * swat1    , 
+		     const ecl_kw_type   * swat2    , 
+		     const ecl_grid_type * ecl_grid , 
+		     const int_vector_type * ilist  , 
+		     const int_vector_type * jlist  , 
+		     const char * target_file,
+		     const char * surf_file) {
+
+  int index,nz,active_size,nx,ny;
+  double * sw1 , * sw2;
+  FILE * target_stream = util_fopen( target_file , "w"); 
+  FILE * surf_stream   = NULL;
+
+  if (surf_file != NULL)
+    surf_stream = util_fopen( surf_file , "w");
+
+  ecl_grid_get_dims( ecl_grid , &nx, &ny , &nz , &active_size);
+  sw1  = util_malloc( nz * sizeof * sw1  , __func__);
+  sw2  = util_malloc( nz * sizeof * sw2  , __func__);
+  
+  for (index = 0; index < int_vector_size( ilist ); index++) {
+    int i 	 = int_vector_iget( ilist , index);
+    int j 	 = int_vector_iget( jlist , index);
+    
+    {
+      int k = 0;
+      double owc = -1;
+      double xpos,ypos;
+      while (1) {
+	int active_index = ecl_grid_get_active_index( ecl_grid , i , j , k);
+	if (active_index >= 0) {
+	  sw1[k] = ecl_kw_iget_as_double( swat1 , active_index );
+	  sw2[k] = ecl_kw_iget_as_double( swat2 , active_index );
+	  
+	  if ((sw2[k] - sw1[k]) > DETECTION_LIMIT) {
+	    /*OK - WE GOT IT ... */
+	    ecl_grid_get_pos(ecl_grid , i , j , k , &xpos , &ypos , &owc);
+	    break;
+	  }
+	}
+	k++;
+	if (k == nz) 
+	  break;
+      }
+  
+      if (surf_stream != NULL) 
+	if (owc > 0)
+	  fprintf(surf_stream   , "%18.6f  %18.6f  %12.6f  \n",xpos,ypos,owc);
+
+      fprintf(target_stream , "%g\n", owc);
+    }
+  }
+  fclose( target_stream );
+  if (surf_stream != NULL)
+    fclose(surf_stream);
+  free( sw1 );
+  free( sw2 );
 }
 
 

@@ -332,9 +332,9 @@ ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int 
 
 
 
-/*
-  The SEQNUM number found in unified restart files corresponds to the 
-  REPORT_STEP.
+/**
+   The SEQNUM number found in unified restart files corresponds to the 
+   REPORT_STEP.
 */
 ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "SEQNUM");
@@ -344,7 +344,7 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 
 /**
    Will look through the unified restart file and load the section
-   corresponding to report_step 'report_step'. If that report_step can
+   corresponding to report_step 'report_step'. If the report_step can
    not be found the function will return NULL.
 
    The ecl_file_fread_alloc_unrst_section() function positions the
@@ -354,7 +354,8 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 */
 
 ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step , bool endian_flip) {
-  ecl_kw_type * seqnum_kw  = ecl_kw_alloc_complete( "SEQNUM" , 1 , ecl_int_type , &report_step);  /* We will use ecl_kw_equal() based on this kw to find the correct location in the file. */  
+  ecl_kw_type * seqnum_kw  = ecl_kw_alloc_complete( "SEQNUM" , 1 , ecl_int_type , &report_step);  
+                             /* We will use ecl_kw_equal() based on this kw to find the correct location in the file. */  
   bool          fmt_file   = ecl_util_fmt_file( filename );
   fortio_type * fortio     = fortio_fopen(filename , "r" , endian_flip , fmt_file);
   FILE * stream            = fortio_get_FILE( fortio );
