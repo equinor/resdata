@@ -21,6 +21,14 @@ void print_usage() {
   printf("***************************************************************************\n");
 }
 
+struct station {
+  float utm_x; 
+  float utm_y; 
+  float depth; 
+  
+  double grav_diff;
+};
+
 
 /*****************************************************************/
 
@@ -77,12 +85,10 @@ int main(int argc , char ** argv) {
       exit(1);
     }
     
+    struct station ** grav_station;
+    
     // Open and read the station file
     FILE * stream = util_fopen(station_file , "r");
-    
-    float * station_x;
-    float * station_y;
-    float * station_d;
     
     bool at_eof = false;
     char **token_list;
@@ -96,15 +102,16 @@ int main(int argc , char ** argv) {
       printf("NUMBERS: %i\n", num_toks);
       if(num_toks ==3 ){
 	printf("TOK1: %s TOK2: %s TOK3: %s\n", token_list[0], token_list[1], token_list[2]);
-	float umtx  = atof(token_list[0]);
-	float umty  = atof(token_list[1]);
-	float depth = atof(token_list[2]);
 	
-	station_x[num_stations] = &umtx;
-	station_y[num_stations] = &umty;;
-	station_d[num_stations] = &depth;;
+	struct station new_station;
+	new_station.utm_x = atof(token_list[0]);
+	new_station.utm_y = atof(token_list[1]);
+	new_station.depth = atof(token_list[2]);
+	
+	grav_station[num_stations] = &new_station;
 	num_stations++;
-//	util_free_stringlist(token_list,num_toks);
+	//util_free_line(line);
+	//util_free_stringlist(token_list,num_toks);
       }
     }
     fclose(stream);
@@ -230,11 +237,11 @@ int main(int argc , char ** argv) {
 	  // printf("Senter-koordinatene til cella er: %f %f %f\n",coord_x, coord_y, coord_z);
 	  
 	  // for(j=0; j<num_stations;j++){
-	  //   float dist_x = coord_x - station_x;
-	  //   float dist_y = coord_y - station_y;
-	  //   float dist_d = coord_d - station_d;
+	  //   float dist_x = coord_x - grav_station[j].utm_x;
+	  //   float dist_y = coord_y - grav_station[j].utm_y;
+	  //   float dist_d = coord_d - grav_station[j].depth;
 	  //   double ldelta_g = 6.67E-3*(mas2 - mas1)/(dist_x*dist_x + dist_y*dist_y + dist_d*dist_d);
-	  //   delta_g[j] = delta_g[j] + ldelta_g;  
+	  //   grav_station[j].grav_diff = grav_station[j].grav_diff + ldelta_g;  
 	  // }
 	  
 	  double ldelta_g = 6.67E-3*(mas2 - mas1)/(coord_x*coord_x + coord_y*coord_y + coord_z*coord_z);
