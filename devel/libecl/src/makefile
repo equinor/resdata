@@ -57,9 +57,10 @@ view_summary.o : view_summary.c
 view_restart.o : view_restart.c 
 block_owc.o    : block_owc.c 
 extract_contact.o : extract_contact.c
-extract_IJ.o : extract_IJ.c
-ecl_pack.o        : ecl_pack.c
-ecl_unpack.o        : ecl_unpack.c
+extract_IJ.o   : extract_IJ.c
+ecl_pack.o     : ecl_pack.c
+ecl_unpack.o   : ecl_unpack.c
+run_gravity.o  : run_gravity.c
 
 #################################################################
 # Binaries
@@ -67,7 +68,7 @@ ecl_unpack.o        : ecl_unpack.c
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
 BIN	:  $(BIN_FILES) 
 BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x extract_owc.x block_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x
 
@@ -109,5 +110,8 @@ restart.x: $(LIB) view_restart.o
 
 rft.x: $(LIB) view_rft.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  view_rft.o -o rft.x $(LIB_PATH)  $(LIB_LINK)
+
+run_gravity.x: $(LIB) run_gravity.o
+	$(LD) -$(MFLAG) $(LDFLAGS)  run_gravity.o -o run_gravity.x $(LIB_PATH)  $(LIB_LINK)
 
 
