@@ -33,14 +33,9 @@ void grid_test(char * filename) {
 //
 //  char * restart_file = ecl_util_alloc_filename("/tmp" , "CASE3" , ECL_RESTART_FILE , false , 67);                                   => restart_file = "/tmp/CASE3.X0067";
 //
-//  char * egrid_file   = ecl_util_alloc_filename(NULL /* NO leading path */ , "CASE3" , ECL_EGRID_FILE , true , -1 /* Irrelevant *);  => egrid_file   = "CASE3.FEGRID";
+//  char * egrid_file   = ecl_util_alloc_filename(NULL /* NO leading path */ , "CASE3" , ECL_EGRID_FILE , true , -1 /* Irrelevant *);  => egrid_file   = "CASE3.EGRID";
 //														     
 //    
-
-
-
-
-
 
 
 
@@ -78,6 +73,7 @@ grav_station_type * grav_station_alloc(double x, double y, double d){
 }
 
 void grav_diff_update(grav_station_type * g_s, double inc){
+  //printf("Updateing\n");
   g_s->grav_diff = g_s->grav_diff + inc;
 }
 
@@ -150,12 +146,9 @@ int main(int argc , char ** argv) {
 	double x,y,d;
 	int fscanf_return = fscanf(stream, "%lg%lg%lg", &x,&y,&d);
 	if(fscanf_return ==3){
-	  printf("READ: x: %f y: %f d: %f\n", x,y,d);
 	  grav_station_type * g = grav_station_alloc(x,y,d);
-	  printf("OK 1\n");
 	  vector_append_owned_ref(grav_stations, g, free);
 	  num_stations++;
-	  printf("OK 2\n");
 	}
 	//else if(fscanf_return == 0) {
 	//  at_eof = true;
@@ -167,44 +160,7 @@ int main(int argc , char ** argv) {
       }
     fclose(stream);
     
-    
 
-
-
-
-
-
-
-
-
-//    // Open and read the station file
-//    FILE * stream = util_fopen(station_file , "r");
-//    
-//    bool at_eof = false;
-//    char **token_list;
-//    int num_toks;
-//    
-//    int num_stations = 0;
-//    while(!(at_eof)){
-//      char * line = util_fscanf_alloc_line(stream, &at_eof);
-//      printf("LESER:%s\n", line);
-//      util_split_string(line , "\t ", &num_toks, &token_list);
-//      printf("NUMBERS: %i\n", num_toks);
-//      if(num_toks ==3 ){
-//	printf("TOK1: %s TOK2: %s TOK3: %s\n", token_list[0], token_list[1], token_list[2]);
-//	
-//	struct station new_station;
-//	new_station.utm_x = atof(token_list[0]);
-//	new_station.utm_y = atof(token_list[1]);
-//	new_station.depth = atof(token_list[2]);
-//	
-//	grav_station[num_stations] = &new_station;
-//	num_stations++;
-//	//util_free_line(line);
-//	//util_free_stringlist(token_list,num_toks);
-//      }
-//    }
-//    fclose(stream);
     
     // Allocate the files 
     ecl_file_type * grid_file     = ecl_file_fread_alloc(grid_filename , true);
@@ -258,7 +214,7 @@ int main(int argc , char ** argv) {
     const int num_cells             = ecl_file_get_num_named_kw(grid_file, "COORDS");
     int ikw, i, j;
     int coord_size;
-    printf("The number of cells is: %i\n", num_cells);
+    //printf("The number of cells is: %i\n", num_cells);
     int act_index = 0;
     
     float soil1, soil2;
@@ -331,12 +287,7 @@ int main(int argc , char ** argv) {
 	    double dist_d = coord_z - g_s->depth;
 	    double ldelta_g = 6.67E-3*(mas2 - mas1)/(dist_x*dist_x + dist_y*dist_y + dist_d*dist_d);
 	    grav_diff_update(g_s, ldelta_g);
-	    //g_s->grav_diff = g_s->grav_diff + ldelta_g;  
 	  }
-	  
-	  //double ldelta_g = 6.67E-3*(mas2 - mas1)/(coord_x*coord_x + coord_y*coord_y + coord_z*coord_z);
-	  //delta_g = delta_g + ldelta_g;  
-	  //printf ("DELTA_G: %f %f %f\n", delta_g, mas1, mas2);
 	}	
 	act_index++;
       }
@@ -355,19 +306,6 @@ int main(int argc , char ** argv) {
     ecl_file_free(restart1_file);
     ecl_file_free(restart2_file);
     
-//    ecl_kw_free(rporv1_kw    );
-//    ecl_kw_free(rporv2_kw    );
-//    ecl_kw_free(oil_den1_kw  );
-//    ecl_kw_free(gas_den1_kw  );
-//    ecl_kw_free(wat_den1_kw  );
-//    ecl_kw_free(oil_den2_kw  );
-//    ecl_kw_free(gas_den2_kw  );
-//    ecl_kw_free(wat_den2_kw  );
-//    ecl_kw_free(swat1_kw     );
-//    ecl_kw_free(sgas1_kw     );
-//    ecl_kw_free(swat2_kw     );
-//    ecl_kw_free(sgas2_kw     );
-//    ecl_kw_free(dimens_kw    );    
 					     
   }		
 }
