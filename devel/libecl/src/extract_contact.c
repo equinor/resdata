@@ -14,6 +14,8 @@
 #define SDP_url          "http://sdp.statoil.no/wiki/index.php/Res:Available_forward_models#EXTRACT_OWC"
 #define DETECTION_LIMIT  0.20
 
+
+
 void extract_contact_peak(const ecl_kw_type   * swat1    , 
 			  const ecl_kw_type   * swat2    , 
 			  const ecl_grid_type * ecl_grid , 
@@ -137,6 +139,7 @@ void extract_contact(const ecl_kw_type   * swat1    ,
       int k = 0;
       double owc = -1;
       double xpos,ypos;
+
       while (1) {
 	int active_index = ecl_grid_get_active_index( ecl_grid , i , j , k);
 	if (active_index >= 0) {

@@ -99,7 +99,7 @@ int main(int argc , char ** argv) {
       exit(1);
     }
     
-    grav_station_type ** grav_stations;
+    vector_type * grav_stations = vector_alloc_new();
     
     FILE * stream = util_fopen(station_file , "r");
     bool at_eof = false;
