@@ -28,7 +28,14 @@ void grid_test(char * filename) {
   ecl_grid_free( grid );
 }
 
-
+//
+//  Demonstration of ecl_util_alloc_filename();
+//
+//  char * restart_file = ecl_util_alloc_filename("/tmp" , "CASE3" , ECL_RESTART_FILE , false , 67);                                   => restart_file = "/tmp/CASE3.X0067";
+//
+//  char * egrid_file   = ecl_util_alloc_filename(NULL /* NO leading path */ , "CASE3" , ECL_EGRID_FILE , true , -1 /* Irrelevant *);  => egrid_file   = "CASE3.FEGRID";
+//														     
+//    
 
 
 
