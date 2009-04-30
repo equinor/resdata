@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ecl_file.h>
 #include <ecl_util.h>
+#include <vector.h>
 
 /*****************************************************************/
 
@@ -21,13 +22,26 @@ void print_usage() {
   printf("***************************************************************************\n");
 }
 
-struct station {
-  float utm_x; 
-  float utm_y; 
-  float depth; 
-  
+typedef struct {
+  double utm_x; 
+  double utm_y; 
+  double depth; 
   double grav_diff;
-};
+} grav_station_type;
+
+grav_station_type * grav_station_alloc(double x, double y, double d){
+  grav_station_type * s = util_malloc(sizeof*s, __func__);
+  s->utm_x =x;
+  s->utm_y =y;
+  s->depth =d;
+  s->grav_diff=0.0;
+  return s;
+}
+
+void grav_diff_update(grav_station_type * g_s, double inc){
+  g_s->grav_diff = g_s->grav_diff + inc;
+}
+
 
 
 /*****************************************************************/
@@ -85,36 +99,71 @@ int main(int argc , char ** argv) {
       exit(1);
     }
     
-    struct station ** grav_station;
+    grav_station_type ** grav_stations;
     
-    // Open and read the station file
     FILE * stream = util_fopen(station_file , "r");
-    
     bool at_eof = false;
-    char **token_list;
-    int num_toks;
-    
     int num_stations = 0;
-    while(!(at_eof)){
-      char * line = util_fscanf_alloc_line(stream, &at_eof);
-      printf("LESER:%s\n", line);
-      util_split_string(line , "\t ", &num_toks, &token_list);
-      printf("NUMBERS: %i\n", num_toks);
-      if(num_toks ==3 ){
-	printf("TOK1: %s TOK2: %s TOK3: %s\n", token_list[0], token_list[1], token_list[2]);
-	
-	struct station new_station;
-	new_station.utm_x = atof(token_list[0]);
-	new_station.utm_y = atof(token_list[1]);
-	new_station.depth = atof(token_list[2]);
-	
-	grav_station[num_stations] = &new_station;
-	num_stations++;
-	//util_free_line(line);
-	//util_free_stringlist(token_list,num_toks);
+    while(!(at_eof))
+      {
+	double x,y,d;
+	int fscanf_return = fscanf(stream, "%lg%lg%lg", &x,&y,&d);
+	if(fscanf_return ==3){
+	  printf("READ: x: %f y: %f d: %f\n", x,y,d);
+	  grav_station_type * g = grav_station_alloc(x,y,d);
+	  printf("OK 1\n");
+	  vector_append_owned_ref(grav_stations, g, free);
+	  num_stations++;
+	  printf("OK 2\n");
+	}
+	//else if(fscanf_return == 0) {
+	//  at_eof = true;
+	//}
+	else{
+	  at_eof = true;
+	  //util_abort("%s: something funky - only found %d numbers", __func__, fscanf_return);
+	}
       }
-    }
     fclose(stream);
+    
+    
+
+
+
+
+
+
+
+
+
+//    // Open and read the station file
+//    FILE * stream = util_fopen(station_file , "r");
+//    
+//    bool at_eof = false;
+//    char **token_list;
+//    int num_toks;
+//    
+//    int num_stations = 0;
+//    while(!(at_eof)){
+//      char * line = util_fscanf_alloc_line(stream, &at_eof);
+//      printf("LESER:%s\n", line);
+//      util_split_string(line , "\t ", &num_toks, &token_list);
+//      printf("NUMBERS: %i\n", num_toks);
+//      if(num_toks ==3 ){
+//	printf("TOK1: %s TOK2: %s TOK3: %s\n", token_list[0], token_list[1], token_list[2]);
+//	
+//	struct station new_station;
+//	new_station.utm_x = atof(token_list[0]);
+//	new_station.utm_y = atof(token_list[1]);
+//	new_station.depth = atof(token_list[2]);
+//	
+//	grav_station[num_stations] = &new_station;
+//	num_stations++;
+//	//util_free_line(line);
+//	//util_free_stringlist(token_list,num_toks);
+//      }
+//    }
+//    fclose(stream);
     
     // Allocate the files 
     ecl_file_type * grid_file     = ecl_file_fread_alloc(grid_filename , true);
@@ -140,7 +189,7 @@ int main(int argc , char ** argv) {
     ecl_kw_type * swat2_kw     = ecl_file_iget_named_kw(restart2_file, "SWAT", 0);
     ecl_kw_type * sgas2_kw     = ecl_file_iget_named_kw(restart2_file, "SGAS", 0);
     		  			     
-    ecl_kw_type * dimens_kw    = ecl_file_iget_named_kw(grid_file, "DIMENS", 0);    
+    //ecl_kw_type * dimens_kw    = ecl_file_iget_named_kw(grid_file, "DIMENS", 0);    
     
     ecl_kw_type * coord_kw;
     ecl_kw_type * corners_kw;
@@ -166,16 +215,14 @@ int main(int argc , char ** argv) {
     
     // Fetch the coordiantes of the grid
     const int num_cells             = ecl_file_get_num_named_kw(grid_file, "COORDS");
-    int ikw;
+    int ikw, i, j;
     int coord_size;
     printf("The number of cells is: %i\n", num_cells);
     int act_index = 0;
-    double delta_g = 0.0;  
     
     float soil1, soil2;
-    float mas1, mas2;
+    double mas1, mas2;
     float coord_x, coord_y, coord_z;
-    int i;
     
     for (ikw=0;ikw<num_cells;ikw++){
       coord_kw     =  ecl_file_iget_named_kw(grid_file, "COORDS", ikw);
@@ -236,25 +283,32 @@ int main(int argc , char ** argv) {
 	  
 	  // printf("Senter-koordinatene til cella er: %f %f %f\n",coord_x, coord_y, coord_z);
 	  
-	  // for(j=0; j<num_stations;j++){
-	  //   float dist_x = coord_x - grav_station[j].utm_x;
-	  //   float dist_y = coord_y - grav_station[j].utm_y;
-	  //   float dist_d = coord_d - grav_station[j].depth;
-	  //   double ldelta_g = 6.67E-3*(mas2 - mas1)/(dist_x*dist_x + dist_y*dist_y + dist_d*dist_d);
-	  //   grav_station[j].grav_diff = grav_station[j].grav_diff + ldelta_g;  
-	  // }
+	  for(j=0; j<num_stations;j++){
+	    const grav_station_type * g_s = vector_iget_const(grav_stations, j);
+	    double dist_x = coord_x - g_s->utm_x;
+	    double dist_y = coord_y - g_s->utm_y;
+	    double dist_d = coord_z - g_s->depth;
+	    double ldelta_g = 6.67E-3*(mas2 - mas1)/(dist_x*dist_x + dist_y*dist_y + dist_d*dist_d);
+	    grav_diff_update(g_s, ldelta_g);
+	    //g_s->grav_diff = g_s->grav_diff + ldelta_g;  
+	  }
 	  
-	  double ldelta_g = 6.67E-3*(mas2 - mas1)/(coord_x*coord_x + coord_y*coord_y + coord_z*coord_z);
-	  delta_g = delta_g + ldelta_g;  
+	  //double ldelta_g = 6.67E-3*(mas2 - mas1)/(coord_x*coord_x + coord_y*coord_y + coord_z*coord_z);
+	  //delta_g = delta_g + ldelta_g;  
 	  //printf ("DELTA_G: %f %f %f\n", delta_g, mas1, mas2);
 	}	
 	act_index++;
       }
     }
-    printf ("DELTA_G: %f\n", delta_g);
     
+    for(j=0; j<num_stations;j++){
+      const grav_station_type * g_s = vector_iget_const(grav_stations, j);
+      printf ("DELTA_G: %f\n", g_s->grav_diff);
+    }
     
     // Clean up the mess 
+    
+    vector_free( grav_stations );
     
     ecl_file_free(grid_file);
     ecl_file_free(restart1_file);
