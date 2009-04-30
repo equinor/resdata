@@ -126,7 +126,7 @@ bool ecl_util_numeric_extension(const char * extension) {
 
 void ecl_util_get_file_type(const char * filename, ecl_file_enum * _file_type , bool *_fmt_file, int * _report_nr) {
   const bool ecl_other_ok = true;
-  ecl_file_enum file_type = ecl_other_file;
+  ecl_file_enum file_type = ECL_OTHER_FILE;
   bool fmt_file = true;
   int report_nr = -1;
   
@@ -134,77 +134,77 @@ void ecl_util_get_file_type(const char * filename, ecl_file_enum * _file_type , 
   if (ext != NULL) {
     ext++;
     if (strcmp(ext , "UNRST") == 0) {
-      file_type = ecl_unified_restart_file;
+      file_type = ECL_UNIFIED_RESTART_FILE;
       fmt_file = false;
     } else if (strcmp(ext , "FUNRST") == 0) {
-      file_type = ecl_unified_restart_file;
+      file_type = ECL_UNIFIED_RESTART_FILE;
       fmt_file = true;
     } else if (strcmp(ext , "UNSMRY") == 0) {
-      file_type = ecl_unified_summary_file;
+      file_type = ECL_UNIFIED_SUMMARY_FILE;
       fmt_file  = false;
     } else if (strcmp(ext , "FUNSMRY") == 0) {
-      file_type = ecl_unified_summary_file;
+      file_type = ECL_UNIFIED_SUMMARY_FILE;
       fmt_file  = true;
     } else if (strcmp(ext , "SMSPEC") == 0) {
-      file_type = ecl_summary_header_file;
+      file_type = ECL_SUMMARY_HEADER_FILE;
       fmt_file  = false;
     } else if (strcmp(ext , "FSMSPEC") == 0) {
-      file_type = ecl_summary_header_file;
+      file_type = ECL_SUMMARY_HEADER_FILE;
       fmt_file  = true;
     } else if (strcmp(ext , "GRID") == 0) {
-      file_type = ecl_grid_file;
+      file_type = ECL_GRID_FILE;
       fmt_file  = false;
     } else if (strcmp(ext , "FGRID") == 0) {
-      file_type = ecl_grid_file;
+      file_type = ECL_GRID_FILE;
       fmt_file  = true;
     } else if (strcmp(ext , "EGRID") == 0) {
-      file_type = ecl_egrid_file;
+      file_type = ECL_EGRID_FILE;
       fmt_file  = false;
     } else if (strcmp(ext , "FEGRID") == 0) {
-      file_type = ecl_egrid_file;
+      file_type = ECL_EGRID_FILE;
       fmt_file  = true;
     } else if (strcmp(ext , "INIT") == 0) {
-      file_type = ecl_init_file;
+      file_type = ECL_INIT_FILE;
       fmt_file  = false;
     } else if (strcmp(ext , "FINIT") == 0) {
-      file_type = ecl_init_file;
+      file_type = ECL_INIT_FILE;
       fmt_file  = true;
     } else if (strcmp(ext , "FRFT") == 0) {
-      file_type = ecl_rft_file;
+      file_type = ECL_RFT_FILE;
       fmt_file  = true;
     } else if (strcmp(ext , "RFT") == 0) {
-      file_type = ecl_rft_file;
+      file_type = ECL_RFT_FILE;
       fmt_file  = false;
     } else if (strcmp(ext , "DATA") == 0) {
-      file_type = ecl_data_file;
+      file_type = ECL_DATA_FILE;
       fmt_file  = true;  /* Not really relevant ... */
     } else {
       switch (ext[0]) {
       case('X'):
-	file_type = ecl_restart_file;
+	file_type = ECL_RESTART_FILE;
 	fmt_file  = false;
 	break;
       case('F'):
-	file_type = ecl_restart_file;
+	file_type = ECL_RESTART_FILE;
 	fmt_file  = true;
 	break;
       case('S'):
-	file_type = ecl_summary_file;
+	file_type = ECL_SUMMARY_FILE;
 	fmt_file  = false;
 	break;
       case('A'):
-	file_type = ecl_summary_file;
+	file_type = ECL_SUMMARY_FILE;
 	fmt_file  = true;
 	break;
       default:
-	file_type = ecl_other_file;
+	file_type = ECL_OTHER_FILE;
 	/*
 	  fprintf(stderr,"*** Warning: *** %s failed to find type of file:%s \n",__func__ , filename);
 	*/
       }
-      if (file_type != ecl_other_file) 
+      if (file_type != ECL_OTHER_FILE) 
 	if (!util_sscanf_int(&ext[1] , &report_nr))
-	  file_type = ecl_other_file;
+	  file_type = ECL_OTHER_FILE;
     }
   }
 
@@ -217,7 +217,7 @@ void ecl_util_get_file_type(const char * filename, ecl_file_enum * _file_type , 
   if (_report_nr != NULL)  
     *_report_nr = report_nr;
   
-  if ( (file_type == ecl_other_file) && !ecl_other_ok) 
+  if ( (file_type == ECL_OTHER_FILE) && !ecl_other_ok) 
     util_abort("%s: Can not determine type of:%s from filename - aborting \n",__func__ , filename);
   
 }
@@ -234,70 +234,70 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
   char * filename;
   char * ext;
   switch (file_type) {
-  case(ecl_restart_file):
+  case(ECL_RESTART_FILE):
     if (fmt_file)
       ext = util_alloc_sprintf("F%04d" , report_nr);
     else
       ext = util_alloc_sprintf("X%04d" , report_nr);
     break;
 
-  case(ecl_unified_restart_file):
+  case(ECL_UNIFIED_RESTART_FILE):
     if (fmt_file)
       ext = util_alloc_string_copy("FUNRST");
     else
       ext = util_alloc_string_copy("UNRST");
     break;
 
-  case(ecl_summary_file):
+  case(ECL_SUMMARY_FILE):
     if (fmt_file)
       ext = util_alloc_sprintf("A%04d" , report_nr);
     else
       ext = util_alloc_sprintf("S%04d" , report_nr);
     break;
     
-  case(ecl_unified_summary_file):
+  case(ECL_UNIFIED_SUMMARY_FILE):
     if (fmt_file)
       ext = util_alloc_string_copy("FUNSMRY");
     else
       ext = util_alloc_string_copy("UNSMRY");
     break;
 
-  case(ecl_summary_header_file):
+  case(ECL_SUMMARY_HEADER_FILE):
     if (fmt_file) 
       ext = util_alloc_string_copy("FSMSPEC");
     else
       ext = util_alloc_string_copy("SMSPEC");
     break;
 
-  case(ecl_grid_file):
+  case(ECL_GRID_FILE):
     if (fmt_file) 
       ext = util_alloc_string_copy("FGRID");
     else
       ext = util_alloc_string_copy("GRID");
     break;
     
-  case(ecl_egrid_file):
+  case(ECL_EGRID_FILE):
     if (fmt_file) 
       ext = util_alloc_string_copy("FEGRID");
     else
       ext = util_alloc_string_copy("EGRID");
     break;
 
-  case(ecl_init_file):
+  case(ECL_INIT_FILE):
     if (fmt_file) 
       ext = util_alloc_string_copy("FINIT");
     else
       ext = util_alloc_string_copy("INIT");
     break;
 
-  case(ecl_rft_file):
+  case(ECL_RFT_FILE):
     if (fmt_file) 
       ext = util_alloc_string_copy("FRFT");
     else
       ext = util_alloc_string_copy("RFT");
     break;
 
-  case(ecl_data_file):
+  case(ECL_DATA_FILE):
     ext = util_alloc_string_copy("DATA");
     break;
     
@@ -472,34 +472,34 @@ bool ecl_util_unified(ecl_file_enum file_type) {
   bool unified = true;
 
   switch (file_type) {
-  case(ecl_other_file):
+  case(ECL_OTHER_FILE):
     unified = true;
     break;
-  case(ecl_restart_file):
+  case(ECL_RESTART_FILE):
     unified = false;
     break;
-  case(ecl_unified_restart_file):
+  case(ECL_UNIFIED_RESTART_FILE):
     unified = true;
     break;
-  case(ecl_summary_file):
+  case(ECL_SUMMARY_FILE):
     unified = false;
     break;
-  case(ecl_unified_summary_file):
+  case(ECL_UNIFIED_SUMMARY_FILE):
     unified = true;
     break;
-  case(ecl_summary_header_file):
+  case(ECL_SUMMARY_HEADER_FILE):
     unified = false;
     break;
-  case(ecl_grid_file):
+  case(ECL_GRID_FILE):
     unified = true;
     break;
-  case(ecl_egrid_file):
+  case(ECL_EGRID_FILE):
     unified = false;
     break;
-  case(ecl_init_file):
+  case(ECL_INIT_FILE):
     unified = false;
     break;
-  case(ecl_rft_file):
+  case(ECL_RFT_FILE):
     unified = true;
     break;
   default:
@@ -521,7 +521,7 @@ bool ecl_util_fmt_file(const char *filename) {
   bool fmt_file;
   if (util_file_exists(filename)) {
     ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
-    if (file_type == ecl_other_file) {
+    if (file_type == ECL_OTHER_FILE) {
       if (util_file_size(filename) > min_size)
 	fmt_file = util_fmt_bit8(filename);
       else 
@@ -529,7 +529,7 @@ bool ecl_util_fmt_file(const char *filename) {
     }
   } else {
     ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
-    if (file_type == ecl_other_file) 
+    if (file_type == ECL_OTHER_FILE) 
       util_abort("%s: sorry could not determine formatted|unformatted of file:%s - aborting \n",__func__ , filename);
   }
   
@@ -689,8 +689,8 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
     base = (char *) _base;
   
   {
-    char * fsmspec_file = ecl_util_alloc_filename(path , base , ecl_summary_header_file , true  , -1);
-    char *  smspec_file = ecl_util_alloc_filename(path , base , ecl_summary_header_file , false , -1);
+    char * fsmspec_file = ecl_util_alloc_filename(path , base , ECL_SUMMARY_HEADER_FILE , true  , -1);
+    char *  smspec_file = ecl_util_alloc_filename(path , base , ECL_SUMMARY_HEADER_FILE , false , -1);
     if (util_file_exists(fsmspec_file) && util_file_exists(smspec_file)) {
       if (util_file_difftime(fsmspec_file , smspec_file) < 0) {
 	header_file = fsmspec_file;
@@ -718,8 +718,8 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
   }
   {
     int files;
-    char  * unif_data_file = ecl_util_alloc_filename(path , base , ecl_unified_summary_file , fmt_file , -1);
-    char ** file_list      = ecl_util_alloc_scandir_filelist(path , base , ecl_summary_file , fmt_file , &files); 
+    char  * unif_data_file = ecl_util_alloc_filename(path , base , ECL_UNIFIED_SUMMARY_FILE , fmt_file , -1);
+    char ** file_list      = ecl_util_alloc_scandir_filelist(path , base , ECL_SUMMARY_FILE , fmt_file , &files); 
     bool    unif_exists    = util_file_exists(unif_data_file);            
     
     
@@ -782,12 +782,12 @@ void ecl_util_alloc_restart_files(const char * path , const char * _base , char 
     int num_F_files;
     int num_X_files;
 
-    char *  unrst_file  = ecl_util_alloc_filename(path , base , ecl_unified_restart_file , false , -1);  
-    char *  funrst_file = ecl_util_alloc_filename(path , base , ecl_unified_restart_file , true  , -1);
+    char *  unrst_file  = ecl_util_alloc_filename(path , base , ECL_UNIFIED_RESTART_FILE , false , -1);  
+    char *  funrst_file = ecl_util_alloc_filename(path , base , ECL_UNIFIED_RESTART_FILE , true  , -1);
     char *  unif_file   = NULL; 
 
-    char ** F_files     = ecl_util_alloc_scandir_filelist(path , base , ecl_restart_file , true  , &num_F_files); 
-    char ** X_files     = ecl_util_alloc_scandir_filelist(path , base , ecl_restart_file , false , &num_X_files); 
+    char ** F_files     = ecl_util_alloc_scandir_filelist(path , base , ECL_RESTART_FILE , true  , &num_F_files); 
+    char ** X_files     = ecl_util_alloc_scandir_filelist(path , base , ECL_RESTART_FILE , false , &num_X_files); 
     char *  FX_file      = NULL;
     char *  final_file; 
 
@@ -839,13 +839,13 @@ void ecl_util_alloc_restart_files(const char * path , const char * _base , char 
       ecl_file_enum file_type;
       
       ecl_util_get_file_type( final_file , &file_type , &fmt_file , NULL);
-      if (file_type == ecl_unified_restart_file) {
+      if (file_type == ECL_UNIFIED_RESTART_FILE) {
 	*num_restart_files = 1;
 	restart_files = util_malloc(sizeof * restart_files, __func__);
 	restart_files[0] = util_alloc_string_copy( final_file );
 	unified = true;
       } else {
-	restart_files = ecl_util_alloc_scandir_filelist( path , base , ecl_restart_file , fmt_file , num_restart_files);
+	restart_files = ecl_util_alloc_scandir_filelist( path , base , ECL_RESTART_FILE , fmt_file , num_restart_files);
 	unified = false;
       }
       *_restart_files = restart_files;

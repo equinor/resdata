@@ -15,7 +15,7 @@ void file_convert(const char * src_file , const char * target_file, ecl_file_enu
   bool formatted_src;
 
   printf("Converting %s -> %s \n",src_file , target_file);
-  if (file_type != ecl_other_file)
+  if (file_type != ECL_OTHER_FILE)
     formatted_src = fmt_src;
   else {
     if (util_fmt_bit8(src_file)) 
@@ -58,7 +58,7 @@ int main (int argc , char **argv) {
     bool          fmt_file;
     ecl_util_get_file_type(src_file , &file_type , &fmt_file , &report_nr);
     
-    if (file_type == ecl_other_file) {
+    if (file_type == ECL_OTHER_FILE) {
       if (argc != 3) {
 	fprintf(stderr,"When the file can not be recognized on the name as an ECLIPSE file you must give output_file as second (and final) argument \n");
 	exit(0);
@@ -73,7 +73,7 @@ int main (int argc , char **argv) {
 	char *extension;
 	src_file    = argv[file_nr];
 	ecl_util_get_file_type(src_file , &file_type , &fmt_file , &report_nr);
-	if (file_type == ecl_other_file) {
+	if (file_type == ECL_OTHER_FILE) {
 	  fprintf(stderr,"File: %s - problem \n",src_file);
 	  fprintf(stderr,"In a list of many files ALL must be recognizable by their name. \n");
 	  exit(1);

@@ -17,10 +17,10 @@ int main(int argc, char ** argv) {
     bool fmt_file;
     ecl_util_get_file_type( argv[1] , &file_type , &fmt_file , NULL);
 
-    if (file_type == ecl_summary_file)
-      target_type = ecl_unified_summary_file;
-    else if (file_type == ecl_restart_file)
-      target_type = ecl_unified_restart_file;
+    if (file_type == ECL_SUMMARY_FILE)
+      target_type = ECL_UNIFIED_SUMMARY_FILE;
+    else if (file_type == ECL_RESTART_FILE)
+      target_type = ECL_UNIFIED_RESTART_FILE;
     else {
       fprintf(stderr , "The ecl_pack program can only be used with ECLIPSE restart files or summary files.\n");
       exit(1);
@@ -35,7 +35,7 @@ int main(int argc, char ** argv) {
       ecl_kw_type * seqnum_kw  = NULL;
       fortio_type * target     = fortio_fopen( target_file_name , "w" , true , fmt_file );
 
-      if (target_type == ecl_unified_restart_file) {
+      if (target_type == ECL_UNIFIED_RESTART_FILE) {
 	int dummy;
 	seqnum_kw = ecl_kw_alloc_complete("SEQNUM" , 1 , ecl_int_type , &dummy);
       } 
@@ -59,7 +59,7 @@ int main(int argc, char ** argv) {
 	  msg_update(msg , filelist[i]);
 	  {
 	    ecl_file_type * src_file = ecl_file_fread_alloc( filelist[i] , true );
-	    if (target_type == ecl_unified_restart_file) {
+	    if (target_type == ECL_UNIFIED_RESTART_FILE) {
 	      /* Must insert the SEQNUM keyword first. */
 	      ecl_kw_iset_int(seqnum_kw , 0 , report_step);
 	      ecl_kw_fwrite( seqnum_kw , target );

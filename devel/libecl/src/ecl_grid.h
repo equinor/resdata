@@ -13,7 +13,8 @@ typedef double (block_function_ftype) ( const double_vector_type *);
 typedef struct ecl_grid_struct ecl_grid_type;
 
 const  char   * ecl_grid_get_filename( const ecl_grid_type * );
-bool            ecl_grid_ijk_active(const ecl_grid_type * , int  , int  , int );
+bool            ecl_grid_cell_active3(const ecl_grid_type * , int  , int  , int );
+bool            ecl_grid_cell_active1(const ecl_grid_type * , int);
 inline bool     ecl_grid_ijk_valid(const ecl_grid_type * , int  , int , int ); 
 inline int      ecl_grid_get_global_index(const ecl_grid_type * , int  , int , int );
 ecl_grid_type * ecl_grid_alloc_GRDECL(int , int , int , const float *  , const float *  , const int * );
@@ -27,7 +28,8 @@ void            ecl_grid_summarize(const ecl_grid_type * );
 void            ecl_grid_get_ijk(const ecl_grid_type * , int , int *, int * , int *);
 void            ecl_grid_get_ijk_from_active_index(const ecl_grid_type *, int , int *, int * , int * );
 const int     * ecl_grid_get_index_map_ref(const ecl_grid_type * );
-void            ecl_grid_get_pos(const ecl_grid_type * , int , int , int , double * , double * , double *);
+void            ecl_grid_get_pos3(const ecl_grid_type * , int , int , int , double * , double * , double *);
+void            ecl_grid_get_pos1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos);
 
 void            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2);
 

@@ -5,6 +5,38 @@
 #include <ecl_file.h>
 #include <ecl_util.h>
 #include <vector.h>
+#include <ecl_grid.h>
+
+
+/*****************************************************************/
+/**/
+
+
+void grid_test(char * filename) {
+  int nx,ny,nz,nactive;
+  int global_index;
+  ecl_grid_type * grid = ecl_grid_alloc(filename , true);  
+  
+  ecl_grid_get_dims( grid , &nx , &ny , &nz , &nactive);
+  for (global_index = 0; global_index < nx*ny*nz; global_index++) {
+    if (ecl_grid_cell_active1( grid , global_index)) {
+      /* Ok this is an active cell - do your work ...*/
+      double xpos,ypos,zpos;
+      ecl_grid_get_pos1(grid , global_index , &xpos , &ypos , &zpos);
+    }
+  }    
+  ecl_grid_free( grid );
+}
+
+
+
+
+
+
+
+
+
+
 
 /*****************************************************************/
 
@@ -72,6 +104,8 @@ int main(int argc , char ** argv) {
       printf("Sorry, file:, %s does not exist", grid_filename);
       exit(1);
     }
+    
+
     
     // *.XTIME1
     char * file1_ext = "NOPE";

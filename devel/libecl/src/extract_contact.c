@@ -62,7 +62,7 @@ void extract_contact_peak(const ecl_kw_type   * swat1    ,
       
       {
 	double xpos,ypos;
-	ecl_grid_get_pos(ecl_grid , i , j , k , &xpos , &ypos , &z[k]);
+	ecl_grid_get_pos3(ecl_grid , i , j , k , &xpos , &ypos , &z[k]);
 	if (diff[k] > 0) {
 	  z_sum += z[k] * diff[k];
 	  w_sum += diff[k];
@@ -92,7 +92,7 @@ void extract_contact_peak(const ecl_kw_type   * swat1    ,
       double z_owc = z_sum / w_sum;
       if (surf_stream != NULL) {
 	double xpos,ypos,zpos;
-	ecl_grid_get_pos(ecl_grid , i , j , k_diffmax , &xpos , &ypos , &zpos);
+	ecl_grid_get_pos3(ecl_grid , i , j , k_diffmax , &xpos , &ypos , &zpos);
 	fprintf(surf_stream   , "%18.6f  %18.6f  %12.6f  \n",xpos,ypos,z_owc);
       }
       fprintf(target_stream , "%g\n", z_owc);
@@ -150,14 +150,14 @@ void extract_contact(const ecl_kw_type   * swat1    ,
 	  dk = sw2[k] - sw1[k];
 	  if (dk > DETECTION_LIMIT) {
 	    double zk,zk1,dk1;
-	    ecl_grid_get_pos(ecl_grid , i , j , k , &xpos , &ypos , &zk);
+	    ecl_grid_get_pos3(ecl_grid , i , j , k , &xpos , &ypos , &zk);
 	    owc = zk;
 
 	    if (k > 0) {
 	      /* Try a basic linear interpolation. */
 	      int prev_active_index = ecl_grid_get_active_index( ecl_grid , i , j , k - 1);
 	      if (prev_active_index >= 0) {
-		ecl_grid_get_pos(ecl_grid , i , j , k - 1 , &xpos , &ypos , &zk1);
+		ecl_grid_get_pos3(ecl_grid , i , j , k - 1 , &xpos , &ypos , &zk1);
 		dk1 = sw2[k - 1] - sw1[k -1];
 		
 		owc = (0.20 - dk) * (zk - zk1)/(dk - dk1) + zk;
@@ -273,7 +273,7 @@ int main (int argc , char ** argv) {
     if (argc > 2) {
       ecl_file_enum file_type;
       ecl_util_get_file_type( argv[2] , &file_type , NULL , NULL);
-      if (file_type == ecl_unified_restart_file) {
+      if (file_type == ECL_UNIFIED_RESTART_FILE) {
 	char * unif_restart_file   = argv[2];
 	int report_nr1;
 	int report_nr2;
@@ -287,7 +287,7 @@ int main (int argc , char ** argv) {
 	    usage();
 	} else
 	  usage();
-      } else if (file_type == ecl_restart_file) {
+      } else if (file_type == ECL_RESTART_FILE) {
 	if (argc > 3) {
 	  char * restart_file1 = argv[2];
 	  char * restart_file2 = argv[3];

@@ -6,18 +6,18 @@
 #include <msg.h>
 
 void unpack_file(const char * filename) {
-  ecl_file_enum target_type = ecl_other_file;
+  ecl_file_enum target_type = ECL_OTHER_FILE;
   ecl_file_enum file_type;
   bool fmt_file;
   ecl_util_get_file_type(filename , &file_type , &fmt_file , NULL);
-  if (file_type == ecl_unified_summary_file)
-    target_type = ecl_summary_file;
-  else if (file_type == ecl_unified_restart_file)
-    target_type = ecl_restart_file;
+  if (file_type == ECL_UNIFIED_SUMMARY_FILE)
+    target_type = ECL_SUMMARY_FILE;
+  else if (file_type == ECL_UNIFIED_RESTART_FILE)
+    target_type = ECL_RESTART_FILE;
   else 
     util_exit("Can only unpack unified ECLIPSE summary and restart files\n");
   
-  if (target_type == ecl_summary_file) {
+  if (target_type == ECL_SUMMARY_FILE) {
     printf("** Warning: when unpacking unified summary files it as ambigous - starting with 0001  -> \n");
   }
   {
@@ -37,7 +37,7 @@ void unpack_file(const char * filename) {
     msg_show(msg);
     do {
 
-      if (target_type == ecl_summary_file) {
+      if (target_type == ECL_SUMMARY_FILE) {
 	src_file = ecl_file_fread_alloc_summary_section( fortio_src );
 	report_step += 1;
 	offset = 0;

@@ -19,7 +19,7 @@ int main (int argc , char ** argv) {
     ecl_rft_file_type * rft_file;
 
     ecl_util_get_file_type( input_file , &input_type , NULL , NULL);
-    if (input_type == ecl_rft_file)
+    if (input_type == ECL_RFT_FILE)
       file_name = util_alloc_string_copy(input_file);
     else {
       char  * base;
@@ -28,8 +28,8 @@ int main (int argc , char ** argv) {
       char  * rft_file_unformatted ;
 
       util_alloc_file_components( input_file , &path , &base , NULL);
-      rft_file_formatted   = ecl_util_alloc_filename(path , base , ecl_rft_file , true  , -1);
-      rft_file_unformatted = ecl_util_alloc_filename(path , base , ecl_rft_file , false , -1);
+      rft_file_formatted   = ecl_util_alloc_filename(path , base , ECL_RFT_FILE , true  , -1);
+      rft_file_unformatted = ecl_util_alloc_filename(path , base , ECL_RFT_FILE , false , -1);
       
       if (util_file_exists( rft_file_formatted ) && util_file_exists( rft_file_unformatted )) 
 	file_name = util_alloc_string_copy( util_newest_file( rft_file_formatted , rft_file_unformatted));

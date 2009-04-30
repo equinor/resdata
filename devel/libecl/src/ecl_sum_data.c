@@ -247,19 +247,19 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
 ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , int files , const char ** filelist , bool endian_convert) {
   ecl_file_enum file_type;
   ecl_util_get_file_type( filelist[0] , &file_type , NULL , NULL);
-  if ((files > 1) && (file_type != ecl_summary_file))
+  if ((files > 1) && (file_type != ECL_SUMMARY_FILE))
     util_abort("%s: internal error - when calling with more than one file - you can not supply a unified file - come on?! \n",__func__);
   {
     int filenr;
     ecl_sum_data_type * data = ecl_sum_data_alloc(smspec);
-    if (file_type == ecl_summary_file) {
+    if (file_type == ECL_SUMMARY_FILE) {
 
       /* Not unified. */
       for (filenr = 0; filenr < files; filenr++) {
 	ecl_file_enum file_type;
 	int report_step;
 	ecl_util_get_file_type( filelist[filenr] , &file_type , NULL , &report_step);
-	if (file_type != ecl_summary_file)
+	if (file_type != ECL_SUMMARY_FILE)
 	  util_abort("%s: file:%s has wrong type \n",__func__ , filelist[filenr]);
 	{
 	  ecl_file_type * ecl_file = ecl_file_fread_alloc( filelist[filenr] , endian_convert );
@@ -267,7 +267,7 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , in
 	  ecl_file_free( ecl_file );
 	}
       }
-    } else if (file_type == ecl_unified_summary_file) {
+    } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
       /* Loading a unified summary file. */
       bool fmt_file = ecl_util_fmt_file( filelist[0] );
       fortio_type * fortio = fortio_fopen( filelist[0] , "r" , endian_convert , fmt_file);

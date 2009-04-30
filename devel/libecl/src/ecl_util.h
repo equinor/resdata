@@ -6,17 +6,17 @@ extern "C" {
 #include <stdbool.h>
 #include <time.h>
 
-typedef enum {ecl_other_file           = 0   , 
-	      ecl_restart_file         = 1   , 
-	      ecl_unified_restart_file = 2   , 
-	      ecl_summary_file         = 4   , 
-	      ecl_unified_summary_file = 8   , 
-	      ecl_summary_header_file  = 16  , 
-	      ecl_grid_file            = 32  , 
-	      ecl_egrid_file           = 64  , 
-	      ecl_init_file            = 128 ,
-              ecl_rft_file             = 256 ,
-              ecl_data_file            = 512 } ecl_file_enum;   
+typedef enum {ECL_OTHER_FILE           = 0   , 
+	      ECL_RESTART_FILE         = 1   , 
+	      ECL_UNIFIED_RESTART_FILE = 2   , 
+	      ECL_SUMMARY_FILE         = 4   , 
+	      ECL_UNIFIED_SUMMARY_FILE = 8   , 
+	      ECL_SUMMARY_HEADER_FILE  = 16  , 
+	      ECL_GRID_FILE            = 32  , 
+	      ECL_EGRID_FILE           = 64  , 
+	      ECL_INIT_FILE            = 128 ,
+              ECL_RFT_FILE             = 256 ,
+              ECL_DATA_FILE            = 512 } ecl_file_enum;   
 
 
 #define ecl_str_len   8
