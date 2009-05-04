@@ -51,7 +51,7 @@ void extract_contact_peak(const ecl_kw_type   * swat1    ,
   
     diffmax = -1000;
     for (k=0; k < nz; k++) {
-      int active_index = ecl_grid_get_active_index( ecl_grid , i , j , k);
+      int active_index = ecl_grid_get_active_index3( ecl_grid , i , j , k);
       if (active_index >= 0) {
 	sw1[k] = ecl_kw_iget_as_double( swat1 , active_index );
 	sw2[k] = ecl_kw_iget_as_double( swat2 , active_index );
@@ -141,7 +141,7 @@ void extract_contact(const ecl_kw_type   * swat1    ,
       double xpos,ypos;
 
       while (1) {
-	int active_index = ecl_grid_get_active_index( ecl_grid , i , j , k);
+	int active_index = ecl_grid_get_active_index3( ecl_grid , i , j , k);
 	if (active_index >= 0) {
 	  double dk;
 	  sw1[k] = ecl_kw_iget_as_double( swat1 , active_index );
@@ -155,7 +155,7 @@ void extract_contact(const ecl_kw_type   * swat1    ,
 
 	    if (k > 0) {
 	      /* Try a basic linear interpolation. */
-	      int prev_active_index = ecl_grid_get_active_index( ecl_grid , i , j , k - 1);
+	      int prev_active_index = ecl_grid_get_active_index3( ecl_grid , i , j , k - 1);
 	      if (prev_active_index >= 0) {
 		ecl_grid_get_pos3(ecl_grid , i , j , k - 1 , &xpos , &ypos , &zk1);
 		dk1 = sw2[k - 1] - sw1[k -1];

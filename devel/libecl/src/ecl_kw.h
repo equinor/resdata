@@ -9,7 +9,7 @@ extern "C" {
 #include <fortio.h>
 #include <ecl_util.h>
 #include <ecl_box.h>
-
+#include <buffer.h>
 
 
 typedef struct ecl_kw_struct      ecl_kw_type;
@@ -90,6 +90,11 @@ void   ecl_kw_max_min(const ecl_kw_type * , void * , void *);
 void * ecl_kw_get_void_ptr(const ecl_kw_type * ecl_kw);
 
 double   ecl_kw_iget_as_double(const ecl_kw_type *  , int );
+
+ecl_kw_type * ecl_kw_buffer_alloc(buffer_type * buffer);
+void          ecl_kw_buffer_store(const ecl_kw_type * ecl_kw , buffer_type * buffer);
+
+
 
 #define ECL_KW_IGET_TYPED_HEADER(type) type ecl_kw_iget_ ## type(const ecl_kw_type * , int);
 ECL_KW_IGET_TYPED_HEADER(double);

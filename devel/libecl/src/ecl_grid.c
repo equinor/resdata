@@ -424,18 +424,6 @@ int ecl_grid_get_global_index(const ecl_grid_type * ecl_grid , int i , int j , i
 }
 
 
-/**
-   Return the active cell index (of the active cells) of the cell
-   i,j,k. (with zero based offset).
-
-   Will return -1 if the cell is not active.
-*/
-
-int ecl_grid_get_active_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
-  int global_index = ecl_grid_get_global_index(ecl_grid , i,j,k);  /* In range: [0,nx*ny*nz) */
-  return ecl_grid->index_map[global_index];
-}
-
 
 bool ecl_grid_cell_active3(const ecl_grid_type * ecl_grid, int i , int j , int k) {
   int global_index = ecl_grid_get_global_index( ecl_grid , i , j , k);
@@ -455,9 +443,23 @@ bool ecl_grid_cell_active1(const ecl_grid_type * ecl_grid , int global_index) {
 }
 
 
-int ecl_grid_get_active_index_from_global(const ecl_grid_type * ecl_grid , int global_index) {
+int ecl_grid_get_active_index1(const ecl_grid_type * ecl_grid , int global_index) {
   return ecl_grid->index_map[global_index];
 }
+
+
+/**
+   Return the active cell index (of the active cells) of the cell
+   i,j,k. (with zero based offset).
+
+   Will return -1 if the cell is not active.
+*/
+
+int ecl_grid_get_active_index3(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+  int global_index = ecl_grid_get_global_index(ecl_grid , i,j,k);  /* In range: [0,nx*ny*nz) */
+  return ecl_grid_get_active_index1(ecl_grid , global_index);
+}
+
 
 int ecl_grid_get_global_index_from_active(const ecl_grid_type * ecl_grid , int active_index) {
   return ecl_grid->inv_index_map[active_index];

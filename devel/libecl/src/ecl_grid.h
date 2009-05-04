@@ -13,6 +13,8 @@ typedef double (block_function_ftype) ( const double_vector_type *);
 typedef struct ecl_grid_struct ecl_grid_type;
 
 const  char   * ecl_grid_get_filename( const ecl_grid_type * );
+int             ecl_grid_get_active_index3(const ecl_grid_type * ecl_grid , int i , int j , int k);
+int             ecl_grid_get_active_index1(const ecl_grid_type * ecl_grid , int global_index);
 bool            ecl_grid_cell_active3(const ecl_grid_type * , int  , int  , int );
 bool            ecl_grid_cell_active1(const ecl_grid_type * , int);
 inline bool     ecl_grid_ijk_valid(const ecl_grid_type * , int  , int , int ); 

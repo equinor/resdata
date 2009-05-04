@@ -9,7 +9,7 @@
 #include <fortio.h>
 #include <util.h>
 #include <ecl_box.h>
-
+#include <buffer.h>
 
 #define DEBUG 1
 
@@ -399,8 +399,7 @@ void ecl_kw_iset(ecl_kw_type *ecl_kw , int i , const void *iptr) {
 }
 
 
-static void ecl_kw_init_types(ecl_kw_type *ecl_kw, ecl_type_enum ecl_type) {
-  ecl_kw->ecl_type = ecl_type;
+static void ecl_kw_init_types(ecl_kw_type *ecl_kw) {
   ecl_kw->sizeof_ctype = ecl_util_get_sizeof_ctype(ecl_kw->ecl_type);
   
   switch(ecl_kw->ecl_type) {
@@ -875,20 +874,24 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 
 
 void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
-  ecl_kw->header = realloc(ecl_kw->header , ecl_str_len + 1);
-  sprintf(ecl_kw->header , "%-8s" , header);
+  ecl_kw->header = util_realloc_string_copy(ecl_kw->header , header );
 }
 
 
-
-void ecl_kw_set_header(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *ecl_str_type ) {
-  ecl_kw->ecl_type = __get_ecl_type(ecl_str_type);
-  ecl_kw_init_types(ecl_kw , __get_ecl_type(ecl_str_type));
+static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int size , ecl_type_enum ecl_type) {
+  ecl_kw->ecl_type = ecl_type;
+  ecl_kw_init_types( ecl_kw );
   if (strlen(header) > ecl_str_len) 
     util_abort("%s: Fatal error: ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
   
   ecl_kw_set_header_name(ecl_kw , header);
   ecl_kw->size = size;
+}
+
+
+void ecl_kw_set_header(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *ecl_str_type ) {
+  ecl_type_enum ecl_type = __get_ecl_type(ecl_str_type);
+  ecl_kw_initialize( ecl_kw , header , size , ecl_type);
 }
 
 
@@ -1249,6 +1252,29 @@ void ecl_kw_cfread(ecl_kw_type * ecl_kw , FILE *stream) {
 }
 
 
+ecl_kw_type * ecl_kw_buffer_alloc(buffer_type * buffer) {
+  const char * header    = buffer_fread_string( buffer );       
+  int size               = buffer_fread_int( buffer );
+  ecl_type_enum ecl_type = buffer_fread_int( buffer );
+  {
+    ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
+    ecl_kw_initialize( ecl_kw , header , size , ecl_type );
+    ecl_kw_alloc_data(ecl_kw);
+    buffer_fread(buffer , ecl_kw->data , ecl_kw->sizeof_ctype , ecl_kw->size);
+    return ecl_kw;
+  }
+}
+
+
+void ecl_kw_buffer_store(const ecl_kw_type * ecl_kw , buffer_type * buffer) {
+  buffer_fwrite_string( buffer , ecl_kw->header );
+  buffer_fwrite_int( buffer , ecl_kw->size );
+  buffer_fwrite_int( buffer , ecl_kw->ecl_type );
+  buffer_fwrite( buffer , ecl_kw->data , ecl_kw->sizeof_ctype , ecl_kw->size);
+}
+
+
+
 void ecl_kw_fwrite_compressed(const ecl_kw_type *ecl_kw , FILE * stream) {
   ecl_kw_cfwrite_header(ecl_kw , stream);
   /*
@@ -1345,7 +1371,8 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
   char buffer[9];
   
   ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
-  ecl_kw_init_types(ecl_kw , ecl_type);
+  ecl_kw->ecl_type = ecl_type;
+  ecl_kw_init_types( ecl_kw );
   ecl_kw->size     = size;
   ecl_kw_alloc_data(ecl_kw);
 
@@ -1835,5 +1862,7 @@ void ecl_kw_element_sum(const ecl_kw_type * ecl_kw , void * _sum) {
 }
 #undef KW_SUM
 
+
+/*****************************************************************/
 
 

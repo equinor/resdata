@@ -28,14 +28,14 @@ void grid_test(char * filename) {
   ecl_grid_free( grid );
 }
 
+
 //
 //  Demonstration of ecl_util_alloc_filename();
 //
 //  char * restart_file = ecl_util_alloc_filename("/tmp" , "CASE3" , ECL_RESTART_FILE , false , 67);                                   => restart_file = "/tmp/CASE3.X0067";
 //
 //  char * egrid_file   = ecl_util_alloc_filename(NULL /* NO leading path */ , "CASE3" , ECL_EGRID_FILE , true , -1 /* Irrelevant *);  => egrid_file   = "CASE3.EGRID";
-//														     
-//    
+//
 
 
 
@@ -62,6 +62,7 @@ typedef struct {
   double depth; 
   double grav_diff;
 } grav_station_type;
+
 
 grav_station_type * grav_station_alloc(double x, double y, double d){
   grav_station_type * s = util_malloc(sizeof*s, __func__);
