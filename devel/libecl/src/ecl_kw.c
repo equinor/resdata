@@ -874,7 +874,8 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 
 
 void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
-  ecl_kw->header = util_realloc_string_copy(ecl_kw->header , header );
+  ecl_kw->header = realloc(ecl_kw->header , ecl_str_len + 1);
+  sprintf(ecl_kw->header , "%-8s" , header);
 }
 
 
