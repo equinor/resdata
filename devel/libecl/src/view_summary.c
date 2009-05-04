@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ecl_sum.h>
 #include <util.h>
+#include <string.h>
 
 
 int main(int argc , char ** argv) {
@@ -10,13 +11,20 @@ int main(int argc , char ** argv) {
     exit(1);
   }
   {
-    const char * data_file = argv[1];
+    char * data_file;
     ecl_sum_type * ecl_sum;
+    bool report_only = false;
+    int offset = 2;
 
+    if (strcmp(argv[1] , "-R") == 0) {
+      report_only = true; 
+      offset += 1;
+      data_file = argv[2];
+    } else
+      data_file = argv[1];
+    
     ecl_sum = ecl_sum_fread_alloc_case( data_file , true );
-    ecl_sum_fprintf(ecl_sum , stdout , argc - 2 , (const char **) &argv[2]);
+    ecl_sum_fprintf(ecl_sum , stdout , argc - offset , (const char **) &argv[offset] , report_only);
     ecl_sum_free(ecl_sum);
   }
-    
-
 }

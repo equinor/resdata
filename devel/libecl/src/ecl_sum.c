@@ -294,6 +294,14 @@ void ecl_sum_get_ministep_range(const ecl_sum_type * ecl_sum , int * ministep1, 
   ecl_sum_data_get_ministep_range(ecl_sum->data , ministep1 , ministep2);
 }
 
+
+int ecl_sum_get_last_report_step( const ecl_sum_type * ecl_sum) {
+  return ecl_sum_data_get_last_report_step( ecl_sum->data );
+}
+
+int ecl_sum_get_first_report_step( const ecl_sum_type * ecl_sum ) {
+  return ecl_sum_data_get_first_report_step( ecl_sum->data );
+}
    
 
 /*
@@ -321,23 +329,38 @@ double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep ) {
 }
 
 
+
+
 /*****************************************************************/
 /* This is essentially the summary.x program. */ 
 
-void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , const char ** var_list) {
-  int ministep1 , ministep2 , ministep;
+void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , const char ** var_list, bool report_only) {
+  int first_report = ecl_sum_get_first_report_step( ecl_sum );
+  int last_report  = ecl_sum_get_last_report_step( ecl_sum );
+  int report;
   
-  ecl_sum_get_ministep_range(ecl_sum , &ministep1 , &ministep2);
-  for (ministep = ministep1; ministep <= ministep2; ministep++) {
-    if (ecl_sum_has_ministep(ecl_sum , ministep)) {
-      int day,month,year,ivar;
-      util_set_date_values(ecl_sum_get_sim_time(ecl_sum , ministep) , &day , &month, &year);
-      fprintf(stream , "%7.2f   %02d/%02d/%04d   " , ecl_sum_get_sim_days(ecl_sum , ministep) , day , month , year);
+
+  for (report = first_report; report <= last_report; report++) {
+    if (ecl_sum_data_has_report_step(ecl_sum->data , report)) {
+      int ministep1 , ministep2 , ministep;
+
+      ecl_sum_data_report2ministep_range( ecl_sum->data , report , &ministep1 , &ministep2);
+      if (report_only)
+	ministep1 = ministep2;
+
+      for (ministep = ministep1; ministep <= ministep2; ministep++) {
+	if (ecl_sum_has_ministep(ecl_sum , ministep)) {
+	  int day,month,year,ivar;
+	  util_set_date_values(ecl_sum_get_sim_time(ecl_sum , ministep) , &day , &month, &year);
+	  fprintf(stream , "%7.2f   %02d/%02d/%04d   " , ecl_sum_get_sim_days(ecl_sum , ministep) , day , month , year);
+	  
+	  for (ivar = 0; ivar < nvars; ivar++)
+	    fprintf(stream , " %12.3f " , ecl_sum_get_general_var(ecl_sum , ministep , var_list[ivar]));
+	  
+	  fprintf(stream , "\n");
+	}
+      }
       
-      for (ivar = 0; ivar < nvars; ivar++)
-	fprintf(stream , " %12.3f " , ecl_sum_get_general_var(ecl_sum , ministep , var_list[ivar]));
-      
-      fprintf(stream , "\n");
     }
   }
 }

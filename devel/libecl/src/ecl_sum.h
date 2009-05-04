@@ -54,9 +54,14 @@ double            ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int min
 int               ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lookup_kw);
 bool              ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw);
 /***************/
-void             ecl_sum_fprintf(const ecl_sum_type * , FILE * , int , const char **  );
+void             ecl_sum_fprintf(const ecl_sum_type * , FILE * , int , const char **  , bool report_only);
+
+
+
 
 /* Time related functions */
+int    ecl_sum_get_last_report_step( const ecl_sum_type * ecl_sum );
+int    ecl_sum_get_first_report_step( const ecl_sum_type * ecl_sum );
 bool   ecl_sum_has_report_step(const ecl_sum_type * ecl_sum , int report_step );
 bool   ecl_sum_has_ministep(const ecl_sum_type * ecl_sum , int ministep );
 void   ecl_sum_get_ministep_range(const ecl_sum_type * ecl_sum , int * ministep1, int * ministep2);

@@ -108,6 +108,8 @@ struct ecl_sum_data_struct {
   int_vector_type  	 * report_last_ministep;   /* Indexed by report_step - giving last ministep in report_step.    */   
   int_vector_type  	 * ministep_index;         /* Indexed by ministep - gives index in data - 
 						      observe that we make no assumtpitons of time-ordering of the input - flexible ehh !? */
+  int                      first_report_step;
+  int                      last_report_step;
 };
 
 
@@ -201,6 +203,8 @@ static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
   data->report_last_ministep  = int_vector_alloc(10 , -1);
   data->ministep_index        = int_vector_alloc(10 , -1);
   data->smspec                = smspec;
+  data->first_report_step     =  1024 * 1024;
+  data->last_report_step      = -1024 * 1024;
   return data;
 }
 
@@ -240,6 +244,8 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
       int_vector_iset( data->ministep_index , ministep->ministep , index );
     }
   }
+  data->first_report_step = util_int_min( data->first_report_step , report_step );
+  data->last_report_step  = util_int_max( data->last_report_step  , report_step );
 }
 
 
@@ -433,6 +439,7 @@ void ecl_sum_data_report2ministep_range(const ecl_sum_data_type * data , int rep
    function.
 */
 
+
 double ecl_sum_data_get(const ecl_sum_data_type * data , int ministep , int params_index) {
   const ecl_sum_ministep_type * ministep_data = ecl_sum_data_get_ministep( data , ministep );  
   return ecl_sum_ministep_iget( ministep_data , params_index);
@@ -449,4 +456,14 @@ time_t ecl_sum_data_get_sim_time( const ecl_sum_data_type * data , int ministep 
 double ecl_sum_data_get_sim_days( const ecl_sum_data_type * data , int ministep ) {
   const ecl_sum_ministep_type * ministep_data = ecl_sum_data_get_ministep( data , ministep );
   return ecl_sum_ministep_get_sim_days( ministep_data );
+}
+
+
+int ecl_sum_data_get_first_report_step( const ecl_sum_data_type * data ) {
+  return data->first_report_step;
+}
+
+
+int ecl_sum_data_get_last_report_step( const ecl_sum_data_type * data ) {
+  return data->last_report_step;
 }
