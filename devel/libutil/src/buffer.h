@@ -15,6 +15,7 @@ size_t 		   buffer_fread_compressed(buffer_type * buffer , size_t compressed_siz
 const char       * buffer_fread_string(buffer_type * buffer);
 char             * buffer_fread_alloc_string(buffer_type * buffer);
 void               buffer_fwrite_string(buffer_type * buffer , const char * string);
+void               buffer_summarize(const buffer_type * buffer);
 
 void               buffer_fwrite_int(buffer_type * buffer , int value);
 int                buffer_fread_int(buffer_type * buffer );
