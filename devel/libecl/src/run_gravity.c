@@ -66,10 +66,10 @@ typedef struct {
 
 grav_station_type * grav_station_alloc(double x, double y, double d){
   grav_station_type * s = util_malloc(sizeof*s, __func__);
-  s->utm_x =x;
-  s->utm_y =y;
-  s->depth =d;
-  s->grav_diff=0.0;
+  s->utm_x = x;
+  s->utm_y = y;
+  s->depth = d;
+  s->grav_diff = 0.0;
   return s;
 }
 
@@ -286,7 +286,8 @@ int main(int argc , char ** argv) {
 	    double dist_x = coord_x - g_s->utm_x;
 	    double dist_y = coord_y - g_s->utm_y;
 	    double dist_d = coord_z - g_s->depth;
-	    double ldelta_g = 6.67E-3*(mas2 - mas1)/(dist_x*dist_x + dist_y*dist_y + dist_d*dist_d);
+	    double dist_sq = dist_x*dist_x + dist_y*dist_y + dist_d*dist_d;
+	    double ldelta_g = 6.67E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5);
 	    grav_diff_update(g_s, ldelta_g);
 	  }
 	}	
@@ -307,6 +308,5 @@ int main(int argc , char ** argv) {
     ecl_file_free(restart1_file);
     ecl_file_free(restart2_file);
     
-					     
   }		
 }
