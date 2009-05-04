@@ -244,6 +244,7 @@ int main(int argc , char ** argv) {
 	if(swat2[act_index] > 1.0){swat2[act_index] = 1.0;};
 	if(swat2[act_index] < 0.0){swat2[act_index] = 0.0;};
 	
+	// Calculate oil saturations
 	soil1 = 1.0 - swat1[act_index] - sgas1[act_index]; 
 	soil2 = 1.0 - swat2[act_index] - sgas2[act_index]; 
 	
@@ -256,8 +257,7 @@ int main(int argc , char ** argv) {
 	//printf ("SGAS1 : %f\n",sgas1[act_index]);
 	//printf ("SWAT1 : %f\n",swat1[act_index]);
 	
-	if(swat1[act_index] == 1.0 && swat2[act_index] == 1.0){	  // Check if this is an aquifer cell; these should be neglected
-	  //printf("Aquifer, no change here\n");  
+	if(swat1[act_index] < 0.999 && swat2[act_index] < 0.999){	  // Check if this is an aquifer cell; neglect these
 	  
 	  mas1 = rporv1[act_index]*(soil1 * oil_den1[act_index] + sgas1[act_index] * gas_den1[act_index] + swat1[act_index] * wat_den1[act_index] );
 	  mas2 = rporv2[act_index]*(soil2 * oil_den2[act_index] + sgas2[act_index] * gas_den2[act_index] + swat2[act_index] * wat_den2[act_index] );
