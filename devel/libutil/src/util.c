@@ -3182,23 +3182,17 @@ void util_read_filename(const char * prompt , int prompt_len , bool must_exist ,
 
 /**
   This function reads data from the input pointer data, and writes a
-  compressed copy into to the target buffer zbuffer. On input
-  data_size should be the *number of bytes* in data. compressed_size
-  should be a reference to the size (in bytes) of zbuffer, on return
-  this has been updated to reflect the new compressed size.
+  compressed copy into qqthe target buffer zbuffer. On input data_size
+  should be the *number of bytes* in data. compressed_size should be a
+  reference to the size (in bytes) of zbuffer, on return this has been
+  updated to reflect the new compressed size.
 */
 
 void util_compress_buffer(const void * data , int data_size , void * zbuffer , unsigned long * compressed_size) {
   int compress_result;
   compress_result = compress(zbuffer , compressed_size , data , data_size);
-  if (compress_result != Z_OK) {
-    const int * int_data = (const int * ) data;
-    int i;
-    for (i=0; i < (data_size / 4); i++)
-      printf("%010d ",int_data[i]);
-    printf("\n");
+  if (compress_result != Z_OK) 
     util_abort("%s: returned %d - different from Z_OK - aborting\n",__func__ , compress_result);
-  }
 }
 
 

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <buffer.h>
 #include <errno.h>
+#include <zlib.h>
 
 /**
    This function implements a small buffer type. The whole point of
@@ -62,7 +63,7 @@ void buffer_reset(buffer_type * buffer) {
 
 static void buffer_resize__(buffer_type * buffer , size_t new_size, bool abort_on_error) {
   if (abort_on_error) {
-    buffer->data = util_realloc(buffer->data , new_size , __func__);
+    buffer->data       = util_realloc(buffer->data , new_size , __func__);
     buffer->alloc_size = new_size;
   } else {
     void * tmp   = realloc(buffer->data , new_size);
@@ -147,12 +148,16 @@ size_t buffer_fread(buffer_type * buffer , void * target_ptr , size_t item_size 
 static size_t buffer_fwrite__(buffer_type * buffer , const void * src_ptr , size_t item_size , size_t items, bool abort_on_error) {
   size_t remaining_size  = buffer->alloc_size - buffer->pos;
   size_t target_size     = item_size * items;
-  if (target_size < remaining_size)
-    buffer_resize__(buffer , buffer->pos + 2*(item_size * items) , abort_on_error);
-  /**
-     OK - now we have the buffer size we are going to get.
-  */
-  remaining_size = buffer->alloc_size - buffer->pos;
+
+  if (target_size > remaining_size) {
+    buffer_resize__(buffer , buffer->pos + 2 * (item_size * items) , abort_on_error);
+    /**
+       OK - now we have the buffer size we are going to get.
+    */
+    remaining_size = buffer->alloc_size - buffer->pos;
+  }
+  
+
   {
     size_t remaining_items = remaining_size / item_size;
     size_t write_items     = util_size_t_min( items , remaining_items );
@@ -184,9 +189,54 @@ size_t buffer_fwrite(buffer_type * buffer , const void * src_ptr , size_t item_s
   return buffer_fwrite__(buffer , src_ptr , item_size , items , true);
 }
 
+/**
+   Return value is the size (in bytes) of the compressed buffer.
+*/
+size_t buffer_fwrite_compressed(buffer_type * buffer, const void * ptr , size_t byte_size) {
+  bool abort_on_error   = true;
+  buffer->content_size  = buffer->pos;   /* Invalidating possible buffer content coming after the compressed content; that is uninterpretable anyway. */
+  size_t remaining_size = buffer->alloc_size - buffer->pos;
+  size_t compress_bound = compressBound( byte_size );
+  size_t compressed_size;
+  if (compress_bound > remaining_size)
+    buffer_resize__(buffer , remaining_size + compress_bound + 32 , abort_on_error);
+
+  compressed_size = buffer->alloc_size - buffer->pos;
+  util_compress_buffer( ptr , byte_size , &buffer->data[buffer->pos] , &compressed_size);
+  buffer->pos          += compressed_size;
+  buffer->content_size += compressed_size;
+  return compressed_size;
+}
+
+
+/**
+   Return value is the size of the uncomopressed buffer.
+*/
+size_t buffer_fread_compressed(buffer_type * buffer , size_t compressed_size , void * target_ptr , size_t target_size) {
+  size_t remaining_size    = buffer->content_size - buffer->pos;
+  size_t uncompressed_size = target_size;
+  if (remaining_size < compressed_size)
+    util_abort("%s: trying to read beyond end of buffer\n",__func__);
+  
+  if (uncompress(target_ptr , &uncompressed_size , &buffer->data[buffer->pos] , compressed_size) != Z_OK)
+    util_abort("uncompress returned results != Z_OK \n",__func__);
+
+  buffer->pos += compressed_size;
+  return uncompressed_size;
+}
+
 
 /*****************************************************************/
 /* Various (slighly) higher level functions                      */
+
+void buffer_fskip(buffer_type * buffer, ssize_t offset) {
+  size_t new_pos = buffer->pos + offset;
+  if ((new_pos > 0) && (new_pos < buffer->content_size))
+    buffer->pos = new_pos;
+  else
+    util_abort("%s: tried to seek to position:%ld - outside of bounds \n",__func__ , new_pos);
+}
+
 
 
 int buffer_fread_int(buffer_type * buffer) {
@@ -200,6 +250,66 @@ void buffer_fwrite_int(buffer_type * buffer , int value) {
   buffer_fwrite(buffer , &value , sizeof value , 1);
 }
 
+
+char buffer_fread_char(buffer_type * buffer) {
+  char value;
+  buffer_fread(buffer , &value , sizeof value , 1);
+  return value;
+}
+
+
+void buffer_fwrite_char(buffer_type * buffer , char value) {
+  buffer_fwrite(buffer , &value , sizeof value , 1);
+}
+
+
+
+/**
+   Storing strings:
+   ----------------
+
+   When storing a string (\0 terminated char pointer) what is actually
+   written to the buffer is
+
+     1. The length of the string - as returned from strlen().
+     2. The string content INCLUDING the terminating \0.
+
+*/
+
+
+/**
+   This function will return a pointer to the current position in the
+   buffer, and advance the buffer position forward until a \0
+   terminater is found. If \0 is not found the thing will abort().
+   
+   Observe that the return value will point straight into the buffer,
+   this is highly volatile memory, and in general it will be safer to
+   use buffer_fread_alloc_string() to get a copy of the string.
+*/
+
+const char * buffer_fread_string(buffer_type * buffer) {
+  int    string_length = buffer_fread_int( buffer );
+  char * string_ptr    = &buffer->data[buffer->pos];
+  char   c;
+  buffer_fskip( buffer , string_length );
+  c = buffer_fread_char( buffer );
+  if (c != '\0')
+    util_abort("%s: internal error - malformed string representation in buffer \n",__func__);
+  return string_ptr;
+}
+
+
+
+char * buffer_fread_alloc_string(buffer_type * buffer) {
+  return util_alloc_string_copy( buffer_fread_string( buffer ));
+}
+
+
+
+void buffer_fwrite_string(buffer_type * buffer , const char * string) {
+  buffer_fwrite_int( buffer , strlen( string ));               /* Writing the length of the string */
+  buffer_fwrite(buffer , string , 1 , strlen( string ) + 1);   /* Writing the string content ** WITH ** the terminating \0 */
+}
 
 
 
@@ -233,7 +343,7 @@ buffer_type * buffer_fread_alloc(const char * filename) {
 }
 
 
-void buffer_fsave(const buffer_type * buffer , const char * filename) {
+void buffer_store(const buffer_type * buffer , const char * filename) {
   FILE * stream        = util_fopen(filename , "w");
   if (fwrite( buffer->data , 1 , buffer->content_size , stream ) != buffer->pos) 
     util_abort("%s: failed to write all elements to file:%s \n",__func__ , filename);
@@ -241,4 +351,18 @@ void buffer_fsave(const buffer_type * buffer , const char * filename) {
 }
 
 
+/*****************************************************************/
 
+size_t buffer_get_offset(const buffer_type * buffer) {
+  return buffer->pos;
+}
+
+
+size_t buffer_get_size(const buffer_type * buffer) {
+  return buffer->content_size;
+}
+
+
+size_t buffer_get_remaining_size(const buffer_type *  buffer) {
+  return buffer->content_size - buffer->pos;
+}
