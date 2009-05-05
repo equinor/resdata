@@ -35,7 +35,6 @@ void   inline matrix_iset(matrix_type * matrix , int i , int j, double value);
 double inline matrix_iget(const matrix_type * matrix , int i , int j);
 void   inline matrix_iadd(matrix_type * matrix , int i , int j , double value);
 void   inline matrix_imul(matrix_type * matrix , int i , int j , double value);
-void          matrix_matmul(matrix_type * A, const matrix_type *B , const matrix_type * C);
 
 void          matrix_inplace_matmul(matrix_type * A, const matrix_type * B);
 
@@ -53,6 +52,7 @@ void     matrix_get_dims(const matrix_type * matrix ,  int * rows , int * column
 
 void     matrix_diag_set(matrix_type * matrix , const double * diag);
 void     matrix_random_init(matrix_type * matrix);
+void     matrix_matlab_dump(const matrix_type * matrix, const char * filename);
 
 #ifdef __cplusplus 
 }

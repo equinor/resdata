@@ -203,6 +203,7 @@ void 	 util_fwrite_double_vector(const double  * , int , FILE * , const char * )
 void     util_fread_char_vector(char * , int , FILE * , const char * );
 
 void 	 util_compress_buffer(const void * , int , void * , unsigned long * );
+int      util_fread_sizeof_compressed(FILE * stream);
 void 	 util_fread_compressed(void * , FILE * );
 void   * util_fread_alloc_compressed(FILE * );
 void 	 util_fwrite_compressed(const void * , int , FILE * );

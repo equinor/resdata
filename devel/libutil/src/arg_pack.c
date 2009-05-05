@@ -401,7 +401,7 @@ void * arg_pack_iget_ptr(const arg_pack_type * arg , int iarg) {
 }
 
 
-void * arg_pack_iget_address(const arg_pack_type * arg , int iarg) {
+void * arg_pack_iget_adress(const arg_pack_type * arg , int iarg) {
   __arg_pack_assert_index(arg , iarg);
   return arg_node_get_ptr(arg->nodes[iarg] , false);
 }
@@ -443,15 +443,15 @@ void arg_pack_fscanf(arg_pack_type * arg , FILE * stream) {
   case(1):
     {
       void *arg0;
-      arg0 = arg_pack_iget_address(arg , 0);
+      arg0 = arg_pack_iget_adress(arg , 0);
       scan_count = fscanf(stream , fmt , arg0);
       break;
     }
   case(2):
     {
       void   *arg0, *arg1;
-      arg0 = arg_pack_iget_address(arg , 0);
-      arg1 = arg_pack_iget_address(arg , 1);
+      arg0 = arg_pack_iget_adress(arg , 0);
+      arg1 = arg_pack_iget_adress(arg , 1);
 
       scan_count = fscanf(stream , fmt , arg0 , arg1);
       break;
@@ -459,9 +459,9 @@ void arg_pack_fscanf(arg_pack_type * arg , FILE * stream) {
   case(3):
     {
       void   *arg0, *arg1 , *arg2;
-      arg0 = arg_pack_iget_address(arg , 0);
-      arg1 = arg_pack_iget_address(arg , 1);
-      arg2 = arg_pack_iget_address(arg , 2);
+      arg0 = arg_pack_iget_adress(arg , 0);
+      arg1 = arg_pack_iget_adress(arg , 1);
+      arg2 = arg_pack_iget_adress(arg , 2);
       
       scan_count = fscanf(stream , fmt , arg0 , arg1 , arg2);
       break;
@@ -469,10 +469,10 @@ void arg_pack_fscanf(arg_pack_type * arg , FILE * stream) {
   case(4):
     {
       void   *arg0, *arg1 , *arg2 , *arg3;
-      arg0 = arg_pack_iget_address(arg , 0);
-      arg1 = arg_pack_iget_address(arg , 1);
-      arg2 = arg_pack_iget_address(arg , 2);
-      arg3 = arg_pack_iget_address(arg , 3);
+      arg0 = arg_pack_iget_adress(arg , 0);
+      arg1 = arg_pack_iget_adress(arg , 1);
+      arg2 = arg_pack_iget_adress(arg , 2);
+      arg3 = arg_pack_iget_adress(arg , 3);
       
       scan_count = fscanf(stream , fmt , arg0 , arg1 , arg2 , arg3);
       break;
@@ -480,11 +480,11 @@ void arg_pack_fscanf(arg_pack_type * arg , FILE * stream) {
   case(5):
     {
       void   *arg0, *arg1 , *arg2 , *arg3, *arg4;
-      arg0 = arg_pack_iget_address(arg , 0);
-      arg1 = arg_pack_iget_address(arg , 1);
-      arg2 = arg_pack_iget_address(arg , 2);
-      arg3 = arg_pack_iget_address(arg , 3);
-      arg4 = arg_pack_iget_address(arg , 4);
+      arg0 = arg_pack_iget_adress(arg , 0);
+      arg1 = arg_pack_iget_adress(arg , 1);
+      arg2 = arg_pack_iget_adress(arg , 2);
+      arg3 = arg_pack_iget_adress(arg , 3);
+      arg4 = arg_pack_iget_adress(arg , 4);
 
       scan_count = fscanf(stream , fmt , arg0 , arg1 , arg2 , arg3 , arg4);
       break;

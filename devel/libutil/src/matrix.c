@@ -449,7 +449,8 @@ void matrix_inplace_div(matrix_type * A , const matrix_type * B) {
      columns in A == rows in B == columns in B 
   
    For general matrix multiplactions where A = B * C all have
-   different dimensions you can use matrix_matmul().
+   different dimensions you can use matrix_matmul() (which calls the
+   BLAS routine dgemm());
 */
 
 
@@ -459,11 +460,12 @@ void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
     int i,j,k;
     
     for (i=0; i < A->rows; i++) {
+      
+      /* Clearing the tmp vector */
       for (k=0; k < B->rows; k++)
 	tmp[k] = 0;
 
       for (j=0; j < B->rows; j++) {
-	
 	double scalar_product = 0;
 	for (k=0; k < A->columns; k++) 
 	  scalar_product += A->data[ GET_INDEX(A,i,k) ] * B->data[ GET_INDEX(B,k,j) ];
@@ -481,25 +483,6 @@ void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
 
 
 
-/* 
-   This function does a general matrix multiply of B * C, and stores
-   the result in A.
-*/
-
-void matrix_matmul(matrix_type * A, const matrix_type * B , const matrix_type * C) {
-  if ((A->columns == C->columns) && (A->rows == B->rows) && (B->columns == C->rows)) {
-    int i,j,k;
-    for (i=0; i < A->rows; i++) {
-      for (j=0; j < A->columns; j++) {
-	double scalar_product = 0;
-	for (k = 0; k < B->columns; k++) 
-	  scalar_product += B->data[ GET_INDEX(B,i,k) ] * C->data[ GET_INDEX(C,k,j) ];
-	A->data[ GET_INDEX(A , i , j) ] = scalar_product;
-      }
-    }
-  } else
-    util_abort("%s: size mismatch \n",__func__);
-}
 
 
 /*****************************************************************/
@@ -587,12 +570,57 @@ void matrix_diag_set(matrix_type * matrix , const double * diag) {
 
 
 /**
-   Fills the matrix with uniformly distributed random numbers.
+   Fills the matrix with uniformly distributed random numbers;
+   samepled with the standard built in rand() function.
 */
 
 void matrix_random_init(matrix_type * matrix) {
   int i,j;
-  for (i=0; i < matrix->rows; i++)
-    for (j=0; j < matrix->columns; j++)
+  for (j=0; j < matrix->columns; j++)
+    for (i=0; i < matrix->rows; i++)
       matrix->data[ GET_INDEX(matrix , i , j) ] = 1.0 * rand() / RAND_MAX;
+}
+
+
+
+
+/**
+   This function dumps the following binary file:
+
+   rows
+   columns
+   data(1,1)
+   data(2,1)
+   data(3,1)
+   ....
+   data(1,2)
+   data(2,2)
+   ....
+
+   Not exactly a matlab format.
+
+   The following matlab code can be used to instatiate a matrix based
+   on the file:
+
+     function m = load_matrix(filename)
+     fid  = fopen(filename);
+     dims = fread(fid , 2 , 'int32');
+     m    = fread(fid , [dims(1) , dims(2)] , 'double');
+     fclose(fid);
+   
+   >> A = load_matrix( 'filename' ); 
+*/
+
+
+void matrix_matlab_dump(const matrix_type * matrix, const char * filename) {
+  FILE * stream = util_fopen( filename , "w");
+  int i,j;
+  util_fwrite_int( matrix->rows    , stream);
+  util_fwrite_int( matrix->columns , stream);
+
+  for (j=0; j < matrix->columns; j++)
+    for (i=0; i < matrix->rows; i++)
+      util_fwrite_double( matrix->data[ GET_INDEX(matrix , i , j) ] , stream);
+
+  fclose(stream);
 }

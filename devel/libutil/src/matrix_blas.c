@@ -1,12 +1,54 @@
 #include <stdbool.h>
+#include <util.h>
 #include <matrix.h>
 #include <matrix_blas.h>
 
+/**
+   y = alpha * op(A)*x + beta * y
 
+   alpha,beta: scalars
+   x,y       : vectors
+   A         : matrix
 
-/*
-  C = alpha * op(A) * op(B)  +  beta * C
+   
+   x and y are entered as matrices ...
 */
+
+
+void matrix_dgemv(const matrix_type * A , const matrix_type * x , matrix_type * y , bool transA , double alpha , double beta) {
+  int m    = matrix_get_rows( A );
+  int n    = matrix_get_columns( A );
+  int lda  = matrix_get_column_stride( A );
+  int incx = matrix_get_row_stride( x );
+  int incy = matrix_get_row_stride( y );
+
+  char transA_c;
+  if (transA) 
+    transA_c = 'T';
+  else
+    transA_c = 'N';
+ 
+  if (matrix_get_rows( x ) != matrix_get_rows( y ))
+    util_abort("%s: x,y size mismatch \n",__func__);
+
+  if (matrix_get_rows( x ) != matrix_get_columns( A ))
+    util_abort("%s: x,A size mismatch \n",__func__);
+
+  if ((matrix_get_columns( x ) != 1) || (matrix_get_columns( y ) != 1))
+    util_abort("%s: x,y must have 1 column - i.e. be vectors \n",__func__);
+
+  dgemv_(&transA_c , &m , &n , &alpha , matrix_get_data( A ) , &lda , matrix_get_data( x ) , &incx , &beta , matrix_get_data( y ) , &incy);
+}
+
+
+
+
+/**
+  C = alpha * op(A) * op(B)  +  beta * C
+
+  op(·) can either be unity or Transpose.
+*/
+
 void matrix_dgemm(const matrix_type *A , const matrix_type * B , matrix_type *C , bool transA, bool transB , double alpha , double beta) {
   int m   = matrix_get_rows( C );
   int n   = matrix_get_columns( C );
@@ -15,27 +57,85 @@ void matrix_dgemm(const matrix_type *A , const matrix_type * B , matrix_type *C 
   int ldc = matrix_get_column_stride( C );
   char transA_c;
   char transB_c;
-  int k;
-
+  int  k , innerA, innerB , outerA , outerB;
+  
   if (transA) 
-    k   = matrix_get_rows( A );
+    k = matrix_get_rows( A );
   else
     k = matrix_get_columns( A );
   
   
-  if (transA)
+  if (transA) {
+    innerA = matrix_get_rows(A);
+    outerA = matrix_get_columns(A);
     transA_c = 'T';
-  else
+  } else {
+    innerA = matrix_get_columns(A);
+    outerA = matrix_get_rows(A);
     transA_c = 'N';
-
-  if (transB)
-    transB_c = 'T';
-  else
-    transB_c = 'N';
-  
-  {
-    /* Need lots of checks on dimensions +++ */
-    
-    degemm_(&transA_c , &transB_c , &m ,&n , &k , &alpha , matrix_get_data( A ) , &lda , matrix_get_data( B ) , &ldb , &beta , matrix_get_data( C ) , &ldc);
   }
+
+  
+  if (transB) {
+    innerB   = matrix_get_columns( B ); 
+    outerB   = matrix_get_rows( B ); 
+    transB_c = 'T';
+  } else {
+    transB_c = 'N';
+    innerB = matrix_get_rows( B );
+    outerB   = matrix_get_columns( B ); 
+  }
+  
+  /*
+    This is the dimension check which must pass:
+
+    --------------------------------------------------
+          A   |         B   |  Columns(A) = Rows(B)
+    Trans(A)  |   Trans(B)  |  Rows(A)    = Columns(B)
+          A   |   Trans(B)  |  Columns(A) = Columns(B)
+    Trans(A)  |         B   |  Rows(A)    = Rows(B)	  
+    --------------------------------------------------
+
+    --------------------------------------------------
+              A         | Rows(A)    = Rows(C)
+	Trans(A)        | Columns(A) = Rows(C)
+	      B         | Columns(B) = Columns(C)
+	Trans(B)        | Rows(B)    = Columns(B)
+    --------------------------------------------------
+    
+    
+  */
+  if (innerA != innerB) 
+    util_abort("%s: matrix size mismatch between A and B \n", __func__);
+  
+  if (outerA != matrix_get_rows( C ))
+    util_abort("%s: matrix size mismatch between A and C \n",__func__);
+
+  if (outerB != matrix_get_columns( C ))
+    util_abort("%s: matrix size mismatch between B and C \n",__func__);
+  
+  dgemm_(&transA_c , &transB_c , &m ,&n , &k , &alpha , matrix_get_data( A ) , &lda , matrix_get_data( B ) , &ldb , &beta , matrix_get_data( C ) , &ldc);
+}
+
+
+
+/* 
+   This function does a general matrix multiply of B * C, and stores
+   the result in A.
+*/
+
+void matrix_matmul(matrix_type * A, const matrix_type * B , const matrix_type * C) {
+  matrix_dgemm( B , C , A , false , false , 1 , 0);
+  //if ((A->columns == C->columns) && (A->rows == B->rows) && (B->columns == C->rows)) {
+  //  int i,j,k;
+  //  for (i=0; i < A->rows; i++) {
+  //    for (j=0; j < A->columns; j++) {
+  //	double scalar_product = 0;
+  //	for (k = 0; k < B->columns; k++) 
+  //	  scalar_product += B->data[ GET_INDEX(B,i,k) ] * C->data[ GET_INDEX(C,k,j) ];
+  //	A->data[ GET_INDEX(A , i , j) ] = scalar_product;
+  //    }
+  //  }
+  //} else
+  //  util_abort("%s: size mismatch \n",__func__);
 }

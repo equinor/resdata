@@ -1303,7 +1303,7 @@ bool util_file_exists(const char *filename) {
    through all file/subdirectore located below root_path. For each
    file in this tree it will call the user-supplied funtion
    'file_callback'. The arguments to file_callback will be:
-   (root_path, file , callback_arg).
+   (root_path, file ,callback_arg):
 
    Example
    -------
@@ -1314,14 +1314,15 @@ bool util_file_exists(const char *filename) {
    Root/dir/fileXX
 
    The call:
-      util_walk_path("Root" , callback , arg);
+      util_walk_directory("Root" , callback , arg);
       
    Will result in the following calls to the callback:
+
       callback("Root" , "File1" , arg); 
-      callback("Root" , "File1" , arg); 
+      callback("Root" , "File2" , arg); 
       callback("Root/dir" , "fileXX" , arg); 
 
-  Symlinks are ignored when descending into subdirectories.     
+   Symlinks are ignored when descending into subdirectories.     
 */
 
 
@@ -3190,9 +3191,12 @@ void util_read_filename(const char * prompt , int prompt_len , bool must_exist ,
 
 void util_compress_buffer(const void * data , int data_size , void * zbuffer , unsigned long * compressed_size) {
   int compress_result;
-  compress_result = compress(zbuffer , compressed_size , data , data_size);
-  if (compress_result != Z_OK) 
-    util_abort("%s: returned %d - different from Z_OK - aborting\n",__func__ , compress_result);
+  if (data_size > 0) {
+    compress_result = compress(zbuffer , compressed_size , data , data_size);
+    if (compress_result != Z_OK) 
+      util_abort("%s: returned %d - different from Z_OK - aborting\n",__func__ , compress_result);
+  } else
+    *compressed_size = 0;
 }
 
 
@@ -3334,6 +3338,7 @@ void util_fread_compressed(void *__data , FILE * stream) {
 }
 
 
+
 /**
    Allocates storage and reads in from compressed data from disk. If the
    data on disk have zero size, NULL is returned.
@@ -3353,6 +3358,20 @@ void * util_fread_alloc_compressed(FILE * stream) {
     util_fread_compressed(data , stream);
     return data;
   }
+}
+
+
+/**
+   Returns the **UNCOMPRESSED** size of a compressed section. 
+*/
+
+int util_fread_sizeof_compressed(FILE * stream) {
+  long   pos = ftell(stream);
+  int    size;
+
+  fread(&size  , sizeof size , 1 , stream); 
+  fseek(  stream , pos , SEEK_SET );
+  return size;
 }
 
 

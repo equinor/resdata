@@ -33,7 +33,7 @@ struct buffer_struct {
   size_t     __id;
   char     * data;             /* The actual storage. */
   size_t     alloc_size;       /* The total byte size of the buffer. */
-  size_t     content_size;     /* The extent of initialized data in the buffer.*/
+  size_t     content_size;     /* The extent of initialized data in the buffer - i.e. the meaningful content in the buffer. */
   size_t     pos;              /* The current byte position in the buffer.*/
 };
 
@@ -41,10 +41,7 @@ struct buffer_struct {
 /*****************************************************************/
 
 
-void buffer_reset(buffer_type * buffer) {
-  buffer->pos          = 0;
-  buffer->content_size = 0;
-}
+
 
 
 
@@ -81,9 +78,11 @@ buffer_type * buffer_alloc( size_t buffer_size ) {
   buffer_type * buffer = util_malloc( sizeof * buffer , __func__);
   buffer->__id = BUFFER_TYPE_ID;
   buffer->data = NULL;
-  buffer->alloc_size = 0;
+
+  buffer->alloc_size   = 0;
+  buffer->content_size = 0;
+  buffer->pos          = 0;
   buffer_resize__( buffer , buffer_size , true);
-  buffer_reset( buffer );
   return buffer;
 }
 
@@ -193,18 +192,22 @@ size_t buffer_fwrite(buffer_type * buffer , const void * src_ptr , size_t item_s
    Return value is the size (in bytes) of the compressed buffer.
 */
 size_t buffer_fwrite_compressed(buffer_type * buffer, const void * ptr , size_t byte_size) {
-  bool abort_on_error   = true;
-  buffer->content_size  = buffer->pos;   /* Invalidating possible buffer content coming after the compressed content; that is uninterpretable anyway. */
-  size_t remaining_size = buffer->alloc_size - buffer->pos;
-  size_t compress_bound = compressBound( byte_size );
-  size_t compressed_size;
-  if (compress_bound > remaining_size)
-    buffer_resize__(buffer , remaining_size + compress_bound + 32 , abort_on_error); /* 32 - some extra ... */
+  size_t compressed_size = 0;
+  bool abort_on_error    = true;
+  buffer->content_size   = buffer->pos;   /* Invalidating possible buffer content coming after the compressed content; that is uninterpretable anyway. */
+
+  if (byte_size > 0) {
+    size_t remaining_size = buffer->alloc_size - buffer->pos;
+    size_t compress_bound = compressBound( byte_size );  /* Calling zlib function */
+    if (compress_bound > remaining_size)
+      buffer_resize__(buffer , remaining_size + compress_bound + 32 , abort_on_error); /* 32 - some extra ... */
+    
+    compressed_size = buffer->alloc_size - buffer->pos;
+    util_compress_buffer( ptr , byte_size , &buffer->data[buffer->pos] , &compressed_size);
+    buffer->pos          += compressed_size;
+    buffer->content_size += compressed_size;
+  }
   
-  compressed_size = buffer->alloc_size - buffer->pos;
-  util_compress_buffer( ptr , byte_size , &buffer->data[buffer->pos] , &compressed_size);
-  buffer->pos          += compressed_size;
-  buffer->content_size += compressed_size;
   return compressed_size;
 }
 
@@ -233,14 +236,27 @@ size_t buffer_fread_compressed(buffer_type * buffer , size_t compressed_size , v
 /*****************************************************************/
 /* Various (slighly) higher level functions                      */
 
-void buffer_fskip(buffer_type * buffer, ssize_t offset) {
-  size_t new_pos = buffer->pos + offset;
+void buffer_fseek(buffer_type * buffer , ssize_t offset , int whence) {
+  ssize_t new_pos = 0;
+
+  if (whence == SEEK_SET)
+    new_pos = offset;
+  else if (whence == SEEK_CUR)
+    new_pos = buffer->pos + offset;
+  else if (whence == SEEK_END)
+    new_pos = buffer->content_size;
+  else 
+    util_abort("%s: unrecognized whence indicator - aborting \n",__func__);
+
   if ((new_pos > 0) && (new_pos < buffer->content_size))
     buffer->pos = new_pos;
   else
     util_abort("%s: tried to seek to position:%ld - outside of bounds \n",__func__ , new_pos);
 }
 
+void buffer_fskip(buffer_type * buffer, ssize_t offset) {
+  buffer_fseek( buffer , offset , SEEK_CUR );
+}
 
 
 int buffer_fread_int(buffer_type * buffer) {
@@ -347,10 +363,13 @@ buffer_type * buffer_fread_alloc(const char * filename) {
 }
 
 
+
 void buffer_store(const buffer_type * buffer , const char * filename) {
   FILE * stream        = util_fopen(filename , "w");
-  if (fwrite( buffer->data , 1 , buffer->content_size , stream ) != buffer->pos) 
+  
+  if (fwrite( buffer->data , 1 , buffer->content_size , stream ) != buffer->content_size) 
     util_abort("%s: failed to write all elements to file:%s \n",__func__ , filename);
+
   fclose( stream );
 }
 
@@ -371,9 +390,23 @@ size_t buffer_get_remaining_size(const buffer_type *  buffer) {
   return buffer->content_size - buffer->pos;
 }
 
+/** 
+    Returns a pointer to the internal storage of the buffer. Observe
+    that this storage is volatile, and the return value from this
+    function should not be kept around.
+*/
 
-void buffer_summarize(const buffer_type * buffer) {
-  printf("Allocated size .....: %10ld bytes \n",buffer->alloc_size);
-  printf("Content size .......: %10ld bytes \n",buffer->content_size);
-  printf("Current position ...: %10ld bytes \n",buffer->pos);
+void * buffer_get_data(const buffer_type * buffer) { 
+  return buffer->data;
+}
+
+
+void buffer_summarize(const buffer_type * buffer , const char * header) {
+  printf("-----------------------------------------------------------------\n");
+  if (header != NULL)
+    printf("%s \n",header);
+  printf("   Allocated size .....: %10ld bytes \n",buffer->alloc_size);
+  printf("   Content size .......: %10ld bytes \n",buffer->content_size);
+  printf("   Current position ...: %10ld bytes \n",buffer->pos);
+  printf("-----------------------------------------------------------------\n");
 }

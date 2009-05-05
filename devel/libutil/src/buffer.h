@@ -1,6 +1,9 @@
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct     buffer_struct buffer_type;
 
@@ -15,14 +18,25 @@ size_t 		   buffer_fread_compressed(buffer_type * buffer , size_t compressed_siz
 const char       * buffer_fread_string(buffer_type * buffer);
 char             * buffer_fread_alloc_string(buffer_type * buffer);
 void               buffer_fwrite_string(buffer_type * buffer , const char * string);
-void               buffer_summarize(const buffer_type * buffer);
+void               buffer_summarize(const buffer_type * buffer , const char *);
 
 void               buffer_fwrite_int(buffer_type * buffer , int value);
 int                buffer_fread_int(buffer_type * buffer );
-buffer_type      * buffer_fread_alloc(const char * filename);
 void               buffer_store(const buffer_type * buffer , const char * filename);
 size_t 		   buffer_get_offset(const buffer_type * buffer);
 size_t 		   buffer_get_size(const buffer_type * buffer);
 size_t             buffer_get_remaining_size(const buffer_type *  buffer);
+void             * buffer_get_data(const buffer_type * buffer);
+
+void 		   buffer_fseek(buffer_type * buffer , ssize_t offset , int whence);
+void 		   buffer_fskip(buffer_type * buffer, ssize_t offset);
+
+
+buffer_type      * buffer_fread_alloc(const char * filename);
+void               buffer_fread_realloc(buffer_type * buffer , const char * filename);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
