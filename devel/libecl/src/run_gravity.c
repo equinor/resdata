@@ -109,7 +109,12 @@ int main(int argc , char ** argv) {
       exit(1);
     }
     
-
+    // *.INIT
+    char * init_filename = util_alloc_joined_string((const char *[3]) {file_path , "." , "INIT"} , 3 , "");
+    if (!(util_file_exists(init_filename))) {
+      printf("Sorry, file:, %s does not exist", init_filename);
+      exit(1);
+    }
     
     // *.XTIME1
     char * file1_ext = "NOPE";
@@ -164,56 +169,163 @@ int main(int argc , char ** argv) {
 
     
     // Allocate the files 
+    ecl_file_type * init_file     = ecl_file_fread_alloc(init_filename , true);
     ecl_file_type * grid_file     = ecl_file_fread_alloc(grid_filename , true);
     ecl_file_type * restart1_file = ecl_file_fread_alloc(restart1_filename , true);
     ecl_file_type * restart2_file = ecl_file_fread_alloc(restart2_filename , true);
     
-    // Get the relevant kws
     
-    ecl_kw_type * rporv1_kw    = ecl_file_iget_named_kw(restart1_file, "RPORV", 0);
-    ecl_kw_type * rporv2_kw    = ecl_file_iget_named_kw(restart2_file, "RPORV", 0);
+    int r_size = ecl_file_get_num_distinct_kw(init_file);
+    printf("SIZE:%i\n",r_size);
+    int ikw;
+    for (ikw = 0; ikw < r_size; ikw++) {
+      const char * kw = ecl_file_iget_distinct_kw(init_file , ikw);
+      printf("INIT HAS: %s\n", kw);
+    }
+
     
-    ecl_kw_type * oil_den1_kw  = ecl_file_iget_named_kw(restart1_file, "OIL_DEN", 0);
-    ecl_kw_type * gas_den1_kw  = ecl_file_iget_named_kw(restart1_file, "GAS_DEN", 0);
-    ecl_kw_type * wat_den1_kw  = ecl_file_iget_named_kw(restart1_file, "WAT_DEN", 0);
+    // Get the relevant kws and vectors
     
-    ecl_kw_type * oil_den2_kw  = ecl_file_iget_named_kw(restart2_file, "OIL_DEN", 0);
-    ecl_kw_type * gas_den2_kw  = ecl_file_iget_named_kw(restart2_file, "GAS_DEN", 0);
-    ecl_kw_type * wat_den2_kw  = ecl_file_iget_named_kw(restart2_file, "WAT_DEN", 0);
-    		  			     
+    // RPORV
+    ecl_kw_type * rporv1_kw  ;
+    ecl_kw_type * rporv2_kw ;
+    float * rporv1  ;
+    float * rporv2  ;
+    
+    if( ecl_file_has_kw( restart1_file , "RPORV") || ecl_file_has_kw( restart2_file , "RPORV") ){   
+      rporv1_kw    = ecl_file_iget_named_kw(restart1_file, "RPORV", 0);
+      rporv2_kw    = ecl_file_iget_named_kw(restart2_file, "RPORV", 0);
+      rporv1       = ecl_kw_get_float_ptr(rporv1_kw);
+      rporv2       = ecl_kw_get_float_ptr(rporv2_kw);
+      
+    } else{
+      printf("Sorry, th e restartfiles does not contain RPORV\n");      
+      exit(1);
+    }
+
+    int num_active_cells = ecl_kw_get_size(rporv2_kw); 
+  
+    // OIL_DEN
+    ecl_kw_type * oil_den1_kw  ;
+    ecl_kw_type * oil_den2_kw  ;
+    float * oil_den1;
+    float * oil_den2;
+    
+    if( ecl_file_has_kw( restart1_file , "OIL_DEN") &&  ecl_file_has_kw( restart2_file , "OIL_DEN")){
+      oil_den1_kw  = ecl_file_iget_named_kw(restart1_file, "OIL_DEN", 0);
+      oil_den2_kw  = ecl_file_iget_named_kw(restart2_file, "OIL_DEN", 0);
+      oil_den1 = ecl_kw_get_float_ptr(oil_den1_kw);
+      oil_den2 = ecl_kw_get_float_ptr(oil_den2_kw);
+    }
+    else{
+      // ok, no oil in the model
+      printf("no oil in the model, setting OIL_DEN to zero\n");
+      float oildens[num_active_cells] ;
+      int k; 
+      for(k=0;k<num_active_cells;k++){
+	oildens[k] = 0.0;
+      }
+      oil_den1 = &oildens; 
+      oil_den2 = &oildens;
+    }
+    
+    // GAS_DEN
+    ecl_kw_type * gas_den1_kw  ;
+    ecl_kw_type * gas_den2_kw  ;
+    float * gas_den1;
+    float * gas_den2;
+    
+    if( ecl_file_has_kw( restart1_file , "GAS_DEN") && ecl_file_has_kw( restart2_file , "GAS_DEN") ){
+      gas_den1_kw  = ecl_file_iget_named_kw(restart1_file, "GAS_DEN", 0);
+      gas_den2_kw  = ecl_file_iget_named_kw(restart2_file, "GAS_DEN", 0);
+      gas_den1 = ecl_kw_get_float_ptr(gas_den1_kw);
+      gas_den2 = ecl_kw_get_float_ptr(gas_den2_kw);
+    }
+    else{
+      // ok, this is an oil field without any gas
+      printf("no gas in the model, setting GAS_DEN to zero\n");
+      float gasdens[num_active_cells] ;
+      int k; 
+      for(k=0;k<num_active_cells;k++){
+	gasdens[k] = 0.0;
+      }
+      gas_den1 = &gasdens; 
+      gas_den2 = &gasdens;
+      
+    }
+
+    // WAT_DEN
+    ecl_kw_type * wat_den1_kw  ;
+    ecl_kw_type * wat_den2_kw  ;
+    float * wat_den1;
+    float * wat_den2;
+    
+    if( ecl_file_has_kw( restart1_file , "WAT_DEN") && ecl_file_has_kw( restart2_file , "WAT_DEN") ){
+      wat_den1_kw  = ecl_file_iget_named_kw(restart1_file, "WAT_DEN", 0);
+      wat_den2_kw  = ecl_file_iget_named_kw(restart2_file, "WAT_DEN", 0);
+      wat_den1 = ecl_kw_get_float_ptr(wat_den1_kw);
+      wat_den2 = ecl_kw_get_float_ptr(wat_den2_kw);
+    }
+    else{
+      // ok, no water in the restart fils
+      printf("no water in the model, setting WAT_DEN to zero\n");
+      float watdens[num_active_cells] ;
+      int k; 
+      for(k=0;k<num_active_cells;k++){
+	watdens[k] = 0.0;
+      }
+      wat_den1 = &watdens; 
+      wat_den2 = &watdens;
+      
+    }
+    
+    // SGAS
+
+    ecl_kw_type * sgas1_kw;
+    ecl_kw_type * sgas2_kw;
+    float * sgas1_v ;
+    float * sgas2_v ;
+    bool exists_sgas = false;
+    
+    if( ecl_file_has_kw( restart1_file , "SGAS") && ecl_file_has_kw( restart2_file , "SGAS") ){
+      sgas1_kw     = ecl_file_iget_named_kw(restart1_file, "SGAS", 0);
+      sgas2_kw     = ecl_file_iget_named_kw(restart2_file, "SGAS", 0);
+      sgas1_v    = ecl_kw_get_float_ptr(sgas1_kw);
+      sgas2_v    = ecl_kw_get_float_ptr(sgas2_kw);
+      exists_sgas = true;
+    }
+    else{
+      exists_sgas = false;
+      printf("SGAS is not reported to the restart files\n");
+    }
+
+    // SWAT
+    
     ecl_kw_type * swat1_kw     = ecl_file_iget_named_kw(restart1_file, "SWAT", 0);
-    ecl_kw_type * sgas1_kw     = ecl_file_iget_named_kw(restart1_file, "SGAS", 0);
-    		  			     
     ecl_kw_type * swat2_kw     = ecl_file_iget_named_kw(restart2_file, "SWAT", 0);
-    ecl_kw_type * sgas2_kw     = ecl_file_iget_named_kw(restart2_file, "SGAS", 0);
-    		  			     
-    //ecl_kw_type * dimens_kw    = ecl_file_iget_named_kw(grid_file, "DIMENS", 0);    
+    float * swat1 ;
+    float * swat2 ;
     
+    if( ecl_file_has_kw( restart1_file , "SWAT") && ecl_file_has_kw( restart2_file , "SWAT") ){
+      swat1_kw     = ecl_file_iget_named_kw(restart1_file, "SWAT", 0);
+      swat2_kw     = ecl_file_iget_named_kw(restart2_file, "SWAT", 0);
+      swat1    = ecl_kw_get_float_ptr(swat1_kw);
+      swat2    = ecl_kw_get_float_ptr(swat2_kw);
+
+    }
+    else{
+      printf("SWAS is not reported to the restart files.\n");
+      exit(1);
+    }
+
     ecl_kw_type * coord_kw;
     ecl_kw_type * corners_kw;
     
-    // Get the relavant vectors
-    float * rporv1   = ecl_kw_get_float_ptr(rporv1_kw);
-    float * rporv2   = ecl_kw_get_float_ptr(rporv2_kw);
-    
-    float * oil_den1 = ecl_kw_get_float_ptr(oil_den1_kw);
-    float * gas_den1 = ecl_kw_get_float_ptr(gas_den1_kw);
-    float * wat_den1 = ecl_kw_get_float_ptr(wat_den1_kw);
-
-    float * oil_den2 = ecl_kw_get_float_ptr(oil_den2_kw);
-    float * gas_den2 = ecl_kw_get_float_ptr(gas_den2_kw);
-    float * wat_den2 = ecl_kw_get_float_ptr(wat_den2_kw);
-    
-    float * swat1    = ecl_kw_get_float_ptr(swat1_kw);
-    float * sgas1    = ecl_kw_get_float_ptr(sgas1_kw);
-    
-    float * swat2    = ecl_kw_get_float_ptr(swat2_kw);
-    float * sgas2    = ecl_kw_get_float_ptr(sgas2_kw);
-
     
     // Fetch the coordiantes of the grid
     const int num_cells             = ecl_file_get_num_named_kw(grid_file, "COORDS");
-    int ikw, i, j;
+    //int ikw, i, j;
+    int  i, j;
     int coord_size;
     //printf("The number of cells is: %i\n", num_cells);
     int act_index = 0;
@@ -221,7 +333,11 @@ int main(int argc , char ** argv) {
     float soil1, soil2;
     double mas1, mas2;
     float coord_x, coord_y, coord_z;
-    
+    double sgas1, sgas2;
+
+
+    double dist_x , dist_y, dist_d, dist_sq, ldelta_g;
+
     for (ikw=0;ikw<num_cells;ikw++){
       coord_kw     =  ecl_file_iget_named_kw(grid_file, "COORDS", ikw);
       coord_size   =  ecl_kw_get_size(coord_kw);
@@ -229,24 +345,34 @@ int main(int argc , char ** argv) {
       int * coord     = ecl_kw_get_int_ptr(coord_kw);
       
       if(coord[4] == 1){	// Active cell, let's go
-	//printf("The indices of this active cell are IX: %i IY: %i IZ %i\n", coord[0], coord[1], coord[2]);
+	printf("The indices of this active cell are IX: %i IY: %i IZ %i\n", coord[0], coord[1], coord[2]);
 	//int index = coord[0] + n_i*(coord[1]-1) + n_i*n_j*(coord[2]-1);
 	//printf("INDEX IS: %i and %i\n", coord[3], index);
 	
 	// Truncate the saturations
-	if(sgas1[act_index] > 1.0){sgas1[act_index] = 1.0;};
-	if(sgas1[act_index] < 0.0){sgas1[act_index] = 0.0;};
-	if(sgas2[act_index] > 1.0){sgas2[act_index] = 1.0;};
-	if(sgas2[act_index] < 0.0){sgas2[act_index] = 0.0;};
-
 	if(swat1[act_index] > 1.0){swat1[act_index] = 1.0;};
 	if(swat1[act_index] < 0.0){swat1[act_index] = 0.0;};
 	if(swat2[act_index] > 1.0){swat2[act_index] = 1.0;};
 	if(swat2[act_index] < 0.0){swat2[act_index] = 0.0;};
 	
+	if(exists_sgas){
+	  sgas1 = sgas1_v[act_index];
+	  sgas2 = sgas2_v[act_index];
+	}
+	else{
+	  sgas1 = 1 - swat1[act_index];
+	  sgas2 = 1 - swat2[act_index];
+	} 
+	
+	if(sgas1 > 1.0){sgas1 = 1.0;};
+	if(sgas1 < 0.0){sgas1 = 0.0;};
+	if(sgas2 > 1.0){sgas2 = 1.0;};
+	if(sgas2 < 0.0){sgas2 = 0.0;};
+	
+
 	// Calculate oil saturations
-	soil1 = 1.0 - swat1[act_index] - sgas1[act_index]; 
-	soil2 = 1.0 - swat2[act_index] - sgas2[act_index]; 
+	soil1 = 1.0 - sgas1 - swat1[act_index]; 
+	soil2 = 1.0 - sgas2 - swat2[act_index]; 
 	
 	if(soil1 > 1.0){soil1 = 1.0;};
 	if(soil1 < 0.0){soil1 = 0.0;};
@@ -254,13 +380,13 @@ int main(int argc , char ** argv) {
 	if(soil2 < 0.0){soil2 = 0.0;};
 
 	//printf ("SOIL1 : %f\n",soil1);
-	//printf ("SGAS1 : %f\n",sgas1[act_index]);
+	//printf ("SGAS1 : %f\n",sgas1);
 	//printf ("SWAT1 : %f\n",swat1[act_index]);
 	
 	if(swat1[act_index] < 0.999 && swat2[act_index] < 0.999){	  // Check if this is an aquifer cell; neglect these
 	  
-	  mas1 = rporv1[act_index]*(soil1 * oil_den1[act_index] + sgas1[act_index] * gas_den1[act_index] + swat1[act_index] * wat_den1[act_index] );
-	  mas2 = rporv2[act_index]*(soil2 * oil_den2[act_index] + sgas2[act_index] * gas_den2[act_index] + swat2[act_index] * wat_den2[act_index] );
+	  mas1 = rporv1[act_index]*(soil1 * oil_den1[act_index] + sgas1 * gas_den1[act_index] + swat1[act_index] * wat_den1[act_index] );
+	  mas2 = rporv2[act_index]*(soil2 * oil_den2[act_index] + sgas2 * gas_den2[act_index] + swat2[act_index] * wat_den2[act_index] );
 	  
 	  // Calculate the cell center coordinate
 	  corners_kw     =  ecl_file_iget_named_kw(grid_file, "CORNERS", ikw);
@@ -283,12 +409,14 @@ int main(int argc , char ** argv) {
 	  
 	  for(j=0; j<num_stations;j++){
 	    const grav_station_type * g_s = vector_iget_const(grav_stations, j);
-	    double dist_x = coord_x - g_s->utm_x;
-	    double dist_y = coord_y - g_s->utm_y;
-	    double dist_d = coord_z - g_s->depth;
-	    double dist_sq = dist_x*dist_x + dist_y*dist_y + dist_d*dist_d;
-	    double ldelta_g = 6.67E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5);
+	    dist_x = coord_x - g_s->utm_x;
+	    dist_y = coord_y - g_s->utm_y;
+	    dist_d = coord_z - g_s->depth;
+	    dist_sq = dist_x*dist_x + dist_y*dist_y + dist_d*dist_d;
+	    ldelta_g = 6.67E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5);
 	    grav_diff_update(g_s, ldelta_g);
+	    //printf("DIST %f \n",dist_sq);
+	    //printf ("DELTA_G: %f %f\n", g_s->grav_diff, ldelta_g);
 	  }
 	}	
 	act_index++;
