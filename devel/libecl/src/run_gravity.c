@@ -109,12 +109,12 @@ int main(int argc , char ** argv) {
       exit(1);
     }
     
-    // *.INIT
-    char * init_filename = util_alloc_joined_string((const char *[3]) {file_path , "." , "INIT"} , 3 , "");
-    if (!(util_file_exists(init_filename))) {
-      printf("Sorry, file:, %s does not exist", init_filename);
-      exit(1);
-    }
+    //// *.INIT
+    //char * init_filename = util_alloc_joined_string((const char *[3]) {file_path , "." , "INIT"} , 3 , "");
+    //if (!(util_file_exists(init_filename))) {
+    //  printf("Sorry, file:, %s does not exist", init_filename);
+    //  exit(1);
+    //}
     
     // *.XTIME1
     char * file1_ext = "NOPE";
@@ -166,26 +166,35 @@ int main(int argc , char ** argv) {
       }
     fclose(stream);
     
-
     
     // Allocate the files 
-    ecl_file_type * init_file     = ecl_file_fread_alloc(init_filename , true);
-    ecl_file_type * grid_file     = ecl_file_fread_alloc(grid_filename , true);
+    //ecl_file_type * init_file     = ecl_file_fread_alloc(init_filename , true);
+    ecl_grid_type * grid_file     = ecl_grid_alloc(grid_filename , true);
     ecl_file_type * restart1_file = ecl_file_fread_alloc(restart1_filename , true);
     ecl_file_type * restart2_file = ecl_file_fread_alloc(restart2_filename , true);
     
+    // Read the INTEHEAD
+    ecl_kw_type * intehead_kw  = ecl_file_iget_named_kw(restart1_file, "INTEHEAD", 0);    
+    int * intehead = ecl_kw_get_int_ptr(intehead_kw);
+    printf("NACTVE CELLS IS: %d\n", intehead[11]);
     
-    int r_size = ecl_file_get_num_distinct_kw(init_file);
-    printf("SIZE:%i\n",r_size);
-    int ikw;
-    for (ikw = 0; ikw < r_size; ikw++) {
-      const char * kw = ecl_file_iget_distinct_kw(init_file , ikw);
-      printf("INIT HAS: %s\n", kw);
-    }
+    int nx,ny,nz,nactive;    
+    ecl_grid_get_dims( grid_file , &nx , &ny , &nz , &nactive);
+    printf("NACTVE CELLS IS: %d %d %d %d\n", nactive, nx, ny, nz);
+    
 
+//    int r_size = ecl_file_get_num_distinct_kw(grid_file);
+//    printf("SIZE:%i\n",r_size);
+//    exit(1);
+//    int ikw;
+//    for (ikw = 0; ikw < r_size; ikw++) {
+//      const char * kw = ecl_file_iget_distinct_kw(grid_file , ikw);
+//      printf("GRID HAS: %s\n", kw);
+//    }
+    
     
     // Get the relevant kws and vectors
-    
+
     // RPORV
     ecl_kw_type * rporv1_kw  ;
     ecl_kw_type * rporv2_kw ;
@@ -204,7 +213,8 @@ int main(int argc , char ** argv) {
     }
 
     int num_active_cells = ecl_kw_get_size(rporv2_kw); 
-  
+    printf("The number of active cells are: %i\n", num_active_cells);
+
     // OIL_DEN
     ecl_kw_type * oil_den1_kw  ;
     ecl_kw_type * oil_den2_kw  ;
@@ -317,35 +327,43 @@ int main(int argc , char ** argv) {
       printf("SWAS is not reported to the restart files.\n");
       exit(1);
     }
-
-    ecl_kw_type * coord_kw;
-    ecl_kw_type * corners_kw;
     
+    //ecl_kw_type * coord_kw;
+    //    ecl_kw_type * corners_kw;
     
     // Fetch the coordiantes of the grid
-    const int num_cells             = ecl_file_get_num_named_kw(grid_file, "COORDS");
+    //const int num_cells             = ecl_file_get_num_named_kw(grid_file, "COORDS");
     //int ikw, i, j;
-    int  i, j;
-    int coord_size;
+    //int  i, j;
+    //int coord_size;
     //printf("The number of cells is: %i\n", num_cells);
     int act_index = 0;
     
     float soil1, soil2;
     double mas1, mas2;
-    float coord_x, coord_y, coord_z;
+    //float coord_x, coord_y, coord_z;
     double sgas1, sgas2;
-
-
+    
+    
     double dist_x , dist_y, dist_d, dist_sq, ldelta_g;
-
-    for (ikw=0;ikw<num_cells;ikw++){
-      coord_kw     =  ecl_file_iget_named_kw(grid_file, "COORDS", ikw);
-      coord_size   =  ecl_kw_get_size(coord_kw);
-      if(coord_size <5){printf("The number of entries in t he coord_kw is less than 5, exiting\n");exit(1);}
-      int * coord     = ecl_kw_get_int_ptr(coord_kw);
+    int global_index;
+    int i,j,k;
+    
+    for (global_index=0;global_index < nx*ny*nz;global_index++){
+      //for (global_index=0;global_index < nx*ny*nz;global_index++){
+      // coord_kw     =  ecl_file_iget_named_kw(grid_file, "COORDS", ikw);
+      //coord_size   =  ecl_kw_get_size(coord_kw);
+      //if(coord_size <5){printf("The number of entries in t he coord_kw is less than 5, exiting\n");exit(1);}
+      //int * coord     = ecl_kw_get_int_ptr(coord_kw);
       
-      if(coord[4] == 1){	// Active cell, let's go
-	printf("The indices of this active cell are IX: %i IY: %i IZ %i\n", coord[0], coord[1], coord[2]);
+      ecl_grid_get_ijk(grid_file , global_index, &i, &j , &k);
+      // printf("Cell index: %i  %i %i %i\n", global_index, i, j, k);
+      if (ecl_grid_cell_active1( grid_file , global_index)) {// Active cell, let's go
+	printf("Cell index: %i  %i %i %i\n", global_index, i, j, k);
+	printf("Active index: %i\n", act_index);
+	// if(coord[4] == 1){	// Active cell, let's go
+	//printf("The indices of this active cell are IX: %i IY: %i IZ %i act_index: %i ikw: %i\n", coord[0], coord[1], coord[2], act_index, ikw);
+	//printf("The indices of this active cell are IX: %i IY: %i IZ %i\n", coord[0], coord[1], coord[2]);
 	//int index = coord[0] + n_i*(coord[1]-1) + n_i*n_j*(coord[2]-1);
 	//printf("INDEX IS: %i and %i\n", coord[3], index);
 	
@@ -378,7 +396,7 @@ int main(int argc , char ** argv) {
 	if(soil1 < 0.0){soil1 = 0.0;};
 	if(soil2 > 1.0){soil2 = 1.0;};
 	if(soil2 < 0.0){soil2 = 0.0;};
-
+	
 	//printf ("SOIL1 : %f\n",soil1);
 	//printf ("SGAS1 : %f\n",sgas1);
 	//printf ("SWAT1 : %f\n",swat1[act_index]);
@@ -388,35 +406,43 @@ int main(int argc , char ** argv) {
 	  mas1 = rporv1[act_index]*(soil1 * oil_den1[act_index] + sgas1 * gas_den1[act_index] + swat1[act_index] * wat_den1[act_index] );
 	  mas2 = rporv2[act_index]*(soil2 * oil_den2[act_index] + sgas2 * gas_den2[act_index] + swat2[act_index] * wat_den2[act_index] );
 	  
-	  // Calculate the cell center coordinate
-	  corners_kw     =  ecl_file_iget_named_kw(grid_file, "CORNERS", ikw);
-	  float * corners = ecl_kw_get_float_ptr(corners_kw);
-	  coord_x = 0.0;
-	  coord_y = 0.0;
-	  coord_z = 0.0;
+	  double xpos,ypos,zpos;
+	  ecl_grid_get_pos1(grid_file , global_index , &xpos , &ypos , &zpos);
 	  
-	  for (i=0;i<24;i=i+3){
-	    coord_x = coord_x + corners[i];  
-	    coord_y = coord_y + corners[i+1];  
-	    coord_z = coord_z + corners[i+2];  
-	  }
-	  
-	  coord_x = coord_x / 8.0;
-	  coord_y = coord_y / 8.0;
-	  coord_z = coord_z / 8.0;
+	  //// Calculate the cell center coordinate
+	  //corners_kw     =  ecl_file_iget_named_kw(grid_file, "CORNERS", ikw);
+	  //float * corners = ecl_kw_get_float_ptr(corners_kw);
+	  //coord_x = 0.0;
+	  //coord_y = 0.0;
+	  //coord_z = 0.0;
+	  //
+	  //for (i=0;i<24;i=i+3){
+	  //  coord_x = coord_x + corners[i];  
+	  //  coord_y = coord_y + corners[i+1];  
+	  //  coord_z = coord_z + corners[i+2];  
+	  //}
+	  //
+	  //coord_x = coord_x / 8.0;
+	  //coord_y = coord_y / 8.0;
+	  //coord_z = coord_z / 8.0;
 	  
 	  // printf("Senter-koordinatene til cella er: %f %f %f\n",coord_x, coord_y, coord_z);
 	  
 	  for(j=0; j<num_stations;j++){
 	    const grav_station_type * g_s = vector_iget_const(grav_stations, j);
-	    dist_x = coord_x - g_s->utm_x;
-	    dist_y = coord_y - g_s->utm_y;
-	    dist_d = coord_z - g_s->depth;
+	    //dist_x = coord_x - g_s->utm_x;
+	    //dist_y = coord_y - g_s->utm_y;
+	    //dist_d = coord_z - g_s->depth;
+	    
+	    dist_x = xpos - g_s->utm_x;
+	    dist_y = ypos - g_s->utm_y;
+	    dist_d = zpos - g_s->depth;
+	    
 	    dist_sq = dist_x*dist_x + dist_y*dist_y + dist_d*dist_d;
 	    ldelta_g = 6.67E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5);
 	    grav_diff_update(g_s, ldelta_g);
 	    //printf("DIST %f \n",dist_sq);
-	    //printf ("DELTA_G: %f %f\n", g_s->grav_diff, ldelta_g);
+	    printf ("DELTA_G: %f %f\n", g_s->grav_diff, ldelta_g);
 	  }
 	}	
 	act_index++;
@@ -432,7 +458,7 @@ int main(int argc , char ** argv) {
     
     vector_free( grav_stations );
     
-    ecl_file_free(grid_file);
+    ecl_grid_free(grid_file);
     ecl_file_free(restart1_file);
     ecl_file_free(restart2_file);
     
