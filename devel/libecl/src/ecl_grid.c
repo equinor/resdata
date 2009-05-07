@@ -70,10 +70,10 @@
   CORNERS     |
   COORDS      |
   CORNERS     |
-  COORDS      |
-  CORNERS     |
-  COORDS      |
-  CORNERS  __/
+  COORDS      |    
+  CORNERS     |      The implementation in this file will ignore 
+  COORDS      |      everything below this line.
+  CORNERS  __/________________________________________________________  
   LGR        \
   LGRILG      |     
   DIMENS      |       
