@@ -1,12 +1,115 @@
 /**
-  This function implements functionality to load ECLISPE grid files, 
+  This function implements functionality to load ECLISPE grid files,
   both .EGRID and .GRID files - in a transparent fashion.
 
   Observe the following convention:
-  
+
   global_index:  [0 , nx*ny*nz)
   active_index:  [0 , nactive)
 */
+
+
+/**
+   Not about LGR
+   -------------
+
+   The ECLIPSE Local Grid Refinement (LGR) is organised as follows:
+
+     1. You start with a normal grid.
+     2. Some of the cells can be subdivided into further internal
+        grids, this is the LGR.
+
+   This is illustrated below:
+
+
+    +--------------------------------------+
+    |  	       	 |	      |		   |
+    |		 |	      |		   |
+    |	  X	 | 	X     |	    X 	   |
+    |		 |	      |		   |
+    |		 |	      |		   |
+    -------------|------------|------------|
+    |  	  | 	 |      |     |		   |
+    |     |  x 	 |   x 	|     |		   |
+    |-----X------|------X-----|	    X	   |
+    |  x  |  x   |   x 	|     |	     	   |
+    |  	  |	 |	|     |	     	   |
+    -------------|------------|------------|
+    |	   	 |	      |	     	   |
+    |	   	 |	      |	     	   |
+    |	  X	 |     	      |	     	   |
+    |		 | 	      |	     	   |
+    |		 | 	      |		   |
+    +--------------------------------------+
+
+
+  The grid above shows the following:
+
+    1. The coarse (i.e. normal) grid has 9 cells, of which 7 marked
+       with 'X' are active.
+
+    2. Two of the cells have been refined into new 2x2 grids. In the
+       refined cells only three and two of the refined cells are
+       active.
+
+  In a GRID file the keywords for this grid will look like like this:
+
+
+  .....    __
+  COORDS     \
+  CORNERS     |
+  COORDS      |
+  CORNERS     |
+  COORDS      |
+  CORNERS     |      Normal COORD / CORNERS kewyords
+  COORDS      |      for the nine coarse cells. Observe
+  CORNERS     |      that when reading in these cells it is
+  COORDS      |      IMPOSSIBLE to know that some of the
+  CORNERS     |      cells will be subdivieded in a following
+  COORDS      |      LGR definition.
+  CORNERS     |
+  COORDS      |
+  CORNERS     |
+  COORDS      |
+  CORNERS     |
+  COORDS      |
+  CORNERS  __/
+  LGR        \
+  LGRILG      |     
+  DIMENS      |       
+  COORDS      |
+  CORNERS     |      First LGR, with some header information, 
+  COORDS      |      and then normal COORDS/CORNERS keywords for
+  CORNERS     |      the four refined cells.
+  COORDS      |
+  CORNERS     |
+  COORDS      |
+  CORNERS  __/
+  LGR	     \
+  LGRILG      |
+  DIMENS      |
+  COORDS      |      Second LGR.
+  CORNERS     |
+  COORDS      |
+  CORNERS     |
+  COORDS      |
+  CORNERS     |
+  COORDS      |
+  CORNERS  __/
+
+
+
+
+  About indices:
+  --------------
+
+  Observe that normal (i,j,k) will adress the normal grid in the
+  normal way, without even knowing of the existence of the LGR - the
+  LGR's are very much 'bolten on' in hindsight. The grid
+  implementation in this file only considers the course grid, the
+  refined cells are silently discarded.
+*/
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,8 +134,8 @@ typedef struct ecl_cell_struct ecl_cell_type;
 
 
 struct ecl_cell_struct {
-  bool active;
-  int  active_index;
+  bool 		 active;
+  int  		 active_index;
   ecl_point_type center;
   ecl_point_type corner_list[8];
 };
@@ -58,13 +161,13 @@ struct ecl_grid_struct {
 
 void ecl_point_compare(const ecl_point_type *p1 , const ecl_point_type *p2) {
   if ((abs(p1->x - p2->x) + abs(p1->y - p2->y) + abs(p1->z - p2->z)) > 0.001)
-    printf("ERROR");
+    printf("ERROR\n");
 }
 
 
 void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2) {
   int i;
-  for (i=0; i < 8; i++) 
+  for (i=0; i < 8; i++)
     ecl_point_compare(&c1->corner_list[i] , &c2->corner_list[i]);
   ecl_point_compare(&c1->center , &c2->center);
 }
@@ -152,7 +255,7 @@ static ecl_cell_type * ecl_cell_alloc(void) {
 }
 
 
-/** 
+/**
     Well this is actually quite difficult - the current implementation
     is total and utter crap.
 */
@@ -164,7 +267,7 @@ static ecl_cell_type * ecl_cell_alloc(void) {
   A x B = [(Ay*Bz - Az*By) , -(Ax*Bz - Az*Bx) , (Ax*By - Bx*Ay)]
 */
 
-/* 
+/*
    Computes the signed distance from the point p the plane spanned by
    the two vectors (p1 - p0) x (p2 - p0).
 */
@@ -173,13 +276,13 @@ static ecl_cell_type * ecl_cell_alloc(void) {
 static void __set_normal_vector3d(ecl_point_type * n , ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2 , bool right_hand) {
   ecl_point_type v1 = p1;
   ecl_point_type v2 = p2;
-  
+
   ecl_point_inplace_sub(&v1 , p0);
   ecl_point_inplace_sub(&v2 , p0);
   n->x =  (v1.y*v2.z - v1.z*v2.y);
   n->y = -(v1.x*v2.z - v1.z*v2.x);
   n->z =  (v1.x*v2.y - v1.y*v2.x);
-  if (!right_hand) 
+  if (!right_hand)
     ecl_point_inplace_scale(n , -1);
 }
 
@@ -206,7 +309,7 @@ static bool __positive_distance3d(ecl_point_type p0 , ecl_point_type p1 , ecl_po
 
 static void __set_normal_vector2d(ecl_point_type * n , ecl_point_type p0 , ecl_point_type p1 , bool right_hand) {
   ecl_point_type v = p1;
-  
+
   ecl_point_inplace_sub(&v , p0);
   n->x = -v.y;
   n->y =  v.x;
@@ -263,7 +366,7 @@ static bool ecl_cell_contains_3d(const ecl_cell_type * cell , ecl_point_type p) 
   ecl_point_type p6 = cell->corner_list[6];
   //ecl_point_type p7 = cell->corner_list[7];
   bool  contains = false;
-  
+
   if (__positive_distance3d(p0 , p1 , p2 , true , p))        	/* Z1 */
     if (__positive_distance3d(p4 , p5 , p6 , false , p))     	/* Z2 */
       if (__positive_distance3d(p0 , p4 , p2 , true , p))    	/* X1 */
@@ -299,13 +402,13 @@ static bool ecl_cell_contains_2d(const ecl_cell_type * cell , ecl_point_type p) 
   ecl_point_type p1 = cell->corner_list[1];
   ecl_point_type p2 = cell->corner_list[2];
   ecl_point_type p3 = cell->corner_list[3];
-  
+
   if (__positive_distance2d(p0 , p2 , false , p))
     if (__positive_distance2d(p0 , p1 , true , p))
       if (__positive_distance2d(p1 , p3 , true , p))
 	if (__positive_distance2d(p2 , p3 , false , p))
 	  contains = true;
-  
+
   return contains;
 }
 
@@ -360,11 +463,11 @@ static int ecl_grid_get_global_index_from_xy(const ecl_grid_type * grid , double
       int active_index = ((index + last_index) % grid->block_size);
       bool cell_contains;
       cell_contains = ecl_cell_contains_2d(grid->cells[active_index] , p);
-      
+
       if (cell_contains) {
 	global_index = active_index;
 	cont = false;
-      } 
+      }
       index++;
       if (index == grid->block_size)
 	cont = false;
@@ -372,8 +475,8 @@ static int ecl_grid_get_global_index_from_xy(const ecl_grid_type * grid , double
   }
   return global_index;
 }
-      
-  
+
+
 
 void ecl_cell_free(ecl_cell_type * cell) {
   free(cell);
@@ -409,7 +512,7 @@ static inline int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid , i
   return i + j * ecl_grid->nx + k * ecl_grid->nx * ecl_grid->ny;
 }
 
-  
+
 
 /**
    i,j,k have zero based offset.
@@ -431,7 +534,7 @@ bool ecl_grid_cell_active3(const ecl_grid_type * ecl_grid, int i , int j , int k
 }
 
 
-/* 
+/*
    Global index in [0,...,nx*ny*nz)
 */
 
@@ -471,7 +574,7 @@ int ecl_grid_get_size( const ecl_grid_type * grid) {
 }
 
 
-/* 
+/*
    This function returns C-based zero offset indices. cell_
 */
 void ecl_grid_get_ijk(const ecl_grid_type * grid , int global_index, int *i, int *j , int *k) {
@@ -496,7 +599,7 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   for (i=0; i < ecl_grid->size; i++) {
     ecl_cell_type * cell = ecl_grid->cells[i];
     ecl_point_inplace_set(&cell->center , 0,0,0);
-    for (c = 0; c < 8; c++) 
+    for (c = 0; c < 8; c++)
       ecl_point_inplace_add(&cell->center , cell->corner_list[c]);
     ecl_point_inplace_scale(&cell->center , 1.0 / 8.0);
   }
@@ -509,46 +612,64 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
   const int global_index   = ecl_grid_get_global_index__(ecl_grid , i , j  , k );
   ecl_cell_type * cell     = ecl_grid->cells[global_index];
   int ip , iz;
-  
+
   for (iz = 0; iz < 2; iz++) {
     for (ip = 0; ip < 4; ip++) {
       int c = ip + iz * 4;
       ecl_point_inplace_set(&cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
     }
   }
-  cell->active       = actnum[global_index];
+
+  /*
+    For normal runs actnum will be 1 for active cells,
+    for dual porosity models it can also be 2 and 3.
+  */
+  if (actnum[global_index] > 0)
+    cell->active = true;
 }
 
 
 static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type * coords_kw , const ecl_kw_type * corners_kw) {
-  const int   * coords  = ecl_kw_get_int_ptr(coords_kw);  
-  const float * corners = ecl_kw_get_float_ptr(corners_kw);   
+  const int   * coords  = ecl_kw_get_int_ptr(coords_kw);
+  const float * corners = ecl_kw_get_float_ptr(corners_kw);
   const int i  = coords[0]; /* ECLIPSE 1 offset */
   const int j  = coords[1];
   const int k  = coords[2];
   const int global_index   = ecl_grid_get_global_index__(ecl_grid , i - 1, j - 1 , k - 1);
   ecl_cell_type * cell     = ecl_grid->cells[global_index];
-  int c;
 
-  /* The coords keyword can optionally contain 4,5 or 7 elements: 
+  /* The coords keyword can optionally contain 4,5 or 7 elements:
 
      	coords[0..2] = i,j,k
      	coords[3]    = global_cell number (not used here)
      	----
-     	coords[4]    = active
-     	coords[5..6] = lgr stuff
+     	coords[4]    = 1,0 for active/inactive cells
+     	coords[5]    = 0 for normal cells, icell of host cell for LGR cell.
+	coords[6]    = 0 for normal cells, coarsening group for coarsened cell [NOT TREATED YET].
 
      If coords[4] is not present it is assumed that the cell is active.
   */
-     
-  
-  if (ecl_kw_get_size(coords_kw) >= 5)
-    cell->active  = (coords[4] == 1) ? true : false;
-  else
-    cell->active = true;
-  
-  for (c = 0; c < 8; c++) 
-    ecl_point_inplace_set_float_ptr(&cell->corner_list[c] , (const float *) &corners[c*3]);
+
+  {
+    int c;
+    int coords_size = ecl_kw_get_size(coords_kw);
+    switch(coords_size) {
+    case(4):                /* All cells active */
+      cell->active = true;
+      break;
+    case(5):                /* Only spesific cells active - no LGR */
+      cell->active  = (coords[4] == 1) ? true : false;
+      break;
+    case(7):
+      if (coords[5] == 0)           /*  It is a normal cell - not a refined LGR cell. */
+	if (coords[4] == 1)         /*  The cell is active */
+	  cell->active = true;
+
+      break;
+    }
+    for (c = 0; c < 8; c++)
+      ecl_point_inplace_set_float_ptr(&cell->corner_list[c] , (const float *) &corners[c*3]);
+  }
 }
 
 
@@ -557,8 +678,8 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
   int i,j,k;
   int active_index = 0;
 
-  for (k=0; k < ecl_grid->nz; k++) 
-    for (j=0; j < ecl_grid->ny; j++) 
+  for (k=0; k < ecl_grid->nz; k++)
+    for (j=0; j < ecl_grid->ny; j++)
       for (i=0; i < ecl_grid->nx; i++) {
 	const int global_index   = ecl_grid_get_global_index__(ecl_grid , i , j , k );
 	ecl_cell_type * cell     = ecl_grid->cells[global_index];
@@ -568,7 +689,7 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
 	} else
 	  cell->active_index = -1;
       }
-  
+
   ecl_grid->total_active = active_index;
 }
 
@@ -599,7 +720,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
   int i,j,k;
   ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(nx,ny,nz);
   ecl_point_type pillars[4][2];
-  
+
   for (j=0; j < ny; j++) {
     for (i=0; i < nx; i++) {
       int pillar_index[4];
@@ -608,7 +729,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
       pillar_index[1] = 6 * ( j      * (nx + 1) + i + 1);
       pillar_index[2] = 6 * ((j + 1) * (nx + 1) + i    );
       pillar_index[3] = 6 * ((j + 1) * (nx + 1) + i + 1);
-      
+
       for (ip = 0; ip < 4; ip++) {
 	ecl_point_inplace_set_float_ptr(&pillars[ip][0] , (const float *) &coord[pillar_index[ip]    ]);
 	ecl_point_inplace_set_float_ptr(&pillars[ip][1] , (const float *) &coord[pillar_index[ip] + 3]);
@@ -627,15 +748,15 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
 	  z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
 	  z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
 	}
-	
+
 	for (ip = 0; ip <  4; ip++)
 	  ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
-	
+
 	ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum);
       }
     }
   }
-  
+
   ecl_grid_set_center(ecl_grid);
   ecl_grid_set_active_index(ecl_grid);
   return ecl_grid;
@@ -648,25 +769,25 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
   ecl_file_enum   file_type;
   bool            fmt_file;
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
-  if (file_type != ECL_EGRID_FILE) 
+  if (file_type != ECL_EGRID_FILE)
     util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
-  
+
   {
     ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file , endian_flip );
     ecl_kw_type * gridhead_kw = ecl_file_iget_named_kw( ecl_file , "GRIDHEAD" , 0);
     int gtype, nx,ny,nz;
-    
+
     gtype = ecl_kw_iget_int(gridhead_kw , 0);
     nx 	  = ecl_kw_iget_int(gridhead_kw , 1);
     ny 	  = ecl_kw_iget_int(gridhead_kw , 2);
     nz 	  = ecl_kw_iget_int(gridhead_kw , 3);
-    if (gtype != 1) 
+    if (gtype != 1)
       util_abort("%s: gtype:%d fatal error when loading:%s - must have corner point grid - aborting\n",__func__ , gtype , grid_file);
     {
       ecl_kw_type * zcorn_kw    = ecl_file_iget_named_kw( ecl_file , "ZCORN"   	, 0);
       ecl_kw_type * coord_kw    = ecl_file_iget_named_kw( ecl_file , "COORD"   	, 0);
       ecl_kw_type * actnum_kw   = ecl_file_iget_named_kw( ecl_file , "ACTNUM"  	, 0);
-      
+
       ecl_grid = ecl_grid_alloc_GRDECL(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw));
     }
     ecl_file_free( ecl_file );
@@ -688,12 +809,12 @@ const int * ecl_grid_get_index_map_ref(const ecl_grid_type * grid) {
 
 
 /**
-   This function allocates the internal index_map and inv_index_map fields. 
+   This function allocates the internal index_map and inv_index_map fields.
 */
 
 static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
   int * index_map     = util_malloc(ecl_grid->size         * sizeof * index_map     , __func__);
-  int * inv_index_map = util_malloc(ecl_grid->total_active * sizeof * inv_index_map , __func__);  
+  int * inv_index_map = util_malloc(ecl_grid->total_active * sizeof * inv_index_map , __func__);
   int   index;
 
   for (index = 0; index < ecl_grid->size; index++) {
@@ -704,7 +825,7 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
     } else
       index_map[index] = -1;
   }
-  
+
   ecl_grid->inv_index_map = inv_index_map;
   ecl_grid->index_map     = index_map;
 }
@@ -713,17 +834,17 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
 
 
 static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_flip) {
-  
+
   ecl_file_enum   file_type;
   int             nx,ny,nz,index;
   ecl_grid_type * grid;
-  ecl_util_get_file_type(grid_file , &file_type , NULL , NULL);  
-  if (file_type != ECL_GRID_FILE) 
+  ecl_util_get_file_type(grid_file , &file_type , NULL , NULL);
+  if (file_type != ECL_GRID_FILE)
     util_abort("%s: %s wrong file type - expected .GRID file - aborting \n",__func__ , grid_file);
 
   {
     ecl_file_type * ecl_file = ecl_file_fread_alloc( grid_file , endian_flip );
-    
+
     {
       ecl_kw_type * dimens_kw = ecl_file_iget_named_kw( ecl_file , "DIMENS" , 0);
       nx = ecl_kw_iget_int(dimens_kw , 0);
@@ -731,19 +852,26 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
       nz = ecl_kw_iget_int(dimens_kw , 2);
       grid = ecl_grid_alloc_empty(nx , ny , nz);
     }
-    
-    for (index = 0; index < ecl_file_get_num_named_kw( ecl_file , "COORDS"); index++) {
+
+    /*
+      Possible LGR cells will follow *AFTER* the first nx*ny*nz cells;
+      the loop stops at nx*ny*nz. Additionally the LGR cells should be
+      discarded (by checking coords[5]) in the
+      ecl_grid_set_cell_GRID() function.
+    */
+
+    for (index = 0; index < nx*ny*nz; index++) {
       ecl_kw_type * coords_kw  = ecl_file_iget_named_kw(ecl_file , "COORDS"  , index);
       ecl_kw_type * corners_kw = ecl_file_iget_named_kw(ecl_file , "CORNERS" , index);
       ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
     }
-    
+
     ecl_file_free( ecl_file );
   }
-  
+
   ecl_grid_set_center(grid);
   ecl_grid_set_active_index(grid);
-  
+
   return grid;
 }
 
@@ -756,7 +884,7 @@ void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * n
 }
 
 
-/** 
+/**
     Input is assumed to be C-based zero offset.
 */
 
@@ -767,7 +895,7 @@ inline bool ecl_grid_ijk_valid(const ecl_grid_type * grid , int i , int j , int 
     if (j >= 0 && j < grid->ny)
       if (k >= 0 && k < grid->nz)
 	OK = true;
-  
+
   return OK;
 }
 
@@ -776,20 +904,20 @@ inline bool ecl_grid_ijk_valid(const ecl_grid_type * grid , int i , int j , int 
 /**
    This function will allocate a ecl_grid instance. As input it takes
    a filename, which can be both a GRID file and an EGRID file (both
-   formatted and unformatted). 
+   formatted and unformatted).
 */
 
 ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
   ecl_file_enum    file_type;
   bool             fmt_file;
   ecl_grid_type  * ecl_grid = NULL;
-  
+
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
   if (file_type == ECL_GRID_FILE)
     ecl_grid = ecl_grid_alloc_GRID(grid_file , endian_flip);
   else if (file_type == ECL_EGRID_FILE)
     ecl_grid = ecl_grid_alloc_EGRID(grid_file , endian_flip);
-  else 
+  else
     util_abort("%s must have .GRID or .EGRID file - %s not recognized \n", __func__ , grid_file);
 
   ecl_grid->filename = util_alloc_string_copy( grid_file );
@@ -827,9 +955,9 @@ void ecl_grid_alloc_blocking_variables(ecl_grid_type * grid, int block_dim) {
     grid->block_size = grid->size;
   else
     util_abort("%: valid values are two and three. Value:%d invaid \n",__func__ , block_dim);
-  
+
   grid->values         = util_malloc( grid->block_size * sizeof * grid->values , __func__);
-  for (index = 0; index < grid->block_size; index++) 
+  for (index = 0; index < grid->block_size; index++)
     grid->values[index] = double_vector_alloc(4 , 0.0);
 }
 
@@ -837,7 +965,7 @@ void ecl_grid_alloc_blocking_variables(ecl_grid_type * grid, int block_dim) {
 
 void ecl_grid_init_blocking(ecl_grid_type * grid) {
   int index;
-  for (index = 0; index < grid->block_size; index++) 
+  for (index = 0; index < grid->block_size; index++)
     double_vector_reset(grid->values[index]);
   grid->last_block_index = 0;
 }
@@ -846,7 +974,7 @@ void ecl_grid_init_blocking(ecl_grid_type * grid) {
 
 
 bool ecl_grid_block_value_3d(ecl_grid_type * grid, double x , double y , double z , double value) {
-  if (grid->block_dim != 3) 
+  if (grid->block_dim != 3)
     util_abort("%s: Wrong blocking dimension \n",__func__);
   {
     int global_index = ecl_grid_get_global_index_from_xyz( grid , x , y , z , grid->last_block_index);
@@ -861,7 +989,7 @@ bool ecl_grid_block_value_3d(ecl_grid_type * grid, double x , double y , double 
 
 
 bool ecl_grid_block_value_2d(ecl_grid_type * grid, double x , double y ,double value) {
-  if (grid->block_dim != 2) 
+  if (grid->block_dim != 2)
     util_abort("%s: Wrong blocking dimension \n",__func__);
   {
     int global_index = ecl_grid_get_global_index_from_xy( grid , x , y , grid->last_block_index);
@@ -924,7 +1052,7 @@ void ecl_grid_set_box_active_list(const ecl_grid_type * grid , const ecl_box_typ
   int i1,i2,j1,j2,k1,k2;
   int i,j,k;
   int active_count = 0;
-  ecl_box_set_limits(box , &i1 , &i2 , &j1 , &j2 , &k1 , &k2); 
+  ecl_box_set_limits(box , &i1 , &i2 , &j1 , &j2 , &k1 , &k2);
 
   for (k = k1; k <= k2; k++) {
     for (j= j1; j <= j2; j++) {
@@ -947,7 +1075,7 @@ int ecl_grid_count_box_active(const ecl_grid_type * grid , const ecl_box_type * 
   int i1,i2,j1,j2,k1,k2;
   int i,j,k;
   int active_count = 0;
-  ecl_box_set_limits(box , &i1 , &i2 , &j1 , &j2 , &k1 , &k2); 
+  ecl_box_set_limits(box , &i1 , &i2 , &j1 , &j2 , &k1 , &k2);
 
   for (k = k1; k <= k2; k++) {
     for (j= j1; j <= j2; j++) {
@@ -959,7 +1087,7 @@ int ecl_grid_count_box_active(const ecl_grid_type * grid , const ecl_box_type * 
       }
     }
   }
-  
+
   return active_count;
 }
 
@@ -968,16 +1096,16 @@ int ecl_grid_count_box_active(const ecl_grid_type * grid , const ecl_box_type * 
 void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int global_index2 , double *dx , double *dy , double *dz) {
   const ecl_cell_type * cell1 = grid->cells[global_index1];
   const ecl_cell_type * cell2 = grid->cells[global_index2];
-  
+
   *dx = cell1->center.x - cell2->center.x;
   *dy = cell1->center.y - cell2->center.y;
   *dz = cell1->center.z - cell2->center.z;
-  
+
 }
 
 
 /*
-  ijk are C-based zero offset. 
+  ijk are C-based zero offset.
 */
 void ecl_grid_get_pos3(const ecl_grid_type * grid , int i, int j , int k, double *xpos , double *ypos , double *zpos) {
   const int global_index     = ecl_grid_get_global_index__(grid , i , j , k );
@@ -1014,7 +1142,7 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
    region_kw has a certan value (region_value). The ecl_kw instance
    must be loaded beforehand, typically with the functions
    ecl_kw_grdecl_fseek_kw / ecl_kw_fscanf_alloc_grdecl_data.
-   
+
    The two boolean flags active_only and export_active_index determine
    how active/inactive indieces should be handled:
 
@@ -1026,7 +1154,7 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
      export_active_index: if this value is true the the index of the
         cell is in the space of active cells, otherwise it is in terms
         of the gloabl indexing.
-  
+
    Observe the following about the ecl_kw instance wth region data:
 
     * It must be of type integer - otherwise we blow up hard.  The
@@ -1059,7 +1187,7 @@ int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type
       }
     }  else
       util_abort("%s: type mismatch - regions_kw must be of type integer \n",__func__);
-    
+
   } else
     util_abort("%s: size mismatch grid has %d cells - region specifier:%d \n",__func__ , ecl_grid->size , ecl_kw_get_size( region_kw ));
   return cells_found;
