@@ -6,6 +6,24 @@
 
   global_index:  [0 , nx*ny*nz)
   active_index:  [0 , nactive)
+
+  About indexing
+  --------------
+
+  There are three different ways to index/access a cell:
+
+    1. By ijk
+    2. By global index, [0 , nx*ny*nz)
+    3. By active index, [0 , nactive)
+
+  Most of the query functions can take input in several of the
+  ways. The expected arguments are indicated as the last part of the
+  function name:
+
+    ecl_grid_get_pos3()  - 3:  this function expects i,j,k
+    ecl_grid_get_pos1()  - 1:  this function expects a global index
+    ecl_grid_get_pos1A() - 1A: this function expects an active index.
+    
 */
 
 
@@ -97,7 +115,10 @@
   COORDS      |
   CORNERS  __/
 
-
+  
+  For EGRID files it is essentially the same, except for replacing the
+  keywords COORDS/CORNERS with COORD/ZCORN/ACTNUM. Also the LGR
+  headers are somewhat different.
 
 
   About indices:
@@ -108,6 +129,13 @@
   LGR's are very much 'bolten on' in hindsight. The grid
   implementation in this file only considers the course grid, the
   refined cells are silently discarded.
+
+  The implementation is based on a hierarchy of three datatypes:
+
+   1. ecl_grid   - This is the only exported datatype
+   2. ecl_cell   - Internal
+   3. ecl_point  - Internal   
+
 */
 
 
@@ -123,14 +151,11 @@
 #include <ecl_file.h>
 
 typedef struct ecl_point_struct ecl_point_type;
-
+typedef struct ecl_cell_struct ecl_cell_type;
 
 struct ecl_point_struct {
   double x,y,z;
 };
-
-
-typedef struct ecl_cell_struct ecl_cell_type;
 
 
 struct ecl_cell_struct {
@@ -150,7 +175,7 @@ struct ecl_grid_struct {
   int                 * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
   ecl_cell_type      ** cells;
 
-  /*------------------------------: The fields below this line are used for blocking algorithms - and not allocated by default.*/
+  /*------------------------------:       The fields below this line are used for blocking algorithms - and not allocated by default.*/
   int                    block_dim; /* == 2 for maps and 3 for fields. 0 when not in use. */
   int                    block_size;
   int                    last_block_index;
@@ -159,82 +184,61 @@ struct ecl_grid_struct {
 
 
 
-void ecl_point_compare(const ecl_point_type *p1 , const ecl_point_type *p2) {
+static void ecl_point_compare(const ecl_point_type *p1 , const ecl_point_type *p2 , bool * equal) {
   if ((abs(p1->x - p2->x) + abs(p1->y - p2->y) + abs(p1->z - p2->z)) > 0.001)
-    printf("ERROR\n");
+    *equal = false;
 }
 
 
-void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2) {
+static void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2, bool * equal) {
   int i;
-  for (i=0; i < 8; i++)
-    ecl_point_compare(&c1->corner_list[i] , &c2->corner_list[i]);
-  ecl_point_compare(&c1->center , &c2->center);
+  if (c1->active != c2->active)
+    *equal = false;
+  else {
+    for (i=0; i < 8; i++)
+      ecl_point_compare(&c1->corner_list[i] , &c2->corner_list[i] , equal);
+    ecl_point_compare(&c1->center , &c2->center , equal);
+  }
 }
-
-
-void ecl_point_printf(const ecl_point_type * p, const char * label, bool newline) {
-  if (label != NULL)
-    printf("%s:  <%10.3f, %10.3f, %10.3f>",label , p->x, p->y ,p->z);
-  else
-    printf("<%10.3f, %10.3f, %10.3f>",p->x, p->y ,p->z);
-
-  if (newline)
-    printf("\n");
-}
-
 
 
 
 /*****************************************************************/
 
-ecl_point_type ecl_point_new(double x, double y , double z) {
-  ecl_point_type point;
-  point.x = x;
-  point.y = y;
-  point.z = z;
 
-  return point;
-}
-
-
-void ecl_point_inplace_set(ecl_point_type * point , double x, double y , double z) {
+static void ecl_point_inplace_set(ecl_point_type * point , double x, double y , double z) {
   point->x = x;
   point->y = y;
   point->z = z;
 }
 
 
-
-void ecl_point_inplace_set_float_ptr(ecl_point_type * point , const float * pos) {
+static void ecl_point_inplace_set_float_ptr(ecl_point_type * point , const float * pos) {
   point->x = pos[0];
   point->y = pos[1];
   point->z = pos[2];
 }
 
 
-void ecl_point_inplace_add(ecl_point_type * point , ecl_point_type add) {
+static void ecl_point_inplace_add(ecl_point_type * point , ecl_point_type add) {
   point->x += add.x;
   point->y += add.y;
   point->z += add.z;
 }
 
-void ecl_point_inplace_sub(ecl_point_type * point , ecl_point_type sub) {
+static void ecl_point_inplace_sub(ecl_point_type * point , ecl_point_type sub) {
   point->x -= sub.x;
   point->y -= sub.y;
   point->z -= sub.z;
 }
 
-void ecl_point_inplace_scale(ecl_point_type * point , double scale_factor) {
+static void ecl_point_inplace_scale(ecl_point_type * point , double scale_factor) {
   point->x *= scale_factor;
   point->y *= scale_factor;
   point->z *= scale_factor;
 }
 
 
-ecl_point_type ecl_point_copy(ecl_point_type src) {
-  return ecl_point_new(src.x , src.y , src.z);
-}
 
 
 
@@ -255,12 +259,13 @@ static ecl_cell_type * ecl_cell_alloc(void) {
 }
 
 
+
+
 /**
-    Well this is actually quite difficult - the current implementation
-    is total and utter crap.
+   Here comes some functions used to determine whether a certain point
+   (x,y,z) is within a cell. These functions are used when blocking scalars, 
+   they are not really well tested.
 */
-
-
 
 
 /*
@@ -367,32 +372,15 @@ static bool ecl_cell_contains_3d(const ecl_cell_type * cell , ecl_point_type p) 
   //ecl_point_type p7 = cell->corner_list[7];
   bool  contains = false;
 
-  if (__positive_distance3d(p0 , p1 , p2 , true , p))        	/* Z1 */
-    if (__positive_distance3d(p4 , p5 , p6 , false , p))     	/* Z2 */
-      if (__positive_distance3d(p0 , p4 , p2 , true , p))    	/* X1 */
-	if (__positive_distance3d(p1 , p5 , p3 , false , p)) 	/* X2 */
-	  if (__positive_distance3d(p0 , p4 , p1 , true , p))   /* Y1 */
+  if (__positive_distance3d(p0 , p1 , p2 , true , p))        	  /* Z1 */
+    if (__positive_distance3d(p4 , p5 , p6 , false , p))     	  /* Z2 */
+      if (__positive_distance3d(p0 , p4 , p2 , true , p))    	  /* X1 */
+	if (__positive_distance3d(p1 , p5 , p3 , false , p)) 	  /* X2 */
+	  if (__positive_distance3d(p0 , p4 , p1 , true , p))     /* Y1 */
 	    if (__positive_distance3d(p2 , p6 , p3 , false , p))  /* Y2 */
 	      contains = true;
 
   return contains;
-}
-
-
-static void ecl_cell_printf_2dlayer(const ecl_cell_type * cell , bool lower) {
-  int offset;
-  if (lower)
-    offset = 0;
-  else
-    offset = 4;
-
-  printf("         < %10.3f,%10.3f >              < %10.3f , %10.3f> \n" , cell->corner_list[2+offset].x , cell->corner_list[2+ offset].y , cell->corner_list[3+offset].x , cell->corner_list[3+offset].y);
-  printf("                    |                               | \n");
-  printf("                    |                               | \n");
-  printf("                    |                               | \n");
-  printf("                    |                               | \n");
-  printf("         < %10.3f,%10.3f >              < %10.3f , %10.3f> \n" , cell->corner_list[0+offset].x , cell->corner_list[0+ offset].y , cell->corner_list[1+offset].x , cell->corner_list[1+offset].y);
-
 }
 
 
@@ -415,73 +403,13 @@ static bool ecl_cell_contains_2d(const ecl_cell_type * cell , ecl_point_type p) 
 
 
 
-
-
-
-static int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z , int last_index) {
-  int global_index;
-  ecl_point_type p;
-  p.x = x;
-  p.y = y;
-  p.z = z;
-  {
-    int index    = 0;
-    bool cont    = true;
-    global_index = -1;
-
-    do {
-      int active_index = ((index + last_index) % grid->block_size);
-      bool cell_contains;
-      cell_contains = ecl_cell_contains_3d(grid->cells[active_index] , p);
-
-      if (cell_contains) {
-	global_index = active_index;
-	cont = false;
-      }
-      index++;
-      if (index == grid->block_size)
-	cont = false;
-    } while (cont);
-  }
-  return global_index;
-}
-
-
-
-static int ecl_grid_get_global_index_from_xy(const ecl_grid_type * grid , double x , double y , int last_index) {
-  int global_index;
-  ecl_point_type p;
-  p.x = x;
-  p.y = y;
-  p.z = -1;
-  {
-    int index    = 0;
-    bool cont    = true;
-    global_index = -1;
-
-    do {
-      int active_index = ((index + last_index) % grid->block_size);
-      bool cell_contains;
-      cell_contains = ecl_cell_contains_2d(grid->cells[active_index] , p);
-
-      if (cell_contains) {
-	global_index = active_index;
-	cont = false;
-      }
-      index++;
-      if (index == grid->block_size)
-	cont = false;
-    } while (cont);
-  }
-  return global_index;
-}
-
-
-
-void ecl_cell_free(ecl_cell_type * cell) {
+static void ecl_cell_free(ecl_cell_type * cell) {
   free(cell);
 }
 
+/* End of cell implementation                                    */
+/*****************************************************************/
+/* Starting on the ecl_grid proper implementation                */
 
 static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
   ecl_grid_type * grid = util_malloc(sizeof * grid , __func__);
@@ -504,96 +432,6 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
 }
 
 
-/*
-  This function wants C-based zero offset on i,j,k - ohh what a fuxxx mess.
-*/
-
-static inline int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid , int i , int j , int k) {
-  return i + j * ecl_grid->nx + k * ecl_grid->nx * ecl_grid->ny;
-}
-
-
-
-/**
-   i,j,k have zero based offset.
-*/
-int ecl_grid_get_global_index(const ecl_grid_type * ecl_grid , int i , int j , int k) {
-  if (ecl_grid_ijk_valid(ecl_grid , i , j , k))
-    return ecl_grid_get_global_index__(ecl_grid , i , j , k);
-  else {
-    util_abort("%s: i,j,k = (%d,%d,%d) is invalid:\n\n  nx: [0,%d>\n  ny: [0,%d>\n  nz: [0,%d>\n",__func__ , i,j,k,ecl_grid->nx,ecl_grid->ny,ecl_grid->nz);
-    return -1; /* Compiler shut up. */
-  }
-}
-
-
-
-bool ecl_grid_cell_active3(const ecl_grid_type * ecl_grid, int i , int j , int k) {
-  int global_index = ecl_grid_get_global_index( ecl_grid , i , j , k);
-  return ecl_grid_cell_active1( ecl_grid , global_index );
-}
-
-
-/*
-   Global index in [0,...,nx*ny*nz)
-*/
-
-bool ecl_grid_cell_active1(const ecl_grid_type * ecl_grid , int global_index) {
-  if (ecl_grid->index_map[global_index] > 0)
-    return true;
-  else
-    return false;
-}
-
-
-int ecl_grid_get_active_index1(const ecl_grid_type * ecl_grid , int global_index) {
-  return ecl_grid->index_map[global_index];
-}
-
-
-/**
-   Return the active cell index (of the active cells) of the cell
-   i,j,k. (with zero based offset).
-
-   Will return -1 if the cell is not active.
-*/
-
-int ecl_grid_get_active_index3(const ecl_grid_type * ecl_grid , int i , int j , int k) {
-  int global_index = ecl_grid_get_global_index(ecl_grid , i,j,k);  /* In range: [0,nx*ny*nz) */
-  return ecl_grid_get_active_index1(ecl_grid , global_index);
-}
-
-
-int ecl_grid_get_global_index_from_active(const ecl_grid_type * ecl_grid , int active_index) {
-  return ecl_grid->inv_index_map[active_index];
-}
-
-
-int ecl_grid_get_size( const ecl_grid_type * grid) {
-  return grid->size;
-}
-
-
-/*
-   This function returns C-based zero offset indices. cell_
-*/
-void ecl_grid_get_ijk(const ecl_grid_type * grid , int global_index, int *i, int *j , int *k) {
-  *k = global_index / (grid->nx * grid->ny); global_index -= (*k) * (grid->nx * grid->ny);
-  *j = global_index / grid->nx;              global_index -= (*j) *  grid->nx;
-  *i = global_index;
-}
-
-
-void ecl_grid_get_ijk_from_active_index(const ecl_grid_type *ecl_grid , int active_index , int *i, int * j, int * k) {
-  if (active_index >= 0 && active_index < ecl_grid->total_active) {
-    int global_index = ecl_grid_get_global_index_from_active( ecl_grid , active_index );
-    ecl_grid_get_ijk(ecl_grid , global_index , i,j,k);
-  } else
-    util_abort("%s: error active_index:%d invalid - grid has only:%d active cells. \n",__func__ , active_index , ecl_grid->total_active);
-}
-
-
-
 static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   int c , i;
   for (i=0; i < ecl_grid->size; i++) {
@@ -605,6 +443,10 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   }
 }
 
+
+static inline int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+  return i + j * ecl_grid->nx + k * ecl_grid->nx * ecl_grid->ny;
+}
 
 
 static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , int k , double x[4][2] , double y[4][2] , double z[4][2] , const int * actnum) {
@@ -796,18 +638,6 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
 }
 
 
-
-const int * ecl_grid_get_index_map_ref(const ecl_grid_type * grid) {
-  return grid->index_map;
-}
-
-
-
-/**
-   This function allocates a copy of the index_map and returns it.
-*/
-
-
 /**
    This function allocates the internal index_map and inv_index_map fields.
 */
@@ -876,35 +706,17 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
 }
 
 
-void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * nz , int * active_size) {
-  if (nx != NULL) *nx 	       		= grid->nx;
-  if (ny != NULL) *ny 	       		= grid->ny;
-  if (nz != NULL) *nz 	       		= grid->nz;
-  if (active_size != NULL) *active_size = grid->total_active;
-}
-
-
-/**
-    Input is assumed to be C-based zero offset.
-*/
-
-inline bool ecl_grid_ijk_valid(const ecl_grid_type * grid , int i , int j , int k) {
-  bool OK = false;
-
-  if (i >= 0 && i < grid->nx)
-    if (j >= 0 && j < grid->ny)
-      if (k >= 0 && k < grid->nz)
-	OK = true;
-
-  return OK;
-}
-
 
 
 /**
    This function will allocate a ecl_grid instance. As input it takes
    a filename, which can be both a GRID file and an EGRID file (both
    formatted and unformatted).
+
+   When allocating based on an EGRID file the COORDS, ZCORN and ACTNUM
+   keywords are extracted, and the ecl_grid_alloc_GRDECL() function is
+   called with these keywords. This function can be called directly
+   with these keywords.
 */
 
 ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
@@ -919,29 +731,101 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
     ecl_grid = ecl_grid_alloc_EGRID(grid_file , endian_flip);
   else
     util_abort("%s must have .GRID or .EGRID file - %s not recognized \n", __func__ , grid_file);
-
+  
   ecl_grid->filename = util_alloc_string_copy( grid_file );
   ecl_grid_alloc_index_map(ecl_grid);
   return ecl_grid;
 }
 
 
-const char * ecl_grid_get_filename( const ecl_grid_type * ecl_grid ) {
-  return ecl_grid->filename;
+
+/**
+   Return true if grids g1 and g2 are equal, and false otherwise.
+*/
+
+bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
+  int i;
+
+  bool equal = true;
+  if (g1->size != g2->size)
+    equal = false;
+  else {
+    for (i = 0; i < g1->size; i++) {
+      ecl_cell_type *c1 = g1->cells[i];
+      ecl_cell_type *c2 = g2->cells[i];
+      ecl_cell_compare(c1 , c2 , &equal);
+    }
+  }
+  
+  return equal;
 }
 
 
 
+/*****************************************************************/
+/** 
+    Here comes some functions used when blocking. These are NOT used
+    by default. Observe that the functions used to look an index based
+    on xy and xyz are NOT well tested.
+*/
 
 
-void ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
-  int i;
-  for (i = 0; i < g1->size; i++) {
-    ecl_cell_type *c1 = g1->cells[i];
-    ecl_cell_type *c2 = g2->cells[i];
-    ecl_cell_compare(c1 , c2);
+static int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z , int last_index) {
+  int global_index;
+  ecl_point_type p;
+  p.x = x;
+  p.y = y;
+  p.z = z;
+  {
+    int index    = 0;
+    bool cont    = true;
+    global_index = -1;
+
+    do {
+      int active_index = ((index + last_index) % grid->block_size);
+      bool cell_contains;
+      cell_contains = ecl_cell_contains_3d(grid->cells[active_index] , p);
+      
+      if (cell_contains) {
+	global_index = active_index;
+	cont = false;
+      }
+      index++;
+      if (index == grid->block_size)
+	cont = false;
+    } while (cont);
   }
-  printf("Compare OK \n");
+  return global_index;
+}
+
+
+
+static int ecl_grid_get_global_index_from_xy(const ecl_grid_type * grid , double x , double y , int last_index) {
+  int global_index;
+  ecl_point_type p;
+  p.x = x;
+  p.y = y;
+  p.z = -1;
+  {
+    int index    = 0;
+    bool cont    = true;
+    global_index = -1;
+
+    do {
+      int active_index = ((index + last_index) % grid->block_size);
+      bool cell_contains;
+      cell_contains = ecl_cell_contains_2d(grid->cells[active_index] , p);
+
+      if (cell_contains) {
+	global_index = active_index;
+	cont = false;
+      }
+      index++;
+      if (index == grid->block_size)
+	cont = false;
+    } while (cont);
+  }
+  return global_index;
 }
 
 
@@ -988,6 +872,7 @@ bool ecl_grid_block_value_3d(ecl_grid_type * grid, double x , double y , double 
 }
 
 
+
 bool ecl_grid_block_value_2d(ecl_grid_type * grid, double x , double y ,double value) {
   if (grid->block_dim != 2)
     util_abort("%s: Wrong blocking dimension \n",__func__);
@@ -1005,27 +890,29 @@ bool ecl_grid_block_value_2d(ecl_grid_type * grid, double x , double y ,double v
 
 
 double ecl_grid_block_eval2d(ecl_grid_type * grid , int i, int j , block_function_ftype * blockf ) {
-  int global_index = ecl_grid_get_global_index(grid , i,j,0);
+  int global_index = ecl_grid_get_global_index3(grid , i,j,0);
   return blockf( grid->values[global_index]);
 }
 
 
 double ecl_grid_block_eval3d(ecl_grid_type * grid , int i, int j , int k ,block_function_ftype * blockf ) {
-  int global_index = ecl_grid_get_global_index(grid , i,j,k);
+  int global_index = ecl_grid_get_global_index3(grid , i,j,k);
   return blockf( grid->values[global_index]);
 }
 
 int ecl_grid_get_block_count2d(const ecl_grid_type * grid , int i , int j) {
-  int global_index = ecl_grid_get_global_index(grid , i,j,0);
+  int global_index = ecl_grid_get_global_index3(grid , i,j,0);
   return double_vector_size( grid->values[global_index]);
 }
 
 
 int ecl_grid_get_block_count3d(const ecl_grid_type * grid , int i , int j, int k) {
-  int global_index = ecl_grid_get_global_index(grid , i,j,k);
+  int global_index = ecl_grid_get_global_index3(grid , i,j,k);
   return double_vector_size( grid->values[global_index]);
 }
 
+/* End of blocking functions                                     */
+/*****************************************************************/
 
 void ecl_grid_free(ecl_grid_type * grid) {
   int i;
@@ -1104,22 +991,177 @@ void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int g
 }
 
 
+
+/*****************************************************************/
+/* Index based query functions */
+/*****************************************************************/
+
+
+
+
+
+
+/**
+   Only checks that i,j,k are in the required intervals:
+  
+      0 <= i < nx
+      0 <= j < ny
+      0 <= k < nz
+
+*/
+   
+inline bool ecl_grid_ijk_valid(const ecl_grid_type * grid , int i , int j , int k) {
+  bool OK = false;
+
+  if (i >= 0 && i < grid->nx)
+    if (j >= 0 && j < grid->ny)
+      if (k >= 0 && k < grid->nz)
+	OK = true;
+
+  return OK;
+}
+
+
+void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * nz , int * active_size) {
+  if (nx != NULL) *nx 	       		= grid->nx;
+  if (ny != NULL) *ny 	       		= grid->ny;
+  if (nz != NULL) *nz 	       		= grid->nz;
+  if (active_size != NULL) *active_size = grid->total_active;
+}
+
+
+
+/*****************************************************************/
+/* Functions for converting between the different index types. */
+
+/**
+   Converts: (i,j,k) -> global_index
+*/
+
+int ecl_grid_get_global_index3(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+  if (ecl_grid_ijk_valid(ecl_grid , i , j , k))
+    return ecl_grid_get_global_index__(ecl_grid , i , j , k);
+  else {
+    util_abort("%s: i,j,k = (%d,%d,%d) is invalid:\n\n  nx: [0,%d>\n  ny: [0,%d>\n  nz: [0,%d>\n",__func__ , i,j,k,ecl_grid->nx,ecl_grid->ny,ecl_grid->nz);
+    return -1; /* Compiler shut up. */
+  }
+}
+
+
+/**
+   Converts: active_index -> global_index
+*/
+
+int ecl_grid_get_global_index1A(const ecl_grid_type * ecl_grid , int active_index) {
+  return ecl_grid->inv_index_map[active_index];
+}
+
+
+
+/**
+   Converts: (i,j,k) -> active_index
+   
+   Will return -1 if the cell is not active.
+*/
+
+int ecl_grid_get_active_index3(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+  int global_index = ecl_grid_get_global_index3(ecl_grid , i,j,k);  /* In range: [0,nx*ny*nz) */
+  return ecl_grid_get_active_index1(ecl_grid , global_index);
+}
+
+
+/**
+   Converts: global_index -> active_index.
+   
+   Will return -1 if the cell is not active.
+*/
+
+int ecl_grid_get_active_index1(const ecl_grid_type * ecl_grid , int global_index) {
+  return ecl_grid->index_map[global_index];
+}
+
+
+/*
+  Converts global_index -> (i,j,k)
+  
+  This function returns C-based zero offset indices. cell_
+*/
+
+void ecl_grid_get_ijk1(const ecl_grid_type * grid , int global_index, int *i, int *j , int *k) {
+  *k = global_index / (grid->nx * grid->ny); global_index -= (*k) * (grid->nx * grid->ny);
+  *j = global_index / grid->nx;              global_index -= (*j) *  grid->nx;
+  *i = global_index;
+}
+
+/*
+  Converts active_index -> (i,j,k)
+*/
+
+void ecl_grid_get_ijk1A(const ecl_grid_type *ecl_grid , int active_index , int *i, int * j, int * k) {
+  if (active_index >= 0 && active_index < ecl_grid->total_active) {
+    int global_index = ecl_grid_get_global_index1A( ecl_grid , active_index );
+    ecl_grid_get_ijk1(ecl_grid , global_index , i,j,k);
+  } else
+    util_abort("%s: error active_index:%d invalid - grid has only:%d active cells. \n",__func__ , active_index , ecl_grid->total_active);
+}
+
+
+/******************************************************************/
+/*
+  Functions to get the 'true' (i.e. UTM or whatever) position (x,y,z).
+*/
+
 /*
   ijk are C-based zero offset.
 */
+
+void ecl_grid_get_pos1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos) {
+  const ecl_cell_type * cell = grid->cells[global_index];
+  *xpos = cell->center.x;
+  *ypos = cell->center.y;
+  *zpos = cell->center.z;
+}
+
+
 void ecl_grid_get_pos3(const ecl_grid_type * grid , int i, int j , int k, double *xpos , double *ypos , double *zpos) {
-  const int global_index     = ecl_grid_get_global_index__(grid , i , j , k );
+  const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
   ecl_grid_get_pos1( grid , global_index , xpos , ypos , zpos);
 }
 
 
 
-void ecl_grid_get_pos1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos) {
-  const ecl_cell_type * cell = grid->cells[global_index];
+void ecl_grid_get_pos1A(const ecl_grid_type * grid , int active_index , double *xpos , double *ypos , double *zpos) {
+  const int global_index = ecl_grid_get_global_index1A( grid , active_index );
+  ecl_grid_get_pos1( grid , global_index , xpos , ypos , zpos );
+}
 
-  *xpos = cell->center.x;
-  *ypos = cell->center.y;
-  *zpos = cell->center.z;
+/*****************************************************************/
+/* Functions to query whether a cell is active or not.           */
+
+/*
+   Global index in [0,...,nx*ny*nz)
+*/
+
+bool ecl_grid_cell_active1(const ecl_grid_type * ecl_grid , int global_index) {
+  if (ecl_grid->index_map[global_index] > 0)
+    return true;
+  else
+    return false;
+}
+
+
+
+bool ecl_grid_cell_active3(const ecl_grid_type * ecl_grid, int i , int j , int k) {
+  int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k);
+  return ecl_grid_cell_active1( ecl_grid , global_index );
+}
+
+
+/*****************************************************************/
+
+
+const char * ecl_grid_get_filename( const ecl_grid_type * ecl_grid ) {
+  return ecl_grid->filename;
 }
 
 
@@ -1127,6 +1169,7 @@ void ecl_grid_get_pos1(const ecl_grid_type * grid , int global_index , double *x
 void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
   int             active_cells , nx,ny,nz;
   ecl_grid_get_dims(ecl_grid , &nx , &ny , &nz , &active_cells);
+  printf("	Grid file .......: %s  \n",ecl_grid->filename);
   printf("	Active cells ....: %d \n",active_cells);
   printf("	nx ..............: %d \n",nx);
   printf("	ny ..............: %d \n",ny);
@@ -1139,7 +1182,7 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
 /*****************************************************************/
 /**
    This function will look up all the indices in the grid where the
-   region_kw has a certan value (region_value). The ecl_kw instance
+   region_kw has a certain value (region_value). The ecl_kw instance
    must be loaded beforehand, typically with the functions
    ecl_kw_grdecl_fseek_kw / ecl_kw_fscanf_alloc_grdecl_data.
 

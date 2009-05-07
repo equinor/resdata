@@ -356,7 +356,7 @@ int main(int argc , char ** argv) {
       //if(coord_size <5){printf("The number of entries in t he coord_kw is less than 5, exiting\n");exit(1);}
       //int * coord     = ecl_kw_get_int_ptr(coord_kw);
       
-      ecl_grid_get_ijk(grid_file , global_index, &i, &j , &k);
+      ecl_grid_get_ijk1(grid_file , global_index, &i, &j , &k);
       // printf("Cell index: %i  %i %i %i\n", global_index, i, j, k);
       if (ecl_grid_cell_active1( grid_file , global_index)) {// Active cell, let's go
 	printf("Cell index: %i  %i %i %i\n", global_index, i, j, k);

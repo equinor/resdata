@@ -21,16 +21,17 @@ int main (int argc , char ** argv) {
       FILE             * stream = util_fopen( regions_file , "r"); 
       int               region_value,nx,ny,nz;
       ecl_kw_grdecl_fseek_kw( kw , false , true , stream , regions_file);
-      regions_kw = ecl_kw_fscanf_alloc_grdecl_data( stream , ecl_grid_get_size( ecl_grid ) , ecl_int_type);
+      ecl_grid_get_dims(ecl_grid , &nx , &ny , &nz , NULL);
+      regions_kw = ecl_kw_fscanf_alloc_grdecl_data( stream , nx*ny*ny , ecl_int_type);
       
       util_sscanf_int( region_value_st , &region_value);
       ecl_grid_get_region_cells( ecl_grid , regions_kw , region_value , true , false , global_index_list);
-      ecl_grid_get_dims(ecl_grid , &nx , &ny , &nz , NULL);
+      
       {
 	int index;
 	for (index = 0; index < int_vector_size( global_index_list ); index++) {
 	  int i,j,k,ij; 
-	  ecl_grid_get_ijk( ecl_grid , int_vector_iget( global_index_list , index) , &i, &j , &k);
+	  ecl_grid_get_ijk1( ecl_grid , int_vector_iget( global_index_list , index) , &i, &j , &k);
 	  ij = i + j*nx;
 	  if (!bool_vector_safe_iget( IJ_set , ij)) {
 	    printf("%4d  %4d \n",i,j);
