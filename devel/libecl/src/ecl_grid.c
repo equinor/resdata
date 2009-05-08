@@ -28,8 +28,8 @@
 
 
 /**
-   Not about LGR
-   -------------
+   Note about LGR
+   --------------
 
    The ECLIPSE Local Grid Refinement (LGR) is organised as follows:
 
@@ -151,7 +151,7 @@
 #include <ecl_file.h>
 
 typedef struct ecl_point_struct ecl_point_type;
-typedef struct ecl_cell_struct ecl_cell_type;
+typedef struct ecl_cell_struct  ecl_cell_type;
 
 struct ecl_point_struct {
   double x,y,z;
@@ -506,7 +506,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
       if (coords[5] == 0)           /*  It is a normal cell - not a refined LGR cell. */
 	if (coords[4] == 1)         /*  The cell is active */
 	  cell->active = true;
-
+      
       break;
     }
     for (c = 0; c < 8; c++)
@@ -740,7 +740,8 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
 
 
 /**
-   Return true if grids g1 and g2 are equal, and false otherwise.
+   Return true if grids g1 and g2 are equal, and false otherwise. To
+   return true all cells must be identical.
 */
 
 bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
