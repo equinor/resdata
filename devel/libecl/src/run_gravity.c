@@ -222,9 +222,9 @@ int main(int argc , char ** argv) {
       // ok, no oil in the model
       printf("No oil in the model, setting OIL_DEN to zero\n");
       //float oildens[num_active_cells] ;
-      int k; 
-      for(k=0;k<num_active_cells;k++){
-	oildens[k] = 0.0;
+      int count; 
+      for(count=0;count<num_active_cells;count++){
+	oildens[count] = 0.0;
       }
 
       oil_den1 = &oildens; 
@@ -247,10 +247,10 @@ int main(int argc , char ** argv) {
     else{
       // ok, this is an oil field without any gas
       printf("No gas in the model, setting GAS_DEN to zero\n");
-
-      int k; 
-      for(k=0;k<num_active_cells;k++){
-	gasdens[k] = 0.0;
+      
+      int count; 
+      for(count=0;count<num_active_cells;count++){
+	gasdens[count] = 0.0;
       }
       gas_den1 = &gasdens; 
       gas_den2 = &gasdens;
@@ -272,10 +272,10 @@ int main(int argc , char ** argv) {
     else{
       // ok, no water in the restart fils
       printf("No water in the model, setting WAT_DEN to zero\n");
-
-      int k; 
-      for(k=0;k<num_active_cells;k++){
-	watdens[k] = 0.0;
+      
+      int count; 
+      for(count=0;count<num_active_cells;count++){
+	watdens[count] = 0.0;
       }
       wat_den1 = &watdens; 
       wat_den2 = &watdens;
@@ -325,7 +325,8 @@ int main(int argc , char ** argv) {
     
     // AQUILERFN
     ecl_kw_type * aquifern_kw  ;
-    int * aquifern;
+    int * aquifern; 
+    int aquifern_f[num_active_cells] ;    
     
     if( ecl_file_has_kw( init_file , "AQUIFERN")){
       aquifern_kw     = ecl_file_iget_named_kw(init_file, "AQUIFERN", 0);
@@ -333,7 +334,14 @@ int main(int argc , char ** argv) {
     }
     else{
       printf("AQUIFERN is not reported to the restart files.\n");
-      exit(1);
+      int count; 
+      
+      for(count=0;count<num_active_cells;count++){
+	aquifern_f[count] = 0;
+      }
+      aquifern = &aquifern_f; 
+      
+
     }
     
     int aquifern_num = ecl_kw_get_size(aquifern_kw);
@@ -354,12 +362,6 @@ int main(int argc , char ** argv) {
       const char * kw = ecl_file_iget_distinct_kw(init_file , count);
       printf("INITFILE HAS: %s\n", kw);
     }
-
-
-
-
-
-
     
     int act_index = 0;
     
@@ -381,7 +383,7 @@ int main(int argc , char ** argv) {
     for (global_index=0;global_index < nx*ny*nz;global_index++){
       
       ecl_grid_get_ijk1(grid_file , global_index, &i, &j , &k);
-      //printf("Cell index: %i  %i %i %i\n", global_index, i, j, k);
+      printf("Cell index: %i  %i %i %i\n", global_index+1, i+1, j+1, k+1);
       if (ecl_grid_cell_active1( grid_file , global_index)) {// Active cell, let's go
 	//printf("Cell index: %i  %i %i %i\n", global_index, i, j, k);
 	//printf("Active index: %i\n", act_index);
@@ -393,7 +395,7 @@ int main(int argc , char ** argv) {
 	  if(swat1[act_index] < 0.0){swat1[act_index] = 0.0;};
 	  if(swat2[act_index] > 1.0){swat2[act_index] = 1.0;};
 	  if(swat2[act_index] < 0.0){swat2[act_index] = 0.0;};
-	
+	  
 	  if(exists_sgas){
 	    sgas1 = sgas1_v[act_index];
 	    sgas2 = sgas2_v[act_index];
@@ -416,29 +418,35 @@ int main(int argc , char ** argv) {
 	  if(soil1 < 0.0){soil1 = 0.0;};
 	  if(soil2 > 1.0){soil2 = 1.0;};
 	  if(soil2 < 0.0){soil2 = 0.0;};
+	  //printf("Cell index: %i %i %i %i\n", global_index + 1, i+1, j+1, k+1);
+	  printf ("SOIL1 : %f\t",soil1);
+	  printf ("SGAS1 : %f\t",sgas1);
+	  printf ("SWAT1 : %f\n",swat1[act_index]);
 	  
-	  //printf ("SOIL1 : %f\n",soil1);
-	  //printf ("SGAS1 : %f\n",sgas1);
-	  //printf ("SWAT1 : %f\n",swat1[act_index]);
-	  
+	  printf ("SOIL2 : %f\t",soil2);
+	  printf ("SGAS2 : %f\t",sgas2);
+	  printf ("SWAT2 : %f\n",swat2[act_index]);
+	  printf ("DEN_GAS1 : %f\n",gas_den1[act_index]);
+	  printf ("DEN_GAS2 : %f\n",gas_den2[act_index]);
+
 	  //if(swat1[act_index] < 0.999 && swat2[act_index] < 0.999){	  // Check if this is an aquifer cell; neglect these
 	  
 	  mas1 = rporv1[act_index]*(soil1 * oil_den1[act_index] + sgas1 * gas_den1[act_index] + swat1[act_index] * wat_den1[act_index] );
 	  mas2 = rporv2[act_index]*(soil2 * oil_den2[act_index] + sgas2 * gas_den2[act_index] + swat2[act_index] * wat_den2[act_index] );
-	  if(!(mas1>=0) || !(mas2>=0)){
-	    printf("Cell index: %i  %i %i %i\n", global_index, i, j, k);
-	    printf("mas1: %f mas2: %f %i\n", mas1, mas2, act_index);
-	    printf("%f %f %f %f\n", rporv1[act_index], oil_den1[act_index], gas_den1[act_index], wat_den1[act_index] );
-	    printf("%f %f %f %f\n", rporv2[act_index], oil_den2[act_index], gas_den2[act_index], wat_den2[act_index] );
-	      exit(1);
-	  }
+	  //if(!(mas1>=0) || !(mas2>=0)){
+	  //  printf("Cell index: %i  %i %i %i %i \n", act_index, global_index, i, j, k);
+	  //  printf("mas1: %f mas2: %f %i\n", mas1, mas2, act_index);
+	  //  printf("%f %f %f %f\n", rporv1[act_index], oil_den1[act_index], gas_den1[act_index], wat_den1[act_index] );
+	  //  printf("%f %f %f %f\n", rporv2[act_index], oil_den2[act_index], gas_den2[act_index], wat_den2[act_index] );
+	  //  exit(1);
+	  //}
 	  
 
 	  double xpos,ypos,zpos;
 	  ecl_grid_get_pos1(grid_file , global_index , &xpos , &ypos , &zpos);
 	  
-	  for(j=0; j<num_stations;j++){
-	    const grav_station_type * g_s = vector_iget_const(grav_stations, j);
+	  for(count=0; count<num_stations;count++){
+	    const grav_station_type * g_s = vector_iget_const(grav_stations, count);
 	    dist_x = xpos - g_s->utm_x;
 	    dist_y = ypos - g_s->utm_y;
 	    dist_d = zpos - g_s->depth;
