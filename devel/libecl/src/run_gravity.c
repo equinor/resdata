@@ -312,6 +312,9 @@ int main(int argc , char ** argv) {
     int     input_length = argc - 1;   
     int     input_offset = 0;
     bool    use_eclbase, fmt_file; 
+
+    
+    const char * report_filen  = "RUN_GRAVITY.out"; 
     
     ecl_file_type ** restart_files;
     ecl_file_type  * init_file;
@@ -623,13 +626,18 @@ int main(int argc , char ** argv) {
       }
     }
     {
+      
+      FILE * stream = util_fopen(report_filen , "w");
+      
       int station_nr;
       for(station_nr = 0; station_nr < vector_get_size( grav_stations ); station_nr++){
 	const grav_station_type * g_s = vector_iget_const(grav_stations, station_nr);
+	fprintf(stream, "%f\n",g_s->grav_diff);
 	printf ("DELTA_G: %f\n", g_s->grav_diff);
       }
+      fclose(stream);
     }
-    
+
     // Clean up the mess 
     
     vector_free( grav_stations );
