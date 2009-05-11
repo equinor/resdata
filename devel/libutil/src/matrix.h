@@ -40,6 +40,7 @@ void          matrix_inplace_matmul(matrix_type * A, const matrix_type * B);
 
 double        matrix_get_column_sum(const matrix_type * matrix , int column);
 double        matrix_get_row_sum(const matrix_type * matrix , int column);
+void          matrix_subtract_row_mean(matrix_type * matrix);
 
 double      * matrix_get_data(const matrix_type * matrix);
 
@@ -49,6 +50,7 @@ int 	 matrix_get_columns(const matrix_type * matrix);
 int 	 matrix_get_row_stride(const matrix_type * matrix);
 int 	 matrix_get_column_stride(const matrix_type * matrix);
 void     matrix_get_dims(const matrix_type * matrix ,  int * rows , int * columns , int * row_stride , int * column_stride);
+bool     matrix_is_quadratic(const matrix_type * matrix);
 
 void     matrix_diag_set(matrix_type * matrix , const double * diag);
 void     matrix_random_init(matrix_type * matrix);

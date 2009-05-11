@@ -14,6 +14,13 @@
    x and y are entered as matrices ...
 */
 
+/*****************************************************************/
+void  dgemm_(char * , char * , int * , int * , int * , double * , double * , int * , double * , int *  , double * , double * , int *);
+void  dgemv_(char * , int * , int * , double * , double * , int * , double * , int * , double * , double * , int * );
+/*****************************************************************/
+
+
+
 
 void matrix_dgemv(const matrix_type * A , const matrix_type * x , matrix_type * y , bool transA , double alpha , double beta) {
   int m    = matrix_get_rows( A );
@@ -42,14 +49,27 @@ void matrix_dgemv(const matrix_type * A , const matrix_type * x , matrix_type * 
 
 
 
+static void dgemm_debug(const matrix_type *C , const matrix_type *A , const matrix_type * B , bool transA, bool transB) {
+  printf("A: [%d , %d]", matrix_get_rows( A ) , matrix_get_columns(A));
+  if (transA)
+    printf("^T");
+
+  printf("\nB: [%d , %d]", matrix_get_rows( B ) , matrix_get_columns(B));
+  if (transB)
+    printf("^T");
+
+  printf("\nC: [%d , %d]\n",matrix_get_rows( C ) , matrix_get_columns(C));
+}
+
+
 
 /**
-  C = alpha * op(A) * op(B)  +  beta * C
+   C = alpha * op(A) * op(B)  +  beta * C
 
-  op(·) can either be unity or Transpose.
+   op(·) can either be unity or Transpose.
 */
 
-void matrix_dgemm(const matrix_type *A , const matrix_type * B , matrix_type *C , bool transA, bool transB , double alpha , double beta) {
+void matrix_dgemm(matrix_type *C , const matrix_type *A , const matrix_type * B , bool transA, bool transB , double alpha , double beta) {
   int m   = matrix_get_rows( C );
   int n   = matrix_get_columns( C );
   int lda = matrix_get_column_stride( A );
@@ -83,7 +103,7 @@ void matrix_dgemm(const matrix_type *A , const matrix_type * B , matrix_type *C 
   } else {
     transB_c = 'N';
     innerB = matrix_get_rows( B );
-    outerB   = matrix_get_columns( B ); 
+    outerB = matrix_get_columns( B ); 
   }
   
   /*
@@ -103,39 +123,36 @@ void matrix_dgemm(const matrix_type *A , const matrix_type * B , matrix_type *C 
 	Trans(B)        | Rows(B)    = Columns(B)
     --------------------------------------------------
     
-    
   */
-  if (innerA != innerB) 
+  
+  if (innerA != innerB) {
+    dgemm_debug(C,A,B,transA , transB);
     util_abort("%s: matrix size mismatch between A and B \n", __func__);
+  }
   
-  if (outerA != matrix_get_rows( C ))
+  if (outerA != matrix_get_rows( C )) {
+    dgemm_debug(C,A,B,transA , transB);
     util_abort("%s: matrix size mismatch between A and C \n",__func__);
+  }
 
-  if (outerB != matrix_get_columns( C ))
-    util_abort("%s: matrix size mismatch between B and C \n",__func__);
   
+  if (outerB != matrix_get_columns( C )) {
+    dgemm_debug(C,A,B,transA , transB);
+    util_abort("%s: matrix size mismatch between B and C \n",__func__);
+  }
+
+
   dgemm_(&transA_c , &transB_c , &m ,&n , &k , &alpha , matrix_get_data( A ) , &lda , matrix_get_data( B ) , &ldb , &beta , matrix_get_data( C ) , &ldc);
 }
 
 
 
+
 /* 
-   This function does a general matrix multiply of B * C, and stores
-   the result in A.
+   This function does a general matrix multiply of A * B, and stores
+   the result in C.
 */
 
-void matrix_matmul(matrix_type * A, const matrix_type * B , const matrix_type * C) {
-  matrix_dgemm( B , C , A , false , false , 1 , 0);
-  //if ((A->columns == C->columns) && (A->rows == B->rows) && (B->columns == C->rows)) {
-  //  int i,j,k;
-  //  for (i=0; i < A->rows; i++) {
-  //    for (j=0; j < A->columns; j++) {
-  //	double scalar_product = 0;
-  //	for (k = 0; k < B->columns; k++) 
-  //	  scalar_product += B->data[ GET_INDEX(B,i,k) ] * C->data[ GET_INDEX(C,k,j) ];
-  //	A->data[ GET_INDEX(A , i , j) ] = scalar_product;
-  //    }
-  //  }
-  //} else
-  //  util_abort("%s: size mismatch \n",__func__);
+void matrix_matmul(matrix_type * C, const matrix_type * A , const matrix_type * B) {
+  matrix_dgemm( C , A , B , false , false , 1 , 0);
 }

@@ -84,7 +84,7 @@ static void matrix_init_header(matrix_type * matrix , int rows , int columns , i
    Before returning all elements will be set to zero.
 */
 
-static double * __alloc_data( int data_size , bool safe_mode ) {
+static double * matrix_alloc_data__( int data_size , bool safe_mode ) {
   double * data;
   if (safe_mode) {
     /* 
@@ -106,7 +106,7 @@ static double * __alloc_data( int data_size , bool safe_mode ) {
 /**
    Corresponding to __alloc_data() - but based on reallocation of data.
 */
-static bool __realloc_data( double ** _data , int data_size , bool safe_mode ) {
+static bool matrix_realloc_data__( double ** _data , int data_size , bool safe_mode ) {
   double * data = *_data;
   double * tmp;
   if (safe_mode) {
@@ -149,7 +149,7 @@ static matrix_type * matrix_alloc_with_stride(int rows , int columns , int row_s
 
   matrix_init_header( matrix , rows , columns , row_stride , column_stride);
   matrix->data_owner    = true;
-  matrix->data          = __alloc_data( matrix->data_size , safe_mode );
+  matrix->data          = matrix_alloc_data__( matrix->data_size , safe_mode );
   if (safe_mode) {
     if (matrix->data == NULL) {  
       /* Allocation failed - we return NULL */
@@ -244,7 +244,7 @@ static bool matrix_resize__(matrix_type * matrix , int rows , int columns , bool
       matrix_get_dims( matrix , &old_rows , &old_columns , &old_row_stride , &old_column_stride);        /* Storing the old header information - in case the realloc() fails. */
       
       matrix_init_header(matrix , rows , columns , 1 , rows);               /* Resetting the header for the matrix */
-      if (__realloc_data(&matrix->data , matrix->data_size , safe_mode)) {  /* Realloc succeeded */
+      if (matrix_realloc_data__(&matrix->data , matrix->data_size , safe_mode)) {  /* Realloc succeeded */
 	matrix_type * target_view = matrix_alloc_shared(matrix , 0 , 0 , copy_rows , copy_columns);
 	matrix_assign( target_view , copy);
 	matrix_free( target_view );
@@ -506,6 +506,24 @@ double matrix_get_column_sum(const matrix_type * matrix , int column) {
 }
 
 
+
+/**
+   For each row in the matrix we will do the operation
+
+     R -> R - <R>
+*/
+
+void matrix_subtract_row_mean(matrix_type * matrix) {
+  int i;
+  for (i=0; i < matrix->rows; i++) {
+    double row_mean = matrix_get_row_sum(matrix , i) / matrix->columns;
+    int j;
+    for (j=0; j < matrix->columns; j++) 
+      matrix->data[ GET_INDEX( matrix , i , j ) ] -= row_mean;
+  }
+}
+
+
 /*****************************************************************/
 /** 
    This function will return the double data pointer of the matrix,
@@ -548,6 +566,14 @@ void matrix_get_dims(const matrix_type * matrix ,  int * rows , int * columns , 
 }
 
 
+bool matrix_is_quadratic(const matrix_type * matrix) {
+  if (matrix->rows == matrix->columns)
+    return true;
+  else
+    return false;
+}
+
+
 /*****************************************************************/
 /* Various special matrices */
 
@@ -581,6 +607,11 @@ void matrix_random_init(matrix_type * matrix) {
       matrix->data[ GET_INDEX(matrix , i , j) ] = 1.0 * rand() / RAND_MAX;
 }
 
+
+
+void matrix_clear( matrix_type * matrix ) {
+  matrix_set( matrix , 0 );
+}
 
 
 

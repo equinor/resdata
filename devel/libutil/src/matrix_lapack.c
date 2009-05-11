@@ -9,6 +9,7 @@
 /*****************************************************************/
 void dgesv_(int * n, int * nrhs , double * A , int * lda , long int * ipivot , double * B , int * ldb , int * info);
 void dgesvd_(char * jobu , char * jobvt , int * m , int * n , double * A, int * lda , double * S , double * U , int * ldu , double * VT , int * ldvt, double * work , int * worksize , int * info);
+void dsyevx_(char * jobz, char * range , char * uplo , int *n , double * A , int * lda , double * vl , double * vu , int * il , int * iu , double * abstol , int * m , double * w , double *z , int * ldz , double * work, int * lwork , int * iwork , int * ifail , int * info); 
 /*****************************************************************/
 
 
@@ -102,25 +103,65 @@ static char dgesvd_get_vector_job( dgesvd_vector_enum vector_job) {
 
 
 
+/**
+   If jobu == DGSEVD_NONE the U matrix can be NULL, same for jobvt.
+*/
+
 void matrix_dgesvd(dgesvd_vector_enum jobu , dgesvd_vector_enum jobvt ,  matrix_type * A , double * S , matrix_type * U , matrix_type * VT) {
   char _jobu  = dgesvd_get_vector_job( jobu );
   char _jobvt = dgesvd_get_vector_job( jobvt ); 
   int m       = matrix_get_rows( A );
   int n       = matrix_get_columns( A );
-  int lda     = matrix_get_column_stride( A );
-  int ldu     = matrix_get_column_stride( U );
-  int ldvt    = matrix_get_column_stride( VT );
+  int lda     = matrix_get_column_stride( A  );
+  int ldu, ldvt;
+  double * VT_data , *U_data;
   int info    = 0;
   int min_worksize = util_int_max(3* util_int_min(m , n) + util_int_max(m , n) , 5 * util_int_min(m , n));
   double * work;
   int worksize;
 
+
+  if (U == NULL) {
+    ldu    = 1;
+    U_data = NULL;
+    if (jobu != DGESVD_NONE)
+      util_abort("%s: internal error \n",__func__);
+  } else {
+    ldu     = matrix_get_column_stride( U  );
+    U_data  = matrix_get_data( U ); 
+  }
+
+  if (VT == NULL) {
+    ldvt    = 1;  /* Will fail if set to zero */
+    VT_data = NULL;
+    if (jobvt != DGESVD_NONE)
+      util_abort("%s: internal error \n",__func__);
+  } else {
+    ldvt     = matrix_get_column_stride( VT );
+    VT_data  = matrix_get_data( VT ); 
+  }
+
   /* 
      Query the routine for optimal worksize. 
   */
-  work = util_malloc( 1 * sizeof * work , __func__);
+  
+  work     = util_malloc( 1 * sizeof * work , __func__);
   worksize = -1;
-  dgesvd_(&_jobu , &_jobvt , &m , &n , matrix_get_data( A ) , &lda , S , matrix_get_data( U ) , &ldu , matrix_get_data( VT ), &ldvt , work , &worksize , &info);
+  dgesvd_(&_jobu  	       , /* 1  */
+	  &_jobvt 	       , /* 2  */
+	  &m      	       , /* 3  */
+	  &n      	       , /* 4  */          
+	  matrix_get_data( A ) , /* 5  */
+	  &lda                 , /* 6  */
+	  S                    , /* 7  */
+	  U_data               , /* 8  */
+	  &ldu                 , /* 9  */
+	  VT_data              , /* 10 */
+	  &ldvt                , /* 11 */
+	  work                 , /* 12 */
+	  &worksize            , /* 13 */
+	  &info);                /* 14 */
+  
   
   /* Try to allocate optimal worksize. */
   worksize = (int) work[0];
@@ -131,9 +172,163 @@ void matrix_dgesvd(dgesvd_vector_enum jobu , dgesvd_vector_enum jobvt ,  matrix_
     work = util_malloc( worksize * sizeof * work , __func__);
   }
 
-  
-  dgesvd_(&_jobu , &_jobvt , &m , &n , matrix_get_data( A ) , &lda , S , matrix_get_data( U ) , &ldu , matrix_get_data( VT ), &ldvt , work , &worksize , &info);
+  dgesvd_(&_jobu , &_jobvt , &m , &n , matrix_get_data( A ) , &lda , S , U_data , &ldu , VT_data , &ldvt , work , &worksize , &info);
   free( work );
 }
 
+
+
+/******************************************************************/
+/* Eigenvalues of a symmetric matrix                              */
+/* Return value is the number of eigenvalues found.               */
+/******************************************************************/
+
+int  matrix_dsyevx(bool             compute_eig_vectors , 
+		   dsyevx_eig_enum  which_values        , /* DSYEVX | DSYEVX_VALUE_INTERVAL | DSYEVX_INDEX_INTERVAL */ 
+		   dsyevx_uplo_enum uplo, 
+		   matrix_type    * A , 
+		   double VL          ,                   /* Lower limit when using DSYEVX_VALUE_INTERVAL */
+		   double VU          ,                   /* Upper limit when using DSYEVX_VALUE_INTERVAL */
+		   int    IL          ,                   /* Lower index when using DSYEVX_INDEX_INTERVAL */ 
+		   int    IU          , 		  /* Upper index when using DSYEVX_INDEX_INTERVAL */
+		   double *eig_values ,                   /* The calcualated eigenvalues                  */
+		   matrix_type * Z    ) {                 /* The eigenvectors as columns vectors          */ 
+
+  int lda  = matrix_get_column_stride( A );
+  int n    = matrix_get_rows( A );
+  
+  char jobz;
+  char range;
+  char uplo_c;
+  
+  if (compute_eig_vectors)
+    jobz = 'V';
+  else
+    jobz = 'N';
+  
+  switch(which_values) {
+  case(DSYEVX_ALL):
+    range = 'A';
+    break;
+  case(DSYEVX_VALUE_INTERVAL):
+    range = 'V';
+    break;
+  case(DSYEVX_INDEX_INTERVAL):
+    range = 'I';
+    break;
+  default:
+    util_abort("%s: internal error \n",__func__);
+  }
+
+  if (uplo == DSYEVX_AUPPER)
+    uplo_c = 'U';
+  else if (uplo == DSYEVX_ALOWER)
+    uplo_c = 'L';
+  else
+    util_abort("%s: internal error \n",__func__);
+  
+  
+  if (!matrix_is_quadratic( A ))
+    util_abort("%s: matrix A must be quadratic \n",__func__);
+  
+  {
+    int      num_eigenvalues , ldz, info , worksize,ifail;
+    int    * iwork = util_malloc( 5 * n * sizeof * iwork , __func__);
+    double * work  = util_malloc( sizeof * work , __func__);
+    double * z_data;
+    double   abstol = 0.0; /* SHopuld */
+
+
+    if (compute_eig_vectors) {
+      ldz    = matrix_get_column_stride( Z );
+      z_data = matrix_get_data( Z );
+    } else {
+      /* In this case we can accept that Z == NULL */
+      ldz    = 1;
+      z_data = NULL;
+    }
+    printf("ldz:%d \n",ldz);
+    printf("n:%d \n",n);
+    
+    /* First call to determine optimal worksize. */
+    worksize = -1;
+    info     = 0;
+    dsyevx_( &jobz,     	   /*  1 */
+	     &range,    	   /*  2 */
+	     &uplo_c,   	   /*  3 */
+	     &n,        	   /*  4 */   
+	     matrix_get_data( A ), /*  5 */
+	     &lda ,     	   /*  6 */
+	     &VL ,      	   /*  7 */
+	     &VU ,      	   /*  8 */
+	     &IL ,      	   /*  9 */
+	     &IU ,      	   /* 10 */   
+	     &abstol ,             /* 11 */
+	     &num_eigenvalues ,    /* 12 */
+	     eig_values ,     	   /* 13 */
+	     z_data ,         	   /* 14 */
+	     &ldz ,           	   /* 15 */
+	     work ,           	   /* 16 */
+	     &worksize ,      	   /* 17 */
+	     iwork ,          	   /* 18 */
+	     &ifail ,         	   /* 19 */
+	     &info);          	   /* 20 */
+    
+    worksize = (int) work[0];
+    {
+      double * tmp = realloc(work , sizeof * work * worksize );
+      if (tmp == NULL) {
+	/* 
+	   OK - we could not get the optimal worksize, 
+	   try again with the minimum.
+	*/
+	worksize = 8 * n;
+	work = util_realloc(work , sizeof * work * worksize , __func__);
+      } else
+	work = tmp; /* The request for optimal worksize succeeded */
+    }
+    
+    /* Second call: do the job */
+    info     = 0;
+    dsyevx_( &jobz,
+	     &range,
+	     &uplo_c,
+	     &n,
+	     matrix_get_data( A ),
+	     &lda , 
+	     &VL ,
+	     &VU , 
+	     &IL , 
+	     &IU , 
+	     &abstol , 
+	     &num_eigenvalues , 
+	     eig_values ,  
+	     z_data , 
+	     &ldz , 
+	     work , 
+	     &worksize , 
+	     iwork , 
+	     &ifail , 
+	     &info);
+
+    
+    free( work );
+    free( iwork );
+    return num_eigenvalues;
+  }
+}
+
+
+/**
+   Wrapper function to compute all eigenvalues + eigenvactors.
+*/
+
+int  matrix_dsyevx_all(dsyevx_uplo_enum uplo, 
+		       matrix_type    * A , 
+		       double *eig_values ,                   /* The calcualated eigenvalues         */
+		       matrix_type * Z    ) {                 /* The eigenvectors as columns vectors */ 
+
+  return matrix_dsyevx(true , DSYEVX_ALL , uplo , A , 0,0,0,0, eig_values , Z);
+  
+}
 
