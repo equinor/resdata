@@ -533,9 +533,11 @@ int main(int argc , char ** argv) {
 	  
 	  for (global_index=0;global_index < ecl_grid_get_global_size( ecl_grid ); global_index++){
 	    const int act_index = ecl_grid_get_active_index1( ecl_grid , global_index );
-	    if (act_index >= 0) {
+	    int ix, iy, iz;
+	    
+	    if (act_index >= 1) {
 	      // Not numerical aquifer 
-	      if(aquifern[act_index] < 1){ 
+	      if(aquifern[act_index] >= 0){ 
 		float swat1 = swat1_v[act_index];
 		float swat2 = swat2_v[act_index];
 		float sgas1 = 0;
@@ -633,7 +635,7 @@ int main(int argc , char ** argv) {
       for(station_nr = 0; station_nr < vector_get_size( grav_stations ); station_nr++){
 	const grav_station_type * g_s = vector_iget_const(grav_stations, station_nr);
 	fprintf(stream, "%f\n",g_s->grav_diff);
-	printf ("DELTA_G: %f\n", g_s->grav_diff);
+	printf ("DELTA_G %i: %f %f %f %f\n", station_nr, g_s->grav_diff, g_s->utm_x, g_s->utm_y, g_s->depth);
       }
       fclose(stream);
     }
