@@ -1166,6 +1166,14 @@ const char * ecl_grid_get_filename( const ecl_grid_type * ecl_grid ) {
 }
 
 
+int ecl_grid_get_global_size( const ecl_grid_type * ecl_grid ) {
+  return ecl_grid->nx * ecl_grid->ny * ecl_grid->nz;
+}
+
+int ecl_grid_get_active_size( const ecl_grid_type * ecl_grid ) {
+  return ecl_grid->total_active;
+}
+
 
 void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
   int             active_cells , nx,ny,nz;

@@ -33,8 +33,9 @@ void            ecl_grid_get_ijk_from_active_index(const ecl_grid_type *, int , 
 void            ecl_grid_get_pos3(const ecl_grid_type * , int , int , int , double * , double * , double *);
 void            ecl_grid_get_pos1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos);
 void            ecl_grid_get_pos1A(const ecl_grid_type * grid , int active_index , double *xpos , double *ypos , double *zpos);
-
+int             ecl_grid_get_global_size( const ecl_grid_type * ecl_grid );
 bool            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2);
+int             ecl_grid_get_active_size( const ecl_grid_type * ecl_grid );
 
 
 void            ecl_grid_alloc_blocking_variables(ecl_grid_type * , int );

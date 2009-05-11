@@ -22,6 +22,7 @@ void truncate_saturation(float * value) {
 }
 
 
+
 bool has_phase( int phase_sum , int phase) {
   if ((phase_sum & phase) == 0)
     return false;
@@ -54,7 +55,10 @@ void print_usage() {
   printf(" NOTE:  Eclipse kw RPORV in RPTRST\n");
   
   printf("***************************************************************************\n");
+  abort();
+  exit(1);
 }
+
 
 typedef struct {
   double utm_x; 
@@ -73,91 +77,298 @@ grav_station_type * grav_station_alloc(double x, double y, double d){
   return s;
 }
 
+
 void grav_diff_update(grav_station_type * g_s, double inc){
-  //printf("Updateing\n");
   g_s->grav_diff = g_s->grav_diff + inc;
 }
 
 
+void load_stations(vector_type * grav_stations , const char * filename) {
+  FILE * stream = util_fopen(filename , "r");
+  bool at_eof = false;
+  while(!(at_eof)) {
+    double x,y,d;
+    int fscanf_return = fscanf(stream, "%lg%lg%lg", &x,&y,&d);
+    if(fscanf_return ==3){
+      grav_station_type * g = grav_station_alloc(x,y,d);
+      vector_append_owned_ref(grav_stations, g, free);
+    }
+    //else if(fscanf_return == 0) {
+    //  at_eof = true;
+    //}
+    else{
+      at_eof = true;
+      //util_abort("%s: something funky - only found %d numbers", __func__, fscanf_return);
+    }
+  }
+  fclose(stream);
+}
+    
 
+
+
+
+
+/**
+   This function will load, and return two ecl_file_type instances with the
+   restart information from the two relevant times. The input to this
+   function is a (char **) pointer, taken directly from the argv input
+   pointer.
+   
+   The function will start by calling ecl_util_get_file_type(input[0]), and
+   depending on the return value from this call it will follow three
+   different code-paths:
+
+
+     ECL_FILE_OTHER: This means that the first argument should be
+        interpreted not as an existing file name, but rather as an ECLIPSE
+        base name. The program will look for restart info in files in the
+        working directory with the following order:
+
+	 1. Unified restart file - unformatted.
+	 2. Non unified restart files - unformatted.
+	 3. Unified restart file - formatted.
+	 4. Non unified restart files - formatted.
+	
+	The search will stop at the first success, if no restart
+	information is found the function will exit. The remaining
+	arguments in input[] will not be considered, but observe that the
+	use of ecl_base is signalled back to calling scope (through
+	reference), and the calling scope will look for GRID file and INIT
+	file also based on the ECLBASE found input[0]; formatted /
+	unformatted will be as returned from the four-way switch above.
+ 
+	Example:
+	
+	bash% run_gravity  ECLIPSE   10  128   xxxx
+	
+
+
+     ECL_RESTART_FILE: This means that input[0] is a non unified eclipse
+        restart file, this file will be loaded. And it is ASSUMED that
+        input[1] is the next non - unified restart file, loaded for the
+        next report step.
+
+	Example:
+
+	bash% run_gravity ECLIPSE.X0010  ECLIPSE.X0128   xxx
+	
+
+     
+     ECL_UNIFIED_RESTART_FILE: This means that input[1] and input[2] are
+        interpreted as integers (i.e. report steps), and those two report
+        steps will be loaded from the unified restart file pointed to by
+        input[0].
+
+	Example:
+
+	bash% run_gravity ECLIPSE.UNRST  10 128 xxx
+
+ 
+
+    Observe that in all the examples above 'xxx' signifies argv arguments
+    which this function does not care about. On return the *arg_offset
+    variable will be set to indicate this index:
+
+    char ** input = argv[1];
+    int     input_offset;
+    ecl_restart_file_type ** restart_info = load_restart_info(input , &input_offset, ...);
+    
+    Then the next argument is: input[input_offset];
+*/
+
+
+static ecl_file_type ** load_restart_info(const char ** input,           /* Input taken directly from argv */
+					  int           input_length,    /* The length of input. */
+					  int         * arg_offset,      /* Integer - value corresponding to the *NEXT* element in input which should be used by the calling scope. */
+					  bool        * use_eclbase,     /* Should input[0] be interpreted as an ECLBASE string? */
+					  bool        * fmt_file) {      /* Only relevant if (*use_eclbase == true): was formatted file used? */
+  
+  
+  ecl_file_type ** restart_files = util_malloc( 2 * sizeof * restart_files , __func__);
+  int  report_nr;
+  ecl_file_enum file_type;
+
+  *use_eclbase = false;
+  ecl_util_get_file_type( input[0] , &file_type , fmt_file , &report_nr );
+
+  if (file_type == ECL_RESTART_FILE) {
+    /* Loading from two non-unified restart files. */
+    if (input_length >= 2) {
+      ecl_util_get_file_type( input[1] , &file_type , fmt_file , &report_nr );
+      if (file_type == ECL_RESTART_FILE) {
+	restart_files[0] = ecl_file_fread_alloc( input[0] , true );
+	restart_files[1] = ecl_file_fread_alloc( input[1] , true );
+	*arg_offset = 2;
+      } else print_usage();
+    } else print_usage();
+  } else if (file_type == ECL_UNIFIED_RESTART_FILE) {
+    /* Loading from one unified restart file. */
+    if (input_length >= 3) {
+      int report1 , report2;
+      if ((util_sscanf_int( input[1] , &report1) && util_sscanf_int( input[2] , &report2))) {
+	restart_files[0] = ecl_file_fread_alloc_unrst_section( input[0] , report1 , true);
+	restart_files[1] = ecl_file_fread_alloc_unrst_section( input[0] , report2 , true);
+	*arg_offset = 3;
+      } else
+	print_usage();
+    } else 
+      print_usage();
+  } else if (file_type == ECL_OTHER_FILE) {
+    if (input_length >= 3) {
+      int report1, report2;
+      if (!(util_sscanf_int( input[1] , &report1) && util_sscanf_int( input[2] , &report2)))
+	print_usage();
+      else {
+	/* 
+	   input[0] is interpreted as an eclbase string, and not as the name of
+	   an existing file. Go through various combinations of
+	   unified/non-unified formatted/unformatted to find data.
+	*/
+	ecl_storage_enum storage_mode = ECL_INVALID_STORAGE;
+	const char * eclbase = input[0];
+	char * unified_file  = NULL;
+	char * file1	     = NULL;
+	char * file2	     = NULL;       
+	
+	unified_file = ecl_util_alloc_filename(NULL , eclbase , ECL_UNIFIED_RESTART_FILE , false , -1);
+	if (util_file_exists( unified_file ))
+	  /* Binary unified */
+	  storage_mode = ECL_BINARY_UNIFIED;
+	else {
+	  /* Binary non-unified */
+	  file1 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , false , report1);
+	  file2 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , false , report2);
+	  if ((util_file_exists(file1) && util_file_exists(file2))) 
+	    storage_mode = ECL_BINARY_NON_UNIFIED;
+	  else {
+	    free(unified_file);
+	    /* ASCII unified */
+	    unified_file = ecl_util_alloc_filename(NULL , eclbase , ECL_UNIFIED_RESTART_FILE , true , -1);
+	    if (util_file_exists( unified_file ))
+	      storage_mode = ECL_FORMATTED_UNIFIED;
+	    else {
+	      /* ASCII non unified */
+	      free(file1);
+	      free(file2);
+	      file1 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , true , report1);
+	      file2 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , true , report2);
+	      if ((util_file_exists(file1) && util_file_exists(file2))) 
+		storage_mode = ECL_FORMATTED_UNIFIED;
+	    }
+	  }
+	}
+
+	if (storage_mode == ECL_INVALID_STORAGE) {
+	  char * cwd = util_alloc_cwd();
+	  util_exit("Could not find any restart information for ECLBASE:%s in %s \n", eclbase , cwd);
+	  free( cwd );
+	}
+	
+	if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_FORMATTED_UNIFIED)) {
+	  restart_files[0] = ecl_file_fread_alloc_unrst_section( input[0] , report1 , true);
+	  restart_files[1] = ecl_file_fread_alloc_unrst_section( input[0] , report2 , true);
+	} else {
+	  restart_files[0] = ecl_file_fread_alloc( file1 , true);
+	  restart_files[1] = ecl_file_fread_alloc( file2 , true);
+	}
+	  
+
+
+	*use_eclbase = true;
+	if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_BINARY_NON_UNIFIED))
+	  *fmt_file = false;
+	else
+	  *fmt_file = true;
+	
+	*arg_offset = 3;
+	
+	util_safe_free( file1 );
+	util_safe_free( file2 );
+	util_safe_free( unified_file );
+      }
+    }
+  }
+  return restart_files;
+}
+
+/*****************************************************************/
+/* Main program                                                  */
 /*****************************************************************/
 
 int main(int argc , char ** argv) {
   
-  if(argc > 1){
-    if(strcmp(argv[1], "-h") == 0){
+  if(argc > 1) {
+    if(strcmp(argv[1], "-h") == 0)
       print_usage();
-      exit(1);
-    }
   }
-  if(argc < 2){
+
+  if(argc < 2)
     print_usage();
-    exit(1);
-  }
+
+
   else{
+    char ** input        = &argv[1];   /* Skipping the name of the executable */
+    int     input_length = argc - 1;   
+    int     input_offset = 0;
+    bool    use_eclbase, fmt_file; 
+    
+    ecl_file_type ** restart_files;
+    ecl_file_type  * init_file;
+    ecl_grid_type  * ecl_grid;
+    
     int model_phases;
     int file_phases;
-
-    const char * ecl_base     = argv[1];    
-    const char * time1        = argv[2];    
-    const char * time2        = argv[3];    
-    const char * station_file = argv[4];    
-    
-    // Check if all the relevant files exist
-    
     vector_type * grav_stations = vector_alloc_new();
-    char * grid_filename     	= ecl_util_alloc_exfilename( NULL , ecl_base , ECL_GRID_FILE , false , -1);
-    char * init_filename     	= ecl_util_alloc_exfilename( NULL , ecl_base , ECL_INIT_FILE , false , -1);
-    char * restart1_filename;
-    char * restart2_filename;
     
-    {
-      int restart1,restart2;
-      if (!(util_sscanf_int( time1 , &restart1) && util_sscanf_int( time2 , &restart2 )))
-	printf("Sorry failed to interpret %s and %s as integers\n", time1 , time2);
-
-      restart1_filename = ecl_util_alloc_exfilename( NULL , ecl_base , ECL_RESTART_FILE , false , restart1);
-      restart2_filename = ecl_util_alloc_exfilename( NULL , ecl_base , ECL_RESTART_FILE , false , restart2);
-    }
-
-    // station_file
-    if (!(util_file_exists(station_file))) {
-      printf("Sorry, file:, %s does not exist", station_file);
-      exit(1);
-    }
     
+    /* Restart info */
+    restart_files = load_restart_info( (const char **) input , input_length , &input_offset , &use_eclbase , &fmt_file);
+
+    
+    /* INIT and GRID/EGRID files */
     {
-      FILE * stream = util_fopen(station_file , "r");
-      bool at_eof = false;
-      while(!(at_eof)) {
-	double x,y,d;
-	int fscanf_return = fscanf(stream, "%lg%lg%lg", &x,&y,&d);
-	if(fscanf_return ==3){
-	  grav_station_type * g = grav_station_alloc(x,y,d);
-	  vector_append_owned_ref(grav_stations, g, free);
-	}
-	//else if(fscanf_return == 0) {
-	//  at_eof = true;
-	//}
-	else{
-	  at_eof = true;
-	  //util_abort("%s: something funky - only found %d numbers", __func__, fscanf_return);
-	}
+      char           * grid_filename = NULL;
+      char           * init_filename = NULL;
+      if (use_eclbase) {
+	/* 
+	   The first command line argument is interpreted as ECLBASE, and we
+	   search for grid and init files in cwd.
+	*/
+	init_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_INIT_FILE , fmt_file , -1);
+	grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_EGRID_FILE , fmt_file , -1);
+	if (grid_filename == NULL)
+	  grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_GRID_FILE , fmt_file , -1);
+	if ((init_filename == NULL) || (grid_filename == NULL))
+	  print_usage();
+      } else {
+	/* */
+	if ((input_length - input_offset) > 1) {
+	  init_filename = util_alloc_string_copy(input[input_offset]);
+	  grid_filename = util_alloc_string_copy(input[input_offset + 1]);
+	  input_offset += 2;
+	} else print_usage();
       }
-      fclose(stream);
+      
+      init_file     = ecl_file_fread_alloc(init_filename , true);
+      ecl_grid      = ecl_grid_alloc(grid_filename , true);
+      free( init_filename );
+      free( grid_filename );
     }
     
+    // station_file
+    if (input_length > input_offset) {
+      char * station_file = input[input_offset];
+      if (util_file_exists(station_file))
+	load_stations( grav_stations , station_file);
+      else
+	print_usage();
+    } else 
+      print_usage();
+
+    /** OK - now everything is loaded */
+        
     
-    // Allocate the files 
-    ecl_file_type * init_file     = ecl_file_fread_alloc(init_filename , true);
-    ecl_grid_type * grid_file     = ecl_grid_alloc(grid_filename , true);
-    ecl_file_type * restart1_file = ecl_file_fread_alloc(restart1_filename , true);
-    ecl_file_type * restart2_file = ecl_file_fread_alloc(restart2_filename , true);
-
-    int nx,ny,nz,nactive;    
-    ecl_grid_get_dims( grid_file , &nx , &ny , &nz , &nactive);
-    printf("NACTVE CELLS IS: %d %d %d %d\n", nactive, nx, ny, nz);
-
         
     // Get the relevant kws and vectors
     // RPORV
@@ -165,24 +376,21 @@ int main(int argc , char ** argv) {
     ecl_kw_type * rporv2_kw ;
     
     model_phases = 0;
-    if (ecl_file_has_kw(restart1_file , "OIL_DEN"))
+    if (ecl_file_has_kw(restart_files[0] , "OIL_DEN"))
       model_phases += OIL;			  	      
 
-    if (ecl_file_has_kw(restart1_file , "WAT_DEN"))
+    if (ecl_file_has_kw(restart_files[0] , "WAT_DEN"))
       model_phases += WATER;			  	      
 
-    if (ecl_file_has_kw(restart1_file , "GAS_DEN"))
+    if (ecl_file_has_kw(restart_files[0] , "GAS_DEN"))
       model_phases += GAS;
 
     /** We assume the restart file NEVER has SOIL information */
     file_phases = 0;
-    if (ecl_file_has_kw(restart1_file , "SWAT"))
+    if (ecl_file_has_kw(restart_files[0] , "SWAT"))
       file_phases += WATER;
-    if (ecl_file_has_kw(restart1_file , "SGAS"))
+    if (ecl_file_has_kw(restart_files[0] , "SGAS"))
       file_phases += GAS;
-    if (ecl_file_has_kw(restart1_file , "OIL"))
-      file_phases += OIL;
-
 
     /* Consiency check */
     {
@@ -190,7 +398,8 @@ int main(int argc , char ** argv) {
 	 The following assumptions are made:
 	 
 	 1. All restart files should have water, i.e. the SWAT keyword. 
-	 2. All phases present in the restart file should also be present as densities.
+	 2. All phases present in the restart file should also be present as densities, 
+	    in addition the model must contain one additional phase. 
 	 3. The restart files can never contain oil saturation.
 	 
       */
@@ -216,9 +425,9 @@ int main(int argc , char ** argv) {
     
     
     
-    if( ecl_file_has_kw( restart1_file , "RPORV") || ecl_file_has_kw( restart2_file , "RPORV") ){   
-      rporv1_kw    = ecl_file_iget_named_kw(restart1_file, "RPORV", 0);
-      rporv2_kw    = ecl_file_iget_named_kw(restart2_file, "RPORV", 0);
+    if( ecl_file_has_kw( restart_files[0] , "RPORV") || ecl_file_has_kw( restart_files[1] , "RPORV") ){   
+      rporv1_kw    = ecl_file_iget_named_kw(restart_files[0], "RPORV", 0);
+      rporv2_kw    = ecl_file_iget_named_kw(restart_files[1], "RPORV", 0);
     } else {
       printf("Sorry, the restartfiles does not contain RPORV\n");      
       exit(1);
@@ -247,20 +456,20 @@ int main(int argc , char ** argv) {
       {
 	// OIL_DEN
 	if( has_phase(model_phases , OIL) ) {
-	  oil_den1_kw  = ecl_file_iget_named_kw(restart1_file, "OIL_DEN", 0);
-	  oil_den2_kw  = ecl_file_iget_named_kw(restart2_file, "OIL_DEN", 0);
+	  oil_den1_kw  = ecl_file_iget_named_kw(restart_files[0], "OIL_DEN", 0);
+	  oil_den2_kw  = ecl_file_iget_named_kw(restart_files[1], "OIL_DEN", 0);
 	}
 	
 	// GAS_DEN
 	if( has_phase( model_phases , GAS) ) {
-	  gas_den1_kw  = ecl_file_iget_named_kw(restart1_file, "GAS_DEN", 0);
-	  gas_den2_kw  = ecl_file_iget_named_kw(restart2_file, "GAS_DEN", 0);
+	  gas_den1_kw  = ecl_file_iget_named_kw(restart_files[0], "GAS_DEN", 0);
+	  gas_den2_kw  = ecl_file_iget_named_kw(restart_files[1], "GAS_DEN", 0);
 	}
 	
 	// WAT_DEN
 	if( has_phase( model_phases , WATER) ) {
-	  wat_den1_kw  = ecl_file_iget_named_kw(restart1_file, "WAT_DEN", 0);
-	  wat_den2_kw  = ecl_file_iget_named_kw(restart2_file, "WAT_DEN", 0);
+	  wat_den1_kw  = ecl_file_iget_named_kw(restart_files[0], "WAT_DEN", 0);
+	  wat_den2_kw  = ecl_file_iget_named_kw(restart_files[1], "WAT_DEN", 0);
 	}
       }
       
@@ -269,14 +478,14 @@ int main(int argc , char ** argv) {
       {
 	// SGAS
 	if( has_phase( file_phases , GAS )) {
-	  sgas1_kw     = ecl_file_iget_named_kw(restart1_file, "SGAS", 0);
-	  sgas2_kw     = ecl_file_iget_named_kw(restart2_file, "SGAS", 0);
+	  sgas1_kw     = ecl_file_iget_named_kw(restart_files[0], "SGAS", 0);
+	  sgas2_kw     = ecl_file_iget_named_kw(restart_files[1], "SGAS", 0);
 	} 
 
 	// SWAT
 	if( has_phase( file_phases , WATER )) {
-	  swat1_kw     = ecl_file_iget_named_kw(restart1_file, "SWAT", 0);
-	  swat2_kw     = ecl_file_iget_named_kw(restart2_file, "SWAT", 0);
+	  swat1_kw     = ecl_file_iget_named_kw(restart_files[0], "SWAT", 0);
+	  swat2_kw     = ecl_file_iget_named_kw(restart_files[1], "SWAT", 0);
 	} 
       }
       
@@ -285,6 +494,7 @@ int main(int argc , char ** argv) {
 	aquifern_kw     = ecl_file_iget_named_kw(init_file, "AQUIFERN", 0);
       
       {
+	int     nactive  = ecl_grid_get_active_size( ecl_grid );
 	float * zero     = util_malloc( nactive * sizeof * zero     , __func__);    /* Fake vector of zeros used for densities / sturations when you do not have data. */
 	int   * int_zero = util_malloc( nactive * sizeof * int_zero , __func__);    /* Fake vector of zeros used for AQUIFER when the init file does not supply data. */
 	{
@@ -318,10 +528,11 @@ int main(int argc , char ** argv) {
 	    aquifern = int_zero;
 	  
 	  
-	  for (global_index=0;global_index < nx*ny*nz; global_index++){
-	    const int act_index = ecl_grid_get_active_index1( grid_file , global_index );
+	  for (global_index=0;global_index < ecl_grid_get_global_size( ecl_grid ); global_index++){
+	    const int act_index = ecl_grid_get_active_index1( ecl_grid , global_index );
 	    if (act_index >= 0) {
-	      if(aquifern[act_index] < 1){ // Not numerical aquifer 
+	      // Not numerical aquifer 
+	      if(aquifern[act_index] < 1){ 
 		float swat1 = swat1_v[act_index];
 		float swat2 = swat2_v[act_index];
 		float sgas1 = 0;
@@ -385,7 +596,7 @@ int main(int argc , char ** argv) {
 		  //}
 		  
 		  
-		  ecl_grid_get_pos1(grid_file , global_index , &xpos , &ypos , &zpos);
+		  ecl_grid_get_pos1(ecl_grid , global_index , &xpos , &ypos , &zpos);
 		  for(station_nr=0; station_nr < vector_get_size( grav_stations ); station_nr++) {
 		    grav_station_type * g_s = vector_iget(grav_stations, station_nr);
 		    double dist_x  = xpos - g_s->utm_x;
@@ -422,13 +633,10 @@ int main(int argc , char ** argv) {
     // Clean up the mess 
     
     vector_free( grav_stations );
-    ecl_grid_free(grid_file);
-    ecl_file_free(restart1_file);
-    ecl_file_free(restart2_file);
+    ecl_grid_free(ecl_grid);
+    ecl_file_free(restart_files[0]);
+    ecl_file_free(restart_files[1]);
+    free( restart_files );
     ecl_file_free(init_file);
-    free( grid_filename );
-    free( init_filename );
-    free( restart1_filename);
-    free( restart2_filename);
   }		
 }

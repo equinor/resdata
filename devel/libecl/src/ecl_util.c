@@ -352,6 +352,7 @@ char * ecl_util_alloc_filename(const char * path, const char * base , ecl_file_e
 }
 
 
+
 static char ** ecl_util_alloc_filelist_static(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file, int report_nr1 , int report_nr2, bool must_exist) {
   if (report_nr2 < report_nr1) 
     util_abort("%s: Invalid input report_nr1:%d > report_nr:%d - aborting \n",__func__ , report_nr1 , report_nr2);
@@ -378,6 +379,26 @@ char * ecl_util_alloc_exfilename(const char * path, const char * base , ecl_file
   return ecl_util_alloc_filename_static(path , base , file_type ,fmt_file , report_nr , true);
 }
 
+/**
+   This function will first try if the 'fmt_file' file exists, and
+   then subsequently the !fmt_file version. If neither can be found it
+   will return NULL.
+*/
+
+char * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file_first , int report_nr) {
+
+  char * filename = ecl_util_alloc_filename( path , base , file_type , fmt_file_first , report_nr);
+  if (!util_file_exists( filename )) {
+    free( filename );
+    filename = ecl_util_alloc_filename( path , base , file_type , !fmt_file_first , report_nr);
+  }
+
+  if (! util_file_exists(filename))
+    filename = util_safe_free( filename );
+  
+  return filename;
+
+}
 
 int ecl_util_fname_cmp(const void *f1, const void *f2) {
   int t1 = ecl_util_filename_report_nr( *((const char **) f1) );

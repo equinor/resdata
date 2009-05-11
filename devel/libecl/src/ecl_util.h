@@ -6,17 +6,32 @@ extern "C" {
 #include <stdbool.h>
 #include <time.h>
 
-typedef enum {ECL_OTHER_FILE           = 0   , 
-	      ECL_RESTART_FILE         = 1   , 
-	      ECL_UNIFIED_RESTART_FILE = 2   , 
-	      ECL_SUMMARY_FILE         = 4   , 
-	      ECL_UNIFIED_SUMMARY_FILE = 8   , 
-	      ECL_SUMMARY_HEADER_FILE  = 16  , 
-	      ECL_GRID_FILE            = 32  , 
-	      ECL_EGRID_FILE           = 64  , 
-	      ECL_INIT_FILE            = 128 ,
-              ECL_RFT_FILE             = 256 ,
-              ECL_DATA_FILE            = 512 } ecl_file_enum;   
+  typedef enum {ECL_OTHER_FILE           = 0   , 
+		ECL_RESTART_FILE         = 1   , 
+		ECL_UNIFIED_RESTART_FILE = 2   , 
+		ECL_SUMMARY_FILE         = 4   , 
+		ECL_UNIFIED_SUMMARY_FILE = 8   , 
+		ECL_SUMMARY_HEADER_FILE  = 16  , 
+		ECL_GRID_FILE            = 32  , 
+		ECL_EGRID_FILE           = 64  , 
+		ECL_INIT_FILE            = 128 ,
+		ECL_RFT_FILE             = 256 ,
+		ECL_DATA_FILE            = 512 } ecl_file_enum;   
+
+
+  /*
+    This enum enumerates the four different ways summary and restart information
+    can be stored.
+  */
+
+  
+  typedef enum { ECL_INVALID_STORAGE       = 0,
+                 ECL_BINARY_UNIFIED        = 1,
+		 ECL_FORMATTED_UNIFIED     = 2,
+		 ECL_BINARY_NON_UNIFIED    = 4,
+		 ECL_FORMATTED_NON_UNIFIED = 8} ecl_storage_enum;
+
+
 
 
 #define ecl_str_len   8
@@ -48,6 +63,7 @@ const    char * ecl_util_type_name(ecl_type_enum );
 time_t          ecl_util_get_start_date(const char * );
 bool            ecl_util_fmt_file(const char *);
 int             ecl_util_fname_cmp(const void *, const void *);
+char          * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , ecl_file_enum file_type , bool start_fmt , int report_nr);
 
 #ifdef __cplusplus
 }
