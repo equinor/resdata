@@ -508,14 +508,14 @@ int main(int argc , char ** argv) {
 	  const float * sgas1_v   = safe_get_float_ptr( sgas1_kw 	  , NULL );
 	  const float * swat1_v   = safe_get_float_ptr( swat1_kw 	  , NULL );
 	  const float * oil_den1  = safe_get_float_ptr( oil_den1_kw , zero );
-	  const float * gas_den1  = safe_get_float_ptr( oil_den1_kw , zero );
-	  const float * wat_den1  = safe_get_float_ptr( oil_den1_kw , zero );
+	  const float * gas_den1  = safe_get_float_ptr( gas_den1_kw , zero );
+	  const float * wat_den1  = safe_get_float_ptr( wat_den1_kw , zero );
 	  
 	  const float * sgas2_v   = safe_get_float_ptr( sgas2_kw 	  , NULL );
 	  const float * swat2_v   = safe_get_float_ptr( swat2_kw 	  , NULL );
 	  const float * oil_den2  = safe_get_float_ptr( oil_den2_kw , zero );
-	  const float * gas_den2  = safe_get_float_ptr( oil_den2_kw , zero );
-	  const float * wat_den2  = safe_get_float_ptr( oil_den2_kw , zero );
+	  const float * gas_den2  = safe_get_float_ptr( gas_den2_kw , zero );
+	  const float * wat_den2  = safe_get_float_ptr( wat_den2_kw , zero );
 	  
 	  const float * rporv1    = ecl_kw_get_float_ptr(rporv1_kw);
 	  const float * rporv2    = ecl_kw_get_float_ptr(rporv2_kw);
