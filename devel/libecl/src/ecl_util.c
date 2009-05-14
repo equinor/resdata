@@ -379,6 +379,7 @@ char * ecl_util_alloc_exfilename(const char * path, const char * base , ecl_file
   return ecl_util_alloc_filename_static(path , base , file_type ,fmt_file , report_nr , true);
 }
 
+
 /**
    This function will first try if the 'fmt_file' file exists, and
    then subsequently the !fmt_file version. If neither can be found it
@@ -386,7 +387,7 @@ char * ecl_util_alloc_exfilename(const char * path, const char * base , ecl_file
 */
 
 char * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file_first , int report_nr) {
-
+  
   char * filename = ecl_util_alloc_filename( path , base , file_type , fmt_file_first , report_nr);
   if (!util_file_exists( filename )) {
     free( filename );
@@ -394,10 +395,9 @@ char * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , e
   }
 
   if (! util_file_exists(filename))
-    filename = util_safe_free( filename );
+    filename = util_safe_free( filename );  
   
   return filename;
-
 }
 
 int ecl_util_fname_cmp(const void *f1, const void *f2) {

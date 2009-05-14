@@ -55,7 +55,6 @@ void print_usage() {
   printf(" NOTE:  Eclipse kw RPORV in RPTRST\n");
   
   printf("***************************************************************************\n");
-  abort();
   exit(1);
 }
 
@@ -338,11 +337,11 @@ int main(int argc , char ** argv) {
 	   The first command line argument is interpreted as ECLBASE, and we
 	   search for grid and init files in cwd.
 	*/
-	init_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_INIT_FILE , fmt_file , -1);
+	init_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_INIT_FILE  , fmt_file , -1);
 	grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_EGRID_FILE , fmt_file , -1);
 	if (grid_filename == NULL)
 	  grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_GRID_FILE , fmt_file , -1);
-	if ((init_filename == NULL) || (grid_filename == NULL))
+	if ((init_filename == NULL) || (grid_filename == NULL))  /* Means we could not find them. */
 	  print_usage();
       } else {
 	/* */
@@ -533,8 +532,6 @@ int main(int argc , char ** argv) {
 	  
 	  for (global_index=0;global_index < ecl_grid_get_global_size( ecl_grid ); global_index++){
 	    const int act_index = ecl_grid_get_active_index1( ecl_grid , global_index );
-	    int ix, iy, iz;
-	    
 	    if (act_index >= 1) {
 	      // Not numerical aquifer 
 	      if(aquifern[act_index] >= 0){ 
@@ -627,8 +624,8 @@ int main(int argc , char ** argv) {
 	free( int_zero );
       }
     }
+    
     {
-      
       FILE * stream = util_fopen(report_filen , "w");
       
       int station_nr;
@@ -639,9 +636,9 @@ int main(int argc , char ** argv) {
       }
       fclose(stream);
     }
+    
 
     // Clean up the mess 
-    
     vector_free( grav_stations );
     ecl_grid_free(ecl_grid);
     ecl_file_free(restart_files[0]);

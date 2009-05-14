@@ -14,20 +14,19 @@
     The RFT's from several wells, and possibly also several timesteps
     are lumped togeheter in one .RFT file. The ecl_rft_node
     implemented in this file contains the information for one
-    well/report step. In tersms of the basic ecl_xxx types on
-    ecl_rft_node corresponds to one ecl_block instance. 
+    well/report step. 
 */
     
 
 
-typedef enum { RFT     = 1 , 
-	       PLT     = 2 , 
-	       SEGMENT = 3} ecl_rft_enum;
+
+
 /*
   If the type is RFT, PLT or SEGMENT depends on the options used when
   the .RFT file is created. RFT and PLT are quite similar, SEGMENT is
   not really supported.
 */
+
 
 /** 
     Here comes some small structs containing various pieces of
@@ -54,7 +53,7 @@ typedef struct {
   int 	 j;
   int 	 k; 
   double depth;
-  double pressure; /* both CONPRES from PLT and PRESSURE from RFT are internalized in the cell_type. */
+  double pressure; /* both CONPRES from PLT and PRESSURE from RFT are internalized as pressure in the cell_type. */
 } cell_type;
 
 /*-----------------------------------------------------------------*/
@@ -77,7 +76,6 @@ typedef struct {
   double wrat;
   /* There is quite a lot of more information in the PLT - not yet internalized. */
 } plt_data_type;
-
 
 
 
@@ -506,5 +504,33 @@ void ecl_rft_node_export_DEPTH(const ecl_rft_node_type * rft_node , const char *
 }
 
 
-int         ecl_rft_node_get_size(const ecl_rft_node_type * rft_node) { return rft_node->size; }
-time_t      ecl_rft_node_get_recording_date(const ecl_rft_node_type * rft_node) { return rft_node->recording_date; }
+int          ecl_rft_node_get_size(const ecl_rft_node_type * rft_node) { return rft_node->size; }
+time_t       ecl_rft_node_get_date(const ecl_rft_node_type * rft_node) { return rft_node->recording_date; }
+ecl_rft_enum ecl_rft_node_get_type(const ecl_rft_node_type * rft_node) { return rft_node->data_type; }
+
+
+/*****************************************************************/
+/* various functions to access properties at the cell level      */
+
+static cell_type * ecl_rft_node_iget_cell( const ecl_rft_node_type * rft_node , int index) {
+  if (index < rft_node->size)
+    return &rft_node->cells[index];
+  else {
+    util_abort("%s: asked for cell:%d max:%d \n",__func__ , index , rft_node->size - 1);
+    return NULL;
+  }
+}
+
+
+
+double ecl_rft_node_iget_depth( const ecl_rft_node_type * rft_node , int index) {
+  const cell_type * cell = ecl_rft_node_iget_cell( rft_node , index );
+  return cell->depth;
+}
+
+
+
+double ecl_rft_node_iget_pressure( const ecl_rft_node_type * rft_node , int index) {
+  const cell_type * cell = ecl_rft_node_iget_cell( rft_node , index );
+  return cell->pressure;
+}
