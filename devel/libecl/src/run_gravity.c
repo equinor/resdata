@@ -190,7 +190,7 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
 
   *use_eclbase = false;
   ecl_util_get_file_type( input[0] , &file_type , fmt_file , &report_nr );
-
+  
   if (file_type == ECL_RESTART_FILE) {
     /* Loading from two non-unified restart files. */
     if (input_length >= 2) {
@@ -231,7 +231,7 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
 	char * file2	     = NULL;       
 	
 	unified_file = ecl_util_alloc_filename(NULL , eclbase , ECL_UNIFIED_RESTART_FILE , false , -1);
-	if (util_file_exists( unified_file ))
+	if (util_file_exists( unified_file )) 
 	  /* Binary unified */
 	  storage_mode = ECL_BINARY_UNIFIED;
 	else {
@@ -257,16 +257,16 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
 	    }
 	  }
 	}
-
+	
 	if (storage_mode == ECL_INVALID_STORAGE) {
 	  char * cwd = util_alloc_cwd();
 	  util_exit("Could not find any restart information for ECLBASE:%s in %s \n", eclbase , cwd);
 	  free( cwd );
 	}
-	
+
 	if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_FORMATTED_UNIFIED)) {
-	  restart_files[0] = ecl_file_fread_alloc_unrst_section( input[0] , report1 , true);
-	  restart_files[1] = ecl_file_fread_alloc_unrst_section( input[0] , report2 , true);
+	  restart_files[0] = ecl_file_fread_alloc_unrst_section( unified_file , report1 , true);
+	  restart_files[1] = ecl_file_fread_alloc_unrst_section( unified_file , report2 , true);
 	} else {
 	  restart_files[0] = ecl_file_fread_alloc( file1 , true);
 	  restart_files[1] = ecl_file_fread_alloc( file2 , true);

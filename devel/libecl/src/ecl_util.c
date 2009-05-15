@@ -120,6 +120,8 @@ bool ecl_util_numeric_extension(const char * extension) {
   formatted or not, and in the case of summary/restart files, which
   report number this corresponds to.
 
+
+
   The function itself returns void, all the results are by reference.
 */
 

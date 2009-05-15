@@ -20,8 +20,6 @@
    All of this is just lumped together in one long vector, both in the
    file, and in this implementation. The data for one specific RFT
    (one well, one time) is internalized in the ecl_rft_node type.   
-   
-   
 */
    
 
@@ -29,7 +27,7 @@
 struct ecl_rft_file_struct {
   char        * filename;
   vector_type * data;          /* This vector just contains all the rft nodes in one long vector. */
-  hash_type   * well_index;    /* This indexes well names into the data vector. */
+  hash_type   * well_index;    /* This indexes well names into the data vector - very similar to the scheme used in ecl_file. */
 };
 
 
