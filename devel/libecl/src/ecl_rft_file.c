@@ -97,7 +97,7 @@ void ecl_rft_file_free(ecl_rft_file_type * rft_vector) {
    the same well occurse many times and so on.
 */
 
-int ecl_file_get_size( const ecl_rft_file_type * rft_file) {
+int ecl_rft_file_get_size( const ecl_rft_file_type * rft_file) {
   return vector_get_size( rft_file->data );
 }
 
@@ -144,7 +144,7 @@ const ecl_rft_node_type * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_
 
 
 
-const ecl_rft_node_type * ecl_rft_iget_well_rft( const ecl_rft_file_type * rft_file , const char * well, int index) {
+const ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_file , const char * well, int index) {
   const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
   return ecl_rft_file_iget_node( rft_file , int_vector_iget(index_vector , index));
 }
@@ -174,7 +174,7 @@ int ecl_rft_file_get_num_wells( const ecl_rft_file_type * rft_file ) {
 
 
 
-const stringlist_type * ecl_rft_file_alloc_well_list(const ecl_rft_file_type * rft_file ) {
+stringlist_type * ecl_rft_file_alloc_well_list(const ecl_rft_file_type * rft_file ) {
   return hash_alloc_stringlist( rft_file->well_index );
 }
 

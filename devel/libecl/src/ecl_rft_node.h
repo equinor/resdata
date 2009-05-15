@@ -23,6 +23,7 @@ time_t    	    ecl_rft_node_get_date(const ecl_rft_node_type * );
 int                 ecl_rft_node_get_size(const ecl_rft_node_type * );
 void                ecl_rft_node_summarize(const ecl_rft_node_type * , bool );
 const char        * ecl_rft_node_get_well_name( const ecl_rft_node_type * rft_node );
+void                ecl_rft_node_iget_ijk( const ecl_rft_node_type * rft_node , int index , int *i , int *j , int *k);
 
 void ecl_rft_node_export_DEPTH(const ecl_rft_node_type * , const char * );
 double ecl_rft_node_iget_pressure( const ecl_rft_node_type * rft_node , int index);

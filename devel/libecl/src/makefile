@@ -68,12 +68,15 @@ run_gravity.o  : run_gravity.c
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x
 BIN	:  $(BIN_FILES) 
 BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x extract_owc.x block_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
 
 ecl_pack.x: $(LIB) ecl_pack.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_pack.o -o ecl_pack.x $(LIB_PATH) $(LIB_LINK)
+
+rft_test.x: $(LIB) rft_test.o
+	$(LD) -$(MFLAG) $(LDFLAGS) rft_test.o -o rft_test.x $(LIB_PATH) $(LIB_LINK)
 
 ecl_unpack.x: $(LIB) ecl_unpack.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_unpack.o -o ecl_unpack.x $(LIB_PATH) $(LIB_LINK)

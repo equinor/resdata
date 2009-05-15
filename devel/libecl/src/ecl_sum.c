@@ -337,8 +337,19 @@ double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep ) {
 void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , const char ** var_list, bool report_only) {
   int first_report = ecl_sum_get_first_report_step( ecl_sum );
   int last_report  = ecl_sum_get_last_report_step( ecl_sum );
-  int report;
+  bool *has_var    = util_malloc( nvars * sizeof * has_var , __func__);
+  int report,ivar;
   
+  for (ivar = 0; ivar < nvars; ivar++) {
+    if (ecl_sum_has_general_var( ecl_sum , var_list[ivar] ))
+      has_var[ivar] = true;
+    else {
+      fprintf(stderr,"** Warning: could not find variable: \'%s\' in summary file \n", var_list[ivar]);
+      has_var[ivar] = false;
+    }
+  }
+    
+
 
   for (report = first_report; report <= last_report; report++) {
     if (ecl_sum_data_has_report_step(ecl_sum->data , report)) {
@@ -350,12 +361,13 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
 
       for (ministep = ministep1; ministep <= ministep2; ministep++) {
 	if (ecl_sum_has_ministep(ecl_sum , ministep)) {
-	  int day,month,year,ivar;
+	  int day,month,year;
 	  util_set_date_values(ecl_sum_get_sim_time(ecl_sum , ministep) , &day , &month, &year);
 	  fprintf(stream , "%7.2f   %02d/%02d/%04d   " , ecl_sum_get_sim_days(ecl_sum , ministep) , day , month , year);
 	  
-	  for (ivar = 0; ivar < nvars; ivar++)
-	    fprintf(stream , " %12.3f " , ecl_sum_get_general_var(ecl_sum , ministep , var_list[ivar]));
+	  for (ivar = 0; ivar < nvars; ivar++) 
+	    if (has_var[ivar])
+	      fprintf(stream , " %12.3f " , ecl_sum_get_general_var(ecl_sum , ministep , var_list[ivar]));
 	  
 	  fprintf(stream , "\n");
 	}
@@ -363,6 +375,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
       
     }
   }
+  free( has_var );
 }
 
 const char * ecl_sum_get_simulation_case(const ecl_sum_type * ecl_sum) {

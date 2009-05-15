@@ -530,7 +530,16 @@ double ecl_rft_node_iget_depth( const ecl_rft_node_type * rft_node , int index) 
 
 
 
+
 double ecl_rft_node_iget_pressure( const ecl_rft_node_type * rft_node , int index) {
   const cell_type * cell = ecl_rft_node_iget_cell( rft_node , index );
   return cell->pressure;
+}
+
+
+void ecl_rft_node_iget_ijk( const ecl_rft_node_type * rft_node , int index , int *i , int *j , int *k) {
+  const cell_type * cell = ecl_rft_node_iget_cell( rft_node , index );
+  *i = cell->i;
+  *j = cell->j;
+  *k = cell->k;
 }
