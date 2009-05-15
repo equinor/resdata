@@ -5,7 +5,6 @@
 typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 
 
-
 <TYPE>_vector_type * <TYPE>_vector_alloc( int , <TYPE>);
 <TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src);
 <TYPE>               <TYPE>_vector_iget(const <TYPE>_vector_type * , int);

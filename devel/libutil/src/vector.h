@@ -4,7 +4,7 @@
 #ifdef __cplusplus 
 extern "C" {
 #endif
-
+#include <node_data.h>
 
 typedef void ( vector_func_type ) (void * , void *);
 typedef int  ( vector_cmp_ftype)  (const void * , const void *);

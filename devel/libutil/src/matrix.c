@@ -122,7 +122,7 @@ static bool matrix_realloc_data__( double ** _data , int data_size , bool safe_m
     /* realloc() succeeded */
     data = tmp;
     /* 
-       We initialize to zero, because the differnet matrices involved
+       We initialize to zero, because the different matrices involved
        might have different data-layout, so the realloc() will
        (probably) not have preserved matrix ordered data anyway; that
        is handled in the calling scope.
@@ -177,12 +177,37 @@ matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column
     matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
     
     matrix_init_header( matrix , rows , columns , src->row_stride , src->column_stride);
-    matrix->data_owner    = false;
     matrix->data          = &src->data[ GET_INDEX(src , row , column) ];
     matrix->data_owner    = false;
     
     return matrix;
   }
+}
+
+
+/**
+   This function will allocate a matrix structure; this matrix
+   structure will TAKE OWNERSHIP OF THE SUPPLIED DATA. This means that
+   it is (at the very best) highly risky to use the data pointer in
+   the calling scope after the matrix has been allocated. If the
+   supplied pointer is too small it is immediately realloced ( in
+   which case the pointer in the calling scope will be immediately
+   invalid).
+*/   
+
+matrix_type * matrix_alloc_steal_data(int rows , int columns , double * data , int data_size) {
+  matrix_type * matrix = util_malloc( sizeof * matrix , __func__);
+  matrix_init_header( matrix , rows , columns , 1 , rows );   
+  matrix->data_size  = data_size;           /* Can in general be different from rows * columns */
+  matrix->data_owner = true;
+  matrix->data       = data;
+  if (data_size < rows * columns) {
+    /* Grow the pointer */
+    matrix->data_size  = rows * columns;
+    matrix_realloc_data__(&matrix->data , matrix->data_size , false);
+  }
+  
+  return matrix;
 }
 
 
@@ -229,33 +254,41 @@ matrix_type * matrix_safe_alloc_copy(const matrix_type * src) {
 
 /*****************************************************************/
 
-static bool matrix_resize__(matrix_type * matrix , int rows , int columns , bool safe_mode) {
+static bool matrix_resize__(matrix_type * matrix , int rows , int columns , bool copy_content , bool safe_mode) {
   if (!matrix->data_owner)
     util_abort("%s: sorry - can not resize shared matrizes. \n",__func__);
   {
     bool resize_OK           = true;
     int copy_rows    	     = util_int_min( rows    , matrix->rows );
     int copy_columns 	     = util_int_min( columns , matrix->columns);
-    matrix_type * copy_view  = matrix_alloc_shared( matrix , 0 , 0 , copy_rows , copy_columns);         /* This is the part of the old matrix which should be copied over to the new. */
-    matrix_type * copy       = matrix_alloc_copy__( copy_view , safe_mode );                            /* Now copy contains the part of the old matrix which should be copied over - with private storage. */
-
+    matrix_type * copy_view  = NULL;
+    matrix_type * copy       = NULL;  
+    
+    if (copy_content) {
+      copy_view = matrix_alloc_shared( matrix , 0 , 0 , copy_rows , copy_columns);         /* This is the part of the old matrix which should be copied over to the new. */		      
+      copy      = matrix_alloc_copy__( copy_view , safe_mode );                            /* Now copy contains the part of the old matrix which should be copied over - with private storage. */
+    }
     {
       int old_rows , old_columns, old_row_stride , old_column_stride;
       matrix_get_dims( matrix , &old_rows , &old_columns , &old_row_stride , &old_column_stride);        /* Storing the old header information - in case the realloc() fails. */
       
-      matrix_init_header(matrix , rows , columns , 1 , rows);               /* Resetting the header for the matrix */
+      matrix_init_header(matrix , rows , columns , 1 , rows);                      /* Resetting the header for the matrix */
       if (matrix_realloc_data__(&matrix->data , matrix->data_size , safe_mode)) {  /* Realloc succeeded */
-	matrix_type * target_view = matrix_alloc_shared(matrix , 0 , 0 , copy_rows , copy_columns);
-	matrix_assign( target_view , copy);
-	matrix_free( target_view );
+	if (copy_content) {
+	  matrix_type * target_view = matrix_alloc_shared(matrix , 0 , 0 , copy_rows , copy_columns);
+	  matrix_assign( target_view , copy);
+	  matrix_free( target_view );
+	}
       } else {                                                              /* Failed to realloc new storage - recovering the old matrix, and returning false. */
 	matrix_init_header(matrix , old_rows , old_columns , old_row_stride , old_column_stride);
 	resize_OK = false;
       }
     }
 
-    matrix_free(copy_view);
-    matrix_free(copy);
+    if (copy_content) {
+      matrix_free(copy_view);
+      matrix_free(copy);
+    }
     
     return resize_OK;
   }
@@ -263,22 +296,61 @@ static bool matrix_resize__(matrix_type * matrix , int rows , int columns , bool
 
 
 /** 
-    Will alwasy return true (or abort). 
+    If copy content is true the content of the old matrix is carried
+    over to the new one, otherwise the new matrix is cleared.
+    
+    Will always return true (or abort). 
 */
-bool matrix_resize(matrix_type * matrix , int rows , int columns ) {
-  return matrix_resize__(matrix , rows , columns , false);
+bool matrix_resize(matrix_type * matrix , int rows , int columns , bool copy_content) {
+  return matrix_resize__(matrix , rows , columns , copy_content , false);
 }
+
 
 /**
    Return true if the resize succeded, otherwise it will return false
    and leave the matrix unchanged. When resize implies expanding a
    dimension, the newly created elements will be explicitly
    initialized to zero.
+
+   If copy_content is set to false the new matrix will be fully
+   initialized to zero.
 */
 
-bool matrix_safe_resize(matrix_type * matrix , int rows , int columns ) {
-  return matrix_resize__(matrix , rows , columns , true);
+bool matrix_safe_resize(matrix_type * matrix , int rows , int columns , bool copy_content) {
+  return matrix_resize__(matrix , rows , columns , copy_content , true);
 }
+
+
+
+/** 
+    This function will ensure that the matrix has at least 'rows'
+    rows. If the present matrix already has >= rows it will return
+    immediately, otherwise the matrix will be resized. 
+*/
+
+void matrix_ensure_rows(matrix_type * matrix, int rows, bool copy_content) {
+  if (matrix->rows < rows)
+    matrix_resize( matrix , rows , matrix->columns , copy_content);
+}
+
+
+
+/** 
+    This function will reduce the size of the matrix. It will only
+    affect the headers, and not touch the actual memory of the matrix.
+*/
+
+
+void matrix_shrink_header(matrix_type * matrix , int rows , int columns) {
+
+  if (rows <= matrix->rows)
+    matrix->rows = rows;
+  
+  if (columns <= matrix->columns)
+    matrix->columns = columns;
+
+}
+
 
 /*****************************************************************/
 
@@ -368,6 +440,25 @@ void matrix_scale(matrix_type * matrix, double value) {
       matrix_imul(matrix , i , j , value);
 }
 
+/*****************************************************************/
+/* Functions working on rows & columns                           */
+
+void matrix_set_many_on_column(matrix_type * matrix , int row_offset , int elements , const double * data , int column) {
+  if ((row_offset + elements) < matrix->rows) {
+    if (matrix->row_stride == 1)  /* Memory is continous ... */
+      memcpy( &matrix->data[ GET_INDEX( matrix , row_offset , column) ] , data , elements * sizeof * data);
+    else {
+      int i;
+      for (i = 0; i < elements; i++)
+	matrix->data[ row_offset + GET_INDEX( matrix , i , column) ] = data[i];
+    }
+  }
+}
+
+void matrix_set_column(matrix_type * matrix , const double * data , int column) {
+  matrix_set_many_on_column( matrix , 0 , matrix->rows , data , column );
+}
+
 
 /*****************************************************************/
 /* Matrix - matrix operations                                    */
@@ -378,13 +469,24 @@ void matrix_assign(matrix_type * A , const matrix_type * B) {
   if ((A->rows == B->rows) && (A->columns == B->columns)) {
     int i,j;
     
-    for (j = 0; j < A->columns; j++)
-      for (i=0; i < A->rows; i++)
-	A->data[ GET_INDEX(A,i,j) ] = B->data[ GET_INDEX(B,i,j) ];
-    
+    if (A->row_stride == B->row_stride) {
+      if (A->columns == A->row_stride)  /** Memory is just one continous block */
+	memcpy( A->data , B->data , A->rows * A->columns * sizeof * A->data);
+      else {
+	/* Copying columns of data */
+	for (j = 0; j < A->columns; j++)
+	  memcpy( &A->data[ GET_INDEX(A , 0 , j)] , &B->data[ GET_INDEX(B , 0 , j) ] , A->rows * sizeof * A->data);
+      } 
+    } else {
+      /* Copying element by element */
+      for (j = 0; j < A->columns; j++)
+	for (i=0; i < A->rows; i++)
+	  A->data[ GET_INDEX(A,i,j) ] = B->data[ GET_INDEX(B,i,j) ];
+    }
   } else 
     util_abort("%s: size mismatch \n",__func__);
 }
+
 
 
 /* Updates matrix A by adding in matrix B - elementwise. */
@@ -638,6 +740,7 @@ void matrix_clear( matrix_type * matrix ) {
      dims = fread(fid , 2 , 'int32');
      m    = fread(fid , [dims(1) , dims(2)] , 'double');
      fclose(fid);
+
    
    >> A = load_matrix( 'filename' ); 
 */

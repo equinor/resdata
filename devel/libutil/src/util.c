@@ -260,46 +260,43 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
 /**
    Reads characters from stdin until EOL/EOF is detected. A '\0' is
    appended to the resulting string before it is returned. If the
-   function reads an immediate EOF (i.e. there is no input waiting)
-   NULL is returned.
+   function reads an immediate EOF/EOL, i.e. the user enters an empty
+   input string, NULL (and not "") is returned.
+
+   Observe that is this function does *not* cooperate very nicely with
+   fscanf() based input, because fascanf will leave a EOL character in
+   the input buffer, which will lead to immediate return from this
+   function. Hence if this function is called after a fsacnf() based
+   function it is essential to preceede this function with one call to
+   getchar() to clear the EOL character.
 */
 
 char * util_alloc_stdin_line() {
-  /* 
-     Skipping possible \n which were left in the stdin buffer from a
-     previous (scanf based) read. 
-  */
-  int first_char;
-  first_char = getchar();
-
-  if (first_char == EOF)
-    return NULL;  /* Nothing to find ... */
-  else {
-    int input_size = 256;
-    char * input   = util_malloc(input_size , __func__);
-    int index = 0;
-    bool end = false;
-    int c;
-    if (!EOL_CHAR(first_char)) {
-      /* ungetc - ugly */
-      input[index] = first_char; 
-      index++; 
-    }
-    do {
-      c = getchar();
-      if ((!EOL_CHAR(c)) && (c != EOF)) {
-	input[index] = c;
-	index++;
-	if (index == (input_size - 1)) { /* Reserve space for terminating \0 */
-	  input_size *= 2;
-	  input = util_realloc(input , input_size , __func__);
-	}
-      } else end = true;
-    } while (!end);
+  int input_size = 256;
+  char * input   = util_malloc(input_size , __func__);
+  int index = 0;
+  bool end = false;
+  int c;
+  do {
+    c = getchar();
+    if ((!EOL_CHAR(c)) && (c != EOF)) {
+      input[index] = c;
+      index++;
+      if (index == (input_size - 1)) { /* Reserve space for terminating \0 */
+	input_size *= 2;
+	input = util_realloc(input , input_size , __func__);
+      }
+    } else end = true;
+  } while (!end);
+  if (index == 0) { 
+    free(input);
+    input = NULL;
+  } else {
     input[index] = '\0';  
     input = util_realloc(input , strlen(input) + 1 , __func__);
-    return input;
   }
+  
+  return input;
 }
 
 

@@ -3,6 +3,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include <stdbool.h>
 
 typedef void       * (  copyc_type) (const void *);
 typedef void         (  del_type)   (void *);

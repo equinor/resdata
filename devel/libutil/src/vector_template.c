@@ -73,6 +73,7 @@
 #include <string.h>
 #include <<TYPE>_vector.h>
 
+
 struct <TYPE>_vector_struct {
   int      alloc_size;    /* The alloceted size of data. */
   int      size;          /* The index of the last valid - i.e. actively set - element in the vector. */

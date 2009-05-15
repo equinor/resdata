@@ -20,6 +20,7 @@ struct vector_struct {
  
 
 /* Small datastructure PURELY used for sorting the vector. */
+
 typedef struct {
   vector_cmp_ftype * user_cmp;
   node_data_type   * data;

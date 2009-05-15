@@ -278,18 +278,25 @@ static void menu_display(const menu_type * menu) {
    character it is discarded, if it is exactly one character long we
    check if it is in the menus set of available command characters,
    and return it *IF* it is a valid character. I.e. the return value
-   from this function is *GURANTEED* to correspond to a menu item.
+   from this function is *GUARANTEED* to correspond to a menu item.
+
+   Observe that the function ends with a call to getchar() - this
+   should remove the traling <RETURN> from the stdin input buffer.
 */
 
 static int menu_read_cmd(const menu_type * menu) { 
   char cmd[256]; 
+  
   do { 
     printf("==> ");
     fflush(stdout); fscanf(stdin , "%s" , cmd); /* We read a full string -
 						   but we only consider it if it is exactly *ONE* character long. */
   } while ((strchr(menu->complete_key_set , cmd[0]) == NULL) || strlen(cmd) > 1);
+  
+  getchar(); /* Discards trailing <RETURN> from standard input buffer? */
   return cmd[0];
 }
+
 
 
 

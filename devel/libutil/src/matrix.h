@@ -13,8 +13,8 @@ typedef struct matrix_struct matrix_type;
 
 matrix_type * matrix_alloc(int rows, int columns);
 matrix_type * matrix_safe_alloc(int rows, int columns);
-bool          matrix_resize(matrix_type * matrix , int rows , int columns);
-bool          matrix_safe_resize(matrix_type * matrix , int rows , int columns);
+bool          matrix_resize(matrix_type * matrix , int rows , int columns , bool copy_content);
+bool          matrix_safe_resize(matrix_type * matrix , int rows , int columns , bool copy_content);
 matrix_type * matrix_alloc_copy(const matrix_type * src);
 matrix_type * matrix_safe_alloc_copy(const matrix_type * src);
 
@@ -44,17 +44,21 @@ void          matrix_subtract_row_mean(matrix_type * matrix);
 
 double      * matrix_get_data(const matrix_type * matrix);
 
+matrix_type * matrix_alloc_steal_data(int rows , int columns , double * data , int data_size);
+void          matrix_set_column(matrix_type * matrix , const double * data , int column);
+void          matrix_set_many_on_column(matrix_type * matrix , int row_offset , int elements , const double * data , int column);
+void          matrix_ensure_rows(matrix_type * matrix, int rows, bool copy_content);
+void          matrix_shrink_header(matrix_type * matrix , int rows , int columns);
+int 	      matrix_get_rows(const matrix_type * matrix);
+int 	      matrix_get_columns(const matrix_type * matrix);
+int 	      matrix_get_row_stride(const matrix_type * matrix);
+int 	      matrix_get_column_stride(const matrix_type * matrix);
+void          matrix_get_dims(const matrix_type * matrix ,  int * rows , int * columns , int * row_stride , int * column_stride);
+bool          matrix_is_quadratic(const matrix_type * matrix);
 
-int 	 matrix_get_rows(const matrix_type * matrix);
-int 	 matrix_get_columns(const matrix_type * matrix);
-int 	 matrix_get_row_stride(const matrix_type * matrix);
-int 	 matrix_get_column_stride(const matrix_type * matrix);
-void     matrix_get_dims(const matrix_type * matrix ,  int * rows , int * columns , int * row_stride , int * column_stride);
-bool     matrix_is_quadratic(const matrix_type * matrix);
-
-void     matrix_diag_set(matrix_type * matrix , const double * diag);
-void     matrix_random_init(matrix_type * matrix);
-void     matrix_matlab_dump(const matrix_type * matrix, const char * filename);
+void          matrix_diag_set(matrix_type * matrix , const double * diag);
+void          matrix_random_init(matrix_type * matrix);
+void          matrix_matlab_dump(const matrix_type * matrix, const char * filename);
 
 #ifdef __cplusplus 
 }
