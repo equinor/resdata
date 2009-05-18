@@ -65,7 +65,6 @@ $(VECTOR_SOURCE): vector_template.c $(VECTOR_HEADERS) util.o
 include dependencies
 
 # Binaries
-hash_test.o : hash_test.c
 util-test.o : util-test.c 
 eol-fix.o   : eol-fix.c  
 mem_free.o  : mem_free.c 
