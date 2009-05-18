@@ -193,22 +193,16 @@ size_t buffer_fwrite(buffer_type * buffer , const void * src_ptr , size_t item_s
 
 /**
    Unfortunately the old RedHat3 computers have a zlib version which
-   does not have the compressBound function. If you get linking errors:
-
-     undefined reference to 'compressBound'
-
-   you could change the implementation below. This will increase
-   memory usage slightly, but apart from that no difference.
+   does not have the compressBound function. For that reason the
+   compressBound function from a 1.2xx version of zlib is pasted in
+   here verbatim:
 */
 
-static size_t __compress_bound( size_t uncompressed_size ) {
-  /** zlib version 1.2.x: */
-  return compressBound(  uncompressed_size );
-
-  /** zlib version 1.1.x: */
-  // return compressBound( uncompressed_size );
+/* Snipped from zlib source code: */
+static size_t compressBound (size_t sourceLen)
+{
+    return sourceLen + (sourceLen >> 12) + (sourceLen >> 14) + 11;
 }
-
 
 
 
@@ -222,7 +216,7 @@ size_t buffer_fwrite_compressed(buffer_type * buffer, const void * ptr , size_t 
 
   if (byte_size > 0) {
     size_t remaining_size = buffer->alloc_size - buffer->pos;
-    size_t compress_bound = __compress_bound( byte_size );  
+    size_t compress_bound = compressBound( byte_size );  
     if (compress_bound > remaining_size)
       buffer_resize__(buffer , remaining_size + compress_bound + 32 , abort_on_error); /* 32 - some extra ... */
     
