@@ -199,7 +199,7 @@ size_t buffer_fwrite(buffer_type * buffer , const void * src_ptr , size_t item_s
 */
 
 /* Snipped from zlib source code: */
-static size_t compressBound (size_t sourceLen)
+static size_t __compress_bound (size_t sourceLen)
 {
     return sourceLen + (sourceLen >> 12) + (sourceLen >> 14) + 11;
 }
@@ -216,9 +216,9 @@ size_t buffer_fwrite_compressed(buffer_type * buffer, const void * ptr , size_t 
 
   if (byte_size > 0) {
     size_t remaining_size = buffer->alloc_size - buffer->pos;
-    size_t compress_bound = compressBound( byte_size );  
+    size_t compress_bound = __compress_bound( byte_size );  
     if (compress_bound > remaining_size)
-      buffer_resize__(buffer , remaining_size + compress_bound + 32 , abort_on_error); /* 32 - some extra ... */
+      buffer_resize__(buffer , remaining_size + compress_bound , abort_on_error); 
     
     compressed_size = buffer->alloc_size - buffer->pos;
     util_compress_buffer( ptr , byte_size , &buffer->data[buffer->pos] , &compressed_size);
