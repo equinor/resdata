@@ -60,6 +60,9 @@ void             ecl_sum_fprintf(const ecl_sum_type * , FILE * , int , const cha
 
 
 /* Time related functions */
+int    ecl_sum_get_first_ministep_gt(const ecl_sum_type * ecl_sum , int smspec_index , double limit);
+int    ecl_sum_get_last_ministep(const ecl_sum_type * ecl_sum );
+int    ecl_sum_get_first_ministep(const ecl_sum_type * ecl_sum );
 int    ecl_sum_get_last_report_step( const ecl_sum_type * ecl_sum );
 int    ecl_sum_get_first_report_step( const ecl_sum_type * ecl_sum );
 bool   ecl_sum_has_report_step(const ecl_sum_type * ecl_sum , int report_step );

@@ -302,6 +302,14 @@ int ecl_sum_get_last_report_step( const ecl_sum_type * ecl_sum) {
 int ecl_sum_get_first_report_step( const ecl_sum_type * ecl_sum ) {
   return ecl_sum_data_get_first_report_step( ecl_sum->data );
 }
+
+int ecl_sum_get_last_ministep( const ecl_sum_type * ecl_sum) {
+  return ecl_sum_data_get_last_ministep( ecl_sum->data );
+}
+
+int ecl_sum_get_first_ministep( const ecl_sum_type * ecl_sum ) {
+  return ecl_sum_data_get_first_ministep( ecl_sum->data );
+}
    
 
 /*
@@ -312,6 +320,33 @@ int ecl_sum_get_first_report_step( const ecl_sum_type * ecl_sum ) {
 
 void ecl_sum_report2ministep_range(const ecl_sum_type * ecl_sum , int report_step , int * ministep1 , int * ministep2 ){
   ecl_sum_data_report2ministep_range( ecl_sum->data , report_step , ministep1 , ministep2);
+}
+
+
+/**
+   Returns the number of the first ministep where a limiting value is
+   reached. If the limiting value is never reached, -1 is
+   returned. The smspec_index should be calculated first with one of the
+
+      ecl_sum_get_XXXX_index() 
+
+   functions.
+*/
+
+int ecl_sum_get_first_ministep_gt(const ecl_sum_type * ecl_sum , int smspec_index , double limit) { 
+  const int last_ministep = ecl_sum_get_last_ministep( ecl_sum );
+  int ministep            = ecl_sum_get_first_ministep( ecl_sum ); 
+  do {
+    double value = ecl_sum_data_get( ecl_sum->data , ministep , smspec_index);
+    if (value > limit)
+      break;
+    ministep++;
+  } while (ministep < last_ministep);
+
+  if (ministep == last_ministep)  /* Did not find it */
+    ministep = -1;
+
+  return ministep;
 }
 
 

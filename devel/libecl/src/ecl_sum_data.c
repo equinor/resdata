@@ -467,3 +467,11 @@ int ecl_sum_data_get_first_report_step( const ecl_sum_data_type * data ) {
 int ecl_sum_data_get_last_report_step( const ecl_sum_data_type * data ) {
   return data->last_report_step;
 }
+
+int ecl_sum_data_get_first_ministep( const ecl_sum_data_type * data ) {
+  return data->first_ministep;
+}
+
+int ecl_sum_data_get_last_ministep( const ecl_sum_data_type * data ) {
+  return data->last_ministep;
+}
