@@ -56,6 +56,7 @@ int 	      matrix_get_row_stride(const matrix_type * matrix);
 int 	      matrix_get_column_stride(const matrix_type * matrix);
 void          matrix_get_dims(const matrix_type * matrix ,  int * rows , int * columns , int * row_stride , int * column_stride);
 bool          matrix_is_quadratic(const matrix_type * matrix);
+bool          matrix_equal( const matrix_type * m1 , const matrix_type * m2);
 
 void          matrix_diag_set(matrix_type * matrix , const double * diag);
 void          matrix_random_init(matrix_type * matrix);

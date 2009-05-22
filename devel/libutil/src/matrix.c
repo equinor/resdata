@@ -621,7 +621,6 @@ void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_t
       arg_pack_append_ptr(arglist[it] , A );
       arg_pack_append_ptr(arglist[it] , B );
       
-      printf("[%d , %d) \n",row_offset , row_offset + row_size);
       thread_pool_add_job( thread_pool , matrix_inplace_matmul_mt__ , arglist[it]);
       row_offset += row_size;
     }
@@ -723,6 +722,31 @@ bool matrix_is_quadratic(const matrix_type * matrix) {
     return true;
   else
     return false;
+}
+
+
+/**
+   Return true if the two matrices m1 and m2 are equal. The equality
+   test is based on element-by-element memcmp() comparison, i.e. the
+   there is ZERO tolerance in the comparison.
+   
+   If the two matrices do not have equal dimension false is returned. 
+*/
+
+bool matrix_equal( const matrix_type * m1 , const matrix_type * m2) {
+  if (! ((m1->rows == m2->rows) && (m1->columns == m2->columns)))
+    return false;
+  {    
+    int i,j;
+    for (j=0; j < m1->columns; j++) {
+      for (i=0; i < m1->rows; i++) {
+	if (memcmp( &m1->data[ GET_INDEX(m1 , i , j)]  , &m2->data[ GET_INDEX(m2 , i,j)] , sizeof * m1->data) != 0)
+	  return false;
+      }
+    }
+  }
+  /** OK - we came all the way through - they are equal. */
+  return true;
 }
 
 
