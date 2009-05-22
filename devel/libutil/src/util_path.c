@@ -258,7 +258,7 @@ int util_proc_mem_free(void) {
 char * util_alloc_realpath(const char * input_path) {
   char * buffer   = util_malloc(PATH_MAX + 1 , __func__);
   char * new_path = NULL;
-
+  
   new_path = realpath( input_path , buffer);
   if (new_path == NULL) 
     util_abort("%s: failed %d/%s \n",__func__ , errno , strerror(errno));

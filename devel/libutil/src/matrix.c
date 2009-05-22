@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <util.h>
 #include <matrix.h>
-
+#include <thread_pool.h>
+#include <arg_pack.h>
 
 /**
    This is V E R Y  S I M P L E matrix implementation. It is not
@@ -59,6 +60,10 @@ static inline int GET_INDEX( const matrix_type * m , int i , int j) {
   return m->row_stride *i + m->column_stride *j;
 }
 
+static inline size_t MATRIX_DATA_SIZE( const matrix_type * m) {
+  return m->columns * m->column_stride;
+}
+
 
 
 
@@ -67,7 +72,7 @@ static void matrix_init_header(matrix_type * matrix , int rows , int columns , i
   if (!((column_stride * columns <= row_stride) || (row_stride * rows <= column_stride)))
     util_abort("%s: invalid stride combination \n",__func__);
   
-  matrix->data_size     = (rows * row_stride) * (columns * column_stride);
+  matrix->data_size     = 0;
   matrix->rows       	= rows;
   matrix->columns    	= columns;
   matrix->row_stride 	= row_stride;
@@ -77,79 +82,77 @@ static void matrix_init_header(matrix_type * matrix , int rows , int columns , i
 
 /**
    This is the low-level function allocating storage. If the input
-   flag 'safe_mode' is equal to true, the function will return NULL if the
-   allocation fails, otherwise the function will abort() if the
+   flag 'safe_mode' is equal to true, the function will return NULL if
+   the allocation fails, otherwise the function will abort() if the
    allocation fails.
 
-   Before returning all elements will be set to zero.
+   Before returning all elements will be initialized to zero.
+
+   1. It is based on first free() of the original pointer, and then
+       subsequently calling malloc() to get new storage. This is to
+       avoid prohibitive temporary memory requirements during the
+       realloc() call.
+       
+    2. If the malloc() fails the function will return NULL, i.e. you
+       will NOT keep the original data pointer. I.e. in this case the
+       matrix will be invalid. It is the responsability of the calling
+       scope to do the right thing.
+
+    3. realloc() functionality - i.e. keeping the original content of
+       the matrix is implemented at higher level. The memory layout of
+       the matrix will in general change anyway; so the promise made
+       by realloc() is not very interesting.
 */
 
-static double * matrix_alloc_data__( int data_size , bool safe_mode ) {
-  double * data;
-  if (safe_mode) {
-    /* 
-       If safe_mode == true it is 'OK' to fail in the allocation,
-       otherwise we use util_malloc() which will abort if the memory is not available.
+static void matrix_realloc_data__( matrix_type * matrix , bool safe_mode ) {
+  if (matrix->data_owner) {
+    size_t data_size = MATRIX_DATA_SIZE( matrix );
+    if (matrix->data_size == data_size) return;
+    if (matrix->data != NULL)
+      free(matrix->data);
+    
+    if (safe_mode) {
+      /* 
+	 If safe_mode == true it is 'OK' to fail in the allocation,
+	 otherwise we use util_malloc() which will abort if the memory
+	 is not available.
+      */
+      matrix->data = malloc( sizeof * matrix->data * data_size );
+    } else
+      matrix->data = util_malloc( sizeof * matrix->data * data_size , __func__);
+    
+
+    /* Initializing matrix content to zero. */
+    if (matrix->data != NULL) {
+      for (int i = 0; i < data_size; i++)
+	matrix->data[i] = 0;
+    } else 
+      data_size = 0;
+
+    /**
+       Observe that if the allocation failed the matrix will
+       be returned with data == NULL, and data_size == 0.
     */
-    data = malloc( sizeof * data * data_size );
-  } else
-    data = util_malloc( sizeof * data * data_size , __func__);
-
-  if (data != NULL) 
-    for (int i = 0; i < data_size; i++)
-      data[i] = 0;
-
-  return data;
-}
-
-
-/**
-   Corresponding to __alloc_data() - but based on reallocation of data.
-*/
-static bool matrix_realloc_data__( double ** _data , int data_size , bool safe_mode ) {
-  double * data = *_data;
-  double * tmp;
-  if (safe_mode) {
-    /* 
-       If safe_mode == true it is 'OK' to fail in the allocation,
-       otherwise we use util_malloc() which will abort if the memory is not available.
-    */
-    tmp = realloc( data , sizeof * data * data_size );
-  } else
-    tmp = util_realloc( data , sizeof * data * data_size , __func__);
-  
-  if (tmp != NULL) {
-    /* realloc() succeeded */
-    data = tmp;
-    /* 
-       We initialize to zero, because the different matrices involved
-       might have different data-layout, so the realloc() will
-       (probably) not have preserved matrix ordered data anyway; that
-       is handled in the calling scope.
-    */
-    for (int i = 0; i < data_size; i++)
-      data[i] = 0;
-  
-    *_data = data;
-    return true;
+    matrix->data_size = data_size;
   } else 
-    return false;
-
+    util_abort("%s: can not manipulate memory when is not data owner\n",__func__);
 }
+
 
 
 /*
   The freshly allocated matrix is explicitly initialized to zero. If
-  the variable safe_mode equals true the function will return NULL if the
-  allocation of data fails, otherwise it will abort() if the
+  the variable safe_mode equals true the function will return NULL if
+  the allocation of data fails, otherwise it will abort() if the
   allocation fails.
 */
 static matrix_type * matrix_alloc_with_stride(int rows , int columns , int row_stride , int column_stride, bool safe_mode) {
   matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
-
+  matrix->data      = NULL;
+  matrix->data_size = 0;
   matrix_init_header( matrix , rows , columns , row_stride , column_stride);
   matrix->data_owner    = true;
-  matrix->data          = matrix_alloc_data__( matrix->data_size , safe_mode );
+  matrix_realloc_data__( matrix  , safe_mode );
   if (safe_mode) {
     if (matrix->data == NULL) {  
       /* Allocation failed - we return NULL */
@@ -201,11 +204,8 @@ matrix_type * matrix_alloc_steal_data(int rows , int columns , double * data , i
   matrix->data_size  = data_size;           /* Can in general be different from rows * columns */
   matrix->data_owner = true;
   matrix->data       = data;
-  if (data_size < rows * columns) {
-    /* Grow the pointer */
-    matrix->data_size  = rows * columns;
-    matrix_realloc_data__(&matrix->data , matrix->data_size , false);
-  }
+  if (data_size < rows * columns) 
+    matrix_realloc_data__(matrix , false);
   
   return matrix;
 }
@@ -269,17 +269,20 @@ static bool matrix_resize__(matrix_type * matrix , int rows , int columns , bool
       copy      = matrix_alloc_copy__( copy_view , safe_mode );                            /* Now copy contains the part of the old matrix which should be copied over - with private storage. */
     }
     {
-      int old_rows , old_columns, old_row_stride , old_column_stride;
+      int old_rows , old_columns, old_row_stride , old_column_stride,old_data_size;
       matrix_get_dims( matrix , &old_rows , &old_columns , &old_row_stride , &old_column_stride);        /* Storing the old header information - in case the realloc() fails. */
+      old_data_size = matrix->data_size;
       
-      matrix_init_header(matrix , rows , columns , 1 , rows);                      /* Resetting the header for the matrix */
-      if (matrix_realloc_data__(&matrix->data , matrix->data_size , safe_mode)) {  /* Realloc succeeded */
+      matrix_init_header(matrix , rows , columns , 1 , rows);                                            /* Resetting the header for the matrix */
+      matrix_realloc_data__(matrix , safe_mode);
+      if (matrix->data != NULL) {  /* Realloc succeeded */
 	if (copy_content) {
 	  matrix_type * target_view = matrix_alloc_shared(matrix , 0 , 0 , copy_rows , copy_columns);
 	  matrix_assign( target_view , copy);
 	  matrix_free( target_view );
 	}
-      } else {                                                              /* Failed to realloc new storage - recovering the old matrix, and returning false. */
+      } else {                                                              
+	/* Failed to realloc new storage; RETURNING AN INVALID MATRIX */
 	matrix_init_header(matrix , old_rows , old_columns , old_row_stride , old_column_stride);
 	resize_OK = false;
       }
@@ -289,7 +292,6 @@ static bool matrix_resize__(matrix_type * matrix , int rows , int columns , bool
       matrix_free(copy_view);
       matrix_free(copy);
     }
-    
     return resize_OK;
   }
 }
@@ -339,7 +341,6 @@ void matrix_ensure_rows(matrix_type * matrix, int rows, bool copy_content) {
     This function will reduce the size of the matrix. It will only
     affect the headers, and not touch the actual memory of the matrix.
 */
-
 
 void matrix_shrink_header(matrix_type * matrix , int rows , int columns) {
 
@@ -572,7 +573,7 @@ void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
 	for (k=0; k < A->columns; k++) 
 	  scalar_product += A->data[ GET_INDEX(A,i,k) ] * B->data[ GET_INDEX(B,k,j) ];
 	
-	/* Assign first to tmp[k] */
+	/* Assign first to tmp[j] */
 	tmp[j] = scalar_product;
       }
       for (j=0; j < A->columns; j++)
@@ -581,6 +582,55 @@ void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
     free(tmp);
   } else
     util_abort("%s: size mismatch \n",__func__);
+}
+
+
+static void matrix_inplace_matmul_mt__(void * arg) {
+
+  arg_pack_type * arg_pack = arg_pack_safe_cast( arg );
+  int row_offset     = arg_pack_iget_int( arg_pack , 0 );
+  int rows           = arg_pack_iget_int( arg_pack , 1 );
+  matrix_type * A    = arg_pack_iget_ptr( arg_pack , 2 );
+  matrix_type * B    = arg_pack_iget_ptr( arg_pack , 3 );
+
+  matrix_type * A_view = matrix_alloc_shared( A , row_offset , 0 , rows , matrix_get_columns( A ));
+  matrix_inplace_matmul( A_view , B );
+  matrix_free( A_view );
+
+}
+
+
+void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads){ 
+  thread_pool_type  * thread_pool = thread_pool_alloc( num_threads );
+  arg_pack_type    ** arglist     = util_malloc( num_threads * sizeof * arglist , __func__);
+  int it;
+  {
+    int rows       = matrix_get_rows( A ) / num_threads;
+    int rows_mod   = matrix_get_rows( A ) % num_threads;
+    int row_offset = 0;
+
+    for (it = 0; it < num_threads; it++) {
+      int row_size;
+      arglist[it] = arg_pack_alloc();
+      row_size = rows;
+      if (it < rows_mod)
+	row_size += 1;
+      
+      arg_pack_append_int(arglist[it] , row_offset );
+      arg_pack_append_int(arglist[it] , row_size   );
+      arg_pack_append_ptr(arglist[it] , A );
+      arg_pack_append_ptr(arglist[it] , B );
+      
+      printf("[%d , %d) \n",row_offset , row_offset + row_size);
+      thread_pool_add_job( thread_pool , matrix_inplace_matmul_mt__ , arglist[it]);
+      row_offset += row_size;
+    }
+    thread_pool_join( thread_pool );
+    thread_pool_free( thread_pool );
+    for (it = 0; it < num_threads; it++) 
+      arg_pack_free( arglist[it] );
+    free( arglist );
+  }
 }
 
 

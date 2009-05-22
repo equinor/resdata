@@ -37,6 +37,7 @@ void   inline matrix_iadd(matrix_type * matrix , int i , int j , double value);
 void   inline matrix_imul(matrix_type * matrix , int i , int j , double value);
 
 void          matrix_inplace_matmul(matrix_type * A, const matrix_type * B);
+void          matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads);
 
 double        matrix_get_column_sum(const matrix_type * matrix , int column);
 double        matrix_get_row_sum(const matrix_type * matrix , int column);

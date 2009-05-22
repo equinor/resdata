@@ -1811,10 +1811,16 @@ void util_fprintf_date(time_t t , FILE * stream) {
 
 
 /* 
+   This function takes a pointer to a time_t instance, and shifts the
+   value days forward. Observe the calls to localtime_r() which give
+   rise to +/- one extra hour of adjustment if we have crossed exactly
+   one daylight savings border.
+
    This code produced erroneus results when compiled with -pg for
    profiling. (Maybe because the ts variable was not properly
    initialized when reading off the first isdst setting??)
 */
+
 void util_inplace_forward_days(time_t * t , double days) {
   struct tm ts;
   int isdst;
