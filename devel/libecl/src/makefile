@@ -1,7 +1,8 @@
 include global_config
 SDP_ROOT	= $(shell get_sdp_root.py)
 #################################################################
-COMPILE_INCLUDE  = -I$(LIBECL_HOME)/src -I$(LIBUTIL_HOME)/include 
+VIEWER        = "/usr/bin/display"
+COMPILE_INCLUDE  = -I$(LIBECL_HOME)/src -I$(LIBUTIL_HOME)/include -D'VIEWER=$(VIEWER)' -I$(LIBPLOT_HOME)/include -I$(EXTERNAL_INC_PATH)
 INSTALL_INC_PATH =  $(LIBECL_HOME)/include
 INSTALL_LIB_PATH =  $(LIBECL_HOME)/lib
 #################################################################
@@ -9,8 +10,8 @@ LIB_OBJECTS   = ecl_smspec.o ecl_sum_data.o ecl_well_vars.o ecl_util.o ecl_kw.o 
 MOD_FILES = 
 INC_FILES = ecl_smspec.h ecl_sum_data.h ecl_well_vars.h ecl_util.h ecl_kw.h ecl_sum.h fortio.h ecl_rft_file.h ecl_rft_node.h ecl_box.h ecl_grid.h ecl_io_config.h ecl_file.h
 LIB       = libecl.a
-LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L./
-LIB_LINK  = -lecl -lutil -lm -lz -lpthread
+LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L./ -L$(LIBPLOT_HOME)/lib -L$(EXTERNAL_LIB_PATH)
+LIB_LINK  = -lecl -lutil -lplot -lplplotd -lm -lz -lpthread 
 
 
 LOCAL: LIB BIN
@@ -38,6 +39,7 @@ LIB:	$(LIB)
 $(LIB): $(LIB_OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(LIB_OBJECTS)
 
+
 %.o : %.c
 	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $(CPPFLAGS) $< -o $@
 
@@ -61,14 +63,14 @@ extract_IJ.o   : extract_IJ.c
 ecl_pack.o     : ecl_pack.c
 ecl_unpack.o   : ecl_unpack.c
 run_gravity.o  : run_gravity.c
-
+ens_plot.o     : ens_plot.c
 #################################################################
 # Binaries
 # Observe that the binaries are built against the libraries / headers
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x ens_plot.x
 BIN	:  $(BIN_FILES) 
 BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x extract_owc.x block_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
 
@@ -116,5 +118,8 @@ rft.x: $(LIB) view_rft.o
 
 run_gravity.x: $(LIB) run_gravity.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  run_gravity.o -o run_gravity.x $(LIB_PATH)  $(LIB_LINK)
+
+ens_plot.x: ens_plot.o
+	$(LD) -$(MFLAG) $(LDFLAGS)  ens_plot.o -o ens_plot.x $(LIB_PATH)  $(LIB_LINK)
 
 
