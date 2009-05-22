@@ -282,7 +282,8 @@ void plot_meas_file(plot_type * plot, time_t start_time){
       if(strcmp(token_list[0], "xy") == 0){
 	util_sscanf_date(token_list[1] , &time);
 	util_difftime(start_time, time, &days, NULL, NULL, NULL);
-	x = days;
+	x = time;
+	//x = days;
 	
 	y = strtod(token_list[2], &error_ptr);
 	plot_dataset = plot_alloc_new_dataset( plot , plot_xy , false);
@@ -295,7 +296,8 @@ void plot_meas_file(plot_type * plot, time_t start_time){
       if(strcmp(token_list[0], "xyy") == 0){
 	util_sscanf_date(token_list[1] , &time);
 	util_difftime(start_time, time, &days, NULL, NULL, NULL);
-	x = days;
+	//x = days;
+	x = time;
 	y1 = strtod(token_list[2], &error_ptr);
 	y2 = strtod(token_list[3], &error_ptr);
 	
@@ -306,12 +308,17 @@ void plot_meas_file(plot_type * plot, time_t start_time){
       }
       
       if(strcmp(token_list[0], "xxy") == 0){
-	
 	x1 = strtod(token_list[1], &error_ptr);
 	x2 = strtod(token_list[2], &error_ptr);
+	time_t time1 = start_time;	 
+	time_t time2 = start_time; 	
+	util_inplace_forward_days(&time1 , x1);
+	util_inplace_forward_days(&time2 , x2);
+	
+	
 	y = strtod(token_list[3], &error_ptr);
 	plot_dataset = plot_alloc_new_dataset( plot , plot_x1x2y , false);
-	plot_dataset_append_point_x1x2y(plot_dataset , x1 , x2, y);
+	plot_dataset_append_point_x1x2y(plot_dataset , time1 , time2, y);
 	plot_dataset_set_line_width( plot_dataset , 1.5);
 	plot_dataset_set_line_color( plot_dataset , 15);
       }
