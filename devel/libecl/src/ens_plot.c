@@ -4,6 +4,7 @@
 #include <hash.h>
 #include <menu.h>
 #include <plot_const.h>
+#include <plot_range.h>
 #include <ecl_util.h>
 #include <plot.h>
 #include <plot_dataset.h>
@@ -245,6 +246,38 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
   }
 }
 
+
+
+void plot_set_range(plot_type * plot, time_t start_time){
+  int     num_tokens;
+  char ** token_list;
+  char  * line;
+  
+  line = util_blocking_alloc_stdin_line(100);
+  util_split_string(line , " " , &num_tokens , &token_list);
+  printf("OK, now set the range %s\n", line);
+  //time_t time1 = start_time;	 
+  //time_t time2 = start_time; 	
+  //util_sscanf_date(token_list[1] , &time1);
+  //util_sscanf_date(token_list[2] , &time2);
+  //printf("TOK1%s\n",token_list[1] );
+  //printf("TOK2%s\n",token_list[2] );
+  
+  plot_range_type * range = NULL;
+  plot_get_extrema(plot, range);
+  //double xmax = plot_range_get_xmax(range); 
+  //double xmin = plot_range_get_xmin(range); 
+  //double ymax = plot_range_get_ymax(range); 
+  //double ymin = plot_range_get_ymin(range); 
+  //printf ("Ranges er: %f %f %f %f\n", xmin, xmax, ymin, ymax);
+  
+  //plot_set_manual_range(plot, xmin, xmax, ymin, ymax);
+  //plot_set_manual_range(plot, time1, time2, ymin, ymax);
+  
+
+}
+
+
 void plot_meas_file(plot_type * plot, time_t start_time){
   bool done = 0;
   double x,x1,x2,y,y1,y2;
@@ -314,7 +347,6 @@ void plot_meas_file(plot_type * plot, time_t start_time){
 	time_t time2 = start_time; 	
 	util_inplace_forward_days(&time1 , x1);
 	util_inplace_forward_days(&time2 , x2);
-	
 	
 	y = strtod(token_list[3], &error_ptr);
 	plot_dataset = plot_alloc_new_dataset( plot , plot_x1x2y , false);
@@ -390,7 +422,7 @@ void plot_batch(void * arg) {
   
   plot_set_window_size(plot , 640 , 480);
   plot_file = util_alloc_sprintf("%s/%s.%s" , plot_info->plot_path , key , plot_info->plot_device);
-  plot_initialize( plot , plot_info->plot_device , plot_file);
+  plot_initialize(plot , plot_info->plot_device , plot_file);
   plot_set_labels(plot , "Date" , key , key);
   
   // get the simulation start time, to be used in plot_meas_file
@@ -419,6 +451,11 @@ void plot_batch(void * arg) {
     scanf("%s" , ens_name);
     if(strcmp(ens_name, "_meas_points_") == 0){
       plot_meas_file(plot, start_time);
+      continue;
+    }  
+    if(strcmp(ens_name, "_set_range_") == 0){
+      plot_set_range(plot, start_time);
+      continue;
     }  
     if(strcmp(ens_name, "_newplotvector_") == 0){
       scanf("%s" , key);
@@ -444,7 +481,7 @@ void plot_batch(void * arg) {
 	}
       }
       else {
-	//fprintf(stderr,"Do not have ensemble: \'%s\' \n", ens_name);
+	fprintf(stderr,"Do not have ensemble: \'%s\' \n", ens_name);
 	complete = true;
       }
     }
