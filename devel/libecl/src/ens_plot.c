@@ -230,7 +230,7 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
       bool ok_mini = ecl_sum_has_ministep( ecl_sum, ministep );
       if (ok_mini ) {
 	plot_dataset_append_point_xy( plot_dataset , 
-				      // ecl_sum_get_sim_days( ecl_sum , ministep),
+				      //ecl_sum_get_sim_days( ecl_sum , ministep),
 				      ecl_sum_get_sim_time( ecl_sum , ministep),
 				      ecl_sum_get_general_var( ecl_sum , ministep , user_key ));
       }
@@ -255,25 +255,21 @@ void plot_set_range(plot_type * plot, time_t start_time){
   
   line = util_blocking_alloc_stdin_line(100);
   util_split_string(line , " " , &num_tokens , &token_list);
-  printf("OK, now set the range %s\n", line);
-  //time_t time1 = start_time;	 
-  //time_t time2 = start_time; 	
-  //util_sscanf_date(token_list[1] , &time1);
-  //util_sscanf_date(token_list[2] , &time2);
-  //printf("TOK1%s\n",token_list[1] );
-  //printf("TOK2%s\n",token_list[2] );
+  time_t time1 = start_time;	 
+  time_t time2 = start_time; 	
+  util_sscanf_date(token_list[0] , &time1);
+  util_sscanf_date(token_list[1] , &time2);
   
-  plot_range_type * range = NULL;
+  plot_range_type * range = plot_range_alloc();
+
   plot_get_extrema(plot, range);
-  //double xmax = plot_range_get_xmax(range); 
-  //double xmin = plot_range_get_xmin(range); 
-  //double ymax = plot_range_get_ymax(range); 
-  //double ymin = plot_range_get_ymin(range); 
-  //printf ("Ranges er: %f %f %f %f\n", xmin, xmax, ymin, ymax);
-  
-  //plot_set_manual_range(plot, xmin, xmax, ymin, ymax);
-  //plot_set_manual_range(plot, time1, time2, ymin, ymax);
-  
+  double xmax = plot_range_get_xmax(range); 
+  double xmin = plot_range_get_xmin(range); 
+  double ymax = plot_range_get_ymax(range); 
+  double ymin = plot_range_get_ymin(range); 
+
+  plot_set_manual_range(plot, time1, time2, ymin, ymax);
+  plot_range_free(range);
 
 }
 
