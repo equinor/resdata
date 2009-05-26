@@ -161,6 +161,18 @@ int node_data_get_int(const node_data_type * node_data) {
 }
 
 
+int node_data_fetch_and_inc_int( node_data_type * node_data ) {
+  if (node_data->ctype == int_value) {
+    int * data = (int *) node_data->data;
+    (*data) += 1;
+    return *data;
+  } else {
+    util_abort("%s: wrong type \n",__func__);
+    return 0;
+  }
+}
+
+
 node_data_type * node_data_alloc_int(int value) {
   void * data_copy = util_alloc_copy( &value , sizeof value , __func__);
   return node_data_alloc__( data_copy , int_value , sizeof value , NULL , free);

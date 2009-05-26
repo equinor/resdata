@@ -5,6 +5,7 @@
 #include <buffer.h>
 #include <errno.h>
 #include <zlib.h>
+#include <time.h>
 
 /**
    This function implements a small buffer type. The whole point of
@@ -285,6 +286,23 @@ int buffer_fread_int(buffer_type * buffer) {
 
 
 void buffer_fwrite_int(buffer_type * buffer , int value) {
+  buffer_fwrite(buffer , &value , sizeof value , 1);
+}
+
+
+void buffer_fskip_time_t(buffer_type * buffer) {
+  buffer_fseek( buffer , sizeof(time_t) , SEEK_CUR );
+}
+
+
+time_t buffer_fread_time_t(buffer_type * buffer) {
+  time_t value;
+  buffer_fread(buffer , &value , sizeof value , 1);
+  return value;
+}
+
+
+void buffer_fwrite_time_t(buffer_type * buffer , time_t value) {
   buffer_fwrite(buffer , &value , sizeof value , 1);
 }
 

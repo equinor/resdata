@@ -47,7 +47,7 @@ void            * hash_iter_get_next_value(hash_iter_type *);
 
 hash_type       * hash_alloc_from_options(const stringlist_type *);
 
-
+int               hash_inc_counter(hash_type * hash , const char * counter_key);
 void              hash_insert_int(hash_type * , const char * , int);
 int               hash_get_int(hash_type * , const char *);
 void              hash_insert_double(hash_type * , const char * , double);

@@ -25,6 +25,7 @@ node_data_type 		 * node_data_alloc_ptr(const void * , copyc_type * , del_type *
 
 node_data_type		 * node_data_alloc_int(int );
 int                        node_data_get_int( const node_data_type * );
+int                        node_data_fetch_and_inc_int( node_data_type * node_data );
 node_data_type		 * node_data_alloc_double(double );
 double                     node_data_get_double( const node_data_type * );
 node_data_type		 * node_data_alloc_string(const char *);

@@ -71,8 +71,8 @@ mem_free.o  : mem_free.c
 
 #################################################################
 
-BIN:	hash.x util.x eol-fix.x mem_free.x tokenizer_test.x grdecl_to_ascii.x
-BIN_FILES = hash.x util.x eol-fix.x mem_free.x tokenizer_test.x grdecl_to_ascii.x
+BIN:	util.x eol-fix.x mem_free.x tokenizer_test.x grdecl_to_ascii.x
+BIN_FILES = util.x eol-fix.x mem_free.x tokenizer_test.x grdecl_to_ascii.x
 
 util.x: util-test.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) util-test.o -o util.x     $(LINK_LIB_PATH) $(LIB_LINK) 

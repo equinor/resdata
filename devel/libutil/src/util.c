@@ -264,7 +264,7 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
    input string, NULL (and not "") is returned.
 
    Observe that is this function does *not* cooperate very nicely with
-   fscanf() based input, because fascanf will leave a EOL character in
+   fscanf() based input, because fscanf will leave a EOL character in
    the input buffer, which will lead to immediate return from this
    function. Hence if this function is called after a fsacnf() based
    function it is essential to preceede this function with one call to

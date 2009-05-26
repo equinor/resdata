@@ -339,6 +339,29 @@ int hash_get_int(hash_type * hash , const char * key) {
   return node_data_get_int( node_data );
 }
 
+/**
+   Small wrapper around hash_get_int() / hash_insert_int() which
+   implements a zero based counter.
+
+      hash_inc_counter()
+
+   Will increment the intgere value stored in the node_data instance,
+   and return the updated value. If the key is not present in the hash
+   it will be inserted as an integer with value 0, and 0 will be
+   returned.
+*/
+
+int hash_inc_counter(hash_type * hash , const char * counter_key) {
+  if (hash_has_key( hash , counter_key)) {
+    node_data_type * node_data = hash_get_node_data(hash , counter_key);
+    return node_data_fetch_and_inc_int( node_data );
+  } else {
+    hash_insert_int(hash , counter_key , 0);
+    return 0;
+  }
+}
+
+
 void hash_insert_double(hash_type * hash , const char * key , double value) {
   node_data_type * node_data = node_data_alloc_double( value );
   hash_node_type * hash_node = hash_node_alloc_new(key , node_data , hash->hashf , hash->size);

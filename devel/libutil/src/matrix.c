@@ -728,7 +728,7 @@ bool matrix_is_quadratic(const matrix_type * matrix) {
 /**
    Return true if the two matrices m1 and m2 are equal. The equality
    test is based on element-by-element memcmp() comparison, i.e. the
-   there is ZERO tolerance in the comparison.
+   there is ZERO numerical tolerance in the comparison.
    
    If the two matrices do not have equal dimension false is returned. 
 */
@@ -745,6 +745,7 @@ bool matrix_equal( const matrix_type * m1 , const matrix_type * m2) {
       }
     }
   }
+
   /** OK - we came all the way through - they are equal. */
   return true;
 }

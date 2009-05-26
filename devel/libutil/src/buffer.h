@@ -32,6 +32,11 @@ void 		   buffer_fseek(buffer_type * buffer , ssize_t offset , int whence);
 void 		   buffer_fskip(buffer_type * buffer, ssize_t offset);
 
 
+void   		   buffer_fskip_time_t(buffer_type * buffer);
+time_t 		   buffer_fread_time_t(buffer_type * buffer);
+void   		   buffer_fwrite_time_t(buffer_type * buffer , time_t value);
+
+
 buffer_type      * buffer_fread_alloc(const char * filename);
 void               buffer_fread_realloc(buffer_type * buffer , const char * filename);
 
