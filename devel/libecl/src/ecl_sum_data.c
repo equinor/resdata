@@ -264,6 +264,7 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , in
       for (filenr = 0; filenr < files; filenr++) {
 	ecl_file_enum file_type;
 	int report_step;
+	printf("Loading file:%s \n",filelist[filenr]);
 	ecl_util_get_file_type( filelist[filenr] , &file_type , NULL , &report_step);
 	if (file_type != ECL_SUMMARY_FILE)
 	  util_abort("%s: file:%s has wrong type \n",__func__ , filelist[filenr]);

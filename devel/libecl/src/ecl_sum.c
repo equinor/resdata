@@ -142,7 +142,7 @@ ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , bool endian_co
 
 /*****************************************************************/
 /* 
-   Here comes lots of access functions - these are mostly thing
+   Here comes lots of access functions - these are mostly thin
    wrapppers around ecl_smspec functions. See more 'extensive'
    documentation in ecl_smspec.c
    
@@ -326,11 +326,18 @@ void ecl_sum_report2ministep_range(const ecl_sum_type * ecl_sum , int report_ste
 /**
    Returns the number of the first ministep where a limiting value is
    reached. If the limiting value is never reached, -1 is
-   returned. The smspec_index should be calculated first with one of the
-
+   returned. The smspec_index should be calculated first with one of
+   the
+   
       ecl_sum_get_XXXX_index() 
 
-   functions.
+   functions. I.e. the following code will give the first ministep
+   where the water wut in well PX exceeds 0.25:
+
+   {  
+      int smspec_index   = ecl_sum_get_well_var( ecl_sum , "PX" , "WWCT" );
+      int first_ministep = ecl_sum_get_first_ministep_gt( ecl_sum , smspec_index , 0.25);
+   }
 */
 
 int ecl_sum_get_first_ministep_gt(const ecl_sum_type * ecl_sum , int smspec_index , double limit) { 

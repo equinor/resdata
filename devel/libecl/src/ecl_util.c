@@ -413,27 +413,41 @@ int ecl_util_fname_cmp(const void *f1, const void *f2) {
     return 0;
 }
 
+/**
+   Checks if the filename satisfies:
+   
+     1. Basename equals the input base.
+     2. The type is one of the types in type_mask.
+     3. It is formatted/unformatted according _fmt_file.
 
-static bool ecl_util_filetype_p(const char * filename , int type_mask , bool _fmt_file) {
-  ecl_file_enum file_type;
-  int report_nr;
-  bool fmt_file;
-  ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
+   Observe that filename can NOT contain any leading path component. 
+*/
 
-  if (fmt_file == _fmt_file) {
-    if ((type_mask & file_type) != 0)
-      return true;
-    else
-      return false;
-  } else
-    return false;
+
+static bool ecl_util_filetype_p(const char * filename , const char * base, int type_mask , bool _fmt_file) {
+  int base_length = strlen(base);
+  bool match = false;
+
+  if (strncmp(filename , base, base_length) == 0) {
+    if (filename[base_length] == '.') {
+      ecl_file_enum file_type;
+      int report_nr;
+      bool fmt_file;
+      ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
+      
+      if (fmt_file == _fmt_file) {
+	if ((type_mask & file_type) != 0)
+	  match = true;
+      }
+    }
+  }
+  return match;
 }
 
 
 
 char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ecl_file_enum file_type , bool fmt_file , int *_files) {
   char *path; 
-  
   if (_path != NULL)
     path = (char *) _path;
   else 
@@ -449,10 +463,10 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
       util_abort("\n%s: opening directory:%s failed - aborting \n",__func__ , path);
 
     files = 0;
-    while ((dentry = readdir(dirH)) != NULL) {
-      if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file))
+    while ((dentry = readdir(dirH)) != NULL) 
+      if (ecl_util_filetype_p(dentry->d_name , base , file_type , fmt_file))
 	files++;
-    }
+    
     rewinddir(dirH);
     
     if (files == 0) 
@@ -461,7 +475,7 @@ char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ec
       fileList = (char **) util_malloc(files * sizeof *fileList , __func__ );
       files = 0;
       while ((dentry = readdir (dirH)) != NULL) {
-	if (ecl_util_filetype_p(dentry->d_name , file_type , fmt_file)) {
+	if (ecl_util_filetype_p(dentry->d_name , base , file_type , fmt_file)) {
 	  fileList[files] = util_alloc_filename(path , dentry->d_name , NULL);
 	  files++;
 	}
@@ -710,7 +724,7 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
     base = ecl_util_alloc_base_guess(path);
   else
     base = (char *) _base;
-  
+
   {
     char * fsmspec_file = ecl_util_alloc_filename(path , base , ECL_SUMMARY_HEADER_FILE , true  , -1);
     char *  smspec_file = ecl_util_alloc_filename(path , base , ECL_SUMMARY_HEADER_FILE , false , -1);

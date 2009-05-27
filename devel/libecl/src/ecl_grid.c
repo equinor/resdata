@@ -174,6 +174,8 @@ struct ecl_grid_struct {
   int                 * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
   ecl_cell_type      ** cells;
+  double                rotation;
+  double                origo[2];
 
   /*------------------------------:       The fields below this line are used for blocking algorithms - and not allocated by default.*/
   int                    block_dim; /* == 2 for maps and 3 for fields. 0 when not in use. */
@@ -421,6 +423,9 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
   grid->inv_index_map = NULL;
   grid->index_map     = NULL;
   grid->cells         = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
+  grid->rotation      = 0;
+  grid->origo[0]      = 0;
+  grid->origo[1]      = 0;
   {
     int i;
     for (i=0; i < grid->size; i++)
@@ -552,13 +557,21 @@ static void ecl_grid_pillar_cross_planes(const ecl_point_type * pillar , const d
 }
 
 
+static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , const float * mapaxes) {
+  ecl_grid->rotation = 0;
+  ecl_grid->origo[0] = 0;
+  ecl_grid->origo[1] = 0;
+}
+
+
+
 /*
   2---3
   |   |
   0---1
 */
 
-ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum) {
+ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes) {
   int i,j,k;
   ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(nx,ny,nz);
   ecl_point_type pillars[4][2];
@@ -598,7 +611,9 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
       }
     }
   }
-
+  if (mapaxes != NULL)
+    ecl_grid_init_mapaxes( ecl_grid , mapaxes );
+    
   ecl_grid_set_center(ecl_grid);
   ecl_grid_set_active_index(ecl_grid);
   return ecl_grid;
@@ -626,11 +641,17 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
     if (gtype != 1)
       util_abort("%s: gtype:%d fatal error when loading:%s - must have corner point grid - aborting\n",__func__ , gtype , grid_file);
     {
-      ecl_kw_type * zcorn_kw    = ecl_file_iget_named_kw( ecl_file , "ZCORN"   	, 0);
-      ecl_kw_type * coord_kw    = ecl_file_iget_named_kw( ecl_file , "COORD"   	, 0);
-      ecl_kw_type * actnum_kw   = ecl_file_iget_named_kw( ecl_file , "ACTNUM"  	, 0);
-
-      ecl_grid = ecl_grid_alloc_GRDECL(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw));
+      ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , "ZCORN"   	, 0);
+      ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , "COORD"   	, 0);
+      ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , "ACTNUM"  	, 0);
+      float       * mapaxes_data = NULL;
+      
+      if (ecl_file_has_kw( ecl_file , "MAPAXES")) {
+	const ecl_kw_type * mapaxes_kw   = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , 0);
+	mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw );
+      }
+      
+      ecl_grid = ecl_grid_alloc_GRDECL(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw) , mapaxes_data);
     }
     ecl_file_free( ecl_file );
   }
@@ -659,6 +680,7 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
   ecl_grid->inv_index_map = inv_index_map;
   ecl_grid->index_map     = index_map;
 }
+
 
 
 
@@ -694,6 +716,11 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
       ecl_kw_type * coords_kw  = ecl_file_iget_named_kw(ecl_file , "COORDS"  , index);
       ecl_kw_type * corners_kw = ecl_file_iget_named_kw(ecl_file , "CORNERS" , index);
       ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
+    }
+
+    if (ecl_file_has_kw( ecl_file , "MAPAXES")) {
+      const ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , 0);
+      ecl_grid_init_mapaxes( grid , ecl_kw_get_float_ptr( mapaxes_kw) );
     }
 
     ecl_file_free( ecl_file );
