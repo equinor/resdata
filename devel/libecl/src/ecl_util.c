@@ -724,7 +724,7 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
     base = ecl_util_alloc_base_guess(path);
   else
     base = (char *) _base;
-
+  
   {
     char * fsmspec_file = ecl_util_alloc_filename(path , base , ECL_SUMMARY_HEADER_FILE , true  , -1);
     char *  smspec_file = ecl_util_alloc_filename(path , base , ECL_SUMMARY_HEADER_FILE , false , -1);
