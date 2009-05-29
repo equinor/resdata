@@ -12,7 +12,7 @@
 #include <int_vector.h>
 #include <ecl_smspec.h>
 #include <ecl_file.h>
-
+#include <stringlist.h>
 
 /**
    This file implements the indexing into the ECLIPSE summary files. 
@@ -26,8 +26,8 @@
 
 struct ecl_smspec_struct {
   int                __id;                      /* Funny integer used for for "safe" run-time casting. */
-
-  hash_type        * well_var_index;             /* Indexes for all well variables. */
+  
+  hash_type        * well_var_index;             /* Indexes for all well variables: {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
   hash_type        * well_completion_var_index;  /* Indexes for completion indexes .*/
   hash_type        * group_var_index;            /* Indexes for group variables.*/
   hash_type        * field_var_index;
@@ -41,7 +41,6 @@ struct ecl_smspec_struct {
   int               num_regions;
   int               Nwells , param_offset;
   int               params_size;
-  char            **well_list;
   char            * simulation_case;        /* This should be full path and basename - without any extension. */
   bool              endian_convert;
   
@@ -112,7 +111,6 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(bool endian_convert , const char
   ecl_smspec->block_var_index                = hash_alloc();
 
   ecl_smspec->var_type           	     = NULL;
-  ecl_smspec->well_list          	     = NULL;
   ecl_smspec->sim_start_time     	     = -1;
   ecl_smspec->__id                           = ECL_SMSPEC_ID;
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
@@ -244,7 +242,6 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_smspec->var_type    = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->var_type , __func__);
 
     {
-      set_type *well_set  = set_alloc_empty();
       int num = -1;
       for (index=0; index < ecl_kw_get_size(wells); index++) {
 	char * well = util_alloc_strip_copy(ecl_kw_iget_ptr(wells    , index));
@@ -304,7 +301,6 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	       dummy well, there is no limit to the stupidity of these
 	       programmers.
 	    */
-	    set_add_key(well_set , well);
 	    if (!hash_has_key(ecl_smspec->well_var_index , well))
 	      hash_insert_hash_owned_ref(ecl_smspec->well_var_index , well , hash_alloc() , hash_free__);
 	    {
@@ -340,9 +336,6 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	free(kw);
 	free(well);
       }
-      ecl_smspec->Nwells    = set_get_size(well_set);
-      ecl_smspec->well_list = set_alloc_keylist(well_set);
-      set_free(well_set);
     }
   }
   ecl_file_free( header );
@@ -742,31 +735,6 @@ const char * ecl_smspec_get_unit(const ecl_smspec_type * ecl_smspec , const char
 
 
 
-
-void ecl_smspec_copy_well_names(const ecl_smspec_type *ecl_smspec , char **well_list) {
-  int iw;
-
-  for (iw=0; iw < ecl_smspec->Nwells; iw++)
-    strcpy(well_list[iw] , ecl_smspec->well_list[iw]);
-
-}
-
-
-char ** ecl_smspec_alloc_well_names_copy(const ecl_smspec_type *ecl_smspec) {
-  char **well_list;
-  int iw;
-  well_list = calloc(ecl_smspec->Nwells , sizeof *well_list);
-  for (iw = 0; iw < ecl_smspec->Nwells; iw++) 
-    well_list[iw] = util_alloc_string_copy( ecl_smspec->well_list[iw] );
-  
-  ecl_smspec_copy_well_names(ecl_smspec , well_list);
-  return well_list;
-}
-
-
-
-
-
 time_t ecl_smspec_get_start_time(const ecl_smspec_type * ecl_smspec) {
   return ecl_smspec->sim_start_time;
 }
@@ -788,7 +756,6 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->misc_var_index);
   hash_free(ecl_smspec->unit_hash);
   hash_free(ecl_smspec->block_var_index);
-  util_free_stringlist(ecl_smspec->well_list  , ecl_smspec->Nwells);
   free(ecl_smspec->var_type);
   free(ecl_smspec->simulation_case);
   free(ecl_smspec);
@@ -833,18 +800,18 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
 }
 
 
-
 /*****************************************************************/
-/* Legacy shit */
 
-int ecl_smspec_get_num_wells(const ecl_smspec_type * smspec) {
-  return smspec->Nwells;
+/** 
+    Returns a stringlist instance with all the (valid) well names. It
+    is the responsability of the calling scope to free the stringlist
+    with stringlist_free();
+*/
+
+stringlist_type * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec ) {
+  return hash_alloc_stringlist( smspec->well_var_index );
 }
 
-
-const char ** ecl_smspec_get_well_names(const ecl_smspec_type * ecl_smspec) {
-  return (const char **) ecl_smspec->well_list;
-}
 
 
 

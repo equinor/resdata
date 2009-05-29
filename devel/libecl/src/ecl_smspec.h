@@ -59,10 +59,8 @@ bool              ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec 
 
 time_t            ecl_smspec_get_start_time(const ecl_smspec_type * );
 /*****************************************************************/
-const char  * ecl_smspec_get_simulation_case(const ecl_smspec_type * );
-int           ecl_smspec_get_num_wells(const ecl_smspec_type * );
-const char ** ecl_smspec_get_well_names(const ecl_smspec_type * );
-
+const char      * ecl_smspec_get_simulation_case(const ecl_smspec_type * );
+stringlist_type * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec );
 
 
 #ifdef __cplsplus

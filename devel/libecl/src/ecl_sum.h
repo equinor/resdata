@@ -4,8 +4,8 @@
 extern "C" {
 #endif
 #include <stdbool.h>
-#include <hash.h>
 #include <time.h>
+#include <stringlist.h>
 
 typedef struct ecl_sum_struct       ecl_sum_type;
 
@@ -76,8 +76,7 @@ time_t       ecl_sum_get_start_time(const ecl_sum_type * );
 const char * ecl_sum_get_simulation_case(const ecl_sum_type * );
 /*****************************************************************/
 /* Legacy shit: */
-int           ecl_sum_get_num_wells(const ecl_sum_type *);
-const char ** ecl_sum_get_well_names(const ecl_sum_type * );
+stringlist_type * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum );
 
   
 

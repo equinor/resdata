@@ -18,8 +18,8 @@
    and the actual summary data. The file implements a data structure
    ecl_sum_type which holds ECLIPSE summary data. Most of the actual
    implementation is in separate files ecl_smspec.c for the SMSPEC
-   header, and ecl_sum_data for. the actual data.
-
+   header, and ecl_sum_data for the actual data.
+   
    Observe that this datastructure is built up around internalizing
    ECLIPSE summary data, the code has NO AMBITION of being able to
    write summary data.
@@ -35,7 +35,7 @@
 /*****************************************************************/
 
 struct ecl_sum_struct {
-  int                __id;     /* Funny integer used for for "safe" run-time casting. */
+  int                 __id;     /* Funny integer used for for "safe" run-time casting. */
   ecl_smspec_type   * smspec;  /* Internalized version of the SMSPEC file. */
   ecl_sum_data_type * data;    /* The data - can be NULL. */
 };
@@ -427,12 +427,8 @@ const char * ecl_sum_get_simulation_case(const ecl_sum_type * ecl_sum) {
 /*****************************************************************/
 /* Legacy shit : */
 
-int ecl_sum_get_num_wells(const ecl_sum_type *ecl_sum) {
-  return ecl_smspec_get_num_wells(ecl_sum->smspec);
-}
-
-const char ** ecl_sum_get_well_names(const ecl_sum_type * ecl_sum) {
-  return ecl_smspec_get_well_names(ecl_sum->smspec);
+stringlist_type * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum ) {
+  return ecl_smspec_alloc_well_list( ecl_sum->smspec );
 }
 
 
