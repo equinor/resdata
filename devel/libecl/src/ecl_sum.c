@@ -425,10 +425,15 @@ const char * ecl_sum_get_simulation_case(const ecl_sum_type * ecl_sum) {
 }
 
 /*****************************************************************/
-/* Legacy shit : */
+
 
 stringlist_type * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum ) {
   return ecl_smspec_alloc_well_list( ecl_sum->smspec );
+}
+
+
+stringlist_type * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum ) {
+  return ecl_smspec_alloc_well_var_list( ecl_sum->smspec );
 }
 
 

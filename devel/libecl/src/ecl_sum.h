@@ -75,9 +75,8 @@ double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep );
 time_t       ecl_sum_get_start_time(const ecl_sum_type * );
 const char * ecl_sum_get_simulation_case(const ecl_sum_type * );
 /*****************************************************************/
-/* Legacy shit: */
 stringlist_type * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum );
-
+stringlist_type * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum );
   
 
 

@@ -814,5 +814,20 @@ stringlist_type * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec ) {
 
 
 
+/** 
+    Returns a stringlist instance with all the well variables.  It is
+    the responsability of the calling scope to free the stringlist
+    with stringlist_free();
+*/
+
+stringlist_type * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec ) {
+  hash_iter_type * well_iter = hash_iter_alloc( smspec->well_var_index );
+  hash_type      * var_hash = hash_iter_get_next_value( well_iter );
+  hash_iter_free( well_iter );
+  return hash_alloc_stringlist( var_hash );
+}
+
+
+
 
 #undef ECL_SMSPEC_ID
