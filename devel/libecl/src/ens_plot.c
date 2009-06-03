@@ -477,7 +477,7 @@ void plot_batch(void * arg) {
 	}
       }
       else {
-	fprintf(stderr,"Do not have ensemble: \'%s\' \n", ens_name);
+	//fprintf(stderr,"Do not have ensemble: \'%s\' \n", ens_name);
 	complete = true;
       }
     }
