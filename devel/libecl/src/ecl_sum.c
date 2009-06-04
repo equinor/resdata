@@ -15,7 +15,7 @@
 
 /**
    The ECLIPSE summary data is organised in a header file (.SMSPEC)
-   and the actual summary data. The file implements a data structure
+   and the actual summary data. This file implements a data structure
    ecl_sum_type which holds ECLIPSE summary data. Most of the actual
    implementation is in separate files ecl_smspec.c for the SMSPEC
    header, and ecl_sum_data for the actual data.
@@ -36,8 +36,8 @@
 
 struct ecl_sum_struct {
   int                 __id;     /* Funny integer used for for "safe" run-time casting. */
-  ecl_smspec_type   * smspec;  /* Internalized version of the SMSPEC file. */
-  ecl_sum_data_type * data;    /* The data - can be NULL. */
+  ecl_smspec_type   * smspec;   /* Internalized version of the SMSPEC file. */
+  ecl_sum_data_type * data;     /* The data - can be NULL. */
 };
 
 
@@ -45,7 +45,7 @@ struct ecl_sum_struct {
 /**
    Reads the data from ECLIPSE summary files, can either be a list of
    files BASE.S0000, BASE.S0001, BASE.S0002,.. or one unified
-   file. Formatted/unformatted is detected automagically. 
+   file. Formatted/unformatted is detected automagically.
    
    The actual loading is implemented in the ecl_sum_data.c file.
 */

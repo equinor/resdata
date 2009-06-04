@@ -10,8 +10,8 @@ LIB_OBJECTS   = ecl_smspec.o ecl_sum_data.o ecl_well_vars.o ecl_util.o ecl_kw.o 
 MOD_FILES = 
 INC_FILES = ecl_smspec.h ecl_sum_data.h ecl_well_vars.h ecl_util.h ecl_kw.h ecl_sum.h fortio.h ecl_rft_file.h ecl_rft_node.h ecl_box.h ecl_grid.h ecl_io_config.h ecl_file.h
 LIB       = libecl.a
-LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L./ -L$(LIBPLOT_HOME)/lib -L$(EXTERNAL_LIB_PATH)
-LIB_LINK  = -lecl -lutil -lplot -lplplotd -lm -lz -lpthread 
+LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L./ 
+LIB_LINK  = -lecl -lutil  -lm -lz -lpthread 
 
 
 LOCAL: LIB BIN
@@ -120,6 +120,6 @@ run_gravity.x: $(LIB) run_gravity.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  run_gravity.o -o run_gravity.x $(LIB_PATH)  $(LIB_LINK)
 
 ens_plot.x: ens_plot.o
-	$(LD) -$(MFLAG) $(LDFLAGS)  ens_plot.o -o ens_plot.x $(LIB_PATH)  $(LIB_LINK)
+	$(LD) -$(MFLAG) $(LDFLAGS)  ens_plot.o -o ens_plot.x $(LIB_PATH) -L$(LIBPLOT_HOME)/lib -L$(EXTERNAL_LIB_PATH)  $(LIB_LINK) -lplot -lplplotd
 
 
