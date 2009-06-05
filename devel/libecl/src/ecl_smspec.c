@@ -141,59 +141,59 @@ ecl_smspec_type * ecl_smspec_safe_cast(const void * __ecl_smspec) {
 /* See table 3.4 in the ECLIPSE file format reference manual. */
 
 ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var) {
-  ecl_smspec_var_type var_type = ecl_smspec_misc_var;
+  ecl_smspec_var_type var_type = ECL_SMSPEC_MISC_VAR;
   switch(var[0]) {
   case('A'):
-    var_type = ecl_smspec_aquifer_var;
+    var_type = ECL_SMSPEC_AQUIFER_VAR;
     break;
   case('B'):
-    var_type = ecl_smspec_block_var;
+    var_type = ECL_SMSPEC_BLOCK_VAR;
     break;
   case('C'):
-    var_type = ecl_smspec_completion_var;
+    var_type = ECL_SMSPEC_COMPLETION_VAR;
     break;
   case('F'):
-    var_type = ecl_smspec_field_var;
+    var_type = ECL_SMSPEC_FIELD_VAR;
     break;
   case('G'):
-    var_type = ecl_smspec_group_var;
+    var_type = ECL_SMSPEC_GROUP_VAR;
     break;
   case('L'):
     switch(var[1]) {
     case('B'):
-      var_type = ecl_smspec_local_block_var;
+      var_type = ECL_SMSPEC_LOCAL_BLOCK_VAR;
       break;
     case('C'):
-      var_type = ecl_smspec_local_completion_var;
+      var_type = ECL_SMSPEC_LOCAL_COMPLETION_VAR;
       break;
     case('W'):
-      var_type = ecl_smspec_local_well_var;
+      var_type = ECL_SMSPEC_LOCAL_WELL_VAR;
       break;
     default:
       util_abort("%s: not recognized: %s \n",__func__ , var);
     }
     break;
   case('N'):
-    var_type = ecl_smspec_network_var;
+    var_type = ECL_SMSPEC_NETWORK_VAR;
     break;
   case('R'):
     if (var[2] == 'F')
-      var_type  = ecl_smspec_region_2_region_var;
+      var_type  = ECL_SMSPEC_REGION_2_REGION_VAR;
     else
-      var_type  = ecl_smspec_region_var;
+      var_type  = ECL_SMSPEC_REGION_VAR;
     break;
   case('S'):
-    var_type = ecl_smspec_segment_var;
+    var_type = ECL_SMSPEC_SEGMENT_VAR;
     break;
   case('W'):
-    var_type = ecl_smspec_well_var;
+    var_type = ECL_SMSPEC_WELL_VAR;
     break;
   default:
     /*
       It is unfortunately impossible to recognize an error situation -
       the rest just goes in "other" variables.
     */
-    var_type = ecl_smspec_misc_var;
+    var_type = ECL_SMSPEC_MISC_VAR;
   }
   return var_type;
 }
@@ -250,7 +250,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	ecl_smspec->var_type[index] = ecl_smspec_identify_var_type(kw);
 	/* See table 3.4 in the ECLIPSE file format reference manual. */
 	switch(ecl_smspec->var_type[index]) {
-	case(ecl_smspec_completion_var):
+	case(ECL_SMSPEC_COMPLETION_VAR):
 	  /* Three level indexing: well -> string(cell_nr) -> variable */
 	  if (!DUMMY_WELL(well)) {
 	    /* Seems I have to accept nums < 0 to get shit through ??? */
@@ -270,13 +270,13 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	  } else
 	    util_abort("%s: incorrectly formatted completion var in SMSPEC. num:%d kw:\"%s\"  well:\"%s\" \n",__func__ , num , kw , well);
 	  break;
-	case(ecl_smspec_field_var):
+	case(ECL_SMSPEC_FIELD_VAR):
 	  /*
 	     Field variable
 	  */
 	  hash_insert_int(ecl_smspec->field_var_index , kw , index);
 	  break;
-	case(ecl_smspec_group_var):
+	case(ECL_SMSPEC_GROUP_VAR):
 	  {
 	    const char * group = well;
 	    if (!DUMMY_WELL(well)) {
@@ -289,12 +289,12 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	    }
 	  }
 	  break;
-	case(ecl_smspec_region_var):
+	case(ECL_SMSPEC_REGION_VAR):
 	  if (!hash_has_key(ecl_smspec->region_var_index , kw))
 	    hash_insert_int(ecl_smspec->region_var_index , kw , index);
 	  ecl_smspec->num_regions = util_int_max(ecl_smspec->num_regions , num);
 	  break;
-	case (ecl_smspec_well_var):
+	case (ECL_SMSPEC_WELL_VAR):
 	  if (!DUMMY_WELL(well)) {
 	    /*
 	       It seems we can have e.g. WOPR associated with the
@@ -309,7 +309,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	    }
 	  }
 	  break;
-	case(ecl_smspec_misc_var):
+	case(ECL_SMSPEC_MISC_VAR):
 	  /*
 	     Possibly we must have the possibility to alter
 	     reclassify - so this last switch must be done
@@ -317,7 +317,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	  */
 	  hash_insert_int(ecl_smspec->misc_var_index , kw , index);
 	  break;
-	case(ecl_smspec_block_var):
+	case(ECL_SMSPEC_BLOCK_VAR):
 	  /* A block variable */
 	  {
 	    char * block_nr  = util_alloc_sprintf("%d" , num);
@@ -662,29 +662,29 @@ int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const 
   var_type = ecl_smspec_identify_var_type(argv[0]);
   
   switch(var_type) {
-  case(ecl_smspec_misc_var):
+  case(ECL_SMSPEC_MISC_VAR):
     index = ecl_smspec_get_misc_var_index(ecl_smspec , argv[0]);
     break;
-  case(ecl_smspec_well_var):
+  case(ECL_SMSPEC_WELL_VAR):
     if (argc == 2)
       index = ecl_smspec_get_well_var_index(ecl_smspec , argv[1] , argv[0]);
     break;
-  case(ecl_smspec_region_var):
+  case(ECL_SMSPEC_REGION_VAR):
     if ( argc ==2 ) {
       int region_nr;
       if (util_sscanf_int(argv[1] , &region_nr))
 	index = ecl_smspec_get_region_var_index( ecl_smspec , region_nr , argv[0]);
     }
     break;
-  case(ecl_smspec_field_var):
+  case(ECL_SMSPEC_FIELD_VAR):
     if (argc == 1)
       index = ecl_smspec_get_field_var_index(ecl_smspec , argv[0]);
     break;
-  case(ecl_smspec_group_var):
+  case(ECL_SMSPEC_GROUP_VAR):
     if (argc == 2)
       index = ecl_smspec_get_group_var_index(ecl_smspec , argv[1] , argv[0]);
     break;
-  case(ecl_smspec_block_var):
+  case(ECL_SMSPEC_BLOCK_VAR):
     if (argc ==2 )
       index = ecl_smspec_get_block_var_index_gen_string(ecl_smspec , argv[0] , argv[1]);
     break;

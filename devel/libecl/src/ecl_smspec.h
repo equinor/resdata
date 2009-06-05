@@ -9,20 +9,20 @@ extern "C" {
 
 typedef struct ecl_smspec_struct ecl_smspec_type; 
 
-typedef enum {ecl_smspec_aquifer_var, 
-              ecl_smspec_well_var   , 
-	      ecl_smspec_region_var , 
-	      ecl_smspec_field_var  , 
-	      ecl_smspec_group_var  , 
-	      ecl_smspec_block_var  , 
-	      ecl_smspec_completion_var ,
-	      ecl_smspec_local_block_var,
-	      ecl_smspec_local_completion_var,
-	      ecl_smspec_local_well_var,
-	      ecl_smspec_network_var,
-	      ecl_smspec_region_2_region_var,
-	      ecl_smspec_segment_var,
-	      ecl_smspec_misc_var}  ecl_smspec_var_type;
+typedef enum {ECL_SMSPEC_AQUIFER_VAR, 
+              ECL_SMSPEC_WELL_VAR   , 
+	      ECL_SMSPEC_REGION_VAR , 
+	      ECL_SMSPEC_FIELD_VAR  , 
+	      ECL_SMSPEC_GROUP_VAR  , 
+	      ECL_SMSPEC_BLOCK_VAR  , 
+	      ECL_SMSPEC_COMPLETION_VAR ,
+	      ECL_SMSPEC_LOCAL_BLOCK_VAR,
+	      ECL_SMSPEC_LOCAL_COMPLETION_VAR,
+	      ECL_SMSPEC_LOCAL_WELL_VAR,
+	      ECL_SMSPEC_NETWORK_VAR,
+	      ECL_SMSPEC_REGION_2_REGION_VAR,
+	      ECL_SMSPEC_SEGMENT_VAR,
+	      ECL_SMSPEC_MISC_VAR}  ecl_smspec_var_type;
 
 ecl_smspec_var_type ecl_smspec_identify_var_type(const char * );
 
