@@ -89,8 +89,8 @@
   COORDS      |
   CORNERS     |
   COORDS      |    
-  CORNERS     |      The implementation in this file will ignore 
-  COORDS      |      everything below this line.
+  CORNERS     |      
+  COORDS      |      
   CORNERS  __/________________________________________________________  
   LGR        \
   LGRILG      |     
@@ -118,17 +118,93 @@
   
   For EGRID files it is essentially the same, except for replacing the
   keywords COORDS/CORNERS with COORD/ZCORN/ACTNUM. Also the LGR
-  headers are somewhat different.
+  headers are somewhat different.  
+
+  Solution data in restart files comes in a similar way, a restart
+  file with LGR can typically look like this:
+
+  .....   __
+  .....     \ 
+  STARTSOL   |   All restart data for the ordinary
+  PRESSURE   |   grid.
+  SWAT       |
+  SGAS       |
+  ....       |
+  ENDSOL  __/____________________________ 
+  LGR       \
+  ....       |
+  STARTSOL   |   Restart data for 
+  PRESSURE   |   the first LGR.
+  SGAS       |
+  SWAT       |
+  ...        |
+  ENDSOL     |
+  ENDLGR  __/   
+  LGR       \ 
+  ....       |
+  STARTSOL   |   Restart data for 
+  PRESSURE   |   the second LGR.
+  SGAS       |
+  SWAT       |
+  ...        |
+  ENDSOL     |
+  ENDLGR  __/
 
 
-  About indices:
-  --------------
+  The LGR implementation in is based on the following main principles:
 
-  Observe that normal (i,j,k) will adress the normal grid in the
-  normal way, without even knowing of the existence of the LGR - the
-  LGR's are very much 'bolted on' in hindsight. The grid
-  implementation in this file only considers the coarse grid, the
-  refined cells are silently discarded.
+   1. When loading a EGRID/GRID file one ecl_grid_type instance will
+      be allocated; this grid will contain the main grid, and all the
+      lgr grids. 
+
+   2. Only one datatype (ecl_grid_type) is used both for the main grid
+      and the lgr grids.
+
+   3. The main grid will own (memory wise) all the lgr grids, this
+      even applies to nested subgrids whose parent is also a lgr.
+
+   4. When it comes to indexing and so on there is no difference
+      between lgr grid and the main grid.
+
+
+      Example:
+      --------
+
+
+      ecl_file_type * restart_data = ecl_file_fread_alloc(restart_filename , true); 		       // load some restart info to inspect
+      ecl_grid_type * grid         = ecl_grid_alloc(grid_filename , true);          		       // bootstrap ecl_grid instance
+      stringlist_type * lgr_names  = ecl_grid_alloc_name_list( grid );    
+      
+      printf("Grid:%s has %d a total of %d LGR's \n", grid_filename , stringlist_get_size( lgr_names ));
+      for (int lgr_nr = 0; lgr_nr < stringlist_get_size( lgr_names); lgr_nr++) {
+         ecl_grid_type * lgr_grid  = ecl_grid_get_lgr( grid , stringlist_iget( lgr_names , lgr_nr ));   // Get the ecl_grid instance of the lgr - by name.
+	 ecl_kw_type   * pressure_kw;
+	 int nx,ny,nz,active_size;
+	 ecl_grid_get_dims( lgr_grid , &nx , &ny , &nz , &active_size);                                // Get some size info from this lgr.
+	 printf("LGR:%s has %d x %d x %d elements \n",stringlist_iget(lgr_names , lgr_nr ) , nx , ny , nz);
+
+	 // OK - now we want to extract the solution vector (pressure) corresponding to this lgr:
+	 pressure_kw = ecl_file_iget_named_kw( ecl_file , "PRESSURE" , ecl_grid_get_grid_nr( lgr_grid ));
+                                                                                   /|\
+                                                                                    |
+                                                                                    |   
+                                                                     We query the lgr_grid instance to find which
+								     occurence of the solution data we are interested in.
+
+         {
+            int center_index = ecl_grid_get_global_index3( lgr_grid , nx/2 , ny/2 , nz/2 );           // Ask the lgr_grid to get the index at the center of the lgr grid								     
+            printf("The pressure in the middle of %s is %g \n", stinglist_iget( lgr_names , lgr_nr ) , ecl_kw_iget_as_double( pressure_kw , center_index ));
+	 }
+      }
+      ecl_file_free( restart_data );
+      ecl_grid_free( grid );
+      stringlist_free( lgr_names );
+
+*/
+
+
+
+/*
 
   The implementation is based on a hierarchy of three datatypes:
 
@@ -152,6 +228,7 @@
 #include <ecl_file.h>
 #include <hash.h>
 #include <vector.h>
+#include <stringlist.h>
 
 typedef struct ecl_point_struct ecl_point_type;
 typedef struct ecl_cell_struct  ecl_cell_type;
@@ -1436,8 +1513,8 @@ static void __assert_main_grid(const ecl_grid_type * ecl_grid) {
 /**
    This functon will return a a ecl_grid instance corresponding to the
    lgr with name lgr_name. The function will fail HARD if no lgr with
-   this name is installed under the present main grid; chech first
-   with ecl_grid_has_lgr() if you are wimp.
+   this name is installed under the present main grid; check first
+   with ecl_grid_has_lgr() if you are whimp.
    
    Leading/trailing spaces on lgr_name are stripped prior to the hash lookup.
 */
@@ -1453,6 +1530,11 @@ ecl_grid_type * ecl_grid_get_lgr(const ecl_grid_type * main_grid, const char * _
   }
 }
 
+
+/**
+   Returns true/false if the main grid has a a lgr with name
+   __lgr_name. Leading/trailing spaces are stripped before checking.
+*/
 
 bool ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name) {
   __assert_main_grid( main_grid );
@@ -1522,6 +1604,19 @@ const ecl_grid_type * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int a
 }
 
 
+/*****************************************************************/
+
+/** 
+    Allocates a stringlist instance with the lookup names of the lgr names in this grid.
+*/
+
+stringlist_type * ecl_grid_alloc_lgr_name_list(const ecl_grid_type * ecl_grid) {
+  __assert_main_grid( ecl_grid );
+  {
+    return hash_alloc_stringlist( ecl_grid->LGR_hash );
+  }
+}
+
 
 
 /*****************************************************************/
@@ -1531,7 +1626,7 @@ const ecl_grid_type * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int a
    the occurence number in the grid file. Starting with 0 at the main
    grid, and then increasing consecutively through the lgr sections.
 
-   Observe that there is A MAJOR POTENTIAL for confusion iwth the
+   Observe that there is A MAJOR POTENTIAL for confusion with the
    ecl_grid_iget_lgr() function, the latter does not refer to the main
    grid and returns the first lgr section (which has grid_nr == 1) for
    input argument 0.
@@ -1593,7 +1688,7 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
 
      export_active_index: if this value is true the the index of the
         cell is in the space of active cells, otherwise it is in terms
-        of the gloabl indexing.
+        of the global indexing.
 
    Observe the following about the ecl_kw instance wth region data:
 

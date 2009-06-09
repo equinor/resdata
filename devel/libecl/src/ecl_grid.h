@@ -8,6 +8,7 @@ extern "C" {
 #include <double_vector.h>
 #include <int_vector.h>
 #include <ecl_kw.h>
+#include <stringlist.h>
 
 typedef double (block_function_ftype) ( const double_vector_type *); 
 typedef struct ecl_grid_struct ecl_grid_type;
@@ -59,7 +60,7 @@ int             ecl_grid_get_grid_nr( const ecl_grid_type * ecl_grid );
 ecl_grid_type * ecl_grid_iget_lgr(const ecl_grid_type * main_grid , int lgr_nr);
 ecl_grid_type * ecl_grid_get_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
 bool            ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
-
+stringlist_type * ecl_grid_alloc_lgr_name_list(const ecl_grid_type * ecl_grid);
 
 #ifdef __cplusplus
 }

@@ -5,6 +5,8 @@
 
 int main(int argc , char ** argv) {
   ecl_grid_type * ecl_grid = ecl_grid_alloc( argv[1] , true );
+
+
   ecl_file_type * ecl_file = ecl_file_fread_alloc( argv[2] , true );
   char * lgr_name          = argv[3];
 
