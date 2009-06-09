@@ -126,8 +126,8 @@
 
   Observe that normal (i,j,k) will adress the normal grid in the
   normal way, without even knowing of the existence of the LGR - the
-  LGR's are very much 'bolten on' in hindsight. The grid
-  implementation in this file only considers the course grid, the
+  LGR's are very much 'bolted on' in hindsight. The grid
+  implementation in this file only considers the coarse grid, the
   refined cells are silently discarded.
 
   The implementation is based on a hierarchy of three datatypes:
@@ -140,6 +140,7 @@
 
 
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <util.h>
 #include <ecl_kw.h>
@@ -149,6 +150,8 @@
 #include <double_vector.h>
 #include <int_vector.h>
 #include <ecl_file.h>
+#include <hash.h>
+#include <vector.h>
 
 typedef struct ecl_point_struct ecl_point_type;
 typedef struct ecl_cell_struct  ecl_cell_type;
@@ -159,25 +162,40 @@ struct ecl_point_struct {
 
 
 struct ecl_cell_struct {
-  bool 		   active;
-  int  		   active_index;
-  ecl_point_type   center;
-  ecl_point_type   corner_list[8];
-  ecl_grid_type   *LGR;            /* If this cell is part of an LGR; this will point to a grid instance for that LGR; NULL if not part of LGR. */
-};
+  bool 		        active;
+  int  		        active_index;
+  ecl_point_type        center;
+  ecl_point_type        corner_list[8];
+  const ecl_grid_type  *lgr;            /* If this cell is part of an LGR; this will point to a grid instance for that LGR; NULL if not part of LGR. */
+  int                   host_cell;      /* The global index of the host cell for an LGR cell, set to -1 for normal cells. */
+};  
 
 
 
-
+#define ECL_GRID_ID 991010
 struct ecl_grid_struct {
-  char                *     filename;
-  int nx , ny , nz , size , total_active;
+  int                   __type_id;
+  int                   grid_nr;       /* This corresponds to item 4 in GRIDHEAD - 0 for the mother grid. */ 
+  char                * name;          /* The name of the file for the main grid - name of the LGR for LGRs. */
+  char                * parent_name;   /* The name of the parent for a nested LGR - for a LGR descending directly from the main grid this will be NULL. */
+  int                   ny,nz,nx;
+  int                   size;          /* == nx*ny*nz */
+  int                   total_active; 
   int                 * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
   ecl_cell_type      ** cells;
+
+  /*
+    The two fields below are for *storing* LGR grid instances. Observe
+    that these fields will be NULL for LGR grids, i.e. grids with
+    grid_nr > 0. 
+  */
+  vector_type         * LGR_list;      /* An vector of ecl_grid instances for LGR's - the index corresponds to the grid_nr. */
+  hash_type           * LGR_hash;      /* A hash of pointers to ecl_grid instances - for name based lookup of LGR. */
+
+
   double                rotation;
   double                origo[2];
-
   /*------------------------------:       The fields below this line are used for blocking algorithms - and not allocated by default.*/
   int                    block_dim; /* == 2 for maps and 3 for fields. 0 when not in use. */
   int                    block_size;
@@ -258,8 +276,13 @@ static void ecl_point_inplace_scale(ecl_point_type * point , double scale_factor
 static ecl_cell_type * ecl_cell_alloc(void) {
   ecl_cell_type * cell = util_malloc(sizeof * cell , __func__);
   cell->active         = false;
-  cell->LGR            = NULL;
+  cell->lgr            = NULL;
+  cell->host_cell      = -1;
   return cell;
+}
+
+static void ecl_cell_install_lgr( ecl_cell_type * cell , const ecl_grid_type * lgr_grid) {
+  cell->lgr       = lgr_grid;
 }
 
 
@@ -415,12 +438,48 @@ static void ecl_cell_free(ecl_cell_type * cell) {
 /*****************************************************************/
 /* Starting on the ecl_grid proper implementation                */
 
-static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
+ecl_grid_type * ecl_grid_safe_cast( void * arg ) {
+  ecl_grid_type * ecl_grid = (ecl_grid_type * ) arg;
+  if (ecl_grid->__type_id == ECL_GRID_ID)
+    return ecl_grid;
+  else {
+    util_abort("%s: runtime cast failed \n",__func__);
+    return NULL;
+  }
+}
+
+/**
+   This function allocates the internal index_map and inv_index_map fields.
+*/
+
+static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
+  int * index_map     = util_malloc(ecl_grid->size         * sizeof * index_map     , __func__);
+  int * inv_index_map = util_malloc(ecl_grid->total_active * sizeof * inv_index_map , __func__);
+  int   index;
+
+  for (index = 0; index < ecl_grid->size; index++) {
+    const ecl_cell_type * cell = ecl_grid->cells[index];
+    if (cell->active) {
+      index_map[index] = cell->active_index;
+      inv_index_map[cell->active_index] = index;
+    } else
+      index_map[index] = -1;
+  }
+
+  ecl_grid->inv_index_map = inv_index_map;
+  ecl_grid->index_map     = index_map;
+}
+
+
+
+static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_nr) {
   ecl_grid_type * grid = util_malloc(sizeof * grid , __func__);
+  grid->__type_id = ECL_GRID_ID;
   grid->nx = nx;
   grid->ny = ny;
   grid->nz = nz;
-  grid->size = nx*ny*nz;
+  grid->size    = nx*ny*nz;
+  grid->grid_nr = grid_nr;
 
   grid->inv_index_map = NULL;
   grid->index_map     = NULL;
@@ -435,6 +494,16 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz) {
   }
   grid->block_dim      = 0;
   grid->values         = NULL;
+  if (grid_nr == 0) {  /* This is the main grid */
+    grid->LGR_list = vector_alloc_new(); 
+    vector_append_ref( grid->LGR_list , grid ); /* Adding a 'self' pointer as first inistance - without destructor! */
+    grid->LGR_hash = hash_alloc();
+  } else {
+    grid->LGR_list = NULL;
+    grid->LGR_hash = NULL;
+  }
+  grid->parent_name = NULL;
+  
   return grid;
 }
 
@@ -502,6 +571,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
   {
     int c;
     int coords_size = ecl_kw_get_size(coords_kw);
+
     switch(coords_size) {
     case(4):                /* All cells active */
       cell->active = true;
@@ -510,14 +580,14 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
       cell->active  = (coords[4] == 1) ? true : false;
       break;
     case(7):
-      if (coords[5] == 0)           /*  It is a normal cell - not a refined LGR cell. */
-	if (coords[4] == 1)         /*  The cell is active */
-	  cell->active = true;
-      
+      cell->active    = (coords[4] == 1) ? true : false;
+      cell->host_cell = coords[5];
       break;
     }
+    
     for (c = 0; c < 8; c++)
       ecl_point_inplace_set_float_ptr(&cell->corner_list[c] , (const float *) &corners[c*3]);
+    
   }
 }
 
@@ -567,15 +637,136 @@ static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , const float * mapa
 
 
 
+
+
+/**
+   This function will add a ecl_grid instance as a LGR to the main
+   grid. The LGR grid as added to two different structures of the main
+   grid:
+
+    1. In the main_grid->LGR_list the LGR instances are inserted in
+       order of occurence in the GRID file. The following equalities
+       should apply:
+
+          occurence number in file == lgr_grid->grid_nr == GRIDHEAD(4) for lgr == index in the LGR_list vector
+  
+       When installed in the LGR_list vector the lgr grid is installed
+       with a destructor, i.e. the grid is destroyed when the vector
+       is destroyed.
+
+    2. In the main->LGR_hash the lgr instance is installed with the
+       LGRNAME as key. Only a reference is installed in the hash
+       table. 
+
+    Observe that this is in principle somewhat different from the
+    install functions below; here the lgr is added to the top level
+    grid (i.e. the main grid) which has the storage responsability of
+    all the lgr instances. The cell->lgr relationship is established
+    in the _install_EGRID / install_GRID functions further down.
+*/
+
+
+static void ecl_grid_add_lgr( ecl_grid_type * main_grid , const ecl_grid_type * lgr_grid) {
+  int next_grid_nr = vector_get_size( main_grid->LGR_list);
+  if (next_grid_nr != lgr_grid->grid_nr) 
+    util_abort("%s: index based insertion of LGR grid failed. next_grid_nr:%d  lgr->grid_nr:%d \n",__func__ , next_grid_nr , lgr_grid->grid_nr);
+  {
+    vector_append_owned_ref( main_grid->LGR_list , lgr_grid , ecl_grid_free__);
+    hash_insert_ref( main_grid->LGR_hash , lgr_grid->name , lgr_grid);
+  }
+}
+
+
+
+/**
+   This function will set the lgr pointer of the relevant cells in the
+   host grid to point to the lgr_grid. Observe that the ecl_cell_type
+   instances do *NOT* own the lgr_grid - all lgr_grid instances are
+   owned by the main grid.
+*/
+
+static void ecl_grid_install_lgr_EGRID(ecl_grid_type * host_grid , ecl_grid_type * lgr_grid , const int * hostnum) {
+  int global_lgr_index;
+
+  for (global_lgr_index = 0; global_lgr_index < lgr_grid->size; global_lgr_index++) {
+    ecl_cell_type * lgr_cell = lgr_grid->cells[global_lgr_index];
+    if (lgr_cell->active) {
+      ecl_cell_type * host_cell = host_grid->cells[ hostnum[ global_lgr_index ] ];
+      ecl_cell_install_lgr( host_cell , lgr_grid );
+
+      lgr_cell->host_cell = hostnum[ global_lgr_index ];
+    }
+  }
+}
+
+
+/**
+   Similar to ecl_grid_install_lgr_EGRID for GRID based instances. 
+*/
+static void ecl_grid_install_lgr_GRID(ecl_grid_type * host_grid , const ecl_grid_type * lgr_grid) {
+  int global_lgr_index;
+  
+  for (global_lgr_index = 0; global_lgr_index < lgr_grid->size; global_lgr_index++) {
+    ecl_cell_type * lgr_cell = lgr_grid->cells[global_lgr_index];
+    if (lgr_cell->active) {
+      ecl_cell_type * host_cell = host_grid->cells[ lgr_cell->host_cell ];
+      ecl_cell_install_lgr( host_cell , lgr_grid );
+    }
+  }
+}
+
+
+
+/**
+   Sets the name of the lgr AND the name of the parent, if this is a
+   nested LGR. For normal LGR descending directly from the coarse grid
+   the parent_name is set to NULL.
+*/
+   
+
+static void ecl_grid_set_lgr_name_EGRID(ecl_grid_type * lgr_grid , const ecl_file_type * ecl_file , int grid_nr) {
+  ecl_kw_type * lgrname_kw = ecl_file_iget_named_kw( ecl_file , "LGR" , grid_nr - 1);
+  lgr_grid->name = util_alloc_strip_copy( ecl_kw_iget_ptr( lgrname_kw , 0) );  /* Trailing zeros are stripped away. */
+  if (ecl_file_has_kw( ecl_file , "LGRPARNT")) {
+    ecl_kw_type * parent_kw = ecl_file_iget_named_kw( ecl_file , "LGRPARNT" , grid_nr - 1);
+    char * parent = util_alloc_strip_copy( ecl_kw_iget_ptr( parent_kw , 0));
+
+    if (strlen( parent ) > 0) 
+      lgr_grid->parent_name = parent;
+    else  /* lgr_grid->parent has been initialized to NULL */
+      free( parent );
+  }
+}
+
+/**
+   Sets the name of the lgr AND the name of the parent, if this is a
+   nested LGR. For LGR descending directly from the parent ECLIPSE
+   will supply 'GLOBAl' (whereas for EGRID it will return '' -
+   cool?). Anyway GLOBAL -> NULL.
+*/
+
+static void ecl_grid_set_lgr_name_GRID(ecl_grid_type * lgr_grid , const ecl_file_type * ecl_file , int grid_nr) {
+  ecl_kw_type * lgr_kw = ecl_file_iget_named_kw( ecl_file , "LGR" , grid_nr - 1);
+  lgr_grid->name = util_alloc_strip_copy( ecl_kw_iget_ptr( lgr_kw , 0) );  /* Trailing zeros are stripped away. */
+  {
+    char * parent = util_alloc_strip_copy( ecl_kw_iget_ptr( lgr_kw , 1));
+    if ((strlen(parent) == 0) || (strcmp(parent , "GLOBAL") == 0))
+      free( parent );
+    else
+      lgr_grid->parent_name = parent;
+  }
+}
+
+
 /*
   2---3
   |   |
   0---1
 */
 
-ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes) {
+static ecl_grid_type * ecl_grid_alloc_GRDECL__(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, int grid_nr) {
   int i,j,k;
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(nx,ny,nz);
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(nx,ny,nz,grid_nr);
   ecl_point_type pillars[4][2];
 
   for (j=0; j < ny; j++) {
@@ -618,9 +809,14 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
     
   ecl_grid_set_center(ecl_grid);
   ecl_grid_set_active_index(ecl_grid);
+  ecl_grid_alloc_index_map(ecl_grid);
   return ecl_grid;
 }
 
+
+ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes) {
+  return ecl_grid_alloc_GRDECL__(nx , ny , nz , zcorn , coord , actnum , mapaxes , 0);
+}
 
 
 static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl_file_type * ecl_file , int grid_nr) {
@@ -640,12 +836,14 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl
     ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , "ACTNUM"  	, grid_nr);
     float       * mapaxes_data = NULL;
     
-    if (ecl_file_has_kw( ecl_file , "MAPAXES")) {
+    if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , "MAPAXES"))) {
       const ecl_kw_type * mapaxes_kw   = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
       mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw );
     }
     
-    return ecl_grid_alloc_GRDECL(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw) , mapaxes_data);
+    ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL__(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw) , mapaxes_data, grid_nr);
+    if (grid_nr > 0) ecl_grid_set_lgr_name_EGRID(ecl_grid , ecl_file , grid_nr);
+    return ecl_grid;
   }
 }
 
@@ -658,37 +856,33 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
   if (file_type != ECL_EGRID_FILE)
     util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
   {
-    ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file ,  endian_flip );
-    ecl_grid_type * ecl_grid  = ecl_grid_alloc_EGRID__( grid_file , ecl_file , 0);
+    ecl_file_type * ecl_file   = ecl_file_fread_alloc( grid_file ,  endian_flip );
+    int num_grid               = ecl_file_get_num_named_kw( ecl_file , "GRIDHEAD" );
+    ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( grid_file , ecl_file , 0);
+
+    for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
+      ecl_grid_type * lgr_grid = ecl_grid_alloc_EGRID__(grid_file , ecl_file , grid_nr );
+      ecl_grid_add_lgr( main_grid , lgr_grid );
+      {
+	ecl_grid_type * host_grid;
+	ecl_kw_type   * hostnum_kw = ecl_file_iget_named_kw( ecl_file , "HOSTNUM" , grid_nr - 1);
+	if (lgr_grid->parent_name == NULL)
+	  host_grid = main_grid;
+	else 
+	  host_grid = ecl_grid_get_lgr( main_grid , lgr_grid->parent_name );
+	  
+	ecl_grid_install_lgr_EGRID( host_grid , lgr_grid , ecl_kw_get_int_ptr( hostnum_kw) );
+      }
+    }
+
     ecl_file_free( ecl_file );
-    return ecl_grid;
+    return main_grid;
   }
 }
 
 
 
 
-/**
-   This function allocates the internal index_map and inv_index_map fields.
-*/
-
-static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
-  int * index_map     = util_malloc(ecl_grid->size         * sizeof * index_map     , __func__);
-  int * inv_index_map = util_malloc(ecl_grid->total_active * sizeof * inv_index_map , __func__);
-  int   index;
-
-  for (index = 0; index < ecl_grid->size; index++) {
-    const ecl_cell_type * cell = ecl_grid->cells[index];
-    if (cell->active) {
-      index_map[index] = cell->active_index;
-      inv_index_map[cell->active_index] = index;
-    } else
-      index_map[index] = -1;
-  }
-
-  ecl_grid->inv_index_map = inv_index_map;
-  ecl_grid->index_map     = index_map;
-}
 
 
 
@@ -696,7 +890,7 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
 
 
 /* 
-   The seeking of COORDS / CORNERS keywords for LGR will not work grid_nr > 0 
+   
 */
 
 static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_type * ecl_file , int * cell_offset , int grid_nr) {
@@ -706,7 +900,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
   nx   = ecl_kw_iget_int(dimens_kw , 0);
   ny   = ecl_kw_iget_int(dimens_kw , 1);
   nz   = ecl_kw_iget_int(dimens_kw , 2);
-  grid = ecl_grid_alloc_empty(nx , ny , nz);
+  grid = ecl_grid_alloc_empty(nx , ny , nz, grid_nr);
   
   /*
     Possible LGR cells will follow *AFTER* the first nx*ny*nz cells;
@@ -721,7 +915,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
     ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
   }
   
-  if (ecl_file_has_kw( ecl_file , "MAPAXES")) {
+  if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , "MAPAXES"))) {
     const ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
     ecl_grid_init_mapaxes( grid , ecl_kw_get_float_ptr( mapaxes_kw) );
   }
@@ -729,6 +923,8 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
   ecl_grid_set_center(grid);
   ecl_grid_set_active_index(grid);
   (*cell_offset) += nx*ny*nz;
+  ecl_grid_alloc_index_map(grid);
+  if (grid_nr > 0) ecl_grid_set_lgr_name_GRID(grid , ecl_file , grid_nr);
   return grid;
 }
 
@@ -743,11 +939,25 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
 
   {
     int cell_offset = 0;
-    ecl_file_type * ecl_file = ecl_file_fread_alloc( grid_file , endian_flip );
-    
-    ecl_grid_type * ecl_grid = ecl_grid_alloc_GRID__(grid_file , ecl_file , &cell_offset , 0);
+    ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file , endian_flip );
+    int num_grid              = ecl_file_get_num_named_kw( ecl_file , "DIMENS");
+    ecl_grid_type * main_grid = ecl_grid_alloc_GRID__(grid_file , ecl_file , &cell_offset , 0);
+    for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
+      ecl_grid_type * lgr_grid = ecl_grid_alloc_GRID__(grid_file , ecl_file , &cell_offset , grid_nr );
+      ecl_grid_add_lgr( main_grid , lgr_grid );
+      {
+      	ecl_grid_type * host_grid;
+      	if (lgr_grid->parent_name == NULL)
+      	  host_grid = main_grid;
+      	else 
+      	  host_grid = ecl_grid_get_lgr( main_grid , lgr_grid->parent_name );
+      	  
+      	ecl_grid_install_lgr_GRID( host_grid , lgr_grid );
+      }
+    }
+
     ecl_file_free( ecl_file );
-    return ecl_grid;
+    return main_grid;
   }
 }
 				 
@@ -778,8 +988,7 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
   else
     util_abort("%s must have .GRID or .EGRID file - %s not recognized \n", __func__ , grid_file);
   
-  ecl_grid->filename = util_alloc_string_copy( grid_file );
-  ecl_grid_alloc_index_map(ecl_grid);
+  ecl_grid->name = util_alloc_string_copy( grid_file );
   return ecl_grid;
 }
 
@@ -975,10 +1184,21 @@ void ecl_grid_free(ecl_grid_type * grid) {
       double_vector_free( grid->values[i] );
     free( grid->values );
   }
-  free( grid->filename );
+  if (grid->grid_nr == 0) { /* This is the main grid. */
+    vector_free( grid->LGR_list );
+    hash_free( grid->LGR_hash );
+  }
+  
+  util_safe_free( grid->parent_name);
+  free( grid->name );
   free( grid );
 }
 
+
+void ecl_grid_free__( void * arg ) {
+  ecl_grid_type * ecl_grid = ecl_grid_safe_cast( arg );
+  ecl_grid_free( ecl_grid );
+}
 
 
 
@@ -1205,10 +1425,126 @@ bool ecl_grid_cell_active3(const ecl_grid_type * ecl_grid, int i , int j , int k
 
 
 /*****************************************************************/
+/* Functions for LGR query/lookup/... */
+
+static void __assert_main_grid(const ecl_grid_type * ecl_grid) {
+  if (ecl_grid->grid_nr != 0) 
+    util_abort("%s: tried to get LGR grid from another LGR_grid - only main grid can be used as first input \n",__func__);
+}
 
 
-const char * ecl_grid_get_filename( const ecl_grid_type * ecl_grid ) {
-  return ecl_grid->filename;
+/**
+   This functon will return a a ecl_grid instance corresponding to the
+   lgr with name lgr_name. The function will fail HARD if no lgr with
+   this name is installed under the present main grid; chech first
+   with ecl_grid_has_lgr() if you are wimp.
+   
+   Leading/trailing spaces on lgr_name are stripped prior to the hash lookup.
+*/
+
+
+ecl_grid_type * ecl_grid_get_lgr(const ecl_grid_type * main_grid, const char * __lgr_name) {
+  __assert_main_grid( main_grid );
+  {
+    char * lgr_name          = util_alloc_strip_copy( __lgr_name );
+    ecl_grid_type * lgr_grid = hash_get(main_grid->LGR_hash , lgr_name);
+    free(lgr_name);
+    return lgr_grid;
+  }
+}
+
+
+bool ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name) {
+  __assert_main_grid( main_grid );
+  {
+    char * lgr_name          = util_alloc_strip_copy( __lgr_name );
+    bool has_lgr             = hash_has_key( main_grid->LGR_hash , lgr_name );
+    free(lgr_name);
+    return has_lgr;
+  }
+}
+
+
+/**
+   Return the number of LGR's associated with this main grid
+   instance. The main grid is not counted.
+*/
+int ecl_grid_get_num_lgr(const ecl_grid_type * main_grid ) {
+  __assert_main_grid( main_grid );
+  return vector_get_size( main_grid->LGR_list ) - 1;  
+}
+
+/**
+   The lgr_nr has zero offset, not counting the main grid, i.e.
+
+      ecl_grid_iget_lgr( ecl_grid , 0);
+   
+   will return the first LGR - and fail HARD if there are no LGR's.
+*/
+
+ecl_grid_type * ecl_grid_iget_lgr(const ecl_grid_type * main_grid, int lgr_nr) {
+  __assert_main_grid( main_grid );
+  return vector_iget(  main_grid->LGR_list , lgr_nr + 1);
+}
+
+
+/**
+   The following functions will return the LGR subgrid referenced by
+   the coordinates given. Observe the following:
+
+   1. The functions will happily return NULL if no LGR is assiciated
+      with the cell indicated - in fact that is (currently) the only
+      way to query whether a particular cell has a LGR.
+      
+   2. If a certain cell is refined in several levels this function
+      will return a pointer to the first level of refinement. The
+      return value can can be used for repeated calls to descend
+      deeper into the refinement hierarchy.  
+*/
+
+
+const ecl_grid_type * ecl_grid_get_cell_lgr1(const ecl_grid_type * grid , int global_index ) {
+  const ecl_cell_type * cell = grid->cells[global_index];
+  return cell->lgr;
+}
+
+
+const ecl_grid_type * ecl_grid_get_cell_lgr3(const ecl_grid_type * grid , int i, int j , int k) {
+  const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
+  return ecl_grid_get_cell_lgr1( grid , global_index );
+}
+
+
+
+const ecl_grid_type * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int active_index) {
+  const int global_index = ecl_grid_get_global_index1A( grid , active_index );
+  return ecl_grid_get_cell_lgr1( grid , global_index );
+}
+
+
+
+
+/*****************************************************************/
+
+/**
+   This function returns the grid_nr field of the field; this is just
+   the occurence number in the grid file. Starting with 0 at the main
+   grid, and then increasing consecutively through the lgr sections.
+
+   Observe that there is A MAJOR POTENTIAL for confusion iwth the
+   ecl_grid_iget_lgr() function, the latter does not refer to the main
+   grid and returns the first lgr section (which has grid_nr == 1) for
+   input argument 0.
+*/
+
+
+int ecl_grid_get_grid_nr( const ecl_grid_type * ecl_grid ) { 
+  return ecl_grid->grid_nr; 
+}
+
+
+const char * ecl_grid_get_name( const ecl_grid_type * ecl_grid ) {
+  return ecl_grid->name;
 }
 
 
@@ -1224,12 +1560,18 @@ int ecl_grid_get_active_size( const ecl_grid_type * ecl_grid ) {
 void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
   int             active_cells , nx,ny,nz;
   ecl_grid_get_dims(ecl_grid , &nx , &ny , &nz , &active_cells);
-  printf("	Grid file .......: %s  \n",ecl_grid->filename);
+  printf("	Name ............: %s  \n",ecl_grid->name);
   printf("	Active cells ....: %d \n",active_cells);
   printf("	nx ..............: %d \n",nx);
   printf("	ny ..............: %d \n",ny);
   printf("	nz ..............: %d \n",nz);
   printf("	Volume ..........: %d \n",nx*ny*nz);
+  if (ecl_grid->grid_nr == 0) {
+    for (int grid_nr=1; grid_nr < vector_get_size( ecl_grid->LGR_list ); grid_nr++) {
+      printf("\n");
+      ecl_grid_summarize( vector_iget_const( ecl_grid->LGR_list , grid_nr ));
+    }
+  }
 }
 
 

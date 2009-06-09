@@ -12,7 +12,7 @@ extern "C" {
 typedef double (block_function_ftype) ( const double_vector_type *); 
 typedef struct ecl_grid_struct ecl_grid_type;
 
-const  char   * ecl_grid_get_filename( const ecl_grid_type * );
+const  char   * ecl_grid_get_name( const ecl_grid_type * );
 int             ecl_grid_get_active_index3(const ecl_grid_type * ecl_grid , int i , int j , int k);
 int             ecl_grid_get_active_index1(const ecl_grid_type * ecl_grid , int global_index);
 bool            ecl_grid_cell_active3(const ecl_grid_type * , int  , int  , int );
@@ -22,6 +22,7 @@ inline int      ecl_grid_get_global_index3(const ecl_grid_type * , int  , int , 
 ecl_grid_type * ecl_grid_alloc_GRDECL(int , int , int , const float *  , const float *  , const int * , const float * mapaxes);
 ecl_grid_type * ecl_grid_alloc(const char * , bool);
 void            ecl_grid_free(ecl_grid_type * );
+void            ecl_grid_free__( void * arg );
 int             ecl_grid_count_box_active(const ecl_grid_type * , const ecl_box_type * );
 void            ecl_grid_set_box_active_list(const ecl_grid_type * , const ecl_box_type * , int * );
 void            ecl_grid_get_dims(const ecl_grid_type * , int *, int * , int * , int *);
@@ -47,7 +48,19 @@ int 		ecl_grid_get_block_count2d(const ecl_grid_type * ecl_grid , int i , int j)
 bool            ecl_grid_block_value_2d(ecl_grid_type * , double  , double  ,double );
 bool            ecl_grid_block_value_3d(ecl_grid_type * , double  , double  ,double , double);
 
+
 int             ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type * region_kw , int region_value , bool active_only, bool export_active_index , int_vector_type * index_list);
+
+const ecl_grid_type * ecl_grid_get_cell_lgr1(const ecl_grid_type * grid , int global_index );
+const ecl_grid_type * ecl_grid_get_cell_lgr3(const ecl_grid_type * grid , int i, int j , int k);
+const ecl_grid_type * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int active_index);
+int             ecl_grid_get_num_lgr(const ecl_grid_type * main_grid );
+int             ecl_grid_get_grid_nr( const ecl_grid_type * ecl_grid );
+ecl_grid_type * ecl_grid_iget_lgr(const ecl_grid_type * main_grid , int lgr_nr);
+ecl_grid_type * ecl_grid_get_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
+bool            ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
+
+
 #ifdef __cplusplus
 }
 #endif
