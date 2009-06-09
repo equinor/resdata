@@ -159,10 +159,11 @@ struct ecl_point_struct {
 
 
 struct ecl_cell_struct {
-  bool 		 active;
-  int  		 active_index;
-  ecl_point_type center;
-  ecl_point_type corner_list[8];
+  bool 		   active;
+  int  		   active_index;
+  ecl_point_type   center;
+  ecl_point_type   corner_list[8];
+  ecl_grid_type   *LGR;            /* If this cell is part of an LGR; this will point to a grid instance for that LGR; NULL if not part of LGR. */
 };
 
 
@@ -257,6 +258,7 @@ static void ecl_point_inplace_scale(ecl_point_type * point , double scale_factor
 static ecl_cell_type * ecl_cell_alloc(void) {
   ecl_cell_type * cell = util_malloc(sizeof * cell , __func__);
   cell->active         = false;
+  cell->LGR            = NULL;
   return cell;
 }
 
@@ -621,42 +623,49 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * z
 
 
 
+static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl_file_type * ecl_file , int grid_nr) {
+  ecl_kw_type * gridhead_kw = ecl_file_iget_named_kw( ecl_file , "GRIDHEAD" , grid_nr);
+  int gtype, nx,ny,nz;
+
+  gtype   = ecl_kw_iget_int(gridhead_kw , 0);
+  nx 	  = ecl_kw_iget_int(gridhead_kw , 1);
+  ny 	  = ecl_kw_iget_int(gridhead_kw , 2);
+  nz 	  = ecl_kw_iget_int(gridhead_kw , 3);
+  if (gtype != 1)
+    util_abort("%s: gtype:%d fatal error when loading:%s - must have corner point grid - aborting\n",__func__ , gtype , grid_file);
+  {
+    
+    ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , "ZCORN"   	, grid_nr);
+    ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , "COORD"   	, grid_nr);
+    ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , "ACTNUM"  	, grid_nr);
+    float       * mapaxes_data = NULL;
+    
+    if (ecl_file_has_kw( ecl_file , "MAPAXES")) {
+      const ecl_kw_type * mapaxes_kw   = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
+      mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw );
+    }
+    
+    return ecl_grid_alloc_GRDECL(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw) , mapaxes_data);
+  }
+}
+
+
+
 static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) {
-  ecl_grid_type * ecl_grid;
   ecl_file_enum   file_type;
   bool            fmt_file;
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
   if (file_type != ECL_EGRID_FILE)
     util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
-
   {
-    ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file , endian_flip );
-    ecl_kw_type * gridhead_kw = ecl_file_iget_named_kw( ecl_file , "GRIDHEAD" , 0);
-    int gtype, nx,ny,nz;
-
-    gtype = ecl_kw_iget_int(gridhead_kw , 0);
-    nx 	  = ecl_kw_iget_int(gridhead_kw , 1);
-    ny 	  = ecl_kw_iget_int(gridhead_kw , 2);
-    nz 	  = ecl_kw_iget_int(gridhead_kw , 3);
-    if (gtype != 1)
-      util_abort("%s: gtype:%d fatal error when loading:%s - must have corner point grid - aborting\n",__func__ , gtype , grid_file);
-    {
-      ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , "ZCORN"   	, 0);
-      ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , "COORD"   	, 0);
-      ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , "ACTNUM"  	, 0);
-      float       * mapaxes_data = NULL;
-      
-      if (ecl_file_has_kw( ecl_file , "MAPAXES")) {
-	const ecl_kw_type * mapaxes_kw   = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , 0);
-	mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw );
-      }
-      
-      ecl_grid = ecl_grid_alloc_GRDECL(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw) , mapaxes_data);
-    }
+    ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file ,  endian_flip );
+    ecl_grid_type * ecl_grid  = ecl_grid_alloc_EGRID__( grid_file , ecl_file , 0);
     ecl_file_free( ecl_file );
+    return ecl_grid;
   }
-  return ecl_grid;
 }
+
+
 
 
 /**
@@ -685,53 +694,63 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
 
 
 
+
+/* 
+   The seeking of COORDS / CORNERS keywords for LGR will not work grid_nr > 0 
+*/
+
+static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_type * ecl_file , int * cell_offset , int grid_nr) {
+  int index,nx,ny,nz;
+  ecl_grid_type * grid;
+  ecl_kw_type * dimens_kw   = ecl_file_iget_named_kw( ecl_file , "DIMENS" , grid_nr);
+  nx   = ecl_kw_iget_int(dimens_kw , 0);
+  ny   = ecl_kw_iget_int(dimens_kw , 1);
+  nz   = ecl_kw_iget_int(dimens_kw , 2);
+  grid = ecl_grid_alloc_empty(nx , ny , nz);
+  
+  /*
+    Possible LGR cells will follow *AFTER* the first nx*ny*nz cells;
+    the loop stops at nx*ny*nz. Additionally the LGR cells should be
+    discarded (by checking coords[5]) in the
+    ecl_grid_set_cell_GRID() function.
+  */
+    
+  for (index = 0; index < nx*ny*nz; index++) {
+    ecl_kw_type * coords_kw  = ecl_file_iget_named_kw(ecl_file , "COORDS"  , index + (*cell_offset));
+    ecl_kw_type * corners_kw = ecl_file_iget_named_kw(ecl_file , "CORNERS" , index + (*cell_offset));
+    ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
+  }
+  
+  if (ecl_file_has_kw( ecl_file , "MAPAXES")) {
+    const ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
+    ecl_grid_init_mapaxes( grid , ecl_kw_get_float_ptr( mapaxes_kw) );
+  }
+  
+  ecl_grid_set_center(grid);
+  ecl_grid_set_active_index(grid);
+  (*cell_offset) += nx*ny*nz;
+  return grid;
+}
+
+
+
 static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_flip) {
 
   ecl_file_enum   file_type;
-  int             nx,ny,nz,index;
-  ecl_grid_type * grid;
   ecl_util_get_file_type(grid_file , &file_type , NULL , NULL);
   if (file_type != ECL_GRID_FILE)
     util_abort("%s: %s wrong file type - expected .GRID file - aborting \n",__func__ , grid_file);
 
   {
+    int cell_offset = 0;
     ecl_file_type * ecl_file = ecl_file_fread_alloc( grid_file , endian_flip );
-
-    {
-      ecl_kw_type * dimens_kw = ecl_file_iget_named_kw( ecl_file , "DIMENS" , 0);
-      nx = ecl_kw_iget_int(dimens_kw , 0);
-      ny = ecl_kw_iget_int(dimens_kw , 1);
-      nz = ecl_kw_iget_int(dimens_kw , 2);
-      grid = ecl_grid_alloc_empty(nx , ny , nz);
-    }
-
-    /*
-      Possible LGR cells will follow *AFTER* the first nx*ny*nz cells;
-      the loop stops at nx*ny*nz. Additionally the LGR cells should be
-      discarded (by checking coords[5]) in the
-      ecl_grid_set_cell_GRID() function.
-    */
-
-    for (index = 0; index < nx*ny*nz; index++) {
-      ecl_kw_type * coords_kw  = ecl_file_iget_named_kw(ecl_file , "COORDS"  , index);
-      ecl_kw_type * corners_kw = ecl_file_iget_named_kw(ecl_file , "CORNERS" , index);
-      ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
-    }
-
-    if (ecl_file_has_kw( ecl_file , "MAPAXES")) {
-      const ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , 0);
-      ecl_grid_init_mapaxes( grid , ecl_kw_get_float_ptr( mapaxes_kw) );
-    }
-
+    
+    ecl_grid_type * ecl_grid = ecl_grid_alloc_GRID__(grid_file , ecl_file , &cell_offset , 0);
     ecl_file_free( ecl_file );
+    return ecl_grid;
   }
-
-  ecl_grid_set_center(grid);
-  ecl_grid_set_active_index(grid);
-
-  return grid;
 }
-
+				 
 
 
 
