@@ -71,7 +71,7 @@ mem_free.o  : mem_free.c
 
 #################################################################
 
-BIN:	util.x eol-fix.x mem_free.x tokenizer_test.x grdecl_to_ascii.x
+BIN:	util.x eol-fix.x mem_free.x tokenizer_test.x grdecl_to_ascii.x replace.x
 BIN_FILES = util.x eol-fix.x mem_free.x tokenizer_test.x grdecl_to_ascii.x
 
 util.x: util-test.o $(LIB)
@@ -88,3 +88,6 @@ tokenizer_test.x: tokenizer_test.o $(LIB)
 
 grdecl_to_ascii.x: grdecl_to_ascii.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) grdecl_to_ascii.o -o grdecl_to_ascii.x  $(LINK_LIB_PATH) $(LIB_LINK)
+
+replace.x: replace.o $(LIB)
+	$(LD) -$(MFLAG) $(LDFLAGS) replace.o -o replace.x  $(LINK_LIB_PATH) $(LIB_LINK)

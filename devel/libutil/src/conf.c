@@ -32,7 +32,7 @@
 
 
 /**
-  Defining random numbers for safe run time casting.
+  Defining numbers for safe run time casting.
 */
 #define __CONF_SPEC_ID 132489012
 #define __CONF_ITEM_ID 342349032
@@ -57,21 +57,21 @@ struct conf_spec_struct
 
 struct conf_struct
 {
-  int               __id;  /** Used for safe run time casting.                */
-  conf_type       * super; /** Mother. Can be NULL for the root.              */
-  char            * type;  /** Name used to identify the class.               */
-  char            * name;  /** Name used to identify the instance.            */
-  vector_type     * confs; /** Vector of conf_type's.                         */
-  hash_type       * items; /** Hash of conf_item_type's. Indexed by name.     */
+  int               __id;           /** Used for safe run time casting.       */
+  conf_type       * super;          /** Mother. Can be NULL for the root.     */
+  char            * type;           /** Name used to identify the class.      */
+  char            * name;           /** Name used to identify the instance.   */
+  vector_type     * confs;          /** Vector of conf_type's.                */
+  hash_type       * items;          /** Hash of conf_item_type's.             */
 };
 
 
 
 struct conf_item_struct
 {
-  int               __id;   /** Used for safe run time casting.               */
-  conf_type       * super;  /** Mother. Can not be NULL.                      */
-  stringlist_type * values; /** Raw tokens read from file.                    */
+  int               __id;           /** Used for safe run time casting.       */
+  conf_type       * super;          /** Mother. Can not be NULL.              */
+  stringlist_type * values;         /** Raw tokens read from file.            */
 };
 
 
@@ -572,7 +572,7 @@ conf_type * conf_get_super(
 
 
 static
-void conf_item_append_data(
+void conf_item_append_data_item(
   conf_item_type * item,
   const char     * data
 )
@@ -582,7 +582,154 @@ void conf_item_append_data(
 
 
 
+static
+void conf_item_append_data(
+  conf_item_type        * item,
+  const stringlist_type * data
+)
+{
+  stringlist_append_stringlist_copy(item->values, data);
+}
+
+
+
 /******************************************************************************/
+
+
+
+/**
+  Create a shallow copy stringlist of tokens that belong to an item
+  starting at *position__. The memory pointed by position__ is updated
+  so that it contains the position of the first token AFTER the tokens
+  belonging to the item.
+*/
+static
+int get_item_tokens(
+  const stringlist_type * tokens,
+  stringlist_type      ** item_tokens,
+  int                   * position__
+)
+{
+  int status = CONF_OK;
+
+  int item_size  = 0;
+  int start      = *position__;
+  int position   = *position__;
+  int num_tokens = stringlist_get_size(tokens);
+
+
+  const char * current_token = stringlist_iget(tokens, position);
+  if( strings_are_equal(current_token, __CONF_VEC_START) )
+  {
+    position++;
+    start = position;
+    bool matched_delimiters = false;
+    while( position < num_tokens && !matched_delimiters )
+    {
+      current_token = stringlist_iget(tokens, position);
+      if( strings_are_equal(current_token, __CONF_VEC_STOP) )
+      {
+        matched_delimiters = true;
+        position++;
+      }
+      else
+      {
+        item_size++;
+        position++;
+      }
+    }
+    
+    if( !matched_delimiters )
+    {
+      /**
+        TODO
+
+        This is an error. Should add a message.
+      */
+      status = CONF_PARSE_ERROR;
+    }
+  }
+  else
+  {
+    item_size = 1;
+    position++;
+  }
+
+  *item_tokens = stringlist_alloc_shallow_copy_with_limits(tokens, start,
+                                                           item_size);
+  *position__ = position;
+
+  return status;
+}
+
+
+
+static
+int get_conf_tokens(
+  const stringlist_type * tokens,
+  stringlist_type      ** conf_tokens,
+  int                   * position__
+)
+{
+  int status = CONF_OK;
+
+  int conf_size  = 0;
+  int start      = *position__;
+  int position   = *position__;
+  int num_tokens = stringlist_get_size(tokens);
+
+
+  const char * current_token = stringlist_iget(tokens, position);
+  if( strings_are_equal(current_token, __CONF_EXP_START) )
+  {
+    position++;
+    start = position;
+    int depth = 1;
+    while( position < num_tokens && depth > 0 )
+    {
+      current_token = stringlist_iget(tokens, position);
+      if( strings_are_equal(current_token, __CONF_EXP_START) )
+      {
+        position++;
+        conf_size++;
+        depth++;
+      }
+      else if( strings_are_equal(current_token, __CONF_EXP_STOP) )
+      {
+        position++;
+        depth--;
+        if(depth > 0)
+          conf_size++;
+      }
+      else
+      {
+        position++;
+        conf_size++;
+      }
+    }
+    
+    if( depth > 0 )
+    {
+      /**
+        TODO
+
+        This is an error. Should add a message.
+      */
+      status = CONF_PARSE_ERROR;
+    }
+  }
+  else
+  {
+    conf_size = 0;
+    position++;
+  }
+
+  *conf_tokens = stringlist_alloc_shallow_copy_with_limits(tokens, start,
+                                                           conf_size);
+  *position__ = position;
+
+  return status;
+}
 
 
 
@@ -596,7 +743,7 @@ int conf_alloc_from_tokens(
   assert(tokens != NULL);
   assert(errors != NULL);
 
-  typedef enum {IN_ROOT, IN_CLASS, IN_ITEM, IN_VEC_ITEM} PARSER_STATE;
+  typedef enum {IN_ROOT, IN_CLASS, IN_ITEM} PARSER_STATE;
   PARSER_STATE state = IN_ROOT;
 
   int position   = 0;
@@ -615,35 +762,8 @@ int conf_alloc_from_tokens(
     */
 
     const char * current_token = stringlist_iget(tokens, position);
-    const char * next_token;
-    switch(state)
-    {
-      case(IN_ROOT):
-        if( position+1 >= num_tokens)
-        {
-          /** 
-            TODO
-            It is really an error if this ever happens. Add a warning.
-          */
-          position++;
-          continue;
-        }
-
-        next_token = stringlist_iget(tokens, position+1);
-        if( strings_are_equal(next_token, "__CONF_ASSIGN") )
-        {
-
-        }
-        continue;
-      case(IN_CLASS):
-        continue;
-      case(IN_ITEM):
-        continue;
-      case(IN_VEC_ITEM):
-        continue;
-      default:
-        continue;
-    }
+    const char * look_ahead_one;
+    const char * look_ahead_two;
   }
 }
   

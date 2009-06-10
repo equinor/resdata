@@ -6,11 +6,11 @@
 extern "C" {
 #endif
 
-#define CONF_OK                      0
-#define CONF_PARSE_ERROR             1
-#define CONF_CIRCULAR_INCLUDE_ERROR  2
-#define CONF_UNEXPECTED_EOF_ERROR    3
-#define CONF_UNABLE_TO_OPEN_FILE     4
+#define CONF_OK                         0
+#define CONF_PARSE_ERROR                1
+#define CONF_CIRCULAR_INCLUDE_ERROR     2
+#define CONF_UNEXPECTED_EOF_ERROR       3 
+#define CONF_UNABLE_TO_OPEN_FILE        4
 
 
 

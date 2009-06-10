@@ -2,7 +2,7 @@
 
 int main(int argc, char ** argv)
 {
-  tokenizer_type * tokenizer = tokenizer_alloc(" \t\n\r,;", "'\"", "[]{}", "--", "\n");
+  tokenizer_type * tokenizer = tokenizer_alloc(" \t\n\r,", "'\"", "[]{}=", "--", "\n");
 
   if(argc < 2 )
   {
