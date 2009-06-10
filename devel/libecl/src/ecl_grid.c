@@ -1,3 +1,20 @@
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <util.h>
+#include <ecl_kw.h>
+#include <ecl_grid.h>
+#include <stdbool.h>
+#include <ecl_util.h>
+#include <double_vector.h>
+#include <int_vector.h>
+#include <ecl_file.h>
+#include <hash.h>
+#include <vector.h>
+#include <stringlist.h>
+
+
+
 /**
   This function implements functionality to load ECLISPE grid files,
   both .EGRID and .GRID files - in a transparent fashion.
@@ -170,35 +187,37 @@
       Example:
       --------
 
-
-      ecl_file_type * restart_data = ecl_file_fread_alloc(restart_filename , true); 		       // load some restart info to inspect
-      ecl_grid_type * grid         = ecl_grid_alloc(grid_filename , true);          		       // bootstrap ecl_grid instance
-      stringlist_type * lgr_names  = ecl_grid_alloc_name_list( grid );    
+      {
+      	 ecl_file_type * restart_data = ecl_file_fread_alloc(restart_filename , true); 		            // load some restart info to inspect
+      	 ecl_grid_type * grid         = ecl_grid_alloc(grid_filename , true);          		            // bootstrap ecl_grid instance
+      	 stringlist_type * lgr_names  = ecl_grid_alloc_name_list( grid );                                   // get a list of all the LGR names.
       
-      printf("Grid:%s has %d a total of %d LGR's \n", grid_filename , stringlist_get_size( lgr_names ));
-      for (int lgr_nr = 0; lgr_nr < stringlist_get_size( lgr_names); lgr_nr++) {
-         ecl_grid_type * lgr_grid  = ecl_grid_get_lgr( grid , stringlist_iget( lgr_names , lgr_nr ));   // Get the ecl_grid instance of the lgr - by name.
-	 ecl_kw_type   * pressure_kw;
-	 int nx,ny,nz,active_size;
-	 ecl_grid_get_dims( lgr_grid , &nx , &ny , &nz , &active_size);                                // Get some size info from this lgr.
-	 printf("LGR:%s has %d x %d x %d elements \n",stringlist_iget(lgr_names , lgr_nr ) , nx , ny , nz);
+      	 printf("Grid:%s has %d a total of %d LGR's \n", grid_filename , stringlist_get_size( lgr_names ));
+      	 for (int lgr_nr = 0; lgr_nr < stringlist_get_size( lgr_names); lgr_nr++) {
+      	    ecl_grid_type * lgr_grid  = ecl_grid_get_lgr( grid , stringlist_iget( lgr_names , lgr_nr ));    // Get the ecl_grid instance of the lgr - by name.
+      	    ecl_kw_type   * pressure_kw;
+	    int nx,ny,nz,active_size;
+	    ecl_grid_get_dims( lgr_grid , &nx , &ny , &nz , &active_size);                             // Get some size info from this lgr.
+	    printf("LGR:%s has %d x %d x %d elements \n",stringlist_iget(lgr_names , lgr_nr ) , nx , ny , nz);
 
-	 // OK - now we want to extract the solution vector (pressure) corresponding to this lgr:
-	 pressure_kw = ecl_file_iget_named_kw( ecl_file , "PRESSURE" , ecl_grid_get_grid_nr( lgr_grid ));
-                                                                                   /|\
-                                                                                    |
-                                                                                    |   
-                                                                     We query the lgr_grid instance to find which
-								     occurence of the solution data we are interested in.
+	    // OK - now we want to extract the solution vector (pressure) corresponding to this lgr:
+	    pressure_kw = ecl_file_iget_named_kw( ecl_file , "PRESSURE" , ecl_grid_get_grid_nr( lgr_grid ));
+      	                                                                              /|\
+      	                                                                               |
+      	                                                                               |   
+      	                                                                We query the lgr_grid instance to find which
+      	 								occurence of the solution data we should look
+									up in the ecl_file instance with restart data. Puuhh!!
 
-         {
-            int center_index = ecl_grid_get_global_index3( lgr_grid , nx/2 , ny/2 , nz/2 );           // Ask the lgr_grid to get the index at the center of the lgr grid								     
-            printf("The pressure in the middle of %s is %g \n", stinglist_iget( lgr_names , lgr_nr ) , ecl_kw_iget_as_double( pressure_kw , center_index ));
-	 }
-      }
-      ecl_file_free( restart_data );
-      ecl_grid_free( grid );
-      stringlist_free( lgr_names );
+      	    {
+      	       int center_index = ecl_grid_get_global_index3( lgr_grid , nx/2 , ny/2 , nz/2 );              // Ask the lgr_grid to get the index at the center of the lgr grid								     
+      	       printf("The pressure in the middle of %s is %g \n", stinglist_iget( lgr_names , lgr_nr ) , ecl_kw_iget_as_double( pressure_kw , center_index ));
+      	    }
+      	 }
+      	 ecl_file_free( restart_data );
+      	 ecl_grid_free( grid );
+      	 stringlist_free( lgr_names );
+     }
 
 */
 
@@ -214,21 +233,6 @@
 
 */
 
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <util.h>
-#include <ecl_kw.h>
-#include <ecl_grid.h>
-#include <stdbool.h>
-#include <ecl_util.h>
-#include <double_vector.h>
-#include <int_vector.h>
-#include <ecl_file.h>
-#include <hash.h>
-#include <vector.h>
-#include <stringlist.h>
 
 typedef struct ecl_point_struct ecl_point_type;
 typedef struct ecl_cell_struct  ecl_cell_type;
@@ -252,16 +256,19 @@ struct ecl_cell_struct {
 #define ECL_GRID_ID 991010
 struct ecl_grid_struct {
   int                   __type_id;
-  int                   grid_nr;       /* This corresponds to item 4 in GRIDHEAD - 0 for the mother grid. */ 
+  int                   grid_nr;       /* This corresponds to item 4 in GRIDHEAD - 0 for the main grid. */ 
   char                * name;          /* The name of the file for the main grid - name of the LGR for LGRs. */
-  char                * parent_name;   /* The name of the parent for a nested LGR - for a LGR descending directly from the main grid this will be NULL. */
   int                   ny,nz,nx;
   int                   size;          /* == nx*ny*nz */
   int                   total_active; 
   int                 * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
-  ecl_cell_type      ** cells;
+  ecl_cell_type      ** cells;         
 
+  char                * parent_name;   /* The name of the parent for a nested LGR - for a LGR descending directly from the main grid this will be NULL. */
+  hash_type           * children;      /* A table of LGR children for this grid. */
+  const ecl_grid_type * parent_grid;   /* The parent grid for this (lgr) - NULL for the main grid. */      
+  
   /*
     The two fields below are for *storing* LGR grid instances. Observe
     that these fields will be NULL for LGR grids, i.e. grids with
@@ -269,7 +276,6 @@ struct ecl_grid_struct {
   */
   vector_type         * LGR_list;      /* An vector of ecl_grid instances for LGR's - the index corresponds to the grid_nr. */
   hash_type           * LGR_hash;      /* A hash of pointers to ecl_grid instances - for name based lookup of LGR. */
-
 
   double                rotation;
   double                origo[2];
@@ -580,7 +586,8 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_n
     grid->LGR_hash = NULL;
   }
   grid->parent_name = NULL;
-  
+  grid->parent_grid = NULL;
+  grid->children    = hash_alloc();
   return grid;
 }
 
@@ -774,6 +781,8 @@ static void ecl_grid_install_lgr_EGRID(ecl_grid_type * host_grid , ecl_grid_type
       lgr_cell->host_cell = hostnum[ global_lgr_index ];
     }
   }
+  hash_insert_ref( host_grid->children , lgr_grid->name , lgr_grid);
+  lgr_grid->parent_grid = host_grid;
 }
 
 
@@ -818,7 +827,7 @@ static void ecl_grid_set_lgr_name_EGRID(ecl_grid_type * lgr_grid , const ecl_fil
 /**
    Sets the name of the lgr AND the name of the parent, if this is a
    nested LGR. For LGR descending directly from the parent ECLIPSE
-   will supply 'GLOBAl' (whereas for EGRID it will return '' -
+   will supply 'GLOBAL' (whereas for EGRID it will return '' -
    cool?). Anyway GLOBAL -> NULL.
 */
 
@@ -1265,7 +1274,7 @@ void ecl_grid_free(ecl_grid_type * grid) {
     vector_free( grid->LGR_list );
     hash_free( grid->LGR_hash );
   }
-  
+  hash_free( grid->children );
   util_safe_free( grid->parent_name);
   free( grid->name );
   free( grid );
