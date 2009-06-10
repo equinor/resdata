@@ -73,7 +73,7 @@ ens_plot.o     : ens_plot.c
 
 BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x ens_plot.x lgr_iget.x
 BIN	:  $(BIN_FILES) 
-BIN_FILES_SDP_INSTALL = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x extract_owc.x block_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
+BIN_FILES_SDP_INSTALL = convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
 
 ecl_pack.x: $(LIB) ecl_pack.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_pack.o -o ecl_pack.x $(LIB_PATH) $(LIB_LINK)
