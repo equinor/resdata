@@ -7,14 +7,10 @@ int main(int argc, char ** argv)
     util_exit("Usage: replace.x from1 to1 from2 to2 ... fromN toN filename\n");
   
   subst_list_type * subst_list =  subst_list_alloc();
-  int i = 1;
-  while(i < argc-1)
-  {
+  for(int i=1; i < argc-1; i += 2)
     subst_list_insert_ref(subst_list, argv[i], argv[i+1]);
-    i = i + 2;
-  }
+
   subst_list_update_file(subst_list, argv[argc-1]);
   subst_list_free(subst_list);
-
   return 0;
 }
