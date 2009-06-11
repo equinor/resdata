@@ -221,6 +221,7 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
   util_fread(new_line , sizeof * new_line , len , stream , __func__);
   new_line[len] = '\0';
   
+
   /*
     Skipping the end of line marker(s).
   */
@@ -979,7 +980,22 @@ int util_scanf_int(const char * prompt , int prompt_len) {
     scanf("%s" , input);
     OK = util_sscanf_int(input , &int_value);
   } while (!OK);
+  getchar(); /* eating a \r left in the stdin input buffer. */
   return int_value;
+}
+
+
+double util_scanf_double(const char * prompt , int prompt_len) {
+  char input[256];
+  double  double_value;
+  bool OK;
+  do {
+    util_printf_prompt(prompt , prompt_len, '=', "=> ");
+    scanf("%s" , input);
+    OK = util_sscanf_double(input , &double_value);
+  } while (!OK);
+  getchar(); /* eating a \r left in the stdin input buffer. */
+  return double_value;
 }
 
 
@@ -1554,6 +1570,7 @@ void util_alloc_file_components(const char * file, char **_path , char **_basena
 
 
 
+
 bool util_path_exists(const char *pathname) {
   DIR *stream = opendir(pathname);
   bool ex;
@@ -1839,7 +1856,7 @@ void util_inplace_forward_days(time_t * t , double days) {
    seconds (straight difftime output). Observe that the ordering of
    time_t arguments is switched with respect to the difftime
    arguments.
-
+   
    In addition the difference can be broken down in days, hours,
    minutes and seconds if the appropriate pointers are passed in.
 */

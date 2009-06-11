@@ -98,6 +98,7 @@ const char * util_skip_sep(const char * , const char * , bool *);
 int      util_scanf_int_with_limits(const char * , int  , int  , int );
 void     util_printf_prompt(const char * , int , char , const char *);
 int      util_scanf_int(const char * , int);
+double   util_scanf_double(const char * prompt , int prompt_len);
 char   * util_scanf_alloc_string(const char * );
 bool     util_sscanf_double(const char * , double * );
   //char   * util_alloc_full_path(const char *, const char *);

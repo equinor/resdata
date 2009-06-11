@@ -35,7 +35,7 @@ clean:
 
 LIB:	$(LIB)
 
-rebuild: clean LOCAL
+rebuild: clean new LOCAL
 
 new: 
 	../../Scripts/cdep.py all_include.h 0
