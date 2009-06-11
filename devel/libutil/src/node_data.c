@@ -117,7 +117,6 @@ void node_data_free_container(node_data_type * node_data) {
 
 
 void node_data_free(node_data_type * node_data) {
-  printf("%s: calling destructor with data:%p \n",__func__ , node_data->data );
   if (node_data->del != NULL)
     node_data->del( (void *) node_data->data );
   

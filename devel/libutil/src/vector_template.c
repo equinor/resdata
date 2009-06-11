@@ -101,7 +101,6 @@ static void <TYPE>_vector_realloc_data__(<TYPE>_vector_type * vector , int new_a
     vector->data = util_realloc(vector->data , new_alloc_size * sizeof * vector->data , __func__);
     for (i=vector->alloc_size;  i < new_alloc_size; i++)
       vector->data[i] = vector->default_value;
-    printf("%s: Har allokert med: %p \n",__func__ , vector->data);
   } else {
     if (vector->alloc_size > 0) {
       free(vector->data);

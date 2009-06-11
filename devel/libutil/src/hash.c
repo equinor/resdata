@@ -540,7 +540,6 @@ void hash_insert_hash_owned_ref(hash_type *hash , const char *key , const void *
   hash_node_type *hash_node;
   if (del == NULL) 
     util_abort("%s: must provide delete operator for insert hash_owned_ref - aborting \n",__func__);
-  printf("%s: inserting: %p \n",__func__ , value);
   {
     node_data_type * data_node = node_data_alloc_ptr( value , NULL , del );
     hash_node                  = hash_node_alloc_new(key , data_node , hash->hashf , hash->size);

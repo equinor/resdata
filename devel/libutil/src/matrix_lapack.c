@@ -194,14 +194,11 @@ int  matrix_dsyevx(bool             compute_eig_vectors ,
 		   double *eig_values ,                   /* The calcualated eigenvalues                  */
 		   matrix_type * Z    ) {                 /* The eigenvectors as columns vectors          */ 
 
-  
   int lda  = matrix_get_column_stride( A );
   int n    = matrix_get_rows( A );
   char jobz;
   char range;
   char uplo_c;
-  printf("%s: P(A): %p \n",__func__ , A);
-
   
   if (compute_eig_vectors)
     jobz = 'V';
@@ -234,9 +231,10 @@ int  matrix_dsyevx(bool             compute_eig_vectors ,
     util_abort("%s: matrix A must be quadratic \n",__func__);
   
   {
-    int      num_eigenvalues , ldz, info , worksize,ifail;
+    int      num_eigenvalues , ldz, info , worksize;
+    int    * ifail = util_malloc( n * sizeof * ifail , __func__);
     int    * iwork = util_malloc( 5 * n * sizeof * iwork , __func__);
-    double * work  = util_malloc( sizeof * work , __func__);
+    double * work  = util_malloc( 1 * sizeof * work , __func__);
     double * z_data;
     double   abstol = 0.0; /* SHopuld */
 
@@ -271,8 +269,9 @@ int  matrix_dsyevx(bool             compute_eig_vectors ,
 	     work ,           	   /* 16 */
 	     &worksize ,      	   /* 17 */
 	     iwork ,          	   /* 18 */
-	     &ifail ,         	   /* 19 */
+	     ifail ,         	   /* 19 */
 	     &info);          	   /* 20 */
+    
     
     worksize = (int) work[0];
     {
@@ -287,7 +286,6 @@ int  matrix_dsyevx(bool             compute_eig_vectors ,
       } else
 	work = tmp; /* The request for optimal worksize succeeded */
     }
-    printf("%s: P(A): %p \n",__func__ , A);
     /* Second call: do the job */
     info     = 0;
     dsyevx_( &jobz,
@@ -308,14 +306,12 @@ int  matrix_dsyevx(bool             compute_eig_vectors ,
 	     work , 
 	     &worksize , 
 	     iwork , 
-	     &ifail , 
+	     ifail , 
 	     &info);
 
-    printf("%s: P(A): %p \n",__func__ , A);
-    
+    free( ifail );
     free( work );
     free( iwork );
-    printf("%s: P(A): %p \n",__func__ , A);
     return num_eigenvalues;
   }
 }
@@ -330,11 +326,8 @@ int  matrix_dsyevx_all(dsyevx_uplo_enum uplo,
 		       double *eig_values ,                   /* The calcualated eigenvalues         */
 		       matrix_type * Z    ) {                 /* The eigenvectors as columns vectors */ 
   int num_eigenvalues;
-
-  printf("%s: P(A): %p \n",__func__ , A);
   num_eigenvalues = matrix_dsyevx(true , DSYEVX_ALL , uplo , A , 0,0,0,0, eig_values , Z);
-  printf("%s: P(A): %p \n",__func__ , A);
-
   return num_eigenvalues;
+
 }
 
