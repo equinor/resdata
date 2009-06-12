@@ -230,6 +230,10 @@ void ecl_util_get_file_type(const char * filename, ecl_file_enum * _file_type , 
    This function takes a path, along with a filetype as input and
    allocates a new string with the filename. If path == NULL, the
    filename is allocated without a leading path component.
+
+   If the flag 'must_exist' is set to true the function will check
+   with the filesystem if the file actually exists; if the file does
+   not exist NULL is returned.
 */
 
 static char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file, int report_nr, bool must_exist) {
@@ -336,8 +340,10 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
 	  in the normal way, and then check whether it existst in the calling
 	  unit. Tough luck ...
 	*/
-	if (total_usleep_time >= max_usleep_time) 
-	  util_abort("%s: file:%s does not exist - aborting \n",__func__ , filename);
+	if (total_usleep_time >= max_usleep_time) {
+	  filename = util_safe_free( filename );  /* Return NULL if the file does not exist */
+	  break;
+	}
 	
 	total_usleep_time += usleep_time;
 	usleep(usleep_time);
@@ -401,6 +407,7 @@ char * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , e
   
   return filename;
 }
+
 
 int ecl_util_fname_cmp(const void *f1, const void *f2) {
   int t1 = ecl_util_filename_report_nr( *((const char **) f1) );

@@ -32,7 +32,7 @@ clean:
 	rm -f $(INSTALL_INC_PATH)/*.h
 	rm -f $(INSTALL_LIB_PATH)/$(LIB)
 
-rebuild: clean LOCAL
+rebuild: clean new LOCAL
 
 LIB:	$(LIB)
 

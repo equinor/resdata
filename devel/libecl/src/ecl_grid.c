@@ -945,23 +945,22 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
     ecl_file_type * ecl_file   = ecl_file_fread_alloc( grid_file ,  endian_flip );
     int num_grid               = ecl_file_get_num_named_kw( ecl_file , "GRIDHEAD" );
     ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( grid_file , ecl_file , 0);
-
+    
     for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
       ecl_grid_type * lgr_grid = ecl_grid_alloc_EGRID__(grid_file , ecl_file , grid_nr );
       ecl_grid_add_lgr( main_grid , lgr_grid );
       {
-	ecl_grid_type * host_grid;
-	ecl_kw_type   * hostnum_kw = ecl_file_iget_named_kw( ecl_file , "HOSTNUM" , grid_nr - 1);
-	if (lgr_grid->parent_name == NULL)
-	  host_grid = main_grid;
-	else 
-	  host_grid = ecl_grid_get_lgr( main_grid , lgr_grid->parent_name );
-	  
-	ecl_grid_install_lgr_EGRID( host_grid , lgr_grid , ecl_kw_get_int_ptr( hostnum_kw) );
+    	ecl_grid_type * host_grid;
+    	ecl_kw_type   * hostnum_kw = ecl_file_iget_named_kw( ecl_file , "HOSTNUM" , grid_nr - 1);
+    	if (lgr_grid->parent_name == NULL)
+    	  host_grid = main_grid;
+    	else 
+    	  host_grid = ecl_grid_get_lgr( main_grid , lgr_grid->parent_name );
+    	  
+    	ecl_grid_install_lgr_EGRID( host_grid , lgr_grid , ecl_kw_get_int_ptr( hostnum_kw) );
       }
     }
-
-    ecl_file_free( ecl_file );
+    
     return main_grid;
   }
 }

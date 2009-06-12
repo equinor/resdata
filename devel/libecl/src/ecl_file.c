@@ -117,7 +117,8 @@ static void ecl_file_make_index( ecl_file_type * ecl_file ) {
       char              * header = ecl_kw_alloc_strip_header( ecl_kw );
       
       if (! hash_has_key( ecl_file->kw_index , header )) {
-	hash_insert_hash_owned_ref( ecl_file->kw_index , header , int_vector_alloc(0 , -1) , int_vector_free__);
+	int_vector_type * index_vector = int_vector_alloc(0 , -1);
+	hash_insert_hash_owned_ref( ecl_file->kw_index , header , index_vector , int_vector_free__);
 	stringlist_append_copy( ecl_file->distinct_kw , header);
       }
       
@@ -248,7 +249,6 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
   } else
     /* Building up the index for keyword/occurence based lookup. */
     ecl_file_make_index( ecl_file );
-    
   
   return ecl_file;
 }

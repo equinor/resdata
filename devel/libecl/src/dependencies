@@ -4,7 +4,7 @@ ecl_grid.o                          : ecl_grid.c ecl_grid.h ecl_kw.o ecl_util.o 
 ecl_file.o                          : ecl_file.c ecl_file.h fortio.o ecl_kw.o  
 ecl_well_vars.o                     : ecl_well_vars.c ecl_well_vars.h  
 ecl_rft_node.o                      : ecl_rft_node.c ecl_rft_node.h ecl_kw.o ecl_file.o  
-ecl_rft_file.o                      : ecl_rft_file.c ecl_rft_file.h ecl_kw.o ecl_rft_node.o ecl_file.o  
+ecl_rft_file.o                      : ecl_rft_file.c ecl_rft_file.h ecl_rft_node.o ecl_file.o  
 ecl_box.o                           : ecl_box.c ecl_box.h  
 ecl_sum.o                           : ecl_sum.c ecl_sum.h ecl_util.o ecl_smspec.o ecl_sum_data.o  
 fortio.o                            : fortio.c fortio.h  
