@@ -335,13 +335,9 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
       if (util_file_exists(filename)) 
 	break;
       else {
-	/*
-	  If aborting is not permissible you must first allocate the name
-	  in the normal way, and then check whether it existst in the calling
-	  unit. Tough luck ...
-	*/
+	/* Return NULL if the file does not exist */
 	if (total_usleep_time >= max_usleep_time) {
-	  filename = util_safe_free( filename );  /* Return NULL if the file does not exist */
+	  filename = util_safe_free( filename );  
 	  break;
 	}
 	

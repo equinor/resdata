@@ -960,7 +960,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian
     	ecl_grid_install_lgr_EGRID( host_grid , lgr_grid , ecl_kw_get_int_ptr( hostnum_kw) );
       }
     }
-    
+    ecl_file_free( ecl_file );
     return main_grid;
   }
 }

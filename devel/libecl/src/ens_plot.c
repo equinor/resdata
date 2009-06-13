@@ -216,11 +216,12 @@ plot_info_type * plot_info_alloc(const char * plot_path , const char * device , 
 
 
 void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_key) {
+  const char * label = NULL;
   const int ens_size = vector_get_size( ens->data );
   int iens;
   
   for (iens = 0; iens < ens_size; iens++) {
-    plot_dataset_type * plot_dataset = plot_alloc_new_dataset( plot , plot_xy , false);
+    plot_dataset_type * plot_dataset = plot_alloc_new_dataset( plot , label , plot_xy );
     const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , iens );
     //int report_step , first_report_step , last_report_step;
     int ministep, first_ministep, last_ministep;
@@ -263,8 +264,6 @@ void plot_set_range(plot_type * plot, time_t start_time){
   plot_range_type * range = plot_range_alloc();
 
   plot_get_extrema(plot, range);
-  double xmax = plot_range_get_xmax(range); 
-  double xmin = plot_range_get_xmin(range); 
   double ymax = plot_range_get_ymax(range); 
   double ymin = plot_range_get_ymin(range); 
 
@@ -315,7 +314,7 @@ void plot_meas_file(plot_type * plot, time_t start_time){
 	//x = days;
 	
 	y = strtod(token_list[2], &error_ptr);
-	plot_dataset = plot_alloc_new_dataset( plot , plot_xy , false);
+	plot_dataset = plot_alloc_new_dataset( plot , NULL , plot_xy );
 	plot_dataset_set_style      (plot_dataset , POINTS);
 	plot_dataset_append_point_xy(plot_dataset , x , y);
 	plot_dataset_set_line_width( plot_dataset , 1.5);
@@ -330,7 +329,7 @@ void plot_meas_file(plot_type * plot, time_t start_time){
 	y1 = strtod(token_list[2], &error_ptr);
 	y2 = strtod(token_list[3], &error_ptr);
 	
-	plot_dataset = plot_alloc_new_dataset( plot , plot_xy1y2 , false);
+	plot_dataset = plot_alloc_new_dataset( plot , NULL , plot_xy1y2 );
 	plot_dataset_append_point_xy1y2(plot_dataset , x , y1, y2);
 	plot_dataset_set_line_width( plot_dataset , 1.5);
 	plot_dataset_set_line_color( plot_dataset , 15);
@@ -345,7 +344,7 @@ void plot_meas_file(plot_type * plot, time_t start_time){
 	util_inplace_forward_days(&time2 , x2);
 	
 	y = strtod(token_list[3], &error_ptr);
-	plot_dataset = plot_alloc_new_dataset( plot , plot_x1x2y , false);
+	plot_dataset = plot_alloc_new_dataset( plot , NULL  , plot_x1x2y );
 	plot_dataset_append_point_x1x2y(plot_dataset , time1 , time2, y);
 	plot_dataset_set_line_width( plot_dataset , 1.5);
 	plot_dataset_set_line_color( plot_dataset , 15);
