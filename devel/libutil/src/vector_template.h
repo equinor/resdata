@@ -5,7 +5,7 @@
 typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 
 
-<TYPE>_vector_type * <TYPE>_vector_alloc( int , <TYPE>);
+<TYPE>_vector_type * <TYPE>_vector_alloc( <TYPE> );
 <TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src);
 <TYPE>               <TYPE>_vector_iget(const <TYPE>_vector_type * , int);
 <TYPE>               <TYPE>_vector_safe_iget(const <TYPE>_vector_type * , int);
@@ -21,6 +21,7 @@ int                  <TYPE>_vector_size(const <TYPE>_vector_type * );
 <TYPE> *             <TYPE>_vector_get_ptr(const <TYPE>_vector_type * );
 const <TYPE> *       <TYPE>_vector_get_const_ptr(const <TYPE>_vector_type * );
 void                 <TYPE>_vector_set_many(<TYPE>_vector_type *  , int  , const <TYPE> *  , int );
+void                 <TYPE>_vector_append_many(<TYPE>_vector_type * vector , const <TYPE> * data , int length);
 void                 <TYPE>_vector_shrink(<TYPE>_vector_type * );
 <TYPE>               <TYPE>_vector_sum(const <TYPE>_vector_type * );
 <TYPE>               <TYPE>_vector_get_default(const <TYPE>_vector_type * );

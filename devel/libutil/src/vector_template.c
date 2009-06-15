@@ -121,7 +121,8 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
    needed.
 */
    
-<TYPE>_vector_type * <TYPE>_vector_alloc(int alloc_size , <TYPE> default_value) {
+<TYPE>_vector_type * <TYPE>_vector_alloc(<TYPE> default_value) {
+  const int alloc_size = 10;
   <TYPE>_vector_type * vector = util_malloc( sizeof * vector , __func__);
   vector->data 	     = NULL;
   vector->size 	     = 0;  
@@ -133,7 +134,8 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
 
 
 <TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src) {
-  <TYPE>_vector_type * copy = <TYPE>_vector_alloc( src->alloc_size , src->default_value );
+  <TYPE>_vector_type * copy = <TYPE>_vector_alloc( src->default_value );
+  <TYPE>_vector_realloc_data__( copy , src->alloc_size );
   copy->size = src->size;
   memcpy(copy->data , src->data , src->alloc_size * sizeof * src->data );
   return copy;
@@ -255,6 +257,11 @@ void <TYPE>_vector_set_many(<TYPE>_vector_type * vector , int index , const <TYP
   memcpy( &vector->data[index] , data , length * sizeof * data);
   if (min_size > vector->size)
     vector->size = min_size;
+}
+
+
+void <TYPE>_vector_append_many(<TYPE>_vector_type * vector , const <TYPE> * data , int length) {
+  <TYPE>_vector_set_many( vector , <TYPE>_vector_size( vector ) , data , length);
 }
 
 

@@ -19,17 +19,25 @@ extern"C" {
 
 /*****************************************************************/
 
-#define UTIL_SAFE_CAST_FUNCTION(type , TYPE_ID)            \
-type ## _type * type ## _safe_cast( void * __arg ) {       \
+#define UTIL_IS_INSTANCE_FUNCTION(type , TYPE_ID)          \
+bool type ## _is_intsance( void * __arg ) {                \
    type ## _type * arg = (type ## _type *) __arg;          \
    if ( arg->__type_id == TYPE_ID)              	   \
-      return arg;                               	   \
-   else {                                       	   \
-      util_abort("%s: run_time cast failed\n",__func__);   \
-      return NULL;                                         \
-   }                                                       \
+      return true;                                         \
+   else                                                    \
+      return false;                                        \
 }
 
+#define UTIL_SAFE_CAST_FUNCTION(type , TYPE_ID)          \
+type ## _type * type ## _safe_cast( void * __arg ) {     \
+   type ## _type * arg = (type ## _type *) __arg;        \
+   if ( arg->__type_id == TYPE_ID)              	 \
+      return arg;                                        \
+   else {                                                \
+      util_abort("%s: runtime cast failed \n", __func__);\
+      return NULL;                                       \
+   }                                                     \
+}
 
 #define UTIL_TYPE_ID_DECLARATION           int   __type_id; 
 #define UTIL_TYPE_ID_INIT(var , TYPE_ID)   var->__type_id = TYPE_ID;
