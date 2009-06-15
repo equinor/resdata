@@ -121,20 +121,22 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
    needed.
 */
    
-<TYPE>_vector_type * <TYPE>_vector_alloc(<TYPE> default_value) {
+<TYPE>_vector_type * <TYPE>_vector_alloc(int init_size , <TYPE> default_value) {
   const int alloc_size = 10;
   <TYPE>_vector_type * vector = util_malloc( sizeof * vector , __func__);
-  vector->data 	     = NULL;
-  vector->size 	     = 0;  
-  vector->alloc_size = 0;
-  vector->default_value = default_value;
-  <TYPE>_vector_realloc_data__(vector , alloc_size);
+  vector->data 	     	      = NULL;
+  vector->size 	     	      = 0;  
+  vector->alloc_size 	      = 0;
+  vector->default_value       = default_value;
+  if (init_size > 0)
+    <TYPE>_vector_iset( vector , init_size - 1 , default_value );  /* Filling up the init size elements with the default value */
+  
   return vector;
 }
 
 
 <TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src) {
-  <TYPE>_vector_type * copy = <TYPE>_vector_alloc( src->default_value );
+  <TYPE>_vector_type * copy = <TYPE>_vector_alloc( src->size , src->default_value );
   <TYPE>_vector_realloc_data__( copy , src->alloc_size );
   copy->size = src->size;
   memcpy(copy->data , src->data , src->alloc_size * sizeof * src->data );

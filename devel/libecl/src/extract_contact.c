@@ -246,8 +246,8 @@ static void usage() {
 
 int main (int argc , char ** argv) {
   char * result_file , * surf_file;
-  int_vector_type * ilist    = int_vector_alloc(100 , -1);
-  int_vector_type * jlist    = int_vector_alloc(100 , -1);
+  int_vector_type * ilist    = int_vector_alloc( 0 , -1 );
+  int_vector_type * jlist    = int_vector_alloc( 0 , -1 );
   ecl_grid_type * grid         = NULL;
 
   int arg_offset,nx,ny,nz,active_size;

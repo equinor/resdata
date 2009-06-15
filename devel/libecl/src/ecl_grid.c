@@ -255,7 +255,7 @@ struct ecl_cell_struct {
 
 #define ECL_GRID_ID 991010
 struct ecl_grid_struct {
-  int                   __type_id;
+  UTIL_TYPE_ID_DECLARATION;
   int                   grid_nr;       /* This corresponds to item 4 in GRIDHEAD - 0 for the main grid. */ 
   char                * name;          /* The name of the file for the main grid - name of the LGR for LGRs. */
   int                   ny,nz,nx;
@@ -521,15 +521,7 @@ static void ecl_cell_free(ecl_cell_type * cell) {
 /*****************************************************************/
 /* Starting on the ecl_grid proper implementation                */
 
-ecl_grid_type * ecl_grid_safe_cast( void * arg ) {
-  ecl_grid_type * ecl_grid = (ecl_grid_type * ) arg;
-  if (ecl_grid->__type_id == ECL_GRID_ID)
-    return ecl_grid;
-  else {
-    util_abort("%s: runtime cast failed \n",__func__);
-    return NULL;
-  }
-}
+UTIL_SAFE_CAST_FUNCTION(ecl_grid , ECL_GRID_ID);
 
 /**
    This function allocates the internal index_map and inv_index_map fields.
@@ -557,7 +549,7 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
 
 static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_nr) {
   ecl_grid_type * grid = util_malloc(sizeof * grid , __func__);
-  grid->__type_id = ECL_GRID_ID;
+  UTIL_TYPE_ID_INIT(grid , ECL_GRID_ID);
   grid->nx = nx;
   grid->ny = ny;
   grid->nz = nz;
@@ -1183,7 +1175,7 @@ void ecl_grid_alloc_blocking_variables(ecl_grid_type * grid, int block_dim) {
 
   grid->values         = util_malloc( grid->block_size * sizeof * grid->values , __func__);
   for (index = 0; index < grid->block_size; index++)
-    grid->values[index] = double_vector_alloc(4 , 0.0);
+    grid->values[index] = double_vector_alloc( 0 , 0.0 );
 }
 
 

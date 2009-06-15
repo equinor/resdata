@@ -14,8 +14,8 @@ int main (int argc , char ** argv) {
     char * region_value_st = argv[4];
     
     {
-      bool_vector_type * IJ_set            = bool_vector_alloc(100, false);
-      int_vector_type  * global_index_list = int_vector_alloc(10 , -1);
+      bool_vector_type * IJ_set            = bool_vector_alloc( 0 , false );
+      int_vector_type  * global_index_list = int_vector_alloc( 0 , -1 );
       ecl_grid_type    * ecl_grid = ecl_grid_alloc( grid_file , true );
       ecl_kw_type      * regions_kw;
       FILE             * stream = util_fopen( regions_file , "r"); 

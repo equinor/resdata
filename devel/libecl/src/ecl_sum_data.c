@@ -199,9 +199,9 @@ static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
   data->data         = vector_alloc_new();
   data->first_ministep = -1;
   data->last_ministep  = -1;
-  data->report_first_ministep = int_vector_alloc(10 , -1);
-  data->report_last_ministep  = int_vector_alloc(10 , -1);
-  data->ministep_index        = int_vector_alloc(10 , -1);
+  data->report_first_ministep = int_vector_alloc( 0 , -1 );
+  data->report_last_ministep  = int_vector_alloc( 0 , -1 );
+  data->ministep_index        = int_vector_alloc( 0 , -1 );
   data->smspec                = smspec;
   data->first_report_step     =  1024 * 1024;
   data->last_report_step      = -1024 * 1024;

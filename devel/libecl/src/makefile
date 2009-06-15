@@ -124,6 +124,6 @@ run_gravity.x: $(LIB) run_gravity.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  run_gravity.o -o run_gravity.x $(LIB_PATH)  $(LIB_LINK)
 
 ens_plot.x: ens_plot.o
-	$(LD) -$(MFLAG) $(LDFLAGS)  ens_plot.o -o ens_plot.x $(LIB_PATH) -L$(LIBPLOT_HOME)/lib -L$(EXTERNAL_LIB_PATH)  $(LIB_LINK) -lplot -lplplotd
+	$(LD) -$(MFLAG) $(LDFLAGS)  ens_plot.o -o ens_plot.x $(LIB_PATH) -L$(LIBPLOT_HOME)/lib -L$(EXTERNAL_LIB_PATH)  -lplot $(LIB_LINK)  -lplplotd
 
 

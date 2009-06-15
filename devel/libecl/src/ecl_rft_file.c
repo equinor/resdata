@@ -66,7 +66,7 @@ ecl_rft_file_type * ecl_rft_file_alloc(const char * filename) {
 	  const char * well_name = ecl_rft_node_get_well_name( rft_node );
 	  ecl_rft_file_add_node(rft_vector , rft_node);
 	  if (!hash_has_key( rft_vector->well_index , well_name)) 
-	    hash_insert_hash_owned_ref( rft_vector->well_index , well_name , int_vector_alloc(3 , 0) , int_vector_free__);
+	    hash_insert_hash_owned_ref( rft_vector->well_index , well_name , int_vector_alloc( 0 , 0 ) , int_vector_free__);
 	  {
 	    int_vector_type * index_list = hash_get( rft_vector->well_index , well_name);
 	    int_vector_append(index_list , global_index);

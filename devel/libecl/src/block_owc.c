@@ -53,8 +53,8 @@ void block_file(ecl_grid_type * ecl_grid ,const char * raw_data, const char * in
     int i;
     int j , index;
     int nx,ny,nz,active;
-    int_vector_type * ilist = int_vector_alloc(100 , -1);
-    int_vector_type * jlist = int_vector_alloc(100 , -1);
+    int_vector_type * ilist = int_vector_alloc( 0 , -1 );
+    int_vector_type * jlist = int_vector_alloc( 0 , -1 );
     FILE * owcH;
     FILE * index_writeH;
     {

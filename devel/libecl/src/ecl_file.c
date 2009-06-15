@@ -34,7 +34,7 @@
 
 
 struct ecl_file_struct {
-  int         	    __id;
+  UTIL_TYPE_ID_DECLARATION;
   char        	  * src_file;  	  /* The name of the file currently loaded - as returned from fortio. */
   vector_type 	  * kw_list;   	  /* This is a vector of ecl_kw instances corresponding to the content of the file. */
   hash_type   	  * kw_index;  	  /* A hash table with integer vectors of indices - see comment below. */
@@ -66,32 +66,13 @@ struct ecl_file_struct {
    
 */
 
-
-
-static bool ecl_file_assert_type(const ecl_file_type * ecl_file) {
-  if (ecl_file->__id != ECL_FILE_ID) {
-    util_abort("%s: run_time cast failed - aborting \n",__func__);
-    return false;
-  } else
-    return true;
-}
-
-
-static ecl_file_type * ecl_file_safe_cast( void * arg) {
-  ecl_file_type * ecl_file = (ecl_file_type * ) arg;
-  if (ecl_file_assert_type(ecl_file))
-    return ecl_file;
-  else
-    return NULL;
-}
-  
-
+UTIL_SAFE_CAST_FUNCTION( ecl_file , ECL_FILE_ID)
 
 
 static ecl_file_type * ecl_file_alloc_empty( ) {
   ecl_file_type * ecl_file = util_malloc( sizeof * ecl_file , __func__);
+  UTIL_TYPE_ID_INIT(ecl_file , ECL_FILE_ID);
   ecl_file->kw_list  	= vector_alloc_new();
-  ecl_file->__id     	= ECL_FILE_ID;
   ecl_file->kw_index 	= hash_alloc();
   ecl_file->src_file 	= NULL;
   ecl_file->distinct_kw = stringlist_alloc_new();
@@ -117,7 +98,7 @@ static void ecl_file_make_index( ecl_file_type * ecl_file ) {
       char              * header = ecl_kw_alloc_strip_header( ecl_kw );
       
       if (! hash_has_key( ecl_file->kw_index , header )) {
-	int_vector_type * index_vector = int_vector_alloc(0 , -1);
+	int_vector_type * index_vector = int_vector_alloc( 0 , -1 );
 	hash_insert_hash_owned_ref( ecl_file->kw_index , header , index_vector , int_vector_free__);
 	stringlist_append_copy( ecl_file->distinct_kw , header);
       }
@@ -499,12 +480,9 @@ void ecl_file_free__(void * arg) {
    
 
 ecl_kw_type * ecl_file_iget_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith) {
-  ecl_file_assert_type(ecl_file);
-  {
-    const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
-    int global_index = int_vector_iget( index_vector , ith);
-    return vector_iget( ecl_file->kw_list , global_index );
-  }
+  const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
+  int global_index = int_vector_iget( index_vector , ith);
+  return vector_iget( ecl_file->kw_list , global_index );
 }
 
 
