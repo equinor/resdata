@@ -641,8 +641,7 @@ void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_t
 
 double matrix_get_row_sum(const matrix_type * matrix , int row) {
   double sum = 0;
-  int j;
-  for (j=0; j < matrix->columns; j++)
+  for (int j=0; j < matrix->columns; j++)
     sum += matrix->data[ GET_INDEX( matrix , row , j ) ];
   return sum;
 }
@@ -650,8 +649,7 @@ double matrix_get_row_sum(const matrix_type * matrix , int row) {
 
 double matrix_get_column_sum(const matrix_type * matrix , int column) {
   double sum = 0;
-  int i;
-  for (i=0; i < matrix->rows; i++)
+  for (int i=0; i < matrix->rows; i++)
     sum += matrix->data[ GET_INDEX( matrix , i , column ) ];
   return sum;
 }
@@ -665,11 +663,9 @@ double matrix_get_column_sum(const matrix_type * matrix , int column) {
 */
 
 void matrix_subtract_row_mean(matrix_type * matrix) {
-  int i;
-  for (i=0; i < matrix->rows; i++) {
+  for (int i=0; i < matrix->rows; i++) {
     double row_mean = matrix_get_row_sum(matrix , i) / matrix->columns;
-    int j;
-    for (j=0; j < matrix->columns; j++) 
+    for (int j=0; j < matrix->columns; j++) 
       matrix->data[ GET_INDEX( matrix , i , j ) ] -= row_mean;
   }
 }

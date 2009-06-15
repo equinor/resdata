@@ -109,10 +109,12 @@ tokenizer_type * tokenizer_alloc(
 void tokenizer_free(
   tokenizer_type * tokenizer);
 
+
 stringlist_type * tokenize_buffer(
   const tokenizer_type * tokenizer,
   const char           * buffer,
   bool                   strip_quote_marks);
+
 
 stringlist_type * tokenize_file(
   const tokenizer_type * tokenizer,

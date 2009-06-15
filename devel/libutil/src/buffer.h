@@ -4,6 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include <stdlib.h>
 
 typedef struct     buffer_struct buffer_type;
 

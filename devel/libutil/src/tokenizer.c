@@ -343,7 +343,9 @@ int length_of_normal_non_whitespace(
 
 
 
-
+/**
+   Allocates a new stringlist. 
+*/
 stringlist_type * tokenize_buffer(
   const tokenizer_type * tokenizer,
   const char           * buffer,

@@ -11,7 +11,7 @@
 
 
 struct vector_struct {
-  int    	   __type_id;    /* internal type id - used for run-time cast check. */
+  UTIL_TYPE_ID_DECLARATION;
   int    	   alloc_size;   /* The number of elements allocated in the data vector - in general > size. */
   int    	   size;         /* THe number of elements the user has added to the vector. */
   node_data_type **data;         /* node_data instances - which again contain user data. */
@@ -27,6 +27,7 @@ typedef struct {
 } vector_sort_node_type;
   
 
+UTIL_SAFE_CAST_FUNCTION(vector , VECTOR_TYPE_ID)
 
 
 
@@ -48,7 +49,7 @@ static void vector_resize__(vector_type * vector, int new_alloc_size) {
 
 vector_type * vector_alloc_new() {
   vector_type * vector = util_malloc( sizeof * vector , __func__);
-  vector->__type_id    = VECTOR_TYPE_ID; 
+  UTIL_TYPE_ID_INIT(vector , VECTOR_TYPE_ID);
   vector->size         = 0;
   vector->alloc_size   = 0;
   vector->data         = NULL;
