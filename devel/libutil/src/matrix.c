@@ -364,24 +364,30 @@ void matrix_free(matrix_type * matrix) {
 
 /*****************************************************************/
 
-void matrix_pretty_print(const matrix_type * matrix , const char * name , const char * fmt) {
+void matrix_pretty_fprint(const matrix_type * matrix , const char * name , const char * fmt , FILE * stream) {
   int i,j;
   for (i=0; i < matrix->rows; i++) {
 
     if (i == (matrix->rows / 2))
-      printf( "%s =" , name);
+      fprintf(stream ,  "%s =" , name);
     else {
       int l;
       for (l = 0; l < strlen(name) + 2; l++)
-	printf( " ");
+	fprintf(stream ,  " ");
     }
     
-    printf(" [");
+    fprintf(stream , " [");
     for (j=0; j < matrix->columns; j++)
-      printf(fmt , matrix_iget(matrix , i,j));
-    printf("]\n");
+      fprintf(stream , fmt , matrix_iget(matrix , i,j));
+    fprintf(stream , "]\n");
   }
 }
+
+
+void matrix_pretty_print(const matrix_type * matrix , const char * name , const char * fmt) {
+  matrix_pretty_fprint(matrix , name , fmt , stdout );
+}
+
 
 
 
@@ -445,7 +451,7 @@ void matrix_scale(matrix_type * matrix, double value) {
 /* Functions working on rows & columns                           */
 
 void matrix_set_many_on_column(matrix_type * matrix , int row_offset , int elements , const double * data , int column) {
-  if ((row_offset + elements) < matrix->rows) {
+  if ((row_offset + elements) <= matrix->rows) {
     if (matrix->row_stride == 1)  /* Memory is continous ... */
       memcpy( &matrix->data[ GET_INDEX( matrix , row_offset , column) ] , data , elements * sizeof * data);
     else {
@@ -453,7 +459,8 @@ void matrix_set_many_on_column(matrix_type * matrix , int row_offset , int eleme
       for (i = 0; i < elements; i++)
 	matrix->data[ row_offset + GET_INDEX( matrix , i , column) ] = data[i];
     }
-  }
+  } else
+    util_abort("%s: range violation \n" , __func__);
 }
 
 void matrix_set_column(matrix_type * matrix , const double * data , int column) {

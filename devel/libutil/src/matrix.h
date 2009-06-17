@@ -11,6 +11,7 @@ extern "C" {
 typedef struct matrix_struct matrix_type;
 
 
+void          matrix_pretty_fprint(const matrix_type * matrix , const char * name , const char * fmt , FILE * stream);
 matrix_type * matrix_alloc(int rows, int columns);
 matrix_type * matrix_safe_alloc(int rows, int columns);
 bool          matrix_resize(matrix_type * matrix , int rows , int columns , bool copy_content);
