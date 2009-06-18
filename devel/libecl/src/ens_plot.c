@@ -249,7 +249,7 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
 
 
 
-void plot_set_range(plot_type * plot, time_t start_time){
+void set_range(plot_type * plot, time_t start_time){
   int     num_tokens;
   char ** token_list;
   char  * line;
@@ -261,15 +261,21 @@ void plot_set_range(plot_type * plot, time_t start_time){
   util_sscanf_date(token_list[0] , &time1);
   util_sscanf_date(token_list[1] , &time2);
   
-  plot_range_type * range = plot_range_alloc();
 
-  plot_get_extrema(plot, range);
-  double ymax = plot_range_get_ymax(range); 
-  double ymin = plot_range_get_ymin(range); 
+  //{
+  //  plot_range_type * range = plot_range_alloc();
+  //
+  //  plot_get_extrema(plot, range);
+  //  double ymax = plot_range_get_ymax(range); 
+  //  double ymin = plot_range_get_ymin(range); 
+  //  
+  //  plot_set_range(plot, time1, time2, ymin, ymax);
+  //  plot_range_free(range);
+  //}
 
-  plot_set_manual_range(plot, time1, time2, ymin, ymax);
-  plot_range_free(range);
-
+  /** The ymin/ymax values are calculated automatically. */
+  plot_set_xmin(plot , time1);
+  plot_set_xmax(plot , time2);
 }
 
 
@@ -449,7 +455,7 @@ void plot_batch(void * arg) {
       continue;
     }  
     if(strcmp(ens_name, "_set_range_") == 0){
-      plot_set_range(plot, start_time);
+      set_range(plot, start_time);
       continue;
     }  
     if(strcmp(ens_name, "_newplotvector_") == 0){
