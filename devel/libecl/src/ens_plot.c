@@ -256,26 +256,33 @@ void set_range(plot_type * plot, time_t start_time){
   
   line = util_blocking_alloc_stdin_line(100);
   util_split_string(line , " " , &num_tokens , &token_list);
-  time_t time1 = start_time;	 
-  time_t time2 = start_time; 	
-  util_sscanf_date(token_list[0] , &time1);
-  util_sscanf_date(token_list[1] , &time2);
   
-
-  //{
-  //  plot_range_type * range = plot_range_alloc();
-  //
-  //  plot_get_extrema(plot, range);
-  //  double ymax = plot_range_get_ymax(range); 
-  //  double ymin = plot_range_get_ymin(range); 
-  //  
-  //  plot_set_range(plot, time1, time2, ymin, ymax);
-  //  plot_range_free(range);
-  //}
-
+  int i;
+  for (i=0;i<num_tokens-1;i+=2){
+    if(strcmp(token_list[i], "XMIN") == 0){
+      time_t time = start_time;	 
+      util_sscanf_date(token_list[i+1] , &time);
+      plot_set_xmin(plot , time);
+    }
+    else if(strcmp(token_list[i], "XMAX") == 0){
+      time_t time = start_time;	 
+      util_sscanf_date(token_list[i+1] , &time);
+      plot_set_xmin(plot , time);
+    }
+    else if(strcmp(token_list[i], "YMIN") == 0){
+      double  ymin = 0.00;	 
+      util_sscanf_double(token_list[i+1] , &ymin);
+      plot_set_ymin(plot , ymin);
+    }
+    else if(strcmp(token_list[i], "YMAX") == 0){
+      double  ymax = 0.00;	 
+      util_sscanf_double(token_list[i+1] , &ymax);
+      plot_set_ymax(plot , ymax);
+    }
+  }
+  
   /** The ymin/ymax values are calculated automatically. */
-  plot_set_xmin(plot , time1);
-  plot_set_xmax(plot , time2);
+  
 }
 
 
