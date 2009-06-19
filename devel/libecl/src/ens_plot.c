@@ -267,7 +267,7 @@ void set_range(plot_type * plot, time_t start_time){
     else if(strcmp(token_list[i], "XMAX") == 0){
       time_t time = start_time;	 
       util_sscanf_date(token_list[i+1] , &time);
-      plot_set_xmin(plot , time);
+      plot_set_xmax(plot , time);
     }
     else if(strcmp(token_list[i], "YMIN") == 0){
       double  ymin = 0.00;	 
