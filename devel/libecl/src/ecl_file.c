@@ -322,6 +322,27 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 }
 
 
+/**
+   This function will look up the INTEHEAD keyword in a ecl_file_type
+   instance, and calculate simulation date from this instance.
+
+   Will fail hard if it is impossible to find the queried for INTEHEAD
+   occurence.
+*/
+
+
+
+static time_t ecl_file_iget_restart_sim_date__(const ecl_file_type * restart_file , int occurence) {
+  ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( restart_file , "INTEHEAD" , occurence );
+  return util_make_date( ecl_kw_iget_int( intehead_kw , 64) , ecl_kw_iget_int( intehead_kw , 65) , ecl_kw_iget_int( intehead_kw , 66));
+}
+
+
+time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int occurence ) {
+  return ecl_file_iget_restart_sim_date__( restart_file , occurence );
+}
+
+
 
 /**
    Will look through the unified restart file and load the section

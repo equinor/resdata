@@ -1342,9 +1342,6 @@ void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int g
 
 
 
-
-
-
 /**
    Only checks that i,j,k are in the required intervals:
   
@@ -1371,6 +1368,18 @@ void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * n
   if (ny != NULL) *ny 	       		= grid->ny;
   if (nz != NULL) *nz 	       		= grid->nz;
   if (active_size != NULL) *active_size = grid->total_active;
+}
+
+int ecl_grid_get_nz( const ecl_grid_type * grid ) {
+  return grid->nz;
+}
+
+int ecl_grid_get_nx( const ecl_grid_type * grid ) {
+  return grid->nx;
+}
+
+int ecl_grid_get_ny( const ecl_grid_type * grid ) {
+  return grid->ny;
 }
 
 
@@ -1467,6 +1476,7 @@ void ecl_grid_get_pos1(const ecl_grid_type * grid , int global_index , double *x
 }
 
 
+
 void ecl_grid_get_pos3(const ecl_grid_type * grid , int i, int j , int k, double *xpos , double *ypos , double *zpos) {
   const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
   ecl_grid_get_pos1( grid , global_index , xpos , ypos , zpos);
@@ -1478,6 +1488,64 @@ void ecl_grid_get_pos1A(const ecl_grid_type * grid , int active_index , double *
   const int global_index = ecl_grid_get_global_index1A( grid , active_index );
   ecl_grid_get_pos1( grid , global_index , xpos , ypos , zpos );
 }
+
+
+
+/**
+   Returns the depth of the top surface of the cell. 
+*/
+
+double ecl_grid_get_top1(const ecl_grid_type * grid , int global_index) {
+  const ecl_cell_type * cell = grid->cells[global_index];
+  double depth = 0;
+  for (int ij = 0; ij < 4; ij++) 
+    depth += cell->corner_list[ij].z;
+  
+  return depth * 0.25;
+}
+
+
+double ecl_grid_get_top3(const ecl_grid_type * grid , int i, int j , int k) {
+  const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
+  return ecl_grid_get_top1( grid , global_index );
+}
+
+
+
+double ecl_grid_get_top1A(const ecl_grid_type * grid , int active_index) {
+  const int global_index = ecl_grid_get_global_index1A(grid , active_index);
+  return ecl_grid_get_top1( grid , global_index );
+}
+
+
+/**
+   Returns the depth of the bottom surface of the cell. 
+*/
+
+double ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index) {
+  const ecl_cell_type * cell = grid->cells[global_index];
+  double depth = 0;
+  for (int ij = 4; ij < 8; ij++) 
+    depth += cell->corner_list[ij].z;
+  
+  return depth * 0.25;
+}
+
+
+double ecl_grid_get_bottom3(const ecl_grid_type * grid , int i, int j , int k) {
+  const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
+  return ecl_grid_get_bottom1( grid , global_index );
+}
+
+
+
+double ecl_grid_get_bottom1A(const ecl_grid_type * grid , int active_index) {
+  const int global_index = ecl_grid_get_global_index1A(grid , active_index);
+  return ecl_grid_get_bottom1( grid , global_index );
+}
+
+
+
 
 /*****************************************************************/
 /* Functions to query whether a cell is active or not.           */
@@ -1669,6 +1737,63 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
   }
 }
 
+/*****************************************************************/
+/**
+   
+   This function is used to translate (with the help of the ecl_grid
+   functionality) i,j,k to an index which can be used to look up an
+   element in the ecl_kw instance. It is just a minor convenience
+   function.
+
+   * If the ecl_kw instance has nx*ny*nz (i,j,k) are translated to a
+     global index with ecl_grid_get_global_index3(). This is typically
+     the case when the ecl_kw instance represents a petrophysical
+     property which is e.g. loaded from a INIT file.
+
+   * If the ecl_kw instance has nactive elements the (i,j,k) indices
+     are converted to an active index with
+     ecl_grid_get_active_index3(). This is typically the case if the
+     ecl_kw instance is a solution vector which has been loaded from a
+     restart file. If you ask for an inactive cell the function will
+     return 0.
+
+   * If the ecl_kw instance has neither nx*ny*nz nor nactive elements
+     the function will fail HARD.
+
+   * The return value is double, irrespective of the type of the
+     underlying datatype of the ecl_kw instance - the function will
+     fail HARD if the underlying type can not be safely converted to
+     double, i.e. if it is not in the set [ecl_float_type ,
+     ecl_int_type , ecl_double_type].
+
+   * i,j,k: C-based zero offset grid coordinates.
+
+*/
+
+
+double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
+  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
+  if ((ecl_type == ecl_float_type) || (ecl_type == ecl_int_type) || (ecl_type == ecl_double_type)) {
+    int kw_size        = ecl_kw_get_size( ecl_kw );
+    int lookup_index   = -1;
+
+    if (kw_size == ecl_grid->nx * ecl_grid->ny * ecl_grid->nz) 
+      lookup_index = ecl_grid_get_global_index3(ecl_grid , i , j , k);
+    else if (kw_size == ecl_grid->total_active) 
+      /* Will be set to -1 if the cell is not active. */ 
+      lookup_index = ecl_grid_get_active_index3(ecl_grid , i , j , k);
+    else 
+      util_abort("%s: incommensurable size ... \n",__func__);
+
+    if (lookup_index >= 0)
+      return ecl_kw_iget_as_double( ecl_kw , lookup_index );
+    else
+      return 0;   /* Tried to lookup an inactive cell. */
+  } else {
+    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_util_type_name( ecl_type ) , __func__);
+    return -1;
+  }
+}
 
 
 /*****************************************************************/

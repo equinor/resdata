@@ -15,10 +15,11 @@
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
-
+#define ECL_KW_TYPE_ID  6111098
 
 
 struct ecl_kw_struct {
+  UTIL_TYPE_ID_DECLARATION;
   bool  fmt_file;
   bool  endian_convert;
   
@@ -242,6 +243,7 @@ ecl_kw_type * ecl_kw_alloc_empty() {
   ecl_kw->shared_data  = false;
   ecl_kw->size         = 0;
   ecl_kw->sizeof_ctype = 0;
+  UTIL_TYPE_ID_INIT(ecl_kw , ECL_KW_TYPE_ID);
   
   return ecl_kw;
 }

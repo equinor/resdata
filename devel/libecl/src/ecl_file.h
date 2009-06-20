@@ -8,7 +8,7 @@ extern "C" {
 #include <stdbool.h>
 #include <ecl_kw.h>
 #include <fortio.h>
-
+#include <time.h>
 
 typedef struct ecl_file_struct ecl_file_type;
 
@@ -24,6 +24,7 @@ ecl_kw_type   * ecl_file_iget_kw( const ecl_file_type * ecl_file  , int index);
 int             ecl_file_get_num_distinct_kw(const ecl_file_type * ecl_file);
 const char    * ecl_file_iget_distinct_kw(const ecl_file_type * ecl_file , int index);
 int             ecl_file_iget_occurence( const ecl_file_type *  ecl_file , int index);
+time_t          ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int occurence );
 
 ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int index , bool endian_flip);
 ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step , bool endian_flip);

@@ -27,6 +27,9 @@ void            ecl_grid_free__( void * arg );
 int             ecl_grid_count_box_active(const ecl_grid_type * , const ecl_box_type * );
 void            ecl_grid_set_box_active_list(const ecl_grid_type * , const ecl_box_type * , int * );
 void            ecl_grid_get_dims(const ecl_grid_type * , int *, int * , int * , int *);
+int             ecl_grid_get_nz( const ecl_grid_type * grid );
+int             ecl_grid_get_nx( const ecl_grid_type * grid );
+int             ecl_grid_get_ny( const ecl_grid_type * grid );
 int             ecl_grid_get_active_index(const ecl_grid_type *  , int  , int  , int );
 void            ecl_grid_summarize(const ecl_grid_type * );
 void            ecl_grid_get_ijk1(const ecl_grid_type * , int global_index , int *, int * , int *);
@@ -38,6 +41,13 @@ void            ecl_grid_get_pos1A(const ecl_grid_type * grid , int active_index
 int             ecl_grid_get_global_size( const ecl_grid_type * ecl_grid );
 bool            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2);
 int             ecl_grid_get_active_size( const ecl_grid_type * ecl_grid );
+
+double 		ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index);
+double 		ecl_grid_get_bottom3(const ecl_grid_type * grid , int i, int j , int k);
+double 		ecl_grid_get_bottom1A(const ecl_grid_type * grid , int active_index);
+double 		ecl_grid_get_top1(const ecl_grid_type * grid , int global_index);
+double 		ecl_grid_get_top3(const ecl_grid_type * grid , int i, int j , int k);
+double 		ecl_grid_get_top1A(const ecl_grid_type * grid , int active_index);
 
 
 void            ecl_grid_alloc_blocking_variables(ecl_grid_type * , int );
@@ -62,6 +72,7 @@ ecl_grid_type * ecl_grid_get_lgr(const ecl_grid_type * main_grid, const char * _
 bool            ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
 stringlist_type * ecl_grid_alloc_lgr_name_list(const ecl_grid_type * ecl_grid);
 
+double          ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k);
 #ifdef __cplusplus
 }
 #endif
