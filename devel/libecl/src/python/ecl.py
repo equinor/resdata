@@ -11,6 +11,7 @@ class ecl_summary:
 		s = ecl_sum_fread_alloc_case(ecl_data_file,self.endian_convert)
 		self.s = s
 	def __del__(self):
+		print "Del ecl_summary object"
 		ecl_sum_free(self.s)
 
 	def display(self, kw): 
@@ -110,8 +111,8 @@ class ecl_file:
 		ecl_file_free(self.f)
 
 	def iget_named_kw(self, kw, ith):
-		kw = ecl_file_iget_named_kw(self.f, kw, ith)
-		return ecl_kw(kw)
+		ret = ecl_file_iget_named_kw(self.f, kw, ith)
+		return ecl_kw(ret)
 	def has_kw(self, kw):
 		return ecl_file_has_kw(self.f, kw)
 
@@ -123,12 +124,15 @@ class ecl_file:
 		return ecl_file_get_num_named_kw(self.f, kw);
 		
 class ecl_kw:
-	def __init__(self, k):
+	def __init__(self, k = None):
 		self.k = k
 		self.w = None
 	def __del__(self):
-		print "Del ecl_kw object"
-		ecl_kw_free(self.k)
+		print "Del ecl_kw object (not doing anything)"
+		print self.k
+		if self.k is not None:
+			print "Free"
+#			ecl_kw_free(self.k)
 		
 	def get_header_ref(self):
 		return ecl_kw_get_header_ref(self.k)
@@ -147,25 +151,17 @@ class ecl_grid:
 		self.grid_file = grid_file
 		self.g = ecl_grid_alloc(grid_file, endian_flip);
 	def __del__(self):
+		print "Del ecl_grid object"
 		ecl_grid_free(self.g)
 
 	def get_name(self):
 		return ecl_grid_get_name(self.g)
 	def get_dims(self):
-		tmp = ecl_grid_get_dims(self.g)
-		dims = {}
-		dims['i'] = tmp[0]
-		dims['j'] = tmp[1]
-		dims['k'] = tmp[2]
-		dims['active_size'] = tmp[3]
-		return dims
+		# (i, j, k, active_size)
+		return ecl_grid_get_dims(self.g)
 	def get_ijk1(self, global_index):
-		tmp = ecl_grid_get_ijk1(self.g, global_index)
-		coords = {}
-		coords['i'] = tmp[0]
-		coords['j'] = tmp[1]
-		coords['k'] = tmp[2]
-		return coords
+		# (i, j, k)
+		return ecl_grid_get_ijk1(self.g, global_index)
 
 	def summarize(self):
 		ecl_grid_summarize(self.g);

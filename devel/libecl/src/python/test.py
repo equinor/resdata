@@ -15,7 +15,6 @@ print '############# ECL_UTIL #############'
 u = ecl_util()
 u.get_file_type(file2)
 print "file_type: %d, fmt_file: %d, report_nr: %d" % (u.file_type, u.fmt_file, u.report_nr)
-del u
 
 print '############# ECL_SUMMARY #############'
 s = ecl_summary(file)
@@ -33,7 +32,6 @@ print "Get general var: %f" % s.get_general_var(48, kw)
 print "Get start time %s" % s.get_start_time()
 print "Formatted time: %s" % strftime("%a, %d %b %Y %H:%M:%S +0000", s.get_start_time())
 print "Get simulation case: %s" % s.get_simulation_case()
-del s
 
 print '############# ECL_GRID #############'
 g = ecl_grid(file2)
@@ -49,24 +47,16 @@ k = f.iget_named_kw('PRESSURE', 0)
 k2 = f.iget_named_kw('SWAT', 0)
 
 list = k.get_data();
-list2 = k2.get_data();
+#list2 = k2.get_data();
 print "List length: %d" % len(list)
-print "List 2 length: %d" % len(list2)
-
-for j, item in enumerate(list):
-	c = g.get_ijk1(j)
-	print "global_index %d has i: %d, j: %d, k: %d, value: %f" % (j, c['i'], c['j'], c['k'], item)
+#print "List 2 length: %d" % len(list2)
 
 print k.get_header_ref()
 print k.get_str_type_ref()
-del k
 
 for j in xrange(f.get_num_distinct_kw()):
 	str_kw = f.iget_distinct_kw(j)
 	m = f.get_num_named_kw(str_kw)
 	print "The file contains: %d occurences of '%s'" % (m, str_kw)
-
-del f
-
 
 

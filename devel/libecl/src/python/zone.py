@@ -9,7 +9,6 @@ from math import *
 ## - Skrive til restartfiler
 ## - Mulighet for aa lese inn nye restartfiler og erstatte f.eks PRESSURE
 ## - Forbedre innlesing, teste med numpy der
-## - Stoette for INTE
 
 class zone(object):
 	kw_arr = []
@@ -54,7 +53,7 @@ class zone(object):
 	def add_keyword(self, kw):
 		k = kw.get_size()
 		str_kw = kw.get_header_ref()
-		if k == self.dims['active_size']:
+		if k == self.dims[3]:
 			print "Loaded kw %s (complete on grid) with size %d" % (str_kw, k)
 			self.h[str_kw.strip()] = kw
 			self.kw_arr.append(str_kw.strip())
@@ -72,13 +71,15 @@ class zone(object):
 			for j, val in enumerate(arr):
 				coords = self.grid.get_ijk1(j)
 				val_new = func(val)
-				coords['val'] = val_new
-				coords['global_index'] = j
-				list.append(coords)
+				tmp = {}
+				tmp['coords'] = coords
+				tmp['val'] = val_new
+				tmp['global_index'] = j
+				list.append(tmp)
 
 			end = time.clock()
 			print "Time elapsed = ", end - start, "seconds (filling list)"
-
+			
 			self.cell[key] = list
 			print "Done filling"
 #		print pp.pformat(self.cell)
@@ -97,13 +98,13 @@ def volume_map(z, param):
 	dims = z.grid.get_dims();
 	# Create an i x j matrix
 	mat = []
-	for i in range(0,dims['i']):
-		mat.append([0]*(dims['j']))
+	for i in range(0,dims[0]):
+		mat.append([0]*(dims[1]))
 
 	test_sum = 0
 	for c in z.cell[param]:
-		i = c['i']
-		j = c['j']
+		i = c['coords'][0]
+		j = c['coords'][1]
 		if i == 5 and j == 2:
 			pp.pprint(c)
 			test_sum += c['val']
@@ -111,6 +112,37 @@ def volume_map(z, param):
 
 	print test_sum
 	print mat[5][2]
+
+def gassmann(z):
+	# Sand
+	k_m   = 18.0e9;
+	mu_m  = 3.2e9;
+	rho_m = 2.65e3;
+
+	# Fluids
+	k_o   = 1.50e9;  # SAE 30 Oil, source: www.engineeringtoolbox.com
+	k_w   = 2.34e9;  # Seawater, source: www.engineeringtoolbox.com
+	rho_o = 0.89e3;  # SAE 30 Oil, source: www.engineeringtoolbox.com
+	rho_w = 1.010e3; # Seawater, source: www.engineeringtoolbox.com
+
+	for n in xrange(0, z.dims[3]):
+		coords = z.cell["PORO"][n]["coords"]
+		poro = z.cell["PORO"][n]["val"]
+		s = z.cell["SGAS"][n]["val"]
+		rho_res = poro*s*rho_o+poro*(1-s)*rho_w+(1-poro)*rho_m
+		mu_res = (1-poro)*mu_m
+		print rho_res, mu_res
+		
+	
+#	i = c['coords'][0]
+#		j = c['coords'][1]
+#		k = c['coords'][3]
+
+		
+		
+		
+		
+
 
 			
 if __name__ == '__main__':
@@ -120,3 +152,4 @@ if __name__ == '__main__':
 	z = zone(grid_file, restart_file, init_file, ["SGAS", "PORO", "SWAT"])
 	z.fill_data(square)
 	volume_map(z, "PORO")
+	gassmann(z)

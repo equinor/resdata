@@ -86,69 +86,11 @@
 
 %inline %{
 
-typedef struct _ecl_kw_data_wrapper {
-	double *d;
-	int size;
-} ecl_kw_data_wrapper;
-
-typedef struct _ecl_kw_data_wrapper_float {
-	const float *f;
-	int size;
-} ecl_kw_data_wrapper_float;
-
 typedef struct _ecl_kw_data_wrapper_void {
 	void *v;
 	int size;
 	const ecl_kw_type *e;
 } ecl_kw_data_wrapper_void;
-
-PyObject *get_ecl_kw_data_wrapper_list(ecl_kw_data_wrapper *w) {
-	int i;
-	PyObject *list;
-	PyObject *o;
-
-	list = PyList_New(0);
-	for (i = 0; i < w->size; i++) {
-		o = PyFloat_FromDouble(w->d[i]);
-		PyList_Append(list, o);
-	}
-	return list;
-}
-
-ecl_kw_data_wrapper *ecl_kw_get_data_as_double_wrap(const ecl_kw_type * ecl_kw) {
-	ecl_kw_data_wrapper *w;
-
-	w = malloc(sizeof(ecl_kw_data_wrapper *));
-	w->size = ecl_kw_get_size(ecl_kw);
-	w->d = malloc((w->size)*sizeof(double));
-	ecl_kw_get_data_as_double(ecl_kw, w->d);
-
-	return w;
-}
-
-PyObject *get_ecl_kw_data_wrapper_float_list(ecl_kw_data_wrapper_float *w) {
-	int i;
-	PyObject *list;
-	PyObject *o;
-
-	list = PyList_New(0);
-	for (i = 0; i < w->size; i++) {
-		o = PyFloat_FromDouble(w->f[i]);
-		PyList_Append(list, o);
-	}
-	return list;
-}
-
-ecl_kw_data_wrapper_float *ecl_kw_get_data_wrap(const ecl_kw_type * ecl_kw) {
-	ecl_kw_data_wrapper_float *w;
-
-	w = malloc(sizeof(ecl_kw_data_wrapper_float *));
-	w->f = ecl_kw_get_data(ecl_kw);
-	printf("Kom hit\n");
-	w->size = ecl_kw_get_size(ecl_kw);
-
-	return w;
-}
 
 PyObject *get_ecl_kw_data_wrapper_void_list(ecl_kw_data_wrapper_void *w) {
 	int i;
@@ -157,8 +99,6 @@ PyObject *get_ecl_kw_data_wrapper_void_list(ecl_kw_data_wrapper_void *w) {
 	const char *str_type;
 
 	str_type = ecl_kw_get_str_type_ref(w->e);
-//	printf("Type: %s\n", str_type);
-
 	list = PyList_New(0);
 	for (i = 0; i < w->size; i++) {
 		if (!strcmp(str_type, "REAL")) {
@@ -207,7 +147,7 @@ int           ecl_kw_get_size(const ecl_kw_type *);
 const float *ecl_kw_get_data(const ecl_kw_type * ecl_kw);
 void * ecl_kw_get_void_ptr(const ecl_kw_type * ecl_kw);
 void          ecl_kw_free(ecl_kw_type *);
-
+ecl_kw_type * ecl_kw_alloc_empty();
 
 // ecl_grid.h
 ecl_grid_type * ecl_grid_alloc(const char * , bool);
