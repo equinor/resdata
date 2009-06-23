@@ -48,8 +48,24 @@ void util_make_path(const char *_path) {
       
       if (!util_path_exists(active_path)) {
 	if (mkdir(active_path , 0775) != 0) { 
-	  if (!((errno == EEXIST) && util_is_directory(active_path)))   /* errnoe == EEXIST another thread might have made it for us.... */
-	    util_abort("%s: failed to make directory:%s - aborting.\n %s \n",__func__ , active_path , strerror(errno));
+	  bool fail = false;
+	  switch (errno) {
+	  case(EEXIST):
+	    if (!util_is_directory(active_path))
+	      fail = false;
+	    break;
+	  case(ENOSPC):
+	    /* Try to recover from full disk. */
+	    __block_full_disk(active_path);
+	    fail = false;
+	    util_make_path(active_path);
+	    break;
+	  default:
+	    fail = true;
+	    break;
+	  }
+	  if (fail)
+	    util_abort("%s: failed to make directory:%s - aborting\n: %s(%d) \n",__func__ , active_path , strerror(errno), errno);
 	}
       }
       

@@ -3044,11 +3044,30 @@ FILE * util_fopen_lockf(const char * filename, const char * mode) {
 }
 
 
+static void __block_full_disk(const char * filename) { /* Filename can be NULL */
+  fprintf(stderr,"********************************************************************\n");
+  fprintf(stderr,"** The filesystem seems to be full  - and the program is veeeery  **\n");
+  fprintf(stderr,"** close to going down in flames. You can try clearing space, and **\n");
+  fprintf(stderr,"** then press return [with fingers crossed :-)]                   **\n");
+  fprintf(stderr,"********************************************************************\n");
+  getc( stdin ); /* Block while user clears some disk space. */
+}
+
+
 
 FILE * util_fopen(const char * filename , const char * mode) {
   FILE * stream = fopen(filename , mode);
-  if (stream == NULL) 
-    util_abort("%s: failed to open:%s with mode:\'%s\' - error:%s \n",__func__ , filename , mode , strerror(errno));
+  if (stream == NULL) {
+    /* 
+       We try to handle "No space left on the device" by letting the user 
+       get a chance to clean out the disk.
+    */
+    if (errno == ENOSPC) {
+      __block_full_disk(filename);
+      return util_fopen(filename , mode); /* Try again. */
+    } else
+      util_abort("%s: failed to open:%s with mode:\'%s\' - error:%s(%d) \n",__func__ , filename , mode , strerror(errno) , errno);
+  }
   return stream;
 }
 
@@ -3068,8 +3087,18 @@ bool util_fopen_test(const char * filename, const char * mode) {
 
 void util_fwrite(const void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {
   int items_written = fwrite(ptr , element_size , items , stream);
-  if (items_written != items) 
-    util_abort("%s/%s: only wrote %d/%d items to disk - aborting\n %s .\n",caller , __func__ , items_written , items , strerror(errno));
+  if (items_written != items) {
+    /* 
+       We try to handle "No space left on the device" by letting the user 
+       get a chance to clean out the disk.
+    */
+    if (errno == ENOSPC) {
+      __block_full_disk( NULL );
+      const char * char_ptr = ptr;
+      util_fwrite( &char_ptr[ items_written * element_size ] , element_size , items - items_written , stream , caller);
+    } else
+      util_abort("%s/%s: only wrote %d/%d items to disk - aborting: %s(%d) .\n",caller , __func__ , items_written , items , strerror(errno) , errno);
+  }
 }
 
 
