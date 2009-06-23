@@ -5,7 +5,7 @@
 #include <stringlist.h>
 #include <vector.h>
 
-#define STRINGLIST_ID 671855
+#define STRINGLIST_TYPE_ID 671855
 
 /**
    This file implements a very thin wrapper around a list (vector) of
@@ -18,7 +18,7 @@
 
 
 struct stringlist_struct {
-  int           __id;       /* ID used to do run-time check of casts. */
+  UTIL_TYPE_ID_DECLARATION;
   vector_type * strings;
 };
 
@@ -75,7 +75,7 @@ void stringlist_iset_owned_ref(stringlist_type * stringlist , int index , const 
 
 static stringlist_type * stringlist_alloc_empty( bool alloc_vector ) {
   stringlist_type * stringlist = util_malloc(sizeof * stringlist , __func__);
-  stringlist->__id      = STRINGLIST_ID;
+  UTIL_TYPE_ID_INIT( stringlist , STRINGLIST_TYPE_ID);
   if (alloc_vector)
     stringlist->strings = vector_alloc_new();
   else
@@ -231,15 +231,7 @@ void stringlist_free(stringlist_type * stringlist) {
 }
 
 
-static stringlist_type * stringlist_safe_cast(void *_stringlist) {
-  stringlist_type * stringlist = (stringlist_type *) _stringlist;
-  if (stringlist->__id != STRINGLIST_ID) {
-    util_abort("%s: run-time cast failed - aborting \n",__func__);
-    return NULL;  /* Compiler shut up */
-  } else 
-    return stringlist;
-}
-
+static UTIL_SAFE_CAST_FUNCTION(stringlist , STRINGLIST_TYPE_ID);
 
 void stringlist_free__(void * __stringlist) {
   stringlist_type * stringlist = stringlist_safe_cast(__stringlist);

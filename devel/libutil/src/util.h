@@ -17,7 +17,38 @@
 extern"C" {
 #endif
 
+
 /*****************************************************************/
+/**
+   
+   The four macros UTIL_IS_INSTANCE_FUNCTION, UTIL_SAFE_CAST_FUNTION,
+   UTIL_TYPE_ID_DECLARATION and UTIL_TYPE_ID_INIT can be used to
+   implement a simple system for type checking (void *) runtime. The
+   system is based on a unique integer for each class, this must be
+   provided by the user.
+
+   The motivation for these functions is to be able to to type-check
+   the arguments to callback functions like pthread_create.
+
+    UTIL_TYPE_ID_DECLARATION: Adds a field "int __type_id;" to the
+      struct defintion.
+
+    UTIL_TYPE_ID_INIT: Should be added to the allocation routine,
+      inserts a "->__type_id = magic_int;" code line in the alloc
+      routine.
+
+    UTIL_IS_INSTANCE_FUNCTION: This macro will generate a function
+      <type>_is_instance(void *) which will cast the (void *) input to
+      (type *), and check the value of __type_id. If this is the
+      correct value true is returned, otherwise the function will
+      return false.
+
+    UTIL_SAFE_CAST_FUNCTION: This is similar to
+      UTIL_IS_INSTANCE_FUNCTION, but it will return (type *) if the
+      cast succeeds, and fail hard if it fails.
+      
+*/
+   
 
 #define UTIL_IS_INSTANCE_FUNCTION(type , TYPE_ID)          \
 bool type ## _is_intsance( void * __arg ) {                \

@@ -40,7 +40,7 @@ static uint32_t hash_index(const char *key, size_t len) {
 
 
 struct hash_struct {
-  int               __type_id; 
+  UTIL_TYPE_ID_DECLARATION;
   uint32_t          size;            /* This is the size of the internal table **NOT**NOT** the number of elements in the table. */
   uint32_t          elements;        /* The number of elements in the hash table. */
   double            resize_fill;
@@ -431,7 +431,7 @@ void * hash_get(const hash_type *hash , const char *key) {
 static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf) {
   hash_type* hash;
   hash = util_malloc(sizeof *hash , __func__);
-  hash->__type_id = HASH_TYPE_ID;
+  UTIL_TYPE_ID_INIT(hash , HASH_TYPE_ID);
   hash->size  	  = size;
   hash->hashf 	  = hashf;
   hash->table 	  = hash_sll_alloc_table(hash->size);
@@ -448,17 +448,7 @@ hash_type * hash_alloc() {
   return __hash_alloc(HASH_DEFAULT_SIZE , 0.50 , hash_index);
 }
 
-hash_type * hash_safe_cast( void * arg) {
-  hash_type * hash = (hash_type *) arg;
-  if (hash->__type_id == HASH_TYPE_ID)
-    return hash;
-  else {
-    util_abort("%s: runtime cast failed - aborting \n",__func__);
-    return NULL;
-  }
-}
-
-
+UTIL_SAFE_CAST_FUNCTION( hash , HASH_TYPE_ID)
 
 void hash_free(hash_type *hash) {
   int i;
@@ -470,8 +460,8 @@ void hash_free(hash_type *hash) {
 }
 
 
-void hash_free__(void *void_hash) {
-  hash_free((hash_type *) void_hash);
+void hash_free__(void * void_hash) {
+  hash_free(hash_safe_cast( void_hash ));
 }
 
 
