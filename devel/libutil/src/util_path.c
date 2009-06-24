@@ -55,7 +55,10 @@ void util_make_path(const char *_path) {
 	      fail = false;
 	    break;
 	  case(ENOSPC):
-	    /* Try to recover from full disk. */
+	    /* 
+	       We try to handle "No space left on the device" by letting the user 
+	       get a chance to clean out the disk.
+	    */
 	    __block_full_disk(active_path);
 	    fail = false;
 	    util_make_path(active_path);

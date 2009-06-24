@@ -19,21 +19,15 @@
 #include <conf.h>
 
 
+void test(const char *s , const char * p) {
+  if (util_string_match(s , p))
+    printf("\"%s\" matches \"%s\" \n",s,p);
+  else
+    printf("\"%s\" does NOT match \"%s\" \n",s,p);
+}
+
 
 int main(int argc , char ** argv) {
-  matrix_type * A1  = matrix_alloc(1000 , 100);
-  matrix_type * A2  = matrix_alloc(1000 , 100);
-  matrix_type * X5 = matrix_alloc(100  , 100);
-
-  matrix_random_init( A1 );
-  matrix_random_init( X5 );
-  matrix_assign(A2 , A1);
-
-  matrix_inplace_matmul( A1 , X5);
-  matrix_inplace_matmul_mt( A2 , X5 , 16);
-  
-  if (matrix_equal(A1 , A2))
-    printf("OK \n");
-  else
-    printf("NOT equal \n");
+  test("Joakim Hove" , "Joakim*");
 }
+

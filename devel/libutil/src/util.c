@@ -2171,6 +2171,87 @@ void * util_safe_free(void *ptr) {
 
 
 
+
+/**
+   This function checks whether a string matches a pattern with
+   wildcard(s). The pattern can consist of plain string parts (which
+   must match verbatim), and an arbitrary number of '*' which will
+   match an arbitrary number (including zero) of arbitrary characters.
+
+   Examples:
+   ---------
+
+   util_string_match("Bjarne" , "Bjarne")    ==> True
+
+   util_string_match("Bjarne" , "jarn")      ==> False   
+
+   util_string_match("Bjarne" , "*jarn*")    ==> True
+
+   util_string_match("Bjarne" , "B*e")       ==> True
+   
+   util_string_match("Bjarne" , "B*n")       ==> False
+
+   util_string_match("Bjarne" , "*")         ==> True
+
+   util_string_match("Bjarne" , "B***jarne") ==> True
+
+   util_string_match("Bjarne" , "B*r*e")     ==> True
+
+*/
+
+
+
+bool util_string_match(const char * string , const char * pattern) {
+  const   char    wildcard    = '*';
+  const   char   *wildcard_st = "*";
+  bool    match = true;
+  char ** sub_pattern;
+  int     num_patterns;
+  char *  string_ptr;
+  util_split_string( pattern , wildcard_st , &num_patterns , &sub_pattern );
+  
+  if (pattern[0] == '*')
+    string_ptr = strstr(string , sub_pattern[0]);
+  else
+    string_ptr = (strncmp(string , sub_pattern[0] , strlen(sub_pattern[0])) == 0) ? (char * ) string : NULL;
+  
+  if (string_ptr != NULL) {
+    /* Inital part matched */
+    string_ptr += strlen( sub_pattern[0] );
+    for (int i=1; i < num_patterns; i++) {
+      char * match_ptr = strstr(string_ptr , sub_pattern[i]);
+      if (match_ptr != NULL) 
+	string_ptr = match_ptr + strlen( sub_pattern[i] );
+      else {
+	match = false;
+	break;
+      }
+    }
+    
+    /* 
+       We have exhausted the complete pattern - matching all the way.
+       Does it match at the end?
+    */
+    if (match) {
+      if (strlen(string_ptr) > 0) {
+	/* 
+	   There is more left at the end of the string; if the pattern
+	   ends with '*' that is OK, otherwise the match result is
+	   FALSE.
+	*/
+	if (pattern[(strlen(pattern) - 1)] != wildcard)
+	  match = false;
+      }
+    }
+
+  } else 
+    match = false;
+
+  util_free_stringlist( sub_pattern , num_patterns);
+  return match;
+}
+
+
 void util_free_stringlist(char **list , int N) {
   int i;
   if (list != NULL) {
@@ -3044,11 +3125,12 @@ FILE * util_fopen_lockf(const char * filename, const char * mode) {
 }
 
 
+
 static void __block_full_disk(const char * filename) { /* Filename can be NULL */
   fprintf(stderr,"********************************************************************\n");
   fprintf(stderr,"** The filesystem seems to be full  - and the program is veeeery  **\n");
   fprintf(stderr,"** close to going down in flames. You can try clearing space, and **\n");
-  fprintf(stderr,"** then press return [with fingers crossed :-)]                   **\n");
+  fprintf(stderr,"** then press return [with fingers crossed :-)].                  **\n");
   fprintf(stderr,"********************************************************************\n");
   getc( stdin ); /* Block while user clears some disk space. */
 }
@@ -3073,17 +3155,6 @@ FILE * util_fopen(const char * filename , const char * mode) {
 
 
 
-bool util_fopen_test(const char * filename, const char * mode) {
-  FILE * stream = fopen(filename , mode);
-  if (stream == NULL) 
-    return false;
-  else
-  {
-    fclose(stream);
-    return true;
-  }
-}
-
 
 void util_fwrite(const void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {
   int items_written = fwrite(ptr , element_size , items , stream);
@@ -3105,7 +3176,7 @@ void util_fwrite(const void *ptr , size_t element_size , size_t items, FILE * st
 void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {
   int items_read = fread(ptr , element_size , items , stream);
   if (items_read != items) 
-    util_abort("%s/%s: only read %d/%d items from disk - aborting.\n %s \n",caller , __func__ , items_read , items , strerror(errno));
+    util_abort("%s/%s: only read %d/%d items from disk - aborting.\n %s(%d) \n",caller , __func__ , items_read , items , strerror(errno) , errno);
 }
 
 
