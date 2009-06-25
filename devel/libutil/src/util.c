@@ -3778,6 +3778,10 @@ void util_abort_append_version_info(const char * msg) {
   __abort_program_message = util_strcat_realloc( __abort_program_message , msg );
 }
 
+void util_abort_free_version_info() {
+  __abort_program_message = util_safe_free( __abort_program_message );
+}
+
 
 void util_abort(const char * fmt , ...) {
   pthread_mutex_lock( &__abort_mutex ); /* Abort before unlock() */

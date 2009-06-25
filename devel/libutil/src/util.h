@@ -207,6 +207,7 @@ void    util_exit(const char * fmt , ...);
 void    util_abort(const char * fmt , ...);
 void    util_abort_signal(int );
 void    util_abort_append_version_info(const char * );
+void    util_abort_free_version_info();
 void *  util_realloc(void *  , size_t  , const char * );
 void *  util_malloc(size_t , const char * );
 void *  util_alloc_copy(const void * , size_t , const char * );
