@@ -67,10 +67,10 @@ void path_fmt_reset_fmt(path_fmt_type * path , const char * fmt) {
 
 static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory) {
   path_fmt_type * path = util_malloc(sizeof * path , __func__);
-  path->__id         = PATH_FMT_ID;
-  path->fmt          = NULL;
-  path->file_fmt     = NULL;
-  path->is_directory = is_directory;
+  path->__id           = PATH_FMT_ID;
+  path->fmt            = NULL;
+  path->file_fmt       = NULL;
+  path->is_directory   = is_directory;
   
   path_fmt_reset_fmt(path , fmt);
   return path;

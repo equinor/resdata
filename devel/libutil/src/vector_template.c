@@ -396,3 +396,30 @@ void <TYPE>_vector_fprintf(const <TYPE>_vector_type * vector , FILE * stream , c
 
   fprintf(stream , "]\n");
 }
+
+
+/**
+   Writing:
+   1. Size 
+   2. default value
+   3. Values
+*/
+
+void <TYPE>_vector_fwrite(const <TYPE>_vector_type * vector , FILE * stream) {
+  util_fwrite_int( vector->size , stream );
+  util_fwrite( &vector->default_value , sizeof vector->default_value , 1 , stream , __func__);
+  util_fwrite(  vector->data , sizeof * vector->data , vector->size , stream , __func__);
+}
+
+
+
+<TYPE>_vector_type * <TYPE>_vector_fread_alloc( FILE * stream ) {
+  <TYPE>     default_value;
+  int size = util_fread_int( stream );
+  util_fread( &default_value , sizeof default_value , 1 , stream , __func__);
+  {
+    <TYPE>_vector_type * vector = <TYPE>_vector_alloc( size , default_value );
+    util_fread( vector->data , sizeof * vector->data , size , stream , __func__);
+    return vector;
+  }
+}

@@ -19,15 +19,10 @@
 #include <conf.h>
 
 
-void test(const char *s , const char * p) {
-  if (util_string_match(s , p))
-    printf("\"%s\" matches \"%s\" \n",s,p);
-  else
-    printf("\"%s\" does NOT match \"%s\" \n",s,p);
-}
 
 
 int main(int argc , char ** argv) {
-  test("Joakim Hove" , "Joakim*");
+  path_fmt_type * p = path_fmt_alloc_directory_fmt("/some/path%d");
+  path_fmt_free( p );
 }
 

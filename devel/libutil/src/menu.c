@@ -357,6 +357,7 @@ void menu_free(menu_type * menu) {
   free(menu->quit_keys);
   free(menu->title);
   free(menu->complete_key_set);
+  free(menu->quit_label);
   vector_free(menu->items);
   free(menu);
 }

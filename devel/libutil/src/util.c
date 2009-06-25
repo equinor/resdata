@@ -2177,7 +2177,7 @@ void * util_safe_free(void *ptr) {
    wildcard(s). The pattern can consist of plain string parts (which
    must match verbatim), and an arbitrary number of '*' which will
    match an arbitrary number (including zero) of arbitrary characters.
-
+   
    Examples:
    ---------
 
