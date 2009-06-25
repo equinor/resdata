@@ -406,7 +406,7 @@ void vector_sort(vector_type * vector , vector_cmp_ftype * cmp) {
   {
     int i;
     
-    /* Fill up the temporarry storage used for sorting */
+    /* Fill up the temporary storage used for sorting */
     for (i = 0; i < vector->size; i++) {
       sort_data[i].data     = vector->data[i];
       sort_data[i].user_cmp = cmp;

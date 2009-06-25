@@ -2204,51 +2204,56 @@ void * util_safe_free(void *ptr) {
 bool util_string_match(const char * string , const char * pattern) {
   const   char    wildcard    = '*';
   const   char   *wildcard_st = "*";
-  bool    match = true;
-  char ** sub_pattern;
-  int     num_patterns;
-  char *  string_ptr;
-  util_split_string( pattern , wildcard_st , &num_patterns , &sub_pattern );
-  
-  if (pattern[0] == '*')
-    string_ptr = strstr(string , sub_pattern[0]);
-  else
-    string_ptr = (strncmp(string , sub_pattern[0] , strlen(sub_pattern[0])) == 0) ? (char * ) string : NULL;
-  
-  if (string_ptr != NULL) {
-    /* Inital part matched */
-    string_ptr += strlen( sub_pattern[0] );
-    for (int i=1; i < num_patterns; i++) {
-      char * match_ptr = strstr(string_ptr , sub_pattern[i]);
-      if (match_ptr != NULL) 
-	string_ptr = match_ptr + strlen( sub_pattern[i] );
-      else {
-	match = false;
-	break;
-      }
-    }
+
+  if (strcmp(wildcard_st , pattern) == 0) 
+    return true;
+  else {
+    bool    match = true;
+    char ** sub_pattern;
+    int     num_patterns;
+    char *  string_ptr;
+    util_split_string( pattern , wildcard_st , &num_patterns , &sub_pattern );
     
-    /* 
-       We have exhausted the complete pattern - matching all the way.
-       Does it match at the end?
-    */
-    if (match) {
-      if (strlen(string_ptr) > 0) {
-	/* 
-	   There is more left at the end of the string; if the pattern
-	   ends with '*' that is OK, otherwise the match result is
-	   FALSE.
-	*/
-	if (pattern[(strlen(pattern) - 1)] != wildcard)
+    if (pattern[0] == '*')
+      string_ptr = strstr(string , sub_pattern[0]);
+    else
+      string_ptr = (strncmp(string , sub_pattern[0] , strlen(sub_pattern[0])) == 0) ? (char * ) string : NULL;
+    
+    if (string_ptr != NULL) {
+      /* Inital part matched */
+      string_ptr += strlen( sub_pattern[0] );
+      for (int i=1; i < num_patterns; i++) {
+	char * match_ptr = strstr(string_ptr , sub_pattern[i]);
+	if (match_ptr != NULL) 
+	  string_ptr = match_ptr + strlen( sub_pattern[i] );
+	else {
 	  match = false;
+	  break;
+	}
       }
-    }
-
-  } else 
-    match = false;
-
-  util_free_stringlist( sub_pattern , num_patterns);
-  return match;
+      
+      /* 
+	 We have exhausted the complete pattern - matching all the way.
+	 Does it match at the end?
+      */
+      if (match) {
+	if (strlen(string_ptr) > 0) {
+	  /* 
+	     There is more left at the end of the string; if the pattern
+	     ends with '*' that is OK, otherwise the match result is
+	     FALSE.
+	  */
+	  if (pattern[(strlen(pattern) - 1)] != wildcard)
+	    match = false;
+	}
+      }
+      
+    } else 
+      match = false;
+    
+    util_free_stringlist( sub_pattern , num_patterns);
+    return match;
+  }
 }
 
 
