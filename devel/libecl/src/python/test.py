@@ -60,3 +60,7 @@ for j in xrange(f.get_num_distinct_kw()):
 	print "The file contains: %d occurences of '%s'" % (m, str_kw)
 
 
+print '############# FORTIO #############'
+fort = ecl_fortio(file3)
+fort.read("PRESSURE")
+fort.close()

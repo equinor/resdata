@@ -8,6 +8,7 @@
 #include <ecl_file.h>
 #include <ecl_kw.h>
 #include <ecl_grid.h>
+#include <fortio.h>
 %}
 
 %typemap(argout) ecl_file_enum *OutValue {
@@ -27,7 +28,6 @@
 
 // This tells SWIG to treat char ** as a special case
 %typemap(in) char ** {
-  /* Check if is a list */
   if (PyList_Check($input)) {
     int size = PyList_Size($input);
     int i = 0;
@@ -134,28 +134,43 @@ ecl_kw_data_wrapper_void *ecl_kw_get_data_wrap_void(const ecl_kw_type * ecl_kw) 
 
 // ecl_util.h
 void ecl_util_get_file_type(char *, ecl_file_enum *OutValue, bool *OUTPUT, int *OUTPUT);
+bool ecl_util_fmt_file(const char *);
 
 %include ../ecl_sum.h
 
 %include ../ecl_file.h
 
+%include ../fortio.h
+
 // ecl_kw.h
 const char  * ecl_kw_get_header_ref(const ecl_kw_type *);
 const char  * ecl_kw_get_str_type_ref(const ecl_kw_type *);
-void ecl_kw_get_data_as_double(const ecl_kw_type * ecl_kw , double * double_data);
+void 		  ecl_kw_get_data_as_double(const ecl_kw_type * ecl_kw , double * double_data);
 int           ecl_kw_get_size(const ecl_kw_type *);
-const float *ecl_kw_get_data(const ecl_kw_type * ecl_kw);
-void * ecl_kw_get_void_ptr(const ecl_kw_type * ecl_kw);
+const float * ecl_kw_get_data(const ecl_kw_type * ecl_kw);
+void 		* ecl_kw_get_void_ptr(const ecl_kw_type * ecl_kw);
 void          ecl_kw_free(ecl_kw_type *);
 ecl_kw_type * ecl_kw_alloc_empty();
+ecl_kw_type * ecl_kw_fread_alloc(fortio_type *);
+bool          ecl_kw_fseek_kw(const char * , bool , bool , fortio_type *);
+bool          ecl_kw_fread_realloc(ecl_kw_type *, fortio_type *);
+void        * ecl_kw_iget_ptr(const ecl_kw_type *, int);
+void          ecl_kw_fwrite(const ecl_kw_type *,  fortio_type *);
+void          ecl_kw_set_header(ecl_kw_type  * , const char * , int , const char *);
+void 		  ecl_kw_set_header_alloc(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *ecl_str_type ); 
+
 
 // ecl_grid.h
 ecl_grid_type * ecl_grid_alloc(const char * , bool);
-const  char   * ecl_grid_get_name( const ecl_grid_type * );
+const char    * ecl_grid_get_name( const ecl_grid_type * );
 void            ecl_grid_free(ecl_grid_type * );
-void ecl_grid_summarize(const ecl_grid_type * ecl_grid);
+void 			ecl_grid_summarize(const ecl_grid_type * ecl_grid);
 void            ecl_grid_get_dims(const ecl_grid_type * , int *OUTPUT, int *OUTPUT , int *OUTPUT , int *OUTPUT);
-void ecl_grid_get_ijk1(const ecl_grid_type * grid , int global_index, int *OUTPUT, int *OUTPUT , int *OUTPUT);
+void 			ecl_grid_get_ijk1(const ecl_grid_type * grid , int global_index, int *OUTPUT, int *OUTPUT , int *OUTPUT);
+void            ecl_grid_get_ijk1A(const ecl_grid_type * , int active_index, int *OUTPUT, int *OUTPUT , int *OUTPUT);
+double 			ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k); 
+int             ecl_grid_get_active_size( const ecl_grid_type * ecl_grid );
+int             ecl_grid_get_global_size( const ecl_grid_type * ecl_grid );
 
 // ANSI-C
 void free(void *ptr);

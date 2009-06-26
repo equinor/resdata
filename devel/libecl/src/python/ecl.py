@@ -113,6 +113,10 @@ class ecl_file:
 	def iget_named_kw(self, kw, ith):
 		ret = ecl_file_iget_named_kw(self.f, kw, ith)
 		return ecl_kw(ret)
+	def iget_kw(self, index):
+		ret = ecl_file_iget_kw(self.f, index)
+		return ecl_kw(ret)
+
 	def has_kw(self, kw):
 		return ecl_file_has_kw(self.f, kw)
 
@@ -121,30 +125,13 @@ class ecl_file:
 	def iget_distinct_kw(self, index):
 		return ecl_file_iget_distinct_kw(self.f, index)
 	def get_num_named_kw(self, kw):
-		return ecl_file_get_num_named_kw(self.f, kw);
+		return ecl_file_get_num_named_kw(self.f, kw)
+	def get_num_kw(self):
+		return ecl_file_get_num_kw(self.f)
+	def has_kw(self, kw):
+		return ecl_file_has_kw(self.f, kw)
+	
 		
-class ecl_kw:
-	def __init__(self, k = None):
-		self.k = k
-		self.w = None
-	def __del__(self):
-		print "Del ecl_kw object (not doing anything)"
-		print self.k
-		if self.k is not None:
-			print "Free"
-#			ecl_kw_free(self.k)
-		
-	def get_header_ref(self):
-		return ecl_kw_get_header_ref(self.k)
-	def get_str_type_ref(self):
-		return ecl_kw_get_str_type_ref(self.k)
-	def get_size(self):
-		return ecl_kw_get_size(self.k);
-	def get_data(self):
-		self.w = ecl_kw_get_data_wrap_void(self.k)
-		list = get_ecl_kw_data_wrapper_void_list(self.w)
-		return list
-
 class ecl_grid:
 	def __init__(self, grid_file):
 		endian_flip = 1
@@ -162,10 +149,82 @@ class ecl_grid:
 	def get_ijk1(self, global_index):
 		# (i, j, k)
 		return ecl_grid_get_ijk1(self.g, global_index)
+	def get_ijk1A(self, active_index):
+		return ecl_grid_get_ijk1A(self.g, active_index)
+	def get_property(self, kw_obj, ijk):
+		return ecl_grid_get_property(self.g, kw_obj.k, ijk[0], ijk[1], ijk[2])
+	def get_active_size(self):
+		return ecl_grid_get_active_size(self.g)
+	def get_global_size(self):
+		return ecl_grid_get_global_size(self.g);
+	
 
 	def summarize(self):
 		ecl_grid_summarize(self.g);
-	
+		
+class ecl_kw:
+	def __init__(self, k = None):
+		self.k = k
+		self.w = None
+	def __del__(self):
+		print "WANT TO FREE HERE"
+		
+	def get_header_ref(self):
+		return ecl_kw_get_header_ref(self.k)
+	def get_str_type_ref(self):
+		return ecl_kw_get_str_type_ref(self.k)
+	def get_size(self):
+		return ecl_kw_get_size(self.k);
+	def get_data(self):
+		self.w = ecl_kw_get_data_wrap_void(self.k)
+		list = get_ecl_kw_data_wrapper_void_list(self.w)
+		return list
+
+	def fread_alloc(self, fortio_type):
+		return ecl_kw_fread_alloc(fortio_type)
+	def fseek_kw(self, kw, fortio_type):
+		return ecl_kw_fseek_kw(kw, 1, 0, fortio_type)
+	def fread_realloc(self, kw_type, fortio_type):
+		self.k = kw_type
+		return ecl_kw_fread_realloc(kw_type, fortio_type)
+
+
+class fortio:
+	def __init__(self, fortio_file = None):
+		self.fds = []
+
+		if fortio_file is not None:
+			print "Gikk her"
+			self.fortio_file = fortio_file
+			self.fortio = self.open(fortio_file)
+
+	def __del__(self):
+		print "Deleting ecl_fortio object"
+
+	def open(self, fortio_file):
+		endian_convert = 1
+		self.fmt_src = ecl_util_fmt_file(fortio_file)
+
+		fortio = fortio_fopen(fortio_file, "rw", endian_convert, self.fmt_src)
+		return fortio
+	def close(self):
+		fortio_fclose(self.fortio)
+
+	def read_data(self, kw):
+		kw_type = ecl_kw_fread_alloc(self.fortio)
+		if ecl_kw_fseek_kw(kw, 1, 0, self.fortio):
+			ecl_kw_fread_realloc(kw_type, self.fortio)
+		w = ecl_kw_get_data_wrap_void(kw_type)
+		list = get_ecl_kw_data_wrapper_void_list(w)
+		ecl_kw_free(kw_type)
+		return list
+	def write_data(self, kw, data):
+		kw_type = ecl_kw_alloc_empty()
+		ecl_kw_set_header_alloc(kw_type, kw, len(kw), "INTE")
+		print ecl_kw_get_header_ref(kw_type)
+		print ecl_kw_get_str_type_ref(kw_type)
+
+		print "Writing data to file"
 	
 class ecl_util:
 	def get_file_type(self, file):
