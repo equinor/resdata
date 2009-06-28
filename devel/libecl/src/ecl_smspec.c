@@ -253,7 +253,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	case(ECL_SMSPEC_COMPLETION_VAR):
 	  /* Three level indexing: well -> string(cell_nr) -> variable */
 	  if (!DUMMY_WELL(well)) {
-	    /* Seems I have to accept nums < 0 to get shit through ??? */
+	    /* Seems we have to accept nums < 0 to get shit through ??? */
 	    char cell_str[16];
 	    if (!hash_has_key(ecl_smspec->well_completion_var_index , well))
 		hash_insert_hash_owned_ref(ecl_smspec->well_completion_var_index , well , hash_alloc() , hash_free__);
@@ -297,9 +297,9 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	case (ECL_SMSPEC_WELL_VAR):
 	  if (!DUMMY_WELL(well)) {
 	    /*
-	       It seems we can have e.g. WOPR associated with the
-	       dummy well, there is no limit to the stupidity of these
-	       programmers.
+	       It seems we can have e.g. WOPR associated with a dummy
+	       well, there is no limit to the stupidity of the
+	       programmers at Schlum.
 	    */
 	    if (!hash_has_key(ecl_smspec->well_var_index , well))
 	      hash_insert_hash_owned_ref(ecl_smspec->well_var_index , well , hash_alloc() , hash_free__);

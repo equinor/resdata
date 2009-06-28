@@ -14,100 +14,15 @@
 #define SDP_url          "http://sdp.statoil.no/wiki/index.php/Res:Available_forward_models#EXTRACT_OWC"
 #define DETECTION_LIMIT  0.20
 
+/*
+  At svn:2031 the program is slightly rewritten:
 
-
-void extract_contact_peak(const ecl_kw_type   * swat1    , 
-			  const ecl_kw_type   * swat2    , 
-			  const ecl_grid_type * ecl_grid , 
-			  const int_vector_type * ilist  , 
-			  const int_vector_type * jlist  , 
-			  const char * target_file,
-			  const char * surf_file) {
-
-  const char * profile_path = "Profiles";
-  int index,k,nz,active_size,nx,ny;
-  double * diff;
-  double * z , * sw1 , * sw2;
-  int k_diffmax = -100;
-  double   diffmax;
-  FILE * target_stream = util_fopen( target_file , "w"); 
-  FILE * surf_stream   = NULL;
-
-  util_make_path(profile_path);
-  if (surf_file != NULL)
-    surf_stream = util_fopen( surf_file , "w");
-
-  ecl_grid_get_dims( ecl_grid , &nx, &ny , &nz , &active_size);
-  diff = util_malloc( nz * sizeof * diff , __func__);
-  z    = util_malloc( nz * sizeof * z    , __func__);
-  sw1  = util_malloc( nz * sizeof * sw1  , __func__);
-  sw2  = util_malloc( nz * sizeof * sw2  , __func__);
+  o Removed the extract_contact_peak() function at svn 2031
+  o The enkf mode is removed.
+  o The file with indices is the last command-line argument, and optional.
   
-  for (index = 0; index < int_vector_size( ilist ); index++) {
-    double z_sum = 0;
-    double w_sum = 0;
-    int i 	 = int_vector_iget( ilist , index);
-    int j 	 = int_vector_iget( jlist , index);
+*/
   
-    diffmax = -1000;
-    for (k=0; k < nz; k++) {
-      int active_index = ecl_grid_get_active_index3( ecl_grid , i , j , k);
-      if (active_index >= 0) {
-	sw1[k] = ecl_kw_iget_as_double( swat1 , active_index );
-	sw2[k] = ecl_kw_iget_as_double( swat2 , active_index );
-
-	diff[k] = (sw2[k] - sw1[k]);  /* Absolute difference in saturation */
-      } else
-	diff[k] = -1;           /* Not active */
-      
-      {
-	double xpos,ypos;
-	ecl_grid_get_pos3(ecl_grid , i , j , k , &xpos , &ypos , &z[k]);
-	if (diff[k] > 0) {
-	  z_sum += z[k] * diff[k];
-	  w_sum += diff[k];
-	  if (diff[k] > diffmax) {
-	    diffmax = diff[k];
-	    k_diffmax = k;
-	  }
-	}
-      }
-    }
-    
-    
-    /* Writing the profile - just for debugging/inspection */
-    {
-      char * filename = util_alloc_sprintf("%s/%s_profile_%d.%d" , profile_path , target_file , i ,j);
-      FILE * stream   = util_fopen(filename , "w");
-      
-      for (k=0; k < nz; k++) 
-	if (fabs(diff[k]) < 1)
-	  fprintf(stream , "%4d   %6.4f  %6.4f   %7.4f   %12.6f   \n",k+1 , sw1[k] , sw2[k] , diff[k] , z[k]);
-      
-      fclose(stream);
-      free(filename);
-    }
-    
-    if (w_sum > 0) {
-      double z_owc = z_sum / w_sum;
-      if (surf_stream != NULL) {
-	double xpos,ypos,zpos;
-	ecl_grid_get_pos3(ecl_grid , i , j , k_diffmax , &xpos , &ypos , &zpos);
-	fprintf(surf_stream   , "%18.6f  %18.6f  %12.6f  \n",xpos,ypos,z_owc);
-      }
-      fprintf(target_stream , "%g\n", z_owc);
-    } else
-      fprintf(target_stream , "0.0\n");
-    
-  }
-  if (surf_stream != NULL)
-    fclose(surf_stream);
-  fclose( target_stream );
-  free( diff );
-  free( sw1 );
-  free( sw2 );
-  free( z );
-}
 
 
 
@@ -116,17 +31,12 @@ void extract_contact(const ecl_kw_type   * swat1    ,
 		     const ecl_grid_type * ecl_grid , 
 		     const int_vector_type * ilist  , 
 		     const int_vector_type * jlist  , 
-		     const char * target_file,
 		     const char * surf_file) {
 
   int index,nz,active_size,nx,ny;
   double * sw1 , * sw2;
-  FILE * target_stream = util_fopen( target_file , "w"); 
-  FILE * surf_stream   = NULL;
-
-  if (surf_file != NULL)
-    surf_stream = util_fopen( surf_file , "w");
-
+  FILE * surf_stream = util_fopen( surf_file , "w");
+  
   ecl_grid_get_dims( ecl_grid , &nx, &ny , &nz , &active_size);
   sw1  = util_malloc( nz * sizeof * sw1  , __func__);
   sw2  = util_malloc( nz * sizeof * sw2  , __func__);
@@ -171,16 +81,13 @@ void extract_contact(const ecl_kw_type   * swat1    ,
 	  break;
       }
   
-      if (surf_stream != NULL) 
-	if (owc > 0)
-	  fprintf(surf_stream   , "%18.6f  %18.6f  %12.6f  \n",xpos,ypos,owc);
+      if (owc > 0)
+	fprintf(surf_stream   , "%18.6f  %18.6f  %12.6f  \n",xpos,ypos,owc);
 
-      fprintf(target_stream , "%g\n", owc);
     }
   }
-  fclose( target_stream );
-  if (surf_stream != NULL)
-    fclose(surf_stream);
+
+  fclose(surf_stream);
   free( sw1 );
   free( sw2 );
 }
@@ -201,11 +108,42 @@ static ecl_file_type * load_restart_section( const char * unif_restart_file , in
 }
 
 
+static void load_ij(const ecl_grid_type * grid , const char * ij_file, int_vector_type * ilist , int_vector_type * jlist) {
+  int i,j;
+  if (ij_file != NULL) {
+    FILE * stream = util_fopen(ij_file , "r");
+    int read_count;
+    printf("Loading i,j from file:%s...\n", ij_file);
+    do {
+      read_count = fscanf(stream , "%d %d" , &i , &j);
+      if (read_count == 2) {
+	int_vector_append(ilist , i);
+	int_vector_append(jlist , j);
+      }
+    } while (read_count == 2);
+  } else {
+    /* 
+       The user has not specified a file with (i,j) pairs, we just
+       scan the whold god damn grid.
+    */
+    int nx = ecl_grid_get_nx( grid );
+    int ny = ecl_grid_get_ny( grid );
+    printf("Using i,j from the whole field\n");
+    for (i=0; i < nx; i++) {
+      for (j=0; j < ny; j++) {
+	int_vector_append(ilist , i);
+	int_vector_append(jlist , j);
+      }
+    }
+  }
+}
+
+
 static void usage() {
   printf("*****************************************************************\n");
   printf("The extract_owc.x program needs the following input on the command-line\n");
   printf("\n");
-  printf("   1. The name of an ECPLISE grid file.\n");
+  printf("   1. The name of an ECPLISE GRID/EGRID file.\n");
   printf("\n");
   printf("   2. The name of ECLIPSE unified restart file and the report steps for\n");
   printf("      base and monitor surveys respectively.\n");
@@ -215,29 +153,39 @@ static void usage() {
   printf("   2. The name of two non-unified ECLIPSE restart files from the base\n");
   printf("      and monitor times respectively.\n");
   printf("\n");
-  printf("   3. A file with (i,j) index pairs for the region you are interested\n");
-  printf("      in.\n");
+  printf("   3. [Output:] The name of a file where columns \"x y owc\" are stored, \n");
+  printf("      this can be loaded into e.g. RMS to see the new estimated contact.\n");
   printf("\n");
-  printf("   4. [Output:] The name of a file where OWC results are stored, this is just for enkf.\n");
+  printf("  [4]. The name of a file with i,j index pairs for the region you are\n");
+  printf("       interested in. This argument is _optional_,  if not given, the \n");
+  printf("       program will determine the OWC for the whole field.\n\n");
+  printf("=================================================================\n");
+  printf("\nExample1:\n");
   printf("\n");
-  printf("   5. [Output:] The name of a file where columns \"x y owc\" are stored, this can be\n");
-  printf("      loaded into e.g. RMS to see the new estimated contact.\n");
+  printf("  bash%% extract_contact.x  ECLIPSE.EGRID   ECLIPSE.UNRST   0  100   OWC_field.xyz \n");
   printf("\n");
-  printf("Example1:\n");
-  printf("---------\n");
-  printf("\n");
-  printf("  bash%% extract_contact.x  ECLIPSE.EGRID   ECLIPSE.UNRST   0  100   IJ_file enkf_results   results.xyz\n");
-  printf("\n");
-  printf(" \n");
-  printf("\n");
-  printf("Example2:\n");
-  printf("---------\n");
-  printf("\n");
-  printf("  bash%% extract_contact.x  ECLIPSE.GRID   ECLIPSE.X0000   ECLIPSE.X0075   IJ_file enkf_results   results.xyz\n");
+
+  printf("This will load restart information from the unified restart file\n");
+  printf("'ECLIPSE.UNRST', the program will use SWAT results from the report\n");
+  printf("steps 0 and 100. The resulting x,y,z surface will be stored in the\n");
+  printf("file 'OWC_field.xyz'. No file with (i,j) index pairs is given, hence\n");
+  printf("the program will calculate the OWC for the whole field.\n");
   printf("\n");
   printf("\n");
-  printf("For more documentation look at the web-page: %s\n" , SDP_url);
+  printf("-----------------------------------------------------------------\n");
+  printf("\nExample2:\n");
   printf("\n");
+  printf("  bash%% extract_contact.x  ECLIPSE.GRID   ECLIPSE.X0000   ECLIPSE.X0075 OWC_C.xyz  IJ_C\n");
+  printf("\n");
+
+  printf("In this example the restart information is loaded from non-unified\n");
+  printf("restart files, 'ECLIPSE.X0000' and 'ECLIPSE.X0175', since the\n");
+  printf("report step is part of the filename in this case it is not\n");
+  printf("necessary to give that separately. The resulting x,y,z surface\n");
+  printf("will be stored in a file 'OWC_C.xyz'. Finally a file 'IJ_C' with\n");
+  printf("(i,j) indices for the region of interest is given. Since such a\n");
+  printf("file is given only part of the field will be considered.\n");
+  
   printf("*****************************************************************\n");
   exit(1);
 }
@@ -245,12 +193,12 @@ static void usage() {
 
 
 int main (int argc , char ** argv) {
-  char * result_file , * surf_file;
+  char * surf_file = NULL;
   int_vector_type * ilist    = int_vector_alloc( 0 , -1 );
   int_vector_type * jlist    = int_vector_alloc( 0 , -1 );
   ecl_grid_type * grid         = NULL;
 
-  int arg_offset,nx,ny,nz,active_size;
+  int next_iarg = -1;
   
   ecl_kw_type 	* swat1 = NULL;
   ecl_kw_type 	* swat2 = NULL;
@@ -274,26 +222,30 @@ int main (int argc , char ** argv) {
       ecl_file_enum file_type;
       ecl_util_get_file_type( argv[2] , &file_type , NULL , NULL);
       if (file_type == ECL_UNIFIED_RESTART_FILE) {
-	char * unif_restart_file   = argv[2];
+	/* Loading from a unifed restart file. */
+	char * unif_restart_file = argv[2];
 	int report_nr1;
 	int report_nr2;
 	
 	if (argc > 4) {
 	  if ((util_sscanf_int( argv[3] , &report_nr1) && util_sscanf_int(argv[4] , &report_nr2))) {
-	    section1 = load_restart_section( unif_restart_file , report_nr1 );
-	    section2 = load_restart_section( unif_restart_file , report_nr2 );
-	    arg_offset = 4;
+	    section1  = load_restart_section( unif_restart_file , report_nr1 );
+	    section2  = load_restart_section( unif_restart_file , report_nr2 );
+	    next_iarg = 5;
 	  } else
 	    usage();
 	} else
 	  usage();
       } else if (file_type == ECL_RESTART_FILE) {
+	/* Loading from two non-unified restart files. */
 	if (argc > 3) {
 	  char * restart_file1 = argv[2];
 	  char * restart_file2 = argv[3];
+	  printf("Loading restart file: %s...\n", restart_file1);
 	  section1 = ecl_file_fread_alloc( restart_file1 , true);
+	  printf("Loading restart file: %s...\n", restart_file2);
 	  section2 = ecl_file_fread_alloc( restart_file2 , true);
-	  arg_offset = 3;
+	  next_iarg = 4;
 	} else
 	  usage();
       }
@@ -305,36 +257,24 @@ int main (int argc , char ** argv) {
     ecl_file_free( section1 );
     ecl_file_free( section2 );
   } 
-  
-  if (argc > arg_offset) {
-    FILE * stream = util_fopen(argv[arg_offset + 1] , "r");
-    int read_count;
-    do {
-      int i,j;
-      read_count = fscanf(stream , "%d %d" , &i , &j);
-      if (read_count == 2) {
-  	int_vector_append(ilist , i);
-  	int_vector_append(jlist , j);
-      }
-    } while (read_count == 2);
-    fclose(stream);
-  } else
-    usage();
-
-
-  if (argc > (arg_offset + 1))
-    result_file = argv[arg_offset + 2];
+  /* 
+     The filename for the resulting surface.
+  */
+  if (argc > (next_iarg))
+    surf_file = argv[next_iarg];
   else
     usage();
-
   
-  if (argc > (arg_offset + 2))
-    surf_file = argv[arg_offset + 3];
-  else
-    surf_file = NULL;
+  {
+    char * index_file = NULL;
+    if (argc > (next_iarg + 1))
+      index_file = argv[next_iarg + 1];
+    load_ij(grid , index_file , ilist , jlist);
+  }
   
-  ecl_grid_get_dims( grid , &nx , &ny , &nz , &active_size );
-  extract_contact(swat1 , swat2 , grid , ilist , jlist ,  result_file , surf_file);
+  printf("Writing surface file: %s" , surf_file); fflush(stdout);
+  extract_contact(swat1 , swat2 , grid , ilist , jlist ,  surf_file);
+  printf(" \n");
   ecl_kw_free(swat1);
   ecl_kw_free(swat2);
   ecl_grid_free( grid );
