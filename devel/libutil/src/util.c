@@ -1602,6 +1602,39 @@ int util_file_size(const char *file) {
 }
 
 
+uid_t util_get_file_uid( const char * file ) {
+  struct stat buffer;
+  stat( file , &buffer);
+  return buffer.st_uid;
+}
+
+
+
+bool util_file_readable( const char * file ) {
+  bool readable;
+  FILE * stream = fopen( file , "r");
+  if (stream != NULL) {
+    readable = true;
+    fclose( stream );
+  } else 
+    readable = false;
+  return readable;
+}
+
+
+/**
+   Returns the permission mode for the file.
+*/
+
+mode_t util_get_file_mode( const char * file ) {
+  struct stat buffer;
+  stat( file , &buffer );
+  return buffer.st_mode & (S_IRWXU + S_IRWXG + S_IRWXO);
+}
+
+
+
+
 static char * util_alloc_link_target(const char * link) {
   bool retry = true;
   int target_length;
@@ -3244,9 +3277,10 @@ void * util_malloc(size_t size , const char * caller) {
   return data;
 }
 
+
 /**
-   Allocates byte_size bytes of storage, and initializes content with the
-   value found in src.
+   Allocates byte_size bytes of storage, and initializes content with
+   the value found in src.
 */
 
 void * util_alloc_copy(const void * src , size_t byte_size , const char * caller) {

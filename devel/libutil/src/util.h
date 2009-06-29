@@ -132,6 +132,10 @@ char       * util_alloc_realpath(const char * );
 bool         util_try_alloc_realpath(const char *);
 bool         util_string_match(const char * string , const char * pattern);
 
+mode_t       util_get_file_mode( const char * file );
+uid_t        util_get_file_uid( const char * file );
+bool         util_file_readable( const char * file );
+
 int    	     util_forward_line(FILE * , bool * );
 void   	     util_rewind_line(FILE *);
 int    	     util_count_content_file_lines(FILE * );
