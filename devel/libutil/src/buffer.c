@@ -95,6 +95,16 @@ void buffer_free( buffer_type * buffer) {
 }
 
 
+/**
+   This will reposition all the pointers to the start of the buffer.
+   The actual data of the buffer will not be touched.
+*/
+void buffer_clear( buffer_type * buffer ) {
+  buffer->content_size = 0;
+  buffer->pos          = 0;
+}
+
+
 /*****************************************************************/
 /** 
     Observe that it is the functions with _safe_ in the name which
@@ -104,7 +114,7 @@ void buffer_free( buffer_type * buffer) {
     and it is the responsability of the calling scope to check the
     return values.
 
-    The functions buffer_fread() and buffer_fread() will abort if
+    The functions buffer_fread() and buffer_fwrite() will abort if
     read/write to buffer failed.
 */
 
@@ -429,11 +439,20 @@ size_t buffer_get_remaining_size(const buffer_type *  buffer) {
 /** 
     Returns a pointer to the internal storage of the buffer. Observe
     that this storage is volatile, and the return value from this
-    function should not be kept around.
+    function should not be kept around; alternatively you can use
+    buffer_alloc_data_copy().
 */
-
 void * buffer_get_data(const buffer_type * buffer) { 
   return buffer->data;
+}
+
+
+/**
+   Returns a copy of the initialized (i.e. buffer->content_size)
+   buffer content.
+*/
+void * buffer_alloc_data_copy(const buffer_type * buffer) { 
+  return util_alloc_copy(buffer->data , buffer->content_size , __func__);
 }
 
 

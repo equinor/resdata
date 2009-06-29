@@ -21,6 +21,7 @@ char             * buffer_fread_alloc_string(buffer_type * buffer);
 void               buffer_fwrite_string(buffer_type * buffer , const char * string);
 void               buffer_summarize(const buffer_type * buffer , const char *);
 
+void               buffer_fwrite_char(buffer_type * buffer , char value);
 void               buffer_fwrite_int(buffer_type * buffer , int value);
 int                buffer_fread_int(buffer_type * buffer );
 void               buffer_store(const buffer_type * buffer , const char * filename);
@@ -28,10 +29,11 @@ size_t 		   buffer_get_offset(const buffer_type * buffer);
 size_t 		   buffer_get_size(const buffer_type * buffer);
 size_t             buffer_get_remaining_size(const buffer_type *  buffer);
 void             * buffer_get_data(const buffer_type * buffer);
+void             * buffer_alloc_data_copy(const buffer_type * buffer);
 
 void 		   buffer_fseek(buffer_type * buffer , ssize_t offset , int whence);
 void 		   buffer_fskip(buffer_type * buffer, ssize_t offset);
-
+void               buffer_clear( buffer_type * buffer );
 
 void   		   buffer_fskip_time_t(buffer_type * buffer);
 time_t 		   buffer_fread_time_t(buffer_type * buffer);
