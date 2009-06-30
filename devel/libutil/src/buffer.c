@@ -277,7 +277,7 @@ void buffer_fseek(buffer_type * buffer , ssize_t offset , int whence) {
   else 
     util_abort("%s: unrecognized whence indicator - aborting \n",__func__);
 
-  if ((new_pos > 0) && (new_pos < buffer->content_size))
+  if ((new_pos >= 0) && (new_pos < buffer->content_size))
     buffer->pos = new_pos;
   else
     util_abort("%s: tried to seek to position:%ld - outside of bounds \n",__func__ , new_pos);

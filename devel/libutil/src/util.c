@@ -3163,14 +3163,36 @@ FILE * util_fopen_lockf(const char * filename, const char * mode) {
 }
 
 
-
-static void __block_full_disk(const char * filename) { /* Filename can be NULL */
-  fprintf(stderr,"********************************************************************\n");
-  fprintf(stderr,"** The filesystem seems to be full  - and the program is veeeery  **\n");
-  fprintf(stderr,"** close to going down in flames. You can try clearing space, and **\n");
-  fprintf(stderr,"** then press return [with fingers crossed :-)].                  **\n");
-  fprintf(stderr,"********************************************************************\n");
-  getc( stdin ); /* Block while user clears some disk space. */
+static pthread_mutex_t __fwrite_block_mutex = PTHREAD_MUTEX_INITIALIZER; /* Used to ensure that only one thread displays the block message. */
+static void __block_full_disk(const char * filename) {                   /* Filename can be NULL */
+  if (pthread_mutex_trylock( &__fwrite_block_mutex ) == 0) {
+    /** 
+        Okay this was the first thread to register a full disk. This
+        thread will display the message and await user input. If other
+        threads also encounter full disk they will just spinn sleeping
+        until this thread terminates.
+    */
+    fprintf(stderr,"********************************************************************\n");
+    fprintf(stderr,"** The filesystem seems to be full  - and the program is veeeery  **\n");
+    fprintf(stderr,"** close to going down in flames. You can try clearing space, and **\n");
+    fprintf(stderr,"** then press return [with fingers crossed :-)].                  **\n");
+    fprintf(stderr,"********************************************************************\n");
+    getc( stdin ); /* Block while user clears some disk space. */
+  } else {
+    /* 
+       Another thread is already blocking - waiting for user
+       input. This thread will block, waiting on the first thread.
+    */
+    while (true) {
+      usleep( 500000 ); /* half a second */
+            
+      if (pthread_mutex_trylock( &__fwrite_block_mutex ) == 0) {
+        usleep( 5000 );  /* 5 ms - to avoid a herd of threads hitting the filesystem concurrently.*/
+        break;           /* The user has entered return - and the main blocking thread has been released. */
+      }
+    }
+  }
+  pthread_mutex_unlock( &__fwrite_block_mutex );
 }
 
 

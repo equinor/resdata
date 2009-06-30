@@ -21,9 +21,11 @@ int main(int argc, char ** argv) {
       target_type = ECL_UNIFIED_SUMMARY_FILE;
     else if (file_type == ECL_RESTART_FILE)
       target_type = ECL_UNIFIED_RESTART_FILE;
-    else 
+    else {
       util_exit("The ecl_pack program can only be used with ECLIPSE restart files or summary files.\n");
-    
+      target_type = -1;
+    }
+
     util_alloc_file_components( argv[1] , &path , &ecl_base , NULL);
     {
       msg_type * msg;
