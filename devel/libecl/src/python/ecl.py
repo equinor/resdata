@@ -107,7 +107,6 @@ class ecl_file:
 		f = ecl_file_fread_alloc(filename, self.endian_flip)
 		self.f = f
 	def __del__(self):
-		print "Del ecl_file object"
 		ecl_file_free(self.f)
 
 	def iget_named_kw(self, kw, ith):
@@ -116,10 +115,8 @@ class ecl_file:
 	def iget_kw(self, index):
 		ret = ecl_file_iget_kw(self.f, index)
 		return ecl_kw(ret)
-
 	def has_kw(self, kw):
 		return ecl_file_has_kw(self.f, kw)
-
 	def get_num_distinct_kw(self):
 		return ecl_file_get_num_distinct_kw(self.f)
 	def iget_distinct_kw(self, index):
@@ -128,8 +125,6 @@ class ecl_file:
 		return ecl_file_get_num_named_kw(self.f, kw)
 	def get_num_kw(self):
 		return ecl_file_get_num_kw(self.f)
-	def has_kw(self, kw):
-		return ecl_file_has_kw(self.f, kw)
 	
 		
 class ecl_grid:
@@ -138,7 +133,6 @@ class ecl_grid:
 		self.grid_file = grid_file
 		self.g = ecl_grid_alloc(grid_file, endian_flip);
 	def __del__(self):
-		print "Del ecl_grid object"
 		ecl_grid_free(self.g)
 
 	def get_name(self):
@@ -157,7 +151,8 @@ class ecl_grid:
 		return ecl_grid_get_active_size(self.g)
 	def get_global_size(self):
 		return ecl_grid_get_global_size(self.g);
-	
+	def get_active_index1(self, global_index):
+		return ecl_grid_get_active_index1(self.g, global_index)
 
 	def summarize(self):
 		ecl_grid_summarize(self.g);
@@ -166,9 +161,6 @@ class ecl_kw:
 	def __init__(self, k = None):
 		self.k = k
 		self.w = None
-	def __del__(self):
-		print "WANT TO FREE HERE"
-		
 	def get_header_ref(self):
 		return ecl_kw_get_header_ref(self.k)
 	def get_str_type_ref(self):
@@ -179,7 +171,19 @@ class ecl_kw:
 		self.w = ecl_kw_get_data_wrap_void(self.k)
 		list = get_ecl_kw_data_wrapper_void_list(self.w)
 		return list
-
+	def iget_data(self, index):
+		return ecl_kw_iget_as_double(self.k, index);
+#		return ecl_kw_iget_ptr_wrap(self.k, index)
+	def write_new_grdecl(self, filename, kw, list):
+		size = len(list);
+		self.k = ecl_kw_alloc_empty()
+#		ecl_kw_set_header(self.k, kw, size, "DOUB")
+#		ecl_kw_alloc_double_data(self.k, list, size)
+		ecl_kw_set_header(self.k, kw, size, "REAL")
+		ecl_kw_alloc_float_data(self.k, list, size)
+		f = open(filename, "w")
+		ecl_kw_fprintf_grdecl(self.k, f)
+		f.close
 	def fread_alloc(self, fortio_type):
 		return ecl_kw_fread_alloc(fortio_type)
 	def fseek_kw(self, kw, fortio_type):
