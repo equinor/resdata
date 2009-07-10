@@ -1437,22 +1437,12 @@ void ecl_kw_scalar_init(ecl_kw_type * ecl_kw , double init_value) {
 
 
 
-void ecl_kw_alloc_double_data(ecl_kw_type * ecl_kw , double * values, int size_values) {
-  int    size = ecl_kw_get_size(ecl_kw);
-
-  if (size != size_values)
-    util_abort("%s: mismatch in size between the ecl_kw_type and input\n",__func__);
-
+void ecl_kw_alloc_double_data(ecl_kw_type * ecl_kw , double * values) {
   ecl_kw_alloc_data(ecl_kw);
   memcpy(ecl_kw->data , values , ecl_kw->size * ecl_kw->sizeof_ctype);
 }
 
-void ecl_kw_alloc_float_data(ecl_kw_type * ecl_kw , float * values, int size_values) {
-  int    size = ecl_kw_get_size(ecl_kw);
-
-  if (size != size_values)
-    util_abort("%s: mismatch in size between the ecl_kw_type and input\n",__func__);
-
+void ecl_kw_alloc_float_data(ecl_kw_type * ecl_kw , float * values) {
   ecl_kw_alloc_data(ecl_kw);
   memcpy(ecl_kw->data , values , ecl_kw->size * ecl_kw->sizeof_ctype);
 }

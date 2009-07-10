@@ -209,8 +209,8 @@ void ecl_kw_set_memcpy_data(ecl_kw_type *ecl_kw , const void *src);
 void 		  ecl_kw_set_header_alloc(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *ecl_str_type ); 
 ecl_kw_type * ecl_kw_alloc_complete(const char * header ,  int size, ecl_type_enum ecl_type , const void * data);
 void          ecl_kw_fprintf_grdecl(ecl_kw_type *  , FILE * );
-void          ecl_kw_alloc_double_data(ecl_kw_type * ecl_kw , double * values, int size_values);
-void          ecl_kw_alloc_float_data(ecl_kw_type * ecl_kw , float * values, int size_values);
+void          ecl_kw_alloc_double_data(ecl_kw_type * ecl_kw , double * values);
+void          ecl_kw_alloc_float_data(ecl_kw_type * ecl_kw , float * values);
 double   ecl_kw_iget_as_double(const ecl_kw_type *  , int );
 
 

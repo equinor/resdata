@@ -180,7 +180,7 @@ class ecl_kw:
 #		ecl_kw_set_header(self.k, kw, size, "DOUB")
 #		ecl_kw_alloc_double_data(self.k, list, size)
 		ecl_kw_set_header(self.k, kw, size, "REAL")
-		ecl_kw_alloc_float_data(self.k, list, size)
+		ecl_kw_alloc_float_data(self.k, list)
 		f = open(filename, "w")
 		ecl_kw_fprintf_grdecl(self.k, f)
 		f.close
