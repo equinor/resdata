@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 from ecl import *
-import pprint as pp
-import time as tt
-import os
-import sys
 from math import *
+import sys
 import ConfigParser
 sys.path.append('/private/masar/numpy/lib64/python2.3/site-packages')
 import numpy as np
 from itertools import *
+from progress_bar import ProgressBar
 
 
 class zone(object):
@@ -36,7 +34,6 @@ class zone(object):
 		if init.has_kw(kw):
 			kw_type = init.iget_named_kw(kw, 0)
 			return kw_type.iget_data(index)
-		
 		if restart.has_kw(kw):
 			kw_type = restart.iget_named_kw(kw, 0)
 			return kw_type.iget_data(index)
@@ -46,7 +43,7 @@ class zone(object):
 	def iter_grid(self, func):
 		grid = self.grid
 		global_size = self.global_size
-		elements_from_func = 3
+		elements_from_func = 4
 		
 		self.k_m = config.getfloat('gassmann', 'k_m')
 		self.mu_m = config.getfloat('gassmann', 'mu_m')
@@ -62,8 +59,6 @@ class zone(object):
 										yield ([float(0)]*elements_from_func)
 						else:
 										yield func(self, ret)
-
-
 
 def gassmann(z, j):
 	pressure = z.get_keyword_data("PRESSURE", j)
@@ -120,7 +115,7 @@ def gassmann(z, j):
 					print "ArithmeticError: %s for global index %d" % (e, j)
 					raise
 	else:
-					return (v_p, v_s, z_p)
+					return (v_p, v_s, z_p, sgas)
 
 
 if __name__ == '__main__':
@@ -138,19 +133,22 @@ if __name__ == '__main__':
 
 	config = ConfigParser.ConfigParser()
 	config.readfp(fp)
-	restart_base_file = config.get('project', 'restart_base')
-	restart_mon_file = config.get('project', 'restart_mon')
-	output_file = config.get('project', 'output_file')
-
+	try:
+					restart_base_file = config.get('project', 'restart_base')
+					restart_mon_file = config.get('project', 'restart_mon')
+					output_file = config.get('project', 'output_file')
+	except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
+					raise e
+	
 	base = zone(config, restart_base_file)
 	mon = zone(config, restart_mon_file)
 
-	keywords = ('VP_BASE', 'VS_BASE', 'VP_MON', 'VS_MON', 'VP_DIFF', 'VS_DIFF', 'Z_P_DIFF')
-	narr = np.zeros((base.global_size, len(keywords)));
-
+	output_keywords = ('VP_BASE', 'VS_BASE', 'VP_MON', 'VS_MON', 'VP_DIFF', 'VS_DIFF', 'Z_P_DIFF', 'X_SGAS')
+	narr = np.zeros((base.global_size, len(output_keywords)));
 
 	print "Iterating grids..."
 	k = 0
+	prog = ProgressBar(k, base.global_size, 77, mode='fixed', char='+')
 	for t_base, t_mon in izip(base.iter_grid(gassmann), 
 									mon.iter_grid(gassmann)):
 					narr[k, 0] = t_base[0]
@@ -160,13 +158,25 @@ if __name__ == '__main__':
 					narr[k, 4] = t_mon[0] - t_base[0]
 					narr[k, 5] = t_mon[1] - t_base[1]
 					narr[k, 6] = t_mon[2] - t_base[2]
+					
+					narr[k, 7] = t_mon[3] - t_base[3]
+
 					k += 1
+					if k % (base.global_size / 100) == 0:
+									prog.update_amount(k)
+									print prog, '\r',
+									sys.stdout.flush()
+	print
 
 	print "Writing output file: '%s'" % output_file
 	k = ecl_kw()
-	for j, val in enumerate(keywords):
+	for j, val in enumerate(output_keywords):
 					k.write_new_grdecl(output_file, val, narr[:,j].tolist())
 	print "Complete!"
 
+	print "Writing some additional files for matlab input.."	
+	narr[:,4].tofile("vp_diff.dat", "\n", "%s")	
+	narr[:,7].tofile("sgas_diff.dat", "\n", "%s")	
 
-	
+
+
