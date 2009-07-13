@@ -5,19 +5,29 @@ import time as tt
 import os
 import sys
 from math import *
+import ConfigParser
+sys.path.append('/private/masar/numpy/lib64/python2.3/site-packages')
+import numpy as np
+from itertools import *
 
-
-# TODO:
-# - Lese configfil
-# - Spytte ut alt i en eclgrd fil.
-# - Beregne posissons ratio, akustisk impendans p/s, total reservoir tetthet.
 
 class zone(object):
-	def __init__(self, grid_file, restart_file, init_file):
+	def __init__(self, config, restart_file):
+		try:
+			path = config.get('project', 'path')
+			grid_file = path + config.get('project', 'grid_file')
+			init_file = path + config.get('project', 'init_file')
+			self.output = config.getboolean('script', 'output')
+		except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
+			raise e
+		
+		if self.output: print "Loading zone with %s." % restart_file
 		self.grid = ecl_grid(grid_file)
 		self.init = ecl_file(init_file)
-		self.restart = ecl_file(restart_file)
+		self.restart = ecl_file(path + restart_file)
 		self.dims = self.grid.get_dims()
+		self.global_size = self.grid.get_global_size()
+		self.config = config
 
 	def get_keyword_data(self, kw, index):
 		init = self.init
@@ -34,40 +44,28 @@ class zone(object):
 		raise "Error: could not find keyword: '%s'" % kw
 
 	def iter_grid(self, func):
-		active_size = self.dims[3]
 		grid = self.grid
-		l = list()
-		for j in xrange(0, grid.get_global_size()):
+		global_size = self.global_size
+		elements_from_func = 3
+		
+		self.k_m = config.getfloat('gassmann', 'k_m')
+		self.mu_m = config.getfloat('gassmann', 'mu_m')
+		self.rho_m = config.getfloat('gassmann', 'rho_m')
+		self.poro_c = config.getfloat('gassmann', 'poro_critical')
+		self.adiabatic_index = config.getfloat('gassmann', 'adiabatic_index')
+		self.k_o = config.getfloat('gassmann', 'k_o')
+		self.k_w = config.getfloat('gassmann', 'k_w')
+
+		for j in xrange(0, global_size):
 						ret = grid.get_active_index1(j)
 						if ret == -1:
-										tuple = (float(0), float(0))
+										yield ([float(0)]*elements_from_func)
 						else:
-										tuple = func(self, ret)
-						l.append(tuple)
-
-		return l
+										yield func(self, ret)
 
 
 
-def gassmann_first_test(z, j):
-	# Sand
-	k_m   = 18.0e9;
-	mu_m  = 3.2e9;
-	rho_m = 2.65e3;
-	rho_m = 1.85e3;
-	
-	# The rockphysics handbook p. 242 (critical porosity model)
-	# Sandstone critical poro (reuss dry rock moduli)
-	poro_c = 0.5
-
-  # Adiabatic index for calculating bulk moduli for gas	
-	# C_3 H_8 (Propane) at 16 C
-	adiabatic_index = 1.130
-
-	# Fluids
-	k_o   = 1.50e9;  # SAE 30 Oil,
-	k_w   = 2.34e9;  # Seawater
-	
+def gassmann(z, j):
 	pressure = z.get_keyword_data("PRESSURE", j)
 	sgas = z.get_keyword_data("SGAS", j)
 	swat = z.get_keyword_data("SWAT", j)
@@ -75,14 +73,14 @@ def gassmann_first_test(z, j):
 	rho_o = z.get_keyword_data("OIL_DEN", j)
 	rho_g = z.get_keyword_data("GAS_DEN", j)
 	rho_w = z.get_keyword_data("WAT_DEN", j)
-
-	# PUNQS3
-#	rho_o = 0.89e3
-#	rho_w = 1.010e3
-#	rho_g = 0.100e3
-
-	#print "sgas: %f, poro: %f, rho_o: %f, rho_w: %f, rho_g: %f, pressure: %f" % (sgas, poro, rho_o, rho_w, rho_g, pressure)
-#	print sgas, poro, rho_o, rho_w, rho_g, pressure
+	
+	k_m = z.k_m
+	mu_m = z.mu_m
+	rho_m = z.rho_m
+	poro_c = z.poro_c
+	adiabatic_index = z.adiabatic_index
+	k_o = z.k_o
+	k_w = z.k_w
 
 	try:
 					if swat < 0:
@@ -95,109 +93,80 @@ def gassmann_first_test(z, j):
 									sgas = sgas / sat_sum
 					soil = 1 - (swat + sgas)
 
-					# Convert from bar to pascal
 					pressure = pressure*1e6
 					k_g = pressure*adiabatic_index
 					rho_res = poro*((sgas * rho_g) + (swat * rho_w) + (soil * rho_o)) + (1 - poro) * rho_m
 					if poro > poro_c: 
 									poro_c = 1
-									
 					k_dry = (1 - poro/poro_c) * k_m
 					mu_dry = (1 - poro/poro_c) * k_m
-					
-					vp_dry = sqrt((k_dry + (4/3) * mu_dry) / (rho_m))
-#					print "vp_dry: %f" % vp_dry
-
 					mu_res = (1 - poro/poro_c) * mu_m
-
 					c_fluid = ((1/k_o) * soil) + ((1/k_w) * swat) + ((1/k_g) * sgas)
 					k_fluid = 1 / c_fluid
-#					k_fluid = 1 / ((soil / k_o) + (swat / k_w) + (sgas / k_g))
 
 					if poro * (k_m - k_fluid) == 0 or k_m - k_dry == 0:
 									print "Warning: setting k_reservoir = k_mineral = %f\n" % k_m
 									k_res = k_m
 					else:
-#									b = (k_dry / (k_m - k_dry)) + (k_fluid / (poro * (k_m - k_fluid)))
-#									k_res = (b * k_m) / (1 + b)
+									b = (k_dry / (k_m - k_dry)) + (k_fluid / (poro * (k_m - k_fluid)))
+									k_res = (b * k_m) / (1 + b)
 
-									b = 1 - (k_dry / k_m)
-									k_res = k_dry + ( (b*b) / ( (poro / k_fluid) + ((1 - poro) / k_m) - (k_dry / (k_m * k_m))))
+					v_p = sqrt((k_res + (4/3) * mu_res) / rho_res)
+					v_s = sqrt(mu_res / rho_res)
+					z_p = rho_res * v_p
 
-#					print "mu_res: %f, rho_res: %f, k_dry: %f, k_fluid: %f, k_res: %f" % (mu_res, rho_res, k_dry, k_fluid, k_res)
-					vp = sqrt((k_res + (4/3) * mu_res) / rho_res)
-					vs = sqrt(mu_res / rho_res)
-
-					##print vp, sgas
 
 	except ArithmeticError, e:
 					print "ArithmeticError: %s for global index %d" % (e, j)
 					raise
 	else:
-					return (vp, vs)
+					return (v_p, v_s, z_p)
 
 
 if __name__ == '__main__':
-	path = '/d/felles/bg/scratch/masar/STRUCT/realization-24-step-0-to-358/'
-	grid_file = path + 'RG01-STRUCT-24.EGRID'
-	restart_files = (path + 'RG01-STRUCT-24.X0050', path + 'RG01-STRUCT-24.X0358')
-	init_file = path + 'RG01-STRUCT-24.INIT'
-	output_files = ('./test_vp1.GRDECL', './test_vp2.GRDECL', './test_diff.GRDECL')
-	output_kws = ('VP1', 'VP2', 'VPDIFF')
-
-#	path = '/d/proj/bg/enkf/jaskje/EnKF_PUNQS3/PUNQS3/'
-#	grid_file = path + 'PUNQS3.EGRID'
-#	restart_files = (path + 'PUNQS3.X0001', path + 'PUNQS3.X0083')
-#	init_file = path + 'PUNQS3.INIT'
-
-	print "[Zone 1] loading"
-	z = zone(grid_file, restart_files[0], init_file)
-	print "[Zone 1] active size: %d, global size: %d" % (z.grid.get_active_size(), z.grid.get_global_size())
-	print "[Zone 1] Iterating grid"
-	gm1 = z.iter_grid(gassmann_first_test)
-	tt.sleep(2)
-
-	print "[Zone 2] Loading"
-	print "[Zone 2] active size: %d, global size: %d" % (z.grid.get_active_size(), z.grid.get_global_size())
-	z = zone(grid_file, restart_files[1], init_file)
-	print "[Zone 2] Iterating grid"
-	gm2 = z.iter_grid(gassmann_first_test)
-	print "--------------"
-	
 	try:
-					assert len(gm1) == z.grid.get_global_size()
-					assert len(gm2) == len(gm1)
-	except AssertionError, e:
-					print "Error: Different lengths of the vp/vs list!"
-					raise 
+					assert (len(sys.argv) == 2) 
+	except AssertionError:
+					print 'Usage: %s <config>' % (sys.argv[0]) 
+					sys.exit()
+	try:
+					config_file = sys.argv[1]
+					fp = open(config_file)
+	except IOError, e:
+					print "Unable to open '%s': %s" % (config_file, e)
+					sys.exit()
 
-	vp1_list = list();
-	vp2_list = list();
-	diff_list = list();
-	vs1_list = list();
-	vs2_list = list();
-	diff_vs_list = list();
-	for j in xrange(0, len(gm1)):
-			vp1, vs1 = gm1[j]
-			vp1_list.append(vp1)
-			vs1_list.append(vs1)
-			vp2, vs2 = gm2[j]
-			vs2_list.append(vs2)
-			vp2_list.append(vp2)
-			diff_list.append(vp2 - vp1)
-			diff_vs_list.append(vs2 - vs1)
+	config = ConfigParser.ConfigParser()
+	config.readfp(fp)
+	restart_base_file = config.get('project', 'restart_base')
+	restart_mon_file = config.get('project', 'restart_mon')
+	output_file = config.get('project', 'output_file')
 
-	print "Writing GRDECL file(s) ..."
+	base = zone(config, restart_base_file)
+	mon = zone(config, restart_mon_file)
+
+	keywords = ('VP_BASE', 'VS_BASE', 'VP_MON', 'VS_MON', 'VP_DIFF', 'VS_DIFF', 'Z_P_DIFF')
+	narr = np.zeros((base.global_size, len(keywords)));
+
+
+	print "Iterating grids..."
+	k = 0
+	for t_base, t_mon in izip(base.iter_grid(gassmann), 
+									mon.iter_grid(gassmann)):
+					narr[k, 0] = t_base[0]
+					narr[k, 1] = t_base[1]
+					narr[k, 2] = t_mon[0]
+					narr[k, 3] = t_mon[1]
+					narr[k, 4] = t_mon[0] - t_base[0]
+					narr[k, 5] = t_mon[1] - t_base[1]
+					narr[k, 6] = t_mon[2] - t_base[2]
+					k += 1
+
+	print "Writing output file: '%s'" % output_file
 	k = ecl_kw()
-	print "Writing (%s) %s, min/max %f/%f" % (output_kws[0], output_files[0], min(vp1_list), max(vp1_list))
-	k.write_new_grdecl(output_files[0], output_kws[0], vp1_list)
-	
-	print "Writing (%s) %s, min/max %f/%f" % (output_kws[1], output_files[1], min(vp2_list), max(vp2_list))
-	k.write_new_grdecl(output_files[1], output_kws[1], vp2_list)
-	
-	print "Writing (%s) %s, min/max %f/%f" % (output_kws[2], output_files[2], min(diff_list), max(diff_list))
-	k.write_new_grdecl(output_files[2], output_kws[2], diff_list)
+	for j, val in enumerate(keywords):
+					k.write_new_grdecl(output_file, val, narr[:,j].tolist())
+	print "Complete!"
 
-	k.write_new_grdecl("VS2.GRDECL", "VS2", vs2_list)
-	k.write_new_grdecl("VS1.GRDECL", "VS1", vs1_list)
-	k.write_new_grdecl("DIFF_VS.GRDECL", "DIFF_VS", diff_vs_list)
+
+	

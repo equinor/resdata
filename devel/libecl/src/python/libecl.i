@@ -212,7 +212,7 @@ void          ecl_kw_fprintf_grdecl(ecl_kw_type *  , FILE * );
 void          ecl_kw_alloc_double_data(ecl_kw_type * ecl_kw , double * values);
 void          ecl_kw_alloc_float_data(ecl_kw_type * ecl_kw , float * values);
 double   ecl_kw_iget_as_double(const ecl_kw_type *  , int );
-
+void          ecl_kw_free_data(ecl_kw_type *);
 
 
 // ecl_grid.h

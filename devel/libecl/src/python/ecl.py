@@ -176,12 +176,18 @@ class ecl_kw:
 #		return ecl_kw_iget_ptr_wrap(self.k, index)
 	def write_new_grdecl(self, filename, kw, list):
 		size = len(list);
-		self.k = ecl_kw_alloc_empty()
-#		ecl_kw_set_header(self.k, kw, size, "DOUB")
-#		ecl_kw_alloc_double_data(self.k, list, size)
+		mode = "w"
+
+		if self.k == None:
+			self.k = ecl_kw_alloc_empty()
+		else:
+			mode = "a"
+			ecl_kw_free_data(self.k)
+
 		ecl_kw_set_header(self.k, kw, size, "REAL")
 		ecl_kw_alloc_float_data(self.k, list)
-		f = open(filename, "w")
+		
+		f = open(filename, mode)
 		ecl_kw_fprintf_grdecl(self.k, f)
 		f.close
 	def fread_alloc(self, fortio_type):
