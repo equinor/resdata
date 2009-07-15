@@ -145,6 +145,8 @@ class ecl_grid:
 		return ecl_grid_get_ijk1(self.g, global_index)
 	def get_ijk1A(self, active_index):
 		return ecl_grid_get_ijk1A(self.g, active_index)
+	def get_global_index3(self, i, j, k):
+		return ecl_grid_get_global_index3(self.g, i, j, j)
 	def get_property(self, kw_obj, ijk):
 		return ecl_grid_get_property(self.g, kw_obj.k, ijk[0], ijk[1], ijk[2])
 	def get_active_size(self):

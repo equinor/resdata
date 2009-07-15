@@ -15,15 +15,15 @@ class zone(object):
 			path = config.get('project', 'path')
 			grid_file = path + config.get('project', 'grid_file')
 			init_file = path + config.get('project', 'init_file')
-			self.output = config.getboolean('script', 'output')
 		except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
 			raise e
 		
-		if self.output: print "Loading zone with %s." % restart_file
+		print "Loading zone with %s." % restart_file
 		self.grid = ecl_grid(grid_file)
 		self.init = ecl_file(init_file)
 		self.restart = ecl_file(path + restart_file)
 		self.dims = self.grid.get_dims()
+		self.active_size = self.dims[3]
 		self.global_size = self.grid.get_global_size()
 		self.config = config
 
@@ -40,10 +40,10 @@ class zone(object):
 	
 		raise "Error: could not find keyword: '%s'" % kw
 
-	def iter_grid(self, func):
+	def iter_grid(self, func, ret_active = 0):
 		grid = self.grid
 		global_size = self.global_size
-		elements_from_func = 4
+		elements_from_func = 7
 		
 		self.k_m = config.getfloat('gassmann', 'k_m')
 		self.mu_m = config.getfloat('gassmann', 'mu_m')
@@ -56,7 +56,8 @@ class zone(object):
 		for j in xrange(0, global_size):
 						ret = grid.get_active_index1(j)
 						if ret == -1:
-										yield ([float(0)]*elements_from_func)
+										if ret_active == 0:
+														yield ([float(0)]*elements_from_func)
 						else:
 										yield func(self, ret)
 
@@ -115,7 +116,7 @@ def gassmann(z, j):
 					print "ArithmeticError: %s for global index %d" % (e, j)
 					raise
 	else:
-					return (v_p, v_s, z_p, sgas)
+					return (v_p, v_s, z_p, sgas, swat, poro, pressure / 1e6)
 
 
 if __name__ == '__main__':
@@ -137,13 +138,14 @@ if __name__ == '__main__':
 					restart_base_file = config.get('project', 'restart_base')
 					restart_mon_file = config.get('project', 'restart_mon')
 					output_file = config.get('project', 'output_file')
+					matlab_export = config.getboolean('script', 'matlab_export')
 	except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
 					raise e
 	
 	base = zone(config, restart_base_file)
 	mon = zone(config, restart_mon_file)
 
-	output_keywords = ('VP_BASE', 'VS_BASE', 'VP_MON', 'VS_MON', 'VP_DIFF', 'VS_DIFF', 'Z_P_DIFF', 'X_SGAS')
+	output_keywords = ('VP_BASE', 'VS_BASE', 'VP_MON', 'VS_MON', 'VP_D_MS', 'VS_D_MS', 'Z_P_DIFF', 'D_SGAS', 'D_PRESS', 'D_SWAT')
 	narr = np.zeros((base.global_size, len(output_keywords)));
 
 	print "Iterating grids..."
@@ -157,9 +159,10 @@ if __name__ == '__main__':
 					narr[k, 3] = t_mon[1]
 					narr[k, 4] = t_mon[0] - t_base[0]
 					narr[k, 5] = t_mon[1] - t_base[1]
-					narr[k, 6] = t_mon[2] - t_base[2]
-					
-					narr[k, 7] = t_mon[3] - t_base[3]
+					narr[k, 6] = t_mon[2] - t_base[2] # Acoustic impedance (P) difference
+					narr[k, 7] = t_mon[3] - t_base[3] # Difference Sgas
+					narr[k, 8] = t_mon[6] - t_base[6] # Difference Pressure
+					narr[k, 9] = t_mon[4] - t_base[4] # Difference Swat
 
 					k += 1
 					if k % (base.global_size / 100) == 0:
@@ -172,11 +175,34 @@ if __name__ == '__main__':
 	k = ecl_kw()
 	for j, val in enumerate(output_keywords):
 					k.write_new_grdecl(output_file, val, narr[:,j].tolist())
-	print "Complete!"
-
-	print "Writing some additional files for matlab input.."	
-	narr[:,4].tofile("vp_diff.dat", "\n", "%s")	
-	narr[:,7].tofile("sgas_diff.dat", "\n", "%s")	
-
-
+	
+	if matlab_export:
+					print "Iterating grids..."
+					output_keywords = ('B_SGAS', 'B_SWAT', 'B_PORO', 'B_PRESS', 'M_SGAS', 'M_SWAT', 'M_PORO', 'M_PRESS')
+					narr_active = np.zeros((base.active_size, len(output_keywords)))
+					print base.active_size
+					k = 0
+					prog = ProgressBar(k, base.active_size, 77, mode='fixed', char='+')
+					for t_base, t_mon in izip(base.iter_grid(gassmann, 1), mon.iter_grid(gassmann, 1)):
+									narr_active[k, 0] = t_base[3]
+									narr_active[k, 1] = t_base[4]
+									narr_active[k, 2] = t_base[5]
+									narr_active[k, 3] = t_base[6]
+									narr_active[k, 4] = t_mon[3] # Sgas
+									narr_active[k, 5] = t_mon[4] # Swat 
+									narr_active[k, 6] = t_mon[5] # Poro
+									narr_active[k, 7] = t_mon[6] # Pressure
+									
+									k += 1
+									if k % (base.active_size / 100) == 0:
+													prog.update_amount(k)
+													print prog, '\r',
+													sys.stdout.flush()
+					print
+					
+					for j, val in enumerate(output_keywords):
+									file_string = "%s.dat" % val
+									print "Exporting (Matlab) to file: '%s'" % file_string
+									narr_active[:,j].tofile(file_string, "\n", "%s")
+					
 
