@@ -32,14 +32,16 @@
     int size = PyList_Size($input);
     int i = 0;
     $1 = malloc((size+1)*sizeof(float));
+
     for (i = 0; i < size; i++) {
       PyObject *o = PyList_GetItem($input,i);
       if (PyFloat_Check(o))  {
-		$1[i] = PyFloat_AsDouble(o);
+        $1[i] = PyFloat_AsDouble(o);
       } else {
-		printf("error: there was a non-float element!\n");
-		free($1);
-		return NULL;
+        printf("error: there was a non-float element!\n");
+        $1[i] = PyFloat_AsDouble(o);
+        free($1);
+        return NULL;
       }
     }
   }

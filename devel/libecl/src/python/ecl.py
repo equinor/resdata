@@ -3,6 +3,200 @@ import pprint as pp
 import sys
 import time
 
+####################################################################
+##
+## class: Zone
+##        - Loads the ECL files, has methods for grabbing ECL
+##          data, and iterating the grid.
+##        - Contains empty cache variables until they are filled
+##          by the Zone_Cache class.
+##
+## class: Gassmann (inherits Zone)
+##        - Defines function pointer doing calculations
+##        - Load its own personal configuration options.
+##        - The returned dictionary from the function pointer
+##          defines what keywords the zone has available.
+##  
+## class: Zone_Cache
+##        - Stores lists of the data, for easy access when comparing
+##          different zones and doing arithmetic operations.
+##        - The objects stored in the cache is also writeable to
+##          either .grdecl format or .dat format.
+##
+####################################################################
+
+class Zone_Cache:
+
+  def __init__(self, grid_file):
+    self.grid = ecl_grid(grid_file)
+    self.active_size = self.grid.get_active_size()
+    self.global_size = self.grid.get_global_size()
+
+    self.zones = list()
+    self.cache = dict()
+
+  def convert_list(self, l_a, dummy_val = 0):
+    k = 0
+    l_g = list();
+    for j in xrange(0, self.global_size):
+      ret = self.grid.get_active_index1(j)
+      if ret == -1:
+        l_g.append(float(dummy_val))
+      else:
+        l_g.append(l_a[k])
+        k += 1
+
+    return l_g
+
+  #############################################################
+  ##
+  ## The following are methods working with a ZONE.
+  ## The keywords from where the data is stored comes from
+  ## the dictionary beeing returned form the functions pointer
+  ## defined by the child class for the ZONE.
+  ##
+  #############################################################
+
+  def addzone(self, *zones):
+    for zone in zones:
+      print "adding ...", zone
+      self.zones.append(zone)
+      for j in xrange(0, self.global_size):
+        ret = zone.grid.get_active_index1(j)
+        if ret != -1:
+          dic = zone.func(ret)
+          zone.active_cache.append(dic)
+          if len(zone.active_cache) == 1:
+            zone.kw_keys = dic.keys()
+
+  def get_active_list(self, zone, keyword):
+    retlist = list()
+    for val in zone.active_cache:
+      retlist.append(val[keyword])
+    return retlist
+
+  def write_zone_grdecl(self, zone, file):
+    if zone not in self.zones:
+      raise "the zone you asked for has not been added!"
+
+    if len(zone.kw_keys) == 0:
+      print "You need to iterate or cache the grid first!"
+   
+    print "Writing %d ZONE variables to grdecl file '%s'" % (len(zone.kw_keys), file)
+    k = ecl_kw()
+    for val in zone.kw_keys:
+      l_a = self.get_active_list(zone, val)
+      l_g = self.convert_list(l_a)
+      k.write_new_grdecl(file, val, l_g)
+      
+  def write_zone_datfiles(self, zone):
+    path = 'zone_output/'
+    for val in zone.kw_keys:
+      file_string = path + "%s.dat" % val
+      l_a = self.get_active_list(zone, val)
+
+      for j, val in enumerate(l_a):
+        q = str(val)
+        l_a[j] = "%s\n" % q
+        
+      print "Writing Matlab export '%s'" % file_string
+      f = open(file_string, 'w')
+      f.writelines(l_a)
+      f.close()
+
+  ##########################################################
+  ##
+  ## The following are methods are for working with newly 
+  ## calculated objects that only exists in the CACHE class.
+  ##
+  ############################################################
+  
+  def add_keyword(self, kw, new_list):
+    self.cache[kw] = new_list
+
+  def write_grdecl(self, file):
+    print "Writing %d CACHE variables to grdecl file '%s'" % (len(self.cache.keys()), file)
+    k = ecl_kw()
+    for val in self.cache.keys():
+      l_g = self.convert_list(self.cache[val])
+      k.write_new_grdecl(file, val, l_g)
+      
+  def write_datfiles(self):
+    path = 'zone_output/'
+    for val in self.cache.keys():
+      file_string = path + "%s.dat" % val
+
+      l_a = list()
+      for val in self.cache[val]:
+        q = str(val)
+        string = "%s\n" % q
+        l_a.append(string)
+        
+      print "Writing Matlab export '%s'" % file_string
+      f = open(file_string, 'w')
+      f.writelines(l_a)
+      f.close()
+    pass
+    
+
+class Zone:
+  def __init__(self):
+    try:
+      assert self.grid_file != None, 'grid file not set!'
+      assert self.init_file != None, 'init file not set!'
+      assert self.restart_file != None, 'restart file not set!'
+    except AssertionError, e:
+      print "Error: %s, parameter required for Zone class!" % e
+      sys.exit()
+    self.grid = ecl_grid(self.grid_file)
+    self.init = ecl_file(self.init_file)
+    self.restart = ecl_file(self.path + self.restart_file)
+    self.dims = self.grid.get_dims()
+    self.active_size = self.dims[3]
+    self.global_size = self.grid.get_global_size()
+    
+    self.active_cache = list()
+    self.global_cache = list()
+
+  def get_keyword_data(self, kw, index):
+    init = self.init
+    restart = self.restart
+    
+    if init.has_kw(kw):
+      kw_type = init.iget_named_kw(kw, 0)
+      return kw_type.iget_data(index)
+    if restart.has_kw(kw):
+      kw_type = restart.iget_named_kw(kw, 0)
+      return kw_type.iget_data(index)
+	
+    raise "Error: could not find keyword: '%s'" % kw
+
+  def iter_grid(self, ret_active = 0, cache = 0):
+    print "Start iterating grid."
+    for j in xrange(0, self.global_size):
+      ret = self.grid.get_active_index1(j)
+      if ret == -1:
+        if ret_active == 0:
+          yield None
+      else:
+        dic = self.func(ret)
+        if cache:
+          self.active_cache.append(ret)
+          if len(self.active_cache) == 1:
+            self.kw_keys = dic.keys()
+          
+        yield dic
+
+
+
+
+
+####################################################################
+##
+## A thin SWIG wrapper starts from here to bottom!
+## 
+####################################################################
+
 
 class ecl_summary:
 	def __init__(self, ecl_data_file):

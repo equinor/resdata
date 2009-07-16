@@ -3,206 +3,144 @@ from ecl import *
 from math import *
 import sys
 import ConfigParser
-sys.path.append('/private/masar/numpy/lib64/python2.3/site-packages')
-import numpy as np
 from itertools import *
-from progress_bar import ProgressBar
 
 
-class zone(object):
-	def __init__(self, config, restart_file):
-		try:
-			path = config.get('project', 'path')
-			grid_file = path + config.get('project', 'grid_file')
-			init_file = path + config.get('project', 'init_file')
-		except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
-			raise e
-		
-		print "Loading zone with %s." % restart_file
-		self.grid = ecl_grid(grid_file)
-		self.init = ecl_file(init_file)
-		self.restart = ecl_file(path + restart_file)
-		self.dims = self.grid.get_dims()
-		self.active_size = self.dims[3]
-		self.global_size = self.grid.get_global_size()
-		self.config = config
+class Gassmann(Zone):
+  def __init__(self, config, restart_file):
+    self.restart_file = restart_file
+    self.grid_file = None
+    self.init_file = None
+    self.func = self.gassmann
+    
+    try:
+      self.path = config.get('project', 'path')
+      self.grid_file = self.path + config.get('project', 'grid_file')
+      self.init_file = self.path + config.get('project', 'init_file')
+			
+      self.k_m = config.getfloat('gassmann', 'k_m')
+      self.mu_m = config.getfloat('gassmann', 'mu_m')
+      self.rho_m = config.getfloat('gassmann', 'rho_m')
+      self.poro_c = config.getfloat('gassmann', 'poro_critical')
+      self.adiabatic_index = config.getfloat('gassmann', 'adiabatic_index')
+      self.k_o = config.getfloat('gassmann', 'k_o')
+      self.k_w = config.getfloat('gassmann', 'k_w')
 
-	def get_keyword_data(self, kw, index):
-		init = self.init
-		restart = self.restart
-					
-		if init.has_kw(kw):
-			kw_type = init.iget_named_kw(kw, 0)
-			return kw_type.iget_data(index)
-		if restart.has_kw(kw):
-			kw_type = restart.iget_named_kw(kw, 0)
-			return kw_type.iget_data(index)
-	
-		raise "Error: could not find keyword: '%s'" % kw
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
+      raise e
+    
+    Zone.__init__(self)
+    
+  def gassmann(self, active_index):
+    pressure = self.get_keyword_data("PRESSURE", active_index)
+    sgas = self.get_keyword_data("SGAS", active_index)
+    swat = self.get_keyword_data("SWAT", active_index)
+    poro = self.get_keyword_data("PORO", active_index)
+    rho_o = self.get_keyword_data("OIL_DEN", active_index)
+    rho_g = self.get_keyword_data("GAS_DEN", active_index)
+    rho_w = self.get_keyword_data("WAT_DEN", active_index)
+    k_m = self.k_m
+    mu_m = self.mu_m
+    rho_m = self.rho_m
+    poro_c = self.poro_c
+    adiabatic_index = self.adiabatic_index
+    k_o = self.k_o
+    k_w = self.k_w
+    
+    try:
+      if swat < 0:
+        swat = 0
+      if sgas < 0:
+        sgas = 0
+      if swat + sgas > 1:
+        sat_sum = (swat + sgas)
+        swat = swat / sat_sum
+        sgas = sgas / sat_sum
+        
+      soil = 1 - (swat + sgas)
+      
+      pressure = pressure*1e6
+      k_g = pressure*adiabatic_index
+      rho_res = poro*((sgas * rho_g) + (swat * rho_w) + (soil * rho_o)) + (1 - poro) * rho_m
+      
+      if poro > poro_c: 
+        poro_c = 1
+      
+      k_dry = (1 - poro/poro_c) * k_m
+      mu_dry = (1 - poro/poro_c) * k_m
+      mu_res = (1 - poro/poro_c) * mu_m
+      c_fluid = ((1/k_o) * soil) + ((1/k_w) * swat) + ((1/k_g) * sgas)
+      k_fluid = 1 / c_fluid
+      
+      if poro * (k_m - k_fluid) == 0 or k_m - k_dry == 0:
+        print "Warning: setting k_reservoir = k_mineral = %f\n" % k_m
+        k_res = k_m
+      else:
+        b = (k_dry / (k_m - k_dry)) + (k_fluid / (poro * (k_m - k_fluid)))
+        k_res = (b * k_m) / (1 + b)
 
-	def iter_grid(self, func, ret_active = 0):
-		grid = self.grid
-		global_size = self.global_size
-		elements_from_func = 7
-		
-		self.k_m = config.getfloat('gassmann', 'k_m')
-		self.mu_m = config.getfloat('gassmann', 'mu_m')
-		self.rho_m = config.getfloat('gassmann', 'rho_m')
-		self.poro_c = config.getfloat('gassmann', 'poro_critical')
-		self.adiabatic_index = config.getfloat('gassmann', 'adiabatic_index')
-		self.k_o = config.getfloat('gassmann', 'k_o')
-		self.k_w = config.getfloat('gassmann', 'k_w')
+      v_p = sqrt((k_res + (4/3) * mu_res) / rho_res)
+      v_s = sqrt(mu_res / rho_res)
 
-		for j in xrange(0, global_size):
-						ret = grid.get_active_index1(j)
-						if ret == -1:
-										if ret_active == 0:
-														yield ([float(0)]*elements_from_func)
-						else:
-										yield func(self, ret)
+    except ArithmeticError, e:
+			print "ArithmeticError: %s for global index %d" % (e, j)
+			raise
+    else:
+      ret = dict(GM_VP = v_p, GM_VS = v_s, SGAS = float(sgas))
 
-def gassmann(z, j):
-	pressure = z.get_keyword_data("PRESSURE", j)
-	sgas = z.get_keyword_data("SGAS", j)
-	swat = z.get_keyword_data("SWAT", j)
-	poro = z.get_keyword_data("PORO", j)
-	rho_o = z.get_keyword_data("OIL_DEN", j)
-	rho_g = z.get_keyword_data("GAS_DEN", j)
-	rho_w = z.get_keyword_data("WAT_DEN", j)
-	
-	k_m = z.k_m
-	mu_m = z.mu_m
-	rho_m = z.rho_m
-	poro_c = z.poro_c
-	adiabatic_index = z.adiabatic_index
-	k_o = z.k_o
-	k_w = z.k_w
-
-	try:
-					if swat < 0:
-									swat = 0
-					if sgas < 0:
-									sgas = 0
-					if swat + sgas > 1:
-									sat_sum = (swat + sgas)
-									swat = swat / sat_sum
-									sgas = sgas / sat_sum
-					soil = 1 - (swat + sgas)
-
-					pressure = pressure*1e6
-					k_g = pressure*adiabatic_index
-					rho_res = poro*((sgas * rho_g) + (swat * rho_w) + (soil * rho_o)) + (1 - poro) * rho_m
-					if poro > poro_c: 
-									poro_c = 1
-					k_dry = (1 - poro/poro_c) * k_m
-					mu_dry = (1 - poro/poro_c) * k_m
-					mu_res = (1 - poro/poro_c) * mu_m
-					c_fluid = ((1/k_o) * soil) + ((1/k_w) * swat) + ((1/k_g) * sgas)
-					k_fluid = 1 / c_fluid
-
-					if poro * (k_m - k_fluid) == 0 or k_m - k_dry == 0:
-									print "Warning: setting k_reservoir = k_mineral = %f\n" % k_m
-									k_res = k_m
-					else:
-									b = (k_dry / (k_m - k_dry)) + (k_fluid / (poro * (k_m - k_fluid)))
-									k_res = (b * k_m) / (1 + b)
-
-					v_p = sqrt((k_res + (4/3) * mu_res) / rho_res)
-					v_s = sqrt(mu_res / rho_res)
-					z_p = rho_res * v_p
-
-
-	except ArithmeticError, e:
-					print "ArithmeticError: %s for global index %d" % (e, j)
-					raise
-	else:
-					return (v_p, v_s, z_p, sgas, swat, poro, pressure / 1e6)
+      return ret
 
 
 if __name__ == '__main__':
-	try:
-					assert (len(sys.argv) == 2) 
-	except AssertionError:
-					print 'Usage: %s <config>' % (sys.argv[0]) 
-					sys.exit()
-	try:
-					config_file = sys.argv[1]
-					fp = open(config_file)
-	except IOError, e:
-					print "Unable to open '%s': %s" % (config_file, e)
-					sys.exit()
+  try:
+    assert (len(sys.argv) == 2) 
+  except AssertionError:
+    print 'Usage: %s <config>' % (sys.argv[0]) 
+    sys.exit()
+  try:
+    config_file = sys.argv[1]
+    fp = open(config_file)
+  except IOError, e:
+    print "Unable to open '%s': %s" % (config_file, e)
+    sys.exit()
+    
+  config = ConfigParser.ConfigParser()
+  config.readfp(fp)
+  try:
+    restart_base_file = config.get('project', 'restart_base')
+    restart_mon_file = config.get('project', 'restart_mon')
+    output_file = config.get('project', 'output_file')
+    matlab_export = config.getboolean('script', 'matlab_export')
+  except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
+    raise e
 
-	config = ConfigParser.ConfigParser()
-	config.readfp(fp)
-	try:
-					restart_base_file = config.get('project', 'restart_base')
-					restart_mon_file = config.get('project', 'restart_mon')
-					output_file = config.get('project', 'output_file')
-					matlab_export = config.getboolean('script', 'matlab_export')
-	except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
-					raise e
-	
-	base = zone(config, restart_base_file)
-	mon = zone(config, restart_mon_file)
+  base = Gassmann(config, restart_base_file)
+  mon = Gassmann(config, restart_mon_file)
+  another = Gassmann(config, "RG01-STRUCT-24.X0250")
 
-	output_keywords = ('VP_BASE', 'VS_BASE', 'VP_MON', 'VS_MON', 'VP_D_MS', 'VS_D_MS', 'Z_P_DIFF', 'D_SGAS', 'D_PRESS', 'D_SWAT')
-	narr = np.zeros((base.global_size, len(output_keywords)));
+  cache = Zone_Cache(base.grid_file)
+  cache.addzone(base, mon, another)
 
-	print "Iterating grids..."
-	k = 0
-	prog = ProgressBar(k, base.global_size, 77, mode='fixed', char='+')
-	for t_base, t_mon in izip(base.iter_grid(gassmann), 
-									mon.iter_grid(gassmann)):
-					narr[k, 0] = t_base[0]
-					narr[k, 1] = t_base[1]
-					narr[k, 2] = t_mon[0]
-					narr[k, 3] = t_mon[1]
-					narr[k, 4] = t_mon[0] - t_base[0]
-					narr[k, 5] = t_mon[1] - t_base[1]
-					narr[k, 6] = t_mon[2] - t_base[2] # Acoustic impedance (P) difference
-					narr[k, 7] = t_mon[3] - t_base[3] # Difference Sgas
-					narr[k, 8] = t_mon[6] - t_base[6] # Difference Pressure
-					narr[k, 9] = t_mon[4] - t_base[4] # Difference Swat
+  a = cache.get_active_list(base, 'GM_VP')
+  b = cache.get_active_list(mon, 'GM_VP')
+  c = cache.get_active_list(mon, 'GM_VP')
 
-					k += 1
-					if k % (base.global_size / 100) == 0:
-									prog.update_amount(k)
-									print prog, '\r',
-									sys.stdout.flush()
-	print
+  diff = [tmp2 - tmp1 for tmp1, tmp2 in zip(a, b)]
+  mult = [tmp2 + tmp1 + tmp3 for tmp1, tmp2, tmp3 in zip(a, b, c)]
+  mult2 = [tmp2 + tmp1 for tmp1, tmp2 in zip(a, b)]
+  
+  a = cache.get_active_list(base, 'SGAS')
+  b = cache.get_active_list(mon, 'SGAS')
+  sgas_diff = [tmp2 - tmp1 for tmp1, tmp2 in zip(a, b)]
+  
+  cache.add_keyword("GM_VP_D", diff)
+  cache.add_keyword("GM_SG_D", sgas_diff)
+  cache.add_keyword("GM_VP_M", mult)
+  cache.add_keyword("GM_VP_M2", mult2)
+  
+  cache.write_grdecl("grane_cache.GRDECL")
+  cache.write_datfiles()
 
-	print "Writing output file: '%s'" % output_file
-	k = ecl_kw()
-	for j, val in enumerate(output_keywords):
-					k.write_new_grdecl(output_file, val, narr[:,j].tolist())
-	
-	if matlab_export:
-					print "Iterating grids..."
-					output_keywords = ('B_SGAS', 'B_SWAT', 'B_PORO', 'B_PRESS', 'M_SGAS', 'M_SWAT', 'M_PORO', 'M_PRESS')
-					narr_active = np.zeros((base.active_size, len(output_keywords)))
-					print base.active_size
-					k = 0
-					prog = ProgressBar(k, base.active_size, 77, mode='fixed', char='+')
-					for t_base, t_mon in izip(base.iter_grid(gassmann, 1), mon.iter_grid(gassmann, 1)):
-									narr_active[k, 0] = t_base[3]
-									narr_active[k, 1] = t_base[4]
-									narr_active[k, 2] = t_base[5]
-									narr_active[k, 3] = t_base[6]
-									narr_active[k, 4] = t_mon[3] # Sgas
-									narr_active[k, 5] = t_mon[4] # Swat 
-									narr_active[k, 6] = t_mon[5] # Poro
-									narr_active[k, 7] = t_mon[6] # Pressure
-									
-									k += 1
-									if k % (base.active_size / 100) == 0:
-													prog.update_amount(k)
-													print prog, '\r',
-													sys.stdout.flush()
-					print
-					
-					for j, val in enumerate(output_keywords):
-									file_string = "%s.dat" % val
-									print "Exporting (Matlab) to file: '%s'" % file_string
-									narr_active[:,j].tofile(file_string, "\n", "%s")
-					
+  cache.write_zone_grdecl(base, output_file)
+  cache.write_zone_datfiles(base)
 
