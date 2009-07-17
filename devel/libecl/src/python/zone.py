@@ -6,7 +6,7 @@ import ConfigParser
 from itertools import *
 
 
-class Gassmann(Zone):
+class Gassmann_Zone(Zone):
   def __init__(self, config, restart_file):
     self.restart_file = restart_file
     self.grid_file = None
@@ -92,11 +92,13 @@ class Gassmann(Zone):
 
 
 if __name__ == '__main__':
+
   try:
     assert (len(sys.argv) == 2) 
   except AssertionError:
     print 'Usage: %s <config>' % (sys.argv[0]) 
     sys.exit()
+    
   try:
     config_file = sys.argv[1]
     fp = open(config_file)
@@ -114,12 +116,15 @@ if __name__ == '__main__':
   except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
     raise e
 
-  base = Gassmann(config, restart_base_file)
-  mon = Gassmann(config, restart_mon_file)
-  another = Gassmann(config, "RG01-STRUCT-24.X0250")
+  base = Gassmann_Zone(config, restart_base_file)
+  mon = Gassmann_Zone(config, restart_mon_file)
+  another = Gassmann_Zone(config, "RG01-STRUCT-24.X0250")
 
   cache = Zone_Cache(base.grid_file)
-  cache.addzone(base, mon, another)
+  
+  for a_i, val in enumerate(base.iter_grid(1)):
+    pass
+  cache.addzone(base, base, mon, another)
 
   a = cache.get_active_list(base, 'GM_VP')
   b = cache.get_active_list(mon, 'GM_VP')
@@ -143,4 +148,5 @@ if __name__ == '__main__':
 
   cache.write_zone_grdecl(base, output_file)
   cache.write_zone_datfiles(base)
+  
 

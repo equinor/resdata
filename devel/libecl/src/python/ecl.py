@@ -3,7 +3,84 @@ import pprint as pp
 import sys
 import time
 
+## TODO:
+## - Don't use iget_data, rather grab the entire data vector, and 
+##   and store it directly. (This was a problem because of how to 
+##   handle (void *) to a (float/double *) in swig.
+##
 ####################################################################
+##
+## Here is a small overview of the classes and how it works together.
+##
+## The objective is to be able to do calculations on the zones and 
+## between different zones as easy as possible.
+##
+## Calculations (how it can be done):
+##    When you want to do calculations from one restart file (or
+##    one zone), you do these calculations in the pointer function
+##    of your own choice and return the calculated values with their 
+##    corresponding keywords.
+##    
+##    On the other hand, after you have done calculations on single
+##    zones, you might want to compare the calculated data between
+##    multiple zones. This is where you have to cache the zone data
+##    and then pick it back up again from your zones of choice before
+##    doing your zone comparasion calculations.
+##
+## An example:
+##    In this example we load two restartfiles, and imagine that Demo_Zone has 
+##    a function that threats the data and hands out a calculated CUSTOM_KW.
+##    (Though, the actual calculation has not really been done yet, it will first
+##    be done if you iterate the grid or cache the grid).
+##
+##    The cache zone is then loaded, and the Demo_Zones are added to the cache,
+##    before beeing recived and manipulated vs eachother. Then a new keyword
+##    is added to the cache Zone_Cache class before all the cache keywords
+##    are written to a RMS/ECLIPSE readable format.
+##
+##    class Demo_Zone(Zone):
+##      def __init__(self):
+##        # The folliwing variables HAS to be set
+##        self.restart_file = ...
+##        self.grid_file = ...
+##        self.init_file = ...
+##
+##        # Now define the function for doing calculations.
+##        # This functions has to take the argument "active_index".
+##        self.func = self.do_calc_func          
+##
+##        # NOW, initialize the Zone parent.
+##        Zone.__init__(self)
+##      
+##      def do_calc_func(self, active_index):
+##        poro = self.get_keyword_data("PORO", active_index)
+##
+##        try:
+##          a = poro*0.5
+##        except, ArithmeticError, e:
+##          raise e
+##        else:
+##          return dict(CUSTOM_KW = a)
+##
+##
+##    base = Demo_Zone("gridfile.EGRID", "initfile.INIT", "restartfile.X00000")
+##    monitor = Demo_Zone("gridfile.EGRID", "initfile.INIT", "restartfile.X99999")
+##    cache = Zone_Cache("gridfile.EGRID")
+##    cache.addzone(base, monitor)
+##    a = cache.get_active_list(base, "CUSTOM_KW")
+##    b = cache.get_active_list(monitor, "CUSTOM_KW")
+##    difference = [b - a for a, b in zip(a, b)]
+##    cache.add_keyword("CUSTOM_DIFFERENCE", difference)
+##    cache.write_grdecl("demo.GRDECL")
+##
+## Another example:
+##    If you just want to iterate trough the grid and grab the values as you go, this 
+##    is also possible. It is also possible to optionally do the caching at this iterations.
+##    
+##    [... snip code ...]
+##    for a_i, val in enumerate(base.iter_grid(1)):
+##      print "active index: %d, val: %f" % (a_i, val["GM_VP"])
+##
 ##
 ## class: Zone
 ##        - Loads the ECL files, has methods for grabbing ECL
@@ -11,7 +88,7 @@ import time
 ##        - Contains empty cache variables until they are filled
 ##          by the Zone_Cache class.
 ##
-## class: Gassmann (inherits Zone)
+## class: Gassmann_Zone (inherits Zone)
 ##        - Defines function pointer doing calculations
 ##        - Load its own personal configuration options.
 ##        - The returned dictionary from the function pointer
@@ -60,7 +137,18 @@ class Zone_Cache:
   def addzone(self, *zones):
     for zone in zones:
       print "adding ...", zone
+
+      if zone in self.zones:
+        print "Warning:" , zone, "already added, skipping."
+        continue
+
+      if len(zone.active_cache) == self.active_size:
+        print "Warning:", zone, "cache has already been filled, skipping."
+        self.zones.append(zone)
+        continue
+
       self.zones.append(zone)
+
       for j in xrange(0, self.global_size):
         ret = zone.grid.get_active_index1(j)
         if ret != -1:
@@ -171,17 +259,14 @@ class Zone:
 	
     raise "Error: could not find keyword: '%s'" % kw
 
-  def iter_grid(self, ret_active = 0, cache = 0):
+  def iter_grid(self, cache = 0):
     print "Start iterating grid."
     for j in xrange(0, self.global_size):
       ret = self.grid.get_active_index1(j)
-      if ret == -1:
-        if ret_active == 0:
-          yield None
-      else:
+      if ret != -1:
         dic = self.func(ret)
         if cache:
-          self.active_cache.append(ret)
+          self.active_cache.append(dic)
           if len(self.active_cache) == 1:
             self.kw_keys = dic.keys()
           
@@ -417,6 +502,9 @@ class fortio:
 		fortio_fclose(self.fortio)
 
 	def read_data(self, kw):
+    ## FIXME
+    ## UNDER CONSTRUCTION AREA!
+    ## 
 		kw_type = ecl_kw_fread_alloc(self.fortio)
 		if ecl_kw_fseek_kw(kw, 1, 0, self.fortio):
 			ecl_kw_fread_realloc(kw_type, self.fortio)
