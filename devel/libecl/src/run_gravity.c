@@ -166,7 +166,7 @@ void load_stations(vector_type * grav_stations , const char * filename) {
  
 
     Observe that in all the examples above 'xxx' signifies argv arguments
-    which this function does not care about. On return the *arg_offset
+    which this function does not care about. The return the *arg_offset
     variable will be set to indicate this index:
 
     char ** input = argv[1];
