@@ -188,8 +188,12 @@ bool is_in_quoters(
 
   should return 4.
 
-  If the character can not be found, it will
-  return the length of the buffer.
+  If the character can not be found, the function will fail with
+  util_abort() - all quotation should be terminated (Joakim - WITH
+  moustache ...). Observe that this function does not allow for mixed
+  quotations, i.e. both ' and " might be vald as quaotation
+  characters; but one quoted string must be wholly quoted with EITHER
+  ' or ".
 
   Escaped occurences of the first character are
   not counted. E.g. if TOKENIZER_ESCAPE_CHAR
@@ -216,6 +220,10 @@ int length_of_quotation(
   }
   length += 1;
 
+  if ( current == '\0') /* We ran through the whole string without finding the end of the quotation - abort HARD. */
+    util_abort("%s: could not find quotation closing on %s \n",__func__ , buffer);
+  
+  
   return length;
 }
 
@@ -396,12 +404,11 @@ stringlist_type * tokenize_buffer(
     }
 
     /**
-      If the character is a quotation start,
-      we copy the whole quotation.
+       If the character is a quotation start, we copy the whole quotation.
     */
     if( is_in_quoters( buffer[position], tokenizer ) )
     {
-      int length = length_of_quotation( &buffer[position] );
+      int length   = length_of_quotation( &buffer[position] );
       char * token = alloc_quoted_token( &buffer[position], length, strip_quote_marks );
       stringlist_append_owned_ref( tokens, token );
       position += length;
@@ -454,16 +461,3 @@ stringlist_type * tokenize_file(
   return tokens;
 }
 
-
-
-
-///**
-//   This function will read from an open stream, until the 
-//
-//stringlist_type * tokenize_stream(const tokenizer_type * tokenizer, 
-//                                  FILE * stream            , 
-//                                  const char * stop_string , 
-//                                  bool strip_quote_marks) {
-//
-//
-//}
