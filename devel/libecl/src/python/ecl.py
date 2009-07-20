@@ -113,6 +113,11 @@ import time
 ##
 ####################################################################
 
+class Rockphysics:
+  def apply(self, zone, active_index):
+    print "Sorry, this is an abstract class."
+    raise
+            
 class Zone_Cache:
 
   def __init__(self, grid_file):
@@ -241,55 +246,63 @@ class Zone_Cache:
     
 
 class Zone:
-  def __init__(self):
+  def __init__(self, grid_file, keywords = None, *arglist):
     try:
-      assert self.grid_file != None, 'grid file not set!'
-      assert self.init_file != None, 'init file not set!'
-      assert self.restart_file != None, 'restart file not set!'
+      assert grid_file != None, 'grid file not set!'
     except AssertionError, e:
       print "Error: %s, parameter required for Zone class!" % e
       sys.exit()
-    self.grid = ecl_grid(self.grid_file)
-    self.init = ecl_file(self.init_file)
-    self.restart = ecl_file(self.path + self.restart_file)
-    self.dims = self.grid.get_dims()
-    self.active_size = self.dims[3]
-    self.global_size = self.grid.get_global_size()
+      
+    self.grid = ecl_grid(grid_file)
+    ecl_file_list = list()
+    for val in arglist:
+      ecl_file_list.append(ecl_file(val))
     
-    self.active_cache = list()
-    self.global_cache = list()
+    self.keywords = keywords
+    self.cache = dict()
+    self.cache_list(ecl_file_list)
 
-    self.temp_cache = dict()
+  def cache_list(self, ecl_file_list):
+    for f in ecl_file_list:
+      for j in xrange(f.get_num_distinct_kw()):
+        str_kw = f.iget_distinct_kw(j)
+        if str_kw in self.keywords:
+          print "Caching: '%s'" % str_kw
+          kw_type = f.iget_named_kw(str_kw, 0)
+          items = list()
+          for i in xrange(0, self.grid.get_global_size()):
+            ret = self.grid.get_active_index1(i)
+            if ret != -1:
+              data = kw_type.iget_data(ret)
+              items.append(data)
+          print len(items) 
+          self.cache[str_kw] = items
 
-  def get_keyword_data(self, kw, index):
-    init = self.init
-    restart = self.restart
+  def get_data(self, kw, active_index):
+    return self.cache[kw][active_index]
 
-    if restart.has_kw(kw):
-      kw_type = restart.iget_named_kw(kw, 0)
-      return kw_type.iget_data(index)
-    if init.has_kw(kw):
-      kw_type = init.iget_named_kw(kw, 0)
-      return kw_type.iget_data(index)
-    
-	
-    raise "Error: could not find keyword: '%s'" % kw
-
-  def iter_grid(self, cache = 0):
-    print "Start iterating grid."
-    for j in xrange(0, self.global_size):
-      ret = self.grid.get_active_index1(j)
+  def apply_function(self, obj):
+    print "Applying function", obj
+    for i in xrange(0, self.grid.get_global_size()):
+      ret = self.grid.get_active_index1(i)
       if ret != -1:
-        dic = self.func(ret)
-        if cache:
-          self.active_cache.append(dic)
-          if len(self.active_cache) == 1:
-            self.kw_keys = dic.keys()
-          
-        yield dic
+        if isinstance(obj, Rockphysics):
+          data = obj.apply(self, ret)
+          for key in data.keys():
+            if not self.cache.has_key(key):
+              self.cache[key] = list()
+           
+            self.cache[key].append(data[key])
 
+  def compute_differences(self, mon, base):
+    for key in base.cache.keys():
+      if key in mon.cache.keys():
+        diff = list()
+        diff = [b - a for a, b in zip(base.cache[key], mon.cache[key])]
+        self.cache[key] = diff
 
-
+  def get_keywords(self):
+    return self.cache.keys()
 
 
 ####################################################################

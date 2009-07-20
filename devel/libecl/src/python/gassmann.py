@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-from ecl import *
 from math import *
 import sys
 import ConfigParser
 from itertools import *
+import getopt
+from ecl import *
 
 
 class Gassmann_Zone(Zone):
@@ -91,16 +92,40 @@ class Gassmann_Zone(Zone):
       return ret
 
 
+def display_usage():
+    print 'Usage: %s --config=<config_file>' % (sys.argv[0]) 
+
+    print """
+    Options: 
+    """
+  
+
 if __name__ == '__main__':
 
   try:
-    assert (len(sys.argv) == 2) 
-  except AssertionError:
-    print 'Usage: %s <config>' % (sys.argv[0]) 
-    sys.exit()
-    
+    opts, args = getopt.getopt(sys.argv[1:], "hc:i:f:t:", ["help", "config=", "iens=", "from=", "to="])
+  except getopt.GetoptError, err:
+    print str(err)
+    display_usage()
+    sys.exit(2)
+
+  iens, report_from, report_to = None, None, None
+  for o, a in opts:
+    if o in ("-h", "--help"):
+      display_usage();
+      sys.exit(2)
+    elif o in ("-c", "--config"):
+      config_file = a
+    elif o in ("-i", "--iens"):
+      iens = int(a)
+    elif o in ("-f", "--from"):
+      report_from = int(a)
+    elif o in ("-t", "--to"):
+      report_to = int(a)
+    else:
+      assert False, "unhandled option"
+        
   try:
-    config_file = sys.argv[1]
     fp = open(config_file)
   except IOError, e:
     print "Unable to open '%s': %s" % (config_file, e)
@@ -109,9 +134,11 @@ if __name__ == '__main__':
   config = ConfigParser.ConfigParser()
   config.readfp(fp)
   try:
+    grid_file = self.path + config.get('project', 'grid_file')
     restart_base_file = config.get('project', 'restart_base')
     restart_mon_file = config.get('project', 'restart_mon')
-    output_file = config.get('project', 'output_file')
+    output_file = config.get('script', 'output_file')
+    output_path = config.get('script', 'output_path')
     matlab_export = config.getboolean('script', 'matlab_export')
   except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
     raise e
@@ -120,8 +147,8 @@ if __name__ == '__main__':
   mon = Gassmann_Zone(config, restart_mon_file)
   another = Gassmann_Zone(config, "RG01-STRUCT-24.X0250")
 
-  cache = Zone_Cache(base.grid_file)
-  cache.addzone(base, base, mon, another)
+  cache = Zone_Cache(grid_file)
+  cache.addzone(base, mon, another)
 
   a = cache.get_active_list(base, 'GM_VP')
   b = cache.get_active_list(mon, 'GM_VP')
@@ -139,11 +166,21 @@ if __name__ == '__main__':
   cache.add_keyword("GM_SG_D", sgas_diff)
   cache.add_keyword("GM_VP_M", mult)
   cache.add_keyword("GM_VP_M2", mult2)
+
+  print iens, report_from, report_to
   
-  cache.write_grdecl("grane_cache.GRDECL")
+  if iens != None and report_from != None and report_to != None:
+    low = output_file.lower()
+    tmp = low.replace('.grdecl', '')
+    file_string = "%s/%s-%d-step-%d-to-%d.GRDECL" % (output_path, tmp, iens, report_from, report_to)
+    print file_string
+  else:
+    file_string = "%s/%s" % (output_path, output_file)
+   
+  cache.write_grdecl(file_string)
   cache.write_datfiles()
 
-  cache.write_zone_grdecl(base, output_file)
-  cache.write_zone_datfiles(base)
+#  cache.write_zone_grdecl(base, output_file)
+#  cache.write_zone_datfiles(base)
   
 
