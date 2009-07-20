@@ -22,7 +22,12 @@
 
 
 int main(int argc , char ** argv) {
-  path_fmt_type * p = path_fmt_alloc_directory_fmt("/some/path%d");
-  path_fmt_free( p );
+  FILE * stream = util_fopen("util.c","r");
+  while (util_fseek_string(stream , "seek")) {
+    printf("Found seek at position: %d \n",ftell(stream));
+    fseek( stream , 1 , SEEK_CUR);
+  }
+    
+  fclose(stream);
 }
 

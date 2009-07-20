@@ -195,8 +195,8 @@ bool is_in_quoters(
   not counted. E.g. if TOKENIZER_ESCAPE_CHAR
   occurs in front of a new occurence of the first
   character, this is *NOT* regarded as the end.
-  
 */
+
 static
 int length_of_quotation(
   const char * buffer)
@@ -453,3 +453,17 @@ stringlist_type * tokenize_file(
   free(buffer);
   return tokens;
 }
+
+
+
+
+///**
+//   This function will read from an open stream, until the 
+//
+//stringlist_type * tokenize_stream(const tokenizer_type * tokenizer, 
+//                                  FILE * stream            , 
+//                                  const char * stop_string , 
+//                                  bool strip_quote_marks) {
+//
+//
+//}

@@ -286,7 +286,7 @@ void     util_update_path_var(const char * , const char * , bool );
 void 	 util_fskip_int(FILE * stream);
 void 	 util_fskip_long(FILE * stream);
 void 	 util_fskip_bool(FILE * stream);
-
+bool     util_fseek_string(FILE * stream , const char * string);
 
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }

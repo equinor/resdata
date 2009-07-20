@@ -184,6 +184,53 @@ void util_rewind_line(FILE *stream) {
 
 
 
+/**
+   This function will reposition the stream pointer at the (beginning
+   of) the first occurence of 'string'. If 'string' is found the
+   function will return true, otherwise the function will return
+   false, and stream pointer will be unchanged.
+*/
+
+bool util_fseek_string(FILE * stream , const char * string) {
+  int len              = strlen( string );
+  long int initial_pos = ftell( stream );   /* Store the inital position. */
+  bool string_found    = false;
+  bool cont            = true;
+  do {
+    int c = fgetc( stream );
+    if (c == string[0]) {  /* OK - we got the first character right - lets try in more detail: */
+      long int current_pos  = ftell(stream);
+      bool     equal        = true;
+
+      for (int string_index = 1; string_index < len; string_index++) {
+        c = fgetc( stream );
+        if (c != string[string_index]) {
+          equal = false;
+          break;
+        }
+      }
+
+      if (equal) {
+        string_found = true;
+        cont = false;
+      } else /* Go back to current pos and continue searching. */
+        fseek(stream , current_pos , SEEK_SET);
+      
+    }
+    if (c == EOF) 
+      cont = false;
+  } while (cont);
+  
+  
+  if (string_found)   
+    fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
+  else
+    fseek(stream , initial_pos , SEEK_SET);      /* Could not find the string reposition at initial position. */
+  
+  return string_found;
+}
+
+
 static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line) {
   int init_pos = ftell(stream);
   char * new_line;

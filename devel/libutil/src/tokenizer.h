@@ -42,30 +42,30 @@ typedef struct tokenizer_struct tokenizer_type;
 
   SPECIAL CHARACTERS 
   
-  Some times it can be useful to define a set of 
-  characters that behaves like white space in the sense
-  that they separate tokens in the source, but does not
-  get dropped. For example, letting "=" be a special
-  character, tokenzing "key=value" would give:
+  Some times it can be useful to define a set of characters which
+  behave like white space in the sense that they separate tokens in
+  the source, but they do not get dropped. For example, letting "=" be
+  a special character, tokenzing "key=value" would give:
 
   Token number 0 is "key"
   Token number 1 is "="
   Token number 2 is "value"
 
-  The special characters are given in the "specials"
-  string when allocating the tokenizer.
+  The special characters are given in the "specials" string when
+  allocating the tokenizer.
 
 
 
   QUOTERS
 
-  When parsing user input, the user often wants to
-  provide e.g. a filename with a white-space character
-  in it. To support this, the tokenizer can be given
-  a set of quoters. For example, letting " " be white
-  space and adding "'" to the quoters, tokenizing
-  "my_file = 'my documents with space in.txt'" would
-  give:
+  When parsing user input, the user often wants to provide e.g. a
+  filename with a white-space character in it. To support this, the
+  tokenizer can be given a set of quoters. For example, letting " " be
+  white space and adding "'" to the quoters, tokenizing 
+
+   "my_file = 'my documents with space in.txt'" 
+
+  would give:
 
   Token number 0 is "my_file"
   Token number 1 is "="
