@@ -188,7 +188,7 @@ void util_rewind_line(FILE *stream) {
    This function will reposition the stream pointer at the (beginning
    of) the first occurence of 'string'. If 'string' is found the
    function will return true, otherwise the function will return
-   false, and stream pointer will be unchanged.
+   false, and stream pointer will be at the original position.
 */
 
 bool util_fseek_string(FILE * stream , const char * string) {
@@ -225,9 +225,35 @@ bool util_fseek_string(FILE * stream , const char * string) {
   if (string_found)   
     fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
   else
-    fseek(stream , initial_pos , SEEK_SET);      /* Could not find the string reposition at initial position. */
+    fseek(stream , initial_pos , SEEK_SET);     /* Could not find the string reposition at initial position. */
   
   return string_found;
+}
+
+
+
+/**
+  This function will allocate a character buffer, and read file
+  content all the way up to (not including) 'stop_string'. If the
+  stop_string is not found, the function will return NULL, and the
+  file pointer will be unchanged.
+*/
+
+
+
+char * util_fscanf_alloc_upto(FILE * stream , const char * stop_string) {
+  long int start_pos = ftell(stream);
+  if (util_fseek_string(stream , stop_string)) {
+    long int end_pos = ftell(stream);
+    int      len     = end_pos - start_pos;
+    char * buffer    = util_malloc(len + 1 , __func__);
+    fseek(stream , start_pos , SEEK_SET);
+    util_fread( buffer , 1 , len , stream , __func__);
+    buffer[len] = '\0';
+    
+    return buffer;
+  } else
+    return NULL;   /* stop_string not found */
 }
 
 

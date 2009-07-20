@@ -23,11 +23,9 @@
 
 int main(int argc , char ** argv) {
   FILE * stream = util_fopen("util.c","r");
-  while (util_fseek_string(stream , "seek")) {
-    printf("Found seek at position: %d \n",ftell(stream));
-    fseek( stream , 1 , SEEK_CUR);
-  }
-    
+  char * buffer = util_fscanf_alloc_upto(stream , "enkf");
+  printf("%s" , buffer);
+  free(buffer);
   fclose(stream);
 }
 
