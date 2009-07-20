@@ -3,11 +3,6 @@ import pprint as pp
 import sys
 import time
 
-## TODO:
-## - Don't use iget_data, rather grab the entire data vector, and 
-##   and store it directly. (This was a problem because of how to 
-##   handle (void *) to a (float/double *) in swig.
-##
 ####################################################################
 ##
 ## Here is a small overview of the classes and how it works together.
@@ -26,6 +21,22 @@ import time
 ##    multiple zones. This is where you have to cache the zone data
 ##    and then pick it back up again from your zones of choice before
 ##    doing your zone comparasion calculations.
+##
+## Writing / output:
+##    The Zone_Cache class has some export functions, these are classifies
+##    in the following way:
+##      - To export the Zone keywords, use write_zone_*() functions.
+##      - To export the Zone_Cache keywords (added to the cache with the 
+##        function cache.add_keyword('KW', list), you use the write_*()
+##        functions.
+##
+## Bottleneck (or not??)
+##    It seems like the lookup of the data values itself is kind of slow
+##    trough all the layers of wrapping (though I have not tried it on the C
+##    layer). But there is no horrible wrappers going on when keyword data values
+##    are beeing picked up from the restart or init files, so it should not be 
+##    a swig bottleneck.
+##
 ##
 ## An example:
 ##    In this example we load two restartfiles, and imagine that Demo_Zone has 
@@ -79,22 +90,22 @@ import time
 ##    
 ##    [... snip code ...]
 ##    for a_i, val in enumerate(base.iter_grid(1)):
-##      print "active index: %d, val: %f" % (a_i, val["GM_VP"])
+##      print "active index: %d, val: %f" % (a_i, val["CUSTOM_KW"])
 ##
 ##
-## class: Zone
+## file: ecl.py, class: Zone
 ##        - Loads the ECL files, has methods for grabbing ECL
 ##          data, and iterating the grid.
 ##        - Contains empty cache variables until they are filled
 ##          by the Zone_Cache class.
 ##
-## class: Gassmann_Zone (inherits Zone)
+## file: gassmann.py, class: Gassmann_Zone (inherits Zone)
 ##        - Defines function pointer doing calculations
 ##        - Load its own personal configuration options.
 ##        - The returned dictionary from the function pointer
 ##          defines what keywords the zone has available.
 ##  
-## class: Zone_Cache
+## file: ecl.py, class: Zone_Cache
 ##        - Stores lists of the data, for easy access when comparing
 ##          different zones and doing arithmetic operations.
 ##        - The objects stored in the cache is also writeable to
@@ -136,19 +147,17 @@ class Zone_Cache:
 
   def addzone(self, *zones):
     for zone in zones:
-      print "adding ...", zone
+      print "Adding ...", zone
 
       if zone in self.zones:
         print "Warning:" , zone, "already added, skipping."
         continue
-
       if len(zone.active_cache) == self.active_size:
         print "Warning:", zone, "cache has already been filled, skipping."
         self.zones.append(zone)
         continue
 
       self.zones.append(zone)
-
       for j in xrange(0, self.global_size):
         ret = zone.grid.get_active_index1(j)
         if ret != -1:
@@ -166,7 +175,6 @@ class Zone_Cache:
   def write_zone_grdecl(self, zone, file):
     if zone not in self.zones:
       raise "the zone you asked for has not been added!"
-
     if len(zone.kw_keys) == 0:
       print "You need to iterate or cache the grid first!"
    
@@ -224,7 +232,12 @@ class Zone_Cache:
       f = open(file_string, 'w')
       f.writelines(l_a)
       f.close()
-    pass
+
+    def write_ipl(self):
+      # TODO: Write an IPL file whichs loads the EGRID, includes
+      # all restart files, also imports every grdecl file 
+      # that has been written.
+      pass
     
 
 class Zone:
@@ -246,16 +259,19 @@ class Zone:
     self.active_cache = list()
     self.global_cache = list()
 
+    self.temp_cache = dict()
+
   def get_keyword_data(self, kw, index):
     init = self.init
     restart = self.restart
-    
-    if init.has_kw(kw):
-      kw_type = init.iget_named_kw(kw, 0)
-      return kw_type.iget_data(index)
+
     if restart.has_kw(kw):
       kw_type = restart.iget_named_kw(kw, 0)
       return kw_type.iget_data(index)
+    if init.has_kw(kw):
+      kw_type = init.iget_named_kw(kw, 0)
+      return kw_type.iget_data(index)
+    
 	
     raise "Error: could not find keyword: '%s'" % kw
 
@@ -454,7 +470,6 @@ class ecl_kw:
 		return list
 	def iget_data(self, index):
 		return ecl_kw_iget_as_double(self.k, index);
-#		return ecl_kw_iget_ptr_wrap(self.k, index)
 	def write_new_grdecl(self, filename, kw, list):
 		size = len(list);
 		mode = "w"
@@ -465,6 +480,14 @@ class ecl_kw:
 			mode = "a"
 			ecl_kw_free_data(self.k)
 
+    # TODO: This currently only supports one type
+
+    # The grdecl files will be of the format 
+    # 0.15235971158633D+04    "DOUB"
+    # 0.15235972E+04          "REAL"
+
+		#ecl_kw_set_header(self.k, kw, size, "DOUB")
+		#ecl_kw_alloc_double_data(self.k, list)
 		ecl_kw_set_header(self.k, kw, size, "REAL")
 		ecl_kw_alloc_float_data(self.k, list)
 		

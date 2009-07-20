@@ -1,6 +1,6 @@
 TARGET     = libecl
-CC         = gcc
-CFLAGS     = -g -fPIC -Wall 
+CC         = gcc4
+CFLAGS     = -g -fPIC -Wall -std=gnu99 
 HEADERS    = #../ecl_sum.h ../ecl_util.h
 SRCS       = #../ecl_sum.c ../ecl_util.c
 INCLUDES   = -I../../include -I../../../libutil/include

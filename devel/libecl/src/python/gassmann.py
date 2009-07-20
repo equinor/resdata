@@ -121,9 +121,6 @@ if __name__ == '__main__':
   another = Gassmann_Zone(config, "RG01-STRUCT-24.X0250")
 
   cache = Zone_Cache(base.grid_file)
-  
-  for a_i, val in enumerate(base.iter_grid(1)):
-    pass
   cache.addzone(base, base, mon, another)
 
   a = cache.get_active_list(base, 'GM_VP')
