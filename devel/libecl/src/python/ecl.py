@@ -4,12 +4,6 @@ import sys
 import time
 import os
 
-####################################################################
-##
-## Here is a small overview of the classes and how it works together.
-##
-##
-####################################################################
 
 class AbstractMethod (object):
   def __init__(self, func):
@@ -30,47 +24,92 @@ class AbstractMethod (object):
 class Rockphysics(object):
   apply = AbstractMethod('apply')
 
-            
+
+####################################################################
+##
+## For usage example look at gassmann.py
+##
+####################################################################
+ 
 class Zone:
-  def __init__(self, grid_file, keywords = None, *arglist):
+  def __init__(self, grid_file, keywords = list(), *arglist):
     try:
       assert grid_file != None, 'grid file not set!'
     except AssertionError, e:
       print "Error: %s, parameter required for Zone class!" % e
-      sys.exit()
-      
+      return
+
     self.grid_file = grid_file
     self.grid = ecl_grid(grid_file)
-    ecl_file_list = list()
-    for val in arglist:
-      ecl_file_list.append(ecl_file(val))
-    print self 
-    self.keywords = keywords
     self.cache = dict()
+    self.keywords = keywords
+
+    ecl_file_list = list()
+    for val in arglist: 
+      ecl_file_list.append(ecl_file(val))
     self.cache_list(ecl_file_list)
 
+    
   def __sub__(self, zone):
-    if self.grid_file is not zone.grid_file:
-      raise "Grid files are not the same in the substraction!"
+    if isinstance(self, Zone) and isinstance(zone, Zone):
+      if self.grid_file is not zone.grid_file:
+        raise "Grid files are not the same in the substraction!"
 
-    print self, zone
-
-    mon = self
-    base = zone
-   
-    new_zone = Zone(self.grid_file)
-    for key in mon.cache.keys():
-      if key in base.cache.keys():
-        print "Doing sub for '%s'" % key
+      new_zone = Zone(self.grid_file)
+      for key in self.shared_keys(self, zone):
         diff = list()
-        diff = [b - a for a, b in zip(base.cache[key], mon.cache[key])]
-#        new_key = "DIFF_%s" % key
+        diff = [a - b for a, b in zip(self.cache[key], zone.cache[key])]
         new_zone.cache[key] = diff
 
+    elif isinstance(self, Zone) and (isinstance(zone, int) 
+        or isinstance(zone, float)):
+
+      new_zone = Zone(self.grid_file)
+      for key in self.cache.keys():
+        diff = list()
+        diff = [a - zone for a in self.cache[key]]
+        new_zone.cache[key] = diff
+    else:
+      print "ERROR: One or more of the substraction types are not supported!"
+      sys.exit()
+    
     return new_zone
 
-  ## This functions takes an active idnex list and 
-  ## returns a global index list.
+
+  def __add__(self, zone):
+    if self.grid_file is not zone.grid_file:
+      raise "Grid files are not the same in the addition!"
+
+    new_zone = Zone(self.grid_file)
+    for key in self.shared_keys(self, zone):
+      print "Doing add for '%s'" % key
+      add = list()
+      add = [a + b for a, b in zip(self.cache[key], zone.cache[key])]
+      new_zone.cache[key] = add
+    return new_zone
+
+
+  def __mul__(self, zone):
+    if self.grid_file is not zone.grid_file:
+      raise "Grid files are not the same in the multiplication!"
+
+    new_zone = Zone(self.grid_file)
+    for key in self.shared_keys(self, zone):
+      print "Doing mult for '%s'" % key
+      add = list()
+      add = [a * b for a, b in zip(self.cache[key], zone.cache[key])]
+      new_zone.cache[key] = add
+    return new_zone
+
+
+  def shared_keys(self, zone1, zone2):
+    for key in zone1.cache.keys():
+      if key in zone2.cache.keys():
+        yield key
+
+
+  # This functions takes an active index list and 
+  # returns a global index list.
   def convert_list(self, l_a, dummy_val = 0):
     k = 0
     l_g = list();
@@ -81,16 +120,30 @@ class Zone:
       else:
         l_g.append(l_a[k])
         k += 1
-
+        
     return l_g
+
+
+  def load_data_from_file(self, keywords, *arglist):
+    if len(self.keywords) > 0:
+      print "Load from file warning: already keywords in the zone, may be overwriting!"
+
+    ecl_file_list = list()
+    self.keywords = keywords
+    for val in arglist: 
+      ecl_file_list.append(ecl_file(val))
+    self.cache_list(ecl_file_list)
 
   def cache_list(self, ecl_file_list):
     for f in ecl_file_list:
       for j in xrange(f.get_num_distinct_kw()):
         str_kw = f.iget_distinct_kw(j)
         if str_kw in self.keywords:
-          print "Adding keyword: '%s'" % str_kw
-          kw_type = f.iget_named_kw(str_kw, 0)
+
+          # Only grabbing the first occurance of the keyword
+          # here, so this will fail with LGR.
+          ith_kw = 0
+          kw_type = f.iget_named_kw(str_kw, ith_kw)
           items = list()
           for i in xrange(0, self.grid.get_global_size()):
             ret = self.grid.get_active_index1(i)
@@ -99,11 +152,12 @@ class Zone:
               items.append(data)
           self.cache[str_kw] = items
 
+
   def get_data(self, kw, active_index):
     return self.cache[kw][active_index]
 
+
   def apply_function(self, obj):
-    print "Applying function", obj
     for i in xrange(0, self.grid.get_global_size()):
       ret = self.grid.get_active_index1(i)
       if ret != -1:
@@ -114,17 +168,47 @@ class Zone:
            
           self.cache[key].append(data[key])
 
-  def compute_differences(self, mon, base):
-    for key in base.cache.keys():
-      if key in mon.cache.keys():
-        diff = list()
-        diff = [b - a for a, b in zip(base.cache[key], mon.cache[key])]
-        self.cache[key] = diff
+
+  def rename(self, old_kw, new_kw):
+    if self.cache.has_key(old_kw):
+      l = self.cache[old_kw]
+      self.cache.pop(old_kw)
+      self.cache[new_kw] = l
+    else:
+      print "Rename warning: no such keyword '%s'" % old_kw
+
+
+  def delete(self, kw):
+    if self.cache.has_key(kw):
+      self.cache.pop(kw)
+    else:
+      print "Delete warning: no such keyword '%s'" % kw
+
+
+  def load(self, zone, kw):
+    if zone.cache.has_key(kw):
+      l = zone.cache[kw]
+      if self.cache.has_key(kw):
+        self.delete(kw)
+        print "Replacing '%s'" % kw
+      self.cache[kw] = l
+    else:
+      print "Load warning: no such keyword '%s'" % kw
+
 
   def get_keywords(self):
     return self.cache.keys()
 
+
+  def get_values(self, kw):
+    return self.cache[kw]
+
+
   def append_keyword_to_grdecl(self, file, kw, new_kw = None):
+    if not self.cache.has_key(kw):
+      print "Append grdecl warning: no such keyword '%s'" % kw
+      return
+    
     if os.path.isfile(file): mode = 'a'
     else: mode = 'w'
     if new_kw is None: write_kw = kw
@@ -135,7 +219,12 @@ class Zone:
     k = ecl_kw()
     k.write_new_grdecl(file, write_kw, l_g, mode)
 
+
   def append_keyword_to_dat(self, file, kw, new_kw = None):
+    if not self.cache.has_key(kw):
+      print "Append dat warning: no such keyword '%s'" % kw
+      return
+    
     if os.path.isfile(file): mode = 'a'
     else: mode = 'w'
     if new_kw is None: write_kw = kw
@@ -151,6 +240,7 @@ class Zone:
     f = open(file, mode)
     f.writelines(l_a)
     f.close()
+
 
   def write_all_keywords_to_grdecl(self, file):
     print "Writing %d keywords to '%s'" % (len(self.cache.keys()), file)

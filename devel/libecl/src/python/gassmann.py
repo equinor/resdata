@@ -133,45 +133,21 @@ if __name__ == '__main__':
   mon = Zone(grid_file, keywords, init_file, restartfile_mon)
   mon.apply_function(Gassmann(config))
 
-  diff = mon - base - base
-  print diff
-  print diff.get_keywords()
-#  diff.compute_differences(mon, base)
+  test = Zone(grid_file)
+  test.load_data_from_file(keywords, init_file, restartfile_mon)
 
-  diff.append_keyword_to_grdecl("diff.GRDECL", "VP")
-  base.append_keyword_to_grdecl("foobar.GRDECL", "VP", "VPBASE")
+  diff = mon - base
+  diff.rename("VP", "VP_DIFF")
+  diff.delete("PORO")
+
+  base.load(diff, "VP_DIFF")
+  base.delete("VP_DIFF")
+  a = base.get_values("VP")
+  b = mon.get_values("VP")
+
+  diff.append_keyword_to_grdecl("diff.GRDECL", "VP_DIFF")
+  mon.append_keyword_to_grdecl("foobar.GRDECL", "VP")
+
   base.append_keyword_to_dat("foobar.dat", "VP", "VPBASE")
   base.write_all_keywords_to_grdecl("all.GRDECL")
-
-  #alt.
-  #
-  #base = Zone(grid_file)
-  #base.load_data_from_file(init_file, "PORO", "SGAS")
-  #
-  #
-  #
-  #moni = ...
-  #
-  #
-  #moni. ...
-  #
-  #
-  #diff = Zone(grid_file)
-  #
-  #diff.compute_differences(moni, base)
-  #
-  #diff = moni - base
-  #
-  #diff.rename("VP", "VPDIFF")
-  #diff.delete("PORO")
-  #diff.load(base, "PORO")
-  #
-  #
-  #base.append_keyword_to_grdecl("foobar.GRDECL", "VP", "VPBASE")
-  #moni.append_keyword_to_grdecl("foobar.GRDECL"  "VP", "VPMONI")
-  #diff.append_keyword_to_grdecl("foobar.GRDECL", "VP", "VPDIFF" )
-  #
-  #
-
-  
-  
+  test.write_all_keywords_to_grdecl("test.GRDECL")
