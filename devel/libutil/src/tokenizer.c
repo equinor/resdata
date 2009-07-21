@@ -461,3 +461,7 @@ stringlist_type * tokenize_file(
   return tokens;
 }
 
+
+//void tokenize_realloc_buffer( const tokenizer_type * tokenizer , char * buffer) {
+//  
+//}

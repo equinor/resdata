@@ -59,6 +59,9 @@ extern "C" {
 			 double *eig_values , 
 			 matrix_type * Z    );
   
+  void matrix_dgeqrf(matrix_type * A , double * tau);
+  void matrix_dorgqf(matrix_type * A , double * tau, int num_reflectors);
+  
 #ifdef __cplusplus
 }
 #endif
