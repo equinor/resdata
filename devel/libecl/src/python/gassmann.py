@@ -7,18 +7,9 @@ import getopt
 from ecl import *
 
 
-class Gassmann_Zone(Zone):
-  def __init__(self, config, restart_file):
-    self.restart_file = restart_file
-    self.grid_file = None
-    self.init_file = None
-    self.func = self.gassmann
-    
+class Gassmann(Rockphysics):
+  def __init__(self, config):
     try:
-      self.path = config.get('project', 'path')
-      self.grid_file = self.path + config.get('project', 'grid_file')
-      self.init_file = self.path + config.get('project', 'init_file')
-			
       self.k_m = config.getfloat('gassmann', 'k_m')
       self.mu_m = config.getfloat('gassmann', 'mu_m')
       self.rho_m = config.getfloat('gassmann', 'rho_m')
@@ -26,20 +17,17 @@ class Gassmann_Zone(Zone):
       self.adiabatic_index = config.getfloat('gassmann', 'adiabatic_index')
       self.k_o = config.getfloat('gassmann', 'k_o')
       self.k_w = config.getfloat('gassmann', 'k_w')
-
     except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
       raise e
-    
-    Zone.__init__(self)
-    
-  def gassmann(self, active_index):
-    pressure = self.get_keyword_data("PRESSURE", active_index)
-    sgas = self.get_keyword_data("SGAS", active_index)
-    swat = self.get_keyword_data("SWAT", active_index)
-    poro = self.get_keyword_data("PORO", active_index)
-    rho_o = self.get_keyword_data("OIL_DEN", active_index)
-    rho_g = self.get_keyword_data("GAS_DEN", active_index)
-    rho_w = self.get_keyword_data("WAT_DEN", active_index)
+
+  def apply(self, zone, active_index):
+    pressure = zone.get_data("PRESSURE", active_index)
+    sgas = zone.get_data("SGAS", active_index)
+    swat = zone.get_data("SWAT", active_index)
+    poro = zone.get_data("PORO", active_index)
+    rho_o = zone.get_data("OIL_DEN", active_index)
+    rho_g = zone.get_data("GAS_DEN", active_index)
+    rho_w = zone.get_data("WAT_DEN", active_index)
     k_m = self.k_m
     mu_m = self.mu_m
     rho_m = self.rho_m
@@ -84,24 +72,21 @@ class Gassmann_Zone(Zone):
       v_s = sqrt(mu_res / rho_res)
 
     except ArithmeticError, e:
-			print "ArithmeticError: %s for global index %d" % (e, j)
-			raise
+      print "ArithmeticError: %s for global index %d" % (e, j)
+      raise
     else:
-      ret = dict(GM_VP = v_p, GM_VS = v_s, SGAS = float(sgas))
+      ret = dict(VP = v_p, VS = v_s)
 
       return ret
-
-
+    
 def display_usage():
     print 'Usage: %s --config=<config_file>' % (sys.argv[0]) 
 
     print """
     Options: 
     """
-  
 
 if __name__ == '__main__':
-
   try:
     opts, args = getopt.getopt(sys.argv[1:], "hc:i:f:t:", ["help", "config=", "iens=", "from=", "to="])
   except getopt.GetoptError, err:
@@ -124,63 +109,67 @@ if __name__ == '__main__':
       report_to = int(a)
     else:
       assert False, "unhandled option"
-        
   try:
     fp = open(config_file)
   except IOError, e:
     print "Unable to open '%s': %s" % (config_file, e)
     sys.exit()
-    
+  
   config = ConfigParser.ConfigParser()
   config.readfp(fp)
   try:
-    grid_file = self.path + config.get('project', 'grid_file')
-    restart_base_file = config.get('project', 'restart_base')
-    restart_mon_file = config.get('project', 'restart_mon')
-    output_file = config.get('script', 'output_file')
-    output_path = config.get('script', 'output_path')
-    matlab_export = config.getboolean('script', 'matlab_export')
+    path = config.get('project', 'path')
+    grid_file = path + config.get('project', 'grid_file')
+    init_file = path + config.get('project', 'init_file')
+    restartfile_base = path + config.get('project', 'restart_base')
+    restartfile_mon = path + config.get('project', 'restart_mon')
   except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
     raise e
 
-  base = Gassmann_Zone(config, restart_base_file)
-  mon = Gassmann_Zone(config, restart_mon_file)
-  another = Gassmann_Zone(config, "RG01-STRUCT-24.X0250")
+  keywords = ('PORO', 'PRESSURE', 'SGAS', 'SWAT', 'OIL_DEN', 'GAS_DEN', 'WAT_DEN')
+  base = Zone(grid_file, keywords, init_file, restartfile_base)
+  base.apply_function(Gassmann(config))
 
-  cache = Zone_Cache(grid_file)
-  cache.addzone(base, mon, another)
+  mon = Zone(grid_file, keywords, init_file, restartfile_mon)
+  mon.apply_function(Gassmann(config))
 
-  a = cache.get_active_list(base, 'GM_VP')
-  b = cache.get_active_list(mon, 'GM_VP')
-  c = cache.get_active_list(mon, 'GM_VP')
+  diff = Zone(grid_file)
+  diff.compute_differences(mon, base)
+  print diff.get_keywords()
 
-  diff = [tmp2 - tmp1 for tmp1, tmp2 in zip(a, b)]
-  mult = [tmp2 + tmp1 + tmp3 for tmp1, tmp2, tmp3 in zip(a, b, c)]
-  mult2 = [tmp2 + tmp1 for tmp1, tmp2 in zip(a, b)]
+  base.append_keyword_to_grdecl("foobar.GRDECL", "VP", "VPBASE")
+  base.append_keyword_to_dat("foobar.dat", "VP", "VPBASE")
+  base.write_all_keywords_to_grdecl("all.GRDECL")
+
+  #alt.
+  #
+  #base = Zone(grid_file)
+  #base.load_data_from_file(init_file, "PORO", "SGAS")
+  #
+  #
+  #
+  #moni = ...
+  #
+  #
+  #moni. ...
+  #
+  #
+  #diff = Zone(grid_file)
+  #
+  #diff.compute_differences(moni, base)
+  #
+  #diff = moni - base
+  #
+  #diff.rename("VP", "VPDIFF")
+  #diff.delete("PORO")
+  #diff.load(base, "PORO")
+  #
+  #
+  #base.append_keyword_to_grdecl("foobar.GRDECL", "VP", "VPBASE")
+  #moni.append_keyword_to_grdecl("foobar.GRDECL"  "VP", "VPMONI")
+  #diff.append_keyword_to_grdecl("foobar.GRDECL", "VP", "VPDIFF" )
+  #
+  #
+
   
-  a = cache.get_active_list(base, 'SGAS')
-  b = cache.get_active_list(mon, 'SGAS')
-  sgas_diff = [tmp2 - tmp1 for tmp1, tmp2 in zip(a, b)]
   
-  cache.add_keyword("GM_VP_D", diff)
-  cache.add_keyword("GM_SG_D", sgas_diff)
-  cache.add_keyword("GM_VP_M", mult)
-  cache.add_keyword("GM_VP_M2", mult2)
-
-  print iens, report_from, report_to
-  
-  if iens != None and report_from != None and report_to != None:
-    low = output_file.lower()
-    tmp = low.replace('.grdecl', '')
-    file_string = "%s/%s-%d-step-%d-to-%d.GRDECL" % (output_path, tmp, iens, report_from, report_to)
-    print file_string
-  else:
-    file_string = "%s/%s" % (output_path, output_file)
-   
-  cache.write_grdecl(file_string)
-  cache.write_datfiles()
-
-#  cache.write_zone_grdecl(base, output_file)
-#  cache.write_zone_datfiles(base)
-  
-

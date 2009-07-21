@@ -2,194 +2,37 @@ from libecl import *
 import pprint as pp
 import sys
 import time
+import os
 
 ####################################################################
 ##
 ## Here is a small overview of the classes and how it works together.
 ##
-## The objective is to be able to do calculations on the zones and 
-## between different zones as easy as possible.
-##
-## Calculations (how it can be done):
-##    When you want to do calculations from one restart file (or
-##    one zone), you do these calculations in the pointer function
-##    of your own choice and return the calculated values with their 
-##    corresponding keywords.
-##    
-##    On the other hand, after you have done calculations on single
-##    zones, you might want to compare the calculated data between
-##    multiple zones. This is where you have to cache the zone data
-##    and then pick it back up again from your zones of choice before
-##    doing your zone comparasion calculations.
-##
-## Writing / output:
-##    The Zone_Cache class has some export functions, these are classifies
-##    in the following way:
-##      - To export the Zone keywords, use write_zone_*() functions.
-##      - To export the Zone_Cache keywords (added to the cache with the 
-##        function cache.add_keyword('KW', list), you use the write_*()
-##        functions.
-##
-## Bottleneck (or not??)
-##    It seems like the lookup of the data values itself is kind of slow
-##    trough all the layers of wrapping (though I have not tried it on the C
-##    layer). But there is no horrible wrappers going on when keyword data values
-##    are beeing picked up from the restart or init files, so it should not be 
-##    a swig bottleneck.
-##
-##
-## An example:
-##    In this example we load two restartfiles, and imagine that Demo_Zone has 
-##    a function that threats the data and hands out a calculated CUSTOM_KW.
-##    (Though, the actual calculation has not really been done yet, it will first
-##    be done if you iterate the grid or cache the grid).
-##
-##    The cache zone is then loaded, and the Demo_Zones are added to the cache,
-##    before beeing recived and manipulated vs eachother. Then a new keyword
-##    is added to the cache Zone_Cache class before all the cache keywords
-##    are written to a RMS/ECLIPSE readable format.
-##
-##    class Demo_Zone(Zone):
-##      def __init__(self):
-##        # The folliwing variables HAS to be set
-##        self.restart_file = ...
-##        self.grid_file = ...
-##        self.init_file = ...
-##
-##        # Now define the function for doing calculations.
-##        # This functions has to take the argument "active_index".
-##        self.func = self.do_calc_func          
-##
-##        # NOW, initialize the Zone parent.
-##        Zone.__init__(self)
-##      
-##      def do_calc_func(self, active_index):
-##        poro = self.get_keyword_data("PORO", active_index)
-##
-##        try:
-##          a = poro*0.5
-##        except, ArithmeticError, e:
-##          raise e
-##        else:
-##          return dict(CUSTOM_KW = a)
-##
-##
-##    base = Demo_Zone("gridfile.EGRID", "initfile.INIT", "restartfile.X00000")
-##    monitor = Demo_Zone("gridfile.EGRID", "initfile.INIT", "restartfile.X99999")
-##    cache = Zone_Cache("gridfile.EGRID")
-##    cache.addzone(base, monitor)
-##    a = cache.get_active_list(base, "CUSTOM_KW")
-##    b = cache.get_active_list(monitor, "CUSTOM_KW")
-##    difference = [b - a for a, b in zip(a, b)]
-##    cache.add_keyword("CUSTOM_DIFFERENCE", difference)
-##    cache.write_grdecl("demo.GRDECL")
-##
-## Another example:
-##    If you just want to iterate trough the grid and grab the values as you go, this 
-##    is also possible. It is also possible to optionally do the caching at this iterations.
-##    
-##    [... snip code ...]
-##    for a_i, val in enumerate(base.iter_grid(1)):
-##      print "active index: %d, val: %f" % (a_i, val["CUSTOM_KW"])
-##
-##
-## file: ecl.py, class: Zone
-##        - Loads the ECL files, has methods for grabbing ECL
-##          data, and iterating the grid.
-##        - Contains empty cache variables until they are filled
-##          by the Zone_Cache class.
-##
-## file: gassmann.py, class: Gassmann_Zone (inherits Zone)
-##        - Defines function pointer doing calculations
-##        - Load its own personal configuration options.
-##        - The returned dictionary from the function pointer
-##          defines what keywords the zone has available.
-##  
-## file: ecl.py, class: Zone_Cache
-##        - Stores lists of the data, for easy access when comparing
-##          different zones and doing arithmetic operations.
-##        - The objects stored in the cache is also writeable to
-##          either .grdecl format or .dat format.
 ##
 ####################################################################
 
-class Rockphysics:
-  def apply(self, zone, active_index):
-    print "Sorry, this is an abstract class."
-    raise
+class AbstractMethod (object):
+  def __init__(self, func):
+    self._function = func
+
+  def __get__(self, obj, type):
+    return self.AbstractMethodHelper(self._function, type)
+
+  class AbstractMethodHelper (object):
+    def __init__(self, func, cls):
+      self._function = func
+      self._class = cls
+
+    def __call__(self, *args, **kwargs):
+      raise TypeError('Abstract method `' + self._class.__name__ \
+          + '.' + self._function + '\' called')
+  
+class Rockphysics(object):
+  apply = AbstractMethod('apply')
+
             
 class Zone_Cache:
 
-  def __init__(self, grid_file):
-    self.grid = ecl_grid(grid_file)
-    self.active_size = self.grid.get_active_size()
-    self.global_size = self.grid.get_global_size()
-
-    self.zones = list()
-    self.cache = dict()
-
-  def convert_list(self, l_a, dummy_val = 0):
-    k = 0
-    l_g = list();
-    for j in xrange(0, self.global_size):
-      ret = self.grid.get_active_index1(j)
-      if ret == -1:
-        l_g.append(float(dummy_val))
-      else:
-        l_g.append(l_a[k])
-        k += 1
-
-    return l_g
-
-  #############################################################
-  ##
-  ## The following are methods working with a ZONE.
-  ## The keywords from where the data is stored comes from
-  ## the dictionary beeing returned form the functions pointer
-  ## defined by the child class for the ZONE.
-  ##
-  #############################################################
-
-  def addzone(self, *zones):
-    for zone in zones:
-      print "Adding ...", zone
-
-      if zone in self.zones:
-        print "Warning:" , zone, "already added, skipping."
-        continue
-      if len(zone.active_cache) == self.active_size:
-        print "Warning:", zone, "cache has already been filled, skipping."
-        self.zones.append(zone)
-        continue
-
-      self.zones.append(zone)
-      for j in xrange(0, self.global_size):
-        ret = zone.grid.get_active_index1(j)
-        if ret != -1:
-          dic = zone.func(ret)
-          zone.active_cache.append(dic)
-          if len(zone.active_cache) == 1:
-            zone.kw_keys = dic.keys()
-
-  def get_active_list(self, zone, keyword):
-    retlist = list()
-    for val in zone.active_cache:
-      retlist.append(val[keyword])
-    return retlist
-
-  def write_zone_grdecl(self, zone, file):
-    if zone not in self.zones:
-      raise "the zone you asked for has not been added!"
-    if len(zone.kw_keys) == 0:
-      print "You need to iterate or cache the grid first!"
-   
-    print "Writing %d ZONE variables to grdecl file '%s'" % (len(zone.kw_keys), file)
-    k = ecl_kw()
-    for val in zone.kw_keys:
-      l_a = self.get_active_list(zone, val)
-      l_g = self.convert_list(l_a)
-      k.write_new_grdecl(file, val, l_g)
-      
   def write_zone_datfiles(self, zone):
     path = 'zone_output/'
     for val in zone.kw_keys:
@@ -205,45 +48,6 @@ class Zone_Cache:
       f.writelines(l_a)
       f.close()
 
-  ##########################################################
-  ##
-  ## The following are methods are for working with newly 
-  ## calculated objects that only exists in the CACHE class.
-  ##
-  ############################################################
-  
-  def add_keyword(self, kw, new_list):
-    self.cache[kw] = new_list
-
-  def write_grdecl(self, file):
-    print "Writing %d CACHE variables to grdecl file '%s'" % (len(self.cache.keys()), file)
-    k = ecl_kw()
-    for val in self.cache.keys():
-      l_g = self.convert_list(self.cache[val])
-      k.write_new_grdecl(file, val, l_g)
-      
-  def write_datfiles(self):
-    path = 'zone_output/'
-    for val in self.cache.keys():
-      file_string = path + "%s.dat" % val
-
-      l_a = list()
-      for val in self.cache[val]:
-        q = str(val)
-        string = "%s\n" % q
-        l_a.append(string)
-        
-      print "Writing Matlab export '%s'" % file_string
-      f = open(file_string, 'w')
-      f.writelines(l_a)
-      f.close()
-
-    def write_ipl(self):
-      # TODO: Write an IPL file whichs loads the EGRID, includes
-      # all restart files, also imports every grdecl file 
-      # that has been written.
-      pass
-    
 
 class Zone:
   def __init__(self, grid_file, keywords = None, *arglist):
@@ -262,12 +66,27 @@ class Zone:
     self.cache = dict()
     self.cache_list(ecl_file_list)
 
+  ## This functions takes an active idnex list and 
+  ## returns a global index list.
+  def convert_list(self, l_a, dummy_val = 0):
+    k = 0
+    l_g = list();
+    for j in xrange(0, self.grid.get_global_size()):
+      ret = self.grid.get_active_index1(j)
+      if ret == -1:
+        l_g.append(float(dummy_val))
+      else:
+        l_g.append(l_a[k])
+        k += 1
+
+    return l_g
+
   def cache_list(self, ecl_file_list):
     for f in ecl_file_list:
       for j in xrange(f.get_num_distinct_kw()):
         str_kw = f.iget_distinct_kw(j)
         if str_kw in self.keywords:
-          print "Caching: '%s'" % str_kw
+          print "Adding keyword: '%s'" % str_kw
           kw_type = f.iget_named_kw(str_kw, 0)
           items = list()
           for i in xrange(0, self.grid.get_global_size()):
@@ -275,7 +94,6 @@ class Zone:
             if ret != -1:
               data = kw_type.iget_data(ret)
               items.append(data)
-          print len(items) 
           self.cache[str_kw] = items
 
   def get_data(self, kw, active_index):
@@ -286,13 +104,12 @@ class Zone:
     for i in xrange(0, self.grid.get_global_size()):
       ret = self.grid.get_active_index1(i)
       if ret != -1:
-        if isinstance(obj, Rockphysics):
-          data = obj.apply(self, ret)
-          for key in data.keys():
-            if not self.cache.has_key(key):
-              self.cache[key] = list()
+        data = obj.apply(self, ret)
+        for key in data.keys():
+          if not self.cache.has_key(key):
+            self.cache[key] = list()
            
-            self.cache[key].append(data[key])
+          self.cache[key].append(data[key])
 
   def compute_differences(self, mon, base):
     for key in base.cache.keys():
@@ -303,6 +120,41 @@ class Zone:
 
   def get_keywords(self):
     return self.cache.keys()
+
+  def append_keyword_to_grdecl(self, file, kw, new_kw = None):
+    if os.path.isfile(file): mode = 'a'
+    else: mode = 'w'
+    if new_kw is None: write_kw = kw
+    else: write_kw = new_kw
+    
+    print "Writing '%s' to '%s'" % (write_kw, file)
+    l_g = self.convert_list(self.cache[kw])
+    k = ecl_kw()
+    k.write_new_grdecl(file, write_kw, l_g, mode)
+
+  def append_keyword_to_dat(self, file, kw, new_kw = None):
+    if os.path.isfile(file): mode = 'a'
+    else: mode = 'w'
+    if new_kw is None: write_kw = kw
+    else: write_kw = new_kw
+
+    l_a = list()
+    for j, val in enumerate(self.cache[kw]):
+      q = str(val)
+      string = "%s\n" % q
+      l_a.append(string)
+      
+    print "Writing '%s' to '%s'" % (write_kw, file)
+    f = open(file, mode)
+    f.writelines(l_a)
+    f.close()
+
+  def write_all_keywords_to_grdecl(self, file):
+    print "Writing %d keywords to '%s'" % (len(self.cache.keys()), file)
+    for key in self.cache.keys():
+      l_g = self.convert_list(self.cache[key])
+      k = ecl_kw()
+      k.write_new_grdecl(file, key, l_g, 'a')
 
 
 ####################################################################
@@ -468,31 +320,25 @@ class ecl_grid:
 		ecl_grid_summarize(self.g);
 		
 class ecl_kw:
-	def __init__(self, k = None):
-		self.k = k
-		self.w = None
-	def get_header_ref(self):
-		return ecl_kw_get_header_ref(self.k)
-	def get_str_type_ref(self):
-		return ecl_kw_get_str_type_ref(self.k)
-	def get_size(self):
-		return ecl_kw_get_size(self.k);
-	def get_data(self):
-		self.w = ecl_kw_get_data_wrap_void(self.k)
-		list = get_ecl_kw_data_wrapper_void_list(self.w)
-		return list
-	def iget_data(self, index):
-		return ecl_kw_iget_as_double(self.k, index);
-	def write_new_grdecl(self, filename, kw, list):
-		size = len(list);
-		mode = "w"
-
-		if self.k == None:
-			self.k = ecl_kw_alloc_empty()
-		else:
-			mode = "a"
-			ecl_kw_free_data(self.k)
-
+  def __init__(self, k = None):
+    self.k = k
+    self.w = None
+  def get_header_ref(self):
+    return ecl_kw_get_header_ref(self.k)
+  def get_str_type_ref(self):
+    return ecl_kw_get_str_type_ref(self.k)
+  def get_size(self):
+    return ecl_kw_get_size(self.k)
+  def get_data(self):
+    self.w = ecl_kw_get_data_wrap_void(self.k)
+    list = get_ecl_kw_data_wrapper_void_list(self.w)
+    return list
+  def iget_data(self, index):
+    return ecl_kw_iget_as_double(self.k, index)
+  def write_new_grdecl(self, filename, kw, list, mode):
+    size = len(list);
+    self.k = ecl_kw_alloc_empty()
+    
     # TODO: This currently only supports one type
 
     # The grdecl files will be of the format 
@@ -501,19 +347,19 @@ class ecl_kw:
 
 		#ecl_kw_set_header(self.k, kw, size, "DOUB")
 		#ecl_kw_alloc_double_data(self.k, list)
-		ecl_kw_set_header(self.k, kw, size, "REAL")
-		ecl_kw_alloc_float_data(self.k, list)
-		
-		f = open(filename, mode)
-		ecl_kw_fprintf_grdecl(self.k, f)
-		f.close
-	def fread_alloc(self, fortio_type):
-		return ecl_kw_fread_alloc(fortio_type)
-	def fseek_kw(self, kw, fortio_type):
-		return ecl_kw_fseek_kw(kw, 1, 0, fortio_type)
-	def fread_realloc(self, kw_type, fortio_type):
-		self.k = kw_type
-		return ecl_kw_fread_realloc(kw_type, fortio_type)
+    ecl_kw_set_header(self.k, kw, size, "REAL")
+    ecl_kw_alloc_float_data(self.k, list)
+    f = open(filename, mode)
+    ecl_kw_fprintf_grdecl(self.k, f)
+    f.close
+    ecl_kw_free_data(self.k)
+  def fread_alloc(self, fortio_type):
+    return ecl_kw_fread_alloc(fortio_type)
+  def fseek_kw(self, kw, fortio_type):
+    return ecl_kw_fseek_kw(kw, 1, 0, fortio_type)
+  def fread_realloc(self, kw_type, fortio_type):
+    self.k = kw_type
+    return ecl_kw_fread_realloc(kw_type, fortio_type)
 
 
 class fortio:
