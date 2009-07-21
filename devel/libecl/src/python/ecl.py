@@ -31,24 +31,6 @@ class Rockphysics(object):
   apply = AbstractMethod('apply')
 
             
-class Zone_Cache:
-
-  def write_zone_datfiles(self, zone):
-    path = 'zone_output/'
-    for val in zone.kw_keys:
-      file_string = path + "%s.dat" % val
-      l_a = self.get_active_list(zone, val)
-
-      for j, val in enumerate(l_a):
-        q = str(val)
-        l_a[j] = "%s\n" % q
-        
-      print "Writing Matlab export '%s'" % file_string
-      f = open(file_string, 'w')
-      f.writelines(l_a)
-      f.close()
-
-
 class Zone:
   def __init__(self, grid_file, keywords = None, *arglist):
     try:
