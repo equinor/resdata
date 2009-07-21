@@ -148,6 +148,6 @@ if __name__ == '__main__':
   diff.append_keyword_to_grdecl("diff.GRDECL", "VP_DIFF")
   mon.append_keyword_to_grdecl("foobar.GRDECL", "VP")
 
-  base.append_keyword_to_dat("foobar.dat", "VP", "VPBASE")
+  base.write_keyword_to_dat("foobar.dat", "VP")
   base.write_all_keywords_to_grdecl("all.GRDECL")
   test.write_all_keywords_to_grdecl("test.GRDECL")

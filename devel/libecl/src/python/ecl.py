@@ -32,6 +32,11 @@ class Rockphysics(object):
 ####################################################################
  
 class Zone:
+  ##
+  # Initalize the Zone class, adds ecl_file objects for each
+  # filename in the arglist and then caches the keywords given
+  # in the keywords argument.
+  ##
   def __init__(self, grid_file, keywords = list(), *arglist):
     try:
       assert grid_file != None, 'grid file not set!'
@@ -49,7 +54,9 @@ class Zone:
       ecl_file_list.append(ecl_file(val))
     self.cache_list(ecl_file_list)
 
-    
+  ## 
+  # Operator overloading for subtraction.
+  ##
   def __sub__(self, zone):
     if isinstance(self, Zone) and isinstance(zone, Zone):
       if self.grid_file is not zone.grid_file:
@@ -76,6 +83,9 @@ class Zone:
     return new_zone
 
 
+  ## 
+  # Operator overloading for addition.
+  ##
   def __add__(self, zone):
     if self.grid_file is not zone.grid_file:
       raise "Grid files are not the same in the addition!"
@@ -89,6 +99,9 @@ class Zone:
     return new_zone
 
 
+  ## 
+  # Operator overloading for multiplication.
+  ##
   def __mul__(self, zone):
     if self.grid_file is not zone.grid_file:
       raise "Grid files are not the same in the multiplication!"
@@ -102,14 +115,18 @@ class Zone:
     return new_zone
 
 
+  ##
+  # Takes two zones and then yields they common keys.
+  ##
   def shared_keys(self, zone1, zone2):
     for key in zone1.cache.keys():
       if key in zone2.cache.keys():
         yield key
 
 
-  # This functions takes an active index list and 
-  # returns a global index list.
+  ## 
+  # Takes an active index list and returns a global index list.
+  ##
   def convert_list(self, l_a, dummy_val = 0):
     k = 0
     l_g = list();
@@ -122,8 +139,11 @@ class Zone:
         k += 1
         
     return l_g
+ 
 
-
+  ##
+  # Takes a keyword list and a list of init- or restartfiles.
+  ##
   def load_data_from_file(self, keywords, *arglist):
     if len(self.keywords) > 0:
       print "Load from file warning: already keywords in the zone, may be overwriting!"
@@ -134,6 +154,14 @@ class Zone:
       ecl_file_list.append(ecl_file(val))
     self.cache_list(ecl_file_list)
 
+
+  ##
+  # Takes a list of init- or restartfiles and  adds all the 
+  # given keywords into the memory of the form:
+  # hash = { keyword => list(val_1 , ... , val_n) }
+  #
+  # To be able to do this, it has to loop over the entire grid.
+  ##
   def cache_list(self, ecl_file_list):
     for f in ecl_file_list:
       for j in xrange(f.get_num_distinct_kw()):
@@ -153,10 +181,13 @@ class Zone:
           self.cache[str_kw] = items
 
 
-  def get_data(self, kw, active_index):
-    return self.cache[kw][active_index]
 
-
+  ##
+  # Takes an object, which inherits the Rockphysics class before
+  # looping the entire grid, applying the apply function and adding
+  # the returned new keywords to the cache, in the same strucutre as
+  # cache_list() does.
+  ##
   def apply_function(self, obj):
     for i in xrange(0, self.grid.get_global_size()):
       ret = self.grid.get_active_index1(i)
@@ -169,6 +200,9 @@ class Zone:
           self.cache[key].append(data[key])
 
 
+  ##
+  # Rename a keyword in the cache.
+  ##
   def rename(self, old_kw, new_kw):
     if self.cache.has_key(old_kw):
       l = self.cache[old_kw]
@@ -177,7 +211,9 @@ class Zone:
     else:
       print "Rename warning: no such keyword '%s'" % old_kw
 
-
+  ##
+  # Delete a keyword in the cache.
+  ##
   def delete(self, kw):
     if self.cache.has_key(kw):
       self.cache.pop(kw)
@@ -185,6 +221,9 @@ class Zone:
       print "Delete warning: no such keyword '%s'" % kw
 
 
+  ##
+  # Loads a keyword from another zone and caches it in the current.
+  ##
   def load(self, zone, kw):
     if zone.cache.has_key(kw):
       l = zone.cache[kw]
@@ -196,14 +235,31 @@ class Zone:
       print "Load warning: no such keyword '%s'" % kw
 
 
+  ##
+  # Get all the cached keys.
+  ##
   def get_keywords(self):
     return self.cache.keys()
 
 
+  ##
+  # Get all the cached values from a key.
+  ##
   def get_values(self, kw):
     return self.cache[kw]
 
 
+  ##
+  # Get a specific active_index data value from a specific keyword.
+  ## 
+  def get_data(self, kw, active_index):
+    return self.cache[kw][active_index]
+
+
+  ##
+  # Append a keyword to a grdecl file, if file does not exist
+  # the file will be created.
+  ##
   def append_keyword_to_grdecl(self, file, kw, new_kw = None):
     if not self.cache.has_key(kw):
       print "Append grdecl warning: no such keyword '%s'" % kw
@@ -220,34 +276,39 @@ class Zone:
     k.write_new_grdecl(file, write_kw, l_g, mode)
 
 
-  def append_keyword_to_dat(self, file, kw, new_kw = None):
+  ##
+  # Write a keyword to a file, written in the .dat format
+  ##
+  def write_keyword_to_dat(self, file, kw):
     if not self.cache.has_key(kw):
       print "Append dat warning: no such keyword '%s'" % kw
       return
     
-    if os.path.isfile(file): mode = 'a'
-    else: mode = 'w'
-    if new_kw is None: write_kw = kw
-    else: write_kw = new_kw
-
     l_a = list()
     for j, val in enumerate(self.cache[kw]):
       q = str(val)
       string = "%s\n" % q
       l_a.append(string)
       
-    print "Writing '%s' to '%s'" % (write_kw, file)
-    f = open(file, mode)
+    print "Writing '%s' to '%s'" % (kw, file)
+    f = open(file, 'w')
     f.writelines(l_a)
     f.close()
 
 
+  ##
+  # Write (append if the file exists) all the cached keywords
+  # in the current zone.
+  ##
   def write_all_keywords_to_grdecl(self, file):
     print "Writing %d keywords to '%s'" % (len(self.cache.keys()), file)
     for key in self.cache.keys():
       l_g = self.convert_list(self.cache[key])
       k = ecl_kw()
       k.write_new_grdecl(file, key, l_g, 'a')
+
+
+
 
 
 ####################################################################
