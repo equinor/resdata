@@ -3,16 +3,6 @@
 #include <matrix.h>
 #include <matrix_blas.h>
 
-/**
-   y = alpha * op(A)*x + beta * y
-
-   alpha,beta: scalars
-   x,y       : vectors
-   A         : matrix
-
-   
-   x and y are entered as matrices ...
-*/
 
 /*****************************************************************/
 void  dgemm_(char * , char * , int * , int * , int * , double * , double * , int * , double * , int *  , double * , double * , int *);
@@ -21,13 +11,24 @@ void  dgemv_(char * , int * , int * , double * , double * , int * , double * , i
 
 
 
+/**
+   y = alpha * op(A)*x + beta * y
 
-void matrix_dgemv(const matrix_type * A , const matrix_type * x , matrix_type * y , bool transA , double alpha , double beta) {
+   alpha,beta: scalars
+   x,y       : vectors
+   A         : matrix
+
+   
+   x and y are entered as (double * ).
+*/
+
+
+void matrix_dgemv(const matrix_type * A , const double *x , double * y, bool transA , double alpha , double beta) {
   int m    = matrix_get_rows( A );
   int n    = matrix_get_columns( A );
   int lda  = matrix_get_column_stride( A );
-  int incx = matrix_get_row_stride( x );
-  int incy = matrix_get_row_stride( y );
+  int incx = 1;
+  int incy = 1;
 
   char transA_c;
   if (transA) 
@@ -35,16 +36,16 @@ void matrix_dgemv(const matrix_type * A , const matrix_type * x , matrix_type * 
   else
     transA_c = 'N';
  
-  if (matrix_get_rows( x ) != matrix_get_rows( y ))
-    util_abort("%s: x,y size mismatch \n",__func__);
+  dgemv_(&transA_c , &m , &n , &alpha , matrix_get_data( A ) , &lda , x , &incx , &beta , y , &incy);
+}
 
-  if (matrix_get_rows( x ) != matrix_get_columns( A ))
-    util_abort("%s: x,A size mismatch \n",__func__);
 
-  if ((matrix_get_columns( x ) != 1) || (matrix_get_columns( y ) != 1))
-    util_abort("%s: x,y must have 1 column - i.e. be vectors \n",__func__);
+/**
+   y = A*x
+*/
 
-  dgemv_(&transA_c , &m , &n , &alpha , matrix_get_data( A ) , &lda , matrix_get_data( x ) , &incx , &beta , matrix_get_data( y ) , &incy);
+void matrix_mul_vector(const matrix_type * A , const double * x , double * y) {
+  matrix_dgemv(A , x , y , false , 1 , 0);
 }
 
 

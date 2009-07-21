@@ -11,7 +11,7 @@ void dgesv_(int * n, int * nrhs , double * A , int * lda , long int * ipivot , d
 void dgesvd_(char * jobu , char * jobvt , int * m , int * n , double * A, int * lda , double * S , double * U , int * ldu , double * VT , int * ldvt, double * work , int * worksize , int * info);
 void dsyevx_(char * jobz, char * range , char * uplo , int *n , double * A , int * lda , double * vl , double * vu , int * il , int * iu , double * abstol , int * m , double * w , double *z , int * ldz , double * work, int * lwork , int * iwork , int * ifail , int * info); 
 void dgeqrf_(int * m , int * n , double * A , int * lda , double * tau , double * work , int * lwork, int * info);
-void dorgqf_(int * m, int * n , int * k , double * A , int * lda , double * tau , double * work , int * lwork, int * info);
+void dorgqr_(int * m, int * n , int * k , double * A , int * lda , double * tau , double * work , int * lwork, int * info);
 /*****************************************************************/
 
 
@@ -382,7 +382,7 @@ void matrix_dgeqrf(matrix_type * A , double * tau) {
     Typically to be used after the matrix_dgeqrf() function to construct a orthormal matrix. 
 */
 
-void matrix_dorgqf(matrix_type * A , double * tau, int num_reflectors) {  /* num_reflectors == length of tau. */
+void matrix_dorgqr(matrix_type * A , double * tau, int num_reflectors) {  /* num_reflectors == length of tau. */
   int lda       = matrix_get_column_stride( A );
   int m         = matrix_get_rows( A );
   int n         = matrix_get_columns( A );  
@@ -393,7 +393,7 @@ void matrix_dorgqf(matrix_type * A , double * tau, int num_reflectors) {  /* num
 
   /* Determine optimal worksize. */
   worksize = -1;
-  dorgqf_(&m , &n , &num_reflectors , matrix_get_data( A ), &lda , tau , work , &worksize , &info);
+  dorgqr_(&m , &n , &num_reflectors , matrix_get_data( A ), &lda , tau , work , &worksize , &info);
   if (info != 0)
     util_abort("%s: dorgqf routine failed with info:%d \n",__func__ , info);
   worksize = ( int ) work[0];
@@ -412,7 +412,7 @@ void matrix_dorgqf(matrix_type * A , double * tau, int num_reflectors) {  /* num
   
   
   /* Second call - do the actual computation. */
-  dorgqf_(&m , &n , &num_reflectors , matrix_get_data( A ), &lda , tau , work , &worksize , &info);
+  dorgqr_(&m , &n , &num_reflectors , matrix_get_data( A ), &lda , tau , work , &worksize , &info);
   if (info != 0)
     util_abort("%s: dorqf routine failed with info:%d \n",__func__ , info);
   free( work );

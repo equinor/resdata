@@ -468,6 +468,12 @@ void matrix_set_column(matrix_type * matrix , const double * data , int column) 
 }
 
 
+void matrix_scale_column(matrix_type * matrix , int column  , double scale_factor) {
+  for (int row = 0; row < matrix->rows; row++)
+    matrix->data[ GET_INDEX( matrix , row , column) ] *= scale_factor;
+}
+
+
 /*****************************************************************/
 /* Matrix - matrix operations                                    */
 

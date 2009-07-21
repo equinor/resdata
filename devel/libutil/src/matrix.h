@@ -43,6 +43,7 @@ void          matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , 
 double        matrix_get_column_sum(const matrix_type * matrix , int column);
 double        matrix_get_row_sum(const matrix_type * matrix , int column);
 void          matrix_subtract_row_mean(matrix_type * matrix);
+void          matrix_scale_column(matrix_type * matrix , int column  , double scale_factor);
 
 double      * matrix_get_data(const matrix_type * matrix);
 
