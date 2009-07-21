@@ -39,14 +39,35 @@ class Zone:
       print "Error: %s, parameter required for Zone class!" % e
       sys.exit()
       
+    self.grid_file = grid_file
     self.grid = ecl_grid(grid_file)
     ecl_file_list = list()
     for val in arglist:
       ecl_file_list.append(ecl_file(val))
-    
+    print self 
     self.keywords = keywords
     self.cache = dict()
     self.cache_list(ecl_file_list)
+
+  def __sub__(self, zone):
+    if self.grid_file is not zone.grid_file:
+      raise "Grid files are not the same in the substraction!"
+
+    print self, zone
+
+    mon = self
+    base = zone
+   
+    new_zone = Zone(self.grid_file)
+    for key in mon.cache.keys():
+      if key in base.cache.keys():
+        print "Doing sub for '%s'" % key
+        diff = list()
+        diff = [b - a for a, b in zip(base.cache[key], mon.cache[key])]
+#        new_key = "DIFF_%s" % key
+        new_zone.cache[key] = diff
+
+    return new_zone
 
   ## This functions takes an active idnex list and 
   ## returns a global index list.

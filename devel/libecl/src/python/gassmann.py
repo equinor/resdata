@@ -133,10 +133,12 @@ if __name__ == '__main__':
   mon = Zone(grid_file, keywords, init_file, restartfile_mon)
   mon.apply_function(Gassmann(config))
 
-  diff = Zone(grid_file)
-  diff.compute_differences(mon, base)
+  diff = mon - base - base
+  print diff
   print diff.get_keywords()
+#  diff.compute_differences(mon, base)
 
+  diff.append_keyword_to_grdecl("diff.GRDECL", "VP")
   base.append_keyword_to_grdecl("foobar.GRDECL", "VP", "VPBASE")
   base.append_keyword_to_dat("foobar.dat", "VP", "VPBASE")
   base.write_all_keywords_to_grdecl("all.GRDECL")
