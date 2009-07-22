@@ -45,7 +45,7 @@ char * ecl_util_alloc_base_guess(const char * path) {
   while ( (dentry = readdir(dirH)) != NULL) {
     const char * entry = dentry->d_name;
     char *this_base , *ext;
-    
+
     if (entry[0] == '.') continue; 
     util_alloc_file_components(entry , NULL , &this_base , &ext);
     if (ext != NULL) {

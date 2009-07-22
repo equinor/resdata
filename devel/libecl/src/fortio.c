@@ -66,6 +66,7 @@ static fortio_type * fortio_alloc__(const char *filename , bool endian_flip_head
 */
 
 static bool __read_int(FILE * stream , int * value, bool endian_flip) {
+  /* This fread() can legitemately fail - can not use util_fread() here. */
   if (fread(value , sizeof * value , 1 , stream) == 1) {
     if (endian_flip)
       util_endian_flip_vector(value , sizeof * value , 1);
@@ -246,7 +247,8 @@ bool fortio_is_fortio_file(fortio_type * fortio) {
 
 
 /*
-  This function returns -1 on error - it does *NOT* fail.
+  This function returns -1 on error - it does *NOT* fail. The -1
+  return value is interpreted in the ecl_kw layer.
 */
 
 int fortio_init_read(fortio_type *fortio) {
@@ -266,8 +268,7 @@ int fortio_init_read(fortio_type *fortio) {
 
 void fortio_complete_read(fortio_type *fortio) {
   int trailer;
-  if (fread(&trailer , sizeof(fortio->active_header) , 1 , fortio->stream) != 1)
-    util_abort("%s: failed to read tail in file: %s : %s \n",__func__ , fortio->filename , strerror(errno));
+  trailer = util_fread_int( fortio->stream );
   
   if (fortio->endian_flip_header)
     util_endian_flip_vector(&trailer , sizeof trailer , 1);
@@ -288,11 +289,7 @@ void fortio_complete_read(fortio_type *fortio) {
 int fortio_fread_record(fortio_type *fortio, char *buffer) {
   fortio_init_read(fortio);
   int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
-  {
-    int items_read = fread(buffer , 1 , fortio->active_header , fortio->stream);
-    if (items_read != fortio->active_header) 
-      util_abort("%s: only read %d/%d bytes from file: %s: %s \n",__func__ , items_read , fortio->active_header , fortio->filename , strerror(errno));
-  }
+  util_fread(buffer , 1 , fortio->active_header , fortio->stream , __func__);
   fortio_complete_read(fortio);
   return record_size;
 }
@@ -349,15 +346,9 @@ void fortio_copy_record(fortio_type * src_stream , fortio_type * target_stream ,
     else
       bytes = record_size - bytes_read;
 
-    {
-      bool ok;
-      ok = true;
-      ok =        (fread (buffer , 1 , bytes , src_stream->stream)    == bytes);
-      ok = (ok && (fwrite(buffer , 1 , bytes , target_stream->stream) == bytes));
-      if (!ok) 
-	util_abort("%s: failed to read/write %d bytes - aborting \n",__func__ , bytes);
-
-    }
+    util_fread(buffer , 1 , bytes , src_stream->stream     , __func__);
+    util_fwrite(buffer , 1 , bytes , target_stream->stream , __func__);
+    
     bytes_read += bytes;
   }
 
@@ -380,7 +371,7 @@ void  fortio_init_write(fortio_type *fortio , int record_size) {
   if (fortio->endian_flip_header)
     util_endian_flip_vector(&file_header , sizeof file_header , 1);
   
-  fwrite(&file_header , sizeof(fortio->active_header) , 1 , fortio->stream);
+  util_fwrite_int( file_header , fortio->stream );
   fortio->rec_nr++;
 }
 
@@ -389,14 +380,14 @@ void fortio_complete_write(fortio_type *fortio) {
   if (fortio->endian_flip_header)
     util_endian_flip_vector(&file_header , sizeof file_header , 1);
 
-  fwrite(&file_header, sizeof(fortio->active_header) , 1 , fortio->stream);
+  util_fwrite_int( file_header , fortio->stream );
   fortio->active_header = 0;
 }
 
 
 void fortio_fwrite_record(fortio_type *fortio, const char *buffer , int record_size) {
   fortio_init_write(fortio , record_size);
-  fwrite(buffer , 1 , record_size , fortio->stream);
+  util_fwrite( buffer , 1 , record_size , fortio->stream , __func__);
   fortio_complete_write(fortio);
 }
 
@@ -404,8 +395,8 @@ void fortio_fwrite_record(fortio_type *fortio, const char *buffer , int record_s
 void * fortio_fread_alloc_record(fortio_type * fortio) {
   void * buffer;
   fortio_init_read(fortio);
-  buffer = malloc(fortio->active_header);
-  fread(buffer , 1 , fortio->active_header , fortio->stream);
+  buffer = util_malloc(fortio->active_header , __func__);
+  util_fread(buffer , 1 , fortio->active_header , fortio->stream , __func__);
   fortio_complete_read(fortio);
   return buffer;
 }
