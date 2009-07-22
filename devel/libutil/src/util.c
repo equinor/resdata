@@ -241,12 +241,15 @@ bool util_fseek_string(FILE * stream , const char * string) {
 
 
 
-char * util_fscanf_alloc_upto(FILE * stream , const char * stop_string) {
+char * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool include_stop_string) {
   long int start_pos = ftell(stream);
   if (util_fseek_string(stream , stop_string)) {
     long int end_pos = ftell(stream);
     int      len     = end_pos - start_pos;
-    char * buffer    = util_malloc(len + 1 , __func__);
+    char * buffer;
+    if (include_stop_string)
+      len += strlen( stop_string );
+    
     fseek(stream , start_pos , SEEK_SET);
     util_fread( buffer , 1 , len , stream , __func__);
     buffer[len] = '\0';

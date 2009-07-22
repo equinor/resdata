@@ -287,7 +287,7 @@ void 	 util_fskip_int(FILE * stream);
 void 	 util_fskip_long(FILE * stream);
 void 	 util_fskip_bool(FILE * stream);
 bool     util_fseek_string(FILE * stream , const char * string);
-char   * util_fscanf_alloc_upto(FILE * stream , const char * stop_string);
+char   * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool include_stop_string);
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_SCALAR(s,stream)  { if (fread(&s , sizeof s , 1 , stream) != 1) util_abort("%s: read failed: %s\n",__func__ , strerror(errno)); }

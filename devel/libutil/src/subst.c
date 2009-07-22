@@ -46,9 +46,9 @@
 */
 
 
-typedef enum { subst_deep_copy   = 1,     
-	       subst_managed_ref = 2,
-	       subst_shared_ref  = 3} subst_insert_type; /* Mode used in the subst_list_insert__() function */
+typedef enum { SUBST_DEEP_COPY   = 1,     
+	       SUBST_MANAGED_REF = 2,
+	       SUBST_SHARED_REF  = 3} subst_insert_type; /* Mode used in the subst_list_insert__() function */
   
 
 struct subst_list_struct {
@@ -104,12 +104,12 @@ static void subst_list_node_set(subst_list_node_type * node, const char * __valu
   if (node->value_owner)
     node->value = util_safe_free(node->value);
 
-  if (insert_mode == subst_deep_copy)
+  if (insert_mode == SUBST_DEEP_COPY)
     value = util_alloc_string_copy(__value);
   else
     value = (char *) __value;
   
-  if (insert_mode == subst_shared_ref)
+  if (insert_mode == SUBST_SHARED_REF)
     node->value_owner = false;
   else
     node->value_owner = true;
@@ -188,15 +188,15 @@ static void subst_list_insert__(subst_list_type * subst_list , const char * key 
 */
    
 void subst_list_insert_ref(subst_list_type * subst_list , const char * key , const char * value) {
-  subst_list_insert__(subst_list , key , value , subst_shared_ref);
+  subst_list_insert__(subst_list , key , value , SUBST_SHARED_REF);
 }
 
 void subst_list_insert_owned_ref(subst_list_type * subst_list , const char * key , const char * value) {
-  subst_list_insert__(subst_list , key , value , subst_managed_ref);
+  subst_list_insert__(subst_list , key , value , SUBST_MANAGED_REF);
 }
 
 void subst_list_insert_copy(subst_list_type * subst_list , const char * key , const char * value) {
-  subst_list_insert__(subst_list , key , value , subst_deep_copy);
+  subst_list_insert__(subst_list , key , value , SUBST_DEEP_COPY);
 }
 
 
@@ -335,7 +335,7 @@ subst_list_type * subst_list_alloc_deep_copy(const subst_list_type * src) {
   subst_list_type * copy = subst_list_alloc();
   for (index = 0; index < vector_get_size( src->data ); index++) {
     const subst_list_node_type * node = vector_iget_const( src->data , index );
-    subst_list_insert__( copy , node->key , node->value , subst_deep_copy);
+    subst_list_insert__( copy , node->key , node->value , SUBST_DEEP_COPY);
   }
   return copy;
 }
@@ -344,3 +344,27 @@ subst_list_type * subst_list_alloc_deep_copy(const subst_list_type * src) {
 int subst_list_get_size( const subst_list_type * subst_list) {
   return vector_get_size(subst_list->data);
 }
+
+
+
+const char * subst_list_iget_key( const subst_list_type * subst_list , int index) {
+  if (index < vector_get_size(subst_list->data)) {
+    const subst_list_node_type * node = vector_iget_const( subst_list->data , index );
+    return node->key;
+  } else {
+    util_abort("%s: index:%d to large \n",__func__ , index);
+    return NULL;
+  }
+}
+
+
+const char * subst_list_iget_value( const subst_list_type * subst_list , int index) {
+  if (index < vector_get_size(subst_list->data)) {
+    const subst_list_node_type * node = vector_iget_const( subst_list->data , index );
+    return node->value;
+  } else {
+    util_abort("%s: index:%d to large \n",__func__ , index);
+    return NULL;
+  }
+}
+
