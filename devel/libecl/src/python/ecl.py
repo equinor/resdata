@@ -193,6 +193,10 @@ class Zone:
       ret = self.grid.get_active_index1(i)
       if ret != -1:
         data = obj.apply(self, ret)
+        if not isinstance(data, dict):
+          print "Error: the apply function has to return a 'dict' type!"
+          sys.exit()
+          
         for key in data.keys():
           if not self.cache.has_key(key):
             self.cache[key] = list()

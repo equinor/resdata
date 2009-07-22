@@ -7,6 +7,15 @@ import getopt
 from ecl import *
 
 
+class Timeshift(Rockphysics):
+  def __init__(self):
+    pass
+
+  def apply(self, zone, active_index):
+    return dict()
+
+
+
 class Gassmann(Rockphysics):
   def __init__(self, config):
     try:
@@ -35,7 +44,10 @@ class Gassmann(Rockphysics):
     adiabatic_index = self.adiabatic_index
     k_o = self.k_o
     k_w = self.k_w
-    
+
+    return self.calculate_velocities(pressure, sgas, swat, poro_c, rho_o, rho_g, rho_w, k_m, mu_m, rho_m, poro_c, adiabatic_index, k_o, k_w)
+
+  def calculate_velocities(self, pressure, sgas, swat, poro, rho_o, rho_g, rho_w, k_m, mu_m, rho_m, poro_c, adiabatic_index, k_o, k_w):
     try:
       if swat < 0:
         swat = 0
@@ -78,6 +90,7 @@ class Gassmann(Rockphysics):
       ret = dict(VP = v_p, VS = v_s)
 
       return ret
+
     
 def display_usage():
     print 'Usage: %s --config=<config_file>' % (sys.argv[0]) 
@@ -126,28 +139,29 @@ if __name__ == '__main__':
   except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
     raise e
 
+  print "Loading the zones."
   keywords = ('PORO', 'PRESSURE', 'SGAS', 'SWAT', 'OIL_DEN', 'GAS_DEN', 'WAT_DEN')
   base = Zone(grid_file, keywords, init_file, restartfile_base)
-  base.apply_function(Gassmann(config))
-
   mon = Zone(grid_file, keywords, init_file, restartfile_mon)
+
+  print "Applying Gassmann base calculation."
+  base.apply_function(Gassmann(config))
+  print "Applying Gassmann monitor calculation."
   mon.apply_function(Gassmann(config))
 
-  test = Zone(grid_file)
-  test.load_data_from_file(keywords, init_file, restartfile_mon)
-
+  print "Calculating difference monitor - base."
   diff = mon - base
   diff.rename("VP", "VP_DIFF")
-  diff.delete("PORO")
+  
+  print "Loading timeshift zone."
+  timeshift = Zone(grid_file)
+  timeshift.load(base, "VP")
+  timeshift.rename("VP", "VP_BASE")
+  timeshift.load(mon, "VP")
+  timeshift.rename("VP", "VP_MON")
+  timeshift.load(diff, "VP_DIFF")
 
-  base.load(diff, "VP_DIFF")
-  base.delete("VP_DIFF")
-  a = base.get_values("VP")
-  b = mon.get_values("VP")
+  print "Applying timeshift calculation."
+  timeshift.apply_function(Timeshift())
 
   diff.append_keyword_to_grdecl("diff.GRDECL", "VP_DIFF")
-  mon.append_keyword_to_grdecl("foobar.GRDECL", "VP")
-
-  base.write_keyword_to_dat("foobar.dat", "VP")
-  base.write_all_keywords_to_grdecl("all.GRDECL")
-  test.write_all_keywords_to_grdecl("test.GRDECL")
