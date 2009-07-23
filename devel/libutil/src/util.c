@@ -3831,51 +3831,42 @@ char * util_alloc_PATH_executable(const char * executable) {
 
 static void util_addr2line_lookup(const char * executable , const char * bt_symbol , char ** func_name , char ** file_line) {
   char *tmp_file = util_alloc_tmp_file("/tmp" , "addr2line" , true);
+  char * adress;
   {
-    /**
-       This seemingly funny code is to invoke the disk_full check in util_fopen().
-    */
-    FILE * stream = util_fopen(tmp_file , "w");
-    fclose( stream );
-  }
-  {
-    char * adress;
-    {
-      int start_pos = 0;
-      int end_pos;   
-      while ( bt_symbol[start_pos] != '[')
-        start_pos++;
-
+    int start_pos = 0;
+    int end_pos;   
+    while ( bt_symbol[start_pos] != '[')
+      start_pos++;
+    
       end_pos = start_pos;
       while ( bt_symbol[end_pos] != ']') 
         end_pos++;
-    
+      
       adress = util_alloc_substring_copy( &bt_symbol[start_pos + 1] , end_pos - start_pos - 1 );
-    }
-
-    {
-      char ** argv;
-
-      argv    = util_malloc(3 * sizeof * argv , __func__);
-      argv[0] = util_alloc_string_copy("--functions");
-      argv[1] = util_alloc_sprintf("--exe=%s" , executable);
-      argv[2] = util_alloc_string_copy(adress);
-    
-      util_vfork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , NULL , tmp_file , NULL);
-      util_free_stringlist(argv , 3);
-    }
-
-    {
-      bool at_eof;
-      FILE * stream = util_fopen(tmp_file , "r");
-      *func_name = util_fscanf_alloc_line(stream , &at_eof);
-      *file_line = util_fscanf_alloc_line(stream , &at_eof);
-      fclose(stream);
-    }
-    util_unlink_existing(tmp_file);
-    free(adress);
-    free(tmp_file);
   }
+  
+  {
+    char ** argv;
+    
+    argv    = util_malloc(3 * sizeof * argv , __func__);
+    argv[0] = util_alloc_string_copy("--functions");
+    argv[1] = util_alloc_sprintf("--exe=%s" , executable);
+    argv[2] = util_alloc_string_copy(adress);
+    
+    util_vfork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , NULL , tmp_file , NULL);
+    util_free_stringlist(argv , 3);
+  }
+  
+  {
+    bool at_eof;
+    FILE * stream = util_fopen(tmp_file , "r");
+    *func_name = util_fscanf_alloc_line(stream , &at_eof);
+    *file_line = util_fscanf_alloc_line(stream , &at_eof);
+    fclose(stream);
+  }
+  util_unlink_existing(tmp_file);
+  free(adress);
+  free(tmp_file);
 }
 
 
@@ -4112,10 +4103,11 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
 
 /**
    This function does the following:
-   1. Fork current process.
-   2. if (run_path != NULL) chdir(run_path)
-   3. The child execs() to run executable.
-   4. Parent can wait (blocking = true) on the child to complete executable.
+
+    1. Fork current process.
+    2. if (run_path != NULL) chdir(run_path)
+    3. The child execs() to run executable.
+    4. Parent can wait (blocking = true) on the child to complete executable.
 
    If the executable is an absolute path it will run the command with
    execv(), otherwise it will use execvp() which will (try) to look up
@@ -4178,9 +4170,20 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
 	util_abort("%s: failed to change to directory:%s  %s \n",__func__ , run_path , strerror(errno));
     }
 
+    if (stdout_file != NULL) {
+      /** This is just to invoke the "block on full disk behaviour" before the external program starts. */
+      FILE * stream = util_fopen( stdout_file , "w");
+      fclose(stream);
+      __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
+    }
+    if (stderr_file != NULL) {
+      /** This is just to invoke the "block on full disk behaviour" before the external program starts. */
+      FILE * stream = util_fopen( stderr_file , "w");
+      fclose(stream);
+      __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
+    }
     if (stdin_file  != NULL) __util_redirect(0 , stdin_file  , O_RDONLY);
-    if (stdout_file != NULL) __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
-    if (stderr_file != NULL) __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
+
     
     __argv        = util_malloc((argc + 2) * sizeof * __argv , __func__);  
     __argv[0]     = executable;
