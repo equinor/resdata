@@ -2,7 +2,6 @@
 %include "typemaps.i"
 
 %{
-#include <util.h>
 #include <ecl_util.h>
 #include <ecl_sum.h>
 #include <ecl_file.h>
@@ -10,6 +9,7 @@
 #include <ecl_grid.h>
 #include <fortio.h>
 #include <stdio.h>
+#include <rms_export.h>
 %}
 
 
@@ -56,6 +56,26 @@
 }
 
 %typemap(freearg) float *values {
+	free($1);
+}
+
+
+%typemap(in) ecl_kw_type ** {
+  if (PyList_Check($input)) {
+    int size = PyList_Size($input);
+    int i = 0;
+    $1 = malloc((size + 1) * (sizeof *$1));
+    for (i = 0; i < size; i++) {
+      PyObject *o = PyList_GetItem($input,i);
+      SWIG_ConvertPtr(o, (void **) &$1[i], SWIGTYPE_p_ecl_kw_type, SWIG_POINTER_EXCEPTION);
+    }
+  } else {
+    PyErr_SetString(PyExc_TypeError,"not a list");
+    return NULL;
+  }
+}
+
+%typemap(freearg) ecl_kw_type ** {
 	free($1);
 }
 
@@ -237,6 +257,10 @@ int             ecl_grid_get_active_size( const ecl_grid_type * ecl_grid );
 int             ecl_grid_get_global_size( const ecl_grid_type * ecl_grid );
 int             ecl_grid_get_active_index1(const ecl_grid_type * ecl_grid , int global_index);
 int             ecl_grid_get_global_index3(const ecl_grid_type * , int  , int , int );
+
+/* rms_export.h */
+void            rms_export_roff_from_keyword(const char *filename, ecl_grid_type *ecl_grid, 
+                                             ecl_kw_type **ecl_kw, int size);
 
 /* ANSI-C */
 void free(void *ptr);

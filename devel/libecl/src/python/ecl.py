@@ -180,6 +180,8 @@ class Zone:
               items.append(data)
           self.cache[str_kw] = items
 
+    self.ecl_file_list = ecl_file_list
+
 
 
   ##
@@ -300,6 +302,22 @@ class Zone:
     f.close()
 
 
+  def write_all_keywords_to_roff(self, file):
+    print "Writing %d keywords to '%s'" % (len(self.cache.keys()), file)
+
+    k = list()
+    for f in self.ecl_file_list:
+      for j in xrange(f.get_num_distinct_kw()):
+        str_kw = f.iget_distinct_kw(j)
+        if str_kw in self.keywords:
+          ith_kw = 0
+          kw_type = f.iget_named_kw(str_kw, ith_kw)
+          k.append(kw_type)
+          
+    e = rms_export(self.grid_file)
+    e.roff_from_keyword(file, k)
+
+
   ##
   # Write (append if the file exists) all the cached keywords
   # in the current zone.
@@ -321,6 +339,16 @@ class Zone:
 ## 
 ####################################################################
 
+class rms_export:
+  def __init__(self, grid_file):
+    self.grid = ecl_grid(grid_file)
+
+  def roff_from_keyword(self, filename, keywords):
+    l = list()
+    for kw_type in keywords:
+      l.append(kw_type.k)
+    rms_export_roff_from_keyword(filename, self.grid.g, l, len(l))
+    
 
 class ecl_summary:
 	def __init__(self, ecl_data_file):

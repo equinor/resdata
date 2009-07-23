@@ -1,10 +1,10 @@
 TARGET     = libecl
 CC         = gcc4
 CFLAGS     = -g -fPIC -Wall -std=gnu99 
-HEADERS    = #../ecl_sum.h ../ecl_util.h
-SRCS       = #../ecl_sum.c ../ecl_util.c
-INCLUDES   = -I../../include -I../../../libutil/include
-LIBS = -L../../../libutil/lib -L../../lib -lecl -lutil -lz -lm -lpthread
+HEADERS    = 
+SRCS       = 
+INCLUDES   = -I../../include -I../../../libutil/include -I../../../librms/include
+LIBS = -L../../../librms/lib -L../../../libutil/lib -L../../lib -lrms -lecl -lutil -lz -lm -lpthread
 INTERFACE  = libecl.i
 SWIG       = swig
  

@@ -143,6 +143,8 @@ if __name__ == '__main__':
   keywords = ('PORO', 'PRESSURE', 'SGAS', 'SWAT', 'OIL_DEN', 'GAS_DEN', 'WAT_DEN')
   base = Zone(grid_file, keywords, init_file, restartfile_base)
   mon = Zone(grid_file, keywords, init_file, restartfile_mon)
+  mon.write_all_keywords_to_roff("haha.roff")
+  
 
   print "Applying Gassmann base calculation."
   base.apply_function(Gassmann(config))
