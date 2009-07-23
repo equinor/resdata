@@ -185,13 +185,17 @@ void util_rewind_line(FILE *stream) {
 
 
 /**
-   This function will reposition the stream pointer at the (beginning
-   of) the first occurence of 'string'. If 'string' is found the
-   function will return true, otherwise the function will return
-   false, and stream pointer will be at the original position.
+   This function will reposition the stream pointer at the the first
+   occurence of 'string'. If 'string' is found the function will
+   return true, otherwise the function will return false, and stream
+   pointer will be at the original position.
+
+   If skip_string == true the stream position will be positioned
+   immediately after the 'string', otherwise it will be positioned at
+   the beginning of 'string'.
 */
 
-bool util_fseek_string(FILE * stream , const char * string) {
+bool util_fseek_string(FILE * stream , const char * string , bool skip_string) {
   int len              = strlen( string );
   long int initial_pos = ftell( stream );   /* Store the inital position. */
   bool string_found    = false;
@@ -222,9 +226,10 @@ bool util_fseek_string(FILE * stream , const char * string) {
   } while (cont);
   
   
-  if (string_found)   
-    fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
-  else
+  if (string_found) {
+    if (!skip_string)
+      fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
+  } else
     fseek(stream , initial_pos , SEEK_SET);     /* Could not find the string reposition at initial position. */
   
   return string_found;
@@ -243,13 +248,11 @@ bool util_fseek_string(FILE * stream , const char * string) {
 
 char * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool include_stop_string) {
   long int start_pos = ftell(stream);
-  if (util_fseek_string(stream , stop_string)) {
+  if (util_fseek_string(stream , stop_string , include_stop_string)) {
     long int end_pos = ftell(stream);
     int      len     = end_pos - start_pos;
-    char * buffer;
-    if (include_stop_string)
-      len += strlen( stop_string );
-    
+    char * buffer    = util_malloc( (len + 1) * sizeof * buffer , __func__);
+
     fseek(stream , start_pos , SEEK_SET);
     util_fread( buffer , 1 , len , stream , __func__);
     buffer[len] = '\0';
@@ -3828,40 +3831,51 @@ char * util_alloc_PATH_executable(const char * executable) {
 
 static void util_addr2line_lookup(const char * executable , const char * bt_symbol , char ** func_name , char ** file_line) {
   char *tmp_file = util_alloc_tmp_file("/tmp" , "addr2line" , true);
-  char * adress;
   {
-    int start_pos = 0;
-    int end_pos;   
-    while ( bt_symbol[start_pos] != '[')
-      start_pos++;
+    /**
+       This seemingly funny code is to invoke the disk_full check in util_fopen().
+    */
+    FILE * stream = util_fopen(tmp_file , "w");
+    fclose( stream );
+  }
+  {
+    char * adress;
+    {
+      int start_pos = 0;
+      int end_pos;   
+      while ( bt_symbol[start_pos] != '[')
+        start_pos++;
 
-    end_pos = start_pos;
-    while ( bt_symbol[end_pos] != ']') 
-      end_pos++;
+      end_pos = start_pos;
+      while ( bt_symbol[end_pos] != ']') 
+        end_pos++;
     
-    adress = util_alloc_substring_copy( &bt_symbol[start_pos + 1] , end_pos - start_pos - 1 );
-  }
-  {
-    char ** argv;
+      adress = util_alloc_substring_copy( &bt_symbol[start_pos + 1] , end_pos - start_pos - 1 );
+    }
 
-    argv    = util_malloc(3 * sizeof * argv , __func__);
-    argv[0] = util_alloc_string_copy("--functions");
-    argv[1] = util_alloc_sprintf("--exe=%s" , executable);
-    argv[2] = util_alloc_string_copy(adress);
+    {
+      char ** argv;
+
+      argv    = util_malloc(3 * sizeof * argv , __func__);
+      argv[0] = util_alloc_string_copy("--functions");
+      argv[1] = util_alloc_sprintf("--exe=%s" , executable);
+      argv[2] = util_alloc_string_copy(adress);
     
-    util_vfork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , NULL , tmp_file , NULL);
-    util_free_stringlist(argv , 3);
+      util_vfork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , NULL , tmp_file , NULL);
+      util_free_stringlist(argv , 3);
+    }
+
+    {
+      bool at_eof;
+      FILE * stream = util_fopen(tmp_file , "r");
+      *func_name = util_fscanf_alloc_line(stream , &at_eof);
+      *file_line = util_fscanf_alloc_line(stream , &at_eof);
+      fclose(stream);
+    }
+    util_unlink_existing(tmp_file);
+    free(adress);
+    free(tmp_file);
   }
-  {
-    bool at_eof;
-    FILE * stream = util_fopen(tmp_file , "r");
-    *func_name = util_fscanf_alloc_line(stream , &at_eof);
-    *file_line = util_fscanf_alloc_line(stream , &at_eof);
-    fclose(stream);
-  }
-  util_unlink_existing(tmp_file);
-  free(adress);
-  free(tmp_file);
 }
 
 
@@ -3918,6 +3932,7 @@ void util_abort_append_version_info(const char * msg) {
 void util_abort_free_version_info() {
   __abort_program_message = util_safe_free( __abort_program_message );
 }
+
 
 
 void util_abort(const char * fmt , ...) {

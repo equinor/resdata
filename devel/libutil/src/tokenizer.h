@@ -121,4 +121,9 @@ stringlist_type * tokenize_file(
   const char           * filename,
   bool                   strip_quote_marks);
 
+
+bool tokenizer_char_is_special(
+  const char             c,
+  const tokenizer_type * tokenizer);
+
 #endif

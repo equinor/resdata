@@ -170,6 +170,7 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
 
 
 
+
 /**
    Observe that this function will grow the vector if necessary. If
    index > size - i.e. leaving holes in the vector, these are
@@ -273,6 +274,27 @@ void <TYPE>_vector_append_many(<TYPE>_vector_type * vector , const <TYPE> * data
 */
 void <TYPE>_vector_shrink(<TYPE>_vector_type * vector) {
   <TYPE>_vector_realloc_data__(vector , vector->size);
+}
+
+
+<TYPE> <TYPE>_vector_get_max(const <TYPE>_vector_type * vector) {
+  int i;
+  <TYPE> max_value = vector->data[0];
+  for (i=0; i < vector->size; i++) {
+    if (vector->data[i] > max_value)
+      max_value = vector->data[i];
+  }
+  return max_value;
+}
+
+<TYPE> <TYPE>_vector_get_min(const <TYPE>_vector_type * vector) {
+  int i;
+  <TYPE> min_value = vector->data[0];
+  for (i=0; i < vector->size; i++) {
+    if (vector->data[i] < min_value)
+      min_value = vector->data[i];
+  }
+  return min_value;
 }
 
 

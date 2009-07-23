@@ -22,9 +22,9 @@
 
 
 int main(int argc , char ** argv) {
-  FILE * stream = util_fopen("util.c","r");
-  char * buffer = util_fscanf_alloc_upto(stream , "enkf");
-  printf("%s" , buffer);
+  FILE * stream = util_fopen("test","r");
+  char * buffer = util_fscanf_alloc_upto(stream , "Hove" , false);
+  printf("[%s]" , buffer);
   free(buffer);
   fclose(stream);
 }

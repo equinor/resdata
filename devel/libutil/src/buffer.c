@@ -392,8 +392,7 @@ void buffer_fread_realloc(buffer_type * buffer , const char * filename) {
     buffer_resize__(buffer , file_size , true);
   {
     FILE * stream        = util_fopen(filename , "r");
-    if (fread( buffer->data , 1 , file_size , stream ) != file_size) 
-      util_abort("%s: failed to read all elements in file:%s \n",__func__ , filename);
+    util_fread( buffer->data , 1 , file_size , stream , __func__);
     fclose( stream );
   }
   buffer->pos          = 0;
@@ -412,10 +411,7 @@ buffer_type * buffer_fread_alloc(const char * filename) {
 
 void buffer_store(const buffer_type * buffer , const char * filename) {
   FILE * stream        = util_fopen(filename , "w");
-  
-  if (fwrite( buffer->data , 1 , buffer->content_size , stream ) != buffer->content_size) 
-    util_abort("%s: failed to write all elements to file:%s \n",__func__ , filename);
-
+  util_fwrite( buffer->data , 1 , buffer->content_size , stream , __func__);
   fclose( stream );
 }
 

@@ -5,6 +5,7 @@
 #include <matrix.h>
 #include <thread_pool.h>
 #include <arg_pack.h>
+#include <math.h>
 
 /**
    This is V E R Y  S I M P L E matrix implementation. It is not
@@ -468,10 +469,39 @@ void matrix_set_column(matrix_type * matrix , const double * data , int column) 
 }
 
 
+void matrix_set_const_column(matrix_type * matrix , const double value , int column) {
+  int row;
+  for (row = 0; row < matrix->rows; row++)
+    matrix->data[ GET_INDEX( matrix , row , column) ] = value;
+}
+
+
+
+
 void matrix_scale_column(matrix_type * matrix , int column  , double scale_factor) {
   for (int row = 0; row < matrix->rows; row++)
     matrix->data[ GET_INDEX( matrix , row , column) ] *= scale_factor;
 }
+
+/*****************************************************************/
+/* Functions for dot products between rows/columns in matrices. */
+
+double matrix_column_column_dot_product(const matrix_type * m1 , int col1 , const matrix_type * m2 , int col2) {
+  if (m1->rows != m2->rows)
+    util_abort("%s: size mismatch \n",__func__);
+
+  if (col1 >= m1->columns || col2 >= m2->columns)
+    util_abort("%s: size mismatch \n",__func__);
+  {
+    int row;
+    double sum = 0;
+    for( row = 0; row < m1->rows; row++) 
+      sum += m1->data[ GET_INDEX(m1 , row , col1) ] * m2->data[ GET_INDEX(m2, row , col2) ];
+    
+    return sum;
+  }
+}
+
 
 
 /*****************************************************************/
@@ -733,6 +763,50 @@ bool matrix_is_quadratic(const matrix_type * matrix) {
     return false;
 }
 
+/**
+   Goes through all the elements in the matrix - and return true if they are all finite.
+*/
+
+bool matrix_is_finite(const matrix_type * matrix) {
+  int i,j;
+  for (i = 0; i < matrix->rows; i++)
+    for (j =0; j< matrix->columns; j++)
+      if ( !isfinite( matrix->data[ GET_INDEX( matrix , i , j) ]))
+        return false;
+
+  return true;
+}
+
+/**
+   This function will return the largest deviance from orthonormal
+   conditions for the matrix - i.e. when this function returns
+   0.000000 the matrix is perfectly orthonormal; otherwise it is the
+   responsability of the calling scope to evaluate.
+*/ 
+
+double matrix_orthonormality( const matrix_type * matrix ) {
+  double max_dev = 0.0;
+  int col1,col2;
+  for (col1=0; col1 < matrix->columns; col1++) {
+    for (col2=col1; col2 < matrix->columns; col2++) {
+      double dot_product = matrix_column_column_dot_product( matrix , col1 , matrix , col2);
+      double dev;
+
+      if (col1 == col2)
+        dev = fabs( dot_product - 1.0 );
+      else
+        dev = fabs( dot_product );
+      
+      if (dev > max_dev)
+        max_dev = dev;
+    }
+  }
+  return max_dev;
+}
+
+
+
+
 
 /**
    Return true if the two matrices m1 and m2 are equal. The equality
@@ -782,8 +856,8 @@ void matrix_diag_set(matrix_type * matrix , const double * diag) {
 
 
 /**
-   Fills the matrix with uniformly distributed random numbers;
-   samepled with the standard built in rand() function.
+   Fills the matrix with uniformly distributed random numbers; sampled
+   with the standard built in rand() function.
 */
 
 void matrix_random_init(matrix_type * matrix) {

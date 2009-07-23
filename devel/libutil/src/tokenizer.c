@@ -140,9 +140,10 @@ bool is_whitespace(
 }
 
 
-
-static
-bool is_special(
+/**
+   This one is exported.
+*/
+bool tokenizer_char_is_special(
   const char             c,
   const tokenizer_type * tokenizer)
 {
@@ -153,6 +154,17 @@ bool is_special(
   else
     return false;
 }
+
+
+//bool tokenizer_string_is_special(const char * string , const tokenizer_type * tokenizer)
+//{
+//  if( tokenizer->specials == NULL)
+//    return false;
+//  else if( strchr( tokenizer->specials, (int) c) != NULL)
+//    return true;
+//  else
+//    return false;
+//}
 
 
 
@@ -329,7 +341,7 @@ int length_of_normal_non_whitespace(
       at_end = true;
       continue;
     }
-    if( is_special( current, tokenizer ) )
+    if( tokenizer_char_is_special( current, tokenizer ) )
     {
       at_end = true;
       continue;
@@ -393,7 +405,7 @@ stringlist_type * tokenize_buffer(
     /** 
        Copy the character if it is in the special set,
     */
-    if( is_special( buffer[position], tokenizer ) )
+    if( tokenizer_char_is_special( buffer[position], tokenizer ) )
     {
       char key[2];
       key[0] = buffer[position];

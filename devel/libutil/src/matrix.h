@@ -44,8 +44,11 @@ double        matrix_get_column_sum(const matrix_type * matrix , int column);
 double        matrix_get_row_sum(const matrix_type * matrix , int column);
 void          matrix_subtract_row_mean(matrix_type * matrix);
 void          matrix_scale_column(matrix_type * matrix , int column  , double scale_factor);
+void          matrix_set_const_column(matrix_type * matrix , const double value , int column);
 
 double      * matrix_get_data(const matrix_type * matrix);
+bool          matrix_is_finite(const matrix_type * matrix);
+double        matrix_orthonormality( const matrix_type * matrix );
 
 matrix_type * matrix_alloc_steal_data(int rows , int columns , double * data , int data_size);
 void          matrix_set_column(matrix_type * matrix , const double * data , int column);
@@ -63,6 +66,8 @@ bool          matrix_equal( const matrix_type * m1 , const matrix_type * m2);
 void          matrix_diag_set(matrix_type * matrix , const double * diag);
 void          matrix_random_init(matrix_type * matrix);
 void          matrix_matlab_dump(const matrix_type * matrix, const char * filename);
+
+double        matrix_column_column_dot_product(const matrix_type * m1 , int col1 , const matrix_type * m2 , int col2);
 
 #ifdef __cplusplus 
 }

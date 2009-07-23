@@ -157,3 +157,6 @@ void matrix_dgemm(matrix_type *C , const matrix_type *A , const matrix_type * B 
 void matrix_matmul(matrix_type * C, const matrix_type * A , const matrix_type * B) {
   matrix_dgemm( C , A , B , false , false , 1 , 0);
 }
+
+
+
