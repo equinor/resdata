@@ -5,14 +5,20 @@ import ConfigParser
 from itertools import *
 import getopt
 from ecl import *
-
+sys.path.append("/private/masar/numpy/lib64/python2.3/site-packages/")
+import numpy as np
 
 class Timeshift(Rockphysics):
   def __init__(self):
-    pass
+    self.nx = 0
+    self.ny = 0
+    self.nz = 0
 
   def apply(self, zone, active_index):
-    return dict()
+    dz = zone.get_data("DZ", active_index)
+    vp = zone.get_data("VP", active_index)
+    t = dz / vp
+    return dict(TIME = t)
 
 
 
@@ -40,12 +46,30 @@ class Gassmann(Rockphysics):
     k_m = self.k_m
     mu_m = self.mu_m
     rho_m = self.rho_m
-    poro_c = self.poro_c
-    adiabatic_index = self.adiabatic_index
     k_o = self.k_o
     k_w = self.k_w
+    poro_c = self.poro_c
+    adiabatic_index = self.adiabatic_index
 
-    return self.calculate_velocities(pressure, sgas, swat, poro_c, rho_o, rho_g, rho_w, k_m, mu_m, rho_m, poro_c, adiabatic_index, k_o, k_w)
+    ##
+    ## Grab observed values from the PEM_main.m from
+    ## /d/proj/bg/ior_fsenter2/grane/ressim/hstruct/2008a/e100/EnKF/sf02rg01/Seismic/matlab_AI
+    ##
+    ## k_m - 18.0e8 : 100000 : 18.0e10
+    ## k_o - 1.50e8 : 100000 : 1.50e10
+    ## k_w - 2.34e8 : 100000 : 2.34e10
+    ## mu_m - 3.2e8 : 100000 : 3.2e10
+    ## rho_m = 2.65e2 : 100000 : 2.65e4
+    ## 
+    ## k = (k_m, k_o, k_w, mu_m, rho_m)
+    ## p = (pressure, sgas, swat, poro, rho_o, rho_g, rho_w)
+    ## observed = np.array([vp, vs])
+    ##
+    ## argmin p( k | observed ) = (1/2*sigma) exp ( | observed - calculate_velocities(p, k) |^2 )
+    ##
+    ##
+
+    return self.calculate_velocities(pressure, sgas, swat, poro, rho_o, rho_g, rho_w, k_m, mu_m, rho_m, poro_c, adiabatic_index, k_o, k_w)
 
   def calculate_velocities(self, pressure, sgas, swat, poro, rho_o, rho_g, rho_w, k_m, mu_m, rho_m, poro_c, adiabatic_index, k_o, k_w):
     try:
@@ -87,9 +111,7 @@ class Gassmann(Rockphysics):
       print "ArithmeticError: %s for global index %d" % (e, j)
       raise
     else:
-      ret = dict(VP = v_p, VS = v_s)
-
-      return ret
+      return dict(VP = v_p, VS = v_s)
 
     
 def display_usage():
@@ -143,27 +165,40 @@ if __name__ == '__main__':
   keywords = ('PORO', 'PRESSURE', 'SGAS', 'SWAT', 'OIL_DEN', 'GAS_DEN', 'WAT_DEN')
   base = Zone(grid_file, keywords, init_file, restartfile_base)
   mon = Zone(grid_file, keywords, init_file, restartfile_mon)
-  mon.write_all_keywords_to_roff("haha.roff")
-  
 
   print "Applying Gassmann base calculation."
   base.apply_function(Gassmann(config))
   print "Applying Gassmann monitor calculation."
   mon.apply_function(Gassmann(config))
+  mon.write_all_keywords_to_roff("monitor.roff")
 
-  print "Calculating difference monitor - base."
   diff = mon - base
   diff.rename("VP", "VP_DIFF")
-  
-  print "Loading timeshift zone."
-  timeshift = Zone(grid_file)
-  timeshift.load(base, "VP")
-  timeshift.rename("VP", "VP_BASE")
-  timeshift.load(mon, "VP")
-  timeshift.rename("VP", "VP_MON")
-  timeshift.load(diff, "VP_DIFF")
+  diff.write_all_keywords_to_roff("diff.roff")
+
+  keywords = ['DZ']
+  time_base = Zone(grid_file, keywords, init_file)
+  time_base.load(base, "VP")
+  time_mon = Zone(grid_file, keywords, init_file)
+  time_mon.load(mon, "VP")
 
   print "Applying timeshift calculation."
-  timeshift.apply_function(Timeshift())
+  time_base.apply_function(Timeshift())
+  time_mon.apply_function(Timeshift())
 
-  diff.append_keyword_to_grdecl("diff.GRDECL", "VP_DIFF")
+  time_diff = time_mon - time_base
+
+  time_diff.delete("DZ")
+  # Load DZ that has not beeb subtracted
+  time_diff.load(time_base, "DZ")
+  
+  print "calculating cumsum for time zone"
+  time_diff.cumsum_dim_k()
+  
+  time_diff.write_all_keywords_to_roff("timeshift.roff")
+  time_diff.write_all_keywords_to_grdecl("timeshift.grdecl")
+  
+  
+
+
+

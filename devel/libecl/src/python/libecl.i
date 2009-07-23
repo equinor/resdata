@@ -256,6 +256,7 @@ double 			    ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_k
 int             ecl_grid_get_active_size( const ecl_grid_type * ecl_grid );
 int             ecl_grid_get_global_size( const ecl_grid_type * ecl_grid );
 int             ecl_grid_get_active_index1(const ecl_grid_type * ecl_grid , int global_index);
+int             ecl_grid_get_active_index3(const ecl_grid_type * ecl_grid , int i , int j , int k);
 int             ecl_grid_get_global_index3(const ecl_grid_type * , int  , int , int );
 
 /* rms_export.h */

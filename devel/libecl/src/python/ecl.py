@@ -3,6 +3,8 @@ import pprint as pp
 import sys
 import time
 import os
+sys.path.append("/private/masar/numpy/lib64/python2.3/site-packages/")
+import numpy as np
 
 
 class AbstractMethod (object):
@@ -116,6 +118,42 @@ class Zone:
 
 
   ##
+  # Calculate the cumulative sum for all gridcells, based on
+  # summing over the columns in k direction.
+  ##
+  def cumsum_dim_k(self):
+    (nx, ny, nz, a_size) = self.grid.get_dims()
+    tmp = dict()
+
+    for key in self.cache.keys():
+      cells = np.zeros((nx, ny, nz))
+      
+      # Start by building a numpy matrix for all keywords.
+      for index in xrange(0, self.grid.get_global_size()):
+        ret = self.grid.get_active_index1(index)
+        if ret != -1:
+          (i, j, k) = self.grid.get_ijk1A(ret)
+          active_index = self.grid.get_active_index1(index)
+          cells[i][j][k] = self.cache[key][active_index]
+      tmp[key] = cells
+      
+    for key in self.cache.keys():
+      timeshift = np.zeros((nx, ny, nz))
+      
+      # Calculate the cumulative sum for each cell for each keyword.
+      for i in xrange(0, nx):
+        for j in xrange(0, ny):
+          for k in xrange(0, nz):
+            val = tmp[key][i, j, 0:k].sum()
+            active_index = self.grid.get_active_index3(i, j, k)
+
+            # Overwrite old keys.
+            self.cache[key][active_index] = val
+
+      
+
+    
+  ##
   # Takes two zones and then yields they common keys.
   ##
   def shared_keys(self, zone1, zone2):
@@ -144,7 +182,7 @@ class Zone:
   ##
   # Takes a keyword list and a list of init- or restartfiles.
   ##
-  def load_data_from_file(self, keywords, *arglist):
+  def load_data_from_file(self, keywords = list(), *arglist):
     if len(self.keywords) > 0:
       print "Load from file warning: already keywords in the zone, may be overwriting!"
 
@@ -181,6 +219,7 @@ class Zone:
           self.cache[str_kw] = items
 
     self.ecl_file_list = ecl_file_list
+    
 
 
 
@@ -232,7 +271,7 @@ class Zone:
   ##
   def load(self, zone, kw):
     if zone.cache.has_key(kw):
-      l = zone.cache[kw]
+      l = zone.get_values(kw)
       if self.cache.has_key(kw):
         self.delete(kw)
         print "Replacing '%s'" % kw
@@ -252,7 +291,8 @@ class Zone:
   # Get all the cached values from a key.
   ##
   def get_values(self, kw):
-    return self.cache[kw]
+    if self.cache.has_key(kw):
+      return self.cache[kw]
 
 
   ##
@@ -306,13 +346,12 @@ class Zone:
     print "Writing %d keywords to '%s'" % (len(self.cache.keys()), file)
 
     k = list()
-    for f in self.ecl_file_list:
-      for j in xrange(f.get_num_distinct_kw()):
-        str_kw = f.iget_distinct_kw(j)
-        if str_kw in self.keywords:
-          ith_kw = 0
-          kw_type = f.iget_named_kw(str_kw, ith_kw)
-          k.append(kw_type)
+    for key in self.cache.keys():
+      size = len(self.cache[key]);
+      kw_type = ecl_kw_alloc_empty()
+      ecl_kw_set_header(kw_type, key, size, "REAL")
+      ecl_kw_alloc_float_data(kw_type, self.cache[key])
+      k.append(kw_type)
           
     e = rms_export(self.grid_file)
     e.roff_from_keyword(file, k)
@@ -324,6 +363,9 @@ class Zone:
   ##
   def write_all_keywords_to_grdecl(self, file):
     print "Writing %d keywords to '%s'" % (len(self.cache.keys()), file)
+    if os.path.isfile(file): 
+      print "Warning: the file '%s' already exists, appending!" % file
+
     for key in self.cache.keys():
       l_g = self.convert_list(self.cache[key])
       k = ecl_kw()
@@ -343,11 +385,8 @@ class rms_export:
   def __init__(self, grid_file):
     self.grid = ecl_grid(grid_file)
 
-  def roff_from_keyword(self, filename, keywords):
-    l = list()
-    for kw_type in keywords:
-      l.append(kw_type.k)
-    rms_export_roff_from_keyword(filename, self.grid.g, l, len(l))
+  def roff_from_keyword(self, filename, kw_type_list):
+    rms_export_roff_from_keyword(filename, self.grid.g, kw_type_list, len(kw_type_list))
     
 
 class ecl_summary:
@@ -474,36 +513,36 @@ class ecl_file:
 	
 		
 class ecl_grid:
-	def __init__(self, grid_file):
-		endian_flip = 1
-		self.grid_file = grid_file
-		self.g = ecl_grid_alloc(grid_file, endian_flip);
-	def __del__(self):
-		ecl_grid_free(self.g)
-
-	def get_name(self):
-		return ecl_grid_get_name(self.g)
-	def get_dims(self):
-		# (i, j, k, active_size)
-		return ecl_grid_get_dims(self.g)
-	def get_ijk1(self, global_index):
-		# (i, j, k)
-		return ecl_grid_get_ijk1(self.g, global_index)
-	def get_ijk1A(self, active_index):
-		return ecl_grid_get_ijk1A(self.g, active_index)
-	def get_global_index3(self, i, j, k):
-		return ecl_grid_get_global_index3(self.g, i, j, j)
-	def get_property(self, kw_obj, ijk):
-		return ecl_grid_get_property(self.g, kw_obj.k, ijk[0], ijk[1], ijk[2])
-	def get_active_size(self):
-		return ecl_grid_get_active_size(self.g)
-	def get_global_size(self):
-		return ecl_grid_get_global_size(self.g);
-	def get_active_index1(self, global_index):
-		return ecl_grid_get_active_index1(self.g, global_index)
-
-	def summarize(self):
-		ecl_grid_summarize(self.g);
+  def __init__(self, grid_file):
+    endian_flip = 1
+    self.grid_file = grid_file
+    self.g = ecl_grid_alloc(grid_file, endian_flip);
+  def __del__(self):
+    ecl_grid_free(self.g)
+  def get_name(self):
+    return ecl_grid_get_name(self.g)
+  def get_dims(self):
+    # (i, j, k, active_size)
+    return ecl_grid_get_dims(self.g)
+  def get_ijk1(self, global_index):
+    # (i, j, k)
+    return ecl_grid_get_ijk1(self.g, global_index)
+  def get_ijk1A(self, active_index):
+    return ecl_grid_get_ijk1A(self.g, active_index)
+  def get_global_index3(self, i, j, k):
+    return ecl_grid_get_global_index3(self.g, i, j, k)
+  def get_active_index3(self, i, j, k):
+    return ecl_grid_get_active_index3(self.g, i, j, k)
+  def get_property(self, kw_obj, ijk):
+    return ecl_grid_get_property(self.g, kw_obj.k, ijk[0], ijk[1], ijk[2])
+  def get_active_size(self):
+    return ecl_grid_get_active_size(self.g)
+  def get_global_size(self):
+    return ecl_grid_get_global_size(self.g)
+  def get_active_index1(self, global_index):
+    return ecl_grid_get_active_index1(self.g, global_index)
+  def summarize(self):
+    ecl_grid_summarize(self.g);
 		
 class ecl_kw:
   def __init__(self, k = None):
