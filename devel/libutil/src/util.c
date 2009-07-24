@@ -4292,21 +4292,21 @@ int util_get_current_linenr(FILE * stream) {
 
 */
 
-#include <stringlist.h>
-#include <tokenizer.h>
-static int * util_sscanf_active_range__NEW(const char * range_string , int max_value , bool * active , int * _list_length) {
-  tokenizer_type * tokenizer = tokenizer_alloc( NULL  , /* No ordinary split characters. */
-                                                NULL  , /* No quoters. */
-                                                ",-"  , /* Special split on ',' and '-' */
-                                                " \t" , /* Removing ' ' and '\t' */
-                                                NULL  , /* No comment */
-                                                NULL  );
-  stringlist_type * tokens;
-  tokens = tokenize_buffer( tokenizer , range_string , true);
-  
-  stringlist_free( tokens );
-  tokenizer_free( tokenizer );
-} 
+//#include <stringlist.h>
+//#include <tokenizer.h>
+//static int * util_sscanf_active_range__NEW(const char * range_string , int max_value , bool * active , int * _list_length) {
+//  tokenizer_type * tokenizer = tokenizer_alloc( NULL  , /* No ordinary split characters. */
+//                                                NULL  , /* No quoters. */
+//                                                ",-"  , /* Special split on ',' and '-' */
+//                                                " \t" , /* Removing ' ' and '\t' */
+//                                                NULL  , /* No comment */
+//                                                NULL  );
+//  stringlist_type * tokens;
+//  tokens = tokenize_buffer( tokenizer , range_string , true);
+//  
+//  stringlist_free( tokens );
+//  tokenizer_free( tokenizer );
+//} 
    
 
 

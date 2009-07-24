@@ -243,7 +243,7 @@ void subst_list_filter_file(const subst_list_type * subst_list , const char * sr
     backup_file = util_alloc_tmp_file("/tmp" , backup_prefix , false);
     free(backup_prefix);
   }
-  buffer = util_fread_alloc_file_content( src_file , NULL , NULL);
+  buffer = util_fread_alloc_file_content( src_file ,  NULL);
   /* Writing backup file */
   if (backup_file != NULL) {
     FILE * stream = util_fopen(backup_file , "w");
