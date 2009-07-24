@@ -33,4 +33,4 @@ for j in xrange(0, global_size):
 		li.append(farr[k])
 		k += 1
 		
-ecl_kw().write_new_grdecl(sys.argv[3], sys.argv[4], li)
+ecl_kw().write_new_grdecl(sys.argv[3], sys.argv[4], li, "w")

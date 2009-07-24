@@ -25,6 +25,7 @@ class AbstractMethod (object):
   
 class Rockphysics(object):
   apply = AbstractMethod('apply')
+  finish = AbstractMethod('finish')
 
 
 ####################################################################
@@ -150,8 +151,6 @@ class Zone:
             # Overwrite old keys.
             self.cache[key][active_index] = val
 
-      
-
     
   ##
   # Takes two zones and then yields they common keys.
@@ -216,10 +215,10 @@ class Zone:
             if ret != -1:
               data = kw_type.iget_data(ret)
               items.append(data)
-          self.cache[str_kw] = items
+          
+            self.cache[str_kw] = items
 
     self.ecl_file_list = ecl_file_list
-    
 
 
 
@@ -234,16 +233,24 @@ class Zone:
       ret = self.grid.get_active_index1(i)
       if ret != -1:
         data = obj.apply(self, ret)
-        if not isinstance(data, dict):
-          print "Error: the apply function has to return a 'dict' type!"
-          sys.exit()
-          
-        for key in data.keys():
-          if not self.cache.has_key(key):
-            self.cache[key] = list()
-           
-          self.cache[key].append(data[key])
 
+        if data != None:
+          if not isinstance(data, dict):
+            print "Error: the apply function has to return a 'dict' type!"
+            sys.exit()
+          
+          for key in data.keys():
+            if not self.cache.has_key(key):
+              self.cache[key] = list()
+           
+            self.cache[key].append(data[key])
+            
+    tmp_cache = obj.finish()
+    if isinstance(tmp_cache, dict):
+      if len(tmp_cache.keys()) > 0:
+        for key in tmp_cache.keys():
+          self.cache[key] = tmp_cache[key]
+          print "adding finish key", key
 
   ##
   # Rename a keyword in the cache.

@@ -3,6 +3,15 @@ clear
 path(path, '/d/proj/bg/ior_fsenter2/grane/ressim/hstruct/2008a/e100/EnKF/sf02rg01/Seismic/matlab_AI')
 
 
+load SGAS.dat
+load SWAT.dat
+load PORO.dat
+load PRESSURE.dat
+
+[Vp,Vs,Rh] = PEM_main(PRESSURE, PORO, SWAT, SGAS)
+save VP.dat Vp -ASCII
+
+break;
 load VP_BASE.dat
 load VS_BASE.dat
 load VP_MON.dat
