@@ -17,15 +17,13 @@
 #include <matrix_lapack.h>
 #include <matrix_blas.h>
 #include <conf.h>
-
+#include <tokenizer.h>
 
 
 
 int main(int argc , char ** argv) {
-  FILE * stream = util_fopen("test","r");
-  char * buffer = util_fscanf_alloc_upto(stream , "Hove" , false);
-  printf("[%s]" , buffer);
-  free(buffer);
-  fclose(stream);
+  tokenizer_type * tokenizer = tokenizer_alloc(NULL , NULL , ",-" , " \n\t\r" , NULL , NULL);
+  stringlist_type * numbers = tokenize_file( tokenizer , "test" , false);
+  stringlist_fprintf(numbers , " " , stdout);
 }
 

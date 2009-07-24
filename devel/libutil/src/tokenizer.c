@@ -9,9 +9,10 @@
 
 struct tokenizer_struct
 {
-  char * whitespace;    
+  char * splitters;         /* The string is split into tokens on the occurence of one of these characters - and they are removed. */
+  char * specials;          /* This exactly like the splitters - but these characters are retained as tokens. */
+  char * delete_set;        /* The chracters are just plain removed - but without any splitting on them. */
   char * quoters;       
-  char * specials;      
   char * comment_start; 
   char * comment_end;   
 };
@@ -19,23 +20,30 @@ struct tokenizer_struct
 
 
 tokenizer_type * tokenizer_alloc(
-  const char * whitespace,       /** Set to NULL if not interessting.            */
+  const char * splitters,        /** Set to NULL if not interessting.            */
   const char * quoters,          /** Set to NULL if not interessting.            */
   const char * specials,         /** Set to NULL if not interessting.            */
+  const char * delete_set,
   const char * comment_start,    /** Set to NULL if not interessting.            */
   const char * comment_end)      /** Set to NULL  if not interessting.           */
 {
   tokenizer_type * tokenizer = util_malloc(sizeof * tokenizer, __func__);
 
 
-  if( whitespace != NULL)
+  if( splitters != NULL)
   {
-    if( strlen(whitespace) == 0)
-      util_abort("%s: Need at least one non '\\0' whitespace character.\n", __func__);
-    tokenizer->whitespace = util_alloc_string_copy( whitespace ); 
+    if( strlen(splitters) == 0)
+      util_abort("%s: Need at least one non '\\0' splitters character.\n", __func__);
+    tokenizer->splitters = util_alloc_string_copy( splitters ); 
   }
   else
-    tokenizer->whitespace = NULL;
+    tokenizer->splitters = NULL;
+  
+  if (delete_set != NULL)
+    tokenizer->delete_set = util_alloc_string_copy( delete_set );
+  else
+    tokenizer->delete_set = NULL;
+
 
   if( quoters != NULL )
   {
@@ -77,6 +85,7 @@ tokenizer_type * tokenizer_alloc(
     util_abort("%s: Need to have comment_start when comment_end is set.\n", __func__);
   if(comment_start != NULL && comment_end == NULL)
     util_abort("%s: Need to have comment_end when comment_start is set.\n", __func__);
+  
 
   return tokenizer;
 }
@@ -86,14 +95,15 @@ tokenizer_type * tokenizer_alloc(
 void tokenizer_free(
   tokenizer_type * tokenizer)
 {
- free( tokenizer->whitespace    );
 
- util_safe_free( tokenizer->quoters       ); 
- util_safe_free( tokenizer->specials      ); 
- util_safe_free( tokenizer->comment_start );
- util_safe_free( tokenizer->comment_end   );
+  util_safe_free( tokenizer->splitters    );
+  util_safe_free( tokenizer->quoters       ); 
+  util_safe_free( tokenizer->specials      ); 
+  util_safe_free( tokenizer->comment_start );
+  util_safe_free( tokenizer->comment_end   );
+  util_safe_free( tokenizer->delete_set    );
 
- free( tokenizer     );
+  free( tokenizer     );
 }
 
 
@@ -110,62 +120,48 @@ bool is_escape(
 
 
 
+
 static
-int length_of_initial_whitespace(
+int length_of_initial_splitters(
   const char           * buffer_position,
   const tokenizer_type * tokenizer)
 {
   assert( buffer_position != NULL );
   assert( tokenizer       != NULL );
 
-  if( tokenizer->whitespace == NULL)
+  if( tokenizer->splitters == NULL)
     return 0;
   else
-    return strspn( buffer_position, tokenizer->whitespace );
+    return strspn( buffer_position, tokenizer->splitters );
 }
 
+static bool in_set(char c , const char * set) {
+  if (set == NULL)
+    return false;
+  else {
+    if (strchr( set , (int) c) != NULL)
+      return true;
+    else
+      return false;
+  }
+}
 
 
 static
-bool is_whitespace(
+bool is_splitters(
   const char             c,
   const tokenizer_type * tokenizer)
 {
-  if( tokenizer->whitespace == NULL)
-    return false;
-  else if( strchr( tokenizer->whitespace, (int) c) != NULL)
-    return true;
-  else
-    return false;
+  return in_set(c , tokenizer->splitters);
 }
 
-
-/**
-   This one is exported.
-*/
-bool tokenizer_char_is_special(
+static 
+bool is_special(
   const char             c,
   const tokenizer_type * tokenizer)
 {
-  if( tokenizer->specials == NULL)
-    return false;
-  else if( strchr( tokenizer->specials, (int) c) != NULL)
-    return true;
-  else
-    return false;
+  return in_set(c , tokenizer->specials);
 }
-
-
-//bool tokenizer_string_is_special(const char * string , const tokenizer_type * tokenizer)
-//{
-//  if( tokenizer->specials == NULL)
-//    return false;
-//  else if( strchr( tokenizer->specials, (int) c) != NULL)
-//    return true;
-//  else
-//    return false;
-//}
-
 
 
 static
@@ -173,21 +169,14 @@ bool is_in_quoters(
   const char       c,
   const tokenizer_type * tokenizer)
 {
-  bool in_set = false;
-  if(tokenizer->quoters == NULL)
-    in_set = false;
-  else
-  {
-    const char * char_pos = strchr( tokenizer->quoters, (int) c);
-    if( char_pos != NULL)
-      in_set = true;
-    else
-      in_set = false;
-  }
-    
-  return in_set;
+  return in_set(c , tokenizer->quoters);
 }
 
+
+
+static bool is_in_delete_set(const char c , const tokenizer_type * tokenizer) {
+  return in_set(c , tokenizer->delete_set);
+}
 
 
 /**
@@ -322,8 +311,15 @@ char * alloc_quoted_token(
 
 
 
+
+/** 
+    This does not care about the possible occurence of characters in
+    the delete_set. That is handled when the token is inserted in the
+    token list.
+*/
+    
 static
-int length_of_normal_non_whitespace(
+int length_of_normal_non_splitters(
   const char           * buffer,
   const tokenizer_type * tokenizer)
 {
@@ -336,12 +332,12 @@ int length_of_normal_non_whitespace(
     length += 1;
     current = buffer[length];
 
-    if( is_whitespace( current, tokenizer ) )
+    if( is_splitters( current, tokenizer ) )
     {
       at_end = true;
       continue;
     }
-    if( tokenizer_char_is_special( current, tokenizer ) )
+    if( is_special( current, tokenizer ) )
     {
       at_end = true;
       continue;
@@ -363,6 +359,18 @@ int length_of_normal_non_whitespace(
 
 
 
+static int length_of_delete( const char * buffer , const tokenizer_type * tokenizer) {
+  int length   = 0;
+  char current = buffer[0];
+
+  while(is_in_delete_set( current , tokenizer ) && current != '\0') {
+    length += 1;
+    current = buffer[length];
+  }
+  return length;
+}
+
+
 /**
    Allocates a new stringlist. 
 */
@@ -373,20 +381,21 @@ stringlist_type * tokenize_buffer(
 {
   int position          = 0;
   int buffer_size       = strlen(buffer);
-  int whitespace_length = 0;
+  int splitters_length  = 0;
   int comment_length    = 0;
+  int delete_length     = 0;
 
   stringlist_type * tokens = stringlist_alloc_new();
 
   while( position < buffer_size )
   {
     /** 
-      Skip initial whitespace.
+      Skip initial splitters.
     */
-    whitespace_length = length_of_initial_whitespace( &buffer[position], tokenizer );
-    if(whitespace_length > 0)
+    splitters_length = length_of_initial_splitters( &buffer[position], tokenizer );
+    if(splitters_length > 0)
     {
-      position += whitespace_length;
+      position += splitters_length;
       continue;
     }
 
@@ -401,11 +410,23 @@ stringlist_type * tokenize_buffer(
       continue;
     }
 
+    
+    /**
+       Skip characters which are just deleted. 
+    */
+      
+    delete_length = length_of_delete( &buffer[position] , tokenizer );
+    if (delete_length > 0) {
+      position += delete_length;
+      continue;
+    }
+
+
 
     /** 
        Copy the character if it is in the special set,
     */
-    if( tokenizer_char_is_special( buffer[position], tokenizer ) )
+    if( is_special( buffer[position], tokenizer ) )
     {
       char key[2];
       key[0] = buffer[position];
@@ -435,22 +456,44 @@ stringlist_type * tokenize_buffer(
       2. The start of a comment.
       3. A special character.
       4. The start of a quotation.
+      5. Something to delete.
 
       In other words, it is the start of plain
-      non-whitespace. Now we need to find the
-      length of the non-whitespace until:
+      non-splitters. Now we need to find the
+      length of the non-splitters until:
 
       1. Whitespace starts.
       2. A comment starts.
       3. A special character occur.
       4. A quotation starts.
     */
+
     {
-      int length = length_of_normal_non_whitespace( &buffer[position], tokenizer );
+      int length   = length_of_normal_non_splitters( &buffer[position], tokenizer );
       char * token = util_malloc( (length + 1) * sizeof * token, __func__ );
-      memmove(token, &buffer[position], length * sizeof * token );
-      token[length] = '\0';
-      stringlist_append_owned_ref( tokens, token );
+      int token_length;
+      if (tokenizer->delete_set == NULL) {
+        token_length = length;
+        memcpy( token , &buffer[position] , length * sizeof * token );
+      } else {
+        int i;
+        token_length = 0;
+        for (i = 0; i < length; i++) {
+          char c = buffer[position + i];
+          if ( !is_in_delete_set( c , tokenizer)) {
+            token[token_length] = c;
+            token_length++;
+          }
+        }
+      }
+
+
+      if (token_length > 0) { /* We do not insert empty tokens. */
+        token[token_length] = '\0';
+        stringlist_append_owned_ref( tokens, token );
+      } else 
+        free( token );    /* The whole thing is discarded. */
+
       position += length;
       continue;
     }
@@ -473,7 +516,3 @@ stringlist_type * tokenize_file(
   return tokens;
 }
 
-
-//void tokenize_realloc_buffer( const tokenizer_type * tokenizer , char * buffer) {
-//  
-//}

@@ -8,7 +8,7 @@ int main(int argc, char ** argv)
   if(argc < 2)
     util_exit("usage: grdecl_to_ascii file_1.grdecl file_2.grdecl ... file_N.grdecl.\n");
 
-  tokenizer_type * tokenizer = tokenizer_alloc(" \t\r\n", NULL , NULL , "--", "\n");
+  tokenizer_type * tokenizer = tokenizer_alloc(" \t\r\n", NULL , NULL , NULL , "--", "\n");
 
   for(int i=1; i<argc; i++)
   {

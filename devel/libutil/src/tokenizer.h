@@ -11,17 +11,18 @@ typedef struct tokenizer_struct tokenizer_type;
   The tokenizer_type is used to create a series of "tokens"
   from a file or string buffer. In it's simplest form,
   we define a token as a subset of a string separated by
-  by some "white space" characters.
+  by some split characters.
 
   For example, if we define the normal space (i.e. " ") as
-  the only white space character, "tokenizing" the string
+  the only split character, "tokenizing" the string
   "I like     beer  " would give the following result:
 
   Token number 0 is "I"
   Token number 1 is "like"
   Token number 2 is "beer"
 
-  Note that all the white space has been removed.
+  Note that all the white space (i.e. split characters) have been
+  removed.
 
 
 
@@ -103,6 +104,7 @@ tokenizer_type * tokenizer_alloc(
   const char * whitespace,       /** Set to NULL if not interessting.         */
   const char * quoters,          /** Set to NULL if not interessting.         */
   const char * specials,         /** Set to NULL if not interessting.         */
+  const char * delete_set, 
   const char * comment_start,    /** Set to NULL if not interessting.         */
   const char * comment_end);     /** Set to NULL if not interessting.         */
 
@@ -121,9 +123,5 @@ stringlist_type * tokenize_file(
   const char           * filename,
   bool                   strip_quote_marks);
 
-
-bool tokenizer_char_is_special(
-  const char             c,
-  const tokenizer_type * tokenizer);
 
 #endif

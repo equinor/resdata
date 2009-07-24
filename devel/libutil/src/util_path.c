@@ -92,7 +92,8 @@ void util_make_path(const char *_path) {
 
       path/prefix-RANDOM
 
-   Observe that prefix can *NOT* contain any path sections, i.e. '/'.
+   Observe that IFF the prefix contains any path separator character
+   they are translterated to "_".
 */
 
 char * util_alloc_tmp_file(const char * path, const char * prefix , bool include_pid ) {
@@ -107,13 +108,7 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
   
   if (!util_is_directory(path))
     util_make_path(path);
-  {
-    int i;
-    for (i = 0; i < strlen(prefix); i++)
-      if (prefix[i] == UTIL_PATH_SEP_CHAR)
-	util_abort("%s: prefix:%s invalid - can not contain path separator:\'%s\' - aborting\n",__func__ , prefix , UTIL_PATH_SEP_STRING);
-  }
-
+  util_string_tr( prefix ,  UTIL_PATH_SEP_CHAR , '_');  /* removing path seps. */
   
   do {
     long int rand_int = random() % random_max;

@@ -1,4 +1,7 @@
 include global_config
+SVN_VERSION 	   = $(shell svnversion ./)
+COMPILE_TIME_STAMP = $(shell date)
+
 #################################################################
 COMPILE_INCLUDE   = -I./  
 COMPILE_LIB_PATH  = 
@@ -58,7 +61,7 @@ $(VECTOR_SOURCE): vector_template.c $(VECTOR_HEADERS) util.o
 	sed -e 's/<TYPE>/time_t/g' vector_template.c > time_t_vector.c
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $(CPPFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $(CPPFLAGS) -D'SVN_VERSION="$(SVN_VERSION)"' -D'COMPILE_TIME_STAMP="$(COMPILE_TIME_STAMP)"' $< -o $@
 
 
 

@@ -22,6 +22,7 @@
 #define __CONF_COM_STOP   "\n"
 #define __CONF_SPECIAL    "[]{}="
 #define __CONF_QUOTERS    "'\""
+#define __CONF_DELETE     NULL
 
 #define __CONF_VEC_START "["
 #define __CONF_VEC_STOP  "]"
@@ -380,6 +381,7 @@ int create_token_buffer(
     tokenizer_type * tokenizer   = tokenizer_alloc(__CONF_WHITESPACE,
                                                    __CONF_QUOTERS,
                                                    __CONF_SPECIAL,
+                                                   __CONF_DELETE,
                                                    __CONF_COM_START,
                                                    __CONF_COM_STOP);
 

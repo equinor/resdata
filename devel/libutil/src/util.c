@@ -62,9 +62,7 @@ static bool EOL_CHAR(char c) {
 #undef strncpy // This is for some reason needed in RH3
 
 
-
-
-
+LIBRARY_VERSION(libutil)
 
 void util_fread_dev_random(int buffer_size , char * buffer) {
   FILE * stream = util_fopen("/dev/random" , "r");
@@ -230,7 +228,7 @@ bool util_fseek_string(FILE * stream , const char * string , bool skip_string) {
     if (!skip_string)
       fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
   } else
-    fseek(stream , initial_pos , SEEK_SET);     /* Could not find the string reposition at initial position. */
+    fseek(stream , initial_pos , SEEK_SET);       /* Could not find the string reposition at initial position. */
   
   return string_found;
 }
@@ -239,9 +237,14 @@ bool util_fseek_string(FILE * stream , const char * string , bool skip_string) {
 
 /**
   This function will allocate a character buffer, and read file
-  content all the way up to (not including) 'stop_string'. If the
-  stop_string is not found, the function will return NULL, and the
-  file pointer will be unchanged.
+  content all the way up to 'stop_string'. If the stop_string is not
+  found, the function will return NULL, and the file pointer will be
+  unchanged.
+
+  If include_stop_string is true the returned string will end with
+  stop_string, and the file pointer will be positioned right AFTER
+  stop_string, otherwise the file_pointer will be positioned right
+  before stop_string.
 */
 
 
@@ -4337,7 +4340,25 @@ int util_get_current_linenr(FILE * stream) {
       with the active indices.
 
 */
+
+#include <stringlist.h>
+#include <tokenizer.h>
+static int * util_sscanf_active_range__NEW(const char * range_string , int max_value , bool * active , int * _list_length) {
+  tokenizer_type * tokenizer = tokenizer_alloc( NULL  , /* No ordinary split characters. */
+                                                NULL  , /* No quoters. */
+                                                ",-"  , /* Special split on ',' and '-' */
+                                                " \t" , /* Removing ' ' and '\t' */
+                                                NULL  , /* No comment */
+                                                NULL  );
+  stringlist_type * tokens;
+  tokens = tokenize_buffer( tokenizer , range_string , true);
+  
+  stringlist_free( tokens );
+  tokenizer_free( tokenizer );
+} 
    
+
+
 
 static int * util_sscanf_active_range__(const char * range_string , int max_value , bool * active , int * _list_length) {
   int *active_list    = NULL;
