@@ -4,6 +4,7 @@
 #include <bool_vector.h>
 #include <util.h>
 
+
 int main (int argc , char ** argv) {
   if (argc != 5)
     util_exit("Usage:  GRID_FILE  REGIONS_FILE   REGION_KW   REGION_VALUE \n");

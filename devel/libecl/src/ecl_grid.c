@@ -1833,19 +1833,46 @@ int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type
     if (ecl_kw_get_type( region_kw ) == ecl_int_type) {
       int_vector_reset( index_list );
       const int * region_ptr = ecl_kw_iget_ptr( region_kw , 0);
-      int global_index;
-      for (global_index = 0; global_index < ecl_grid->size; global_index++) {
-	if (region_ptr[global_index] == region_value) {
-	  if (!active_only || (ecl_grid->index_map[global_index] >= 0)) {
-	    /* Okay - this index should be included */
-	    if (export_active_index)
-	      int_vector_iset(index_list , cells_found , ecl_grid->index_map[global_index]);
-	    else
-	      int_vector_iset(index_list , cells_found , global_index);
-	    cells_found++;
-	  }
-	}
+
+      /* Layer five hack for Norne: */
+      {
+        int nx = ecl_grid_get_nx(ecl_grid);
+        int ny = ecl_grid_get_ny(ecl_grid);
+        int k  = 4; /* == 5 with zero offset*/
+        for (int i = 0; i < nx; i++) {
+          for (int j= 0; j < ny; j++) {
+            int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k );
+
+            if (region_ptr[global_index] == region_value) {
+              if (!active_only || (ecl_grid->index_map[global_index] >= 0)) {
+                /* Okay - this index should be included */
+                if (export_active_index)
+                  int_vector_iset(index_list , cells_found , ecl_grid->index_map[global_index]);
+                else
+                  int_vector_iset(index_list , cells_found , global_index);
+                cells_found++;
+              }
+            }
+          }
+        }
       }
+      
+      /* Proper global code: */
+      //{
+      //  int global_index;
+      //  for (global_index = 0; global_index < ecl_grid->size; global_index++) {
+      //     if (region_ptr[global_index] == region_value) {
+      //      if (!active_only || (ecl_grid->index_map[global_index] >= 0)) {
+      //        /* Okay - this index should be included */
+      //        if (export_active_index)
+      //          int_vector_iset(index_list , cells_found , ecl_grid->index_map[global_index]);
+      //        else
+      //          int_vector_iset(index_list , cells_found , global_index);
+      //        cells_found++;
+      //      }
+      //    }
+      //  }
+      //}
     }  else
       util_abort("%s: type mismatch - regions_kw must be of type integer \n",__func__);
 
