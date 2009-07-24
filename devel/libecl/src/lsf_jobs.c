@@ -286,49 +286,21 @@ static void lsf_job_summarize(const lsf_job_type * lsf_job) {
 */
 
 static int lsf_job_parse_bsub_stdout(const char * stdout_file) {
-  int jobid;
+  int     jobid = -1;
   FILE * stream = util_fopen(stdout_file , "r");
-  {
-    char buffer[16];
-    int c;
-    int i;
-    do {
-      c = fgetc(stream);
-    } while (c != '<');
 
-    i = -1;
-    do {
-      i++;
-      buffer[i] = fgetc(stream);
-    } while(buffer[i] != '>');
-    buffer[i] = '\0';
-    jobid = atoi(buffer);
-  }
-  fclose(stream);
+  if (util_fseek_string(stream , "<")) {
+    char * jobid_string = util_fscanf_alloc_upto(stream , ">" , false);
+    if (jobid_string != NULL) {
+      jobid = atoi( jobid_string );
+      free( jobid_string );
+    } else
+      util_abort("%s: Could not extract job id from bsub submit_file:%s \n",__func__ , stdout_file );
+  } else
+    util_abort("%s: Could not extract job id from bsub submit_file:%s \n",__func__ , stdout_file );
+  
   return jobid;
 }
-
-
-
-static int lsf_job_submit(lsf_job_type *lsf_job , const char * submit_cmd_fmt , const char * tmp_path ) {
-  if (!util_file_exists(lsf_job->run_path)) {
-    fprintf(stderr,"%s: fatal error when submitting job:%s - run_path:%s does not exist \n",__func__ , lsf_job->base , lsf_job->run_path);
-    abort();
-  }
-
-  {
-    int job_id;
-    sprintf(lsf_job->tmp_file   , "%s/enkf-submit-%08d-%d" , tmp_path , getpid() , lsf_job->external_id);
-    sprintf(lsf_job->submit_cmd , submit_cmd_fmt , lsf_job->run_path , lsf_job->base , lsf_job->base , lsf_job->run_path , lsf_job->base , lsf_job->tmp_file);
-    system(lsf_job->submit_cmd);
-
-    job_id = lsf_job_parse_bsub_stdout(lsf_job->tmp_file);
-    lsf_job->lsf_base = job_id;
-    util_unlink_existing(lsf_job->tmp_file); 
-    return job_id;
-  }
-}
-
 
 
 

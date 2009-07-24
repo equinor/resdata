@@ -22,8 +22,16 @@
 
 
 int main(int argc , char ** argv) {
-  tokenizer_type * tokenizer = tokenizer_alloc(NULL , NULL , ",-" , " \n\t\r" , NULL , NULL);
-  stringlist_type * numbers = tokenize_file( tokenizer , "test" , false);
-  stringlist_fprintf(numbers , " " , stdout);
+  tokenizer_type * tokenizer = tokenizer_alloc(NULL , "\"\'" , NULL , "\n" , "/*" , "*/");
+  char * buffer = util_fread_alloc_file_content("test" ,  NULL);
+  printf("-----------------------------------------------------------------\n");
+  printf("%s \n",buffer);
+  printf("-----------------------------------------------------------------\n");
+  tokenizer_strip_buffer( tokenizer , &buffer );
+  printf("-----------------------------------------------------------------\n");
+  printf("%s \n",buffer);
+  printf("-----------------------------------------------------------------\n");
+  
 }
+  
 

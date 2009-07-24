@@ -1171,67 +1171,18 @@ int util_count_content_file_lines(FILE * stream) {
     the allocation. Can pass in NULL if that size is not interesting.
 */
 
-char * util_fread_alloc_file_content(const char * filename , const char * comment, int * buffer_size) {
+char * util_fread_alloc_file_content(const char * filename , int * buffer_size) {
   int file_size = util_file_size(filename);
   char * buffer = util_malloc(file_size + 1 , __func__);
-  FILE * stream = util_fopen(filename , "r");
-  int byte_read = fread(buffer , 1 , file_size , stream);
-  if (byte_read != file_size) 
-    util_abort("%s: something failed when reading: %s - aborting \n",__func__ , filename);
-  
-  fclose(stream);
-  
-  if (comment != NULL) {
-    char * src_buffer    = buffer;
-    char * target_buffer = util_malloc(file_size + 1 , __func__);
-    bool comment_on      = false;
-    int src_pos          = 0;
-    int target_pos       = 0;
-    int comment_length;
-
-    do {
-      if (!comment_on) {
-	/* Turning on comment */
-	if (strncmp(&src_buffer[src_pos] , comment , strlen(comment)) == 0) {
-	  comment_on     = true;
-	  comment_length = 0;
-	} else {
-	  /*Plain character transfer */
-	  target_buffer[target_pos] = src_buffer[src_pos];
-	  target_pos++;
-	}
-      } else {
-	/* We are in a comment - should maybe turn it off?? Turning off on \n */
-	if (src_buffer[src_pos] == '\n') {
-	  comment_on = false;
-	  if (src_buffer[src_pos - 1] == '\r') {
-	    target_buffer[target_pos] = '\r';
-	    target_pos++;
-	  }
-	  target_buffer[target_pos] = '\n';
-	  target_pos++;
-	} else 
-	  comment_length++;
-      }
-      src_pos++;
-    } while (src_pos <= file_size); 
-    
-    if(target_buffer[target_pos-1] == EOF)
-        target_buffer[target_pos-1] = '\0';
-    else 
-        target_buffer[target_pos] = '\0';
-
-    free(src_buffer);
-    
-    target_buffer = util_realloc(target_buffer , strlen(target_buffer) + 1 , __func__);
-    if (buffer_size != NULL) *buffer_size  = strlen(target_buffer);
-    return target_buffer;
-  } else {
-    if (buffer_size != NULL) *buffer_size = file_size;
-    
-    buffer[file_size] = '\0';
-    return buffer;
+  {
+    FILE * stream = util_fopen(filename , "r");
+    util_fread( buffer , 1 , file_size , stream , __func__);
+    fclose(stream);
   }
+  if (buffer_size != NULL) *buffer_size = file_size;
+  
+  buffer[file_size] = '\0';
+  return buffer;
 }
 
 

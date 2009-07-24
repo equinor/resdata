@@ -2,7 +2,7 @@ list.o                              : list.c list.h list_node.o
 hash_node.o                         : hash_node.c hash_node.h util.o node_data.o  
 menu.o                              : menu.c menu.h util.o vector.o  
 buffer.o                            : buffer.c buffer.h util.o  
-util.o                              : util.c util.h stringlist.o tokenizer.o util_path.c  
+util.o                              : util.c util.h util_path.c  
 stringlist.o                        : stringlist.c stringlist.h util.o vector.o  
 hash.o                              : hash.c hash.h hash_sll.o hash_node.o node_data.o util.o stringlist.o  
 path_fmt.o                          : path_fmt.c path_fmt.h util.o node_ctype.o  

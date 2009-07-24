@@ -236,7 +236,7 @@ void 	util_float_to_double(double * , const float  * , int );
 int 	util_get_month_nr(const char * );
 int 	util_check_month(const char * );
 
-char *  util_fread_alloc_file_content(const char * , const char * , int *);
+char *  util_fread_alloc_file_content(const char * , int *);
 void    util_fwrite_string(const char * , FILE *);
 char *  util_fread_realloc_string(char *  , FILE *);
 char *  util_fread_alloc_string(FILE *);

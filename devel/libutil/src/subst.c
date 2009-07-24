@@ -240,7 +240,6 @@ void subst_list_filter_file(const subst_list_type * subst_list , const char * sr
   char * backup_file = NULL;
   if (util_same_file(src_file , target_file)) {
     char * backup_prefix = util_alloc_sprintf("%s-%s" , src_file , __func__);
-    util_string_tr( backup_prefix , UTIL_PATH_SEP_CHAR , '_' );
     backup_file = util_alloc_tmp_file("/tmp" , backup_prefix , false);
     free(backup_prefix);
   }

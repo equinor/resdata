@@ -65,6 +65,8 @@ int    ecl_sum_get_last_ministep(const ecl_sum_type * ecl_sum );
 int    ecl_sum_get_first_ministep(const ecl_sum_type * ecl_sum );
 int    ecl_sum_get_last_report_step( const ecl_sum_type * ecl_sum );
 int    ecl_sum_get_first_report_step( const ecl_sum_type * ecl_sum );
+int    ecl_sum_get_report_ministep_end( const ecl_sum_type * ecl_sum, int report_step);
+int    ecl_sum_get_report_ministep_start( const ecl_sum_type * ecl_sum, int report_step);
 bool   ecl_sum_has_report_step(const ecl_sum_type * ecl_sum , int report_step );
 bool   ecl_sum_has_ministep(const ecl_sum_type * ecl_sum , int ministep );
 void   ecl_sum_get_ministep_range(const ecl_sum_type * ecl_sum , int * ministep1, int * ministep2);

@@ -322,6 +322,21 @@ void ecl_sum_report2ministep_range(const ecl_sum_type * ecl_sum , int report_ste
   ecl_sum_data_report2ministep_range( ecl_sum->data , report_step , ministep1 , ministep2);
 }
 
+/*
+  return the first ministep incluced in report step. 
+*/
+int ecl_sum_get_report_ministep_start( const ecl_sum_type * ecl_sum, int report_step) {
+  int ministep1 , ministep2;
+  ecl_sum_report2ministep_range( ecl_sum , report_step , &ministep1 , &ministep2);
+  return ministep1;
+}
+
+int ecl_sum_get_report_ministep_end( const ecl_sum_type * ecl_sum, int report_step) {
+  int ministep1 , ministep2;
+  ecl_sum_report2ministep_range( ecl_sum , report_step , &ministep1 , &ministep2);
+  return ministep2;
+}
+
 
 /**
    Returns the number of the first ministep where a limiting value is

@@ -105,20 +105,22 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
   
   pid_t  pid            = getpid() % pid_max;
   char * file           = util_malloc(strlen(path) + 1 + strlen(prefix) + 1 + pid_digits + 1 + random_digits + 1 , __func__);
+  char * tmp_prefix     = util_alloc_string_copy( prefix );
   
   if (!util_is_directory(path))
     util_make_path(path);
-  util_string_tr( prefix ,  UTIL_PATH_SEP_CHAR , '_');  /* removing path seps. */
+  util_string_tr( tmp_prefix ,  UTIL_PATH_SEP_CHAR , '_');  /* removing path seps. */
   
   do {
     long int rand_int = random() % random_max;
     if (include_pid)
-      sprintf(file , "%s%c%s-%d-%ld" , path , UTIL_PATH_SEP_CHAR , prefix , pid , rand_int);
+      sprintf(file , "%s%c%s-%d-%ld" , path , UTIL_PATH_SEP_CHAR , tmp_prefix , pid , rand_int);
     else
-      sprintf(file , "%s%c%s-%ld" , path , UTIL_PATH_SEP_CHAR , prefix , rand_int);
+      sprintf(file , "%s%c%s-%ld" , path , UTIL_PATH_SEP_CHAR , tmp_prefix , rand_int);
   } while (util_file_exists(file));
-  return file;
 
+  free( tmp_prefix );
+  return file;
 }
 
 

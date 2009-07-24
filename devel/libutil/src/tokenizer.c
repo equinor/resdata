@@ -510,9 +510,212 @@ stringlist_type * tokenize_file(
   bool                   strip_quote_marks)
 {
   stringlist_type * tokens;
-  char * buffer = util_fread_alloc_file_content( filename, NULL, NULL );
+  char * buffer = util_fread_alloc_file_content( filename, NULL );
   tokens = tokenize_buffer( tokenizer, buffer, strip_quote_marks );
   free(buffer);
   return tokens;
 }
 
+
+/*****************************************************************/
+/* Below are some functions which do not actually tokenize, but use
+   the comment/quote handling of the tokenizer implementation for
+   related tasks.
+*/
+
+static bool fseek_quote_end( char quoter , FILE * stream ) {
+  int c;
+  do {
+    c = fgetc( stream );
+  } while (c != quoter && c != EOF);
+
+  if (c == quoter)
+    return true;
+  else
+    return false;
+}
+
+static bool fgetc_while_equal( FILE * stream , const char * string ) {
+  bool     equal        = true;
+  long int current_pos  = ftell(stream);
+  
+  for (int string_index = 0; string_index < strlen(string); string_index++) {
+    int c = fgetc( stream );
+    if (c != string[string_index]) {
+      equal = false;
+      break;
+    }
+  }
+  
+  if (!equal) /* OK - not equal - go back. */
+    fseek( stream , current_pos , SEEK_SET);
+  return equal;
+}
+
+
+
+/**
+   This function is quite tolerant - it will accept (with a warning)
+   unterminated comments and unterminated quotations.
+*/
+
+bool tokenizer_fseek_string(const tokenizer_type * tokenizer , FILE * stream , const char * string , bool skip_string) {
+  long int initial_pos     = ftell( stream );   /* Store the inital position. */
+  bool string_found        = false;
+  bool cont                = true;
+  
+  if (strstr( string , tokenizer->comment_start ) != NULL)
+    util_abort("%s: sorry the string contains a comment start - will never find it ... \n"); /* A bit harsh ?? */
+  
+  do {
+    int c = fgetc( stream );
+
+    /* Special treatment of quoters: */
+    if (is_in_quoters( c , tokenizer )) {
+      long int quote_start_pos = ftell(stream);
+      if (!fseek_quote_end( c , stream )) {
+        fseek( stream ,  quote_start_pos , SEEK_SET);
+        fprintf(stderr,"Warning: unterminated quotation starting at line: %d \n",util_get_current_linenr( stream ));
+        fseek(stream , 0 , SEEK_END);
+      }
+      /* Now we are either at the first character following a
+         terminated quotation, or at EOF. */
+      continue;
+    }
+
+    /* Special treatment of comments: */
+    if (c == tokenizer->comment_start[0]) {
+      /* OK - this might be the start of a comment - let us check further. */
+      bool comment_start = fgetc_while_equal( stream , &tokenizer->comment_start[1]);
+      if (comment_start) {
+        long int comment_start_pos = ftell(stream) - strlen( tokenizer->comment_start );
+        /* Start seeking for comment_end */
+        if (!util_fseek_string(stream , tokenizer->comment_end , skip_string)) { 
+          /* 
+             No end comment end was found - what to do about that??
+             The file is just positioned at the end - and the routine
+             will exit at the next step - with a Warning. 
+          */
+          fseek( stream , comment_start_pos , SEEK_SET);
+          fprintf(stderr,"Warning: unterminated comment starting at line: %d \n",util_get_current_linenr( stream ));
+          fseek(stream , 0 , SEEK_END);
+        } continue;
+        /* Now we are at the character following a comment end - or at EOF. */
+      } 
+    }
+    
+    /*****************************************************************/
+    
+    /* Now c is a regular character - and we can start looking for our string. */
+    if (c == string[0]) {  /* OK - we got the first character right - lets try in more detail: */
+      bool equal = fgetc_while_equal( stream , &string[1]);
+      if (equal) {
+        string_found = true;
+        cont = false;
+      } 
+    }
+    if (c == EOF) 
+      cont = false;
+    
+  } while (cont);
+  
+  if (string_found) {
+    if (!skip_string)
+      fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
+  } else
+    fseek(stream , initial_pos , SEEK_SET);       /* Could not find the string reposition at initial position. */
+  
+  return string_found;
+}
+
+
+
+/**
+   This function takes an input buffer, and updates the buffer (in place) according to:
+
+   1. Quoted content is copied verbatim (this takes presedence).
+   2. All comment sections are removed.
+   3. Delete characters are deleted.
+   
+*/
+
+
+void tokenizer_strip_buffer(const tokenizer_type * tokenizer , char ** __buffer) {
+  char * src     = *__buffer;
+  char * target  = util_malloc( sizeof * target * ( strlen( *__buffer ) + 1) , __func__);
+
+  int src_position    = 0;
+  int target_position = 0;
+  while (src_position < strlen( src )) {
+    int comment_length;
+    int delete_length;
+
+    /**
+      Skip comments.
+    */
+    comment_length = length_of_comment( &src[src_position], tokenizer);
+    if(comment_length > 0)
+    {
+      src_position += comment_length;
+      continue;
+    }
+
+    
+    /**
+       Skip characters which are just deleted. 
+    */
+    delete_length = length_of_delete( &src[src_position] , tokenizer );
+    if (delete_length > 0) {
+      src_position += delete_length;
+      continue;
+    }
+    
+    /*
+      Quotations.
+    */
+    if( is_in_quoters( src[src_position], tokenizer ) )
+    {
+      int length   = length_of_quotation( &src[src_position] );
+      char * token = alloc_quoted_token( &src[src_position], length, false );
+      memcpy( &target[target_position] , &src[src_position] , length);
+      free( token );
+      src_position    += length;
+      target_position += length;
+      continue;
+    }
+
+    /**
+       OK -it is a god damn normal charactar - copy it straight over: 
+    */
+    target[target_position] = src[src_position];
+    src_position    += 1;
+    target_position += 1;
+  }
+  target[target_position] = '\0';
+  target = util_realloc( target , sizeof * target * (target_position + 1) , __func__);
+  
+  free( src );
+  *__buffer = target;
+}
+
+
+
+/*****************************************************************/
+/**
+   This file reads file content into a buffer, and then strips the
+   buffer with tokenizer_strip_buffer() and returns the 'cleaned up'
+   buffer.
+
+   This function is a replacement for the old
+   util_fread_alloc_file_content() which no longer has support for a
+   comment string.
+*/
+
+char * tokenizer_fread_alloc_file_content(const char * filename , const char * quote_set , const char * delete_set , const char * comment_start , const char * comment_end) {
+  tokenizer_type * tokenizer = tokenizer_alloc( NULL , quote_set , NULL , delete_set , comment_start , comment_end);
+  char * buffer              = util_fread_alloc_file_content( filename , NULL);
+  
+  tokenizer_strip_buffer( tokenizer , &buffer );
+  tokenizer_free( tokenizer );
+  return buffer;
+}

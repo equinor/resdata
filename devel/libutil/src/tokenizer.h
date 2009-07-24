@@ -124,4 +124,9 @@ stringlist_type * tokenize_file(
   bool                   strip_quote_marks);
 
 
+/* Pollution by Joakim: */
+
+void   tokenizer_strip_buffer(const tokenizer_type * tokenizer , char ** __buffer);
+bool   tokenizer_fseek_string(const tokenizer_type * tokenizer , FILE * stream , const char * string , bool skip_string);
+char * tokenizer_fread_alloc_file_content(const char * filename , const char * quote_set , const char * delete_set , const char * comment_start , const char * comment_end);
 #endif
