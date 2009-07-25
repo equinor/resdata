@@ -23,7 +23,7 @@ int main (int argc , char ** argv) {
       int               region_value,nx,ny,nz;
       ecl_kw_grdecl_fseek_kw( kw , false , true , stream , regions_file);
       ecl_grid_get_dims(ecl_grid , &nx , &ny , &nz , NULL);
-      regions_kw = ecl_kw_fscanf_alloc_grdecl_data( stream , nx*ny*ny , ecl_int_type);
+      regions_kw = ecl_kw_fscanf_alloc_grdecl_data( stream , nx*ny*nz , ecl_int_type);
       
       util_sscanf_int( region_value_st , &region_value);
       ecl_grid_get_region_cells( ecl_grid , regions_kw , region_value , true , false , global_index_list);

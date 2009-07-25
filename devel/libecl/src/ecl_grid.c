@@ -1839,8 +1839,8 @@ int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type
         int nx = ecl_grid_get_nx(ecl_grid);
         int ny = ecl_grid_get_ny(ecl_grid);
         int k  = 4; /* == 5 with zero offset*/
-        for (int i = 0; i < nx; i++) {
-          for (int j= 0; j < ny; j++) {
+        for (int j= 0; j < ny; j++) {
+          for (int i = 0; i < nx; i++) {
             int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k );
 
             if (region_ptr[global_index] == region_value) {

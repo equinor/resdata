@@ -804,56 +804,75 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
 */
 
 bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error , FILE * stream, const char * filename) {
-  char *file_kw     = util_alloc_string_copy( kw );
-  long int init_pos = ftell(stream);
-  bool cont, kw_found;
-  
-  cont     = true;
-  kw_found = false;
-  while (cont) {
-    int c;
-    bool at_EOF   = false;
-    do {
-      c = getc( stream );
-    } while (c != kw[0] && c != EOF);
-    if (c == EOF) at_EOF = true;
+  if (util_fseek_string(stream , kw , false))
+    return true;       /* OK - we found the kw between current file pos and EOF. */
+  else if (rewind) {
+    long int init_pos = ftell(stream);
 
-    if ( !at_EOF ) {
-      /*
-	Now we have found a character which is equal to the first character in kw - this might be it! 
-      */
-      if (fread(&file_kw[1] , 1 , strlen(kw) - 1 , stream) == (strlen(kw) - 1)) {
-	/* OK - we have read in the remaining number of characters - let us compare! */
-	if (strcmp(file_kw , kw) == 0) {
-	  kw_found = true;
-	  cont = false;
-	} else
-	  fseek(stream , -(strlen(kw) - 1) , SEEK_CUR);
-      } else at_EOF = true;
-    }
-    
-    if (!kw_found) {
-      if (at_EOF) {
-	if (rewind) {
-	  fseek(stream , 0L , SEEK_SET); /* Go to beginning of file */
-	  rewind = false;                /* No more rewinds ... */
-	} else
-	  cont = false;                  /* OK - give up with kw_found == false. */
-      }
-    }
+    fseek(stream , 0L , SEEK_SET);
+    if (util_fseek_string(stream , kw , false)) /* Try again from the beginning of the file. */
+      return true;                              
+    else
+      fseek(stream , init_pos , SEEK_SET);      /* Could not find it - reposition to initial position. */
   }
-	  
-  if (!kw_found) {
-    if (abort_on_error) 
-      util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , filename);
-    
-    fseek(stream , init_pos , SEEK_SET);     /* Repositioning to the initial position. */
-  } else
-    fseek(stream , -strlen(kw) , SEEK_CUR);  /* Reposition to the beginning of kw */
+
+  /* OK: If we are here - that means that we failed to find the kw. */
+  if (abort_on_error) 
+    util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , filename);
   
-  free(file_kw);
-  return kw_found;
+  return false;
 }
+
+//  char *file_kw     = util_alloc_string_copy( kw );
+//  long int init_pos = ftell(stream);
+//  bool cont, kw_found;
+//  
+//  cont     = true;
+//  kw_found = false;
+//  while (cont) {
+//    int c;
+//    bool at_EOF   = false;
+//    do {
+//      c = getc( stream );
+//    } while (c != kw[0] && c != EOF);
+//    if (c == EOF) at_EOF = true;
+//
+//    if ( !at_EOF ) {
+//      /*
+//	Now we have found a character which is equal to the first character in kw - this might be it! 
+//      */
+//      if (fread(&file_kw[1] , 1 , strlen(kw) - 1 , stream) == (strlen(kw) - 1)) {
+//	/* OK - we have read in the remaining number of characters - let us compare! */
+//	if (strcmp(file_kw , kw) == 0) {
+//	  kw_found = true;
+//	  cont = false;
+//	} else
+//	  fseek(stream , -(strlen(kw) - 1) , SEEK_CUR);
+//      } else at_EOF = true;
+//    }
+//    
+//    if (!kw_found) {
+//      if (at_EOF) {
+//	if (rewind) {
+//	  fseek(stream , 0L , SEEK_SET); /* Go to beginning of file */
+//	  rewind = false;                /* No more rewinds ... */
+//	} else
+//	  cont = false;                  /* OK - give up with kw_found == false. */
+//      }
+//    }
+//  }
+//	  
+//  if (!kw_found) {
+//    if (abort_on_error) 
+//      util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , filename);
+//    
+//    fseek(stream , init_pos , SEEK_SET);     /* Repositioning to the initial position. */
+//  } else
+//    fseek(stream , -strlen(kw) , SEEK_CUR);  /* Reposition to the beginning of kw */
+//  
+//  free(file_kw);
+//  return kw_found;
+//}
 
 
 

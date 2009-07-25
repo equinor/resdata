@@ -266,6 +266,7 @@ char * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool inc
 }
 
 
+
 static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line) {
   int init_pos = ftell(stream);
   char * new_line;
