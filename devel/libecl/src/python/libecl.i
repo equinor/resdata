@@ -203,6 +203,11 @@ ecl_kw_data_wrapper_void *ecl_kw_get_data_wrap_void(const ecl_kw_type * ecl_kw) 
 	return w;
 }
 
+
+ecl_kw_type *ecl_kw_fscanf_alloc_grdecl_data_wrap(FILE *stream, int size) {
+  return ecl_kw_fscanf_alloc_grdecl_data(stream, size, ecl_float_type);
+}
+
 /*************************************************************************/
 
 %}
@@ -239,6 +244,7 @@ void          ecl_kw_alloc_float_data(ecl_kw_type * ecl_kw , float * values);
 void          ecl_kw_alloc_double_data(ecl_kw_type * ecl_kw , double * values);
 double        ecl_kw_iget_as_double(const ecl_kw_type *  , int );
 void          ecl_kw_free_data(ecl_kw_type *);
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_type_enum ecl_type);
 
 /* ecl_grid.h */
 ecl_grid_type * ecl_grid_alloc(const char * , bool);
