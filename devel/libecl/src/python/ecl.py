@@ -275,8 +275,10 @@ class Zone:
       l = self.cache[old_kw]
       self.cache.pop(old_kw)
       self.cache[new_kw] = l
-    else:
-      print "Rename warning: no such keyword '%s'" % old_kw
+      return True
+    
+    print "Rename warning: no such keyword '%s'" % old_kw
+    return False
 
   ##
   # Delete a keyword in the cache.
@@ -284,8 +286,10 @@ class Zone:
   def delete(self, kw):
     if self.cache.has_key(kw):
       self.cache.pop(kw)
-    else:
-      print "Delete warning: no such keyword '%s'" % kw
+      return True
+    
+    print "Delete warning: no such keyword '%s'" % kw
+    return False
 
 
   ##
@@ -298,8 +302,10 @@ class Zone:
         self.delete(kw)
         print "Replacing '%s'" % kw
       self.cache[kw] = l
-    else:
-      print "Load warning: no such keyword '%s'" % kw
+      return True
+    
+    print "Load warning: no such keyword '%s'" % kw
+    return False
 
 
   ##
@@ -418,7 +424,6 @@ class ecl_summary:
     s = ecl_sum_fread_alloc_case(ecl_data_file,self.endian_convert)
     self.s = s
   def __del__(self):
-    print "Del ecl_summary object"
     ecl_sum_free(self.s)
 
   def display(self, kw): 

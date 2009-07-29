@@ -160,18 +160,14 @@ if __name__ == '__main__':
   print "Applying Gassmann base calculation."
   base.apply_function(Gassmann(config))
 
-  base.append_keyword_to_grdecl("VP.grdecl", "VP")
-  base.load_from_grdecl("VP.grdecl", "VP_FOO")
-  base.append_keyword_to_grdecl("VP_new.grdecl", "VP_FOO")
+  mon = Zone(grid_file, keywords, init_file, restartfile_mon)
+  print "Applying Gassmann monitor calculation."
+  mon.apply_function(Gassmann(config))
 
-  
-#  mon = Zone(grid_file, keywords, init_file, restartfile_mon)
-#  print "Applying Gassmann monitor calculation."
-#  mon.apply_function(Gassmann(config))
-#  mon.append_keyword_to_grdecl("VP.grdecl", "VP", "VP_MON")
+  diff = mon - base
+  diff.write_keyword_to_dat("VP_diff.dat", "VP")
+  diff.write_keyword_to_dat("SGAS_diff.dat", "SGAS")
 
-#  diff = mon - base
-#  diff.append_keyword_to_grdecl("VP.grdecl", "VP", "VP_DIFF")
 
 #  mon.write_keyword_to_dat("SGAS.dat", "SGAS")
 #  mon.write_keyword_to_dat("SOIL.dat", "SOIL")
