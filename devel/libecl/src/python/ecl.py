@@ -3,7 +3,7 @@ import pprint as pp
 import sys
 import time
 import os
-sys.path.append("/private/masar/numpy/lib64/python2.3/site-packages/")
+sys.path.append("/d/proj/bg/enkf/software/numpy/lib64/python2.3/site-packages/")
 import numpy as np
 
 
