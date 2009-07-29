@@ -57,63 +57,113 @@ class Zone:
       ecl_file_list.append(ecl_file(val))
     self.cache_list(ecl_file_list)
 
-  ## 
-  # Operator overloading for subtraction.
-  ##
-  def __sub__(self, zone):
-    if isinstance(self, Zone) and isinstance(zone, Zone):
-      if self.grid_file is not zone.grid_file:
+  ## List of the overloading operators can be found here:
+  ## http://docs.python.org/reference/datamodel.html
+
+  def __getslice__(self, i, j):
+    new_zone = Zone(self.grid_file)
+    for key in self.get_keywords():
+      new_zone.cache[key] = self.cache[key][i:j]
+    return new_zone
+
+  def __setslice__(self, i, j, sequence):
+    print "Not implemented!"
+
+  def __delslice__(self, i, j):
+    print "Not implemented!"
+
+  def __rsub__(self, other):
+    new_zone = Zone(self.grid_file)
+    for key in self.get_keywords():
+      new_zone.cache[key] = [other - a for a in self.get_values(key)]
+    return new_zone
+  
+  def __radd__(self, other):
+    new_zone = Zone(self.grid_file)
+    for key in self.get_keywords():
+      new_zone.cache[key] = [other + a for a in self.get_values(key)]
+    return new_zone
+  
+  def __rmul__(self, other):
+    new_zone = Zone(self.grid_file)
+    for key in self.get_keywords():
+      new_zone.cache[key] = [other * a for a in self.get_values(key)]
+    return new_zone
+  
+  def __rpow__(self, other):
+    new_zone = Zone(self.grid_file)
+    for key in self.get_keywords():
+      new_zone.cache[key] = [pow(other, a) for a in self.get_values(key)]
+    return new_zone
+
+  def __abs__(self):
+    new_zone = Zone(self.grid_file)
+    for key in self.get_keywords():
+      new_zone.cache[key] = [abs(a) for a in self.get_values(key)]
+    return new_zone
+
+  def __neg__(self):
+    new_zone = Zone(self.grid_file)
+    for key in self.get_keywords():
+      new_zone.cache[key] = [ -a for a in self.get_values(key)]
+    return new_zone
+
+  def __pow__(self, other):
+    new_zone = Zone(self.grid_file)
+    if isinstance(self, Zone) and isinstance(other, Zone):
+      if self.grid_file is not other.grid_file:
         raise "Grid files are not the same in the substraction!"
-
-      new_zone = Zone(self.grid_file)
-      for key in self.shared_keys(self, zone):
-        diff = list()
-        diff = [a - b for a, b in zip(self.cache[key], zone.cache[key])]
-        new_zone.cache[key] = diff
-
-    elif isinstance(self, Zone) and (isinstance(zone, int) 
-        or isinstance(zone, float)):
-
-      new_zone = Zone(self.grid_file)
+      for key in self.shared_keys(self, other):
+        new_zone.cache[key] = [pow(a,b) for a, b in zip(self.cache[key], other.cache[key])]
+    elif isinstance(self, Zone) and (isinstance(other, int) 
+        or isinstance(other, float)):
       for key in self.cache.keys():
-        diff = list()
-        diff = [a - zone for a in self.cache[key]]
-        new_zone.cache[key] = diff
-    else:
-      print "ERROR: One or more of the substraction types are not supported!"
-      sys.exit()
+        new_zone.cache[key] = [pow(a, other) for a in self.cache[key]]
+    return new_zone
+
+  def __sub__(self, other):
+    new_zone = Zone(self.grid_file)
+    if isinstance(self, Zone) and isinstance(other, Zone):
+      if self.grid_file is not other.grid_file:
+        raise "Grid files are not the same in the substraction!"
+      for key in self.shared_keys(self, other):
+        new_zone.cache[key] = [a - b for a, b in zip(self.cache[key], other.cache[key])]
+    elif isinstance(self, Zone) and (isinstance(other, int) 
+        or isinstance(other, float)):
+      for key in self.cache.keys():
+        new_zone.cache[key] = [a - other for a in self.cache[key]]
+    return new_zone
+
+  def __add__(self, other):
+    new_zone = Zone(self.grid_file)
+    if isinstance(self, Zone) and isinstance(other, Zone):
+      if self.grid_file is not other.grid_file:
+        raise "Grid files are not the same in the addition!"
+      for key in self.shared_keys(self, other):
+        new_zone.cache[key] = [a + b for a, b in zip(self.cache[key], other.cache[key])]
+    elif isinstance(self, Zone) and (isinstance(other, int) 
+        or isinstance(other, float)):
+      for key in self.cache.keys():
+        new_zone.cache[key] = [a + other for a in self.cache[key]]
     
     return new_zone
 
-
-  ## 
-  # Operator overloading for addition.
-  ##
-  def __add__(self, zone):
-    if self.grid_file is not zone.grid_file:
-      raise "Grid files are not the same in the addition!"
-
+  def __mul__(self, other):
     new_zone = Zone(self.grid_file)
-    for key in self.shared_keys(self, zone):
-      add = list()
-      add = [a + b for a, b in zip(self.cache[key], zone.cache[key])]
-      new_zone.cache[key] = add
+    if isinstance(self, Zone) and isinstance(other, Zone):
+      if self.grid_file is not other.grid_file:
+        raise "Grid files are not the same in the multiplication!"
+      for key in self.shared_keys(self, other):
+        new_zone.cache[key] = [a * b for a, b in zip(self.cache[key], other.cache[key])]
+    elif isinstance(self, Zone) and (isinstance(other, int) 
+        or isinstance(other, float)):
+      for key in self.cache.keys():
+        new_zone.cache[key] = [a * other for a in self.cache[key]]
+    
     return new_zone
-
-
-  ## 
-  # Operator overloading for multiplication.
-  ##
-  def __mul__(self, zone):
-    if self.grid_file is not zone.grid_file:
-      raise "Grid files are not the same in the multiplication!"
-
-    new_zone = Zone(self.grid_file)
-    for key in self.shared_keys(self, zone):
-      add = list()
-      add = [a * b for a, b in zip(self.cache[key], zone.cache[key])]
-      new_zone.cache[key] = add
-    return new_zone
+  
+  def __div__(self, zone):
+    print "Division by zero is scary! Not implemented :-)"
 
 
   ##
@@ -163,10 +213,8 @@ class Zone:
   def convert_list(self, l_a, dummy_val = -1):
     k = 0
     l_g = list();
-
     if len(l_a) == self.grid.get_global_size():
       return l_a
-
     for j in xrange(0, self.grid.get_global_size()):
       ret = self.grid.get_active_index1(j)
       if ret == -1:
@@ -174,7 +222,6 @@ class Zone:
       else:
         l_g.append(l_a[k])
         k += 1
-        
     return l_g
  
 
@@ -190,6 +237,7 @@ class Zone:
     for val in arglist: 
       ecl_file_list.append(ecl_file(val))
     self.cache_list(ecl_file_list)
+
 
   ## 
   # Load data from grdecl file, currently supports only one 

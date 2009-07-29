@@ -49,9 +49,6 @@ class Gassmann(Rockphysics):
     k_o   = self.k_o
     k_g  = self.k_g
 
-    if poro > 0.4:
-      print "Poro higher then critical poro for sand", poro
-
     (k_dry, mu_dry) = self.calculate_dry_velocities(poro)
 
     return self.calculate_saturated_velocities(swat, sgas, poro, rho_m, rho_o, rho_g, 

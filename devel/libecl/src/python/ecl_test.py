@@ -3,13 +3,12 @@ import unittest
 import sys
 import ecl
 
-enkf_cvs_path = "/private/masar/enkf"
+punqs3_path = "/d/proj/bg/enkf/jaskje/EnKF_PUNQS3/PUNQS3/"
 
 class test_ecl_summary(unittest.TestCase):
   def setUp(self):
-    self.summary = ecl.ecl_summary(enkf_cvs_path + "/Testcases/Common/Refcase/EXAMPLE_01_BASE.DATA")
-    self.summary_keywords = ["WOPR:OP_4", "WOPR:OP_1"]
-
+    self.summary = ecl.ecl_summary(punqs3_path + "PUNQS3.DATA")
+    self.summary_keywords = ["WOPR:PRO1", "WOPR:PRO4"]
   def test_summary_display(self):
     sys.stdout = open("/dev/null","w")
     self.summary.display(self.summary_keywords)
@@ -22,11 +21,9 @@ class test_ecl_summary(unittest.TestCase):
     self.assert_(str != None)
 
 class test_ecl_file(unittest.TestCase):
-
   def setUp(self):
-    self.file = ecl.ecl_file(enkf_cvs_path + "/Testcases/SimpleEnKF/Simulations/Real0/EXAMPLE_01_BASE_0000.X0039")
+    self.file = ecl.ecl_file(punqs3_path + "PUNQS3.X0001")
     self.kw = "PRESSURE"
-
   def test_file_iget_named_kw(self):
     kw_type = self.file.iget_named_kw(self.kw, 0)
     self.assert_(isinstance(kw_type, ecl.ecl_kw))
@@ -51,14 +48,11 @@ class test_ecl_file(unittest.TestCase):
     self.assert_(n > 0)
 
 class test_ecl_grid(unittest.TestCase):
-  
   def setUp(self):
-    path = "/d/proj/bg/enkf/jaskje/EnKF_PUNQS3/PUNQS3/" 
-    self.grid = ecl.ecl_grid(path + "PUNQS3.EGRID")
+    self.grid = ecl.ecl_grid(punqs3_path + "PUNQS3.EGRID")
     self.dims = self.grid.get_dims()
     self.global_size = self.grid.get_global_size()
     self.active_size = self.grid.get_active_size()
-
   def test_grid_get_name(self):
     self.assert_(self.grid.get_name() != None)
   def test_grid_get_dims(self):
@@ -72,12 +66,11 @@ class test_ecl_grid(unittest.TestCase):
 
 class test_Zone(unittest.TestCase): 
   def setUp(self):
-    path = "/d/proj/bg/enkf/jaskje/EnKF_PUNQS3/PUNQS3/" 
-    self.grid_file = path + "PUNQS3.EGRID"
-    self.restart_base = path + "PUNQS3.X0001"
-    self.restart_mon = path + "PUNQS3.X0083"
-    self.restart_third = path + "PUNQS3.X0050"
-    init_file = path + "PUNQS3.INIT"
+    self.grid_file = punqs3_path + "PUNQS3.EGRID"
+    self.restart_base = punqs3_path + "PUNQS3.X0001"
+    self.restart_mon = punqs3_path + "PUNQS3.X0083"
+    self.restart_third = punqs3_path + "PUNQS3.X0050"
+    init_file = punqs3_path + "PUNQS3.INIT"
 
     self.keywords = ("SGAS", "SWAT", "PRESSURE")
     self.zone = ecl.Zone(self.grid_file, self.keywords, self.restart_base)
@@ -85,7 +78,7 @@ class test_Zone(unittest.TestCase):
     self.dims = self.zone.grid.get_dims()
     self.assertEqual(len(self.dims), 4)
     self.kw = "PRESSURE"
-
+    self.index = self.dims[3] - 1
   def test_Zone_get_keywords(self):
     self.assertEqual(len(self.zone.get_keywords()), len(self.keywords))
   def test_Zone_get_values(self):
@@ -102,53 +95,91 @@ class test_Zone(unittest.TestCase):
     self.assert_(self.zone.load(monitor, self.kw))
   def test_Zone_Arithmetic_sub_zones(self):
     monitor = ecl.Zone(self.grid_file, self.keywords, self.restart_mon)
+    monitor_scalar = monitor.get_data(self.kw, self.index)
     third = ecl.Zone(self.grid_file, self.keywords, self.restart_third)
-    diff = monitor - self.zone
-    a =  self.zone.get_data(self.kw, self.dims[3] - 1)
-    b = monitor.get_data(self.kw, self.dims[3] - 1)
-    c = b - a 
-    e =  diff.get_data(self.kw, self.dims[3] - 1)
-    self.assertEqual(e, c)
-    f = third.get_data(self.kw, self.dims[3] - 1)
-    g = b - a - f
-    diff = monitor - self.zone - third
-    h = diff.get_data(self.kw, self.dims[3] - 1)
-    self.assertEqual(g, h)
+    third_scalar = third.get_data(self.kw, self.index)
+    zone_scalar = self.zone.get_data(self.kw, self.index)
+    ans = monitor - self.zone
+    ans_scalar = monitor_scalar - zone_scalar
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = monitor - self.zone - third
+    ans_scalar = monitor_scalar - zone_scalar - third_scalar
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
   def test_Zone_Arithmetic_add_zones(self):
     monitor = ecl.Zone(self.grid_file, self.keywords, self.restart_mon)
+    monitor_scalar = monitor.get_data(self.kw, self.index)
     third = ecl.Zone(self.grid_file, self.keywords, self.restart_third)
-    diff = monitor + self.zone
-    a =  self.zone.get_data(self.kw, self.dims[3] - 1)
-    b = monitor.get_data(self.kw, self.dims[3] - 1)
-    c = b + a 
-    e =  diff.get_data(self.kw, self.dims[3] - 1)
-    self.assertEqual(e, c)
-    f = third.get_data(self.kw, self.dims[3] - 1)
-    g = b + a + f
-    diff = monitor + self.zone + third
-    h = diff.get_data(self.kw, self.dims[3] - 1)
-    self.assertEqual(g, h)
+    third_scalar = third.get_data(self.kw, self.index)
+    zone_scalar = self.zone.get_data(self.kw, self.index)
+    ans = monitor + self.zone
+    ans_scalar = monitor_scalar + zone_scalar
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = monitor + self.zone + third
+    ans_scalar = monitor_scalar + zone_scalar + third_scalar
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
   def test_Zone_Arithmetic_mul_zones(self):
     monitor = ecl.Zone(self.grid_file, self.keywords, self.restart_mon)
+    monitor_scalar = monitor.get_data(self.kw, self.index)
     third = ecl.Zone(self.grid_file, self.keywords, self.restart_third)
-    diff = monitor * self.zone
-    a =  self.zone.get_data(self.kw, self.dims[3] - 1)
-    b = monitor.get_data(self.kw, self.dims[3] - 1)
-    c = b * a 
-    e =  diff.get_data(self.kw, self.dims[3] - 1)
-    self.assertEqual(e, c)
-    f = third.get_data(self.kw, self.dims[3] - 1)
-    g = b * a * f
-    diff = monitor * self.zone * third
-    h = diff.get_data(self.kw, self.dims[3] - 1)
-    self.assertEqual(g, h)
-
+    third_scalar = third.get_data(self.kw, self.index)
+    zone_scalar = self.zone.get_data(self.kw, self.index)
+    ans = monitor * self.zone
+    ans_scalar = monitor_scalar * zone_scalar
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = monitor * self.zone * third
+    ans_scalar = monitor_scalar * zone_scalar * third_scalar
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+  def test_Zone_Arithmetic_mix(self):
+    monitor = ecl.Zone(self.grid_file, self.keywords, self.restart_mon)
+    monitor_scalar = monitor.get_data(self.kw, self.index)
+    third = ecl.Zone(self.grid_file, self.keywords, self.restart_third)
+    third_scalar = third.get_data(self.kw, self.index)
+    zone_scalar = self.zone.get_data(self.kw, self.index)
+    ans = monitor - 2
+    ans_scalar = monitor_scalar - 2
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = monitor * third - monitor + self.zone
+    ans_scalar = monitor_scalar * third_scalar - monitor_scalar + zone_scalar
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = -monitor 
+    ans_scalar = -monitor_scalar
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = -monitor * self.zone - third - 99 
+    ans_scalar = -monitor_scalar * zone_scalar - third_scalar - 99
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = 100 - monitor
+    ans_scalar = 100 - monitor_scalar
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = abs(monitor)
+    ans_scalar = abs(monitor_scalar)
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = 244 * monitor * 10 + 10 + self.zone - 40 - third
+    ans_scalar = 244 * monitor_scalar * 10 + 10 + zone_scalar - 40 - third_scalar
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = 244 * monitor * 10 - 5 + self.zone + abs(third)
+    ans_scalar = 244 * monitor_scalar * 10 - 5 + zone_scalar + abs(third_scalar)
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = pow(monitor, 2)
+    ans_scalar = pow(monitor_scalar, 2)
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = 3 * self.zone * pow(2, monitor)
+    ans_scalar = 3 * zone_scalar * pow(2, monitor_scalar)
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
+    ans = abs((self.zone + 4 * monitor) * (pow((third + 5), 2) + 4))
+    ans_scalar = abs((zone_scalar + 4 * monitor_scalar) * (pow((third_scalar + 5), 2) + 4))
+    self.assertEqual(ans_scalar, ans.get_data(self.kw, self.index))
   def test_Zone_Verify_cache(self):
     self.assertEqual(len(self.keywords), len(self.zone.cache.keys()))
-
     for key in self.zone.cache.keys():
       self.assertEqual(len(self.zone.cache[key]), self.dims[3])
       self.assert_(isinstance(self.zone.cache[key], list))
+  def test_Zone_Slicing_get(self):
+    i = 10
+    j = 20
+    d = j - i
+    new_zone = self.zone[i:j]
+    self.assertEqual(len(new_zone.get_values(self.kw)), d)
+    self.assertEqual(len(new_zone.get_keywords()), len(self.zone.get_keywords()))
 
 
 if __name__ == '__main__':
