@@ -49,8 +49,27 @@ class test_ecl_file(unittest.TestCase):
   def test_file_get_num_kw(self):
     n = self.file.get_num_kw()
     self.assert_(n > 0)
-    
-    
+
+class test_ecl_grid(unittest.TestCase):
+  
+  def setUp(self):
+    path = "/d/proj/bg/enkf/jaskje/EnKF_PUNQS3/PUNQS3/" 
+    self.grid = ecl.ecl_grid(path + "PUNQS3.EGRID")
+    self.dims = self.grid.get_dims()
+    self.global_size = self.grid.get_global_size()
+    self.active_size = self.grid.get_active_size()
+
+  def test_grid_get_name(self):
+    self.assert_(self.grid.get_name() != None)
+  def test_grid_get_dims(self):
+    self.assertEqual(len(self.grid.get_dims()), 4)
+  def test_grid_get_ijk1A(self):
+    self.assertEqual(len(self.grid.get_ijk1A(self.dims[3] - 1)), 3)
+  def test_grid_get_global_index3(self):
+    index = self.grid.get_global_index3(self.dims[0] - 1, self.dims[1] - 1, self.dims[2] - 1)
+    self.assertEqual(self.global_size - 1, index)
+
+
 class test_Zone(unittest.TestCase): 
   def setUp(self):
     path = "/d/proj/bg/enkf/jaskje/EnKF_PUNQS3/PUNQS3/" 
@@ -143,6 +162,12 @@ if __name__ == '__main__':
   Now testing the 'ecl_file' Class
   """
   suite = unittest.TestLoader().loadTestsFromTestCase(test_ecl_file)
+  unittest.TextTestRunner(verbosity=2).run(suite)
+  
+  print """
+  Now testing the 'ecl_grid' Class
+  """
+  suite = unittest.TestLoader().loadTestsFromTestCase(test_ecl_grid)
   unittest.TextTestRunner(verbosity=2).run(suite)
   
   print """
