@@ -95,7 +95,6 @@ class Zone:
 
     new_zone = Zone(self.grid_file)
     for key in self.shared_keys(self, zone):
-      print "Doing add for '%s'" % key
       add = list()
       add = [a + b for a, b in zip(self.cache[key], zone.cache[key])]
       new_zone.cache[key] = add
@@ -111,7 +110,6 @@ class Zone:
 
     new_zone = Zone(self.grid_file)
     for key in self.shared_keys(self, zone):
-      print "Doing mult for '%s'" % key
       add = list()
       add = [a * b for a, b in zip(self.cache[key], zone.cache[key])]
       new_zone.cache[key] = add

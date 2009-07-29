@@ -81,7 +81,7 @@ class test_Zone(unittest.TestCase):
     monitor = ecl.Zone(self.grid_file, self.keywords, self.restart_mon)
     self.zone.delete(self.kw)
     self.assert_(self.zone.load(monitor, self.kw))
-  def test_Zone_subtract_zones(self):
+  def test_Zone_Arithmetic_sub_zones(self):
     monitor = ecl.Zone(self.grid_file, self.keywords, self.restart_mon)
     third = ecl.Zone(self.grid_file, self.keywords, self.restart_third)
     diff = monitor - self.zone
@@ -95,8 +95,36 @@ class test_Zone(unittest.TestCase):
     diff = monitor - self.zone - third
     h = diff.get_data(self.kw, self.dims[3] - 1)
     self.assertEqual(g, h)
+  def test_Zone_Arithmetic_add_zones(self):
+    monitor = ecl.Zone(self.grid_file, self.keywords, self.restart_mon)
+    third = ecl.Zone(self.grid_file, self.keywords, self.restart_third)
+    diff = monitor + self.zone
+    a =  self.zone.get_data(self.kw, self.dims[3] - 1)
+    b = monitor.get_data(self.kw, self.dims[3] - 1)
+    c = b + a 
+    e =  diff.get_data(self.kw, self.dims[3] - 1)
+    self.assertEqual(e, c)
+    f = third.get_data(self.kw, self.dims[3] - 1)
+    g = b + a + f
+    diff = monitor + self.zone + third
+    h = diff.get_data(self.kw, self.dims[3] - 1)
+    self.assertEqual(g, h)
+  def test_Zone_Arithmetic_mul_zones(self):
+    monitor = ecl.Zone(self.grid_file, self.keywords, self.restart_mon)
+    third = ecl.Zone(self.grid_file, self.keywords, self.restart_third)
+    diff = monitor * self.zone
+    a =  self.zone.get_data(self.kw, self.dims[3] - 1)
+    b = monitor.get_data(self.kw, self.dims[3] - 1)
+    c = b * a 
+    e =  diff.get_data(self.kw, self.dims[3] - 1)
+    self.assertEqual(e, c)
+    f = third.get_data(self.kw, self.dims[3] - 1)
+    g = b * a * f
+    diff = monitor * self.zone * third
+    h = diff.get_data(self.kw, self.dims[3] - 1)
+    self.assertEqual(g, h)
 
-  def test_Zone_cache_verify(self):
+  def test_Zone_Verify_cache(self):
     self.assertEqual(len(self.keywords), len(self.zone.cache.keys()))
 
     for key in self.zone.cache.keys():
