@@ -5,8 +5,6 @@ import ConfigParser
 from itertools import *
 import getopt
 from ecl import *
-sys.path.append("/private/masar/numpy/lib64/python2.3/site-packages/")
-import numpy as np
 
 class Timeshift(Rockphysics):
   def __init__(self):
@@ -23,9 +21,11 @@ class Timeshift(Rockphysics):
   def finish(self):
     pass
 
-
-class Gassmann(Rockphysics):
+class Grane_PEM(PEM):
   def __init__(self, config):
+
+    self.sand_flag, self.shale_flag = range(1,3)
+
     try:
       self.k_m = config.getfloat('gassmann', 'k_m')
       self.rho_m = config.getfloat('gassmann', 'rho_m')
@@ -35,28 +35,22 @@ class Gassmann(Rockphysics):
     except (ConfigParser.NoSectionError, ConfigParser.NoOptionError), e:
       raise e
 
-  def apply(self, zone, active_index):
-    sgas = zone.get_data("SGAS", active_index)
-    swat = zone.get_data("SWAT", active_index)
-    poro = zone.get_data("PORO", active_index)
-    rho_o = zone.get_data("OIL_DEN", active_index)
-    rho_g = zone.get_data("GAS_DEN", active_index)
-    rho_w = zone.get_data("WAT_DEN", active_index)
 
-    rho_m = self.rho_m
-    k_m = self.k_m
-    k_w   = self.k_w
-    k_o   = self.k_o
-    k_g  = self.k_g
-
-    (k_dry, mu_dry) = self.calculate_dry_velocities(poro)
-
-    return self.calculate_saturated_velocities(swat, sgas, poro, rho_m, rho_o, rho_g, 
-        rho_w, k_m, k_o, k_w, k_g, k_dry, mu_dry)
+  def update(self, zone, active_index):
+    flag = self.sand_flag
+    self.sgas = zone.get_data("SGAS", active_index)
+    self.swat = zone.get_data("SWAT", active_index)
+    self.poro = zone.get_data("PORO", active_index)
+    self.rho_o = zone.get_data("OIL_DEN", active_index)
+    self.rho_g = zone.get_data("GAS_DEN", active_index)
+    self.rho_w = zone.get_data("WAT_DEN", active_index)
     
-
-  def finish(self):
-    print "Finished"
+    try:
+      (self.k_dry, self.mu_dry) = { self.sand_flag:  self.calculate_dry_velocities(self.poro),
+                                    self.shale_flag: self.calculate_dry_velocities(self.poro) }[flag]
+    except KeyError:
+      print "Flag: %d not defined!" % flag
+       
 
   def calculate_dry_velocities(self, poro):
     vp_dry = -4280 * poro + 4353
@@ -67,6 +61,21 @@ class Gassmann(Rockphysics):
 
     return (k_dry, mu_dry)
 
+
+class Gassmann(Rockphysics, Grane_PEM):
+
+  def apply(self, zone, active_index):
+    self.update(zone, active_index)
+
+    ret = self.calculate_saturated_velocities(self.swat, self.sgas, self.poro, 
+        self.rho_m, self.rho_o, self.rho_g, self.rho_w, 
+        self.k_m, self.k_o, self.k_w, self.k_g, 
+        self.k_dry, self.mu_dry)
+
+    return ret
+    
+  def finish(self):
+    print "Finished"
 
   def calculate_saturated_velocities(self, swat, sgas, poro, rho_m, rho_o, rho_g, 
       rho_w, k_m, k_o, k_w, k_g, k_dry, mu_dry):
@@ -88,7 +97,7 @@ class Gassmann(Rockphysics):
       c_fluid = ((1/k_o) * soil) + ((1/k_w) * swat) + ((1/k_g) * sgas)
       k_fluid = 1 / c_fluid
       if poro * (k_m - k_fluid) == 0 or k_m - k_dry == 0:
-        print "Warning: setting k_reservoir = k_mineral = %f\n" % k_m
+        print "Warning: setting k_sat = k_m = %f\n" % k_m
         k_sat = k_m
       else:
         b = (k_dry / (k_m - k_dry)) + (k_fluid / (poro * (k_m - k_fluid)))

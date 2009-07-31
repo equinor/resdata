@@ -27,6 +27,8 @@ class Rockphysics(object):
   apply = AbstractMethod('apply')
   finish = AbstractMethod('finish')
 
+class PEM(object):
+  update = AbstractMethod('update')
 
 ####################################################################
 ##
