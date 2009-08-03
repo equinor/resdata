@@ -1455,7 +1455,6 @@ void ecl_kw_scalar_init(ecl_kw_type * ecl_kw , double init_value) {
 }
 
 
-
 void ecl_kw_alloc_double_data(ecl_kw_type * ecl_kw , double * values) {
   ecl_kw_alloc_data(ecl_kw);
   memcpy(ecl_kw->data , values , ecl_kw->size * ecl_kw->sizeof_ctype);
@@ -1465,10 +1464,6 @@ void ecl_kw_alloc_float_data(ecl_kw_type * ecl_kw , float * values) {
   ecl_kw_alloc_data(ecl_kw);
   memcpy(ecl_kw->data , values , ecl_kw->size * ecl_kw->sizeof_ctype);
 }
-
-
-
-
 
 
 void ecl_kw_shift(ecl_kw_type * ecl_kw , double shift_value) {

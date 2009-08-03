@@ -16,7 +16,6 @@
 #include <matrix.h>
 #include <matrix_lapack.h>
 #include <matrix_blas.h>
-#include <conf.h>
 #include <tokenizer.h>
 
 

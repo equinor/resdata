@@ -49,8 +49,10 @@ main (int argc, char **argv)
 	  double_data = ecl_kw_iget_as_double(ecl_kw, ret);
 
 	  ecl_grid_get_ijk1A (ecl_grid, ret, &x, &y, &z);
+    /*
 	  printf ("pressure: %f double: %f on index %d (%d, %d, %d)\n",
 		  ((float *) float_data)[ret], double_data, ret, x, y, z);
+      */
 	}
 
     }
