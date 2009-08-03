@@ -8,7 +8,7 @@
 #include <util.h>
 #include <hash.h>
 #include <stringlist.h>
-
+#include <parser.h>
 
 
 /**
@@ -976,109 +976,51 @@ void ecl_util_escape_kw(char * kw) {
     ECLIPSE300 has default date: 1. of january 1990.
 
   They don't have much style those fuckers at Schlum ...
+
+  Observe that this function *requires* that START is in UPPER CASE.
 */
 
 
 
 time_t ecl_util_get_start_date(const char * data_file) { 
+  parser_type * parser = parser_alloc(" \t\r\n" , "\"\'" , NULL , NULL , "--" , "\n");
   time_t start_date  = -1;
   FILE * stream      = util_fopen(data_file , "r");
-  char * line        = NULL;
-  bool   at_eof      = false;
-  bool   start_found = false;
-  int    line_start;
+  char * buffer;
   
-  do {
-    char * start_pos;
-    line_start = ftell(stream);
-    line = util_fscanf_realloc_line(stream , &at_eof , line);
-    //util_strupr(line);
-    start_pos = strstr(line , "START");
-    if (start_pos != NULL) {
-      /* 
-	 OK - we have found START - must go back and check that it is
-	 not in a section which is commented out.
-      */
-      char * comment_start = strstr(line , "--");
-      start_found = true;
-      if (comment_start != NULL)
-	if (comment_start < start_pos)
-	  start_found = false; /* Sorry - it was in a comment */
-    }
-  } while (!start_found && !at_eof);
-  free(line);
-  if (!start_found) 
+  if (!parser_fseek_string( parser , stream , "START" , true))  /* No tolerance for mixed case ... */
     util_abort("%s: sorry - could not find START in DATA file %s \n",__func__ , data_file);
   
   {
-    int c;
-    int buffer_length = 0;
-    char * buffer;
+    long int start_pos = ftell( stream );
+    int buffer_size;
 
-
-    fseek(stream , line_start , SEEK_SET);
-    /* This will be fooled by a commented out termination '/' */
-    do {
-      c = fgetc(stream);
-      buffer_length++;
-    } while (c != '/');
-    buffer = (char *) util_malloc(buffer_length + 1 , __func__);
-    buffer[buffer_length] = '\0';
-
-    {
-      int comment_mode = 0;
-      int pos      = 0;
-      int file_pos = 0;
-
-      fseek(stream , line_start , SEEK_SET);
-      do {
-	c = fgetc(stream);
-	file_pos++;
-	if (c == '-')
-	  comment_mode++;
-	else 
-	  if (comment_mode == 0) {
-	    if (!(c == '\r' || c == '\n')) {
-	      buffer[pos] = c;
-	      pos++;
-	    }
-	  } else {
-	    /* Just looking for newline */
-	    if (c == '\r' || c == '\n')
-	      comment_mode = 0;
-	  }
-      } while (file_pos < buffer_length);
-    } 
+    /* Look for terminating '/' */
+    if (!parser_fseek_string( parser , stream , "/" , false))
+      util_abort("%s: sorry - could not find \"/\" termination of START keyword in data_file: \n",__func__ , data_file);
     
-
-    
-    /* Searching for the first numeric character */
-    {
-      int pos = 0;
-      while (!isdigit(buffer[pos]) && pos <= buffer_length) 
-	pos++;
-
-      if (!isdigit(buffer[pos])) 
-	util_abort("%s: sorry - failed to detect start date from DATA file \n",__func__);
-      
-      {
-	int day, year, month_nr;
-	char * month_str = (char *) util_malloc(32 , __func__);
-	{
-	  int scanf_count = sscanf(&buffer[pos] , "%d %s %d" , &day , month_str , &year);
-	  if (scanf_count != 3)
-	    util_abort("%s: failed to parse DAY MONTH YEAR from: %s \n",__func__ , &buffer[pos]);
-	}
-	month_str = util_realloc_dequoted_string( month_str );
-	
-	month_nr   = util_get_month_nr(month_str);
-	start_date = util_make_date(day , month_nr , year );
-	free(month_str);
-      }
-    }
-    free(buffer);
+    buffer_size = (ftell(stream) - start_pos)  ;
+    buffer = util_malloc( sizeof * buffer * buffer_size + 1 , __func__);
+    fseek( stream , start_pos , SEEK_SET);
+    util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
+    buffer[buffer_size] = '\0';
   }
   
+  
+  {
+    stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , true );
+    int day, year, month_nr;
+    if ( util_sscanf_int( stringlist_iget( tokens , 0 ) , &day)   &&   util_sscanf_int( stringlist_iget(tokens , 2) , &year)) {
+      month_nr   = util_get_month_nr(stringlist_iget( tokens , 1));
+      start_date = util_make_date(day , month_nr , year );
+    } else
+      util_abort("%s: failed to parse DAY MONTH YEAR from : \"%s\" \n",__func__ , buffer);
+    stringlist_free( tokens );
+  }
+  
+  free( buffer );
+  parser_free( parser );
   fclose(stream);
+  
   return start_date;
 }
