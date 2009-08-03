@@ -1,13 +1,13 @@
 #include <assert.h>
 #include <string.h>
 #include <util.h>
-#include <tokenizer.h>
+#include <parser.h>
 
-#define TOKENIZER_ESCAPE_CHAR '\\'
+#define PARSER_ESCAPE_CHAR '\\'
 
 
 
-struct tokenizer_struct
+struct parser_struct
 {
   char * splitters;         /* The string is split into tokens on the occurence of one of these characters - and they are removed. */
   char * specials;          /* This exactly like the splitters - but these characters are retained as tokens. */
@@ -19,7 +19,7 @@ struct tokenizer_struct
 
 
 
-tokenizer_type * tokenizer_alloc(
+parser_type * parser_alloc(
   const char * splitters,        /** Set to NULL if not interessting.            */
   const char * quoters,          /** Set to NULL if not interessting.            */
   const char * specials,         /** Set to NULL if not interessting.            */
@@ -27,59 +27,59 @@ tokenizer_type * tokenizer_alloc(
   const char * comment_start,    /** Set to NULL if not interessting.            */
   const char * comment_end)      /** Set to NULL  if not interessting.           */
 {
-  tokenizer_type * tokenizer = util_malloc(sizeof * tokenizer, __func__);
+  parser_type * parser = util_malloc(sizeof * parser, __func__);
 
 
   if( splitters != NULL)
   {
     if( strlen(splitters) == 0)
       util_abort("%s: Need at least one non '\\0' splitters character.\n", __func__);
-    tokenizer->splitters = util_alloc_string_copy( splitters ); 
+    parser->splitters = util_alloc_string_copy( splitters ); 
   }
   else
-    tokenizer->splitters = NULL;
+    parser->splitters = NULL;
   
   if (delete_set != NULL)
-    tokenizer->delete_set = util_alloc_string_copy( delete_set );
+    parser->delete_set = util_alloc_string_copy( delete_set );
   else
-    tokenizer->delete_set = NULL;
+    parser->delete_set = NULL;
 
 
   if( quoters != NULL )
   {
     if( strlen( quoters ) == 0)
       util_abort("%s: Need at least one non '\\0' quote character.\n", __func__);
-    tokenizer->quoters = util_alloc_string_copy( quoters ); 
+    parser->quoters = util_alloc_string_copy( quoters ); 
   }
   else
-    tokenizer->quoters = NULL;
+    parser->quoters = NULL;
 
   if( specials != NULL )
   {
     if( strlen( specials ) == 0)
       util_abort("%s: Need at least one non '\\0' special character.\n", __func__);
-    tokenizer->specials = util_alloc_string_copy( specials ); 
+    parser->specials = util_alloc_string_copy( specials ); 
   }
   else
-    tokenizer->specials = NULL;
+    parser->specials = NULL;
 
   if( comment_start != NULL )
   {
     if( strlen( comment_start ) == 0)
       util_abort("%s: Need at least one non '\\0' character to start a comment.\n", __func__);
-    tokenizer->comment_start = util_alloc_string_copy( comment_start );
+    parser->comment_start = util_alloc_string_copy( comment_start );
   }
   else
-    tokenizer->comment_start = NULL;
+    parser->comment_start = NULL;
     
   if( comment_end != NULL )
   {
     if( strlen( comment_end ) == 0)
       util_abort("%s: Need at least one non '\\0' character to end a comment.\n", __func__);
-    tokenizer->comment_end   = util_alloc_string_copy( comment_end );
+    parser->comment_end   = util_alloc_string_copy( comment_end );
   }
   else 
-    tokenizer->comment_end   = NULL;
+    parser->comment_end   = NULL;
 
   if(comment_start == NULL && comment_end != NULL)
     util_abort("%s: Need to have comment_start when comment_end is set.\n", __func__);
@@ -87,23 +87,23 @@ tokenizer_type * tokenizer_alloc(
     util_abort("%s: Need to have comment_end when comment_start is set.\n", __func__);
   
 
-  return tokenizer;
+  return parser;
 }
 
 
 
-void tokenizer_free(
-  tokenizer_type * tokenizer)
+void parser_free(
+  parser_type * parser)
 {
 
-  util_safe_free( tokenizer->splitters    );
-  util_safe_free( tokenizer->quoters       ); 
-  util_safe_free( tokenizer->specials      ); 
-  util_safe_free( tokenizer->comment_start );
-  util_safe_free( tokenizer->comment_end   );
-  util_safe_free( tokenizer->delete_set    );
+  util_safe_free( parser->splitters    );
+  util_safe_free( parser->quoters       ); 
+  util_safe_free( parser->specials      ); 
+  util_safe_free( parser->comment_start );
+  util_safe_free( parser->comment_end   );
+  util_safe_free( parser->delete_set    );
 
-  free( tokenizer     );
+  free( parser     );
 }
 
 
@@ -112,7 +112,7 @@ static
 bool is_escape(
   const char c)
 {
-  if( c == TOKENIZER_ESCAPE_CHAR )
+  if( c == PARSER_ESCAPE_CHAR )
     return true;
   else
     return false;
@@ -124,15 +124,15 @@ bool is_escape(
 static
 int length_of_initial_splitters(
   const char           * buffer_position,
-  const tokenizer_type * tokenizer)
+  const parser_type * parser)
 {
   assert( buffer_position != NULL );
-  assert( tokenizer       != NULL );
+  assert( parser       != NULL );
 
-  if( tokenizer->splitters == NULL)
+  if( parser->splitters == NULL)
     return 0;
   else
-    return strspn( buffer_position, tokenizer->splitters );
+    return strspn( buffer_position, parser->splitters );
 }
 
 static bool in_set(char c , const char * set) {
@@ -150,32 +150,32 @@ static bool in_set(char c , const char * set) {
 static
 bool is_splitters(
   const char             c,
-  const tokenizer_type * tokenizer)
+  const parser_type * parser)
 {
-  return in_set(c , tokenizer->splitters);
+  return in_set(c , parser->splitters);
 }
 
 static 
 bool is_special(
   const char             c,
-  const tokenizer_type * tokenizer)
+  const parser_type * parser)
 {
-  return in_set(c , tokenizer->specials);
+  return in_set(c , parser->specials);
 }
 
 
 static
 bool is_in_quoters(
   const char       c,
-  const tokenizer_type * tokenizer)
+  const parser_type * parser)
 {
-  return in_set(c , tokenizer->quoters);
+  return in_set(c , parser->quoters);
 }
 
 
 
-static bool is_in_delete_set(const char c , const tokenizer_type * tokenizer) {
-  return in_set(c , tokenizer->delete_set);
+static bool is_in_delete_set(const char c , const parser_type * parser) {
+  return in_set(c , parser->delete_set);
 }
 
 
@@ -197,7 +197,7 @@ static bool is_in_delete_set(const char c , const tokenizer_type * tokenizer) {
   ' or ".
 
   Escaped occurences of the first character are
-  not counted. E.g. if TOKENIZER_ESCAPE_CHAR
+  not counted. E.g. if PARSER_ESCAPE_CHAR
   occurs in front of a new occurence of the first
   character, this is *NOT* regarded as the end.
 */
@@ -233,16 +233,16 @@ int length_of_quotation(
 static
 int length_of_comment(
   const char           * buffer_position,
-  const tokenizer_type * tokenizer)
+  const parser_type * parser)
 {  
   bool in_comment = false;
   int length = 0;
 
-  if(tokenizer->comment_start == NULL || tokenizer->comment_end == NULL)
+  if(parser->comment_start == NULL || parser->comment_end == NULL)
     length = 0;
   else
   {
-    const char * comment_start     = tokenizer->comment_start;
+    const char * comment_start     = parser->comment_start;
     int          len_comment_start = strlen( comment_start );
     if( strncmp( buffer_position, comment_start, len_comment_start) == 0)
     {
@@ -255,7 +255,7 @@ int length_of_comment(
 
   if( in_comment )
   {
-    const char * comment_end       = tokenizer->comment_end;
+    const char * comment_end       = parser->comment_end;
     int          len_comment_end   = strlen( comment_end   );
     while(buffer_position[length] != '\0' && in_comment)
     {
@@ -298,7 +298,7 @@ char * alloc_quoted_token(
       int  new_length = length-1;
       char expr[3];
       char subs[2];
-      expr[0] = TOKENIZER_ESCAPE_CHAR;
+      expr[0] = PARSER_ESCAPE_CHAR;
       expr[1] = buffer[0];
       expr[2] = '\0';
       subs[0] = buffer[0];
@@ -321,7 +321,7 @@ char * alloc_quoted_token(
 static
 int length_of_normal_non_splitters(
   const char           * buffer,
-  const tokenizer_type * tokenizer)
+  const parser_type * parser)
 {
   bool at_end  = false;
   int length   = 0;
@@ -332,22 +332,22 @@ int length_of_normal_non_splitters(
     length += 1;
     current = buffer[length];
 
-    if( is_splitters( current, tokenizer ) )
+    if( is_splitters( current, parser ) )
     {
       at_end = true;
       continue;
     }
-    if( is_special( current, tokenizer ) )
+    if( is_special( current, parser ) )
     {
       at_end = true;
       continue;
     }
-    if( is_in_quoters( current, tokenizer ) )
+    if( is_in_quoters( current, parser ) )
     {
       at_end = true;
       continue;
     }
-    if( length_of_comment(&buffer[length], tokenizer) > 0)
+    if( length_of_comment(&buffer[length], parser) > 0)
     {
       at_end = true;
       continue;
@@ -359,11 +359,11 @@ int length_of_normal_non_splitters(
 
 
 
-static int length_of_delete( const char * buffer , const tokenizer_type * tokenizer) {
+static int length_of_delete( const char * buffer , const parser_type * parser) {
   int length   = 0;
   char current = buffer[0];
 
-  while(is_in_delete_set( current , tokenizer ) && current != '\0') {
+  while(is_in_delete_set( current , parser ) && current != '\0') {
     length += 1;
     current = buffer[length];
   }
@@ -374,8 +374,8 @@ static int length_of_delete( const char * buffer , const tokenizer_type * tokeni
 /**
    Allocates a new stringlist. 
 */
-stringlist_type * tokenize_buffer(
-  const tokenizer_type * tokenizer,
+stringlist_type * parser_tokenize_buffer(
+  const parser_type * parser,
   const char           * buffer,
   bool                   strip_quote_marks)
 {
@@ -392,7 +392,7 @@ stringlist_type * tokenize_buffer(
     /** 
       Skip initial splitters.
     */
-    splitters_length = length_of_initial_splitters( &buffer[position], tokenizer );
+    splitters_length = length_of_initial_splitters( &buffer[position], parser );
     if(splitters_length > 0)
     {
       position += splitters_length;
@@ -403,7 +403,7 @@ stringlist_type * tokenize_buffer(
     /**
       Skip comments.
     */
-    comment_length = length_of_comment( &buffer[position], tokenizer);
+    comment_length = length_of_comment( &buffer[position], parser);
     if(comment_length > 0)
     {
       position += comment_length;
@@ -415,7 +415,7 @@ stringlist_type * tokenize_buffer(
        Skip characters which are just deleted. 
     */
       
-    delete_length = length_of_delete( &buffer[position] , tokenizer );
+    delete_length = length_of_delete( &buffer[position] , parser );
     if (delete_length > 0) {
       position += delete_length;
       continue;
@@ -426,7 +426,7 @@ stringlist_type * tokenize_buffer(
     /** 
        Copy the character if it is in the special set,
     */
-    if( is_special( buffer[position], tokenizer ) )
+    if( is_special( buffer[position], parser ) )
     {
       char key[2];
       key[0] = buffer[position];
@@ -439,7 +439,7 @@ stringlist_type * tokenize_buffer(
     /**
        If the character is a quotation start, we copy the whole quotation.
     */
-    if( is_in_quoters( buffer[position], tokenizer ) )
+    if( is_in_quoters( buffer[position], parser ) )
     {
       int length   = length_of_quotation( &buffer[position] );
       char * token = alloc_quoted_token( &buffer[position], length, strip_quote_marks );
@@ -469,10 +469,10 @@ stringlist_type * tokenize_buffer(
     */
 
     {
-      int length   = length_of_normal_non_splitters( &buffer[position], tokenizer );
+      int length   = length_of_normal_non_splitters( &buffer[position], parser );
       char * token = util_malloc( (length + 1) * sizeof * token, __func__ );
       int token_length;
-      if (tokenizer->delete_set == NULL) {
+      if (parser->delete_set == NULL) {
         token_length = length;
         memcpy( token , &buffer[position] , length * sizeof * token );
       } else {
@@ -480,7 +480,7 @@ stringlist_type * tokenize_buffer(
         token_length = 0;
         for (i = 0; i < length; i++) {
           char c = buffer[position + i];
-          if ( !is_in_delete_set( c , tokenizer)) {
+          if ( !is_in_delete_set( c , parser)) {
             token[token_length] = c;
             token_length++;
           }
@@ -504,14 +504,14 @@ stringlist_type * tokenize_buffer(
 
 
 
-stringlist_type * tokenize_file(
-  const tokenizer_type * tokenizer,
+stringlist_type * parser_tokenize_file(
+  const parser_type * parser,
   const char           * filename,
   bool                   strip_quote_marks)
 {
   stringlist_type * tokens;
   char * buffer = util_fread_alloc_file_content( filename, NULL );
-  tokens = tokenize_buffer( tokenizer, buffer, strip_quote_marks );
+  tokens = tokenize_buffer( parser, buffer, strip_quote_marks );
   free(buffer);
   return tokens;
 }
@@ -519,7 +519,7 @@ stringlist_type * tokenize_file(
 
 /*****************************************************************/
 /* Below are some functions which do not actually tokenize, but use
-   the comment/quote handling of the tokenizer implementation for
+   the comment/quote handling of the parser implementation for
    related tasks.
 */
 
@@ -554,24 +554,26 @@ static bool fgetc_while_equal( FILE * stream , const char * string ) {
 
 
 
+
+
 /**
    This function is quite tolerant - it will accept (with a warning)
    unterminated comments and unterminated quotations.
 */
 
-bool tokenizer_fseek_string(const tokenizer_type * tokenizer , FILE * stream , const char * string , bool skip_string) {
+bool parser_fseek_string(const parser_type * parser , FILE * stream , const char * string , bool skip_string) {
   long int initial_pos     = ftell( stream );   /* Store the inital position. */
   bool string_found        = false;
   bool cont                = true;
   
-  if (strstr( string , tokenizer->comment_start ) != NULL)
+  if (strstr( string , parser->comment_start ) != NULL)
     util_abort("%s: sorry the string contains a comment start - will never find it ... \n"); /* A bit harsh ?? */
   
   do {
     int c = fgetc( stream );
 
     /* Special treatment of quoters: */
-    if (is_in_quoters( c , tokenizer )) {
+    if (is_in_quoters( c , parser )) {
       long int quote_start_pos = ftell(stream);
       if (!fseek_quote_end( c , stream )) {
         fseek( stream ,  quote_start_pos , SEEK_SET);
@@ -584,13 +586,13 @@ bool tokenizer_fseek_string(const tokenizer_type * tokenizer , FILE * stream , c
     }
 
     /* Special treatment of comments: */
-    if (c == tokenizer->comment_start[0]) {
+    if (c == parser->comment_start[0]) {
       /* OK - this might be the start of a comment - let us check further. */
-      bool comment_start = fgetc_while_equal( stream , &tokenizer->comment_start[1]);
+      bool comment_start = fgetc_while_equal( stream , &parser->comment_start[1]);
       if (comment_start) {
-        long int comment_start_pos = ftell(stream) - strlen( tokenizer->comment_start );
+        long int comment_start_pos = ftell(stream) - strlen( parser->comment_start );
         /* Start seeking for comment_end */
-        if (!util_fseek_string(stream , tokenizer->comment_end , skip_string)) { 
+        if (!util_fseek_string(stream , parser->comment_end , skip_string)) { 
           /* 
              No end comment end was found - what to do about that??
              The file is just positioned at the end - and the routine
@@ -640,7 +642,7 @@ bool tokenizer_fseek_string(const tokenizer_type * tokenizer , FILE * stream , c
 */
 
 
-void tokenizer_strip_buffer(const tokenizer_type * tokenizer , char ** __buffer) {
+void parser_strip_buffer(const parser_type * parser , char ** __buffer) {
   char * src     = *__buffer;
   char * target  = util_malloc( sizeof * target * ( strlen( *__buffer ) + 1) , __func__);
 
@@ -653,7 +655,7 @@ void tokenizer_strip_buffer(const tokenizer_type * tokenizer , char ** __buffer)
     /**
       Skip comments.
     */
-    comment_length = length_of_comment( &src[src_position], tokenizer);
+    comment_length = length_of_comment( &src[src_position], parser);
     if(comment_length > 0)
     {
       src_position += comment_length;
@@ -664,7 +666,7 @@ void tokenizer_strip_buffer(const tokenizer_type * tokenizer , char ** __buffer)
     /**
        Skip characters which are just deleted. 
     */
-    delete_length = length_of_delete( &src[src_position] , tokenizer );
+    delete_length = length_of_delete( &src[src_position] , parser );
     if (delete_length > 0) {
       src_position += delete_length;
       continue;
@@ -673,7 +675,7 @@ void tokenizer_strip_buffer(const tokenizer_type * tokenizer , char ** __buffer)
     /*
       Quotations.
     */
-    if( is_in_quoters( src[src_position], tokenizer ) )
+    if( is_in_quoters( src[src_position], parser ) )
     {
       int length   = length_of_quotation( &src[src_position] );
       char * token = alloc_quoted_token( &src[src_position], length, false );
@@ -703,7 +705,7 @@ void tokenizer_strip_buffer(const tokenizer_type * tokenizer , char ** __buffer)
 /*****************************************************************/
 /**
    This file reads file content into a buffer, and then strips the
-   buffer with tokenizer_strip_buffer() and returns the 'cleaned up'
+   buffer with parser_strip_buffer() and returns the 'cleaned up'
    buffer.
 
    This function is a replacement for the old
@@ -711,11 +713,11 @@ void tokenizer_strip_buffer(const tokenizer_type * tokenizer , char ** __buffer)
    comment string.
 */
 
-char * tokenizer_fread_alloc_file_content(const char * filename , const char * quote_set , const char * delete_set , const char * comment_start , const char * comment_end) {
-  tokenizer_type * tokenizer = tokenizer_alloc( NULL , quote_set , NULL , delete_set , comment_start , comment_end);
+char * parser_fread_alloc_file_content(const char * filename , const char * quote_set , const char * delete_set , const char * comment_start , const char * comment_end) {
+  parser_type * parser = parser_alloc( NULL , quote_set , NULL , delete_set , comment_start , comment_end);
   char * buffer              = util_fread_alloc_file_content( filename , NULL);
   
-  tokenizer_strip_buffer( tokenizer , &buffer );
-  tokenizer_free( tokenizer );
+  parser_strip_buffer( parser , &buffer );
+  parser_free( parser );
   return buffer;
 }

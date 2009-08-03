@@ -1,14 +1,14 @@
-#ifndef __TOKENIZER_H__
-#define __TOKENIZER_H__
+#ifndef __PARSER_H__
+#define __PARSER_H__
 #include <stringlist.h>
 
-typedef struct tokenizer_struct tokenizer_type;
+typedef struct parser_struct parser_type;
 
 
 /**
   GENERAL OVERVIEW
 
-  The tokenizer_type is used to create a series of "tokens"
+  The parser_type is used to create a series of "tokens"
   from a file or string buffer. In it's simplest form,
   we define a token as a subset of a string separated by
   by some split characters.
@@ -28,9 +28,9 @@ typedef struct tokenizer_struct tokenizer_type;
 
   COMMENTS
 
-  The tokenizer can ignore comments when tokenzing
+  The parser can ignore comments when tokenzing
   a file or buffer. To enable this feature, allocate
-  the tokenizer_type with comment_start and comment_end
+  the parser_type with comment_start and comment_end
   different from NULL. For example if we set both
   comment_start and comment_end to "##", tokenizing
   "I ## really  ## like beer" would give:
@@ -53,7 +53,7 @@ typedef struct tokenizer_struct tokenizer_type;
   Token number 2 is "value"
 
   The special characters are given in the "specials" string when
-  allocating the tokenizer.
+  allocating the parser.
 
 
 
@@ -61,7 +61,7 @@ typedef struct tokenizer_struct tokenizer_type;
 
   When parsing user input, the user often wants to provide e.g. a
   filename with a white-space character in it. To support this, the
-  tokenizer can be given a set of quoters. For example, letting " " be
+  parser can be given a set of quoters. For example, letting " " be
   white space and adding "'" to the quoters, tokenizing 
 
    "my_file = 'my documents with space in.txt'" 
@@ -74,7 +74,7 @@ typedef struct tokenizer_struct tokenizer_type;
 
   If wanted, the quoting characters can be removed
   using the strip_quote_marks options when running
-  the tokenizer on the buffer. The last token
+  the parser on the buffer. The last token
   in the example above would then be:
 
   Token number 2 is "my documents with space in.txt"
@@ -100,7 +100,7 @@ typedef struct tokenizer_struct tokenizer_type;
 */
 
 
-tokenizer_type * tokenizer_alloc(
+parser_type * parser_alloc(
   const char * whitespace,       /** Set to NULL if not interessting.         */
   const char * quoters,          /** Set to NULL if not interessting.         */
   const char * specials,         /** Set to NULL if not interessting.         */
@@ -108,25 +108,25 @@ tokenizer_type * tokenizer_alloc(
   const char * comment_start,    /** Set to NULL if not interessting.         */
   const char * comment_end);     /** Set to NULL if not interessting.         */
 
-void tokenizer_free(
-  tokenizer_type * tokenizer);
+void parser_free(
+  parser_type * parser);
 
 
-stringlist_type * tokenize_buffer(
-  const tokenizer_type * tokenizer,
+stringlist_type * parser_tokenize_buffer(
+  const parser_type * parser,
   const char           * buffer,
   bool                   strip_quote_marks);
 
 
-stringlist_type * tokenize_file(
-  const tokenizer_type * tokenizer,
+stringlist_type * parser_tokenize_file(
+  const parser_type * parser,
   const char           * filename,
   bool                   strip_quote_marks);
 
 
 /* Pollution by Joakim: */
 
-void   tokenizer_strip_buffer(const tokenizer_type * tokenizer , char ** __buffer);
-bool   tokenizer_fseek_string(const tokenizer_type * tokenizer , FILE * stream , const char * string , bool skip_string);
-char * tokenizer_fread_alloc_file_content(const char * filename , const char * quote_set , const char * delete_set , const char * comment_start , const char * comment_end);
+void   parser_strip_buffer(const parser_type * parser , char ** __buffer);
+bool   parser_fseek_string(const parser_type * parser , FILE * stream , const char * string , bool skip_string);
+char * parser_fread_alloc_file_content(const char * filename , const char * quote_set , const char * delete_set , const char * comment_start , const char * comment_end);
 #endif

@@ -34,6 +34,7 @@ int *                <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * ve
 void                 <TYPE>_vector_fprintf(const <TYPE>_vector_type * vector , FILE * stream , const char * name , const char * fmt);
 void 		     <TYPE>_vector_fwrite(const <TYPE>_vector_type * vector , FILE * stream);
 <TYPE>_vector_type * <TYPE>_vector_fread_alloc( FILE * stream );
+<TYPE>_vector_type * <TYPE>_vector_buffer_fread_alloc( buffer_type * buffer );
 void                 <TYPE>_vector_buffer_fwrite(const <TYPE>_vector_type * vector , buffer_type * buffer);
 
 #endif
