@@ -16,17 +16,17 @@
 #include <matrix.h>
 #include <matrix_lapack.h>
 #include <matrix_blas.h>
-#include <tokenizer.h>
+#include <parser.h>
 
 
 
 int main(int argc , char ** argv) {
-  tokenizer_type * tokenizer = tokenizer_alloc(NULL , "\"\'" , NULL , "\n" , "/*" , "*/");
+  parser_type * parser = parser_alloc(NULL , "\"\'" , NULL , "\n" , "/*" , "*/");
   char * buffer = util_fread_alloc_file_content("test" ,  NULL);
   printf("-----------------------------------------------------------------\n");
   printf("%s \n",buffer);
   printf("-----------------------------------------------------------------\n");
-  tokenizer_strip_buffer( tokenizer , &buffer );
+  parser_strip_buffer( parser , &buffer );
   printf("-----------------------------------------------------------------\n");
   printf("%s \n",buffer);
   printf("-----------------------------------------------------------------\n");

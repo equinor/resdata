@@ -511,7 +511,7 @@ stringlist_type * parser_tokenize_file(
 {
   stringlist_type * tokens;
   char * buffer = util_fread_alloc_file_content( filename, NULL );
-  tokens = tokenize_buffer( parser, buffer, strip_quote_marks );
+  tokens = parser_tokenize_buffer( parser, buffer, strip_quote_marks );
   free(buffer);
   return tokens;
 }

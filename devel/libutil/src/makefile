@@ -86,8 +86,8 @@ eol-fix.x: eol-fix.o $(LIB)
 mem_free.x: mem_free.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) mem_free.o -o mem_free.x  $(LINK_LIB_PATH) $(LIB_LINK)
 
-tokenizer_test.x: tokenizer_test.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) tokenizer_test.o -o tokenizer_test.x  $(LINK_LIB_PATH) $(LIB_LINK)
+parser_test.x: parser_test.o $(LIB)
+	$(LD) -$(MFLAG) $(LDFLAGS) parser_test.o -o parser_test.x  $(LINK_LIB_PATH) $(LIB_LINK)
 
 grdecl_to_ascii.x: grdecl_to_ascii.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) grdecl_to_ascii.o -o grdecl_to_ascii.x  $(LINK_LIB_PATH) $(LIB_LINK)

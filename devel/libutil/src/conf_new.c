@@ -6,7 +6,7 @@
 #include <vector.h>
 #include <int_vector.h>
 #include <conf_new.h>
-#include <tokenizer.h>
+#include <parser.h>
 
 
 
@@ -195,8 +195,8 @@ int create_token_buffer__(
   stringlist_type     ** tokens,      /** Memory to the created pointer.      */
   stringlist_type     ** src_files,   /** Memory to the created pointer.      */
   const set_type       * sources,     /** Real path of files already sourced. */
-  const tokenizer_type * tokenizer,   /** Tokenizer to use.                   */
-  const char           * filename ,   /** Real path of file to tokenize.      */
+  const parser_type    * parser   ,   /** Parser to use.                      */
+  const char           * filename ,   /** Real path of file to parse.         */
   stringlist_type      * errors       /** Storage for error messages.         */
 )
 {
@@ -247,7 +247,7 @@ int create_token_buffer__(
     set_type * sources__   = set_copyc(sources);
     set_add_key(sources__, filename);
 
-    tokens__    = tokenize_file(tokenizer, filename, true);
+    tokens__    = parser_tokenize_file(parser , filename, true);
     src_files__ = stringlist_alloc_new(); 
 
     /**
@@ -306,10 +306,10 @@ int create_token_buffer__(
             Recursive call.
           */
           int last_status = create_token_buffer__(&included_tokens,
-                                                 &included_src_files,
-                                                 sources__, tokenizer, 
-                                                 include_file_realpath,
-                                                 errors);
+                                                  &included_src_files,
+                                                  sources__, parser,
+                                                  include_file_realpath,
+                                                  errors);
           if( last_status != CONF_OK)
             status = last_status;
 
@@ -392,22 +392,22 @@ int create_token_buffer(
 
   if( util_fopen_test(filename, "r") )
   {
-    tokenizer_type * tokenizer   = tokenizer_alloc(__CONF_WHITESPACE,
-                                                   __CONF_QUOTERS,
-                                                   __CONF_SPECIAL,
-                                                   __CONF_DELETE,
-                                                   __CONF_COM_START,
-                                                   __CONF_COM_STOP);
-
+    parser_type * parser   = parser_alloc(__CONF_WHITESPACE,
+                                          __CONF_QUOTERS,
+                                          __CONF_SPECIAL,
+                                          __CONF_DELETE,
+                                          __CONF_COM_START,
+                                          __CONF_COM_STOP);
+    
     set_type * sources           = set_alloc_empty();
     char     * realpath_filename = util_alloc_realpath(filename);
 
     status = create_token_buffer__(&tokens__, &src_files__, sources,
-                                   tokenizer, realpath_filename, errors__);
+                                   parser, realpath_filename, errors__);
 
     free(realpath_filename);
     set_free(sources);
-    tokenizer_free(tokenizer);
+    parser_free(parser);
   }
   else
   {
