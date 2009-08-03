@@ -265,6 +265,12 @@ size_t buffer_fread_compressed(buffer_type * buffer , size_t compressed_size , v
 /*****************************************************************/
 /* Various (slighly) higher level functions                      */
 
+
+void buffer_rewind(buffer_type * buffer ) {
+  buffer_fseek( buffer , 0 , SEEK_SET);
+}
+
+
 void buffer_fseek(buffer_type * buffer , ssize_t offset , int whence) {
   ssize_t new_pos = 0;
 
@@ -380,42 +386,7 @@ void buffer_fwrite_string(buffer_type * buffer , const char * string) {
 
 
 
-/**
-   This file will read in the full content of file, and allocate a
-   buffer instance with that content. Observe that the buffer->pos
-   pointer is at the beginning of the buffer.
-*/
-
-void buffer_fread_realloc(buffer_type * buffer , const char * filename) {
-  size_t file_size     = util_file_size( filename );
-  if (buffer->alloc_size < file_size)
-    buffer_resize__(buffer , file_size , true);
-  {
-    FILE * stream        = util_fopen(filename , "r");
-    util_fread( buffer->data , 1 , file_size , stream , __func__);
-    fclose( stream );
-  }
-  buffer->pos          = 0;
-  buffer->content_size = file_size;
-}
-
-
-
-buffer_type * buffer_fread_alloc(const char * filename) {
-  buffer_type * buffer = buffer_alloc( 0 );
-  buffer_fread_realloc( buffer , filename );
-  return buffer;
-}
-
-
-
-void buffer_store(const buffer_type * buffer , const char * filename) {
-  FILE * stream        = util_fopen(filename , "w");
-  util_fwrite( buffer->data , 1 , buffer->content_size , stream , __func__);
-  fclose( stream );
-}
-
-
+/*****************************************************************/
 /*****************************************************************/
 
 size_t buffer_get_offset(const buffer_type * buffer) {
@@ -460,4 +431,84 @@ void buffer_summarize(const buffer_type * buffer , const char * header) {
   printf("   Content size .......: %10ld bytes \n",buffer->content_size);
   printf("   Current position ...: %10ld bytes \n",buffer->pos);
   printf("-----------------------------------------------------------------\n");
+}
+
+
+/*****************************************************************/
+/*****************************************************************/
+/*
+  Here comes a couple of functions for loading/storing a buffer
+  instance to a stream. Observe that when the buffer is stored to file
+  it does not store any metadata (i.e. not even size) - only the raw
+  buffer content.
+*/
+
+/**
+   This is the lowest level: 'read buffer content from file'
+   function. It will read 'byte_size' bytes from stream and fill the
+   buffer with the data.  
+   
+   When the function completes the buffer position is at the end of
+   the buffer, i.e. it is ready for more calls to buffer_stream_fread;
+   this is in contrast to the higher level functions
+   buffer_fread_alloc() / buffer_fread_realloc() which reposition the
+   buffer position to the beginning of the buffer.
+   
+   Before reading from the buffer with e.g. buffer_fread_int() the
+   buffer must be repositioned with buffer_rewind().
+*/
+
+
+void buffer_stream_fread( buffer_type * buffer , size_t byte_size , FILE * stream) {
+  size_t min_size = byte_size + buffer->pos;
+  if (buffer->alloc_size < min_size)
+    buffer_resize__(buffer , min_size , true);
+
+  util_fread( &buffer->data[buffer->pos] , 1 , byte_size , stream , __func__);
+
+  buffer->content_size += byte_size;
+  buffer->pos          += byte_size;
+}
+
+
+
+
+/**
+   This file will read in the full content of file, and allocate a
+   buffer instance with that content. When the function completes the
+   position is at the beginning of the buffer.
+*/
+
+void buffer_fread_realloc(buffer_type * buffer , const char * filename) {
+  size_t file_size     = util_file_size( filename );
+  FILE * stream        = util_fopen( filename , "r");  
+
+  buffer_clear( buffer );   /* Setting: content_size = 0; pos = 0;  */
+  buffer_stream_fread( buffer , file_size , stream );
+  buffer_rewind( buffer );  /* Setting: pos = 0; */
+  fclose( stream );
+}
+
+
+
+buffer_type * buffer_fread_alloc(const char * filename) {
+  buffer_type * buffer = buffer_alloc( 0 );
+  buffer_fread_realloc( buffer , filename );
+  return buffer;
+}
+
+
+
+void buffer_stream_fwrite( const buffer_type * buffer , FILE * stream ) {
+  util_fwrite( buffer->data , 1 , buffer->content_size , stream , __func__);
+}
+
+
+/**
+   Dumps buffer content to a stream - without any metadata. 
+*/
+void buffer_store(const buffer_type * buffer , const char * filename) {
+  FILE * stream        = util_fopen(filename , "w");
+  buffer_stream_fwrite( buffer , stream );
+  fclose( stream );
 }

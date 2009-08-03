@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef struct     buffer_struct buffer_type;
 
@@ -30,6 +31,7 @@ size_t 		   buffer_get_size(const buffer_type * buffer);
 size_t             buffer_get_remaining_size(const buffer_type *  buffer);
 void             * buffer_get_data(const buffer_type * buffer);
 void             * buffer_alloc_data_copy(const buffer_type * buffer);
+void               buffer_stream_fwrite( const buffer_type * buffer , FILE * stream );
 
 void 		   buffer_fseek(buffer_type * buffer , ssize_t offset , int whence);
 void 		   buffer_fskip(buffer_type * buffer, ssize_t offset);
@@ -39,7 +41,7 @@ void   		   buffer_fskip_time_t(buffer_type * buffer);
 time_t 		   buffer_fread_time_t(buffer_type * buffer);
 void   		   buffer_fwrite_time_t(buffer_type * buffer , time_t value);
 
-
+void               buffer_stream_fread( buffer_type * buffer , size_t byte_size , FILE * stream);
 buffer_type      * buffer_fread_alloc(const char * filename);
 void               buffer_fread_realloc(buffer_type * buffer , const char * filename);
 

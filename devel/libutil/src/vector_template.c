@@ -71,6 +71,7 @@
 
 #include <util.h>
 #include <string.h>
+#include <buffer.h>
 #include <<TYPE>_vector.h>
 
 
@@ -434,7 +435,6 @@ void <TYPE>_vector_fwrite(const <TYPE>_vector_type * vector , FILE * stream) {
 }
 
 
-
 <TYPE>_vector_type * <TYPE>_vector_fread_alloc( FILE * stream ) {
   <TYPE>     default_value;
   int size = util_fread_int( stream );
@@ -442,6 +442,26 @@ void <TYPE>_vector_fwrite(const <TYPE>_vector_type * vector , FILE * stream) {
   {
     <TYPE>_vector_type * vector = <TYPE>_vector_alloc( size , default_value );
     util_fread( vector->data , sizeof * vector->data , size , stream , __func__);
+    return vector;
+  }
+}
+
+
+
+void <TYPE>_vector_buffer_fwrite(const <TYPE>_vector_type * vector , buffer_type * buffer) {
+  buffer_fwrite_int( buffer , vector->size );
+  buffer_fwrite( buffer , &vector->default_value , sizeof vector->default_value , 1 );
+  buffer_fwrite( buffer , vector->data , sizeof * vector->data , vector->size );
+}
+
+
+<TYPE>_vector_type * <TYPE>_vector_buffer_fread_alloc( buffer_type * buffer ) {
+  <TYPE>     default_value;
+  int size = buffer_fread_int( buffer );
+  buffer_fread( buffer , &default_value , sizeof default_value , 1 );
+  {
+    <TYPE>_vector_type * vector = <TYPE>_vector_alloc( size , default_value );
+    buffer_fread( buffer , vector->data , sizeof * vector->data , size );
     return vector;
   }
 }

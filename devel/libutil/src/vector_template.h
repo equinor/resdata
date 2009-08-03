@@ -1,6 +1,7 @@
 #ifndef __<TYPE>_VECTOR_H__
 #define __<TYPE>_VECTOR_H__
 #include <stdio.h>
+#include <buffer.h>
 
 typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 
@@ -33,5 +34,6 @@ int *                <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * ve
 void                 <TYPE>_vector_fprintf(const <TYPE>_vector_type * vector , FILE * stream , const char * name , const char * fmt);
 void 		     <TYPE>_vector_fwrite(const <TYPE>_vector_type * vector , FILE * stream);
 <TYPE>_vector_type * <TYPE>_vector_fread_alloc( FILE * stream );
+void                 <TYPE>_vector_buffer_fwrite(const <TYPE>_vector_type * vector , buffer_type * buffer);
 
 #endif
