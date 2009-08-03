@@ -1,5 +1,5 @@
-#ifndef __CONF_H__
-#define __CONF_H__
+#ifndef __CONF_NEW_H__
+#define __CONF_NEW_H__
 
 #include <stringlist.h>
 #ifdef __cplusplus

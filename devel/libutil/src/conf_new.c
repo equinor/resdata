@@ -5,7 +5,7 @@
 #include <set.h>
 #include <vector.h>
 #include <int_vector.h>
-#include <conf.h>
+#include <conf_new.h>
 #include <tokenizer.h>
 
 
@@ -42,6 +42,14 @@
 
 
 /******************************************************************************/
+
+
+/**
+  TODO
+
+  Data structures should have some parsing info etc.
+  Should have a special structure for the error messages.
+*/
 
 
 
@@ -101,7 +109,8 @@ static
 bool string_is_special(
   const char * str)
 {
-  if( strlen(str) != 1 )
+  int num_special_chars = strlen(__CONF_SPECIAL);
+  if( num_special_chars != 1 )
   {
     /**
       Cannot be in the special set if it's not a single character.
@@ -110,7 +119,6 @@ bool string_is_special(
   }
   else
   {
-    int num_special_chars = strlen(__CONF_SPECIAL);
     for(int i=0; i<num_special_chars; i++)
     {
       if( str[0] == __CONF_SPECIAL[i])
@@ -179,6 +187,8 @@ int alloc_included_realpath(
   stringlist of the source file for each token.
 
   Do not use this function directly, use create_token_buffer.
+
+  NOTE: This function wants the realpath of the file to tokenize!
 */
 static
 int create_token_buffer__(
@@ -195,6 +205,10 @@ int create_token_buffer__(
   stringlist_type * tokens__;
   stringlist_type * src_files__;
   
+  /**
+    Assert that we've got a realpath.
+  */
+  assert( util_is_abs_path(filename) );
 
   /**
     Check if the file has been parsed before.
@@ -364,8 +378,8 @@ int create_token_buffer__(
 */
 static
 int create_token_buffer(
-  stringlist_type ** tokens,    /** Memory to return the allocated tokens in. */
-  stringlist_type ** src_files, /** Memory to return source files in.         */
+  stringlist_type ** tokens,    /** Memory for the tokens.                    */
+  stringlist_type ** src_files, /** Memory for source file for each token.    */
   stringlist_type ** errors,    /** Memory to return error messages in.       */
   const char       * filename   /** Filename to create tokens from.           */
 )
@@ -549,9 +563,9 @@ conf_type * conf_append_child(
   conf_type * child = util_malloc(sizeof * child, __func__);
 
   child->__id  = __CONF_ID;
-  child->super = NULL;
-  child->type  = util_alloc_string_copy("root");
-  child->name  = util_alloc_string_copy("root");
+  child->super = conf;
+  child->type  = util_alloc_string_copy(type);
+  child->name  = util_alloc_string_copy(name);
 
   child->confs = vector_alloc_new();
   child->items = hash_alloc();
