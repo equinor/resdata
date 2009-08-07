@@ -419,6 +419,23 @@ void * hash_get(const hash_type *hash , const char *key) {
 }
 
 
+/**
+   This function will:
+
+    1. Return an object from the hash table.
+    2. Remove it from the table.
+
+   Observe that if the object has been installed with a constructor,
+   the object will be destroyed by the hash_del() operation, and the
+   return value is complete gibberish - i.e. this function can NOT be
+   used on hash-owned references.
+*/
+
+void * hash_pop( hash_type * hash , const char * key) {
+  void * value = hash_get( hash , key);
+  hash_del( hash , key );
+  return value;
+}
 
 
 

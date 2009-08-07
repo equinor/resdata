@@ -123,7 +123,6 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
 */
    
 <TYPE>_vector_type * <TYPE>_vector_alloc(int init_size , <TYPE> default_value) {
-  const int alloc_size = 10;
   <TYPE>_vector_type * vector = util_malloc( sizeof * vector , __func__);
   vector->data 	     	      = NULL;
   vector->size 	     	      = 0;  

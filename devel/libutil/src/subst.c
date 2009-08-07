@@ -213,13 +213,12 @@ void subst_list_free(subst_list_type * subst_list) {
 */
 
 static void subst_list_inplace_update_buffer__(const subst_list_type * subst_list , char ** buffer) {
-  int buffer_size  = strlen( *buffer );
   int index;
   for (index = 0; index < vector_get_size( subst_list->data ); index++) {
     const subst_list_node_type * node = vector_iget_const( subst_list->data , index );
     const char * value = node->value;
     if (value != NULL)
-      util_string_replace_inplace( buffer , &buffer_size , node->key , value);
+      util_string_replace_inplace( buffer , node->key , value);
   }
 }
     

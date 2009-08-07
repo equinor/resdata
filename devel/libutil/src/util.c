@@ -774,7 +774,6 @@ bool util_sscanf_double(const char * buffer , double * value) {
    succeded, the integer value is returned by reference.
 */
 
-
 bool util_sscanf_int(const char * buffer , int * value) {
   bool value_OK = false;
   char * error_ptr;
@@ -796,6 +795,13 @@ bool util_sscanf_int(const char * buffer , int * value) {
   return value_OK;
 }
 
+
+inline bool util_string_equal(const char * s1 , const char * s2 ) {
+  if (strcmp(s1,s2) == 0)
+    return true;
+  else
+    return false;
+}
 
 
 
@@ -2043,6 +2049,7 @@ static int util_get_month_nr__(const char * _month_name) {
   return month_nr;
 }
 
+
 int util_get_month_nr(const char * month_name) {
   int month_nr = util_get_month_nr__(month_name);
   if (month_nr < 0) 
@@ -2708,19 +2715,22 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
 
 
 /**
+   The function will, in-place, update all occurencese: expr->subs.
    The return value is the number of substitutions which have been
    performed.
-
+   
+   buffer must be \0 terminated.
    Observe that the variable _buffer_size should point to an integer
    which contains the size of the buffer; this will be updated during
    run. Observe that *_buffer_size should be the TOTAL size of the
    buffer, i.e. if if the buffer is terminated with '\0' that should
    be included in the buffer_size.
+
 */
   
-int static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
+int static util_string_replace_inplace__(char ** _buffer , const char * expr , const char * subs) {
   char * buffer      	   = *_buffer;
-  int    buffer_size 	   = *_buffer_size;
+  int    buffer_size 	   = strlen( buffer ) + 1;   /* The variable buffer_size is the TOTAL size - including the terminating \0. */
   int len_expr  	   = strlen(expr);
   int len_subs  	   = strlen(subs);
   int    size   	   = strlen(buffer);
@@ -2759,14 +2769,13 @@ int static util_string_replace_inplace__(char ** _buffer , int *_buffer_size , c
     
     
   *_buffer      = buffer;
-  *_buffer_size = buffer_size;
   return match_count;
 }
 
 
 
-int util_string_replace_inplace(char ** _buffer , int *_buffer_size , const char * expr , const char * subs) {
-  return util_string_replace_inplace__(_buffer , _buffer_size , expr , subs);
+int util_string_replace_inplace(char ** _buffer , const char * expr , const char * subs) {
+  return util_string_replace_inplace__(_buffer , expr , subs);
 }
 
 
@@ -2780,7 +2789,7 @@ char * util_string_replace_alloc(const char * buff_org, const char * expr, const
   int buffer_size   = strlen(buff_org) * 2;
   char * new_buffer = util_malloc(buffer_size * sizeof * new_buffer , __func__);
   memcpy(new_buffer , buff_org , strlen(buff_org) + 1);
-  util_string_replace_inplace__( &new_buffer , &buffer_size , expr , subs);
+  util_string_replace_inplace__( &new_buffer , expr , subs);
   
   {
     int size = strlen(new_buffer);
@@ -2802,7 +2811,7 @@ char * util_string_replacen_alloc(const char * buff_org, int num_expr, const cha
   memcpy(new_buffer , buff_org , strlen(buff_org) + 1);
 
   for(int i=0; i<num_expr; i++)
-    util_string_replace_inplace__( &new_buffer , &buffer_size , expr[i] , subs[i]);
+    util_string_replace_inplace__( &new_buffer , expr[i] , subs[i]);
   
   int size = strlen(new_buffer);
   new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer, __func__);
@@ -3016,6 +3025,10 @@ int util_int_max(int a , int b) {
   return (a > b) ? a : b;
 }
 
+long int util_long_max(long int a , long int b) {
+  return (a > b) ? a : b;
+}
+
 double util_double_max(double a , double b) {
   return (a > b) ? a : b;
 }
@@ -3221,7 +3234,7 @@ static void __block_full_disk(const char * filename) {                   /* File
       usleep( 500000 ); /* half a second */
             
       if (pthread_mutex_trylock( &__fwrite_block_mutex ) == 0) {
-        usleep( 5000 );  /* 5 ms - to avoid a herd of threads hitting the filesystem concurrently.*/
+        usleep( 5000 );  /* 5 ms - to avoid a heard of threads hitting the filesystem concurrently.       */
         break;           /* The user has entered return - and the main blocking thread has been released. */
       }
     }

@@ -40,6 +40,10 @@ void               buffer_clear( buffer_type * buffer );
 void   		   buffer_fskip_time_t(buffer_type * buffer);
 time_t 		   buffer_fread_time_t(buffer_type * buffer);
 void   		   buffer_fwrite_time_t(buffer_type * buffer , time_t value);
+void               buffer_rewind(buffer_type * buffer );
+
+double             buffer_fread_double(buffer_type * buffer);
+void               buffer_fwrite_double(buffer_type * buffer , double value);
 
 void               buffer_stream_fread( buffer_type * buffer , size_t byte_size , FILE * stream);
 buffer_type      * buffer_fread_alloc(const char * filename);

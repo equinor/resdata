@@ -335,6 +335,18 @@ void buffer_fwrite_char(buffer_type * buffer , char value) {
 }
 
 
+double buffer_fread_double(buffer_type * buffer) {
+  double value;
+  buffer_fread(buffer , &value , sizeof value , 1);
+  return value;
+}
+
+
+void buffer_fwrite_double(buffer_type * buffer , double value) {
+  buffer_fwrite(buffer , &value , sizeof value , 1);
+}
+
+
 
 /**
    Storing strings:
@@ -482,7 +494,7 @@ void buffer_stream_fread( buffer_type * buffer , size_t byte_size , FILE * strea
 void buffer_fread_realloc(buffer_type * buffer , const char * filename) {
   size_t file_size     = util_file_size( filename );
   FILE * stream        = util_fopen( filename , "r");  
-
+  
   buffer_clear( buffer );   /* Setting: content_size = 0; pos = 0;  */
   buffer_stream_fread( buffer , file_size , stream );
   buffer_rewind( buffer );  /* Setting: pos = 0; */

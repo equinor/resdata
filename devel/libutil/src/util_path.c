@@ -128,7 +128,7 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
    This file allocates a filename consisting of a leading path, a
    basename and an extension. Both the path and the extension can be
    NULL, but not the basename. 
-
+   
    Observe that this function does pure string manipulation; there is
    no input check on whether path exists, if basaneme contains "."
    (or even a '/') and so on.

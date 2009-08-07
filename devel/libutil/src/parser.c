@@ -295,7 +295,6 @@ char * alloc_quoted_token(
       Removed escape char before any escaped quotation starts.
     */
     {
-      int  new_length = length-1;
       char expr[3];
       char subs[2];
       expr[0] = PARSER_ESCAPE_CHAR;
@@ -303,7 +302,7 @@ char * alloc_quoted_token(
       expr[2] = '\0';
       subs[0] = buffer[0];
       subs[1] = '\0';
-      util_string_replace_inplace(&token, &new_length, expr, subs);
+      util_string_replace_inplace(&token, expr, subs);
     }
   }
   return token;
@@ -386,7 +385,7 @@ stringlist_type * parser_tokenize_buffer(
   int delete_length     = 0;
 
   stringlist_type * tokens = stringlist_alloc_new();
-
+  
   while( position < buffer_size )
   {
     /** 
