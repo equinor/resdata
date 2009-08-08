@@ -5,7 +5,7 @@
 typedef struct block_fs_struct block_fs_type;
 
 
-block_fs_type * block_fs_mount( const char * mount_file , int block_size );
+block_fs_type * block_fs_mount( const char * mount_file , int block_size , bool internal_index);
 void            block_fs_close( block_fs_type * block_fs );
 void            block_fs_fwrite_file(block_fs_type * block_fs , const char * filename , const void * ptr , size_t byte_size);
 void            block_fs_fwrite_buffer(block_fs_type * block_fs , const char * filename , const buffer_type * buffer);

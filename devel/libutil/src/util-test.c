@@ -40,14 +40,15 @@ void write_random_file( block_fs_type * fs , const char * prefix , int max_file 
     free( backup_file );
   }
 
-   filename = util_realloc_sprintf(filename , "%s.%d" , prefix , (rand() % max_file));
-   if (block_fs_has_file( fs , filename )) {
-     char * backup_file = util_alloc_filename("/tmp" , filename , NULL);
-     block_fs_unlink_file( fs , filename );
-     unlink( backup_file );
-     free( backup_file );
-   }
-
+  for (int i= 0; i < 3; i++) {
+    filename = util_realloc_sprintf(filename , "%s.%d" , prefix , (rand() % max_file));
+    if (block_fs_has_file( fs , filename )) {
+      char * backup_file = util_alloc_filename("/tmp" , filename , NULL);
+      block_fs_unlink_file( fs , filename );
+      unlink( backup_file );
+      free( backup_file );
+    }
+  }
   free( filename );
 }
 
@@ -103,7 +104,7 @@ void random_test(int outer_loop , int inner_loop) {
   {
     FILE * stream = util_fopen("/dev/random" , "r");
     int seed = util_fread_int( stream );
-    //srand(seed);
+    srand(seed);
     fclose( stream );
   }
   
@@ -111,8 +112,8 @@ void random_test(int outer_loop , int inner_loop) {
 
   for (int j=0; j < outer_loop; j++) {
     block_fs_type * fs;
-    fs = block_fs_mount( mount_file , block_size);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
-                                                       to recover from crashes. */
+    fs = block_fs_mount( mount_file , block_size , true);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
+                                                              to recover from crashes. */
     {
       char * index_file = util_alloc_sprintf("initial_index.%d" , j);
       FILE * stream = util_fopen(index_file , "w");
@@ -150,7 +151,7 @@ void random_test(int outer_loop , int inner_loop) {
     //block_fs_close( fs );
   }
   {
-    block_fs_type * fs = block_fs_mount( mount_file , block_size);
+    block_fs_type * fs = block_fs_mount( mount_file , block_size , false);
 
     check_all(fs , max_file , prefix , buffer , buffer2);
     
@@ -178,7 +179,7 @@ void speed_test(bool write , int N) {
   int i;
 
 
-  fs = block_fs_mount( mount_file , block_size );
+  fs = block_fs_mount( mount_file , block_size , false);
   
   if (write) {
     for (i=0; i < N; i++) {
@@ -205,7 +206,7 @@ void speed_test(bool write , int N) {
     }
   }
 
-  fs = block_fs_mount( mount_file , block_size );
+  fs = block_fs_mount( mount_file , block_size , false);
   
   {
     clock_t start_time;
@@ -252,7 +253,7 @@ void speed_test(bool write , int N) {
 
 
 int main(int argc , char ** argv) {
-  random_test(10 , 100);
+  random_test(5 , 50);
   //speed_test(true , 10000);
 }
 
