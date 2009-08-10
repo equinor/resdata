@@ -4,6 +4,7 @@
 #include <util.h>
 #include <stringlist.h>
 #include <vector.h>
+#include <buffer.h>
 
 #define STRINGLIST_TYPE_ID 671855
 
@@ -377,6 +378,15 @@ char * stringlist_alloc_joined_string(const stringlist_type * s , const char * s
 
 /*****************************************************************/
 
+void stringlist_buffer_fwrite( const stringlist_type * s , buffer_type * buffer ) {
+  int i;
+  int size = stringlist_get_size( s );
+  buffer_fwrite_int( buffer , size );
+  for (i=0; i < size; i++) 
+    buffer_fwrite_string(buffer , stringlist_iget(s , i) );
+}
+
+
 void stringlist_fwrite(const stringlist_type * s, FILE * stream) {
   int i;
   int size = stringlist_get_size( s );
@@ -397,6 +407,16 @@ void  stringlist_fread(stringlist_type * s, FILE * stream) {
   for (i=0; i < size; i++)
     stringlist_append_owned_ref( s , util_fread_alloc_string( stream ));
 }
+
+
+void stringlist_buffer_fread( stringlist_type * s , buffer_type * buffer ) {
+  int size = buffer_fread_int( buffer );
+  int i;
+  stringlist_clear(s);
+  for (i=0; i < size; i++)
+    stringlist_append_owned_ref( s , buffer_fread_alloc_string( buffer ));
+}
+
 
 
 stringlist_type * stringlist_fread_alloc(FILE * stream) {

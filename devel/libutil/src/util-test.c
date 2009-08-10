@@ -104,7 +104,7 @@ void random_test(int outer_loop , int inner_loop) {
   {
     FILE * stream = util_fopen("/dev/random" , "r");
     int seed = util_fread_int( stream );
-    //srand(seed);
+    srand(seed);
     fclose( stream );
   }
   
@@ -253,7 +253,7 @@ void speed_test(bool write , int N) {
 
 
 int main(int argc , char ** argv) {
-  random_test(5 , 50);
+  random_test(25 , 50);
   //speed_test(true , 10000);
 }
 

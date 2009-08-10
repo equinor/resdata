@@ -13,12 +13,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <int_vector.h>
+#include <arg_pack.h>
 
 #define PROMPT_LEN 50
 
 /**
    This is basic datatype to hold the information about one ensemble
-   os eclipse simulations. All the simulations ion one ensemble should
+   of eclipse simulations. All the simulations ion one ensemble should
    share some characteristica, like all beeing from the prior
    distribution. A plotting session can very well be completed with
    only one ensemble.
@@ -382,16 +383,24 @@ void plot_all(void * arg) {
   hash_type  * ens_table     = arg_pack_iget_ptr( arg_pack , 0);
   plot_info_type * plot_info = arg_pack_iget_ptr( arg_pack , 1);
   {
-    plot_type * plot = plot_alloc();
+    plot_type * plot;
     char key[32];
     char * plot_file;
     
     util_printf_prompt("Give key to plot" , PROMPT_LEN , '=' , "=> ");
     scanf("%s" , key);
 
-    plot_set_window_size(plot , 640 , 480);
     plot_file = util_alloc_sprintf("%s/%s.%s" , plot_info->plot_path , key , plot_info->plot_device);
-    plot_initialize( plot , plot_info->plot_device , plot_file);
+    {
+      arg_pack_type * arg_pack = arg_pack_alloc();
+      arg_pack_append_ptr( arg_pack , plot_file );
+      arg_pack_append_ptr( arg_pack , plot_info->plot_device);
+
+      plot = plot_alloc("PLPLOT" , arg_pack );
+
+      arg_pack_free( arg_pack );
+    }
+    plot_set_window_size(plot , 640 , 480);
     plot_set_labels(plot , "Time (days)" , key , key);
 
     {
@@ -423,14 +432,20 @@ void plot_batch(void * arg) {
   // scan stdin for vector
   
   char * key = util_blocking_alloc_stdin_line(10);
-  
-  plot_type * plot = plot_alloc();
+  plot_type     * plot;
   
   char * plot_file;
   
-  plot_set_window_size(plot , 640 , 480);
   plot_file = util_alloc_sprintf("%s/%s.%s" , plot_info->plot_path , key , plot_info->plot_device);
-  plot_initialize(plot , plot_info->plot_device , plot_file);
+  
+  {
+    arg_pack_type * arg_pack = arg_pack_alloc();
+    arg_pack_append_ptr( arg_pack , plot_file );
+    arg_pack_append_ptr( arg_pack , plot_info->plot_device);
+    plot = plot_alloc("PLPLOT" , arg_pack );
+    arg_pack_free( arg_pack );
+  }
+  plot_set_window_size(plot , 640 , 480);
   plot_set_labels(plot , "Date" , key , key);
   
   // get the simulation start time, to be used in plot_meas_file

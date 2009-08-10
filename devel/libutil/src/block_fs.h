@@ -18,5 +18,6 @@ void            block_fs_fprintf_log( block_fs_type * block_fs );
 void            block_fs_fprintf_logfile( const char * filename);
 void            block_fs_unlink_file( block_fs_type * block_fs , const char * filename);
 bool            block_fs_has_file( const block_fs_type * block_fs , const char * filename);
+const char    * block_fs_get_mount_point( const block_fs_type * block_fs );
 
 #endif

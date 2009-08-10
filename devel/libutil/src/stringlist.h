@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <int_vector.h>
 #include <subst.h>
+#include <buffer.h>
 
 typedef struct stringlist_struct stringlist_type;
 
@@ -49,6 +50,8 @@ int   	          stringlist_get_argc(const stringlist_type * );
 char           ** stringlist_alloc_char_copy(const stringlist_type * );
 void              stringlist_fread(stringlist_type * , FILE * );
 void              stringlist_fwrite(const stringlist_type * , FILE * );
+void              stringlist_buffer_fread( stringlist_type * s , buffer_type * buffer );
+void              stringlist_buffer_fwrite( const stringlist_type * s , buffer_type * buffer );
 stringlist_type * stringlist_fread_alloc(FILE * );
 void              stringlist_sort(stringlist_type *);
 void              stringlist_apply_subst(stringlist_type * stringlist , const subst_list_type * subst_list); 
