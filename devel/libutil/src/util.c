@@ -1635,7 +1635,7 @@ bool util_path_exists(const char *pathname) {
 
 
 
-int util_file_size(const char *file) {
+size_t util_file_size(const char *file) {
   struct stat buffer;
   int fildes;
   
@@ -3371,6 +3371,21 @@ void * util_alloc_copy(const void * src , size_t byte_size , const char * caller
 }
 
 
+
+void * util_realloc_copy(void * org_ptr , const void * src , size_t byte_size , const char * caller) {
+  if (byte_size == 0 && src == NULL) 
+    return util_realloc( org_ptr , 0 , caller);
+  {
+    void * new = util_realloc(org_ptr , byte_size , caller);
+    memcpy(new , src , byte_size);
+    return new;
+  }
+}
+
+
+
+
+
 static void util_display_prompt(const char * prompt , int prompt_len2) {
   int i;
   printf("%s" , prompt);
@@ -3789,6 +3804,57 @@ char * util_alloc_PATH_executable(const char * executable) {
     return full_path;
   }
 }
+
+/**
+   This function uses the external program lsof to (try) to associate
+   an open FILE * instance with a filename in the filesystem.
+   
+   If it succeds in finding the filename the function will allocate
+   storage and return a (char *) pointer with the filename. If the
+   filename can not be found, the function will return NULL.
+
+   This function is quite heavyweight (invoking an external program
+   +++), and also quite fragile, it should therefor not be used in
+   routine FILE -> name lookups, rather in situations where a FILE *
+   operation has aborted, and we want to provide as much information
+   as possible before going down in flames.
+*/
+  
+char * util_alloc_filename_from_stream( FILE * input_stream ) {
+  char * filename = NULL;
+  const char * lsf_executable = "/usr/sbin/lsof";
+  int   fd     = fileno( input_stream );
+    
+  if (util_file_exists( lsf_executable ) && util_is_executable( lsf_executable ) && (fd != -1)) {
+    char  * fd_string = util_alloc_sprintf("f%d" , fd);
+    char    line_fd[32];
+    char    line_file[4096];
+    char * pid_string = util_alloc_sprintf("%d" , getpid());
+    char * tmp_file   = util_alloc_tmp_file("/tmp" , "lsof" , false);
+    util_vfork_exec(lsf_executable , 3 , (const char *[3]) {"-p" , pid_string , "-Ffn"}, true , NULL , NULL , NULL , tmp_file , NULL);
+    {
+      FILE * stream = util_fopen(tmp_file , "r");
+      fscanf( stream , "%s" , line_fd);  /* Skipping the first pxxxx marker */
+      while ( true ) {
+        if (fscanf( stream , "%s %s" , line_fd , line_file) == 2) {
+          if (util_string_equal( line_fd , fd_string )) {
+            /* We have found the file descriptor we are looking for. */
+            filename = util_alloc_string_copy( &line_file[1] );
+            break;
+          }
+        } else 
+          break; /* have reached the end of file - seems like we will not find the file descriptor we are looking for. */
+      }
+      fclose( stream );
+      unlink( tmp_file );
+    }
+  }
+  return filename;
+}
+
+ 
+
+
 
 /**
   This function uses the external program addr2line to convert the
