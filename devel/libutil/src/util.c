@@ -795,8 +795,16 @@ bool util_sscanf_int(const char * buffer , int * value) {
   return value_OK;
 }
 
+/*
+  If any (or both) s1 or s2 is equal to NULL - the function will
+  return false.
+*/
 
 inline bool util_string_equal(const char * s1 , const char * s2 ) {
+  if (s1 == NULL || s2 == NULL) 
+    return false;
+
+  /* Now we know that both s1 and s2 are != NULL */
   if (strcmp(s1,s2) == 0)
     return true;
   else

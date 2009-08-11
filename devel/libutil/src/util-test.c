@@ -55,12 +55,11 @@ void write_random_file( block_fs_type * fs , const char * prefix , int max_file 
 
 void check_file(block_fs_type * block_fs , const char * backup_file , const char * filename , void * block_buffer , void * plain_buffer) {
   int byte_size = util_file_size( backup_file );
-  printf("Filename:%s Size: %d - %d \n",filename , byte_size , block_fs_get_filesize( block_fs , filename ));
+  printf("Filename:%s Size: %d - %d ",filename , byte_size , block_fs_get_filesize( block_fs , filename ));
   {
     FILE * stream = util_fopen( backup_file , "r");
     util_fread(plain_buffer , 1 , byte_size ,stream , __func__);
     fclose( stream );
-    printf("Plain OK \n");
   }
   
   block_fs_fread_file( block_fs , filename , block_buffer );
@@ -69,8 +68,8 @@ void check_file(block_fs_type * block_fs , const char * backup_file , const char
     printf("%-15s : ERROR \n",filename);
     exit(1);
   }
-
-  printf("\n");
+  
+  printf("OK \n\n");
 }
 
 
@@ -95,7 +94,7 @@ void random_test(int outer_loop , int inner_loop) {
   int max_file            = 100;
   int min_size            = 10;
   int max_size            = 1067;
-  const int block_size    = 3;
+  const int block_size    = 1;
   const char * mount_file = "/tmp/block_fs.mnt";
   char       * prefix;
   int   * buffer          = util_malloc( sizeof * buffer * 2 * (max_size / 4 + 1) , __func__);
@@ -112,8 +111,8 @@ void random_test(int outer_loop , int inner_loop) {
 
   for (int j=0; j < outer_loop; j++) {
     block_fs_type * fs;
-    fs = block_fs_mount( mount_file , block_size , true , true);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
-                                                              to recover from crashes. */
+    fs = block_fs_mount( mount_file , block_size , true , true , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
+                                                                             to recover from crashes. */
     {
       char * index_file = util_alloc_sprintf("initial_index.%d" , j);
       FILE * stream = util_fopen(index_file , "w");
@@ -151,7 +150,7 @@ void random_test(int outer_loop , int inner_loop) {
     block_fs_close( fs );
   }
   {
-    block_fs_type * fs = block_fs_mount( mount_file , block_size , false , true);
+    block_fs_type * fs = block_fs_mount( mount_file , block_size , false , true , false);
 
     check_all(fs , max_file , prefix , buffer , buffer2);
     
@@ -179,7 +178,7 @@ void speed_test(bool write , int N) {
   int i;
 
 
-  fs = block_fs_mount( mount_file , block_size , false , true);
+  fs = block_fs_mount( mount_file , block_size , false , true , false);
   
   if (write) {
     for (i=0; i < N; i++) {
@@ -206,7 +205,7 @@ void speed_test(bool write , int N) {
     }
   }
 
-  fs = block_fs_mount( mount_file , block_size , false , true);
+  fs = block_fs_mount( mount_file , block_size , false , true , false);
   
   {
     clock_t start_time;
