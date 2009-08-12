@@ -252,6 +252,14 @@ void speed_test(bool write , int N) {
 
 
 int main(int argc , char ** argv) {
+  int A = 85  * (1 + 256 + 256*256 + 256*256*256);
+  int B = 170 * (1 + 256 + 256*256 + 256*256*256);
+  int C = 255 * (1 + 256*256);
+  
+  printf("A:%d -> %x \n",A,A);
+  printf("B:%d -> %x \n",B,B);
+  printf("C:%d \n",C);
+  
   random_test(25 , 50);
   //speed_test(true , 10000);
 }
