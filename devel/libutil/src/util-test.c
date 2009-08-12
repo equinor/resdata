@@ -111,7 +111,7 @@ void random_test(int outer_loop , int inner_loop) {
 
   for (int j=0; j < outer_loop; j++) {
     block_fs_type * fs;
-    fs = block_fs_mount( mount_file , block_size , true , true , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
+    fs = block_fs_mount( mount_file , block_size , 1024 , true , true , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
                                                                              to recover from crashes. */
     {
       char * index_file = util_alloc_sprintf("initial_index.%d" , j);
@@ -147,16 +147,16 @@ void random_test(int outer_loop , int inner_loop) {
       free( index_file );
     }
     
-    block_fs_close( fs );
+    block_fs_close( fs , true);
   }
   {
-    block_fs_type * fs = block_fs_mount( mount_file , block_size , false , true , false);
+    block_fs_type * fs = block_fs_mount( mount_file , block_size , 1024 , false , true , false);
 
     check_all(fs , max_file , prefix , buffer , buffer2);
     
     // block_fs_printf( fs );
     
-    block_fs_close( fs );
+    block_fs_close( fs , true);
   }
   free( buffer );
   free( buffer2 );
@@ -178,7 +178,7 @@ void speed_test(bool write , int N) {
   int i;
 
 
-  fs = block_fs_mount( mount_file , block_size , false , true , false);
+  fs = block_fs_mount( mount_file , block_size , 1024 , false , true , false);
   
   if (write) {
     for (i=0; i < N; i++) {
@@ -205,7 +205,7 @@ void speed_test(bool write , int N) {
     }
   }
 
-  fs = block_fs_mount( mount_file , block_size , false , true , false);
+  fs = block_fs_mount( mount_file , block_size , 1024 , false , true , false);
   
   {
     clock_t start_time;
@@ -244,7 +244,7 @@ void speed_test(bool write , int N) {
     
     printf("-----------------------------------------------------------------\n");
   }
-  block_fs_close( fs );
+  block_fs_close( fs , true );
   buffer_free( buffer );
 }
 
