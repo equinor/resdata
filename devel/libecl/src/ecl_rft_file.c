@@ -134,7 +134,7 @@ const ecl_rft_node_type * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_
    will return the rft node indicated by the arrow (i.e. the second
    occurence of well "P2" in the file.)
 
-   If the rft_file does not have the well, or that occurence the
+   If the rft_file does not have the well, or that occurence, the
    function will go down in flames with util_abort(). Use
    ecl_rft_file_has_well() and ecl_rft_file_get_well_occurences()
    first if you can not take util_abort().
@@ -145,6 +145,36 @@ const ecl_rft_node_type * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_
 const ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_file , const char * well, int index) {
   const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
   return ecl_rft_file_iget_node( rft_file , int_vector_iget(index_vector , index));
+}
+
+
+
+/**
+   Returns an rft_node for well 'well' and time 'recording_time'. If
+   the rft_file does not have the well in question the function will
+   go down in flames. If it has no rft recordings at the requested
+   date the function will return NULL.
+*/
+
+
+const ecl_rft_node_type * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
+  const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
+  const ecl_rft_node_type * node = NULL;
+  int index = 0;
+  while (true) {
+    if (index == int_vector_size( index_vector ))
+      break;
+    
+    node = ecl_rft_file_iget_node( rft_file , int_vector_iget( index_vector , index ));
+    if (ecl_rft_node_get_date( node ) == recording_time) 
+      break;
+    else {
+      node = NULL;
+      index++;
+    }
+    
+  }
+  return node;
 }
 
 
@@ -188,3 +218,45 @@ void ecl_rft_file_summarize(const ecl_rft_file_type * rft_vector , bool show_com
   }
 }
 
+
+void ecl_rft_file_xml_summary( const ecl_rft_file_type * rft_file ) {
+  stringlist_type   * wells    = ecl_rft_file_alloc_well_list( rft_file );
+  printf("<ECLIPSE RFT FILE>\n");
+  {
+    int iw;
+    for (iw = 0; iw < stringlist_get_size( wells ); iw++) {
+      const char * well = stringlist_iget(wells , iw);
+      printf("    <WELL>\n");
+      {
+        int it;
+        for (it = 0; it < ecl_rft_file_get_well_occurences( rft_file , well ); it++) {
+          const ecl_rft_node_type * node = ecl_rft_file_iget_well_rft( rft_file , well , it);
+          time_t date  = ecl_rft_node_get_date( node );
+          {
+            int mday, year,month;
+            util_set_date_values( date , &mday , &month , &year);
+            printf("        <RFT>\n");
+            printf("            <DATE>%02d/%02d/%4d</DATE> \n",mday,month,year);
+            {
+              int num_cells = ecl_rft_node_get_size( node );
+              int icell;
+              for (icell = 0; icell < num_cells; icell++) {
+                int i,j,k;
+                ecl_rft_node_iget_ijk( node , icell , &i , &j , &k);
+                printf("            <cell>\n");
+                printf("                <PRESSURE> %g </PRESSURE> \n", ecl_rft_node_iget_pressure( node, icell));
+                printf("                <DPETH>    %g </DEPTH>     \n" , ecl_rft_node_iget_depth( node , icell));
+                printf("                <ijk> %3d,%3d,%3d </ijk>  \n",i,j,k);     
+                printf("            </cell>\n");
+              }
+            }
+            printf("        </RFT>\n");
+          }
+        }
+      }
+      printf("    </WELL>\n");
+    }
+  }
+  printf("</ECLIPSE RFT FILE>\n");
+  stringlist_free( wells );
+}

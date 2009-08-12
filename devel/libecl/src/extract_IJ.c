@@ -21,7 +21,7 @@ int main (int argc , char ** argv) {
       ecl_kw_type      * regions_kw;
       FILE             * stream = util_fopen( regions_file , "r"); 
       int               region_value,nx,ny,nz;
-      ecl_kw_grdecl_fseek_kw( kw , false , true , stream , regions_file);
+      ecl_kw_grdecl_fseek_kw( kw , false , true , stream );
       ecl_grid_get_dims(ecl_grid , &nx , &ny , &nz , NULL);
       regions_kw = ecl_kw_fscanf_alloc_grdecl_data( stream , nx*ny*nz , ecl_int_type);
       

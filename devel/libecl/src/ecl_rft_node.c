@@ -19,8 +19,6 @@
     
 
 
-
-
 /*
   If the type is RFT, PLT or SEGMENT depends on the options used when
   the .RFT file is created. RFT and PLT are quite similar, SEGMENT is
@@ -29,16 +27,15 @@
 
 
 /** 
-    Here comes some small structs containing various pieces of
-    information. Observe the following which is common to all these
-    structs:
+  Here comes some small structs containing various pieces of
+  information. Observe the following which is common to all these
+  structs:
 
-     * In the implementation only 'full instance' are employed, and
-       not pointers. This implies that the code does not provide
-       xxx_alloc() and xx_free() functions.
+   * In the implementation only 'full instance' are employed, and
+     not pointers. This implies that the code does not provide
+     xxx_alloc() and xx_free() functions.
 
-     * They should NOT be exported out of this file.
-
+   * They should NOT be exported out of this file.
 */
 
 
@@ -106,6 +103,11 @@ struct ecl_rft_node_struct {
 
 
 
+/**
+   Will return NULL if the data_type_string is equal to "SEGMENT" -
+   that is not (yet) supported.
+*/
+
 static ecl_rft_node_type * ecl_rft_node_alloc_empty(int size , const char * data_type_string) {
   ecl_rft_enum data_type = SEGMENT;
 
@@ -156,7 +158,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
   ecl_rft_node_type * rft_node  = ecl_rft_node_alloc_empty(ecl_kw_get_size(conipos) , ecl_kw_iget_ptr(welletc , 5));
   
   if (rft_node != NULL) {
-    ecl_kw_type * date_kw = ecl_file_iget_named_kw( rft_file , "DATE" , 0);
+    ecl_kw_type * date_kw = ecl_file_iget_named_kw( rft_file , "DATE"    , 0);
     ecl_kw_type * conjpos = ecl_file_iget_named_kw( rft_file , "CONJPOS" , 0);
     ecl_kw_type * conkpos = ecl_file_iget_named_kw( rft_file , "CONKPOS" , 0);
     ecl_kw_type * depth_kw;
@@ -172,7 +174,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
       rft_node->recording_date = util_make_date( time[0] , time[1] , time[2]);
     }
     rft_node->days = ecl_kw_iget_float( ecl_file_iget_named_kw( rft_file , "TIME" , 0 ) , 0);
-
+    
     
     /* Cell information */
     {
@@ -191,15 +193,14 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
 	
     }
 
-    /* Now we are done with the information which is common to both RFT and PLT. */
     
+    /* Now we are done with the information which is common to both RFT and PLT. */
     if (rft_node->data_type == RFT) {
       const float * SW = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "SWAT" , 0));
       const float * SG = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "SGAS" , 0)); 
       const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "PRESSURE" , 0));
 
-      int c;
-      for (c = 0; c < rft_node->size; c++) {
+      for (int c = 0; c < rft_node->size; c++) {
 	rft_node->rft_data[c].swat     = SW[c];
 	rft_node->rft_data[c].sgas     = SG[c];
 	rft_node->cells[c].pressure     = P[c];
@@ -211,8 +212,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
       const float * OR = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "CONORAT" , 0)); 
       const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "CONPRES" , 0));
 
-      int c;
-      for (c = 0; c < rft_node->size; c++) {
+      for (int c = 0; c < rft_node->size; c++) {
 	rft_node->plt_data[c].orat     = OR[c];
 	rft_node->plt_data[c].grat     = GR[c];
 	rft_node->plt_data[c].wrat     = WR[c];
@@ -224,7 +224,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
 
     /* 
        Checking if the well is monotone in the z-direction; if it is we can
-       reasonably safely try som eblocking.
+       reasonably safely try some blocking.
     */
     {
       int i;

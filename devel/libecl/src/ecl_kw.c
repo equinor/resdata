@@ -803,7 +803,7 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
   file. The current implementation just does string-search for 'kw'.
 */
 
-bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error , FILE * stream, const char * filename) {
+bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error , FILE * stream) {
   if (util_fseek_string(stream , kw , false))
     return true;       /* OK - we found the kw between current file pos and EOF. */
   else if (rewind) {
@@ -818,7 +818,7 @@ bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error 
 
   /* OK: If we are here - that means that we failed to find the kw. */
   if (abort_on_error) 
-    util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , filename);
+    util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , util_alloc_filename_from_stream( stream ));
   
   return false;
 }
