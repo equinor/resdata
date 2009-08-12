@@ -3816,8 +3816,8 @@ char * util_alloc_PATH_executable(const char * executable) {
    This function is quite heavyweight (invoking an external program
    +++), and also quite fragile, it should therefor not be used in
    routine FILE -> name lookups, rather in situations where a FILE *
-   operation has aborted, and we want to provide as much information
-   as possible before going down in flames.
+   operation has failed extraordinary, and we want to provide as much
+   information as possible before going down in flames.
 */
   
 char * util_alloc_filename_from_stream( FILE * input_stream ) {

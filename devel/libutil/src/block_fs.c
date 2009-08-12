@@ -625,7 +625,6 @@ const char * block_fs_get_mount_point( const block_fs_type * block_fs ) {
 
 
 static void block_fs_preload( block_fs_type * block_fs ) {
-  printf("Doing preload ... \n");
   if (block_fs->max_cache_size > 0) {
     char * buffer = malloc( block_fs->data_file_size * sizeof * buffer );
     if (buffer != NULL) {
@@ -697,6 +696,7 @@ block_fs_type * block_fs_mount( const char * mount_file , int block_size , int m
           bool unclean_umount = util_file_exists( block_fs->log_file );
         
           if (unclean_umount) {
+            fprintf(stderr,"Warning:: filesystem \'%s\' was not cleanly unmounted - trying to replay the log. \n" , block_fs->mount_file);
             block_fs_apply_log( block_fs );
             block_fs_fwrite_index( block_fs );
           }
