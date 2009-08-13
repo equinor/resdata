@@ -250,17 +250,52 @@ void speed_test(bool write , int N) {
 
 
 
+void large_test() {
+  int external_counter;
+  int internal_loops = 100;
+  int external_loops = 100;
+  block_fs_type * block_fs = block_fs_mount("/tmp/large.mnt" , 1 , 0 , true , true , false );
+  
+  int buffer_size = 65538 * 16;
+  void * buffer   = util_malloc( buffer_size , __func__);
+  
+  for (external_counter = 0; external_counter < external_loops; external_counter++) {
+
+    for (int internal_counter = 0; internal_counter < internal_loops; internal_counter++) {
+      char * key = util_alloc_sprintf("%s.%d.%d" , "Large" , external_counter , internal_counter);
+      block_fs_fwrite_file( block_fs , key , buffer , buffer_size );
+      free( key );
+    }
+    
+    
+    for (int internal_counter = 0; internal_counter < internal_loops; internal_counter++) {
+      char * key = util_alloc_sprintf("%s.%d.%d" , "Large" , external_counter , internal_counter);
+      block_fs_fread_file( block_fs , key , buffer );
+      free( key );
+    }
+    
+    printf("external_index:%d file_size:%ld \n" , external_counter , util_file_size("/tmp/large.data_0"));
+  }
+  block_fs_close( block_fs , true );
+}
+
+
+
+
+
 
 int main(int argc , char ** argv) {
   int A = 85  * (1 + 256 + 256*256 + 256*256*256);
   int B = 170 * (1 + 256 + 256*256 + 256*256*256);
   int C = 255 * (1 + 256*256);
-  
+  long int K = (1L << 31) ;
+  long int L = (1L << 32) ;
   printf("A:%d -> %x \n",A,A);
   printf("B:%d -> %x \n",B,B);
   printf("C:%d \n",C);
-  
-  random_test(25 , 50);
+  printf("K:%ld   L:%ld \n",K,L);
+  large_test();
+  //random_test(25 , 50);
   //speed_test(true , 10000);
 }
 

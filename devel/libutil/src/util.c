@@ -1187,7 +1187,7 @@ int util_count_content_file_lines(FILE * stream) {
 */
 
 char * util_fread_alloc_file_content(const char * filename , int * buffer_size) {
-  int file_size = util_file_size(filename);
+  size_t file_size = util_file_size(filename);
   char * buffer = util_malloc(file_size + 1 , __func__);
   {
     FILE * stream = util_fopen(filename , "r");
@@ -1241,7 +1241,7 @@ static void util_copy_file__(const char * src_file , const char * target_file, i
 
 void util_copy_file(const char * src_file , const char * target_file) {
   void * buffer   = NULL;
-  int buffer_size = util_int_max( 32 , util_file_size(src_file) );  /* The copy stream function will hang if buffer size == 0 */
+  size_t buffer_size = util_size_t_max( 32 , util_file_size(src_file) );  /* The copy stream function will hang if buffer size == 0 */
   do {
     buffer = malloc(buffer_size);
     if (buffer == NULL) buffer_size /= 2;
