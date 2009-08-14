@@ -1,6 +1,7 @@
 #include <util.h>
 #include <vector.h>
 #include <ecl_sum.h>
+#include <ecl_rft_file.h>
 #include <hash.h>
 #include <menu.h>
 #include <plot_const.h>
@@ -127,6 +128,25 @@ void ens_load_summary(ens_type * ens, const char * data_file) {
     fflush(stdout);
     
     vector_append_owned_ref( ens->data , ecl_sum_fread_alloc_case( data_file , true) , ecl_sum_free__);
+    printf("\n");
+    free( base );
+    util_safe_free( path );
+  } else 
+    fprintf(stderr,"Sorry: could not locate case:%s \n",data_file);
+}
+
+void ens_load_rft(ens_type * ens, const char * data_file) {
+  char * base , * path;
+  
+  if (util_file_exists(data_file)) {
+    util_alloc_file_components( data_file , &path , &base , NULL);
+    if (path != NULL)
+      printf("Loading case: %s/%s ... ",path , base);
+    else
+      printf("Loading case: %s .......",base);
+    fflush(stdout);
+    
+    vector_append_owned_ref( ens->data , ecl_rft_file_alloc( data_file) , ecl_rft_file_free);
     printf("\n");
     free( base );
     util_safe_free( path );
@@ -427,7 +447,7 @@ void plot_batch(void * arg) {
   hash_type  * ens_table     = arg_pack_iget_ptr( arg_pack , 0);
   plot_info_type * plot_info = arg_pack_iget_ptr( arg_pack , 1);
   
-  printf("Plot summary ensemble(s)\n");
+  //printf("Plot summary ensemble(s)\n");
   
   // scan stdin for vector
   
@@ -611,13 +631,34 @@ ens_type * create_named_ensemble(void * arg,   char * ens_name ) {
   return NULL;
 }
 
-
-void create_ensemble_batch(void * arg) {
+ens_type * create_named_rft_ensemble(void * arg,   char * ens_name ) {
   hash_type * ens_table = (hash_type *) arg;
+  
+  if (!hash_has_key( ens_table , ens_name)) {
+    ens_type * ens = ens_alloc();
+    ens_set_line_width(ens, 1.5);
+    
+    // EIVIND
+    ens_set_style(ens, POINTS);    
+    ens_set_symbol_type(ens , PLOT_SYMBOL_FILLED_CIRCLE); 
+    ens_set_symbol_size(ens , 1.0);
+    
+    printf("Creating named rft ensemble:%s\n", ens_name);
+    hash_insert_hash_owned_ref( ens_table , ens_name , ens , ens_free__);
+    return ens;
+  }
+  return NULL;
+}
+
+
+void create_ensemble_batch(void * arg1, void * arg2) {
+  hash_type * ens_table = (hash_type *) arg1;
+  hash_type * ens_rft_table = (hash_type *) arg2;
   char * line;  
   // scan stdin for ensemble name
   char * ens_name  = util_alloc_stdin_line();
   ens_type  * ens  = create_named_ensemble(ens_table, ens_name);
+  ens_type  * ens_rft  = create_named_rft_ensemble(ens_rft_table, ens_name);
   
   // scan stdin for valid simulation directory, or a valid eclipse data filename
   
@@ -639,6 +680,7 @@ void create_ensemble_batch(void * arg) {
       
       sim_name = ecl_util_alloc_filename(line, base, file, 1, 0);
       ens_load_summary(ens , sim_name);
+      ens_load_rft(ens , sim_name);
       free(sim_name);
     }
     // Check if this is a file
@@ -719,9 +761,11 @@ int main(int argc , char ** argv) {
       char * path = util_blocking_alloc_stdin_line(10);
       
       hash_type * ens_table = hash_alloc();
+      hash_type * ens_rft_table = hash_alloc();
       plot_info_type * info = plot_info_alloc( path , "png" , VIEWER);
       arg_pack_type * arg_pack = arg_pack_alloc();
       arg_pack_append_ptr( arg_pack , ens_table );
+      arg_pack_append_ptr( arg_pack , ens_rft_table );
       arg_pack_append_ptr( arg_pack , info );
       char * line;
       free(path);
@@ -737,7 +781,7 @@ int main(int argc , char ** argv) {
 	}
 	
 	if(strcmp(line, "C") == 0){
-	  create_ensemble_batch(ens_table);
+	  create_ensemble_batch(ens_table, ens_rft_table);
 	}
 	
 	if(strcmp(line, "P") == 0){
