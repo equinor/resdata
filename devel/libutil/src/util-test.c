@@ -112,7 +112,7 @@ void random_test(int outer_loop , int inner_loop) {
   for (int j=0; j < outer_loop; j++) {
     block_fs_type * fs;
     fs = block_fs_mount( mount_file , block_size , 1024 , true , true , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
-                                                                             to recover from crashes. */
+                                                                                    to recover from crashes. */
     {
       char * index_file = util_alloc_sprintf("initial_index.%d" , j);
       FILE * stream = util_fopen(index_file , "w");
@@ -250,10 +250,8 @@ void speed_test(bool write , int N) {
 
 
 
-void large_test() {
+void large_test(int external_loops , int internal_loops) {
   int external_counter;
-  int internal_loops = 100;
-  int external_loops = 100;
   block_fs_type * block_fs = block_fs_mount("/tmp/large.mnt" , 1 , 0 , true , true , false );
   
   int buffer_size = 65538 * 16;
@@ -285,17 +283,8 @@ void large_test() {
 
 
 int main(int argc , char ** argv) {
-  int A = 85  * (1 + 256 + 256*256 + 256*256*256);
-  int B = 170 * (1 + 256 + 256*256 + 256*256*256);
-  int C = 255 * (1 + 256*256);
-  long int K = (1L << 31) ;
-  long int L = (1L << 32) ;
-  printf("A:%d -> %x \n",A,A);
-  printf("B:%d -> %x \n",B,B);
-  printf("C:%d \n",C);
-  printf("K:%ld   L:%ld \n",K,L);
-  large_test();
-  //random_test(25 , 50);
+  large_test(10,10);
+  random_test(25 , 50);
   //speed_test(true , 10000);
 }
 
