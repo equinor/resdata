@@ -110,6 +110,7 @@ void ens_free( ens_type * ens) {
   free(ens);
 }
 
+
 void ens_free__(void * __ens) {
   ens_type * ens = (ens_type *) __ens;
   ens_free (ens );
@@ -134,6 +135,7 @@ void ens_load_summary(ens_type * ens, const char * data_file) {
   } else 
     fprintf(stderr,"Sorry: could not locate case:%s \n",data_file);
 }
+
 
 void ens_load_rft(ens_type * ens, const char * data_file) {
   char * base , * path;

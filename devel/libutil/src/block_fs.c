@@ -915,23 +915,26 @@ static void block_fs_index_verify(block_fs_type * block_fs , long_vector_type * 
                 /*
                   The node metadata differs. What we do is:
                   
-                  1. Set the node to NODE_FREE - irrespective of current status.
-                  2. Use the node_size from the file_node instance.
+                  Basically TRUST the datafile.
                   
                 */
+                
                 if (existing_node->status == NODE_IN_USE) {
-                  /* 
-                     The node is reported as in use in the index, and as free in the datafile.
-                  */
+                  /* Trust the datafile: */
+                  existing_node->data_size   = file_node->data_size;
+                  existing_node->node_size   = file_node->node_size;
+                  existing_node->data_offset = file_node->data_offset;
+                } else {
                   hash_del( block_fs->index , filename );
                   existing_node->status      = NODE_FREE;
                   existing_node->data_size   = 0;
                   existing_node->data_offset = 0;
                   existing_node->node_size   = file_node->node_size;
                   block_fs_insert_free_node( block_fs , existing_node );
+
+                  existing_node->node_size = file_node->node_size;
+                  long_vector_append( fix_nodes , file_node->node_offset );
                 }
-                existing_node->node_size = file_node->node_size;
-                long_vector_append( fix_nodes , file_node->node_offset );
               }
             } 
           }
@@ -1053,15 +1056,6 @@ block_fs_type * block_fs_mount( const char * mount_file , int block_size , int m
           fclose(block_fs->data_stream);
         }
       }
-    
-      {
-        char * index_file = util_alloc_sprintf("/tmp/%s_index" , "init");
-        FILE * stream = util_fopen(index_file , "w");
-        block_fs_fprintf_index( block_fs , stream );
-        printf("Index dumped on: %s \n",index_file);
-        fclose(stream);
-      }
-
     
       if (block_fs->internal_index && block_fs->external_index) 
         /* Ok - we have both types of index. Then we do the following:

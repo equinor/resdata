@@ -55,21 +55,23 @@ void write_random_file( block_fs_type * fs , const char * prefix , int max_file 
 
 void check_file(block_fs_type * block_fs , const char * backup_file , const char * filename , void * block_buffer , void * plain_buffer) {
   int byte_size = util_file_size( backup_file );
-  printf("Filename:%s Size: %d - %d ",filename , byte_size , block_fs_get_filesize( block_fs , filename ));
-  {
-    FILE * stream = util_fopen( backup_file , "r");
-    util_fread(plain_buffer , 1 , byte_size ,stream , __func__);
-    fclose( stream );
-  }
-  
-  block_fs_fread_file( block_fs , filename , block_buffer );
-  
-  if ( memcmp( block_buffer , plain_buffer , byte_size ) != 0) {
-    printf("%-15s : ERROR \n",filename);
-    exit(1);
-  }
-  
-  printf("OK \n\n");
+  if (block_fs_has_file( block_fs , filename )) {
+    printf("Filename:%s Size: %d - %d ",filename , byte_size , block_fs_get_filesize( block_fs , filename ));
+    {
+      FILE * stream = util_fopen( backup_file , "r");
+      util_fread(plain_buffer , 1 , byte_size ,stream , __func__);
+      fclose( stream );
+    }
+    
+    block_fs_fread_file( block_fs , filename , block_buffer );
+    
+    if ( memcmp( block_buffer , plain_buffer , byte_size ) != 0) {
+      printf("%-15s : ERROR \n",filename);
+      exit(1);
+    }
+    
+    printf("OK \n\n");
+  } else printf("File:%s does not exist in block_fs \n",filename);
 }
 
 
@@ -111,7 +113,7 @@ void random_test(int outer_loop , int inner_loop) {
 
   for (int j=0; j < outer_loop; j++) {
     block_fs_type * fs;
-    fs = block_fs_mount( mount_file , block_size , 1024 , true , true , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
+    fs = block_fs_mount( mount_file , block_size , 128 , true , true , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
                                                                                     to recover from crashes. */
     {
       char * index_file = util_alloc_sprintf("initial_index.%d" , j);
@@ -283,8 +285,8 @@ void large_test(int external_loops , int internal_loops) {
 
 
 int main(int argc , char ** argv) {
-  large_test(10,10);
-  random_test(25 , 50);
+  large_test(10   , 10);
+  random_test(10 , 50);
   //speed_test(true , 10000);
 }
 
