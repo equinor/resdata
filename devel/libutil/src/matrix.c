@@ -628,7 +628,7 @@ void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
 }
 
 
-static void matrix_inplace_matmul_mt__(void * arg) {
+static void * matrix_inplace_matmul_mt__(void * arg) {
 
   arg_pack_type * arg_pack = arg_pack_safe_cast( arg );
   int row_offset     = arg_pack_iget_int( arg_pack , 0 );
@@ -639,7 +639,7 @@ static void matrix_inplace_matmul_mt__(void * arg) {
   matrix_type * A_view = matrix_alloc_shared( A , row_offset , 0 , rows , matrix_get_columns( A ));
   matrix_inplace_matmul( A_view , B );
   matrix_free( A_view );
-
+  return NULL;
 }
 
 

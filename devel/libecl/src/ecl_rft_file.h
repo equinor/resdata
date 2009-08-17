@@ -27,6 +27,8 @@ bool 			  ecl_rft_file_has_well( const ecl_rft_file_type * rft_file , const char
 int  			  ecl_rft_file_get_well_occurences( const ecl_rft_file_type * rft_file , const char * well);
 stringlist_type         * ecl_rft_file_alloc_well_list(const ecl_rft_file_type * rft_file );
 int                       ecl_rft_file_get_num_wells( const ecl_rft_file_type * rft_file );
+void                      ecl_rft_file_free__( void * arg);
+
 #ifdef __cplusplus
 }
 #endif

@@ -42,7 +42,7 @@ list_node_type * list_node_alloc_managed(const void *value_ptr , int value_size)
 }
 
 
-list_node_type * list_node_alloc(const void *value , copyc_type *copyc , del_type *del) {
+list_node_type * list_node_alloc(const void *value , copyc_ftype *copyc , free_ftype *del) {
   list_node_type    *node;
   node              = util_malloc(sizeof *node , __func__);
   node->node_data = node_data_alloc_ptr(value , copyc , del); 

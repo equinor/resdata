@@ -148,7 +148,7 @@ void ens_load_rft(ens_type * ens, const char * data_file) {
       printf("Loading case: %s .......",base);
     fflush(stdout);
     
-    vector_append_owned_ref( ens->data , ecl_rft_file_alloc( data_file) , ecl_rft_file_free);
+    vector_append_owned_ref( ens->data , ecl_rft_file_alloc( data_file) , ecl_rft_file_free__);
     printf("\n");
     free( base );
     util_safe_free( path );

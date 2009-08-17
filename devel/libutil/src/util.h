@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
-#include <hash.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 
 #define UTIL_PATH_SEP_STRING "/"   /* A \0 terminated separator used when we want a (char *) instance.                   */
 #define UTIL_PATH_SEP_CHAR   '/'   /* A simple character used when we want an actual char instance (i.e. not a pointer). */
@@ -94,6 +96,8 @@ const char * libname ## _build_time();
 typedef void (file_callback_ftype)   (const char * , /* The current directory */
 				      const char * , /* The current file */
 				      void *);       /* Arbitrary argument */
+
+typedef char * (subst_callback_ftype) (const char *, void *);
 
 typedef enum {left_pad  = 0,
 	      right_pad = 1,
@@ -199,9 +203,9 @@ void     util_path_split(const char * , int *, char ***);
 void     util_binary_split_string(const char * , const char * , bool  , char ** , char ** );
 char   * util_alloc_joined_string(const char **  , int , const char * );
 char   * util_alloc_multiline_string(const char ** , int );
-char   * util_string_replace_alloc(const char *, const char *, const char *);
+char   * util_string_replace_alloc(const char *, const char *, const char * , subst_callback_ftype * callback, void * callback_arg);
 char   * util_string_replacen_alloc(const char *, int , const char ** , const char **);
-int      util_string_replace_inplace(char ** , const char *  , const char * );
+int      util_string_replace_inplace(char ** , const char *  , const char * , subst_callback_ftype * callback, void * callback_arg);
 char   * util_string_strip_chars_alloc(const char *, const char * );
 char   * util_realloc_string_copy(char * , const char *);
 char   * util_realloc_substring_copy(char * , const char *, int );

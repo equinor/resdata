@@ -22,8 +22,8 @@ struct node_data_struct {
     
     if they are present they are used.
   */
-  copyc_type  	 *copyc;  /* Copy constructor - can be NULL. */
-  del_type    	 *del;    /* Destructor - can be NULL. */ 
+  copyc_ftype  	 *copyc;  /* Copy constructor - can be NULL. */
+  free_ftype     *del;    /* Destructor - can be NULL. */ 
 };
 
 
@@ -33,7 +33,7 @@ struct node_data_struct {
    - so the node contains a copy from object creation time.
 */
 
-static node_data_type * node_data_alloc__(const void * data , node_ctype ctype , int buffer_size , copyc_type * copyc, del_type * del) {
+static node_data_type * node_data_alloc__(const void * data , node_ctype ctype , int buffer_size , copyc_ftype * copyc, free_ftype * del) {
   node_data_type * node = util_malloc(sizeof * node , __func__);
   node->ctype           = ctype;
   node->copyc           = copyc;
@@ -49,7 +49,7 @@ static node_data_type * node_data_alloc__(const void * data , node_ctype ctype ,
 }
 
 
-node_data_type * node_data_alloc_ptr(const void * data  , copyc_type * copyc, del_type * del) {
+node_data_type * node_data_alloc_ptr(const void * data  , copyc_ftype * copyc, free_ftype * del) {
   return node_data_alloc__( data , void_pointer , 0 , copyc , del);
 }
 

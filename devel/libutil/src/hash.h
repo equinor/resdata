@@ -19,7 +19,7 @@ void              hash_iter_complete(hash_type * );
 void              hash_free(hash_type *);
 void              hash_free__(void *);
 void              hash_insert_ref(hash_type * , const char * , const void *);
-void              hash_insert_copy(hash_type *, const char * , const void *, copyc_type *, del_type *);
+void              hash_insert_copy(hash_type *, const char * , const void *, copyc_ftype *, free_ftype *);
 void              hash_insert_string(hash_type *, const char *, const char *);
 bool              hash_has_key(const hash_type *, const char *);
 void            * hash_pop( hash_type * hash , const char * key);
@@ -36,7 +36,7 @@ stringlist_type * hash_alloc_stringlist(hash_type * );
 char           ** hash_alloc_sorted_keylist (hash_type *hash , int ( hash_get_cmp_value ) (const void *));
 char           ** hash_alloc_key_sorted_list(hash_type *hash, int (*cmp)(const void *, const void *));
 bool              hash_key_list_compare( hash_type * hash1, hash_type * hash2);
-void              hash_insert_hash_owned_ref(hash_type *, const char * , const void *, del_type *);
+void              hash_insert_hash_owned_ref(hash_type *, const char * , const void *, free_ftype *);
 
 
 hash_iter_type  * hash_iter_alloc(const hash_type *);

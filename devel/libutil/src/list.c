@@ -196,14 +196,14 @@ list_node_type * list_append_ref(list_type *list , const void *value) {
 }
 
 
-list_node_type * list_append_list_owned_ref(list_type *list , const void *value , del_type *del) {
+list_node_type * list_append_list_owned_ref(list_type *list , const void *value , free_ftype *del) {
   list_node_type *node = list_node_alloc(value , NULL , del);
   list_append_node(list , node);
   return node;
 }
 
 
-list_node_type * list_append_copy(list_type *list , const void *value , copyc_type *copyc , del_type *del) {
+list_node_type * list_append_copy(list_type *list , const void *value , copyc_ftype *copyc , free_ftype *del) {
   list_node_type *node = list_node_alloc(value , copyc , del);
   list_append_node(list , node);
   return node;

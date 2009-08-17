@@ -44,7 +44,7 @@ thread_pool_type * thread_pool_alloc(int pool_size) {
 
 
 void thread_pool_add_job(thread_pool_type * pool , 
-			 void *(start_func) (void *) , void *arg) {
+			 void * (start_func) (void *) , void *arg) {
 
   if (pool->pool_size == 0) 
     start_func(arg);

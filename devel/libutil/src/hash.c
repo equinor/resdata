@@ -520,7 +520,7 @@ stringlist_type * hash_alloc_stringlist(hash_type * hash) {
 */
 
 
-void hash_insert_copy(hash_type *hash , const char *key , const void *value , copyc_type *copyc , del_type *del) {
+void hash_insert_copy(hash_type *hash , const char *key , const void *value , copyc_ftype *copyc , free_ftype *del) {
   hash_node_type *hash_node;
   if (copyc == NULL || del == NULL) 
     util_abort("%s: must provide copy constructer and delete operator for insert copy - aborting \n",__func__);
@@ -543,7 +543,7 @@ void hash_insert_copy(hash_type *hash , const char *key , const void *value , co
   responsibility of freeing the memory pointed to by value.
 */
 
-void hash_insert_hash_owned_ref(hash_type *hash , const char *key , const void *value , del_type *del) {
+void hash_insert_hash_owned_ref(hash_type *hash , const char *key , const void *value , free_ftype *del) {
   hash_node_type *hash_node;
   if (del == NULL) 
     util_abort("%s: must provide delete operator for insert hash_owned_ref - aborting \n",__func__);

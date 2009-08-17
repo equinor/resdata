@@ -19,10 +19,10 @@ void           * list_iget_node_value_ptr(const list_type *, int );
 list_node_type * list_get_head(const list_type *);
 list_node_type * list_get_tail(const list_type *);
 list_node_type * list_append_ref(list_type *list , const void *);
-list_node_type * list_append_list_owned_ref(list_type *, const void *, del_type *);
+list_node_type * list_append_list_owned_ref(list_type *, const void *, free_ftype *);
 int              list_get_size(const list_type *);
 list_node_type * list_append_string_copy(list_type *, const char * );
-list_node_type * list_append_copy(list_type *, const void *, copyc_type *, del_type *);
+list_node_type * list_append_copy(list_type *, const void *, copyc_ftype *, free_ftype *);
 #ifdef __cplusplus
 }
 #endif

@@ -143,18 +143,18 @@ void vector_insert_ref(vector_type * vector , int index , const void * data) {
 */
 
 
-int vector_append_owned_ref(vector_type * vector , const void * data , del_type * del) {
+int vector_append_owned_ref(vector_type * vector , const void * data , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , del);
   return vector_append_node(vector , node);
 }
 
-void vector_push_owned_ref(vector_type * vector , const void * data , del_type * del) {
+void vector_push_owned_ref(vector_type * vector , const void * data , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , del);
   vector_push_node(vector , node);
 }
 
 
-void vector_insert_owned_ref(vector_type * vector , int index , const void * data , del_type * del) {
+void vector_insert_owned_ref(vector_type * vector , int index , const void * data , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , del);
   vector_iset__(vector , index , node);
 }
@@ -168,18 +168,18 @@ void vector_insert_owned_ref(vector_type * vector , int index , const void * dat
 */
 
 
-int  vector_append_copy(vector_type * vector , const void * data , copyc_type * copyc , del_type * del) {
+int  vector_append_copy(vector_type * vector , const void * data , copyc_ftype * copyc , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, copyc , del);
   return vector_append_node(vector , node);
 }
 
-void  vector_push_copy(vector_type * vector , const void * data , copyc_type * copyc , del_type * del) {
+void  vector_push_copy(vector_type * vector , const void * data , copyc_ftype * copyc , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, copyc , del);
   return vector_push_node(vector , node);
 }
 
 
-void vector_insert_copy(vector_type * vector , int index , const void * data , copyc_type * copyc , del_type * del) {
+void vector_insert_copy(vector_type * vector , int index , const void * data , copyc_ftype * copyc , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, copyc , del);
   vector_iset__(vector , index , node);
 }

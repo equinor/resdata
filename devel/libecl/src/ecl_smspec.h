@@ -6,6 +6,7 @@ extern "C" {
 
 #include <time.h>
 #include <stdbool.h>
+#include <stringlist.h>
 
 typedef struct ecl_smspec_struct ecl_smspec_type; 
 

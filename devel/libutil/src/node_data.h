@@ -5,8 +5,8 @@ extern "C" {
 #endif
 #include <stdbool.h>
 
-typedef void       * (  copyc_type) (const void *);
-typedef void         (  del_type)   (void *);
+typedef void       * (  copyc_ftype) (const void *);
+typedef void         (  free_ftype)  (void *);
 
 
 
@@ -21,7 +21,7 @@ node_data_type           * node_data_alloc_copy(const node_data_type * node , bo
 void     		 * node_data_get_ptr(const node_data_type *);
 const void     		 * node_data_get_const_ptr(const node_data_type *);
 node_data_type		 * node_data_alloc_buffer(const void *, int );
-node_data_type 		 * node_data_alloc_ptr(const void * , copyc_type * , del_type *);
+node_data_type 		 * node_data_alloc_ptr(const void * , copyc_ftype * , free_ftype *);
 
 node_data_type		 * node_data_alloc_int(int );
 int                        node_data_get_int( const node_data_type * );

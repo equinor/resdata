@@ -1,8 +1,9 @@
+#include <stdlib.h>
 #include <string.h>
 #include <util.h>
 #include <subst.h>
 #include <vector.h>
-
+#include <node_data.h>
 
 /**
    This file implements a small support struct for search-replace
@@ -65,9 +66,13 @@ struct subst_list_struct {
    
 
 typedef struct {  
-  bool       value_owner;     /* Wether the memory pointed to by value should bee freed.*/
-  char     * value;
-  char     * key;
+  bool                   value_owner;     /* Wether the memory pointed to by value should bee freed.*/
+  char                 * value;
+  char                 * key;      
+  /*-- Callback code --*/
+  subst_callback_ftype * callback;
+  void                 * callback_arg;
+  free_ftype           * free_callback_arg;
 } subst_list_node_type;
 
 
@@ -75,16 +80,27 @@ typedef struct {
 /** Allocates an empty instance with no values. */
 static subst_list_node_type * subst_list_node_alloc(const char * key) {
   subst_list_node_type * node = util_malloc(sizeof * node , __func__);
-  node->value       = NULL;
-  node->value_owner = false;
-  node->key         = util_alloc_string_copy( key );
+  node->value             = NULL;
+  node->value_owner       = false;
+  node->key               = util_alloc_string_copy( key );
+  node->callback          = NULL;
+  node->callback_arg      = NULL;
+  node->free_callback_arg = NULL;
   return node;
 }
 
 
-static void subst_list_node_free(subst_list_node_type * node) {
+static void subst_list_node_free_content( subst_list_node_type * node ) {
   if (node->value_owner)
-    util_safe_free(node->value);
+    util_safe_free( node->value );
+
+  if (node->free_callback_arg != NULL)
+    node->free_callback_arg( node->callback_arg );
+}
+
+
+static void subst_list_node_free(subst_list_node_type * node) {
+  subst_list_node_free_content( node );
   free(node->key);
   free(node);
 }
@@ -95,26 +111,38 @@ static void subst_list_node_free__(void * node) {
 }
 
 
+
+
+static void subst_list_node_set_callback(subst_list_node_type * node, subst_callback_ftype * callback , void * callback_arg , free_ftype * free_callback_arg) {
+  subst_list_node_free_content( node );
+  {
+    node->value             = NULL;
+    node->callback          = callback;
+    node->callback_arg      = callback_arg;
+    node->free_callback_arg = free_callback_arg;
+  }
+}
+
+
 /**
    __value can be NULL. 
 */
-static void subst_list_node_set(subst_list_node_type * node, const char * __value , subst_insert_type insert_mode) {
-  char * value;
-  /* Free the current content of the node. */
-  if (node->value_owner)
-    node->value = util_safe_free(node->value);
-
-  if (insert_mode == SUBST_DEEP_COPY)
-    value = util_alloc_string_copy(__value);
-  else
-    value = (char *) __value;
-  
-  if (insert_mode == SUBST_SHARED_REF)
-    node->value_owner = false;
-  else
-    node->value_owner = true;
-  
-  node->value = value;
+static void subst_list_node_set_value(subst_list_node_type * node, const char * __value , subst_insert_type insert_mode) {
+  subst_list_node_free_content( node );
+  {
+    char * value;
+    if (insert_mode == SUBST_DEEP_COPY)
+      value = util_alloc_string_copy(__value);
+    else
+      value = (char *) __value;
+    
+    if (insert_mode == SUBST_SHARED_REF)
+      node->value_owner = false;
+    else
+      node->value_owner = true;
+    
+    node->value = value;
+  }
 }
 
 
@@ -161,7 +189,7 @@ static void subst_list_insert__(subst_list_type * subst_list , const char * key 
   if (node == NULL) /* Did not have the node. */
     node = subst_list_insert_new_node(subst_list , key);
   
-  subst_list_node_set(node , value , insert_mode);
+  subst_list_node_set_value(node , value , insert_mode);
 }
 
 
@@ -200,6 +228,13 @@ void subst_list_insert_copy(subst_list_type * subst_list , const char * key , co
 }
 
 
+void subst_list_insert_callback(subst_list_type * subst_list , const char * key , subst_callback_ftype * callback , void * callback_arg , free_ftype * free_callback_arg) {
+  subst_list_node_type * node = subst_list_get_node(subst_list , key);
+  if (node == NULL) /* Did not have the node. */
+    node = subst_list_insert_new_node(subst_list , key);
+  subst_list_node_set_callback( node , callback , callback_arg , free_callback_arg );
+}
+
 void subst_list_free(subst_list_type * subst_list) {
   vector_free( subst_list->data );
   free(subst_list);
@@ -217,8 +252,8 @@ static void subst_list_inplace_update_buffer__(const subst_list_type * subst_lis
   for (index = 0; index < vector_get_size( subst_list->data ); index++) {
     const subst_list_node_type * node = vector_iget_const( subst_list->data , index );
     const char * value = node->value;
-    if (value != NULL)
-      util_string_replace_inplace( buffer , node->key , value);
+    if ((value != NULL) || (node->callback != NULL))
+      util_string_replace_inplace( buffer , node->key , value , node->callback , node->callback_arg);
   }
 }
     
@@ -289,9 +324,7 @@ void subst_list_fprintf(const subst_list_type * subst_list , FILE * stream) {
   int index;
   for (index=0; index < vector_get_size( subst_list->data ); index++) {
     const subst_list_node_type * node = vector_iget_const( subst_list->data , index );
-    fprintf(stream , "%s = %s" , node->key , node->value);
-    if (index < (vector_get_size(subst_list->data) - 1))
-      fprintf(stream , " , ");
+    fprintf(stream , "%s = %s\n" , node->key , node->value);
   }
 }
 
