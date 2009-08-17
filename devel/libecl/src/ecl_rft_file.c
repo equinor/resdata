@@ -24,7 +24,10 @@
    
 
 
+#define ECL_RFT_FILE_ID 6610632
+
 struct ecl_rft_file_struct {
+  UTIL_TYPE_ID_DECLARATION;
   char        * filename;
   vector_type * data;          /* This vector just contains all the rft nodes in one long vector. */
   hash_type   * well_index;    /* This indexes well names into the data vector - very similar to the scheme used in ecl_file. */
@@ -34,12 +37,22 @@ struct ecl_rft_file_struct {
 
 static ecl_rft_file_type * ecl_rft_file_alloc_empty(const char * filename) {
   ecl_rft_file_type * rft_vector = util_malloc(sizeof * rft_vector , __func__);
+  UTIL_TYPE_ID_INIT( rft_vector , ECL_RFT_FILE_ID );
   rft_vector->data       = vector_alloc_new();
   rft_vector->filename   = util_alloc_string_copy(filename);
   rft_vector->well_index = hash_alloc();
   return rft_vector;
 }
 
+/**
+   Generating the two functions:
+   
+   bool                ecl_rft_file_is_instance( void * );
+   ecl_rft_file_type * ecl_rft_file_safe_cast( void * );
+*/
+
+UTIL_SAFE_CAST_FUNCTION( ecl_rft_file , ECL_RFT_FILE_ID );
+UTIL_IS_INSTANCE_FUNCTION( ecl_rft_file , ECL_RFT_FILE_ID );
 
 
 static void ecl_rft_file_add_node(ecl_rft_file_type * rft_vector , const ecl_rft_node_type * rft_node) {
@@ -89,6 +102,10 @@ void ecl_rft_file_free(ecl_rft_file_type * rft_vector) {
   free(rft_vector);
 }
 
+
+void ecl_rft_file_free__(void * arg) {
+  ecl_rft_file_free( ecl_rft_file_safe_cast( arg ));
+}
 
 /**
    Returns the total number of rft nodes in the file, not caring if

@@ -83,8 +83,9 @@ typedef struct {
 } segment_data_type;
 
 
-
+#define ECL_RFT_NODE_ID 887195
 struct ecl_rft_node_struct {
+  UTIL_TYPE_ID_DECLARATION;
   char       * well_name;     	       /* Name of the well. */
   int          size;          	       /* The number of entries in this RFT vector (i.e. the number of cells) .*/
 
@@ -134,6 +135,8 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(int size , const char * data
     rft_node->rft_data 	   = NULL;
     rft_node->segment_data = NULL;
     
+    UTIL_TYPE_ID_INIT( rft_node , ECL_RFT_NODE_ID );
+    
     rft_node->cells = util_malloc( size * sizeof * rft_node->cells , __func__);
     if (data_type == RFT)
       rft_node->rft_data = util_malloc( size * sizeof * rft_node->rft_data , __func__);
@@ -150,6 +153,9 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(int size , const char * data
   }
 }
 
+
+UTIL_SAFE_CAST_FUNCTION( ecl_rft_node   , ECL_RFT_NODE_ID );
+UTIL_IS_INSTANCE_FUNCTION( ecl_rft_node , ECL_RFT_NODE_ID );
 
 
 ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
@@ -258,7 +264,7 @@ void ecl_rft_node_free(ecl_rft_node_type * rft_node) {
 }
 
 void ecl_rft_node_free__(void * void_node) {
-  ecl_rft_node_free((ecl_rft_node_type *) void_node);
+  ecl_rft_node_free( ecl_rft_node_safe_cast (void_node) );
 }
 
 
