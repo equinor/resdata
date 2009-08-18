@@ -21,30 +21,26 @@ typedef struct file_node_struct file_node_type;
 typedef struct sort_node_struct sort_node_type;
 
 
-typedef enum {
-  ALLOC_NODE_ACTION    = 1,     /* A new node is added. */
-  DELETE_NODE_ACTION   = 2,     /* A node is deleted. */
-  REUSE_NODE_ACTION    = 3      /* We are reusing a node from the free_nodes list. */
-} block_fs_action_type;
-
-
 
 /**
    These should be bitwise "smart" - so it is possible
    to go on a wild chase through a binary stream and look for them.
 */
 
-#define NODE_IN_USE_BYTE  85         /* Binary(85)  =  01010101 */
-#define NODE_FREE_BYTE   170         /* Binary(170) =  10101010 */   
-#define NODE_END_TAG__   16711935    /* Binary      =  00000000111111110000000011111111 */
+#define NODE_IN_USE_BYTE  85                /* Binary(85)  =  01010101 */
+#define NODE_FREE_BYTE   170                /* Binary(170) =  10101010 */   
+#define WRITE_START__    77162
 
-static const int NODE_END_TAG = NODE_END_TAG__;
+static const int NODE_END_TAG            = 16711935;       /* Binary      =  00000000111111110000000011111111 */
+static const int NODE_WRITE_ACTIVE_START = WRITE_START__;
+static const int NODE_WRITE_ACTIVE_END   = 776512;
 
 
 typedef enum {
-  NODE_IN_USE  =  1431655765,    /* NODE_IN_USE_BYTE * ( 1 + 256 + 256**2 + 256**3) => Binary 01010101010101010101010101010101 */
-  NODE_FREE    = -1431655766,    /* NODE_FREE_BYTE   * ( 1 + 256 + 256**2 + 256**3) => Binary 10101010101010101010101010101010 */
-  NODE_INVALID = 13              /* <- This should __never__ be written to disk */
+  NODE_IN_USE       =  1431655765,    /* NODE_IN_USE_BYTE * ( 1 + 256 + 256**2 + 256**3) => Binary 01010101010101010101010101010101 */
+  NODE_FREE         = -1431655766,    /* NODE_FREE_BYTE   * ( 1 + 256 + 256**2 + 256**3) => Binary 10101010101010101010101010101010 */
+  NODE_WRITE_ACTIVE =  WRITE_START__, /* This */
+  NODE_INVALID      = 13              /* This should __never__ be written to disk */
 } node_status_type;
 
 
@@ -55,11 +51,10 @@ struct file_node_struct{
   long int           data_offset;   /* The offset into the data_file where the actual data starts. */ 
   int                node_size;     /* The size in bytes of this node - must be >= data_size. NEVER Changed. */
   int                data_size;     /* The size of the data stored in this node - in addition the node might need to store header information. */
-  node_status_type   status; 
+  node_status_type   status;        /* This should be: NODE_IN_USE | NODE_FREE; in addition the disk can have NODE_WRITE_ACTIVE for incomplete writes. */
   char             * cache;
   int                cache_size;
-  file_node_type   * next;          /* Implementing doubly linked list behaviour WHEN the node is in */
-  file_node_type   * prev;          /*     the free_nodes list of the block_fs object. */
+  file_node_type   * next , * prev; /* Implementing doubly linked list behaviour WHEN the node is in the free_nodes list of the block_fs object. */
 };
 
 
@@ -90,14 +85,10 @@ struct block_fs_struct {
 
   int              version;       /* A version number which is incremented each time the filesystem is defragmented - not implemented yet. */
   
-  char           * log_file;
   char           * data_file;
-  char           * index_file;
   char           * lock_file;
   
   FILE           * data_stream;
-  FILE           * index_stream;
-  FILE           * log_stream;
 
   long int         data_file_size;  /* The total number of bytes in the data_file. */
   long int         free_size;       /* Size of 'holes' in the data file. */ 
@@ -114,19 +105,9 @@ struct block_fs_struct {
                                        only contain pointers to the objects stored in this vector. */
   int              write_count;     /* This just counts the number of writes since the file system was mounted. */
   int              max_cache_size;
-
+  
   bool             write_access;
-  bool             internal_index;   /* Should header(index) information be embedded in the datafile? */  
-  bool             external_index;   /* Should a separate index file be written? */
-  bool             log_transactions; /* Should transactions be logged? This will be set to true (AFTER mounting) if external_index == true. */
 };
-
-
-static void block_fs_log_reuse_node( block_fs_type * block_fs ,  const char * filename , const file_node_type * file_node);
-static void block_fs_log_alloc_node( block_fs_type * block_fs ,  const char * filename , const file_node_type * file_node);
-static void block_fs_log_delete_node( block_fs_type * block_fs ,  const char * filename );
-static void block_fs_clear_log( block_fs_type * block_fs );
-static void block_fs_apply_log( block_fs_type * block_fs , bool verbose);
 
 
 static void block_fs_fprintf_free_nodes( const block_fs_type * block_fs, FILE * stream) {
@@ -146,8 +127,14 @@ static void block_fs_fprintf_free_nodes( const block_fs_type * block_fs, FILE * 
 
 
 static inline void fseek__(FILE * stream , long int arg , int whence) {
-  if (fseek(stream , arg , whence) != 0) 
+  if (fseek(stream , arg , whence) != 0) {
     fprintf(stderr,"** Warning - seek:%ld failed %s(%d) \n",arg,strerror(errno) , errno);
+    util_abort("%S - aborting\n",__func__);
+  }
+}
+
+static inline void block_fs_fseek_data(block_fs_type * block_fs , long offset) {
+  fseek__( block_fs->data_stream , offset , SEEK_SET );
 }
 
 
@@ -172,16 +159,17 @@ static void file_node_fprintf(const file_node_type * node, const char * name, FI
 */
 
 
-static file_node_type * file_node_alloc( long int offset , int node_size) {
+static file_node_type * file_node_alloc( node_status_type status , long int offset , int node_size) {
   file_node_type * file_node = util_malloc( sizeof * file_node , __func__);
   
   file_node->node_offset = offset;    /* These should NEVER change. */
-  file_node->node_size   = node_size;
+  file_node->node_size   = node_size; /* -------------------------  */
+
   file_node->data_size   = 0;
   file_node->data_offset = 0;
-  file_node->status      = NODE_FREE; 
+  file_node->status      = status; 
   
-  file_node->cache = NULL;
+  file_node->cache      = NULL;
   file_node->cache_size = 0;
 
   file_node->next = NULL;
@@ -200,8 +188,8 @@ static void file_node_clear_cache( file_node_type * file_node ) {
 }
 
 
-static void file_node_read_from_cache( const file_node_type * file_node , long int ext_offset , void * ptr , size_t read_bytes) {
-  memcpy(ptr , &file_node->cache[ext_offset] , read_bytes);
+static void file_node_read_from_cache( const file_node_type * file_node , void * ptr , size_t read_bytes) {
+  memcpy(ptr , file_node->cache , read_bytes);
   /*
     Could check: (ext_offset + file_node->cache_size <= read_bytes) - else
     we are reading beyond the end of the cache.
@@ -225,19 +213,6 @@ static void file_node_update_cache( file_node_type * file_node , int data_size ,
 
 
 
-static bool file_node_cmp( const file_node_type *node1 , const file_node_type * node2 ) {
-  bool equal = true;
-
-  equal = equal && (node1->node_offset == node2->node_offset);  
-  equal = equal && (node1->data_offset == node2->data_offset);  
-  equal = equal && (node1->node_size   == node2->node_size);  
-  equal = equal && (node1->data_size   == node2->data_size);  
-  equal = equal && (node1->status      == node2->status);  
-
-  return equal;
-}
-
-
 
 static void file_node_free( file_node_type * file_node ) {
   free( file_node );
@@ -248,37 +223,6 @@ static void file_node_free__( void * file_node ) {
   file_node_free( (file_node_type *) file_node );
 }
 
-
-
-static void file_node_index_fwrite( const file_node_type * file_node , FILE * stream ) {
-  util_fwrite_int( file_node->status       , stream );
-  util_fwrite_long( file_node->node_offset , stream);
-  util_fwrite_long( file_node->data_offset , stream ); 
-  util_fwrite_int( file_node->node_size    , stream );
-  util_fwrite_int( file_node->data_size    , stream );
-}
-
-
-
-static void file_node_index_fread( file_node_type * file_node , FILE * stream ) {
-  file_node->status      = util_fread_int( stream );
-  file_node->node_offset = util_fread_long( stream );
-  file_node->data_offset = util_fread_long( stream ); 
-  file_node->node_size   = util_fread_int( stream );
-  file_node->data_size   = util_fread_int( stream );
-}
-
-/**
-   This will instantiate a file_node instance from an index file; in particular the data_offset will be locked
-   to the node_offset.
-   
-*/
-
-static file_node_type * file_node_index_fread_alloc( FILE * stream ) {
-  file_node_type * node = file_node_alloc( 0,0 );
-  file_node_index_fread( node , stream );
-  return node;
-}
 
 
 static bool file_node_verify_end_tag( const file_node_type * file_node , FILE * stream ) {
@@ -294,14 +238,8 @@ static bool file_node_verify_end_tag( const file_node_type * file_node , FILE * 
 }
 
 
-  
-static void file_node_fwrite_end_tag( const file_node_type * file_node , FILE * stream ) {
-  fseek__( stream , file_node->node_offset + file_node->node_size - sizeof NODE_END_TAG , SEEK_SET);
-  util_fwrite_int( NODE_END_TAG , stream );
-}
 
-
-static file_node_type * file_node_data_fread_alloc( FILE * stream , char ** key) {
+static file_node_type * file_node_fread_alloc( FILE * stream , char ** key) {
   file_node_type * file_node = NULL;
   node_status_type status;
   long int node_offset       = ftell( stream );
@@ -314,20 +252,19 @@ static file_node_type * file_node_data_fread_alloc( FILE * stream , char ** key)
         *key = util_safe_free( *key );  /* Explicitly set to NULL for free nodes. */
 
       node_size = util_fread_int( stream );
-      file_node = file_node_alloc( node_offset , node_size );
-      file_node->status = status;
+      file_node = file_node_alloc( status , node_offset , node_size );
       if (status == NODE_IN_USE) {
         file_node->data_size   = util_fread_int( stream );
         file_node->data_offset = ftell( stream );
       }
     } else {
       /* 
-         We did not recognize the status identifier - the node is
-         broken; when it comes to building an index from the datafile
-         we have lost now :-(
+         We did not recognize the status identifier; the node will
+         eventually be marked as free. 
       */
-      file_node = file_node_alloc( node_offset , 0 );
-      file_node->status = NODE_INVALID;
+      if (status != NODE_WRITE_ACTIVE)
+        status = NODE_INVALID;
+      file_node = file_node_alloc( status , node_offset , 0 );
     }
   }
   return file_node;
@@ -350,29 +287,55 @@ node_offset                                                data_offset
   implicitly read with ftell() calls.
 */
 
-static void file_node_data_fwrite( const file_node_type * file_node , const char * key , FILE * stream ) {
-  util_fwrite_int( file_node->status , stream );
-  if (file_node->status == NODE_IN_USE)
-    util_fwrite_string( key , stream );
-  util_fwrite_int( file_node->node_size , stream );
-  util_fwrite_int( file_node->data_size , stream );
+/**
+   This function will write the node information to file, this
+   includes the NODE_END_TAG identifier which shoule be written to the
+   end of the node.
+*/
+
+static void file_node_fwrite( const file_node_type * file_node , const char * key , FILE * stream ) {
+  if (file_node->node_size == 0)
+    util_abort("%s: trying to write node with z<ero size \n",__func__);
+  {
+    fseek__( stream , file_node->node_offset , SEEK_SET);
+    util_fwrite_int( file_node->status , stream );
+    if (file_node->status == NODE_IN_USE)
+      util_fwrite_string( key , stream );
+    util_fwrite_int( file_node->node_size , stream );
+    util_fwrite_int( file_node->data_size , stream );
+    fseek__( stream , file_node->node_offset + file_node->node_size - sizeof NODE_END_TAG , SEEK_SET);
+    util_fwrite_int( NODE_END_TAG , stream );
+  }
 }
 
 
+/**
+   This marks the start and end of the node with the integer tags:
+   NODE_WRITE_ACTIVE_START and NODE_WRITE_ACTIVE_END, signalling this
+   section in the data file is 'work in progress', and should be
+   discarded if the application aborts during the write.
 
-static void file_node_update_internal_index( const file_node_type * file_node , const char * key , FILE * stream ) {
-  fsync( fileno(stream) );
+   When the write is complete file_node_fwrite() should be called,
+   which will replace the NODE_WRITE_ACTIVE_START and
+   NODE_WRITE_ACTIVE_END tags with NODE_IN_USE and NODE_END_TAG
+   identifiers.
+*/
+
+   
+static void file_node_init_fwrite( const file_node_type * file_node , FILE * stream) {
   fseek__( stream , file_node->node_offset , SEEK_SET );
-  file_node_data_fwrite( file_node , key , stream );
-  fsync( fileno(stream) );
+  util_fwrite_int( NODE_WRITE_ACTIVE_START , stream );
+  fseek__( stream , file_node->node_offset + file_node->node_size - sizeof NODE_END_TAG , SEEK_SET);
+  util_fwrite_int( NODE_WRITE_ACTIVE_END   , stream );
 }
 
 
-static void file_node_init_write( const file_node_type * file_node , FILE * stream) {
-  
-}
-
-int file_node_header_size( const char * filename ) {
+/**
+   Observe that header in this context include the size of the tail
+   marker NODE_END_TAG.
+*/
+   
+static int file_node_header_size( const char * filename ) {
   file_node_type * file_node;
   return sizeof ( file_node->status    ) + 
          sizeof ( file_node->node_size ) + 
@@ -380,6 +343,10 @@ int file_node_header_size( const char * filename ) {
          sizeof ( NODE_END_TAG )         + sizeof(int) /* embedded by the util_fwrite_string routine */ + strlen(filename) + 1 /* \0 */;
 }
 
+
+static void file_node_set_data_offset( file_node_type * file_node, const char * filename ) {
+  file_node->data_offset = file_node->node_offset + file_node_header_size( filename ) - sizeof( NODE_END_TAG );
+}
 
 
 /* file_node functions - end. */
@@ -400,52 +367,10 @@ static inline void block_fs_aquire_rlock( block_fs_type * block_fs ) {
 }
 
 
-
-/**
-   
-*/   
-static void block_fs_fwrite_index( block_fs_type * block_fs ) {
-  if (block_fs->external_index) {
-    fseek__( block_fs->index_stream , 0 , SEEK_SET );
-    util_fwrite_long( block_fs->data_file_size , block_fs->index_stream );
-    
-    /* Writing the nodes from the index. */
-    util_fwrite_int( hash_get_size( block_fs->index ) , block_fs->index_stream );
-    {
-      hash_iter_type * iter        = hash_iter_alloc( block_fs->index );
-      while ( !hash_iter_is_complete( iter )) {
-        const char * key            = hash_iter_get_next_key( iter );
-        const file_node_type * node = hash_get( block_fs->index , key );
-        util_fwrite_string( key , block_fs->index_stream );
-        file_node_index_fwrite( node , block_fs->index_stream );
-      }
-      hash_iter_free( iter );
-    }
-    
-    /* Inserting the free nodes - the holes. */
-    util_fwrite_int( block_fs->num_free_nodes , block_fs->index_stream );
-    {
-      file_node_type * current = block_fs->free_nodes;
-      while (current != NULL) {
-        file_node_index_fwrite( current , block_fs->index_stream );
-        current = current->next;
-      }
-    }
-    fsync( fileno( block_fs->index_stream ) );
-    ftell( block_fs->index_stream );
-    /**
-       Delete the log. 
-    */
-    block_fs_clear_log( block_fs );
-  }
-}
-
-
-
 static void block_fs_insert_index_node( block_fs_type * block_fs , const char * filename , const file_node_type * file_node) {
-  block_fs_log_alloc_node( block_fs , filename , file_node);
   hash_insert_ref( block_fs->index , filename , file_node);
 }
+
 
 /**
    Looks through the list of free nodes - looking for a node with
@@ -528,24 +453,10 @@ static void block_fs_install_node(block_fs_type * block_fs , file_node_type * no
 
 
 static void block_fs_set_filenames( block_fs_type * block_fs ) {
-  if (block_fs->external_index) {
-    char * log_ext   = util_alloc_sprintf("log_%d" , block_fs->version );
-    char * index_ext = util_alloc_sprintf("index_%d" , block_fs->version );
-    
-    util_safe_free( block_fs->log_file );
-    util_safe_free( block_fs->index_file );
-    
-    block_fs->log_file   = util_alloc_filename( block_fs->path , block_fs->base_name , log_ext);
-    block_fs->index_file = util_alloc_filename( block_fs->path , block_fs->base_name , index_ext);
-    free( log_ext );
-    free( index_ext );
-  }
-  {
-    char * data_ext  = util_alloc_sprintf("data_%d" , block_fs->version );
-    util_safe_free( block_fs->data_file );
-    block_fs->data_file  = util_alloc_filename( block_fs->path , block_fs->base_name , data_ext);
-    free( data_ext );
-  }
+  char * data_ext  = util_alloc_sprintf("data_%d" , block_fs->version );
+  util_safe_free( block_fs->data_file );
+  block_fs->data_file  = util_alloc_filename( block_fs->path , block_fs->base_name , data_ext);
+  free( data_ext );
 }
 
 
@@ -561,29 +472,22 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
   block_fs->free_size        = 0; 
   block_fs->block_size       = block_size;
   block_fs->max_cache_size   = max_cache_size;
-  block_fs->log_transactions = false;
-  block_fs->internal_index   = false;
   util_alloc_file_components( mount_file , &block_fs->path , &block_fs->base_name, NULL );
-  block_fs->mount_point  = util_alloc_filename( block_fs->path , block_fs->base_name , NULL);
-  block_fs->lock_file    = util_alloc_filename( block_fs->path , block_fs->base_name , "lock");
-  block_fs->write_access =  util_try_lockf( block_fs->lock_file , S_IWUSR + S_IWGRP , &block_fs->lock_fd);
+  block_fs->mount_point      = util_alloc_filename( block_fs->path , block_fs->base_name , NULL);
+  block_fs->lock_file        = util_alloc_filename( block_fs->path , block_fs->base_name , "lock");
+  block_fs->write_access     =  util_try_lockf( block_fs->lock_file , S_IWUSR + S_IWGRP , &block_fs->lock_fd);
   pthread_mutex_init( &block_fs->io_lock  , NULL);
   pthread_rwlock_init( &block_fs->rw_lock , NULL);
   {
     FILE * stream            = util_fopen( mount_file , "r");
     int id                   = util_fread_int( stream );
     block_fs->version        = util_fread_int( stream );
-    block_fs->internal_index = util_fread_bool( stream );
-    block_fs->external_index = util_fread_bool( stream );
     fclose( stream );
     
     if (id != MOUNT_MAP_MAGIC_INT) 
       util_abort("%s: The file:%s does not seem to a valid block_fs mount map \n",__func__ , mount_file);
   }
-  block_fs->log_file    = NULL;
   block_fs->data_file   = NULL;
-  block_fs->index_file  = NULL;
-  block_fs->log_stream  = NULL; /* Tested for in block_fs_clear_log() */
   block_fs_set_filenames( block_fs );
   UTIL_TYPE_ID_INIT(block_fs , BLOCK_FS_TYPE_ID);
   return block_fs;
@@ -593,20 +497,11 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
 UTIL_IS_INSTANCE_FUNCTION(block_fs , BLOCK_FS_TYPE_ID);
 
 
-static void block_fs_fwrite_mount_info__( const char * mount_file , int version , bool internal_index, bool external_index) {
-  if ((internal_index == external_index) && (internal_index == false))
-    /* 
-       Have essentially asked to create a filesystem with no index information - that is a no go.
-    */
-    util_abort("%s: You must have at least one of internal_index and external_index set to true.\n",__func__);
-  {
-    FILE * stream = util_fopen( mount_file , "w");
-    util_fwrite_int( MOUNT_MAP_MAGIC_INT , stream );
-    util_fwrite_int( version , stream );
-    util_fwrite_bool( internal_index , stream );
-    util_fwrite_bool( external_index , stream );
-    fclose( stream );
-  }
+static void block_fs_fwrite_mount_info__( const char * mount_file , int version) {
+  FILE * stream = util_fopen( mount_file , "w");
+  util_fwrite_int( MOUNT_MAP_MAGIC_INT , stream );
+  util_fwrite_int( version , stream );
+  fclose( stream );
 }
 
 
@@ -615,7 +510,7 @@ static void block_fs_fwrite_mount_info__( const char * mount_file , int version 
    start at a new node.
 */
 static void block_fs_fseek_node_end(block_fs_type * block_fs , const file_node_type * file_node) {
-  fseek__( block_fs->data_stream , file_node->node_offset + file_node->node_size , SEEK_SET );
+  block_fs_fseek_data( block_fs , file_node->node_offset + file_node->node_size);
 }
 
 
@@ -656,7 +551,7 @@ static bool block_fs_fseek_valid_node( block_fs_type * block_fs ) {
                OK - this was not a valid id; we go back and continue 
                reading single bytes.
             */
-            fseek__( block_fs->data_stream , pos , SEEK_SET);
+            block_fs_fseek_data( block_fs , pos );
         } else
           break; /* EOF */
       }
@@ -670,30 +565,14 @@ static bool block_fs_fseek_valid_node( block_fs_type * block_fs ) {
 
 
 
-/**
-   This function opens the index file. If the index does not already
-   exist an empty index table is written to it.
-*/
-
-static void block_fs_open_index( block_fs_type * block_fs) {
-  if (util_file_exists( block_fs->index_file )) {
-    block_fs->index_stream = util_fopen(block_fs->index_file , "r+");  
-    fseek__( block_fs->index_stream , 0 , SEEK_SET);
-  } else {
-    block_fs->index_stream = util_fopen(block_fs->index_file , "w+");  /* This is THE fopen() of the index file - will stay open for the lifetime of the block_fs instance. */
-    block_fs_fwrite_index( block_fs );                                 /* Ensure that the existing (empty) index is valid. */
-    fseek__( block_fs->index_stream , 0 , SEEK_SET);
-  }
-}
-
 
 /**
-   The read-only open mode is only for the mount section, where the data file is read in to load/verify the
-   index.
+   The read-only open mode is only for the mount section, where the
+   data file is read in to load/verify the index.
 
-   If the read_only open fails - the data_stream is set to NULL. If the open succeeds the calling scope should
-   close the stream before calling this function again, with read_only == false.
-
+   If the read_only open fails - the data_stream is set to NULL. If
+   the open succeeds the calling scope should close the stream before
+   calling this function again, with read_only == false.
 */
 
 static void block_fs_open_data( block_fs_type * block_fs , bool read_only) {
@@ -708,15 +587,6 @@ static void block_fs_open_data( block_fs_type * block_fs , bool read_only) {
     else
       block_fs->data_stream = util_fopen( block_fs->data_file , "w+");
   }
-}
-
-
-static void block_fs_open_log( block_fs_type * block_fs ) {
-  if (util_file_exists( block_fs->log_file )) {
-    block_fs->log_stream = util_fopen( block_fs->log_file , "r+");
-    fseek__( block_fs->log_stream , 0  , SEEK_END);
-  } else
-    block_fs->log_stream = util_fopen( block_fs->log_file , "w+");
 }
 
 
@@ -760,6 +630,7 @@ static void block_fs_preload( block_fs_type * block_fs ) {
   }
 }
 
+
 /**
    This function will 'fix' the nodes with offset in offset_list.  The
    fixing in this case means the following:
@@ -767,8 +638,6 @@ static void block_fs_preload( block_fs_type * block_fs ) {
      1. The node is updated in place on the file to become a free node.
      2. The node is added to the block_fs instance as a free node, which can
         be recycled at a later stage.
-        
-        
 
 */
 
@@ -781,15 +650,14 @@ static void block_fs_fix_nodes( block_fs_type * block_fs , long_vector_type * of
       bool new_node = false;
       long int node_offset = long_vector_iget( offset_list , inode );
       file_node_type * file_node;
-      fseek__(block_fs->data_stream , node_offset , SEEK_SET);
-      file_node = file_node_data_fread_alloc( block_fs->data_stream , &key );
+      block_fs_fseek_data(block_fs , node_offset);
+      file_node = file_node_fread_alloc( block_fs->data_stream , &key );
       
-      printf("Setting node at offset:%ld to available.\n",file_node->node_offset);
-      if (file_node->status == NODE_INVALID) {
+      if ((file_node->status == NODE_INVALID) || (file_node->status == NODE_WRITE_ACTIVE)) {
         /* This node is really quite broken. */
         long int node_end;
         block_fs_fseek_valid_node( block_fs );
-        node_end = ftell( block_fs->data_stream );
+        node_end             = ftell( block_fs->data_stream );
         file_node->node_size = node_end - node_offset;
       } 
       
@@ -803,18 +671,10 @@ static void block_fs_fix_nodes( block_fs_type * block_fs , long_vector_type * of
         block_fs_insert_free_node( block_fs , file_node );
       }
       
-      fseek__(block_fs->data_stream , node_offset , SEEK_SET);
-      file_node_data_fwrite( file_node , NULL , block_fs->data_stream );
-      file_node_fwrite_end_tag( file_node , block_fs->data_stream );
+      block_fs_fseek_data(block_fs , node_offset);
+      file_node_fwrite( file_node , NULL , block_fs->data_stream );
       if (!new_node)
         file_node_free( file_node );
-      //{
-      //  file_node_type * test;
-      //  fseek__(block_fs->data_stream , node_offset , SEEK_SET);
-      //  test = file_node_data_fread_alloc( block_fs->data_stream , &key);
-      //  
-      //  file_node_free( test );
-      //}
     }
     util_safe_free( key );
   }
@@ -823,136 +683,6 @@ static void block_fs_fix_nodes( block_fs_type * block_fs , long_vector_type * of
 
 
 
-static void block_fs_index_verify(block_fs_type * block_fs , long_vector_type * fix_nodes) {
-  block_fs_open_data( block_fs , true );
-  if (block_fs->data_stream != NULL) {   /* Otherwise we do not have any datafile - first mount. */
-    bool   data_file_error = false;
-    char * filename        = NULL;
-    file_node_type * file_node;
-    do {
-      file_node_type * existing_node = NULL;
-      bool node_error                = false;
-      file_node                      = file_node_data_fread_alloc( block_fs->data_stream , &filename );
-      if (file_node != NULL) {
-        if (file_node_verify_end_tag(file_node , block_fs->data_stream)) {
-          block_fs_fseek_node_end(block_fs , file_node);
-          switch(file_node->status) {
-            /*
-              The switch code is identical for NODE_FREE and
-              NODE_IN_USE.  In both cases we try to find the node; looking
-              both in the hash table and the free_nodes list.
-            */
-          case(NODE_FREE):
-          case(NODE_IN_USE):
-            if (filename != NULL) {
-              if (hash_has_key( block_fs->index , filename))
-                existing_node = hash_get( block_fs->index , filename );
-              else
-                existing_node = block_fs_lookup_free_node( block_fs , file_node->node_offset);
-            } else 
-              existing_node = block_fs_lookup_free_node( block_fs , file_node->node_offset);
-            break;
-          case(NODE_INVALID):
-            fprintf(stderr,"** ERROR: invalid node status at offset:%ld in data_file: %s \n" , file_node->node_offset , block_fs->data_file);
-            block_fs_fseek_valid_node( block_fs );
-            data_file_error = true;
-            node_error      = true; 
-            long_vector_append( fix_nodes , file_node->node_offset );
-            break;
-          default:
-            util_abort("%s: this is __really__ broken \n",__func__);
-          }
-        } else {
-          /* Could not verify end tag. */
-          node_error = true; 
-          block_fs_fseek_valid_node( block_fs );
-          fprintf(stderr,"** Warning node (%s) at offset:%ld does not have valid end tag - will be deleted.\n", filename , file_node->node_offset );
-          long_vector_append( fix_nodes , file_node->node_offset );
-        }
-        
-        if (!node_error) {
-          if (existing_node == NULL) {
-            /** 
-                The node in the datafile seems to be 100% OK -
-                but we can not find it in the index or list of free nodes.
-            */
-            printf("Following node could not be found in existing index - probably halfway written. \n");
-            file_node_fprintf( file_node , filename , stderr);
-            {
-              char * index_file = util_alloc_sprintf("/tmp/%s_index" , "dump");
-              FILE * stream = util_fopen(index_file , "w");
-              block_fs_fprintf_index( block_fs , stream );
-              printf("Index dumped on: %s \n",index_file);
-              fclose(stream);
-            }
-            long_vector_append( fix_nodes , file_node->node_offset ); 
-          } else {
-            if (!file_node_cmp( file_node , existing_node )) {
-              printf("Node name:%s \n", filename );
-              file_node_fprintf( file_node     , "DATAFILE" , stdout );
-              file_node_fprintf( existing_node , "INDEX" , stdout );
-              /*
-                The node in the data_file seems to be 100%
-                OK. We can also find the node in the existing index, but the
-                node in the index|list differs from the node on disk.
-                
-                What to do?
-              */
-              if (file_node->status != existing_node->status) {
-                /* 
-                   If one reports the node as IN_USE and the other as free we set both to
-                   report the node to FREE - this might be percieved as data loss;
-                   but the notion is that "No Data is better than Wrong data".
-                */
-                if (existing_node->status == NODE_IN_USE) {
-                  /* 
-                     The node is reported as in use in the index, and as free in the datafile.
-                  */
-                  hash_del( block_fs->index , filename );
-                  existing_node->status      = NODE_FREE;
-                  existing_node->data_size   = 0;
-                  existing_node->data_offset = 0;
-                  block_fs_insert_free_node( block_fs , existing_node );
-                } else 
-                  /* 
-                     The node is reported as free in the index, and as in use in the datafile.
-                  */
-                  long_vector_append( fix_nodes , file_node->node_offset );
-              } else {
-                /*
-                  The node metadata differs. What we do is:
-                  
-                  Basically TRUST the datafile.
-                  
-                */
-                
-                if (existing_node->status == NODE_IN_USE) {
-                  /* Trust the datafile: */
-                  existing_node->data_size   = file_node->data_size;
-                  existing_node->node_size   = file_node->node_size;
-                  existing_node->data_offset = file_node->data_offset;
-                } else {
-                  hash_del( block_fs->index , filename );
-                  existing_node->status      = NODE_FREE;
-                  existing_node->data_size   = 0;
-                  existing_node->data_offset = 0;
-                  existing_node->node_size   = file_node->node_size;
-                  block_fs_insert_free_node( block_fs , existing_node );
-
-                  existing_node->node_size = file_node->node_size;
-                  long_vector_append( fix_nodes , file_node->node_offset );
-                }
-              }
-            } 
-          }
-        } 
-      }
-      file_node_free( file_node );
-    } while (file_node != NULL);
-    util_safe_free( filename );
-    fclose(block_fs->data_stream);
-  }
-}
 
 /**
    This mutex is to ensure that only one thread (from the same
@@ -962,128 +692,77 @@ static void block_fs_index_verify(block_fs_type * block_fs , long_vector_type * 
 */
 
 static pthread_mutex_t mount_lock = PTHREAD_MUTEX_INITIALIZER;
-block_fs_type * block_fs_mount( const char * mount_file , int block_size , int max_cache_size , bool internal_index , bool external_index, bool preload) {
+block_fs_type * block_fs_mount( const char * mount_file , int block_size , int max_cache_size , bool preload) {
   block_fs_type * block_fs;
   long_vector_type * fix_nodes = long_vector_alloc(0 , 0);
   pthread_mutex_lock( &mount_lock );
   {
     if (!util_file_exists(mount_file)) 
       /* This is a brand new filesystem - create the mount map first. */
-      block_fs_fwrite_mount_info__( mount_file , 0 , internal_index , external_index);
+      block_fs_fwrite_mount_info__( mount_file , 0 );
     {
       block_fs = block_fs_alloc_empty( mount_file , block_size , max_cache_size );
-      /* Loading the index information from a separate external index file. */
-      if (block_fs->external_index) {
-        block_fs_open_index( block_fs );
-        block_fs->data_file_size = util_fread_long( block_fs->index_stream );
-      
-        /* Loading the main index hash. */
-        {
-          int index_size = util_fread_int( block_fs->index_stream );
-          for (int i = 0; i < index_size; i++) {
-            char * filename            = util_fread_alloc_string( block_fs->index_stream );
-            file_node_type * file_node = file_node_index_fread_alloc( block_fs->index_stream );
-          
-            block_fs_install_node( block_fs , file_node );
-            block_fs_insert_index_node(block_fs , filename , file_node);
-            free( filename );
-          }
-        }
-      
-        /* Loading information about free nodes - i.e. holes in the datafile. */
-        {
-          int free_size = util_fread_int( block_fs->index_stream );
-          for (int i = 0; i < free_size; i++) {
-            file_node_type * file_node = file_node_index_fread_alloc( block_fs->index_stream );
-          
-            block_fs_install_node( block_fs , file_node );
-            block_fs_insert_free_node( block_fs , file_node );
-            if (file_node->node_offset == 353391303)
-              printf("Installing free node with offset: %ld \n",file_node->node_offset);
-          }
-        }
-
-        /* Replaying the transactions log IFF the filesystem was uncleanly shut down previously. */
-        {
-          bool unclean_umount = util_file_exists( block_fs->log_file );
-        
-          if (unclean_umount) {
-            fprintf(stderr,"Warning: filesystem \'%s\' was not cleanly unmounted - trying to replay the log. \n" , block_fs->mount_file);
-            block_fs_apply_log( block_fs , false );
-            block_fs_fwrite_index( block_fs );
-          }
-        }
-        block_fs->log_transactions = true;
-        block_fs_open_log( block_fs );
-      } else {
-        /* Means that block_fs->internal_index must be true.  */
-        /* We build up the index & free_nodes_list based on the header/index information embedded in the datafile. */
-        char * filename = NULL;
-        block_fs_open_data( block_fs , true );
-        if (block_fs->data_stream != NULL) {   /* Otherwise we do not have any datafile - first mount. */
-          file_node_type * file_node;
-          do {
-            file_node = file_node_data_fread_alloc( block_fs->data_stream , &filename );
-            if (file_node != NULL) {
-              if (file_node->status == NODE_INVALID) {
-                /* Oh fuck */
+      /* We build up the index & free_nodes_list based on the header/index information embedded in the datafile. */
+      char * filename = NULL;
+      block_fs_open_data( block_fs , true );
+      if (block_fs->data_stream != NULL) {   /* Otherwise we do not have any datafile - first mount. */
+        file_node_type * file_node;
+        do {
+          file_node = file_node_fread_alloc( block_fs->data_stream , &filename );
+          if (file_node != NULL) {
+            if ((file_node->status == NODE_INVALID) || (file_node->status == NODE_WRITE_ACTIVE)) {
+              /* Oh fuck */
+              
+              if (file_node->status == NODE_INVALID)
                 fprintf(stderr,"** Warning:: invalid node found at offset:%ld in datafile:%s - data will be lost. \n", file_node->node_offset , block_fs->data_file);
+              else
+                fprintf(stderr,"** Warning:: file system was prematurely shut down while writing node in %s/%ld - will be discarded.\n",block_fs->data_file , file_node->node_offset);
+              
+              long_vector_append( fix_nodes , file_node->node_offset );
+              file_node_free( file_node );
+              block_fs_fseek_valid_node( block_fs );
+            } else {
+              if (file_node_verify_end_tag(file_node, block_fs->data_stream)) {
+                block_fs_fseek_node_end(block_fs , file_node);
+                block_fs_install_node( block_fs , file_node );
+                switch(file_node->status) {
+                case(NODE_IN_USE):
+                  block_fs_insert_index_node(block_fs , filename , file_node);
+                  break;
+                case(NODE_FREE):
+                  block_fs_insert_free_node( block_fs , file_node );
+                  break;
+                default:
+                  util_abort("%s: node status flag:%d not recognized - error in data file \n",__func__ , file_node->status);
+                }
+              } else {
+                /* 
+                   Could not find a valid END_TAG - indicating that
+                   the filesystem was shut down during the write of
+                   this node.  This node will NOT be added to the
+                   index.  The node will be updated to become a free node.
+                */
+                fprintf(stderr,"** Warning found node:%s at offset:%ld which was incomplete - discarded.\n",filename, file_node->node_offset);
                 long_vector_append( fix_nodes , file_node->node_offset );
                 file_node_free( file_node );
                 block_fs_fseek_valid_node( block_fs );
-              } else {
-                if (file_node_verify_end_tag(file_node, block_fs->data_stream)) {
-                  block_fs_fseek_node_end(block_fs , file_node);
-                  block_fs_install_node( block_fs , file_node );
-                  switch(file_node->status) {
-                  case(NODE_IN_USE):
-                    block_fs_insert_index_node(block_fs , filename , file_node);
-                    break;
-                  case(NODE_FREE):
-                    block_fs_insert_free_node( block_fs , file_node );
-                    break;
-                  default:
-                    util_abort("%s: node status flag:%d not recognized - error in data file \n",__func__ , file_node->status);
-                  }
-                } else {
-                  /* 
-                     Could not find a valid END_TAG - indicating that
-                     the filesystem was shut down during the write of this node.
-                     This node will NOT be added to the index.  The node will be left
-                     as an incorrect node.
-                  */
-                  fprintf(stderr,"** Warning found node:%s at offset:%ld which was incomplete - discarded\n",filename, file_node->node_offset);
-                  long_vector_append( fix_nodes , file_node->node_offset );
-                  file_node_free( file_node );
-                  block_fs_fseek_valid_node( block_fs );
-                }
               }
             }
-          } while (file_node != NULL);
-          util_safe_free( filename );
-          fclose(block_fs->data_stream);
-        }
+          }
+        } while (file_node != NULL);
+        util_safe_free( filename );
+        fclose(block_fs->data_stream);
       }
-    
-      if (block_fs->internal_index && block_fs->external_index) 
-        /* Ok - we have both types of index. Then we do the following:
-
-          1. Build the index state by parsing the external index file (that is already done).
-          2. Verify the index by reading the internal index - i.e. we get a check!
-        
-        */
-        block_fs_index_verify( block_fs , fix_nodes );
-      
       
       block_fs_open_data( block_fs , false     );  /* reopen the data_stream for reading AND writing. */
       block_fs_fix_nodes( block_fs , fix_nodes );
-      block_fs_sync( block_fs );
     }
   }
   if (preload) block_fs_preload( block_fs );
   pthread_mutex_unlock( &mount_lock );
   return block_fs;
 }
+
 
 
 static void block_fs_unlink_free_node( block_fs_type * block_fs , file_node_type * node) {
@@ -1127,7 +806,6 @@ static file_node_type * block_fs_get_new_node( block_fs_type * block_fs , const 
        
     */
     block_fs_unlink_free_node( block_fs , current );
-    block_fs_log_reuse_node( block_fs , filename , current);
     
     current->next = NULL;
     current->prev = NULL;
@@ -1147,12 +825,13 @@ static file_node_type * block_fs_get_new_node( block_fs_type * block_fs , const 
     }
     /* Must lock the total size here ... */
     offset = block_fs->data_file_size;
-    new_node = file_node_alloc(offset , node_size);
-    block_fs_install_node( block_fs , new_node );  /* <- This will update the total file size. */
+    new_node = file_node_alloc(NODE_IN_USE , offset , node_size);  
+    block_fs_install_node( block_fs , new_node );                   /* <- This will update the total file size. */
     
     return new_node;
   }
 }
+
 
 
 bool block_fs_has_file( const block_fs_type * block_fs , const char * filename) {
@@ -1164,17 +843,14 @@ bool block_fs_has_file( const block_fs_type * block_fs , const char * filename) 
 
 static void block_fs_unlink_file__( block_fs_type * block_fs , const char * filename ) {
   file_node_type * node = hash_pop( block_fs->index , filename );
-  block_fs_log_delete_node( block_fs , filename );
   node->status      = NODE_FREE;
   node->data_offset = 0;
   node->data_size   = 0;
-  if (block_fs->internal_index) {
-    if (block_fs->data_stream != NULL) {  /* While the log is beeing applied the data file is firmly closed; and the stream pointer set to NULL. */
-      fsync( fileno(block_fs->data_stream) );
-      fseek__( block_fs->data_stream , node->node_offset , SEEK_SET);
-      file_node_data_fwrite( node , NULL , block_fs->data_stream );
-      fsync( fileno(block_fs->data_stream) );
-    }
+  if (block_fs->data_stream != NULL) {  
+    fsync( fileno(block_fs->data_stream) );
+    block_fs_fseek_data(block_fs , node->node_offset);
+    file_node_fwrite( node , NULL , block_fs->data_stream );
+    fsync( fileno(block_fs->data_stream) );
   }
   block_fs_insert_free_node( block_fs , node );
 }
@@ -1185,6 +861,7 @@ void block_fs_unlink_file( block_fs_type * block_fs , const char * filename) {
   block_fs_unlink_file__( block_fs , filename );
   block_fs_release_rwlock( block_fs );
 }
+
 
 /**
    The single lowest-level write function:
@@ -1214,23 +891,23 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
     return;
   else {
     fsync( fileno(block_fs->data_stream) );
-    fseek__( block_fs->data_stream , node->node_offset , SEEK_SET );
+    block_fs_fseek_data(block_fs , node->node_offset);
     
-    /* Writing the internal index header - if the filesystem is configured to store index in the data file. */
     node->data_size   = data_size; 
-    node->status      = NODE_IN_USE; 
-    if (block_fs->internal_index) 
-      file_node_data_fwrite( node , filename , block_fs->data_stream );
-    node->data_offset = ftell( block_fs->data_stream );
+    file_node_set_data_offset( node , filename );
     
+    /* This marks the node section in the datafile as write in progress with: NODE_WRITE_ACTIVE_START ... NODE_WRITE_ACTIVE_END */
+    file_node_init_fwrite( node , block_fs->data_stream );                
+    
+    /* Writes the actual data content. */
+    block_fs_fseek_data(block_fs , node->data_offset);
     util_fwrite( ptr , 1 , data_size , block_fs->data_stream , __func__);
-    file_node_fwrite_end_tag( node , block_fs->data_stream );
-
+    
+    /* Writes the file node header data, including the NODE_END_TAG. */
+    file_node_fwrite( node , filename , block_fs->data_stream );
+    
     fsync( fileno(block_fs->data_stream) );
-    
-    block_fs->write_count++;
-    
-    fseek__( block_fs->data_stream , block_fs->data_file_size , SEEK_SET );
+    block_fs_fseek_data(block_fs , block_fs->data_file_size);
     ftell( block_fs->data_stream );
     
     /* Update the cache */
@@ -1238,6 +915,7 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
       file_node_update_cache( node , data_size , ptr );
     else
       file_node_clear_cache( node );
+    block_fs->write_count++;
   }
 }
 
@@ -1249,17 +927,16 @@ void block_fs_fwrite_file(block_fs_type * block_fs , const char * filename , con
     file_node_type * file_node;
     size_t min_size = data_size;
     bool   new_node = true;   
-    if (block_fs->internal_index)
-      min_size += file_node_header_size( filename );
+    min_size += file_node_header_size( filename );
     
     if (block_fs_has_file( block_fs , filename )) {
       file_node = hash_get( block_fs->index , filename );
       if (file_node->node_size < min_size) {
         /* The current node is too small for the new content:
            
-          1. Remove the existing node, from the index and insert it into the free_nodes list.
-          2. Get a new node.
-        
+        1. Remove the existing node, from the index and insert it into the free_nodes list.
+        2. Get a new node.
+      
         */
         block_fs_unlink_file__( block_fs , filename );
         file_node = block_fs_get_new_node( block_fs , filename , min_size );
@@ -1270,12 +947,6 @@ void block_fs_fwrite_file(block_fs_type * block_fs , const char * filename , con
     
     /* The actual writing ... */
     block_fs_fwrite__( block_fs , filename , file_node , ptr , data_size);
-    /*  
-        Critical:
-        --------
-        
-        If the system crashes between these two - we get an inconsistency beetween internal and external index.
-    */
     if (new_node)
       block_fs_insert_index_node(block_fs , filename , file_node);
   }
@@ -1292,12 +963,12 @@ void block_fs_fwrite_buffer(block_fs_type * block_fs , const char * filename , c
 /**
    Need extra locking here - because the global rwlock allows many concurrent readers.
 */
-static void block_fs_fread__(block_fs_type * block_fs , const file_node_type * file_node , long int ext_offset , void * ptr , size_t read_bytes) {
+static void block_fs_fread__(block_fs_type * block_fs , const file_node_type * file_node , void * ptr , size_t read_bytes) {
   if (file_node->cache != NULL) 
-    file_node_read_from_cache( file_node , ext_offset , ptr , read_bytes);
+    file_node_read_from_cache( file_node , ptr , read_bytes);
   else {
     pthread_mutex_lock( &block_fs->io_lock );
-    fseek__( block_fs->data_stream , file_node->data_offset + ext_offset , SEEK_SET);
+    block_fs_fseek_data( block_fs , file_node->data_offset );
     util_fread( ptr , 1 , read_bytes , block_fs->data_stream , __func__);
     //file_node_verify_end_tag( file_node , block_fs->data_stream );
     pthread_mutex_unlock( &block_fs->io_lock );
@@ -1324,7 +995,7 @@ void block_fs_fread_realloc_buffer( block_fs_type * block_fs , const char * file
         file_node_buffer_read_from_cache( node , buffer );
       else {
         pthread_mutex_lock( &block_fs->io_lock );
-        fseek__( block_fs->data_stream , node->data_offset , SEEK_SET);
+        block_fs_fseek_data(block_fs , node->data_offset);
         buffer_stream_fread( buffer , node->data_size , block_fs->data_stream );
         //file_node_verify_end_tag( node , block_fs->data_stream );
         pthread_mutex_unlock( &block_fs->io_lock );
@@ -1340,25 +1011,6 @@ void block_fs_fread_realloc_buffer( block_fs_type * block_fs , const char * file
 
 
 
-/**
-   This function will:
-
-    1. seek to beginning of filename (util_abort() if filename does not exist).
-    2. seek forward offset into filename (NB negative offset -> util_abort()).
-    3. read read_bytes bytes into the ptr.
-*/
-
-void block_fs_fread(block_fs_type * block_fs , const char * filename , long int ext_offset , void * ptr , size_t read_bytes) {
-  block_fs_aquire_rlock( block_fs );
-  {
-    file_node_type * node = hash_get( block_fs->index , filename);
-    if (ext_offset < 0 || (read_bytes + ext_offset) > node->data_size)
-      util_abort("%s: invalid offset:%ld \n",__func__ , ext_offset);
-    
-    block_fs_fread__( block_fs , node , ext_offset , ptr , read_bytes);
-  }
-  block_fs_release_rwlock( block_fs );
-}
 
 
 /*
@@ -1373,17 +1025,17 @@ void block_fs_fread_file( block_fs_type * block_fs , const char * filename , voi
   block_fs_aquire_rlock( block_fs );
   {
     file_node_type * node = hash_get( block_fs->index , filename);
-    block_fs_fread__( block_fs , node , 0 , ptr , node->data_size);
+    block_fs_fread__( block_fs , node , ptr , node->data_size);
   }
   block_fs_release_rwlock( block_fs );
 }
+
 
 
 int block_fs_get_filesize( const block_fs_type * block_fs , const char * filename) {
   file_node_type * node = hash_get( block_fs->index , filename );
   return node->data_size;
 }
-
 
 
 
@@ -1394,7 +1046,7 @@ int block_fs_get_filesize( const block_fs_type * block_fs , const char * filenam
 
 
 void block_fs_sync( block_fs_type * block_fs ) {
-  block_fs_fwrite_index( block_fs );
+  
 }
 
 
@@ -1411,17 +1063,6 @@ void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
   block_fs_sync( block_fs );
 
   printf("Shutting down filesystem: %s",block_fs->mount_file); fflush(stdout);
-  if (block_fs->external_index) {
-    /* Closing index and log streams. */
-    fclose( block_fs->index_stream );
-    fclose( block_fs->log_stream );    
-
-    /* Deleting the log file - this is a nice and controlled shutdown. */
-    unlink( block_fs->log_file );
-
-    free( block_fs->log_file );
-    free( block_fs->index_file );
-  }
   fclose( block_fs->data_stream );
   if (block_fs->lock_fd > 0)
     close( block_fs->lock_fd );     /* Closing the lock_file file descriptor - and releasing the lock. */
@@ -1429,10 +1070,6 @@ void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
   if ( unlink_empty && (hash_get_size( block_fs->index ) == 0)) {
     util_unlink_existing( block_fs->mount_file );
     util_unlink_existing( block_fs->data_file );
-    if (block_fs->external_index) {
-      util_unlink_existing( block_fs->log_file );
-      util_unlink_existing( block_fs->index_file );
-    }
   }
   util_unlink_existing( block_fs->lock_file );
 
@@ -1529,192 +1166,15 @@ void block_fs_fprintf( const block_fs_type * block_fs , FILE * stream) {
 }
 
 
-/*****************************************************************/
-/* Operations related to the log_file                            */
-/*****************************************************************/
-
-static void block_fs_fsync_log( block_fs_type * block_fs ) {
-  fsync( fileno( block_fs->log_stream) );
-  ftell( block_fs->log_stream );
-}
-
-static void block_fs_log_alloc_node( block_fs_type * block_fs ,  const char * filename , const file_node_type * file_node) {
-  if ( block_fs->log_transactions ) {
-    util_fwrite_int( ALLOC_NODE_ACTION , block_fs->log_stream );
-    util_fwrite_string( filename , block_fs->log_stream );
-    file_node_index_fwrite( file_node , block_fs->log_stream );
-    
-    block_fs_fsync_log( block_fs );
-  }
-}
-
-
-static void block_fs_log_reuse_node( block_fs_type * block_fs ,  const char * filename , const file_node_type * file_node) {
-  if ( block_fs->log_transactions ) {
-
-    util_fwrite_int( REUSE_NODE_ACTION , block_fs->log_stream );
-    util_fwrite_string( filename , block_fs->log_stream );
-    util_fwrite_long( file_node->node_offset , block_fs->log_stream );
-    util_fwrite_int( file_node->data_size , block_fs->log_stream );
-    
-    block_fs_fsync_log( block_fs );
-  }
-}
-
-
-static void block_fs_log_delete_node( block_fs_type * block_fs ,  const char * filename ) {
-  if ( block_fs->log_transactions ) {
-    util_fwrite_int( DELETE_NODE_ACTION , block_fs->log_stream );
-    util_fwrite_string( filename , block_fs->log_stream );
-
-    block_fs_fsync_log( block_fs );
-  }
-}
-
-
-
 void block_fs_fprintf_index( const block_fs_type * block_fs , FILE * stream) {
   hash_iter_type * iter        = hash_iter_alloc( block_fs->index );
   while ( !hash_iter_is_complete( iter )) {
     const char * key            = hash_iter_get_next_key( iter );
     const file_node_type * node = hash_get( block_fs->index , key );
     file_node_fprintf( node , key , stream);
-    file_node_index_fwrite( node , block_fs->index_stream );
   }
   fprintf(stream,"\n-----------------------------------------------------------------\nFree nodes: \n");
   block_fs_fprintf_free_nodes( block_fs , stream );
 }
 
 
-
-
-static void block_fs_fprintf_log_stream( FILE * stream ) {
-  file_node_type * node = file_node_alloc(0,0);
-  bool            atEOF = false;
-  char * filename       = NULL;
-  
-  while (!atEOF) {
-    block_fs_action_type action;
-    long int pos = ftell( stream );
-    long int offset;
-    if ( fread( &action , sizeof action , 1 , stream) == 1) {
-      printf("%d:   ",action);
-      switch (action) {
-      case(ALLOC_NODE_ACTION):
-        filename = util_fread_realloc_string( filename , stream );
-        file_node_index_fread( node , stream);
-        printf("%ld: Added new node: ",pos );
-        file_node_fprintf( node , filename , stdout);
-        break;
-      case(DELETE_NODE_ACTION):
-        filename = util_fread_realloc_string( filename , stream );
-        printf("%ld: Deleted node:%s \n",pos , filename);
-        break;
-      case(REUSE_NODE_ACTION):
-        filename = util_fread_realloc_string( filename , stream );
-        offset    = util_fread_long( stream );
-        util_fskip_int( stream );
-        printf("%ld Reusing the offset at:%ld for node:%s \n",pos , offset , filename);
-        break;
-      default:
-        util_abort("%s: action:%d not recognzied \n",__func__,action);
-      }
-    } else
-      atEOF = true;
-  }
-  util_safe_free(filename);
-  file_node_free( node );
-}
-
-
-/**
-   If the log stream is attached this function will truncate the stream
-   to zero length; otherwise it will unlink the log_file.
-*/
-
-static void block_fs_clear_log( block_fs_type * block_fs ) {
-  if (block_fs->log_stream != NULL) {
-    fseek__( block_fs->log_stream , 0 , SEEK_SET );
-    ftruncate( fileno( block_fs->log_stream ) , 0 );
-  } else
-    unlink( block_fs->log_file );
-}
-
-
-static void block_fs_apply_log( block_fs_type * block_fs , bool verbose) {
-  FILE * stream   = util_fopen( block_fs->log_file , "r");
-  bool  atEOF     = false;
-  char * filename = NULL;
-  
-  block_fs->data_stream = NULL;
-  while (!atEOF) {
-    block_fs_action_type action;
-    file_node_type * file_node;
-    
-    if (fread( &action , sizeof action , 1 , stream) == 1) {
-
-      switch (action) {
-      case(REUSE_NODE_ACTION):
-        filename = util_fread_realloc_string( filename , stream );
-        {
-          long int node_offset = util_fread_long( stream );
-          int      data_size   = util_fread_int( stream ); 
-          /* 
-             OK - now we must find this node in the free_nodes list, i.e. it has been deleted by a previous
-             step in the log playback. In that case we take it from the free_nodes list, and just discard the
-             file_node instance we have read/allocated from file, and use the instance from the free list.
-          */
-          file_node = block_fs_lookup_free_node( block_fs , node_offset );
-          if (verbose) printf("REUSE :  node:%s   offset:%ld \n",filename , node_offset);
-          
-          if (file_node == NULL) 
-            util_abort("%s: failed to play back transaction log - you are fucked ... \n",__func__);
-          else {
-            block_fs_unlink_free_node( block_fs , file_node );
-            file_node->status = NODE_IN_USE;
-            file_node->data_size = data_size;
-            block_fs_insert_index_node(block_fs , filename , file_node);
-            ///* Marking the node section in the data file as a NODE_IN_USE */
-            //if (block_fs->internal_index)
-            //  file_node_update_internal_index( file_node , filename , block_fs->data_stream );  
-          }
-        }
-        break;
-      case(ALLOC_NODE_ACTION):
-        filename  = util_fread_realloc_string( filename , stream );
-        file_node = file_node_index_fread_alloc(  stream );
-        if (verbose) printf("ALLOC :  node:%s   offset:%ld   status:%d   data_size:%d    data_offset:%ld \n",
-                            filename , file_node->node_offset, file_node->status, file_node->data_size , file_node->data_offset);
-        block_fs_install_node( block_fs , file_node );
-        block_fs_insert_index_node(block_fs , filename , file_node);
-        break;
-      case(DELETE_NODE_ACTION):
-        filename = util_fread_realloc_string( filename , stream );
-        block_fs_unlink_file__( block_fs , filename );
-        if (verbose) printf("DELETE:  node:%s\n",filename);
-        break;
-      default:
-        util_abort("%s: action:%d not recognzied \n",__func__,action);
-      }
-    } else
-      atEOF = true;
-  }
-  util_safe_free(filename);
-  fclose(stream);
-}
-
-
-
-void block_fs_fprintf_log( block_fs_type * block_fs ) {
-  FILE * stream = util_fopen( block_fs->log_file , "r");
-  block_fs_fprintf_log_stream( stream );
-  fclose(stream);
-}
-
-
-
-void block_fs_fprintf_logfile( const char * filename) {
-  FILE * stream = util_fopen( filename , "r");
-  block_fs_fprintf_log_stream( stream );
-  fclose( stream );
-}
