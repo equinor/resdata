@@ -52,7 +52,7 @@ typedef enum {
 
 struct file_node_struct{
   long int           node_offset;   /* The offset into the data_file of this node. NEVER Changed. */
-  long int           data_offset;    
+  long int           data_offset;   /* The offset into the data_file where the actual data starts. */ 
   int                node_size;     /* The size in bytes of this node - must be >= data_size. NEVER Changed. */
   int                data_size;     /* The size of the data stored in this node - in addition the node might need to store header information. */
   node_status_type   status; 
@@ -83,16 +83,17 @@ struct sort_node_struct {
 
 struct block_fs_struct {
   UTIL_TYPE_ID_DECLARATION;
-  char           * path;
-  char           * mount_file;
+  char           * mount_file;    /* The full path to a file with some mount information - input to the mount routine. */
+  char           * path;          
   char           * base_name;
   char           * mount_point;   /* string equals path + base_name: unique for this FS */
 
-  int              version;
+  int              version;       /* A version number which is incremented each time the filesystem is defragmented - not implemented yet. */
   
   char           * log_file;
   char           * data_file;
   char           * index_file;
+  char           * lock_file;
   
   FILE           * data_stream;
   FILE           * index_stream;
@@ -101,19 +102,20 @@ struct block_fs_struct {
   long int         data_file_size;  /* The total number of bytes in the data_file. */
   long int         free_size;       /* Size of 'holes' in the data file. */ 
   int              block_size;      /* The size of blocks in bytes. */
-
+  int              lock_fd;         /* The file descriptor for the lock_file. Set to -1 if we do not have write access. */
   
   pthread_mutex_t  io_lock;         /* Lock held during fread of the data file. */
   pthread_rwlock_t rw_lock;         /* Read-write lock during all access to the fs. */
   
   int              num_free_nodes;   
-  hash_type      * index;
+  hash_type      * index;           /* THE HASH table of all the nodes/files which have been stored. */
   file_node_type * free_nodes;
   vector_type    * file_nodes;      /* This vector owns all the file_node instances - the index and free_nodes structures
                                        only contain pointers to the objects stored in this vector. */
   int              write_count;     /* This just counts the number of writes since the file system was mounted. */
   int              max_cache_size;
 
+  bool             write_access;
   bool             internal_index;   /* Should header(index) information be embedded in the datafile? */  
   bool             external_index;   /* Should a separate index file be written? */
   bool             log_transactions; /* Should transactions be logged? This will be set to true (AFTER mounting) if external_index == true. */
@@ -366,6 +368,10 @@ static void file_node_update_internal_index( const file_node_type * file_node , 
 }
 
 
+static void file_node_init_write( const file_node_type * file_node , FILE * stream) {
+  
+}
+
 int file_node_header_size( const char * filename ) {
   file_node_type * file_node;
   return sizeof ( file_node->status    ) + 
@@ -557,7 +563,10 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
   block_fs->max_cache_size   = max_cache_size;
   block_fs->log_transactions = false;
   block_fs->internal_index   = false;
-
+  util_alloc_file_components( mount_file , &block_fs->path , &block_fs->base_name, NULL );
+  block_fs->mount_point  = util_alloc_filename( block_fs->path , block_fs->base_name , NULL);
+  block_fs->lock_file    = util_alloc_filename( block_fs->path , block_fs->base_name , "lock");
+  block_fs->write_access =  util_try_lockf( block_fs->lock_file , S_IWUSR + S_IWGRP , &block_fs->lock_fd);
   pthread_mutex_init( &block_fs->io_lock  , NULL);
   pthread_rwlock_init( &block_fs->rw_lock , NULL);
   {
@@ -571,8 +580,6 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
     if (id != MOUNT_MAP_MAGIC_INT) 
       util_abort("%s: The file:%s does not seem to a valid block_fs mount map \n",__func__ , mount_file);
   }
-  util_alloc_file_components( mount_file , &block_fs->path , &block_fs->base_name, NULL );
-  block_fs->mount_point = util_alloc_filename( block_fs->path , block_fs->base_name , NULL);
   block_fs->log_file    = NULL;
   block_fs->data_file   = NULL;
   block_fs->index_file  = NULL;
@@ -1012,6 +1019,7 @@ block_fs_type * block_fs_mount( const char * mount_file , int block_size , int m
         /* Means that block_fs->internal_index must be true.  */
         /* We build up the index & free_nodes_list based on the header/index information embedded in the datafile. */
         char * filename = NULL;
+        block_fs_open_data( block_fs , true );
         if (block_fs->data_stream != NULL) {   /* Otherwise we do not have any datafile - first mount. */
           file_node_type * file_node;
           do {
@@ -1415,14 +1423,20 @@ void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
     free( block_fs->index_file );
   }
   fclose( block_fs->data_stream );
+  if (block_fs->lock_fd > 0)
+    close( block_fs->lock_fd );     /* Closing the lock_file file descriptor - and releasing the lock. */
 
   if ( unlink_empty && (hash_get_size( block_fs->index ) == 0)) {
     util_unlink_existing( block_fs->mount_file );
     util_unlink_existing( block_fs->data_file );
-    util_unlink_existing( block_fs->log_file );
-    util_unlink_existing( block_fs->index_file );
+    if (block_fs->external_index) {
+      util_unlink_existing( block_fs->log_file );
+      util_unlink_existing( block_fs->index_file );
+    }
   }
+  util_unlink_existing( block_fs->lock_file );
 
+  free( block_fs->lock_file );
   free( block_fs->base_name );
   free( block_fs->data_file );
   free( block_fs->path );
