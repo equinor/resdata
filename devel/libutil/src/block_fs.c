@@ -671,7 +671,9 @@ static void block_fs_preload( block_fs_type * block_fs ) {
      1. The node is updated in place on the file to become a free node.
      2. The node is added to the block_fs instance as a free node, which can
         be recycled at a later stage.
-
+   
+   If the instance is not data owner (i.e. read-only) the function
+   will return immediately.
 */
 
 

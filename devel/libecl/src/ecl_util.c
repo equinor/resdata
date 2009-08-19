@@ -316,36 +316,36 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
   filename = util_alloc_filename(path , base , ext);
   free(ext);
 
-  if (must_exist) {
-    const int max_usleep_time = 10000000;  /* 10 seconds   */ 
-    const int usleep_time     =    10000;  /* 1/100 second */
-    int   total_usleep_time   =        0;
-
-
-    /*
-      If we require the file to exist we do several attempts, waiting
-      up to ten seconds. The reason for this funny approach is that we
-      have quite a lot of problems with file-system synchronization (I
-      think ...). Where a file which clearly "is there" fails to show
-      up.
-    */
-    
-
-    while (1) {
-      if (util_file_exists(filename)) 
-	break;
-      else {
-	/* Return NULL if the file does not exist */
-	if (total_usleep_time >= max_usleep_time) {
-	  filename = util_safe_free( filename );  
-	  break;
-	}
-	
-	total_usleep_time += usleep_time;
-	usleep(usleep_time);
-      }
-    }
-  }
+  //if (must_exist) {
+  //  const int max_usleep_time = 10000000;  /* 10 seconds   */ 
+  //  const int usleep_time     =    10000;  /* 1/100 second */
+  //  int   total_usleep_time   =        0;
+  //
+  //
+  //  /*
+  //    If we require the file to exist we do several attempts, waiting
+  //    up to ten seconds. The reason for this funny approach is that we
+  //    have quite a lot of problems with file-system synchronization (I
+  //    think ...). Where a file which clearly "is there" fails to show
+  //    up.
+  //  */
+  //  
+  //
+  //  while (1) {
+  //    if (util_file_exists(filename)) 
+  //      break;
+  //    else {
+  //      /* Return NULL if the file does not exist */
+  //      if (total_usleep_time >= max_usleep_time) {
+  //        filename = util_safe_free( filename );  
+  //        break;
+  //      }
+  //      
+  //      total_usleep_time += usleep_time;
+  //      usleep(usleep_time);
+  //    }
+  //  }
+  //}
   
   return filename;
 }
