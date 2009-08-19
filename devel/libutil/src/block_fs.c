@@ -371,6 +371,27 @@ static inline void block_fs_release_rwlock( block_fs_type * block_fs ) {
 
 static inline void block_fs_aquire_rlock( block_fs_type * block_fs ) {
   pthread_rwlock_rdlock( &block_fs->rw_lock );
+  /*
+    We just assume that the user does NOT write to the filesystem
+    with another instance. In that case we will go out of sync. 
+  */
+  
+  
+  //if (!block_fs->data_owner) {
+  //  /** 
+  //      OK - some other fucker might have updated the fs underneath
+  //      our feet. First we compare the index_time with the mtime of
+  //      the datafile. If the datafile has not been modified all is
+  //      hunkadory, otherwise we must rebuild the index - THAT is going
+  //      to be costly.
+  //  */
+  //  struct stat stat_buffer;
+  //  fstat( fileno( block_fs->data_stream ) , &stat_buffer);
+  //  if (stat_buffer.st_mtime > block_fs->index_time) {
+  //    /* Rebuild index ... */
+  //    
+  //  }
+  //}
 }
 
 
@@ -516,7 +537,7 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
   block_fs->index_time = time( NULL );
   
   if (!block_fs->data_owner) 
-    fprintf(stderr,"** Warning another program has already opened this filesystem read-write - this instance will be read-only.\n");
+    fprintf(stderr,"** Warning: Another program has already opened this filesystem read-write - this instance will be read-only.\n");
   
   return block_fs;
 }
@@ -603,22 +624,24 @@ static bool block_fs_fseek_valid_node( block_fs_type * block_fs ) {
    calling this function again, with read_only == false.
 */
 
-static void block_fs_open_data( block_fs_type * block_fs , bool init_mode) {
-  if (init_mode) {
+static void block_fs_open_data( block_fs_type * block_fs , bool read_write) {
+  if (read_write) {
+    /* Normal read-write open.- */
+    if (util_file_exists( block_fs->data_file ))
+      block_fs->data_stream = util_fopen( block_fs->data_file , "r+");
+    else
+      block_fs->data_stream = util_fopen( block_fs->data_file , "w+");
+  } else {
+    /* read-only open. */
     if (util_file_exists( block_fs->data_file ))
       block_fs->data_stream = util_fopen( block_fs->data_file , "r");
     else
       block_fs->data_stream = NULL;
-  } else {
-    if (block_fs->data_owner) {
-      if (util_file_exists( block_fs->data_file ))
-        block_fs->data_stream = util_fopen( block_fs->data_file , "r+");
-      else
-        block_fs->data_stream = util_fopen( block_fs->data_file , "w+");
-    } else {
-      /* This will fail hard if the datafile does not exist at all .. */
-      block_fs->data_stream = util_fopen( block_fs->data_file , "r");
-    }
+    /* 
+       If we ever try to dereference this pointer it will break
+       hard; but it should be stopped in hash_get() calls before the
+       data_stream is dereferenced anyway?
+    */
   }
 }
 
@@ -644,12 +667,12 @@ const char * block_fs_get_mount_point( const block_fs_type * block_fs ) {
 
 
 static void block_fs_preload( block_fs_type * block_fs ) {
-  if (block_fs->max_cache_size > 0) {
+
+  if ((block_fs->max_cache_size > 0) && (block_fs->data_stream != NULL)) {
     char * buffer = malloc( block_fs->data_file_size * sizeof * buffer );
     if (buffer != NULL) {
-      FILE * stream = util_fopen( block_fs->data_file , "r");
       hash_iter_type * index_iter = hash_iter_alloc( block_fs->index );
-      util_fread( buffer , 1 , block_fs->data_file_size , stream , __func__);
+      util_fread( buffer , 1 , block_fs->data_file_size , block_fs->data_stream , __func__);
       
       while (!hash_iter_is_complete( index_iter )) {
         file_node_type * node = hash_iter_get_next_value( index_iter );
@@ -657,10 +680,10 @@ static void block_fs_preload( block_fs_type * block_fs ) {
           file_node_update_cache( node , node->data_size , &buffer[node->data_offset]);
         
       }
-      fclose( stream );
       free( buffer );
     } 
   }
+  
 }
 
 
@@ -723,6 +746,7 @@ static void block_fs_fix_nodes( block_fs_type * block_fs , long_vector_type * of
 static void block_fs_build_index( block_fs_type * block_fs , long_vector_type * error_offset ) {
   char * filename = NULL;
   file_node_type * file_node;
+  block_fs_fseek_data( block_fs , 0);
   do {
     file_node = file_node_fread_alloc( block_fs->data_stream , &filename );
     if (file_node != NULL) {
@@ -791,13 +815,13 @@ block_fs_type * block_fs_mount( const char * mount_file , int block_size , int m
       long_vector_type * fix_nodes = long_vector_alloc(0 , 0);
       block_fs = block_fs_alloc_empty( mount_file , block_size , max_cache_size , fragmentation_limit );
       /* We build up the index & free_nodes_list based on the header/index information embedded in the datafile. */
-      block_fs_open_data( block_fs , true );
+      block_fs_open_data( block_fs , false );
       if (block_fs->data_stream != NULL) {
         block_fs_build_index( block_fs , fix_nodes );
         fclose(block_fs->data_stream);
       }
       
-      block_fs_open_data( block_fs , false     );  /* reopen the data_stream for reading AND writing (IFF we are data_owner - otherwise it is still read only) */
+      block_fs_open_data( block_fs , block_fs->data_owner ); /* The data_stream for reading AND writing (IFF we are data_owner - otherwise it is still read only) */
       block_fs_fix_nodes( block_fs , fix_nodes );
       long_vector_free( fix_nodes );
     }
@@ -1105,17 +1129,18 @@ void block_fs_sync( block_fs_type * block_fs ) {
 
 void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
   block_fs_sync( block_fs );
-
+  
   printf("Shutting down filesystem: %s",block_fs->mount_file); fflush(stdout);
-  fclose( block_fs->data_stream );
-  if (block_fs->lock_fd > 0)
+  if (block_fs->data_stream != NULL) fclose( block_fs->data_stream );
+  if (block_fs->lock_fd > 0) {
     close( block_fs->lock_fd );     /* Closing the lock_file file descriptor - and releasing the lock. */
-
-  if ( unlink_empty && (hash_get_size( block_fs->index ) == 0)) {
-    util_unlink_existing( block_fs->mount_file );
-    util_unlink_existing( block_fs->data_file );
+    util_unlink_existing( block_fs->lock_file );
   }
-  util_unlink_existing( block_fs->lock_file );
+    
+  if ( unlink_empty && (hash_get_size( block_fs->index) == 0)) {
+    util_unlink_existing( block_fs->data_file );
+    util_unlink_existing( block_fs->mount_file );
+  }
 
   free( block_fs->lock_file );
   free( block_fs->base_name );
