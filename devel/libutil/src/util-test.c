@@ -113,7 +113,7 @@ void random_test(int outer_loop , int inner_loop) {
 
   for (int j=0; j < outer_loop; j++) {
     block_fs_type * fs;
-    fs = block_fs_mount( mount_file , block_size , 128 , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
+    fs = block_fs_mount( mount_file , block_size , 128 , 1.0 , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
                                                                                     to recover from crashes. */
     {
       char * index_file = util_alloc_sprintf("initial_index.%d" , j);
@@ -152,7 +152,7 @@ void random_test(int outer_loop , int inner_loop) {
     block_fs_close( fs , true);
   }
   {
-    block_fs_type * fs = block_fs_mount( mount_file , block_size , 1024 , false);
+    block_fs_type * fs = block_fs_mount( mount_file , block_size , 1024 , 1.0 , false);
 
     check_all(fs , max_file , prefix , buffer , buffer2);
     
@@ -180,7 +180,7 @@ void speed_test(bool write , int N) {
   int i;
 
 
-  fs = block_fs_mount( mount_file , block_size , 1024 , false);
+  fs = block_fs_mount( mount_file , block_size , 1024 , 1.0 , false);
   
   if (write) {
     for (i=0; i < N; i++) {
@@ -207,7 +207,7 @@ void speed_test(bool write , int N) {
     }
   }
 
-  fs = block_fs_mount( mount_file , block_size , 1024 , false);
+  fs = block_fs_mount( mount_file , block_size , 1024 , 1.0 , false);
   
   {
     clock_t start_time;
@@ -254,7 +254,7 @@ void speed_test(bool write , int N) {
 
 void large_test(int external_loops , int internal_loops) {
   int external_counter;
-  block_fs_type * block_fs = block_fs_mount("/tmp/large.mnt" , 1 , 0 , false );
+  block_fs_type * block_fs = block_fs_mount("/tmp/large.mnt" , 1 , 0 , 1.0 , false );
   
   int buffer_size = 65538 * 16;
   void * buffer   = util_malloc( buffer_size , __func__);
@@ -288,8 +288,8 @@ int main(int argc , char ** argv) {
   int A = 16711935;
   int B = (A << 8);
   printf("B: %d \n",B);
-  //large_test(10   , 10);
-  //random_test(10 , 50);
+  large_test(100   , 100);
+  //random_test(10 , 10);
   //speed_test(true , 10000);
 }
 
