@@ -315,6 +315,15 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
 
   filename = util_alloc_filename(path , base , ext);
   free(ext);
+  
+  if (must_exist) {
+    if (!util_file_exists( filename )) {
+      free(filename);
+      filename = NULL;
+    }
+  }
+      
+  
 
   //if (must_exist) {
   //  const int max_usleep_time = 10000000;  /* 10 seconds   */ 
