@@ -20,3 +20,5 @@
 #include <matrix_lapack.h>
 #include <matrix_blas.h>
 #include <buffer.h>
+#include <block_fs.h>
+#include <log.h>

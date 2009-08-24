@@ -157,6 +157,7 @@ bool         util_string_match(const char * string , const char * pattern);
 mode_t       util_get_file_mode( const char * file );
 uid_t        util_get_file_uid( const char * file );
 bool         util_file_readable( const char * file );
+bool         util_chmod_if_owner( const char * filename , mode_t target_mode );
 
 int    	     util_forward_line(FILE * , bool * );
 void   	     util_rewind_line(FILE *);

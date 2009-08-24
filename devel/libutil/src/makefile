@@ -12,8 +12,8 @@ VECTOR_HEADERS    = int_vector.h double_vector.h float_vector.h bool_vector.h ti
 VECTOR_OBJECTS    = int_vector.o double_vector.o float_vector.o bool_vector.o time_t_vector.o long_vector.o
 VECTOR_SOURCE     = int_vector.c double_vector.c float_vector.c bool_vector.c time_t_vector.c long_vector.c
 SDP_ROOT          = $(shell get_sdp_root.py)
-OBJECTS           = $(VECTOR_OBJECTS)  set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o node_ctype.o util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o menu.o subst.o vector.o parser.o stringlist.o matrix.o matrix_lapack.o matrix_blas.o conf_new.o buffer.o block_fs.o
-INC_FILES_INSTALL = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h vector.h parser.h $(VECTOR_HEADERS) matrix.h matrix_lapack.h matrix_blas.h conf_new.h buffer.h block_fs.h
+OBJECTS           = $(VECTOR_OBJECTS)  set.o hash_node.o hash_sll.o hash.o list_node.o list.o node_data.o node_ctype.o util.o thread_pool.o msg.o arg_pack.o str_buffer.o path_fmt.o menu.o subst.o vector.o parser.o stringlist.o matrix.o matrix_lapack.o matrix_blas.o conf_new.o buffer.o block_fs.o log.o
+INC_FILES_INSTALL = set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h vector.h parser.h $(VECTOR_HEADERS) matrix.h matrix_lapack.h matrix_blas.h conf_new.h buffer.h block_fs.h log.h
 LIB               = libutil.a
 LIB_LINK          = -lutil -lz -lpthread -llapack -lm
 LINK_LIB_PATH     = -L./ 
@@ -76,8 +76,8 @@ mem_free.o  : mem_free.c
 
 #################################################################
 
-BIN:	util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x replace.x
-BIN_FILES = util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x
+BIN:	util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x replace.x bls
+BIN_FILES = util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x bls
 
 util.x: util-test.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) util-test.o -o util.x     $(LINK_LIB_PATH) $(LIB_LINK) 
@@ -96,3 +96,6 @@ grdecl_to_ascii.x: grdecl_to_ascii.o $(LIB)
 
 replace.x: replace.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) replace.o -o replace.x  -L./ -lutil -lz -lpthread -lm
+
+bls: bls.o $(LIB)
+	$(LD) -$(MFLAG) $(LDFLAGS) bls.o -o bls.x  -L./ -lutil -lz -lpthread -lm

@@ -1657,6 +1657,33 @@ uid_t util_get_file_uid( const char * file ) {
 }
 
 
+/*
+  This function will update the mode of file 'filename' to
+  'target_mode' IFF the current user is the owner of the file.
+
+  If an update has been done (i.e. there has been a chmod() call) the
+  function will return true, otherwise it will return false.
+*/
+
+bool util_chmod_if_owner( const char * filename , mode_t target_mode ) {
+  struct stat buffer;
+  uid_t  exec_uid = getuid(); 
+  stat( filename , &buffer );
+  
+  if (exec_uid == buffer.st_uid) {  /* OKAY - the current running uid is also the owner of the file. */
+    mode_t current_mode = buffer.st_mode & ( S_IRWXU + S_IRWXG + S_IRWXO );
+    if (current_mode != target_mode) {
+      chmod( filename , target_mode ); /* No error check ... */
+      return true;
+    }
+  }
+  
+  return false; /* No update performed. */
+}
+  
+
+
+
 
 bool util_file_readable( const char * file ) {
   bool readable;
