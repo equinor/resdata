@@ -280,7 +280,7 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
   }
 }
 
-void plot_rft_ensemble(const ens_type * ens , plot_type * plot , const char * well, time_t * survey_time) {
+void plot_rft_ensemble(const ens_type * ens , plot_type * plot , const char * well, time_t survey_time) {
   const char * label = NULL;
   const int ens_size = vector_get_size( ens->data );
   int iens, inode;
@@ -290,7 +290,7 @@ void plot_rft_ensemble(const ens_type * ens , plot_type * plot , const char * we
     
     plot_dataset_type * plot_dataset = plot_alloc_new_dataset( plot , label , PLOT_XY );
     ecl_rft = vector_iget_const( ens->data , iens );
-    ecl_rft_node_type * ecl_rft_node = ecl_rft_file_get_well_time_rft(ecl_rft, well, survey_time);
+    const ecl_rft_node_type * ecl_rft_node = ecl_rft_file_get_well_time_rft(ecl_rft, well, survey_time);
     
     
     const int node_size = ecl_rft_node_get_size(ecl_rft_node);
@@ -613,20 +613,6 @@ void plot_all(void * arg) {
   }
 }
 
-void plot_batch(void * arg) {
-  char *  key = util_blocking_alloc_stdin_line(10);
-  int     num_tokens;
-  char ** token_list;
-  
-  // scan stdin for vector
-  util_split_string(key , ":" , &num_tokens , &token_list);  
-  if(strcmp(token_list[0],"RFT") == 0){
-    _plot_batch_rft(arg, key);
-  } else{
-    _plot_batch_summary(arg, key);
-  }
-}
-
 void _plot_batch_rft(void * arg, char * inkey){
   // subroutine used in batch mode to plot a summary vector for a list of ensembles given at stdin
   arg_pack_type * arg_pack   = arg_pack_safe_cast( arg );
@@ -750,6 +736,7 @@ void _plot_batch_rft(void * arg, char * inkey){
   plot_finalize(plot , plot_info , plot_file);
   free( plot_file );
 }
+
  
 
 void _plot_batch_summary(void * arg, char * inkey){
@@ -859,6 +846,20 @@ ens_type * select_ensemble(hash_type * ens_table, const char * prompt) {
   else {
     fprintf(stderr,"Do not have ensemble: \'%s\' \n", ens_name);
     return NULL;
+  }
+}
+
+void plot_batch(void * arg) {
+  char *  key = util_blocking_alloc_stdin_line(10);
+  int     num_tokens;
+  char ** token_list;
+  
+  // scan stdin for vector
+  util_split_string(key , ":" , &num_tokens , &token_list);  
+  if(strcmp(token_list[0],"RFT") == 0){
+    _plot_batch_rft(arg, key);
+  } else{
+    _plot_batch_summary(arg, key);
   }
 }
 
