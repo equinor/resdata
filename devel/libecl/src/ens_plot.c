@@ -29,7 +29,7 @@
 typedef struct {
   vector_type         * data;               /* This is a vector ecl_sum instances - actually holding the data. */
 
-  plot_style_type       plot_style;  	    /* LINE | POINT | LINE_POINTS */ 
+  plot_style_type       plot_style;  	    /* LINE | POINTS | LINE_POINTS */ 
   plot_color_type       plot_color;  	    /* See available colors in libplot/include/plot_const.h */
   plot_line_style_type  plot_line_style;    /* Line style solid_line | short_dash | long_dash */
   plot_symbol_type      plot_symbol;        /* Integer  - 17 is filled circle ... */
@@ -140,18 +140,19 @@ void ens_load_summary(ens_type * ens, const char * data_file) {
 void ens_load_rft(ens_type * ens, const char * data_file) {
   char * base , * path;
   
+  
   if (util_file_exists(data_file)) {
     util_alloc_file_components( data_file , &path , &base , NULL);
-    if (path != NULL)
+    char * rft_file = ecl_util_alloc_exfilename( path, base, ECL_RFT_FILE, false, -1 );  
+    if(rft_file != NULL){
       printf("Loading case: %s/%s ... ",path , base);
-    else
-      printf("Loading case: %s .......",base);
-    fflush(stdout);
-    
-    vector_append_owned_ref( ens->data , ecl_rft_file_alloc( data_file) , ecl_rft_file_free__);
-    printf("\n");
-    free( base );
-    util_safe_free( path );
+      fflush(stdout);
+      vector_append_owned_ref( ens->data , ecl_rft_file_alloc( rft_file) , ecl_rft_file_free__);
+      printf("\n");
+      free( base );
+      util_safe_free( path );
+    } else 
+      fprintf(stderr,"Sorry: could not locate rft file:%s \n",rft_file);
   } else 
     fprintf(stderr,"Sorry: could not locate case:%s \n",data_file);
 }
@@ -175,9 +176,11 @@ void ens_set_plot_attributes(ens_type * ens) {
 }
 
 
-void ens_set_plot_attributes_batch(void * arg) {
-  hash_type * ens_table = (hash_type *) arg;
+void ens_set_plot_attributes_batch(void * arg1,void * arg2 ) {
+  hash_type * ens_table = (hash_type *) arg1;
+  hash_type * ens_rft_table = (hash_type *) arg2;
   //printf("Set plot attributes (color)\n");
+
   char ens_name[32];
   scanf("%s" , ens_name);
   int new_color;
@@ -187,6 +190,13 @@ void ens_set_plot_attributes_batch(void * arg) {
   
   if (hash_has_key( ens_table , ens_name)){
     ens_type  * set_ens    = hash_get( ens_table , ens_name);
+    if((new_color > -1) && (new_color < 16)){
+      ens_set_color( set_ens , new_color);	      
+    }	 
+  }
+  
+  if (hash_has_key( ens_rft_table , ens_name)){
+    ens_type  * set_ens    = hash_get( ens_rft_table , ens_name);
     if((new_color > -1) && (new_color < 16)){
       ens_set_color( set_ens , new_color);	      
     }	 
@@ -270,6 +280,35 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
   }
 }
 
+void plot_rft_ensemble(const ens_type * ens , plot_type * plot , const char * well, time_t * survey_time) {
+  const char * label = NULL;
+  const int ens_size = vector_get_size( ens->data );
+  int iens, inode;
+  
+  const ecl_rft_file_type * ecl_rft = NULL;  
+  for (iens = 0; iens < ens_size; iens++) {
+    
+    plot_dataset_type * plot_dataset = plot_alloc_new_dataset( plot , label , PLOT_XY );
+    ecl_rft = vector_iget_const( ens->data , iens );
+    ecl_rft_node_type * ecl_rft_node = ecl_rft_file_get_well_time_rft(ecl_rft, well, survey_time);
+    
+    
+    const int node_size = ecl_rft_node_get_size(ecl_rft_node);
+    for (inode =0;inode < node_size;inode++){
+      plot_dataset_append_point_xy( plot_dataset , 
+				    ecl_rft_node_iget_pressure(ecl_rft_node,inode) ,
+				    ecl_rft_node_iget_depth(ecl_rft_node,inode) );
+    }
+    
+    plot_dataset_set_style      ( plot_dataset , ens->plot_style);
+    plot_dataset_set_line_color ( plot_dataset , ens->plot_color);
+    plot_dataset_set_point_color( plot_dataset , ens->plot_color);
+    plot_dataset_set_line_style ( plot_dataset , ens->plot_line_style);
+    plot_dataset_set_symbol_type( plot_dataset , ens->plot_symbol);
+    plot_dataset_set_symbol_size( plot_dataset , ens->plot_symbol_size);
+    plot_dataset_set_line_width( plot_dataset , ens->plot_line_width);
+  }
+}
 
 
 void set_range(plot_type * plot, time_t start_time){
@@ -308,6 +347,71 @@ void set_range(plot_type * plot, time_t start_time){
   
 }
 
+void set_range_rft(plot_type * plot){
+  int     num_tokens;
+  char ** token_list;
+  char  * line;
+  
+  line = util_blocking_alloc_stdin_line(100);
+  util_split_string(line , " " , &num_tokens , &token_list);
+  
+  int i;
+  for (i=0;i<num_tokens-1;i+=2){
+    if(strcmp(token_list[i], "XMIN") == 0){
+      double xmin = 0.00;
+      util_sscanf_double(token_list[i+1] , &xmin);
+      plot_set_xmin(plot , xmin);
+    }
+    else if(strcmp(token_list[i], "XMAX") == 0){
+      double xmax  = 0.00;
+      util_sscanf_double(token_list[i+1] , &xmax);
+      plot_set_xmax(plot , xmax);
+    }
+    else if(strcmp(token_list[i], "YMIN") == 0){
+      double  ymin = 0.00;	 
+      util_sscanf_double(token_list[i+1] , &ymin);
+      plot_set_ymin(plot , ymin);
+    }
+    else if(strcmp(token_list[i], "YMAX") == 0){
+      double  ymax = 0.00;	 
+      util_sscanf_double(token_list[i+1] , &ymax);
+      plot_set_ymax(plot , ymax);
+    }
+  }
+  
+  /** The ymin/ymax values are calculated automatically. */
+  
+}
+
+double get_rft_depth (hash_type * ens_table, char * well, int i, int j, int k) {
+  ens_type * ens;
+  
+  {
+    hash_iter_type * ens_iter = hash_iter_alloc( ens_table );
+    ens = hash_iter_get_next_value( ens_iter );
+    hash_iter_free( ens_iter );
+  }
+  const ecl_rft_file_type * ecl_rft = vector_iget_const( ens->data , 0 );
+  const ecl_rft_node_type * ecl_rft_node = ecl_rft_file_iget_well_rft(ecl_rft, well, 0);
+  const int node_size = ecl_rft_node_get_size(ecl_rft_node);
+  int inode;
+  int ni,nj,nk;
+  for (inode =0;inode < node_size;inode++){
+    ecl_rft_node_iget_ijk( ecl_rft_node , inode , &ni , &nj , &nk);
+    
+    if( i == ni && j==nj && k==nk){
+      double depth = ecl_rft_node_iget_depth(ecl_rft_node,inode);
+      return ecl_rft_node_iget_depth(ecl_rft_node,inode);
+      
+    }
+  }
+  
+
+
+
+  return 0;
+  
+}
 
 void plot_meas_file(plot_type * plot, time_t start_time){
   bool done = 0;
@@ -393,6 +497,72 @@ void plot_meas_file(plot_type * plot, time_t start_time){
   }
 }
 
+void plot_meas_rft_file(plot_type * plot, char * well, hash_type * ens_table){
+  bool done = 0;
+  int i, j, k;
+  double x1, x2;
+  char * error_ptr;
+  plot_dataset_type * plot_dataset; 
+  //time_t time;
+  //int days;
+  while (!done) {
+    int     num_tokens;
+    char ** token_list;
+    char  * line;
+    
+    line = util_blocking_alloc_stdin_line(10);
+    util_split_string(line , " " , &num_tokens , &token_list);
+    
+    /*
+      Tips:
+
+      
+      1. Free token_list: util_free_stringlist( token_list , num_tokens);
+      2. Parse int/double/...
+
+         if (util_sscanf_double(token_list[??] , &double_value)) 
+	    prinftf("Parsed %s -> %g \n",token_list[?+] , double_value);
+         else
+            printf("Could not interpret %s as double \n",token_list[??]);
+	    
+    */	    
+    
+    if (token_list[0] != NULL) {
+      if(strcmp(token_list[0], "_stop_") == 0){
+	done = 1;
+      }
+      
+      if(strcmp(token_list[0], "rft") == 0){
+	util_sscanf_int(token_list[1] , &i);
+	util_sscanf_int(token_list[2] , &j);
+	util_sscanf_int(token_list[3] , &k);
+	util_sscanf_double(token_list[4] , &x1);
+	util_sscanf_double(token_list[5] , &x2);
+	
+	double depth = get_rft_depth(ens_table, well, i, j, k);
+	
+	if(depth != 0){
+	  plot_dataset = plot_alloc_new_dataset( plot , NULL  , PLOT_X1X2Y );
+	  plot_dataset_append_point_x1x2y(plot_dataset , x1 , x2, depth);
+	  plot_dataset_set_line_width( plot_dataset , 1.5);
+	  plot_dataset_set_line_color( plot_dataset , 15);
+	}
+	else{
+	  printf ("The block %i %i %i does not exist in well %s\n", i, j, k, well);
+	}
+      }
+      
+    } else {
+      util_forward_line(stdin , &done);
+    }
+    util_free_stringlist( token_list , num_tokens);
+  }
+}
+
+
+
+
+
 void plot_finalize(plot_type * plot , plot_info_type * info , const char * plot_file) {
   plot_data(plot);
   plot_free(plot);
@@ -444,18 +614,158 @@ void plot_all(void * arg) {
 }
 
 void plot_batch(void * arg) {
-  // subroutine used in batch mode to plot a vector for a list of ensembles given at stdin
-  arg_pack_type * arg_pack   = arg_pack_safe_cast( arg );
-  hash_type  * ens_table     = arg_pack_iget_ptr( arg_pack , 0);
-  plot_info_type * plot_info = arg_pack_iget_ptr( arg_pack , 1);
-  
-  //printf("Plot summary ensemble(s)\n");
+  char *  key = util_blocking_alloc_stdin_line(10);
+  int     num_tokens;
+  char ** token_list;
   
   // scan stdin for vector
+  util_split_string(key , ":" , &num_tokens , &token_list);  
+  if(strcmp(token_list[0],"RFT") == 0){
+    _plot_batch_rft(arg, key);
+  } else{
+    _plot_batch_summary(arg, key);
+  }
+}
+
+void _plot_batch_rft(void * arg, char * inkey){
+  // subroutine used in batch mode to plot a summary vector for a list of ensembles given at stdin
+  arg_pack_type * arg_pack   = arg_pack_safe_cast( arg );
+  hash_type  * ens_table     = arg_pack_iget_ptr( arg_pack , 0);
+  hash_type  * ens_rft_table = arg_pack_iget_ptr( arg_pack , 1);
+  plot_info_type * plot_info = arg_pack_iget_ptr( arg_pack , 2);
   
-  char * key = util_blocking_alloc_stdin_line(10);
+  printf("Plot rft ensemble(s)\n");
+  
   plot_type     * plot;
   
+  char * key = inkey;
+  
+  // split the key in to head, well, date
+  int     num_tokens;
+  char ** token_list;
+  util_split_string(key , ":" , &num_tokens , &token_list);  
+  
+  if(num_tokens != 3){
+    printf("The key %s does not exist", key);
+    return;
+  }
+ 
+  char * well = token_list[1];
+  char * date = token_list[2];
+  time_t survey_time ;
+  util_sscanf_date(date , &survey_time) ;  
+  
+  char * plot_file;
+  
+  char * plotfn = util_alloc_string_sum2(token_list[0] , ":");
+  plotfn = util_alloc_string_sum2(plotfn , token_list[1]);
+  
+  plot_file = util_alloc_sprintf("%s/%s.%s" , plot_info->plot_path , plotfn , plot_info->plot_device);
+  
+  {
+    arg_pack_type * arg_pack = arg_pack_alloc();
+    arg_pack_append_ptr( arg_pack , plot_file );
+    arg_pack_append_ptr( arg_pack , plot_info->plot_device);
+    plot = plot_alloc("PLPLOT" , arg_pack );
+    arg_pack_free( arg_pack );
+  }
+  plot_set_window_size(plot , 640 , 480);
+  plot_set_labels(plot , "Pressure" , key , key);
+  
+  
+  char ens_name[32];    
+  bool complete = false;
+  int iens;
+  int ens_size;
+  bool has_key; 
+  
+  ens_type * ens;
+  {
+    hash_iter_type * ens_iter = hash_iter_alloc( ens_rft_table );
+    ens = hash_iter_get_next_value( ens_iter );
+    hash_iter_free( ens_iter );
+  }
+  
+  
+  // Check if there is anything to plot
+  int size = vector_get_size(ens->data);
+  if(size == 0){
+    printf("Sorry no RFT files to plot\n");
+    return;
+  }
+
+  
+  const ecl_rft_file_type * ecl_rft = vector_iget_const( ens->data , 0 );
+  
+  while (!complete) {
+    scanf("%s" , ens_name);
+    //printf("Reading %s\n", ens_name);
+    if(strcmp(ens_name, "_meas_points_") == 0){
+      plot_meas_rft_file(plot, well, ens_rft_table);
+      continue;
+    }  
+    if(strcmp(ens_name, "_set_range_") == 0){
+      set_range_rft(plot);
+      continue;
+    }  
+    //if(strcmp(ens_name, "_newplotvector_") == 0){
+    //  scanf("%s" , key);
+    //}  
+    else{ 
+      if (hash_has_key(ens_rft_table , ens_name)){
+	ens = hash_get(ens_rft_table , ens_name);
+	
+	ens_size = vector_get_size( ens->data );
+	has_key = 1;
+	// Check if the rft file has the requested well and date
+	for (iens = 0; iens < ens_size; iens++) {
+	  ecl_rft = vector_iget_const( ens->data , iens );
+	  if(!ecl_rft_file_has_well(ecl_rft , well)){
+	    has_key =0;
+	    printf("The well %s does not exits\n", well);
+	    return;
+	  }
+	  else{
+	    // Check if the rft file has the requested servey time
+	    const ecl_rft_node_type * ecl_rft_node = ecl_rft_file_get_well_time_rft(ecl_rft, well, survey_time);
+	    if(ecl_rft_node == NULL){
+	      printf("The servey %s in %s does not exits \n", well, date);
+	      has_key =0;
+	      return;
+	    }
+	  }
+	}
+	
+	if(has_key){
+	  plot_rft_ensemble( ens , plot , well, survey_time);
+	}	
+      }
+      else {
+	//fprintf(stderr,"Do not have ensemble: \'%s\' \n", ens_name);
+	complete = true;
+      }
+    }
+  }
+  //  plot_set_default_timefmt(plot , start_time , end_time);
+  plot_finalize(plot , plot_info , plot_file);
+  free( plot_file );
+}
+ 
+
+void _plot_batch_summary(void * arg, char * inkey){
+  // subroutine used in batch mode to plot a summary vector for a list of ensembles given at stdin
+  arg_pack_type * arg_pack   = arg_pack_safe_cast( arg );
+  hash_type  * ens_table     = arg_pack_iget_ptr( arg_pack , 0);
+  hash_type  * ens_rft_table = arg_pack_iget_ptr( arg_pack , 1);
+  plot_info_type * plot_info = arg_pack_iget_ptr( arg_pack , 2);
+  
+  printf("Plot summary ensemble(s)\n");
+  
+
+  
+  plot_type     * plot;
+  
+  char * key = inkey;
   char * plot_file;
   
   plot_file = util_alloc_sprintf("%s/%s.%s" , plot_info->plot_path , key , plot_info->plot_device);
@@ -491,7 +801,7 @@ void plot_batch(void * arg) {
   int iens;
   int ens_size;
   bool has_key;
-
+  
   while (!complete) {
     scanf("%s" , ens_name);
     if(strcmp(ens_name, "_meas_points_") == 0){
@@ -640,13 +950,14 @@ ens_type * create_named_rft_ensemble(void * arg,   char * ens_name ) {
     ens_type * ens = ens_alloc();
     ens_set_line_width(ens, 1.5);
     
-    // EIVIND
     ens_set_style(ens, POINTS);    
+    // ens_set_style(ens, LINE);    
     ens_set_symbol_type(ens , PLOT_SYMBOL_FILLED_CIRCLE); 
     ens_set_symbol_size(ens , 1.0);
     
     printf("Creating named rft ensemble:%s\n", ens_name);
     hash_insert_hash_owned_ref( ens_table , ens_name , ens , ens_free__);
+    
     return ens;
   }
   return NULL;
@@ -661,7 +972,6 @@ void create_ensemble_batch(void * arg1, void * arg2) {
   char * ens_name  = util_alloc_stdin_line();
   ens_type  * ens  = create_named_ensemble(ens_table, ens_name);
   ens_type  * ens_rft  = create_named_rft_ensemble(ens_rft_table, ens_name);
-  
   // scan stdin for valid simulation directory, or a valid eclipse data filename
   
   char * sim_name;
@@ -682,12 +992,13 @@ void create_ensemble_batch(void * arg1, void * arg2) {
       
       sim_name = ecl_util_alloc_filename(line, base, file, 1, 0);
       ens_load_summary(ens , sim_name);
-      ens_load_rft(ens , sim_name);
+      ens_load_rft(ens_rft , sim_name);
       free(sim_name);
     }
     // Check if this is a file
     else{
       if(util_is_file(line)){
+	ens_load_rft(ens_rft , line);
 	ens_load_summary(ens , line);
       }
       else{
@@ -779,6 +1090,7 @@ int main(int argc , char ** argv) {
 	if(strcmp(line, "Q") == 0){
 	  plot_info_free( info );
 	  hash_free( ens_table );
+	  hash_free( ens_rft_table );
 	  exit(1);
 	}
 	
@@ -791,7 +1103,7 @@ int main(int argc , char ** argv) {
 	}
 	
 	if(strcmp(line, "A") == 0){
-	  ens_set_plot_attributes_batch(ens_table);
+	  ens_set_plot_attributes_batch(ens_table, ens_rft_table);
 	}
 	free(line);
       }

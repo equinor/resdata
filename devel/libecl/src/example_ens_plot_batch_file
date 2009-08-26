@@ -33,4 +33,16 @@ _stop_
 _set_range_
 XMIN 01/01/2000 XMAX 01/01/2010 YMAX 100.0 YMAX 400.0
 _stop_
+p
+RFT:WI_1:2/9/2000
+prior
+post
+_set_range_
+XMIN 300 XMAX 400	
+_meas_points_
+rft 15 28 1  340.0 345.2
+rft 15 28 10 345  350
+rft 15 28 14 350 352
+_stop_
+_stop_
 q
