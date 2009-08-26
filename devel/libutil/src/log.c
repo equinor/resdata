@@ -47,7 +47,7 @@ static log_type *log_alloc_internal(const char *filename , bool new, int log_lev
       logh->stream = util_fopen(filename , "w");
     else {
       logh->stream = util_fopen(filename , "a");
-      log_add_message(logh , "========================= Starting new log =========================" , logh->log_level , false );
+      log_add_message(logh , logh->log_level , "========================= Starting new log =========================" , false );
     }
   }
   return logh;
@@ -76,7 +76,7 @@ static bool log_include_message(const log_type *logh, int message_level) {
 
 
 
-void log_add_message(log_type *logh, char* message, int message_level , bool free_message) {
+void log_add_message(log_type *logh, int message_level , char* message, bool free_message) {
   pthread_mutex_lock( &logh->mutex );
   {
     struct tm time_fields;
@@ -107,14 +107,16 @@ void log_add_fmt_message(log_type * logh , int message_level , const char * fmt 
     va_list ap;
     va_start(ap , fmt);
     message = util_alloc_sprintf_va( fmt , ap );
-    log_add_message( logh , message , message_level , true);
+    log_add_message( logh , message_level , message , true);
   }
 }
 
 
 
 void log_close( log_type * logh ) {
-  fclose( logh->stream );
+  if ((logh->stream != stdout) && (logh->stream != stderr))
+    fclose( logh->stream );
+
   free( logh->filename );
   free( logh );
 }

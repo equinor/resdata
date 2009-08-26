@@ -7,7 +7,7 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
+#include <stdarg.h>
 
 #define UTIL_PATH_SEP_STRING "/"   /* A \0 terminated separator used when we want a (char *) instance.                   */
 #define UTIL_PATH_SEP_CHAR   '/'   /* A simple character used when we want an actual char instance (i.e. not a pointer). */
@@ -115,6 +115,7 @@ double       util_difftime(time_t  , time_t  , int *  , int *  , int *  , int *)
 double       util_difftime_days(time_t  , time_t );
 
 bool         util_char_in(char c, int , const char *);
+char       * util_alloc_sprintf_va(const char * fmt , va_list ap);
 char       * util_alloc_sprintf(const char *  , ...);
 char       * util_realloc_sprintf(char * , const char *  , ...);
 void         util_fprintf_int(int , int , FILE * );
