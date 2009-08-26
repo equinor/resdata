@@ -400,7 +400,7 @@ double get_rft_depth (hash_type * ens_table, char * well, int i, int j, int k) {
     ecl_rft_node_iget_ijk( ecl_rft_node , inode , &ni , &nj , &nk);
     
     if( i == ni && j==nj && k==nk){
-      double depth = ecl_rft_node_iget_depth(ecl_rft_node,inode);
+      //double depth = ecl_rft_node_iget_depth(ecl_rft_node,inode);
       return ecl_rft_node_iget_depth(ecl_rft_node,inode);
       
     }
@@ -501,7 +501,6 @@ void plot_meas_rft_file(plot_type * plot, char * well, hash_type * ens_table){
   bool done = 0;
   int i, j, k;
   double x1, x2;
-  char * error_ptr;
   plot_dataset_type * plot_dataset; 
   //time_t time;
   //int days;
@@ -616,7 +615,7 @@ void plot_all(void * arg) {
 void _plot_batch_rft(void * arg, char * inkey){
   // subroutine used in batch mode to plot a summary vector for a list of ensembles given at stdin
   arg_pack_type * arg_pack   = arg_pack_safe_cast( arg );
-  hash_type  * ens_table     = arg_pack_iget_ptr( arg_pack , 0);
+  //hash_type  * ens_table     = arg_pack_iget_ptr( arg_pack , 0);
   hash_type  * ens_rft_table = arg_pack_iget_ptr( arg_pack , 1);
   plot_info_type * plot_info = arg_pack_iget_ptr( arg_pack , 2);
   
@@ -743,7 +742,7 @@ void _plot_batch_summary(void * arg, char * inkey){
   // subroutine used in batch mode to plot a summary vector for a list of ensembles given at stdin
   arg_pack_type * arg_pack   = arg_pack_safe_cast( arg );
   hash_type  * ens_table     = arg_pack_iget_ptr( arg_pack , 0);
-  hash_type  * ens_rft_table = arg_pack_iget_ptr( arg_pack , 1);
+  //hash_type  * ens_rft_table = arg_pack_iget_ptr( arg_pack , 1);
   plot_info_type * plot_info = arg_pack_iget_ptr( arg_pack , 2);
   
   printf("Plot summary ensemble(s)\n");
