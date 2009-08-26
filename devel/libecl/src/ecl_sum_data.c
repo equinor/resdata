@@ -267,19 +267,19 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , in
 	ecl_util_get_file_type( filelist[filenr] , &file_type , NULL , &report_step);
 
 	/** 
-	    ECLIPSE starts a report step by writing an empty summaryf
-	    file, this code will fail if presented with one of those
-	    empty files. Therefor we verify that the size is greater
-	    than zero before continuing.
+	    ECLIPSE starts a report step by writing an empty summary
+	    file, therefor we must verify that the ecl_file instance
+	    returned by ecl_file_fread_alloc() is different from NULL
+	    before adding it to the ecl_sum_data instance.
 	*/
-	if (util_file_size( filelist[filenr] ) > 0) {
-	  if (file_type != ECL_SUMMARY_FILE)
-	    util_abort("%s: file:%s has wrong type \n",__func__ , filelist[filenr]);
-	  {
-	    ecl_file_type * ecl_file = ecl_file_fread_alloc( filelist[filenr] , endian_convert );
-	    ecl_sum_data_add_ecl_file( data , report_step , ecl_file , smspec);
-	    ecl_file_free( ecl_file );
-	  }
+        if (file_type != ECL_SUMMARY_FILE)
+          util_abort("%s: file:%s has wrong type \n",__func__ , filelist[filenr]);
+        {
+          ecl_file_type * ecl_file = ecl_file_fread_alloc( filelist[filenr] , endian_convert );
+          if (ecl_file != NULL) {
+            ecl_sum_data_add_ecl_file( data , report_step , ecl_file , smspec);
+            ecl_file_free( ecl_file );
+          }
 	}
       }
     } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {

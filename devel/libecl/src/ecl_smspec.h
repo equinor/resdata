@@ -57,6 +57,7 @@ bool              ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl
 
 int               ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
 bool              ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
+stringlist_type * ecl_smspec_alloc_matching_general_var_list(const ecl_smspec_type * smspec , const char * pattern);
 
 time_t            ecl_smspec_get_start_time(const ecl_smspec_type * );
 /*****************************************************************/

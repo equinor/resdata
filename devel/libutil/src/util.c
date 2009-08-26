@@ -3741,22 +3741,27 @@ void util_fprintf_string(const char * s , int width , string_alignement_type ali
    error-checking is performed.
 */
 
+char * util_alloc_sprintf_va(const char * fmt , va_list ap) {
+  char *s = NULL;
+  int length;
+  va_list tmp_va;
+  va_copy(tmp_va , ap);
+  length = vsnprintf(s , 0 , fmt , tmp_va);
+  s = util_malloc(length + 1 , __func__);
+  vsprintf(s , fmt , ap);
+  return s;
+}
+
 
 char * util_alloc_sprintf(const char * fmt , ...) {
-  char *s = NULL;
+  char * s;
   va_list ap;
   va_start(ap , fmt);
-  {
-    int length;
-    va_list tmp_va;
-    va_copy(tmp_va , ap);
-    length = vsnprintf(s , 0 , fmt , tmp_va);
-    s = util_malloc(length + 1 , __func__);
-  }
-  vsprintf(s , fmt , ap);
+  s = util_alloc_sprintf_va(fmt , ap);
   va_end(ap);
   return s;
 }
+
 
 
 

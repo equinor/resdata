@@ -6,14 +6,11 @@
 
 typedef struct log_struct log_type;
 
-void        log_init_new(log_type *);
-log_type   *log_alloc_empty(int);
-void        log_set_file(log_type * , const char *);
-log_type   *log_alloc_internal(char *filename , bool new, int log_level);
-log_type   *log_alloc_new(char *filename, int log_level);
-log_type   *log_alloc_existing(char *filename, int log_level);
-void        log_add_message(const log_type *logh, const char* message, int message_level);
-void        log_update(log_type *logh);
-void        log_set_auto(log_type *logh, const char *message , int log_fraction);
-
+void         log_set_file(log_type * , const char *);
+log_type   * log_alloc_new(const char *filename, int log_level);
+log_type   * log_alloc_existing(const char *filename, int log_level);
+void         log_add_message(log_type *logh, char* message, int message_level , bool free_message);
+void         log_add_fmt_message(log_type * logh , int message_level , const char * fmt , ...);
+int          log_get_level( const log_type * logh);
+void         log_close( log_type * logh );
 #endif

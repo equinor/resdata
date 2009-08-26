@@ -13,6 +13,7 @@
 #include <ecl_smspec.h>
 #include <ecl_file.h>
 #include <stringlist.h>
+#include <fnmatch.h>
 
 /**
    This file implements the indexing into the ECLIPSE summary files. 
@@ -25,7 +26,7 @@
 
 
 struct ecl_smspec_struct {
-  int                __id;                      /* Funny integer used for for "safe" run-time casting. */
+  UTIL_TYPE_ID_DECLARATION;
   
   hash_type        * well_var_index;             /* Indexes for all well variables: {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
   hash_type        * well_completion_var_index;  /* Indexes for completion indexes .*/
@@ -35,6 +36,7 @@ struct ecl_smspec_struct {
   hash_type        * misc_var_index;
   hash_type        * unit_hash;
   hash_type        * block_var_index;
+  hash_type        * gen_var_index;              /* This is "everything" - thing can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
 
   ecl_smspec_var_type * var_type;
   int               grid_nx , grid_ny , grid_nz; /* Grid dimensions - in DIMENS[1,2,3] */
@@ -90,6 +92,19 @@ KEYWORDS = ['TIME','FOPR','FPR','FWCT','WOPR','WOPR,'WWCT','WWCT]
 
 
 
+general_var:
+------------
+VAR_TYPE:(WELL_NAME|GROUP_NAME|NUMBER):NUMBER
+
+Field var:         VAR_TYPE
+Misc var:          VAR_TYPE  
+Well var:          VAR_TYPE:WELL_NAME
+Group var:         VAR_TYPE:GROUP_NAME
+Block var:         VAR_TYPE:i,j,k  (where i,j,k is calculated form NUM)
+Region var         VAR_TYPE:index  (where index is NOT from the nums vector, it it is just an offset).
+Completion var:    VAR_TYPE:WELL_NAME:NUM
+.... 
+
 
 */
 
@@ -99,20 +114,21 @@ KEYWORDS = ['TIME','FOPR','FPR','FWCT','WOPR','WOPR,'WWCT','WWCT]
 static ecl_smspec_type * ecl_smspec_alloc_empty(bool endian_convert , const char * path , const char * base_name) {
   ecl_smspec_type *ecl_smspec;
   ecl_smspec = util_malloc(sizeof *ecl_smspec , __func__);
+  UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
   ecl_smspec->endian_convert     	     = endian_convert;
 
   ecl_smspec->well_var_index     	     = hash_alloc();
-  ecl_smspec->well_completion_var_index = hash_alloc();
+  ecl_smspec->well_completion_var_index      = hash_alloc();
   ecl_smspec->group_var_index    	     = hash_alloc();
   ecl_smspec->field_var_index    	     = hash_alloc();
   ecl_smspec->region_var_index   	     = hash_alloc();
   ecl_smspec->misc_var_index     	     = hash_alloc();
   ecl_smspec->unit_hash          	     = hash_alloc();
   ecl_smspec->block_var_index                = hash_alloc();
+  ecl_smspec->gen_var_index                  = hash_alloc();
 
   ecl_smspec->var_type           	     = NULL;
   ecl_smspec->sim_start_time     	     = -1;
-  ecl_smspec->__id                           = ECL_SMSPEC_ID;
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
 
   ecl_smspec->time_index  = -1;
@@ -126,16 +142,7 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(bool endian_convert , const char
 
 
 
-
-
-ecl_smspec_type * ecl_smspec_safe_cast(const void * __ecl_smspec) {
-  ecl_smspec_type * ecl_smspec = (ecl_smspec_type *) __ecl_smspec;
-  if (ecl_smspec->__id != ECL_SMSPEC_ID)
-    util_abort("%s: runtime cast failed - aborting. \n",__func__);
-  return ecl_smspec;
-}
-
-
+UTIL_SAFE_CAST_FUNCTION( ecl_smspec , ECL_SMSPEC_ID )
 
 
 /* See table 3.4 in the ECLIPSE file format reference manual. */
@@ -200,6 +207,37 @@ ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var) {
 
 
 
+/**
+  Input i,j,k are assumed to be in the interval [1..nx] , [1..ny],
+  [1..nz], return value is a global index which can be used in the
+  xxx_block_xxx routines.
+*/
+
+
+static int ecl_smspec_get_global_grid_index(const ecl_smspec_type * smspec , int i , int j , int k) {
+  return i + (j - 1) * smspec->grid_nx + (k - 1) * smspec->grid_nx * smspec->grid_ny;
+}
+
+/**
+   Takes as input a global index [1...nx*ny*nz] and returns by
+   reference i [1..nx] , j:[1..ny], k:[1..nz].
+*/
+
+static void ecl_smspec_get_ijk( const ecl_smspec_type * smspec , int global_index , int * i , int * j , int * k) {
+  global_index--;
+  *k = global_index / (smspec->grid_nx * smspec->grid_ny); global_index -= (*k) * (smspec->grid_nx * smspec->grid_ny);
+  *j = global_index / smspec->grid_nx;                     global_index -= (*j) *  smspec->grid_nx;
+  *i = global_index;
+
+  /* Need offset one. */
+  (*i) += 1;
+  (*j) += 1;
+  (*k) += 1;
+}
+
+
+
+
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file) {
   ecl_file_type * header = ecl_file_fread_alloc( header_file , ecl_smspec->endian_convert );
   {
@@ -251,7 +289,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	/* See table 3.4 in the ECLIPSE file format reference manual. */
 	switch(ecl_smspec->var_type[index]) {
 	case(ECL_SMSPEC_COMPLETION_VAR):
-	  /* Three level indexing: well -> string(cell_nr) -> variable */
+	  /* Three level indexing: variable -> well -> string(cell_nr)*/
 	  if (!DUMMY_WELL(well)) {
 	    /* Seems we have to accept nums < 0 to get shit through ??? */
 	    char cell_str[16];
@@ -264,7 +302,10 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 		hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
 	      {
 		hash_type * var_hash = hash_get(cell_hash , cell_str);
-		hash_insert_int(var_hash , kw , index);
+                char * gen_key = util_alloc_sprintf("%s:%d:%s" , kw , num, well);
+                hash_insert_int(var_hash , kw , index);
+                hash_insert_int(ecl_smspec->gen_var_index , gen_key , index );
+                free(gen_key);
 	      }
 	    }
 	  } else
@@ -275,6 +316,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	     Field variable
 	  */
 	  hash_insert_int(ecl_smspec->field_var_index , kw , index);
+          hash_insert_int(ecl_smspec->gen_var_index , kw , index );
 	  break;
 	case(ECL_SMSPEC_GROUP_VAR):
 	  {
@@ -284,7 +326,10 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 		hash_insert_hash_owned_ref(ecl_smspec->group_var_index , group , hash_alloc() , hash_free__);
 	      {
 		hash_type * var_hash = hash_get(ecl_smspec->group_var_index , group);
+                char * gen_key = util_alloc_sprintf("%s:%s" , kw , well);
 		hash_insert_int(var_hash , kw , index);
+                hash_insert_int(ecl_smspec->gen_var_index , gen_key , index );
+                free(gen_key);
 	      }
 	    }
 	  }
@@ -293,6 +338,11 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	  if (!hash_has_key(ecl_smspec->region_var_index , kw))
 	    hash_insert_int(ecl_smspec->region_var_index , kw , index);
 	  ecl_smspec->num_regions = util_int_max(ecl_smspec->num_regions , num);
+          {
+            char * gen_key = util_alloc_sprintf("%s:%d" , kw , num);
+            hash_insert_int( ecl_smspec->gen_var_index , gen_key , index);
+            free( gen_key );
+          }
 	  break;
 	case (ECL_SMSPEC_WELL_VAR):
 	  if (!DUMMY_WELL(well)) {
@@ -305,17 +355,17 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	      hash_insert_hash_owned_ref(ecl_smspec->well_var_index , well , hash_alloc() , hash_free__);
 	    {
 	      hash_type * var_hash = hash_get(ecl_smspec->well_var_index , well);
-	      hash_insert_int(var_hash , kw , index);
+              char * gen_key = util_alloc_sprintf("%s:%s" , kw , well);
+              hash_insert_int(var_hash , kw , index);
+              hash_insert_int(ecl_smspec->gen_var_index , gen_key , index );
+              free(gen_key);
 	    }
 	  }
 	  break;
 	case(ECL_SMSPEC_MISC_VAR):
-	  /*
-	     Possibly we must have the possibility to alter
-	     reclassify - so this last switch must be done
-	     in two passes?
-	  */
+          /* Misc variable - i.e. date or CPU time ... */
 	  hash_insert_int(ecl_smspec->misc_var_index , kw , index);
+          hash_insert_int(ecl_smspec->gen_var_index , kw ,index);
 	  break;
 	case(ECL_SMSPEC_BLOCK_VAR):
 	  /* A block variable */
@@ -325,7 +375,14 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	      hash_insert_hash_owned_ref(ecl_smspec->block_var_index , kw , hash_alloc() , hash_free__);
 	    {
 	      hash_type * block_hash = hash_get(ecl_smspec->block_var_index , kw);
+              int i,j,k;
+              char * gen_key;
+              ecl_smspec_get_ijk(ecl_smspec , num , &i,&j,&k);
+              /* Using (ONLY) the VAR:i,j,k form - could in addition also insert the VAR:num form?? */
+              gen_key = util_alloc_sprintf("%s:%d,%d,%d" , kw , i,j,k);
+              hash_insert_int(ecl_smspec->gen_var_index , gen_key , index);
 	      hash_insert_int(block_hash , block_nr , index);
+              free(gen_key);
 	    }
 	    free(block_nr);
 	  }
@@ -392,19 +449,6 @@ char ** ecl_smspec_alloc_group_names(const ecl_smspec_type * ecl_smspec) {
 int ecl_smspec_get_num_regions(const ecl_smspec_type * ecl_smspec) {
   return ecl_smspec->num_regions;
 }
-
-
-/**
-  Input i,j,k are assumed to be in the interval [1..nx] , [1..ny],
-  [1..nz], return value is a global index which can be used in the
-  xxx_block_xxx routines.
-*/
-
-
-static int ecl_smspec_get_global_grid_index(const ecl_smspec_type * smspec , int i , int j , int k) {
-  return i + (j - 1) * smspec->grid_nx + (k - 1) * smspec->grid_nx * smspec->grid_ny;
-}
-
 
 
 
@@ -692,6 +736,9 @@ int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const 
     util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
   }
   util_free_stringlist(argv , argc);
+  //if (index != hash_get_int( ecl_smspec->gen_var_index , lookup_kw))
+  //  util_abort("Internal error \n",__func__);
+
   return index;
 }
 
@@ -756,6 +803,7 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->misc_var_index);
   hash_free(ecl_smspec->unit_hash);
   hash_free(ecl_smspec->block_var_index);
+  hash_free(ecl_smspec->gen_var_index);
   free(ecl_smspec->var_type);
   free(ecl_smspec->simulation_case);
   free(ecl_smspec);
@@ -801,6 +849,30 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
 
 
 /*****************************************************************/
+/**
+   Allocates a stringlist instance with all the gen_key string
+   matching the supplied pattern. I.e.
+
+     ecl_smspec_alloc_matching_general_var_list( smspec , "WGOR:*");
+
+   will give a list of WGOR for ALL the wells. The function is
+   unfortunately not as useful as one might think because ECLIPSE is a
+   bit stupid; it will for instance happily give ou the WOPR for a
+   water injector or WWIR for an oil producer.
+*/
+
+stringlist_type * ecl_smspec_alloc_matching_general_var_list(const ecl_smspec_type * smspec , const char * pattern) {
+  stringlist_type * keys = stringlist_alloc_new();
+  hash_iter_type * iter = hash_iter_alloc( smspec->gen_var_index);
+  while (!hash_iter_is_complete( iter )) {
+    const char * key = hash_iter_get_next_key( iter );
+    if (fnmatch( pattern , key , 0) == 0)
+      stringlist_append_copy( keys , key );
+  }
+  hash_iter_free( iter );
+  return keys;
+}
+
 
 /** 
     Returns a stringlist instance with all the (valid) well names. It

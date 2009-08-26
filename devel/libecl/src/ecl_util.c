@@ -322,7 +322,7 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
       filename = NULL;
     }
   }
-      
+  
   
 
   //if (must_exist) {
