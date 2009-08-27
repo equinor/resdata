@@ -54,6 +54,8 @@ int               hash_get_int(hash_type * , const char *);
 void              hash_insert_double(hash_type * , const char * , double);
 double               hash_get_double(hash_type * , const char *);
 
+UTIL_IS_INSTANCE_HEADER(hash);
+
 #ifdef __cplusplus
 }
 #endif

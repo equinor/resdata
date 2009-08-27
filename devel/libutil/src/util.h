@@ -43,7 +43,8 @@ extern"C" {
       <type>_is_instance(void *) which will cast the (void *) input to
       (type *), and check the value of __type_id. If this is the
       correct value true is returned, otherwise the function will
-      return false.
+      return false. Observe that the function will accept NULL as
+      input; in which case it will return false.
 
     UTIL_SAFE_CAST_FUNCTION: This is similar to
       UTIL_IS_INSTANCE_FUNCTION, but it will return (type *) if the
@@ -54,12 +55,17 @@ extern"C" {
 
 #define UTIL_IS_INSTANCE_FUNCTION(type , TYPE_ID)          \
 bool type ## _is_instance( void * __arg ) {                \
-   type ## _type * arg = (type ## _type *) __arg;          \
-   if ( arg->__type_id == TYPE_ID)              	   \
-      return true;                                         \
-   else                                                    \
+   if (__arg == NULL)                                      \
       return false;                                        \
+   else {                                                  \
+      type ## _type * arg = (type ## _type *) __arg;       \
+      if ( arg->__type_id == TYPE_ID)              	   \
+         return true;                                      \
+      else                                                 \
+         return false;                                     \
+   }                                                       \
 }
+
 
 #define UTIL_IS_INSTANCE_HEADER(type) bool type ## _is_instance( void * __arg );
 
@@ -74,6 +80,7 @@ type ## _type * type ## _safe_cast( void * __arg ) {     \
       return NULL;                                       \
    }                                                     \
 }
+#define UTIL_SAFE_CAST_HEADER( type ) type ## _type * type ## _safe_cast( void * __arg );
 
 #define UTIL_TYPE_ID_DECLARATION           int   __type_id; 
 #define UTIL_TYPE_ID_INIT(var , TYPE_ID)   var->__type_id = TYPE_ID;

@@ -148,19 +148,29 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
   return vector->default_value;
 }
 
+void <TYPE>_vector_set_default(<TYPE>_vector_type * vector, <TYPE> default_value) {
+  vector->default_value = default_value;
+}
+
 <TYPE> <TYPE>_vector_iget(const <TYPE>_vector_type * vector , int index) {
   <TYPE>_vector_assert_index(vector , index);
   return vector->data[index];
 }
 
 
-/* Will return default value if index > size. */
+/* Will return default value if index > size. Will fail HARD on negative indices (not that safe) ....*/
 <TYPE> <TYPE>_vector_safe_iget(const <TYPE>_vector_type * vector, int index) {
   if (index >= vector->size)
     return vector->default_value;
-  else
-    return vector->data[index];
+  else {
+    if (index >= 0)
+      return vector->data[index];
+    else
+      util_abort("%s: index:%d is invalid - only accepts positive indices\n",__func__ , index);
+  }
 }
+
+
 
 /** Will abort is size == 0 */
 <TYPE> <TYPE>_vector_get_last(const <TYPE>_vector_type * vector) {
@@ -419,6 +429,22 @@ void <TYPE>_vector_fprintf(const <TYPE>_vector_type * vector , FILE * stream , c
   fprintf(stream , "]\n");
 }
 
+/*
+  This function does not consider the default value; it does a
+  vector_resize based on the input size.
+*/
+void <TYPE>_vector_fread_data( <TYPE>_vector_type * vector , int size, FILE * stream) {
+  <TYPE>_vector_realloc_data__( vector , size );
+  util_fread( vector->data , sizeof * vector->data , size , stream , __func__);
+  vector->size = size;
+}
+
+
+
+
+void <TYPE>_vector_fwrite_data( const <TYPE>_vector_type * vector , FILE * stream ) {
+  util_fwrite(  vector->data , sizeof * vector->data , vector->size , stream , __func__);
+}
 
 /**
    Writing:
@@ -430,19 +456,30 @@ void <TYPE>_vector_fprintf(const <TYPE>_vector_type * vector , FILE * stream , c
 void <TYPE>_vector_fwrite(const <TYPE>_vector_type * vector , FILE * stream) {
   util_fwrite_int( vector->size , stream );
   util_fwrite( &vector->default_value , sizeof vector->default_value , 1 , stream , __func__);
-  util_fwrite(  vector->data , sizeof * vector->data , vector->size , stream , __func__);
+  <TYPE>_vector_fwrite_data( vector , stream );
 }
 
 
-<TYPE>_vector_type * <TYPE>_vector_fread_alloc( FILE * stream ) {
+
+/*
+  Observe that this function will reset the default value. 
+*/
+void <TYPE>_vector_fread( <TYPE>_vector_type * vector , FILE * stream ) {
   <TYPE>     default_value;
   int size = util_fread_int( stream );
   util_fread( &default_value , sizeof default_value , 1 , stream , __func__);
   {
-    <TYPE>_vector_type * vector = <TYPE>_vector_alloc( size , default_value );
-    util_fread( vector->data , sizeof * vector->data , size , stream , __func__);
-    return vector;
+    <TYPE>_vector_set_default( vector , default_value );
+    <TYPE>_vector_fread_data( vector , size , stream );
   }
+}
+
+
+
+<TYPE>_vector_type * <TYPE>_vector_fread_alloc( FILE * stream ) {
+  <TYPE>_vector_type * vector = <TYPE>_vector_alloc( 0,0 );
+  <TYPE>_vector_fread( vector , stream );
+  return vector;
 }
 
 
@@ -464,3 +501,5 @@ void <TYPE>_vector_buffer_fwrite(const <TYPE>_vector_type * vector , buffer_type
     return vector;
   }
 }
+
+

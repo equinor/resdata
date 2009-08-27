@@ -466,6 +466,7 @@ hash_type * hash_alloc() {
 }
 
 UTIL_SAFE_CAST_FUNCTION( hash , HASH_TYPE_ID)
+UTIL_IS_INSTANCE_FUNCTION(hash , HASH_TYPE_ID)
 
 void hash_free(hash_type *hash) {
   int i;

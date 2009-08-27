@@ -199,7 +199,7 @@ static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
   data->data         = vector_alloc_new();
   data->first_ministep = -1;
   data->last_ministep  = -1;
-  data->report_first_ministep = int_vector_alloc( 0 , -1 );
+  data->report_first_ministep = int_vector_alloc( 0 , -1 );  /* This -1 value is hard-wired around in the place - not good. */
   data->report_last_ministep  = int_vector_alloc( 0 , -1 );
   data->ministep_index        = int_vector_alloc( 0 , -1 );
   data->smspec                = smspec;
@@ -279,7 +279,7 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , in
           if (ecl_file != NULL) {
             ecl_sum_data_add_ecl_file( data , report_step , ecl_file , smspec);
             ecl_file_free( ecl_file );
-          }
+          } 
 	}
       }
     } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
@@ -300,18 +300,17 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , in
     } else
       util_abort("%s: invalid file type \n",__func__);
 
-    /* OK - now we have loaded all the actual data. Must build up the report -> ministep mapping. */
 
+    /* OK - now we have loaded all the actual data. Must build up the report -> ministep mapping. */
     {
       int internal_index;
       for (internal_index = 0; internal_index < vector_get_size( data->data ); internal_index++) {
 	const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , internal_index );
 	int report_step = ministep->report_step;
 	int ministep_nr = ministep->ministep;
-	
 	{
-	  int current_first_ministep =  int_vector_safe_iget( data->report_first_ministep , report_step );
-	  if (current_first_ministep == -1) 
+	  int current_first_ministep = int_vector_safe_iget( data->report_first_ministep , report_step );
+	  if (current_first_ministep < 0) /* i.e. currently not set. */
 	    int_vector_iset( data->report_first_ministep , report_step , ministep_nr);
 	  else
 	    if (ministep_nr  < current_first_ministep)
@@ -321,7 +320,7 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , in
 
 	{
 	  int current_last_ministep =  int_vector_safe_iget( data->report_last_ministep , report_step );
-	  if (current_last_ministep == -1)
+	  if (current_last_ministep < 0)
 	    int_vector_iset( data->report_last_ministep , report_step ,  ministep_nr);
 	  else
 	    if (ministep_nr > current_last_ministep)

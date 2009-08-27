@@ -87,6 +87,7 @@ void log_add_message(log_type *logh, int message_level , char* message, bool fre
       localtime_r(&epoch_time , &time_fields);
       fprintf(logh->stream,"%02d/%02d - %02d:%02d:%02d  %s\n",time_fields.tm_mday, time_fields.tm_mon + 1, time_fields.tm_hour , time_fields.tm_min , time_fields.tm_sec , message);
       fsync( fileno(logh->stream) );
+      fseek( logh->stream , 0 , SEEK_END );
     }
   }
   pthread_mutex_unlock( &logh->mutex );

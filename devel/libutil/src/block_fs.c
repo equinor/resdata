@@ -554,7 +554,7 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
     block_fs->index_time = time( NULL );
   
     if (!block_fs->data_owner) 
-      fprintf(stderr,"** Warning: Another program has already opened this filesystem read-write - this instance will be *unsyncronized* read-only.\n");
+      fprintf(stderr,"** Warning: Another program has already opened this filesystem read-write - this instance will be UNSYNCRONIZED read-only.\n");
   }
   
   return block_fs;
@@ -1001,10 +1001,14 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
     
     /* Writes the file node header data, including the NODE_END_TAG. */
     file_node_fwrite( node , filename , block_fs->data_stream );
-    
+    /* 
+       It seems it is not enough to call fsync() must also this funny
+       fseek + ftell combination to ensure that all data is on disk
+       after a uncontrolled shutdown.
+    */
     fsync( fileno(block_fs->data_stream) );
     block_fs_fseek_data(block_fs , block_fs->data_file_size);
-    ftell( block_fs->data_stream );
+    ftell( block_fs->data_stream ); 
     
     /* Update the cache */
     if (data_size <= block_fs->max_cache_size)
