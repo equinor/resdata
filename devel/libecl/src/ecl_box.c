@@ -17,11 +17,10 @@ struct ecl_box_struct {
 };
 
 
-static bool verify_pair( int a1, int a2 , int n) {
+static bool verify_pair( int a1, int a2 ) {
   bool OK = true;
   if ( a1 > a2 ) OK = false;
   if ( a1 <  0 ) OK = false;
-  if (a2  >= n ) OK = false; 
   return OK;
 }
 
@@ -46,13 +45,25 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , in
 
   {
     bool OK = true;
-    if (!verify_pair(i1,i2,ecl_box->grid_nx)) OK = false;
-    if (!verify_pair(j1,j2,ecl_box->grid_ny)) OK = false;
-    if (!verify_pair(k1,k2,ecl_box->grid_nz)) OK = false;
+    if (!verify_pair(i1,i2)) OK = false;
+    if (!verify_pair(j1,j2)) OK = false;
+    if (!verify_pair(k1,k2)) OK = false;
     if (!OK)
       util_abort("%s: invalid input ... \n",__func__);
   }
-    
+  if (i2 >= ecl_box->grid_nx) {
+    fprintf(stderr,"** Warning box defined with i2 = %d - truncated to maximum value %d \n",i2 , ecl_box->grid_nx - 1);
+    i2 = ecl_box->grid_nx - 1;
+  }
+  if (j2 >= ecl_box->grid_ny) {
+    fprintf(stderr,"** Warning box defined with j2 = %d - truncated to maximum value %d \n",j2 , ecl_box->grid_ny - 1);
+    j2 = ecl_box->grid_ny - 1;
+  }
+  if (k2 >= ecl_box->grid_nz) {
+    fprintf(stderr,"** Warning box defined with k2 = %d - truncated to maximum value %d \n",k2 , ecl_box->grid_nz - 1);
+    k2 = ecl_box->grid_nz -1;
+  }
+  
   
   /*Properties of the box: */
   ecl_box->box_nx = i2 - i1 + 1;
