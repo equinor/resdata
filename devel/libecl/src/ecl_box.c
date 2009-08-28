@@ -17,6 +17,14 @@ struct ecl_box_struct {
 };
 
 
+static bool verify_pair( int a1, int a2 , int n) {
+  bool OK = true;
+  if ( a1 > a2 ) OK = false;
+  if ( a1 <  0 ) OK = false;
+  if (a2  >= n ) OK = false; 
+  return OK;
+}
+
 
 
 /**
@@ -36,6 +44,16 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , in
   ecl_box->grid_sy   = ecl_box->grid_nx;
   ecl_box->grid_sz   = ecl_box->grid_nx * ecl_box->grid_ny;
 
+  {
+    bool OK = true;
+    if (!verify_pair(i1,i2,ecl_box->grid_nx)) OK = false;
+    if (!verify_pair(j1,j2,ecl_box->grid_ny)) OK = false;
+    if (!verify_pair(k1,k2,ecl_box->grid_nz)) OK = false;
+    if (!OK)
+      util_abort("%s: invalid input ... \n",__func__);
+  }
+    
+  
   /*Properties of the box: */
   ecl_box->box_nx = i2 - i1 + 1;
   ecl_box->box_ny = j2 - j1 + 1;
