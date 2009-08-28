@@ -8,7 +8,6 @@
 #include <ecl_util.h>
 #include <fortio.h>
 #include <util.h>
-#include <ecl_box.h>
 #include <buffer.h>
 
 #define DEBUG 1
@@ -1719,19 +1718,6 @@ void ecl_kw_inplace_add_subkw(ecl_kw_type * my_kw , int my_offset , const ecl_kw
 }
 
 
-
-void ecl_kw_merge(ecl_kw_type * main_kw , const ecl_kw_type * sub_kw , const ecl_box_type * ecl_box) {
-  if (main_kw->sizeof_ctype != sub_kw->sizeof_ctype) 
-    util_abort("%s: trying to combine two different underlying datatypes - aborting \n",__func__);
-
-  if (ecl_kw_get_size(main_kw) != ecl_box_get_total_size(ecl_box)) 
-    util_abort("%s box size and total_kw mismatch - aborting \n",__func__);
-
-  if (ecl_kw_get_size(sub_kw)   != ecl_box_get_box_size(ecl_box)) 
-    util_abort("%s box size and total_kw mismatch - aborting \n",__func__);
-
-  ecl_box_set_values(ecl_box , ecl_kw_get_data_ref(main_kw) , ecl_kw_get_data_ref(sub_kw) , main_kw->sizeof_ctype);
-}
 
 
 void ecl_kw_inplace_update_file(const ecl_kw_type * ecl_kw , const char * filename, int index) {

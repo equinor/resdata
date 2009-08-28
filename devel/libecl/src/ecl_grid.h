@@ -4,7 +4,6 @@
 extern "C" {
 #endif
 #include <stdbool.h>
-#include <ecl_box.h>
 #include <double_vector.h>
 #include <int_vector.h>
 #include <ecl_kw.h>
@@ -24,8 +23,6 @@ ecl_grid_type * ecl_grid_alloc_GRDECL(int , int , int , const float *  , const f
 ecl_grid_type * ecl_grid_alloc(const char * , bool);
 void            ecl_grid_free(ecl_grid_type * );
 void            ecl_grid_free__( void * arg );
-int             ecl_grid_count_box_active(const ecl_grid_type * , const ecl_box_type * );
-void            ecl_grid_set_box_active_list(const ecl_grid_type * , const ecl_box_type * , int * );
 void            ecl_grid_get_dims(const ecl_grid_type * , int *, int * , int * , int *);
 int             ecl_grid_get_nz( const ecl_grid_type * grid );
 int             ecl_grid_get_nx( const ecl_grid_type * grid );

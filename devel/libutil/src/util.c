@@ -3299,6 +3299,38 @@ FILE * util_fopen(const char * filename , const char * mode) {
 }
 
 
+/**
+   This function will open 'filename' with mode 'mode'. If the mode is
+   for write or append (w|a) and the open fails with ENOENT we will
+   try to make the path compponent.
+
+   So - the whole point about this function is that for writing it
+   should be possible to safely call:
+
+     util_mkdir_fopen("/some/path/to/file.txt" , "w");
+     
+   without first enusring that /some/path/to exists.
+*/
+
+FILE * util_mkdir_fopen( const char * filename , const char * mode ) {
+  FILE* stream = fopen( filename , mode);
+  if (stream == NULL) {
+    if (errno == ENOENT) {
+      if (mode[0] == 'w' || mode[0] == 'a') {
+        char * path;
+        util_alloc_file_components(filename , &path , NULL , NULL);
+        if (path != NULL) {
+          util_make_path( path );
+          free( path );
+        }
+      }
+    }
+    /* Let the eventual util_abort() come in the main util_fopen function. */
+    return util_fopen( filename , mode );
+  } else
+    return stream;
+}
+
 
 
 void util_fwrite(const void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {

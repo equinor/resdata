@@ -1279,50 +1279,6 @@ void ecl_grid_free__( void * arg ) {
 
 
 
-void ecl_grid_set_box_active_list(const ecl_grid_type * grid , const ecl_box_type * box , int * active_index_list) {
-  int i1,i2,j1,j2,k1,k2;
-  int i,j,k;
-  int active_count = 0;
-  ecl_box_set_limits(box , &i1 , &i2 , &j1 , &j2 , &k1 , &k2);
-
-  for (k = k1; k <= k2; k++) {
-    for (j= j1; j <= j2; j++) {
-      for (i=i1; i <= i2; i++) {
-	const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
-	ecl_cell_type * cell   = grid->cells[global_index];
-	if (cell->active) {
-	  active_index_list[active_count] = cell->active_index;
-	  active_count++;
-	}
-      }
-    }
-  }
-}
-
-
-
-
-int ecl_grid_count_box_active(const ecl_grid_type * grid , const ecl_box_type * box) {
-  int i1,i2,j1,j2,k1,k2;
-  int i,j,k;
-  int active_count = 0;
-  ecl_box_set_limits(box , &i1 , &i2 , &j1 , &j2 , &k1 , &k2);
-
-  for (k = k1; k <= k2; k++) {
-    for (j= j1; j <= j2; j++) {
-      for (i=i1; i <= i2; i++) {
-	const int global_index   = ecl_grid_get_global_index__(grid , i , j , k );
-	ecl_cell_type * cell   = grid->cells[global_index];
-	if (cell->active)
-	  active_count++;
-      }
-    }
-  }
-
-  return active_count;
-}
-
-
 
 void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int global_index2 , double *dx , double *dy , double *dz) {
   const ecl_cell_type * cell1 = grid->cells[global_index1];
@@ -1388,7 +1344,7 @@ int ecl_grid_get_ny( const ecl_grid_type * grid ) {
 /* Functions for converting between the different index types. */
 
 /**
-   Converts: (i,j,k) -> global_index
+   Converts: (i,j,k) -> global_index. i,j,k are zero offset.
 */
 
 int ecl_grid_get_global_index3(const ecl_grid_type * ecl_grid , int i , int j , int k) {
@@ -1413,6 +1369,7 @@ int ecl_grid_get_global_index1A(const ecl_grid_type * ecl_grid , int active_inde
 
 /**
    Converts: (i,j,k) -> active_index
+   (i,j,k ) are zero offset.
    
    Will return -1 if the cell is not active.
 */

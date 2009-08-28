@@ -8,7 +8,6 @@ extern "C" {
 #include <stdio.h>
 #include <fortio.h>
 #include <ecl_util.h>
-#include <ecl_box.h>
 #include <buffer.h>
 
 
@@ -86,7 +85,6 @@ void   ecl_kw_inplace_inv(ecl_kw_type * my_kw);
 void   ecl_kw_scalar_init(ecl_kw_type * , double );
 void   ecl_kw_scale(ecl_kw_type * , double );
 void   ecl_kw_shift(ecl_kw_type * , double );
-void   ecl_kw_merge(ecl_kw_type * , const ecl_kw_type * , const ecl_box_type * );
 void   ecl_kw_element_sum(const ecl_kw_type * , void * );
 void   ecl_kw_max_min(const ecl_kw_type * , void * , void *);
 void * ecl_kw_get_void_ptr(const ecl_kw_type * ecl_kw);
