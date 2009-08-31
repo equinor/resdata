@@ -165,8 +165,10 @@ void <TYPE>_vector_set_default(<TYPE>_vector_type * vector, <TYPE> default_value
   else {
     if (index >= 0)
       return vector->data[index];
-    else
+    else {
       util_abort("%s: index:%d is invalid - only accepts positive indices\n",__func__ , index);
+      return -1;
+    }
   }
 }
 

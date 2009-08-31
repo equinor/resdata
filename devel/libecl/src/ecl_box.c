@@ -18,6 +18,7 @@ struct ecl_box_struct {
   int     box_offset;
   int     active_size;
   int    *active_list;  /* This is a list with active_size elements containing the index active index of the elemtents in the box. Will be NULL if there are no active elements. */
+  int    *global_list;  /* This is a list of global indices which are present in the box. */
   const ecl_grid_type * parent_grid;
 };
 
@@ -37,8 +38,9 @@ UTIL_SAFE_CAST_FUNCTION( ecl_box , ECL_BOX_TYPE_ID)
 /**
    Observe that:
 
-      1. The coordinates i1,i2...k2 are assumed to be zero offset.
-      2. The corrdinates are supposed to be _INCLUSIVE_, i.e. the box is [i1..i2] x [j1..j2] x [k1..k2]
+    1. The coordinates i1,i2...k2 are assumed to be ZERO offset.
+    2. The corrdinates are  _INCLUSIVE_, i.e. the box is [i1..i2] x [j1..j2] x [k1..k2]
+
 */
 
 ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , int j1 , int j2 , int k1, int k2) {
@@ -50,7 +52,7 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , in
   ecl_box->grid_sx   = 1;
   ecl_box->grid_sy   = ecl_box->grid_nx;
   ecl_box->grid_sz   = ecl_box->grid_nx * ecl_box->grid_ny;
-
+  
   {
     bool OK = true;
     if (!verify_pair(i1,i2)) OK = false;
@@ -84,16 +86,25 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , in
   ecl_box->box_offset = i1 * ecl_box->box_sx + j1 * ecl_box->box_sy + k1 * ecl_box->box_sz;
   /* Counting the number of active elements in the box */
   {
+    int global_counter = 0;
     int i,j,k;
     ecl_box->active_size = 0;
     ecl_box->active_list = util_malloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz * sizeof * ecl_box->active_list , __func__);
+    ecl_box->global_list = util_malloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz * sizeof * ecl_box->global_list , __func__);
     for (k=k1; k <= k2; k++) 
       for (j=j1; j <= j2; j++)
         for (i=i1; i <= i2; i++) {
-          int active_index = ecl_grid_get_active_index3( ecl_box->parent_grid , i,j,k);
-          if (active_index >= 0) {
-            ecl_box->active_list[ecl_box->active_size] = active_index;
-            ecl_box->active_size++;
+          {
+            int global_index = ecl_grid_get_global_index3( ecl_box->parent_grid , i , j , k);
+            ecl_box->global_list[global_counter] = global_index;
+            global_counter++;
+          }
+          {
+            int active_index = ecl_grid_get_active_index3( ecl_box->parent_grid , i,j,k);
+            if (active_index >= 0) {
+              ecl_box->active_list[ecl_box->active_size] = active_index;
+              ecl_box->active_size++;
+            }
           }
         }
     
@@ -107,6 +118,7 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , in
 
 void ecl_box_free(ecl_box_type * ecl_box) { 
   util_safe_free(ecl_box->active_list );
+  util_safe_free(ecl_box->global_list );
   free(ecl_box); 
 }
 
@@ -150,4 +162,17 @@ int ecl_box_get_active_size( const ecl_box_type * ecl_box ) {
 
 const int * ecl_box_get_active_list( const ecl_box_type * ecl_box ) {
   return ecl_box->active_list;
+}
+
+
+/*
+  Return the number of global element in the box. 
+*/
+int ecl_box_get_global_size( const ecl_box_type * ecl_box ) {
+  return ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz;
+}
+
+
+const int * ecl_box_get_global_list( const ecl_box_type * ecl_box ) {
+  return ecl_box->global_list;
 }

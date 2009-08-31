@@ -54,11 +54,11 @@ extern"C" {
    
 
 #define UTIL_IS_INSTANCE_FUNCTION(type , TYPE_ID)          \
-bool type ## _is_instance( void * __arg ) {                \
+bool type ## _is_instance( const void * __arg ) {          \
    if (__arg == NULL)                                      \
       return false;                                        \
    else {                                                  \
-      type ## _type * arg = (type ## _type *) __arg;       \
+      const type ## _type * arg = (type ## _type *) __arg; \
       if ( arg->__type_id == TYPE_ID)              	   \
          return true;                                      \
       else                                                 \
@@ -67,7 +67,7 @@ bool type ## _is_instance( void * __arg ) {                \
 }
 
 
-#define UTIL_IS_INSTANCE_HEADER(type) bool type ## _is_instance( void * __arg );
+#define UTIL_IS_INSTANCE_HEADER(type) bool type ## _is_instance( const void * __arg );
 
 
 #define UTIL_SAFE_CAST_FUNCTION(type , TYPE_ID)          \
