@@ -1,10 +1,15 @@
+#include <util.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ecl_box.h>
 #include <ecl_grid.h>
 
+
+#define ECL_BOX_TYPE_ID 6610643
+
 struct ecl_box_struct {
+  UTIL_TYPE_ID_DECLARATION;
   int     grid_nx  , grid_ny  , grid_nz;
   int     grid_sx  , grid_sy  , grid_sz;   /* xxx_sx : x stride */
 
@@ -25,6 +30,9 @@ static bool verify_pair( int a1, int a2 ) {
 }
 
 
+UTIL_IS_INSTANCE_FUNCTION( ecl_box , ECL_BOX_TYPE_ID)
+UTIL_SAFE_CAST_FUNCTION( ecl_box , ECL_BOX_TYPE_ID)
+
 
 /**
    Observe that:
@@ -35,7 +43,7 @@ static bool verify_pair( int a1, int a2 ) {
 
 ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , int j1 , int j2 , int k1, int k2) {
   ecl_box_type * ecl_box = util_malloc(sizeof * ecl_box , __func__);
-  
+  UTIL_TYPE_ID_INIT( ecl_box , ECL_BOX_TYPE_ID);
   ecl_box->parent_grid = ecl_grid;
   /* Properties of the parent grid. */
   ecl_grid_get_dims( ecl_grid , &ecl_box->grid_nx , &ecl_box->grid_ny , &ecl_box->grid_nz , NULL);

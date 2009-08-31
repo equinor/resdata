@@ -11,4 +11,4 @@
 #include <ecl_smspec.h>
 #include <ecl_sum_data.h>
 #include <ecl_file.h>
-
+#include <ecl_region.h>
