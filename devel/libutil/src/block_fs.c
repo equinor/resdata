@@ -87,7 +87,6 @@ struct block_fs_struct {
   char           * mount_file;    /* The full path to a file with some mount information - input to the mount routine. */
   char           * path;          
   char           * base_name;
-  char           * mount_point;   /* string equals path + base_name: unique for this FS */
 
   int              version;       /* A version number which is incremented each time the filesystem is defragmented - not implemented yet. */
   
@@ -95,7 +94,7 @@ struct block_fs_struct {
   char           * lock_file;
   
   FILE           * data_stream;
-
+  
   long int         data_file_size;  /* The total number of bytes in the data_file. */
   long int         free_size;       /* Size of 'holes' in the data file. */ 
   int              block_size;      /* The size of blocks in bytes. */
@@ -487,9 +486,6 @@ static void block_fs_insert_free_node( block_fs_type * block_fs , file_node_type
   block_fs->num_free_nodes++;
   block_fs->free_size += new->node_size;
   
-  /* OKAY - this is going to take some time ... */
-  if ((block_fs->free_size * 1.0 / block_fs->data_file_size) > block_fs->fragmentation_limit)
-    block_fs_rotate__( block_fs );
 }
 
 
@@ -517,9 +513,14 @@ static void block_fs_set_filenames( block_fs_type * block_fs ) {
 }
 
 
-static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block_size , int max_cache_size, float fragmentation_limit, bool read_only) {
-  block_fs_type * block_fs      = util_malloc( sizeof * block_fs , __func__);
-  block_fs->mount_file          = util_alloc_string_copy( mount_file );
+
+/**
+   This function is called both when allocating a new block_fs
+   instance, and when an existing block_fs instance is 'rotated'.
+*/
+
+
+static void block_fs_reinit( block_fs_type * block_fs ) {
   block_fs->index               = hash_alloc();
   block_fs->file_nodes          = vector_alloc_new();
   block_fs->free_nodes          = NULL;
@@ -527,11 +528,21 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
   block_fs->write_count         = 0;
   block_fs->data_file_size      = 0;
   block_fs->free_size           = 0; 
+  block_fs_set_filenames( block_fs );
+}
+
+
+
+
+static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block_size , int max_cache_size, float fragmentation_limit, bool read_only) {
+  block_fs_type * block_fs      = util_malloc( sizeof * block_fs , __func__);
+  UTIL_TYPE_ID_INIT(block_fs , BLOCK_FS_TYPE_ID);
+  
+  block_fs->mount_file          = util_alloc_string_copy( mount_file );
   block_fs->block_size          = block_size;
   block_fs->max_cache_size      = max_cache_size;
-  block_fs->fragmentation_limit = 1.0; //fragmentation_limit;   /* Never rotate currently */
+  block_fs->fragmentation_limit = fragmentation_limit;   
   util_alloc_file_components( mount_file , &block_fs->path , &block_fs->base_name, NULL );
-  block_fs->mount_point         = util_alloc_filename( block_fs->path , block_fs->base_name , NULL);
   pthread_mutex_init( &block_fs->io_lock  , NULL);
   pthread_rwlock_init( &block_fs->rw_lock , NULL);
   {
@@ -545,8 +556,7 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
   }
   block_fs->data_file   = NULL;
   block_fs->lock_file   = NULL;
-  block_fs_set_filenames( block_fs );
-  UTIL_TYPE_ID_INIT(block_fs , BLOCK_FS_TYPE_ID);
+  block_fs_reinit( block_fs );
   if (read_only)
     block_fs->data_owner = false;
   else {
@@ -671,10 +681,6 @@ static void block_fs_open_data( block_fs_type * block_fs , bool read_write) {
 */
 
 
-
-const char * block_fs_get_mount_point( const block_fs_type * block_fs ) {
-  return block_fs->mount_point;
-}
 
 /**
    This functon will (attempt) to read the whole datafile in one large
@@ -824,14 +830,15 @@ bool block_fs_is_mount( const char * mount_file ) {
 }
 
 
+
 /**
    This mutex is to ensure that only one thread (from the same
    application) is trying to mount a file system at a time. If they
    are trying to mount different mount files, it could be done in
    parallell - but what the fuck.
 */
-
 static pthread_mutex_t mount_lock = PTHREAD_MUTEX_INITIALIZER;
+
 block_fs_type * block_fs_mount( const char * mount_file , int block_size , int max_cache_size , float fragmentation_limit , bool preload , bool read_only) {
   block_fs_type * block_fs;
   pthread_mutex_lock( &mount_lock );
@@ -954,7 +961,11 @@ static void block_fs_unlink_file__( block_fs_type * block_fs , const char * file
 
 void block_fs_unlink_file( block_fs_type * block_fs , const char * filename) {
   block_fs_aquire_wlock( block_fs );
+
   block_fs_unlink_file__( block_fs , filename );
+  if ((block_fs->free_size * 1.0 / block_fs->data_file_size) > block_fs->fragmentation_limit) 
+    block_fs_rotate__( block_fs );
+  
   block_fs_release_rwlock( block_fs );
 }
 
@@ -1021,38 +1032,55 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
 
 
 
+static void block_fs_fwrite_file_unlocked(block_fs_type * block_fs , const char * filename , const void * ptr , size_t data_size) {
+  file_node_type * file_node;
+  size_t min_size = data_size;
+  bool   new_node = true;   
+  min_size += file_node_header_size( filename );
+  
+  if (block_fs_has_file( block_fs , filename )) {
+    file_node = hash_get( block_fs->index , filename );
+    if (file_node->node_size < min_size) {
+      /* The current node is too small for the new content:
+         
+        1. Remove the existing node, from the index and insert it into the free_nodes list.
+        2. Get a new node.
+        
+      */
+      block_fs_unlink_file__( block_fs , filename );
+      file_node = block_fs_get_new_node( block_fs , filename , min_size );
+    } else
+      new_node = false;  /* We are reusing the existing node. */
+  } else 
+    file_node = block_fs_get_new_node( block_fs , filename , min_size );
+  
+  /* The actual writing ... */
+  block_fs_fwrite__( block_fs , filename , file_node , ptr , data_size);
+  if (new_node)
+    block_fs_insert_index_node(block_fs , filename , file_node);
+}
+
+
+
 void block_fs_fwrite_file(block_fs_type * block_fs , const char * filename , const void * ptr , size_t data_size) {
   block_fs_aquire_wlock( block_fs );
   {
-    file_node_type * file_node;
-    size_t min_size = data_size;
-    bool   new_node = true;   
-    min_size += file_node_header_size( filename );
+    block_fs_fwrite_file_unlocked( block_fs , filename , ptr , data_size );
     
-    if (block_fs_has_file( block_fs , filename )) {
-      file_node = hash_get( block_fs->index , filename );
-      if (file_node->node_size < min_size) {
-        /* The current node is too small for the new content:
-           
-           1. Remove the existing node, from the index and insert it into the free_nodes list.
-           2. Get a new node.
-      
-        */
-        block_fs_unlink_file__( block_fs , filename );
-        file_node = block_fs_get_new_node( block_fs , filename , min_size );
-      } else
-        new_node = false;  /* We are reusing the existing node. */
-    } else 
-      file_node = block_fs_get_new_node( block_fs , filename , min_size );
-    
-    /* The actual writing ... */
-    block_fs_fwrite__( block_fs , filename , file_node , ptr , data_size);
-    if (new_node)
-      block_fs_insert_index_node(block_fs , filename , file_node);
+    /* OKAY - this is going to take some time ... */
+    if ((block_fs->free_size * 1.0 / block_fs->data_file_size) > block_fs->fragmentation_limit)
+      block_fs_rotate__( block_fs );
+
   }
   block_fs_release_rwlock( block_fs );
 }
 
+
+void block_fs_defrag( block_fs_type * block_fs ) {
+  block_fs_aquire_wlock( block_fs );
+  block_fs_rotate__( block_fs );
+  block_fs_release_rwlock( block_fs );
+}
 
 
 void block_fs_fwrite_buffer(block_fs_type * block_fs , const char * filename , const buffer_type * buffer) {
@@ -1162,7 +1190,7 @@ void block_fs_sync( block_fs_type * block_fs ) {
 void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
   block_fs_sync( block_fs );
   
-  printf("Shutting down filesystem: %s",block_fs->mount_file); fflush(stdout);
+  printf("Shutting down filesystem: %s",block_fs->mount_file ); fflush(stdout);
   if (block_fs->data_stream != NULL) fclose( block_fs->data_stream );
   if (block_fs->lock_fd > 0) {
     close( block_fs->lock_fd );     /* Closing the lock_file file descriptor - and releasing the lock. */
@@ -1179,53 +1207,77 @@ void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
   free( block_fs->data_file );
   free( block_fs->path );
   free( block_fs->mount_file );
-  free( block_fs->mount_point );
   
   hash_free( block_fs->index );
   vector_free( block_fs->file_nodes );
   free( block_fs );
   printf("\n");
-
 }
 
 
-static void block_fs_rotate__( block_fs_type * block_fs ) {
-  block_fs_type * old_fs = util_malloc( sizeof * old_fs , __func__);
-  block_fs_type * new_fs;
 
+/**
+   Observe that the block_fs instance should hold the write lock when
+   entering this function.
+*/
+static void block_fs_rotate__( block_fs_type * block_fs ) {
   /* 
      Write a updated mount map where the version info has been bumped
      up with one; the new_fs will mount based on this mount_file.
   */
-  block_fs_fwrite_mount_info__( block_fs->mount_file , block_fs->version + 1 ); 
-  new_fs = block_fs_mount( block_fs->mount_file , block_fs->block_size , block_fs->max_cache_size , block_fs->fragmentation_limit , false , false);
-  
-  /* Play it over sam ... */
+  block_fs->version++;
+  block_fs_fwrite_mount_info__( block_fs->mount_file , block_fs->version ); 
   {
-    hash_iter_type * iter = hash_iter_alloc( block_fs->index );
-    buffer_type * buffer = buffer_alloc(1024);
+    vector_type * old_nodes       = block_fs->file_nodes;
+    hash_type   * old_index       = block_fs->index;
+    FILE        * old_data_stream = block_fs->data_stream;
+    char        * old_data_file   = util_alloc_string_copy( block_fs->data_file );
+    char        * old_lock_file   = util_alloc_string_copy( block_fs->lock_file );
 
-    while (!hash_iter_is_complete( iter )) {
-      const char * key = hash_iter_get_next_key( iter );
-      block_fs_fread_realloc_buffer(block_fs , key , buffer );   /* Load from the original file. */
-      block_fs_fwrite_buffer( new_fs , key , buffer);            /* Write to the new file. */
+    block_fs_reinit( block_fs );
+    /** 
+        Now the block_fs pointers point to the new copy. Must use the
+        old_xxx pointers to access the existing.
+    */
+    block_fs_open_data( block_fs , block_fs->data_owner );
+    {
+      hash_iter_type * iter = hash_iter_alloc( old_index );
+      buffer_type * buffer = buffer_alloc(1024);
+      
+      while (!hash_iter_is_complete( iter )) {
+        const char * key          = hash_iter_get_next_key( iter );
+        file_node_type * old_node = hash_get( old_index , key );
+        buffer_clear( buffer );
+
+        /* Low level read of the old file. */
+        fseek__( old_data_stream , old_node->data_offset , SEEK_SET );
+        buffer_stream_fread( buffer , old_node->data_size , old_data_stream );
+        
+        block_fs_fwrite_file_unlocked( block_fs , key , buffer_get_data( buffer ) , buffer_get_size( buffer ));  /* Write to the new file. */
+      }
+      
+      buffer_free( buffer );
+      hash_iter_free( iter );
     }
-    
-    buffer_free( buffer );
-    hash_iter_free( iter );
+    /*
+      OK - everything has been played over, and we should clean up the old fs:
+
+        1. Close the old data stream.
+        2. Unlink the old lockfile.
+        3. Delete the old data file.
+        4. free()
+
+    */
+    fclose( old_data_stream );
+    printf("%s: planning to unlink: %s \n",__func__ , old_data_file);
+    //unlink( old_data_file );
+    unlink( old_lock_file );
+    free( old_lock_file );
+    free( old_data_file );
+    free( old_index );
+    free( old_nodes );
   }
-  
-  /* Copy: 
-        block_fs -> old_fs
-        new_fs   -> block_fs
-     close & free old_fs and continue with block_fs.
-  */
-  
-  memcpy(old_fs , block_fs , sizeof * block_fs );
-  memcpy(block_fs , new_fs , sizeof * block_fs );
-  printf("%s: planning to unlink: %s \n",__func__ , old_fs->data_file );
-  //unlink( old_fs->data_file );
-  block_fs_close( old_fs , false );
+  printf("Rotate complete ... \n");
 }
 
 

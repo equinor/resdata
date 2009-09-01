@@ -1201,36 +1201,51 @@ char * util_fread_alloc_file_content(const char * filename , int * buffer_size) 
 }
 
 
+/**
+   If abort_on_error = true the function will abort if the read/write
+   fails (although the write will try the disk_full hack). If
+   abort_on_error == false the function will just return false if the
+   write fails, in this case the calling scope must do the right
+   thing.
+*/
+  
 
-
-void util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size , void * buffer) {
+bool util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size , void * buffer , bool abort_on_error) {
 
   while ( ! feof(src_stream)) {
     int bytes_read;
     int bytes_written;
     bytes_read = fread (buffer , 1 , buffer_size , src_stream);
     
-    if (bytes_read < buffer_size && !feof(src_stream)) 
-      util_abort("%s: error when reading from src_stream - aborting \n",__func__);
+    if (bytes_read < buffer_size && !feof(src_stream)) {
+      if (abort_on_error)
+        util_abort("%s: error when reading from src_stream - aborting \n",__func__);
+      else
+        return false;
+    }
 
-    bytes_written = fwrite(buffer , 1 , bytes_read , target_stream);
-    
-    if (bytes_written < bytes_read) 
-      util_abort("%s: not all bytes written to target stream - aborting \n",__func__);
+    if (abort_on_error)
+      util_fwrite( buffer , 1 , bytes_read , target_stream , __func__);
+    else {
+      bytes_written = fwrite(buffer , 1 , bytes_read , target_stream);
+      if (bytes_written < bytes_read) 
+        return false;
+    }
   }
-
+  
+  return true;
 }
 
 
-static void util_copy_file__(const char * src_file , const char * target_file, int buffer_size , void * buffer) {
+static void util_copy_file__(const char * src_file , const char * target_file, int buffer_size , void * buffer , bool abort_on_error) {
   if (util_same_file(src_file , target_file)) 
-    fprintf(stderr,"%s Warning: trying to copy %s onto itself - noting done\n",__func__ , src_file);
+    fprintf(stderr,"%s Warning: trying to copy %s onto itself - nothing done\n",__func__ , src_file);
   else {
     {
       FILE * src_stream      = util_fopen(src_file     , "r");
       FILE * target_stream   = util_fopen(target_file  , "w");
       
-      util_copy_stream(src_stream , target_stream , buffer_size , buffer);
+      util_copy_stream(src_stream , target_stream , buffer_size , buffer , abort_on_error);
       fclose(src_stream);
       fclose(target_stream);
     }
@@ -1239,7 +1254,7 @@ static void util_copy_file__(const char * src_file , const char * target_file, i
 
 
 
-void util_copy_file(const char * src_file , const char * target_file) {
+void util_copy_file(const char * src_file , const char * target_file, bool abort_on_error) {
   void * buffer   = NULL;
   size_t buffer_size = util_size_t_max( 32 , util_file_size(src_file) );  /* The copy stream function will hang if buffer size == 0 */
   do {
@@ -1250,7 +1265,7 @@ void util_copy_file(const char * src_file , const char * target_file) {
   if (buffer_size == 0)
     util_abort("%s: failed to allocate any memory ?? \n",__func__);
   
-  util_copy_file__(src_file , target_file , buffer_size , buffer);
+  util_copy_file__(src_file , target_file , buffer_size , buffer , abort_on_error);
   free(buffer);
 }
 
@@ -1288,7 +1303,7 @@ static void util_copy_directory__(const char * src_path , const char * target_pa
 	    if (util_is_file( full_src_path )) {
 	      if (msg != NULL)
 		msg_update( msg , full_src_path);
-	      util_copy_file__( full_src_path , full_target_path , buffer_size , buffer);
+	      full_src_path = util_copy_file__( full_src_path , full_target_path , buffer_size , buffer , true);
 	    } else 
 	      util_copy_directory__( full_src_path , full_target_path , buffer_size , buffer , msg);
 
@@ -4352,7 +4367,7 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
     resource it should close the file descriptor.
 
     ** Observe that with this locking scheme the existence of a lockfile
-       is not really interesting. **
+    ** is not really interesting. 
 */
     
 

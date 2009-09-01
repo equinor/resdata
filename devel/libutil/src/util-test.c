@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <signal.h>
 #include <stdio.h>
 #include <util.h>
 #include <string.h>      
@@ -40,7 +41,7 @@ void write_random_file( block_fs_type * fs , const char * prefix , int max_file 
     free( backup_file );
   }
 
-  for (int i= 0; i < 3; i++) {
+  for (int i= 0; i < 5; i++) {
     filename = util_realloc_sprintf(filename , "%s.%d" , prefix , (rand() % max_file));
     if (block_fs_has_file( fs , filename )) {
       char * backup_file = util_alloc_filename("/tmp" , filename , NULL);
@@ -51,6 +52,7 @@ void write_random_file( block_fs_type * fs , const char * prefix , int max_file 
   }
   free( filename );
 }
+
 
 
 void check_file(block_fs_type * block_fs , const char * backup_file , const char * filename , void * block_buffer , void * plain_buffer) {
@@ -93,7 +95,7 @@ void check_all(block_fs_type * block_fs , int max_file , const char * prefix , v
 
 
 void random_test(int outer_loop , int inner_loop) {
-  int max_file            = 100;
+  int max_file            = 1000;
   int min_size            = 10;
   int max_size            = 1067;
   const int block_size    = 1;
@@ -113,7 +115,7 @@ void random_test(int outer_loop , int inner_loop) {
 
   for (int j=0; j < outer_loop; j++) {
     block_fs_type * fs;
-    fs = block_fs_mount( mount_file , block_size , 128 , 1.0 , false , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
+    fs = block_fs_mount( mount_file , block_size , 128 , 0.25 , false , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
                                                                                     to recover from crashes. */
     {
       char * index_file = util_alloc_sprintf("initial_index.%d" , j);
@@ -147,14 +149,13 @@ void random_test(int outer_loop , int inner_loop) {
       free( index_file );
     }
     
-    block_fs_close( fs , true);
+    //block_fs_close( fs , true);
   }
   {
-    block_fs_type * fs = block_fs_mount( mount_file , block_size , 1024 , 1.0 , false , false);
-
+    block_fs_type * fs = block_fs_mount( mount_file , block_size , 1024 , 0.25 , false , false);
+    
     check_all(fs , max_file , prefix , buffer , buffer2);
-    
-    
+    block_fs_defrag( fs );
     block_fs_close( fs , true);
   }
   free( buffer );
@@ -282,11 +283,9 @@ void large_test(int external_loops , int internal_loops) {
 
 
 int main(int argc , char ** argv) {
-  int A = 16711935;
-  int B = (A << 8);
-  printf("B: %d \n",B);
-  large_test(100   , 100);
-  //random_test(10 , 10);
+  signal(SIGFPE , util_abort_signal);    /* Segmentation violation, i.e. overwriting memory ... */
+  //large_test(100   , 100);
+  random_test(25 , 100);
   //speed_test(true , 10000);
 }
 

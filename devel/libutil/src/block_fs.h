@@ -28,8 +28,8 @@ void            block_fs_fprintf_log( block_fs_type * block_fs );
 void            block_fs_fprintf_logfile( const char * filename);
 void            block_fs_unlink_file( block_fs_type * block_fs , const char * filename);
 bool            block_fs_has_file( const block_fs_type * block_fs , const char * filename);
-const char    * block_fs_get_mount_point( const block_fs_type * block_fs );
 vector_type   * block_fs_alloc_filelist( const block_fs_type * block_fs  , const char * pattern , block_fs_sort_type sort_mode , bool include_free_nodes );
+void            block_fs_defrag( block_fs_type * block_fs );
 
 long int        file_node_get_node_offset( const file_node_type * file_node );
 long int        file_node_get_data_offset( const file_node_type * file_node );
