@@ -1237,24 +1237,26 @@ bool util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size ,
 }
 
 
-static void util_copy_file__(const char * src_file , const char * target_file, int buffer_size , void * buffer , bool abort_on_error) {
-  if (util_same_file(src_file , target_file)) 
+static bool util_copy_file__(const char * src_file , const char * target_file, int buffer_size , void * buffer , bool abort_on_error) {
+  if (util_same_file(src_file , target_file)) {
     fprintf(stderr,"%s Warning: trying to copy %s onto itself - nothing done\n",__func__ , src_file);
-  else {
+    return false;
+  } else {
     {
       FILE * src_stream      = util_fopen(src_file     , "r");
       FILE * target_stream   = util_fopen(target_file  , "w");
-      
-      util_copy_stream(src_stream , target_stream , buffer_size , buffer , abort_on_error);
+      bool result = util_copy_stream(src_stream , target_stream , buffer_size , buffer , abort_on_error);
+        
       fclose(src_stream);
       fclose(target_stream);
+      return result;
     }
   }
 }
 
 
 
-void util_copy_file(const char * src_file , const char * target_file, bool abort_on_error) {
+bool util_copy_file(const char * src_file , const char * target_file, bool abort_on_error) {
   void * buffer   = NULL;
   size_t buffer_size = util_size_t_max( 32 , util_file_size(src_file) );  /* The copy stream function will hang if buffer size == 0 */
   do {
@@ -1265,8 +1267,11 @@ void util_copy_file(const char * src_file , const char * target_file, bool abort
   if (buffer_size == 0)
     util_abort("%s: failed to allocate any memory ?? \n",__func__);
   
-  util_copy_file__(src_file , target_file , buffer_size , buffer , abort_on_error);
-  free(buffer);
+  {
+    bool result = util_copy_file__(src_file , target_file , buffer_size , buffer , abort_on_error);
+    free(buffer);
+    return result;
+  }
 }
 
 
@@ -1279,8 +1284,6 @@ msg_type   * msg_alloc(const char *);
 void         msg_show(msg_type * );
 void         msg_free(msg_type *  , bool);
 void         msg_update(msg_type * , const char * );
-
-
 
 static void util_copy_directory__(const char * src_path , const char * target_path , int buffer_size , void * buffer , msg_type * msg) {
   if (!util_is_directory(src_path))
@@ -1303,7 +1306,7 @@ static void util_copy_directory__(const char * src_path , const char * target_pa
 	    if (util_is_file( full_src_path )) {
 	      if (msg != NULL)
 		msg_update( msg , full_src_path);
-	      full_src_path = util_copy_file__( full_src_path , full_target_path , buffer_size , buffer , true);
+	      util_copy_file__( full_src_path , full_target_path , buffer_size , buffer , true);
 	    } else 
 	      util_copy_directory__( full_src_path , full_target_path , buffer_size , buffer , msg);
 
@@ -1316,6 +1319,7 @@ static void util_copy_directory__(const char * src_path , const char * target_pa
     closedir( dirH );
   }
 }
+
 
 /** 
     Equivalent to shell command cp -r src_path target_path

@@ -6,7 +6,7 @@
 
 void eol_fix_file(const char * filename) {
   char * tmp_file = util_alloc_tmp_file("/tmp" , "eol-fix" , true);
-  util_copy_file(filename , tmp_file);
+  util_copy_file(filename , tmp_file , true);
   {
     FILE * src    = util_fopen(tmp_file , "r");
     FILE * target = util_fopen(filename , "w");

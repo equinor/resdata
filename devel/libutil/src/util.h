@@ -154,7 +154,7 @@ inline       bool util_string_equal(const char * s1 , const char * s2 );
 char       * util_alloc_strupr_copy(const char * );
 void         util_string_tr(char * , char , char);
 bool 	     util_copy_stream(FILE *, FILE *, int , void * , bool abort_on_error);
-void 	     util_copy_file(const char * , const char * , bool abort_on_error);
+bool 	     util_copy_file(const char * , const char * , bool abort_on_error);
 void         util_copy_directory(const char *  , const char * , const char *);
 void         util_walk_directory(const char * root_path , file_callback_ftype * file_callback , void * callback_arg);
 char       * util_alloc_cwd(void);
