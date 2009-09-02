@@ -76,8 +76,8 @@ mem_free.o  : mem_free.c
 
 #################################################################
 
-BIN:	util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x replace.x bls
-BIN_FILES = util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x bls
+BIN:	util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x replace.x bls.x
+BIN_FILES = util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x
 
 util.x: util-test.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) util-test.o -o util.x     $(LINK_LIB_PATH) $(LIB_LINK) 
@@ -97,5 +97,5 @@ grdecl_to_ascii.x: grdecl_to_ascii.o $(LIB)
 replace.x: replace.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) replace.o -o replace.x  -L./ -lutil -lz -lpthread -lm
 
-bls: bls.o $(LIB)
+bls.x: bls.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) bls.o -o bls.x  -L./ -lutil -lz -lpthread -lm
