@@ -441,6 +441,17 @@ const char * ecl_sum_get_simulation_case(const ecl_sum_type * ecl_sum) {
 
 /*****************************************************************/
 
+bool ecl_sum_general_is_total(const ecl_sum_type * ecl_sum , const char * gen_key) {
+  return ecl_smspec_general_is_total( ecl_sum->smspec , gen_key );
+}
+
+bool ecl_sum_var_is_total(const ecl_sum_type * ecl_sum , const char * gen_key) {
+  return ecl_smspec_general_is_total( ecl_sum->smspec , gen_key );
+}
+
+
+/*****************************************************************/
+
 
 stringlist_type * ecl_sum_alloc_matching_general_var_list(const ecl_sum_type * ecl_sum , const char * pattern) {
   return ecl_smspec_alloc_matching_general_var_list(ecl_sum->smspec , pattern );

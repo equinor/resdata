@@ -7,6 +7,64 @@
 #include <ecl_region.h>
 #include <util.h>
 
+/**
+   This file implements a type called ecl_region which is a way to
+   select and keep track of designated cells in an ECLIPSE reservoir
+   grid. An instance is allocated with a grid (a shared reference
+   which is NOT modified). Then we can select/deselect cells based on:
+
+     1. Integer equality     - ecl_region_select_equal()
+     2. Float interval       - ecl_region_select_in_interval()
+     3. A rectangualar box   - ecl_region_select_from_box()
+     4. Subsections of i/j/k - ecl_region_select_i1i2() / ecl_region_seleect_j1j2() / ...
+     5. All cells            - ecl_region_select_all()
+
+   When allocating an instance you determine whether all cells should
+   be initially selected, or not-selected. The various select
+   functions can (of course ...) be chained together. All functions
+   exist in a xxx_select() and an opposite xxx_delect() version.
+
+   When you are finished with selecting you can query the ecl_region
+   instance for the number of active cells, and get a (const int *) to
+   the indices. When it comes to results you can either get them in
+   terms of active indices or global indices (refer to ecl_grid for
+   the difference between active and global indices).
+
+   For the functions which take ecl_kw input, the ecl_kw instance must
+   have either nx*ny*nz elements, or nactive(from the grid)
+   elements. This is checked, and the program will fail hard if it is
+   not satisfied.
+
+   Example:
+   --------
+   
+   ecl_grid_type   * ecl_grid;
+   ecl_kw_type     * soil;
+   ecl_kw_type     * regions;
+   ecl_region_type * ecl_region;
+
+   // Load grid, soil and regions somehow.
+
+   ecl_region = ecl_region_alloc( ecl_grid , false );                       // Start with nothing selected 
+   ecl_region_select_in_interval( ecl_region , soil , 0.50, 1.00);          // Select all cells with soil > 0.50
+   ecl_region_select_equal( ecl_region , regions , 3 );                     // Only consider ECLIPSE region 3.
+   ecl_region_select_k1k2( ecl_region , 5 , 8);                             // Select layers 5,6,7,8
+   {
+      int num_cells         = ecl_region_get_global_size( ecl_region );     // How many cells are active 
+      const int * cell_list = ecl_region_get_global_list( ecl_region );     // Get a list of indices
+      int i;
+      printf("%d cells satisfy your selection. The cells are: \n");
+
+      for (i=0; i < num_cells; i++) 
+         printf("Cell: %d \n",cell_list[i]); 
+   }
+
+   ecl_region_free( ecl_region );
+
+*/
+
+
+
 #define ECL_REGION_TYPE_ID 1106377
 
 struct ecl_region_struct {
@@ -394,3 +452,14 @@ void ecl_region_select_all( ecl_region_type * region) {
 void ecl_region_deselect_all( ecl_region_type * region ) {
   ecl_region_select_all__( region , false );
 }
+
+
+/*****************************************************************/
+
+void ecl_region_invert_selection( ecl_region_type * region ) {
+  int global_index;
+  for (global_index = 0; global_index < region->grid_vol; global_index++) 
+    region->active_mask[ global_index ] = !region->active_mask[ global_index ];
+  ecl_region_invalidate_index_list( region );
+}
+

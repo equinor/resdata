@@ -206,6 +206,14 @@ ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var) {
 }
 
 
+static ecl_smspec_var_type ecl_smspec_split_general(const char * gen_key , int * argc , char *** argv) {
+  ecl_smspec_var_type var_type;
+  util_split_string(gen_key , ":" , argc , argv);
+  var_type = ecl_smspec_identify_var_type( (*argv)[0] );
+  return var_type;
+}
+
+
 
 /**
   Input i,j,k are assumed to be in the interval [1..nx] , [1..ny],
@@ -273,9 +281,9 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
       }
     }
     
-    ecl_smspec->grid_nx = ecl_kw_iget_int(dimens , 1);
-    ecl_smspec->grid_ny = ecl_kw_iget_int(dimens , 2);
-    ecl_smspec->grid_nz = ecl_kw_iget_int(dimens , 3);
+    ecl_smspec->grid_nx     = ecl_kw_iget_int(dimens , 1);
+    ecl_smspec->grid_ny     = ecl_kw_iget_int(dimens , 2);
+    ecl_smspec->grid_nz     = ecl_kw_iget_int(dimens , 3);
     ecl_smspec->params_size = ecl_kw_get_size(keywords);
     ecl_smspec->var_type    = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->var_type , __func__);
 
@@ -702,8 +710,7 @@ int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const 
   char ** argv;
   int     argc;
   ecl_smspec_var_type var_type;
-  util_split_string(lookup_kw , ":" , &argc , &argv);
-  var_type = ecl_smspec_identify_var_type(argv[0]);
+  var_type = ecl_smspec_split_general( lookup_kw , &argc , &argv );
   
   switch(var_type) {
   case(ECL_SMSPEC_MISC_VAR):
@@ -846,6 +853,69 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
   *_sim_days = sim_days;
   *_sim_time= sim_time;
 }
+
+
+/*****************************************************************/
+/*
+  This function checks in a predefined list whether a certain WGNAMES
+  variable represents a total accumulated quantity. Only the last
+  three characters in the variable is considered (i.e. the leading
+  'W', 'G' or 'F' is discarded).
+*/
+
+bool ecl_smspec_var_is_total( const ecl_smspec_type * smspec , const char * var ) {
+  /** 
+      The list below is all the keyowrds with 'Total' in the
+      information from the tables 2.7 - 2.11.  Have skipped some of
+      the most exotic keywords (AND ALL THE HISTORICAL).
+  */
+  
+  const char *total_vars[29] = {"OPT"  , "GPT"  , "WPT" , "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" , "WIT" ,
+                                "WVPT" , "WVIT" , "GMT"  , "GPTF" , "GIT"  , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" , 
+                                "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" };
+  int ivar;
+  bool is_total = false;
+  for (ivar = 0; ivar < 29; ivar++) {
+    if (util_string_equal( total_vars[ivar] , &var[1])) {
+      is_total = true;
+      break;
+    }
+  }
+  return is_total;
+}
+
+
+
+/**
+   This function checks whether an input general key (i.e. FWPR or
+   GGPT:NORTH) represents an accumulated total: 
+   
+     * If the variabel is one of [ECL_SMSPEC_WELL_VAR ,
+       ECL_SMSPEC_GROUP_VAR , ECL_SMSPEC_FIELD_VAR] the
+       ecl_smspec_var_is_total() is consulted. 
+
+     * Otherwise the function will just return false.
+*/
+
+
+bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * gen_key) {
+  char ** argv;
+  int     argc;
+  bool is_total;
+  ecl_smspec_var_type var_type;
+  var_type = ecl_smspec_split_general( gen_key , &argc , &argv );
+  if (var_type == ECL_SMSPEC_WELL_VAR || var_type == ECL_SMSPEC_GROUP_VAR || var_type == ECL_SMSPEC_FIELD_VAR) 
+    is_total = ecl_smspec_var_is_total( smspec , argv[0] );
+  else
+    is_total = false;
+  
+  util_free_stringlist( argv , argc );
+  return is_total;
+}
+
+
+
+
 
 
 /*****************************************************************/

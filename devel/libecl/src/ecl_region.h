@@ -29,7 +29,7 @@ void              ecl_region_select_j1j2( ecl_region_type * region , int j1 , in
 void              ecl_region_deselect_j1j2( ecl_region_type * region , int j1 , int i2);
 void              ecl_region_select_k1k2( ecl_region_type * region , int k1 , int k2);
 void              ecl_region_deselect_k1k2( ecl_region_type * region , int k1 , int i2);
-
+void              ecl_region_invert_selection( ecl_region_type * region );
 
 UTIL_IS_INSTANCE_HEADER( ecl_region );
 UTIL_SAFE_CAST_HEADER( ecl_region );
