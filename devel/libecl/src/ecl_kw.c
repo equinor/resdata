@@ -9,8 +9,8 @@
 #include <fortio.h>
 #include <util.h>
 #include <buffer.h>
+#include <endian_flip.h>
 
-#define DEBUG 1
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
@@ -19,10 +19,7 @@
 
 struct ecl_kw_struct {
   UTIL_TYPE_ID_DECLARATION;
-  bool  fmt_file;
-  bool  endian_convert;
-  
-  int   size;
+  lint   size;
   int 	sizeof_ctype;
   int   fmt_linesize;
   int   blocksize;
@@ -299,9 +296,7 @@ const void * ecl_kw_copyc__(const void * void_kw) {
 }
 
 static void * ecl_kw_iget_ptr_static(const ecl_kw_type *ecl_kw , int i) {
-#ifdef DEBUG
   ecl_kw_assert_index(ecl_kw , i , __func__);
-#endif
   return &ecl_kw->data[i * ecl_kw->sizeof_ctype];
 }
 
@@ -312,9 +307,7 @@ static void ecl_kw_iget_static(const ecl_kw_type *ecl_kw , int i , void *iptr) {
 
 
 static void ecl_kw_iset_static(ecl_kw_type *ecl_kw , int i , const void *iptr) {
-#ifdef DEBUG
   ecl_kw_assert_index(ecl_kw , i , __func__);
-#endif
   memcpy(&ecl_kw->data[i * ecl_kw->sizeof_ctype] , iptr, ecl_kw->sizeof_ctype);
 }
 
@@ -1181,7 +1174,7 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
     fprintf(stream , ecl_kw_header_write_fmt ,ecl_kw->header , ecl_kw->size, __get_ecl_str_type(ecl_kw->ecl_type));
   else {
     int size = ecl_kw->size;
-    if (ecl_kw->endian_convert) 
+    if (fortio_endian_flip( fortio ))
       util_endian_flip_vector(&size , sizeof size , 1);
 
     fortio_init_write(fortio , ecl_str_len + sizeof(int) + ecl_type_len);
@@ -1215,8 +1208,6 @@ const char * ecl_kw_get_str_type_ref(const ecl_kw_type *ecl_kw) {
 }
 
 ecl_type_enum ecl_kw_get_type(const ecl_kw_type * ecl_kw) { return ecl_kw->ecl_type; }
-
-bool ecl_kw_get_endian_convert(const ecl_kw_type * ecl_kw) { return ecl_kw->endian_convert; }
 
 
 /******************************************************************/
@@ -1262,12 +1253,12 @@ void ecl_kw_cfwrite(const ecl_kw_type * ecl_kw , FILE *stream) {
 void ecl_kw_cfread_header(ecl_kw_type * ecl_kw , FILE * stream) {
   bool dummy_bool;
   
-  fread(&dummy_bool , sizeof dummy_bool , 1, stream);  /* Old ecl_kw->fmt_file */
+  fread(&dummy_bool , sizeof dummy_bool , 1, stream);                         /* Old ecl_kw->fmt_file */
   fread(&ecl_kw->sizeof_ctype 	 , sizeof ecl_kw->sizeof_ctype , 1 , stream);
   fread(&ecl_kw->size    	 , sizeof ecl_kw->size         , 1 , stream);
   fread(&ecl_kw->fmt_linesize 	 , sizeof ecl_kw->fmt_linesize , 1 , stream);
   fread(&ecl_kw->blocksize    	 , sizeof ecl_kw->blocksize , 1 , stream);
-  fread(&dummy_bool , sizeof dummy_bool , 1, stream);  /* Old ecl_kw->fmt_file */
+  fread(&dummy_bool , sizeof dummy_bool , 1, stream);                         /* Old ecl_kw->fmt_file */
   fread(&ecl_kw->ecl_type        , sizeof ecl_kw->ecl_type   , 1 , stream);
 
   ecl_kw->header    = util_fread_realloc_string(ecl_kw->header    , stream);

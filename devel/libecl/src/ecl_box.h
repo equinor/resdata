@@ -1,5 +1,9 @@
 #ifndef __ECL_BOX_H__
 #define __ECL_BOX_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <ecl_grid.h>
 
 
@@ -20,5 +24,7 @@ const int    * ecl_box_get_global_list( const ecl_box_type * ecl_box );
 UTIL_IS_INSTANCE_HEADER( ecl_box );
 UTIL_SAFE_CAST_HEADER( ecl_box );
 
-
+#ifdef __cplusplus
+}
+#endif
 #endif

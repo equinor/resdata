@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <fortio.h>
 #include <util.h>
+#include <endian_flip.h>
 
 extern int errno;
 
@@ -43,7 +44,7 @@ struct fortio_struct {
   char    *filename;
   int      active_header;
   int      rec_nr;
-  bool     endian_flip_header;
+  bool     endian_flip_header;  
   bool     fmt_file;            /* This is not really used by the fortio instance - but it is very convenient to store it here. */
 };
 
@@ -193,7 +194,7 @@ fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_
 }
 
 
-fortio_type *fortio_fopen(const char *filename , const char *mode, bool endian_flip_header , bool fmt_file) {
+fortio_type * fortio_fopen(const char *filename , const char *mode, bool endian_flip_header , bool fmt_file) {
   fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
   
   fortio->stream = util_fopen(fortio->filename , mode);

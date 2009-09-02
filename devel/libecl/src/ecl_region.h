@@ -1,6 +1,9 @@
 #ifndef __ECL_REGION_H__
 #define __ECL_REGION_H__
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <ecl_box.h>
 #include <ecl_grid.h>
 #include <stdbool.h>
 
@@ -34,5 +37,7 @@ void              ecl_region_invert_selection( ecl_region_type * region );
 UTIL_IS_INSTANCE_HEADER( ecl_region );
 UTIL_SAFE_CAST_HEADER( ecl_region );
 
-
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -16,7 +16,6 @@ typedef struct ecl_kw_struct      ecl_kw_type;
 
 ecl_type_enum ecl_kw_get_type(const ecl_kw_type *);
 const char  * ecl_kw_get_str_type_ref(const ecl_kw_type *);
-/*const char  * ecl_kw_str_type(ecl_type_enum );*/
 const char  * ecl_kw_get_header_ref(const ecl_kw_type *);
 char        * ecl_kw_alloc_strip_header(const ecl_kw_type * );
 ecl_kw_type * ecl_kw_alloc_empty();
@@ -59,7 +58,6 @@ ecl_kw_type * ecl_kw_alloc_complete(const char * ,  int , ecl_type_enum , const 
 ecl_kw_type * ecl_kw_alloc_complete_shared(const char * ,  int , ecl_type_enum , void * );
 void          ecl_kw_cfwrite(const ecl_kw_type *  , FILE *);
 void          ecl_kw_cfread(ecl_kw_type *  , FILE *);
-bool          ecl_kw_get_endian_convert(const ecl_kw_type * );
 void          ecl_kw_fwrite_param(const char * , bool  , bool , const char * ,  ecl_type_enum , int , void * );
 void          ecl_kw_fwrite_param_fortio(fortio_type *, const char * ,  ecl_type_enum , int , void * );
 void          ecl_kw_summarize(const ecl_kw_type * ecl_kw);
