@@ -9,6 +9,7 @@
 #include <vector.h>
 #include <ecl_file.h>
 #include <int_vector.h>
+#include <ecl_endian_flip.h>
 
 /**
    This data structure is for loading one eclipse RFT file. One RFT
@@ -63,36 +64,33 @@ static void ecl_rft_file_add_node(ecl_rft_file_type * rft_vector , const ecl_rft
 
 
 ecl_rft_file_type * ecl_rft_file_alloc(const char * filename) {
-  bool endian_flip;
-  fortio_guess_endian_flip( filename , &endian_flip);
-  {
-    bool fmt_file                  = ecl_util_fmt_file(filename); 
-    ecl_rft_file_type * rft_vector = ecl_rft_file_alloc_empty(filename);
-    fortio_type   * fortio         = fortio_fopen( filename , "r" , endian_flip , fmt_file);
-    bool complete = false;
-    int global_index = 0;
-    do {
-      ecl_file_type * ecl_file = ecl_file_fread_alloc_RFT_section( fortio );
-      if (ecl_file != NULL) {
-	ecl_rft_node_type * rft_node = ecl_rft_node_alloc( ecl_file );
-	if (rft_node != NULL) { 
-	  const char * well_name = ecl_rft_node_get_well_name( rft_node );
-	  ecl_rft_file_add_node(rft_vector , rft_node);
-	  if (!hash_has_key( rft_vector->well_index , well_name)) 
-	    hash_insert_hash_owned_ref( rft_vector->well_index , well_name , int_vector_alloc( 0 , 0 ) , int_vector_free__);
-	  {
-	    int_vector_type * index_list = hash_get( rft_vector->well_index , well_name);
-	    int_vector_append(index_list , global_index);
-	  }	  
-	  global_index++;
-	}
-	ecl_file_free( ecl_file );
-      } else complete = true;
-    } while ( !complete );
-    fortio_fclose( fortio );
-    return rft_vector;
-  }
+  bool fmt_file                  = ecl_util_fmt_file(filename); 
+  ecl_rft_file_type * rft_vector = ecl_rft_file_alloc_empty(filename);
+  fortio_type   * fortio         = fortio_fopen( filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
+  bool complete = false;
+  int global_index = 0;
+  do {
+    ecl_file_type * ecl_file = ecl_file_fread_alloc_RFT_section( fortio );
+    if (ecl_file != NULL) {
+      ecl_rft_node_type * rft_node = ecl_rft_node_alloc( ecl_file );
+      if (rft_node != NULL) { 
+        const char * well_name = ecl_rft_node_get_well_name( rft_node );
+        ecl_rft_file_add_node(rft_vector , rft_node);
+        if (!hash_has_key( rft_vector->well_index , well_name)) 
+          hash_insert_hash_owned_ref( rft_vector->well_index , well_name , int_vector_alloc( 0 , 0 ) , int_vector_free__);
+        {
+          int_vector_type * index_list = hash_get( rft_vector->well_index , well_name);
+          int_vector_append(index_list , global_index);
+        }	  
+        global_index++;
+      }
+      ecl_file_free( ecl_file );
+    } else complete = true;
+  } while ( !complete );
+  fortio_fclose( fortio );
+  return rft_vector;
 }
+
 
 
 void ecl_rft_file_free(ecl_rft_file_type * rft_vector) {

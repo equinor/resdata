@@ -4,6 +4,7 @@
 #include <ecl_util.h>
 #include <ecl_kw.h>
 #include <msg.h>
+#include <ecl_endian_flip.h>
 
 void unpack_file(const char * filename) {
   ecl_file_enum target_type = ECL_OTHER_FILE;
@@ -21,7 +22,7 @@ void unpack_file(const char * filename) {
     printf("** Warning: when unpacking unified summary files it as ambigous - starting with 0001  -> \n");
   }
   {
-    fortio_type   * fortio_src = fortio_fopen( filename , "r" , true , fmt_file );
+    fortio_type   * fortio_src = fortio_fopen( filename , "r" , ECL_ENDIAN_FLIP , fmt_file );
     ecl_file_type * src_file;
     int    offset;
     int    report_step = 0;
@@ -53,7 +54,7 @@ void unpack_file(const char * filename) {
       
       if (src_file != NULL) {
 	char * target_file = ecl_util_alloc_filename( path , base , target_type , fmt_file , report_step);
-	fortio_type * fortio_target = fortio_fopen( target_file , "w" , true , fmt_file );
+	fortio_type * fortio_target = fortio_fopen( target_file , "w" , ECL_ENDIAN_FLIP , fmt_file );
 	
 	msg_update(msg , target_file);
 	ecl_file_fwrite_fortio( src_file , fortio_target , offset);

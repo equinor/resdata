@@ -13,12 +13,12 @@ typedef struct ecl_sum_struct       ecl_sum_type;
 
 bool             ecl_sum_general_is_total(const ecl_sum_type * ecl_sum , const char * gen_key);
 bool             ecl_sum_var_is_total(const ecl_sum_type * ecl_sum , const char * gen_key);
-void             ecl_sum_fread_realloc_data(ecl_sum_type *, int , const char ** , bool);
+void             ecl_sum_fread_realloc_data(ecl_sum_type *, int , const char ** );
 void             ecl_sum_free_data(ecl_sum_type * );
 void             ecl_sum_free__(void * );
 void             ecl_sum_free(ecl_sum_type * );
-ecl_sum_type   * ecl_sum_fread_alloc(const char * , int , const char **, bool);
-ecl_sum_type   * ecl_sum_fread_alloc_case(const char *  , bool );
+ecl_sum_type   * ecl_sum_fread_alloc(const char * , int , const char **);
+ecl_sum_type   * ecl_sum_fread_alloc_case(const char *  );
 
 /* Accessor functions : */
 double            ecl_sum_get_well_var(const ecl_sum_type * ecl_sum , int ministep , const char * well , const char *var);
@@ -51,7 +51,7 @@ bool              ecl_sum_has_misc_var(const ecl_sum_type * ecl_sum , const char
 double            ecl_sum_get_well_completion_var(const ecl_sum_type * ecl_sum , int ministep , const char * well , const char *var, int cell_nr);
 int               ecl_sum_get_well_completion_var_index(const ecl_sum_type * ecl_sum , const char * well , const char *var, int cell_nr);
 bool              ecl_sum_has_well_completion_var(const ecl_sum_type * ecl_sum , const char * well , const char *var, int cell_nr);
-
+  
 double            ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int ministep , const char * lookup_kw);
 int               ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lookup_kw);
 bool              ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw);

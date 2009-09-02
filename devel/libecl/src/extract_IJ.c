@@ -17,7 +17,7 @@ int main (int argc , char ** argv) {
     {
       bool_vector_type * IJ_set            = bool_vector_alloc( 0 , false );
       int_vector_type  * global_index_list = int_vector_alloc( 0 , -1 );
-      ecl_grid_type    * ecl_grid = ecl_grid_alloc( grid_file , true );
+      ecl_grid_type    * ecl_grid = ecl_grid_alloc( grid_file );
       ecl_kw_type      * regions_kw;
       FILE             * stream = util_fopen( regions_file , "r"); 
       int               region_value,nx,ny,nz;

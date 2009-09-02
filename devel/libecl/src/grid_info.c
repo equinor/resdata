@@ -10,15 +10,14 @@ int main(int argc, char ** argv) {
     exit(1);
   }
   {
-    bool endian_flip = true;
     ecl_grid_type * ecl_grid;
     const char    * grid_file = argv[1];
     
     
-    ecl_grid = ecl_grid_alloc(grid_file , endian_flip);
+    ecl_grid = ecl_grid_alloc(grid_file );
     ecl_grid_summarize( ecl_grid );
     if (argc >= 3) {
-      ecl_grid_type * grid2 = ecl_grid_alloc( argv[2] , endian_flip );
+      ecl_grid_type * grid2 = ecl_grid_alloc( argv[2] );
       
       if (ecl_grid_compare( ecl_grid , grid2))
 	printf("\nThe grids %s %s are IDENTICAL.\n" , argv[1] , argv[2]);

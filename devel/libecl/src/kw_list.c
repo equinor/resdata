@@ -5,6 +5,7 @@
 #include <fortio.h>
 #include <string.h>
 #include <ecl_util.h>
+#include <ecl_endian_flip.h>
 
 
 void kw_list(const char *filename) {
@@ -13,7 +14,7 @@ void kw_list(const char *filename) {
 
   printf("-----------------------------------------------------------------\n");
   printf("%s: \n",filename); 
-  fortio = fortio_fopen(filename , "r" , true , fmt_file);
+  fortio = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
   ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
   while(  ecl_kw_fread_realloc(ecl_kw , fortio) ) 
     ecl_kw_summarize(ecl_kw);

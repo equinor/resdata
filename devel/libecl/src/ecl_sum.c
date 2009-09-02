@@ -51,20 +51,20 @@ struct ecl_sum_struct {
 */
 
 
-void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , int files , const char ** data_files , bool endian_convert ) {
+void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , int files , const char ** data_files ) {
   if (ecl_sum->data != NULL)
     ecl_sum_free_data( ecl_sum );
-  ecl_sum->data   = ecl_sum_data_fread_alloc( ecl_sum->smspec , files , data_files , endian_convert);
+  ecl_sum->data   = ecl_sum_data_fread_alloc( ecl_sum->smspec , files , data_files );
 }
 
 
 
-ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const char **data_files , bool endian_convert) {
+ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const char **data_files ) {
   ecl_sum_type *ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
   ecl_sum->__id   = ECL_SUM_ID;
-  ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , endian_convert); 
+  ecl_sum->smspec = ecl_smspec_fread_alloc( header_file ); 
   ecl_sum->data   = NULL;
-  ecl_sum_fread_realloc_data(ecl_sum , files , data_files , endian_convert);
+  ecl_sum_fread_realloc_data(ecl_sum , files , data_files );
   return ecl_sum;
 }
 
@@ -119,7 +119,7 @@ void ecl_sum_free__(void * __ecl_sum) {
 */
 
 
-ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , bool endian_convert){
+ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file ){
   ecl_sum_type * ecl_sum;
   char * path , * base;
   char * header_file;
@@ -129,7 +129,7 @@ ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , bool endian_co
 
   util_alloc_file_components( input_file , &path , &base , NULL);
   ecl_util_alloc_summary_files( path , base , &header_file , &summary_file_list , &files , &fmt_file , &unified);
-  ecl_sum = ecl_sum_fread_alloc( header_file , files , (const char **) summary_file_list , endian_convert );
+  ecl_sum = ecl_sum_fread_alloc( header_file , files , (const char **) summary_file_list );
   
   free(base);
   util_safe_free(path);

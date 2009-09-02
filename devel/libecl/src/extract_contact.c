@@ -99,7 +99,7 @@ static ecl_file_type * load_restart_section( const char * unif_restart_file , in
 
   ecl_file_type * section;
   printf("Loading report step %04d from: %s .....", report_nr , unif_restart_file); fflush(stdout);
-  section = ecl_file_fread_alloc_unrst_section(  unif_restart_file , report_nr , true );
+  section = ecl_file_fread_alloc_unrst_section(  unif_restart_file , report_nr );
   if (section == NULL)
     util_exit("exit: failed to load report_step:%d from file:%s.\n", report_nr , unif_restart_file);
   printf("\n");
@@ -207,7 +207,7 @@ int main (int argc , char ** argv) {
   /* Loading the grid */
   if (argc > 1) {
     printf("Loading grid file:%s ......" , argv[1]); fflush(stdout);
-    grid = ecl_grid_alloc( argv[1] , true );    
+    grid = ecl_grid_alloc( argv[1] );    
     printf("\n");
   } else
     usage();
@@ -242,9 +242,9 @@ int main (int argc , char ** argv) {
 	  char * restart_file1 = argv[2];
 	  char * restart_file2 = argv[3];
 	  printf("Loading restart file: %s...\n", restart_file1);
-	  section1 = ecl_file_fread_alloc( restart_file1 , true);
+	  section1 = ecl_file_fread_alloc( restart_file1 );
 	  printf("Loading restart file: %s...\n", restart_file2);
-	  section2 = ecl_file_fread_alloc( restart_file2 , true);
+	  section2 = ecl_file_fread_alloc( restart_file2 );
 	  next_iarg = 4;
 	} else
 	  usage();

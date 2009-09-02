@@ -5,7 +5,6 @@
 #include <errno.h>
 #include <fortio.h>
 #include <util.h>
-#include <endian_flip.h>
 
 extern int errno;
 
@@ -407,7 +406,7 @@ void * fortio_fread_alloc_record(fortio_type * fortio) {
 void          fortio_fflush(fortio_type * fortio) { fflush( fortio->stream); }
 FILE        * fortio_get_FILE(const fortio_type *fortio)        { return fortio->stream; }
 int           fortio_get_record_size(const fortio_type *fortio) { return fortio->active_header; }
-bool          fortio_endian_flip(const fortio_type *fortio) 	{ return fortio->endian_flip_header; }
+//bool          fortio_endian_flip(const fortio_type *fortio) 	{ return fortio->endian_flip_header; }
 bool          fortio_fmt_file(const fortio_type *fortio)    	{ return fortio->fmt_file; }
 void          fortio_rewind(const fortio_type *fortio)          { rewind(fortio->stream); }
 const char  * fortio_filename_ref(const fortio_type * fortio)   { return (const char *) fortio->filename; }

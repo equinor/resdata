@@ -9,7 +9,7 @@
 #include <fortio.h>
 #include <util.h>
 #include <buffer.h>
-#include <endian_flip.h>
+#include <ecl_endian_flip.h>
 
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -19,7 +19,7 @@
 
 struct ecl_kw_struct {
   UTIL_TYPE_ID_DECLARATION;
-  lint   size;
+  int   size;
   int 	sizeof_ctype;
   int   fmt_linesize;
   int   blocksize;
@@ -539,10 +539,10 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
   if (ecl_kw->size > 0) {
     if (fmt_file) {
       const int blocks = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
-      FILE *stream = fortio_get_FILE(fortio);
-      int offset = 0;
-      int index = 0;
-      int ib,ir;
+      FILE * stream   = fortio_get_FILE(fortio);
+      int    offset   = 0;
+      int    index    = 0;
+      int    ib,ir;
       for (ib = 0; ib < blocks; ib++) {
 	int read_elm = util_int_min((ib + 1) * ecl_kw->blocksize , ecl_kw->size) - ib * ecl_kw->blocksize;
 	for (ir = 0; ir < read_elm; ir++) {
@@ -639,7 +639,7 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 	*/
 	fortio_fread_buffer(fortio , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
       
-      if (fortio_endian_flip(fortio))
+      if (ECL_ENDIAN_FLIP)
 	ecl_kw_endian_convert_data(ecl_kw);
     }
   }
@@ -701,7 +701,7 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
       fread(ecl_type_str , sizeof(char)   , ecl_type_len , stream);
       fortio_complete_read(fortio);
       OK = true;
-      if (fortio_endian_flip(fortio)) 
+      if (ECL_ENDIAN_FLIP) 
 	util_endian_flip_vector(&size , sizeof size , 1);
     } else 
       OK = false;
@@ -1107,7 +1107,7 @@ static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio)
 
 
   if (!fmt_file) { 
-    if (fortio_endian_flip(fortio)) {
+    if (ECL_ENDIAN_FLIP) {
       ecl_kw_endian_convert_data(ecl_kw);
       local_endian_flip = true;
     }
@@ -1174,7 +1174,7 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
     fprintf(stream , ecl_kw_header_write_fmt ,ecl_kw->header , ecl_kw->size, __get_ecl_str_type(ecl_kw->ecl_type));
   else {
     int size = ecl_kw->size;
-    if (fortio_endian_flip( fortio ))
+    if (ECL_ENDIAN_FLIP)
       util_endian_flip_vector(&size , sizeof size , 1);
 
     fortio_init_write(fortio , ecl_str_len + sizeof(int) + ecl_type_len);
@@ -1335,8 +1335,8 @@ void ecl_kw_fwrite_param_fortio(fortio_type * fortio, const char * header ,  ecl
     
 
 
-void ecl_kw_fwrite_param(const char * filename , bool fmt_file , bool endian_convert , const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
-  fortio_type   * fortio = fortio_fopen(filename , "w" , endian_convert , fmt_file);
+void ecl_kw_fwrite_param(const char * filename , bool fmt_file , const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
+  fortio_type   * fortio = fortio_fopen(filename , "w" , ECL_ENDIAN_FLIP , fmt_file);
   ecl_kw_fwrite_param_fortio(fortio , header , ecl_type , size , data);
   fortio_fclose(fortio);
 }
@@ -1361,8 +1361,8 @@ void ecl_kw_get_data_as_double(const ecl_kw_type * ecl_kw , double * double_data
 }
 
 
-void ecl_kw_fread_double_param(const char * filename , bool fmt_file , bool endian_convert, double * double_data) {
-  fortio_type   * fortio      = fortio_fopen(filename , "r" , endian_convert , fmt_file);
+void ecl_kw_fread_double_param(const char * filename , bool fmt_file , double * double_data) {
+  fortio_type   * fortio      = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
   ecl_kw_type   * ecl_kw      = ecl_kw_fread_alloc(fortio);
   fortio_fclose(fortio);
   
@@ -1728,15 +1728,10 @@ void ecl_kw_inplace_add_subkw(ecl_kw_type * my_kw , int my_offset , const ecl_kw
 
 void ecl_kw_inplace_update_file(const ecl_kw_type * ecl_kw , const char * filename, int index) {
   if (util_file_exists(filename)) {
-    bool endian_flip = true;
     bool fmt_file = util_fmt_bit8(filename);
-
-    if (!fmt_file)
-      if (!fortio_guess_endian_flip(filename , &endian_flip)) 
-	util_abort("%s: could not determine endian ness of: %s \n",__func__ , filename);
-
+    
     {
-      fortio_type * fortio =  fortio_fopen(filename , "r+" , endian_flip , fmt_file);
+      fortio_type * fortio =  fortio_fopen(filename , "r+" , ECL_ENDIAN_FLIP , fmt_file);
       ecl_kw_ifseek_kw(ecl_kw_get_header_ref(ecl_kw) , fortio , index);
       {
 	ecl_kw_type *file_kw = ecl_kw_alloc_empty();
@@ -1759,13 +1754,13 @@ void ecl_kw_inplace_update_file(const ecl_kw_type * ecl_kw , const char * filena
 
 /******************************************************************/
 
-bool ecl_kw_is_kw_file(FILE * stream , bool fmt_file , bool endian_flip) {
+bool ecl_kw_is_kw_file(FILE * stream , bool fmt_file ) {
   const long int init_pos = ftell(stream);
   bool kw_file;
   
   {
     ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
-    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , endian_flip , fmt_file , stream);
+    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , ECL_ENDIAN_FLIP , fmt_file , stream);
     
     if (fmt_file) 
       kw_file = ecl_kw_fread_header(ecl_kw , fortio);

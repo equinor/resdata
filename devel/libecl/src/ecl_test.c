@@ -19,7 +19,7 @@
 int
 main (int argc, char **argv)
 {
-  ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case("../../libenkf/src/Gurbat/EXAMPLE_01_BASE.DATA" , true );
+  ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case("../../libenkf/src/Gurbat/EXAMPLE_01_BASE.DATA" );
   
   stringlist_type * keys = ecl_sum_alloc_matching_general_var_list( ecl_sum , argv[1]);
   stringlist_fprintf(keys , " "  , stdout);

@@ -6,7 +6,7 @@
 #include <string.h>
 #include <util.h>
 #include <ecl_util.h>
-
+#include <ecl_endian_flip.h>
 
 
 void file_convert(const char * src_file , const char * target_file, ecl_file_enum file_type , bool fmt_src) {
@@ -24,8 +24,8 @@ void file_convert(const char * src_file , const char * target_file, ecl_file_enu
       formatted_src = false;
   }
   
-  target = fortio_fopen(target_file , "w" , true , !formatted_src);
-  src    = fortio_fopen(src_file , "r" , true , formatted_src);
+  target = fortio_fopen(target_file , "w" , ECL_ENDIAN_FLIP , !formatted_src);
+  src    = fortio_fopen(src_file , "r" , ECL_ENDIAN_FLIP , formatted_src);
   ecl_kw = ecl_kw_fread_alloc(src);
   if (ecl_kw == NULL) {
     fprintf(stderr,"Loading: %s failed - maybe you forgot the header? \n", src_file);

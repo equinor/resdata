@@ -3,7 +3,7 @@
 #include <ecl_util.h>
 #include <stdlib.h>
 #include <msg.h>
-   
+#include <ecl_endian_flip.h>   
 
 
 
@@ -33,7 +33,7 @@ int main(int argc, char ** argv) {
       char *  target_file_name = ecl_util_alloc_filename( path , ecl_base , target_type , fmt_file , -1);
       char ** filelist         = util_alloc_stringlist_copy( (const char **) &argv[1] , num_files );
       ecl_kw_type * seqnum_kw  = NULL;
-      fortio_type * target     = fortio_fopen( target_file_name , "w" , true , fmt_file );
+      fortio_type * target     = fortio_fopen( target_file_name , "w" , ECL_ENDIAN_FLIP , fmt_file );
 
       if (target_type == ECL_UNIFIED_RESTART_FILE) {
 	int dummy;
@@ -58,7 +58,7 @@ int main(int argc, char ** argv) {
 	  prev_report_step = report_step;
 	  msg_update(msg , filelist[i]);
 	  {
-	    ecl_file_type * src_file = ecl_file_fread_alloc( filelist[i] , true );
+	    ecl_file_type * src_file = ecl_file_fread_alloc( filelist[i] );
 	    if (target_type == ECL_UNIFIED_RESTART_FILE) {
 	      /* Must insert the SEQNUM keyword first. */
 	      ecl_kw_iset_int(seqnum_kw , 0 , report_step);

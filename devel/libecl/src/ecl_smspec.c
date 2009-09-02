@@ -44,7 +44,6 @@ struct ecl_smspec_struct {
   int               Nwells , param_offset;
   int               params_size;
   char            * simulation_case;        /* This should be full path and basename - without any extension. */
-  bool              endian_convert;
   
   time_t            sim_start_time;
   int               time_index;
@@ -111,11 +110,10 @@ Completion var:    VAR_TYPE:WELL_NAME:NUM
 
 
 
-static ecl_smspec_type * ecl_smspec_alloc_empty(bool endian_convert , const char * path , const char * base_name) {
+static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char * base_name) {
   ecl_smspec_type *ecl_smspec;
   ecl_smspec = util_malloc(sizeof *ecl_smspec , __func__);
   UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
-  ecl_smspec->endian_convert     	     = endian_convert;
 
   ecl_smspec->well_var_index     	     = hash_alloc();
   ecl_smspec->well_completion_var_index      = hash_alloc();
@@ -247,7 +245,7 @@ static void ecl_smspec_get_ijk( const ecl_smspec_type * smspec , int global_inde
 
 
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file) {
-  ecl_file_type * header = ecl_file_fread_alloc( header_file , ecl_smspec->endian_convert );
+  ecl_file_type * header = ecl_file_fread_alloc( header_file );
   {
     int *date;
     ecl_kw_type *wells     = ecl_file_iget_named_kw(header, "WGNAMES" , 0);
@@ -408,13 +406,13 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 
 
 
-ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file , bool endian_convert) {
+ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file) {
   ecl_smspec_type *ecl_smspec;
   
   {
     char * base_name , *path;
     util_alloc_file_components(header_file , &path , &base_name , NULL);
-    ecl_smspec = ecl_smspec_alloc_empty(endian_convert , path , base_name);
+    ecl_smspec = ecl_smspec_alloc_empty(path , base_name);
     util_safe_free(base_name);
     util_safe_free(path);
   }

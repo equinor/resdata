@@ -58,10 +58,10 @@ ecl_kw_type * ecl_kw_alloc_complete(const char * ,  int , ecl_type_enum , const 
 ecl_kw_type * ecl_kw_alloc_complete_shared(const char * ,  int , ecl_type_enum , void * );
 void          ecl_kw_cfwrite(const ecl_kw_type *  , FILE *);
 void          ecl_kw_cfread(ecl_kw_type *  , FILE *);
-void          ecl_kw_fwrite_param(const char * , bool  , bool , const char * ,  ecl_type_enum , int , void * );
+void          ecl_kw_fwrite_param(const char * , bool  , const char * ,  ecl_type_enum , int , void * );
 void          ecl_kw_fwrite_param_fortio(fortio_type *, const char * ,  ecl_type_enum , int , void * );
 void          ecl_kw_summarize(const ecl_kw_type * ecl_kw);
-void          ecl_kw_fread_double_param(const char * , bool , bool , double *);
+void          ecl_kw_fread_double_param(const char * , bool , double *);
 float         ecl_kw_iget_as_float(const ecl_kw_type * ecl_kw , int i);
 double        ecl_kw_iget_as_double(const ecl_kw_type * ecl_kw , int i);
 void          ecl_kw_get_data_as_double(const ecl_kw_type *, double *);
@@ -75,7 +75,7 @@ void ecl_kw_fread_realloc_compressed(ecl_kw_type *  , FILE *);
 ecl_kw_type * ecl_kw_fread_alloc_compressed(FILE * );
 
 bool ecl_kw_is_grdecl_file(FILE * );
-bool ecl_kw_is_kw_file(FILE * , bool , bool );
+bool ecl_kw_is_kw_file(FILE * , bool );
 void ecl_kw_inplace_sub(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_mul(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_add(ecl_kw_type * , const ecl_kw_type * );

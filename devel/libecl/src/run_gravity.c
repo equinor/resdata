@@ -196,8 +196,8 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
     if (input_length >= 2) {
       ecl_util_get_file_type( input[1] , &file_type , fmt_file , &report_nr );
       if (file_type == ECL_RESTART_FILE) {
-	restart_files[0] = ecl_file_fread_alloc( input[0] , true );
-	restart_files[1] = ecl_file_fread_alloc( input[1] , true );
+	restart_files[0] = ecl_file_fread_alloc( input[0] );
+	restart_files[1] = ecl_file_fread_alloc( input[1] );
 	*arg_offset = 2;
       } else print_usage();
     } else print_usage();
@@ -206,8 +206,8 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
     if (input_length >= 3) {
       int report1 , report2;
       if ((util_sscanf_int( input[1] , &report1) && util_sscanf_int( input[2] , &report2))) {
-	restart_files[0] = ecl_file_fread_alloc_unrst_section( input[0] , report1 , true);
-	restart_files[1] = ecl_file_fread_alloc_unrst_section( input[0] , report2 , true);
+	restart_files[0] = ecl_file_fread_alloc_unrst_section( input[0] , report1 );
+	restart_files[1] = ecl_file_fread_alloc_unrst_section( input[0] , report2 );
 	*arg_offset = 3;
       } else
 	print_usage();
@@ -265,11 +265,11 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
 	}
 
 	if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_FORMATTED_UNIFIED)) {
-	  restart_files[0] = ecl_file_fread_alloc_unrst_section( unified_file , report1 , true);
-	  restart_files[1] = ecl_file_fread_alloc_unrst_section( unified_file , report2 , true);
+	  restart_files[0] = ecl_file_fread_alloc_unrst_section( unified_file , report1 );
+	  restart_files[1] = ecl_file_fread_alloc_unrst_section( unified_file , report2 );
 	} else {
-	  restart_files[0] = ecl_file_fread_alloc( file1 , true);
-	  restart_files[1] = ecl_file_fread_alloc( file2 , true);
+	  restart_files[0] = ecl_file_fread_alloc( file1 );
+	  restart_files[1] = ecl_file_fread_alloc( file2 );
 	}
 	  
 
@@ -352,8 +352,8 @@ int main(int argc , char ** argv) {
 	} else print_usage();
       }
       
-      init_file     = ecl_file_fread_alloc(init_filename , true);
-      ecl_grid      = ecl_grid_alloc(grid_filename , true);
+      init_file     = ecl_file_fread_alloc(init_filename );
+      ecl_grid      = ecl_grid_alloc(grid_filename );
       free( init_filename );
       free( grid_filename );
     }

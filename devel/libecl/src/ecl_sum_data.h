@@ -16,7 +16,7 @@ double      	         ecl_sum_data_get_sim_days( const ecl_sum_data_type *  , in
 time_t      	         ecl_sum_data_get_sim_time( const ecl_sum_data_type *  , int );
 bool        	         ecl_sum_data_has_report_step(const ecl_sum_data_type *  , int );
 void        	         ecl_sum_data_report2ministep_range(const ecl_sum_data_type *  , int  , int *  , int * );
-ecl_sum_data_type      * ecl_sum_data_fread_alloc(const ecl_smspec_type *  , int  , const char **  , bool );
+ecl_sum_data_type      * ecl_sum_data_fread_alloc(const ecl_smspec_type *  , int  , const char **);
 void                     ecl_sum_data_free( ecl_sum_data_type * );
 int                      ecl_sum_data_get_last_report_step( const ecl_sum_data_type * data );
 int                      ecl_sum_data_get_first_report_step( const ecl_sum_data_type * data );

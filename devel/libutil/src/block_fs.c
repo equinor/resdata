@@ -94,7 +94,6 @@ struct block_fs_struct {
   char           * lock_file;
   
   FILE           * data_stream;
-  
   long int         data_file_size;  /* The total number of bytes in the data_file. */
   long int         free_size;       /* Size of 'holes' in the data file. */ 
   int              block_size;      /* The size of blocks in bytes. */
@@ -1034,17 +1033,17 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
 
 static void block_fs_fwrite_file_unlocked(block_fs_type * block_fs , const char * filename , const void * ptr , size_t data_size) {
   file_node_type * file_node;
-  size_t min_size = data_size;
   bool   new_node = true;   
-  min_size += file_node_header_size( filename );
+  size_t min_size = data_size + file_node_header_size( filename );
   
   if (block_fs_has_file( block_fs , filename )) {
     file_node = hash_get( block_fs->index , filename );
     if (file_node->node_size < min_size) {
-      /* The current node is too small for the new content:
+      /* 
+         The current node is too small for the new content:
          
-        1. Remove the existing node, from the index and insert it into the free_nodes list.
-        2. Get a new node.
+          1. Remove the existing node, from the index and insert it into the free_nodes list.
+          2. Get a new node.
         
       */
       block_fs_unlink_file__( block_fs , filename );

@@ -95,7 +95,7 @@ int main(int argc , char ** argv) {
   if (argc != 7)
     util_exit("Usage: GRID_FILE  RAW_OWC  IJ_index   OUTFILE_woc   OUTFILE_index  OWC_STD\n");
   {
-    ecl_grid_type * ecl_grid     = ecl_grid_alloc( argv[1] , true);
+    ecl_grid_type * ecl_grid     = ecl_grid_alloc( argv[1] );
     const char    * raw_file     = argv[2];
     const char    * index_file   = argv[3];
     const char    * blocked_file = argv[4];

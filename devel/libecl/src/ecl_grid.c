@@ -927,14 +927,14 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl
 
 
 
-static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file , bool endian_flip) {
+static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
   ecl_file_enum   file_type;
   bool            fmt_file;
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
   if (file_type != ECL_EGRID_FILE)
     util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
   {
-    ecl_file_type * ecl_file   = ecl_file_fread_alloc( grid_file ,  endian_flip );
+    ecl_file_type * ecl_file   = ecl_file_fread_alloc( grid_file );
     int num_grid               = ecl_file_get_num_named_kw( ecl_file , "GRIDHEAD" );
     ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( grid_file , ecl_file , 0);
     
@@ -1007,7 +1007,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
 
 
 
-static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_flip) {
+static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
 
   ecl_file_enum   file_type;
   ecl_util_get_file_type(grid_file , &file_type , NULL , NULL);
@@ -1016,7 +1016,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
 
   {
     int cell_offset = 0;
-    ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file , endian_flip );
+    ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file );
     int num_grid              = ecl_file_get_num_named_kw( ecl_file , "DIMENS");
     ecl_grid_type * main_grid = ecl_grid_alloc_GRID__(grid_file , ecl_file , &cell_offset , 0);
     for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
@@ -1052,16 +1052,16 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool endian_f
    with these keywords.
 */
 
-ecl_grid_type * ecl_grid_alloc(const char * grid_file , bool endian_flip) {
+ecl_grid_type * ecl_grid_alloc(const char * grid_file ) {
   ecl_file_enum    file_type;
   bool             fmt_file;
   ecl_grid_type  * ecl_grid = NULL;
 
   ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
   if (file_type == ECL_GRID_FILE)
-    ecl_grid = ecl_grid_alloc_GRID(grid_file , endian_flip);
+    ecl_grid = ecl_grid_alloc_GRID(grid_file );
   else if (file_type == ECL_EGRID_FILE)
-    ecl_grid = ecl_grid_alloc_EGRID(grid_file , endian_flip);
+    ecl_grid = ecl_grid_alloc_EGRID(grid_file);
   else
     util_abort("%s must have .GRID or .EGRID file - %s not recognized \n", __func__ , grid_file);
   

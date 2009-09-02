@@ -11,7 +11,7 @@
 #include <vector.h>
 #include <int_vector.h>
 #include <stringlist.h>
-
+#include <ecl_endian_flip.h>
 
 /**
    This file implements functionality to load an entire ECLIPSE file
@@ -245,9 +245,9 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
   ecl_kw instances in one long vector.
 */
 
-ecl_file_type * ecl_file_fread_alloc(const char * filename , bool endian_flip) {
+ecl_file_type * ecl_file_fread_alloc(const char * filename ) {
   bool          fmt_file   = ecl_util_fmt_file( filename );
-  fortio_type * fortio     = fortio_fopen(filename , "r" , endian_flip , fmt_file);
+  fortio_type * fortio     = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
   
   ecl_file_type * ecl_file = ecl_file_fread_alloc_fortio(fortio , NULL);
     
@@ -295,9 +295,9 @@ ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
 */
 
 
-ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int index , bool endian_flip) {
+ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int index) {
   bool          fmt_file   = ecl_util_fmt_file( filename );
-  fortio_type * fortio     = fortio_fopen(filename , "r" , endian_flip , fmt_file);
+  fortio_type * fortio     = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
   ecl_file_type * ecl_file = NULL;
 
   if (ecl_file_ifseek_kw( fortio , "SEQHDR" , index - 1)) 
@@ -355,11 +355,11 @@ time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int 
    actual loading.
 */
 
-ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step , bool endian_flip) {
+ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step) {
   ecl_kw_type * seqnum_kw  = ecl_kw_alloc_complete( "SEQNUM" , 1 , ecl_int_type , &report_step);  
                              /* We will use ecl_kw_equal() based on this kw to find the correct location in the file. */  
   bool          fmt_file   = ecl_util_fmt_file( filename );
-  fortio_type * fortio     = fortio_fopen(filename , "r" , endian_flip , fmt_file);
+  fortio_type * fortio     = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
   FILE * stream            = fortio_get_FILE( fortio );
   ecl_file_type * ecl_file = NULL;
   long read_pos            = 0;
@@ -418,7 +418,7 @@ void ecl_file_fwrite_fortio(const ecl_file_type * ecl_file , fortio_type * forti
    is NOT consulted.
 */
   
-void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, bool fmt_file, bool endian_flip) {
+void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, bool fmt_file) {
   bool __fmt_file;
   ecl_file_enum file_type;
   
@@ -427,7 +427,7 @@ void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, boo
     __fmt_file = fmt_file;
   
   {
-    fortio_type * fortio = fortio_fopen( filename , "w", endian_flip , __fmt_file);
+    fortio_type * fortio = fortio_fopen( filename , "w", ECL_ENDIAN_FLIP , __fmt_file);
     ecl_file_fwrite_fortio( ecl_file , fortio , 0);
     fortio_fclose( fortio );
   }
