@@ -19,7 +19,6 @@ int main(int argc, char ** argv) {
     const char *  src_file   = argv[1];
     const char * target_file = argv[2];
     const char ** kw_list  = (const char **) &argv[3];
-    bool endian_convert    = true;
     int num_kw = argc - 3;
     fortio_type * fortio_src;
     fortio_type * fortio_target;
