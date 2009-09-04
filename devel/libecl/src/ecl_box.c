@@ -12,7 +12,8 @@ struct ecl_box_struct {
   UTIL_TYPE_ID_DECLARATION;
   int     grid_nx  , grid_ny  , grid_nz;
   int     grid_sx  , grid_sy  , grid_sz;   /* xxx_sx : x stride */
-
+  
+  int     i1,i2,j1,j2,k1,k2;
   int     box_nx  , box_ny  , box_nz;
   int     box_sx  , box_sy  , box_sz;   
   int     box_offset;
@@ -73,7 +74,12 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , in
     fprintf(stderr,"** Warning box defined with k2 = %d - truncated to maximum value %d \n",k2 , ecl_box->grid_nz - 1);
     k2 = ecl_box->grid_nz -1;
   }
-  
+  ecl_box->i1 = i1;
+  ecl_box->i2 = i2;
+  ecl_box->j1 = j1;
+  ecl_box->j2 = j2;
+  ecl_box->k1 = k1;
+  ecl_box->k2 = k2;
   
   /*Properties of the box: */
   ecl_box->box_nx = i2 - i1 + 1;
@@ -113,6 +119,26 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , in
   
   return ecl_box;
 }
+
+
+/**
+   Returns true if the box contains the point (i,j,k). Observe the
+   following:
+
+    ijk: These are zero offset.
+    ijk: Which are ON one of the box surfaces will return true.
+    
+*/
+
+
+bool ecl_box_contains(const ecl_box_type * box , int i , int j , int k) {
+  
+  return (( box->i1 >= i ) && (i <= box->i2) &&
+          ( box->j1 >= j ) && (j <= box->j2) &&
+          ( box->k1 >= k ) && (k <= box->k2));
+  
+}
+
 
 
 

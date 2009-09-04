@@ -16,7 +16,7 @@ int               ecl_region_get_active_size( ecl_region_type * region );
 const int       * ecl_region_get_active_list( ecl_region_type * region );
 int               ecl_region_get_global_size( ecl_region_type * region );
 const int       * ecl_region_get_global_list( ecl_region_type * region );
-
+bool              ecl_region_contains_ijk( const ecl_region_type * ecl_region , int i , int j , int k);
 
 void              ecl_region_select_all( ecl_region_type * region);
 void              ecl_region_deselect_all( ecl_region_type * region );

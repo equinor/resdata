@@ -19,7 +19,7 @@ int            ecl_box_get_active_size( const ecl_box_type * ecl_box );
 const int    * ecl_box_get_active_list( const ecl_box_type * ecl_box );
 int            ecl_box_get_global_size( const ecl_box_type * ecl_box );
 const int    * ecl_box_get_global_list( const ecl_box_type * ecl_box );
-
+bool           ecl_box_contains(const ecl_box_type * box , int i , int j , int k);
 
 UTIL_IS_INSTANCE_HEADER( ecl_box );
 UTIL_SAFE_CAST_HEADER( ecl_box );

@@ -1513,7 +1513,7 @@ double ecl_grid_get_bottom1A(const ecl_grid_type * grid , int active_index) {
 */
 
 bool ecl_grid_cell_active1(const ecl_grid_type * ecl_grid , int global_index) {
-  if (ecl_grid->index_map[global_index] > 0)
+  if (ecl_grid->index_map[global_index] >= 0)
     return true;
   else
     return false;

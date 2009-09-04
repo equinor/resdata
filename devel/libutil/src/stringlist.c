@@ -250,6 +250,21 @@ const char * stringlist_iget(const stringlist_type * stringlist , int index) {
 }
 
 
+/**
+   Will return NULL if you ask for something beyond the limits of the
+   stringlist (will die on negative index - that is NEVER OK).
+*/
+const char * stringlist_safe_iget( const stringlist_type * stringlist , int index) {
+  if (index < 0)
+    util_abort("%s: negative index:%d is NOT allowed \n",__func__ , index);
+  if (index < stringlist_get_size( stringlist ))
+    return stringlist_iget( stringlist , index);
+  else
+    return NULL;
+}
+
+
+
 char * stringlist_iget_copy(const stringlist_type * stringlist , int index) {
   return util_alloc_string_copy(stringlist_iget(stringlist , index));
 }

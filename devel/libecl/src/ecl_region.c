@@ -95,7 +95,7 @@ ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool presel
   region->active_mask       = util_malloc(region->grid_vol * sizeof * region->active_mask , __func__);
   region->active_index_list = NULL;
   region->global_index_list = NULL;
-
+  
   {
     int i;
     for (i=0; i < region->grid_vol; i++) 
@@ -463,3 +463,15 @@ void ecl_region_invert_selection( ecl_region_type * region ) {
   ecl_region_invalidate_index_list( region );
 }
 
+
+/**
+
+   Returns true if the region has selected grid cell ijk.
+
+   ijk have zero offset.
+*/
+
+bool ecl_region_contains_ijk( const ecl_region_type * ecl_region , int i , int j , int k) {
+  int global_index = ecl_grid_get_global_index3( ecl_region->parent_grid , i , j , k );
+  return ecl_region->active_mask[ global_index ];
+}
