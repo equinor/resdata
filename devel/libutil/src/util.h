@@ -147,7 +147,6 @@ double       util_file_difftime(const char * , const char *);
 bool         util_file_update_required(const char *, const char *);
 size_t       util_file_size(const char *);
 void         util_unlink_path(const char *);
-void         util_unlink_path_TESTING(const char *);
 void         util_unlink_existing(const char *filename);
 void         util_strupr(char *);
 inline       bool util_string_equal(const char * s1 , const char * s2 );

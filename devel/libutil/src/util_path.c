@@ -175,7 +175,7 @@ char * util_realloc_filename(char * filename , const char * path , const char * 
 /**
    Only removes the last component in path.
 */
-void static util_unlink_path_static(const char *path , bool test_mode) {
+void static util_unlink_path_static( const char *path ) {
   if (util_path_exists(path)) {
     const uid_t uid = getuid();
     DIR  *dirH;
@@ -194,27 +194,25 @@ void static util_unlink_path_static(const char *path , bool test_mode) {
 	} else {
 	  mode = buffer.st_mode;
 	  
-	  if (S_ISDIR(mode)) {
-	    util_unlink_path_static(full_path, test_mode);
-	  } else if (S_ISLNK(mode)) {
+	  if (S_ISDIR(mode)) 
+            /*
+              Recursively descending into sub directory. 
+            */
+	    util_unlink_path_static(full_path);
+          else if (S_ISLNK(mode)) 
 	    /*
 	      Symbolic links are unconditionally removed.
 	    */
-	    if (test_mode)
-	      printf("%s [TEST:] removing symbolic link: %s \n",__func__ , full_path);
-	    else
-	      unlink(full_path);
-	  }
+            unlink(full_path);
 	  else if (S_ISREG(mode)) {
+            /* 
+               It is a regular file - we remove it (if we own it!).
+            */
 	    if (buffer.st_uid == uid) {
-	      if (test_mode)
-		printf("%s [TEST:] removing file: %s \n",__func__ , full_path);
-	      else {
-		if (unlink(full_path) != 0) {
-		  fprintf(stderr,"%s: failed to unlink: %s ?? \n",__func__ , full_path);
-		  fprintf(stderr,"%s: %s(%d) \n",__func__ , strerror(errno) , errno);
-		}
-	      }
+              int unlink_return = unlink(full_path);
+	      if (unlink_return != 0) {
+                /* Unlink failed - we don't give a shit. */
+              }
 	    } else 
 	      fprintf(stderr,"Warning mismatch in uid of calling process and owner for:%s - entry *not* removed \n",full_path);
 	  }
@@ -224,18 +222,11 @@ void static util_unlink_path_static(const char *path , bool test_mode) {
     }
     
     closedir(dirH);
-    if (test_mode)
-      printf("%s: [TEST:] removing directory: %s \n",__func__ , path);
-    else {
+    {
       int rmdir_return = rmdir(path);
-      /*
-	The "Directory not empty" warning was displayed *all the time*
-	on NFS mounted volumes - some .nfsxxxxxx file was hanging
-	around - so this warning is masked out.
-      */
-      
-      if ((rmdir_return != 0) && (rmdir_return != ENOTEMPTY)) 
-	fprintf(stderr,"%s: Warning: failed to remove directory:%s: %s \n",__func__ , path , strerror(errno));
+      if (rmdir_return != 0) {
+        /* Unlink failed - we don't give a shit. */
+      }
     }
   }
 }
@@ -243,14 +234,8 @@ void static util_unlink_path_static(const char *path , bool test_mode) {
 
 
 void util_unlink_path(const char *path) {
-  util_unlink_path_static(path , false);
+  util_unlink_path_static( path );
 }
-
-
-void util_unlink_path_TESTING(const char *path) {
-  util_unlink_path_static(path , true);
-}
-
 
 
 bool util_proc_alive(pid_t pid) {
