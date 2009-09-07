@@ -101,6 +101,11 @@ int log_get_level( const log_type * logh ) {
 }
 
 
+void log_set_level( log_type * logh , int new_level) {
+  logh->log_level = new_level;
+}
+
+
 
 void log_add_fmt_message(log_type * logh , int message_level , const char * fmt , ...) {
   if (log_include_message(logh,message_level)) {

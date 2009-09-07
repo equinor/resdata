@@ -12,5 +12,6 @@ log_type   * log_alloc_existing(const char *filename, int log_level);
 void         log_add_message(log_type *logh, int message_level , char* message, bool free_message);
 void         log_add_fmt_message(log_type * logh , int message_level , const char * fmt , ...);
 int          log_get_level( const log_type * logh);
+void         log_set_level( log_type * logh , int new_level);
 void         log_close( log_type * logh );
 #endif
