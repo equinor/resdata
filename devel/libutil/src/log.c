@@ -10,21 +10,36 @@
 #include <log.h>
 #include <pthread.h>
 #include <stdarg.h>
-
+#include <sys/types.h>
+#include <fcntl.h>
+#include <errno.h>
 
 
 struct log_struct {
   char             * filename;
   FILE             * stream; 
+  int                fd; 
   int                log_level;
   pthread_mutex_t    mutex;
 };
 
 
 
-void log_set_file(log_type *logh , const char *filename) {
+void log_reset_filename(log_type *logh , const char *filename) {
   logh->filename = util_realloc_string_copy( logh->filename , filename );
+  if (logh->stream != NULL)  /* Close the existing file descriptor. */
+    fclose( logh->stream );
+  
+  pthread_mutex_lock( &logh->mutex );
+
+  logh->stream = util_mkdir_fopen( filename , "a+");
+  logh->fd     = fileno( logh->stream );
+  
+  pthread_mutex_unlock( &logh->mutex );
+  
 }
+
+
 
 
 
@@ -34,22 +49,10 @@ static log_type *log_alloc_internal(const char *filename , bool new, int log_lev
   
   logh->log_level     = log_level;
   logh->filename      = NULL;
-  log_set_file( logh ,filename );
+  logh->stream         = NULL;
   pthread_mutex_init( &logh->mutex , NULL );
-  
-  
-  if (util_string_equal(filename,"<stdout>"))
-    logh->stream = stdout;
-  else if (util_string_equal(filename , "<stderr>"))
-    logh->stream = stderr;
-  else {
-    if (new)
-      logh->stream = util_fopen(filename , "w");
-    else {
-      logh->stream = util_fopen(filename , "a");
-      log_add_message(logh , logh->log_level , "========================= Starting new log =========================" , false );
-    }
-  }
+  log_reset_filename( logh ,filename );
+    
   return logh;
 }
 
@@ -85,9 +88,12 @@ void log_add_message(log_type *logh, int message_level , char* message, bool fre
     if (log_include_message(logh,message_level)) {
       time(&epoch_time);
       localtime_r(&epoch_time , &time_fields);
-      fprintf(logh->stream,"%02d/%02d - %02d:%02d:%02d  %s\n",time_fields.tm_mday, time_fields.tm_mon + 1, time_fields.tm_hour , time_fields.tm_min , time_fields.tm_sec , message);
-      fsync( fileno(logh->stream) );
-      fseek( logh->stream , 0 , SEEK_END );
+
+      if (message != NULL)
+        fprintf(logh->stream,"%02d/%02d - %02d:%02d:%02d  %s\n",time_fields.tm_mday, time_fields.tm_mon + 1, time_fields.tm_hour , time_fields.tm_min , time_fields.tm_sec , message);
+      else
+        fprintf(logh->stream,"%02d/%02d - %02d:%02d:%02d   \n",time_fields.tm_mday, time_fields.tm_mon + 1, time_fields.tm_hour , time_fields.tm_min , time_fields.tm_sec);
+      log_sync( logh );
     }
   }
   pthread_mutex_unlock( &logh->mutex );
@@ -118,11 +124,35 @@ void log_add_fmt_message(log_type * logh , int message_level , const char * fmt 
 }
 
 
+/**
+   This function can be used to get low level to the FILE pointer of
+   the stream. To 'ensure' that the data actually hits the disk
+   you should call log_sync() after writing.
+
+   It is your responsabiulity to avoid racing++ when using the
+   log_get_stream() function.
+*/
+
+FILE * log_get_stream(log_type * logh ) {
+  return logh->stream;
+}
+
+
+inline void log_sync(log_type * logh) {
+  fsync( logh->fd );
+  fseek( logh->stream , 0 , SEEK_END );
+}
+
+
+const char * log_get_filename( log_type * logh ) {
+  return logh->filename;
+}
+
 
 void log_close( log_type * logh ) {
   if ((logh->stream != stdout) && (logh->stream != stderr))
-    fclose( logh->stream );
-
+    fclose( logh->stream );  /* This closes BOTH the FILE * stream and the integer file descriptor. */
+  
   free( logh->filename );
   free( logh );
 }

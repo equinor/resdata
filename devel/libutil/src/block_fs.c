@@ -87,13 +87,15 @@ struct block_fs_struct {
   char           * mount_file;    /* The full path to a file with some mount information - input to the mount routine. */
   char           * path;          
   char           * base_name;
-
+  
   int              version;       /* A version number which is incremented each time the filesystem is defragmented - not implemented yet. */
   
   char           * data_file;
   char           * lock_file;
   
+  int              data_fd;
   FILE           * data_stream;
+
   long int         data_file_size;  /* The total number of bytes in the data_file. */
   long int         free_size;       /* Size of 'holes' in the data file. */ 
   int              block_size;      /* The size of blocks in bytes. */
@@ -114,23 +116,25 @@ struct block_fs_struct {
   time_t           index_time;   
 };
 
+/*****************************************************************/
+
 static void block_fs_rotate__( block_fs_type * block_fs );
 
 
-static void block_fs_fprintf_free_nodes( const block_fs_type * block_fs, FILE * stream) {
-  file_node_type * current = block_fs->free_nodes;
-  int counter = 0;
-  while (current != NULL ) {
-    fprintf(stream , "Offset:%ld   node_size:%d   data_size:%d \n",current->node_offset , current->node_size , current->data_size);
-    if (current->next == current)
-      util_abort("%s: linked list broken \n",__func__);
-    current = current->next;
-    counter++;
-  }
-  fprintf(stderr , "\n");
-  if (counter != block_fs->num_free_nodes) 
-    util_abort("%s: Counter:%d    num_free_nodes:%d \n",__func__ , counter , block_fs->num_free_nodes);
-}
+//static void block_fs_fprintf_free_nodes( const block_fs_type * block_fs, FILE * stream) {
+//  file_node_type * current = block_fs->free_nodes;
+//  int counter = 0;
+//  while (current != NULL ) {
+//    fprintf(stream , "Offset:%ld   node_size:%d   data_size:%d \n",current->node_offset , current->node_size , current->data_size);
+//    if (current->next == current)
+//      util_abort("%s: linked list broken \n",__func__);
+//    current = current->next;
+//    counter++;
+//  }
+//  fprintf(stderr , "\n");
+//  if (counter != block_fs->num_free_nodes) 
+//    util_abort("%s: Counter:%d    num_free_nodes:%d \n",__func__ , counter , block_fs->num_free_nodes);
+//}
 
 
 static inline void fseek__(FILE * stream , long int arg , int whence) {
@@ -670,6 +674,10 @@ static void block_fs_open_data( block_fs_type * block_fs , bool read_write) {
        data_stream is dereferenced anyway?
     */
   }
+  if (block_fs->data_stream == NULL)
+    block_fs->data_fd = -1;
+  else
+    block_fs->data_fd = fileno( block_fs->data_stream );
 }
 
 
@@ -725,7 +733,7 @@ static void block_fs_preload( block_fs_type * block_fs ) {
 
 static void block_fs_fix_nodes( block_fs_type * block_fs , long_vector_type * offset_list ) {
   if (block_fs->data_owner) { 
-    fsync( fileno(block_fs->data_stream) );
+    fsync( block_fs->data_fd );
     {
       char * key = NULL;
       for (int inode = 0; inode < long_vector_size( offset_list ); inode++) {
@@ -760,7 +768,7 @@ static void block_fs_fix_nodes( block_fs_type * block_fs , long_vector_type * of
       }
       util_safe_free( key );
     }
-    fsync( fileno(block_fs->data_stream) );
+    fsync( block_fs->data_fd );
   }
 }
 
@@ -949,10 +957,10 @@ static void block_fs_unlink_file__( block_fs_type * block_fs , const char * file
   node->data_offset = 0;
   node->data_size   = 0;
   if (block_fs->data_stream != NULL) {  
-    fsync( fileno(block_fs->data_stream) );
+    fsync( block_fs->data_fd );
     block_fs_fseek_data(block_fs , node->node_offset);
     file_node_fwrite( node , NULL , block_fs->data_stream );
-    fsync( fileno(block_fs->data_stream) );
+    fsync( block_fs->data_fd );
   }
   block_fs_insert_free_node( block_fs , node );
 }
@@ -996,7 +1004,7 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
     /* The current cache is identical to the data we are attempting to write - can leave immediately. */
     return;
   else {
-    fsync( fileno(block_fs->data_stream) );
+    fsync( block_fs->data_fd );
     block_fs_fseek_data(block_fs , node->node_offset);
     node->status      = NODE_IN_USE;
     node->data_size   = data_size; 
@@ -1016,7 +1024,7 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
        fseek + ftell combination to ensure that all data is on disk
        after a uncontrolled shutdown.
     */
-    fsync( fileno(block_fs->data_stream) );
+    fsync( block_fs->data_fd );
     block_fs_fseek_data(block_fs , block_fs->data_file_size);
     ftell( block_fs->data_stream ); 
     

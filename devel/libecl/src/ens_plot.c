@@ -230,7 +230,8 @@ void plot_info_free( plot_info_type * plot_info) {
 
 }
 
-plot_info_type * plot_info_alloc(const char * plot_path , const char * device , const char * viewer) {
+
+plot_info_type * plot_info_alloc(const char * plot_path , const char * device , const char * viewer) {) {
   plot_info_type * info = util_malloc( sizeof * info , __func__);
   info->plot_path   = NULL;
   info->plot_device = NULL;
