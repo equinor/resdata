@@ -12,8 +12,10 @@ matrix.o                            : matrix.c matrix.h util.o thread_pool.o arg
 vector.o                            : vector.c vector.h util.o node_data.o  
 msg.o                               : msg.c msg.h util.o  
 hash_sll.o                          : hash_sll.c hash_sll.h hash_node.o  
+subst.o                             : subst.c subst.h util.o vector.o node_data.o  
 matrix_blas.o                       : matrix_blas.c matrix_blas.h util.o matrix.o  
 matrix_lapack.o                     : matrix_lapack.c matrix_lapack.h matrix.o util.o  
+template.o                          : template.c template.h subst.o  
 list_node.o                         : list_node.c list_node.h util.o node_data.o  
 set.o                               : set.c set.h hash.o util.o  
 node_ctype.o                        : node_ctype.c node_ctype.h  

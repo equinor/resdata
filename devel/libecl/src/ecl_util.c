@@ -1040,7 +1040,7 @@ time_t ecl_util_get_start_date(const char * data_file) {
   FILE * stream      = util_fopen(data_file , "r");
   char * buffer;
   
-  if (!parser_fseek_string( parser , stream , "START" , true))  /* No tolerance for mixed case ... */
+  if (!parser_fseek_string( parser , stream , "START" , true , true))   /* Seeks case insensitive. */
     util_abort("%s: sorry - could not find START in DATA file %s \n",__func__ , data_file);
   
   {
@@ -1048,7 +1048,7 @@ time_t ecl_util_get_start_date(const char * data_file) {
     int buffer_size;
 
     /* Look for terminating '/' */
-    if (!parser_fseek_string( parser , stream , "/" , false))
+    if (!parser_fseek_string( parser , stream , "/" , false , true))
       util_abort("%s: sorry - could not find \"/\" termination of START keyword in data_file: \n",__func__ , data_file);
     
     buffer_size = (ftell(stream) - start_pos)  ;

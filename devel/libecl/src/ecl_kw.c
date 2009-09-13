@@ -811,16 +811,16 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
 */
 
 bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error , FILE * stream) {
-  if (util_fseek_string(stream , kw , false))
+  if (util_fseek_string(stream , kw , false , true))
     return true;       /* OK - we found the kw between current file pos and EOF. */
   else if (rewind) {
     long int init_pos = ftell(stream);
 
     fseek(stream , 0L , SEEK_SET);
-    if (util_fseek_string(stream , kw , false)) /* Try again from the beginning of the file. */
+    if (util_fseek_string(stream , kw , false , true)) /* Try again from the beginning of the file. */
       return true;                              
     else
-      fseek(stream , init_pos , SEEK_SET);      /* Could not find it - reposition to initial position. */
+      fseek(stream , init_pos , SEEK_SET);              /* Could not find it - reposition to initial position. */
   }
 
   /* OK: If we are here - that means that we failed to find the kw. */

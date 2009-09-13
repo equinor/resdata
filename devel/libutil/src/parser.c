@@ -537,13 +537,13 @@ static bool fseek_quote_end( char quoter , FILE * stream ) {
 
 
 
-static bool fgetc_while_equal( FILE * stream , const char * string , bool ignore_case) {
+static bool fgetc_while_equal( FILE * stream , const char * string , bool case_sensitive) {
   bool     equal        = true;
   long int current_pos  = ftell(stream);
   
   for (int string_index = 0; string_index < strlen(string); string_index++) {
     int c = fgetc( stream );
-    if (ignore_case)
+    if (!case_sensitive)
       c = toupper( c );
     
     if (c != string[string_index]) {
@@ -566,10 +566,10 @@ static bool fgetc_while_equal( FILE * stream , const char * string , bool ignore
    unterminated comments and unterminated quotations.
 */
 
-bool parser_fseek_string(const parser_type * parser , FILE * stream , const char * __string , bool skip_string, bool ignore_case) {
+bool parser_fseek_string(const parser_type * parser , FILE * stream , const char * __string , bool skip_string, bool case_sensitive) {
   bool string_found        = false;
   char * string            = util_alloc_string_copy( __string );
-  if (ignore_case)
+  if (!case_sensitive)
     util_strupr( string );
   {
     long int initial_pos     = ftell( stream );   /* Store the inital position. */
@@ -580,7 +580,7 @@ bool parser_fseek_string(const parser_type * parser , FILE * stream , const char
     
     do {
       int c = fgetc( stream );
-      if (ignore_case) c = toupper( c );
+      if (!case_sensitive) c = toupper( c );
       
       /* Special treatment of quoters: */
       if (is_in_quoters( c , parser )) {
@@ -602,7 +602,7 @@ bool parser_fseek_string(const parser_type * parser , FILE * stream , const char
         if (comment_start) {
           long int comment_start_pos = ftell(stream) - strlen( parser->comment_start );
           /* Start seeking for comment_end */
-          if (!util_fseek_string(stream , parser->comment_end , true , false)) { 
+          if (!util_fseek_string(stream , parser->comment_end , true , true)) { 
             /* 
                No end comment end was found - what to do about that??
                The file is just positioned at the end - and the routine
@@ -620,7 +620,7 @@ bool parser_fseek_string(const parser_type * parser , FILE * stream , const char
       
       /* Now c is a regular character - and we can start looking for our string. */
       if (c == string[0]) {  /* OK - we got the first character right - lets try in more detail: */
-        bool equal = fgetc_while_equal( stream , &string[1] , ignore_case);
+        bool equal = fgetc_while_equal( stream , &string[1] , case_sensitive);
         if (equal) {
           string_found = true;
           cont = false;

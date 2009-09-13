@@ -196,11 +196,11 @@ void util_rewind_line(FILE *stream) {
    case, otherwise we accept any case combination.
 */
 
-bool util_fseek_string(FILE * stream , const char * __string , bool skip_string , bool ignore_case) {
+bool util_fseek_string(FILE * stream , const char * __string , bool skip_string , bool case_sensitive) {
   bool string_found  = false;
   char * string      = util_alloc_string_copy(__string);
 
-  if (ignore_case)
+  if (!case_sensitive)
     util_strupr( string );
   {
     int len              = strlen( string );
@@ -208,7 +208,7 @@ bool util_fseek_string(FILE * stream , const char * __string , bool skip_string 
     bool cont            = true;
     do {
       int c = fgetc( stream );
-      if (ignore_case)
+      if (!case_sensitive)
         c = toupper( c );
       
       if (c == string[0]) {  /* OK - we got the first character right - lets try in more detail: */
@@ -217,7 +217,7 @@ bool util_fseek_string(FILE * stream , const char * __string , bool skip_string 
         
         for (int string_index = 1; string_index < len; string_index++) {
           c = fgetc( stream );
-          if (ignore_case)
+          if (!case_sensitive)
             c = toupper( c );
           
           if (c != string[string_index]) {
@@ -267,7 +267,7 @@ bool util_fseek_string(FILE * stream , const char * __string , bool skip_string 
 
 char * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool include_stop_string) {
   long int start_pos = ftell(stream);
-  if (util_fseek_string(stream , stop_string , include_stop_string , false)) {
+  if (util_fseek_string(stream , stop_string , include_stop_string , true)) {   /* Default case sensitive. */
     long int end_pos = ftell(stream);
     int      len     = end_pos - start_pos;
     char * buffer    = util_malloc( (len + 1) * sizeof * buffer , __func__);
