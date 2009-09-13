@@ -164,7 +164,9 @@ bool         util_string_match(const char * string , const char * pattern);
 mode_t       util_get_file_mode( const char * file );
 uid_t        util_get_file_uid( const char * file );
 bool         util_file_readable( const char * file );
-bool         util_chmod_if_owner( const char * filename , mode_t target_mode );
+bool         util_addmode_if_owner( const char * filename , mode_t add_mode );
+bool         util_delmode_if_owner( const char * filename , mode_t del_mode);
+bool         util_chmod_if_owner( const char * filename , mode_t new_mode);
 
 int    	     util_forward_line(FILE * , bool * );
 void   	     util_rewind_line(FILE *);
@@ -222,7 +224,6 @@ char   * util_alloc_string_sum2(const char *, const char *);
 char   * util_realloc_dequoted_string(char *);
 void   * util_safe_free(void *);
 void     util_free_stringlist(char **, int );
-char  ** util_alloc_stringlist(int , int );
 char   * util_alloc_substring_copy(const char *, int );
 bool     util_is_directory(const char * );
 bool     util_is_file(const char * );
@@ -320,7 +321,7 @@ void     util_update_path_var(const char * , const char * , bool );
 void 	 util_fskip_int(FILE * stream);
 void 	 util_fskip_long(FILE * stream);
 void 	 util_fskip_bool(FILE * stream);
-bool     util_fseek_string(FILE * stream , const char * string , bool skip_string);
+bool     util_fseek_string(FILE * stream , const char * string , bool skip_string , bool ignore_case);
 char   * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool include_stop_string);
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }

@@ -566,8 +566,11 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
     block_fs->data_owner = util_try_lockf( block_fs->lock_file , S_IWUSR + S_IWGRP , &block_fs->lock_fd);
     block_fs->index_time = time( NULL );
   
-    if (!block_fs->data_owner) 
-      fprintf(stderr,"** Warning: Another program has already opened this filesystem read-write - this instance will be UNSYNCRONIZED read-only.\n");
+    if (block_fs->data_owner) 
+      printf(" read-write: OK  ");
+    else
+      printf(" Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only.");
+    fflush( stdout );
   }
   
   return block_fs;
@@ -701,6 +704,7 @@ static void block_fs_preload( block_fs_type * block_fs ) {
 
   if ((block_fs->max_cache_size > 0) && (block_fs->data_stream != NULL)) {
     char * buffer = malloc( block_fs->data_file_size * sizeof * buffer );
+    printf("preloading"); fflush( stdout );
     if (buffer != NULL) {
       hash_iter_type * index_iter = hash_iter_alloc( block_fs->index );
       util_fread( buffer , 1 , block_fs->data_file_size , block_fs->data_stream , __func__);
@@ -733,6 +737,7 @@ static void block_fs_preload( block_fs_type * block_fs ) {
 
 static void block_fs_fix_nodes( block_fs_type * block_fs , long_vector_type * offset_list ) {
   if (block_fs->data_owner) { 
+    printf(" fixing broken nodes "); fflush(stdout);
     fsync( block_fs->data_fd );
     {
       char * key = NULL;
@@ -855,10 +860,12 @@ block_fs_type * block_fs_mount( const char * mount_file , int block_size , int m
       block_fs_fwrite_mount_info__( mount_file , 0 );
     {
       long_vector_type * fix_nodes = long_vector_alloc(0 , 0);
+      printf("Mounting file system:%s  " , mount_file); fflush(stdout);
       block_fs = block_fs_alloc_empty( mount_file , block_size , max_cache_size , fragmentation_limit , read_only);
       /* We build up the index & free_nodes_list based on the header/index information embedded in the datafile. */
       block_fs_open_data( block_fs , false );
       if (block_fs->data_stream != NULL) {
+        printf(" building index "); fflush(stdout);
         block_fs_build_index( block_fs , fix_nodes );
         fclose(block_fs->data_stream);
       }
@@ -870,6 +877,7 @@ block_fs_type * block_fs_mount( const char * mount_file , int block_size , int m
   }
   if (preload) block_fs_preload( block_fs );
   pthread_mutex_unlock( &mount_lock );
+  printf("\n");
   return block_fs;
 }
 

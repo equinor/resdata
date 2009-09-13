@@ -48,34 +48,42 @@ new:
 include dependencies
 
 # Source code for binaries - based on library
-lgr_iget.o     : lgr_iget.c
-view_rft.o     : view_rft.c 	
-ecl_test.o     : ecl_test.c 	
-convert.o      : convert.c  	
-kw_list.o      : kw_list.c  	
-kw_extract.o   : kw_extract.c   
-grid_info.o    : grid_info.c    
-view_summary.o : view_summary.c 
-view_restart.o : view_restart.c 
-block_owc.o    : block_owc.c 
+troll_contact.o   : troll_contact.c
+troll_iget_lgr.o  : troll_iget_lgr.c
+lgr_iget.o     	  : lgr_iget.c
+view_rft.o     	  : view_rft.c 	
+ecl_test.o     	  : ecl_test.c 	
+convert.o      	  : convert.c  	
+kw_list.o      	  : kw_list.c  	
+kw_extract.o   	  : kw_extract.c   
+grid_info.o    	  : grid_info.c    
+view_summary.o 	  : view_summary.c 
+view_restart.o 	  : view_restart.c 
+block_owc.o    	  : block_owc.c 
 extract_contact.o : extract_contact.c
-extract_IJ.o   : extract_IJ.c
-ecl_pack.o     : ecl_pack.c
-ecl_unpack.o   : ecl_unpack.c
-run_gravity.o  : run_gravity.c
-ens_plot.o     : ens_plot.c
+extract_IJ.o   	  : extract_IJ.c
+ecl_pack.o     	  : ecl_pack.c
+ecl_unpack.o   	  : ecl_unpack.c
+run_gravity.o  	  : run_gravity.c
+ens_plot.o     	  : ens_plot.c
 #################################################################
 # Binaries
 # Observe that the binaries are built against the libraries / headers
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x ens_plot.x lgr_iget.x make_grane_aqconn.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x ens_plot.x lgr_iget.x make_grane_aqconn.x troll_iget_lgr.x troll_contact.x
 BIN	:  $(BIN_FILES) 
 BIN_FILES_SDP_INSTALL = convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
 
 ecl_pack.x: $(LIB) ecl_pack.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_pack.o -o ecl_pack.x $(LIB_PATH) $(LIB_LINK)
+
+troll_iget_lgr.x: $(LIB) troll_iget_lgr.o
+	$(LD) -$(MFLAG) $(LDFLAGS) troll_iget_lgr.o -o troll_iget_lgr.x $(LIB_PATH) $(LIB_LINK)
+
+troll_contact.x: $(LIB) troll_contact.o
+	$(LD) -$(MFLAG) $(LDFLAGS) troll_contact.o -o troll_contact.x $(LIB_PATH) $(LIB_LINK)
 
 lgr_iget.x: $(LIB) lgr_iget.o
 	$(LD) -$(MFLAG) $(LDFLAGS) lgr_iget.o -o lgr_iget.x $(LIB_PATH) $(LIB_LINK)

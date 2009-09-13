@@ -43,7 +43,8 @@ const float * safe_get_float_ptr( const ecl_kw_type * ecl_kw , const float * alt
 
 /*****************************************************************/
 
-void print_usage() {
+void print_usage(int line) {
+  printf("line:%d \n",line);
   printf("***************************************************************************\n");
   printf("  This program is used to calculate the change in graviational response \n");
   printf("  between two timesteps in an eclipse simulation.\n");
@@ -199,8 +200,8 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
 	restart_files[0] = ecl_file_fread_alloc( input[0] );
 	restart_files[1] = ecl_file_fread_alloc( input[1] );
 	*arg_offset = 2;
-      } else print_usage();
-    } else print_usage();
+      } else print_usage(__LINE__);
+    } else print_usage(__LINE__);
   } else if (file_type == ECL_UNIFIED_RESTART_FILE) {
     /* Loading from one unified restart file. */
     if (input_length >= 3) {
@@ -210,14 +211,14 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
 	restart_files[1] = ecl_file_fread_alloc_unrst_section( input[0] , report2 );
 	*arg_offset = 3;
       } else
-	print_usage();
+	print_usage(__LINE__);
     } else 
-      print_usage();
+      print_usage(__LINE__);
   } else if (file_type == ECL_OTHER_FILE) {
     if (input_length >= 3) {
       int report1, report2;
       if (!(util_sscanf_int( input[1] , &report1) && util_sscanf_int( input[2] , &report2)))
-	print_usage();
+	print_usage(__LINE__);
       else {
 	/* 
 	   input[0] is interpreted as an eclbase string, and not as the name of
@@ -299,11 +300,11 @@ int main(int argc , char ** argv) {
   
   if(argc > 1) {
     if(strcmp(argv[1], "-h") == 0)
-      print_usage();
+      print_usage(__LINE__);
   }
 
   if(argc < 2)
-    print_usage();
+    print_usage(__LINE__);
 
 
   else{
@@ -342,14 +343,14 @@ int main(int argc , char ** argv) {
 	if (grid_filename == NULL)
 	  grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_GRID_FILE , fmt_file , -1);
 	if ((init_filename == NULL) || (grid_filename == NULL))  /* Means we could not find them. */
-	  print_usage();
+	  print_usage(__LINE__);
       } else {
 	/* */
 	if ((input_length - input_offset) > 1) {
 	  init_filename = util_alloc_string_copy(input[input_offset]);
 	  grid_filename = util_alloc_string_copy(input[input_offset + 1]);
 	  input_offset += 2;
-	} else print_usage();
+	} else print_usage(__LINE__);
       }
       
       init_file     = ecl_file_fread_alloc(init_filename );
@@ -364,9 +365,9 @@ int main(int argc , char ** argv) {
       if (util_file_exists(station_file))
 	load_stations( grav_stations , station_file);
       else
-	print_usage();
+	print_usage(__LINE__);
     } else 
-      print_usage();
+      print_usage(__LINE__);
 
     /** OK - now everything is loaded */
         

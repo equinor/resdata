@@ -420,6 +420,19 @@ void * hash_get(const hash_type *hash , const char *key) {
 
 
 /**
+   This function will return NULL if the hash does not
+   contain 'kay'.
+*/
+void * hash_safe_get( const hash_type * hash , const char * key ) {
+  hash_node_type * node = __hash_get_node(hash , key , false);
+  if (node != NULL)
+    return hash_node_value_ptr( node );
+  else
+    return NULL;
+}
+
+
+/**
    This function will:
 
     1. Return an object from the hash table.

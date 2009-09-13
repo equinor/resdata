@@ -2,6 +2,7 @@
 #include <string.h>
 #include <util.h>
 #include <parser.h>
+#include <ctype.h>
 
 #define PARSER_ESCAPE_CHAR '\\'
 
@@ -534,12 +535,17 @@ static bool fseek_quote_end( char quoter , FILE * stream ) {
     return false;
 }
 
-static bool fgetc_while_equal( FILE * stream , const char * string ) {
+
+
+static bool fgetc_while_equal( FILE * stream , const char * string , bool ignore_case) {
   bool     equal        = true;
   long int current_pos  = ftell(stream);
   
   for (int string_index = 0; string_index < strlen(string); string_index++) {
     int c = fgetc( stream );
+    if (ignore_case)
+      c = toupper( c );
+    
     if (c != string[string_index]) {
       equal = false;
       break;
@@ -560,72 +566,79 @@ static bool fgetc_while_equal( FILE * stream , const char * string ) {
    unterminated comments and unterminated quotations.
 */
 
-bool parser_fseek_string(const parser_type * parser , FILE * stream , const char * string , bool skip_string) {
-  long int initial_pos     = ftell( stream );   /* Store the inital position. */
+bool parser_fseek_string(const parser_type * parser , FILE * stream , const char * __string , bool skip_string, bool ignore_case) {
   bool string_found        = false;
-  bool cont                = true;
-  
-  if (strstr( string , parser->comment_start ) != NULL)
-    util_abort("%s: sorry the string contains a comment start - will never find it ... \n"); /* A bit harsh ?? */
-  
-  do {
-    int c = fgetc( stream );
-
-    /* Special treatment of quoters: */
-    if (is_in_quoters( c , parser )) {
-      long int quote_start_pos = ftell(stream);
-      if (!fseek_quote_end( c , stream )) {
-        fseek( stream ,  quote_start_pos , SEEK_SET);
-        fprintf(stderr,"Warning: unterminated quotation starting at line: %d \n",util_get_current_linenr( stream ));
-        fseek(stream , 0 , SEEK_END);
-      }
-      /* Now we are either at the first character following a
-         terminated quotation, or at EOF. */
-      continue;
-    }
-
-    /* Special treatment of comments: */
-    if (c == parser->comment_start[0]) {
-      /* OK - this might be the start of a comment - let us check further. */
-      bool comment_start = fgetc_while_equal( stream , &parser->comment_start[1]);
-      if (comment_start) {
-        long int comment_start_pos = ftell(stream) - strlen( parser->comment_start );
-        /* Start seeking for comment_end */
-        if (!util_fseek_string(stream , parser->comment_end , skip_string)) { 
-          /* 
-             No end comment end was found - what to do about that??
-             The file is just positioned at the end - and the routine
-             will exit at the next step - with a Warning. 
-          */
-          fseek( stream , comment_start_pos , SEEK_SET);
-          fprintf(stderr,"Warning: unterminated comment starting at line: %d \n",util_get_current_linenr( stream ));
+  char * string            = util_alloc_string_copy( __string );
+  if (ignore_case)
+    util_strupr( string );
+  {
+    long int initial_pos     = ftell( stream );   /* Store the inital position. */
+    bool cont                = true;
+    
+    if (strstr( string , parser->comment_start ) != NULL)
+      util_abort("%s: sorry the string contains a comment start - will never find it ... \n"); /* A bit harsh ?? */
+    
+    do {
+      int c = fgetc( stream );
+      if (ignore_case) c = toupper( c );
+      
+      /* Special treatment of quoters: */
+      if (is_in_quoters( c , parser )) {
+        long int quote_start_pos = ftell(stream);
+        if (!fseek_quote_end( c , stream )) {
+          fseek( stream ,  quote_start_pos , SEEK_SET);
+          fprintf(stderr,"Warning: unterminated quotation starting at line: %d \n",util_get_current_linenr( stream ));
           fseek(stream , 0 , SEEK_END);
-        } continue;
-        /* Now we are at the character following a comment end - or at EOF. */
-      } 
-    }
-    
-    /*****************************************************************/
-    
-    /* Now c is a regular character - and we can start looking for our string. */
-    if (c == string[0]) {  /* OK - we got the first character right - lets try in more detail: */
-      bool equal = fgetc_while_equal( stream , &string[1]);
-      if (equal) {
-        string_found = true;
+        }
+        /* Now we are either at the first character following a
+           terminated quotation, or at EOF. */
+        continue;
+      }
+      
+      /* Special treatment of comments: */
+      if (c == parser->comment_start[0]) {
+        /* OK - this might be the start of a comment - let us check further. */
+        bool comment_start = fgetc_while_equal( stream , &parser->comment_start[1] , false);
+        if (comment_start) {
+          long int comment_start_pos = ftell(stream) - strlen( parser->comment_start );
+          /* Start seeking for comment_end */
+          if (!util_fseek_string(stream , parser->comment_end , true , false)) { 
+            /* 
+               No end comment end was found - what to do about that??
+               The file is just positioned at the end - and the routine
+               will exit at the next step - with a Warning. 
+            */
+            fseek( stream , comment_start_pos , SEEK_SET);
+            fprintf(stderr,"Warning: unterminated comment starting at line: %d \n",util_get_current_linenr( stream ));
+            fseek(stream , 0 , SEEK_END);
+          } continue;
+          /* Now we are at the character following a comment end - or at EOF. */
+        } 
+      }
+      
+      /*****************************************************************/
+      
+      /* Now c is a regular character - and we can start looking for our string. */
+      if (c == string[0]) {  /* OK - we got the first character right - lets try in more detail: */
+        bool equal = fgetc_while_equal( stream , &string[1] , ignore_case);
+        if (equal) {
+          string_found = true;
+          cont = false;
+        } 
+      }
+      
+      if (c == EOF) 
         cont = false;
-      } 
-    }
-    if (c == EOF) 
-      cont = false;
+      
+    } while (cont);
     
-  } while (cont);
-  
-  if (string_found) {
-    if (!skip_string)
-      fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
-  } else
-    fseek(stream , initial_pos , SEEK_SET);       /* Could not find the string reposition at initial position. */
-  
+    if (string_found) {
+      if (!skip_string)
+        fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
+    } else
+      fseek(stream , initial_pos , SEEK_SET);       /* Could not find the string reposition at initial position. */
+  }
+  free( string );
   return string_found;
 }
 

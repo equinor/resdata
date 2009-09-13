@@ -127,6 +127,6 @@ stringlist_type * parser_tokenize_file(
 /* Pollution by Joakim: */
 
 void   parser_strip_buffer(const parser_type * parser , char ** __buffer);
-bool   parser_fseek_string(const parser_type * parser , FILE * stream , const char * string , bool skip_string);
+bool   parser_fseek_string(const parser_type * parser , FILE * stream , const char * string , bool skip_string , bool ignore_case);
 char * parser_fread_alloc_file_content(const char * filename , const char * quote_set , const char * delete_set , const char * comment_start , const char * comment_end);
 #endif

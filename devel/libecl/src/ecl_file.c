@@ -493,6 +493,25 @@ void ecl_file_free__(void * arg) {
 
 
 
+/**
+   This will just return ecl_kw nr i - without looking at the names.
+*/
+ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * ecl_file , int index) {
+  return vector_iget( ecl_file->kw_list , index);
+}
+
+
+
+/**
+   This will return a copy ecl_kw nr i - without looking at the names.
+*/
+ecl_kw_type * ecl_file_icopy_kw( const ecl_file_type * ecl_file , int index) {
+  return ecl_kw_alloc_copy( vector_iget( ecl_file->kw_list , index) );
+}
+
+
+
+
 /* 
    This function will return the ith occurence of 'kw' in
    ecl_file. Will abort hard if the request can not be satisifed - use
@@ -503,9 +522,13 @@ void ecl_file_free__(void * arg) {
 ecl_kw_type * ecl_file_iget_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith) {
   const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
   int global_index = int_vector_iget( index_vector , ith);
-  return vector_iget( ecl_file->kw_list , global_index );
+  return ecl_file_iget_kw( ecl_file , global_index );
 }
 
+
+ecl_kw_type * ecl_file_icopy_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith) {
+  return ecl_kw_alloc_copy( ecl_file_iget_named_kw( ecl_file , kw , ith ));
+}
 
   
 /*
@@ -521,14 +544,6 @@ int ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw) 
     return 0;
 }
 
-
-
-/**
-   This will just return ecl_kw nr i - without looking at the names.
-*/
-ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * ecl_file , int index) {
-  return vector_iget( ecl_file->kw_list , index);
-}
 
 
 

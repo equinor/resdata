@@ -17,6 +17,8 @@ ecl_file_type * ecl_file_fread_alloc( const char * filename );
 void            ecl_file_free( ecl_file_type * ecl_file );
 void            ecl_file_free__(void * arg);
 ecl_kw_type   * ecl_file_iget_named_kw( const ecl_file_type *  ecl_file , const char * kw , int ith);
+ecl_kw_type   * ecl_file_icopy_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith);
+ecl_kw_type   * ecl_file_icopy_kw( const ecl_file_type * ecl_file , int index);
 bool            ecl_file_has_kw( const ecl_file_type * ecl_file , const char * kw);
 int             ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw);
 int             ecl_file_get_num_kw( const ecl_file_type * ecl_fil );

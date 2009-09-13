@@ -26,10 +26,15 @@ struct log_struct {
 
 
 void log_reset_filename(log_type *logh , const char *filename) {
-  logh->filename = util_realloc_string_copy( logh->filename , filename );
-  if (logh->stream != NULL)  /* Close the existing file descriptor. */
+  if (logh->stream != NULL)  { /* Close the existing file descriptor. */
+    size_t file_size;
     fclose( logh->stream );
+    file_size = util_file_size( logh->filename );
+    if (file_size == 0)
+      unlink( logh->filename ); /* Unlink the old log file if it had zero size. */ 
+  }
   
+  logh->filename = util_realloc_string_copy( logh->filename , filename );
   pthread_mutex_lock( &logh->mutex );
 
   logh->stream = util_mkdir_fopen( filename , "a+");

@@ -225,6 +225,49 @@ void ecl_util_get_file_type(const char * filename, ecl_file_enum * _file_type , 
 }
 
 
+const char * ecl_util_file_type_name( ecl_file_enum file_type ) {
+  switch (file_type) {
+  case(ECL_OTHER_FILE):
+    return "ECL_OTHER_FILE";
+    break;
+  case(ECL_RESTART_FILE):
+    return "ECL_RESTART_FILE";
+    break;
+  case(ECL_UNIFIED_RESTART_FILE):
+    return "ECL_UNIFIED_RESTART_FILE";
+    break;
+  case(ECL_SUMMARY_FILE):
+    return "ECL_SUMMARY_FILE";
+    break;
+  case(ECL_UNIFIED_SUMMARY_FILE):
+    return "ECL_UNIFIED_SUMMARY_FILE";
+    break;
+  case(ECL_SUMMARY_HEADER_FILE):
+    return "ECL_SUMMARY_HEADER_FILE";
+    break;
+  case(ECL_GRID_FILE):
+    return "ECL_GRID_FILE";
+    break;
+  case(ECL_EGRID_FILE):
+    return "ECL_EGRID_FILE";
+    break;
+  case(ECL_INIT_FILE):
+    return "ECL_INIT_FILE";
+    break;
+  case(ECL_RFT_FILE):
+    return "ECL_RFT_FILE";
+    break;
+  case(ECL_DATA_FILE):
+    return "ECL_DATA_FILE";
+    break;
+  default:
+    util_abort("%s: internal error type.%d not recognizxed \n",__func__ , file_type);
+  }
+  return NULL;
+}
+
+
+
 
 /**
    This function takes a path, along with a filetype as input and

@@ -44,6 +44,7 @@ int            ecl_util_get_sizeof_ctype(ecl_type_enum );
 /*****************************************************************/
 
 void            ecl_util_init_stdin(const char * , const char *);
+const char    * ecl_util_file_type_name( ecl_file_enum file_type );
 ecl_type_enum   ecl_util_guess_type(const char * key);
 char          * ecl_util_alloc_base_guess(const char *);
 bool            ecl_util_unified(ecl_file_enum );

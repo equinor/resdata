@@ -191,45 +191,61 @@ void util_rewind_line(FILE *stream) {
    If skip_string == true the stream position will be positioned
    immediately after the 'string', otherwise it will be positioned at
    the beginning of 'string'.
+
+   If case_sensitive is true we require exact match with respect to
+   case, otherwise we accept any case combination.
 */
 
-bool util_fseek_string(FILE * stream , const char * string , bool skip_string) {
-  int len              = strlen( string );
-  long int initial_pos = ftell( stream );   /* Store the inital position. */
-  bool string_found    = false;
-  bool cont            = true;
-  do {
-    int c = fgetc( stream );
-    if (c == string[0]) {  /* OK - we got the first character right - lets try in more detail: */
-      long int current_pos  = ftell(stream);
-      bool     equal        = true;
+bool util_fseek_string(FILE * stream , const char * __string , bool skip_string , bool ignore_case) {
+  bool string_found  = false;
+  char * string      = util_alloc_string_copy(__string);
 
-      for (int string_index = 1; string_index < len; string_index++) {
-        c = fgetc( stream );
-        if (c != string[string_index]) {
-          equal = false;
-          break;
-        }
-      }
-
-      if (equal) {
-        string_found = true;
-        cont = false;
-      } else /* Go back to current pos and continue searching. */
-        fseek(stream , current_pos , SEEK_SET);
+  if (ignore_case)
+    util_strupr( string );
+  {
+    int len              = strlen( string );
+    long int initial_pos = ftell( stream );   /* Store the inital position. */
+    bool cont            = true;
+    do {
+      int c = fgetc( stream );
+      if (ignore_case)
+        c = toupper( c );
       
-    }
-    if (c == EOF) 
-      cont = false;
-  } while (cont);
-  
-  
-  if (string_found) {
-    if (!skip_string)
-      fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
-  } else
-    fseek(stream , initial_pos , SEEK_SET);       /* Could not find the string reposition at initial position. */
-  
+      if (c == string[0]) {  /* OK - we got the first character right - lets try in more detail: */
+        long int current_pos  = ftell(stream);
+        bool     equal        = true;
+        
+        for (int string_index = 1; string_index < len; string_index++) {
+          c = fgetc( stream );
+          if (ignore_case)
+            c = toupper( c );
+          
+          if (c != string[string_index]) {
+            equal = false;
+            break;
+          }
+        }
+        
+        if (equal) {
+          string_found = true;
+          cont = false;
+        } else /* Go back to current pos and continue searching. */
+          fseek(stream , current_pos , SEEK_SET);
+        
+      }
+      if (c == EOF) 
+        cont = false;
+    } while (cont);
+    
+    
+    if (string_found) {
+      if (!skip_string)
+        fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
+    } else
+      fseek(stream , initial_pos , SEEK_SET);       /* Could not find the string reposition at initial position. */
+    
+  }
+  free( string );
   return string_found;
 }
 
@@ -251,7 +267,7 @@ bool util_fseek_string(FILE * stream , const char * string , bool skip_string) {
 
 char * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool include_stop_string) {
   long int start_pos = ftell(stream);
-  if (util_fseek_string(stream , stop_string , include_stop_string)) {
+  if (util_fseek_string(stream , stop_string , include_stop_string , false)) {
     long int end_pos = ftell(stream);
     int      len     = end_pos - start_pos;
     char * buffer    = util_malloc( (len + 1) * sizeof * buffer , __func__);
@@ -1676,28 +1692,65 @@ uid_t util_get_file_uid( const char * file ) {
 }
 
 
-/*
-  This function will update the mode of file 'filename' to
-  'target_mode' IFF the current user is the owner of the file.
 
-  If an update has been done (i.e. there has been a chmod() call) the
-  function will return true, otherwise it will return false.
-*/
-
-bool util_chmod_if_owner( const char * filename , mode_t target_mode ) {
+bool util_chmod_if_owner( const char * filename , mode_t new_mode) {
   struct stat buffer;
   uid_t  exec_uid = getuid(); 
   stat( filename , &buffer );
   
   if (exec_uid == buffer.st_uid) {  /* OKAY - the current running uid is also the owner of the file. */
     mode_t current_mode = buffer.st_mode & ( S_IRWXU + S_IRWXG + S_IRWXO );
-    if (current_mode != target_mode) {
-      chmod( filename , target_mode ); /* No error check ... */
+    if (current_mode != new_mode) {
+      chmod( filename , new_mode); /* No error check ... */
       return true;
     }
   }
   
   return false; /* No update performed. */
+}
+
+
+
+
+/*
+  IFF the current uid is also the owner of the file the current
+  function will add the permissions specified in the add_mode variable
+  to the file.
+
+  The function simulates the "chmod +???" behaviour of the shell
+  command. If the mode of the file is changed the function will return
+  true, otherwise it will return false.
+*/
+
+
+
+bool util_addmode_if_owner( const char * filename , mode_t add_mode) {
+  struct stat buffer;
+  stat( filename , &buffer );
+  
+  {
+    mode_t current_mode = buffer.st_mode & ( S_IRWXU + S_IRWXG + S_IRWXO );
+    mode_t target_mode  = (current_mode | add_mode);
+
+    return util_chmod_if_owner( filename , target_mode );
+  }
+}
+
+
+
+/**
+   Implements shell chmod -??? behaviour.
+*/
+bool util_delmode_if_owner( const char * filename , mode_t del_mode) {
+  struct stat buffer;
+  stat( filename , &buffer );
+  
+  {
+    mode_t current_mode = buffer.st_mode & ( S_IRWXU + S_IRWXG + S_IRWXO );
+    mode_t target_mode  = (current_mode -  (current_mode & del_mode));
+    
+    return util_chmod_if_owner( filename , target_mode );
+  }
 }
   
 
@@ -2397,13 +2450,6 @@ void util_free_stringlist(char **list , int N) {
 }
 
 
-char ** util_alloc_stringlist(int N, int len) {
-  int i;
-  char **list = calloc(N , sizeof *list);
-  for (i=0; i < N; i++)
-    list[i] = util_malloc(len , __func__);
-  return list;
-}
 
 
 
