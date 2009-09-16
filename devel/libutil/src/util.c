@@ -1410,7 +1410,7 @@ bool util_file_exists(const char *filename) {
    Root/dir/fileXX
 
    The call:
-      util_walk_directory("Root" , callback , arg);
+   util_walk_directory("Root" , callback , arg);
       
    Will result in the following calls to the callback:
 
@@ -1418,11 +1418,14 @@ bool util_file_exists(const char *filename) {
       callback("Root" , "File2" , arg); 
       callback("Root/dir" , "fileXX" , arg); 
 
-   Symlinks are ignored when descending into subdirectories.     
+   Symlinks are ignored when descending into subdirectories. The tree
+   is walked in a 'width-first' mode (i.e. all the callbacks in a
+   directory are evaluated before the function descends further down
+   in the tree).
 */
 
 
-void util_walk_directory(const char * root_path , file_callback_ftype * file_callback , void * callback_arg) {
+void util_walk_directory(const char * root_path , walk_callback_ftype * file_callback , void * file_callback_arg , walk_callback_ftype * dir_callback , void * dir_callback_arg) {
   {
     DIR * dirH = opendir( root_path );
     if (dirH == NULL) 
@@ -1430,22 +1433,45 @@ void util_walk_directory(const char * root_path , file_callback_ftype * file_cal
 
     {
       struct dirent * dp;
+      
+      /* First pass - evaluating callbacks */
       do {
 	dp = readdir(dirH);
 	if (dp != NULL) {
 	  if (dp->d_name[0] != '.') {
 	    char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
 
-	    if (util_is_file( full_path )) 
-	      file_callback( root_path , dp->d_name , callback_arg);
-	    else {
-	      if ((util_is_directory( full_path) && (!util_is_link(full_path)))) 
-		util_walk_directory( full_path , file_callback, callback_arg );
-	    }
-
+	    if (util_is_file( full_path ) && file_callback != NULL) 
+	      file_callback( root_path , dp->d_name , file_callback_arg);
+            else if (util_is_directory( full_path ) && dir_callback != NULL)
+              dir_callback( root_path , dp->d_name , dir_callback_arg);
+            
 	    free(full_path);
 	  }
 	}
+      } while (dp != NULL);
+      closedir( dirH );
+
+      /*
+        Reopen because the first pass might have changed the directory
+        content.  Do not know if it is necessary.
+      */
+
+      dirH = opendir( root_path );
+      /* Second pass - descending into subdirectories */
+      rewinddir( dirH );
+      do {
+        dp = readdir(dirH);
+	if (dp != NULL) {
+	  if (dp->d_name[0] != '.') {
+	    char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
+            
+            if ((util_is_directory( full_path) && (!util_is_link(full_path)))) 
+              util_walk_directory( full_path , file_callback, file_callback_arg , dir_callback , dir_callback_arg );
+            
+            free( full_path );
+          }
+        }
       } while (dp != NULL);
     }
     closedir( dirH );
@@ -3936,6 +3962,57 @@ char * util_alloc_PATH_executable(const char * executable) {
     return full_path;
   }
 }
+
+
+/**
+   This function will use the external program /usr/sbin/lsof to
+   determine which users currently have 'filename' open. The return
+   value will be a (uid_t *) pointer of active users. The number of
+   active users is returned by reference.
+
+   * In the current implementation a user can occur several times if
+     the user has the file open in several processes.
+     
+   * If a NFS mounted file is opened on a remote machine it will not
+     appear in this listing. I.e. to check that an executable file can
+     be safely modified you must iterate through the relevant
+     computers.
+*/
+
+
+uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
+  const char * lsf_executable = "/usr/sbin/lsof";
+  int     buffer_size = 8;
+  int     num_users   = 0;
+  uid_t * users       = util_malloc( sizeof * users * buffer_size , __func__);
+  char * tmp_file     = util_alloc_tmp_file("/tmp" , "lsof" , false);
+  util_vfork_exec(lsf_executable , 2 , (const char *[2]) {"-Fu" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
+  {
+    FILE * stream = util_fopen(tmp_file , "r");
+    while ( true ) {
+      int pid , uid;
+      char dummy_char;
+      if (fscanf( stream , "%c%d %c%d" , &dummy_char , &pid , &dummy_char , &uid) == 4) {
+        //int i;
+        if (buffer_size == num_users) {
+          buffer_size *= 2;
+          users        = util_realloc( users , sizeof * users * buffer_size , __func__);
+        }
+        users[ num_users ] = uid;
+        num_users++;
+      } else 
+        break; /* have reached the end of file - seems like we will not find the file descriptor we are looking for. */
+    }
+    fclose( stream );
+    unlink( tmp_file );
+  }
+  free( tmp_file );
+  users = util_realloc( users , sizeof * users * num_users , __func__);
+  *__num_users = num_users;
+  return users;
+}
+
+
 
 /**
    This function uses the external program lsof to (try) to associate

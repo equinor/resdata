@@ -58,6 +58,19 @@ vector_type * vector_alloc_new() {
 }
 
 
+/**
+   This functon will allocate a vector 'size' elements. Each of these
+   elements is initialized with NULL pointers.
+*/
+
+vector_type * vector_alloc_NULL_initialized( int size ) { 
+  vector_type * vector = vector_alloc_new();
+  for (int i=0; i < size; i++)
+    vector_append_ref( vector , NULL );
+  return vector;
+}
+
+
 /** 
     This function assumes that the index is *inside* the vector,
     otherwise it will fail HARD. Should NOT be exported (then we
@@ -73,6 +86,23 @@ static void vector_iset__(vector_type * vector , int index , node_data_type * no
 
   vector->data[index] = node;
 }
+
+/**
+   This is the low level function opposite to the vector_idel()
+   function. A new value (node) is inserted at index, and the rest of
+   the vector is shifted to the right.
+*/
+
+static void vector_insert__(vector_type * vector , int index , node_data_type * node) {
+  if (vector->size == vector->alloc_size)
+    vector_resize__(vector , 2*(vector->alloc_size + 1));
+  {
+    int bytes_to_move = (vector->size - index) * sizeof * vector->data;
+    memmove(&vector->data[index + 1] , &vector->data[index] , bytes_to_move);
+  }
+  vector_iset__( vector , index , node );
+}
+
 
 /**
    This is the low-level append node function which actually "does
@@ -128,7 +158,7 @@ void vector_push_ref(vector_type * vector , const void * data) {
   vector_push_node(vector , node);
 }
 
-void vector_insert_ref(vector_type * vector , int index , const void * data) {
+void vector_iset_ref(vector_type * vector , int index , const void * data) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , NULL);
   vector_iset__(vector , index , node);
 }
@@ -154,7 +184,7 @@ void vector_push_owned_ref(vector_type * vector , const void * data , free_ftype
 }
 
 
-void vector_insert_owned_ref(vector_type * vector , int index , const void * data , free_ftype * del) {
+void vector_iset_owned_ref(vector_type * vector , int index , const void * data , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , del);
   vector_iset__(vector , index , node);
 }
@@ -179,7 +209,7 @@ void  vector_push_copy(vector_type * vector , const void * data , copyc_ftype * 
 }
 
 
-void vector_insert_copy(vector_type * vector , int index , const void * data , copyc_ftype * copyc , free_ftype * del) {
+void vector_iset_copy(vector_type * vector , int index , const void * data , copyc_ftype * copyc , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, copyc , del);
   vector_iset__(vector , index , node);
 }
@@ -199,7 +229,7 @@ void vector_append_buffer(vector_type * vector , const void * buffer, int buffer
 }
 
 
-void vector_insert_buffer(vector_type * vector , int index , const void * buffer, int buffer_size) {
+void vector_iset_buffer(vector_type * vector , int index , const void * buffer, int buffer_size) {
   node_data_type * node = node_data_alloc_buffer( buffer , buffer_size );
   vector_iset__(vector , index , node);
 }
@@ -254,6 +284,9 @@ void vector_idel(vector_type * vector , int index) {
   } else 
     util_abort("%s: Invald index:%d  Valid range: [0,%d> \n",__func__ , index , vector->size);
 }
+
+
+
 
 
 /** 
@@ -367,6 +400,11 @@ void vector_free(vector_type * vector) {
   vector_clear( vector );
   free(vector->data);
   free(vector);
+}
+
+
+void vector_free__( void * arg ) {
+  vector_free( vector_safe_cast( arg ));
 }
 
 

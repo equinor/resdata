@@ -100,9 +100,10 @@ const char * libname ## _svn_version(); \
 const char * libname ## _build_time();
 
 /*****************************************************************/
-typedef void (file_callback_ftype)   (const char * , /* The current directory */
-				      const char * , /* The current file */
+typedef void (walk_callback_ftype)   (const char * , /* The current directory */
+				      const char * , /* The current file / directory */
 				      void *);       /* Arbitrary argument */
+
 
 typedef char * (subst_callback_ftype) (const char *, void *);
 
@@ -155,7 +156,7 @@ void         util_string_tr(char * , char , char);
 bool 	     util_copy_stream(FILE *, FILE *, int , void * , bool abort_on_error);
 bool 	     util_copy_file(const char * , const char * , bool abort_on_error);
 void         util_copy_directory(const char *  , const char * , const char *);
-void         util_walk_directory(const char * root_path , file_callback_ftype * file_callback , void * callback_arg);
+void         util_walk_directory(const char * root_path , walk_callback_ftype * file_callback , void * file_callback_arg , walk_callback_ftype * dir_callback , void * dir_callback_arg);
 char       * util_alloc_cwd(void);
 char       * util_alloc_realpath(const char * );
 bool         util_try_alloc_realpath(const char *);
@@ -316,6 +317,8 @@ void     util_sscanf_active_range(const char *  , int , bool * );
 int    * util_sscanf_alloc_active_list(const char *  , int * );
 int      util_get_current_linenr(FILE * stream);
 char   * util_alloc_filename_from_stream( FILE * input_stream );
+uid_t  * util_alloc_file_users( const char * filename , int * __num_users);
+uid_t  * util_alloc_file_users( const char * filename , int * __num_users);
 void     util_update_path_var(const char * , const char * , bool );
 
 void 	 util_fskip_int(FILE * stream);

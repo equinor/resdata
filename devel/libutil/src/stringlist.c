@@ -61,15 +61,15 @@ void stringlist_append_owned_ref(stringlist_type * stringlist , const char * s) 
 
 
 void stringlist_iset_copy(stringlist_type * stringlist , int index , const char * s) {
-  vector_insert_buffer(stringlist->strings , index , s , strlen(s) + 1);
+  vector_iset_buffer(stringlist->strings , index , s , strlen(s) + 1);
 }
 
 void stringlist_iset_ref(stringlist_type * stringlist , int index , const char * s) {
-  vector_insert_ref(stringlist->strings , index , s);
+  vector_iset_ref(stringlist->strings , index , s);
 }
 
 void stringlist_iset_owned_ref(stringlist_type * stringlist , int index , const char * s) {
-  vector_insert_owned_ref(stringlist->strings , index , s , free);
+  vector_iset_owned_ref(stringlist->strings , index , s , free);
 }
 
 

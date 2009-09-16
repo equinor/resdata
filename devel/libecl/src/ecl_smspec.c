@@ -164,10 +164,16 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
 UTIL_SAFE_CAST_FUNCTION( ecl_smspec , ECL_SMSPEC_ID )
 
 
-/* See table 3.4 in the ECLIPSE file format reference manual. */
+/* 
+   See table 3.4 in the ECLIPSE file format reference manual. 
+   
+   This function does not consider the variables internalized in the
+   smspec instance, only the string 'var'.
+*/
 
 ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec , const char * var) {
   ecl_smspec_var_type var_type = ECL_SMSPEC_MISC_VAR;
+  
   if (hash_has_key( smspec->special_types , var ))
     return hash_get_int( smspec->special_types , var);
   else {
