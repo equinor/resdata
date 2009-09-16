@@ -6,6 +6,7 @@ extern "C" {
 #include <stdbool.h>
 #include <time.h>
 #include <stringlist.h>
+#include <ecl_smspec.h>
 
 typedef struct ecl_sum_struct       ecl_sum_type;
 
@@ -79,10 +80,10 @@ double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep );
 time_t       ecl_sum_get_start_time(const ecl_sum_type * );
 const char * ecl_sum_get_simulation_case(const ecl_sum_type * );
 /*****************************************************************/
-stringlist_type * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum );
-stringlist_type * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum );
-stringlist_type * ecl_sum_alloc_matching_general_var_list(const ecl_sum_type * ecl_sum , const char * pattern);  
-
+stringlist_type     * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum );
+stringlist_type     * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum );
+stringlist_type     * ecl_sum_alloc_matching_general_var_list(const ecl_sum_type * ecl_sum , const char * pattern);  
+ecl_smspec_var_type   ecl_sum_identify_var_type(const ecl_sum_type * ecl_sum , const char * var);
 
 #ifdef __cplusplus
 }

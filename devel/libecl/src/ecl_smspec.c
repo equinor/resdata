@@ -37,6 +37,7 @@ struct ecl_smspec_struct {
   hash_type        * unit_hash;
   hash_type        * block_var_index;
   hash_type        * gen_var_index;              /* This is "everything" - thing can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
+  hash_type        * special_types;
 
   ecl_smspec_var_type * var_type;
   int               grid_nx , grid_ny , grid_nz; /* Grid dimensions - in DIMENS[1,2,3] */
@@ -124,6 +125,26 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   ecl_smspec->unit_hash          	     = hash_alloc();
   ecl_smspec->block_var_index                = hash_alloc();
   ecl_smspec->gen_var_index                  = hash_alloc();
+  ecl_smspec->special_types                  = hash_alloc();
+  /**
+     The special_types hash table is used to associate keywords with
+     special types, when the kewyord name is in conflict with the
+     default vector naming convention.
+     
+     For instance the keyword 'NEWTON' starts with 'N' and is
+     classified as a NETWORK type variable. However it should rather
+     be classified as a MISC type variable. (What a fucking mess).
+  */
+  hash_insert_int(ecl_smspec->special_types , "NEWTON"    , ECL_SMSPEC_MISC_VAR );
+  hash_insert_int(ecl_smspec->special_types , "NLINEARS"  , ECL_SMSPEC_MISC_VAR );
+  hash_insert_int(ecl_smspec->special_types , "ELAPSED"   , ECL_SMSPEC_MISC_VAR );
+  hash_insert_int(ecl_smspec->special_types , "MAXDPR"    , ECL_SMSPEC_MISC_VAR );
+  hash_insert_int(ecl_smspec->special_types , "MAXDSO"    , ECL_SMSPEC_MISC_VAR );
+  hash_insert_int(ecl_smspec->special_types , "MAXDSG"    , ECL_SMSPEC_MISC_VAR );
+  hash_insert_int(ecl_smspec->special_types , "MAXDSW"    , ECL_SMSPEC_MISC_VAR );
+  hash_insert_int(ecl_smspec->special_types , "STEPTYPE"  , ECL_SMSPEC_MISC_VAR );
+  
+
 
   ecl_smspec->var_type           	     = NULL;
   ecl_smspec->sim_start_time     	     = -1;
@@ -145,69 +166,73 @@ UTIL_SAFE_CAST_FUNCTION( ecl_smspec , ECL_SMSPEC_ID )
 
 /* See table 3.4 in the ECLIPSE file format reference manual. */
 
-ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var) {
+ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec , const char * var) {
   ecl_smspec_var_type var_type = ECL_SMSPEC_MISC_VAR;
-  switch(var[0]) {
-  case('A'):
-    var_type = ECL_SMSPEC_AQUIFER_VAR;
-    break;
-  case('B'):
-    var_type = ECL_SMSPEC_BLOCK_VAR;
-    break;
-  case('C'):
-    var_type = ECL_SMSPEC_COMPLETION_VAR;
-    break;
-  case('F'):
-    var_type = ECL_SMSPEC_FIELD_VAR;
-    break;
-  case('G'):
-    var_type = ECL_SMSPEC_GROUP_VAR;
-    break;
-  case('L'):
-    switch(var[1]) {
+  if (hash_has_key( smspec->special_types , var ))
+    return hash_get_int( smspec->special_types , var);
+  else {
+    switch(var[0]) {
+    case('A'):
+      var_type = ECL_SMSPEC_AQUIFER_VAR;
+      break;
     case('B'):
-      var_type = ECL_SMSPEC_LOCAL_BLOCK_VAR;
+      var_type = ECL_SMSPEC_BLOCK_VAR;
       break;
     case('C'):
-      var_type = ECL_SMSPEC_LOCAL_COMPLETION_VAR;
+      var_type = ECL_SMSPEC_COMPLETION_VAR;
+      break;
+    case('F'):
+      var_type = ECL_SMSPEC_FIELD_VAR;
+      break;
+    case('G'):
+      var_type = ECL_SMSPEC_GROUP_VAR;
+      break;
+    case('L'):
+      switch(var[1]) {
+      case('B'):
+        var_type = ECL_SMSPEC_LOCAL_BLOCK_VAR;
+        break;
+      case('C'):
+        var_type = ECL_SMSPEC_LOCAL_COMPLETION_VAR;
+        break;
+      case('W'):
+        var_type = ECL_SMSPEC_LOCAL_WELL_VAR;
+        break;
+      default:
+        util_abort("%s: not recognized: %s \n",__func__ , var);
+      }
+      break;
+    case('N'):
+      var_type = ECL_SMSPEC_NETWORK_VAR;
+      break;
+    case('R'):
+      if (var[2] == 'F')
+        var_type  = ECL_SMSPEC_REGION_2_REGION_VAR;
+      else
+        var_type  = ECL_SMSPEC_REGION_VAR;
+      break;
+    case('S'):
+      var_type = ECL_SMSPEC_SEGMENT_VAR;
       break;
     case('W'):
-      var_type = ECL_SMSPEC_LOCAL_WELL_VAR;
+      var_type = ECL_SMSPEC_WELL_VAR;
       break;
     default:
-      util_abort("%s: not recognized: %s \n",__func__ , var);
+      /*
+        It is unfortunately impossible to recognize an error situation -
+        the rest just goes in "other" variables.
+      */
+      var_type = ECL_SMSPEC_MISC_VAR;
     }
-    break;
-  case('N'):
-    var_type = ECL_SMSPEC_NETWORK_VAR;
-    break;
-  case('R'):
-    if (var[2] == 'F')
-      var_type  = ECL_SMSPEC_REGION_2_REGION_VAR;
-    else
-      var_type  = ECL_SMSPEC_REGION_VAR;
-    break;
-  case('S'):
-    var_type = ECL_SMSPEC_SEGMENT_VAR;
-    break;
-  case('W'):
-    var_type = ECL_SMSPEC_WELL_VAR;
-    break;
-  default:
-    /*
-      It is unfortunately impossible to recognize an error situation -
-      the rest just goes in "other" variables.
-    */
-    var_type = ECL_SMSPEC_MISC_VAR;
+    return var_type;
   }
-  return var_type;
 }
 
 
-static ecl_smspec_var_type ecl_smspec_split_general(const char * gen_key , int * argc , char *** argv) {
+static ecl_smspec_var_type ecl_smspec_split_general(const ecl_smspec_type * smspec , const char * gen_key , int * argc , char *** argv) {
   ecl_smspec_var_type var_type;
   util_split_string(gen_key , ":" , argc , argv);
-  var_type = ecl_smspec_identify_var_type( (*argv)[0] );
+  var_type = ecl_smspec_identify_var_type( smspec , (*argv)[0] );
   return var_type;
 }
 
@@ -291,7 +316,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	char * well = util_alloc_strip_copy(ecl_kw_iget_ptr(wells    , index));
 	char * kw   = util_alloc_strip_copy(ecl_kw_iget_ptr(keywords , index));
 	if (nums != NULL) num = ecl_kw_iget_int(nums , index);
-	ecl_smspec->var_type[index] = ecl_smspec_identify_var_type(kw);
+	ecl_smspec->var_type[index] = ecl_smspec_identify_var_type(ecl_smspec , kw);
 	/* See table 3.4 in the ECLIPSE file format reference manual. */
 	switch(ecl_smspec->var_type[index]) {
 	case(ECL_SMSPEC_COMPLETION_VAR):
@@ -705,44 +730,49 @@ bool  ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl_smspec , co
 /* Completions not supported yet. */
 int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
   int     index = -1;
-  char ** argv;
-  int     argc;
-  ecl_smspec_var_type var_type;
-  var_type = ecl_smspec_split_general( lookup_kw , &argc , &argv );
+
+  if (hash_has_key( ecl_smspec->gen_var_index , lookup_kw ))
+    index = hash_get_int( ecl_smspec->gen_var_index , lookup_kw );
+
+  return index;
   
-  switch(var_type) {
-  case(ECL_SMSPEC_MISC_VAR):
-    index = ecl_smspec_get_misc_var_index(ecl_smspec , argv[0]);
-    break;
-  case(ECL_SMSPEC_WELL_VAR):
-    if (argc == 2)
-      index = ecl_smspec_get_well_var_index(ecl_smspec , argv[1] , argv[0]);
-    break;
-  case(ECL_SMSPEC_REGION_VAR):
-    if ( argc ==2 ) {
-      int region_nr;
-      if (util_sscanf_int(argv[1] , &region_nr))
-	index = ecl_smspec_get_region_var_index( ecl_smspec , region_nr , argv[0]);
-    }
-    break;
-  case(ECL_SMSPEC_FIELD_VAR):
-    if (argc == 1)
-      index = ecl_smspec_get_field_var_index(ecl_smspec , argv[0]);
-    break;
-  case(ECL_SMSPEC_GROUP_VAR):
-    if (argc == 2)
-      index = ecl_smspec_get_group_var_index(ecl_smspec , argv[1] , argv[0]);
-    break;
-  case(ECL_SMSPEC_BLOCK_VAR):
-    if (argc ==2 )
-      index = ecl_smspec_get_block_var_index_gen_string(ecl_smspec , argv[0] , argv[1]);
-    break;
-  default:
-    util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
-  }
-  util_free_stringlist(argv , argc);
-  //if (index != hash_get_int( ecl_smspec->gen_var_index , lookup_kw))
-  //  util_abort("Internal error \n",__func__);
+
+  //ecl_smspec_var_type var_type;
+  //var_type = ecl_smspec_split_general( lookup_kw , &argc , &argv );
+  //
+  //switch(var_type) {
+  //case(ECL_SMSPEC_MISC_VAR):
+  //  index = ecl_smspec_get_misc_var_index(ecl_smspec , argv[0]);
+  //  break;
+  //case(ECL_SMSPEC_WELL_VAR):
+  //  if (argc == 2)
+  //    index = ecl_smspec_get_well_var_index(ecl_smspec , argv[1] , argv[0]);
+  //  break;
+  //case(ECL_SMSPEC_REGION_VAR):
+  //  if ( argc ==2 ) {
+  //    int region_nr;
+  //    if (util_sscanf_int(argv[1] , &region_nr))
+  //      index = ecl_smspec_get_region_var_index( ecl_smspec , region_nr , argv[0]);
+  //  }
+  //  break;
+  //case(ECL_SMSPEC_FIELD_VAR):
+  //  if (argc == 1)
+  //    index = ecl_smspec_get_field_var_index(ecl_smspec , argv[0]);
+  //  break;
+  //case(ECL_SMSPEC_GROUP_VAR):
+  //  if (argc == 2)
+  //    index = ecl_smspec_get_group_var_index(ecl_smspec , argv[1] , argv[0]);
+  //  break;
+  //case(ECL_SMSPEC_BLOCK_VAR):
+  //  if (argc ==2 )
+  //    index = ecl_smspec_get_block_var_index_gen_string(ecl_smspec , argv[0] , argv[1]);
+  //  break;
+  //default:
+  //  util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
+  //}
+  //util_free_stringlist(argv , argc);
+  ////if (index != hash_get_int( ecl_smspec->gen_var_index , lookup_kw))
+  ////  util_abort("Internal error \n",__func__);
 
   return index;
 }
@@ -809,6 +839,7 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->unit_hash);
   hash_free(ecl_smspec->block_var_index);
   hash_free(ecl_smspec->gen_var_index);
+  hash_free(ecl_smspec->special_types);
   free(ecl_smspec->var_type);
   free(ecl_smspec->simulation_case);
   free(ecl_smspec);
@@ -901,7 +932,7 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
   int     argc;
   bool is_total;
   ecl_smspec_var_type var_type;
-  var_type = ecl_smspec_split_general( gen_key , &argc , &argv );
+  var_type = ecl_smspec_split_general( smspec , gen_key , &argc , &argv );
   if (var_type == ECL_SMSPEC_WELL_VAR || var_type == ECL_SMSPEC_GROUP_VAR || var_type == ECL_SMSPEC_FIELD_VAR) 
     is_total = ecl_smspec_var_is_total( smspec , argv[0] );
   else

@@ -468,3 +468,9 @@ stringlist_type * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum ) {
 }
 
 
+/*****************************************************************/
+
+ecl_smspec_var_type ecl_sum_identify_var_type(const ecl_sum_type * ecl_sum , const char * var) {
+  return ecl_smspec_identify_var_type( ecl_sum->smspec , var );
+}
+
