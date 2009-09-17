@@ -1426,57 +1426,52 @@ bool util_file_exists(const char *filename) {
 
 
 void util_walk_directory(const char * root_path , walk_callback_ftype * file_callback , void * file_callback_arg , walk_callback_ftype * dir_callback , void * dir_callback_arg) {
-  {
-    DIR * dirH = opendir( root_path );
-    if (dirH == NULL) 
-      util_abort("%s: failed to open directory:%s / %s \n",__func__ , root_path , strerror(errno));
+  struct dirent * dp;
+  DIR * dirH = opendir( root_path );
+  if (dirH == NULL) 
+    util_abort("%s: failed to open directory:%s / %s \n",__func__ , root_path , strerror(errno));
 
-    {
-      struct dirent * dp;
-      
-      /* First pass - evaluating callbacks */
-      do {
-	dp = readdir(dirH);
-	if (dp != NULL) {
-	  if (dp->d_name[0] != '.') {
-	    char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
-
-	    if (util_is_file( full_path ) && file_callback != NULL) 
-	      file_callback( root_path , dp->d_name , file_callback_arg);
-            else if (util_is_directory( full_path ) && dir_callback != NULL)
-              dir_callback( root_path , dp->d_name , dir_callback_arg);
-            
-	    free(full_path);
-	  }
-	}
-      } while (dp != NULL);
-      closedir( dirH );
-
-      /*
-        Reopen because the first pass might have changed the directory
-        content.  Do not know if it is necessary.
-      */
-
-      dirH = opendir( root_path );
-      /* Second pass - descending into subdirectories */
-      rewinddir( dirH );
-      do {
-        dp = readdir(dirH);
-	if (dp != NULL) {
-	  if (dp->d_name[0] != '.') {
-	    char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
-            
-            if ((util_is_directory( full_path) && (!util_is_link(full_path)))) 
-              util_walk_directory( full_path , file_callback, file_callback_arg , dir_callback , dir_callback_arg );
-            
-            free( full_path );
-          }
-        }
-      } while (dp != NULL);
+  /* First pass - evaluating callbacks */
+  do {
+    dp = readdir(dirH);
+    if (dp != NULL) {
+      if (dp->d_name[0] != '.') {
+        char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
+        
+        if (util_is_file( full_path ) && file_callback != NULL) 
+          file_callback( root_path , dp->d_name , file_callback_arg);
+        else if (util_is_directory( full_path ) && dir_callback != NULL)
+          dir_callback( root_path , dp->d_name , dir_callback_arg);
+        
+        free(full_path);
+      }
     }
-    closedir( dirH );
-  }
+  } while (dp != NULL);
+  closedir( dirH );
+  
+  /*
+    Reopen because the first pass might have changed the directory
+    content.  Do not know if it is necessary.
+  */
+  
+  /* Second pass - descending into subdirectories */
+  dirH = opendir( root_path );
+  do {
+    dp = readdir(dirH);
+    if (dp != NULL) {
+      if (dp->d_name[0] != '.') {
+        char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
+        
+        if ((util_is_directory( full_path) && (!util_is_link(full_path)))) 
+          util_walk_directory( full_path , file_callback, file_callback_arg , dir_callback , dir_callback_arg );
+        
+        free( full_path );
+      }
+    }
+  } while (dp != NULL);
+  closedir( dirH );
 }
+
 
 
 
@@ -3986,7 +3981,7 @@ uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
   int     num_users   = 0;
   uid_t * users       = util_malloc( sizeof * users * buffer_size , __func__);
   char * tmp_file     = util_alloc_tmp_file("/tmp" , "lsof" , false);
-  util_vfork_exec(lsf_executable , 2 , (const char *[2]) {"-Fu" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
+  util_vfork_exec(lsf_executable , 2 , (const char *[2]) {"-F" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
   {
     FILE * stream = util_fopen(tmp_file , "r");
     while ( true ) {
@@ -4025,7 +4020,7 @@ uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
    This function is quite heavyweight (invoking an external program
    +++), and also quite fragile, it should therefor not be used in
    routine FILE -> name lookups, rather in situations where a FILE *
-   operation has failed extraordinary, and we want to provide as much
+   operation has failed extraordinary, and we want to hide as much
    information as possible before going down in flames.
 */
   

@@ -23,7 +23,7 @@ char      ** set_alloc_keylist(const set_type * );
 void         set_fwrite(const set_type * , FILE * );
 void         set_fread(set_type * , FILE * );
 set_type   * set_fread_alloc(FILE *);
-void         set_fprintf(const set_type * , FILE * );
+void         set_fprintf(const set_type * , const char * sep , FILE * );
 void         set_intersect(set_type * , const set_type * );
 void         set_union(set_type * , const set_type * );
 void         set_minus(set_type * , const set_type * );

@@ -3,7 +3,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include <util.h>
 #include <stdbool.h>
 
 
@@ -19,6 +19,8 @@ void         msg_update_int(msg_type * , const char * , int );
 void         msg_hide(msg_type *);
 void         msg_clear_msg(msg_type * msg);
 
+
+UTIL_SAFE_CAST_HEADER( msg );
 
 #ifdef __cplusplus
 }

@@ -67,19 +67,17 @@ bool set_has_key(const set_type * set, const char * key) {
 }
 
 
-void set_fprintf(const set_type * set, FILE * stream) {
+void set_fprintf(const set_type * set, const char * sep , FILE * stream) {
   const int size = set_get_size(set);
   int i;
   char ** key_list = set_alloc_keylist(set);
-  fprintf(stream , "[");
   for (i=0; i < size; i++) {
     if (i < (size - 1))
-      fprintf(stream , "\'%s\', ",key_list[i]);
+      fprintf(stream , "%s%s",key_list[i] , sep);
     else
-      fprintf(stream , "\'%s\'",key_list[i]);
+      fprintf(stream , "%s",key_list[i]);
     free(key_list[i]);
   }
-  fprintf(stream , "]");
   free(key_list);
 }
     

@@ -6,7 +6,10 @@
 #include <msg.h>
 
 
+#define MSG_TYPE_ID 1999867
+
 struct msg_struct {
+  UTIL_TYPE_ID_DECLARATION;  
   char * prompt;
   char * msg;
   int    msg_len;
@@ -98,8 +101,11 @@ void msg_update_int(msg_type * msg , const char * fmt , int value) {
 }
 
 
+UTIL_SAFE_CAST_FUNCTION( msg , MSG_TYPE_ID )
+
 msg_type * msg_alloc(const char * prompt) {
   msg_type * msg = util_malloc(sizeof * msg , __func__);
+  UTIL_TYPE_ID_INIT( msg , MSG_TYPE_ID);
   msg->prompt = util_alloc_string_copy(prompt);
   
   msg->msg     = NULL;
