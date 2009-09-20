@@ -121,20 +121,6 @@ struct block_fs_struct {
 static void block_fs_rotate__( block_fs_type * block_fs );
 
 
-//static void block_fs_fprintf_free_nodes( const block_fs_type * block_fs, FILE * stream) {
-//  file_node_type * current = block_fs->free_nodes;
-//  int counter = 0;
-//  while (current != NULL ) {
-//    fprintf(stream , "Offset:%ld   node_size:%d   data_size:%d \n",current->node_offset , current->node_size , current->data_size);
-//    if (current->next == current)
-//      util_abort("%s: linked list broken \n",__func__);
-//    current = current->next;
-//    counter++;
-//  }
-//  fprintf(stderr , "\n");
-//  if (counter != block_fs->num_free_nodes) 
-//    util_abort("%s: Counter:%d    num_free_nodes:%d \n",__func__ , counter , block_fs->num_free_nodes);
-//}
 
 
 static inline void fseek__(FILE * stream , long int arg , int whence) {
@@ -695,8 +681,9 @@ static void block_fs_open_data( block_fs_type * block_fs , bool read_write) {
 /**
    This functon will (attempt) to read the whole datafile in one large
    go, and then fill up the cache nodes. If it can not allocate enough
-   memory to read in the whole datafile in one go, it will just fail
-   silently, and no preload will be done.
+   memory to read in the whole datafile in one go, it will try loading
+   all the small (i.e. with size less than the maximum cache size)
+   nodes.
 */
 
 
@@ -708,15 +695,30 @@ static void block_fs_preload( block_fs_type * block_fs ) {
     if (buffer != NULL) {
       hash_iter_type * index_iter = hash_iter_alloc( block_fs->index );
       util_fread( buffer , 1 , block_fs->data_file_size , block_fs->data_stream , __func__);
-      
       while (!hash_iter_is_complete( index_iter )) {
         file_node_type * node = hash_iter_get_next_value( index_iter );
         if (node->data_size < block_fs->max_cache_size) 
           file_node_update_cache( node , node->data_size , &buffer[node->data_offset]);
-        
       }
+      hash_iter_free( index_iter );
       free( buffer );
-    } 
+    } else {  /* OK - failed to load the whole god damn datafile. Try to selectively 
+                 preload the small nodes which can be cached. */
+
+      buffer = util_malloc( block_fs->max_cache_size , __func__);
+      hash_iter_type * index_iter = hash_iter_alloc( block_fs->index );
+      while (!hash_iter_is_complete( index_iter )) {
+        file_node_type * node = hash_iter_get_next_value( index_iter );
+        if (node->data_size < block_fs->max_cache_size) {
+          block_fs_fseek_data(block_fs , node->data_offset);
+          util_fread( buffer , 1 , node->data_size , block_fs->data_stream , __func__);
+          file_node_update_cache( node , node->data_size , buffer);
+        }
+      }
+      hash_iter_free( index_iter );
+      
+      free( buffer );
+    }
   }
   
 }
