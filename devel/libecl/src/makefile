@@ -72,7 +72,7 @@ ens_plot.o     	  : ens_plot.c
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x ens_plot.x lgr_iget.x make_grane_aqconn.x troll_iget_lgr.x troll_contact.x porv.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x ens_plot.x lgr_iget.x make_grane_aqconn.x troll_iget_lgr.x troll_contact.x
 BIN	:  $(BIN_FILES) 
 BIN_FILES_SDP_INSTALL = convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
 
@@ -129,9 +129,6 @@ restart.x: $(LIB) view_restart.o
 
 rft.x: $(LIB) view_rft.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  view_rft.o -o rft.x $(LIB_PATH)  $(LIB_LINK)
-
-porv.x: $(LIB) porv.o
-	$(LD) -$(MFLAG) $(LDFLAGS)  porv.o -o porv.x $(LIB_PATH)  $(LIB_LINK)
 
 run_gravity.x: $(LIB) run_gravity.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  run_gravity.o -o run_gravity.x $(LIB_PATH)  $(LIB_LINK)
