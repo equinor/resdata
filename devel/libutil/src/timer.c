@@ -3,29 +3,27 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-
-#include <work.h>
+#include <util.h>
 #include <timer.h>
 
 struct timer_struct {
   char    *name;
   size_t   count;
-  bool     running;
+
   clock_t  clock_start;
   time_t   epoch_start;
-  double   sum1,sum2;
-  double   min_time, max_time;
-  bool     epoch_time;
+  double   sum1 , sum2;
+  double   min_time , max_time;
+  bool     running , epoch_time;
 };
 
 
 
 timer_type * timer_alloc(const char *name, bool epoch_time) {
   timer_type *timer;
-  timer = malloc(sizeof(timer_type));
-  timer->name = calloc(strlen(name) + 1, sizeof(char));
-  strcpy(timer->name , name);
-
+  timer       = util_malloc(sizeof * timer , __func__);
+  timer->name = util_alloc_string_copy( name );
+  
   timer->epoch_time = epoch_time;
   timer_reset(timer);
   return timer;
@@ -39,10 +37,8 @@ void timer_free(timer_type *timer) {
 
 
 void timer_start(timer_type *timer) {
-  if (timer->running) {
-    fprintf(stderr,"timer:%s already running. Use timer_stop() or timer_restart(). Aborting \n",timer->name);
-    abort();
-  }
+  if (timer->running) 
+    util_abort("%s: Timer:%s already running. Use timer_stop() or timer_restart(). Aborting \n",__func__ , timer->name);
   timer->running    = true;
 
   if (timer->epoch_time)
@@ -53,7 +49,7 @@ void timer_start(timer_type *timer) {
 }
 
 
-void timer_stop(timer_type *timer) {
+double timer_stop(timer_type *timer) {
   time_t  epoch_time;
   clock_t clock_time = clock();
   
@@ -64,33 +60,29 @@ void timer_stop(timer_type *timer) {
       cpu_sec = 1.0 * (epoch_time - timer->epoch_start);
     else
       cpu_sec = 1.0 * (clock_time - timer->clock_start) / CLOCKS_PER_SEC;
-
+    
     timer->count++;
-    timer->sum1   += cpu_sec;
-    timer->sum2   += cpu_sec * cpu_sec;
-    timer->min_time = GSL_MIN_DBL(timer->min_time , cpu_sec);
-    timer->max_time = GSL_MAX_DBL(timer->max_time , cpu_sec);
-    timer->running = false;
+    timer->sum1    += cpu_sec;
+    timer->sum2    += cpu_sec * cpu_sec;
+    timer->min_time = util_double_min( timer->min_time , cpu_sec);
+    timer->max_time = util_double_max( timer->max_time , cpu_sec);
+    timer->running  = false;
 
-  } else {
-    fprintf(stderr,"Timer:%s is not running. Aborting \n",timer->name);
-    abort();
-  }
+    return cpu_sec;
+  } else 
+    util_abort("%s: Timer:%s is not running. Aborting \n",__func__ , timer->name);
+  
+  return -1;
 }
 
-
-void timer_restart(timer_type *timer) {
-  timer->running = false;
-  timer_start(timer);
-}
 
 
 void timer_reset(timer_type *timer) {
-  timer->count   = 0;
-  timer->sum1    = 0.0;
-  timer->sum2    = 0.0;
-  timer->min_time =  GSL_DBL_MAX;
-  timer->max_time = -GSL_DBL_MAX;
+  timer->count    = 0;
+  timer->sum1     = 0.0;
+  timer->sum2     = 0.0;
+  timer->min_time =  HUGE;
+  timer->max_time = -HUGE;
   timer->running  = false;
 }
 
@@ -108,18 +100,15 @@ static char *pad(const char *string , const char *padchar, size_t w , char *buff
 
 
 
-void timer_header_start(const timer_type *timer, FILE *stream) {
-  
-}
-
-
 void timer_stats(const timer_type *timer , double *mean, double *std_dev) {
-  *mean   = timer->sum1 / timer->count;
+  *mean    = timer->sum1 / timer->count;
   *std_dev = sqrt(timer->sum2 / timer->count - (*mean) * (*mean));
 }
 
 
-void timer_list_report(const timer_type **timer_list , int N , FILE *stream, work_type *work) {
+
+
+void timer_list_report(const timer_type **timer_list , int N , FILE *stream) {
   double *perc_list;
   double  total_time = 0;
 
@@ -128,13 +117,12 @@ void timer_list_report(const timer_type **timer_list , int N , FILE *stream, wor
   char *str_buffer;
   size_t i;
 
-  work_reset(work);
-  perc_list  = work_get_double(work , N , __func__);
-  str_buffer = work_get_char(work , 128 , __func__);
+  perc_list  = util_malloc( N * sizeof * perc_list , __func__);
+  str_buffer = util_malloc( 128 , __func__);
   
   for (i=0; i < N; i++) {
     total_time += timer_list[i]->sum1;
-    max_width = GSL_MAX_INT(strlen(timer_list[i]->name) , max_width);
+    max_width = util_int_max(strlen(timer_list[i]->name) , max_width);
   }
   max_width += 3;
   total_width = max_width + 102;
@@ -161,13 +149,30 @@ void timer_list_report(const timer_type **timer_list , int N , FILE *stream, wor
 	   
   printf("%s\n" , pad("","-",total_width,str_buffer));
   
-  
+  free( perc_list );
+  free( str_buffer );
 }
 
 
-double timer_total(const timer_type *timer) {
+
+double timer_get_total_time(const timer_type *timer) {
   return timer->sum1;
 }
+
+
+double timer_get_max_time(const timer_type *timer) {
+  return timer->max_time;
+}
+
+
+double timer_get_min_time(const timer_type *timer) {
+  return timer->min_time;
+}
+
+double timer_get_avg_time(const timer_type *timer) {
+  return timer->sum1 / timer->count;
+}
+
 
 
 void timer_report(const timer_type *timer , FILE *stream) {

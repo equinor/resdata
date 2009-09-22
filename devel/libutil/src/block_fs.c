@@ -114,6 +114,7 @@ struct block_fs_struct {
   float            fragmentation_limit;
   bool             data_owner;
   time_t           index_time;   
+  int              fsync_interval;  /* 0: never  n: every nth iteration. */
 };
 
 /*****************************************************************/
@@ -248,7 +249,7 @@ static bool file_node_verify_end_tag( const file_node_type * file_node , FILE * 
 static file_node_type * file_node_fread_alloc( FILE * stream , char ** key) {
   file_node_type * file_node = NULL;
   node_status_type status;
-  long int node_offset       = ftell( stream );
+  long int node_offset = ftell( stream );
   if (fread( &status , sizeof status , 1 , stream) == 1) {
     if ((status == NODE_IN_USE) || (status == NODE_FREE)) {
       int node_size;
@@ -256,8 +257,17 @@ static file_node_type * file_node_fread_alloc( FILE * stream , char ** key) {
         *key = util_fread_realloc_string( *key , stream );
       else
         *key = util_safe_free( *key );  /* Explicitly set to NULL for free nodes. */
-
+      
       node_size = util_fread_int( stream );
+      if (node_size <= 0)
+        status = NODE_INVALID;
+      /*
+        A case has occured with an invalid node with size 0. That
+        resulted in a deadlock, because the reader never got beyond
+        the broken node. We therefor explicitly check for this
+        condition.
+      */
+      
       file_node = file_node_alloc( status , node_offset , node_size );
       if (status == NODE_IN_USE) {
         file_node->data_size   = util_fread_int( stream );
@@ -523,11 +533,12 @@ static void block_fs_reinit( block_fs_type * block_fs ) {
 
 
 
-static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block_size , int max_cache_size, float fragmentation_limit, bool read_only) {
+static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block_size , int max_cache_size, float fragmentation_limit, int fsync_interval , bool read_only) {
   block_fs_type * block_fs      = util_malloc( sizeof * block_fs , __func__);
   UTIL_TYPE_ID_INIT(block_fs , BLOCK_FS_TYPE_ID);
   
   block_fs->mount_file          = util_alloc_string_copy( mount_file );
+  block_fs->fsync_interval      = fsync_interval;
   block_fs->block_size          = block_size;
   block_fs->max_cache_size      = max_cache_size;
   block_fs->fragmentation_limit = fragmentation_limit;   
@@ -561,7 +572,7 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
   
   return block_fs;
 }
-
+  
 
 UTIL_IS_INSTANCE_FUNCTION(block_fs , BLOCK_FS_TYPE_ID);
 
@@ -588,7 +599,7 @@ static void block_fs_fseek_node_end(block_fs_type * block_fs , const file_node_t
    identifiers: NODE_IN_USE | NODE_FREE. If one of the valid status
    identifiers is found the stream is repositioned at the beginning of
    the valid node, so the calling scope can continue with a
-
+   
       file_node = file_node_date_fread_alloc()
 
    call. If no valid status ID is found whatsover the data_stream
@@ -688,39 +699,22 @@ static void block_fs_open_data( block_fs_type * block_fs , bool read_write) {
 
 
 static void block_fs_preload( block_fs_type * block_fs ) {
-
-  if ((block_fs->max_cache_size > 0) && (block_fs->data_stream != NULL)) {
-    char * buffer = malloc( block_fs->data_file_size * sizeof * buffer );
-    printf("preloading"); fflush( stdout );
-    if (buffer != NULL) {
-      hash_iter_type * index_iter = hash_iter_alloc( block_fs->index );
-      util_fread( buffer , 1 , block_fs->data_file_size , block_fs->data_stream , __func__);
-      while (!hash_iter_is_complete( index_iter )) {
-        file_node_type * node = hash_iter_get_next_value( index_iter );
-        if (node->data_size < block_fs->max_cache_size) 
-          file_node_update_cache( node , node->data_size , &buffer[node->data_offset]);
-      }
-      hash_iter_free( index_iter );
-      free( buffer );
-    } else {  /* OK - failed to load the whole god damn datafile. Try to selectively 
-                 preload the small nodes which can be cached. */
-
-      buffer = util_malloc( block_fs->max_cache_size , __func__);
-      hash_iter_type * index_iter = hash_iter_alloc( block_fs->index );
-      while (!hash_iter_is_complete( index_iter )) {
-        file_node_type * node = hash_iter_get_next_value( index_iter );
-        if (node->data_size < block_fs->max_cache_size) {
-          block_fs_fseek_data(block_fs , node->data_offset);
-          util_fread( buffer , 1 , node->data_size , block_fs->data_stream , __func__);
-          file_node_update_cache( node , node->data_size , buffer);
-        }
-      }
-      hash_iter_free( index_iter );
-      
-      free( buffer );
-    }
-  }
   
+  if ((block_fs->max_cache_size > 0) && (block_fs->data_stream != NULL)) {
+    void * buffer = util_malloc( block_fs->max_cache_size , __func__);
+    hash_iter_type * index_iter = hash_iter_alloc( block_fs->index );
+    while (!hash_iter_is_complete( index_iter )) {
+      file_node_type * node = hash_iter_get_next_value( index_iter );
+      if (node->data_size < block_fs->max_cache_size) {
+        block_fs_fseek_data(block_fs , node->data_offset);
+        util_fread( buffer , 1 , node->data_size , block_fs->data_stream , __func__);
+        file_node_update_cache( node , node->data_size , buffer);
+      }
+    }
+    hash_iter_free( index_iter );
+    
+    free( buffer );
+  }
 }
 
 
@@ -790,7 +784,6 @@ static void block_fs_build_index( block_fs_type * block_fs , long_vector_type * 
     if (file_node != NULL) {
       if ((file_node->status == NODE_INVALID) || (file_node->status == NODE_WRITE_ACTIVE)) {
         /* Oh fuck */
-        
         if (file_node->status == NODE_INVALID)
           fprintf(stderr,"** Warning:: invalid node found at offset:%ld in datafile:%s - data will be lost. \n", file_node->node_offset , block_fs->data_file);
         else
@@ -853,7 +846,7 @@ bool block_fs_is_mount( const char * mount_file ) {
 */
 static pthread_mutex_t mount_lock = PTHREAD_MUTEX_INITIALIZER;
 
-block_fs_type * block_fs_mount( const char * mount_file , int block_size , int max_cache_size , float fragmentation_limit , bool preload , bool read_only) {
+block_fs_type * block_fs_mount( const char * mount_file , int block_size , int max_cache_size , float fragmentation_limit , int fsync_interval , bool preload , bool read_only) {
   block_fs_type * block_fs;
   pthread_mutex_lock( &mount_lock );
   {
@@ -863,7 +856,7 @@ block_fs_type * block_fs_mount( const char * mount_file , int block_size , int m
     {
       long_vector_type * fix_nodes = long_vector_alloc(0 , 0);
       printf("Mounting file system:%s  " , mount_file); fflush(stdout);
-      block_fs = block_fs_alloc_empty( mount_file , block_size , max_cache_size , fragmentation_limit , read_only);
+      block_fs = block_fs_alloc_empty( mount_file , block_size , max_cache_size , fragmentation_limit , fsync_interval , read_only);
       /* We build up the index & free_nodes_list based on the header/index information embedded in the datafile. */
       block_fs_open_data( block_fs , false );
       if (block_fs->data_stream != NULL) {
@@ -986,6 +979,19 @@ void block_fs_unlink_file( block_fs_type * block_fs , const char * filename) {
   block_fs_release_rwlock( block_fs );
 }
 
+    
+/* 
+   It seems it is not enough to call fsync(); must also issue this
+   funny fseek + ftell combination to ensure that all data is on
+   disk after an uncontrolled shutdown.
+*/
+
+void block_fs_fsync( block_fs_type * block_fs ) {
+  fsync( block_fs->data_fd );
+  block_fs_fseek_data( block_fs , block_fs->data_file_size );
+  ftell( block_fs->data_stream ); 
+}
+
 
 /**
    The single lowest-level write function:
@@ -1014,7 +1020,6 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
     /* The current cache is identical to the data we are attempting to write - can leave immediately. */
     return;
   else {
-    fsync( block_fs->data_fd );
     block_fs_fseek_data(block_fs , node->node_offset);
     node->status      = NODE_IN_USE;
     node->data_size   = data_size; 
@@ -1029,21 +1034,17 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
     
     /* Writes the file node header data, including the NODE_END_TAG. */
     file_node_fwrite( node , filename , block_fs->data_stream );
-    /* 
-       It seems it is not enough to call fsync() must also this funny
-       fseek + ftell combination to ensure that all data is on disk
-       after a uncontrolled shutdown.
-    */
-    fsync( block_fs->data_fd );
-    block_fs_fseek_data(block_fs , block_fs->data_file_size);
-    ftell( block_fs->data_stream ); 
-    
+
+
     /* Update the cache */
     if (data_size <= block_fs->max_cache_size)
       file_node_update_cache( node , data_size , ptr );
     else
       file_node_clear_cache( node );
     block_fs->write_count++;
+    if (block_fs->fsync_interval && ((block_fs->write_count % block_fs->fsync_interval) == 0)) 
+      block_fs_fsync( block_fs );
+    
   }
 }
 
