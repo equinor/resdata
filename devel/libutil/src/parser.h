@@ -108,6 +108,15 @@ parser_type * parser_alloc(
   const char * comment_start,    /** Set to NULL if not interessting.         */
   const char * comment_end);     /** Set to NULL if not interessting.         */
 
+
+void       parser_set_splitters( parser_type * parser , const char * splitters );
+void       parser_set_quoters( parser_type * parser , const char * quoters );
+void       parser_set_specials( parser_type * parser , const char * specials );
+void       parser_set_delete_set( parser_type * parser , const char * delete_set );
+void       parser_set_comment_start( parser_type * parser , const char * comment_start );
+void       parser_set_comment_end( parser_type * parser , const char * comment_end );
+
+
 void parser_free(
   parser_type * parser);
 

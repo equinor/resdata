@@ -234,6 +234,7 @@ void stringlist_free(stringlist_type * stringlist) {
 
 static UTIL_SAFE_CAST_FUNCTION(stringlist , STRINGLIST_TYPE_ID);
 
+
 void stringlist_free__(void * __stringlist) {
   stringlist_type * stringlist = stringlist_safe_cast(__stringlist);
   stringlist_free( stringlist );

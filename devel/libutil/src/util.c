@@ -4470,7 +4470,7 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
 /** 
     This function will TRY to aquire an exclusive lock to the file
     filename. If the file does not exist it will be created. The mode
-    will be changed to 'mode' (irrespictive of whether it exists
+    will be changed to 'mode' (irrespective of whether it exists
     already or not).
 
     Observe that before the lockf() call we *MUST* succeed in opening
@@ -4510,6 +4510,7 @@ bool util_try_lockf(const char * lockfile , mode_t mode , int * __fd) {
     if (errno == EACCES || errno == EAGAIN) {
       close(lock_fd);
       *__fd = -1;
+
       return false;
     } else {
       util_abort("%s: lockf() system call failed:%d/%s \n",__func__ , errno , strerror(errno));

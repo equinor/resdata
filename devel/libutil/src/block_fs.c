@@ -563,10 +563,8 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
     block_fs->data_owner = util_try_lockf( block_fs->lock_file , S_IWUSR + S_IWGRP , &block_fs->lock_fd);
     block_fs->index_time = time( NULL );
   
-    if (block_fs->data_owner) 
-      printf(" read-write: OK  ");
-    else
-      printf(" Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only.");
+    if (!block_fs->data_owner) 
+      printf(" Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only.\n");
     fflush( stdout );
   }
   
@@ -733,7 +731,6 @@ static void block_fs_preload( block_fs_type * block_fs ) {
 
 static void block_fs_fix_nodes( block_fs_type * block_fs , long_vector_type * offset_list ) {
   if (block_fs->data_owner) { 
-    printf(" fixing broken nodes "); fflush(stdout);
     fsync( block_fs->data_fd );
     {
       char * key = NULL;
@@ -784,8 +781,8 @@ static void block_fs_build_index( block_fs_type * block_fs , long_vector_type * 
     if (file_node != NULL) {
       if ((file_node->status == NODE_INVALID) || (file_node->status == NODE_WRITE_ACTIVE)) {
         /* Oh fuck */
-        if (file_node->status == NODE_INVALID)
-          fprintf(stderr,"** Warning:: invalid node found at offset:%ld in datafile:%s - data will be lost. \n", file_node->node_offset , block_fs->data_file);
+        if (file_node->status == NODE_INVALID) 
+          fprintf(stderr,"** Warning:: invalid node found at offset:%ld in datafile:%s - data will be lost, node_size:%d\n", file_node->node_offset , block_fs->data_file , file_node->node_size);
         else
           fprintf(stderr,"** Warning:: file system was prematurely shut down while writing node in %s/%ld - will be discarded.\n",block_fs->data_file , file_node->node_offset);
         
@@ -838,29 +835,18 @@ bool block_fs_is_mount( const char * mount_file ) {
 
 
 
-/**
-   This mutex is to ensure that only one thread (from the same
-   application) is trying to mount a file system at a time. If they
-   are trying to mount different mount files, it could be done in
-   parallell - but what the fuck.
-*/
-static pthread_mutex_t mount_lock = PTHREAD_MUTEX_INITIALIZER;
-
 block_fs_type * block_fs_mount( const char * mount_file , int block_size , int max_cache_size , float fragmentation_limit , int fsync_interval , bool preload , bool read_only) {
   block_fs_type * block_fs;
-  pthread_mutex_lock( &mount_lock );
   {
     if (!util_file_exists(mount_file)) 
       /* This is a brand new filesystem - create the mount map first. */
       block_fs_fwrite_mount_info__( mount_file , 0 );
     {
       long_vector_type * fix_nodes = long_vector_alloc(0 , 0);
-      printf("Mounting file system:%s  " , mount_file); fflush(stdout);
       block_fs = block_fs_alloc_empty( mount_file , block_size , max_cache_size , fragmentation_limit , fsync_interval , read_only);
       /* We build up the index & free_nodes_list based on the header/index information embedded in the datafile. */
       block_fs_open_data( block_fs , false );
       if (block_fs->data_stream != NULL) {
-        printf(" building index "); fflush(stdout);
         block_fs_build_index( block_fs , fix_nodes );
         fclose(block_fs->data_stream);
       }
@@ -871,8 +857,6 @@ block_fs_type * block_fs_mount( const char * mount_file , int block_size , int m
     }
   }
   if (preload) block_fs_preload( block_fs );
-  pthread_mutex_unlock( &mount_lock );
-  printf("\n");
   return block_fs;
 }
 
@@ -1184,19 +1168,6 @@ int block_fs_get_filesize( const block_fs_type * block_fs , const char * filenam
 }
 
 
-
-/**
-   If one of the files data_file or index_file already exists the
-   function will fail hard.
-*/
-
-
-void block_fs_sync( block_fs_type * block_fs ) {
-  
-}
-
-
-
 /**
    Close/synchronize the open file descriptors and free all memory
    related to the block_fs instance.
@@ -1206,9 +1177,8 @@ void block_fs_sync( block_fs_type * block_fs ) {
 */
 
 void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
-  block_fs_sync( block_fs );
+  block_fs_fsync( block_fs );
   
-  printf("Shutting down filesystem: %s",block_fs->mount_file ); fflush(stdout);
   if (block_fs->data_stream != NULL) fclose( block_fs->data_stream );
   if (block_fs->lock_fd > 0) {
     close( block_fs->lock_fd );     /* Closing the lock_file file descriptor - and releasing the lock. */
@@ -1229,7 +1199,6 @@ void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
   hash_free( block_fs->index );
   vector_free( block_fs->file_nodes );
   free( block_fs );
-  printf("\n");
 }
 
 

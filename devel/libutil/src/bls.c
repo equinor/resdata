@@ -15,7 +15,7 @@ int main(int argc , char ** argv) {
   install_SIGNALS();
   const char * mount_file      = argv[1];
   if (block_fs_is_mount(mount_file)) {
-    block_fs_sort_type sort_mode = NO_SORT;
+    block_fs_sort_type sort_mode = OFFSET_SORT;
     const char * pattern         = NULL;
     int iarg;
 
@@ -27,13 +27,13 @@ int main(int argc , char ** argv) {
     }
     
     {
-      block_fs_type * block_fs = block_fs_mount(mount_file , 1 , 0 , 1 , false , true );
+      block_fs_type * block_fs = block_fs_mount(mount_file , 1 , 0 , 1 , 0 , false , true );
       vector_type   * files    = block_fs_alloc_filelist( block_fs , pattern , sort_mode , false );
       {
         int i;
         for (i=0; i < vector_get_size( files ); i++) {
           const file_node_type * node = vector_iget_const( files , i );
-          printf("%-40s   %d    \n",file_node_get_filename( node ), file_node_get_data_size( node ));
+          printf("%-40s   %10d %ld    \n",file_node_get_filename( node ), file_node_get_data_size( node ) , file_node_get_node_offset( node ));
         }
       }
       vector_free( files );

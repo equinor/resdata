@@ -20,6 +20,46 @@ struct parser_struct
 
 
 
+static void __verify_string_length( const char * s) {
+  if ((s != NULL) && (strlen(s) == 0))
+    util_abort("%s: invalid input to parser_set_xxx function - zero length string.\n",__func__);
+}
+
+
+void parser_set_splitters( parser_type * parser , const char * splitters ) {
+  __verify_string_length( splitters );
+  parser->splitters = util_realloc_string_copy( parser->splitters , splitters );
+}
+
+
+void parser_set_quoters( parser_type * parser , const char * quoters ) {
+  __verify_string_length( quoters );
+  parser->quoters = util_realloc_string_copy( parser->quoters , quoters );
+}
+
+void parser_set_specials( parser_type * parser , const char * specials ) {
+  __verify_string_length( specials );
+  parser->specials = util_realloc_string_copy( parser->specials , specials );
+}
+
+
+void parser_set_delete_set( parser_type * parser , const char * delete_set ) {
+  __verify_string_length( delete_set );
+  parser->delete_set = util_realloc_string_copy( parser->delete_set , delete_set );
+}
+
+void parser_set_comment_start( parser_type * parser , const char * comment_start ) {
+  __verify_string_length( comment_start );
+  parser->comment_start = util_realloc_string_copy( parser->comment_start , comment_start );
+}
+
+
+void parser_set_comment_end( parser_type * parser , const char * comment_end ) {
+  __verify_string_length( comment_end );
+  parser->comment_end = util_realloc_string_copy( parser->comment_end , comment_end );
+}
+
+
 parser_type * parser_alloc(
   const char * splitters,        /** Set to NULL if not interessting.            */
   const char * quoters,          /** Set to NULL if not interessting.            */
@@ -29,65 +69,25 @@ parser_type * parser_alloc(
   const char * comment_end)      /** Set to NULL  if not interessting.           */
 {
   parser_type * parser = util_malloc(sizeof * parser, __func__);
-
-
-  if( splitters != NULL)
-  {
-    if( strlen(splitters) == 0)
-      util_abort("%s: Need at least one non '\\0' splitters character.\n", __func__);
-    parser->splitters = util_alloc_string_copy( splitters ); 
-  }
-  else
-    parser->splitters = NULL;
+  parser->splitters     = NULL;
+  parser->delete_set    = NULL;
+  parser->quoters       = NULL;
+  parser->specials      = NULL;
+  parser->comment_start = NULL;
+  parser->comment_end   = NULL;
   
-  if (delete_set != NULL)
-    parser->delete_set = util_alloc_string_copy( delete_set );
-  else
-    parser->delete_set = NULL;
-
-
-  if( quoters != NULL )
-  {
-    if( strlen( quoters ) == 0)
-      util_abort("%s: Need at least one non '\\0' quote character.\n", __func__);
-    parser->quoters = util_alloc_string_copy( quoters ); 
-  }
-  else
-    parser->quoters = NULL;
-
-  if( specials != NULL )
-  {
-    if( strlen( specials ) == 0)
-      util_abort("%s: Need at least one non '\\0' special character.\n", __func__);
-    parser->specials = util_alloc_string_copy( specials ); 
-  }
-  else
-    parser->specials = NULL;
-
-  if( comment_start != NULL )
-  {
-    if( strlen( comment_start ) == 0)
-      util_abort("%s: Need at least one non '\\0' character to start a comment.\n", __func__);
-    parser->comment_start = util_alloc_string_copy( comment_start );
-  }
-  else
-    parser->comment_start = NULL;
+  parser_set_splitters( parser , splitters );
+  parser_set_quoters( parser , quoters );
+  parser_set_specials( parser , specials );
+  parser_set_delete_set( parser , delete_set );
+  parser_set_comment_start( parser , comment_start );
+  parser_set_comment_end( parser , comment_end );
     
-  if( comment_end != NULL )
-  {
-    if( strlen( comment_end ) == 0)
-      util_abort("%s: Need at least one non '\\0' character to end a comment.\n", __func__);
-    parser->comment_end   = util_alloc_string_copy( comment_end );
-  }
-  else 
-    parser->comment_end   = NULL;
-
   if(comment_start == NULL && comment_end != NULL)
     util_abort("%s: Need to have comment_start when comment_end is set.\n", __func__);
   if(comment_start != NULL && comment_end == NULL)
     util_abort("%s: Need to have comment_end when comment_start is set.\n", __func__);
   
-
   return parser;
 }
 
