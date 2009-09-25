@@ -694,9 +694,12 @@ void _plot_batch_rft(void * arg, char * inkey){
       set_range_rft(plot);
       continue;
     }  
-    //if(strcmp(ens_name, "_newplotvector_") == 0){
-    //  scanf("%s" , key);
-    //}  
+    if(strcmp(ens_name, "_newplotvector_") == 0){
+      char * tmpkey ;      
+      scanf("%s" , tmpkey);
+      printf("The key %s does not exist\n", tmpkey);
+      continue;
+    }  
     else{ 
       if (hash_has_key(ens_rft_table , ens_name)){
 	ens = hash_get(ens_rft_table , ens_name);
