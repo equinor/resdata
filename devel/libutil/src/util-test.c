@@ -115,7 +115,7 @@ void random_test(int outer_loop , int inner_loop) {
 
   for (int j=0; j < outer_loop; j++) {
     block_fs_type * fs;
-    fs = block_fs_mount( mount_file , block_size , 128 , 0.25 , false , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
+    fs = block_fs_mount( mount_file , block_size , 128 , 0.25 , 100 , false , false);  /* Realloc on each round - just drop the existing fs instance on the floor(). Testing abiility 
                                                                                     to recover from crashes. */
     {
       char * index_file = util_alloc_sprintf("initial_index.%d" , j);
@@ -152,7 +152,7 @@ void random_test(int outer_loop , int inner_loop) {
     //block_fs_close( fs , true);
   }
   {
-    block_fs_type * fs = block_fs_mount( mount_file , block_size , 1024 , 0.25 , false , false);
+    block_fs_type * fs = block_fs_mount( mount_file , block_size , 1024 , 0.25 , 100 , false , false);
     
     check_all(fs , max_file , prefix , buffer , buffer2);
     block_fs_defrag( fs );
@@ -178,7 +178,7 @@ void speed_test(bool write , int N) {
   int i;
 
 
-  fs = block_fs_mount( mount_file , block_size , 1024 , 1.0 , false , false);
+  fs = block_fs_mount( mount_file , block_size , 1024 , 1.0 , 100 , false , false);
   
   if (write) {
     for (i=0; i < N; i++) {
@@ -205,7 +205,7 @@ void speed_test(bool write , int N) {
     }
   }
 
-  fs = block_fs_mount( mount_file , block_size , 1024 , 1.0 , false , false);
+  fs = block_fs_mount( mount_file , block_size , 1024 , 1.0 , 100 , false , false);
   
   {
     clock_t start_time;
@@ -252,7 +252,7 @@ void speed_test(bool write , int N) {
 
 void large_test(int external_loops , int internal_loops) {
   int external_counter;
-  block_fs_type * block_fs = block_fs_mount("/tmp/large.mnt" , 1 , 0 , 1.0 , false  , false);
+  block_fs_type * block_fs = block_fs_mount("/tmp/large.mnt" , 1 , 0 , 1.0 , 100 , false  , false);
   
   int buffer_size = 65538 * 16;
   void * buffer   = util_malloc( buffer_size , __func__);

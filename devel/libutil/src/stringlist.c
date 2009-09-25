@@ -380,16 +380,25 @@ bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
 }
 
 
-char * stringlist_alloc_joined_string(const stringlist_type * s , const char * sep) {
+/**
+   The interval is halfopen: [start_index , end_index).
+*/
+
+/* Based on buffer?? */
+
+char * stringlist_alloc_joined_segment_string( const stringlist_type * s , int start_index , int end_index , const char * sep ) {
   char * string = NULL;
-  int size = stringlist_get_size( s );
   int i;
-  for (i = 0; i < size; i ++) {
+  for (i = start_index; i < end_index; i ++) {
     string = util_strcat_realloc(string , stringlist_iget( s , i));
-    if (i < (size - 1))
+    if (i < (end_index - 1))
       string = util_strcat_realloc(string , sep);
   }
   return string;
+}
+
+char * stringlist_alloc_joined_string(const stringlist_type * s , const char * sep) {
+  return stringlist_alloc_joined_segment_string( s , 0 , stringlist_get_size( s ) , sep );
 }
 
 /*****************************************************************/

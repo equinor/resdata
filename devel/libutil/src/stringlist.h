@@ -22,6 +22,7 @@ const      char * stringlist_safe_iget( const stringlist_type * stringlist , int
 const      char * stringlist_iget(const stringlist_type * , int);
 char            * stringlist_iget_copy(const stringlist_type * stringlist , int );
 char            * stringlist_alloc_joined_string(const stringlist_type *  , const char * );
+char            * stringlist_alloc_joined_segment_string( const stringlist_type * s , int start_index , int end_index , const char * sep );
 
 void 		  stringlist_iset_copy(stringlist_type *, int index , const char *);
 void 		  stringlist_iset_ref(stringlist_type *, int index , const char *);
