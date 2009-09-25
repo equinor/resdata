@@ -685,7 +685,6 @@ void _plot_batch_rft(void * arg, char * inkey){
   
   while (!complete) {
     scanf("%s" , ens_name);
-    //printf("Reading %s\n", ens_name);
     if(strcmp(ens_name, "_meas_points_") == 0){
       plot_meas_rft_file(plot, well, ens_rft_table);
       continue;
@@ -695,10 +694,10 @@ void _plot_batch_rft(void * arg, char * inkey){
       continue;
     }  
     if(strcmp(ens_name, "_newplotvector_") == 0){
-      char * tmpkey ;      
-      scanf("%s" , tmpkey);
+      char tmpkey[32];      
+      scanf("%31s" , tmpkey);
       printf("The key %s does not exist\n", tmpkey);
-      continue;
+      return;
     }  
     else{ 
       if (hash_has_key(ens_rft_table , ens_name)){
