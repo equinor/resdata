@@ -126,12 +126,15 @@ static inline int atomic_add_negative( int i, atomic_t *v )
 }
 
 #endif
-Pretty straight forward isn't it? It could be even more powerful and simpler if you don't need precise compatibility with atomic.h. For example, atomic_add could easily return the result values:
+
+
+//Pretty straight forward isn't it? It could be even more powerful and simpler if you don't need precise compatibility with atomic.h. For example, atomic_add could easily return the result values:
 static inline int atomic_add( int i, atomic_t *v )
 {
          return __sync_add_and_fetch(&v->counter, i);
 }
-As a second example, consider a compare and swap operation, frequently used in lock-free algorithms. Once again, it's trivially:
+
+//As a second example, consider a compare and swap operation, frequently used in lock-free algorithms. Once again, it's trivially:
 /**
  * @brief compare and swap
  * @param v pointer of type atomic_t
