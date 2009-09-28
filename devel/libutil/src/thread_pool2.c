@@ -6,23 +6,34 @@
 #include <thread_pool2.h>
 #include <util.h>
 
+/**
+   Ts file implements a small thread_pool object based on
+   pthread_create() function calls. The characetristics of this
+   implementation is as follows:
+
+    1. The jobs are mangaged by a sperate thread - dispatch_thread.
+    2. The new jobs are just appended to the queue, the dispatch_thread
+       sees them in the queue and dispatches them. 
+*/
+
+
 typedef void * (start_func_ftype) (void *) ;
 
 /**
    Internal struct which is used as queue node.
 */
-
 typedef struct {
-  thread_pool_type * pool;
-  int                internal_index;
-  void             * func_arg;
-  start_func_ftype * func;
+  thread_pool_type * pool;                /* A back-reference to the thread_pool holding the queue. */
+  int                internal_index;      /* The index in the space [0,max_running) of the job slot where this job is running. */
+  void             * func_arg;            /* The arguments to this job - supplied by the calling scope. */   
+  start_func_ftype * func;                /* The function to call - supplied by the calling scope. */
 } thread_pool_arg_type;
 
 
 
+
 struct thread_pool_struct {
-  thread_pool_arg_type  * queue;
+  thread_pool_arg_type  * queue;           
   int                     queue_index;
   int                     queue_size;
   int                     queue_alloc_size; 
@@ -36,12 +47,18 @@ struct thread_pool_struct {
   bool                  * thread_running;
   pthread_t             * thread_list;
   int                   * run_count;
-  pthread_t               main_thread;
+  pthread_t               dispatch_thread;
   pthread_rwlock_t        queue_lock;
 };
 
 
 
+/**
+   This function will grow the queue. It is called by the main thread
+   (i.e. the context of the calling scope), and the queue is read by
+   the dispatch_thread - i.e. access to the queue must be protected by
+   rwlock.
+*/
 
 static void thread_pool_resize_queue( thread_pool_type * pool, int queue_length ) {
   pthread_rwlock_wrlock( &pool->queue_lock );
@@ -53,6 +70,15 @@ static void thread_pool_resize_queue( thread_pool_type * pool, int queue_length 
 }
 
 
+
+/**
+   The pthread_create() call which this is all about, does not start
+   the user supplied function. Instead it will start an instance of
+   this function, which will do some housekeeping before calling the
+   user supplied function.
+
+   
+*/
 
 static void * thread_pool_start_job( void * arg ) {
   thread_pool_arg_type * tp_arg = (thread_pool_arg_type * ) arg;
@@ -68,6 +94,13 @@ static void * thread_pool_start_job( void * arg ) {
   return NULL;
 }
 
+
+
+/**
+   This function is run by the dispatch_thread. The thread will keep
+   an eye on the queue, and dispatch new jobs when there are free
+   slots available.
+*/
 
 
 static void * thread_pool_main_loop( void * arg ) {
@@ -87,15 +120,16 @@ static void * thread_pool_main_loop( void * arg ) {
         do {
           int internal_index = (counter + internal_offset) % tp->max_running;
           if (!tp->thread_running[internal_index]) {
+            /* OK thread[internal_index] is ready to take this job.*/
             thread_pool_arg_type * tp_arg;
 
             pthread_rwlock_rdlock( &tp->queue_lock );
             tp_arg = util_alloc_copy( &tp->queue[ tp->queue_index ] , sizeof * tp_arg , __func__);
             pthread_rwlock_unlock( &tp->queue_lock );            
 
-            /* OK thread[internal_index] is ready */
-            tp->thread_running[internal_index] = true;
             tp_arg->internal_index = internal_index;
+
+            tp->thread_running[internal_index] = true;
             pthread_create( &tp->thread_list[ internal_index ] , NULL , thread_pool_start_job , tp_arg );
             tp->run_count[ internal_index ] += 1;
             tp->queue_index++;
@@ -128,7 +162,10 @@ static void * thread_pool_main_loop( void * arg ) {
 }
 
 
-
+/**
+   This function initializes a couple of counters, and starts up the
+   dispatch thread.
+*/
 void thread_pool_restart( thread_pool_type * tp ) {
   tp->join           = false;
   tp->queue_index    = 0;
@@ -143,22 +180,33 @@ void thread_pool_restart( thread_pool_type * tp ) {
     }
   }
   /* Starting the main thread. */
-  pthread_create( &tp->main_thread , NULL , thread_pool_main_loop , tp );
+  pthread_create( &tp->dispatch_thread , NULL , thread_pool_main_loop , tp );
   tp->accepting_jobs = true;
 }
 
 
 
+/**
+   This function is called by the calling scope when all the jobs have
+   been submitted, and we just wait for them to complete.
+
+   This function just sets the join switch to true - this tells the
+   dispatch_thread to start the join process on the worker threads.
+*/
+
 void thread_pool_join(thread_pool_type * pool) {
   pool->join = true;                          /* Signals to the main thread that joining can start. */
   if (pool->max_running > 0) {
-    pthread_join( pool->main_thread , NULL ); /* Wait for the main thread to complete. */
+    pthread_join( pool->dispatch_thread , NULL ); /* Wait for the main thread to complete. */
     pool->accepting_jobs = false;
   }
 }
 
 
 
+/**
+   max_running is the maximum number of concurrent threads.
+*/
 
 thread_pool_type * thread_pool_alloc(int max_running) {
   thread_pool_type * pool = util_malloc(sizeof *pool , __func__);
