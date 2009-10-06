@@ -251,6 +251,11 @@ const char * stringlist_iget(const stringlist_type * stringlist , int index) {
 }
 
 
+bool stringlist_iequal( const stringlist_type * stringlist , int index, const char * s ) {
+  return util_string_equal( stringlist_iget( stringlist , index ) , s);
+}
+
+
 /**
    Will return NULL if you ask for something beyond the limits of the
    stringlist (will die on negative index - that is NEVER OK).

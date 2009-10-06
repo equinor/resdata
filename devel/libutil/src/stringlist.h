@@ -19,6 +19,7 @@ void              stringlist_append_ref(stringlist_type * , const char *);
 void              stringlist_append_owned_ref(stringlist_type * , const char *);
 
 const      char * stringlist_safe_iget( const stringlist_type * stringlist , int index);
+bool              stringlist_iequal( const stringlist_type * stringlist , int index, const char * s );
 const      char * stringlist_iget(const stringlist_type * , int);
 char            * stringlist_iget_copy(const stringlist_type * stringlist , int );
 char            * stringlist_alloc_joined_string(const stringlist_type *  , const char * );

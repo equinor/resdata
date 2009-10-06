@@ -100,9 +100,14 @@ const char * libname ## _svn_version(); \
 const char * libname ## _build_time();
 
 /*****************************************************************/
-typedef void (walk_callback_ftype)   (const char * , /* The current directory */
-				      const char * , /* The current file / directory */
-				      void *);       /* Arbitrary argument */
+typedef void (walk_file_callback_ftype)   (const char * , /* The current directory */
+                                           const char * , /* The current file / directory */
+                                           void *);       /* Arbitrary argument */
+
+typedef bool (walk_dir_callback_ftype)   (const char * , /* The current directory */
+                                          const char * , /* The current file / directory */
+                                          int          , /* The current depth in the file hiearcrcy. */
+                                          void *);       /* Arbitrary argument */
 
 
 typedef char * (subst_callback_ftype) (const char *, void *);
@@ -156,7 +161,7 @@ void         util_string_tr(char * , char , char);
 bool 	     util_copy_stream(FILE *, FILE *, int , void * , bool abort_on_error);
 bool 	     util_copy_file(const char * , const char * , bool abort_on_error);
 void         util_copy_directory(const char *  , const char * , const char *);
-void         util_walk_directory(const char * root_path , walk_callback_ftype * file_callback , void * file_callback_arg , walk_callback_ftype * dir_callback , void * dir_callback_arg);
+void         util_walk_directory(const char * root_path , walk_file_callback_ftype * file_callback , void * file_callback_arg , walk_dir_callback_ftype * dir_callback , void * dir_callback_arg);
 char       * util_alloc_cwd(void);
 char       * util_alloc_realpath(const char * );
 bool         util_try_alloc_realpath(const char *);
@@ -223,6 +228,7 @@ char   * util_realloc_string_copy(char * , const char *);
 char   * util_realloc_substring_copy(char * , const char *, int );
 char   * util_alloc_string_sum2(const char *, const char *);
 char   * util_realloc_dequoted_string(char *);
+char   * util_alloc_dequoted_copy(const char *s);
 void   * util_safe_free(void *);
 void     util_free_stringlist(char **, int );
 char   * util_alloc_substring_copy(const char *, int );
@@ -240,6 +246,7 @@ void     util_fread_dev_random(int , char * );
 void     util_fread_dev_urandom(int , char * );
 char *   util_alloc_string_copy(const char *);
 void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
+bool     util_string_isspace(const char * s);
 
 void    util_exit(const char * fmt , ...);
 void    util_abort(const char * fmt , ...);

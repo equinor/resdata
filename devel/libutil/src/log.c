@@ -14,6 +14,12 @@
 #include <fcntl.h>
 #include <errno.h>
 
+/**
+   This file implements a simple log structure. The characteristics of
+   this object are as follows:
+
+*/
+
 
 struct log_struct {
   char             * filename;
@@ -83,8 +89,10 @@ static bool log_include_message(const log_type *logh, int message_level) {
 }
 
 
-
-void log_add_message(log_type *logh, int message_level , char* message, bool free_message) {
+/**
+   If dup_stream != NULL the message (without the date/time header) is duplicated on this stream.
+*/
+void log_add_message(log_type *logh, int message_level , FILE * dup_stream , char* message, bool free_message) {
   pthread_mutex_lock( &logh->mutex );
   {
     struct tm time_fields;
@@ -98,6 +106,11 @@ void log_add_message(log_type *logh, int message_level , char* message, bool fre
         fprintf(logh->stream,"%02d/%02d - %02d:%02d:%02d  %s\n",time_fields.tm_mday, time_fields.tm_mon + 1, time_fields.tm_hour , time_fields.tm_min , time_fields.tm_sec , message);
       else
         fprintf(logh->stream,"%02d/%02d - %02d:%02d:%02d   \n",time_fields.tm_mday, time_fields.tm_mon + 1, time_fields.tm_hour , time_fields.tm_min , time_fields.tm_sec);
+
+      /** We duplicate the message to the stream 'dup_stream'. */
+      if ((dup_stream != NULL) && (message != NULL))
+        fprintf(dup_stream , "%s\n", message);
+      
       log_sync( logh );
     }
   }
@@ -105,6 +118,8 @@ void log_add_message(log_type *logh, int message_level , char* message, bool fre
   if (free_message)
     free( message );
 }
+
+
 
 
 int log_get_level( const log_type * logh ) {
@@ -118,15 +133,19 @@ void log_set_level( log_type * logh , int new_level) {
 
 
 
-void log_add_fmt_message(log_type * logh , int message_level , const char * fmt , ...) {
+void log_add_fmt_message(log_type * logh , int message_level , FILE * dup_stream , const char * fmt , ...) {
   if (log_include_message(logh,message_level)) {
     char * message;
     va_list ap;
     va_start(ap , fmt);
     message = util_alloc_sprintf_va( fmt , ap );
-    log_add_message( logh , message_level , message , true);
+    log_add_message( logh , message_level , dup_stream , message , true);
   }
 }
+
+
+
+
 
 
 /**

@@ -38,7 +38,7 @@
 		      ((var <<  8) & 0x00ff0000) | \
 		      ((var << 24) & 0xff000000))
 
-#define FLIP64(var)  (((var >> 56)  & 0x00000000000000ff)| \
+#define FLIP64(var)  (((var >> 56) & 0x00000000000000ff) | \
 		      ((var >> 40) & 0x000000000000ff00) | \
 		      ((var >> 24) & 0x0000000000ff0000) | \
 		      ((var >>  8) & 0x00000000ff000000) | \
@@ -111,6 +111,26 @@ char * util_alloc_substring_copy(const char *src , int N) {
   return copy;
 }
 
+
+char * util_alloc_dequoted_copy(const char *s) {
+  char first_char = s[0];
+  char last_char  = s[strlen(s) - 1];
+  char *new;
+  int offset , len;
+  
+  if ((first_char == '\'') || (first_char == '\"'))
+    offset = 1;
+  else 
+    offset = 0;
+  
+  if ((last_char == '\'') || (last_char == '\"'))
+    len = strlen(s) - offset - 1;
+  else 
+    len = strlen(s) - offset;
+  
+  new = util_alloc_substring_copy(&s[offset] , len);
+  return new;
+}
 
 
 
@@ -561,11 +581,27 @@ bool util_char_in(char c , int set_size , const char * set) {
 }
 
 
+/** 
+    Returns true if ALL the characters in 's' return true from
+    isspace().
+*/
+bool util_string_isspace(const char * s) {
+  int  index = 0;
+  while (index < strlen(s)) {
+    if (!isspace( s[index] ))
+      return false;
+    index++;
+  }
+  return true;
+}
+
+
 void util_fskip_token(FILE * stream) {
   char * tmp = util_fscanf_alloc_token(stream);
   if (tmp != NULL)
     free(tmp);
 }
+
 
 
 static void util_fskip_chars__(FILE * stream , const char * skip_set , bool complimentary_set , bool *at_eof) {
@@ -1397,9 +1433,24 @@ bool util_file_exists(const char *filename) {
 /**
    This function will start at 'root_path' and then recursively go
    through all file/subdirectore located below root_path. For each
-   file in this tree it will call the user-supplied funtion
-   'file_callback'. The arguments to file_callback will be:
-   (root_path, file ,callback_arg):
+   file/directory in the tree it will call the user-supplied funtions
+   'file_callback' and 'dir_callback'. 
+
+   The arguments to file_callback will be: 
+
+     file_callback(root_path, file , file_callback_arg):
+
+   For the dir_callback function the the depth in the filesystem will
+   also be supplied as an argument:
+
+      dir_callback(root_path , directory , depth , dir_callback_arg)
+
+   The dir_callback / file_callback arguments can be NULL. Observe
+   that IFF supplied the dir_callback function can be used to stop the
+   recursion, if the dir_callback returns false for a particular
+   directory the function will not descend into that directory. (If
+   dir_callback == NULL it will descend to the bottom irrespectively).
+
 
    Example
    -------
@@ -1408,70 +1459,169 @@ bool util_file_exists(const char *filename) {
    Root/File2
    Root/dir
    Root/dir/fileXX
+   Root/dir/dir2
 
    The call:
-   util_walk_directory("Root" , callback , arg);
+   util_walk_directory("Root" , file_callback , file_arg , dir_callback , dir_arg);
       
-   Will result in the following calls to the callback:
+   Will result in the following calls to the callbacks:
 
-      callback("Root" , "File1" , arg); 
-      callback("Root" , "File2" , arg); 
-      callback("Root/dir" , "fileXX" , arg); 
+      file_callback("Root"     , "File1"  , file_arg); 
+      file_callback("Root"     , "File2"  , file_arg); 
+      file_callback("Root/dir" , "fileXX" , arg); 
+
+      dir_callback("Root"     , "dir"  , 1 , dir_arg);
+      dir_callback("Root/dir" , "dir2" , 2 , dir_arg);
 
    Symlinks are ignored when descending into subdirectories. The tree
    is walked in a 'width-first' mode (i.e. all the callbacks in a
    directory are evaluated before the function descends further down
    in the tree).
+
+   If we encounter permission denied when opening a directory a
+   message is printed on stderr, the directory is ignored and the
+   function returns.
 */
 
 
-void util_walk_directory(const char * root_path , walk_callback_ftype * file_callback , void * file_callback_arg , walk_callback_ftype * dir_callback , void * dir_callback_arg) {
-  struct dirent * dp;
-  DIR * dirH = opendir( root_path );
-  if (dirH == NULL) 
-    util_abort("%s: failed to open directory:%s / %s \n",__func__ , root_path , strerror(errno));
+static void util_walk_directory__(const char               * root_path , 
+                                  bool                       depth_first , 
+                                  int                        current_depth  ,
+                                  walk_file_callback_ftype * file_callback , 
+                                  void                     * file_callback_arg , 
+                                  walk_dir_callback_ftype  * dir_callback , 
+                                  void                     * dir_callback_arg);
 
-  /* First pass - evaluating callbacks */
-  do {
-    dp = readdir(dirH);
-    if (dp != NULL) {
-      if (dp->d_name[0] != '.') {
-        char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
-        
-        if (util_is_file( full_path ) && file_callback != NULL) 
-          file_callback( root_path , dp->d_name , file_callback_arg);
-        else if (util_is_directory( full_path ) && dir_callback != NULL)
-          dir_callback( root_path , dp->d_name , dir_callback_arg);
-        
-        free(full_path);
-      }
-    }
-  } while (dp != NULL);
-  closedir( dirH );
-  
-  /*
-    Reopen because the first pass might have changed the directory
-    content.  Do not know if it is necessary.
-  */
-  
-  /* Second pass - descending into subdirectories */
-  dirH = opendir( root_path );
-  do {
-    dp = readdir(dirH);
-    if (dp != NULL) {
-      if (dp->d_name[0] != '.') {
-        char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
-        
-        if ((util_is_directory( full_path) && (!util_is_link(full_path)))) 
-          util_walk_directory( full_path , file_callback, file_callback_arg , dir_callback , dir_callback_arg );
-        
-        free( full_path );
-      }
-    }
-  } while (dp != NULL);
-  closedir( dirH );
+
+static DIR * util_walk_opendir__( const char * root_path ) {
+
+  DIR * dirH = opendir( root_path );
+  if (dirH == NULL) {
+    if (errno == EACCES) 
+      fprintf(stderr,"** Warning could not open directory:%s - permission denied - IGNORED.\n" , root_path);
+    else
+      util_abort("%s: failed to open directory:%s / %s \n",__func__ , root_path , strerror(errno));
+  }
+  return dirH;
 }
 
+
+
+/**
+   This function will evaluate all file_callbacks for all the files in
+   the root_path directory.
+*/
+
+static void util_walk_file_callbacks__(const char               * root_path , 
+                                       int                        current_depth  ,
+                                       walk_file_callback_ftype * file_callback , 
+                                       void                     * file_callback_arg) {
+  
+
+  DIR * dirH = util_walk_opendir__( root_path );
+  if (dirH != NULL) {
+    struct dirent * dp;
+    do {
+      dp = readdir(dirH);
+      if (dp != NULL) {
+        if (dp->d_name[0] != '.') {
+          char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
+          
+          if (util_is_file( full_path ) && file_callback != NULL) 
+            file_callback( root_path , dp->d_name , file_callback_arg);
+          
+          free(full_path);
+        }
+      }
+    } while (dp != NULL);
+    closedir( dirH );
+  }
+}
+
+
+
+/**
+   This function will evaluate the dir_callback for all the (sub)
+   directories in root_path, and afterwards descend recursively into
+   the subdireectories. It will descend into the subdirectory
+   immediately after completing the callback, i.e. it will not do all
+   the callbacks first.
+
+   Observe that if the dir_callback function returns false, this sub
+   directory will not be descended into. (If dir_callback == NULL that
+   amounts to return true.)
+*/
+  
+
+
+static void util_walk_descend__(const char               * root_path , 
+                                bool                       depth_first ,   
+                                int                        current_depth  ,
+                                walk_file_callback_ftype * file_callback , 
+                                void                     * file_callback_arg , 
+                                walk_dir_callback_ftype  * dir_callback , 
+                                void                     * dir_callback_arg) {
+  
+  DIR * dirH = util_walk_opendir__( root_path );
+  if (dirH != NULL) {
+    struct dirent * dp;
+    do {
+      dp = readdir(dirH);
+      if (dp != NULL) {
+        if (dp->d_name[0] != '.') {
+          char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
+          
+          if ((util_is_directory( full_path ) && (!util_is_link(full_path)))) {
+            bool descend = true;
+            if (dir_callback != NULL)
+              descend = dir_callback( root_path , dp->d_name , current_depth , dir_callback_arg);
+            if (descend)
+              util_walk_directory__( full_path , depth_first , current_depth + 1 , file_callback, file_callback_arg , dir_callback , dir_callback_arg );
+          }
+          free( full_path );
+        }
+      }
+    } while (dp != NULL);
+    closedir( dirH );
+  }
+}
+ 
+ 
+
+static void util_walk_directory__(const char               * root_path , 
+                                  bool                       depth_first , 
+                                  int                        current_depth  ,
+                                  walk_file_callback_ftype * file_callback , 
+                                  void                     * file_callback_arg , 
+                                  walk_dir_callback_ftype  * dir_callback , 
+                                  void                     * dir_callback_arg) {
+  
+  if (depth_first) {
+    util_walk_descend__( root_path , depth_first , current_depth , file_callback , file_callback_arg , dir_callback , dir_callback_arg );
+    util_walk_file_callbacks__( root_path , current_depth , file_callback , file_callback_arg );
+  } else {
+    util_walk_file_callbacks__( root_path , current_depth , file_callback , file_callback_arg );
+    util_walk_descend__( root_path , depth_first , current_depth , file_callback , file_callback_arg , dir_callback , dir_callback_arg);
+  }
+}
+
+
+
+void util_walk_directory(const char               * root_path , 
+                         walk_file_callback_ftype * file_callback , 
+                         void                     * file_callback_arg , 
+                         walk_dir_callback_ftype  * dir_callback , 
+                         void                     * dir_callback_arg) {
+
+  bool depth_first = false;
+
+  util_walk_directory__( root_path , depth_first , 0 , file_callback , file_callback_arg , dir_callback , dir_callback_arg);
+
+}
+
+/* End of recursive walk_directory implementation.               */
+/*****************************************************************/
+/*****************************************************************/
 
 
 
@@ -1777,7 +1927,11 @@ bool util_delmode_if_owner( const char * filename , mode_t del_mode) {
 
 
 
-
+/**
+   The function will not differentiate between permission problems and
+   just plain 'File not found'.
+*/
+   
 bool util_file_readable( const char * file ) {
   bool readable;
   FILE * stream = fopen( file , "r");
@@ -2135,6 +2289,9 @@ time_t util_make_date(int mday , int month , int year) {
 }
 
 
+/**
+   Will return -1 for an unrecognized month name.
+*/
 
 static int util_get_month_nr__(const char * _month_name) {
   int month_nr = -1;

@@ -1,5 +1,4 @@
 #define  _GNU_SOURCE   /* Must define this to get access to pthread_rwlock_t */
-#include <atomic.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -50,11 +49,9 @@ typedef struct {
 struct thread_pool_struct {
   thread_pool_arg_type      * queue;              /* The jobs to be executed are appended in this vector. */
   int                         queue_index;        /* The index of the next job to run. */
-  int                         queue_size;         /* The number of jobs in the queue - including those which are complete. */
+  int                         queue_size;         /* The number of jobs in the queue - including those which are complete. [Should be protected / atomic / ... ] */
   int                         queue_alloc_size;   /* The allocated size of the queue. */
   
-  
-  int                         completed_jobs;     /* The number of jobs which have completed. */
   int                         max_running;        /* The max number of concurrently running jobs. */
   bool                        join;               /* Flag set by the main thread to inform the dispatch thread that joining should start. */
   bool                        accepting_jobs;     /* True|False whether the dispatch thread is running. */
@@ -108,7 +105,6 @@ static void * thread_pool_start_job( void * arg ) {
   
   func( func_arg );                                   /* Starting the real external function */
   tp->job_slots[ internal_index ].running = false;    /* We mark the job as completed. */
-  tp->completed_jobs++;
   free( arg );
   return NULL;
 }
@@ -128,7 +124,7 @@ static void * thread_pool_main_loop( void * arg ) {
     const int usleep_busy = 1000;  /* 1/100 second */
     const int usleep_init = 1000;
     int internal_offset   = 0;
-    do {
+    while (true) {
       if (tp->queue_size > tp->queue_index) {
         /* 
            There are jobs in the queue which would like to run - 
@@ -166,8 +162,19 @@ static void * thread_pool_main_loop( void * arg ) {
         if (!slot_found)
           usleep( usleep_busy );  /* There are no available job slots. */
       } else
-        usleep( usleep_init ); /* There are no jobs wanting to run. */
-    } while ((tp->join == false) || (tp->queue_size > tp->completed_jobs));
+        usleep( usleep_init );    /* There are no jobs wanting to run. */
+
+      /*****************************************************************/
+      /*
+        We exit explicitly from this loop when:
+
+         1. tp->join       == true              :  The calling scope has signaled that it will not submit more jobs. 
+         2. tp->queue_size == tp->queue_index   :  This function has submitted all the jobs in the queue.
+      */
+      if ((tp->join) &&
+          (tp->queue_size == tp->queue_index))
+        break;
+    } /* End of while() loop */
   }
 
   /* 
@@ -196,7 +203,6 @@ void thread_pool_restart( thread_pool_type * tp ) {
   tp->join           = false;
   tp->queue_index    = 0;
   tp->queue_size     = 0;
-  tp->completed_jobs = 0;
   {
     int i;
     for (i=0; i < tp->max_running; i++) {
@@ -215,14 +221,15 @@ void thread_pool_restart( thread_pool_type * tp ) {
    This function is called by the calling scope when all the jobs have
    been submitted, and we just wait for them to complete.
 
-   This function just sets the join switch to true - this tells the
-   dispatch_thread to start the join process on the worker threads.
+   This function just sets the join switch to true - this again tells
+   the dispatch_thread to start the join process on the worker
+   threads.
 */
 
 void thread_pool_join(thread_pool_type * pool) {
-  pool->join = true;                          /* Signals to the main thread that joining can start. */
+  pool->join = true;                               /* Signals to the main thread that joining can start. */
   if (pool->max_running > 0) {
-    pthread_join( pool->dispatch_thread , NULL ); /* Wait for the main thread to complete. */
+    pthread_join( pool->dispatch_thread , NULL );  /* Wait for the main thread to complete. */
     pool->accepting_jobs = false;
   }
 }
@@ -261,8 +268,8 @@ void thread_pool_add_job(thread_pool_type * pool , start_func_ftype * start_func
       pool->queue[pool->queue_size].pool     = pool;
       pool->queue[pool->queue_size].func_arg = func_arg;
       pool->queue[pool->queue_size].func     = start_func;
-
-      pool->queue_size++;
+      
+      pool->queue_size++;  /* <- This is shared between this thread and the dispatch thread */
     } else
       util_abort("%s: thread_pool is not running - restart with thread_pool_restart()?? \n",__func__);
   }
