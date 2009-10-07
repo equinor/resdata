@@ -12,6 +12,7 @@ extern "C" {
 typedef double (block_function_ftype) ( const double_vector_type *); 
 typedef struct ecl_grid_struct ecl_grid_type;
 
+int             ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z);
 const  char   * ecl_grid_get_name( const ecl_grid_type * );
 int             ecl_grid_get_active_index3(const ecl_grid_type * ecl_grid , int i , int j , int k);
 int             ecl_grid_get_active_index1(const ecl_grid_type * ecl_grid , int global_index);

@@ -1098,13 +1098,15 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
 /*****************************************************************/
 /** 
     Here comes some functions used when blocking. These are NOT used
-    by default. Observe that the functions used to look an index based
-    on xy and xyz are NOT well tested.
+    by default. Observe that the functions used to look up an index
+    based on xy and xyz are NOT well tested.
+
+    Will return -1 if no cell is found.
 */
 
 
-static int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z , int last_index) {
-  int global_index;
+static int ecl_grid_get_global_index_from_xyz__(const ecl_grid_type * grid , double x , double y , double z , int last_index) {
+  int global_index = -1;
   ecl_point_type p;
   p.x = x;
   p.y = y;
@@ -1132,8 +1134,13 @@ static int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , doubl
 }
 
 
+int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z) {
+  return ecl_grid_get_global_index_from_xyz__( grid , x , y , z , 0 );
+}
 
-static int ecl_grid_get_global_index_from_xy(const ecl_grid_type * grid , double x , double y , int last_index) {
+
+
+static int ecl_grid_get_global_index_from_xy__(const ecl_grid_type * grid , double x , double y , int last_index) {
   int global_index;
   ecl_point_type p;
   p.x = x;
@@ -1194,7 +1201,7 @@ bool ecl_grid_block_value_3d(ecl_grid_type * grid, double x , double y , double 
   if (grid->block_dim != 3)
     util_abort("%s: Wrong blocking dimension \n",__func__);
   {
-    int global_index = ecl_grid_get_global_index_from_xyz( grid , x , y , z , grid->last_block_index);
+    int global_index = ecl_grid_get_global_index_from_xyz__( grid , x , y , z , grid->last_block_index);
     if (global_index >= 0) {
       double_vector_append( grid->values[global_index] , value);
       grid->last_block_index = global_index;
@@ -1210,7 +1217,7 @@ bool ecl_grid_block_value_2d(ecl_grid_type * grid, double x , double y ,double v
   if (grid->block_dim != 2)
     util_abort("%s: Wrong blocking dimension \n",__func__);
   {
-    int global_index = ecl_grid_get_global_index_from_xy( grid , x , y , grid->last_block_index);
+    int global_index = ecl_grid_get_global_index_from_xy__( grid , x , y , grid->last_block_index);
     if (global_index >= 0) {
       double_vector_append( grid->values[global_index] , value);
       grid->last_block_index = global_index;
