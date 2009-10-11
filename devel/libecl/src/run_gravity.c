@@ -84,24 +84,28 @@ void grav_diff_update(grav_station_type * g_s, double inc){
 
 
 void load_stations(vector_type * grav_stations , const char * filename) {
-  FILE * stream = util_fopen(filename , "r");
-  bool at_eof = false;
-  while(!(at_eof)) {
-    double x,y,d;
-    int fscanf_return = fscanf(stream, "%lg%lg%lg", &x,&y,&d);
-    if(fscanf_return ==3){
-      grav_station_type * g = grav_station_alloc(x,y,d);
-      vector_append_owned_ref(grav_stations, g, free);
+  printf("Loading from file:%s \n",filename);
+  {
+    FILE * stream = util_fopen(filename , "r");
+    bool at_eof = false;
+    while(!(at_eof)) {
+      double x,y,d;
+      int fscanf_return = fscanf(stream, "%lg%lg%lg", &x,&y,&d);
+      if(fscanf_return ==3){
+        grav_station_type * g = grav_station_alloc(x,y,d);
+        vector_append_owned_ref(grav_stations, g, free);
+      }
+      //else if(fscanf_return == 0) {
+      //  at_eof = true;
+      //}
+      else{
+        at_eof = true;
+        //util_abort("%s: something funky - only found %d numbers", __func__, fscanf_return);
+      }
     }
-    //else if(fscanf_return == 0) {
-    //  at_eof = true;
-    //}
-    else{
-      at_eof = true;
-      //util_abort("%s: something funky - only found %d numbers", __func__, fscanf_return);
-    }
+    fclose(stream);
   }
-  fclose(stream);
+  printf("Har lastet:%d stasjoner \n",vector_get_size( grav_stations ));
 }
     
 
@@ -302,6 +306,7 @@ int main(int argc , char ** argv) {
     if(strcmp(argv[1], "-h") == 0)
       print_usage(__LINE__);
   }
+
 
   if(argc < 2)
     print_usage(__LINE__);
@@ -628,7 +633,6 @@ int main(int argc , char ** argv) {
     
     {
       FILE * stream = util_fopen(report_filen , "w");
-      
       int station_nr;
       for(station_nr = 0; station_nr < vector_get_size( grav_stations ); station_nr++){
 	const grav_station_type * g_s = vector_iget_const(grav_stations, station_nr);

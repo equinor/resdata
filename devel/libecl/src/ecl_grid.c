@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <util.h>
@@ -343,6 +344,9 @@ static void ecl_point_inplace_scale(ecl_point_type * point , double scale_factor
 }
 
 
+static void ecl_point_fprintf(const ecl_point_type * point , FILE * stream ) {
+  fprintf(stream," (%10.4f , %10.4f , %10.4f) ",point->x , point->y , point->z);
+}
 
 
 
@@ -369,6 +373,15 @@ static void ecl_cell_install_lgr( ecl_cell_type * cell , const ecl_grid_type * l
 }
 
 
+static void ecl_cell_fprintf( ecl_cell_type * cell , FILE * stream ) {
+  int i;
+  for (i=0; i < 7; i++) {
+    printf("\nCorner[%d] => ",i);
+    ecl_point_fprintf( &cell->corner_list[i] , stdout );
+  }
+  fprintf(stream , "-----------------------------------\n");
+}
+
 
 
 /**
@@ -391,7 +404,7 @@ static void ecl_cell_install_lgr( ecl_cell_type * cell , const ecl_grid_type * l
 static void __set_normal_vector3d(ecl_point_type * n , ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2 , bool right_hand) {
   ecl_point_type v1 = p1;
   ecl_point_type v2 = p2;
-
+  
   ecl_point_inplace_sub(&v1 , p0);
   ecl_point_inplace_sub(&v2 , p0);
   n->x =  (v1.y*v2.z - v1.z*v2.y);
@@ -404,7 +417,8 @@ static void __set_normal_vector3d(ecl_point_type * n , ecl_point_type p0 , ecl_p
 
 static double __signed_distance3d(ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2 , bool right_hand , ecl_point_type p) {
   ecl_point_type n;
-  __set_normal_vector3d(&n , p0,p1,p2 ,right_hand);
+  __set_normal_vector3d(&n , p0 , p1 , p2 , right_hand);
+  //ecl_point_fprintf(&n , stdout);
   ecl_point_inplace_sub(&p  , p0);
   {
     double d = n.x*p.x + n.y*p.y + n.z*p.z;
@@ -455,6 +469,9 @@ static bool __positive_distance2d(ecl_point_type p0 , ecl_point_type p1 , bool r
 
 
 
+
+
+
 /*
 
   6---7
@@ -471,6 +488,154 @@ Lower layer:
 
 */
 
+
+static void __set_normal_vector3d__(double *A , double *B , double *C, ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2) {
+  ecl_point_type v1 = p1;
+  ecl_point_type v2 = p2;
+  
+  ecl_point_inplace_sub(&v1 , p0);
+  ecl_point_inplace_sub(&v2 , p0);
+  *A =  (v1.y*v2.z - v1.z*v2.y);
+  *B = -(v1.x*v2.z - v1.z*v2.x);
+  *C =  (v1.x*v2.y - v1.y*v2.x);
+}
+
+
+
+static bool ecl_cell_contains_3d__(const ecl_cell_type * cell , ecl_point_type p) {
+  ecl_point_type p0 = cell->corner_list[0];
+  ecl_point_type p1 = cell->corner_list[1];
+  ecl_point_type p2 = cell->corner_list[2];
+  ecl_point_type p3 = cell->corner_list[3];
+  ecl_point_type p4 = cell->corner_list[4];
+  ecl_point_type p5 = cell->corner_list[5];
+  ecl_point_type p6 = cell->corner_list[6];
+  ecl_point_type p7 = cell->corner_list[7];
+
+  /**
+     Equation for plane:
+     
+     A*(x - a) + B*(y - b) + C*(z - c) = 0
+
+     Solved with respect to:
+
+       z(x,y) = (D - A*x - B*y)  / C
+
+       y(z,x) = (D - A*x - C*z)  / B
+
+       x(y,z) = (D - B*y - C*z ) / A
+
+     Where:
+     
+       D = A*a + B*b + C*c
+  */
+
+
+  //printf("1111 \n");
+  
+  /**
+     Z planes.
+  */
+  double A,B,C,D;
+  {
+    double z;
+    __set_normal_vector3d__( &A , &B , &C , p0 , p1 , p2);
+    if (fabs(A) + fabs(B) + fabs(C) == 0)
+      return false;
+    
+    D = A*p0.x + B*p0.y + C*p0.z;
+    z = (D - A * p.x - B*p.y) / C;
+    //printf("D:%g  A:%g  B:%g   C:%G \n",D , A,B,C);
+    //printf("Comparing: %g %g \n",z,p.z);
+    //printf("Naive: %g \n",0.25*(p0.z + p1.z + p2.z + p3.z));
+    //printf("recovering p2: p2.z :%g  calcultaed:%g\n",p2.z,(D - A*p2.x - B*p2.y)/C);
+    printf("plane check: %g  %g \n",p3.z , (D - A*p3.x - B*p3.y)/C);
+    if (z > p.z)
+      return false;
+    
+    //printf("dz: %g %g %g %g \n",p6.z - p2.z ,p7.z - p3.z , p4.z - p0.z , p5.z - p1.z);
+    //
+    //printf("%g - %g \n",p0.z,p4.z);
+    //printf("%g - %g \n",p1.z,p5.z);
+    //printf("%g - %g \n",p2.z,p6.z);
+    //printf("%g - %g \n",p3.z,p7.z);
+
+
+    //printf("1111 \n");
+    __set_normal_vector3d__( &A , &B , &C , p4 , p5 , p6);
+    D = A*p4.x + B*p4.y + C*p4.z;
+    //printf("D:%g  A:%g  B:%g   C:%G \n",D, A,B,C);
+    z = (D - A * p.x - B*p.y) / C;
+    //printf("Comparing: %g %g \n",z,p.z);
+    //printf("Naive: %g \n",0.25*(p4.z + p5.z + p6.z + p7.z));
+    //printf("recovering p5: p5.z :%g  calcultaed:%g\n",p5.z,(D - A*p5.x - B*p5.y)/C);
+    if (z < p.z)
+      return false;
+  }
+
+  
+  /**
+     X planes.
+  */
+  {
+    double x;
+    __set_normal_vector3d__( &A , &B , &C , p0 , p2 , p4);
+    D = A*p0.x + B*p0.y + C*p0.z;
+    x = (D - B * p.y - C*p.z) / A;
+    if (x > p.x)
+      return false;
+    //printf("1111 \n");
+    
+    __set_normal_vector3d__( &A , &B , &C , p1 , p3 , p5);
+    D = A*p1.x + B*p1.y + C*p1.z;
+    x = (D - B * p.y - C*p.z) / A;
+    if (x < p.x)
+      return false;
+  }
+  //printf("1111 \n");
+
+  /**
+     Y planes.
+  */
+  {
+    double y;
+    __set_normal_vector3d__( &A , &B , &C , p4 , p5 , p0);
+    D = A*p4.x + B*p4.y + C*p4.z;
+    y = (D - A * p.x - C*p.z) / B;
+    if (y > p.y)
+      return false;
+    //printf("1111 \n");
+    
+    __set_normal_vector3d__( &A , &B , &C , p6 , p7 , p2);
+    D = A*p6.x + B*p6.y + C*p6.z;
+    y = (D - A * p.x - C*p.z) / B;
+    if (y < p.y)
+      return false;
+  }
+  //printf("YY 1111 \n");
+  return true;
+}
+
+
+bool ecl_grid_cell_contains1(const ecl_grid_type * grid , int global_index , double x , double y , double z) {
+  ecl_point_type p;
+  p.x = x;
+  p.y = y;
+  p.z = z;
+  return ecl_cell_contains_3d__( grid->cells[global_index] , p);
+}
+
+
+bool ecl_grid_cell_contains3(const ecl_grid_type * grid , int i,int j,int k , double x , double y , double z) {
+  ecl_point_type p;
+  p.x = x;
+  p.y = y;
+  p.z = z;
+  return ecl_cell_contains_3d__( grid->cells[ecl_grid_get_global_index3(grid , i,j,k)] , p);
+}
+
+
+
 static bool ecl_cell_contains_3d(const ecl_cell_type * cell , ecl_point_type p) {
   ecl_point_type p0 = cell->corner_list[0];
   ecl_point_type p1 = cell->corner_list[1];
@@ -479,19 +644,87 @@ static bool ecl_cell_contains_3d(const ecl_cell_type * cell , ecl_point_type p) 
   ecl_point_type p4 = cell->corner_list[4];
   ecl_point_type p5 = cell->corner_list[5];
   ecl_point_type p6 = cell->corner_list[6];
-  //ecl_point_type p7 = cell->corner_list[7];
+  ecl_point_type p7 = cell->corner_list[7];
   bool  contains = false;
 
-  if (__positive_distance3d(p0 , p1 , p2 , true , p))        	  /* Z1 */
-    if (__positive_distance3d(p4 , p5 , p6 , false , p))     	  /* Z2 */
-      if (__positive_distance3d(p0 , p4 , p2 , true , p))    	  /* X1 */
-	if (__positive_distance3d(p1 , p5 , p3 , false , p)) 	  /* X2 */
-	  if (__positive_distance3d(p0 , p4 , p1 , true , p))     /* Y1 */
-	    if (__positive_distance3d(p2 , p6 , p3 , false , p))  /* Y2 */
-	      contains = true;
+  /**
+     Rectangular approximation - this whole thing might be fucked by MAPAXES.
+  */
+  
+  {
+    /* Of all fucking heuristics .... */
+    const double max_xy = 2500;
+    const double max_z  = 250;
+    
+    double z1 = 0.25 * (p0.z + p1.z + p2.z + p3.z);
+    double z2 = 0.25 * (p4.z + p5.z + p6.z + p7.z);
 
+    double y1 = 0.25 * (p0.y + p1.y + p4.y + p5.y);
+    double y2 = 0.25 * (p2.y + p3.y + p6.y + p7.y);
+
+    double x1 = 0.25* (p0.x + p2.x + p4.x + p6.x);
+    double x2 = 0.25* (p1.x + p3.x + p7.x + p5.x);
+    
+    double zmax = util_double_max(z1 , z2);
+    double zmin = util_double_min(z1 , z2);
+
+    double xmax = util_double_max(x1 , x2);
+    double xmin = util_double_min(x1 , x2);
+    
+    double ymax = util_double_max(y1 , y2);
+    double ymin = util_double_min(y1 , y2);
+ 
+
+    if (((xmax - xmin) < max_xy) && 
+        ((ymax - ymin) < max_xy) && 
+        ((zmax - zmin) < max_z)) {
+
+      if (((zmin <= p.z) && (zmax >= p.z)) &&
+          ((ymin <= p.y) && (ymax >= p.y)) &&
+          ((xmin <= p.x) && (xmax >= p.x)))
+        
+        contains = true;
+    }
+
+    //if (contains) {
+    //  printf(" X: %g < %g <%g \n",xmin , p.x, xmax);
+    //  printf(" Y: %g < %g <%g \n",ymin , p.y, ymax);
+    //  printf(" Z: %g < %g <%g \n",zmin , p.z, zmax);
+    //}
+  }
   return contains;
 }
+  
+
+//static bool ecl_cell_contains_3d(const ecl_cell_type * cell , ecl_point_type p) {
+//  ecl_point_type p0 = cell->corner_list[0];
+//  ecl_point_type p1 = cell->corner_list[1];
+//  ecl_point_type p2 = cell->corner_list[2];
+//  ecl_point_type p3 = cell->corner_list[3];
+//  ecl_point_type p4 = cell->corner_list[4];
+//  ecl_point_type p5 = cell->corner_list[5];
+//  ecl_point_type p6 = cell->corner_list[6];
+//  //ecl_point_type p7 = cell->corner_list[7];
+//  bool  contains = false;
+//
+//
+//  /** 
+//      Calculate the surface of the base area.  This can be zero for funny
+//      aquifer cells, which will fool the algorithm completely.
+//  */
+//  double surface_area = ((p1.x - p0.x) * (p2.y - p0.y) - ((p1.y - p0.y) * (p2.x - p0.x)));
+//  
+//  if (surface_area > 0) {
+//    if (__positive_distance3d(p0 , p1 , p2 , true , p))        	  /* Z1 */
+//      if (__positive_distance3d(p4 , p5 , p6 , false , p))     	  /* Z2 */
+//        if (__positive_distance3d(p0 , p4 , p2 , true , p))    	  /* X1 */
+//          if (__positive_distance3d(p1 , p5 , p3 , false , p)) 	  /* X2 */
+//            if (__positive_distance3d(p0 , p4 , p1 , true , p))     /* Y1 */
+//              if (__positive_distance3d(p2 , p6 , p3 , false , p))  /* Y2 */
+//                contains = true;
+//  }
+//  return contains;
+//}
 
 
 static bool ecl_cell_contains_2d(const ecl_cell_type * cell , ecl_point_type p) {
@@ -613,6 +846,7 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
       ecl_point_inplace_set(&cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
     }
   }
+
 
   /*
     For normal runs actnum will be 1 for active cells,
@@ -1117,16 +1351,16 @@ static int ecl_grid_get_global_index_from_xyz__(const ecl_grid_type * grid , dou
     global_index = -1;
 
     do {
-      int active_index = ((index + last_index) % grid->block_size);
+      int active_index = ((index + last_index) % grid->size);
       bool cell_contains;
-      cell_contains = ecl_cell_contains_3d(grid->cells[active_index] , p);
+      cell_contains = ecl_cell_contains_3d__(grid->cells[active_index] , p);
       
       if (cell_contains) {
 	global_index = active_index;
 	cont = false;
       }
       index++;
-      if (index == grid->block_size)
+      if (index == grid->size)
 	cont = false;
     } while (cont);
   }
@@ -1135,7 +1369,8 @@ static int ecl_grid_get_global_index_from_xyz__(const ecl_grid_type * grid , dou
 
 
 int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z) {
-  return ecl_grid_get_global_index_from_xyz__( grid , x , y , z , 0 );
+  int start_index = ecl_grid_get_global_index3( grid , 10 , 10 , 10 );
+  return ecl_grid_get_global_index_from_xyz__( grid , x , y , z , start_index );
 }
 
 

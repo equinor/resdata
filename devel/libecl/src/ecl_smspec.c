@@ -243,6 +243,67 @@ static ecl_smspec_var_type ecl_smspec_split_general(const ecl_smspec_type * smsp
 }
 
 
+/**
+   Takes a ecl_smspec_var_type variable as input, and return a string
+   representation of this var_type suitable for debug messages +++
+*/
+
+
+const char * ecl_smspec_get_well_type_name( ecl_smspec_var_type var_type ) {
+  switch(var_type) {
+  case(ECL_SMSPEC_INVALID_VAR):
+    return "INVALID_VAR";
+    break;
+  case(ECL_SMSPEC_AQUIFER_VAR):
+    return "AQUIFER_VAR";
+    break;
+  case(ECL_SMSPEC_WELL_VAR):
+    return "WELL_VAR";
+    break;
+  case(ECL_SMSPEC_REGION_VAR):
+    return "REGION_VAR";
+    break;
+  case(ECL_SMSPEC_FIELD_VAR):
+    return "FIELD_VAR";
+    break;
+  case(ECL_SMSPEC_GROUP_VAR):
+    return "GROUP_VAR";
+    break;
+  case(ECL_SMSPEC_BLOCK_VAR):
+    return "BLOCK_VAR";
+    break;
+  case(ECL_SMSPEC_COMPLETION_VAR):
+    return "COMPLETION_VAR";
+    break;
+  case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
+    return "LOCAL_BLOCK_VAR";
+    break;
+  case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
+    return "LOCAL_COMPLETION_VAR";
+    break;
+  case(ECL_SMSPEC_LOCAL_WELL_VAR):
+    return "LOCAL_WELL_VAR";
+    break;
+  case(ECL_SMSPEC_NETWORK_VAR):
+    return "NETWORK_VAR";
+    break;
+  case(ECL_SMSPEC_REGION_2_REGION_VAR):
+    return "REGION_2_REGION_VAR";
+    break;
+  case(ECL_SMSPEC_SEGMENT_VAR):
+    return "SEGMENT_VAR";
+    break;
+  case(ECL_SMSPEC_MISC_VAR):
+    return "MISC_VAR";
+    break;
+  default:
+    util_abort("%s: Unrecognized variable type:%d \n",__func__ , var_type);
+    return NULL;
+  }
+}
+
+
+
 
 /**
   Input i,j,k are assumed to be in the interval [1..nx] , [1..ny],

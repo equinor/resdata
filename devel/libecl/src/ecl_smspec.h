@@ -26,6 +26,7 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0,
 	      ECL_SMSPEC_SEGMENT_VAR            = 13,
 	      ECL_SMSPEC_MISC_VAR               = 14 }  ecl_smspec_var_type;
 
+const char        * ecl_smspec_get_well_type_name( ecl_smspec_var_type var_type );
 ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec , const char * );
 
 bool              ecl_smspec_general_is_total(const ecl_smspec_type * ecl_smspec , const char * gen_key);
