@@ -24,30 +24,25 @@
 
 
 
-void * print_int( void * arg ) {
-  int value = *( int * ) arg;
-  printf("Value:%d \n",value);
-  usleep( 10000 );
-  return NULL;
-}
-
-
 
 int main(int argc , char ** argv) {
-  const int num_jobs = 1000;
-  int * arglist = util_malloc( num_jobs * sizeof * arglist , __func__);
-  
-  thread_pool_type * tp = thread_pool_alloc( 20 );
-  for (int i = 0; i < num_jobs; i++) {
-    arglist[i] = i + 100;
-    thread_pool_add_job( tp , print_int , &arglist[i] );
+
+  char * s = util_alloc_string_copy("/private/$USER = $HOME");
+
+  {
+    char * user = util_isscanf_alloc_envvar( s , 0 );
+    if (user != NULL)
+      util_string_replace_inplace( &s , user , getenv( &user[1] ) , NULL , NULL );
+  }
+
+  {
+    char * home = util_isscanf_alloc_envvar( s , 0 );
+    if (home != NULL)
+      util_string_replace_inplace( &s , home , getenv( &home[1] ) , NULL , NULL );
   }
   
-  printf("All jobs submitted ... \n");
-  thread_pool_join( tp );
-  thread_pool_free( tp );
-  free( arglist );
-  return 0;
+  printf("%s \n",s);
+  
 }
 
 

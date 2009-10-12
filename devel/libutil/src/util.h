@@ -135,6 +135,7 @@ void         util_fprintf_int(int , int , FILE * );
 void         util_fprintf_string(const char *  , int , string_alignement_type ,  FILE * );
 void         util_fprintf_double(double , int , int , char , FILE *);
 bool         util_fscanf_date(FILE * , time_t *);
+char       * util_isscanf_alloc_envvar( const char * string , int env_index );
 bool         util_sscanf_date(const char * , time_t *);
 char       * util_blocking_alloc_stdin_line(unsigned long );
 char       * util_alloc_stdin_line();
