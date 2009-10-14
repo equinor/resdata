@@ -26,23 +26,11 @@
 
 
 int main(int argc , char ** argv) {
-
-  char * s = util_alloc_string_copy("/private/$USER = $HOME");
-
-  {
-    char * user = util_isscanf_alloc_envvar( s , 0 );
-    if (user != NULL)
-      util_string_replace_inplace( &s , user , getenv( &user[1] ) , NULL , NULL );
-  }
-
-  {
-    char * home = util_isscanf_alloc_envvar( s , 0 );
-    if (home != NULL)
-      util_string_replace_inplace( &s , home , getenv( &home[1] ) , NULL , NULL );
-  }
-  
-  printf("%s \n",s);
-  
+  size_t compressed_size = 80;
+  double x  = 189;
+  void * zx = util_malloc( compressed_size , __func__);
+  util_compress_buffer( &x , 8 , zx , &compressed_size );
+  printf("Compress OK ?? compressed_size:%d \n" , compressed_size);
 }
 
 

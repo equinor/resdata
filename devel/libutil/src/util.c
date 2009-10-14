@@ -3817,9 +3817,9 @@ void util_compress_buffer(const void * data , int data_size , void * zbuffer , u
        Have some not reproducible "one-in-a-thousand" problems with
        the return value from compress. It seemingly randomly returns:
 
-         -2  == Z_STREAM_ERROR 
+         -2  == Z_STREAM_ERROR. 
          
-       according to the documentation in zlib.h compress should only
+       According to the documentation in zlib.h compress should only
        return one of the three values:
 
            Z_OK == 0   ||   Z_MEM_ERROR == -4   Z_BUF_ERROR == -5
@@ -3827,18 +3827,20 @@ void util_compress_buffer(const void * data , int data_size , void * zbuffer , u
        We mask the Z_STREAM_ERROR return value as Z_OK, with a
        FAT-AND_UGLY_WARNING, and continue with fingers crossed.
     */
-
+    
     if (compress_result == Z_STREAM_ERROR) {
       fprintf(stderr,"*****************************************************************\n");
       fprintf(stderr,"**                       W A R N I N G                         **\n");
       fprintf(stderr,"** ----------------------------------------------------------- **\n");
       fprintf(stderr,"** Unrecognized return value:%d from compress(). Proceeding as **\n" , compress_result);
-      fprintf(stderr,"** if all is OK ??  Cross your fingers!                        **\n");
+      fprintf(stderr,"** if all is OK ??  Cross your fingers!!                       **\n");
       fprintf(stderr,"*****************************************************************\n");
       compress_result = Z_OK;
+
+      printf("data_size:%d   compressed_size:%ld \n",data_size , *compressed_size);
+      util_abort("%s - kkk \n", __func__ );
     }
-
-
+    
     if (compress_result != Z_OK) 
       util_abort("%s: returned %d - different from Z_OK - aborting\n",__func__ , compress_result);
   } else
@@ -3848,10 +3850,10 @@ void util_compress_buffer(const void * data , int data_size , void * zbuffer , u
 
 
 /**
-  This function allocates a new buffer which is a compressed version
-  of the input buffer data. The input variable data_size, and the
-  output * compressed_size are the size - *in bytes* - of input and
-  output.
+   This function allocates a new buffer which is a compressed version
+   of the input buffer data. The input variable data_size, and the
+   output * compressed_size are the size - *in bytes* - of input and
+   output.
 */
 void * util_alloc_compressed_buffer(const void * data , int data_size , unsigned long * compressed_size) {
   void * zbuffer = util_malloc(data_size , __func__);

@@ -209,6 +209,7 @@ size_t buffer_fwrite(buffer_type * buffer , const void * src_ptr , size_t item_s
    here verbatim:
 */
 
+
 /* Snipped from zlib source code: */
 static size_t __compress_bound (size_t sourceLen)
 {
@@ -252,8 +253,10 @@ size_t buffer_fread_compressed(buffer_type * buffer , size_t compressed_size , v
   
 
   if (compressed_size > 0) {
-    if (uncompress(target_ptr , &uncompressed_size , &buffer->data[buffer->pos] , compressed_size) != Z_OK)
-      util_abort("uncompress returned results != Z_OK \n",__func__);
+    int uncompress_result = uncompress(target_ptr , &uncompressed_size , &buffer->data[buffer->pos] , compressed_size);
+    if (uncompress_result != Z_OK)
+      util_abort("%s: uncompress returned:%d results != Z_OK \n",__func__ , uncompress_result);
+    
   } else
     uncompressed_size = 0;
   
