@@ -22,5 +22,5 @@ set.o                               : set.c set.h hash.o util.o
 node_ctype.o                        : node_ctype.c node_ctype.h  
 path_fmt.o                          : path_fmt.c path_fmt.h util.o node_ctype.o  
 str_buffer.o                        : str_buffer.c str_buffer.h  
-thread_pool.o                       : thread_pool.c thread_pool.h atomic.h util.o  
+thread_pool.o                       : thread_pool.c thread_pool.h util.o  
 log.o                               : log.c log.h util.o  

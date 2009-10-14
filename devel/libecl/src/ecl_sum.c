@@ -338,6 +338,12 @@ int ecl_sum_get_report_ministep_end( const ecl_sum_type * ecl_sum, int report_st
 }
 
 
+void ecl_sum_summarize( const ecl_sum_type * ecl_sum , FILE * stream ) {
+  ecl_sum_data_summarize( ecl_sum->data , stream );
+}
+
+
+
 /**
    Returns the number of the first ministep where a limiting value is
    reached. If the limiting value is never reached, -1 is

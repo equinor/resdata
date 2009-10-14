@@ -482,17 +482,21 @@ char * util_alloc_cwd(void) {
    function will return NULL. 
 
    Observe that the returned string will start with '$'. This is to
-   simplify subsequent calls to util_string_replace_XXX()
-   functions. Typicall usage:
+   simplify subsequent calls to util_string_replace_XXX() functions,
+   however &ret_value[1] must be used in the subsequent getenv() call:
 
-   {
-       char * env_var = util_isscanf_alloc_envvar( s , 0 );
-       if (env_var != NULL) {
-          const char * env_value = getenv( &env_var[1] );  // Skip the leading '$'.
-          util_string_replace_inplace( s , env_value );
-       }
-       free( env_var );
+   { 
+      char * env_var = util_isscanf_alloc_envvar( s , 0 ); 
+      if (env_var != NULL) {
+         const char * env_value = getenv( &env_var[1] );   // Skip the leading '$'.
+         if (env_value != NULL)
+            util_string_replace_inplace( s , env_value );
+         else
+            fprintf(stderr,"** Warning: environment variable: \'%s\' is not defined \n", env_var);
+         free( env_var );
+      }
    }
+
 
 */
 
@@ -3799,7 +3803,7 @@ void util_read_filename(const char * prompt , int prompt_len , bool must_exist ,
 
 /**
   This function reads data from the input pointer data, and writes a
-  compressed copy into qqthe target buffer zbuffer. On input data_size
+  compressed copy into the target buffer zbuffer. On input data_size
   should be the *number of bytes* in data. compressed_size should be a
   reference to the size (in bytes) of zbuffer, on return this has been
   updated to reflect the new compressed size.
@@ -3809,6 +3813,32 @@ void util_compress_buffer(const void * data , int data_size , void * zbuffer , u
   int compress_result;
   if (data_size > 0) {
     compress_result = compress(zbuffer , compressed_size , data , data_size);
+    /**
+       Have some not reproducible "one-in-a-thousand" problems with
+       the return value from compress. It seemingly randomly returns:
+
+         -2  == Z_STREAM_ERROR 
+         
+       according to the documentation in zlib.h compress should only
+       return one of the three values:
+
+           Z_OK == 0   ||   Z_MEM_ERROR == -4   Z_BUF_ERROR == -5
+
+       We mask the Z_STREAM_ERROR return value as Z_OK, with a
+       FAT-AND_UGLY_WARNING, and continue with fingers crossed.
+    */
+
+    if (compress_result == Z_STREAM_ERROR) {
+      fprintf(stderr,"*****************************************************************\n");
+      fprintf(stderr,"**                       W A R N I N G                         **\n");
+      fprintf(stderr,"** ----------------------------------------------------------- **\n");
+      fprintf(stderr,"** Unrecognized return value:%d from compress(). Proceeding as **\n" , compress_result);
+      fprintf(stderr,"** if all is OK ??  Cross your fingers!                        **\n");
+      fprintf(stderr,"*****************************************************************\n");
+      compress_result = Z_OK;
+    }
+
+
     if (compress_result != Z_OK) 
       util_abort("%s: returned %d - different from Z_OK - aborting\n",__func__ , compress_result);
   } else

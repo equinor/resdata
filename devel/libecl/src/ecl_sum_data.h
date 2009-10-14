@@ -8,7 +8,7 @@ extern "C" {
 
 typedef struct ecl_sum_data_struct ecl_sum_data_type ; 
 
-
+void                     ecl_sum_data_summarize(const ecl_sum_data_type * data , FILE * stream);
 bool        	         ecl_sum_data_has_ministep(const ecl_sum_data_type *  , int );
 double      	         ecl_sum_data_get(const ecl_sum_data_type * , int , int );
 void        	         ecl_sum_data_get_ministep_range(const ecl_sum_data_type *  , int * , int *);

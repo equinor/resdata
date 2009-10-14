@@ -157,8 +157,24 @@ void <TYPE>_vector_set_default(<TYPE>_vector_type * vector, <TYPE> default_value
   return vector->data[index];
 }
 
+/**
+   This might very well operate on a default value. 
+*/
+void <TYPE>_vector_imul(<TYPE>_vector_type * vector, int index, <TYPE> factor) {
+  <TYPE>_vector_assert_index(vector , index);
+  vector->data[index] *= factor;
+}
+
+
+void <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> factor) {
+  for (int i=0; i < vector->size; i++)
+    vector->data[i] *= factor;
+}
+
+
 
 /* Will return default value if index > size. Will fail HARD on negative indices (not that safe) ....*/
+
 <TYPE> <TYPE>_vector_safe_iget(const <TYPE>_vector_type * vector, int index) {
   if (index >= vector->size)
     return vector->default_value;
@@ -171,8 +187,6 @@ void <TYPE>_vector_set_default(<TYPE>_vector_type * vector, <TYPE> default_value
     }
   }
 }
-
-
 
 /** Will abort is size == 0 */
 <TYPE> <TYPE>_vector_get_last(const <TYPE>_vector_type * vector) {

@@ -245,11 +245,10 @@ static ecl_smspec_var_type ecl_smspec_split_general(const ecl_smspec_type * smsp
 
 /**
    Takes a ecl_smspec_var_type variable as input, and return a string
-   representation of this var_type suitable for debug messages +++
+   representation of this var_type. Suitable for debug messages +++
 */
 
-
-const char * ecl_smspec_get_well_type_name( ecl_smspec_var_type var_type ) {
+const char * ecl_smspec_get_var_type_name( ecl_smspec_var_type var_type ) {
   switch(var_type) {
   case(ECL_SMSPEC_INVALID_VAR):
     return "INVALID_VAR";
