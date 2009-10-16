@@ -14,7 +14,7 @@
 #include <vector.h>
 #include <stringlist.h>
 #include <point.h>
-
+#include <tetrahedron.h>
 
 /**
   This function implements functionality to load ECLISPE grid files,
@@ -225,6 +225,70 @@
 
 
 /*
+  The table tetraheder_permutations describe how the cells can be
+  divided into twelve tetrahedrons. The dimensions in the the table
+  are as follows:
+
+   1. The first dimension is the "way" the cell is divided into
+      tetrahedrons, there are two different ways. For cells where the
+      four point corners on a face are NOT in the same plane, the two
+      methods will not give the same result. Which one is "right"??
+
+   2. The second dimension is the tetrahedron number, for each way of
+      the two ways there are a total of twelve tetrahedrons.
+
+   3. The third and list dimension is the point number in this
+      tetrahedron. When forming a tetrahedron the first input point
+      should always be the point corresponding to center of the
+      cell. That is not explicit in this table.
+
+   I.e. for instance the third tetrahedron for the first method
+   consists of the cells:
+
+        tetraheheder_permutations[0][2] = {0 , 4 , 5}
+
+   in addition to the central point. The value [0..7] correspond the
+   the number scheme of the corners in a cell used by ECLIPSE:
+
+
+       Lower layer:   Upper layer  
+                    
+         2---3           6---7
+         |   |           |   |
+         0---1           4---5
+
+
+   Table entries are ripped from ECLPOST code - file: kvpvos.f in
+   klib/
+*/
+
+
+static const int tetrahedron_permutations[2][12][3] = {{{0 , 2 , 6},
+                                                        {0 , 4 , 6},
+                                                        {0 , 4 , 5},
+                                                        {0 , 1 , 5},
+                                                        {1 , 3 , 7},
+                                                        {1 , 5 , 7},
+                                                        {2 , 3 , 7},
+                                                        {2 , 6 , 7},
+                                                        {0 , 1 , 2},
+                                                        {1 , 2 , 3},
+                                                        {4 , 5 , 6},
+                                                        {5 , 6 , 7}},
+                                                       {{0 , 2 , 4},  
+                                                        {2 , 4 , 6},  
+                                                        {0 , 4 , 1},  
+                                                        {4 , 5 , 1},  
+                                                        {1 , 3 , 5},  
+                                                        {3 , 5 , 7},  
+                                                        {2 , 3 , 6},   
+                                                        {3 , 6 , 7},   
+                                                        {0 , 1 , 3},  
+                                                        {0 , 2 , 3},  
+                                                        {4 , 5 , 7},  
+                                                        {4 , 6 , 7}}};
+
+/*
 
   The implementation is based on a hierarchy of three datatypes:
 
@@ -337,91 +401,36 @@ static void ecl_cell_fprintf( ecl_cell_type * cell , FILE * stream ) {
 
 
 
-/**
-   Here comes some functions used to determine whether a certain point
-   (x,y,z) is within a cell. These functions are used when blocking scalars, 
-   they are not really well tested.
-*/
 
+static void ecl_cell_init_tetrahedron( const ecl_cell_type * cell , tetrahedron_type * tet , int method_nr , int tetrahedron_nr) {
+  int point0 = tetrahedron_permutations[ method_nr ][ tetrahedron_nr ][ 0 ];
+  int point1 = tetrahedron_permutations[ method_nr ][ tetrahedron_nr ][ 1 ];
+  int point2 = tetrahedron_permutations[ method_nr ][ tetrahedron_nr ][ 2 ];
 
-/*
-  A x B = [(Ay*Bz - Az*By) , -(Ax*Bz - Az*Bx) , (Ax*By - Bx*Ay)]
-*/
-
-/*
-   Computes the signed distance from the point p the plane spanned by
-   the two vectors (p1 - p0) x (p2 - p0).
-*/
-
-
-//static void __set_normal_vector3d(ecl_point_type * n , ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2 , bool right_hand) {
-//  ecl_point_type v1 = p1;
-//  ecl_point_type v2 = p2;
-//  
-//  ecl_point_inplace_sub(&v1 , p0);
-//  ecl_point_inplace_sub(&v2 , p0);
-//  n->x =  (v1.y*v2.z - v1.z*v2.y);
-//  n->y = -(v1.x*v2.z - v1.z*v2.x);
-//  n->z =  (v1.x*v2.y - v1.y*v2.x);
-//  if (!right_hand)
-//    ecl_point_inplace_scale(n , -1);
-//}
-//
-//
-//static double __signed_distance3d(ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2 , bool right_hand , ecl_point_type p) {
-//  ecl_point_type n;
-//  __set_normal_vector3d(&n , p0 , p1 , p2 , right_hand);
-//  //ecl_point_fprintf(&n , stdout);
-//  ecl_point_inplace_sub(&p  , p0);
-//  {
-//    double d = n.x*p.x + n.y*p.y + n.z*p.z;
-//    return d;
-//  }
-//}
-//
-//static bool __positive_distance3d(ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2 , bool right_hand , ecl_point_type p) {
-//  double d = __signed_distance3d(p0 , p1 , p2 , right_hand , p);
-//  if (d >= 0)
-//    return true;
-//  else
-//    return false;
-//}
-//
-//
-//
-//static void __set_normal_vector2d(ecl_point_type * n , ecl_point_type p0 , ecl_point_type p1 , bool right_hand) {
-//  ecl_point_type v = p1;
-//
-//  ecl_point_inplace_sub(&v , p0);
-//  n->x = -v.y;
-//  n->y =  v.x;
-//  n->z =  0;
-//  if (!right_hand)
-//    ecl_point_inplace_scale(n , -1.0);
-//
-//}
-//
-//
-//static double __signed_distance2d(ecl_point_type p0 , ecl_point_type p1 , bool right_hand , ecl_point_type p) {
-//  ecl_point_type n;
-//  __set_normal_vector2d(&n  ,  p0 , p1 , right_hand);
-//  ecl_point_inplace_sub(&p  ,  p0);
-//  {
-//    double d = n.x*p.x + n.y*p.y;
-//    return d;
-//  }
-//}
-//
-//static bool __positive_distance2d(ecl_point_type p0 , ecl_point_type p1 , bool right_hand , ecl_point_type p) {
-//  double d = __signed_distance2d(p0 , p1 , right_hand , p);
-//  if (d >= 0)
-//    return true;
-//  else
-//    return false;
-//}
+  tetrahedron_set_shared( tet , cell->center , cell->corner_list[ point0 ] , cell->corner_list[point1] , cell->corner_list[point2]);
+}
 
 
 
+static double ecl_cell_get_volume( const ecl_cell_type * cell ) {
+  tetrahedron_type tet;
+  int itet;
+  double volume = 0;
+  for (itet = 0; itet < 12; itet++) {
+    /* 
+       Using both tetrahedron decompositions - gives good agreement
+       with PORV from ECLIPSE INIT files. 
+    */
+    ecl_cell_init_tetrahedron( cell , &tet , 0 , itet );
+    volume += tetrahedron_volume( &tet );
+
+    ecl_cell_init_tetrahedron( cell , &tet , 1 , itet );
+    volume += tetrahedron_volume( &tet );
+
+  }
+  
+  return volume * 0.5;
+}
 
 
 
@@ -440,263 +449,6 @@ Lower layer:
   0---1
 
 */
-
-
-// Completely fucked: static void __set_normal_vector3d__(double *A , double *B , double *C, ecl_point_type p0 , ecl_point_type p1 , ecl_point_type p2) {
-// Completely fucked:   ecl_point_type v1 = p1;
-// Completely fucked:   ecl_point_type v2 = p2;
-// Completely fucked:   
-// Completely fucked:   ecl_point_inplace_sub(&v1 , p0);
-// Completely fucked:   ecl_point_inplace_sub(&v2 , p0);
-// Completely fucked:   *A =  (v1.y*v2.z - v1.z*v2.y);
-// Completely fucked:   *B = -(v1.x*v2.z - v1.z*v2.x);
-// Completely fucked:   *C =  (v1.x*v2.y - v1.y*v2.x);
-// Completely fucked: }
-// Completely fucked: 
-// Completely fucked: 
-// Completely fucked: 
-// Completely fucked: static bool ecl_cell_contains_3d__(const ecl_cell_type * cell , ecl_point_type p) {
-// Completely fucked:   ecl_point_type p0 = cell->corner_list[0];
-// Completely fucked:   ecl_point_type p1 = cell->corner_list[1];
-// Completely fucked:   ecl_point_type p2 = cell->corner_list[2];
-// Completely fucked:   ecl_point_type p3 = cell->corner_list[3];
-// Completely fucked:   ecl_point_type p4 = cell->corner_list[4];
-// Completely fucked:   ecl_point_type p5 = cell->corner_list[5];
-// Completely fucked:   ecl_point_type p6 = cell->corner_list[6];
-// Completely fucked:   ecl_point_type p7 = cell->corner_list[7];
-// Completely fucked: 
-// Completely fucked:   /**
-// Completely fucked:      Equation for plane:
-// Completely fucked:      
-// Completely fucked:      A*(x - a) + B*(y - b) + C*(z - c) = 0
-// Completely fucked: 
-// Completely fucked:      Solved with respect to:
-// Completely fucked: 
-// Completely fucked:        z(x,y) = (D - A*x - B*y)  / C
-// Completely fucked: 
-// Completely fucked:        y(z,x) = (D - A*x - C*z)  / B
-// Completely fucked: 
-// Completely fucked:        x(y,z) = (D - B*y - C*z ) / A
-// Completely fucked: 
-// Completely fucked:      Where:
-// Completely fucked:      
-// Completely fucked:        D = A*a + B*b + C*c
-// Completely fucked:   */
-// Completely fucked: 
-// Completely fucked: 
-// Completely fucked:   //printf("1111 \n");
-// Completely fucked:   
-// Completely fucked:   /**
-// Completely fucked:      Z planes.
-// Completely fucked:   */
-// Completely fucked:   double A,B,C,D;
-// Completely fucked:   {
-// Completely fucked:     double z;
-// Completely fucked:     __set_normal_vector3d__( &A , &B , &C , p0 , p1 , p2);
-// Completely fucked:     if (fabs(A) + fabs(B) + fabs(C) == 0)
-// Completely fucked:       return false;
-// Completely fucked:     
-// Completely fucked:     D = A*p0.x + B*p0.y + C*p0.z;
-// Completely fucked:     z = (D - A * p.x - B*p.y) / C;
-// Completely fucked:     //printf("D:%g  A:%g  B:%g   C:%G \n",D , A,B,C);
-// Completely fucked:     //printf("Comparing: %g %g \n",z,p.z);
-// Completely fucked:     //printf("Naive: %g \n",0.25*(p0.z + p1.z + p2.z + p3.z));
-// Completely fucked:     //printf("recovering p2: p2.z :%g  calcultaed:%g\n",p2.z,(D - A*p2.x - B*p2.y)/C);
-// Completely fucked:     printf("plane check: %g  %g \n",p3.z , (D - A*p3.x - B*p3.y)/C);
-// Completely fucked:     if (z > p.z)
-// Completely fucked:       return false;
-// Completely fucked:     
-// Completely fucked:     //printf("dz: %g %g %g %g \n",p6.z - p2.z ,p7.z - p3.z , p4.z - p0.z , p5.z - p1.z);
-// Completely fucked:     //
-// Completely fucked:     //printf("%g - %g \n",p0.z,p4.z);
-// Completely fucked:     //printf("%g - %g \n",p1.z,p5.z);
-// Completely fucked:     //printf("%g - %g \n",p2.z,p6.z);
-// Completely fucked:     //printf("%g - %g \n",p3.z,p7.z);
-// Completely fucked: 
-// Completely fucked: 
-// Completely fucked:     //printf("1111 \n");
-// Completely fucked:     __set_normal_vector3d__( &A , &B , &C , p4 , p5 , p6);
-// Completely fucked:     D = A*p4.x + B*p4.y + C*p4.z;
-// Completely fucked:     //printf("D:%g  A:%g  B:%g   C:%G \n",D, A,B,C);
-// Completely fucked:     z = (D - A * p.x - B*p.y) / C;
-// Completely fucked:     //printf("Comparing: %g %g \n",z,p.z);
-// Completely fucked:     //printf("Naive: %g \n",0.25*(p4.z + p5.z + p6.z + p7.z));
-// Completely fucked:     //printf("recovering p5: p5.z :%g  calcultaed:%g\n",p5.z,(D - A*p5.x - B*p5.y)/C);
-// Completely fucked:     if (z < p.z)
-// Completely fucked:       return false;
-// Completely fucked:   }
-// Completely fucked: 
-// Completely fucked:   
-// Completely fucked:   /**
-// Completely fucked:      X planes.
-// Completely fucked:   */
-// Completely fucked:   {
-// Completely fucked:     double x;
-// Completely fucked:     __set_normal_vector3d__( &A , &B , &C , p0 , p2 , p4);
-// Completely fucked:     D = A*p0.x + B*p0.y + C*p0.z;
-// Completely fucked:     x = (D - B * p.y - C*p.z) / A;
-// Completely fucked:     if (x > p.x)
-// Completely fucked:       return false;
-// Completely fucked:     //printf("1111 \n");
-// Completely fucked:     
-// Completely fucked:     __set_normal_vector3d__( &A , &B , &C , p1 , p3 , p5);
-// Completely fucked:     D = A*p1.x + B*p1.y + C*p1.z;
-// Completely fucked:     x = (D - B * p.y - C*p.z) / A;
-// Completely fucked:     if (x < p.x)
-// Completely fucked:       return false;
-// Completely fucked:   }
-// Completely fucked:   //printf("1111 \n");
-// Completely fucked: 
-// Completely fucked:   /**
-// Completely fucked:      Y planes.
-// Completely fucked:   */
-// Completely fucked:   {
-// Completely fucked:     double y;
-// Completely fucked:     __set_normal_vector3d__( &A , &B , &C , p4 , p5 , p0);
-// Completely fucked:     D = A*p4.x + B*p4.y + C*p4.z;
-// Completely fucked:     y = (D - A * p.x - C*p.z) / B;
-// Completely fucked:     if (y > p.y)
-// Completely fucked:       return false;
-// Completely fucked:     //printf("1111 \n");
-// Completely fucked:     
-// Completely fucked:     __set_normal_vector3d__( &A , &B , &C , p6 , p7 , p2);
-// Completely fucked:     D = A*p6.x + B*p6.y + C*p6.z;
-// Completely fucked:     y = (D - A * p.x - C*p.z) / B;
-// Completely fucked:     if (y < p.y)
-// Completely fucked:       return false;
-// Completely fucked:   }
-// Completely fucked:   //printf("YY 1111 \n");
-// Completely fucked:   return true;
-// Completely fucked: }
-// Completely fucked: 
-// Completely fucked: 
-// Completely fucked: bool ecl_grid_cell_contains1(const ecl_grid_type * grid , int global_index , double x , double y , double z) {
-// Completely fucked:   ecl_point_type p;
-// Completely fucked:   p.x = x;
-// Completely fucked:   p.y = y;
-// Completely fucked:   p.z = z;
-// Completely fucked:   return ecl_cell_contains_3d__( grid->cells[global_index] , p);
-// Completely fucked: }
-// Completely fucked: 
-// Completely fucked: 
-// Completely fucked: bool ecl_grid_cell_contains3(const ecl_grid_type * grid , int i,int j,int k , double x , double y , double z) {
-// Completely fucked:   ecl_point_type p;
-// Completely fucked:   p.x = x;
-// Completely fucked:   p.y = y;
-// Completely fucked:   p.z = z;
-// Completely fucked:   return ecl_cell_contains_3d__( grid->cells[ecl_grid_get_global_index3(grid , i,j,k)] , p);
-// Completely fucked: }
-// Completely fucked: 
-// Completely fucked: 
-// Completely fucked: 
-// Completely fucked: static bool ecl_cell_contains_3d(const ecl_cell_type * cell , ecl_point_type p) {
-// Completely fucked:   ecl_point_type p0 = cell->corner_list[0];
-// Completely fucked:   ecl_point_type p1 = cell->corner_list[1];
-// Completely fucked:   ecl_point_type p2 = cell->corner_list[2];
-// Completely fucked:   ecl_point_type p3 = cell->corner_list[3];
-// Completely fucked:   ecl_point_type p4 = cell->corner_list[4];
-// Completely fucked:   ecl_point_type p5 = cell->corner_list[5];
-// Completely fucked:   ecl_point_type p6 = cell->corner_list[6];
-// Completely fucked:   ecl_point_type p7 = cell->corner_list[7];
-// Completely fucked:   bool  contains = false;
-// Completely fucked: 
-// Completely fucked:   /**
-// Completely fucked:      Rectangular approximation - this whole thing might be fucked by MAPAXES.
-// Completely fucked:   */
-// Completely fucked:   
-// Completely fucked:   {
-// Completely fucked:     /* Of all fucking heuristics .... */
-// Completely fucked:     const double max_xy = 2500;
-// Completely fucked:     const double max_z  = 250;
-// Completely fucked:     
-// Completely fucked:     double z1 = 0.25 * (p0.z + p1.z + p2.z + p3.z);
-// Completely fucked:     double z2 = 0.25 * (p4.z + p5.z + p6.z + p7.z);
-// Completely fucked: 
-// Completely fucked:     double y1 = 0.25 * (p0.y + p1.y + p4.y + p5.y);
-// Completely fucked:     double y2 = 0.25 * (p2.y + p3.y + p6.y + p7.y);
-// Completely fucked: 
-// Completely fucked:     double x1 = 0.25* (p0.x + p2.x + p4.x + p6.x);
-// Completely fucked:     double x2 = 0.25* (p1.x + p3.x + p7.x + p5.x);
-// Completely fucked:     
-// Completely fucked:     double zmax = util_double_max(z1 , z2);
-// Completely fucked:     double zmin = util_double_min(z1 , z2);
-// Completely fucked: 
-// Completely fucked:     double xmax = util_double_max(x1 , x2);
-// Completely fucked:     double xmin = util_double_min(x1 , x2);
-// Completely fucked:     
-// Completely fucked:     double ymax = util_double_max(y1 , y2);
-// Completely fucked:     double ymin = util_double_min(y1 , y2);
-// Completely fucked:  
-// Completely fucked: 
-// Completely fucked:     if (((xmax - xmin) < max_xy) && 
-// Completely fucked:         ((ymax - ymin) < max_xy) && 
-// Completely fucked:         ((zmax - zmin) < max_z)) {
-// Completely fucked: 
-// Completely fucked:       if (((zmin <= p.z) && (zmax >= p.z)) &&
-// Completely fucked:           ((ymin <= p.y) && (ymax >= p.y)) &&
-// Completely fucked:           ((xmin <= p.x) && (xmax >= p.x)))
-// Completely fucked:         
-// Completely fucked:         contains = true;
-// Completely fucked:     }
-// Completely fucked: 
-// Completely fucked:     //if (contains) {
-// Completely fucked:     //  printf(" X: %g < %g <%g \n",xmin , p.x, xmax);
-// Completely fucked:     //  printf(" Y: %g < %g <%g \n",ymin , p.y, ymax);
-// Completely fucked:     //  printf(" Z: %g < %g <%g \n",zmin , p.z, zmax);
-// Completely fucked:     //}
-// Completely fucked:   }
-// Completely fucked:   return contains;
-// Completely fucked: }
-// Completely fucked:   
-// Completely fucked: 
-// Completely fucked: //static bool ecl_cell_contains_3d(const ecl_cell_type * cell , ecl_point_type p) {
-// Completely fucked: //  ecl_point_type p0 = cell->corner_list[0];
-// Completely fucked: //  ecl_point_type p1 = cell->corner_list[1];
-// Completely fucked: //  ecl_point_type p2 = cell->corner_list[2];
-// Completely fucked: //  ecl_point_type p3 = cell->corner_list[3];
-// Completely fucked: //  ecl_point_type p4 = cell->corner_list[4];
-// Completely fucked: //  ecl_point_type p5 = cell->corner_list[5];
-// Completely fucked: //  ecl_point_type p6 = cell->corner_list[6];
-// Completely fucked: //  //ecl_point_type p7 = cell->corner_list[7];
-// Completely fucked: //  bool  contains = false;
-// Completely fucked: //
-// Completely fucked: //
-// Completely fucked: //  /** 
-// Completely fucked: //      Calculate the surface of the base area.  This can be zero for funny
-// Completely fucked: //      aquifer cells, which will fool the algorithm completely.
-// Completely fucked: //  */
-// Completely fucked: //  double surface_area = ((p1.x - p0.x) * (p2.y - p0.y) - ((p1.y - p0.y) * (p2.x - p0.x)));
-// Completely fucked: //  
-// Completely fucked: //  if (surface_area > 0) {
-// Completely fucked: //    if (__positive_distance3d(p0 , p1 , p2 , true , p))        	  /* Z1 */
-// Completely fucked: //      if (__positive_distance3d(p4 , p5 , p6 , false , p))     	  /* Z2 */
-// Completely fucked: //        if (__positive_distance3d(p0 , p4 , p2 , true , p))    	  /* X1 */
-// Completely fucked: //          if (__positive_distance3d(p1 , p5 , p3 , false , p)) 	  /* X2 */
-// Completely fucked: //            if (__positive_distance3d(p0 , p4 , p1 , true , p))     /* Y1 */
-// Completely fucked: //              if (__positive_distance3d(p2 , p6 , p3 , false , p))  /* Y2 */
-// Completely fucked: //                contains = true;
-// Completely fucked: //  }
-// Completely fucked: //  return contains;
-// Completely fucked: //}
-// Completely fucked: 
-// Completely fucked: 
-// Completely fucked: static bool ecl_cell_contains_2d(const ecl_cell_type * cell , ecl_point_type p) {
-// Completely fucked:   bool contains = false;
-// Completely fucked:   ecl_point_type p0 = cell->corner_list[0];
-// Completely fucked:   ecl_point_type p1 = cell->corner_list[1];
-// Completely fucked:   ecl_point_type p2 = cell->corner_list[2];
-// Completely fucked:   ecl_point_type p3 = cell->corner_list[3];
-// Completely fucked: 
-// Completely fucked:   if (__positive_distance2d(p0 , p2 , false , p))
-// Completely fucked:     if (__positive_distance2d(p0 , p1 , true , p))
-// Completely fucked:       if (__positive_distance2d(p1 , p3 , true , p))
-// Completely fucked: 	if (__positive_distance2d(p2 , p3 , false , p))
-// Completely fucked: 	  contains = true;
-// Completely fucked: 
-// Completely fucked:   return contains;
-// Completely fucked: }
-
-
 
 
 static void ecl_cell_free(ecl_cell_type * cell) {
@@ -1880,6 +1632,17 @@ int ecl_grid_get_global_size( const ecl_grid_type * ecl_grid ) {
 
 int ecl_grid_get_active_size( const ecl_grid_type * ecl_grid ) {
   return ecl_grid->total_active;
+}
+
+double ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_index ) {
+  const ecl_cell_type * cell = ecl_grid->cells[global_index];
+  return ecl_cell_get_volume( cell );
+}
+
+
+double ecl_grid_get_cell_volume3( const ecl_grid_type * ecl_grid, int i , int j , int k) {
+  int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k);
+  return ecl_grid_get_cell_volume1( ecl_grid , global_index );
 }
 
 

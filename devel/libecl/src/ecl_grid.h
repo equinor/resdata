@@ -12,6 +12,9 @@ extern "C" {
 typedef double (block_function_ftype) ( const double_vector_type *); 
 typedef struct ecl_grid_struct ecl_grid_type;
 
+
+double          ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_index );
+double          ecl_grid_get_cell_volume3( const ecl_grid_type * ecl_grid, int i , int j , int k);
 bool            ecl_grid_cell_contains1(const ecl_grid_type * grid , int global_index , double x , double y , double z);
 bool            ecl_grid_cell_contains3(const ecl_grid_type * grid , int i , int j ,int k , double x , double y , double z);
 int             ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z);

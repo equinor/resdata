@@ -21,6 +21,11 @@ void point_set(point_type * p , double x , double y , double z) {
 }
 
 
+void point_copy_values(point_type * p , const point_type * src) {
+  point_set(p , src->x , src->y , src->z);
+}
+
+
 point_type * point_alloc_empty( ) {
   point_type * p = util_malloc( sizeof * p , __func__);
   return p;
@@ -53,7 +58,7 @@ void point_free( point_type * p) {
 
 
 void point_fprintf( const point_type * p , FILE * stream ) {
-  fprintf(stream , "%g %g %g \n",p->x , p->y , p->z);
+  fprintf(stream , "%g %g %g ",p->x , p->y , p->z);
 }
 
 /*****************************************************************/

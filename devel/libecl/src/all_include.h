@@ -13,3 +13,5 @@
 #include <ecl_file.h>
 #include <ecl_region.h>
 #include <point.h>
+#include <tetrahedron.h>
+

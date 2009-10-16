@@ -90,8 +90,9 @@ void load_stations(vector_type * grav_stations , const char * filename) {
     bool at_eof = false;
     while(!(at_eof)) {
       double x,y,d;
-      int fscanf_return = fscanf(stream, "%lg%lg%lg", &x,&y,&d);
-      if(fscanf_return ==3){
+      char station_name[32];
+      int fscanf_return = fscanf(stream, "%s%lg%lg%lg", station_name , &x,&y,&d);
+      if(fscanf_return == 4){
         grav_station_type * g = grav_station_alloc(x,y,d);
         vector_append_owned_ref(grav_stations, g, free);
       }

@@ -6,8 +6,8 @@ COMPILE_INCLUDE  = -I$(LIBECL_HOME)/src -I$(LIBUTIL_HOME)/include -D'VIEWER=$(VI
 INSTALL_INC_PATH =  $(LIBECL_HOME)/include
 INSTALL_LIB_PATH =  $(LIBECL_HOME)/lib
 #################################################################
-LIB_OBJECTS       = ecl_smspec.o ecl_sum_data.o ecl_well_vars.o ecl_util.o ecl_kw.o ecl_sum.o fortio.o ecl_rft_file.o ecl_rft_node.o ecl_grid.o ecl_box.o ecl_io_config.o ecl_file.o ecl_region.o point.o
-INC_FILES         = ecl_endian_flip.h ecl_smspec.h ecl_sum_data.h ecl_well_vars.h ecl_util.h ecl_kw.h ecl_sum.h fortio.h ecl_rft_file.h ecl_rft_node.h ecl_box.h ecl_grid.h ecl_io_config.h ecl_file.h ecl_region.h point.h
+LIB_OBJECTS       = ecl_smspec.o ecl_sum_data.o ecl_well_vars.o ecl_util.o ecl_kw.o ecl_sum.o fortio.o ecl_rft_file.o ecl_rft_node.o ecl_grid.o ecl_box.o ecl_io_config.o ecl_file.o ecl_region.o point.o tetrahedron.o 
+INC_FILES         = ecl_endian_flip.h ecl_smspec.h ecl_sum_data.h ecl_well_vars.h ecl_util.h ecl_kw.h ecl_sum.h fortio.h ecl_rft_file.h ecl_rft_node.h ecl_box.h ecl_grid.h ecl_io_config.h ecl_file.h ecl_region.h point.h tetrahedron.h 
 LIB       = libecl.a
 LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L./ -L$(LIBCONFIG_HOME)/lib
 LIB_LINK  = -lecl -lconfig -lutil  -lm -lz -lpthread 
