@@ -553,7 +553,7 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   int c , i;
   for (i=0; i < ecl_grid->size; i++) {
     ecl_cell_type * cell = ecl_grid->cells[i];
-    point_set(cell->center , 0,0,0);
+    point_set(cell->center , 0 , 0 , 0);
     for (c = 0; c < 8; c++)
       point_inplace_add(cell->center , cell->corner_list[c]);
     point_inplace_scale(cell->center , 1.0 / 8.0);
