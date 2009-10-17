@@ -65,17 +65,29 @@ typedef struct {
   double utm_y; 
   double depth; 
   double grav_diff;
+  char * name;
 } grav_station_type;
 
 
-grav_station_type * grav_station_alloc(double x, double y, double d){
+
+void grav_station_free__( void * arg) {
+  grav_station_type * grav = ( grav_station_type * ) arg;
+  free( grav->name );
+  free( grav );
+}
+
+
+
+grav_station_type * grav_station_alloc(const char * name , double x, double y, double d){
   grav_station_type * s = util_malloc(sizeof*s, __func__);
+  s->name  = util_alloc_string_copy( name );
   s->utm_x = x;
   s->utm_y = y;
   s->depth = d;
   s->grav_diff = 0.0;
   return s;
 }
+
 
 
 void grav_diff_update(grav_station_type * g_s, double inc){
@@ -92,9 +104,9 @@ void load_stations(vector_type * grav_stations , const char * filename) {
       double x,y,d;
       char station_name[32];
       int fscanf_return = fscanf(stream, "%s%lg%lg%lg", station_name , &x,&y,&d);
-        if(fscanf_return == 4){
-        grav_station_type * g = grav_station_alloc(x,y,d);
-        vector_append_owned_ref(grav_stations, g, free);
+      if(fscanf_return == 4){
+        grav_station_type * g = grav_station_alloc(station_name , x,y,d);
+        vector_append_owned_ref(grav_stations, g, grav_station_free__);
       }
 
 
@@ -351,8 +363,9 @@ int main(int argc , char ** argv) {
 	grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_EGRID_FILE , fmt_file , -1);
 	if (grid_filename == NULL)
 	  grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_GRID_FILE , fmt_file , -1);
+
 	if ((init_filename == NULL) || (grid_filename == NULL))  /* Means we could not find them. */
-	  print_usage(__LINE__);
+          util_exit("Could not find INIT or GRID|EGRID file \n");
       } else {
 	/* */
 	if ((input_length - input_offset) > 1) {
@@ -373,8 +386,10 @@ int main(int argc , char ** argv) {
       char * station_file = input[input_offset];
       if (util_file_exists(station_file))
 	load_stations( grav_stations , station_file);
-      else
+      else {
+        printf("Can not find file:%s \n",station_file);
 	print_usage(__LINE__);
+      }
     } else 
       print_usage(__LINE__);
 
@@ -500,11 +515,11 @@ int main(int argc , char ** argv) {
 	  swat2_kw     = ecl_file_iget_named_kw(restart_files[1], "SWAT", 0);
 	} 
       }
-      
+
+
       /* The numerical aquifer information */
       if( ecl_file_has_kw( init_file , "AQUIFERN")) 
 	aquifern_kw     = ecl_file_iget_named_kw(init_file, "AQUIFERN", 0);
-      
       {
 	int     nactive  = ecl_grid_get_active_size( ecl_grid );
 	float * zero     = util_malloc( nactive * sizeof * zero     , __func__);    /* Fake vector of zeros used for densities / sturations when you do not have data. */
@@ -517,14 +532,14 @@ int main(int argc , char ** argv) {
 	  }
 	}
 	{
-	  const float * sgas1_v   = safe_get_float_ptr( sgas1_kw 	  , NULL );
-	  const float * swat1_v   = safe_get_float_ptr( swat1_kw 	  , NULL );
+	  const float * sgas1_v   = safe_get_float_ptr( sgas1_kw    , NULL );
+	  const float * swat1_v   = safe_get_float_ptr( swat1_kw    , NULL );
 	  const float * oil_den1  = safe_get_float_ptr( oil_den1_kw , zero );
 	  const float * gas_den1  = safe_get_float_ptr( gas_den1_kw , zero );
 	  const float * wat_den1  = safe_get_float_ptr( wat_den1_kw , zero );
 	  
-	  const float * sgas2_v   = safe_get_float_ptr( sgas2_kw 	  , NULL );
-	  const float * swat2_v   = safe_get_float_ptr( swat2_kw 	  , NULL );
+	  const float * sgas2_v   = safe_get_float_ptr( sgas2_kw    , NULL );
+	  const float * swat2_v   = safe_get_float_ptr( swat2_kw    , NULL );
 	  const float * oil_den2  = safe_get_float_ptr( oil_den2_kw , zero );
 	  const float * gas_den2  = safe_get_float_ptr( gas_den2_kw , zero );
 	  const float * wat_den2  = safe_get_float_ptr( wat_den2_kw , zero );
@@ -542,7 +557,8 @@ int main(int argc , char ** argv) {
 	  
 	  for (global_index=0;global_index < ecl_grid_get_global_size( ecl_grid ); global_index++){
 	    const int act_index = ecl_grid_get_active_index1( ecl_grid , global_index );
-	    if (act_index >= 1) {
+	    if (act_index >= 0) {
+
 	      // Not numerical aquifer 
 	      if(aquifern[act_index] >= 0){ 
 		float swat1 = swat1_v[act_index];
@@ -573,20 +589,6 @@ int main(int argc , char ** argv) {
 		  truncate_saturation( &soil1 );
 		  truncate_saturation( &soil2 );
 		}
-		
-		//printf ("SOIL1 : %f\t",soil1);
-		//printf ("SGAS1 : %f\t",sgas1);
-		//printf ("SWAT1 : %f\n",swat1);
-		//
-		//printf ("SOIL2 : %f\t",soil2);
-		//printf ("SGAS2 : %f\t",sgas2);
-		//printf ("SWAT2 : %f\n",swat2);
-		//printf ("DEN_GAS1 : %f\n",gas_den1[act_index]);
-		//printf ("DEN_GAS2 : %f\n",gas_den2[act_index]);
-		
-		//if(swat1[act_index] < 0.999 && swat2[act_index] < 0.999){	  // Check if this is an aquifer cell; neglect these
-		
-
 	
 		/* 
 		   We have found all the info we need for one cell, then we loop over all the grav
@@ -599,22 +601,13 @@ int main(int argc , char ** argv) {
 
 		  mas1 = rporv1[act_index]*(soil1 * oil_den1[act_index] + sgas1 * gas_den1[act_index] + swat1 * wat_den1[act_index] );
 		  mas2 = rporv2[act_index]*(soil2 * oil_den2[act_index] + sgas2 * gas_den2[act_index] + swat2 * wat_den2[act_index] );
-		  //if(!(mas1>=0) || !(mas2>=0)){
-		  //  printf("Cell index: %i  %i %i %i %i \n", act_index, global_index, i, j, k);
-		  //  printf("mas1: %f mas2: %f %i\n", mas1, mas2, act_index);
-		  //  printf("%f %f %f %f\n", rporv1[act_index], oil_den1[act_index], gas_den1[act_index], wat_den1[act_index] );
-		  //  printf("%f %f %f %f\n", rporv2[act_index], oil_den2[act_index], gas_den2[act_index], wat_den2[act_index] );
-		  //  exit(1);
-		  //}
-		  
-		  
 		  ecl_grid_get_pos1(ecl_grid , global_index , &xpos , &ypos , &zpos);
 		  for(station_nr=0; station_nr < vector_get_size( grav_stations ); station_nr++) {
 		    grav_station_type * g_s = vector_iget(grav_stations, station_nr);
-		    double dist_x  = xpos - g_s->utm_x;
-		    double dist_y  = ypos - g_s->utm_y;
-		    double dist_d  = zpos - g_s->depth;
-		    double dist_sq = dist_x*dist_x + dist_y*dist_y + dist_d*dist_d;
+		    double dist_x   = xpos - g_s->utm_x;
+		    double dist_y   = ypos - g_s->utm_y;
+		    double dist_d   = zpos - g_s->depth;
+		    double dist_sq  = dist_x*dist_x + dist_y*dist_y + dist_d*dist_d;
 		    double ldelta_g;
 
 		    if(dist_sq == 0){
@@ -622,8 +615,6 @@ int main(int argc , char ** argv) {
 		    }
 		    ldelta_g = 6.67E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5);
 		    grav_diff_update(g_s , ldelta_g);
-		    //printf("DIST %f \n",dist_sq);
-		    //printf ("DELTA_G: %f %f\n", g_s->grav_diff, ldelta_g);
 		  }
 		}
 	      }
@@ -641,13 +632,12 @@ int main(int argc , char ** argv) {
       for(station_nr = 0; station_nr < vector_get_size( grav_stations ); station_nr++){
 	const grav_station_type * g_s = vector_iget_const(grav_stations, station_nr);
 	fprintf(stream, "%f\n",g_s->grav_diff);
-	printf ("DELTA_G %i: %f %f %f %f\n", station_nr, g_s->grav_diff, g_s->utm_x, g_s->utm_y, g_s->depth);
+	printf ("DELTA_G %s[%i]: %f %f %f %f\n", g_s->name , station_nr, g_s->grav_diff, g_s->utm_x, g_s->utm_y, g_s->depth);
       }
       fclose(stream);
     }
     
 
-    // Clean up the mess 
     vector_free( grav_stations );
     ecl_grid_free(ecl_grid);
     ecl_file_free(restart_files[0]);
