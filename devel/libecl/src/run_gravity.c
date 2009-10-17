@@ -92,10 +92,12 @@ void load_stations(vector_type * grav_stations , const char * filename) {
       double x,y,d;
       char station_name[32];
       int fscanf_return = fscanf(stream, "%s%lg%lg%lg", station_name , &x,&y,&d);
-      if(fscanf_return == 4){
+        if(fscanf_return == 4){
         grav_station_type * g = grav_station_alloc(x,y,d);
         vector_append_owned_ref(grav_stations, g, free);
       }
+
+
       //else if(fscanf_return == 0) {
       //  at_eof = true;
       //}
@@ -205,6 +207,7 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
 	restart_files[0] = ecl_file_fread_alloc( input[0] );
 	restart_files[1] = ecl_file_fread_alloc( input[1] );
 	*arg_offset = 2;
+        printf("Loading from files:%s %s \n",input[0] , input[1]);
       } else print_usage(__LINE__);
     } else print_usage(__LINE__);
   } else if (file_type == ECL_UNIFIED_RESTART_FILE) {
