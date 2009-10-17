@@ -20,17 +20,25 @@
 #include <parser.h>
 #include <block_fs.h>
 #include <thread_pool.h>
-
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
 
 
 int main(int argc , char ** argv) {
-  size_t compressed_size = 80;
-  double x  = 189;
-  void * zx = util_malloc( compressed_size , __func__);
-  util_compress_buffer( &x , 8 , zx , &compressed_size );
-  printf("Compress OK ?? compressed_size:%d \n" , compressed_size);
+  char * filename = "/tmp/kast.txt";
+  int    fd      = open( filename , O_CREAT );
+  FILE * stream;
+
+  printf("fd:%d -> ",fd);
+  fd = dup2(1 , fd);
+  printf("%d \n",fd);
+
+  stream = fdopen( fd , "w");
+  fprintf(stream , "Hei ..... \n");
+  fclose(stream);
 }
 
 
