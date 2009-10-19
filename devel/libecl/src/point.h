@@ -21,6 +21,7 @@ void         point_compare( const point_type *p1 , const point_type * p2, bool *
 void         point_fprintf( const point_type * p , FILE * stream );
 void         point_free( point_type * p);
 void         point_set( point_type *p , double x , double y , double z);
+point_type * point_alloc( double x , double y , double z);
 point_type * point_copyc( const point_type * p);
 void         point_copy_values(point_type * p , const point_type * src);
 void         point_vector_cross(point_type * A , const point_type * B , const point_type * C);

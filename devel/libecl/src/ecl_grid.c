@@ -454,20 +454,16 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
   const int method   = 0;
   int tetrahedron_nr = 0;
   tetrahedron_type tet;
-  
-  do {
-    ecl_cell_init_tetrahedron( cell , &tet , method , tetrahedron_nr );
-    if (!tetrahedron_contains( &tet , p ))
-      return false;
-    
-    tetrahedron_nr++;
-    printf("tetrahedon:%d \n",tetrahedron_nr);
-  } while (tetrahedron_nr < 12);
-  
-  if (ecl_cell_get_volume( cell ) > 0)
-    return true;
-  else
-    return false;
+
+  if (ecl_cell_get_volume( cell ) > 0) {
+    do {
+      ecl_cell_init_tetrahedron( cell , &tet , method , tetrahedron_nr );
+      if (tetrahedron_contains( &tet , p ))
+        return true;
+      tetrahedron_nr++;
+    } while (tetrahedron_nr < 12);
+  } 
+  return false;
 }
 
 
@@ -1064,7 +1060,17 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
 
 
 
+
+
 /*****************************************************************/
+
+bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index , double x , double y , double z ) {
+  point_type p;
+  point_set( &p , x , y , z);
+  
+  return ecl_cell_contains_point( ecl_grid->cells[global_index] , &p );
+}
+
 /** 
     Here comes some functions used when blocking. These are NOT used
     by default. Observe that the functions used to look up an index
@@ -1084,14 +1090,14 @@ static int ecl_grid_get_global_index_from_xyz__(const ecl_grid_type * grid , dou
     global_index = -1;
 
     do {
-      int active_index = ((index + last_index) % grid->size);
+      int current_index = ((index + last_index) % grid->size);
       bool cell_contains;
-      cell_contains = ecl_cell_contains_point( grid->cells[active_index] , &p );
+      cell_contains = ecl_cell_contains_point( grid->cells[current_index] , &p );
       
       if (cell_contains) {
-	global_index = active_index;
+	global_index = current_index;
 	cont = false;
-        printf("Volume: %g \n", ecl_cell_get_volume( grid->cells[active_index] ));
+        printf("Volume: %g \n", ecl_cell_get_volume( grid->cells[current_index] ));
       }
       index++;
       if (index == grid->size)
@@ -1100,6 +1106,8 @@ static int ecl_grid_get_global_index_from_xyz__(const ecl_grid_type * grid , dou
   }
   return global_index;
 }
+
+
 
 
 

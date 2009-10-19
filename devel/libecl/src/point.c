@@ -127,6 +127,12 @@ void point_normal_vector(point_type * n, const point_type * p0, const point_type
 double point_plane_distance(const point_type * p , const point_type * n , const point_type * plane_point) {
   point_type * diff = point_alloc_diff( p , plane_point );
   double d = point_dot_product( n , diff );
+
+  printf("plane_point: "); point_fprintf( plane_point , stdout ); printf("\n");
+  printf("p:           "); point_fprintf( p , stdout );        printf("\n");
+  printf("diff:        "); point_fprintf( diff , stdout );        printf("\n");
+  
+
   free( diff );
   return d;
 }

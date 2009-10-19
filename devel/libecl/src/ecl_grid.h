@@ -13,6 +13,7 @@ typedef double (block_function_ftype) ( const double_vector_type *);
 typedef struct ecl_grid_struct ecl_grid_type;
 
 
+bool            ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index , double x , double y , double z );
 double          ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_index );
 double          ecl_grid_get_cell_volume3( const ecl_grid_type * ecl_grid, int i , int j , int k);
 bool            ecl_grid_cell_contains1(const ecl_grid_type * grid , int global_index , double x , double y , double z);

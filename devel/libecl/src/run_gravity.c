@@ -60,6 +60,7 @@ void print_usage(int line) {
 }
 
 
+
 typedef struct {
   double utm_x; 
   double utm_y; 
@@ -95,6 +96,18 @@ void grav_diff_update(grav_station_type * g_s, double inc){
 }
 
 
+
+/**
+   The station information is in a file with the following rules:
+
+    1. Each station on a seperate line.
+    2. For each station we have four items:
+
+         name   utm_x  utm_y   depth
+   
+       name is an arbitrary string - without spaces.
+*/  
+
 void load_stations(vector_type * grav_stations , const char * filename) {
   printf("Loading from file:%s \n",filename);
   {
@@ -107,16 +120,8 @@ void load_stations(vector_type * grav_stations , const char * filename) {
       if(fscanf_return == 4){
         grav_station_type * g = grav_station_alloc(station_name , x,y,d);
         vector_append_owned_ref(grav_stations, g, grav_station_free__);
-      }
-
-
-      //else if(fscanf_return == 0) {
-      //  at_eof = true;
-      //}
-      else{
+      } else 
         at_eof = true;
-        //util_abort("%s: something funky - only found %d numbers", __func__, fscanf_return);
-      }
     }
     fclose(stream);
   }
@@ -219,7 +224,6 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
 	restart_files[0] = ecl_file_fread_alloc( input[0] );
 	restart_files[1] = ecl_file_fread_alloc( input[1] );
 	*arg_offset = 2;
-        printf("Loading from files:%s %s \n",input[0] , input[1]);
       } else print_usage(__LINE__);
     } else print_usage(__LINE__);
   } else if (file_type == ECL_UNIFIED_RESTART_FILE) {
@@ -312,12 +316,217 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
   return restart_files;
 }
 
+
+
+/*
+  This functions should be called AFTER we have verified that all the
+  required input has indeed been provided.
+*/
+
+static void gravity_doit( const ecl_grid_type * ecl_grid , const ecl_file_type * init_file , const ecl_file_type * restart_file1 , const ecl_file_type * restart_file2 , vector_type * stations, int model_phases, int file_phases) {
+  ecl_kw_type * init_porv_kw = NULL;
+  ecl_kw_type * rporv1_kw   = NULL;  
+  ecl_kw_type * rporv2_kw   = NULL;
+  ecl_kw_type * oil_den1_kw = NULL;  
+  ecl_kw_type * oil_den2_kw = NULL;
+  ecl_kw_type * gas_den1_kw = NULL;
+  ecl_kw_type * gas_den2_kw = NULL;
+  ecl_kw_type * wat_den1_kw = NULL;
+  ecl_kw_type * wat_den2_kw = NULL;
+  ecl_kw_type * sgas1_kw    = NULL;
+  ecl_kw_type * sgas2_kw    = NULL;
+  ecl_kw_type * swat1_kw    = NULL;
+  ecl_kw_type * swat2_kw    = NULL;
+  ecl_kw_type * aquifern_kw = NULL ;
+  
+  /* Extracting the pore volumes */
+  rporv1_kw = ecl_file_iget_named_kw( restart_file1 , "RPORV" , 0);      
+  rporv2_kw = ecl_file_iget_named_kw( restart_file2 , "RPORV" , 0);      
+  init_porv_kw  = ecl_file_iget_named_kw( init_file , "PORV" , 0);
+  
+  
+  /** Extracting the densities */
+  {
+    // OIL_DEN
+    if( has_phase(model_phases , OIL) ) {
+      oil_den1_kw  = ecl_file_iget_named_kw(restart_file1, "OIL_DEN", 0);
+      oil_den2_kw  = ecl_file_iget_named_kw(restart_file2, "OIL_DEN", 0);
+    }
+    
+    // GAS_DEN
+    if( has_phase( model_phases , GAS) ) {
+      gas_den1_kw  = ecl_file_iget_named_kw(restart_file1, "GAS_DEN", 0);
+      gas_den2_kw  = ecl_file_iget_named_kw(restart_file2, "GAS_DEN", 0);
+    }
+    
+    // WAT_DEN
+    if( has_phase( model_phases , WATER) ) {
+      wat_den1_kw  = ecl_file_iget_named_kw(restart_file1, "WAT_DEN", 0);
+      wat_den2_kw  = ecl_file_iget_named_kw(restart_file2, "WAT_DEN", 0);
+    }
+  }
+  
+  
+  /* Extracting the saturations */
+  {
+    // SGAS
+    if( has_phase( file_phases , GAS )) {
+      sgas1_kw     = ecl_file_iget_named_kw(restart_file1, "SGAS", 0);
+      sgas2_kw     = ecl_file_iget_named_kw(restart_file2, "SGAS", 0);
+    } 
+    
+    // SWAT
+    if( has_phase( file_phases , WATER )) {
+      swat1_kw     = ecl_file_iget_named_kw(restart_file1, "SWAT", 0);
+      swat2_kw     = ecl_file_iget_named_kw(restart_file2, "SWAT", 0);
+    } 
+  }
+  
+  
+  /* The numerical aquifer information */
+  if( ecl_file_has_kw( init_file , "AQUIFERN")) 
+    aquifern_kw     = ecl_file_iget_named_kw(init_file, "AQUIFERN", 0);
+  {
+    int     nactive  = ecl_grid_get_active_size( ecl_grid );
+    float * zero     = util_malloc( nactive * sizeof * zero     , __func__);    /* Fake vector of zeros used for densities / sturations when you do not have data. */
+    int   * int_zero = util_malloc( nactive * sizeof * int_zero , __func__);    /* Fake vector of zeros used for AQUIFER when the init file does not supply data. */
+    {
+      int i;
+      for (i=0; i < nactive; i++) {
+        zero[i]     = 0;
+        int_zero[i] = 0;
+      }
+    }
+    {
+      const float * sgas1_v   = safe_get_float_ptr( sgas1_kw    , NULL );
+      const float * swat1_v   = safe_get_float_ptr( swat1_kw    , NULL );
+      const float * oil_den1  = safe_get_float_ptr( oil_den1_kw , zero );
+      const float * gas_den1  = safe_get_float_ptr( gas_den1_kw , zero );
+      const float * wat_den1  = safe_get_float_ptr( wat_den1_kw , zero );
+      
+      const float * sgas2_v   = safe_get_float_ptr( sgas2_kw    , NULL );
+      const float * swat2_v   = safe_get_float_ptr( swat2_kw    , NULL );
+      const float * oil_den2  = safe_get_float_ptr( oil_den2_kw , zero );
+      const float * gas_den2  = safe_get_float_ptr( gas_den2_kw , zero );
+      const float * wat_den2  = safe_get_float_ptr( wat_den2_kw , zero );
+      
+      const float * rporv1    = ecl_kw_get_float_ptr(rporv1_kw);
+      const float * rporv2    = ecl_kw_get_float_ptr(rporv2_kw);
+      int   * aquifern;
+      int global_index;
+      bool has_checked_rporv = false;
+    
+      if (aquifern_kw != NULL)
+        aquifern = ecl_kw_get_int_ptr( aquifern_kw );
+      else
+        aquifern = int_zero;
+
+
+
+      for (global_index=0;global_index < ecl_grid_get_global_size( ecl_grid ); global_index++){
+        const int act_index = ecl_grid_get_active_index1( ecl_grid , global_index );
+        if (act_index >= 0) {
+          // Not numerical aquifer 
+          if(aquifern[act_index] >= 0){ 
+            float swat1 = swat1_v[act_index];
+            float swat2 = swat2_v[act_index];
+            float sgas1 = 0;
+            float sgas2 = 0;
+            float soil1 = 0;
+            float soil2 = 0;
+
+            truncate_saturation( &swat1 );
+            truncate_saturation( &swat2 );
+            
+            if (has_phase( model_phases , GAS)) {
+              if (has_phase( file_phases , GAS )) {
+                sgas1 = sgas1_v[act_index];
+                sgas2 = sgas2_v[act_index];
+                truncate_saturation( &sgas1 );
+		    truncate_saturation( &sgas2 );
+              } else {
+                sgas1 = 1 - swat1;
+                sgas2 = 1 - swat2;
+              }
+            }
+            
+            if (has_phase( model_phases , OIL )) {
+              soil1 =  1 - sgas1  - swat1;
+              soil2 =  1 - sgas2  - swat2;
+              truncate_saturation( &soil1 );
+              truncate_saturation( &soil2 );
+            }
+            
+            /**
+               Check that the rporv values are in the right ballpark.
+               For ECLIPSE version 2008.2 they are way fucking off.
+            */
+            if (!has_checked_rporv) {
+              double init_porv  = ecl_kw_iget_as_double( init_porv_kw , global_index );   /* NB - this uses global indexing. */
+              double rporv12    = 0.5 * (rporv1[ act_index ] + rporv2[ act_index ]);
+              double fraction   = util_double_min( init_porv , rporv12 ) / util_double_max( init_porv , rporv12 );
+              if (fraction  < 0.50) {
+                fprintf(stderr,"-----------------------------------------------------------------\n");
+                fprintf(stderr,"INIT PORV: %g \n",init_porv);
+                fprintf(stderr,"RPORV1   : %g \n",rporv1[ act_index ]);
+                fprintf(stderr,"RPORV2   : %g \n",rporv2[ act_index ]);
+                fprintf(stderr,"Hmmm - the RPORV values extracted from the restart file seem to be \n");
+                fprintf(stderr,"veeery different from the initial rporv value. This might indicated\n");
+                fprintf(stderr,"an ECLIPSE bug. Version 2007.2 is known to be ok in this respect, \n");
+                fprintf(stderr,"whereas version 2008.2 is known to have a bug. \n");
+                fprintf(stderr,"-----------------------------------------------------------------\n");
+                exit(1);
+              }
+              has_checked_rporv = true;
+            }
+
+            /* 
+               We have found all the info we need for one cell, then we loop over all the grav
+               stations and calculate the delta G from this cell for the various stations.
+            */
+            {
+              double  mas1 , mas2;
+              double  xpos , ypos , zpos;
+              int     station_nr;
+              
+              mas1 = rporv1[act_index]*(soil1 * oil_den1[act_index] + sgas1 * gas_den1[act_index] + swat1 * wat_den1[act_index] );
+              mas2 = rporv2[act_index]*(soil2 * oil_den2[act_index] + sgas2 * gas_den2[act_index] + swat2 * wat_den2[act_index] );
+              ecl_grid_get_pos1(ecl_grid , global_index , &xpos , &ypos , &zpos);
+              
+              
+              for(station_nr=0; station_nr < vector_get_size( stations ); station_nr++) {
+                grav_station_type * g_s = vector_iget(stations, station_nr);
+                double dist_x   = xpos - g_s->utm_x;
+                double dist_y   = ypos - g_s->utm_y;
+                double dist_d   = zpos - g_s->depth;
+                double dist_sq  = dist_x*dist_x + dist_y*dist_y + dist_d*dist_d;
+                double ldelta_g;
+                
+                if(dist_sq == 0){
+                  exit(1);
+                }
+                ldelta_g = 6.67E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5);
+                grav_diff_update(g_s , ldelta_g);
+              }
+            }
+          }
+        }
+      }
+    }
+    free( zero );
+    free( int_zero );
+  }
+}
+
+
+
+
 /*****************************************************************/
 /* Main program                                                  */
 /*****************************************************************/
 
 int main(int argc , char ** argv) {
-  
+
   if(argc > 1) {
     if(strcmp(argv[1], "-h") == 0)
       print_usage(__LINE__);
@@ -381,27 +590,32 @@ int main(int argc , char ** argv) {
       free( grid_filename );
     }
     
-    // station_file
+    // Load the station_file
     if (input_length > input_offset) {
       char * station_file = input[input_offset];
       if (util_file_exists(station_file))
 	load_stations( grav_stations , station_file);
-      else {
-        printf("Can not find file:%s \n",station_file);
-	print_usage(__LINE__);
-      }
+      else 
+        util_exit("Can not find file:%s \n",station_file);
     } else 
       print_usage(__LINE__);
 
     /** OK - now everything is loaded */
-        
     
-        
-    // Get the relevant kws and vectors
-    // RPORV
-    ecl_kw_type * rporv1_kw  ;
-    ecl_kw_type * rporv2_kw ;
-    
+    /* 
+       Look at the restart files to determine which phases are
+       present. The restart files generally only contain (n - 1) phases,
+       i.e. for a WATER-OIL-GAS system the restart files will contain SGAS
+       and SWAT, but not SOIL.
+       
+       We must determine which phases are in the model, that is
+       determined by looking for the densities OIL_DEN, WAT_DEN and
+       GAS_DEN. This is stored in the variable model_phases. In addition we
+       must determine which saturations can be found in the restart files,
+       that is stored in the file_phases variable.
+    */
+
+    /* Check which phases are present in the model */
     model_phases = 0;
     if (ecl_file_has_kw(restart_files[0] , "OIL_DEN"))
       model_phases += OIL;			  	      
@@ -412,12 +626,14 @@ int main(int argc , char ** argv) {
     if (ecl_file_has_kw(restart_files[0] , "GAS_DEN"))
       model_phases += GAS;
 
-    /** We assume the restart file NEVER has SOIL information */
+
+    /* Check which phases are present in the restart files. We assume the restart file NEVER has SOIL information */
     file_phases = 0;
     if (ecl_file_has_kw(restart_files[0] , "SWAT"))
       file_phases += WATER;
     if (ecl_file_has_kw(restart_files[0] , "SGAS"))
       file_phases += GAS;
+
 
     /* Consiency check */
     {
@@ -450,15 +666,9 @@ int main(int argc , char ** argv) {
       }
     }
     
-    
-    
-    if( ecl_file_has_kw( restart_files[0] , "RPORV") || ecl_file_has_kw( restart_files[1] , "RPORV") ){   
-      rporv1_kw    = ecl_file_iget_named_kw(restart_files[0], "RPORV", 0);
-      rporv2_kw    = ecl_file_iget_named_kw(restart_files[1], "RPORV", 0);
-    } else {
-      printf("Sorry, the restartfiles does not contain RPORV\n");      
-      exit(1);
-    }
+    /* Check that the restart files have RPORV information. This is ensured by giving the argument RPORV to the RPTRST keyword. */
+    if ( !(ecl_file_has_kw( restart_files[0] , "RPORV") && ecl_file_has_kw( restart_files[1] , "RPORV")) )
+      util_exit("Sorry: the restartfiles do  not contain RPORV\n");       
 
 
     /* 
@@ -466,165 +676,7 @@ int main(int argc , char ** argv) {
        we need. Let us start extracting, and then subsequently using
        it.
     */
-    {
-      ecl_kw_type * oil_den1_kw = NULL ;  
-      ecl_kw_type * oil_den2_kw = NULL ;
-      ecl_kw_type * gas_den1_kw = NULL ;
-      ecl_kw_type * gas_den2_kw = NULL ;
-      ecl_kw_type * wat_den1_kw = NULL ;
-      ecl_kw_type * wat_den2_kw = NULL ;
-      ecl_kw_type * sgas1_kw 	= NULL;
-      ecl_kw_type * sgas2_kw 	= NULL;
-      ecl_kw_type * swat1_kw 	= NULL;
-      ecl_kw_type * swat2_kw 	= NULL;
-      ecl_kw_type * aquifern_kw = NULL ;
-
-      /** Extracting the densities */
-      {
-	// OIL_DEN
-	if( has_phase(model_phases , OIL) ) {
-	  oil_den1_kw  = ecl_file_iget_named_kw(restart_files[0], "OIL_DEN", 0);
-	  oil_den2_kw  = ecl_file_iget_named_kw(restart_files[1], "OIL_DEN", 0);
-	}
-	
-	// GAS_DEN
-	if( has_phase( model_phases , GAS) ) {
-	  gas_den1_kw  = ecl_file_iget_named_kw(restart_files[0], "GAS_DEN", 0);
-	  gas_den2_kw  = ecl_file_iget_named_kw(restart_files[1], "GAS_DEN", 0);
-	}
-	
-	// WAT_DEN
-	if( has_phase( model_phases , WATER) ) {
-	  wat_den1_kw  = ecl_file_iget_named_kw(restart_files[0], "WAT_DEN", 0);
-	  wat_den2_kw  = ecl_file_iget_named_kw(restart_files[1], "WAT_DEN", 0);
-	}
-      }
-      
-
-      /* Extracting the saturations */
-      {
-	// SGAS
-	if( has_phase( file_phases , GAS )) {
-	  sgas1_kw     = ecl_file_iget_named_kw(restart_files[0], "SGAS", 0);
-	  sgas2_kw     = ecl_file_iget_named_kw(restart_files[1], "SGAS", 0);
-	} 
-
-	// SWAT
-	if( has_phase( file_phases , WATER )) {
-	  swat1_kw     = ecl_file_iget_named_kw(restart_files[0], "SWAT", 0);
-	  swat2_kw     = ecl_file_iget_named_kw(restart_files[1], "SWAT", 0);
-	} 
-      }
-
-
-      /* The numerical aquifer information */
-      if( ecl_file_has_kw( init_file , "AQUIFERN")) 
-	aquifern_kw     = ecl_file_iget_named_kw(init_file, "AQUIFERN", 0);
-      {
-	int     nactive  = ecl_grid_get_active_size( ecl_grid );
-	float * zero     = util_malloc( nactive * sizeof * zero     , __func__);    /* Fake vector of zeros used for densities / sturations when you do not have data. */
-	int   * int_zero = util_malloc( nactive * sizeof * int_zero , __func__);    /* Fake vector of zeros used for AQUIFER when the init file does not supply data. */
-	{
-	  int i;
-	  for (i=0; i < nactive; i++) {
-	    zero[i]     = 0;
-	    int_zero[i] = 0;
-	  }
-	}
-	{
-	  const float * sgas1_v   = safe_get_float_ptr( sgas1_kw    , NULL );
-	  const float * swat1_v   = safe_get_float_ptr( swat1_kw    , NULL );
-	  const float * oil_den1  = safe_get_float_ptr( oil_den1_kw , zero );
-	  const float * gas_den1  = safe_get_float_ptr( gas_den1_kw , zero );
-	  const float * wat_den1  = safe_get_float_ptr( wat_den1_kw , zero );
-	  
-	  const float * sgas2_v   = safe_get_float_ptr( sgas2_kw    , NULL );
-	  const float * swat2_v   = safe_get_float_ptr( swat2_kw    , NULL );
-	  const float * oil_den2  = safe_get_float_ptr( oil_den2_kw , zero );
-	  const float * gas_den2  = safe_get_float_ptr( gas_den2_kw , zero );
-	  const float * wat_den2  = safe_get_float_ptr( wat_den2_kw , zero );
-	  
-	  const float * rporv1    = ecl_kw_get_float_ptr(rporv1_kw);
-	  const float * rporv2    = ecl_kw_get_float_ptr(rporv2_kw);
-	  int   * aquifern;
-	  int global_index;
-	  
-	  if (aquifern_kw != NULL)
-	    aquifern = ecl_kw_get_int_ptr( aquifern_kw );
-	  else
-	    aquifern = int_zero;
-	  
-	  
-	  for (global_index=0;global_index < ecl_grid_get_global_size( ecl_grid ); global_index++){
-	    const int act_index = ecl_grid_get_active_index1( ecl_grid , global_index );
-	    if (act_index >= 0) {
-
-	      // Not numerical aquifer 
-	      if(aquifern[act_index] >= 0){ 
-		float swat1 = swat1_v[act_index];
-		float swat2 = swat2_v[act_index];
-		float sgas1 = 0;
-		float sgas2 = 0;
-		float soil1 = 0;
-		float soil2 = 0;
-		
-		truncate_saturation( &swat1 );
-		truncate_saturation( &swat2 );
-		
-		if (has_phase( model_phases , GAS)) {
-		  if (has_phase( file_phases , GAS )) {
-		    sgas1 = sgas1_v[act_index];
-		    sgas2 = sgas2_v[act_index];
-		    truncate_saturation( &sgas1 );
-		    truncate_saturation( &sgas2 );
-		  } else {
-		    sgas1 = 1 - swat1;
-		    sgas2 = 1 - swat2;
-		  }
-		}
-		
-		if (has_phase( model_phases , OIL )) {
-		  soil1 =  1 - sgas1  - swat1;
-		  soil2 =  1 - sgas2  - swat2;
-		  truncate_saturation( &soil1 );
-		  truncate_saturation( &soil2 );
-		}
-	
-		/* 
-		   We have found all the info we need for one cell, then we loop over all the grav
-		   stations and calculate the delta G from this cell for the various stations.
-		*/
-		{
-		  double  mas1 , mas2;
-		  double  xpos , ypos , zpos;
-		  int     station_nr;
-
-		  mas1 = rporv1[act_index]*(soil1 * oil_den1[act_index] + sgas1 * gas_den1[act_index] + swat1 * wat_den1[act_index] );
-		  mas2 = rporv2[act_index]*(soil2 * oil_den2[act_index] + sgas2 * gas_den2[act_index] + swat2 * wat_den2[act_index] );
-		  ecl_grid_get_pos1(ecl_grid , global_index , &xpos , &ypos , &zpos);
-		  for(station_nr=0; station_nr < vector_get_size( grav_stations ); station_nr++) {
-		    grav_station_type * g_s = vector_iget(grav_stations, station_nr);
-		    double dist_x   = xpos - g_s->utm_x;
-		    double dist_y   = ypos - g_s->utm_y;
-		    double dist_d   = zpos - g_s->depth;
-		    double dist_sq  = dist_x*dist_x + dist_y*dist_y + dist_d*dist_d;
-		    double ldelta_g;
-
-		    if(dist_sq == 0){
-		      exit(1);
-		    }
-		    ldelta_g = 6.67E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5);
-		    grav_diff_update(g_s , ldelta_g);
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-	free( zero );
-	free( int_zero );
-      }
-    }
+    gravity_doit( ecl_grid , init_file , restart_files[0] , restart_files[1] , grav_stations , model_phases , file_phases);
     
     {
       FILE * stream = util_fopen(report_filen , "w");

@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <point.h>
 #include <tetrahedron.h>
-
-
-
+#include <math.h>
+#include <matrix.h>
+#include <matrix_lapack.h>
 
 
 void tetrahedron_set_shared( tetrahedron_type * tet , point_type * p0 , point_type * p1 , point_type * p2 , point_type * p3) {
@@ -73,42 +73,242 @@ double tetrahedron_volume( const tetrahedron_type * tet ) {
 
   point_vector_cross( &b_x_c , &b , &c);
   
-  printf("%g \n",abs( point_dot_product( &a , &b_x_c) ) / 6.0);
-  return abs( point_dot_product( &a , &b_x_c) ) / 6.0;
+  return fabs( point_dot_product( &a , &b_x_c) ) / 6.0;
 }
 
 
+/**
+   The __sign() function will return 0 for x ==== 0 - it is not
+   exactly zero measure....
+*/
 
 static int __sign( double x) {
-  if (x >= 0) 
+  const double zero_tol = 1e-10;
+  if (fabs(x) < zero_tol)
+    return 0;
+  else if (x > 0) 
     return 1;
   else
     return -1;
+  
 }
 
 
 
-bool tetrahedron_contains( const tetrahedron_type * tet , const point_type * p) {
-  int    current_sign;
-  double d0 , d1 , d2 , d3;
-  point_type n;
 
-  point_normal_vector( &n , tet->p0 , tet->p1 , tet->p2 );
-  d3 = point_plane_distance( p , &n , tet->p0 );
-  current_sign = __sign( d3 );
 
-  point_normal_vector( &n , tet->p1 , tet->p2 , tet->p3);
-  d0 = point_plane_distance( p , &n , tet->p1 );
-  if (current_sign != __sign( d0 )) return false;
-  
 
-  point_normal_vector( &n , tet->p2 , tet->p3 , tet->p0);
-  d1 = point_plane_distance( p , &n , tet->p2 );
-  if (current_sign != __sign( d1 )) return false;
+/**
+   When it comes to points which are exactly on one (or more ...) of
+   the surfaces it is a mess. The function will return true if exact
+   equality is found, unfortunately this implies that the function
+   finding the correct cell for a xyz location is not 100% stable:
+   
+   When it comes to a point on the surface between two cells the first
+   cell which queries about the point will be assigned this point.
+*/
+
+/**
+Point in Tetrahedron TestNewsgroups: comp.graphics,comp.graphics.algorithms
+From: herron@cs.washington.edu (Gary Herron)
+Subject: Re: point within a tetrahedron
+Date: Wed, 23 Feb 94 21:52:45 GMT 
+
+
+Let the tetrahedron have vertices 
+        V1 = (x1, y1, z1)
+        V2 = (x2, y2, z2)
+        V3 = (x3, y3, z3)
+        V4 = (x4, y4, z4)
+and your test point be 
+        P = (x, y, z).
+
+Then the point P is in the tetrahedron if following five determinants all have 
+the same sign. 
+
+             |x1 y1 z1 1|
+        D0 = |x2 y2 z2 1|
+             |x3 y3 z3 1|
+             |x4 y4 z4 1|
+
+             |x  y  z  1|
+        D1 = |x2 y2 z2 1|
+             |x3 y3 z3 1|
+             |x4 y4 z4 1|
+
+             |x1 y1 z1 1|
+        D2 = |x  y  z  1|
+             |x3 y3 z3 1|
+             |x4 y4 z4 1|
+
+             |x1 y1 z1 1|
+        D3 = |x2 y2 z2 1|
+             |x  y  z  1|
+             |x4 y4 z4 1|
+
+             |x1 y1 z1 1|
+        D4 = |x2 y2 z2 1|
+             |x3 y3 z3 1|
+             |x  y  z  1|
+
+
+  Some additional notes: 
+  If by chance the D0=0, then your tetrahedron is degenerate (the points are 
+  coplanar). 
+  If any other Di=0, then P lies on boundary i (boundary i being that boundary 
+  formed by the three points other than Vi). 
+  If the sign of any Di differs from that of D0 then P is outside boundary i. 
+  If the sign of any Di equals that of D0 then P is inside boundary i. 
+  If P is inside all 4 boundaries, then it is inside the tetrahedron. 
+  As a check, it must be that D0 = D1+D2+D3+D4. 
+  The pattern here should be clear; the computations can be extended to 
+  simplicies of any dimension. (The 2D and 3D case are the triangle and the 
+  tetrahedron). 
+  If it is meaningful to you, the quantities bi = Di/D0 are the usual 
+  barycentric coordinates. 
+  Comparing signs of Di and D0 is only a check that P and Vi are on the same 
+  side of boundary i. 
+
+*/
+
+
+
+bool tetrahedron_contains__( const tetrahedron_type * tet , const point_type * p, matrix_type * D) {
+  const point_type * p1 = tet->p0;
+  const point_type * p2 = tet->p1;
+  const point_type * p3 = tet->p2; 
+  const point_type * p4 = tet->p3;
   
-  point_normal_vector( &n , tet->p3 , tet->p0 , tet->p1);
-  d2 = point_plane_distance( p , &n , tet->p3 );
-  if (current_sign != __sign( d2 )) return false;
+  double D0 , D1 , D2 , D3 , D4;
+  int current_sign , sign;
+
+  /*****************************************************************/
+  matrix_iset( D , 0 , 0 , p1->x);
+  matrix_iset( D , 0 , 1 , p1->y);
+  matrix_iset( D , 0 , 2 , p1->z);
+  matrix_iset( D , 0 , 3 , 1);
   
+  matrix_iset( D , 1 , 0 , p2->x);
+  matrix_iset( D , 1 , 1 , p2->y);
+  matrix_iset( D , 1 , 2 , p2->z);
+  matrix_iset( D , 1 , 3 , 1);
+
+  matrix_iset( D , 2 , 0 , p3->x);
+  matrix_iset( D , 2 , 1 , p3->y);
+  matrix_iset( D , 2 , 2 , p3->z);
+  matrix_iset( D , 2 , 3 , 1);
+
+  matrix_iset( D , 3 , 0 , p4->x);
+  matrix_iset( D , 3 , 1 , p4->y);
+  matrix_iset( D , 3 , 2 , p4->z);
+  matrix_iset( D , 3 , 3 , 1);
+  D0 = matrix_det( D );
+  current_sign = __sign( D0 );
+  if (current_sign == 0)
+    return false; /* A zero volume cell. */
+
+  /*****************************************************************/
+  matrix_iset( D , 0 , 0 , p->x);
+  matrix_iset( D , 0 , 1 , p->y);
+  matrix_iset( D , 0 , 2 , p->z);
+  matrix_iset( D , 0 , 3 , 1);
+  
+  matrix_iset( D , 1 , 0 , p2->x);
+  matrix_iset( D , 1 , 1 , p2->y);
+  matrix_iset( D , 1 , 2 , p2->z);
+  matrix_iset( D , 1 , 3 , 1);
+
+  matrix_iset( D , 2 , 0 , p3->x);
+  matrix_iset( D , 2 , 1 , p3->y);
+  matrix_iset( D , 2 , 2 , p3->z);
+  matrix_iset( D , 2 , 3 , 1);
+
+  matrix_iset( D , 3 , 0 , p4->x);
+  matrix_iset( D , 3 , 1 , p4->y);
+  matrix_iset( D , 3 , 2 , p4->z);
+  matrix_iset( D , 3 , 3 , 1);
+  D1 = matrix_det( D );
+  sign = __sign( D1 );
+  if ((sign != 0) && (sign != current_sign)) return false;
+  
+  /*****************************************************************/
+  matrix_iset( D , 0 , 0 , p1->x);
+  matrix_iset( D , 0 , 1 , p1->y);
+  matrix_iset( D , 0 , 2 , p1->z);
+  matrix_iset( D , 0 , 3 , 1);
+  
+  matrix_iset( D , 1 , 0 , p->x);
+  matrix_iset( D , 1 , 1 , p->y);
+  matrix_iset( D , 1 , 2 , p->z);
+  matrix_iset( D , 1 , 3 , 1);
+
+  matrix_iset( D , 2 , 0 , p3->x);
+  matrix_iset( D , 2 , 1 , p3->y);
+  matrix_iset( D , 2 , 2 , p3->z);
+  matrix_iset( D , 2 , 3 , 1);
+
+  matrix_iset( D , 3 , 0 , p4->x);
+  matrix_iset( D , 3 , 1 , p4->y);
+  matrix_iset( D , 3 , 2 , p4->z);
+  matrix_iset( D , 3 , 3 , 1);
+  D2 = matrix_det( D );
+  sign = __sign( D2 );
+  if ((sign != 0) && (sign != current_sign)) return false;
+  /*****************************************************************/
+  matrix_iset( D , 0 , 0 , p1->x);
+  matrix_iset( D , 0 , 1 , p1->y);
+  matrix_iset( D , 0 , 2 , p1->z);
+  matrix_iset( D , 0 , 3 , 1);
+  
+  matrix_iset( D , 1 , 0 , p2->x);
+  matrix_iset( D , 1 , 1 , p2->y);
+  matrix_iset( D , 1 , 2 , p2->z);
+  matrix_iset( D , 1 , 3 , 1);
+
+  matrix_iset( D , 2 , 0 , p->x);
+  matrix_iset( D , 2 , 1 , p->y);
+  matrix_iset( D , 2 , 2 , p->z);
+  matrix_iset( D , 2 , 3 , 1);
+
+  matrix_iset( D , 3 , 0 , p4->x);
+  matrix_iset( D , 3 , 1 , p4->y);
+  matrix_iset( D , 3 , 2 , p4->z);
+  matrix_iset( D , 3 , 3 , 1);
+  D3 = matrix_det( D );
+  sign = __sign( D3 );
+  if ((sign != 0) && (sign != current_sign)) return false;
+  /*****************************************************************/
+  matrix_iset( D , 0 , 0 , p1->x);
+  matrix_iset( D , 0 , 1 , p1->y);
+  matrix_iset( D , 0 , 2 , p1->z);
+  matrix_iset( D , 0 , 3 , 1);
+  
+  matrix_iset( D , 1 , 0 , p2->x);
+  matrix_iset( D , 1 , 1 , p2->y);
+  matrix_iset( D , 1 , 2 , p2->z);
+  matrix_iset( D , 1 , 3 , 1);
+
+  matrix_iset( D , 2 , 0 , p3->x);
+  matrix_iset( D , 2 , 1 , p3->y);
+  matrix_iset( D , 2 , 2 , p3->z);
+  matrix_iset( D , 2 , 3 , 1);
+
+  matrix_iset( D , 3 , 0 , p->x);
+  matrix_iset( D , 3 , 1 , p->y);
+  matrix_iset( D , 3 , 2 , p->z);
+  matrix_iset( D , 3 , 3 , 1);
+  D4 = matrix_det( D );
+  sign = __sign( D4 );
+  if ((sign != 0) && (sign != current_sign)) return false;
+  /*****************************************************************/
+
   return true;
+}
+
+
+bool tetrahedron_contains( const tetrahedron_type * tet , const point_type * p) {
+  matrix_type * D = matrix_alloc(4 , 4);
+  bool contains = tetrahedron_contains__( tet , p , D );
+  matrix_free( D );
+  return contains;
 }
