@@ -1,17 +1,19 @@
 #include <matrix.h>
 #include <matrix_lapack.h>
 #include <util.h>
-
+#include <math.h>
 
 /** 
     The external lapack routines 
 */
 /*****************************************************************/
-void dgesv_(int * n, int * nrhs , double * A , int * lda , long int * ipivot , double * B , int * ldb , int * info);
-void dgesvd_(char * jobu , char * jobvt , int * m , int * n , double * A, int * lda , double * S , double * U , int * ldu , double * VT , int * ldvt, double * work , int * worksize , int * info);
-void dsyevx_(char * jobz, char * range , char * uplo , int *n , double * A , int * lda , double * vl , double * vu , int * il , int * iu , double * abstol , int * m , double * w , double *z , int * ldz , double * work, int * lwork , int * iwork , int * ifail , int * info); 
-void dgeqrf_(int * m , int * n , double * A , int * lda , double * tau , double * work , int * lwork, int * info);
-void dorgqr_(int * m, int * n , int * k , double * A , int * lda , double * tau , double * work , int * lwork, int * info);
+void  dgesv_(int * n, int * nrhs , double * A , int * lda , long int * ipivot , double * B , int * ldb , int * info);
+void  dgesvd_(char * jobu , char * jobvt , int * m , int * n , double * A, int * lda , double * S , double * U , int * ldu , double * VT , int * ldvt, double * work , int * worksize , int * info);
+void  dsyevx_(char * jobz, char * range , char * uplo , int *n , double * A , int * lda , double * vl , double * vu , int * il , int * iu , double * abstol , int * m , double * w , double *z , int * ldz , double * work, int * lwork , int * iwork , int * ifail , int * info); 
+void  dgeqrf_(int * m , int * n , double * A , int * lda , double * tau , double * work , int * lwork, int * info);
+void  dorgqr_(int * m, int * n , int * k , double * A , int * lda , double * tau , double * work , int * lwork, int * info);
+void  dgetrf_(int * M , int * n , double * A , int * lda , int * ipiv, int * info);
+void  dgedi_(double * A , int * lda , int * n , int * ipiv , double * det , double * work , int * job);
 /*****************************************************************/
 
 
@@ -417,3 +419,72 @@ void matrix_dorgqr(matrix_type * A , double * tau, int num_reflectors) {  /* num
     util_abort("%s: dorqf routine failed with info:%d \n",__func__ , info);
   free( work );
 }
+
+/*****************************************************************/
+
+/*****************************************************************/
+/* Factorization */
+
+
+static void matrix_dgetrf__( matrix_type * A, int * ipiv, int * info) {
+  int lda       = matrix_get_column_stride( A );
+  int m         = matrix_get_rows( A );
+  int n         = matrix_get_columns( A );  
+
+  dgetrf_( &m , &n , matrix_get_data( A ) , &lda , ipiv , info);
+}
+
+
+/** 
+    This is currently only used as a precursor for th determinant calculation.
+ */
+static void matrix_dgetrf( matrix_type * A) {
+  int   info;
+  int m         = matrix_get_rows( A );
+  int n         = matrix_get_columns( A );  
+  int * ipiv    = util_malloc( sizeof * ipiv * util_int_min( m , n ) , __func__);
+  matrix_dgetrf__( A , ipiv , &info );
+  free( ipiv );
+}
+
+
+/* Matrix content will be destroyed. */
+double matrix_det( matrix_type *A ) {
+  matrix_lapack_assert_square( A ); 
+  {
+    int       n   = matrix_get_columns( A );
+    int       dgetrf_info;
+    double    det       = 1;
+    double    det_scale = 0;
+    int * ipiv          = util_malloc( n * sizeof * ipiv , __func__ );
+    matrix_dgetrf__( A , ipiv , &dgetrf_info );
+    {
+      int i;
+      for (i=0; i < n; i++) {
+        det *= matrix_iget(A , i , i);
+
+        if (ipiv[i] != (i + 1)) /* A permutation has taken place. */
+          det *= -1;
+
+        while (fabs(det) > 10.0) {
+          det       /= 10;
+          det_scale += 1;
+        }
+
+        while (fabs(det) < 1.0) {
+          det       *= 10;
+          det_scale -= 1;
+        }
+      }
+    }
+    
+    free( ipiv );
+    return det * pow(10 , det_scale );
+  }
+}
+
+
+
+
+
+

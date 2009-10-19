@@ -61,6 +61,8 @@ extern "C" {
   
   void matrix_dgeqrf(matrix_type * A , double * tau);
   void matrix_dorgqr(matrix_type * A , double * tau, int num_reflectors);
+
+  double matrix_det( matrix_type *A );
   
 #ifdef __cplusplus
 }
