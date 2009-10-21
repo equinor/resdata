@@ -349,6 +349,32 @@ static int <TYPE>_vector_cmp(const void *_a, const void *_b) {
   return 0;
 }
 
+/**
+   The input vector will be altered in place, so that the vector only
+   contains every numerical value __once__. On exit the values will be
+   sorted in increasing order.
+
+   vector = <0 , 1 , 7 , 1 , 0 , 7 , 1> => <0,1,7>
+*/
+
+void <TYPE>_vector_select_unique(<TYPE>_vector_type * vector) {
+  <TYPE>_vector_type * copy = <TYPE>_vector_alloc_copy( vector );
+  <TYPE>_vector_sort( copy );
+  <TYPE>_vector_reset( vector );
+  {
+    int i;
+    <TYPE> previous_value = <TYPE>_vector_iget( copy , 0);
+    <TYPE>_vector_append( vector , previous_value);
+
+    for (i=1; i <  copy->size; i++) {
+      <TYPE> value = <TYPE>_vector_iget( copy , i );
+      if (value != previous_value)
+        <TYPE>_vector_append( vector , value);
+      previous_value = value;
+    }
+  }
+  <TYPE>_vector_free( copy );
+}
 
 /**
    Inplace numerical sort of the vector; sorted in increasing order.

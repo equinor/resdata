@@ -5,7 +5,7 @@
 
 typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 
-
+void                 <TYPE>_vector_select_unique(<TYPE>_vector_type * vector);
 <TYPE>_vector_type * <TYPE>_vector_alloc( int init_size , <TYPE> );
 <TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src);
 void                 <TYPE>_vector_imul(<TYPE>_vector_type * vector, int index, <TYPE> factor);

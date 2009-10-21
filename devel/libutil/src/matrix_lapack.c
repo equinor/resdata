@@ -1,7 +1,7 @@
 #include <matrix.h>
 #include <matrix_lapack.h>
 #include <util.h>
-#include <math.h>
+#include <math.h>    
 
 /** 
     The external lapack routines 
@@ -425,7 +425,7 @@ void matrix_dorgqr(matrix_type * A , double * tau, int num_reflectors) {  /* num
 /*****************************************************************/
 /* Factorization */
 
-
+/* Currently only used as 'support' function for the matrix_det function. */
 static void matrix_dgetrf__( matrix_type * A, int * ipiv, int * info) {
   int lda       = matrix_get_column_stride( A );
   int m         = matrix_get_rows( A );
@@ -448,24 +448,32 @@ static void matrix_dgetrf( matrix_type * A) {
 }
 
 
-/* Matrix content will be destroyed. */
+/** 
+   Calculated the determinant of A. The matrix content will be
+   destroyed.
+*/
+
 double matrix_det( matrix_type *A ) {
   matrix_lapack_assert_square( A ); 
   {
-    int       n   = matrix_get_columns( A );
+
     int       dgetrf_info;
     double    det       = 1;
     double    det_scale = 0;
+    int       n         = matrix_get_columns( A );
     int * ipiv          = util_malloc( n * sizeof * ipiv , __func__ );
     matrix_dgetrf__( A , ipiv , &dgetrf_info );
     {
       int i;
       for (i=0; i < n; i++) {
         det *= matrix_iget(A , i , i);
+        if (det == 0) return 0;   /* Holy fuck - a float == comparison ?? */
 
-        if (ipiv[i] != (i + 1)) /* A permutation has taken place. */
+        if (ipiv[i] != (i + 1))   /* A permutation has taken place. */
           det *= -1;
 
+
+        /* Try to avoid overflow/underflow by factoring out the order of magnitude. */
         while (fabs(det) > 10.0) {
           det       /= 10;
           det_scale += 1;
