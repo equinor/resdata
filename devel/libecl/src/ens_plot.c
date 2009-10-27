@@ -656,7 +656,7 @@ void _plot_batch_rft(void * arg, char * inkey){
     arg_pack_free( arg_pack );
   }
   plot_set_window_size(plot , 640 , 480);
-  plot_set_labels(plot , "Pressure" , key , key);
+  plot_set_labels(plot , "Pressure" , "Depth" , key);
   
   
   char ens_name[32];    
