@@ -7,7 +7,7 @@
 #include <util.h>
 
 /**
-   Ts file implements a small thread_pool object based on
+   This file implements a small thread_pool object based on
    pthread_create() function calls. The characetristics of this
    implementation is as follows:
 
@@ -15,12 +15,12 @@
     2. The new jobs are just appended to the queue, the
        dispatch_thread sees them in the queue and dispatches them.
     3. The dispatch thread manages a list of thread_pool_job_slot_type
-       instances.
-   
+       instances - one slot for each actually running job.
 */
 
 
 typedef void * (start_func_ftype) (void *) ;
+
 
 /**
    Internal struct which is used as queue node.
@@ -46,6 +46,8 @@ typedef struct {
 
 
 
+
+
 struct thread_pool_struct {
   thread_pool_arg_type      * queue;              /* The jobs to be executed are appended in this vector. */
   int                         queue_index;        /* The index of the next job to run. */
@@ -60,10 +62,6 @@ struct thread_pool_struct {
   pthread_t                   dispatch_thread;
   pthread_rwlock_t            queue_lock;
 };
-
-
-
-
 
 
 
@@ -92,8 +90,6 @@ static void thread_pool_resize_queue( thread_pool_type * pool, int queue_length 
    the user supplied function. Instead it will start an instance of
    this function, which will do some housekeeping before calling the
    user supplied function.
-
-   
 */
 
 static void * thread_pool_start_job( void * arg ) {
@@ -117,13 +113,12 @@ static void * thread_pool_start_job( void * arg ) {
    slots available.
 */
 
-
 static void * thread_pool_main_loop( void * arg ) {
   thread_pool_type * tp = (thread_pool_type *) arg;
   {
     const int usleep_busy = 1000;  /* 1/100 second */
     const int usleep_init = 1000;
-    int internal_offset   = 0;
+    int internal_offset   = 0;     /* Keep track of the (index of) the last job slot fired off - minor time saving. */
     while (true) {
       if (tp->queue_size > tp->queue_index) {
         /* 
@@ -150,6 +145,10 @@ static void * thread_pool_main_loop( void * arg ) {
             tp_arg->internal_index = internal_index;
             
             job_slot->running = true;
+            /* 
+               Here is the actual pthread_create() call creating an additional running
+               thread.
+            */
             pthread_create( &job_slot->thread , NULL , thread_pool_start_job , tp_arg );
             job_slot->run_count += 1;
             tp->queue_index++;
@@ -166,7 +165,7 @@ static void * thread_pool_main_loop( void * arg ) {
 
       /*****************************************************************/
       /*
-        We exit explicitly from this loop when:
+        We exit explicitly from this loop when both conditions apply:
 
          1. tp->join       == true              :  The calling scope has signaled that it will not submit more jobs. 
          2. tp->queue_size == tp->queue_index   :  This function has submitted all the jobs in the queue.

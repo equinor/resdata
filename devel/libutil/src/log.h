@@ -1,6 +1,10 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -19,4 +23,7 @@ void         log_set_level( log_type * logh , int new_level);
 void         log_close( log_type * logh );
 inline  void log_sync(log_type * logh);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

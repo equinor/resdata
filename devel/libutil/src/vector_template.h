@@ -1,5 +1,8 @@
 #ifndef __<TYPE>_VECTOR_H__
 #define __<TYPE>_VECTOR_H__
+#ifdef __cplusplus 
+extern "C" {
+#endif
 #include <stdio.h>
 #include <buffer.h>
 
@@ -42,4 +45,8 @@ void                 <TYPE>_vector_buffer_fwrite(const <TYPE>_vector_type * vect
 void                 <TYPE>_vector_fread( <TYPE>_vector_type * vector , FILE * stream );
 void                 <TYPE>_vector_fwrite_data( const <TYPE>_vector_type * vector , FILE * stream );
 void                 <TYPE>_vector_fread_data( <TYPE>_vector_type * vector , int size, FILE * stream);
+
+#ifdef __cplusplus 
+}
+#endif
 #endif

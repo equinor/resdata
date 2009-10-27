@@ -1,5 +1,9 @@
 #ifndef __STRINGLIST_H__
 #define __STRINGLIST_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <int_vector.h>
@@ -58,4 +62,8 @@ void              stringlist_buffer_fwrite( const stringlist_type * s , buffer_t
 stringlist_type * stringlist_fread_alloc(FILE * );
 void              stringlist_sort(stringlist_type *);
 void              stringlist_apply_subst(stringlist_type * stringlist , const subst_list_type * subst_list); 
+
+#ifdef __cplusplus
+}
+#endif
 #endif 

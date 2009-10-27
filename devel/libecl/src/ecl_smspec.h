@@ -1,5 +1,6 @@
 #ifndef __ECL_SMSPEC__
 #define __ECL_SMSPEC__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -71,7 +72,7 @@ stringlist_type * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec );
 stringlist_type * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec );
 
 
-#ifdef __cplsplus
+#ifdef __cplusplus
 }
 #endif
 #endif

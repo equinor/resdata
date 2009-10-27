@@ -20,7 +20,7 @@ static void check_point( const ecl_grid_type * ecl_grid , int global_index ) {
   int i,j,k;
   double x,y,z;
 
-  ecl_grid_get_pos1( ecl_grid , global_index , &x , &y , &z );
+  ecl_grid_get_xyz1( ecl_grid , global_index , &x , &y , &z );
   ecl_grid_get_ijk1( ecl_grid , global_index , &i , &j , &k );
   printf("%5d -> %d,%d,%d = %6.2f,%6.2f,%6.2f \n",global_index , i,j,k,x,y,z);
   printf("Contains: %d \n", ecl_grid_cell_contains_xyz1( ecl_grid , global_index + 000, x , y , z));

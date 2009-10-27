@@ -16,7 +16,7 @@
 #include <double_vector.h>
 #include <matrix.h>
 #include <matrix_lapack.h>
-#include <matrix_blas.h>
+#include <matrix_blas.h>>
 #include <parser.h>
 #include <block_fs.h>
 #include <thread_pool.h>
@@ -28,7 +28,18 @@
 
 
 int main(int argc , char ** argv) {
-  
+  int_vector_type * iv = int_vector_alloc(0,0);
+  int_vector_append(iv , 10);
+  int_vector_append(iv , 0);
+  int_vector_append(iv , 2);
+  int_vector_append(iv , 10);
+  int_vector_append(iv , 0);
+  int_vector_append(iv , 0);
+  int_vector_append(iv , 2);
+  int_vector_append(iv , 10);
+  int_vector_select_unique( iv );
+  int_vector_fprintf( iv , stdout , NULL , "%3d");
+  int_vector_free( iv );
 }
 
 

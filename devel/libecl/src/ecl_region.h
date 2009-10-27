@@ -24,8 +24,13 @@ void              ecl_region_select_in_interval( ecl_region_type * region , cons
 void              ecl_region_deselect_in_interval( ecl_region_type * region , const ecl_kw_type * ecl_kw, float min_value , float max_value);
 void              ecl_region_select_equal( ecl_region_type * region , const ecl_kw_type * ecl_kw, int value);
 void              ecl_region_deselect_equal( ecl_region_type * region , const ecl_kw_type * ecl_kw, int value);
+
 void              ecl_region_select_from_box( ecl_region_type * region , const ecl_box_type * ecl_box );
 void              ecl_region_deselect_from_box( ecl_region_type * region , const ecl_box_type * ecl_box );
+
+void              ecl_region_select_from_ijkbox( ecl_region_type * region , int i1 , int i2 , int j1 , int j2 , int k1 , int k2);
+void              ecl_region_deselect_from_ijkbox( ecl_region_type * region , int i1 , int i2 , int j1 , int j2 , int k1 , int k2);
+
 void              ecl_region_select_i1i2( ecl_region_type * region , int i1 , int i2);
 void              ecl_region_deselect_i1i2( ecl_region_type * region , int i1 , int i2);
 void              ecl_region_select_j1j2( ecl_region_type * region , int j1 , int j2);

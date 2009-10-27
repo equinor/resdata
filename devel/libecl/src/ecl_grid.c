@@ -225,6 +225,9 @@
 
 
 /*
+  About tetraheder decomposition
+  ------------------------------
+
   The table tetraheder_permutations describe how the cells can be
   divided into twelve tetrahedrons. The dimensions in the the table
   are as follows:
@@ -302,14 +305,18 @@ static const int tetrahedron_permutations[2][12][3] = {{{0 , 2 , 6},
 typedef struct ecl_cell_struct  ecl_cell_type;
 
 
+
 struct ecl_cell_struct {
   bool 		         active;
   int  		         active_index;
   point_type            *center;
   point_type            *corner_list[8];
-  const ecl_grid_type   *lgr;            /* If this cell is part of an LGR; this will point to a grid instance for that LGR; NULL if not part of LGR. */
-  int                    host_cell;      /* The global index of the host cell for an LGR cell, set to -1 for normal cells. */
+  const ecl_grid_type   *lgr;                /* If this cell is part of an LGR; this will point to a grid instance for that LGR; NULL if not part of LGR. */
+  int                    host_cell;          /* The global index of the host cell for an LGR cell, set to -1 for normal cells. */
+  bool                   tainted_geometry;   /* Lazy fucking stupid reservoir engineers make invalid grid cells - for kicks?? 
+                                                Must keep those cells out of real-world calculations with some hysteric heuristics.*/
 };  
+
 
 
 
@@ -334,8 +341,10 @@ struct ecl_grid_struct {
     that these fields will be NULL for LGR grids, i.e. grids with
     grid_nr > 0. 
   */
-  vector_type         * LGR_list;      /* An vector of ecl_grid instances for LGR's - the index corresponds to the grid_nr. */
+  vector_type         * LGR_list;      /* A vector of ecl_grid instances for LGR's - the index corresponds to the grid_nr. */
   hash_type           * LGR_hash;      /* A hash of pointers to ecl_grid instances - for name based lookup of LGR. */
+  int                   parent_box[6]; /* Integers i1,i2, j1,j2, k1,k2 of the parent grid region containing this LGR. The indices are INCLUSIVE - zero offset */
+                                       /* Not used yet .. */ 
 
   double                rotation;
   double                origo[2];
@@ -363,6 +372,35 @@ static void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2, bool
 
 
 
+/**
+   The problem is that some EXTREMELY FUCKING STUPID reservoir
+   engineers purpousely have made grids with invalid cells. Typically
+   the cells accomodating numerical AQUIFERS are located at an utm
+   position (0,0).
+
+   Cells which have some pillars located in (0,0) and some cells
+   located among the rest of the grid become completely warped - with
+   insane volumes, parts of the reservoir volume doubly covered, and
+   so on.
+   
+   To keep these cells out of the real-world (i.e. involving utm
+   coordinates) computations they are marked as 'tainted' in this
+   function. The tainting procedure is completely heuristic, and
+   probably wrong, but it at least seems to give sensible results for
+   the TROLL gas model.
+*/
+
+
+static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
+  int c;
+  for (c = 0; c < 8; c++) {
+    const point_type *p = cell->corner_list[c];
+    if ((p->x == 0) && (p->y == 0))
+      cell->tainted_geometry = true;
+  }
+}
+
+
 /*****************************************************************/
 
 
@@ -380,8 +418,9 @@ static ecl_cell_type * ecl_cell_alloc(void) {
   cell->center         = point_alloc_empty();
   for (int i=0; i < 8; i++)
     cell->corner_list[i] = point_alloc_empty();
-  
-  cell->host_cell      = -1;
+
+  cell->tainted_geometry = false;
+  cell->host_cell        = -1;
   return cell;
 }
 
@@ -390,7 +429,7 @@ static void ecl_cell_install_lgr( ecl_cell_type * cell , const ecl_grid_type * l
 }
 
 
-static void ecl_cell_fprintf( ecl_cell_type * cell , FILE * stream ) {
+static void ecl_cell_fprintf( const ecl_cell_type * cell , FILE * stream ) {
   int i;
   for (i=0; i < 7; i++) {
     printf("\nCorner[%d] => ",i);
@@ -433,37 +472,184 @@ static double ecl_cell_get_volume( const ecl_cell_type * cell ) {
 }
 
 
+
+
+static double triangle_area(double x1 , double y1 , double x2 , double y2 , double x3 ,double y3) {
+  return fabs(x1*y2 + x2*y3 + x3*y1 - x1*y3 - x3*y2 - x2*y1)*0.5;
+}
+
+
+static bool triangle_contains(const point_type *p0 , const point_type * p1 , const point_type *p2 , double x , double y) {
+  double epsilon = 1e-10;
+
+  double VT = triangle_area(p0->x , p0->y,
+                            p1->x , p1->y,
+                            p2->x , p2->y);
+
+  if (VT < epsilon)  /* Zero size cells do not contain anything. */
+    return false;
+  {
+    double V1 = triangle_area(p0->x , p0->y,
+                              p1->x , p1->y,
+                              x     , y); 
+    
+    double V2 = triangle_area(p0->x , p0->y,
+                              x     , y,
+                              p2->x , p2->y);
+    
+    double V3 = triangle_area(x     , y,
+                              p1->x , p1->y,
+                              p2->x , p2->y);
+    
+    
+    if (fabs( VT - (V1 + V2 + V3 )) < epsilon)
+      return true;
+    else
+      return false;
+  }
+}
+
+
+
+
+/* 
+   If the layer defined by the cell corners 0-1-2-3 (lower == true) or
+   4-5-6-7 (lower == false) contain the point (x,y) the function will
+   return true - otehrwise false.
+   
+   The function works by dividing the cell face into two triangles,
+   which are checked one at a time with the function
+   triangle_contains().
+*/
+
+
+static bool ecl_cell_layer_contains_xy( const ecl_cell_type * cell , bool lower_layer , double x , double y) {
+  if (cell->tainted_geometry)
+    return false;
+  {
+    point_type * p0,*p1,*p2,*p3;
+    {
+      int corner_offset;
+      if (lower_layer) 
+        corner_offset = 0;
+      else
+        corner_offset = 4;
+      
+      p0 = cell->corner_list[corner_offset + 0];
+      p1 = cell->corner_list[corner_offset + 1];
+      p2 = cell->corner_list[corner_offset + 2];
+      p3 = cell->corner_list[corner_offset + 3];
+    }
+    
+    if (triangle_contains(p0,p1,p2,x,y))
+      return true;
+    else
+      return triangle_contains(p1,p2,p3,x,y);
+  }
+}
+
 /*
+Deeper layer: (larger (negative) z values).
+------------
 
   6---7
   |   |
   4---5
 
 
-
-Lower layer:
-
   2---3
   |   |
   0---1
 
+
+
 */
+
+//static double min4(double x1 , double x2 , double x3 , double x4) {
+//  return util_double_min( util_double_min(x1 , x2) , util_double_min(x3 , x4 ));
+//}
+//
+//
+//static double max4(double x1 , double x2 , double x3 , double x4) {
+//  return util_double_max( util_double_max(x1 , x2) , util_double_max(x3 , x4 ));
+//}
+  
 
 
 static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_type * p) {
-  const int method   = 0;
-  int tetrahedron_nr = 0;
-  tetrahedron_type tet;
+  /**
+     This must use mapaxes (or max8) to be correct.
+  */
+  
+  //const point_type * p0 = cell->corner_list[0];
+  //const point_type * p1 = cell->corner_list[1];
+  //const point_type * p2 = cell->corner_list[2];
+  //const point_type * p3 = cell->corner_list[3];
+  //const point_type * p4 = cell->corner_list[4];
+  //const point_type * p5 = cell->corner_list[5];
+  //const point_type * p6 = cell->corner_list[6];
+  //const point_type * p7 = cell->corner_list[7];
+  //
+  //if (use_rectangle)
+  //{
+  //  double x1 = min4(p0->x , p2->x , p4->x , p6->x);
+  //  double x2 = max4(p1->x , p3->x , p5->x , p7->x);
+  //  
+  //  double y1 = min4(p0->y , p1->y , p4->y , p5->y);
+  //  double y2 = max4(p2->y , p3->y , p6->y , p7->y);
+  //  
+  //  double z1 = min4(p0->z , p1->z , p2->z , p3->z);
+  //  double z2 = max4(p4->z , p5->z , p6->z , p7->z);
+  //  
+  //  
+  //  /* Is it outside the large enclosing box?? */
+  //  if ((p->x < x1) || (p->x > x2) || 
+  //      (p->y < y1) || (p->y > y2) || 
+  //      (p->z < z1) || (p->z > z2)) {
+  //    return false;
+  //  }
+  //  
+  //
+  //  x1 = max4(p0->x , p2->x , p4->x , p6->x);
+  //  x2 = min4(p1->x , p3->x , p5->x , p7->x);
+  //  
+  //  y1 = max4(p0->y , p1->y , p4->y , p5->y);
+  //  y2 = min4(p2->y , p3->y , p6->y , p7->y);
+  //  
+  //  z1 = max4(p0->z , p1->z , p2->z , p3->z);
+  //  z2 = min4(p4->z , p5->z , p6->z , p7->z);
+  //
+  //  
+  //  /* Is it inside the inscribed rectangle?? */
+  //  if ((p->x > x1) && (p->x < x2) &&  
+  //      (p->y > y1) && (p->y < y2) &&  
+  //      (p->z > z1) && (p->z < z2))
+  //    return true;
+  //}
 
-  if (ecl_cell_get_volume( cell ) > 0) {
-    do {
-      ecl_cell_init_tetrahedron( cell , &tet , method , tetrahedron_nr );
-      if (tetrahedron_contains( &tet , p ))
-        return true;
-      tetrahedron_nr++;
-    } while (tetrahedron_nr < 12);
-  } 
-  return false;
+
+  /* 
+     OK -the point is in the volume inside the large rectangle, and
+     outside the small rectangle. Then we must use the full
+     tetrahedron decomposition to determine.
+  */
+  if (cell->tainted_geometry) 
+    return false;
+  {
+    const int method   = 0;
+    int tetrahedron_nr = 0;
+    tetrahedron_type tet;
+    
+    if (ecl_cell_get_volume( cell ) > 0) {
+      do {
+        ecl_cell_init_tetrahedron( cell , &tet , method , tetrahedron_nr );
+        if (tetrahedron_contains( &tet , p ))
+          return true;
+        tetrahedron_nr++;
+      } while (tetrahedron_nr < 12);
+    } 
+    return false;
+  }
 }
 
 
@@ -506,6 +692,21 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
   ecl_grid->index_map     = index_map;
 }
 
+
+
+/**
+   This function uses heuristics (ahhh - I hate it) in an attempt to
+   mark cells with fucked geometry - see further comments in the
+   function ecl_cell_taint_cell() which actually does it.
+*/
+
+static void ecl_grid_taint_cells( ecl_grid_type * ecl_grid ) {
+  int index;
+  for (index = 0; index < ecl_grid->size; index++) {
+    ecl_cell_type * cell = ecl_grid->cells[index];
+    ecl_cell_taint_cell( cell );
+  }
+}
 
 
 static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_nr) {
@@ -619,7 +820,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
       break;
     case(7):
       cell->active    = (coords[4] == 1) ? true : false;
-      cell->host_cell = coords[5];
+      cell->host_cell = coords[5] - 1;
       break;
     }
     
@@ -732,7 +933,7 @@ static void ecl_grid_install_lgr_EGRID(ecl_grid_type * host_grid , ecl_grid_type
       ecl_cell_type * host_cell = host_grid->cells[ hostnum[ global_lgr_index ] ];
       ecl_cell_install_lgr( host_cell , lgr_grid );
 
-      lgr_cell->host_cell = hostnum[ global_lgr_index ];
+      lgr_cell->host_cell = hostnum[ global_lgr_index ] - 1;  /* HOSTNUM has offset 1 (I think ... ) */
     }
   }
   hash_insert_ref( host_grid->children , lgr_grid->name , lgr_grid);
@@ -853,6 +1054,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL__(int nx , int ny , int nz , const 
   ecl_grid_set_center(ecl_grid);
   ecl_grid_set_active_index(ecl_grid);
   ecl_grid_alloc_index_map(ecl_grid);
+  ecl_grid_taint_cells( ecl_grid );
   return ecl_grid;
 }
 
@@ -967,6 +1169,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
   (*cell_offset) += nx*ny*nz;
   ecl_grid_alloc_index_map(grid);
   if (grid_nr > 0) ecl_grid_set_lgr_name_GRID(grid , ecl_file , grid_nr);
+  ecl_grid_taint_cells( grid );
   return grid;
 }
 
@@ -1064,40 +1267,132 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
 
 /*****************************************************************/
 
-bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index , double x , double y , double z ) {
+bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index , double x , double y , double z) {
   point_type p;
   point_set( &p , x , y , z);
   
-  return ecl_cell_contains_point( ecl_grid->cells[global_index] , &p );
+  return ecl_cell_contains_point( ecl_grid->cells[global_index] , &p);
 }
 
-/** 
-    Here comes some functions used when blocking. These are NOT used
-    by default. Observe that the functions used to look up an index
-    based on xy and xyz are NOT well tested.
 
-    Will return -1 if no cell is found.
+bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i , int j , int k, double x , double y , double z) {
+  int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k );
+  return ecl_grid_cell_contains_xyz1( ecl_grid , global_index , x ,y  , z);
+}
+
+
+
+/**
+   This function returns the global index for the cell (in layer 'k')
+   which contains the point x,y. Observe that if you are looking for
+   (i,j) you must call the function ecl_grid_get_ijk1() on the return value.
+*/
+
+int ecl_grid_get_global_index_from_xy( const ecl_grid_type * ecl_grid , int k , bool lower_layer , double x , double y) {
+
+  int i,j;
+  for (j=0; j < ecl_grid->ny; j++)
+    for (i=0; i < ecl_grid->nx; i++) {
+      int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k );
+      if (ecl_cell_layer_contains_xy( ecl_grid->cells[ global_index ] , lower_layer , x , y))
+        return global_index;  
+    }
+  return -1; /* Did not find x,y */
+}
+
+
+
+int ecl_grid_get_global_index_from_xy_top( const ecl_grid_type * ecl_grid , double x , double y) {
+  return ecl_grid_get_global_index_from_xy( ecl_grid , ecl_grid->nz - 1 , false , x , y );
+}
+
+int ecl_grid_get_global_index_from_xy_bottom( const ecl_grid_type * ecl_grid , double x , double y) {
+  return ecl_grid_get_global_index_from_xy( ecl_grid , 0 , true , x , y );
+}
+
+
+/**
+   This function will find the global index of the cell containing the
+   world coordinates (x,y,z), if no cell can be found the function
+   will return -1.
+
+   The function is basically based on scanning through the cells in
+   natural (i fastest) order and querying whether the cell[i,j,k]
+   contains the (x,y,z) point; not very elegant :-(
+
+   The last argument - 'start_index' - can be used to speed things up
+   a bit if you have reasonable guess of where the the (x,y,z) is
+   located. The start_index value is used as this:
+
+
+     start_index == 0: I do not have a clue, start from the beginning
+        and scan through the grid linearly.
+
+
+     start_index != 0: 
+        1. Check the cell 'start_index'.
+        2. Check the neighbours (i +/- 1, j +/- 1, k +/- 1 ).
+        3. Give up and do a linear search starting from start_index.
+
 */
 
 
-static int ecl_grid_get_global_index_from_xyz__(const ecl_grid_type * grid , double x , double y , double z , int last_index) {
-  int global_index = -1;
+
+int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z , int start_index) {
+  int global_index;
   point_type p;
   point_set( &p , x , y , z);
+
+  if (start_index >= 0) {
+    /* Try start index */
+    if (ecl_cell_contains_point( grid->cells[start_index] , &p ))
+      return start_index;
+    else {
+      /* Try neighbours */
+      int i,j,k;
+      int i1,i2,j1,j2,k1,k2;
+      int nx,ny,nz;
+      ecl_grid_get_dims( grid , &nx , &ny , &nz , NULL);
+      ecl_grid_get_ijk1( grid , start_index , &i , &j , &k);
+
+      i1 = util_int_max( 0 , i - 1 );
+      j1 = util_int_max( 0 , j - 1 );
+      k1 = util_int_max( 0 , k - 1 );
+      
+      i2 = util_int_min( nx , i + 1 );
+      j2 = util_int_min( ny , j + 1 );
+      k2 = util_int_min( nz , k + 1 );
+
+      for (k=k1; k < k2; k++)
+        for (j=j1; j < j2; j++)
+          for (i=i1; i < i2; i++) {
+            global_index = ecl_grid_get_global_index3( grid , i , j , k);
+            if (ecl_cell_contains_point( grid->cells[ global_index ] , &p ))
+              return global_index;
+          }
+    }
+  }
+
+  
+  
+  /* 
+     OK - the attempted shortcuts did not pay off. We start on the
+     full linear search starting from start_index.
+  */
+  
   {
     int index    = 0;
     bool cont    = true;
     global_index = -1;
 
     do {
-      int current_index = ((index + last_index) % grid->size);
+      int current_index = ((index + start_index) % grid->size);
       bool cell_contains;
       cell_contains = ecl_cell_contains_point( grid->cells[current_index] , &p );
       
       if (cell_contains) {
 	global_index = current_index;
 	cont = false;
-        printf("Volume: %g \n", ecl_cell_get_volume( grid->cells[current_index] ));
       }
       index++;
       if (index == grid->size)
@@ -1111,17 +1406,10 @@ static int ecl_grid_get_global_index_from_xyz__(const ecl_grid_type * grid , dou
 
 
 
-int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z) {
-  int start_index = ecl_grid_get_global_index3( grid , 10 , 10 , 10 );
-  return ecl_grid_get_global_index_from_xyz__( grid , x , y , z , start_index );
-}
-
-
-
 static int ecl_grid_get_global_index_from_xy__(const ecl_grid_type * grid , double x , double y , int last_index) {
   util_exit("%s: not implemented ... \n");
   //int global_index;
-  //ecl_point_type p;
+  //ecl_point_type p;ordinates (
   //p.x = x;
   //p.y = y;
   //p.z = -1;
@@ -1181,7 +1469,7 @@ bool ecl_grid_block_value_3d(ecl_grid_type * grid, double x , double y , double 
   if (grid->block_dim != 3)
     util_abort("%s: Wrong blocking dimension \n",__func__);
   {
-    int global_index = ecl_grid_get_global_index_from_xyz__( grid , x , y , z , grid->last_block_index);
+    int global_index = ecl_grid_get_global_index_from_xyz( grid , x , y , z , grid->last_block_index);
     if (global_index >= 0) {
       double_vector_append( grid->values[global_index] , value);
       grid->last_block_index = global_index;
@@ -1325,6 +1613,15 @@ int ecl_grid_get_ny( const ecl_grid_type * grid ) {
   return grid->ny;
 }
 
+int ecl_grid_get_parent_cell1( const ecl_grid_type * grid , int global_index ) {
+  return grid->cells[global_index]->host_cell;
+}
+
+
+int ecl_grid_get_parent_cell3( const ecl_grid_type * grid , int i , int j , int k) {
+  int global_index = ecl_grid_get_global_index__(grid , i , j , k);
+  return ecl_grid_get_parent_cell1( grid , global_index );
+}
 
 
 /*****************************************************************/
@@ -1412,7 +1709,7 @@ void ecl_grid_get_ijk1A(const ecl_grid_type *ecl_grid , int active_index , int *
   ijk are C-based zero offset.
 */
 
-void ecl_grid_get_pos1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos) {
+void ecl_grid_get_xyz1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos) {
   const ecl_cell_type * cell = grid->cells[global_index];
   *xpos = cell->center->x;
   *ypos = cell->center->y;
@@ -1421,17 +1718,56 @@ void ecl_grid_get_pos1(const ecl_grid_type * grid , int global_index , double *x
 
 
 
-void ecl_grid_get_pos3(const ecl_grid_type * grid , int i, int j , int k, double *xpos , double *ypos , double *zpos) {
+void ecl_grid_get_xyz3(const ecl_grid_type * grid , int i, int j , int k, double *xpos , double *ypos , double *zpos) {
   const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
-  ecl_grid_get_pos1( grid , global_index , xpos , ypos , zpos);
+  ecl_grid_get_xyz1( grid , global_index , xpos , ypos , zpos);
 }
 
 
 
-void ecl_grid_get_pos1A(const ecl_grid_type * grid , int active_index , double *xpos , double *ypos , double *zpos) {
+
+/**
+   This function will return (by reference) the x,y,z values of corner
+   nr 'corner_nr' in cell 'global_index'. See the documentation of
+   tetraheder decomposition for the numbering of the corners.
+*/
+
+
+void ecl_grid_get_corner_xyz1(const ecl_grid_type * grid , int global_index , int corner_nr , double * xpos , double * ypos , double * zpos ) {
+  if ((corner_nr >= 0) &&  (corner_nr <= 7)) {
+    const ecl_cell_type * cell  = grid->cells[ global_index ];
+    const point_type    * point = cell->corner_list[ corner_nr ];
+    *xpos = point->x;
+    *ypos = point->y;
+    *zpos = point->z;
+  }
+}
+
+
+void ecl_grid_get_corner_xyz3(const ecl_grid_type * grid , int i , int j , int k, int corner_nr , double * xpos , double * ypos , double * zpos ) {
+  const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
+  ecl_grid_get_corner_xyz1( grid , global_index , corner_nr , xpos , ypos , zpos);
+}
+
+
+
+void ecl_grid_get_xyz1A(const ecl_grid_type * grid , int active_index , double *xpos , double *ypos , double *zpos) {
   const int global_index = ecl_grid_get_global_index1A( grid , active_index );
-  ecl_grid_get_pos1( grid , global_index , xpos , ypos , zpos );
+  ecl_grid_get_xyz1( grid , global_index , xpos , ypos , zpos );
 }
+
+
+double ecl_grid_get_cdepth1(const ecl_grid_type * grid , int global_index) {
+  const ecl_cell_type * cell = grid->cells[global_index];
+  return cell->center->z;
+}
+
+
+double ecl_grid_get_cdepth3(const ecl_grid_type * grid , int i, int j , int k) {
+  const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
+  return ecl_grid_get_cdepth1( grid , global_index );
+}
+
 
 
 
@@ -1470,7 +1806,7 @@ double ecl_grid_get_top1A(const ecl_grid_type * grid , int active_index) {
 double ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = grid->cells[global_index];
   double depth = 0;
-  for (int ij = 4; ij < 8; ij++) 
+  for (int ij = 0; ij < 4; ij++) 
     depth += cell->corner_list[ij]->z;
   
   return depth * 0.25;
@@ -1490,6 +1826,21 @@ double ecl_grid_get_bottom1A(const ecl_grid_type * grid , int active_index) {
 }
 
 
+  
+double ecl_grid_get_cell_thickness1( const ecl_grid_type * grid , int global_index ) {
+  const ecl_cell_type * cell = grid->cells[global_index];
+  double thickness = 0;
+  for (int ij = 0; ij < 4; ij++) 
+    thickness += (cell->corner_list[ij + 4]->z - cell->corner_list[ij]->z);
+  
+  return thickness * 0.25;
+}
+
+
+double ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j , int k) {
+  const int global_index = ecl_grid_get_global_index3(grid , i,j,k);
+  return ecl_grid_get_cell_thickness1( grid , global_index );
+}
 
 
 /*****************************************************************/
@@ -1789,45 +2140,21 @@ int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type
       int_vector_reset( index_list );
       const int * region_ptr = ecl_kw_iget_ptr( region_kw , 0);
 
-      /* Layer five hack for Norne: */
       {
-        int nx = ecl_grid_get_nx(ecl_grid);
-        int ny = ecl_grid_get_ny(ecl_grid);
-        int k  = 4; /* == 5 with zero offset*/
-        for (int j= 0; j < ny; j++) {
-          for (int i = 0; i < nx; i++) {
-            int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k );
-
-            if (region_ptr[global_index] == region_value) {
-              if (!active_only || (ecl_grid->index_map[global_index] >= 0)) {
-                /* Okay - this index should be included */
-                if (export_active_index)
-                  int_vector_iset(index_list , cells_found , ecl_grid->index_map[global_index]);
-                else
-                  int_vector_iset(index_list , cells_found , global_index);
-                cells_found++;
-              }
+        int global_index;
+        for (global_index = 0; global_index < ecl_grid->size; global_index++) {
+          if (region_ptr[global_index] == region_value) {
+             if (!active_only || (ecl_grid->index_map[global_index] >= 0)) {
+              /* Okay - this index should be included */
+              if (export_active_index)
+                int_vector_iset(index_list , cells_found , ecl_grid->index_map[global_index]);
+              else
+                int_vector_iset(index_list , cells_found , global_index);
+              cells_found++;
             }
-          }
+           }
         }
       }
-      
-      /* Proper global code: */
-      //{
-      //  int global_index;
-      //  for (global_index = 0; global_index < ecl_grid->size; global_index++) {
-      //     if (region_ptr[global_index] == region_value) {
-      //      if (!active_only || (ecl_grid->index_map[global_index] >= 0)) {
-      //        /* Okay - this index should be included */
-      //        if (export_active_index)
-      //          int_vector_iset(index_list , cells_found , ecl_grid->index_map[global_index]);
-      //        else
-      //          int_vector_iset(index_list , cells_found , global_index);
-      //        cells_found++;
-      //      }
-      //    }
-      //  }
-      //}
     }  else
       util_abort("%s: type mismatch - regions_kw must be of type integer \n",__func__);
 

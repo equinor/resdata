@@ -22,7 +22,7 @@
    When allocating an instance you determine whether all cells should
    be initially selected, or not-selected. The various select
    functions can (of course ...) be chained together. All functions
-   exist in a xxx_select() and an opposite xxx_delect() version.
+   exist in a xxx_select() and an opposite xxx_deselect() version.
 
    When you are finished with selecting you can query the ecl_region
    instance for the number of active cells, and get a (const int *) to
@@ -296,7 +296,9 @@ void ecl_region_deselect_in_interval( ecl_region_type * region , const ecl_kw_ty
 
 /**
    Will select all the cells in the box. Remember that the box is
-   defined as an inclusive geometry.
+   defined as an inclusive geometry. Alternatively the functions
+   xxx_ijkbox() can be used, these functions take i1,i2,j1,j2,k1,k2 as
+   input and create a temporary box object.
 */
 
 static void ecl_region_select_from_box__( ecl_region_type * region , const ecl_box_type * ecl_box , bool select) {
@@ -317,6 +319,32 @@ void ecl_region_select_from_box( ecl_region_type * region , const ecl_box_type *
 
 void ecl_region_deselect_from_box( ecl_region_type * region , const ecl_box_type * ecl_box ) {
   ecl_region_select_from_box__( region , ecl_box , false );
+}
+/*****************************************************************/
+
+/**
+   Observe that:
+   
+     1. All the indices are inclusive.
+     2. All the indices have zero offset.
+
+   Only a thin wrapper around the ecl_region_select_from_box() function.  
+*/
+
+static void ecl_region_select_from_ijkbox__( ecl_region_type * region , int i1 , int i2 , int j1 , int j2 , int k1 , int k2 , bool select) {
+  ecl_box_type * tmp_box = ecl_box_alloc( region->parent_grid , i1 , i2 , j1 , j2 , k1 , k2);
+  ecl_region_select_from_box__( region , tmp_box , select );
+  ecl_box_free( tmp_box );
+}
+
+
+void ecl_region_select_from_ijkbox( ecl_region_type * region , int i1 , int i2 , int j1 , int j2 , int k1 , int k2) {
+  ecl_region_select_from_ijkbox__( region , i1 , i2 , j1 , j2 , k1 , k2 , true );
+}
+
+
+void ecl_region_deselect_from_ijkbox( ecl_region_type * region , int i1 , int i2 , int j1 , int j2 , int k1 , int k2) {
+  ecl_region_select_from_ijkbox__( region , i1 , i2 , j1 , j2 , k1 , k2 , false );
 }
 
 

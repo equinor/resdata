@@ -1,8 +1,11 @@
 #ifndef __ECL_SUM_H__
 #define __ECL_SUM_H__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
 #include <stringlist.h>

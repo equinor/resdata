@@ -322,6 +322,8 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 }
 
 
+
+
 /**
    This function will look up the INTEHEAD keyword in a ecl_file_type
    instance, and calculate simulation date from this instance.

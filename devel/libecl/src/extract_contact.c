@@ -60,14 +60,14 @@ void extract_contact(const ecl_kw_type   * swat1    ,
 	  dk = sw2[k] - sw1[k];
 	  if (dk > DETECTION_LIMIT) {
 	    double zk,zk1,dk1;
-	    ecl_grid_get_pos3(ecl_grid , i , j , k , &xpos , &ypos , &zk);
+	    ecl_grid_get_xyz3(ecl_grid , i , j , k , &xpos , &ypos , &zk);
 	    owc = zk;
 
 	    if (k > 0) {
 	      /* Try a basic linear interpolation. */
 	      int prev_active_index = ecl_grid_get_active_index3( ecl_grid , i , j , k - 1);
 	      if (prev_active_index >= 0) {
-		ecl_grid_get_pos3(ecl_grid , i , j , k - 1 , &xpos , &ypos , &zk1);
+		ecl_grid_get_xyz3(ecl_grid , i , j , k - 1 , &xpos , &ypos , &zk1);
 		dk1 = sw2[k - 1] - sw1[k -1];
 		
 		owc = (0.20 - dk) * (zk - zk1)/(dk - dk1) + zk;

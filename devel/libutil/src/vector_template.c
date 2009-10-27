@@ -354,7 +354,7 @@ static int <TYPE>_vector_cmp(const void *_a, const void *_b) {
    contains every numerical value __once__. On exit the values will be
    sorted in increasing order.
 
-   vector = <0 , 1 , 7 , 1 , 0 , 7 , 1> => <0,1,7>
+   vector = <7 , 0 , 1 , 7 , 1 , 0 , 7 , 1> => <0,1,7>
 */
 
 void <TYPE>_vector_select_unique(<TYPE>_vector_type * vector) {
@@ -470,6 +470,7 @@ void <TYPE>_vector_fprintf(const <TYPE>_vector_type * vector , FILE * stream , c
 
   fprintf(stream , "]\n");
 }
+
 
 /*
   This function does not consider the default value; it does a

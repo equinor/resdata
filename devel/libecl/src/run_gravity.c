@@ -13,17 +13,29 @@
 #define OIL   4
 
 
+typedef struct {
+  double utm_x; 
+  double utm_y; 
+  double depth; 
+  double grav_diff;
+  char * name;
+} grav_station_type;
+
+
+
 /*****************************************************************/
 
 
 
-void truncate_saturation(float * value) {
+
+
+static void truncate_saturation(float * value) {
   util_apply_float_limits( value , 0.0 , 1.0);
 }
 
 
 
-bool has_phase( int phase_sum , int phase) {
+static bool has_phase( int phase_sum , int phase) {
   if ((phase_sum & phase) == 0)
     return false;
   else
@@ -31,7 +43,7 @@ bool has_phase( int phase_sum , int phase) {
 }
 
 
-const float * safe_get_float_ptr( const ecl_kw_type * ecl_kw , const float * alternative) {
+static const float * safe_get_float_ptr( const ecl_kw_type * ecl_kw , const float * alternative) {
   if (ecl_kw != NULL)
     return ecl_kw_get_float_ptr(ecl_kw);
   else
@@ -61,17 +73,7 @@ void print_usage(int line) {
 
 
 
-typedef struct {
-  double utm_x; 
-  double utm_y; 
-  double depth; 
-  double grav_diff;
-  char * name;
-} grav_station_type;
-
-
-
-void grav_station_free__( void * arg) {
+static void grav_station_free__( void * arg) {
   grav_station_type * grav = ( grav_station_type * ) arg;
   free( grav->name );
   free( grav );
@@ -79,7 +81,7 @@ void grav_station_free__( void * arg) {
 
 
 
-grav_station_type * grav_station_alloc(const char * name , double x, double y, double d){
+static grav_station_type * grav_station_alloc(const char * name , double x, double y, double d){
   grav_station_type * s = util_malloc(sizeof*s, __func__);
   s->name  = util_alloc_string_copy( name );
   s->utm_x = x;
@@ -89,11 +91,6 @@ grav_station_type * grav_station_alloc(const char * name , double x, double y, d
   return s;
 }
 
-
-
-void grav_diff_update(grav_station_type * g_s, double inc){
-  g_s->grav_diff = g_s->grav_diff + inc;
-}
 
 
 
@@ -108,7 +105,7 @@ void grav_diff_update(grav_station_type * g_s, double inc){
        name is an arbitrary string - without spaces.
 */  
 
-void load_stations(vector_type * grav_stations , const char * filename) {
+static void load_stations(vector_type * grav_stations , const char * filename) {
   printf("Loading from file:%s \n",filename);
   {
     FILE * stream = util_fopen(filename , "r");
@@ -319,12 +316,32 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
 
 
 /*
-  This functions should be called AFTER we have verified that all the
-  required input has indeed been provided.
+  This function calculates the gravimetric response (local change in
+  g) at location (utm_x , utm_y , depth) - i.e. the function is
+  written as stand-alone, and is independent of the (somewhat
+  arbitrary) datatype grav_station_type.
+
+  For code cleanliness the code is written in a way where this
+  function is called for every position we are interested in,
+  performance-wise it would be smarter to loop over the interesting
+  locations as the inner loop.
+  
+  This function does NOT check whether the restart_file / init_file
+  contains the necessary keywords - and will fail HARD if a required
+  keyword is not present. That the the input is well-formed should be
+  checked PRIOR to calling this function.
 */
 
-static void gravity_doit( const ecl_grid_type * ecl_grid , const ecl_file_type * init_file , const ecl_file_type * restart_file1 , const ecl_file_type * restart_file2 , vector_type * stations, int model_phases, int file_phases) {
-  ecl_kw_type * init_porv_kw = NULL;
+static double gravity_response(const ecl_grid_type * ecl_grid      , 
+                               const ecl_file_type * init_file     , 
+                               const ecl_file_type * restart_file1 , 
+                               const ecl_file_type * restart_file2 ,
+                               double utm_x , 
+                               double utm_y , 
+                               double tvd   , 
+                               int model_phases, 
+                               int file_phases) {
+  
   ecl_kw_type * rporv1_kw   = NULL;  
   ecl_kw_type * rporv2_kw   = NULL;
   ecl_kw_type * oil_den1_kw = NULL;  
@@ -338,11 +355,11 @@ static void gravity_doit( const ecl_grid_type * ecl_grid , const ecl_file_type *
   ecl_kw_type * swat1_kw    = NULL;
   ecl_kw_type * swat2_kw    = NULL;
   ecl_kw_type * aquifern_kw = NULL ;
-  
+  double local_deltag = 0;
+
   /* Extracting the pore volumes */
   rporv1_kw = ecl_file_iget_named_kw( restart_file1 , "RPORV" , 0);      
   rporv2_kw = ecl_file_iget_named_kw( restart_file2 , "RPORV" , 0);      
-  init_porv_kw  = ecl_file_iget_named_kw( init_file , "PORV" , 0);
   
   
   /** Extracting the densities */
@@ -390,6 +407,11 @@ static void gravity_doit( const ecl_grid_type * ecl_grid , const ecl_file_type *
     int     nactive  = ecl_grid_get_active_size( ecl_grid );
     float * zero     = util_malloc( nactive * sizeof * zero     , __func__);    /* Fake vector of zeros used for densities / sturations when you do not have data. */
     int   * int_zero = util_malloc( nactive * sizeof * int_zero , __func__);    /* Fake vector of zeros used for AQUIFER when the init file does not supply data. */
+    /* 
+       Observe that the fake vectors are only a coding simplification,
+       they should not be really used.
+    */
+
     {
       int i;
       for (i=0; i < nactive; i++) {
@@ -414,7 +436,6 @@ static void gravity_doit( const ecl_grid_type * ecl_grid , const ecl_file_type *
       const float * rporv2    = ecl_kw_get_float_ptr(rporv2_kw);
       int   * aquifern;
       int global_index;
-      bool has_checked_rporv = false;
     
       if (aquifern_kw != NULL)
         aquifern = ecl_kw_get_int_ptr( aquifern_kw );
@@ -443,7 +464,7 @@ static void gravity_doit( const ecl_grid_type * ecl_grid , const ecl_file_type *
                 sgas1 = sgas1_v[act_index];
                 sgas2 = sgas2_v[act_index];
                 truncate_saturation( &sgas1 );
-		    truncate_saturation( &sgas2 );
+                truncate_saturation( &sgas2 );
               } else {
                 sgas1 = 1 - swat1;
                 sgas2 = 1 - swat2;
@@ -457,57 +478,31 @@ static void gravity_doit( const ecl_grid_type * ecl_grid , const ecl_file_type *
               truncate_saturation( &soil2 );
             }
             
-            /**
-               Check that the rporv values are in the right ballpark.
-               For ECLIPSE version 2008.2 they are way fucking off.
-            */
-            if (!has_checked_rporv) {
-              double init_porv  = ecl_kw_iget_as_double( init_porv_kw , global_index );   /* NB - this uses global indexing. */
-              double rporv12    = 0.5 * (rporv1[ act_index ] + rporv2[ act_index ]);
-              double fraction   = util_double_min( init_porv , rporv12 ) / util_double_max( init_porv , rporv12 );
-              if (fraction  < 0.50) {
-                fprintf(stderr,"-----------------------------------------------------------------\n");
-                fprintf(stderr,"INIT PORV: %g \n",init_porv);
-                fprintf(stderr,"RPORV1   : %g \n",rporv1[ act_index ]);
-                fprintf(stderr,"RPORV2   : %g \n",rporv2[ act_index ]);
-                fprintf(stderr,"Hmmm - the RPORV values extracted from the restart file seem to be \n");
-                fprintf(stderr,"veeery different from the initial rporv value. This might indicated\n");
-                fprintf(stderr,"an ECLIPSE bug. Version 2007.2 is known to be ok in this respect, \n");
-                fprintf(stderr,"whereas version 2008.2 is known to have a bug. \n");
-                fprintf(stderr,"-----------------------------------------------------------------\n");
-                exit(1);
-              }
-              has_checked_rporv = true;
-            }
-
+                        
             /* 
-               We have found all the info we need for one cell, then we loop over all the grav
-               stations and calculate the delta G from this cell for the various stations.
+               We have found all the info we need for one cell.
             */
+            
             {
               double  mas1 , mas2;
               double  xpos , ypos , zpos;
-              int     station_nr;
               
               mas1 = rporv1[act_index]*(soil1 * oil_den1[act_index] + sgas1 * gas_den1[act_index] + swat1 * wat_den1[act_index] );
               mas2 = rporv2[act_index]*(soil2 * oil_den2[act_index] + sgas2 * gas_den2[act_index] + swat2 * wat_den2[act_index] );
-              ecl_grid_get_pos1(ecl_grid , global_index , &xpos , &ypos , &zpos);
-              
-              
-              for(station_nr=0; station_nr < vector_get_size( stations ); station_nr++) {
-                grav_station_type * g_s = vector_iget(stations, station_nr);
-                double dist_x   = xpos - g_s->utm_x;
-                double dist_y   = ypos - g_s->utm_y;
-                double dist_d   = zpos - g_s->depth;
+
+              ecl_grid_get_xyz1(ecl_grid , global_index , &xpos , &ypos , &zpos);
+              {
+                double dist_x   = xpos - utm_x;
+                double dist_y   = ypos - utm_y;
+                double dist_d   = zpos - tvd;
                 double dist_sq  = dist_x*dist_x + dist_y*dist_y + dist_d*dist_d;
-                double ldelta_g;
                 
                 if(dist_sq == 0){
                   exit(1);
                 }
-                ldelta_g = 6.67E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5);
-                grav_diff_update(g_s , ldelta_g);
+                local_deltag += 6.67E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5);
               }
+              
             }
           }
         }
@@ -516,7 +511,153 @@ static void gravity_doit( const ecl_grid_type * ecl_grid , const ecl_file_type *
     free( zero );
     free( int_zero );
   }
+  return local_deltag;
 }
+
+
+
+  
+/* 
+   Validate input:
+   ---------------
+   This function tries to verify that the restart_files contain all
+   the necessary information. The required keywords are:
+
+    1. The restart files must contain RPORV and XXX_DEN (see info
+       about phases below).
+
+    2. The init file must contain the PORV keyword - this is only used
+       to check for the ECLIPSE_2008 bug in RPORV calculations.
+       
+
+
+   Determine phases:
+   -----------------
+   Look at the restart files to determine which phases are
+   present. The restart files generally only contain (n - 1) phases,
+   i.e. for a WATER-OIL-GAS system the restart files will contain SGAS
+   and SWAT, but not SOIL.
+   
+   We must determine which phases are in the model, that is determined
+   by looking for the densities OIL_DEN, WAT_DEN and GAS_DEN. This is
+   stored in the variable model_phases. In addition we must determine
+   which saturations can be found in the restart files, that is stored
+   in the file_phases variable. The variables model_phases and
+   file_phases are returned by reference.
+
+
+   If the input is valid, the function will return zero, otherwise it
+   will return a non-zero error code: (ehhh - it will exit currently).
+   
+*/
+
+static int gravity_check_input( const ecl_grid_type * ecl_grid , 
+                                const ecl_file_type * init_file , 
+                                const ecl_file_type * restart_file1, 
+                                const ecl_file_type * restart_file2,
+                                int   * model_phases,
+                                int   * file_phases) {
+  
+  /* Check which phases are present in the model */
+  model_phases = 0;
+  if (ecl_file_has_kw(restart_file1 , "OIL_DEN"))
+    model_phases += OIL;			  	      
+  
+  if (ecl_file_has_kw(restart_file1 , "WAT_DEN"))
+    model_phases += WATER;			  	      
+  
+  if (ecl_file_has_kw(restart_file1 , "GAS_DEN"))
+    model_phases += GAS;
+  
+  
+  /* Check which phases are present in the restart files. We assume the restart file NEVER has SOIL information */
+  file_phases = 0;
+  if (ecl_file_has_kw(restart_file1 , "SWAT"))
+      file_phases += WATER;
+  if (ecl_file_has_kw(restart_file1 , "SGAS"))
+    file_phases += GAS;
+
+
+  /* Consiency check */
+  {
+    /**
+       The following assumptions are made:
+       
+       1. All restart files should have water, i.e. the SWAT keyword. 
+       2. All phases present in the restart file should also be present as densities, 
+          in addition the model must contain one additional phase. 
+       3. The restart files can never contain oil saturation.
+       
+    */
+    if (! has_phase( *file_phases , WATER ) )
+      util_exit("Could not locate SWAT keyword in restart files\n");
+    
+    if ( has_phase( *file_phases , OIL ))
+      util_exit("Can not handle restart files with SOIL keyword\n"); 
+    
+    if (! has_phase( *model_phases , WATER ) )
+      util_exit("Could not locate WAT_DEN keyword in restart files\n");      
+    
+    if ( has_phase( *file_phases , GAS )) {
+      /** Restart file has both water and gas - means we need all three densities. */
+      if (! (has_phase( *model_phases , GAS) && has_phase( *model_phases , OIL)))
+        util_exit("Could not find GAS_DEN and OIL_DEN keywords in restart files\n");
+    } else {
+      /* This is (water + oil) or (water + gas) system. We enforce one of the densities.*/
+      if ( !has_phase( *model_phases , GAS + OIL))
+        util_exit("Could not find either GAS_DEN or OIL_DEN kewyords in restart files\n");
+    }
+  }
+  
+  /* Check that the restart files have RPORV information. This is ensured by giving the argument RPORV to the RPTRST keyword. */
+  if ( !(ecl_file_has_kw( restart_file1 , "RPORV") && ecl_file_has_kw( restart_file2 , "RPORV")) )
+    util_exit("Sorry: the restartfiles do  not contain RPORV\n");       
+
+
+
+  /**
+     Check that the rporv values are in the right ballpark.  For
+     ECLIPSE version 2008.2 they are way fucking off. Check PORV
+     versus RPORV for ten 'random' locations in the grid.
+  */
+  {
+    const ecl_kw_type * rporv1_kw     = ecl_file_iget_named_kw( restart_file1 , "RPORV" , 0);      
+    const ecl_kw_type * rporv2_kw     = ecl_file_iget_named_kw( restart_file2 , "RPORV" , 0);      
+    const ecl_kw_type * init_porv_kw  = ecl_file_iget_named_kw( init_file     , "PORV" , 0);
+
+    int    active_index;
+    int    active_delta;
+    int    active_size;
+    
+    ecl_grid_get_dims( ecl_grid , NULL , NULL , NULL , &active_size );
+    active_delta = active_size / 12;
+    for (active_index = active_delta; active_index < active_size; active_index += active_delta) {
+      int    global_index = ecl_grid_get_global_index1A( ecl_grid , active_index );
+      double init_porv    = ecl_kw_iget_as_double( init_porv_kw , global_index );   /* NB - this uses global indexing. */
+      double rporv1       = ecl_kw_iget_as_double( rporv1_kw ,  active_index );
+      double rporv2       = ecl_kw_iget_as_double( rporv2_kw ,  active_index );
+      double rporv12      = 0.5 * ( rporv1 + rporv2 );
+      double fraction     = util_double_min( init_porv , rporv12 ) / util_double_max( init_porv , rporv12 );
+
+      if (fraction  < 0.50) {
+        fprintf(stderr,"-----------------------------------------------------------------\n");
+        fprintf(stderr,"INIT PORV: %g \n",init_porv);
+        fprintf(stderr,"RPORV1   : %g \n",rporv1);
+        fprintf(stderr,"RPORV2   : %g \n",rporv2);
+        fprintf(stderr,"Hmmm - the RPORV values extracted from the restart file seem to be \n");
+        fprintf(stderr,"veeery different from the initial rporv value. This might indicated\n");
+        fprintf(stderr,"an ECLIPSE bug. Version 2007.2 is known to be ok in this respect, \n");
+        fprintf(stderr,"whereas version 2008.2 is known to have a bug. \n");
+        fprintf(stderr,"-----------------------------------------------------------------\n");
+        exit(1);
+      }
+    }
+  }
+  return 0;
+}
+
+
+
 
 
 
@@ -600,83 +741,35 @@ int main(int argc , char ** argv) {
     } else 
       print_usage(__LINE__);
 
-    /** OK - now everything is loaded */
-    
-    /* 
-       Look at the restart files to determine which phases are
-       present. The restart files generally only contain (n - 1) phases,
-       i.e. for a WATER-OIL-GAS system the restart files will contain SGAS
-       and SWAT, but not SOIL.
-       
-       We must determine which phases are in the model, that is
-       determined by looking for the densities OIL_DEN, WAT_DEN and
-       GAS_DEN. This is stored in the variable model_phases. In addition we
-       must determine which saturations can be found in the restart files,
-       that is stored in the file_phases variable.
+
+
+    /** 
+        OK - now everything is loaded - check that all required keywords+++ are present.
     */
-
-    /* Check which phases are present in the model */
-    model_phases = 0;
-    if (ecl_file_has_kw(restart_files[0] , "OIL_DEN"))
-      model_phases += OIL;			  	      
-
-    if (ecl_file_has_kw(restart_files[0] , "WAT_DEN"))
-      model_phases += WATER;			  	      
-
-    if (ecl_file_has_kw(restart_files[0] , "GAS_DEN"))
-      model_phases += GAS;
-
-
-    /* Check which phases are present in the restart files. We assume the restart file NEVER has SOIL information */
-    file_phases = 0;
-    if (ecl_file_has_kw(restart_files[0] , "SWAT"))
-      file_phases += WATER;
-    if (ecl_file_has_kw(restart_files[0] , "SGAS"))
-      file_phases += GAS;
-
-
-    /* Consiency check */
-    {
-      /**
-	 The following assumptions are made:
-	 
-	 1. All restart files should have water, i.e. the SWAT keyword. 
-	 2. All phases present in the restart file should also be present as densities, 
-	    in addition the model must contain one additional phase. 
-	 3. The restart files can never contain oil saturation.
-	 
-      */
-      if (! has_phase( file_phases , WATER ) )
-	util_exit("Could not locate SWAT keyword in restart files\n");
-      
-      if ( has_phase( file_phases , OIL ))
-	util_exit("Can not handle restart files with SOIL keyword\n"); 
-      
-      if (! has_phase( model_phases , WATER ) )
-	util_exit("Could not locate WAT_DEN keyword in restart files\n");      
-      
-      if ( has_phase( file_phases , GAS )) {
-	/** Restart file has both water and gas - means we need all three densities. */
-	if (! (has_phase(model_phases , GAS) && has_phase(model_phases , OIL)))
-	  util_exit("Could not find GAS_DEN and OIL_DEN keywords in restart files\n");
-      } else {
-	/* This is (water + oil) or (water + gas) system. We enforce one of the densities.*/
-	if ( !has_phase( model_phases , GAS + OIL))
-	  util_exit("Could not find either GAS_DEN or OIL_DEN kewyords in restart files\n");
-      }
-    }
+    gravity_check_input(ecl_grid , init_file , restart_files[0] , restart_files[1] , &model_phases , &file_phases);
     
-    /* Check that the restart files have RPORV information. This is ensured by giving the argument RPORV to the RPTRST keyword. */
-    if ( !(ecl_file_has_kw( restart_files[0] , "RPORV") && ecl_file_has_kw( restart_files[1] , "RPORV")) )
-      util_exit("Sorry: the restartfiles do  not contain RPORV\n");       
-
-
     /* 
        OK - now it seems the provided files have all the information
        we need. Let us start extracting, and then subsequently using
        it.
     */
-    gravity_doit( ecl_grid , init_file , restart_files[0] , restart_files[1] , grav_stations , model_phases , file_phases);
+    {
+      int station_nr;
+      for (station_nr = 0; station_nr < vector_get_size( grav_stations ); station_nr++) {
+        grav_station_type * gs = vector_iget( grav_stations , station_nr );
+        
+        gs->grav_diff = gravity_response( ecl_grid , 
+                                          init_file , 
+                                          restart_files[0] , 
+                                          restart_files[1] , 
+                                          gs->utm_x,
+                                          gs->utm_y,
+                                          gs->depth,
+                                          model_phases , 
+                                          file_phases);
+        
+      }
+    }
     
     {
       FILE * stream = util_fopen(report_filen , "w");
