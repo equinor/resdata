@@ -6,6 +6,26 @@ extern "C" {
 #include <ecl_box.h>
 #include <ecl_grid.h>
 #include <stdbool.h>
+  
+typedef enum {
+  SELECT_ALL           =  0,
+  DESELECT_ALL         =  1,  
+  SELECT_FROM_IJK      =  2,
+  DESELECT_FROM_IJK    =  3,
+  SELECT_FROM_I        =  4, 
+  DSELECT_FROM_I       =  5, 
+  SELECT_FROM_J        =  6, 
+  DSELECT_FROM_J       =  7, 
+  SELECT_FROM_K        =  8, 
+  DSELECT_FROM_K       =  9,  
+  SELECT_EQUAL         = 10,
+  DESELECT_EQUAL       = 11,
+  SELECT_IN_INTERVAL   = 12, 
+  DESELECT_IN_INTERVAL = 13,
+  INVERT_SELECTION     = 14
+} ecl_region_select_cmd;
+
+
 
 typedef struct ecl_region_struct ecl_region_type; 
 
