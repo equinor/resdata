@@ -28,6 +28,7 @@ typedef struct options {
 } options_type;
 
 
+
 void make_aqudims_file(options_type * options , int_vector_type * aqcells , bool active) {
   FILE * stream = util_mkdir_fopen( options->aqudims_file , "w");
   if (active) {
@@ -36,6 +37,7 @@ void make_aqudims_file(options_type * options , int_vector_type * aqcells , bool
   }
   fclose( stream );
 }
+
 
 
 

@@ -56,18 +56,83 @@ static const float * safe_get_float_ptr( const ecl_kw_type * ecl_kw , const floa
 /*****************************************************************/
 
 void print_usage(int line) {
-  printf("line:%d \n",line);
-  printf("***************************************************************************\n");
-  printf("  This program is used to calculate the change in graviational response \n");
-  printf("  between two timesteps in an eclipse simulation.\n");
-  printf("\n");
-  printf(" USAGE: ./run_gravity.x [-h] base_name restart_time1 restart_time2 station_position_file\n");
-  printf("\n");
-  printf(" NOTE: The program needs a *.GRID, *.INIT, as well as the two restart files.\n");
-  printf(" NOTE: The reservoir pore volume needs to be reported in the restart file: \n");
-  printf(" NOTE:  Eclipse kw RPORV in RPTRST\n");
-  
-  printf("***************************************************************************\n");
+  printf("LINE: %d \n",line);
+  fprintf(stderr,"This program is used to calculate the change in graviational response\n");
+  fprintf(stderr,"between two timesteps in an eclipse simulation. To do the calculations\n");
+  fprintf(stderr,"the program needs the following information:\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"  1. Restart file(s) with solution data for the two timesteps.\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"  2. An EGRID or GRID file.\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"  3. An INIT file.\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"  4. A configuration file which lists at which geographical locations\n");
+  fprintf(stderr,"     you want to measure the gravitational response. This file should\n");
+  fprintf(stderr,"     contain one position on each line, formatted as this:\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"             name1   utm_x  utm_y   depth\n");
+  fprintf(stderr,"             name2   utm_x  utm_y   depth\n");
+  fprintf(stderr,"             .....\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"     The name string is completely arbitrary - but can NOT contain\n");
+  fprintf(stderr,"     spaces.\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"The required information should be passed from the user with the help\n");
+  fprintf(stderr,"of commandline arguments. This can be done in roughly speaking two\n");
+  fprintf(stderr,"different ways:\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"All ECLIPSE files in one directory\n");
+  fprintf(stderr,"----------------------------------\n");
+  fprintf(stderr,"In the case where all the files are found in one directory you can\n");
+  fprintf(stderr,"just give an ECLIPSE basename, and the run_gravity program will by\n");
+  fprintf(stderr,"itself find the required restart/init/grid files. Observe that both\n");
+  fprintf(stderr,"unified and non-unified restart files will be checked. In addition to\n");
+  fprintf(stderr,"the ECLIPSE basename you must give two numbers indicating which report\n");
+  fprintf(stderr,"steps you are interested in comparing, and finally the configuration\n");
+  fprintf(stderr,"file with all the measurement positions.\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"Example:\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"    bash%%  run_gravity.x  BASE_CASE  10 178  ../config/grav_stations\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"This will look up restart/grid/init files in the current dirtectory,\n");
+  fprintf(stderr,"for a simulation with baseame 'BASE_CASE'. It will compare report\n");
+  fprintf(stderr,"steps 10 and 178, and load station locations from the file\n");
+  fprintf(stderr,"'../config/grav_stations'. \n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"ECLIPSE files NOT in same directory\n");
+  fprintf(stderr,"-----------------------------------\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"If the different ECLIPSE files are not in the same directory you can\n");
+  fprintf(stderr,"not let the run_gravity program find the required files automatically,\n");
+  fprintf(stderr,"and you must give all the required files as arguments on the command\n");
+  fprintf(stderr,"line. This is the most flexible approach, in addition to files stored\n");
+  fprintf(stderr,"different places this also allows to combine files with different\n");
+  fprintf(stderr,"ECLISPE basenames. There are two different ways to enter restart\n");
+  fprintf(stderr,"information, depending on whether you use unified or non-unified\n");
+  fprintf(stderr,"restart files.\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"Example 1 (unified restart):\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"     bash%% run_gravity.x /path/to/restart_files/CASE_3.UNRST 10 178  /path/init/BASE_CASE.INIT   /path/to/grid/BASE_CASE.EGRID  ../config/stations.txt\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"Example 2 (non-unified restart):\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"     bash%% run_gravity.x CASE_3.X0010  ../path/CASE_2.X0178  /path/init/BASE_CASE.INIT   /path/to/grid/BASE_CASE.EGRID  ../config/stations.txt\n");
+  fprintf(stderr,"     \n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"  When the program has completed succesfully it will write the changes\n");
+  fprintf(stderr,"  in local gravity to a file 'RUN_GRAVITY.out', in addition the same\n");
+  fprintf(stderr,"  information (with something more) will be sent to stdout.\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"\n");
   exit(1);
 }
 
@@ -122,7 +187,6 @@ static void load_stations(vector_type * grav_stations , const char * filename) {
     }
     fclose(stream);
   }
-  printf("Har lastet:%d stasjoner \n",vector_get_size( grav_stations ));
 }
     
 
@@ -555,58 +619,62 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
                                 const ecl_file_type * init_file , 
                                 const ecl_file_type * restart_file1, 
                                 const ecl_file_type * restart_file2,
-                                int   * model_phases,
-                                int   * file_phases) {
-  
-  /* Check which phases are present in the model */
-  model_phases = 0;
-  if (ecl_file_has_kw(restart_file1 , "OIL_DEN"))
-    model_phases += OIL;			  	      
-  
-  if (ecl_file_has_kw(restart_file1 , "WAT_DEN"))
-    model_phases += WATER;			  	      
-  
-  if (ecl_file_has_kw(restart_file1 , "GAS_DEN"))
-    model_phases += GAS;
-  
-  
-  /* Check which phases are present in the restart files. We assume the restart file NEVER has SOIL information */
-  file_phases = 0;
-  if (ecl_file_has_kw(restart_file1 , "SWAT"))
-      file_phases += WATER;
-  if (ecl_file_has_kw(restart_file1 , "SGAS"))
-    file_phases += GAS;
-
-
-  /* Consiency check */
+                                int   * __model_phases,
+                                int   * __file_phases) {
   {
-    /**
-       The following assumptions are made:
-       
-       1. All restart files should have water, i.e. the SWAT keyword. 
-       2. All phases present in the restart file should also be present as densities, 
-          in addition the model must contain one additional phase. 
-       3. The restart files can never contain oil saturation.
-       
-    */
-    if (! has_phase( *file_phases , WATER ) )
-      util_exit("Could not locate SWAT keyword in restart files\n");
+    int model_phases = 0;
+    int file_phases  = 0;
     
-    if ( has_phase( *file_phases , OIL ))
-      util_exit("Can not handle restart files with SOIL keyword\n"); 
+    /* Check which phases are present in the model */
+    if (ecl_file_has_kw(restart_file1 , "OIL_DEN"))
+      model_phases += OIL;			  	      
     
-    if (! has_phase( *model_phases , WATER ) )
-      util_exit("Could not locate WAT_DEN keyword in restart files\n");      
+    if (ecl_file_has_kw(restart_file1 , "WAT_DEN"))
+      model_phases += WATER;			  	      
     
-    if ( has_phase( *file_phases , GAS )) {
-      /** Restart file has both water and gas - means we need all three densities. */
-      if (! (has_phase( *model_phases , GAS) && has_phase( *model_phases , OIL)))
-        util_exit("Could not find GAS_DEN and OIL_DEN keywords in restart files\n");
-    } else {
-      /* This is (water + oil) or (water + gas) system. We enforce one of the densities.*/
-      if ( !has_phase( *model_phases , GAS + OIL))
-        util_exit("Could not find either GAS_DEN or OIL_DEN kewyords in restart files\n");
+    if (ecl_file_has_kw(restart_file1 , "GAS_DEN"))
+      model_phases += GAS;
+    
+    
+    /* Check which phases are present in the restart files. We assume the restart file NEVER has SOIL information */
+    if (ecl_file_has_kw(restart_file1 , "SWAT"))
+      file_phases += WATER;
+    if (ecl_file_has_kw(restart_file1 , "SGAS"))
+      file_phases += GAS;
+    
+    
+    /* Consiency check */
+    {
+      /**
+         The following assumptions are made:
+         
+         1. All restart files should have water, i.e. the SWAT keyword. 
+         2. All phases present in the restart file should also be present as densities, 
+            in addition the model must contain one additional phase. 
+         3. The restart files can never contain oil saturation.
+         
+      */
+      if ( !has_phase( file_phases , WATER ) )
+        util_exit("Could not locate SWAT keyword in restart files\n");
+      
+      if ( has_phase( file_phases , OIL ))
+        util_exit("Can not handle restart files with SOIL keyword\n"); 
+      
+      if (! has_phase( model_phases , WATER ) )
+        util_exit("Could not locate WAT_DEN keyword in restart files\n");      
+      
+      if ( has_phase( file_phases , GAS )) {
+        /** Restart file has both water and gas - means we need all three densities. */
+        if (! (has_phase( model_phases , GAS) && has_phase( model_phases , OIL)))
+          util_exit("Could not find GAS_DEN and OIL_DEN keywords in restart files\n");
+      } else {
+        /* This is (water + oil) or (water + gas) system. We enforce one of the densities.*/
+        if ( !has_phase( model_phases , GAS + OIL))
+          util_exit("Could not find either GAS_DEN or OIL_DEN kewyords in restart files\n");
+      }
     }
+    *__model_phases = model_phases;
+    *__file_phases  = file_phases;
   }
   
   /* Check that the restart files have RPORV information. This is ensured by giving the argument RPORV to the RPTRST keyword. */
@@ -713,7 +781,7 @@ int main(int argc , char ** argv) {
 	grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_EGRID_FILE , fmt_file , -1);
 	if (grid_filename == NULL)
 	  grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_GRID_FILE , fmt_file , -1);
-
+        
 	if ((init_filename == NULL) || (grid_filename == NULL))  /* Means we could not find them. */
           util_exit("Could not find INIT or GRID|EGRID file \n");
       } else {
@@ -777,7 +845,7 @@ int main(int argc , char ** argv) {
       for(station_nr = 0; station_nr < vector_get_size( grav_stations ); station_nr++){
 	const grav_station_type * g_s = vector_iget_const(grav_stations, station_nr);
 	fprintf(stream, "%f\n",g_s->grav_diff);
-	printf ("DELTA_G %s[%i]: %f %f %f %f\n", g_s->name , station_nr, g_s->grav_diff, g_s->utm_x, g_s->utm_y, g_s->depth);
+	printf ("DELTA_G %4s[%02d]: %12.6f %12.6f %12.6f %12.6f \n", g_s->name , station_nr, g_s->grav_diff, g_s->utm_x, g_s->utm_y, g_s->depth);
       }
       fclose(stream);
     }
