@@ -1477,22 +1477,36 @@ void util_copy_directory(const char * src_path , const char * __target_path , co
 }
 
 
-
+/**
+   Currently only checks if the ntrye entry exists - this will return true
+   if path points to directory.
+*/
 bool util_file_exists(const char *filename) {
+  return util_entry_exists( filename );
+}
+
+
+
+/**
+   Checks if there is an entry in the filesystem - i.e.  ordinary
+   file, directory , symbolic link, ... with name 'entry'; and returns
+   true/false accordingly.
+*/
+
+bool util_entry_exists( const char * entry ) {
   struct stat stat_buffer;
-  int stat_return = stat(filename , &stat_buffer);
+  int stat_return = stat(entry, &stat_buffer);
   if (stat_return == 0)
     return true;
   else {
     if (errno == ENOENT)
       return false;
     else {
-      util_abort("%s: error checking for file:%s  %d/%s \n",__func__ , filename , errno , strerror(errno));
+      util_abort("%s: error checking for entry:%s  %d/%s \n",__func__ , entry , errno , strerror(errno));
       return false;
     }
   }
 }
-
 
 /**
    This function will start at 'root_path' and then recursively go
@@ -1888,6 +1902,10 @@ void util_alloc_file_components(const char * file, char **_path , char **_basena
 
 
 
+
+/**
+   Checks if the argument exists - as a directory.
+*/
 
 bool util_path_exists(const char *pathname) {
   DIR *stream = opendir(pathname);
@@ -3345,6 +3363,14 @@ void util_fskip_bool(FILE * stream) {
 
 
 /*****************************************************************/
+
+time_t util_time_t_min(time_t a , time_t b) {
+  return (a < b) ? a : b;
+}
+
+time_t util_time_t_max(time_t a , time_t b) {
+  return (a > b) ? a : b;
+}
 
 size_t util_size_t_min(size_t a , size_t b) {
   return (a < b) ? a : b;

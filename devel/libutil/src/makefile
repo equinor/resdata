@@ -76,7 +76,7 @@ mem_free.o  : mem_free.c
 
 #################################################################
 
-BIN:	util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x replace.x bls.x file_open.x ens_tar.x
+BIN:	util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x replace.x bls.x bfs_extract file_open.x ens_tar.x grane_fix
 BIN_FILES = util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x
 
 util.x: util-test.o $(LIB)
@@ -99,6 +99,12 @@ replace.x: replace.o $(LIB)
 
 bls.x: bls.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) bls.o -o bls.x  -L./ -lutil -lz -lpthread -lm
+
+bfs_extract: bfs_extract.o $(LIB)
+	$(LD) -$(MFLAG) $(LDFLAGS) bfs_extract.o -o bfs_extract  -L./ -lutil -lz -lpthread -lm
+
+grane_fix: grane_fix.o $(LIB)
+	$(LD) -$(MFLAG) $(LDFLAGS) grane_fix.o -o grane_fix  -L./ -lutil -lz -lpthread -lm
 
 file_open.x: file_open.o $(LIB)
 	$(LD) -$(MFLAG) $(LDFLAGS) file_open.o -o file_open.x  -L./ -lutil -lz -lpthread -lm

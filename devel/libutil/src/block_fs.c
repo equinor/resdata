@@ -385,26 +385,11 @@ static inline void block_fs_aquire_rlock( block_fs_type * block_fs ) {
   pthread_rwlock_rdlock( &block_fs->rw_lock );
   /*
     We just assume that the user does NOT write to the filesystem
-    with another instance; in that case we will go out of sync. 
+    with another instance; in that case we will go out of sync;
+    and things will probably fail badly.
   */
-  
-  
-  //if (!block_fs->data_owner) {
-  //  /** 
-  //      OK - some other fucker might have updated the fs underneath
-  //      our feet. First we compare the index_time with the mtime of
-  //      the datafile. If the datafile has not been modified all is
-  //      hunkadory, otherwise we must rebuild the index - THAT is going
-  //      to be costly.
-  //  */
-  //  struct stat stat_buffer;
-  //  fstat( fileno( block_fs->data_stream ) , &stat_buffer);
-  //  if (stat_buffer.st_mtime > block_fs->index_time) {
-  //    /* Rebuild index ... */
-  //    
-  //  }
-  //}
 }
+
 
 
 static void block_fs_insert_index_node( block_fs_type * block_fs , const char * filename , const file_node_type * file_node) {
@@ -564,7 +549,7 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
     block_fs->index_time = time( NULL );
   
     if (!block_fs->data_owner) 
-      printf(" Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only.\n");
+      printf(" Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only. Cross your fingers ....\n");
     fflush( stdout );
   }
   
@@ -680,19 +665,8 @@ static void block_fs_open_data( block_fs_type * block_fs , bool read_write) {
 
 
 /**
-   Observe that the arguments internal_index & external_indx can not
-   be changed when remounting; when remounting you will get the
-   original values.
-*/
-
-
-
-/**
-   This functon will (attempt) to read the whole datafile in one large
-   go, and then fill up the cache nodes. If it can not allocate enough
-   memory to read in the whole datafile in one go, it will try loading
-   all the small (i.e. with size less than the maximum cache size)
-   nodes.
+   This function will load all the small (i.e. with size less than the
+   maximum cache size) nodes, and fill the cache.
 */
 
 
@@ -714,6 +688,7 @@ static void block_fs_preload( block_fs_type * block_fs ) {
     free( buffer );
   }
 }
+
 
 
 /**
@@ -880,6 +855,7 @@ static void block_fs_unlink_free_node( block_fs_type * block_fs , file_node_type
 }
 
 
+
 /**
    This function first checks the free nodes if any of them can be
    used, otherwise a new node is created.
@@ -920,6 +896,7 @@ static file_node_type * block_fs_get_new_node( block_fs_type * block_fs , const 
       if (d.rem)
         node_size += block_fs->block_size;
     }
+
     /* Must lock the total size here ... */
     offset = block_fs->data_file_size;
     new_node = file_node_alloc(NODE_IN_USE , offset , node_size);  
@@ -971,19 +948,19 @@ void block_fs_unlink_file( block_fs_type * block_fs , const char * filename) {
 */
 
 void block_fs_fsync( block_fs_type * block_fs ) {
-  fsync( block_fs->data_fd );
-  block_fs_fseek_data( block_fs , block_fs->data_file_size );
-  ftell( block_fs->data_stream ); 
+  if (block_fs->data_owner) {
+    fsync( block_fs->data_fd );
+    block_fs_fseek_data( block_fs , block_fs->data_file_size );
+    ftell( block_fs->data_stream ); 
+  }
 }
 
 
 /**
    The single lowest-level write function:
    
-     2. fsync() the datafile.
      3. seek to correct position.
      4. Write the data with util_fwrite()
-     5. fsync() again.
 
      7. increase the write_count
      8. set the data_size field of the node.
@@ -1025,6 +1002,7 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
       file_node_update_cache( node , data_size , ptr );
     else
       file_node_clear_cache( node );
+    
     block_fs->write_count++;
     if (block_fs->fsync_interval && ((block_fs->write_count % block_fs->fsync_interval) == 0)) 
       block_fs_fsync( block_fs );
@@ -1045,7 +1023,9 @@ static void block_fs_fwrite_file_unlocked(block_fs_type * block_fs , const char 
       /* 
          The current node is too small for the new content:
          
-          1. Remove the existing node, from the index and insert it into the free_nodes list.
+          1. Remove the existing node, from the index and insert it
+             into the free_nodes list.
+
           2. Get a new node.
         
       */
@@ -1091,7 +1071,8 @@ void block_fs_fwrite_buffer(block_fs_type * block_fs , const char * filename , c
 
 
 /**
-   Need extra locking here - because the global rwlock allows many concurrent readers.
+   Need extra locking here - because the global rwlock allows many
+   concurrent readers.
 */
 static void block_fs_fread__(block_fs_type * block_fs , const file_node_type * file_node , void * ptr , size_t read_bytes) {
   if (file_node->cache != NULL) 
@@ -1184,10 +1165,12 @@ void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
     close( block_fs->lock_fd );     /* Closing the lock_file file descriptor - and releasing the lock. */
     util_unlink_existing( block_fs->lock_file );
   }
-    
-  if ( unlink_empty && (hash_get_size( block_fs->index) == 0)) {
-    util_unlink_existing( block_fs->data_file );
-    util_unlink_existing( block_fs->mount_file );
+
+  if (block_fs->data_owner) {
+    if ( unlink_empty && (hash_get_size( block_fs->index) == 0)) {
+      util_unlink_existing( block_fs->data_file );
+      util_unlink_existing( block_fs->mount_file );
+    }
   }
 
   free( block_fs->lock_file );
@@ -1336,6 +1319,9 @@ static bool pattern_match( const char * pattern , const char * string ) {
   }
 }
 
+/**
+   If pattern == NULL all files will be selected.
+*/
 
 vector_type * block_fs_alloc_filelist( const block_fs_type * block_fs  , const char * pattern , block_fs_sort_type sort_mode , bool include_free_nodes ) {
   vector_type    * sort_vector = vector_alloc_new();
@@ -1354,7 +1340,7 @@ vector_type * block_fs_alloc_filelist( const block_fs_type * block_fs  , const c
   }
   if (pattern != NULL)
     include_free_nodes = false;  /* Doing fnmatch on free nodes makes no sense */
-
+  
   /* Inserting the free nodes - the holes. */
   if (include_free_nodes) {
     file_node_type * current = block_fs->free_nodes;

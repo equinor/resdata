@@ -28,6 +28,64 @@ int util_get_path_length(const char * file) {
 }
 
 
+
+static bool util_make_path2__(const char *path , mode_t mode) {
+  /* It already exists as a directory - we just return true. */
+  if (util_is_directory( path ))
+    return true;      
+  
+  /* It is in the filesystem - but not as a directory - then we can do nothing. */
+  if (util_entry_exists( path ))
+    return false;
+  
+  if (mkdir( path , mode ) == 0)
+    return true;
+  else
+    return false;
+}
+
+
+
+/**
+   Will return if the directory path exists on exit, either because it
+   already existed, or because it was successfully made with this
+   function. 
+   
+   If a file entry 'path' already exists, and is NOT a directory, the
+   function will return false.
+*/
+
+bool util_make_path2( const char * path ) {
+  const mode_t mode = 0755;
+
+  /* It already exists as a directory - we just return true. */
+  if (util_is_directory( path ))
+    return true;      
+  
+  /* It is in the filesystem - but not as a directory - then we can do nothing. */
+  if (util_entry_exists( path ))
+    return false;
+  {
+    
+    bool    make_path = true;
+    char ** components;
+    int     num_components;
+    int     len = 0;
+
+    util_split_string( path , UTIL_PATH_SEP_STRING , &num_components , &components );
+    while (make_path && (len  < num_components)) {
+      char * current_path = util_alloc_joined_string( (const char **) components , len , UTIL_PATH_SEP_STRING );
+      make_path = util_make_path2__( current_path , mode );
+      len++;
+      free( current_path );
+    }
+
+    return make_path;
+  }
+}
+
+
+
 void util_make_path(const char *_path) {
   char *active_path;
   char *path = (char *) _path;
@@ -51,7 +109,7 @@ void util_make_path(const char *_path) {
 	  bool fail = false;
 	  switch (errno) {
 	  case(EEXIST):
-	    if (!util_is_directory(active_path))
+	    if (util_is_directory(active_path))
 	      fail = false;
 	    break;
 	  case(ENOSPC):

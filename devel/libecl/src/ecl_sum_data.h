@@ -8,6 +8,10 @@ extern "C" {
 
 typedef struct ecl_sum_data_struct ecl_sum_data_type ; 
 
+
+time_t                   ecl_sum_data_get_sim_start ( const ecl_sum_data_type * data ); 
+time_t                   ecl_sum_data_get_sim_end   ( const ecl_sum_data_type * data ); 
+double                   ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ); 
 void                     ecl_sum_data_summarize(const ecl_sum_data_type * data , FILE * stream);
 bool        	         ecl_sum_data_has_ministep(const ecl_sum_data_type *  , int );
 double      	         ecl_sum_data_get(const ecl_sum_data_type * , int , int );
