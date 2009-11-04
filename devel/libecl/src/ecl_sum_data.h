@@ -5,6 +5,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include <stdlib.h>
+#include <time.h>
 
 typedef struct ecl_sum_data_struct ecl_sum_data_type ; 
 
@@ -26,6 +28,13 @@ int                      ecl_sum_data_get_last_report_step( const ecl_sum_data_t
 int                      ecl_sum_data_get_first_report_step( const ecl_sum_data_type * data );
 int 			 ecl_sum_data_get_first_ministep( const ecl_sum_data_type * data );
 int 			 ecl_sum_data_get_last_ministep( const ecl_sum_data_type * data );
+
+time_t                   ecl_sum_data_get_sim_end   ( const ecl_sum_data_type * data );
+int                      ecl_sum_data_get_ministep_from_sim_days( const ecl_sum_data_type * data , double sim_days);
+int                      ecl_sum_data_get_ministep_from_sim_time( const ecl_sum_data_type * data , time_t sim_time);
+
+double                   ecl_sum_data_get_from_sim_time( const ecl_sum_data_type * data , time_t sim_time , int params_index);
+double                   ecl_sum_data_get_from_sim_days( const ecl_sum_data_type * data , double sim_days , int params_index);
 
 
 #ifdef __cplusplus

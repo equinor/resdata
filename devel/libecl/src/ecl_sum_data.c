@@ -72,8 +72,79 @@
        (which corresponds to the old RPTONLY based behaviour) is to
        use the last ministep in the block.
 
-     * There is no BASE.SOOOO file.
+     * There is no BASE.SOOOO file
 
+
+
+   About MINISTEP, REPORTSTEP, rates and continous sim_time/sim_days:
+   ------------------------------------------------------------------
+
+   For ECLIPSE summary files the smallest unit of time resolution is
+   called the ministep - a ministep corresponds to a time step in the
+   underlying partial differential equation, i.e. the length of the
+   timesteps is controlled by the simulator itself - there is no finer
+   temporal resolution.
+   
+   The user has told the simulator to store (i.e. save to file
+   results) the results at reportsteps. A reportstep will typically
+   consist of several ministeps. The timeline below shows a simulation
+   consisting of two reportsteps:
+
+
+   S0000                                          S0001                                          S0002
+   ||------|------|------------|------------------||----------------------|----------------------||
+          M1     M2           M3                 M4                      M5                     M6     
+   
+   The first reportstep consist of four ministeps, the second
+   reportstep consits of only two ministeps. As a user you have no
+   control over the length/number of ministeps apart from:
+
+      1. Indirectly through the TUNING keywords.
+      2. A ministep will always end at a report step.
+
+
+   RPTONLY: In conjunction with enkf it has been customary to use the
+   keyword RPTONLY. This is purely a storage directive, the effect is
+   that only the ministep ending at the REPORT step is reported,
+   i.e. in the case above we would get the ministeps [M4 , M6], where
+   the ministeps M4 and M6 will be unchanged, and there will be many
+   'holes' in the timeline.
+
+   About truetime: The ministeps have a finite length; this implies
+   that
+
+     [rates]: The ministep value is NOT actually an instantaneous
+        value, it is the total production during the ministepd period
+        - divided by the length of the ministep. I.e. it is an average
+        value. (I.e. the differential time element dt is actually quite
+        looong).
+
+     [state]: For state variables (this will include total production
+        of various phases), the ministep value corresponds to the
+        reservoir state at THE END OF THE MINISTEP.
+
+   This difference between state variables and rates implies a
+   difference in how continous time-variables (in the middle of a
+   ministep) are reported, i.e.
+
+
+   S0000                                                      S0001
+   ||--------------|---------------|------------X-------------||
+                  M1              M2           /|\            M3
+                                                | 
+                                                |
+
+   We have enteeed the sim_days/sim_time cooresponding to the location
+   of 'X' on the timeline, i.e. in the middle of ministep M3. If we
+   are interested in the rate at this time the function:
+
+             ecl_sum_data_get_from_sim_time()
+
+   will just return the M3 value, whereas if you are interested in
+   e.g. pressure at this time the function will return a weighted
+   average of the M2 and M3 values. Whether a variable in question is
+   interpreted as a 'rate' is effectively determined by the
+   ecl_smspec_set_rate_var() function in ecl_smspec.c.
 */   
 
 
@@ -88,12 +159,13 @@ typedef struct ecl_sum_ministep_struct ecl_sum_ministep_type;
 
 struct ecl_sum_ministep_struct {
   int         		   __id;
-  float       		 * data;          /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
+  float       		 * data;            /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
   time_t      		   sim_time;      
   int         		   ministep;      
   int         		   report_step;
   double      		   sim_days;        /* Accumulated simulation time up to this ministep. */
-  int         		   data_size;       /* NUmber of elements in data - only used for checking indices. */
+  int         		   data_size;       /* Number of elements in data - only used for checking indices. */
+  int                      internal_index;  /* Used for lookups of the next / previous ministep based on an existing ministep. */
 };
 
 
@@ -115,7 +187,7 @@ struct ecl_sum_data_struct {
 };
 
 
-
+static const ecl_sum_ministep_type * ecl_sum_data_get_ministep( const ecl_sum_data_type * data , int ministep_nr);
 
 static void ecl_sum_ministep_free( ecl_sum_ministep_type * ministep ) {
   free( ministep->data );
@@ -218,59 +290,173 @@ double ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ) { return da
 
 
 
+
+/**
+   This function will return the ministep corresponding to a time_t
+   instance 'sim_time'. The function will fail hard if the time_t is
+   before the simulation start, or after the end of the
+   simulation. Check with
+
+       ecl_smspec_get_start_time() and ecl_sum_data_get_sim_end()
+
+   first.
+
+   See the documentation about report steps, ministeps and rates at
+   the top of this file for how the sim_time relates to to the
+   returned ministep_nr.
+
+   The indices used in this function are the internal indices, and not
+   ministep numbers. Observe that is there are holes in the
+   time-domain, i.e. if RPTONLY has been used, the function can return
+   a ministep index which does NOT cover the input time:
+
+
+   The 'X' should represent report times - the dashed lines represent
+   the temporal extent of two ministeps. Outside the '--' area we do
+   not have any results. The two ministeps we actually have are M15
+   and M25, i.e. there is a hole.
+
+
+   X      .      +-----X            +----X
+         /|\        M15               M25
+          |
+          |
+
+   When asking for the ministep number at the location of the arrow,
+   the function will return '15', i.e. the valid ministep following
+   the sim_time. Of course - the ideal situation is if the time
+   sequence has no holes.
+*/
+
+
+
 int ecl_sum_data_get_ministep_from_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
   time_t sim_start = ecl_smspec_get_start_time( data->smspec );
 
   if ((sim_time < sim_start) || (sim_time > data->sim_end))
-    util_abort("%s: invalid time_t instance \n",__func__);
+    util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",__func__, sim_time , sim_start , data->sim_end);
   
   /* 
-     The moment we have passed the intial test we MUST find a valid ministep index,
-     otherwise the data structure is internally corrupted. 
+     The moment we have passed the intial test we MUST find a valid
+     ministep index, however care should be taken that there can
+     perfectly well be 'holes' in the time domain, because of e.g. the
+     RPTONLY keyword.
   */
   {
     int  low_index      = 0;
     int  high_index     = vector_get_size( data->data );
-    int  ministep_index = -1;
+    int  internal_index = -1;
     
 
-    while (ministep_index < 0) {
+    while (internal_index < 0) {
       if (low_index == high_index)
-        ministep_index = low_index;
+        internal_index = low_index;
       else {
         int center_index = 0.5*( low_index + high_index );
-        const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , center_index );
+        const ecl_sum_ministep_type * ministep = vector_iget_const(data->data , center_index);
         
         if ((high_index - low_index) == 1) {
           /* Degenerate special case. */
           if (sim_time < ministep->sim_time)
-            ministep_index = low_index;
+            internal_index = low_index;
           else
-            ministep_index = high_index;
+            internal_index = high_index;
         } else {
           if (sim_time > ministep->sim_time)    /*     Low-----Center---X---High */
             low_index = center_index;
           else {
             time_t prev_time = sim_start;
             if (center_index > 0) {
-              const ecl_sum_ministep_type * prev_step = vector_iget_const( data->data , center_index - 1);
+              const ecl_sum_ministep_type * prev_step = vector_iget_const( data->data , center_index - 1 );
               prev_time = prev_step->sim_time;
             }
             
             if (prev_time < sim_time)
-              ministep_index = center_index; /* Found it */
+              internal_index = center_index; /* Found it */
             else
               high_index = center_index;
           }
         }
       }
     }
-    return ministep_index;
+
+    /* Translation from internal indexing to ministep nr. */
+    {
+      const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , internal_index );
+      return ministep->ministep;
+    }
   }
 }
 
+int ecl_sum_data_get_ministep_from_sim_days( const ecl_sum_data_type * data , double sim_days) {
+  time_t sim_time = ecl_smspec_get_start_time( data->smspec );
+  util_inplace_forward_days( &sim_time , sim_days );
+  return ecl_sum_data_get_ministep_from_sim_time(data , sim_time );
+}
 
-static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministep_nr , const ecl_sum_ministep_type * ministep) {
+
+/**
+   This function will take a true time 'sim_time' as input. The
+   ministep indices bracketing this sim_time is identified, and the
+   corresponding weights are calculated. 
+
+   The actual value we are interested in can then be computed with the
+   ecl_sum_data_interp_get() function:
+
+
+   int    param_index;
+   time_t sim_time;
+   {
+      int    ministep1 , ministep2;
+      double weight1   , weight2;
+
+      ecl_sum_data_init_interp_from_sim_time( data , sim_time , &ministep1 , &ministep2 , &weight1 , &weight2);
+      return ecl_sum_data_interp_get( data , ministep1 , ministep2 , weight1 , weight2 , param_index );
+   }
+   
+   
+   For further explanation (in particular for which keywords the
+   function should be used), consult documentation at the top of
+   this file.
+*/
+
+
+
+void ecl_sum_data_init_interp_from_sim_time( const ecl_sum_data_type * data , time_t sim_time, int *_step1, int *_step2 , double * _weight1 , double *_weight2) {
+  int     step2                           = ecl_sum_data_get_ministep_from_sim_time( data , sim_time);
+  const ecl_sum_ministep_type * ministep2 = ecl_sum_data_get_ministep( data , step2 );
+  int   step1;
+  const ecl_sum_ministep_type * ministep1;
+  {
+    int     internal_index1 = ministep2->internal_index - 1; /* We want the previous timestep - not actually considering if there is hole on the temporal series. */
+    ministep1 = vector_iget_const( data->data , internal_index1);
+    step1 = ministep1->ministep;
+  }
+    
+  
+  double  weight2    =  (sim_time - ecl_sum_ministep_get_sim_time( ministep1 ));
+  double  weight1    = -(sim_time - ecl_sum_ministep_get_sim_time( ministep2 ));
+
+  
+  *_step1   = step1;
+  *_step2   = step2;
+  *_weight1 = weight1 / ( weight1 + weight2 );
+  *_weight2 = weight2 / ( weight1 + weight2 );
+}
+
+
+
+void ecl_sum_data_init_interp_from_sim_days( const ecl_sum_data_type * data , double sim_days, int *step1, int *step2 , double * weight1 , double *weight2) {
+  time_t sim_time = ecl_smspec_get_start_time( data->smspec );
+  util_inplace_forward_days( &sim_time , sim_days );
+  ecl_sum_data_init_interp_from_sim_time( data , sim_time , step1 , step2 , weight1 , weight2);
+}
+
+
+
+
+
+static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministep_nr , ecl_sum_ministep_type * ministep) {
   if (data->first_ministep < 0) 
     data->first_ministep = ministep_nr;
   data->first_ministep = util_int_min( data->first_ministep , ministep_nr);
@@ -281,6 +467,7 @@ static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministe
   
   {
     int index = vector_append_owned_ref( data->data , ministep , ecl_sum_ministep_free__);
+    ministep->internal_index = index;
     int_vector_iset( data->ministep_index , ministep->ministep , index );
   }
   
@@ -289,7 +476,8 @@ static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministe
 }
 
 
-/* 
+
+/**
    One ecl_file corresponds to one report_step (limited by SEQHDR). 
 */
 static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         , 
@@ -522,6 +710,49 @@ double ecl_sum_data_get(const ecl_sum_data_type * data , int ministep , int para
   return ecl_sum_ministep_iget( ministep_data , params_index);
 }
 
+
+/**
+   This function will form a weight average of the two ministeps
+   @ministep1 and @ministep2. The weights and the ministep indices
+   should (typically) be determined by the 
+
+      ecl_sum_data_init_interp_from_sim_xxx() 
+
+   functions. The function will typically the last function called
+   when we seek a reservoir state variable at an intermediate time
+   between two ministeps.
+*/
+
+double ecl_sum_data_interp_get(const ecl_sum_data_type * data , int ministep1 , int ministep2 , double weight1 , double weight2 , int params_index) {
+  const ecl_sum_ministep_type * ministep_data1 = ecl_sum_data_get_ministep( data , ministep1 );  
+  const ecl_sum_ministep_type * ministep_data2 = ecl_sum_data_get_ministep( data , ministep2 );  
+  
+  return ecl_sum_ministep_iget( ministep_data1 , params_index ) * weight1 + ecl_sum_ministep_iget( ministep_data2 , params_index ) * weight2;
+}
+
+
+
+double ecl_sum_data_get_from_sim_time( const ecl_sum_data_type * data , time_t sim_time , int params_index) {
+  if (ecl_smspec_is_rate( data->smspec , params_index)) {
+    int ministep = ecl_sum_data_get_ministep_from_sim_time( data , sim_time );
+    return ecl_sum_data_get( data , ministep , params_index);
+  } else {
+    /* Interpolated lookup based on two (hopefully) consecutive ministeps. */
+    double weight1 , weight2;
+    int    ministep1 , ministep2;
+    
+
+    ecl_sum_data_init_interp_from_sim_time( data , sim_time , &ministep1 , &ministep2 , &weight1 , &weight2);
+    return ecl_sum_data_interp_get( data , ministep1 , ministep2 , weight1 , weight2 , params_index);
+  }
+}
+
+
+double ecl_sum_data_get_from_sim_days( const ecl_sum_data_type * data , double sim_days , int params_index) {
+  time_t sim_time = ecl_smspec_get_start_time( data->smspec );
+  util_inplace_forward_days( &sim_time , sim_days );
+  return ecl_sum_data_get_from_sim_time( data , sim_time , params_index );
+}
 
 
 time_t ecl_sum_data_get_sim_time( const ecl_sum_data_type * data , int ministep ) {

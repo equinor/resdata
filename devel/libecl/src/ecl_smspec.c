@@ -39,7 +39,8 @@ struct ecl_smspec_struct {
   hash_type        * gen_var_index;              /* This is "everything" - thing can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
   hash_type        * special_types;
 
-  ecl_smspec_var_type * var_type;
+  ecl_smspec_var_type * var_type;                
+  bool                * rate_variable; 
   int               grid_nx , grid_ny , grid_nz; /* Grid dimensions - in DIMENS[1,2,3] */
   int               num_regions;
   int               Nwells , param_offset;
@@ -145,7 +146,7 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   hash_insert_int(ecl_smspec->special_types , "STEPTYPE"  , ECL_SMSPEC_MISC_VAR );
   
 
-
+  ecl_smspec->rate_variable                  = NULL;
   ecl_smspec->var_type           	     = NULL;
   ecl_smspec->sim_start_time     	     = -1;
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
@@ -243,6 +244,8 @@ static ecl_smspec_var_type ecl_smspec_split_general(const ecl_smspec_type * smsp
 }
 
 
+
+
 /**
    Takes a ecl_smspec_var_type variable as input, and return a string
    representation of this var_type. Suitable for debug messages +++
@@ -333,7 +336,7 @@ static void ecl_smspec_get_ijk( const ecl_smspec_type * smspec , int global_inde
 }
 
 
-
+static void ecl_smspec_set_rate_variable(ecl_smspec_type * smspec , const char * kw , int index);
 
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file) {
   ecl_file_type * header = ecl_file_fread_alloc( header_file );
@@ -370,12 +373,12 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
       }
     }
     
-    ecl_smspec->grid_nx     = ecl_kw_iget_int(dimens , 1);
-    ecl_smspec->grid_ny     = ecl_kw_iget_int(dimens , 2);
-    ecl_smspec->grid_nz     = ecl_kw_iget_int(dimens , 3);
-    ecl_smspec->params_size = ecl_kw_get_size(keywords);
-    ecl_smspec->var_type    = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->var_type , __func__);
-
+    ecl_smspec->grid_nx       = ecl_kw_iget_int(dimens , 1);
+    ecl_smspec->grid_ny       = ecl_kw_iget_int(dimens , 2);
+    ecl_smspec->grid_nz       = ecl_kw_iget_int(dimens , 3);
+    ecl_smspec->params_size   = ecl_kw_get_size(keywords);
+    ecl_smspec->var_type      = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->var_type , __func__);
+    ecl_smspec->rate_variable = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->rate_variable , __func__);
     {
       int num = -1;
       for (index=0; index < ecl_kw_get_size(wells); index++) {
@@ -487,6 +490,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	  /* Lots of legitimate alternatives which are not handled .. */
 	  break;
 	}
+        ecl_smspec_set_rate_variable( ecl_smspec , kw ,index );
 	free(kw);
 	free(well);
       }
@@ -509,6 +513,7 @@ ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file) {
   }
   
   ecl_smspec_fread_header(ecl_smspec , header_file);
+  
   if (hash_has_key(ecl_smspec->misc_var_index , "TIME")) {
     if (hash_has_key( ecl_smspec->misc_var_index , "TIME"))
       ecl_smspec->time_index = hash_get_int(ecl_smspec->misc_var_index , "TIME");
@@ -907,6 +912,7 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->gen_var_index);
   hash_free(ecl_smspec->special_types);
   free(ecl_smspec->var_type);
+  free(ecl_smspec->rate_variable);
   free(ecl_smspec->simulation_case);
   free(ecl_smspec);
 }
@@ -981,6 +987,8 @@ bool ecl_smspec_var_is_total( const ecl_smspec_type * smspec , const char * var 
 
 
 
+
+
 /**
    This function checks whether an input general key (i.e. FWPR or
    GGPT:NORTH) represents an accumulated total: 
@@ -1008,6 +1016,28 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
   return is_total;
 }
 
+
+
+        
+        
+static void ecl_smspec_set_rate_variable(ecl_smspec_type * smspec , const char * kw , int index) {
+  const char *rate_vars[5] = {"OPR" , "GPR" , "WPR" , "GOR" , "WCT"};
+  bool  is_rate            = false;
+  int ivar;
+  for (ivar = 0; ivar < 5; ivar++) {
+    if (util_string_equal( rate_vars[ivar] , &kw[1])) {
+      is_rate = true;
+      break;
+    }
+  }
+  smspec->rate_variable[ index ] = is_rate;
+}
+
+
+
+bool ecl_smspec_is_rate(const ecl_smspec_type * smspec , int kw_index) {
+  return smspec->rate_variable[kw_index];
+}
 
 
 

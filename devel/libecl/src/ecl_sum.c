@@ -167,6 +167,16 @@ double  ecl_sum_get_well_var(const ecl_sum_type * ecl_sum , int ministep , const
   return ecl_sum_data_get( ecl_sum->data , ministep , index);
 }
 
+double ecl_sum_get_well_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * well , const char * var) {
+  int index = ecl_sum_get_well_var_index( ecl_sum , well , var );
+  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , index );
+}
+
+double ecl_sum_get_well_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * well , const char * var) {
+  int index = ecl_sum_get_well_var_index( ecl_sum , well , var );
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , index );
+}
+
 
 /*****************************************************************/
 /* Group variables */
@@ -179,6 +189,16 @@ double  ecl_sum_get_group_var(const ecl_sum_type * ecl_sum , int ministep , cons
   return ecl_sum_data_get( ecl_sum->data , ministep , index);
 }
 
+double ecl_sum_get_group_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * group , const char * var) {
+  int index = ecl_sum_get_group_var_index( ecl_sum , group , var );
+  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , index );
+}
+
+double ecl_sum_get_group_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * group , const char * var) {
+  int index = ecl_sum_get_group_var_index( ecl_sum , group , var );
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , index );
+}
+
 
 /*****************************************************************/
 /* Field variables */
@@ -189,6 +209,17 @@ double ecl_sum_get_field_var(const ecl_sum_type * ecl_sum , int ministep , const
   int index = ecl_sum_get_field_var_index( ecl_sum ,  var );
   return ecl_sum_data_get( ecl_sum->data , ministep , index);
 }
+
+double ecl_sum_get_field_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var) {
+  int index = ecl_sum_get_field_var_index( ecl_sum , var );
+  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , index );
+}
+
+double ecl_sum_get_field_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * var) {
+  int index = ecl_sum_get_field_var_index( ecl_sum , var );
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , index );
+}
+
 
 /*****************************************************************/
 /* Block variables */
@@ -214,6 +245,17 @@ double ecl_sum_get_block_var_ijk(const ecl_sum_type * ecl_sum , int ministep , c
   return ecl_sum_data_get( ecl_sum->data , ministep , index);
 }
 
+double ecl_sum_get_block_var_ijk_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * block_var, int i , int j , int k) {
+  int index = ecl_sum_get_block_var_index_ijk( ecl_sum , block_var ,i,j,k);
+  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , index );
+}
+
+double ecl_sum_get_block_var_ijk_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * block_var, int i , int j , int k) {
+  int index = ecl_sum_get_block_var_index_ijk( ecl_sum , block_var ,i,j,k);
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , index );
+}
+
+
 
 /*****************************************************************/
 /* Region variables */
@@ -229,6 +271,18 @@ double ecl_sum_get_region_var(const ecl_sum_type * ecl_sum , int ministep , int 
   return ecl_sum_data_get( ecl_sum->data , ministep , index);
 }
 
+double ecl_sum_get_region_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , int region_nr , const char * var) {
+  int index = ecl_sum_get_region_var_index( ecl_sum , region_nr , var );
+  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , index );
+}
+
+double ecl_sum_get_region_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , int region_nr , const char * var) {
+  int index = ecl_sum_get_region_var_index( ecl_sum , region_nr , var );
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , index );
+}
+
+
+
 /*****************************************************************/
 /* Misc variables */
 
@@ -239,6 +293,17 @@ double  ecl_sum_get_misc_var(const ecl_sum_type * ecl_sum , int ministep , const
   int index = ecl_sum_get_misc_var_index( ecl_sum ,  var);
   return ecl_sum_data_get( ecl_sum->data , ministep , index);
 }
+
+double ecl_sum_get_misc_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var) {
+  int index = ecl_sum_get_misc_var_index( ecl_sum , var );
+  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , index );
+}
+
+double ecl_sum_get_misc_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * var) {
+  int index = ecl_sum_get_misc_var_index( ecl_sum , var );
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , index );
+}
+
 
 
 /*****************************************************************/
@@ -258,7 +323,7 @@ double ecl_sum_get_well_completion_var(const ecl_sum_type * ecl_sum , int minist
 }
 
 /*****************************************************************/
-/* General variables ... */
+/* General variables - this means WWCT:OP_1 - i.e. composite variables*/
 
 int  ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lookup_kw) { return ecl_smspec_get_general_var_index( ecl_sum->smspec , lookup_kw); }
 bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw)       { return ecl_smspec_has_general_var( ecl_sum->smspec , lookup_kw); }
@@ -267,6 +332,18 @@ double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int ministep , con
   int index = ecl_sum_get_general_var_index(ecl_sum , lookup_kw);
   return ecl_sum_data_get( ecl_sum->data , ministep , index);
 }
+
+double ecl_sum_get_general_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var) {
+  int index = ecl_sum_get_general_var_index( ecl_sum , var );
+  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , index );
+}
+
+double ecl_sum_get_general_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * var) {
+  int index = ecl_sum_get_general_var_index( ecl_sum , var );
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , index );
+}
+
+
 
 
 /*****************************************************************/
@@ -386,13 +463,24 @@ time_t ecl_sum_get_start_time( const ecl_sum_type * ecl_sum) {
   return ecl_smspec_get_start_time( ecl_sum->smspec );
 }
 
+time_t ecl_sum_get_end_time( const ecl_sum_type * ecl_sum) {
+  return ecl_sum_data_get_sim_end( ecl_sum->data );
+}
 
 double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep ) {
   return ecl_sum_data_get_sim_days( ecl_sum->data , ministep);
 }
 
 
+int ecl_sum_get_ministep_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days) {
+  return ecl_sum_data_get_ministep_from_sim_days( ecl_sum->data , sim_days );
+}
 
+
+int ecl_sum_get_ministep_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time) {
+  return ecl_sum_data_get_ministep_from_sim_time(ecl_sum->data , sim_time );
+}
+ 
 
 /*****************************************************************/
 /* This is essentially the summary.x program. */ 
