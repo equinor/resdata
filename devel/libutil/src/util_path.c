@@ -53,10 +53,18 @@ static bool util_make_path2__(const char *path , mode_t mode) {
    
    If a file entry 'path' already exists, and is NOT a directory, the
    function will return false.
+
+   All directories which are actually created, are created with mode
+   @mode - no attempt is made to change the mode of existing
+   directories. 
+
+   Observe that the mode is an 'absolute' mode; umask is explicitly
+   circumvented when mkdir() is called.
 */
 
-bool util_make_path2( const char * path ) {
-  const mode_t mode = 0755;
+
+
+bool util_make_path2( const char * path , mode_t mode) {
 
   /* It already exists as a directory - we just return true. */
   if (util_is_directory( path ))
@@ -70,16 +78,27 @@ bool util_make_path2( const char * path ) {
     bool    make_path = true;
     char ** components;
     int     num_components;
-    int     len = 0;
-
+    int     len = 1;
+    bool    abs_path = util_is_abs_path( path );
+    mode_t  old_mode = umask( 0 );
+    
     util_split_string( path , UTIL_PATH_SEP_STRING , &num_components , &components );
-    while (make_path && (len  < num_components)) {
+    while (make_path && (len  <= num_components)) {
       char * current_path = util_alloc_joined_string( (const char **) components , len , UTIL_PATH_SEP_STRING );
+
+      /* Prepend the '/' for absolute path. */
+      if (abs_path) {
+        int length = strlen( current_path );
+        current_path = util_realloc(current_path , length + 2 , __func__);
+        memmove( &current_path[1] , current_path , length + 1);
+        current_path[0] = UTIL_PATH_SEP_CHAR;
+      }
       make_path = util_make_path2__( current_path , mode );
       len++;
       free( current_path );
     }
 
+    umask( old_mode );
     return make_path;
   }
 }

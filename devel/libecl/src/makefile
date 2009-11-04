@@ -6,8 +6,8 @@ COMPILE_INCLUDE  = -I$(LIBECL_HOME)/src -I$(LIBUTIL_HOME)/include -D'VIEWER=$(VI
 INSTALL_INC_PATH =  $(LIBECL_HOME)/include
 INSTALL_LIB_PATH =  $(LIBECL_HOME)/lib
 #################################################################
-LIB_OBJECTS       = ecl_smspec.o ecl_sum_data.o ecl_well_vars.o ecl_util.o ecl_kw.o ecl_sum.o fortio.o ecl_rft_file.o ecl_rft_node.o ecl_grid.o ecl_box.o ecl_io_config.o ecl_file.o ecl_region.o point.o tetrahedron.o 
-INC_FILES         = ecl_endian_flip.h ecl_smspec.h ecl_sum_data.h ecl_well_vars.h ecl_util.h ecl_kw.h ecl_sum.h fortio.h ecl_rft_file.h ecl_rft_node.h ecl_box.h ecl_grid.h ecl_io_config.h ecl_file.h ecl_region.h point.h tetrahedron.h 
+LIB_OBJECTS       = ecl_smspec.o ecl_sum_data.o ecl_well_vars.o ecl_util.o ecl_kw.o ecl_sum.o fortio.o ecl_rft_file.o ecl_rft_node.o ecl_grid.o ecl_box.o ecl_io_config.o ecl_file.o ecl_region.o point.o 
+INC_FILES         = ecl_endian_flip.h ecl_smspec.h ecl_sum_data.h ecl_well_vars.h ecl_util.h ecl_kw.h ecl_sum.h fortio.h ecl_rft_file.h ecl_rft_node.h ecl_box.h ecl_grid.h ecl_io_config.h ecl_file.h ecl_region.h point.h #tetrahedron.h 
 LIB       = libecl.a
 LIB_PATH  = -L$(LIBUTIL_HOME)/lib -L./ -L$(LIBCONFIG_HOME)/lib
 LIB_LINK  = -lecl -lconfig -lutil -llapack -lm -lz -lpthread 
@@ -48,8 +48,8 @@ new:
 include dependencies
 
 # Source code for binaries - based on library
-troll_contact.o   : troll_contact.c
-troll_iget_lgr.o  : troll_iget_lgr.c
+#troll_contact.o   : troll_contact.c
+#troll_iget_lgr.o  : troll_iget_lgr.c
 lgr_iget.o     	  : lgr_iget.c
 view_rft.o     	  : view_rft.c 	
 ecl_test.o     	  : ecl_test.c 	
@@ -72,18 +72,18 @@ ens_plot.o     	  : ens_plot.c
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x ens_plot.x lgr_iget.x make_grane_aqconn.x troll_iget_lgr.x troll_contact.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x ens_plot.x lgr_iget.x make_grane_aqconn.x #troll_iget_lgr.x troll_contact.x
 BIN	:  $(BIN_FILES) 
 BIN_FILES_SDP_INSTALL = convert.x kw_list.x kw_extract.x grid_info.x summary.x rft.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
 
 ecl_pack.x: $(LIB) ecl_pack.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_pack.o -o ecl_pack.x $(LIB_PATH) $(LIB_LINK)
 
-troll_iget_lgr.x: $(LIB) troll_iget_lgr.o
-	$(LD) -$(MFLAG) $(LDFLAGS) troll_iget_lgr.o -o troll_iget_lgr.x $(LIB_PATH) $(LIB_LINK)
-
-troll_contact.x: $(LIB) troll_contact.o
-	$(LD) -$(MFLAG) $(LDFLAGS) troll_contact.o -o troll_contact.x $(LIB_PATH) $(LIB_LINK)
+#troll_iget_lgr.x: $(LIB) troll_iget_lgr.o
+#	$(LD) -$(MFLAG) $(LDFLAGS) troll_iget_lgr.o -o troll_iget_lgr.x $(LIB_PATH) $(LIB_LINK)
+#
+#troll_contact.x: $(LIB) troll_contact.o
+#	$(LD) -$(MFLAG) $(LDFLAGS) troll_contact.o -o troll_contact.x $(LIB_PATH) $(LIB_LINK)
 
 lgr_iget.x: $(LIB) lgr_iget.o
 	$(LD) -$(MFLAG) $(LDFLAGS) lgr_iget.o -o lgr_iget.x $(LIB_PATH) $(LIB_LINK)
