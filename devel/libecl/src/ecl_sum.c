@@ -35,7 +35,7 @@
 /*****************************************************************/
 
 struct ecl_sum_struct {
-  int                 __id;     /* Funny integer used for for "safe" run-time casting. */
+  UTIL_TYPE_ID_DECLARATION;
   ecl_smspec_type   * smspec;   /* Internalized version of the SMSPEC file. */
   ecl_sum_data_type * data;     /* The data - can be NULL. */
 };
@@ -61,13 +61,15 @@ void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , int files , const char 
 
 ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , int files , const char **data_files ) {
   ecl_sum_type *ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
-  ecl_sum->__id   = ECL_SUM_ID;
+  UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
   ecl_sum->smspec = ecl_smspec_fread_alloc( header_file ); 
   ecl_sum->data   = NULL;
   ecl_sum_fread_realloc_data(ecl_sum , files , data_files );
   return ecl_sum;
 }
 
+
+UTIL_SAFE_CAST_FUNCTION( ecl_sum , ECL_SUM_ID );
 
 /**
    This function frees the data from the ecl_sum instance and sets the
@@ -87,13 +89,6 @@ void ecl_sum_free( ecl_sum_type * ecl_sum ) {
   free( ecl_sum );
 }
 
-
-ecl_sum_type * ecl_sum_safe_cast(const void * __ecl_sum) {
-  ecl_sum_type * ecl_sum = (ecl_sum_type *) __ecl_sum;
-  if (ecl_sum->__id != ECL_SUM_ID)
-    util_abort("%s: runtime cast failed - aborting. \n",__func__);
-  return ecl_sum;
-}
 
 
 void ecl_sum_free__(void * __ecl_sum) {
