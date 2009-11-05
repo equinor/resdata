@@ -56,7 +56,7 @@ ecl_test.o     	  : ecl_test.c
 convert.o      	  : convert.c  	
 kw_list.o      	  : kw_list.c  	
 kw_extract.o   	  : kw_extract.c   
-kw_strip.o   	  : kw_strip.c   
+kw_trim.o   	  : kw_trim.c   
 grid_info.o    	  : grid_info.c    
 view_summary.o 	  : view_summary.c 
 view_restart.o 	  : view_restart.c 
@@ -73,9 +73,9 @@ ens_plot.o     	  : ens_plot.c
 # in the source directory - and not the installed files. This is to
 
 
-BIN_FILES  = ecl_test.x convert.x kw_list.x kw_strip.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x ens_plot.x lgr_iget.x make_grane_aqconn.x #troll_iget_lgr.x troll_contact.x
+BIN_FILES  = ecl_test.x convert.x kw_list.x kw_trim.x kw_extract.x grid_info.x summary.x rft.x restart.x block_owc.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x rft_test.x ens_plot.x lgr_iget.x make_grane_aqconn.x #troll_iget_lgr.x troll_contact.x
 BIN	:  $(BIN_FILES) 
-BIN_FILES_SDP_INSTALL = convert.x kw_list.x kw_extract.x kw_strip.x grid_info.x summary.x rft.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
+BIN_FILES_SDP_INSTALL = convert.x kw_list.x kw_extract.x kw_trim.x grid_info.x summary.x rft.x extract_owc.x ecl_pack.x ecl_unpack.x extract_IJ.x run_gravity.x
 
 ecl_pack.x: $(LIB) ecl_pack.o
 	$(LD) -$(MFLAG) $(LDFLAGS) ecl_pack.o -o ecl_pack.x $(LIB_PATH) $(LIB_LINK)
@@ -113,8 +113,8 @@ kw_list.x: $(LIB) kw_list.o
 kw_extract.x: $(LIB) kw_extract.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  kw_extract.o -o kw_extract.x $(LIB_PATH)  $(LIB_LINK)
 
-kw_strip.x: $(LIB) kw_strip.o
-	$(LD) -$(MFLAG) $(LDFLAGS)  kw_strip.o -o kw_strip.x $(LIB_PATH)  $(LIB_LINK)
+kw_trim.x: $(LIB) kw_trim.o
+	$(LD) -$(MFLAG) $(LDFLAGS)  kw_trim.o -o kw_trim.x $(LIB_PATH)  $(LIB_LINK)
 
 grid_info.x: $(LIB) grid_info.o
 	$(LD) -$(MFLAG) $(LDFLAGS)  grid_info.o -o grid_info.x $(LIB_PATH)  $(LIB_LINK)
