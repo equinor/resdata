@@ -45,15 +45,16 @@ void              hash_iter_free(hash_iter_type *);
 bool              hash_iter_is_complete(const hash_iter_type *);
 const      char * hash_iter_get_next_key(hash_iter_type *);
 void            * hash_iter_get_next_value(hash_iter_type *);
-
+void              hash_iter_restart( hash_iter_type * iter );
 
 hash_type       * hash_alloc_from_options(const stringlist_type *);
 
 int               hash_inc_counter(hash_type * hash , const char * counter_key);
+int               hash_get_counter(hash_type * hash , const char * key);
 void              hash_insert_int(hash_type * , const char * , int);
 int               hash_get_int(hash_type * , const char *);
 void              hash_insert_double(hash_type * , const char * , double);
-double               hash_get_double(hash_type * , const char *);
+double            hash_get_double(hash_type * , const char *);
 
 UTIL_IS_INSTANCE_HEADER(hash);
 

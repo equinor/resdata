@@ -7,9 +7,9 @@ extern "C" {
 #include <stdbool.h>
 
 /**
-   This header file checks is the ECLIPSE endianness and the hardware
+   This header file checks if the ECLIPSE endianness and the hardware
    endianness are equal, and defines the macro ECL_ENDIAN_FLIP
-   accordingly. 
+   accordingly.
    
    All the ecl_xxx functions will use the ECL_ENDIAN_FLIP macro to
    determine whether the endian flip should be performed. When opening

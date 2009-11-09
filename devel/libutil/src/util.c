@@ -533,7 +533,9 @@ char * util_isscanf_alloc_envvar( const char * string , int env_index ) {
 }
 
 
-
+/**
+   If the parsing fails the time_t pointer is set to -1;
+*/
 bool util_sscanf_date(const char * date_token , time_t * t) {
   int day   , month , year;
   char sep1 , sep2;
@@ -4675,7 +4677,7 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
   if (target_file != NULL && blocking == false) 
     util_abort("%s: When giving a target_file != NULL - you must use the blocking semantics. \n",__func__);
 
-  child_pid = vfork();
+  child_pid = fork();
   if (child_pid == -1) {
     fprintf(stderr,"Error: %s(%d) \n",strerror(errno) , errno);
     util_abort("%s: fork() failed when trying to run external command:%s \n",__func__ , executable);
@@ -4697,6 +4699,7 @@ pid_t util_vfork_exec(const char * executable , int argc , const char ** argv ,
       fclose(stream);
       __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
     }
+
     if (stderr_file != NULL) {
       /** This is just to invoke the "block on full disk behaviour" before the external program starts. */
       FILE * stream = util_fopen( stderr_file , "w");

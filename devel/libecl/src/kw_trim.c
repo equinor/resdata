@@ -18,18 +18,18 @@ static void usage() {
   fprintf(stderr,"This program is used to remove keywords from an ECLIPSE file\n");
   fprintf(stderr,"inplace. The program is used as follows:\n");
   fprintf(stderr,"\n");
-  fprintf(stderr,"bash%%  kw_strip FILENAME kw1 kw2 kw3\n");
+  fprintf(stderr,"bash%%  kw_trim FILENAME kw1 kw2 kw3\n");
   fprintf(stderr,"\n");
-  fprintf(stderr,"This will update the file FILENAME __IN_PLACE__ so only the\n");
+  fprintf(stderr,"This will update the file FILENAME --IN-PLACE-- so only the\n");
   fprintf(stderr,"keywords kw1, kw2 and kw3 are kept. I.e. to only retain the\n");
   fprintf(stderr,"solution vectors in a restart file:\n");
   fprintf(stderr,"\n");
-  fprintf(stderr,"bash%% kw_strip RESTART_FILE PRESSURE SWAT SGAS RS RV\n");
+  fprintf(stderr,"bash%% kw_trim RESTART_FILE PRESSURE SWAT SGAS RS RV\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"Observe the following:\n");
   fprintf(stderr,"\n");
   fprintf(stderr," 1. You must name at least one keyword to keep - if you give no\n");
-  fprintf(stderr,"    keyword arguments that amount to removing the file - and that\n");
+  fprintf(stderr,"    keyword arguments that amounts to removing the file - and that\n");
   fprintf(stderr,"    is done with 'rm'.\n");
   fprintf(stderr,"\n");
   fprintf(stderr," 2. If a keyword occurs several times in file all instances are\n");
@@ -90,5 +90,6 @@ int main(int argc, char ** argv) {
       fortio_fclose( fortio );
     }
     ecl_file_free( ecl_file );
+    set_free( kw_set );
   }
 }

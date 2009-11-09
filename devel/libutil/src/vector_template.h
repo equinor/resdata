@@ -5,8 +5,10 @@ extern "C" {
 #endif
 #include <stdio.h>
 #include <buffer.h>
+#include <util.h>
 
 typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
+
 
 void                 <TYPE>_vector_select_unique(<TYPE>_vector_type * vector);
 <TYPE>_vector_type * <TYPE>_vector_alloc( int init_size , <TYPE> );
@@ -17,6 +19,7 @@ void                 <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> fac
 <TYPE>               <TYPE>_vector_safe_iget(const <TYPE>_vector_type * , int);
 <TYPE>               <TYPE>_vector_get_min(const <TYPE>_vector_type * vector);
 <TYPE>               <TYPE>_vector_get_max(const <TYPE>_vector_type * vector);
+<TYPE>               <TYPE>_vector_iadd( <TYPE>_vector_type * vector , int index , <TYPE> delta);
 void                 <TYPE>_vector_iset(<TYPE>_vector_type *       , int , <TYPE>);
 void                 <TYPE>_vector_append(<TYPE>_vector_type *     , <TYPE>);
 void                 <TYPE>_vector_free(<TYPE>_vector_type *);  
@@ -25,6 +28,7 @@ void                 <TYPE>_vector_free_data(<TYPE>_vector_type *);
 void                 <TYPE>_vector_reset(<TYPE>_vector_type *);  
 int                  <TYPE>_vector_size(const <TYPE>_vector_type * );
 <TYPE>               <TYPE>_vector_pop(<TYPE>_vector_type * vector);
+<TYPE>               <TYPE>_vector_get_first(const <TYPE>_vector_type * vector);
 <TYPE>               <TYPE>_vector_get_last(const <TYPE>_vector_type * );
 <TYPE> *             <TYPE>_vector_get_ptr(const <TYPE>_vector_type * );
 const <TYPE> *       <TYPE>_vector_get_const_ptr(const <TYPE>_vector_type * );
@@ -45,6 +49,8 @@ void                 <TYPE>_vector_buffer_fwrite(const <TYPE>_vector_type * vect
 void                 <TYPE>_vector_fread( <TYPE>_vector_type * vector , FILE * stream );
 void                 <TYPE>_vector_fwrite_data( const <TYPE>_vector_type * vector , FILE * stream );
 void                 <TYPE>_vector_fread_data( <TYPE>_vector_type * vector , int size, FILE * stream);
+
+UTIL_SAFE_CAST_HEADER( <TYPE>_vector );
 
 #ifdef __cplusplus 
 }

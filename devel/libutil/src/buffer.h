@@ -37,6 +37,7 @@ void 		   buffer_fseek(buffer_type * buffer , ssize_t offset , int whence);
 void 		   buffer_fskip(buffer_type * buffer, ssize_t offset);
 void               buffer_clear( buffer_type * buffer );
 
+void               buffer_fskip_int(buffer_type * buffer);
 void   		   buffer_fskip_time_t(buffer_type * buffer);
 time_t 		   buffer_fread_time_t(buffer_type * buffer);
 void   		   buffer_fwrite_time_t(buffer_type * buffer , time_t value);

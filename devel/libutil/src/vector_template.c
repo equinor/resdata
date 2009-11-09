@@ -3,13 +3,12 @@
    is charactereized by the following:
 
     o The content is only fundamental scalar types, like double, int
-      or bool. If you a vector of compositie types use the vector_type
-      implementation.
+      or bool. If you want a vector of compositie types use the
+      vector_type implementation.
 
     o The vector will grow as needed. You can safely set any index in
-      the value, and it will automatically grow. However - this might
-      lead to 'holes' with undefined values in the vector (see
-      illustration below).
+      the vector, and it will automatically grow. However - this might
+      lead to 'holes' - these will be filled with the default value.
 
     o The implementation is terms of a <TYPE>, the following sed
       one-liner will then produce proper source files:
@@ -17,23 +16,24 @@
       sed -e'/<TYPE>/int/g' vector_template.c > int_vector.c
 
 
-   Illustration of the interplay of size and alloc_size.
+   Illustration of the interplay of size, alloc_size and default value.
 
 
-   1. int_vector_type * vector = int_vector_alloc(2);
+   1. int_vector_type * vector = int_vector_alloc(2 , 77);
    2. int_vector_append(vector , 1);
    3. int_vector_append(vector , 0);
    4. int_vector_append(vector , 12);
    5. int_vector_iset(vector , 6 , 78);
+   6. int_vector_set_default( vector , 99 );
 
    ------------------------------------
 
     ·-----·-----·      
-1.  |     |     |    		 								      size = 0, alloc_size = 2
+1.  | 77  | 77  |    		 								      size = 0, alloc_size = 2
     ·-----·-----·
 
     ·-----·-----·    		 								        
-2.  |  1  |     |    		 								      size = 1, alloc_size = 2
+2.  |  1  | 77  |    		 								      size = 1, alloc_size = 2
     ·-----·-----·
 
     ·-----·-----·    		 								        
@@ -41,17 +41,19 @@
     ·-----·-----·
 
     ·-----·-----·-----·-----·    								        
-4.  |  1  |  0  |  12 |     |    								      size = 3, alloc_size = 4                                             
+4.  |  1  |  0  |  12 | 77  |    								      size = 3, alloc_size = 4                                             
     ·-----·-----·-----·-----·
 
     ·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·      
-5.  |  1  |  0  |  12 |  X  |  X  |  X  |  78 |     |     |     |     |     |     |     |     |     | size = 7, alloc_size = 12
+5.  |  1  |  0  |  12 |  77 |  77 | 77  |  78 | 77  | 77  |  77 | 77  | 77  | 77  | 77  | 77  | 77  | size = 7, alloc_size = 12, default = 77
+    ·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·
+
+    ·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·      
+6.  |  1  |  0  |  12 |  77 |  77 | 77  |  78 | 77  | 99  |  99 | 99  | 99  | 99  | 99  | 99  | 99  | size = 7, alloc_size = 12, default = 99
     ·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·
     
        0     1      2    3     4     5     6     7     8     9    10    11    12    13    14   15
 
-
-    Now - the important point with this figure is the following:
 
     1. In point 4. above - if you ask the vector for it's size you
        will get 3, and int_vector_iget(vector, 3) will fail because
@@ -62,10 +64,13 @@
 
     3. In point 5 above we have grown the vector quite a lot to be
        able to write in index 6, as a results there are now many slots
-       in the vector which contain uninitialized data (marked with 'X'
-       above)'. If you query the vector for element 3, 4 or 5 the
-       vector will return the default value (set on allocation). Askin
-       for element 7 will abort().
+       in the vector which contain the default value - i.e. 77 in this
+       case.
+
+    4. In point 6 we change the default value 77 -> 99, then all the
+       77 values from position 7 and onwards are changed to 99; the 77
+       values in positions 3,4 & 5 are not touched.
+
 */
 
 
@@ -74,8 +79,10 @@
 #include <buffer.h>
 #include <<TYPE>_vector.h>
 
+#define TYPE_VECTOR_ID "<TYPE>"[0]
 
 struct <TYPE>_vector_struct {
+  UTIL_TYPE_ID_DECLARATION;
   int      alloc_size;    /* The alloceted size of data. */
   int      size;          /* The index of the last valid - i.e. actively set - element in the vector. */
   <TYPE>   default_value; /* The data vector is initialized with this value. */
@@ -94,6 +101,9 @@ typedef struct {
   <TYPE> value;
 } sort_node_type;
 
+
+
+UTIL_SAFE_CAST_FUNCTION(<TYPE>_vector , TYPE_VECTOR_ID);
 
 
 static void <TYPE>_vector_realloc_data__(<TYPE>_vector_type * vector , int new_alloc_size) {
@@ -128,6 +138,7 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
   vector->size 	     	      = 0;  
   vector->alloc_size 	      = 0;
   vector->default_value       = default_value;
+  UTIL_TYPE_ID_INIT( vector , TYPE_VECTOR_ID);
   if (init_size > 0)
     <TYPE>_vector_iset( vector , init_size - 1 , default_value );  /* Filling up the init size elements with the default value */
   
@@ -148,9 +159,22 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
   return vector->default_value;
 }
 
+
+/**
+   This will set the default value. This implies that everything
+   following the current length of the vector will be set to the new
+   default value, whereas values not explicitly set in the interior of
+   the vector will retain the olf default value.
+*/
+
+
 void <TYPE>_vector_set_default(<TYPE>_vector_type * vector, <TYPE> default_value) {
   vector->default_value = default_value;
+  for (int i=vector->size; i < vector->alloc_size; i++)
+    vector->data[i] = default_value;
 }
+
+
 
 <TYPE> <TYPE>_vector_iget(const <TYPE>_vector_type * vector , int index) {
   <TYPE>_vector_assert_index(vector , index);
@@ -194,6 +218,10 @@ void <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> factor) {
 }
 
 
+/** Will abort is size == 0 */
+<TYPE> <TYPE>_vector_get_first(const <TYPE>_vector_type * vector) {
+  return <TYPE>_vector_iget(vector , 0);
+}
 
 
 
@@ -214,6 +242,17 @@ void <TYPE>_vector_iset(<TYPE>_vector_type * vector , int index , <TYPE> value) 
       vector->data[i] = vector->default_value;
     vector->size = index + 1;
   }
+}
+
+/**
+   This function invokes _iset - i.e. growing the vector if needed. If
+   the index is not currently set, the default value will be used.
+*/
+
+<TYPE> <TYPE>_vector_iadd( <TYPE>_vector_type * vector , int index , <TYPE> delta) {
+  <TYPE> new_value     = <TYPE>_vector_safe_iget(vector , index ) + delta;
+  <TYPE>_vector_iset( vector , index , new_value );
+  return new_value;
 }
 
 

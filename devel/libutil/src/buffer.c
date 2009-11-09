@@ -314,6 +314,11 @@ void buffer_fskip_time_t(buffer_type * buffer) {
 }
 
 
+void buffer_fskip_int(buffer_type * buffer) {
+  buffer_fseek( buffer , sizeof(int) , SEEK_CUR );
+}
+
+
 time_t buffer_fread_time_t(buffer_type * buffer) {
   time_t value;
   buffer_fread(buffer , &value , sizeof value , 1);

@@ -361,6 +361,17 @@ int hash_inc_counter(hash_type * hash , const char * counter_key) {
   }
 }
 
+/**
+   Will return 0 if the key is not in the hash.
+*/
+
+int hash_get_counter(hash_type * hash , const char * key) {
+  if (hash_has_key( hash , key ))
+    return hash_get_int( hash , key );
+  else
+    return 0;
+}
+
 
 void hash_insert_double(hash_type * hash , const char * key , double value) {
   node_data_type * node_data = node_data_alloc_double( value );
@@ -781,6 +792,11 @@ struct hash_iter_struct {
 };
 
 
+void hash_iter_restart( hash_iter_type * iter ) {
+  iter->current_key_num = 0;
+}
+
+
 
 hash_iter_type * hash_iter_alloc(const hash_type * hash) {
   hash_iter_type * iter = util_malloc(sizeof * iter, __func__); 
@@ -788,10 +804,11 @@ hash_iter_type * hash_iter_alloc(const hash_type * hash) {
   iter->hash            = hash;
   iter->num_keys        = hash_get_size(hash);
   iter->keylist         = hash_alloc_keylist( (hash_type *) hash);
-  iter->current_key_num = 0;
-
+  hash_iter_restart( iter );
   return iter;
 }
+
+
 
 
 
