@@ -566,7 +566,7 @@ void plot_meas_rft_file(plot_type * plot, char * well, hash_type * ens_table){
 void plot_finalize(plot_type * plot , plot_info_type * info , const char * plot_file) {
   plot_data(plot);
   plot_free(plot);
-  util_vfork_exec(info->viewer , 1 , (const char *[1]) { plot_file } , false , NULL , NULL , NULL , NULL , NULL);
+  util_fork_exec(info->viewer , 1 , (const char *[1]) { plot_file } , false , NULL , NULL , NULL , NULL , NULL);
 }
 
 

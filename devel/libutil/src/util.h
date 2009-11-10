@@ -321,7 +321,7 @@ void   * util_fread_alloc_compressed(FILE * );
 void 	 util_fwrite_compressed(const void * , int , FILE * );
 void     util_block_growing_file(const char * );
 void     util_block_growing_directory(const char * );
-pid_t    util_vfork_exec(const char *  , int , const char ** , bool , const char * , const char *  , const char * , const char *  , const char * );
+pid_t    util_fork_exec(const char *  , int , const char ** , bool , const char * , const char *  , const char * , const char *  , const char * );
 char   * util_alloc_realpath(const char * );
 bool     util_try_lockf(const char *  , mode_t  , int * );
 bool     util_sscanf_bytesize(const char * , size_t *);

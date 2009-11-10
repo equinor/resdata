@@ -4258,7 +4258,7 @@ uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
   int     num_users   = 0;
   uid_t * users       = util_malloc( sizeof * users * buffer_size , __func__);
   char * tmp_file     = util_alloc_tmp_file("/tmp" , "lsof" , false);
-  util_vfork_exec(lsf_executable , 2 , (const char *[2]) {"-F" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
+  util_fork_exec(lsf_executable , 2 , (const char *[2]) {"-F" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
   {
     FILE * stream = util_fopen(tmp_file , "r");
     while ( true ) {
@@ -4312,7 +4312,7 @@ char * util_alloc_filename_from_stream( FILE * input_stream ) {
     char    line_file[4096];
     char * pid_string = util_alloc_sprintf("%d" , getpid());
     char * tmp_file   = util_alloc_tmp_file("/tmp" , "lsof" , false);
-    util_vfork_exec(lsf_executable , 3 , (const char *[3]) {"-p" , pid_string , "-Ffn"}, true , NULL , NULL , NULL , tmp_file , NULL);
+    util_fork_exec(lsf_executable , 3 , (const char *[3]) {"-p" , pid_string , "-Ffn"}, true , NULL , NULL , NULL , tmp_file , NULL);
     {
       FILE * stream = util_fopen(tmp_file , "r");
       fscanf( stream , "%s" , line_fd);  /* Skipping the first pxxxx marker */
@@ -4376,7 +4376,7 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
     argv[1] = util_alloc_sprintf("--exe=%s" , executable);
     argv[2] = util_alloc_string_copy(adress);
     
-    util_vfork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , NULL , tmp_file , NULL);
+    util_fork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , NULL , tmp_file , NULL);
     util_free_stringlist(argv , 3);
   }
   
@@ -4612,7 +4612,7 @@ void util_block_growing_directory(const char * directory) {
 
 /** 
     A small function used to redirect a file descriptior,
-    only used as a helper utility for util_vfork_exec().
+    only used as a helper utility for util_fork_exec().
 */
     
 static void __util_redirect(int src_fd , const char * target_file , int open_flags) {
@@ -4668,7 +4668,7 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
 
 */
 
-pid_t util_vfork_exec(const char * executable , int argc , const char ** argv , 
+pid_t util_fork_exec(const char * executable , int argc , const char ** argv , 
 		      bool blocking , const char * target_file , const char  * run_path , 
 		      const char * stdin_file , const char * stdout_file , const char * stderr_file) {
   const char  ** __argv = NULL;
