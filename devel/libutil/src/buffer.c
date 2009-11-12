@@ -285,11 +285,16 @@ void buffer_fseek(buffer_type * buffer , ssize_t offset , int whence) {
     new_pos = buffer->content_size;
   else 
     util_abort("%s: unrecognized whence indicator - aborting \n",__func__);
+  
+  /** 
+      Observe that we can seek to the very end of the buffer. I.e. for
+      a buffer with content_size == 20 we can seek to position 20.
+  */
 
-  if ((new_pos >= 0) && (new_pos < buffer->content_size))
+  if ((new_pos >= 0) && (new_pos <= buffer->content_size))
     buffer->pos = new_pos;
   else
-    util_abort("%s: tried to seek to position:%ld - outside of bounds \n",__func__ , new_pos);
+    util_abort("%s: tried to seek to position:%ld - outside of bounds: [0,%d) \n",__func__ , new_pos , buffer->content_size);
 }
 
 void buffer_fskip(buffer_type * buffer, ssize_t offset) {
@@ -315,7 +320,7 @@ void buffer_fskip_time_t(buffer_type * buffer) {
 
 
 void buffer_fskip_int(buffer_type * buffer) {
-  buffer_fseek( buffer , sizeof(int) , SEEK_CUR );
+  buffer_fseek( buffer , sizeof( int ) , SEEK_CUR );
 }
 
 

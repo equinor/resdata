@@ -126,6 +126,8 @@ time_t       util_make_date(int , int , int);
 void         util_inplace_forward_days(time_t *  , double);
 double       util_difftime(time_t  , time_t  , int *  , int *  , int *  , int *);
 double       util_difftime_days(time_t  , time_t );
+char       * util_alloc_date_string( time_t t );
+char       * util_alloc_date_stamp( );
 
 bool         util_char_in(char c, int , const char *);
 char       * util_alloc_sprintf_va(const char * fmt , va_list ap);
