@@ -10,6 +10,7 @@ extern "C" {
 #include <time.h>
 #include <stringlist.h>
 #include <ecl_smspec.h>
+#include <time_t_vector.h>
 
 typedef struct ecl_sum_struct       ecl_sum_type;
 
@@ -86,11 +87,13 @@ void   ecl_sum_report2ministep_range(const ecl_sum_type * ecl_sum , int report_s
 time_t ecl_sum_get_sim_time( const ecl_sum_type * ecl_sum , int ministep );
 double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep );
 
+time_t_vector_type * ecl_sum_alloc_time_vector( const ecl_sum_type * ecl_sum  , bool report_only);
 time_t       ecl_sum_get_end_time( const ecl_sum_type * ecl_sum);
 int          ecl_sum_get_ministep_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days);
 int          ecl_sum_get_ministep_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time);
 time_t       ecl_sum_get_start_time(const ecl_sum_type * );
-const char * ecl_sum_get_simulation_case(const ecl_sum_type * );
+const char * ecl_sum_get_case(const ecl_sum_type * );
+
 /*****************************************************************/
 stringlist_type     * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum );
 stringlist_type     * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum );

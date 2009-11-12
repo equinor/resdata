@@ -10,8 +10,10 @@
 #include <util.h>
 #include <vector.h>
 #include <int_vector.h>
+#include <time_t_vector.h>
 #include <ecl_smspec.h>
 #include <ecl_sum_data.h>
+
 
 /**
    The ECLIPSE summary data is organised in a header file (.SMSPEC)
@@ -410,6 +412,11 @@ int ecl_sum_get_report_ministep_end( const ecl_sum_type * ecl_sum, int report_st
 }
 
 
+time_t_vector_type * ecl_sum_alloc_time_vector( const ecl_sum_type * ecl_sum  , bool report_only) {
+  return ecl_sum_data_alloc_time_vector( ecl_sum->data , report_only );
+}
+
+
 void ecl_sum_summarize( const ecl_sum_type * ecl_sum , FILE * stream ) {
   ecl_sum_data_summarize( ecl_sum->data , stream );
 }
@@ -524,7 +531,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
   free( has_var );
 }
 
-const char * ecl_sum_get_simulation_case(const ecl_sum_type * ecl_sum) {
+const char * ecl_sum_get_case(const ecl_sum_type * ecl_sum) {
   return ecl_smspec_get_simulation_case( ecl_sum->smspec );
 }
 

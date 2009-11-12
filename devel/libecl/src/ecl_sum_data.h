@@ -7,10 +7,11 @@ extern "C" {
 #endif
 #include <stdlib.h>
 #include <time.h>
+#include <time_t_vector.h>
 
 typedef struct ecl_sum_data_struct ecl_sum_data_type ; 
 
-
+time_t_vector_type     * ecl_sum_data_alloc_time_vector( const ecl_sum_data_type * data , bool report_only);
 time_t                   ecl_sum_data_get_sim_start ( const ecl_sum_data_type * data ); 
 time_t                   ecl_sum_data_get_sim_end   ( const ecl_sum_data_type * data ); 
 double                   ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ); 

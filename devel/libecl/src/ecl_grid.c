@@ -335,7 +335,8 @@ struct ecl_grid_struct {
   char                * parent_name;   /* The name of the parent for a nested LGR - for a LGR descending directly from the main grid this will be NULL. */
   hash_type           * children;      /* A table of LGR children for this grid. */
   const ecl_grid_type * parent_grid;   /* The parent grid for this (lgr) - NULL for the main grid. */      
-  
+  const ecl_grid_type * global_grid;   /* The global grid - NULL for the main grid. */
+
   /*
     The two fields below are for *storing* LGR grid instances. Observe
     that these fields will be NULL for LGR grids, i.e. grids with
@@ -741,6 +742,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_n
   }
   grid->parent_name = NULL;
   grid->parent_grid = NULL;
+  grid->global_grid = NULL;
   grid->children    = hash_alloc();
   return grid;
 }
@@ -905,13 +907,14 @@ static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , const float * mapa
 */
 
 
-static void ecl_grid_add_lgr( ecl_grid_type * main_grid , const ecl_grid_type * lgr_grid) {
-  int next_grid_nr = vector_get_size( main_grid->LGR_list);
+static void ecl_grid_add_lgr( ecl_grid_type * main_grid , ecl_grid_type * lgr_grid) {
+  int next_grid_nr = vector_get_size( main_grid->LGR_list );
   if (next_grid_nr != lgr_grid->grid_nr) 
     util_abort("%s: index based insertion of LGR grid failed. next_grid_nr:%d  lgr->grid_nr:%d \n",__func__ , next_grid_nr , lgr_grid->grid_nr);
   {
     vector_append_owned_ref( main_grid->LGR_list , lgr_grid , ecl_grid_free__);
     hash_insert_ref( main_grid->LGR_hash , lgr_grid->name , lgr_grid);
+    lgr_grid->global_grid = main_grid;
   }
 }
 
@@ -1807,7 +1810,7 @@ double ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = grid->cells[global_index];
   double depth = 0;
   for (int ij = 0; ij < 4; ij++) 
-    depth += cell->corner_list[ij]->z;
+    depth += cell->corner_list[ij + 4]->z;
   
   return depth * 0.25;
 }
@@ -1965,6 +1968,14 @@ const ecl_grid_type * ecl_grid_get_cell_lgr3(const ecl_grid_type * grid , int i,
 const ecl_grid_type * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int active_index) {
   const int global_index = ecl_grid_get_global_index1A( grid , active_index );
   return ecl_grid_get_cell_lgr1( grid , global_index );
+}
+
+/**
+   Will return the global grid for a lgr. If the input grid is indeed
+   a global grid itself the function will return NULL.
+*/
+const ecl_grid_type * ecl_grid_get_global_grid( const ecl_grid_type * grid ) {
+  return grid->global_grid;
 }
 
 

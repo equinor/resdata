@@ -7,6 +7,7 @@
 #include <vector.h>
 #include <ecl_file.h>
 #include <ecl_endian_flip.h>
+#include <time_t_vector.h>
 
 
 /*
@@ -776,10 +777,34 @@ int ecl_sum_data_get_last_report_step( const ecl_sum_data_type * data ) {
   return data->last_report_step;
 }
 
+
 int ecl_sum_data_get_first_ministep( const ecl_sum_data_type * data ) {
   return data->first_ministep;
 }
 
 int ecl_sum_data_get_last_ministep( const ecl_sum_data_type * data ) {
   return data->last_ministep;
+}
+
+
+
+time_t_vector_type * ecl_sum_data_alloc_time_vector( const ecl_sum_data_type * data , bool report_only) {
+  time_t_vector_type * time_vector = time_t_vector_alloc(0,0);
+  time_t_vector_append( time_vector , ecl_smspec_get_start_time( data->smspec ));
+  if (report_only) {
+    int report_step;
+    for (report_step = data->first_report_step; report_step < data->last_report_step; report_step++) {
+      const ecl_sum_ministep_type * ministep = ecl_sum_data_get_ministep( data , int_vector_iget(data->report_last_ministep , report_step));
+      time_t_vector_append( time_vector , ministep->sim_time );
+    }
+  } else {
+    int i;
+    for (i = 0; i < vector_get_size(data->data); i++) {
+      const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , i );
+      time_t_vector_append( time_vector , ministep->sim_time );
+    }
+  }
+    
+  
+  return time_vector;
 }

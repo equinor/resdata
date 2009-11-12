@@ -23,8 +23,6 @@ double          ecl_grid_get_cell_thickness1( const ecl_grid_type * grid , int g
 double          ecl_grid_get_cdepth1(const ecl_grid_type * grid , int global_index);
 double          ecl_grid_get_cdepth3(const ecl_grid_type * grid , int i, int j , int k);
 double          ecl_grid_get_depth3(const ecl_grid_type * grid , int i, int j , int k);
-int             ecl_grid_get_parent_cell1( const ecl_grid_type * grid , int global_index);
-int             ecl_grid_get_parent_cell3( const ecl_grid_type * grid , int i , int j , int k);
 int             ecl_grid_get_global_index_from_xy( const ecl_grid_type * ecl_grid , int k , bool lower_layer , double x , double y);
 bool            ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index , double x , double y , double z);
 bool            ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i , int j , int k, double x , double y , double z );
@@ -81,17 +79,21 @@ bool            ecl_grid_block_value_3d(ecl_grid_type * , double  , double  ,dou
 
 int             ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type * region_kw , int region_value , bool active_only, bool export_active_index , int_vector_type * index_list);
 
-const ecl_grid_type * ecl_grid_get_cell_lgr1(const ecl_grid_type * grid , int global_index );
-const ecl_grid_type * ecl_grid_get_cell_lgr3(const ecl_grid_type * grid , int i, int j , int k);
-const ecl_grid_type * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int active_index);
-int             ecl_grid_get_num_lgr(const ecl_grid_type * main_grid );
-int             ecl_grid_get_grid_nr( const ecl_grid_type * ecl_grid );
-ecl_grid_type * ecl_grid_iget_lgr(const ecl_grid_type * main_grid , int lgr_nr);
-ecl_grid_type * ecl_grid_get_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
-bool            ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
-stringlist_type * ecl_grid_alloc_lgr_name_list(const ecl_grid_type * ecl_grid);
 
-double          ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k);
+/* lgr related functions */
+const ecl_grid_type   * ecl_grid_get_cell_lgr3(const ecl_grid_type * grid , int i, int j , int k);
+const ecl_grid_type   * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int active_index);
+int                     ecl_grid_get_num_lgr(const ecl_grid_type * main_grid );
+int                     ecl_grid_get_grid_nr( const ecl_grid_type * ecl_grid );
+ecl_grid_type         * ecl_grid_iget_lgr(const ecl_grid_type * main_grid , int lgr_nr);
+ecl_grid_type         * ecl_grid_get_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
+bool                    ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
+stringlist_type       * ecl_grid_alloc_lgr_name_list(const ecl_grid_type * ecl_grid);
+int                     ecl_grid_get_parent_cell1( const ecl_grid_type * grid , int global_index);
+int                     ecl_grid_get_parent_cell3( const ecl_grid_type * grid , int i , int j , int k);
+const ecl_grid_type   * ecl_grid_get_global_grid( const ecl_grid_type * grid );
+
+double                  ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k);
 
 #ifdef __cplusplus
 }

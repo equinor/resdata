@@ -58,7 +58,7 @@ static const char *ecl_kw_header_write_fmt = " '%-8s' %11d '%-4s'\n";
 
 static void ecl_kw_assert_index(const ecl_kw_type *ecl_kw , int index, const char *caller) {
   if (index < 0 || index >= ecl_kw->size) 
-    util_abort("%s: Invalid index lookup. \n",caller);
+    util_abort("%s: Invalid index lookup. input_index:%d   size:%d \n",caller , index , ecl_kw->size);
 }
 
 
