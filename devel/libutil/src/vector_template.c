@@ -372,6 +372,9 @@ void <TYPE>_vector_shrink(<TYPE>_vector_type * vector) {
 }
 
 
+
+
+
 /*****************************************************************/
 /* Functions for sorting a vector instance. */
 
@@ -585,3 +588,14 @@ void <TYPE>_vector_buffer_fwrite(const <TYPE>_vector_type * vector , buffer_type
 }
 
 
+/*****************************************************************/
+
+bool <TYPE>_vector_equal(const <TYPE>_vector_type * vector1 , const <TYPE>_vector_type * vector2) {
+  if (vector1->size == vector2->size) {
+    if (memcmp(vector1->data , vector2->data , sizeof * vector1->data * vector1->size) == 0)
+      return true;
+    else
+      return false;
+  } else
+    return false;
+}
