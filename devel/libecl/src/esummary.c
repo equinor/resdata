@@ -14,9 +14,9 @@ void install_SIGNALS(void) {
 }
 
 void usage() {
-  fprintf(stderr," The esummary.x program can be used to summary vectors from \n");
+  fprintf(stderr," The esummary.x program can be used to extract summary vectors from \n");
   fprintf(stderr," an ensemble of summary files: \n\n");
-  fprintf(stderr,"    bash%% esummary.x  ECLIPSE1.DATA ECLIPSE2.DATA  KEY1  KEY2  ... \n"); 
+  fprintf(stderr,"    bash%% esummary.x  ECLIPSE1.DATA ECLIPSE2.DATA  KEY1  KEY2  ... \n\n"); 
   exit(1);
 }
 
