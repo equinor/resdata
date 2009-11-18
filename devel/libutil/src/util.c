@@ -1655,7 +1655,8 @@ static void util_walk_descend__(const char               * root_path ,
             bool descend = true;
             if (dir_callback != NULL)
               descend = dir_callback( root_path , dp->d_name , current_depth , dir_callback_arg);
-            if (descend)
+            
+            if (descend && util_file_exists(full_path)) /* The callback might have removed it. */
               util_walk_directory__( full_path , depth_first , current_depth + 1 , file_callback, file_callback_arg , dir_callback , dir_callback_arg );
           }
           free( full_path );

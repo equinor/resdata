@@ -292,6 +292,7 @@ void static util_unlink_path_static( const char *path ) {
               }
 	    } else 
 	      fprintf(stderr,"Warning mismatch in uid of calling process and owner for:%s - entry *not* removed \n",full_path);
+
 	  }
 	}
 	free(full_path);

@@ -54,6 +54,10 @@ int main( int argc , char ** argv ) {
 
 
 
+/*
+/d/proj/bg/enkf/abuf/Gullfaks/Gullfaks_sector_model/Experiments_Real_Ens_100/cgg_seismic_prod_local_start_2_new/Ensemble_old/cgg_4d_prod_local_start_2_new
+
+ */
 
 
 

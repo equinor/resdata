@@ -170,7 +170,7 @@ static file_node_type * file_node_alloc( node_status_type status , long int offs
 
 
 /**
-   This function is called from the functions export file_node
+   This function is called from the functions exporting file_node
    instances; the file_node instance will then have a correct filename
    field immediately afterwards, but the normal block_fs functions
    (read/write/unlink) do NOT update this field, so it can quickly go
@@ -547,7 +547,7 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
   else {
     block_fs->data_owner = util_try_lockf( block_fs->lock_file , S_IWUSR + S_IWGRP , &block_fs->lock_fd);
     block_fs->index_time = time( NULL );
-  
+    
     if (!block_fs->data_owner) 
       printf(" Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only. Cross your fingers ....\n");
     fflush( stdout );
@@ -565,7 +565,7 @@ static void block_fs_fwrite_mount_info__( const char * mount_file , int version)
   util_fwrite_int( MOUNT_MAP_MAGIC_INT , stream );
   util_fwrite_int( version , stream );
   fclose( stream );
-}
+ }
 
 
 /**
@@ -826,8 +826,8 @@ block_fs_type * block_fs_mount( const char * mount_file , int block_size , int m
         fclose(block_fs->data_stream);
       }
       
-      block_fs_open_data( block_fs , block_fs->data_owner ); /* The data_stream for reading AND writing (IFF we are data_owner - otherwise it is still read only) */
-      block_fs_fix_nodes( block_fs , fix_nodes );
+      block_fs_open_data( block_fs , block_fs->data_owner ); /* The data_stream is opened for reading AND writing (IFF we are data_owner - otherwise it is still read only) */
+      block_fs_fix_nodes( block_fs , fix_nodes );  
       long_vector_free( fix_nodes );
     }
   }
@@ -1320,7 +1320,18 @@ static bool pattern_match( const char * pattern , const char * string ) {
 }
 
 /**
-   If pattern == NULL all files will be selected.
+   If pattern == NULL all files will be selected. Observe that the
+   returned vector contains pointers to the "real" file_node instances
+   - this has two consequences:
+
+    1. The calling scope should N O T change the elements in the
+       vector - that will lead to internal corruption of the block_fs
+       instance.
+
+    2. If normal read/write/unlink operations are performed on the
+       block_fs instance while the vector is held, the content of the
+       vector will go out of sync.
+
 */
 
 vector_type * block_fs_alloc_filelist( const block_fs_type * block_fs  , const char * pattern , block_fs_sort_type sort_mode , bool include_free_nodes ) {
