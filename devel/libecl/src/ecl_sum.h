@@ -85,6 +85,7 @@ bool   ecl_sum_has_ministep(const ecl_sum_type * ecl_sum , int ministep );
 void   ecl_sum_get_ministep_range(const ecl_sum_type * ecl_sum , int * ministep1, int * ministep2);
 void   ecl_sum_report2ministep_range(const ecl_sum_type * ecl_sum , int report_step , int * ministep1 , int * ministep2 );
 time_t ecl_sum_get_sim_time( const ecl_sum_type * ecl_sum , int ministep );
+time_t ecl_sum_get_report_time( const ecl_sum_type * ecl_sum , int report_step );
 double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep );
 
 time_t_vector_type * ecl_sum_alloc_time_vector( const ecl_sum_type * ecl_sum  , bool report_only);

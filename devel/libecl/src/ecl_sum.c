@@ -457,6 +457,12 @@ int ecl_sum_get_first_ministep_gt(const ecl_sum_type * ecl_sum , int smspec_inde
 }
 
 
+time_t ecl_sum_get_report_time( const ecl_sum_type * ecl_sum , int report_step ) {
+  int ministep1 , ministep2;
+  ecl_sum_report2ministep_range( ecl_sum , report_step , &ministep1 , &ministep2 );
+  return ecl_sum_get_sim_time( ecl_sum , ministep2 );
+}
+
 time_t ecl_sum_get_sim_time( const ecl_sum_type * ecl_sum , int ministep ) {
   return ecl_sum_data_get_sim_time( ecl_sum->data , ministep);
 }

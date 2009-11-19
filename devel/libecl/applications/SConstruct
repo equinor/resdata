@@ -1,0 +1,73 @@
+import os
+import os.path
+import sys
+sys.path += ["../../build"]
+import global_config
+from   global_config import LIBUTIL
+from   global_config import LIBECL
+from   global_config import LIBPLOT
+from   global_config import LIBCONFIG
+from   global_config import EXTERNAL 
+
+conf = global_config.get_conf(os.getcwd() , 2)
+env  = Environment()
+
+libList      = ["ecl" , "config" , "plot" , "plplotd" , "util" , "lapack" , "m" , "z" , "pthread"]
+
+conf.env_update_path( env , [ LIBUTIL , LIBECL , LIBPLOT , LIBCONFIG , EXTERNAL ])
+env.Replace(CCFLAGS    = conf.CCFLAGS ,
+            LIBS       = libList)
+
+            
+
+##################################################################
+
+
+
+def add_program(env , conf , target , src , SDP_INSTALL = False):
+    P = env.Program( target , src)
+    env.Install( "../bin" , P)
+    if SDP_INSTALL:
+        env.Install(conf.SDP_BIN , P)
+
+
+add_program(env , conf ,  "block_owc.x"       , "block_owc.c"       , False)
+add_program(env , conf ,  "convert.x"         , "convert.c"         , False)
+add_program(env , conf ,  "ecl_pack.x"        , "ecl_pack.c"        , False)
+add_program(env , conf ,  "ecl_test.x"        , "ecl_test.c"        , False)
+add_program(env , conf ,  "ecl_unpack.x"      , "ecl_unpack.c"      , False)
+add_program(env , conf ,  "esummary.x"        , "esummary.c"        , False)
+add_program(env , conf ,  "extract_IJ.x"      , "extract_IJ.c"      , False)
+add_program(env , conf ,  "extract_contact.x" , "extract_contact.c" , False)
+add_program(env , conf ,  "grid_info.x"       , "grid_info.c"       , False)
+add_program(env , conf ,  "grid_layer.x"      , "grid_layer.c"      , False)
+add_program(env , conf ,  "kw_extract.x"      , "kw_extract.c"      , False)
+add_program(env , conf ,  "kw_list.x"         , "kw_list.c"         , False)
+add_program(env , conf ,  "kw_trim.x"         , "kw_trim.c"         , False)
+add_program(env , conf ,  "lgr_iget.x"        , "lgr_iget.c"        , False)
+add_program(env , conf ,  "run_gravity.x"     , "run_gravity.c"     , False)
+add_program(env , conf ,  "troll_aqunum.x"    , "troll_aqunum.c"    , False)
+add_program(env , conf ,  "troll_contact.x"   , "troll_contact.c"   , False)
+add_program(env , conf ,  "troll_iget_lgr.x"  , "troll_iget_lgr.c"  , False)
+add_program(env , conf ,  "utm2ijk.x"         , "utm2ijk.c"         , False)
+add_program(env , conf ,  "view_restart.x"    , "view_restart.c"    , False)
+add_program(env , conf ,  "view_rft.x"        , "view_rft.c"        , False)
+add_program(env , conf ,  "view_summary.x"    , "view_summary.c"    , False)
+add_program(env , conf ,  "vprofile.x"        , "vprofile.c"        , False)
+
+
+# Custom builds:
+ens_plot = env.Program( "ens_plot.x" , "ens_plot.c" , CPPDEFINES = "\'VIEWER=\"/usr/bin/display\"\'")
+env.Install( "../bin" , ens_plot)
+env.Install(conf.SDP_BIN , ens_plot)
+
+
+if not os.path.exists( conf.SDP_BIN ):
+    os.makedirs( conf.SDP_BIN )
+ 
+install = env.Alias('install',"../bin")
+env.Alias('SDP_INSTALL' , conf.SDP_BIN)
+
+Default( install )
+
+
