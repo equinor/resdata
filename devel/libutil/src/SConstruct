@@ -1,0 +1,46 @@
+import os
+import os.path
+import sys
+sys.path += ["../../build"]
+import global_config
+from   global_config import LIBUTIL
+from   global_config import LIBECL
+
+conf = global_config.get_conf(os.getcwd() , 2)
+env  = Environment()
+conf.update_env( env , [ LIBECL , LIBUTIL ] , link = False)
+
+vector_list = ["int" , "float" , "double" , "bool" , "time_t" , "long"]
+
+src_list = Split("set.c hash_node.c hash_sll.c hash.c list_node.c list.c node_data.c node_ctype.c util.c thread_pool.c msg.c arg_pack.c str_buffer.c path_fmt.c menu.c subst.c vector.c parser.c stringlist.c matrix.c matrix_lapack.c matrix_blas.c conf_new.c buffer.c block_fs.c log.c template.c timer.c")
+
+header_list = Split("set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst.h vector.h parser.h matrix.h matrix_lapack.h matrix_blas.h conf_new.h buffer.h block_fs.h log.h template.h timer.h")
+
+for type in vector_list:
+    header_file = "%s_vector.h" % type
+    src_file    = "%s_vector.c" % type
+    print "Creating: %s/%s" % (header_file , src_file)
+    os.system("sed -e \'s/<TYPE>/%s/g\' vector_template.h > %s" % ( type , header_file))
+    os.system("sed -e \'s/<TYPE>/%s/g\' vector_template.c > %s" % ( type , src_file ))
+    header_list.append( header_file )
+    src_list.append( src_file )
+
+
+define_fmt = "\'%s=\"%s\"\'"
+LIB = env.StaticLibrary("util" , src_list , CPPDEFINES = [define_fmt % ("SVN_VERSION"        ,  conf.SVN_VERSION),
+                                                          define_fmt % ("COMPILE_TIME_STAMP" ,  conf.TIME_STAMP)])
+env.Install("../lib" , LIB)
+env.Install(conf.SDP_LIB , LIB )
+
+env.Install("../include" , header_list)
+env.Install(conf.SDP_LIB , header_list)
+
+##################################################################
+
+if not os.path.exists( conf.SDP_LIB ):
+    os.makedirs( conf.SDP_LIB )
+ 
+install     = env.Alias('install',["../lib" , "../include"])
+SDP_INSTALL = env.Alias('SDP_INSTALL' , [conf.SDP_LIB , conf.SDP_INCLUDE])
+
+Default( install )

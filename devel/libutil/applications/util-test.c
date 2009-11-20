@@ -16,7 +16,7 @@
 #include <double_vector.h>
 #include <matrix.h>
 #include <matrix_lapack.h>
-#include <matrix_blas.h>>
+#include <matrix_blas.h>
 #include <parser.h>
 #include <block_fs.h>
 #include <thread_pool.h>

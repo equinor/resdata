@@ -18,16 +18,18 @@ LIB               = libutil.a
 LIB_LINK          = -lutil -lz -lpthread -llapack -lblas -lm
 LINK_LIB_PATH     = -L./ 
 
-LOCAL: LIB BIN
+
+LOCAL: LIB
 	install -d $(INSTALL_INC_PATH)
 	install -d $(INSTALL_LIB_PATH)
 	install $(INC_FILES_INSTALL) $(INSTALL_INC_PATH)
 	install $(LIB) $(INSTALL_LIB_PATH)
 
-SDP_INSTALL: LIB BIN 
+
+SDP_INSTALL: LIB
 	install $(LIB) $(SDP_ROOT)/lib/$(LIB)
-	install $(BIN_FILES) $(SDP_ROOT)/bin
 	install $(INC_FILES_INSTALL) $(SDP_ROOT)/include
+
 
 clean:
 	rm -f *.o *~ 
@@ -36,12 +38,13 @@ clean:
 	rm -f $(INSTALL_LIB_PATH)/$(LIB)
 	rm -f $(INSTALL_INC_PATH)/*.h
 
-LIB:	$(LIB)
 
 rebuild: clean new LOCAL
 
 new: 
 	../../Scripts/cdep.py all_include.h 0
+
+LIB:	$(LIB)
 
 $(LIB): $(OBJECTS)
 	$(AR) $(ARFLAGS) $(LIB) $(OBJECTS)
@@ -65,49 +68,4 @@ $(VECTOR_SOURCE): vector_template.c $(VECTOR_HEADERS) util.o
 %.o : %.c
 	$(CC) -c $(CFLAGS) $(COMPILE_INCLUDE) $(CPPFLAGS) -D'SVN_VERSION="$(SVN_VERSION)"' -D'COMPILE_TIME_STAMP="$(COMPILE_TIME_STAMP)"' $< -o $@
 
-
-
 include dependencies
-
-# Binaries
-util-test.o : util-test.c 
-eol-fix.o   : eol-fix.c  
-mem_free.o  : mem_free.c 
-
-#################################################################
-
-BIN:	util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x replace.x bls.x bfs_extract file_open.x ens_tar.x grane_fix
-BIN_FILES = util.x eol-fix.x mem_free.x parser_test.x grdecl_to_ascii.x
-
-util.x: util-test.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) util-test.o -o util.x     $(LINK_LIB_PATH) $(LIB_LINK) 
-
-eol-fix.x: eol-fix.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) eol-fix.o -o eol-fix.x    $(LINK_LIB_PATH) $(LIB_LINK)
-
-mem_free.x: mem_free.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) mem_free.o -o mem_free.x  $(LINK_LIB_PATH) $(LIB_LINK)
-
-parser_test.x: parser_test.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) parser_test.o -o parser_test.x  $(LINK_LIB_PATH) $(LIB_LINK)
-
-grdecl_to_ascii.x: grdecl_to_ascii.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) grdecl_to_ascii.o -o grdecl_to_ascii.x  $(LINK_LIB_PATH) $(LIB_LINK)
-
-replace.x: replace.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) replace.o -o replace.x  -L./ -lutil -lz -lpthread -lm
-
-bls.x: bls.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) bls.o -o bls.x  -L./ -lutil -lz -lpthread -lm
-
-bfs_extract: bfs_extract.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) bfs_extract.o -o bfs_extract  -L./ -lutil -lz -lpthread -lm
-
-grane_fix: grane_fix.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) grane_fix.o -o grane_fix  -L./ -lutil -lz -lpthread -lm
-
-file_open.x: file_open.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) file_open.o -o file_open.x  -L./ -lutil -lz -lpthread -lm
-
-ens_tar.x: ens_tar.o $(LIB)
-	$(LD) -$(MFLAG) $(LDFLAGS) ens_tar.o -o ens_tar.x  -L./ -lutil -lz -lpthread -lm

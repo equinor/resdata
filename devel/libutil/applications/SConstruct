@@ -1,0 +1,52 @@
+import os
+import os.path
+import sys
+sys.path += ["../../build"]
+import global_config
+from   global_config import LIBUTIL
+
+
+
+conf = global_config.get_conf(os.getcwd() , 2)
+env  = Environment()
+
+libList      = ["util" , "m" , "z" , "pthread"]
+
+conf.update_env( env , [ LIBUTIL ])
+env.Replace(CCFLAGS  = conf.CCFLAGS ,
+            LIBS     = libList)
+            
+
+##################################################################
+
+
+
+def add_program(env , conf , target , src , SDP_INSTALL = False):
+    P = env.Program( target , src )
+    env.Install( "../bin" , P)
+    if SDP_INSTALL:
+        env.Install(conf.SDP_BIN , P)
+
+
+
+
+add_program(env , conf , "replace.x"         , "replace.c"   , True)
+add_program(env , conf , "ens_tar.x"         , "ens_tar.c"   , True)
+add_program(env , conf , "file_open.x"       , "file_open.c" )
+add_program(env , conf , "grane_fix"         , "grane_fix.c" )
+add_program(env , conf , "bfs_extract"       , "bfs_extract.c" , True)
+add_program(env , conf , "bls.x"             , "bls.c"         , True)
+add_program(env , conf , "grdecl_to_ascii.x" , "grdecl_to_ascii.c" )
+add_program(env , conf , "parser_test.x"     , "parser_test.c" )
+add_program(env , conf , "mem_free.x"        , "mem_free.c" )
+add_program(env , conf , "eol-fix.x"         , "eol-fix.c" )
+
+if not os.path.exists( conf.SDP_BIN ):
+    os.makedirs( conf.SDP_BIN )
+ 
+install = env.Alias('install',"../bin")
+env.Alias('SDP_INSTALL' , conf.SDP_BIN)
+
+Default( install )
+
+
