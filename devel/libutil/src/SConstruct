@@ -6,9 +6,23 @@ import global_config
 from   global_config import LIBUTIL
 from   global_config import LIBECL
 
+
+
+def needs_update( target_file , src_file):
+    src_stat    = os.stat( src_file )
+    target_stat = os.stat( target_file )
+
+    if src_stat[8] > target_stat[8]:
+        return True
+    else:
+        return False
+    
+
+
 conf = global_config.get_conf(os.getcwd() , 2)
 env  = Environment()
 conf.update_env( env , [ LIBECL , LIBUTIL ] , link = False)
+
 
 vector_list = ["int" , "float" , "double" , "bool" , "time_t" , "long"]
 
@@ -19,16 +33,20 @@ header_list = Split("set.h hash.h hash_node.h hash_sll.h list_node.h list.h node
 for type in vector_list:
     header_file = "%s_vector.h" % type
     src_file    = "%s_vector.c" % type
-    print "Creating: %s/%s" % (header_file , src_file)
-    os.system("sed -e \'s/<TYPE>/%s/g\' vector_template.h > %s" % ( type , header_file))
-    os.system("sed -e \'s/<TYPE>/%s/g\' vector_template.c > %s" % ( type , src_file ))
+    if needs_update( header_file , "vector_template.h"):
+        os.system("sed -e \'s/<TYPE>/%s/g\' vector_template.h > %s" % ( type , header_file))
+    
+    if needs_update( src_file , "vector_template.c"):
+        os.system("sed -e \'s/<TYPE>/%s/g\' vector_template.c > %s" % ( type , src_file ))
+
     header_list.append( header_file )
     src_list.append( src_file )
 
 
 define_fmt = "\'%s=\"%s\"\'"
-LIB = env.StaticLibrary("util" , src_list , CPPDEFINES = [define_fmt % ("SVN_VERSION"        ,  conf.SVN_VERSION),
-                                                          define_fmt % ("COMPILE_TIME_STAMP" ,  conf.TIME_STAMP)])
+LIB = env.StaticLibrary("util" , src_list , CPPDEFINES = [define_fmt % ("SVN_VERSION"        ,  conf.SVN_VERSION)])
+
+
 env.Install("../lib" , LIB)
 env.Install(conf.SDP_LIB , LIB )
 

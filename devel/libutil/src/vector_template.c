@@ -526,10 +526,11 @@ void <TYPE>_vector_fread_data( <TYPE>_vector_type * vector , int size, FILE * st
 
 
 
-
 void <TYPE>_vector_fwrite_data( const <TYPE>_vector_type * vector , FILE * stream ) {
   util_fwrite(  vector->data , sizeof * vector->data , vector->size , stream , __func__);
 }
+
+
 
 /**
    Writing:

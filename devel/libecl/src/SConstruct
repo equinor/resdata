@@ -1,0 +1,35 @@
+import os
+import os.path
+import sys
+sys.path += ["../../build"]
+import global_config
+from   global_config import LIBUTIL
+from   global_config import LIBECL
+
+conf = global_config.get_conf(os.getcwd() , 2)
+env  = Environment()
+conf.update_env( env , [ LIBECL , LIBUTIL ] , link = False)
+
+src_list = Split("ecl_smspec.c ecl_sum_data.c ecl_well_vars.c ecl_util.c ecl_kw.c ecl_sum.c fortio.c ecl_rft_file.c ecl_rft_node.c ecl_grid.c ecl_box.c ecl_io_config.c ecl_file.c ecl_region.c point.c tetrahedron.c")
+
+
+# tetrahedron.h and point.h are not installed.
+header_list = Split("ecl_endian_flip.h ecl_smspec.h ecl_sum_data.h ecl_well_vars.h ecl_util.h ecl_kw.h ecl_sum.h fortio.h ecl_rft_file.h ecl_rft_node.h ecl_box.h ecl_grid.h ecl_io_config.h ecl_file.h ecl_region.h")
+
+
+LIB = env.StaticLibrary("ecl" , src_list)
+env.Install("../lib" , LIB)
+env.Install(conf.SDP_LIB , LIB )
+
+env.Install("../include" , header_list)
+env.Install(conf.SDP_LIB , header_list)
+
+##################################################################
+
+if not os.path.exists( conf.SDP_LIB ):
+    os.makedirs( conf.SDP_LIB )
+ 
+install     = env.Alias('install',["../lib" , "../include"])
+SDP_INSTALL = env.Alias('SDP_INSTALL' , [conf.SDP_LIB , conf.SDP_INCLUDE])
+
+Default( install )

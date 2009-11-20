@@ -92,7 +92,7 @@ type ## _type * type ## _safe_cast( void * __arg ) {     \
 
 #define LIBRARY_VERSION(libname) \
 const char * libname ## _svn_version() { return SVN_VERSION; } \
-const char * libname ## _build_time()  { return COMPILE_TIME_STAMP; }
+const char * libname ## _build_time()  { return NULL; }
 
 
 #define LIBRARY_VERSION_HEADER(libname) \

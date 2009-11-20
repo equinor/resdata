@@ -12,13 +12,7 @@ from   global_config import EXTERNAL
 conf = global_config.get_conf(os.getcwd() , 2)
 env  = Environment()
 
-libList      = ["ecl" , "config" , "plot" , "plplotd" , "util" , "lapack" , "m" , "z" , "pthread"]
-
-conf.env_update_path( env , [ LIBUTIL , LIBECL , LIBPLOT , LIBCONFIG , EXTERNAL ])
-env.Replace(CCFLAGS    = conf.CCFLAGS ,
-            LIBS       = libList)
-
-            
+conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBUTIL , EXTERNAL ] , ["lapack" , "plplotd" , "m" , "z" , "pthread"] , link = True)
 
 ##################################################################
 
