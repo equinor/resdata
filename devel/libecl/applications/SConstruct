@@ -9,8 +9,9 @@ from   global_config import LIBPLOT
 from   global_config import LIBCONFIG
 from   global_config import EXTERNAL 
 
-conf = global_config.get_conf(os.getcwd() , 2)
-env  = Environment()
+SDP_ROOT = ARGUMENTS.get('SDP_ROOT','/d/proj/bg/enkf')
+conf     = global_config.get_conf(SDP_ROOT , os.getcwd() , 2)
+env      = Environment()
 
 conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBUTIL , EXTERNAL ] , ["lapack" , "plplotd" , "m" , "z" , "pthread"] , link = True)
 
@@ -21,8 +22,9 @@ conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBUTIL , EXTERNAL ] , [
 def add_program(env , conf , target , src , SDP_INSTALL = False):
     P = env.Program( target , src)
     env.Install( "../bin" , P)
-    if SDP_INSTALL:
-        env.Install(conf.SDP_BIN , P)
+    if conf.SDP_BIN:
+        if SDP_INSTALL:
+            env.Install(conf.SDP_BIN , P)
 
 
 add_program(env , conf ,  "block_owc.x"       , "block_owc.c"       , False)
@@ -53,14 +55,12 @@ add_program(env , conf ,  "vprofile.x"        , "vprofile.c"        , False)
 # Custom builds:
 ens_plot = env.Program( "ens_plot.x" , "ens_plot.c" , CPPDEFINES = "\'VIEWER=\"/usr/bin/display\"\'")
 env.Install( "../bin" , ens_plot)
-env.Install(conf.SDP_BIN , ens_plot)
-
-
-if not os.path.exists( conf.SDP_BIN ):
-    os.makedirs( conf.SDP_BIN )
- 
 install = env.Alias('install',"../bin")
-env.Alias('SDP_INSTALL' , conf.SDP_BIN)
+
+if SDP_ROOT: 
+   env.Install(conf.SDP_BIN , ens_plot)
+   env.Alias('SDP_INSTALL' , conf.SDP_BIN) 
+
 
 Default( install )
 

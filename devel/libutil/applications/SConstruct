@@ -6,8 +6,8 @@ import global_config
 from   global_config import LIBUTIL
 
 
-
-conf = global_config.get_conf(os.getcwd() , 2)
+SDP_ROOT = ARGUMENTS.get('SDP_ROOT','/d/proj/bg/enkf')
+conf = global_config.get_conf(SDP_ROOT , os.getcwd() , 2)
 env  = Environment()
 
 conf.update_env( env , [ LIBUTIL ] , ext_liblist = ["pthread" , "m" , "z"] , link = True)
@@ -20,8 +20,9 @@ conf.update_env( env , [ LIBUTIL ] , ext_liblist = ["pthread" , "m" , "z"] , lin
 def add_program(env , conf , target , src , SDP_INSTALL = False):
     P = env.Program( target , src )
     env.Install( "../bin" , P)
-    if SDP_INSTALL:
-        env.Install(conf.SDP_BIN , P)
+    if conf.SDP_BIN:
+        if SDP_INSTALL:
+            env.Install(conf.SDP_BIN , P)
 
 
 
@@ -38,7 +39,8 @@ add_program(env , conf , "mem_free.x"        , "mem_free.c" )
 add_program(env , conf , "eol-fix.x"         , "eol-fix.c" )
 
 install = env.Alias('install',"../bin")
-env.Alias('SDP_INSTALL' , conf.SDP_BIN)
+if SDP_ROOT:
+    env.Alias('SDP_INSTALL' , conf.SDP_BIN)
 
 Default( install )
 
