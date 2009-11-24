@@ -72,7 +72,10 @@ struct file_node_struct{
 
 
 
-/* Help structure used for 'ls' like funtionality. */
+
+/* 
+   Help structure used for 'ls' like funtionality. 
+*/
 struct block_fs_file_struct {
   long int          node_offset;
   int               node_size;
@@ -940,6 +943,32 @@ void block_fs_unlink_file( block_fs_type * block_fs , const char * filename) {
   block_fs_release_rwlock( block_fs );
 }
 
+
+/**
+   This function can be used to initiate explicit rotate of the file
+   system, observe the following.
+
+    1. This function is called with an explicit fragmentation_limit
+       which might differ from the fragmentation limit held by the
+       filesystem
+
+    2. This function will take the write lock, it is therefor
+       essential that this function is NOT called by another function
+       which has already taken the write lock (i.e. the
+       block_fs_unlink_file() or block_fs_fwrite_file() functions),
+       that will deadlock.
+
+   The return value is whether a rotation actually has taken place.
+*/
+
+bool block_fs_rotate( block_fs_type * block_fs , double fragmentation_limit) {
+  if ((block_fs->free_size * 1.0 / block_fs->data_file_size) > block_fs->fragmentation_limit) {
+    block_fs_aquire_wlock( block_fs );
+    block_fs_rotate__( block_fs );
+    block_fs_release_rwlock( block_fs );
+  }
+}
+
     
 /* 
    It seems it is not enough to call fsync(); must also issue this
@@ -1187,9 +1216,15 @@ void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
 
 
 /**
+   This function will 'rotate' the datafile to a new version which has
+   been defragmented, i.e. with no 'holes' in it. In the process the
+   datafile version number is increased with one. The function works
+   by using the regular block_fs read and write functions.
+   
    Observe that the block_fs instance should hold the write lock when
    entering this function.
 */
+
 static void block_fs_rotate__( block_fs_type * block_fs ) {
   /* 
      Write a updated mount map where the version info has been bumped
@@ -1247,7 +1282,6 @@ static void block_fs_rotate__( block_fs_type * block_fs ) {
     free( old_index );
     free( old_nodes );
   }
-  printf("Rotate complete ... \n");
 }
 
 

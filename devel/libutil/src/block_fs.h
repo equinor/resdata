@@ -14,7 +14,7 @@ typedef enum {
 } block_fs_sort_type;
 
 
-
+bool            block_fs_rotate( block_fs_type * block_fs , double fragmentation_limit);
 void            block_fs_fsync( block_fs_type * block_fs );
 bool            block_fs_is_mount( const char * mount_file );
 block_fs_type * block_fs_mount( const char * mount_file , int block_size , int max_cache_size , float fragmentation_limit , int fsync_interval , bool preload , bool read_only);
