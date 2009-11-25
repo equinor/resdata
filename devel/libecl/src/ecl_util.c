@@ -767,12 +767,12 @@ ecl_type_enum ecl_util_guess_type(const char * key){
 */
 
 
-void ecl_util_alloc_summary_files(const char * path , const char * _base , char ** _header_file , char *** _data_files , int * _num_data_files , bool * _fmt_file , bool * _unified) {
+void ecl_util_alloc_summary_files(const char * path , const char * _base , char ** _header_file , stringlist_type * filelist , bool * _fmt_file , bool * _unified) {
   bool    fmt_file    	 = true; 
   bool    unified     	 = true;
-  char  * header_file 	 = NULL;
   char ** data_files  	 = NULL;
   int     num_data_files = 0;
+  char  * header_file 	 = NULL;
   char  * base;
 
   if (_base == NULL)
@@ -857,9 +857,16 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
 
   *_fmt_file  	   = fmt_file;
   *_unified   	   = unified;
-  *_num_data_files = num_data_files;
   *_header_file    = header_file;
-  *_data_files     = data_files;
+
+  /* Lazy solution - keeping the old char ** based implementation. */
+  stringlist_clear( filelist );
+  {
+    int i;
+    for (i=0; i < num_data_files; i++)
+      stringlist_append_owned_ref( filelist , data_files[i]); /* The stringlist hijacks the storage of the actual filenames. */
+  }
+  free( data_files );                                                /* Only fre char ** structure - not the actual strings. */        
 }
 
 

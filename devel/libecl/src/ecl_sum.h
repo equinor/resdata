@@ -11,6 +11,7 @@ extern "C" {
 #include <stringlist.h>
 #include <ecl_smspec.h>
 #include <time_t_vector.h>
+#include <stringlist.h>
 
 typedef struct ecl_sum_struct       ecl_sum_type;
 
@@ -18,11 +19,11 @@ typedef struct ecl_sum_struct       ecl_sum_type;
 void             ecl_sum_summarize( const ecl_sum_type * ecl_sum , FILE * stream );
 bool             ecl_sum_general_is_total(const ecl_sum_type * ecl_sum , const char * gen_key);
 bool             ecl_sum_var_is_total(const ecl_sum_type * ecl_sum , const char * gen_key);
-void             ecl_sum_fread_realloc_data(ecl_sum_type *, int , const char ** );
+void             ecl_sum_fread_realloc_data(ecl_sum_type *, const stringlist_type * data_files);
 void             ecl_sum_free_data(ecl_sum_type * );
 void             ecl_sum_free__(void * );
 void             ecl_sum_free(ecl_sum_type * );
-ecl_sum_type   * ecl_sum_fread_alloc(const char * , int , const char **);
+ecl_sum_type   * ecl_sum_fread_alloc(const char * , const stringlist_type * data_files);
 ecl_sum_type   * ecl_sum_fread_alloc_case(const char *  );
 
 /* Accessor functions : */

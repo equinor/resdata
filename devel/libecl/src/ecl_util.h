@@ -5,6 +5,7 @@ extern "C" {
 #endif
 #include <stdbool.h>
 #include <time.h>
+#include <stringlist.h>
 
   typedef enum {ECL_OTHER_FILE           = 0   , 
 		ECL_RESTART_FILE         = 1   , 
@@ -58,7 +59,7 @@ char         ** ecl_util_alloc_scandir_filelist(const char *, const char *,ecl_f
 char         ** ecl_util_alloc_simple_filelist(const char *, const char *, ecl_file_enum , bool , int , int );
 void            ecl_util_memcpy_typed_data(void *, const void * , ecl_type_enum , ecl_type_enum , int );
 void            ecl_util_escape_kw(char * kw);
-void            ecl_util_alloc_summary_files(const char * , const char * , char ** , char *** , int *  , bool * , bool * );
+void            ecl_util_alloc_summary_files(const char * , const char * , char ** , stringlist_type * , bool * , bool * );
 void            ecl_util_alloc_restart_files(const char *  , const char *  , char *** , int *  , bool * , bool *);
 const    char * ecl_util_type_name(ecl_type_enum );
 time_t          ecl_util_get_start_date(const char * );

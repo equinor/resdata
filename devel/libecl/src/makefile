@@ -10,7 +10,7 @@ INC_FILES         = ecl_endian_flip.h ecl_smspec.h ecl_sum_data.h ecl_well_vars.
 LIB       = libecl.a
 
 
-LOCAL: LIB 
+LOCAL: LIB
 	install -d $(INSTALL_INC_PATH)
 	install -d $(INSTALL_LIB_PATH)
 	install $(INC_FILES) $(INSTALL_INC_PATH)
