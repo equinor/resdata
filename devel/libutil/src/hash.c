@@ -764,7 +764,7 @@ hash_type * hash_alloc_from_options(const stringlist_type * options) {
     util_binary_split_string( stringlist_iget(options , iopt) , ":" , true , &option , &value);
     if ((option != NULL) && (value != NULL)) 
       hash_insert_hash_owned_ref( opt_hash , option , util_alloc_string_copy(value) , free);
-    else
+    else 
       fprintf(stderr,"** Warning: could not interpret %s as KEY:VALUE - ignored\n",stringlist_iget(options , iopt));
     
     util_safe_free(option);

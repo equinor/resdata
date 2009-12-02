@@ -88,10 +88,34 @@ buffer_type * buffer_alloc( size_t buffer_size ) {
 }
 
 
+/**
+   This function will free the buffer daat structure, but NOT the
+   actual storage. Can typically be used when some other pointer has
+   taken posession of the buffer content:
+
+   buffer_type * buffer = buffer_alloc( );
+
+   // Do thing with the buffer
+
+   {
+      void * thief_ptr = buffer_get_data( buffer );
+      buffer_free_container( buffer );
+
+      // Do stuff with thief_ptr
+      // ....
+
+      free( thief_ptr);
+   }
+*/
+
+void buffer_free_container( buffer_type * buffer ) {
+  free( buffer );
+}
+
 
 void buffer_free( buffer_type * buffer) {
   free( buffer->data );
-  free( buffer );
+  buffer_free_container( buffer );
 }
 
 
@@ -297,6 +321,7 @@ void buffer_fseek(buffer_type * buffer , ssize_t offset , int whence) {
     util_abort("%s: tried to seek to position:%ld - outside of bounds: [0,%d) \n",__func__ , new_pos , buffer->content_size);
 }
 
+
 void buffer_fskip(buffer_type * buffer, ssize_t offset) {
   buffer_fseek( buffer , offset , SEEK_CUR );
 }
@@ -446,6 +471,94 @@ void * buffer_get_data(const buffer_type * buffer) {
 void * buffer_alloc_data_copy(const buffer_type * buffer) { 
   return util_alloc_copy(buffer->data , buffer->content_size , __func__);
 }
+
+
+/**
+   This function will shift parts of the buffer data, either creating
+   a hole in the buffer, or overwriting parts of the internal buffer.
+
+   Example
+   -------
+
+   The buffer has content_size of 8, and allocated size of 12
+   elements.
+
+   -------------------------------------------------
+   | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | x | x | x | x |
+   -------------------------------------------------
+
+
+   buffer_memshift(buffer , 4 , 3)
+   -------------------------------
+   The part from offset four is moved three bytes to the right. The
+   newly created 'hole' in the storage area has undefined values.
+
+   -------------------------------------------------
+   | 0 | 1 | 2 | 3 | x | x | x | 4 | 5 | 6 | 7 | x |
+   -------------------------------------------------
+   
+   If you are shifting beyound the end of the buffer, it will be
+   automatically resized.
+
+   
+   buffer_memshift(buffer , 2 , -4)
+   --------------------------------
+
+   -------------------------------------------------
+   | 4 | 5 | 6 | 7 | 8 | x | x | x | x | x | x | x |
+   -------------------------------------------------
+
+   
+   When shifting to the left, content is lost (without warning/error)
+   when it is shifted beyond the start of the buffer.
+
+
+   The current position in the buffer is not updated, unless it
+   corresponds to a point beyond the (new) end of the buffer, in which
+   case it is set to the new end of the buffer.
+*/
+
+void buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift) { 
+  /* Do we need to grow the buffer? */
+  if (buffer->alloc_size < (buffer->content_size + shift)) {
+    size_t new_size = 2 * (buffer->content_size + shift);
+    buffer_resize__(buffer , new_size , true );
+  }
+  {
+    size_t move_size;
+    if (shift < 0)
+      if (abs(shift) > offset)
+        offset = abs(shift);  /* We are 'trying' to left shift beyond the start of the buffer. */
+    
+    move_size = buffer->content_size - offset;
+    memmove( &buffer->data[offset + shift] , &buffer->data[offset] , move_size );
+    buffer->content_size += shift;
+    buffer->pos           = util_size_t_min( buffer->pos , buffer->content_size);  
+  }
+}
+
+
+/**
+   This function will use the stdlib function strstr() to search for
+   the string @expr in @buffer. The search will start at the current
+   position in the buffer, if the string is found true is returned AND
+   the internal pos is updated to point at the match.
+
+   If the string is NOT found the function will return false, without
+   touching internal state.
+*/
+
+
+bool buffer_strstr( buffer_type * buffer , const char * expr ) {
+  char * match  = NULL;
+
+  match = strstr( &buffer->data[buffer->pos] , expr);
+  if (match != NULL) 
+    buffer->pos = match - buffer->data;
+  
+  return (match != NULL);
+}
+
 
 
 void buffer_summarize(const buffer_type * buffer , const char * header) {

@@ -28,18 +28,9 @@
 
 
 int main(int argc , char ** argv) {
-  int_vector_type * iv = int_vector_alloc(0,0);
-  int_vector_append(iv , 10);
-  int_vector_append(iv , 0);
-  int_vector_append(iv , 2);
-  int_vector_append(iv , 10);
-  int_vector_append(iv , 0);
-  int_vector_append(iv , 0);
-  int_vector_append(iv , 2);
-  int_vector_append(iv , 10);
-  int_vector_select_unique( iv );
-  int_vector_fprintf( iv , stdout , NULL , "%3d");
-  int_vector_free( iv );
+  buffer_type * buffer = buffer_alloc(10000);
+
+  buffer_free( buffer );
 }
 
 
