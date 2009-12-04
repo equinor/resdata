@@ -1,13 +1,13 @@
 import os
 import os.path
 import sys
-sys.path += ["../../build"]
+sys.path += ["../../../build"]
 import global_config
 from   global_config import LIBUTIL
 
 
 SDP_ROOT = ARGUMENTS.get('SDP_ROOT','/d/proj/bg/enkf')
-conf = global_config.get_conf(SDP_ROOT , os.getcwd() , 2)
+conf = global_config.get_conf(SDP_ROOT , os.getcwd() , 3)
 env  = Environment()
 
 conf.update_env( env , [ LIBUTIL ] , ext_liblist = ["pthread" , "m" , "z"] , link = True)
@@ -19,7 +19,7 @@ conf.update_env( env , [ LIBUTIL ] , ext_liblist = ["pthread" , "m" , "z"] , lin
 
 def add_program(env , conf , target , src , SDP_INSTALL = False):
     P = env.Program( target , src )
-    env.Install( "../bin" , P)
+    env.Install( "../../bin" , P)
     if conf.SDP_BIN:
         if SDP_INSTALL:
             env.Install(conf.SDP_BIN , P)
@@ -27,22 +27,16 @@ def add_program(env , conf , target , src , SDP_INSTALL = False):
 
 
 
-add_program(env , conf , "replace.x"         , "replace.c"   , True)
-add_program(env , conf , "ens_tar.x"         , "ens_tar.c"   , True)
-add_program(env , conf , "file_open.x"       , "file_open.c" )
-add_program(env , conf , "grane_fix"         , "grane_fix.c" )
 add_program(env , conf , "bfs_extract"       , "bfs_extract.c" , True)
 add_program(env , conf , "bls.x"             , "bls.c"         , True)
-add_program(env , conf , "grdecl_to_ascii.x" , "grdecl_to_ascii.c" )
-add_program(env , conf , "parser_test.x"     , "parser_test.c" )
-add_program(env , conf , "mem_free.x"        , "mem_free.c" )
-add_program(env , conf , "eol-fix.x"         , "eol-fix.c" )
-add_program(env , conf , "util-test"         , "util-test.c" )
+add_program(env , conf , "brm.x"             , "brm.c"         , True)
+add_program(env , conf , "brot.x"            , "brot.c"        , True)
 
-install = env.Alias('install',"../bin")
+install = env.Alias('install',"../../bin")
 if SDP_ROOT:
     env.Alias('SDP_INSTALL' , conf.SDP_BIN)
 
 Default( install )
 
 
+         
