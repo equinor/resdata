@@ -7,11 +7,13 @@ extern "C" {
 #include <stdio.h>
 #include <util.h>
 #include <node_data.h>
+#include <subst_func.h>
 
 typedef struct subst_list_struct subst_list_type;
+void                 subst_list_update_buffer( const subst_list_type * subst_list , buffer_type * buffer );
 
 void                 subst_list_fprintf(const subst_list_type * , FILE * stream);
-subst_list_type    * subst_list_alloc();
+subst_list_type    * subst_list_alloc( subst_func_pool_type * func_pool);
 subst_list_type    * subst_list_alloc_deep_copy(const subst_list_type * );
 void                 subst_list_free(subst_list_type *);
 void                 subst_list_insert_copy(subst_list_type *  , const char * , const char * );

@@ -6,6 +6,7 @@
 #include <node_data.h>
 #include <buffer.h>
 #include <subst_func.h>
+#include <parser.h>
 
 /**
    This file implements a small support struct for search-replace
@@ -55,7 +56,8 @@ typedef enum { SUBST_DEEP_COPY   = 1,
   
 
 struct subst_list_struct {
-  vector_type *   data;
+  vector_type           * data;
+  subst_func_pool_type  * func_pool; /* NOT owned by the subst_list instance - can be NULL */
 };
 
 
@@ -178,9 +180,10 @@ static subst_list_string_type * subst_list_insert_new_node(subst_list_type * sub
 }
 
 
-subst_list_type * subst_list_alloc() {
+subst_list_type * subst_list_alloc(subst_func_pool_type * func_pool) {
   subst_list_type * subst_list = util_malloc(sizeof * subst_list , __func__);
-  subst_list->data = vector_alloc_new();
+  subst_list->data      = vector_alloc_new();
+  subst_list->func_pool = func_pool;
   return subst_list;
 }
 
@@ -244,36 +247,72 @@ void subst_list_free(subst_list_type * subst_list) {
 
 
 
-static void subst_list_inplace_update_buffer____(const subst_list_type * subst_list , char ** __buffer) {
-  buffer_type * buffer = buffer_alloc( 2 * strlen( *__buffer ));
-  {
-    char * tmp = *__buffer;
-    buffer_fwrite( buffer , tmp , strlen( tmp ) + 1 , sizeof * tmp );
+static void subst_list_inplace_update_buffer____(const subst_list_type * subst_list , buffer_type * buffer) {
+  int index;
+  for (index = 0; index < vector_get_size( subst_list->data ); index++) {
+    const subst_list_string_type * node = vector_iget_const( subst_list->data , index );
+    const int shift = strlen( node->value ) - strlen( node->key );
+    bool    match;
+    buffer_rewind( buffer );
+    do {
+      match = buffer_strstr( buffer , node->key ); 
+      if (match) {
+        size_t offset = buffer_get_offset( buffer ) + strlen( node->key );
+        if (shift != 0)
+          buffer_memshift( buffer , offset , shift );
+        
+        /** Search continues at the end of the newly inserted string - i.e. no room for recursions. */
+        buffer_fwrite( buffer , node->value , strlen( node->value ) , sizeof * node->value );
+      }
+    } while (match);
   }
-
+  
   {
-    int index;
-    for (index = 0; index < vector_get_size( subst_list->data ); index++) {
-      const subst_list_string_type * node = vector_iget_const( subst_list->data , index );
-      const int shift = strlen( node->value ) - strlen( node->key );
-      bool    match;
+    parser_type     * parser     = parser_alloc( "," , "\"\'" , NULL , " \t" , NULL , NULL );
+    {
+      const char      * func_name  = "ADD";
+      subst_func_type * subst_func = subst_func_pool_get_func( subst_list->func_pool , func_name );
+      
+      bool match;
       buffer_rewind( buffer );
       do {
-        match = buffer_strstr( buffer , node->key ); 
+        size_t match_pos;
+        match     = buffer_strstr( buffer , func_name );
+        match_pos = buffer_get_offset( buffer );
+        
         if (match) {
-          if (shift != 0)
-            buffer_memshift( buffer , buffer_get_offset( buffer ) + strlen( node->key ) , shift );
+          bool   update     = false;
+          char * arg_start  = buffer_get_data( buffer );
+          arg_start        += buffer_get_offset( buffer ) + strlen( func_name );
           
-          /** Search continues at the end of the newly inserted string - i.e. no room for recursions. */
-          buffer_fwrite( buffer , node->value , strlen( node->value ) , sizeof * node->value );
+          if (arg_start[0] == '(') {  /* We require that an opening paren follows immediately behind the function name. */
+            char * arg_end = strchr( arg_start , ')');
+            if (arg_end != NULL) {
+              /* OK - we found an enclosing () pair. */
+              char            * arg_content = util_alloc_substring_copy( &arg_start[1] , arg_end - arg_start - 1);
+              stringlist_type * arg_list    = parser_tokenize_buffer( parser , arg_content , true);
+              char            * func_eval   = subst_func_eval( subst_func , arg_list );
+              int               old_len     = strlen(func_name) + strlen( arg_content) + 2;       
+
+              if (func_eval != NULL) {
+                buffer_memshift( buffer , match_pos + old_len , strlen( func_eval ) - old_len);
+                buffer_fwrite( buffer , func_eval , strlen( func_eval ) , sizeof * func_eval );
+                free( func_eval );
+                update = true;
+              }
+              
+              free( arg_content );
+              stringlist_free( arg_list );
+            } 
+          } 
+          
+          if (!update) 
+            buffer_fseek( buffer , match_pos + strlen( func_name ) , SEEK_SET);
         }
       } while (match);
-
     }
+    parser_free( parser );
   }
-
-  *__buffer = buffer_get_data( buffer );
-  buffer_free_container( buffer );
 }
 
 /**
@@ -354,6 +393,12 @@ void subst_list_update_string(const subst_list_type * subst_list , char ** strin
 }
 
 
+void subst_list_update_buffer( const subst_list_type * subst_list , buffer_type * buffer ) {
+  subst_list_inplace_update_buffer____( subst_list , buffer );
+}
+
+
+
 void subst_list_fprintf(const subst_list_type * subst_list , FILE * stream) {
   int index;
   for (index=0; index < vector_get_size( subst_list->data ); index++) {
@@ -397,7 +442,7 @@ void subst_list_filtered_fprintf(const subst_list_type * subst_list , const char
 
 subst_list_type * subst_list_alloc_deep_copy(const subst_list_type * src) {
   int index;
-  subst_list_type * copy = subst_list_alloc();
+  subst_list_type * copy = subst_list_alloc( src->func_pool );
   for (index = 0; index < vector_get_size( src->data ); index++) {
     const subst_list_string_type * node = vector_iget_const( src->data , index );
     subst_list_insert__( copy , node->key , node->value , SUBST_DEEP_COPY);
@@ -433,3 +478,31 @@ const char * subst_list_iget_value( const subst_list_type * subst_list , int ind
   }
 }
 
+
+
+/**
+   This function will perform subst-based substitution on all the
+   elements in the stringlist. The stringlist is modified in place,
+   and the following applies to memory:
+
+    o Elements inserted with _ref() are just dropped on the floor,
+      they were the responsability of the calling scope anyway.
+
+    o Elements inserted with _owned_ref() are freed - INVALIDATING A
+      POSSIBLE POINTER IN THE CALLING SCOPE.
+
+    o The newly inserted element is inserted as _owned_ref() -
+      i.e. with a destructor.
+*/
+
+
+void stringlist_apply_subst(stringlist_type * stringlist , const subst_list_type * subst_list) {
+  int i;
+  for (i=0; i < stringlist_get_size( stringlist ); i++) {
+    const char * old_string = stringlist_iget( stringlist , i );
+    char * new_string = subst_list_alloc_filtered_string( subst_list , old_string );
+    stringlist_iset_owned_ref( stringlist , i , new_string );
+  }
+}
+
+/*****************************************************************/

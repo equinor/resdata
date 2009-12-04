@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <subst.h>
+#include <subst_func.h>
 #include <template.h>
 
 
@@ -55,10 +56,10 @@ static char * template_load( const template_type * template , const subst_list_t
 */
 
 
-template_type * template_alloc( const char * template_file , bool internalize_template) {
+template_type * template_alloc( const char * template_file , bool internalize_template , subst_func_pool_type * func_pool) {
   template_type * template = util_malloc( sizeof * template , __func__);
   UTIL_TYPE_ID_INIT(template , TEMPLATE_TYPE_ID);
-  template->arg_list        = subst_list_alloc();
+  template->arg_list        = subst_list_alloc( func_pool );
   template->template_buffer = NULL;
 
   template->template_file        = util_alloc_string_copy( template_file );

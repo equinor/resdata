@@ -36,7 +36,7 @@ size_t             buffer_get_remaining_size(const buffer_type *  buffer);
 void             * buffer_get_data(const buffer_type * buffer);
 void             * buffer_alloc_data_copy(const buffer_type * buffer);
 void               buffer_stream_fwrite( const buffer_type * buffer , FILE * stream );
-
+int                buffer_fgetc( buffer_type * buffer );
 void 		   buffer_fseek(buffer_type * buffer , ssize_t offset , int whence);
 void 		   buffer_fskip(buffer_type * buffer, ssize_t offset);
 void               buffer_clear( buffer_type * buffer );
@@ -50,6 +50,7 @@ void               buffer_rewind(buffer_type * buffer );
 double             buffer_fread_double(buffer_type * buffer);
 void               buffer_fwrite_double(buffer_type * buffer , double value);
 
+void               buffer_stream_fprintf( const buffer_type * buffer , FILE * stream );
 void               buffer_stream_fread( buffer_type * buffer , size_t byte_size , FILE * stream);
 buffer_type      * buffer_fread_alloc(const char * filename);
 void               buffer_fread_realloc(buffer_type * buffer , const char * filename);

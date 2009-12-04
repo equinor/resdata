@@ -23,13 +23,30 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-
+#include <subst.h>
+#include <subst_func.h>
+#include <buffer.h>
 
 
 int main(int argc , char ** argv) {
+  subst_func_pool_type * func_pool  = subst_func_pool_alloc();
+  subst_list_type      * subst_list = subst_list_alloc( func_pool );
   buffer_type * buffer = buffer_alloc(10000);
+  const char * string  = "<TALL1> + <TALL2> = ADD(<TALL1>, <TALL2>)";
 
+  subst_func_pool_add_func( func_pool , "ADD" , subst_func_add , true , 0 , 0 );
+  buffer_fwrite( buffer , string , strlen( string ) , sizeof * string);
+
+  buffer_stream_fprintf( buffer , stdout );
+  printf("\n\n");
+  
+  subst_list_insert_ref( subst_list     , "<TALL1>" , "10.0" );
+  subst_list_insert_ref( subst_list     , "<TALL2>" , "22.0" );
+  subst_list_update_buffer( subst_list  , buffer );
+  
+  buffer_stream_fprintf( buffer , stdout );
+  printf("\n");
+  
   buffer_free( buffer );
 }
 

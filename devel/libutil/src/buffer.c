@@ -334,6 +334,17 @@ int buffer_fread_int(buffer_type * buffer) {
 }
 
 
+int buffer_fgetc( buffer_type * buffer ) {
+  if (buffer->pos == buffer->content_size)
+    return EOF;
+  else {
+    unsigned char byte;
+    buffer_fread( buffer , &byte , sizeof byte , 1 );
+    return byte;
+  }
+}
+
+
 void buffer_fwrite_int(buffer_type * buffer , int value) {
   buffer_fwrite(buffer , &value , sizeof value , 1);
 }
@@ -530,7 +541,7 @@ void buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift) {
       if (abs(shift) > offset)
         offset = abs(shift);  /* We are 'trying' to left shift beyond the start of the buffer. */
     
-    move_size = buffer->content_size - offset;
+    move_size = buffer->content_size - offset + 1;
     memmove( &buffer->data[offset + shift] , &buffer->data[offset] , move_size );
     buffer->content_size += shift;
     buffer->pos           = util_size_t_min( buffer->pos , buffer->content_size);  
@@ -639,6 +650,12 @@ buffer_type * buffer_fread_alloc(const char * filename) {
 
 void buffer_stream_fwrite( const buffer_type * buffer , FILE * stream ) {
   util_fwrite( buffer->data , 1 , buffer->content_size , stream , __func__);
+}
+
+
+/* Assumes that the buffer contains a \0 terminated string - that is the resoponsability of the caller. */
+void buffer_stream_fprintf( const buffer_type * buffer , FILE * stream ) {
+  fprintf(stream , "%s" , buffer->data );
 }
 
 

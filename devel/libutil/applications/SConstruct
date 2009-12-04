@@ -37,6 +37,7 @@ add_program(env , conf , "grdecl_to_ascii.x" , "grdecl_to_ascii.c" )
 add_program(env , conf , "parser_test.x"     , "parser_test.c" )
 add_program(env , conf , "mem_free.x"        , "mem_free.c" )
 add_program(env , conf , "eol-fix.x"         , "eol-fix.c" )
+add_program(env , conf , "util-test"         , "util-test.c" )
 
 install = env.Alias('install',"../bin")
 if SDP_ROOT:

@@ -471,31 +471,5 @@ void stringlist_sort(stringlist_type * s)
 
 
 
-/**
-   This function will perform subst-based substitution on all the
-   elements in the stringlist. The stringlist is modified in place,
-   and the following applies to memory:
-
-    o Elements inserted with _ref() are just dropped on the floor,
-      they were the responsability of the calling scope anyway.
-
-    o Elements inserted with _owned_ref() are freed - INVALIDATING A
-      POSSIBLE POINTER IN THE CALLING SCOPE.
-
-    o The newly inserted element is inserted as _owned_ref() -
-      i.e. with a destructor.
-*/
-
-
-void stringlist_apply_subst(stringlist_type * stringlist , const subst_list_type * subst_list) {
-  int i;
-  for (i=0; i < vector_get_size( stringlist->strings ); i++) {
-    const char * old_string = stringlist_iget( stringlist , i );
-    char * new_string = subst_list_alloc_filtered_string( subst_list , old_string );
-    stringlist_iset_owned_ref( stringlist , i , new_string );
-  }
-}
-
-/*****************************************************************/
 
 

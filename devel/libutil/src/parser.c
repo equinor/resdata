@@ -3,6 +3,7 @@
 #include <util.h>
 #include <parser.h>
 #include <ctype.h>
+#include <buffer.h>
 
 #define PARSER_ESCAPE_CHAR '\\'
 
@@ -582,7 +583,7 @@ bool parser_fseek_string(const parser_type * parser , FILE * stream , const char
       int c = fgetc( stream );
       if (!case_sensitive) c = toupper( c );
       
-      /* Special treatment of quoters: */
+      /* Special treatment of quoters - does not properly handle escaping of the quoters. */
       if (is_in_quoters( c , parser )) {
         long int quote_start_pos = ftell(stream);
         if (!fseek_quote_end( c , stream )) {
@@ -590,8 +591,10 @@ bool parser_fseek_string(const parser_type * parser , FILE * stream , const char
           fprintf(stderr,"Warning: unterminated quotation starting at line: %d \n",util_get_current_linenr( stream ));
           fseek(stream , 0 , SEEK_END);
         }
-        /* Now we are either at the first character following a
-           terminated quotation, or at EOF. */
+        /* 
+           Now we are either at the first character following a
+           terminated quotation, or at EOF. 
+        */
         continue;
       }
       
