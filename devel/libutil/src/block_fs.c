@@ -932,12 +932,19 @@ static void block_fs_unlink_file__( block_fs_type * block_fs , const char * file
   block_fs_insert_free_node( block_fs , node );
 }
 
+/**
+   Returns the fraction of unused space in the block_fs instance. 
+*/
+double block_fs_get_fragmentation( const block_fs_type * block_fs ) {
+  return block_fs->free_size * 1.0 / block_fs->data_file_size;
+}
+
 
 void block_fs_unlink_file( block_fs_type * block_fs , const char * filename) {
   block_fs_aquire_wlock( block_fs );
 
   block_fs_unlink_file__( block_fs , filename );
-  if ((block_fs->free_size * 1.0 / block_fs->data_file_size) > block_fs->fragmentation_limit) 
+  if (block_fs_get_fragmentation( block_fs ) > block_fs->fragmentation_limit) 
     block_fs_rotate__( block_fs );
   
   block_fs_release_rwlock( block_fs );
@@ -962,11 +969,13 @@ void block_fs_unlink_file( block_fs_type * block_fs , const char * filename) {
 */
 
 bool block_fs_rotate( block_fs_type * block_fs , double fragmentation_limit) {
-  if ((block_fs->free_size * 1.0 / block_fs->data_file_size) > block_fs->fragmentation_limit) {
+  if (block_fs_get_fragmentation( block_fs ) > fragmentation_limit) {
     block_fs_aquire_wlock( block_fs );
     block_fs_rotate__( block_fs );
     block_fs_release_rwlock( block_fs );
-  }
+    return true;
+  } else
+    return false;
 }
 
     

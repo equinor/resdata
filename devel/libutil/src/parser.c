@@ -563,6 +563,11 @@ static bool fgetc_while_equal( FILE * stream , const char * string , bool case_s
 
 
 /**
+   The return value is whether the string could be found or not. If
+   the string is found, the stream position is positionoed to point at
+   (or immediatbely after) the string; if not the stream pointer is
+   left at the initial position.
+
    This function is quite tolerant - it will accept (with a warning)
    unterminated comments and unterminated quotations.
 */

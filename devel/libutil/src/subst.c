@@ -56,8 +56,9 @@ typedef enum { SUBST_DEEP_COPY   = 1,
   
 
 struct subst_list_struct {
-  vector_type           * data;
-  subst_func_pool_type  * func_pool; /* NOT owned by the subst_list instance - can be NULL */
+  vector_type           * string_data;  /* The string substitutions we should do. */
+  vector_type           * func_data;    /* The functions we support. */
+  subst_func_pool_type  * func_pool;    /* NOT owned by the subst_list instance - can be NULL */
 };
 
 
@@ -159,8 +160,8 @@ static subst_list_string_type * subst_list_get_node(const subst_list_type * subs
   int  index                  = 0;
 
   /* Linear search ... */
-  while ((index < vector_get_size(subst_list->data)) && (node == NULL)) {
-    subst_list_string_type * inode = vector_iget( subst_list->data , index);
+  while ((index < vector_get_size(subst_list->string_data)) && (node == NULL)) {
+    subst_list_string_type * inode = vector_iget( subst_list->string_data , index);
 
     if (strcmp(inode->key , key) == 0)  /* Found it */
       node = inode;
@@ -175,14 +176,15 @@ static subst_list_string_type * subst_list_get_node(const subst_list_type * subs
 
 static subst_list_string_type * subst_list_insert_new_node(subst_list_type * subst_list , const char * key) {
   subst_list_string_type * new_node = subst_list_node_alloc(key);
-  vector_append_owned_ref(subst_list->data , new_node , subst_list_node_free__);
+  vector_append_owned_ref(subst_list->string_data , new_node , subst_list_node_free__);
   return new_node;
 }
 
 
 subst_list_type * subst_list_alloc(subst_func_pool_type * func_pool) {
   subst_list_type * subst_list = util_malloc(sizeof * subst_list , __func__);
-  subst_list->data      = vector_alloc_new();
+  subst_list->string_data      = vector_alloc_new();
+  subst_list->func_data        = vector_alloc_new();
   subst_list->func_pool = func_pool;
   return subst_list;
 }
@@ -240,8 +242,11 @@ void subst_list_insert_callback(subst_list_type * subst_list , const char * key 
   subst_list_node_set_callback( node , callback , callback_arg , free_callback_arg );
 }
 
+
+
 void subst_list_free(subst_list_type * subst_list) {
-  vector_free( subst_list->data );
+  vector_free( subst_list->string_data );
+  vector_free( subst_list->func_data );
   free(subst_list);
 }
 
@@ -249,8 +254,8 @@ void subst_list_free(subst_list_type * subst_list) {
 
 static void subst_list_inplace_update_buffer____(const subst_list_type * subst_list , buffer_type * buffer) {
   int index;
-  for (index = 0; index < vector_get_size( subst_list->data ); index++) {
-    const subst_list_string_type * node = vector_iget_const( subst_list->data , index );
+  for (index = 0; index < vector_get_size( subst_list->string_data ); index++) {
+    const subst_list_string_type * node = vector_iget_const( subst_list->string_data , index );
     const int shift = strlen( node->value ) - strlen( node->key );
     bool    match;
     buffer_rewind( buffer );
@@ -322,8 +327,8 @@ static void subst_list_inplace_update_buffer____(const subst_list_type * subst_l
 
 static void subst_list_inplace_update_buffer__(const subst_list_type * subst_list , char ** buffer) {
   int index;
-  for (index = 0; index < vector_get_size( subst_list->data ); index++) {
-    const subst_list_string_type * node = vector_iget_const( subst_list->data , index );
+  for (index = 0; index < vector_get_size( subst_list->string_data ); index++) {
+    const subst_list_string_type * node = vector_iget_const( subst_list->string_data , index );
     const char * value = node->value;
     if ((value != NULL) || (node->callback != NULL))
       util_string_replace_inplace( buffer , node->key , value , node->callback , node->callback_arg);
@@ -401,8 +406,8 @@ void subst_list_update_buffer( const subst_list_type * subst_list , buffer_type 
 
 void subst_list_fprintf(const subst_list_type * subst_list , FILE * stream) {
   int index;
-  for (index=0; index < vector_get_size( subst_list->data ); index++) {
-    const subst_list_string_type * node = vector_iget_const( subst_list->data , index );
+  for (index=0; index < vector_get_size( subst_list->string_data ); index++) {
+    const subst_list_string_type * node = vector_iget_const( subst_list->string_data , index );
     fprintf(stream , "%s = %s\n" , node->key , node->value);
   }
 }
@@ -443,8 +448,8 @@ void subst_list_filtered_fprintf(const subst_list_type * subst_list , const char
 subst_list_type * subst_list_alloc_deep_copy(const subst_list_type * src) {
   int index;
   subst_list_type * copy = subst_list_alloc( src->func_pool );
-  for (index = 0; index < vector_get_size( src->data ); index++) {
-    const subst_list_string_type * node = vector_iget_const( src->data , index );
+  for (index = 0; index < vector_get_size( src->string_data ); index++) {
+    const subst_list_string_type * node = vector_iget_const( src->string_data , index );
     subst_list_insert__( copy , node->key , node->value , SUBST_DEEP_COPY);
   }
   return copy;
@@ -452,14 +457,14 @@ subst_list_type * subst_list_alloc_deep_copy(const subst_list_type * src) {
 
 
 int subst_list_get_size( const subst_list_type * subst_list) {
-  return vector_get_size(subst_list->data);
+  return vector_get_size(subst_list->string_data);
 }
 
 
 
 const char * subst_list_iget_key( const subst_list_type * subst_list , int index) {
-  if (index < vector_get_size(subst_list->data)) {
-    const subst_list_string_type * node = vector_iget_const( subst_list->data , index );
+  if (index < vector_get_size(subst_list->string_data)) {
+    const subst_list_string_type * node = vector_iget_const( subst_list->string_data , index );
     return node->key;
   } else {
     util_abort("%s: index:%d to large \n",__func__ , index);
@@ -469,8 +474,8 @@ const char * subst_list_iget_key( const subst_list_type * subst_list , int index
 
 
 const char * subst_list_iget_value( const subst_list_type * subst_list , int index) {
-  if (index < vector_get_size(subst_list->data)) {
-    const subst_list_string_type * node = vector_iget_const( subst_list->data , index );
+  if (index < vector_get_size(subst_list->string_data)) {
+    const subst_list_string_type * node = vector_iget_const( subst_list->string_data , index );
     return node->value;
   } else {
     util_abort("%s: index:%d to large \n",__func__ , index);
