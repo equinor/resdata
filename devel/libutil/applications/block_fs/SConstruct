@@ -25,12 +25,11 @@ def add_program(env , conf , target , src , SDP_INSTALL = False):
             env.Install(conf.SDP_BIN , P)
 
 
-
-
 add_program(env , conf , "bfs_extract"       , "bfs_extract.c" , True)
 add_program(env , conf , "bls.x"             , "bls.c"         , True)
 add_program(env , conf , "brm.x"             , "brm.c"         , True)
 add_program(env , conf , "brot.x"            , "brot.c"        , True)
+add_program(env , conf , "bcp.x"             , "bcp.c"         , True)
 
 install = env.Alias('install',"../../bin")
 if SDP_ROOT:

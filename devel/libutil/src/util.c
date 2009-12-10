@@ -3095,12 +3095,13 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
    The return value is the number of substitutions which have been
    performed. buffer must be \0 terminated.
 */
-  
 
-int static util_string_replace_inplace__(char ** _buffer , const char * expr , const char * subs , subst_callback_ftype * callback , void * callback_arg) {
+
+int static util_string_replace_inplace__(char ** _buffer , const char * expr , const char * subs) {
   char * buffer      	   = *_buffer;
   int    buffer_size 	   = strlen( buffer ) + 1;   /* The variable buffer_size is the TOTAL size - including the terminating \0. */
-  int len_expr  	   = strlen(expr);
+  int len_expr  	   = strlen( expr );
+  int len_subs             = strlen( subs );
   int    size   	   = strlen(buffer);
   int    offset 	   = 0;     
   int    match_count       = 0;
@@ -3114,20 +3115,13 @@ int static util_string_replace_inplace__(char ** _buffer , const char * expr , c
 	 Can not use pointer arithmetic here - because the underlying
 	 buffer pointer might be realloced.
       */
-      char * value;
-      int    len_value;
-      if (subs == NULL) 
-        value = callback( expr , callback_arg );
-      else
-        value = (char *) subs;
-      len_value = strlen( value );
       {
         int    start_offset  = match             - buffer;
         int    end_offset    = match + len_expr  - buffer;
-        int    target_offset = match + len_value - buffer;
-        int    new_size      = size  + len_value - len_expr;
+        int    target_offset = match + len_subs - buffer;
+        int    new_size      = size  + len_subs - len_expr;
         if (new_size >= (buffer_size - 1)) {
-          buffer_size += buffer_size + 2*len_value;
+          buffer_size += buffer_size + 2*len_subs;
           buffer = util_realloc( buffer , buffer_size , __func__);
         }
         {
@@ -3136,13 +3130,13 @@ int static util_string_replace_inplace__(char ** _buffer , const char * expr , c
           memmove(target , match_end , 1 + size - end_offset);
         }
       
-        memcpy(&buffer[start_offset] , value , len_value);
-        offset = start_offset + len_value;
+        memcpy(&buffer[start_offset] , subs , len_subs);
+        offset = start_offset + len_subs;
         size   = new_size;
         match_count++;
       }
       if (subs == NULL)
-        free( value );
+        free( subs );
     }
   } while (match != NULL && offset < strlen(buffer));
     
@@ -3153,8 +3147,8 @@ int static util_string_replace_inplace__(char ** _buffer , const char * expr , c
 
 
 
-int util_string_replace_inplace(char ** _buffer , const char * expr , const char * subs, subst_callback_ftype * callback , void * callback_arg) {
-  return util_string_replace_inplace__(_buffer , expr , subs , callback , callback_arg);
+int util_string_replace_inplace(char ** _buffer , const char * expr , const char * subs) {
+  return util_string_replace_inplace__(_buffer , expr , subs );
 }
 
 
@@ -3163,12 +3157,12 @@ int util_string_replace_inplace(char ** _buffer , const char * expr , const char
 /**
   This allocates a copy of buff_org where occurences of the string expr are replaced with subs.
 */
-char * util_string_replace_alloc(const char * buff_org, const char * expr, const char * subs,  subst_callback_ftype * callback , void * callback_arg)
+char * util_string_replace_alloc(const char * buff_org, const char * expr, const char * subs)
 {
   int buffer_size   = strlen(buff_org) * 2;
   char * new_buffer = util_malloc(buffer_size * sizeof * new_buffer , __func__);
   memcpy(new_buffer , buff_org , strlen(buff_org) + 1);
-  util_string_replace_inplace__( &new_buffer , expr , subs , callback , callback_arg);
+  util_string_replace_inplace__( &new_buffer , expr , subs);
   
   {
     int size = strlen(new_buffer);
@@ -3181,7 +3175,7 @@ char * util_string_replace_alloc(const char * buff_org, const char * expr, const
 
 
 /**
-  This allocates a copy of buff_org where occurences of expr[i] are replaced with subs[i] for i=1,..,num_expr.
+   This allocates a copy of buff_org where occurences of expr[i] are replaced with subs[i] for i=1,..,num_expr.
 */
 char * util_string_replacen_alloc(const char * buff_org, int num_expr, const char ** expr, const char ** subs)
 {
@@ -3190,13 +3184,14 @@ char * util_string_replacen_alloc(const char * buff_org, int num_expr, const cha
   memcpy(new_buffer , buff_org , strlen(buff_org) + 1);
 
   for(int i=0; i<num_expr; i++)
-    util_string_replace_inplace__( &new_buffer , expr[i] , subs[i] , NULL , NULL);
+    util_string_replace_inplace__( &new_buffer , expr[i] , subs[i]);
   
   int size = strlen(new_buffer);
   new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer, __func__);
-
+  
   return new_buffer;
 }
+
 
 
 /**
@@ -4570,6 +4565,7 @@ void util_exit(const char * fmt , ...) {
   va_list ap;
   va_start(ap , fmt);
   vfprintf(stderr , fmt , ap);
+  va_end(ap);
   exit(1);
 }
     

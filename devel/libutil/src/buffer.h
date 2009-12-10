@@ -13,6 +13,7 @@ typedef struct     buffer_struct buffer_type;
 void               buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift);
 bool               buffer_strstr( buffer_type * buffer , const char * expr );
 buffer_type      * buffer_alloc( size_t buffer_size );
+buffer_type      * buffer_alloc_wrapper(void * data , size_t buffer_size );
 void               buffer_free_container( buffer_type * buffer );
 void               buffer_free( buffer_type * buffer);
 size_t             buffer_safe_fread(buffer_type * buffer , void * target_ptr , size_t item_size , size_t items);
@@ -50,6 +51,7 @@ void               buffer_rewind(buffer_type * buffer );
 double             buffer_fread_double(buffer_type * buffer);
 void               buffer_fwrite_double(buffer_type * buffer , double value);
 
+size_t             buffer_stream_fwrite_n( const buffer_type * buffer , size_t offset , ssize_t write_size , FILE * stream );
 void               buffer_stream_fprintf( const buffer_type * buffer , FILE * stream );
 void               buffer_stream_fread( buffer_type * buffer , size_t byte_size , FILE * stream);
 buffer_type      * buffer_fread_alloc(const char * filename);

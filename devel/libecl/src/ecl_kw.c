@@ -110,6 +110,7 @@ void ecl_kw_get_memcpy_data(const ecl_kw_type *ecl_kw , void *target) {
   memcpy(target , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
 }
 
+
 /** Allocates a untyped buffer with exactly the same content as the ecl_kw instances data. */
 void * ecl_kw_alloc_data_copy(const ecl_kw_type * ecl_kw) {
   void * buffer = util_alloc_copy( ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , __func__);
@@ -645,6 +646,14 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
   }
 }
 
+/**
+   Allocates storage and reads data. 
+*/
+void ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
+  ecl_kw_alloc_data(ecl_kw);
+  ecl_kw_fread_data(ecl_kw , fortio);
+}
+
 
 void ecl_kw_rewind(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
   fseek(fortio_get_FILE(fortio) , ecl_kw->_start_pos , SEEK_SET);
@@ -675,7 +684,7 @@ void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 
 bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   const char null_char = '\0';
-  FILE *stream  = fortio_get_FILE(fortio);
+  FILE *stream  = fortio_get_FILE( fortio );
   bool fmt_file = fortio_fmt_file( fortio );
   char header[ecl_str_len + 1];
   char ecl_type_str[ecl_type_len + 1];
@@ -797,6 +806,7 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
   }
   return kw_found;
 }
+
 
 
 /** 
@@ -933,10 +943,9 @@ void ecl_kw_set_header_alloc(ecl_kw_type *ecl_kw , const char *header ,  int siz
 bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   bool OK;
   OK = ecl_kw_fread_header(ecl_kw , fortio);
-  if (OK) {
-    ecl_kw_alloc_data(ecl_kw);
-    ecl_kw_fread_data(ecl_kw , fortio);
-  } 
+  if (OK) 
+    ecl_kw_fread_realloc_data( ecl_kw , fortio );
+
   return OK;
 }
 

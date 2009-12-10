@@ -75,7 +75,7 @@ static void buffer_resize__(buffer_type * buffer , size_t new_size, bool abort_o
 }
 
 
-buffer_type * buffer_alloc( size_t buffer_size ) {
+static buffer_type * buffer_alloc_empty( ) {
   buffer_type * buffer = util_malloc( sizeof * buffer , __func__);
   buffer->__id = BUFFER_TYPE_ID;
   buffer->data = NULL;
@@ -83,9 +83,44 @@ buffer_type * buffer_alloc( size_t buffer_size ) {
   buffer->alloc_size   = 0;
   buffer->content_size = 0;
   buffer->pos          = 0;
+  return buffer;
+}
+
+
+buffer_type * buffer_alloc( size_t buffer_size ) {
+  buffer_type * buffer = buffer_alloc_empty();
   buffer_resize__( buffer , buffer_size , true);
   return buffer;
 }
+
+
+/**
+   This function will allocate a buffer instance based on the input
+   data. Observe that the buffer will 'steal' the input data pointer,
+   in the process the data pointer might very well be realloced()
+   leaving the original pointer invalid.
+   
+   All the content of the input data pointer will be assumed to be
+   valid, i.e. the fields content_size and pos will be set to the
+   value @buffer_size.
+    
+   When calling buffer_free() at a later stage the hijacked data will
+   also be freed.
+*/
+
+buffer_type * buffer_alloc_wrapper(void * data , size_t buffer_size ) {
+  buffer_type * buffer = buffer_alloc_empty();
+
+  buffer->data         = data;        /* We have stolen the data pointer. */
+  buffer->content_size = buffer_size;
+  buffer->pos          = buffer_size;
+  buffer->alloc_size   = buffer_size;
+  
+  
+  return buffer;
+}
+
+
 
 
 /**
@@ -306,7 +341,7 @@ void buffer_fseek(buffer_type * buffer , ssize_t offset , int whence) {
   else if (whence == SEEK_CUR)
     new_pos = buffer->pos + offset;
   else if (whence == SEEK_END)
-    new_pos = buffer->content_size;
+    new_pos = buffer->content_size + offset;
   else 
     util_abort("%s: unrecognized whence indicator - aborting \n",__func__);
   
@@ -531,7 +566,7 @@ void * buffer_alloc_data_copy(const buffer_type * buffer) {
 
 void buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift) { 
   /* Do we need to grow the buffer? */
-  if (buffer->alloc_size < (buffer->content_size + shift)) {
+  if (buffer->alloc_size <= (buffer->content_size + shift)) {
     size_t new_size = 2 * (buffer->content_size + shift);
     buffer_resize__(buffer , new_size , true );
   }
@@ -562,7 +597,7 @@ void buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift) {
 
 bool buffer_strstr( buffer_type * buffer , const char * expr ) {
   char * match  = NULL;
-
+  
   match = strstr( &buffer->data[buffer->pos] , expr);
   if (match != NULL) 
     buffer->pos = match - buffer->data;
@@ -632,9 +667,9 @@ void buffer_fread_realloc(buffer_type * buffer , const char * filename) {
   size_t file_size     = util_file_size( filename );
   FILE * stream        = util_fopen( filename , "r");  
   
-  buffer_clear( buffer );   /* Setting: content_size = 0; pos = 0;  */
+  buffer_clear( buffer );    /* Setting: content_size = 0; pos = 0;  */
   buffer_stream_fread( buffer , file_size , stream );
-  buffer_rewind( buffer );  /* Setting: pos = 0; */
+  buffer_rewind( buffer );   /* Setting: pos = 0; */
   fclose( stream );
 }
 
@@ -648,8 +683,49 @@ buffer_type * buffer_fread_alloc(const char * filename) {
 
 
 
+/**
+   Will write parts of the buffer to the stream. Will start at buffer
+   position @offset and write @write_size bytes.
+   
+    o If @offset is invalid, i.e. less than zero or greater than
+      buffer->content_size the function will fail hard.
+
+    o If @write_size is greater than storage in the buffer the
+      function will just write all the available data, but not complain
+      any more.
+
+    o @write_size == 0 that is interpreted as "write everything from offset".  
+
+    o @write_size < 0 is interpreted as : "Write everything except the
+      abs(@write_size) last bytes.
+
+   The return value is the number of bytes actually written.
+*/
+
+size_t buffer_stream_fwrite_n( const buffer_type * buffer , size_t offset , ssize_t write_size , FILE * stream ) {
+  if (offset < 0 || offset > buffer->content_size)
+    util_abort("%s: invalid offset:%ld - valid range: [0,%ld) \n",__func__ , offset , offset);
+  {
+    ssize_t len;
+
+    if (write_size > 0)             /* Normal - write @write_size bytes from offset */
+      len = write_size;   
+    else if (write_size == 0)       /* Write everything from the offset */   
+      len = buffer->content_size - offset;
+    else                            /* @write_size < 0 - write everything excluding the last abs(write_size) bytes. */
+      len = buffer->content_size - offset - abs( write_size );
+
+    if (len < 0)
+      util_abort("%s: invalid length spesifier - tried to write %ld bytes \n",__func__ , len);
+    
+    util_fwrite( &buffer->data[offset] , 1 , len , stream , __func__);
+    return len;
+  }
+}
+
+
 void buffer_stream_fwrite( const buffer_type * buffer , FILE * stream ) {
-  util_fwrite( buffer->data , 1 , buffer->content_size , stream , __func__);
+  buffer_stream_fwrite_n( buffer , 0 , buffer->content_size , stream );
 }
 
 

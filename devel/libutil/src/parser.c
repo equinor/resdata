@@ -304,7 +304,7 @@ char * alloc_quoted_token(
       expr[2] = '\0';
       subs[0] = buffer[0];
       subs[1] = '\0';
-      util_string_replace_inplace(&token, expr, subs , NULL , NULL);
+      util_string_replace_inplace(&token, expr, subs);
     }
   }
   return token;

@@ -56,10 +56,10 @@ static char * template_load( const template_type * template , const subst_list_t
 */
 
 
-template_type * template_alloc( const char * template_file , bool internalize_template , subst_func_pool_type * func_pool) {
+template_type * template_alloc( const char * template_file , bool internalize_template , subst_list_type * parent_subst) {
   template_type * template = util_malloc( sizeof * template , __func__);
   UTIL_TYPE_ID_INIT(template , TEMPLATE_TYPE_ID);
-  template->arg_list        = subst_list_alloc( func_pool );
+  template->arg_list        = subst_list_alloc( parent_subst );
   template->template_buffer = NULL;
 
   template->template_file        = util_alloc_string_copy( template_file );
@@ -137,5 +137,5 @@ void template_instansiate( const template_type * template , const char * __targe
    before the internal substitutions.
 */
 void template_add_arg( template_type * template , const char * key , const char * value ) {
-  subst_list_insert_copy( template->arg_list , key , value );
+  subst_list_insert_copy( template->arg_list , key , value , NULL /* No doc_string */);
 }

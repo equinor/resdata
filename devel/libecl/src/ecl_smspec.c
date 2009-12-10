@@ -447,9 +447,9 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	case (ECL_SMSPEC_WELL_VAR):
 	  if (!DUMMY_WELL(well)) {
 	    /*
-	       It seems we can have e.g. WOPR associated with a dummy
-	       well, there is no limit to the stupidity of the
-	       programmers at Schlum.
+              It seems we can have e.g. WOPR associated with a dummy
+              well, there is no limit to the stupidity of the
+              programmers at Schlum.
 	    */
 	    if (!hash_has_key(ecl_smspec->well_var_index , well))
 	      hash_insert_hash_owned_ref(ecl_smspec->well_var_index , well , hash_alloc() , hash_free__);
