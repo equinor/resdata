@@ -402,7 +402,32 @@ static void subst_list_replace_strings__(const subst_list_type * subst_list , bu
    Updates the buffer inplace by evaluationg all the string functions
    in the subst_list. Last performing all the replacements in the
    parent.
+
+   The rules for function evaluation are as follows:
+
+    1. Every function MUST have a '()', IMMEDIATELY following the
+       function name, this also applies to functions which do not have
+       any arguments.
+
+    2. The function parser is quite primitive, and can (at least
+       currently) not handle nested functions, i.e.
+
+          __SUM__( __SUM__(1 ,2 ) , 3)
+
+       will fail.
+
+    3. If the function evaluation fails; typicall because of wrong
+       type/number of arguments the buffer will not updated.
+
+
+    4. The functions will return a freshly allocated (char *) pointer,
+       or NULL if the evaluation fails, and the input value is a list
+       of strings extracted from the parsing context - i.e. the
+       function is in no way limited to numeric functions like sum()
+       and exp().
+
 */
+
 static void subst_list_eval_funcs____(const subst_list_type * subst_list , const parser_type * parser , buffer_type * buffer) {
   {
     int index;
@@ -465,9 +490,9 @@ static void subst_list_eval_funcs__(const subst_list_type * subst_list , buffer_
 
 
 /**
-   Should we eavluate the parent first (i.e. top down), or this
+   Should we evaluate the parent first (i.e. top down), or this
    instance first and then subsequently the parent (i.e. bottom
-   up). There are essesntially two cases with conflicting needs:
+   up). The problem is with inherited defintions:
 
      Inherited defintions
      --------------------
@@ -481,8 +506,19 @@ static void subst_list_eval_funcs__(const subst_list_type * subst_list , buffer_
      I.e. first <PATH> is replaced with "/tmp/run/<CASE>" and then
      subsequently "<CASE>" is replaced with "Test4". A typical use
      case here is that the common definition of "<PATH>" is in the
-     parent, and consequently parent should run first (i.e. top down).
+     parent, and consequently parent should run first (i.e. top
+     down). 
 
+     However, in other cases the order of defintion might very well be
+     opposite, i.e. with "<CASE>" first and then things will blow up:
+
+       1. <CASE>: Not found
+       2. <PATH> -> /tmp/run/<CASE>
+
+     and, the final <CASE> will not be resolved. I.e. there is no
+     obvious 'right' way to do it.
+     
+     
 
      Overriding defaults
      -------------------
@@ -500,12 +536,10 @@ static void subst_list_eval_funcs__(const subst_list_type * subst_list , buffer_
      approach.
 
 
-   Currently the implementation is top down, i.e. inherited defintions
-   are supported. Overriding deafults are not.
-   
-   The actual implementation here is in terms of recursion, the low
-   level function doing the stuff is subst_list_replace_strings__()
-   which is not recursive.
+   Currently the implementation is purely top down, the latter case
+   above is not supported. The actual implementation here is in terms
+   of recursion, the low level function doing the stuff is
+   subst_list_replace_strings__() which is not recursive.
 */
 
 static void subst_list_replace_strings( const subst_list_type * subst_list , buffer_type * buffer ) {
@@ -740,8 +774,6 @@ void subst_list_fprintf(const subst_list_type * subst_list , FILE * stream) {
     fprintf(stream , "%s = %s\n" , node->key , node->value);
   }
 }
-
-
 
 
 
