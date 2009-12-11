@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <util.h>
-#include <subst.h>
 #include <vector.h>
 #include <node_data.h>
 #include <buffer.h>
+#include <subst_list.h>
 #include <subst_func.h>
 #include <parser.h>
 

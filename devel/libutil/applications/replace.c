@@ -1,5 +1,5 @@
 #include <util.h>
-#include <subst.h>
+#include <subst_list.h>
 
 int main(int argc, char ** argv)
 {
