@@ -15,7 +15,7 @@ bool util_is_abs_path(const char * path) {
 }
 
 
-int util_get_path_length(const char * file) {
+static int util_get_path_length(const char * file) {
   if (util_is_directory(file)) 
     return strlen(file);
   else {
@@ -110,8 +110,8 @@ void util_make_path(const char *_path) {
   char *path = (char *) _path;
   int current_pos = 0;
 
-  if (!util_path_exists(path)) {
-    active_path = malloc(strlen(path) + 1);
+  if (!util_is_directory(path)) {
+    active_path = util_malloc(strlen(path) + 1 , __func__);
     int i = 0;
     do {
       int n = strcspn(path , UTIL_PATH_SEP_STRING);
@@ -123,7 +123,7 @@ void util_make_path(const char *_path) {
       active_path[n+current_pos] = '\0';
       current_pos += n; 
       
-      if (!util_path_exists(active_path)) {
+      if (!util_is_directory(active_path)) {
 	if (mkdir(active_path , 0775) != 0) { 
 	  bool fail = false;
 	  switch (errno) {
@@ -253,7 +253,7 @@ char * util_realloc_filename(char * filename , const char * path , const char * 
    Only removes the last component in path.
 */
 void static util_unlink_path_static( const char *path ) {
-  if (util_path_exists(path)) {
+  if (util_is_directory(path)) {
     const uid_t uid = getuid();
     DIR  *dirH;
     struct dirent *dentry;
@@ -319,7 +319,7 @@ void util_unlink_path(const char *path) {
 bool util_proc_alive(pid_t pid) {
   char proc_path[16];
   sprintf(proc_path , "/proc/%d" , pid);
-  return util_path_exists(proc_path);
+  return util_is_directory(proc_path);
 }
 
 

@@ -66,7 +66,7 @@ time_t          ecl_util_get_start_date(const char * );
 bool            ecl_util_fmt_file(const char *);
 int             ecl_util_fname_cmp(const void *, const void *);
 char          * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , ecl_file_enum file_type , bool start_fmt , int report_nr);
-
+int             ecl_util_get_month_nr(const char * month_name);
 #ifdef __cplusplus
 }
 #endif

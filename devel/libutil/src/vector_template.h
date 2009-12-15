@@ -31,6 +31,7 @@ int                  <TYPE>_vector_size(const <TYPE>_vector_type * );
 <TYPE>               <TYPE>_vector_get_first(const <TYPE>_vector_type * vector);
 <TYPE>               <TYPE>_vector_get_last(const <TYPE>_vector_type * );
 <TYPE> *             <TYPE>_vector_get_ptr(const <TYPE>_vector_type * );
+<TYPE> *             <TYPE>_vector_alloc_data_copy( const <TYPE>_vector_type * vector );
 const <TYPE> *       <TYPE>_vector_get_const_ptr(const <TYPE>_vector_type * );
 void                 <TYPE>_vector_set_many(<TYPE>_vector_type *  , int  , const <TYPE> *  , int );
 void                 <TYPE>_vector_append_many(<TYPE>_vector_type * vector , const <TYPE> * data , int length);

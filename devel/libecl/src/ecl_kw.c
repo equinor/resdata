@@ -53,6 +53,8 @@ static const char ecl_type_map[ecl_Ntype][ecl_type_len + 1] = {{"CHAR\0"},
 
 static const char *ecl_kw_header_write_fmt = " '%-8s' %11d '%-4s'\n";
 
+static void ecl_kw_init_types(ecl_kw_type *ecl_kw);
+
 
 /******************************************************************/
 
@@ -178,51 +180,58 @@ bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
 
 
 
-void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
-  if (!ecl_kw->shared_data) 
-    util_abort("%s: trying to set shared data reference for ecl_kw object which has been allocated with private storage - aborting \n",__func__);
-  
-  ecl_kw->data = data_ptr;
-}
-
-
-static void ecl_kw_set_shared(ecl_kw_type * ecl_kw) {
+static void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
   if (!ecl_kw->shared_data) {
     if (ecl_kw->data != NULL) 
       util_abort("%s: can not change to shared for keyword with allocated storage - aborting \n",__func__);
   }
   ecl_kw->shared_data = true;
+  ecl_kw->data = data_ptr;
+}
+
+
+
+static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int size , ecl_type_enum ecl_type) {
+  ecl_kw->ecl_type = ecl_type;
+  ecl_kw_init_types( ecl_kw );
+  if (strlen(header) > ecl_str_len) 
+    util_abort("%s: Fatal error: ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
+  
+  ecl_kw_set_header_name(ecl_kw , header);
+  ecl_kw->size = size;
 }
 
 
 
 
-ecl_kw_type * ecl_kw_alloc_complete(const char * header ,  int size, ecl_type_enum ecl_type , const void * data) {
+/**
+   The data is copied from the input argument to the ecl_kw. 
+*/
+ecl_kw_type * ecl_kw_alloc_new(const char * header ,  int size, ecl_type_enum ecl_type , const void * data) {
   ecl_kw_type *ecl_kw;
   ecl_kw = ecl_kw_alloc_empty();
-  ecl_kw_set_header(ecl_kw , header , size , __get_ecl_str_type(ecl_type));
+  ecl_kw_initialize(ecl_kw , header , size , ecl_type);
   ecl_kw_alloc_data(ecl_kw);
   ecl_kw_set_memcpy_data(ecl_kw , data);
   return ecl_kw;
 }
 
 
-ecl_kw_type * ecl_kw_alloc_scalar(const char * header , int size , ecl_type_enum ecl_type , double init_value) {
+
+ecl_kw_type * ecl_kw_alloc( const char * header , int size , ecl_type_enum ecl_type ) {
   ecl_kw_type *ecl_kw;
   ecl_kw = ecl_kw_alloc_empty();
-  ecl_kw_set_header(ecl_kw , header , size , __get_ecl_str_type(ecl_type));
+  ecl_kw_initialize(ecl_kw , header , size , ecl_type);
   ecl_kw_alloc_data(ecl_kw);
-  ecl_kw_scalar_init(ecl_kw , init_value);
   return ecl_kw;
 }
 
 
 
-ecl_kw_type * ecl_kw_alloc_complete_shared(const char * header ,  int size, ecl_type_enum ecl_type , void * data) {
+ecl_kw_type * ecl_kw_alloc_new_shared(const char * header ,  int size, ecl_type_enum ecl_type , void * data) {
   ecl_kw_type *ecl_kw;
   ecl_kw = ecl_kw_alloc_empty();
-  ecl_kw_set_header(ecl_kw , header , size , __get_ecl_str_type(ecl_type));
-  ecl_kw_set_shared(ecl_kw);
+  ecl_kw_initialize(ecl_kw , header , size , ecl_type);
   ecl_kw_set_shared_ref(ecl_kw , data);
   return ecl_kw;
 }
@@ -917,16 +926,6 @@ void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
 }
 
 
-static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int size , ecl_type_enum ecl_type) {
-  ecl_kw->ecl_type = ecl_type;
-  ecl_kw_init_types( ecl_kw );
-  if (strlen(header) > ecl_str_len) 
-    util_abort("%s: Fatal error: ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
-  
-  ecl_kw_set_header_name(ecl_kw , header);
-  ecl_kw->size = size;
-}
-
 
 void ecl_kw_set_header(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *ecl_str_type ) {
   ecl_type_enum ecl_type = __get_ecl_type(ecl_str_type);
@@ -1328,6 +1327,11 @@ void ecl_kw_fread_realloc_compressed(ecl_kw_type * ecl_kw , FILE * stream) {
 }
 
 
+
+/**
+   Function needed for upgrading fs version 103 in the ERT code.
+   Might be removed ...
+*/
 ecl_kw_type * ecl_kw_fread_alloc_compressed(FILE * stream) {
   ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(false , false);
   ecl_kw_fread_realloc_compressed(ecl_kw , stream);
@@ -1337,7 +1341,7 @@ ecl_kw_type * ecl_kw_fread_alloc_compressed(FILE * stream) {
 
 
 void ecl_kw_fwrite_param_fortio(fortio_type * fortio, const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
-  ecl_kw_type   * ecl_kw = ecl_kw_alloc_complete_shared(header , size , ecl_type , data);
+  ecl_kw_type   * ecl_kw = ecl_kw_alloc_new_shared(header , size , ecl_type , data);
   ecl_kw_fwrite(ecl_kw , fortio);
   ecl_kw_free(ecl_kw);
 }

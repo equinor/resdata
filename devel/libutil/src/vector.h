@@ -15,15 +15,24 @@ typedef struct vector_struct vector_type;
 
 vector_type * vector_alloc_new();
 vector_type * vector_alloc_NULL_initialized( int size );
+
 int  	      vector_append_ref( vector_type * , const void *);
 int  	      vector_append_owned_ref( vector_type * , const void * , free_ftype * del);
 int           vector_append_copy(vector_type * , const void *, copyc_ftype *, free_ftype *);
+
 void 	      vector_iset_ref( vector_type * , int , const void *);
 void 	      vector_iset_owned_ref( vector_type * , int , const void * , free_ftype * del);
 void          vector_iset_copy(vector_type * , int , const void *, copyc_ftype *, free_ftype *);
+
+void 	      vector_insert_ref( vector_type * , int , const void *);
+void 	      vector_insert_owned_ref( vector_type * , int , const void * , free_ftype * del);
+void          vector_insert_copy(vector_type * , int , const void *, copyc_ftype *, free_ftype *);
+
 void 	      vector_push_ref( vector_type * ,  const void *);
 void 	      vector_push_owned_ref( vector_type * ,  const void * , free_ftype * del);
 void          vector_push_copy(vector_type * ,  const void *, copyc_ftype *, free_ftype *);
+
+
 void          vector_clear(vector_type * vector);
 void          vector_free(vector_type * ); 
 void          vector_free__( void * arg );

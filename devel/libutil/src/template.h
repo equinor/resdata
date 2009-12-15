@@ -1,7 +1,7 @@
 #ifndef __TEMPLATE_H__
 #define __TEMPLATE_H__
-#include <subst.h>
 #include <stdbool.h>
+#include <subst_list.h>
 
 typedef struct template_struct template_type;
 

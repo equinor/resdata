@@ -10,7 +10,6 @@
 #include <thread_pool.h>
 #include <stringlist.h>
 #include <menu.h>
-#include <subst.h>
 #include <arg_pack.h>
 #include <vector.h>
 #include <double_vector.h>
@@ -23,7 +22,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <subst.h>
+#include <subst_list.h>
 #include <subst_func.h>
 #include <buffer.h>
 

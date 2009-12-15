@@ -642,11 +642,11 @@ void _plot_batch_rft(void * arg, char * inkey){
   util_sscanf_date(date , &survey_time) ;  
   
   char * plot_file;
-  
-  char * plotfn = util_alloc_string_sum2(token_list[0] , ":");
-  plotfn = util_alloc_string_sum2(plotfn , token_list[1]);
-  
-  plot_file = util_alloc_sprintf("%s/%s.%s" , plot_info->plot_path , plotfn , plot_info->plot_device);
+  {
+    char * plot_name = util_alloc_sprintf("%s:%s" , token_list[0] , token_list[1]);
+    plot_file = util_alloc_filename(plot_info->plot_path , plot_name  , plot_info->plot_device);
+    free( plot_name );
+  }
   
   {
     arg_pack_type * arg_pack = arg_pack_alloc();

@@ -54,8 +54,8 @@ void        * ecl_kw_iget_ptr(const ecl_kw_type *, int);
 int           ecl_kw_get_size(const ecl_kw_type *);
 bool          ecl_kw_header_eq(const ecl_kw_type *, const char *);
 bool          ecl_kw_ichar_eq(const ecl_kw_type *, int , const char *);
-ecl_kw_type * ecl_kw_alloc_complete(const char * ,  int , ecl_type_enum , const void * );
-ecl_kw_type * ecl_kw_alloc_complete_shared(const char * ,  int , ecl_type_enum , void * );
+ecl_kw_type * ecl_kw_alloc_new(const char * ,  int , ecl_type_enum , const void * );
+ecl_kw_type * ecl_kw_alloc_new_shared(const char * ,  int , ecl_type_enum , void * );
 void          ecl_kw_cfwrite(const ecl_kw_type *  , FILE *);
 void          ecl_kw_cfread(ecl_kw_type *  , FILE *);
 void          ecl_kw_fwrite_param(const char * , bool  , const char * ,  ecl_type_enum , int , void * );
@@ -66,7 +66,6 @@ float         ecl_kw_iget_as_float(const ecl_kw_type * ecl_kw , int i);
 double        ecl_kw_iget_as_double(const ecl_kw_type * ecl_kw , int i);
 void          ecl_kw_get_data_as_double(const ecl_kw_type *, double *);
 bool          ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2);
-ecl_kw_type * ecl_kw_alloc_scalar(const char *  , int  , ecl_type_enum  , double );
 void          ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
 void          ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
 

@@ -85,21 +85,6 @@ void util_fread_dev_urandom(int buffer_size , char * buffer) {
 
 
 
-
-
-char * util_alloc_string_sum2(const char *s1 , const char *s2) {
-  char * buffer;
-  buffer = util_malloc(strlen(s1) + strlen(s2) + 1 , __func__);
-  buffer[0] = '\0';
-  strcat(buffer , s1);
-  strcat(buffer , s2);
-  return buffer;
-}
-
-
-
-
-
 char * util_alloc_substring_copy(const char *src , int N) {
   char *copy;
   if (N < strlen(src)) {
@@ -531,43 +516,6 @@ char * util_isscanf_alloc_envvar( const char * string , int env_index ) {
   } else
     return NULL; /* Could not find any env variable occurences. */
 }
-
-
-/**
-   If the parsing fails the time_t pointer is set to -1;
-*/
-bool util_sscanf_date(const char * date_token , time_t * t) {
-  int day   , month , year;
-  char sep1 , sep2;
-  
-  if (sscanf(date_token , "%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) {
-    *t = util_make_date(day , month , year );  
-    return true;
-  } else {
-    *t = -1;
-    return false;
-  }
-}
-
-
-bool util_fscanf_date(FILE *stream , time_t *t)  {
-  int init_pos = ftell(stream);
-  char * date_token = util_fscanf_alloc_token(stream);
-  bool return_value = util_sscanf_date(date_token , t);
-  if (!return_value) fseek(stream , init_pos , SEEK_SET);
-  free(date_token);
-  return return_value;
-}
-
-/* 
-   The date format is HARD assumed to be
-
-   dd/mm/yyyy
-
-   Where mm is [1..12]
-   yyyy ~2000
-
-*/
 
 
 
@@ -1374,7 +1322,8 @@ static bool util_copy_file__(const char * src_file , const char * target_file, i
 
 
 
-bool util_copy_file(const char * src_file , const char * target_file, bool abort_on_error) {
+bool util_copy_file(const char * src_file , const char * target_file) {
+  const bool abort_on_error = true;
   void * buffer   = NULL;
   size_t buffer_size = util_size_t_max( 32 , util_file_size(src_file) );  /* The copy stream function will hang if buffer size == 0 */
   do {
@@ -1707,9 +1656,16 @@ void util_walk_directory(const char               * root_path ,
 
 
 /**
-  This function return true if path corresponds to an existing
-  directory, if stat() fails errno is checked for the value ENOENT, in
-  which case a false is returned.
+   The semantics for all the is_xxx functions is follows:
+
+   1. Call stat(). If stat fails with ENOENT the entry does not exist
+      at all - return false.
+
+   2. If stat() has succeeded check the type of the entry, and return
+      true|false if it is of the wanted type.
+      
+   3. If stat() fails with error != ENOENT => util_abort().   
+
 */
 bool util_is_directory(const char * path) {
   struct stat stat_buffer;
@@ -1773,7 +1729,8 @@ bool util_is_executable(const char * path) {
 }
 
 
-int util_get_base_length(const char * file) {
+
+static int util_get_base_length(const char * file) {
   int path_length   = util_get_path_length(file);
   const char * base_start;
   const char * last_point;
@@ -1906,24 +1863,6 @@ void util_alloc_file_components(const char * file, char **_path , char **_basena
 
 
 
-/**
-   Checks if the argument exists - as a directory.
-*/
-
-bool util_path_exists(const char *pathname) {
-  DIR *stream = opendir(pathname);
-  bool ex;
-  
-  if (stream == NULL) {
-    ex = false;
-  } else {
-    closedir(stream);
-    ex = true;
-  }
-
-  return ex;
-}
-
 
 
 size_t util_file_size(const char *file) {
@@ -1941,7 +1880,7 @@ size_t util_file_size(const char *file) {
 }
 
 
-uid_t util_get_file_uid( const char * file ) {
+uid_t util_get_entry_uid( const char * file ) {
   struct stat buffer;
   stat( file , &buffer);
   return buffer.st_uid;
@@ -2033,7 +1972,7 @@ bool util_file_readable( const char * file ) {
    Returns the permission mode for the file.
 */
 
-mode_t util_get_file_mode( const char * file ) {
+mode_t util_get_entry_mode( const char * file ) {
   struct stat buffer;
   stat( file , &buffer );
   return buffer.st_mode & (S_IRWXU + S_IRWXG + S_IRWXO);
@@ -2249,6 +2188,43 @@ void util_set_date_values(time_t t , int * mday , int * month , int * year) {
 }
 
 
+/**
+   If the parsing fails the time_t pointer is set to -1;
+*/
+bool util_sscanf_date(const char * date_token , time_t * t) {
+  int day   , month , year;
+  char sep1 , sep2;
+  
+  if (sscanf(date_token , "%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) {
+    *t = util_make_date(day , month , year );  
+    return true;
+  } else {
+    *t = -1;
+    return false;
+  }
+}
+
+
+bool util_fscanf_date(FILE *stream , time_t *t)  {
+  int init_pos = ftell(stream);
+  char * date_token = util_fscanf_alloc_token(stream);
+  bool return_value = util_sscanf_date(date_token , t);
+  if (!return_value) fseek(stream , init_pos , SEEK_SET);
+  free(date_token);
+  return return_value;
+}
+
+/* 
+   The date format is HARD assumed to be
+
+   dd/mm/yyyy
+
+   Where mm is [1..12]
+   yyyy ~2000
+
+*/
+
+
 void util_fprintf_datetime(time_t t , FILE * stream) {
   int sec,min,hour;
   int mday,year,month;
@@ -2387,64 +2363,7 @@ time_t util_make_date(int mday , int month , int year) {
 }
 
 
-/**
-   Will return -1 for an unrecognized month name.
-*/
 
-static int util_get_month_nr__(const char * _month_name) {
-  int month_nr = -1;
-  char * month_name = util_alloc_string_copy(_month_name);
-  util_strupr(month_name);
-  
-  if (strncmp(month_name , "JAN" , 3)      == 0) 
-    month_nr = 1;
-  else if (strncmp(month_name , "FEB" , 3) == 0) 
-    month_nr = 2;
-  else if (strncmp(month_name , "MAR" , 3) == 0) 
-    month_nr = 3;
-  else if (strncmp(month_name , "APR" , 3) == 0) 
-    month_nr = 4;
-  else if (strncmp(month_name , "MAI" , 3) == 0) 
-    month_nr = 5;
-  else if (strncmp(month_name , "MAY" , 3) == 0) 
-    month_nr = 5;
-  else if (strncmp(month_name , "JUN" , 3) == 0) 
-    month_nr = 6;
-  else if (strncmp(month_name , "JUL" , 3) == 0) 
-    month_nr = 7;
-  else if (strncmp(month_name , "JLY" , 3) == 0)   /* ECLIPSE ambigus on July. */
-    month_nr = 7;
-  else if (strncmp(month_name , "AUG" , 3) == 0) 
-    month_nr = 8;
-  else if (strncmp(month_name , "SEP" , 3) == 0) 
-    month_nr = 9;
-  else if (strncmp(month_name , "OCT" , 3) == 0) 
-    month_nr = 10;
-  else if (strncmp(month_name , "OKT" , 3) == 0) 
-    month_nr = 10;
-  else if (strncmp(month_name , "NOV" , 3) == 0) 
-    month_nr = 11;
-  else if (strncmp(month_name , "DEC" , 3) == 0) 
-    month_nr = 12;
-  else if (strncmp(month_name , "DES" , 3) == 0) 
-    month_nr = 12;
-  free(month_name);
-  return month_nr;
-}
-
-
-int util_get_month_nr(const char * month_name) {
-  int month_nr = util_get_month_nr__(month_name);
-  if (month_nr < 0) 
-    util_abort("%s: %s not a valid month name - aborting \n",__func__ , month_name);
-  
-  return month_nr;
-}
-
-
-int util_check_month(const char * month_name) {
-  return util_get_month_nr__(month_name);
-}
 
 
 /*****************************************************************/
@@ -3744,7 +3663,10 @@ void * util_realloc(void * old_ptr , size_t new_size , const char * caller) {
 void * util_malloc(size_t size , const char * caller) {
   void * data;
   if (size == 0) 
-    /* Not entirely clear from documentation what you get when you call malloc( 0 ); */
+    /* 
+       Not entirely clear from documentation what you get when you
+       call malloc( 0 ); this code will return NULL in that case.
+    */
     data = NULL;
   else {
     data = malloc(size);
@@ -3813,7 +3735,7 @@ void util_read_path(const char * prompt , int prompt_len , bool must_exist , cha
   while (!ok) {
     util_read_string(prompt , prompt_len , path);
     if (must_exist)
-      ok = util_path_exists(path);
+      ok = util_is_directory(path);
     else
       ok = true;
     if (!ok) 

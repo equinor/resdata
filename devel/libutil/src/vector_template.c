@@ -317,6 +317,24 @@ const <TYPE> * <TYPE>_vector_get_const_ptr(const <TYPE>_vector_type * vector) {
   return vector->data;
 }
 
+/**
+   Observe that there is a principle difference between the get_ptr()
+   functions and alloc_data_copy() when the vector has zero size. The
+   former functions will always return valid (<TYPE> *) pointer,
+   altough possibly of the elements have been set by the vector
+   instance, whereas the alloc_data_copy() function will return NULL
+   in that case.
+*/
+
+<TYPE> * <TYPE>_vector_alloc_data_copy( const <TYPE>_vector_type * vector ) {
+  int      size = vector->size * sizeof ( <TYPE> ); 
+  <TYPE> * copy = util_malloc(size , __func__);
+  if (copy != NULL)
+    memcpy( copy , vector->data , size);
+  return copy;
+}
+
+
 
 void <TYPE>_vector_set_many(<TYPE>_vector_type * vector , int index , const <TYPE> * data , int length) {
   int min_size = index + length;

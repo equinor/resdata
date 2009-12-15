@@ -163,6 +163,11 @@ void vector_iset_ref(vector_type * vector , int index , const void * data) {
   vector_iset__(vector , index , node);
 }
 
+void vector_insert_ref(vector_type * vector , int index , const void * data) {
+  node_data_type * node = node_data_alloc_ptr( data, NULL , NULL);
+  vector_insert__(vector , index , node);
+}
+
 
 
 /**
@@ -190,6 +195,12 @@ void vector_iset_owned_ref(vector_type * vector , int index , const void * data 
 }
 
 
+void vector_insert_owned_ref(vector_type * vector , int index , const void * data , free_ftype * del) {
+  node_data_type * node = node_data_alloc_ptr( data, NULL , del);
+  vector_insert__(vector , index , node);
+}
+
+
 /**
   This function appends a COPY of user object. This implies that the
   calling scope is still responsible for the instance declared and
@@ -212,6 +223,11 @@ void  vector_push_copy(vector_type * vector , const void * data , copyc_ftype * 
 void vector_iset_copy(vector_type * vector , int index , const void * data , copyc_ftype * copyc , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, copyc , del);
   vector_iset__(vector , index , node);
+}
+
+void vector_insert_copy(vector_type * vector , int index , const void * data , copyc_ftype * copyc , free_ftype * del) {
+  node_data_type * node = node_data_alloc_ptr( data, copyc , del);
+  vector_insert__(vector , index , node);
 }
 
 

@@ -358,7 +358,7 @@ time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int 
 */
 
 ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step) {
-  ecl_kw_type * seqnum_kw  = ecl_kw_alloc_complete( "SEQNUM" , 1 , ecl_int_type , &report_step);  
+  ecl_kw_type * seqnum_kw  = ecl_kw_alloc_new( "SEQNUM" , 1 , ecl_int_type , &report_step);  
                              /* We will use ecl_kw_equal() based on this kw to find the correct location in the file. */  
   bool          fmt_file   = ecl_util_fmt_file( filename );
   fortio_type * fortio     = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);

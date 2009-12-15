@@ -159,7 +159,7 @@ static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
 char * path_fmt_alloc_path_va(const path_fmt_type * path ,bool auto_mkdir,  va_list ap) {
   char * new_path = __fmt_alloc_path_va__(path->fmt , ap);
   if (auto_mkdir)
-    if (! util_path_exists(new_path) )
+    if (! util_is_directory(new_path) )
       util_make_path(new_path);
   return new_path;
 }
@@ -219,7 +219,7 @@ char * path_fmt_alloc_file(const path_fmt_type * path , bool auto_mkdir , ...) {
     filename = __fmt_alloc_path_va__(path->file_fmt , ap);
     if (auto_mkdir) {
       const char * __path = __fmt_alloc_path_va__(path->fmt , tmp_va);
-      if (! util_path_exists(__path)) 
+      if (! util_is_directory(__path)) 
 	util_make_path( __path );
       free((char *) __path );
     }

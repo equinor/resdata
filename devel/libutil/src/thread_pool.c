@@ -27,11 +27,12 @@ typedef void * (start_func_ftype) (void *) ;
 */
 typedef struct {
   thread_pool_type * pool;                /* A back-reference to the thread_pool holding the queue. */
-  int                internal_index;      /* The index in the space [0,max_running) of the job slot where this job is running. */
+  int                slot_index;      /* The index in the space [0,max_running) of the job slot where this job is running. */
+  int                queue_index;         /* The index of the current tp_arg in the queue. */
   void             * func_arg;            /* The arguments to this job - supplied by the calling scope. */   
   start_func_ftype * func;                /* The function to call - supplied by the calling scope. */
+  void             * return_value;        
 } thread_pool_arg_type;
-
 
 
 
@@ -83,6 +84,27 @@ static void thread_pool_resize_queue( thread_pool_type * pool, int queue_length 
   pthread_rwlock_unlock( &pool->queue_lock );
 }
 
+/**
+   This function updates an element in the queue, the function is
+   called by the executing threads, on the same time the main thread
+   might be resizing the thread, we therefor take a read lock during
+   execution of this function. (Write lock is not necessary because we
+   will not change the queue pointer itself, only something it points
+   to.)
+*/
+
+static void thread_pool_iset_return_value( thread_pool_type * pool , int index , void * return_value) {
+  pthread_rwlock_rdlock( &pool->queue_lock );
+  {
+    pool->queue[ index ].return_value = return_value;
+  }
+  pthread_rwlock_unlock( &pool->queue_lock );
+}
+
+
+void * thread_pool_iget_return_value( const thread_pool_type * pool , int queue_index ) {
+  return pool->queue[ queue_index ].return_value;
+}
 
 
 /**
@@ -95,14 +117,20 @@ static void thread_pool_resize_queue( thread_pool_type * pool, int queue_length 
 static void * thread_pool_start_job( void * arg ) {
   thread_pool_arg_type * tp_arg = (thread_pool_arg_type * ) arg;
   thread_pool_type * tp         =  tp_arg->pool;
-  int internal_index            =  tp_arg->internal_index;
+  int slot_index            =  tp_arg->slot_index;
   void * func_arg               =  tp_arg->func_arg;
   start_func_ftype * func       =  tp_arg->func;
+  void * return_value;                     
+
   
-  func( func_arg );                                   /* Starting the real external function */
-  tp->job_slots[ internal_index ].running = false;    /* We mark the job as completed. */
+  return_value = func( func_arg );                  /* Starting the real external function */
+  tp->job_slots[ slot_index ].running = false;  /* We mark the job as completed. */
   free( arg );
-  return NULL;
+
+  if (return_value != NULL) 
+    thread_pool_iset_return_value( tp , tp_arg->queue_index , return_value);
+
+  return NULL;                                      /* Currently we loose the return value from the user supplied function. */
 }
 
 
@@ -128,10 +156,10 @@ static void * thread_pool_main_loop( void * arg ) {
         int counter     = 0;
         bool slot_found = false;
         do {
-          int internal_index = (counter + internal_offset) % tp->max_running;
-          thread_pool_job_slot_type * job_slot = &tp->job_slots[ internal_index ];
+          int slot_index = (counter + internal_offset) % tp->max_running;
+          thread_pool_job_slot_type * job_slot = &tp->job_slots[ slot_index ];
           if (!job_slot->running) {
-            /* OK thread[internal_index] is ready to take this job.*/
+            /* OK thread[slot_index] is ready to take this job.*/
             thread_pool_arg_type * tp_arg;
             
             /* 
@@ -142,7 +170,7 @@ static void * thread_pool_main_loop( void * arg ) {
             tp_arg = util_alloc_copy( &tp->queue[ tp->queue_index ] , sizeof * tp_arg , __func__);
             pthread_rwlock_unlock( &tp->queue_lock );            
 
-            tp_arg->internal_index = internal_index;
+            tp_arg->slot_index = slot_index;
             
             job_slot->running = true;
             /* 
@@ -178,7 +206,9 @@ static void * thread_pool_main_loop( void * arg ) {
 
   /* 
      There are no more jobs in the queue, and the main scope has
-     signaled that join should start.
+     signaled that join should start. Observe that we only the jobs
+     corresponding to explicitly running job_slots; the first jobs run
+     in a job_slot will not be explicitly joined.
   */
   {
     int i;
@@ -196,7 +226,8 @@ static void * thread_pool_main_loop( void * arg ) {
 
 /**
    This function initializes a couple of counters, and starts up the
-   dispatch thread.
+   dispatch thread. If the thread_pool should be reused after a join,
+   this function must be called.
 */
 void thread_pool_restart( thread_pool_type * tp ) {
   tp->join           = false;
@@ -264,10 +295,15 @@ void thread_pool_add_job(thread_pool_type * pool , start_func_ftype * start_func
          The new job is added to the queue - the main thread is watching
          the queue and will pick up the new job.
       */
-      pool->queue[pool->queue_size].pool     = pool;
-      pool->queue[pool->queue_size].func_arg = func_arg;
-      pool->queue[pool->queue_size].func     = start_func;
-      
+      {
+        int queue_index = pool->queue_size;
+
+        pool->queue[ queue_index ].pool         = pool;
+        pool->queue[ queue_index ].func_arg     = func_arg;
+        pool->queue[ queue_index ].func         = start_func;
+        pool->queue[ queue_index ].return_value = NULL;
+        pool->queue[ queue_index ].queue_index = queue_index;
+      }
       pool->queue_size++;  /* <- This is shared between this thread and the dispatch thread */
     } else
       util_abort("%s: thread_pool is not running - restart with thread_pool_restart()?? \n",__func__);
