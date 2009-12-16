@@ -3176,14 +3176,14 @@ void util_double_to_float(float *float_ptr , const double *double_ptr , int size
        whereas the disk content when writing NULL is "0".
 
     2. When reading back we find the '0' - but it is impossible to
-       determine whether we should interpret this as a NUL or as "".
+       determine whether we should interpret this as a NULL or as "".
 
    When the harm was done, with files allover the place, it is "solved"
    as follows:
 
     1. Nothing is changed when writing NULL => '0' to disk.
     
-    2. When writing "" => '0-1\0' to disk. The -1 is the magic length
+    2. When writing "" => '-1\0' to disk. The -1 is the magic length
        signifying that the following string is "".
 */
 
@@ -3237,9 +3237,12 @@ char * util_fread_realloc_string(char * old_s , FILE *stream) {
 void util_fskip_string(FILE *stream) {
   int len;
   util_fread(&len , sizeof len , 1 , stream , __func__);
-  if (len == -1) /* Magig string for "" - skip the '\0' */
-    len = 0;
-  fseek(stream , len + 1 , SEEK_CUR);
+  if (len == 0)        
+    return;                                  /* The user has written NULL with util_fwrite_string(). */ 
+  else if (len == -1)  
+    fseek( stream , 1 , SEEK_CUR);           /* Magic length for "" - skip the '\0' */
+  else
+    fseek(stream , len + 1 , SEEK_CUR);      /* Skip the data in a normal string. */
 }
 
 

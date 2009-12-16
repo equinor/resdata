@@ -32,21 +32,45 @@ extern "C" {
 		 ECL_BINARY_NON_UNIFIED    = 4,
 		 ECL_FORMATTED_NON_UNIFIED = 8} ecl_storage_enum;
 
+/*
+  Character data in ECLIPSE files comes as an array of fixed-length
+  string. Each of these strings is 8 characters long. The type name,
+  i.e. 'REAL', 'INTE', ... , come as 4 character strings.
+*/
+
+
+#define ECL_STRING_LENGTH 8
+#define ECL_TYPE_LENGTH   4
 
 
 
-#define ecl_str_len   8
-enum           ecl_type_enum_def {ecl_char_type , ecl_float_type , ecl_double_type , ecl_int_type , ecl_bool_type , ecl_mess_type};  /* This is used as index in ecl_kw.c - don't touch. */
-typedef enum   ecl_type_enum_def  ecl_type_enum;
+/*****************************************************************/
+/* 
+   Observe that these type identidiers are (ab)used in both the rms and
+   ert/enkf libraries in situations where ECLIPSE is not at all involved.
+*/
+
+typedef enum {
+  ECL_CHAR_TYPE   = 0, 
+  ECL_FLOAT_TYPE  = 1, 
+  ECL_DOUBLE_TYPE = 2, 
+  ECL_INT_TYPE    = 3, 
+  ECL_BOOL_TYPE   = 4, 
+  ECL_MESS_TYPE   = 5
+} ecl_type_enum;
 
 
-int            ecl_util_get_sizeof_ctype(ecl_type_enum );
+
+
+
+int              ecl_util_get_sizeof_ctype(ecl_type_enum );
+ecl_type_enum    ecl_util_get_type_from_name( const char * type_name );
+const char     * ecl_util_get_type_name( ecl_type_enum ecl_type );
 
 /*****************************************************************/
 
 void            ecl_util_init_stdin(const char * , const char *);
 const char    * ecl_util_file_type_name( ecl_file_enum file_type );
-ecl_type_enum   ecl_util_guess_type(const char * key);
 char          * ecl_util_alloc_base_guess(const char *);
 bool            ecl_util_unified(ecl_file_enum );
 int             ecl_util_filename_report_nr(const char *);
@@ -61,7 +85,6 @@ void            ecl_util_memcpy_typed_data(void *, const void * , ecl_type_enum 
 void            ecl_util_escape_kw(char * kw);
 void            ecl_util_alloc_summary_files(const char * , const char * , char ** , stringlist_type * , bool * , bool * );
 void            ecl_util_alloc_restart_files(const char *  , const char *  , char *** , int *  , bool * , bool *);
-const    char * ecl_util_type_name(ecl_type_enum );
 time_t          ecl_util_get_start_date(const char * );
 bool            ecl_util_fmt_file(const char *);
 int             ecl_util_fname_cmp(const void *, const void *);

@@ -219,7 +219,7 @@ void ecl_region_deselect_cell( ecl_region_type * region , int i , int j , int k)
 static void ecl_region_select_equal__( ecl_region_type * region , const ecl_kw_type * ecl_kw, int value , bool select) {
   bool global_kw;
   ecl_region_assert_kw( region , ecl_kw , &global_kw);
-  if (ecl_kw_get_type( ecl_kw ) != ecl_int_type) 
+  if (ecl_kw_get_type( ecl_kw ) != ECL_INT_TYPE) 
     util_abort("%s: sorry - select by equality is only supported for integer keywords \n",__func__);
   {
     const int * kw_data = ecl_kw_get_int_ptr( ecl_kw );
@@ -258,7 +258,7 @@ void ecl_region_deselect_equal( ecl_region_type * region , const ecl_kw_type * e
 static void ecl_region_select_in_interval__( ecl_region_type * region , const ecl_kw_type * ecl_kw, float min_value , float max_value , bool select) {
   bool global_kw;
   ecl_region_assert_kw( region , ecl_kw , &global_kw);
-  if (ecl_kw_get_type( ecl_kw ) != ecl_float_type) 
+  if (ecl_kw_get_type( ecl_kw ) != ECL_FLOAT_TYPE) 
     util_abort("%s: sorry - select by in_interval is only supported for float keywords \n",__func__);
   {
     const float * kw_data = ecl_kw_get_float_ptr( ecl_kw );

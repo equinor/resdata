@@ -10,7 +10,103 @@
 #include <stringlist.h>
 #include <parser.h>
 
+/*****************************************************************/
+/* The string names for the different ECLIPSE low-level
+   types. 
+*/
 
+
+#define ECL_TYPE_NAME_CHAR     "CHAR"
+#define ECL_TYPE_NAME_FLOAT    "REAL"
+#define ECL_TYPE_NAME_INT      "INTE" 
+#define ECL_TYPE_NAME_DOUBLE   "DOUB"
+#define ECL_TYPE_NAME_BOOL     "LOGI"
+#define ECL_TYPE_NAME_MESSAGE  "MESS" 
+
+
+const char * ecl_util_get_type_name( ecl_type_enum ecl_type ) {
+  switch (ecl_type) {
+  case(ECL_CHAR_TYPE):
+    return ECL_TYPE_NAME_CHAR;
+    break;
+  case(ECL_FLOAT_TYPE):
+    return ECL_TYPE_NAME_FLOAT;
+    break;
+  case(ECL_DOUBLE_TYPE):
+    return ECL_TYPE_NAME_DOUBLE;
+    break;
+  case(ECL_INT_TYPE):
+    return ECL_TYPE_NAME_INT;
+    break;
+  case(ECL_BOOL_TYPE):
+    return ECL_TYPE_NAME_BOOL;
+    break;
+  case(ECL_MESS_TYPE):
+    return ECL_TYPE_NAME_MESSAGE;
+    break;
+  default:
+    util_abort("Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type);
+  }
+  return NULL; /* Dummy */
+}
+
+
+ecl_type_enum ecl_util_get_type_from_name( const char * type_name ) {
+  ecl_type_enum ecl_type;
+
+  if (strncmp( type_name , ECL_TYPE_NAME_FLOAT , ECL_TYPE_LENGTH) == 0)
+    ecl_type = ECL_FLOAT_TYPE;
+  else if (strncmp( type_name , ECL_TYPE_NAME_INT , ECL_TYPE_LENGTH) == 0)
+    ecl_type = ECL_INT_TYPE;
+  else if (strncmp( type_name , ECL_TYPE_NAME_DOUBLE , ECL_TYPE_LENGTH) == 0)
+    ecl_type = ECL_DOUBLE_TYPE;
+  else if (strncmp( type_name , ECL_TYPE_NAME_CHAR , ECL_TYPE_LENGTH) == 0)
+    ecl_type = ECL_CHAR_TYPE;
+  else if (strncmp( type_name , ECL_TYPE_NAME_MESSAGE , ECL_TYPE_LENGTH) == 0)
+    ecl_type = ECL_MESS_TYPE;
+  else if (strncmp( type_name , ECL_TYPE_NAME_BOOL , ECL_TYPE_LENGTH) == 0)
+    ecl_type = ECL_BOOL_TYPE;
+  else {
+    util_abort("%s: unrecognized type name:%s \n",__func__ , type_name);
+    ecl_type = -1; /* Dummy */
+  }
+  return ecl_type;
+}
+
+
+
+int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
+  int sizeof_ctype = -1;
+  switch (ecl_type) {
+  case(ECL_CHAR_TYPE):
+    sizeof_ctype = (ECL_STRING_LENGTH + 1) * sizeof(char); /* One element of character data is string section of 8 characters + \0. */
+    break;
+  case(ECL_FLOAT_TYPE):
+    sizeof_ctype = sizeof(float);
+    break;
+  case(ECL_DOUBLE_TYPE):
+    sizeof_ctype = sizeof(double);
+    break;
+  case(ECL_INT_TYPE):
+    sizeof_ctype = sizeof(int);
+    break;
+  case(ECL_BOOL_TYPE):
+    sizeof_ctype = sizeof(int);
+    break;
+  case(ECL_MESS_TYPE):
+    sizeof_ctype = sizeof(char);
+    break;
+  default:
+    util_abort("Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type);
+  }
+  return sizeof_ctype;
+}
+
+
+
+
+
+/*****************************************************************/
 /**
    This little function writes the pathetic little file read by
    ECLIPSE on startup. This is actually read from stdin, so on startup
@@ -632,32 +728,7 @@ bool ecl_util_fmt_file(const char *filename) {
 
 /*****************************************************************/
 
-int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
-  int sizeof_ctype = -1;
-  switch (ecl_type) {
-  case(ecl_char_type):
-    sizeof_ctype = (ecl_str_len + 1) * sizeof(char);
-    break;
-  case(ecl_float_type):
-    sizeof_ctype = sizeof(float);
-    break;
-  case(ecl_double_type):
-    sizeof_ctype = sizeof(double);
-    break;
-  case(ecl_int_type):
-    sizeof_ctype = sizeof(int);
-    break;
-  case(ecl_bool_type):
-    sizeof_ctype = sizeof(int);
-    break;
-  case(ecl_mess_type):
-    sizeof_ctype = sizeof(char);
-    break;
-  default:
-    util_abort("Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type);
-  }
-  return sizeof_ctype;
-}
+
 
 
 /**
@@ -673,14 +744,14 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
     memcpy(_target_data , _src_data , size * ecl_util_get_sizeof_ctype(src_type));
   else {
     switch (target_type) {
-    case(ecl_double_type):
+    case(ECL_DOUBLE_TYPE):
       {
 	double * target_data = (double *) _target_data;
 	switch(src_type) {
-	case(ecl_float_type):
+	case(ECL_FLOAT_TYPE):
 	  util_float_to_double(target_data , (const float *) _src_data , size);
 	  break;
-	case(ecl_int_type):
+	case(ECL_INT_TYPE):
 	  for (i = 0; i < size; i++) 
 	    target_data[i] = ((int *) _src_data)[i];
 	  break;
@@ -689,14 +760,14 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 	}
 	break;
       }
-    case(ecl_float_type):
+    case(ECL_FLOAT_TYPE):
       {
 	float * target_data = (float *) _target_data;
 	switch(src_type) {
-	case(ecl_float_type):
+	case(ECL_FLOAT_TYPE):
 	  util_double_to_float(target_data , (const double *) _src_data , size);
 	  break;
-	case(ecl_int_type):
+	case(ECL_INT_TYPE):
 	  for (i = 0; i < size; i++) 
 	    target_data[i] = ((int *) _src_data)[i];
 	  break;
@@ -712,28 +783,6 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 }
 
 
-ecl_type_enum ecl_util_guess_type(const char * key){ 
-  hash_type * type_hash = hash_alloc( );
-  ecl_type_enum type = ecl_float_type;  /* Keep compiler silent / happy .*/
-
-  hash_insert_int(type_hash , "PERMX"  , ecl_float_type);
-  hash_insert_int(type_hash , "PERMZ"  , ecl_float_type);
-  hash_insert_int(type_hash , "PERMY"  , ecl_float_type);
-  hash_insert_int(type_hash , "PORO"   , ecl_float_type);
-  hash_insert_int(type_hash , "COORD"  , ecl_float_type);
-  hash_insert_int(type_hash , "ZCORN"  , ecl_float_type);
-  hash_insert_int(type_hash , "ACTNUM" , ecl_int_type);
-  
-  if (hash_has_key(type_hash , key)) 
-    type = (ecl_type_enum) hash_get_int(type_hash , key);
-  else 
-    util_abort("could not guess type of keyword %s - update the table in %s/%s - aborting \n",key , __FILE__ , __func__);
-
-  
-
-  hash_free(type_hash);
-  return type;
-}
 
 
 /**
@@ -965,39 +1014,6 @@ void ecl_util_alloc_restart_files(const char * path , const char * _base , char 
 
 
 
-/**
-  This little function will take an ecl_type_enum variable as input,
-  and return a constant string description of the type. Observe that
-  these strings can *NOT* be used when writing eclipse files; then
-  internal functionality in ecl_kw.c should be used.
-*/
-
-
-const char * ecl_util_type_name(ecl_type_enum ecl_type) {
-  switch (ecl_type) {
-  case(ecl_char_type):
-    return "ecl_char_type";
-    break;
-  case(ecl_float_type):
-    return "ecl_float_type";
-    break;
-  case(ecl_double_type):
-    return "ecl_double_type";
-    break;
-  case(ecl_int_type):
-    return "ecl_int_type";
-    break;
-  case(ecl_bool_type):
-    return "ecl_bool_type";
-    break;
-  case(ecl_mess_type):
-    return "ecl_mess_type";
-    break;
-  default:
-    util_abort("%s: unrecognized ecl_type value:%d - aborting \n",__func__ , ecl_type);
-  }
-  return NULL;  /* This should never happen */
-}
 
 
 /**

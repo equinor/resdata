@@ -37,7 +37,7 @@ int main(int argc, char ** argv) {
 
       if (target_type == ECL_UNIFIED_RESTART_FILE) {
 	int dummy;
-	seqnum_kw = ecl_kw_alloc_new("SEQNUM" , 1 , ecl_int_type , &dummy);
+	seqnum_kw = ecl_kw_alloc_new("SEQNUM" , 1 , ECL_INT_TYPE , &dummy);
       } 
       
       {

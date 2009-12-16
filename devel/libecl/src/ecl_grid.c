@@ -2091,7 +2091,7 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
 
 double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
   ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
-  if ((ecl_type == ecl_float_type) || (ecl_type == ecl_int_type) || (ecl_type == ecl_double_type)) {
+  if ((ecl_type == ECL_FLOAT_TYPE) || (ecl_type == ECL_INT_TYPE) || (ecl_type == ECL_DOUBLE_TYPE)) {
     int kw_size        = ecl_kw_get_size( ecl_kw );
     int lookup_index   = -1;
 
@@ -2108,7 +2108,7 @@ double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type 
     else
       return 0;   /* Tried to lookup an inactive cell. */
   } else {
-    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_util_type_name( ecl_type ) , __func__);
+    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_util_get_type_name( ecl_type ) , __func__);
     return -1;
   }
 }
@@ -2147,7 +2147,7 @@ double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type 
 int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type * region_kw , int region_value , bool active_only, bool export_active_index , int_vector_type * index_list) {
   int cells_found = 0;
   if (ecl_kw_get_size( region_kw ) == ecl_grid->size) {
-    if (ecl_kw_get_type( region_kw ) == ecl_int_type) {
+    if (ecl_kw_get_type( region_kw ) == ECL_INT_TYPE) {
       int_vector_reset( index_list );
       const int * region_ptr = ecl_kw_iget_ptr( region_kw , 0);
 
