@@ -99,7 +99,9 @@ static void vector_insert__(vector_type * vector , int index , node_data_type * 
   {
     int bytes_to_move = (vector->size - index) * sizeof * vector->data;
     memmove(&vector->data[index + 1] , &vector->data[index] , bytes_to_move);
+    vector->data[index] = NULL;   /* Otherwise the destructor might try to pick up on it in the vector_iset__() call below */
   }
+  vector->size++;
   vector_iset__( vector , index , node );
 }
 
@@ -132,7 +134,7 @@ static void vector_push_node(vector_type * vector , node_data_type * node) {
     int bytes = vector->size * sizeof * vector->data;
     if (bytes > 0) {
       memmove(&vector->data[1] , vector->data , bytes);
-      vector->data[0] = NULL;   /* Otherwise the destructor might try to pick up on it .. */
+      vector->data[0] = NULL;   /* Otherwise the destructor might try to pick up on it in the vector_iset__() call below */
     }
   }
   vector->size++;
