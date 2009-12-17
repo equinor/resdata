@@ -246,9 +246,11 @@ bool fortio_is_fortio_file(fortio_type * fortio) {
 }
 
 
-/*
-  This function returns -1 on error - it does *NOT* fail. The -1
-  return value is interpreted in the ecl_kw layer.
+/**
+  This function reads the header (i.e. the number of bytes in the
+  following record), stores that internally in the fortio struct, and
+  also returns it. If the function fails to read a header (i.e. EOF)
+  it will return -1.
 */
 
 int fortio_init_read(fortio_type *fortio) {

@@ -96,8 +96,7 @@ static void ecl_file_make_index( ecl_file_type * ecl_file ) {
     for (i=0; i < vector_get_size( ecl_file->kw_list ); i++) {
       const ecl_kw_type * ecl_kw = vector_iget_const( ecl_file->kw_list , i);
       char              * header = ecl_kw_alloc_strip_header( ecl_kw );
-      
-      if (! hash_has_key( ecl_file->kw_index , header )) {
+      if ( !hash_has_key( ecl_file->kw_index , header )) {
 	int_vector_type * index_vector = int_vector_alloc( 0 , -1 );
 	hash_insert_hash_owned_ref( ecl_file->kw_index , header , index_vector , int_vector_free__);
 	stringlist_append_copy( ecl_file->distinct_kw , header);
@@ -403,6 +402,72 @@ ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , "TIME");
 }
 
+
+/**
+   This function will insert a new ecl_kw instance in the
+   ecl_file. The ecl_file instance will take ownership of the new
+   instance, and free it when the ecl_file is freed.
+   
+   Where is the new ecl_kw inserted??
+
+    1. The position indicated by (neighbour_name , neighbour_occurence)
+       is located.
+
+    2. If the boolean 'after' is true the new ecl_kw is placed
+       immediately after the location found in point 1, otherwise it is
+       placed immediately before.
+
+    3. neighbour_name can be NULL, in which case the new ecl_kw is
+       placed at the end (after == true), or beginning of the ecl_file
+       (after == false); in this case neighbour_occurence is not
+       considered.
+
+    4. If the position (neighbour_name , neighbour_occurence) can not
+       be found the function will fail hard - check first with
+       ecl_file_get_num_named_kw() first.
+
+
+   So, considering the example at the top of the file, the following
+   statements:
+   
+     ecl_file_insert_kw( ecl_file , FUNNY_KW  , true , "MINISTEP" , 2);
+     ecl_file_insert_kw( ecl_file , NEW_START , false , NULL , 0);
+
+   Will result in the ecl_file instance:
+   
+   ------------------
+   NEW_START         \      <- Newly inserted 
+   SEQHDR             |
+   MINISTEP  0        |     
+   PARAMS    .....    |
+   MINISTEP  1        |
+   PARAMS    .....    |
+   MINISTEP  2        |
+   FUNNY_KW           |     <- Newly inserted
+   PARAMS    .....   /
+   ------------------
+*/
+
+void ecl_file_insert_kw( ecl_file_type * ecl_file , ecl_kw_type * ecl_kw , bool after , const char * neighbour_name , int neighbour_occurence ) {
+  if (neighbour_name == NULL) {
+    if (after)
+      vector_append_owned_ref( ecl_file->kw_list , ecl_kw , ecl_kw_free__ );
+    else
+      vector_insert_owned_ref( ecl_file->kw_list , 0 , ecl_kw , ecl_kw_free__ );
+  } else {
+    const int_vector_type * index_vector = hash_get(ecl_file->kw_index , neighbour_name);
+    int global_index = int_vector_iget( index_vector , neighbour_occurence);
+
+    if (after)
+      global_index++;
+    
+    vector_insert_owned_ref( ecl_file->kw_list , global_index , ecl_kw , ecl_kw_free__);
+  }
+  ecl_file_make_index( ecl_file );
+}
+
+
+
 /*****************************************************************/
 /* fwrite functions */
 
@@ -510,7 +575,6 @@ ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * ecl_file , int index) {
 ecl_kw_type * ecl_file_icopy_kw( const ecl_file_type * ecl_file , int index) {
   return ecl_kw_alloc_copy( vector_iget( ecl_file->kw_list , index) );
 }
-
 
 
 

@@ -34,6 +34,7 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio);
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio);
 ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type *     fortio);
 
+void            ecl_file_insert_kw( ecl_file_type * ecl_file , ecl_kw_type * ecl_kw , bool after , const char * neighbour_name , int neighbour_occurence );
 void 		ecl_file_fwrite_fortio(const ecl_file_type * ec_file  , fortio_type * fortio , int offset);
 void 		ecl_file_fwrite(const ecl_file_type * ecl_file , const char * , bool fmt_file );
 
