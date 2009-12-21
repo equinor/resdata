@@ -169,7 +169,7 @@ static bool ecl_file_ifseek_kw(fortio_type * fortio, const char * kw , int occur
 
 
 
-/* 
+/** 
    This function will allocate and read a ecl_file instance from an
    open fortio instance. If stop_kw != NULL the function will return
    __THE_SECOND_TIME__ stop_kw is encountered, leaving the fortio
@@ -466,6 +466,23 @@ void ecl_file_insert_kw( ecl_file_type * ecl_file , ecl_kw_type * ecl_kw , bool 
   ecl_file_make_index( ecl_file );
 }
 
+
+
+/**
+   This function will delete the keyword (name,occurence) from the
+   ecl_file instance. When deleted from the ecl_file instance the
+   ecl_kw instance will be freed.
+
+   If the keyword corresponding to (name,occurence) can not be found the
+   function will fail hard.
+*/
+   
+void ecl_file_delete_kw( ecl_file_type * ecl_file , ecl_kw_type * ecl_kw , bool after , const char * name , int occurence ) {
+  const int_vector_type * index_vector = hash_get(ecl_file->kw_index , name);
+  int global_index = int_vector_iget( index_vector , occurence);
+  vector_idel( ecl_file->kw_list , global_index );
+  ecl_file_make_index( ecl_file );
+}
 
 
 /*****************************************************************/

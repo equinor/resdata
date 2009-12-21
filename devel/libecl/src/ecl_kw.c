@@ -81,8 +81,7 @@ struct ecl_kw_struct {
        and a power prior to writing.
 
     3. The logical type involves converting back and forth between 'T'
-       and 'F' and internal logical representation, and does not have
-       neither read nor write format.
+       and 'F' and internal logical representation.
 
 */
 
@@ -94,12 +93,15 @@ struct ecl_kw_struct {
 #define READ_FMT_DOUBLE  NULL
 
 
-#define WRITE_FMT_CHAR    " '%-8s'"
-#define WRITE_FMT_INT     " %11d"
-#define WRITE_FMT_FLOAT   "  %11.8fE%+03d"
-#define WRITE_FMT_DOUBLE  "  %17.14fD%+03d"
-#define WRITE_FMT_MESS    "%s"
-#define WRITE_FMT_BOOL    NULL
+#define WRITE_FMT_CHAR       " '%-8s'"
+#define WRITE_FMT_INT        " %11d"
+#define WRITE_FMT_FLOAT      "  %11.8fE%+03d"
+#define WRITE_FMT_DOUBLE     "  %17.14fD%+03d"
+#define WRITE_FMT_MESS       "%s"
+#define WRITE_FMT_BOOL       "%3s"
+#define BOOL_TRUE_STRING     "T" 
+#define BOOL_FALSE_STRING    "F"
+   
 
 
 static const char * get_read_fmt( ecl_type_enum ecl_type ) {
@@ -1004,205 +1006,10 @@ ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio) {
 
 
 
-
-
-
 void ecl_kw_fskip(fortio_type *fortio) {
   ecl_kw_type *tmp_kw;
   tmp_kw = ecl_kw_fread_alloc(fortio );
   ecl_kw_free(tmp_kw);
-}
-
-
-
-
-#define FPRINTF_BLOCK(ecl_kw , blocksize , columns , elements , tmp_var , write_fmt , stream)                      \
- {                                                                                                                 \
-    int ib2;                                                                                                       \
-    int small_blocks = (elements) / columns + (elements % columns == 0 ? 0 : 1);                                   \
-    for (ib2 = 0; ib2 < small_blocks; ib2++) {                                                                     \
-	 int elements2 = util_int_min((ib2 + 1)*columns , (elements)) - ib2 * columns;                             \
-	 int ie;                                                                                                   \
-	 for (ie=0; ie < elements2; ie++) {                                                                        \
-	   int index = ib * blocksize + ib2 * columns + ie;                                                        \
-	    ecl_kw_iget_static((ecl_kw) , (index) , &(tmp_var));                                                   \
-	    fprintf((stream) , write_fmt , (tmp_var));                                                             \
-	 }                                                                                                         \
-	 fprintf(stream , "\n");                                                                                   \
-    }                                                                                                              \
- }                                                                                                                
-
-
-#define FPRINTF_BLOCK_BOOL(ecl_kw , blocksize , columns , elements , tmp_var , stream)                             \
- {                                                                                                                 \
-    int ib2;                                                                                                       \
-    int small_blocks = (elements) / columns + (elements % columns == 0 ? 0 : 1);                                   \
-    for (ib2 = 0; ib2 < small_blocks; ib2++) {                                                                     \
-	 int elements2 = util_int_min((ib2 + 1)*columns , (elements)) - ib2 * columns;                             \
-	 int ie;                                                                                                   \
-	 for (ie=0; ie < elements2; ie++) {                                                                        \
-	   int index = ib * blocksize + ib2 * columns + ie;                                                        \
-	    ecl_kw_iget_static((ecl_kw) , (index) , &(tmp_var));                                                   \
-	    if ((tmp_var))                                                                                         \
-	       fprintf(stream , "  T");                                                                            \
-	    else                                                                                                   \
-	       fprintf(stream , "  F");                                                                            \
-	 }                                                                                                         \
-	 fprintf(stream , "\n");                                                                                   \
-    }                                                                                                              \
- }                                                                                                                
-
-
-static void __set_double_arg(double x , double *_arg_x , int *_pow_x ) {
-  if (x != 0.0) {
-    double pow_x = ceil(log10(fabs(x)));
-    double arg_x = x / pow(10.0 , pow_x);
-    
-    if (arg_x == 1.0) {
-      arg_x *= 0.10;
-      pow_x += 1;
-    }
-    *_arg_x = arg_x;
-    *_pow_x = (int) pow_x;
-  } else {
-    *_arg_x = 0.0;
-    *_pow_x = 0.0;
-  }
-}
-
-static void __set_float_arg(float x , double *_arg_x , int *_pow_x ) {
-  if (x != 0.0) {
-    double pow_x = ceil(log10(fabs(x)));
-    double arg_x   = x / pow(10.0 , pow_x);
-    
-    if (arg_x == 1.0) {
-      arg_x *= 0.10;
-      pow_x += 1;
-    }
-    *_arg_x = arg_x;
-    *_pow_x = (int) pow_x;
-  } else {
-    *_arg_x = 0.0;
-    *_pow_x = 0.0;
-  }
-}
-
-
-#define FPRINTF_BLOCK_DOUBLE(ecl_kw , blocksize , columns , elements , tmp_var , write_fmt , stream)               \
- {                                                                                                                 \
-    int ib2;                                                                                                       \
-    int small_blocks = (elements) / columns + (elements % columns == 0 ? 0 : 1);                                   \
-    for (ib2 = 0; ib2 < small_blocks; ib2++) {                                                                     \
-	 int elements2 = util_int_min((ib2 + 1)*columns , (elements)) - ib2 * columns;                             \
-	 int ie;                                                                                                   \
-	 for (ie=0; ie < elements2; ie++) {                                                                        \
-	   int index = ib * blocksize + ib2 * columns + ie;                                                        \
-           double arg_x;                                                                                           \
-	   int    pow_x;                                                                                           \
-	    ecl_kw_iget_static((ecl_kw) , (index) , &(tmp_var));                                                   \
-	    __set_double_arg((tmp_var) , &arg_x , &pow_x);                                                         \
-	    fprintf(stream , write_fmt , arg_x , pow_x);                                                           \
-         }                                                                                                         \
-	 fprintf(stream , "\n");                                                                                   \
-    }                                                                                                              \
- }                                                                                                                
-
-
-#define FPRINTF_BLOCK_FLOAT(ecl_kw , blocksize , columns , elements , tmp_var , write_fmt , stream)                \
- {                                                                                                                 \
-    int ib2;                                                                                                       \
-    int small_blocks = (elements) / columns + (elements % columns == 0 ? 0 : 1);                                   \
-    for (ib2 = 0; ib2 < small_blocks; ib2++) {                                                                     \
-	 int elements2 = util_int_min((ib2 + 1)*columns , (elements)) - ib2 * columns;                             \
-	 int ie;                                                                                                   \
-	 for (ie=0; ie < elements2; ie++) {                                                                        \
-	   int index = ib * blocksize + ib2 * columns + ie;                                                        \
-           double arg_x;                                                                                           \
-	   int pow_x;                                                                                              \
-	    ecl_kw_iget_static((ecl_kw) , (index) , &(tmp_var));                                                   \
-	    __set_float_arg((tmp_var) , &arg_x , &pow_x);                                                          \
-	    fprintf(stream , write_fmt , arg_x , pow_x);                                                           \
-         }                                                                                                         \
-	 fprintf(stream , "\n");                                                                                   \
-    }                                                                                                              \
- }                                                                                                                
-
-
-
-
-
-/*
-  The function guarantees no net change to the data, but there is
-  temporarry change - that is the reason for the ugly (const casting).
-*/
-static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio) {
-  ecl_kw_type *ecl_kw = (ecl_kw_type *) _ecl_kw;
-  const int blocksize = get_blocksize( ecl_kw->ecl_type );
-  const int blocks    = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
-  FILE *stream        = fortio_get_FILE(fortio);
-  bool  fmt_file      = fortio_fmt_file( fortio );
-  int ib;
-  bool local_endian_flip = false;
-
-
-  if (!fmt_file) { 
-    if (ECL_ENDIAN_FLIP) {
-      ecl_kw_endian_convert_data(ecl_kw);
-      local_endian_flip = true;
-    }
-  }
-  
-  for (ib = 0; ib < blocks; ib++) {
-    int elements = util_int_min((ib + 1)*blocksize , ecl_kw->size) - ib*blocksize;
-    if (fmt_file) {
-      const  char * write_fmt = get_write_fmt( ecl_kw->ecl_type );
-      const  int columns = get_columns( ecl_kw->ecl_type );
-      double tmp_double;
-      float  tmp_float;
-      int    tmp_int;
-      char   tmp_char[ECL_STRING_LENGTH + 1];
-      bool   tmp_bool;
-      switch (ecl_kw->ecl_type) {
-      case(ECL_CHAR_TYPE):
-	FPRINTF_BLOCK(ecl_kw , blocksize , columns , elements , tmp_char , write_fmt , stream);
-	break;
-      case(ECL_DOUBLE_TYPE):
-	FPRINTF_BLOCK_DOUBLE(ecl_kw , blocksize , columns , elements , tmp_double , write_fmt , stream);
-	break;
-      case(ECL_FLOAT_TYPE):
-	FPRINTF_BLOCK_FLOAT(ecl_kw , blocksize , columns , elements , tmp_float , write_fmt , stream);
-	break;
-      case(ECL_INT_TYPE):
-	FPRINTF_BLOCK(ecl_kw , blocksize , columns , elements , tmp_int , write_fmt , stream);
-	break;
-      case (ECL_BOOL_TYPE):
-	FPRINTF_BLOCK_BOOL(ecl_kw , blocksize , columns , elements , tmp_bool , stream);
-	break;
-      default:
-	util_abort("%s: Internal error:  internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
-      }
-    } else {
-      int sizeof_ctype = (ecl_kw->ecl_type == ECL_CHAR_TYPE) ? ECL_STRING_LENGTH * sizeof(char) : ecl_kw->sizeof_ctype;
-      if (ecl_kw->ecl_type == ECL_CHAR_TYPE || ecl_kw->ecl_type == ECL_MESS_TYPE) {
-	/* 
-	   Due to the necessaary terminating \0 characters there is
-	   not a continous file/memory mapping.
-	*/
-	FILE *stream = fortio_get_FILE(fortio);
-	int ir;
-	fortio_init_write(fortio , elements * sizeof_ctype);
-	for (ir = 0; ir < elements; ir++) 
-	  fwrite(&ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream);
-	fortio_complete_write(fortio);
-      } else
-	fortio_fwrite_record(fortio , &ecl_kw->data[ib * blocksize * ecl_kw->sizeof_ctype] , sizeof_ctype * elements);
-    }
-  }
-
-  /* Convert back - the in-memory representation should always be "correct". */
-  if (local_endian_flip) 
-    ecl_kw_endian_convert_data(ecl_kw);
-  
 }
 
 
@@ -1244,73 +1051,116 @@ static void ecl_kw_fwrite_data_unformatted( ecl_kw_type * ecl_kw , fortio_type *
 }
 
 
-//static void ecl_kw_fwrite_data2(const ecl_kw_type *_ecl_kw , fortio_type *fortio) {
-//  ecl_kw_type *ecl_kw = (ecl_kw_type *) _ecl_kw;
-//  const int blocks    = ecl_kw->size / ecl_kw->blocksize + (ecl_kw->size % ecl_kw->blocksize == 0 ? 0 : 1);
-//  FILE *stream        = fortio_get_FILE( fortio );
-//  bool  fmt_file      = fortio_fmt_file( fortio );
-//  int ib;
-//  bool local_endian_flip = false;
-//
-//
-//  if (!fmt_file) { 
-//    if (ECL_ENDIAN_FLIP) {
-//      ecl_kw_endian_convert_data(ecl_kw);
-//      local_endian_flip = true;
-//    }
-//  }
-//  
-//  for (ib = 0; ib < blocks; ib++) {
-//    int elements = util_int_min((ib + 1)*ecl_kw->blocksize , ecl_kw->size) - ib*ecl_kw->blocksize;
-//    if (fmt_file) {
-//      double tmp_double;
-//      float  tmp_float;
-//      int    tmp_int;
-//      char   tmp_char[ECL_STRING_LENGTH + 1];
-//      bool   tmp_bool;
-//      switch (ecl_kw->ecl_type) {
-//      case(ECL_CHAR_TYPE):
-//	FPRINTF_BLOCK(ecl_kw , elements , tmp_char , stream);
-//	break;
-//      case(ECL_DOUBLE_TYPE):
-//	FPRINTF_BLOCK_DOUBLE(ecl_kw , elements , tmp_double , stream);
-//	break;
-//      case(ECL_FLOAT_TYPE):
-//	FPRINTF_BLOCK_FLOAT(ecl_kw , elements , tmp_float , stream);
-//	break;
-//      case(ECL_INT_TYPE):
-//	FPRINTF_BLOCK(ecl_kw , elements , tmp_int , stream);
-//	break;
-//      case (ECL_BOOL_TYPE):
-//	FPRINTF_BLOCK_BOOL(ecl_kw , elements , tmp_bool , stream);
-//	break;
-//      default:
-//	util_abort("%s: Internal error:  internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
-//      }
-//    } else {
-//      int sizeof_ctype = (ecl_kw->ecl_type == ECL_CHAR_TYPE) ? ECL_STRING_LENGTH * sizeof(char) : ecl_kw->sizeof_ctype;
-//      if (ecl_kw->ecl_type == ECL_CHAR_TYPE || ecl_kw->ecl_type == ECL_MESS_TYPE) {
-//	/* 
-//	   Due to the necessaary terminating \0 characters there is
-//	   not a continous file/memory mapping.
-//	*/
-//	FILE *stream = fortio_get_FILE(fortio);
-//	int ir;
-//	fortio_init_write(fortio , elements * sizeof_ctype);
-//	for (ir = 0; ir < elements; ir++) 
-//	  fwrite(&ecl_kw->data[(ib * ecl_kw->blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream);
-//	fortio_complete_write(fortio);
-//      } else
-//	fortio_fwrite_record(fortio , &ecl_kw->data[ib * ecl_kw->blocksize * ecl_kw->sizeof_ctype] , sizeof_ctype * elements);
-//    }
-//  }
-//
-//  /* Convert back - the in-memory representation should always be "correct". */
-//  if (local_endian_flip) 
-//    ecl_kw_endian_convert_data(ecl_kw);
-//  
-//}
 
+
+static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * fortio ) {
+
+  /**
+     The point of this awkward function is that I have not managed to
+     use C fprintf() syntax to reproduce the ECLIPSE
+     formatting. ECLIPSE expects the following formatting for float
+     and double values:
+
+        0.ddddddddE+03       (float)   
+        0.ddddddddddddddD+03 (double)
+
+     The problem with printf have been:
+
+        1. To force the radix part to start with 0.
+        2. To use 'D' as the exponent start for double values.
+
+     If you are more adapt with C fprintf() format strings than I am,
+     the __fprintf_scientific() function should be removed, and the
+     WRITE_FMT_DOUBLE and WRITE_FMT_FLOAT format specifiers updated
+     accordingly.
+  */
+  
+  static void __fprintf_scientific(FILE * stream, const char * fmt , double x) {
+    double pow_x = ceil(log10(fabs(x)));
+    double arg_x   = x / pow(10.0 , pow_x);
+    if (x != 0.0) {
+      if (arg_x == 1.0) {
+        arg_x *= 0.10;
+        pow_x += 1;
+      }
+    } else {
+      arg_x = 0.0;
+      pow_x = 0.0;
+    }
+    fprintf(stream , fmt , arg_x , (int) pow_x);
+  }
+  
+  {
+    
+    FILE * stream           = fortio_get_FILE( fortio );
+    const int blocksize     = get_blocksize( ecl_kw->ecl_type );
+    const  int columns      = get_columns( ecl_kw->ecl_type );
+    const  char * write_fmt = get_write_fmt( ecl_kw->ecl_type );
+    const int num_blocks    = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
+    int block_nr;
+    
+    for (block_nr = 0; block_nr < num_blocks; block_nr++) {
+      int this_blocksize = util_int_min((block_nr + 1)*blocksize , ecl_kw->size) - block_nr*blocksize;
+      int num_lines      = this_blocksize / columns + ( this_blocksize % columns == 0 ? 0 : 1);
+      int line_nr;
+      for (line_nr = 0; line_nr < num_lines; line_nr++) {
+        int num_columns = util_int_min( (line_nr + 1)*columns , this_blocksize) - columns * line_nr;
+        int col_nr;
+        for (col_nr =0; col_nr < num_columns; col_nr++) {
+          int data_index  = block_nr * blocksize + line_nr * columns + col_nr;
+          void * data_ptr = ecl_kw_iget_ptr_static( ecl_kw , data_index );
+          switch (ecl_kw->ecl_type) {
+          case(ECL_CHAR_TYPE):
+            fprintf(stream , write_fmt , data_ptr);
+            break;
+          case(ECL_INT_TYPE):
+            {
+              int int_value = ((int *) data_ptr)[0];
+              fprintf(stream , write_fmt , int_value);
+            }
+            break;
+          case(ECL_BOOL_TYPE):
+            {
+              bool bool_value = ((bool *) data_ptr)[0];
+              if (bool_value)
+                fprintf(stream , write_fmt , BOOL_TRUE_STRING);
+              else
+                fprintf(stream , write_fmt , BOOL_FALSE_STRING);
+            }
+            break;
+          case(ECL_FLOAT_TYPE):
+            {
+              float float_value = ((float *) data_ptr)[0];
+              __fprintf_scientific( stream , write_fmt , float_value );
+            }
+            break;
+          case(ECL_DOUBLE_TYPE):
+            {
+              double double_value = ((double *) data_ptr)[0];
+              __fprintf_scientific( stream , write_fmt , double_value );
+            }
+            break;
+          case(ECL_MESS_TYPE):
+            util_abort("%s: internal fuckup : message type keywords should NOT have data ??\n",__func__);
+            break;
+          }
+        }
+        fprintf(stream , "\n");
+      }
+    }
+  }
+}
+
+
+static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio) {
+  ecl_kw_type *ecl_kw = (ecl_kw_type *) _ecl_kw;
+  bool  fmt_file      = fortio_fmt_file( fortio );
+  
+  if (fmt_file)
+    ecl_kw_fwrite_data_formatted( ecl_kw , fortio );
+  else
+    ecl_kw_fwrite_data_unformatted( ecl_kw ,fortio );
+}
 
 
 
