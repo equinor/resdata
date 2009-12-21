@@ -78,10 +78,12 @@ struct ecl_kw_struct {
 
     2. For both double and float the write format contains two '%'
        characters - that is because the values are split in a prefix
-       and a power prior to writing.
+       and a power prior to writing - see the function
+       __fprintf_scientific().
 
     3. The logical type involves converting back and forth between 'T'
-       and 'F' and internal logical representation.
+       and 'F' and internal logical representation. The format strings
+       are therefor for reading/writing a character.
 
 */
 
@@ -89,7 +91,7 @@ struct ecl_kw_struct {
 #define READ_FMT_FLOAT   "%gE"
 #define READ_FMT_INT     "%d"
 #define READ_FMT_MESS    "%8c"
-#define READ_FMT_BOOL    NULL
+#define READ_FMT_BOOL    "%c"
 #define READ_FMT_DOUBLE  NULL
 
 
@@ -98,10 +100,39 @@ struct ecl_kw_struct {
 #define WRITE_FMT_FLOAT      "  %11.8fE%+03d"
 #define WRITE_FMT_DOUBLE     "  %17.14fD%+03d"
 #define WRITE_FMT_MESS       "%s"
-#define WRITE_FMT_BOOL       "%3s"
-#define BOOL_TRUE_STRING     "T" 
-#define BOOL_FALSE_STRING    "F"
-   
+#define WRITE_FMT_BOOL       "%3c"
+
+
+/*****************************************************************/
+/* The boolean type is not a native type which can be uniquely
+   identified between Fortran (ECLIPSE), C, formatted and unformatted
+   files:
+
+    o In the formatted ECLIPSE files the characters BOOL_TRUE_CHAR and
+      BOOL_FALSE_CHAR are used to represent true and false values
+      repsectively.
+
+    o In the unformatted ECLIPSE files the boolean values are
+      represented as integers with the values BOOL_TRUE_INT and
+      BOOL_FALSE_INT respectively.
+
+   Internally in an ecl_kw instance boolean values are represented as
+   integers (NOT bool), with the representation given by BOOL_TRUE_INT
+   and BOOL_FALSE_INT. This implies that read/write of unformatted
+   data can go transparently without between ECLIPSE and the ecl_kw
+   implementation, but exported set()/get() functions with bool must
+   intercept the bool values and convert to the appropriate integer
+   value.
+*/
+
+
+// For formatted files:
+#define BOOL_TRUE_CHAR       'T' 
+#define BOOL_FALSE_CHAR      'F'
+
+// For unformatted files:
+#define BOOL_TRUE_INT         -1   // Binary representation: 11111111  11111111  11111111  1111111
+#define BOOL_FALSE_INT         0   // Binary representation: 00000000  00000000  00000000  0000000     
 
 
 static const char * get_read_fmt( ecl_type_enum ecl_type ) {
@@ -470,6 +501,23 @@ ECL_KW_IGET_TYPED(int    , ECL_INT_TYPE);
 #undef ECL_KW_IGET_TYPED
 
 
+bool ecl_kw_iget_bool( const ecl_kw_type * ecl_kw , int i) {
+  int  int_value;                                                  						    
+  if (ecl_kw_get_type(ecl_kw) != ECL_BOOL_TYPE)                  					            
+    util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        
+  ecl_kw_iget_static(ecl_kw , i , &int_value);                                                                  
+  if (int_value == BOOL_TRUE_INT)
+    return true;
+  else if (int_value == BOOL_FALSE_INT)
+    return false;
+  else {
+    util_abort("%s: fuckup - wrong integer in BOOL type \n",__func__);
+    return false;
+  }
+}
+
+  
+
 #define ECL_KW_ISET_TYPED(ctype , ECL_TYPE)                                				    \
 void ecl_kw_iset_ ## ctype(ecl_kw_type * ecl_kw, int i, ctype value) {    			            \
   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)             					                    \
@@ -481,6 +529,21 @@ ECL_KW_ISET_TYPED(double , ECL_DOUBLE_TYPE);
 ECL_KW_ISET_TYPED(float  , ECL_FLOAT_TYPE);
 ECL_KW_ISET_TYPED(int    , ECL_INT_TYPE);
 #undef ECL_KW_ISET_TYPED
+
+
+void ecl_kw_iset_bool( ecl_kw_type * ecl_kw , int i , bool bool_value) {
+  int  int_value;                                                  						    
+  if (ecl_kw_get_type(ecl_kw) != ECL_BOOL_TYPE)                  					            
+    util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        
+
+  if (bool_value)
+    int_value = BOOL_TRUE_INT;
+  else
+    int_value = BOOL_FALSE_INT;
+  
+  ecl_kw_iset_static(ecl_kw , i , &int_value);
+}
+
 
 
 /*****************************************************************/
@@ -556,19 +619,8 @@ static bool ecl_kw_fscanf_qstring(char *s , const char *fmt , int len, FILE *str
 }
 
 
-/*
-  Boolean mapping:
-  ----------------
-  true  => -1             -1 : 1  11111111  11111111  11111111  1111111
-  false =>  0              0 : 0  00000000  00000000  00000000  0000000
-*/
-
 void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
   const char null_char         = '\0';
-  const char char_true         = 84;  /* 'T' */
-  const char char_false        = 70;  /* 'F' */
-  const int  fortran_int_true  = -1;
-  const int  fortran_int_false = 0;
   bool fmt_file                = fortio_fmt_file( fortio );
   if (ecl_kw->size > 0) {
     const int blocksize = get_blocksize( ecl_kw->ecl_type ); 
@@ -630,11 +682,11 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 	  case(ECL_BOOL_TYPE): 
 	    {
 	      char bool_char;
-	      fscanf(stream , "  %c" , &bool_char);
-	      if (bool_char == char_true) 
-		ecl_kw_iset(ecl_kw , index , &fortran_int_true);
-	      else if (bool_char == char_false)
-		ecl_kw_iset(ecl_kw , index , &fortran_int_false);
+              fscanf(stream , read_fmt , &bool_char);
+	      if (bool_char == BOOL_TRUE_CHAR) 
+		ecl_kw_iset_bool(ecl_kw , index , true);
+	      else if (bool_char == BOOL_FALSE_CHAR)
+                ecl_kw_iset_bool(ecl_kw , index , false);
 	      else 
 		util_abort("%s: Logical value: [%c] not recogniced - aborting \n", __func__ , bool_char);
 	    }
@@ -1123,9 +1175,9 @@ static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * f
             {
               bool bool_value = ((bool *) data_ptr)[0];
               if (bool_value)
-                fprintf(stream , write_fmt , BOOL_TRUE_STRING);
+                fprintf(stream , write_fmt , BOOL_TRUE_CHAR);
               else
-                fprintf(stream , write_fmt , BOOL_FALSE_STRING);
+                fprintf(stream , write_fmt , BOOL_FALSE_CHAR);
             }
             break;
           case(ECL_FLOAT_TYPE):
