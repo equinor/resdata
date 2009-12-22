@@ -16,6 +16,9 @@
 #include <int_vector.h>
 #include <arg_pack.h>
 
+
+#define KEY_JOIN_STRING ":"    /* The string used when joining strings to form a gen_key lookup key. */
+
 #define PROMPT_LEN 50
 
 /**
@@ -128,7 +131,7 @@ void ens_load_summary(ens_type * ens, const char * data_file) {
       printf("Loading case: %s .......",base);
     fflush(stdout);
     
-    vector_append_owned_ref( ens->data , ecl_sum_fread_alloc_case( data_file ) , ecl_sum_free__);
+    vector_append_owned_ref( ens->data , ecl_sum_fread_alloc_case( data_file , KEY_JOIN_STRING ) , ecl_sum_free__);
     printf("\n");
     free( base );
     util_safe_free( path );

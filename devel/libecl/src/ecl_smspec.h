@@ -34,7 +34,7 @@ bool              ecl_smspec_general_is_total(const ecl_smspec_type * ecl_smspec
 bool              ecl_smspec_var_is_total(const ecl_smspec_type * ecl_smspec , const char * gen_key);
 bool              ecl_smspec_is_rate(const ecl_smspec_type * smspec , int kw_index);
 
-ecl_smspec_type * ecl_smspec_fread_alloc(const char * );
+ecl_smspec_type * ecl_smspec_fread_alloc(const char * , const char *);
 void              ecl_smspec_free( ecl_smspec_type *);
 void              ecl_smspec_set_time_info( const ecl_smspec_type *  , const float *  , double *  , time_t * );
 

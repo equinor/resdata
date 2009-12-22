@@ -112,7 +112,7 @@ Completion var:    VAR_TYPE:WELL_NAME:NUM
 
 
 
-static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char * base_name) {
+static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char * base_name, const char * key_join_string) {
   ecl_smspec_type *ecl_smspec;
   ecl_smspec = util_malloc(sizeof *ecl_smspec , __func__);
   UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
@@ -150,7 +150,7 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   ecl_smspec->var_type           	     = NULL;
   ecl_smspec->sim_start_time     	     = -1;
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
-  ecl_smspec->key_join_string                = util_alloc_string_copy(":");
+  ecl_smspec->key_join_string                = util_alloc_string_copy( key_join_string );
 
   ecl_smspec->time_index  = -1;
   ecl_smspec->day_index   = -1;
@@ -257,7 +257,7 @@ ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec 
 
 static ecl_smspec_var_type ecl_smspec_split_general(const ecl_smspec_type * smspec , const char * gen_key , int * argc , char *** argv) {
   ecl_smspec_var_type var_type;
-  util_split_string(gen_key , ":" , argc , argv);
+  util_split_string( gen_key , smspec->key_join_string , argc , argv );
   var_type = ecl_smspec_identify_var_type( smspec , (*argv)[0] );
   return var_type;
 }
@@ -520,13 +520,13 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 
 
 
-ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file) {
+ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * key_join_string) {
   ecl_smspec_type *ecl_smspec;
   
   {
     char * base_name , *path;
     util_alloc_file_components(header_file , &path , &base_name , NULL);
-    ecl_smspec = ecl_smspec_alloc_empty(path , base_name);
+    ecl_smspec = ecl_smspec_alloc_empty(path , base_name , key_join_string);
     util_safe_free(base_name);
     util_safe_free(path);
   }
@@ -685,23 +685,6 @@ static int ecl_smspec_get_block_var_index_string(const ecl_smspec_type * ecl_sms
 }
 
 
-/*
-  Here the block_str can either be "i,j,k" or "6362".
-*/
-
-static int ecl_smspec_get_block_var_index_gen_string(const ecl_smspec_type * ecl_smspec , const char * block_var , const char * block_str) {
-  int i,j,k,global_index;
-  
-  if (sscanf(block_str , "%d,%d,%d" , &i,&j,&k) == 3) {
-    /* We read three comma separated integers - this is ijk*/
-    global_index = ecl_smspec_get_global_grid_index( ecl_smspec , i,j,k);
-    return ecl_smspec_get_block_var_index( ecl_smspec , block_var , global_index );
-  } else
-    return ecl_smspec_get_block_var_index_string( ecl_smspec , block_var , block_str);
-
-}
-
-
 int ecl_smspec_get_block_var_index_ijk(const ecl_smspec_type * ecl_smspec , const char * block_var , int i , int j , int k) {
   return ecl_smspec_get_block_var_index( ecl_smspec , block_var , ecl_smspec_get_global_grid_index( ecl_smspec , i,j,k) );
 }
@@ -816,54 +799,16 @@ bool  ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl_smspec , co
 /* General variables ... */
 
 
-/* There is a quite wide range of error which are just returned as "Not found" - but that is OK. */
+/* There is a quite wide range of error which are just returned as
+   "Not found" (i.e. -1) - but that is OK. */
 /* Completions not supported yet. */
+
 int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
   int     index = -1;
-
+  
   if (hash_has_key( ecl_smspec->gen_var_index , lookup_kw ))
     index = hash_get_int( ecl_smspec->gen_var_index , lookup_kw );
-
-  return index;
   
-
-  //ecl_smspec_var_type var_type;
-  //var_type = ecl_smspec_split_general( lookup_kw , &argc , &argv );
-  //
-  //switch(var_type) {
-  //case(ECL_SMSPEC_MISC_VAR):
-  //  index = ecl_smspec_get_misc_var_index(ecl_smspec , argv[0]);
-  //  break;
-  //case(ECL_SMSPEC_WELL_VAR):
-  //  if (argc == 2)
-  //    index = ecl_smspec_get_well_var_index(ecl_smspec , argv[1] , argv[0]);
-  //  break;
-  //case(ECL_SMSPEC_REGION_VAR):
-  //  if ( argc ==2 ) {
-  //    int region_nr;
-  //    if (util_sscanf_int(argv[1] , &region_nr))
-  //      index = ecl_smspec_get_region_var_index( ecl_smspec , region_nr , argv[0]);
-  //  }
-  //  break;
-  //case(ECL_SMSPEC_FIELD_VAR):
-  //  if (argc == 1)
-  //    index = ecl_smspec_get_field_var_index(ecl_smspec , argv[0]);
-  //  break;
-  //case(ECL_SMSPEC_GROUP_VAR):
-  //  if (argc == 2)
-  //    index = ecl_smspec_get_group_var_index(ecl_smspec , argv[1] , argv[0]);
-  //  break;
-  //case(ECL_SMSPEC_BLOCK_VAR):
-  //  if (argc ==2 )
-  //    index = ecl_smspec_get_block_var_index_gen_string(ecl_smspec , argv[0] , argv[1]);
-  //  break;
-  //default:
-  //  util_abort("%s: sorry looking up the type:%d / %s is not (yet) implemented.\n" , __func__ , var_type , lookup_kw);
-  //}
-  //util_free_stringlist(argv , argc);
-  ////if (index != hash_get_int( ecl_smspec->gen_var_index , lookup_kw))
-  ////  util_abort("Internal error \n",__func__);
-
   return index;
 }
 
@@ -987,8 +932,9 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
 bool ecl_smspec_var_is_total( const ecl_smspec_type * smspec , const char * var ) {
   /** 
       The list below is all the keyowrds with 'Total' in the
-      information from the tables 2.7 - 2.11.  Have skipped some of
-      the most exotic keywords (AND ALL THE HISTORICAL).
+      information from the tables 2.7 - 2.11 in the ECLIPSE
+      documentation.  Have skipped some of the most exotic keywords
+      (AND ALL THE HISTORICAL).
   */
   
   const char *total_vars[29] = {"OPT"  , "GPT"  , "WPT" , "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" , "WIT" ,

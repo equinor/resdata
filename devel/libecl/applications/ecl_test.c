@@ -15,16 +15,19 @@
 #include <time.h>
 
 int main(int argc , char ** argv) {
-  int num_t = 10000;
-  ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case("Gurbat/EXAMPLE_01_BASE");
-  time_t start_time = ecl_sum_get_start_time( ecl_sum );
-  time_t end_time   = ecl_sum_get_end_time( ecl_sum ); 
-  time_t dt         = (end_time - start_time) / (num_t  - 1);
-  int i;
-  for (i=0; i < num_t; i++) {
-    time_t sim_time = start_time + i*dt;
+  for (int iarg = 1; iarg < argc; iarg++) {
+    ecl_file_type * ecl_file = ecl_file_fread_alloc( argv[iarg] );
+    const ecl_kw_type   * swat_kw  = ecl_file_iget_named_kw( ecl_file , "SWAT" , 0 );
+    const ecl_kw_type   * sgas_kw  = ecl_file_iget_named_kw( ecl_file , "SGAS" , 0 );
+    ecl_kw_type         * soil_kw  = ecl_kw_alloc_copy( swat_kw );
     
+    ecl_kw_scale( soil_kw , -1.0 );
+    ecl_kw_shift( soil_kw ,  1.0 );
+    ecl_kw_inplace_sub(soil_kw , sgas_kw );
+    ecl_kw_set_header_name( soil_kw , "SOIL" );
 
-    printf("%d  %g  %g \n",sim_time , ecl_sum_get_general_var_from_sim_time( ecl_sum , sim_time , "RPR:2" ),ecl_sum_get_general_var_from_sim_time( ecl_sum , sim_time , "WOPR:OP_1"));
+    ecl_file_insert_kw( ecl_file , soil_kw , false , "ENDSOL" , 0 );
+    ecl_file_fwrite( ecl_file , argv[iarg] , false );
+    ecl_file_free( ecl_file );
   }
 }

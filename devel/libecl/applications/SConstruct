@@ -48,7 +48,7 @@ add_program(env , conf ,  "troll_iget_lgr.x"  , "troll_iget_lgr.c"  , False)
 add_program(env , conf ,  "utm2ijk.x"         , "utm2ijk.c"         , False)
 add_program(env , conf ,  "view_restart.x"    , "view_restart.c"    , False)
 add_program(env , conf ,  "view_rft.x"        , "view_rft.c"        , False)
-add_program(env , conf ,  "view_summary.x"    , "view_summary.c"    , False)
+add_program(env , conf ,  "summary.x"         , "view_summary.c"    , False)
 add_program(env , conf ,  "vprofile.x"        , "vprofile.c"        , False)
 
 
