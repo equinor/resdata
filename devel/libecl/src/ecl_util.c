@@ -79,7 +79,7 @@ int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
   int sizeof_ctype = -1;
   switch (ecl_type) {
   case(ECL_CHAR_TYPE):
-    sizeof_ctype = (ECL_STRING_LENGTH + 1) * sizeof(char); /* One element of character data is string section of 8 characters + \0. */
+    sizeof_ctype = (ECL_STRING_LENGTH + 1) * sizeof(char); /* One element of character data is a string section of 8 characters + \0. */
     break;
   case(ECL_FLOAT_TYPE):
     sizeof_ctype = sizeof(float);
@@ -91,7 +91,7 @@ int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
     sizeof_ctype = sizeof(int);
     break;
   case(ECL_BOOL_TYPE):
-    sizeof_ctype = sizeof(int);
+    sizeof_ctype = sizeof(int); // The ECL_BOOL_TYPE type is internally implemented as an integer - and not a bool.
     break;
   case(ECL_MESS_TYPE):
     sizeof_ctype = sizeof(char);
@@ -321,6 +321,10 @@ void ecl_util_get_file_type(const char * filename, ecl_file_enum * _file_type , 
 }
 
 
+/**
+   Takes an ecl_file_enum variable and returns string with a
+   descriptive name of this file type.
+*/
 const char * ecl_util_file_type_name( ecl_file_enum file_type ) {
   switch (file_type) {
   case(ECL_OTHER_FILE):

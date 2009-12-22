@@ -36,7 +36,7 @@ struct ecl_smspec_struct {
   hash_type        * misc_var_index;
   hash_type        * unit_hash;
   hash_type        * block_var_index;
-  hash_type        * gen_var_index;              /* This is "everything" - thing can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
+  hash_type        * gen_var_index;              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
   hash_type        * special_types;
 
   ecl_smspec_var_type * var_type;                
@@ -46,6 +46,7 @@ struct ecl_smspec_struct {
   int               Nwells , param_offset;
   int               params_size;
   char            * simulation_case;        /* This should be full path and basename - without any extension. */
+  char            * key_join_string;        /* The string used to join keys when building gen_key keys. */
   
   time_t            sim_start_time;
   int               time_index;
@@ -105,9 +106,8 @@ Block var:         VAR_TYPE:i,j,k  (where i,j,k is calculated form NUM)
 Region var         VAR_TYPE:index  (where index is NOT from the nums vector, it it is just an offset).
 Completion var:    VAR_TYPE:WELL_NAME:NUM
 .... 
-
-
 */
+
 
 
 
@@ -150,6 +150,7 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   ecl_smspec->var_type           	     = NULL;
   ecl_smspec->sim_start_time     	     = -1;
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
+  ecl_smspec->key_join_string                = util_alloc_string_copy(":");
 
   ecl_smspec->time_index  = -1;
   ecl_smspec->day_index   = -1;
@@ -163,6 +164,24 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
 
 
 UTIL_SAFE_CAST_FUNCTION( ecl_smspec , ECL_SMSPEC_ID )
+
+
+static char * ecl_smspec_alloc_gen_key_ss(const ecl_smspec_type * smspec, const char * s1 , const char * s2) {
+  return util_alloc_sprintf("%s%s%s" , s1 , smspec->key_join_string , s2 );
+}
+
+static char * ecl_smspec_alloc_gen_key_sd(const ecl_smspec_type * smspec, const char * s , int num) {
+  return util_alloc_sprintf("%s%s%d" , s , smspec->key_join_string , num );
+}
+
+static char * ecl_smspec_alloc_gen_key_sds(const ecl_smspec_type * smspec, const char * s1 , int num , const char * s2) {
+  return util_alloc_sprintf("%s%s%d%s%s" , s1 , smspec->key_join_string , num , smspec->key_join_string , s2 );
+}
+
+static char * ecl_smspec_alloc_block_gen_key(const ecl_smspec_type * smspec , const char * var , int i , int j , int k) {
+  return util_alloc_sprintf("%s%s%d,%d,%d" , var , smspec->key_join_string , i , j , k);
+}
+
 
 
 /* 
@@ -402,7 +421,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 		hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
 	      {
 		hash_type * var_hash = hash_get(cell_hash , cell_str);
-                char * gen_key = util_alloc_sprintf("%s:%d:%s" , kw , num, well);
+                char * gen_key = ecl_smspec_alloc_gen_key_sds( ecl_smspec , kw , num , well);
                 hash_insert_int(var_hash , kw , index);
                 hash_insert_int(ecl_smspec->gen_var_index , gen_key , index );
                 free(gen_key);
@@ -426,7 +445,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 		hash_insert_hash_owned_ref(ecl_smspec->group_var_index , group , hash_alloc() , hash_free__);
 	      {
 		hash_type * var_hash = hash_get(ecl_smspec->group_var_index , group);
-                char * gen_key = util_alloc_sprintf("%s:%s" , kw , well);
+                char * gen_key = ecl_smspec_alloc_gen_key_ss( ecl_smspec , kw , well );
 		hash_insert_int(var_hash , kw , index);
                 hash_insert_int(ecl_smspec->gen_var_index , gen_key , index );
                 free(gen_key);
@@ -439,7 +458,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	    hash_insert_int(ecl_smspec->region_var_index , kw , index);
 	  ecl_smspec->num_regions = util_int_max(ecl_smspec->num_regions , num);
           {
-            char * gen_key = util_alloc_sprintf("%s:%d" , kw , num);
+            char * gen_key = ecl_smspec_alloc_gen_key_sd( ecl_smspec , kw , num );
             hash_insert_int( ecl_smspec->gen_var_index , gen_key , index);
             free( gen_key );
           }
@@ -455,7 +474,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	      hash_insert_hash_owned_ref(ecl_smspec->well_var_index , well , hash_alloc() , hash_free__);
 	    {
 	      hash_type * var_hash = hash_get(ecl_smspec->well_var_index , well);
-              char * gen_key = util_alloc_sprintf("%s:%s" , kw , well);
+              char * gen_key = ecl_smspec_alloc_gen_key_ss( ecl_smspec , kw , well );
               hash_insert_int(var_hash , kw , index);
               hash_insert_int(ecl_smspec->gen_var_index , gen_key , index );
               free(gen_key);
@@ -479,7 +498,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
               char * gen_key;
               ecl_smspec_get_ijk(ecl_smspec , num , &i,&j,&k);
               /* Using (ONLY) the VAR:i,j,k form - could in addition also insert the VAR:num form?? */
-              gen_key = util_alloc_sprintf("%s:%d,%d,%d" , kw , i,j,k);
+              gen_key = ecl_smspec_alloc_block_gen_key( ecl_smspec , kw , i , j , k );
               hash_insert_int(ecl_smspec->gen_var_index , gen_key , index);
 	      hash_insert_int(block_hash , block_nr , index);
               free(gen_key);
@@ -914,6 +933,7 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   free(ecl_smspec->var_type);
   free(ecl_smspec->rate_variable);
   free(ecl_smspec->simulation_case);
+  free(ecl_smspec->key_join_string);
   free(ecl_smspec);
 }
 

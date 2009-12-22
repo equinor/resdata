@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#define _GNU_SOURCE   // Defined to get access to pow10() function.
+#define __USE_GNU     // Defined to get access to pow10() function.
 #include <math.h>
 #include <inttypes.h>
 #include <ecl_kw.h>
@@ -63,7 +65,7 @@ struct ecl_kw_struct {
 
 
 /*****************************************************************/
-/* Format string used when writing a header. */
+/* Format string used when writing a formatted header. */
 #define WRITE_HEADER_FMT  " '%-8s' %11d '%-4s'\n" 
 
 
@@ -87,20 +89,20 @@ struct ecl_kw_struct {
 
 */
 
-#define READ_FMT_CHAR    "%8c"
-#define READ_FMT_FLOAT   "%gE"
-#define READ_FMT_INT     "%d"
-#define READ_FMT_MESS    "%8c"
-#define READ_FMT_BOOL    "  %c"
-#define READ_FMT_DOUBLE  "%lgD%d" 
+#define READ_FMT_CHAR     "%8c"
+#define READ_FMT_FLOAT    "%gE"
+#define READ_FMT_INT      "%d"
+#define READ_FMT_MESS     "%8c"
+#define READ_FMT_BOOL     "  %c"
+#define READ_FMT_DOUBLE   "%lgD%d" 
 
 
-#define WRITE_FMT_CHAR       " '%-8s'"
-#define WRITE_FMT_INT        " %11d"
-#define WRITE_FMT_FLOAT      "  %11.8fE%+03d"
-#define WRITE_FMT_DOUBLE     "  %17.14fD%+03d"
-#define WRITE_FMT_MESS       "%s"
-#define WRITE_FMT_BOOL       "  %c"
+#define WRITE_FMT_CHAR    " '%-8s'"
+#define WRITE_FMT_INT     " %11d"
+#define WRITE_FMT_FLOAT   "  %11.8fE%+03d"
+#define WRITE_FMT_DOUBLE  "  %17.14fD%+03d"
+#define WRITE_FMT_MESS    "%s"
+#define WRITE_FMT_BOOL    "  %c"
 
 
 /*****************************************************************/
@@ -632,7 +634,7 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
     double value , arg;
     read_count = fscanf( stream , fmt , &arg , &power);
     if (read_count == 2) 
-      value = arg * pow( 10.0 , power );
+      value = arg * pow10( power );
     else {
       util_abort("%s: read failed \n",__func__);
       value = -1;
