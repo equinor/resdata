@@ -462,6 +462,131 @@ void ecl_region_deselect_k1k2( ecl_region_type * region , int k1 , int k2) {
   ecl_region_select_k1k2__( region , k1 , k2 , false );
 }
 
+/*****************************************************************/
+
+/**
+   This function will select all the cells with depth below the input
+   parameter @depth (if @select_below == true). The depth of a cell is
+   determined by the depth of the center of a cell.
+*/
+
+
+static void ecl_region_select_from_depth__( ecl_region_type * region , double depth_limit , bool select_deep  , bool select) {
+  int global_index;
+  for (global_index = 0; global_index < region->grid_vol; global_index++) {
+    double cell_depth = ecl_grid_get_cdepth1( region->parent_grid , global_index );
+    if (select_deep) {
+      // The select/deselect mechanism should be applied to deep cells.
+      if (cell_depth >= depth_limit)
+        region->active_mask[ global_index ] = select;
+    } else {
+      // The select/deselect mechanism should be applied to shallow cells.
+      if (cell_depth <= depth_limit)
+        region->active_mask[ global_index ] = select;
+    }
+  }
+  ecl_region_invalidate_index_list( region );
+}
+
+
+void ecl_region_select_shallow_cells( ecl_region_type * region , double depth_limit ) {
+  ecl_region_select_from_depth__( region , depth_limit , false , true );
+}
+
+
+void ecl_region_deselect_shallow_cells( ecl_region_type * region , double depth_limit ) {
+  ecl_region_select_from_depth__( region , depth_limit , false , false );
+}
+
+void ecl_region_select_deep_cells( ecl_region_type * region , double depth_limit ) {
+  ecl_region_select_from_depth__( region , depth_limit , true , true );
+}
+
+
+void ecl_region_deselect_deep_cells( ecl_region_type * region , double depth_limit ) {
+  ecl_region_select_from_depth__( region , depth_limit , true , false );
+}
+
+/*****************************************************************/
+
+static void ecl_region_select_from_volume__( ecl_region_type * region , double volum_limit , bool select_small , bool select) {
+  int global_index;
+  for (global_index = 0; global_index < region->grid_vol; global_index++) {
+    double cell_size = ecl_grid_get_cell_volume1( region->parent_grid , global_index );
+    if (select_small) {
+      // The select/deselect mechanism should be applied to small cells.
+      if (cell_size <= volum_limit)
+        region->active_mask[ global_index ] = select;
+    } else {
+      // The select/deselect mechanism should be applied to large cells.
+      if (cell_size >= volum_limit)
+        region->active_mask[ global_index ] = select;
+    }
+  }
+  ecl_region_invalidate_index_list( region );
+}
+
+
+void ecl_region_select_small_cells( ecl_region_type * ecl_region , double volum_limit ) {
+  ecl_region_select_from_volume__( ecl_region , volum_limit , true , true );
+}
+
+void ecl_region_deselect_small_cells( ecl_region_type * ecl_region , double volum_limit ) {
+  ecl_region_select_from_volume__( ecl_region , volum_limit , true , false );
+}
+
+void ecl_region_select_large_cells( ecl_region_type * ecl_region , double volum_limit ) {
+  ecl_region_select_from_volume__( ecl_region , volum_limit , false , true );
+}
+
+void ecl_region_deselect_large_cells( ecl_region_type * ecl_region , double volum_limit ) {
+  ecl_region_select_from_volume__( ecl_region , volum_limit , false , false );
+}
+
+/*****************************************************************/
+/**
+   This function will select a cell based on global_index.
+*/
+
+static void ecl_region_select_global_index__( ecl_region_type * region , int global_index , bool select) {
+  if ((global_index >= 0) && (global_index < region->grid_vol))
+    region->active_mask[ global_index ] = select;
+  else
+    util_abort("%s: global_index:%d invalid - legal interval: [0,%d) \n",__func__ , global_index , region->grid_vol);
+  ecl_region_invalidate_index_list( region );
+}
+
+void ecl_region_select_global_index( ecl_region_type * region , int global_index) {
+  ecl_region_select_global_index__( region , global_index , true );
+}
+
+void ecl_region_deselect_global_index( ecl_region_type * region , int global_index) {
+  ecl_region_select_global_index__( region , global_index , false );
+}
+
+/*****************************************************************/
+/**
+   This function will select a cell based on active_index.
+*/
+
+static void ecl_region_select_active_index__( ecl_region_type * region , int active_index , bool select) {
+  if ((active_index >= 0) && (active_index < region->grid_active)) {
+    int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index);
+    region->active_mask[ global_index ] = select;
+  } else
+    util_abort("%s: active_index:%d invalid - legal interval: [0,%d) \n",__func__ , active_index , region->grid_vol);
+  ecl_region_invalidate_index_list( region );
+}
+
+
+void ecl_region_select_active_index( ecl_region_type * region , int active_index) {
+  ecl_region_select_active_index__( region , active_index , true );
+}
+
+void ecl_region_deselect_active_index( ecl_region_type * region , int active_index) {
+  ecl_region_select_active_index__( region , active_index , false );
+}
+
 
 /*****************************************************************/
 

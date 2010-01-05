@@ -675,23 +675,6 @@ UTIL_SAFE_CAST_FUNCTION(ecl_grid , ECL_GRID_ID);
    This function allocates the internal index_map and inv_index_map fields.
 */
 
-static void ecl_grid_alloc_index_map(ecl_grid_type * ecl_grid) {
-  int * index_map     = util_malloc(ecl_grid->size         * sizeof * index_map     , __func__);
-  int * inv_index_map = util_malloc(ecl_grid->total_active * sizeof * inv_index_map , __func__);
-  int   index;
-
-  for (index = 0; index < ecl_grid->size; index++) {
-    const ecl_cell_type * cell = ecl_grid->cells[index];
-    if (cell->active) {
-      index_map[index] = cell->active_index;
-      inv_index_map[cell->active_index] = index;
-    } else
-      index_map[index] = -1;
-  }
-
-  ecl_grid->inv_index_map = inv_index_map;
-  ecl_grid->index_map     = index_map;
-}
 
 
 
@@ -718,7 +701,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_n
   grid->nz = nz;
   grid->size    = nx*ny*nz;
   grid->grid_nr = grid_nr;
-
+  
   grid->inv_index_map = NULL;
   grid->index_map     = NULL;
   grid->cells         = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
@@ -832,7 +815,27 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
   }
 }
 
-
+/**
+   The functions ecl_grid_set_active_index() must be called
+   immediately prior to calling this function, to ensure that
+   ecl_grid->total_active is correct.
+*/
+static void ecl_grid_realloc_index_map(ecl_grid_type * ecl_grid) {
+  ecl_grid->index_map     = util_realloc(ecl_grid->index_map     , ecl_grid->size         * sizeof * ecl_grid->index_map     , __func__);
+  ecl_grid->inv_index_map = util_realloc(ecl_grid->inv_index_map , ecl_grid->total_active * sizeof * ecl_grid->inv_index_map , __func__);
+  {
+    int index;
+    for (index = 0; index < ecl_grid->size; index++) {
+      const ecl_cell_type * cell = ecl_grid->cells[index];
+      if (cell->active) {
+        ecl_grid->index_map[index] = cell->active_index;
+        ecl_grid->inv_index_map[cell->active_index] = index;
+      } else
+        ecl_grid->index_map[index] = -1;
+    }
+  }
+}
+  
 
 static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
   int i,j,k;
@@ -853,6 +856,11 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
   ecl_grid->total_active = active_index;
 }
 
+
+static void ecl_grid_update_index( ecl_grid_type * ecl_grid) {
+  ecl_grid_set_active_index(ecl_grid);
+  ecl_grid_realloc_index_map(ecl_grid);
+}
 
 
 static void ecl_grid_pillar_cross_planes(const point_type * pillar , const double *z , double *x , double *y) {
@@ -1055,8 +1063,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL__(int nx , int ny , int nz , const 
     ecl_grid_init_mapaxes( ecl_grid , mapaxes );
     
   ecl_grid_set_center(ecl_grid);
-  ecl_grid_set_active_index(ecl_grid);
-  ecl_grid_alloc_index_map(ecl_grid);
+  ecl_grid_update_index( ecl_grid );
   ecl_grid_taint_cells( ecl_grid );
   return ecl_grid;
 }
@@ -1089,7 +1096,13 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl
       mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw );
     }
     
-    ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL__(nx , ny , nz , ecl_kw_get_float_ptr(zcorn_kw) , ecl_kw_get_float_ptr(coord_kw) , ecl_kw_get_int_ptr(actnum_kw) , mapaxes_data, grid_nr);
+    ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL__(nx , ny , nz , 
+                                                       ecl_kw_get_float_ptr(zcorn_kw) , 
+                                                       ecl_kw_get_float_ptr(coord_kw) , 
+                                                       ecl_kw_get_int_ptr(actnum_kw) , 
+                                                       mapaxes_data, 
+                                                       grid_nr);
+    
     if (grid_nr > 0) ecl_grid_set_lgr_name_EGRID(ecl_grid , ecl_file , grid_nr);
     return ecl_grid;
   }
@@ -1168,11 +1181,10 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
   }
   
   ecl_grid_set_center(grid);
-  ecl_grid_set_active_index(grid);
-  (*cell_offset) += nx*ny*nz;
-  ecl_grid_alloc_index_map(grid);
+  ecl_grid_update_index( grid );
   if (grid_nr > 0) ecl_grid_set_lgr_name_GRID(grid , ecl_file , grid_nr);
   ecl_grid_taint_cells( grid );
+  (*cell_offset) += nx*ny*nz;
   return grid;
 }
 
@@ -1969,6 +1981,7 @@ const ecl_grid_type * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int a
   const int global_index = ecl_grid_get_global_index1A( grid , active_index );
   return ecl_grid_get_cell_lgr1( grid , global_index );
 }
+
 
 /**
    Will return the global grid for a lgr. If the input grid is indeed

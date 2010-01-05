@@ -38,10 +38,13 @@ int               ecl_region_get_global_size( ecl_region_type * region );
 const int       * ecl_region_get_global_list( ecl_region_type * region );
 bool              ecl_region_contains_ijk( const ecl_region_type * ecl_region , int i , int j , int k);
 
+void              ecl_region_invert_selection( ecl_region_type * region );
 void              ecl_region_select_all( ecl_region_type * region);
 void              ecl_region_deselect_all( ecl_region_type * region );
+
 void              ecl_region_select_in_interval( ecl_region_type * region , const ecl_kw_type * ecl_kw, float min_value , float max_value);
 void              ecl_region_deselect_in_interval( ecl_region_type * region , const ecl_kw_type * ecl_kw, float min_value , float max_value);
+
 void              ecl_region_select_equal( ecl_region_type * region , const ecl_kw_type * ecl_kw, int value);
 void              ecl_region_deselect_equal( ecl_region_type * region , const ecl_kw_type * ecl_kw, int value);
 
@@ -57,7 +60,23 @@ void              ecl_region_select_j1j2( ecl_region_type * region , int j1 , in
 void              ecl_region_deselect_j1j2( ecl_region_type * region , int j1 , int i2);
 void              ecl_region_select_k1k2( ecl_region_type * region , int k1 , int k2);
 void              ecl_region_deselect_k1k2( ecl_region_type * region , int k1 , int i2);
-void              ecl_region_invert_selection( ecl_region_type * region );
+
+void              ecl_region_select_shallow_cells( ecl_region_type * region , double depth_limit );
+void              ecl_region_deselect_shallow_cells( ecl_region_type * region , double depth_limit );
+void              ecl_region_select_deep_cells( ecl_region_type * region , double depth_limit );
+void              ecl_region_deselect_deep_cells( ecl_region_type * region , double depth_limit );
+
+void              ecl_region_select_small_cells( ecl_region_type * ecl_region , double volum_limit );
+void              ecl_region_deselect_small_cells( ecl_region_type * ecl_region , double volum_limit );
+void              ecl_region_select_large_cells( ecl_region_type * ecl_region , double volum_limit );
+void              ecl_region_deselect_large_cells( ecl_region_type * ecl_region , double volum_limit );
+
+void              ecl_region_select_global_index( ecl_region_type * ecl_region , int global_index);
+void              ecl_region_deselect_global_index( ecl_region_type * ecl_region , int global_index);
+
+void              ecl_region_select_active_index( ecl_region_type * ecl_region , int active_index);
+void              ecl_region_deselect_active_index( ecl_region_type * ecl_region , int active_index);
+
 
 UTIL_IS_INSTANCE_HEADER( ecl_region );
 UTIL_SAFE_CAST_HEADER( ecl_region );

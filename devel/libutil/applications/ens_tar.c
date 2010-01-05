@@ -24,7 +24,7 @@ bool tar_and_remove_dir( const char * root_path , const char * current_dir , int
       char * full_path = util_alloc_filename( root_path , current_dir , NULL);
       char * text     = util_alloc_sprintf("%s: Removing %s" , root_path , current_dir);
       msg_update( msg , text );
-      util_unlink_path( full_path );
+      util_clear_directory( full_path , true , true );
       free( text );
       free( full_path );
     }

@@ -23,30 +23,47 @@
 
 #define DUMMY_WELL(well) (strcmp((well) , ":+:+:+:+") == 0)
 #define ECL_SMSPEC_ID          806647
+#define SMSPEC_INDEX_ID        771109
+#define NUMS_INVALID          -991199
+
+
+typedef struct {
+  ecl_smspec_var_type    var_type;
+  char                 * wgname;
+  char                 * keyword;
+  char                 * unit;
+  int                    num;
+  bool                   rate_variable;
+  bool                   total_variable;
+  int                    index;       
+} smspec_index_type;
+
+
+
 
 
 struct ecl_smspec_struct {
   UTIL_TYPE_ID_DECLARATION;
   
-  hash_type        * well_var_index;             /* Indexes for all well variables: {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
-  hash_type        * well_completion_var_index;  /* Indexes for completion indexes .*/
-  hash_type        * group_var_index;            /* Indexes for group variables.*/
-  hash_type        * field_var_index;
-  hash_type        * region_var_index;           /* The stored index is an offset. */
-  hash_type        * misc_var_index;
-  hash_type        * unit_hash;
-  hash_type        * block_var_index;
-  hash_type        * gen_var_index;              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
-  hash_type        * special_types;
+  hash_type          * well_var_index;             /* Indexes for all well variables: {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
+  hash_type          * well_completion_var_index;  /* Indexes for completion indexes .*/
+  hash_type          * group_var_index;            /* Indexes for group variables.*/
+  hash_type          * field_var_index;
+  hash_type          * region_var_index;           /* The stored index is an offset. */
+  hash_type          * misc_var_index;             /* Variables like 'TCPU' and 'NEWTON'. */
+  hash_type          * block_var_index;
+  hash_type          * gen_var_index;              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
+  hash_type          * special_types;              /* Table of funky keywords which break ECLIPSE own default naming scheme. */
 
-  ecl_smspec_var_type * var_type;                
-  bool                * rate_variable; 
-  int               grid_nx , grid_ny , grid_nz; /* Grid dimensions - in DIMENS[1,2,3] */
+  smspec_index_type ** smspec_index_list;          /* This is the storage of smspec_index instances. */
+
+  int               grid_nx , grid_ny , grid_nz;   /* Grid dimensions - in DIMENS[1,2,3] */
   int               num_regions;
   int               Nwells , param_offset;
   int               params_size;
-  char            * simulation_case;        /* This should be full path and basename - without any extension. */
-  char            * key_join_string;        /* The string used to join keys when building gen_key keys. */
+  char            * simulation_case;               /* This should be full path and basename - without any extension. */
+  char            * key_join_string;               /* The string used to join keys when building gen_key keys - typically ":" - 
+                                                      but arbitrary - NOT necessary to be able to invert the joining. */
   
   time_t            sim_start_time;
   int               time_index;
@@ -54,6 +71,7 @@ struct ecl_smspec_struct {
   int               month_index;
   int               year_index;
 };
+
 
 /**
 About indexing:
@@ -108,8 +126,176 @@ Completion var:    VAR_TYPE:WELL_NAME:NUM
 .... 
 */
 
+/*****************************************************************/
+/**
+   Implementation of the small smspec_index_type data type.
+*/
 
 
+static smspec_index_type * smspec_index_alloc_empty(ecl_smspec_var_type var_type, const char * keyword , const char * unit , int param_index) {
+  smspec_index_type * index = util_malloc( sizeof * index , __func__);
+  /** These can stay with values NULL / NUMS_INVALID for variables where those fields are not accessed. */
+  index->wgname      = NULL;
+  index->num         = NUMS_INVALID;
+
+
+  /** All smspec_index instances should have valid values of these fields. */
+  index->var_type    = var_type;
+  index->unit        = util_alloc_string_copy( unit );
+  index->keyword     = util_alloc_string_copy( keyword );
+  index->index       = param_index;
+  return index;
+}
+
+
+static void smspec_index_set_wgname( smspec_index_type * index , const char * wgname ) {
+  if (DUMMY_WELL( wgname ))
+    util_abort("%s: trying to set/derefernce WGNAME = %s which is invalid \n",__func__);
+  
+  index->wgname = util_realloc_string_copy(index->wgname , wgname );
+}
+
+
+static void smspec_index_set_num( smspec_index_type * index , int num) {
+  if (num == NUMS_INVALID)
+    util_abort("%s: explicitly trying to set nums == NUMS_INVALID - seems like a bug?!\n",__func__);
+  
+  index->num = num;
+}
+
+
+/**
+   This function will allocate a smspec_index instance, and initialize
+   all the elements. Observe that the function can return NULL, in the
+   case we do not care to internalize the variable in question,
+   i.e. if it is a well_rate from a dummy well or a variable type we
+   do not support at all.
+
+
+   This function initializes a valid smspec_index instance based on
+   the supplied var_type, and the input. Observe that when a new
+   variable type is supported, the big switch() statement must be
+   updated in the ecl_smspec_install_gen_key() and
+   ecl_smspec_fread_header() functions in addition. UGGGLY
+*/
+
+
+static smspec_index_type * smspec_index_alloc( ecl_smspec_var_type var_type , const char * wgname , const char * keyword , const char * unit , int num , int index) {
+  smspec_index_type * smspec_index = NULL;
+  
+  switch (var_type) {
+  case(ECL_SMSPEC_COMPLETION_VAR):
+    /* Completion variable : WGNAME & NUM */
+    if (!DUMMY_WELL(wgname)) {
+      smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
+      smspec_index_set_wgname( smspec_index , wgname );
+      smspec_index_set_num( smspec_index , num );
+    }
+    break;
+  case(ECL_SMSPEC_FIELD_VAR):
+    /* Field variable : */
+    smspec_index = smspec_index_alloc_empty( var_type ,  keyword , unit , index);
+    break;
+  case(ECL_SMSPEC_GROUP_VAR):
+    /* Group variable : WGNAME */
+    if (!DUMMY_WELL(wgname)) {
+      smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
+      smspec_index_set_wgname( smspec_index , wgname );
+    }
+    break;
+  case(ECL_SMSPEC_WELL_VAR):
+    /* Well variable : WGNAME */
+    if (!DUMMY_WELL(wgname)) {
+      smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
+      smspec_index_set_wgname( smspec_index , wgname );
+    }
+    break;
+  case(ECL_SMSPEC_REGION_VAR):
+    /* Region variable : NUM */
+    smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
+    smspec_index_set_num( smspec_index , num );
+    break;
+  case(ECL_SMSPEC_BLOCK_VAR):
+    /* A block variable : NUM*/
+    smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
+    smspec_index_set_num( smspec_index , num );
+    break;
+  case(ECL_SMSPEC_MISC_VAR):
+    /* Misc variable : */
+    smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
+    break;
+  default:
+    /* Lots of legitimate alternatives which are not handled .. */
+    break;
+  }
+  
+
+  if (smspec_index != NULL) {
+    /* 
+       Check if this is a rate variabel - that info is used when
+       interpolating results to true_time between ministeps. 
+    */
+    {
+      const char *rate_vars[5] = {"OPR" , "GPR" , "WPR" , "GOR" , "WCT"};
+      bool  is_rate            = false;
+      int ivar;
+      for (ivar = 0; ivar < 5; ivar++) {
+        if (util_string_equal( rate_vars[ivar] , &keyword[1])) {
+          is_rate = true;
+          break;
+        }
+      }
+      smspec_index->rate_variable = is_rate;
+    }
+
+    
+    
+    /*
+      This code checks in a predefined list whether a certain WGNAMES
+      variable represents a total accumulated quantity. Only the last
+      three characters in the variable is considered (i.e. the leading
+      'W', 'G' or 'F' is discarded).
+      
+      The list below is all the keyowrds with 'Total' in the
+      information from the tables 2.7 - 2.11 in the ECLIPSE
+      documentation.  Have skipped some of the most exotic keywords
+      (AND ALL THE HISTORICAL).
+    */
+    {
+      bool is_total = false;
+      if (var_type == ECL_SMSPEC_WELL_VAR || var_type == ECL_SMSPEC_GROUP_VAR || var_type == ECL_SMSPEC_FIELD_VAR) {
+        const char *total_vars[29] = {"OPT"  , "GPT"  , "WPT" , "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" , "WIT" ,
+                                      "WVPT" , "WVIT" , "GMT"  , "GPTF" , "GIT"  , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" , 
+                                      "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" };
+        int ivar;
+        bool is_total = false;
+        for (ivar = 0; ivar < 29; ivar++) {
+          if (util_string_equal( total_vars[ivar] , &keyword[1])) {
+            is_total = true;
+            break;
+          }
+        }
+      }
+      smspec_index->total_variable = is_total;
+    }
+  }
+  return smspec_index;
+}
+
+
+static void smspec_index_free( smspec_index_type * index ) {
+  if (index != NULL) {
+    free( index->unit );
+    free( index->keyword );
+    util_safe_free( index->wgname );
+    free( index );
+  }
+}
+
+
+
+
+/*****************************************************************/
 
 
 static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char * base_name, const char * key_join_string) {
@@ -123,7 +309,6 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   ecl_smspec->field_var_index    	     = hash_alloc();
   ecl_smspec->region_var_index   	     = hash_alloc();
   ecl_smspec->misc_var_index     	     = hash_alloc();
-  ecl_smspec->unit_hash          	     = hash_alloc();
   ecl_smspec->block_var_index                = hash_alloc();
   ecl_smspec->gen_var_index                  = hash_alloc();
   ecl_smspec->special_types                  = hash_alloc();
@@ -146,8 +331,6 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   hash_insert_int(ecl_smspec->special_types , "STEPTYPE"  , ECL_SMSPEC_MISC_VAR );
   
 
-  ecl_smspec->rate_variable                  = NULL;
-  ecl_smspec->var_type           	     = NULL;
   ecl_smspec->sim_start_time     	     = -1;
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
   ecl_smspec->key_join_string                = util_alloc_string_copy( key_join_string );
@@ -165,22 +348,6 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
 
 UTIL_SAFE_CAST_FUNCTION( ecl_smspec , ECL_SMSPEC_ID )
 
-
-static char * ecl_smspec_alloc_gen_key_ss(const ecl_smspec_type * smspec, const char * s1 , const char * s2) {
-  return util_alloc_sprintf("%s%s%s" , s1 , smspec->key_join_string , s2 );
-}
-
-static char * ecl_smspec_alloc_gen_key_sd(const ecl_smspec_type * smspec, const char * s , int num) {
-  return util_alloc_sprintf("%s%s%d" , s , smspec->key_join_string , num );
-}
-
-static char * ecl_smspec_alloc_gen_key_sds(const ecl_smspec_type * smspec, const char * s1 , int num , const char * s2) {
-  return util_alloc_sprintf("%s%s%d%s%s" , s1 , smspec->key_join_string , num , smspec->key_join_string , s2 );
-}
-
-static char * ecl_smspec_alloc_block_gen_key(const ecl_smspec_type * smspec , const char * var , int i , int j , int k) {
-  return util_alloc_sprintf("%s%s%d,%d,%d" , var , smspec->key_join_string , i , j , k);
-}
 
 
 
@@ -255,15 +422,6 @@ ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec 
 }
 
 
-static ecl_smspec_var_type ecl_smspec_split_general(const ecl_smspec_type * smspec , const char * gen_key , int * argc , char *** argv) {
-  ecl_smspec_var_type var_type;
-  util_split_string( gen_key , smspec->key_join_string , argc , argv );
-  var_type = ecl_smspec_identify_var_type( smspec , (*argv)[0] );
-  return var_type;
-}
-
-
-
 
 /**
    Takes a ecl_smspec_var_type variable as input, and return a string
@@ -326,6 +484,8 @@ const char * ecl_smspec_get_var_type_name( ecl_smspec_var_type var_type ) {
 
 
 
+
+
 /**
   Input i,j,k are assumed to be in the interval [1..nx] , [1..ny],
   [1..nz], return value is a global index which can be used in the
@@ -355,17 +515,71 @@ static void ecl_smspec_get_ijk( const ecl_smspec_type * smspec , int global_inde
 }
 
 
-static void ecl_smspec_set_rate_variable(ecl_smspec_type * smspec , const char * kw , int index);
+static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_type * smspec_index ) {
+  char * gen_key = NULL;
+
+  switch( smspec_index->var_type) {
+  case(ECL_SMSPEC_COMPLETION_VAR):
+    gen_key = util_alloc_sprintf("%s%s%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname , smspec->key_join_string , smspec_index->num );
+    hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
+    break;
+  case(ECL_SMSPEC_FIELD_VAR):
+    hash_insert_ref(smspec->gen_var_index , smspec_index->keyword , smspec_index);  
+    break;
+  case(ECL_SMSPEC_GROUP_VAR):
+    gen_key = util_alloc_sprintf("%s%s%s" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname );
+    hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index );
+    break;
+  case(ECL_SMSPEC_WELL_VAR):
+    gen_key = util_alloc_sprintf("%s%s%s" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname );
+    hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index );
+    break;
+  case(ECL_SMSPEC_REGION_VAR):
+    gen_key = util_alloc_sprintf("%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->num );
+    hash_insert_ref( smspec->gen_var_index , gen_key , smspec_index);
+    break;
+  case(ECL_SMSPEC_MISC_VAR):
+    /* Misc variable - i.e. date or CPU time ... */
+    hash_insert_ref(smspec->gen_var_index  , smspec_index->keyword , smspec_index );
+    break;
+  case(ECL_SMSPEC_BLOCK_VAR):
+    /* A block variable */
+    {
+
+      /* Block variables are installed with two keys:
+
+         VAR:NUM
+         VAR:i,j,k
+      */
+      
+      gen_key = util_alloc_sprintf("%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->num );
+      hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
+      
+      {
+        int i,j,k;
+        ecl_smspec_get_ijk(smspec , smspec_index->num , &i,&j,&k);
+        gen_key = util_realloc_sprintf(gen_key , "%s%s%d,%d,%d" , smspec_index->keyword , smspec->key_join_string , i,j,k);
+        hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
+      }
+    }
+    break;
+  default:
+    util_abort("%s: internal error - should not be here? \n");
+  }
+  util_safe_free( gen_key );
+}
+
+
 
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file) {
   ecl_file_type * header = ecl_file_fread_alloc( header_file );
   {
     int *date;
-    ecl_kw_type *wells     = ecl_file_iget_named_kw(header, "WGNAMES" , 0);
-    ecl_kw_type *keywords  = ecl_file_iget_named_kw(header, "KEYWORDS", 0);
+    ecl_kw_type *wells     = ecl_file_iget_named_kw(header, "WGNAMES"  , 0);
+    ecl_kw_type *keywords  = ecl_file_iget_named_kw(header, "KEYWORDS" , 0);
     ecl_kw_type *startdat  = ecl_file_iget_named_kw(header, "STARTDAT" , 0);
-    ecl_kw_type *units     = ecl_file_iget_named_kw(header, "UNITS" , 0 );
-    ecl_kw_type *dimens    = ecl_file_iget_named_kw(header, "DIMENS", 0);
+    ecl_kw_type *units     = ecl_file_iget_named_kw(header, "UNITS"    , 0 );
+    ecl_kw_type *dimens    = ecl_file_iget_named_kw(header, "DIMENS"   , 0);
     ecl_kw_type *nums      = NULL;
     int index;
     ecl_smspec->num_regions     = 0;
@@ -377,145 +591,104 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     
     date = ecl_kw_get_int_ptr(startdat);
     ecl_smspec->sim_start_time = util_make_date(date[0] , date[1] , date[2]);
-    {
-      /*
-	Fills a unit_hash: unit_hash["WOPR"] =	"Barrels/day"...
-      */
+    ecl_smspec->grid_nx           = ecl_kw_iget_int(dimens , 1);
+    ecl_smspec->grid_ny           = ecl_kw_iget_int(dimens , 2);
+    ecl_smspec->grid_nz           = ecl_kw_iget_int(dimens , 3);
+    ecl_smspec->params_size       = ecl_kw_get_size(keywords);
+    ecl_smspec->smspec_index_list = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->smspec_index_list  ,  __func__);
 
-      for (index=0; index < ecl_kw_get_size(keywords); index++) {
-	char * kw = util_alloc_strip_copy( ecl_kw_iget_ptr(keywords , index));
-	if (!hash_has_key(ecl_smspec->unit_hash , kw)) {
-	  char * unit = util_alloc_strip_copy(ecl_kw_iget_ptr(units , index));
-	  hash_insert_hash_owned_ref(ecl_smspec->unit_hash , kw , unit , free);
-	}
-	free(kw);
-      }
-    }
-    
-    ecl_smspec->grid_nx       = ecl_kw_iget_int(dimens , 1);
-    ecl_smspec->grid_ny       = ecl_kw_iget_int(dimens , 2);
-    ecl_smspec->grid_nz       = ecl_kw_iget_int(dimens , 3);
-    ecl_smspec->params_size   = ecl_kw_get_size(keywords);
-    ecl_smspec->var_type      = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->var_type , __func__);
-    ecl_smspec->rate_variable = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->rate_variable , __func__);
     {
-      int num = -1;
       for (index=0; index < ecl_kw_get_size(wells); index++) {
-	char * well = util_alloc_strip_copy(ecl_kw_iget_ptr(wells    , index));
-	char * kw   = util_alloc_strip_copy(ecl_kw_iget_ptr(keywords , index));
+        int num                      = NUMS_INVALID;
+	char * well                  = util_alloc_strip_copy(ecl_kw_iget_ptr(wells    , index));
+	char * kw                    = util_alloc_strip_copy(ecl_kw_iget_ptr(keywords , index));
+        char * unit                  = util_alloc_strip_copy(ecl_kw_iget_ptr(units    , index));
+        ecl_smspec_var_type var_type = ecl_smspec_identify_var_type(ecl_smspec , kw);
+        smspec_index_type * smspec_index;
 	if (nums != NULL) num = ecl_kw_iget_int(nums , index);
-	ecl_smspec->var_type[index] = ecl_smspec_identify_var_type(ecl_smspec , kw);
-	/* See table 3.4 in the ECLIPSE file format reference manual. */
-	switch(ecl_smspec->var_type[index]) {
-	case(ECL_SMSPEC_COMPLETION_VAR):
-	  /* Three level indexing: variable -> well -> string(cell_nr)*/
-	  if (!DUMMY_WELL(well)) {
-	    /* Seems we have to accept nums < 0 to get shit through ??? */
-	    char cell_str[16];
+        
+        smspec_index = smspec_index_alloc( var_type , well , kw , unit , num , index );
+        ecl_smspec->smspec_index_list[ index ] = smspec_index;
+        if (smspec_index != NULL) {
+          /** OK - we know this is valid shit. */
+          
+          ecl_smspec_install_gen_key( ecl_smspec , smspec_index );
+          
+          switch(var_type) {
+          case(ECL_SMSPEC_COMPLETION_VAR):
+            /* Three level indexing: variable -> well -> string(cell_nr)*/
 	    if (!hash_has_key(ecl_smspec->well_completion_var_index , well))
-		hash_insert_hash_owned_ref(ecl_smspec->well_completion_var_index , well , hash_alloc() , hash_free__);
+              hash_insert_hash_owned_ref(ecl_smspec->well_completion_var_index , well , hash_alloc() , hash_free__);
 	    {
 	      hash_type * cell_hash = hash_get(ecl_smspec->well_completion_var_index , well);
+              char cell_str[16];
 	      sprintf(cell_str , "%d" , num);
 	      if (!hash_has_key(cell_hash , cell_str))
 		hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
 	      {
 		hash_type * var_hash = hash_get(cell_hash , cell_str);
-                char * gen_key = ecl_smspec_alloc_gen_key_sds( ecl_smspec , kw , num , well);
                 hash_insert_int(var_hash , kw , index);
-                hash_insert_int(ecl_smspec->gen_var_index , gen_key , index );
-                free(gen_key);
 	      }
 	    }
-	  } else
-	    util_abort("%s: incorrectly formatted completion var in SMSPEC. num:%d kw:\"%s\"  well:\"%s\" \n",__func__ , num , kw , well);
-	  break;
-	case(ECL_SMSPEC_FIELD_VAR):
-	  /*
-	     Field variable
-	  */
-	  hash_insert_int(ecl_smspec->field_var_index , kw , index);
-          hash_insert_int(ecl_smspec->gen_var_index , kw , index );
-	  break;
-	case(ECL_SMSPEC_GROUP_VAR):
-	  {
-	    const char * group = well;
-	    if (!DUMMY_WELL(well)) {
-	      if (!hash_has_key(ecl_smspec->group_var_index , group))
-		hash_insert_hash_owned_ref(ecl_smspec->group_var_index , group , hash_alloc() , hash_free__);
-	      {
-		hash_type * var_hash = hash_get(ecl_smspec->group_var_index , group);
-                char * gen_key = ecl_smspec_alloc_gen_key_ss( ecl_smspec , kw , well );
-		hash_insert_int(var_hash , kw , index);
-                hash_insert_int(ecl_smspec->gen_var_index , gen_key , index );
-                free(gen_key);
-	      }
-	    }
-	  }
-	  break;
-	case(ECL_SMSPEC_REGION_VAR):
-	  if (!hash_has_key(ecl_smspec->region_var_index , kw))
-	    hash_insert_int(ecl_smspec->region_var_index , kw , index);
-	  ecl_smspec->num_regions = util_int_max(ecl_smspec->num_regions , num);
-          {
-            char * gen_key = ecl_smspec_alloc_gen_key_sd( ecl_smspec , kw , num );
-            hash_insert_int( ecl_smspec->gen_var_index , gen_key , index);
-            free( gen_key );
-          }
-	  break;
-	case (ECL_SMSPEC_WELL_VAR):
-	  if (!DUMMY_WELL(well)) {
-	    /*
-              It seems we can have e.g. WOPR associated with a dummy
-              well, there is no limit to the stupidity of the
-              programmers at Schlum.
-	    */
-	    if (!hash_has_key(ecl_smspec->well_var_index , well))
-	      hash_insert_hash_owned_ref(ecl_smspec->well_var_index , well , hash_alloc() , hash_free__);
-	    {
-	      hash_type * var_hash = hash_get(ecl_smspec->well_var_index , well);
-              char * gen_key = ecl_smspec_alloc_gen_key_ss( ecl_smspec , kw , well );
+            break;
+          case(ECL_SMSPEC_FIELD_VAR):
+            /*
+              Field variable
+            */
+            hash_insert_ref(ecl_smspec->gen_var_index , kw , smspec_index);
+            hash_insert_int(ecl_smspec->field_var_index , kw , index);
+            break;
+          case(ECL_SMSPEC_GROUP_VAR):
+            {
+              const char * group = well;
+              if (!hash_has_key(ecl_smspec->group_var_index , group))
+                hash_insert_hash_owned_ref(ecl_smspec->group_var_index , group, hash_alloc() , hash_free__);
+              {
+                hash_type * var_hash = hash_get(ecl_smspec->group_var_index , group);
+                hash_insert_int(var_hash , kw , index);
+              }
+            }
+            break;
+          case(ECL_SMSPEC_REGION_VAR):
+            if (!hash_has_key(ecl_smspec->region_var_index , kw))
+              hash_insert_int(ecl_smspec->region_var_index , kw , index);
+            ecl_smspec->num_regions = util_int_max(ecl_smspec->num_regions , num);
+            break;
+          case (ECL_SMSPEC_WELL_VAR):
+            if (!hash_has_key(ecl_smspec->well_var_index , well))
+              hash_insert_hash_owned_ref(ecl_smspec->well_var_index , well , hash_alloc() , hash_free__);
+            {
+              hash_type * var_hash = hash_get(ecl_smspec->well_var_index , well);
               hash_insert_int(var_hash , kw , index);
-              hash_insert_int(ecl_smspec->gen_var_index , gen_key , index );
-              free(gen_key);
-	    }
-	  }
-	  break;
-	case(ECL_SMSPEC_MISC_VAR):
-          /* Misc variable - i.e. date or CPU time ... */
-	  hash_insert_int(ecl_smspec->misc_var_index , kw , index);
-          hash_insert_int(ecl_smspec->gen_var_index , kw ,index);
-	  break;
-	case(ECL_SMSPEC_BLOCK_VAR):
-	  /* A block variable */
-	  {
-	    char * block_nr  = util_alloc_sprintf("%d" , num);
-	    if (!hash_has_key(ecl_smspec->block_var_index , kw))
-	      hash_insert_hash_owned_ref(ecl_smspec->block_var_index , kw , hash_alloc() , hash_free__);
-	    {
-	      hash_type * block_hash = hash_get(ecl_smspec->block_var_index , kw);
-              int i,j,k;
-              char * gen_key;
-              ecl_smspec_get_ijk(ecl_smspec , num , &i,&j,&k);
-              /* Using (ONLY) the VAR:i,j,k form - could in addition also insert the VAR:num form?? */
-              gen_key = ecl_smspec_alloc_block_gen_key( ecl_smspec , kw , i , j , k );
-              hash_insert_int(ecl_smspec->gen_var_index , gen_key , index);
-	      hash_insert_int(block_hash , block_nr , index);
-              free(gen_key);
-	    }
-	    free(block_nr);
-	  }
-	default:
-	  /* Lots of legitimate alternatives which are not handled .. */
-	  break;
-	}
-        ecl_smspec_set_rate_variable( ecl_smspec , kw ,index );
-	free(kw);
-	free(well);
+            }
+            break;
+          case(ECL_SMSPEC_MISC_VAR):
+            /* Misc variable - i.e. date or CPU time ... */
+            hash_insert_int(ecl_smspec->misc_var_index , kw , index);
+            break;
+          case(ECL_SMSPEC_BLOCK_VAR):
+            /* A block variable */
+            if (!hash_has_key(ecl_smspec->block_var_index , kw))
+              hash_insert_hash_owned_ref(ecl_smspec->block_var_index , kw , hash_alloc() , hash_free__);
+            {
+              hash_type * block_hash = hash_get(ecl_smspec->block_var_index , kw);
+              char * block_nr        = util_alloc_sprintf("%d" , num);
+              hash_insert_int(block_hash , block_nr , index);
+              free(block_nr);
+            }
+            break;
+          default:
+            util_abort("%: Internal error - should never be here ?? \n",__func__);
+            break;
+          }
+        }
+        free( kw );
+        free( well );
+        free( unit );
       }
     }
+    ecl_file_free( header );
   }
-  ecl_file_free( header );
 }
 
 
@@ -552,9 +725,30 @@ static void ecl_smspec_assert_index(const ecl_smspec_type * ecl_smspec, int inde
 }
 
 
+static const smspec_index_type * ecl_smspec_iget_index( const ecl_smspec_type * ecl_smspec , int index) {
+  ecl_smspec_assert_index(ecl_smspec , index);
+  {
+    const smspec_index_type * smspec_index = ecl_smspec->smspec_index_list[ index ];
+    if (smspec_index != NULL)
+      return smspec_index;
+    else {
+      util_abort("%s: asked for internal index of element:%d - that element is not internalized \n",__func__ , index);
+      return NULL;
+    }
+  }
+}
+
+
+
 ecl_smspec_var_type ecl_smspec_iget_var_type(const ecl_smspec_type * ecl_smspec , int sum_index) {
-  ecl_smspec_assert_index(ecl_smspec , sum_index);
-  return ecl_smspec->var_type[sum_index];
+  const smspec_index_type * smspec_index = ecl_smspec_iget_index( ecl_smspec , sum_index );
+  return smspec_index->var_type;
+}
+
+
+bool ecl_smspec_is_rate(const ecl_smspec_type * smspec , int kw_index) {
+  const smspec_index_type * smspec_index = ecl_smspec_iget_index( smspec , kw_index );
+  return smspec_index->rate_variable;
 }
 
 
@@ -806,48 +1000,30 @@ bool  ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl_smspec , co
 int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
   int     index = -1;
   
-  if (hash_has_key( ecl_smspec->gen_var_index , lookup_kw ))
-    index = hash_get_int( ecl_smspec->gen_var_index , lookup_kw );
+  if (hash_has_key( ecl_smspec->gen_var_index , lookup_kw )) {
+    const smspec_index_type * smspec_index = hash_get( ecl_smspec->gen_var_index , lookup_kw );
+    index = smspec_index->index;
+  }
   
   return index;
 }
 
 
 bool ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
-  if (ecl_smspec_get_general_var_index( ecl_smspec , lookup_kw ) >= 0)
-    return true;
-  else
-    return false;
+  return hash_has_key( ecl_smspec->gen_var_index , lookup_kw );
 } 
+
+
+/** DIES if the lookup_kw is not present. */
+const char * ecl_smspec_get_general_var_unit( const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
+  const smspec_index_type * smspec_index = hash_get( ecl_smspec->gen_var_index , lookup_kw );
+  return smspec_index->unit;
+}
 
 /*****************************************************************/
 
 
 
-
-
-/**
-   The var variable can either be just "WOPR", "RPR" or the like. Or
-   it can be a ":" variable like "WOPR:OP_3". If the unit_hash does
-   not have the variable, in either format, NULL is returned.
-*/
-
-const char * ecl_smspec_get_unit(const ecl_smspec_type * ecl_smspec , const char *var) {
-  const char * unit = NULL;
-  if (hash_has_key(ecl_smspec->unit_hash , var))
-    unit = hash_get(ecl_smspec->unit_hash , var);
-  else {
-    int var_length = strcspn(var , ":");
-    if (var_length < strlen(var)) {
-      const char * unit;
-      char * tmp_var = util_alloc_substring_copy(var , var_length);
-      if (hash_has_key(ecl_smspec->unit_hash , tmp_var))
-	unit = hash_get(ecl_smspec->unit_hash , tmp_var);
-      free(tmp_var);
-    }
-  }
-  return unit;
-}
 
 
 
@@ -871,14 +1047,17 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->field_var_index);
   hash_free(ecl_smspec->region_var_index);
   hash_free(ecl_smspec->misc_var_index);
-  hash_free(ecl_smspec->unit_hash);
   hash_free(ecl_smspec->block_var_index);
   hash_free(ecl_smspec->gen_var_index);
   hash_free(ecl_smspec->special_types);
-  free(ecl_smspec->var_type);
-  free(ecl_smspec->rate_variable);
   free(ecl_smspec->simulation_case);
   free(ecl_smspec->key_join_string);
+  {
+    int index;
+    for (index = 0; index < ecl_smspec->params_size; index++) 
+      smspec_index_free( ecl_smspec->smspec_index_list[ index ] );
+    free( ecl_smspec->smspec_index_list );
+  }
   free(ecl_smspec);
 }
 
@@ -921,90 +1100,17 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
 }
 
 
-/*****************************************************************/
-/*
-  This function checks in a predefined list whether a certain WGNAMES
-  variable represents a total accumulated quantity. Only the last
-  three characters in the variable is considered (i.e. the leading
-  'W', 'G' or 'F' is discarded).
-*/
-
-bool ecl_smspec_var_is_total( const ecl_smspec_type * smspec , const char * var ) {
-  /** 
-      The list below is all the keyowrds with 'Total' in the
-      information from the tables 2.7 - 2.11 in the ECLIPSE
-      documentation.  Have skipped some of the most exotic keywords
-      (AND ALL THE HISTORICAL).
-  */
-  
-  const char *total_vars[29] = {"OPT"  , "GPT"  , "WPT" , "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" , "WIT" ,
-                                "WVPT" , "WVIT" , "GMT"  , "GPTF" , "GIT"  , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" , 
-                                "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" };
-  int ivar;
-  bool is_total = false;
-  for (ivar = 0; ivar < 29; ivar++) {
-    if (util_string_equal( total_vars[ivar] , &var[1])) {
-      is_total = true;
-      break;
-    }
-  }
-  return is_total;
-}
-
-
-
-
-
 /**
    This function checks whether an input general key (i.e. FWPR or
-   GGPT:NORTH) represents an accumulated total: 
-   
-     * If the variabel is one of [ECL_SMSPEC_WELL_VAR ,
-       ECL_SMSPEC_GROUP_VAR , ECL_SMSPEC_FIELD_VAR] the
-       ecl_smspec_var_is_total() is consulted. 
-
-     * Otherwise the function will just return false.
+   GGPT:NORTH) represents an accumulated total. If the variable is not
+   internalized the function will fail hard.
 */
 
 
 bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * gen_key) {
-  char ** argv;
-  int     argc;
-  bool is_total;
-  ecl_smspec_var_type var_type;
-  var_type = ecl_smspec_split_general( smspec , gen_key , &argc , &argv );
-  if (var_type == ECL_SMSPEC_WELL_VAR || var_type == ECL_SMSPEC_GROUP_VAR || var_type == ECL_SMSPEC_FIELD_VAR) 
-    is_total = ecl_smspec_var_is_total( smspec , argv[0] );
-  else
-    is_total = false;
-  
-  util_free_stringlist( argv , argc );
-  return is_total;
+  const  smspec_index_type * smspec_index = hash_get( smspec->gen_var_index , gen_key );
+  return smspec_index->total_variable;
 }
-
-
-
-        
-        
-static void ecl_smspec_set_rate_variable(ecl_smspec_type * smspec , const char * kw , int index) {
-  const char *rate_vars[5] = {"OPR" , "GPR" , "WPR" , "GOR" , "WCT"};
-  bool  is_rate            = false;
-  int ivar;
-  for (ivar = 0; ivar < 5; ivar++) {
-    if (util_string_equal( rate_vars[ivar] , &kw[1])) {
-      is_rate = true;
-      break;
-    }
-  }
-  smspec->rate_variable[ index ] = is_rate;
-}
-
-
-
-bool ecl_smspec_is_rate(const ecl_smspec_type * smspec , int kw_index) {
-  return smspec->rate_variable[kw_index];
-}
-
 
 
 

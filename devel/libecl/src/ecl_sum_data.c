@@ -160,7 +160,7 @@ typedef struct ecl_sum_ministep_struct ecl_sum_ministep_type;
 
 
 struct ecl_sum_ministep_struct {
-  int         		   __id;
+  UTIL_TYPE_ID_DECLARATION;
   float       		 * data;            /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
   time_t      		   sim_time;      
   int         		   ministep;      
@@ -198,17 +198,7 @@ static void ecl_sum_ministep_free( ecl_sum_ministep_type * ministep ) {
 
 
 
-
-static ecl_sum_ministep_type * ecl_sum_ministep_safe_cast( void * __ministep ) {
-  ecl_sum_ministep_type * ministep = ( ecl_sum_ministep_type * )  __ministep;
-  if (ministep->__id == ECL_SUM_MINISTEP_ID)
-    return ministep;
-  else {
-    util_abort("%s: run_time cast failed - aborting \n",__func__);
-    return NULL;
-  }
-}
-
+static UTIL_SAFE_CAST_FUNCTION( ecl_sum_ministep , ECL_SUM_MINISTEP_ID)
 
 
 static void ecl_sum_ministep_free__( void * __ministep) {
@@ -225,8 +215,7 @@ static ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr    	  ,
 						       const ecl_smspec_type * smspec) {
   
   ecl_sum_ministep_type * ministep = util_malloc( sizeof * ministep , __func__);
-  
-  ministep->__id        = ECL_SUM_MINISTEP_ID;
+  UTIL_TYPE_ID_INIT( ministep , ECL_SUM_MINISTEP_ID);
   ministep->data        = ecl_kw_alloc_data_copy( param_kw );
   ministep->data_size   = ecl_kw_get_size( param_kw );
   ministep->report_step = report_step;
@@ -288,7 +277,17 @@ static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
 
 
 time_t ecl_sum_data_get_sim_end   ( const ecl_sum_data_type * data ) { return data->sim_end; }
-double ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ) { return data->sim_length; }
+
+
+/**
+   Returns the number of simulations days from the start of the
+   simulation (irrespective of whether the that summary data has
+   actually been loaded) to the last loaded simulation step.
+*/
+
+double ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ) { 
+  return data->sim_length; 
+}
 
 
 
@@ -308,26 +307,25 @@ double ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ) { return da
    returned ministep_nr.
 
    The indices used in this function are the internal indices, and not
-   ministep numbers. Observe that is there are holes in the
-   time-domain, i.e. if RPTONLY has been used, the function can return
-   a ministep index which does NOT cover the input time:
+   ministep numbers. Observe that there are holes in the time-domain,
+   i.e. if RPTONLY has been used, the function can return a ministep
+   index which does NOT cover the input time:
+
+     The 'X' should represent report times - the dashed lines
+     represent the temporal extent of two ministeps. Outside the '--'
+     area we do not have any results. The two ministeps we actually
+     have are M15 and M25, i.e. there is a hole.
 
 
-   The 'X' should represent report times - the dashed lines represent
-   the temporal extent of two ministeps. Outside the '--' area we do
-   not have any results. The two ministeps we actually have are M15
-   and M25, i.e. there is a hole.
+      X      .      +-----X            +----X
+            /|\        M15               M25
+             |
+             |
 
-
-   X      .      +-----X            +----X
-         /|\        M15               M25
-          |
-          |
-
-   When asking for the ministep number at the location of the arrow,
-   the function will return '15', i.e. the valid ministep following
-   the sim_time. Of course - the ideal situation is if the time
-   sequence has no holes.
+     When asking for the ministep number at the location of the arrow,
+     the function will return '15', i.e. the valid ministep following
+     the sim_time. Of course - the ideal situation is if the time
+     sequence has no holes.
 */
 
 

@@ -31,7 +31,6 @@ const char        * ecl_smspec_get_var_type_name( ecl_smspec_var_type var_type )
 ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec , const char * );
 
 bool              ecl_smspec_general_is_total(const ecl_smspec_type * ecl_smspec , const char * gen_key);
-bool              ecl_smspec_var_is_total(const ecl_smspec_type * ecl_smspec , const char * gen_key);
 bool              ecl_smspec_is_rate(const ecl_smspec_type * smspec , int kw_index);
 
 ecl_smspec_type * ecl_smspec_fread_alloc(const char * , const char *);
@@ -63,6 +62,8 @@ bool              ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl
 
 int               ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
 bool              ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
+const char      * ecl_smspec_get_general_var_unit( const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
+
 stringlist_type * ecl_smspec_alloc_matching_general_var_list(const ecl_smspec_type * smspec , const char * pattern);
 
 time_t            ecl_smspec_get_start_time(const ecl_smspec_type * );

@@ -1729,6 +1729,19 @@ bool util_is_executable(const char * path) {
 }
 
 
+static int util_get_path_length(const char * file) {
+  if (util_is_directory(file)) 
+    return strlen(file);
+  else {
+    char * last_slash = strrchr(file , UTIL_PATH_SEP_CHAR);
+    if (last_slash == NULL)
+      return 0;
+    else 
+      return last_slash - file;
+  }
+}
+
+
 
 static int util_get_base_length(const char * file) {
   int path_length   = util_get_path_length(file);
@@ -3054,8 +3067,6 @@ int static util_string_replace_inplace__(char ** _buffer , const char * expr , c
         size   = new_size;
         match_count++;
       }
-      if (subs == NULL)
-        free( subs );
     }
   } while (match != NULL && offset < strlen(buffer));
     
