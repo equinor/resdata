@@ -28,15 +28,21 @@
 
 
 int main(int argc , char ** argv) {
+  const char * s1 = "AAA";
+  const char * s2 = "BBB";
+  const char * s3 = "CCC";
   
-  float  float_value  = 7882192.737;
-  double double_value =  7882192.737;
-  const char * s = "0.24690000000000D+06";
-  double arg;
-  int c , int_power;
+  stringlist_type * slist = stringlist_alloc_new();
+  stringlist_append_ref( slist , s1 );
+  stringlist_append_ref( slist , s2 );
+  stringlist_append_ref( slist , s3 );
   
-  c = sscanf(s , "%lgD%d" , &arg , &int_power);
-  printf("c:%d  arg:%g   power:%d \n",c , arg , int_power);
+  printf("s1: %p \n",s1);
+  printf("s2: %p \n",s2);
+  printf("s3: %p \n",s3);
+
+
+  stringlist_sort( slist );
 }
 
 

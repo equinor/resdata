@@ -284,6 +284,7 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
   }
 }
 
+
 void plot_rft_ensemble(const ens_type * ens , plot_type * plot , const char * well, time_t survey_time) {
   const char * label = NULL;
   const int ens_size = vector_get_size( ens->data );

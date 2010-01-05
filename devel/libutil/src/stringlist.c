@@ -456,13 +456,18 @@ stringlist_type * stringlist_fread_alloc(FILE * stream) {
 }
 
 
-static int strcmp__(const void * __s1, const void * __s2)
-{
-  const char ** s1 = (const char **) __s1;
-  const char ** s2 = (const char **) __s2;
-  return strcmp( *s1, *s2);
+static int strcmp__(const void * __s1, const void * __s2) {
+  const char * s1 = (const char *) __s1;
+  const char * s2 = (const char *) __s2;
+  return strcmp( s1, s2);
 }
 
+
+
+/**
+   Will sort the stringlist inplace; the elements are compared with
+   the ordinary strcmp() function.
+*/
 
 void stringlist_sort(stringlist_type * s)
 {

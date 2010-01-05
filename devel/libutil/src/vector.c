@@ -379,21 +379,6 @@ void * vector_unshift(vector_type * vector ) {
 
 
 
-
-
-
-
-
-//void vector_for_each(vector_type * vector , vector_func_type * func , void * arg) {
-//  int i;
-//  for (i = 0; i < vector->size; i++) {
-//    node_data_type * node = vector->data[index];
-//    
-//    
-//}
-
-
-
 int vector_get_size( const vector_type * vector) {
   return vector->size;
 }
@@ -429,7 +414,7 @@ void vector_free__( void * arg ) {
 static int vector_cmp(const void * s1 , const void * s2) {
   const vector_sort_node_type * node1 = (const vector_sort_node_type *) s1;
   const vector_sort_node_type * node2 = (const vector_sort_node_type *) s2;
-
+    
   return node1->user_cmp(node_data_get_ptr(node1->data) , node_data_get_ptr(node2->data));
 }
 
@@ -450,9 +435,9 @@ static int vector_cmp(const void * s1 , const void * s2) {
      vector_append_buffer(vector , "This is a string ..." , strlen());
      vector_append_buffer(vector , p , 10 * sizeof * p);
 
-   Here we have inserted one (char *) and one (double *). When the
-   these elements arrive in the sort function they will just be (void
-   *), and the comparison will be quite meaningless(??).
+   Here we have inserted one (char *) and one (double *). When these
+   elements arrive in the sort function they will just be (void *),
+   and the comparison will be quite meaningless(??).
 */
 
 
@@ -467,10 +452,9 @@ void vector_sort(vector_type * vector , vector_cmp_ftype * cmp) {
       sort_data[i].data     = vector->data[i];
       sort_data[i].user_cmp = cmp;
     }
-
+    
     /* Sort the temporary vector */
     qsort(sort_data , vector->size , sizeof * sort_data ,  vector_cmp);
-
     
     /* Recover the sorted vector */
     for (i = 0; i < vector->size; i++) 
