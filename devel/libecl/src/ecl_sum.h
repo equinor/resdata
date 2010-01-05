@@ -67,8 +67,9 @@ int               ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , c
 bool              ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw);
 double            ecl_sum_get_general_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * var);
 double            ecl_sum_get_general_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var);
+const char *      ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const char * var);
 /***************/
-void             ecl_sum_fprintf(const ecl_sum_type * , FILE * , int , const char **  , bool report_only);
+void              ecl_sum_fprintf(const ecl_sum_type * , FILE * , int , const char **  , bool report_only);
 
 
 

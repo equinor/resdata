@@ -337,7 +337,9 @@ double ecl_sum_get_general_var_from_sim_days( const ecl_sum_type * ecl_sum , dou
   return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , index );
 }
 
-
+const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const char * var) {
+  return ecl_smspec_get_general_var_unit(ecl_sum->smspec , var );
+}
 
 
 /*****************************************************************/
