@@ -107,7 +107,7 @@ void template_instansiate( const template_type * template , const char * __targe
 
   /* Finding the name of the target file. */
   subst_list_update_string( template->arg_list , &target_file);
-  if (arg_list != NULL) subst_list_update_string( arg_list           , &target_file );
+  if (arg_list != NULL) subst_list_update_string( arg_list , &target_file );
 
   {
     char * buffer;
@@ -119,7 +119,7 @@ void template_instansiate( const template_type * template , const char * __targe
     
     /* Substitutions on the content. */
     subst_list_update_string( template->arg_list , &buffer );
-    if (arg_list != NULL) subst_list_update_string( arg_list           , &buffer );
+    if (arg_list != NULL) subst_list_update_string( arg_list , &buffer );
 
     /* Write the content out. */
     {
@@ -129,6 +129,8 @@ void template_instansiate( const template_type * template , const char * __targe
     }
     free( buffer );
   }
+  
+  free( target_file );
 }
 
 

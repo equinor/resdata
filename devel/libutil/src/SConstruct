@@ -19,16 +19,16 @@ def needs_update( target_file , src_file):
     
 
 SDP_ROOT = ARGUMENTS.get('SDP_ROOT','/d/proj/bg/enkf')
-conf = global_config.get_conf(SDP_ROOT , os.getcwd() , 2)
-env  = Environment()
+conf     = global_config.get_conf(SDP_ROOT , os.getcwd() , 2)
+env      = Environment()
 conf.update_env( env , [ LIBECL , LIBUTIL ] , link = False)
 
 
 vector_list = ["int" , "float" , "double" , "bool" , "time_t" , "long"]
 
-src_list = Split("set.c hash_node.c hash_sll.c hash.c list_node.c list.c node_data.c node_ctype.c util.c thread_pool.c msg.c arg_pack.c str_buffer.c path_fmt.c menu.c subst_list.c subst_func.c vector.c parser.c stringlist.c matrix.c matrix_lapack.c matrix_blas.c conf_new.c buffer.c block_fs.c log.c template.c timer.c")
+src_list = Split("set.c hash_node.c hash_sll.c hash.c list_node.c list.c node_data.c node_ctype.c util.c thread_pool.c msg.c arg_pack.c path_fmt.c menu.c subst_list.c subst_func.c vector.c parser.c stringlist.c matrix.c matrix_lapack.c matrix_blas.c conf_new.c buffer.c block_fs.c log.c template.c timer.c")
 
-header_list = Split("set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h str_buffer.h path_fmt.h  stringlist.h menu.h subst_list.h subst_func.h vector.h parser.h matrix.h matrix_lapack.h matrix_blas.h conf_new.h buffer.h block_fs.h log.h template.h timer.h")
+header_list = Split("set.h hash.h hash_node.h hash_sll.h list_node.h list.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h path_fmt.h  stringlist.h menu.h subst_list.h subst_func.h vector.h parser.h matrix.h matrix_lapack.h matrix_blas.h conf_new.h buffer.h block_fs.h log.h template.h timer.h")
 
 for type in vector_list:
     header_file = "%s_vector.h" % type
@@ -47,17 +47,16 @@ define_fmt = "\'%s=\"%s\"\'"
 LIB = env.StaticLibrary("util" , src_list , CPPDEFINES = [define_fmt % ("SVN_VERSION"        ,  conf.SVN_VERSION)])
 
 
-env.Install("../lib" , LIB)
-env.Install("../include" , header_list)
+env.InstallLibrary("../lib"    , LIB)
+env.InstallHeader("../include" , header_list)
 install = env.Alias('install',["../lib" , "../include"])
-
 
 
 ##################################################################
 
 if SDP_ROOT:
-    env.Install(conf.SDP_LIB , LIB )
-    env.Install("%s/%s" % (conf.SDP_INCLUDE , "libutil") , header_list)
+    env.InstallLibrary(conf.SDP_LIB , LIB )
+    env.InstallHeader("%s/%s" % (conf.SDP_INCLUDE , "libutil") , header_list)
     SDP_INSTALL = env.Alias('SDP_INSTALL' , [conf.SDP_LIB , conf.SDP_INCLUDE])
  
 ##################################################################

@@ -28,21 +28,12 @@
 
 
 int main(int argc , char ** argv) {
-  const char * s1 = "AAA";
-  const char * s2 = "BBB";
-  const char * s3 = "CCC";
+  const char * data = "1234567890123456";
+  buffer_type * buffer = buffer_alloc( 16 );
   
-  stringlist_type * slist = stringlist_alloc_new();
-  stringlist_append_ref( slist , s1 );
-  stringlist_append_ref( slist , s2 );
-  stringlist_append_ref( slist , s3 );
-  
-  printf("s1: %p \n",s1);
-  printf("s2: %p \n",s2);
-  printf("s3: %p \n",s3);
-
-
-  stringlist_sort( slist );
+  buffer_fwrite( buffer , data , 1 , strlen( data ));
+  buffer_memshift( buffer , 15 , -3 );
+  buffer_free( buffer );
 }
 
 

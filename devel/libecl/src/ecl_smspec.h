@@ -64,6 +64,10 @@ int               ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_s
 bool              ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
 const char      * ecl_smspec_get_general_var_unit( const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
 
+const char      * ecl_smspec_iget_unit( const ecl_smspec_type * smspec , int index );
+
+
+
 stringlist_type * ecl_smspec_alloc_matching_general_var_list(const ecl_smspec_type * smspec , const char * pattern);
 
 time_t            ecl_smspec_get_start_time(const ecl_smspec_type * );

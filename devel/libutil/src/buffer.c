@@ -116,7 +116,6 @@ buffer_type * buffer_alloc_wrapper(void * data , size_t buffer_size ) {
   buffer->pos          = buffer_size;
   buffer->alloc_size   = buffer_size;
   
-  
   return buffer;
 }
 
@@ -494,6 +493,10 @@ size_t buffer_get_size(const buffer_type * buffer) {
   return buffer->content_size;
 }
 
+size_t buffer_get_alloc_size(const buffer_type * buffer) {
+  return buffer->alloc_size;
+}
+
 
 size_t buffer_get_remaining_size(const buffer_type *  buffer) {
   return buffer->content_size - buffer->pos;
@@ -566,17 +569,20 @@ void * buffer_alloc_data_copy(const buffer_type * buffer) {
 
 void buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift) { 
   /* Do we need to grow the buffer? */
-  if (buffer->alloc_size <= (buffer->content_size + shift)) {
-    size_t new_size = 2 * (buffer->content_size + shift);
-    buffer_resize__(buffer , new_size , true );
+  if (shift > 0) {
+    if (buffer->alloc_size <= (buffer->content_size + shift)) {
+      size_t new_size = 2 * (buffer->content_size + shift);
+      buffer_resize__(buffer , new_size , true );
+    }
   }
+
   {
     size_t move_size;
     if (shift < 0)
       if (abs(shift) > offset)
         offset = abs(shift);  /* We are 'trying' to left shift beyond the start of the buffer. */
-    
-    move_size = buffer->content_size - offset + 1;
+
+    move_size = buffer->content_size - offset;
     memmove( &buffer->data[offset + shift] , &buffer->data[offset] , move_size );
     buffer->content_size += shift;
     buffer->pos           = util_size_t_min( buffer->pos , buffer->content_size);  
@@ -589,20 +595,30 @@ void buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift) {
    the string @expr in @buffer. The search will start at the current
    position in the buffer, if the string is found true is returned AND
    the internal pos is updated to point at the match.
-
+   
    If the string is NOT found the function will return false, without
    touching internal state.
 */
 
 
 bool buffer_strstr( buffer_type * buffer , const char * expr ) {
-  char * match  = NULL;
+  /** 
+      If this condition is satisfied the assumption tha buffer->data
+      is a \0 terminated string certainly breaks down.
+  */
+  if ((buffer->content_size == 0) || (buffer->pos == buffer->content_size))
+    return false;
+
+  {
+    char * match = NULL;
+    
+    match = strstr( &buffer->data[buffer->pos] , expr);
+    if (match != NULL) 
+      buffer->pos = match - buffer->data;
+    
+    return (match != NULL);
+  }
   
-  match = strstr( &buffer->data[buffer->pos] , expr);
-  if (match != NULL) 
-    buffer->pos = match - buffer->data;
-  
-  return (match != NULL);
 }
 
 

@@ -341,7 +341,7 @@ char * util_alloc_realpath(const char * input_path) {
   
   new_path = realpath( input_path , buffer);
   if (new_path == NULL) 
-    util_abort("%s: input_path:%s - failed %s \n",__func__ , input_path , strerror(errno) , errno);
+    util_abort("%s: input_path:%s - failed %s(%d) \n",__func__ , input_path , strerror(errno) , errno);
   else 
     new_path = util_realloc(new_path , strlen(new_path) + 1, __func__);
   

@@ -394,13 +394,28 @@ bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
 char * stringlist_alloc_joined_segment_string( const stringlist_type * s , int start_index , int end_index , const char * sep ) {
   char * string = NULL;
   int i;
-  for (i = start_index; i < end_index; i ++) {
-    string = util_strcat_realloc(string , stringlist_iget( s , i));
-    if (i < (end_index - 1))
-      string = util_strcat_realloc(string , sep);
+
+  /* Start with allocating a string long enough to hold all the substrings. */
+  {
+    int sep_length   = strlen( sep );
+    int total_length = 0;
+    for (i=start_index; i < end_index; i++)
+      total_length += (strlen(stringlist_iget( s , i)) + sep_length);
+
+    total_length += (1 - sep_length);
+    string    = util_malloc( total_length * sizeof * string , __func__);
+    string[0] = '\0';
   }
+  
+  for (i = start_index; i < end_index; i ++) {
+    strcat( string , stringlist_iget( s , i));
+    if (i < (end_index - 1))
+      strcat( string , sep );
+  }
+  
   return string;
 }
+
 
 char * stringlist_alloc_joined_string(const stringlist_type * s , const char * sep) {
   return stringlist_alloc_joined_segment_string( s , 0 , stringlist_get_size( s ) , sep );

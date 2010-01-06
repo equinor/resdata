@@ -341,6 +341,20 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
   return ecl_smspec_get_general_var_unit(ecl_sum->smspec , var );
 }
 
+/*****************************************************************/
+/* Indexed get - these functions can be used after another function
+   has been used to query for index.
+*/
+   
+
+double ecl_sum_iget( const ecl_sum_type * ecl_sum , int ministep , int index) {
+  return ecl_sum_data_get(ecl_sum->data , ministep , index);
+}
+
+const char * ecl_sum_iget_unit( const ecl_sum_type * ecl_sum , int index) {
+  return ecl_smspec_iget_unit(ecl_sum->smspec , index);
+}
+
 
 /*****************************************************************/
 /* 
@@ -495,13 +509,15 @@ int ecl_sum_get_ministep_from_sim_time( const ecl_sum_type * ecl_sum , time_t si
 void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , const char ** var_list, bool report_only) {
   int first_report = ecl_sum_get_first_report_step( ecl_sum );
   int last_report  = ecl_sum_get_last_report_step( ecl_sum );
-  bool *has_var    = util_malloc( nvars * sizeof * has_var , __func__);
+  bool *has_var    = util_malloc( nvars * sizeof * has_var   , __func__);
+  bool *var_index  = util_malloc( nvars * sizeof * var_index , __func__);
   int report,ivar;
   
   for (ivar = 0; ivar < nvars; ivar++) {
-    if (ecl_sum_has_general_var( ecl_sum , var_list[ivar] ))
-      has_var[ivar] = true;
-    else {
+    if (ecl_sum_has_general_var( ecl_sum , var_list[ivar] )) {
+      has_var[ivar]   = true;
+      var_index[ivar] = ecl_sum_get_general_var_index( ecl_sum , var_list[ivar] );
+    } else {
       fprintf(stderr,"** Warning: could not find variable: \'%s\' in summary file \n", var_list[ivar]);
       has_var[ivar] = false;
     }
@@ -516,7 +532,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
       ecl_sum_data_report2ministep_range( ecl_sum->data , report , &ministep1 , &ministep2);
       if (report_only)
 	ministep1 = ministep2;
-
+      
       for (ministep = ministep1; ministep <= ministep2; ministep++) {
 	if (ecl_sum_has_ministep(ecl_sum , ministep)) {
 	  int day,month,year;
@@ -525,7 +541,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
 	  
 	  for (ivar = 0; ivar < nvars; ivar++) 
 	    if (has_var[ivar])
-	      fprintf(stream , " %12.3f " , ecl_sum_get_general_var(ecl_sum , ministep , var_list[ivar]));
+	      fprintf(stream , " %12.3f " , ecl_sum_iget(ecl_sum , ministep , var_index[ivar]));
 	  
 	  fprintf(stream , "\n");
 	}
@@ -533,6 +549,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
       
     }
   }
+  free( var_index );
   free( has_var );
 }
 

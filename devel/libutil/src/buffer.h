@@ -32,6 +32,7 @@ void               buffer_fwrite_int(buffer_type * buffer , int value);
 int                buffer_fread_int(buffer_type * buffer );
 void               buffer_store(const buffer_type * buffer , const char * filename);
 size_t 		   buffer_get_offset(const buffer_type * buffer);
+size_t             buffer_get_alloc_size(const buffer_type * buffer);
 size_t 		   buffer_get_size(const buffer_type * buffer);
 size_t             buffer_get_remaining_size(const buffer_type *  buffer);
 void             * buffer_get_data(const buffer_type * buffer);

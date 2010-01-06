@@ -1021,12 +1021,17 @@ const char * ecl_smspec_get_general_var_unit( const ecl_smspec_type * ecl_smspec
 }
 
 /*****************************************************************/
+/* Pure indexed lookup */
+
+const char * ecl_smspec_iget_unit( const ecl_smspec_type * smspec , int index ) {
+  const smspec_index_type * smspec_index = ecl_smspec_iget_index( smspec , index );
+  return smspec_index->unit;
+}
 
 
 
 
-
-
+/*****************************************************************/
 
 time_t ecl_smspec_get_start_time(const ecl_smspec_type * ecl_smspec) {
   return ecl_smspec->sim_start_time;

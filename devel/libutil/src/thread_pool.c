@@ -124,7 +124,7 @@ static void * thread_pool_start_job( void * arg ) {
 
   
   return_value = func( func_arg );                  /* Starting the real external function */
-  tp->job_slots[ slot_index ].running = false;  /* We mark the job as completed. */
+  tp->job_slots[ slot_index ].running = false;      /* We mark the job as completed. */
   free( arg );
 
   if (return_value != NULL) 
@@ -227,7 +227,7 @@ static void * thread_pool_main_loop( void * arg ) {
 /**
    This function initializes a couple of counters, and starts up the
    dispatch thread. If the thread_pool should be reused after a join,
-   this function must be called.
+   this function must be called before adding new jobs.
 */
 void thread_pool_restart( thread_pool_type * tp ) {
   tp->join           = false;
@@ -240,6 +240,7 @@ void thread_pool_restart( thread_pool_type * tp ) {
       tp->job_slots[i].running   = false;
     }
   }
+
   /* Starting the dispatch thread. */
   pthread_create( &tp->dispatch_thread , NULL , thread_pool_main_loop , tp );
   tp->accepting_jobs = true;
@@ -315,7 +316,7 @@ void thread_pool_add_job(thread_pool_type * pool , start_func_ftype * start_func
 /*
   Observe that this function does not join the worker threads,
   i.e. you should call thread_pool_join() first (otherwise the thing
-  wll ho up in flames).
+  will go up in flames).
 */
 
 

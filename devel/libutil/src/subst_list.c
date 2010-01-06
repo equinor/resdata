@@ -590,7 +590,6 @@ void subst_list_filter_file(const subst_list_type * subst_list , const char * sr
     backup_file = util_alloc_tmp_file("/tmp" , backup_prefix , false);
     free(backup_prefix);
   }
-
   
   /* Writing backup file */
   if (backup_file != NULL) {

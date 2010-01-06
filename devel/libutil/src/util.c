@@ -1997,15 +1997,15 @@ mode_t util_get_entry_mode( const char * file ) {
 static char * util_alloc_link_target(const char * link) {
   bool retry = true;
   int target_length;
-  int buffer_size = 64;
-  char * buffer = NULL;
+  int buffer_size = 128;
+  char * buffer   = NULL;
   do {
-    buffer = util_realloc(buffer , buffer_size , __func__);
+    buffer        = util_realloc(buffer , buffer_size , __func__);
     target_length = readlink(link , buffer , buffer_size);
     if (target_length == -1) 
       util_abort("%s: readlink(%s,...) failed with error:%s - aborting\n",__func__ , link , strerror(errno));
 
-    if (target_length < buffer_size)
+    if (target_length < (buffer_size - 1))   /* Must leave room for the trailing \0 */
       retry = false;
     else
       buffer_size *= 2;
@@ -2014,6 +2014,7 @@ static char * util_alloc_link_target(const char * link) {
   buffer[target_length] = '\0';
   return buffer;
 }
+
 
 
 
@@ -2263,8 +2264,7 @@ char * util_alloc_date_string( time_t t ) {
 }
 
 char * util_alloc_date_stamp( ) {
-  time_t now;
-  localtime( &now );
+  time_t now = time( NULL );
   return util_alloc_date_string( now );
 }
 
@@ -2670,7 +2670,8 @@ char * util_strcat_realloc(char *s1 , const char * s2) {
   if (s1 == NULL) 
     s1 = util_alloc_string_copy(s2);
   else {
-    s1 = realloc(s1 , strlen(s1) + strlen(s2) + 1);
+    int new_length = strlen(s1) + strlen(s2) + 1;
+    s1 = util_realloc( s1 , new_length , __func__);
     strcat(s1 , s2);
   }
   return s1;
