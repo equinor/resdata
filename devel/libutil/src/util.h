@@ -242,11 +242,12 @@ void 	 util_set_date_values(time_t , int * , int * , int * );
 
 void     util_fread_from_buffer(void *  , size_t  , size_t , char ** );
 
-void     util_fread_dev_random(int , char * );
-void     util_fread_dev_urandom(int , char * );
-char *   util_alloc_string_copy(const char *);
-void     util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
-bool     util_string_isspace(const char * s);
+unsigned int util_clock_seed( );
+void         util_fread_dev_random(int , char * );
+void         util_fread_dev_urandom(int , char * );
+char *       util_alloc_string_copy(const char *);
+void         util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
+bool         util_string_isspace(const char * s);
 
 void    util_exit(const char * fmt , ...);
 void    util_abort(const char * fmt , ...);

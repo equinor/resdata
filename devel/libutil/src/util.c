@@ -82,6 +82,27 @@ void util_fread_dev_urandom(int buffer_size , char * buffer) {
 }
 
 
+unsigned int util_clock_seed( ) {
+  int sec,min,hour;
+  int mday,year,month;
+  time_t now = time( NULL );
+  
+  
+  util_set_datetime_values(now , &sec , &min , &hour , &mday , &month , &year);
+  {
+    unsigned int seed = 1;
+    int i,j,k;
+    for (i=0; i < 2*min + 2; i++) {
+      for (j=0; j < 13*mday + 17; j++) {
+        for (k=0; k < (hour + year + 17) * month + 13; k++) {
+          seed *= (sec + min + mday);
+        }
+      }
+    }
+    return seed;
+  }
+}
+
 
 
 

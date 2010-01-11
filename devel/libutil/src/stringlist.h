@@ -61,6 +61,8 @@ void              stringlist_buffer_fwrite( const stringlist_type * s , buffer_t
 stringlist_type * stringlist_fread_alloc(FILE * );
 void              stringlist_sort(stringlist_type *);
 
+UTIL_IS_INSTANCE_HEADER(stringlist);
+
 #ifdef __cplusplus
 }
 #endif
