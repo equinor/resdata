@@ -25,15 +25,14 @@
 #include <subst_list.h>
 #include <subst_func.h>
 #include <buffer.h>
+#include <mzran.h>
 
 
 int main(int argc , char ** argv) {
-  const char * data = "1234567890123456";
-  buffer_type * buffer = buffer_alloc( 16 );
-  
-  buffer_fwrite( buffer , data , 1 , strlen( data ));
-  buffer_memshift( buffer , 15 , -3 );
-  buffer_free( buffer );
+  mzran_type * rng = mzran_alloc( INIT_NONE );
+  printf("rng 1:%d  2:%d \n",mzran_get_int( rng ) , mzran_get_int( rng ));
+  mzran_init( rng , INIT_DEV_RANDOM );
+  printf("rng 1:%d  2:%d \n",mzran_get_int( rng ) , mzran_get_int( rng ));
 }
 
 

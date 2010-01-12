@@ -66,6 +66,11 @@ void              ecl_region_deselect_shallow_cells( ecl_region_type * region , 
 void              ecl_region_select_deep_cells( ecl_region_type * region , double depth_limit );
 void              ecl_region_deselect_deep_cells( ecl_region_type * region , double depth_limit );
 
+void              ecl_region_select_thin_cells( ecl_region_type * ecl_region , double dz_limit );
+void              ecl_region_deselect_thin_cells( ecl_region_type * ecl_region , double dz_limit );
+void              ecl_region_select_thick_cells( ecl_region_type * ecl_region , double dz_limit );
+void              ecl_region_deselect_thick_cells( ecl_region_type * ecl_region , double dz_limit );
+
 void              ecl_region_select_small_cells( ecl_region_type * ecl_region , double volum_limit );
 void              ecl_region_deselect_small_cells( ecl_region_type * ecl_region , double volum_limit );
 void              ecl_region_select_large_cells( ecl_region_type * ecl_region , double volum_limit );

@@ -8,11 +8,15 @@ extern "C" {
 
 typedef struct mzran_struct mzran_type;
 
+/*
+  This enum enumerates different ways to initialize the mzran rng.
+*/
+
 typedef enum {
-  INIT_NONE        = 0,
-  INIT_CLOCK       = 1, 
-  INIT_DEV_RANDOM  = 2,
-  INIT_DEV_URANDOM = 3
+  INIT_NONE        = 0,   /* The rng is initialized with the default seed values. */
+  INIT_CLOCK       = 1,   /* Four random seeds are calculated with the util_clock_seed() function. */
+  INIT_DEV_RANDOM  = 2,   /* Random content is read with the function util_fread_dev_random(). */
+  INIT_DEV_URANDOM = 3    /* Random content is read with the function util_fread_dev_urandom(). */
 } mzran_init_mode;
 
 

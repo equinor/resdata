@@ -26,10 +26,10 @@
 
    When you are finished with selecting you can query the ecl_region
    instance for the number of active cells, and get a (const int *) to
-   the indices. When it comes to results you can either get them in
-   terms of active indices or global indices (refer to ecl_grid for
-   the difference between active and global indices).
-
+   the indices. You can also get the results in term of global
+   indices. (Refer to ecl_grid for the difference between active and
+   global indices).
+   
    For the functions which take ecl_kw input, the ecl_kw instance must
    have either nx*ny*nz elements, or nactive(from the grid)
    elements. This is checked, and the program will fail hard if it is
@@ -541,6 +541,42 @@ void ecl_region_select_large_cells( ecl_region_type * ecl_region , double volum_
 
 void ecl_region_deselect_large_cells( ecl_region_type * ecl_region , double volum_limit ) {
   ecl_region_select_from_volume__( ecl_region , volum_limit , false , false );
+}
+
+/*****************************************************************/
+
+static void ecl_region_select_from_dz__( ecl_region_type * region , double dz_limit , bool select_thin , bool select) {
+  int global_index;
+  for (global_index = 0; global_index < region->grid_vol; global_index++) {
+    double cell_dz = ecl_grid_get_cell_thickness1( region->parent_grid , global_index );
+    if (select_thin) {
+      // The select/deselect mechanism should be applied to thin cells.
+      if (cell_dz <= dz_limit)
+        region->active_mask[ global_index ] = select;
+    } else {
+      // The select/deselect mechanism should be applied to thick cells.
+      if (cell_dz >= dz_limit)
+        region->active_mask[ global_index ] = select;
+    }
+  }
+  ecl_region_invalidate_index_list( region );
+}
+
+
+void ecl_region_select_thin_cells( ecl_region_type * ecl_region , double dz_limit ) {
+  ecl_region_select_from_dz__( ecl_region , dz_limit , true , true );
+}
+
+void ecl_region_deselect_thin_cells( ecl_region_type * ecl_region , double dz_limit ) {
+  ecl_region_select_from_dz__( ecl_region , dz_limit , true , false );
+}
+
+void ecl_region_select_thick_cells( ecl_region_type * ecl_region , double dz_limit ) {
+  ecl_region_select_from_dz__( ecl_region , dz_limit , false , true );
+}
+
+void ecl_region_deselect_thick_cells( ecl_region_type * ecl_region , double dz_limit ) {
+  ecl_region_select_from_dz__( ecl_region , dz_limit , false , false );
 }
 
 /*****************************************************************/

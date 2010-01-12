@@ -3,6 +3,17 @@
 #include <util.h>
 #include <mzran.h>
 
+/*****************************************************************/
+/*
+  This file implements the mz random number generator. Historically
+  the rng has been translated from Fortran code found on the internet,
+  used in the context of SSE QMC simulations by Anders Sandvik.
+
+  The state of the random number generator is based on 4 unsigned
+  integers.
+*/
+
+
 
 struct mzran_struct {
   unsigned int x;
@@ -12,8 +23,8 @@ struct mzran_struct {
   unsigned int n;
 };
 
-#define MZRAN_MAX 4294967296;
 
+#define MZRAN_MAX 4294967296;
 #define DEFAULT_S0  99
 #define DEFAULT_S1 199
 #define DEFAULT_S2  13
@@ -22,6 +33,12 @@ struct mzran_struct {
 
 /*****************************************************************/
 
+
+/**
+   This function will return and unsigned int. This is the fundamental
+   low level function which drives the random number generator state
+   forward. The returned value will be in the interval [0,MZRAN_MAX).
+*/
 
 unsigned int mzran_get_int(mzran_type * rng) {
   unsigned int s;
@@ -42,14 +59,19 @@ unsigned int mzran_get_int(mzran_type * rng) {
 }
 
 
-
+/**
+   Returns a double in the interval [0,1).
+*/
 double mzran_get_double(mzran_type * rng) {
   return 1.0 * mzran_get_int( rng ) / MZRAN_MAX;
 }
 
 
 
-
+/**
+  This function will set the state of the rng, based on four input
+  seeds.
+*/ 
 void mzran_set_state4(mzran_type * rng , 
                        unsigned int s0 , unsigned int s1,
                        unsigned int s2 , unsigned int s3) {
@@ -63,6 +85,13 @@ void mzran_set_state4(mzran_type * rng ,
 }
 
 
+
+/**
+   This function will set the state of the rng, based on a buffer of
+   length buffer size. To set the state of the rng completely 16 bytes
+   are needed, if the buffer is smaller than 16 bytes, the content is
+   recycled.
+*/
 
 void mzran_set_state1(mzran_type * rng , int buffer_size , char * seed_buffer) {
   const int seed_size = 4 * sizeof( unsigned int );
@@ -78,6 +107,13 @@ void mzran_set_state1(mzran_type * rng , int buffer_size , char * seed_buffer) {
 }
 
 
+/**
+   Will initialize the rng with 'random content', using the method
+   specified by the @init_mode variable. 
+
+   If you have a state which you want to reproduce deterministically you
+   should use one of the mzran_set_state() functions.
+*/
 
 void mzran_init( mzran_type * rng , mzran_init_mode init_mode ) {
   unsigned int seed[4];
@@ -108,7 +144,11 @@ void mzran_init( mzran_type * rng , mzran_init_mode init_mode ) {
 
 
 
-
+/**
+   Creates (and initializes) a new rng instance. To recover a known
+   state you must subsequently call one of the mzran_set_state()
+   functions.
+*/
 mzran_type * mzran_alloc( mzran_init_mode init_mode ) {
   mzran_type * rng = util_malloc( sizeof * rng , __func__);
   mzran_init( rng , init_mode );

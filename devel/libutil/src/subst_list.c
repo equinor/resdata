@@ -574,6 +574,9 @@ void subst_list_update_buffer( const subst_list_type * subst_list , buffer_type 
    which case this will amount to an inplace update. In that case a
    backup file is written, and held, during the execution of the
    function.
+
+   Observe that @target_file can contain a path component, that
+   component will be created if it does not exist.
 */
 
 
@@ -605,7 +608,7 @@ void subst_list_filter_file(const subst_list_type * subst_list , const char * sr
 
   /* Writing updated file */
   {
-    FILE * stream = util_fopen(target_file , "w");
+    FILE * stream = util_mkdir_fopen(target_file , "w");
     buffer_stream_fwrite_n( buffer , 0 , -1 , stream );  /* -1: Do not write the trailing \0. */
     fclose(stream);
   }
