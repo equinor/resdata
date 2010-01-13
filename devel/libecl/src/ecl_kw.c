@@ -672,8 +672,12 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
             case(ECL_FLOAT_TYPE): 
               {
                 int iread = fscanf(stream , read_fmt , (float *) &ecl_kw->data[offset]);
-                if (iread != 1) 
-                  util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header8 , fortio_filename_ref(fortio));
+                if (iread != 1) {
+                  util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__ , 
+                             offset / ecl_kw->sizeof_ctype , 
+                             ecl_kw->header8 , 
+                             fortio_filename_ref(fortio));
+                }
               }
               break;
             case(ECL_DOUBLE_TYPE):
@@ -907,9 +911,8 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
 /** 
   This function will search through a GRDECL file to look for the
   'kw'; input variables and return vales are similar to
-  ecl_kw_fseek_kw(). The filename argument is ONLY used for printing a
-  sensible error message when/if aborting.
-
+  ecl_kw_fseek_kw(). 
+  
   Observe that the GRDECL files are exteremly weakly structured, it is
   therefor veeeery easy to fool this function with a malformed GRDECL
   file. The current implementation just does string-search for 'kw'.
@@ -920,7 +923,7 @@ bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error 
     return true;       /* OK - we found the kw between current file pos and EOF. */
   else if (rewind) {
     long int init_pos = ftell(stream);
-
+    
     fseek(stream , 0L , SEEK_SET);
     if (util_fseek_string(stream , kw , false , true)) /* Try again from the beginning of the file. */
       return true;                              
@@ -931,7 +934,7 @@ bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error 
   /* OK: If we are here - that means that we failed to find the kw. */
   if (abort_on_error) 
     util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , util_alloc_filename_from_stream( stream ));
-  
+    
   return false;
 }
 
@@ -1460,11 +1463,12 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
   char buffer[9];
   
   ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
-  ecl_kw->ecl_type = ecl_type;
-  ecl_kw->size     = size;
+  ecl_kw->ecl_type     = ecl_type;
+  ecl_kw->size         = size;
+  ecl_kw->sizeof_ctype = ecl_util_get_sizeof_ctype(ecl_kw->ecl_type);
   ecl_kw_alloc_data(ecl_kw);
-
-  fscanf(stream , "%s" , buffer);
+  
+  fscanf(stream , "%s" , buffer);      /* Reading the header name */
   ecl_kw_set_header_name(ecl_kw , buffer);
   {
     fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL ,true , true , stream);  /* The endian flip is not used. */
