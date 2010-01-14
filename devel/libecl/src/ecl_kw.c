@@ -1,9 +1,9 @@
+#define _GNU_SOURCE   // Defined to get access to pow10() function.
+#define __USE_GNU     // Defined to get access to pow10() function.
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#define _GNU_SOURCE   // Defined to get access to pow10() function.
-#define __USE_GNU     // Defined to get access to pow10() function.
 #include <math.h>
 #include <inttypes.h>
 #include <ecl_kw.h>
@@ -489,8 +489,8 @@ float ecl_kw_iget_as_float(const ecl_kw_type * ecl_kw , int i) {
 
 
 #define ECL_KW_IGET_TYPED(ctype , ECL_TYPE)                                		                    \
-ctype ecl_kw_iget_ ## ctype(const ecl_kw_type * ecl_kw, int i) { 						    \
-  ctype value;                                                  						    \
+ctype ecl_kw_iget_ ## ctype(const ecl_kw_type * ecl_kw, int i) { 					    \
+  ctype value;                                                  				            \
   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                  					            \
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        \
   ecl_kw_iget_static(ecl_kw , i , &value);                                                                  \
@@ -555,7 +555,7 @@ void ecl_kw_iset_bool( ecl_kw_type * ecl_kw , int i , bool bool_value) {
 ctype * ecl_kw_get_ ## ctype ## _ptr(const ecl_kw_type * ecl_kw) {       		                            \
   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)             					                            \
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));                \
-  return (ctype *) ecl_kw->data;                                                                                     \
+  return (ctype *) ecl_kw->data;                                                                                    \
 }                                                                                                           
 
 ECL_KW_GET_TYPED_PTR(double , ECL_DOUBLE_TYPE);
@@ -938,59 +938,11 @@ bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error 
   return false;
 }
 
-//  char *file_kw     = util_alloc_string_copy( kw );
-//  long int init_pos = ftell(stream);
-//  bool cont, kw_found;
-//  
-//  cont     = true;
-//  kw_found = false;
-//  while (cont) {
-//    int c;
-//    bool at_EOF   = false;
-//    do {
-//      c = getc( stream );
-//    } while (c != kw[0] && c != EOF);
-//    if (c == EOF) at_EOF = true;
-//
-//    if ( !at_EOF ) {
-//      /*
-//	Now we have found a character which is equal to the first character in kw - this might be it! 
-//      */
-//      if (fread(&file_kw[1] , 1 , strlen(kw) - 1 , stream) == (strlen(kw) - 1)) {
-//	/* OK - we have read in the remaining number of characters - let us compare! */
-//	if (strcmp(file_kw , kw) == 0) {
-//	  kw_found = true;
-//	  cont = false;
-//	} else
-//	  fseek(stream , -(strlen(kw) - 1) , SEEK_CUR);
-//      } else at_EOF = true;
-//    }
-//    
-//    if (!kw_found) {
-//      if (at_EOF) {
-//	if (rewind) {
-//	  fseek(stream , 0L , SEEK_SET); /* Go to beginning of file */
-//	  rewind = false;                /* No more rewinds ... */
-//	} else
-//	  cont = false;                  /* OK - give up with kw_found == false. */
-//      }
-//    }
-//  }
-//	  
-//  if (!kw_found) {
-//    if (abort_on_error) 
-//      util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , filename);
-//    
-//    fseek(stream , init_pos , SEEK_SET);     /* Repositioning to the initial position. */
-//  } else
-//    fseek(stream , -strlen(kw) , SEEK_CUR);  /* Reposition to the beginning of kw */
-//  
-//  free(file_kw);
-//  return kw_found;
-//}
 
 
-
+/**
+   This is where the storage buffer of the ecl_kw is allocated.
+*/
 void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
   if (ecl_kw->shared_data) 
     util_abort("%s: trying to allocate data for ecl_kw object which has been declared with shared storage - aborting \n",__func__);
@@ -1128,10 +1080,10 @@ static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * f
         1. To force the radix part to start with 0.
         2. To use 'D' as the exponent start for double values.
 
-     If you are more adapt with C fprintf() format strings than I am,
-     the __fprintf_scientific() function should be removed, and the
-     WRITE_FMT_DOUBLE and WRITE_FMT_FLOAT format specifiers updated
-     accordingly.
+     If you are more proficient with C fprintf() format strings than I
+     am, the __fprintf_scientific() function should be removed, and
+     the WRITE_FMT_DOUBLE and WRITE_FMT_FLOAT format specifiers
+     updated accordingly.
   */
   
   static void __fprintf_scientific(FILE * stream, const char * fmt , double x) {
@@ -1290,7 +1242,7 @@ void ecl_kw_cfwrite_header(const ecl_kw_type * ecl_kw , FILE *stream) {
   fwrite(&ecl_kw->ecl_type       , sizeof ecl_kw->ecl_type     , 1 , stream);
 
   util_fwrite_string(ecl_kw->header8    , stream);
-  util_fwrite_string( get_write_fmt( ecl_kw->ecl_type ) , stream );
+  util_fwrite_string( get_write_fmt( ecl_kw->ecl_type ) , stream );            
   util_fwrite_string( get_read_fmt( ecl_kw->ecl_type )  , stream );
 }
 
