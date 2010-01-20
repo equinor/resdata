@@ -9,6 +9,9 @@ from   global_config import LIBECL
 
 
 def needs_update( target_file , src_file):
+    if not os.path.exists( target_file ):
+       return True
+       
     src_stat    = os.stat( src_file )
     target_stat = os.stat( target_file )
 
