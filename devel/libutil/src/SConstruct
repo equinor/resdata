@@ -22,6 +22,9 @@ def needs_update( target_file , src_file):
     
 
 SDP_ROOT = ARGUMENTS.get('SDP_ROOT','/d/proj/bg/enkf')
+if not os.path.exists( SDP_ROOT ):
+   SDP_ROOT = None
+
 conf     = global_config.get_conf(SDP_ROOT , os.getcwd() , 2)
 env      = Environment()
 conf.update_env( env , [ LIBECL , LIBUTIL ] , link = False)

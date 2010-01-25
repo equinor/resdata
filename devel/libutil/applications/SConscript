@@ -7,6 +7,9 @@ from   global_config import LIBUTIL
 
 
 SDP_ROOT = ARGUMENTS.get('SDP_ROOT','/d/proj/bg/enkf')
+if not os.path.exists( SDP_ROOT ):
+   SDP_ROOT = None
+
 env  = Environment()
 conf = global_config.get_conf(SDP_ROOT , os.getcwd() , 2)
 conf.update_env( env , [ LIBUTIL ] , ext_liblist = ["pthread" , "m" , "z"] , link = True)
