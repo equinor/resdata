@@ -164,7 +164,7 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
    This will set the default value. This implies that everything
    following the current length of the vector will be set to the new
    default value, whereas values not explicitly set in the interior of
-   the vector will retain the olf default value.
+   the vector will retain the old default value.
 */
 
 
@@ -173,6 +173,30 @@ void <TYPE>_vector_set_default(<TYPE>_vector_type * vector, <TYPE> default_value
   for (int i=vector->size; i < vector->alloc_size; i++)
     vector->data[i] = default_value;
 }
+
+/**
+   This function will append the value @default_value to the vector,
+   and then subsequently set this value as the new default.
+*/
+
+void <TYPE>_vector_append_default(<TYPE>_vector_type * vector , <TYPE> default_value) { 
+  <TYPE>_vector_append( vector , default_value );
+  <TYPE>_vector_set_default( vector , default_value ); 
+}
+
+
+/**
+   This function will iset the value @default_value into the vector,
+   and then subsequently set this value as the new default. This
+   functionality is extensively used by the schedule parsing code.
+*/
+
+void <TYPE>_vector_iset_default(<TYPE>_vector_type * vector , int index , <TYPE> default_value) { 
+  <TYPE>_vector_iset( vector , index , default_value );
+  <TYPE>_vector_set_default( vector , default_value ); 
+}
+
+
 
 
 

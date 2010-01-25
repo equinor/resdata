@@ -39,6 +39,8 @@ void                 <TYPE>_vector_shrink(<TYPE>_vector_type * );
 <TYPE>               <TYPE>_vector_sum(const <TYPE>_vector_type * );
 <TYPE>               <TYPE>_vector_get_default(const <TYPE>_vector_type * );
 void                 <TYPE>_vector_set_default(<TYPE>_vector_type * vector, <TYPE> default_value);
+void                 <TYPE>_vector_append_default(<TYPE>_vector_type * vector , <TYPE> default_value);
+void                 <TYPE>_vector_iset_default(<TYPE>_vector_type * vector , int index , <TYPE> default_value);
 void                 <TYPE>_vector_sort(<TYPE>_vector_type * vector);
 void                 <TYPE>_vector_permute(<TYPE>_vector_type * vector , const int * perm);
 int *                <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * vector);

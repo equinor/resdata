@@ -2684,7 +2684,7 @@ void util_free_stringlist(char **list , int N) {
 
 /**
    This function will reallocate the string s1 to become the sum of s1
-   and s2.
+   and s2. If s1 == NULL it will just return a copy of s2.
 */
 
 char * util_strcat_realloc(char *s1 , const char * s2) {
