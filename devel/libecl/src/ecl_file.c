@@ -260,13 +260,15 @@ ecl_file_type * ecl_file_fread_alloc(const char * filename ) {
    This function will allocate a ecl_file_type instance going all the
    way to the NEXT 'SEQHDR' keyword. Observe that it is assumed that
    the fortio instance is already positioned at a SEQHDR keyword.
-
-   Will return NULL if the fortio pointer is already at the end of the
-   file.
+   
+   Will return NULL if the fortio pointer is already at the end of
+   the file.
 */
 
+
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
-  return ecl_file_fread_alloc_fortio(fortio , "SEQHDR");
+  ecl_file_type * summary_section = ecl_file_fread_alloc_fortio(fortio , "SEQHDR");
+  return summary_section;
 }
 
 

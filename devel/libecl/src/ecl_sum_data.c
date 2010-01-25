@@ -478,31 +478,53 @@ static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministe
 
 
 /**
+   Malformed/incopmplete files:
+   ----------------------------
+   Observe that ECLIPSE works in the following way:
+
+     1. At the start of a report step a summary data section
+        containing only the 'SEQHDR' keyword is written - this is
+        currently a an 'invalid' summary section.
+
+     2. ECLIPSE simulates as best it can.
+
+     3. When the time step is complete data is written to the summary
+        file.
+
+   Now - if ECLIPSE goes down in flames during step 2 a malformed
+   summary file will be left around, to handle this situation
+   reasonably gracefully we check that the ecl_file instance has at
+   least one "PARAMS" keyword.
+
    One ecl_file corresponds to one report_step (limited by SEQHDR). 
 */
 static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         , 
-				      int   report_step                , 
-				      const ecl_file_type   * ecl_file , 
-				      const ecl_smspec_type * smspec) {
+                                      int   report_step                , 
+                                      const ecl_file_type   * ecl_file , 
+                                      const ecl_smspec_type * smspec) {
+  
   
   int num_ministep  = ecl_file_get_num_named_kw( ecl_file , "PARAMS");
-  int ikw;
-  for (ikw = 0; ikw < num_ministep; ikw++) {
-    ecl_kw_type * ministep_kw = ecl_file_iget_named_kw( ecl_file , "MINISTEP" , ikw);
-    ecl_kw_type * param_kw    = ecl_file_iget_named_kw( ecl_file , "PARAMS"   , ikw);
+  if (num_ministep > 0) {
+    int ikw;
 
-    ecl_sum_ministep_type * ministep;
-    int ministep_nr = ecl_kw_iget_int( ministep_kw , 0 );
-    ministep = ecl_sum_ministep_alloc( ministep_nr,
-				       report_step , 
-				       param_kw , 
-				       smspec);
-
-    ecl_sum_data_append_ministep( data , ministep_nr , ministep );
-    
+    for (ikw = 0; ikw < num_ministep; ikw++) {
+      ecl_kw_type * ministep_kw = ecl_file_iget_named_kw( ecl_file , "MINISTEP" , ikw);
+      ecl_kw_type * param_kw    = ecl_file_iget_named_kw( ecl_file , "PARAMS"   , ikw);
+      
+      ecl_sum_ministep_type * ministep;
+      int ministep_nr = ecl_kw_iget_int( ministep_kw , 0 );
+      ministep = ecl_sum_ministep_alloc( ministep_nr,
+                                         report_step , 
+                                         param_kw , 
+                                         smspec);
+      
+      ecl_sum_data_append_ministep( data , ministep_nr , ministep );
+      
+    }
+    data->first_report_step = util_int_min( data->first_report_step , report_step );
+    data->last_report_step  = util_int_max( data->last_report_step  , report_step );
   }
-  data->first_report_step = util_int_min( data->first_report_step , report_step );
-  data->last_report_step  = util_int_max( data->last_report_step  , report_step );
 }
 
 
@@ -533,7 +555,7 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , co
         if (file_type != ECL_SUMMARY_FILE)
           util_abort("%s: file:%s has wrong type \n",__func__ , data_file);
         {
-          ecl_file_type * ecl_file = ecl_file_fread_alloc( data_file);
+          ecl_file_type * ecl_file = ecl_file_fread_alloc( data_file );
           if (ecl_file != NULL) {
             ecl_sum_data_add_ecl_file( data , report_step , ecl_file , smspec);
             ecl_file_free( ecl_file );
@@ -556,7 +578,7 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , co
       } while ( !complete );
       fortio_fclose(fortio);
     } else
-      util_abort("%s: invalid file type \n",__func__);
+      util_abort("%s: invalid file type:%s  \n",__func__ , ecl_util_file_type_name( file_type ));
 
 
     /* OK - now we have loaded all the actual data. Must build up the report -> ministep mapping. */
