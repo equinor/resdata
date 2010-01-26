@@ -5,7 +5,9 @@ sys.path += ["../../build"]
 import global_config
 from   global_config import LIBUTIL
 from   global_config import LIBECL
-
+from   global_config import add_static_library
+from   global_config import add_header
+from   global_config import get_targets
 
 
 def needs_update( target_file , src_file):
@@ -20,11 +22,6 @@ def needs_update( target_file , src_file):
     else:
         return False
     
-
-conf     = global_config.get_conf(os.getcwd() , 2)
-env      = Environment()
-conf.update_env( env , [ LIBECL , LIBUTIL ] , link = False)
-
 
 vector_list = ["int" , "float" , "double" , "bool" , "time_t" , "long"]
 
@@ -44,22 +41,40 @@ for type in vector_list:
     header_list.append( header_file )
     src_list.append( src_file )
 
-
-define_fmt = "\'%s=\"%s\"\'"
-LIB = env.StaticLibrary("util" , src_list , CPPDEFINES = [define_fmt % ("SVN_VERSION"        ,  conf.SVN_VERSION)])
-
-# Local install target
+#################################################################
+package      = "util"
 lib_path     = "../lib"
 include_path = "../include"
+bin_path     = "../bin"  
+define_fmt   = "\'%s=\"%s\"\'"
 
-env.InstallLibrary(lib_path    , LIB)
-env.InstallHeader(include_path , header_list)
-install = env.Alias('install',[lib_path , include_path])
+conf     = global_config.get_conf(os.getcwd() , package , 2)
+env      = Environment()
+conf.update_env( env , [ LIBECL , LIBUTIL ] , link = False)
 
 
-# SDP install target - includes the local install target.
-env.InstallLibrary(conf.SDP_LIB , LIB )
-env.InstallHeader("%s/%s" % (conf.SDP_INCLUDE , "libutil") , header_list)
-SDP_INSTALL = env.Alias('SDP_INSTALL' , [conf.SDP_LIB , conf.SDP_INCLUDE , lib_path , include_path])
 
-Default( install )
+
+##LIB = env.StaticLibrary("util" , src_list , CPPDEFINES = [define_fmt % ("SVN_VERSION"        ,  conf.SVN_VERSION)])
+##
+### Local install target
+##lib_path     = "../lib"
+##include_path = "../include"
+##
+##env.InstallLibrary(lib_path    , LIB)
+##env.InstallHeader(include_path , header_list)
+##install = env.Alias('install',[lib_path , include_path])
+##
+##
+### SDP install target - includes the local install target.
+##env.InstallLibrary(conf.SDP_LIB , LIB )
+##env.InstallHeader("%s/%s" % (conf.SDP_INCLUDE , "libutil") , header_list)
+##SDP_INSTALL = env.Alias('SDP_INSTALL' , [conf.SDP_LIB , conf.SDP_INCLUDE , lib_path , include_path])
+
+add_static_library( env , conf , lib_path , package , src_list , CPPDEFINES = [define_fmt % ("SVN_VERSION" ,  conf.SVN_VERSION)])
+add_header( env , conf , include_path , header_list )
+
+(local , SDP_INSTALL) = get_targets( env , conf )
+Default( local )
+
+
