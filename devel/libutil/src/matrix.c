@@ -644,7 +644,7 @@ static void * matrix_inplace_matmul_mt__(void * arg) {
 
 
 void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads){ 
-  thread_pool_type  * thread_pool = thread_pool_alloc( num_threads );
+  thread_pool_type  * thread_pool = thread_pool_alloc( num_threads , true );
   arg_pack_type    ** arglist     = util_malloc( num_threads * sizeof * arglist , __func__);
   int it;
   {

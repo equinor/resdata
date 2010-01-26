@@ -268,17 +268,22 @@ void thread_pool_join(thread_pool_type * pool) {
 
 
 /**
-   max_running is the maximum number of concurrent threads.
+   max_running is the maximum number of concurrent threads. If
+   @start_queue is true the dispatch thread will start immediately. If
+   the function is called with @start_queue == false you must first
+   call thread_pool_restart() BEFORE you can start adding jobs.
 */
 
-thread_pool_type * thread_pool_alloc(int max_running) {
+thread_pool_type * thread_pool_alloc(int max_running , bool start_queue) {
   thread_pool_type * pool = util_malloc(sizeof *pool , __func__);
   pool->job_slots       = util_malloc( max_running * sizeof * pool->job_slots      , __func__);
   pool->max_running     = max_running;
   pool->queue           = NULL;
+  pool->accepting_jobs  = false;
   pthread_rwlock_init( &pool->queue_lock , NULL);
   thread_pool_resize_queue( pool  , 32 );  
-  thread_pool_restart( pool );
+  if (start_queue) 
+    thread_pool_restart( pool );
   return pool;
 }
 

@@ -1450,7 +1450,7 @@ void util_copy_directory(const char * src_path , const char * __target_path , co
 
 
 /**
-   Currently only checks if the ntrye entry exists - this will return true
+   Currently only checks if the entry exists - this will return true
    if path points to directory.
 */
 bool util_file_exists(const char *filename) {
@@ -1737,12 +1737,18 @@ bool util_is_link(const char * path) {
   }
 }
 
+/**
+   Checks that is file as well.
+*/
 
 bool util_is_executable(const char * path) {
   if (util_file_exists(path)) {
     struct stat stat_buffer;
     stat(path , &stat_buffer);
-    return (stat_buffer.st_mode & S_IXUSR);
+    if (S_ISREG(stat_buffer.st_mode))
+      return (stat_buffer.st_mode & S_IXUSR);
+    else
+      return false; /* It is not a file. */
   } else {
     util_abort("%s: file:%s does not exist - aborting \n",__func__ , path);
     return false; /* Dummy to shut up compiler */

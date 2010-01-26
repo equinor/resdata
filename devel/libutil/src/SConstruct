@@ -54,7 +54,7 @@ include_path = "../include"
 
 env.InstallLibrary(lib_path    , LIB)
 env.InstallHeader(include_path , header_list)
-install = env.Alias('install',["../lib" , "../include"])
+install = env.Alias('install',[lib_path , include_path])
 
 
 # SDP install target - includes the local install target.
