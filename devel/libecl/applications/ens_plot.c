@@ -892,9 +892,9 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
       info_reply("Range set") ;
     } else if(strcmp(ens_name, "_newplotvector_") == 0){// ??????????
       scanf("%s" , key);
-      sprintf(message,"The key %s does not exist\n", key);
-      error_reply(message) ;
-      return;
+      plot_ensemble( ens , plot , key);
+      sprintf(message,"%s plotted",key) ;
+       info_reply(message) ;     
     } else if (strcmp(ens_name, "_stop_") == 0) {
       complete = true ;
     }  else  if (hash_has_key( ens_table , ens_name)){
