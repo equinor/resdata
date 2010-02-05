@@ -77,10 +77,12 @@ void stringlist_iset_owned_ref(stringlist_type * stringlist , int index , const 
 static stringlist_type * stringlist_alloc_empty( bool alloc_vector ) {
   stringlist_type * stringlist = util_malloc(sizeof * stringlist , __func__);
   UTIL_TYPE_ID_INIT( stringlist , STRINGLIST_TYPE_ID);
+
   if (alloc_vector)
     stringlist->strings = vector_alloc_new();
   else
     stringlist->strings = NULL;
+  
   return stringlist;
 }
 
@@ -421,6 +423,34 @@ char * stringlist_alloc_joined_string(const stringlist_type * s , const char * s
   return stringlist_alloc_joined_segment_string( s , 0 , stringlist_get_size( s ) , sep );
 }
 
+/**
+   This function will allocate a stringlist instance based on
+   splitting the input string. If the input string is NULL the
+   function will return a stringlist instance with zero elements.
+
+   Observe that the splitting is based on __ANY__ character in @sep;
+   NOT the full exact string @sep.
+
+   The newly allocated stringlist will take ownership of the strings
+   in the list. The actual functionality is in the util_split_string()
+   function.
+*/
+   
+
+
+stringlist_type * stringlist_alloc_from_split( const char * input_string , const char * sep ) {
+  stringlist_type * slist = stringlist_alloc_new();
+  if (input_string != NULL) {
+    char ** items;
+    int     num_items , i;
+    util_split_string( input_string , sep , &num_items , &items);
+    for ( i =0; i < num_items; i++)
+      stringlist_append_copy( slist , items[i] );
+    util_free_stringlist( items , num_items );
+  }
+  return slist;
+}
+
 /*****************************************************************/
 
 void stringlist_buffer_fwrite( const stringlist_type * s , buffer_type * buffer ) {
@@ -480,13 +510,23 @@ static int strcmp__(const void * __s1, const void * __s2) {
 
 
 /**
-   Will sort the stringlist inplace; the elements are compared with
-   the ordinary strcmp() function.
+   Will sort the stringlist inplace. The prototype of the comparison
+   function is
+
+     int (cmp) (const void * , const void *);
+
+   i.e. ths strings are implemented as (void *). If string_cmp == NULL
+   the sort function will use the ordinary strcmp() function for
+   comparison.
 */
 
-void stringlist_sort(stringlist_type * s)
+
+void stringlist_sort(stringlist_type * s , string_cmp_ftype * string_cmp)
 {
-  vector_sort( s->strings , strcmp__);
+  if (string_cmp == NULL)
+    vector_sort( s->strings , strcmp__ );
+  else
+    vector_sort( s->strings , string_cmp );
 }
 
 
