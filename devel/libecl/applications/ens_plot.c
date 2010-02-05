@@ -16,6 +16,9 @@
 #include <int_vector.h>
 #include <arg_pack.h>
 
+bool use_viewer = false ; // Global variable to enable backwords compatible behaviour of batch mode
+                          // option -b sets use_viewer = true (will start external viewer to show plots)
+                          // option -s sets use_viewer = false (slave mode, returns name of plot file on STDOUT)
 
 #define KEY_JOIN_STRING ":"    /* The string used when joining strings to form a gen_key lookup key. */
 
@@ -52,7 +55,29 @@ typedef struct plot_info_struct {
   char * viewer;        /* The executable used when displaying the newly created image. */
 } plot_info_type;
 
+/*
+ * Dialog functions for batch processing (two way communication):
+ */
 
+void error_reply(char* message) 
+{
+  printf("ERROR: %s\n",message) ;
+  fflush(stdout) ;
+} ;
+
+
+void warning_reply(char* message) 
+{
+  printf("WARNING: %s\n",message) ;
+  fflush(stdout) ;
+} ;
+
+
+void info_reply(char* message) 
+{
+  printf("INFO: %s\n",message) ;
+  fflush(stdout) ;
+} ;
 
 
 
@@ -161,6 +186,36 @@ void ens_load_rft(ens_type * ens, const char * data_file) {
 }
 
 
+void ens_load_batch(ens_type* ens, ens_type* ens_rft, const char * data_file) { 
+  char* base ;
+  char* path ;
+  char message[128] ;
+
+  if (util_file_exists(data_file)) {
+    util_alloc_file_components( data_file , &path , &base , NULL);
+    vector_append_owned_ref( ens->data , ecl_sum_fread_alloc_case( data_file , KEY_JOIN_STRING ) , ecl_sum_free__);
+
+    char * rft_file = ecl_util_alloc_exfilename( path, base, ECL_RFT_FILE, false, -1 ); 
+
+    if(rft_file != NULL){
+      vector_append_owned_ref( ens_rft->data , ecl_rft_file_alloc( rft_file) , ecl_rft_file_free__);
+      sprintf(message,"Case %s loaded",base) ;
+      info_reply(message) ;
+    } else {
+      sprintf(message,"No RFT for case %s loaded",base) ;
+      warning_reply(message) ;
+    } ;
+
+    free( base );
+    util_safe_free( path );
+  } else {
+    sprintf(message,"Case %s not found",base) ;
+    error_reply(message) ;
+  } ;
+
+} ;
+
+
 void ens_load_many(ens_type * ens, path_fmt_type * data_file_fmt , int iens1, int iens2) {
   int iens;
   for (iens = iens1; iens <= iens2; iens++) {
@@ -179,11 +234,9 @@ void ens_set_plot_attributes(ens_type * ens) {
 }
 
 
-void ens_set_plot_attributes_batch(void * arg1,void * arg2 ) {
-  hash_type * ens_table = (hash_type *) arg1;
-  hash_type * ens_rft_table = (hash_type *) arg2;
-  //printf("Set plot attributes (color)\n");
+void ens_set_plot_attributes_batch(hash_type * ens_table, hash_type * ens_rft_table) {
 
+  char message[128] ;
   char ens_name[32];
   scanf("%s" , ens_name);
   int new_color;
@@ -196,14 +249,24 @@ void ens_set_plot_attributes_batch(void * arg1,void * arg2 ) {
     if((new_color > -1) && (new_color < 16)){
       ens_set_color( set_ens , new_color);	      
     }	 
-  }
+  } else {
+    sprintf(message,"Unknown ensemble %s",ens_name) ;
+    error_reply(message) ;
+    return ;
+  } ;
   
   if (hash_has_key( ens_rft_table , ens_name)){
     ens_type  * set_ens    = hash_get( ens_rft_table , ens_name);
     if((new_color > -1) && (new_color < 16)){
       ens_set_color( set_ens , new_color);	      
     }	 
-  }
+  } else {
+    sprintf(message,"Unknown ensemble %s",ens_name) ;
+    error_reply(message) ;
+    return ;
+  } ;
+
+  info_reply("New attributes set") ;
 }
 
 
@@ -617,16 +680,17 @@ void plot_all(void * arg) {
   }
 }
 
-void _plot_batch_rft(void * arg, char * inkey){
+
+void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
+
   // subroutine used in batch mode to plot a summary vector for a list of ensembles given at stdin
-  arg_pack_type * arg_pack   = arg_pack_safe_cast( arg );
-  //hash_type  * ens_table     = arg_pack_iget_ptr( arg_pack , 0);
-  hash_type  * ens_rft_table = arg_pack_iget_ptr( arg_pack , 1);
-  plot_info_type * plot_info = arg_pack_iget_ptr( arg_pack , 2);
+
+  char message[128] ;
+
+  hash_type*      ens_rft_table = arg_pack_iget_ptr( arg_pack , 1);
+  plot_info_type* plot_info     = arg_pack_iget_ptr( arg_pack , 2);
   
-  printf("Plot rft ensemble(s)\n");
-  
-  plot_type     * plot;
+  plot_type* plot = NULL ;
   
   char * key = inkey;
   
@@ -636,7 +700,8 @@ void _plot_batch_rft(void * arg, char * inkey){
   util_split_string(key , ":" , &num_tokens , &token_list);  
   
   if(num_tokens != 3){
-    printf("The key %s does not exist", key);
+    sprintf(message,"The key %s does not exist", key);
+    error_reply(message) ;
     return;
   }
  
@@ -664,10 +729,8 @@ void _plot_batch_rft(void * arg, char * inkey){
   
   
   char ens_name[32];    
-  bool complete = false;
   int iens;
   int ens_size;
-  bool has_key; 
   
   ens_type * ens;
   {
@@ -678,88 +741,102 @@ void _plot_batch_rft(void * arg, char * inkey){
   
   
   // Check if there is anything to plot
-  int size = vector_get_size(ens->data);
-  if(size == 0){
-    printf("Sorry no RFT files to plot\n");
+   if (!ens || !(ens->data) || vector_get_size(ens->data) <= 0) { // Denne satt langt inne !!!!
+    error_reply("No ensembles or RFT files to plot\n");
     return;
   }
 
-  
   const ecl_rft_file_type * ecl_rft = vector_iget_const( ens->data , 0 );
   
+  sprintf(message,"Will plot %s",key) ;
+  info_reply(message) ;
+  
+  bool plotempty = true ;
+
+  bool complete = false;
   while (!complete) {
     scanf("%s" , ens_name);
+
     if(strcmp(ens_name, "_meas_points_") == 0){
       plot_meas_rft_file(plot, well, ens_rft_table);
-      continue;
-    }  
-    if(strcmp(ens_name, "_set_range_") == 0){
+      plotempty = false ;
+      info_reply("Measured values plotted") ;
+    } else if(strcmp(ens_name, "_set_range_") == 0){
       set_range_rft(plot);
-      continue;
-    }  
-    if(strcmp(ens_name, "_newplotvector_") == 0){
+      info_reply("Range set") ;
+    } else if(strcmp(ens_name, "_newplotvector_") == 0){
       char tmpkey[32];      
       scanf("%31s" , tmpkey);
-      printf("The key %s does not exist\n", tmpkey);
+      sprintf(message,"The key %s does not exist\n", tmpkey);
+      error_reply(message) ;
       return;
-    }  
-    else{ 
-      if (hash_has_key(ens_rft_table , ens_name)){
-	ens = hash_get(ens_rft_table , ens_name);
-	
-	ens_size = vector_get_size( ens->data );
-	has_key = 1;
-	// Check if the rft file has the requested well and date
-	for (iens = 0; iens < ens_size; iens++) {
-	  ecl_rft = vector_iget_const( ens->data , iens );
-	  if(!ecl_rft_file_has_well(ecl_rft , well)){
-	    has_key =0;
-	    printf("The well %s does not exits\n", well);
-	    return;
-	  }
-	  else{
-	    // Check if the rft file has the requested servey time
-	    const ecl_rft_node_type * ecl_rft_node = ecl_rft_file_get_well_time_rft(ecl_rft, well, survey_time);
-	    if(ecl_rft_node == NULL){
-	      printf("The servey %s in %s does not exits \n", well, date);
-	      has_key =0;
-	      return;
-	    }
-	  }
-	}
-	
-	if(has_key){
-	  plot_rft_ensemble( ens , plot , well, survey_time);
-	}	
+    } else if (strcmp(ens_name, "_stop_") == 0) {
+      complete = true ;
+    } else if (hash_has_key(ens_rft_table , ens_name)){
+      ens = hash_get(ens_rft_table , ens_name);
+      
+      ens_size = vector_get_size( ens->data );
+      // Check if the rft file has the requested well and date
+      for (iens = 0; iens < ens_size; iens++) {
+        ecl_rft = vector_iget_const( ens->data , iens );
+        if(!ecl_rft_file_has_well(ecl_rft , well)){
+          sprintf(message,"The well %s does not exist\n", well);
+          error_reply(message) ;
+          return;
+        } else {
+          // Check if the rft file has the requested survey time
+          const ecl_rft_node_type * ecl_rft_node = ecl_rft_file_get_well_time_rft(ecl_rft, well, survey_time);
+          if(ecl_rft_node == NULL){
+            sprintf(message,"The survey %s in %s does not exist", well, date);
+            error_reply(message) ;
+            return;
+          }
+        }
       }
-      else {
-	//fprintf(stderr,"Do not have ensemble: \'%s\' \n", ens_name);
-	complete = true;
-      }
+	
+      plot_rft_ensemble( ens , plot , well, survey_time);
+      plotempty = false ;
+      sprintf(message,"%s plotted",ens_name) ;
+      info_reply(message) ;
+      
+    } else {
+      sprintf(message,"unknown ensemble %s",ens_name) ;
+      error_reply(message) ;
+      return ;
     }
-  }
-  //  plot_set_default_timefmt(plot , start_time , end_time);
-  plot_finalize(plot , plot_info , plot_file);
+  
+  } // End while
+
+  if (plot && !plotempty) {
+    plot_data(plot);
+    plot_free(plot);
+    if (use_viewer) {
+      util_fork_exec(plot_info->viewer , 1 , (const char *[1]) { plot_file } , false , NULL , NULL , NULL , NULL , NULL);
+    } ;
+    sprintf(message,"Plot file %s",plot_file) ;
+    info_reply(message) ;
+  } else {
+    error_reply("No data plotted") ;
+  } ;
+
   free( plot_file );
 }
 
  
 
-void _plot_batch_summary(void * arg, char * inkey){
-  // subroutine used in batch mode to plot a summary vector for a list of ensembles given at stdin
-  arg_pack_type * arg_pack   = arg_pack_safe_cast( arg );
-  hash_type  * ens_table     = arg_pack_iget_ptr( arg_pack , 0);
-  //hash_type  * ens_rft_table = arg_pack_iget_ptr( arg_pack , 1);
-  plot_info_type * plot_info = arg_pack_iget_ptr( arg_pack , 2);
-  
-  printf("Plot summary ensemble(s)\n");
-  
+void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
 
+  // subroutine used in batch mode to plot a summary vector for a list of ensembles given at stdin
+
+  char message[128] ;
+
+  hash_type*      ens_table = arg_pack_iget_ptr( arg_pack , 0);
+  plot_info_type* plot_info = arg_pack_iget_ptr( arg_pack , 2);
   
-  plot_type     * plot;
+  plot_type* plot = NULL ;
   
-  char * key = inkey;
-  char * plot_file;
+  char* key = inkey;
+  char* plot_file ;
   
   plot_file = util_alloc_sprintf("%s/%s.%s" , plot_info->plot_path , key , plot_info->plot_device);
   
@@ -781,6 +858,10 @@ void _plot_batch_summary(void * arg, char * inkey){
     hash_iter_free( ens_iter );
   }
   
+  if (!ens || !(ens->data) || vector_get_size(ens->data) <= 0) { // Denne satt langt inne !!!!
+    error_reply("No ensembles found") ;
+    return ;
+  } ;
   const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , 0 );
   
   int first_ministep, last_ministep;
@@ -789,53 +870,73 @@ void _plot_batch_summary(void * arg, char * inkey){
   time_t end_time         = ecl_sum_get_sim_time(ecl_sum , last_ministep ) ; 
   //  time_t start_time       = ecl_sum_get_start_time(ecl_sum);
 
+  sprintf(message,"Will plot %s",key) ;
+  info_reply(message) ;
+
   char ens_name[32];    
   bool complete = false;
+  bool plotempty = true ;
+
   int iens;
   int ens_size;
-  bool has_key;
   
   while (!complete) {
     scanf("%s" , ens_name);
+
     if(strcmp(ens_name, "_meas_points_") == 0){
       plot_meas_file(plot, start_time);
-      continue;
-    }  
-    if(strcmp(ens_name, "_set_range_") == 0){
+      plotempty = false ;
+      info_reply("Measured values plotted") ;
+    } else if(strcmp(ens_name, "_set_range_") == 0){
       set_range(plot, start_time);
-      continue;
-    }  
-    if(strcmp(ens_name, "_newplotvector_") == 0){
+      info_reply("Range set") ;
+    } else if(strcmp(ens_name, "_newplotvector_") == 0){// ??????????
       scanf("%s" , key);
-    }  
-    else{ 
-      if (hash_has_key( ens_table , ens_name)){
-	ens = hash_get(ens_table , ens_name);
-	
-	ens_size = vector_get_size( ens->data );
-	has_key = 1;
-	// Check if the summary file has the requested key
-	for (iens = 0; iens < ens_size; iens++) {
-	  ecl_sum = vector_iget_const( ens->data , iens );
-	  if(!ecl_sum_has_general_var(ecl_sum , key)){
-	    has_key =0;
-	    printf("The key %s does not exits\n", key);
-	    return;
-	  }
-	}
-	
-	if(has_key){
-	  plot_ensemble( ens , plot , key);
-	}
-      }
-      else {
-	//fprintf(stderr,"Do not have ensemble: \'%s\' \n", ens_name);
-	complete = true;
-      }
+      sprintf(message,"The key %s does not exist\n", key);
+      error_reply(message) ;
+      return;
+    } else if (strcmp(ens_name, "_stop_") == 0) {
+      complete = true ;
+    }  else  if (hash_has_key( ens_table , ens_name)){
+      ens = hash_get(ens_table , ens_name);
+      
+      ens_size = vector_get_size( ens->data );
+      // Check if the summary file has the requested key
+      for (iens = 0; iens < ens_size; iens++) {
+        ecl_sum = vector_iget_const( ens->data , iens );
+        if(!ecl_sum_has_general_var(ecl_sum , key)){
+          sprintf(message,"The key %s does not exits in case %i", key,iens); // How to get name
+          error_reply(message) ;
+          return;
+        }
+
+      } ;
+      plotempty = false ;
+      plot_ensemble( ens , plot , key);
+      sprintf(message,"%s plotted",ens_name) ;
+      info_reply(message) ;
+
+    } else {
+      sprintf(message,"unknown ensemble %s",ens_name) ;
+      error_reply(message) ;
+      return ;
     }
-  }
-  plot_set_default_timefmt(plot , start_time , end_time);
-  plot_finalize(plot , plot_info , plot_file);
+  
+  } // End while
+  
+  if (plot && !plotempty) {
+    plot_set_default_timefmt(plot , start_time , end_time);
+    plot_data(plot);
+    plot_free(plot);
+    if (use_viewer) {
+      util_fork_exec(plot_info->viewer , 1 , (const char *[1]) { plot_file } , false , NULL , NULL , NULL , NULL , NULL);
+    } ;
+    sprintf(message,"Plot file %s",plot_file) ;
+    info_reply(message) ;
+  } else {
+    error_reply("No data plotted") ;
+  } ;
+
   free( plot_file );
 }
 
@@ -855,7 +956,7 @@ ens_type * select_ensemble(hash_type * ens_table, const char * prompt) {
   }
 }
 
-void plot_batch(void * arg) {
+void plot_batch(arg_pack_type* arg) {
   char *  key = util_blocking_alloc_stdin_line(10);
   int     num_tokens;
   char ** token_list;
@@ -937,48 +1038,41 @@ void create_ensemble(void * arg) {
   }
 }
 
-ens_type * create_named_ensemble(void * arg,   char * ens_name ) {
-  hash_type * ens_table = (hash_type *) arg;
-  
-  if (!hash_has_key( ens_table , ens_name)) {
-    ens_type * ens = ens_alloc();
-    ens_set_line_width(ens, 1.5);
-    printf("Creating named ensemble:%s\n", ens_name);
-    hash_insert_hash_owned_ref( ens_table , ens_name , ens , ens_free__);
-    return ens;
-  }
-  return NULL;
-}
 
-ens_type * create_named_rft_ensemble(void * arg,   char * ens_name ) {
-  hash_type * ens_table = (hash_type *) arg;
-  
-  if (!hash_has_key( ens_table , ens_name)) {
-    ens_type * ens = ens_alloc();
-    ens_set_line_width(ens, 1.5);
-    
-    ens_set_style(ens, POINTS);    
-    // ens_set_style(ens, LINE);    
-    ens_set_symbol_type(ens , PLOT_SYMBOL_FILLED_CIRCLE); 
-    ens_set_symbol_size(ens , 1.0);
-    
-    printf("Creating named rft ensemble:%s\n", ens_name);
-    hash_insert_hash_owned_ref( ens_table , ens_name , ens , ens_free__);
-    
-    return ens;
-  }
-  return NULL;
-}
+void create_named_ensembles(ens_type** ens, ens_type** ens_rft, hash_type* ens_table, hash_type* ens_rft_table, char* ens_name) {
+  char message[128] ;
+  if (!hash_has_key( ens_table , ens_name) && !hash_has_key( ens_rft_table , ens_name)) {
+    *ens = ens_alloc();
+    ens_set_line_width(*ens, 1.5);
+    hash_insert_hash_owned_ref( ens_table , ens_name , *ens , ens_free__);
+
+    *ens_rft = ens_alloc();
+    ens_set_line_width(*ens_rft, 1.5);    
+    ens_set_style(*ens_rft, POINTS);    
+    ens_set_symbol_type(*ens_rft , PLOT_SYMBOL_FILLED_CIRCLE); 
+    hash_insert_hash_owned_ref( ens_rft_table , ens_name , *ens_rft , ens_free__);
+
+    sprintf(message,"Ensemble %s created", ens_name);
+    info_reply(message) ;
+  } else {
+    sprintf(message,"Ensemble %s already exist",ens_name) ;
+    error_reply(message) ;
+  } ;
+  return ;
+} ;
 
 
-void create_ensemble_batch(void * arg1, void * arg2) {
-  hash_type * ens_table = (hash_type *) arg1;
-  hash_type * ens_rft_table = (hash_type *) arg2;
+void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
+
+  char message[128] ;
   char * line;  
   // scan stdin for ensemble name
   char * ens_name  = util_alloc_stdin_line();
-  ens_type  * ens  = create_named_ensemble(ens_table, ens_name);
-  ens_type  * ens_rft  = create_named_rft_ensemble(ens_rft_table, ens_name);
+
+  ens_type* ens     = NULL ;
+  ens_type* ens_rft = NULL ;
+  create_named_ensembles(&ens, &ens_rft, ens_table, ens_rft_table, ens_name);
+
   // scan stdin for valid simulation directory, or a valid eclipse data filename
   
   char * sim_name;
@@ -990,31 +1084,33 @@ void create_ensemble_batch(void * arg1, void * arg2) {
     line = util_alloc_stdin_line();
     
     if(strcmp(line, "_stop_") == 0){
+      sprintf(message,"Ensemble %s created",ens_name) ;
+      info_reply(message) ;
       return;
     }
-    
+
     // Check if this is a directory
     if(util_is_directory(line)){
       base = ecl_util_alloc_base_guess(line);
       
       sim_name = ecl_util_alloc_filename(line, base, file, 1, 0);
-      ens_load_summary(ens , sim_name);
-      ens_load_rft(ens_rft , sim_name);
+      ens_load_batch(ens,ens_rft,sim_name) ;
       free(sim_name);
-    }
-    // Check if this is a file
-    else{
+    } else {     // Check if this is a file
       if(util_is_file(line)){
-	ens_load_rft(ens_rft , line);
-	ens_load_summary(ens , line);
+        ens_load_batch(ens,ens_rft,line) ;
+      } else {
+        sprintf(message,"%s is not a valid eclipse summary file or directory", line);
+        error_reply(message) ;
+        free(line) ;
+        return ;
       }
-      else{
-	printf("Warning: %s is not a valid eclipse summary file or directory\n", line);
-      }
-    }
+    } ;
     free(line);
-  }
-  
+  } ;
+
+  sprintf(message,"Ensemble %s created",ens_name) ;
+  info_reply(message) ;
 }
 
 
@@ -1077,7 +1173,10 @@ int main(int argc , char ** argv) {
   //setvbuf(stdout, NULL, _IOFBF, 0);
   
   if(argc > 1){
-    if(strcmp(argv[1], "-b") == 0){
+    if(strcmp(argv[1], "-b") == 0 || strcmp(argv[1], "-s") == 0) {
+      if (strcmp(argv[1], "-b") == 0) {
+        use_viewer = true ;
+      } ;
       char * path = util_blocking_alloc_stdin_line(10);
       
       hash_type * ens_table = hash_alloc();
@@ -1094,24 +1193,37 @@ int main(int argc , char ** argv) {
 	line = util_blocking_alloc_stdin_line(10);
 	util_strupr(line);
 	
-	if(strcmp(line, "Q") == 0){
+	if(strcmp(line, "Q") == 0 || strcmp(line, "STOP") == 0 ){
+
 	  plot_info_free( info );
 	  hash_free( ens_table );
 	  hash_free( ens_rft_table );
-	  exit(1);
-	}
-	
-	if(strcmp(line, "C") == 0){
+	  return 0 ;
+
+	} else if(strcmp(line, "C") == 0){
+
 	  create_ensemble_batch(ens_table, ens_rft_table);
-	}
-	
-	if(strcmp(line, "P") == 0){
+
+	} else if (strcmp(line, "P") == 0){
+
 	  plot_batch(arg_pack);
-	}
-	
-	if(strcmp(line, "A") == 0){
+
+	} else if (strcmp(line, "A") == 0){
+
 	  ens_set_plot_attributes_batch(ens_table, ens_rft_table);
-	}
+
+	} else {
+
+          char message[128] ;
+          sprintf(message,"Unknown command %s",line) ;
+          error_reply(message) ;
+	  plot_info_free( info );
+	  hash_free( ens_table );
+	  hash_free( ens_rft_table );
+	  return 1 ;
+
+        } ;
+
 	free(line);
       }
     }

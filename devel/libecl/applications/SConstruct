@@ -17,7 +17,7 @@ bin_path     = "../bin"
 
 conf = global_config.get_conf(os.getcwd() , package , 2)
 env  = Environment()
-conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBUTIL ] , ["lapack" , "g2c" , "plplotd" , "m" , "z" , "pthread"] , link = True)
+conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBUTIL ] , ["lapack" , "plplotd" , "m" , "z" , "pthread"] , link = True)
 
 
 add_program(env , conf ,  bin_path , "block_owc.x"       , "block_owc.c"       )
