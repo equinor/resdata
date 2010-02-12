@@ -27,18 +27,25 @@
 #define NUMS_INVALID          -991199
 
 
+/**
+   This struct is contains meta-information about one element in the
+   smspec file; the content is based on the smspec vectors WGNAMES,
+   KEYWORDS, UNIT and NUMS. The index field of this struct points to
+   where the actual data can be found in the PARAMS vector of the
+   *.Snnnn / *.UNSMRY files; probably the most important field.
+*/
+
+
 typedef struct {
-  ecl_smspec_var_type    var_type;
-  char                 * wgname;
-  char                 * keyword;
-  char                 * unit;
-  int                    num;
-  bool                   rate_variable;
-  bool                   total_variable;
-  int                    index;       
+  ecl_smspec_var_type    var_type;           /* The variable type */
+  char                 * wgname;             /* The value of the WGNAMES vector for this element. */
+  char                 * keyword;            /* The value of the KEYWORDS vector for this elements. */
+  char                 * unit;               /* The value of the UNITS vector for this elements. */
+  int                    num;                /* The value of the NUMS vector for this elements - NB this will have the value NUMS_INVALID if the smspec file does not have a NUMS vector. */
+  bool                   rate_variable;      /* Is this a rate variable (i.e. WOPR) or a state variable (i.e. BPR). Relevant when doing time interpolation. */
+  bool                   total_variable;     /* Is this a total variable like WOPT? */
+  int                    index;              /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
 } smspec_index_type;
-
-
 
 
 
@@ -175,7 +182,7 @@ static void smspec_index_set_num( smspec_index_type * index , int num) {
    This function initializes a valid smspec_index instance based on
    the supplied var_type, and the input. Observe that when a new
    variable type is supported, the big switch() statement must be
-   updated in the ecl_smspec_install_gen_key() and
+   updated in the functions ecl_smspec_install_gen_key() and
    ecl_smspec_fread_header() functions in addition. UGGGLY
 */
 
@@ -293,6 +300,9 @@ static void smspec_index_free( smspec_index_type * index ) {
 }
 
 
+static inline int smspec_index_get_index( const smspec_index_type * index ) {
+  return index->index;
+}
 
 
 /*****************************************************************/
@@ -627,7 +637,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 		hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
 	      {
 		hash_type * var_hash = hash_get(cell_hash , cell_str);
-                hash_insert_int(var_hash , kw , index);
+                hash_insert_ref(var_hash , kw , smspec_index );
 	      }
 	    }
             break;
@@ -645,7 +655,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
                 hash_insert_hash_owned_ref(ecl_smspec->group_var_index , group, hash_alloc() , hash_free__);
               {
                 hash_type * var_hash = hash_get(ecl_smspec->group_var_index , group);
-                hash_insert_int(var_hash , kw , index);
+                hash_insert_ref(var_hash , kw , smspec_index );
               }
             }
             break;
@@ -659,12 +669,12 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
               hash_insert_hash_owned_ref(ecl_smspec->well_var_index , well , hash_alloc() , hash_free__);
             {
               hash_type * var_hash = hash_get(ecl_smspec->well_var_index , well);
-              hash_insert_int(var_hash , kw , index);
+              hash_insert_ref(var_hash , kw , smspec_index );
             }
             break;
           case(ECL_SMSPEC_MISC_VAR):
             /* Misc variable - i.e. date or CPU time ... */
-            hash_insert_int(ecl_smspec->misc_var_index , kw , index);
+            hash_insert_ref(ecl_smspec->misc_var_index , kw , smspec_index );
             break;
           case(ECL_SMSPEC_BLOCK_VAR):
             /* A block variable */
@@ -673,7 +683,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
             {
               hash_type * block_hash = hash_get(ecl_smspec->block_var_index , kw);
               char * block_nr        = util_alloc_sprintf("%d" , num);
-              hash_insert_int(block_hash , block_nr , index);
+              hash_insert_ref(block_hash , block_nr , smspec_index);
               free(block_nr);
             }
             break;
@@ -708,12 +718,12 @@ ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * k
   
   if (hash_has_key(ecl_smspec->misc_var_index , "TIME")) {
     if (hash_has_key( ecl_smspec->misc_var_index , "TIME"))
-      ecl_smspec->time_index = hash_get_int(ecl_smspec->misc_var_index , "TIME");
+      ecl_smspec->time_index = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "TIME") );
 
     if (hash_has_key(ecl_smspec->misc_var_index , "DAY")) {
-      ecl_smspec->day_index   = hash_get_int(ecl_smspec->misc_var_index , "DAY");
-      ecl_smspec->month_index = hash_get_int(ecl_smspec->misc_var_index , "MONTH");
-      ecl_smspec->year_index  = hash_get_int(ecl_smspec->misc_var_index , "YEAR");
+      ecl_smspec->day_index   = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "DAY") );
+      ecl_smspec->month_index = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "MONTH") );
+      ecl_smspec->year_index  = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "YEAR") );
     } 
   } return ecl_smspec;
 }
@@ -800,7 +810,7 @@ int ecl_smspec_get_well_var_index(const ecl_smspec_type * ecl_smspec , const cha
   if (hash_has_key(ecl_smspec->well_var_index , well)) {
     hash_type * var_hash = hash_get(ecl_smspec->well_var_index , well);
     if (hash_has_key(var_hash , var))
-      index = hash_get_int(var_hash , var);
+      index = smspec_index_get_index( hash_get(var_hash , var) );
   }
   return index;
 }
@@ -825,7 +835,7 @@ int ecl_smspec_get_group_var_index(const ecl_smspec_type * ecl_smspec , const ch
   if (hash_has_key(ecl_smspec->group_var_index , group)) {
     hash_type * var_hash = hash_get(ecl_smspec->group_var_index , group);
     if (hash_has_key(var_hash , var))
-      index = hash_get_int(var_hash , var);
+      index = smspec_index_get_index( hash_get(var_hash , var) );
   }
   return index;
 }
@@ -845,7 +855,7 @@ int ecl_smspec_get_field_var_index(const ecl_smspec_type * ecl_smspec , const ch
   int index = -1;
 
   if (hash_has_key(ecl_smspec->field_var_index , var))
-    index = hash_get_int(ecl_smspec->field_var_index , var);
+    index = smspec_index_get_index( hash_get(ecl_smspec->field_var_index , var) );
   
   return index;
 }
@@ -872,7 +882,7 @@ static int ecl_smspec_get_block_var_index_string(const ecl_smspec_type * ecl_sms
   if (hash_has_key(ecl_smspec->block_var_index , block_var)) {
     hash_type * block_hash = hash_get(ecl_smspec->block_var_index , block_var);
     if (hash_has_key(block_hash , block_str))
-      index = hash_get_int(block_hash , block_str);
+      index = smspec_index_get_index( hash_get(block_hash , block_str) );
   }
 
   return index;
@@ -925,7 +935,7 @@ int ecl_smspec_get_region_var_index(const ecl_smspec_type * ecl_smspec , int reg
 
   ecl_smspec_assert_region_nr(ecl_smspec , region_nr);
   if (hash_has_key(ecl_smspec->region_var_index , var))
-    index = region_nr + hash_get_int(ecl_smspec->region_var_index , var) - 1;
+    index = region_nr -1 + smspec_index_get_index(hash_get( ecl_smspec->region_var_index , var) );
   
   return index;
 }
@@ -944,7 +954,7 @@ int ecl_smspec_get_misc_var_index(const ecl_smspec_type * ecl_smspec , const cha
   int index = -1;
 
   if (hash_has_key(ecl_smspec->misc_var_index , var))
-    index = hash_get_int(ecl_smspec->misc_var_index , var);
+    index = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , var) );
   
   return index;
 }
@@ -957,25 +967,19 @@ bool ecl_smspec_has_misc_var(const ecl_smspec_type * ecl_smspec , const char *va
 /*****************************************************************/
 /* Well completion - not fully implemented ?? */
 
-static int ecl_smspec_get_well_completion_var_index_string(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, const char * cell_str) {
+
+int ecl_smspec_get_well_completion_var_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr) {
   int index = -1;
+  char * cell_str = util_alloc_sprintf("%d" , cell_nr);
   if (hash_has_key(ecl_smspec->well_completion_var_index , well)) {
     hash_type * cell_hash = hash_get(ecl_smspec->well_completion_var_index , well);
-
+    
     if (hash_has_key(cell_hash , cell_str)) {
       hash_type * var_hash = hash_get(cell_hash , cell_str);
       if (hash_has_key(var_hash , var))
-	index = hash_get_int(var_hash , var);
+	index = smspec_index_get_index( hash_get( var_hash , var) );
     }
   }
-  return index;
-}
-
-
-int ecl_smspec_get_well_completion_var_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr) {
-  int index;
-  char * cell_str = util_alloc_sprintf("%d" , cell_nr);
-  index = ecl_smspec_get_well_completion_var_index_string( ecl_smspec , well , var , cell_str);
   free(cell_str);
   return index;
 }
@@ -1002,7 +1006,7 @@ int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const 
   
   if (hash_has_key( ecl_smspec->gen_var_index , lookup_kw )) {
     const smspec_index_type * smspec_index = hash_get( ecl_smspec->gen_var_index , lookup_kw );
-    index = smspec_index->index;
+    index = smspec_index_get_index( smspec_index );
   }
   
   return index;
@@ -1020,8 +1024,12 @@ const char * ecl_smspec_get_general_var_unit( const ecl_smspec_type * ecl_smspec
   return smspec_index->unit;
 }
 
+
 /*****************************************************************/
-/* Pure indexed lookup */
+/* 
+   Pure indexed lookup - these functions can be used after one of the
+   ecl_smspec_get_xxx_index() functions has been used first.
+*/
 
 const char * ecl_smspec_iget_unit( const ecl_smspec_type * smspec , int index ) {
   const smspec_index_type * smspec_index = ecl_smspec_iget_index( smspec , index );
