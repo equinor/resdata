@@ -752,8 +752,9 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
   info_reply(message) ;
   
   bool plotempty = true ;
-
   bool complete = false;
+  bool failed = false ;
+
   while (!complete) {
     scanf("%s" , ens_name);
 
@@ -777,27 +778,29 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
       
       ens_size = vector_get_size( ens->data );
       // Check if the rft file has the requested well and date
-      for (iens = 0; iens < ens_size; iens++) {
+      for (iens = 0; iens < ens_size && !failed; iens++) {
         ecl_rft = vector_iget_const( ens->data , iens );
         if(!ecl_rft_file_has_well(ecl_rft , well)){
           sprintf(message,"The well %s does not exist\n", well);
           error_reply(message) ;
-          return;
+          failed = true ;
         } else {
           // Check if the rft file has the requested survey time
           const ecl_rft_node_type * ecl_rft_node = ecl_rft_file_get_well_time_rft(ecl_rft, well, survey_time);
           if(ecl_rft_node == NULL){
             sprintf(message,"The survey %s in %s does not exist", well, date);
             error_reply(message) ;
-            return;
+            failed = true ;
           }
         }
       }
 	
-      plot_rft_ensemble( ens , plot , well, survey_time);
-      plotempty = false ;
-      sprintf(message,"%s plotted",ens_name) ;
-      info_reply(message) ;
+      if (!failed) {
+        plot_rft_ensemble( ens , plot , well, survey_time);
+        plotempty = false ;
+        sprintf(message,"%s plotted",ens_name) ;
+        info_reply(message) ;
+      } ;
       
     } else {
       sprintf(message,"unknown ensemble %s",ens_name) ;
@@ -876,6 +879,7 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
   char ens_name[32];    
   bool complete = false;
   bool plotempty = true ;
+  bool failed = false ;
 
   int iens;
   int ens_size;
@@ -892,9 +896,6 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
       info_reply("Range set") ;
     } else if(strcmp(ens_name, "_newplotvector_") == 0){// ??????????
       scanf("%s" , key);
-      plot_ensemble( ens , plot , key);
-      sprintf(message,"%s plotted",key) ;
-       info_reply(message) ;     
     } else if (strcmp(ens_name, "_stop_") == 0) {
       complete = true ;
     }  else  if (hash_has_key( ens_table , ens_name)){
@@ -902,19 +903,21 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
       
       ens_size = vector_get_size( ens->data );
       // Check if the summary file has the requested key
-      for (iens = 0; iens < ens_size; iens++) {
+      for (iens = 0; iens < ens_size && !failed; iens++) {
         ecl_sum = vector_iget_const( ens->data , iens );
         if(!ecl_sum_has_general_var(ecl_sum , key)){
-          sprintf(message,"The key %s does not exits in case %i", key,iens); // How to get name
+          sprintf(message,"The key %s does not exist in case %i", key,iens); // How to get name
           error_reply(message) ;
-          return;
+          failed = true ;
         }
-
       } ;
-      plotempty = false ;
-      plot_ensemble( ens , plot , key);
-      sprintf(message,"%s plotted",ens_name) ;
-      info_reply(message) ;
+
+      if (!failed) {
+        plotempty = false ;
+        plot_ensemble( ens , plot , key);
+        sprintf(message,"%s plotted",ens_name) ;
+        info_reply(message) ;
+      } ;
 
     } else {
       sprintf(message,"unknown ensemble %s",ens_name) ;
