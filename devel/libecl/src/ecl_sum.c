@@ -100,30 +100,31 @@ void ecl_sum_free__(void * __ecl_sum) {
 
 
 /**
-   This file takes an input file, and loads the corresponding
+   This function takes an input file, and loads the corresponding
    summary. The function extracts the path part, and the basename from
-   the input file. The extension is not considered (and need to even
-   be a valid file). In principle a simulation directory with a given
-   basename can contain four different simulation cases:
+   the input file. The extension is not considered (the input need not
+   even be a valid file). In principle a simulation directory with a
+   given basename can contain four different simulation cases:
 
     * Formatted and unformatted.
     * Unified and not unified.
     
    The program will load the most recent dataset, by looking at the
-   modification time stamps of the files.
+   modification time stamps of the files; if no simulation case is
+   found the function will return NULL.
 */
 
 
 ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , const char * key_join_string){
-  ecl_sum_type * ecl_sum;
+  ecl_sum_type * ecl_sum = NULL;
   char * path , * base;
   char * header_file;
   stringlist_type * summary_file_list = stringlist_alloc_new();
   bool    fmt_file , unified;
 
   util_alloc_file_components( input_file , &path , &base , NULL);
-  ecl_util_alloc_summary_files( path , base , &header_file , summary_file_list , &fmt_file , &unified);
-  ecl_sum = ecl_sum_fread_alloc( header_file , summary_file_list , key_join_string);
+  if (ecl_util_alloc_summary_files( path , base , &header_file , summary_file_list , &fmt_file , &unified)) 
+    ecl_sum = ecl_sum_fread_alloc( header_file , summary_file_list , key_join_string);
   
   free(base);
   util_safe_free(path);

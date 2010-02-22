@@ -36,8 +36,11 @@ int main(int argc , char ** argv) {
 	data_file = argv[1];
       
       ecl_sum = ecl_sum_fread_alloc_case( data_file , ":");
-      ecl_sum_fprintf(ecl_sum , stdout , argc - offset , (const char **) &argv[offset] , report_only);
-      ecl_sum_free(ecl_sum);
+      if (ecl_sum != NULL) {
+        ecl_sum_fprintf(ecl_sum , stdout , argc - offset , (const char **) &argv[offset] , report_only);
+        ecl_sum_free(ecl_sum);
+      } else 
+        fprintf(stderr,"summary.x: No summary data found for case:%s\n", data_file );
     }
   }
 }

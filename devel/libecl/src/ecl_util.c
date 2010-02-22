@@ -601,6 +601,10 @@ static bool ecl_util_filetype_p(const char * filename , const char * base, int t
 
 
 
+/**
+   Will return NULL if no files match. 
+*/
+
 char ** ecl_util_alloc_scandir_filelist(const char *_path , const char *base, ecl_file_enum file_type , bool fmt_file , int *_files) {
   char *path; 
   if (_path != NULL)
@@ -791,8 +795,12 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 
 /**
    This routine allocates summary header and data files from a
-   directory; path and base are input. For the header file there are
-   two possible files:
+   directory, and return them by reference; path and base are
+   input. If the function can not find BOTH a summary header file and
+   summary data it will return false and not update the reference
+   variables.
+
+   For the header file there are two possible files:
 
      1. X.FSMSPEC
      2. X.SMSPEEC
@@ -816,11 +824,11 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
         to which is the newest.
    
    This algorithm should work in most practical cases, but it is
-   surely possible to fool it.
+   surely possible to fool it. 
 */
 
 
-void ecl_util_alloc_summary_files(const char * path , const char * _base , char ** _header_file , stringlist_type * filelist , bool * _fmt_file , bool * _unified) {
+bool ecl_util_alloc_summary_files(const char * path , const char * _base , char ** _header_file , stringlist_type * filelist , bool * _fmt_file , bool * _unified) {
   bool    fmt_file    	 = true; 
   bool    unified     	 = true;
   char ** data_files  	 = NULL;
@@ -854,13 +862,18 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
       header_file = smspec_file;
       free(fsmspec_file);
       fmt_file = false;
-    } else {
-      if (path == NULL)
-	util_abort("%s: could not find either %s or %s - can not load summary data from %s.DATA \n",__func__ , fsmspec_file , smspec_file , base);
-      else
-	util_abort("%s: could not find either %s or %s - can not load summary data from %s/%s.DATA \n",__func__ , fsmspec_file , smspec_file , path , base);
-    }
+    } else 
+      /* 
+         Could not find SMSPEC/FSMSPEC file. Return false.
+       */
+      return false;
   }
+
+  /* 
+     OK - we have found a SMSPEC / FMSPEC file - continue to look for
+     XXX.Snnnn / XXX.UNSMRY files.
+  */
+
   {
     int files;
     char  * unif_data_file = ecl_util_alloc_filename(path , base , ECL_UNIFIED_SUMMARY_FILE , fmt_file , -1);
@@ -870,6 +883,11 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
     
     
     if ((files > 0) && unif_exists) {
+      /* 
+         We have both a unified file AND a list of files: BASE.S0000,
+         BASE.S0001, BASE.S0002, ..., must check which is newest and
+         load accordingly.
+      */
       bool unified_newest = true;
       int file_nr = 0;
       while (unified_newest && (file_nr < files)) {
@@ -891,18 +909,21 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
 	num_data_files = files;
       }
     } else if (files > 0) {
+      /* Found a list of non unified summary files. */
       free(unif_data_file);
       unified    = false;
       data_files = file_list;
       num_data_files = files;
     } else if (unif_exists) {
+      /* Found a unified summary file. */
       util_free_stringlist( file_list , files );
       data_files     = (char **) util_malloc( sizeof * data_files , __func__);
       data_files[0]  = unif_data_file;
       unified        = true;
       num_data_files = 1;
     } else 
-      util_abort("%s: could not find summary data in %s - aborting.\n",__func__ , path );
+      /* Found no summary data - return false. */
+      return false;
   }
   
   if (_base == NULL)
@@ -912,14 +933,13 @@ void ecl_util_alloc_summary_files(const char * path , const char * _base , char 
   *_unified   	   = unified;
   *_header_file    = header_file;
 
-  /* Lazy solution - keeping the old char ** based implementation. */
   stringlist_clear( filelist );
   {
     int i;
     for (i=0; i < num_data_files; i++)
       stringlist_append_owned_ref( filelist , data_files[i]); /* The stringlist hijacks the storage of the actual filenames. */
   }
-  free( data_files );                                                /* Only fre char ** structure - not the actual strings. */        
+  free( data_files );                                         /* Only fre char ** structure - not the actual strings. */        
 }
 
 
