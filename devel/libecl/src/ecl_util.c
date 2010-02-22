@@ -880,8 +880,6 @@ bool ecl_util_alloc_summary_files(const char * path , const char * _base , char 
     char ** file_list      = ecl_util_alloc_scandir_filelist(path , base , ECL_SUMMARY_FILE , fmt_file , &files); 
     bool    unif_exists    = util_file_exists(unif_data_file);            
     
-    
-    
     if ((files > 0) && unif_exists) {
       /* 
          We have both a unified file AND a list of files: BASE.S0000,
@@ -940,6 +938,8 @@ bool ecl_util_alloc_summary_files(const char * path , const char * _base , char 
       stringlist_append_owned_ref( filelist , data_files[i]); /* The stringlist hijacks the storage of the actual filenames. */
   }
   free( data_files );                                         /* Only fre char ** structure - not the actual strings. */        
+  
+  return true;
 }
 
 
