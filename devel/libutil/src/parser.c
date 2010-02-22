@@ -376,7 +376,7 @@ static int length_of_delete( const char * buffer , const parser_type * parser) {
    Allocates a new stringlist. 
 */
 stringlist_type * parser_tokenize_buffer(
-  const parser_type * parser,
+  const parser_type    * parser,
   const char           * buffer,
   bool                   strip_quote_marks)
 {
