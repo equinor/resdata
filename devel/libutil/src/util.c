@@ -392,7 +392,7 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
    Observe that is this function does *not* cooperate very nicely with
    fscanf() based input, because fscanf will leave a EOL character in
    the input buffer, which will lead to immediate return from this
-   function. Hence if this function is called after a fsacnf() based
+   function. Hence if this function is called after a fscanf() based
    function it is essential to preceede this function with one call to
    getchar() to clear the EOL character.
 */
@@ -2671,6 +2671,20 @@ bool util_string_match(const char * string , const char * pattern) {
     return match;
   }
 }
+
+/**
+   Will check the input string 's' and return true if it contains
+   wildcard characters (i.e. '*'), and false otherwise.
+*/
+
+bool util_string_has_wildcard( const char * s) {
+  const char wildcard = '*';
+  if (strchr(s , wildcard) != NULL)
+    return true;
+  else
+    return false;
+}
+
 
 
 void util_free_stringlist(char **list , int N) {

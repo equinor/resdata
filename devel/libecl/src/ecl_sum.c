@@ -70,6 +70,7 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_ty
 
 
 UTIL_SAFE_CAST_FUNCTION( ecl_sum , ECL_SUM_ID );
+UTIL_IS_INSTANCE_FUNCTION( ecl_sum , ECL_SUM_ID );
 
 /**
    This function frees the data from the ecl_sum instance and sets the
@@ -574,6 +575,10 @@ bool ecl_sum_var_is_total(const ecl_sum_type * ecl_sum , const char * gen_key) {
 
 stringlist_type * ecl_sum_alloc_matching_general_var_list(const ecl_sum_type * ecl_sum , const char * pattern) {
   return ecl_smspec_alloc_matching_general_var_list(ecl_sum->smspec , pattern );
+}
+
+void ecl_sum_select_matching_general_var_list( const ecl_sum_type * ecl_sum , const char * pattern , stringlist_type * keys) {
+  ecl_smspec_select_matching_general_var_list( ecl_sum->smspec , pattern , keys );
 }
 
 

@@ -167,6 +167,7 @@ char       * util_alloc_cwd(void);
 char       * util_alloc_realpath(const char * );
 bool         util_try_alloc_realpath(const char *);
 bool         util_string_match(const char * string , const char * pattern);
+bool         util_string_has_wildcard( const char * s);
 
 mode_t       util_get_entry_mode( const char * file );
 uid_t        util_get_entry_uid( const char * file );

@@ -1129,29 +1129,45 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
 
 
 /*****************************************************************/
+
+
 /**
-   Allocates a stringlist instance with all the gen_key string
-   matching the supplied pattern. I.e.
+   Fills a stringlist instance with all the gen_key string matching
+   the supplied pattern. I.e.
 
      ecl_smspec_alloc_matching_general_var_list( smspec , "WGOR:*");
 
    will give a list of WGOR for ALL the wells. The function is
    unfortunately not as useful as one might think because ECLIPSE is a
-   bit stupid; it will for instance happily give ou the WOPR for a
-   water injector or WWIR for an oil producer.
+   bit quite stupid; it will for instance happily give ou the WOPR for
+   a water injector or WWIR for an oil producer.
 */
 
-stringlist_type * ecl_smspec_alloc_matching_general_var_list(const ecl_smspec_type * smspec , const char * pattern) {
-  stringlist_type * keys = stringlist_alloc_new();
+void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys) {
   hash_iter_type * iter = hash_iter_alloc( smspec->gen_var_index);
+  stringlist_clear( keys );
   while (!hash_iter_is_complete( iter )) {
     const char * key = hash_iter_get_next_key( iter );
     if (fnmatch( pattern , key , 0) == 0)
       stringlist_append_copy( keys , key );
   }
   hash_iter_free( iter );
+}
+
+
+/**
+   Allocates a new stringlist and initializes it with the
+   ecl_smspec_select_matching_general_var_list() function.
+*/
+
+stringlist_type * ecl_smspec_alloc_matching_general_var_list(const ecl_smspec_type * smspec , const char * pattern) {
+  stringlist_type * keys = stringlist_alloc_new();
+  ecl_smspec_select_matching_general_var_list( smspec , pattern , keys );
   return keys;
 }
+
+
+
 
 
 /** 
