@@ -139,6 +139,18 @@ Completion var:    VAR_TYPE:WELL_NAME:NUM
 */
 
 
+static void smspec_index_fprintf( const smspec_index_type * index , FILE * stream) {
+  fprintf(stream , "var_type........: %d \n", index->var_type );
+  fprintf(stream , "wgname..........: %s \n", index->wgname );
+  fprintf(stream , "keyword.........: %s \n", index->keyword );
+  fprintf(stream , "unit............: %s \n", index->unit );
+  fprintf(stream , "index...........: %d \n", index->index );
+  fprintf(stream , "num..  .........: %d \n", index->num);
+  fprintf(stream , "rate_variable...: %d \n", index->rate_variable);
+  fprintf(stream , "total_variable..: %d \n", index->total_variable);
+}
+
+
 static smspec_index_type * smspec_index_alloc_empty(ecl_smspec_var_type var_type, const char * keyword , const char * unit , int param_index) {
   smspec_index_type * index = util_malloc( sizeof * index , __func__);
   /** These can stay with values NULL / NUMS_INVALID for variables where those fields are not accessed. */
@@ -300,12 +312,13 @@ static void smspec_index_free( smspec_index_type * index ) {
 }
 
 
-static inline int smspec_index_get_index( const smspec_index_type * index ) {
-  return index->index;
+static inline int smspec_index_get_index( const smspec_index_type * smspec_index ) {
+  return smspec_index->index;
 }
 
 
 /*****************************************************************/
+
 
 
 static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char * base_name, const char * key_join_string) {

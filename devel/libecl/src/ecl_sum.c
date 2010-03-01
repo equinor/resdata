@@ -321,7 +321,10 @@ double ecl_sum_get_well_completion_var(const ecl_sum_type * ecl_sum , int minist
 /*****************************************************************/
 /* General variables - this means WWCT:OP_1 - i.e. composite variables*/
 
-int  ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lookup_kw) { return ecl_smspec_get_general_var_index( ecl_sum->smspec , lookup_kw); }
+int  ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lookup_kw) { 
+  return ecl_smspec_get_general_var_index( ecl_sum->smspec , lookup_kw); 
+}
+
 bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw)       { return ecl_smspec_has_general_var( ecl_sum->smspec , lookup_kw); }
 
 double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int ministep , const char * lookup_kw) {
@@ -512,7 +515,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
   int first_report = ecl_sum_get_first_report_step( ecl_sum );
   int last_report  = ecl_sum_get_last_report_step( ecl_sum );
   bool *has_var    = util_malloc( nvars * sizeof * has_var   , __func__);
-  bool *var_index  = util_malloc( nvars * sizeof * var_index , __func__);
+  int  *var_index  = util_malloc( nvars * sizeof * var_index , __func__);
   int report,ivar;
   
   for (ivar = 0; ivar < nvars; ivar++) {
