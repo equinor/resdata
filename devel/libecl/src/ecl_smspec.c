@@ -15,6 +15,7 @@
 #include <stringlist.h>
 #include <fnmatch.h>
 
+
 /**
    This file implements the indexing into the ECLIPSE summary files. 
 */
@@ -71,12 +72,14 @@ struct ecl_smspec_struct {
   char            * simulation_case;               /* This should be full path and basename - without any extension. */
   char            * key_join_string;               /* The string used to join keys when building gen_key keys - typically ":" - 
                                                       but arbitrary - NOT necessary to be able to invert the joining. */
-  
+
+  bool              formatted;                     /* Has this summary instance been loaded from a formatted (i.e. FSMSPEC file) or unformatted (i.e. SMSPEC) file. */
   time_t            sim_start_time;
   int               time_index;
   int               day_index;
   int               month_index;
   int               year_index;
+  stringlist_type * restart_list;                  /* List of ECLBASE names of restart files this case has been restarted from (if any). */ 
 };
 
 
@@ -363,6 +366,8 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   ecl_smspec->year_index  = -1;
   ecl_smspec->month_index = -1;
 
+  ecl_smspec->restart_list = stringlist_alloc_new();
+
   return ecl_smspec;
 }
 
@@ -594,8 +599,42 @@ static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_
 
 
 
+/**
+   This will iterate backwards through the RESTART header in the
+   SMSPEC files to find names of the case(s) this case has been
+   restarted from. The case names are internalized in the restart_list
+   field of the ecl_smspec instance.
+*/
+static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_file_type * header ) {
+  if (ecl_file_has_kw( header , "RESTART" )) {
+    const ecl_kw_type * restart_kw = ecl_file_iget_kw( header , 0 );
+    char   tmp_base[73];   /* To accomodate a maximum of 9 items which consist of 8 characters each. */
+    char * restart_base;
+    int i;
+    tmp_base[0] = '\0';
+    for (i=0; i < ecl_kw_get_size( restart_kw ); i++) 
+      strcat( tmp_base , ecl_kw_iget_ptr( restart_kw , i ));
+    
+    restart_base = util_alloc_strip_copy( tmp_base );
+    stringlist_iset_copy( ecl_smspec->restart_list , 0 , restart_base );
+    {
+      char * smspec_header = ecl_util_alloc_exfilename( NULL /* No path */ , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
+      if (smspec_header == NULL) 
+        fprintf(stderr,"Warning - the file: %s refers to restart from case: %s - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
+      else {
+        ecl_file_type * restart_header = ecl_file_fread_alloc( smspec_header );
+        ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */ 
+        ecl_file_free( restart_header );
+      }
+    }
+    free( restart_base );
+  }
+}
+
+
+
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file) {
-  ecl_file_type * header = ecl_file_fread_alloc( header_file );
+    ecl_file_type * header = ecl_file_fread_alloc( header_file );
   {
     int *date;
     ecl_kw_type *wells     = ecl_file_iget_named_kw(header, "WGNAMES"  , 0);
@@ -619,7 +658,8 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_smspec->grid_nz           = ecl_kw_iget_int(dimens , 3);
     ecl_smspec->params_size       = ecl_kw_get_size(keywords);
     ecl_smspec->smspec_index_list = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->smspec_index_list  ,  __func__);
-
+    ecl_util_get_file_type( header_file , NULL , &ecl_smspec->formatted , NULL );
+    
     {
       for (index=0; index < ecl_kw_get_size(wells); index++) {
         int num                      = NUMS_INVALID;
@@ -710,8 +750,9 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         free( unit );
       }
     }
-    ecl_file_free( header );
   }
+  ecl_smspec_load_restart( ecl_smspec , header );
+  ecl_file_free( header );
 }
 
 
@@ -1084,7 +1125,8 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
       smspec_index_free( ecl_smspec->smspec_index_list[ index ] );
     free( ecl_smspec->smspec_index_list );
   }
-  free(ecl_smspec);
+  stringlist_free( ecl_smspec->restart_list );
+  free( ecl_smspec );
 }
 
 
