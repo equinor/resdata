@@ -71,20 +71,29 @@ vector_type * vector_alloc_NULL_initialized( int size ) {
 }
 
 
+static int vector_append_node(vector_type * vector , node_data_type * node);
+
 /** 
     This function assumes that the index is *inside* the vector,
     otherwise it will fail HARD. Should NOT be exported (then we
     suddenly have to check for 'holes' in the vector.
+
+    If (index == vector->size) i.e. this amounts to an append, the
+    append routine will be called (which again will call this function
+    ...) ; if index > vector->size, the function will fail hard.
 */
 
 static void vector_iset__(vector_type * vector , int index , node_data_type * node) {
-  if (index >= vector->size) 
-    util_abort("%s: called with index:%d  max_value:%d \n",__func__ , index , vector->size - 1);
+  if (index == vector->size) 
+    vector_append_node( vector , node );
+  else if (index > vector->size) 
+    util_abort("%s: called with index:%d  max_value:%d \n",__func__ , index , vector->size);
+  else {
+    if (vector->data[index] != NULL) 
+      node_data_free( vector->data[index] );
 
-  if (vector->data[index] != NULL) 
-    node_data_free( vector->data[index] );
-
-  vector->data[index] = node;
+    vector->data[index] = node;
+  }
 }
 
 /**

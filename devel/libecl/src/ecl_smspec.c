@@ -616,15 +616,17 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
       strcat( tmp_base , ecl_kw_iget_ptr( restart_kw , i ));
     
     restart_base = util_alloc_strip_copy( tmp_base );
-    stringlist_iset_copy( ecl_smspec->restart_list , 0 , restart_base );
-    {
-      char * smspec_header = ecl_util_alloc_exfilename( NULL /* No path */ , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
-      if (smspec_header == NULL) 
-        fprintf(stderr,"Warning - the file: %s refers to restart from case: %s - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
-      else {
-        ecl_file_type * restart_header = ecl_file_fread_alloc( smspec_header );
-        ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */ 
-        ecl_file_free( restart_header );
+    if (strlen(restart_base)) {  /* We ignore the empty ones. */
+      stringlist_iset_copy( ecl_smspec->restart_list , 0 , restart_base );
+      {
+        char * smspec_header = ecl_util_alloc_exfilename( NULL /* No path */ , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
+        if (smspec_header == NULL) 
+          fprintf(stderr,"Warning - the file: %s refers to restart from case: >%s< - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
+        else {
+          ecl_file_type * restart_header = ecl_file_fread_alloc( smspec_header );
+          ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */ 
+          ecl_file_free( restart_header );
+        }
       }
     }
     free( restart_base );
