@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <msg.h>
 #include <ecl_endian_flip.h>   
-
+#include <stringlist.h>
 
 
 int main(int argc, char ** argv) {
@@ -15,8 +15,9 @@ int main(int argc, char ** argv) {
     char * path;
     ecl_file_enum file_type , target_type;
     bool fmt_file;
-    ecl_util_get_file_type( argv[1] , &file_type , &fmt_file , NULL);
 
+    /** Look at the first command line argument to determine type and formatted/unformatted status. */
+    ecl_util_get_file_type( argv[1] , &file_type , &fmt_file , NULL);
     if (file_type == ECL_SUMMARY_FILE)
       target_type = ECL_UNIFIED_SUMMARY_FILE;
     else if (file_type == ECL_RESTART_FILE)
@@ -25,15 +26,16 @@ int main(int argc, char ** argv) {
       util_exit("The ecl_pack program can only be used with ECLIPSE restart files or summary files.\n");
       target_type = -1;
     }
-
     util_alloc_file_components( argv[1] , &path , &ecl_base , NULL);
+
+    
     {
       msg_type * msg;
       int i , report_step , prev_report_step;
-      char *  target_file_name = ecl_util_alloc_filename( path , ecl_base , target_type , fmt_file , -1);
-      char ** filelist         = util_alloc_stringlist_copy( (const char **) &argv[1] , num_files );
-      ecl_kw_type * seqnum_kw  = NULL;
-      fortio_type * target     = fortio_fopen( target_file_name , "w" , ECL_ENDIAN_FLIP , fmt_file );
+      char *  target_file_name   = ecl_util_alloc_filename( path , ecl_base , target_type , fmt_file , -1);
+      stringlist_type * filelist = stringlist_alloc_argv_copy( (const char **) &argv[1] , num_files );
+      ecl_kw_type * seqnum_kw    = NULL;
+      fortio_type * target       = fortio_fopen( target_file_name , "w" , ECL_ENDIAN_FLIP , fmt_file );
 
       if (target_type == ECL_UNIFIED_RESTART_FILE) {
 	int dummy;
@@ -47,18 +49,21 @@ int main(int argc, char ** argv) {
       }
       
       msg_show( msg );
-      qsort(filelist , num_files , sizeof *filelist , &ecl_util_fname_cmp);
+      stringlist_sort( filelist , ecl_util_fname_report_cmp);
       prev_report_step = -1;
       for (i=0; i < num_files; i++) {
 	ecl_file_enum this_file_type;
-	ecl_util_get_file_type(  filelist[i] , &this_file_type , NULL , &report_step);
+	ecl_util_get_file_type( stringlist_iget(filelist , i)  , &this_file_type , NULL , &report_step);
 	if (this_file_type == file_type) {
 	  if (report_step == prev_report_step)
-	    util_exit("Tried to write same report step twice: %s / %s \n",filelist[i-1] , filelist[i]);
+	    util_exit("Tried to write same report step twice: %s / %s \n",
+                      stringlist_iget(filelist , i-1) , 
+                      stringlist_iget(filelist , i));
+
 	  prev_report_step = report_step;
-	  msg_update(msg , filelist[i]);
+	  msg_update(msg , stringlist_iget( filelist , i));
 	  {
-	    ecl_file_type * src_file = ecl_file_fread_alloc( filelist[i] );
+	    ecl_file_type * src_file = ecl_file_fread_alloc( stringlist_iget( filelist , i) );
 	    if (target_type == ECL_UNIFIED_RESTART_FILE) {
 	      /* Must insert the SEQNUM keyword first. */
 	      ecl_kw_iset_int(seqnum_kw , 0 , report_step);
@@ -72,7 +77,7 @@ int main(int argc, char ** argv) {
       msg_free(msg , false);
       fortio_fclose( target );
       free(target_file_name);
-      util_free_stringlist( filelist , num_files );
+      stringlist_free( filelist );
       if (seqnum_kw != NULL) ecl_kw_free(seqnum_kw);
     }
     free(ecl_base);

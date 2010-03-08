@@ -182,8 +182,7 @@ struct ecl_sum_data_struct {
   int                	   last_ministep; 
   int_vector_type  	 * report_first_ministep ; /* Indexed by report_step - giving first ministep in report_step.   */
   int_vector_type  	 * report_last_ministep;   /* Indexed by report_step - giving last ministep in report_step.    */   
-  int_vector_type  	 * ministep_index;         /* Indexed by ministep - gives index in data - 
-						      observe that we make no assumtpitons of time-ordering of the input - flexible ehh !? */
+  int_vector_type  	 * ministep_index;         /* Indexed by ministep - gives index into data - observe that we make no assumtpitons of time-ordering of the input - flexible ehh !? */
   int                      first_report_step;
   int                      last_report_step;
 };
@@ -199,6 +198,7 @@ static void ecl_sum_ministep_free( ecl_sum_ministep_type * ministep ) {
 
 
 static UTIL_SAFE_CAST_FUNCTION( ecl_sum_ministep , ECL_SUM_MINISTEP_ID)
+static UTIL_SAFE_CAST_FUNCTION_CONST( ecl_sum_ministep , ECL_SUM_MINISTEP_ID)
 
 
 static void ecl_sum_ministep_free__( void * __ministep) {
@@ -248,6 +248,10 @@ static double ecl_sum_ministep_get_sim_days(const ecl_sum_ministep_type * minist
 
 /*****************************************************************/
 
+static void ecl_sum_data_fprintf( const ecl_sum_data_type * data , FILE * stream) {
+  
+}
+
 
  void ecl_sum_data_free( ecl_sum_data_type * data ) {
   vector_free( data->data );
@@ -257,21 +261,39 @@ static double ecl_sum_ministep_get_sim_days(const ecl_sum_ministep_type * minist
   free(data);
 }
 
+/*
+  This function will clear/initialize all the mapping between
+  ministep, report step and internal index. This function should be
+  called before (re)building the indexes.
+*/
+
+
+static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
+  int_vector_reset( data->report_first_ministep);
+  int_vector_reset( data->report_last_ministep);
+  int_vector_reset( data->ministep_index );
+
+  data->first_report_step     =  1024 * 1024;
+  data->last_report_step      = -1024 * 1024;
+  data->sim_end               = -1;
+  data->sim_length            = -1;
+  data->first_ministep = -1;
+  data->last_ministep  = -1;
+
+}
 
 
 static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
   ecl_sum_data_type * data = util_malloc( sizeof * data , __func__);
   data->data         = vector_alloc_new();
-  data->first_ministep = -1;
-  data->last_ministep  = -1;
+  data->smspec                = smspec;
+
   data->report_first_ministep = int_vector_alloc( 0 , -1 );  /* This -1 value is hard-wired around in the place - not good. */
   data->report_last_ministep  = int_vector_alloc( 0 , -1 );
   data->ministep_index        = int_vector_alloc( 0 , -1 );
-  data->smspec                = smspec;
-  data->first_report_step     =  1024 * 1024;
-  data->last_report_step      = -1024 * 1024;
-  data->sim_end               = -1;
-  data->sim_length            = -1;
+  
+  ecl_sum_data_clear_index( data );
+
   return data;
 }
 
@@ -457,22 +479,11 @@ void ecl_sum_data_init_interp_from_sim_days( const ecl_sum_data_type * data , do
 
 
 static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministep_nr , ecl_sum_ministep_type * ministep) {
-  if (data->first_ministep < 0) 
-    data->first_ministep = ministep_nr;
-  data->first_ministep = util_int_min( data->first_ministep , ministep_nr);
-    
-  if (data->last_ministep < 0) 
-    data->last_ministep = ministep_nr;
-  data->last_ministep = util_int_max( data->last_ministep , ministep_nr);
-  
-  {
-    int index = vector_append_owned_ref( data->data , ministep , ecl_sum_ministep_free__);
-    ministep->internal_index = index;
-    int_vector_iset( data->ministep_index , ministep->ministep , index );
-  }
-  
-  data->sim_length = util_double_max( data->sim_length , ministep->sim_days );
-  data->sim_end    = util_time_t_max( data->sim_end    , ministep->sim_time );
+  /* 
+     Here the ministep is just appended naively, the vector will be
+     sorted by ministep nr before the data instance is returned.
+  */
+  vector_append_owned_ref( data->data , ministep , ecl_sum_ministep_free__);
 }
 
 
@@ -484,7 +495,7 @@ static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministe
 
      1. At the start of a report step a summary data section
         containing only the 'SEQHDR' keyword is written - this is
-        currently a an 'invalid' summary section.
+        currently an 'invalid' summary section.
 
      2. ECLIPSE simulates as best it can.
 
@@ -496,8 +507,12 @@ static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministe
    reasonably gracefully we check that the ecl_file instance has at
    least one "PARAMS" keyword.
 
-   One ecl_file corresponds to one report_step (limited by SEQHDR). 
+   One ecl_file corresponds to one report_step (limited by SEQHDR); in
+   the case of non unfied summary files these objects correspond to
+   one BASE.Annnn or BASE.Snnnn file, in the case of unified files the
+   calling routine will read the unified summary file partly.
 */
+
 static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         , 
                                       int   report_step                , 
                                       const ecl_file_type   * ecl_file , 
@@ -522,30 +537,118 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
       ecl_sum_data_append_ministep( data , ministep_nr , ministep );
       
     }
-    data->first_report_step = util_int_min( data->first_report_step , report_step );
-    data->last_report_step  = util_int_max( data->last_report_step  , report_step );
+  }
+}
+
+
+static int cmp_ministep( const void * arg1 , const void * arg2) {
+  const ecl_sum_ministep_type * ministep1 = ecl_sum_ministep_safe_cast_const( arg1 );
+  const ecl_sum_ministep_type * ministep2 = ecl_sum_ministep_safe_cast_const( arg2 );  
+
+  if (ministep1->ministep < ministep2->ministep)
+    return -1;
+  else if (ministep1->ministep == ministep2->ministep) {
+    util_abort("%s: fatal error when loading summary - more than one ministep with the same number ??? \n",__func__);
+    return 0;
+  } else
+    return 1;
+}
+
+
+static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
+  /* Clear the existing index (if any): */
+  ecl_sum_data_clear_index( sum_data );
+  
+  /*
+    Sort the internal storage vector after ministep number. This
+    sorting is required for the function looking up ministep number
+    from true ime.
+  */
+  vector_sort( sum_data->data , cmp_ministep );
+  
+  /* 
+     Build the mapping between the internal index in the data
+     storage vector, and ministep numbers.
+  */
+  {
+    int index;
+    for (index = 0; index < vector_get_size( sum_data->data ); index++) {
+      ecl_sum_ministep_type * ministep = vector_iget( sum_data->data , index );
+      ministep->internal_index = index;
+      int_vector_iset( sum_data->ministep_index , ministep->ministep , index );
+    }
+  }
+
+  
+  /* Identify various global first and last values.  */
+  {
+    const ecl_sum_ministep_type * first_ministep = vector_iget_const( sum_data->data , 0);
+    const ecl_sum_ministep_type * last_ministep  = vector_get_last_const( sum_data->data );
+    
+    sum_data->first_ministep = first_ministep->ministep;
+    sum_data->last_ministep  = last_ministep->ministep;
+    sum_data->sim_length     = last_ministep->sim_days;
+    sum_data->sim_end        = last_ministep->sim_time;
+  }
+  
+  
+  /* Build up the report -> ministep mapping. */
+  {
+    int internal_index;
+    for (internal_index = 0; internal_index < vector_get_size( sum_data->data ); internal_index++) {
+      const ecl_sum_ministep_type * ministep = vector_iget_const( sum_data->data , internal_index );
+	int report_step = ministep->report_step;
+	int ministep_nr = ministep->ministep;
+	{
+	  int current_first_ministep = int_vector_safe_iget( sum_data->report_first_ministep , report_step );
+	  if (current_first_ministep < 0) /* i.e. currently not set. */
+	    int_vector_iset( sum_data->report_first_ministep , report_step , ministep_nr);
+	  else
+	    if (ministep_nr  < current_first_ministep)
+	      int_vector_iset( sum_data->report_first_ministep , report_step , ministep_nr);
+	}
+        
+        
+	{
+	  int current_last_ministep =  int_vector_safe_iget( sum_data->report_last_ministep , report_step );
+	  if (current_last_ministep < 0)
+	    int_vector_iset( sum_data->report_last_ministep , report_step ,  ministep_nr);
+	  else
+	    if (ministep_nr > current_last_ministep)
+	      int_vector_iset( sum_data->report_last_ministep , report_step , ministep_nr);
+	}
+        
+        sum_data->first_report_step = util_int_min( sum_data->first_report_step , report_step );
+        sum_data->last_report_step  = util_int_max( sum_data->last_report_step  , report_step );
+    }
   }
 }
 
 
 
-ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , const stringlist_type * filelist ) {
+/*
+  Observe that this can be called several times (but not with the same
+  data - that will die). 
+
+  Warning: The index information of the ecl_sum_data instance has
+  __NOT__ been updated when leaving this function. That is done with a
+  call to ecl_sum_data_build_index().
+*/
+static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_type * filelist) {
   ecl_file_enum file_type;
   ecl_util_get_file_type( stringlist_iget( filelist , 0 ) , &file_type , NULL , NULL);
   if ((stringlist_get_size( filelist ) > 1) && (file_type != ECL_SUMMARY_FILE))
     util_abort("%s: internal error - when calling with more than one file - you can not supply a unified file - come on?! \n",__func__);
   {
     int filenr;
-    ecl_sum_data_type * data = ecl_sum_data_alloc(smspec);
     if (file_type == ECL_SUMMARY_FILE) {
-
+      
       /* Not unified. */
       for (filenr = 0; filenr < stringlist_get_size( filelist ); filenr++) {
-        const char * data_file = stringlist_iget( filelist , filenr );
+        const char * data_file = stringlist_iget( filelist , filenr);
 	ecl_file_enum file_type;
 	int report_step;
 	ecl_util_get_file_type( data_file , &file_type , NULL , &report_step);
-
 	/** 
 	    ECLIPSE starts a report step by writing an empty summary
 	    file, therefor we must verify that the ecl_file instance
@@ -557,7 +660,7 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , co
         {
           ecl_file_type * ecl_file = ecl_file_fread_alloc( data_file );
           if (ecl_file != NULL) {
-            ecl_sum_data_add_ecl_file( data , report_step , ecl_file , smspec);
+            ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
             ecl_file_free( ecl_file );
           } 
 	}
@@ -571,7 +674,7 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , co
       do {
 	ecl_file_type * ecl_file = ecl_file_fread_alloc_summary_section( fortio );
 	if (ecl_file != NULL) {
-	  ecl_sum_data_add_ecl_file( data , report_step , ecl_file , smspec);
+	  ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
 	  ecl_file_free( ecl_file );
 	  report_step++;
 	} else complete = true;
@@ -579,37 +682,43 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , co
       fortio_fclose(fortio);
     } else
       util_abort("%s: invalid file type:%s  \n",__func__ , ecl_util_file_type_name( file_type ));
-
-
-    /* OK - now we have loaded all the actual data. Must build up the report -> ministep mapping. */
-    {
-      int internal_index;
-      for (internal_index = 0; internal_index < vector_get_size( data->data ); internal_index++) {
-	const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , internal_index );
-	int report_step = ministep->report_step;
-	int ministep_nr = ministep->ministep;
-	{
-	  int current_first_ministep = int_vector_safe_iget( data->report_first_ministep , report_step );
-	  if (current_first_ministep < 0) /* i.e. currently not set. */
-	    int_vector_iset( data->report_first_ministep , report_step , ministep_nr);
-	  else
-	    if (ministep_nr  < current_first_ministep)
-	      int_vector_iset( data->report_first_ministep , report_step , ministep_nr);
-	}
-
-
-	{
-	  int current_last_ministep =  int_vector_safe_iget( data->report_last_ministep , report_step );
-	  if (current_last_ministep < 0)
-	    int_vector_iset( data->report_last_ministep , report_step ,  ministep_nr);
-	  else
-	    if (ministep_nr > current_last_ministep)
-	      int_vector_iset( data->report_last_ministep , report_step , ministep_nr);
-	}
-      }
-    }
-    return data;
   }
+}
+
+
+
+/**
+   If the variable @include_restart is true the function will query
+   the smspec object for restart information, and load summary
+   information from case(s) which this case was restarted from (this
+   only really applies to predictions where the basename has been
+   (manually) changed from the historical part.
+*/
+
+ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , const stringlist_type * filelist , bool include_restart) {
+  ecl_sum_data_type * data = ecl_sum_data_alloc(smspec);
+  ecl_sum_data_fread__( data , filelist );
+
+  if (include_restart) {
+    const char * path                     = ecl_smspec_get_simulation_path( smspec );
+    const stringlist_type * restart_cases = ecl_smspec_get_restart_list( smspec );
+    stringlist_type       * restart_files = stringlist_alloc_new();
+    bool fmt_file                         = ecl_smspec_get_formatted( smspec );    /* The restart cases must have the same formatted|unformatted status as the current case. */
+    int restart_nr;
+    for (restart_nr = 0; restart_nr < stringlist_get_size( restart_cases ); restart_nr++) {
+      ecl_util_alloc_summary_data_files(path , stringlist_iget( restart_cases , restart_nr ) , fmt_file , restart_files );
+      ecl_sum_data_fread__( data , restart_files );
+    }
+    stringlist_free( restart_files );
+  }
+  
+  /*****************************************************************/
+  /* OK - now we have loaded all the data. Must sort the internal
+     storage vector, and build up various internal indexing vectors;
+     this is done in a sepearate function.
+  */
+  ecl_sum_data_build_index( data );
+  return data;
 }
 
 

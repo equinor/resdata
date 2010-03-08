@@ -69,6 +69,8 @@ struct ecl_smspec_struct {
   int               num_regions;
   int               Nwells , param_offset;
   int               params_size;
+  char            * simulation_path;               /* The path to the case - can be NULL for current directory. */
+  char            * base_name;                     /* The basename of this simulation. */   
   char            * simulation_case;               /* This should be full path and basename - without any extension. */
   char            * key_join_string;               /* The string used to join keys when building gen_key keys - typically ":" - 
                                                       but arbitrary - NOT necessary to be able to invert the joining. */
@@ -358,6 +360,8 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   
 
   ecl_smspec->sim_start_time     	     = -1;
+  ecl_smspec->simulation_path                = util_alloc_string_copy( path );
+  ecl_smspec->base_name                      = util_alloc_string_copy( base_name ); 
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
   ecl_smspec->key_join_string                = util_alloc_string_copy( key_join_string );
 
@@ -617,17 +621,27 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
     
     restart_base = util_alloc_strip_copy( tmp_base );
     if (strlen(restart_base)) {  /* We ignore the empty ones. */
-      stringlist_iset_copy( ecl_smspec->restart_list , 0 , restart_base );
-      {
-        char * smspec_header = ecl_util_alloc_exfilename( NULL /* No path */ , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
-        if (smspec_header == NULL) 
-          fprintf(stderr,"Warning - the file: %s refers to restart from case: >%s< - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
-        else {
-          ecl_file_type * restart_header = ecl_file_fread_alloc( smspec_header );
-          ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */ 
-          ecl_file_free( restart_header );
+      char * smspec_header = ecl_util_alloc_exfilename( ecl_smspec->simulation_path , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
+      /* 
+         Verify that this smspec_header is not already in the list of restart
+         cases. Don't know if this is at all possible, but this test
+         nevertheless prevents against a recursive death.
+      */
+      
+      if (!stringlist_contains( ecl_smspec->restart_list , restart_base)) {
+        stringlist_iset_copy( ecl_smspec->restart_list , 0 , restart_base );
+        {
+          if (smspec_header == NULL) 
+            fprintf(stderr,"Warning - the file: %s refers to restart from case: >%s< - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
+          else {
+            ecl_file_type * restart_header = ecl_file_fread_alloc( smspec_header );
+            ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */ 
+            ecl_file_free( restart_header );
+          }
         }
       }
+      
+      util_safe_free( smspec_header );
     }
     free( restart_base );
   }
@@ -1101,12 +1115,25 @@ time_t ecl_smspec_get_start_time(const ecl_smspec_type * ecl_smspec) {
   return ecl_smspec->sim_start_time;
 }
 
-
+bool ecl_smspec_get_formatted( const ecl_smspec_type * ecl_smspec) {
+  return ecl_smspec->formatted;
+}
 
 const char * ecl_smspec_get_simulation_case(const ecl_smspec_type * ecl_smspec) {
   return ecl_smspec->simulation_case;
 }
 
+const char * ecl_smspec_get_simulation_path(const ecl_smspec_type * ecl_smspec) {
+  return ecl_smspec->simulation_path;
+}
+
+const char * ecl_smspec_get_base_name( const ecl_smspec_type * ecl_smspec) {
+  return ecl_smspec->base_name;
+}
+
+const stringlist_type * ecl_smspec_get_restart_list( const ecl_smspec_type * ecl_smspec) {
+  return ecl_smspec->restart_list;
+}
 
 
 void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
@@ -1120,6 +1147,8 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->gen_var_index);
   hash_free(ecl_smspec->special_types);
   free(ecl_smspec->simulation_case);
+  free(ecl_smspec->simulation_path);
+  free(ecl_smspec->base_name);
   free(ecl_smspec->key_join_string);
   {
     int index;

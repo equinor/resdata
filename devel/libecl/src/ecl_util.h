@@ -19,6 +19,9 @@ extern "C" {
 		ECL_RFT_FILE             = 256 ,
 		ECL_DATA_FILE            = 512 } ecl_file_enum;   
 
+  
+
+
 
   /*
     This enum enumerates the four different ways summary and restart information
@@ -72,24 +75,21 @@ const char     * ecl_util_get_type_name( ecl_type_enum ecl_type );
 void            ecl_util_init_stdin(const char * , const char *);
 const char    * ecl_util_file_type_name( ecl_file_enum file_type );
 char          * ecl_util_alloc_base_guess(const char *);
-bool            ecl_util_unified(ecl_file_enum );
 int             ecl_util_filename_report_nr(const char *);
 void            ecl_util_get_file_type(const char * , ecl_file_enum * , bool * , int * );
 char          * ecl_util_alloc_filename(const char * /* path */, const char * /* base */, ecl_file_enum , bool /* fmt_file */ , int /*report_nr*/);
 char          * ecl_util_alloc_exfilename(const char * /* path */, const char * /* base */, ecl_file_enum , bool /* fmt_file */ , int /*report_nr*/);
-char         ** ecl_util_alloc_filelist(const char * /* path */, const char * /* base */, ecl_file_enum , bool /* fmt_file */ , int /*report_nr*/ , int);
-char         ** ecl_util_alloc_exfilelist(const char * /* path */, const char * /* base */, ecl_file_enum , bool /* fmt_file */ , int /*report_nr*/ , int);
-char         ** ecl_util_alloc_scandir_filelist(const char *, const char *,ecl_file_enum , bool , int *);
-char         ** ecl_util_alloc_simple_filelist(const char *, const char *, ecl_file_enum , bool , int , int );
 void            ecl_util_memcpy_typed_data(void *, const void * , ecl_type_enum , ecl_type_enum , int );
 void            ecl_util_escape_kw(char * kw);
-bool            ecl_util_alloc_summary_files(const char * , const char * , char ** , stringlist_type * , bool * , bool * );
+bool            ecl_util_alloc_summary_files(const char * , const char * , char ** , stringlist_type * );
+void            ecl_util_alloc_summary_data_files(const char * path , const char * base , bool fmt_file , stringlist_type * filelist);
 void            ecl_util_alloc_restart_files(const char *  , const char *  , char *** , int *  , bool * , bool *);
 time_t          ecl_util_get_start_date(const char * );
 bool            ecl_util_fmt_file(const char *);
-int             ecl_util_fname_cmp(const void *, const void *);
 char          * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , ecl_file_enum file_type , bool start_fmt , int report_nr);
 int             ecl_util_get_month_nr(const char * month_name);
+int             ecl_util_fname_report_cmp(const void *f1, const void *f2);
+int             ecl_util_select_filelist( const char * path , const char * base , ecl_file_enum file_type , bool fmt_file , stringlist_type * filelist);
 #ifdef __cplusplus
 }
 #endif
