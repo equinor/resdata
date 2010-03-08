@@ -82,6 +82,18 @@ type ## _type * type ## _safe_cast( void * __arg ) {     \
 }
 #define UTIL_SAFE_CAST_HEADER( type ) type ## _type * type ## _safe_cast( void * __arg );
 
+#define UTIL_SAFE_CAST_FUNCTION_CONST(type , TYPE_ID)          \
+const type ## _type * type ## _safe_cast_const( const void * __arg ) {     \
+   const type ## _type * arg = (const type ## _type *) __arg;        \
+   if ( arg->__type_id == TYPE_ID)              	 \
+      return arg;                                        \
+   else {                                                \
+      util_abort("%s: runtime cast failed \n", __func__);\
+      return NULL;                                       \
+   }                                                     \
+}
+#define UTIL_SAFE_CAST_HEADER_CONST( type ) const type ## _type * type ## _safe_cast( const void * __arg );
+
 #define UTIL_TYPE_ID_DECLARATION           int   __type_id; 
 #define UTIL_TYPE_ID_INIT(var , TYPE_ID)   var->__type_id = TYPE_ID;
 

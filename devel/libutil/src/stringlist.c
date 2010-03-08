@@ -1,10 +1,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <glob.h>
 #include <util.h>
 #include <stringlist.h>
 #include <vector.h>
 #include <buffer.h>
+
 
 #define STRINGLIST_TYPE_ID 671855
 
@@ -530,6 +532,29 @@ void stringlist_sort(stringlist_type * s , string_cmp_ftype * string_cmp)
 }
 
 
+/*****************************************************************/
 
+/*
+  This function uses the stdlib function glob() to select file/path
+  names matching a pattern. The stringlist is cleared when the
+  function starts.
+*/
+
+
+int stringlist_select_matching(stringlist_type * names , const char * pattern) {
+  int match_count = 0;
+  stringlist_clear( names );
+  {
+    glob_t * pglob  = util_malloc( sizeof * pglob , __func__);
+    int glob_flags = 0;
+    int i;
+    glob( pattern , 0 , NULL , pglob);
+    match_count = pglob->gl_pathc;
+    for (i=0; i < pglob->gl_pathc; i++)
+      stringlist_append_copy( names , pglob->gl_pathv[i] );
+    globfree( pglob );
+  }
+  return match_count;
+}
 
 
