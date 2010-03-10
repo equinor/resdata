@@ -61,6 +61,7 @@ void stringlist_append_owned_ref(stringlist_type * stringlist , const char * s) 
   vector_append_owned_ref(stringlist->strings , s , free);
 }
 
+/*****************************************************************/
 
 void stringlist_iset_copy(stringlist_type * stringlist , int index , const char * s) {
   vector_iset_buffer(stringlist->strings , index , s , strlen(s) + 1);
@@ -73,6 +74,21 @@ void stringlist_iset_ref(stringlist_type * stringlist , int index , const char *
 void stringlist_iset_owned_ref(stringlist_type * stringlist , int index , const char * s) {
   vector_iset_owned_ref(stringlist->strings , index , s , free);
 }
+
+/*****************************************************************/
+
+void stringlist_insert_copy(stringlist_type * stringlist , int index , const char * s) {
+  vector_insert_buffer(stringlist->strings , index , s , strlen(s) + 1);
+}
+
+void stringlist_insert_ref(stringlist_type * stringlist , int index , const char * s) {
+  vector_insert_ref(stringlist->strings , index , s);
+}
+
+void stringlist_insert_owned_ref(stringlist_type * stringlist , int index , const char * s) {
+  vector_insert_owned_ref(stringlist->strings , index , s , free);
+}
+
 
 
 
@@ -548,11 +564,12 @@ int stringlist_select_matching(stringlist_type * names , const char * pattern) {
     glob_t * pglob  = util_malloc( sizeof * pglob , __func__);
     int glob_flags = 0;
     int i;
-    glob( pattern , 0 , NULL , pglob);
+    glob( pattern , glob_flags , NULL , pglob);
     match_count = pglob->gl_pathc;
     for (i=0; i < pglob->gl_pathc; i++)
       stringlist_append_copy( names , pglob->gl_pathv[i] );
-    globfree( pglob );
+    globfree( pglob );  /* Only frees the _internal_ data structures of the pglob object. */
+    free( pglob );
   }
   return match_count;
 }

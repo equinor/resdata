@@ -32,6 +32,11 @@ char            * stringlist_alloc_joined_segment_string( const stringlist_type 
 void 		  stringlist_iset_copy(stringlist_type *, int index , const char *);
 void 		  stringlist_iset_ref(stringlist_type *, int index , const char *);
 void 		  stringlist_iset_owned_ref(stringlist_type *, int index , const char *);
+
+void 		  stringlist_insert_copy(stringlist_type *, int index , const char *);
+void 		  stringlist_insert_ref(stringlist_type *, int index , const char *);
+void 		  stringlist_insert_owned_ref(stringlist_type *, int index , const char *);
+
 void              stringlist_idel(stringlist_type * stringlist , int index);
 
 int               stringlist_get_size(const stringlist_type * );

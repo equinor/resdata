@@ -261,10 +261,19 @@ void vector_iset_buffer(vector_type * vector , int index , const void * buffer, 
   vector_iset__(vector , index , node);
 }
 
+
+void vector_insert_buffer(vector_type * vector , int index , const void * buffer, int buffer_size) {
+  node_data_type * node = node_data_alloc_buffer( buffer , buffer_size );
+  vector_insert__(vector , index , node);
+}
+
+
 void vector_push_buffer(vector_type * vector , const void * buffer, int buffer_size) {
   node_data_type * node = node_data_alloc_buffer( buffer , buffer_size );
   vector_push_node(vector , node);
 }
+
+
 
 
 const void * vector_iget_const(const vector_type * vector, int index) {

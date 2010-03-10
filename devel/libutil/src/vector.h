@@ -27,6 +27,7 @@ void          vector_iset_copy(vector_type * , int , const void *, copyc_ftype *
 void 	      vector_insert_ref( vector_type * , int , const void *);
 void 	      vector_insert_owned_ref( vector_type * , int , const void * , free_ftype * del);
 void          vector_insert_copy(vector_type * , int , const void *, copyc_ftype *, free_ftype *);
+void          vector_insert_buffer(vector_type * vector , int index , const void * buffer, int buffer_size);
 
 void 	      vector_push_ref( vector_type * ,  const void *);
 void 	      vector_push_owned_ref( vector_type * ,  const void * , free_ftype * del);

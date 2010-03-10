@@ -429,10 +429,10 @@ ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , bool report_mo
   char * header_file;
   char ** summary_file_list;
   int     files;
-  bool    fmt_file , unified;
+  bool    fmt_file ;
 
   util_alloc_file_components( input_file , &path , &base , NULL);
-  ecl_util_alloc_summary_files( path , base , &header_file , &summary_file_list , &files , &fmt_file , &unified);
+  ecl_util_alloc_summary_files( path , base , &header_file , &summary_file_list , &files , &fmt_file );
   ecl_sum = ecl_sum_fread_alloc( header_file , files , (const char **) summary_file_list , report_mode , endian_convert );
 
   free(base);

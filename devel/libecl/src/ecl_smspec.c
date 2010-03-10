@@ -629,7 +629,8 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
       */
       
       if (!stringlist_contains( ecl_smspec->restart_list , restart_base)) {
-        stringlist_iset_copy( ecl_smspec->restart_list , 0 , restart_base );
+        stringlist_insert_copy( ecl_smspec->restart_list , 0 , restart_base );
+        
         {
           if (smspec_header == NULL) 
             fprintf(stderr,"Warning - the file: %s refers to restart from case: >%s< - which was not found.... \n", ecl_smspec->simulation_case , restart_base);

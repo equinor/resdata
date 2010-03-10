@@ -51,24 +51,33 @@ struct ecl_sum_struct {
 */
 
 
-void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , const stringlist_type * data_files) {
-  const bool include_restart = false;
+static void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , const stringlist_type * data_files , bool include_restart) {
   if (ecl_sum->data != NULL)
     ecl_sum_free_data( ecl_sum );
   ecl_sum->data   = ecl_sum_data_fread_alloc( ecl_sum->smspec , data_files , include_restart);
 }
 
 
-
-ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_type *data_files , const char * key_join_string) {
-  const bool include_restart = false;
+static ecl_sum_type * ecl_sum_fread_alloc__(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
   ecl_sum_type *ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
   UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
   ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , key_join_string); 
   ecl_sum->data   = NULL;
-  ecl_sum_fread_realloc_data(ecl_sum , data_files );
+  ecl_sum_fread_realloc_data(ecl_sum , data_files , include_restart);
   return ecl_sum;
 }
+
+/**
+   This will explicitly load the summary specified by @header_file and
+   @data_files, i.e. if the case has been restarted from another case,
+   it will NOT look for old summary information - that functionality
+   is only invoked when using ecl_sum_fread_alloc_case() function.
+*/
+
+ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_type *data_files , const char * key_join_string) {
+  return ecl_sum_fread_alloc__( header_file , data_files , key_join_string , false );
+}
+
 
 
 UTIL_SAFE_CAST_FUNCTION( ecl_sum , ECL_SUM_ID );
@@ -114,19 +123,24 @@ void ecl_sum_free__(void * __ecl_sum) {
     
    The program will load the most recent dataset, by looking at the
    modification time stamps of the files; if no simulation case is
-   found the function will return NULL.
+   found the function will return NULL. 
+
+   If the SMSPEC file contains the RESTART keyword the function will
+   iterate backwards to load summary information from previous runs
+   (this is goverened by the local variable include_restart).
 */
 
 
 ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , const char * key_join_string){
-  ecl_sum_type * ecl_sum = NULL;
+  const bool include_restart = true;
+  ecl_sum_type * ecl_sum     = NULL;
   char * path , * base;
   char * header_file;
   stringlist_type * summary_file_list = stringlist_alloc_new();
 
   util_alloc_file_components( input_file , &path , &base , NULL);
   if (ecl_util_alloc_summary_files( path , base , &header_file , summary_file_list )) 
-    ecl_sum = ecl_sum_fread_alloc( header_file , summary_file_list , key_join_string);
+    ecl_sum = ecl_sum_fread_alloc__( header_file , summary_file_list , key_join_string , include_restart);
   
   free(base);
   util_safe_free(path);
