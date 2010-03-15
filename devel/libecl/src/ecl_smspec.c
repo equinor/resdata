@@ -59,7 +59,7 @@ struct ecl_smspec_struct {
   hash_type          * field_var_index;
   hash_type          * region_var_index;           /* The stored index is an offset. */
   hash_type          * misc_var_index;             /* Variables like 'TCPU' and 'NEWTON'. */
-  hash_type          * block_var_index;
+  hash_type          * block_var_index;            /* Block variables like BPR */ 
   hash_type          * gen_var_index;              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
   hash_type          * special_types;              /* Table of funky keywords which break ECLIPSE own default naming scheme. */
 
@@ -75,13 +75,15 @@ struct ecl_smspec_struct {
   char            * key_join_string;               /* The string used to join keys when building gen_key keys - typically ":" - 
                                                       but arbitrary - NOT necessary to be able to invert the joining. */
 
-  bool              formatted;                     /* Has this summary instance been loaded from a formatted (i.e. FSMSPEC file) or unformatted (i.e. SMSPEC) file. */
-  time_t            sim_start_time;
-  int               time_index;
-  int               day_index;
-  int               month_index;
-  int               year_index;
-  stringlist_type * restart_list;                  /* List of ECLBASE names of restart files this case has been restarted from (if any). */ 
+  bool                formatted;                     /* Has this summary instance been loaded from a formatted (i.e. FSMSPEC file) or unformatted (i.e. SMSPEC) file. */
+  time_t              sim_start_time;                /* When did the simulation start - worldtime. */
+
+  int                 time_index;                    /* The fields time_index, day_index, month_index and year_index */
+  int                 day_index;                     /* are used by the ecl_sum_data object to locate per. timestep */  
+  int                 month_index;                   /* time information. */ 
+  int                 year_index;
+
+  stringlist_type   * restart_list;                  /* List of ECLBASE names of restart files this case has been restarted from (if any). */ 
 };
 
 

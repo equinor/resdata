@@ -698,7 +698,7 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
 ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , const stringlist_type * filelist , bool include_restart) {
   ecl_sum_data_type * data = ecl_sum_data_alloc(smspec);
   ecl_sum_data_fread__( data , filelist );
-  
+
   if (include_restart) {
     const char * path                     = ecl_smspec_get_simulation_path( smspec );
     const stringlist_type * restart_cases = ecl_smspec_get_restart_list( smspec );
