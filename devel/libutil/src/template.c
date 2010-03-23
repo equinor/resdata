@@ -97,12 +97,19 @@ void template_free( template_type * template ) {
 
     3. If internalize_template == false subsititions will be performed
        on the filename of the file with template content.
+  
+    4. If the parameter @override_symlink is true the function will
+       have the following behaviour:
+
+         If the target_file already exists as a symbolic link, the
+         symbolic link will be removed prior to creating the instance,
+         ensuring that a remote file is not updated.
 
 */
    
 
 
-void template_instansiate( const template_type * template , const char * __target_file , const subst_list_type * arg_list ) {
+void template_instansiate( const template_type * template , const char * __target_file , const subst_list_type * arg_list , bool override_symlink) {
   char * target_file = util_alloc_string_copy( __target_file );
 
   /* Finding the name of the target file. */
@@ -121,6 +128,15 @@ void template_instansiate( const template_type * template , const char * __targe
     subst_list_update_string( template->arg_list , &buffer );
     if (arg_list != NULL) subst_list_update_string( arg_list , &buffer );
 
+    /* 
+       Check if target file already exists as a symlink, 
+       and remove it if override_symlink is true. 
+    */
+    if (override_symlink) {
+      if (util_is_link( target_file ))
+        unlink( target_file );
+    }
+    
     /* Write the content out. */
     {
       FILE * stream = util_mkdir_fopen( target_file , "w");

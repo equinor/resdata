@@ -56,7 +56,7 @@ struct ecl_smspec_struct {
   hash_type          * well_var_index;             /* Indexes for all well variables: {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
   hash_type          * well_completion_var_index;  /* Indexes for completion indexes .*/
   hash_type          * group_var_index;            /* Indexes for group variables.*/
-  hash_type          * field_var_index;
+  hash_type          * field_var_index;               
   hash_type          * region_var_index;           /* The stored index is an offset. */
   hash_type          * misc_var_index;             /* Variables like 'TCPU' and 'NEWTON'. */
   hash_type          * block_var_index;            /* Block variables like BPR */ 

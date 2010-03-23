@@ -84,7 +84,10 @@ void matrix_dgesv(matrix_type * A , matrix_type * B) {
    This little function translates between an integer identifier
    (i.e. and enum instance) to one of the characters used by the low
    level lapack routine to indicate how the singular vectors should be
-   returned to the calling scope.
+   returned to the calling scope. 
+   
+   The meaning of the different enum values is documented in the enum
+   definition in the header file matrix_lapack.h.
 */
 
 static char dgesvd_get_vector_job( dgesvd_vector_enum vector_job) {
@@ -136,6 +139,8 @@ void matrix_dgesvd(dgesvd_vector_enum jobu , dgesvd_vector_enum jobvt ,  matrix_
   } else {
     ldu     = matrix_get_column_stride( U  );
     U_data  = matrix_get_data( U ); 
+    if (jobu == DGESVD_NONE)
+      util_abort("%s: internal error \n",__func__);
   }
 
   if (VT == NULL) {
@@ -146,6 +151,8 @@ void matrix_dgesvd(dgesvd_vector_enum jobu , dgesvd_vector_enum jobvt ,  matrix_
   } else {
     ldvt     = matrix_get_column_stride( VT );
     VT_data  = matrix_get_data( VT ); 
+    if (jobvt == DGESVD_NONE)
+      util_abort("%s: internal error \n",__func__);
   }
 
   /* 
@@ -193,7 +200,7 @@ void matrix_dgesvd(dgesvd_vector_enum jobu , dgesvd_vector_enum jobvt ,  matrix_
 int  matrix_dsyevx(bool             compute_eig_vectors , 
 		   dsyevx_eig_enum  which_values        , /* DSYEVX | DSYEVX_VALUE_INTERVAL | DSYEVX_INDEX_INTERVAL */ 
 		   dsyevx_uplo_enum uplo, 
-		   matrix_type    * A , 
+		   matrix_type    * A ,                   /* The input matrix - is modified by the dsyevx() function. */ 
 		   double VL          ,                   /* Lower limit when using DSYEVX_VALUE_INTERVAL */
 		   double VU          ,                   /* Upper limit when using DSYEVX_VALUE_INTERVAL */
 		   int    IL          ,                   /* Lower index when using DSYEVX_INDEX_INTERVAL */ 
@@ -325,11 +332,12 @@ int  matrix_dsyevx(bool             compute_eig_vectors ,
 
 
 /**
-   Wrapper function to compute all eigenvalues + eigenvactors.
+   Wrapper function to compute all eigenvalues + eigenvectors with the
+   matrix_dsyevx() function.
 */
 
 int  matrix_dsyevx_all(dsyevx_uplo_enum uplo, 
-		       matrix_type    * A , 
+		       matrix_type    * A ,                   /* The input matrix - is modified by the dsyevx() function. */ 
 		       double *eig_values ,                   /* The calcualated eigenvalues         */
 		       matrix_type * Z    ) {                 /* The eigenvectors as columns vectors */ 
   int num_eigenvalues;
