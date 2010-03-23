@@ -622,26 +622,27 @@ static bool ecl_kw_fscanf_qstring(char *s , const char *fmt , int len, FILE *str
 
 
 
+/*
+  This rather painful parsing is because formatted eclipse double
+  format : 0.ddddD+01 - difficult to parse the 'D';
+*/
+/** Should be: NESTED */
+  
+static double __fscanf_ECL_double( FILE * stream , const char * fmt) {
+  int    read_count , power;
+  double value , arg;
+  read_count = fscanf( stream , fmt , &arg , &power);
+  if (read_count == 2) 
+    value = arg * pow10( power );
+  else {
+    util_abort("%s: read failed \n",__func__);
+    value = -1;
+  }
+  return value;
+}
+
 void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 
-  /*
-    This rather painful parsing is because formatted eclipse double
-    format : 0.ddddD+01 - difficult to parse the 'D';
-  */
-  
-  static double __fscanf_ECL_double( FILE * stream , const char * fmt) {
-    int    read_count , power;
-    double value , arg;
-    read_count = fscanf( stream , fmt , &arg , &power);
-    if (read_count == 2) 
-      value = arg * pow10( power );
-    else {
-      util_abort("%s: read failed \n",__func__);
-      value = -1;
-    }
-    return value;
-  }
-  
 
   {
     const char null_char         = '\0';
@@ -1063,10 +1064,7 @@ static void ecl_kw_fwrite_data_unformatted( ecl_kw_type * ecl_kw , fortio_type *
 
 
 
-
-static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * fortio ) {
-
-  /**
+/**
      The point of this awkward function is that I have not managed to
      use C fprintf() syntax to reproduce the ECLIPSE
      formatting. ECLIPSE expects the following formatting for float
@@ -1086,7 +1084,7 @@ static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * f
      updated accordingly.
   */
   
-  static void __fprintf_scientific(FILE * stream, const char * fmt , double x) {
+   static void __fprintf_scientific(FILE * stream, const char * fmt , double x) {
     double pow_x = ceil(log10(fabs(x)));
     double arg_x   = x / pow(10.0 , pow_x);
     if (x != 0.0) {
@@ -1100,7 +1098,10 @@ static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * f
     }
     fprintf(stream , fmt , arg_x , (int) pow_x);
   }
-  
+
+
+static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * fortio ) {
+
   {
     
     FILE * stream           = fortio_get_FILE( fortio );
