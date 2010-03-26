@@ -4845,9 +4845,9 @@ int util_get_current_linenr(FILE * stream) {
       values in the range) are marked as true. All other entries are
       marked as false. The active array must be allocated by the
       calling scope, with length (at least) "max_value + 1".
-
-    o If active == NULL - an (int *) pointer is allocated, and filled
-      with the active indices.
+      
+    o If active == NULL - an (int *) pointer is allocated, filled with
+      the active indices and returned.
 
 */
 
