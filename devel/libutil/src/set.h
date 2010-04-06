@@ -12,6 +12,7 @@ extern "C" {
 typedef struct set_struct set_type;
 typedef struct set_iter_struct set_iter_type;
 
+void         set_clear( set_type * set );
 void         set_remove_key(set_type * , const char * );
 set_type   * set_alloc(int , const char ** );
 set_type   * set_alloc_empty();

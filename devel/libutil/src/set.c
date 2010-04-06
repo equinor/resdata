@@ -40,6 +40,10 @@ set_type * set_copyc(const set_type * set)
 }
 
 
+void set_clear( set_type * set ) {
+  hash_clear( set->key_hash );
+}
+
 
 set_type * set_alloc_empty() { return set_alloc(0 , NULL); }
 

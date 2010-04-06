@@ -341,6 +341,12 @@ void subst_list_insert_func(subst_list_type * subst_list , const char * func_nam
     util_abort("%s: function:%s not available \n",__func__ , func_name);
 }
 
+
+void subst_list_clear( subst_list_type * subst_list ) {
+  vector_clear( subst_list->string_data );
+}
+
+
 void subst_list_free(subst_list_type * subst_list) {
   vector_free( subst_list->string_data );
   vector_free( subst_list->func_data );
