@@ -18,7 +18,7 @@ const subst_list_type * subst_list_get_parent( const subst_list_type * subst_lis
 subst_list_type       * subst_list_alloc( const void * input_arg );
 subst_list_type       * subst_list_alloc_deep_copy(const subst_list_type * );
 void                    subst_list_free(subst_list_type *);
-void                    lsubst_list_clear( subst_list_type * subst_list );
+void                    subst_list_clear( subst_list_type * subst_list );
 void                    subst_list_insert_copy(subst_list_type *  , const char * , const char * , const char * doc_string);
 void                    subst_list_insert_ref(subst_list_type *  , const char * , const char * , const char * doc_string);
 void                    subst_list_insert_owned_ref(subst_list_type *  , const char * , const char * , const char * doc_string);
