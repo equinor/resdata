@@ -117,8 +117,8 @@ void ecl_region_free( ecl_region_type * region ) {
 /*****************************************************************/
 
 static void ecl_region_invalidate_index_list( ecl_region_type * region ) {
-  region->active_index_list = util_safe_free( region->active_index_list );
-  region->global_index_list = util_safe_free( region->global_index_list );
+  util_safe_free( region->active_index_list );  region->active_index_list = NULL;
+  util_safe_free( region->global_index_list );  region->global_index_list = NULL;
 }
 
 
