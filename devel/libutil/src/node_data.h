@@ -5,8 +5,8 @@ extern "C" {
 #endif
 #include <stdbool.h>
 
-typedef void       * (  copyc_ftype) (const void *);
-typedef void         (  free_ftype)  (void *);
+typedef void       * (  copyc_ftype ) (const void *);
+typedef void         (  free_ftype )  (void *);
 
 
 

@@ -798,6 +798,7 @@ void hash_iter_restart( hash_iter_type * iter ) {
 
 
 
+
 hash_iter_type * hash_iter_alloc(const hash_type * hash) {
   hash_iter_type * iter = util_malloc(sizeof * iter, __func__); 
 
@@ -807,8 +808,6 @@ hash_iter_type * hash_iter_alloc(const hash_type * hash) {
   hash_iter_restart( iter );
   return iter;
 }
-
-
 
 
 

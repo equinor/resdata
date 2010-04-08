@@ -156,9 +156,8 @@ stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type * src) {
 
 
 /**
-  Allocates a new stringlist where the strings are references to the num_strings found
-  in stringlist from start.
-
+  Allocates a new stringlist where the strings are references to the
+  num_strings found in stringlist from start.
 */
 stringlist_type * stringlist_alloc_shallow_copy_with_limits(const stringlist_type * stringlist, int start, int num_strings) {
   stringlist_type * copy = stringlist_alloc_empty( true );
@@ -174,8 +173,9 @@ stringlist_type * stringlist_alloc_shallow_copy_with_limits(const stringlist_typ
 
 
 /*
-  Can not use vector_deep copy - because we might not have the constructor registered, 
-  in the node_data instance; but in this case we know the copy constructor.
+  Can not use vector_deep copy - because we might not have the
+  constructor registered, in the node_data instance; but in this case
+  we know the copy constructor.
 */
 
 stringlist_type * stringlist_alloc_deep_copy(const stringlist_type * src) {
@@ -204,9 +204,10 @@ void stringlist_append_stringlist_ref(stringlist_type * stringlist , const strin
 
 /**
   Insert a copy of a stringlist in some position.
-
+  
   Can probably be made more efficient.
 */
+
 void stringlist_insert_stringlist_copy(stringlist_type * stringlist, const stringlist_type * src, int pos) {
   int size_old  = stringlist_get_size(stringlist);
 
@@ -253,7 +254,7 @@ void stringlist_free(stringlist_type * stringlist) {
 
 
 static UTIL_SAFE_CAST_FUNCTION(stringlist , STRINGLIST_TYPE_ID);
-UTIL_IS_INSTANCE_FUNCTION(stringlist , STRINGLIST_TYPE_ID)
+       UTIL_IS_INSTANCE_FUNCTION(stringlist , STRINGLIST_TYPE_ID)
 
 void stringlist_free__(void * __stringlist) {
   stringlist_type * stringlist = stringlist_safe_cast(__stringlist);
@@ -283,6 +284,7 @@ bool stringlist_iequal( const stringlist_type * stringlist , int index, const ch
 const char * stringlist_safe_iget( const stringlist_type * stringlist , int index) {
   if (index < 0)
     util_abort("%s: negative index:%d is NOT allowed \n",__func__ , index);
+
   if (index < stringlist_get_size( stringlist ))
     return stringlist_iget( stringlist , index);
   else

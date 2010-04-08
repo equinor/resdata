@@ -242,7 +242,7 @@ char   * util_realloc_string_copy(char * , const char *);
 char   * util_realloc_substring_copy(char * , const char *, int );
 char   * util_realloc_dequoted_string(char *);
 char   * util_alloc_dequoted_copy(const char *s);
-void   * util_safe_free(void *);
+void     util_safe_free(void *);
 void     util_free_stringlist(char **, int );
 char   * util_alloc_substring_copy(const char *, int );
 bool     util_is_directory(const char * );

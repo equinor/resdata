@@ -258,8 +258,10 @@ static file_node_type * file_node_fread_alloc( FILE * stream , char ** key) {
       int node_size;
       if (status == NODE_IN_USE) 
         *key = util_fread_realloc_string( *key , stream );
-      else
-        *key = util_safe_free( *key );  /* Explicitly set to NULL for free nodes. */
+      else {
+        util_safe_free( *key );  /* Explicitly set to NULL for free nodes. */
+        *key = NULL;
+      }
       
       node_size = util_fread_int( stream );
       if (node_size <= 0)

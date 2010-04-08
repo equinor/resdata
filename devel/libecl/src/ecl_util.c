@@ -636,8 +636,10 @@ char * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , e
     filename = ecl_util_alloc_filename( path , base , file_type , !fmt_file_first , report_nr);
   }
 
-  if (! util_file_exists(filename))
-    filename = util_safe_free( filename );  
+  if (! util_file_exists(filename)) {
+    util_safe_free( filename );  
+    filename = NULL;
+  }
   
   return filename;
 }
