@@ -123,7 +123,7 @@ static void <TYPE>_vector_realloc_data__(<TYPE>_vector_type * vector , int new_a
 
 static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int index) {
   if ((index < 0) || (index >= vector->size)) 
-    util_abort("%s: index:%d invalid. Valid interval: [0,%d> \n",__func__ , index , vector->size);
+    util_abort("%s: index:%d invalid. Valid interval: [0,%d>.\n",__func__ , index , vector->size);
 }
 
 
@@ -230,7 +230,7 @@ void <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> factor) {
     if (index >= 0)
       return vector->data[index];
     else {
-      util_abort("%s: index:%d is invalid - only accepts positive indices\n",__func__ , index);
+      util_abort("%s: index:%d is invalid - only accepts positive indices.\n",__func__ , index);
       return -1;
     }
   }
