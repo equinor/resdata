@@ -8,6 +8,7 @@ extern "C" {
 #include <util.h>
 
 typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
+typedef <TYPE> (<TYPE>_ftype) (<TYPE>);
 
 
 void                 <TYPE>_vector_select_unique(<TYPE>_vector_type * vector);
@@ -53,6 +54,7 @@ void                 <TYPE>_vector_fread( <TYPE>_vector_type * vector , FILE * s
 void                 <TYPE>_vector_fwrite_data( const <TYPE>_vector_type * vector , FILE * stream );
 void                 <TYPE>_vector_fread_data( <TYPE>_vector_type * vector , int size, FILE * stream);
 bool                 <TYPE>_vector_equal(const <TYPE>_vector_type * vector1 , const <TYPE>_vector_type * vector2);
+void                 <TYPE>_vector_apply(<TYPE>_vector_type * vector , <TYPE>_ftype *func);
 
 UTIL_SAFE_CAST_HEADER( <TYPE>_vector );
 

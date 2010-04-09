@@ -642,3 +642,10 @@ bool <TYPE>_vector_equal(const <TYPE>_vector_type * vector1 , const <TYPE>_vecto
   } else
     return false;
 }
+
+
+void  <TYPE>_vector_apply(<TYPE>_vector_type * vector , <TYPE>_ftype * func) {
+  int i;
+  for (i=0; i < vector->size; i++)
+    vector->data[i] = func( vector->data[i] );
+}
