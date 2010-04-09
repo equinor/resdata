@@ -140,7 +140,7 @@
    of 'X' on the timeline, i.e. in the middle of ministep M3. If we
    are interested in the rate at this time the function:
 
-             ecl_sum_data_get_from_sim_time()
+        ecl_sum_data_get_from_sim_time()
 
    will just return the M3 value, whereas if you are interested in
    e.g. pressure at this time the function will return a weighted
@@ -438,8 +438,8 @@ int ecl_sum_data_get_ministep_from_sim_days( const ecl_sum_data_type * data , do
    
    
    For further explanation (in particular for which keywords the
-   function should be used), consult documentation at the top of
-   this file.
+   function should be used), consult documentation at the top of this
+   file.
 */
 
 
@@ -935,7 +935,8 @@ time_t_vector_type * ecl_sum_data_alloc_time_vector( const ecl_sum_data_type * d
       time_t_vector_append( time_vector , ministep->sim_time );
     }
   }
-    
-  
   return time_vector;
 }
+
+
+

@@ -614,3 +614,40 @@ ecl_smspec_var_type ecl_sum_identify_var_type(const ecl_sum_type * ecl_sum , con
   return ecl_smspec_identify_var_type( ecl_sum->smspec , var );
 }
 
+/*****************************************************************/
+
+
+void ecl_sum_resample_from_sim_time( const ecl_sum_type * ecl_sum , const time_t_vector_type * sim_time , double_vector_type * value , const char * gen_key) {
+  int param_index = ecl_smspec_get_general_var_index( ecl_sum->smspec , gen_key );
+  double_vector_reset( value );
+  {
+    int i;
+    for (i=0; i < time_t_vector_size( sim_time ); i++)
+      double_vector_iset( value , i , ecl_sum_data_get_from_sim_time( ecl_sum->data , time_t_vector_iget( sim_time , i ) , param_index));
+  }
+}
+
+
+void ecl_sum_resample_from_sim_days( const ecl_sum_type * ecl_sum , const double_vector_type * sim_days , double_vector_type * value , const char * gen_key) {
+  int param_index = ecl_smspec_get_general_var_index( ecl_sum->smspec , gen_key );
+  double_vector_reset( value );
+  {
+    int i;
+    for (i=0; i < double_vector_size( sim_days ); i++)
+      double_vector_iset( value , i , ecl_sum_data_get_from_sim_days( ecl_sum->data , double_vector_iget( sim_days , i ) , param_index));
+  }
+}
+
+
+time_t ecl_sum_time_from_days( const ecl_sum_type * ecl_sum , double sim_days ) {
+  time_t t = ecl_smspec_get_start_time( ecl_sum->smspec );
+  util_inplace_forward_days( &t , sim_days );
+  return t;
+}
+
+
+double ecl_sum_days_from_time( const ecl_sum_type * ecl_sum , time_t sim_time ) {
+  double seconds_diff = util_difftime( ecl_smspec_get_start_time( ecl_sum->smspec ) , sim_time , NULL , NULL , NULL, NULL);
+  return seconds_diff * 1.0 / (3600 * 24.0);
+}
+

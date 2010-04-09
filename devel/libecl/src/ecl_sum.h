@@ -12,6 +12,8 @@ extern "C" {
 #include <ecl_smspec.h>
 #include <time_t_vector.h>
 #include <stringlist.h>
+#include <double_vector.h>
+#include <time_t_vector.h>
 
 typedef struct ecl_sum_struct       ecl_sum_type;
 
@@ -95,6 +97,11 @@ int          ecl_sum_get_ministep_from_sim_days( const ecl_sum_type * ecl_sum , 
 int          ecl_sum_get_ministep_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time);
 time_t       ecl_sum_get_start_time(const ecl_sum_type * );
 const char * ecl_sum_get_case(const ecl_sum_type * );
+
+void ecl_sum_resample_from_sim_days( const ecl_sum_type * ecl_sum , const double_vector_type * sim_days , double_vector_type * value , const char * gen_key);
+void ecl_sum_resample_from_sim_time( const ecl_sum_type * ecl_sum , const time_t_vector_type * sim_time , double_vector_type * value , const char * gen_key);
+time_t ecl_sum_time_from_days( const ecl_sum_type * ecl_sum , double sim_days );
+double ecl_sum_days_from_time( const ecl_sum_type * ecl_sum , time_t sim_time );
 
 /*****************************************************************/
 stringlist_type     * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum );
