@@ -18,6 +18,58 @@
 #include <statistics.h>
 #include <thread_pool.h>
 
+/*******************************************************************/
+/**
+
+About plotting quantiles:
+-------------------------
+
+The default modus for ens_plot is to plot an ensemble as a collection
+of curves, however it is also possible to plot an ensemble as a mean
+curve and a collection of quantiles. The implementation works as
+follows:
+
+ 1. You use the function ens_use_quantile(ens , true) to tell that you
+    want to plot the ensemble using quantiles. The ens_alloc()
+    function contains the statement:
+ 
+                   ens_use_quantiles(ens , false);
+
+    i.e. the default is to not use quantiles. Observe that the use of
+    quantiles versus a collection of lines is on per-ensemble basis.
+
+
+ 2. You use the function ens_add_quantile(ens , q) to add
+    quantiles. The quantile values should be q in the interval [0,1].
+
+
+ 3. The function plot_ensemble() has separate code blocks for plotting
+    with quantiles and as a collection of lines. When plotting with
+    quantiles the algorithm is as follows:
+
+    a) All summary data is resampled to a common time-axis. This time
+       axis contains @interp_size elements, this is currently set to
+       50. The distribution of interpolation times is currently
+       uniform, but that can easily be generalized. 
+
+       The data is resampled using the low-level functions
+       ecl_sum_data_get_from_sim_time() which tries to differentiates
+       between rate and non-rate data. 
+
+
+    b) For each interpolation time step we use the functions
+       statistics_empirical_quantile() to calculate the quantile
+       values. This is briefly based on sorting the data, looking up
+       the appropriate index and simple linear interpolation.
+
+
+    c) The quantiles are plotted - along with the mean value.   
+
+
+*/
+
+
+
 bool use_viewer = false ; // Global variable to enable backwords compatible behaviour of batch mode
                           // option -b sets use_viewer = true (will start external viewer to show plots)
                           // option -s sets use_viewer = false (slave mode, returns name of plot file on STDOUT)
@@ -48,8 +100,8 @@ typedef struct {
   /* Everything below line is related to plotting of quantiles. */
   /*-----------------------------------------------------------------*/  
   bool                  use_quantiles;       /* Should this ensemble be plotted as a mean and quantiles - instead of one line pr. member? */ 
-  int                   num_sim_days;        /* How many interpolation points to use when resampling the summary data.*/
-  double_vector_type  * sim_days;            /* The times where we resample the summary data - given in days since simulation start.*/ 
+  int                   interp_size;         /* How many interpolation points to use when resampling the summary data.*/
+  double_vector_type  * interp_days;         /* The times where we resample the summary data - given in days since simulation start.*/ 
   double_vector_type  * quantiles;           /* The quantile values we want to plot, i.e [0.10, 0.32, 0.68, 0.90] */
   vector_type         * interp_data;         /* A vector of double_vector instances of the summary data - interpolated to sim_days. */
   vector_type         * quantile_data;       /* The quantiles. */ 
@@ -120,6 +172,9 @@ void ens_set_line_width(ens_type * ens, double line_width) {
   ens->plot_line_width = line_width;
 }
 
+void ens_set_interp_size( ens_type * ens, int interp_size) {
+  ens->interp_size = interp_size;
+}
 
 void ens_use_quantiles( ens_type * ens, bool use_quantiles ) {
   ens->use_quantiles = use_quantiles;
@@ -148,11 +203,10 @@ ens_type * ens_alloc() {
   ens->data        = vector_alloc_new();
   /* Quantyile related stuff. */
   ens->quantiles     = double_vector_alloc(0 , 0);
-  ens->sim_days      = double_vector_alloc(0 , 0); 
+  ens->interp_days      = double_vector_alloc(0 , 0); 
   ens->interp_data   = vector_alloc_new();
   ens->quantile_data = vector_alloc_new();
   ens->sim_length    = 0;
-  ens->num_sim_days  = 50;
 
   /* Setting defaults for the plot */
   ens_set_style( ens , LINE );
@@ -162,6 +216,7 @@ ens_type * ens_alloc() {
   ens_set_symbol_size(ens , 1.0);
   ens_set_line_width(ens , 1.0);
   ens_use_quantiles( ens , false );
+  ens_set_interp_size( ens , 50 );
   return ens;
 }
 
@@ -170,7 +225,7 @@ ens_type * ens_alloc() {
 void ens_free( ens_type * ens) {
   vector_free( ens->data );
   double_vector_free( ens->quantiles );
-  double_vector_free( ens->sim_days  );
+  double_vector_free( ens->interp_days  );
   vector_free( ens->interp_data );
   vector_free( ens->quantile_data );
   free(ens);
@@ -429,16 +484,16 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
     /* The ensemble is plotted as a mean, and quantiles. */
     
     /* 1: Init simulations days to use for resampling of the summary data. */
-    double_vector_reset( ens->sim_days );
-    for (int i = 0; i < ens->num_sim_days; i++) {
-      double sim_days = i * ens->sim_length / (ens->num_sim_days - 1);
-      double_vector_iset( ens->sim_days , i , sim_days);
+    double_vector_reset( ens->interp_days );
+    for (int i = 0; i < ens->interp_size; i++) {
+      double sim_days = i * ens->sim_length / (ens->interp_size - 1);
+      double_vector_iset( ens->interp_days , i , sim_days);
     }
     
     /* 2: resample all the simulation results to the same times. */
     for (iens = 0; iens < ens_size; iens++) {
       const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , iens );
-      ecl_sum_resample_from_sim_days( ecl_sum , ens->sim_days , vector_iget( ens->interp_data , iens ) , user_key );
+      ecl_sum_resample_from_sim_days( ecl_sum , ens->interp_days , vector_iget( ens->interp_data , iens ) , user_key );
     }
     
     /* 3: Setting up the plot data for the quantiles. */
@@ -478,7 +533,7 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
       /* 3B: Calculate and add the actual data to plot. */
       {
         double_vector_type * tmp = double_vector_alloc( 0,0);
-        for (int i =0; i < double_vector_size( ens->sim_days ); i++) {                    /* looping over the time direction */
+        for (int i =0; i < double_vector_size( ens->interp_days ); i++) {                    /* looping over the time direction */
           double_vector_reset( tmp );
           for (iens=0; iens < ens_size; iens++) {                                         /* Looping over all the realisations. */
             const double_vector_type * interp_data = vector_iget_const( ens->interp_data , iens );
@@ -494,7 +549,7 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
 
             /* Adding the mean value. */
             plot_dataset_append_point_xy( mean , 
-                                          ecl_sum_time_from_days( ecl_sum , double_vector_iget( ens->sim_days , i )) ,    /* Time value */
+                                          ecl_sum_time_from_days( ecl_sum , double_vector_iget( ens->interp_days , i )) ,    /* Time value */
                                           statistics_mean( tmp ));
             
             /* Adding the quantiles. */
@@ -503,7 +558,7 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
               plot_dataset_type * data_set = vector_iget( quantiles , iq );
               qv                           = statistics_empirical_quantile( tmp , double_vector_iget( ens->quantiles , iq ));
               plot_dataset_append_point_xy( data_set , 
-                                            ecl_sum_time_from_days( ecl_sum , double_vector_iget( ens->sim_days , i )) ,            /* Time value */
+                                            ecl_sum_time_from_days( ecl_sum , double_vector_iget( ens->interp_days , i )) ,         /* Time value */
                                             qv );                                                                                   /* y-value - the interpolated quantile. */
             }
           }
