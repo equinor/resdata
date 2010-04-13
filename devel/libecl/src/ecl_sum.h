@@ -102,6 +102,7 @@ void ecl_sum_resample_from_sim_days( const ecl_sum_type * ecl_sum , const double
 void ecl_sum_resample_from_sim_time( const ecl_sum_type * ecl_sum , const time_t_vector_type * sim_time , double_vector_type * value , const char * gen_key);
 time_t ecl_sum_time_from_days( const ecl_sum_type * ecl_sum , double sim_days );
 double ecl_sum_days_from_time( const ecl_sum_type * ecl_sum , time_t sim_time );
+double                ecl_sum_get_sim_length( const ecl_sum_type * ecl_sum ) ;
 
 /*****************************************************************/
 stringlist_type     * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum );
@@ -109,6 +110,7 @@ stringlist_type     * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum 
 stringlist_type     * ecl_sum_alloc_matching_general_var_list(const ecl_sum_type * ecl_sum , const char * pattern);  
 void                  ecl_sum_select_matching_general_var_list( const ecl_sum_type * ecl_sum , const char * pattern , stringlist_type * keys);
 ecl_smspec_var_type   ecl_sum_identify_var_type(const ecl_sum_type * ecl_sum , const char * var);
+
 
 UTIL_IS_INSTANCE_HEADER( ecl_sum );
 

@@ -26,13 +26,25 @@
 #include <subst_func.h>
 #include <buffer.h>
 #include <mzran.h>
-
+#include <statistics.h>
+#include <double_vector.h>
 
 int main(int argc , char ** argv) {
-  mzran_type * rng = mzran_alloc( INIT_NONE );
-  printf("rng 1:%d  2:%d \n",mzran_get_int( rng ) , mzran_get_int( rng ));
-  mzran_init( rng , INIT_DEV_RANDOM );
-  printf("rng 1:%d  2:%d \n",mzran_get_int( rng ) , mzran_get_int( rng ));
+  int N = atof( argv[1] );
+  int i;
+  
+  double_vector_type * data = double_vector_alloc(0 , 0);
+  mzran_type * rng = mzran_alloc( INIT_DEV_RANDOM );
+
+  for (i=0; i < N;  i++) 
+    double_vector_iset( data , i , mzran_get_double( rng ));
+
+
+  printf("Q( 0.10 ) = %7.4f \n",statistics_empirical_quantile( data , 0.10 ));
+  printf("Q( 0.30 ) = %7.4f \n",statistics_empirical_quantile( data , 0.30 ));
+  printf("Q( 0.50 ) = %7.4f \n",statistics_empirical_quantile( data , 0.50 ));
+  printf("Q( 0.70 ) = %7.4f \n",statistics_empirical_quantile( data , 0.70 ));
+  printf("Q( 0.90 ) = %7.4f \n",statistics_empirical_quantile( data , 0.90 ));
 }
 
 

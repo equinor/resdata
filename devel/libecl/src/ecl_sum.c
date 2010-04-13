@@ -651,3 +651,7 @@ double ecl_sum_days_from_time( const ecl_sum_type * ecl_sum , time_t sim_time ) 
   return seconds_diff * 1.0 / (3600 * 24.0);
 }
 
+
+double ecl_sum_get_sim_length( const ecl_sum_type * ecl_sum ) { 
+  return ecl_sum_data_get_sim_length( ecl_sum->data );
+}

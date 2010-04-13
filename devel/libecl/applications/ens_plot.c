@@ -15,6 +15,8 @@
 #include <string.h>
 #include <int_vector.h>
 #include <arg_pack.h>
+#include <statistics.h>
+#include <thread_pool.h>
 
 bool use_viewer = false ; // Global variable to enable backwords compatible behaviour of batch mode
                           // option -b sets use_viewer = true (will start external viewer to show plots)
@@ -37,10 +39,20 @@ typedef struct {
 
   plot_style_type       plot_style;  	    /* LINE | POINTS | LINE_POINTS */ 
   plot_color_type       plot_color;  	    /* See available colors in libplot/include/plot_const.h */
-  plot_line_style_type  plot_line_style;    /* Line style solid_line | short_dash | long_dash */
+  plot_line_style_type  plot_line_style;    /* Line style: solid_line | short_dash | long_dash */
   plot_symbol_type      plot_symbol;        /* Integer  - 17 is filled circle ... */
   double                plot_symbol_size;   /* Scale factor for symbol size. */
   double                plot_line_width;    /* Scale factor for line width. */ 
+  double                sim_length;         /* The length of the _longest_ simulation in the ensemble. */
+
+  /* Everything below line is related to plotting of quantiles. */
+  /*-----------------------------------------------------------------*/  
+  bool                  use_quantiles;       /* Should this ensemble be plotted as a mean and quantiles - instead of one line pr. member? */ 
+  int                   num_sim_days;        /* How many interpolation points to use when resampling the summary data.*/
+  double_vector_type  * sim_days;            /* The times where we resample the summary data - given in days since simulation start.*/ 
+  double_vector_type  * quantiles;           /* The quantile values we want to plot, i.e [0.10, 0.32, 0.68, 0.90] */
+  vector_type         * interp_data;         /* A vector of double_vector instances of the summary data - interpolated to sim_days. */
+  vector_type         * quantile_data;       /* The quantiles. */ 
 } ens_type;
 
 
@@ -109,6 +121,21 @@ void ens_set_line_width(ens_type * ens, double line_width) {
 }
 
 
+void ens_use_quantiles( ens_type * ens, bool use_quantiles ) {
+  ens->use_quantiles = use_quantiles;
+}
+
+
+void ens_add_quantile( ens_type * ens , double quantile ) {
+  double_vector_append( ens->quantiles , quantile );
+  vector_append_owned_ref( ens->quantile_data , double_vector_alloc(0,0) , double_vector_free__ );
+}
+
+void ens_clear_quantiles( ens_type * ens ) {
+  double_vector_reset( ens->quantiles );
+  vector_clear( ens->quantile_data );
+}
+
 /** 
     Allocating an empty ens_type instance, with all plotting
     attributes initialized to default values.
@@ -117,9 +144,16 @@ void ens_set_line_width(ens_type * ens, double line_width) {
 
 
 ens_type * ens_alloc() {
-  ens_type * ens  = util_malloc( sizeof * ens, __func__);
-  ens->data       = vector_alloc_new();
-  
+  ens_type * ens   = util_malloc( sizeof * ens, __func__);
+  ens->data        = vector_alloc_new();
+  /* Quantyile related stuff. */
+  ens->quantiles     = double_vector_alloc(0 , 0);
+  ens->sim_days      = double_vector_alloc(0 , 0); 
+  ens->interp_data   = vector_alloc_new();
+  ens->quantile_data = vector_alloc_new();
+  ens->sim_length    = 0;
+  ens->num_sim_days  = 50;
+
   /* Setting defaults for the plot */
   ens_set_style( ens , LINE );
   ens_set_color( ens , BLUE );
@@ -127,7 +161,7 @@ ens_type * ens_alloc() {
   ens_set_symbol_type(ens , PLOT_SYMBOL_FILLED_CIRCLE); 
   ens_set_symbol_size(ens , 1.0);
   ens_set_line_width(ens , 1.0);
-  
+  ens_use_quantiles( ens , false );
   return ens;
 }
 
@@ -135,6 +169,10 @@ ens_type * ens_alloc() {
 
 void ens_free( ens_type * ens) {
   vector_free( ens->data );
+  double_vector_free( ens->quantiles );
+  double_vector_free( ens->sim_days  );
+  vector_free( ens->interp_data );
+  vector_free( ens->quantile_data );
   free(ens);
 }
 
@@ -155,8 +193,12 @@ void ens_load_summary(ens_type * ens, const char * data_file) {
     else
       printf("Loading case: %s .......",base);
     fflush(stdout);
-    
-    vector_append_owned_ref( ens->data , ecl_sum_fread_alloc_case( data_file , KEY_JOIN_STRING ) , ecl_sum_free__);
+    {
+      ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( data_file , KEY_JOIN_STRING );
+      vector_append_owned_ref( ens->data , ecl_sum , ecl_sum_free__);
+      ens->sim_length = util_double_max( ens->sim_length , ecl_sum_get_sim_length( ecl_sum ));
+    }
+    vector_append_owned_ref( ens->interp_data , double_vector_alloc(0,0) , double_vector_free__ );
     printf("\n");
     free( base );
     util_safe_free( path );
@@ -193,8 +235,13 @@ void ens_load_batch(ens_type* ens, ens_type* ens_rft, const char * data_file) {
 
   if (util_file_exists(data_file)) {
     util_alloc_file_components( data_file , &path , &base , NULL);
-    vector_append_owned_ref( ens->data , ecl_sum_fread_alloc_case( data_file , KEY_JOIN_STRING ) , ecl_sum_free__);
-
+    {
+      ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( data_file , KEY_JOIN_STRING );
+      vector_append_owned_ref( ens->data , ecl_sum , ecl_sum_free__);
+      ens->sim_length = util_double_max( ens->sim_length , ecl_sum_get_sim_length( ecl_sum ));
+    }
+    vector_append_owned_ref( ens->interp_data , double_vector_alloc(0,0) , double_vector_free__ );
+    
     char * rft_file = ecl_util_alloc_exfilename( path, base, ECL_RFT_FILE, false, -1 ); 
 
     if(rft_file != NULL){
@@ -211,9 +258,8 @@ void ens_load_batch(ens_type* ens, ens_type* ens_rft, const char * data_file) {
   } else {
     sprintf(message,"Case %s not found",base) ;
     error_reply(message) ;
-  } ;
-
-} ;
+  } 
+} 
 
 
 void ens_load_many(ens_type * ens, path_fmt_type * data_file_fmt , int iens1, int iens2) {
@@ -224,6 +270,7 @@ void ens_load_many(ens_type * ens, path_fmt_type * data_file_fmt , int iens1, in
     free( data_file );
   }
 }
+
 
 void ens_set_plot_attributes(ens_type * ens) {
   int new_color;
@@ -236,7 +283,7 @@ void ens_set_plot_attributes(ens_type * ens) {
 
 void ens_set_plot_attributes_batch(hash_type * ens_table, hash_type * ens_rft_table) {
 
-  char message[128] ;
+  char message[128];
   char ens_name[32];
   scanf("%s" , ens_name);
   int new_color;
@@ -253,7 +300,7 @@ void ens_set_plot_attributes_batch(hash_type * ens_table, hash_type * ens_rft_ta
     sprintf(message,"Unknown ensemble %s",ens_name) ;
     error_reply(message) ;
     return ;
-  } ;
+  } 
   
   if (hash_has_key( ens_rft_table , ens_name)){
     ens_type  * set_ens    = hash_get( ens_rft_table , ens_name);
@@ -264,11 +311,68 @@ void ens_set_plot_attributes_batch(hash_type * ens_table, hash_type * ens_rft_ta
     sprintf(message,"Unknown ensemble %s",ens_name) ;
     error_reply(message) ;
     return ;
-  } ;
+  } 
 
   info_reply("New attributes set") ;
 }
 
+
+/**
+   This function will set the quantile properties of an ensemble. The
+   main command loop has read a 'Quantiles', and then subsequently gone up
+   here. The first argument following the 'Quantiles' should be the name of
+   the ensemble, a true or false value (i.e. 1 or 0) as to whether
+   quantiles should be used, and if quantiles should be used the
+   number of quantiles and their values.
+   
+   Example1
+   --------
+   Quantiles <- read in the main loop    
+   Prior     <- Name of ensemble this applies to
+   1         <- This ensemble should be plotted with quantiles.
+   4         <- We want four quantiles
+   0.10      <- The four quantile values
+   0.32      <- 
+   0.68      <-
+   0.90      <-
+
+   
+
+   Example2
+   --------
+   Quantiles <- read in the main loop    
+   Prior     <- Name of ensemble this applies to
+   0         <- This ensemble should not be plotted with quantiles.
+
+*/
+
+void ens_set_plot_quantile_properties_batch( hash_type * ens_table ) {
+  char message[128];
+  char ens_name[32];
+  scanf("%s" , ens_name);                                             /* Name of ensemble. */
+  if (hash_has_key( ens_table , ens_name)){
+    ens_type  * ens    = hash_get( ens_table , ens_name);
+    int  use_quantiles;
+    fscanf(stdin , "%d" , &use_quantiles);                            /* Should quantiles be used? */
+    if (use_quantiles == 1) {
+      int num_quantiles;
+      ens_use_quantiles( ens , true );
+      fscanf(stdin , "%d" , &num_quantiles);
+      ens_clear_quantiles( ens );
+      for (int i = 0; i < num_quantiles; i++) {
+        double q;
+        fscanf(stdin , "%lg" , &q);
+        ens_add_quantile( ens , q );
+      }
+    } else
+      ens_use_quantiles( ens , false);
+  } else {
+    sprintf(message,"Unknown ensemble %s",ens_name) ;
+    error_reply(message) ;
+    return;
+  } 
+  
+}
 
 
 /*****************************************************************/
@@ -319,31 +423,121 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
   const char * label = NULL;
   const int ens_size = vector_get_size( ens->data );
   int iens;
-  
-  for (iens = 0; iens < ens_size; iens++) {
-    plot_dataset_type * plot_dataset = plot_alloc_new_dataset( plot , label , PLOT_XY );
-    const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , iens );
-    //int report_step , first_report_step , last_report_step;
-    int ministep, first_ministep, last_ministep;
-    ecl_sum_get_ministep_range(ecl_sum , &first_ministep , &last_ministep);  
+
+
+  if (ens->use_quantiles) {
+    /* The ensemble is plotted as a mean, and quantiles. */
     
-    for (ministep = first_ministep; ministep <= last_ministep; ministep++) { 
-      bool ok_mini = ecl_sum_has_ministep( ecl_sum, ministep );
-      if (ok_mini ) {
-	plot_dataset_append_point_xy( plot_dataset , 
-				      //ecl_sum_get_sim_days( ecl_sum , ministep),
-				      ecl_sum_get_sim_time( ecl_sum , ministep),
-				      ecl_sum_get_general_var( ecl_sum , ministep , user_key ));
-      }
+    /* 1: Init simulations days to use for resampling of the summary data. */
+    double_vector_reset( ens->sim_days );
+    for (int i = 0; i < ens->num_sim_days; i++) {
+      double sim_days = i * ens->sim_length / (ens->num_sim_days - 1);
+      double_vector_iset( ens->sim_days , i , sim_days);
     }
     
-    plot_dataset_set_style      ( plot_dataset , ens->plot_style);
-    plot_dataset_set_line_color ( plot_dataset , ens->plot_color);
-    plot_dataset_set_point_color( plot_dataset , ens->plot_color);
-    plot_dataset_set_line_style ( plot_dataset , ens->plot_line_style);
-    plot_dataset_set_symbol_type( plot_dataset , ens->plot_symbol);
-    plot_dataset_set_symbol_size( plot_dataset , ens->plot_symbol_size);
-    plot_dataset_set_line_width( plot_dataset , ens->plot_line_width);
+    /* 2: resample all the simulation results to the same times. */
+    for (iens = 0; iens < ens_size; iens++) {
+      const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , iens );
+      ecl_sum_resample_from_sim_days( ecl_sum , ens->sim_days , vector_iget( ens->interp_data , iens ) , user_key );
+    }
+    
+    /* 3: Setting up the plot data for the quantiles. */
+    {
+      /* 3A: Create the plot_dataset instances and set the properties for the plots. */
+      vector_type * quantiles  = vector_alloc_new(); 
+      plot_dataset_type * mean = plot_alloc_new_dataset( plot , label , PLOT_XY);
+
+      for (int i=0; i < double_vector_size( ens->quantiles ); i++) {
+        plot_dataset_type * quantile_dataset = plot_alloc_new_dataset( plot , label , PLOT_XY);
+        vector_append_ref( quantiles , quantile_dataset);
+        
+        /*
+          The plotting style of the quantiles is (currently) quite
+          hardcoded:
+      
+          1. The quantiles are plotted as lines, with linestyle LONG_DASH.
+          2. The quantiles are plotted with the same color as the "mother curve" (i.e. the mean).
+          3. The quantiles are plotted with a linwidth given by 0.75 times the linewidth of the mean.
+        */
+        
+        plot_dataset_set_style      ( quantile_dataset , LINE );                           
+        plot_dataset_set_line_color ( quantile_dataset , ens->plot_color);                 
+        plot_dataset_set_line_style ( quantile_dataset , PLOT_LINESTYLE_LONG_DASH);        
+        plot_dataset_set_line_width ( quantile_dataset , ens->plot_line_width * 0.75);     
+      }
+
+      /* Set the style of the mean. */
+      plot_dataset_set_style      ( mean , ens->plot_style);
+      plot_dataset_set_line_color ( mean , ens->plot_color);
+      plot_dataset_set_point_color( mean , ens->plot_color);
+      plot_dataset_set_line_style ( mean , ens->plot_line_style);
+      plot_dataset_set_symbol_type( mean , ens->plot_symbol);
+      plot_dataset_set_symbol_size( mean , ens->plot_symbol_size);
+      plot_dataset_set_line_width ( mean , ens->plot_line_width);
+      
+      /* 3B: Calculate and add the actual data to plot. */
+      {
+        double_vector_type * tmp = double_vector_alloc( 0,0);
+        for (int i =0; i < double_vector_size( ens->sim_days ); i++) {                    /* looping over the time direction */
+          double_vector_reset( tmp );
+          for (iens=0; iens < ens_size; iens++) {                                         /* Looping over all the realisations. */
+            const double_vector_type * interp_data = vector_iget_const( ens->interp_data , iens );
+            double_vector_iset( tmp , iens , double_vector_iget( interp_data , i ));
+          }
+
+          /* 
+             Now tmp is an ensemble of values resampled to the same
+             time; this can be used for quantiles. 
+          */
+          {
+            const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , 0);    
+
+            /* Adding the mean value. */
+            plot_dataset_append_point_xy( mean , 
+                                          ecl_sum_time_from_days( ecl_sum , double_vector_iget( ens->sim_days , i )) ,    /* Time value */
+                                          statistics_mean( tmp ));
+            
+            /* Adding the quantiles. */
+            for (int iq =0; iq < double_vector_size( ens->quantiles ); iq++) {                                                      /* Looping over all the quantiles. */
+              double qv;
+              plot_dataset_type * data_set = vector_iget( quantiles , iq );
+              qv                           = statistics_empirical_quantile( tmp , double_vector_iget( ens->quantiles , iq ));
+              plot_dataset_append_point_xy( data_set , 
+                                            ecl_sum_time_from_days( ecl_sum , double_vector_iget( ens->sim_days , i )) ,            /* Time value */
+                                            qv );                                                                                   /* y-value - the interpolated quantile. */
+            }
+          }
+        }
+        double_vector_free( tmp );
+      }
+      vector_free(quantiles);
+    } 
+  } else {
+    /* The ensemble is plotted as a collection of curves. */
+    for (iens = 0; iens < ens_size; iens++) {
+      plot_dataset_type * plot_dataset = plot_alloc_new_dataset( plot , label , PLOT_XY );
+      const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , iens );
+      int ministep, first_ministep, last_ministep;
+      ecl_sum_get_ministep_range(ecl_sum , &first_ministep , &last_ministep);  
+      
+      for (ministep = first_ministep; ministep <= last_ministep; ministep++) { 
+        bool ok_mini = ecl_sum_has_ministep( ecl_sum, ministep );
+        if (ok_mini ) {
+          plot_dataset_append_point_xy( plot_dataset , 
+                                        //ecl_sum_get_sim_days( ecl_sum , ministep),
+                                        ecl_sum_get_sim_time( ecl_sum , ministep),
+                                        ecl_sum_get_general_var( ecl_sum , ministep , user_key ));
+        }
+      }
+      
+      plot_dataset_set_style      ( plot_dataset , ens->plot_style);
+      plot_dataset_set_line_color ( plot_dataset , ens->plot_color);
+      plot_dataset_set_point_color( plot_dataset , ens->plot_color);
+      plot_dataset_set_line_style ( plot_dataset , ens->plot_line_style);
+      plot_dataset_set_symbol_type( plot_dataset , ens->plot_symbol);
+      plot_dataset_set_symbol_size( plot_dataset , ens->plot_symbol_size);
+      plot_dataset_set_line_width( plot_dataset , ens->plot_line_width);
+    }
   }
 }
 
@@ -757,7 +951,7 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
 
   while (!complete) {
     scanf("%s" , ens_name);
-
+    
     if(strcmp(ens_name, "_meas_points_") == 0){
       plot_meas_rft_file(plot, well, ens_rft_table);
       plotempty = false ;
@@ -1071,7 +1265,7 @@ void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
   char * line;  
   // scan stdin for ensemble name
   char * ens_name  = util_alloc_stdin_line();
-
+  
   ens_type* ens     = NULL ;
   ens_type* ens_rft = NULL ;
   create_named_ensembles(&ens, &ens_rft, ens_table, ens_rft_table, ens_name);
@@ -1082,7 +1276,9 @@ void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
   char * base;
   
   ecl_file_enum file = ECL_DATA_FILE;
-  
+
+  printf("Have created ensemble:%s \n",ens_name);
+
   while (1){
     line = util_alloc_stdin_line();
     
@@ -1195,6 +1391,8 @@ int main(int argc , char ** argv) {
       while (1){
 	line = util_blocking_alloc_stdin_line(10);
 	util_strupr(line);
+        
+        printf("Command:%s \n",line);
 	
 	if(strcmp(line, "Q") == 0 || strcmp(line, "STOP") == 0 ){
 
@@ -1208,13 +1406,13 @@ int main(int argc , char ** argv) {
 	  create_ensemble_batch(ens_table, ens_rft_table);
 
 	} else if (strcmp(line, "P") == 0){
-
+          
 	  plot_batch(arg_pack);
 
 	} else if (strcmp(line, "A") == 0){
-
 	  ens_set_plot_attributes_batch(ens_table, ens_rft_table);
-
+        } else if (strcmp(line, "QUANTILES") == 0){
+	  ens_set_plot_quantile_properties_batch( ens_table );
 	} else {
 
           char message[128] ;
