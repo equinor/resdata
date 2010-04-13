@@ -52,7 +52,7 @@ follows:
        50. The distribution of interpolation times is currently
        uniform, but that can easily be generalized. 
 
-       The data is resampled using the low-level functions
+       The data is resampled using the low-level function
        ecl_sum_data_get_from_sim_time() which tries to differentiates
        between rate and non-rate data. 
 
@@ -75,12 +75,14 @@ bool use_viewer = false ; // Global variable to enable backwords compatible beha
                           // option -s sets use_viewer = false (slave mode, returns name of plot file on STDOUT)
 
 #define KEY_JOIN_STRING ":"    /* The string used when joining strings to form a gen_key lookup key. */
-
+#define PLOT_WIDTH  640
+#define PLOT_HEIGHT 480
 #define PROMPT_LEN 50
+
 
 /**
    This is basic datatype to hold the information about one ensemble
-   of eclipse simulations. All the simulations ion one ensemble should
+   of eclipse simulations. All the simulations in one ensemble should
    share some characteristica, like all beeing from the prior
    distribution. A plotting session can very well be completed with
    only one ensemble.
@@ -102,8 +104,8 @@ typedef struct {
   bool                  use_quantiles;       /* Should this ensemble be plotted as a mean and quantiles - instead of one line pr. member? */ 
   int                   interp_size;         /* How many interpolation points to use when resampling the summary data.*/
   double_vector_type  * interp_days;         /* The times where we resample the summary data - given in days since simulation start.*/ 
-  double_vector_type  * quantiles;           /* The quantile values we want to plot, i.e [0.10, 0.32, 0.68, 0.90] */
   vector_type         * interp_data;         /* A vector of double_vector instances of the summary data - interpolated to sim_days. */
+  double_vector_type  * quantiles;           /* The quantile values we want to plot, i.e [0.10, 0.32, 0.68, 0.90] */
   vector_type         * quantile_data;       /* The quantiles. */ 
 } ens_type;
 
@@ -908,7 +910,7 @@ void plot_all(void * arg) {
 
       arg_pack_free( arg_pack );
     }
-    plot_set_window_size(plot , 640 , 480);
+    plot_set_window_size(plot , PLOT_WIDTH , PLOT_HEIGHT);
     plot_set_labels(plot , "Time (days)" , key , key);
 
     {
@@ -973,7 +975,7 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
     plot = plot_alloc("PLPLOT" , arg_pack );
     arg_pack_free( arg_pack );
   }
-  plot_set_window_size(plot , 640 , 480);
+  plot_set_window_size(plot , PLOT_WIDTH , PLOT_HEIGHT);
   plot_set_labels(plot , "Pressure" , "Depth" , key);
   
   
@@ -1099,7 +1101,7 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
     plot = plot_alloc("PLPLOT" , arg_pack );
     arg_pack_free( arg_pack );
   }
-  plot_set_window_size(plot , 640 , 480);
+  plot_set_window_size(plot , PLOT_WIDTH , PLOT_HEIGHT);
   plot_set_labels(plot , "Date" , key , key);
   
   // get the simulation start time, to be used in plot_meas_file
@@ -1447,8 +1449,6 @@ int main(int argc , char ** argv) {
 	line = util_blocking_alloc_stdin_line(10);
 	util_strupr(line);
         
-        printf("Command:%s \n",line);
-	
 	if(strcmp(line, "Q") == 0 || strcmp(line, "STOP") == 0 ){
 
 	  plot_info_free( info );
