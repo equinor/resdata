@@ -10,7 +10,6 @@
 #include <plot.h>
 #include <plot_dataset.h>
 #include <path_fmt.h>
-#include <arg_pack.h>
 #include <stdio.h>
 #include <string.h>
 #include <int_vector.h>
@@ -69,15 +68,32 @@ follows:
 */
 
 
+/**
+
+Multithreaded loading
+---------------------
+The loading of ensembles in function create_ensemble_batch() is done
+multithreaded. This is implemented with the help of a thread_pool
+"class" implemented in libutil/src/thread_pool.c. The maximum number
+of concurrent threads is given by MAX_LOAD_THREADS, this is currently
+set to 4. Since the loading is mainly I/O bound it might be beneficial
+to set it even higher?
+*/
+
 
 bool use_viewer = false ; // Global variable to enable backwords compatible behaviour of batch mode
                           // option -b sets use_viewer = true (will start external viewer to show plots)
                           // option -s sets use_viewer = false (slave mode, returns name of plot file on STDOUT)
 
-#define KEY_JOIN_STRING ":"    /* The string used when joining strings to form a gen_key lookup key. */
+#define KEY_JOIN_STRING  ":"    /* The string used when joining strings to form a gen_key lookup key. */
 #define PLOT_WIDTH  640
 #define PLOT_HEIGHT 480
 #define PROMPT_LEN 50
+#define MAX_LOAD_THREADS 4
+
+
+
+
 
 
 /**
@@ -104,9 +120,9 @@ typedef struct {
   bool                  use_quantiles;       /* Should this ensemble be plotted as a mean and quantiles - instead of one line pr. member? */ 
   int                   interp_size;         /* How many interpolation points to use when resampling the summary data.*/
   double_vector_type  * interp_days;         /* The times where we resample the summary data - given in days since simulation start.*/ 
-  vector_type         * interp_data;         /* A vector of double_vector instances of the summary data - interpolated to sim_days. */
+  vector_type         * interp_data;         /* A vector of double_vector instances of the summary data - interpolated to interp_days. */
   double_vector_type  * quantiles;           /* The quantile values we want to plot, i.e [0.10, 0.32, 0.68, 0.90] */
-  vector_type         * quantile_data;       /* The quantiles. */ 
+  vector_type         * quantile_data;       /* The quantile data as double_vector instances. */ 
 } ens_type;
 
 
@@ -136,14 +152,14 @@ void warning_reply(char* message)
 {
   printf("WARNING: %s\n",message) ;
   fflush(stdout) ;
-} ;
+};
 
 
 void info_reply(char* message) 
 {
   printf("INFO: %s\n",message) ;
   fflush(stdout) ;
-} ;
+};
 
 
 
@@ -285,6 +301,7 @@ void ens_load_rft(ens_type * ens, const char * data_file) {
 }
 
 
+
 void ens_load_batch(ens_type* ens, ens_type* ens_rft, const char * data_file) { 
   char* base ;
   char* path ;
@@ -317,6 +334,18 @@ void ens_load_batch(ens_type* ens, ens_type* ens_rft, const char * data_file) {
     error_reply(message) ;
   } 
 } 
+
+
+void * ens_load_batch__(void * arg) {
+  arg_pack_type * arg_pack = arg_pack_safe_cast( arg );
+  ens_type * ens         = arg_pack_iget_ptr( arg_pack , 0 );
+  ens_type * ens_rft     = arg_pack_iget_ptr( arg_pack , 1 );
+  const char * data_file = arg_pack_iget_ptr( arg_pack , 2 );
+
+  ens_load_batch( ens, ens_rft , data_file );
+  return NULL;
+}
+
 
 
 void ens_load_many(ens_type * ens, path_fmt_type * data_file_fmt , int iens1, int iens2) {
@@ -1316,8 +1345,17 @@ void create_named_ensembles(ens_type** ens, ens_type** ens_rft, hash_type* ens_t
 } ;
 
 
-void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
+/**
+   This function has been slightly rewritten to support multithreaded
+   loading of realizations. The most important changes is that the
+   error and complete conditions are handled with a break statement,
+   and not an immediate return. This is essential to ensure that
+   thread_pool_join() call at the end of the function is issued.
+*/
 
+void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
+  thread_pool_type * tp = thread_pool_alloc( MAX_LOAD_THREADS , true );
+  vector_type * arglist = vector_alloc_new();   /* Container to discard the arg_pack instances used for the threaded loading. */
   char message[128] ;
   char * line;  
   // scan stdin for ensemble name
@@ -1329,42 +1367,47 @@ void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
 
   // scan stdin for valid simulation directory, or a valid eclipse data filename
   
-  char * sim_name;
   char * base;
   
-  ecl_file_enum file = ECL_DATA_FILE;
-
-  printf("Have created ensemble:%s \n",ens_name);
 
   while (1){
+    char * data_file = NULL;
     line = util_alloc_stdin_line();
     
     if(strcmp(line, "_stop_") == 0){
       sprintf(message,"Ensemble %s created",ens_name) ;
       info_reply(message) ;
-      return;
+      break;  
     }
 
-    // Check if this is a directory
-    if(util_is_directory(line)){
-      base = ecl_util_alloc_base_guess(line);
-      
-      sim_name = ecl_util_alloc_filename(line, base, file, 1, 0);
-      ens_load_batch(ens,ens_rft,sim_name) ;
-      free(sim_name);
-    } else {     // Check if this is a file
-      if(util_is_file(line)){
-        ens_load_batch(ens,ens_rft,line) ;
-      } else {
-        sprintf(message,"%s is not a valid eclipse summary file or directory", line);
-        error_reply(message) ;
-        free(line) ;
-        return ;
-      }
-    } ;
-    free(line);
-  } ;
+    // Check if this is a directory or a file
+    if(util_is_directory(line)) {
+      base      = ecl_util_alloc_base_guess(line);
+      data_file = ecl_util_alloc_filename(line, base, ECL_DATA_FILE , true , 0);
+    } else if (util_is_file(line))       
+      data_file = util_alloc_string_copy( line );
 
+    if (data_file != NULL) {
+      arg_pack_type * arg_pack = arg_pack_alloc();
+      vector_append_owned_ref( arglist , arg_pack , arg_pack_free__);
+      arg_pack_append_ptr( arg_pack , ens );
+      arg_pack_append_ptr( arg_pack , ens_rft );
+      arg_pack_append_owned_ptr( arg_pack , data_file , free);   /* The arg pack takes ownership of the data_file pointer. */
+      
+      thread_pool_add_job(tp , ens_load_batch__ , arg_pack );
+      //ens_load_batch(ens , ens_rft , data_file) ;
+    } else {
+      sprintf(message,"%s is not a valid eclipse summary file or directory", line);
+      error_reply(message) ;
+      free(line) ;
+      break;
+    };
+    free(line);
+  };
+  
+  thread_pool_join( tp );
+  thread_pool_free( tp );
+  vector_free( arglist );
   sprintf(message,"Ensemble %s created",ens_name) ;
   info_reply(message) ;
 }
