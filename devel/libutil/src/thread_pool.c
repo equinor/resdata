@@ -59,7 +59,7 @@ struct thread_pool_struct {
   bool                        join;               /* Flag set by the main thread to inform the dispatch thread that joining should start. */
   bool                        accepting_jobs;     /* True|False whether the dispatch thread is running. */
   
-  thread_pool_job_slot_type * job_slots;          /* */
+  thread_pool_job_slot_type * job_slots;          /* A vector to @max_running job slots, each slot can be reused several times.*/
   pthread_t                   dispatch_thread;
   pthread_rwlock_t            queue_lock;
 };
@@ -117,7 +117,7 @@ void * thread_pool_iget_return_value( const thread_pool_type * pool , int queue_
 static void * thread_pool_start_job( void * arg ) {
   thread_pool_arg_type * tp_arg = (thread_pool_arg_type * ) arg;
   thread_pool_type * tp         =  tp_arg->pool;
-  int slot_index            =  tp_arg->slot_index;
+  int slot_index                =  tp_arg->slot_index;
   void * func_arg               =  tp_arg->func_arg;
   start_func_ftype * func       =  tp_arg->func;
   void * return_value;                     
@@ -144,8 +144,8 @@ static void * thread_pool_start_job( void * arg ) {
 static void * thread_pool_main_loop( void * arg ) {
   thread_pool_type * tp = (thread_pool_type *) arg;
   {
-    const int usleep_busy = 1000;  /* 1/100 second */
-    const int usleep_init = 1000;
+    const int usleep_busy = 1000;  /* The sleep time when all job slots are occupied. */
+    const int usleep_init = 1000;  /* The sleep time when there are free slots available - but no jobs wanting to run. */
     int internal_offset   = 0;     /* Keep track of the (index of) the last job slot fired off - minor time saving. */
     while (true) {
       if (tp->queue_size > tp->queue_index) {
