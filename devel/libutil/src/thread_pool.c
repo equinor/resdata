@@ -16,6 +16,54 @@
        dispatch_thread sees them in the queue and dispatches them.
     3. The dispatch thread manages a list of thread_pool_job_slot_type
        instances - one slot for each actually running job.
+
+   Example
+   -------
+
+   1. Start with creating a thread pool object. The arguments to the
+      allocater are the (maximum) number of concurrently running
+      threads and a boolean flag of whether the queue should start
+      immediately (that is in general the case).
+
+        thread_pool_type * tp = thread_pool_alloc( NUM_THREADS , immediate_start);   
+
+
+   2. Add the jobs you want to run:
+
+        thread_pool_add_job( tp , some_function , argument_to_some_function );
+
+      Here the prototype for the function which is being run is
+
+        void * (some_func) (void *);
+
+      I.e. it expects a (void *) input pointer, and also returns a
+      (void *) pointer as output. The thread pool implementation does
+      not touch the input and output of some_function.
+
+
+  3.  When all the jobs have been added you inform the thread pool of
+      that by calling:
+
+         thread_pool_join( tp );
+
+      This function will not return before all the added jobs have run
+      to completion.
+
+
+  4. Optional: If you want to get the return value from the function
+     you supplied, you can use:
+
+         thread_pool_iget_return_value( tp , index );
+
+     To get the return value from function nr index.
+
+  
+  5. Optional: The thread pool will probably mainly be used only once,
+     but after a join it is possible to reuse a thread pool, but then
+     you MUST call thread_pool_restart() before adding jobs again.
+
+
+  6. When you are really finished: thread_pool_free( tp ); 
 */
 
 
@@ -27,7 +75,7 @@ typedef void * (start_func_ftype) (void *) ;
 */
 typedef struct {
   thread_pool_type * pool;                /* A back-reference to the thread_pool holding the queue. */
-  int                slot_index;      /* The index in the space [0,max_running) of the job slot where this job is running. */
+  int                slot_index;          /* The index in the space [0,max_running) of the job slot where this job is running. */
   int                queue_index;         /* The index of the current tp_arg in the queue. */
   void             * func_arg;            /* The arguments to this job - supplied by the calling scope. */   
   start_func_ftype * func;                /* The function to call - supplied by the calling scope. */
