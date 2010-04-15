@@ -47,9 +47,12 @@ void log_reset_filename(log_type *logh , const char *filename) {
   logh->fd     = fileno( logh->stream );
   
   pthread_mutex_unlock( &logh->mutex );
-  
 }
 
+
+const char * log_get_filename( const log_type * logh ) {
+  return logh->filename);
+}
 
 
 
