@@ -11,7 +11,6 @@ extern "C" {
 typedef struct log_struct log_type;
 
 FILE       * log_get_stream(log_type * logh );
-const char * log_get_filename( log_type * logh );
 void         log_reset_filename( log_type * logh , const char * filename );
 void         log_set_file(log_type * , const char *);
 log_type   * log_alloc_new(const char *filename, int log_level);
@@ -23,6 +22,8 @@ void         log_set_level( log_type * logh , int new_level);
 void         log_close( log_type * logh );
 inline  void log_sync(log_type * logh);
 const char * log_get_filename( const log_type * logh );
+
+
 
 #ifdef __cplusplus
 }

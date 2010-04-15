@@ -51,7 +51,7 @@ void log_reset_filename(log_type *logh , const char *filename) {
 
 
 const char * log_get_filename( const log_type * logh ) {
-  return logh->filename);
+  return logh->filename;
 }
 
 
@@ -170,10 +170,6 @@ inline void log_sync(log_type * logh) {
   fseek( logh->stream , 0 , SEEK_END );
 }
 
-
-const char * log_get_filename( log_type * logh ) {
-  return logh->filename;
-}
 
 
 void log_close( log_type * logh ) {
