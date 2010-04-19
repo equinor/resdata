@@ -111,7 +111,7 @@ void util_make_path(const char *_path) {
       current_pos += n; 
       
       if (!util_is_directory(active_path)) {
-	if (mkdir(active_path , 0775) != 0) { 
+	if (mkdir(active_path , UTIL_DEFAULT_MKDIR_MODE) != 0) { 
 	  bool fail = false;
 	  switch (errno) {
 	  case(EEXIST):

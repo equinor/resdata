@@ -854,6 +854,32 @@ bool util_sscanf_double(const char * buffer , double * value) {
 }
 
 
+/**
+   Base 8
+*/
+
+bool util_sscanf_octal_int(const char * buffer , int * value) {
+  bool value_OK = false;
+  char * error_ptr;
+
+  int tmp_value = strtol(buffer , &error_ptr , 8);
+  
+  /*
+    Skip trailing white-space
+  */
+
+  while (error_ptr[0] != '\0' && isspace(error_ptr[0]))
+    error_ptr++;
+
+  if (error_ptr[0] == '\0') {
+    value_OK = true; 
+    if (value != NULL)
+      *value = tmp_value;
+  } 
+  return value_OK;
+}
+
+
 
 /**
    Takes a char buffer as input, and parses it as an integer. Returns

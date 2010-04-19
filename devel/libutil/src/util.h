@@ -9,11 +9,10 @@
 #include <sys/stat.h>
 #include <stdarg.h>
 
-#define UTIL_PATH_SEP_STRING "/"   /* A \0 terminated separator used when we want a (char *) instance.                   */
-#define UTIL_PATH_SEP_CHAR   '/'   /* A simple character used when we want an actual char instance (i.e. not a pointer). */
-
-#define UTIL_NEWLINE_STRING "\n"
-
+#define UTIL_PATH_SEP_STRING           "/"   /* A \0 terminated separator used when we want a (char *) instance.                   */
+#define UTIL_PATH_SEP_CHAR             '/'   /* A simple character used when we want an actual char instance (i.e. not a pointer). */
+#define UTIL_NEWLINE_STRING "          \n"       
+#define UTIL_DEFAULT_MKDIR_MODE 0777         /* Directories are by default created with mode a+rwx - and then comes the umask ... */
 
 #ifdef __cplusplus
 extern"C" {
@@ -208,6 +207,7 @@ void   	     util_fskip_chars(FILE * , const char * , bool *);
 void   	     util_fskip_cchars(FILE * , const char * , bool *);
 bool   	     util_fscanf_int(FILE * , int * );
 bool   	     util_sscanf_bool(const char * , bool *);
+bool         util_sscanf_octal_int(const char * buffer , int * value);
 bool   	     util_sscanf_int(const char * , int * );
 const char * util_parse_int(const char * , int * , bool *);
 const char * util_skip_sep(const char * , const char * , bool *);
