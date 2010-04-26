@@ -6,13 +6,15 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 #include <node_ctype.h>
+#include <util.h>
 
 typedef struct arg_pack_struct arg_pack_type;
 typedef void   (arg_node_free_ftype)  (void *);
 typedef void * (arg_node_copyc_ftype) (void *);
 
 arg_pack_type * arg_pack_alloc();
-arg_pack_type * arg_pack_safe_cast(void * );
+UTIL_SAFE_CAST_HEADER( arg_pack );
+
 void            arg_pack_free(arg_pack_type * );
 void            arg_pack_free__(void *);
 void            arg_pack_clear(arg_pack_type *);
@@ -30,7 +32,7 @@ void            arg_pack_iset_owned_ptr(arg_pack_type * arg_pack, int index , vo
 
 void          * arg_pack_iget_ptr(const arg_pack_type * , int);
 void          * arg_pack_iget_adress(const arg_pack_type * , int);
-
+node_ctype      arg_pack_iget_ctype(const arg_pack_type * arg_pack ,int index);
 
   /*****************************************************************/
 
@@ -51,6 +53,13 @@ IGET_TYPED_HEADER(char)
 IGET_TYPED_HEADER(float)
 IGET_TYPED_HEADER(double)
 IGET_TYPED_HEADER(size_t)
+
+ISET_TYPED_HEADER(int)
+ISET_TYPED_HEADER(bool)
+ISET_TYPED_HEADER(char)
+ISET_TYPED_HEADER(float)
+ISET_TYPED_HEADER(double)
+ISET_TYPED_HEADER(size_t)
 
 #undef APPEND_TYPED_HEADER
 #undef GET_TYPED_HEADER

@@ -68,7 +68,7 @@
   
 
 
-#define VOID_ARG_TYPE_SIGNATURE 7651
+#define ARG_PACK_TYPE_ID 668268
 
 
 typedef struct {
@@ -81,10 +81,10 @@ typedef struct {
 
 
 struct arg_pack_struct {
-  int             __type_signature;    /* Used to to check run-time casts. */ 
+  UTIL_TYPE_ID_DECLARATION;
   int             size;                /* The number of arguments appended to this arg_pack instance. */     
   int             alloc_size;          /* The number of nodes allocated to this arg_pack - will in general be greater than size. */
-  bool            locked;              /* To insure against unwaranted modifictaions - you can explicitly lock the arg_pack instance. */ 
+  bool            locked;              /* To insure against unwaranted modifictaions - you can explicitly lock the arg_pack instance. This only */ 
   arg_node_type **nodes;               /* Vector of nodes */ 
 };
 
@@ -96,7 +96,7 @@ static arg_node_type * arg_node_alloc_empty() {
   arg_node_type * node = util_malloc( sizeof * node , __func__);
   node->buffer      = NULL;
   node->destructor  = NULL;
-  node->ctype       = invalid_ctype;
+  node->ctype       = CTYPE_INVALID;
   return node;
 }
 
@@ -114,28 +114,44 @@ static void __arg_node_assert_type(const arg_node_type * node , node_ctype arg_t
 
 
 /*****************************************************************/
-/* GET functions. */
-#define GET_TYPED(type)\
-static type arg_node_get_ ## type(const arg_node_type * node) {\
-  __arg_node_assert_type(node , type ## _value);         \
-  if (node->ctype == type ## _value) {                   \
-     type value;                                         \
-     memcpy(&value , node->buffer , sizeof value);       \
-     return value;                                       \
-   } else {                                              \
-     util_abort("%s: type mismatch \n",__func__);        \
-     return 0;                                           \
-   }                                                     \
+#define ARG_NODE_GET_RETURN(type)                \
+{                                                \
+   type value;                                   \
+   memcpy(&value , node->buffer , sizeof value); \
+   return value;                                 \
 }
 
 
-GET_TYPED(int);
-GET_TYPED(float)
-GET_TYPED(double)
-GET_TYPED(char)
-GET_TYPED(bool)
-GET_TYPED(size_t);
-#undef GET_TYPED
+static int arg_node_get_int( const arg_node_type * node) {
+  __arg_node_assert_type( node , CTYPE_INT_VALUE );
+  ARG_NODE_GET_RETURN( int )
+}
+
+static char arg_node_get_char( const arg_node_type * node) {
+  __arg_node_assert_type( node , CTYPE_CHAR_VALUE );
+  ARG_NODE_GET_RETURN( char )
+}
+
+static double arg_node_get_double( const arg_node_type * node) {
+  __arg_node_assert_type( node , CTYPE_DOUBLE_VALUE );
+  ARG_NODE_GET_RETURN( double )
+}
+
+static float arg_node_get_float( const arg_node_type * node) {
+  __arg_node_assert_type( node , CTYPE_FLOAT_VALUE );
+  ARG_NODE_GET_RETURN( float )
+}
+
+static bool arg_node_get_bool( const arg_node_type * node) {
+  __arg_node_assert_type( node , CTYPE_BOOL_VALUE );
+  ARG_NODE_GET_RETURN( bool )
+}
+
+static size_t arg_node_get_size_t( const arg_node_type * node) {
+  __arg_node_assert_type( node , CTYPE_SIZE_T_VALUE );
+  ARG_NODE_GET_RETURN( size_t )
+}
+#undef ARG_NODE_GET_RETURN
 
 /**
    If the argument is inserted as a pointer, you must use get_ptr ==
@@ -148,39 +164,72 @@ GET_TYPED(size_t);
 */
 
   
-static void * arg_node_get_ptr(arg_node_type * node , bool get_ptr) {
+static void * arg_node_get_ptr(const arg_node_type * node , bool get_ptr) {
   if (get_ptr) {
-    if (node->ctype != void_pointer)
+    if (node->ctype != CTYPE_VOID_POINTER)
       util_abort("%s: tried to get pointer from something not a pointer\n",__func__);
   } else {
-    if (node->ctype == void_pointer)
+    if (node->ctype == CTYPE_VOID_POINTER)
       util_abort("%s: tried to get adress to something already a ponter\n",__func__);
   }
   return node->buffer;
 }
 
+
+static node_ctype arg_node_get_ctype( const arg_node_type * arg_node ) {
+  return arg_node->ctype;
+}
+
 /*****************************************************************/
 /* SET functions. */
 
-#define SET_TYPED(type)                                                \
-static void arg_node_set_ ## type (arg_node_type *node , type value) { \
+
+#define ARG_NODE_SET(node , value)                                     \
   arg_node_realloc_buffer(node , sizeof value);                        \
   memcpy(node->buffer , &value , sizeof value);                        \
-  node->destructor = NULL;                                             \
-  node->ctype      = type ## _value;                                   \
+  node->destructor = NULL;
+
+
+static void arg_node_set_int( arg_node_type * node , int value) {
+  ARG_NODE_SET( node , value );
+  node->ctype = CTYPE_INT_VALUE;
 }
 
-SET_TYPED(int);
-SET_TYPED(float)
-SET_TYPED(double)
-SET_TYPED(char)
-SET_TYPED(bool)
-SET_TYPED(size_t);
-#undef SET_TYPED
+
+static void arg_node_set_char( arg_node_type * node , char value) {
+  ARG_NODE_SET( node , value );
+  node->ctype = CTYPE_CHAR_VALUE;
+}
+
+
+static void arg_node_set_float( arg_node_type * node , float value) {
+  ARG_NODE_SET( node , value );
+  node->ctype = CTYPE_FLOAT_VALUE;
+}
+
+
+static void arg_node_set_double( arg_node_type * node , double value) {
+  ARG_NODE_SET( node , value );
+  node->ctype = CTYPE_DOUBLE_VALUE;
+}
+
+
+static void arg_node_set_bool( arg_node_type * node , bool value) {
+  ARG_NODE_SET( node , value );
+  node->ctype = CTYPE_BOOL_VALUE;
+}
+
+
+static void arg_node_set_size_t( arg_node_type * node , size_t value) {
+  ARG_NODE_SET( node , value );
+  node->ctype = CTYPE_SIZE_T_VALUE;
+}
+
+#undef ARG_NODE_SET
 
 
 static void arg_node_set_ptr(arg_node_type * node , void * ptr , arg_node_copyc_ftype * copyc , arg_node_free_ftype * destructor) {
-  node->ctype      = void_pointer;
+  node->ctype      = CTYPE_VOID_POINTER;
   node->destructor = destructor;
   node->copyc      = copyc; 
   if (copyc != NULL)
@@ -195,7 +244,7 @@ static void arg_node_set_ptr(arg_node_type * node , void * ptr , arg_node_copyc_
 
 
 static void arg_node_clear(arg_node_type * node) {
-  if (node->ctype == void_pointer) {
+  if (node->ctype == CTYPE_VOID_POINTER) {
     if (node->destructor != NULL) 
       node->destructor( node->buffer );
     /* When you have cleared - must not reuse the thing. */
@@ -216,22 +265,22 @@ static void arg_node_free(arg_node_type * node) {
 
 static const char * arg_node_fmt(const arg_node_type *node) {
   switch (node->ctype) {
-  case(int_value):
+  case(CTYPE_INT_VALUE):
     return " %d";
       break;
-  case(double_value):
+  case(CTYPE_DOUBLE_VALUE):
     return " %lg";
     break;
-  case(float_value):
+  case(CTYPE_FLOAT_VALUE):
     return " %g";
     break;
-  case(bool_value):
+  case(CTYPE_BOOL_VALUE):
     return " %d";
     break;
-  case(char_value):
+  case(CTYPE_CHAR_VALUE):
     return " %d";
     break;
-  case(size_t_value):
+  case(CTYPE_SIZE_T_VALUE):
     return " %d";
     break;
   default:
@@ -243,14 +292,17 @@ static const char * arg_node_fmt(const arg_node_type *node) {
 
 static void arg_node_fprintf(const arg_node_type * node , FILE * stream) {
   switch (node->ctype) {
-  case(int_value):
+  case(CTYPE_INT_VALUE):
     fprintf(stream , "int:%d",arg_node_get_int(node));
     break;
-  case(double_value):
+  case(CTYPE_DOUBLE_VALUE):
     fprintf(stream , "double:%g",arg_node_get_double(node));
     break;
-  case(void_pointer):
-    fprintf(stream , "pointer:<...>");
+  case(CTYPE_VOID_POINTER):
+    fprintf(stream , "pointer:<%p>",arg_node_get_ptr( node , true ));
+    break;
+  case(CTYPE_BOOL_VALUE):
+    fprintf(stream , "bool:%d", arg_node_get_bool( node ));
     break;
   default:
     util_abort("%s: - not implemented for type:%d \n",__func__ , node->ctype);
@@ -262,19 +314,11 @@ static void arg_node_fprintf(const arg_node_type * node , FILE * stream) {
 /* Ending node node functions - starting on functons for the whole pack. */
 /*****************************************************************/
 
-
-static void __arg_pack_assert_cast(const arg_pack_type * arg) {
-  if (arg == NULL) 
-    util_abort("%s: arrived with arg = NULL - this is broken !! \n",__func__);
-  
-  if (arg->__type_signature != VOID_ARG_TYPE_SIGNATURE) 
-    util_abort("%s: hmmm - the cast to arg_pack_type seemed to fail at runtime - aborting\n",__func__);
-}
-
+UTIL_SAFE_CAST_FUNCTION( arg_pack , ARG_PACK_TYPE_ID)
 
 static void __arg_pack_assert_index(const arg_pack_type * arg , int iarg) {
   if (iarg < 0 || iarg >= arg->size) 
-    util_abort("%s: arg_pack() object allocated with %d arguments - %d invalid argument number - aborting \n",__func__ , arg->size , iarg);
+    util_abort("%s: arg_pack() object filled with %d arguments - %d invalid argument number - aborting \n",__func__ , arg->size , iarg);
 }
 
 
@@ -307,6 +351,9 @@ static arg_node_type * arg_pack_iget_new_node( arg_pack_type * arg_pack , int in
     
     if (arg_pack->size == arg_pack->alloc_size)
       arg_pack_realloc_nodes(arg_pack , 1 + arg_pack->alloc_size * 2);  /* We have to grow the vector of nodes. */
+
+    if (index == arg_pack->size)                                
+      arg_pack->size++;            /* We are asking for the first element beyond the current length of the vector, i.e. append. */
     return arg_pack->nodes[index];
   }
 }
@@ -320,19 +367,9 @@ static arg_node_type * arg_pack_get_append_node(arg_pack_type * arg_pack) {
   }
   {
     arg_node_type * new_node = arg_pack_iget_new_node( arg_pack , arg_pack->size );
-    arg_pack->size++;                                                    
     return new_node;
   }
 }
-
-
-
-arg_pack_type * arg_pack_safe_cast(void * __arg_pack) {
-  arg_pack_type * arg_pack = (arg_pack_type * ) __arg_pack;
-  __arg_pack_assert_cast(arg_pack);
-  return arg_pack;
-}
-
 
 
 void arg_pack_lock(arg_pack_type * arg_pack) {
@@ -343,7 +380,7 @@ void arg_pack_lock(arg_pack_type * arg_pack) {
 
 arg_pack_type * arg_pack_alloc() {
   arg_pack_type * arg_pack = util_malloc(sizeof * arg_pack , __func__);
-  arg_pack->__type_signature = VOID_ARG_TYPE_SIGNATURE;
+  UTIL_TYPE_ID_INIT( arg_pack , ARG_PACK_TYPE_ID);
   arg_pack->nodes      = NULL;
   arg_pack->alloc_size = 0;
   arg_pack->locked     = false;
@@ -453,6 +490,11 @@ void * arg_pack_iget_adress(const arg_pack_type * arg , int iarg) {
   return arg_node_get_ptr(arg->nodes[iarg] , false);
 }
 
+
+node_ctype arg_pack_iget_ctype(const arg_pack_type * arg_pack ,int index) {
+  __arg_pack_assert_index(arg_pack , index);
+  return arg_node_get_ctype( arg_pack->nodes[index] );
+}
 
 /*****************************************************************/
 

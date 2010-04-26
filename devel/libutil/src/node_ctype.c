@@ -7,25 +7,25 @@
 const char * node_ctype_name(node_ctype ctype) {
   const char * name;
   switch (ctype) {
-  case(void_pointer):
+  case(CTYPE_VOID_POINTER):
     name =  "void pointer";
     break;
-  case(int_value):
+  case(CTYPE_INT_VALUE):
     name =  "integer value";
     break;
-  case(double_value):
+  case(CTYPE_DOUBLE_VALUE):
     name =  "double value";
     break;
-  case(float_value):
+  case(CTYPE_FLOAT_VALUE):
     name =  "float_value";
     break;
-  case(char_value):
+  case(CTYPE_CHAR_VALUE):
     name =  "char value";
     break;
-  case(bool_value):
+  case(CTYPE_BOOL_VALUE):
     name =  "bool value";
     break;
-  case(size_t_value):
+  case(CTYPE_SIZE_T_VALUE):
     name =  "size_t value";
     break;
   default:

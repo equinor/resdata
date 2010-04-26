@@ -50,13 +50,13 @@ static node_data_type * node_data_alloc__(const void * data , node_ctype ctype ,
 
 
 node_data_type * node_data_alloc_ptr(const void * data  , copyc_ftype * copyc, free_ftype * del) {
-  return node_data_alloc__( data , void_pointer , 0 , copyc , del);
+  return node_data_alloc__( data , CTYPE_VOID_POINTER , 0 , copyc , del);
 }
 
 
 node_data_type * node_data_alloc_buffer(const void * data, int buffer_size) {  /* The buffer is copied on insert. */
   void * data_copy = util_alloc_copy( data , buffer_size , __func__);
-  return node_data_alloc__( data_copy , void_pointer , buffer_size , NULL , free);
+  return node_data_alloc__( data_copy , CTYPE_VOID_POINTER , buffer_size , NULL , free);
 }
 
 
@@ -135,7 +135,7 @@ void * node_data_get_ptr(const node_data_type * node_data) {
 /*****************************************************************/
 
 char * node_data_get_string(const node_data_type * node_data) {
-  if (node_data->ctype == void_pointer)
+  if (node_data->ctype == CTYPE_VOID_POINTER)
     return (char *) node_data->data;
   else {
     util_abort("%s: wrong type \n",__func__);
@@ -146,13 +146,13 @@ char * node_data_get_string(const node_data_type * node_data) {
 
 node_data_type * node_data_alloc_string(const char * value) {
   void * data_copy = util_alloc_string_copy( value );
-  return node_data_alloc__( data_copy , void_pointer , strlen(value + 1) , NULL , free);
+  return node_data_alloc__( data_copy , CTYPE_VOID_POINTER , strlen(value + 1) , NULL , free);
 }
 
 
 
 int node_data_get_int(const node_data_type * node_data) {
-  if (node_data->ctype == int_value)
+  if (node_data->ctype == CTYPE_INT_VALUE)
     return *((int *) node_data->data);
   else {
     util_abort("%s: wrong type \n",__func__);
@@ -162,7 +162,7 @@ int node_data_get_int(const node_data_type * node_data) {
 
 
 int node_data_fetch_and_inc_int( node_data_type * node_data ) {
-  if (node_data->ctype == int_value) {
+  if (node_data->ctype == CTYPE_INT_VALUE) {
     int * data = (int *) node_data->data;
     (*data) += 1;
     return *data;
@@ -175,12 +175,12 @@ int node_data_fetch_and_inc_int( node_data_type * node_data ) {
 
 node_data_type * node_data_alloc_int(int value) {
   void * data_copy = util_alloc_copy( &value , sizeof value , __func__);
-  return node_data_alloc__( data_copy , int_value , sizeof value , NULL , free);
+  return node_data_alloc__( data_copy , CTYPE_INT_VALUE , sizeof value , NULL , free);
 }
 
 
 double node_data_get_double(const node_data_type * node_data) {
-  if (node_data->ctype == double_value)
+  if (node_data->ctype == CTYPE_DOUBLE_VALUE)
     return *((double *) node_data->data);
   else {
     util_abort("%s: wrong type \n",__func__);
@@ -191,7 +191,7 @@ double node_data_get_double(const node_data_type * node_data) {
 
 node_data_type * node_data_alloc_double(double value) {
   void * data_copy = util_alloc_copy( &value , sizeof value , __func__);
-  return node_data_alloc__( data_copy , double_value , sizeof value , NULL , free);
+  return node_data_alloc__( data_copy , CTYPE_DOUBLE_VALUE , sizeof value , NULL , free);
 }
 
 

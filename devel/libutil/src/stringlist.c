@@ -368,7 +368,7 @@ int_vector_type * stringlist_find(const stringlist_type * stringlist, const char
 int stringlist_find_first(const stringlist_type * stringlist, const char * s) {
   bool found = false;
   int size   = stringlist_get_size( stringlist );
-  int index = 0;
+  int index  = 0;
 
   while( index < size && !found )
   {
@@ -377,7 +377,7 @@ int stringlist_find_first(const stringlist_type * stringlist, const char * s) {
       if (strcmp(istring , s) == 0)
       {
         found = true;
-        continue;
+        break;
       }
     index++;
   }
