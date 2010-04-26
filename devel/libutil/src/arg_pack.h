@@ -23,6 +23,11 @@ void            arg_pack_fprintf(const arg_pack_type * , FILE * );
 void            arg_pack_append_ptr(arg_pack_type * , const void *);
 void            arg_pack_append_owned_ptr(arg_pack_type * , void * , arg_node_free_ftype *);
 void            arg_pack_append_copy(arg_pack_type * , void * , arg_node_copyc_ftype * , arg_node_free_ftype *);
+
+void            arg_pack_iset_copy(arg_pack_type * arg_pack , int index , void * ptr, arg_node_copyc_ftype * copyc , arg_node_free_ftype * freef);
+void            arg_pack_iset_ptr(arg_pack_type * arg_pack, int index , const void * ptr);
+void            arg_pack_iset_owned_ptr(arg_pack_type * arg_pack, int index , void * ptr, arg_node_free_ftype * freef);
+
 void          * arg_pack_iget_ptr(const arg_pack_type * , int);
 void          * arg_pack_iget_adress(const arg_pack_type * , int);
 
@@ -31,6 +36,7 @@ void          * arg_pack_iget_adress(const arg_pack_type * , int);
 
 #define APPEND_TYPED_HEADER(type) void arg_pack_append_ ## type (arg_pack_type * , type);
 #define IGET_TYPED_HEADER(type)   type arg_pack_iget_ ## type( const arg_pack_type * , int );
+#define ISET_TYPED_HEADER(type)   void arg_pack_iset_ ## type( arg_pack_type * , int , type value);
 
 APPEND_TYPED_HEADER(int)
 APPEND_TYPED_HEADER(bool)

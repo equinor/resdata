@@ -15,16 +15,25 @@
    then pack several arguments into one arg_pack instance, and then
    unpack them at the other end.
 
-   The content of the arg_pack is inserted by appending - there is no
-   possibility to set a specified index to a value. When you take them
-   out again that is done with indexed get.
+   The content of the arg_pack is mainly inserted by appending, in
+   addition it is possible to insert new items by using _iset()
+   functions, however these functions will fail hard if the resulting
+   call sequence will lead to holes in the structure, i.e.
+
+      arg_pack_type * arg_pack = arg_pack_alloc()
+      arg_pack_append_int( arg_pack , 1);
+      arg_pack_iset_int( arg_pack , 3 , 0);   <--- Will fail hard because
+                                                   elements 1,2,3 have not been set.
+
+
+   When you take them out again that is done with indexed get.
 
    When elements are inserted into the arg_pack, they are inserted
    with a (limited) type information (implictly given by the function
    invoked to insert the argument), and the corresponding typed get
    must be used to unpack the argument again afterwards. The
    excepetion is with the function arg_pack_iget_adress() which can be
-   used to extract the referenc of a scalar.
+   used to extract the reference of a scalar.
 
 
 
@@ -280,17 +289,42 @@ static void arg_pack_realloc_nodes(arg_pack_type * arg_pack , int new_size) {
 }
 
 
+/**
+   The name of this function is QUITE MISLEADING; the function will
+   create a new node, with index @index, and return it possibly
+   freeing the existing with this index. If index == arg_pack->size a
+   new node will be created at the end of the arg_pack; if index >
+   arg_pack->size the function will fail hard.
+*/
+static arg_node_type * arg_pack_iget_new_node( arg_pack_type * arg_pack , int index) {
+  if (index < 0 || index > arg_pack->size)
+    util_abort("%s: index:%d invalid. Valid interval: [0,%d) \n",__func__ , index , arg_pack->size);
+  {
+    if (index < arg_pack->size) {
+      arg_node_free( arg_pack->nodes[index] );           /* Free the existing current node. */
+      arg_pack->nodes[index] = arg_node_alloc_empty( );  /* Allocate a new fresh instance. */
+    }
+    
+    if (arg_pack->size == arg_pack->alloc_size)
+      arg_pack_realloc_nodes(arg_pack , 1 + arg_pack->alloc_size * 2);  /* We have to grow the vector of nodes. */
+    return arg_pack->nodes[index];
+  }
+}
+
+
+
 static arg_node_type * arg_pack_get_append_node(arg_pack_type * arg_pack) {
   if (arg_pack->locked) {
     util_abort("%s: tryng to append to a locked arg_pack instance \n",__func__);
     return NULL;
   }
   {
-    if (arg_pack->size == arg_pack->alloc_size)
-      arg_pack_realloc_nodes(arg_pack , 1 + arg_pack->alloc_size * 2);
-    return arg_pack->nodes[arg_pack->size];
+    arg_node_type * new_node = arg_pack_iget_new_node( arg_pack , arg_pack->size );
+    arg_pack->size++;                                                    
+    return new_node;
   }
 }
+
 
 
 arg_pack_type * arg_pack_safe_cast(void * __arg_pack) {
@@ -354,25 +388,31 @@ void arg_pack_clear(arg_pack_type * arg_pack) {
 
   1. Append
   2. iget 
-
+  3. iset (can NOT create holes in the vector)
 
 ******************************************************************/
 
 #define APPEND_TYPED(type)                                         \
 void arg_pack_append_ ## type (arg_pack_type *pack , type value) { \
-  arg_node_type * node = arg_pack_get_append_node( pack );            \
+  arg_node_type * node = arg_pack_get_append_node( pack );         \
   arg_node_set_ ## type(node , value);                             \
-  pack->size++;                                                    \
+}
+
+
+#define ISET_TYPED(type)\
+void arg_pack_iset_ ## type(arg_pack_type * pack, int index, type value) {   \
+  arg_node_type * node = arg_pack_iget_new_node( pack , index);  \
+  arg_node_set_ ## type(node , value);                           \
 }
 
 
 #define IGET_TYPED(type)\
 type arg_pack_iget_ ## type(const arg_pack_type * pack, int index) { \
-  __arg_pack_assert_index( pack , index);                      \
-  {                                                            \
-    arg_node_type * node = pack->nodes[index];                 \
-    return arg_node_get_ ## type ( node );                     \
-  }                                                            \
+  __arg_pack_assert_index( pack , index);                            \
+  {                                                                  \
+    arg_node_type * node = pack->nodes[index];                       \
+    return arg_node_get_ ## type ( node );                           \
+  }                                                                  \
 }
 
 
@@ -390,9 +430,16 @@ IGET_TYPED(double);
 IGET_TYPED(char);
 IGET_TYPED(size_t);
 
+ISET_TYPED(int);
+ISET_TYPED(bool);
+ISET_TYPED(float);
+ISET_TYPED(double);
+ISET_TYPED(char);
+ISET_TYPED(size_t);
+
 #undef APPEND_TYPED
 #undef IGET_TYPED
-
+#undef ISET_TYPED
 
 
 void * arg_pack_iget_ptr(const arg_pack_type * arg , int iarg) {
@@ -407,20 +454,37 @@ void * arg_pack_iget_adress(const arg_pack_type * arg , int iarg) {
 }
 
 
-void  arg_pack_append_copy(arg_pack_type * arg_pack , void * ptr, arg_node_copyc_ftype * copyc , arg_node_free_ftype * freef) {
-  arg_node_type * node = arg_pack_get_append_node( arg_pack );          
+/*****************************************************************/
+
+
+void  arg_pack_iset_copy(arg_pack_type * arg_pack , int index , void * ptr, arg_node_copyc_ftype * copyc , arg_node_free_ftype * freef) {
+  arg_node_type * node = arg_pack_iget_new_node( arg_pack , index );          
   arg_node_set_ptr(node , ptr , copyc , freef);
-  arg_pack->size++;
+}
+
+
+void arg_pack_iset_ptr(arg_pack_type * arg_pack, int index , const void * ptr) {
+  arg_pack_iset_copy(arg_pack , index , ptr , NULL , NULL);
+}
+
+void arg_pack_iset_owned_ptr(arg_pack_type * arg_pack, int index , void * ptr, arg_node_free_ftype * freef) {
+  arg_pack_iset_copy(arg_pack , index , ptr , NULL , freef );
+}
+
+
+void  arg_pack_append_copy(arg_pack_type * arg_pack , void * ptr, arg_node_copyc_ftype * copyc , arg_node_free_ftype * freef) {
+  arg_pack_iset_copy( arg_pack , arg_pack->size , ptr , copyc , freef);
 }
 
 
 void arg_pack_append_ptr(arg_pack_type * arg_pack, const void * ptr) {
-  arg_pack_append_copy(arg_pack , ptr , NULL , NULL);
+  arg_pack_iset_ptr( arg_pack , arg_pack->size , ptr );
 }
 
 void arg_pack_append_owned_ptr(arg_pack_type * arg_pack, void * ptr, arg_node_free_ftype * freef) {
-  arg_pack_append_copy(arg_pack , ptr , NULL , freef );
+  arg_pack_iset_owned_ptr( arg_pack , arg_pack->size , ptr , freef);
 }
+
 
 
 /******************************************************************/
@@ -516,60 +580,3 @@ void arg_pack_fprintf(const arg_pack_type * arg_pack , FILE * stream) {
 
 
 
-
-/*****************************************************************/
-
-/* 
-   These functions are used to create a arg_pack instance which
-   a type flag according to the node_ctype type and a value.
-
-   usage:
-
-   arg_pack_type *void_double = arg_pack_alloc_double(78.78);
-   arg_pack_type *void_int    = arg_pack_alloc_int(13);
-   ...
-   ...
-   type = arg_pack->arg_type[0];
-   if (type == double_value) {
-      double value = arg_pack_get_double(arg_pack , 0);
-      printf("The input was a double with value: %g \n",value);
-   } else if (type == int_value) {
-      int value = arg_pack_get_int(arg_pack , 0);
-      printf("The input was an int with value: %d \n",value);
-   }
-*/
-
-
-/*arg_pack_type * arg_pack_alloc_double(double value) {
-  arg_pack_type *arg = arg_pack_alloc1(double_value);
-  arg_pack_pack_double(arg , 0 , value);
-  return arg;
-}
-
-
-arg_pack_type * arg_pack_alloc_int(int value) {
-  arg_pack_type *arg = arg_pack_alloc1(int_value);
-  arg_pack_pack_int(arg , 0 , value);
-  return arg;
-}
-
-
-arg_pack_type * arg_pack_alloc_ptr(void *ptr) {
-  arg_pack_type *arg = arg_pack_alloc1(void_pointer);
-  arg_pack_pack_ptr(arg , 0 , ptr );
-  return arg;
-}
-
-
-arg_pack_type * arg_pack_alloc_buffer(int buffer_size, const void * buffer) {
-  arg_pack_type *arg = arg_pack_alloc__(1 , (const node_ctype[1]) { void_buffer} , (const int[1]) {buffer_size});
-  arg_pack_pack_buffer(arg , 0 , buffer );
-  return arg;
-}
-
-
-arg_pack_type * arg_pack_alloc_string(const char * s) {
-  return arg_pack_alloc_buffer(strlen(s) + 1 , s);
-}
-
-*/

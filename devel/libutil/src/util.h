@@ -182,7 +182,7 @@ bool         util_string_has_wildcard( const char * s);
 
 mode_t       util_get_entry_mode( const char * file );
 uid_t        util_get_entry_uid( const char * file );
-bool         util_file_readable( const char * file );
+bool         util_entry_readable( const char * entry );
 bool         util_addmode_if_owner( const char * filename , mode_t add_mode );
 bool         util_delmode_if_owner( const char * filename , mode_t del_mode);
 bool         util_chmod_if_owner( const char * filename , mode_t new_mode);

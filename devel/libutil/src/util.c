@@ -2017,20 +2017,13 @@ bool util_delmode_if_owner( const char * filename , mode_t del_mode) {
 
 
 
-/**
-   The function will not differentiate between permission problems and
-   just plain 'File not found'.
+/* 
+   Will not differtiate between files and directories.
 */
-   
-bool util_file_readable( const char * file ) {
-  bool readable;
-  FILE * stream = fopen( file , "r");
-  if (stream != NULL) {
-    readable = true;
-    fclose( stream );
-  } else 
-    readable = false;
-  return readable;
+bool util_entry_readable( const char * entry ) {
+  struct stat buffer;
+  stat( entry , &buffer );
+  return buffer.st_mode & S_IRUSR;
 }
 
 
