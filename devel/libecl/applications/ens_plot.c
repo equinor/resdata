@@ -963,7 +963,7 @@ void plot_all(void * arg) {
 
 void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
 
-  // subroutine used in batch mode to plot a summary vector for a list of ensembles given at stdin
+  // subroutine used in batch mode to plot an rft vector for a list of ensembles given at stdin
 
   char message[128] ;
 
@@ -1492,7 +1492,8 @@ int main(int argc , char ** argv) {
 	line = util_blocking_alloc_stdin_line(10);
 	util_strupr(line);
         
-	if(strcmp(line, "Q") == 0 || strcmp(line, "STOP") == 0 ){
+	//if(strcmp(line, "Q") == 0 || strcmp(line, "STOP") == 0 ){
+	if(strcmp(line, "Q") == 0){
 
 	  plot_info_free( info );
 	  hash_free( ens_table );
@@ -1500,7 +1501,7 @@ int main(int argc , char ** argv) {
 	  return 0 ;
 
 	} else if(strcmp(line, "C") == 0){
-
+	  
 	  create_ensemble_batch(ens_table, ens_rft_table);
 
 	} else if (strcmp(line, "P") == 0){
@@ -1512,19 +1513,20 @@ int main(int argc , char ** argv) {
         } else if (strcmp(line, "QUANTILES") == 0){
 	  ens_set_plot_quantile_properties_batch( ens_table );
 	} else {
-
+	  
           char message[128] ;
           sprintf(message,"Unknown command %s",line) ;
           error_reply(message) ;
-	  plot_info_free( info );
-	  hash_free( ens_table );
-	  hash_free( ens_rft_table );
-	  return 1 ;
-
+	  
         } ;
-
+	
 	free(line);
       }
+      plot_info_free( info );
+      hash_free( ens_table );
+      hash_free( ens_rft_table );
+      return 1 ;
+      
     }
   }
   
