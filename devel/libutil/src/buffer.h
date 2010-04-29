@@ -27,6 +27,7 @@ char             * buffer_fread_alloc_string(buffer_type * buffer);
 void               buffer_fwrite_string(buffer_type * buffer , const char * string);
 void               buffer_summarize(const buffer_type * buffer , const char *);
 
+void               buffer_fwrite_char_ptr(buffer_type * buffer , const char * string_ptr );
 void               buffer_fwrite_char(buffer_type * buffer , char value);
 void               buffer_fwrite_int(buffer_type * buffer , int value);
 int                buffer_fread_int(buffer_type * buffer );

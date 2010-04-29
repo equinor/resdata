@@ -378,6 +378,17 @@ int buffer_fgetc( buffer_type * buffer ) {
   }
 }
 
+/**
+   This function writes all the elements in the string __NOT__
+   including the terminating \0 character into the buffer. This should
+   not be confused with buffer_fwrite_string() function which both
+   prepends the string with an integer length specifier and also
+   includes the terminating \0.
+*/
+
+void buffer_fwrite_char_ptr(buffer_type * buffer , const char * string_ptr ) {
+  buffer_fwrite(buffer , string_ptr , sizeof * string_ptr , strlen( string_ptr ));
+}
 
 void buffer_fwrite_int(buffer_type * buffer , int value) {
   buffer_fwrite(buffer , &value , sizeof value , 1);
