@@ -69,17 +69,22 @@ bool type ## _is_instance( const void * __arg ) {          \
 #define UTIL_IS_INSTANCE_HEADER(type) bool type ## _is_instance( const void * __arg );
 
 
-#define UTIL_SAFE_CAST_FUNCTION(type , TYPE_ID)          \
-type ## _type * type ## _safe_cast( void * __arg ) {     \
-   type ## _type * arg = (type ## _type *) __arg;        \
-   if ( arg->__type_id == TYPE_ID)              	 \
-      return arg;                                        \
-   else {                                                \
-      util_abort("%s: runtime cast failed \n", __func__);\
-      return NULL;                                       \
-   }                                                     \
+#define UTIL_SAFE_CAST_FUNCTION(type , TYPE_ID)                                     \
+type ## _type * type ## _safe_cast( void * __arg ) {                                \
+   if (__arg == NULL) {                                                             \
+      util_abort("%s: runtime cast failed - tried to dereference NULL\n",__func__); \
+      return NULL;                                                                  \
+   }                                                                                \
+   type ## _type * arg = (type ## _type *) __arg;                                   \
+   if ( arg->__type_id == TYPE_ID)              	                            \
+      return arg;                                                                   \
+   else {                                                                           \
+      util_abort("%s: runtime cast failed \n", __func__);                           \
+      return NULL;                                                                  \
+   }                                                                                \
 }
 #define UTIL_SAFE_CAST_HEADER( type ) type ## _type * type ## _safe_cast( void * __arg );
+
 
 #define UTIL_SAFE_CAST_FUNCTION_CONST(type , TYPE_ID)          \
 const type ## _type * type ## _safe_cast_const( const void * __arg ) {     \
@@ -267,6 +272,7 @@ void    util_abort(const char * fmt , ...);
 void    util_abort_signal(int );
 void    util_abort_append_version_info(const char * );
 void    util_abort_free_version_info();
+void    util_abort_set_executable( const char * executable );
 void *  util_realloc(void *  , size_t  , const char * );
 void *  util_malloc(size_t , const char * );
 void * util_realloc_copy(void * org_ptr , const void * src , size_t byte_size , const char * caller);
