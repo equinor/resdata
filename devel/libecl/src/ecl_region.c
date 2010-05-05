@@ -114,6 +114,12 @@ void ecl_region_free( ecl_region_type * region ) {
   free( region );
 }
 
+
+void ecl_region_free__( void * __region ) {
+  ecl_region_type * region = ecl_region_safe_cast( __region );
+  ecl_region_free( region );
+}
+
 /*****************************************************************/
 
 static void ecl_region_invalidate_index_list( ecl_region_type * region ) {
@@ -289,6 +295,63 @@ void ecl_region_select_in_interval( ecl_region_type * region , const ecl_kw_type
 
 void ecl_region_deselect_in_interval( ecl_region_type * region , const ecl_kw_type * ecl_kw, float min_value , float max_value) {
   ecl_region_select_in_interval__( region , ecl_kw , min_value , max_value , false );
+}
+
+/*****************************************************************/
+
+static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl_kw_type * ecl_kw, float limit , bool select_less , bool select) {
+  bool global_kw;
+  ecl_region_assert_kw( region , ecl_kw , &global_kw);
+  if (ecl_kw_get_type( ecl_kw ) != ECL_FLOAT_TYPE) 
+    util_abort("%s: sorry - select by in_interval is only supported for float keywords \n",__func__);
+  {
+    const float * kw_data = ecl_kw_get_float_ptr( ecl_kw );
+    if (global_kw) {
+      int global_index;
+      for (global_index = 0; global_index < region->grid_vol; global_index++) {
+        if (select_less) {
+          if (kw_data[ global_index ] <= limit)
+            region->active_mask[ global_index ] = select;
+        } else {
+          if (kw_data[ global_index ] > limit)
+            region->active_mask[ global_index ] = select;
+        }
+      }
+    } else {
+      int active_index;
+      for (active_index = 0; active_index < region->grid_active; active_index++) {
+        if (select_less) {
+          if (kw_data[ active_index ] <= limit) {
+            int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
+            region->active_mask[ global_index ] = select;
+          }
+        } else {
+          if (kw_data[ active_index ] > limit) {
+            int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
+            region->active_mask[ global_index ] = select;
+          }
+        }
+      }
+    }
+  }
+  ecl_region_invalidate_index_list( region );
+}
+
+
+void ecl_region_select_smaller( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit) {
+  ecl_region_select_with_limit__( ecl_region , ecl_kw , limit , true , true );
+}
+
+void ecl_region_deselect_smaller( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit) {
+  ecl_region_select_with_limit__( ecl_region , ecl_kw , limit , true , false );
+}
+
+void ecl_region_select_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit) {
+  ecl_region_select_with_limit__( ecl_region , ecl_kw , limit , false , true );
+}
+
+void ecl_region_deselect_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit) {
+  ecl_region_select_with_limit__( ecl_region , ecl_kw , limit , false , false );
 }
 
 
@@ -663,4 +726,34 @@ void ecl_region_invert_selection( ecl_region_type * region ) {
 bool ecl_region_contains_ijk( const ecl_region_type * ecl_region , int i , int j , int k) {
   int global_index = ecl_grid_get_global_index3( ecl_region->parent_grid , i , j , k );
   return ecl_region->active_mask[ global_index ];
+}
+
+
+
+/*****************************************************************/
+
+
+/**
+   Will update the selection in @region to ONLY contain the elements
+   which are also present in @new_region.
+*/
+void ecl_region_select_intersection( ecl_region_type * region , const ecl_region_type * new_region ) {
+  int global_index;
+  for (global_index = 0; global_index < region->grid_vol; global_index++)
+    region->active_mask[global_index] = (region->active_mask[global_index] && new_region->active_mask[global_index]);
+      
+  ecl_region_invalidate_index_list( region );
+}
+
+
+/**
+   Will update the selection in @region to contain all the elements
+   which are selected in either @region or @new_region.
+*/
+void ecl_region_select_union( ecl_region_type * region , const ecl_region_type * new_region ) {
+  int global_index;
+  for (global_index = 0; global_index < region->grid_vol; global_index++)
+    region->active_mask[global_index] = (region->active_mask[global_index] || new_region->active_mask[global_index]);
+  
+  ecl_region_invalidate_index_list( region );
 }

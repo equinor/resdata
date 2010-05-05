@@ -1115,6 +1115,13 @@ bool util_sscanf_bool(const char * buffer , bool * _value) {
 }
 
 
+bool util_fscanf_bool(FILE * stream , bool * value) {
+  char buffer[256];
+  fscanf(stream , "%s" , buffer);
+  return util_sscanf_bool( buffer , value );
+}
+
+
 /**
    Takes a stream as input. Reads one string token from the stream,
    and tries to interpret the token as an integer with the function

@@ -211,6 +211,7 @@ void         util_fskip_space(FILE *  ,  bool *);
 void   	     util_fskip_chars(FILE * , const char * , bool *);
 void   	     util_fskip_cchars(FILE * , const char * , bool *);
 bool   	     util_fscanf_int(FILE * , int * );
+bool         util_fscanf_bool(FILE * stream , bool * value);
 bool   	     util_sscanf_bool(const char * , bool *);
 bool         util_sscanf_octal_int(const char * buffer , int * value);
 bool   	     util_sscanf_int(const char * , int * );

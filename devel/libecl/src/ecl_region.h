@@ -31,6 +31,7 @@ typedef struct ecl_region_struct ecl_region_type;
 
 ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool preselect);
 void              ecl_region_free( ecl_region_type * region );
+void              ecl_region_free__( void * __region );
 
 int               ecl_region_get_active_size( ecl_region_type * region );
 const int       * ecl_region_get_active_list( ecl_region_type * region );
@@ -81,6 +82,14 @@ void              ecl_region_deselect_global_index( ecl_region_type * ecl_region
 
 void              ecl_region_select_active_index( ecl_region_type * ecl_region , int active_index);
 void              ecl_region_deselect_active_index( ecl_region_type * ecl_region , int active_index);
+
+void              ecl_region_select_intersection( ecl_region_type * region , const ecl_region_type * new_region );
+void              ecl_region_select_union( ecl_region_type * region , const ecl_region_type * new_region );
+
+void              ecl_region_select_smaller( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
+void              ecl_region_deselect_smaller( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
+void              ecl_region_select_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
+void              ecl_region_deselect_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
 
 
 UTIL_IS_INSTANCE_HEADER( ecl_region );
