@@ -269,6 +269,35 @@ void path_fmt_assert_fmt(const path_fmt_type * path , int num_input , const node
 }
 */
 
+/*
+  fmt == NULL
+  -----------
+  The function will return NULL, possibly freeing the incoming
+  path_fmt instance if that is different from NULL.
+
+
+  fmt != NULL
+  -----------
+  The current path_fmt instance will be updated, or a new created. The
+  new/updated path_fmt instance is returned.
+*/
+
+path_fmt_type * path_fmt_realloc_path_fmt( path_fmt_type * path_fmt, const char * fmt ) {
+  if (fmt == NULL) {
+    if (path_fmt != NULL)
+      path_fmt_free( path_fmt );
+    return NULL;
+  } else {
+    if (path_fmt == NULL)
+      return path_fmt_alloc_path_fmt( fmt );
+    else {
+      path_fmt_reset_fmt( path_fmt , fmt );
+      return path_fmt;
+    }
+  }
+}
+
+
 const char * path_fmt_get_fmt(const path_fmt_type * path) {
   return path->fmt;
 }

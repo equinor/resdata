@@ -21,6 +21,7 @@ void 		path_fmt_free(path_fmt_type * );
 const char    * path_fmt_get_fmt(const path_fmt_type * );
 void            path_fmt_reset_fmt(path_fmt_type * , const char * );
 void            path_fmt_make_path(const path_fmt_type * );
+path_fmt_type * path_fmt_realloc_path_fmt( path_fmt_type * path_fmt, const char * fmt );
 
 #ifdef __cplusplus
 }
