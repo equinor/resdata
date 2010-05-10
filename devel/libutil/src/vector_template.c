@@ -87,6 +87,8 @@ struct <TYPE>_vector_struct {
   int      size;          /* The index of the last valid - i.e. actively set - element in the vector. */
   <TYPE>   default_value; /* The data vector is initialized with this value. */
   <TYPE> * data;          /* The actual data. */
+  bool     data_owner;    /* Is the vector owner of the the actual storage data? 
+                             If this is false the vector can not be resized. */
 };
 
 
@@ -107,23 +109,78 @@ UTIL_SAFE_CAST_FUNCTION(<TYPE>_vector , TYPE_VECTOR_ID);
 
 
 static void <TYPE>_vector_realloc_data__(<TYPE>_vector_type * vector , int new_alloc_size) {
-  if (new_alloc_size > 0) {
-    int i;
-    vector->data = util_realloc(vector->data , new_alloc_size * sizeof * vector->data , __func__);
-    for (i=vector->alloc_size;  i < new_alloc_size; i++)
-      vector->data[i] = vector->default_value;
-  } else {
-    if (vector->alloc_size > 0) {
-      free(vector->data);
-      vector->data = NULL;
+  if (vector->data_owner) {
+    if (new_alloc_size > 0) {
+      int i;
+      vector->data = util_realloc(vector->data , new_alloc_size * sizeof * vector->data , __func__);
+      for (i=vector->alloc_size;  i < new_alloc_size; i++)
+        vector->data[i] = vector->default_value;
+    } else {
+      if (vector->alloc_size > 0) {
+        free(vector->data);
+        vector->data = NULL;
+      }
     }
-  }
-  vector->alloc_size = new_alloc_size;
+    vector->alloc_size = new_alloc_size;
+  } else
+    util_abort("%s: tried to change the storage are for a shared data segment \n",__func__);
 }
 
 static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int index) {
   if ((index < 0) || (index >= vector->size)) 
     util_abort("%s: index:%d invalid. Valid interval: [0,%d>.\n",__func__ , index , vector->size);
+}
+
+
+
+
+static <TYPE>_vector_type * <TYPE>_vector_alloc__(int init_size , <TYPE> default_value, <TYPE> * data, int alloc_size , bool data_owner ) {
+  <TYPE>_vector_type * vector = util_malloc( sizeof * vector , __func__);
+  UTIL_TYPE_ID_INIT( vector , TYPE_VECTOR_ID);
+  vector->default_value       = default_value;
+
+  /**
+     Not all combinations of (data, alloc_size, data_owner) are valid:
+
+     1. Creating a new vector instance with fresh storage allocation
+        from <TYPE>_vector_alloc():
+
+          data       == NULL
+          alloc_size == 0
+          data_owner == true
+
+
+     2. Creating a shared wrapper from the <TYPE>_vector_alloc_shared_wrapper():     
+     
+          data       != NULL
+          data_size   > 0
+          data_owner == false
+
+
+     3. Creating a private wrapper which steals the input data from
+        <TYPE>_vector_alloc_private_wrapper():
+
+          data       != NULL
+          data_size   > 0
+          data_owner == true
+          
+  */
+  
+  if (data == NULL) {  /* Case 1: */
+    vector->data 	      = NULL;
+    vector->data_owner        = true;     /* The input values alloc_size and */
+    vector->alloc_size 	      = 0;        /* data_owner are not even consulted. */
+  } else {             /* Case 2 & 3 */                
+    vector->data 	      = data;
+    vector->data_owner        = data_owner;
+    vector->alloc_size 	      = alloc_size;
+  }
+  
+  vector->size 	     	      = 0;  
+  if (init_size > 0)
+    <TYPE>_vector_iset( vector , init_size - 1 , default_value );  /* Filling up the init size elements with the default value */
+  
+  return vector;
 }
 
 
@@ -133,17 +190,48 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
 */
    
 <TYPE>_vector_type * <TYPE>_vector_alloc(int init_size , <TYPE> default_value) {
-  <TYPE>_vector_type * vector = util_malloc( sizeof * vector , __func__);
-  vector->data 	     	      = NULL;
-  vector->size 	     	      = 0;  
-  vector->alloc_size 	      = 0;
-  vector->default_value       = default_value;
-  UTIL_TYPE_ID_INIT( vector , TYPE_VECTOR_ID);
-  if (init_size > 0)
-    <TYPE>_vector_iset( vector , init_size - 1 , default_value );  /* Filling up the init size elements with the default value */
-  
+  <TYPE>_vector_type * vector = <TYPE>_vector_alloc__( init_size , default_value , NULL , 0 , true );
   return vector;
 }
+
+
+/**
+   This function will allocate a shared wrapper around the input
+   pointer data. The vector implementation will work transparently
+   with the input data, but the data will not be reallocated, and also
+   not freed when exiting, this implies that it is safe (memory wise)
+   to work with the memory location pointed to by data from somewhere
+   else as well.
+
+   Vector wrappers allocated this way can NOT grow, and will fail HARD
+   if a resize beyond alloc_size is attempted - check with
+   <TYPE>_vector_growable()
+*/
+
+
+<TYPE>_vector_type * <TYPE>_vector_alloc_shared_wrapper(int init_size, <TYPE> default_value , <TYPE> * data , int alloc_size) {
+  return <TYPE>_vector_alloc__( init_size , default_value , data , alloc_size , false );
+}
+
+
+/**
+   This function will allocate a vector wrapper around the input
+   pointer data. The input data will be hijacked by the vector
+   implementation, and the vector will continue like a 100% normal
+   vector instance, that includes the capability to resize the data
+   area, and the data are will also be freed when the vector is freed.
+
+   Observe that it is (in general) NOT safe to continue to use the
+   data pointer from an external scope.
+*/
+
+
+<TYPE>_vector_type * <TYPE>_vector_alloc_private_wrapper(int init_size, <TYPE> default_value , <TYPE> * data , int alloc_size) {
+  return <TYPE>_vector_alloc__( init_size , default_value , data , alloc_size , false );
+}
+
+
+
 
 
 <TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src) {
@@ -152,6 +240,10 @@ static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int i
   copy->size = src->size;
   memcpy(copy->data , src->data , src->alloc_size * sizeof * src->data );
   return copy;
+}
+
+bool <TYPE>_vector_growable( const <TYPE>_vector_type * vector) {
+  return vector->data_owner;
 }
 
 
@@ -297,7 +389,8 @@ void <TYPE>_vector_free_data(<TYPE>_vector_type * vector) {
 
 
 void <TYPE>_vector_free(<TYPE>_vector_type * vector) {
-  util_safe_free( vector->data );
+  if (vector->data_owner)
+    util_safe_free( vector->data );
   free( vector );
 }
 

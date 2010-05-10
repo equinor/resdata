@@ -640,7 +640,7 @@ void subst_list_update_file(const subst_list_type * subst_list , const char * fi
    This function does search-replace on string instance inplace.
 */
 void subst_list_update_string(const subst_list_type * subst_list , char ** string) {
-  buffer_type * buffer = buffer_alloc_wrapper( *string , strlen( *string ) + 1);
+  buffer_type * buffer = buffer_alloc_private_wrapper( *string , strlen( *string ) + 1);
   subst_list_update_buffer(subst_list , buffer);
   *string = buffer_get_data( buffer );
   buffer_free_container( buffer );

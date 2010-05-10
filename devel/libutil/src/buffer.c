@@ -108,7 +108,7 @@ buffer_type * buffer_alloc( size_t buffer_size ) {
    also be freed.
 */
 
-buffer_type * buffer_alloc_wrapper(void * data , size_t buffer_size ) {
+buffer_type * buffer_alloc_private_wrapper(void * data , size_t buffer_size ) {
   buffer_type * buffer = buffer_alloc_empty();
 
   buffer->data         = data;        /* We have stolen the data pointer. */

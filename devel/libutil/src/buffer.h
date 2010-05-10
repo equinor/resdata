@@ -13,7 +13,7 @@ typedef struct     buffer_struct buffer_type;
 void               buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift);
 bool               buffer_strstr( buffer_type * buffer , const char * expr );
 buffer_type      * buffer_alloc( size_t buffer_size );
-buffer_type      * buffer_alloc_wrapper(void * data , size_t buffer_size );
+buffer_type      * buffer_alloc_private_wrapper(void * data , size_t buffer_size );
 void               buffer_free_container( buffer_type * buffer );
 void               buffer_free( buffer_type * buffer);
 size_t             buffer_safe_fread(buffer_type * buffer , void * target_ptr , size_t item_size , size_t items);

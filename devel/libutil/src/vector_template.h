@@ -11,8 +11,11 @@ typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 typedef <TYPE> (<TYPE>_ftype) (<TYPE>);
 
 
+bool                 <TYPE>_vector_growable( const <TYPE>_vector_type * vector);
 void                 <TYPE>_vector_select_unique(<TYPE>_vector_type * vector);
 <TYPE>_vector_type * <TYPE>_vector_alloc( int init_size , <TYPE> );
+<TYPE>_vector_type * <TYPE>_vector_alloc_private_wrapper(int init_size, <TYPE> default_value , <TYPE> * data , int alloc_size);
+<TYPE>_vector_type * <TYPE>_vector_alloc_shared_wrapper(int init_size, <TYPE> default_value , <TYPE> * data , int alloc_size);
 <TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src);
 void                 <TYPE>_vector_imul(<TYPE>_vector_type * vector, int index, <TYPE> factor);
 void                 <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> factor);
