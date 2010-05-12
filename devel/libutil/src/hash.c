@@ -746,9 +746,11 @@ bool hash_key_list_compare(hash_type * hash1, hash_type * hash2)
 
    and build a hash table where the element in front of ':' is used as
    key, and the element behind the ':' is used as value. The value is
-   internalized as a (char *) pointer with no type conversion. 
+   internalized as a (char *) pointer with no type conversion.  In the
+   calling scope the values should be extracted with hash_get().
 
-   In the calling scope the values should be extracted with hash_get().
+   Strings which can not be interpreted as KEY:VALUE are simply
+   ignored.
 */
 
 
@@ -764,8 +766,8 @@ hash_type * hash_alloc_from_options(const stringlist_type * options) {
     util_binary_split_string( stringlist_iget(options , iopt) , ":" , true , &option , &value);
     if ((option != NULL) && (value != NULL)) 
       hash_insert_hash_owned_ref( opt_hash , option , util_alloc_string_copy(value) , free);
-    else 
-      fprintf(stderr,"** Warning: could not interpret %s as KEY:VALUE - ignored\n",stringlist_iget(options , iopt));
+    // Warning: could not interpret string as KEY:VALUE - ignored
+      
     
     util_safe_free(option);
     util_safe_free(value);

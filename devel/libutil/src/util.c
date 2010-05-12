@@ -62,7 +62,7 @@ static bool EOL_CHAR(char c) {
 #undef strncpy // This is for some reason needed in RH3
 
 
-LIBRARY_VERSION(libutil)
+//LIBRARY_VERSION(libutil)
 
 void util_fread_dev_random(int buffer_size , char * buffer) {
   FILE * stream = util_fopen("/dev/random" , "r");
