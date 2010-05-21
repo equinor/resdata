@@ -50,6 +50,8 @@ extern"C" {
       cast succeeds, and fail hard if it fails.
       
 */
+
+
    
 
 #define UTIL_IS_INSTANCE_FUNCTION(type , TYPE_ID)          \
@@ -96,7 +98,7 @@ const type ## _type * type ## _safe_cast_const( const void * __arg ) {     \
       return NULL;                                       \
    }                                                     \
 }
-#define UTIL_SAFE_CAST_HEADER_CONST( type ) const type ## _type * type ## _safe_cast( const void * __arg );
+#define UTIL_SAFE_CAST_HEADER_CONST( type ) const type ## _type * type ## _safe_cast_const( const void * __arg );
 
 #define UTIL_TYPE_ID_DECLARATION           int   __type_id; 
 #define UTIL_TYPE_ID_INIT(var , TYPE_ID)   var->__type_id = TYPE_ID;
@@ -350,6 +352,7 @@ uid_t  * util_alloc_file_users( const char * filename , int * __num_users);
 uid_t  * util_alloc_file_users( const char * filename , int * __num_users);
 void     util_update_path_var(const char * , const char * , bool );
 
+int      util_get_type( void * data );
 void 	 util_fskip_int(FILE * stream);
 void 	 util_fskip_long(FILE * stream);
 void 	 util_fskip_bool(FILE * stream);

@@ -299,7 +299,10 @@ path_fmt_type * path_fmt_realloc_path_fmt( path_fmt_type * path_fmt, const char 
 
 
 const char * path_fmt_get_fmt(const path_fmt_type * path) {
-  return path->fmt;
+  if (path == NULL)
+    return NULL;
+  else
+    return path->fmt;
 }
 
 
