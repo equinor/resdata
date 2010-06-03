@@ -43,9 +43,16 @@ void log_reset_filename(log_type *logh , const char *filename) {
   logh->filename = util_realloc_string_copy( logh->filename , filename );
   pthread_mutex_lock( &logh->mutex );
 
-  logh->stream = util_mkdir_fopen( filename , "a+");
-  logh->fd     = fileno( logh->stream );
-  
+  if (filename != NULL) {
+    logh->stream = util_mkdir_fopen( filename , "a+");
+    logh->fd     = fileno( logh->stream );
+  } else {  /* It is ~OK to open a log with NULL filename, but then
+               log_reset_filename() with a VALID filename must be
+               called before it is actually used. */
+    logh->stream = NULL;
+    logh->fd     = -1;
+  }
+
   pthread_mutex_unlock( &logh->mutex );
 }
 
@@ -54,6 +61,14 @@ const char * log_get_filename( const log_type * logh ) {
   return logh->filename;
 }
 
+int log_get_level( const log_type * logh) {
+  return logh->level;
+}
+
+
+void log_set_level( log_type * logh , int log_level) {
+  logh->log_level = log_level;
+}
 
 
 
@@ -63,7 +78,7 @@ static log_type *log_alloc_internal(const char *filename , bool new, int log_lev
   
   logh->log_level     = log_level;
   logh->filename      = NULL;
-  logh->stream         = NULL;
+  logh->stream        = NULL;
   pthread_mutex_init( &logh->mutex , NULL );
   log_reset_filename( logh ,filename );
     
@@ -96,6 +111,9 @@ static bool log_include_message(const log_type *logh, int message_level) {
    If dup_stream != NULL the message (without the date/time header) is duplicated on this stream.
 */
 void log_add_message(log_type *logh, int message_level , FILE * dup_stream , char* message, bool free_message) {
+  if (logh->stream == NULL)
+    util_abort("%s: logh->stream == NULL - must call log_reset_filename() first \n",__func__);
+
   pthread_mutex_lock( &logh->mutex );
   {
     struct tm time_fields;
