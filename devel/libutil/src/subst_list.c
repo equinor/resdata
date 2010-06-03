@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <util.h>
@@ -783,6 +784,86 @@ void subst_list_fprintf(const subst_list_type * subst_list , FILE * stream) {
   }
 }
 
+/**
+   Will allocate string representation of the subst_list as:
+   KEY1=Value1, Key2=Value2, Key3=Value3. Will return NULL is there
+   are no elements in the subst_list.
+*/
+   
+char * subst_list_alloc_string_representation( const subst_list_type * subst_list ) {
+  int size = subst_list_get_size( subst_list );
+  char * return_string = NULL;
+  if (size > 0) {
+    buffer_type * buffer = buffer_alloc( 512 );
+    int i;
+  
+    for (i=0; i < size; i++) {
+      buffer_fwrite_char_ptr( buffer , subst_list_iget_key( subst_list , i));
+      buffer_fwrite_char(buffer , '=');
+      buffer_fwrite_char_ptr( buffer , subst_list_iget_value( subst_list , i));
+      if (i < (size - 1)) 
+        buffer_fwrite_char_ptr( buffer , ", ");
+    }
+    buffer_fwrite_char( buffer , '\0');
+    buffer_shrink_to_fit( buffer );
+    return_string = buffer_get_data( buffer );
+    buffer_free_container( buffer );
+  }
+  return return_string;
+}
+  
+
+/** Will loose tagging .... */
+int subst_list_add_from_string( subst_list_type * subst_list , const char * arg_string) {
+  int     error_count = 0;
+  if (arg_string != NULL) {
+    char ** key_value_list;
+    int     num_arg, iarg;
+    
+    util_split_string(arg_string , "," , &num_arg , &key_value_list);
+    for (iarg = 0; iarg < num_arg; iarg++) {
+      if (strchr(key_value_list[iarg] , '=') == NULL)
+        //util_abort("%s: could not find \'=\' in argument string:%s \n",__func__ , key_value_list[iarg]);
+        /*
+          Could not find '=' in the argument string, this argument will
+          be ignored, and the error_count will be increased by one.
+        */
+        error_count += 1;
+      else {
+        char * key , * value;
+        char * tmp     = key_value_list[iarg];
+        int arg_length , value_length;
+        while (isspace(*tmp))  /* Skipping initial space */
+          tmp++;
+        
+        arg_length = strcspn(tmp , " =");
+        key  = util_alloc_substring_copy(tmp , arg_length);
+        tmp += arg_length;
+        while ((*tmp == ' ') || (*tmp == '='))
+          tmp++;
+        
+        value_length = strcspn(tmp , " ");
+        value = util_alloc_substring_copy( tmp , value_length);
+        
+        /* Setting the argument */
+        subst_list_insert_copy( subst_list , key , value , NULL);
+        free(key);
+        free(value);
+        tmp += value_length;
+        
+        
+        /* Accept only trailing space - any other character indicates a failed parsing. */
+        while (*tmp != '\0') {
+          if (!isspace(*tmp))
+            util_abort("%s: something wrong with:%s  - spaces are not allowed in key or value part.\n",__func__ , key_value_list[iarg]);
+          tmp++;
+        }
+      }
+    }
+    util_free_stringlist(key_value_list , num_arg);
+  }
+  return error_count;
+}
 
 
 

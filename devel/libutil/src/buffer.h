@@ -10,6 +10,7 @@ extern "C" {
 
 typedef struct     buffer_struct buffer_type;
 
+void               buffer_shrink_to_fit( buffer_type * buffer );
 void               buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift);
 bool               buffer_strstr( buffer_type * buffer , const char * expr );
 buffer_type      * buffer_alloc( size_t buffer_size );

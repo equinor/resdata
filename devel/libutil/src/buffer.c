@@ -93,6 +93,13 @@ buffer_type * buffer_alloc( size_t buffer_size ) {
   return buffer;
 }
 
+/**
+   Will resize the buffer storage to exactly fit the amount of content.
+*/
+void buffer_shrink_to_fit( buffer_type * buffer ) {
+  buffer_resize__( buffer , buffer->content_size , true);
+}
+
 
 /**
    This function will allocate a buffer instance based on the input
@@ -123,7 +130,7 @@ buffer_type * buffer_alloc_private_wrapper(void * data , size_t buffer_size ) {
 
 
 /**
-   This function will free the buffer daat structure, but NOT the
+   This function will free the buffer data structure, but NOT the
    actual storage. Can typically be used when some other pointer has
    taken posession of the buffer content:
 

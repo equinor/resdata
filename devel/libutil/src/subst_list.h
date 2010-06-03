@@ -32,6 +32,8 @@ int                     subst_list_get_size( const subst_list_type *);
 const char            * subst_list_iget_value( const subst_list_type * subst_list , int index);
 const char            * subst_list_iget_key( const subst_list_type * subst_list , int index);
 const char            * subst_list_iget_doc_string( const subst_list_type * subst_list , int index);
+char                  * subst_list_alloc_string_representation( const subst_list_type * subst_list );
+int                     subst_list_add_from_string( subst_list_type * subst_list , const char * arg_string);
 
 #ifdef __cplusplus 
 }
