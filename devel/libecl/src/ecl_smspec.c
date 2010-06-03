@@ -556,6 +556,13 @@ static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_
   case(ECL_SMSPEC_COMPLETION_VAR):
     gen_key = util_alloc_sprintf("%s%s%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname , smspec->key_join_string , smspec_index->num );
     hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
+    /* Inserted with two keys - just like the block variables. */
+    {
+      int i,j,k;
+      ecl_smspec_get_ijk(smspec , smspec_index->num , &i,&j,&k);
+      gen_key = util_realloc_sprintf(gen_key , "%s%s%s%s%d,%d,%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname , smspec->key_join_string , i,j,k);
+      hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
+    }
     break;
   case(ECL_SMSPEC_FIELD_VAR):
     hash_insert_ref(smspec->gen_var_index , smspec_index->keyword , smspec_index);  
