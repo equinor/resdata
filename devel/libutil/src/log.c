@@ -62,7 +62,7 @@ const char * log_get_filename( const log_type * logh ) {
 }
 
 int log_get_level( const log_type * logh) {
-  return logh->level;
+  return logh->log_level;
 }
 
 
@@ -142,15 +142,6 @@ void log_add_message(log_type *logh, int message_level , FILE * dup_stream , cha
 
 
 
-
-int log_get_level( const log_type * logh ) {
-  return logh->log_level; 
-}
-
-
-void log_set_level( log_type * logh , int new_level) {
-  logh->log_level = new_level;
-}
 
 
 
