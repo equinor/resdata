@@ -575,6 +575,40 @@ const char * ecl_sum_get_case(const ecl_sum_type * ecl_sum) {
   return ecl_smspec_get_simulation_case( ecl_sum->smspec );
 }
 
+
+/**
+   This function will check if the currently loaded case corresponds
+   to the case specified by @input_file. The extension of @input file
+   can be arbitrary (or nonexistent) and will be ignored (this can
+   lead to errors with formatted/unformatted mixup if the simulation
+   directory has been changed after the ecl_sum instance has been
+   loaded).
+*/
+
+
+bool ecl_sum_same_case( const ecl_sum_type * ecl_sum , const char * input_file ) {
+  bool   same_case = false;
+  {
+    char * path;
+    char * base;
+
+    util_alloc_file_components( input_file , &path , &base , NULL);
+    {
+      bool   fmt_file = ecl_smspec_get_formatted( ecl_sum->smspec );
+      char * header_file = ecl_util_alloc_exfilename( path , base , ECL_SUMMARY_HEADER_FILE , fmt_file , -1 );
+      if (header_file != NULL) {
+        same_case = util_same_file( header_file , ecl_smspec_get_header_file( ecl_sum->smspec ));
+        free( header_file );
+      }
+    }
+    
+    util_safe_free( path );
+    util_safe_free( base );
+  }
+  return same_case;
+}
+
+
 /*****************************************************************/
 
 bool ecl_sum_general_is_total(const ecl_sum_type * ecl_sum , const char * gen_key) {

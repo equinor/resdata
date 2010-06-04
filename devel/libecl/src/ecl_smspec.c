@@ -74,6 +74,7 @@ struct ecl_smspec_struct {
   char            * simulation_case;               /* This should be full path and basename - without any extension. */
   char            * key_join_string;               /* The string used to join keys when building gen_key keys - typically ":" - 
                                                       but arbitrary - NOT necessary to be able to invert the joining. */
+  char            * header_file;                   /* FULL path to the currenbtly loaded header_file. */
 
   bool                formatted;                     /* Has this summary instance been loaded from a formatted (i.e. FSMSPEC file) or unformatted (i.e. SMSPEC) file. */
   time_t              sim_start_time;                /* When did the simulation start - worldtime. */
@@ -366,6 +367,7 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   ecl_smspec->base_name                      = util_alloc_string_copy( base_name ); 
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
   ecl_smspec->key_join_string                = util_alloc_string_copy( key_join_string );
+  ecl_smspec->header_file                    = NULL;
 
   ecl_smspec->time_index  = -1;
   ecl_smspec->day_index   = -1;
@@ -660,7 +662,7 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 
 
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file) {
-    ecl_file_type * header = ecl_file_fread_alloc( header_file );
+  ecl_file_type * header = ecl_file_fread_alloc( header_file );
   {
     int *date;
     ecl_kw_type *wells     = ecl_file_iget_named_kw(header, "WGNAMES"  , 0);
@@ -779,6 +781,8 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
   }
   ecl_smspec_load_restart( ecl_smspec , header );
   ecl_file_free( header );
+  util_safe_free( ecl_smspec->header_file );
+  ecl_smspec->header_file = util_alloc_realpath( header_file );
 }
 
 
@@ -1129,6 +1133,10 @@ bool ecl_smspec_get_formatted( const ecl_smspec_type * ecl_smspec) {
   return ecl_smspec->formatted;
 }
 
+const char * ecl_smspec_get_header_file( const ecl_smspec_type * ecl_smspec ) {
+  return ecl_smspec->header_file;
+}
+
 const char * ecl_smspec_get_simulation_case(const ecl_smspec_type * ecl_smspec) {
   return ecl_smspec->simulation_case;
 }
@@ -1156,6 +1164,7 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->block_var_index);
   hash_free(ecl_smspec->gen_var_index);
   hash_free(ecl_smspec->special_types);
+  util_safe_free( ecl_smspec->header_file );
   free(ecl_smspec->simulation_case);
   free(ecl_smspec->simulation_path);
   free(ecl_smspec->base_name);
