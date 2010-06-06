@@ -306,7 +306,6 @@ void * vector_iget(const vector_type * vector, int index) {
    are shifted one element to the left. 
 */
 
-
 void vector_idel(vector_type * vector , int index) {
   if ((index >= 0) && (index < vector->size)) {
     node_data_type * node = vector->data[index];
@@ -322,6 +321,22 @@ void vector_idel(vector_type * vector , int index) {
 }
 
 
+/**
+   This function will remove the last elements of the vector, so that
+   the new size becomes @new_size. If the @new_size is greater than
+   the current length of the vector the function will fail HARD.
+*/
+
+
+void vector_shrink( vector_type * vector , int new_size ) {
+  if (new_size > vector->size)
+    util_abort("%s: Tried to \'shrink\' vector to %d elements - current size:%d\n",__func__ , new_size , vector->size);
+  {
+    int index;
+    for (index = (vector->size - 1); index >= new_size; index--)
+      vector_idel( vector , index );
+  }
+}
 
 
 
