@@ -41,6 +41,7 @@ void              stringlist_idel(stringlist_type * stringlist , int index);
 
 int               stringlist_get_size(const stringlist_type * );
 void              stringlist_fprintf(const stringlist_type * , const char * , FILE *);
+void              stringlist_fprintf_fmt(const stringlist_type * stringlist, const stringlist_type * fmt_list , FILE * stream);
 
 
 stringlist_type * stringlist_alloc_argv_copy(const char **      , int );

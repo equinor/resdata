@@ -917,10 +917,13 @@ int ecl_sum_data_get_last_ministep( const ecl_sum_data_type * data ) {
   return data->last_ministep;
 }
 
+/*****************************************************************/
+/* High level vector routines */
 
 
-time_t_vector_type * ecl_sum_data_alloc_time_vector( const ecl_sum_data_type * data , bool report_only) {
-  time_t_vector_type * time_vector = time_t_vector_alloc(0,0);
+
+void ecl_sum_data_init_time_vector( const ecl_sum_data_type * data , time_t_vector_type * time_vector , bool report_only) {
+  time_t_vector_reset( time_vector );
   time_t_vector_append( time_vector , ecl_smspec_get_start_time( data->smspec ));
   if (report_only) {
     int report_step;
@@ -935,8 +938,39 @@ time_t_vector_type * ecl_sum_data_alloc_time_vector( const ecl_sum_data_type * d
       time_t_vector_append( time_vector , ministep->sim_time );
     }
   }
+}
+
+time_t_vector_type *  ecl_sum_data_alloc_time_vector( const ecl_sum_data_type * data , bool report_only) {
+  time_t_vector_type * time_vector = time_t_vector_alloc(0,0);
+  ecl_sum_data_init_time_vector( data , time_vector , report_only);
   return time_vector;
 }
 
+
+void ecl_sum_data_init_data_vector( const ecl_sum_data_type * data , double_vector_type * data_vector , int data_index , bool report_only) {
+  double_vector_reset( data_vector );
+  double_vector_append( data_vector , ecl_smspec_get_start_time( data->smspec ));
+  if (report_only) {
+    int report_step;
+    for (report_step = data->first_report_step; report_step < data->last_report_step; report_step++) {
+      const ecl_sum_ministep_type * ministep = ecl_sum_data_get_ministep( data , int_vector_iget(data->report_last_ministep , report_step));
+      double_vector_append( data_vector , ecl_sum_ministep_iget( ministep , data_index ));
+    }
+  } else {
+    int i;
+    for (i = 0; i < vector_get_size(data->data); i++) {
+      const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , i );
+      double_vector_append( data_vector , ecl_sum_ministep_iget( ministep , data_index ));
+
+    }
+  }
+}
+
+
+double_vector_type * ecl_sum_data_alloc_data_vector( const ecl_sum_data_type * data , int data_index , bool report_only) {
+  double_vector_type * data_vector = double_vector_alloc(0,0);
+  ecl_sum_data_init_data_vector( data , data_vector , data_index , report_only);
+  return data_vector;
+}
 
 

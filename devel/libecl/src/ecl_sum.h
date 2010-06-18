@@ -13,7 +13,6 @@ extern "C" {
 #include <time_t_vector.h>
 #include <stringlist.h>
 #include <double_vector.h>
-#include <time_t_vector.h>
 
 typedef struct ecl_sum_struct       ecl_sum_type;
 
@@ -91,6 +90,8 @@ time_t ecl_sum_get_sim_time( const ecl_sum_type * ecl_sum , int ministep );
 time_t ecl_sum_get_report_time( const ecl_sum_type * ecl_sum , int report_step );
 double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep );
 
+void                 ecl_sum_init_data_vector( const ecl_sum_type * ecl_sum , double_vector_type * data_vector , int data_index , bool report_only );
+double_vector_type * ecl_sum_alloc_data_vector( const ecl_sum_type * ecl_sum  , int data_index , bool report_only);
 time_t_vector_type * ecl_sum_alloc_time_vector( const ecl_sum_type * ecl_sum  , bool report_only);
 time_t       ecl_sum_get_end_time( const ecl_sum_type * ecl_sum);
 int          ecl_sum_get_ministep_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days);

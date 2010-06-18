@@ -42,6 +42,14 @@ void stringlist_fprintf(const stringlist_type * stringlist, const char * sep , F
 }
 
 
+void stringlist_fprintf_fmt(const stringlist_type * stringlist, const stringlist_type * fmt_list , FILE * stream) {
+  if (stringlist_get_size(stringlist) == stringlist_get_size( fmt_list )) {
+    int i;
+    for (i=0; i < stringlist_get_size( stringlist); i++)
+      fprintf(stringlist_iget( fmt_list , i) , stringlist_iget( stringlist , i ));
+  } util_abort("%s: length of stringlist:%d   length of fmt_list:%d - must be equal \n",__func__ , stringlist_get_size( stringlist ) , stringlist_get_size( fmt_list ));
+}
+
 
 
 

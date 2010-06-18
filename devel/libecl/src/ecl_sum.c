@@ -445,9 +445,25 @@ int ecl_sum_get_report_ministep_end( const ecl_sum_type * ecl_sum, int report_st
 }
 
 
+void ecl_sum_init_time_vector( const ecl_sum_type * ecl_sum , time_t_vector_type * time_vector , bool report_only ) {
+  ecl_sum_data_init_time_vector( ecl_sum->data , time_vector , report_only );
+}
+
+
 time_t_vector_type * ecl_sum_alloc_time_vector( const ecl_sum_type * ecl_sum  , bool report_only) {
   return ecl_sum_data_alloc_time_vector( ecl_sum->data , report_only );
 }
+
+
+void ecl_sum_init_data_vector( const ecl_sum_type * ecl_sum , double_vector_type * data_vector , int data_index , bool report_only ) {
+  ecl_sum_data_init_data_vector( ecl_sum->data , data_vector , data_index , report_only );
+}
+
+
+double_vector_type * ecl_sum_alloc_data_vector( const ecl_sum_type * ecl_sum  , int data_index , bool report_only) {
+  return ecl_sum_data_alloc_data_vector( ecl_sum->data , data_index , report_only );
+}
+
 
 
 void ecl_sum_summarize( const ecl_sum_type * ecl_sum , FILE * stream ) {
@@ -522,6 +538,7 @@ int ecl_sum_get_ministep_from_sim_time( const ecl_sum_type * ecl_sum , time_t si
   return ecl_sum_data_get_ministep_from_sim_time(ecl_sum->data , sim_time );
 }
  
+
 
 /*****************************************************************/
 /* This is essentially the summary.x program. */ 
