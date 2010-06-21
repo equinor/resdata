@@ -1151,3 +1151,48 @@ time_t ecl_util_get_start_date(const char * data_file) {
   
   return start_date;
 }
+
+
+
+int ecl_util_get_num_cpu(const char * data_file) { 
+  parser_type * parser = parser_alloc(" \t\r\n" , "\"\'" , NULL , NULL , "--" , "\n");
+  int num_cpu        = 1;
+  FILE * stream      = util_fopen(data_file , "r");
+  char * buffer;
+  
+  if (parser_fseek_string( parser , stream , "PARALLEL" , true , true)) {  /* Seeks case insensitive. */
+    long int start_pos = ftell( stream );
+    int buffer_size;
+
+    /* Look for terminating '/' */
+    if (!parser_fseek_string( parser , stream , "/" , false , true))
+      util_abort("%s: sorry - could not find \"/\" termination of PARALLEL keyword in data_file: \n",__func__ , data_file);
+    
+    buffer_size = (ftell(stream) - start_pos)  ;
+    buffer = util_malloc( sizeof * buffer * buffer_size + 1 , __func__);
+    fseek( stream , start_pos , SEEK_SET);
+    util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
+    buffer[buffer_size] = '\0';
+  
+    {
+      stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , true );
+      int i;
+      char * item = NULL;
+      for (i=0; i < stringlist_get_size( tokens ); i++) {
+        item = util_realloc_string_copy( item , stringlist_iget( tokens , i ));
+        util_strupr( item );
+        if ( util_string_equal( item , "DISTRIBUTED" )) {
+          num_cpu = atoi( stringlist_iget( tokens , i - 1));
+          break;
+        }
+      }
+      free( item );  
+      stringlist_free( tokens );
+    }
+    free( buffer );
+  }
+
+  parser_free( parser );
+  fclose(stream);
+  return num_cpu;
+}
