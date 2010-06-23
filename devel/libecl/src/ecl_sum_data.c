@@ -927,7 +927,7 @@ void ecl_sum_data_init_time_vector( const ecl_sum_data_type * data , time_t_vect
   time_t_vector_append( time_vector , ecl_smspec_get_start_time( data->smspec ));
   if (report_only) {
     int report_step;
-    for (report_step = data->first_report_step; report_step < data->last_report_step; report_step++) {
+    for (report_step = data->first_report_step; report_step <= data->last_report_step; report_step++) {
       const ecl_sum_ministep_type * ministep = ecl_sum_data_get_ministep( data , int_vector_iget(data->report_last_ministep , report_step));
       time_t_vector_append( time_vector , ministep->sim_time );
     }
@@ -952,7 +952,7 @@ void ecl_sum_data_init_data_vector( const ecl_sum_data_type * data , double_vect
   double_vector_append( data_vector , ecl_smspec_get_start_time( data->smspec ));
   if (report_only) {
     int report_step;
-    for (report_step = data->first_report_step; report_step < data->last_report_step; report_step++) {
+    for (report_step = data->first_report_step; report_step <= data->last_report_step; report_step++) {
       const ecl_sum_ministep_type * ministep = ecl_sum_data_get_ministep( data , int_vector_iget(data->report_last_ministep , report_step));
       double_vector_append( data_vector , ecl_sum_ministep_iget( ministep , data_index ));
     }
@@ -961,7 +961,6 @@ void ecl_sum_data_init_data_vector( const ecl_sum_data_type * data , double_vect
     for (i = 0; i < vector_get_size(data->data); i++) {
       const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , i );
       double_vector_append( data_vector , ecl_sum_ministep_iget( ministep , data_index ));
-
     }
   }
 }

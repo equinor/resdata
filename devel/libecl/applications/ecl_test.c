@@ -15,4 +15,5 @@
 #include <time.h>
 
 int main(int argc , char ** argv) {
+  ecl_util_get_num_cpu( argv[1] );
 }

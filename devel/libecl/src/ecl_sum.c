@@ -454,7 +454,6 @@ time_t_vector_type * ecl_sum_alloc_time_vector( const ecl_sum_type * ecl_sum  , 
   return ecl_sum_data_alloc_time_vector( ecl_sum->data , report_only );
 }
 
-
 void ecl_sum_init_data_vector( const ecl_sum_type * ecl_sum , double_vector_type * data_vector , int data_index , bool report_only ) {
   ecl_sum_data_init_data_vector( ecl_sum->data , data_vector , data_index , report_only );
 }

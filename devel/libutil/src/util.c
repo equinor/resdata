@@ -1395,6 +1395,43 @@ bool util_copy_file(const char * src_file , const char * target_file) {
   }
 }
 
+/**
+   Only the file _content_ is considered - file metadata is ignored.
+*/
+
+bool util_files_equal( const char * file1 , const char * file2 ) {
+  bool equal = true;
+  int buffer_size = 4096;
+  char buffer1[ buffer_size ];
+  char buffer2[ buffer_size ];
+  
+  FILE * stream1 = util_fopen( file1 , "r" );
+  FILE * stream2 = util_fopen( file2 , "r" );
+
+  do {
+    int count1 = fread( buffer1 , 1 , buffer_size , stream1 );
+    int count2 = fread( buffer2 , 1 , buffer_size , stream2 );
+
+    if (count1 != count2) 
+      equal = false;
+    else {
+      if (memcmp( buffer1 , buffer2 , count1 ) != 0)
+        equal = false;
+    }
+
+    if (feof(stream1)) {
+      if (feof(stream2))
+        break;
+      else
+        equal = false;
+    }
+  } while (equal);
+  fclose( stream1 );
+  fclose( stream2 );
+  return equal;
+}
+
+
 
 
 /**
