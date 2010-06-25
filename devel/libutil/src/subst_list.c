@@ -203,9 +203,12 @@ static subst_list_string_type * subst_list_get_string_node(const subst_list_type
 
 
 
-static subst_list_string_type * subst_list_insert_new_node(subst_list_type * subst_list , const char * key) {
+static subst_list_string_type * subst_list_insert_new_node(subst_list_type * subst_list , const char * key , bool append) {
   subst_list_string_type * new_node = subst_list_string_alloc(key);
-  vector_append_owned_ref(subst_list->string_data , new_node , subst_list_string_free__);
+  if (append)
+    vector_append_owned_ref( subst_list->string_data , new_node , subst_list_string_free__ );
+  else
+    vector_insert_owned_ref( subst_list->string_data , 0 , new_node , subst_list_string_free__ );
   return new_node;
 }
 
@@ -282,11 +285,12 @@ subst_list_type * subst_list_alloc(const void * input_arg) {
 */
 
 
-static void subst_list_insert__(subst_list_type * subst_list , const char * key , const char * value , const char * doc_string, subst_insert_type insert_mode) {
+static void subst_list_insert__(subst_list_type * subst_list , const char * key , const char * value , const char * doc_string, bool append , 
+                                subst_insert_type insert_mode) {
   subst_list_string_type * node = subst_list_get_string_node(subst_list , key);
   
   if (node == NULL) /* Did not have the node. */
-    node = subst_list_insert_new_node(subst_list , key);
+    node = subst_list_insert_new_node(subst_list , key ,append);
   subst_list_string_set_value(node , value , doc_string , insert_mode);
 }
 
@@ -313,17 +317,30 @@ static void subst_list_insert__(subst_list_type * subst_list , const char * key 
 
 */
    
-void subst_list_insert_ref(subst_list_type * subst_list , const char * key , const char * value, const char * doc_string) {
-  subst_list_insert__(subst_list , key , value , doc_string , SUBST_SHARED_REF);
+void subst_list_append_ref(subst_list_type * subst_list , const char * key , const char * value, const char * doc_string) {
+  subst_list_insert__(subst_list , key , value , doc_string , true , SUBST_SHARED_REF);
 }
 
-void subst_list_insert_owned_ref(subst_list_type * subst_list , const char * key , const char * value, const char * doc_string) {
-  subst_list_insert__(subst_list , key , value , doc_string , SUBST_MANAGED_REF);
+void subst_list_append_owned_ref(subst_list_type * subst_list , const char * key , const char * value, const char * doc_string) {
+  subst_list_insert__(subst_list , key , value , doc_string , true , SUBST_MANAGED_REF);
 }
 
-void subst_list_insert_copy(subst_list_type * subst_list , const char * key , const char * value, const char * doc_string) {
-  subst_list_insert__(subst_list , key , value , doc_string , SUBST_DEEP_COPY);
+void subst_list_append_copy(subst_list_type * subst_list , const char * key , const char * value, const char * doc_string) {
+  subst_list_insert__(subst_list , key , value , doc_string , true , SUBST_DEEP_COPY);
 }
+
+void subst_list_prepend_ref(subst_list_type * subst_list , const char * key , const char * value, const char * doc_string) {
+  subst_list_insert__(subst_list , key , value , doc_string , false , SUBST_SHARED_REF);
+}
+
+void subst_list_prepend_owned_ref(subst_list_type * subst_list , const char * key , const char * value, const char * doc_string) {
+  subst_list_insert__(subst_list , key , value , doc_string , false , SUBST_MANAGED_REF);
+}
+
+void subst_list_prepend_copy(subst_list_type * subst_list , const char * key , const char * value, const char * doc_string) {
+  subst_list_insert__(subst_list , key , value , doc_string , false , SUBST_DEEP_COPY);
+}
+
 
 
 /**
@@ -724,7 +741,7 @@ subst_list_type * subst_list_alloc_deep_copy(const subst_list_type * src) {
     int index;
     for (index = 0; index < vector_get_size( src->string_data ); index++) {
       const subst_list_string_type * node = vector_iget_const( src->string_data , index );
-      subst_list_insert__( copy , node->key , node->value , node->doc_string , SUBST_DEEP_COPY);
+      subst_list_insert__( copy , node->key , node->value , node->doc_string , true , SUBST_DEEP_COPY);
     }
 
     for (index = 0; index < vector_get_size( src->func_data ); index++) {
@@ -851,7 +868,7 @@ int subst_list_add_from_string( subst_list_type * subst_list , const char * arg_
         value = util_alloc_substring_copy( tmp , value_length);
         
         /* Setting the argument */
-        subst_list_insert_copy( subst_list , key , value , NULL);
+        subst_list_append_copy( subst_list , key , value , NULL);
         free(key);
         free(value);
         tmp += value_length;

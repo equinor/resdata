@@ -170,7 +170,7 @@ void template_instansiate( const template_type * template , const char * __targe
    before the internal substitutions.
 */
 void template_add_arg( template_type * template , const char * key , const char * value ) {
-  subst_list_insert_copy( template->arg_list , key , value , NULL /* No doc_string */);
+  subst_list_append_copy( template->arg_list , key , value , NULL /* No doc_string */);
 }
 
 

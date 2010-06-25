@@ -19,9 +19,12 @@ subst_list_type       * subst_list_alloc( const void * input_arg );
 subst_list_type       * subst_list_alloc_deep_copy(const subst_list_type * );
 void                    subst_list_free(subst_list_type *);
 void                    subst_list_clear( subst_list_type * subst_list );
-void                    subst_list_insert_copy(subst_list_type *  , const char * , const char * , const char * doc_string);
-void                    subst_list_insert_ref(subst_list_type *  , const char * , const char * , const char * doc_string);
-void                    subst_list_insert_owned_ref(subst_list_type *  , const char * , const char * , const char * doc_string);
+void                    subst_list_append_copy(subst_list_type *  , const char * , const char * , const char * doc_string);
+void                    subst_list_append_ref(subst_list_type *  , const char * , const char * , const char * doc_string);
+void                    subst_list_append_owned_ref(subst_list_type *  , const char * , const char * , const char * doc_string);
+void                    subst_list_prepend_copy(subst_list_type *  , const char * , const char * , const char * doc_string);
+void                    subst_list_prepend_ref(subst_list_type *  , const char * , const char * , const char * doc_string);
+void                    subst_list_prepend_owned_ref(subst_list_type *  , const char * , const char * , const char * doc_string);
 
 void                  	subst_list_filter_file(const subst_list_type * , const char * , const  char * );
 void                    subst_list_update_file(const subst_list_type * , const char * );

@@ -9,7 +9,7 @@ int main(int argc, char ** argv)
   {
     subst_list_type * subst_list =  subst_list_alloc( NULL );
     for(int i=1; i < argc-1; i += 2)
-      subst_list_insert_ref(subst_list, argv[i], argv[i+1] , NULL);
+      subst_list_append_ref(subst_list, argv[i], argv[i+1] , NULL);
     
     subst_list_update_file(subst_list, argv[argc-1]);
     subst_list_free(subst_list);

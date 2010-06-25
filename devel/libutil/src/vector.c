@@ -73,6 +73,7 @@ vector_type * vector_alloc_NULL_initialized( int size ) {
 
 static int vector_append_node(vector_type * vector , node_data_type * node);
 
+
 /** 
     This function assumes that the index is *inside* the vector,
     otherwise it will fail HARD. Should NOT be exported (then we
