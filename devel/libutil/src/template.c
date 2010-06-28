@@ -180,7 +180,7 @@ void template_clear_args( template_type * template ) {
 
 
 int template_add_args_from_string( template_type * template , const char * arg_string) {
-  return subst_list_add_from_string( template->arg_list , arg_string );
+  return subst_list_add_from_string( template->arg_list , arg_string , true);
 }
 
 

@@ -836,7 +836,7 @@ char * subst_list_alloc_string_representation( const subst_list_type * subst_lis
   
 
 /** Will loose tagging .... */
-int subst_list_add_from_string( subst_list_type * subst_list , const char * arg_string) {
+int subst_list_add_from_string( subst_list_type * subst_list , const char * arg_string, bool append) {
   int     error_count = 0;
   if (arg_string != NULL) {
     char ** key_value_list;
@@ -868,7 +868,11 @@ int subst_list_add_from_string( subst_list_type * subst_list , const char * arg_
         value = util_alloc_substring_copy( tmp , value_length);
         
         /* Setting the argument */
-        subst_list_append_copy( subst_list , key , value , NULL);
+        if (append)
+          subst_list_append_copy( subst_list , key , value , NULL);
+        else
+          subst_list_prepend_copy( subst_list , key , value , NULL);
+        
         free(key);
         free(value);
         tmp += value_length;
