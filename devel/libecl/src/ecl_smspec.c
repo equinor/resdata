@@ -198,7 +198,6 @@ static void smspec_index_set_num( smspec_index_type * index , int num) {
    i.e. if it is a well_rate from a dummy well or a variable type we
    do not support at all.
 
-
    This function initializes a valid smspec_index instance based on
    the supplied var_type, and the input. Observe that when a new
    variable type is supported, the big switch() statement must be
