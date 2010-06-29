@@ -20,7 +20,7 @@ env  = Environment()
 conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBUTIL ] , ["lapack" , "plplotd" , "m" , "z" , "pthread"] , link = True)
 
 
-#add_program(env , conf ,  bin_path , "ecl_quantile"      , "ecl_quantile.c"    )
+add_program(env , conf ,  bin_path , "ecl_quantile"      , "ecl_quantile.c"    )
 add_program(env , conf ,  bin_path , "block_owc.x"       , "block_owc.c"       )
 add_program(env , conf ,  bin_path , "convert.x"         , "convert.c"         )
 add_program(env , conf ,  bin_path , "ecl_pack.x"        , "ecl_pack.c"        )
