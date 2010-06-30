@@ -861,6 +861,33 @@ void * hash_iter_get_next_value(hash_iter_type * iter) {
 }
 
 
+/*****************************************************************/
+
+/**
+   This function will iterate through the hash table, and call the
+   function func on each of the elements in the table inplace:
+
+       ....
+       value = hash_get( hash , key );
+       func( value );                      <-- The call is inplace - with no arguments, 
+       ....                                    and no return value. The content of 'value'
+                                               can obviously change, but 'value' itself 
+                                               must still be a valid reference!
+*/
+
+
+void hash_apply( hash_type * hash , hash_apply_ftype * func) {
+  hash_iter_type * iter = hash_iter_alloc( hash );
+  while (!hash_iter_is_complete( iter )) {
+    const char * key = hash_iter_get_next_key( iter );
+    void * value     = hash_get( hash , key );
+    
+    func( value );
+  }
+  hash_iter_free( iter );
+}
+
+
 
 #undef HASH_GET_SCALAR
 #undef HASH_INSERT_SCALAR

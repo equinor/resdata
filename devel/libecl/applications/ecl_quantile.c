@@ -320,7 +320,7 @@ void usage() {
   printf("   CASE_LIST   extra_simulation.DATA    even/more/simulations*GG/run*.DATA\n");
   printf("\n");
   printf("\n");
-  printf("   OUTPUT      FILE1   WWCT:OP_1:0.10  WWCT:OP_1:0.50   WWCT   WOPR:OP_3\n");
+  printf("   OUTPUT      FILE1   WWCT:OP_1:0.10  WWCT:OP_1:0.50   WOPR:OP_3\n");
   printf("   OUTPUT      FILE2   FOPT:0.10  FOPT:0.50  FOPT:0.90  GOPT:0.10  GOPT:0.50  GOPT:0.90   FWPT:0.10  FWPT:0.50  FWPT:0.90\n");
   printf("   NUM_INTERP  100\n");
   printf("\n");

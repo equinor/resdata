@@ -8,7 +8,7 @@ extern"C" {
 #include <stringlist.h>
 typedef struct hash_struct      hash_type;
 typedef struct hash_iter_struct hash_iter_type;
-
+typedef void (hash_apply_ftype) (void * );
 #include <hash_node.h>
 
 void              hash_lock  (hash_type * );
@@ -55,6 +55,7 @@ void              hash_insert_int(hash_type * , const char * , int);
 int               hash_get_int(hash_type * , const char *);
 void              hash_insert_double(hash_type * , const char * , double);
 double            hash_get_double(hash_type * , const char *);
+void              hash_apply( hash_type * hash , hash_apply_ftype * func);
 
 UTIL_IS_INSTANCE_HEADER(hash);
 

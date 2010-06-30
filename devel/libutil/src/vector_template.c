@@ -79,7 +79,8 @@
 #include <buffer.h>
 #include <<TYPE>_vector.h>
 
-#define TYPE_VECTOR_ID "<TYPE>"[0]
+static const char * string_type = "<TYPE>";
+#define TYPE_VECTOR_ID ((int *) string_type )[0]
 
 struct <TYPE>_vector_struct {
   UTIL_TYPE_ID_DECLARATION;
@@ -400,6 +401,11 @@ void <TYPE>_vector_free__(void * __vector) {
   <TYPE>_vector_free( vector );
 }
 
+
+void <TYPE>_vector_reset__(void * __vector) {
+  <TYPE>_vector_type * vector = <TYPE>_vector_safe_cast( __vector );
+  <TYPE>_vector_reset( vector );
+}
 
 
 int <TYPE>_vector_size(const <TYPE>_vector_type * vector) {
