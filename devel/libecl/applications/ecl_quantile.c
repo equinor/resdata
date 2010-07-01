@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <string.h>
 #include <util.h>
 #include <ecl_sum.h>
 #include <stat.h>
@@ -29,19 +31,13 @@ typedef struct {
   int                   num_interp;
   time_t                start_time;
   time_t                end_time;
+  const ecl_sum_type  * refcase;     /* Pointer to an arbitrary ecl_sum instance in the ensemble - to have access to indexing functions. */
 } ensemble_type;
 
 
-
-
-//typedef struct {
-//  stringlist_type    * header_list;
-//  stringlist_type    * unit_list;
-//  vector_type        * data;         /* Vector containing row vectors of double_vector_type; 
-//                                        one double_vector_type instance for each interpolated 
-//                                        timestep. */
-//} result_type;
-
+typedef enum {
+  S3GRAPH = 1
+} output_type;
 
 
 
@@ -108,7 +104,7 @@ void ensemble_load_from_glob( ensemble_type * ensemble , const char * pattern ) 
 
   globfree( &pglob );
 }
-  
+
 
 
 ensemble_type * ensemble_alloc( ) {
@@ -136,7 +132,11 @@ void ensemble_init( ensemble_type * ensemble , config_type * config) {
         ensemble_load_from_glob( ensemble , stringlist_iget( case_list , j ));
     }
   }
-
+  {
+    const sum_case_type * tmp = vector_iget_const( ensemble->data , 0 );
+    ensemble->refcase = tmp->ecl_sum;
+  }
+  
   /*1b: Other config settings */
   if (config_item_set( config , "NUM_INTERP" ))
     ensemble->num_interp  = config_iget_as_int( config , "NUM_INTERP" , 0 , 0 );
@@ -144,13 +144,21 @@ void ensemble_init( ensemble_type * ensemble , config_type * config) {
   
   /*2: Remaining initialization */
   ensemble_init_time_interp( ensemble );
+  if (vector_get_size( ensemble->data ) < 10 )
+    util_exit("Sorry - quantiles make no bloody sense with with < 10 realizations; should have ~> 100.\n");
 }
+
+
+
 
 void ensemble_free( ensemble_type * ensemble ) {
   vector_free( ensemble->data );
   time_t_vector_free( ensemble->interp_time );
   free( ensemble );
 }
+
+
+
 
 /*****************************************************************/
 
@@ -176,24 +184,216 @@ void output_init( hash_type * output , const config_type * config ) {
 }
 
 
+/**
+   Will print the string variable @var and the numerical variable @q
+   padded to a total width of @w:
+
+        'var:0.001     '
+*/
+
+static void print_var( FILE * stream , const char * var , double q , int w) {
+  int qwidth       = 5;
+  const char * fmt = "%s:%4.2f";
+  
+  for (int i = 0; i < (w - strlen( var )) - qwidth; i++)
+    fprintf(stream , " ");      
+  fprintf(stream , fmt , var , q);
+  fprintf(stream , " ");  /* Alwasy include one extra space to insure againt coaleching strings. */
+  
+}
+
+
+/* 
+   I don't understand the rules of the game when it comes to parsing
+   the header section of the S3Graph files, it can actually seem like
+   some 'fixed-length' magic is going on.
+
+   An ECLIPSE summary variable is generally characterized by three
+   variable values from SMSPEC vectors; the three vectors are
+   KEYWORDS, WGNAMES and NUMS.
+
+   The main variable is the KEYWORDS variable which says what type of
+   variable it is. Examples of KEYWORDS variable values are 'WWCT',
+   'WOPR' and 'GWPT'. To make the variable unique we then need
+   additional information from one, or both of WGNAMES and NUMS. For
+   instance for a well variable or group variable we will need the
+   well name from WGNAMES and for a block property we will need the
+   block number (as i + j*nx + k*nx*ny) from the NUMS vector. 
+
+   When writing the S3Graph header I don't understand how to enter the
+   different parts of header information. The current implementation,
+   which seems to work reasonably well[*] , does the following:
+
+     1. Write a line like this:
+
+             TIME    DATE        KEYWORD1:xxx    KEYWORD2:xxx     KEYWORD3:xxxx
+          
+        Here KEYWORD is an eclipse variable memnonic from the KEYWORDS
+        array, i.e. FOPT or WWCT. The :xxx part is the quantile we are
+        looking at, i.e. 0.10 or 0.90. It seems adding the quantile
+        does not confuse S3Graph.
+
+     2. Write a line with units:
+
+             TIME    DATA        KEYWORD1:xxx    KEYWORD2:xxx     KEYWORD3:xxxx 
+             DAYS                UNIT1           UNIT2            UNIT2             <---- New line
+
+
+     3. Write a line with keyword qualifiers, i.e. extra information:
+
+             TIME    DATA        WOPR:xxx        FOPT:xxxx        BPR
+             DAYS                UNIT1           UNIT2            UNIT2             
+                                 OP1                              1000              <---- New line 
+ 
+        Now - the totally confusing part is that it is not clear what
+        S3Graph expects on this third line, in the case of well/group
+        variables it is a well/group name from the WGNAMES array,
+        whereas for e.g. a region or block varaiable it wants an
+        element from the NUMS array, and for e.g. a field variable it
+        wants nothing extra[**]. When it comes to variables which need
+        both NUMS and WGNAMES to become unique (e.g completion
+        variables) it is not clear how - if at all possible - to
+        support it. In the current implementation a string
+        concatenation of WGNAMES and NUMS is used.
+
+
+
+   [*] : I do not really understand why it seems to work.
+
+   [**]: It seemingly manages to pick out the right qualifier - how
+         that works I don't know; but I try be reeally nazi with the
+         formatting.
+*/
+
+
+
+
+void output_save_S3Graph( const char * file , ensemble_type * ensemble , const double ** data , const stringlist_type * ecl_keys, const double_vector_type * quantiles) {
+  FILE * stream = util_mkdir_fopen( file , "w"); 
+  int          field_width  = 24;
+  const char * unit_fmt     = "%24s ";
+  const char * float_fmt    = "%24.5f ";
+  const char * num_fmt      = "%24d ";
+  const char * days_fmt     = "%10.2f ";
+  const char * date_fmt     = "%02d-%02d-%04d ";
+  const char * time_header  = "      DATE       TIME ";
+  const char * time_unit    = "                 DAYS ";
+  const char * time_blank   = "                      ";
+  const int    data_columns = stringlist_get_size( ecl_keys );
+  const int    data_rows    = time_t_vector_size( ensemble->interp_time );
+  int row_nr,column_nr;
+    
+  {
+    char       * origin; 
+    util_alloc_file_components( file , NULL ,&origin , NULL);
+    fprintf(stream , "ORIGIN %s\n", origin );
+    free( origin );
+  }
+  
+  /* 1: Writing first header line with variables. */
+  fprintf(stream , time_header );
+  for (column_nr = 0; column_nr < data_columns; column_nr++) {
+    const char * ecl_key = stringlist_iget( ecl_keys , column_nr );
+    double quantile      = double_vector_iget( quantiles , column_nr );
+    print_var( stream , ecl_sum_get_keyword( ensemble->refcase , ecl_key ) , quantile , field_width);
+  }
+  fprintf(stream , "\n");
+  
+  
+  /* 2: Writing second header line with units. */
+  fprintf(stream , time_unit );
+  for (column_nr = 0; column_nr < data_columns; column_nr++) {
+    const char * ecl_key = stringlist_iget( ecl_keys , column_nr );
+    double quantile      = double_vector_iget( quantiles , column_nr );
+    fprintf(stream , unit_fmt , ecl_sum_get_unit( ensemble->refcase , ecl_key ) , quantile);
+  }
+  fprintf(stream , "\n");
+  
+  
+  /*3: Writing third header line with WGNAMES / NUMS - extra information. */
+  fprintf(stream , time_blank );
+  {
+    for (column_nr = 0; column_nr < data_columns; column_nr++) {
+      const char * ecl_key         = stringlist_iget( ecl_keys , column_nr );
+      const char * wgname          = ecl_sum_get_wgname( ensemble->refcase , ecl_key ); 
+      int          num             = ecl_sum_get_num( ensemble->refcase , ecl_key );
+      ecl_smspec_var_type var_type = ecl_sum_get_var_type( ensemble->refcase , ecl_key);
+      bool need_num                = ecl_smspec_needs_num(   var_type );
+      bool need_wgname             = ecl_smspec_needs_wgname(   var_type );      
+      
+      if (need_num && need_wgname) {
+        /** Do not know have to include both - will just create a
+            mangled name as a combination. */
+        char * wgname_num = util_alloc_sprintf("%s:%d" , wgname , num);
+        fprintf(stream , unit_fmt , wgname_num);
+      } else if (need_num)
+        fprintf(stream , num_fmt , num);
+      else if (need_wgname)
+        fprintf(stream , unit_fmt , wgname);
+      else
+        fprintf(stream , unit_fmt , " ");
+    }
+    fprintf(stream , "\n");
+  }
+  
+  /*4: Writing the actuaal data. */
+  for (row_nr = 0; row_nr < data_rows; row_nr++) {
+    time_t interp_time = time_t_vector_iget( ensemble->interp_time , row_nr);
+    {
+      int mday,month,year;
+      util_set_datetime_values(interp_time , NULL , NULL , NULL , &mday , &month , &year);
+      fprintf(stream , date_fmt , mday , month , year);
+    }
+    fprintf(stream , days_fmt , 1.0*(interp_time - ensemble->start_time) / 86400);
+      
+    for (column_nr = 0; column_nr < data_columns; column_nr++) {
+      fprintf(stream , float_fmt , data[row_nr][column_nr]);
+    }
+    fprintf( stream , "\n");
+  }
+  
+  
+
+}
+
+
+
+void output_save( const char * file , ensemble_type * ensemble , const double ** data , const stringlist_type * ecl_keys , const double_vector_type * quantiles , output_type format) {
+  switch( format ) {
+  case(S3GRAPH):
+    output_save_S3Graph( file , ensemble , data , ecl_keys ,  quantiles);
+    break;
+  default:
+    util_exit("Sorry: output_format:%d not supported \n", format );
+  }
+}
+      
+
+
 
 
 void output_run_line( const char * output_file , const stringlist_type * keys , ensemble_type * ensemble) {
-  const char * float_fmt   = "%24.5f ";
-  const char * string_fmt  = "%24s ";
-  const char * comment_fmt = "-------------------------";
-  
-  FILE * stream = util_mkdir_fopen( output_file ,"w");
-  int i;
+  const int    data_columns = stringlist_get_size( keys );
+  const int    data_rows    = time_t_vector_size( ensemble->interp_time );
+  double     ** data;
+  int row_nr, column_nr;
 
   stringlist_type * sum_keys     = stringlist_alloc_new();
   double_vector_type * quantiles = double_vector_alloc(0,0);
-
+  
+  data = util_malloc( data_rows * sizeof * data , __func__);
+  /*
+    time-direction, i.e. the row index is the first index and the
+    column number (i.e. the different keys) is the second index. 
+  */
+  for (row_nr=0; row_nr < data_rows; row_nr++)
+    data[row_nr] = util_malloc( sizeof * data[row_nr] * data_columns, __func__);
+  
   printf("Creating output file: %s \n",output_file );
 
   /* Going through the keys. */
-  for (i = 0; i < stringlist_get_size( keys ); i++) {
-    const char * key = stringlist_iget( keys , i );
+  for (column_nr = 0; column_nr < stringlist_get_size( keys ); column_nr++) {
+    const char * key = stringlist_iget( keys , column_nr );
     char * sum_key;
     double quantile;
     {
@@ -217,35 +417,13 @@ void output_run_line( const char * output_file , const stringlist_type * keys , 
   
   /* The main loop - outer loop is running over time. */
   {
-    int tstep;
-    int ikey;
     hash_type * interp_data_cache = hash_alloc();
-    fprintf(stream , "-- DATE        DAYS     ");
-    for (ikey=0; ikey < stringlist_get_size( keys ); ikey++) 
-      fprintf(stream , string_fmt , stringlist_iget( keys , ikey ));
-    fprintf(stream , "\n");
-    fprintf(stream , "--------------------------");
 
-    for (ikey=0; ikey < stringlist_get_size( keys ); ikey++) 
-      fprintf(stream , comment_fmt);
-    fprintf(stream , "\n");
-
-    
-    for (tstep = 0; tstep < time_t_vector_size( ensemble->interp_time ); tstep++) {
-      time_t interp_time = time_t_vector_iget( ensemble->interp_time , tstep );
-      {
-        int mday,month,year;
-        util_set_datetime_values(interp_time , NULL , NULL , NULL , &mday , &month , &year);
-        fprintf(stream , "%02d.%02d.%4d  ", mday , month , year);
-      }
-      fprintf(stream , "%10.2f  ", 1.0*(interp_time - ensemble->start_time) / 86400);
-      
-      
-      
-      for (ikey = 0; ikey < stringlist_get_size( sum_keys ); ikey++) {
-        const char * sum_key = stringlist_iget( sum_keys , ikey );
-        double quantile      = double_vector_iget( quantiles , ikey );
-        double value;
+    for (row_nr = 0; row_nr < data_rows; row_nr++) {
+      time_t interp_time = time_t_vector_iget( ensemble->interp_time , row_nr);
+      for (column_nr = 0; column_nr < stringlist_get_size( sum_keys ); column_nr++) {
+        const char * sum_key = stringlist_iget( sum_keys , column_nr);
+        double quantile      = double_vector_iget( quantiles , column_nr);
         double_vector_type * interp_data;
 
         /* Check if we have the vector in the cache table - if not create it. */
@@ -264,15 +442,19 @@ void output_run_line( const char * output_file , const stringlist_type * keys , 
               double_vector_append( interp_data , ecl_sum_get_general_var_from_sim_time( sum_case->ecl_sum , interp_time , sum_key)) ;
           }
         }
-        value = statistics_empirical_quantile( interp_data , quantile );
-        fprintf(stream , float_fmt , value );
+        data[row_nr][column_nr] = statistics_empirical_quantile( interp_data , quantile );
       }
       hash_apply( interp_data_cache , double_vector_reset__ );
-      fprintf(stream , "\n");
     }
     hash_free( interp_data_cache );
   }
-  fclose( stream );
+  
+  output_save( output_file , ensemble , (const double **) data , sum_keys , quantiles , S3GRAPH );
+  stringlist_free( sum_keys );
+  double_vector_free( quantiles );
+  for (row_nr=0; row_nr < data_rows; row_nr++)
+    free( data[row_nr] );
+  free( data );
 }
 
 

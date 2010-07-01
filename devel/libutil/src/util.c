@@ -2083,26 +2083,40 @@ mode_t util_get_entry_mode( const char * file ) {
 
 
 
+/**
+   A wrapper around readlink() which will:
 
-static char * util_alloc_link_target(const char * link) {
-  bool retry = true;
-  int target_length;
-  int buffer_size = 128;
-  char * buffer   = NULL;
-  do {
-    buffer        = util_realloc(buffer , buffer_size , __func__);
-    target_length = readlink(link , buffer , buffer_size);
-    if (target_length == -1) 
-      util_abort("%s: readlink(%s,...) failed with error:%s - aborting\n",__func__ , link , strerror(errno));
+     1. Allocate a sufficiently large buffer - reallocating if necessary.
+     2. Append a terminating \0 at the end of the return string.
 
-    if (target_length < (buffer_size - 1))   /* Must leave room for the trailing \0 */
-      retry = false;
-    else
-      buffer_size *= 2;
+   If the input argument is not a symbolic link the function will just
+   return a string copy of the input.
+*/
 
-  } while (retry);
-  buffer[target_length] = '\0';
-  return buffer;
+char * util_alloc_link_target(const char * link) {
+  if (util_is_link( link )) {
+    bool retry = true;
+    int target_length;
+    int buffer_size = 256;
+    char * target   = NULL;
+    do {
+      target        = util_realloc(target , buffer_size , __func__);
+      target_length = readlink(link , target , buffer_size);
+      
+      if (target_length == -1) 
+        util_abort("%s: readlink(%s,...) failed with error:%s - aborting\n",__func__ , link , strerror(errno));
+      
+      if (target_length < (buffer_size - 1))   /* Must leave room for the trailing \0 */
+        retry = false;
+      else
+        buffer_size *= 2;
+      
+    } while (retry);
+    target[target_length] = '\0';
+    target = util_realloc( target , strlen( target ) + 1 , __func__ );   /* Shrink down to accurate size. */
+    return target;
+  } else
+    return util_alloc_string_copy( link );
 }
 
 

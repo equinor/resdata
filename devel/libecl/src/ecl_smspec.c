@@ -613,6 +613,73 @@ static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_
 
 
 
+bool ecl_smspec_needs_wgname( ecl_smspec_var_type var_type ) {
+  switch( var_type ) {
+  case(ECL_SMSPEC_COMPLETION_VAR):
+    return true;
+    break;
+  case(ECL_SMSPEC_FIELD_VAR):
+    return false;
+    break;
+  case(ECL_SMSPEC_GROUP_VAR):
+    return true;
+    break;
+  case(ECL_SMSPEC_WELL_VAR):
+    return true;
+    break;
+  case(ECL_SMSPEC_REGION_VAR):
+    return false;
+    break;
+  case(ECL_SMSPEC_MISC_VAR):
+    return false;
+    break;
+  case(ECL_SMSPEC_BLOCK_VAR):
+    return false;
+  case(ECL_SMSPEC_AQUIFER_VAR):
+    return false;
+    break;
+  default:
+    util_exit("Sorry: support for variables of type:%s is not implemented in %s.\n",ecl_smspec_get_var_type_name( var_type ), __FILE__);
+  }
+  /* Really should not be here. */
+  return false;
+}
+
+
+
+bool ecl_smspec_needs_num( ecl_smspec_var_type var_type ) {
+  switch( var_type ) {
+  case(ECL_SMSPEC_COMPLETION_VAR):
+    return true;
+    break;
+  case(ECL_SMSPEC_AQUIFER_VAR):
+    return true;
+    break;
+  case(ECL_SMSPEC_FIELD_VAR):
+    return false;
+    break;
+  case(ECL_SMSPEC_GROUP_VAR):
+    return false;
+    break;
+  case(ECL_SMSPEC_WELL_VAR):
+    return false;
+    break;
+  case(ECL_SMSPEC_REGION_VAR):
+    return true;
+    break;
+  case(ECL_SMSPEC_MISC_VAR):
+    return false;
+    break;
+  case(ECL_SMSPEC_BLOCK_VAR):
+    return true;
+    break;
+  default:
+    util_exit("Sorry: support for variables of type:%s is not implemented in %s.\n",ecl_smspec_get_var_type_name( var_type ), __FILE__);
+  }
+  return false;
+}
+
+
 /**
    This will iterate backwards through the RESTART header in the
    SMSPEC files to find names of the case(s) this case has been
@@ -830,9 +897,6 @@ static const smspec_index_type * ecl_smspec_iget_index( const ecl_smspec_type * 
     }
   }
 }
-
-
-
 ecl_smspec_var_type ecl_smspec_iget_var_type(const ecl_smspec_type * ecl_smspec , int sum_index) {
   const smspec_index_type * smspec_index = ecl_smspec_iget_index( ecl_smspec , sum_index );
   return smspec_index->var_type;
@@ -1120,6 +1184,21 @@ const char * ecl_smspec_iget_unit( const ecl_smspec_type * smspec , int index ) 
 }
 
 
+
+int ecl_smspec_iget_num( const ecl_smspec_type * smspec , int index ) {
+  const smspec_index_type * smspec_index = ecl_smspec_iget_index( smspec , index );
+  return smspec_index->num;
+}
+
+const char * ecl_smspec_iget_wgname( const ecl_smspec_type * smspec , int index ) {
+  const smspec_index_type * smspec_index = ecl_smspec_iget_index( smspec , index );
+  return smspec_index->wgname;
+}
+
+const char * ecl_smspec_iget_keyword( const ecl_smspec_type * smspec , int index ) {
+  const smspec_index_type * smspec_index = ecl_smspec_iget_index( smspec , index );
+  return smspec_index->keyword;
+}
 
 
 /*****************************************************************/

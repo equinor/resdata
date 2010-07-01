@@ -17,6 +17,18 @@ extern "C" {
 typedef struct ecl_sum_struct       ecl_sum_type;
 
 
+
+
+const char *     ecl_sum_get_keyword( const ecl_sum_type * sum , const char * gen_key );
+const char *     ecl_sum_get_wgname( const ecl_sum_type * sum , const char * gen_key );
+const char *     ecl_sum_get_unit( const ecl_sum_type * sum , const char * gen_key );
+int              ecl_sum_get_num( const ecl_sum_type * sum , const char * gen_key );
+const char *     ecl_sum_iget_unit( const ecl_sum_type * ecl_sum , int index);
+int              ecl_sum_iget_num( const ecl_sum_type * sum , int index );
+const char *     ecl_sum_iget_wgname( const ecl_sum_type * sum , int index );
+const char *     ecl_sum_iget_keyword( const ecl_sum_type * sum , int index );
+
+
 void             ecl_sum_summarize( const ecl_sum_type * ecl_sum , FILE * stream );
 bool             ecl_sum_general_is_total(const ecl_sum_type * ecl_sum , const char * gen_key);
 bool             ecl_sum_var_is_total(const ecl_sum_type * ecl_sum , const char * gen_key);
@@ -112,7 +124,8 @@ stringlist_type     * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum 
 stringlist_type     * ecl_sum_alloc_matching_general_var_list(const ecl_sum_type * ecl_sum , const char * pattern);  
 void                  ecl_sum_select_matching_general_var_list( const ecl_sum_type * ecl_sum , const char * pattern , stringlist_type * keys);
 ecl_smspec_var_type   ecl_sum_identify_var_type(const ecl_sum_type * ecl_sum , const char * var);
-
+const ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum );
+ecl_smspec_var_type   ecl_sum_get_var_type( const ecl_sum_type * ecl_sum , const char * gen_key);
 
 UTIL_IS_INSTANCE_HEADER( ecl_sum );
 

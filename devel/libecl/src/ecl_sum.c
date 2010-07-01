@@ -375,6 +375,47 @@ const char * ecl_sum_iget_unit( const ecl_sum_type * ecl_sum , int index) {
   return ecl_smspec_iget_unit(ecl_sum->smspec , index);
 }
 
+int ecl_sum_iget_num( const ecl_sum_type * sum , int index ) {
+  return ecl_smspec_iget_num( sum->smspec , index );
+}
+
+const char * ecl_sum_iget_wgname( const ecl_sum_type * sum , int index ) {
+  return ecl_smspec_iget_wgname( sum->smspec , index );
+}
+
+const char * ecl_sum_iget_keyword( const ecl_sum_type * sum , int index ) {
+  return ecl_smspec_iget_keyword( sum->smspec , index );
+}
+
+/*****************************************************************/
+/* Simple get functions which take a general var key as input    */
+
+ecl_smspec_var_type ecl_sum_get_var_type( const ecl_sum_type * ecl_sum , const char * gen_key) {
+  int index = ecl_sum_get_general_var_index( ecl_sum , gen_key );
+  return ecl_smspec_iget_var_type(ecl_sum->smspec , index);
+}
+
+const char * ecl_sum_get_unit( const ecl_sum_type * ecl_sum , const char * gen_key) {
+  int index = ecl_sum_get_general_var_index( ecl_sum , gen_key );
+  return ecl_smspec_iget_unit(ecl_sum->smspec , index);
+}
+
+int ecl_sum_get_num( const ecl_sum_type * sum , const char * gen_key ) {
+  int index = ecl_sum_get_general_var_index( sum , gen_key );
+  return ecl_smspec_iget_num( sum->smspec , index );
+}
+
+const char * ecl_sum_get_wgname( const ecl_sum_type * sum , const char * gen_key ) {
+  int index = ecl_sum_get_general_var_index( sum , gen_key );
+  return ecl_smspec_iget_wgname( sum->smspec , index );
+}
+
+const char * ecl_sum_get_keyword( const ecl_sum_type * sum , const char * gen_key ) {
+  int index = ecl_sum_get_general_var_index( sum , gen_key );
+  return ecl_smspec_iget_keyword( sum->smspec , index );
+}
+
+
 
 /*****************************************************************/
 /* 
@@ -704,4 +745,10 @@ double ecl_sum_days_from_time( const ecl_sum_type * ecl_sum , time_t sim_time ) 
 
 double ecl_sum_get_sim_length( const ecl_sum_type * ecl_sum ) { 
   return ecl_sum_data_get_sim_length( ecl_sum->data );
+}
+
+/*****************************************************************/
+
+const ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum ) {
+  return ecl_sum->smspec;
 }
