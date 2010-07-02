@@ -2,7 +2,6 @@
 #include <string.h>
 #include <util.h>
 #include <ecl_sum.h>
-#include <stat.h>
 #include <double_vector.h>
 #include <time_t_vector.h>
 #include <config.h>
@@ -326,6 +325,7 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
             mangled name as a combination. */
         char * wgname_num = util_alloc_sprintf("%s:%d" , wgname , num);
         fprintf(stream , unit_fmt , wgname_num);
+        free( wgname_num );
       } else if (need_num)
         fprintf(stream , num_fmt , num);
       else if (need_wgname)
@@ -336,7 +336,8 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
     fprintf(stream , "\n");
   }
   
-  /*4: Writing the actuaal data. */
+
+  /*4: Writing the actual data. */
   for (row_nr = 0; row_nr < data_rows; row_nr++) {
     time_t interp_time = time_t_vector_iget( ensemble->interp_time , row_nr);
     {
