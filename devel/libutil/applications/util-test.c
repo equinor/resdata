@@ -30,21 +30,10 @@
 #include <double_vector.h>
 
 int main(int argc , char ** argv) {
-  int N = atof( argv[1] );
-  int i;
-  
-  double_vector_type * data = double_vector_alloc(0 , 0);
-  mzran_type * rng = mzran_alloc( INIT_DEV_RANDOM );
-
-  for (i=0; i < N;  i++) 
-    double_vector_iset( data , i , mzran_get_double( rng ));
-
-
-  printf("Q( 0.10 ) = %7.4f \n",statistics_empirical_quantile( data , 0.10 ));
-  printf("Q( 0.30 ) = %7.4f \n",statistics_empirical_quantile( data , 0.30 ));
-  printf("Q( 0.50 ) = %7.4f \n",statistics_empirical_quantile( data , 0.50 ));
-  printf("Q( 0.70 ) = %7.4f \n",statistics_empirical_quantile( data , 0.70 ));
-  printf("Q( 0.90 ) = %7.4f \n",statistics_empirical_quantile( data , 0.90 ));
+  printf("$HOME -> <%s> \n\n",util_alloc_envvar( "$HOME" ));
+  printf("$WHAT -> <%s> \n\n",util_alloc_envvar( "$WHAT" ));
+  printf("$HOME/BJARNE/$WHAT/$ERT_LD_PATH -> <%s>\n",util_alloc_envvar( "$HOME/BJARNE/$WHAT/$ERT_LD_PATH" ));
+  printf("HEI -> <%s> \n",util_alloc_envvar( "HEI "));
 }
 
 
