@@ -636,7 +636,44 @@ bool buffer_strstr( buffer_type * buffer , const char * expr ) {
     
     return (match != NULL);
   }
-  
+}
+
+
+bool buffer_strchr( buffer_type * buffer , int c) {
+  /** 
+      If this condition is satisfied the assumption that buffer->data
+      is a \0 terminated string certainly breaks down.
+  */
+  if ((buffer->content_size == 0) || (buffer->pos == buffer->content_size))
+    return false;
+
+  {
+    char * match = NULL;
+    
+    match = strchr( &buffer->data[buffer->pos] , c);
+    if (match != NULL) 
+      buffer->pos = match - buffer->data;
+    
+    return (match != NULL);
+  }
+}
+
+
+
+
+
+bool buffer_replace( buffer_type * buffer , const char * old_string , const char * new_string) {
+  const int shift = strlen( new_string ) - strlen( old_string );
+  bool match = buffer_strstr( buffer , old_string ); 
+  if (match) {
+    size_t offset = buffer_get_offset( buffer ) + strlen( old_string );
+    if (shift != 0)
+      buffer_memshift( buffer , offset , shift );
+    
+    /** Search continues at the end of the newly inserted string - i.e. no room for recursions. */
+    buffer_fwrite( buffer , new_string , strlen( new_string ) , sizeof * new_string );
+  }
+  return match;
 }
 
 

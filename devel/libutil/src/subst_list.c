@@ -402,19 +402,10 @@ static void subst_list_replace_strings__(const subst_list_type * subst_list , bu
   int index;
   for (index = 0; index < vector_get_size( subst_list->string_data ); index++) {
     const subst_list_string_type * node = vector_iget_const( subst_list->string_data , index );
-    const int shift = strlen( node->value ) - strlen( node->key );
     bool    match;
     buffer_rewind( buffer );
     do {
-      match = buffer_strstr( buffer , node->key ); 
-      if (match) {
-        size_t offset = buffer_get_offset( buffer ) + strlen( node->key );
-        if (shift != 0)
-          buffer_memshift( buffer , offset , shift );
-        
-        /** Search continues at the end of the newly inserted string - i.e. no room for recursions. */
-        buffer_fwrite( buffer , node->value , strlen( node->value ) , sizeof * node->value );
-      }
+      match = buffer_replace( buffer , node->key , node->value);
     } while (match);
   }
 }

@@ -29,7 +29,7 @@
 #include <execinfo.h>
 #include <pthread.h>
 #include <util.h>
-
+#include <buffer.h>
 
 #define FLIP16(var) (((var >> 8) & 0x00ff) | ((var << 8) & 0xff00))
 
@@ -5106,27 +5106,149 @@ int * util_sscanf_alloc_active_list(const char * range_string , int * list_lengt
 
 /**
    This function updates an environment variable representing a path,
-   i.e. ":" separated. 
+   before actually updating the environment variable the current value
+   is checked, and the following rules apply:
+   
+   1. If @append == true, and @value is already included in the
+      environment variable; nothing is done.
+
+   2. If @append == false, and the variable already starts with
+      @value, nothing is done.
+
+   A pointer to the updated(?) environment variable is returned.
 */
 
-void util_update_path_var(const char * variable, const char * value, bool append) {
-  if (getenv(variable) == NULL)
+const char * util_update_path_var(const char * variable, const char * value, bool append) {
+  const char * current_value = getenv( variable );
+  if (current_value == NULL)
     /* The (path) variable is not currently set. */
     setenv( variable , value , 1);
   else {
-    char * new_value;
+    bool    update = true; 
 
-    if (append)
-      new_value = util_alloc_sprintf("%s:%s" , getenv( variable ) , value);
-    else
-      new_value = util_alloc_sprintf("%s:%s" , value , getenv( variable ));
-
-    //unsetenv( variable );
-    setenv( variable , new_value , 1);
-    free( new_value);
+    {
+      char ** path_list;
+      int     num_path;
+      util_split_string( current_value , ":" , &num_path , &path_list);
+      if (append) {
+        for (int i = 0; i < num_path; i++) {
+          if (util_string_equal( path_list[i] , value)) 
+            update = false;                            /* The environment variable already contains @value - no point in appending it at the end. */
+        } 
+      } else {
+        if (util_string_equal( path_list[0] , value)) 
+          update = false;                              /* The environment variable already starts with @value. */
+      }
+      util_free_stringlist( path_list , num_path );
+    }
+    
+    if (update) {
+      char  * new_value;
+      if (append)
+        new_value = util_alloc_sprintf("%s:%s" , current_value , value);
+      else
+        new_value = util_alloc_sprintf("%s:%s" , value , current_value);
+      setenv( variable , new_value , 1);
+      free( new_value );
+    }
+    
   }
+  return getenv( variable );
 }
 
+
+
+
+/**
+   This is a thin wrapper around the setenv() call, with the twist
+   that all $VAR expressions in the @value parameter are replaced with
+   getenv() calls, so that the function call:
+
+      util_setenv("PATH" , "$HOME/bin:$PATH")
+
+   Should work as in the shell. If the variables referred to with ${}
+   in @value do not exist the literal string, i.e. '$HOME' is
+   retained. 
+
+   If @value == NULL a call to unsetenve( @variable ) will be issued.
+*/
+
+const char * util_setenv( const char * variable , const char * value) {
+  char * interp_value = util_alloc_envvar( value );
+  if (interp_value != NULL) {
+    setenv( variable , interp_value , 1);
+    free( interp_value );
+  } else
+    unsetenv( variable );
+
+  return getenv( variable );
+}
+
+
+
+/**
+   This function will take a string as input, and then replace all if
+   $VAR expressions with the corresponding environment variable. If
+   the environament variable VAR is not set, the string literal $VAR
+   is retained. The return value is a newly allocated string. 
+
+   If the input value is NULL - the function will just return NULL;
+*/
+
+
+char * util_alloc_envvar( const char * value ) {
+  if (value == NULL)
+    return NULL;
+  else {
+    buffer_type * buffer = buffer_alloc( 1024 );               /* Start by filling up a buffer instance with 
+                                                                  the current content of @value. */
+    buffer_fwrite_char_ptr( buffer , value );
+    buffer_fwrite_char( buffer , '\0' );
+    buffer_rewind( buffer );
+    
+    
+    while (true) {
+      if (buffer_strchr( buffer , '$')) {
+        const char * data = buffer_get_data( buffer );
+        int offset        = buffer_get_offset( buffer ) + 1;    /* Points at the first character following the '$' */
+        int var_length = 0;
+        
+        /* Find the length of the variable name */
+        while (true) {
+          char c;
+          c = data[offset + var_length];
+          if (!(isalnum( c ) || c == '_'))      /* Any character which is NOT in the set [a-Z,0-9_] marks the end of the variable. */
+            break;             
+          
+          if (c == '\0')                        /* The end of the string. */
+            break;
+          
+          var_length += 1;
+        }
+
+        {
+          char * var_name        = util_alloc_substring_copy( &data[offset-1] , var_length + 1);  /* Include the leading $ */
+          const char * var_value = getenv( &var_name[1] );
+          
+          if (var_value != NULL)
+            buffer_replace( buffer , var_name , var_value);                                      /* The actual string replacement. */
+          else  
+            buffer_fseek( buffer , var_length , SEEK_CUR );                                      /* The variable is not defined, and we leave the $name. */
+          
+          free( var_name );
+        }
+      } else break;  /* No more $ to replace */
+    }
+    
+    
+    buffer_shrink_to_fit( buffer );
+    {
+      char * expanded_value = buffer_get_data( buffer );
+      buffer_free_container( buffer );
+      return expanded_value;
+    }
+  }
+}
 
 
 #include "util_path.c"

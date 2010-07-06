@@ -432,7 +432,7 @@ void * hash_get(const hash_type *hash , const char *key) {
 
 /**
    This function will return NULL if the hash does not
-   contain 'kay'.
+   contain 'key'.
 */
 void * hash_safe_get( const hash_type * hash , const char * key ) {
   hash_node_type * node = __hash_get_node(hash , key , false);

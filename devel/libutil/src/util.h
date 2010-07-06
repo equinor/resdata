@@ -351,8 +351,10 @@ int      util_get_current_linenr(FILE * stream);
 char   * util_alloc_filename_from_stream( FILE * input_stream );
 uid_t  * util_alloc_file_users( const char * filename , int * __num_users);
 uid_t  * util_alloc_file_users( const char * filename , int * __num_users);
-void     util_update_path_var(const char * , const char * , bool );
+const char * util_update_path_var(const char * , const char * , bool );
 
+const char * util_setenv( const char * variable , const char * value);
+char   * util_alloc_envvar( const char * value );
 int      util_get_type( void * data );
 void 	 util_fskip_int(FILE * stream);
 void 	 util_fskip_long(FILE * stream);
