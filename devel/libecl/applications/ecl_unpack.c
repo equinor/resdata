@@ -51,9 +51,17 @@ void unpack_file(const char * filename) {
 	}
 	offset = 1;
       }
+
+
+      /**
+         Will unpack to cwd, even though the source files might be
+         somewhere else. To unpack to the same directory as the source
+         files, just send in @path as first argument when creating the
+         target_file.
+      */
       
       if (src_file != NULL) {
-	char * target_file = ecl_util_alloc_filename( path , base , target_type , fmt_file , report_step);
+	char * target_file = ecl_util_alloc_filename( NULL , base , target_type , fmt_file , report_step);
 	fortio_type * fortio_target = fortio_fopen( target_file , "w" , ECL_ENDIAN_FLIP , fmt_file );
 	
 	msg_update(msg , target_file);

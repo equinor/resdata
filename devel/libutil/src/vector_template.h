@@ -11,6 +11,7 @@ typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 typedef <TYPE> (<TYPE>_ftype) (<TYPE>);
 
 
+
 bool                 <TYPE>_vector_growable( const <TYPE>_vector_type * vector);
 void                 <TYPE>_vector_select_unique(<TYPE>_vector_type * vector);
 <TYPE>_vector_type * <TYPE>_vector_alloc( int init_size , <TYPE> );

@@ -280,8 +280,25 @@ void <TYPE>_vector_append_default(<TYPE>_vector_type * vector , <TYPE> default_v
 
 /**
    This function will iset the value @default_value into the vector,
-   and then subsequently set this value as the new default. This
-   functionality is extensively used by the schedule parsing code.
+   and then subsequently set this value as the new default. 
+
+   1.    V = [1 , 2 , 3 , 4 ], default = 77
+
+
+   2.  _iset_default(v , 10 , 66)
+
+         V = [1 ,2 , 3 ,  4 , 77, 77, 77, 77, 77, 77, 66] 
+
+       I.e. before setting the 66 value all values up to @index are
+       filled with the current default.
+
+   3. If @index is inside the current data region, there will be no
+      effect of the current default, i.e. _iset_default(v , 2 , 66)
+      will just give:
+ 
+         V = [1 ,2 , 66 ,  4 ]
+
+      and 66 as the new default value.
 */
 
 void <TYPE>_vector_iset_default(<TYPE>_vector_type * vector , int index , <TYPE> default_value) { 

@@ -29,10 +29,17 @@ int main(int argc, char ** argv) {
     util_alloc_file_components( argv[1] , &path , &ecl_base , NULL);
 
     
+    /**
+       Will pack to cwd, even though the source files might be
+       somewhere else. To unpack to the same directory as the source
+       files, just send in @path as first argument when creating the
+       target_file.
+    */
+
     {
       msg_type * msg;
       int i , report_step , prev_report_step;
-      char *  target_file_name   = ecl_util_alloc_filename( path , ecl_base , target_type , fmt_file , -1);
+      char *  target_file_name   = ecl_util_alloc_filename( NULL , ecl_base , target_type , fmt_file , -1);
       stringlist_type * filelist = stringlist_alloc_argv_copy( (const char **) &argv[1] , num_files );
       ecl_kw_type * seqnum_kw    = NULL;
       fortio_type * target       = fortio_fopen( target_file_name , "w" , ECL_ENDIAN_FLIP , fmt_file );
