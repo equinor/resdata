@@ -402,11 +402,13 @@ static void subst_list_replace_strings__(const subst_list_type * subst_list , bu
   int index;
   for (index = 0; index < vector_get_size( subst_list->string_data ); index++) {
     const subst_list_string_type * node = vector_iget_const( subst_list->string_data , index );
-    bool    match;
-    buffer_rewind( buffer );
-    do {
-      match = buffer_replace( buffer , node->key , node->value);
-    } while (match);
+    if (node->value != NULL) {
+      bool    match;
+      buffer_rewind( buffer );
+      do {
+        match = buffer_replace( buffer , node->key , node->value);
+      } while (match);
+    }
   }
 }
 
