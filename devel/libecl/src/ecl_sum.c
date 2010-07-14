@@ -612,7 +612,6 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
 	if (ecl_sum_has_ministep(ecl_sum , ministep)) {
 	  int day,month,year;
 	  util_set_date_values(ecl_sum_get_sim_time(ecl_sum , ministep) , &day , &month, &year);
-          //fprintf(stream , "%4d  %4d  %18.4f  %02d/%02d/%04d" , ministep , report , ecl_sum_get_sim_days(ecl_sum , ministep) , day,month,year);
           fprintf(stream , "%7.2f   %02d/%02d/%04d   " , ecl_sum_get_sim_days(ecl_sum , ministep) , day , month , year);
 	  
 	  for (ivar = 0; ivar < nvars; ivar++) 

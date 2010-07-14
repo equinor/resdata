@@ -85,7 +85,8 @@ bool use_viewer = false ; // Global variable to enable backwords compatible beha
                           // option -b sets use_viewer = true (will start external viewer to show plots)
                           // option -s sets use_viewer = false (slave mode, returns name of plot file on STDOUT)
 
-#define KEY_JOIN_STRING  ":"    /* The string used when joining strings to form a gen_key lookup key. */
+
+#define KEY_JOIN_STRING  ":"    /* The string used when joining strings to form a gen_key lookup key - can be anything (even ""). */
 #define PLOT_WIDTH  640
 #define PLOT_HEIGHT 480
 #define PROMPT_LEN 50
