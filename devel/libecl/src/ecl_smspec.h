@@ -101,7 +101,7 @@ stringlist_type       * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * 
 const char            * ecl_smspec_get_simulation_path(const ecl_smspec_type * ecl_smspec);
 const char            * ecl_smspec_get_base_name( const ecl_smspec_type * ecl_smspec);
 const stringlist_type * ecl_smspec_get_restart_list( const ecl_smspec_type * ecl_smspec);
-
+const char            * ecl_smspec_get_join_string( const ecl_smspec_type * smspec);
 
 
 

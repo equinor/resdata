@@ -30,10 +30,13 @@
 #include <double_vector.h>
 
 int main(int argc , char ** argv) {
-  printf("$HOME -> <%s> \n\n",util_alloc_envvar( "$HOME" ));
-  printf("$WHAT -> <%s> \n\n",util_alloc_envvar( "$WHAT" ));
-  printf("$HOME/BJARNE/$WHAT/$ERT_LD_PATH -> <%s>\n",util_alloc_envvar( "$HOME/BJARNE/$WHAT/$ERT_LD_PATH" ));
-  printf("HEI -> <%s> \n",util_alloc_envvar( "HEI "));
+  char ** token_list;
+  int     len;
+
+  util_split_string("GG&10.7f&s&f.g" , "&" , &len , &token_list); 
+  for (int i=0; i < len; i++)
+    printf("token[%d] = %s \n",i,token_list[i]);
+  
 }
 
 

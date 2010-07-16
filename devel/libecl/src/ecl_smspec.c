@@ -550,6 +550,19 @@ static void ecl_smspec_get_ijk( const ecl_smspec_type * smspec , int global_inde
 }
 
 
+
+char * ecl_smspec_alloc_gen_key( const ecl_smspec_type * smspec , const char * fmt , ...) {
+  char * gen_key = NULL;
+  va_list arg_list;
+  va_start( arg_list , fmt );
+  /* ... */
+  va_end( arg_list );
+  return gen_key;
+}
+
+
+
+
 static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_type * smspec_index ) {
   char * gen_key = NULL;
 
@@ -1350,6 +1363,10 @@ stringlist_type * ecl_smspec_alloc_matching_general_var_list(const ecl_smspec_ty
 }
 
 
+
+const char * ecl_smspec_get_join_string( const ecl_smspec_type * smspec) {
+  return smspec->key_join_string;
+}
 
 
 
