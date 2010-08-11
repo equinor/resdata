@@ -110,22 +110,25 @@ UTIL_SAFE_CAST_FUNCTION(<TYPE>_vector , TYPE_VECTOR_ID);
 
 
 static void <TYPE>_vector_realloc_data__(<TYPE>_vector_type * vector , int new_alloc_size) {
-  if (vector->data_owner) {
-    if (new_alloc_size > 0) {
-      int i;
-      vector->data = util_realloc(vector->data , new_alloc_size * sizeof * vector->data , __func__);
-      for (i=vector->alloc_size;  i < new_alloc_size; i++)
-        vector->data[i] = vector->default_value;
-    } else {
-      if (vector->alloc_size > 0) {
-        free(vector->data);
-        vector->data = NULL;
+  if (new_alloc_size != vector->alloc_size) {
+    if (vector->data_owner) {
+      if (new_alloc_size > 0) {
+        int i;
+        vector->data = util_realloc(vector->data , new_alloc_size * sizeof * vector->data , __func__);
+        for (i=vector->alloc_size;  i < new_alloc_size; i++)
+          vector->data[i] = vector->default_value;
+      } else {
+        if (vector->alloc_size > 0) {
+          free(vector->data);
+          vector->data = NULL;
+        }
       }
-    }
-    vector->alloc_size = new_alloc_size;
-  } else
-    util_abort("%s: tried to change the storage are for a shared data segment \n",__func__);
+      vector->alloc_size = new_alloc_size;
+    } else
+      util_abort("%s: tried to change the storage are for a shared data segment \n",__func__);
+  }
 }
+
 
 static void <TYPE>_vector_assert_index(const <TYPE>_vector_type * vector , int index) {
   if ((index < 0) || (index >= vector->size)) 
@@ -197,6 +200,19 @@ static <TYPE>_vector_type * <TYPE>_vector_alloc__(int init_size , <TYPE> default
 
 
 /**
+   This function will change the size of the storage area of the
+   vector to become @new_alloc_size elements. If @new_alloc_size is
+   less than the current size of the vector, the last elements will be
+   lost.
+*/
+
+void <TYPE>_vector_resize( <TYPE>_vector_type * vector , int new_alloc_size ) {
+  <TYPE>_vector_realloc_data__( vector , new_alloc_size );
+}
+
+
+
+/**
    This function will allocate a shared wrapper around the input
    pointer data. The vector implementation will work transparently
    with the input data, but the data will not be reallocated, and also
@@ -231,6 +247,27 @@ static <TYPE>_vector_type * <TYPE>_vector_alloc__(int init_size , <TYPE> default
   return <TYPE>_vector_alloc__( init_size , default_value , data , alloc_size , false );
 }
 
+
+/**
+   This function will copy all the content from the src vector to the
+   target vector. If the the current allocation size of the target
+   vector is sufficiently large, it will not be touched.
+
+   Observe that also the default value will be copied.
+*/
+
+
+void <TYPE>_vector_memcpy( const <TYPE>_vector_type * src , <TYPE>_vector_type * target) {
+  if (target->alloc_size < src->size)
+    <TYPE>_vector_realloc_data__( target , src->alloc_size );  /* Must grow the target vector */
+  
+  /* Copy the content. */
+  memcpy(target->data , src->data , src->size * sizeof * src->data );
+  
+  /* Copy the headers */
+  target->size          = src->size;
+  target->default_value = src->default_value;
+}
 
 
 
@@ -400,6 +437,11 @@ void <TYPE>_vector_reset(<TYPE>_vector_type * vector) {
 }
 
 
+
+
+
+
+
 void <TYPE>_vector_free_data(<TYPE>_vector_type * vector) {
   <TYPE>_vector_reset(vector);
   <TYPE>_vector_realloc_data__(vector , 0);
@@ -461,7 +503,7 @@ const <TYPE> * <TYPE>_vector_get_const_ptr(const <TYPE>_vector_type * vector) {
    Observe that there is a principle difference between the get_ptr()
    functions and alloc_data_copy() when the vector has zero size. The
    former functions will always return valid (<TYPE> *) pointer,
-   altough possibly of the elements have been set by the vector
+   altough possibly none of the elements have been set by the vector
    instance, whereas the alloc_data_copy() function will return NULL
    in that case.
 */
