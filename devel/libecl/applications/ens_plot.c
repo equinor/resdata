@@ -601,20 +601,18 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
     } 
   } else {
     /* The ensemble is plotted as a collection of curves. */
+
     for (iens = 0; iens < ens_size; iens++) {
       plot_dataset_type * plot_dataset = plot_alloc_new_dataset( plot , label , PLOT_XY );
       const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , iens );
-      int ministep, first_ministep, last_ministep;
-      ecl_sum_get_ministep_range(ecl_sum , &first_ministep , &last_ministep);  
-      
-      for (ministep = first_ministep; ministep <= last_ministep; ministep++) { 
-        bool ok_mini = ecl_sum_has_ministep( ecl_sum, ministep );
-        if (ok_mini ) {
-          plot_dataset_append_point_xy( plot_dataset , 
-                                        //ecl_sum_get_sim_days( ecl_sum , ministep),
-                                        ecl_sum_get_sim_time( ecl_sum , ministep),
-                                        ecl_sum_get_general_var( ecl_sum , ministep , user_key ));
-        }
+      int param_index = ecl_sum_get_general_var_index( ecl_sum , user_key );
+      int time_index;
+
+      for (time_index = 0; time_index < ecl_sum_get_data_length( ecl_sum ); time_index++) {
+        plot_dataset_append_point_xy( plot_dataset , 
+                                      //ecl_sum_iget_sim_days( ecl_sum , time_index),
+                                      ecl_sum_iget_sim_time( ecl_sum , time_index ),
+                                      ecl_sum_iiget( ecl_sum , time_index , param_index ));
       }
       
       plot_dataset_set_style      ( plot_dataset , ens->plot_style);

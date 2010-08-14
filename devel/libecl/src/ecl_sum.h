@@ -23,10 +23,14 @@ const char *     ecl_sum_get_keyword( const ecl_sum_type * sum , const char * ge
 const char *     ecl_sum_get_wgname( const ecl_sum_type * sum , const char * gen_key );
 const char *     ecl_sum_get_unit( const ecl_sum_type * sum , const char * gen_key );
 int              ecl_sum_get_num( const ecl_sum_type * sum , const char * gen_key );
-const char *     ecl_sum_iget_unit( const ecl_sum_type * ecl_sum , int index);
-int              ecl_sum_iget_num( const ecl_sum_type * sum , int index );
-const char *     ecl_sum_iget_wgname( const ecl_sum_type * sum , int index );
-const char *     ecl_sum_iget_keyword( const ecl_sum_type * sum , int index );
+
+double           ecl_sum_iiget( const ecl_sum_type * ecl_sum , int internal_index , int param_index);
+double           ecl_sum_iget( const ecl_sum_type * ecl_sum , int ministep , int param_index);
+const char *     ecl_sum_iget_unit( const ecl_sum_type * ecl_sum , int param_index);
+int              ecl_sum_iget_num( const ecl_sum_type * sum , int param_index );
+const char *     ecl_sum_iget_wgname( const ecl_sum_type * sum , int param_index );
+const char *     ecl_sum_iget_keyword( const ecl_sum_type * sum , int param_index );
+int              ecl_sum_get_data_length( const ecl_sum_type * ecl_sum );
 
 
 void             ecl_sum_summarize( const ecl_sum_type * ecl_sum , FILE * stream );
@@ -100,7 +104,13 @@ void   ecl_sum_get_ministep_range(const ecl_sum_type * ecl_sum , int * ministep1
 void   ecl_sum_report2ministep_range(const ecl_sum_type * ecl_sum , int report_step , int * ministep1 , int * ministep2 );
 time_t ecl_sum_get_sim_time( const ecl_sum_type * ecl_sum , int ministep );
 time_t ecl_sum_get_report_time( const ecl_sum_type * ecl_sum , int report_step );
+time_t ecl_sum_iget_sim_time( const ecl_sum_type * ecl_sum , int index );
 double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep );
+double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int ministep );
+int    ecl_sum_get_report_step( const ecl_sum_type * ecl_sum , int ministep );
+int    ecl_sum_iget_report_step( const ecl_sum_type * ecl_sum , int internal_index );
+double ecl_sum_iget_general_var(const ecl_sum_type * ecl_sum , int internal_index , const char * lookup_kw);
+
 
 void                 ecl_sum_init_data_vector( const ecl_sum_type * ecl_sum , double_vector_type * data_vector , int data_index , bool report_only );
 double_vector_type * ecl_sum_alloc_data_vector( const ecl_sum_type * ecl_sum  , int data_index , bool report_only);

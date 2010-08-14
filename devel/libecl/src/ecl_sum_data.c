@@ -147,6 +147,29 @@
    average of the M2 and M3 values. Whether a variable in question is
    interpreted as a 'rate' is effectively determined by the
    ecl_smspec_set_rate_var() function in ecl_smspec.c.
+
+
+   
+   Indexing and _get() versus _iget()
+   ---------------------------------- 
+   As already mentionded the set of ministeps is not necessarrily a
+   continous series, we can easily have a series of ministeps with
+   "holes" in it, and the series can also start on a non-zero
+   value. Internally all the ministeps are stored in a dense, zero
+   offset vector instance; and we must be able to translate back and
+   forth between ministep_nr and internal index.
+
+   Partly due to EnKF heritage the MINISTEP nr has been the main
+   method to access the time dimension of the data, i.e. all the
+   functions like ecl_sum_get_general_var() expect the time direction
+   to be given as a ministep; however it is also possible to get the
+   data by giving an internal (not that internal ...) index. In
+   ecl_sum_data.c the latter functions have _iget():
+
+   
+      ecl_sum_data_get_xxx : Expects the time direction given as a ministep_nr.
+      ecl_sum_data_iget_xxx: Expects the time direction given as an internal index.
+
 */   
 
 
@@ -313,6 +336,10 @@ double ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ) {
 
 
 
+static const ecl_sum_ministep_type * ecl_sum_data_iget_ministep( const ecl_sum_data_type * data , int internal_index ) {
+  return vector_iget_const( data->data , internal_index );
+}
+
 
 /**
    This function will return the ministep corresponding to a time_t
@@ -329,9 +356,9 @@ double ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ) {
    returned ministep_nr.
 
    The indices used in this function are the internal indices, and not
-   ministep numbers. Observe that there are holes in the time-domain,
-   i.e. if RPTONLY has been used, the function can return a ministep
-   index which does NOT cover the input time:
+   ministep numbers. Observe that if there are holes in the
+   time-domain, i.e. if RPTONLY has been used, the function can return
+   a ministep index which does NOT cover the input time:
 
      The 'X' should represent report times - the dashed lines
      represent the temporal extent of two ministeps. Outside the '--'
@@ -375,7 +402,7 @@ int ecl_sum_data_get_ministep_from_sim_time( const ecl_sum_data_type * data , ti
         internal_index = low_index;
       else {
         int center_index = 0.5*( low_index + high_index );
-        const ecl_sum_ministep_type * ministep = vector_iget_const(data->data , center_index);
+        const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , center_index );
         
         if ((high_index - low_index) == 1) {
           /* Degenerate special case. */
@@ -389,7 +416,7 @@ int ecl_sum_data_get_ministep_from_sim_time( const ecl_sum_data_type * data , ti
           else {
             time_t prev_time = sim_start;
             if (center_index > 0) {
-              const ecl_sum_ministep_type * prev_step = vector_iget_const( data->data , center_index - 1 );
+              const ecl_sum_ministep_type * prev_step = ecl_sum_data_iget_ministep( data , center_index - 1  );
               prev_time = prev_step->sim_time;
             }
             
@@ -404,7 +431,7 @@ int ecl_sum_data_get_ministep_from_sim_time( const ecl_sum_data_type * data , ti
 
     /* Translation from internal indexing to ministep nr. */
     {
-      const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , internal_index );
+      const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index  );
       return ministep->ministep;
     }
   }
@@ -451,7 +478,7 @@ void ecl_sum_data_init_interp_from_sim_time( const ecl_sum_data_type * data , ti
   const ecl_sum_ministep_type * ministep1;
   {
     int     internal_index1 = ministep2->internal_index - 1; /* We want the previous timestep - not actually considering if there is hole on the temporal series. */
-    ministep1 = vector_iget_const( data->data , internal_index1);
+    ministep1 = ecl_sum_data_iget_ministep( data , internal_index1 );
     step1 = ministep1->ministep;
   }
     
@@ -582,7 +609,7 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
   
   /* Identify various global first and last values.  */
   {
-    const ecl_sum_ministep_type * first_ministep = vector_iget_const( sum_data->data , 0);
+    const ecl_sum_ministep_type * first_ministep = ecl_sum_data_iget_ministep( sum_data , 0 );
     const ecl_sum_ministep_type * last_ministep  = vector_get_last_const( sum_data->data );
     
     sum_data->first_ministep = first_ministep->ministep;
@@ -596,7 +623,7 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
   {
     int internal_index;
     for (internal_index = 0; internal_index < vector_get_size( sum_data->data ); internal_index++) {
-      const ecl_sum_ministep_type * ministep = vector_iget_const( sum_data->data , internal_index );
+      const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( sum_data , internal_index  );
 	int report_step = ministep->report_step;
 	int ministep_nr = ministep->ministep;
 	{
@@ -730,7 +757,7 @@ void ecl_sum_data_summarize(const ecl_sum_data_type * data , FILE * stream) {
     for (ministep = 0; ministep < vector_get_size( data->data ); ministep++) {
       int internal_index = int_vector_safe_iget( data->ministep_index , ministep );
       if (internal_index >= 0) {
-	const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , internal_index);
+	const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index );
 	int day,month,year;
 	util_set_date_values( ministep->sim_time , &day, &month , &year);
 	fprintf(stream , "%04d          %6d               %02d/%02d/%4d           %7.2f \n", ministep->report_step , ministep->ministep , day,month,year, ministep->sim_days);
@@ -740,17 +767,33 @@ void ecl_sum_data_summarize(const ecl_sum_data_type * data , FILE * stream) {
   fprintf(stream , "---------------------------------------------------------------\n");
 }
 
-
-static const ecl_sum_ministep_type * ecl_sum_data_get_ministep( const ecl_sum_data_type * data , int ministep_nr) {
+/**
+   This functions converts a ministep_nr to a internal index.
+*/
+int ecl_sum_data_get_internal_index( const ecl_sum_data_type * data , int ministep_nr ) {
   int internal_index = int_vector_safe_iget( data->ministep_index , ministep_nr );
   if (internal_index < 0) {
     ecl_sum_data_summarize( data , stderr);
     
     util_abort("%s: Summary:%s object has no data for MINISTEP:%d - abortng \n",__func__ , ecl_smspec_get_simulation_case( data->smspec ) , ministep_nr);
-    return NULL;
   }
-  return vector_iget_const( data->data , internal_index );
+  return internal_index;
 }
+
+
+
+
+static const ecl_sum_ministep_type * ecl_sum_data_get_ministep( const ecl_sum_data_type * data , int ministep_nr) {
+  int internal_index = ecl_sum_data_get_internal_index( data , ministep_nr );
+  return ecl_sum_data_iget_ministep( data , internal_index );
+}
+
+
+int ecl_sum_data_iget_ministep_nr( const ecl_sum_data_type * data , int internal_index ) {
+  const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index );
+  return ministep->ministep;
+}
+
 
 
 /*****************************************************************/
@@ -829,6 +872,35 @@ void ecl_sum_data_report2ministep_range(const ecl_sum_data_type * data , int rep
 }
 
 
+
+
+int ecl_sum_data_get_report_step(const ecl_sum_data_type * data , int ministep_nr) {
+  const ecl_sum_ministep_type * ministep = ecl_sum_data_get_ministep( data , ministep_nr );
+  return ministep->report_step;
+}
+
+
+int ecl_sum_data_iget_report_step(const ecl_sum_data_type * data , int internal_index) {
+  const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index );
+  return ministep->report_step;
+}
+
+
+
+
+/** 
+    This will look up a value based on an internal index. The internal
+    index will ALWAYS run in the interval [0,num_ministep), without
+    any holes.
+*/
+
+
+double ecl_sum_data_iget( const ecl_sum_data_type * data , int internal_index , int params_index ) {
+  const ecl_sum_ministep_type * ministep_data = ecl_sum_data_iget_ministep( data , internal_index  );
+  return ecl_sum_ministep_iget( ministep_data , params_index);  
+}
+
+
 /**
    This function will check that the ministep, and params_index are
    valid, and ABORT if that is not the case. There are several query
@@ -836,10 +908,9 @@ void ecl_sum_data_report2ministep_range(const ecl_sum_data_type * data , int rep
    function.
 */
 
-
 double ecl_sum_data_get(const ecl_sum_data_type * data , int ministep , int params_index) {
-  const ecl_sum_ministep_type * ministep_data = ecl_sum_data_get_ministep( data , ministep );  
-  return ecl_sum_ministep_iget( ministep_data , params_index);
+  const ecl_sum_ministep_type * ministep_data = ecl_sum_data_get_ministep( data , ministep );
+  return ecl_sum_ministep_iget( ministep_data , params_index);  
 }
 
 
@@ -861,6 +932,9 @@ double ecl_sum_data_interp_get(const ecl_sum_data_type * data , int ministep1 , 
   
   return ecl_sum_ministep_iget( ministep_data1 , params_index ) * weight1 + ecl_sum_ministep_iget( ministep_data2 , params_index ) * weight2;
 }
+
+
+
 
 
 
@@ -887,14 +961,25 @@ double ecl_sum_data_get_from_sim_days( const ecl_sum_data_type * data , double s
 }
 
 
-time_t ecl_sum_data_get_sim_time( const ecl_sum_data_type * data , int ministep ) {
-  const ecl_sum_ministep_type * ministep_data = ecl_sum_data_get_ministep( data , ministep );
+time_t ecl_sum_data_iget_sim_time( const ecl_sum_data_type * data , int internal_index ) {
+  const ecl_sum_ministep_type * ministep_data = ecl_sum_data_iget_ministep( data , internal_index  );
   return ecl_sum_ministep_get_sim_time( ministep_data );
+}
+
+
+time_t ecl_sum_data_get_sim_time( const ecl_sum_data_type * data , int ministep ) {
+  int internal_index = ecl_sum_data_get_internal_index( data , ministep );
+  return ecl_sum_data_iget_sim_time( data , internal_index );
 }
 
 
 double ecl_sum_data_get_sim_days( const ecl_sum_data_type * data , int ministep ) {
   const ecl_sum_ministep_type * ministep_data = ecl_sum_data_get_ministep( data , ministep );
+  return ecl_sum_ministep_get_sim_days( ministep_data );
+}
+
+double ecl_sum_data_iget_sim_days( const ecl_sum_data_type * data , int internal_index ) {
+  const ecl_sum_ministep_type * ministep_data = ecl_sum_data_iget_ministep( data , internal_index );
   return ecl_sum_ministep_get_sim_days( ministep_data );
 }
 
@@ -934,7 +1019,7 @@ void ecl_sum_data_init_time_vector( const ecl_sum_data_type * data , time_t_vect
   } else {
     int i;
     for (i = 0; i < vector_get_size(data->data); i++) {
-      const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , i );
+      const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , i  );
       time_t_vector_append( time_vector , ministep->sim_time );
     }
   }
@@ -959,7 +1044,7 @@ void ecl_sum_data_init_data_vector( const ecl_sum_data_type * data , double_vect
   } else {
     int i;
     for (i = 0; i < vector_get_size(data->data); i++) {
-      const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , i );
+      const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , i  );
       double_vector_append( data_vector , ecl_sum_ministep_iget( ministep , data_index ));
     }
   }
@@ -972,4 +1057,15 @@ double_vector_type * ecl_sum_data_alloc_data_vector( const ecl_sum_data_type * d
   return data_vector;
 }
 
+
+
+/**
+   This function will return the total number of ministeps in the
+   current ecl_sum_data instance; but observe that actual series of
+   ministeps can have non-zero offset and also "holes" in the series.
+*/
+
+int ecl_sum_data_get_length( const ecl_sum_data_type * data ) {
+  return vector_get_size( data->data );
+}
 
