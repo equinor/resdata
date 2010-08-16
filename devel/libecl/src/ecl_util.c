@@ -1196,3 +1196,34 @@ int ecl_util_get_num_cpu(const char * data_file) {
   fclose(stream);
   return num_cpu;
 }
+
+
+/**
+   This function checks that all the characters in the input @basename
+   are either lowercase, or uppercase. If presented with a mixed-case
+   basename the multimillion $$ program ECLIPSE will die a horrible
+   death.
+*/
+
+
+bool ecl_util_valid_basename( const char * basename ) {
+  int index       = 0;
+  int upper_count = 0;
+  int lower_count = 0;
+  
+  for (int index = 0; index < strlen( basename ); index++) {
+    int c = basename[index];
+    if (isalpha(c)) {
+      if (isupper(c))
+        upper_count++;
+      else
+        lower_count++;
+    }
+  }
+
+  if ((lower_count * upper_count) != 0)
+    return false;
+  else
+    return true;
+}
+
