@@ -508,7 +508,7 @@ void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, boo
   bool __fmt_file;
   ecl_file_enum file_type;
   
-  ecl_util_get_file_type( filename , &file_type , &__fmt_file , NULL);
+  file_type = ecl_util_get_file_type( filename , &__fmt_file , NULL);
   if (file_type == ECL_OTHER_FILE)
     __fmt_file = fmt_file;
   

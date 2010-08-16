@@ -765,7 +765,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_smspec->grid_nz           = ecl_kw_iget_int(dimens , 3);
     ecl_smspec->params_size       = ecl_kw_get_size(keywords);
     ecl_smspec->smspec_index_list = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->smspec_index_list  ,  __func__);
-    ecl_util_get_file_type( header_file , NULL , &ecl_smspec->formatted , NULL );
+    ecl_util_get_file_type( header_file , &ecl_smspec->formatted , NULL );
     
     {
       for (index=0; index < ecl_kw_get_size(wells); index++) {

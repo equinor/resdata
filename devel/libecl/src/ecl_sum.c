@@ -135,16 +135,17 @@ void ecl_sum_free__(void * __ecl_sum) {
 ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , const char * key_join_string){
   const bool include_restart = true;
   ecl_sum_type * ecl_sum     = NULL;
-  char * path , * base;
+  char * path , * base, *ext;
   char * header_file;
   stringlist_type * summary_file_list = stringlist_alloc_new();
 
-  util_alloc_file_components( input_file , &path , &base , NULL);
-  if (ecl_util_alloc_summary_files( path , base , &header_file , summary_file_list )) 
+  util_alloc_file_components( input_file , &path , &base , &ext);
+  if (ecl_util_alloc_summary_files( path , base , ext , &header_file , summary_file_list )) 
     ecl_sum = ecl_sum_fread_alloc__( header_file , summary_file_list , key_join_string , include_restart);
   
-  free(base);
-  util_safe_free(path);
+  free( base );
+  util_safe_free( path );
+  util_safe_free( ext );
   free(header_file);
   stringlist_free( summary_file_list );
 

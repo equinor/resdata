@@ -260,7 +260,7 @@ int main (int argc , char ** argv) {
       options = parse_alloc_options( config_file , ecl_grid);
   
     
-      ecl_util_get_file_type( restart_file , &file_type , NULL , NULL);
+      file_type = ecl_util_get_file_type( restart_file , NULL , NULL);
       if (file_type == ECL_UNIFIED_RESTART_FILE)
         restart = ecl_file_fread_alloc_unrst_section( restart_file , 0);
       else

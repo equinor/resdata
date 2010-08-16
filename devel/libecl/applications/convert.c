@@ -56,7 +56,7 @@ int main (int argc , char **argv) {
     int           report_nr;
     ecl_file_enum file_type;
     bool          fmt_file;
-    ecl_util_get_file_type(src_file , &file_type , &fmt_file , &report_nr);
+    file_type = ecl_util_get_file_type(src_file , &fmt_file , &report_nr);
     
     if (file_type == ECL_OTHER_FILE) {
       if (argc != 3) {
@@ -72,7 +72,7 @@ int main (int argc , char **argv) {
 	char *basename;
 	char *extension;
 	src_file    = argv[file_nr];
-	ecl_util_get_file_type(src_file , &file_type , &fmt_file , &report_nr);
+	file_type = ecl_util_get_file_type(src_file , &fmt_file , &report_nr);
 	if (file_type == ECL_OTHER_FILE) {
 	  fprintf(stderr,"File: %s - problem \n",src_file);
 	  fprintf(stderr,"In a list of many files ALL must be recognizable by their name. \n");

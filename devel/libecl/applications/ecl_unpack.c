@@ -10,7 +10,7 @@ void unpack_file(const char * filename) {
   ecl_file_enum target_type = ECL_OTHER_FILE;
   ecl_file_enum file_type;
   bool fmt_file;
-  ecl_util_get_file_type(filename , &file_type , &fmt_file , NULL);
+  file_type = ecl_util_get_file_type(filename , &fmt_file , NULL);
   if (file_type == ECL_UNIFIED_SUMMARY_FILE)
     target_type = ECL_SUMMARY_FILE;
   else if (file_type == ECL_UNIFIED_RESTART_FILE)

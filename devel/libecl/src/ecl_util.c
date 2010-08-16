@@ -247,12 +247,10 @@ bool ecl_util_numeric_extension(const char * extension) {
   report number this corresponds to.
 
 
-
-  The function itself returns void, all the results are by reference.
 */
 
 
-void ecl_util_get_file_type(const char * filename, ecl_file_enum * _file_type , bool *_fmt_file, int * _report_nr) {
+ecl_file_enum ecl_util_get_file_type(const char * filename, bool *_fmt_file, int * _report_nr) {
   const bool ecl_other_ok = true;
   ecl_file_enum file_type = ECL_OTHER_FILE;
   bool fmt_file = true;
@@ -336,9 +334,6 @@ void ecl_util_get_file_type(const char * filename, ecl_file_enum * _file_type , 
     }
   }
 
-  if (_file_type != NULL)
-    *_file_type = file_type;
-
   if (_fmt_file != NULL)
     *_fmt_file  = fmt_file;
 
@@ -348,6 +343,7 @@ void ecl_util_get_file_type(const char * filename, ecl_file_enum * _file_type , 
   if ( (file_type == ECL_OTHER_FILE) && !ecl_other_ok) 
     util_abort("%s: Can not determine type of:%s from filename - aborting \n",__func__ , filename);
   
+  return file_type;
 }
 
 
@@ -716,7 +712,7 @@ bool ecl_util_fmt_file(const char *filename) {
 
   bool fmt_file;
   if (util_file_exists(filename)) {
-    ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
+    file_type = ecl_util_get_file_type(filename , &fmt_file , &report_nr);
     if (file_type == ECL_OTHER_FILE) {
       if (util_file_size(filename) > min_size)
 	fmt_file = util_fmt_bit8(filename);
@@ -724,7 +720,7 @@ bool ecl_util_fmt_file(const char *filename) {
 	util_abort("%s: sorry could not determine formatted|unformatted of file:%s file_size:%d - aborting \n",__func__ , filename , util_file_size(filename));
     }
   } else {
-    ecl_util_get_file_type(filename , &file_type , &fmt_file , &report_nr);
+    file_type = ecl_util_get_file_type(filename , &fmt_file , &report_nr);
     if (file_type == ECL_OTHER_FILE) 
       util_abort("%s: sorry could not determine formatted|unformatted of file:%s - aborting \n",__func__ , filename);
   }
@@ -859,7 +855,7 @@ void ecl_util_alloc_summary_data_files(const char * path , const char * base , b
 */
 
 
-bool ecl_util_alloc_summary_files(const char * path , const char * _base , char ** _header_file , stringlist_type * filelist) {
+bool ecl_util_alloc_summary_files(const char * path , const char * _base , const char * ext , char ** _header_file , stringlist_type * filelist) {
   bool    fmt_file    	 = true; 
   char  * header_file 	 = NULL;
   char  * base;
@@ -869,6 +865,18 @@ bool ecl_util_alloc_summary_files(const char * path , const char * _base , char 
   else
     base = (char *) _base;
   
+  if (ext != NULL) {
+    bool fmt_input;
+    ecl_file_enum input_type;
+
+    char * test_name = util_alloc_filename( NULL , base, ext );
+
+    input_type = ecl_util_get_file_type( test_name , &fmt_input , NULL);
+    free( test_name );
+  }
+  
+
+
   {
     char * fsmspec_file = ecl_util_alloc_filename(path , base , ECL_SUMMARY_HEADER_FILE , true  , -1);
     char *  smspec_file = ecl_util_alloc_filename(path , base , ECL_SUMMARY_HEADER_FILE , false , -1);
@@ -896,6 +904,8 @@ bool ecl_util_alloc_summary_files(const char * path , const char * _base , char 
        */
       return false;
   }
+  
+  
 
   /* 
      OK - we have found a SMSPEC / FMSPEC file - continue to look for

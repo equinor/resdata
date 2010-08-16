@@ -275,12 +275,12 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
   ecl_file_enum file_type;
 
   *use_eclbase = false;
-  ecl_util_get_file_type( input[0] , &file_type , fmt_file , &report_nr );
+  file_type = ecl_util_get_file_type( input[0] , fmt_file , &report_nr );
   
   if (file_type == ECL_RESTART_FILE) {
     /* Loading from two non-unified restart files. */
     if (input_length >= 2) {
-      ecl_util_get_file_type( input[1] , &file_type , fmt_file , &report_nr );
+      file_type = ecl_util_get_file_type( input[1] , fmt_file , &report_nr );
       if (file_type == ECL_RESTART_FILE) {
 	restart_files[0] = ecl_file_fread_alloc( input[0] );
 	restart_files[1] = ecl_file_fread_alloc( input[1] );

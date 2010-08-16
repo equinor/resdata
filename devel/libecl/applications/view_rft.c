@@ -18,7 +18,7 @@ int main (int argc , char ** argv) {
 
     ecl_rft_file_type * rft_file;
 
-    ecl_util_get_file_type( input_file , &input_type , NULL , NULL);
+    input_type = ecl_util_get_file_type( input_file , NULL , NULL);
     if (input_type == ECL_RFT_FILE)
       file_name = util_alloc_string_copy(input_file);
     else {

@@ -17,7 +17,7 @@ int main(int argc, char ** argv) {
     bool fmt_file;
 
     /** Look at the first command line argument to determine type and formatted/unformatted status. */
-    ecl_util_get_file_type( argv[1] , &file_type , &fmt_file , NULL);
+    file_type = ecl_util_get_file_type( argv[1] , &fmt_file , NULL);
     if (file_type == ECL_SUMMARY_FILE)
       target_type = ECL_UNIFIED_SUMMARY_FILE;
     else if (file_type == ECL_RESTART_FILE)
@@ -60,7 +60,7 @@ int main(int argc, char ** argv) {
       prev_report_step = -1;
       for (i=0; i < num_files; i++) {
 	ecl_file_enum this_file_type;
-	ecl_util_get_file_type( stringlist_iget(filelist , i)  , &this_file_type , NULL , &report_step);
+	this_file_type = ecl_util_get_file_type( stringlist_iget(filelist , i)  , NULL , &report_step);
 	if (this_file_type == file_type) {
 	  if (report_step == prev_report_step)
 	    util_exit("Tried to write same report step twice: %s / %s \n",

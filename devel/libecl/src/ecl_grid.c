@@ -1113,7 +1113,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl
 static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
   ecl_file_enum   file_type;
   bool            fmt_file;
-  ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
+  file_type = ecl_util_get_file_type(grid_file , &fmt_file , NULL);
   if (file_type != ECL_EGRID_FILE)
     util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
   {
@@ -1193,7 +1193,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
 static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
 
   ecl_file_enum   file_type;
-  ecl_util_get_file_type(grid_file , &file_type , NULL , NULL);
+  file_type = ecl_util_get_file_type(grid_file , NULL , NULL);
   if (file_type != ECL_GRID_FILE)
     util_abort("%s: %s wrong file type - expected .GRID file - aborting \n",__func__ , grid_file);
 
@@ -1240,7 +1240,7 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file ) {
   bool             fmt_file;
   ecl_grid_type  * ecl_grid = NULL;
 
-  ecl_util_get_file_type(grid_file , &file_type , &fmt_file , NULL);
+  file_type = ecl_util_get_file_type(grid_file , &fmt_file , NULL);
   if (file_type == ECL_GRID_FILE)
     ecl_grid = ecl_grid_alloc_GRID(grid_file );
   else if (file_type == ECL_EGRID_FILE)

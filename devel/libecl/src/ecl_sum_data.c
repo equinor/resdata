@@ -663,7 +663,7 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
 */
 static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_type * filelist) {
   ecl_file_enum file_type;
-  ecl_util_get_file_type( stringlist_iget( filelist , 0 ) , &file_type , NULL , NULL);
+  file_type = ecl_util_get_file_type( stringlist_iget( filelist , 0 ) , NULL , NULL);
   if ((stringlist_get_size( filelist ) > 1) && (file_type != ECL_SUMMARY_FILE))
     util_abort("%s: internal error - when calling with more than one file - you can not supply a unified file - come on?! \n",__func__);
   {
@@ -675,7 +675,7 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
         const char * data_file = stringlist_iget( filelist , filenr);
 	ecl_file_enum file_type;
 	int report_step;
-	ecl_util_get_file_type( data_file , &file_type , NULL , &report_step);
+	file_type = ecl_util_get_file_type( data_file , NULL , &report_step);
 	/** 
 	    ECLIPSE starts a report step by writing an empty summary
 	    file, therefor we must verify that the ecl_file instance
