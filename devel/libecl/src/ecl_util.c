@@ -788,9 +788,10 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 
 
 
+
 void ecl_util_alloc_summary_data_files(const char * path , const char * base , bool fmt_file , stringlist_type * filelist) {
   char  * unif_data_file = ecl_util_alloc_exfilename(path , base , ECL_UNIFIED_SUMMARY_FILE , fmt_file , -1);
-  int files              = ecl_util_select_filelist( path , base , ECL_SUMMARY_FILE , fmt_file , filelist);
+  int files = ecl_util_select_filelist( path , base , ECL_SUMMARY_FILE , fmt_file , filelist);
     
   if ((files > 0) && (unif_data_file != NULL)) {
     /* 
@@ -856,9 +857,21 @@ void ecl_util_alloc_summary_data_files(const char * path , const char * base , b
 
 
 bool ecl_util_alloc_summary_files(const char * path , const char * _base , const char * ext , char ** _header_file , stringlist_type * filelist) {
+  bool    fmt_input      = false;
+  bool    fmt_set        = false;
   bool    fmt_file    	 = true; 
+  bool    unif_input     = false;
+  bool    unif_set       = false;
+
+
   char  * header_file 	 = NULL;
   char  * base;
+
+  /* 1: We start by inspecting the input extension and see if we can
+     learn anything about formatted/unformatted and
+     unified/non-unified from this. The input extension can be NULL,
+     in which case we learn nothing.
+  */
 
   if (_base == NULL)
     base = ecl_util_alloc_base_guess(path);
@@ -866,54 +879,99 @@ bool ecl_util_alloc_summary_files(const char * path , const char * _base , const
     base = (char *) _base;
   
   if (ext != NULL) {
-    bool fmt_input;
     ecl_file_enum input_type;
 
-    char * test_name = util_alloc_filename( NULL , base, ext );
+    {
+      char * test_name = util_alloc_filename( NULL , base, ext );
+      input_type = ecl_util_get_file_type( test_name , &fmt_input , NULL);
+      free( test_name );
+    }
 
-    input_type = ecl_util_get_file_type( test_name , &fmt_input , NULL);
-    free( test_name );
+    if ((input_type != ECL_OTHER_FILE) && (input_type != ECL_DATA_FILE)) {
+      /* 
+         The file has been recognized as a file type from which we can
+         at least infer formatted/unformatted inforamtion.
+      */
+      fmt_set = true;
+      switch (input_type) {
+      case(ECL_SUMMARY_FILE):
+      case(ECL_RESTART_FILE):
+        unif_input = false;
+        unif_set   = true;
+        break;
+      case(ECL_UNIFIED_SUMMARY_FILE):
+      case(ECL_UNIFIED_RESTART_FILE):
+        unif_input = true;
+        unif_set   = true;
+        break;
+      default:  /* Nothing wrong with this */
+        break;
+      }
+    } 
   }
   
-
-
+  
+  /*
+    2: We continue by looking for header files. 
+  */
+  
   {
-    char * fsmspec_file = ecl_util_alloc_filename(path , base , ECL_SUMMARY_HEADER_FILE , true  , -1);
-    char *  smspec_file = ecl_util_alloc_filename(path , base , ECL_SUMMARY_HEADER_FILE , false , -1);
-    if (util_file_exists(fsmspec_file) && util_file_exists(smspec_file)) {
-      if (util_file_difftime(fsmspec_file , smspec_file) < 0) {
-	header_file = fsmspec_file;
-	free(smspec_file);
-	fmt_file = true;
-      } else {
-	header_file = smspec_file;
-	free(fsmspec_file);
-	fmt_file = false;
-      }
-    } else if (util_file_exists(fsmspec_file)) {
-      header_file = fsmspec_file;
-      free(smspec_file);
-      fmt_file = true;
-    } else if (util_file_exists(smspec_file)) {
-      header_file = smspec_file;
-      free(fsmspec_file);
-      fmt_file = false;
-    } else 
-      /* 
-         Could not find SMSPEC/FSMSPEC file. Return false.
-       */
+    char * fsmspec_file = ecl_util_alloc_exfilename(path , base , ECL_SUMMARY_HEADER_FILE , true  , -1);
+    char *  smspec_file = ecl_util_alloc_exfilename(path , base , ECL_SUMMARY_HEADER_FILE , false , -1);
+
+    if ((fsmspec_file == NULL) && (smspec_file == NULL))   /* Neither file exists */
       return false;
+
+    
+    if (fmt_set)  /* The question of formatted|unformatted has already been settled based on the input filename. */
+      fmt_file = fmt_input;
+    else {
+      if ((fsmspec_file != NULL) && (smspec_file != NULL)) {   /* Both fsmspec and smspec exist - we take the newest. */
+        if (util_file_difftime(fsmspec_file , smspec_file) < 0) 
+          fmt_file = true;
+        else 
+          fmt_file = false;
+      } else {                                                /* Only one of fsmspec / smspec exists */
+        if (fsmspec_file != NULL)
+          fmt_file = true;
+        else
+          fmt_file = false;
+      }
+    }
+    
+    if (fmt_file) {
+      header_file = fsmspec_file;
+      util_safe_free( smspec_file );
+    } else {
+      header_file = smspec_file;
+      util_safe_free( fsmspec_file );
+    }
+
+    if (header_file == NULL)
+      return false;                                           /* If you insist on e.g. unformatted and only fsmspec exists - no results for you. */
   }
   
   
 
   /* 
-     OK - we have found a SMSPEC / FMSPEC file - continue to look for
+     3: OK - we have found a SMSPEC / FMSPEC file - continue to look for
      XXX.Snnnn / XXX.UNSMRY files.
   */
-  ecl_util_alloc_summary_data_files( path , base , fmt_file , filelist );
-  
-  
+
+  if (unif_set) { /* Based on the input file we have inferred whether to look for unified or
+                     non-unified input files. */
+
+    if ( unif_input ) {
+      char  * unif_data_file = ecl_util_alloc_exfilename(path , base , ECL_UNIFIED_SUMMARY_FILE , fmt_file , -1);
+      if (unif_data_file != NULL) {
+        stringlist_append_copy( filelist , unif_data_file );
+        free( unif_data_file );
+      }
+    } else 
+      ecl_util_select_filelist( path , base , ECL_SUMMARY_FILE , fmt_file , filelist);
+  } else          
+    ecl_util_alloc_summary_data_files( path , base , fmt_file , filelist );
+    
   if (_base == NULL)
     free(base);
 
@@ -1217,7 +1275,6 @@ int ecl_util_get_num_cpu(const char * data_file) {
 
 
 bool ecl_util_valid_basename( const char * basename ) {
-  int index       = 0;
   int upper_count = 0;
   int lower_count = 0;
   
