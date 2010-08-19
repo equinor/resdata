@@ -610,7 +610,7 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
 
       for (time_index = 0; time_index < ecl_sum_get_data_length( ecl_sum ); time_index++) {
         plot_dataset_append_point_xy( plot_dataset , 
-                                      //ecl_sum_iget_sim_days( ecl_sum , time_index),
+                                      //ecl_sum_iget_sim_days( ecl_sum , time_index ),
                                       ecl_sum_iget_sim_time( ecl_sum , time_index ),
                                       ecl_sum_iiget( ecl_sum , time_index , param_index ));
       }
@@ -1146,10 +1146,8 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
   } ;
   const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , 0 );
   
-  int first_ministep, last_ministep;
-  ecl_sum_get_ministep_range(ecl_sum , &first_ministep , &last_ministep);  
-  time_t start_time       = ecl_sum_get_sim_time(ecl_sum , first_ministep ) ; 
-  time_t end_time         = ecl_sum_get_sim_time(ecl_sum , last_ministep ) ; 
+  time_t start_time       = ecl_sum_get_start_time( ecl_sum );
+  time_t end_time         = ecl_sum_get_end_time( ecl_sum );
   //  time_t start_time       = ecl_sum_get_start_time(ecl_sum);
 
   sprintf(message,"Will plot %s",key) ;

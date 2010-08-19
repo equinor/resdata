@@ -133,7 +133,12 @@ void ecl_sum_free__(void * __ecl_sum) {
 
 
 ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , const char * key_join_string){
-  const bool include_restart = true;
+  bool include_restart = true;
+  return ecl_sum_fread_alloc_case__( input_file , key_join_string , include_restart );
+}
+
+
+ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char * key_join_string , bool include_restart){
   ecl_sum_type * ecl_sum     = NULL;
   char * path , * base, *ext;
   char * header_file;
@@ -151,7 +156,6 @@ ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , const char * k
 
   return ecl_sum;
 }
-
 
 /*****************************************************************/
 /* 
@@ -175,9 +179,9 @@ ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , const char * k
 int  	ecl_sum_get_well_var_index(const ecl_sum_type * ecl_sum , const char * well , const char *var) { return ecl_smspec_get_well_var_index(ecl_sum->smspec , well , var); }
 bool 	ecl_sum_has_well_var(const ecl_sum_type * ecl_sum , const char * well , const char *var)       { return ecl_smspec_has_well_var(ecl_sum->smspec , well , var); }
 
-double  ecl_sum_get_well_var(const ecl_sum_type * ecl_sum , int ministep , const char * well , const char *var) {
+double  ecl_sum_get_well_var(const ecl_sum_type * ecl_sum , int time_index , const char * well , const char *var) {
   int index = ecl_sum_get_well_var_index( ecl_sum , well , var );
-  return ecl_sum_data_get( ecl_sum->data , ministep , index);
+  return ecl_sum_data_iget( ecl_sum->data , time_index , index);
 }
 
 double ecl_sum_get_well_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * well , const char * var) {
@@ -197,9 +201,9 @@ double ecl_sum_get_well_var_from_sim_days( const ecl_sum_type * ecl_sum , double
 int  ecl_sum_get_group_var_index(const ecl_sum_type * ecl_sum , const char * group , const char *var) { return ecl_smspec_get_group_var_index( ecl_sum->smspec , group , var); }
 bool ecl_sum_has_group_var(const ecl_sum_type * ecl_sum , const char * group , const char *var)       { return ecl_smspec_has_group_var( ecl_sum->smspec , group , var); }
 
-double  ecl_sum_get_group_var(const ecl_sum_type * ecl_sum , int ministep , const char * group , const char *var) {
+double  ecl_sum_get_group_var(const ecl_sum_type * ecl_sum , int time_index , const char * group , const char *var) {
   int index = ecl_sum_get_group_var_index( ecl_sum , group , var );
-  return ecl_sum_data_get( ecl_sum->data , ministep , index);
+  return ecl_sum_data_iget( ecl_sum->data , time_index , index);
 }
 
 double ecl_sum_get_group_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * group , const char * var) {
@@ -218,9 +222,9 @@ double ecl_sum_get_group_var_from_sim_days( const ecl_sum_type * ecl_sum , doubl
 int  ecl_sum_get_field_var_index(const ecl_sum_type * ecl_sum , const char *var) { return ecl_smspec_get_field_var_index( ecl_sum->smspec , var); }
 bool ecl_sum_has_field_var(const ecl_sum_type * ecl_sum , const char *var)       { return ecl_smspec_has_field_var( ecl_sum->smspec , var); }
 
-double ecl_sum_get_field_var(const ecl_sum_type * ecl_sum , int ministep , const char * var) {
+double ecl_sum_get_field_var(const ecl_sum_type * ecl_sum , int time_index , const char * var) {
   int index = ecl_sum_get_field_var_index( ecl_sum ,  var );
-  return ecl_sum_data_get( ecl_sum->data , ministep , index);
+  return ecl_sum_data_iget( ecl_sum->data , time_index , index);
 }
 
 double ecl_sum_get_field_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var) {
@@ -239,9 +243,10 @@ double ecl_sum_get_field_var_from_sim_days( const ecl_sum_type * ecl_sum , doubl
 
 int  ecl_sum_get_block_var_index(const ecl_sum_type * ecl_sum , const char * block_var , int block_nr) { return ecl_smspec_get_block_var_index( ecl_sum->smspec , block_var , block_nr ); }
 bool ecl_sum_has_block_var(const ecl_sum_type * ecl_sum , const char * block_var , int block_nr)       { return ecl_smspec_has_block_var( ecl_sum->smspec , block_var , block_nr ); }
-double ecl_sum_get_block_var(const ecl_sum_type * ecl_sum , int ministep , const char * block_var , int block_nr) {
+
+double ecl_sum_get_block_var(const ecl_sum_type * ecl_sum , int time_index , const char * block_var , int block_nr) {
   int index = ecl_sum_get_block_var_index( ecl_sum ,  block_var , block_nr);
-  return ecl_sum_data_get( ecl_sum->data , ministep , index);
+  return ecl_sum_data_iget( ecl_sum->data , time_index , index);
 }
 
 
@@ -253,9 +258,9 @@ bool ecl_sum_has_block_var_ijk(const ecl_sum_type * ecl_sum , const char * block
   return ecl_smspec_has_block_var_ijk( ecl_sum->smspec , block_var , i ,j , k); 
 }
 
-double ecl_sum_get_block_var_ijk(const ecl_sum_type * ecl_sum , int ministep , const char * block_var , int i , int j , int k) {
+double ecl_sum_get_block_var_ijk(const ecl_sum_type * ecl_sum , int time_index , const char * block_var , int i , int j , int k) {
   int index = ecl_sum_get_block_var_index_ijk( ecl_sum ,  block_var , i , j , k);
-  return ecl_sum_data_get( ecl_sum->data , ministep , index);
+  return ecl_sum_data_iget( ecl_sum->data , time_index , index);
 }
 
 double ecl_sum_get_block_var_ijk_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * block_var, int i , int j , int k) {
@@ -279,9 +284,9 @@ double ecl_sum_get_block_var_ijk_from_sim_days( const ecl_sum_type * ecl_sum , d
 int  ecl_sum_get_region_var_index(const ecl_sum_type * ecl_sum , int region_nr , const char *var) { return ecl_smspec_get_region_var_index( ecl_sum->smspec , region_nr , var); }
 bool ecl_sum_has_region_var(const ecl_sum_type * ecl_sum , int region_nr , const char *var)       { return ecl_smspec_has_region_var( ecl_sum->smspec , region_nr , var); }
 
-double ecl_sum_get_region_var(const ecl_sum_type * ecl_sum , int ministep , int region_nr , const char *var) {
+double ecl_sum_iget_region_var(const ecl_sum_type * ecl_sum , int time_index , int region_nr , const char *var) {
   int index = ecl_sum_get_region_var_index( ecl_sum ,  region_nr , var);
-  return ecl_sum_data_get( ecl_sum->data , ministep , index);
+  return ecl_sum_data_iget( ecl_sum->data , time_index , index);
 }
 
 double ecl_sum_get_region_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , int region_nr , const char * var) {
@@ -302,9 +307,9 @@ double ecl_sum_get_region_var_from_sim_days( const ecl_sum_type * ecl_sum , doub
 int  	ecl_sum_get_misc_var_index(const ecl_sum_type * ecl_sum , const char *var) { return ecl_smspec_get_misc_var_index( ecl_sum->smspec , var ); }
 bool 	ecl_sum_has_misc_var(const ecl_sum_type * ecl_sum , const char *var)       { return ecl_smspec_has_misc_var( ecl_sum->smspec , var ); }
 
-double  ecl_sum_get_misc_var(const ecl_sum_type * ecl_sum , int ministep , const char *var) {
+double  ecl_sum_get_misc_var(const ecl_sum_type * ecl_sum , int time_index , const char *var) {
   int index = ecl_sum_get_misc_var_index( ecl_sum ,  var);
-  return ecl_sum_data_get( ecl_sum->data , ministep , index);
+  return ecl_sum_data_iget( ecl_sum->data , time_index , index);
 }
 
 double ecl_sum_get_misc_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var) {
@@ -330,9 +335,9 @@ bool ecl_sum_has_well_completion_var(const ecl_sum_type * ecl_sum , const char *
   return ecl_smspec_has_well_completion_var( ecl_sum->smspec , well , var , cell_nr);
 }
 
-double ecl_sum_get_well_completion_var(const ecl_sum_type * ecl_sum , int ministep , const char * well , const char *var, int cell_nr)  {
+double ecl_sum_get_well_completion_var(const ecl_sum_type * ecl_sum , int time_index , const char * well , const char *var, int cell_nr)  {
   int index = ecl_sum_get_well_completion_var_index(ecl_sum , well , var , cell_nr);
-  return ecl_sum_data_get( ecl_sum->data , ministep , index);
+  return ecl_sum_data_iget( ecl_sum->data , time_index , index);
 }
 
 /*****************************************************************/
@@ -344,9 +349,9 @@ int  ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * l
 
 bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw)       { return ecl_smspec_has_general_var( ecl_sum->smspec , lookup_kw); }
 
-double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int ministep , const char * lookup_kw) {
+double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , const char * lookup_kw) {
   int index = ecl_sum_get_general_var_index(ecl_sum , lookup_kw);
-  return ecl_sum_data_get( ecl_sum->data , ministep , index);
+  return ecl_sum_data_iget( ecl_sum->data , time_index , index);
 }
 
 
@@ -375,20 +380,10 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
    has been used to query for index.
 */
  
-/**
-   The functions ecl_sum_iiget() and ecl_sum_iget() are quite confused
-   in the naming. The first 'i' means that the parameter dimensions is
-   indexed (i.e. WWCT:OP -> param_index), and the second 'i' means
-   that also the time direction is indexed (ministep->internal_index).
-*/
 
 
 double ecl_sum_iiget( const ecl_sum_type * ecl_sum , int internal_index , int param_index) {
   return ecl_sum_data_iget(ecl_sum->data , internal_index , param_index);
-}
- 
-double ecl_sum_iget( const ecl_sum_type * ecl_sum , int ministep , int param_index) {
-  return ecl_sum_data_get(ecl_sum->data , ministep , param_index);
 }
 
 const char * ecl_sum_iget_unit( const ecl_sum_type * ecl_sum , int param_index) {
@@ -405,6 +400,14 @@ const char * ecl_sum_iget_wgname( const ecl_sum_type * sum , int param_index ) {
 
 const char * ecl_sum_iget_keyword( const ecl_sum_type * sum , int param_index ) {
   return ecl_smspec_iget_keyword( sum->smspec , param_index );
+}
+
+double ecl_sum_iget_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , int param_index) {
+  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , param_index );
+}
+
+double ecl_sum_iget_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , int param_index ) {
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , param_index );
 }
 
 /*****************************************************************/
@@ -439,10 +442,9 @@ const char * ecl_sum_get_keyword( const ecl_sum_type * sum , const char * gen_ke
 
 /*****************************************************************/
 /* 
-   Here comes a couple of functions relating to the time dimension,
-   about reports and ministeps and such things. The functions here in
-   this file are just thin wrappers of 'real' functions located in
-   ecl_sum_data.c.
+   Here comes a couple of functions relating to the time
+   dimension. The functions here in this file are just thin wrappers
+   of 'real' functions located in ecl_sum_data.c.
 */
    
 
@@ -450,18 +452,6 @@ const char * ecl_sum_get_keyword( const ecl_sum_type * sum , const char * gen_ke
 bool  ecl_sum_has_report_step(const ecl_sum_type * ecl_sum , int report_step ) {
   return ecl_sum_data_has_report_step( ecl_sum->data , report_step );
 }
-
-
-bool  ecl_sum_has_ministep(const ecl_sum_type * ecl_sum , int ministep ) {
-  return ecl_sum_data_has_ministep( ecl_sum->data , ministep );
-}
-
-
-
-void ecl_sum_get_ministep_range(const ecl_sum_type * ecl_sum , int * ministep1, int * ministep2) {
-  ecl_sum_data_get_ministep_range(ecl_sum->data , ministep1 , ministep2);
-}
-
 
 int ecl_sum_get_last_report_step( const ecl_sum_type * ecl_sum) {
   return ecl_sum_data_get_last_report_step( ecl_sum->data );
@@ -471,42 +461,12 @@ int ecl_sum_get_first_report_step( const ecl_sum_type * ecl_sum ) {
   return ecl_sum_data_get_first_report_step( ecl_sum->data );
 }
 
-int ecl_sum_get_last_ministep( const ecl_sum_type * ecl_sum) {
-  return ecl_sum_data_get_last_ministep( ecl_sum->data );
+int ecl_sum_iget_report_end( const ecl_sum_type * ecl_sum, int report_step) {
+  return ecl_sum_data_iget_report_end(ecl_sum->data , report_step );
 }
 
-int ecl_sum_get_first_ministep( const ecl_sum_type * ecl_sum ) {
-  return ecl_sum_data_get_first_ministep( ecl_sum->data );
-}
-   
-
-/*
-  Translates a report step to the correspondingly first and last
-  ministep. Will set the two ministeps to -1 if the report step is not
-  valid.
-*/
-
-void ecl_sum_report2ministep_range(const ecl_sum_type * ecl_sum , int report_step , int * ministep1 , int * ministep2 ){
-  ecl_sum_data_report2ministep_range( ecl_sum->data , report_step , ministep1 , ministep2);
-}
-
-/*
-  return the first ministep incluced in report step. 
-*/
-int ecl_sum_get_report_ministep_start( const ecl_sum_type * ecl_sum, int report_step) {
-  int ministep1 , ministep2;
-  ecl_sum_report2ministep_range( ecl_sum , report_step , &ministep1 , &ministep2);
-  return ministep1;
-}
-
-int ecl_sum_get_report_ministep_end( const ecl_sum_type * ecl_sum, int report_step) {
-  int ministep1 , ministep2;
-  ecl_sum_report2ministep_range( ecl_sum , report_step , &ministep1 , &ministep2);
-  return ministep2;
-}
-
-int ecl_sum_get_report_step( const ecl_sum_type * ecl_sum , int ministep ){
-  return ecl_sum_data_get_report_step( ecl_sum->data , ministep );
+int ecl_sum_iget_report_start( const ecl_sum_type * ecl_sum, int report_step) {
+  return ecl_sum_data_iget_report_start(ecl_sum->data , report_step );
 }
 
 int ecl_sum_iget_report_step( const ecl_sum_type * ecl_sum , int internal_index ){
@@ -541,47 +501,58 @@ void ecl_sum_summarize( const ecl_sum_type * ecl_sum , FILE * stream ) {
 
 
 /**
-   Returns the number of the first ministep where a limiting value is
+   Returns the first internal index where a limiting value is
    reached. If the limiting value is never reached, -1 is
    returned. The smspec_index should be calculated first with one of
    the
    
       ecl_sum_get_XXXX_index() 
 
-   functions. I.e. the following code will give the first ministep
-   where the water wut in well PX exceeds 0.25:
+   functions. I.e. the following code will give the first index where
+   the water wut in well PX exceeds 0.25:
 
    {  
       int smspec_index   = ecl_sum_get_well_var( ecl_sum , "PX" , "WWCT" );
-      int first_ministep = ecl_sum_get_first_ministep_gt( ecl_sum , smspec_index , 0.25);
+      int first_index    = ecl_sum_get_first_gt( ecl_sum , smspec_index , 0.25);
    }
+
 */
 
-int ecl_sum_get_first_ministep_gt(const ecl_sum_type * ecl_sum , int smspec_index , double limit) { 
-  const int last_ministep = ecl_sum_get_last_ministep( ecl_sum );
-  int ministep            = ecl_sum_get_first_ministep( ecl_sum ); 
+
+static int ecl_sum_get_limiting(const ecl_sum_type * ecl_sum , int smspec_index , double limit , bool gt) { 
+  const int length        = ecl_sum_data_get_length( ecl_sum->data );
+  int internal_index      = 0;
   do {
-    double value = ecl_sum_data_get( ecl_sum->data , ministep , smspec_index);
-    if (value > limit)
-      break;
-    ministep++;
-  } while (ministep < last_ministep);
+    double value = ecl_sum_data_iget( ecl_sum->data , internal_index , smspec_index );
+    if (gt) {
+      if (value > limit)
+        break;
+    } else {
+      if (value < limit)
+        break;
+    }
+    internal_index++;
+  } while (internal_index < length);
 
-  if (ministep == last_ministep)  /* Did not find it */
-    ministep = -1;
+  if (internal_index == length)  /* Did not find it */
+    internal_index = -1;
 
-  return ministep;
+  return internal_index;
 }
+
+int ecl_sum_get_first_gt( const ecl_sum_type * ecl_sum , int param_index , double limit) {
+  return ecl_sum_get_limiting( ecl_sum , param_index , limit , true );
+}
+
+int ecl_sum_get_first_lt( const ecl_sum_type * ecl_sum , int param_index , double limit) {
+  return ecl_sum_get_limiting( ecl_sum , param_index , limit , false );
+}
+
 
 
 time_t ecl_sum_get_report_time( const ecl_sum_type * ecl_sum , int report_step ) {
-  int ministep1 , ministep2;
-  ecl_sum_report2ministep_range( ecl_sum , report_step , &ministep1 , &ministep2 );
-  return ecl_sum_get_sim_time( ecl_sum , ministep2 );
-}
-
-time_t ecl_sum_get_sim_time( const ecl_sum_type * ecl_sum , int ministep ) {
-  return ecl_sum_data_get_sim_time( ecl_sum->data , ministep );
+  int end_index = ecl_sum_data_iget_report_end( ecl_sum->data , report_step );
+  return ecl_sum_iget_sim_time( ecl_sum , end_index );
 }
 
 time_t ecl_sum_iget_sim_time( const ecl_sum_type * ecl_sum , int index ) {
@@ -596,24 +567,9 @@ time_t ecl_sum_get_end_time( const ecl_sum_type * ecl_sum) {
   return ecl_sum_data_get_sim_end( ecl_sum->data );
 }
 
-double ecl_sum_get_sim_days( const ecl_sum_type * ecl_sum , int ministep ) {
-  return ecl_sum_data_get_sim_days( ecl_sum->data , ministep);
-}
-
 double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int index ) {
   return ecl_sum_data_iget_sim_days( ecl_sum->data , index );
 }
-
-
-int ecl_sum_get_ministep_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days) {
-  return ecl_sum_data_get_ministep_from_sim_days( ecl_sum->data , sim_days );
-}
-
-
-int ecl_sum_get_ministep_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time) {
-  return ecl_sum_data_get_ministep_from_sim_time(ecl_sum->data , sim_time );
-}
- 
 
 
 /*****************************************************************/
@@ -657,10 +613,8 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , int nvars , 
 
     for (report = first_report; report <= last_report; report++) {
       if (ecl_sum_data_has_report_step(ecl_sum->data , report)) {
-        int last_ministep , internal_index;
-        ecl_sum_data_report2ministep_range( ecl_sum->data , report , NULL , &last_ministep);
-        internal_index = ecl_sum_data_get_internal_index( ecl_sum->data , last_ministep );
-        
+        int internal_index;
+        internal_index = ecl_sum_data_iget_report_end( ecl_sum->data , report );
         __ecl_sum_fprintf_line( ecl_sum , stream , internal_index , has_var , var_index );
       }
     }
@@ -795,7 +749,7 @@ double ecl_sum_get_sim_length( const ecl_sum_type * ecl_sum ) {
 }
 
 /**
-   Will return the number of ministeps.
+   Will return the number of data blocks.
 */
 int ecl_sum_get_data_length( const ecl_sum_type * ecl_sum ) {
   return ecl_sum_data_get_length( ecl_sum->data );

@@ -1284,6 +1284,7 @@ void ecl_smspec_free__(void * __ecl_smspec) {
   data object owns the final (pr. timestep) time information.
 */
 
+
 void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * param_data , double * _sim_days , time_t * _sim_time) {
   double sim_days;
   time_t sim_time;
@@ -1292,7 +1293,7 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
     sim_days = param_data[smspec->time_index];
     sim_time = smspec->sim_start_time;
     util_inplace_forward_days( &sim_time , sim_days);
-  } else {
+  } else if (smspec->day_index > 0) {
     int sec  = 0;
     int min  = 0;
     int hour = 0;
@@ -1300,10 +1301,17 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
     int day   = roundf(param_data[smspec->day_index]);
     int month = roundf(param_data[smspec->month_index]);
     int year  = roundf(param_data[smspec->year_index]);
-
+    
     sim_time = util_make_datetime(sec , min , hour , day , month , year);
     sim_days = util_difftime_days( smspec->sim_start_time , sim_time);
+  } else {
+    /* Unasable configuration */
+    util_abort("%s: Sorry the SMSPEC file seems to lack all time information, need either TIME, or DAY/MONTH/YEAR information. Can not proceee.",__func__);
+    
+    sim_time = -1;
+    sim_days = -1;
   }
+
   *_sim_days = sim_days;
   *_sim_time= sim_time;
 }
@@ -1396,6 +1404,10 @@ stringlist_type * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec
 }
 
 
+
+int ecl_smspec_get_param_size( const ecl_smspec_type * smspec ) {
+  return smspec->params_size;
+}
 
 
 #undef ECL_SMSPEC_ID

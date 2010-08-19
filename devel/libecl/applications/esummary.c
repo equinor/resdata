@@ -128,17 +128,16 @@ int main(int argc , char ** argv) {
               for (iens = 0; iens < vector_get_size( ecl_sum_list ); iens++) {            /* Iterating over the ensemble members */
                 const ecl_sum_type * ecl_sum = vector_iget_const( ecl_sum_list , iens );  
                 double value = 0;
-                int ministep1 , ministep2;
+                int end_index;
                 if (ecl_sum_has_report_step(ecl_sum , report)) {
-                  ecl_sum_report2ministep_range( ecl_sum , report , &ministep1 , &ministep2);
-                  ministep1 = ministep2;
-                  if (ecl_sum_has_ministep(ecl_sum , ministep2)) {
+                  end_index = ecl_sum_iget_report_end( ecl_sum , report );
+                  if (end_index >= 0) {
                     if (ivar == 0 && iens == 0) {                                         /* Display time info in the first columns */
                       int day,month,year;
-                      util_set_date_values(ecl_sum_get_sim_time(ecl_sum , ministep2) , &day , &month, &year);
-                      fprintf(stream , "%7.2f   %02d/%02d/%04d   " , ecl_sum_get_sim_days(ecl_sum , ministep2) , day , month , year);
+                      util_set_date_values(ecl_sum_iget_sim_time(ecl_sum , end_index) , &day , &month, &year);
+                      fprintf(stream , "%7.2f   %02d/%02d/%04d   " , ecl_sum_iget_sim_days(ecl_sum , end_index) , day , month , year);
                     }
-                    value = ecl_sum_get_general_var(ecl_sum , ministep2 , var_list[ivar]);
+                    value = ecl_sum_iget_general_var(ecl_sum , end_index , var_list[ivar]);
                   }
                 }
                 fprintf(stream , " %12.3f " , value);
