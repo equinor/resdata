@@ -304,6 +304,7 @@ static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl
   ecl_region_assert_kw( region , ecl_kw , &global_kw);
   if (ecl_kw_get_type( ecl_kw ) != ECL_FLOAT_TYPE) 
     util_abort("%s: sorry - select by in_interval is only supported for float keywords \n",__func__);
+  
   {
     const float * kw_data = ecl_kw_get_float_ptr( ecl_kw );
     if (global_kw) {
@@ -336,6 +337,7 @@ static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl
   }
   ecl_region_invalidate_index_list( region );
 }
+
 
 
 void ecl_region_select_smaller( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit) {
