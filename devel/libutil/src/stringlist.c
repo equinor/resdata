@@ -245,6 +245,15 @@ void stringlist_insert_stringlist_copy(stringlist_type * stringlist, const strin
   stringlist_free(end);
 }
 
+void stringlist_deep_copy( stringlist_type * target , const stringlist_type * src) {
+  stringlist_clear( target );
+  {
+    for (int i=0; i < stringlist_get_size( src ); i++)
+      stringlist_append_copy( target , stringlist_iget( src , i ));
+  }
+}
+
+
 
 /** 
     Frees all the memory contained by the stringlist.

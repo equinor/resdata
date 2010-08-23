@@ -390,6 +390,15 @@ void matrix_pretty_print(const matrix_type * matrix , const char * name , const 
 }
 
 
+void matrix_fprintf( const matrix_type * matrix , const char * fmt , FILE * stream ) {
+  int i,j;
+  for (i=0; i < matrix->rows; i++) {
+    for (j=0; j < matrix->columns; j++) 
+      fprintf(stream , fmt , matrix_iget( matrix , i , j));
+    fprintf(stream , "\n");
+  }
+}
+
 
 
 /* Discard the strides?? */
@@ -397,13 +406,78 @@ void matrix_fwrite(const matrix_type * matrix , FILE * stream) {
   
 }
 
+/**
+     [ a11   a12  ]
+     [ a21   a22  ] 
+
+
+
+
+   row_major_order == true
+   -----------------------
+   a_11
+   a_12
+   a_21
+   a_22
+
+
+   row_major_order == false
+   -----------------------
+   a_11
+   a_12
+   a_21
+   a_22
+   
+
+   The @orw_major_order parameter ONLY affects the layout on the file,
+   and NOT the memory layout of the matrix.
+*/
+
+
+static void __fscanf_and_set( matrix_type * matrix , int row , int col , FILE * stream) {
+  double value;
+  if (fscanf(stream , "%lg" , &value) == 1)
+    matrix_iset( matrix , row , col , value );
+  else 
+    util_abort("%s: reading of matyrix failed \n",__func__);
+}
+
+
+void matrix_fscanf_data( matrix_type * matrix , bool row_major_order , FILE * stream ) {
+  int row,col;
+  if (row_major_order) {
+    for (row = 0; row < matrix->columns; row++) {
+      for (col = 0; col < matrix->columns; col++) {
+        __fscanf_and_set( matrix , row , col ,stream);
+      } 
+    }
+  } else {
+    for (row = 0; row < matrix->columns; row++) {
+      for (col = 0; col < matrix->columns; col++) {
+        __fscanf_and_set( matrix , row , col , stream);
+      } 
+    }
+  }
+}
+
 
 
 /*****************************************************************/
 /* Functions which manipulate one element in the matrix.         */
 
+static bool matrix_assert_ij( const matrix_type * matrix , int i , int j) {
+  if ((i < 0) || (i >= matrix->rows) || (j < 0) || (j >= matrix->columns)) 
+    util_abort("%s: (i,j) = (%d,%d) invalid. Matrix size: %d x %d \n",__func__ , i,j,matrix->rows , matrix->columns);
+}
+
 void inline matrix_iset(matrix_type * matrix , int i , int j, double value) {
   matrix->data[ GET_INDEX(matrix , i,j) ] = value;
+}
+
+
+void matrix_iset_safe(matrix_type * matrix , int i , int j, double value) {
+  matrix_assert_ij( matrix , i , j );
+  matrix_iset( matrix , i , j , value );
 }
 
 

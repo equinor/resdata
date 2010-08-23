@@ -397,6 +397,18 @@ void buffer_fwrite_char_ptr(buffer_type * buffer , const char * string_ptr ) {
   buffer_fwrite(buffer , string_ptr , sizeof * string_ptr , strlen( string_ptr ));
 }
 
+
+/**
+   Will append a \0 to the buffer; before appending the last character
+   of the buffer will be checked, and no new \0 will be added if the
+   buffer is already \0 terminated.
+*/
+void buffer_terminate_char_ptr( buffer_type * buffer ) {
+  if (buffer->data[ buffer->content_size - 1] != '\0')
+    buffer_fwrite_char( buffer , '\0');
+}
+
+
 void buffer_fwrite_int(buffer_type * buffer , int value) {
   buffer_fwrite(buffer , &value , sizeof value , 1);
 }
@@ -458,6 +470,7 @@ void buffer_fwrite_double(buffer_type * buffer , double value) {
 
      1. The length of the string - as returned from strlen().
      2. The string content INCLUDING the terminating \0.
+
 
 */
 

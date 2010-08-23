@@ -10,7 +10,8 @@ extern "C" {
 
 typedef struct matrix_struct matrix_type;
 
-
+void          matrix_fscanf_data( matrix_type * matrix , bool row_major_order , FILE * stream );
+void          matrix_fprintf( const matrix_type * matrix , const char * fmt , FILE * stream );
 void          matrix_pretty_fprint(const matrix_type * matrix , const char * name , const char * fmt , FILE * stream);
 matrix_type * matrix_alloc(int rows, int columns);
 matrix_type * matrix_safe_alloc(int rows, int columns);
@@ -32,6 +33,7 @@ void          matrix_inplace_sub(matrix_type * A , const matrix_type * B);
 void          matrix_inplace_mul(matrix_type * A , const matrix_type * B);
 void          matrix_inplace_div(matrix_type * A , const matrix_type * B);
 
+void          matrix_iset_safe(matrix_type * matrix , int i , int j, double value);
 void   inline matrix_iset(matrix_type * matrix , int i , int j, double value);
 double inline matrix_iget(const matrix_type * matrix , int i , int j);
 void   inline matrix_iadd(matrix_type * matrix , int i , int j , double value);

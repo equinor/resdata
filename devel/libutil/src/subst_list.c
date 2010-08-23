@@ -716,6 +716,7 @@ void stringlist_apply_subst(stringlist_type * stringlist , const subst_list_type
 
 
 
+
 /**
    This allocates a new subst_list instance, the copy process is deep,
    in the sense that all srings inserted in the new subst_list

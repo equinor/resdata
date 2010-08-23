@@ -4762,8 +4762,8 @@ static void __util_redirect(int src_fd , const char * target_file , int open_fla
 */
 
 pid_t util_fork_exec(const char * executable , int argc , const char ** argv , 
-		      bool blocking , const char * target_file , const char  * run_path , 
-		      const char * stdin_file , const char * stdout_file , const char * stderr_file) {
+                     bool blocking , const char * target_file , const char  * run_path , 
+                     const char * stdin_file , const char * stdout_file , const char * stderr_file) {
   const char  ** __argv = NULL;
   pid_t child_pid;
   
@@ -4820,18 +4820,17 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
     */
     util_abort("%s: failed to execute external command: \'%s\': %s \n",__func__ , executable , strerror(errno));
     
-  }  else {
+  }  else  {
     /* Parent */
     if (blocking) {
-      int child_status;
-      waitpid(child_pid , &child_status , 0);
+      waitpid(child_pid , NULL , 0);
       
       if (target_file != NULL)
 	if (!util_file_exists(target_file))
 	  util_abort("%s: %s failed to produce target_file:%s aborting \n",__func__ , executable , target_file);
     }
   }
-
+  
   util_safe_free( __argv );
   return child_pid;
 }

@@ -13,6 +13,8 @@ typedef struct stringlist_struct stringlist_type;
 typedef int  ( string_cmp_ftype)  (const void * , const void *);
 
 
+void              stringlist_deep_copy( stringlist_type * target , const stringlist_type * src);
+
 stringlist_type * stringlist_alloc_new();
 void              stringlist_free__(void * );
 void              stringlist_free(stringlist_type *);

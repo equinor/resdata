@@ -29,13 +29,24 @@
 #include <statistics.h>
 #include <double_vector.h>
 
+
+
+int test( const char ** s) {
+  int i    = 0;
+  char * p = s[i];
+
+  while (p != NULL) {
+    printf("Looking at %s \n",p);
+    i++;
+    p = s[i];
+  }
+}
+
 int main(int argc , char ** argv) {
   char ** token_list;
   int     len;
 
-  util_split_string("GG&10.7f&s&f.g" , "&" , &len , &token_list); 
-  for (int i=0; i < len; i++)
-    printf("token[%d] = %s \n",i,token_list[i]);
+  test( (const char *[]) {"Hei","Joakim","GHove",NULL} );
   
 }
 
