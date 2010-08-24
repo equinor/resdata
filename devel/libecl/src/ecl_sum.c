@@ -143,15 +143,15 @@ ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char *
   char * path , * base, *ext;
   char * header_file;
   stringlist_type * summary_file_list = stringlist_alloc_new();
-
+  
   util_alloc_file_components( input_file , &path , &base , &ext);
   if (ecl_util_alloc_summary_files( path , base , ext , &header_file , summary_file_list )) 
     ecl_sum = ecl_sum_fread_alloc__( header_file , summary_file_list , key_join_string , include_restart);
   
-  free( base );
+  util_safe_free( base );
   util_safe_free( path );
   util_safe_free( ext );
-  free(header_file);
+  util_safe_free( header_file );
   stringlist_free( summary_file_list );
 
   return ecl_sum;

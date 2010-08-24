@@ -863,9 +863,11 @@ bool ecl_util_alloc_summary_files(const char * path , const char * _base , const
   bool    unif_input     = false;
   bool    unif_set       = false;
 
-
+  
   char  * header_file 	 = NULL;
   char  * base;
+
+  *_header_file = NULL;
 
   /* 1: We start by inspecting the input extension and see if we can
      learn anything about formatted/unformatted and
@@ -918,7 +920,7 @@ bool ecl_util_alloc_summary_files(const char * path , const char * _base , const
   {
     char * fsmspec_file = ecl_util_alloc_exfilename(path , base , ECL_SUMMARY_HEADER_FILE , true  , -1);
     char *  smspec_file = ecl_util_alloc_exfilename(path , base , ECL_SUMMARY_HEADER_FILE , false , -1);
-
+    
     if ((fsmspec_file == NULL) && (smspec_file == NULL))   /* Neither file exists */
       return false;
 
@@ -1295,22 +1297,3 @@ bool ecl_util_valid_basename( const char * basename ) {
 }
 
 
-void test1( int len , const char ** s ) {
-  int i;
-  for (i=0; i < len; i++) {
-    printf("S[%d] = %s \n",i,s[i]);
-  }
-
-}
-
-
-void test2( const char ** s ) {
-  int index     = 0;
-  const char *p = s[index];
-  
-  while (p != NULL) {
-    printf("s : %s \n",p);
-    index++;
-    p = s[index];
-  }
-}

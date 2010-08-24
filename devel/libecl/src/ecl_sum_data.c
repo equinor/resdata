@@ -841,8 +841,10 @@ int ecl_sum_data_iget_report_start( const ecl_sum_data_type * data , int report_
 
 
 int ecl_sum_data_iget_report_step(const ecl_sum_data_type * data , int internal_index) {
-  const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index );
-  return ministep->report_step;
+  {
+    const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index );
+    return ministep->report_step;
+  }
 }
 
 

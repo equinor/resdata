@@ -41,6 +41,7 @@ inline int      ecl_grid_get_global_index3(const ecl_grid_type * , int  , int , 
 int             ecl_grid_get_global_index1A(const ecl_grid_type * ecl_grid , int active_index);
 ecl_grid_type * ecl_grid_alloc_GRDECL(int , int , int , const float *  , const float *  , const int * , const float * mapaxes);
 ecl_grid_type * ecl_grid_alloc(const char * );
+ecl_grid_type * ecl_grid_load_case( const char * case_input );
 void            ecl_grid_free(ecl_grid_type * );
 void            ecl_grid_free__( void * arg );
 void            ecl_grid_get_dims(const ecl_grid_type * , int *, int * , int * , int *);

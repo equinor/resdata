@@ -74,6 +74,7 @@ struct ecl_region_struct {
   int                 * active_index_list;    /* This means cells in the region which are also active in the grid */
   int                   global_size;          /* The size of global_index_list. */
   int                   active_size;          /* The size of active_index_list. */
+  bool                  preselect;
   /******************************************************************/
   /* Grid properties */
   int                   grid_nx,grid_ny,grid_nz,grid_vol,grid_active;
@@ -86,6 +87,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_region , ECL_REGION_TYPE_ID)
 UTIL_SAFE_CAST_FUNCTION( ecl_region , ECL_REGION_TYPE_ID)
 
 
+
 ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool preselect) {
   ecl_region_type * region = util_malloc( sizeof * region , __func__);
   UTIL_TYPE_ID_INIT( region , ECL_REGION_TYPE_ID);
@@ -95,13 +97,8 @@ ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool presel
   region->active_mask       = util_malloc(region->grid_vol * sizeof * region->active_mask , __func__);
   region->active_index_list = NULL;
   region->global_index_list = NULL;
-  
-  {
-    int i;
-    for (i=0; i < region->grid_vol; i++) 
-      region->active_mask[i] = preselect;
-  }
-
+  region->preselect         = preselect;
+  ecl_region_reset( region );
   return region;
 }
   
@@ -203,6 +200,16 @@ static void ecl_region_assert_kw( const ecl_region_type * region , const ecl_kw_
 
 
 /*****************************************************************/ 
+
+void ecl_region_reset( ecl_region_type * ecl_region ) {
+  int i;
+  for (i=0; i < ecl_region->grid_vol; i++) 
+    ecl_region->active_mask[i] = ecl_region->preselect;
+  ecl_region_invalidate_index_list( ecl_region );
+}
+
+
+/*****************************************************************/
 
 static void ecl_region_select_cell__( ecl_region_type * region , int i , int j , int k, bool select) {
   int global_index = ecl_grid_get_global_index3( region->parent_grid , i,j,k);
