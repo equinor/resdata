@@ -1277,17 +1277,19 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file ) {
 */
 
 
-ecl_grid_type * ecl_grid_load_case( const char * case_input ) {
+
+
+char * ecl_grid_alloc_case_filename( const char * case_input ) {
   ecl_file_enum    file_type;
   bool             fmt_file;
   file_type = ecl_util_get_file_type( case_input , &fmt_file ,  NULL);
 
   if (file_type == ECL_GRID_FILE)
-    return ecl_grid_alloc_GRID( case_input );   /* Case 1 */
+    return util_alloc_string_copy( case_input ); /* Case 1 */
   else if (file_type == ECL_EGRID_FILE)
-    return ecl_grid_alloc_EGRID( case_input );  /* Case 1 */
+    return util_alloc_string_copy( case_input ); /* Case 1 */
   else {
-    ecl_grid_type * ecl_grid = NULL;
+    char * grid_file = NULL;
     char * path;
     char * basename;
     util_alloc_file_components( case_input , &path , &basename , NULL);
@@ -1298,13 +1300,13 @@ ecl_grid_type * ecl_grid_load_case( const char * case_input ) {
       char * FGRID  = ecl_util_alloc_filename( path , basename , ECL_GRID_FILE  , true  , -1);
 
       if (util_file_exists( EGRID ))
-        ecl_grid = ecl_grid_alloc_EGRID( EGRID );
+        grid_file = util_alloc_string_copy( EGRID );
       else if (util_file_exists( GRID ))
-        ecl_grid = ecl_grid_alloc_GRID( GRID );
+        grid_file = util_alloc_string_copy( GRID );
       else if (util_file_exists( FEGRID ))
-        ecl_grid = ecl_grid_alloc_EGRID( FEGRID );
+        grid_file = util_alloc_string_copy( FEGRID );
       else if (util_file_exists( FGRID ))
-        ecl_grid = ecl_grid_alloc_GRID( FGRID );
+        grid_file = util_alloc_string_copy( FGRID );
       /*
         else: could not find a GRID/EGRID. 
       */
@@ -1318,15 +1320,39 @@ ecl_grid_type * ecl_grid_load_case( const char * case_input ) {
       char * GRID   = ecl_util_alloc_filename( path , basename , ECL_GRID_FILE  , fmt_file , -1);
       
       if (util_file_exists( EGRID ))
-        ecl_grid = ecl_grid_alloc_EGRID( EGRID );
+        grid_file = util_alloc_string_copy( EGRID );
       else if (util_file_exists( GRID ))
-        ecl_grid = ecl_grid_alloc_GRID( GRID );
+        grid_file = util_alloc_string_copy( GRID );
       
       free( EGRID );
       free( GRID );
     }
-    return ecl_grid;
+    return grid_file;
   }
+}
+
+
+
+ecl_grid_type * ecl_grid_load_case( const char * case_input ) {
+  ecl_grid_type * ecl_grid = NULL;
+  char * grid_file = ecl_grid_alloc_case_filename( case_input );
+  if (grid_file != NULL) {
+    ecl_grid = ecl_grid_alloc( grid_file );
+    free( grid_file );
+  }
+  return ecl_grid;
+}
+
+
+
+bool ecl_grid_exists( const char * case_input ) {
+  bool exists = false;
+  char * grid_file = ecl_grid_alloc_case_filename( case_input );
+  if (grid_file != NULL) {
+    exists = true;
+    free( grid_file );
+  }
+  return exists;
 }
 
 

@@ -100,7 +100,7 @@ ecl_rft_file_type * ecl_rft_file_alloc(const char * filename) {
    
 */
 
-static char * ecl_rft_file_alloc_case_filename(const char * case_input ) {
+char * ecl_rft_file_alloc_case_filename(const char * case_input ) {
   ecl_file_enum    file_type;
   bool             fmt_file;
   file_type = ecl_util_get_file_type( case_input , &fmt_file ,  NULL);
@@ -184,6 +184,10 @@ int ecl_rft_file_get_size( const ecl_rft_file_type * rft_file) {
   return vector_get_size( rft_file->data );
 }
 
+
+const char * ecl_rft_file_get_filename( const ecl_rft_file_type * rft_file ) {
+  return rft_file->filename;
+}
 
 
 /**
