@@ -9,8 +9,11 @@ extern "C" {
 
 typedef struct ecl_rft_file_struct ecl_rft_file_type;
 
- 
-ecl_rft_file_type   *  ecl_rft_file_alloc(const char * );
+
+ecl_rft_file_type    * ecl_rft_file_alloc_case(const char * case_input ); 
+bool                   ecl_rft_file_case_has_rft(const char * case_input ); 
+bool                   ecl_rft_file_case_has_rft( const char * case_input );
+ecl_rft_file_type    * ecl_rft_file_alloc(const char * );
 void                   ecl_rft_file_free(ecl_rft_file_type * );
 void                   ecl_rft_file_block(const ecl_rft_file_type *  , double , const char * , int , const double * , int * , int * , int *);
 void                   ecl_rft_file_fprintf_rft_obs(const ecl_rft_file_type  * , double , const char * , const char *, const char * , double);

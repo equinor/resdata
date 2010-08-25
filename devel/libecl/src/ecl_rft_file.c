@@ -92,6 +92,76 @@ ecl_rft_file_type * ecl_rft_file_alloc(const char * filename) {
 }
 
 
+/**
+   Will look for .RFT / .FRFT files very similar to the
+   ecl_grid_load_case(). Will return NULL if no RFT file can be found,
+   and the name of RFT file if it is found. New storage is allocated
+   for the new name.
+   
+*/
+
+static char * ecl_rft_file_alloc_case_filename(const char * case_input ) {
+  ecl_file_enum    file_type;
+  bool             fmt_file;
+  file_type = ecl_util_get_file_type( case_input , &fmt_file ,  NULL);
+  if (file_type == ECL_RFT_FILE)
+    return util_alloc_string_copy (case_input );
+  else {
+    char * return_file = NULL;
+    char * path;
+    char * basename;
+    util_alloc_file_components( case_input , &path , &basename , NULL);
+    if ((file_type == ECL_OTHER_FILE) || (file_type == ECL_DATA_FILE)) {      /* Impossible to infer formatted/unformatted from the case_input */
+      char * RFT_file  = ecl_util_alloc_filename( path , basename , ECL_RFT_FILE , false , -1 );
+      char * FRFT_file = ecl_util_alloc_filename( path , basename , ECL_RFT_FILE , true  , -1 );
+      
+      if (util_file_exists( RFT_file ))
+        return_file = util_alloc_string_copy( RFT_file );
+      else if (util_file_exists( FRFT_file ))
+        return_file = util_alloc_string_copy( FRFT_file );
+      
+      free( RFT_file );
+      free( FRFT_file );
+    } else {
+      char * RFT_file  = ecl_util_alloc_filename( path , basename , ECL_RFT_FILE , fmt_file , -1 );
+      
+      if (util_file_exists( RFT_file ))
+        return_file = util_alloc_string_copy( RFT_file );
+      
+      free( RFT_file );
+    }
+    return return_file;
+  }
+}
+
+
+
+ecl_rft_file_type * ecl_rft_file_alloc_case( const char * case_input ) {
+  ecl_rft_file_type * ecl_rft_file = NULL;
+  char * file_name = ecl_rft_file_alloc_case_filename( case_input );
+
+  if (file_name != NULL) {
+    ecl_rft_file = ecl_rft_file_alloc( file_name );
+    free( file_name );
+  }
+  return ecl_rft_file;
+}
+
+
+
+bool ecl_rft_file_case_has_rft( const char * case_input ) {
+  bool has_rft = false;
+  char * file_name = ecl_rft_file_alloc_case_filename( case_input );
+
+  if (file_name != NULL) {
+    has_rft = true;
+    free( file_name );
+  }
+
+  return has_rft;
+}
+
+
 
 void ecl_rft_file_free(ecl_rft_file_type * rft_vector) {
   vector_free(rft_vector->data);
