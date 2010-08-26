@@ -864,10 +864,11 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
       }
     }
   }
+  ecl_smspec->header_file = util_alloc_realpath( header_file );
   ecl_smspec_load_restart( ecl_smspec , header );
   ecl_file_free( header );
+
   util_safe_free( ecl_smspec->header_file );
-  ecl_smspec->header_file = util_alloc_realpath( header_file );
 }
 
 
