@@ -24,6 +24,7 @@ void                   ecl_rft_file_xml_summary( const ecl_rft_file_type * rft_f
 
 const ecl_rft_node_type * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time);
 
+int                       ecl_rft_file_get_size__( const ecl_rft_file_type * rft_file, const char * well_pattern , time_t recording_time);
 int                       ecl_rft_file_get_size( const ecl_rft_file_type * rft_file);
 const ecl_rft_node_type * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_file , int index);
 const ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_file , const char * well, int index);

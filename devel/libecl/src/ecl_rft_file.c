@@ -10,6 +10,7 @@
 #include <ecl_file.h>
 #include <int_vector.h>
 #include <ecl_endian_flip.h>
+#include <fnmatch.h>
 
 /**
    This data structure is for loading one eclipse RFT file. One RFT
@@ -175,14 +176,65 @@ void ecl_rft_file_free__(void * arg) {
   ecl_rft_file_free( ecl_rft_file_safe_cast( arg ));
 }
 
+
+/** 
+    Will return the number of RFT nodes in the file. If @well != NULL
+    only wells matching @well be included. The @well variable can
+    contain '*', so the function call
+
+          ecl_rft_file_get_size__( rft_file , "OP*" , -1)
+
+    will count the number of rft instances with a well name matching
+    well "OP*".  
+
+    If recording_time >= only rft_nodes with recording time ==
+    @recording_time are included.
+*/
+
+
+static bool match( const char * pattern , const char * string) {
+  int fnm = fnmatch( pattern , string , 0);
+  if (fnm == 0)
+    return true;
+  else
+    return false;
+}
+
+int ecl_rft_file_get_size__( const ecl_rft_file_type * rft_file, const char * well_pattern , time_t recording_time) {
+  if ((well_pattern == NULL) && (recording_time < 0))
+    return vector_get_size( rft_file->data );
+  else {
+    int match_count = 0;
+    for (int i=0; i < vector_get_size( rft_file->data ); i++) {
+      const ecl_rft_node_type * rft = vector_iget_const( rft_file->data , i);
+
+      if (well_pattern != NULL) {
+        if (!match( well_pattern , ecl_rft_node_get_well_name( rft )))
+          continue;
+      }
+
+      /*OK - we either do not care about the well, or alternatively the well matches. */
+      if (recording_time >= 0) {
+        if (recording_time != ecl_rft_node_get_date( rft ))
+          continue;
+      }
+      match_count++;
+    }
+    return match_count;
+  }
+}
+
+
 /**
    Returns the total number of rft nodes in the file, not caring if
    the same well occurse many times and so on.
 */
 
 int ecl_rft_file_get_size( const ecl_rft_file_type * rft_file) {
-  return vector_get_size( rft_file->data );
+  return ecl_rft_file_get_size__( rft_file , NULL , -1 );
 }
+
+
 
 
 const char * ecl_rft_file_get_filename( const ecl_rft_file_type * rft_file ) {

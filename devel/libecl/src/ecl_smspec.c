@@ -696,9 +696,13 @@ bool ecl_smspec_needs_num( ecl_smspec_var_type var_type ) {
 /**
    This will iterate backwards through the RESTART header in the
    SMSPEC files to find names of the case(s) this case has been
-   restarted from. The case names are internalized in the restart_list
-   field of the ecl_smspec instance.
+   restarted from. 
+
+   The case names are internalized in the restart_list field of the
+   ecl_smspec instance. The actual loading of the restart summary data
+   is subsequently handled by the ecl_sum_data function.
 */
+
 static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_file_type * header ) {
   if (ecl_file_has_kw( header , "RESTART" )) {
     const ecl_kw_type * restart_kw = ecl_file_iget_kw( header , 0 );
@@ -712,22 +716,24 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
     restart_base = util_alloc_strip_copy( tmp_base );
     if (strlen(restart_base)) {  /* We ignore the empty ones. */
       char * smspec_header = ecl_util_alloc_exfilename( ecl_smspec->simulation_path , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
-      /* 
+
+      if (!util_same_file(smspec_header , ecl_smspec->header_file)) {   /* Restart from the current case is ignored. */
+        /* 
          Verify that this smspec_header is not already in the list of restart
          cases. Don't know if this is at all possible, but this test
          nevertheless prevents against a recursive death.
-      */
-      
-      if (!stringlist_contains( ecl_smspec->restart_list , restart_base)) {
-        stringlist_insert_copy( ecl_smspec->restart_list , 0 , restart_base );
-        
-        {
-          if (smspec_header == NULL) 
-            fprintf(stderr,"Warning - the file: %s refers to restart from case: >%s< - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
-          else {
-            ecl_file_type * restart_header = ecl_file_fread_alloc( smspec_header );
-            ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */ 
-            ecl_file_free( restart_header );
+        */
+        if (!stringlist_contains( ecl_smspec->restart_list , restart_base)) {
+          stringlist_insert_copy( ecl_smspec->restart_list , 0 , restart_base );
+          
+          {
+            if (smspec_header == NULL) 
+              fprintf(stderr,"Warning - the file: %s refers to restart from case: %s - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
+            else {
+              ecl_file_type * restart_header = ecl_file_fread_alloc( smspec_header );
+              ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */ 
+              ecl_file_free( restart_header );
+            }
           }
         }
       }
