@@ -62,7 +62,7 @@ static void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , const stringlist
 static ecl_sum_type * ecl_sum_fread_alloc__(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
   ecl_sum_type *ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
   UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
-  ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , key_join_string); 
+  ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , key_join_string , include_restart); 
   ecl_sum->data   = NULL;
   ecl_sum_fread_realloc_data(ecl_sum , data_files , include_restart);
   return ecl_sum;

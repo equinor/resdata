@@ -746,7 +746,7 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 
 
 
-static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file) {
+static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file , bool include_restart) {
   ecl_file_type * header = ecl_file_fread_alloc( header_file );
   {
     int *date;
@@ -865,15 +865,15 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     }
   }
   ecl_smspec->header_file = util_alloc_realpath( header_file );
-  ecl_smspec_load_restart( ecl_smspec , header );
+  if (include_restart)
+    ecl_smspec_load_restart( ecl_smspec , header );
   ecl_file_free( header );
-
   util_safe_free( ecl_smspec->header_file );
 }
 
 
 
-ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * key_join_string) {
+ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * key_join_string , bool include_restart) {
   ecl_smspec_type *ecl_smspec;
   
   {
@@ -884,7 +884,7 @@ ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * k
     util_safe_free(path);
   }
   
-  ecl_smspec_fread_header(ecl_smspec , header_file);
+  ecl_smspec_fread_header(ecl_smspec , header_file , include_restart);
   
   if (hash_has_key(ecl_smspec->misc_var_index , "TIME")) {
     if (hash_has_key( ecl_smspec->misc_var_index , "TIME"))
