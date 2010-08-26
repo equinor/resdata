@@ -46,6 +46,8 @@ typedef struct {
   bool                   rate_variable;      /* Is this a rate variable (i.e. WOPR) or a state variable (i.e. BPR). Relevant when doing time interpolation. */
   bool                   total_variable;     /* Is this a total variable like WOPT? */
   int                    index;              /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
+  char                 * lgr_name;           /* The lgr name of the current variable - will be NULL for non-lgr variables. */
+  int                  * lgr_ijk;            /* The (i,j,k) coordinate, in the local grid, if this is a LGR variable. WIll be NULL for no-lgr variables. */
 } smspec_index_type;
 
 
@@ -83,7 +85,8 @@ struct ecl_smspec_struct {
   int                 day_index;                     /* are used by the ecl_sum_data object to locate per. timestep */  
   int                 month_index;                   /* time information. */ 
   int                 year_index;
-
+  bool                has_lgr;
+  
   stringlist_type   * restart_list;                  /* List of ECLBASE names of restart files this case has been restarted from (if any). */ 
 };
 
@@ -171,6 +174,8 @@ static smspec_index_type * smspec_index_alloc_empty(ecl_smspec_var_type var_type
   index->unit        = util_alloc_string_copy( unit );
   index->keyword     = util_alloc_string_copy( keyword );
   index->index       = param_index;
+  index->lgr_name    = NULL;
+  index->lgr_ijk     = NULL;
   return index;
 }
 
@@ -183,6 +188,21 @@ static void smspec_index_set_wgname( smspec_index_type * index , const char * wg
 }
 
 
+static void smspec_index_set_lgr_name( smspec_index_type * index , const char * lgr_name ) {
+  index->lgr_name = util_realloc_string_copy(index->lgr_name , lgr_name);
+}
+
+
+static void smspec_index_set_lgr_ijk( smspec_index_type * index , int lgr_i , int lgr_j , int lgr_k) {
+  if (index->lgr_ijk == NULL)
+    index->lgr_ijk = util_malloc( 3 * sizeof * index->lgr_ijk , __func__);
+  
+  index->lgr_ijk[0] = lgr_i;
+  index->lgr_ijk[1] = lgr_j;
+  index->lgr_ijk[2] = lgr_k;
+}
+
+
 static void smspec_index_set_num( smspec_index_type * index , int num) {
   if (num == NUMS_INVALID)
     util_abort("%s: explicitly trying to set nums == NUMS_INVALID - seems like a bug?!\n",__func__);
@@ -191,6 +211,54 @@ static void smspec_index_set_num( smspec_index_type * index , int num) {
 }
 
 
+static void smspec_index_set_flags( smspec_index_type * smspec_index) {
+  /* 
+     Check if this is a rate variabel - that info is used when
+     interpolating results to true_time between ministeps. 
+  */
+  {
+    const char *rate_vars[5] = {"OPR" , "GPR" , "WPR" , "GOR" , "WCT"};
+    bool  is_rate            = false;
+    int ivar;
+    for (ivar = 0; ivar < 5; ivar++) {
+      if (util_string_equal( rate_vars[ivar] , &smspec_index->keyword[1])) {
+        is_rate = true;
+        break;
+      }
+    }
+    smspec_index->rate_variable = is_rate;
+  }
+  
+  /*
+    This code checks in a predefined list whether a certain WGNAMES
+    variable represents a total accumulated quantity. Only the last
+    three characters in the variable is considered (i.e. the leading
+    'W', 'G' or 'F' is discarded).
+    
+    The list below is all the keyowrds with 'Total' in the
+    information from the tables 2.7 - 2.11 in the ECLIPSE
+    documentation.  Have skipped some of the most exotic keywords
+    (AND ALL THE HISTORICAL).
+  */
+  {
+    bool is_total = false;
+    if (smspec_index->var_type == ECL_SMSPEC_WELL_VAR || smspec_index->var_type == ECL_SMSPEC_GROUP_VAR || smspec_index->var_type == ECL_SMSPEC_FIELD_VAR) {
+      const char *total_vars[29] = {"OPT"  , "GPT"  , "WPT" , "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" , "WIT" ,
+                                    "WVPT" , "WVIT" , "GMT"  , "GPTF" , "GIT"  , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" , 
+                                    "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" };
+      int ivar;
+      bool is_total = false;
+      for (ivar = 0; ivar < 29; ivar++) {
+        if (util_string_equal( total_vars[ivar] , &smspec_index->keyword[1])) {
+          is_total = true;
+          break;
+        }
+      }
+    }
+    smspec_index->total_variable = is_total;
+  }
+}
+  
 /**
    This function will allocate a smspec_index instance, and initialize
    all the elements. Observe that the function can return NULL, in the
@@ -206,7 +274,11 @@ static void smspec_index_set_num( smspec_index_type * index , int num) {
 */
 
 
-static smspec_index_type * smspec_index_alloc( ecl_smspec_var_type var_type , const char * wgname , const char * keyword , const char * unit , int num , int index) {
+static smspec_index_type * smspec_index_alloc( ecl_smspec_var_type var_type , 
+                                               const char * wgname  , 
+                                               const char * keyword , 
+                                               const char * unit    , 
+                                               int num , int index) {
   smspec_index_type * smspec_index = NULL;
   
   switch (var_type) {
@@ -255,56 +327,46 @@ static smspec_index_type * smspec_index_alloc( ecl_smspec_var_type var_type , co
     break;
   }
   
+  
+  if (smspec_index != NULL) 
+    smspec_index_set_flags( smspec_index );
+  return smspec_index;
+}
 
-  if (smspec_index != NULL) {
-    /* 
-       Check if this is a rate variabel - that info is used when
-       interpolating results to true_time between ministeps. 
-    */
-    {
-      const char *rate_vars[5] = {"OPR" , "GPR" , "WPR" , "GOR" , "WCT"};
-      bool  is_rate            = false;
-      int ivar;
-      for (ivar = 0; ivar < 5; ivar++) {
-        if (util_string_equal( rate_vars[ivar] , &keyword[1])) {
-          is_rate = true;
-          break;
-        }
-      }
-      smspec_index->rate_variable = is_rate;
-    }
 
-    
-    
-    /*
-      This code checks in a predefined list whether a certain WGNAMES
-      variable represents a total accumulated quantity. Only the last
-      three characters in the variable is considered (i.e. the leading
-      'W', 'G' or 'F' is discarded).
-      
-      The list below is all the keyowrds with 'Total' in the
-      information from the tables 2.7 - 2.11 in the ECLIPSE
-      documentation.  Have skipped some of the most exotic keywords
-      (AND ALL THE HISTORICAL).
-    */
-    {
-      bool is_total = false;
-      if (var_type == ECL_SMSPEC_WELL_VAR || var_type == ECL_SMSPEC_GROUP_VAR || var_type == ECL_SMSPEC_FIELD_VAR) {
-        const char *total_vars[29] = {"OPT"  , "GPT"  , "WPT" , "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" , "WIT" ,
-                                      "WVPT" , "WVIT" , "GMT"  , "GPTF" , "GIT"  , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" , 
-                                      "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" };
-        int ivar;
-        bool is_total = false;
-        for (ivar = 0; ivar < 29; ivar++) {
-          if (util_string_equal( total_vars[ivar] , &keyword[1])) {
-            is_total = true;
-            break;
-          }
-        }
-      }
-      smspec_index->total_variable = is_total;
+static smspec_index_type * smspec_index_alloc_lgr( ecl_smspec_var_type var_type , 
+                                                   const char * wgname  , 
+                                                   const char * keyword , 
+                                                   const char * unit    , 
+                                                   const char * lgr , 
+                                                   int   lgr_i, int lgr_j , int lgr_k,
+                                                   int index) {
+  smspec_index_type * smspec_index = NULL;
+  switch (var_type) {
+  case(ECL_SMSPEC_LOCAL_WELL_VAR):
+    if (!DUMMY_WELL(wgname)) {
+      smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
+      smspec_index_set_wgname( smspec_index , wgname );
+      smspec_index_set_lgr_name( smspec_index , lgr );
     }
+    break;
+  case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
+    smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
+    smspec_index_set_lgr_name( smspec_index , lgr );
+    smspec_index_set_lgr_ijk( smspec_index , lgr_i, lgr_j , lgr_k );
+    break;
+  case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
+    if (!DUMMY_WELL(wgname)) {
+      smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
+      smspec_index_set_lgr_name( smspec_index , lgr );
+      smspec_index_set_wgname( smspec_index , wgname );
+      smspec_index_set_lgr_ijk( smspec_index , lgr_i, lgr_j , lgr_k );
+    }
+    break;
+  default:
+    util_abort("%s: internal error:  in LGR function with  non-LGR keyword:%s \n",__func__ , keyword);
   }
+  smspec_index_set_flags( smspec_index );
   return smspec_index;
 }
 
@@ -314,6 +376,8 @@ static void smspec_index_free( smspec_index_type * index ) {
     free( index->unit );
     free( index->keyword );
     util_safe_free( index->wgname );
+    util_safe_free( index->lgr_name );
+    util_safe_free( index->lgr_ijk );
     free( index );
   }
 }
@@ -456,6 +520,16 @@ ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec 
   }
 }
 
+
+static bool ecl_smspec_lgr_var_type( ecl_smspec_var_type var_type) {
+  if ((var_type == ECL_SMSPEC_LOCAL_BLOCK_VAR) ||
+      (var_type == ECL_SMSPEC_LOCAL_WELL_VAR) ||
+      (var_type == ECL_SMSPEC_LOCAL_COMPLETION_VAR))
+    
+    return true;
+  else
+    return false;
+}
 
 
 /**
@@ -618,6 +692,37 @@ static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_
       }
     }
     break;
+  case(ECL_SMSPEC_LOCAL_WELL_VAR):
+    /** KW:LGR:WELL */
+    gen_key = util_alloc_sprintf("%s%s%s%s%s" , smspec_index->keyword , smspec->key_join_string , smspec_index->lgr_name , smspec->key_join_string , smspec_index->wgname);
+    hash_insert_ref(smspec->gen_var_index  , gen_key, smspec_index );
+    break;
+  case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
+    /* KW:LGR:i,j,k */
+    gen_key = util_alloc_sprintf("%s%s%s%s%d,%d,%d" , 
+                                 smspec_index->keyword , 
+                                 smspec->key_join_string , 
+                                 smspec_index->lgr_name , 
+                                 smspec->key_join_string , 
+                                 smspec_index->lgr_ijk[0] , 
+                                 smspec_index->lgr_ijk[1] , 
+                                 smspec_index->lgr_ijk[2] );
+    hash_insert_ref(smspec->gen_var_index  , gen_key, smspec_index );
+    break;
+  case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
+    /* KW:LGR:WELL:i,j,k */
+    gen_key = util_alloc_sprintf("%s%s%s%s%s%s%d,%d,%d" , 
+                                 smspec_index->keyword  , 
+                                 smspec->key_join_string , 
+                                 smspec_index->lgr_name , 
+                                 smspec->key_join_string ,
+                                 smspec_index->wgname , 
+                                 smspec->key_join_string ,
+                                 smspec_index->lgr_ijk[0] , 
+                                 smspec_index->lgr_ijk[1] , 
+                                 smspec_index->lgr_ijk[2]);
+    hash_insert_ref(smspec->gen_var_index  , gen_key, smspec_index );
+    break;
   default:
     util_abort("%s: internal error - should not be here? \n");
   }
@@ -625,6 +730,11 @@ static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_
 }
 
 
+
+
+/**
+   The usage of this functon breaks down completely if LGR's are involved.
+*/
 
 bool ecl_smspec_needs_wgname( ecl_smspec_var_type var_type ) {
   switch( var_type ) {
@@ -648,6 +758,7 @@ bool ecl_smspec_needs_wgname( ecl_smspec_var_type var_type ) {
     break;
   case(ECL_SMSPEC_BLOCK_VAR):
     return false;
+    break;
   case(ECL_SMSPEC_AQUIFER_VAR):
     return false;
     break;
@@ -659,7 +770,9 @@ bool ecl_smspec_needs_wgname( ecl_smspec_var_type var_type ) {
 }
 
 
-
+/**
+   The usage of this functon breaks down completely if LGR's are involved.
+*/
 bool ecl_smspec_needs_num( ecl_smspec_var_type var_type ) {
   switch( var_type ) {
   case(ECL_SMSPEC_COMPLETION_VAR):
@@ -756,6 +869,10 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_kw_type *units     = ecl_file_iget_named_kw(header, "UNITS"    , 0 );
     ecl_kw_type *dimens    = ecl_file_iget_named_kw(header, "DIMENS"   , 0);
     ecl_kw_type *nums      = NULL;
+    ecl_kw_type *lgrs      = NULL;
+    ecl_kw_type *numlx     = NULL;
+    ecl_kw_type *numly     = NULL;
+    ecl_kw_type *numlz     = NULL;
     int index;
     ecl_smspec->num_regions     = 0;
     if (startdat == NULL) 
@@ -764,6 +881,15 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     if (ecl_file_has_kw(header , "NUMS"))
       nums = ecl_file_iget_named_kw(header , "NUMS" , 0);
     
+    if (ecl_file_has_kw( header , "LGRS" )) {/* The file has LGR information. */
+      lgrs  = ecl_file_iget_named_kw( header , "LGRS"  , 0 );
+      numlx = ecl_file_iget_named_kw( header , "NUMLX" , 0 ); 
+      numly = ecl_file_iget_named_kw( header , "NUMLY" , 0 ); 
+      numlz = ecl_file_iget_named_kw( header , "NUMLZ" , 0 ); 
+      ecl_smspec->has_lgr = true;
+    } else
+      ecl_smspec->has_lgr = false;
+
     date = ecl_kw_get_int_ptr(startdat);
     ecl_smspec->sim_start_time = util_make_date(date[0] , date[1] , date[2]);
     ecl_smspec->grid_nx           = ecl_kw_iget_int(dimens , 1);
@@ -779,15 +905,30 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 	char * well                  = util_alloc_strip_copy(ecl_kw_iget_ptr(wells    , index));
 	char * kw                    = util_alloc_strip_copy(ecl_kw_iget_ptr(keywords , index));
         char * unit                  = util_alloc_strip_copy(ecl_kw_iget_ptr(units    , index));
-        ecl_smspec_var_type var_type = ecl_smspec_identify_var_type(ecl_smspec , kw);
+        char * lgr_name              = NULL;  
+
         smspec_index_type * smspec_index;
-	if (nums != NULL) num = ecl_kw_iget_int(nums , index);
-        
-        smspec_index = smspec_index_alloc( var_type , well , kw , unit , num , index );
+
+        ecl_smspec_var_type var_type = ecl_smspec_identify_var_type(ecl_smspec , kw);
+	if (nums != NULL) num        = ecl_kw_iget_int(nums , index);
+        if (ecl_smspec_lgr_var_type( var_type )) {
+          lgr_name  = util_alloc_strip_copy(  ecl_kw_iget_ptr( lgrs , index ));
+          int lgr_i = ecl_kw_iget_int( numlx , index );
+          int lgr_j = ecl_kw_iget_int( numly , index );
+          int lgr_k = ecl_kw_iget_int( numlz , index );
+          smspec_index = smspec_index_alloc_lgr( var_type , well , kw , unit , lgr_name , lgr_i , lgr_j , lgr_k , index);
+        } else 
+          smspec_index = smspec_index_alloc( var_type , well , kw , unit , num , index );
+
         ecl_smspec->smspec_index_list[ index ] = smspec_index;
         if (smspec_index != NULL) {
           /** OK - we know this is valid shit. */
           
+          /* The gen_key is installed in the ecl_smspec_install_gen_key()
+             function. That is the most important, in addition wells, groups and
+             so on can be access with well specific functions and lookup, that
+             is handled in the large switch below.
+          */
           ecl_smspec_install_gen_key( ecl_smspec , smspec_index );
           
           switch(var_type) {
@@ -853,6 +994,17 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
               free(block_nr);
             }
             break;
+
+            /** The LGR variables are ONLY acceable via the gen_key setup; but
+                the must be mentioned in this switch statement, otherwise they
+                will induce a hard failure in the default: target below.
+            */
+          case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
+            break;
+          case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
+            break;
+          case(ECL_SMSPEC_LOCAL_WELL_VAR):
+            break;
           default:
             util_abort("%: Internal error - should never be here ?? \n",__func__);
             break;
@@ -861,6 +1013,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         free( kw );
         free( well );
         free( unit );
+        util_safe_free( lgr_name );
       }
     }
   }
@@ -868,7 +1021,6 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
   if (include_restart)
     ecl_smspec_load_restart( ecl_smspec , header );
   ecl_file_free( header );
-  util_safe_free( ecl_smspec->header_file );
 }
 
 
