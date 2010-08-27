@@ -439,7 +439,7 @@ static void __fscanf_and_set( matrix_type * matrix , int row , int col , FILE * 
   if (fscanf(stream , "%lg" , &value) == 1)
     matrix_iset( matrix , row , col , value );
   else 
-    util_abort("%s: reading of matyrix failed \n",__func__);
+    util_abort("%s: reading of matrix failed at row:%d  col:%d \n",__func__ , row , col);
 }
 
 

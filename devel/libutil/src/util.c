@@ -4311,19 +4311,18 @@ char * util_alloc_PATH_executable(const char * executable) {
 
 
 uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
-  const char * lsf_executable = "/usr/sbin/lsof";
+  const char * lsof_executable = "/usr/sbin/lsof";
   int     buffer_size = 8;
   int     num_users   = 0;
   uid_t * users       = util_malloc( sizeof * users * buffer_size , __func__);
   char * tmp_file     = util_alloc_tmp_file("/tmp" , "lsof" , false);
-  util_fork_exec(lsf_executable , 2 , (const char *[2]) {"-F" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
+  util_fork_exec(lsof_executable , 2 , (const char *[2]) {"-F" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
   {
     FILE * stream = util_fopen(tmp_file , "r");
     while ( true ) {
       int pid , uid;
       char dummy_char;
       if (fscanf( stream , "%c%d %c%d" , &dummy_char , &pid , &dummy_char , &uid) == 4) {
-        //int i;
         if (buffer_size == num_users) {
           buffer_size *= 2;
           users        = util_realloc( users , sizeof * users * buffer_size , __func__);
@@ -4361,16 +4360,16 @@ uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
   
 char * util_alloc_filename_from_stream( FILE * input_stream ) {
   char * filename = NULL;
-  const char * lsf_executable = "/usr/sbin/lsof";
+  const char * lsof_executable = "/usr/sbin/lsof";
   int   fd     = fileno( input_stream );
     
-  if (util_file_exists( lsf_executable ) && util_is_executable( lsf_executable ) && (fd != -1)) {
+  if (util_file_exists( lsof_executable ) && util_is_executable( lsof_executable ) && (fd != -1)) {
     char  * fd_string = util_alloc_sprintf("f%d" , fd);
     char    line_fd[32];
     char    line_file[4096];
     char * pid_string = util_alloc_sprintf("%d" , getpid());
     char * tmp_file   = util_alloc_tmp_file("/tmp" , "lsof" , false);
-    util_fork_exec(lsf_executable , 3 , (const char *[3]) {"-p" , pid_string , "-Ffn"}, true , NULL , NULL , NULL , tmp_file , NULL);
+    util_fork_exec(lsof_executable , 3 , (const char *[3]) {"-p" , pid_string , "-Ffn"}, true , NULL , NULL , NULL , tmp_file , NULL);
     {
       FILE * stream = util_fopen(tmp_file , "r");
       fscanf( stream , "%s" , line_fd);  /* Skipping the first pxxxx marker */

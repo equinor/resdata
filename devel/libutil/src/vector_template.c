@@ -404,14 +404,18 @@ void <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> factor) {
 */
 
 void <TYPE>_vector_iset(<TYPE>_vector_type * vector , int index , <TYPE> value) {
-  if (vector->alloc_size <= index)
-    <TYPE>_vector_realloc_data__(vector , 2 * (index + 1));  /* Must have ( + 1) here to ensure we are not doing 2*0 */
-  vector->data[index] = value;
-  if (index >= vector->size) {
-    int i;
-    for (i=vector->size; i < index; i++)
-      vector->data[i] = vector->default_value;
-    vector->size = index + 1;
+  if (index < 0) 
+    util_abort("%s: Sorry - can NOT set negative indices. called with index:%d \n",__func__ , index);
+  {
+    if (vector->alloc_size <= index)
+      <TYPE>_vector_realloc_data__(vector , 2 * (index + 1));  /* Must have ( + 1) here to ensure we are not doing 2*0 */
+    vector->data[index] = value;
+    if (index >= vector->size) {
+      int i;
+      for (i=vector->size; i < index; i++)
+        vector->data[i] = vector->default_value;
+      vector->size = index + 1;
+    }
   }
 }
 

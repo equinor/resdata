@@ -309,7 +309,8 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
   fprintf(stream , "\n");
   
   
-  /*3: Writing third header line with WGNAMES / NUMS - extra information. */
+  /*3: Writing third header line with WGNAMES / NUMS - extra information - 
+       breaks completely down with LGR information. */
   fprintf(stream , time_blank );
   {
     for (column_nr = 0; column_nr < data_columns; column_nr++) {
