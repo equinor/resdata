@@ -8,7 +8,7 @@ extern "C" {
 
 typedef enum { RFT     = 1 , 
 	       PLT     = 2 , 
-	       SEGMENT = 3} ecl_rft_enum;
+	       SEGMENT = 3 /* Not really implemented */ } ecl_rft_enum;
 
 typedef struct ecl_rft_node_struct ecl_rft_node_type;
 
@@ -28,6 +28,11 @@ void                ecl_rft_node_iget_ijk( const ecl_rft_node_type * rft_node , 
 void ecl_rft_node_export_DEPTH(const ecl_rft_node_type * , const char * );
 double ecl_rft_node_iget_pressure( const ecl_rft_node_type * rft_node , int index);
 double ecl_rft_node_iget_depth( const ecl_rft_node_type * rft_node , int index);
+double ecl_rft_node_iget_wrat( const ecl_rft_node_type * rft_node , int index);
+double ecl_rft_node_iget_grat( const ecl_rft_node_type * rft_node , int index);
+double ecl_rft_node_iget_orat( const ecl_rft_node_type * rft_node , int index);
+double ecl_rft_node_iget_swat( const ecl_rft_node_type * rft_node , int index);
+double ecl_rft_node_iget_sgas( const ecl_rft_node_type * rft_node , int index);
 
 #ifdef __cplusplus
 }

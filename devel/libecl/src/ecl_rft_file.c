@@ -158,7 +158,7 @@ bool ecl_rft_file_case_has_rft( const char * case_input ) {
     has_rft = true;
     free( file_name );
   }
-
+  
   return has_rft;
 }
 

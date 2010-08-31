@@ -536,7 +536,6 @@ double ecl_rft_node_iget_depth( const ecl_rft_node_type * rft_node , int index) 
 
 
 
-
 double ecl_rft_node_iget_pressure( const ecl_rft_node_type * rft_node , int index) {
   const cell_type * cell = ecl_rft_node_iget_cell( rft_node , index );
   return cell->pressure;
@@ -549,3 +548,57 @@ void ecl_rft_node_iget_ijk( const ecl_rft_node_type * rft_node , int index , int
   *j = cell->j;
   *k = cell->k;
 }
+
+
+static void assert_type_and_index( const ecl_rft_node_type * rft_node , ecl_rft_enum target_type , int index) {
+  if (rft_node->data_type != target_type)
+    util_abort("%s: wrong type \n",__func__);
+
+  if ((index < 0) || (index >= rft_node->size))
+    util_abort("%s: invalid index:%d \n",__func__ , index);
+}
+
+double ecl_rft_node_iget_sgas( const ecl_rft_node_type * rft_node , int index) {
+  assert_type_and_index( rft_node , RFT , index );
+  {
+    const rft_data_type rft_data = rft_node->rft_data[ index ];
+    return rft_data.sgas;
+  }
+}
+
+
+double ecl_rft_node_iget_swat( const ecl_rft_node_type * rft_node , int index) {
+  assert_type_and_index( rft_node , RFT , index );
+  {
+    const rft_data_type rft_data = rft_node->rft_data[ index ];
+    return rft_data.swat;
+  }
+}
+
+
+double ecl_rft_node_iget_orat( const ecl_rft_node_type * rft_node , int index) {
+  assert_type_and_index( rft_node , PLT , index );
+  {
+    const plt_data_type  plt_data = rft_node->plt_data[ index ];
+    return plt_data.orat;
+  }
+}
+
+
+double ecl_rft_node_iget_wrat( const ecl_rft_node_type * rft_node , int index) {
+  assert_type_and_index( rft_node , PLT , index );
+  {
+    const plt_data_type  plt_data = rft_node->plt_data[ index ];
+    return plt_data.wrat;
+  }
+}
+
+
+double ecl_rft_node_iget_grat( const ecl_rft_node_type * rft_node , int index) {
+  assert_type_and_index( rft_node , PLT , index );
+  {
+    const plt_data_type  plt_data = rft_node->plt_data[ index ];
+    return plt_data.grat;
+  }
+}
+

@@ -31,23 +31,14 @@
 
 
 
-int test( const char ** s) {
-  int i    = 0;
-  char * p = s[i];
-
-  while (p != NULL) {
-    printf("Looking at %s \n",p);
-    i++;
-    p = s[i];
-  }
-}
-
 int main(int argc , char ** argv) {
-  char ** token_list;
-  int     len;
-
-  test( (const char *[]) {"Hei","Joakim","GHove",NULL} );
+  char host_name[256];
+  char domain_name[256];
+  gethostname( host_name , 255 );
+  getdomainname( domain_name , 255 );
   
+  printf("Currently on: %s - %s\n",host_name , domain_name);
+  printf("%d \n",getdomainname( domain_name , 255));
 }
 
 
