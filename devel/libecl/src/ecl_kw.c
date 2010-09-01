@@ -518,6 +518,12 @@ bool ecl_kw_iget_bool( const ecl_kw_type * ecl_kw , int i) {
   }
 }
 
+const char * ecl_kw_iget_char_ptr( const ecl_kw_type * ecl_kw , int i) {
+  if (ecl_kw_get_type(ecl_kw) != ECL_CHAR_TYPE)                  					            
+    util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        
+  return ecl_kw_iget_ptr( ecl_kw , i );
+}
+
   
 
 #define ECL_KW_ISET_TYPED(ctype , ECL_TYPE)                                				    \

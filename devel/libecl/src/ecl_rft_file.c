@@ -200,6 +200,7 @@ static bool match( const char * pattern , const char * string) {
     return false;
 }
 
+
 int ecl_rft_file_get_size__( const ecl_rft_file_type * rft_file, const char * well_pattern , time_t recording_time) {
   if ((well_pattern == NULL) && (recording_time < 0))
     return vector_get_size( rft_file->data );

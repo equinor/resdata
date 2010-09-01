@@ -1875,6 +1875,7 @@ void ecl_grid_get_xyz1A(const ecl_grid_type * grid , int active_index , double *
 }
 
 
+
 double ecl_grid_get_cdepth1(const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = grid->cells[global_index];
   return cell->center->z;
