@@ -472,6 +472,10 @@ char * util_alloc_cwd(void) {
 
 
 
+char * util_alloc_abspath( const char * path ) {
+  
+}
+
 
 /**
    This function will allocate a string copy of the env_index'th

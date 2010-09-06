@@ -32,13 +32,10 @@
 
 
 int main(int argc , char ** argv) {
-  char host_name[256];
-  char domain_name[256];
-  gethostname( host_name , 255 );
-  getdomainname( domain_name , 255 );
-  
-  printf("Currently on: %s - %s\n",host_name , domain_name);
-  printf("%d \n",getdomainname( domain_name , 255));
+  const char * rel_path = "applications/util-test.c";
+  char abs_path[256];
+  realpath( rel_path , abs_path );
+  printf("%s -> %s \n",rel_path , abs_path);
 }
 
 
