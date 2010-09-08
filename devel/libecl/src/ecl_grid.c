@@ -15,6 +15,7 @@
 #include <stringlist.h>
 #include <point.h>
 #include <tetrahedron.h>
+#include <thread_pool.h>
 
 /**
   This function implements functionality to load ECLISPE grid files,
@@ -1500,22 +1501,21 @@ int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , d
   
   {
     int index    = 0;
-    bool cont    = true;
     global_index = -1;
 
-    do {
+    while (true) {
       int current_index = ((index + start_index) % grid->size);
       bool cell_contains;
       cell_contains = ecl_cell_contains_point( grid->cells[current_index] , &p );
       
       if (cell_contains) {
         global_index = current_index;
-        cont = false;
+        break;
       }
       index++;
       if (index == grid->size)
-        cont = false;
-    } while (cont);
+        break;
+    } 
   }
   return global_index;
 }
@@ -2190,7 +2190,7 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
      ecl_grid_get_active_index3(). This is typically the case if the
      ecl_kw instance is a solution vector which has been loaded from a
      restart file. If you ask for an inactive cell the function will
-     return 0.
+     return -1.
 
    * If the ecl_kw instance has neither nx*ny*nz nor nactive elements
      the function will fail HARD.
@@ -2223,7 +2223,7 @@ double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type 
     if (lookup_index >= 0)
       return ecl_kw_iget_as_double( ecl_kw , lookup_index );
     else
-      return 0;   /* Tried to lookup an inactive cell. */
+      return -1;   /* Tried to lookup an inactive cell. */
   } else {
     util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_util_get_type_name( ecl_type ) , __func__);
     return -1;

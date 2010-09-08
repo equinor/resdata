@@ -82,7 +82,7 @@ ecl_rft_file_type * ecl_rft_file_alloc(const char * filename) {
         {
           int_vector_type * index_list = hash_get( rft_vector->well_index , well_name);
           int_vector_append(index_list , global_index);
-        }	  
+        }         
         global_index++;
       }
       ecl_file_free( ecl_file );
