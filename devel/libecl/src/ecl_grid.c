@@ -329,6 +329,7 @@ struct ecl_grid_struct {
   int                   ny,nz,nx;
   int                   size;          /* == nx*ny*nz */
   int                   total_active; 
+  bool                * visited;       /* Internal helper struct used when searching for index - can be NULL. */
   int                 * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
   ecl_cell_type      ** cells;         
@@ -567,68 +568,27 @@ Deeper layer: (larger (negative) z values).
 
 */
 
-//static double min4(double x1 , double x2 , double x3 , double x4) {
-//  return util_double_min( util_double_min(x1 , x2) , util_double_min(x3 , x4 ));
-//}
-//
-//
-//static double max4(double x1 , double x2 , double x3 , double x4) {
-//  return util_double_max( util_double_max(x1 , x2) , util_double_max(x3 , x4 ));
-//}
+static double min4(double x1 , double x2 , double x3 , double x4) {
+  return util_double_min( util_double_min(x1 , x2) , util_double_min(x3 , x4 ));
+}
+
+
+static double max4(double x1 , double x2 , double x3 , double x4) {
+  return util_double_max( util_double_max(x1 , x2) , util_double_max(x3 , x4 ));
+}
   
 
 
 static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_type * p) {
-  /**
-     This must use mapaxes (or max8) to be correct.
-  */
-  
-  //const point_type * p0 = cell->corner_list[0];
-  //const point_type * p1 = cell->corner_list[1];
-  //const point_type * p2 = cell->corner_list[2];
-  //const point_type * p3 = cell->corner_list[3];
-  //const point_type * p4 = cell->corner_list[4];
-  //const point_type * p5 = cell->corner_list[5];
-  //const point_type * p6 = cell->corner_list[6];
-  //const point_type * p7 = cell->corner_list[7];
-  //
-  //if (use_rectangle)
-  //{
-  //  double x1 = min4(p0->x , p2->x , p4->x , p6->x);
-  //  double x2 = max4(p1->x , p3->x , p5->x , p7->x);
-  //  
-  //  double y1 = min4(p0->y , p1->y , p4->y , p5->y);
-  //  double y2 = max4(p2->y , p3->y , p6->y , p7->y);
-  //  
-  //  double z1 = min4(p0->z , p1->z , p2->z , p3->z);
-  //  double z2 = max4(p4->z , p5->z , p6->z , p7->z);
-  //  
-  //  
-  //  /* Is it outside the large enclosing box?? */
-  //  if ((p->x < x1) || (p->x > x2) || 
-  //      (p->y < y1) || (p->y > y2) || 
-  //      (p->z < z1) || (p->z > z2)) {
-  //    return false;
-  //  }
-  //  
-  //
-  //  x1 = max4(p0->x , p2->x , p4->x , p6->x);
-  //  x2 = min4(p1->x , p3->x , p5->x , p7->x);
-  //  
-  //  y1 = max4(p0->y , p1->y , p4->y , p5->y);
-  //  y2 = min4(p2->y , p3->y , p6->y , p7->y);
-  //  
-  //  z1 = max4(p0->z , p1->z , p2->z , p3->z);
-  //  z2 = min4(p4->z , p5->z , p6->z , p7->z);
-  //
-  //  
-  //  /* Is it inside the inscribed rectangle?? */
-  //  if ((p->x > x1) && (p->x < x2) &&  
-  //      (p->y > y1) && (p->y < y2) &&  
-  //      (p->z > z1) && (p->z < z2))
-  //    return true;
-  //}
+  /*
+    1. First check if the point z value is below the deepest point of
+       the cell, or above the shallowest => Return False.
 
+    2. [Should do similar fast checks in x/y direction, but that
+        requires proper mapaxes support. ]
+
+    3. Full geometric verification.
+  */
 
   /* 
      OK -the point is in the volume inside the large rectangle, and
@@ -637,20 +597,29 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
   */
   if (cell->tainted_geometry) 
     return false;
+  
+  if (p->z < min4( cell->corner_list[0]->z , cell->corner_list[1]->z , cell->corner_list[2]->z , cell->corner_list[3]->z))
+    return false;
+  
+  if (p->z > max4( cell->corner_list[4]->z , cell->corner_list[5]->z , cell->corner_list[6]->z , cell->corner_list[7]->z))
+    return false;
+
   {
     const int method   = 0;
     int tetrahedron_nr = 0;
     tetrahedron_type tet;
     
     if (ecl_cell_get_volume( cell ) > 0) {
-      do {
+      while (true) {   /* Does never exit from this loop - only returns from the whole function. */
         ecl_cell_init_tetrahedron( cell , &tet , method , tetrahedron_nr );
-        if (tetrahedron_contains( &tet , p ))
+        if (tetrahedron_contains( &tet , p )) 
           return true;
+        
         tetrahedron_nr++;
-      } while (tetrahedron_nr < 12);
+        if (tetrahedron_nr == 12)
+          return false;
+      } 
     } 
-    return false;
   }
 }
 
@@ -703,6 +672,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_n
   grid->size    = nx*ny*nz;
   grid->grid_nr = grid_nr;
   
+  grid->visited       = NULL;
   grid->inv_index_map = NULL;
   grid->index_map     = NULL;
   grid->cells         = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
@@ -1430,6 +1400,37 @@ int ecl_grid_get_global_index_from_xy_bottom( const ecl_grid_type * ecl_grid , d
 }
 
 
+static void ecl_grid_clear_visited( ecl_grid_type * grid ) {
+  if (grid->visited == NULL)
+    grid->visited = util_malloc( sizeof * grid->visited * grid->size , __func__);
+
+  for (int i=0; i < grid->size; i++)
+    grid->visited[i] = false;
+}
+
+
+/* 
+   Box coordinates are not inclusive, i.e. [i1,i2) 
+*/
+static int ecl_grid_box_contains_xyz( const ecl_grid_type * grid , int i1, int i2 , int j1 , int j2 , int k1 , int k2 , const point_type * p) {
+
+  int i,j,k;
+  int global_index = -1;
+  for (k=k1; k < k2; k++)
+    for (j=j1; j < j2; j++)
+      for (i=i1; i < i2; i++) {
+        global_index = ecl_grid_get_global_index3( grid , i , j , k);
+        if (!grid->visited[ global_index ]) {
+          grid->visited[ global_index ] = true;
+          if (ecl_cell_contains_point( grid->cells[ global_index ] , p )) {
+            return global_index;
+          }
+        }
+      }
+  return -1;  /* Returning -1; did not find xyz. */
+}
+
+
 /**
    This function will find the global index of the cell containing the
    world coordinates (x,y,z), if no cell can be found the function
@@ -1461,7 +1462,8 @@ int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , d
   int global_index;
   point_type p;
   point_set( &p , x , y , z);
-
+  ecl_grid_clear_visited( grid );
+  
   if (start_index >= 0) {
     /* Try start index */
     if (ecl_cell_contains_point( grid->cells[start_index] , &p ))
@@ -1481,18 +1483,28 @@ int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , d
       i2 = util_int_min( nx , i + 1 );
       j2 = util_int_min( ny , j + 1 );
       k2 = util_int_min( nz , k + 1 );
+      
+      global_index = ecl_grid_box_contains_xyz( grid , i1 , i2 , j1 , j2 , k1 , k2 , &p);
+      if (global_index >= 0)
+        return global_index;
 
-      for (k=k1; k < k2; k++)
-        for (j=j1; j < j2; j++)
-          for (i=i1; i < i2; i++) {
-            global_index = ecl_grid_get_global_index3( grid , i , j , k);
-            if (ecl_cell_contains_point( grid->cells[ global_index ] , &p ))
-              return global_index;
-          }
+
+      /* Try a bigger box */
+      i1 = util_int_max( 0 , i - 2 );
+      j1 = util_int_max( 0 , j - 2 );
+      k1 = util_int_max( 0 , k - 2 );
+      
+      i2 = util_int_min( nx , i + 2 );
+      j2 = util_int_min( ny , j + 2 );
+      k2 = util_int_min( nz , k + 2 );
+      
+      global_index = ecl_grid_box_contains_xyz( grid , i1 , i2 , j1 , j2 , k1 , k2 , &p);
+      if (global_index >= 0)
+        return global_index;
+
+
     }
-  }
-
-  
+  } 
   
   /* 
      OK - the attempted shortcuts did not pay off. We start on the
@@ -1659,7 +1671,8 @@ void ecl_grid_free(ecl_grid_type * grid) {
     hash_free( grid->LGR_hash );
   }
   hash_free( grid->children );
-  util_safe_free( grid->parent_name);
+  util_safe_free( grid->parent_name );
+  util_safe_free( grid->visited );
   free( grid->name );
   free( grid );
 }

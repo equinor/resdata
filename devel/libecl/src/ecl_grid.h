@@ -9,6 +9,19 @@ extern "C" {
 #include <ecl_kw.h>
 #include <stringlist.h>
 
+//typedef enum {
+//  NO_HINT          = 0,
+//  NORTH            = 1,
+//  CENTRAL          = 2,
+//  SOUTH            = 4,
+//  
+  
+  
+  
+
+
+
+
 typedef double (block_function_ftype) ( const double_vector_type *); 
 typedef struct ecl_grid_struct ecl_grid_type;
 
@@ -63,20 +76,20 @@ int             ecl_grid_get_global_size( const ecl_grid_type * ecl_grid );
 bool            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2);
 int             ecl_grid_get_active_size( const ecl_grid_type * ecl_grid );
 
-double 		ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index);
-double 		ecl_grid_get_bottom3(const ecl_grid_type * grid , int i, int j , int k);
-double 		ecl_grid_get_bottom1A(const ecl_grid_type * grid , int active_index);
-double 		ecl_grid_get_top1(const ecl_grid_type * grid , int global_index);
-double 		ecl_grid_get_top3(const ecl_grid_type * grid , int i, int j , int k);
-double 		ecl_grid_get_top1A(const ecl_grid_type * grid , int active_index);
+double          ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index);
+double          ecl_grid_get_bottom3(const ecl_grid_type * grid , int i, int j , int k);
+double          ecl_grid_get_bottom1A(const ecl_grid_type * grid , int active_index);
+double          ecl_grid_get_top1(const ecl_grid_type * grid , int global_index);
+double          ecl_grid_get_top3(const ecl_grid_type * grid , int i, int j , int k);
+double          ecl_grid_get_top1A(const ecl_grid_type * grid , int active_index);
 
 
 void            ecl_grid_alloc_blocking_variables(ecl_grid_type * , int );
 void            ecl_grid_init_blocking(ecl_grid_type * );
-double 		ecl_grid_block_eval2d(ecl_grid_type * grid , int i, int j , block_function_ftype * blockf );
-double 		ecl_grid_block_eval3d(ecl_grid_type * grid , int i, int j , int k ,block_function_ftype * blockf );
-int 		ecl_grid_get_block_count3d(const ecl_grid_type * ecl_grid , int i , int j, int k);
-int 		ecl_grid_get_block_count2d(const ecl_grid_type * ecl_grid , int i , int j);
+double          ecl_grid_block_eval2d(ecl_grid_type * grid , int i, int j , block_function_ftype * blockf );
+double          ecl_grid_block_eval3d(ecl_grid_type * grid , int i, int j , int k ,block_function_ftype * blockf );
+int             ecl_grid_get_block_count3d(const ecl_grid_type * ecl_grid , int i , int j, int k);
+int             ecl_grid_get_block_count2d(const ecl_grid_type * ecl_grid , int i , int j);
 bool            ecl_grid_block_value_2d(ecl_grid_type * , double  , double  ,double );
 bool            ecl_grid_block_value_3d(ecl_grid_type * , double  , double  ,double , double);
 

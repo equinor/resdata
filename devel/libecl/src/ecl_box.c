@@ -171,9 +171,9 @@ void ecl_box_set_values(const ecl_box_type * ecl_box , char * main_field , const
   for (k=0; k < ecl_box->box_nz; k++) 
     for(j=0; j < ecl_box->box_ny; j++)
       for (i=0; i < ecl_box->box_nx; i++) {
-	int grid_index = k*ecl_box->grid_sz   + j*ecl_box->grid_sy   + i*ecl_box->grid_sx + ecl_box->box_offset;
-	int box_index  = k*ecl_box->box_sz    + j*ecl_box->box_sy    + i*ecl_box->box_sx;
-	memcpy(&main_field[grid_index * element_size] , &sub_field[box_index * element_size] , element_size);
+        int grid_index = k*ecl_box->grid_sz   + j*ecl_box->grid_sy   + i*ecl_box->grid_sx + ecl_box->box_offset;
+        int box_index  = k*ecl_box->box_sz    + j*ecl_box->box_sy    + i*ecl_box->box_sx;
+        memcpy(&main_field[grid_index * element_size] , &sub_field[box_index * element_size] , element_size);
       }
 }
 
@@ -202,3 +202,7 @@ int ecl_box_get_global_size( const ecl_box_type * ecl_box ) {
 const int * ecl_box_get_global_list( const ecl_box_type * ecl_box ) {
   return ecl_box->global_list;
 }
+
+
+
+
