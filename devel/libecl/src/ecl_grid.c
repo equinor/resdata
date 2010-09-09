@@ -373,6 +373,72 @@ static void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2, bool
   }
 }
 
+/*****************************************************************/
+
+static double max2( double x1 , double x2) {
+  return (x1 > x2) ? x1 : x2;
+}  
+
+
+static double min2( double x1 , double x2) {
+  return  (x1 < x2) ? x1 : x2;
+}  
+
+
+static inline double min4(double x1 , double x2 , double x3 , double x4) {
+  return min2( min2(x1 , x2) , min2(x3 , x4 ));
+}
+
+static inline double max4(double x1 , double x2 , double x3 , double x4) {
+  return max2( max2(x1 , x2) , max2(x3 , x4 ));
+}
+
+static inline double max8( double x1 , double x2 , double x3, double x4 , double x5 , double x6 , double x7 , double x8) {
+  return max2( max4(x1,x2,x3,x4) , max4(x5,x6,x7,x8));
+}
+
+static inline double min8( double x1 , double x2 , double x3, double x4 , double x5 , double x6 , double x7 , double x8) {
+  return min2( min4(x1,x2,x3,x4) , min4(x5,x6,x7,x8));
+}
+
+/*****************************************************************/
+
+static double ecl_cell_min_z( const ecl_cell_type * cell) {
+  return min4( cell->corner_list[0]->z , cell->corner_list[1]->z , cell->corner_list[2]->z , cell->corner_list[3]->z);
+}
+
+static double ecl_cell_max_z( const ecl_cell_type * cell ) {
+  return max4( cell->corner_list[4]->z , cell->corner_list[5]->z , cell->corner_list[6]->z , cell->corner_list[7]->z );
+}
+
+
+/**
+   The grid can be rotated so that it is not safe to consider only one
+   plane for the x/y min/max.
+*/
+
+static double ecl_cell_min_x( const ecl_cell_type * cell) {
+  return min8( cell->corner_list[0]->x , cell->corner_list[1]->x , cell->corner_list[2]->x , cell->corner_list[3]->x,
+               cell->corner_list[4]->x , cell->corner_list[5]->x , cell->corner_list[6]->x , cell->corner_list[7]->x );
+}
+
+
+static double ecl_cell_max_x( const ecl_cell_type * cell ) {
+  return max8( cell->corner_list[0]->x , cell->corner_list[1]->x , cell->corner_list[2]->x , cell->corner_list[3]->x,
+               cell->corner_list[4]->x , cell->corner_list[5]->x , cell->corner_list[6]->x , cell->corner_list[7]->x );
+}
+
+static double ecl_cell_min_y( const ecl_cell_type * cell) {
+  return min8( cell->corner_list[0]->y , cell->corner_list[1]->y , cell->corner_list[2]->y , cell->corner_list[3]->y,
+               cell->corner_list[4]->y , cell->corner_list[5]->y , cell->corner_list[6]->y , cell->corner_list[7]->y );
+}
+
+
+static double ecl_cell_max_y( const ecl_cell_type * cell ) {
+  return max8( cell->corner_list[0]->y , cell->corner_list[1]->y , cell->corner_list[2]->y , cell->corner_list[3]->y,
+               cell->corner_list[4]->y , cell->corner_list[5]->y , cell->corner_list[6]->y , cell->corner_list[7]->y );
+}
+
 
 
 /**
@@ -568,14 +634,6 @@ Deeper layer: (larger (negative) z values).
 
 */
 
-static double min4(double x1 , double x2 , double x3 , double x4) {
-  return util_double_min( util_double_min(x1 , x2) , util_double_min(x3 , x4 ));
-}
-
-
-static double max4(double x1 , double x2 , double x3 , double x4) {
-  return util_double_max( util_double_max(x1 , x2) , util_double_max(x3 , x4 ));
-}
   
 
 
@@ -598,11 +656,25 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
   if (cell->tainted_geometry) 
     return false;
   
-  if (p->z < min4( cell->corner_list[0]->z , cell->corner_list[1]->z , cell->corner_list[2]->z , cell->corner_list[3]->z))
+  if (p->z < ecl_cell_min_z( cell ))
     return false;
   
-  if (p->z > max4( cell->corner_list[4]->z , cell->corner_list[5]->z , cell->corner_list[6]->z , cell->corner_list[7]->z))
+  if (p->z > ecl_cell_max_z( cell ))
     return false;
+
+  if (p->x < ecl_cell_min_x( cell ))
+    return false;
+  
+  if (p->x > ecl_cell_max_x( cell ))
+    return false;
+  
+  if (p->y < ecl_cell_min_y( cell ))
+    return false;
+  
+  if (p->y > ecl_cell_max_y( cell ))
+    return false;
+  
+  
 
   {
     const int method   = 0;
@@ -610,17 +682,20 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
     tetrahedron_type tet;
     
     if (ecl_cell_get_volume( cell ) > 0) {
-      while (true) {   /* Does never exit from this loop - only returns from the whole function. */
+      /* Does never exit from this loop - only returns from the whole function. */
+      while (true) {   
         ecl_cell_init_tetrahedron( cell , &tet , method , tetrahedron_nr );
         if (tetrahedron_contains( &tet , p )) 
           return true;
         
         tetrahedron_nr++;
         if (tetrahedron_nr == 12)
-          return false;
+          return false;  /* OK - cell did not contain point. */
       } 
     } 
   }
+  util_abort("%s: Internal error - should not be here \n",__func__);
+  return false;
 }
 
 
@@ -1458,7 +1533,7 @@ static int ecl_grid_box_contains_xyz( const ecl_grid_type * grid , int i1, int i
 
 
 
-int ecl_grid_get_global_index_from_xyz(const ecl_grid_type * grid , double x , double y , double z , int start_index) {
+int ecl_grid_get_global_index_from_xyz(ecl_grid_type * grid , double x , double y , double z , int start_index) {
   int global_index;
   point_type p;
   point_set( &p , x , y , z);

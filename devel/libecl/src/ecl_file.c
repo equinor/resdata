@@ -27,6 +27,18 @@
 */
 
 
+/*
+  Some keyword strings which are give special significance when
+  loading summary and restart files.
+*/
+
+#define INTEHEAD_KW  "INTEHEAD"
+#define SEQNUM_KW    "SEQNUM"  
+#define SEQHDR_KW    "SEQHDR" 
+
+#define INTEHEAD_DAY_INDEX    64
+#define INTEHEAD_MONTH_INDEX  65
+#define INTEHEAD_YEAR_INDEX   66
 
 
 
@@ -35,9 +47,9 @@
 
 struct ecl_file_struct {
   UTIL_TYPE_ID_DECLARATION;
-  char        	  * src_file;  	  /* The name of the file currently loaded - as returned from fortio. */
-  vector_type 	  * kw_list;   	  /* This is a vector of ecl_kw instances corresponding to the content of the file. */
-  hash_type   	  * kw_index;  	  /* A hash table with integer vectors of indices - see comment below. */
+  char            * src_file;     /* The name of the file currently loaded - as returned from fortio. */
+  vector_type     * kw_list;      /* This is a vector of ecl_kw instances corresponding to the content of the file. */
+  hash_type       * kw_index;     /* A hash table with integer vectors of indices - see comment below. */
   stringlist_type * distinct_kw;  /* A stringlist of the keywords occuring in the file - each string occurs ONLY ONCE. */
 };
 
@@ -72,9 +84,9 @@ UTIL_SAFE_CAST_FUNCTION( ecl_file , ECL_FILE_ID)
 static ecl_file_type * ecl_file_alloc_empty( ) {
   ecl_file_type * ecl_file = util_malloc( sizeof * ecl_file , __func__);
   UTIL_TYPE_ID_INIT(ecl_file , ECL_FILE_ID);
-  ecl_file->kw_list  	= vector_alloc_new();
-  ecl_file->kw_index 	= hash_alloc();
-  ecl_file->src_file 	= NULL;
+  ecl_file->kw_list     = vector_alloc_new();
+  ecl_file->kw_index    = hash_alloc();
+  ecl_file->src_file    = NULL;
   ecl_file->distinct_kw = stringlist_alloc_new();
   return ecl_file;
 }
@@ -97,14 +109,14 @@ static void ecl_file_make_index( ecl_file_type * ecl_file ) {
       const ecl_kw_type * ecl_kw = vector_iget_const( ecl_file->kw_list , i);
       char              * header = ecl_kw_alloc_strip_header( ecl_kw );
       if ( !hash_has_key( ecl_file->kw_index , header )) {
-	int_vector_type * index_vector = int_vector_alloc( 0 , -1 );
-	hash_insert_hash_owned_ref( ecl_file->kw_index , header , index_vector , int_vector_free__);
-	stringlist_append_copy( ecl_file->distinct_kw , header);
+        int_vector_type * index_vector = int_vector_alloc( 0 , -1 );
+        hash_insert_hash_owned_ref( ecl_file->kw_index , header , index_vector , int_vector_free__);
+        stringlist_append_copy( ecl_file->distinct_kw , header);
       }
       
       {
-	int_vector_type * index_vector = hash_get( ecl_file->kw_index , header);
-	int_vector_append( index_vector , i);
+        int_vector_type * index_vector = hash_get( ecl_file->kw_index , header);
+        int_vector_append( index_vector , i);
       }
       free(header);
     }
@@ -145,11 +157,11 @@ static bool ecl_file_ifseek_kw(fortio_type * fortio, const char * kw , int occur
     
     if (ecl_kw_fread_header(ecl_kw , fortio)) {
       if (ecl_kw_header_eq(ecl_kw , kw)) {
-	if (find_count == occurence) {
-	  pos_found = true;
-	  cont      = false;
-	}
-	find_count++;
+        if (find_count == occurence) {
+          pos_found = true;
+          cont      = false;
+        }
+        find_count++;
       }
       /* Skip the data section of the keyword and continue. */
       ecl_kw_fskip_data( ecl_kw , fortio );
@@ -193,20 +205,20 @@ static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const 
     ecl_kw = ecl_kw_fread_alloc( fortio );
     if (ecl_kw != NULL) {
       if (stop_kw != NULL) {
-	bool eq = ecl_kw_header_eq( ecl_kw , stop_kw);
-	
-	if (first_kw) 
-	  if (!eq)
-	    util_abort("%s: expected to find:%s as first keyword - aborting \n",__func__ , stop_kw);
-	
-	if (eq)
-	  stop_count++;
-	
-	if (stop_count == 2) { /* Two strikes and you are out ... */
-	  ecl_kw_rewind(ecl_kw , fortio);
-	  ecl_kw_free( ecl_kw );
-	  ecl_kw = NULL;
-	}
+        bool eq = ecl_kw_header_eq( ecl_kw , stop_kw);
+        
+        if (first_kw) 
+          if (!eq)
+            util_abort("%s: expected to find:%s as first keyword - aborting \n",__func__ , stop_kw);
+        
+        if (eq)
+          stop_count++;
+        
+        if (stop_count == 2) { /* Two strikes and you are out ... */
+          ecl_kw_rewind(ecl_kw , fortio);
+          ecl_kw_free( ecl_kw );
+          ecl_kw = NULL;
+        }
       }
     }
     
@@ -301,7 +313,7 @@ ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int 
   fortio_type * fortio     = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
   ecl_file_type * ecl_file = NULL;
 
-  if (ecl_file_ifseek_kw( fortio , "SEQHDR" , index - 1)) 
+  if (ecl_file_ifseek_kw( fortio , SEQHDR_KW , index - 1)) 
     ecl_file = ecl_file_fread_alloc_summary_section(fortio);
   else
     util_abort("%s: sorry - could not lcoate summary report:%d in file:%s \n",__func__ , index , filename);
@@ -319,7 +331,7 @@ ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int 
    REPORT_STEP.
 */
 ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
-  return ecl_file_fread_alloc_fortio(fortio , "SEQNUM");
+  return ecl_file_fread_alloc_fortio(fortio , SEQNUM_KW);
 }
 
 
@@ -334,15 +346,81 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 */
 
 
-
 static time_t ecl_file_iget_restart_sim_date__(const ecl_file_type * restart_file , int occurence) {
-  ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( restart_file , "INTEHEAD" , occurence );
-  return util_make_date( ecl_kw_iget_int( intehead_kw , 64) , ecl_kw_iget_int( intehead_kw , 65) , ecl_kw_iget_int( intehead_kw , 66));
+  ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( restart_file , INTEHEAD_KW , occurence );
+  return util_make_date( ecl_kw_iget_int( intehead_kw , INTEHEAD_DAY_INDEX)   , 
+                         ecl_kw_iget_int( intehead_kw , INTEHEAD_MONTH_INDEX) , 
+                         ecl_kw_iget_int( intehead_kw , INTEHEAD_YEAR_INDEX)  );
 }
 
 
 time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int occurence ) {
   return ecl_file_iget_restart_sim_date__( restart_file , occurence );
+}
+
+/**
+   This function will scan through the ecl_file looking for INTEHEAD
+   headers corresponding to sim_time. If sim_time is found the
+   function will return the INTEHEAD occurence number, i.e. for a
+   unified restart file like:
+
+     INTEHEAD  /  01.01.2000
+     ...
+     PRESSURE
+     SWAT
+     ...
+     INTEHEAD  /  01.03.2000
+     ...
+     PRESSURE
+     SWAT
+     ...
+     INTEHEAD  /  01.05.2000
+     ...
+     PRESSURE
+     SWAT
+     ....
+
+   The function call:
+
+      ecl_file_get_restart_index( restart_file , (time_t) "01.03.2000")
+
+   will return 1. Observe that this will in general NOT agree with the
+   DATES step number.
+
+   If the sim_time can not be found the function will return -1, that
+   includes the case when the file in question is not a restart file
+   at all, and no INTEHEAD headers can be found.
+   
+   Observe that the function requires on-the-second-equality; which is
+   of course quite strict.
+*/
+
+
+int ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_time) {
+  int num_INTEHEAD = ecl_file_get_num_named_kw( restart_file , INTEHEAD_KW );
+  if (num_INTEHEAD == 0)
+    return -1;       /* We have no INTEHEAD headers - probably not a restart file at all. */
+  else {
+    /*
+      Should probably do something smarter than a linear search; but I dare not
+      take the chance that all INTEHEAD headers are properly set. This is from
+      Schlumberger after all.
+    */
+    int index = 0;
+    while (true) {
+      time_t itime = ecl_file_iget_restart_sim_date__( restart_file , index );
+      
+      if (itime == sim_time) /* Perfect hit. */
+        return index;
+
+      if (itime > sim_time)  /* We have gone past the target_time - i.e. we do not have it. */
+        return -1;
+      
+      index++;
+      if (index == num_INTEHEAD)  /* We have iterated through the whole thing without finding sim_time. */
+        return -1;
+    }
+  }
 }
 
 
@@ -359,7 +437,7 @@ time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int 
 */
 
 ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step) {
-  ecl_kw_type * seqnum_kw  = ecl_kw_alloc_new( "SEQNUM" , 1 , ECL_INT_TYPE , &report_step);  
+  ecl_kw_type * seqnum_kw  = ecl_kw_alloc_new( SEQNUM_KW , 1 , ECL_INT_TYPE , &report_step);  
                              /* We will use ecl_kw_equal() based on this kw to find the correct location in the file. */  
   bool          fmt_file   = ecl_util_fmt_file( filename );
   fortio_type * fortio     = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
@@ -370,21 +448,21 @@ ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int r
   bool cont                = true;
   ecl_kw_type * file_kw    = ecl_kw_alloc_empty();
   do {
-    if (ecl_kw_fseek_kw("SEQNUM" , false, false , fortio)) {
+    if (ecl_kw_fseek_kw( SEQNUM_KW , false, false , fortio)) {
       read_pos              = ftell( stream );
       if (ecl_kw_fread_header( file_kw , fortio )) {
-	if (ecl_kw_header_eq( file_kw , "SEQNUM")) {
-	  ecl_kw_alloc_data( file_kw );  /* If we have the right header we continue to read in data. */
-	  ecl_kw_fread_data( file_kw , fortio );
-	  if (ecl_kw_equal( file_kw , seqnum_kw )) {
-	    section_found = true;
-	    cont          = false;
-	  }
-	  ecl_kw_free_data( file_kw ); /* Discard the data */
-	} else
-	  ecl_kw_fskip_data( file_kw , fortio );
+        if (ecl_kw_header_eq( file_kw , SEQNUM_KW)) {
+          ecl_kw_alloc_data( file_kw );  /* If we have the right header we continue to read in data. */
+          ecl_kw_fread_data( file_kw , fortio );
+          if (ecl_kw_equal( file_kw , seqnum_kw )) {
+            section_found = true;
+            cont          = false;
+          }
+          ecl_kw_free_data( file_kw ); /* Discard the data */
+        } else
+          ecl_kw_fskip_data( file_kw , fortio );
       } else
-	cont = false;
+        cont = false;
     } else cont = false;
   } while (cont);
   ecl_kw_free( file_kw );
@@ -663,7 +741,7 @@ int ecl_file_iget_occurence( const ecl_file_type * ecl_file , int index) {
     /* Manual reverse lookup. */
     for (int i=0; i < int_vector_size( index_vector ); i++)
       if (index_data[i] == index)
-	occurence = i;
+        occurence = i;
   }
   if (occurence < 0)
     util_abort("%s: internal error ... \n" , __func__);
