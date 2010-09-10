@@ -34,18 +34,18 @@
 #define FLIP16(var) (((var >> 8) & 0x00ff) | ((var << 8) & 0xff00))
 
 #define FLIP32(var) (( (var >> 24) & 0x000000ff) | \
-		      ((var >>  8) & 0x0000ff00) | \
-		      ((var <<  8) & 0x00ff0000) | \
-		      ((var << 24) & 0xff000000))
+                      ((var >>  8) & 0x0000ff00) | \
+                      ((var <<  8) & 0x00ff0000) | \
+                      ((var << 24) & 0xff000000))
 
 #define FLIP64(var)  (((var >> 56) & 0x00000000000000ff) | \
-		      ((var >> 40) & 0x000000000000ff00) | \
-		      ((var >> 24) & 0x0000000000ff0000) | \
-		      ((var >>  8) & 0x00000000ff000000) | \
-		      ((var <<  8) & 0x000000ff00000000) | \
-		      ((var << 24) & 0x0000ff0000000000) | \
-		      ((var << 40) & 0x00ff000000000000) | \
-		      ((var << 56) & 0xff00000000000000))
+                      ((var >> 40) & 0x000000000000ff00) | \
+                      ((var >> 24) & 0x0000000000ff0000) | \
+                      ((var >>  8) & 0x00000000ff000000) | \
+                      ((var <<  8) & 0x000000ff00000000) | \
+                      ((var << 24) & 0x0000ff0000000000) | \
+                      ((var << 40) & 0x00ff000000000000) | \
+                      ((var << 56) & 0xff00000000000000))
 
 
 
@@ -201,7 +201,7 @@ void util_rewind_line(FILE *stream) {
       c = fgetc(stream);
       at_eol = EOL_CHAR(c);
       if (!at_eol)
-	fseek(stream , -1 , SEEK_CUR);
+        fseek(stream , -1 , SEEK_CUR);
     }
   } while (!at_eol);
 }
@@ -324,12 +324,12 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
     do {
       c = fgetc(stream);
       if (c == EOF) 
-	cont = false;
+        cont = false;
       else {
-	if (EOL_CHAR(c))
-	  cont = false;
-	else
-	  len++;
+        if (EOL_CHAR(c))
+          cont = false;
+        else
+          len++;
       }
     } while (cont);
     if (c == '\r')
@@ -409,8 +409,8 @@ char * util_alloc_stdin_line() {
       input[index] = c;
       index++;
       if (index == (input_size - 1)) { /* Reserve space for terminating \0 */
-	input_size *= 2;
-	input = util_realloc(input , input_size , __func__);
+        input_size *= 2;
+        input = util_realloc(input , input_size , __func__);
       }
     } else end = true;
   } while (!end);
@@ -461,8 +461,8 @@ char * util_alloc_cwd(void) {
     result_ptr = getcwd(cwd , buffer_size - 1);
     if (result_ptr == NULL) {
       if (errno == ERANGE) {
-	buffer_size *= 2;
-	free(cwd);
+        buffer_size *= 2;
+        free(cwd);
       }
     }
   } while ( result_ptr == NULL );
@@ -472,8 +472,10 @@ char * util_alloc_cwd(void) {
 
 
 
-char * util_alloc_abspath( const char * path ) {
-  
+char * util_alloc_abs_path( const char * path ) {
+  char work_path[4096];
+  realpath( path , work_path );
+  return util_alloc_string_copy( work_path );
 }
 
 
@@ -557,13 +559,13 @@ void util_fskip_lines(FILE * stream , int lines) {
     do {
       c = fgetc(stream);
       if (c == EOF)
-	at_eof = true;
+        at_eof = true;
     } while (c != '\r' && c != '\n' && !at_eof);
     line_nr++;
     if (line_nr == lines || at_eof) cont = false;
   } while (cont);
 }
-	    
+            
 
 /*
   The last line(s) without content are not counted, i.e.
@@ -592,16 +594,16 @@ int util_forward_line(FILE * stream , bool * at_eof) {
       at_eol  = true;
     } else {
       if (EOL_CHAR(c)) {
-	at_eol = true;
-	c = fgetc(stream);
-	if (c == EOF) 
-	  *at_eof = true;
-	else {
-	  if (!EOL_CHAR(c)) 
-	    fseek(stream , -1 , SEEK_CUR);
-	}
+        at_eol = true;
+        c = fgetc(stream);
+        if (c == EOF) 
+          *at_eof = true;
+        else {
+          if (!EOL_CHAR(c)) 
+            fseek(stream , -1 , SEEK_CUR);
+        }
       } else
-	col++;
+        col++;
     }
   } while (!at_eol);
   return col;
@@ -652,13 +654,13 @@ static void util_fskip_chars__(FILE * stream , const char * skip_set , bool comp
       cont = false;
     } else {
       if (strchr(skip_set , c) == NULL) {
-	/* c is not in skip_set */
-	if (!complimentary_set)
-	  cont = false;
+        /* c is not in skip_set */
+        if (!complimentary_set)
+          cont = false;
       } else {
-	/* c is in skip_set */
-	if (complimentary_set)
-	  cont = false;
+        /* c is in skip_set */
+        if (complimentary_set)
+          cont = false;
       }
     }
   } while (cont);
@@ -685,13 +687,13 @@ static void util_fskip_space__(FILE * stream , bool complimentary_set , bool *at
       cont = false;
     } else {
       if (!isspace(c)) {
-	/* c is not in space set. */
-	if (!complimentary_set)
-	  cont = false;
+        /* c is not in space set. */
+        if (!complimentary_set)
+          cont = false;
       } else {
-	/* c is in skip_set */
-	if (complimentary_set)
-	  cont = false;
+        /* c is in skip_set */
+        if (complimentary_set)
+          cont = false;
       }
     }
   } while (cont);
@@ -795,13 +797,13 @@ char * util_fscanf_alloc_token(FILE * stream) {
     do {
       c = fgetc(stream);
       if (c == EOF)
-	cont = false;
+        cont = false;
       else if (EOL_CHAR(c))
-	cont = false;
+        cont = false;
       else if (util_char_in(c , 2 , space_set))
-	cont = false;
+        cont = false;
       else
-	length++;
+        length++;
     } while (cont);
     if (EOL_CHAR(c)) fseek(stream , -1 , SEEK_CUR);
   
@@ -810,7 +812,7 @@ char * util_fscanf_alloc_token(FILE * stream) {
     { 
       int i;
       for (i = 0; i < length; i++)
-	token[i] = fgetc(stream);
+        token[i] = fgetc(stream);
       token[length] = '\0';
     }
   }
@@ -950,7 +952,7 @@ inline bool util_string_equal(const char * s1 , const char * s2 ) {
          |   |   |   NULL
          1   2   3   3
          
-   The vertical bars indicate the return values.	 
+   The vertical bars indicate the return values.         
 
 */
 
@@ -1049,13 +1051,13 @@ bool util_sscanf_bytesize(const char * buffer, size_t *size) {
     {
       char * upper = util_alloc_string_copy(suffix_ptr);
       if (strcmp(upper,"KB") == 0)
-	factor = KB_factor;
+        factor = KB_factor;
       else if (strcmp(upper,"MB") == 0)
-	factor = MB_factor;
+        factor = MB_factor;
       else if (strcmp(upper , "GB") == 0)
-	factor = GB_factor;
+        factor = GB_factor;
       else
-	parse_OK = false;
+        parse_OK = false;
       /* else - failed to parse - returning false. */
       free(upper);
     }
@@ -1275,22 +1277,22 @@ int util_count_content_file_lines(FILE * stream) {
     c = fgetc(stream);
     if (EOL_CHAR(c)) {
       if (col == 0)
-	empty_lines++;
+        empty_lines++;
       else {
-	lines       += empty_lines + 1;
-	empty_lines  = 0;
+        lines       += empty_lines + 1;
+        empty_lines  = 0;
       }
       col = 0;
       c = fgetc(stream);
       if (! feof(stream) ) {
-	if (!EOL_CHAR(c))
-	  fseek(stream , -1 , SEEK_CUR);
+        if (!EOL_CHAR(c))
+          fseek(stream , -1 , SEEK_CUR);
       }
     } else if (c == EOF)
       lines++;
     else {
       if (c != ' ')
-	col++;
+        col++;
     }
   } while (! feof(stream) );
   if (col == 0) 
@@ -1460,22 +1462,22 @@ static void util_copy_directory__(const char * src_path , const char * target_pa
     {
       struct dirent * dp;
       do {
-	dp = readdir(dirH);
-	if (dp != NULL) {
-	  if (dp->d_name[0] != '.') {
-	    char * full_src_path    = util_alloc_filename(src_path , dp->d_name , NULL);
-	    char * full_target_path = util_alloc_filename(target_path , dp->d_name , NULL);
-	    if (util_is_file( full_src_path )) {
-	      if (msg != NULL)
-		msg_update( msg , full_src_path);
-	      util_copy_file__( full_src_path , full_target_path , buffer_size , buffer , true);
-	    } else 
-	      util_copy_directory__( full_src_path , full_target_path , buffer_size , buffer , msg);
+        dp = readdir(dirH);
+        if (dp != NULL) {
+          if (dp->d_name[0] != '.') {
+            char * full_src_path    = util_alloc_filename(src_path , dp->d_name , NULL);
+            char * full_target_path = util_alloc_filename(target_path , dp->d_name , NULL);
+            if (util_is_file( full_src_path )) {
+              if (msg != NULL)
+                msg_update( msg , full_src_path);
+              util_copy_file__( full_src_path , full_target_path , buffer_size , buffer , true);
+            } else 
+              util_copy_directory__( full_src_path , full_target_path , buffer_size , buffer , msg);
 
-	    free( full_src_path );
-	    free( full_target_path );
-	  }
-	}
+            free( full_src_path );
+            free( full_target_path );
+          }
+        }
       } while (dp != NULL);
     }
     closedir( dirH );
@@ -1917,8 +1919,8 @@ static int util_get_base_length(const char * file) {
         path -> "/some/existing/path"
         base -> NULL
         ext  -> NULL
-	
-	
+        
+        
 
       Ex2: input is NOT an existing directory:
       ------------------------------------
@@ -1927,7 +1929,7 @@ static int util_get_base_length(const char * file) {
       path -> "/some/random/not_existing"
         base -> "path"
         ext  -> NULL
-	
+        
 */
 
 void util_alloc_file_components(const char * file, char **_path , char **_basename , char **_extension) {
@@ -2155,7 +2157,7 @@ void util_make_slink(const char *target , const char * link) {
   if (util_file_exists(link)) {
     if (util_is_link(link)) {
       if (!util_same_file(target , link)) 
-	util_abort("%s: %s already exists - not pointing to: %s - aborting \n",__func__ , link , target);
+        util_abort("%s: %s already exists - not pointing to: %s - aborting \n",__func__ , link , target);
     } else 
       util_abort("%s: %s already exists - is not a link - aborting \n",__func__ , link);
   } else {
@@ -2257,9 +2259,9 @@ char * util_newest_file(const char *file1 , const char *file2) {
     if (util_file_exists(file2)) {
       /* Actual comparison of two existing files. */
       if (util_file_difftime(file1 , file2) < 0)
-	return (char *) file1;
+        return (char *) file1;
       else
-	return (char *) file2;
+        return (char *) file2;
     } else
       return (char *)file1;   /* Only file1 exists. */
   } else {
@@ -2714,29 +2716,29 @@ bool util_string_match(const char * string , const char * pattern) {
       /* Inital part matched */
       string_ptr += strlen( sub_pattern[0] );
       for (int i=1; i < num_patterns; i++) {
-	char * match_ptr = strstr(string_ptr , sub_pattern[i]);
-	if (match_ptr != NULL) 
-	  string_ptr = match_ptr + strlen( sub_pattern[i] );
-	else {
-	  match = false;
-	  break;
-	}
+        char * match_ptr = strstr(string_ptr , sub_pattern[i]);
+        if (match_ptr != NULL) 
+          string_ptr = match_ptr + strlen( sub_pattern[i] );
+        else {
+          match = false;
+          break;
+        }
       }
       
       /* 
-	 We have exhausted the complete pattern - matching all the way.
-	 Does it match at the end?
+         We have exhausted the complete pattern - matching all the way.
+         Does it match at the end?
       */
       if (match) {
-	if (strlen(string_ptr) > 0) {
-	  /* 
-	     There is more left at the end of the string; if the pattern
-	     ends with '*' that is OK, otherwise the match result is
-	     FALSE.
-	  */
-	  if (pattern[(strlen(pattern) - 1)] != wildcard)
-	    match = false;
-	}
+        if (strlen(string_ptr) > 0) {
+          /* 
+             There is more left at the end of the string; if the pattern
+             ends with '*' that is OK, otherwise the match result is
+             FALSE.
+          */
+          if (pattern[(strlen(pattern) - 1)] != wildcard)
+            match = false;
+        }
       }
       
     } else 
@@ -2767,7 +2769,7 @@ void util_free_stringlist(char **list , int N) {
   if (list != NULL) {
     for (i=0; i < N; i++) {
       if (list[i] != NULL)
-	free(list[i]);
+        free(list[i]);
     }
     free(list);
   }
@@ -2861,7 +2863,7 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
     
     while ( (entry = readdir(dir_stream)) ) {
       if (strncmp(ensbase , entry->d_name , len_ensbase) == 0)
-	files++;
+        files++;
     }
     if (files == 0) {
       closedir(dir_stream);
@@ -2875,14 +2877,14 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
     rewinddir(dir_stream);
     while ( (entry = readdir(dir_stream)) ) {
       if (strncmp(ensbase , entry->d_name , len_ensbase) == 0) {
-	fileList[filenr].filename   = util_alloc_filename(enspath , entry->d_name , NULL);
-	fileList[filenr].num_offset = num_offset;
-	{
-	  int num = enkf_filenr(fileList[filenr]);
-	  if (num < first_file) first_file = num;
-	  if (num > last_file)  last_file  = num;
-	}
-	filenr++;
+        fileList[filenr].filename   = util_alloc_filename(enspath , entry->d_name , NULL);
+        fileList[filenr].num_offset = num_offset;
+        {
+          int num = enkf_filenr(fileList[filenr]);
+          if (num < first_file) first_file = num;
+          if (num > last_file)  last_file  = num;
+        }
+        filenr++;
       }
     } 
     closedir(dir_stream);
@@ -2893,16 +2895,16 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
       bool delete_file = false;
 
       if (num != first_file && num != last_file) 
-	if ( (num % mod_keep) != 0) 
-	  delete_file = true;
+        if ( (num % mod_keep) != 0) 
+          delete_file = true;
 
       if (delete_file) {
-	if (dryrun)
-	  printf("    %s\n",fileList[filenr].filename);
-	else {
-	  printf("Deleting: %s \n",fileList[filenr].filename);
-	  unlink(fileList[filenr].filename);
-	}
+        if (dryrun)
+          printf("    %s\n",fileList[filenr].filename);
+        else {
+          printf("Deleting: %s \n",fileList[filenr].filename);
+          unlink(fileList[filenr].filename);
+        }
       } 
     }
     for (filenr = 0; filenr < files; filenr++) 
@@ -2935,8 +2937,8 @@ char * util_alloc_joined_string(const char ** item_list , int len , const char *
     int i;
     for (i=0; i < len; i++) 
       if (item_list[i] != NULL) {
-	total_length += strlen(item_list[i]);
-	eff_len++;
+        total_length += strlen(item_list[i]);
+        eff_len++;
       }
 
     if (eff_len > 0) {
@@ -2944,11 +2946,11 @@ char * util_alloc_joined_string(const char ** item_list , int len , const char *
       joined_string = util_malloc(total_length , __func__);
       joined_string[0] = '\0';
       for (i=0; i < len; i++) {
-	if (item_list[i] != NULL) {
-	  if (i > 0)
-	    strcat(joined_string , sep);
-	  strcat(joined_string , item_list[i]);
-	}
+        if (item_list[i] != NULL) {
+          if (i > 0)
+            strcat(joined_string , sep);
+          strcat(joined_string , item_list[i]);
+        }
       }
       return joined_string;
     } else
@@ -3002,10 +3004,10 @@ void util_split_string(const char *line , const char *sep_set, int *_tokens, cha
     do {
       token_length = strcspn(&line[offset] , sep_set);
       if (token_length > 0) {
-	token_list[token] = util_alloc_substring_copy(&line[offset] , token_length);
-	token++;
+        token_list[token] = util_alloc_substring_copy(&line[offset] , token_length);
+        token++;
       } else
-	token_list[token] = NULL;
+        token_list[token] = NULL;
       
       offset += token_length;
       offset += strspn(&line[offset] , sep_set);
@@ -3055,20 +3057,20 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
       /* Removing leading separators. */
       pos = 0;
       while ((pos < strlen(__src)) && (strchr(sep_set , __src[pos]) != NULL))
-	pos += 1;
+        pos += 1;
       if (pos == strlen(__src))  /* The string consisted ONLY of separators. */
-	src = NULL;
+        src = NULL;
       else
-	src = util_alloc_string_copy(&__src[pos]);
+        src = util_alloc_string_copy(&__src[pos]);
     } else {
       /*Remove trailing separators. */
       pos = strlen(__src) - 1;
       while ((pos >= 0) && (strchr(sep_set , __src[pos]) != NULL))
-	pos -= 1;
+        pos -= 1;
       if (pos < 0)
-	src = NULL;
+        src = NULL;
       else
-	src = util_alloc_substring_copy(__src , pos + 1);
+        src = util_alloc_substring_copy(__src , pos + 1);
     }
 
     
@@ -3080,56 +3082,56 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
       int pos;
       int start_pos , delta , end_pos;
       if (split_on_first) {
-	start_pos = 0;
-	delta     = 1;
-	end_pos   = strlen(src);
+        start_pos = 0;
+        delta     = 1;
+        end_pos   = strlen(src);
       } else {
-	start_pos = strlen(src) - 1;
-	delta     = -1;
-	end_pos   = -1;
+        start_pos = strlen(src) - 1;
+        delta     = -1;
+        end_pos   = -1;
       }
 
       pos = start_pos;
       while ((pos != end_pos) && (strchr(sep_set , src[pos]) == NULL)) 
-	pos += delta;
+        pos += delta;
       /* 
-	 OK - now we have either iterated through the whole string - or
-	 we hav found a character in the sep_set. 
+         OK - now we have either iterated through the whole string - or
+         we hav found a character in the sep_set. 
       */
       if (pos == end_pos) {
-	/* There was no split. */
-	first_part = util_alloc_string_copy( src );
-	second_part   = NULL;
+        /* There was no split. */
+        first_part = util_alloc_string_copy( src );
+        second_part   = NULL;
       } else {
-	int sep_start = 0;
-	int sep_end   = 0;
-	if (split_on_first)
-	  sep_start = pos;
-	else
-	  sep_end = pos;
-	/* Iterate through the separation string - can be e.g. many " " */
-	while ((pos != end_pos) && (strchr(sep_set , src[pos]) != NULL))
-	  pos += delta;
+        int sep_start = 0;
+        int sep_end   = 0;
+        if (split_on_first)
+          sep_start = pos;
+        else
+          sep_end = pos;
+        /* Iterate through the separation string - can be e.g. many " " */
+        while ((pos != end_pos) && (strchr(sep_set , src[pos]) != NULL))
+          pos += delta;
 
-	if (split_on_first) {
-	  sep_end = pos;
-	  first_part = util_alloc_substring_copy(src , sep_start);
-	  
-	  if (sep_end == end_pos)
-	    second_part = NULL;
-	  else
-	    second_part = util_alloc_string_copy( &src[sep_end] );
-	} else {
-	  sep_start = pos;
-	  if (sep_start == end_pos) {
-	    // ":String" => (NULL , "String")
-	    first_part = NULL;
-	    second_part = util_alloc_string_copy( &src[sep_end+1] );
-	  } else {
-	    first_part  = util_alloc_substring_copy( src , sep_start + 1);
-	    second_part = util_alloc_string_copy( &src[sep_end + 1]);
-	  }
-	}
+        if (split_on_first) {
+          sep_end = pos;
+          first_part = util_alloc_substring_copy(src , sep_start);
+          
+          if (sep_end == end_pos)
+            second_part = NULL;
+          else
+            second_part = util_alloc_string_copy( &src[sep_end] );
+        } else {
+          sep_start = pos;
+          if (sep_start == end_pos) {
+            // ":String" => (NULL , "String")
+            first_part = NULL;
+            second_part = util_alloc_string_copy( &src[sep_end+1] );
+          } else {
+            first_part  = util_alloc_substring_copy( src , sep_start + 1);
+            second_part = util_alloc_string_copy( &src[sep_end + 1]);
+          }
+        }
       }
       free(src);
     }
@@ -3147,12 +3149,12 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
 
 
 int static util_string_replace_inplace__(char ** _buffer , const char * expr , const char * subs) {
-  char * buffer      	   = *_buffer;
-  int    buffer_size 	   = strlen( buffer ) + 1;   /* The variable buffer_size is the TOTAL size - including the terminating \0. */
-  int len_expr  	   = strlen( expr );
+  char * buffer            = *_buffer;
+  int    buffer_size       = strlen( buffer ) + 1;   /* The variable buffer_size is the TOTAL size - including the terminating \0. */
+  int len_expr             = strlen( expr );
   int len_subs             = strlen( subs );
-  int    size   	   = strlen(buffer);
-  int    offset 	   = 0;     
+  int    size              = strlen(buffer);
+  int    offset            = 0;     
   int    match_count       = 0;
 
   char  * match = NULL;
@@ -3161,8 +3163,8 @@ int static util_string_replace_inplace__(char ** _buffer , const char * expr , c
     
     if (match != NULL) {
       /* 
-	 Can not use pointer arithmetic here - because the underlying
-	 buffer pointer might be realloced.
+         Can not use pointer arithmetic here - because the underlying
+         buffer pointer might be realloced.
       */
       {
         int    start_offset  = match             - buffer;
@@ -3576,21 +3578,21 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
     {
       uint16_t *tmp_int = (uint16_t *) data;
       for (i = 0; i <elements; i++)
-	tmp_int[i] = FLIP16(tmp_int[i]);
+        tmp_int[i] = FLIP16(tmp_int[i]);
       break;
     }
   case(4):
     {
       uint32_t *tmp_int = (uint32_t *) data;
       for (i = 0; i <elements; i++)
-	tmp_int[i] = FLIP32(tmp_int[i]);
+        tmp_int[i] = FLIP32(tmp_int[i]);
       break;
     }
   case(8):
     {
       uint64_t *tmp_int = (uint64_t *) data;
       for (i = 0; i <elements; i++)
-	tmp_int[i] = FLIP64(tmp_int[i]);
+        tmp_int[i] = FLIP64(tmp_int[i]);
       break;
     }
   default:
@@ -3998,7 +4000,7 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
     do {
       zbuffer = malloc(buffer_size);
       if (zbuffer == NULL)
-	buffer_size /= 2;
+        buffer_size /= 2;
     } while(zbuffer == NULL);
     memset(zbuffer , 0 , buffer_size);
     block_size = (int) (floor(buffer_size / 1.002) - 64);
@@ -4008,23 +4010,23 @@ void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
       header_write  = fwrite(&size        , sizeof size        , 1 , stream);
       header_write += fwrite(&buffer_size , sizeof buffer_size , 1 , stream);
       if (header_write != 2)
-	util_abort("%s: failed to write header to disk: %s \n",__func__ , strerror(errno));
+        util_abort("%s: failed to write header to disk: %s \n",__func__ , strerror(errno));
     }
     
     {
       int offset = 0;
       do {
-	unsigned long compressed_size = buffer_size;
-	int this_block_size           = util_int_min(block_size , size - offset);
-	util_compress_buffer(&data[offset] , this_block_size , zbuffer , &compressed_size);
-	fwrite(&compressed_size , sizeof compressed_size , 1 , stream);
-	{
-	  int bytes_written = fwrite(zbuffer , 1 , compressed_size , stream);
-	  if (bytes_written < compressed_size) 
-	    util_abort("%s: wrote only %d/%ld bytes to compressed file  - aborting \n",__func__ , bytes_written , compressed_size);
-	}
-	offset += this_block_size;
-	fwrite(&offset , sizeof offset , 1 , stream);
+        unsigned long compressed_size = buffer_size;
+        int this_block_size           = util_int_min(block_size , size - offset);
+        util_compress_buffer(&data[offset] , this_block_size , zbuffer , &compressed_size);
+        fwrite(&compressed_size , sizeof compressed_size , 1 , stream);
+        {
+          int bytes_written = fwrite(zbuffer , 1 , compressed_size , stream);
+          if (bytes_written < compressed_size) 
+            util_abort("%s: wrote only %d/%ld bytes to compressed file  - aborting \n",__func__ , bytes_written , compressed_size);
+        }
+        offset += this_block_size;
+        fwrite(&offset , sizeof offset , 1 , stream);
       } while (offset < size);
     }
     free(zbuffer);
@@ -4058,7 +4060,7 @@ void util_fread_compressed(void *__data , FILE * stream) {
     {
       int bytes_read = fread(zbuffer , 1 , compressed_size , stream);
       if (bytes_read < compressed_size) 
-	util_abort("%s: read only %d/%d bytes from compressed file - aborting \n",__func__ , bytes_read , compressed_size);
+        util_abort("%s: read only %d/%d bytes from compressed file - aborting \n",__func__ , bytes_read , compressed_size);
       
     }
     compress_result = uncompress(&data[offset] , &block_size , zbuffer , compressed_size);
@@ -4070,7 +4072,7 @@ void util_fread_compressed(void *__data , FILE * stream) {
       int file_offset;
       fread(&file_offset , sizeof offset , 1 , stream); 
       if (file_offset != offset) 
-	util_abort("%s: something wrong when reding compressed stream - aborting \n",__func__);
+        util_abort("%s: something wrong when reding compressed stream - aborting \n",__func__);
     }
   } while (offset < size);
   free(zbuffer);
@@ -4161,7 +4163,7 @@ void util_fprintf_string(const char * s , int width , string_alignement_type ali
     i = 0;
     if (width > strlen(s)) {
       for (i=0; i < (width - strlen(s)); i++) 
-	fputc(' ' , stream);
+        fputc(' ' , stream);
     }
     fprintf(stream , s);
   } else if (alignement == right_pad) {
@@ -4281,16 +4283,16 @@ char * util_alloc_PATH_executable(const char * executable) {
       ipath = 0;
       util_split_string(getenv("PATH") , ":" , &path_size , &path_list);
       while ( cont ) {
-	char * current_attempt = util_alloc_filename(path_list[ipath] , executable , NULL);
-	if ( util_is_file( current_attempt ) && util_is_executable( current_attempt )) {
-	  full_path = current_attempt;
-	  cont = false;
-	} else {
-	  free(current_attempt);
-	  ipath++;
-	  if (ipath == path_size)
-	    cont = false;
-	}
+        char * current_attempt = util_alloc_filename(path_list[ipath] , executable , NULL);
+        if ( util_is_file( current_attempt ) && util_is_executable( current_attempt )) {
+          full_path = current_attempt;
+          cont = false;
+        } else {
+          free(current_attempt);
+          ipath++;
+          if (ipath == path_size)
+            cont = false;
+        }
       }
       util_free_stringlist(path_list , path_size);
     }
@@ -4555,9 +4557,9 @@ void util_abort(const char * fmt , ...) {
       int    size,i;
   
       if (__abort_program_message != NULL) {
-	fprintf(stderr,"--------------------------------------------------------------------------------\n");
-	fprintf(stderr,"%s",__abort_program_message);
-	fprintf(stderr,"--------------------------------------------------------------------------------\n");
+        fprintf(stderr,"--------------------------------------------------------------------------------\n");
+        fprintf(stderr,"%s",__abort_program_message);
+        fprintf(stderr,"--------------------------------------------------------------------------------\n");
       }
 
       fprintf(stderr,"\n");
@@ -4577,34 +4579,34 @@ void util_abort(const char * fmt , ...) {
       strings    = backtrace_symbols(array , size);    
       executable = util_bt_alloc_current_executable(strings[0]);
       if (executable != NULL) {
-	fprintf(stderr,"Current executable : %s \n",executable);
-	
-	func_list      = util_malloc(size * sizeof * func_list      , __func__);
-	file_line_list = util_malloc(size * sizeof * file_line_list , __func__);
-	
-	for (i=0; i < size; i++) {
-	  util_addr2line_lookup(executable , strings[i] , &func_list[i] , &file_line_list[i]);
-	  max_func_length = util_int_max(max_func_length , strlen(func_list[i]));
-	}
-	
-	{
-	  char string_fmt[64];
-	  sprintf(string_fmt, " #%s02d %s-%ds(..) in %ss   \n" , "%" , "%" , max_func_length , "%");
-	  fprintf(stderr , "--------------------------------------------------------------------------------\n");
-	  for (i=0; i < size; i++) {
-	    
-	    int line_nr;
-	    if (util_sscanf_int(file_line_list[i] , &line_nr))
-	      fprintf(stderr, string_fmt , i , func_list[i], file_line_list[i]);
-	    else
-	      fprintf(stderr, string_fmt , i , func_list[i], file_line_list[i]);
-	  }
-	  fprintf(stderr , "--------------------------------------------------------------------------------\n");
-	  util_free_stringlist(func_list      , size);
-	  util_free_stringlist(file_line_list , size);
-	}
+        fprintf(stderr,"Current executable : %s \n",executable);
+        
+        func_list      = util_malloc(size * sizeof * func_list      , __func__);
+        file_line_list = util_malloc(size * sizeof * file_line_list , __func__);
+        
+        for (i=0; i < size; i++) {
+          util_addr2line_lookup(executable , strings[i] , &func_list[i] , &file_line_list[i]);
+          max_func_length = util_int_max(max_func_length , strlen(func_list[i]));
+        }
+        
+        {
+          char string_fmt[64];
+          sprintf(string_fmt, " #%s02d %s-%ds(..) in %ss   \n" , "%" , "%" , max_func_length , "%");
+          fprintf(stderr , "--------------------------------------------------------------------------------\n");
+          for (i=0; i < size; i++) {
+            
+            int line_nr;
+            if (util_sscanf_int(file_line_list[i] , &line_nr))
+              fprintf(stderr, string_fmt , i , func_list[i], file_line_list[i]);
+            else
+              fprintf(stderr, string_fmt , i , func_list[i], file_line_list[i]);
+          }
+          fprintf(stderr , "--------------------------------------------------------------------------------\n");
+          util_free_stringlist(func_list      , size);
+          util_free_stringlist(file_line_list , size);
+        }
       } else
-	fprintf(stderr,"Could not determine executable file for:%s - no backtrace. \n",strings[0]);
+        fprintf(stderr,"Could not determine executable file for:%s - no backtrace. \n",strings[0]);
       
       free(strings);
       util_safe_free(executable);
@@ -4699,7 +4701,7 @@ void util_block_growing_directory(const char * directory) {
       DIR * dirH  = opendir( directory );
       struct dirent * dentry;
       while ( (dentry = readdir(dirH)) != NULL) 
-	current_size++;
+        current_size++;
 
       closedir(dirH);
     }
@@ -4787,7 +4789,7 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
     nice(19);    /* Remote process is run with nice(19). */
     if (run_path != NULL) {
       if (chdir(run_path) != 0) 
-	util_abort("%s: failed to change to directory:%s  %s \n",__func__ , run_path , strerror(errno));
+        util_abort("%s: failed to change to directory:%s  %s \n",__func__ , run_path , strerror(errno));
     }
 
     if (stdout_file != NULL) {
@@ -4830,8 +4832,8 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
       waitpid(child_pid , NULL , 0);
       
       if (target_file != NULL)
-	if (!util_file_exists(target_file))
-	  util_abort("%s: %s failed to produce target_file:%s aborting \n",__func__ , executable , target_file);
+        if (!util_file_exists(target_file))
+          util_abort("%s: %s failed to produce target_file:%s aborting \n",__func__ , executable , target_file);
     }
   }
   
@@ -4932,7 +4934,7 @@ int util_get_current_linenr(FILE * stream) {
     for (char_nr = 0; char_nr < init_pos; char_nr++) {
       c = fgetc(stream);
       if (c == '\n')
-	line_nr++;
+        line_nr++;
     }
   }
   return line_nr;
@@ -5032,63 +5034,63 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
     else {
       /* OK - now we can point at "," or "-" - else malformed string. */
       if (start_ptr[0] == ',' || start_ptr[0] == '-') {
-	if (start_ptr[0] == '-') {  /* This is a range */
-	  start_ptr++; /* Skipping the "-" */
-	  while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
-	    start_ptr++;
-	  
-	  if (start_ptr[0] == '\0') 
-	    /* The range just ended - without second value. */
-	    util_abort("%s[0]: malformed string: %s \n",__func__ , start_ptr);
+        if (start_ptr[0] == '-') {  /* This is a range */
+          start_ptr++; /* Skipping the "-" */
+          while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
+            start_ptr++;
+          
+          if (start_ptr[0] == '\0') 
+            /* The range just ended - without second value. */
+            util_abort("%s[0]: malformed string: %s \n",__func__ , start_ptr);
 
-	  value2 = strtol(start_ptr , &end_ptr , 10);
-	  if (end_ptr == start_ptr) 
-	    util_abort("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
+          value2 = strtol(start_ptr , &end_ptr , 10);
+          if (end_ptr == start_ptr) 
+            util_abort("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
 
-	  if (active != NULL && value2 > max_value)
-	    fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value2 , max_value);
-	  
-	  if (value2 < value1)
-	    util_abort("%s[2]: invalid interval - must have increasing range \n",__func__);
-	  
-	  start_ptr = end_ptr;
-	  { 
-	    int value;
-	    for (value = value1 + 1; value <= value2; value++) {
-	      if (active != NULL) {
-		if (value <= max_value) active[value] = true;
-	      } else
-		__add_item__(&active_list , &current_length , &list_length , value);
-	    }
-	  }
-	  
-	  /* Skipping trailing whitespace. */
-	  while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
-	    start_ptr++;
-	  
-	  
-	  if (start_ptr[0] == '\0')
-	    start_ptr = NULL; /* We are done */
-	  else {
-	    if (start_ptr[0] == ',')
-	      start_ptr++;
-	    else
-	      util_abort("%s[3]: malformed string: %s \n",__func__ , start_ptr);
-	  }
-	} else 
-	  start_ptr++;  /* Skipping "," */
+          if (active != NULL && value2 > max_value)
+            fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value2 , max_value);
+          
+          if (value2 < value1)
+            util_abort("%s[2]: invalid interval - must have increasing range \n",__func__);
+          
+          start_ptr = end_ptr;
+          { 
+            int value;
+            for (value = value1 + 1; value <= value2; value++) {
+              if (active != NULL) {
+                if (value <= max_value) active[value] = true;
+              } else
+                __add_item__(&active_list , &current_length , &list_length , value);
+            }
+          }
+          
+          /* Skipping trailing whitespace. */
+          while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
+            start_ptr++;
+          
+          
+          if (start_ptr[0] == '\0')
+            start_ptr = NULL; /* We are done */
+          else {
+            if (start_ptr[0] == ',')
+              start_ptr++;
+            else
+              util_abort("%s[3]: malformed string: %s \n",__func__ , start_ptr);
+          }
+        } else 
+          start_ptr++;  /* Skipping "," */
 
-	/**
-	   When this loop is finished the start_ptr should point at a
-	   valid integer. I.e. for instance for the following input
-	   string:  "1-3 , 78"
-	                   ^
-			   
-	   The start_ptr should point at "78".
-	*/
+        /**
+           When this loop is finished the start_ptr should point at a
+           valid integer. I.e. for instance for the following input
+           string:  "1-3 , 78"
+                           ^
+                           
+           The start_ptr should point at "78".
+        */
 
       } else 
-	util_abort("%s[4]: malformed string: %s \n",__func__ , start_ptr);
+        util_abort("%s[4]: malformed string: %s \n",__func__ , start_ptr);
     }
   }
   if (_list_length != NULL)
