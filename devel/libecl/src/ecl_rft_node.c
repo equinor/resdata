@@ -46,9 +46,9 @@
 */
 
 typedef struct {
-  int 	 i;
-  int 	 j;
-  int 	 k; 
+  int    i;
+  int    j;
+  int    k; 
   double depth;
   double pressure; /* both CONPRES from PLT and PRESSURE from RFT are internalized as pressure in the cell_type. */
 } cell_type;
@@ -86,10 +86,10 @@ typedef struct {
 #define ECL_RFT_NODE_ID 887195
 struct ecl_rft_node_struct {
   UTIL_TYPE_ID_DECLARATION;
-  char       * well_name;     	       /* Name of the well. */
-  int          size;          	       /* The number of entries in this RFT vector (i.e. the number of cells) .*/
+  char       * well_name;              /* Name of the well. */
+  int          size;                   /* The number of entries in this RFT vector (i.e. the number of cells) .*/
 
-  ecl_rft_enum data_type;     	       /* What type of data: RFT|PLT|SEGMENT */
+  ecl_rft_enum data_type;              /* What type of data: RFT|PLT|SEGMENT */
   time_t       recording_date;         /* When was the RFT recorded - date.*/ 
   double       days;                   /* When was the RFT recorded - days after simulaton start. */
   cell_type    *cells;                 /* Coordinates and depth of the well cells. */
@@ -131,8 +131,8 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(int size , const char * data
 
   {
     ecl_rft_node_type * rft_node = util_malloc(sizeof * rft_node , __func__);
-    rft_node->plt_data 	   = NULL;
-    rft_node->rft_data 	   = NULL;
+    rft_node->plt_data     = NULL;
+    rft_node->rft_data     = NULL;
     rft_node->segment_data = NULL;
     
     UTIL_TYPE_ID_INIT( rft_node , ECL_RFT_NODE_ID );
@@ -184,19 +184,21 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
     
     /* Cell information */
     {
-      const int   * i 	   = ecl_kw_get_int_ptr( conipos );
-      const int   * j 	   = ecl_kw_get_int_ptr( conjpos );
-      const int   * k 	   = ecl_kw_get_int_ptr( conkpos );
+      const int   * i      = ecl_kw_get_int_ptr( conipos );
+      const int   * j      = ecl_kw_get_int_ptr( conjpos );
+      const int   * k      = ecl_kw_get_int_ptr( conkpos );
       const float * depth  = ecl_kw_get_float_ptr( depth_kw );
 
+
+      /* The ECLIPSE file has offset-1 coordinates, and that is currently what we store; What a fxxxing mess. */
       int c;
       for (c = 0; c < rft_node->size; c++) {
-	rft_node->cells[c].i 	 = i[c];
-	rft_node->cells[c].j 	 = j[c];
-	rft_node->cells[c].k 	 = k[c];
-	rft_node->cells[c].depth = depth[c];
+        rft_node->cells[c].i     = i[c];
+        rft_node->cells[c].j     = j[c];
+        rft_node->cells[c].k     = k[c];
+        rft_node->cells[c].depth = depth[c];
       }
-	
+        
     }
 
     
@@ -207,9 +209,9 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
       const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "PRESSURE" , 0));
 
       for (int c = 0; c < rft_node->size; c++) {
-	rft_node->rft_data[c].swat     = SW[c];
-	rft_node->rft_data[c].sgas     = SG[c];
-	rft_node->cells[c].pressure     = P[c];
+        rft_node->rft_data[c].swat     = SW[c];
+        rft_node->rft_data[c].sgas     = SG[c];
+        rft_node->cells[c].pressure     = P[c];
       }
     } else if (rft_node->data_type == PLT) {
       /* For PLT there is quite a lot of extra information which is not yet internalized. */
@@ -219,10 +221,10 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
       const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft_file , "CONPRES" , 0));
 
       for (int c = 0; c < rft_node->size; c++) {
-	rft_node->plt_data[c].orat     = OR[c];
-	rft_node->plt_data[c].grat     = GR[c];
-	rft_node->plt_data[c].wrat     = WR[c];
-	rft_node->cells[c].pressure     = P[c];   
+        rft_node->plt_data[c].orat     = OR[c];
+        rft_node->plt_data[c].grat     = GR[c];
+        rft_node->plt_data[c].wrat     = WR[c];
+        rft_node->cells[c].pressure     = P[c];   
       }
     } else {
       /* Segmnet code - not implemented. */
@@ -237,11 +239,11 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft_file) {
       rft_node->__vertical_well = true;
       double first_delta = rft_node->cells[1].depth - rft_node->cells[0].depth;
       for (i = 1; i < (rft_node->size - 1); i++) {
-	double delta = rft_node->cells[i+1].depth - rft_node->cells[i].depth;
-	if (fabs(delta) > 0) {
-	  if (first_delta * delta < 0)
-	    rft_node->__vertical_well = false;
-	}
+        double delta = rft_node->cells[i+1].depth - rft_node->cells[i].depth;
+        if (fabs(delta) > 0) {
+          if (first_delta * delta < 0)
+            rft_node->__vertical_well = false;
+        }
       }
     }
   }
@@ -286,11 +288,11 @@ void ecl_rft_node_summarize(const ecl_rft_node_type * rft_node , bool print_cell
     printf("-----------------------------------------\n");
     for (i=0; i < rft_node->size; i++) 
       printf("%2d: %3d %3d %3d | %10.2f %10.2f \n",i,
-	     rft_node->cells[i].i , 
-	     rft_node->cells[i].j , 
-	     rft_node->cells[i].k , 
-	     rft_node->cells[i].depth,
-	     rft_node->cells[i].pressure);
+             rft_node->cells[i].i , 
+             rft_node->cells[i].j , 
+             rft_node->cells[i].k , 
+             rft_node->cells[i].depth,
+             rft_node->cells[i].pressure);
     printf("-----------------------------------------\n");
   }
 }
@@ -317,25 +319,25 @@ void ecl_rft_node_block(const ecl_rft_node_type * rft_node , double epsilon , in
     int    min_diff_index = 0;
     if (rft_node->__vertical_well) {
       for (rft_index = last_rft_index; rft_index < rft_node->size; rft_index++) {      
-	double diff = fabs(tvd[tvd_index] - rft_node->cells[rft_index].depth);
-	if (diff < min_diff) {
-	  min_diff = diff;
-	  min_diff_index = rft_index;
-	}
+        double diff = fabs(tvd[tvd_index] - rft_node->cells[rft_index].depth);
+        if (diff < min_diff) {
+          min_diff = diff;
+          min_diff_index = rft_index;
+        }
       }
     } else {
       for (rft_index = last_rft_index; rft_index < (rft_node->size - 1); rft_index++) {      
-	int next_rft_index = rft_index + 1;
-	if ((rft_node->cells[next_rft_index].depth - tvd[tvd_index]) * (tvd[tvd_index] - rft_node->cells[rft_index].depth) > 0) {
-	  /*
-	    We have bracketing ... !!
-	  */
-	  min_diff_index = rft_index;
-	  min_diff = 0;
-	  printf("Bracketing:  %g  |  %g  | %g \n",rft_node->cells[next_rft_index].depth , 
-		 tvd[tvd_index] , rft_node->cells[rft_index].depth);
-	  break;
-	}
+        int next_rft_index = rft_index + 1;
+        if ((rft_node->cells[next_rft_index].depth - tvd[tvd_index]) * (tvd[tvd_index] - rft_node->cells[rft_index].depth) > 0) {
+          /*
+            We have bracketing ... !!
+          */
+          min_diff_index = rft_index;
+          min_diff = 0;
+          printf("Bracketing:  %g  |  %g  | %g \n",rft_node->cells[next_rft_index].depth , 
+                 tvd[tvd_index] , rft_node->cells[rft_index].depth);
+          break;
+        }
       }
     }
 
@@ -403,30 +405,30 @@ void ecl_rft_node_block2(const ecl_rft_node_type * rft_node , int tvd_size , con
     {
       int index;
       for (index = 1; index < (tvd_size - 1); index++) 
-	if (tvd[index] < tvd[index+1] && tvd[index] < tvd[index-1]) 
-	  local_tvd_peak = util_double_min(tvd[index] , local_tvd_peak);
+        if (tvd[index] < tvd[index+1] && tvd[index] < tvd[index-1]) 
+          local_tvd_peak = util_double_min(tvd[index] , local_tvd_peak);
     }
     
     
     while (min_diff > epsilon) {
       for (rft_index = 0; rft_index < rft_node->size; rft_index++) {      
-	double diff = fabs(tvd[tvd_index] - rft_node->cells[rft_index].depth);
-	if (diff < min_diff) {
-	  min_diff = diff;
-	  min_diff_index = rft_index;
-	}
+        double diff = fabs(tvd[tvd_index] - rft_node->cells[rft_index].depth);
+        if (diff < min_diff) {
+          min_diff = diff;
+          min_diff_index = rft_index;
+        }
       }
       if (min_diff > epsilon) {
-	tvd_index++;
-	if (tvd_index == tvd_size) {
-	  fprintf(stderr,"%s: could not map tvd:%g to well-path depth - aborting \n",__func__ , tvd[tvd_index]);
-	  abort();
-	}
+        tvd_index++;
+        if (tvd_index == tvd_size) {
+          fprintf(stderr,"%s: could not map tvd:%g to well-path depth - aborting \n",__func__ , tvd[tvd_index]);
+          abort();
+        }
 
-	if (tvd[tvd_index] > local_tvd_peak) {
-	  fprintf(stderr,"%s: could not determine offset before well path becomes multivalued - aborting\n",__func__);
-	  abort();
-	}
+        if (tvd[tvd_index] > local_tvd_peak) {
+          fprintf(stderr,"%s: could not determine offset before well path becomes multivalued - aborting\n",__func__);
+          abort();
+        }
       }
     }
     ecl_rft_node_block_static(rft_node , min_diff_index , tvd_size , tvd_index , md , i , j , k);
@@ -439,13 +441,13 @@ void ecl_rft_node_block2(const ecl_rft_node_type * rft_node , int tvd_size , con
 
 void ecl_rft_node_fprintf_rft_obs(const ecl_rft_node_type * rft_node , double epsilon , const char * tvd_file , const char * target_file , double p_std) {
   FILE * input_stream  = util_fopen(tvd_file    , "r" );
-  int size    	       = util_count_file_lines(input_stream);
-  double *p   	       = util_malloc(size * sizeof * p,   __func__);
-  double *tvd 	       = util_malloc(size * sizeof * tvd, __func__);
+  int size             = util_count_file_lines(input_stream);
+  double *p            = util_malloc(size * sizeof * p,   __func__);
+  double *tvd          = util_malloc(size * sizeof * tvd, __func__);
   double *md           = util_malloc(size * sizeof * md,  __func__);
-  int    *i   	       = util_malloc(size * sizeof * i,   __func__);
-  int    *j   	       = util_malloc(size * sizeof * j,   __func__);
-  int    *k   	       = util_malloc(size * sizeof * k,   __func__);
+  int    *i            = util_malloc(size * sizeof * i,   __func__);
+  int    *j            = util_malloc(size * sizeof * j,   __func__);
+  int    *k            = util_malloc(size * sizeof * k,   __func__);
 
   {
     double *arg1 , *arg2 , *arg3;
@@ -455,8 +457,8 @@ void ecl_rft_node_fprintf_rft_obs(const ecl_rft_node_type * rft_node , double ep
     arg3 = md;
     for (line = 0; line < size; line++)
       if (fscanf(input_stream , "%lg  %lg", &arg1[line] , &arg2[line]) != 2) {
-	fprintf(stderr,"%s: something wrong when reading: %s - aborting \n",__func__ , tvd_file);
-	abort();
+        fprintf(stderr,"%s: something wrong when reading: %s - aborting \n",__func__ , tvd_file);
+        abort();
       }
   }
   fclose(input_stream);
@@ -467,14 +469,14 @@ void ecl_rft_node_fprintf_rft_obs(const ecl_rft_node_type * rft_node , double ep
     int line;
     for (line = 0; line < size; line++)
       if (i[line] != -1)
-	active_lines++;
+        active_lines++;
     
     if (active_lines > 0) {
       FILE * output_stream = util_fopen(target_file , "w" );
       fprintf(output_stream,"%d\n" , active_lines);
       for (line = 0; line < size; line++)
-	if (i[line] != -1)
-	  fprintf(output_stream , "%3d %3d %3d %g %g\n",i[line] , j[line] , k[line] , p[line] , p_std);
+        if (i[line] != -1)
+          fprintf(output_stream , "%3d %3d %3d %g %g\n",i[line] , j[line] , k[line] , p[line] , p_std);
       fclose(output_stream);
     } else 
       fprintf(stderr,"%s: Warning found no active cells when blocking well:%s to data_file:%s \n",__func__ , rft_node->well_name , tvd_file);
@@ -547,6 +549,20 @@ void ecl_rft_node_iget_ijk( const ecl_rft_node_type * rft_node , int index , int
   *i = cell->i;
   *j = cell->j;
   *k = cell->k;
+}
+
+
+int ecl_rft_node_lookup_ijk( const ecl_rft_node_type * rft_node , int i, int j , int k) {
+  int index = 0; 
+  while (true) {
+    const cell_type * cell = ecl_rft_node_iget_cell( rft_node , index );
+    if ((cell->i == (i+1)) && (cell->j == (j+1)) && (cell->k == (k+1)))  /* OK - found it. */
+      return index;
+    
+    index++;
+    if (index == rft_node->size)                             /* Could not find it. */
+      return -1;
+  }
 }
 
 

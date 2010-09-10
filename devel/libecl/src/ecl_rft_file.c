@@ -293,28 +293,29 @@ const ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * 
 
 /**
    Returns an rft_node for well 'well' and time 'recording_time'. If
-   the rft_file does not have the well in question the function will
-   go down in flames. If it has no rft recordings at the requested
-   date the function will return NULL.
+   the rft can not be found, either due to "wrong" well name, or "wrong"
+   time; the function will return NULL.
 */
 
 
 const ecl_rft_node_type * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
-  const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
   const ecl_rft_node_type * node = NULL;
-  int index = 0;
-  while (true) {
-    if (index == int_vector_size( index_vector ))
-      break;
-    
-    node = ecl_rft_file_iget_node( rft_file , int_vector_iget( index_vector , index ));
-    if (ecl_rft_node_get_date( node ) == recording_time) 
-      break;
-    else {
-      node = NULL;
-      index++;
+  if (hash_has_key( rft_file->well_index , well)) {
+    const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
+    int index = 0;
+    while (true) {
+      if (index == int_vector_size( index_vector ))
+        break;
+      
+      node = ecl_rft_file_iget_node( rft_file , int_vector_iget( index_vector , index ));
+      if (ecl_rft_node_get_date( node ) == recording_time) 
+        break;
+      else {
+        node = NULL;
+        index++;
+      }
+      
     }
-    
   }
   return node;
 }
