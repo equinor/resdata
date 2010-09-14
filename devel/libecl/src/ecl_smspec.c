@@ -397,12 +397,12 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   ecl_smspec = util_malloc(sizeof *ecl_smspec , __func__);
   UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
 
-  ecl_smspec->well_var_index     	     = hash_alloc();
+  ecl_smspec->well_var_index                 = hash_alloc();
   ecl_smspec->well_completion_var_index      = hash_alloc();
-  ecl_smspec->group_var_index    	     = hash_alloc();
-  ecl_smspec->field_var_index    	     = hash_alloc();
-  ecl_smspec->region_var_index   	     = hash_alloc();
-  ecl_smspec->misc_var_index     	     = hash_alloc();
+  ecl_smspec->group_var_index                = hash_alloc();
+  ecl_smspec->field_var_index                = hash_alloc();
+  ecl_smspec->region_var_index               = hash_alloc();
+  ecl_smspec->misc_var_index                 = hash_alloc();
   ecl_smspec->block_var_index                = hash_alloc();
   ecl_smspec->gen_var_index                  = hash_alloc();
   ecl_smspec->special_types                  = hash_alloc();
@@ -425,7 +425,7 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   hash_insert_int(ecl_smspec->special_types , "STEPTYPE"  , ECL_SMSPEC_MISC_VAR );
   
 
-  ecl_smspec->sim_start_time     	     = -1;
+  ecl_smspec->sim_start_time                 = -1;
   ecl_smspec->simulation_path                = util_alloc_string_copy( path );
   ecl_smspec->base_name                      = util_alloc_string_copy( base_name ); 
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
@@ -902,15 +902,15 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     {
       for (index=0; index < ecl_kw_get_size(wells); index++) {
         int num                      = NUMS_INVALID;
-	char * well                  = util_alloc_strip_copy(ecl_kw_iget_ptr(wells    , index));
-	char * kw                    = util_alloc_strip_copy(ecl_kw_iget_ptr(keywords , index));
+        char * well                  = util_alloc_strip_copy(ecl_kw_iget_ptr(wells    , index));
+        char * kw                    = util_alloc_strip_copy(ecl_kw_iget_ptr(keywords , index));
         char * unit                  = util_alloc_strip_copy(ecl_kw_iget_ptr(units    , index));
         char * lgr_name              = NULL;  
 
         smspec_index_type * smspec_index;
 
         ecl_smspec_var_type var_type = ecl_smspec_identify_var_type(ecl_smspec , kw);
-	if (nums != NULL) num        = ecl_kw_iget_int(nums , index);
+        if (nums != NULL) num        = ecl_kw_iget_int(nums , index);
         if (ecl_smspec_lgr_var_type( var_type )) {
           lgr_name  = util_alloc_strip_copy(  ecl_kw_iget_ptr( lgrs , index ));
           int lgr_i = ecl_kw_iget_int( numlx , index );
@@ -934,19 +934,19 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           switch(var_type) {
           case(ECL_SMSPEC_COMPLETION_VAR):
             /* Three level indexing: variable -> well -> string(cell_nr)*/
-	    if (!hash_has_key(ecl_smspec->well_completion_var_index , well))
+            if (!hash_has_key(ecl_smspec->well_completion_var_index , well))
               hash_insert_hash_owned_ref(ecl_smspec->well_completion_var_index , well , hash_alloc() , hash_free__);
-	    {
-	      hash_type * cell_hash = hash_get(ecl_smspec->well_completion_var_index , well);
+            {
+              hash_type * cell_hash = hash_get(ecl_smspec->well_completion_var_index , well);
               char cell_str[16];
-	      sprintf(cell_str , "%d" , num);
-	      if (!hash_has_key(cell_hash , cell_str))
-		hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
-	      {
-		hash_type * var_hash = hash_get(cell_hash , cell_str);
+              sprintf(cell_str , "%d" , num);
+              if (!hash_has_key(cell_hash , cell_str))
+                hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
+              {
+                hash_type * var_hash = hash_get(cell_hash , cell_str);
                 hash_insert_ref(var_hash , kw , smspec_index );
-	      }
-	    }
+              }
+            }
             break;
           case(ECL_SMSPEC_FIELD_VAR):
             /*
@@ -1296,7 +1296,7 @@ int ecl_smspec_get_well_completion_var_index(const ecl_smspec_type * ecl_smspec 
     if (hash_has_key(cell_hash , cell_str)) {
       hash_type * var_hash = hash_get(cell_hash , cell_str);
       if (hash_has_key(var_hash , var))
-	index = smspec_index_get_index( hash_get( var_hash , var) );
+        index = smspec_index_get_index( hash_get( var_hash , var) );
     }
   }
   free(cell_str);

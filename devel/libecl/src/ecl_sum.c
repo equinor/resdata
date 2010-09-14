@@ -176,8 +176,8 @@ ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char *
 /*****************************************************************/
 /* Well variables */
 
-int  	ecl_sum_get_well_var_index(const ecl_sum_type * ecl_sum , const char * well , const char *var) { return ecl_smspec_get_well_var_index(ecl_sum->smspec , well , var); }
-bool 	ecl_sum_has_well_var(const ecl_sum_type * ecl_sum , const char * well , const char *var)       { return ecl_smspec_has_well_var(ecl_sum->smspec , well , var); }
+int     ecl_sum_get_well_var_index(const ecl_sum_type * ecl_sum , const char * well , const char *var) { return ecl_smspec_get_well_var_index(ecl_sum->smspec , well , var); }
+bool    ecl_sum_has_well_var(const ecl_sum_type * ecl_sum , const char * well , const char *var)       { return ecl_smspec_has_well_var(ecl_sum->smspec , well , var); }
 
 double  ecl_sum_get_well_var(const ecl_sum_type * ecl_sum , int time_index , const char * well , const char *var) {
   int index = ecl_sum_get_well_var_index( ecl_sum , well , var );
@@ -304,8 +304,8 @@ double ecl_sum_get_region_var_from_sim_days( const ecl_sum_type * ecl_sum , doub
 /*****************************************************************/
 /* Misc variables */
 
-int  	ecl_sum_get_misc_var_index(const ecl_sum_type * ecl_sum , const char *var) { return ecl_smspec_get_misc_var_index( ecl_sum->smspec , var ); }
-bool 	ecl_sum_has_misc_var(const ecl_sum_type * ecl_sum , const char *var)       { return ecl_smspec_has_misc_var( ecl_sum->smspec , var ); }
+int     ecl_sum_get_misc_var_index(const ecl_sum_type * ecl_sum , const char *var) { return ecl_smspec_get_misc_var_index( ecl_sum->smspec , var ); }
+bool    ecl_sum_has_misc_var(const ecl_sum_type * ecl_sum , const char *var)       { return ecl_smspec_has_misc_var( ecl_sum->smspec , var ); }
 
 double  ecl_sum_get_misc_var(const ecl_sum_type * ecl_sum , int time_index , const char *var) {
   int index = ecl_sum_get_misc_var_index( ecl_sum ,  var);
