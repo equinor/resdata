@@ -471,11 +471,36 @@ char * util_alloc_cwd(void) {
 }
 
 
+/**
+   If @path points to an existing entry the standard realpath()
+   function is used otherwise an absolute path is created after the
+   following simple algorithm:
+
+    1. If @path starts with '/' the path is assumed to be absolute, and
+       just returned.
+  
+    2. Else cwd is prepended to the path.
+
+   In the manual path neither "/../" nor symlinks are resolved.
+*/
 
 char * util_alloc_abs_path( const char * path ) {
-  char work_path[4096];
-  realpath( path , work_path );
-  return util_alloc_string_copy( work_path );
+  if (util_entry_exists( path )) {
+    char work_path[4096];
+    realpath( path , work_path );
+    return util_alloc_string_copy( work_path );
+  } else {
+    /* Homemade realpath() for not existing path */
+    if (util_is_abs_path( path ))
+      return util_alloc_string_copy( path );
+    else {
+      char * cwd       = util_alloc_cwd( );
+      char * abs_path  = util_realloc( cwd , strlen( cwd ) + 1 + strlen( path ) + 1 , __func__);
+      strcat( abs_path , UTIL_PATH_SEP_STRING );
+      strcat( abs_path , path );
+      return abs_path;
+    }
+  }
 }
 
 
