@@ -1465,7 +1465,7 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
     sim_days = util_difftime_days( smspec->sim_start_time , sim_time);
   } else {
     /* Unusable configuration */
-    util_abort("%s: Sorry the SMSPEC file seems to lack all time information, need either TIME, or DAY/MONTH/YEAR information. Can not proceee.",__func__);
+    util_abort("%s: Sorry the SMSPEC file seems to lack all time information, need either TIME, or DAY/MONTH/YEAR information. Can not proceed.",__func__);
     
     sim_time = -1;
     sim_days = -1;

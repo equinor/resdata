@@ -46,14 +46,14 @@
    SEQHDR            \
    MINISTEP  3        |
    PARAMS    .....    |
-   MINISTEP  4	      |
+   MINISTEP  4        |
    PARAMS    .....    |
-   MINISTEP  5	      |==> This is REPORT STEP 2, in file BASE.S0002
+   MINISTEP  5        |==> This is REPORT STEP 2, in file BASE.S0002
    PARAMS    .....    |
-   MINISTEP  6	      |
+   MINISTEP  6        |
    PARAMS    .....    |
-   SEQHDR	      |
-   MINISTEP  7	      |
+   SEQHDR             |
+   MINISTEP  7        |
    PARAMS    .....   /
    ------------------
 
@@ -184,12 +184,12 @@ typedef struct ecl_sum_ministep_struct ecl_sum_ministep_type;
 
 struct ecl_sum_ministep_struct {
   UTIL_TYPE_ID_DECLARATION;
-  float       		 * data;            /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
-  time_t      		   sim_time;      
-  int         		   ministep;      
-  int         		   report_step;
-  double      		   sim_days;        /* Accumulated simulation time up to this ministep. */
-  int         		   data_size;       /* Number of elements in data - only used for checking indices. */
+  float                  * data;            /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
+  time_t                   sim_time;      
+  int                      ministep;      
+  int                      report_step;
+  double                   sim_days;        /* Accumulated simulation time up to this ministep. */
+  int                      data_size;       /* Number of elements in data - only used for checking indices. */
   int                      internal_index;  /* Used for lookups of the next / previous ministep based on an existing ministep. */
 };
 
@@ -197,14 +197,14 @@ struct ecl_sum_ministep_struct {
 
 
 struct ecl_sum_data_struct {
-  vector_type 	         * data;                   /* Vector of ecl_sum_ministep_type instances. */
+  vector_type            * data;                   /* Vector of ecl_sum_ministep_type instances. */
   const ecl_smspec_type  * smspec;                 /* A shared reference - only used for providing good error messages. */
   time_t                   sim_end;
   double                   sim_length;
-  int                	   first_ministep;
-  int                	   last_ministep; 
-  int_vector_type  	 * report_first_index ;    /* Indexed by report_step - giving first internal_index in report_step.   */
-  int_vector_type  	 * report_last_index;      /* Indexed by report_step - giving last internal_index in report_step.    */   
+  int                      first_ministep;
+  int                      last_ministep; 
+  int_vector_type        * report_first_index ;    /* Indexed by report_step - giving first internal_index in report_step.   */
+  int_vector_type        * report_last_index;      /* Indexed by report_step - giving last internal_index in report_step.    */   
   int                      first_report_step;
   int                      last_report_step;
 };
@@ -234,10 +234,10 @@ static void ecl_sum_ministep_free__( void * __ministep) {
 */
 
 
-static ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr    	  ,
-						       int report_step 	  ,
-						       const ecl_kw_type * param_kw , 
-						       const ecl_smspec_type * smspec) {
+static ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr            ,
+                                                       int report_step    ,
+                                                       const ecl_kw_type * param_kw , 
+                                                       const ecl_smspec_type * smspec) {
   int data_size = ecl_kw_get_size( param_kw );
   
   if (data_size == ecl_smspec_get_param_size( smspec )) {
@@ -626,27 +626,27 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
     int internal_index;
     for (internal_index = 0; internal_index < vector_get_size( sum_data->data ); internal_index++) {
       const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( sum_data , internal_index  );
-	int report_step = ministep->report_step;
-	int ministep_nr = ministep->ministep;
+        int report_step = ministep->report_step;
+        int ministep_nr = ministep->ministep;
         
         /* Indexing internal_index - report_step */
         {
-	  int current_first_index = int_vector_safe_iget( sum_data->report_first_index , report_step );
-	  if (current_first_index < 0) /* i.e. currently not set. */
-	    int_vector_iset( sum_data->report_first_index , report_step , internal_index);
-	  else
-	    if (internal_index  < current_first_index)
-	      int_vector_iset( sum_data->report_first_index , report_step , internal_index);
-	}
+          int current_first_index = int_vector_safe_iget( sum_data->report_first_index , report_step );
+          if (current_first_index < 0) /* i.e. currently not set. */
+            int_vector_iset( sum_data->report_first_index , report_step , internal_index);
+          else
+            if (internal_index  < current_first_index)
+              int_vector_iset( sum_data->report_first_index , report_step , internal_index);
+        }
         
-	{
-	  int current_last_index =  int_vector_safe_iget( sum_data->report_last_index , report_step );
-	  if (current_last_index < 0)
-	    int_vector_iset( sum_data->report_last_index , report_step ,  internal_index);
-	  else
-	    if (internal_index > current_last_index)
-	      int_vector_iset( sum_data->report_last_index , report_step , internal_index);
-	}
+        {
+          int current_last_index =  int_vector_safe_iget( sum_data->report_last_index , report_step );
+          if (current_last_index < 0)
+            int_vector_iset( sum_data->report_last_index , report_step ,  internal_index);
+          else
+            if (internal_index > current_last_index)
+              int_vector_iset( sum_data->report_last_index , report_step , internal_index);
+        }
         
         sum_data->first_report_step = util_int_min( sum_data->first_report_step , report_step );
         sum_data->last_report_step  = util_int_max( sum_data->last_report_step  , report_step );
@@ -676,15 +676,15 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
       /* Not unified. */
       for (filenr = 0; filenr < stringlist_get_size( filelist ); filenr++) {
         const char * data_file = stringlist_iget( filelist , filenr);
-	ecl_file_enum file_type;
-	int report_step;
-	file_type = ecl_util_get_file_type( data_file , NULL , &report_step);
-	/** 
-	    ECLIPSE starts a report step by writing an empty summary
-	    file, therefor we must verify that the ecl_file instance
-	    returned by ecl_file_fread_alloc() is different from NULL
-	    before adding it to the ecl_sum_data instance.
-	*/
+        ecl_file_enum file_type;
+        int report_step;
+        file_type = ecl_util_get_file_type( data_file , NULL , &report_step);
+        /** 
+            ECLIPSE starts a report step by writing an empty summary
+            file, therefor we must verify that the ecl_file instance
+            returned by ecl_file_fread_alloc() is different from NULL
+            before adding it to the ecl_sum_data instance.
+        */
         if (file_type != ECL_SUMMARY_FILE)
           util_abort("%s: file:%s has wrong type \n",__func__ , data_file);
         {
@@ -693,7 +693,7 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
             ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
             ecl_file_free( ecl_file );
           } 
-	}
+        }
       }
     } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
       /* Loading a unified summary file. */
@@ -702,12 +702,12 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
       bool complete = false;
       int report_step = 1; /* Corresponding to the first report_step in unified files - by assumption. */
       do {
-	ecl_file_type * ecl_file = ecl_file_fread_alloc_summary_section( fortio );
-	if (ecl_file != NULL) {
-	  ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
-	  ecl_file_free( ecl_file );
-	  report_step++;
-	} else complete = true;
+        ecl_file_type * ecl_file = ecl_file_fread_alloc_summary_section( fortio );
+        if (ecl_file != NULL) {
+          ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
+          ecl_file_free( ecl_file );
+          report_step++;
+        } else complete = true;
       } while ( !complete );
       fortio_fclose(fortio);
     } else
