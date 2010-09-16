@@ -12,11 +12,16 @@ int main(int argc , char ** argv) {
   
   ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( data_file , ":");
   if (ecl_sum != NULL) {
-    stringlist_type * keys;
-    if (argc >= 3)
-      keys = ecl_sum_alloc_matching_general_var_list( ecl_sum , argv[2]);
-    else
-      keys = ecl_sum_alloc_matching_general_var_list( ecl_sum , "*");
+    stringlist_type * keys = stringlist_alloc_new();
+
+    if (argc == 2)
+      ecl_sum_select_matching_general_var_list( ecl_sum , "*" , keys);
+    else {
+      for (int iarg = 2; iarg < argc; iarg++) {
+        printf("Matchging:%s \n",argv[iarg]);
+        ecl_sum_select_matching_general_var_list( ecl_sum , argv[iarg] , keys);
+      }
+    }
     
     stringlist_sort( keys , NULL );
     {

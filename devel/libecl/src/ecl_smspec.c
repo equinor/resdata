@@ -1509,17 +1509,32 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
    unfortunately not as useful as one might think because ECLIPSE is a
    bit quite stupid; it will for instance happily give ou the WOPR for
    a water injector or WWIR for an oil producer.
+
+   The function can be called several times with different patterns,
+   the stringlist is not cleared on startup; the keys in the list are
+   unique - keys are not added multiple times.
+
 */
 
 void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys) {
-  hash_iter_type * iter = hash_iter_alloc( smspec->gen_var_index);
-  stringlist_clear( keys );
-  while (!hash_iter_is_complete( iter )) {
-    const char * key = hash_iter_get_next_key( iter );
-    if (fnmatch( pattern , key , 0) == 0)
-      stringlist_append_copy( keys , key );
+  hash_type * ex_keys = hash_alloc( );
+  
+  for (int i=0; i < stringlist_get_size( keys ); i++) 
+    hash_insert_int( ex_keys , stringlist_iget( keys , i ) , 1);
+
+  {
+    hash_iter_type * iter = hash_iter_alloc( smspec->gen_var_index );
+    while (!hash_iter_is_complete( iter )) {
+      const char * key = hash_iter_get_next_key( iter );
+      if (fnmatch( pattern , key , 0) == 0) {
+        if (!hash_has_key( ex_keys , key))
+          stringlist_append_copy( keys , key );
+      }
+    }
+    hash_iter_free( iter );
   }
-  hash_iter_free( iter );
+  
+  hash_free( ex_keys );
 }
 
 

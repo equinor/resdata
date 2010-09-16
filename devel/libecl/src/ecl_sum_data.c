@@ -629,7 +629,6 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
     for (internal_index = 0; internal_index < vector_get_size( sum_data->data ); internal_index++) {
       const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( sum_data , internal_index  );
         int report_step = ministep->report_step;
-        int ministep_nr = ministep->ministep;
         
         /* Indexing internal_index - report_step */
         {
