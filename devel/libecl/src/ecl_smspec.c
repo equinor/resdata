@@ -1454,14 +1454,14 @@ void ecl_smspec_free__(void * __ecl_smspec) {
 
 
 void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * param_data , double * _sim_days , time_t * _sim_time) {
-  double sim_days;
-  time_t sim_time;
+  double sim_days = -1;
+  time_t sim_time = -1;
 
   if (smspec->time_index >= 0) {
     sim_days = param_data[smspec->time_index];
     sim_time = smspec->sim_start_time;
     util_inplace_forward_days( &sim_time , sim_days);
-  } else if (smspec->day_index > 0) {
+  } else if (smspec->day_index >= 0) {
     int sec  = 0;
     int min  = 0;
     int hour = 0;
@@ -1473,7 +1473,7 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
     sim_time = util_make_datetime(sec , min , hour , day , month , year);
     sim_days = util_difftime_days( smspec->sim_start_time , sim_time);
   } else 
-    util_abort("%s: internal error \n",__func__);
+    util_abort("%s: internal error - invalid config. Should not be here \n",__func__);
   
   
   *_sim_days = sim_days;

@@ -237,6 +237,7 @@ static void ecl_sum_ministep_free__( void * __ministep) {
 static ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr            ,
                                                        int report_step    ,
                                                        const ecl_kw_type * param_kw , 
+                                                       const char * src_file , 
                                                        const ecl_smspec_type * smspec) {
   int data_size = ecl_kw_get_size( param_kw );
   
@@ -252,7 +253,7 @@ static ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr          
 
     return ministep;
   } else {
-    fprintf(stderr , "** Warning size mismatch between timestep and header when loading summary data - timestep discarded\n");
+    fprintf(stderr , "** Warning size mismatch between timestep loaded from:%s and header:%s - timestep discarded.\n" , src_file , ecl_smspec_get_simulation_case( smspec ));
     return NULL;
   }
 }
@@ -574,6 +575,7 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
       ministep = ecl_sum_ministep_alloc( ministep_nr,
                                          report_step , 
                                          param_kw , 
+                                         ecl_file_get_src_file( ecl_file ) , 
                                          smspec);
       if (ministep != NULL)
         ecl_sum_data_append_ministep( data , ministep_nr , ministep );

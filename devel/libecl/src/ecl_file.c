@@ -779,3 +779,7 @@ const char * ecl_file_iget_distinct_kw(const ecl_file_type * ecl_file, int index
 }
 
 
+const char * ecl_file_get_src_file( const ecl_file_type * ecl_file ) {
+  return ecl_file->src_file;
+}
+

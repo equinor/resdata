@@ -25,6 +25,7 @@ int             ecl_file_get_num_kw( const ecl_file_type * ecl_fil );
 ecl_kw_type   * ecl_file_iget_kw( const ecl_file_type * ecl_file  , int index);
 int             ecl_file_get_num_distinct_kw(const ecl_file_type * ecl_file);
 const char    * ecl_file_iget_distinct_kw(const ecl_file_type * ecl_file , int index);
+const char    * ecl_file_get_src_file( const ecl_file_type * ecl_file );
 int             ecl_file_iget_occurence( const ecl_file_type *  ecl_file , int index);
 time_t          ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int occurence );
 int             ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_time);
@@ -36,8 +37,8 @@ ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio);
 ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type *     fortio);
 
 void            ecl_file_insert_kw( ecl_file_type * ecl_file , ecl_kw_type * ecl_kw , bool after , const char * neighbour_name , int neighbour_occurence );
-void 		ecl_file_fwrite_fortio(const ecl_file_type * ec_file  , fortio_type * fortio , int offset);
-void 		ecl_file_fwrite(const ecl_file_type * ecl_file , const char * , bool fmt_file );
+void            ecl_file_fwrite_fortio(const ecl_file_type * ec_file  , fortio_type * fortio , int offset);
+void            ecl_file_fwrite(const ecl_file_type * ecl_file , const char * , bool fmt_file );
 
 #ifdef __cplusplus
 }
