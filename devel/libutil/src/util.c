@@ -2421,7 +2421,7 @@ void util_inplace_forward_days(time_t * t , double days) {
   
   localtime_r(t , &ts);
   isdst = ts.tm_isdst;
-  (*t) += (int) (days * 3600 * 24);
+  (*t) += ( time_t ) (days * 3600 * 24);
   localtime_r(t , &ts);
   (*t) += 3600 * (isdst - ts.tm_isdst);  /* Extra adjustment of +/- one hour if we have crossed exactly one daylight savings border. */
 }
