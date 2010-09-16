@@ -829,20 +829,18 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
     restart_base = util_alloc_strip_copy( tmp_base );
     if (strlen(restart_base)) {  /* We ignore the empty ones. */
       char * smspec_header = ecl_util_alloc_exfilename( ecl_smspec->simulation_path , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
-
-      if (!util_same_file(smspec_header , ecl_smspec->header_file)) {   /* Restart from the current case is ignored. */
-        /* 
-         Verify that this smspec_header is not already in the list of restart
-         cases. Don't know if this is at all possible, but this test
-         nevertheless prevents against a recursive death.
-        */
-        if (!stringlist_contains( ecl_smspec->restart_list , restart_base)) {
-          stringlist_insert_copy( ecl_smspec->restart_list , 0 , restart_base );
-          
-          {
-            if (smspec_header == NULL) 
-              fprintf(stderr,"Warning - the file: %s refers to restart from case: %s - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
-            else {
+      if (smspec_header == NULL) 
+        fprintf(stderr,"Warning - the file: %s refers to restart from case: %s - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
+      else {
+        if (!util_same_file(smspec_header , ecl_smspec->header_file)) {   /* Restart from the current case is ignored. */
+          /* 
+             Verify that this smspec_header is not already in the list of restart
+             cases. Don't know if this is at all possible, but this test
+             nevertheless prevents against a recursive death.
+          */
+          if (!stringlist_contains( ecl_smspec->restart_list , restart_base)) {
+            stringlist_insert_copy( ecl_smspec->restart_list , 0 , restart_base );
+            {
               ecl_file_type * restart_header = ecl_file_fread_alloc( smspec_header );
               ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */ 
               ecl_file_free( restart_header );
@@ -891,7 +889,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
       ecl_smspec->has_lgr = false;
 
     date = ecl_kw_get_int_ptr(startdat);
-    ecl_smspec->sim_start_time = util_make_date(date[0] , date[1] , date[2]);
+    ecl_smspec->sim_start_time    = util_make_date(date[0] , date[1] , date[2]);
     ecl_smspec->grid_nx           = ecl_kw_iget_int(dimens , 1);
     ecl_smspec->grid_ny           = ecl_kw_iget_int(dimens , 2);
     ecl_smspec->grid_nz           = ecl_kw_iget_int(dimens , 3);
@@ -1038,16 +1036,27 @@ ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * k
   
   ecl_smspec_fread_header(ecl_smspec , header_file , include_restart);
   
-  if (hash_has_key(ecl_smspec->misc_var_index , "TIME")) {
-    if (hash_has_key( ecl_smspec->misc_var_index , "TIME"))
-      ecl_smspec->time_index = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "TIME") );
+  if (hash_has_key( ecl_smspec->misc_var_index , "TIME"))
+    ecl_smspec->time_index = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "TIME") );
+  
+  if (hash_has_key(ecl_smspec->misc_var_index , "DAY")) {
+    ecl_smspec->day_index   = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "DAY") );
+    ecl_smspec->month_index = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "MONTH") );
+    ecl_smspec->year_index  = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "YEAR") );
+  } 
 
-    if (hash_has_key(ecl_smspec->misc_var_index , "DAY")) {
-      ecl_smspec->day_index   = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "DAY") );
-      ecl_smspec->month_index = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "MONTH") );
-      ecl_smspec->year_index  = smspec_index_get_index( hash_get(ecl_smspec->misc_var_index , "YEAR") );
-    } 
-  } return ecl_smspec;
+  if ((ecl_smspec->time_index == -1) && ( ecl_smspec->day_index == -1)) {
+    /* Unusable configuration. 
+       
+       Seems the ECLIPSE file can also have time specified with
+       'YEARS' as basic time unit; that mode is not supported.
+    */
+    
+    util_abort("%s: Sorry the SMSPEC file seems to lack all time information, need either TIME, or DAY/MONTH/YEAR information. Can not proceed.",__func__);
+    return NULL;
+  }
+  
+  return ecl_smspec;
 }
 
 
@@ -1317,7 +1326,7 @@ bool  ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl_smspec , co
 
 
 /* There is a quite wide range of error which are just returned as
-   "Not found" (i.e. -1) - but that is OK. */
+   "Not found" (i.e. -1). */
 /* Completions not supported yet. */
 
 int ecl_smspec_get_general_var_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
@@ -1463,14 +1472,10 @@ void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * pa
     
     sim_time = util_make_datetime(sec , min , hour , day , month , year);
     sim_days = util_difftime_days( smspec->sim_start_time , sim_time);
-  } else {
-    /* Unusable configuration */
-    util_abort("%s: Sorry the SMSPEC file seems to lack all time information, need either TIME, or DAY/MONTH/YEAR information. Can not proceed.",__func__);
-    
-    sim_time = -1;
-    sim_days = -1;
-  }
-
+  } else 
+    util_abort("%s: internal error \n",__func__);
+  
+  
   *_sim_days = sim_days;
   *_sim_time= sim_time;
 }
