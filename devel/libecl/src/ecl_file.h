@@ -30,6 +30,7 @@ int             ecl_file_iget_occurence( const ecl_file_type *  ecl_file , int i
 time_t          ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int occurence );
 int             ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_time);
 
+ecl_file_type * ecl_file_alloc_empty( );
 ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int index );
 ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step);
 ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio);

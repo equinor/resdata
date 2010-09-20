@@ -81,7 +81,7 @@ struct ecl_file_struct {
 UTIL_SAFE_CAST_FUNCTION( ecl_file , ECL_FILE_ID)
 
 
-static ecl_file_type * ecl_file_alloc_empty( ) {
+ecl_file_type * ecl_file_alloc_empty( ) {
   ecl_file_type * ecl_file = util_malloc( sizeof * ecl_file , __func__);
   UTIL_TYPE_ID_INIT(ecl_file , ECL_FILE_ID);
   ecl_file->kw_list     = vector_alloc_new();
@@ -581,7 +581,7 @@ void ecl_file_fwrite_fortio(const ecl_file_type * ecl_file , fortio_type * forti
    to infer formatted/unformatted automagically the fmt_file variable
    is NOT consulted.
 */
-  
+
 void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, bool fmt_file) {
   bool __fmt_file;
   ecl_file_enum file_type;

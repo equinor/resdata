@@ -93,30 +93,30 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
     cont = false;
     if (__read_int(stream , &header , endian_flip)) {
       if (header >= 0) {
-	if (fseek(stream , header , SEEK_CUR) == 0) {
-	  if (__read_int(stream , &tail , endian_flip)) {
-	    cont = true;
-	    /* 
-	       OK - now we have read a header and a tail - it might be
-	       a fortran file.
-	    */
-	    if (header == tail) {
-	      if (header != 0) {
-		/* This is (most probably) a fortran file */
-		is_fortran_stream = true;
-		if (strict_checking)
-		  cont = true;  
-		else
-		  cont = false;
-	      }
-	      /* Header == tail == 0 - we don't make any inference on this. */
-	    } else {
-	      /* Header != tail => this is *not* a fortran file */
-	      cont = false;
-	      is_fortran_stream = false;
-	    }
-	  }
-	}
+        if (fseek(stream , header , SEEK_CUR) == 0) {
+          if (__read_int(stream , &tail , endian_flip)) {
+            cont = true;
+            /* 
+               OK - now we have read a header and a tail - it might be
+               a fortran file.
+            */
+            if (header == tail) {
+              if (header != 0) {
+                /* This is (most probably) a fortran file */
+                is_fortran_stream = true;
+                if (strict_checking)
+                  cont = true;  
+                else
+                  cont = false;
+              }
+              /* Header == tail == 0 - we don't make any inference on this. */
+            } else {
+              /* Header != tail => this is *not* a fortran file */
+              cont = false;
+              is_fortran_stream = false;
+            }
+          }
+        }
       } 
     }
   } while (cont);
@@ -232,11 +232,11 @@ bool fortio_is_fortio_file(fortio_type * fortio) {
 
     if (fseek(stream , fortio->active_header , SEEK_CUR) == 0) {
       if (fread(&trailer , sizeof(fortio->active_header) , 1 , fortio->stream) == 1) {
-	if (fortio->endian_flip_header)
-	  util_endian_flip_vector(&trailer , sizeof trailer , 1);
-	
-	if (trailer == fortio->active_header)
-	  is_fortio_file = true;
+        if (fortio->endian_flip_header)
+          util_endian_flip_vector(&trailer , sizeof trailer , 1);
+        
+        if (trailer == fortio->active_header)
+          is_fortio_file = true;
       }
     } 
   }
@@ -265,6 +265,42 @@ int fortio_init_read(fortio_type *fortio) {
   } else 
     return -1;
 }
+
+
+
+// util_fread_int: read failed: No such file or directory
+// 
+// ****************************************************************************
+// **                                                                        **
+// **           A fatal error occured, and we have to abort.                 **
+// **                                                                        **
+// **  We now *try* to provide a backtrace, which would be very useful       **
+// **  when debugging. The process of making a (human readable) backtrace    **
+// **  is quite complex, among other things it involves several calls to the **
+// **  external program addr2line. We have arrived here because the program  **
+// **  state is already quite broken, so the backtrace might be (seriously)  **
+// **  broken as well.                                                       **
+// **                                                                        **
+// ****************************************************************************
+// Current executable : /private/joaho/EnKF/devel/EnKF/libecl/applications/summary.x
+// --------------------------------------------------------------------------------
+//  #00 util_abort                 (..) in /private/joaho/EnKF/devel/EnKF/libutil/src/util.c:4604
+//  #01 util_fread_int             (..) in /private/joaho/EnKF/devel/EnKF/libutil/src/util.c:3423
+//  #02 fortio_complete_read       (..) in libecl/src/fortio.c:275
+//  #03 fortio_fread_record        (..) in libecl/src/fortio.c:297
+//  #04 fortio_fread_buffer        (..) in libecl/src/fortio.c:313
+//  #05 ecl_kw_fread_data          (..) in libecl/src/ecl_kw.c:745
+//  #06 ecl_kw_fread_realloc       (..) in libecl/src/ecl_kw.c:996
+//  #07 ecl_kw_fread_alloc         (..) in libecl/src/ecl_kw.c:1017
+//  #08 ecl_file_fread_alloc_fortio(..) in /private/joaho/EnKF/devel/EnKF/libecl/src/ecl_file.c:206
+//  #09 ecl_file_fread_alloc       (..) in /private/joaho/EnKF/devel/EnKF/libecl/src/ecl_file.c:265
+//  #10 ecl_sum_data_fread__       (..) in /private/joaho/EnKF/devel/EnKF/libecl/src/ecl_sum_data.c:693
+//  #11 ecl_sum_data_fread_alloc   (..) in /private/joaho/EnKF/devel/EnKF/libecl/src/ecl_sum_data.c:733
+//  #12 ecl_sum_fread_alloc__      (..) in libecl/src/ecl_sum.c:58
+//  #13 ecl_sum_fread_alloc_case__ (..) in libecl/src/ecl_sum.c:149
+//  #14 main                       (..) in /private/joaho/EnKF/devel/EnKF/libecl/applications/view_summary.c:144
+//  #15 ??                         (..) in ??:0
+//  #16 _start                     (..) in ??:0
 
 
 
@@ -312,9 +348,9 @@ void fortio_fread_buffer(fortio_type * fortio, char * buffer , int buffer_size) 
     char * buffer_ptr = &buffer[bytes_read];
     bytes_read += fortio_fread_record(fortio , buffer_ptr);
   }
+
   if (bytes_read > buffer_size) 
     util_abort("%s: hmmmm - something is broken. The individual records in %s did not sum up to the expected buffer size \n",__func__ , fortio->filename);
-
 }
 
 
@@ -404,11 +440,98 @@ void * fortio_fread_alloc_record(fortio_type * fortio) {
 }
 
 
+
+static fortio_status_type fortio_check_record( FILE * stream , bool endian_flip , int * record_size) {
+  int read_count;
+  int header, tail;
+  fortio_status_type status;
+
+  read_count = fread( &header , sizeof header , 1 , stream );
+  if (read_count == 0)
+    status = FORTIO_EOF;
+  else {
+    if (endian_flip)
+      util_endian_flip_vector(&header , sizeof header , 1);
+    
+    if (fseek(  stream , header , SEEK_CUR ) != 0) 
+      /* The fseek() failed - i.e. the data section was not sufficiently long. */
+      status = FORTIO_MISSING_DATA;
+    else {
+      read_count = fread( &tail , sizeof tail , 1 , stream );
+      if (read_count == 1) {
+        if (endian_flip)
+          util_endian_flip_vector(&tail , sizeof tail , 1);
+      
+        if (tail == header)
+          /* All OK */
+          status = FORTIO_OK;
+        else if ( tail != header ) 
+          /* The numerical value of the tail did not agree with the header. */
+          status = FORTIO_HEADER_MISMATCH;
+      } else 
+        /* The file ended before we could read the tail mark. */
+        status = FORTIO_MISSING_TAIL;
+    }
+  }
+
+  *record_size = header;
+  return status;
+}
+
+
+fortio_status_type fortio_check_buffer( FILE * stream , bool endian_flip , size_t buffer_size ) {
+  size_t current_size = 0;
+  fortio_status_type record_status;
+  while (true) {
+    int record_size;
+    record_status = fortio_check_record( stream , endian_flip , &record_size );
+    current_size += record_size;
+    if (record_status != FORTIO_OK)
+      break;
+  }
+  if (record_status == FORTIO_EOF) {
+    /* We are at the end of file - see if we have read in enough data. */
+    if (buffer_size == current_size)
+      return FORTIO_OK;
+    else
+      return FORTIO_EOF;
+  } else
+    return record_status;
+}
+
+  
+
+fortio_status_type fortio_check_file( const char * filename , bool endian_flip) {
+  if (util_file_exists( filename )) {
+    size_t file_size = util_file_size( filename );
+    if (file_size == 0)
+      return FORTIO_EOF;
+    else {
+      fortio_status_type record_status;
+      {
+        FILE * stream = util_fopen( filename , "r");
+        do {
+          int record_size;
+          record_status = fortio_check_record( stream , endian_flip , &record_size);
+        } while ( record_status == FORTIO_OK );
+        fclose( stream );
+      }
+      if (record_status == FORTIO_EOF) /* Normal exit from loop at EOF */
+        return FORTIO_OK;
+      else
+        return record_status;
+    }
+  } else
+    return FORTIO_NOENTRY;  /* This is an application error. */
+}
+
+
+
 /*****************************************************************/
 void          fortio_fflush(fortio_type * fortio) { fflush( fortio->stream); }
 FILE        * fortio_get_FILE(const fortio_type *fortio)        { return fortio->stream; }
 int           fortio_get_record_size(const fortio_type *fortio) { return fortio->active_header; }
-//bool          fortio_endian_flip(const fortio_type *fortio) 	{ return fortio->endian_flip_header; }
-bool          fortio_fmt_file(const fortio_type *fortio)    	{ return fortio->fmt_file; }
+//bool          fortio_endian_flip(const fortio_type *fortio)   { return fortio->endian_flip_header; }
+bool          fortio_fmt_file(const fortio_type *fortio)        { return fortio->fmt_file; }
 void          fortio_rewind(const fortio_type *fortio)          { rewind(fortio->stream); }
 const char  * fortio_filename_ref(const fortio_type * fortio)   { return (const char *) fortio->filename; }
