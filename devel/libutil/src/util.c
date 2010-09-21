@@ -4080,7 +4080,7 @@ void util_fread_compressed(void *__data , FILE * stream) {
   do {
     unsigned long compressed_size;
     unsigned long block_size = size - offset;
-    int compress_result;
+    int uncompress_result;
     fread(&compressed_size , sizeof compressed_size , 1 , stream);
     {
       int bytes_read = fread(zbuffer , 1 , compressed_size , stream);
@@ -4088,9 +4088,18 @@ void util_fread_compressed(void *__data , FILE * stream) {
         util_abort("%s: read only %d/%d bytes from compressed file - aborting \n",__func__ , bytes_read , compressed_size);
       
     }
-    compress_result = uncompress(&data[offset] , &block_size , zbuffer , compressed_size);
-    if (compress_result != Z_OK) 
-      util_abort("%s: uncompress returned %d - aborting \n",__func__ , compress_result);
+    uncompress_result = uncompress(&data[offset] , &block_size , zbuffer , compressed_size);
+    if (uncompress_result != Z_OK) {
+      fprintf(stderr,"%s: ** Warning uncompress result:%d != Z_OK.\n" , __func__ , uncompress_result);
+      /**
+         According to the zlib documentation:
+
+         1. Values > 0 are not errors - just rare events?
+         2. The value Z_BUF_ERROR is not fatal - we let that pass?!
+      */
+      if (uncompress_result < 0 && uncompress_result != Z_BUF_ERROR)
+        util_abort("%s: fatal uncompress error: %d \n",__func__ , uncompress_result);
+    }
     
     offset += block_size;
     {

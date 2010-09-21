@@ -244,10 +244,10 @@ static size_t buffer_fwrite__(buffer_type * buffer , const void * src_ptr , size
     if (write_items < items) {
       /* The buffer was not large enough - what to do now???? */
       if (abort_on_error)
-	util_abort("%s: failed to write %d elements to the buffer \n",__func__ , items); /* This code is never executed - abort is in resize__(); */
+        util_abort("%s: failed to write %d elements to the buffer \n",__func__ , items); /* This code is never executed - abort is in resize__(); */
       else 
-	/* OK we emulate fwrite() behaviour - setting errno to ENOMEM */
-	errno = ENOMEM;
+        /* OK we emulate fwrite() behaviour - setting errno to ENOMEM */
+        errno = ENOMEM;
     }
     buffer->content_size = util_size_t_max(buffer->content_size , buffer->pos);
     return write_items;
@@ -319,9 +319,17 @@ size_t buffer_fread_compressed(buffer_type * buffer , size_t compressed_size , v
 
   if (compressed_size > 0) {
     int uncompress_result = uncompress(target_ptr , &uncompressed_size , &buffer->data[buffer->pos] , compressed_size);
-    if (uncompress_result != Z_OK)
-      util_abort("%s: uncompress returned:%d results != Z_OK \n",__func__ , uncompress_result);
-    
+    if (uncompress_result != Z_OK) {
+      fprintf(stderr,"%s: ** Warning uncompress result:%d != Z_OK.\n" , __func__ , uncompress_result);
+      /**
+         According to the zlib documentation:
+
+         1. Values > 0 are not errors - just rare events?
+         2. The value Z_BUF_ERROR is not fatal - we let that pass?!
+      */
+      if (uncompress_result < 0 && uncompress_result != Z_BUF_ERROR)
+        util_abort("%s: fatal uncompress error: %d \n",__func__ , uncompress_result);
+    }
   } else
     uncompressed_size = 0;
   
