@@ -17,7 +17,12 @@ bin_path     = "../bin"
 
 conf = global_config.get_conf(os.getcwd() , package , 2)
 env  = Environment()
-conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBUTIL ] , ["lapack" , "plplotd" , "m" , "z" , "pthread"] , link = True)
+
+lib_list = ["lapack" , "plplotd" , "m" , "z" , "pthread"]
+if conf.RH == 3:
+   lib_list.append( "g2c" )
+
+conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBUTIL ] , lib_list , link = True)
 
 
 add_program(env , conf ,  bin_path , "key_list.x"        , "key_list.c"        )
