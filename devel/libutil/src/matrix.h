@@ -33,11 +33,13 @@ void          matrix_inplace_sub(matrix_type * A , const matrix_type * B);
 void          matrix_inplace_mul(matrix_type * A , const matrix_type * B);
 void          matrix_inplace_div(matrix_type * A , const matrix_type * B);
 
+
 void          matrix_iset_safe(matrix_type * matrix , int i , int j, double value);
 void   inline matrix_iset(matrix_type * matrix , int i , int j, double value);
 double inline matrix_iget(const matrix_type * matrix , int i , int j);
 void   inline matrix_iadd(matrix_type * matrix , int i , int j , double value);
 void   inline matrix_imul(matrix_type * matrix , int i , int j , double value);
+
 
 void          matrix_inplace_matmul(matrix_type * A, const matrix_type * B);
 void          matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads);
@@ -47,6 +49,7 @@ double        matrix_get_row_sum(const matrix_type * matrix , int column);
 void          matrix_subtract_row_mean(matrix_type * matrix);
 void          matrix_scale_column(matrix_type * matrix , int column  , double scale_factor);
 void          matrix_set_const_column(matrix_type * matrix , const double value , int column);
+void          matrix_copy_column(matrix_type * target_matrix, const matrix_type * src_matrix , int src_column, int target_column);
 
 double      * matrix_get_data(const matrix_type * matrix);
 bool          matrix_is_finite(const matrix_type * matrix);
@@ -57,10 +60,10 @@ void          matrix_set_column(matrix_type * matrix , const double * data , int
 void          matrix_set_many_on_column(matrix_type * matrix , int row_offset , int elements , const double * data , int column);
 void          matrix_ensure_rows(matrix_type * matrix, int rows, bool copy_content);
 void          matrix_shrink_header(matrix_type * matrix , int rows , int columns);
-int 	      matrix_get_rows(const matrix_type * matrix);
-int 	      matrix_get_columns(const matrix_type * matrix);
-int 	      matrix_get_row_stride(const matrix_type * matrix);
-int 	      matrix_get_column_stride(const matrix_type * matrix);
+int           matrix_get_rows(const matrix_type * matrix);
+int           matrix_get_columns(const matrix_type * matrix);
+int           matrix_get_row_stride(const matrix_type * matrix);
+int           matrix_get_column_stride(const matrix_type * matrix);
 void          matrix_get_dims(const matrix_type * matrix ,  int * rows , int * columns , int * row_stride , int * column_stride);
 bool          matrix_is_quadratic(const matrix_type * matrix);
 bool          matrix_equal( const matrix_type * m1 , const matrix_type * m2);
