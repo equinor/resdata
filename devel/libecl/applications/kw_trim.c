@@ -82,10 +82,9 @@ int main(int argc, char ** argv) {
       fortio  = fortio_fopen(src_file , "w" , ECL_ENDIAN_FLIP, fmt_file );
       for (ikw = 0; ikw < ecl_file_get_num_kw( ecl_file ); ikw++) {
         const ecl_kw_type * ecl_kw = ecl_file_iget_kw( ecl_file , ikw );
-        char * kw = ecl_kw_alloc_strip_header( ecl_kw );
+        const char * kw = ecl_kw_get_header( ecl_kw );
         if (set_has_key( kw_set , kw))
           ecl_kw_fwrite(ecl_kw , fortio );
-        free( kw );
       }
       fortio_fclose( fortio );
     }

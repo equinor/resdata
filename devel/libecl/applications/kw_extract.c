@@ -44,13 +44,12 @@ int main(int argc, char ** argv) {
       ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
       while (true) {
         if (ecl_kw_fread_header( ecl_kw , fortio_src )) {
-          char * header = ecl_kw_alloc_strip_header( ecl_kw ); 
+          const char * header = ecl_kw_get_header( ecl_kw ); 
           if (set_has_key( kw_set , header )) {
             ecl_kw_fread_realloc_data(ecl_kw , fortio_src );
             ecl_kw_fwrite( ecl_kw , fortio_target );
           } else
             ecl_kw_fskip_data( ecl_kw , fortio_src );
-          free( header );
         } else 
           break; /* We have reached EOF */
       }
