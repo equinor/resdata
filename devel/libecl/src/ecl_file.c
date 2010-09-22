@@ -107,7 +107,7 @@ static void ecl_file_make_index( ecl_file_type * ecl_file ) {
     int i;
     for (i=0; i < vector_get_size( ecl_file->kw_list ); i++) {
       const ecl_kw_type * ecl_kw = vector_iget_const( ecl_file->kw_list , i);
-      char              * header = ecl_kw_alloc_strip_header( ecl_kw );
+      const char        * header = ecl_kw_get_header( ecl_kw );
       if ( !hash_has_key( ecl_file->kw_index , header )) {
         int_vector_type * index_vector = int_vector_alloc( 0 , -1 );
         hash_insert_hash_owned_ref( ecl_file->kw_index , header , index_vector , int_vector_free__);
@@ -118,7 +118,6 @@ static void ecl_file_make_index( ecl_file_type * ecl_file ) {
         int_vector_type * index_vector = hash_get( ecl_file->kw_index , header);
         int_vector_append( index_vector , i);
       }
-      free(header);
     }
   }
 }
@@ -557,7 +556,7 @@ void ecl_file_insert_kw( ecl_file_type * ecl_file , ecl_kw_type * ecl_kw , bool 
    function will fail hard.
 */
    
-void ecl_file_delete_kw( ecl_file_type * ecl_file , ecl_kw_type * ecl_kw , bool after , const char * name , int occurence ) {
+void ecl_file_delete_kw( ecl_file_type * ecl_file , const char * name , int occurence ) {
   const int_vector_type * index_vector = hash_get(ecl_file->kw_index , name);
   int global_index = int_vector_iget( index_vector , occurence);
   vector_idel( ecl_file->kw_list , global_index );
@@ -732,7 +731,7 @@ int ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw) 
 
 int ecl_file_iget_occurence( const ecl_file_type * ecl_file , int index) {
   const ecl_kw_type * ecl_kw = ecl_file_iget_kw( ecl_file , index );
-  char * header = ecl_kw_alloc_strip_header( ecl_kw );
+  const char * header        = ecl_kw_get_header( ecl_kw );
   const int_vector_type * index_vector = hash_get(ecl_file->kw_index , header );
   const int * index_data = int_vector_get_const_ptr( index_vector );
   
@@ -746,7 +745,6 @@ int ecl_file_iget_occurence( const ecl_file_type * ecl_file , int index) {
   if (occurence < 0)
     util_abort("%s: internal error ... \n" , __func__);
 
-  free(header);
   return occurence;
 }
 

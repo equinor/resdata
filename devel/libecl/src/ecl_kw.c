@@ -22,6 +22,7 @@ struct ecl_kw_struct {
   int               sizeof_ctype;
   ecl_type_enum     ecl_type;
   char            * header8;              /* Header which is right padded with ' ' to become exactly 8 characters long. Should only be used internally.*/ 
+  char            * header;               /* Header which is trimmed to no-space. */  
   char            * data;                 /* The actual data vector. */
   bool              shared_data;          /* Whether this keyword has shared data or not. */ 
   long int          __file_offset;        /* The in-file position of the start of this keyword - to support rewind() functionality. */
@@ -248,9 +249,11 @@ const char * ecl_kw_get_header8(const ecl_kw_type *ecl_kw) {
   return ecl_kw->header8; 
 }
 
-
-char * ecl_kw_alloc_strip_header(const ecl_kw_type *ecl_kw) {
-  return util_alloc_strip_copy(ecl_kw->header8);
+/*
+   Return the header without the trailing spaces 
+*/
+const char * ecl_kw_get_header(const ecl_kw_type * ecl_kw ) {
+  return ecl_kw->header;
 }
 
 void ecl_kw_get_memcpy_data(const ecl_kw_type *ecl_kw , void *target) {
@@ -387,6 +390,7 @@ ecl_kw_type * ecl_kw_alloc_empty() {
   ecl_kw_type *ecl_kw;
   
   ecl_kw                 = util_malloc(sizeof *ecl_kw , __func__);
+  ecl_kw->header         = NULL;
   ecl_kw->header8        = NULL;
   ecl_kw->data           = NULL;
   ecl_kw->shared_data    = false;
@@ -402,7 +406,8 @@ ecl_kw_type * ecl_kw_alloc_empty() {
 
 
 void ecl_kw_free(ecl_kw_type *ecl_kw) {
-  free(ecl_kw->header8);
+  util_safe_free( ecl_kw->header );
+  util_safe_free(ecl_kw->header8);
   ecl_kw_free_data(ecl_kw);
   free(ecl_kw);
 }
@@ -417,10 +422,8 @@ void ecl_kw_memcpy(ecl_kw_type *target, const ecl_kw_type *src) {
   target->sizeof_ctype        = src->sizeof_ctype;
   target->ecl_type            = src->ecl_type;
 
-  
-  target->header8 = realloc(target->header8 , strlen(src->header8) + 1);
-  strcpy(target->header8 , src->header8);
 
+  ecl_kw_set_header_name( target , src->header );
   ecl_kw_alloc_data(target);
   memcpy(target->data , src->data , target->size * target->sizeof_ctype);
 }
@@ -523,6 +526,53 @@ const char * ecl_kw_iget_char_ptr( const ecl_kw_type * ecl_kw , int i) {
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        
   return ecl_kw_iget_ptr( ecl_kw , i );
 }
+
+
+/**
+   This will set the elemnts of the ecl_kw data storage in index to
+   the value of s8; if s8 is shorter than 8 characters the result will
+   be padded, if s8 is longer than 8 characters the characters from 9
+   and out will be ignored. 
+*/
+static void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s8) {
+  char * ecl_string = (char *) ecl_kw_iget_ptr( ecl_kw , index );
+  if (strlen( s8 ) >= ECL_STRING_LENGTH) {
+    /* The whole string goes in - possibly loosing content at the end. */
+    for (int i=0; i < ECL_STRING_LENGTH; i++)
+      ecl_string[i] = s8[i];
+  } else {
+    /* The string is padded with trailing spaces. */
+    int string_length = strlen( s8 );
+    int pad_length    = ECL_STRING_LENGTH - string_length;
+    int i;
+    
+    for (i=0; i < string_length; i++)
+      ecl_string[i] = s8[i];
+
+    for (i=0; i < pad_length; i++)
+      ecl_string[string_length + i] = ' ';
+  }
+}
+
+/**
+   This function will set the string @index in the ecl_kw string array
+   to @s. IFF @s is longer than 8 characters, the first part will go
+   inelement @index, and then we will continue writing into the next
+   elements. If you go beyond the length of the keyword - WhamBang!
+
+   You should know what you are doing when sending in a string of
+   length greater than 8 - maybe the overwriting of consecutive
+   elements is not what you want?  
+*/
+void ecl_kw_iset_char_ptr( ecl_kw_type * ecl_kw , int index, const char * s) {
+  int strings = strlen( s ) / ECL_STRING_LENGTH;
+  if ((strlen( s ) %  ECL_STRING_LENGTH) != 0)
+    strings++;
+
+  for (int sub_index = 0; sub_index < strings; sub_index++) 
+    ecl_kw_iset_string8( ecl_kw , index + sub_index , &s[ sub_index * ECL_STRING_LENGTH ]);
+}
+
 
   
 
@@ -969,6 +1019,10 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
   ecl_kw->header8 = realloc(ecl_kw->header8 , ECL_STRING_LENGTH + 1);
   sprintf(ecl_kw->header8 , "%-8s" , header);
+  
+  /* Internalizing a header without the trailing spaces as well. */
+  util_safe_free( ecl_kw->header );
+  ecl_kw->header = util_alloc_strip_copy( ecl_kw->header8 );
 }
 
 
@@ -1246,7 +1300,7 @@ void ecl_kw_cfwrite_header(const ecl_kw_type * ecl_kw , FILE *stream) {
   fwrite(&dummy_bool             , sizeof dummy_bool           , 1 , stream);  /* Old ecl_kw->endian_flip */
   fwrite(&ecl_kw->ecl_type       , sizeof ecl_kw->ecl_type     , 1 , stream);
 
-  util_fwrite_string(ecl_kw->header8    , stream);
+  util_fwrite_string( ecl_kw->header8    , stream);
   util_fwrite_string( get_write_fmt( ecl_kw->ecl_type ) , stream );            
   util_fwrite_string( get_read_fmt( ecl_kw->ecl_type )  , stream );
 }
