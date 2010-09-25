@@ -557,8 +557,9 @@ static void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s
 /**
    This function will set the string @index in the ecl_kw string array
    to @s. IFF @s is longer than 8 characters, the first part will go
-   inelement @index, and then we will continue writing into the next
-   elements. If you go beyond the length of the keyword - WhamBang!
+   in element @index, and then we will continue writing into the next
+   elements. If the resulting index goes beyond the length of the
+   keyword - WhamBang!
 
    You should know what you are doing when sending in a string of
    length greater than 8 - maybe the overwriting of consecutive

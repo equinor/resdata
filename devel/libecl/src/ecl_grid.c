@@ -1062,7 +1062,7 @@ static void ecl_grid_set_lgr_name_GRID(ecl_grid_type * lgr_grid , const ecl_file
   0---1
 */
 
-static ecl_grid_type * ecl_grid_alloc_GRDECL__(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, int grid_nr) {
+static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, int grid_nr) {
   int i,j,k;
   ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(nx,ny,nz,grid_nr);
   point_type pillars[4][2];
@@ -1115,13 +1115,17 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL__(int nx , int ny , int nz , const 
 }
 
 
-ecl_grid_type * ecl_grid_alloc_GRDECL(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes) {
-  return ecl_grid_alloc_GRDECL__(nx , ny , nz , zcorn , coord , actnum , mapaxes , 0);
+ecl_grid_type * ecl_grid_alloc_GRDECL_data(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes) {
+  return ecl_grid_alloc_GRDECL_data__(nx , ny , nz , zcorn , coord , actnum , mapaxes , 0);
 }
 
-
-static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl_file_type * ecl_file , int grid_nr) {
-  ecl_kw_type * gridhead_kw = ecl_file_iget_named_kw( ecl_file , "GRIDHEAD" , grid_nr);
+static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__( const ecl_kw_type * gridhead_kw , 
+                                                   const ecl_kw_type * zcorn_kw , 
+                                                   const ecl_kw_type * coord_kw , 
+                                                   const ecl_kw_type * actnum_kw , 
+                                                   const ecl_kw_type * mapaxes_kw ,   /* Can be NULL */
+                                                   int grid_nr) {
+  
   int gtype, nx,ny,nz;
 
   gtype   = ecl_kw_iget_int(gridhead_kw , 0);
@@ -1129,25 +1133,60 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl
   ny      = ecl_kw_iget_int(gridhead_kw , 2);
   nz      = ecl_kw_iget_int(gridhead_kw , 3);
   if (gtype != 1)
-    util_abort("%s: gtype:%d fatal error when loading:%s - must have corner point grid - aborting\n",__func__ , gtype , grid_file);
+    util_abort("%s: gtype:%d fatal error when loading grid - must have corner point grid - aborting\n",__func__ , gtype );
   {
-    
-    ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , "ZCORN"     , grid_nr);
-    ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , "COORD"     , grid_nr);
-    ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , "ACTNUM"    , grid_nr);
-    float       * mapaxes_data = NULL;
-    
-    if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , "MAPAXES"))) {
-      const ecl_kw_type * mapaxes_kw   = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
+    const float * mapaxes_data = NULL;
+
+    if (mapaxes_kw != NULL)
       mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw );
-    }
+
+    return ecl_grid_alloc_GRDECL_data__(nx , ny , nz , 
+                                        ecl_kw_get_float_ptr(zcorn_kw) , 
+                                        ecl_kw_get_float_ptr(coord_kw) , 
+                                        ecl_kw_get_int_ptr(actnum_kw) , 
+                                        mapaxes_data, 
+                                        grid_nr);
+  }
+}
+
+
+
+ecl_grid_type * ecl_grid_alloc_GRDECL_kw( const ecl_kw_type * gridhead_kw , const ecl_kw_type * zcorn_kw , const ecl_kw_type * coord_kw , const ecl_kw_type * actnum_kw , const ecl_kw_type * mapaxes_kw ) {
+  return ecl_grid_alloc_GRDECL_kw__(gridhead_kw , zcorn_kw , coord_kw , actnum_kw , mapaxes_kw , 0);
+}
+
+
+
+/**
+   Creating a grid based on a EGRID file is a three step process:
+
+    1. Load the file and extracte the keywords.
+    2. Call xx_alloc_GRDECL_kw__() to build grid based on keywords.
+    3. Call xx_alloc_GRDECL_data__() to build the grid based on keyword data.
     
-    ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL__(nx , ny , nz , 
-                                                       ecl_kw_get_float_ptr(zcorn_kw) , 
-                                                       ecl_kw_get_float_ptr(coord_kw) , 
-                                                       ecl_kw_get_int_ptr(actnum_kw) , 
-                                                       mapaxes_data, 
-                                                       grid_nr);
+   The point is that external scope can create grid based on both a
+   list of keywords, and actual data - in addition to the normal loading
+   of a full file.
+*/
+
+
+static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl_file_type * ecl_file , int grid_nr) {
+  ecl_kw_type * gridhead_kw = ecl_file_iget_named_kw( ecl_file , "GRIDHEAD" , grid_nr);
+  ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , "ZCORN"     , grid_nr);
+  ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , "COORD"     , grid_nr);
+  ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , "ACTNUM"    , grid_nr);
+  ecl_kw_type * mapaxes_kw   = NULL; 
+  
+  if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , "MAPAXES"))) 
+    mapaxes_kw   = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
+  {
+    ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__( gridhead_kw , 
+                                                           zcorn_kw , 
+                                                           coord_kw , 
+                                                           actnum_kw , 
+                                                           mapaxes_kw , 
+                                                           grid_nr );
+
     
     if (grid_nr > 0) ecl_grid_set_lgr_name_EGRID(ecl_grid , ecl_file , grid_nr);
     return ecl_grid;
