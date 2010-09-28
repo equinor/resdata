@@ -18,7 +18,8 @@ typedef struct ecl_sum_struct       ecl_sum_type;
 
 
 
-
+bool             ecl_sum_check_sim_time( const ecl_sum_type * sum , time_t sim_time);
+bool             ecl_sum_check_sim_days( const ecl_sum_type * sum , double sim_days);
 const char *     ecl_sum_get_keyword( const ecl_sum_type * sum , const char * gen_key );
 const char *     ecl_sum_get_wgname( const ecl_sum_type * sum , const char * gen_key );
 const char *     ecl_sum_get_unit( const ecl_sum_type * sum , const char * gen_key );

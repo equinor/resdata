@@ -165,7 +165,7 @@ static grav_station_type * grav_station_alloc(const char * name , double x, doub
 
     1. Each station on a seperate line.
     2. For each station we have four items:
-
+-----
          name   utm_x  utm_y   depth
    
        name is an arbitrary string - without spaces.
@@ -179,8 +179,8 @@ static void load_stations(vector_type * grav_stations , const char * filename) {
     while(!(at_eof)) {
       double x,y,d;
       char station_name[32];
-      int fscanf_return = fscanf(stream, "%s%lg%lg%lg", station_name , &x,&y,&d);
-      if(fscanf_return == 4){
+      int fscanf_return = fscanf(stream, "%s %lg %lg %lg", station_name , &x,&y,&d);
+      if(fscanf_return == 4) {
         grav_station_type * g = grav_station_alloc(station_name , x,y,d);
         vector_append_owned_ref(grav_stations, g, grav_station_free__);
       } else 
@@ -354,12 +354,18 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
         if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_FORMATTED_UNIFIED)) {
           restart_files[0] = ecl_file_fread_alloc_unrst_section( unified_file , report1 );
           restart_files[1] = ecl_file_fread_alloc_unrst_section( unified_file , report2 );
+          if (restart_files[0] == NULL)
+            util_exit("Failed to load report:%d from %s \n",report1 , unified_file );
+
+          if (restart_files[1] == NULL)
+            util_exit("Failed to load report:%d from %s \n",report2 , unified_file );
         } else {
           restart_files[0] = ecl_file_fread_alloc( file1 );
           restart_files[1] = ecl_file_fread_alloc( file2 );
         }
-          
-
+        
+        
+        
 
         *use_eclbase = true;
         if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_BINARY_NON_UNIFIED))
@@ -625,7 +631,7 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
   {
     int model_phases = 0;
     int file_phases  = 0;
-    
+
     /* Check which phases are present in the model */
     if (ecl_file_has_kw(restart_file1 , "OIL_DEN"))
       model_phases += OIL;                                    

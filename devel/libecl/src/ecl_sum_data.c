@@ -350,6 +350,29 @@ static const ecl_sum_ministep_type * ecl_sum_data_iget_ministep( const ecl_sum_d
 }
 
 
+
+
+bool ecl_sum_data_check_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
+  time_t sim_start = ecl_smspec_get_start_time( data->smspec );
+  if ((sim_time < sim_start) || (sim_time > data->sim_end))
+    return false;
+  else
+    return true;
+}
+
+
+bool ecl_sum_data_check_sim_days( const ecl_sum_data_type * data , double sim_days) {
+  if ((sim_days < 0) || ( sim_days > data->sim_length))
+    return false;
+  else
+    return true;
+}
+
+
+
+
+
+
 /**
    This function will return the ministep corresponding to a time_t
    instance 'sim_time'. The function will fail hard if the time_t is
@@ -385,7 +408,6 @@ static const ecl_sum_ministep_type * ecl_sum_data_iget_ministep( const ecl_sum_d
      the sim_time. Of course - the ideal situation is if the time
      sequence has no holes.
 */
-
 
 
 static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data , time_t sim_time) {

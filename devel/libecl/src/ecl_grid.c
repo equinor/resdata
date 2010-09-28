@@ -1114,6 +1114,11 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(int nx , int ny , int nz , c
   return ecl_grid;
 }
 
+/*
+  If you create/load data for the various fields, this function can be
+   used to create a GRID instance, without going through a GRID/EGRID
+   file.
+*/
 
 ecl_grid_type * ecl_grid_alloc_GRDECL_data(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes) {
   return ecl_grid_alloc_GRDECL_data__(nx , ny , nz , zcorn , coord , actnum , mapaxes , 0);
@@ -1150,6 +1155,11 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__( const ecl_kw_type * gridhead_
 }
 
 
+/**
+   If you create/load ecl_kw instances for the various fields, this
+   function can be used to create a GRID instance, without going
+   through a GRID/EGRID file.
+*/
 
 ecl_grid_type * ecl_grid_alloc_GRDECL_kw( const ecl_kw_type * gridhead_kw , const ecl_kw_type * zcorn_kw , const ecl_kw_type * coord_kw , const ecl_kw_type * actnum_kw , const ecl_kw_type * mapaxes_kw ) {
   return ecl_grid_alloc_GRDECL_kw__(gridhead_kw , zcorn_kw , coord_kw , actnum_kw , mapaxes_kw , 0);

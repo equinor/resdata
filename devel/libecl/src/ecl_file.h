@@ -42,6 +42,8 @@ void            ecl_file_insert_kw( ecl_file_type * ecl_file , ecl_kw_type * ecl
 void            ecl_file_fwrite_fortio(const ecl_file_type * ec_file  , fortio_type * fortio , int offset);
 void            ecl_file_fwrite(const ecl_file_type * ecl_file , const char * , bool fmt_file );
 
+UTIL_IS_INSTANCE_HEADER( ecl_file )
+
 #ifdef __cplusplus
 }
 #endif 

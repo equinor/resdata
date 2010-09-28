@@ -79,6 +79,7 @@ struct ecl_file_struct {
 */
 
 UTIL_SAFE_CAST_FUNCTION( ecl_file , ECL_FILE_ID)
+UTIL_IS_INSTANCE_FUNCTION( ecl_file , ECL_FILE_ID)
 
 
 ecl_file_type * ecl_file_alloc_empty( ) {

@@ -1463,7 +1463,7 @@ void ecl_kw_fprintf_grdecl(ecl_kw_type * ecl_kw , FILE * stream) {
   fprintf(stream,"%s\n" , ecl_kw_get_header8(ecl_kw));
   ecl_kw_fwrite_data(ecl_kw , fortio);
   fprintf(stream,"\n/\n"); /* Unsure about the leading newline ?? */
-  fortio_free_FILE_wrapper(fortio);
+  fortio_free_FILE_wrapper( fortio );
 }
 
 

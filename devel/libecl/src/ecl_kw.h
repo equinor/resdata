@@ -34,7 +34,7 @@ void          ecl_kw_alloc_float_data(ecl_kw_type * ecl_kw , float * values);
 bool          ecl_kw_fread_realloc(ecl_kw_type *, fortio_type *);
 void          ecl_kw_fread(ecl_kw_type * , fortio_type * );
 ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * , int , ecl_type_enum );
-void          ecl_kw_fprintf_grdecl(ecl_kw_type *  , FILE * );
+void          ecl_kw_fprintf_grdecl(ecl_kw_type *  , FILE * stream);
 ecl_kw_type * ecl_kw_fread_alloc(fortio_type *);
 ecl_kw_type * ecl_kw_fscanf_alloc_parameter(FILE * , int );
 void          ecl_kw_free_data(ecl_kw_type *);

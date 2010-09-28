@@ -756,6 +756,17 @@ int ecl_sum_get_data_length( const ecl_sum_type * ecl_sum ) {
 }
 
 
+bool ecl_sum_check_sim_time( const ecl_sum_type * sum , time_t sim_time) {
+  return ecl_sum_data_check_sim_time( sum->data , sim_time );
+}
+
+
+bool ecl_sum_check_sim_days( const ecl_sum_type * sum , double sim_days) {
+  return ecl_sum_data_check_sim_days( sum->data , sim_days );
+}
+
+
+
 /*****************************************************************/
 
 const ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum ) {
