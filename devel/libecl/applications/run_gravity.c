@@ -1,5 +1,6 @@
 #include <util.h>
 #include <hash.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <ecl_file.h>
@@ -210,23 +211,23 @@ static void load_stations(vector_type * grav_stations , const char * filename) {
         base name. The program will look for restart info in files in the
         working directory with the following order:
 
-	 1. Unified restart file - unformatted.
-	 2. Non unified restart files - unformatted.
-	 3. Unified restart file - formatted.
-	 4. Non unified restart files - formatted.
-	
-	The search will stop at the first success, if no restart
-	information is found the function will exit. The remaining
-	arguments in input[] will not be considered, but observe that the
-	use of ecl_base is signalled back to calling scope (through
-	reference), and the calling scope will look for GRID file and INIT
-	file also based on the ECLBASE found input[0]; formatted /
-	unformatted will be as returned from the four-way switch above.
+         1. Unified restart file - unformatted.
+         2. Non unified restart files - unformatted.
+         3. Unified restart file - formatted.
+         4. Non unified restart files - formatted.
+        
+        The search will stop at the first success, if no restart
+        information is found the function will exit. The remaining
+        arguments in input[] will not be considered, but observe that the
+        use of ecl_base is signalled back to calling scope (through
+        reference), and the calling scope will look for GRID file and INIT
+        file also based on the ECLBASE found input[0]; formatted /
+        unformatted will be as returned from the four-way switch above.
  
-	Example:
-	
-	bash% run_gravity  ECLIPSE   10  128   xxxx
-	
+        Example:
+        
+        bash% run_gravity  ECLIPSE   10  128   xxxx
+        
 
 
      ECL_RESTART_FILE: This means that input[0] is a non unified eclipse
@@ -234,10 +235,10 @@ static void load_stations(vector_type * grav_stations , const char * filename) {
         input[1] is the next non - unified restart file, loaded for the
         next report step.
 
-	Example:
+        Example:
 
-	bash% run_gravity ECLIPSE.X0010  ECLIPSE.X0128   xxx
-	
+        bash% run_gravity ECLIPSE.X0010  ECLIPSE.X0128   xxx
+        
 
      
      ECL_UNIFIED_RESTART_FILE: This means that input[1] and input[2] are
@@ -245,9 +246,9 @@ static void load_stations(vector_type * grav_stations , const char * filename) {
         steps will be loaded from the unified restart file pointed to by
         input[0].
 
-	Example:
+        Example:
 
-	bash% run_gravity ECLIPSE.UNRST  10 128 xxx
+        bash% run_gravity ECLIPSE.UNRST  10 128 xxx
 
  
 
@@ -264,10 +265,10 @@ static void load_stations(vector_type * grav_stations , const char * filename) {
 
 
 static ecl_file_type ** load_restart_info(const char ** input,           /* Input taken directly from argv */
-					  int           input_length,    /* The length of input. */
-					  int         * arg_offset,      /* Integer - value corresponding to the *NEXT* element in input which should be used by the calling scope. */
-					  bool        * use_eclbase,     /* Should input[0] be interpreted as an ECLBASE string? */
-					  bool        * fmt_file) {      /* Only relevant if (*use_eclbase == true): was formatted file used? */
+                                          int           input_length,    /* The length of input. */
+                                          int         * arg_offset,      /* Integer - value corresponding to the *NEXT* element in input which should be used by the calling scope. */
+                                          bool        * use_eclbase,     /* Should input[0] be interpreted as an ECLBASE string? */
+                                          bool        * fmt_file) {      /* Only relevant if (*use_eclbase == true): was formatted file used? */
   
   
   ecl_file_type ** restart_files = util_malloc( 2 * sizeof * restart_files , __func__);
@@ -282,9 +283,9 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
     if (input_length >= 2) {
       file_type = ecl_util_get_file_type( input[1] , fmt_file , &report_nr );
       if (file_type == ECL_RESTART_FILE) {
-	restart_files[0] = ecl_file_fread_alloc( input[0] );
-	restart_files[1] = ecl_file_fread_alloc( input[1] );
-	*arg_offset = 2;
+        restart_files[0] = ecl_file_fread_alloc( input[0] );
+        restart_files[1] = ecl_file_fread_alloc( input[1] );
+        *arg_offset = 2;
       } else print_usage(__LINE__);
     } else print_usage(__LINE__);
   } else if (file_type == ECL_UNIFIED_RESTART_FILE) {
@@ -292,85 +293,85 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
     if (input_length >= 3) {
       int report1 , report2;
       if ((util_sscanf_int( input[1] , &report1) && util_sscanf_int( input[2] , &report2))) {
-	restart_files[0] = ecl_file_fread_alloc_unrst_section( input[0] , report1 );
-	restart_files[1] = ecl_file_fread_alloc_unrst_section( input[0] , report2 );
-	*arg_offset = 3;
+        restart_files[0] = ecl_file_fread_alloc_unrst_section( input[0] , report1 );
+        restart_files[1] = ecl_file_fread_alloc_unrst_section( input[0] , report2 );
+        *arg_offset = 3;
       } else
-	print_usage(__LINE__);
+        print_usage(__LINE__);
     } else 
       print_usage(__LINE__);
   } else if (file_type == ECL_OTHER_FILE) {
     if (input_length >= 3) {
       int report1, report2;
       if (!(util_sscanf_int( input[1] , &report1) && util_sscanf_int( input[2] , &report2)))
-	print_usage(__LINE__);
+        print_usage(__LINE__);
       else {
-	/* 
-	   input[0] is interpreted as an eclbase string, and not as the name of
-	   an existing file. Go through various combinations of
-	   unified/non-unified formatted/unformatted to find data.
-	*/
-	ecl_storage_enum storage_mode = ECL_INVALID_STORAGE;
-	const char * eclbase = input[0];
-	char * unified_file  = NULL;
-	char * file1	     = NULL;
-	char * file2	     = NULL;       
-	
-	unified_file = ecl_util_alloc_filename(NULL , eclbase , ECL_UNIFIED_RESTART_FILE , false , -1);
-	if (util_file_exists( unified_file )) 
-	  /* Binary unified */
-	  storage_mode = ECL_BINARY_UNIFIED;
-	else {
-	  /* Binary non-unified */
-	  file1 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , false , report1);
-	  file2 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , false , report2);
-	  if ((util_file_exists(file1) && util_file_exists(file2))) 
-	    storage_mode = ECL_BINARY_NON_UNIFIED;
-	  else {
-	    free(unified_file);
-	    /* ASCII unified */
-	    unified_file = ecl_util_alloc_filename(NULL , eclbase , ECL_UNIFIED_RESTART_FILE , true , -1);
-	    if (util_file_exists( unified_file ))
-	      storage_mode = ECL_FORMATTED_UNIFIED;
-	    else {
-	      /* ASCII non unified */
-	      free(file1);
-	      free(file2);
-	      file1 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , true , report1);
-	      file2 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , true , report2);
-	      if ((util_file_exists(file1) && util_file_exists(file2))) 
-		storage_mode = ECL_FORMATTED_UNIFIED;
-	    }
-	  }
-	}
-	
-	if (storage_mode == ECL_INVALID_STORAGE) {
-	  char * cwd = util_alloc_cwd();
-	  util_exit("Could not find any restart information for ECLBASE:%s in %s \n", eclbase , cwd);
-	  free( cwd );
-	}
+        /* 
+           input[0] is interpreted as an eclbase string, and not as the name of
+           an existing file. Go through various combinations of
+           unified/non-unified formatted/unformatted to find data.
+        */
+        ecl_storage_enum storage_mode = ECL_INVALID_STORAGE;
+        const char * eclbase = input[0];
+        char * unified_file  = NULL;
+        char * file1         = NULL;
+        char * file2         = NULL;       
+        
+        unified_file = ecl_util_alloc_filename(NULL , eclbase , ECL_UNIFIED_RESTART_FILE , false , -1);
+        if (util_file_exists( unified_file )) 
+          /* Binary unified */
+          storage_mode = ECL_BINARY_UNIFIED;
+        else {
+          /* Binary non-unified */
+          file1 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , false , report1);
+          file2 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , false , report2);
+          if ((util_file_exists(file1) && util_file_exists(file2))) 
+            storage_mode = ECL_BINARY_NON_UNIFIED;
+          else {
+            free(unified_file);
+            /* ASCII unified */
+            unified_file = ecl_util_alloc_filename(NULL , eclbase , ECL_UNIFIED_RESTART_FILE , true , -1);
+            if (util_file_exists( unified_file ))
+              storage_mode = ECL_FORMATTED_UNIFIED;
+            else {
+              /* ASCII non unified */
+              free(file1);
+              free(file2);
+              file1 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , true , report1);
+              file2 = ecl_util_alloc_filename(NULL , eclbase , ECL_RESTART_FILE , true , report2);
+              if ((util_file_exists(file1) && util_file_exists(file2))) 
+                storage_mode = ECL_FORMATTED_UNIFIED;
+            }
+          }
+        }
+        
+        if (storage_mode == ECL_INVALID_STORAGE) {
+          char * cwd = util_alloc_cwd();
+          util_exit("Could not find any restart information for ECLBASE:%s in %s \n", eclbase , cwd);
+          free( cwd );
+        }
 
-	if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_FORMATTED_UNIFIED)) {
-	  restart_files[0] = ecl_file_fread_alloc_unrst_section( unified_file , report1 );
-	  restart_files[1] = ecl_file_fread_alloc_unrst_section( unified_file , report2 );
-	} else {
-	  restart_files[0] = ecl_file_fread_alloc( file1 );
-	  restart_files[1] = ecl_file_fread_alloc( file2 );
-	}
-	  
+        if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_FORMATTED_UNIFIED)) {
+          restart_files[0] = ecl_file_fread_alloc_unrst_section( unified_file , report1 );
+          restart_files[1] = ecl_file_fread_alloc_unrst_section( unified_file , report2 );
+        } else {
+          restart_files[0] = ecl_file_fread_alloc( file1 );
+          restart_files[1] = ecl_file_fread_alloc( file2 );
+        }
+          
 
 
-	*use_eclbase = true;
-	if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_BINARY_NON_UNIFIED))
-	  *fmt_file = false;
-	else
-	  *fmt_file = true;
-	
-	*arg_offset = 3;
-	
-	util_safe_free( file1 );
-	util_safe_free( file2 );
-	util_safe_free( unified_file );
+        *use_eclbase = true;
+        if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_BINARY_NON_UNIFIED))
+          *fmt_file = false;
+        else
+          *fmt_file = true;
+        
+        *arg_offset = 3;
+        
+        util_safe_free( file1 );
+        util_safe_free( file2 );
+        util_safe_free( unified_file );
       }
     }
   }
@@ -627,10 +628,10 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
     
     /* Check which phases are present in the model */
     if (ecl_file_has_kw(restart_file1 , "OIL_DEN"))
-      model_phases += OIL;			  	      
+      model_phases += OIL;                                    
     
     if (ecl_file_has_kw(restart_file1 , "WAT_DEN"))
-      model_phases += WATER;			  	      
+      model_phases += WATER;                                  
     
     if (ecl_file_has_kw(restart_file1 , "GAS_DEN"))
       model_phases += GAS;
@@ -726,6 +727,12 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
 
 
 
+void install_SIGNALS(void) {
+  signal(SIGSEGV , util_abort_signal);    /* Segmentation violation, i.e. overwriting memory ... */
+  signal(SIGINT  , util_abort_signal);    /* Control C */
+  signal(SIGTERM , util_abort_signal);    /* If killing the program with SIGTERM (the default kill signal) you will get a backtrace. 
+                                             Killing with SIGKILL (-9) will not give a backtrace.*/
+}
 
 
 
@@ -735,6 +742,7 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
 /*****************************************************************/
 
 int main(int argc , char ** argv) {
+  install_SIGNALS();
 
   if(argc > 1) {
     if(strcmp(argv[1], "-h") == 0)
@@ -744,7 +752,6 @@ int main(int argc , char ** argv) {
 
   if(argc < 2)
     print_usage(__LINE__);
-
 
   else{
     char ** input        = &argv[1];   /* Skipping the name of the executable */
@@ -773,24 +780,24 @@ int main(int argc , char ** argv) {
       char           * grid_filename = NULL;
       char           * init_filename = NULL;
       if (use_eclbase) {
-	/* 
-	   The first command line argument is interpreted as ECLBASE, and we
-	   search for grid and init files in cwd.
-	*/
-	init_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_INIT_FILE  , fmt_file , -1);
-	grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_EGRID_FILE , fmt_file , -1);
-	if (grid_filename == NULL)
-	  grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_GRID_FILE , fmt_file , -1);
+        /* 
+           The first command line argument is interpreted as ECLBASE, and we
+           search for grid and init files in cwd.
+        */
+        init_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_INIT_FILE  , fmt_file , -1);
+        grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_EGRID_FILE , fmt_file , -1);
+        if (grid_filename == NULL)
+          grid_filename = ecl_util_alloc_exfilename_anyfmt( NULL , input[0] , ECL_GRID_FILE , fmt_file , -1);
         
-	if ((init_filename == NULL) || (grid_filename == NULL))  /* Means we could not find them. */
+        if ((init_filename == NULL) || (grid_filename == NULL))  /* Means we could not find them. */
           util_exit("Could not find INIT or GRID|EGRID file \n");
       } else {
-	/* */
-	if ((input_length - input_offset) > 1) {
-	  init_filename = util_alloc_string_copy(input[input_offset]);
-	  grid_filename = util_alloc_string_copy(input[input_offset + 1]);
-	  input_offset += 2;
-	} else print_usage(__LINE__);
+        /* */
+        if ((input_length - input_offset) > 1) {
+          init_filename = util_alloc_string_copy(input[input_offset]);
+          grid_filename = util_alloc_string_copy(input[input_offset + 1]);
+          input_offset += 2;
+        } else print_usage(__LINE__);
       }
       
       init_file     = ecl_file_fread_alloc(init_filename );
@@ -803,7 +810,7 @@ int main(int argc , char ** argv) {
     if (input_length > input_offset) {
       char * station_file = input[input_offset];
       if (util_file_exists(station_file))
-	load_stations( grav_stations , station_file);
+        load_stations( grav_stations , station_file);
       else 
         util_exit("Can not find file:%s \n",station_file);
     } else 
@@ -843,9 +850,9 @@ int main(int argc , char ** argv) {
       FILE * stream = util_fopen(report_filen , "w");
       int station_nr;
       for(station_nr = 0; station_nr < vector_get_size( grav_stations ); station_nr++){
-	const grav_station_type * g_s = vector_iget_const(grav_stations, station_nr);
-	fprintf(stream, "%f\n",g_s->grav_diff);
-	printf ("DELTA_G %4s[%02d]: %12.6f %12.6f %12.6f %12.6f \n", g_s->name , station_nr, g_s->grav_diff, g_s->utm_x, g_s->utm_y, g_s->depth);
+        const grav_station_type * g_s = vector_iget_const(grav_stations, station_nr);
+        fprintf(stream, "%f\n",g_s->grav_diff);
+        printf ("DELTA_G %4s[%02d]: %12.6f %12.6f %12.6f %12.6f \n", g_s->name , station_nr, g_s->grav_diff, g_s->utm_x, g_s->utm_y, g_s->depth);
       }
       fclose(stream);
     }
@@ -857,5 +864,5 @@ int main(int argc , char ** argv) {
     ecl_file_free(restart_files[1]);
     free( restart_files );
     ecl_file_free(init_file);
-  }		
+  }             
 }
