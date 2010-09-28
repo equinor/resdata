@@ -8,6 +8,8 @@
 #include <vector.h>
 #include <ecl_grid.h>
 #include <math.h>
+#include <thread_pool.h>
+#include <arg_pack.h>
 
 #define WATER 1
 #define GAS   2
@@ -19,7 +21,10 @@ typedef struct {
   double utm_y; 
   double depth; 
   double grav_diff;
-  char * name;
+  char * name;  
+  bool   has_obs;
+  double obs_gdiff;    /* Measured difference in g. */
+  double std_gdiff;    /* Uncertainty in the observed g difference. */
 } grav_station_type;
 
 
@@ -147,15 +152,28 @@ static void grav_station_free__( void * arg) {
 
 
 
-static grav_station_type * grav_station_alloc(const char * name , double x, double y, double d){
-  grav_station_type * s = util_malloc(sizeof*s, __func__);
+
+
+static grav_station_type * grav_station_alloc_new( const char * name , double x , double y , double d) {
+  grav_station_type * s = util_malloc(sizeof * s , __func__);
   s->name  = util_alloc_string_copy( name );
   s->utm_x = x;
   s->utm_y = y;
   s->depth = d;
   s->grav_diff = 0.0;
+  s->obs_gdiff = 0.0;
+  s->std_gdiff = 0.0;
+  s->has_obs  = false;
   return s;
 }
+
+
+static void grav_station_add_obs( grav_station_type * g , double obs, double std) {
+  g->obs_gdiff = obs;
+  g->std_gdiff = std;
+  g->has_obs  = true;
+}
+
 
 
 
@@ -174,14 +192,37 @@ static grav_station_type * grav_station_alloc(const char * name , double x, doub
 static void load_stations(vector_type * grav_stations , const char * filename) {
   printf("Loading from file:%s \n",filename);
   {
+    int    target_width;
     FILE * stream = util_fopen(filename , "r");
     bool at_eof = false;
+    /**
+       When reading the first line we determine how many columns the
+       file contains.
+    */
+    {
+      char * first_line = util_fscanf_alloc_line( stream , &at_eof);
+      char ** token_list;
+      util_split_string( first_line , " \t" , &target_width , &token_list);
+      util_free_stringlist( token_list , target_width );
+      fseek( stream , 0 , SEEK_SET );
+    }
+    
     while(!(at_eof)) {
       double x,y,d;
+      double obs_gdiff , std_gdiff;
       char station_name[32];
-      int fscanf_return = fscanf(stream, "%s %lg %lg %lg", station_name , &x,&y,&d);
-      if(fscanf_return == 4) {
-        grav_station_type * g = grav_station_alloc(station_name , x,y,d);
+      int fscanf_return;
+      
+      if (target_width == 4)
+        fscanf_return = fscanf(stream, "%s %lg %lg %lg", station_name , &x , &y , &d );
+      else
+        fscanf_return = fscanf(stream, "%s %lg %lg %lg %lg %lg", station_name , &x , &y , &d , &obs_gdiff , &std_gdiff);
+      
+      if(fscanf_return == target_width) {
+        grav_station_type * g = grav_station_alloc_new(station_name , x , y , d);
+        if (target_width == 6)
+          grav_station_add_obs( g , obs_gdiff , std_gdiff );
+        
         vector_append_owned_ref(grav_stations, g, grav_station_free__);
       } else 
         at_eof = true;
@@ -387,11 +428,9 @@ static ecl_file_type ** load_restart_info(const char ** input,           /* Inpu
 
 
 /*
-  This function calculates the gravimetric response (local change in
-  g) at location (utm_x , utm_y , depth) - i.e. the function is
-  written as stand-alone, and is independent of the (somewhat
-  arbitrary) datatype grav_station_type.
-
+  This function calculates the gravimetric response for the
+  gravitation station given as input parameter grav_station.
+  
   For code cleanliness the code is written in a way where this
   function is called for every position we are interested in,
   performance-wise it would be smarter to loop over the interesting
@@ -407,9 +446,7 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
                                const ecl_file_type * init_file     , 
                                const ecl_file_type * restart_file1 , 
                                const ecl_file_type * restart_file2 ,
-                               double utm_x , 
-                               double utm_y , 
-                               double tvd   , 
+                               const grav_station_type * grav_station , 
                                int model_phases, 
                                int file_phases) {
   
@@ -505,15 +542,17 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
       
       const float * rporv1    = ecl_kw_get_float_ptr(rporv1_kw);
       const float * rporv2    = ecl_kw_get_float_ptr(rporv2_kw);
+      double utm_x = grav_station->utm_x;
+      double utm_y = grav_station->utm_y;
+      double tvd   = grav_station->depth;
+      
       int   * aquifern;
       int global_index;
-    
+          
       if (aquifern_kw != NULL)
         aquifern = ecl_kw_get_int_ptr( aquifern_kw );
       else
         aquifern = int_zero;
-
-
 
       for (global_index=0;global_index < ecl_grid_get_global_size( ecl_grid ); global_index++){
         const int act_index = ecl_grid_get_active_index1( ecl_grid , global_index );
@@ -560,7 +599,7 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
               
               mas1 = rporv1[act_index]*(soil1 * oil_den1[act_index] + sgas1 * gas_den1[act_index] + swat1 * wat_den1[act_index] );
               mas2 = rporv2[act_index]*(soil2 * oil_den2[act_index] + sgas2 * gas_den2[act_index] + swat2 * wat_den2[act_index] );
-
+              
               ecl_grid_get_xyz1(ecl_grid , global_index , &xpos , &ypos , &zpos);
               {
                 double dist_x   = xpos - utm_x;
@@ -584,6 +623,34 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
   }
   return local_deltag;
 }
+
+
+static void * gravity_response_mt( void * arg ) {
+  arg_pack_type * arg_pack = arg_pack_safe_cast( arg );
+  vector_type * grav_stations          = arg_pack_iget_ptr( arg_pack , 0 );
+  const ecl_grid_type * ecl_grid       = arg_pack_iget_ptr( arg_pack , 1 );
+  const ecl_file_type * init_file      = arg_pack_iget_ptr( arg_pack , 2 );
+  const ecl_file_type ** restart_files = arg_pack_iget_ptr( arg_pack , 3 );
+  int station1                         = arg_pack_iget_int( arg_pack , 4 );
+  int station2                         = arg_pack_iget_int( arg_pack , 5 );
+  int model_phases                     = arg_pack_iget_int( arg_pack , 6 );
+  int file_phases                      = arg_pack_iget_int( arg_pack , 7 );
+  
+  int station_nr;
+  for (station_nr = station1; station_nr < station2; station_nr++) {
+    grav_station_type * gs = vector_iget( grav_stations , station_nr );
+    
+    gs->grav_diff = gravity_response( ecl_grid , 
+                                      init_file , 
+                                      restart_files[0] , 
+                                      restart_files[1] , 
+                                      gs , 
+                                      model_phases , 
+                                      file_phases);
+  }
+  return NULL;
+}
+
 
 
 
@@ -825,40 +892,73 @@ int main(int argc , char ** argv) {
 
 
     /** 
-        OK - now everything is loaded - check that all required keywords+++ are present.
+        OK - now everything is loaded - check that all required
+        keywords+++ are present.
     */
     gravity_check_input(ecl_grid , init_file , restart_files[0] , restart_files[1] , &model_phases , &file_phases);
     
     /* 
        OK - now it seems the provided files have all the information
-       we need. Let us start extracting, and then subsequently using
-       it.
+       we need. Let us start using it. The main loop is run in
+       parallell on four threads - most people have four cores these
+       days.
     */
     {
-      int station_nr;
-      for (station_nr = 0; station_nr < vector_get_size( grav_stations ); station_nr++) {
-        grav_station_type * gs = vector_iget( grav_stations , station_nr );
-        
-        gs->grav_diff = gravity_response( ecl_grid , 
-                                          init_file , 
-                                          restart_files[0] , 
-                                          restart_files[1] , 
-                                          gs->utm_x,
-                                          gs->utm_y,
-                                          gs->depth,
-                                          model_phases , 
-                                          file_phases);
-        
+      int i;
+      int num_threads = 4;
+      thread_pool_type * tp = thread_pool_alloc( num_threads , true);
+      arg_pack_type ** arg_list = util_malloc( sizeof * arg_list * num_threads , __func__);
+      {
+        int station_delta = vector_get_size( grav_stations ) / num_threads;
+        for (i = 0; i < num_threads; i++) {
+          int station1 = i * station_delta;
+          int station2 = station1 + station_delta;
+          if (i == num_threads)
+            station2 = vector_get_size( grav_stations );
+          
+          arg_list[i] = arg_pack_alloc( );
+
+          arg_pack_append_ptr( arg_list[i] , grav_stations );
+          arg_pack_append_ptr( arg_list[i] , ecl_grid);
+          arg_pack_append_ptr( arg_list[i] , init_file );
+          arg_pack_append_ptr( arg_list[i] , restart_files );
+          arg_pack_append_int( arg_list[i] , station1 );
+          arg_pack_append_int( arg_list[i] , station2 );
+          arg_pack_append_int( arg_list[i] , model_phases );
+          arg_pack_append_int( arg_list[i] , file_phases );
+
+          thread_pool_add_job( tp , gravity_response_mt , arg_list[i]);
+        }
       }
+      thread_pool_join( tp );
+      for (i = 0; i < num_threads; i++) 
+        arg_pack_free( arg_list[i] );
+      free( arg_list );
+        
     }
     
     {
       FILE * stream = util_fopen(report_filen , "w");
       int station_nr;
+      double total_chisq = 0;
       for(station_nr = 0; station_nr < vector_get_size( grav_stations ); station_nr++){
         const grav_station_type * g_s = vector_iget_const(grav_stations, station_nr);
-        fprintf(stream, "%f\n",g_s->grav_diff);
-        printf ("DELTA_G %4s[%02d]: %12.6f %12.6f %12.6f %12.6f \n", g_s->name , station_nr, g_s->grav_diff, g_s->utm_x, g_s->utm_y, g_s->depth);
+        fprintf(stream, "%f",g_s->grav_diff);
+        printf ("DELTA_G %4s[%02d]: %12.6f %12.6f %12.6f %12.6f", g_s->name , station_nr, g_s->grav_diff, g_s->utm_x, g_s->utm_y, g_s->depth);
+
+        if ( g_s->has_obs ) {
+          double y = (g_s->grav_diff - g_s->obs_gdiff) / g_s->std_gdiff;
+          double chi_sq = y * y;
+          total_chisq += chi_sq;
+          fprintf(stream , " %g",chi_sq);
+          printf(" %g",chi_sq);
+        }
+
+        fprintf(stream , " \n");
+        printf("\n");
+      }
+      if (total_chisq > 0) {
+        printf("Total chisq misfit: %g \n", total_chisq);
       }
       fclose(stream);
     }
