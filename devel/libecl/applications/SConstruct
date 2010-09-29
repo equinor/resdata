@@ -17,11 +17,11 @@ bin_path     = "../bin"
 
 conf = global_config.get_conf(os.getcwd() , package , 2)
 env  = Environment()
-lib_list = ["lapack" , "plplotd" , "m" , "z" , "pthread"]
+lib_list = ["lapack" , "gsl" , "plplotd" , "m" , "z" , "pthread"]
 if conf.RH == 3:
    lib_list.append( "g2c" )
 
-conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBUTIL ] , lib_list , link = True)
+conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBUTIL ] , ext_liblist = lib_list , ext_headerlist = ["/prog/sdpsoft/gsl/include"] , link = True)
 
 
 add_program(env , conf ,  bin_path , "key_list.x"        , "key_list.c"        )

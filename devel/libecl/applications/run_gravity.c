@@ -10,6 +10,7 @@
 #include <math.h>
 #include <thread_pool.h>
 #include <arg_pack.h>
+#include <gsl/gsl_specfunc.h>
 
 #define WATER 1
 #define GAS   2
@@ -78,12 +79,13 @@ void print_usage(int line) {
   fprintf(stderr,"     contain one position on each line, formatted as this:\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"\n");
-  fprintf(stderr,"             name1   utm_x  utm_y   depth\n");
-  fprintf(stderr,"             name2   utm_x  utm_y   depth\n");
+  fprintf(stderr,"             name1   utm_x  utm_y   depth   g_obs   g_std \n");
+  fprintf(stderr,"             name2   utm_x  utm_y   depth   g_obs   g_std \n");
   fprintf(stderr,"             .....\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"     The name string is completely arbitrary - but can NOT contain\n");
-  fprintf(stderr,"     spaces.\n");
+  fprintf(stderr,"     spaces. The two last columns - g_obs and g_std ar optional, but\n");
+  fprintf(stderr,"     must be present on all lines - or on no lines. \n");
   fprintf(stderr,"\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"The required information should be passed from the user with the help\n");
@@ -218,7 +220,7 @@ static void load_stations(vector_type * grav_stations , const char * filename) {
       else
         fscanf_return = fscanf(stream, "%s %lg %lg %lg %lg %lg", station_name , &x , &y , &d , &obs_gdiff , &std_gdiff);
       
-      if(fscanf_return == target_width) {
+      if (fscanf_return == target_width) {
         grav_station_type * g = grav_station_alloc_new(station_name , x , y , d);
         if (target_width == 6)
           grav_station_add_obs( g , obs_gdiff , std_gdiff );
@@ -816,7 +818,7 @@ void install_SIGNALS(void) {
 
 int main(int argc , char ** argv) {
   install_SIGNALS();
-
+  
   if(argc > 1) {
     if(strcmp(argv[1], "-h") == 0)
       print_usage(__LINE__);
@@ -971,4 +973,5 @@ int main(int argc , char ** argv) {
     free( restart_files );
     ecl_file_free(init_file);
   }             
+
 }
