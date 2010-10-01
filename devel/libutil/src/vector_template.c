@@ -29,19 +29,19 @@
    ------------------------------------
 
     ·-----·-----·      
-1.  | 77  | 77  |    		 								      size = 0, alloc_size = 2
+1.  | 77  | 77  |                                                                                     size = 0, alloc_size = 2
     ·-----·-----·
 
-    ·-----·-----·    		 								        
-2.  |  1  | 77  |    		 								      size = 1, alloc_size = 2
+    ·-----·-----·                                                                                       
+2.  |  1  | 77  |                                                                                     size = 1, alloc_size = 2
     ·-----·-----·
 
-    ·-----·-----·    		 								        
-3.  |  1  |  0  |    		 								      size = 2, alloc_size = 2
+    ·-----·-----·                                                                                       
+3.  |  1  |  0  |                                                                                     size = 2, alloc_size = 2
     ·-----·-----·
 
-    ·-----·-----·-----·-----·    								        
-4.  |  1  |  0  |  12 | 77  |    								      size = 3, alloc_size = 4                                             
+    ·-----·-----·-----·-----·                                                                           
+4.  |  1  |  0  |  12 | 77  |                                                                         size = 3, alloc_size = 4                                             
     ·-----·-----·-----·-----·
 
     ·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·      
@@ -171,16 +171,16 @@ static <TYPE>_vector_type * <TYPE>_vector_alloc__(int init_size , <TYPE> default
   */
   
   if (data == NULL) {  /* Case 1: */
-    vector->data 	      = NULL;
+    vector->data              = NULL;
     vector->data_owner        = true;     /* The input values alloc_size and */
-    vector->alloc_size 	      = 0;        /* data_owner are not even consulted. */
+    vector->alloc_size        = 0;        /* data_owner are not even consulted. */
   } else {             /* Case 2 & 3 */                
-    vector->data 	      = data;
+    vector->data              = data;
     vector->data_owner        = data_owner;
-    vector->alloc_size 	      = alloc_size;
+    vector->alloc_size        = alloc_size;
   }
   
-  vector->size 	     	      = 0;  
+  vector->size                = 0;  
   if (init_size > 0)
     <TYPE>_vector_iset( vector , init_size - 1 , default_value );  /* Filling up the init size elements with the default value */
   
@@ -209,7 +209,6 @@ static <TYPE>_vector_type * <TYPE>_vector_alloc__(int init_size , <TYPE> default
 void <TYPE>_vector_resize( <TYPE>_vector_type * vector , int new_alloc_size ) {
   <TYPE>_vector_realloc_data__( vector , new_alloc_size );
 }
-
 
 
 /**

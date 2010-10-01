@@ -49,7 +49,6 @@
 
 
 
-
 /*****************************************************************/
 
 static bool EOL_CHAR(char c) {
@@ -4645,7 +4644,9 @@ void util_abort(const char * fmt , ...) {
       free(strings);
       util_safe_free(executable);
     }
-    abort();
+    printf("Exiting ... \n");
+    exit(1);
+    // Would have preferred abort() here - but that comes in conflict with the SIGABRT signal.
   }
   pthread_mutex_unlock( &__abort_mutex );
 }
