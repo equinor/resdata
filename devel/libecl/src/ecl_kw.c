@@ -579,7 +579,7 @@ void ecl_kw_iset_char_ptr( ecl_kw_type * ecl_kw , int index, const char * s) {
 
 #define ECL_KW_ISET_TYPED(ctype , ECL_TYPE)                                                                 \
 void ecl_kw_iset_ ## ctype(ecl_kw_type * ecl_kw, int i, ctype value) {                                      \
-  if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                  \
+  if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                              \
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        \
   ecl_kw_iset_static(ecl_kw , i , &value);                                                                  \
 }                                                                                                           \
@@ -588,6 +588,23 @@ ECL_KW_ISET_TYPED(double , ECL_DOUBLE_TYPE);
 ECL_KW_ISET_TYPED(float  , ECL_FLOAT_TYPE);
 ECL_KW_ISET_TYPED(int    , ECL_INT_TYPE);
 #undef ECL_KW_ISET_TYPED
+
+
+#define ECL_KW_SET_INDEXED(ctype , ECL_TYPE)                                                                \
+void ecl_kw_set_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype value) {  \
+   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                 \
+      util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));      \
+   {                                                                                                        \
+     ctype * data = (ctype *) ecl_kw->data;                                                                 \
+      for (int i = 0; i < size; i++)                                                                        \
+          data[index_list[i]] = value;                                                                      \
+   }                                                                                                        \
+}
+
+ECL_KW_SET_INDEXED( double , ECL_DOUBLE_TYPE);
+ECL_KW_SET_INDEXED( float  , ECL_FLOAT_TYPE);
+ECL_KW_SET_INDEXED( int    , ECL_INT_TYPE);
+#undef ECL_KW_SET_INDEXED
 
 
 void ecl_kw_iset_bool( ecl_kw_type * ecl_kw , int i , bool bool_value) {

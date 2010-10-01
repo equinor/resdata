@@ -766,3 +766,60 @@ void ecl_region_select_union( ecl_region_type * region , const ecl_region_type *
   
   ecl_region_invalidate_index_list( region );
 }
+
+
+
+/*****************************************************************/
+
+static const int * ecl_region_get_kw_index_list( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw ) {
+  const int * index_set = NULL;
+  int kw_size = ecl_kw_get_size( ecl_kw );
+
+  if (kw_size == ecl_grid_get_active_size( ecl_region->parent_grid )) 
+    index_set = ecl_region_get_active_list( ecl_region );
+  else if (kw_size == ecl_grid_get_global_size( ecl_region->parent_grid)) 
+    index_set = ecl_region_get_global_list( ecl_region );
+  else 
+    util_abort("%s: size mismatch \n",__func__); 
+
+  return index_set;
+}
+
+
+static int  ecl_region_get_kw_size( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw ) {
+  int set_size= -1;
+  int kw_size = ecl_kw_get_size( ecl_kw );
+  
+  if (kw_size == ecl_grid_get_active_size( ecl_region->parent_grid )) 
+    set_size = ecl_region_get_active_size( ecl_region );
+  else if (kw_size == ecl_grid_get_global_size( ecl_region->parent_grid)) 
+    set_size = ecl_region_get_global_size( ecl_region );
+  else
+    util_abort("%s: size mismatch \n",__func__); 
+
+  return set_size;
+}
+
+
+void ecl_region_set_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw );
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw );
+  ecl_kw_set_indexed_int( ecl_kw , set_size , index_set , value );
+}
+
+
+void ecl_region_set_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw );
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw );
+  ecl_kw_set_indexed_float( ecl_kw , set_size , index_set , value );
+}
+
+
+void ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw );
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw );
+  ecl_kw_set_indexed_double( ecl_kw , set_size , index_set , value );
+}
+
+
+

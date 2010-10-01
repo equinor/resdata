@@ -119,6 +119,14 @@ ECL_KW_GET_TYPED_PTR_HEADER(int);
 ECL_KW_GET_TYPED_PTR_HEADER(bool);
 #undef ECL_KW_GET_TYPED_PTR_HEADER
 
+
+#define ECL_KW_SET_INDEXED_HEADER(ctype ) void ecl_kw_set_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype value);
+ECL_KW_SET_INDEXED_HEADER( double );
+ECL_KW_SET_INDEXED_HEADER( float  );
+ECL_KW_SET_INDEXED_HEADER( int    );
+#undef ECL_KW_SET_INDEXED_HEADER
+
+
 #ifdef __cplusplus
 }
 #endif
