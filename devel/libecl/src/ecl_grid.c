@@ -769,6 +769,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_n
     grid->LGR_list = NULL;
     grid->LGR_hash = NULL;
   }
+  grid->name        = NULL;
   grid->parent_name = NULL;
   grid->parent_grid = NULL;
   grid->global_grid = NULL;
@@ -1132,7 +1133,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__( const ecl_kw_type * gridhead_
                                                    int grid_nr) {
   
   int gtype, nx,ny,nz;
-
+  
   gtype   = ecl_kw_iget_int(gridhead_kw , 0);
   nx      = ecl_kw_iget_int(gridhead_kw , 1);
   ny      = ecl_kw_iget_int(gridhead_kw , 2);
@@ -1144,7 +1145,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__( const ecl_kw_type * gridhead_
 
     if (mapaxes_kw != NULL)
       mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw );
-
+    
     return ecl_grid_alloc_GRDECL_data__(nx , ny , nz , 
                                         ecl_kw_get_float_ptr(zcorn_kw) , 
                                         ecl_kw_get_float_ptr(coord_kw) , 
@@ -1181,7 +1182,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( const ecl_kw_type * gridhead_kw , cons
 
 
 static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl_file_type * ecl_file , int grid_nr) {
-  ecl_kw_type * gridhead_kw = ecl_file_iget_named_kw( ecl_file , "GRIDHEAD" , grid_nr);
+  ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , "GRIDHEAD" , grid_nr);
   ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , "ZCORN"     , grid_nr);
   ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , "COORD"     , grid_nr);
   ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , "ACTNUM"    , grid_nr);
@@ -1797,7 +1798,7 @@ void ecl_grid_free(ecl_grid_type * grid) {
   hash_free( grid->children );
   util_safe_free( grid->parent_name );
   util_safe_free( grid->visited );
-  free( grid->name );
+  util_safe_free( grid->name );
   free( grid );
 }
 

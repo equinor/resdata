@@ -1524,6 +1524,68 @@ ecl_kw_type * ecl_kw_fscanf_alloc_parameter(FILE * stream , int size ) {
 }
 
 
+/**
+   This function will load a keyword from a grdecl file, and return
+   it. If input argument @kw is NULL it will just try loading from the
+   current position, otherwise it will start with seeking to find @kw
+   first.
+
+   Observe that the grdecl files are very weakly structured, so the
+   loading of ecl_kw instances from a grdecl file can go wrong in many
+   ways; if the loading fails the function returns NULL.
+
+   The main loop is extremely simple - it is just repeated calls to
+   fscanf() to read one-number-at-atime; when that reading fails that
+   is interpreted as the end of the keyword.
+
+   Currently ONLY integer and float types are supported in ecl_type -
+   any other types will lead to a hard failure.
+*/
+
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_type_enum ecl_type) {
+  const int init_size = 10000;
+  if (ecl_type == ECL_FLOAT_TYPE || ecl_type == ECL_INT_TYPE) {
+    if (kw != NULL) {
+      if (!ecl_kw_grdecl_fseek_kw( kw , true , false , stream ))
+        return NULL;
+    }
+    {
+      char header[9];
+      if (fscanf( stream , "%8s" , header) == 1) {
+        const char * read_fmt = get_read_fmt( ecl_type );
+        int    sizeof_ctype   = ecl_util_get_sizeof_ctype( ecl_type );
+        int    data_size      = init_size;
+        char * data           = util_malloc( data_size * sizeof_ctype , __func__ ); 
+        int    size           = 0;
+        
+        while (true) {
+          int read_count = fscanf( stream , read_fmt , &data[ size * sizeof_ctype ]);
+          if (read_count == 1) {
+            size++;
+            if (size == data_size) {
+              data_size *= 2;
+              data       = util_realloc( data , data_size * sizeof_ctype , __func__ );
+            }
+          } else break;
+        }
+        { 
+          ecl_kw_type * ecl_kw = NULL;
+          
+          if (size > 0) 
+            ecl_kw = ecl_kw_alloc_new( header , size , ecl_type , data );
+          
+          free( data );
+          return ecl_kw;
+        }
+      } else
+        return NULL; /* Could not read header */
+    }
+  } else
+    util_abort("%s: sorry - only FLOAT and INT supported");
+  return NULL;
+}
+
+
 
 /*****************************************************************/
 

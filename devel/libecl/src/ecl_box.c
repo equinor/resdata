@@ -24,13 +24,6 @@ struct ecl_box_struct {
 };
 
 
-static bool verify_pair( int a1, int a2 ) {
-  bool OK = true;
-  if ( a1 > a2 ) OK = false;
-  if ( a1 <  0 ) OK = false;
-  return OK;
-}
-
 
 UTIL_IS_INSTANCE_FUNCTION( ecl_box , ECL_BOX_TYPE_ID)
 UTIL_SAFE_CAST_FUNCTION( ecl_box , ECL_BOX_TYPE_ID)
@@ -41,10 +34,11 @@ UTIL_SAFE_CAST_FUNCTION( ecl_box , ECL_BOX_TYPE_ID)
 
     1. The coordinates i1,i2...k2 are assumed to be ZERO offset.
     2. The corrdinates are  _INCLUSIVE_, i.e. the box is [i1..i2] x [j1..j2] x [k1..k2]
-
+    3. Coordinates are truncated to [0,ni).
+    4. Coordinates are interchanged, so __i1 can be greater than __i2.
 */
 
-ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , int j1 , int j2 , int k1, int k2) {
+ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int __i1,int __i2 , int __j1 , int __j2 , int __k1, int __k2) {
   ecl_box_type * ecl_box = util_malloc(sizeof * ecl_box , __func__);
   UTIL_TYPE_ID_INIT( ecl_box , ECL_BOX_TYPE_ID);
   ecl_box->parent_grid = ecl_grid;
@@ -53,70 +47,60 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int i1,int i2 , in
   ecl_box->grid_sx   = 1;
   ecl_box->grid_sy   = ecl_box->grid_nx;
   ecl_box->grid_sz   = ecl_box->grid_nx * ecl_box->grid_ny;
-  
-  {
-    bool OK = true;
-    if (!verify_pair(i1,i2)) OK = false;
-    if (!verify_pair(j1,j2)) OK = false;
-    if (!verify_pair(k1,k2)) OK = false;
-    if (!OK)
-      util_abort("%s: invalid input ... \n",__func__);
-  }
-  if (i2 >= ecl_box->grid_nx) {
-    fprintf(stderr,"** Warning box defined with i2 = %d - truncated to maximum value %d \n",i2 , ecl_box->grid_nx - 1);
-    i2 = ecl_box->grid_nx - 1;
-  }
-  if (j2 >= ecl_box->grid_ny) {
-    fprintf(stderr,"** Warning box defined with j2 = %d - truncated to maximum value %d \n",j2 , ecl_box->grid_ny - 1);
-    j2 = ecl_box->grid_ny - 1;
-  }
-  if (k2 >= ecl_box->grid_nz) {
-    fprintf(stderr,"** Warning box defined with k2 = %d - truncated to maximum value %d \n",k2 , ecl_box->grid_nz - 1);
-    k2 = ecl_box->grid_nz -1;
-  }
-  ecl_box->i1 = i1;
-  ecl_box->i2 = i2;
-  ecl_box->j1 = j1;
-  ecl_box->j2 = j2;
-  ecl_box->k1 = k1;
-  ecl_box->k2 = k2;
-  
-  /*Properties of the box: */
-  ecl_box->box_nx = i2 - i1 + 1;
-  ecl_box->box_ny = j2 - j1 + 1;
-  ecl_box->box_nz = k2 - k1 + 1;
 
-  ecl_box->box_sx = 1;
-  ecl_box->box_sy = ecl_box->box_nx;
-  ecl_box->box_sz = ecl_box->box_nx * ecl_box->box_ny;
-  ecl_box->box_offset = i1 * ecl_box->box_sx + j1 * ecl_box->box_sy + k1 * ecl_box->box_sz;
-  /* Counting the number of active elements in the box */
   {
-    int global_counter = 0;
-    int i,j,k;
-    ecl_box->active_size = 0;
-    ecl_box->active_list = util_malloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz * sizeof * ecl_box->active_list , __func__);
-    ecl_box->global_list = util_malloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz * sizeof * ecl_box->global_list , __func__);
-    for (k=k1; k <= k2; k++) 
-      for (j=j1; j <= j2; j++)
-        for (i=i1; i <= i2; i++) {
-          {
-            int global_index = ecl_grid_get_global_index3( ecl_box->parent_grid , i , j , k);
-            ecl_box->global_list[global_counter] = global_index;
-            global_counter++;
-          }
-          {
-            int active_index = ecl_grid_get_active_index3( ecl_box->parent_grid , i,j,k);
-            if (active_index >= 0) {
-              ecl_box->active_list[ecl_box->active_size] = active_index;
-              ecl_box->active_size++;
+    int i1 = util_int_max( util_int_min(__i1 , __i2 ) , 0);
+    int i2 = util_int_min( util_int_max(__i1 , __i2 ) , ecl_box->grid_nx );
+    int j1 = util_int_max(util_int_min(__j1 , __j2 ) , 0 );
+    int j2 = util_int_min( util_int_max(__j1 , __j2 ) , ecl_box->grid_ny );
+    int k1 = util_int_max(util_int_min(__k1 , __k2 ) , 0 );
+    int k2 = util_int_max( util_int_max(__k1 , __k2 ) , ecl_box->grid_nz );
+
+    ecl_box->i1 = i1;
+    ecl_box->i2 = i2;
+    ecl_box->j1 = j1;
+    ecl_box->j2 = j2;
+    ecl_box->k1 = k1;
+    ecl_box->k2 = k2;
+  
+    /*Properties of the box: */
+    ecl_box->box_nx = i2 - i1 + 1;
+    ecl_box->box_ny = j2 - j1 + 1;
+    ecl_box->box_nz = k2 - k1 + 1;
+    
+    ecl_box->box_sx = 1;
+    ecl_box->box_sy = ecl_box->box_nx;
+    ecl_box->box_sz = ecl_box->box_nx * ecl_box->box_ny;
+    ecl_box->box_offset = i1 * ecl_box->box_sx + j1 * ecl_box->box_sy + k1 * ecl_box->box_sz;
+    /* Counting the number of active elements in the box */
+
+
+    {
+      int global_counter = 0;
+      int i,j,k;
+      ecl_box->active_size = 0;
+      ecl_box->active_list = util_malloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz * sizeof * ecl_box->active_list , __func__);
+      ecl_box->global_list = util_malloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz * sizeof * ecl_box->global_list , __func__);
+      for (k=k1; k <= k2; k++) 
+        for (j=j1; j <= j2; j++)
+          for (i=i1; i <= i2; i++) {
+            {
+              int global_index = ecl_grid_get_global_index3( ecl_box->parent_grid , i , j , k);
+              ecl_box->global_list[global_counter] = global_index;
+              global_counter++;
+            }
+            {
+              int active_index = ecl_grid_get_active_index3( ecl_box->parent_grid , i,j,k);
+              if (active_index >= 0) {
+                ecl_box->active_list[ecl_box->active_size] = active_index;
+                ecl_box->active_size++;
+              }
             }
           }
-        }
-    
-    ecl_box->active_list = util_realloc( ecl_box->active_list , ecl_box->active_size * sizeof * ecl_box->active_list , __func__);
+      
+      ecl_box->active_list = util_realloc( ecl_box->active_list , ecl_box->active_size * sizeof * ecl_box->active_list , __func__);
+    }
   }
-  
   return ecl_box;
 }
 
