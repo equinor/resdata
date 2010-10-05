@@ -1264,13 +1264,17 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
     discarded (by checking coords[5]) in the
     ecl_grid_set_cell_GRID() function.
   */
-    
-  for (index = 0; index < nx*ny*nz; index++) {
-    ecl_kw_type * coords_kw  = ecl_file_iget_named_kw(ecl_file , "COORDS"  , index + (*cell_offset));
-    ecl_kw_type * corners_kw = ecl_file_iget_named_kw(ecl_file , "CORNERS" , index + (*cell_offset));
-    ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
-  }
   
+  {
+    int num_coords = ecl_file_get_num_named_kw( ecl_file , "COORDS" );
+    for (index = 0; index < num_coords; index++) {
+      ecl_kw_type * coords_kw  = ecl_file_iget_named_kw(ecl_file , "COORDS"  , index + (*cell_offset));
+      ecl_kw_type * corners_kw = ecl_file_iget_named_kw(ecl_file , "CORNERS" , index + (*cell_offset));
+      ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
+    }
+    (*cell_offset) += num_coords;
+  }
+
   if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , "MAPAXES"))) {
     const ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
     ecl_grid_init_mapaxes( grid , ecl_kw_get_float_ptr( mapaxes_kw) );
@@ -1280,7 +1284,6 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
   ecl_grid_update_index( grid );
   if (grid_nr > 0) ecl_grid_set_lgr_name_GRID(grid , ecl_file , grid_nr);
   ecl_grid_taint_cells( grid );
-  (*cell_offset) += nx*ny*nz;
   return grid;
 }
 
