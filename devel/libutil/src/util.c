@@ -4644,8 +4644,13 @@ void util_abort(const char * fmt , ...) {
       free(strings);
       util_safe_free(executable);
     }
-    printf("Exiting ... \n");
-    exit(1);
+    if (getenv("UTIL_ABORT") != NULL) {
+      printf("Aborting ... \n");
+      abort();
+    } else {
+      printf("Exiting ... \n");
+      exit(1);
+    }
     // Would have preferred abort() here - but that comes in conflict with the SIGABRT signal.
   }
   pthread_mutex_unlock( &__abort_mutex );

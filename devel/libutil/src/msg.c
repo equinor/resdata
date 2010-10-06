@@ -14,6 +14,7 @@ struct msg_struct {
   char * msg;
   int    msg_len;
   bool   visible;
+  bool   debug;
 };
 
 
@@ -111,6 +112,7 @@ msg_type * msg_alloc(const char * prompt) {
   msg->msg     = NULL;
   msg->msg_len = 0;
   msg->visible = false;
+  msg->debug   = false;
   return msg;
 }
 

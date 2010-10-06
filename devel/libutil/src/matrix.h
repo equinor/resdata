@@ -24,8 +24,11 @@ matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column
 void          matrix_free(matrix_type * matrix);
 void          matrix_pretty_print(const matrix_type * matrix , const char * name , const char * fmt);
 void          matrix_set(matrix_type * matrix, double value);
+void          matrix_set_name( matrix_type * matrix , const char * name);
 void          matrix_scale(matrix_type * matrix, double value);
 void          matrix_shift(matrix_type * matrix, double value);
+
+void          matrix_assert_finite( const matrix_type * matrix );
 
 void          matrix_assign(matrix_type * A , const matrix_type * B);
 void          matrix_inplace_add(matrix_type * A , const matrix_type * B);

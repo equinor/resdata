@@ -38,6 +38,7 @@
 
 
 struct matrix_struct {
+  char                  * name;           /* A name of the matrix - for printing - can be NULL. */
   double                * data;           /* The actual storage */
   bool                    data_owner;     /* is this matrix instance the owner of data? */
   size_t                  data_size;      /* What is the length of data (number of double values). */
@@ -140,6 +141,14 @@ static void matrix_realloc_data__( matrix_type * matrix , bool safe_mode ) {
 }
 
 
+/**
+   The matrix objecty is NOT ready for use after this function. 
+*/
+static matrix_type * matrix_alloc_empty( ) {
+  matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
+  matrix->name = NULL;
+  return matrix;
+}
 
 /*
   The freshly allocated matrix is explicitly initialized to zero. If
@@ -148,7 +157,7 @@ static void matrix_realloc_data__( matrix_type * matrix , bool safe_mode ) {
   allocation fails.
 */
 static matrix_type * matrix_alloc_with_stride(int rows , int columns , int row_stride , int column_stride, bool safe_mode) {
-  matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
+  matrix_type * matrix = matrix_alloc_empty();
   matrix->data      = NULL;
   matrix->data_size = 0;
   matrix_init_header( matrix , rows , columns , row_stride , column_stride);
@@ -161,10 +170,13 @@ static matrix_type * matrix_alloc_with_stride(int rows , int columns , int row_s
       matrix = NULL;
     }
   }
-  
   return matrix;
 }
 
+
+void matrix_set_name( matrix_type * matrix , const char * name) {
+  matrix->name = util_realloc_string_copy( matrix->name , name );
+}
 
 
 /**
@@ -178,7 +190,7 @@ matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column
   if (((row + rows) > src->rows) || ((column + columns) > src->columns))
     util_abort("%s: Invalid matrix subsection \n",__func__);
   {
-    matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
+    matrix_type * matrix = matrix_alloc_empty();
     
     matrix_init_header( matrix , rows , columns , src->row_stride , src->column_stride);
     matrix->data          = &src->data[ GET_INDEX(src , row , column) ];
@@ -200,7 +212,7 @@ matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column
 */   
 
 matrix_type * matrix_alloc_steal_data(int rows , int columns , double * data , int data_size) {
-  matrix_type * matrix = util_malloc( sizeof * matrix , __func__);
+  matrix_type * matrix = matrix_alloc_empty();
   matrix_init_header( matrix , rows , columns , 1 , rows );   
   matrix->data_size  = data_size;           /* Can in general be different from rows * columns */
   matrix->data_owner = true;
@@ -359,6 +371,7 @@ void matrix_shrink_header(matrix_type * matrix , int rows , int columns) {
 void matrix_free(matrix_type * matrix) {
   if (matrix->data_owner)
     util_safe_free(matrix->data);
+  util_safe_free( matrix->name );
   free(matrix);
 }
 
@@ -858,11 +871,24 @@ bool matrix_is_finite(const matrix_type * matrix) {
   int i,j;
   for (i = 0; i < matrix->rows; i++)
     for (j =0; j< matrix->columns; j++)
-      if ( !isfinite( matrix->data[ GET_INDEX( matrix , i , j) ]))
+      if ( !isfinite( matrix->data[ GET_INDEX( matrix , i , j) ])) {
+        printf("%s(%d,%d) = %g \n",matrix->name , i,j,matrix->data[ GET_INDEX( matrix , i , j) ]);
         return false;
+      }
 
   return true;
 }
+
+
+void matrix_assert_finite( const matrix_type * matrix ) {
+  if (!matrix_is_finite( matrix )) {
+    if ((matrix->rows * matrix->columns) < 400)
+      matrix_pretty_fprint( matrix , matrix->name , " %6.3f" , stdout);
+    
+    util_abort("%s: matrix:%s is not finite. \n",__func__ , matrix->name); 
+  }
+}
+
 
 /**
    This function will return the largest deviance from orthonormal
