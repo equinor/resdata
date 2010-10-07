@@ -11,7 +11,7 @@ typedef struct msg_struct msg_type;
 
 
 
-msg_type   * msg_alloc(const char *);
+msg_type   * msg_alloc(const char * , bool debug);
 void         msg_show(msg_type * );
 void         msg_free(msg_type *  , bool);
 void         msg_update(msg_type * , const char * );

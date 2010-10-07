@@ -45,7 +45,7 @@ int main(int argc , char ** argv) {
         buffer_type   * buffer    = buffer_alloc( 1024 );
         {
           int i;
-          msg_type   * msg      = msg_alloc("Copying :");
+          msg_type   * msg      = msg_alloc("Copying :" , false);
           msg_show( msg );
           for (i=0; i < vector_get_size( files ); i++) {
             const file_node_type * node = vector_iget_const( files , i );

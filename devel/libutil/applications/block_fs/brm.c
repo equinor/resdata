@@ -32,7 +32,7 @@ int main(int argc , char ** argv) {
       vector_type   * files    = block_fs_alloc_filelist( block_fs , pattern , sort_mode , false );
       {
         int i;
-        msg_type * msg = msg_alloc("Deleting file: ");
+        msg_type * msg = msg_alloc("Deleting file: " , false);
         msg_show( msg );
         //for (i=0; i < vector_get_size( files ); i++) {
         //  const file_node_type * node = vector_iget_const( files , i );

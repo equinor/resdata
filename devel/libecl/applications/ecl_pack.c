@@ -45,41 +45,41 @@ int main(int argc, char ** argv) {
       fortio_type * target       = fortio_fopen( target_file_name , "w" , ECL_ENDIAN_FLIP , fmt_file );
 
       if (target_type == ECL_UNIFIED_RESTART_FILE) {
-	int dummy;
-	seqnum_kw = ecl_kw_alloc_new("SEQNUM" , 1 , ECL_INT_TYPE , &dummy);
+        int dummy;
+        seqnum_kw = ecl_kw_alloc_new("SEQNUM" , 1 , ECL_INT_TYPE , &dummy);
       } 
       
       {
-	char * msg_format = util_alloc_sprintf("Packing %s <= " , target_file_name);
-	msg = msg_alloc( msg_format );
-	free( msg_format );
+        char * msg_format = util_alloc_sprintf("Packing %s <= " , target_file_name);
+        msg = msg_alloc( msg_format , false);
+        free( msg_format );
       }
       
       msg_show( msg );
       stringlist_sort( filelist , ecl_util_fname_report_cmp);
       prev_report_step = -1;
       for (i=0; i < num_files; i++) {
-	ecl_file_enum this_file_type;
-	this_file_type = ecl_util_get_file_type( stringlist_iget(filelist , i)  , NULL , &report_step);
-	if (this_file_type == file_type) {
-	  if (report_step == prev_report_step)
-	    util_exit("Tried to write same report step twice: %s / %s \n",
+        ecl_file_enum this_file_type;
+        this_file_type = ecl_util_get_file_type( stringlist_iget(filelist , i)  , NULL , &report_step);
+        if (this_file_type == file_type) {
+          if (report_step == prev_report_step)
+            util_exit("Tried to write same report step twice: %s / %s \n",
                       stringlist_iget(filelist , i-1) , 
                       stringlist_iget(filelist , i));
 
-	  prev_report_step = report_step;
-	  msg_update(msg , stringlist_iget( filelist , i));
-	  {
-	    ecl_file_type * src_file = ecl_file_fread_alloc( stringlist_iget( filelist , i) );
-	    if (target_type == ECL_UNIFIED_RESTART_FILE) {
-	      /* Must insert the SEQNUM keyword first. */
-	      ecl_kw_iset_int(seqnum_kw , 0 , report_step);
-	      ecl_kw_fwrite( seqnum_kw , target );
-	    }
-	    ecl_file_fwrite_fortio( src_file , target , 0);
-	    ecl_file_free( src_file );
-	  }
-	}  /* Else skipping file of incorrect type. */
+          prev_report_step = report_step;
+          msg_update(msg , stringlist_iget( filelist , i));
+          {
+            ecl_file_type * src_file = ecl_file_fread_alloc( stringlist_iget( filelist , i) );
+            if (target_type == ECL_UNIFIED_RESTART_FILE) {
+              /* Must insert the SEQNUM keyword first. */
+              ecl_kw_iset_int(seqnum_kw , 0 , report_step);
+              ecl_kw_fwrite( seqnum_kw , target );
+            }
+            ecl_file_fwrite_fortio( src_file , target , 0);
+            ecl_file_free( src_file );
+          }
+        }  /* Else skipping file of incorrect type. */
       }
       msg_free(msg , false);
       fortio_fclose( target );

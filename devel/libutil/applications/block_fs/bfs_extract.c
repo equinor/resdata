@@ -55,7 +55,7 @@ int main(int argc , char ** argv) {
       {
         block_fs_type * block_fs = block_fs_mount(mount_file , 1 , 0 , 1 , 0 , false , true );
         buffer_type * buffer = buffer_alloc(1024);
-        msg_type * msg = msg_alloc("Extracting: ");
+        msg_type * msg = msg_alloc("Extracting: " , false);
         msg_show( msg );
 
         for (iarg = 3; iarg < argc; iarg++) {

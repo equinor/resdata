@@ -1468,7 +1468,7 @@ bool util_files_equal( const char * file1 , const char * file2 ) {
    Externals:
 */
 typedef struct msg_struct msg_type;
-msg_type   * msg_alloc(const char *);
+msg_type   * msg_alloc(const char * , bool);
 void         msg_show(msg_type * );
 void         msg_free(msg_type *  , bool);
 void         msg_update(msg_type * , const char * );
@@ -1537,7 +1537,7 @@ void util_copy_directory(const char * src_path , const char * __target_path , co
   {
     msg_type * msg = NULL;
     if (prompt != NULL) {
-      msg = msg_alloc(prompt);
+      msg = msg_alloc(prompt , false);
       msg_show( msg );
       util_copy_directory__(src_path , target_path , buffer_size , buffer ,msg);
     }

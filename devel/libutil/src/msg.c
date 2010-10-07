@@ -85,13 +85,18 @@ void msg_show(msg_type * msg) {
 
 void msg_update(msg_type * msg , const char * new_msg) {
   __msg_assert_visible(msg);
-  msg_clear_msg(msg);
   msg->msg = util_realloc_string_copy(msg->msg , new_msg);
   if (new_msg == NULL)
     msg->msg_len = 0;
   else
     msg->msg_len = strlen(new_msg);
-  msg_print_msg(msg);
+
+  if (msg->debug)
+    printf("%s\n",msg->msg);
+  else {
+    msg_clear_msg(msg);
+    msg_print_msg(msg);
+  }
 }
 
 
@@ -104,7 +109,7 @@ void msg_update_int(msg_type * msg , const char * fmt , int value) {
 
 UTIL_SAFE_CAST_FUNCTION( msg , MSG_TYPE_ID )
 
-msg_type * msg_alloc(const char * prompt) {
+msg_type * msg_alloc(const char * prompt, bool debug) {
   msg_type * msg = util_malloc(sizeof * msg , __func__);
   UTIL_TYPE_ID_INIT( msg , MSG_TYPE_ID);
   msg->prompt = util_alloc_string_copy(prompt);
@@ -112,7 +117,7 @@ msg_type * msg_alloc(const char * prompt) {
   msg->msg     = NULL;
   msg->msg_len = 0;
   msg->visible = false;
-  msg->debug   = false;
+  msg->debug   = debug;
   return msg;
 }
 

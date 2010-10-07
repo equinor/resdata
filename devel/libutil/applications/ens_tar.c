@@ -39,7 +39,7 @@ bool tar_and_remove_dir( const char * root_path , const char * current_dir , int
 int main( int argc , char ** argv ) {
   const char * mount_file = "enkf_mount_info";
   if (util_file_exists( mount_file )) {
-    msg_type * msg = msg_alloc("");
+    msg_type * msg = msg_alloc("" , false);
     char * cwd    = util_alloc_cwd();
     
     msg_show( msg );
