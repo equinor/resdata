@@ -484,7 +484,7 @@ static bool matrix_assert_ij( const matrix_type * matrix , int i , int j) {
 }
 
 
-static bool matrix_matrix_assert_rows( const matrix_type * m1 , const matrix_type * m2) {
+static void matrix_matrix_assert_equal_rows( const matrix_type * m1 , const matrix_type * m2) {
   if (m1->rows != m2->rows)
     util_abort("%s: size mismatch in binary matrix operation %d %d \n",__func__ , m1->rows , m2->rows);
 }
@@ -572,7 +572,7 @@ void matrix_set_const_column(matrix_type * matrix , const double value , int col
 
 
 void matrix_copy_column(matrix_type * target_matrix, const matrix_type * src_matrix , int target_column, int src_column) {
-  matrix_matrix_assert_rows( target_matrix , src_matrix );
+  matrix_matrix_assert_equal_rows( target_matrix , src_matrix );
   for(int row = 0; row < target_matrix->rows; row++)
     target_matrix->data[ GET_INDEX( target_matrix, row , target_column)] = src_matrix->data[ GET_INDEX( src_matrix, row, src_column)];
 } 

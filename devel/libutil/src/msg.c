@@ -85,18 +85,21 @@ void msg_show(msg_type * msg) {
 
 void msg_update(msg_type * msg , const char * new_msg) {
   __msg_assert_visible(msg);
-  msg->msg = util_realloc_string_copy(msg->msg , new_msg);
-  if (new_msg == NULL)
-    msg->msg_len = 0;
-  else
-    msg->msg_len = strlen(new_msg);
+  if (!msg->debug)
+    msg_clear_msg(msg);
+
+  {
+    msg->msg = util_realloc_string_copy(msg->msg , new_msg);
+    if (new_msg == NULL)
+      msg->msg_len = 0;
+    else
+      msg->msg_len = strlen(new_msg);
+  }
 
   if (msg->debug)
     printf("%s\n",msg->msg);
-  else {
-    msg_clear_msg(msg);
+  else
     msg_print_msg(msg);
-  }
 }
 
 
