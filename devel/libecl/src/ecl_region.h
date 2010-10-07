@@ -92,9 +92,9 @@ void              ecl_region_deselect_smaller( ecl_region_type * ecl_region , co
 void              ecl_region_select_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
 void              ecl_region_deselect_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
 
-void ecl_region_set_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value);
-void ecl_region_set_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value);
-void ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value);
+  void ecl_region_set_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value, bool force_active);
+  void ecl_region_set_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active);
+  void ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active);
 
 UTIL_IS_INSTANCE_HEADER( ecl_region );
 UTIL_SAFE_CAST_HEADER( ecl_region );

@@ -38,7 +38,7 @@ void summary_file_get_last(const char * summary_file , msg_type * msg) {
 
 
 int main(int argc , char **argv) {
-  msg_type * msg = msg_alloc("Ferdig med: ");
+  msg_type * msg = msg_alloc("Ferdig med: " , false);
   int i;
 
   msg_show(msg);
