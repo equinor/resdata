@@ -2431,3 +2431,49 @@ int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type
     util_abort("%s: size mismatch grid has %d cells - region specifier:%d \n",__func__ , ecl_grid->size , ecl_kw_get_size( region_kw ));
   return cells_found;
 }
+
+
+
+/*****************************************************************/
+
+
+
+void ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , FILE * stream , double double_default) {
+  int src_size = ecl_kw_get_size( ecl_kw );
+  if (src_size == ecl_grid->size)
+    ecl_kw_fprintf_grdecl( ecl_kw , stream );
+  else if (src_size == ecl_grid->total_active) {
+    void  * default_ptr;
+    float   float_default;
+    int     int_default;
+    int     bool_default;
+    ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
+    ecl_kw_type * tmp_kw;
+
+    if (ecl_type == ECL_FLOAT_TYPE) {
+      float_default = (float) double_default;
+      default_ptr = &float_default;
+    } else if (ecl_type == ECL_INT_TYPE) {
+      int_default = (int) double_default;
+      default_ptr = &int_default;
+    } else if (ecl_type == ECL_DOUBLE_TYPE) {
+      default_ptr = &double_default;
+    } else if (ecl_type == ECL_BOOL_TYPE) {
+      int tmp = (int) double_default;
+      if (tmp == 1)
+        bool_default = ECL_BOOL_TRUE_INT;
+      else if (tmp == 0)
+        bool_default = ECL_BOOL_FALSE_INT;
+      else
+        util_abort("%s: only 0 and 1 are allowed for bool interpolation\n",__func__);
+      default_ptr = &bool_default;
+    }
+      
+    tmp_kw = ecl_kw_alloc_scatter_copy( ecl_kw , ecl_grid->size , ecl_grid->inv_index_map , default_ptr );
+    ecl_kw_fprintf_grdecl( tmp_kw , stream );
+    ecl_kw_free( tmp_kw );
+  } else 
+    util_abort("%s: size mismatch. ecl_kw must have either nx*ny*ny elements or nactive elements\n",__func__);
+
+}
+

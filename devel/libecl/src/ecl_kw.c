@@ -116,12 +116,12 @@ struct ecl_kw_struct {
       repsectively.
 
     o In the unformatted ECLIPSE files the boolean values are
-      represented as integers with the values BOOL_TRUE_INT and
-      BOOL_FALSE_INT respectively.
-
+      represented as integers with the values ECL_BOOL_TRUE_INT and
+      ECL_BOOL_FALSE_INT respectively.
+      
    Internally in an ecl_kw instance boolean values are represented as
-   integers (NOT bool), with the representation given by BOOL_TRUE_INT
-   and BOOL_FALSE_INT. This implies that read/write of unformatted
+   integers (NOT bool), with the representation given by ECL_BOOL_TRUE_INT
+   and ECL_BOOL_FALSE_INT. This implies that read/write of unformatted
    data can go transparently without between ECLIPSE and the ecl_kw
    implementation, but exported set()/get() functions with bool must
    intercept the bool values and convert to the appropriate integer
@@ -133,9 +133,6 @@ struct ecl_kw_struct {
 #define BOOL_TRUE_CHAR       'T' 
 #define BOOL_FALSE_CHAR      'F'
 
-// For unformatted files:
-#define BOOL_TRUE_INT         -1   // Binary representation: 11111111  11111111  11111111  1111111
-#define BOOL_FALSE_INT         0   // Binary representation: 00000000  00000000  00000000  0000000     
 
 
 static const char * get_read_fmt( ecl_type_enum ecl_type ) {
@@ -417,6 +414,15 @@ void ecl_kw_free__(void *void_ecl_kw) {
 }
 
 
+void ecl_kw_memcpy_data( ecl_kw_type * target , const ecl_kw_type * src) {
+  if (!ecl_kw_assert_binary( target , src ))
+    util_abort("%s: type/size mismatch \n",__func__);
+  
+  memcpy(target->data , src->data , target->size * target->sizeof_ctype);
+}
+
+
+
 void ecl_kw_memcpy(ecl_kw_type *target, const ecl_kw_type *src) {
   target->size                = src->size;
   target->sizeof_ctype        = src->sizeof_ctype;
@@ -425,7 +431,7 @@ void ecl_kw_memcpy(ecl_kw_type *target, const ecl_kw_type *src) {
 
   ecl_kw_set_header_name( target , src->header );
   ecl_kw_alloc_data(target);
-  memcpy(target->data , src->data , target->size * target->sizeof_ctype);
+  ecl_kw_memcpy_data( target , src );
 }
 
 
@@ -511,9 +517,9 @@ bool ecl_kw_iget_bool( const ecl_kw_type * ecl_kw , int i) {
   if (ecl_kw_get_type(ecl_kw) != ECL_BOOL_TYPE)                                                                     
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        
   ecl_kw_iget_static(ecl_kw , i , &int_value);                                                                  
-  if (int_value == BOOL_TRUE_INT)
+  if (int_value == ECL_BOOL_TRUE_INT)
     return true;
-  else if (int_value == BOOL_FALSE_INT)
+  else if (int_value == ECL_BOOL_FALSE_INT)
     return false;
   else {
     util_abort("%s: fuckup - wrong integer in BOOL type \n",__func__);
@@ -607,15 +613,49 @@ ECL_KW_SET_INDEXED( int    , ECL_INT_TYPE);
 #undef ECL_KW_SET_INDEXED
 
 
+#define ECL_KW_SHIFT_INDEXED(ctype , ECL_TYPE)                                                                \
+void ecl_kw_shift_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype shift) {  \
+   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                   \
+      util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        \
+   {                                                                                                          \
+     ctype * data = (ctype *) ecl_kw->data;                                                                   \
+      for (int i = 0; i < size; i++)                                                                          \
+          data[index_list[i]] += shift;                                                                       \
+   }                                                                                                          \
+}
+
+ECL_KW_SHIFT_INDEXED( double , ECL_DOUBLE_TYPE);
+ECL_KW_SHIFT_INDEXED( float  , ECL_FLOAT_TYPE);
+ECL_KW_SHIFT_INDEXED( int    , ECL_INT_TYPE);
+#undef ECL_KW_SHIFT_INDEXED
+
+
+#define ECL_KW_SCALE_INDEXED(ctype , ECL_TYPE)                                                                \
+void ecl_kw_scale_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype scale) {  \
+   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                   \
+      util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        \
+   {                                                                                                          \
+     ctype * data = (ctype *) ecl_kw->data;                                                                   \
+      for (int i = 0; i < size; i++)                                                                          \
+          data[index_list[i]] *= scale;                                                                       \
+   }                                                                                                          \
+}
+
+ECL_KW_SCALE_INDEXED( double , ECL_DOUBLE_TYPE);
+ECL_KW_SCALE_INDEXED( float  , ECL_FLOAT_TYPE);
+ECL_KW_SCALE_INDEXED( int    , ECL_INT_TYPE);
+#undef ECL_KW_SCALE_INDEXED
+
+
 void ecl_kw_iset_bool( ecl_kw_type * ecl_kw , int i , bool bool_value) {
   int  int_value;                                                                                                   
   if (ecl_kw_get_type(ecl_kw) != ECL_BOOL_TYPE)                                                                     
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        
 
   if (bool_value)
-    int_value = BOOL_TRUE_INT;
+    int_value = ECL_BOOL_TRUE_INT;
   else
-    int_value = BOOL_FALSE_INT;
+    int_value = ECL_BOOL_FALSE_INT;
   
   ecl_kw_iset_static(ecl_kw , i , &int_value);
 }
@@ -1455,6 +1495,66 @@ void ecl_kw_get_data_as_double(const ecl_kw_type * ecl_kw , double * double_data
 }
 
 
+/**
+   Will create a new keyword of the same type as src_kw, and size
+   @target_size. The integer array mapping is a list sizeof(src_kw)
+   elements, where each element is the new index, i.e.
+
+       new_kw[ mapping[i] ]  = src_kw[i]
+       
+   For all inactive elements in new kw are set as follows:
+
+   0          - For float / int / double
+   False      - For logical
+   ""         - For char
+*/
+
+ecl_kw_type * ecl_kw_alloc_scatter_copy( const ecl_kw_type * src_kw , int target_size , const int * mapping, void * def_value) {
+  int default_int           = 0;
+  double default_double     = 0;
+  float default_float       = 0;
+  int   default_bool        = ECL_BOOL_FALSE_INT;
+  const char * default_char = "";
+  ecl_kw_type * new_kw = ecl_kw_alloc( src_kw->header , target_size , src_kw->ecl_type );
+
+  if (def_value != NULL)
+    ecl_kw_scalar_set__( new_kw , def_value );
+  else {
+    /** Initialize with defaults .*/
+    switch (src_kw->ecl_type) {
+    case(ECL_INT_TYPE): 
+      ecl_kw_scalar_set__( new_kw , &default_int );
+      break;
+    case(ECL_FLOAT_TYPE): 
+      ecl_kw_scalar_set__( new_kw , &default_float );
+      break;
+    case(ECL_DOUBLE_TYPE): 
+      ecl_kw_scalar_set__( new_kw , &default_double );
+      break;
+    case(ECL_BOOL_TYPE): 
+      ecl_kw_scalar_set__( new_kw , &default_bool );
+      break;
+    case(ECL_CHAR_TYPE): 
+      ecl_kw_scalar_set__( new_kw , default_char );
+      break;
+    default:
+      util_abort("%s: unsopprted type:%d \n", __func__ , src_kw->ecl_type);
+    }
+  }
+  
+  {
+    int sizeof_ctype = ecl_util_get_sizeof_ctype( src_kw->ecl_type );
+    for(int i =0; i < src_kw->size; i++) {
+      int target_index = mapping[i];
+      memcpy( &new_kw->data[ target_index * sizeof_ctype ] , &src_kw->data[ i * sizeof_ctype] , sizeof_ctype);
+    }
+  }
+
+  return new_kw;
+}
+
+
+
 void ecl_kw_fread_double_param(const char * filename , bool fmt_file , double * double_data) {
   fortio_type   * fortio      = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
   ecl_kw_type   * ecl_kw      = ecl_kw_fread_alloc(fortio);
@@ -1475,7 +1575,7 @@ void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
 }
 
 
-void ecl_kw_fprintf_grdecl(ecl_kw_type * ecl_kw , FILE * stream) {
+void ecl_kw_fprintf_grdecl(const ecl_kw_type * ecl_kw , FILE * stream) {
   fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , true , stream);   /* Endian flip should *NOT* be used */
   fprintf(stream,"%s\n" , ecl_kw_get_header8(ecl_kw));
   ecl_kw_fwrite_data(ecl_kw , fortio);
@@ -1589,31 +1689,43 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * k
 
 /*****************************************************************/
 
-
-void ecl_kw_scalar_init(ecl_kw_type * ecl_kw , double init_value) {
-  void * data = ecl_kw_get_data_ref(ecl_kw);
-  int    size = ecl_kw_get_size(ecl_kw);
-  int i;
-
-  switch (ecl_kw->ecl_type) {
-  case(ECL_DOUBLE_TYPE):
-    {
-      double *double_data = (double *) data;
-      for (i=0; i < size; i++)
-        double_data[i] = init_value;
-      break;
-    }
-  case(ECL_FLOAT_TYPE):
-    {
-      float *float_data = (float *) data;
-      for (i=0; i < size; i++)
-        float_data[i] = init_value;
-      break;
-    }
-  default:
-    util_abort("%s: can only be called on ECL_FLOAT_TYPE and ECL_DOUBLE_TYPE - aborting \n",__func__);
-  }
+#define ECL_KW_SCALAR_SET_TYPED( ctype , ECL_TYPE ) \
+void ecl_kw_scalar_set_ ## ctype( ecl_kw_type * ecl_kw , ctype value){  \
+ if (ecl_kw->ecl_type == ECL_TYPE) {                                    \
+    ctype * data = ecl_kw_get_data_ref(ecl_kw);                         \
+    for (int i=0;i < ecl_kw->size; i++)                                 \
+      data[i] = value;                                                  \
+ } else util_abort("%s: wrong type\n",__func__);                        \
 }
+
+ECL_KW_SCALAR_SET_TYPED( int   , ECL_INT_TYPE )
+ECL_KW_SCALAR_SET_TYPED( float , ECL_FLOAT_TYPE )
+ECL_KW_SCALAR_SET_TYPED( double , ECL_DOUBLE_TYPE )
+#undef ECL_KW_SCALAR_SET_TYPED
+
+
+void ecl_kw_scalar_set_float_or_double( ecl_kw_type * ecl_kw , double value ) {
+  ecl_type_enum ecl_type = ecl_kw_get_type(ecl_kw);
+  if (ecl_type == ECL_FLOAT_TYPE)
+    ecl_kw_scalar_set_float( ecl_kw , (float) value);
+  else if (ecl_type == ECL_DOUBLE_TYPE)
+    ecl_kw_scalar_set_double( ecl_kw ,  value);
+  else
+    util_abort("%s: wrong type \n",__func__);
+}
+
+/*
+  Untyped - low level alternative.
+*/
+void ecl_kw_scalar_set__(ecl_kw_type * ecl_kw , const void * value) {
+  int sizeof_ctype = ecl_util_get_sizeof_ctype( ecl_kw->ecl_type );
+  for (int i=0;i < ecl_kw->size; i++)
+    memcpy( &ecl_kw->data[ i * sizeof_ctype ] , value , sizeof_ctype);
+}
+
+/*****************************************************************/
+
+
 
 
 void ecl_kw_alloc_double_data(ecl_kw_type * ecl_kw , double * values) {
@@ -1626,94 +1738,233 @@ void ecl_kw_alloc_float_data(ecl_kw_type * ecl_kw , float * values) {
   memcpy(ecl_kw->data , values , ecl_kw->size * ecl_kw->sizeof_ctype);
 }
 
+/*****************************************************************/
+/* Macros for typed mathematical functions.                      */
 
-void ecl_kw_shift(ecl_kw_type * ecl_kw , double shift_value) {
-  void * data = ecl_kw_get_data_ref(ecl_kw);
-  int    size = ecl_kw_get_size(ecl_kw);
-  int i;
+#define ECL_KW_SCALE_TYPED( ctype , ECL_TYPE )                                                        \
+void ecl_kw_scale_ ## ctype (ecl_kw_type * ecl_kw , ctype scale_factor) {                             \
+  if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                            \
+    util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));  \
+  {                                                                                                   \
+     ctype * data = ecl_kw_get_data_ref(ecl_kw);                                                      \
+     int    size  = ecl_kw_get_size(ecl_kw);                                                          \
+     for (int i=0; i < size; i++)                                                                     \
+        data[i] *= scale_factor;                                                                      \
+  }                                                                                                   \
+}
 
+ECL_KW_SCALE_TYPED( int , ECL_INT_TYPE)
+ECL_KW_SCALE_TYPED( float , ECL_FLOAT_TYPE)
+ECL_KW_SCALE_TYPED( double , ECL_DOUBLE_TYPE )
+#undef ECL_KW_SCALE_TYPED
 
-  switch (ecl_kw->ecl_type) {
-  case(ECL_DOUBLE_TYPE):
-    {
-      double *double_data = (double *) data;
-      for (i=0; i < size; i++)
-        double_data[i] += shift_value;
-      break;
-    }
-  case(ECL_FLOAT_TYPE):
-    {
-      float *float_data = (float *) data;
-      for (i=0; i < size; i++)
-        float_data[i] += shift_value;
-      break;
-    }
-  default:
-    util_abort("%s: can only be called on ECL_FLOAT_TYPE and ECL_DOUBLE_TYPE - aborting \n",__func__);
-  }
+void ecl_kw_scale_float_or_double( ecl_kw_type * ecl_kw , double scale_factor ) {
+  ecl_type_enum ecl_type = ecl_kw_get_type(ecl_kw);
+  if (ecl_type == ECL_FLOAT_TYPE)
+    ecl_kw_scale_float( ecl_kw , (float) scale_factor);
+  else if (ecl_type == ECL_DOUBLE_TYPE)
+    ecl_kw_scale_double( ecl_kw ,  scale_factor);
+  else
+    util_abort("%s: wrong type \n",__func__);
 }
 
 
-void ecl_kw_scale(ecl_kw_type * ecl_kw , double scale_factor) {
-  void * data = ecl_kw_get_data_ref(ecl_kw);
-  int    size = ecl_kw_get_size(ecl_kw);
-  int i;
+#define ECL_KW_SHIFT_TYPED( ctype , ECL_TYPE )                                                        \
+void ecl_kw_shift_ ## ctype (ecl_kw_type * ecl_kw , ctype shift_value) {                              \
+  if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                            \
+    util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));  \
+  {                                                                                                   \
+     ctype * data = ecl_kw_get_data_ref(ecl_kw);                                                      \
+     int    size  = ecl_kw_get_size(ecl_kw);                                                          \
+     for (int i=0; i < size; i++)                                                                     \
+        data[i] += shift_value;                                                                       \
+  }                                                                                                   \
+}
 
-  switch (ecl_kw->ecl_type) {
-  case(ECL_DOUBLE_TYPE):
-    {
-      double *double_data = (double *) data;
-      for (i=0; i < size; i++)
-        double_data[i] *= scale_factor;
-      break;
-    }
-  case(ECL_FLOAT_TYPE):
-    {
-      float *float_data = (float *) data;
-      for (i=0; i < size; i++)
-        float_data[i] *= scale_factor;
-      break;
-    }
-  default:
-    util_abort("%s: can only be called on ECL_FLOAT_TYPE and ECL_DOUBLE_TYPE - aborting \n",__func__);
-  }
+ECL_KW_SHIFT_TYPED( int , ECL_INT_TYPE)
+ECL_KW_SHIFT_TYPED( float , ECL_FLOAT_TYPE)
+ECL_KW_SHIFT_TYPED( double , ECL_DOUBLE_TYPE )
+#undef ECL_KW_SHIFT_TYPED 
+
+
+void ecl_kw_shift_float_or_double( ecl_kw_type * ecl_kw , double shift_value ) {
+  ecl_type_enum ecl_type = ecl_kw_get_type(ecl_kw);
+  if (ecl_type == ECL_FLOAT_TYPE)
+    ecl_kw_shift_float( ecl_kw , (float) shift_value );
+  else if (ecl_type == ECL_DOUBLE_TYPE)
+    ecl_kw_shift_double( ecl_kw ,  shift_value );
+  else
+    util_abort("%s: wrong type \n",__func__);
 }
 
 
 
-void ecl_kw_inplace_sub(ecl_kw_type * my_kw , const ecl_kw_type * sub_kw) {
+bool ecl_kw_assert_numeric( const ecl_kw_type * kw ) {
+  if ((kw->ecl_type == ECL_INT_TYPE) || (kw->ecl_type == ECL_FLOAT_TYPE) || (kw->ecl_type == ECL_DOUBLE_TYPE))
+    return true;
+  else
+    return false;
+}
 
-  int            size = ecl_kw_get_size(my_kw);
-  ecl_type_enum type = ecl_kw_get_type(my_kw);
-  if ((size != ecl_kw_get_size(sub_kw)) || (type != ecl_kw_get_type(sub_kw))) 
-    util_abort("%s: attempt to subtract to fields of different size - aborting \n",__func__);
+
+bool ecl_kw_assert_binary( const ecl_kw_type * kw1, const ecl_kw_type * kw2) {
+  if (kw1->size != kw2->size) 
+    return false;   /* Size mismatch */
+  if (kw1->ecl_type != kw2->ecl_type)  
+    return false;   /* Type mismatch */
   
-  {
-    int i;
-    void * my_data        = ecl_kw_get_data_ref(my_kw);
-    const void * sub_data = ecl_kw_get_data_ref(sub_kw);
+  return true;
+}
 
-    switch (type) {
-    case(ECL_DOUBLE_TYPE):
-      {
-        double *my_double        = (double *) my_data;
-        const double *sub_double = (const double *) sub_data;
-        for (i=0; i < size; i++)
-          my_double[i] -= sub_double[i];
-        break;
-      }
-    case(ECL_FLOAT_TYPE):
-      {
-        float *my_float        = (float *)       my_data;
-        const float *sub_float = (const float *) sub_data;
-        for (i=0; i < size; i++)
-          my_float[i] -= sub_float[i];
-        break;
-      }
-    default:
-      util_abort("%s: can only be called on ECL_FLOAT_TYPE and ECL_DOUBLE_TYPE - aborting \n",__func__);
-    }
 
+bool ecl_kw_assert_binary_numeric( const ecl_kw_type * kw1, const ecl_kw_type * kw2) {
+  if (!ecl_kw_assert_binary( kw1 , kw2))
+    return false;
+  else
+    return ecl_kw_assert_numeric( kw1 );
+}
+
+
+
+#define ECL_KW_ASSERT_TYPED_BINARY_OP( ctype , ECL_TYPE ) \
+bool ecl_kw_assert_binary_ ## ctype( const ecl_kw_type * kw1 , const ecl_kw_type * kw2) { \
+ if (!ecl_kw_assert_binary_numeric( kw1 , kw2))                                                \
+    return false;                                                                         \
+ if (kw1->ecl_type != ECL_TYPE)                                                           \
+    return false;   /* Type mismatch */                                                   \
+ return true;                                                                             \
+}    
+
+ECL_KW_ASSERT_TYPED_BINARY_OP( int , ECL_INT_TYPE )
+ECL_KW_ASSERT_TYPED_BINARY_OP( float , ECL_FLOAT_TYPE )
+ECL_KW_ASSERT_TYPED_BINARY_OP( double , ECL_DOUBLE_TYPE )
+#undef ECL_KW_ASSERT_TYPED_BINARY_OP
+     
+
+void ecl_kw_copy_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * src_kw) {
+  if (!ecl_kw_assert_binary( target_kw , src_kw ))
+    util_abort("%s: type/size  mismatch\n",__func__);      
+  {                                                         
+    char * target_data = ecl_kw_get_data_ref( target_kw ); 
+    const char * src_data = ecl_kw_get_data_ref( src_kw ); 
+    int sizeof_ctype = ecl_util_get_sizeof_ctype(target_kw->ecl_type);                     
+    for (int i=0; i < set_size; i++) {                                                    
+      int index = index_set[i];                                         
+      memcpy( &target_data[ index * sizeof_ctype ] , &src_data[ index * sizeof_ctype] , sizeof_ctype);
+    }                                                                                     
+  }                                                                                       
+}
+
+
+
+#define ECL_KW_TYPED_INPLACE_ADD_INDEXED( ctype ) \
+static void ecl_kw_inplace_add_indexed_ ## ctype( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * add_kw) { \
+ if (!ecl_kw_assert_binary_ ## ctype( target_kw , add_kw ))                                \
+    util_abort("%s: type/size  mismatch\n",__func__);                                      \
+ {                                                                                         \
+    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * add_data = ecl_kw_get_data_ref( add_kw );                                \
+    for (int i=0; i < set_size; i++) {                                                     \
+      int index = index_set[i];                                                            \
+      target_data[index] += add_data[index];                                               \
+    }                                                                                      \
+  }                                                                                        \
+}
+
+
+ECL_KW_TYPED_INPLACE_ADD_INDEXED( int )
+ECL_KW_TYPED_INPLACE_ADD_INDEXED( double )
+ECL_KW_TYPED_INPLACE_ADD_INDEXED( float )
+#undef ECL_KW_TYPED_INPLACE_ADD
+
+void ecl_kw_inplace_add_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * add_kw) {
+  ecl_type_enum type = ecl_kw_get_type(target_kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_add_indexed_float( target_kw , set_size , index_set , add_kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_add_indexed_double( target_kw , set_size , index_set , add_kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_add_indexed_int( target_kw , set_size , index_set , add_kw );
+    break;
+  default:
+    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+  }
+}
+
+
+
+
+#define ECL_KW_TYPED_INPLACE_ADD( ctype ) \
+static void ecl_kw_inplace_add_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type * add_kw) { \
+ if (!ecl_kw_assert_binary_ ## ctype( target_kw , add_kw ))                                \
+    util_abort("%s: type/size  mismatch\n",__func__);                                      \
+ {                                                                                         \
+    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * add_data = ecl_kw_get_data_ref( add_kw );                                \
+    for (int i=0; i < target_kw->size; i++)                                                \
+      target_data[i] += add_data[i];                                                       \
+ }                                                                                         \
+}
+ECL_KW_TYPED_INPLACE_ADD( int )
+ECL_KW_TYPED_INPLACE_ADD( double )
+ECL_KW_TYPED_INPLACE_ADD( float )
+#undef ECL_KW_TYPED_INPLACE_ADD
+
+void ecl_kw_inplace_add( ecl_kw_type * target_kw , const ecl_kw_type * add_kw) {
+  ecl_type_enum type = ecl_kw_get_type(target_kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_add_float( target_kw , add_kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_add_double( target_kw , add_kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_add_int( target_kw , add_kw );
+    break;
+  default:
+    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+  }
+}
+
+
+
+
+
+
+#define ECL_KW_TYPED_INPLACE_SUB( ctype ) \
+void ecl_kw_inplace_sub_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type * sub_kw) { \
+ if (!ecl_kw_assert_binary_ ## ctype( target_kw , sub_kw ))                                \
+    util_abort("%s: type/size  mismatch\n",__func__);                                      \
+ {                                                                                         \
+    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * sub_data = ecl_kw_get_data_ref( sub_kw );                                \
+    for (int i=0; i < target_kw->size; i++)                                                \
+      target_data[i] -= sub_data[i];                                                       \
+ }                                                                                         \
+}
+ECL_KW_TYPED_INPLACE_SUB( int )
+ECL_KW_TYPED_INPLACE_SUB( double )
+ECL_KW_TYPED_INPLACE_SUB( float )
+#undef ECL_KW_TYPED_INPLACE_SUB
+
+void ecl_kw_inplace_sub( ecl_kw_type * target_kw , const ecl_kw_type * sub_kw) {
+  ecl_type_enum type = ecl_kw_get_type(target_kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_sub_float( target_kw , sub_kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_sub_double( target_kw , sub_kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_sub_int( target_kw , sub_kw );
+    break;
+  default:
+    util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
   }
 }
 
@@ -1819,65 +2070,6 @@ void ecl_kw_inplace_inv(ecl_kw_type * my_kw) {
   }
 }
 
-
-
-static void ecl_kw_inplace_add__(ecl_kw_type * my_kw , int my_offset , const ecl_kw_type * add_kw , bool different_size_ok) {
-  ecl_type_enum type  = ecl_kw_get_type(my_kw);
-  int my_size         = ecl_kw_get_size(my_kw);
-  int add_size        = ecl_kw_get_size(add_kw);
-  int my_last_index   = my_offset + add_size;
-
-  if (different_size_ok) {
-    if (my_last_index >= my_size) 
-      util_abort("%s: the last index of the adder will extend beyond the size - aborting \n",__func__);
-  } else {
-    if (my_size != add_size || my_offset != 0) 
-      util_abort("%s: attempt to add to fields of different size - aborting \n",__func__);
-  }
-
-  if (type != ecl_kw_get_type(add_kw)) 
-    util_abort("%s: trying to add fields of different type - aborting \n",__func__);
-
-  {
-    int i;
-    void * my_data        = ecl_kw_get_data_ref(my_kw);
-    const void * add_data = ecl_kw_get_data_ref(add_kw);
-
-    switch (type) {
-    case(ECL_DOUBLE_TYPE):
-      {
-        double *my_double        = (double *) my_data;
-        const double *add_double = (const double *) add_data;
-        for (i=0; i < add_size; i++)
-          my_double[i + my_offset] += add_double[i];
-        break;
-      }
-
-    case(ECL_FLOAT_TYPE):
-      {
-        float *my_float        = (float *)       my_data;
-        const float *add_float = (const float *) add_data;
-        for (i=0; i < add_size; i++)
-          my_float[i + my_offset] += add_float[i];
-        break;
-      }
-      
-    default:
-      util_abort("%s: can only be called on ECL_FLOAT_TYPE and ECL_DOUBLE_TYPE - aborting \n",__func__);
-    }
-
-  }
-}
-
-
-void ecl_kw_inplace_add(ecl_kw_type * my_kw , const ecl_kw_type * add_kw) {
-  ecl_kw_inplace_add__(my_kw , 0 , add_kw , false);
-}
-
-
-void ecl_kw_inplace_add_subkw(ecl_kw_type * my_kw , int my_offset , const ecl_kw_type * add_kw) {
-  ecl_kw_inplace_add__(my_kw , my_offset , add_kw , true);
-}
 
 
 

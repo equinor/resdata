@@ -51,9 +51,9 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int __i1,int __i2 
   {
     int i1 = util_int_max( util_int_min(__i1 , __i2 ) , 0);
     int i2 = util_int_min( util_int_max(__i1 , __i2 ) , ecl_box->grid_nx );
-    int j1 = util_int_max(util_int_min(__j1 , __j2 ) , 0 );
+    int j1 = util_int_max( util_int_min(__j1 , __j2 ) , 0 );
     int j2 = util_int_min( util_int_max(__j1 , __j2 ) , ecl_box->grid_ny );
-    int k1 = util_int_max(util_int_min(__k1 , __k2 ) , 0 );
+    int k1 = util_int_max( util_int_min(__k1 , __k2 ) , 0 );
     int k2 = util_int_max( util_int_max(__k1 , __k2 ) , ecl_box->grid_nz );
 
     ecl_box->i1 = i1;

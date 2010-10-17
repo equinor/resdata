@@ -95,8 +95,6 @@ bool            ecl_grid_block_value_2d(ecl_grid_type * , double  , double  ,dou
 bool            ecl_grid_block_value_3d(ecl_grid_type * , double  , double  ,double , double);
 
 
-int             ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type * region_kw , int region_value , bool active_only, bool export_active_index , int_vector_type * index_list);
-
 
 /* lgr related functions */
 const ecl_grid_type   * ecl_grid_get_cell_lgr3(const ecl_grid_type * grid , int i, int j , int k);
@@ -113,6 +111,7 @@ int                     ecl_grid_get_parent_cell3( const ecl_grid_type * grid , 
 const ecl_grid_type   * ecl_grid_get_global_grid( const ecl_grid_type * grid );
 bool                    ecl_grid_is_lgr( const ecl_grid_type * ecl_grid );
 double                  ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k);
+void                    ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , FILE * stream , double double_default);
 
 #ifdef __cplusplus
 }

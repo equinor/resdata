@@ -30,7 +30,7 @@ int main(int argc, char ** argv) {
     printf("Writing: %s ",sgu_file); fflush(stdout);
     sgu_kw = ecl_kw_alloc_copy(swl_kw);
     ecl_kw_set_header_name(sgu_kw , "SGU");
-    ecl_kw_scalar_init(sgu_kw , 1.0);
+    ecl_kw_scalar_set_float(sgu_kw , 1.0);
     ecl_kw_inplace_sub(sgu_kw , swl_kw);
     
     fortio = fortio_open(sgu_file , "w" , true);

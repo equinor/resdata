@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <ecl_kw.h>
 #include <ecl_grid.h>
 #include <ecl_box.h>
@@ -87,6 +88,12 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_region , ECL_REGION_TYPE_ID)
 UTIL_SAFE_CAST_FUNCTION( ecl_region , ECL_REGION_TYPE_ID)
 
 
+static void ecl_region_invalidate_index_list( ecl_region_type * region ) {
+  util_safe_free( region->active_index_list );  region->active_index_list = NULL;
+  util_safe_free( region->global_index_list );  region->global_index_list = NULL;
+}
+
+
 
 ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool preselect) {
   ecl_region_type * region = util_malloc( sizeof * region , __func__);
@@ -104,6 +111,17 @@ ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool presel
   
 
 
+
+
+
+ecl_region_type * ecl_region_alloc_copy( const ecl_region_type * ecl_region ) {
+  ecl_region_type * new_region = ecl_region_alloc( ecl_region->parent_grid , ecl_region->preselect );
+  memcpy( new_region->active_mask , ecl_region->active_mask , ecl_region->grid_vol * sizeof * ecl_region->active_mask );
+  ecl_region_invalidate_index_list( new_region );
+  return new_region;
+}
+
+
 void ecl_region_free( ecl_region_type * region ) {
   free( region->active_mask );
   util_safe_free( region->active_index_list );
@@ -118,12 +136,7 @@ void ecl_region_free__( void * __region ) {
 }
 
 /*****************************************************************/
-
-static void ecl_region_invalidate_index_list( ecl_region_type * region ) {
-  util_safe_free( region->active_index_list );  region->active_index_list = NULL;
-  util_safe_free( region->global_index_list );  region->global_index_list = NULL;
-}
-
+ 
 
 static void ecl_region_assert_global_index_list( ecl_region_type * region ) {
   if (region->global_index_list == NULL) {
@@ -650,6 +663,37 @@ void ecl_region_select_thick_cells( ecl_region_type * ecl_region , double dz_lim
 void ecl_region_deselect_thick_cells( ecl_region_type * ecl_region , double dz_limit ) {
   ecl_region_select_from_dz__( ecl_region , dz_limit , false , false );
 }
+/*****************************************************************/
+static void ecl_region_select_active_cells__( ecl_region_type * ecl_region , bool select_active , bool select) {
+  int global_index;
+  for (global_index = 0; global_index < ecl_region->grid_vol; global_index++) {
+    if (select_active) {
+      if (ecl_grid_get_active_index1( ecl_region->parent_grid , global_index) >= 0)
+        ecl_region->active_mask[ global_index ] = select;
+    } else {
+      if (ecl_grid_get_active_index1( ecl_region->parent_grid , global_index) < 0)
+        ecl_region->active_mask[ global_index ] = select;
+    }
+  }
+  ecl_region_invalidate_index_list( ecl_region );
+}
+
+
+void ecl_region_select_active_cells( ecl_region_type * region ) {
+  ecl_region_select_active_cells__( region , true , true );
+}
+
+void ecl_region_deselect_active_cells( ecl_region_type * region ) {
+  ecl_region_select_active_cells__( region , true , false );
+}
+
+void ecl_region_select_inactive_cells( ecl_region_type * region ) {
+  ecl_region_select_active_cells__( region , false , true );
+}
+
+void ecl_region_deselect_inactive_cells( ecl_region_type * region ) {
+  ecl_region_select_active_cells__( region , false , false );
+}
 
 /*****************************************************************/
 /**
@@ -744,14 +788,19 @@ bool ecl_region_contains_ijk( const ecl_region_type * ecl_region , int i , int j
 
 /**
    Will update the selection in @region to ONLY contain the elements
-   which are also present in @new_region.
-*/
+   which are also present in @new_region. Will FAIL hard if the two
+   regions do not share the same grid instance (checked by pointer
+   equality).  */
+
 void ecl_region_select_intersection( ecl_region_type * region , const ecl_region_type * new_region ) {
-  int global_index;
-  for (global_index = 0; global_index < region->grid_vol; global_index++)
-    region->active_mask[global_index] = (region->active_mask[global_index] && new_region->active_mask[global_index]);
-      
-  ecl_region_invalidate_index_list( region );
+  if (region->parent_grid == new_region->parent_grid) {
+    int global_index;
+    for (global_index = 0; global_index < region->grid_vol; global_index++)
+      region->active_mask[global_index] = (region->active_mask[global_index] && new_region->active_mask[global_index]);
+    
+    ecl_region_invalidate_index_list( region );
+  } else
+    util_abort("%s: The two regions do not share grid - aborting \n",__func__);
 }
 
 
@@ -760,11 +809,14 @@ void ecl_region_select_intersection( ecl_region_type * region , const ecl_region
    which are selected in either @region or @new_region.
 */
 void ecl_region_select_union( ecl_region_type * region , const ecl_region_type * new_region ) {
-  int global_index;
-  for (global_index = 0; global_index < region->grid_vol; global_index++)
-    region->active_mask[global_index] = (region->active_mask[global_index] || new_region->active_mask[global_index]);
-  
-  ecl_region_invalidate_index_list( region );
+  if (region->parent_grid == new_region->parent_grid) {
+    int global_index;
+    for (global_index = 0; global_index < region->grid_vol; global_index++)
+      region->active_mask[global_index] = (region->active_mask[global_index] || new_region->active_mask[global_index]);
+    
+    ecl_region_invalidate_index_list( region );
+  } else 
+    util_abort("%s: The two regions do not share grid - aborting \n",__func__);
 }
 
 
@@ -807,6 +859,7 @@ static int  ecl_region_get_kw_size( ecl_region_type * ecl_region , const ecl_kw_
 }
 
 
+
 void ecl_region_set_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value , bool force_active) {
   const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
   int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
@@ -827,5 +880,66 @@ void ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_
   ecl_kw_set_indexed_double( ecl_kw , set_size , index_set , value );
 }
 
+
+/*****************************************************************/
+
+void ecl_region_shift_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value , bool force_active) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
+  ecl_kw_shift_indexed_int( ecl_kw , set_size , index_set , value );
+}
+
+
+void ecl_region_shift_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
+  ecl_kw_shift_indexed_float( ecl_kw , set_size , index_set , value );
+}
+
+
+void ecl_region_shift_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
+  ecl_kw_shift_indexed_double( ecl_kw , set_size , index_set , value );
+}
+
+
+/*****************************************************************/
+
+void ecl_region_scale_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value , bool force_active) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
+  ecl_kw_scale_indexed_int( ecl_kw , set_size , index_set , value );
+}
+
+
+void ecl_region_scale_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
+  ecl_kw_scale_indexed_float( ecl_kw , set_size , index_set , value );
+}
+
+
+void ecl_region_scale_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
+  ecl_kw_scale_indexed_double( ecl_kw , set_size , index_set , value );
+}
+
+
+/*****************************************************************/
+
+void ecl_region_kw_iadd( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * delta_kw , bool force_active) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
+  ecl_kw_inplace_add_indexed( ecl_kw , set_size , index_set , delta_kw );
+}
+
+
+void ecl_region_kw_copy( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * src_kw , bool force_active) {
+  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
+  ecl_kw_copy_indexed( ecl_kw , set_size , index_set , src_kw );
+}
 
 

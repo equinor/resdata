@@ -8,16 +8,16 @@ extern "C" {
 #include <stringlist.h>
 
   typedef enum {ECL_OTHER_FILE           = 0   , 
-		ECL_RESTART_FILE         = 1   , 
-		ECL_UNIFIED_RESTART_FILE = 2   , 
-		ECL_SUMMARY_FILE         = 4   , 
-		ECL_UNIFIED_SUMMARY_FILE = 8   , 
-		ECL_SUMMARY_HEADER_FILE  = 16  , 
-		ECL_GRID_FILE            = 32  , 
-		ECL_EGRID_FILE           = 64  , 
-		ECL_INIT_FILE            = 128 ,
-		ECL_RFT_FILE             = 256 ,
-		ECL_DATA_FILE            = 512 } ecl_file_enum;   
+                ECL_RESTART_FILE         = 1   , 
+                ECL_UNIFIED_RESTART_FILE = 2   , 
+                ECL_SUMMARY_FILE         = 4   , 
+                ECL_UNIFIED_SUMMARY_FILE = 8   , 
+                ECL_SUMMARY_HEADER_FILE  = 16  , 
+                ECL_GRID_FILE            = 32  , 
+                ECL_EGRID_FILE           = 64  , 
+                ECL_INIT_FILE            = 128 ,
+                ECL_RFT_FILE             = 256 ,
+                ECL_DATA_FILE            = 512 } ecl_file_enum;   
 
   
 
@@ -31,9 +31,9 @@ extern "C" {
   
   typedef enum { ECL_INVALID_STORAGE       = 0,
                  ECL_BINARY_UNIFIED        = 1,
-		 ECL_FORMATTED_UNIFIED     = 2,
-		 ECL_BINARY_NON_UNIFIED    = 4,
-		 ECL_FORMATTED_NON_UNIFIED = 8} ecl_storage_enum;
+                 ECL_FORMATTED_UNIFIED     = 2,
+                 ECL_BINARY_NON_UNIFIED    = 4,
+                 ECL_FORMATTED_NON_UNIFIED = 8} ecl_storage_enum;
 
 /*
   Character data in ECLIPSE files comes as an array of fixed-length
@@ -63,7 +63,9 @@ typedef enum {
 } ecl_type_enum;
 
 
-
+// For unformatted files:
+#define ECL_BOOL_TRUE_INT         -1   // Binary representation: 11111111  11111111  11111111  1111111
+#define ECL_BOOL_FALSE_INT         0   // Binary representation: 00000000  00000000  00000000  0000000     
 
 
 int              ecl_util_get_sizeof_ctype(ecl_type_enum );

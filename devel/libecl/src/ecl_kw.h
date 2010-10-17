@@ -35,7 +35,7 @@ void           ecl_kw_alloc_float_data(ecl_kw_type * ecl_kw , float * values);
 bool           ecl_kw_fread_realloc(ecl_kw_type *, fortio_type *);
 void           ecl_kw_fread(ecl_kw_type * , fortio_type * );
 ecl_kw_type *  ecl_kw_fscanf_alloc_grdecl_data(FILE * , int , ecl_type_enum );
-void           ecl_kw_fprintf_grdecl(ecl_kw_type *  , FILE * stream);
+void           ecl_kw_fprintf_grdecl(const ecl_kw_type *  , FILE * stream);
 ecl_kw_type *  ecl_kw_fread_alloc(fortio_type *);
 ecl_kw_type *  ecl_kw_fscanf_alloc_parameter(FILE * , int );
 void           ecl_kw_free_data(ecl_kw_type *);
@@ -79,13 +79,9 @@ bool ecl_kw_is_grdecl_file(FILE * );
 bool ecl_kw_is_kw_file(FILE * , bool );
 void ecl_kw_inplace_sub(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_mul(ecl_kw_type * , const ecl_kw_type * );
-void ecl_kw_inplace_add(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_div(ecl_kw_type * , const ecl_kw_type * );
 
 void   ecl_kw_inplace_inv(ecl_kw_type * my_kw);
-void   ecl_kw_scalar_init(ecl_kw_type * , double );
-void   ecl_kw_scale(ecl_kw_type * , double );
-void   ecl_kw_shift(ecl_kw_type * , double );
 void   ecl_kw_element_sum(const ecl_kw_type * , void * );
 void   ecl_kw_max_min(const ecl_kw_type * , void * , void *);
 void * ecl_kw_get_void_ptr(const ecl_kw_type * ecl_kw);
@@ -95,6 +91,47 @@ double   ecl_kw_iget_as_double(const ecl_kw_type *  , int );
 ecl_kw_type * ecl_kw_buffer_alloc(buffer_type * buffer);
 void          ecl_kw_buffer_store(const ecl_kw_type * ecl_kw , buffer_type * buffer);
 
+
+void ecl_kw_memcpy_data( ecl_kw_type * target , const ecl_kw_type * src);
+
+bool ecl_kw_assert_numeric( const ecl_kw_type * kw );
+bool ecl_kw_assert_binary( const ecl_kw_type * kw1, const ecl_kw_type * kw2);
+
+void ecl_kw_scalar_set__(ecl_kw_type * ecl_kw , const void * value);
+void ecl_kw_scalar_set_float_or_double( ecl_kw_type * ecl_kw , double value );
+#define ECL_KW_SCALAR_SET_TYPED_HEADER( ctype ) void ecl_kw_scalar_set_ ## ctype( ecl_kw_type * ecl_kw , ctype value);
+ECL_KW_SCALAR_SET_TYPED_HEADER( int )
+ECL_KW_SCALAR_SET_TYPED_HEADER( float )
+ECL_KW_SCALAR_SET_TYPED_HEADER( double )
+#undef ECL_KW_SCALAR_SET_TYPED_HEADER
+
+ecl_kw_type * ecl_kw_alloc_scatter_copy( const ecl_kw_type * src_kw , int target_size , const int * mapping, void * def_value);
+
+void ecl_kw_inplace_add( ecl_kw_type * target_kw , const ecl_kw_type * add_kw);
+void ecl_kw_inplace_add_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * add_kw);
+void ecl_kw_copy_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * src_kw);
+
+bool ecl_kw_assert_binary_numeric( const ecl_kw_type * kw1, const ecl_kw_type * kw2);
+#define ECL_KW_ASSERT_TYPED_BINARY_OP_HEADER( ctype ) bool ecl_kw_assert_binary_ ## ctype( const ecl_kw_type * kw1 , const ecl_kw_type * kw2);
+ECL_KW_ASSERT_TYPED_BINARY_OP_HEADER( int )
+ECL_KW_ASSERT_TYPED_BINARY_OP_HEADER( float )
+ECL_KW_ASSERT_TYPED_BINARY_OP_HEADER( double )
+#undef  ECL_KW_ASSERT_TYPED_BINARY_OP_HEADER
+
+#define ECL_KW_SCALE_TYPED_HEADER( ctype ) void ecl_kw_scale_ ## ctype (ecl_kw_type * ecl_kw , ctype scale_factor);
+ECL_KW_SCALE_TYPED_HEADER( int )
+ECL_KW_SCALE_TYPED_HEADER( float )
+ECL_KW_SCALE_TYPED_HEADER( double )
+#undef ECL_KW_SCALE_TYPED_HEADER
+void ecl_kw_scale_float_or_double( ecl_kw_type * ecl_kw , double scale_factor );
+
+
+#define ECL_KW_SHIFT_TYPED_HEADER( ctype ) void ecl_kw_shift_ ## ctype (ecl_kw_type * ecl_kw , ctype shift_factor);
+ECL_KW_SHIFT_TYPED_HEADER( int )
+ECL_KW_SHIFT_TYPED_HEADER( float )
+ECL_KW_SHIFT_TYPED_HEADER( double )
+#undef ECL_KW_SHIFT_TYPED_HEADER
+void ecl_kw_shift_float_or_double( ecl_kw_type * ecl_kw , double shift_value );
 
 
 #define ECL_KW_IGET_TYPED_HEADER(type) type ecl_kw_iget_ ## type(const ecl_kw_type * , int);
@@ -126,6 +163,21 @@ ECL_KW_SET_INDEXED_HEADER( double );
 ECL_KW_SET_INDEXED_HEADER( float  );
 ECL_KW_SET_INDEXED_HEADER( int    );
 #undef ECL_KW_SET_INDEXED_HEADER
+
+
+#define ECL_KW_SHIFT_INDEXED_HEADER(ctype) void ecl_kw_shift_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype shift);
+ECL_KW_SHIFT_INDEXED_HEADER( int    )
+ECL_KW_SHIFT_INDEXED_HEADER( float  )
+ECL_KW_SHIFT_INDEXED_HEADER( double )
+#undef ECL_KW_SHIFT_INDEXED_HEADER
+
+
+#define ECL_KW_SCALE_INDEXED_HEADER(ctype) void ecl_kw_scale_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype scale);
+ECL_KW_SCALE_INDEXED_HEADER( int    )
+ECL_KW_SCALE_INDEXED_HEADER( float  )
+ECL_KW_SCALE_INDEXED_HEADER( double )
+#undef ECL_KW_SCALE_INDEXED_HEADER
+
 
 
 #ifdef __cplusplus

@@ -30,6 +30,7 @@ typedef enum {
 typedef struct ecl_region_struct ecl_region_type; 
 
 void              ecl_region_reset( ecl_region_type * ecl_region );
+ecl_region_type * ecl_region_alloc_copy( const ecl_region_type * ecl_region );
 ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool preselect);
 void              ecl_region_free( ecl_region_type * region );
 void              ecl_region_free__( void * __region );
@@ -49,6 +50,11 @@ void              ecl_region_deselect_in_interval( ecl_region_type * region , co
 
 void              ecl_region_select_equal( ecl_region_type * region , const ecl_kw_type * ecl_kw, int value);
 void              ecl_region_deselect_equal( ecl_region_type * region , const ecl_kw_type * ecl_kw, int value);
+
+void              ecl_region_select_inactive_cells( ecl_region_type * region );
+void              ecl_region_deselect_inactive_cells( ecl_region_type * region );
+void              ecl_region_select_active_cells( ecl_region_type * region );
+void              ecl_region_deselect_active_cells( ecl_region_type * region );
 
 void              ecl_region_select_from_box( ecl_region_type * region , const ecl_box_type * ecl_box );
 void              ecl_region_deselect_from_box( ecl_region_type * region , const ecl_box_type * ecl_box );
@@ -92,9 +98,14 @@ void              ecl_region_deselect_smaller( ecl_region_type * ecl_region , co
 void              ecl_region_select_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
 void              ecl_region_deselect_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
 
-  void ecl_region_set_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value, bool force_active);
-  void ecl_region_set_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active);
-  void ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active);
+/*****************************************************************/
+/* Functions to manipulate ecl_kw instances . */
+
+void ecl_region_set_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value, bool force_active);
+void ecl_region_set_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active);
+void ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active);
+void ecl_region_kw_copy( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * src_kw , bool force_active);
+
 
 UTIL_IS_INSTANCE_HEADER( ecl_region );
 UTIL_SAFE_CAST_HEADER( ecl_region );
