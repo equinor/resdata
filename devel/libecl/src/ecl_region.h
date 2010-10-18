@@ -90,8 +90,8 @@ void              ecl_region_deselect_global_index( ecl_region_type * ecl_region
 void              ecl_region_select_active_index( ecl_region_type * ecl_region , int active_index);
 void              ecl_region_deselect_active_index( ecl_region_type * ecl_region , int active_index);
 
-void              ecl_region_select_intersection( ecl_region_type * region , const ecl_region_type * new_region );
-void              ecl_region_select_union( ecl_region_type * region , const ecl_region_type * new_region );
+void              ecl_region_intersection( ecl_region_type * region , const ecl_region_type * new_region );
+void              ecl_region_union( ecl_region_type * region , const ecl_region_type * new_region );
 
 void              ecl_region_select_smaller( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
 void              ecl_region_deselect_smaller( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
@@ -101,10 +101,12 @@ void              ecl_region_deselect_larger( ecl_region_type * ecl_region , con
 /*****************************************************************/
 /* Functions to manipulate ecl_kw instances . */
 
-void ecl_region_set_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value, bool force_active);
-void ecl_region_set_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active);
-void ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active);
-void ecl_region_kw_copy( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * src_kw , bool force_active);
+void        ecl_region_set_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value, bool force_active);
+void        ecl_region_set_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active);
+void        ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active);
+void        ecl_region_kw_copy( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * src_kw , bool force_active);
+const int * ecl_region_get_kw_index_list( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , bool force_active);
+int         ecl_region_get_kw_size( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , bool force_active);
 
 
 UTIL_IS_INSTANCE_HEADER( ecl_region );

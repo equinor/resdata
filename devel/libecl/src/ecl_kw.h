@@ -109,6 +109,7 @@ ecl_kw_type * ecl_kw_alloc_scatter_copy( const ecl_kw_type * src_kw , int target
 
 void ecl_kw_inplace_add( ecl_kw_type * target_kw , const ecl_kw_type * add_kw);
 void ecl_kw_inplace_add_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * add_kw);
+void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * sub_kw);
 void ecl_kw_copy_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * src_kw);
 
 bool ecl_kw_assert_binary_numeric( const ecl_kw_type * kw1, const ecl_kw_type * kw2);

@@ -1968,78 +1968,117 @@ void ecl_kw_inplace_sub( ecl_kw_type * target_kw , const ecl_kw_type * sub_kw) {
   }
 }
 
+#define ECL_KW_TYPED_INPLACE_SUB_INDEXED( ctype ) \
+static void ecl_kw_inplace_sub_indexed_ ## ctype( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * sub_kw) { \
+ if (!ecl_kw_assert_binary_ ## ctype( target_kw , sub_kw ))                                \
+    util_abort("%s: type/size  mismatch\n",__func__);                                      \
+ {                                                                                         \
+    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * sub_data = ecl_kw_get_data_ref( sub_kw );                                \
+    for (int i=0; i < set_size; i++) {                                                     \
+      int index = index_set[i];                                                            \
+      target_data[index] -= sub_data[index];                                               \
+    }                                                                                      \
+  }                                                                                        \
+}
 
-void ecl_kw_inplace_mul(ecl_kw_type * my_kw , const ecl_kw_type * mul_kw) {
 
-  int            size = ecl_kw_get_size(my_kw);
-  ecl_type_enum type = ecl_kw_get_type(my_kw);
-  if ((size != ecl_kw_get_size(mul_kw)) || (type != ecl_kw_get_type(mul_kw))) 
-    util_abort("%s: attempt to multract to fields of different size - aborting \n",__func__);
-  {
-    int i;
-    void * my_data        = ecl_kw_get_data_ref(my_kw);
-    const void * mul_data = ecl_kw_get_data_ref(mul_kw);
+ECL_KW_TYPED_INPLACE_SUB_INDEXED( int )
+ECL_KW_TYPED_INPLACE_SUB_INDEXED( double )
+ECL_KW_TYPED_INPLACE_SUB_INDEXED( float )
+#undef ECL_KW_TYPED_INPLACE_SUB
 
-    switch (type) {
-    case(ECL_DOUBLE_TYPE):
-      {
-        double *my_double        = (double *) my_data;
-        const double *mul_double = (const double *) mul_data;
-        for (i=0; i < size; i++)
-          my_double[i] *= mul_double[i];
-        break;
-      }
-    case(ECL_FLOAT_TYPE):
-      {
-        float *my_float        = (float *)       my_data;
-        const float *mul_float = (const float *) mul_data;
-        for (i=0; i < size; i++)
-          my_float[i] *= mul_float[i];
-        break;
-      }
-    default:
-      util_abort("%s: can only be called on ECL_FLOAT_TYPE and ECL_DOUBLE_TYPE - aborting \n",__func__);
-    }
-
+void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * sub_kw) {
+  ecl_type_enum type = ecl_kw_get_type(target_kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_sub_indexed_float( target_kw , set_size , index_set , sub_kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_sub_indexed_double( target_kw , set_size , index_set , sub_kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_sub_indexed_int( target_kw , set_size , index_set , sub_kw );
+    break;
+  default:
+    util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
   }
 }
 
 
-void ecl_kw_inplace_div(ecl_kw_type * my_kw , const ecl_kw_type * div_kw) {
+/*****************************************************************/
 
-  int            size = ecl_kw_get_size(my_kw);
-  ecl_type_enum type = ecl_kw_get_type(my_kw);
-  if ((size != ecl_kw_get_size(div_kw)) || (type != ecl_kw_get_type(div_kw))) 
-    util_abort("%s: attempt to divtract to fields of different size - aborting \n",__func__);
-    
-  {
-    int i;
-    void * my_data        = ecl_kw_get_data_ref(my_kw);
-    const void * div_data = ecl_kw_get_data_ref(div_kw);
+#define ECL_KW_TYPED_INPLACE_MUL( ctype ) \
+void ecl_kw_inplace_mul_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type * mul_kw) { \
+ if (!ecl_kw_assert_binary_ ## ctype( target_kw , mul_kw ))                                \
+    util_abort("%s: type/size  mismatch\n",__func__);                                      \
+ {                                                                                         \
+    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * mul_data = ecl_kw_get_data_ref( mul_kw );                                \
+    for (int i=0; i < target_kw->size; i++)                                                \
+      target_data[i] *= mul_data[i];                                                       \
+ }                                                                                         \
+}
+ECL_KW_TYPED_INPLACE_MUL( int )
+ECL_KW_TYPED_INPLACE_MUL( double )
+ECL_KW_TYPED_INPLACE_MUL( float )
+#undef ECL_KW_TYPED_INPLACE_MUL
 
-    switch (type) {
-    case(ECL_DOUBLE_TYPE):
-      {
-        double *my_double        = (double *) my_data;
-        const double *div_double = (const double *) div_data;
-        for (i=0; i < size; i++)
-          my_double[i] /= div_double[i];
-        break;
-      }
-    case(ECL_FLOAT_TYPE):
-      {
-        float *my_float        = (float *)       my_data;
-        const float *div_float = (const float *) div_data;
-        for (i=0; i < size; i++)
-          my_float[i] /= div_float[i];
-        break;
-      }
-    default:
-      util_abort("%s: can only be called on ECL_FLOAT_TYPE and ECL_DOUBLE_TYPE - aborting \n",__func__);
-    }
-
+void ecl_kw_inplace_mul( ecl_kw_type * target_kw , const ecl_kw_type * mul_kw) {
+  ecl_type_enum type = ecl_kw_get_type(target_kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_mul_float( target_kw , mul_kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_mul_double( target_kw , mul_kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_mul_int( target_kw , mul_kw );
+    break;
+  default:
+    util_abort("%s: inplace mul not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
   }
 }
+
+/*****************************************************************/
+
+#define ECL_KW_TYPED_INPLACE_DIV( ctype ) \
+void ecl_kw_inplace_div_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type * div_kw) { \
+ if (!ecl_kw_assert_binary_ ## ctype( target_kw , div_kw ))                                \
+    util_abort("%s: type/size  mismatch\n",__func__);                                      \
+ {                                                                                         \
+    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * div_data = ecl_kw_get_data_ref( div_kw );                                \
+    for (int i=0; i < target_kw->size; i++)                                                \
+      target_data[i] /= div_data[i];                                                       \
+ }                                                                                         \
+}
+ECL_KW_TYPED_INPLACE_DIV( int )
+ECL_KW_TYPED_INPLACE_DIV( double )
+ECL_KW_TYPED_INPLACE_DIV( float )
+#undef ECL_KW_TYPED_INPLACE_DIV
+
+void ecl_kw_inplace_div( ecl_kw_type * target_kw , const ecl_kw_type * div_kw) {
+  ecl_type_enum type = ecl_kw_get_type(target_kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_div_float( target_kw , div_kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_div_double( target_kw , div_kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_div_int( target_kw , div_kw );
+    break;
+  default:
+    util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+  }
+}
+
+
+
+/*****************************************************************/
 
 
 void ecl_kw_inplace_inv(ecl_kw_type * my_kw) {
