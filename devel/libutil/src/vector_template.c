@@ -429,6 +429,36 @@ void <TYPE>_vector_iset(<TYPE>_vector_type * vector , int index , <TYPE> value) 
   return new_value;
 }
 
+/**
+   Will remove a block of length @block_size elements, starting at
+   @index from the vector. The @block_size might very well extend beyond
+   the length of the vector.  
+
+   V = [ 0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9]
+
+   vector_idel_block( vector , 5 , 2 ) =>  V = [ 0 , 1 , 2 , 3 , 6 , 7 , 8 , 9]
+
+   The function is based on memmove() and probably not a high
+   performance player....  
+*/
+
+
+void <TYPE>_vector_idel_block( <TYPE>_vector_type * vector , int index , int block_size) {
+  if ((index >= 0) && (index < vector->size) && (block_size >= 0)) {
+    if (index + block_size > vector->size)
+      block_size = vector->size - index;
+    else {
+      int move_size      = (vector->size - index - block_size - 1) * sizeof(<TYPE>);
+      <TYPE> * target    = &vector->data[index];
+      const <TYPE> * src = &vector->data[index + block_size];
+      memmove( target , src , move_size );
+    }
+    vector->size -= block_size;
+  } else
+    util_abort("%s: invalid input \n",__func__);
+}
+
+
 
 void <TYPE>_vector_append(<TYPE>_vector_type * vector , <TYPE> value) {
   <TYPE>_vector_iset(vector , vector->size , value);
@@ -438,6 +468,8 @@ void <TYPE>_vector_append(<TYPE>_vector_type * vector , <TYPE> value) {
 void <TYPE>_vector_reset(<TYPE>_vector_type * vector) {
   vector->size = 0;
 }
+
+
 
 
 

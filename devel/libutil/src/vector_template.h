@@ -26,6 +26,7 @@ void                 <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> fac
 <TYPE>               <TYPE>_vector_get_max(const <TYPE>_vector_type * vector);
 <TYPE>               <TYPE>_vector_iadd( <TYPE>_vector_type * vector , int index , <TYPE> delta);
 void                 <TYPE>_vector_iset(<TYPE>_vector_type *       , int , <TYPE>);
+void                 <TYPE>_vector_idel_block( <TYPE>_vector_type * vector , int index , int block_size);
 void                 <TYPE>_vector_append(<TYPE>_vector_type *     , <TYPE>);
 void                 <TYPE>_vector_free(<TYPE>_vector_type *);  
 void                 <TYPE>_vector_free__(void *);  
@@ -51,7 +52,7 @@ void                 <TYPE>_vector_sort(<TYPE>_vector_type * vector);
 void                 <TYPE>_vector_permute(<TYPE>_vector_type * vector , const int * perm);
 int *                <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * vector);
 void                 <TYPE>_vector_fprintf(const <TYPE>_vector_type * vector , FILE * stream , const char * name , const char * fmt);
-void 		     <TYPE>_vector_fwrite(const <TYPE>_vector_type * vector , FILE * stream);
+void                 <TYPE>_vector_fwrite(const <TYPE>_vector_type * vector , FILE * stream);
 <TYPE>_vector_type * <TYPE>_vector_fread_alloc( FILE * stream );
 <TYPE>_vector_type * <TYPE>_vector_buffer_fread_alloc( buffer_type * buffer );
 void                 <TYPE>_vector_buffer_fwrite(const <TYPE>_vector_type * vector , buffer_type * buffer);
