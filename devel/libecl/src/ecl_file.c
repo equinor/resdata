@@ -330,6 +330,7 @@ ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int 
    The SEQNUM number found in unified restart files corresponds to the 
    REPORT_STEP.
 */
+
 ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
   return ecl_file_fread_alloc_fortio(fortio , SEQNUM_KW);
 }

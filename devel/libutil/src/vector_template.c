@@ -393,8 +393,6 @@ void <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> factor) {
   return <TYPE>_vector_iget(vector , 0);
 }
 
-
-
 /**
    Observe that this function will grow the vector if necessary. If
    index > size - i.e. leaving holes in the vector, these are
@@ -459,7 +457,6 @@ void <TYPE>_vector_idel_block( <TYPE>_vector_type * vector , int index , int blo
 }
 
 
-
 void <TYPE>_vector_append(<TYPE>_vector_type * vector , <TYPE> value) {
   <TYPE>_vector_iset(vector , vector->size , value);
 }
@@ -468,13 +465,6 @@ void <TYPE>_vector_append(<TYPE>_vector_type * vector , <TYPE> value) {
 void <TYPE>_vector_reset(<TYPE>_vector_type * vector) {
   vector->size = 0;
 }
-
-
-
-
-
-
-
 
 
 void <TYPE>_vector_free_data(<TYPE>_vector_type * vector) {

@@ -32,10 +32,18 @@
 
 
 int main(int argc , char ** argv) {
-  const char * rel_path = "applications/util-test.c";
-  char abs_path[256];
-  realpath( rel_path , abs_path );
-  printf("%s -> %s \n",rel_path , abs_path);
+  int_vector_type * iv = int_vector_alloc( 0 , 0);
+  for (int i=0; i < 10; i++)
+    int_vector_append( iv , i );
+  
+  int_vector_fprintf( iv , stdout , NULL , "%2d");
+  int_vector_idel_block( iv , 5 , 2 );
+  int_vector_fprintf( iv , stdout , NULL , "%2d");
+  int_vector_idel_block( iv , 0 , 2 );
+  int_vector_fprintf( iv , stdout , NULL , "%2d");
+  int_vector_idel_block( iv , 4 , 20 );
+  int_vector_fprintf( iv , stdout , NULL , "%2d");
+  int_vector_free( iv );
 }
 
 
