@@ -5,6 +5,7 @@
 #include <string.h>
 #include <signal.h>
 #include <getopt.h>
+#include <stringlist.h>
 
 
 void install_SIGNALS(void) {
@@ -45,6 +46,9 @@ void print_help_and_exit()  {
   printf("      program will by default also load historical data. If the --no-restart \n");
   printf("      option is used the program will not look for old results.\n");
   printf("\n");
+  printf("  --no-header: By default summary.x will print a header line at the top, with the\n");
+  printf("               option --no-header this will be suppressed.   \n");
+  printf("\n");
   printf("  --report-only: Will only report results at report times (i.e. DATES).\n");
   printf("\n");
   printf("  --help: Print this message and exit.\n");
@@ -82,14 +86,26 @@ void print_help_and_exit()  {
 }
 
 
+static void build_key_list( const ecl_sum_type * ecl_sum , stringlist_type * key_list , int argc , const char ** argv) {
+  for (int iarg = 0; iarg < argc; iarg++) {
+    stringlist_type * tmp_keys = stringlist_alloc_new( );
+    ecl_sum_select_matching_general_var_list( ecl_sum , argv[iarg] , tmp_keys);
+    stringlist_sort( tmp_keys , NULL );
+    stringlist_append_stringlist_copy( key_list , tmp_keys );
+    stringlist_free( tmp_keys );
+  }
+}
+
+
 int main(int argc , char ** argv) {
   install_SIGNALS();
   {
     bool           report_only     = false;
     bool           list_mode       = false;
     bool           include_restart = true;
+    bool           print_header    = true;
     int            arg_offset      = 1;  
-
+    
     if (argc == 1)
       print_help_and_exit();
     else {
@@ -97,7 +113,8 @@ int main(int argc , char ** argv) {
       static struct option long_options[] = {
         {"no-restart"  , 0 , 0 , 'n'} ,
         {"list"        , 0 , 0 , 'l'} ,
-        {"report-only" , 0 , 0 , 'r'} , 
+        {"report-only" , 0 , 0 , 'r'} ,
+        {"no-header"   , 0 , 0 , 'x'} , 
         {"help"        , 0 , 0 , 'h'} ,
         { 0            , 0 , 0 ,   0} };
       
@@ -105,7 +122,7 @@ int main(int argc , char ** argv) {
         int c;
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "nlRr", long_options, &option_index);
+        c = getopt_long (argc, argv, "nlRrx", long_options, &option_index);
         if (c == -1)
           break;
 
@@ -118,6 +135,9 @@ int main(int argc , char ** argv) {
           break;
         case 'l':
           list_mode = true;
+          break;
+        case 'x':
+          print_header = false;
           break;
         case 'h':
           print_help_and_exit();
@@ -137,7 +157,7 @@ int main(int argc , char ** argv) {
       char         * data_file = argv[arg_offset];
       ecl_sum_type * ecl_sum;
       int            num_keys  = argc - arg_offset - 1;  
-      const char  ** key_list  = (const char **) &argv[arg_offset + 1];
+      const char  ** arg_list  = (const char **) &argv[arg_offset + 1];
       
       
       ecl_sum = ecl_sum_fread_alloc_case__( data_file , ":" , include_restart);
@@ -155,14 +175,12 @@ int main(int argc , char ** argv) {
           */
              
           stringlist_type * keys = stringlist_alloc_new();
-          if (num_keys == 0)
+          if (num_keys == 0) {
             ecl_sum_select_matching_general_var_list( ecl_sum , "*" , keys);
-          else {
-            for (int iarg = 0; iarg < num_keys; iarg++) 
-              ecl_sum_select_matching_general_var_list( ecl_sum , key_list[iarg] , keys);
-          }
+            stringlist_sort( keys , NULL );
+          } else 
+            build_key_list( ecl_sum , keys , num_keys , arg_list);
           
-          stringlist_sort( keys , NULL );
           {
             int columns = 5;
             for (int i=0; i< stringlist_get_size( keys );  i++) {
@@ -175,9 +193,12 @@ int main(int argc , char ** argv) {
           stringlist_free( keys );
         } else {
           /* Normal operation print results for the various keys on stdout. */
-          ecl_sum_fprintf(ecl_sum , stdout , num_keys , key_list , report_only);
-          ecl_sum_free(ecl_sum);
+          stringlist_type * key_list = stringlist_alloc_new( );
+          build_key_list( ecl_sum , key_list , num_keys , arg_list);
+          ecl_sum_fprintf(ecl_sum , stdout , key_list , report_only , print_header);
+          stringlist_free( key_list );
         }
+        ecl_sum_free(ecl_sum);
       } else 
         fprintf(stderr,"summary.x: No summary data found for case:%s\n", data_file );
     }

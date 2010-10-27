@@ -89,7 +89,7 @@ double            ecl_sum_get_general_var_from_sim_days( const ecl_sum_type * ec
 double            ecl_sum_get_general_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var);
 const char *      ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const char * var);
 /***************/
-void              ecl_sum_fprintf(const ecl_sum_type * , FILE * , int , const char **  , bool report_only);
+void              ecl_sum_fprintf(const ecl_sum_type * , FILE * , const stringlist_type * , bool report_only , bool print_header);
 
 
 
