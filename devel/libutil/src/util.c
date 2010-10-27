@@ -3909,18 +3909,36 @@ void util_read_path(const char * prompt , int prompt_len , bool must_exist , cha
   }
 }
 
+/*
+  exist_status == 0: Just read a string; do not check if it exist or not.
+  exist_status == 1: Must be existing file. 
+  exist_status == 2: Must NOT exist as entry.
+*/
 
-void util_read_filename(const char * prompt , int prompt_len , bool must_exist , char * filename) {
-  bool ok = false;
-  while (!ok) {
-    util_read_string(prompt , prompt_len , filename);
-    if (must_exist)
-      ok = util_file_exists(filename);
-    else
-      ok = true;
-    if (!ok) 
-      fprintf(stderr,"File: %s does not exist - try again.\n",filename);
+char * util_fscanf_alloc_filename(const char * prompt , int prompt_len , int exist_status) {
+  char * filename = NULL;
+  while (filename == NULL) {
+    util_printf_prompt(prompt , prompt_len , '=' , "=> ");
+    filename = util_alloc_stdin_line();
+    if (filename != NULL) {
+      if (exist_status != 0) {
+        if (exist_status == 1) {
+          if (!util_file_exists(filename)) {
+            fprintf(stderr,"Sorry: %s does not exist. \n",filename);
+            free( filename );
+            filename = NULL;
+          } 
+        } else if (exist_status == 2) {
+          if (util_entry_exists( filename )) {
+            fprintf(stderr,"Sorry: entry %s already exists. \n",filename);
+            free( filename );
+            filename = NULL;
+          }
+        }
+      }
+    }
   }
+  return filename;
 }
 
 

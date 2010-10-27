@@ -1285,13 +1285,6 @@ int block_fs_get_filesize( const block_fs_type * block_fs , const char * filenam
 
 
 static void block_fs_dump_index( block_fs_type * block_fs ) {
-  //return ;
-
-  /* 
-     The separate index does NOT seem to speed things up - quite the
-     contrary. Altough that is quite surprising. 
-  */
-  
   if (block_fs->data_owner) {
     struct stat stat_buffer;
     int stat_return = stat(block_fs->data_file , &stat_buffer);
