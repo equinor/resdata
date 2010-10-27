@@ -383,6 +383,13 @@ int buffer_fread_int(buffer_type * buffer) {
 }
 
 
+long int buffer_fread_long(buffer_type * buffer) {
+  long value;
+  buffer_fread(buffer , &value , sizeof value , 1);
+  return value;
+}
+
+
 int buffer_fgetc( buffer_type * buffer ) {
   if (buffer->pos == buffer->content_size)
     return EOF;

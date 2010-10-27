@@ -46,7 +46,7 @@ void stringlist_fprintf_fmt(const stringlist_type * stringlist, const stringlist
   if (stringlist_get_size(stringlist) == stringlist_get_size( fmt_list )) {
     int i;
     for (i=0; i < stringlist_get_size( stringlist); i++)
-      fprintf(stringlist_iget( fmt_list , i) , stringlist_iget( stringlist , i ));
+      fprintf(stream , stringlist_iget( fmt_list , i) , stringlist_iget( stringlist , i ));
   } util_abort("%s: length of stringlist:%d   length of fmt_list:%d - must be equal \n",__func__ , stringlist_get_size( stringlist ) , stringlist_get_size( fmt_list ));
 }
 
@@ -414,8 +414,8 @@ bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
     bool equal = true;
     for (int i = 0; i < size1; i++) {
       if (strcmp(stringlist_iget(s1 , i) , stringlist_iget(s2 , i)) != 0) {
-	equal = false;
-	break;
+        equal = false;
+        break;
       }
     }
     return equal;

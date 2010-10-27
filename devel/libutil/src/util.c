@@ -3401,8 +3401,9 @@ void util_fskip_string(FILE *stream) {
 
 
 
-void util_fwrite_bool  (bool value , FILE * stream)   { UTIL_FWRITE_SCALAR(value , stream); }
-void util_fwrite_int   (int value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
+void util_fwrite_bool     (bool value , FILE * stream)   { UTIL_FWRITE_SCALAR(value , stream); }
+void util_fwrite_int      (int value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
+void util_fwrite_time_t   (time_t value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_long  (long value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_double(double value , FILE * stream) { UTIL_FWRITE_SCALAR(value , stream); }
 
@@ -3421,6 +3422,13 @@ int util_fread_int(FILE * stream) {
   UTIL_FREAD_SCALAR(file_value , stream);
   return file_value;
 }
+
+time_t util_fread_time_t(FILE * stream) {
+  time_t file_value;
+  UTIL_FREAD_SCALAR(file_value , stream);
+  return file_value;
+}
+
 
 long util_fread_long(FILE * stream) {
   long file_value;
