@@ -40,9 +40,10 @@ void print_help_and_exit()  {
   printf("\n");
   printf("  --list : The program will list available keys.\n");
   printf("\n");
-  printf("  --no-restart: By default the program will locate summary previous\n");
-  printf("    summary data when restarted; with the '--no-restart' function\n");
-  printf("    the program will not look for old results.\n");
+  printf("  --no-restart: If the simulation in question is a restart, i.e a prediction \n");
+  printf("      which starts at the end of the historical period, the summary.x \n");
+  printf("      program will by default also load historical data. If the --no-restart \n");
+  printf("      option is used the program will not look for old results.\n");
   printf("\n");
   printf("  --report-only: Will only report results at report times (i.e. DATES).\n");
   printf("\n");
@@ -63,7 +64,8 @@ void print_help_and_exit()  {
   printf("  computer> summary.x  --list CASE2_XXX \"*:F-36\"  \"BPR:*\"\n");
   printf("\n");
   printf("  This example will list all the available keys which end with\n");
-  printf("  ':F-36' and those which start with 'BPR:'. Observe the use of \"..\"\n");
+  printf("  ':F-36' and those which start with 'BPR:'. Observe the use of \n");
+  printf("  quoting characters \"\" when using shell wildcards.\n");
   printf("\n");
   printf("The summary.x program will look for and load both unified and\n");
   printf("non-unified and formatted and non-formatted files. The default\n");
