@@ -108,8 +108,8 @@ bool use_viewer = false ; // Global variable to enable backwords compatible beha
 typedef struct {
   vector_type         * data;               /* This is a vector ecl_sum instances - actually holding the data. */
 
-  plot_style_type       plot_style;  	    /* LINE | POINTS | LINE_POINTS */ 
-  plot_color_type       plot_color;  	    /* See available colors in libplot/include/plot_const.h */
+  plot_style_type       plot_style;         /* LINE | POINTS | LINE_POINTS */ 
+  plot_color_type       plot_color;         /* See available colors in libplot/include/plot_const.h */
   plot_line_style_type  plot_line_style;    /* Line style: solid_line | short_dash | long_dash */
   plot_symbol_type      plot_symbol;        /* Integer  - 17 is filled circle ... */
   double                plot_symbol_size;   /* Scale factor for symbol size. */
@@ -381,8 +381,8 @@ void ens_set_plot_attributes_batch(hash_type * ens_table, hash_type * ens_rft_ta
   if (hash_has_key( ens_table , ens_name)){
     ens_type  * set_ens    = hash_get( ens_table , ens_name);
     if((new_color > -1) && (new_color < 16)){
-      ens_set_color( set_ens , new_color);	      
-    }	 
+      ens_set_color( set_ens , new_color);            
+    }    
   } else {
     sprintf(message,"Unknown ensemble %s",ens_name) ;
     error_reply(message) ;
@@ -392,8 +392,8 @@ void ens_set_plot_attributes_batch(hash_type * ens_table, hash_type * ens_rft_ta
   if (hash_has_key( ens_rft_table , ens_name)){
     ens_type  * set_ens    = hash_get( ens_rft_table , ens_name);
     if((new_color > -1) && (new_color < 16)){
-      ens_set_color( set_ens , new_color);	      
-    }	 
+      ens_set_color( set_ens , new_color);            
+    }    
   } else {
     sprintf(message,"Unknown ensemble %s",ens_name) ;
     error_reply(message) ;
@@ -643,8 +643,8 @@ void plot_rft_ensemble(const ens_type * ens , plot_type * plot , const char * we
     const int node_size = ecl_rft_node_get_size(ecl_rft_node);
     for (inode =0;inode < node_size;inode++){
       plot_dataset_append_point_xy( plot_dataset , 
-				    ecl_rft_node_iget_pressure(ecl_rft_node,inode) ,
-				    ecl_rft_node_iget_depth(ecl_rft_node,inode) );
+                                    ecl_rft_node_iget_pressure(ecl_rft_node,inode) ,
+                                    ecl_rft_node_iget_depth(ecl_rft_node,inode) );
     }
     
     plot_dataset_set_style      ( plot_dataset , ens->plot_style);
@@ -669,22 +669,22 @@ void set_range(plot_type * plot, time_t start_time){
   int i;
   for (i=0;i<num_tokens-1;i+=2){
     if(strcmp(token_list[i], "XMIN") == 0){
-      time_t time = start_time;	 
+      time_t time = start_time;  
       util_sscanf_date(token_list[i+1] , &time);
       plot_set_xmin(plot , time);
     }
     else if(strcmp(token_list[i], "XMAX") == 0){
-      time_t time = start_time;	 
+      time_t time = start_time;  
       util_sscanf_date(token_list[i+1] , &time);
       plot_set_xmax(plot , time);
     }
     else if(strcmp(token_list[i], "YMIN") == 0){
-      double  ymin = 0.00;	 
+      double  ymin = 0.00;       
       util_sscanf_double(token_list[i+1] , &ymin);
       plot_set_ymin(plot , ymin);
     }
     else if(strcmp(token_list[i], "YMAX") == 0){
-      double  ymax = 0.00;	 
+      double  ymax = 0.00;       
       util_sscanf_double(token_list[i+1] , &ymax);
       plot_set_ymax(plot , ymax);
     }
@@ -715,12 +715,12 @@ void set_range_rft(plot_type * plot){
       plot_set_xmax(plot , xmax);
     }
     else if(strcmp(token_list[i], "YMIN") == 0){
-      double  ymin = 0.00;	 
+      double  ymin = 0.00;       
       util_sscanf_double(token_list[i+1] , &ymin);
       plot_set_ymin(plot , ymin);
     }
     else if(strcmp(token_list[i], "YMAX") == 0){
-      double  ymax = 0.00;	 
+      double  ymax = 0.00;       
       util_sscanf_double(token_list[i+1] , &ymax);
       plot_set_ymax(plot , ymax);
     }
@@ -783,58 +783,58 @@ void plot_meas_file(plot_type * plot, time_t start_time){
       2. Parse int/double/...
 
          if (util_sscanf_double(token_list[??] , &double_value)) 
-	    prinftf("Parsed %s -> %g \n",token_list[?+] , double_value);
+            prinftf("Parsed %s -> %g \n",token_list[?+] , double_value);
          else
             printf("Could not interpret %s as double \n",token_list[??]);
-	    
-    */	    
+            
+    */      
     
     if (token_list[0] != NULL) {
       if(strcmp(token_list[0], "_stop_") == 0){
-	done = 1;
+        done = 1;
       }
       
       if(strcmp(token_list[0], "xy") == 0){
-	util_sscanf_date(token_list[1] , &time);
-	util_difftime(start_time, time, &days, NULL, NULL, NULL);
-	x = time;
-	//x = days;
-	
-	y = strtod(token_list[2], &error_ptr);
-	plot_dataset = plot_alloc_new_dataset( plot , NULL , PLOT_XY );
-	plot_dataset_set_style      (plot_dataset , POINTS);
-	plot_dataset_append_point_xy(plot_dataset , x , y);
-	plot_dataset_set_line_width( plot_dataset , 1.5);
-	plot_dataset_set_line_color( plot_dataset , 15);
+        util_sscanf_date(token_list[1] , &time);
+        util_difftime(start_time, time, &days, NULL, NULL, NULL);
+        x = time;
+        //x = days;
+        
+        y = strtod(token_list[2], &error_ptr);
+        plot_dataset = plot_alloc_new_dataset( plot , NULL , PLOT_XY );
+        plot_dataset_set_style      (plot_dataset , POINTS);
+        plot_dataset_append_point_xy(plot_dataset , x , y);
+        plot_dataset_set_line_width( plot_dataset , 1.5);
+        plot_dataset_set_line_color( plot_dataset , 15);
       }
       
       if(strcmp(token_list[0], "xyy") == 0){
-	util_sscanf_date(token_list[1] , &time);
-	util_difftime(start_time, time, &days, NULL, NULL, NULL);
-	//x = days;
-	x = time;
-	y1 = strtod(token_list[2], &error_ptr);
-	y2 = strtod(token_list[3], &error_ptr);
-	
-	plot_dataset = plot_alloc_new_dataset( plot , NULL , PLOT_XY1Y2 );
-	plot_dataset_append_point_xy1y2(plot_dataset , x , y1, y2);
-	plot_dataset_set_line_width( plot_dataset , 1.5);
-	plot_dataset_set_line_color( plot_dataset , 15);
+        util_sscanf_date(token_list[1] , &time);
+        util_difftime(start_time, time, &days, NULL, NULL, NULL);
+        //x = days;
+        x = time;
+        y1 = strtod(token_list[2], &error_ptr);
+        y2 = strtod(token_list[3], &error_ptr);
+        
+        plot_dataset = plot_alloc_new_dataset( plot , NULL , PLOT_XY1Y2 );
+        plot_dataset_append_point_xy1y2(plot_dataset , x , y1, y2);
+        plot_dataset_set_line_width( plot_dataset , 1.5);
+        plot_dataset_set_line_color( plot_dataset , 15);
       }
       
       if(strcmp(token_list[0], "xxy") == 0){
-	x1 = strtod(token_list[1], &error_ptr);
-	x2 = strtod(token_list[2], &error_ptr);
-	time_t time1 = start_time;	 
-	time_t time2 = start_time; 	
-	util_inplace_forward_days(&time1 , x1);
-	util_inplace_forward_days(&time2 , x2);
-	
-	y = strtod(token_list[3], &error_ptr);
-	plot_dataset = plot_alloc_new_dataset( plot , NULL  , PLOT_X1X2Y );
-	plot_dataset_append_point_x1x2y(plot_dataset , time1 , time2, y);
-	plot_dataset_set_line_width( plot_dataset , 1.5);
-	plot_dataset_set_line_color( plot_dataset , 15);
+        x1 = strtod(token_list[1], &error_ptr);
+        x2 = strtod(token_list[2], &error_ptr);
+        time_t time1 = start_time;       
+        time_t time2 = start_time;      
+        util_inplace_forward_days(&time1 , x1);
+        util_inplace_forward_days(&time2 , x2);
+        
+        y = strtod(token_list[3], &error_ptr);
+        plot_dataset = plot_alloc_new_dataset( plot , NULL  , PLOT_X1X2Y );
+        plot_dataset_append_point_x1x2y(plot_dataset , time1 , time2, y);
+        plot_dataset_set_line_width( plot_dataset , 1.5);
+        plot_dataset_set_line_color( plot_dataset , 15);
       }
       
     } else {
@@ -867,35 +867,35 @@ void plot_meas_rft_file(plot_type * plot, char * well, hash_type * ens_table){
       2. Parse int/double/...
 
          if (util_sscanf_double(token_list[??] , &double_value)) 
-	    prinftf("Parsed %s -> %g \n",token_list[?+] , double_value);
+            prinftf("Parsed %s -> %g \n",token_list[?+] , double_value);
          else
             printf("Could not interpret %s as double \n",token_list[??]);
-	    
-    */	    
+            
+    */      
     
     if (token_list[0] != NULL) {
       if(strcmp(token_list[0], "_stop_") == 0){
-	done = 1;
+        done = 1;
       }
       
       if(strcmp(token_list[0], "rft") == 0){
-	util_sscanf_int(token_list[1] , &i);
-	util_sscanf_int(token_list[2] , &j);
-	util_sscanf_int(token_list[3] , &k);
-	util_sscanf_double(token_list[4] , &x1);
-	util_sscanf_double(token_list[5] , &x2);
-	
-	double depth = get_rft_depth(ens_table, well, i, j, k);
-	
-	if(depth != 0){
-	  plot_dataset = plot_alloc_new_dataset( plot , NULL  , PLOT_X1X2Y );
-	  plot_dataset_append_point_x1x2y(plot_dataset , x1 , x2, depth);
-	  plot_dataset_set_line_width( plot_dataset , 1.5);
-	  plot_dataset_set_line_color( plot_dataset , 15);
-	}
-	else{
-	  printf ("The block %i %i %i does not exist in well %s\n", i, j, k, well);
-	}
+        util_sscanf_int(token_list[1] , &i);
+        util_sscanf_int(token_list[2] , &j);
+        util_sscanf_int(token_list[3] , &k);
+        util_sscanf_double(token_list[4] , &x1);
+        util_sscanf_double(token_list[5] , &x2);
+        
+        double depth = get_rft_depth(ens_table, well, i, j, k);
+        
+        if(depth != 0){
+          plot_dataset = plot_alloc_new_dataset( plot , NULL  , PLOT_X1X2Y );
+          plot_dataset_append_point_x1x2y(plot_dataset , x1 , x2, depth);
+          plot_dataset_set_line_width( plot_dataset , 1.5);
+          plot_dataset_set_line_color( plot_dataset , 15);
+        }
+        else{
+          printf ("The block %i %i %i does not exist in well %s\n", i, j, k, well);
+        }
       }
       
     } else {
@@ -934,7 +934,7 @@ void plot_all(void * arg) {
       arg_pack_append_ptr( arg_pack , plot_file );
       arg_pack_append_ptr( arg_pack , plot_info->plot_device);
 
-      plot = plot_alloc("PLPLOT" , arg_pack );
+      plot = plot_alloc("PLPLOT" , arg_pack , false , false);  /* The two last arguments are for log - works by taking log on the __the_data__. */
 
       arg_pack_free( arg_pack );
     }
@@ -945,11 +945,11 @@ void plot_all(void * arg) {
       bool complete;
       hash_iter_type * ens_iter = hash_iter_alloc( ens_table );
       do {
-	complete = hash_iter_is_complete( ens_iter );
-	if (!complete) {
-	  const ens_type * ens = hash_iter_get_next_value( ens_iter );
-	  plot_ensemble( ens , plot , key);
-	}
+        complete = hash_iter_is_complete( ens_iter );
+        if (!complete) {
+          const ens_type * ens = hash_iter_get_next_value( ens_iter );
+          plot_ensemble( ens , plot , key);
+        }
       } while (!complete);
       hash_iter_free( ens_iter );
       plot_finalize(plot , plot_info , plot_file);
@@ -1000,7 +1000,7 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
     arg_pack_type * arg_pack = arg_pack_alloc();
     arg_pack_append_ptr( arg_pack , plot_file );
     arg_pack_append_ptr( arg_pack , plot_info->plot_device);
-    plot = plot_alloc("PLPLOT" , arg_pack );
+    plot = plot_alloc("PLPLOT" , arg_pack , false , false );
     arg_pack_free( arg_pack );
   }
   plot_set_window_size(plot , PLOT_WIDTH , PLOT_HEIGHT);
@@ -1073,7 +1073,7 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
           }
         }
       }
-	
+        
       if (!failed) {
         plot_rft_ensemble( ens , plot , well, survey_time);
         plotempty = false ;
@@ -1126,7 +1126,7 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
     arg_pack_type * arg_pack = arg_pack_alloc();
     arg_pack_append_ptr( arg_pack , plot_file );
     arg_pack_append_ptr( arg_pack , plot_info->plot_device);
-    plot = plot_alloc("PLPLOT" , arg_pack );
+    plot = plot_alloc("PLPLOT" , arg_pack , false , false );
     arg_pack_free( arg_pack );
   }
   plot_set_window_size(plot , PLOT_WIDTH , PLOT_HEIGHT);
@@ -1436,27 +1436,27 @@ void print_usage() {
   printf("  2. In the menu:\n");
   printf("\n");
   printf("     p: Plot summary ensemble(s): This will ask you for a key to plot,\n");
-  printf("  	i.e. RPR:2 for a region, WWCT:OP_3 for the watercut in well OP_3\n");
-  printf("  	and FOPR for the field oil production rate - and so on. It will\n");
-  printf("  	plot all the ensembles you have loaded.\n");
+  printf("      i.e. RPR:2 for a region, WWCT:OP_3 for the watercut in well OP_3\n");
+  printf("      and FOPR for the field oil production rate - and so on. It will\n");
+  printf("      plot all the ensembles you have loaded.\n");
   printf("\n");
   printf("     c: Create a new ensemble: The simulation results are grouped\n");
-  printf("  	together in ensembles. With this command you can make a new\n");
-  printf("  	(empty) ensemble.\n");
+  printf("      together in ensembles. With this command you can make a new\n");
+  printf("      (empty) ensemble.\n");
   printf("\n");
   printf("     n: New simulation case: You can load a new simulation; first you\n");
-  printf("  	are prompted for the name of an ensemble, and then afterwards\n");
-  printf("  	an ECLIPSE data file which is then loaded.\n");
+  printf("      are prompted for the name of an ensemble, and then afterwards\n");
+  printf("      an ECLIPSE data file which is then loaded.\n");
   printf("\n");
   printf("     m: Add many simulations: This is similar to 'n' - but instead of\n");
-  printf("  	giving a data-file you give a (C-based) format string containing\n");
-  printf("  	up to three %%d format specifiers - these are replaced with\n");
-  printf("  	simulation number, and the corresponding cases are loaded.\n");
+  printf("      giving a data-file you give a (C-based) format string containing\n");
+  printf("      up to three %%d format specifiers - these are replaced with\n");
+  printf("      simulation number, and the corresponding cases are loaded.\n");
   printf("\n");
   printf("     a: Set plot attributes: This gives you the possibility to set plot\n");
-  printf("  	attributes for an ensemble. Observe that all the members in the\n");
-  printf("  	ensemble are plotted with the same attributes. (Currently only\n");
-  printf("  	attribute is color).\n");
+  printf("      attributes for an ensemble. Observe that all the members in the\n");
+  printf("      ensemble are plotted with the same attributes. (Currently only\n");
+  printf("      attribute is color).\n");
   printf("\n");
   printf("***************************************************************************\n");
 }
@@ -1486,38 +1486,38 @@ int main(int argc , char ** argv) {
       free(path);
       
       while (1){
-	line = util_blocking_alloc_stdin_line(10);
-	util_strupr(line);
+        line = util_blocking_alloc_stdin_line(10);
+        util_strupr(line);
         
-	//if(strcmp(line, "Q") == 0 || strcmp(line, "STOP") == 0 ){
-	if(strcmp(line, "Q") == 0){
+        //if(strcmp(line, "Q") == 0 || strcmp(line, "STOP") == 0 ){
+        if(strcmp(line, "Q") == 0){
 
-	  plot_info_free( info );
-	  hash_free( ens_table );
-	  hash_free( ens_rft_table );
-	  return 0 ;
+          plot_info_free( info );
+          hash_free( ens_table );
+          hash_free( ens_rft_table );
+          return 0 ;
 
-	} else if(strcmp(line, "C") == 0){
-	  
-	  create_ensemble_batch(ens_table, ens_rft_table);
-
-	} else if (strcmp(line, "P") == 0){
+        } else if(strcmp(line, "C") == 0){
           
-	  plot_batch(arg_pack);
+          create_ensemble_batch(ens_table, ens_rft_table);
 
-	} else if (strcmp(line, "A") == 0){
-	  ens_set_plot_attributes_batch(ens_table, ens_rft_table);
+        } else if (strcmp(line, "P") == 0){
+          
+          plot_batch(arg_pack);
+
+        } else if (strcmp(line, "A") == 0){
+          ens_set_plot_attributes_batch(ens_table, ens_rft_table);
         } else if (strcmp(line, "QUANTILES") == 0){
-	  ens_set_plot_quantile_properties_batch( ens_table );
-	} else {
-	  
+          ens_set_plot_quantile_properties_batch( ens_table );
+        } else {
+          
           char message[128] ;
           sprintf(message,"Unknown command %s",line) ;
           error_reply(message) ;
-	  
+          
         } ;
-	
-	free(line);
+        
+        free(line);
       }
       plot_info_free( info );
       hash_free( ens_table );
@@ -1539,7 +1539,7 @@ int main(int argc , char ** argv) {
       printf("Loading realizations in ensemble: \"Ensemble1\"\n");
       ens_type  * ens  = ens_alloc();
       for (iarg = 1; iarg < argc; iarg++)
-	ens_load_summary(ens , argv[iarg]);
+        ens_load_summary(ens , argv[iarg]);
       hash_insert_hash_owned_ref( ens_table , "Ensemble1" , ens , ens_free__);
     }
   }
