@@ -98,6 +98,12 @@ void              ecl_region_deselect_smaller( ecl_region_type * ecl_region , co
 void              ecl_region_select_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
 void              ecl_region_deselect_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
 
+void              ecl_region_cmp_select_less( ecl_region_type * ecl_region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2);
+void              ecl_region_cmp_deselect_less( ecl_region_type * ecl_region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2);
+void              ecl_region_cmp_select_more( ecl_region_type * ecl_region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2);
+void              ecl_region_cmp_deselect_more( ecl_region_type * ecl_region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2);
+
+
 /*****************************************************************/
 /* Functions to manipulate ecl_kw instances . */
 

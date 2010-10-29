@@ -344,10 +344,10 @@ static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl
       int global_index;
       for (global_index = 0; global_index < region->grid_vol; global_index++) {
         if (select_less) {
-          if (kw_data[ global_index ] <= limit)
+          if (kw_data[ global_index ] < limit)
             region->active_mask[ global_index ] = select;
         } else {
-          if (kw_data[ global_index ] > limit)
+          if (kw_data[ global_index ] >= limit)
             region->active_mask[ global_index ] = select;
         }
       }
@@ -355,12 +355,12 @@ static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl
       int active_index;
       for (active_index = 0; active_index < region->grid_active; active_index++) {
         if (select_less) {
-          if (kw_data[ active_index ] <= limit) {
+          if (kw_data[ active_index ] < limit) {
             int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
             region->active_mask[ global_index ] = select;
           }
         } else {
-          if (kw_data[ active_index ] > limit) {
+          if (kw_data[ active_index ] >= limit) {
             int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
             region->active_mask[ global_index ] = select;
           }
@@ -387,6 +387,73 @@ void ecl_region_select_larger( ecl_region_type * ecl_region , const ecl_kw_type 
 
 void ecl_region_deselect_larger( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit) {
   ecl_region_select_with_limit__( ecl_region , ecl_kw , limit , false , false );
+}
+
+/*****************************************************************/
+
+/** 
+    Selection based on comparing two keywords. 
+*/
+
+static void ecl_region_cmp_select__( ecl_region_type * region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2 , bool select_less , bool select) {
+  bool global_kw;
+  ecl_region_assert_kw( region , kw1 , &global_kw);
+  if (ecl_kw_get_type( kw1 ) != ECL_FLOAT_TYPE) 
+    util_abort("%s: sorry - select by cmp() is only supported for float keywords \n",__func__);
+  {
+    if ((ecl_kw_get_size( kw1 ) == ecl_kw_get_size( kw2 )) && 
+        (ecl_kw_get_type( kw1 ) == ecl_kw_get_type( kw2 ))) {
+
+      const float * kw1_data = ecl_kw_get_float_ptr( kw1 );
+      const float * kw2_data = ecl_kw_get_float_ptr( kw2 );
+
+      if (global_kw) {
+        int global_index;
+        for (global_index = 0; global_index < region->grid_vol; global_index++) {
+          if (select_less) {
+            if (kw1_data[ global_index ] < kw2_data[ global_index ])
+              region->active_mask[ global_index ] = select;
+          } else {
+            if (kw1_data[ global_index ] >= kw2_data[ global_index ] )
+              region->active_mask[ global_index ] = select;
+          }
+        }
+      } else {
+        int active_index;
+        for (active_index = 0; active_index < region->grid_active; active_index++) {
+          if (select_less) {
+            if (kw1_data[ active_index ] < kw2_data[ active_index] ) {
+              int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
+              region->active_mask[ global_index ] = select;
+            }
+          } else {
+            if (kw1_data[ active_index ] >= kw2_data[ active_index ]) {
+              int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
+              region->active_mask[ global_index ] = select;
+            }
+          }
+        }
+      }
+    } else 
+      util_abort("%s: type/size mismatch between keywords. \n",__func__);
+  }
+  ecl_region_invalidate_index_list( region );
+}
+
+void ecl_region_cmp_select_less( ecl_region_type * ecl_region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2) {
+  ecl_region_cmp_select__( ecl_region , kw1 , kw2 , true , true );
+}
+
+void ecl_region_cmp_deselect_less( ecl_region_type * ecl_region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2) {
+  ecl_region_cmp_select__( ecl_region , kw1 , kw2 , true , false);
+}
+
+void ecl_region_cmp_select_more( ecl_region_type * ecl_region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2) {
+  ecl_region_cmp_select__( ecl_region , kw1 , kw2 , false , true );
+}
+
+void ecl_region_cmp_deselect_more( ecl_region_type * ecl_region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2) {
+  ecl_region_cmp_select__( ecl_region , kw1 , kw2 , false , false );
 }
 
 
