@@ -13,6 +13,14 @@
 #define SUMMARY_JOIN       ":"
 
 
+
+typedef enum {
+  S3GRAPH    = 1,
+  HEADER = 2,
+  PLAIN      = 3
+} format_type;
+
+
 typedef struct {
   ecl_sum_type             * ecl_sum;
   double_vector_type       * interp_data;
@@ -21,6 +29,12 @@ typedef struct {
   time_t                     end_time;
 } sum_case_type;
 
+
+typedef struct  {
+  stringlist_type * keys;
+  char            * file;
+  format_type       format;
+} output_type;
 
 
 
@@ -34,10 +48,10 @@ typedef struct {
 } ensemble_type;
 
 
-typedef enum {
-  S3GRAPH = 1
-} output_type;
 
+#define S3GRAPH_STRING "S3GRAPH"
+#define HEADER_STRING  "HEADER"
+#define PLAIN_STRING   "PLAIN"
 
 
 
@@ -156,7 +170,45 @@ void ensemble_free( ensemble_type * ensemble ) {
   free( ensemble );
 }
 
+/*****************************************************************/
+ 
+static output_type * output_alloc( const char * file , const char * format_string) {
+  output_type * output = util_malloc( sizeof * output , __func__);
+  output->keys = stringlist_alloc_new();
+  output->file = util_alloc_string_copy( file );
+  {
+    format_type  format;
 
+    if ( util_string_equal(format_string , S3GRAPH_STRING))
+      format = S3GRAPH;
+    else if ( util_string_equal( format_string , HEADER_STRING))
+      format = HEADER;
+    else if ( util_string_equal( format_string , PLAIN_STRING) )
+      format = PLAIN;
+    else
+      util_abort("%s: unrecognized format string:%s \n",__func__ , format_string);
+    
+    output->format = format;
+  }
+  
+  return output;
+}
+
+
+
+static void output_free( output_type * output ) {
+  stringlist_free( output->keys );
+  free( output->file );
+  free( output );
+}
+
+static void output_free__( void * arg) {
+  output_free( (output_type *) arg);
+}
+  
+static void output_add_key( output_type * output , const char * key) {
+  stringlist_append_copy( output->keys , key );
+}
 
 
 /*****************************************************************/
@@ -167,18 +219,19 @@ void ensemble_free( ensemble_type * ensemble ) {
    OUTPUT  output_file key.q    key.q    key.q    key.q    ...
 */
 
-void output_init( hash_type * output , const config_type * config ) {
-  int i;
+void output_table_init( hash_type * output_table , const config_type * config ) {
+  int i,j;
   for (i=0; i < config_get_occurences( config , "OUTPUT" ); i++) {
     const stringlist_type * tokens = config_iget_stringlist_ref( config , "OUTPUT" , i);
-    const char * file        = stringlist_iget( tokens , 0 );
-    int j;
-    stringlist_type * keylist = stringlist_alloc_new( );
-    /* Alle the keys are just added - without any check. */
-    for (j = 1; j < stringlist_get_size( tokens ); j++)
-      stringlist_append_copy( keylist , stringlist_iget( tokens , j ));
+    const char * file              = stringlist_iget( tokens , 0 );
+    const char * format_string     = stringlist_iget( tokens , 1 );
+    output_type * output           = output_alloc( file , format_string );
     
-    hash_insert_hash_owned_ref( output , file , keylist , stringlist_free__ );
+    /* Alle the keys are just added - without any check. */
+    for (j = 2; j < stringlist_get_size( tokens ); j++)
+      output_add_key( output , stringlist_iget( tokens , j));
+    
+    hash_insert_hash_owned_ref( output_table , file , output , output_free__ );
   }
 }
 
@@ -271,8 +324,8 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
   FILE * stream = util_mkdir_fopen( file , "w"); 
   int          field_width  = 24;
   const char * unit_fmt     = "%24s ";
-  const char * float_fmt    = "%24.5f ";
   const char * num_fmt      = "%24d ";
+  const char * float_fmt    = "%24.5f ";
   const char * days_fmt     = "%10.2f ";
   const char * date_fmt     = "%02d-%02d-%04d ";
   const char * time_header  = "      DATE       TIME ";
@@ -353,17 +406,66 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
     }
     fprintf( stream , "\n");
   }
-  
-  
-
 }
 
 
 
-void output_save( const char * file , ensemble_type * ensemble , const double ** data , const stringlist_type * ecl_keys , const double_vector_type * quantiles , output_type format) {
+void output_save_plain__( const char * file , ensemble_type * ensemble , const double ** data , const stringlist_type * ecl_keys, const double_vector_type * quantiles , bool add_header) {
+  FILE * stream = util_mkdir_fopen( file , "w"); 
+  int          field_width  = 24;
+  const char * key_fmt      = " %18s:%4.2f ";
+  const char * time_header  = "--    DAYS      DATE    ";
+  const char * time_dash    = "------------------------";
+  const char * key_dash     = "-------------------------";
+  const char * float_fmt    = "%24.5f ";
+  const char * days_fmt     = "%10.2f ";
+  const char * date_fmt     = "  %02d/%02d/%04d ";
+  const int    data_columns = stringlist_get_size( ecl_keys );
+  const int    data_rows    = time_t_vector_size( ensemble->interp_time );
+  int row_nr,column_nr;
+
+  if (add_header) {
+    fprintf( stream ,time_header);
+    for (int i=0; i < stringlist_get_size( ecl_keys ); i++) 
+      fprintf( stream , key_fmt , stringlist_iget( ecl_keys , i) , double_vector_iget( quantiles , i ));
+    fprintf(stream , "\n");
+
+    fprintf( stream , time_dash );
+    for (int i=0; i < stringlist_get_size( ecl_keys ); i++) 
+      fprintf(stream , key_dash );
+    fprintf(stream , "\n");
+  }
+
+  /*4: Writing the actual data. */
+  for (row_nr = 0; row_nr < data_rows; row_nr++) {
+    time_t interp_time = time_t_vector_iget( ensemble->interp_time , row_nr);
+    fprintf(stream , days_fmt , 1.0*(interp_time - ensemble->start_time) / 86400);
+    {
+      int mday,month,year;
+      util_set_datetime_values(interp_time , NULL , NULL , NULL , &mday , &month , &year);
+      fprintf(stream , date_fmt , mday , month , year);
+    }
+      
+    for (column_nr = 0; column_nr < data_columns; column_nr++) {
+      fprintf(stream , float_fmt , data[row_nr][column_nr]);
+    }
+    fprintf( stream , "\n");
+  }
+}
+
+
+
+
+void output_save( const char * file , ensemble_type * ensemble , const double ** data , const stringlist_type * ecl_keys , const double_vector_type * quantiles , format_type format) {
   switch( format ) {
   case(S3GRAPH):
     output_save_S3Graph( file , ensemble , data , ecl_keys ,  quantiles);
+    break;
+  case(PLAIN):
+    output_save_plain__( file , ensemble , data , ecl_keys , quantiles , false);
+    break;
+  case(HEADER):
+    output_save_plain__( file , ensemble , data , ecl_keys , quantiles , true);
     break;
   default:
     util_exit("Sorry: output_format:%d not supported \n", format );
@@ -374,8 +476,9 @@ void output_save( const char * file , ensemble_type * ensemble , const double **
 
 
 
-void output_run_line( const char * output_file , const stringlist_type * keys , ensemble_type * ensemble) {
-  const int    data_columns = stringlist_get_size( keys );
+void output_run_line( const output_type * output , ensemble_type * ensemble) {
+  
+  const int    data_columns = stringlist_get_size( output->keys );
   const int    data_rows    = time_t_vector_size( ensemble->interp_time );
   double     ** data;
   int row_nr, column_nr;
@@ -391,11 +494,11 @@ void output_run_line( const char * output_file , const stringlist_type * keys , 
   for (row_nr=0; row_nr < data_rows; row_nr++)
     data[row_nr] = util_malloc( sizeof * data[row_nr] * data_columns, __func__);
   
-  printf("Creating output file: %s \n",output_file );
+  printf("Creating output file: %s \n",output->file );
 
   /* Going through the keys. */
-  for (column_nr = 0; column_nr < stringlist_get_size( keys ); column_nr++) {
-    const char * key = stringlist_iget( keys , column_nr );
+  for (column_nr = 0; column_nr < stringlist_get_size( output->keys ); column_nr++) {
+    const char * key = stringlist_iget( output->keys , column_nr );
     char * sum_key;
     double quantile;
     {
@@ -451,7 +554,7 @@ void output_run_line( const char * output_file , const stringlist_type * keys , 
     hash_free( interp_data_cache );
   }
   
-  output_save( output_file , ensemble , (const double **) data , sum_keys , quantiles , S3GRAPH );
+  output_save( output->file , ensemble , (const double **) data , sum_keys , quantiles , output->format );
   stringlist_free( sum_keys );
   double_vector_free( quantiles );
   for (row_nr=0; row_nr < data_rows; row_nr++)
@@ -461,13 +564,13 @@ void output_run_line( const char * output_file , const stringlist_type * keys , 
 
 
 
-void output_run( hash_type * output , ensemble_type * ensemble ) {
-  hash_iter_type * iter = hash_iter_alloc( output );
+void output_table_run( hash_type * output_table , ensemble_type * ensemble ) {
+  hash_iter_type * iter = hash_iter_alloc( output_table);
 
   while (!hash_iter_is_complete( iter )) {
     const char * output_file     = hash_iter_get_next_key( iter );
-    const stringlist_type * keys = hash_get( output , output_file );
-    output_run_line( output_file , keys , ensemble );
+    const output_type * output   = hash_get( output_table , output_file );
+    output_run_line( output, ensemble );
   }
 }
 
@@ -477,12 +580,21 @@ void output_run( hash_type * output , ensemble_type * ensemble ) {
 /*****************************************************************/
 
 void config_init( config_type * config ) {
-  config_item_type * item;
 
-  item = config_add_item( config , "CASE_LIST"      , true , true );
-  item = config_add_key_value( config , "NUM_INTERP" , false , CONFIG_INT);
-  item = config_add_item( config , "OUTPUT" , true , true );
-  config_item_set_argc_minmax( item , 1 , -1 , NULL );
+
+  config_add_item( config , "CASE_LIST"      , true , true );
+  config_add_key_value( config , "NUM_INTERP" , false , CONFIG_INT);
+  
+  {
+    config_item_type * item;
+    item = config_add_item( config , "OUTPUT" , true , true );
+    config_item_set_argc_minmax( item , 2 , -1 , NULL );
+    /*
+      This does not work with open arg max:
+
+      config_item_set_indexed_selection_set( item , 1 , 3 , (const char *[3]) { S3GRAPH_STRING , HEADER_STRING , PLAIN_STRING });
+    */
+  }
 }
 
 
@@ -504,8 +616,8 @@ void usage() {
   printf("   CASE_LIST   extra_simulation.DATA    even/more/simulations*GG/run*.DATA\n");
   printf("\n");
   printf("\n");
-  printf("   OUTPUT      FILE1   WWCT:OP_1:0.10  WWCT:OP_1:0.50   WOPR:OP_3\n");
-  printf("   OUTPUT      FILE2   FOPT:0.10  FOPT:0.50  FOPT:0.90  GOPT:0.10  GOPT:0.50  GOPT:0.90   FWPT:0.10  FWPT:0.50  FWPT:0.90\n");
+  printf("   OUTPUT      FILE1   S3GRAPH WWCT:OP_1:0.10  WWCT:OP_1:0.50   WOPR:OP_3\n");
+  printf("   OUTPUT      FILE2   PLAIN   FOPT:0.10  FOPT:0.50  FOPT:0.90  GOPT:0.10  GOPT:0.50  GOPT:0.90   FWPT:0.10  FWPT:0.50  FWPT:0.90\n");
   printf("   NUM_INTERP  100\n");
   printf("\n");
   printf("\n");
@@ -520,11 +632,16 @@ void usage() {
   printf("OUTPUT: This keyword is used to denote what output you want from the\n");
   printf("  program. The first argument to the OUTPUT keyword is the name output\n");
   printf("  file you want to produce, in the example above we will create two\n");
-  printf("  output files (FILE1 and FILE2 respectively). The remaining arguments\n");
-  printf("  on the output line corresponds to the summary vector & quantile you\n");
-  printf("  are interested in. Each of these values is a \":\" separated string\n");
-  printf("  consting of:\n");
-  printf("   \n");
+  printf("  output files (FILE1 and FILE2 respectively). The second argument is \n");
+  printf("  the wanted type of the output file, the three types currently supported\n");
+  printf("  are: \n\n");
+  printf("     S3GRAPH: S3GRAPH user format - at least quite close...\n");
+  printf("     PLAIN: Columns of data without any header information\n");
+  printf("     HEADER: Like plain, but with a header at the top\n\n");
+  printf("  The remaining arguments on the output line corresponds to the \n");
+  printf("  summary vector & quantile you are interested in. Each of these values\n");
+  printf("  is a \":\" separated string consting of:\n");
+  printf("  \n");
   printf("     VAR: The ECLIPSE summary variable we are interested in, (nearly)\n");
   printf("          all variables found in the summary file are available,\n");
   printf("          e.g. RPR, WWCT or GOPT.\n");
@@ -560,19 +677,19 @@ int main( int argc , char ** argv ) {
   if (argc != 2)
     usage();
   else {
-    hash_type     * output   = hash_alloc();
-    ensemble_type * ensemble = ensemble_alloc();
+    hash_type     * output_table   = hash_alloc();
+    ensemble_type * ensemble       = ensemble_alloc();
     {
       config_type   * config   = config_alloc( );
       config_init( config );
       config_parse( config , argv[1] , "--" , NULL , NULL , false , true );
     
       ensemble_init( ensemble , config );
-      output_init( output , config);
+      output_table_init( output_table , config);
       config_free( config );
     } 
-    output_run( output , ensemble );
+    output_table_run( output_table , ensemble );
     ensemble_free( ensemble );
-    hash_free( output );
+    hash_free( output_table );
   }
 }
