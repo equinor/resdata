@@ -88,13 +88,17 @@ void sum_case_free__( void * sum_case) {
 
 void ensemble_add_case( ensemble_type * ensemble , const char * data_file ) {
   sum_case_type * sum_case = sum_case_fread_alloc( data_file , ensemble->interp_time );
-  vector_append_owned_ref( ensemble->data , sum_case , sum_case_free__ );
-  if (ensemble->start_time > 0)
-    ensemble->start_time = util_time_t_min( ensemble->start_time , sum_case->start_time);
-  else
-    ensemble->start_time = ecl_sum_get_start_time( sum_case->ecl_sum );
   
-  ensemble->end_time   = util_time_t_max( ensemble->end_time   , sum_case->end_time);
+  /* Must be protected by a write lock in treaded mode: */
+  {
+    vector_append_owned_ref( ensemble->data , sum_case , sum_case_free__ );
+    if (ensemble->start_time > 0)
+      ensemble->start_time = util_time_t_min( ensemble->start_time , sum_case->start_time);
+    else
+      ensemble->start_time = ecl_sum_get_start_time( sum_case->ecl_sum );
+    
+    ensemble->end_time   = util_time_t_max( ensemble->end_time   , sum_case->end_time);
+  }
 }
 
 
@@ -591,6 +595,7 @@ void config_init( config_type * config ) {
     config_item_set_argc_minmax( item , 2 , -1 , 0 , NULL );
     config_item_set_indexed_selection_set( item , 1 , 3 , (const char *[3]) { S3GRAPH_STRING , HEADER_STRING , PLAIN_STRING });
   }
+  
 }
 
 
