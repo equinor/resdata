@@ -588,12 +588,8 @@ void config_init( config_type * config ) {
   {
     config_item_type * item;
     item = config_add_item( config , "OUTPUT" , true , true );
-    config_item_set_argc_minmax( item , 2 , -1 , NULL );
-    /*
-      This does not work with open arg max:
-
-      config_item_set_indexed_selection_set( item , 1 , 3 , (const char *[3]) { S3GRAPH_STRING , HEADER_STRING , PLAIN_STRING });
-    */
+    config_item_set_argc_minmax( item , 2 , -1 , 0 , NULL );
+    config_item_set_indexed_selection_set( item , 1 , 3 , (const char *[3]) { S3GRAPH_STRING , HEADER_STRING , PLAIN_STRING });
   }
 }
 
@@ -668,6 +664,7 @@ void usage() {
   printf("  that for rate variable the program will not do linear interpolation\n");
   printf("  between ECLIPSE report steps, the might therefore look a bit jagged\n");
   printf("  if NUM_INTERP is set to high. This keyword is optional.\n");
+  printf("\n\necl_quantile is written by Joakim Hove / joaho@statoil.com / 92 68 57 04.\n");
   exit(0);
 }
 

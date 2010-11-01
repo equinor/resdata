@@ -101,28 +101,28 @@ options_type  * parse_alloc_options( const char * config_file , const ecl_grid_t
   }    
   
   item = config_add_item( config , "AQUIFER" , true , true );
-  config_item_set_argc_minmax( item , 3 , 3 , (const config_item_types [3]) { CONFIG_INT , CONFIG_STRING , CONFIG_FLOAT });
+  config_item_set_argc_minmax( item , 3 , 3 , 3 , (const config_item_types [3]) { CONFIG_INT , CONFIG_STRING , CONFIG_FLOAT });
 
   item = config_add_item( config , "MIN_SWAT" , true , false );
-  config_item_set_argc_minmax( item , 1 , 1 , (const config_item_types [1]) { CONFIG_FLOAT });
+  config_item_set_argc_minmax( item , 1 , 1 , 1 , (const config_item_types [1]) { CONFIG_FLOAT });
 
   item = config_add_item( config , "BOX" , true , false );
-  config_item_set_argc_minmax( item , 6 , 6 , (const config_item_types [6]) { CONFIG_INT , CONFIG_INT , CONFIG_INT , CONFIG_INT , CONFIG_INT , CONFIG_INT });
+  config_item_set_argc_minmax( item , 6 , 6 , 6 , (const config_item_types [6]) { CONFIG_INT , CONFIG_INT , CONFIG_INT , CONFIG_INT , CONFIG_INT , CONFIG_INT });
 
   item = config_add_item( config , "FASE" , true , false );
-  config_item_set_argc_minmax( item , 1 , 1 , (const config_item_types [1]) { CONFIG_STRING });
+  config_item_set_argc_minmax( item , 1 , 1 , 1 , (const config_item_types [1]) { CONFIG_STRING });
   
   item = config_add_item( config , "MIN_ACTIVE" , true , false );
-  config_item_set_argc_minmax( item , 1 , 1 , (const config_item_types [1]) { CONFIG_INT });
+  config_item_set_argc_minmax( item , 1 , 1 , 1 , (const config_item_types [1]) { CONFIG_INT });
 
   item = config_add_item( config , "NUM_AQUIFER" , true , false );
-  config_item_set_argc_minmax( item , 1 , 1 , (const config_item_types [1]) { CONFIG_INT });
+  config_item_set_argc_minmax( item , 1 , 1 , 1 , (const config_item_types [1]) { CONFIG_INT });
   
   item = config_add_item( config , "AQUDIMS_FILE" , true , false );
-  config_item_set_argc_minmax( item , 1 , 1 , (const config_item_types [1]) { CONFIG_STRING });
+  config_item_set_argc_minmax( item , 1 , 1 , 1 , (const config_item_types [1]) { CONFIG_STRING });
 
   item = config_add_item( config , "AQUCON_FILE" , true , false );
-  config_item_set_argc_minmax( item , 1 , 1 , (const config_item_types [1]) { CONFIG_STRING });
+  config_item_set_argc_minmax( item , 1 , 1 , 1 , (const config_item_types [1]) { CONFIG_STRING });
 
   config_parse( config , config_file , "--" , NULL , NULL , NULL , false , true);
 
