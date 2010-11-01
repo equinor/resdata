@@ -1,3 +1,4 @@
+#define  _GNU_SOURCE   /* Must define this to get access to pthread_rwlock_t */
 #include <stdlib.h>
 #include <string.h>
 #include <util.h>
@@ -6,18 +7,22 @@
 #include <time_t_vector.h>
 #include <config.h>
 #include <vector.h>
+#include <arg_pack.h>
 #include <glob.h>
 #include <statistics.h>
+#include <thread_pool.h>
+#include <pthread.h>
 
 #define DEFAULT_NUM_INTERP  50
 #define SUMMARY_JOIN       ":"
-
+#define MIN_SIZE            10
+#define LOAD_THREADS         8 /* Limited testing on a 2 x 2 CPU box indicates that 8 is a reasonable number. */
 
 
 typedef enum {
   S3GRAPH    = 1,
-  HEADER = 2,
-  PLAIN      = 3
+  HEADER     = 2,    /* Columns of numbers like summary.x - with a header */
+  PLAIN      = 3     /* Columns of numbers like summary.x - no header */
 } format_type;
 
 
@@ -45,6 +50,7 @@ typedef struct {
   time_t                start_time;
   time_t                end_time;
   const ecl_sum_type  * refcase;     /* Pointer to an arbitrary ecl_sum instance in the ensemble - to have access to indexing functions. */
+  pthread_rwlock_t      rwlock;
 } ensemble_type;
 
 
@@ -89,7 +95,7 @@ void sum_case_free__( void * sum_case) {
 void ensemble_add_case( ensemble_type * ensemble , const char * data_file ) {
   sum_case_type * sum_case = sum_case_fread_alloc( data_file , ensemble->interp_time );
   
-  /* Must be protected by a write lock in treaded mode: */
+  pthread_rwlock_wrlock( &ensemble->rwlock );
   {
     vector_append_owned_ref( ensemble->data , sum_case , sum_case_free__ );
     if (ensemble->start_time > 0)
@@ -99,7 +105,19 @@ void ensemble_add_case( ensemble_type * ensemble , const char * data_file ) {
     
     ensemble->end_time   = util_time_t_max( ensemble->end_time   , sum_case->end_time);
   }
+  pthread_rwlock_unlock( &ensemble->rwlock );
+
 }
+
+void * ensemble_add_case__( void * arg ) {
+  arg_pack_type * arg_pack = arg_pack_safe_cast( arg );
+  ensemble_type * ensemble = arg_pack_iget_ptr( arg , 0 );
+  const char * data_file   = arg_pack_iget_ptr( arg , 1 );
+  ensemble_add_case( ensemble , data_file );
+  arg_pack_free( arg_pack );
+  return NULL;
+}
+
 
 
 
@@ -111,13 +129,19 @@ void ensemble_init_time_interp( ensemble_type * ensemble ) {
 
 
 
-void ensemble_load_from_glob( ensemble_type * ensemble , const char * pattern ) {
+
+
+void ensemble_load_from_glob( ensemble_type * ensemble , const char * pattern , thread_pool_type * tp) {
   glob_t pglob;
   int    i;
   glob( pattern , GLOB_NOSORT , NULL , &pglob );
 
-  for (i=0; i < pglob.gl_pathc; i++)
-    ensemble_add_case( ensemble , pglob.gl_pathv[i]);
+  for (i=0; i < pglob.gl_pathc; i++) {
+    arg_pack_type * arg_pack = arg_pack_alloc( );
+    arg_pack_append_ptr( arg_pack , ensemble );
+    arg_pack_append_owned_ptr( arg_pack , util_alloc_string_copy( pglob.gl_pathv[i] ) , free );
+    thread_pool_add_job( tp , ensemble_add_case__ , arg_pack );
+  }
 
   globfree( &pglob );
 }
@@ -132,7 +156,7 @@ ensemble_type * ensemble_alloc( ) {
   ensemble->end_time    = -1;
   ensemble->data        = vector_alloc_new();
   ensemble->interp_time = time_t_vector_alloc( 0 , -1 );
-  
+  pthread_rwlock_init( &ensemble->rwlock , NULL );
   return ensemble;
 }
 
@@ -142,13 +166,19 @@ void ensemble_init( ensemble_type * ensemble , config_type * config) {
   /*1 : Loading ensembles and settings from the config instance */
   /*1a: Loading the eclipse summary cases. */
   {
-    int i,j;
-    for (i=0; i < config_get_occurences( config , "CASE_LIST"); i++) {
-      const stringlist_type * case_list = config_iget_stringlist_ref( config , "CASE_LIST" , i );
-      for (j=0; j < stringlist_get_size( case_list ); j++)
-        ensemble_load_from_glob( ensemble , stringlist_iget( case_list , j ));
+    thread_pool_type * tp = thread_pool_alloc( LOAD_THREADS , true );
+    {
+      int i,j;
+      for (i=0; i < config_get_occurences( config , "CASE_LIST"); i++) {
+        const stringlist_type * case_list = config_iget_stringlist_ref( config , "CASE_LIST" , i );
+        for (j=0; j < stringlist_get_size( case_list ); j++) 
+          ensemble_load_from_glob( ensemble , stringlist_iget( case_list , j ) , tp);
+      }
     }
+    thread_pool_join( tp );
+    thread_pool_free( tp );
   }
+  
   {
     const sum_case_type * tmp = vector_iget_const( ensemble->data , 0 );
     ensemble->refcase = tmp->ecl_sum;
@@ -161,8 +191,8 @@ void ensemble_init( ensemble_type * ensemble , config_type * config) {
   
   /*2: Remaining initialization */
   ensemble_init_time_interp( ensemble );
-  if (vector_get_size( ensemble->data ) < 10 )
-    util_exit("Sorry - quantiles make no bloody sense with with < 10 realizations; should have ~> 100.\n");
+  if (vector_get_size( ensemble->data ) < MIN_SIZE )
+    util_exit("Sorry - quantiles make no bloody sense with with < %d realizations; should have ~> 100.\n" , MIN_SIZE);
 }
 
 
