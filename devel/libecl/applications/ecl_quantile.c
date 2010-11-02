@@ -16,7 +16,7 @@
 #define DEFAULT_NUM_INTERP  50
 #define SUMMARY_JOIN       ":"
 #define MIN_SIZE            10
-#define LOAD_THREADS         8 /* Limited testing on a 2 x 2 CPU box indicates that 8 is a reasonable number. */
+#define LOAD_THREADS         8 /* Limited testing on a 2 x 2 CPU box with RH4 indicates that 8 is a reasonable number. */
 
 
 typedef enum {
@@ -632,7 +632,7 @@ void config_init( config_type * config ) {
 /*****************************************************************/
 
 void usage() {
-  fprintf(stderr, "\nUse:\n\n    ecl_quantil config_file\n\n");
+  fprintf(stderr, "\nUse:\n\n    ecl_quantile config_file\n\n");
   
   printf("Help\n");
   printf("----\n");
@@ -640,24 +640,22 @@ void usage() {
   printf("The ecl_quantile program will load an ensemble of ECLIPSE summary\n");
   printf("files, it can then output quantiles of summary vectors over the time\n");
   printf("span of the simulation. The program is based on a simple configuration\n");
-  printf("file. The configuration file only has three keywords:\n");
+  printf("file which must be given as a commandline argument. The configuration\n");
+  printf("file only has three keywords:\n");
   printf("\n");
   printf("\n");
   printf("   CASE_LIST   simulation*X/run*X/CASE*.DATA\n");
   printf("   CASE_LIST   extra_simulation.DATA    even/more/simulations*GG/run*.DATA\n");
-  printf("\n");
-  printf("\n");
   printf("   OUTPUT      FILE1   S3GRAPH WWCT:OP_1:0.10  WWCT:OP_1:0.50   WOPR:OP_3\n");
-  printf("   OUTPUT      FILE2   PLAIN   FOPT:0.10  FOPT:0.50  FOPT:0.90  GOPT:0.10  GOPT:0.50  GOPT:0.90   FWPT:0.10  FWPT:0.50  FWPT:0.90\n");
+  printf("   OUTPUT      FILE2   PLAIN   FOPT:0.10  FOPT:0.90  FGPT:0.10  FGPT:0.90   FWPT:0.10  FWPT:0.90\n");
   printf("   NUM_INTERP  100\n");
   printf("\n");
   printf("\n");
   printf("CASE_LIST: This keyword is used to give the path to ECLIPSE data files\n");
   printf("  corresponding to summaries which you want to load, observe that the\n");
   printf("  argument given to the CASE_LIST keyword can contain unix-style\n");
-  printf("  wildcards like '*'. You can point to several simulation cases with\n");
-  printf("  one CASE_LIST keyword. In addition you can several CASE_LIST\n");
-  printf("  keywords.\n");
+  printf("  wildcards like '*'. One CASE_LIST keyword can point to several cases, \n");
+  printf("  and in addition you can have several CASE_LIST keywords.\n");
   printf("\n");
   printf("\n");
   printf("OUTPUT: This keyword is used to denote what output you want from the\n");
@@ -680,16 +678,16 @@ void usage() {
   printf("     WG?: This is extra information added to the variable to make it\n");
   printf("          unique, e.g. the name of a well or group for rate variables\n");
   printf("          and the region number for a region. Not all variables, in\n");
-  printf("          particalar the Fxxx rates, have this string.\n");
+  printf("          particalar the field rates, Fxxx, have this string.\n");
   printf("\n");
   printf("     Q: The quantile we are interested in, e.g 0.10 to get the P10\n");
   printf("        quantile and 0.90 to get the P90 quantile.\n");
   printf("\n");
   printf("  Examples are:\n");
   printf("\n");
-  printf("     WWCT:OPX:0.75:    The P75 quantile of the watercut in well OPX.\n");
-  printf("     BPR:10,10,5:0.50: The P50 quantile of the Block Pressure in block 10,10,5\n");
-  printf("     FOPT:0.90:        The P90 quantile of the field oil production total.\n");
+  printf("     WWCT:OPX:0.75     The P75 quantile of the watercut in well OPX.\n");
+  printf("     BPR:10,10,5:0.50  The P50 quantile of the Block Pressure in block 10,10,5\n");
+  printf("     FOPT:0.90         The P90 quantile of the field oil production total.\n");
   printf("\n");
   printf("\n");
   printf("NUM_INTERP: Before the program can calculate quantiles it must\n");
@@ -698,7 +696,7 @@ void usage() {
   printf("  the time axis; the default is 50 which is probably quite OK. Observe\n");
   printf("  that for rate variable the program will not do linear interpolation\n");
   printf("  between ECLIPSE report steps, the might therefore look a bit jagged\n");
-  printf("  if NUM_INTERP is set to high. This keyword is optional.\n");
+  printf("  if NUM_INTERP is set too high. This keyword is optional.\n");
   printf("\n\necl_quantile is written by Joakim Hove / joaho@statoil.com / 92 68 57 04.\n");
   exit(0);
 }
