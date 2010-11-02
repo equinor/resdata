@@ -8,6 +8,7 @@ extern "C" {
 
 double      statistics_mean( const double_vector_type * data_vector );
 double      statistics_empirical_quantile( double_vector_type * data , double quantile );
+double      statistics_empirical_quantile__( const double_vector_type * data , double quantile );
 
 #ifdef __cplusplus
 }

@@ -86,7 +86,7 @@ typedef struct {
 
 /**
    Internal struct used to keep track of the job slots. 
-*/ 
+*/
 typedef struct {
   pthread_t  thread;                /* The thread variable currently (or more correct:last) running. */
   int        run_count;             /* The number of times this slot has been used - just to check whether the slot has been used AT ALL when/if joining. */ 
@@ -131,6 +131,7 @@ static void thread_pool_resize_queue( thread_pool_type * pool, int queue_length 
   }
   pthread_rwlock_unlock( &pool->queue_lock );
 }
+
 
 /**
    This function updates an element in the queue, the function is
@@ -178,7 +179,7 @@ static void * thread_pool_start_job( void * arg ) {
   if (return_value != NULL) 
     thread_pool_iset_return_value( tp , tp_arg->queue_index , return_value);
 
-  return NULL;                                      /* Currently we loose the return value from the user supplied function. */
+  return NULL;  
 }
 
 
@@ -363,7 +364,7 @@ void thread_pool_add_job(thread_pool_type * pool , start_func_ftype * start_func
       util_abort("%s: thread_pool is not running - restart with thread_pool_restart()?? \n",__func__);
   }
 }
-			 
+                         
 
   
 /*

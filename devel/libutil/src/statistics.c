@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <util.h>
 #include <double_vector.h>
-
+#include <statistics.h>
 
 
 double statistics_mean( const double_vector_type * data_vector ) {
@@ -16,14 +16,30 @@ double statistics_mean( const double_vector_type * data_vector ) {
 }
  
 
+/**
+   Observe that the data vector will be sorted in place. If the vector is
+   already sorted, e.g. from a previous call to statistics_empirical_quantile(),
+   you can call statistics_empirical_quantile__() directly.  
+*/
+
 double statistics_empirical_quantile( double_vector_type * data , double quantile ) {
+  double_vector_sort( data );
+  return statistics_empirical_quantile__( data , quantile );
+}
+
+
+/**
+   This assumes that data has already been sorted, either by through
+   calling statistics_empirical_quantile( ) or by sorting data
+   explicitly with  double_vector_sort( data );
+*/
+
+double statistics_empirical_quantile__( const double_vector_type * data , double quantile ) {
   if ((quantile < 0) || (quantile > 1.0))
     util_abort("%s: quantile must be in [0,1] \n",__func__);
 
   {
     const int size = (double_vector_size( data ) - 1);
-    double_vector_sort( data );
-    
     if (double_vector_iget( data , 0) == double_vector_iget( data , size))
       /* 
          All elements are equal - and it is impossible to find a meaingful quantile,

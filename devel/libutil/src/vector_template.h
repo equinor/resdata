@@ -17,6 +17,7 @@ void                 <TYPE>_vector_select_unique(<TYPE>_vector_type * vector);
 <TYPE>_vector_type * <TYPE>_vector_alloc( int init_size , <TYPE> );
 <TYPE>_vector_type * <TYPE>_vector_alloc_private_wrapper(int init_size, <TYPE> default_value , <TYPE> * data , int alloc_size);
 <TYPE>_vector_type * <TYPE>_vector_alloc_shared_wrapper(int init_size, <TYPE> default_value , <TYPE> * data , int alloc_size);
+<TYPE>_vector_type * <TYPE>_vector_alloc_strided_copy( const <TYPE>_vector_type * src , int start , int stop , int stride );
 <TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src);
 void                 <TYPE>_vector_imul(<TYPE>_vector_type * vector, int index, <TYPE> factor);
 void                 <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> factor);
@@ -49,8 +50,10 @@ void                 <TYPE>_vector_set_default(<TYPE>_vector_type * vector, <TYP
 void                 <TYPE>_vector_append_default(<TYPE>_vector_type * vector , <TYPE> default_value);
 void                 <TYPE>_vector_iset_default(<TYPE>_vector_type * vector , int index , <TYPE> default_value);
 void                 <TYPE>_vector_sort(<TYPE>_vector_type * vector);
+void                 <TYPE>_vector_rsort(<TYPE>_vector_type * vector);
 void                 <TYPE>_vector_permute(<TYPE>_vector_type * vector , const int * perm);
 int *                <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * vector);
+int *                <TYPE>_vector_alloc_rsort_perm(const <TYPE>_vector_type * vector);
 void                 <TYPE>_vector_fprintf(const <TYPE>_vector_type * vector , FILE * stream , const char * name , const char * fmt);
 void                 <TYPE>_vector_fwrite(const <TYPE>_vector_type * vector , FILE * stream);
 <TYPE>_vector_type * <TYPE>_vector_fread_alloc( FILE * stream );

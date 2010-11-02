@@ -269,6 +269,26 @@ void <TYPE>_vector_memcpy( const <TYPE>_vector_type * src , <TYPE>_vector_type *
 }
 
 
+/**
+   Should essentially implement Python sliced index lookup.
+*/
+<TYPE>_vector_type * <TYPE>_vector_alloc_strided_copy( const <TYPE>_vector_type * src , int start , int stop , int stride ) {
+  <TYPE>_vector_type * copy = <TYPE>_vector_alloc( 0 , src->default_value );
+  if (start < 0)
+    start = src->size - start;
+  
+  if (stop < 0)
+    stop = src->size - stop;
+  
+  {
+    int src_index = start;
+    while (src_index < stop) {
+      <TYPE>_vector_append( copy , <TYPE>_vector_iget( src , src_index ));
+      src_index += stride;
+    }
+  }
+  return copy;
+}
 
 
 <TYPE>_vector_type * <TYPE>_vector_alloc_copy( const <TYPE>_vector_type * src) {
@@ -616,6 +636,11 @@ static int <TYPE>_vector_cmp(const void *_a, const void *_b) {
   return 0;
 }
 
+
+static int <TYPE>_vector_rcmp(const void *a, const void *b) {
+  return <TYPE>_vector_cmp( b , a );
+}
+
 /**
    The input vector will be altered in place, so that the vector only
    contains every numerical value __once__. On exit the values will be
@@ -651,6 +676,11 @@ void <TYPE>_vector_sort(<TYPE>_vector_type * vector) {
 }
 
 
+void <TYPE>_vector_rsort(<TYPE>_vector_type * vector) {
+  qsort(vector->data , vector->size , sizeof * vector->data ,  <TYPE>_vector_rcmp);
+}
+
+
 
 static int <TYPE>_vector_cmp_node(const void *_a, const void *_b) {
   sort_node_type a = *((sort_node_type *) _a);
@@ -665,6 +695,10 @@ static int <TYPE>_vector_cmp_node(const void *_a, const void *_b) {
   return 0;
 }
 
+
+static int <TYPE>_vector_rcmp_node(const void *a, const void *b) {
+  return <TYPE>_vector_cmp_node( b , a );
+}
 
 /**
    This function will allocate a (int *) pointer of indices,
@@ -691,7 +725,7 @@ static int <TYPE>_vector_cmp_node(const void *_a, const void *_b) {
 
 
    
-int * <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * vector) {
+static int * <TYPE>_vector_alloc_sort_perm__(const <TYPE>_vector_type * vector, bool reverse) {
   int * sort_perm             = util_malloc( vector->size * sizeof * sort_perm , __func__);
   sort_node_type * sort_nodes = util_malloc( vector->size * sizeof * sort_nodes , __func__);
   int i;
@@ -699,7 +733,10 @@ int * <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * vector) {
     sort_nodes[i].index = i;
     sort_nodes[i].value = vector->data[i];
   }
-  qsort(sort_nodes , vector->size , sizeof * sort_nodes ,  <TYPE>_vector_cmp_node);
+  if (reverse)
+    qsort(sort_nodes , vector->size , sizeof * sort_nodes ,  <TYPE>_vector_rcmp_node);
+  else
+    qsort(sort_nodes , vector->size , sizeof * sort_nodes ,  <TYPE>_vector_cmp_node);
     
   for (i=0; i < vector->size; i++)
     sort_perm[i] = sort_nodes[i].index;
@@ -708,6 +745,15 @@ int * <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * vector) {
   return sort_perm;
 }
 
+
+int * <TYPE>_vector_alloc_sort_perm(const <TYPE>_vector_type * vector) {
+  return <TYPE>_vector_alloc_sort_perm__( vector , false );
+}
+
+
+int * <TYPE>_vector_alloc_rsort_perm(const <TYPE>_vector_type * vector) {
+  return <TYPE>_vector_alloc_sort_perm__( vector , false );
+}
 
 
 void <TYPE>_vector_permute(<TYPE>_vector_type * vector , const int * perm) {
