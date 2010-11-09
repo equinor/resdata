@@ -180,6 +180,12 @@ ECL_KW_SCALE_INDEXED_HEADER( double )
 #undef ECL_KW_SCALE_INDEXED_HEADER
 
 
+#define ECL_KW_MAX_MIN_HEADER( ctype ) void ecl_kw_max_min_ ## ctype( const ecl_kw_type * kw );                         
+ECL_KW_MAX_MIN_HEADER( int )
+ECL_KW_MAX_MIN_HEADER( float )
+ECL_KW_MAX_MIN_HEADER( double )
+#undef ECL_KW_MAX_MIN_HEADER
+
 
 #ifdef __cplusplus
 }

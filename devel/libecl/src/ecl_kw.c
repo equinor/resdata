@@ -2231,8 +2231,23 @@ void ecl_kw_max_min(const ecl_kw_type * ecl_kw , void * _max , void *_min) {
     util_abort("%s: invalid type for element sum \n",__func__);
   }
 }
-
 #undef KW_MAX_MIN
+
+
+#define ECL_KW_MAX_MIN( ctype )                          \
+void ecl_kw_max_min_ ## ctype ( const ecl_kw_type * kw) {\
+  ctype min_value , max_value;                           \
+  ecl_kw_max_min( kw , &max_value , &min_value);         \
+} 
+
+ECL_KW_MAX_MIN( int )
+ECL_KW_MAX_MIN( float )
+ECL_KW_MAX_MIN( double )
+
+#undef ECL_KW_MAX_MIN
+
+
+
 
 
 
