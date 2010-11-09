@@ -3504,8 +3504,8 @@ float util_float_max(float a , float b) {;
 }
 
 void util_update_int_max_min(int value , int * max , int * min) {
-  *min = util_int_min(value , *min);
-  *max = util_int_max(value , *max);
+  *min = util_int_min( value , *min);
+  *max = util_int_max( value , *max);
 }
 
 void util_update_float_max_min(float value , float * max , float * min) {

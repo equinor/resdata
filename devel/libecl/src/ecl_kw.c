@@ -2202,16 +2202,16 @@ bool ecl_kw_is_grdecl_file(FILE * stream) {
   
 
 
-#define KW_MAX_MIN(type)                                 \
-{                                                        \
-  type * data = ecl_kw_get_data_ref(ecl_kw);             \
-  type max = -data[0];                                   \
-  type min =  data[0];                                   \
-  int i;                                                 \
-  for (i=1; i < ecl_kw_get_size(ecl_kw); i++)            \
+#define KW_MAX_MIN(type)                                       \
+{                                                              \
+  type * data = ecl_kw_get_data_ref(ecl_kw);                   \
+  type max = data[0];                                          \
+  type min = data[0];                                          \
+  int i;                                                       \
+  for (i=1; i < ecl_kw_get_size(ecl_kw); i++)                  \
       util_update_ ## type ## _max_min(data[i] , &max , &min); \
-  memcpy(_max , &max , ecl_kw->sizeof_ctype);            \
-  memcpy(_min , &min , ecl_kw->sizeof_ctype);            \
+  memcpy(_max , &max , ecl_kw->sizeof_ctype);                  \
+  memcpy(_min , &min , ecl_kw->sizeof_ctype);                  \
 }
 
 
@@ -2231,19 +2231,17 @@ void ecl_kw_max_min(const ecl_kw_type * ecl_kw , void * _max , void *_min) {
     util_abort("%s: invalid type for element sum \n",__func__);
   }
 }
-#undef KW_MAX_MIN
 
-
-#define ECL_KW_MAX_MIN( ctype )                          \
-void ecl_kw_max_min_ ## ctype ( const ecl_kw_type * kw) {\
-  ctype min_value , max_value;                           \
-  ecl_kw_max_min( kw , &max_value , &min_value);         \
+#define ECL_KW_MAX_MIN( ctype )                                                       \
+void ecl_kw_max_min_ ## ctype ( const ecl_kw_type * ecl_kw , ctype * _max , ctype * _min) { \
+ KW_MAX_MIN( ctype );                                                                 \
 } 
 
 ECL_KW_MAX_MIN( int )
 ECL_KW_MAX_MIN( float )
 ECL_KW_MAX_MIN( double )
 
+#undef KW_MAX_MIN
 #undef ECL_KW_MAX_MIN
 
 
