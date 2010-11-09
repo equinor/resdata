@@ -332,37 +332,77 @@ void ecl_region_deselect_in_interval( ecl_region_type * region , const ecl_kw_ty
 
 /*****************************************************************/
 
+/**
+   This is to fucking large:
+
+   Float / Int  *  Active / Global  *  More / Less ==> In total 8 code blocks written out ...
+*/
+
 static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl_kw_type * ecl_kw, float limit , bool select_less , bool select) {
   bool global_kw;
+  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
   ecl_region_assert_kw( region , ecl_kw , &global_kw);
-  if (ecl_kw_get_type( ecl_kw ) != ECL_FLOAT_TYPE) 
-    util_abort("%s: sorry - select by in_interval is only supported for float keywords \n",__func__);
+  if (!((ecl_type == ECL_FLOAT_TYPE) || (ecl_type == ECL_INT_TYPE)))
+    util_abort("%s: sorry - select by in_interval is only supported for float and integer keywords \n",__func__);
   
   {
-    const float * kw_data = ecl_kw_get_float_ptr( ecl_kw );
-    if (global_kw) {
-      int global_index;
-      for (global_index = 0; global_index < region->grid_vol; global_index++) {
-        if (select_less) {
-          if (kw_data[ global_index ] < limit)
-            region->active_mask[ global_index ] = select;
-        } else {
-          if (kw_data[ global_index ] >= limit)
-            region->active_mask[ global_index ] = select;
+    if (ecl_type == ECL_FLOAT_TYPE) {
+      const float * kw_data = ecl_kw_get_float_ptr( ecl_kw );
+      float float_limit = limit;
+      if (global_kw) {
+        int global_index;
+        for (global_index = 0; global_index < region->grid_vol; global_index++) {
+          if (select_less) {
+            if (kw_data[ global_index ] < float_limit)
+              region->active_mask[ global_index ] = select;
+          } else {
+            if (kw_data[ global_index ] >= float_limit)
+              region->active_mask[ global_index ] = select;
+          }
+        }
+      } else {
+        int active_index;
+        for (active_index = 0; active_index < region->grid_active; active_index++) {
+          if (select_less) {
+            if (kw_data[ active_index ] < float_limit) {
+              int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
+              region->active_mask[ global_index ] = select;
+            }
+          } else {
+            if (kw_data[ active_index ] >= float_limit) {
+              int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
+              region->active_mask[ global_index ] = select;
+            }
+          }
         }
       }
-    } else {
-      int active_index;
-      for (active_index = 0; active_index < region->grid_active; active_index++) {
-        if (select_less) {
-          if (kw_data[ active_index ] < limit) {
-            int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
-            region->active_mask[ global_index ] = select;
+    } else if (ecl_type == ECL_INT_TYPE) {
+      const int * kw_data = ecl_kw_get_int_ptr( ecl_kw );
+      int   int_limit = (int) limit;
+      if (global_kw) {
+        int global_index;
+        for (global_index = 0; global_index < region->grid_vol; global_index++) {
+          if (select_less) {
+            if (kw_data[ global_index ] < int_limit)
+              region->active_mask[ global_index ] = select;
+          } else {
+            if (kw_data[ global_index ] >= int_limit)
+              region->active_mask[ global_index ] = select;
           }
-        } else {
-          if (kw_data[ active_index ] >= limit) {
-            int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
-            region->active_mask[ global_index ] = select;
+        }
+      } else {
+        int active_index;
+        for (active_index = 0; active_index < region->grid_active; active_index++) {
+          if (select_less) {
+            if (kw_data[ active_index ] < int_limit) {
+              int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
+              region->active_mask[ global_index ] = select;
+            }
+          } else {
+            if (kw_data[ active_index ] >= int_limit) {
+              int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
+              region->active_mask[ global_index ] = select;
+            }
           }
         }
       }
@@ -370,7 +410,6 @@ static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl
   }
   ecl_region_invalidate_index_list( region );
 }
-
 
 
 void ecl_region_select_smaller( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit) {
