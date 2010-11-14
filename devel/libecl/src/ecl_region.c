@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <int_vector.h>
 #include <ecl_kw.h>
 #include <ecl_grid.h>
 #include <ecl_box.h>
@@ -71,11 +72,12 @@
 struct ecl_region_struct {
   UTIL_TYPE_ID_DECLARATION;
   bool                * active_mask;          /* This marks active|inactive in the region, which is unrelated to active in the grid. */
-  int                 * global_index_list;    /* This is a list of the cells in the region - irrespective of whether they are active in the grid or not. */
-  int                 * active_index_list;    /* This means cells in the region which are also active in the grid */
-  int                 * global_active_list;   /* This is a list of (maximum) nactive elements, where the values are in the [0,..nx*ny*nz) range. */
-  int                   global_size;          /* The size of global_index_list. */
-  int                   active_size;          /* The size of active_index_list. */
+  int_vector_type     * global_index_list;    /* This is a list of the cells in the region - irrespective of whether they are active in the grid or not. */
+  int_vector_type     * active_index_list;    /* This means cells in the region which are also active in the grid */
+  int_vector_type     * global_active_list;   /* This is a list of (maximum) nactive elements, where the values are in the [0,..nx*ny*nz) range. */
+  bool                  global_index_list_valid;
+  bool                  active_index_list_valid;
+
   bool                  preselect;
   /******************************************************************/
   /* Grid properties */
@@ -90,9 +92,11 @@ UTIL_SAFE_CAST_FUNCTION( ecl_region , ECL_REGION_TYPE_ID)
 
 
 static void ecl_region_invalidate_index_list( ecl_region_type * region ) {
-  util_safe_free( region->active_index_list );   region->active_index_list = NULL;
-  util_safe_free( region->global_index_list );   region->global_index_list = NULL;
-  util_safe_free( region->global_active_list );  region->global_active_list = NULL;
+  int_vector_reset( region->global_index_list  );
+  int_vector_reset( region->active_index_list  );
+  int_vector_reset( region->global_active_list );
+  region->global_index_list_valid  = false; 
+  region->active_index_list_valid  = false; 
 }
 
 
@@ -104,11 +108,11 @@ ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool presel
   ecl_grid_get_dims( ecl_grid , &region->grid_nx , &region->grid_ny , &region->grid_nz , &region->grid_active);
   region->grid_vol          = region->grid_nx * region->grid_ny * region->grid_nz;
   region->active_mask       = util_malloc(region->grid_vol * sizeof * region->active_mask , __func__);
-  region->active_index_list  = NULL;
-  region->global_index_list  = NULL;
-  region->global_active_list = NULL;
-  region->preselect         = preselect;
-  ecl_region_reset( region );
+  region->active_index_list  = int_vector_alloc(0 , 0);
+  region->global_index_list  = int_vector_alloc(0 , 0);
+  region->global_active_list = int_vector_alloc(0 , 0);
+  region->preselect          = preselect;
+  ecl_region_reset( region );  /* This MUST be called to ensure that xxx_valid is correctly initialized. */
   return region;
 }
   
@@ -127,9 +131,9 @@ ecl_region_type * ecl_region_alloc_copy( const ecl_region_type * ecl_region ) {
 
 void ecl_region_free( ecl_region_type * region ) {
   free( region->active_mask );
-  util_safe_free( region->active_index_list );
-  util_safe_free( region->global_index_list );
-  util_safe_free( region->global_active_list );
+  int_vector_free( region->active_index_list );
+  int_vector_free( region->global_index_list );
+  int_vector_free( region->global_active_list );
   free( region );
 }
 
@@ -143,39 +147,32 @@ void ecl_region_free__( void * __region ) {
  
 
 static void ecl_region_assert_global_index_list( ecl_region_type * region ) {
-  if (region->global_index_list == NULL) {
+  if (!region->global_index_list_valid) {
     int global_index;
-    region->global_size = 0;
-    region->global_index_list = util_malloc( region->grid_vol * sizeof * region->global_index_list , __func__);
-    for (global_index = 0; global_index < region->grid_vol; global_index++) {
-      if (region->active_mask[ global_index ]) {
-        region->global_index_list[ region->global_size ] = global_index;
-        region->global_size++;
-      }
-    }
-    region->global_index_list = util_realloc( region->global_index_list , region->global_size * sizeof * region->global_index_list , __func__);
+    /* If this code is erronously run twice there will be hell to pay ....  */
+    for (global_index = 0; global_index < region->grid_vol; global_index++) 
+      if (region->active_mask[ global_index ]) 
+        int_vector_append( region->global_index_list , global_index );
+    
+    region->global_index_list_valid = true;
   }
 }
 
 
 static void ecl_region_assert_active_index_list( ecl_region_type * region ) {
-  if (region->active_index_list == NULL) {
+  if (!region->active_index_list_valid) {
     int global_index;
-    region->active_size = 0;
-    region->active_index_list  = util_malloc( region->grid_active * sizeof * region->active_index_list , __func__);
-    region->global_active_list = util_malloc( region->grid_active * sizeof * region->global_active_list , __func__);
+    
     for (global_index = 0; global_index < region->grid_vol; global_index++) {
       if (region->active_mask[ global_index ]) {
         int active_index = ecl_grid_get_active_index1( region->parent_grid , global_index );
         if (active_index >= 0) {
-          region->active_index_list[ region->active_size ] = active_index;
-          region->global_active_list[ region->active_size ] = global_index;
-          region->active_size++;
+          int_vector_append( region->active_index_list , active_index );
+          int_vector_append( region->global_active_list , global_index );
         }
       }
     }
-    region->active_index_list  = util_realloc( region->active_index_list  , region->active_size * sizeof * region->active_index_list , __func__);
-    region->global_active_list = util_realloc( region->global_active_list , region->active_size * sizeof * region->global_active_list , __func__);
+    region->active_index_list_valid = true;
   }
 }
 
@@ -184,31 +181,31 @@ static void ecl_region_assert_active_index_list( ecl_region_type * region ) {
 
 int ecl_region_get_active_size( ecl_region_type * region ) {
   ecl_region_assert_active_index_list( region );
-  return region->active_size;
+  return int_vector_size( region->active_index_list );
 }
 
 
 int ecl_region_get_global_size( ecl_region_type * region ) {
   ecl_region_assert_global_index_list( region );
-  return region->global_size;
+  return int_vector_size( region->global_index_list );
 }
 
 
 const int * ecl_region_get_active_list( ecl_region_type * region ) {
   ecl_region_assert_active_index_list( region );
-  return region->active_index_list;
+  return int_vector_get_const_ptr( region->active_index_list );
 }
 
 
 static const int * ecl_region_get_global_active_list( ecl_region_type * region ) {
   ecl_region_assert_active_index_list( region );
-  return region->global_active_list;
+  return int_vector_get_const_ptr( region->global_active_list );
 }
 
 
 const int * ecl_region_get_global_list( ecl_region_type * region ) {
   ecl_region_assert_global_index_list( region );
-  return region->global_index_list;
+  return int_vector_get_const_ptr( region->global_index_list );
 }
 
 /*****************************************************************/
