@@ -10,6 +10,8 @@ extern "C" {
 typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 typedef <TYPE> (<TYPE>_ftype) (<TYPE>);
 
+void                 <TYPE>_vector_set_read_only( <TYPE>_vector_type * vector , bool read_only);
+bool                 <TYPE>_vector_get_read_only( const <TYPE>_vector_type * vector );
 void                 <TYPE>_vector_resize( <TYPE>_vector_type * vector , int new_alloc_size );
 void                 <TYPE>_vector_memcpy( const <TYPE>_vector_type * src , <TYPE>_vector_type * target);
 bool                 <TYPE>_vector_growable( const <TYPE>_vector_type * vector);

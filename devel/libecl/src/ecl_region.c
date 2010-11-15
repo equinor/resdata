@@ -149,12 +149,17 @@ void ecl_region_free__( void * __region ) {
 static void ecl_region_assert_global_index_list( ecl_region_type * region ) {
   if (!region->global_index_list_valid) {
     int global_index;
-    /* If this code is erronously run twice there will be hell to pay ....  */
+    /* 
+       If this code is erronously run twice (probably due to some fuckup with
+       the global_index_list_valid flag) there will be hell to pay.
+    */
+    int_vector_set_read_only( region->global_index_list , false );
     for (global_index = 0; global_index < region->grid_vol; global_index++) 
       if (region->active_mask[ global_index ]) 
         int_vector_append( region->global_index_list , global_index );
     
     region->global_index_list_valid = true;
+    int_vector_set_read_only( region->global_index_list , true );
   }
 }
 
@@ -162,7 +167,8 @@ static void ecl_region_assert_global_index_list( ecl_region_type * region ) {
 static void ecl_region_assert_active_index_list( ecl_region_type * region ) {
   if (!region->active_index_list_valid) {
     int global_index;
-    
+    int_vector_set_read_only( region->active_index_list , false );
+    int_vector_set_read_only( region->global_active_list , false );
     for (global_index = 0; global_index < region->grid_vol; global_index++) {
       if (region->active_mask[ global_index ]) {
         int active_index = ecl_grid_get_active_index1( region->parent_grid , global_index );
@@ -172,6 +178,8 @@ static void ecl_region_assert_active_index_list( ecl_region_type * region ) {
         }
       }
     }
+    int_vector_set_read_only( region->active_index_list , true );
+    int_vector_set_read_only( region->global_active_list , true );
     region->active_index_list_valid = true;
   }
 }
@@ -179,33 +187,33 @@ static void ecl_region_assert_active_index_list( ecl_region_type * region ) {
 
 /*****************************************************************/
 
-int ecl_region_get_active_size( ecl_region_type * region ) {
+//int ecl_region_get_active_size( ecl_region_type * region ) {
+//  ecl_region_assert_active_index_list( region );
+//  return int_vector_size( region->active_index_list );
+//}
+//
+//
+//int ecl_region_get_global_size( ecl_region_type * region ) {
+//  ecl_region_assert_global_index_list( region );
+//  return int_vector_size( region->global_index_list );
+//}
+
+
+const int_vector_type * ecl_region_get_active_list( ecl_region_type * region ) {
   ecl_region_assert_active_index_list( region );
-  return int_vector_size( region->active_index_list );
+  return region->active_index_list;
 }
 
 
-int ecl_region_get_global_size( ecl_region_type * region ) {
+const int_vector_type * ecl_region_get_global_active_list( ecl_region_type * region ) {
+  ecl_region_assert_active_index_list( region );
+  return region->global_active_list;
+}
+
+
+const int_vector_type * ecl_region_get_global_list( ecl_region_type * region ) {
   ecl_region_assert_global_index_list( region );
-  return int_vector_size( region->global_index_list );
-}
-
-
-const int * ecl_region_get_active_list( ecl_region_type * region ) {
-  ecl_region_assert_active_index_list( region );
-  return int_vector_get_const_ptr( region->active_index_list );
-}
-
-
-static const int * ecl_region_get_global_active_list( ecl_region_type * region ) {
-  ecl_region_assert_active_index_list( region );
-  return int_vector_get_const_ptr( region->global_active_list );
-}
-
-
-const int * ecl_region_get_global_list( ecl_region_type * region ) {
-  ecl_region_assert_global_index_list( region );
-  return int_vector_get_const_ptr( region->global_index_list );
+  return region->global_index_list;
 }
 
 /*****************************************************************/
@@ -939,8 +947,8 @@ void ecl_region_union( ecl_region_type * region , const ecl_region_type * new_re
 
 /*****************************************************************/
 
-const int * ecl_region_get_kw_index_list( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , bool force_active) {
-  const int * index_set = NULL;
+const int_vector_type * ecl_region_get_kw_index_list( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , bool force_active) {
+  const int_vector_type * index_set = NULL;
   int kw_size = ecl_kw_get_size( ecl_kw );
 
   if (kw_size == ecl_grid_get_active_size( ecl_region->parent_grid )) 
@@ -957,112 +965,82 @@ const int * ecl_region_get_kw_index_list( ecl_region_type * ecl_region , const e
 }
 
 
-int ecl_region_get_kw_size( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , bool force_active) {
-  int set_size= -1;
-  int kw_size = ecl_kw_get_size( ecl_kw );
-  
-  if (kw_size == ecl_grid_get_active_size( ecl_region->parent_grid )) 
-    set_size = ecl_region_get_active_size( ecl_region );
-  else if (kw_size == ecl_grid_get_global_size( ecl_region->parent_grid)) {
-    if (force_active)
-      set_size = ecl_region_get_active_size( ecl_region );
-    else
-      set_size = ecl_region_get_global_size( ecl_region );
-  } else
-    util_abort("%s: size mismatch \n",__func__); 
-
-  return set_size;
-}
-
-
 
 void ecl_region_set_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_set_indexed_int( ecl_kw , set_size , index_set , value );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_set_indexed_int( ecl_kw , index_set , value );
 }
 
 
 void ecl_region_set_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_set_indexed_float( ecl_kw , set_size , index_set , value );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_set_indexed_float( ecl_kw , index_set , value );
 }
 
 
 void ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_set_indexed_double( ecl_kw , set_size , index_set , value );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_set_indexed_double( ecl_kw , index_set , value );
 }
 
 
 /*****************************************************************/
 
 void ecl_region_shift_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_shift_indexed_int( ecl_kw , set_size , index_set , value );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_shift_indexed_int( ecl_kw , index_set , value );
 }
 
 
 void ecl_region_shift_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_shift_indexed_float( ecl_kw , set_size , index_set , value );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_shift_indexed_float( ecl_kw , index_set , value );
 }
 
 
 void ecl_region_shift_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_shift_indexed_double( ecl_kw , set_size , index_set , value );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_shift_indexed_double( ecl_kw , index_set , value );
 }
 
 
 /*****************************************************************/
 
 void ecl_region_scale_kw_int( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , int value , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_scale_indexed_int( ecl_kw , set_size , index_set , value );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_scale_indexed_int( ecl_kw , index_set , value );
 }
 
 
 void ecl_region_scale_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_scale_indexed_float( ecl_kw , set_size , index_set , value );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_scale_indexed_float( ecl_kw , index_set , value );
 }
 
 
 void ecl_region_scale_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_scale_indexed_double( ecl_kw , set_size , index_set , value );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_scale_indexed_double( ecl_kw , index_set , value );
 }
 
 
 /*****************************************************************/
 
 void ecl_region_kw_iadd( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * delta_kw , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_inplace_add_indexed( ecl_kw , set_size , index_set , delta_kw );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_inplace_add_indexed( ecl_kw , index_set , delta_kw );
 }
 
 
 void ecl_region_kw_isub( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * delta_kw , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_inplace_sub_indexed( ecl_kw , set_size , index_set , delta_kw );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_inplace_sub_indexed( ecl_kw , index_set , delta_kw );
 }
 
 
 void ecl_region_kw_copy( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * src_kw , bool force_active) {
-  const int * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  int set_size = ecl_region_get_kw_size( ecl_region , ecl_kw , force_active);
-  ecl_kw_copy_indexed( ecl_kw , set_size , index_set , src_kw );
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_copy_indexed( ecl_kw , index_set , src_kw );
 }
 
 

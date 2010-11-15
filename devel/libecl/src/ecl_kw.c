@@ -585,7 +585,7 @@ void ecl_kw_iset_char_ptr( ecl_kw_type * ecl_kw , int index, const char * s) {
 
 #define ECL_KW_ISET_TYPED(ctype , ECL_TYPE)                                                                 \
 void ecl_kw_iset_ ## ctype(ecl_kw_type * ecl_kw, int i, ctype value) {                                      \
-  if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                              \
+  if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                  \
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        \
   ecl_kw_iset_static(ecl_kw , i , &value);                                                                  \
 }                                                                                                           \
@@ -596,15 +596,17 @@ ECL_KW_ISET_TYPED(int    , ECL_INT_TYPE);
 #undef ECL_KW_ISET_TYPED
 
 
-#define ECL_KW_SET_INDEXED(ctype , ECL_TYPE)                                                                \
-void ecl_kw_set_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype value) {  \
-   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                 \
-      util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));      \
-   {                                                                                                        \
-     ctype * data = (ctype *) ecl_kw->data;                                                                 \
-      for (int i = 0; i < size; i++)                                                                        \
-          data[index_list[i]] = value;                                                                      \
-   }                                                                                                        \
+#define ECL_KW_SET_INDEXED(ctype , ECL_TYPE)                                                                   \
+void ecl_kw_set_indexed_ ## ctype( ecl_kw_type * ecl_kw, const int_vector_type * index_list , ctype value) {   \
+   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                    \
+      util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));         \
+   {                                                                                                           \
+     ctype * data = (ctype *) ecl_kw->data;                                                                    \
+     int size = int_vector_size( index_list );                                                                 \
+     const int * index_ptr = int_vector_get_const_ptr( index_list );                                           \
+     for (int i = 0; i < size; i++)                                                                            \
+         data[index_ptr[i]] = value;                                                                           \
+   }                                                                                                           \
 }
 
 ECL_KW_SET_INDEXED( double , ECL_DOUBLE_TYPE);
@@ -613,16 +615,19 @@ ECL_KW_SET_INDEXED( int    , ECL_INT_TYPE);
 #undef ECL_KW_SET_INDEXED
 
 
-#define ECL_KW_SHIFT_INDEXED(ctype , ECL_TYPE)                                                                \
-void ecl_kw_shift_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype shift) {  \
-   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                   \
-      util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        \
-   {                                                                                                          \
-     ctype * data = (ctype *) ecl_kw->data;                                                                   \
-      for (int i = 0; i < size; i++)                                                                          \
-          data[index_list[i]] += shift;                                                                       \
-   }                                                                                                          \
+#define ECL_KW_SHIFT_INDEXED(ctype , ECL_TYPE)                                                                   \
+void ecl_kw_shift_indexed_ ## ctype( ecl_kw_type * ecl_kw, const int_vector_type * index_list , ctype shift) {   \
+   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                      \
+      util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));           \
+   {                                                                                                             \
+     ctype * data = (ctype *) ecl_kw->data;                                                                      \
+     int size = int_vector_size( index_list );                                                                   \
+     const int * index_ptr = int_vector_get_const_ptr( index_list );                                             \
+     for (int i = 0; i < size; i++)                                                                              \
+          data[index_ptr[i]] += shift;                                                                           \
+   }                                                                                                             \
 }
+
 
 ECL_KW_SHIFT_INDEXED( double , ECL_DOUBLE_TYPE);
 ECL_KW_SHIFT_INDEXED( float  , ECL_FLOAT_TYPE);
@@ -631,13 +636,15 @@ ECL_KW_SHIFT_INDEXED( int    , ECL_INT_TYPE);
 
 
 #define ECL_KW_SCALE_INDEXED(ctype , ECL_TYPE)                                                                \
-void ecl_kw_scale_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype scale) {  \
+void ecl_kw_scale_indexed_ ## ctype( ecl_kw_type * ecl_kw, const int_vector_type * index_list , ctype scale) {  \
    if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                   \
       util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        \
    {                                                                                                          \
      ctype * data = (ctype *) ecl_kw->data;                                                                   \
-      for (int i = 0; i < size; i++)                                                                          \
-          data[index_list[i]] *= scale;                                                                       \
+     int size = int_vector_size( index_list );                                                                \
+     const int * index_ptr = int_vector_get_const_ptr( index_list );                                          \
+     for (int i = 0; i < size; i++)                                                                           \
+          data[index_ptr[i]] *= scale;                                                                        \
    }                                                                                                          \
 }
 
@@ -1841,15 +1848,17 @@ ECL_KW_ASSERT_TYPED_BINARY_OP( double , ECL_DOUBLE_TYPE )
 #undef ECL_KW_ASSERT_TYPED_BINARY_OP
      
 
-void ecl_kw_copy_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * src_kw) {
+void ecl_kw_copy_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * src_kw) {
   if (!ecl_kw_assert_binary( target_kw , src_kw ))
     util_abort("%s: type/size  mismatch\n",__func__);      
   {                                                         
     char * target_data = ecl_kw_get_data_ref( target_kw ); 
     const char * src_data = ecl_kw_get_data_ref( src_kw ); 
     int sizeof_ctype = ecl_util_get_sizeof_ctype(target_kw->ecl_type);                     
+    int set_size     = int_vector_size( index_set );
+    const int * index_data = int_vector_get_const_ptr( index_set );
     for (int i=0; i < set_size; i++) {                                                    
-      int index = index_set[i];                                         
+      int index = index_data[i];                                         
       memcpy( &target_data[ index * sizeof_ctype ] , &src_data[ index * sizeof_ctype] , sizeof_ctype);
     }                                                                                     
   }                                                                                       
@@ -1858,14 +1867,16 @@ void ecl_kw_copy_indexed( ecl_kw_type * target_kw , int set_size , const int * i
 
 
 #define ECL_KW_TYPED_INPLACE_ADD_INDEXED( ctype ) \
-static void ecl_kw_inplace_add_indexed_ ## ctype( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * add_kw) { \
+static void ecl_kw_inplace_add_indexed_ ## ctype( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * add_kw) { \
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , add_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
     ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
     const ctype * add_data = ecl_kw_get_data_ref( add_kw );                                \
+    int set_size     = int_vector_size( index_set );                                       \
+    const int * index_data = int_vector_get_const_ptr( index_set );                        \
     for (int i=0; i < set_size; i++) {                                                     \
-      int index = index_set[i];                                                            \
+      int index = index_data[i];                                                           \
       target_data[index] += add_data[index];                                               \
     }                                                                                      \
   }                                                                                        \
@@ -1877,17 +1888,17 @@ ECL_KW_TYPED_INPLACE_ADD_INDEXED( double )
 ECL_KW_TYPED_INPLACE_ADD_INDEXED( float )
 #undef ECL_KW_TYPED_INPLACE_ADD
 
-void ecl_kw_inplace_add_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * add_kw) {
+void ecl_kw_inplace_add_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * add_kw) {
   ecl_type_enum type = ecl_kw_get_type(target_kw);
   switch (type) {
   case(ECL_FLOAT_TYPE):
-    ecl_kw_inplace_add_indexed_float( target_kw , set_size , index_set , add_kw );
+    ecl_kw_inplace_add_indexed_float( target_kw , index_set , add_kw );
     break;
   case(ECL_DOUBLE_TYPE):
-    ecl_kw_inplace_add_indexed_double( target_kw , set_size , index_set , add_kw );
+    ecl_kw_inplace_add_indexed_double( target_kw , index_set , add_kw );
     break;
   case(ECL_INT_TYPE):
-    ecl_kw_inplace_add_indexed_int( target_kw , set_size , index_set , add_kw );
+    ecl_kw_inplace_add_indexed_int( target_kw , index_set , add_kw );
     break;
   default:
     util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
@@ -1969,14 +1980,16 @@ void ecl_kw_inplace_sub( ecl_kw_type * target_kw , const ecl_kw_type * sub_kw) {
 }
 
 #define ECL_KW_TYPED_INPLACE_SUB_INDEXED( ctype ) \
-static void ecl_kw_inplace_sub_indexed_ ## ctype( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * sub_kw) { \
+static void ecl_kw_inplace_sub_indexed_ ## ctype( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * sub_kw) { \
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , sub_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
     ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
     const ctype * sub_data = ecl_kw_get_data_ref( sub_kw );                                \
+    int set_size     = int_vector_size( index_set );                                       \
+    const int * index_data = int_vector_get_const_ptr( index_set );                        \
     for (int i=0; i < set_size; i++) {                                                     \
-      int index = index_set[i];                                                            \
+      int index = index_data[i];                                                           \
       target_data[index] -= sub_data[index];                                               \
     }                                                                                      \
   }                                                                                        \
@@ -1988,17 +2001,17 @@ ECL_KW_TYPED_INPLACE_SUB_INDEXED( double )
 ECL_KW_TYPED_INPLACE_SUB_INDEXED( float )
 #undef ECL_KW_TYPED_INPLACE_SUB
 
-void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * sub_kw) {
+void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * sub_kw) {
   ecl_type_enum type = ecl_kw_get_type(target_kw);
   switch (type) {
   case(ECL_FLOAT_TYPE):
-    ecl_kw_inplace_sub_indexed_float( target_kw , set_size , index_set , sub_kw );
+    ecl_kw_inplace_sub_indexed_float( target_kw , index_set , sub_kw );
     break;
   case(ECL_DOUBLE_TYPE):
-    ecl_kw_inplace_sub_indexed_double( target_kw , set_size , index_set , sub_kw );
+    ecl_kw_inplace_sub_indexed_double( target_kw , index_set , sub_kw );
     break;
   case(ECL_INT_TYPE):
-    ecl_kw_inplace_sub_indexed_int( target_kw , set_size , index_set , sub_kw );
+    ecl_kw_inplace_sub_indexed_int( target_kw , index_set , sub_kw );
     break;
   default:
     util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));

@@ -108,9 +108,9 @@ ECL_KW_SCALAR_SET_TYPED_HEADER( double )
 ecl_kw_type * ecl_kw_alloc_scatter_copy( const ecl_kw_type * src_kw , int target_size , const int * mapping, void * def_value);
 
 void ecl_kw_inplace_add( ecl_kw_type * target_kw , const ecl_kw_type * add_kw);
-void ecl_kw_inplace_add_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * add_kw);
-void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * sub_kw);
-void ecl_kw_copy_indexed( ecl_kw_type * target_kw , int set_size , const int * index_set , const ecl_kw_type * src_kw);
+void ecl_kw_inplace_add_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * add_kw);
+void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * sub_kw);
+void ecl_kw_copy_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * src_kw);
 
 bool ecl_kw_assert_binary_numeric( const ecl_kw_type * kw1, const ecl_kw_type * kw2);
 #define ECL_KW_ASSERT_TYPED_BINARY_OP_HEADER( ctype ) bool ecl_kw_assert_binary_ ## ctype( const ecl_kw_type * kw1 , const ecl_kw_type * kw2);
@@ -159,21 +159,21 @@ ECL_KW_GET_TYPED_PTR_HEADER(bool);
 #undef ECL_KW_GET_TYPED_PTR_HEADER
 
 
-#define ECL_KW_SET_INDEXED_HEADER(ctype ) void ecl_kw_set_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype value);
+#define ECL_KW_SET_INDEXED_HEADER(ctype ) void ecl_kw_set_indexed_ ## ctype( ecl_kw_type * ecl_kw, const int_vector_type * index_list , ctype value);
 ECL_KW_SET_INDEXED_HEADER( double );
 ECL_KW_SET_INDEXED_HEADER( float  );
 ECL_KW_SET_INDEXED_HEADER( int    );
 #undef ECL_KW_SET_INDEXED_HEADER
 
 
-#define ECL_KW_SHIFT_INDEXED_HEADER(ctype) void ecl_kw_shift_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype shift);
+#define ECL_KW_SHIFT_INDEXED_HEADER(ctype) void ecl_kw_shift_indexed_ ## ctype( ecl_kw_type * ecl_kw, const int_vector_type * index_list , ctype shift);
 ECL_KW_SHIFT_INDEXED_HEADER( int    )
 ECL_KW_SHIFT_INDEXED_HEADER( float  )
 ECL_KW_SHIFT_INDEXED_HEADER( double )
 #undef ECL_KW_SHIFT_INDEXED_HEADER
 
 
-#define ECL_KW_SCALE_INDEXED_HEADER(ctype) void ecl_kw_scale_indexed_ ## ctype( ecl_kw_type * ecl_kw, int size, const int * index_list , ctype scale);
+#define ECL_KW_SCALE_INDEXED_HEADER(ctype) void ecl_kw_scale_indexed_ ## ctype( ecl_kw_type * ecl_kw, const int_vector_type * index_list , ctype scale);
 ECL_KW_SCALE_INDEXED_HEADER( int    )
 ECL_KW_SCALE_INDEXED_HEADER( float  )
 ECL_KW_SCALE_INDEXED_HEADER( double )

@@ -6,6 +6,7 @@ extern "C" {
 #include <ecl_box.h>
 #include <ecl_grid.h>
 #include <stdbool.h>
+#include <int_vector.h>
   
 typedef enum {
   SELECT_ALL           =  0,
@@ -35,10 +36,9 @@ ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool presel
 void              ecl_region_free( ecl_region_type * region );
 void              ecl_region_free__( void * __region );
 
-int               ecl_region_get_active_size( ecl_region_type * region );
-const int       * ecl_region_get_active_list( ecl_region_type * region );
-int               ecl_region_get_global_size( ecl_region_type * region );
-const int       * ecl_region_get_global_list( ecl_region_type * region );
+const int_vector_type * ecl_region_get_active_list( ecl_region_type * region );
+const int_vector_type * ecl_region_get_global_list( ecl_region_type * region );
+const int_vector_type * ecl_region_get_global_active_list( ecl_region_type * region );
 bool              ecl_region_contains_ijk( const ecl_region_type * ecl_region , int i , int j , int k);
 
 void              ecl_region_invert_selection( ecl_region_type * region );
@@ -111,7 +111,6 @@ void        ecl_region_set_kw_int( ecl_region_type * ecl_region , ecl_kw_type * 
 void        ecl_region_set_kw_float( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , float value , bool force_active);
 void        ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , double value , bool force_active);
 void        ecl_region_kw_copy( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * src_kw , bool force_active);
-const int * ecl_region_get_kw_index_list( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , bool force_active);
 int         ecl_region_get_kw_size( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , bool force_active);
 
 
