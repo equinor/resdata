@@ -220,7 +220,6 @@ static void * thread_pool_main_loop( void * arg ) {
             pthread_rwlock_unlock( &tp->queue_lock );            
 
             tp_arg->slot_index = slot_index;
-            
             job_slot->running = true;
             /* 
                Here is the actual pthread_create() call creating an additional running

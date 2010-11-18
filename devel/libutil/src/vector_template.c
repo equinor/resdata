@@ -575,6 +575,7 @@ const <TYPE> * <TYPE>_vector_get_const_ptr(const <TYPE>_vector_type * vector) {
   return vector->data;
 }
 
+
 /**
    Observe that there is a principle difference between the get_ptr()
    functions and alloc_data_copy() when the vector has zero size. The
@@ -671,10 +672,12 @@ static int <TYPE>_vector_cmp(const void *_a, const void *_b) {
   return 0;
 }
 
+/* Reverse compare function. */
 
 static int <TYPE>_vector_rcmp(const void *a, const void *b) {
   return <TYPE>_vector_cmp( b , a );
 }
+
 
 /**
    The input vector will be altered in place, so that the vector only
