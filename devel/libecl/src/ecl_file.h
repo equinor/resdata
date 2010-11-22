@@ -14,6 +14,9 @@ typedef struct ecl_file_struct ecl_file_type;
 
 ecl_file_type * ecl_file_fread_alloc( const char * filename );
 
+
+ecl_file_type * ecl_file_copy_restart_section( const ecl_file_type * src_file , int report_step );
+ecl_file_type * ecl_file_copy_summary_section( const ecl_file_type * src_file , int report_step );
 void            ecl_file_free( ecl_file_type * ecl_file );
 void            ecl_file_free__(void * arg);
 ecl_kw_type   * ecl_file_iget_named_kw( const ecl_file_type *  ecl_file , const char * kw , int ith);

@@ -32,9 +32,9 @@
   loading summary and restart files.
 */
 
-#define INTEHEAD_KW  "INTEHEAD"
-#define SEQNUM_KW    "SEQNUM"  
-#define SEQHDR_KW    "SEQHDR" 
+#define INTEHEAD_KW  "INTEHEAD"    /* Restart files */
+#define SEQNUM_KW    "SEQNUM"      /* Restart files */
+#define SEQHDR_KW    "SEQHDR"      /* Summary files */
 
 #define INTEHEAD_DAY_INDEX    64
 #define INTEHEAD_MONTH_INDEX  65
@@ -80,6 +80,13 @@ struct ecl_file_struct {
 
 UTIL_SAFE_CAST_FUNCTION( ecl_file , ECL_FILE_ID)
 UTIL_IS_INSTANCE_FUNCTION( ecl_file , ECL_FILE_ID)
+
+
+static int ecl_file_get_global_index( const ecl_file_type * ecl_file , const char * kw , int ith) {
+  const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
+  int global_index = int_vector_iget( index_vector , ith);
+  return global_index;
+}
 
 
 ecl_file_type * ecl_file_alloc_empty( ) {
@@ -180,6 +187,38 @@ static bool ecl_file_ifseek_kw(fortio_type * fortio, const char * kw , int occur
 
 
 
+ecl_file_type * ecl_file_alloc_sub_copy( const ecl_file_type * src_file , const char * stop_kw , int kw_nr) {
+  if (ecl_file_has_kw( src_file , stop_kw )) {
+    int first_kw = ecl_file_get_global_index( src_file , stop_kw , kw_nr );
+    int last_kw;
+    if (ecl_file_get_num_named_kw( src_file , stop_kw ) > (kw_nr + 1))
+      last_kw = ecl_file_get_global_index( src_file , stop_kw , kw_nr + 1);
+    else
+      last_kw = ecl_file_get_num_kw( src_file );
+    
+    {
+      ecl_file_type * copy_file = ecl_file_alloc_empty();
+
+      for (int kw_nr = first_kw; kw_nr < last_kw; kw_nr++) 
+        vector_append_owned_ref( copy_file->kw_list , ecl_file_icopy_kw( src_file , kw_nr ), ecl_kw_free__);
+      ecl_file_make_index( copy_file );
+
+      return copy_file;
+    }
+  } else
+    return NULL;  /* The stop kw is not there at all. */
+}
+
+
+ecl_file_type * ecl_file_copy_restart_section( const ecl_file_type * src_file , int report_step ) {
+  return ecl_file_alloc_sub_copy( src_file , SEQNUM_KW , report_step );
+}
+
+
+ecl_file_type * ecl_file_copy_summary_section( const ecl_file_type * src_file , int report_step ) {
+  return ecl_file_alloc_sub_copy( src_file , SEQHDR_KW , report_step );
+}
+
 
 /** 
    This function will allocate and read a ecl_file instance from an
@@ -279,7 +318,7 @@ ecl_file_type * ecl_file_fread_alloc(const char * filename ) {
 
 
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
-  ecl_file_type * summary_section = ecl_file_fread_alloc_fortio(fortio , "SEQHDR");
+  ecl_file_type * summary_section = ecl_file_fread_alloc_fortio(fortio , SEQHDR_KW);
   return summary_section;
 }
 
@@ -676,6 +715,7 @@ ecl_kw_type * ecl_file_icopy_kw( const ecl_file_type * ecl_file , int index) {
 
 
 
+
 /* 
    This function will return the ith occurence of 'kw' in
    ecl_file. Will abort hard if the request can not be satisifed - use
@@ -684,8 +724,7 @@ ecl_kw_type * ecl_file_icopy_kw( const ecl_file_type * ecl_file , int index) {
    
 
 ecl_kw_type * ecl_file_iget_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith) {
-  const int_vector_type * index_vector = hash_get(ecl_file->kw_index , kw);
-  int global_index = int_vector_iget( index_vector , ith);
+  int global_index = ecl_file_get_global_index( ecl_file , kw , ith );
   return ecl_file_iget_kw( ecl_file , global_index );
 }
 
