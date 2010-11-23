@@ -1045,11 +1045,30 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
       set_range_rft(plot);
       info_reply("Range set") ;
     } else if(strcmp(ens_name, "_newplotvector_") == 0){
-      char tmpkey[32];      
-      scanf("%31s" , tmpkey);
-      sprintf(message,"The key %s does not exist\n", tmpkey);
-      error_reply(message) ;
-      return;
+      scanf("%s" , key);
+      util_split_string(key , ":" , &num_tokens , &token_list);  
+
+      if(num_tokens != 3){
+	sprintf(message,"The key %s does not exist", key);
+	error_reply(message) ;
+	return;
+      }
+      
+      if(strcmp(token_list[0],"RFT") != 0){
+	sprintf(message,"The key %s does not exist", key);
+	error_reply(message) ;
+	failed = true ;
+	char tmp[32];    
+	scanf("%s" , tmp);
+      }
+      else{
+	well = token_list[1];
+	date = token_list[2];
+	survey_time ;
+	util_sscanf_date(date , &survey_time) ;  
+	sprintf(message,"Will plot %s",key) ;
+	info_reply(message) ;
+      }
     } else if (strcmp(ens_name, "_stop_") == 0) {
       complete = true ;
     } else if (hash_has_key(ens_rft_table , ens_name)){
