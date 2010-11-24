@@ -36,6 +36,7 @@ int             ecl_file_get_restart_index( const ecl_file_type * restart_file ,
 ecl_file_type * ecl_file_alloc_empty( );
 ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int index );
 ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step);
+ecl_file_type * ecl_file_fread_alloc_unrst_section_time( const char * filename , time_t sim_time);
 ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio);
 ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio);
 ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type *     fortio);

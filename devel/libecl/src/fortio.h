@@ -45,6 +45,10 @@ bool               fortio_is_fortio_file(fortio_type * );
 void               fortio_rewind(const fortio_type *fortio);
 const char  *      fortio_filename_ref(const fortio_type * );
 bool               fortio_fmt_file(const fortio_type *);
+long               fortio_ftell( const fortio_type * fortio );
+int                fortio_fseek( fortio_type * fortio , long offset , int whence);
+
+
 #ifdef __cplusplus
 }
 #endif

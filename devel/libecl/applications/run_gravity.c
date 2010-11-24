@@ -47,7 +47,7 @@ static bool has_phase( int phase_sum , int phase) {
     return false;
   else
     return true;
-}
+} 
 
 
 static const float * safe_get_float_ptr( const ecl_kw_type * ecl_kw , const float * alternative) {
@@ -559,6 +559,7 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
       for (global_index=0;global_index < ecl_grid_get_global_size( ecl_grid ); global_index++){
         const int act_index = ecl_grid_get_active_index1( ecl_grid , global_index );
         if (act_index >= 0) {
+
           // Not numerical aquifer 
           if(aquifern[act_index] >= 0){ 
             float swat1 = swat1_v[act_index];

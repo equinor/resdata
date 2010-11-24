@@ -1382,7 +1382,7 @@ char * ecl_grid_alloc_case_filename( const char * case_input ) {
   ecl_file_enum    file_type;
   bool             fmt_file;
   file_type = ecl_util_get_file_type( case_input , &fmt_file ,  NULL);
-
+  
   if (file_type == ECL_GRID_FILE)
     return util_alloc_string_copy( case_input ); /* Case 1 */
   else if (file_type == ECL_EGRID_FILE)

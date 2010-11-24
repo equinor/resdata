@@ -526,6 +526,20 @@ fortio_status_type fortio_check_file( const char * filename , bool endian_flip) 
 }
 
 
+long fortio_ftell( const fortio_type * fortio ) {
+  return ftell( fortio->stream );
+}
+
+
+int fortio_fseek( fortio_type * fortio , long offset , int whence) {
+  int fseek_return = fseek( fortio->stream , offset , whence );
+  /*
+    if fseek_return != 0 -> util_abort().
+  */
+  return fseek_return;
+}
+
+
 
 /*****************************************************************/
 void          fortio_fflush(fortio_type * fortio) { fflush( fortio->stream); }

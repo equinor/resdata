@@ -135,7 +135,7 @@ static void ecl_file_make_index( ecl_file_type * ecl_file ) {
 /**
    This function will seek for occurence nr 'occurence' of 'kw' in the
    fortio instance, and position the stream pointer there. If the
-   occuerence is found, the function will return true, otherwise it
+   occurence is found, the function will return true, otherwise it
    will return false, and reposition the stream pointer at position it
    had prior to the call.
 
@@ -376,6 +376,12 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 
 
 
+static time_t INTEHEAD_date( const ecl_kw_type * intehead_kw ) {
+  return util_make_date( ecl_kw_iget_int( intehead_kw , INTEHEAD_DAY_INDEX)   , 
+                         ecl_kw_iget_int( intehead_kw , INTEHEAD_MONTH_INDEX) , 
+                         ecl_kw_iget_int( intehead_kw , INTEHEAD_YEAR_INDEX)  );
+}
+
 
 /**
    This function will look up the INTEHEAD keyword in a ecl_file_type
@@ -388,9 +394,7 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 
 static time_t ecl_file_iget_restart_sim_date__(const ecl_file_type * restart_file , int occurence) {
   ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( restart_file , INTEHEAD_KW , occurence );
-  return util_make_date( ecl_kw_iget_int( intehead_kw , INTEHEAD_DAY_INDEX)   , 
-                         ecl_kw_iget_int( intehead_kw , INTEHEAD_MONTH_INDEX) , 
-                         ecl_kw_iget_int( intehead_kw , INTEHEAD_YEAR_INDEX)  );
+  return INTEHEAD_date( intehead_kw );
 }
 
 
@@ -464,7 +468,6 @@ int ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_
 }
 
 
-
 /**
    Will look through the unified restart file and load the section
    corresponding to report_step 'report_step'. If the report_step can
@@ -511,11 +514,63 @@ ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int r
     fseek(stream , read_pos , SEEK_SET);
     ecl_file = ecl_file_fread_alloc_restart_section( fortio );
   } 
+  
   fortio_fclose( fortio );
   ecl_kw_free( seqnum_kw );
   
   return ecl_file;
 }
+
+
+
+/**
+   Will load one restart section from the file @filename corresponding
+   to the time given by @sim_time; if the restart section
+   corresponding to @sim_time can not be found the function will
+   return NULL.
+
+   The function works by scanning through INTEHEAD keywords and
+   looking for a match; if a match is found the
+   ecl_file_fread_alloc_unrst_section() is called for the actual load.
+*/
+
+ecl_file_type * ecl_file_fread_alloc_unrst_section_time( const char * filename , time_t sim_time) {
+  ecl_file_type * restart_section = NULL;
+  bool          fmt_file = ecl_util_fmt_file( filename );
+  fortio_type * fortio   = fortio_fopen( filename , "r" , ECL_ENDIAN_FLIP , fmt_file );
+  ecl_kw_type * seqnum   = ecl_kw_alloc_empty();
+  ecl_kw_type * intehead = ecl_kw_alloc_empty();
+
+  while (true) {
+    
+    if (ecl_kw_fseek_kw( SEQNUM_KW , false , false , fortio)) {
+      long seqnum_pos = fortio_ftell( fortio );
+      ecl_kw_fread_realloc( seqnum , fortio );
+      ecl_kw_fread_realloc( intehead , fortio );
+
+      if (ecl_kw_header_eq( seqnum , SEQNUM_KW) && ecl_kw_header_eq( intehead , INTEHEAD_KW)) {
+        if (INTEHEAD_date( intehead ) == sim_time) {
+          /* We found the correct position. Seek back to the beginning
+             of the seqnum_kw and load the whole thing. */
+          fortio_fseek( fortio , seqnum_pos , SEEK_SET );
+          restart_section = ecl_file_fread_alloc_restart_section( fortio );
+          break;
+        }
+      } else 
+        util_abort("%s: %s does not seem to be a normal restart file. Expected kw sequence: %s %s. Got: %s %s\n",
+                   __func__ , filename, SEQNUM_KW , INTEHEAD_KW , ecl_kw_get_header( seqnum ) , ecl_kw_get_header( intehead ));
+    } else 
+      break;  /* Could not find the section - return NULL */
+    
+  }
+  
+  ecl_kw_free( intehead );
+  ecl_kw_free( seqnum );
+  fortio_fclose( fortio );
+
+  return restart_section;
+}
+
 
 
 ecl_file_type * ecl_file_fread_alloc_RFT_section(fortio_type * fortio) {

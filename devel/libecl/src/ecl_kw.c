@@ -283,10 +283,12 @@ static bool ecl_kw_string_eq(const char *s1 , const char *s2) {
   
   for (index = 0; index < len2; index++)
     eq = eq & (long_kw[index] == short_kw[index]);
+
   if (eq) {
     for (index = len2; index < len1; index++)
       eq = eq & (long_kw[index] == space_char);
   }
+
   return eq;
 }
 
@@ -911,7 +913,7 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
   int size;
   bool OK;
 
-  ecl_kw->__file_offset = ftell(stream);
+  ecl_kw->__file_offset = fortio_ftell( fortio );
   if (fmt_file) {
     OK = ecl_kw_fscanf_qstring(header , "%8c" , 8 , stream); 
     if (OK) {
@@ -957,8 +959,7 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
 
 bool ecl_kw_fseek_kw(const char * kw , bool rewind , bool abort_on_error , fortio_type *fortio) {
   ecl_kw_type *tmp_kw = ecl_kw_alloc_empty();
-  FILE *stream        = fortio_get_FILE(fortio);
-  long int init_pos   = ftell(stream);
+  long int init_pos   = fortio_ftell( fortio );
   bool cont, kw_found;
 
   cont     = true;
@@ -984,7 +985,7 @@ bool ecl_kw_fseek_kw(const char * kw , bool rewind , bool abort_on_error , forti
     if (abort_on_error) 
       util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , fortio_filename_ref(fortio));
     
-    fseek(stream , init_pos , SEEK_SET);
+    fortio_fseek(fortio , init_pos , SEEK_SET);
   }
   
   ecl_kw_free(tmp_kw);
@@ -1003,25 +1004,24 @@ bool ecl_kw_ifseek_kw(const char * kw , fortio_type * fortio , int index) {
 
 
 bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *fortio) {
-  FILE *stream      = fortio_get_FILE(fortio);
-  long int init_pos = ftell(stream);
+  long int init_pos = fortio_ftell( fortio );
   bool kw_found     = false;
 
-  fseek(stream , 0L , SEEK_SET);
+  fortio_fseek(fortio , 0L , SEEK_SET);
   kw_found = ecl_kw_fseek_kw(kw ,  false , false , fortio);
   if (kw_found) {
     bool cont = true;
     do {
-      long int current_pos = ftell(stream);
+      long int current_pos = fortio_ftell( fortio );
       ecl_kw_fskip(fortio);
       cont = ecl_kw_fseek_kw(kw , false , false , fortio);
-      if (!cont) fseek(stream , current_pos , SEEK_SET);
+      if (!cont) fortio_fseek(fortio , current_pos , SEEK_SET);
     } while (cont);
   } else {
     if (abort_on_error) 
       util_abort("%s: could not locate keyword:%s - aborting \n",__func__ , kw);
     else
-      fseek(stream , init_pos , SEEK_SET);
+      fortio_fseek(fortio , init_pos , SEEK_SET);
   }
   return kw_found;
 }
