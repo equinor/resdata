@@ -17,6 +17,12 @@
 #define OIL   4
 
 
+#define ECLIPSE300 2
+#define ECLIPSE100 1
+
+int  simulator =  ECLIPSE100 ;
+
+
 typedef struct {
   double utm_x; 
   double utm_y; 
@@ -476,20 +482,35 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
   {
     // OIL_DEN
     if( has_phase(model_phases , OIL) ) {
-      oil_den1_kw  = ecl_file_iget_named_kw(restart_file1, "OIL_DEN", 0);
-      oil_den2_kw  = ecl_file_iget_named_kw(restart_file2, "OIL_DEN", 0);
+      if (simulator == ECLIPSE100) {
+        oil_den1_kw  = ecl_file_iget_named_kw(restart_file1, "OIL_DEN", 0);
+        oil_den2_kw  = ecl_file_iget_named_kw(restart_file2, "OIL_DEN", 0);
+      } else { // ECLIPSE300
+        oil_den1_kw  = ecl_file_iget_named_kw(restart_file1, "DENO", 0);
+        oil_den2_kw  = ecl_file_iget_named_kw(restart_file2, "DENO", 0);
+      } ;
     }
     
     // GAS_DEN
     if( has_phase( model_phases , GAS) ) {
-      gas_den1_kw  = ecl_file_iget_named_kw(restart_file1, "GAS_DEN", 0);
-      gas_den2_kw  = ecl_file_iget_named_kw(restart_file2, "GAS_DEN", 0);
+      if (simulator == ECLIPSE100) {
+        gas_den1_kw  = ecl_file_iget_named_kw(restart_file1, "GAS_DEN", 0);
+        gas_den2_kw  = ecl_file_iget_named_kw(restart_file2, "GAS_DEN", 0);
+      } else { // ECLIPSE300
+        gas_den1_kw  = ecl_file_iget_named_kw(restart_file1, "DENG", 0);
+        gas_den2_kw  = ecl_file_iget_named_kw(restart_file2, "DENG", 0);
+      } ;
     }
     
     // WAT_DEN
     if( has_phase( model_phases , WATER) ) {
-      wat_den1_kw  = ecl_file_iget_named_kw(restart_file1, "WAT_DEN", 0);
-      wat_den2_kw  = ecl_file_iget_named_kw(restart_file2, "WAT_DEN", 0);
+      if (simulator == ECLIPSE100) {
+        wat_den1_kw  = ecl_file_iget_named_kw(restart_file1, "WAT_DEN", 0);
+        wat_den2_kw  = ecl_file_iget_named_kw(restart_file2, "WAT_DEN", 0);
+      } else { // ECLIPSE300
+        wat_den1_kw  = ecl_file_iget_named_kw(restart_file1, "DENW", 0);
+        wat_den2_kw  = ecl_file_iget_named_kw(restart_file2, "DENW", 0);
+      } ;
     }
   }
   
@@ -613,7 +634,7 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
                 if(dist_sq == 0){
                   exit(1);
                 }
-                local_deltag += 6.67E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5);
+                local_deltag += 6.67428E-3*(mas2 - mas1)*dist_d/pow(dist_sq, 1.5); // Gravity in units of \mu Gal = 10^{-8} m/s^2
               }
               
             }
@@ -703,14 +724,29 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
     int file_phases  = 0;
 
     /* Check which phases are present in the model */
-    if (ecl_file_has_kw(restart_file1 , "OIL_DEN"))
-      model_phases += OIL;                                    
+    if (ecl_file_has_kw(restart_file1 , "OIL_DEN")) {
+      model_phases += OIL;  
+      simulator = ECLIPSE100 ;
+    } else if (ecl_file_has_kw(restart_file1 , "DENO")) {
+      model_phases += OIL;  
+      simulator = ECLIPSE300 ;
+    } ;
+      
+    if (ecl_file_has_kw(restart_file1 , "WAT_DEN")) {
+      model_phases += WATER;                         
+      simulator = ECLIPSE100 ;
+    } else if (ecl_file_has_kw(restart_file1 , "DENW")) {
+      model_phases += WATER;                         
+      simulator = ECLIPSE300 ;
+    } ;
     
-    if (ecl_file_has_kw(restart_file1 , "WAT_DEN"))
-      model_phases += WATER;                                  
-    
-    if (ecl_file_has_kw(restart_file1 , "GAS_DEN"))
+    if (ecl_file_has_kw(restart_file1 , "GAS_DEN")) {
       model_phases += GAS;
+      simulator = ECLIPSE100 ;
+    } else if (ecl_file_has_kw(restart_file1 , "DENG")) {
+      model_phases += GAS;
+      simulator = ECLIPSE300 ;
+    } ;
     
     
     /* Check which phases are present in the restart files. We assume the restart file NEVER has SOIL information */
