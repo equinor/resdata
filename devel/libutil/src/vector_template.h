@@ -10,10 +10,14 @@ extern "C" {
 typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 typedef <TYPE> (<TYPE>_ftype) (<TYPE>);
 
+
+void                 <TYPE>_vector_inplace_div( <TYPE>_vector_type * vector , const <TYPE>_vector_type * inv_factor);
+void                 <TYPE>_vector_inplace_mul( <TYPE>_vector_type * vector , const <TYPE>_vector_type * factor);
+void                 <TYPE>_vector_inplace_add( <TYPE>_vector_type * vector , const <TYPE>_vector_type * delta);
 void                 <TYPE>_vector_set_read_only( <TYPE>_vector_type * vector , bool read_only);
 bool                 <TYPE>_vector_get_read_only( const <TYPE>_vector_type * vector );
 void                 <TYPE>_vector_resize( <TYPE>_vector_type * vector , int new_alloc_size );
-void                 <TYPE>_vector_memcpy( const <TYPE>_vector_type * src , <TYPE>_vector_type * target);
+  void                 <TYPE>_vector_memcpy(  <TYPE>_vector_type * target , const <TYPE>_vector_type * src);
 bool                 <TYPE>_vector_growable( const <TYPE>_vector_type * vector);
 void                 <TYPE>_vector_select_unique(<TYPE>_vector_type * vector);
 <TYPE>_vector_type * <TYPE>_vector_alloc( int init_size , <TYPE> );
@@ -27,6 +31,8 @@ void                 <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> fac
 <TYPE>               <TYPE>_vector_safe_iget(const <TYPE>_vector_type * , int);
 <TYPE>               <TYPE>_vector_get_min(const <TYPE>_vector_type * vector);
 <TYPE>               <TYPE>_vector_get_max(const <TYPE>_vector_type * vector);
+int                  <TYPE>_vector_get_min_index(const <TYPE>_vector_type * vector, bool reverse);
+int                  <TYPE>_vector_get_max_index(const <TYPE>_vector_type * vector, bool reverse);
 <TYPE>               <TYPE>_vector_iadd( <TYPE>_vector_type * vector , int index , <TYPE> delta);
 void                 <TYPE>_vector_iset(<TYPE>_vector_type *       , int , <TYPE>);
 void                 <TYPE>_vector_idel_block( <TYPE>_vector_type * vector , int index , int block_size);
@@ -44,6 +50,7 @@ int                  <TYPE>_vector_size(const <TYPE>_vector_type * );
 <TYPE> *             <TYPE>_vector_alloc_data_copy( const <TYPE>_vector_type * vector );
 const <TYPE> *       <TYPE>_vector_get_const_ptr(const <TYPE>_vector_type * );
 void                 <TYPE>_vector_set_many(<TYPE>_vector_type *  , int  , const <TYPE> *  , int );
+void                 <TYPE>_vector_set_all(<TYPE>_vector_type * vector , <TYPE> value);
 void                 <TYPE>_vector_append_many(<TYPE>_vector_type * vector , const <TYPE> * data , int length);
 void                 <TYPE>_vector_shrink(<TYPE>_vector_type * );
 <TYPE>               <TYPE>_vector_sum(const <TYPE>_vector_type * );

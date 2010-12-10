@@ -272,7 +272,7 @@ static void <TYPE>_vector_assert_writable( const <TYPE>_vector_type * vector ) {
 */
 
 
-void <TYPE>_vector_memcpy( const <TYPE>_vector_type * src , <TYPE>_vector_type * target) {
+void <TYPE>_vector_memcpy( <TYPE>_vector_type * target, const <TYPE>_vector_type * src ) {
   if (target->alloc_size < src->size)
     <TYPE>_vector_realloc_data__( target , src->alloc_size );  /* Must grow the target vector */
   
@@ -399,10 +399,57 @@ void <TYPE>_vector_imul(<TYPE>_vector_type * vector, int index, <TYPE> factor) {
 }
 
 
+/*****************************************************************/
+/* Mathematical operations operating on the whole vector .*/
+
+/* Vector * scalar */
 void <TYPE>_vector_scale(<TYPE>_vector_type * vector, <TYPE> factor) {
   for (int i=0; i < vector->size; i++)
     vector->data[i] *= factor;
 }
+
+/* vector + scalar */
+void <TYPE>_vector_shift(<TYPE>_vector_type * vector, <TYPE> delta) {
+  for (int i=0; i < vector->size; i++)
+    vector->data[i] += delta;
+}
+
+/* vector + vector */
+void <TYPE>_vector_inplace_add( <TYPE>_vector_type * vector , const <TYPE>_vector_type * delta) {
+  if (vector->size != delta->size) 
+    util_abort("%s: combining vectors with different size: %d and %d \n",__func__ , vector->size , delta->size);
+  {
+    int i;
+    for (i=0; i < vector->size; i++) 
+      vector->data[i] += delta->data[i];
+  }
+}
+
+/* vector * vector (elementwise) */
+void <TYPE>_vector_inplace_mul( <TYPE>_vector_type * vector , const <TYPE>_vector_type * factor) {
+  if (vector->size != factor->size) 
+    util_abort("%s: combining vectors with different size: %d and %d \n",__func__ , vector->size , factor->size);
+  {
+    int i;
+    for (i=0; i < vector->size; i++) 
+      vector->data[i] *= factor->data[i];
+  }
+}
+
+
+/* vector / vector (elementwise) */
+void <TYPE>_vector_inplace_div( <TYPE>_vector_type * vector , const <TYPE>_vector_type * inv_factor) {
+  if (vector->size != inv_factor->size) 
+    util_abort("%s: combining vectors with different size: %d and %d \n",__func__ , vector->size , inv_factor->size);
+  {
+    int i;
+    for (i=0; i < vector->size; i++) 
+      vector->data[i] /= inv_factor->data[i];
+  }
+}
+
+/*****************************************************************/
+
 
 
 
@@ -607,6 +654,12 @@ void <TYPE>_vector_set_many(<TYPE>_vector_type * vector , int index , const <TYP
   }
 }
 
+void <TYPE>_vector_set_all(<TYPE>_vector_type * vector , <TYPE> value) {
+  <TYPE>_vector_assert_writable( vector ); 
+  for (int i=0; i< vector->size; i++)
+    vector->data[i] = value;
+}
+
 
 void <TYPE>_vector_append_many(<TYPE>_vector_type * vector , const <TYPE> * data , int length) {
   <TYPE>_vector_set_many( vector , <TYPE>_vector_size( vector ) , data , length);
@@ -623,25 +676,89 @@ void <TYPE>_vector_shrink(<TYPE>_vector_type * vector) {
 }
 
 
-<TYPE> <TYPE>_vector_get_max(const <TYPE>_vector_type * vector) {
-  int i;
-  <TYPE> max_value = vector->data[0];
-  for (i=0; i < vector->size; i++) {
-    if (vector->data[i] > max_value)
-      max_value = vector->data[i];
+int <TYPE>_vector_get_max_index(const <TYPE>_vector_type * vector, bool reverse) {
+  if (vector->size == 0)
+    util_abort("%s: can not look for max_index in an empty vector \n",__func__);
+  {
+    int max_index;
+    int i;
+    if (reverse) {
+      <TYPE> max_value;
+      max_index = vector->size - 1;
+      max_value = vector->data[max_index];
+
+      for (i=vector->size - 1; i >= 0; i--) {
+        if (vector->data[i] > max_value) {
+          max_value = vector->data[i];
+          max_index = i;
+        }
+      } 
+    } else {
+      <TYPE> max_value;
+      max_index = 0;
+      max_value = vector->data[max_index];
+
+      for (i=0; i < vector->size; i++) {
+        if (vector->data[i] > max_value) {
+          max_value = vector->data[i];
+          max_index = i;
+        }
+      }
+    }
+    return max_index;
   }
-  return max_value;
 }
 
-<TYPE> <TYPE>_vector_get_min(const <TYPE>_vector_type * vector) {
-  int i;
-  <TYPE> min_value = vector->data[0];
-  for (i=0; i < vector->size; i++) {
-    if (vector->data[i] < min_value)
-      min_value = vector->data[i];
-  }
-  return min_value;
+
+<TYPE> <TYPE>_vector_get_max(const <TYPE>_vector_type * vector) {
+  int max_index = <TYPE>_vector_get_max_index( vector , false );
+  return vector->data[ max_index ]; 
 }
+
+
+int <TYPE>_vector_get_min_index(const <TYPE>_vector_type * vector, bool reverse) {
+  if (vector->size == 0)
+    util_abort("%s: can not look for min_index in an empty vector \n",__func__);
+  {
+    int min_index;
+    int i;
+    if (reverse) {
+      <TYPE> min_value;
+      min_index = vector->size - 1;
+
+      min_value = vector->data[min_index];
+      for (i=vector->size - 1; i >= 0; i--) {
+        if (vector->data[i] < min_value) {
+          min_value = vector->data[i];
+          min_index = i;
+        }
+      } 
+    } else {
+      <TYPE> min_value;
+      min_index = 0;
+
+      min_value = vector->data[min_index];
+      for (i=0; i < vector->size; i++) {
+        if (vector->data[i] < min_value) {
+          min_value = vector->data[i];
+          min_index = i;
+        }
+      }
+    }
+    return min_index;
+  }
+}
+
+
+
+
+<TYPE> <TYPE>_vector_get_min(const <TYPE>_vector_type * vector) {
+  int min_index = <TYPE>_vector_get_min_index( vector , false );
+  return vector->data[ min_index ]; 
+}
+
+
+
 
 
 <TYPE> <TYPE>_vector_sum(const <TYPE>_vector_type * vector) {
