@@ -2372,6 +2372,50 @@ double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type 
 }
 
 
+/**
+   Will fill the double_vector instance @column with values from
+   ecl_kw from the column given by (i,j). If @ecl_kw has size nactive
+   the inactive k values will not be set, i.e. you should make sure
+   that the default value of the @column instance has been properly
+   set beforehand.
+
+   The column vector will be filled with double values, the content of
+   ecl_kw will be converted to double in the case INTE,REAL and DOUB
+   types, otherwsie it is crash and burn.
+*/
+
+
+void ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j, double_vector_type * column) {
+  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
+  if ((ecl_type == ECL_FLOAT_TYPE) || (ecl_type == ECL_INT_TYPE) || (ecl_type == ECL_DOUBLE_TYPE)) {
+    int kw_size        = ecl_kw_get_size( ecl_kw );
+    bool use_global_index = false;
+
+    if (kw_size == ecl_grid->nx * ecl_grid->ny * ecl_grid->nz) 
+      use_global_index = true;
+    else if (kw_size == ecl_grid->total_active) 
+      use_global_index = false;
+    else 
+      util_abort("%s: incommensurable sizes: nx*ny*nz = %d  nactive=%d  kw_size:%d \n",__func__ , ecl_grid->size , ecl_grid->total_active , ecl_kw_get_size( ecl_kw ));
+
+    double_vector_reset( column );
+    {
+      for (int k=0; k < ecl_grid->nz; k++) {
+        if (use_global_index) {
+          int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k );
+          double_vector_iset( column , k , ecl_kw_iget_as_double( ecl_kw , global_index ));
+        } else {
+          int active_index = ecl_grid_get_active_index3( ecl_grid , i , j , k );
+          if (active_index >= 0)
+            double_vector_iset( column, k , ecl_kw_iget_as_double( ecl_kw , active_index ));
+        }
+      }
+    }
+  } else 
+    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_util_get_type_name( ecl_type ) , __func__);
+}
+
+
 /*****************************************************************/
 /**
    This function will look up all the indices in the grid where the

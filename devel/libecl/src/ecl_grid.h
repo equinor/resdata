@@ -25,6 +25,7 @@ extern "C" {
 typedef double (block_function_ftype) ( const double_vector_type *); 
 typedef struct ecl_grid_struct ecl_grid_type;
 
+void            ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j, double_vector_type * column);
 int             ecl_grid_get_global_index_from_xy_top( const ecl_grid_type * ecl_grid , double x , double y);
 int             ecl_grid_get_global_index_from_xy_bottom( const ecl_grid_type * ecl_grid , double x , double y);
 
