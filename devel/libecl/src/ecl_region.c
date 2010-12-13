@@ -217,6 +217,26 @@ const int_vector_type * ecl_region_get_global_list( ecl_region_type * region ) {
 }
 
 /*****************************************************************/
+/* Stupid cpp compat/legacy/cruft functions. */
+int ecl_region_get_active_size_cpp(  ecl_region_type * region ) {
+  return int_vector_size( ecl_region_get_active_list( region ));
+}
+
+int ecl_region_get_global_size_cpp( ecl_region_type * region ) {
+  return int_vector_size( ecl_region_get_global_list( region ));
+}
+
+const int * ecl_region_get_active_list_cpp( ecl_region_type * region ) {
+  return int_vector_get_const_ptr( ecl_region_get_active_list( region ));
+}
+
+const int * ecl_region_get_global_list_cpp(  ecl_region_type * region ) {
+  return int_vector_get_const_ptr( ecl_region_get_global_list( region ));
+}
+
+
+
+/*****************************************************************/
 
 static void ecl_region_assert_kw( const ecl_region_type * region , const ecl_kw_type * ecl_kw , bool * global_kw) {
   int kw_size = ecl_kw_get_size( ecl_kw );

@@ -927,6 +927,100 @@ void <TYPE>_vector_permute(<TYPE>_vector_type * vector , const int * perm) {
   }
 }
 
+/**
+   Looks through the vector and checks if it is in sorted form. If the
+   @reverse argument is true it will check for descending values,
+   otherwise for ascending values.
+*/
+
+bool <TYPE>_vector_is_sorted( const <TYPE>_vector_type * vector , bool reverse) {
+  bool sorted = true;
+  int start_index, delta,stop_index;
+  
+  if (reverse) {
+    start_index = vector->size - 1;
+    stop_index = 0;
+    delta = -1;
+  } else {
+    start_index = 0;
+    stop_index = vector->size - 1;
+    delta = 1;
+  }
+  {
+    int index = start_index;
+
+    while (true) {
+      if (vector->data[index] > vector->data[index + delta]) {
+        sorted = false;
+        break;
+      }
+      index = index + delta;
+      if (index == stop_index)
+        break;
+    }
+    
+    return sorted;
+  }
+}
+
+/*****************************************************************/
+
+
+int <TYPE>_vector_lookup_bin( const <TYPE>_vector_type * limits , <TYPE> value , int guess) {
+  if (value < limits->data[0]) 
+    return -1;
+
+  if (value > limits->data[ limits->size - 1])
+    return -1 * limits->size;
+  
+  if (guess >= limits->size)
+    guess = -1;  /* No guess */
+
+  return <TYPE>_vector_lookup_bin__( limits , value , guess );
+}
+
+
+
+/*
+  This is the fast path and assumes that @value is within the limits,
+  and that guess < limits->size.
+*/
+
+int <TYPE>_vector_lookup_bin__( const <TYPE>_vector_type * limits , <TYPE> value , int guess) {
+  if (guess >= 0) {
+    if ((limits->data[ guess ] <= value) && (limits->data[guess + 1] > value))
+      return guess;  /* The guess was a hit. */
+  }
+  /* We did not have a guess - or it did not pay off. Start with a
+     binary search. */
+  {
+    int index;
+    int lower_index = 0;
+    int upper_index = limits->size - 1;
+    //<TYPE> lower_value = limits->data[ lower_index ];
+    //<TYPE> upper_value = limits->data[ upper_index ];
+    while (true) {
+      if ((upper_index - lower_index) == 1) {
+        /* We have found it. */
+        index = lower_index;
+        break;
+      }
+
+      {
+        int central_index = (lower_index + upper_index) / 2;
+        <TYPE> central_value = limits->data[ central_index ];
+        
+        if (central_value > value) 
+          upper_index = central_index;
+        else
+          lower_index = central_index;
+      }
+    }
+    return index;
+  }
+}
+
+
 
 /*****************************************************************/
 

@@ -11,6 +11,8 @@ typedef struct <TYPE>_vector_struct <TYPE>_vector_type;
 typedef <TYPE> (<TYPE>_ftype) (<TYPE>);
 
 
+int                  <TYPE>_vector_lookup_bin( const <TYPE>_vector_type * limits , <TYPE> value , int guess);
+int                  <TYPE>_vector_lookup_bin__( const <TYPE>_vector_type * limits , <TYPE> value , int guess);
 void                 <TYPE>_vector_inplace_div( <TYPE>_vector_type * vector , const <TYPE>_vector_type * inv_factor);
 void                 <TYPE>_vector_inplace_mul( <TYPE>_vector_type * vector , const <TYPE>_vector_type * factor);
 void                 <TYPE>_vector_inplace_add( <TYPE>_vector_type * vector , const <TYPE>_vector_type * delta);
@@ -58,6 +60,7 @@ void                 <TYPE>_vector_shrink(<TYPE>_vector_type * );
 void                 <TYPE>_vector_set_default(<TYPE>_vector_type * vector, <TYPE> default_value);
 void                 <TYPE>_vector_append_default(<TYPE>_vector_type * vector , <TYPE> default_value);
 void                 <TYPE>_vector_iset_default(<TYPE>_vector_type * vector , int index , <TYPE> default_value);
+bool                 <TYPE>_vector_is_sorted( const <TYPE>_vector_type * vector , bool reverse);
 void                 <TYPE>_vector_sort(<TYPE>_vector_type * vector);
 void                 <TYPE>_vector_rsort(<TYPE>_vector_type * vector);
 void                 <TYPE>_vector_permute(<TYPE>_vector_type * vector , const int * perm);

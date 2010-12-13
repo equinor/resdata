@@ -32,18 +32,18 @@
 
 
 int main(int argc , char ** argv) {
-  int_vector_type * iv = int_vector_alloc( 0 , 0);
-  for (int i=0; i < 10; i++)
-    int_vector_append( iv , i );
+  double_vector_type * limits = double_vector_alloc( 0,0);
+
+  for (int i=0; i < 11; i++)
+    double_vector_append( limits , i*1.0 );
   
-  int_vector_fprintf( iv , stdout , NULL , "%2d");
-  int_vector_idel_block( iv , 5 , 2 );
-  int_vector_fprintf( iv , stdout , NULL , "%2d");
-  int_vector_idel_block( iv , 0 , 2 );
-  int_vector_fprintf( iv , stdout , NULL , "%2d");
-  int_vector_idel_block( iv , 4 , 20 );
-  int_vector_fprintf( iv , stdout , NULL , "%2d");
-  int_vector_free( iv );
+  double_vector_fprintf( limits , stdout , "limits" , "%4.0f" );
+  printf(" index(0.5):%d \n",  double_vector_lookup_bin( limits , 0.5 , -1));
+  printf(" index(3.3):%d \n",  double_vector_lookup_bin( limits , 3.3 , -1));
+  printf(" index(2.0):%d \n",  double_vector_lookup_bin( limits , 2.0  , -1));
+  printf(" index(-0.5):%d \n", double_vector_lookup_bin( limits , -0.5 , -1));
+  printf(" index(10.5):%d \n", double_vector_lookup_bin( limits , 10.5 , -1));
+  
 }
 
 
