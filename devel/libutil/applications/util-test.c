@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <util.h>
@@ -28,22 +29,29 @@
 #include <mzran.h>
 #include <statistics.h>
 #include <double_vector.h>
+#include <lookup_table.h>
 
 
+void test( lookup_table_type * lt , double x) {
+  printf("%g => %g/%g \n",x,lookup_table_interp( lt , x ) , sin(x));
+}
 
 int main(int argc , char ** argv) {
   double_vector_type * limits = double_vector_alloc( 0,0);
+  double_vector_type * values = double_vector_alloc( 0,0);
 
-  for (int i=0; i < 11; i++)
-    double_vector_append( limits , i*1.0 );
+  for (int i=0; i < 100; i++) {
+    double x = 1.0 * i / 99;
+    double_vector_append( limits , x);
+    double_vector_append( values , sin(x));
+  }
   
-  double_vector_fprintf( limits , stdout , "limits" , "%4.0f" );
-  printf(" index(0.5):%d \n",  double_vector_lookup_bin( limits , 0.5 , -1));
-  printf(" index(3.3):%d \n",  double_vector_lookup_bin( limits , 3.3 , -1));
-  printf(" index(2.0):%d \n",  double_vector_lookup_bin( limits , 2.0  , -1));
-  printf(" index(-0.5):%d \n", double_vector_lookup_bin( limits , -0.5 , -1));
-  printf(" index(10.5):%d \n", double_vector_lookup_bin( limits , 10.5 , -1));
-  
+  { 
+    lookup_table_type * lt = lookup_table_alloc( limits , values , false );
+    
+    test( lt , 0.67 );
+  }
+
 }
 
 

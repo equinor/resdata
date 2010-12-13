@@ -997,8 +997,6 @@ int <TYPE>_vector_lookup_bin__( const <TYPE>_vector_type * limits , <TYPE> value
     int index;
     int lower_index = 0;
     int upper_index = limits->size - 1;
-    //<TYPE> lower_value = limits->data[ lower_index ];
-    //<TYPE> upper_value = limits->data[ upper_index ];
     while (true) {
       if ((upper_index - lower_index) == 1) {
         /* We have found it. */
