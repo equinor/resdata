@@ -31,7 +31,7 @@ double ecl_grav_phase_deltag( double utm_x ,
                               const ecl_kw_type   * porv2_kw) {
 
   double deltag = 0;
-  float * aquifern      = NULL;
+  const int * aquifern      = NULL;
   
   const float * rho1    = ecl_kw_get_float_ptr( rho1_kw );
   const float * rho2    = ecl_kw_get_float_ptr( rho2_kw );
