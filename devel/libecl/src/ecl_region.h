@@ -113,6 +113,18 @@ void        ecl_region_set_kw_double( ecl_region_type * ecl_region , ecl_kw_type
 void        ecl_region_kw_copy( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * src_kw , bool force_active);
 int         ecl_region_get_kw_size( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , bool force_active);
 
+/*****************************************************************/
+/* Stupid cpp compat/legacy/cruft functions. */
+  int ecl_region_get_active_size_cpp(  ecl_region_type * region ); 
+  int ecl_region_get_global_size_cpp( ecl_region_type * region );
+  const int * ecl_region_get_active_list_cpp( ecl_region_type * region );
+  const int * ecl_region_get_global_list_cpp(  ecl_region_type * region );
+  
+
+/*****************************************************************/
+
+
+
 
 UTIL_IS_INSTANCE_HEADER( ecl_region );
 UTIL_SAFE_CAST_HEADER( ecl_region );
