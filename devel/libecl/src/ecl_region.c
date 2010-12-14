@@ -159,7 +159,8 @@ static void ecl_region_assert_global_index_list( ecl_region_type * region ) {
         int_vector_append( region->global_index_list , global_index );
     
     region->global_index_list_valid = true;
-    int_vector_set_read_only( region->global_index_list , true );
+    //int_vector_set_read_only( region->global_index_list , true );
+
   }
 }
 
@@ -178,8 +179,8 @@ static void ecl_region_assert_active_index_list( ecl_region_type * region ) {
         }
       }
     }
-    int_vector_set_read_only( region->active_index_list , true );
-    int_vector_set_read_only( region->global_active_list , true );
+    //int_vector_set_read_only( region->active_index_list , true );
+    //int_vector_set_read_only( region->global_active_list , true );
     region->active_index_list_valid = true;
   }
 }
