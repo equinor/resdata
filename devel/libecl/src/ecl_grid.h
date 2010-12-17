@@ -84,7 +84,9 @@ double          ecl_grid_get_bottom1A(const ecl_grid_type * grid , int active_in
 double          ecl_grid_get_top1(const ecl_grid_type * grid , int global_index);
 double          ecl_grid_get_top3(const ecl_grid_type * grid , int i, int j , int k);
 double          ecl_grid_get_top1A(const ecl_grid_type * grid , int active_index);
-
+double          ecl_grid_get_top2(const ecl_grid_type * grid , int i, int j);
+double          ecl_grid_get_bottom2(const ecl_grid_type * grid , int i, int j);
+int             ecl_grid_locate_depth( const ecl_grid_type * grid , double depth , int i , int j );
 
 void            ecl_grid_alloc_blocking_variables(ecl_grid_type * , int );
 void            ecl_grid_init_blocking(ecl_grid_type * );

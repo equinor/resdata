@@ -10,31 +10,37 @@ struct lookup_table_struct {
   const double       * x_data;
   const double       * y_data; 
   int                  size; 
-  double               xmin;
-  double               xmax;
-  bool                 prev_index;
+  double               xmin,ymin;
+  double               xmax,ymax;
+  int                  prev_index;
+  bool                 sorted;                 
 };
 
 
 
-void lookup_table_sort_data( lookup_table_type * lt) {
-  if (double_vector_get_read_only( lt->x_vector ))
-    if (!double_vector_is_sorted( lt->x_vector , false))
-      util_abort("%s: x vector is not sorted and read-only - this will not fly\n",__func__);
-  
-  {
-    int * sort_perm = double_vector_alloc_sort_perm( lt->x_vector );
-    double_vector_permute( lt->x_vector , sort_perm );
-    double_vector_permute( lt->y_vector , sort_perm );
-    free( sort_perm );
+
+static void lookup_table_sort_data( lookup_table_type * lt) {
+  if (double_vector_size( lt->x_vector ) > 0) {
+    if (double_vector_get_read_only( lt->x_vector ))
+      if (!double_vector_is_sorted( lt->x_vector , false))
+        util_abort("%s: x vector is not sorted and read-only - this will not fly\n",__func__);
+    
+    {
+      int * sort_perm = double_vector_alloc_sort_perm( lt->x_vector );
+      double_vector_permute( lt->x_vector , sort_perm );
+      double_vector_permute( lt->y_vector , sort_perm );
+      free( sort_perm );
+    }
+    lt->ymax = double_vector_get_max( lt->y_vector );
+    lt->ymin = double_vector_get_min( lt->y_vector );
+    lt->xmin = double_vector_get_min( lt->x_vector );
+    lt->xmax = double_vector_get_max( lt->x_vector );
+    lt->size = double_vector_size( lt->x_vector);
+    lt->prev_index = -1;
+    lt->x_data = double_vector_get_const_ptr( lt->x_vector );
+    lt->y_data = double_vector_get_const_ptr( lt->y_vector );
   }
-  
-  lt->xmin = double_vector_get_first( lt->x_vector );
-  lt->xmax = double_vector_get_last( lt->x_vector );
-  lt->size = double_vector_size( lt->x_vector);
-  lt->prev_index = -1;
-  lt->x_data = double_vector_get_const_ptr( lt->x_vector );
-  lt->y_data = double_vector_get_const_ptr( lt->y_vector );
+  lt->sorted = true;
 }
 
 
@@ -53,6 +59,7 @@ void lookup_table_set_data( lookup_table_type * lt , double_vector_type * x , do
   lt->x_vector = x;
   lt->y_vector = y;
   lt->data_owner = data_owner;
+  lt->sorted = false;
   lookup_table_sort_data( lt );
 }
 
@@ -72,10 +79,20 @@ lookup_table_type * lookup_table_alloc( double_vector_type * x , double_vector_t
   return lt;
 }
 
+lookup_table_type * lookup_table_alloc_empty( ) {
+  return lookup_table_alloc( NULL , NULL , true );
+}
+
+
+int lookup_table_get_size( const lookup_table_type * lt ) {
+  return double_vector_size( lt->x_vector );
+}
+
 
 void lookup_table_append( lookup_table_type * lt , double x , double y) {
   double_vector_append( lt->x_vector , x );
   double_vector_append( lt->y_vector , y );
+  lt->sorted = false;
 }
 
 
@@ -88,26 +105,54 @@ void lookup_table_free( lookup_table_type * lt ) {
 }
 
 
+static void lookup_table_assert_sorted( lookup_table_type * lt) {
+  if (!lt->sorted)
+    lookup_table_sort_data( lt );
+}
 
 
 double lookup_table_interp( lookup_table_type * lt , double x) {
-  if ((x >= lt->xmin) && (x < lt->xmax)) {
-    int index = double_vector_lookup_bin__( lt->x_vector , x , lt->prev_index );
-    printf("%g -> %d \n",x,index);
-    {
-      double x1 = lt->x_data[ index ];
-      double x2 = lt->x_data[ index + 1];
-      double y1 = lt->y_data[ index ];
-      double y2 = lt->y_data[ index + 1];
-      
-      lt->prev_index = index;
-      return (( x - x1 ) * y2 + (x2 - x) * y1) / (x2 - x1 );
+  lookup_table_assert_sorted( lt );
+  {
+    if ((x >= lt->xmin) && (x < lt->xmax)) {
+      int index = double_vector_lookup_bin__( lt->x_vector , x , lt->prev_index );
+      {
+        double x1 = lt->x_data[ index ];
+        double x2 = lt->x_data[ index + 1];
+        double y1 = lt->y_data[ index ];
+        double y2 = lt->y_data[ index + 1];
+        
+        lt->prev_index = index;
+        return (( x - x1 ) * y2 + (x2 - x) * y1) / (x2 - x1 );
+      }
+    } else {
+      util_abort("%s: out of bounds \n",__func__);
+      return -1;
     }
-  } else {
-    util_abort("%s: out of bounds \n",__func__);
-    return -1;
   }
 }
 
 
 
+double lookup_table_get_max_value(  lookup_table_type * lookup_table ) {
+  lookup_table_assert_sorted( lookup_table );
+  return lookup_table->ymax;
+}
+
+
+double lookup_table_get_min_value(  lookup_table_type * lookup_table ) {
+  lookup_table_assert_sorted( lookup_table );
+  return lookup_table->ymax;
+}
+
+
+double lookup_table_get_max_arg(  lookup_table_type * lookup_table ) {
+  lookup_table_assert_sorted( lookup_table );
+  return lookup_table->xmax;
+}
+
+
+double lookup_table_get_min_arg( lookup_table_type * lookup_table ) {
+  lookup_table_assert_sorted( lookup_table );
+  return lookup_table->xmin;
+}

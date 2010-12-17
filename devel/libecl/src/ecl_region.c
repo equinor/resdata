@@ -100,6 +100,19 @@ static void ecl_region_invalidate_index_list( ecl_region_type * region ) {
 }
 
 
+void ecl_region_lock( ecl_region_type * region ){
+  int_vector_set_read_only( region->global_index_list , true );
+  int_vector_set_read_only( region->active_index_list , true );
+  int_vector_set_read_only( region->global_active_list , true );
+}
+
+
+void ecl_region_unlock( ecl_region_type * region ){
+  int_vector_set_read_only( region->global_index_list , false );
+  int_vector_set_read_only( region->active_index_list , false );
+  int_vector_set_read_only( region->global_active_list , false );
+}
+
 
 ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool preselect) {
   ecl_region_type * region = util_malloc( sizeof * region , __func__);
@@ -143,6 +156,8 @@ void ecl_region_free__( void * __region ) {
   ecl_region_free( region );
 }
 
+
+
 /*****************************************************************/
  
 
@@ -153,14 +168,13 @@ static void ecl_region_assert_global_index_list( ecl_region_type * region ) {
        If this code is erronously run twice (probably due to some fuckup with
        the global_index_list_valid flag) there will be hell to pay.
     */
-    int_vector_set_read_only( region->global_index_list , false );
+
+    
     for (global_index = 0; global_index < region->grid_vol; global_index++) 
       if (region->active_mask[ global_index ]) 
         int_vector_append( region->global_index_list , global_index );
     
     region->global_index_list_valid = true;
-    //int_vector_set_read_only( region->global_index_list , true );
-
   }
 }
 
@@ -168,8 +182,6 @@ static void ecl_region_assert_global_index_list( ecl_region_type * region ) {
 static void ecl_region_assert_active_index_list( ecl_region_type * region ) {
   if (!region->active_index_list_valid) {
     int global_index;
-    int_vector_set_read_only( region->active_index_list , false );
-    int_vector_set_read_only( region->global_active_list , false );
     for (global_index = 0; global_index < region->grid_vol; global_index++) {
       if (region->active_mask[ global_index ]) {
         int active_index = ecl_grid_get_active_index1( region->parent_grid , global_index );
@@ -179,25 +191,12 @@ static void ecl_region_assert_active_index_list( ecl_region_type * region ) {
         }
       }
     }
-    //int_vector_set_read_only( region->active_index_list , true );
-    //int_vector_set_read_only( region->global_active_list , true );
     region->active_index_list_valid = true;
   }
 }
 
 
 /*****************************************************************/
-
-//int ecl_region_get_active_size( ecl_region_type * region ) {
-//  ecl_region_assert_active_index_list( region );
-//  return int_vector_size( region->active_index_list );
-//}
-//
-//
-//int ecl_region_get_global_size( ecl_region_type * region ) {
-//  ecl_region_assert_global_index_list( region );
-//  return int_vector_size( region->global_index_list );
-//}
 
 
 const int_vector_type * ecl_region_get_active_list( ecl_region_type * region ) {

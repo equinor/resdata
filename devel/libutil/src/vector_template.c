@@ -10,10 +10,11 @@
       the vector, and it will automatically grow. However - this might
       lead to 'holes' - these will be filled with the default value.
 
-    o The implementation is terms of a <TYPE>, the following sed
-      one-liner will then produce proper source files:
+    o The implementation is in terms of a <TYPE>, the following sed
+      one-liners will then produce proper source and header files:
   
-      sed -e'/<TYPE>/int/g' vector_template.c > int_vector.c
+        sed -e'/<TYPE>/int/g' vector_template.c > int_vector.c
+        sed -e'/<TYPE>/int/g' vector_template.h > int_vector.h
 
 
    Illustration of the interplay of size, alloc_size and default value.
@@ -966,6 +967,29 @@ bool <TYPE>_vector_is_sorted( const <TYPE>_vector_type * vector , bool reverse) 
 /*****************************************************************/
 
 
+/**
+   This function can be used to implement lookup tables of various
+   types. The input vector @limits is supposed to contain container
+   limits, e.g.
+
+       limits = [0 , 1 , 2 , 3 , 4]
+
+   The @limits vector must be sorted. The function will then look up
+   in which bin @value fits and return the bin index. If the test
+
+         limit[i] <= value < limit[i+1]
+ 
+   succeeds the function will return i. If value is less than
+   limits[0] the function will return -1, if value is greater than
+   max( limit ) the function will return -1 * limit->size.
+
+   The parameter @guess can be used to speed up the process, a value
+   of @guess < 0 is interpreted as "no guess". When all input has been
+   validated the final search will be binary search.
+*/
+   
+
+
 int <TYPE>_vector_lookup_bin( const <TYPE>_vector_type * limits , <TYPE> value , int guess) {
   if (value < limits->data[0]) 
     return -1;
@@ -983,7 +1007,8 @@ int <TYPE>_vector_lookup_bin( const <TYPE>_vector_type * limits , <TYPE> value ,
 
 /*
   This is the fast path and assumes that @value is within the limits,
-  and that guess < limits->size.
+  and that guess < limits->size. See <TYPE>_vector_lookup_bin() for
+  further documentation.x 
 */
 
 int <TYPE>_vector_lookup_bin__( const <TYPE>_vector_type * limits , <TYPE> value , int guess) {

@@ -30,6 +30,8 @@ typedef enum {
 
 typedef struct ecl_region_struct ecl_region_type; 
 
+void              ecl_region_unlock( ecl_region_type * region );
+void              ecl_region_lock( ecl_region_type * region );
 void              ecl_region_reset( ecl_region_type * ecl_region );
 ecl_region_type * ecl_region_alloc_copy( const ecl_region_type * ecl_region );
 ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool preselect);

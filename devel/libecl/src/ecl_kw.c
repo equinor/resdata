@@ -1545,7 +1545,7 @@ ecl_kw_type * ecl_kw_alloc_scatter_copy( const ecl_kw_type * src_kw , int target
       ecl_kw_scalar_set__( new_kw , default_char );
       break;
     default:
-      util_abort("%s: unsopprted type:%d \n", __func__ , src_kw->ecl_type);
+      util_abort("%s: unsupported type:%d \n", __func__ , src_kw->ecl_type);
     }
   }
   

@@ -2029,6 +2029,29 @@ double ecl_grid_get_cdepth3(const ecl_grid_type * grid , int i, int j , int k) {
 }
 
 
+int ecl_grid_locate_depth( const ecl_grid_type * grid , double depth , int i , int j ) {
+  if (depth < ecl_grid_get_top2( grid , i , j))
+    return -1;
+  else if (depth >= ecl_grid_get_bottom2( grid , i , j ))
+    return -1 * grid->nz;
+  else {
+    int k=0;
+    double bottom = ecl_grid_get_top3( grid , i , j , k);
+
+    while (true) {
+      double top = bottom;
+      bottom = ecl_grid_get_bottom3( grid , i , j , k );
+
+      if ((depth >= top) && (depth < bottom)) 
+        return k;
+      
+      k++;
+      if (k == grid->nz)
+        util_abort("%s: internal error when scanning for depth:%g \n",__func__ , depth);
+    }
+  }
+}
+
 
 
 /**
@@ -2048,6 +2071,18 @@ double ecl_grid_get_top1(const ecl_grid_type * grid , int global_index) {
 
 double ecl_grid_get_top3(const ecl_grid_type * grid , int i, int j , int k) {
   const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
+  return ecl_grid_get_top1( grid , global_index );
+}
+
+
+double ecl_grid_get_top2(const ecl_grid_type * grid , int i, int j) {
+  const int global_index = ecl_grid_get_global_index__(grid , i , j , 0);
+  return ecl_grid_get_top1( grid , global_index );
+}
+
+
+double ecl_grid_get_bottom2(const ecl_grid_type * grid , int i, int j) {
+  const int global_index = ecl_grid_get_global_index__(grid , i , j , grid->nz - 1);
   return ecl_grid_get_top1( grid , global_index );
 }
 
