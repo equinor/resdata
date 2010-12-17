@@ -2083,7 +2083,7 @@ double ecl_grid_get_top2(const ecl_grid_type * grid , int i, int j) {
 
 double ecl_grid_get_bottom2(const ecl_grid_type * grid , int i, int j) {
   const int global_index = ecl_grid_get_global_index__(grid , i , j , grid->nz - 1);
-  return ecl_grid_get_top1( grid , global_index );
+  return ecl_grid_get_bottom1( grid , global_index );
 }
 
 
