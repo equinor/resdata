@@ -43,26 +43,28 @@ extern "C" {
   void      matrix_dgesvd(dgesvd_vector_enum jobv, dgesvd_vector_enum jobvt , matrix_type * A , double * S , matrix_type * U , matrix_type * VT);
   
   int  matrix_dsyevx(bool             compute_eig_vectors , 
-		     dsyevx_eig_enum  which_values        , 
-		     dsyevx_uplo_enum uplo, 
-		     matrix_type    * A , 
-		     double VL          ,                   
-		     double VU          ,                   
-		     int    IL          ,                   
-		     int    IU          , 		  
-		     double *eig_values ,                   
-		     matrix_type * Z    ) ;
+                     dsyevx_eig_enum  which_values        , 
+                     dsyevx_uplo_enum uplo, 
+                     matrix_type    * A , 
+                     double VL          ,                   
+                     double VU          ,                   
+                     int    IL          ,                   
+                     int    IU          ,                 
+                     double *eig_values ,                   
+                     matrix_type * Z    ) ;
   
   
   int  matrix_dsyevx_all(dsyevx_uplo_enum uplo , 
-			 matrix_type    * A , 
-			 double *eig_values , 
-			 matrix_type * Z    );
+                         matrix_type    * A , 
+                         double *eig_values , 
+                         matrix_type * Z    );
   
   void matrix_dgeqrf(matrix_type * A , double * tau);
   void matrix_dorgqr(matrix_type * A , double * tau, int num_reflectors);
 
   double matrix_det( matrix_type *A );
+
+  int matrix_inv( matrix_type * A );
   
 #ifdef __cplusplus
 }

@@ -969,8 +969,8 @@ void matrix_diag_set(matrix_type * matrix , const double * diag) {
 
 
 /**
-   Fills the matrix with uniformly distributed random numbers; sampled
-   with the standard built in rand() function.
+   Fills the matrix with uniformly distributed random numbers in
+   [0,1), sampled with the standard built in rand() function.  
 */
 
 void matrix_random_init(matrix_type * matrix) {
