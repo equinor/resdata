@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 #include <stdlib.h>
+#include <util.h>
 
 typedef struct mzran_struct mzran_type;
 
@@ -20,15 +21,17 @@ typedef enum {
 } mzran_init_mode;
 
 
+UTIL_SAFE_CAST_HEADER( mzran )
 
+unsigned int      mzran_sample(mzran_type * rng);
 mzran_type      * mzran_alloc( mzran_init_mode init_mode );
 void              mzran_init( mzran_type * rng , mzran_init_mode init_mode );
 void              mzran_free( mzran_type * rgn);
 void              mzran_set_state1(mzran_type * rng , int buffer_size , char * seed_buffer);
 void              mzran_set_state4(mzran_type * rng , unsigned int s0 , unsigned int s1 , unsigned int s2 , unsigned int s3);
 double            mzran_get_double(mzran_type * rng);
-unsigned int      mzran_get_int(mzran_type * rng);
-
+int               mzran_get_int( mzran_type * rng, int max);
+void              mzran_fprintf_state( const mzran_type * rng , FILE * stream);
 
 #ifdef __cplusplus
 }

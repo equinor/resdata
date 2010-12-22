@@ -15,7 +15,10 @@
 
 
 
+#define MZRAN_TYPE_ID  77156432
+
 struct mzran_struct {
+  UTIL_TYPE_ID_DECLARATION;
   unsigned int x;
   unsigned int y;
   unsigned int z;
@@ -40,7 +43,7 @@ struct mzran_struct {
    forward. The returned value will be in the interval [0,MZRAN_MAX).
 */
 
-unsigned int mzran_get_int(mzran_type * rng) {
+unsigned int mzran_sample(mzran_type * rng) {
   unsigned int s;
   
   if (rng->y > (rng->x + rng->c)) { 
@@ -59,12 +62,22 @@ unsigned int mzran_get_int(mzran_type * rng) {
 }
 
 
+
+
+
 /**
    Returns a double in the interval [0,1).
 */
-double mzran_get_double(mzran_type * rng) {
-  return 1.0 * mzran_get_int( rng ) / MZRAN_MAX;
+double mzran_get_double(mzran_type * rng ) {
+  return 1.0 * mzran_sample( rng ) / MZRAN_MAX;
 }
+
+
+
+int mzran_get_int( mzran_type * rng, int max) {
+  return mzran_sample( rng ) % max;
+}
+
 
 
 
@@ -83,6 +96,7 @@ void mzran_set_state4(mzran_type * rng ,
   rng->c = 1;  
   
 }
+
 
 
 
@@ -143,6 +157,8 @@ void mzran_init( mzran_type * rng , mzran_init_mode init_mode ) {
 }
 
 
+UTIL_SAFE_CAST_FUNCTION( mzran , MZRAN_TYPE_ID)
+
 
 /**
    Creates (and initializes) a new rng instance. To recover a known
@@ -151,8 +167,14 @@ void mzran_init( mzran_type * rng , mzran_init_mode init_mode ) {
 */
 mzran_type * mzran_alloc( mzran_init_mode init_mode ) {
   mzran_type * rng = util_malloc( sizeof * rng , __func__);
+  UTIL_TYPE_ID_INIT( rng , MZRAN_TYPE_ID );
   mzran_init( rng , init_mode );
   return rng;
+}
+
+
+void mzran_fprintf_state( const mzran_type * rng , FILE * stream) {
+  fprintf(stream,"%d %d %d %d\n",rng->x , rng->y, rng->z, rng->n);
 }
 
 

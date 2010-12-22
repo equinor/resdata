@@ -15,8 +15,7 @@
 #include <stringlist.h>
 
 #define HASH_DEFAULT_SIZE 16
-
-#define HASH_TYPE_ID 771065
+#define HASH_TYPE_ID      771065
 
 /**
    This is **THE** hash function - which actually does the hashing.
@@ -143,7 +142,7 @@ static void * __hash_get_node(hash_type *hash , const char *key, bool abort_on_e
 
 static node_data_type * hash_get_node_data(hash_type *hash , const char *key) {
   hash_node_type * node = __hash_get_node(hash , key , true);
-  return hash_node_get_node_data(node);
+  return hash_node_get_data(node);
 }
 
 
@@ -194,13 +193,13 @@ static void __hash_insert_node(hash_type *hash , hash_node_type *node) {
     uint32_t table_index = hash_node_get_table_index(node);
     {
       /*
-	If a node with the same key already exists in the table
-	it is removed.
+        If a node with the same key already exists in the table
+        it is removed.
       */
-      hash_node_type *existing_node = __hash_get_node_unlocked(hash , hash_node_get_keyref(node) , false);
+      hash_node_type *existing_node = __hash_get_node_unlocked(hash , hash_node_get_key(node) , false);
       if (existing_node != NULL) {
-	hash_sll_del_node(hash->table[table_index] , existing_node);
-	hash->elements--;
+        hash_sll_del_node(hash->table[table_index] , existing_node);
+        hash->elements--;
       } 
     }
     
@@ -250,10 +249,10 @@ static hash_node_type * hash_internal_iter_next(const hash_type *hash , const ha
     if (table_index < hash->size) {
       uint32_t i = table_index + 1;
       while (i < hash->size && hash_sll_empty(hash->table[i]))
-	i++;
+        i++;
 
       if (i < hash->size) 
-	next_node = hash_sll_get_head(hash->table[i]);
+        next_node = hash_sll_get_head(hash->table[i]);
     }
   }
   return next_node;
@@ -282,19 +281,19 @@ static char ** hash_alloc_keylist__(hash_type *hash , bool lock) {
       hash_node_type *node = NULL;
       keylist = calloc(hash->elements , sizeof *keylist);
       {
-	uint32_t i = 0;
-	while (i < hash->size && hash_sll_empty(hash->table[i]))
-	  i++;
-	
-	if (i < hash->size) 
-	  node = hash_sll_get_head(hash->table[i]);
+        uint32_t i = 0;
+        while (i < hash->size && hash_sll_empty(hash->table[i]))
+          i++;
+        
+        if (i < hash->size) 
+          node = hash_sll_get_head(hash->table[i]);
       }
       
       while (node != NULL) {
-	const char *key = hash_node_get_keyref(node); 
-	keylist[i] = util_alloc_string_copy(key);
-	node = hash_internal_iter_next(hash , node);
-	i++;
+        const char *key = hash_node_get_key(node); 
+        keylist[i] = util_alloc_string_copy(key);
+        node = hash_internal_iter_next(hash , node);
+        i++;
       }
     } else keylist = NULL;
   }
@@ -345,7 +344,7 @@ int hash_get_int(hash_type * hash , const char * key) {
 
       hash_inc_counter()
 
-   Will increment the intgere value stored in the node_data instance,
+   Will increment the integer value stored in the node_data instance,
    and return the updated value. If the key is not present in the hash
    it will be inserted as an integer with value 0, and 0 will be
    returned.
@@ -414,8 +413,8 @@ void hash_clear(hash_type *hash) {
       char **keyList = hash_alloc_keylist__( hash , false);
       int i;
       for (i=0; i < old_size; i++) {
-	hash_del_unlocked__(hash , keyList[i]);
-	free(keyList[i]);
+        hash_del_unlocked__(hash , keyList[i]);
+        free(keyList[i]);
       }
       free(keyList);
     }
@@ -425,8 +424,9 @@ void hash_clear(hash_type *hash) {
 
 
 void * hash_get(const hash_type *hash , const char *key) {
-  hash_node_type * node = __hash_get_node(hash , key , true);
-  return hash_node_value_ptr(node);
+  hash_node_type * hash_node = __hash_get_node(hash , key , true);
+  node_data_type * data_node = hash_node_get_data( hash_node );
+  return node_data_get_ptr( data_node ); 
 }
 
 
@@ -435,10 +435,11 @@ void * hash_get(const hash_type *hash , const char *key) {
    contain 'key'.
 */
 void * hash_safe_get( const hash_type * hash , const char * key ) {
-  hash_node_type * node = __hash_get_node(hash , key , false);
-  if (node != NULL)
-    return hash_node_value_ptr( node );
-  else
+  hash_node_type * hash_node = __hash_get_node(hash , key , false);
+  if (hash_node != NULL) {
+    node_data_type * data_node = hash_node_get_data( hash_node );
+    return node_data_get_ptr( data_node ); 
+  } else
     return NULL;
 }
 
@@ -473,9 +474,9 @@ static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf
   hash_type* hash;
   hash = util_malloc(sizeof *hash , __func__);
   UTIL_TYPE_ID_INIT(hash , HASH_TYPE_ID);
-  hash->size  	  = size;
-  hash->hashf 	  = hashf;
-  hash->table 	  = hash_sll_alloc_table(hash->size);
+  hash->size      = size;
+  hash->hashf     = hashf;
+  hash->table     = hash_sll_alloc_table(hash->size);
   hash->elements  = 0;
   hash->resize_fill  = resize_fill;
   if (pthread_rwlock_init( &hash->rwlock , NULL) != 0) 
@@ -613,7 +614,7 @@ int hash_get_size(const hash_type *hash) {
    
 
 static hash_sort_type * hash_alloc_sort_list(const hash_type *hash ,
-					     const char **keylist) { 
+                                             const char **keylist) { 
 
   int i; hash_sort_type * sort_list = calloc(hash_get_size(hash) , sizeof * sort_list); 
   for (i=0; i < hash_get_size(hash); i++) 

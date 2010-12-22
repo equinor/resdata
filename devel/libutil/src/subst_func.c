@@ -4,13 +4,14 @@
 #include <stdbool.h>
 #include <hash.h>
 #include <math.h>
+#include <mzran.h>
 
 #define SUBST_FUNC_TYPE_ID      646781
 #define SUBST_FUNC_POOL_TYPE_ID 7641
 
 struct subst_func_pool_struct {
   UTIL_TYPE_ID_DECLARATION;
-  hash_type * func_table;
+  hash_type  * func_table;
 };
 
 
@@ -23,13 +24,14 @@ struct subst_func_struct {
   bool                vararg;
   int                 argc_min;
   int                 argc_max; 
+  void              * arg;           /* 100% unmanaged void argument passed in from the construction. */ 
 };
 
 
 
-char * subst_func_eval( const subst_func_type * subst_func , const stringlist_type * args ) {
+char * subst_func_eval( const subst_func_type * subst_func , const stringlist_type * args) {
   if (!subst_func->vararg) {
-    /* Checking that we have th right number of arguments. */
+    /* Checking that we have the right number of arguments. */
     int argc = stringlist_get_size( args );
     if (argc < subst_func->argc_min || argc > subst_func->argc_max) {
       fprintf(stderr,"Fatal error when appying function:%s - got %d arguments: [",subst_func->name , argc);
@@ -39,11 +41,11 @@ char * subst_func_eval( const subst_func_type * subst_func , const stringlist_ty
     }
   }
   
-  return subst_func->func( args );
+  return subst_func->func( args , subst_func->arg );
 }
 
 
-subst_func_type * subst_func_alloc( const char * func_name , const char * doc_string , subst_func_ftype * func , bool vararg, int argc_min , int argc_max) {
+subst_func_type * subst_func_alloc( const char * func_name , const char * doc_string , subst_func_ftype * func , bool vararg, int argc_min , int argc_max , void * arg) {
   subst_func_type * subst_func = util_malloc( sizeof * subst_func , __func__);
   UTIL_TYPE_ID_INIT( subst_func , SUBST_FUNC_TYPE_ID );
   subst_func->func       = func;
@@ -52,6 +54,7 @@ subst_func_type * subst_func_alloc( const char * func_name , const char * doc_st
   subst_func->argc_min   = argc_min;
   subst_func->argc_max   = argc_max;
   subst_func->doc_string = util_alloc_string_copy( doc_string );
+  subst_func->arg        = arg; 
   return subst_func;
 }
 
@@ -76,7 +79,7 @@ static void subst_func_free__( void * arg ) {
 
 UTIL_IS_INSTANCE_FUNCTION( subst_func_pool , SUBST_FUNC_POOL_TYPE_ID);
 
-subst_func_pool_type * subst_func_pool_alloc() {
+subst_func_pool_type * subst_func_pool_alloc( ) {
   subst_func_pool_type * pool = util_malloc( sizeof * pool , __func__);
   UTIL_TYPE_ID_INIT( pool , SUBST_FUNC_POOL_TYPE_ID );
   pool->func_table = hash_alloc();
@@ -91,8 +94,8 @@ void subst_func_pool_free( subst_func_pool_type * pool ) {
 }
 
 
-void subst_func_pool_add_func( subst_func_pool_type * pool , const char * func_name , const char * doc_string , subst_func_ftype * func , bool vararg, int argc_min , int argc_max) {
-  subst_func_type * subst_func = subst_func_alloc( func_name , doc_string , func , vararg , argc_min , argc_max );
+void subst_func_pool_add_func( subst_func_pool_type * pool , const char * func_name , const char * doc_string , subst_func_ftype * func , bool vararg, int argc_min , int argc_max , void * arg) {
+  subst_func_type * subst_func = subst_func_alloc( func_name , doc_string , func , vararg , argc_min , argc_max , arg);
   hash_insert_hash_owned_ref( pool->func_table , func_name , subst_func , subst_func_free__);
 }
 
@@ -108,16 +111,18 @@ bool subst_func_pool_has_func( const subst_func_pool_type * pool , const char * 
 
 /*****************************************************************/
 
-char * subst_func_randint( const stringlist_type * args ) {
-  return util_alloc_sprintf("%d" , rand());
+char * subst_func_randint( const stringlist_type * args , void * arg) {
+  mzran_type * rng = mzran_safe_cast( arg );
+  return util_alloc_sprintf("%d" , mzran_sample( rng ));
 }
 
-char * subst_func_randfloat( const stringlist_type * args ) {
-  return util_alloc_sprintf("%12.10f" , rand() * 1.0 / RAND_MAX);
+char * subst_func_randfloat( const stringlist_type * args , void * arg) {
+  mzran_type * rng = mzran_safe_cast( arg );
+  return util_alloc_sprintf("%12.10f" , 1e9 * mzran_get_double( rng ));
 }
 
 
-char * subst_func_exp( const stringlist_type * args ) {
+char * subst_func_exp( const stringlist_type * args , void * ext_arg) {
   double arg;
   if (util_sscanf_double( stringlist_iget(args , 0 ) , &arg)) 
     return util_alloc_sprintf("%g" , exp(arg));
@@ -126,7 +131,7 @@ char * subst_func_exp( const stringlist_type * args ) {
 }
 
 
-char * subst_func_log( const stringlist_type * args ) {
+char * subst_func_log( const stringlist_type * args , void * ext_arg) {
   double arg;
   if (util_sscanf_double( stringlist_iget(args , 0 ) , &arg)) 
     return util_alloc_sprintf("%g" , log(arg));
@@ -135,7 +140,7 @@ char * subst_func_log( const stringlist_type * args ) {
 }
 
 
-char * subst_func_pow10( const stringlist_type * args ) {
+char * subst_func_pow10( const stringlist_type * args , void * ext_arg) {
   double arg;
   if (util_sscanf_double( stringlist_iget(args , 0 ) , &arg)) 
     return util_alloc_sprintf("%g" , pow(10 , arg));
@@ -145,7 +150,7 @@ char * subst_func_pow10( const stringlist_type * args ) {
 
 
 
-char * subst_func_add( const stringlist_type * args ) {
+char * subst_func_add( const stringlist_type * args , void * ext_arg) {
   double sum = 0;
   bool OK = true;
   int index;
@@ -164,7 +169,7 @@ char * subst_func_add( const stringlist_type * args ) {
 }
 
 
-char * subst_func_mul( const stringlist_type * args ) {
+char * subst_func_mul( const stringlist_type * args , void * ext_arg) {
   double product = 0;
   bool OK = true;
   int index;
