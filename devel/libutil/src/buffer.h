@@ -7,6 +7,8 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
+#include <time.h>
 
 typedef struct     buffer_struct buffer_type;
 
