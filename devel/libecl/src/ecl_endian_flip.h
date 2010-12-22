@@ -19,14 +19,14 @@ extern "C" {
 
 #define ECLIPSE_BYTE_ORDER  __BIG_ENDIAN   // Alternatively: __LITTLE_ENDIAN
 
-#ifdef __BYTE_ORDER
-#if  __BYTE_ORDER == ECLIPSE_BYTE_ORDER
+#ifdef BYTE_ORDER
+#if  BYTE_ORDER == ECLIPSE_BYTE_ORDER
 #define ECL_ENDIAN_FLIP false
 #else
 #define ECL_ENDIAN_FLIP true
 #endif               
 #else
-#error: The macro __BYTE_ORDER is not defined?
+#error: The macro BYTE_ORDER is not defined?
 #endif 
 
 #undef ECLIPSE_BYTE_ORDER
