@@ -97,7 +97,24 @@ void mzran_set_state4(mzran_type * rng ,
   
 }
 
+/**
+   Will load four unsigned integers from the open FILE * and call
+   mzran_set_state4(). The integers will be loaded with fscanf(),
+   i.e. this is formatted file. Will crash and burn if the reading fails. 
+*/
+   
+void mzran_fscanf_state( mzran_type * rng , FILE * stream ) {
+  unsigned int s0,s1,s2,s3;
+  if (fscanf( stream , "%u %u %u %u" , &s0 , &s1 , &s2 , &s3) == 4)
+    mzran_set_state4( rng , s0 , s1 , s2 , s3);
+  else 
+    util_abort("%s: failed to load for integers ---- \n",__func__);
+}
 
+
+void mzran_fprintf_state( const mzran_type * rng , FILE * stream) {
+  fprintf(stream,"%u %u %u %u\n",rng->x , rng->y, rng->z, rng->n);
+}
 
 
 /**
@@ -173,9 +190,6 @@ mzran_type * mzran_alloc( mzran_init_mode init_mode ) {
 }
 
 
-void mzran_fprintf_state( const mzran_type * rng , FILE * stream) {
-  fprintf(stream,"%d %d %d %d\n",rng->x , rng->y, rng->z, rng->n);
-}
 
 
 

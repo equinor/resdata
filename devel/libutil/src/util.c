@@ -89,7 +89,7 @@ unsigned int util_clock_seed( ) {
   
   util_set_datetime_values(now , &sec , &min , &hour , &mday , &month , &year);
   {
-    unsigned int seed = 1;
+    unsigned int seed = clock( );
     int i,j,k;
     for (i=0; i < 2*min + 2; i++) {
       for (j=0; j < 13*mday + 17; j++) {

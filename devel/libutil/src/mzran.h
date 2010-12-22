@@ -23,6 +23,7 @@ typedef enum {
 
 UTIL_SAFE_CAST_HEADER( mzran )
 
+void              mzran_fscanf_state( mzran_type * rng , FILE * stream );
 unsigned int      mzran_sample(mzran_type * rng);
 mzran_type      * mzran_alloc( mzran_init_mode init_mode );
 void              mzran_init( mzran_type * rng , mzran_init_mode init_mode );
