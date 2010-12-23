@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <hash.h>
 #include <math.h>
-#include <mzran.h>
+#include <rng.h>
 
 #define SUBST_FUNC_TYPE_ID      646781
 #define SUBST_FUNC_POOL_TYPE_ID 7641
@@ -112,13 +112,13 @@ bool subst_func_pool_has_func( const subst_func_pool_type * pool , const char * 
 /*****************************************************************/
 
 char * subst_func_randint( const stringlist_type * args , void * arg) {
-  mzran_type * rng = mzran_safe_cast( arg );
-  return util_alloc_sprintf("%d" , mzran_sample( rng ));
+  rng_type * rng = rng_safe_cast( arg );
+  return util_alloc_sprintf("%u" , rng_forward( rng ));
 }
 
 char * subst_func_randfloat( const stringlist_type * args , void * arg) {
-  mzran_type * rng = mzran_safe_cast( arg );
-  return util_alloc_sprintf("%12.10f" , 1e9 * mzran_get_double( rng ));
+  rng_type * rng = rng_safe_cast( arg );
+  return util_alloc_sprintf("%12.10f" , 1e9 * rng_get_double( rng ));
 }
 
 

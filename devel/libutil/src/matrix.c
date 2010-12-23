@@ -6,7 +6,7 @@
 #include <thread_pool.h>
 #include <arg_pack.h>
 #include <math.h>
-#include <mzran.h>
+#include <rng.h>
 
 /**
    This is V E R Y  S I M P L E matrix implementation. It is not
@@ -974,11 +974,11 @@ void matrix_diag_set(matrix_type * matrix , const double * diag) {
    [0,1).
 */
 
-void matrix_random_init(matrix_type * matrix , mzran_type * rng) {
+void matrix_random_init(matrix_type * matrix , rng_type * rng) {
   int i,j;
   for (j=0; j < matrix->columns; j++)
     for (i=0; i < matrix->rows; i++)
-      matrix->data[ GET_INDEX(matrix , i , j) ] = mzran_get_double( rng );
+      matrix->data[ GET_INDEX(matrix , i , j) ] = rng_get_double( rng );
 }
 
 

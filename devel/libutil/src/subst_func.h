@@ -6,7 +6,7 @@ extern "C" {
 
 #include <stringlist.h>
 
-  typedef  char * (subst_func_ftype) (const stringlist_type * , void * );
+typedef  char * (subst_func_ftype) (const stringlist_type * , void * );
 typedef  struct subst_func_struct        subst_func_type;
 typedef  struct subst_func_pool_struct   subst_func_pool_type;
 

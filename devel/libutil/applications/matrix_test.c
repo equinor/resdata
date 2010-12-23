@@ -30,11 +30,11 @@
 #include <statistics.h>
 #include <double_vector.h>
 #include <lookup_table.h>
-#include <mzran.h>
+#include <rng.h>
 
 
 int main( int argc, char ** argv)  {
-  mzran_type * rng =  mzran_alloc( INIT_DEV_RANDOM );
+  rng_type * rng   =  rng_alloc( MZRAN , INIT_DEV_RANDOM );
   matrix_type * A  =  matrix_alloc( 12 , 12 );
   matrix_type * B  =  matrix_alloc( 12 , 12 );
   matrix_random_init( A , rng );
@@ -49,6 +49,6 @@ int main( int argc, char ** argv)  {
   
   matrix_free( A );
   matrix_free( B );
-  mzran_free( rng );
+  rng_free( rng );
 }
 

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <mzran.h>
+#include <rng.h>
 
 #ifdef __cplusplus 
 extern "C" {
@@ -73,7 +73,7 @@ bool          matrix_is_quadratic(const matrix_type * matrix);
 bool          matrix_equal( const matrix_type * m1 , const matrix_type * m2);
 
 void          matrix_diag_set(matrix_type * matrix , const double * diag);
-  void          matrix_random_init(matrix_type * matrix , mzran_type * rng);
+  void          matrix_random_init(matrix_type * matrix , rng_type * rng);
 void          matrix_matlab_dump(const matrix_type * matrix, const char * filename);
 
 double        matrix_column_column_dot_product(const matrix_type * m1 , int col1 , const matrix_type * m2 , int col2);
