@@ -163,7 +163,6 @@ void * mzran_alloc( ) {
   mzran_type * rng = util_malloc( sizeof * rng , __func__);
   UTIL_TYPE_ID_INIT( rng , MZRAN_TYPE_ID );
   mzran_set_state4( rng , DEFAULT_S0 , DEFAULT_S1 , DEFAULT_S2 , DEFAULT_S3);
-  printf("Returning an mzran instance \n");
   return rng;
 }
 
