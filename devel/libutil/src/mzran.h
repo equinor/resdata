@@ -9,8 +9,8 @@ extern "C" {
 
 typedef struct mzran_struct mzran_type;
 
-#define MZRAN_MAX_VALUE 4294967296
-#define MZRAN_SEED_SIZE 16             /* Size of the seed buffer - in bytes. */
+#define MZRAN_MAX_VALUE  4294967296
+#define MZRAN_STATE_SIZE 16             /* Size of the seed buffer - in bytes. */
 
 
 UTIL_SAFE_CAST_HEADER( mzran )

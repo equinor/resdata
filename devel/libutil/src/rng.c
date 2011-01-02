@@ -7,23 +7,27 @@
 
 
 /**
-   Essentially a collection of function pointers to manipulate an an
-   arbitrary rng state.
+   The rng structure is a thin structure which wraps a specific Random
+   Number Generator (rng) implementation. The rng_struct structure is
+   essentially container with function pointers to functions
+   manipulating the underlying state.  
 */
 
 struct rng_struct {
   UTIL_TYPE_ID_DECLARATION;
-  rng_forward_ftype    * forward;
-  rng_set_state_ftype  * set_state;
-  rng_alloc_ftype      * alloc_state;
-  rng_free_ftype       * free_state;
-  rng_fscanf_ftype     * fscanf_state;
-  rng_fprintf_ftype    * fprintf_state;
+  rng_forward_ftype    * forward;          /* Brings the rng forward - returning a random unsigned int value.  This is the fundamental
+                                              source of random numbers, and all other random numbers are derived from this through
+                                              scaling/shifting/type conversion/... */
+  rng_set_state_ftype  * set_state;        /* Takes a char * buffer as input and sets the state of the rng. */
+  rng_alloc_ftype      * alloc_state;      /* Creates a new instance of this rng. */
+  rng_free_ftype       * free_state;       
+  rng_fscanf_ftype     * fscanf_state;     /* Loads the state from a formatted file with (integer representation of) bytes. */
+  rng_fprintf_ftype    * fprintf_state;    /* Writes the state as a formatted series of bytes. */
   /******************************************************************/
-  rng_alg_type           type;
-  void                 * state;
-  int                    seed_size;
-  unsigned long          max_value;
+  rng_alg_type           type;             
+  void                 * state;            /* The current state - the return value from alloc_state() - passed as parameter to all the function pointers. */
+  int                    state_size;       /* How many bytes needed to specify the state of the rng. */
+  unsigned long          max_value;        /* The maximum value this rng can return. */
   double                 inv_max;
 };
   
@@ -39,7 +43,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
                        rng_fscanf_ftype    * fscanf_state ,
                        rng_fprintf_ftype   * fprintf_state ,
                        rng_alg_type          type , 
-                       int seed_size              , 
+                       int state_size              , 
                        unsigned long max_value) {
 
   rng_type * rng = util_malloc( sizeof * rng , __func__ );
@@ -51,7 +55,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
   rng->fscanf_state  = fscanf_state; 
   rng->fprintf_state = fprintf_state; 
 
-  rng->seed_size   = seed_size;
+  rng->state_size   = state_size;
   rng->max_value   = max_value;
   rng->inv_max     = 1.0 / max_value;
   rng->type        = type;
@@ -74,20 +78,20 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
 
 
 void rng_init( rng_type * rng , rng_init_mode init_mode ) {
-  char * seed_buffer = util_malloc( rng->seed_size * sizeof * seed_buffer , __func__ );
+  char * seed_buffer = util_malloc( rng->state_size * sizeof * seed_buffer , __func__ );
   
   switch (init_mode) {
   case(INIT_CLOCK):
     {
-      for (int i=0; i < rng->seed_size; i++)
+      for (int i=0; i < rng->state_size; i++)
         seed_buffer[i] = ( char ) util_clock_seed();
     }
     break;
   case(INIT_DEV_RANDOM):
-    util_fread_dev_random( rng->seed_size * sizeof * seed_buffer , seed_buffer );
+    util_fread_dev_random( rng->state_size * sizeof * seed_buffer , seed_buffer );
     break;
   case(INIT_DEV_URANDOM):
-    util_fread_dev_urandom( rng->seed_size * sizeof * seed_buffer , seed_buffer );
+    util_fread_dev_urandom( rng->state_size * sizeof * seed_buffer , seed_buffer );
     break;
   default:
     util_abort("%s: unrecognized init_code:%d \n",__func__ , init_mode);
@@ -100,8 +104,8 @@ void rng_init( rng_type * rng , rng_init_mode init_mode ) {
 
 void rng_rng_init( rng_type * rng , rng_type * seed_src) {
   {
-    int byte_size = rng->seed_size;
-    int int_size  = rng->seed_size / 4;
+    int byte_size = rng->state_size;
+    int int_size  = rng->state_size / 4;
     unsigned int * seed_buffer;
 
     if (int_size * 4 < byte_size)
@@ -131,7 +135,7 @@ rng_type * rng_alloc( rng_alg_type type , rng_init_mode init_mode ) {
                        mzran_fscanf_state , 
                        mzran_fprintf_state , 
                        type , 
-                       MZRAN_SEED_SIZE , 
+                       MZRAN_STATE_SIZE , 
                        MZRAN_MAX_VALUE );
     break;
   default:

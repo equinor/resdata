@@ -7,7 +7,8 @@
 /*
   This file implements the mz random number generator. Historically
   the rng has been translated from Fortran code found on the internet,
-  used in the context of SSE QMC simulations by Anders Sandvik.
+  used in the context of SSE
+ QMC simulations by Anders Sandvik.
 
   The state of the random number generator is based on 4 unsigned
   integers.
