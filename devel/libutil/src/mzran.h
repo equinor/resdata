@@ -13,8 +13,6 @@ typedef struct mzran_struct mzran_type;
 #define MZRAN_STATE_SIZE 16             /* Size of the seed buffer - in bytes. */
 
 
-UTIL_SAFE_CAST_HEADER( mzran )
-
 void              mzran_fscanf_state( void * __rng , FILE * stream );
 unsigned int      mzran_forward(void * __rng);
 void            * mzran_alloc( );

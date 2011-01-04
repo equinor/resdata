@@ -7,8 +7,7 @@
 /*
   This file implements the mz random number generator. Historically
   the rng has been translated from Fortran code found on the internet,
-  used in the context of SSE
- QMC simulations by Anders Sandvik.
+  used in the context of SSE QMC simulations by Anders Sandvik.
 
   The state of the random number generator is based on 4 unsigned
   integers.
@@ -34,6 +33,11 @@ struct mzran_struct {
 #define DEFAULT_S3  77
 
 
+static UTIL_SAFE_CAST_FUNCTION( mzran , MZRAN_TYPE_ID)
+static UTIL_SAFE_CAST_FUNCTION_CONST( mzran , MZRAN_TYPE_ID)
+
+
+
 /*****************************************************************/
 
 
@@ -44,8 +48,7 @@ struct mzran_struct {
 */
 
 unsigned int mzran_forward(void * __rng) {
-  //mzran_type * rng = (mzran_type *) __rng;
-  mzran_type * rng = mzran_safe_cast( __rng );
+  mzran_type * rng = (mzran_type *) __rng;
   {
     unsigned int s;
   
@@ -92,8 +95,10 @@ static unsigned int fscanf_4bytes( FILE * stream ) {
   char * char_ptr = (char *) &s;
   for (int i=0; i < 4; i++) {
     int c;
-    fscanf(stream , "%d" , &c);
-    char_ptr[i] = c;
+    if ( fscanf(stream , "%d" , &c) == 1 )
+      char_ptr[i] = c;
+    else
+      util_abort("%s: reading byte from: %s failed \n",__func__ , util_alloc_filename_from_stream( stream ));
   }
   return s;
 }
@@ -111,7 +116,7 @@ void mzran_fscanf_state( void * __rng , FILE * stream ) {
   unsigned int s2 = fscanf_4bytes( stream );
   unsigned int s3 = fscanf_4bytes( stream );
 
-  mzran_type * rng = (mzran_type *) __rng;
+  mzran_type * rng = mzran_safe_cast( __rng );
   mzran_set_state4( rng , s0 , s1 , s2 , s3);
 }
 
@@ -125,7 +130,7 @@ static void fprintf_4bytes( unsigned int s , FILE * stream) {
 
 
 void mzran_fprintf_state( const void * __rng , FILE * stream) {
-  mzran_type * rng = (mzran_type *) __rng;
+  const mzran_type * rng = mzran_safe_cast_const( __rng );
   fprintf_4bytes( rng->x , stream );
   fprintf_4bytes( rng->y , stream );
   fprintf_4bytes( rng->z , stream );
@@ -149,9 +154,6 @@ void mzran_set_state(void * __rng , const char * seed_buffer) {
 }
 
 
-
-
-UTIL_SAFE_CAST_FUNCTION( mzran , MZRAN_TYPE_ID)
 
 
 /**

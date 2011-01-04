@@ -4420,8 +4420,8 @@ uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
    This function is quite heavyweight (invoking an external program
    +++), and also quite fragile, it should therefor not be used in
    routine FILE -> name lookups, rather in situations where a FILE *
-   operation has failed extraordinary, and we want to hide as much
-   information as possible before going down in flames.
+   operation has failed extraordinary, and we want to provide as much
+   information as possible before going down in flames.  
 */
   
 char * util_alloc_filename_from_stream( FILE * input_stream ) {
@@ -4435,6 +4435,13 @@ char * util_alloc_filename_from_stream( FILE * input_stream ) {
     char    line_file[4096];
     char * pid_string = util_alloc_sprintf("%d" , getpid());
     char * tmp_file   = util_alloc_tmp_file("/tmp" , "lsof" , false);
+
+    /* 
+       The lsof executable is run as:
+
+       bash% lsof -p pid -Ffn
+
+    */
     util_fork_exec(lsof_executable , 3 , (const char *[3]) {"-p" , pid_string , "-Ffn"}, true , NULL , NULL , NULL , tmp_file , NULL);
     {
       FILE * stream = util_fopen(tmp_file , "r");
@@ -4450,8 +4457,9 @@ char * util_alloc_filename_from_stream( FILE * input_stream ) {
           break; /* have reached the end of file - seems like we will not find the file descriptor we are looking for. */
       }
       fclose( stream );
-      unlink( tmp_file );
     }
+    unlink( tmp_file );
+    free( tmp_file );
   }
   return filename;
 }
