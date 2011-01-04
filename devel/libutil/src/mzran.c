@@ -106,9 +106,11 @@ static unsigned int fscanf_4bytes( FILE * stream ) {
 
 /**
    Will load four unsigned integers from the open FILE * and call
-   mzran_set_state4(). The integers will be loaded with fscanf(),
-   i.e. this is formatted file. Will crash and burn if the reading fails. 
+   mzran_set_state4(). The integers will be loaded as four independent
+   bytes with fscanf() calls ( this is a formatted file). Will crash
+   and burn if the reading fails.
 */
+
 
 void mzran_fscanf_state( void * __rng , FILE * stream ) {
   unsigned int s0 = fscanf_4bytes( stream );
@@ -157,10 +159,15 @@ void mzran_set_state(void * __rng , const char * seed_buffer) {
 
 
 /**
-   Creates (and initializes) a new rng instance. To recover a known
-   state you must subsequently call one of the mzran_set_state()
-   functions.
+   Creates a new rng instance, the instance is initialized with the
+   default seed given by: 
+
+       {DEFAULT_S0, DEFAULT_S1, DEFAULT_S2,DEFAULT_S3}. 
+
+   To recover a known state you must subsequently call one of the
+   mzran_set_state() functions. 
 */
+
 
 void * mzran_alloc( ) {
   mzran_type * rng = util_malloc( sizeof * rng , __func__);
