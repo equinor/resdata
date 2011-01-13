@@ -888,7 +888,7 @@ bool util_sscanf_double(const char * buffer , double * value) {
    Base 8
 */
 
-bool util_sscanf_octal_int(const char * buffer , int * value) {
+bool util_sscanf_octal_int(const char * buffer , unsigned int * value) {
   bool value_OK = false;
   char * error_ptr;
 

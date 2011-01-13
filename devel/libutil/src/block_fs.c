@@ -1080,10 +1080,13 @@ bool block_fs_rotate( block_fs_type * block_fs , double fragmentation_limit) {
    It seems it is not enough to call fsync(); must also issue this
    funny fseek + ftell combination to ensure that all data is on
    disk after an uncontrolled shutdown.
+
+   Could possibly use fdatasync() to improve speed slightly?
 */
 
 void block_fs_fsync( block_fs_type * block_fs ) {
   if (block_fs->data_owner) {
+    //fdatasync( block_fs->data_fd );
     fsync( block_fs->data_fd );
     block_fs_fseek_data( block_fs , block_fs->data_file_size );
     ftell( block_fs->data_stream ); 
