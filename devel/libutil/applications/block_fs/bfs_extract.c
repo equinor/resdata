@@ -26,7 +26,7 @@ static void usage() {
   fprintf(stderr,"\n");
   fprintf(stderr,"  1. The block_fs mount file.\n");
   fprintf(stderr,"  2. The name of directory (need not exist) where the extracted files will be put.\n");
-  fprintf(stderr,"  3. A list of files to extract - this can contain wildcards, but the MUST be \n");
+  fprintf(stderr,"  3. A list of files to extract - this can contain wildcards, but they MUST be \n");
   fprintf(stderr,"     quoted to avoid expansion by the shell.\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"Example:\n\n");

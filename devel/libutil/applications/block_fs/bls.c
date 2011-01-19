@@ -11,6 +11,15 @@ void install_SIGNALS(void) {
 }
 
 
+static int usage( void ) {
+  fprintf(stderr,"\n");
+  fprintf(stderr,"Usage:\n\n");
+  fprintf(stderr,"   bash% block_fs BLOCK_FILE.mnt <pattern>\n\n");
+  fprintf(stderr,"Will list all elements in BLOCK_FILE matching pattern - remember to quote wildcards.\n");
+  exit(1);
+}
+
+
 int main(int argc , char ** argv) {
   install_SIGNALS();
   const char * mount_file      = argv[1];
@@ -23,7 +32,8 @@ int main(int argc , char ** argv) {
       if (argv[iarg][0] == '-') {
         /** OK - this is an option .. */
       }
-      else pattern = argv[iarg];
+      else 
+        pattern = argv[iarg];
     }
     
     {
