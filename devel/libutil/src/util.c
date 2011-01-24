@@ -1098,6 +1098,128 @@ bool util_sscanf_bytesize(const char * buffer, size_t *size) {
 }
 
 
+/**
+   Will compare two strings by using a mix of ordinary strcmp() and
+   numerical comparison. The algorithm works like this:
+
+   while (equal) {
+      1. Scan both characters until character difference is found:
+      2. Both characters numeric?
+
+         Yes: use strtol() to read embedded numeric string, and do a
+              numerical comparison.
+
+         No:  normal strcmp( ) of the two strings.
+   }
+
+   Caveat: Algorithm will not interpret "-" as a minus sign, only as a
+   character. This might lead to unexpected results if you want to
+   compare strings with embedded signed numeric literals, see example
+   three below.
+   
+   Examples:
+   
+   S1           S2            util_strcmp_numeric()    strcmp()
+   ------------------------------------------------------------
+   "001"        "1"           0                        -1
+   "String-10"  "String-3"    1                        -1                
+   "String-8"   "String1"     -1                       -1
+   ------------------------------------------------------------
+*/
+   
+
+int util_strcmp_numeric( const char * s1 , const char * s2) {
+  int cmp       = 0;
+  bool complete = false;  
+  int  len1     = strlen( s1 );
+  int  len2     = strlen( s2 );
+  int  offset1  = 0;
+  int  offset2  = 0;
+    
+  
+  while (!complete) {
+    while( true ) {
+      if ((offset1 == len1) || (offset2 == len2)) {
+        /* OK - at least one of the strings is at the end;
+           we set the cmp value and return. */
+
+        if ((offset1 == len1) && (offset2 == len2))
+          /* We are the the end of both strings - they compare as equal. */
+          cmp = 0;
+        else if (offset1 == len1)
+          cmp = -1;  // s1 < s2
+        else
+          cmp = 1;   // s1 > s2
+        complete = true;
+        break;
+      }
+      
+      if (s1[offset1] != s2[offset2])
+        /* We have reached a point of difference, jump out of this
+           loop and continue with more detailed comparison further
+           down. */
+        break;
+
+      // Strings are still equal - proceed one character further.
+      offset1++;
+      offset2++;
+    }
+
+    if (!complete) {
+      /* Both offset values point to a valid character value, but the
+         two character values are different:
+        
+         1. Both characters are numeric - we use strtol() to read the
+            two integers and perform a numeric comparison.
+
+         2. One or none of the characters are numeric, we just use
+            ordinary strcmp() on the substrings starting at the current
+            offset.
+      */
+      
+      if (isdigit( s1[ offset1 ]) && isdigit( s2[ offset2 ])) {
+        char * end1;
+        char * end2;
+        long num1 = strtol( &s1[offset1] , &end1 , 10);
+        long num2 = strtol( &s2[offset2] , &end2 , 10);
+        
+        if (num1 != num2) {
+          if (num1 < num2)
+            cmp = -1;
+          else
+            cmp = 1;
+          complete = true;
+        } else {
+          /* The two numeric values are identical and we must
+             continue. Start by using the end pointers to determine
+             new offset values. If the end pointers are NULL that
+             means the whole string has been devoured, and we can set
+             the offset to point to the end of the string.
+          */
+          if (end1 == NULL)
+            offset1 = len1;
+          else
+            offset1 = end1 - s1;
+
+          if (end2 == NULL)
+            offset2 = len2;
+          else
+            offset2 = end2 - s2;
+        }
+      } else {
+        /* 
+           We have arrived at a point of difference in the string, and
+           perform 100% standard strcmp().
+        */
+        cmp = strcmp( &s1[offset1] , &s2[offset2] );
+        complete = true;
+      } 
+    }
+  }
+
+  return cmp;
+}
+
 
 /** 
     Succesfully parses:
