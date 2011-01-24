@@ -1243,6 +1243,10 @@ static int util_strcmp_numeric__( const char * s1 , const char * s2, bool float_
           char * end1;
           char * end2;
           double num1,num2;
+          /* 
+             The numerical comparison is based on double variables
+             irrespective of the value of @float_mode. 
+          */
           if (float_mode) {
             num1 = strtod( s1 , &end1 );
             num2 = strtod( s2 , &end2 );
