@@ -74,7 +74,7 @@ void print_help_and_exit()  {
   printf("The summary.x program will look for and load both unified and\n");
   printf("non-unified and formatted and non-formatted files. The default\n");
   printf("search order is: UNSMRY, Snnnn, FUNSMRY, Annnn, however you can\n");
-  printf("manipulate that with the extension to the basename:\n");
+  printf("manipulate this with the extension to the basename:\n");
   printf("\n");
   printf("* If the extension corresponds to an unformatted file, summary.x\n");
   printf("  will only look for unformatted files.\n");
@@ -93,7 +93,7 @@ static void build_key_list( const ecl_sum_type * ecl_sum , stringlist_type * key
   for (int iarg = 0; iarg < argc; iarg++) {
     stringlist_type * tmp_keys = stringlist_alloc_new( );
     ecl_sum_select_matching_general_var_list( ecl_sum , argv[iarg] , tmp_keys);
-    stringlist_sort( tmp_keys , NULL );
+    stringlist_sort( tmp_keys , util_strcmp_int );
     stringlist_append_stringlist_copy( key_list , tmp_keys );
     stringlist_free( tmp_keys );
   }

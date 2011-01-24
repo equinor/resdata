@@ -32,26 +32,14 @@
 #include <lookup_table.h>
 
 
-void test( lookup_table_type * lt , double x) {
-  printf("%g => %g/%g \n",x,lookup_table_interp( lt , x ) , sin(x));
+void test( const char * s1 , const char *s2) {
+  int cmp = util_strcmp_numeric( s1 , s2 );
+  int scmp = strcmp( s1 , s2 );
+  printf(" cmp(%s,%s) = %d   strcmp(%s,%s) = %d\n",s1,s2,cmp,s1,s2,scmp);
 }
 
 int main(int argc , char ** argv) {
-  double_vector_type * limits = double_vector_alloc( 0,0);
-  double_vector_type * values = double_vector_alloc( 0,0);
-
-  for (int i=0; i < 100; i++) {
-    double x = 1.0 * i / 99;
-    double_vector_append( limits , x);
-    double_vector_append( values , sin(x));
-  }
-  
-  { 
-    lookup_table_type * lt = lookup_table_alloc( limits , values , false );
-    
-    test( lt , 0.67 );
-  }
-
+  test("1.00123000","1.00123");
 }
 
 

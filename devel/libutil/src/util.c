@@ -1099,15 +1099,20 @@ bool util_sscanf_bytesize(const char * buffer, size_t *size) {
 
 
 /**
-   Checks if c is in the character class: [.0-9] (NOT including
-   the "-").  
+   Checks if c is in the character class: [-0-9], and optionally "."
 */
 
-static int isnumeric( int c ) {
+static int isnumeric( int c , bool float_mode) {
   if (isdigit( c ))
     return true;
-  else
-    return ((c == '.') || (c == '-')) ? true : false;
+  else {
+    if (c == '-')
+      return true;
+    else if (float_mode && (c == '.'))
+      return true;
+    else
+      return false;
+  }
 }
 
 /**
@@ -1145,7 +1150,7 @@ static int isnumeric( int c ) {
 */
    
 
-int util_strcmp_numeric( const char * s1 , const char * s2) {
+static int util_strcmp_numeric__( const char * s1 , const char * s2, bool float_mode) {
   /* 
      Special case to handle e.g.
 
@@ -1161,8 +1166,13 @@ int util_strcmp_numeric( const char * s1 , const char * s2) {
     char * end1;
     char * end2;
 
-    num1 = strtod( s1 , &end1 );
-    num2 = strtod( s2 , &end2 );
+    if (float_mode) {
+      num1 = strtod( s1 , &end1 );
+      num2 = strtod( s2 , &end2 );
+    } else {
+      num1 = 1.0 * strtol( s1 , &end1  , 10);
+      num2 = 1.0 * strtol( s2 , &end2  , 10);
+    }
     
     if ( (*end2 == '\0') && (*end1 == '\0')) {  
       /* The whole string has been read and converted to a number - for both strings. */
@@ -1229,7 +1239,7 @@ int util_strcmp_numeric( const char * s1 , const char * s2) {
               offset.
         */
         
-        if (isnumeric( s1[ offset1 ]) && isnumeric( s2[ offset2 ])) {
+        if (isnumeric( s1[ offset1 ] , float_mode) && isnumeric( s2[ offset2 ] , float_mode)) {
           char * end1;
           char * end2;
           double num1 = strtod( &s1[offset1] , &end1 );
@@ -1271,6 +1281,22 @@ int util_strcmp_numeric( const char * s1 , const char * s2) {
     return cmp;
   }
 }
+
+/**
+   Will interpret XXXX.yyyy as a fractional number.
+*/
+int util_strcmp_float( const char * s1 , const char * s2) {
+  return util_strcmp_numeric__( s1 , s2 , true );
+}
+
+/*
+   Will interpret XXXX.yyyy as two integers.
+*/
+
+int util_strcmp_int( const char * s1 , const char * s2) {
+  return util_strcmp_numeric__( s1 , s2 , false );
+}
+
 
 
 /** 
