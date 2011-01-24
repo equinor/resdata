@@ -1165,7 +1165,7 @@ static int util_strcmp_numeric__( const char * s1 , const char * s2, bool float_
     double num1 , num2;
     char * end1;
     char * end2;
-
+    
     if (float_mode) {
       num1 = strtod( s1 , &end1 );
       num2 = strtod( s2 , &end2 );
@@ -1242,8 +1242,14 @@ static int util_strcmp_numeric__( const char * s1 , const char * s2, bool float_
         if (isnumeric( s1[ offset1 ] , float_mode) && isnumeric( s2[ offset2 ] , float_mode)) {
           char * end1;
           char * end2;
-          double num1 = strtod( &s1[offset1] , &end1 );
-          double num2 = strtod( &s2[offset2] , &end2 );
+          double num1,num2;
+          if (float_mode) {
+            num1 = strtod( s1 , &end1 );
+            num2 = strtod( s2 , &end2 );
+          } else {
+            num1 = 1.0 * strtol( s1 , &end1  , 10);
+            num2 = 1.0 * strtol( s2 , &end2  , 10);
+          }
           
           if (num1 != num2) {
             if (num1 < num2)
