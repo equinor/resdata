@@ -1151,7 +1151,10 @@ int util_strcmp_numeric( const char * s1 , const char * s2) {
 
          util_strcmp_numeric("100.00000" , "100") 
 
-     which should compare as equal.
+     which should compare as equal. The normal algorithm will compare
+     equal characterwise all the way until one string ends, and the
+     shorter string will be returned as less than the longer - without
+     ever invoking the numerical comparison.
   */
   {
     double num1 , num2;
@@ -1161,7 +1164,8 @@ int util_strcmp_numeric( const char * s1 , const char * s2) {
     num1 = strtod( s1 , &end1 );
     num2 = strtod( s2 , &end2 );
     
-    if ( (*end2 == '\0') && (*end1 == '\0')) {
+    if ( (*end2 == '\0') && (*end1 == '\0')) {  
+      /* The whole string has been read and converted to a number - for both strings. */
       if (num1 < num2)
         return -1;
       else if (num1 > num2) 
