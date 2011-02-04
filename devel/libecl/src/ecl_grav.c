@@ -16,13 +16,50 @@
    times, one time for each phase.
 */
 
+/**
+   Check that the rporv values are in the right ballpark.  For
+   ECLIPSE version 2008.2 they are way fucking off. Check PORV
+   versus RPORV for ten 'random' locations in the grid.
+*/
+
+
+static void ecl_grav_check_rporv(const ecl_grid_type * ecl_grid , const ecl_kw_type * rporv1_kw , const ecl_kw_type * rporv2_kw , const ecl_kw_type * init_porv_kw) {
+  int    active_index;
+  int    active_delta;
+  int    active_size;
+  
+  ecl_grid_get_dims( ecl_grid , NULL , NULL , NULL , &active_size );
+  active_delta = active_size / 12;
+  for (active_index = active_delta; active_index < active_size; active_index += active_delta) {
+    int    global_index = ecl_grid_get_global_index1A( ecl_grid , active_index );
+    double init_porv    = ecl_kw_iget_as_double( init_porv_kw , global_index );   /* NB - this uses global indexing. */
+    double rporv1       = ecl_kw_iget_as_double( rporv1_kw ,  active_index );
+    double rporv2       = ecl_kw_iget_as_double( rporv2_kw ,  active_index );
+    double rporv12      = 0.5 * ( rporv1 + rporv2 );
+    double fraction     = util_double_min( init_porv , rporv12 ) / util_double_max( init_porv , rporv12 );
+    
+    if (fraction  < 0.50) {
+      fprintf(stderr,"-----------------------------------------------------------------\n");
+      fprintf(stderr,"INIT PORV: %g \n",init_porv);
+      fprintf(stderr,"RPORV1   : %g \n",rporv1);
+      fprintf(stderr,"RPORV2   : %g \n",rporv2);
+      fprintf(stderr,"Hmmm - the RPORV values extracted from the restart file seem to be \n");
+      fprintf(stderr,"veeery different from the initial rporv value. This might indicated\n");
+      fprintf(stderr,"an ECLIPSE bug. Version 2007.2 is known to be ok in this respect, \n");
+      fprintf(stderr,"whereas version 2008.2 is known to have a bug. \n");
+      fprintf(stderr,"-----------------------------------------------------------------\n");
+      exit(1);
+    }
+  }
+}
+
 
 
 double ecl_grav_phase_deltag( double utm_x ,
                               double utm_y , 
                               double tvd,
                               const ecl_grid_type * grid,
-                              const ecl_kw_type   * aquifern_kw,
+                              const ecl_file_type * init_file,
                               const ecl_kw_type   * sat1_kw,
                               const ecl_kw_type   * rho1_kw,
                               const ecl_kw_type   * porv1_kw,
@@ -40,9 +77,16 @@ double ecl_grav_phase_deltag( double utm_x ,
   const float * porv1   = ecl_kw_get_float_ptr( porv1_kw );
   const float * porv2   = ecl_kw_get_float_ptr( porv2_kw );
 
-  if (aquifern_kw != NULL)
+  if (ecl_file_has_kw( init_file , "AQUIFERN")) {
+    const ecl_kw_type * aquifern_kw = ecl_file_iget_named_kw( init_file , "AQUIFERN" , 0);
     aquifern = ecl_kw_get_int_ptr( aquifern_kw );
+  }
   
+  {
+    const ecl_kw_type * init_porv_kw = ecl_file_iget_named_kw( init_file , "PORV" , 0);
+    ecl_grav_check_rporv( grid , porv1_kw , porv2_kw , init_porv_kw);
+  }
+
   {
     int active_index;
     for (active_index = 0; active_index < ecl_grid_get_active_size( grid ); active_index++) {

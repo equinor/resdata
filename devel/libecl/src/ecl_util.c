@@ -24,6 +24,8 @@
 #define ECL_TYPE_NAME_MESSAGE  "MESS" 
 
 
+
+
 #define ECL_OTHER_FILE_FMT_PATTERN        "*"
 #define ECL_RESTART_FMT_PATTERN           "F[0-9][0-9][0-9][0-9]"
 #define ECL_UNIFIED_RESTART_FMT_PATTERN   "FUNRST"
@@ -45,6 +47,7 @@
 #define ECL_EGRID_UFMT_PATTERN            "EGRID"
 #define ECL_INIT_UFMT_PATTERN             "INIT" 
 #define ECL_RFT_UFMT_PATTERN              "RFT"   
+
 
 
 
@@ -177,13 +180,13 @@ char * ecl_util_alloc_base_guess(const char * path) {
     if (ext != NULL) {
       
       if ((strcmp(ext,"DATA") == 0) || (strcmp(ext , "data") == 0)) {
-	if (data_count == 0) 
-	  base = util_alloc_string_copy(this_base);
-	else if (data_count == 1) {
-	  free(base);
-	  base = NULL;
-	}
-	data_count++;
+        if (data_count == 0) 
+          base = util_alloc_string_copy(this_base);
+        else if (data_count == 1) {
+          free(base);
+          base = NULL;
+        }
+        data_count++;
       }
       
       free(ext);
@@ -307,30 +310,30 @@ ecl_file_enum ecl_util_get_file_type(const char * filename, bool *_fmt_file, int
     } else {
       switch (ext[0]) {
       case('X'):
-	file_type = ECL_RESTART_FILE;
-	fmt_file  = false;
-	break;
+        file_type = ECL_RESTART_FILE;
+        fmt_file  = false;
+        break;
       case('F'):
-	file_type = ECL_RESTART_FILE;
-	fmt_file  = true;
-	break;
+        file_type = ECL_RESTART_FILE;
+        fmt_file  = true;
+        break;
       case('S'):
-	file_type = ECL_SUMMARY_FILE;
-	fmt_file  = false;
-	break;
+        file_type = ECL_SUMMARY_FILE;
+        fmt_file  = false;
+        break;
       case('A'):
-	file_type = ECL_SUMMARY_FILE;
-	fmt_file  = true;
-	break;
+        file_type = ECL_SUMMARY_FILE;
+        fmt_file  = true;
+        break;
       default:
-	file_type = ECL_OTHER_FILE;
-	/*
-	  fprintf(stderr,"*** Warning: *** %s failed to find type of file:%s \n",__func__ , filename);
-	*/
+        file_type = ECL_OTHER_FILE;
+        /*
+          fprintf(stderr,"*** Warning: *** %s failed to find type of file:%s \n",__func__ , filename);
+        */
       }
       if (file_type != ECL_OTHER_FILE) 
-	if (!util_sscanf_int(&ext[1] , &report_nr))
-	  file_type = ECL_OTHER_FILE;
+        if (!util_sscanf_int(&ext[1] , &report_nr))
+          file_type = ECL_OTHER_FILE;
     }
   }
 
@@ -469,6 +472,8 @@ const char * ecl_util_file_type_name( ecl_file_enum file_type ) {
   }
   return NULL;
 }
+
+
 
 
 
@@ -715,9 +720,9 @@ bool ecl_util_fmt_file(const char *filename) {
     file_type = ecl_util_get_file_type(filename , &fmt_file , &report_nr);
     if (file_type == ECL_OTHER_FILE) {
       if (util_file_size(filename) > min_size)
-	fmt_file = util_fmt_bit8(filename);
+        fmt_file = util_fmt_bit8(filename);
       else 
-	util_abort("%s: sorry could not determine formatted|unformatted of file:%s file_size:%d - aborting \n",__func__ , filename , util_file_size(filename));
+        util_abort("%s: sorry could not determine formatted|unformatted of file:%s file_size:%d - aborting \n",__func__ , filename , util_file_size(filename));
     }
   } else {
     file_type = ecl_util_get_file_type(filename , &fmt_file , &report_nr);
@@ -750,35 +755,35 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
     switch (target_type) {
     case(ECL_DOUBLE_TYPE):
       {
-	double * target_data = (double *) _target_data;
-	switch(src_type) {
-	case(ECL_FLOAT_TYPE):
-	  util_float_to_double(target_data , (const float *) _src_data , size);
-	  break;
-	case(ECL_INT_TYPE):
-	  for (i = 0; i < size; i++) 
-	    target_data[i] = ((int *) _src_data)[i];
-	  break;
-	default:
-	  util_abort("%s: double type can only load from int/float/double - aborting \n",__func__);
-	}
-	break;
+        double * target_data = (double *) _target_data;
+        switch(src_type) {
+        case(ECL_FLOAT_TYPE):
+          util_float_to_double(target_data , (const float *) _src_data , size);
+          break;
+        case(ECL_INT_TYPE):
+          for (i = 0; i < size; i++) 
+            target_data[i] = ((int *) _src_data)[i];
+          break;
+        default:
+          util_abort("%s: double type can only load from int/float/double - aborting \n",__func__);
+        }
+        break;
       }
     case(ECL_FLOAT_TYPE):
       {
-	float * target_data = (float *) _target_data;
-	switch(src_type) {
-	case(ECL_FLOAT_TYPE):
-	  util_double_to_float(target_data , (const double *) _src_data , size);
-	  break;
-	case(ECL_INT_TYPE):
-	  for (i = 0; i < size; i++) 
-	    target_data[i] = ((int *) _src_data)[i];
-	  break;
-	default:
-	  util_abort("%s: float type can only load from int/float/double - aborting \n",__func__);
-	}
-	break;
+        float * target_data = (float *) _target_data;
+        switch(src_type) {
+        case(ECL_FLOAT_TYPE):
+          util_double_to_float(target_data , (const double *) _src_data , size);
+          break;
+        case(ECL_INT_TYPE):
+          for (i = 0; i < size; i++) 
+            target_data[i] = ((int *) _src_data)[i];
+          break;
+        default:
+          util_abort("%s: float type can only load from int/float/double - aborting \n",__func__);
+        }
+        break;
       }
     default:
       util_abort("%s con not convert %d -> %d \n",__func__ , src_type , target_type);
@@ -859,12 +864,12 @@ void ecl_util_alloc_summary_data_files(const char * path , const char * base , b
 bool ecl_util_alloc_summary_files(const char * path , const char * _base , const char * ext , char ** _header_file , stringlist_type * filelist) {
   bool    fmt_input      = false;
   bool    fmt_set        = false;
-  bool    fmt_file    	 = true; 
+  bool    fmt_file       = true; 
   bool    unif_input     = false;
   bool    unif_set       = false;
 
   
-  char  * header_file 	 = NULL;
+  char  * header_file    = NULL;
   char  * base;
 
   *_header_file = NULL;
@@ -981,6 +986,25 @@ bool ecl_util_alloc_summary_files(const char * path , const char * _base , const
     
   return (stringlist_get_size(filelist) > 0) ? true : false;
 }
+
+
+//const char * ecl_util_get_extension( ecl_file_enum_type file_type , bool fmt_file) {
+//
+//}
+//
+//
+///** 
+//    Based on the ordinary util_alloc_file_components function, but if
+//    file_type is used specify the type file we know what extension to
+//    expect, and an optional "." can potentially be included as part of
+//    the filename. 
+//*/
+//
+//void ecl_util_alloc_file_components( const char * file, ecl_file_enum file_type , char **_path , char **_basename , char **_extension) {
+//  
+//}
+
+
 
 
 

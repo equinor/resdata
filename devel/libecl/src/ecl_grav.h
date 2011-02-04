@@ -6,12 +6,13 @@ extern "C" {
 
 #include <ecl_kw.h>
 #include <ecl_grid.h>
+#include <ecl_file.h>
 
 double ecl_grav_phase_deltag( double utm_x ,
                               double utm_y , 
                               double tvd,
                               const ecl_grid_type * grid,
-                              const ecl_kw_type   * aquifer_kw,
+                              const ecl_file_type * init_file ,
                               const ecl_kw_type   * sat_kw1,
                               const ecl_kw_type   * rho_kw1,
                               const ecl_kw_type   * porv_kw1,

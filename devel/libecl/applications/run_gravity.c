@@ -795,7 +795,6 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
     util_exit("Sorry: the restartfiles do  not contain RPORV\n");       
 
 
-
   /**
      Check that the rporv values are in the right ballpark.  For
      ECLIPSE version 2008.2 they are way fucking off. Check PORV
@@ -834,6 +833,7 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
       }
     }
   }
+
   return 0;
 }
 
