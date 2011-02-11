@@ -4570,6 +4570,45 @@ char * util_alloc_PATH_executable(const char * executable) {
 }
 
 
+///**
+//   Will use external program lsof to (try) to determine which
+//   process(es) are currently accessing the file filename. The return
+//   type will be an array pid_t instances, the number of processes is
+//   returned by reference. 
+//*/
+//
+//pid_t * util_alloc_file_pid_list( const char * filename , int * __num_pids) {
+//  const char * lsof_executable = "/usr/sbin/lsof";
+//  int     buffer_size = 8;
+//  int     num_pids    = 0;
+//  uid_t * pid_list    = util_malloc( sizeof * pid_list * buffer_size , __func__);
+//  char * tmp_file     = util_alloc_tmp_file("/tmp" , "lsof" , false);
+//  util_fork_exec(lsof_executable , 2 , (const char *[2]) {"-F" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
+//  {
+//    FILE * stream = util_fopen(tmp_file , "r");
+//    while ( true ) {
+//      int pid , uid;
+//      char dummy_char;
+//      if (fscanf( stream , "%c%d %c%d" , &dummy_char , &pid , &dummy_char , &uid) == 4) {
+//        if (buffer_size == num_users) {
+//          buffer_size *= 2;
+//          users        = util_realloc( users , sizeof * users * buffer_size , __func__);
+//        }
+//        users[ num_users ] = uid;
+//        num_users++;
+//      } else 
+//        break; /* have reached the end of file - seems like we will not find the file descriptor we are looking for. */
+//    }
+//    fclose( stream );
+//    unlink( tmp_file );
+//  }
+//  free( tmp_file );
+//  users = util_realloc( users , sizeof * users * num_users , __func__);
+//  *__num_users = num_users;
+//  return users;
+//}
+
+
 /**
    This function will use the external program /usr/sbin/lsof to
    determine which users currently have 'filename' open. The return
