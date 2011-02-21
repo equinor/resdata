@@ -26,7 +26,7 @@ add_program(env , conf , bin_path , "mem_free.x"        , "mem_free.c" )
 add_program(env , conf , bin_path , "eol-fix.x"         , "eol-fix.c" )
 add_program(env , conf , bin_path , "util-test"         , "util-test.c" )
 
-(local , SDP_INSTALL) = get_targets( env , conf )
+(local ) = get_targets( env , conf )
 Default( local )
 
 
