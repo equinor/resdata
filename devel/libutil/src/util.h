@@ -194,7 +194,7 @@ void         util_clear_directory(const char *path, bool strict_uid , bool unlin
 char       * util_alloc_link_target(const char * link);
 void         util_unlink_existing(const char *filename);
 void         util_strupr(char *);
-inline       bool util_string_equal(const char * s1 , const char * s2 );
+bool         util_string_equal(const char * s1 , const char * s2 );
 char       * util_alloc_strupr_copy(const char * );
 void         util_string_tr(char * , char , char);
 bool         util_copy_stream(FILE *, FILE *, int , void * , bool abort_on_error);

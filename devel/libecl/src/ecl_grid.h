@@ -64,8 +64,8 @@ int             ecl_grid_get_active_index3(const ecl_grid_type * ecl_grid , int 
 int             ecl_grid_get_active_index1(const ecl_grid_type * ecl_grid , int global_index);
 bool            ecl_grid_cell_active3(const ecl_grid_type * , int  , int  , int );
 bool            ecl_grid_cell_active1(const ecl_grid_type * , int);
-inline bool     ecl_grid_ijk_valid(const ecl_grid_type * , int  , int , int ); 
-inline int      ecl_grid_get_global_index3(const ecl_grid_type * , int  , int , int );
+bool            ecl_grid_ijk_valid(const ecl_grid_type * , int  , int , int ); 
+int             ecl_grid_get_global_index3(const ecl_grid_type * , int  , int , int );
 int             ecl_grid_get_global_index1A(const ecl_grid_type * ecl_grid , int active_index);
 ecl_grid_type * ecl_grid_alloc_GRDECL_kw( const ecl_kw_type * gridhead_kw , const ecl_kw_type * zcorn_kw , const ecl_kw_type * coord_kw , const ecl_kw_type * actnum_kw , const ecl_kw_type * mapaxes_kw );
 ecl_grid_type * ecl_grid_alloc_GRDECL_data(int , int , int , const float *  , const float *  , const int * , const float * mapaxes);

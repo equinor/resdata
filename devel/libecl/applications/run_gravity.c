@@ -28,7 +28,6 @@
 #include <math.h>
 #include <thread_pool.h>
 #include <arg_pack.h>
-#include <gsl/gsl_specfunc.h>
 
 #define WATER 1
 #define GAS   2

@@ -5213,7 +5213,7 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
 bool util_try_lockf(const char * lockfile , mode_t mode , int * __fd) {
   int status;
   int lock_fd;
-  lock_fd = open(lockfile , O_WRONLY + O_CREAT); 
+  lock_fd = open(lockfile , O_WRONLY + O_CREAT , mode); 
   if (lock_fd == -1) 
     util_abort("%s: failed to open lockfile:%s %d/%s\n",__func__ , lockfile,errno , strerror(errno));
 

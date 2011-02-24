@@ -57,10 +57,10 @@ void          matrix_inplace_div(matrix_type * A , const matrix_type * B);
 
 
 void          matrix_iset_safe(matrix_type * matrix , int i , int j, double value);
-void   inline matrix_iset(matrix_type * matrix , int i , int j, double value);
-double inline matrix_iget(const matrix_type * matrix , int i , int j);
-void   inline matrix_iadd(matrix_type * matrix , int i , int j , double value);
-void   inline matrix_imul(matrix_type * matrix , int i , int j , double value);
+void   	      matrix_iset(matrix_type * matrix , int i , int j, double value);
+double 	      matrix_iget(const matrix_type * matrix , int i , int j);
+void   	      matrix_iadd(matrix_type * matrix , int i , int j , double value);
+void   	      matrix_imul(matrix_type * matrix , int i , int j , double value);
 
 
 void          matrix_inplace_matmul(matrix_type * A, const matrix_type * B);

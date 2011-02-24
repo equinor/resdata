@@ -1859,7 +1859,7 @@ void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int g
 
 */
    
-inline bool ecl_grid_ijk_valid(const ecl_grid_type * grid , int i , int j , int k) {
+bool ecl_grid_ijk_valid(const ecl_grid_type * grid , int i , int j , int k) {
   bool OK = false;
 
   if (i >= 0 && i < grid->nx)
