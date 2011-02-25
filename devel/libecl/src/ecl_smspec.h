@@ -35,8 +35,8 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
 
    Only the variable types marked with "X" below are supported in the
    remaining implementation. To add support for a new variable type
-   the functions smspec_index_alloc() and smsepec_fread_header() must
-   be updated.
+   the functions smspec_index_alloc(), ecl_smsepec_fread_header() and
+   ecl_smspec_install_gen_key() must be updated.  
 */
 
 typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
@@ -47,13 +47,13 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
               ECL_SMSPEC_GROUP_VAR              =  5 ,   /* X */
               ECL_SMSPEC_BLOCK_VAR              =  6 ,   /* X */
               ECL_SMSPEC_COMPLETION_VAR         =  7 ,   /* X */ 
-              ECL_SMSPEC_LOCAL_BLOCK_VAR        =  8 ,   
-              ECL_SMSPEC_LOCAL_COMPLETION_VAR   =  9 ,
-              ECL_SMSPEC_LOCAL_WELL_VAR         = 10 ,
+              ECL_SMSPEC_LOCAL_BLOCK_VAR        =  8 ,   /* X */
+              ECL_SMSPEC_LOCAL_COMPLETION_VAR   =  9 ,   /* X */
+              ECL_SMSPEC_LOCAL_WELL_VAR         = 10 ,   /* X */
               ECL_SMSPEC_NETWORK_VAR            = 11 ,
               ECL_SMSPEC_REGION_2_REGION_VAR    = 12 ,
               ECL_SMSPEC_SEGMENT_VAR            = 13 ,
-              ECL_SMSPEC_MISC_VAR               = 14    /* X */}  ecl_smspec_var_type;
+              ECL_SMSPEC_MISC_VAR               = 14     /* X */}  ecl_smspec_var_type;
 
 ecl_smspec_var_type ecl_smspec_iget_var_type( const ecl_smspec_type * smspec , int index );
 bool                ecl_smspec_needs_num( ecl_smspec_var_type var_type );

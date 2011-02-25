@@ -38,6 +38,47 @@
    This file implements the indexing into the ECLIPSE summary files. 
 */
    
+/*
+  Supporting a variable type:
+  ---------------------------
+
+  1. The function smspec_index_alloc() must be updated to return a valid
+     smspec_index_type instance when called with the new var_type.
+
+  2. Update the function ecl_smpec_install_gen_key() to install smpec_index
+     instances of this particular type. The format of the general key is
+     implictly defined in this function.
+
+  3. The ecl_smspec structure supports two different types of lookup:
+
+       a) Lookup based on general key like e.g. WWCT:OP6
+       b) Specific lookup based on the variable type, i.e. :
+
+              ecl_smspec_get_well_var( xxx , well_name , var).
+
+      Historically everything started with specific lookup as in case b);
+      however the general lookup proved to be very convenient, and the specfic
+      lookup method has seen less use[*]. The final step in supporting a new
+      variable is to update the function ecl_smspec_fread_header(). The LGR
+      variables, and also ECL_SMSPEC_SEGMENT_VAR do not support specific
+      lookup.
+      
+      If you want to support specific lookup of your new variable type you must
+      add the necessary datastructures to the ecl_smspec_struct structure and
+      then subsequently fill that structure in the big switch() in
+      ecl_smspec_fread_header() - if you do not care about specific lookup you
+      just have to add an empty case() slot to the switch in
+      ecl_smspec_fread_header().
+
+      [*]: The advantage of the specific lookup is that it is possible to supply
+           better error messages (The well XX does not exist, instead of just
+           unknown key: 'WWCT:XX'), and it is also possible sto support
+           queries like: give me all the well names.
+ */
+
+      
+
+
 
 
 #define DUMMY_WELL(well) (strcmp((well) , ":+:+:+:+") == 0)
@@ -324,6 +365,13 @@ static smspec_index_type * smspec_index_alloc( ecl_smspec_var_type var_type ,
     if (!DUMMY_WELL(wgname)) {
       smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
       smspec_index_set_wgname( smspec_index , wgname );
+    }
+    break;
+  case(ECL_SMSPEC_SEGMENT_VAR):
+    if (!DUMMY_WELL( wgname )) {
+      smspec_index = smspec_index_alloc_empty( var_type , keyword , unit , index);
+      smspec_index_set_wgname( smspec_index , wgname );
+      smspec_index_set_num( smspec_index , num );
     }
     break;
   case(ECL_SMSPEC_REGION_VAR):
@@ -655,6 +703,15 @@ char * ecl_smspec_alloc_gen_key( const ecl_smspec_type * smspec , const char * f
 
 
 
+/**
+   This function takes a fully initialized smspec_index instance, generates the
+   corresponding key and inserts smspec_index instance in the main hash table
+   smspec->gen_var_index. 
+
+   The format strings used, i.e. VAR:WELL for well based variables is implicitly
+   defined through the format strings used in this function.  
+*/
+
 static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_type * smspec_index ) {
   char * gen_key = NULL;
 
@@ -685,6 +742,10 @@ static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_
     gen_key = util_alloc_sprintf("%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->num );
     hash_insert_ref( smspec->gen_var_index , gen_key , smspec_index);
     break;
+  case(ECL_SMSPEC_SEGMENT_VAR):
+    /* SEGMENT:WELL:NUM */
+    gen_key = util_alloc_sprintf("%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname , smspec->key_join_string , smspec_index->num );
+    hash_insert_ref( smspec->gen_var_index , gen_key , smspec_index);
   case(ECL_SMSPEC_MISC_VAR):
     /* Misc variable - i.e. date or CPU time ... */
     hash_insert_ref(smspec->gen_var_index  , smspec_index->keyword , smspec_index );
@@ -778,6 +839,9 @@ bool ecl_smspec_needs_wgname( ecl_smspec_var_type var_type ) {
     return false;
     break;
   case(ECL_SMSPEC_AQUIFER_VAR):
+    return false;
+    break;
+  case(ECL_SMSPEC_SEGMENT_VAR):
     return false;
     break;
   default:
@@ -947,6 +1011,16 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           */
           ecl_smspec_install_gen_key( ecl_smspec , smspec_index );
           
+          
+          /** 
+              This large switch is for installing keys which have custom lookup
+              paths, in addition to the lookup based on general keys. Examples
+              of this is e.g. well variables which can be looked up through: 
+
+                  ecl_smspec_get_well_var_index( smspec , well_name , var );
+
+          */
+
           switch(var_type) {
           case(ECL_SMSPEC_COMPLETION_VAR):
             /* Three level indexing: variable -> well -> string(cell_nr)*/
@@ -1011,15 +1085,19 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
             }
             break;
 
-            /** The LGR variables are ONLY acceable via the gen_key setup; but
-                the must be mentioned in this switch statement, otherwise they
-                will induce a hard failure in the default: target below.
+            /** 
+                The variables below are ONLY accesable through the gen_key
+                setup; but the must be mentioned in this switch statement,
+                otherwise they will induce a hard failure in the default: target
+                below.
             */
           case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
             break;
           case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
             break;
           case(ECL_SMSPEC_LOCAL_WELL_VAR):
+            break;
+          case(ECL_SMSPEC_SEGMENT_VAR):
             break;
           default:
             util_abort("%: Internal error - should never be here ?? \n",__func__);
@@ -1524,15 +1602,15 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
      ecl_smspec_alloc_matching_general_var_list( smspec , "WGOR:*");
 
    will give a list of WGOR for ALL the wells. The function is
-   unfortunately not as useful as one might think because ECLIPSE is a
-   bit quite stupid; it will for instance happily give ou the WOPR for
-   a water injector or WWIR for an oil producer.
-
+   unfortunately not as useful as one might think because ECLIPSE is
+   quite stupid; it will for instance happily give you the WOPR for a
+   water injector or WWIR for an oil producer.
+   
    The function can be called several times with different patterns,
    the stringlist is not cleared on startup; the keys in the list are
    unique - keys are not added multiple times.
-
 */
+
 
 void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys) {
   hash_type * ex_keys = hash_alloc( );
