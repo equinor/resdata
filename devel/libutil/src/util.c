@@ -1141,8 +1141,8 @@ static int isnumeric( int c , bool float_mode) {
       1. Scan both characters until character difference is found:
       2. Both characters numeric?
 
-           Yes: use strtol() to read embedded numeric string, and do a
-                numerical comparison.
+           Yes: use strtol()/strtod() to read embedded numeric string,
+                and do a numerical comparison.
 
            No:  normal strcmp( ) of the two strings.
 
@@ -1203,11 +1203,11 @@ static int util_strcmp_numeric__( const char * s1 , const char * s2, bool float_
     } 
   } 
   
+  
   /* 
      At least one of the strings is not a pure numerical literal and
      we start on a normal comparison. 
   */
-
   {
     int cmp       = 0;
     bool complete = false;  
@@ -1266,13 +1266,13 @@ static int util_strcmp_numeric__( const char * s1 , const char * s2, bool float_
              irrespective of the value of @float_mode. 
           */
           if (float_mode) {
-            num1 = strtod( s1 , &end1 );
-            num2 = strtod( s2 , &end2 );
+            num1 = strtod( &s1[ offset1 ] , &end1 );
+            num2 = strtod( &s2[ offset2 ] , &end2 );
           } else {
-            num1 = 1.0 * strtol( s1 , &end1  , 10);
-            num2 = 1.0 * strtol( s2 , &end2  , 10);
+            num1 = 1.0 * strtol( &s1[ offset1 ] , &end1  , 10);
+            num2 = 1.0 * strtol( &s2[ offset2 ] , &end2  , 10);
           }
-          
+        
           if (num1 != num2) {
             if (num1 < num2)
               cmp = -1;
@@ -1299,7 +1299,7 @@ static int util_strcmp_numeric__( const char * s1 , const char * s2, bool float_
         } else {
           /* 
              We have arrived at a point of difference in the string, and
-           perform 100% standard strcmp().
+             perform 100% standard strcmp().
           */
           cmp = strcmp( &s1[offset1] , &s2[offset2] );
           complete = true;
@@ -1316,6 +1316,7 @@ static int util_strcmp_numeric__( const char * s1 , const char * s2, bool float_
 int util_strcmp_float( const char * s1 , const char * s2) {
   return util_strcmp_numeric__( s1 , s2 , true );
 }
+
 
 /*
    Will interpret XXXX.yyyy as two integers.
