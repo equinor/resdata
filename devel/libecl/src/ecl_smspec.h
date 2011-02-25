@@ -52,7 +52,7 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
               ECL_SMSPEC_LOCAL_WELL_VAR         = 10 ,   /* X */
               ECL_SMSPEC_NETWORK_VAR            = 11 ,
               ECL_SMSPEC_REGION_2_REGION_VAR    = 12 ,
-              ECL_SMSPEC_SEGMENT_VAR            = 13 ,
+              ECL_SMSPEC_SEGMENT_VAR            = 13 ,   /* X */ 
               ECL_SMSPEC_MISC_VAR               = 14     /* X */}  ecl_smspec_var_type;
 
 ecl_smspec_var_type ecl_smspec_iget_var_type( const ecl_smspec_type * smspec , int index );

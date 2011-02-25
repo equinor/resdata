@@ -39,8 +39,8 @@
 */
    
 /*
-  Supporting a variable type:
-  ---------------------------
+  Supporting a new variable type:
+  -------------------------------
 
   1. The function smspec_index_alloc() must be updated to return a valid
      smspec_index_type instance when called with the new var_type.
@@ -57,23 +57,28 @@
               ecl_smspec_get_well_var( xxx , well_name , var).
 
       Historically everything started with specific lookup as in case b);
-      however the general lookup proved to be very convenient, and the specfic
-      lookup method has seen less use[*]. The final step in supporting a new
-      variable is to update the function ecl_smspec_fread_header(). The LGR
-      variables, and also ECL_SMSPEC_SEGMENT_VAR do not support specific
-      lookup.
-      
-      If you want to support specific lookup of your new variable type you must
-      add the necessary datastructures to the ecl_smspec_struct structure and
-      then subsequently fill that structure in the big switch() in
-      ecl_smspec_fread_header() - if you do not care about specific lookup you
-      just have to add an empty case() slot to the switch in
+      however the general lookup proved to be very convenient, and the
+      specfic lookup method has seen less use[*]. The final step in
+      supporting a new variable is to update the function
       ecl_smspec_fread_header().
+      
+      If you want to support specific lookup of the new variable type you
+      must add the necessary datastructures to the ecl_smspec_struct
+      structure and then subsequently fill that structure in the big
+      switch() in ecl_smspec_fread_header() - if you do not care about
+      specific lookup you just have to add an empty case() slot to the
+      switch in ecl_smspec_fread_header(). The LGR variables, and also
+      ECL_SMSPEC_SEGMENT_VAR do not support specific lookup.
 
-      [*]: The advantage of the specific lookup is that it is possible to supply
-           better error messages (The well XX does not exist, instead of just
-           unknown key: 'WWCT:XX'), and it is also possible sto support
-           queries like: give me all the well names.
+      [*]: The advantage of the specific lookup is that it is possible
+           to supply better error messages (The well 'XX' does not
+           exist, instead of just unknown key: 'WWCT:XX'), and it is
+           also possible sto support queries like: give me all the
+           well names.
+
+  4. Mark the variable type as supported with a 'X' in the defintion of
+     ecl_smspec_var_type in ecl_smspec.h.
+
  */
 
       
