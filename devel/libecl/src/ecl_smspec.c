@@ -93,11 +93,11 @@
 
 
 /**
-   This struct is contains meta-information about one element in the
-   smspec file; the content is based on the smspec vectors WGNAMES,
-   KEYWORDS, UNIT and NUMS. The index field of this struct points to
-   where the actual data can be found in the PARAMS vector of the
-   *.Snnnn / *.UNSMRY files; probably the most important field.
+   This struct contains meta-information about one element in the smspec
+   file; the content is based on the smspec vectors WGNAMES, KEYWORDS, UNIT
+   and NUMS. The index field of this struct points to where the actual data
+   can be found in the PARAMS vector of the *.Snnnn / *.UNSMRY files;
+   probably the most important field.  
 */
 
 
@@ -295,14 +295,13 @@ static void smspec_index_set_flags( smspec_index_type * smspec_index) {
   
   /*
     This code checks in a predefined list whether a certain WGNAMES
-    variable represents a total accumulated quantity. Only the last
-    three characters in the variable is considered (i.e. the leading
-    'W', 'G' or 'F' is discarded).
+    variable represents a total accumulated quantity. Only the last three
+    characters in the variable is considered (i.e. the leading 'W', 'G' or
+    'F' is discarded).
     
-    The list below is all the keyowrds with 'Total' in the
-    information from the tables 2.7 - 2.11 in the ECLIPSE
-    documentation.  Have skipped some of the most exotic keywords
-    (AND ALL THE HISTORICAL).
+    The list below is all the keyowrds with 'Total' in the information from
+    the tables 2.7 - 2.11 in the ECLIPSE fileformat documentation.  Have
+    skipped some of the most exotic keywords (AND ALL THE HISTORICAL).
   */
   {
     bool is_total = false;

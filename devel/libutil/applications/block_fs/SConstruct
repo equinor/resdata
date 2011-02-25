@@ -6,7 +6,7 @@ import global_config
 from   global_config import LIBUTIL
 from   global_config import add_static_library
 from   global_config import add_header
-from   global_config import get_targets
+from   global_config import get_target
 from   global_config import add_program
 
 bin_path = "../../bin"
@@ -22,7 +22,7 @@ add_program(env , conf , bin_path , "brm.x"             , "brm.c"        )
 add_program(env , conf , bin_path , "brot.x"            , "brot.c"       )
 add_program(env , conf , bin_path , "bcp.x"             , "bcp.c"        )
 
-(local ) = get_targets( env , conf )
-Default( local )
+target = get_target( env , conf )
+
 
          

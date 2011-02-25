@@ -6,7 +6,7 @@ import global_config
 from   global_config import LIBUTIL
 from   global_config import add_static_library
 from   global_config import add_header
-from   global_config import get_targets
+from   global_config import get_target
 from   global_config import add_program
 
 bin_path = "../bin"
@@ -26,8 +26,7 @@ add_program(env , conf , bin_path , "mem_free.x"        , "mem_free.c" )
 add_program(env , conf , bin_path , "eol-fix.x"         , "eol-fix.c" )
 add_program(env , conf , bin_path , "util-test"         , "util-test.c" )
 
-(local ) = get_targets( env , conf )
-Default( local )
+target = get_target( env , conf )
 
 
 

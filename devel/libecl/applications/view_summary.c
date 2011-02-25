@@ -50,6 +50,7 @@ void print_help_and_exit()  {
   printf("   FOPT               - The total field oil production.\n");
   printf("   RPR:3              - The region pressure in region 3.\n");
   printf("   GGIT:NORTH         - The total gas injection group NORTH.\n");
+  printf("   SPR:F-12:18        - The segment pressure in well F-12, segment 18.\n");
   printf("   BPR:10,10,10       - The block pressure in cell 10,10,10.\n");
   printf("   LBPR:LGR3:10,10,10 - The block pressure in cell 10,10,10 - in LGR3\n");
   printf("\n");
