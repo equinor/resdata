@@ -22,7 +22,6 @@ add_program(env , conf , bin_path , "brm.x"             , "brm.c"        )
 add_program(env , conf , bin_path , "brot.x"            , "brot.c"       )
 add_program(env , conf , bin_path , "bcp.x"             , "bcp.c"        )
 
-target = get_target( env , conf )
 
-
+Default( bin_path )
          

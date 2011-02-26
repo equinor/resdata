@@ -44,6 +44,6 @@ add_program(env , conf ,  bin_path , "summary.x"         , "view_summary.c"    )
 add_program(env , conf ,  bin_path , "vprofile.x"        , "vprofile.c"        )
 add_program(env , conf ,  bin_path , "ens_plot.x"        , "ens_plot.c" , CPPDEFINES = "\'VIEWER=\"/usr/bin/display\"\'")
 
-target  = get_target( env , conf )
+Default( bin_path )
 
 

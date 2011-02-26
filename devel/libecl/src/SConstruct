@@ -30,5 +30,5 @@ add_static_library( env , conf , lib_path , package , src_list)
 add_shared_library( env , conf , slib_path , package , src_list)
 add_header( env , conf , include_path , header_list )
 
-local = get_target( env , conf )
+Default( lib_path , include_path , slib_path )
 
