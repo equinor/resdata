@@ -748,7 +748,7 @@ static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_
     break;
   case(ECL_SMSPEC_SEGMENT_VAR):
     /* SEGMENT:WELL:NUM */
-    gen_key = util_alloc_sprintf("%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname , smspec->key_join_string , smspec_index->num );
+    gen_key = util_alloc_sprintf("%s%s%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname , smspec->key_join_string , smspec_index->num );
     hash_insert_ref( smspec->gen_var_index , gen_key , smspec_index);
   case(ECL_SMSPEC_MISC_VAR):
     /* Misc variable - i.e. date or CPU time ... */
