@@ -770,6 +770,9 @@ void ecl_file_free__(void * arg) {
 
 
 
+
+
+
 /**
    This will just return ecl_kw nr i - without looking at the names.
 */
@@ -787,12 +790,90 @@ ecl_kw_type * ecl_file_icopy_kw( const ecl_file_type * ecl_file , int index) {
 }
 
 
+/**
+   This function will iterate through the ecl_file instance and search
+   for the ecl_kw instance @old_kw - the search is based on pointer
+   equality, i.e. the actual ecl_kw instance, and not on content
+   equality.
+
+   When @old_kw is found that keyword instance will be discarded with
+   ecl_kw_free() and the new keyword @new_kw will be inserted. If
+   @old_kw can not be found the function will fail hard - to verify
+   that @new_kw is indeed in the ecl_file instance you should use
+   ecl_file_has_kw_ptr() first.
+   
+   The ecl_file function typically gives our references to the
+   internal ecl_kw instances via the ecl_file_iget_kw() function. Use
+   of ecl_file_replace_kw() might lead to invalidating ecl_kw
+   instances held by the calling scope:
+
+
+   ....
+   ecl_file_type * restart_file   = ecl_file_fread_alloc( "ECLIPSE.UNRST" );
+   ecl_kw_type * initial_pressure = ecl_file_iget_named_kw( ecl_file , "PRESSURE" , 0);
+   ecl_kw_type * faked_pressure   = ecl_kw_alloc_copy( initial_pressure );
+   
+   ecl_kw_scale( faked_pressure , 1.25 );
+   ecl_file_replace_kw( restart_file , initial_pressure , faked_pressure , false );  <--- This call will invalidate the inital_pressure reference
+   ....
+   ....
+   // This will fail horribly: 
+   printf("The initial pressure in cell(0) was:%g \n",ecl_kw_iget_double( initial_pressure , 0 ));
+                                                                             /|\
+                                                                              |
+                                                                              +---------> Using initial_pressure => Crash and burn! 
+                                                           
+   The ecl_file structure takes ownership of all the keywords, and
+   will also take ownership of the newly instered @new_kw instance; if
+   the boolean @insert_copy is set to true the function will insert a
+   copy of @new_kw, leaving the original reference untouched. 
+*/                
+
+
+
+void ecl_file_replace_kw( ecl_file_type * ecl_file , ecl_kw_type * old_kw , const ecl_kw_type * new_kw , bool insert_copy) {
+  int index = 0;
+  while (index < vector_get_size( ecl_file->kw_list )) {
+    const ecl_kw_type * ikw = vector_iget_const( ecl_file->kw_list , index );
+    if ( ikw == old_kw) {
+      /* 
+         Found it; observe that the vector_iset() function will
+         automatically invoke the destructor on the old_kw. 
+      */
+
+      if (insert_copy)
+        vector_iset_owned_ref( ecl_file->kw_list , index , ecl_kw_alloc_copy( new_kw ) , ecl_kw_free__ );
+      else
+        vector_iset_owned_ref( ecl_file->kw_list , index , new_kw , ecl_kw_free__ );
+      
+      ecl_file_make_index( ecl_file );
+      return;
+    }
+    index++;
+  }
+  util_abort("%s: could not find ecl_kw ptr: %p \n",__func__ , old_kw);
+}
+
+
+
+bool ecl_file_has_kw_ptr(const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw) {
+  int index;
+
+  for (index = 0; index < vector_get_size( ecl_file->kw_list ); index++) {
+    const ecl_kw_type * ikw = vector_iget_const( ecl_file->kw_list , index );
+    if ( ikw == ecl_kw) 
+      return true;
+  } 
+  return false;
+}
+
+
 
 
 /* 
    This function will return the ith occurence of 'kw' in
    ecl_file. Will abort hard if the request can not be satisifed - use
-   query functions if you can not take that.
+   query functions if you can not take that.  
 */
    
 

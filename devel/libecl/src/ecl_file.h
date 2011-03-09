@@ -64,6 +64,9 @@ void            ecl_file_insert_kw( ecl_file_type * ecl_file , ecl_kw_type * ecl
 void            ecl_file_fwrite_fortio(const ecl_file_type * ec_file  , fortio_type * fortio , int offset);
 void            ecl_file_fwrite(const ecl_file_type * ecl_file , const char * , bool fmt_file );
 
+bool            ecl_file_has_kw_ptr(const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw);
+void            ecl_file_replace_kw( ecl_file_type * ecl_file , ecl_kw_type * old_kw , const ecl_kw_type * new_kw , bool insert_copy);
+
 UTIL_IS_INSTANCE_HEADER( ecl_file )
 
 #ifdef __cplusplus

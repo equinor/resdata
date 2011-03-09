@@ -47,7 +47,7 @@
 
   2. Update the function ecl_smpec_install_gen_key() to install smpec_index
      instances of this particular type. The format of the general key is
-     implictly defined in this function.
+     implicitly defined in this function.
 
   3. The ecl_smspec structure supports two different types of lookup:
 
