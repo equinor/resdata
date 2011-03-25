@@ -220,6 +220,17 @@ matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column
 }
 
 
+matrix_type * matrix_alloc_view(double * data , int rows , int columns) {
+  matrix_type * matrix = matrix_alloc_empty();
+  
+  matrix_init_header( matrix , rows , columns , 1 , rows);
+  matrix->data          = data;
+  matrix->data_owner    = false;
+  
+  return matrix;
+}
+
+
 /**
    This function will allocate a matrix structure; this matrix
    structure will TAKE OWNERSHIP OF THE SUPPLIED DATA. This means that
@@ -497,7 +508,7 @@ void matrix_fscanf_data( matrix_type * matrix , bool row_major_order , FILE * st
 /*****************************************************************/
 /* Functions which manipulate one element in the matrix.         */
 
-static bool matrix_assert_ij( const matrix_type * matrix , int i , int j) {
+static void matrix_assert_ij( const matrix_type * matrix , int i , int j) {
   if ((i < 0) || (i >= matrix->rows) || (j < 0) || (j >= matrix->columns)) 
     util_abort("%s: (i,j) = (%d,%d) invalid. Matrix size: %d x %d \n",__func__ , i,j,matrix->rows , matrix->columns);
 }
@@ -509,7 +520,7 @@ static void matrix_matrix_assert_equal_rows( const matrix_type * m1 , const matr
 }
 
 
-void inline matrix_iset(matrix_type * matrix , int i , int j, double value) {
+void matrix_iset(matrix_type * matrix , int i , int j, double value) {
   matrix->data[ GET_INDEX(matrix , i,j) ] = value;
 }
 
@@ -521,7 +532,7 @@ void matrix_iset_safe(matrix_type * matrix , int i , int j, double value) {
 }
 
 
-double inline matrix_iget(const matrix_type * matrix , int i , int j) {
+double matrix_iget(const matrix_type * matrix , int i , int j) {
   return matrix->data[ GET_INDEX(matrix , i, j) ];
 }
 
@@ -590,6 +601,13 @@ void matrix_set_const_column(matrix_type * matrix , const double value , int col
 }
 
 
+void matrix_set_const_row(matrix_type * matrix , const double value , int row) {
+  int column;
+  for (column = 0; column < matrix->columns; column++)
+    matrix->data[ GET_INDEX( matrix , row , column) ] = value;
+}
+
+
 void matrix_copy_column(matrix_type * target_matrix, const matrix_type * src_matrix , int target_column, int src_column) {
   matrix_matrix_assert_equal_rows( target_matrix , src_matrix );
   for(int row = 0; row < target_matrix->rows; row++)
@@ -599,6 +617,11 @@ void matrix_copy_column(matrix_type * target_matrix, const matrix_type * src_mat
 
 void matrix_scale_column(matrix_type * matrix , int column  , double scale_factor) {
   for (int row = 0; row < matrix->rows; row++)
+    matrix->data[ GET_INDEX( matrix , row , column) ] *= scale_factor;
+}
+
+void matrix_scale_row(matrix_type * matrix , int row  , double scale_factor) {
+  for (int column = 0; column < matrix->columns; column++)
     matrix->data[ GET_INDEX( matrix , row , column) ] *= scale_factor;
 }
 
@@ -620,6 +643,22 @@ double matrix_column_column_dot_product(const matrix_type * m1 , int col1 , cons
     return sum;
   }
 }
+
+
+double matrix_row_column_dot_product(const matrix_type * m1 , int row1 , const matrix_type * m2 , int col2) {
+  if (m1->columns != m2->rows)
+    util_abort("%s: size mismatch \n",__func__);
+
+  {
+    int k;
+    double sum = 0;
+    for( k = 0; k < m1->columns; k++) 
+      sum += m1->data[ GET_INDEX(m1 , row1 , k) ] * m2->data[ GET_INDEX(m2, k , col2) ];
+    
+    return sum;
+  }
+}
+
 
 
 
@@ -647,7 +686,7 @@ void matrix_assign(matrix_type * A , const matrix_type * B) {
           A->data[ GET_INDEX(A,i,j) ] = B->data[ GET_INDEX(B,i,j) ];
     }
   } else 
-    util_abort("%s: size mismatch \n",__func__);
+    util_abort("%s: size mismatch A:[%d,%d]  B:[%d,%d] \n",__func__ , A->rows , A->columns , B->rows , B->columns);
 }
 
 
@@ -680,6 +719,24 @@ void matrix_inplace_mul(matrix_type * A , const matrix_type * B) {
 }
 
 
+/*
+  Schur product:  A = B * C
+*/
+
+void matrix_mul( matrix_type * A , const matrix_type * B , const matrix_type * C) {
+  if ((A->rows == B->rows) && (A->columns == B->columns) && (A->rows == C->rows) && (A->columns == C->columns)) {
+    int i,j;
+    
+    for (j = 0; j < A->columns; j++)
+      for (i=0; i < A->rows; i++)
+        A->data[ GET_INDEX(A,i,j) ] = B->data[ GET_INDEX(B,i,j) ] * C->data[ GET_INDEX(B,i,j) ];
+    
+  } else 
+    util_abort("%s: size mismatch \n",__func__);
+}
+
+
+
 /* Updates matrix A by subtracting matrix B - elementwise. */
 void matrix_inplace_sub(matrix_type * A , const matrix_type * B) {
   if ((A->rows == B->rows) && (A->columns == B->columns)) {
@@ -694,6 +751,27 @@ void matrix_inplace_sub(matrix_type * A , const matrix_type * B) {
 }
 
 
+/* Does the matrix operation:
+
+   A = B - C
+
+   elementwise.
+*/
+void matrix_sub(matrix_type * A , const matrix_type * B , const matrix_type * C) {
+  if ((A->rows == B->rows) && (A->columns == B->columns) && (A->rows == C->rows) && (A->columns == C->columns)) {
+    int i,j;
+    
+    for (j = 0; j < A->columns; j++)
+      for (i=0; i < A->rows; i++)
+        A->data[ GET_INDEX(A,i,j) ] = B->data[ GET_INDEX(B,i,j) ] - C->data[ GET_INDEX(B,i,j) ];
+    
+  } else 
+    util_abort("%s: size mismatch \n",__func__);
+}
+
+
+
+
 /* Updates matrix A by dividing matrix B - elementwise. */
 void matrix_inplace_div(matrix_type * A , const matrix_type * B) {
   if ((A->rows == B->rows) && (A->columns == B->columns)) {
@@ -706,6 +784,32 @@ void matrix_inplace_div(matrix_type * A , const matrix_type * B) {
   } else 
     util_abort("%s: size mismatch \n",__func__);
 }
+
+
+/**
+   Observe that A and T should not overlap, i.e. the call
+   
+         matrix_transpose(X , X)
+
+   will fail in mysterious ways.
+*/
+        
+void matrix_transpose(const matrix_type * A , matrix_type * T) {
+  if ((A->columns == T->rows) && (A->rows == T->columns)) {
+    int i,j;
+    for (i=0; i < A->rows; i++) {
+      for (j=0; j < A->columns; j++) {
+        int src_index    = GET_INDEX(A , i , j );
+        int target_index = GET_INDEX(T , j , i );
+        
+        T->data[ target_index ] = A->data[ src_index ];
+      }
+    }
+  } else
+    util_abort("%s: size mismatch\n",__func__);
+}
+
+
 
 
 /**
@@ -817,6 +921,59 @@ double matrix_get_column_sum(const matrix_type * matrix , int column) {
 }
 
 
+double matrix_get_column_abssum(const matrix_type * matrix , int column) {
+  double sum = 0;
+  for (int i=0; i < matrix->rows; i++)
+    sum += fabs( matrix->data[ GET_INDEX( matrix , i , column ) ] );
+  return sum;
+}
+
+
+double matrix_get_row_sum2(const matrix_type * matrix , int row) {
+  double sum2 = 0;
+  for (int j=0; j < matrix->columns; j++) {
+    double m = matrix->data[ GET_INDEX( matrix , row , j ) ];
+    sum2 += m*m;
+  }
+  return sum2;
+}
+
+
+double matrix_get_row_abssum(const matrix_type * matrix , int row) {
+  double sum_abs = 0;
+  for (int j=0; j < matrix->columns; j++) {
+    double m = matrix->data[ GET_INDEX( matrix , row , j ) ];
+    sum_abs += fabs( m );
+  }
+  return sum_abs;
+}
+
+/**
+   Return the sum of the squares on column.
+*/
+double matrix_get_column_sum2(const matrix_type * matrix , int column) {
+  double sum2 = 0;
+  for (int i=0; i < matrix->rows; i++) {
+    double m = matrix->data[ GET_INDEX( matrix , i , column ) ];
+    sum2 += m*m;
+  }
+  return sum2;
+}
+
+
+
+void matrix_shift_column(matrix_type * matrix , int column, double shift) {
+  for (int i=0; i < matrix->rows; i++) 
+    matrix->data[ GET_INDEX( matrix , i , column) ] += shift;
+}
+
+
+void matrix_shift_row(matrix_type * matrix , int row , double shift) {
+  for (int j=0; j < matrix->columns; j++) 
+    matrix->data[ GET_INDEX( matrix , row , j ) ] += shift;
+}
+
+
 
 /**
    For each row in the matrix we will do the operation
@@ -827,8 +984,7 @@ double matrix_get_column_sum(const matrix_type * matrix , int column) {
 void matrix_subtract_row_mean(matrix_type * matrix) {
   for (int i=0; i < matrix->rows; i++) {
     double row_mean = matrix_get_row_sum(matrix , i) / matrix->columns;
-    for (int j=0; j < matrix->columns; j++) 
-      matrix->data[ GET_INDEX( matrix , i , j ) ] -= row_mean;
+    matrix_shift_row( matrix , i , -row_mean);
   }
 }
 
@@ -987,6 +1143,8 @@ void matrix_diag_set(matrix_type * matrix , const double * diag) {
 
 
 
+
+
 /**
    Fills the matrix with uniformly distributed random numbers in
    [0,1).
@@ -1048,3 +1206,6 @@ void matrix_matlab_dump(const matrix_type * matrix, const char * filename) {
 
   fclose(stream);
 }
+
+
+

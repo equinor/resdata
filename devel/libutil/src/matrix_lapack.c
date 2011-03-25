@@ -463,7 +463,8 @@ static void matrix_dgetrf__( matrix_type * A, int * ipiv, int * info) {
 
 
 /** 
-    This is currently only used as a precursor for th determinant calculation.
+    This is currently only used as a precursor for the determinant
+    calculation.
  */
 static void matrix_dgetrf( matrix_type * A) {
   int   info;

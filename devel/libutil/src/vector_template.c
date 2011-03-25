@@ -555,8 +555,8 @@ void <TYPE>_vector_idel_block( <TYPE>_vector_type * vector , int index , int blo
     if ((index >= 0) && (index < vector->size) && (block_size >= 0)) {
       if (index + block_size > vector->size)
         block_size = vector->size - index;
-      else {
-        int move_size      = (vector->size - index - block_size - 1) * sizeof(<TYPE>);
+      {
+        int move_size      = (vector->size - (index + block_size)) * sizeof(<TYPE>);
         <TYPE> * target    = &vector->data[index];
         const <TYPE> * src = &vector->data[index + block_size];
         memmove( target , src , move_size );
@@ -565,6 +565,19 @@ void <TYPE>_vector_idel_block( <TYPE>_vector_type * vector , int index , int blo
     } else
       util_abort("%s: invalid input \n",__func__);
   }
+}
+
+/**
+   Removes element @index from the vector, shifting all elements to
+   the right of @index one element to the left and shrinking the total
+   vector. The return value is the value which is removed.  
+*/
+
+
+<TYPE> <TYPE>_vector_idel( <TYPE>_vector_type * vector , int index) {
+  <TYPE> del_value = <TYPE>_vector_iget( vector , index );
+  <TYPE>_vector_idel_block( vector , index , 1 );
+  return del_value;
 }
 
 

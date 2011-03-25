@@ -3955,6 +3955,17 @@ FILE * util_fopen(const char * filename , const char * mode) {
   return stream;
 }
 
+/**
+   This micro function is only provided for the convenience of java
+   wrapping; if you wonder "What on earth should I use this function
+   for" - you can just forget about it.x  
+*/
+
+void util_fclose( FILE * stream ) {
+  fclose( stream );
+}
+
+
 
 /**
    This function will open 'filename' with mode 'mode'. If the mode is

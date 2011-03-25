@@ -40,8 +40,8 @@
 
    The ecl_file struct is quite simply a vector of ecl_kw instances,
    it has no knowledge of report steps and such, and does not know
-   whether it has been built from a complete file, or only from a part
-   of a unified file.
+   whether it has been built from a complete file, or only from part
+   of a unified file.  
 */
 
 
@@ -121,9 +121,9 @@ ecl_file_type * ecl_file_alloc_empty( ) {
 /**
    This function iterates over the kw_list vector and builds the
    internal index fields 'kw_index' and 'distinct_kw'. This function
-   must be called everytime the content of the kw_list vector is
+   must be called every time the content of the kw_list vector is
    modified (otherwise the ecl_file instance will be in an
-   inconsistent state).
+   inconsistent state).  
 */
 
 static void ecl_file_make_index( ecl_file_type * ecl_file ) {

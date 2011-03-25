@@ -69,6 +69,8 @@ void matrix_mul_vector(const matrix_type * A , const double * x , double * y) {
 
 
 static void dgemm_debug(const matrix_type *C , const matrix_type *A , const matrix_type * B , bool transA, bool transB) {
+  printf("\nC =  [%d , %d]\n",matrix_get_rows( C ) , matrix_get_columns(C));
+  
   printf("A: [%d , %d]", matrix_get_rows( A ) , matrix_get_columns(A));
   if (transA)
     printf("^T");
@@ -77,7 +79,20 @@ static void dgemm_debug(const matrix_type *C , const matrix_type *A , const matr
   if (transB)
     printf("^T");
 
-  printf("\nC: [%d , %d]\n",matrix_get_rows( C ) , matrix_get_columns(C));
+  printf("\n\n");
+  printf("[%d ,%d] = ",matrix_get_rows( C ) , matrix_get_columns(C));
+  if (transA)
+    printf("[%d ,%d] x ",matrix_get_rows( A ) , matrix_get_columns(A));
+  else
+    printf("[%d ,%d] x ",matrix_get_columns( A ) , matrix_get_rows(A));
+  
+  
+  if (transB)
+    printf("[%d ,%d]\n",matrix_get_rows( B ) , matrix_get_columns(B));
+  else
+    printf("[%d ,%d]\n",matrix_get_columns( B ) , matrix_get_rows(B));
+  
+
 }
 
 
@@ -132,14 +147,14 @@ void matrix_dgemm(matrix_type *C , const matrix_type *A , const matrix_type * B 
           A   |         B   |  Columns(A) = Rows(B)
     Trans(A)  |   Trans(B)  |  Rows(A)    = Columns(B)
           A   |   Trans(B)  |  Columns(A) = Columns(B)
-    Trans(A)  |         B   |  Rows(A)    = Rows(B)	  
+    Trans(A)  |         B   |  Rows(A)    = Rows(B)       
     --------------------------------------------------
 
     --------------------------------------------------
               A         | Rows(A)    = Rows(C)
-	Trans(A)        | Columns(A) = Rows(C)
-	      B         | Columns(B) = Columns(C)
-	Trans(B)        | Rows(B)    = Columns(B)
+        Trans(A)        | Columns(A) = Rows(C)
+              B         | Columns(B) = Columns(C)
+        Trans(B)        | Rows(B)    = Columns(B)
     --------------------------------------------------
     
   */
@@ -149,8 +164,10 @@ void matrix_dgemm(matrix_type *C , const matrix_type *A , const matrix_type * B 
     util_abort("%s: matrix size mismatch between A and B \n", __func__);
   }
   
+  
   if (outerA != matrix_get_rows( C )) {
     dgemm_debug(C,A,B,transA , transB);
+    printf("outerA:%d \n",outerA);
     util_abort("%s: matrix size mismatch between A and C \n",__func__);
   }
 
@@ -178,3 +195,48 @@ void matrix_matmul(matrix_type * C, const matrix_type * A , const matrix_type * 
 
 
 
+/*****************************************************************/
+/**
+   Will calculate the Gram matrix: G = X'*X
+*/
+
+void matrix_gram_set( const matrix_type * X , matrix_type * G, bool col) {
+  int G_rows = matrix_get_rows( G );
+  int G_cols = matrix_get_columns( G );
+  int X_rows = matrix_get_rows( X );
+  int X_cols = matrix_get_columns( X );
+  if (col) {
+    // Calculate X' · X
+    if ((G_rows == G_cols) && (X_cols == G_rows)) 
+      matrix_dgemm( G , X , X , true , false , 1 , 0);
+    else 
+      util_abort("%s: dimension mismatch \n",__func__);
+  } else {
+    // Calculate X · X'
+    if ((G_rows == G_cols) && (X_rows == G_rows)) 
+      matrix_dgemm( G , X , X , false , true , 1 , 0);
+    else
+      util_abort("%s: dimension mismatch \n",__func__);
+  }
+}
+
+
+/**
+   If col == true:   G = X' · X
+      col == false:  G = X  · X'   
+*/
+
+
+matrix_type * matrix_alloc_gram( const matrix_type * X , bool col) {
+  int X_rows    = matrix_get_rows( X );
+  int X_columns = matrix_get_columns( X );
+  matrix_type * G;
+
+  if (col) 
+    G = matrix_alloc( X_columns , X_columns );    
+  else
+    G = matrix_alloc( X_rows , X_rows );
+
+  matrix_gram_set( X , G , col);
+  return G;
+}

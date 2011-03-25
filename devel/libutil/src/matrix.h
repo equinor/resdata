@@ -54,24 +54,35 @@ void          matrix_inplace_add(matrix_type * A , const matrix_type * B);
 void          matrix_inplace_sub(matrix_type * A , const matrix_type * B);
 void          matrix_inplace_mul(matrix_type * A , const matrix_type * B);
 void          matrix_inplace_div(matrix_type * A , const matrix_type * B);
-
+void          matrix_sub(matrix_type * A , const matrix_type * B , const matrix_type * C);
+void          matrix_mul( matrix_type * A , const matrix_type * B , const matrix_type * C);
+void          matrix_transpose(const matrix_type * A , matrix_type * T);
 
 void          matrix_iset_safe(matrix_type * matrix , int i , int j, double value);
-void   	      matrix_iset(matrix_type * matrix , int i , int j, double value);
-double 	      matrix_iget(const matrix_type * matrix , int i , int j);
-void   	      matrix_iadd(matrix_type * matrix , int i , int j , double value);
-void   	      matrix_imul(matrix_type * matrix , int i , int j , double value);
+void          matrix_iset(matrix_type * matrix , int i , int j, double value);
+double        matrix_iget(const matrix_type * matrix , int i , int j);
+void          matrix_iadd(matrix_type * matrix , int i , int j , double value);
+void          matrix_imul(matrix_type * matrix , int i , int j , double value);
 
 
 void          matrix_inplace_matmul(matrix_type * A, const matrix_type * B);
 void          matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads);
 
+
+void          matrix_shift_column(matrix_type * matrix , int column, double shift);
+void          matrix_shift_row(matrix_type * matrix , int row , double shift);
 double        matrix_get_column_sum(const matrix_type * matrix , int column);
 double        matrix_get_row_sum(const matrix_type * matrix , int column);
+double        matrix_get_column_sum2(const matrix_type * matrix , int column);
+double        matrix_get_row_abssum(const matrix_type * matrix , int row);
+double        matrix_get_column_abssum(const matrix_type * matrix , int column);
+double        matrix_get_row_sum2(const matrix_type * matrix , int column);
 void          matrix_subtract_row_mean(matrix_type * matrix);
 void          matrix_scale_column(matrix_type * matrix , int column  , double scale_factor);
+void          matrix_scale_row(matrix_type * matrix , int row  , double scale_factor);
 void          matrix_set_const_column(matrix_type * matrix , const double value , int column);
 void          matrix_copy_column(matrix_type * target_matrix, const matrix_type * src_matrix , int src_column, int target_column);
+void          matrix_set_const_row(matrix_type * matrix , const double value , int row);
 
 double      * matrix_get_data(const matrix_type * matrix);
 bool          matrix_is_finite(const matrix_type * matrix);
@@ -95,6 +106,8 @@ void          matrix_diag_set(matrix_type * matrix , const double * diag);
 void          matrix_matlab_dump(const matrix_type * matrix, const char * filename);
 
 double        matrix_column_column_dot_product(const matrix_type * m1 , int col1 , const matrix_type * m2 , int col2);
+double        matrix_row_column_dot_product(const matrix_type * m1 , int row1 , const matrix_type * m2 , int col2);
+matrix_type * matrix_alloc_view(double * data , int rows , int columns);
 
 #ifdef __cplusplus 
 }
