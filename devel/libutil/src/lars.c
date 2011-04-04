@@ -165,6 +165,15 @@ static void lars_estimate_init( lars_type * lars, matrix_type * X , matrix_type 
   }
 }
 
+double lars_getY0( const lars_type * lars) {
+  return lars->Y0;
+}
+
+double lars_iget_beta( const lars_type * lars , int index) {
+  return matrix_iget( lars->beta0 , index , 0 );
+}
+
+
 
 void lars_select_beta( lars_type * lars , int beta_index) {
   int nvars = matrix_get_rows( lars->beta );
@@ -203,7 +212,7 @@ void lars_select_beta( lars_type * lars , int beta_index) {
   4. Update the beta estimate and the current 'location' mu.
 */
 
-void lars_estimate(lars_type * lars , int max_vars , double max_beta) {
+void lars_estimate(lars_type * lars , int max_vars , double max_beta , bool verbose) {
   int nvars       = matrix_get_columns( lars->X );
   int nsample     = matrix_get_rows( lars->X );
   matrix_type * X = matrix_alloc( nsample, nvars );    // Allocate local X and Y variables
@@ -292,7 +301,7 @@ void lars_estimate(lars_type * lars , int max_vars , double max_beta) {
             by:
 
             [  s1   s2   s3   s4 ]  
-            S = [  s1   s2   s3   s4 ]
+        S = [  s1   s2   s3   s4 ]
             [  s1   s2   s3   s4 ]
             [  s1   s2   s3   s4 ]
 
@@ -436,7 +445,8 @@ void lars_estimate(lars_type * lars , int max_vars , double max_beta) {
     int_vector_free( active_set );
     int_vector_free( inactive_set );
     matrix_resize( lars->beta , nvars , active_size , true );
-    matrix_pretty_fprint( lars->beta , "beta" , "%12.5f" , stdout );
+    if (verbose) 
+      matrix_pretty_fprint( lars->beta , "beta" , "%12.5f" , stdout );
     lars_select_beta( lars , active_size - 1);
   }
   matrix_free( X );
@@ -444,14 +454,14 @@ void lars_estimate(lars_type * lars , int max_vars , double max_beta) {
 }
 
 
-double lars_eval( const lars_type * lars , const matrix_type * x) {
+double lars_eval1( const lars_type * lars , const matrix_type * x) {
   return lars->Y0 + matrix_row_column_dot_product( x , 0 , lars->beta0 , 0 );
 }
 
 
 double lars_eval2( const lars_type * lars , double * x) {
   matrix_type * x_view = matrix_alloc_view( x , 1 , matrix_get_columns( lars->X_mean ));
-  double y = lars_eval( lars , x_view );
+  double y = lars_eval1( lars , x_view );
   matrix_free( x_view );
   return y;
 }

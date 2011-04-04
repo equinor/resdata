@@ -62,7 +62,7 @@ static void ecl_grav_check_rporv(const ecl_grid_type * ecl_grid , const ecl_kw_t
       fprintf(stderr,"RPORV1   : %g \n",rporv1);
       fprintf(stderr,"RPORV2   : %g \n",rporv2);
       fprintf(stderr,"Hmmm - the RPORV values extracted from the restart file seem to be \n");
-      fprintf(stderr,"veeery different from the initial rporv value. This might indicated\n");
+      fprintf(stderr,"veeery different from the initial rporv value. This might indicate\n");
       fprintf(stderr,"an ECLIPSE bug. Version 2007.2 is known to be ok in this respect, \n");
       fprintf(stderr,"whereas version 2008.2 is known to have a bug. \n");
       fprintf(stderr,"-----------------------------------------------------------------\n");

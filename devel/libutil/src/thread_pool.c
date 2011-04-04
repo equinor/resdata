@@ -272,9 +272,10 @@ static void * thread_pool_main_loop( void * arg ) {
 
   /* 
      There are no more jobs in the queue, and the main scope has
-     signaled that join should start. Observe that we only the jobs
-     corresponding to explicitly running job_slots; the first jobs run
-     in a job_slot will not be explicitly joined.
+     signaled that join should start. Observe that we join only the
+     jobs corresponding to explicitly running job_slots; when a job
+     slot is used multiple time the first jobs run in the job_slot
+     will not be explicitly joined.
   */
   {
     int i;
