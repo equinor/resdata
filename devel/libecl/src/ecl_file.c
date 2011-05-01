@@ -50,15 +50,16 @@
   loading summary and restart files.
 */
 
-#define INTEHEAD_KW  "INTEHEAD"    /* Restart files */
+#define INTEHEAD_KW  "INTEHEAD"    /* Restart files & init files*/
 #define SEQNUM_KW    "SEQNUM"      /* Restart files */
 #define SEQHDR_KW    "SEQHDR"      /* Summary files */
 
-#define INTEHEAD_DAY_INDEX    64
-#define INTEHEAD_MONTH_INDEX  65
-#define INTEHEAD_YEAR_INDEX   66
-
-
+/* The INTEHEAD_XXX_INDEX values apply to both INIT files and restart files. */
+#define INTEHEAD_DAY_INDEX     64   
+#define INTEHEAD_MONTH_INDEX   65
+#define INTEHEAD_YEAR_INDEX    66
+#define INTEHEAD_VERSION_INDEX 94
+#define INTEHEAD_PHASE_INDEX   14
 
 #define ECL_FILE_ID 776107
 
@@ -418,6 +419,46 @@ static time_t ecl_file_iget_restart_sim_date__(const ecl_file_type * restart_fil
 
 time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int occurence ) {
   return ecl_file_iget_restart_sim_date__( restart_file , occurence );
+}
+
+/*
+  The input @file must be either an INIT file or a restart file. Will
+  fail hard if an INTEHEAD kw can not be found - or if the INTEHEAD
+  keyword is not sufficiently large.
+
+  The eclipse files can distinguish between ECLIPSE300 ( value == 300)
+  and ECLIPSE300-Thermal option (value == 500). This function will
+  return ECLIPSE300 in both those cases.  
+*/
+
+ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file ) {
+  ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( file , INTEHEAD_KW , 0 );
+  int int_value = ecl_kw_iget_int( intehead_kw , INTEHEAD_VERSION_INDEX );
+
+  if (int_value == 100)
+    return ECLIPSE100;
+  else if ((int_value == 300) || (int_value == 500))
+    return ECLIPSE300;
+  else {
+    util_abort("%s: ECLIPSE version value:%d not recognized \n",__func__ , int_value );
+    return -1;
+  }
+}
+
+/*
+  1: Oil
+  2: Water
+  3: Oil + water
+  4: Gas
+  5: Gas + Oil
+  6: Gas + water
+  7: Gas + Water + Oil
+
+  Do not know if this differs between init files and restart files?
+*/
+int ecl_file_get_phases( const ecl_file_type * init_file ) {
+  ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( init_file , INTEHEAD_KW , 0 );
+  int phases = ecl_kw_iget_int( intehead_kw , INTEHEAD_PHASE_INDEX );
 }
 
 /**

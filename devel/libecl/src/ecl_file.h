@@ -27,6 +27,7 @@ extern "C" {
 #include <ecl_kw.h>
 #include <fortio.h>
 #include <time.h>
+#include <ecl_util.h>
 
 typedef struct ecl_file_struct ecl_file_type;
 
@@ -48,8 +49,9 @@ int             ecl_file_get_num_distinct_kw(const ecl_file_type * ecl_file);
 const char    * ecl_file_iget_distinct_kw(const ecl_file_type * ecl_file , int index);
 const char    * ecl_file_get_src_file( const ecl_file_type * ecl_file );
 int             ecl_file_iget_occurence( const ecl_file_type *  ecl_file , int index);
-time_t          ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int occurence );
-int             ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_time);
+time_t           ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int occurence );
+ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file );
+int              ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_time);
 
 ecl_file_type * ecl_file_alloc_empty( );
 ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int index );
@@ -66,6 +68,7 @@ void            ecl_file_fwrite(const ecl_file_type * ecl_file , const char * , 
 
 bool            ecl_file_has_kw_ptr(const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw);
 void            ecl_file_replace_kw( ecl_file_type * ecl_file , ecl_kw_type * old_kw , const ecl_kw_type * new_kw , bool insert_copy);
+int             ecl_file_get_phases( const ecl_file_type * init_file );
 
 UTIL_IS_INSTANCE_HEADER( ecl_file )
 

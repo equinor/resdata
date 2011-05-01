@@ -81,6 +81,33 @@ typedef enum {
 } ecl_type_enum;
 
 
+
+/*
+  The libecl library has been built and tested 99.5% with ECLIPSE100
+  as context, but in thye gravity code there is some very limited
+  functionality related to ECLIPSE100 versus ECLIPSE300 functionality.
+*/ 
+
+typedef enum {
+  ECLIPSE_UNDEFINED = 0,
+  ECLIPSE100        = 1,
+  ECLIPSE300        = 2     
+} ecl_version_enum;
+
+/*
+  Observe that the numerical enum VALUES matches those found in item
+  14 in the INTEHEAD keyword in the ECLIPSE INIT files.  
+  
+  The phases in a simulation will typically be a sum of these
+  fundamental phases, and represented as an integer.
+*/
+
+typedef enum {
+  OIL   = 1,
+  GAS   = 2,
+  WATER = 4
+} ecl_phase_enum;
+
 // For unformatted files:
 #define ECL_BOOL_TRUE_INT         -1   // Binary representation: 11111111  11111111  11111111  1111111
 #define ECL_BOOL_FALSE_INT         0   // Binary representation: 00000000  00000000  00000000  0000000     
