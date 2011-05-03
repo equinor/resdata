@@ -2003,6 +2003,7 @@ void ecl_grid_get_xyz3(const ecl_grid_type * grid , int i, int j , int k, double
 
 
 
+
 /**
    This function will return (by reference) the x,y,z values of corner
    nr 'corner_nr' in cell 'global_index'. See the documentation of

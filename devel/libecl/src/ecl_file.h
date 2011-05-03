@@ -69,6 +69,7 @@ void            ecl_file_fwrite(const ecl_file_type * ecl_file , const char * , 
 bool            ecl_file_has_kw_ptr(const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw);
 void            ecl_file_replace_kw( ecl_file_type * ecl_file , ecl_kw_type * old_kw , const ecl_kw_type * new_kw , bool insert_copy);
 int             ecl_file_get_phases( const ecl_file_type * init_file );
+void            ecl_file_fprintf_kw_list( const ecl_file_type * ecl_file , FILE * stream );
 
 UTIL_IS_INSTANCE_HEADER( ecl_file )
 

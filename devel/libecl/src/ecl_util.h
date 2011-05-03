@@ -96,16 +96,20 @@ typedef enum {
 
 /*
   Observe that the numerical enum VALUES matches those found in item
-  14 in the INTEHEAD keyword in the ECLIPSE INIT files.  
+  14 in the INTEHEAD keyword in the ECLIPSE INIT files; i.e. the
+  distribution of numerical values 1,2,4 can NOT BE CHANGED.
+
+  The function ecl_util_get_phase_name() can be used to lookup a
+  string name from an enum value.
   
   The phases in a simulation will typically be a sum of these
   fundamental phases, and represented as an integer.
 */
 
 typedef enum {
-  OIL   = 1,
-  GAS   = 2,
-  WATER = 4
+  ECL_OIL_PHASE   = 1,
+  ECL_GAS_PHASE   = 2,
+  ECL_WATER_PHASE = 4
 } ecl_phase_enum;
 
 // For unformatted files:
@@ -139,6 +143,7 @@ int             ecl_util_get_month_nr(const char * month_name);
 int             ecl_util_fname_report_cmp(const void *f1, const void *f2);
 int             ecl_util_select_filelist( const char * path , const char * base , ecl_file_enum file_type , bool fmt_file , stringlist_type * filelist);
 bool            ecl_util_valid_basename( const char * basename );
+const char *    ecl_util_get_phase_name( ecl_phase_enum phase );
 #ifdef __cplusplus
 }
 #endif

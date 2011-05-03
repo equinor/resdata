@@ -459,6 +459,7 @@ ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file ) {
 int ecl_file_get_phases( const ecl_file_type * init_file ) {
   ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( init_file , INTEHEAD_KW , 0 );
   int phases = ecl_kw_iget_int( intehead_kw , INTEHEAD_PHASE_INDEX );
+  return phases;
 }
 
 /**
@@ -1017,3 +1018,11 @@ const char * ecl_file_get_src_file( const ecl_file_type * ecl_file ) {
   return ecl_file->src_file;
 }
 
+
+void ecl_file_fprintf_kw_list( const ecl_file_type * ecl_file , FILE * stream ) {
+  int i;
+  for (i=0; i < vector_get_size( ecl_file->kw_list ); i++) {
+    const ecl_kw_type * kw = ecl_file_iget_kw( ecl_file , i );
+    fprintf(stream , "%-8s %7d:%s\n",ecl_kw_get_header( kw ) , ecl_kw_get_size( kw ) , ecl_util_get_type_name( ecl_kw_get_type( kw )));
+  }
+}

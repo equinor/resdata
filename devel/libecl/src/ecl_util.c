@@ -42,6 +42,9 @@
 #define ECL_TYPE_NAME_MESSAGE  "MESS" 
 
 
+#define ECL_PHASE_NAME_OIL   "SOIL"   // SHould match the keywords found in restart file
+#define ECL_PHASE_NAME_WATER "SWAT"
+#define ECL_PHASE_NAME_GAS   "SGAS"
 
 
 #define ECL_OTHER_FILE_FMT_PATTERN        "*"
@@ -69,7 +72,22 @@
 
 
 
-
+const char * ecl_util_get_phase_name( ecl_phase_enum phase ) {
+  switch( phase ) {
+  case( ECL_OIL_PHASE ):
+    return ECL_PHASE_NAME_OIL;
+    break;
+  case( ECL_WATER_PHASE ):
+    return ECL_PHASE_NAME_WATER;
+    break;
+  case( ECL_GAS_PHASE ):
+    return ECL_PHASE_NAME_GAS;
+    break;
+  default:
+    util_abort("%s: phase enum value:%d not recognized \n",__func__ , phase);
+    return NULL;
+  }
+}
 
 
 
@@ -1006,6 +1024,8 @@ bool ecl_util_alloc_summary_files(const char * path , const char * _base , const
 }
 
 
+
+
 //const char * ecl_util_get_extension( ecl_file_enum_type file_type , bool fmt_file) {
 //
 //}
@@ -1337,5 +1357,7 @@ bool ecl_util_valid_basename( const char * basename ) {
   else
     return true;
 }
+
+
 
 

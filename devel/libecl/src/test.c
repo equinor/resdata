@@ -16,25 +16,34 @@
    for more details. 
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-
-
+#include <ecl_grav.h>
+#include <ecl_file.h>
 
 int main (int argc, char **argv) {
-  char buffer[64];
-  char *end_ptr;
-  double power;
-  double arg   = strtod("1.0000E+01" , &end_ptr);
-  if (end_ptr[0] == 'D')
-    power = strtod(end_ptr + 1 , NULL);
-  
+  const char * path = "/d/proj/bg/restroll2/restek2/TEG/simu_HM2011";
+  const char * base = "BCUPD_HISTORYMATCH_JAN11_ECL20072";
+  {
+    char * grid_file = ecl_util_alloc_exfilename( path , base , ECL_EGRID_FILE , false , 0 );
+    char * init_file = ecl_util_alloc_exfilename( path , base , ECL_INIT_FILE , false , 0 );
+    char * restart_file = ecl_util_alloc_exfilename( path , base , ECL_UNIFIED_RESTART_FILE , false , 0 );
 
+    ecl_grav_type * ecl_grav = ecl_grav_alloc( grid_file , init_file );
+    {
+      ecl_file_type * base_survey    = ecl_file_fread_alloc_unrst_section( restart_file , 23 );
+      ecl_file_type * monitor_survey = ecl_file_fread_alloc_unrst_section( restart_file , 206 );
 
-  printf("Hei %lg  %lg \n",arg, power);
-
-  return 0;
+      ecl_grav_add_survey(ecl_grav  , "BASE"    , base_survey );
+      ecl_grav_add_survey( ecl_grav , "MONITOR" , monitor_survey );
+      
+      printf("grav_eval: %g \n",ecl_grav_eval( ecl_grav , "BASE" , "MONITOR" , 541003 , 6709907 , 297.023);
+             
+      ecl_file_free( base_survey );
+      ecl_file_free( monitor_survey );
+    }
+    free( grid_file );
+    free( init_file );
+    free( restart_file );
+  }
 }
 
 
