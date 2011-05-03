@@ -95,6 +95,7 @@ void                 <TYPE>_vector_fwrite_data( const <TYPE>_vector_type * vecto
 void                 <TYPE>_vector_fread_data( <TYPE>_vector_type * vector , int size, FILE * stream);
 bool                 <TYPE>_vector_equal(const <TYPE>_vector_type * vector1 , const <TYPE>_vector_type * vector2);
 void                 <TYPE>_vector_apply(<TYPE>_vector_type * vector , <TYPE>_ftype *func);
+int                  <TYPE>_vector_count_equal( const <TYPE>_vector_type * vector , <TYPE> cmp_value);
 
 UTIL_SAFE_CAST_HEADER( <TYPE>_vector );
 

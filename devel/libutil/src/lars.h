@@ -33,7 +33,7 @@ int               lars_get_sample( const lars_type * lars );
 int               lars_get_nvar( const lars_type * lars );
 lars_type       * lars_alloc1( int nsample , int nvars);
 lars_type       * lars_alloc2( matrix_type * X , matrix_type * Y , bool internal_copy );
-  void              lars_estimate(lars_type * lars , int max_vars , double max_beta , bool verbose);
+void              lars_estimate(lars_type * lars , int max_vars , double max_beta , bool verbose);
 void              lars_isetX( lars_type * lars, int sample, int var , double value);
 void              lars_isetY( lars_type * lars, int sample, double value);
 void              lars_select_beta( lars_type * lars , int beta_index);

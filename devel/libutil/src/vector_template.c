@@ -1193,3 +1193,12 @@ void  <TYPE>_vector_apply(<TYPE>_vector_type * vector , <TYPE>_ftype * func) {
       vector->data[i] = func( vector->data[i] );
   }
 }
+
+int <TYPE>_vector_count_equal( const <TYPE>_vector_type * vector , <TYPE> cmp_value) {
+  int count = 0;
+  for (int i=0; i < vector->size; i++)
+    if (vector->data[i] == cmp_value)
+      count += 1;
+
+  return count;
+}

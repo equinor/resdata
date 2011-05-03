@@ -27,11 +27,13 @@
 #include <matrix.h>
 #include <matrix_blas.h>
 #include <matrix_lapack.h>
+#include <regression.h>
 #include <lars.h>
 
-
+#define LARS_TYPE_ID 77125439
 
 struct lars_struct {
+  UTIL_TYPE_ID_DECLARATION;
   matrix_type * X;
   matrix_type * Y;
   bool          data_owner;  
@@ -48,7 +50,7 @@ struct lars_struct {
 
 static lars_type * lars_alloc__() {
   lars_type * lars = util_malloc( sizeof * lars , __func__ );
-
+  UTIL_TYPE_ID_INIT( lars , LARS_TYPE_ID );
   lars->X = NULL;
   lars->Y = NULL;
 
@@ -127,7 +129,6 @@ static double sgn(double x) {
 
 static void lars_estimate_init( lars_type * lars, matrix_type * X , matrix_type * Y) {
   int nvar     = matrix_get_columns( lars->X );
-  int nsample  = matrix_get_rows( lars->X );
   
   matrix_assign( X , lars->X );
   matrix_assign( Y , lars->Y );
@@ -142,28 +143,9 @@ static void lars_estimate_init( lars_type * lars, matrix_type * X , matrix_type 
   if (lars->beta != NULL)
     matrix_free( lars->beta );
   lars->beta = matrix_alloc( nvar , nvar );
-  
-  {
-    double y_mean = matrix_get_column_sum( Y , 0 ) / nsample;
-    matrix_shift_column( Y , 0 , -y_mean );
-    
-    {
-      int col;
-      for (col = 0; col < nvar; col++) {
-        double mean = matrix_get_column_sum(X , col ) / nsample;
-        matrix_shift_column(X , col , -mean);
-        matrix_iset( lars->X_mean , 0 , col , mean );
-      }
-      
-      for (col=0; col < nvar; col++) {
-        double norm = 1.0 / sqrt(matrix_get_column_sum2( X , col ));
-        matrix_scale_column( X , col , norm );
-        matrix_iset( lars->X_norm , 0 , col , norm );
-      }
-    }
-    lars->Y_mean = y_mean;
-  }
+  lars->Y_mean = regression_scale( X , Y , lars->X_mean , lars->X_norm);
 }
+
 
 double lars_getY0( const lars_type * lars) {
   return lars->Y0;
@@ -179,16 +161,11 @@ void lars_select_beta( lars_type * lars , int beta_index) {
   int nvars = matrix_get_rows( lars->beta );
   if (lars->beta0 == NULL)
     lars->beta0 = matrix_alloc( nvars , 1 );
-
   {
-    int k;
-    double yshift = 0;
-    for (k=0; k < nvars; k++) {
-      double scaled_beta = matrix_iget( lars->beta , k , beta_index) * matrix_iget( lars->X_norm , 0 , k);
-      matrix_iset( lars->beta0 , k , 0 , scaled_beta);
-      yshift += scaled_beta * matrix_iget( lars->X_mean , 0 , k );
-    }
-    lars->Y0 = lars->Y_mean - yshift;
+    matrix_type * beta_vector = matrix_alloc( nvars , 1 );
+    matrix_copy_column( beta_vector , lars->beta , 0 , beta_index );
+    lars->Y0 = regression_unscale( beta_vector , lars->X_norm , lars->X_mean , lars->Y_mean , lars->beta0 );
+    matrix_free( beta_vector );
   }
 }
 

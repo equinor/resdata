@@ -108,6 +108,8 @@ void          matrix_matlab_dump(const matrix_type * matrix, const char * filena
 double        matrix_column_column_dot_product(const matrix_type * m1 , int col1 , const matrix_type * m2 , int col2);
 double        matrix_row_column_dot_product(const matrix_type * m1 , int row1 , const matrix_type * m2 , int col2);
 matrix_type * matrix_alloc_view(double * data , int rows , int columns);
+matrix_type * matrix_alloc_transpose( const matrix_type * A);
+void          matrix_copy_row(matrix_type * target_matrix, const matrix_type * src_matrix , int target_row, int src_row);
 
 #ifdef __cplusplus 
 }

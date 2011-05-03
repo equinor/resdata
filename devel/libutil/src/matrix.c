@@ -520,6 +520,12 @@ static void matrix_matrix_assert_equal_rows( const matrix_type * m1 , const matr
 }
 
 
+static void matrix_matrix_assert_equal_columns( const matrix_type * m1 , const matrix_type * m2) {
+  if (m1->columns != m2->columns)
+    util_abort("%s: size mismatch in binary matrix operation %d %d \n",__func__ , m1->columns , m2->columns);
+}
+
+
 void matrix_iset(matrix_type * matrix , int i , int j, double value) {
   matrix->data[ GET_INDEX(matrix , i,j) ] = value;
 }
@@ -625,6 +631,13 @@ void matrix_scale_row(matrix_type * matrix , int row  , double scale_factor) {
     matrix->data[ GET_INDEX( matrix , row , column) ] *= scale_factor;
 }
 
+void matrix_copy_row(matrix_type * target_matrix, const matrix_type * src_matrix , int target_row, int src_row) {
+  matrix_matrix_assert_equal_columns( target_matrix , src_matrix );
+  for(int col = 0; col < target_matrix->columns; col++)
+    target_matrix->data[ GET_INDEX( target_matrix , target_row , col)] = src_matrix->data[ GET_INDEX( src_matrix, src_row, col)];
+} 
+
+
 /*****************************************************************/
 /* Functions for dot products between rows/columns in matrices. */
 
@@ -647,7 +660,7 @@ double matrix_column_column_dot_product(const matrix_type * m1 , int col1 , cons
 
 double matrix_row_column_dot_product(const matrix_type * m1 , int row1 , const matrix_type * m2 , int col2) {
   if (m1->columns != m2->rows)
-    util_abort("%s: size mismatch \n",__func__);
+    util_abort("%s: size mismatch: m1:[%d,%d]   m2:[%d,%d] \n",__func__ , matrix_get_rows( m1 ) , matrix_get_columns( m1 ) , matrix_get_rows( m2 ) , matrix_get_columns( m2 ));
 
   {
     int k;
@@ -810,6 +823,12 @@ void matrix_transpose(const matrix_type * A , matrix_type * T) {
 }
 
 
+matrix_type * matrix_alloc_transpose( const matrix_type * A) {
+  matrix_type * B = matrix_alloc( matrix_get_columns( A ) , matrix_get_rows( A ));
+  matrix_transpose( A , B );
+  return B;
+}
+
 
 
 /**
@@ -847,7 +866,7 @@ void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
     }
     free(tmp);
   } else
-    util_abort("%s: size mismatch \n",__func__);
+    util_abort("%s: size mismatch: A:[%d,%d]   B:[%d,%d]\n",__func__ , matrix_get_rows(A) , matrix_get_columns(A) , matrix_get_rows(B) , matrix_get_columns(B));
 }
 
 

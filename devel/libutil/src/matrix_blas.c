@@ -167,7 +167,7 @@ void matrix_dgemm(matrix_type *C , const matrix_type *A , const matrix_type * B 
   
   if (outerA != matrix_get_rows( C )) {
     dgemm_debug(C,A,B,transA , transB);
-    printf("outerA:%d \n",outerA);
+    printf("outerA:%d  rows(C):%d \n",outerA , matrix_get_rows( C ));
     util_abort("%s: matrix size mismatch between A and C \n",__func__);
   }
 
@@ -192,6 +192,19 @@ void matrix_dgemm(matrix_type *C , const matrix_type *A , const matrix_type * B 
 void matrix_matmul(matrix_type * C, const matrix_type * A , const matrix_type * B) {
   matrix_dgemm( C , A , B , false , false , 1 , 0);
 }
+
+
+/**
+   Allocates new matrix C = A·B
+*/
+
+matrix_type * matrix_alloc_matmul(const matrix_type * A, const matrix_type * B) {
+  matrix_type * C = matrix_alloc( matrix_get_rows( A ) , matrix_get_columns( B ));
+  matrix_matmul( C , A , B );
+  return C;
+}
+
+
 
 
 
