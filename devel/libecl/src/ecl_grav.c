@@ -218,6 +218,13 @@ static double ecl_grav_phase_eval( const ecl_grav_phase_type * base_phase , cons
            return the result in microGal, i.e. we scale with 10^2 * 
            10^6 => 6.67E-3.
         */
+        {
+          double dg = 6.67428E-3*(monitor_mass - base_mass) * dist_z/(dist * dist * dist );
+          int plot_index = index + base_phase->phase * size;
+          printf("%d  %g  %g  %g %g \n",plot_index , base_phase->porv[index] , monitor_phase->porv[ index] , 
+                 (base_phase->porv[index] - monitor_phase->porv[index]) / base_phase->porv[index] , dg);
+        }
+        
         deltag += 6.67428E-3*(monitor_mass - base_mass) * dist_z/(dist * dist * dist );
       }
     }
@@ -398,11 +405,12 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_RPORV(const ecl_grav_grid_ca
   if (ecl_file_has_kw( restart_file , RPORV_KW)) {
     ecl_kw_type * rporv_kw = ecl_file_iget_named_kw( restart_file , RPORV_KW , 0);
     int iactive;
-    for (iactive = 0; iactive < ecl_kw_get_size( rporv_kw ); iactive++) 
+    for (iactive = 0; iactive < ecl_kw_get_size( rporv_kw ); iactive++) {
       survey->porv[ iactive ] = ecl_kw_iget_as_double( rporv_kw , iactive );
-    
+      //printf("%d: RPORV: V = %g \n",  iactive , survey->porv[ iactive ]);
+    }
   } else 
-    util_abort("%s: restart file did not contain RPORV keyword??\n",__func__);
+    util_abort("%s: restart file did not contain %s keyword??\n",__func__ , RPORV_KW);
   survey->porv_kw = util_realloc_string_copy( survey->porv_kw , RPORV_KW);
   ecl_grav_survey_assert_RPORV( survey , init_file );
   ecl_grav_survey_add_phases( survey , ecl_file_get_phases( init_file ) , restart_file );
@@ -425,6 +433,10 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_PORMOD(const ecl_grav_grid_c
   for (active_index = 0; active_index < size; active_index++) {
     int global_index = ecl_grid_get_global_index1A( grid , active_index );
     survey->porv[ active_index ] = ecl_kw_iget_float( pormod_kw , active_index ) * ecl_kw_iget_float( init_porv_kw , global_index );
+    //printf("%d: PORMOD: V = %g * %g = %g \n", active_index , 
+    //       ecl_kw_iget_float( pormod_kw , active_index ) , 
+    //       ecl_kw_iget_float( init_porv_kw , global_index ) , 
+    //       survey->porv[ active_index]);
   }
   survey->porv_kw = util_realloc_string_copy( survey->porv_kw , RPORV_KW);
   ecl_grav_survey_add_phases( survey , ecl_file_get_phases( init_file ) , restart_file );
