@@ -30,6 +30,15 @@
 #include <util.h>
 
 
+/**
+   This file contains datastructures for calculating changes in
+   gravitational response in reservoars. The main datastructure is the
+   ecl_grav_type structure (which is the only structure which is
+   exported). 
+*/
+
+
+
 #define AQUIFER_KW  "AQUIFERN"
 #define RPORV_KW    "RPORV"
 #define PORV_KW     "PORV"
@@ -48,26 +57,76 @@
 typedef struct ecl_grav_grid_cache_struct ecl_grav_grid_cache_type;
 typedef struct ecl_grav_phase_struct      ecl_grav_phase_type;
 
+
+/**
+   The ecl_grav_struct datastructure is the main structure for
+   calculating the gravimetric response from time lapse ECLIPSE
+   simulations. 
+*/
+
 struct ecl_grav_struct {
-  ecl_grid_type            * grid;
-  ecl_file_type            * init_file;
+  ecl_grid_type            * grid;        /* The grid for the current gravity calculations. */
+  ecl_file_type            * init_file;   /* The init file. */
   
-  ecl_grav_grid_cache_type * grid_cache;
-  hash_type                * surveys;
+  ecl_grav_grid_cache_type * grid_cache;  /* An internal specialized structure to facilitate fast grid lookup. */
+  hash_type                * surveys;     /* A hash table containg ecl_grav_survey_type instances; one instance
+                                             for each interesting time. */
 };
+
+
+/**
+   The ecl_grav_grid_cache_struct data structure internalizes the
+   position of all the active cells. This is just a minor
+   simplification to speed up repeated calls to get the true world
+   coordinates of a cell. 
+*/
+
+struct ecl_grav_grid_cache_struct {
+  const ecl_grid_type * grid;         
+
+  int                   size;      /* The length of the vectors, equal to the number of active elements in the grid. */
+  double              * xpos;
+  double              * ypos;
+  double              * zpos;
+  bool                * active;    /* Observe that this is NOT the normal active concept; this vector only has
+                                      grid.nactive elements. Elements are deactivated in this vector if the cell
+                                      represents a numerical aquifer. */
+};
+
+
+
+/**
+   Data structure representing one gravimetric survey. 
+*/
+
+#define ECL_GRAV_SURVEY_ID 88517
+struct ecl_grav_survey_struct {
+  UTIL_TYPE_ID_DECLARATION;
+  const ecl_grav_grid_cache_type * grid_cache;
+  char                           * porv_kw;        /* The keyword (string) used for calculating pore volume: "RPORV" or "PORV_MOD" */
+  char                           * name;           /* Name of the survey - arbitrary string. */
+  double                         * porv;           /* Reference shared by the ecl_grav_phase structures - i.e. it must not be updated. */
+  vector_type                    * phase_list;     /* ecl_grav_phase_type objects - one for each phase present in the model. */
+  hash_type                      * phase_map;      /* The same objects as in the phase_list vector - accessible by the "SWAT", "SGAS" and "SOIL" keys. */
+};
+
+
+/**
+   Data structure representing the results from one phase at one survey.
+*/
+
+#define ECL_GRAV_PHASE_TYPE_ID 1066652
+struct ecl_grav_phase_struct {
+  UTIL_TYPE_ID_DECLARATION;
+  const ecl_grav_grid_cache_type  * grid_cache;
+  double                          * fluid_mass;  /* The total fluid in place (mass) of this phase - for each active cell.*/
+  ecl_phase_enum                    phase;
+};
+
 
 
 /*****************************************************************/
 
-struct ecl_grav_grid_cache_struct {
-  const ecl_grid_type * grid;
-
-  int                   size;
-  double              * xpos;
-  double              * ypos;
-  double              * zpos;
-  bool                * active;
-};
 
 static ecl_grav_grid_cache_type * ecl_grav_grid_cache_alloc( const ecl_grid_type * grid , const ecl_file_type * init_file ) {
   ecl_grav_grid_cache_type * grid_cache = util_malloc( sizeof * grid_cache , __func__);
@@ -143,16 +202,6 @@ static void ecl_grav_grid_cache_free( ecl_grav_grid_cache_type * grid_cache ) {
 
 /*****************************************************************/
 
-#define ECL_GRAV_PHASE_TYPE_ID 1066652
-
-struct ecl_grav_phase_struct {
-  UTIL_TYPE_ID_DECLARATION;
-  const ecl_grav_grid_cache_type  * grid_cache;
-  double                          * sat;
-  double                          * rho;
-  const double                    * porv;    /* Shared reference to the porv field owned by the parent survey. */
-  ecl_phase_enum                    phase;
-};
 
 
 static const char * get_den_kw( ecl_phase_enum phase , ecl_version_enum ecl_version) {
@@ -206,8 +255,8 @@ static double ecl_grav_phase_eval( const ecl_grav_phase_type * base_phase , cons
     
     for (index = 0; index < size; index++) {
       if (active[index]) {
-        double base_mass    = base_phase->rho[index] * base_phase->sat[index] * base_phase->porv[index];
-        double monitor_mass = monitor_phase->rho[index] * monitor_phase->sat[index] * monitor_phase->porv[index];
+        double base_mass    = base_phase->fluid_mass[index];
+        double monitor_mass = monitor_phase->fluid_mass[index];
         double dist_x  = (xpos[index] - utm_x );
         double dist_y  = (ypos[index] - utm_y );
         double dist_z  = (zpos[index] - depth );
@@ -218,13 +267,11 @@ static double ecl_grav_phase_eval( const ecl_grav_phase_type * base_phase , cons
            return the result in microGal, i.e. we scale with 10^2 * 
            10^6 => 6.67E-3.
         */
-        {
-          double dg = 6.67428E-3*(monitor_mass - base_mass) * dist_z/(dist * dist * dist );
-          int plot_index = index + base_phase->phase * size;
-          printf("%d  %g  %g  %g %g \n",plot_index , base_phase->porv[index] , monitor_phase->porv[ index] , 
-                 (base_phase->porv[index] - monitor_phase->porv[index]) / base_phase->porv[index] , dg);
-        }
         
+        /** 
+           For numerical precision it might be benficial to use the
+           util_kahan_sum() function to do a Kahan summation.
+        */
         deltag += 6.67428E-3*(monitor_mass - base_mass) * dist_z/(dist * dist * dist );
       }
     }
@@ -254,10 +301,8 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( const ecl_grav_grid_cache_typ
     
     UTIL_TYPE_ID_INIT( grav_phase , ECL_GRAV_PHASE_TYPE_ID );
     grav_phase->grid_cache = grid_cache;
-    grav_phase->sat        = util_malloc( size * sizeof * grav_phase->sat , __func__ );
-    grav_phase->rho        = util_malloc( size * sizeof * grav_phase->rho , __func__ );
+    grav_phase->fluid_mass = util_malloc( size * sizeof * grav_phase->fluid_mass , __func__ );
     grav_phase->phase      = phase;
-    grav_phase->porv       = porv;
   
     if (ecl_file_has_kw( restart_file , sat_kw_name )) 
       sat_kw = ecl_file_iget_named_kw( restart_file , sat_kw_name , 0 );
@@ -275,9 +320,11 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( const ecl_grav_grid_cache_typ
       private_sat_kw = true;
     }
 
+
     for (iactive=0; iactive < size; iactive++) {
-      grav_phase->sat[iactive] = ecl_kw_iget_as_double( sat_kw , iactive );
-      grav_phase->rho[iactive] = ecl_kw_iget_as_double( den_kw , iactive );
+      double rho  = ecl_kw_iget_as_double( den_kw , iactive );
+      double sat  = ecl_kw_iget_as_double( sat_kw , iactive );
+      grav_phase->fluid_mass[ iactive ] = rho * sat * porv[ iactive ];
     }
     
     if (private_sat_kw)
@@ -289,8 +336,7 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( const ecl_grav_grid_cache_typ
 
 
 static void ecl_grav_phase_free( ecl_grav_phase_type * grav_phase ) {
-  free( grav_phase->sat );
-  free( grav_phase->rho );
+  free( grav_phase->fluid_mass );
   free( grav_phase );
 }
 
@@ -303,20 +349,11 @@ static void ecl_grav_phase_free__( void * __grav_phase) {
 
 
 /*****************************************************************/
-#define ECL_GRAV_SURVEY_ID 88517
-struct ecl_grav_survey_struct {
-  UTIL_TYPE_ID_DECLARATION;
-  const ecl_grav_grid_cache_type * grid_cache;
-  char                           * porv_kw;
-  char                           * name;
-  double                         * porv;   /* Reference shared by the ecl_grav_phase structures - i.e. it must not be updated. */
-  vector_type                    * phase_list;
-  hash_type                      * phase_map;
-};
 
 
 static void ecl_grav_survey_add_phase( ecl_grav_survey_type * survey, ecl_phase_enum phase , ecl_grav_phase_type * grav_phase ) {
   vector_append_owned_ref( survey->phase_list , grav_phase , ecl_grav_phase_free__ );
+  hash_insert_ref( survey->phase_map , ecl_util_get_phase_name( phase ) , grav_phase );
 }
 
 
@@ -405,12 +442,11 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_RPORV(const ecl_grav_grid_ca
   if (ecl_file_has_kw( restart_file , RPORV_KW)) {
     ecl_kw_type * rporv_kw = ecl_file_iget_named_kw( restart_file , RPORV_KW , 0);
     int iactive;
-    for (iactive = 0; iactive < ecl_kw_get_size( rporv_kw ); iactive++) {
+    for (iactive = 0; iactive < ecl_kw_get_size( rporv_kw ); iactive++) 
       survey->porv[ iactive ] = ecl_kw_iget_as_double( rporv_kw , iactive );
-      //printf("%d: RPORV: V = %g \n",  iactive , survey->porv[ iactive ]);
-    }
   } else 
     util_abort("%s: restart file did not contain %s keyword??\n",__func__ , RPORV_KW);
+
   survey->porv_kw = util_realloc_string_copy( survey->porv_kw , RPORV_KW);
   ecl_grav_survey_assert_RPORV( survey , init_file );
   ecl_grav_survey_add_phases( survey , ecl_file_get_phases( init_file ) , restart_file );
@@ -433,10 +469,6 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_PORMOD(const ecl_grav_grid_c
   for (active_index = 0; active_index < size; active_index++) {
     int global_index = ecl_grid_get_global_index1A( grid , active_index );
     survey->porv[ active_index ] = ecl_kw_iget_float( pormod_kw , active_index ) * ecl_kw_iget_float( init_porv_kw , global_index );
-    //printf("%d: PORMOD: V = %g * %g = %g \n", active_index , 
-    //       ecl_kw_iget_float( pormod_kw , active_index ) , 
-    //       ecl_kw_iget_float( init_porv_kw , global_index ) , 
-    //       survey->porv[ active_index]);
   }
   survey->porv_kw = util_realloc_string_copy( survey->porv_kw , RPORV_KW);
   ecl_grav_survey_add_phases( survey , ecl_file_get_phases( init_file ) , restart_file );
@@ -504,6 +536,25 @@ ecl_grav_type * ecl_grav_alloc( const char * grid_file , const char * init_file 
 static void ecl_grav_add_survey__( ecl_grav_type * grav , const char * name , ecl_grav_survey_type * survey) {
   hash_insert_hash_owned_ref( grav->surveys , name , survey , ecl_grav_survey_free__ );
 }
+
+/**
+   There are (at least) two ways to calculate the time-dependent pore
+   volumes, based either on the RPORV keyword or the PORV_MOD keyword
+   from the restart file. The difference between the
+   ecl_grav_add_survey(), ecl_grav_add_survey_RPORV() and
+   ecl_grav_add_survey_PORMOD() functions is how the pore volume is
+   calculated:
+
+     ecl_grav_add_survey: Look first for 'PORV_MOD' and then for
+       'RPORV'.
+
+     ecl_grav_add_survey_RPORV: Use the 'RPORV' keyword.
+
+     ecl_grav_add_survey_PORMOD: Use the 'PORMOD' keyword.
+
+   There have been several ECLIPSE bugs related to the RPORV keyword,
+   so probably it is easiest to use PORMOD.
+*/
 
 ecl_grav_survey_type * ecl_grav_add_survey( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file ) {
   ecl_grav_survey_type * survey = ecl_grav_survey_alloc( grav->grid_cache , grav->init_file , restart_file , name );

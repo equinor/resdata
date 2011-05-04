@@ -121,6 +121,27 @@ unsigned int util_clock_seed( ) {
 }
 
 
+/**
+   Kahan summation is a technique to retain numerical precision when
+   summing a long vector of values. See: http://en.wikipedia.org/wiki/Kahan_summation_algorithm
+*/
+
+double util_kahan_sum(const double *data, size_t N) {
+  double S = data[0];
+  double C = 0;
+  double Y,T;
+  size_t i;
+  
+  for (i=1; i < N; i++) {
+    Y = data[i] - C;
+    T = S + Y;
+    C = (T - S) - Y;
+    S = T;
+  }
+  return S;
+}
+
+
 
 
 char * util_alloc_substring_copy(const char *src , int N) {
