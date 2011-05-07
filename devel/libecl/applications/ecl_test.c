@@ -34,6 +34,10 @@ int main (int argc, char **argv) {
 
       ecl_grav_add_survey_RPORV(ecl_grav  , "BASE"    , base_survey );
       ecl_grav_add_survey_RPORV( ecl_grav , "MONITOR" , monitor_survey );
+
+      ecl_grav_new_std_density( ecl_grav , ECL_WATER_PHASE , 1000);
+      ecl_grav_new_std_density( ecl_grav , ECL_GAS_PHASE , 100);
+      ecl_grav_add_survey_FIP( ecl_grav , "FIP" , base_survey );
       
       {
         int i;

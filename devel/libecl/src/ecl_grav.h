@@ -36,6 +36,8 @@ ecl_grav_survey_type * ecl_grav_add_survey( ecl_grav_type * grav , const char * 
 ecl_grav_survey_type * ecl_grav_add_survey_PORMOD( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file );
 ecl_grav_survey_type * ecl_grav_add_survey_RPORV( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file );
 double                 ecl_grav_eval( const ecl_grav_type * grav , const char * base, const char * monitor , double utm_x, double utm_y, double depth);
+void                   ecl_grav_new_std_density( ecl_grav_type * grav , ecl_phase_enum phase , double default_density);
+void                   ecl_grav_add_std_density( ecl_grav_type * grav , ecl_phase_enum phase , int pvtnum , double density);
 
 #ifdef __plusplus
 }
