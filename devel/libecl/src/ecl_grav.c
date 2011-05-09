@@ -37,13 +37,15 @@
    exported). 
 */
 
-
+/**
+   The various #define symbols listed here are the names of the
+   keywords used for various things in the remaining part of the code.
+*/
 
 #define AQUIFER_KW  "AQUIFERN"
 #define RPORV_KW    "RPORV"
 #define PORV_KW     "PORV"
 #define PORMOD_KW   "PORV_MOD"
-
 
 #define ECLIPSE100_OIL_DEN_KW   "OIL_DEN"
 #define ECLIPSE100_GAS_DEN_KW   "GAS_DEN"
@@ -77,9 +79,9 @@ struct ecl_grav_struct {
 
 /**
    The ecl_grav_grid_cache_struct data structure internalizes the
-   position of all the active cells. This is just a minor
+   world position of all the active cells. This is just a minor
    simplification to speed up repeated calls to get the true world
-   coordinates of a cell. 
+   coordinates of a cell.
 */
 
 struct ecl_grav_grid_cache_struct {
@@ -407,14 +409,20 @@ static void ecl_grav_survey_add_phases( ecl_grav_type * ecl_grav , ecl_grav_surv
 
 
 static ecl_grav_survey_type * ecl_grav_survey_alloc_empty(const ecl_grav_grid_cache_type * grid_cache , 
-                                                          const char * name ) {
+                                                          const char * name , 
+                                                          bool  alloc_porv) {
   ecl_grav_survey_type * survey = util_malloc( sizeof * survey , __func__ );
   UTIL_TYPE_ID_INIT( survey , ECL_GRAV_SURVEY_ID );
   survey->grid_cache = grid_cache;
   survey->name       = util_alloc_string_copy( name );
   survey->phase_list = vector_alloc_new();
   survey->phase_map  = hash_alloc();
-  survey->porv       = util_malloc( ecl_grav_grid_cache_get_size( grid_cache ) * sizeof * survey->porv , __func__ );
+
+  if (alloc_porv)
+    survey->porv       = util_malloc( ecl_grav_grid_cache_get_size( grid_cache ) * sizeof * survey->porv , __func__ );
+  else
+    survey->porv       = NULL;
+
   return survey;
 }
 
@@ -466,7 +474,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_RPORV(ecl_grav_type * ecl_gr
                                                           const ecl_file_type * restart_file , 
                                                           const char * name ) {
   const ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
-  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name );
+  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , true);
   if (ecl_file_has_kw( restart_file , RPORV_KW)) {
     ecl_kw_type * rporv_kw = ecl_file_iget_named_kw( restart_file , RPORV_KW , 0);
     int iactive;
@@ -489,7 +497,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_PORMOD(ecl_grav_type * ecl_g
                                                            const ecl_file_type * restart_file , 
                                                            const char * name ) {
   ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
-  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name );
+  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , true);
   ecl_kw_type * init_porv_kw    = ecl_file_iget_named_kw( ecl_grav->init_file    , PORV_KW   , 0 );  /* Global indexing */
   ecl_kw_type * pormod_kw       = ecl_file_iget_named_kw( restart_file , PORMOD_KW , 0 );  /* Active indexing */
   const int size                = ecl_grav_grid_cache_get_size( grid_cache ); 
@@ -509,7 +517,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_FIP(ecl_grav_type * ecl_grav
                                                         const ecl_file_type * restart_file , 
                                                         const char * name ) {
   ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
-  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name );
+  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , false);
   ecl_grav_survey_add_phases( ecl_grav , survey , restart_file , true);
   
   return survey;
@@ -534,7 +542,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc(ecl_grav_type * ecl_grav ,
 
 static void ecl_grav_survey_free( ecl_grav_survey_type * grav_survey ) {
   free( grav_survey->name );
-  free( grav_survey->porv );
+  util_safe_free( grav_survey->porv );
   vector_free( grav_survey->phase_list );
   hash_free( grav_survey->phase_map );
   free( grav_survey );
