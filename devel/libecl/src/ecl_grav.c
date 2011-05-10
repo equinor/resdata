@@ -55,6 +55,11 @@
 #define ECLIPSE300_GAS_DEN_KW   "DENG"
 #define ECLIPSE300_WATER_DEN_KW "DENW"
 
+#define PVTNUM_KW "PVTNUM"
+#define FIPGAS_KW "FIPGAS"
+#define FIPWAT_KW "FIPWAT"
+#define FIPOIL_KW "FIPOIL"
+
 
 typedef struct ecl_grav_grid_cache_struct ecl_grav_grid_cache_type;
 typedef struct ecl_grav_phase_struct      ecl_grav_phase_type;
@@ -310,16 +315,16 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav ,
     if (FIPmode) {
       
       int iactive;
-      ecl_kw_type * pvtnum_kw = ecl_file_iget_named_kw( init_file , "PVTNUM" , 0 );
+      ecl_kw_type * pvtnum_kw = ecl_file_iget_named_kw( init_file , PVTNUM_KW , 0 );
       ecl_kw_type * fip_kw;
       double_vector_type * std_density = hash_get( ecl_grav->std_density , ecl_util_get_phase_name( phase ));
         
       if ( phase == ECL_OIL_PHASE)
-        fip_kw = ecl_file_iget_named_kw( restart_file , "FIPOIL" , 0 );
+        fip_kw = ecl_file_iget_named_kw( restart_file , FIPOIL_KW , 0 );
       else if (phase == ECL_GAS_PHASE)
-        fip_kw = ecl_file_iget_named_kw( restart_file , "FIPGAS" , 0 );
+        fip_kw = ecl_file_iget_named_kw( restart_file , FIPGAS_KW , 0 );
       else
-        fip_kw = ecl_file_iget_named_kw( restart_file , "FIPWAT" , 0 );
+        fip_kw = ecl_file_iget_named_kw( restart_file , FIPWAT_KW , 0 );
       
       for (iactive=0; iactive < size; iactive++) {
         double fip    = ecl_kw_iget_as_double( fip_kw , iactive );
@@ -470,6 +475,51 @@ static void ecl_grav_survey_assert_RPORV( const ecl_grav_survey_type * survey , 
 }
 
 
+
+/**
+   There are currently two main methods to add a survey; differentiated by
+   how the mass of various phases in each cell is calculated:
+   
+    1. We can calculate the mass of each phase from the relation:
+
+          mass = saturation * pore_volume * mass_density.
+ 
+      This method requires access to the instantaneous pore volume. This
+      can be accessed in two different ways, based either on the RPORV
+      keyword or the PORV_MOD keyword. This functionality is available
+      through the ecl_grav_survey_alloc_RPORV() and
+      ecl_grav_survey_alloc_PORMOD() functions.
+
+
+   2. The mass of each phase can be calculated based on the fluid in place
+      values (volume of phase when the matter is brought to standard
+      conditions), i.e. the FIPGAS, FIPWAT and FIPOIL keywords, and the
+      corresponding densities at surface conditions. This functionality is
+      implemented with the ecl_grav_survey_alloc_FIP() function. 
+
+      Observe that use of the FIP based method requires densities entered
+      with ecl_grav_new_std_density()/ecl_grav_add_std_density() prior to
+      adding the actual survey.
+*/   
+
+
+
+/**
+   Allocate one survey based on using the RPORV keyword from the
+   restart file to calculate the instantaneous pore volume in each
+   cell.
+
+   Unfortunately different versions of ECLIPSE have showed a wide
+   range of bugs related to the RPORV keyword, including:
+
+    - Using the pressure values instead of pore volumes - this will be
+      cached by the ecl_grav_survey_assert_RPORV() function.  
+
+    - Ignoring the dynamic pore volume changes, and just using 
+      RPORV  == INIT PORV.
+*/
+
+
 static ecl_grav_survey_type * ecl_grav_survey_alloc_RPORV(ecl_grav_type * ecl_grav , 
                                                           const ecl_file_type * restart_file , 
                                                           const char * name ) {
@@ -499,7 +549,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_PORMOD(ecl_grav_type * ecl_g
   ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
   ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , true);
   ecl_kw_type * init_porv_kw    = ecl_file_iget_named_kw( ecl_grav->init_file    , PORV_KW   , 0 );  /* Global indexing */
-  ecl_kw_type * pormod_kw       = ecl_file_iget_named_kw( restart_file , PORMOD_KW , 0 );  /* Active indexing */
+  ecl_kw_type * pormod_kw       = ecl_file_iget_named_kw( restart_file , PORMOD_KW , 0 );            /* Active indexing */
   const int size                = ecl_grav_grid_cache_get_size( grid_cache ); 
   int active_index;
 
@@ -513,9 +563,17 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_PORMOD(ecl_grav_type * ecl_g
 }
 
 
+
+/**
+   Use of the ecl_grav_survey_alloc_FIP() function requires that the densities
+   have been added for all phases with the ecl_grav_new_std_density() and
+   possibly also the ecl_grav_add_std_density() functions.
+*/
+
 static ecl_grav_survey_type * ecl_grav_survey_alloc_FIP(ecl_grav_type * ecl_grav , 
                                                         const ecl_file_type * restart_file , 
                                                         const char * name ) {
+
   ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
   ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , false);
   ecl_grav_survey_add_phases( ecl_grav , survey , restart_file , true);
@@ -625,9 +683,17 @@ double ecl_grav_eval( const ecl_grav_type * grav , const char * base, const char
   return ecl_grav_survey_eval( base_survey , monitor_survey , utm_x , utm_y , depth );
 }
 
+/******************************************************************/
+/* The functions ecl_grav_new_std_density() and ecl_grav_add_std_density() are
+   used to "install" standard conditions densities for the various phases
+   involved. These functions must be called prior to calling
+   ecl_grav_add_survey_FIP() - failure to do so will lead to hard failure.
+*/
+
+
 /**
-   Based on how the double_vector_type type works it is ESSENTIAL that function setting the default is used before
-   individual values are set.  
+   The function ecl_grav_new_std_density() is used to add a default density for
+   a new phase.
 */
 
 void ecl_grav_new_std_density( ecl_grav_type * grav , ecl_phase_enum phase , double default_density) {
@@ -636,11 +702,26 @@ void ecl_grav_new_std_density( ecl_grav_type * grav , ecl_phase_enum phase , dou
     hash_insert_hash_owned_ref( grav->std_density , phase_key , double_vector_alloc( 0 , default_density ) , double_vector_free__ );
 }
 
+/**
+   In cases with many PVT regions it is possible to install per PVT region
+   densities. The ecl_grav_new_std_density() must be called first to install a
+   default density for the phase, and then this function can be called
+   afterwards to install density for a particular PVT region.  In the example
+   below we set the default gas density to 0.75, but in PVT regions 2 and 7 the
+   density is different:
+
+      ecl_grav_new_std_density( grav , ECL_GAS_PHASE , 0.75 );
+      ecl_grav_add_std_density( grav , ECL_GAS_PHASE , 2 , 0.70 );
+      ecl_grav_add_std_density( grav , ECL_GAS_PHASE , 7 , 0.80 );
+*/
+
 
 void ecl_grav_add_std_density( ecl_grav_type * grav , ecl_phase_enum phase , int pvtnum , double density) {
   double_vector_type * std_density = hash_get( grav->std_density , ecl_util_get_phase_name( phase ));
   double_vector_iset( std_density , pvtnum , density );
 }
+
+
 
 void ecl_grav_free( ecl_grav_type * ecl_grav ) {
   ecl_grid_free( ecl_grav->grid );
