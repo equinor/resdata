@@ -2546,8 +2546,7 @@ void ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_t
     int     int_default;
     int     bool_default;
     ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
-    ecl_kw_type * tmp_kw;
-
+    
     if (ecl_type == ECL_FLOAT_TYPE) {
       float_default = (float) double_default;
       default_ptr = &float_default;
@@ -2566,10 +2565,12 @@ void ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_t
         util_abort("%s: only 0 and 1 are allowed for bool interpolation\n",__func__);
       default_ptr = &bool_default;
     }
-      
-    tmp_kw = ecl_kw_alloc_scatter_copy( ecl_kw , ecl_grid->size , ecl_grid->inv_index_map , default_ptr );
-    ecl_kw_fprintf_grdecl( tmp_kw , stream );
-    ecl_kw_free( tmp_kw );
+    
+    {
+      ecl_kw_type * tmp_kw = ecl_kw_alloc_scatter_copy( ecl_kw , ecl_grid->size , ecl_grid->inv_index_map , default_ptr );
+      ecl_kw_fprintf_grdecl( tmp_kw , stream );
+      ecl_kw_free( tmp_kw );
+    }
   } else 
     util_abort("%s: size mismatch. ecl_kw must have either nx*ny*ny elements or nactive elements\n",__func__);
 

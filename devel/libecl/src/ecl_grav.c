@@ -42,10 +42,10 @@
    keywords used for various things in the remaining part of the code.
 */
 
-#define AQUIFER_KW  "AQUIFERN"
-#define RPORV_KW    "RPORV"
-#define PORV_KW     "PORV"
-#define PORMOD_KW   "PORV_MOD"
+#define AQUIFER_KW              "AQUIFERN"
+#define RPORV_KW                "RPORV"
+#define PORV_KW                 "PORV"
+#define PORMOD_KW               "PORV_MOD"  
 
 #define ECLIPSE100_OIL_DEN_KW   "OIL_DEN"
 #define ECLIPSE100_GAS_DEN_KW   "GAS_DEN"
@@ -55,10 +55,25 @@
 #define ECLIPSE300_GAS_DEN_KW   "DENG"
 #define ECLIPSE300_WATER_DEN_KW "DENW"
 
-#define PVTNUM_KW "PVTNUM"
-#define FIPGAS_KW "FIPGAS"
-#define FIPWAT_KW "FIPWAT"
-#define FIPOIL_KW "FIPOIL"
+#define PVTNUM_KW               "PVTNUM"
+
+#define FIPGAS_KW               "FIPGAS"
+#define FIPWAT_KW               "FIPWAT"
+#define FIPOIL_KW               "FIPOIL"     
+#define RFIPGAS_KW              "RFIPGAS"
+#define RFIPWAT_KW              "RFIPWAT"
+#define RFIPOIL_KW              "RFIPOIL"     
+
+
+#define GRAV_CALC_USE_PORV 128
+#define GRAV_CALC_USE_RHO  256    // Not currently used
+
+typedef enum {
+  GRAV_CALC_RPORV  = 1 + GRAV_CALC_USE_PORV + GRAV_CALC_USE_RHO, 
+  GRAV_CALC_PORMOD = 2 + GRAV_CALC_USE_PORV + GRAV_CALC_USE_RHO,
+  GRAV_CALC_FIP    = 3,
+  GRAV_CALC_RFIP   = 4 + GRAV_CALC_USE_RHO
+} grav_calc_type;
 
 
 typedef struct ecl_grav_grid_cache_struct ecl_grav_grid_cache_type;
@@ -72,7 +87,6 @@ typedef struct ecl_grav_phase_struct      ecl_grav_phase_type;
 */
 
 struct ecl_grav_struct {
-  ecl_grid_type            * grid;        /* The grid for the current gravity calculations. */
   ecl_file_type            * init_file;   /* The init file. */
   ecl_grav_grid_cache_type * grid_cache;  /* An internal specialized structure to facilitate fast grid lookup. */
   hash_type                * surveys;     /* A hash table containg ecl_grav_survey_type instances; one instance
@@ -90,8 +104,6 @@ struct ecl_grav_struct {
 */
 
 struct ecl_grav_grid_cache_struct {
-  const ecl_grid_type * grid;         
-  
   int                   size;      /* The length of the vectors, equal to the number of active elements in the grid. */
   double              * xpos;
   double              * ypos;
@@ -139,7 +151,6 @@ struct ecl_grav_phase_struct {
 static ecl_grav_grid_cache_type * ecl_grav_grid_cache_alloc( const ecl_grid_type * grid , const ecl_file_type * init_file ) {
   ecl_grav_grid_cache_type * grid_cache = util_malloc( sizeof * grid_cache , __func__);
   
-  grid_cache->grid          = grid;
   grid_cache->size          = ecl_grid_get_active_size( grid );
   grid_cache->xpos          = util_malloc( grid_cache->size * sizeof * grid_cache->xpos , __func__ );
   grid_cache->ypos          = util_malloc( grid_cache->size * sizeof * grid_cache->ypos , __func__ );
@@ -251,8 +262,10 @@ static const char * get_den_kw( ecl_phase_enum phase , ecl_version_enum ecl_vers
 }
 
 
-static double ecl_grav_phase_eval( const ecl_grav_phase_type * base_phase , const ecl_grav_phase_type * monitor_phase, double utm_x , double utm_y , double depth) {
-  if (base_phase->phase == monitor_phase->phase) {
+static double ecl_grav_phase_eval( const ecl_grav_phase_type * base_phase , 
+                                   const ecl_grav_phase_type * monitor_phase, 
+                                   double utm_x , double utm_y , double depth) {
+  if ((monitor_phase == NULL) || (base_phase->phase == monitor_phase->phase)) {
     const ecl_grav_grid_cache_type * grid_cache = base_phase->grid_cache;
     const double * xpos   = ecl_grav_grid_cache_get_xpos( grid_cache );
     const double * ypos   = ecl_grav_grid_cache_get_ypos( grid_cache );
@@ -265,12 +278,15 @@ static double ecl_grav_phase_eval( const ecl_grav_phase_type * base_phase , cons
     for (index = 0; index < size; index++) {
       if (active[index]) {
         double base_mass    = base_phase->fluid_mass[index];
-        double monitor_mass = monitor_phase->fluid_mass[index];
+        double monitor_mass = 0;
         double dist_x  = (xpos[index] - utm_x );
         double dist_y  = (ypos[index] - utm_y );
         double dist_z  = (zpos[index] - depth );
         double dist    = sqrt( dist_x * dist_x + dist_y * dist_y + dist_z * dist_z );
-        
+
+        if (monitor_phase != NULL)
+          monitor_mass = monitor_phase->fluid_mass[index];
+
         /**
            The Gravitational constant is 6.67E-11 N (m/kg)^2, we
            return the result in microGal, i.e. we scale with 10^2 * 
@@ -297,7 +313,7 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav ,
                                                    ecl_grav_survey_type * survey , 
                                                    ecl_phase_enum phase , 
                                                    const ecl_file_type * restart_file, 
-                                                   bool FIPmode) {
+                                                   grav_calc_type calc_type) {
 
   const ecl_file_type * init_file             = ecl_grav->init_file;
   const ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
@@ -305,14 +321,13 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav ,
   {
     ecl_grav_phase_type * grav_phase = util_malloc( sizeof * grav_phase , __func__ );
     const int size                   = ecl_grav_grid_cache_get_size( grid_cache );
-    int iactive;
     
     UTIL_TYPE_ID_INIT( grav_phase , ECL_GRAV_PHASE_TYPE_ID );
     grav_phase->grid_cache = grid_cache;
     grav_phase->fluid_mass = util_malloc( size * sizeof * grav_phase->fluid_mass , __func__ );
     grav_phase->phase      = phase;
 
-    if (FIPmode) {
+    if (calc_type == GRAV_CALC_FIP) {
       
       int iactive;
       ecl_kw_type * pvtnum_kw = ecl_file_iget_named_kw( init_file , PVTNUM_KW , 0 );
@@ -331,40 +346,60 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav ,
         int    pvtnum = ecl_kw_iget_int( pvtnum_kw , iactive );
         grav_phase->fluid_mass[ iactive ] = fip * double_vector_safe_iget( std_density , pvtnum );
       }
-
-    } else {
-      ecl_kw_type         * sat_kw;
-      bool private_sat_kw = false;
-      if (ecl_file_has_kw( restart_file , sat_kw_name )) 
-        sat_kw = ecl_file_iget_named_kw( restart_file , sat_kw_name , 0 );
-      else {
-        /* We are targeting the residual phase, e.g. the OIL phase in a three phase system. */
-        const ecl_kw_type * swat_kw = ecl_file_iget_named_kw( restart_file , "SWAT" , 0 );
-        sat_kw = ecl_kw_alloc_copy( swat_kw );
-        ecl_kw_scalar_set_float( sat_kw , 1.0 );
-        ecl_kw_inplace_sub( sat_kw , swat_kw );  /* sat = 1 - SWAT */
-        
-        if (ecl_file_has_kw( restart_file , "SGAS" )) {
-          const ecl_kw_type * sgas_kw = ecl_file_iget_named_kw( restart_file , "SGAS" , 0 );
-          ecl_kw_inplace_sub( sat_kw , sgas_kw );  /* sat -= SGAS */
-        }
-        private_sat_kw = true;
-      }
       
-      {
-        ecl_version_enum      ecl_version = ecl_file_get_ecl_version( init_file );
-        const char          * den_kw_name = get_den_kw( phase , ecl_version );
-        const ecl_kw_type   * den_kw      = ecl_file_iget_named_kw( restart_file , den_kw_name , 0 );
+    } else {
+      ecl_version_enum      ecl_version = ecl_file_get_ecl_version( init_file );
+      const char          * den_kw_name = get_den_kw( phase , ecl_version );
+      const ecl_kw_type   * den_kw      = ecl_file_iget_named_kw( restart_file , den_kw_name , 0 );
+
+      if (calc_type == GRAV_CALC_RFIP) {
+        int iactive;
+        ecl_kw_type * rfip_kw;
+        if ( phase == ECL_OIL_PHASE)
+          rfip_kw = ecl_file_iget_named_kw( restart_file , RFIPOIL_KW , 0 );
+        else if (phase == ECL_GAS_PHASE)
+          rfip_kw = ecl_file_iget_named_kw( restart_file , RFIPGAS_KW , 0 );
+        else
+          rfip_kw = ecl_file_iget_named_kw( restart_file , RFIPWAT_KW , 0 );
         
         for (iactive=0; iactive < size; iactive++) {
-          double rho  = ecl_kw_iget_as_double( den_kw , iactive );
-          double sat  = ecl_kw_iget_as_double( sat_kw , iactive );
-          grav_phase->fluid_mass[ iactive ] = rho * sat * survey->porv[ iactive ];
+          double rho   = ecl_kw_iget_as_double( den_kw  , iactive );
+          double rfip  = ecl_kw_iget_as_double( rfip_kw , iactive );
+          grav_phase->fluid_mass[ iactive ] = rho * rfip;
         }
+        
+      } else {
+        /* (calc_type == GRAV_CALC_RPORV) || (calc_type == GRAV_CALC_PORMOD) */
+        ecl_kw_type * sat_kw;
+        bool private_sat_kw = false;
+        if (ecl_file_has_kw( restart_file , sat_kw_name )) 
+          sat_kw = ecl_file_iget_named_kw( restart_file , sat_kw_name , 0 );
+        else {
+          /* We are targeting the residual phase, e.g. the OIL phase in a three phase system. */
+          const ecl_kw_type * swat_kw = ecl_file_iget_named_kw( restart_file , "SWAT" , 0 );
+          sat_kw = ecl_kw_alloc_copy( swat_kw );
+          ecl_kw_scalar_set_float( sat_kw , 1.0 );
+          ecl_kw_inplace_sub( sat_kw , swat_kw );  /* sat = 1 - SWAT */
+          
+          if (ecl_file_has_kw( restart_file , "SGAS" )) {
+            const ecl_kw_type * sgas_kw = ecl_file_iget_named_kw( restart_file , "SGAS" , 0 );
+            ecl_kw_inplace_sub( sat_kw , sgas_kw );  /* sat -= SGAS */
+          }
+          private_sat_kw = true;
+        }
+        
+        {
+          int iactive;
+          for (iactive=0; iactive < size; iactive++) {
+            double rho  = ecl_kw_iget_as_double( den_kw , iactive );
+            double sat  = ecl_kw_iget_as_double( sat_kw , iactive );
+            grav_phase->fluid_mass[ iactive ] = rho * sat * survey->porv[ iactive ];
+          }
+        }
+        
+        if (private_sat_kw)
+          ecl_kw_free( sat_kw );
       }
-    
-      if (private_sat_kw)
-        ecl_kw_free( sat_kw );
     }
     
     return grav_phase;
@@ -394,20 +429,20 @@ static void ecl_grav_survey_add_phase( ecl_grav_survey_type * survey, ecl_phase_
 }
 
 
-static void ecl_grav_survey_add_phases( ecl_grav_type * ecl_grav , ecl_grav_survey_type * survey, const ecl_file_type * restart_file , bool FIPmode) {
+static void ecl_grav_survey_add_phases( ecl_grav_type * ecl_grav , ecl_grav_survey_type * survey, const ecl_file_type * restart_file , grav_calc_type calc_type) {
   int phases = ecl_file_get_phases( ecl_grav->init_file );
   if (phases & ECL_OIL_PHASE) {
-    ecl_grav_phase_type * oil_phase = ecl_grav_phase_alloc( ecl_grav , survey , ECL_OIL_PHASE ,  restart_file , FIPmode);
+    ecl_grav_phase_type * oil_phase = ecl_grav_phase_alloc( ecl_grav , survey , ECL_OIL_PHASE ,  restart_file , calc_type);
     ecl_grav_survey_add_phase( survey , ECL_OIL_PHASE , oil_phase );
   }
 
   if (phases & ECL_GAS_PHASE) {
-    ecl_grav_phase_type * gas_phase = ecl_grav_phase_alloc( ecl_grav , survey , ECL_GAS_PHASE , restart_file , FIPmode);
+    ecl_grav_phase_type * gas_phase = ecl_grav_phase_alloc( ecl_grav , survey , ECL_GAS_PHASE , restart_file , calc_type);
     ecl_grav_survey_add_phase( survey , ECL_GAS_PHASE , gas_phase );
   }
 
   if (phases & ECL_WATER_PHASE) {
-    ecl_grav_phase_type * water_phase = ecl_grav_phase_alloc( ecl_grav , survey , ECL_WATER_PHASE ,  restart_file , FIPmode);
+    ecl_grav_phase_type * water_phase = ecl_grav_phase_alloc( ecl_grav , survey , ECL_WATER_PHASE ,  restart_file , calc_type);
     ecl_grav_survey_add_phase( survey , ECL_WATER_PHASE , water_phase );
   }
 }
@@ -415,7 +450,7 @@ static void ecl_grav_survey_add_phases( ecl_grav_type * ecl_grav , ecl_grav_surv
 
 static ecl_grav_survey_type * ecl_grav_survey_alloc_empty(const ecl_grav_grid_cache_type * grid_cache , 
                                                           const char * name , 
-                                                          bool  alloc_porv) {
+                                                          grav_calc_type calc_type) {
   ecl_grav_survey_type * survey = util_malloc( sizeof * survey , __func__ );
   UTIL_TYPE_ID_INIT( survey , ECL_GRAV_SURVEY_ID );
   survey->grid_cache = grid_cache;
@@ -423,7 +458,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_empty(const ecl_grav_grid_ca
   survey->phase_list = vector_alloc_new();
   survey->phase_map  = hash_alloc();
 
-  if (alloc_porv)
+  if (calc_type & GRAV_CALC_USE_PORV)
     survey->porv       = util_malloc( ecl_grav_grid_cache_get_size( grid_cache ) * sizeof * survey->porv , __func__ );
   else
     survey->porv       = NULL;
@@ -524,7 +559,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_RPORV(ecl_grav_type * ecl_gr
                                                           const ecl_file_type * restart_file , 
                                                           const char * name ) {
   const ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
-  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , true);
+  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , GRAV_CALC_RPORV);
   if (ecl_file_has_kw( restart_file , RPORV_KW)) {
     ecl_kw_type * rporv_kw = ecl_file_iget_named_kw( restart_file , RPORV_KW , 0);
     int iactive;
@@ -536,7 +571,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_RPORV(ecl_grav_type * ecl_gr
   {
     const ecl_file_type * init_file = ecl_grav->init_file;
     ecl_grav_survey_assert_RPORV( survey , init_file );
-    ecl_grav_survey_add_phases( ecl_grav , survey ,  restart_file , false);
+    ecl_grav_survey_add_phases( ecl_grav , survey ,  restart_file , GRAV_CALC_RPORV);
   }
   return survey;
 }
@@ -547,7 +582,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_PORMOD(ecl_grav_type * ecl_g
                                                            const ecl_file_type * restart_file , 
                                                            const char * name ) {
   ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
-  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , true);
+  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , GRAV_CALC_PORMOD);
   ecl_kw_type * init_porv_kw    = ecl_file_iget_named_kw( ecl_grav->init_file    , PORV_KW   , 0 );  /* Global indexing */
   ecl_kw_type * pormod_kw       = ecl_file_iget_named_kw( restart_file , PORMOD_KW , 0 );            /* Active indexing */
   const int size                = ecl_grav_grid_cache_get_size( grid_cache ); 
@@ -557,7 +592,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_PORMOD(ecl_grav_type * ecl_g
     int global_index = grid_cache->global_index[ active_index ];
     survey->porv[ active_index ] = ecl_kw_iget_float( pormod_kw , active_index ) * ecl_kw_iget_float( init_porv_kw , global_index );
   }
-  ecl_grav_survey_add_phases( ecl_grav , survey , restart_file , false);
+  ecl_grav_survey_add_phases( ecl_grav , survey , restart_file , GRAV_CALC_PORMOD);
   
   return survey;
 }
@@ -575,27 +610,25 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_FIP(ecl_grav_type * ecl_grav
                                                         const char * name ) {
 
   ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
-  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , false);
-  ecl_grav_survey_add_phases( ecl_grav , survey , restart_file , true);
+  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , GRAV_CALC_FIP);
+  ecl_grav_survey_add_phases( ecl_grav , survey , restart_file , GRAV_CALC_FIP);
   
   return survey;
 }
 
 
 
-static ecl_grav_survey_type * ecl_grav_survey_alloc(ecl_grav_type * ecl_grav , 
-                                                    const ecl_file_type * restart_file , 
-                                                    const char * name ) {
-  if (ecl_file_has_kw( restart_file , PORMOD_KW))
-    return ecl_grav_survey_alloc_PORMOD( ecl_grav , restart_file , name );
-  else if (ecl_file_has_kw( restart_file , RPORV_KW))
-    return ecl_grav_survey_alloc_RPORV( ecl_grav , restart_file , name );
-  else {
-    ecl_file_fprintf_kw_list( restart_file , stdout );
-    util_abort("%s: restart file contained neither %s or %s keywords - aborting \n",__func__ , PORMOD_KW , RPORV_KW );
-    return NULL;
-  }
+static ecl_grav_survey_type * ecl_grav_survey_alloc_RFIP(ecl_grav_type * ecl_grav , 
+                                                         const ecl_file_type * restart_file , 
+                                                         const char * name ) {
+
+  ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
+  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_empty( grid_cache , name , GRAV_CALC_RFIP);
+  ecl_grav_survey_add_phases( ecl_grav , survey , restart_file , GRAV_CALC_RFIP);
+  
+  return survey;
 }
+
 
 
 static void ecl_grav_survey_free( ecl_grav_survey_type * grav_survey ) {
@@ -613,14 +646,20 @@ static void ecl_grav_survey_free__( void * __grav_survey ) {
 
 
 
-static double ecl_grav_survey_eval( const ecl_grav_survey_type * base_survey, const ecl_grav_survey_type * monitor_survey , 
+static double ecl_grav_survey_eval( const ecl_grav_survey_type * base_survey, 
+                                    const ecl_grav_survey_type * monitor_survey , 
                                     double utm_x , double utm_y , double depth) {
   int phase_nr;
   double deltag = 0;
   for (phase_nr = 0; phase_nr < vector_get_size( base_survey->phase_list ); phase_nr++) {
     const ecl_grav_phase_type * base_phase    = vector_iget_const( base_survey->phase_list , phase_nr );
-    const ecl_grav_phase_type * monitor_phase = vector_iget_const( monitor_survey->phase_list , phase_nr );
-    deltag += ecl_grav_phase_eval( base_phase , monitor_phase , utm_x , utm_y , depth );
+    
+    if (monitor_survey != NULL) {
+      const ecl_grav_phase_type * monitor_phase = vector_iget_const( monitor_survey->phase_list , phase_nr );
+      deltag += ecl_grav_phase_eval( base_phase , monitor_phase , utm_x , utm_y , depth );
+    } else
+      deltag += ecl_grav_phase_eval( base_phase , NULL , utm_x , utm_y , depth );
+
   }
   return deltag;
 }
@@ -629,12 +668,14 @@ static double ecl_grav_survey_eval( const ecl_grav_survey_type * base_survey, co
 
 ecl_grav_type * ecl_grav_alloc( const char * grid_file , const char * init_file ) {
   ecl_grav_type * ecl_grav = util_malloc( sizeof * ecl_grav , __func__ );
-  ecl_grav->grid           = ecl_grid_alloc( grid_file );
-  ecl_grav->init_file      = ecl_file_fread_alloc( init_file );    
-  ecl_grav->surveys        = hash_alloc();
-  ecl_grav->grid_cache     = ecl_grav_grid_cache_alloc( ecl_grav->grid , ecl_grav->init_file );
-  ecl_grav->std_density    = hash_alloc();
-  
+  {
+    ecl_grid_type * grid     = ecl_grid_alloc( grid_file );
+    ecl_grav->init_file      = ecl_file_fread_alloc( init_file );    
+    ecl_grav->surveys        = hash_alloc();
+    ecl_grav->grid_cache     = ecl_grav_grid_cache_alloc( grid , ecl_grav->init_file );
+    ecl_grav->std_density    = hash_alloc();
+    ecl_grid_free( grid );
+  }
   return ecl_grav;
 }
 
@@ -643,13 +684,6 @@ ecl_grav_type * ecl_grav_alloc( const char * grid_file , const char * init_file 
 static void ecl_grav_add_survey__( ecl_grav_type * grav , const char * name , ecl_grav_survey_type * survey) {
   hash_insert_hash_owned_ref( grav->surveys , name , survey , ecl_grav_survey_free__ );
 }
-
-ecl_grav_survey_type * ecl_grav_add_survey( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file ) {
-  ecl_grav_survey_type * survey = ecl_grav_survey_alloc( grav , restart_file , name );
-  ecl_grav_add_survey__( grav , name , survey );
-  return survey;
-}
-
 
 ecl_grav_survey_type * ecl_grav_add_survey_RPORV( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file ) {
   ecl_grav_survey_type * survey = ecl_grav_survey_alloc_RPORV( grav , restart_file , name );
@@ -664,6 +698,12 @@ ecl_grav_survey_type * ecl_grav_add_survey_FIP( ecl_grav_type * grav , const cha
   return survey;
 }
 
+ecl_grav_survey_type * ecl_grav_add_survey_RFIP( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file ) {
+  ecl_grav_survey_type * survey = ecl_grav_survey_alloc_RFIP( grav , restart_file , name );
+  ecl_grav_add_survey__( grav , name , survey );
+  return survey;
+}
+
 
 ecl_grav_survey_type * ecl_grav_add_survey_PORMOD( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file ) {
   ecl_grav_survey_type * survey = ecl_grav_survey_alloc_PORMOD( grav , restart_file , name );
@@ -671,9 +711,28 @@ ecl_grav_survey_type * ecl_grav_add_survey_PORMOD( ecl_grav_type * grav , const 
   return survey;
 }
 
+
 static ecl_grav_survey_type * ecl_grav_get_survey( const ecl_grav_type * grav , const char * name) {
-  return hash_get( grav->surveys , name );
+  if (name == NULL)
+    return NULL;  // Calling scope must determine if this is OK?
+  else {
+    if (hash_has_key( grav->surveys , name))
+      return hash_get( grav->surveys , name );
+    else {
+      hash_iter_type * survey_iter = hash_iter_alloc( grav->surveys );
+      fprintf(stderr,"Survey name:%s not registered. Available surveys are: \n\n     " , name);
+      while (!hash_iter_is_complete( survey_iter )) {
+        const char * survey = hash_iter_get_next_key( survey_iter );
+        fprintf(stderr,"%s ",survey);
+      }
+      fprintf(stderr,"\n\n");
+      hash_iter_free( survey_iter );
+      exit(1);
+    }
+  }
 }
+
+
 
 
 double ecl_grav_eval( const ecl_grav_type * grav , const char * base, const char * monitor , double utm_x, double utm_y , double depth) {
@@ -703,12 +762,13 @@ void ecl_grav_new_std_density( ecl_grav_type * grav , ecl_phase_enum phase , dou
 }
 
 /**
-   In cases with many PVT regions it is possible to install per PVT region
-   densities. The ecl_grav_new_std_density() must be called first to install a
-   default density for the phase, and then this function can be called
-   afterwards to install density for a particular PVT region.  In the example
-   below we set the default gas density to 0.75, but in PVT regions 2 and 7 the
-   density is different:
+   In cases with many PVT regions it is possible to install per PVT
+   region densities. The ecl_grav_new_std_density() must be called
+   first to install a default density for the phase, and then this
+   function can be called afterwards to install density for a
+   particular PVT region.  In the example below we set the default gas
+   density to 0.75, but in PVT regions 2 and 7 the density is
+   different:
 
       ecl_grav_new_std_density( grav , ECL_GAS_PHASE , 0.75 );
       ecl_grav_add_std_density( grav , ECL_GAS_PHASE , 2 , 0.70 );
@@ -724,7 +784,6 @@ void ecl_grav_add_std_density( ecl_grav_type * grav , ecl_phase_enum phase , int
 
 
 void ecl_grav_free( ecl_grav_type * ecl_grav ) {
-  ecl_grid_free( ecl_grav->grid );
   ecl_file_free( ecl_grav->init_file );
   ecl_grav_grid_cache_free( ecl_grav->grid_cache );
   hash_free( ecl_grav->surveys );
