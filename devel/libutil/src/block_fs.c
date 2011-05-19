@@ -527,7 +527,7 @@ static void block_fs_insert_free_node( block_fs_type * block_fs , file_node_type
     }
     if (new != NULL)     if (new->next == new) util_abort("%s: broken LIST1 \n",__func__);
     if (prev != NULL)    if (prev->next == prev) util_abort("%s: broken LIST2 \n",__func__);
-    if (current != NULL) if (current->next == current) util_abort("%s: Broken LIST 3\n",__func__);
+    if (current != NULL) if (current->next == current) util_abort("%s: Broken LIST3 \n",__func__);
   }
   block_fs->num_free_nodes++;
   block_fs->free_size += new->node_size;
@@ -668,7 +668,7 @@ static bool block_fs_fseek_valid_node( block_fs_type * block_fs ) {
            whole integer and see if we have hit any of the valid status identifiers.
         */
         fseek__( block_fs->data_stream , -1 , SEEK_CUR);
-        if (fread(&status , sizeof status ,1 , block_fs->data_stream) == 1) {
+        if (fread(&status , sizeof status , 1 , block_fs->data_stream) == 1) {
           if (status == NODE_IN_USE || status == NODE_FREE_BYTE) {
             /* 
                OK - we have found a valid identifier. We reposition to

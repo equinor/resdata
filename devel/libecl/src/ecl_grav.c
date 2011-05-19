@@ -87,7 +87,7 @@ typedef struct ecl_grav_phase_struct      ecl_grav_phase_type;
 */
 
 struct ecl_grav_struct {
-  ecl_file_type            * init_file;   /* The init file. */
+  const ecl_file_type      * init_file;   /* The init file - a shared reference owned by calling scope. */
   ecl_grav_grid_cache_type * grid_cache;  /* An internal specialized structure to facilitate fast grid lookup. */
   hash_type                * surveys;     /* A hash table containg ecl_grav_survey_type instances; one instance
                                              for each interesting time. */
@@ -665,17 +665,20 @@ static double ecl_grav_survey_eval( const ecl_grav_survey_type * base_survey,
 }
 
 /*****************************************************************/
+/**
+   The grid instance is only used during the construction phase. The
+   @init_file object is used by the ecl_grav_add_survey_XXX()
+   functions; and calling scope must NOT destroy this object before
+   all surveys have been added.
+*/
 
-ecl_grav_type * ecl_grav_alloc( const char * grid_file , const char * init_file ) {
+ecl_grav_type * ecl_grav_alloc( const ecl_grid_type * ecl_grid, const ecl_file_type * init_file) {
   ecl_grav_type * ecl_grav = util_malloc( sizeof * ecl_grav , __func__ );
-  {
-    ecl_grid_type * grid     = ecl_grid_alloc( grid_file );
-    ecl_grav->init_file      = ecl_file_fread_alloc( init_file );    
-    ecl_grav->surveys        = hash_alloc();
-    ecl_grav->grid_cache     = ecl_grav_grid_cache_alloc( grid , ecl_grav->init_file );
-    ecl_grav->std_density    = hash_alloc();
-    ecl_grid_free( grid );
-  }
+  ecl_grav->init_file      = init_file;
+  ecl_grav->grid_cache     = ecl_grav_grid_cache_alloc( ecl_grid , ecl_grav->init_file );
+  
+  ecl_grav->surveys        = hash_alloc();
+  ecl_grav->std_density    = hash_alloc();
   return ecl_grav;
 }
 
@@ -684,6 +687,7 @@ ecl_grav_type * ecl_grav_alloc( const char * grid_file , const char * init_file 
 static void ecl_grav_add_survey__( ecl_grav_type * grav , const char * name , ecl_grav_survey_type * survey) {
   hash_insert_hash_owned_ref( grav->surveys , name , survey , ecl_grav_survey_free__ );
 }
+
 
 ecl_grav_survey_type * ecl_grav_add_survey_RPORV( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file ) {
   ecl_grav_survey_type * survey = ecl_grav_survey_alloc_RPORV( grav , restart_file , name );
@@ -784,7 +788,6 @@ void ecl_grav_add_std_density( ecl_grav_type * grav , ecl_phase_enum phase , int
 
 
 void ecl_grav_free( ecl_grav_type * ecl_grav ) {
-  ecl_file_free( ecl_grav->init_file );
   ecl_grav_grid_cache_free( ecl_grav->grid_cache );
   hash_free( ecl_grav->surveys );
   hash_free( ecl_grav->std_density );

@@ -1267,7 +1267,8 @@ static int util_strcmp_numeric__( const char * s1 , const char * s2, bool float_
       }
       
       if (!complete) {
-        /* Both offset values point to a valid character value, but the
+        /* 
+           Both offset values point to a valid character value, but the
            two character values are different:
            
            1. Both characters are numeric - we use strtol() to read the

@@ -31,7 +31,7 @@ typedef struct ecl_grav_survey_struct     ecl_grav_survey_type;
 
 
 void                   ecl_grav_free( ecl_grav_type * ecl_grav_config );
-ecl_grav_type        * ecl_grav_alloc( const char * grid_file , const char * init_file );
+ecl_grav_type        * ecl_grav_alloc( const ecl_grid_type * ecl_grid, const ecl_file_type * init_file );
 ecl_grav_survey_type * ecl_grav_add_survey_FIP( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file );
 ecl_grav_survey_type * ecl_grav_add_survey_PORMOD( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file );
 ecl_grav_survey_type * ecl_grav_add_survey_RPORV( ecl_grav_type * grav , const char * name , const ecl_file_type * restart_file );
