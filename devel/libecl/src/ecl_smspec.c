@@ -206,6 +206,7 @@ Block var:         VAR_TYPE:i,j,k  (where i,j,k is calculated form NUM)
 Region var         VAR_TYPE:index  (where index is NOT from the nums vector, it it is just an offset).
 Completion var:    VAR_TYPE:WELL_NAME:NUM
 .... 
+
 */
 
 /*****************************************************************/

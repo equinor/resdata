@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'ecl_sum.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'ecl_sum.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <string.h>
@@ -40,10 +40,41 @@
    ecl_sum_type which holds ECLIPSE summary data. Most of the actual
    implementation is in separate files ecl_smspec.c for the SMSPEC
    header, and ecl_sum_data for the actual data.
-   
+
    Observe that this datastructure is built up around internalizing
    ECLIPSE summary data, the code has NO AMBITION of being able to
    write summary data.
+
+
+
+   Header in ECLIPSE.SMSPEC file                  Actual data; many 'PARAMS' blocks in .Snnnn or .UNSMRY file
+
+   ------------------------------.........       -----------   -----------   -----------   -----------   -----------
+   | WGNAMES    KEYWORDS   NUMS | INDEX  :       | PARAMS  |   | PARAMS  |   | PARAMS  |   | PARAMS  |   | PARAMS  |
+   |----------------------------|........:       |---------|   |---------|   |---------|   |---------|   |---------|
+   | OP-1       WOPR       X    |   0    :       |  652    |   |   752   |   |  862    |   |   852   |   |    962  |
+   | OP-1       WWPR       X    |   1    :       |   45    |   |    47   |   |   55    |   |    59   |   |     62  |
+   | GI-1       WGIR       X    |   2    :       |  500    |   |   500   |   |  786    |   |   786   |   |    486  |
+   | :+:+:+:+   FOPT       X    |   3    :       | 7666    |   |  7666   |   | 8811    |   |  7688   |   |   8649  |
+   | :+:+:+:+   RPR        5    |   4    :       |  255    |   |   255   |   |  266    |   |   257   |   |    277  |
+   | :+:+:+:+   BPR        3457 |   5    :       |  167    |   |   167   |   |  189    |   |   201   |   |    166  |
+   ------------------------------.........       -----------   -----------   -----------   -----------   -----------
+
+                                                 <------------------------ Time direction ------------------------->
+
+   As illustrated in the figure above header information is stored in
+   the SMSPEC file; the header information is organised in several
+   keywords; at least the WGNAMES and KEYWORDS arrays, and often also
+   the NUMS array. Together these three arrays uniquely specify a
+   summary vector. 
+
+   The INDEX column in the header information is NOT part of the SMSPEC
+   file, but an important part of the workings of the ecl_smspec
+   implementation; this index is used to lookup a numerical value from
+   the PARAMS vector with actual data.
+   
+   These matters are documented further in the ecl_smspec.c and
+   ecl_sum_data.c files.
 */
 
 
@@ -65,7 +96,7 @@ struct ecl_sum_struct {
    Reads the data from ECLIPSE summary files, can either be a list of
    files BASE.S0000, BASE.S0001, BASE.S0002,.. or one unified
    file. Formatted/unformatted is detected automagically.
-   
+
    The actual loading is implemented in the ecl_sum_data.c file.
 */
 
@@ -80,7 +111,7 @@ static void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , const stringlist
 static ecl_sum_type * ecl_sum_fread_alloc__(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
   ecl_sum_type *ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
   UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
-  ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , key_join_string , include_restart); 
+  ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , key_join_string , include_restart);
   ecl_sum->data   = NULL;
   ecl_sum_fread_realloc_data(ecl_sum , data_files , include_restart);
   return ecl_sum;
@@ -107,7 +138,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_sum , ECL_SUM_ID );
    data pointer to NULL. The SMSPEC data is still valid, and can be
    reused with calls to ecl_sum_fread_realloc_data().
 */
-  
+
 void ecl_sum_free_data( ecl_sum_type * ecl_sum ) {
   ecl_sum_data_free( ecl_sum->data );
   ecl_sum->data = NULL;
@@ -139,10 +170,10 @@ void ecl_sum_free__(void * __ecl_sum) {
 
     * Formatted and unformatted.
     * Unified and not unified.
-    
+
    The program will load the most recent dataset, by looking at the
    modification time stamps of the files; if no simulation case is
-   found the function will return NULL. 
+   found the function will return NULL.
 
    If the SMSPEC file contains the RESTART keyword the function will
    iterate backwards to load summary information from previous runs
@@ -161,12 +192,12 @@ ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char *
   char * path , * base, *ext;
   char * header_file;
   stringlist_type * summary_file_list = stringlist_alloc_new();
-  
+
   util_alloc_file_components( input_file , &path , &base , &ext);
   /* Should add ext to the base if ext does not represent a valid ECLIPSE extension. */
-  if (ecl_util_alloc_summary_files( path , base , ext , &header_file , summary_file_list )) 
+  if (ecl_util_alloc_summary_files( path , base , ext , &header_file , summary_file_list ))
     ecl_sum = ecl_sum_fread_alloc__( header_file , summary_file_list , key_join_string , include_restart);
-  
+
   util_safe_free( base );
   util_safe_free( path );
   util_safe_free( ext );
@@ -177,11 +208,11 @@ ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char *
 }
 
 /*****************************************************************/
-/* 
+/*
    Here comes lots of access functions - these are mostly thin
    wrapppers around ecl_smspec functions. See more 'extensive'
    documentation in ecl_smspec.c
-   
+
    The functions returning an actual value,
    i.e. ecl_sum_get_well_var() will trustingly call ecl_sum_data_get()
    with whatever indices it gets. If the indices are invalid -
@@ -269,12 +300,12 @@ double ecl_sum_get_block_var(const ecl_sum_type * ecl_sum , int time_index , con
 }
 
 
-int  ecl_sum_get_block_var_index_ijk(const ecl_sum_type * ecl_sum , const char * block_var , int i, int j , int k ) { 
-  return ecl_smspec_get_block_var_index_ijk( ecl_sum->smspec , block_var , i , j , k); 
+int  ecl_sum_get_block_var_index_ijk(const ecl_sum_type * ecl_sum , const char * block_var , int i, int j , int k ) {
+  return ecl_smspec_get_block_var_index_ijk( ecl_sum->smspec , block_var , i , j , k);
 }
 
-bool ecl_sum_has_block_var_ijk(const ecl_sum_type * ecl_sum , const char * block_var , int i, int j , int k) { 
-  return ecl_smspec_has_block_var_ijk( ecl_sum->smspec , block_var , i ,j , k); 
+bool ecl_sum_has_block_var_ijk(const ecl_sum_type * ecl_sum , const char * block_var , int i, int j , int k) {
+  return ecl_smspec_has_block_var_ijk( ecl_sum->smspec , block_var , i ,j , k);
 }
 
 double ecl_sum_get_block_var_ijk(const ecl_sum_type * ecl_sum , int time_index , const char * block_var , int i , int j , int k) {
@@ -346,7 +377,7 @@ double ecl_sum_get_misc_var_from_sim_days( const ecl_sum_type * ecl_sum , double
 /*****************************************************************/
 /* Well completion - not fully implemented ?? */
 
-int ecl_sum_get_well_completion_var_index(const ecl_sum_type * ecl_sum , const char * well , const char *var, int cell_nr) { 
+int ecl_sum_get_well_completion_var_index(const ecl_sum_type * ecl_sum , const char * well , const char *var, int cell_nr) {
   return ecl_smspec_get_well_completion_var_index( ecl_sum->smspec , well , var , cell_nr);
 }
 
@@ -362,8 +393,8 @@ double ecl_sum_get_well_completion_var(const ecl_sum_type * ecl_sum , int time_i
 /*****************************************************************/
 /* General variables - this means WWCT:OP_1 - i.e. composite variables*/
 
-int  ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lookup_kw) { 
-  return ecl_smspec_get_general_var_index( ecl_sum->smspec , lookup_kw); 
+int  ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lookup_kw) {
+  return ecl_smspec_get_general_var_index( ecl_sum->smspec , lookup_kw);
 }
 
 bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw)       { return ecl_smspec_has_general_var( ecl_sum->smspec , lookup_kw); }
@@ -394,11 +425,11 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 }
 
 /*****************************************************************/
-/* 
+/*
    Indexed get - these functions can be used after another function
    has been used to query for index.
 */
- 
+
 
 
 double ecl_sum_iiget( const ecl_sum_type * ecl_sum , int internal_index , int param_index) {
@@ -460,12 +491,12 @@ const char * ecl_sum_get_keyword( const ecl_sum_type * sum , const char * gen_ke
 
 
 /*****************************************************************/
-/* 
+/*
    Here comes a couple of functions relating to the time
    dimension. The functions here in this file are just thin wrappers
    of 'real' functions located in ecl_sum_data.c.
 */
-   
+
 
 
 bool  ecl_sum_has_report_step(const ecl_sum_type * ecl_sum , int report_step ) {
@@ -524,13 +555,13 @@ void ecl_sum_summarize( const ecl_sum_type * ecl_sum , FILE * stream ) {
    reached. If the limiting value is never reached, -1 is
    returned. The smspec_index should be calculated first with one of
    the
-   
-      ecl_sum_get_XXXX_index() 
+
+      ecl_sum_get_XXXX_index()
 
    functions. I.e. the following code will give the first index where
    the water wut in well PX exceeds 0.25:
 
-   {  
+   {
       int smspec_index   = ecl_sum_get_well_var( ecl_sum , "PX" , "WWCT" );
       int first_index    = ecl_sum_get_first_gt( ecl_sum , smspec_index , 0.25);
    }
@@ -538,7 +569,7 @@ void ecl_sum_summarize( const ecl_sum_type * ecl_sum , FILE * stream ) {
 */
 
 
-static int ecl_sum_get_limiting(const ecl_sum_type * ecl_sum , int smspec_index , double limit , bool gt) { 
+static int ecl_sum_get_limiting(const ecl_sum_type * ecl_sum , int smspec_index , double limit , bool gt) {
   const int length        = ecl_sum_data_get_length( ecl_sum->data );
   int internal_index      = 0;
   do {
@@ -592,7 +623,7 @@ double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int index ) {
 
 
 /*****************************************************************/
-/* This is essentially the summary.x program. */ 
+/* This is essentially the summary.x program. */
 
 #define DAYS_DATE_FORMAT    "%7.2f   %02d/%02d/%04d   "
 #define FLOAT_FORMAT        " %12.3f "
@@ -605,22 +636,22 @@ static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream
   int ivar , day,month,year;
   util_set_date_values(ecl_sum_iget_sim_time(ecl_sum , internal_index ) , &day , &month, &year);
   fprintf(stream , DAYS_DATE_FORMAT , ecl_sum_iget_sim_days(ecl_sum , internal_index) , day , month , year);
-  
-  for (ivar = 0; ivar < int_vector_size( var_index ); ivar++) 
+
+  for (ivar = 0; ivar < int_vector_size( var_index ); ivar++)
     if (bool_vector_iget( has_var , ivar ))
       fprintf(stream , FLOAT_FORMAT , ecl_sum_iiget(ecl_sum , internal_index, int_vector_iget( var_index , ivar )));
-  
+
   fprintf(stream , "\n");
 }
 
 
 static void ecl_sum_fprintf_header( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const bool_vector_type * has_var , FILE * stream) {
   fprintf(stream , DATE_HEADER);
-  for (int i=0; i < stringlist_get_size( key_list ); i++) 
+  for (int i=0; i < stringlist_get_size( key_list ); i++)
     if (bool_vector_iget( has_var , i ))
       fprintf(stream , HEADER_FORMAT , stringlist_iget( key_list , i ));
   fprintf( stream , "\n");
-  
+
   fprintf(stream , DATE_DASH);
   for (int i=0; i < stringlist_get_size( key_list ); i++)
     if (bool_vector_iget( has_var , i ))
@@ -648,7 +679,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const string
 
   if (print_header)
     ecl_sum_fprintf_header( ecl_sum , var_list , has_var , stream );
-  
+
   if (report_only) {
     int first_report = ecl_sum_get_first_report_step( ecl_sum );
     int last_report  = ecl_sum_get_last_report_step( ecl_sum );
@@ -663,10 +694,10 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const string
     }
   } else {
     int internal_index;
-    for (internal_index = 0; internal_index < ecl_sum_get_data_length( ecl_sum ); internal_index++) 
+    for (internal_index = 0; internal_index < ecl_sum_get_data_length( ecl_sum ); internal_index++)
       __ecl_sum_fprintf_line( ecl_sum , stream , internal_index , has_var , var_index );
   }
-  
+
   int_vector_free( var_index );
   bool_vector_free( has_var );
 }
@@ -702,7 +733,7 @@ bool ecl_sum_same_case( const ecl_sum_type * ecl_sum , const char * input_file )
         free( header_file );
       }
     }
-    
+
     util_safe_free( path );
     util_safe_free( base );
   }
@@ -787,7 +818,7 @@ double ecl_sum_days_from_time( const ecl_sum_type * ecl_sum , time_t sim_time ) 
 }
 
 
-double ecl_sum_get_sim_length( const ecl_sum_type * ecl_sum ) { 
+double ecl_sum_get_sim_length( const ecl_sum_type * ecl_sum ) {
   return ecl_sum_data_get_sim_length( ecl_sum->data );
 }
 

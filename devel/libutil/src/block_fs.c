@@ -875,6 +875,7 @@ static bool block_fs_load_index( block_fs_type * block_fs ) {
       time_t index_mtime = util_fread_time_t( stream );
       time_t data_mtime  = data_stat.st_mtime;
       if (index_mtime == data_mtime) {
+        /* Read the whole index file in one single read operation. */
         buffer_type * buffer = buffer_fread_alloc( block_fs->index_file );
 
         /* OK - the index has the same age as the data file,

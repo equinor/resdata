@@ -485,10 +485,10 @@ static void ecl_region_cmp_select__( ecl_region_type * region , const ecl_kw_typ
   {
     if ((ecl_kw_get_size( kw1 ) == ecl_kw_get_size( kw2 )) && 
         (ecl_kw_get_type( kw1 ) == ecl_kw_get_type( kw2 ))) {
-
+      
       const float * kw1_data = ecl_kw_get_float_ptr( kw1 );
       const float * kw2_data = ecl_kw_get_float_ptr( kw2 );
-
+      
       if (global_kw) {
         int global_index;
         for (global_index = 0; global_index < region->grid_vol; global_index++) {
