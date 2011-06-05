@@ -247,7 +247,7 @@ static smspec_index_type * smspec_index_alloc_empty(ecl_smspec_var_type var_type
 
 static void smspec_index_set_wgname( smspec_index_type * index , const char * wgname ) {
   if (DUMMY_WELL( wgname ))
-    util_abort("%s: trying to set/derefernce WGNAME = %s which is invalid \n",__func__);
+    util_abort("%s: trying to set/dereference WGNAME = %s which is invalid \n",__func__);
   
   index->wgname = util_realloc_string_copy(index->wgname , wgname );
 }

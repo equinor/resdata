@@ -240,8 +240,8 @@ static void * thread_pool_main_loop( void * arg ) {
             tp_arg->slot_index = slot_index;
             job_slot->running = true;
             /* 
-               Here is the actual pthread_create() call creating an additional running
-               thread.
+               Here is the actual pthread_create() call creating an
+               additional running thread.
             */
             pthread_create( &job_slot->thread , NULL , thread_pool_start_job , tp_arg );
             job_slot->run_count += 1;
@@ -274,7 +274,7 @@ static void * thread_pool_main_loop( void * arg ) {
      There are no more jobs in the queue, and the main scope has
      signaled that join should start. Observe that we join only the
      jobs corresponding to explicitly running job_slots; when a job
-     slot is used multiple time the first jobs run in the job_slot
+     slot is used multiple times the first jobs run in the job_slot
      will not be explicitly joined.
   */
   {

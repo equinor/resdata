@@ -58,7 +58,7 @@
 #define INTEHEAD_DAY_INDEX     64   
 #define INTEHEAD_MONTH_INDEX   65
 #define INTEHEAD_YEAR_INDEX    66
-#define INTEHEAD_VERSION_INDEX 94
+#define INTEHEAD_VERSION_INDEX 94    /* This is ECLIPSE100 || ECLIPSE300 - not temporal version. */
 #define INTEHEAD_PHASE_INDEX   14
 
 #define ECL_FILE_ID 776107
@@ -1025,4 +1025,8 @@ void ecl_file_fprintf_kw_list( const ecl_file_type * ecl_file , FILE * stream ) 
     const ecl_kw_type * kw = ecl_file_iget_kw( ecl_file , i );
     fprintf(stream , "%-8s %7d:%s\n",ecl_kw_get_header( kw ) , ecl_kw_get_size( kw ) , ecl_util_get_type_name( ecl_kw_get_type( kw )));
   }
+}
+
+const char * ecl_file_enum_iget( int index , int * value) {
+  return util_enum_iget( index , ECL_FILE_ENUM_SIZE , (const util_enum_element_type []) { ECL_FILE_ENUM_DEFS } , value);
 }

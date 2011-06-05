@@ -457,10 +457,70 @@ void ecl_kw_memcpy(ecl_kw_type *target, const ecl_kw_type *src) {
 
 ecl_kw_type *ecl_kw_alloc_copy(const ecl_kw_type *src) {
   ecl_kw_type *new;
-  new = ecl_kw_alloc_empty(true , true);
+  new = ecl_kw_alloc_empty();
   ecl_kw_memcpy(new , src);
   return new;
 }
+
+
+/**
+   This function will allocate a new copy of @src, where only the
+   elements corresponding to the slice [index1:index2) is included.
+   
+   The input parameters @index1 and @index2 can to some extent be
+   out-of-range:
+
+       index1 = max( index1 , 0 );
+       index2 = min( index2 , size );
+
+   If index1 > index2 it will fail hard; the same applies if stride is
+   <= 0.  
+
+   
+*/
+
+   
+
+ecl_kw_type * ecl_kw_alloc_slice_copy( const ecl_kw_type * src, int index1, int index2, int stride) {
+  if (index1 < 0) index1 = 0;
+  if (index2 >  src->size) index2 = src->size;
+  if (index1 >= src->size) util_abort("%s: index1=%d > size:%d \n",__func__ , index1 , src->size);
+  if (stride <= 0)         util_abort("%s: stride:%d completely broken ...\n",__func__ , stride);
+  {
+    ecl_kw_type * new_kw = NULL;
+    int src_index = index1;
+    /* 1: Determine size of the sliced copy. */
+    {
+      int new_size = 0;
+      while (src_index < index2) {
+        new_size++;
+        src_index += stride;
+      }
+      if (new_size > 0) {
+        new_kw = ecl_kw_alloc_empty();
+        ecl_kw_initialize(new_kw , src->header , new_size , src->ecl_type);
+        ecl_kw_alloc_data(new_kw);
+        
+        /* 2: Copy over the elements. */
+        src_index = index1;
+        {
+          int target_index = 0;
+          const char * src_ptr = src->data;
+          char * new_ptr = new_kw->data;
+          int sizeof_ctype = new_kw->sizeof_ctype;
+          
+          while ( src_index < index2 ) {
+            memcpy( &new_ptr[ target_index * sizeof_ctype ] , &src_ptr[ src_index * sizeof_ctype ] , sizeof_ctype );
+            src_index += stride;
+            target_index += 1;
+          }
+        }
+      }
+    }
+    return new_kw;
+  }
+}
+      
 
 const void * ecl_kw_copyc__(const void * void_kw) {
   return ecl_kw_alloc_copy((const ecl_kw_type *) void_kw); 

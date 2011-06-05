@@ -21,7 +21,7 @@ add_program(env , conf , bin_path , "bls.x"             , "bls.c"        )
 add_program(env , conf , bin_path , "brm.x"             , "brm.c"        )
 add_program(env , conf , bin_path , "brot.x"            , "brot.c"       )
 add_program(env , conf , bin_path , "bcp.x"             , "bcp.c"        )
-
+add_program(env , conf , bin_path , "block_fs_test.x"   , "block_fs_test.c" )
 
 Default( bin_path )
          

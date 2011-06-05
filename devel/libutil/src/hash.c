@@ -168,12 +168,12 @@ static node_data_type * hash_get_node_data(hash_type *hash , const char *key) {
 
 /**
    This function resizes the hash table when it has become to full.
-   The table only grows - this funuction is called from
+   The table only grows - this function is called from
    __hash_insert_node().
 */
 static void hash_resize(hash_type *hash, int new_size) {
-  hash_sll_type **new_table = hash_sll_alloc_table(new_size);
-  hash_node_type *node;
+  hash_sll_type ** new_table = hash_sll_alloc_table( new_size );
+  hash_node_type * node;
   int i;
   
   for (i=0; i < hash->size; i++) {
@@ -187,13 +187,16 @@ static void hash_resize(hash_type *hash, int new_size) {
   }
   
   /* 
-     Only freeing the table structure, *NOT* calling the node_free() functions,. which
-     happens when hash_sll_free() is called.
+     Only freeing the table structure, *NOT* calling the node_free()
+     functions, which happens when hash_sll_free() is called.
   */
-  for (i=0; i < hash->size; i++) 
-    free(hash->table[i]);
   
-  free(hash->table);
+  {
+    for (i=0; i < hash->size; i++) 
+      free( hash->table[i] );
+    free( hash->table );
+  }
+  
   hash->size     = new_size;
   hash->table    = new_table;
 }
@@ -468,10 +471,10 @@ void * hash_safe_get( const hash_type * hash , const char * key ) {
     1. Return an object from the hash table.
     2. Remove it from the table.
 
-   Observe that if the object has been installed with a constructor,
+   Observe that if the object has been installed with a destructor,
    the object will be destroyed by the hash_del() operation, and the
    return value is complete gibberish - i.e. this function can NOT be
-   used on hash-owned references.
+   used on hash-owned references.  
 */
 
 void * hash_pop( hash_type * hash , const char * key) {

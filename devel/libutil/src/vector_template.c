@@ -68,7 +68,7 @@
     ·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·
 
     ·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·      
-6.  |  1  |  0  |  12 |  77 |  77 | 77  |  78 | 77  | 99  |  99 | 99  | 99  | 99  | 99  | 99  | 99  | size = 7, alloc_size = 12, default = 99
+6.  |  1  |  0  |  12 |  77 |  77 | 77  |  78 | 99  | 99  |  99 | 99  | 99  | 99  | 99  | 99  | 99  | size = 7, alloc_size = 12, default = 99
     ·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·-----·
     
        0     1      2    3     4     5     6     7     8     9    10    11    12    13    14   15
@@ -103,7 +103,7 @@ static const char * string_type = "<TYPE>";
 
 struct <TYPE>_vector_struct {
   UTIL_TYPE_ID_DECLARATION;
-  int      alloc_size;    /* The alloceted size of data. */
+  int      alloc_size;    /* The allocated size of data. */
   int      size;          /* The index of the last valid - i.e. actively set - element in the vector. */
   <TYPE>   default_value; /* The data vector is initialized with this value. */
   <TYPE> * data;          /* The actual data. */

@@ -32,7 +32,7 @@ extern "C" {
    All the ecl_xxx functions will use the ECL_ENDIAN_FLIP macro to
    determine whether the endian flip should be performed. When opening
    a fortio instance explicitly you can use the ECL_ENDIAN_FLIP macro
-   to get the endianness correct (for ECLIPSE usage that is).
+   to get the endianness correct (for ECLIPSE usage that is).  
 */
 
 #define ECLIPSE_BYTE_ORDER  __BIG_ENDIAN   // Alternatively: __LITTLE_ENDIAN

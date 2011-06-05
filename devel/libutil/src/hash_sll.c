@@ -30,17 +30,16 @@ struct hash_sll_struct {
 
 
 static hash_sll_type * hash_sll_alloc( void ) {
-  hash_sll_type * hash_sll = util_malloc(sizeof *hash_sll , __func__);
+  hash_sll_type * hash_sll = util_malloc(sizeof * hash_sll , __func__);
   hash_sll->length = 0;
   hash_sll->head   = NULL;
   return hash_sll;
 }
 
 
-hash_sll_type **hash_sll_alloc_table(int size) {
+hash_sll_type ** hash_sll_alloc_table(int size) {
+  hash_sll_type ** table = util_malloc(size * sizeof * table , __func__);
   int i;
-  hash_sll_type **table;
-  table = util_malloc(size * sizeof *table , __func__);
   for (i=0; i<size; i++)
     table[i] = hash_sll_alloc();
   return table;
@@ -70,10 +69,9 @@ void hash_sll_del_node(hash_sll_type *hash_sll , hash_node_type *del_node) {
         hash_node_set_next(p_node , hash_node_get_next(del_node));
       hash_node_free(del_node);
       hash_sll->length--;
-    } else {
-      fprintf(stderr,"%s: tried to delete node not in list - aborting \n",__func__);
-      abort();
-    }
+    } else 
+      util_abort("%s: tried to delete node not in list - aborting \n",__func__);
+
   }
 }
 
@@ -98,7 +96,7 @@ void hash_sll_free(hash_sll_type *hash_sll) {
       node = next_node;
     }
   }
-  free(hash_sll);
+  free( hash_sll );
 }
 
 

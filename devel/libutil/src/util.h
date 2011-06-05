@@ -42,9 +42,9 @@ extern"C" {
    
    The four macros UTIL_IS_INSTANCE_FUNCTION, UTIL_SAFE_CAST_FUNTION,
    UTIL_TYPE_ID_DECLARATION and UTIL_TYPE_ID_INIT can be used to
-   implement a simple system for type checking (void *) runtime. The
-   system is based on a unique integer for each class, this must be
-   provided by the user.
+   implement a simple system for type checking (void *) at
+   runtime. The system is based on a unique integer for each class,
+   this must be provided by the user.
 
    The motivation for these functions is to be able to to type-check
    the arguments to callback functions like pthread_create.
@@ -65,7 +65,8 @@ extern"C" {
 
     UTIL_SAFE_CAST_FUNCTION: This is similar to
       UTIL_IS_INSTANCE_FUNCTION, but it will return (type *) if the
-      cast succeeds, and fail hard if it fails.
+      cast succeeds, and fail hard if it fails. There is also a _CONST
+      variety of this function.
       
 */
 
@@ -393,6 +394,71 @@ double   util_kahan_sum(const double *data, size_t N);
 
 #define UTIL_FWRITE_VECTOR(s,n,stream) { if (fwrite(s , sizeof s , (n) , stream) != (n)) util_abort("%s: write failed: %s \n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_VECTOR(s,n,stream)  { if (fread(s , sizeof s , (n) , stream) != (n)) util_abort("%s: read failed: %s \n",__func__ , strerror(errno)); }
+
+/*****************************************************************/
+/*
+  The code below here is a simple functionality to support 'enum
+  introspection'; the point is that when calling the library functions
+  from Python/ctypes it is very valuable to have access to the enum
+  values from the Python side. The enum defintions is just used during
+  the compile phase, and then subsequently dropped. It is therefor
+  impossible to determine enum values by inspecting the resulting
+  object files.
+
+  The approach which has been chosen is that each of the enums which
+  should support 'introspection' from Python should have a function:
+
+     const char * <enum>_iget(int index, int * value) {
+        ...
+     }
+     
+  which should take an enum element number as input argument and
+  return a string representation of the corresponding enum element and
+  also update the value reference to contain the corresponding enum
+  value. If index is out of range the function should return NULL and
+  also set value to -1. The python layer can then create an integer
+  variable with the correct name and value in the calling module.
+
+  The util_enum_element_type and the util_enum_iget() function are
+  convenience functions which can be used to avoid indirectly
+  repeating the enum definition in the <enum>_iget() function. 
+
+  In the example below we create the enum definition in normal way in
+  the header file, and then in addition we repeat the defintion in a
+  #define a symbol which is used as argument in the <enum>_iget()
+  function:
+
+
+  header_file:
+  ------------
+  enum my_enum {
+    INVALID = 0,
+    VALUE1  = 2,
+    VALUE2  = 17
+  }
+    
+  // The enum definition is repeated; but at at least at the very same spot of the code.
+
+  #define MY_ENUM_DEF  { .value = INVALID, .name="INVALID"} , {.value = VALUE1 , .name="VALUE1"} , {.value = VALUE2 , .name="VALUE2"}
+  #define MY_ENUM_SIZE 3
+
+  
+  source file:
+  ------------
+  
+  const char * my_enum_iget(int index, int * value) {
+     return util_enum_iget( index , MY_ENUM_SIZE , (const util_enum_element_type []) MY_ENUM_DEF , value);
+  }
+
+*/  
+   
+
+typedef struct {
+  int value;
+  const char * name;
+} util_enum_element_type;
+
+const char * util_enum_iget( int index , int size , const util_enum_element_type * enum_defs , int * value);
 
 #ifdef __cplusplus
 }

@@ -71,7 +71,6 @@
 
 
 
-
 const char * ecl_util_get_phase_name( ecl_phase_enum phase ) {
   switch( phase ) {
   case( ECL_OIL_PHASE ):
@@ -1359,5 +1358,18 @@ bool ecl_util_valid_basename( const char * basename ) {
 }
 
 
+/*****************************************************************/
+/* Small functions to support enum introspection. */
 
+const char * ecl_util_file_enum_iget( int index, int * value) {
+  return util_enum_iget( index , ECL_FILE_ENUM_SIZE , (const util_enum_element_type []) { ECL_FILE_ENUM_DEFS }, value);
+}
+
+const char * ecl_util_phase_enum_iget( int index, int * value) {
+  return util_enum_iget( index , ECL_PHASE_ENUM_SIZE , (const util_enum_element_type []) { ECL_PHASE_ENUM_DEFS }, value);
+}
+
+const char * ecl_util_type_enum_iget( int index, int * value) {
+  return util_enum_iget( index , ECL_TYPE_ENUM_SIZE , (const util_enum_element_type []) { ECL_TYPE_ENUM_DEFS }, value);
+}
 

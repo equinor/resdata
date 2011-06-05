@@ -171,8 +171,9 @@ stringlist_type * stringlist_alloc_argv_owned_ref(const char ** argv , int argc)
 
 
 /** 
-    Allocates a new stringlist instance where all the new string are references to the
-    string found in the existing stringlist instance.
+    Allocates a new stringlist instance where all the new string are
+    references to the string found in the existing stringlist
+    instance.  
 */ 
 stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type * src) {
   stringlist_type * copy = stringlist_alloc_empty( false );

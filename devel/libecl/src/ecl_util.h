@@ -25,19 +25,31 @@ extern "C" {
 #include <time.h>
 #include <stringlist.h>
 
-  typedef enum {ECL_OTHER_FILE           = 0   , 
-                ECL_RESTART_FILE         = 1   , 
-                ECL_UNIFIED_RESTART_FILE = 2   , 
-                ECL_SUMMARY_FILE         = 4   , 
-                ECL_UNIFIED_SUMMARY_FILE = 8   , 
-                ECL_SUMMARY_HEADER_FILE  = 16  , 
-                ECL_GRID_FILE            = 32  , 
-                ECL_EGRID_FILE           = 64  , 
-                ECL_INIT_FILE            = 128 ,
-                ECL_RFT_FILE             = 256 ,
-                ECL_DATA_FILE            = 512 } ecl_file_enum;   
+typedef enum { ECL_OTHER_FILE           = 0   , 
+               ECL_RESTART_FILE         = 1   , 
+               ECL_UNIFIED_RESTART_FILE = 2   , 
+               ECL_SUMMARY_FILE         = 4   , 
+               ECL_UNIFIED_SUMMARY_FILE = 8   , 
+               ECL_SUMMARY_HEADER_FILE  = 16  , 
+               ECL_GRID_FILE            = 32  , 
+               ECL_EGRID_FILE           = 64  , 
+               ECL_INIT_FILE            = 128 ,
+               ECL_RFT_FILE             = 256 ,
+               ECL_DATA_FILE            = 512 } ecl_file_enum;   
 
-  
+
+#define ECL_FILE_ENUM_DEFS {.value =   0 , .name="ECL_OTHER_FILE"},     \
+{.value =   1 , .name="ECL_RESTART_FILE"},                              \
+{.value =   2 , .name="ECL_UNIFIED_RESTART_FILE"},                      \
+{.value =   4 , .name="ECL_SUMMARY_FILE"},                              \
+{.value =   8 , .name="ECL_UNIFIED_SUMMARY_FILE"},                      \
+{.value =  16 , .name="ECL_SUMMARY_HEADER_FILE"},                       \
+{.value =  32 , .name="ECL_GRID_FILE"},                                 \
+{.value =  64 , .name="ECL_EGRID_FILE"},                                \
+{.value = 128 , .name="ECL_INIT_FILE"},                                 \
+{.value = 256 , .name="ECL_RFT_FILE"},                                  \
+{.value = 512 , .name="ECL_DATA_FILE"}
+#define ECL_FILE_ENUM_SIZE 11
 
 
 
@@ -80,6 +92,15 @@ typedef enum {
   ECL_MESS_TYPE   = 5
 } ecl_type_enum;
 
+#define ECL_TYPE_ENUM_DEFS {.value = 0 , .name = "ECL_CHAR_TYPE"}, \
+{.value = 1 , .name = "ECL_FLOAT_TYPE"} ,                          \
+{.value = 2 , .name = "ECL_DOUBLE_TYPE"},                          \
+{.value = 3 , .name = "ECL_INT_TYPE"},                             \
+{.value = 4 , .name = "ECL_BOOL_TYPE"},                            \
+{.value = 5 , .name = "ECL_MESS_TYPE"}
+
+#define ECL_TYPE_ENUM_SIZE 6
+
 
 
 /*
@@ -111,6 +132,12 @@ typedef enum {
   ECL_GAS_PHASE   = 2,
   ECL_WATER_PHASE = 4
 } ecl_phase_enum;
+
+#define ECL_PHASE_ENUM_DEFS {.value = 1 , .name = "ECL_OIL_PHASE"}, {.value = 2 , .name = "ECL_GAS_PHASE"} , {.value = 4 , .name = "ECL_WATER_PHASE"}
+#define ECL_PHASE_ENUM_SIZE 3
+
+
+
 
 // For unformatted files:
 #define ECL_BOOL_TRUE_INT         -1   // Binary representation: 11111111  11111111  11111111  1111111
@@ -144,6 +171,8 @@ int             ecl_util_fname_report_cmp(const void *f1, const void *f2);
 int             ecl_util_select_filelist( const char * path , const char * base , ecl_file_enum file_type , bool fmt_file , stringlist_type * filelist);
 bool            ecl_util_valid_basename( const char * basename );
 const char *    ecl_util_get_phase_name( ecl_phase_enum phase );
+const char *    ecl_util_file_enum_iget( int index, int * value);
+
 #ifdef __cplusplus
 }
 #endif

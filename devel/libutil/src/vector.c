@@ -30,8 +30,8 @@
 
 struct vector_struct {
   UTIL_TYPE_ID_DECLARATION;
-  int    	   alloc_size;   /* The number of elements allocated in the data vector - in general > size. */
-  int    	   size;         /* THe number of elements the user has added to the vector. */
+  int              alloc_size;   /* The number of elements allocated in the data vector - in general > size. */
+  int              size;         /* THe number of elements the user has added to the vector. */
   node_data_type **data;         /* node_data instances - which again contain user data. */
 };
 
@@ -59,7 +59,7 @@ static void vector_resize__(vector_type * vector, int new_alloc_size) {
   
   vector->data = util_realloc( vector->data , new_alloc_size * sizeof * vector->data , __func__);  
   for (i = vector->alloc_size; i < new_alloc_size; i++)
-    vector->data[i] = NULL; /* nitialising new nodes to NULL */
+    vector->data[i] = NULL; /* Initialising new nodes to NULL */
 
   vector->alloc_size = new_alloc_size;
 }
@@ -68,9 +68,9 @@ static void vector_resize__(vector_type * vector, int new_alloc_size) {
 vector_type * vector_alloc_new() {
   vector_type * vector = util_malloc( sizeof * vector , __func__);
   UTIL_TYPE_ID_INIT(vector , VECTOR_TYPE_ID);
-  vector->size         = 0;
-  vector->alloc_size   = 0;
-  vector->data         = NULL;
+  vector->size       = 0;
+  vector->alloc_size = 0;
+  vector->data       = NULL;
   vector_resize__(vector , VECTOR_DEFAULT_SIZE);
   return vector;
 }
@@ -453,8 +453,8 @@ void vector_clear(vector_type * vector) {
 
 void vector_free(vector_type * vector) {
   vector_clear( vector );
-  free(vector->data);
-  free(vector);
+  free( vector->data );
+  free( vector );
 }
 
 

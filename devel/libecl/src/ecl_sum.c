@@ -46,7 +46,6 @@
    write summary data.
 
 
-
    Header in ECLIPSE.SMSPEC file                  Actual data; many 'PARAMS' blocks in .Snnnn or .UNSMRY file
 
    ------------------------------.........       -----------   -----------   -----------   -----------   -----------
@@ -66,12 +65,14 @@
    the SMSPEC file; the header information is organised in several
    keywords; at least the WGNAMES and KEYWORDS arrays, and often also
    the NUMS array. Together these three arrays uniquely specify a
-   summary vector. 
+   summary vector.
 
-   The INDEX column in the header information is NOT part of the SMSPEC
-   file, but an important part of the workings of the ecl_smspec
-   implementation; this index is used to lookup a numerical value from
-   the PARAMS vector with actual data.
+   The INDEX column in the header information is NOT part of the
+   SMSPEC file, but an important part of the ecl_smspec
+   implementation. The the values from WGNAMES/KEYWORDS/NUMS are
+   combined to create a unique key; and the corresponding index is
+   used to lookup a numerical value from the PARAMS vector with actual
+   data.
    
    These matters are documented further in the ecl_smspec.c and
    ecl_sum_data.c files.

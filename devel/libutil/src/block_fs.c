@@ -133,7 +133,9 @@ struct block_fs_struct {
                                        only contain pointers to the objects stored in this vector. */
   int              write_count;     /* This just counts the number of writes since the file system was mounted. */
   int              max_cache_size;
-  float            fragmentation_limit;
+  float            fragmentation_limit;  /* If fragmentation (amount of wasted space) is above this limit - do a rotate.
+                                            fragmentation_limit == 1.0 : Never rotate.
+                                            fragmentation_limit == 0.0 : Rotate when one byte is wasted. */
   bool             data_owner;
   time_t           index_time;   
   int              fsync_interval;  /* 0: never  n: every nth iteration. */
@@ -553,6 +555,7 @@ static void block_fs_set_filenames( block_fs_type * block_fs ) {
   util_safe_free( block_fs->data_file );
   util_safe_free( block_fs->lock_file );
   util_safe_free( block_fs->index_file );
+  
   block_fs->data_file  = util_alloc_filename( block_fs->path , block_fs->base_name , data_ext);
   block_fs->lock_file  = util_alloc_filename( block_fs->path , block_fs->base_name , lock_ext);
   block_fs->index_file = util_alloc_filename( block_fs->path , block_fs->base_name , index_ext);
@@ -616,8 +619,8 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
     block_fs->index_time = time( NULL );
     
     if (!block_fs->data_owner) 
-      printf(" Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only. Cross your fingers ....\n");
-    fflush( stdout );
+      fprintf(stderr," Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only. Cross your fingers ....\n");
+    fflush( stderr );
   }
   
   return block_fs;
@@ -961,7 +964,7 @@ static void block_fs_unlink_free_node( block_fs_type * block_fs , file_node_type
   file_node_type * next = node->next;
   
   if (prev == NULL)
-      /* Special case: popping off the head of the list. */
+    /* Special case: popping off the head of the list. */
     block_fs->free_nodes = next;
   else
     prev->next = next;
@@ -1071,15 +1074,15 @@ void block_fs_unlink_file( block_fs_type * block_fs , const char * filename) {
    This function can be used to initiate explicit rotate of the file
    system, observe the following.
 
-    1. This function is called with an explicit fragmentation_limit
-       which might differ from the fragmentation limit held by the
-       filesystem
+   1. This function is called with an explicit fragmentation_limit
+   which might differ from the fragmentation limit held by the
+   filesystem
 
-    2. This function will take the write lock, it is therefor
-       essential that this function is NOT called by another function
-       which has already taken the write lock (i.e. the
-       block_fs_unlink_file() or block_fs_fwrite_file() functions),
-       that will deadlock.
+   2. This function will take the write lock, it is therefor
+   essential that this function is NOT called by another function
+   which has already taken the write lock (i.e. the
+   block_fs_unlink_file() or block_fs_fwrite_file() functions),
+   that will deadlock.
 
    The return value is whether a rotation actually has taken place.
 */
@@ -1116,11 +1119,11 @@ void block_fs_fsync( block_fs_type * block_fs ) {
 /**
    The single lowest-level write function:
    
-     3. seek to correct position.
-     4. Write the data with util_fwrite()
+   3. seek to correct position.
+   4. Write the data with util_fwrite()
 
-     7. increase the write_count
-     8. set the data_size field of the node.
+   7. increase the write_count
+   8. set the data_size field of the node.
 
    Observe that when 'designing' this file-system the priority has
    been on read-spead, one consequence of this is that all write
@@ -1180,10 +1183,10 @@ static void block_fs_fwrite_file_unlocked(block_fs_type * block_fs , const char 
       /* 
          The current node is too small for the new content:
          
-          1. Remove the existing node, from the index and insert it
-             into the free_nodes list.
+         1. Remove the existing node, from the index and insert it
+         into the free_nodes list.
 
-          2. Get a new node.
+         2. Get a new node.
         
       */
       block_fs_unlink_file__( block_fs , filename );
@@ -1381,6 +1384,7 @@ void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
     }
   }
 
+  free( block_fs->index_file );
   free( block_fs->lock_file );
   free( block_fs->base_name );
   free( block_fs->data_file );
@@ -1428,7 +1432,7 @@ static void block_fs_rotate__( block_fs_type * block_fs ) {
     block_fs_open_data( block_fs , block_fs->data_owner );
     {
       hash_iter_type * iter = hash_iter_alloc( old_index );
-      buffer_type * buffer = buffer_alloc(1024);
+      buffer_type * buffer  = buffer_alloc(1024);
       
       while (!hash_iter_is_complete( iter )) {
         const char * key          = hash_iter_get_next_key( iter );
@@ -1439,7 +1443,7 @@ static void block_fs_rotate__( block_fs_type * block_fs ) {
         fseek__( old_data_stream , old_node->data_offset , SEEK_SET );
         buffer_stream_fread( buffer , old_node->data_size , old_data_stream );
         
-        block_fs_fwrite_file_unlocked( block_fs , key , buffer_get_data( buffer ) , buffer_get_size( buffer ));  /* Write to the new file. */
+        block_fs_fwrite_file_unlocked( block_fs , key , buffer_get_data( buffer ) , buffer_get_size( buffer ));  /* Normal write to the new file. */
       }
       
       buffer_free( buffer );
@@ -1455,13 +1459,14 @@ static void block_fs_rotate__( block_fs_type * block_fs ) {
 
     */
     fclose( old_data_stream );
-    printf("%s: planning to unlink: %s \n",__func__ , old_data_file);
-    //unlink( old_data_file );
+    //printf("%s: planning to unlink: %s \n",__func__ , old_data_file);
+    unlink( old_data_file );
     unlink( old_lock_file );
     free( old_lock_file );
     free( old_data_file );
-    free( old_index );
-    free( old_nodes );
+    
+    hash_free( old_index );
+    vector_free( old_nodes );
   }
 }
 

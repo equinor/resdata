@@ -49,6 +49,17 @@
 #include <util.h>
 #include <buffer.h>
 
+/**
+   Macros for endian flipping. The macros create a new endian-flipped
+   value, and should be used as: 
+
+     flipped_value = FLIP32( value )
+ 
+   The macros are not exported and only available through the function
+   util_endian_flip_vector().  
+*/
+
+
 #define FLIP16(var) (((var >> 8) & 0x00ff) | ((var << 8) & 0xff00))
 
 #define FLIP32(var) (( (var >> 24) & 0x000000ff) | \
@@ -123,7 +134,8 @@ unsigned int util_clock_seed( ) {
 
 /**
    Kahan summation is a technique to retain numerical precision when
-   summing a long vector of values. See: http://en.wikipedia.org/wiki/Kahan_summation_algorithm
+   summing a long vector of values. See:
+   http://en.wikipedia.org/wiki/Kahan_summation_algorithm 
 */
 
 double util_kahan_sum(const double *data, size_t N) {
@@ -519,7 +531,7 @@ char * util_alloc_cwd(void) {
   
     2. Else cwd is prepended to the path.
 
-   In the manual path neither "/../" nor symlinks are resolved.
+   In the manual realpath() neither "/../" nor symlinks are resolved.
 */
 
 char * util_alloc_abs_path( const char * path ) {
@@ -5550,7 +5562,7 @@ const char * util_update_path_var(const char * variable, const char * value, boo
    in @value do not exist the literal string, i.e. '$HOME' is
    retained. 
 
-   If @value == NULL a call to unsetenve( @variable ) will be issued.
+   If @value == NULL a call to unsetenv( @variable ) will be issued.
 */
 
 const char * util_setenv( const char * variable , const char * value) {
@@ -5629,6 +5641,18 @@ char * util_alloc_envvar( const char * value ) {
     }
   }
 }
+
+const char * util_enum_iget( int index , int size , const util_enum_element_type * enum_defs , int * value) {
+  if ((index < 0) || (index >= size)) {
+    *value = -1;
+    return NULL;
+  } else {
+    const util_enum_element_type elm = enum_defs[ index ];
+    *value = elm.value;
+    return elm.name;
+  }
+}
+
 
 
 #include "util_path.c"
