@@ -180,7 +180,7 @@ static const char * get_read_fmt( ecl_type_enum ecl_type ) {
 }
 
 
-static const char * get_write_fmt( ecl_type_enum ecl_type ) {
+const char * ecl_kw_get_write_fmt( ecl_type_enum ecl_type ) {
   switch(ecl_type) {
   case(ECL_CHAR_TYPE):
     return WRITE_FMT_CHAR;
@@ -1308,7 +1308,7 @@ static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * f
     FILE * stream           = fortio_get_FILE( fortio );
     const int blocksize     = get_blocksize( ecl_kw->ecl_type );
     const  int columns      = get_columns( ecl_kw->ecl_type );
-    const  char * write_fmt = get_write_fmt( ecl_kw->ecl_type );
+    const  char * write_fmt = ecl_kw_get_write_fmt( ecl_kw->ecl_type );
     const int num_blocks    = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
     int block_nr;
     
@@ -1444,7 +1444,7 @@ void ecl_kw_cfwrite_header(const ecl_kw_type * ecl_kw , FILE *stream) {
   fwrite(&ecl_kw->ecl_type       , sizeof ecl_kw->ecl_type     , 1 , stream);
 
   util_fwrite_string( ecl_kw->header8    , stream);
-  util_fwrite_string( get_write_fmt( ecl_kw->ecl_type ) , stream );            
+  util_fwrite_string( ecl_kw_get_write_fmt( ecl_kw->ecl_type ) , stream );            
   util_fwrite_string( get_read_fmt( ecl_kw->ecl_type )  , stream );
 }
 
