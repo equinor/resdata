@@ -38,6 +38,21 @@
 
 
 
+/*
+  During mounting a significant part of the time is spent on filling
+  up the index hash table. By default a hash table is created with a
+  quite small size, and when initializing a large block_fs structure
+  it must be resized many times. By setting a default size with the
+  DEFAULT_INDEX_SIZE variable the hash table will immediately be
+  resized, avoiding some of the automatic calls to hash_resize. 
+
+  When the file system is loaded from an index a good size estimate
+  can be inferred directly from the index.  
+*/
+
+#define DEFAULT_INDEX_SIZE 2048
+
+
 
 /**
    These should be bitwise "smart" - so it is possible
@@ -849,6 +864,8 @@ static void block_fs_fix_nodes( block_fs_type * block_fs , long_vector_type * of
 static void block_fs_build_index( block_fs_type * block_fs , long_vector_type * error_offset ) {
   char * filename = NULL;
   file_node_type * file_node;
+  
+  hash_resize( block_fs->index , DEFAULT_INDEX_SIZE );
   block_fs_fseek_data( block_fs , 0);
   do {
     file_node = file_node_fread_alloc( block_fs->data_stream , &filename );
@@ -917,6 +934,8 @@ static bool block_fs_load_index( block_fs_type * block_fs ) {
         {
           int num_active_nodes = buffer_fread_int( buffer );
           hash_resize( block_fs->index , num_active_nodes * 2 + 64);
+          printf("size:%d \n",num_active_nodes * 2 + 64);
+          
           for (int i=0; i < num_active_nodes; i++) {
             const char * filename = buffer_fread_string( buffer );
             file_node_type * file_node = file_node_index_buffer_fread_alloc( buffer );
