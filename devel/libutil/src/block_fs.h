@@ -31,7 +31,7 @@ typedef enum {
   OFFSET_SORT = 2
 } block_fs_sort_type;
 
-
+size_t          block_fs_get_cache_usage( const block_fs_type * block_fs );
 double          block_fs_get_fragmentation( const block_fs_type * block_fs );
 bool            block_fs_rotate( block_fs_type * block_fs , double fragmentation_limit);
 void            block_fs_fsync( block_fs_type * block_fs );

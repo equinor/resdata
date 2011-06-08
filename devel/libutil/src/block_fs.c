@@ -133,6 +133,8 @@ struct block_fs_struct {
                                        only contain pointers to the objects stored in this vector. */
   int              write_count;     /* This just counts the number of writes since the file system was mounted. */
   int              max_cache_size;
+  size_t           total_cache_size;
+  size_t           max_total_cache_size;
   float            fragmentation_limit;  /* If fragmentation (amount of wasted space) is above this limit - do a rotate.
                                             fragmentation_limit == 1.0 : Never rotate.
                                             fragmentation_limit == 0.0 : Rotate when one byte is wasted. */
@@ -209,13 +211,6 @@ static void file_node_set_filename( file_node_type * file_node , const char * fi
      
 
 
-static void file_node_clear_cache( file_node_type * file_node ) {
-  if (file_node->cache != NULL) {
-    file_node->cache_size = 0;
-    free(file_node->cache);
-    file_node->cache      = NULL;
-  }
-}
 
 
 static void file_node_read_from_cache( const file_node_type * file_node , void * ptr , size_t read_bytes) {
@@ -236,12 +231,18 @@ static void file_node_update_cache( file_node_type * file_node , int data_size ,
   if (data_size != file_node->cache_size) {
     file_node->cache = util_realloc_copy( file_node->cache , data , data_size , __func__);
     file_node->cache_size = data_size;
-  } else
+  } else 
     memcpy( file_node->cache , data , data_size);
 }
 
 
-
+static void file_node_clear_cache( file_node_type * file_node ) {
+  if (file_node->cache != NULL) {
+    file_node->cache_size = 0;
+    free(file_node->cache);
+    file_node->cache = NULL;
+  }
+}
 
 
 static void file_node_free( file_node_type * file_node ) {
@@ -580,6 +581,7 @@ static void block_fs_reinit( block_fs_type * block_fs ) {
   block_fs->write_count         = 0;
   block_fs->data_file_size      = 0;
   block_fs->free_size           = 0; 
+  block_fs->total_cache_size    = 0;
   block_fs_set_filenames( block_fs );
 }
 
@@ -590,10 +592,13 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
   block_fs_type * block_fs      = util_malloc( sizeof * block_fs , __func__);
   UTIL_TYPE_ID_INIT(block_fs , BLOCK_FS_TYPE_ID);
   
-  block_fs->mount_file          = util_alloc_string_copy( mount_file );
-  block_fs->fsync_interval      = fsync_interval;
-  block_fs->block_size          = block_size;
-  block_fs->max_cache_size      = max_cache_size;
+  block_fs->mount_file           = util_alloc_string_copy( mount_file );
+  block_fs->fsync_interval       = fsync_interval;
+  block_fs->block_size           = block_size;
+  block_fs->max_cache_size       = max_cache_size;
+  block_fs->total_cache_size     = 0;
+  block_fs->max_total_cache_size = 512 * 1024 * 1024;  /* 512 MB */
+  
   block_fs->fragmentation_limit = fragmentation_limit;   
   util_alloc_file_components( mount_file , &block_fs->path , &block_fs->base_name, NULL );
   pthread_mutex_init( &block_fs->io_lock  , NULL);
@@ -605,7 +610,7 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
     fclose( stream );
     
     if (id != MOUNT_MAP_MAGIC_INT) 
-      util_abort("%s: The file:%s does not seem to a valid block_fs mount map \n",__func__ , mount_file);
+      util_abort("%s: The file:%s does not seem to be a valid block_fs mount map \n",__func__ , mount_file);
   }
   block_fs->data_file   = NULL;
   block_fs->lock_file   = NULL;
@@ -734,24 +739,47 @@ static void block_fs_open_data( block_fs_type * block_fs , bool read_write) {
 }
 
 
+static void block_fs_clear_cache_node( block_fs_type * block_fs , file_node_type * node ) {
+  if (node->cache_size > 0) {
+    block_fs->total_cache_size -= node->cache_size;
+    file_node_clear_cache( node );
+  }
+}
+
+
+static void block_fs_update_cache_node( block_fs_type * block_fs, file_node_type * node, int data_size, const void * data) {
+  int delta_size = data_size - node->cache_size;
+  if (delta_size < 0) {
+    file_node_update_cache( node , data_size , data );
+    block_fs->total_cache_size += delta_size;
+  } else {
+    if (((block_fs->total_cache_size + delta_size) <= block_fs->max_total_cache_size) &&   /* Check total cache usage */
+        (data_size <= block_fs->max_cache_size)) {                                         /* Chech cache size of this node */
+      block_fs->total_cache_size += delta_size;
+      file_node_update_cache( node , data_size , data );
+    } else
+      block_fs_clear_cache_node( block_fs , node );
+  }
+}
+
+
 /**
    This function will load all the small (i.e. with size less than the
    maximum cache size) nodes, and fill the cache.
 */
 
-
 static void block_fs_preload( block_fs_type * block_fs ) {
-  
-  if ((block_fs->max_cache_size > 0) && (block_fs->data_stream != NULL)) {
+  if ((block_fs->max_cache_size > 0) && (block_fs->data_stream != NULL) && (block_fs->max_total_cache_size > 0)) {
     void * buffer = util_malloc( block_fs->max_cache_size , __func__);
     hash_iter_type * index_iter = hash_iter_alloc( block_fs->index );
     
     while (!hash_iter_is_complete( index_iter )) {
       file_node_type * node = hash_iter_get_next_value( index_iter );
-      if (node->data_size < block_fs->max_cache_size) {
+      if ((node->data_size < block_fs->max_cache_size) &&                                         /* Check the size of this node */ 
+          (block_fs->total_cache_size + node->data_size < block_fs->max_total_cache_size)) {      /* Check the total cache size */
         block_fs_fseek_data(block_fs , node->data_offset);
         util_fread( buffer , 1 , node->data_size , block_fs->data_stream , __func__);
-        file_node_update_cache( node , node->data_size , buffer);
+        block_fs_update_cache_node( block_fs , node , node->data_size , buffer );
       }
     }
     
@@ -888,6 +916,7 @@ static bool block_fs_load_index( block_fs_type * block_fs ) {
         /*1: Loading all the active nodes. */
         {
           int num_active_nodes = buffer_fread_int( buffer );
+          hash_resize( block_fs->index , num_active_nodes * 2 + 64);
           for (int i=0; i < num_active_nodes; i++) {
             const char * filename = buffer_fread_string( buffer );
             file_node_type * file_node = file_node_index_buffer_fread_alloc( buffer );
@@ -916,6 +945,10 @@ static bool block_fs_load_index( block_fs_type * block_fs ) {
   return false;
 }
 
+
+size_t block_fs_get_cache_usage( const block_fs_type * block_fs ) {
+  return block_fs->total_cache_size;
+}
 
 
 bool block_fs_is_mount( const char * mount_file ) {
@@ -1039,6 +1072,8 @@ bool block_fs_has_file( const block_fs_type * block_fs , const char * filename) 
 
 static void block_fs_unlink_file__( block_fs_type * block_fs , const char * filename ) {
   file_node_type * node = hash_pop( block_fs->index , filename );
+  block_fs_clear_cache_node( block_fs , node );
+
   node->status      = NODE_FREE;
   node->data_offset = 0;
   node->data_size   = 0;
@@ -1116,6 +1151,8 @@ void block_fs_fsync( block_fs_type * block_fs ) {
 }
 
 
+
+
 /**
    The single lowest-level write function:
    
@@ -1156,13 +1193,7 @@ static void block_fs_fwrite__(block_fs_type * block_fs , const char * filename ,
     /* Writes the file node header data, including the NODE_END_TAG. */
     file_node_fwrite( node , filename , block_fs->data_stream );
 
-
-    /* Update the cache */
-    if (data_size <= block_fs->max_cache_size)
-      file_node_update_cache( node , data_size , ptr );
-    else
-      file_node_clear_cache( node );
-    
+    block_fs_update_cache_node( block_fs , node , data_size , ptr);
     block_fs->write_count++;
     if (block_fs->fsync_interval && ((block_fs->write_count % block_fs->fsync_interval) == 0)) 
       block_fs_fsync( block_fs );

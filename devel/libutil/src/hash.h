@@ -56,7 +56,7 @@ char           ** hash_alloc_sorted_keylist (hash_type *hash , int ( hash_get_cm
 char           ** hash_alloc_key_sorted_list(hash_type *hash, int (*cmp)(const void *, const void *));
 bool              hash_key_list_compare( hash_type * hash1, hash_type * hash2);
 void              hash_insert_hash_owned_ref(hash_type *, const char * , const void *, free_ftype *);
-
+void              hash_resize(hash_type *hash, int new_size);
 
 hash_iter_type  * hash_iter_alloc(const hash_type *);
 void              hash_iter_free(hash_iter_type *);

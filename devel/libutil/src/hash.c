@@ -169,9 +169,14 @@ static node_data_type * hash_get_node_data(hash_type *hash , const char *key) {
 /**
    This function resizes the hash table when it has become to full.
    The table only grows - this function is called from
-   __hash_insert_node().
+   __hash_insert_node(). 
+
+   If you know in advance (roughly) how large the hash table will be
+   it can be advantageous to call hash_resize() manually, to avoid
+   repeated internal calls to hash_resize().
 */
-static void hash_resize(hash_type *hash, int new_size) {
+
+void hash_resize(hash_type *hash, int new_size) {
   hash_sll_type ** new_table = hash_sll_alloc_table( new_size );
   hash_node_type * node;
   int i;
