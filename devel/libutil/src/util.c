@@ -2897,8 +2897,9 @@ char ** util_stringlist_append_ref(char ** string_list, int size , const char * 
 
 char * util_alloc_string_copy(const char *src ) {
   if (src != NULL) {
-    char *copy = util_malloc((strlen(src) + 1) * sizeof *copy , __func__);
-    strcpy(copy , src);
+    int byte_size = (strlen(src) + 1) * sizeof * src;
+    char * copy   = util_malloc(byte_size  , __func__);
+    memcpy( copy , src , byte_size );
     return copy;
   } else 
     return NULL;
