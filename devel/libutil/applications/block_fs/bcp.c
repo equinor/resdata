@@ -66,8 +66,8 @@ int main(int argc , char ** argv) {
           msg_type   * msg      = msg_alloc("Copying :" , false);
           msg_show( msg );
           for (i=0; i < vector_get_size( files ); i++) {
-            const file_node_type * node = vector_iget_const( files , i );
-            const char * filename       = file_node_get_filename( node );
+            const user_file_node_type * node = vector_iget_const( files , i );
+            const char * filename       = user_file_node_get_filename( node );
             msg_update( msg , filename ); 
             block_fs_fread_realloc_buffer( src_fs , filename , buffer );
             block_fs_fwrite_buffer( target_fs , filename , buffer );

@@ -61,16 +61,16 @@ void apply_check( block_fs_type * fs , const char * file_path ) {
   vector_type   * files = block_fs_alloc_filelist( fs , NULL  , NO_SORT , false );
   int i;
   for (i=0; i < vector_get_size( files ); i++) {
-    const file_node_type * node = vector_iget_const( files , i );
-    int size = file_node_get_data_size( node );
+    const user_file_node_type * node = vector_iget_const( files , i );
+    int size = user_file_node_get_data_size( node );
     if (size > current_size) {
       current_size = size;
       buffer1 = util_realloc( buffer1 , current_size , __func__);
       buffer2 = util_realloc( buffer2 , current_size , __func__);
     }
-    block_fs_fread_file( fs , file_node_get_filename( node ) , buffer1 );
+    block_fs_fread_file( fs , user_file_node_get_filename( node ) , buffer1 );
     {
-      char * filename = util_alloc_filename( file_path , file_node_get_filename( node ) , NULL);
+      char * filename = util_alloc_filename( file_path , user_file_node_get_filename( node ) , NULL);
       FILE * stream   = util_fopen( filename , "r");
       util_fread( buffer2 , 1 , size , stream , __func__);
       fclose( stream );
@@ -151,21 +151,22 @@ void apply( const action_node_type ** action_list , int action_length, block_fs_
 
 
 int main(int argc, char ** argv) {
-  const char * test_path  = "/tmp/block_fs";
+  
+  const char * test_path  = "/tmp/block_fs"; // "/tmp/storage_1_27/default/mod_0"; 
   const char * file_fmt   = "file_%04d";
   char * file_path        = util_alloc_filename( test_path , "files" , NULL );
-  char * test_mnt         = util_alloc_filename( test_path , "test" , "mnt");
+  char * test_mnt         = util_alloc_filename( test_path , "FORECAST" , "mnt");
   char * test_log         = util_alloc_filename( test_path , "test" , "log");
 
-  const int    test_run   =  200;
-  const int    block_size =  10000;
+  const int    test_run   =    10;
+  const int    block_size =  1000;
   const int    max_files  =  1000;
   
   const int fs_block_size  = 32;
-  const int cache_size     = 4096;
+  const int cache_size     = 2048;
   const float frag_limit   = 0.25;
   const int fsync_interval = 100;
-  const bool preload       = true;
+  const bool preload       = false;
   int run = 0;
 
   block_fs_type * block_fs = block_fs_mount( test_mnt , fs_block_size , cache_size , frag_limit , fsync_interval , preload , false );
@@ -174,7 +175,7 @@ int main(int argc, char ** argv) {
   {
     int i;
     for (i=0; i < block_size; i++) {
-      action_list[i] = action_node_alloc_new( );
+      action_list[i] = action_node_alloc_new(  );
     }
   }
 
@@ -218,4 +219,3 @@ int main(int argc, char ** argv) {
   free( test_mnt );
   free( test_log );
 }
-

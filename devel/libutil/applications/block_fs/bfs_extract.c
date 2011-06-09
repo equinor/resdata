@@ -81,8 +81,8 @@ int main(int argc , char ** argv) {
           {
             int i;
             for (i=0; i < vector_get_size( files ); i++) {
-              const file_node_type * node = vector_iget_const( files , i );
-              const char * filename    = file_node_get_filename( node );
+              const user_file_node_type * node = vector_iget_const( files , i );
+              const char * filename    = user_file_node_get_filename( node );
               const char * target_file = util_alloc_filename( target_path , filename , NULL );
               msg_update( msg , filename );
               block_fs_fread_realloc_buffer( block_fs , filename , buffer );

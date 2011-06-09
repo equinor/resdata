@@ -23,7 +23,7 @@
 #include <vector.h>
 
 typedef struct block_fs_struct  block_fs_type;
-typedef struct file_node_struct file_node_type;
+typedef struct user_file_node_struct user_file_node_type;
 
 typedef enum {
   NO_SORT     = 0,
@@ -52,12 +52,12 @@ bool            block_fs_has_file( const block_fs_type * block_fs , const char *
 vector_type   * block_fs_alloc_filelist( const block_fs_type * block_fs  , const char * pattern , block_fs_sort_type sort_mode , bool include_free_nodes );
 void            block_fs_defrag( block_fs_type * block_fs );
 
-long int        file_node_get_node_offset( const file_node_type * file_node );
-long int        file_node_get_data_offset( const file_node_type * file_node );
-int             file_node_get_node_size( const file_node_type * file_node );
-int             file_node_get_data_size( const file_node_type * file_node );
-bool            file_node_in_use( const file_node_type * file_node );
-const char *    file_node_get_filename( const file_node_type * file_node );
+long int        user_file_node_get_node_offset( const user_file_node_type * user_file_node );
+long int        user_file_node_get_data_offset( const user_file_node_type * user_file_node );
+int             user_file_node_get_node_size( const user_file_node_type * user_file_node );
+int             user_file_node_get_data_size( const user_file_node_type * user_file_node );
+bool            user_file_node_in_use( const user_file_node_type * user_file_node );
+const char *    user_file_node_get_filename( const user_file_node_type * user_file_node );
 
 
 

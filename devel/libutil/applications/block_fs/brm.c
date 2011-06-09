@@ -53,14 +53,14 @@ int main(int argc , char ** argv) {
         msg_type * msg = msg_alloc("Deleting file: " , false);
         msg_show( msg );
         //for (i=0; i < vector_get_size( files ); i++) {
-        //  const file_node_type * node = vector_iget_const( files , i );
-        //  printf("%-40s   %10d %ld    \n",file_node_get_filename( node ), file_node_get_data_size( node ) , file_node_get_node_offset( node ));
+        //  const user_file_node_type * node = vector_iget_const( files , i );
+        //  printf("%-40s   %10d %ld    \n",user_file_node_get_filename( node ), user_file_node_get_data_size( node ) , user_file_node_get_node_offset( node ));
         //}
 
         for (i=0; i < vector_get_size( files ); i++) {
-          const file_node_type * node = vector_iget_const( files , i );
-          msg_update( msg , file_node_get_filename( node ) );
-          block_fs_unlink_file( block_fs , file_node_get_filename( node ));
+          const user_file_node_type * node = vector_iget_const( files , i );
+          msg_update( msg , user_file_node_get_filename( node ) );
+          block_fs_unlink_file( block_fs , user_file_node_get_filename( node ));
         }
         msg_free( msg , true );
         printf("Final fragmentation: %5.2f \n", block_fs_get_fragmentation( block_fs ));

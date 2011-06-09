@@ -32,7 +32,7 @@ void install_SIGNALS(void) {
 static int usage( void ) {
   fprintf(stderr,"\n");
   fprintf(stderr,"Usage:\n\n");
-  fprintf(stderr,"   bash% block_fs BLOCK_FILE.mnt <pattern>\n\n");
+  fprintf(stderr,"   bash%% block_fs BLOCK_FILE.mnt <pattern>\n\n");
   fprintf(stderr,"Will list all elements in BLOCK_FILE matching pattern - remember to quote wildcards.\n");
   exit(1);
 }
@@ -60,8 +60,8 @@ int main(int argc , char ** argv) {
       {
         int i;
         for (i=0; i < vector_get_size( files ); i++) {
-          const file_node_type * node = vector_iget_const( files , i );
-          printf("%-40s   %10d %ld    \n",file_node_get_filename( node ), file_node_get_data_size( node ) , file_node_get_node_offset( node ));
+          const user_file_node_type * node = vector_iget_const( files , i );
+          printf("%-40s   %10d %ld    \n",user_file_node_get_filename( node ), user_file_node_get_data_size( node ) , user_file_node_get_node_offset( node ));
         }
       }
       vector_free( files );
