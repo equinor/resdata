@@ -40,24 +40,6 @@
 
 
 /*
-file_node : 72 + cache + strlen( key ) + 1
-hash_node : 64 + strlen( key ) + 1
-
-totalt    : 138 + 2 * strlen(key) ~ 150 byte per node + cache()
-
-450000 * 32 * 150 ~ 2GB
-
-next & prev pointers ~ 220 MB
-data_offset -> int 450000 * 32*4 =  54 MB       
-
-Cache data ~ 450000 * 32 * 12    = 160 MB
-Cache pointer ~ 450000 * 32 * 12 = 160 MB
-
-Begrenset gevinst ved å kutte cache.
-*/
-
-
-/*
   During mounting a significant part of the time is spent on filling
   up the index hash table. By default a hash table is created with a
   quite small size, and when initializing a large block_fs structure
