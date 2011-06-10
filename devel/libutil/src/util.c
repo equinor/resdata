@@ -48,14 +48,10 @@
 #include <util.h>
 #include <buffer.h>
 
-#define HAVE_ZLIB
 
 #ifdef HAVE_ZLIB
 #include <zlib.h>
 #else
-#define Z_STREAM_ERROR -1
-#define Z_OK           -1
-#define Z_BUF_ERROR    -1
 int compress  ( void * buffer , unsigned long * compressed_size , const void * data , int data_size)    { util_abort("%s: Missing zlib\n",__func__); }
 int uncompress( void * buffer , unsigned long * size1 , const void * src , unsigned long size2) { util_abort("%s: Missing zlib\n",__func__); }
 #endif

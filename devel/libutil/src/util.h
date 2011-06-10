@@ -460,6 +460,17 @@ typedef struct {
 
 const char * util_enum_iget( int index , int size , const util_enum_element_type * enum_defs , int * value);
 
+
+
+#define HAVE_ZLIB
+
+#ifndef HAVE_ZLIB
+#define Z_STREAM_ERROR -1
+#define Z_OK           -1
+#define Z_BUF_ERROR    -1
+#endif
+
+
 #ifdef __cplusplus
 }
 #endif
