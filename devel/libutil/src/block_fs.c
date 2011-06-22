@@ -100,7 +100,7 @@ struct free_node_struct {
 
 struct file_node_struct{
   long int           node_offset;   /* The offset into the data_file of this node. NEVER Changed. */
-  long int           data_offset;   /* The offset into the data_file where the actual data starts. */ 
+  int                data_offset;   /* The offset from the node start to the start of actual data - i.e. data starts at absolute position: node_offset + data_offset. */
   int                node_size;     /* The size in bytes of this node - must be >= data_size. NEVER Changed. */
   int                data_size;     /* The size of the data stored in this node - in addition the node might need to store header information. */
   node_status_type   status;        /* This should be: NODE_IN_USE | NODE_FREE; in addition the disk can have NODE_WRITE_ACTIVE for incomplete writes. */
@@ -315,8 +315,8 @@ static file_node_type * file_node_fread_alloc( FILE * stream , char ** key) {
       
       file_node = file_node_alloc( status , node_offset , node_size );
       if (status == NODE_IN_USE) {
-        file_node->data_size   = util_fread_int( stream );
-        file_node->data_offset = ftell( stream );
+        file_node->data_size = util_fread_int( stream );
+        file_node->data_offset    = ftell( stream ) - file_node->node_offset;
       }
     } else {
       /* 
@@ -338,13 +338,13 @@ static file_node_type * file_node_fread_alloc( FILE * stream , char ** key) {
    |<InUse: Bool><Key: String><node_size: Int><data_size: Int>|
    |<InUse: Bool><node_size: Int><data_size: Int>|
              
-  /|\                                                        /|\ 
-   |                                                          | 
-   |                                                          |
-          
-node_offset                                                data_offset
+  /|\                                                        
+   |                                                         
+   |<-------------------------------------------------------->|                                                         
+                                                   |           
+node_offset                                      offset
 
-  The node_offset and data_offset values are not stored on disk, but rather
+  The node_offset and offset values are not stored on disk, but rather
   implicitly read with ftell() calls.
 */
 
@@ -406,15 +406,24 @@ static int file_node_header_size( const char * filename ) {
 
 
 static void file_node_set_data_offset( file_node_type * file_node, const char * filename ) {
-  file_node->data_offset = file_node->node_offset + file_node_header_size( filename ) - sizeof( NODE_END_TAG );
+  file_node->data_offset = file_node_header_size( filename ) - sizeof( NODE_END_TAG );
 }
+
+
 
 static void file_node_dump_index( const file_node_type * file_node , FILE * index_stream) {
   util_fwrite_int( file_node->status , index_stream );
   util_fwrite_long( file_node->node_offset , index_stream );
   util_fwrite_int( file_node->node_size   , index_stream );
-  
-  util_fwrite_long( file_node->data_offset , index_stream );
+
+  {
+    /* 
+       There are index files around there where the content is a long
+       value with the absolute offset. 
+    */
+    long abs_data_offset = file_node->node_offset + file_node->data_offset;
+    util_fwrite_long( abs_data_offset , index_stream );
+  }
   util_fwrite_int( file_node->data_size   , index_stream );
 }
 
@@ -426,7 +435,10 @@ static file_node_type * file_node_index_fread_alloc( FILE * stream ) {
   int node_size           = util_fread_int( stream );
   {
     file_node_type * file_node = file_node_alloc( status , node_offset , node_size );
-    file_node->data_offset = util_fread_long( stream );
+    {
+      long abs_data_offset = util_fread_long( stream );
+      file_node->data_offset = abs_data_offset - file_node->node_offset;
+    }
     file_node->data_size   = util_fread_int( stream );
     
     return file_node;
@@ -440,7 +452,10 @@ static file_node_type * file_node_index_buffer_fread_alloc( buffer_type * buffer
   int node_size           = buffer_fread_int( buffer );
   {
     file_node_type * file_node = file_node_alloc( status , node_offset , node_size );
-    file_node->data_offset = buffer_fread_long( buffer );
+    {
+      long abs_data_offset = buffer_fread_long( buffer );
+      file_node->data_offset    = abs_data_offset - file_node->node_offset;
+    }
     file_node->data_size   = buffer_fread_int( buffer );
     
     return file_node;
@@ -700,7 +715,7 @@ static void block_fs_fseek_node_end(block_fs_type * block_fs , const file_node_t
 }
 
 static void block_fs_fseek_node_data(block_fs_type * block_fs , const file_node_type * file_node) {
-  block_fs_fseek( block_fs , file_node->data_offset );
+  block_fs_fseek( block_fs , file_node->node_offset + file_node->data_offset );
 }
 
 
@@ -1555,7 +1570,7 @@ static void block_fs_rotate__( block_fs_type * block_fs ) {
         buffer_clear( buffer );
 
         /* Low level read of the old file. */
-        fseek__( old_data_stream , old_node->data_offset , SEEK_SET );
+        fseek__( old_data_stream , old_node->node_offset + old_node->data_offset , SEEK_SET );
         buffer_stream_fread( buffer , old_node->data_size , old_data_stream );
         
         block_fs_fwrite_file_unlocked( block_fs , key , buffer_get_data( buffer ) , buffer_get_size( buffer ));  /* Normal write to the new file. */
@@ -1626,7 +1641,7 @@ long int user_file_node_get_node_offset( const user_file_node_type * user_file_n
 }
 
 long int user_file_node_get_data_offset( const user_file_node_type * user_file_node ) {
-  return user_file_node->file_node->data_offset;
+  return user_file_node->file_node->data_offset + user_file_node->file_node->node_offset;
 }
 
 int user_file_node_get_node_size( const user_file_node_type * user_file_node ) {
