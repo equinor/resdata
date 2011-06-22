@@ -85,7 +85,6 @@ typedef struct {
 sum_case_type * sum_case_fread_alloc( const char * data_file , const time_t_vector_type * interp_time ) {
   sum_case_type * sum_case = util_malloc( sizeof * sum_case , __func__ );
 
-  printf("Loading case: %s\n" , data_file );
   sum_case->ecl_sum     = ecl_sum_fread_alloc_case( data_file , SUMMARY_JOIN );
   sum_case->interp_data = double_vector_alloc(0 , 0);
   sum_case->interp_time = interp_time; 
@@ -562,15 +561,37 @@ void output_run_line( const output_type * output , ensemble_type * ensemble) {
       
       sum_key = util_alloc_joined_string( (const char **) tmp , tokens - 1 , SUMMARY_JOIN);
       if (!util_sscanf_double( tmp[tokens - 1] , &quantile))
-        util_exit("Hmmmm - failed to interpret:%s as a quantile - must be a number [0,1).\n",tmp[tokens-1]);
+        util_exit("Hmmmm - failed to interpret:%s as a quantile - must be a number (0,1).\n",tmp[tokens-1]);
+      
+      if (quantile <= 0 || quantile >= 1.0)
+        util_exit("Invalid quantile value:%g - must be in interval (0,1)\n", quantile);
       
       util_free_stringlist( tmp, tokens );
     }
     double_vector_append( quantiles , quantile );
     stringlist_append_owned_ref( sum_keys , sum_key );
+
+    /* 
+       Go through all the cases and check that they have this key; exit
+       if missing. Could also ignore the missing keys and just continue?
+    */
+    {
+      bool OK = true;
+      
+      for (int iens = 0; iens < vector_get_size( ensemble->data ); iens++) {
+        const sum_case_type * sum_case = vector_iget_const( ensemble->data , iens );
+        
+        if (!ecl_sum_has_general_var(sum_case->ecl_sum , sum_key)) {
+          OK = false;
+          fprintf(stderr,"** Sorry: the case:%s does not have the summary key:%s \n", ecl_sum_get_case( sum_case->ecl_sum ), sum_key);
+        }
+      }
+        
+      if (!OK)
+        util_exit("Exiting due to missing summary vector\n");
+    }
   }
 
-  
   
   /* The main loop - outer loop is running over time. */
   {
@@ -595,8 +616,10 @@ void output_run_line( const output_type * output , ensemble_type * ensemble) {
           /* Fill up the interpolated vector */
           for (int iens = 0; iens < vector_get_size( ensemble->data ); iens++) {
             const sum_case_type * sum_case = vector_iget_const( ensemble->data , iens );
-            if ((interp_time >= sum_case->start_time) && (interp_time <= sum_case->end_time))    /* We allow the different simulations to have differing length */
+            
+            if ((interp_time >= sum_case->start_time) && (interp_time <= sum_case->end_time))  /* We allow the different simulations to have differing length */
               double_vector_append( interp_data , ecl_sum_get_general_var_from_sim_time( sum_case->ecl_sum , interp_time , sum_key)) ;
+            
           }
         }
         data[row_nr][column_nr] = statistics_empirical_quantile( interp_data , quantile );
