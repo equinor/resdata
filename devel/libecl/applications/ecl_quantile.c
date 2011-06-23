@@ -34,7 +34,7 @@
 #define DEFAULT_NUM_INTERP  50
 #define SUMMARY_JOIN       ":"
 #define MIN_SIZE            10
-#define LOAD_THREADS         8 /* Limited testing on a 2 x 2 CPU box with RH4 indicates that 8 is a reasonable number. */
+#define LOAD_THREADS         4 
 
 
 typedef enum {
@@ -114,6 +114,7 @@ void ensemble_add_case( ensemble_type * ensemble , const char * data_file ) {
   
   pthread_rwlock_wrlock( &ensemble->rwlock );
   {
+    printf("Loading case: %s \n", data_file );
     vector_append_owned_ref( ensemble->data , sum_case , sum_case_free__ );
     if (ensemble->start_time > 0)
       ensemble->start_time = util_time_t_min( ensemble->start_time , sum_case->start_time);
@@ -294,17 +295,30 @@ void output_table_init( hash_type * output_table , const config_type * config ) 
         'var:0.001     '
 */
 
-static void print_var( FILE * stream , const char * var , double q , int w) {
-  int qwidth       = 5;
-  const char * fmt = "%s:%4.2f";
-  
-  for (int i = 0; i < (w - strlen( var )) - qwidth; i++)
-    fprintf(stream , " ");      
-  fprintf(stream , fmt , var , q);
-  fprintf(stream , " ");  /* Alwasy include one extra space to insure againt coaleching strings. */
-  
+static void print_var( FILE * stream , const char * var , double q , const char * kw_fmt) {
+  char * qvar = util_alloc_sprintf( "%s:%4.2f" , var , q );
+  fprintf( stream , kw_fmt , qvar );
+  free( qvar );
 }
 
+
+/*
+ORIGIN AO2008A_2-HM_06Q1ED4
+xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        
+DATE    TIME    FOPTH:0.10      FOPTH:0.90      FOPT:0.10       FOPT:0.90       WOPR:0.10       WOPR:0.90       WOPRH:0.10      WOPRH:0.90      WOPR:0.10       WOPR:0.90       WOPRH:0.10      WOPRH:0.90
+        DAYS    SM3     SM3     SM3     SM3     SM3/DAY SM3/DAY SM3/DAY SM3/DAY SM3/DAY SM3/DAY SM3/DAY SM3/DAY
+xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx                                                        B-40    B-40    B-40    B-40    C-21    C-21    C-21    C-21
+1/9/1986        0       0       0       0       0       0       0       0       0       0       0       0       0
+14-10-1986      43.74   58834.46797     59973.67274     53765.2593      55594.58174     0       0       0       0       0       0       0       0
+27-11-1986      87.48   186029.5        188381.1847     181623.6429     186583.342      0       0       0       0       0       0       0       0
+10/1/1987       131.22  320713.1608     324025.777      321584.5038     332193.2206     0       0       0       0       0       0       0       0
+22-02-1987      174.95  473796.7562     477413.1401     483144.7025     500145.9171     0       0       0       0       0       0       0       0
+7/4/1987        218.69  560779.8197     563864.8532     573511.8108     592876.1807     0       0       0       0       0       0       0       0
+21-05-1987      262.43  666149.9739     671011.6746     680054.7425     700441.721      0       0       0       0       0       0       0       0
+4/7/1987        306.17  789827.0472     795050.4471     808944.3102     830852.7545     0       0       0       0       0       0       0       0
+16-08-1987      349.91  917196.6886     923869.7777     954859.5289     976114.3091     0       0       0       0       0       0       0       0
+29-09-1987      393.65  963438.0175     970131.6044     1011776.515     1034546.572     0       0       0       0       0       0       0       0
+*/
 
 /* 
    I don't understand the rules of the game when it comes to parsing
@@ -338,13 +352,13 @@ static void print_var( FILE * stream , const char * var , double q , int w) {
 
      2. Write a line with units:
 
-             TIME    DATA        KEYWORD1:xxx    KEYWORD2:xxx     KEYWORD3:xxxx 
+             TIME    DATE        KEYWORD1:xxx    KEYWORD2:xxx     KEYWORD3:xxxx 
              DAYS                UNIT1           UNIT2            UNIT2             <---- New line
 
 
      3. Write a line with keyword qualifiers, i.e. extra information:
 
-             TIME    DATA        WOPR:xxx        FOPT:xxxx        BPR
+             TIME    DATE        WOPR:xxx        FOPT:xxxx        BPR
              DAYS                UNIT1           UNIT2            UNIT2             
                                  OP1                              1000              <---- New line 
  
@@ -364,8 +378,9 @@ static void print_var( FILE * stream , const char * var , double q , int w) {
    [*] : I do not really understand why it seems to work.
 
    [**]: It seemingly manages to pick out the right qualifier - how
-         that works I don't know; but I try be reeally nazi with the
-         formatting.
+         that works I don't know; but I try be really nazi with the
+         formatting.  
+
 */
 
 
@@ -373,15 +388,18 @@ static void print_var( FILE * stream , const char * var , double q , int w) {
 
 void output_save_S3Graph( const char * file , ensemble_type * ensemble , const double ** data , const stringlist_type * ecl_keys, const double_vector_type * quantiles) {
   FILE * stream = util_mkdir_fopen( file , "w"); 
-  int          field_width  = 24;
-  const char * unit_fmt     = "%24s ";
-  const char * num_fmt      = "%24d ";
-  const char * float_fmt    = "%24.5f ";
-  const char * days_fmt     = "%10.2f ";
-  const char * date_fmt     = "%02d-%02d-%04d ";
-  const char * time_header  = "      DATE       TIME ";
-  const char * time_unit    = "                 DAYS ";
-  const char * time_blank   = "                      ";
+  const char * kw_fmt       = "\t%s";
+  const char * unit_fmt     = "\t%s";
+  const char * wgname_fmt   = "\t%s";
+  const char * num_fmt      = "\t%d";
+  const char * float_fmt    = "\t%0.4f";
+  const char * days_fmt     = "\t%0.2f";
+
+  const char * empty_fmt    = "\t";
+  const char * date_fmt     = "%d/%d/%d";
+  const char * time_header  = "DATE\tTIME";
+  const char * time_unit    = "DAYS\t";
+  const char * time_blank   = "\t";
   const int    data_columns = stringlist_get_size( ecl_keys );
   const int    data_rows    = time_t_vector_size( ensemble->interp_time );
   int row_nr,column_nr;
@@ -398,20 +416,17 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
   for (column_nr = 0; column_nr < data_columns; column_nr++) {
     const char * ecl_key = stringlist_iget( ecl_keys , column_nr );
     double quantile      = double_vector_iget( quantiles , column_nr );
-    print_var( stream , ecl_sum_get_keyword( ensemble->refcase , ecl_key ) , quantile , field_width);
+    print_var( stream , ecl_sum_get_keyword( ensemble->refcase , ecl_key ) , quantile , kw_fmt);
   }
   fprintf(stream , "\n");
-  
-  
+
   /* 2: Writing second header line with units. */
   fprintf(stream , time_unit );
   for (column_nr = 0; column_nr < data_columns; column_nr++) {
     const char * ecl_key = stringlist_iget( ecl_keys , column_nr );
-    double quantile      = double_vector_iget( quantiles , column_nr );
-    fprintf(stream , unit_fmt , ecl_sum_get_unit( ensemble->refcase , ecl_key ) , quantile);
+    fprintf(stream , unit_fmt , ecl_sum_get_unit( ensemble->refcase , ecl_key ) );
   }
   fprintf(stream , "\n");
-  
   
   /*3: Writing third header line with WGNAMES / NUMS - extra information - 
        breaks completely down with LGR information. */
@@ -426,21 +441,20 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
       bool need_wgname             = ecl_smspec_needs_wgname(   var_type );      
       
       if (need_num && need_wgname) {
-        /** Do not know have to include both - will just create a
+        /** Do not know how to include both - will just create a
             mangled name as a combination. */
         char * wgname_num = util_alloc_sprintf("%s:%d" , wgname , num);
-        fprintf(stream , unit_fmt , wgname_num);
+        fprintf(stream , wgname_fmt , wgname_num);
         free( wgname_num );
       } else if (need_num)
         fprintf(stream , num_fmt , num);
       else if (need_wgname)
-        fprintf(stream , unit_fmt , wgname);
+        fprintf(stream , wgname_fmt , wgname);
       else
-        fprintf(stream , unit_fmt , " ");
+        fprintf(stream , empty_fmt );
     }
     fprintf(stream , "\n");
   }
-  
 
   /*4: Writing the actual data. */
   for (row_nr = 0; row_nr < data_rows; row_nr++) {
@@ -463,7 +477,6 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
 
 void output_save_plain__( const char * file , ensemble_type * ensemble , const double ** data , const stringlist_type * ecl_keys, const double_vector_type * quantiles , bool add_header) {
   FILE * stream = util_mkdir_fopen( file , "w"); 
-  int          field_width  = 24;
   const char * key_fmt      = " %18s:%4.2f ";
   const char * time_header  = "--    DAYS      DATE    ";
   const char * time_dash    = "------------------------";
@@ -568,12 +581,11 @@ void output_run_line( const output_type * output , ensemble_type * ensemble) {
       
       util_free_stringlist( tmp, tokens );
     }
-    double_vector_append( quantiles , quantile );
-    stringlist_append_owned_ref( sum_keys , sum_key );
 
     /* 
-       Go through all the cases and check that they have this key; exit
-       if missing. Could also ignore the missing keys and just continue?
+       Go through all the cases and check that they have this key;
+       exit if missing. Could also ignore the missing keys and just
+       continue; and even defer the checking to the inner loop.
     */
     {
       bool OK = true;
@@ -586,15 +598,29 @@ void output_run_line( const output_type * output , ensemble_type * ensemble) {
           fprintf(stderr,"** Sorry: the case:%s does not have the summary key:%s \n", ecl_sum_get_case( sum_case->ecl_sum ), sum_key);
         }
       }
-        
-      if (!OK)
-        util_exit("Exiting due to missing summary vector\n");
+
+      if (OK) {
+        double_vector_append( quantiles , quantile );
+        stringlist_append_owned_ref( sum_keys , sum_key );
+      } else
+        util_exit("Exiting due to missing summary vector(s).\n");
     }
   }
 
   
   /* The main loop - outer loop is running over time. */
   {
+    /**
+       In the quite typical case that we are asking for several
+       quantiles of the quantity, i.e.
+
+           WWCT:OP_1:0.10  WWCT:OP_1:0.50  WWCT:OP_1:0.90 
+
+       this cache construction will ensure that the underlying ecl_sum
+       object is only queried once; and also the sorting will be
+       performed once.
+    */
+    
     hash_type * interp_data_cache = hash_alloc();
 
     for (row_nr = 0; row_nr < data_rows; row_nr++) {
@@ -613,16 +639,16 @@ void output_run_line( const output_type * output , ensemble_type * ensemble) {
 
         /* Check if the vector has data - if not initialize it. */
         if (double_vector_size( interp_data ) == 0) {
-          /* Fill up the interpolated vector */
           for (int iens = 0; iens < vector_get_size( ensemble->data ); iens++) {
             const sum_case_type * sum_case = vector_iget_const( ensemble->data , iens );
             
             if ((interp_time >= sum_case->start_time) && (interp_time <= sum_case->end_time))  /* We allow the different simulations to have differing length */
               double_vector_append( interp_data , ecl_sum_get_general_var_from_sim_time( sum_case->ecl_sum , interp_time , sum_key)) ;
             
+            double_vector_sort( interp_data );
           }
         }
-        data[row_nr][column_nr] = statistics_empirical_quantile( interp_data , quantile );
+        data[row_nr][column_nr] = statistics_empirical_quantile__( interp_data , quantile );
       }
       hash_apply( interp_data_cache , double_vector_reset__ );
     }
@@ -738,7 +764,11 @@ void usage() {
   printf("  that for rate variable the program will not do linear interpolation\n");
   printf("  between ECLIPSE report steps, the might therefore look a bit jagged\n");
   printf("  if NUM_INTERP is set too high. This keyword is optional.\n");
-  printf("\n\necl_quantile is written by Joakim Hove / joaho@statoil.com / 92 68 57 04.\n");
+  printf("\n");
+  printf("All filenames in the configuration file will be interpreted relative to\n");
+  printf("the location of the configuration file, i.e. irrespective of the current\n");
+  printf("working directory when invoking the ecl_quantile program.\n\n");
+  printf("ecl_quantile is written by Joakim Hove / joaho@statoil.com / 92 68 57 04.\n");
   exit(0);
 }
 
@@ -751,13 +781,26 @@ int main( int argc , char ** argv ) {
     hash_type     * output_table   = hash_alloc();
     ensemble_type * ensemble       = ensemble_alloc();
     {
-      config_type   * config   = config_alloc( );
+      config_type   * config      = config_alloc( );
+      const char    * config_arg  = argv[1];
+      
       config_init( config );
-      config_parse( config , argv[1] , "--" , NULL , NULL , false , true );
+      config_parse( config , config_arg , "--" , NULL , NULL , false , true );
+      
+      {
+        char * config_path;
+        util_alloc_file_components( config_arg , &config_path , NULL , NULL);
+        if (config_path != NULL) {
+          chdir( config_path );
+          free( config_path );
+        }
+      }
+
     
       ensemble_init( ensemble , config );
       output_table_init( output_table , config);
       config_free( config );
+
     } 
     output_table_run( output_table , ensemble );
     ensemble_free( ensemble );
