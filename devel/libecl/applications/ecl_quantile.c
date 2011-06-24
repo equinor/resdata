@@ -19,6 +19,7 @@
 #define  _GNU_SOURCE   /* Must define this to get access to pthread_rwlock_t */
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <util.h>
 #include <ecl_sum.h>
 #include <double_vector.h>
@@ -296,35 +297,16 @@ void output_table_init( hash_type * output_table , const config_type * config ) 
 */
 
 static void print_var( FILE * stream , const char * var , double q , const char * kw_fmt) {
-  char * qvar = util_alloc_sprintf( "%s:%4.2f" , var , q );
+  char * qvar = util_alloc_sprintf( "%s:%3.1f" , var , q );
   fprintf( stream , kw_fmt , qvar );
   free( qvar );
 }
 
 
-/*
-ORIGIN AO2008A_2-HM_06Q1ED4
-xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        
-DATE    TIME    FOPTH:0.10      FOPTH:0.90      FOPT:0.10       FOPT:0.90       WOPR:0.10       WOPR:0.90       WOPRH:0.10      WOPRH:0.90      WOPR:0.10       WOPR:0.90       WOPRH:0.10      WOPRH:0.90
-        DAYS    SM3     SM3     SM3     SM3     SM3/DAY SM3/DAY SM3/DAY SM3/DAY SM3/DAY SM3/DAY SM3/DAY SM3/DAY
-xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx                                                        B-40    B-40    B-40    B-40    C-21    C-21    C-21    C-21
-1/9/1986        0       0       0       0       0       0       0       0       0       0       0       0       0
-14-10-1986      43.74   58834.46797     59973.67274     53765.2593      55594.58174     0       0       0       0       0       0       0       0
-27-11-1986      87.48   186029.5        188381.1847     181623.6429     186583.342      0       0       0       0       0       0       0       0
-10/1/1987       131.22  320713.1608     324025.777      321584.5038     332193.2206     0       0       0       0       0       0       0       0
-22-02-1987      174.95  473796.7562     477413.1401     483144.7025     500145.9171     0       0       0       0       0       0       0       0
-7/4/1987        218.69  560779.8197     563864.8532     573511.8108     592876.1807     0       0       0       0       0       0       0       0
-21-05-1987      262.43  666149.9739     671011.6746     680054.7425     700441.721      0       0       0       0       0       0       0       0
-4/7/1987        306.17  789827.0472     795050.4471     808944.3102     830852.7545     0       0       0       0       0       0       0       0
-16-08-1987      349.91  917196.6886     923869.7777     954859.5289     976114.3091     0       0       0       0       0       0       0       0
-29-09-1987      393.65  963438.0175     970131.6044     1011776.515     1034546.572     0       0       0       0       0       0       0       0
-*/
 
 /* 
-   I don't understand the rules of the game when it comes to parsing
-   the header section of the S3Graph files, it can actually seem like
-   some 'fixed-length' magic is going on.
-
+   ** The columns are <TAB> separated! **
+   
    An ECLIPSE summary variable is generally characterized by three
    variable values from SMSPEC vectors; the three vectors are
    KEYWORDS, WGNAMES and NUMS.
@@ -343,7 +325,7 @@ xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        
 
      1. Write a line like this:
 
-             TIME    DATE        KEYWORD1:xxx    KEYWORD2:xxx     KEYWORD3:xxxx
+             DATE    TIME        KEYWORD1:xxx    KEYWORD2:xxx     KEYWORD3:xxxx
           
         Here KEYWORD is an eclipse variable memnonic from the KEYWORDS
         array, i.e. FOPT or WWCT. The :xxx part is the quantile we are
@@ -352,14 +334,14 @@ xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        
 
      2. Write a line with units:
 
-             TIME    DATE        KEYWORD1:xxx    KEYWORD2:xxx     KEYWORD3:xxxx 
-             DAYS                UNIT1           UNIT2            UNIT2             <---- New line
+             DATE        TIME    KEYWORD1:xxx    KEYWORD2:xxx     KEYWORD3:xxxx 
+                         DAYS    UNIT1           UNIT2            UNIT2             <---- New line
 
 
      3. Write a line with keyword qualifiers, i.e. extra information:
 
-             TIME    DATE        WOPR:xxx        FOPT:xxxx        BPR
-             DAYS                UNIT1           UNIT2            UNIT2             
+             DATE    TIME        WOPR:xxx        FOPT:xxxx        BPR
+                     DAYS        UNIT1           UNIT2            UNIT2             
                                  OP1                              1000              <---- New line 
  
         Now - the totally confusing part is that it is not clear what
@@ -367,20 +349,15 @@ xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        xxxxxxxx        
         variables it is a well/group name from the WGNAMES array,
         whereas for e.g. a region or block varaiable it wants an
         element from the NUMS array, and for e.g. a field variable it
-        wants nothing extra[**]. When it comes to variables which need
+        wants nothing extra. When it comes to variables which need
         both NUMS and WGNAMES to become unique (e.g completion
         variables) it is not clear how - if at all possible - to
         support it. In the current implementation a string
         concatenation of WGNAMES and NUMS is used.
 
 
-
    [*] : I do not really understand why it seems to work.
-
-   [**]: It seemingly manages to pick out the right qualifier - how
-         that works I don't know; but I try be really nazi with the
-         formatting.  
-
+   
 */
 
 
@@ -398,7 +375,7 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
   const char * empty_fmt    = "\t";
   const char * date_fmt     = "%d/%d/%d";
   const char * time_header  = "DATE\tTIME";
-  const char * time_unit    = "DAYS\t";
+  const char * time_unit    = "\tDAYS";
   const char * time_blank   = "\t";
   const int    data_columns = stringlist_get_size( ecl_keys );
   const int    data_rows    = time_t_vector_size( ensemble->interp_time );
@@ -437,8 +414,8 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
       const char * wgname          = ecl_sum_get_wgname( ensemble->refcase , ecl_key ); 
       int          num             = ecl_sum_get_num( ensemble->refcase , ecl_key );
       ecl_smspec_var_type var_type = ecl_sum_get_var_type( ensemble->refcase , ecl_key);
-      bool need_num                = ecl_smspec_needs_num(   var_type );
-      bool need_wgname             = ecl_smspec_needs_wgname(   var_type );      
+      bool need_num                = ecl_smspec_needs_num( var_type );
+      bool need_wgname             = ecl_smspec_needs_wgname( var_type );      
       
       if (need_num && need_wgname) {
         /** Do not know how to include both - will just create a
@@ -448,7 +425,7 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
         free( wgname_num );
       } else if (need_num)
         fprintf(stream , num_fmt , num);
-      else if (need_wgname)
+      else if (need_wgname) 
         fprintf(stream , wgname_fmt , wgname);
       else
         fprintf(stream , empty_fmt );
