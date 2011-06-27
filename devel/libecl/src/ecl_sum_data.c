@@ -296,6 +296,10 @@ static double ecl_sum_ministep_get_sim_days(const ecl_sum_ministep_type * minist
   return ministep->sim_days;
 }
 
+static int ecl_sum_ministep_get_nr(const ecl_sum_ministep_type * ministep) {
+  return ministep->ministep;
+}
+
 
 
 /*****************************************************************/
@@ -887,6 +891,15 @@ int ecl_sum_data_iget_report_step(const ecl_sum_data_type * data , int internal_
     return ministep->report_step;
   }
 }
+
+
+int ecl_sum_data_iget_mini_step(const ecl_sum_data_type * data , int internal_index) {
+  {
+    const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index );
+    return ministep->ministep;
+  }
+}
+
 
 
 

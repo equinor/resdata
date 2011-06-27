@@ -1179,6 +1179,7 @@ static const smspec_index_type * ecl_smspec_iget_index( const ecl_smspec_type * 
     }
   }
 }
+
 ecl_smspec_var_type ecl_smspec_iget_var_type(const ecl_smspec_type * ecl_smspec , int sum_index) {
   const smspec_index_type * smspec_index = ecl_smspec_iget_index( ecl_smspec , sum_index );
   return smspec_index->var_type;

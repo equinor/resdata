@@ -122,6 +122,7 @@ time_t ecl_sum_get_report_time( const ecl_sum_type * ecl_sum , int report_step )
 time_t ecl_sum_iget_sim_time( const ecl_sum_type * ecl_sum , int index );
 double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int time_index);
 int    ecl_sum_iget_report_step( const ecl_sum_type * ecl_sum , int internal_index );
+int    ecl_sum_iget_mini_step( const ecl_sum_type * ecl_sum , int internal_index );
 double ecl_sum_iget_general_var(const ecl_sum_type * ecl_sum , int internal_index , const char * lookup_kw);
 
 
@@ -144,9 +145,10 @@ stringlist_type     * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum );
 stringlist_type     * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum );
 stringlist_type     * ecl_sum_alloc_matching_general_var_list(const ecl_sum_type * ecl_sum , const char * pattern);  
 void                  ecl_sum_select_matching_general_var_list( const ecl_sum_type * ecl_sum , const char * pattern , stringlist_type * keys);
-ecl_smspec_var_type   ecl_sum_identify_var_type(const ecl_sum_type * ecl_sum , const char * var);
 const ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum );
 ecl_smspec_var_type   ecl_sum_get_var_type( const ecl_sum_type * ecl_sum , const char * gen_key);
+bool                  ecl_sum_var_is_rate( const ecl_sum_type * ecl_sum , const char * gen_key);
+bool                  ecl_sum_var_is_total( const ecl_sum_type * ecl_sum , const char * gen_key);
 
 
 

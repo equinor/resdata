@@ -405,7 +405,6 @@ double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , c
   return ecl_sum_data_iget( ecl_sum->data , time_index , index);
 }
 
-
 double ecl_sum_iget_general_var(const ecl_sum_type * ecl_sum , int internal_index , const char * lookup_kw) {
   int index = ecl_sum_get_general_var_index(ecl_sum , lookup_kw);
   return ecl_sum_data_iget( ecl_sum->data , internal_index  , index);
@@ -463,6 +462,15 @@ double ecl_sum_iget_from_sim_days( const ecl_sum_type * ecl_sum , double sim_day
 
 /*****************************************************************/
 /* Simple get functions which take a general var key as input    */
+
+bool ecl_sum_var_is_rate( const ecl_sum_type * ecl_sum , const char * gen_key) {
+  int index = ecl_sum_get_general_var_index( ecl_sum , gen_key );
+  return ecl_smspec_is_rate( ecl_sum->smspec , index );
+}
+
+bool ecl_sum_var_is_total( const ecl_sum_type * ecl_sum , const char * gen_key) {
+  return ecl_smspec_general_is_total( ecl_sum->smspec , gen_key );
+}
 
 ecl_smspec_var_type ecl_sum_get_var_type( const ecl_sum_type * ecl_sum , const char * gen_key) {
   int index = ecl_sum_get_general_var_index( ecl_sum , gen_key );
@@ -522,6 +530,11 @@ int ecl_sum_iget_report_start( const ecl_sum_type * ecl_sum, int report_step) {
 
 int ecl_sum_iget_report_step( const ecl_sum_type * ecl_sum , int internal_index ){
   return ecl_sum_data_iget_report_step( ecl_sum->data , internal_index );
+}
+
+
+int ecl_sum_iget_mini_step( const ecl_sum_type * ecl_sum , int internal_index ){
+  return ecl_sum_data_iget_mini_step( ecl_sum->data , internal_index );
 }
 
 
@@ -742,15 +755,6 @@ bool ecl_sum_same_case( const ecl_sum_type * ecl_sum , const char * input_file )
 }
 
 
-/*****************************************************************/
-
-bool ecl_sum_general_is_total(const ecl_sum_type * ecl_sum , const char * gen_key) {
-  return ecl_smspec_general_is_total( ecl_sum->smspec , gen_key );
-}
-
-bool ecl_sum_var_is_total(const ecl_sum_type * ecl_sum , const char * gen_key) {
-  return ecl_smspec_general_is_total( ecl_sum->smspec , gen_key );
-}
 
 
 /*****************************************************************/
@@ -764,22 +768,15 @@ void ecl_sum_select_matching_general_var_list( const ecl_sum_type * ecl_sum , co
   ecl_smspec_select_matching_general_var_list( ecl_sum->smspec , pattern , keys );
 }
 
-
 stringlist_type * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum ) {
   return ecl_smspec_alloc_well_list( ecl_sum->smspec );
 }
-
 
 stringlist_type * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum ) {
   return ecl_smspec_alloc_well_var_list( ecl_sum->smspec );
 }
 
 
-/*****************************************************************/
-
-ecl_smspec_var_type ecl_sum_identify_var_type(const ecl_sum_type * ecl_sum , const char * var) {
-  return ecl_smspec_identify_var_type( ecl_sum->smspec , var );
-}
 
 /*****************************************************************/
 

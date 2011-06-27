@@ -1515,7 +1515,7 @@ void ecl_kw_buffer_store(const ecl_kw_type * ecl_kw , buffer_type * buffer) {
 }
 
 
-
+#ifdef HAVE_ZLIB
 void ecl_kw_fwrite_compressed(const ecl_kw_type *ecl_kw , FILE * stream) {
   ecl_kw_cfwrite_header(ecl_kw , stream);
   /*
@@ -1533,7 +1533,6 @@ void ecl_kw_fread_realloc_compressed(ecl_kw_type * ecl_kw , FILE * stream) {
 }
 
 
-
 /**
    Function needed for upgrading fs version 103 in the ERT code.
    Might be removed ...
@@ -1543,6 +1542,7 @@ ecl_kw_type * ecl_kw_fread_alloc_compressed(FILE * stream) {
   ecl_kw_fread_realloc_compressed(ecl_kw , stream);
   return ecl_kw;
 }
+#endif
 
 
 

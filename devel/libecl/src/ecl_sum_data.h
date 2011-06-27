@@ -50,8 +50,6 @@ time_t                   ecl_sum_data_iget_sim_time( const ecl_sum_data_type *  
 
 bool                     ecl_sum_data_has_report_step(const ecl_sum_data_type *  , int );
 
-int                      ecl_sum_data_iget_reportstep(const ecl_sum_data_type * data , int internal);
-int                      ecl_sum_data_get_reportstep(const ecl_sum_data_type * data , int ministep);
 ecl_sum_data_type      * ecl_sum_data_fread_alloc(const ecl_smspec_type *  , const stringlist_type * filelist , bool include_restart);
 void                     ecl_sum_data_free( ecl_sum_data_type * );
 int                      ecl_sum_data_get_last_report_step( const ecl_sum_data_type * data );
@@ -64,7 +62,7 @@ double                   ecl_sum_data_get_from_sim_days( const ecl_sum_data_type
 
 int                      ecl_sum_data_get_length( const ecl_sum_data_type * data );
 int                      ecl_sum_data_iget_report_step(const ecl_sum_data_type * data , int internal_index);
-
+int                      ecl_sum_data_iget_mini_step(const ecl_sum_data_type * data , int internal_index);
 int                      ecl_sum_data_iget_report_end( const ecl_sum_data_type * data , int report_step );
 int                      ecl_sum_data_iget_report_start( const ecl_sum_data_type * data , int report_step );
 

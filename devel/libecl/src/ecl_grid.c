@@ -473,8 +473,7 @@ static double ecl_cell_max_y( const ecl_cell_type * cell ) {
    To keep these cells out of the real-world (i.e. involving utm
    coordinates) computations they are marked as 'tainted' in this
    function. The tainting procedure is completely heuristic, and
-   probably wrong, but it at least seems to give sensible results for
-   the TROLL gas model.
+   probably wrong.
 */
 
 
@@ -1075,18 +1074,20 @@ static void ecl_grid_set_lgr_name_GRID(ecl_grid_type * lgr_grid , const ecl_file
 }
 
 
-/*
-  2---3
-  |   |
-  0---1
+
+/**
+   This function can in principle be called by several threads with
+   different [j1, j2) intervals to speed things up a bit.  
 */
 
-static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, int grid_nr) {
-  int i,j,k;
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(nx,ny,nz,grid_nr);
+static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid , int j1 , int j2 , const float * zcorn , const float * coord , const int * actnum) {
+  const int nx = ecl_grid->nx;
+  const int ny = ecl_grid->ny;
+  const int nz = ecl_grid->nz;
   point_type pillars[4][2];
-
-  for (j=0; j < ny; j++) {
+  int i,j,k;
+  
+  for (j=j1; j < j2; j++) {
     for (i=0; i < nx; i++) {
       int pillar_index[4];
       int ip;
@@ -1124,6 +1125,19 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(int nx , int ny , int nz , c
       }
     }
   }
+}
+
+
+/*
+  2---3
+  |   |
+  0---1
+*/
+
+static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, int grid_nr) {
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(nx,ny,nz,grid_nr);
+  
+  ecl_grid_init_GRDECL_data__( ecl_grid , 0 , ny , zcorn , coord , actnum);
   if (mapaxes != NULL)
     ecl_grid_init_mapaxes( ecl_grid , mapaxes );
     
@@ -2541,7 +2555,7 @@ void ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_t
   if (src_size == ecl_grid->size)
     ecl_kw_fprintf_grdecl( ecl_kw , stream );
   else if (src_size == ecl_grid->total_active) {
-    void  * default_ptr;
+    void  * default_ptr = NULL;
     float   float_default;
     int     int_default;
     int     bool_default;
@@ -2565,6 +2579,9 @@ void ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_t
         util_abort("%s: only 0 and 1 are allowed for bool interpolation\n",__func__);
       default_ptr = &bool_default;
     }
+    
+    if (default_ptr == NULL) 
+      util_abort("%s: invalid type \n",__func__);
     
     {
       ecl_kw_type * tmp_kw = ecl_kw_alloc_scatter_copy( ecl_kw , ecl_grid->size , ecl_grid->inv_index_map , default_ptr );
