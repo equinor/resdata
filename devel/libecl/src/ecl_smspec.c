@@ -1614,7 +1614,8 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
    
    The function can be called several times with different patterns,
    the stringlist is not cleared on startup; the keys in the list are
-   unique - keys are not added multiple times.
+   unique - keys are not added multiple times. If pattern == NULL all
+   keys will match.
 */
 
 
@@ -1628,7 +1629,7 @@ void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec
     hash_iter_type * iter = hash_iter_alloc( smspec->gen_var_index );
     while (!hash_iter_is_complete( iter )) {
       const char * key = hash_iter_get_next_key( iter );
-      if (fnmatch( pattern , key , 0) == 0) {
+      if ((pattern == NULL) || (fnmatch( pattern , key , 0) == 0)) {
         if (!hash_has_key( ex_keys , key))
           stringlist_append_copy( keys , key );
       }
