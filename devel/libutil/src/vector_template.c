@@ -283,9 +283,10 @@ static void <TYPE>_vector_assert_writable( const <TYPE>_vector_type * vector ) {
 
 
 /**
-   This function will copy all the content from the src vector to the
-   target vector. If the the current allocation size of the target
-   vector is sufficiently large, it will not be touched.
+   This function will copy all the content (both header and data) from
+   the src vector to the target vector. If the the current allocation
+   size of the target vector is sufficiently large, it will not be
+   touched.
 
    Observe that also the default value will be copied.
 */
@@ -672,7 +673,9 @@ const <TYPE> * <TYPE>_vector_get_const_ptr(const <TYPE>_vector_type * vector) {
   return copy;
 }
 
-
+int <TYPE>_vector_element_size( const <TYPE>_vector_type * vector ) {
+  return sizeof( <TYPE> );
+}
 
 void <TYPE>_vector_set_many(<TYPE>_vector_type * vector , int index , const <TYPE> * data , int length) {
   <TYPE>_vector_assert_writable( vector ); 
@@ -1177,7 +1180,7 @@ bool <TYPE>_vector_equal(const <TYPE>_vector_type * vector1 , const <TYPE>_vecto
   if (vector1->size == vector2->size) {
     if (memcmp(vector1->data , vector2->data , sizeof * vector1->data * vector1->size) == 0)
       return true;
-    else
+    else 
       return false;
   } else
     return false;
@@ -1193,7 +1196,7 @@ void  <TYPE>_vector_apply(<TYPE>_vector_type * vector , <TYPE>_ftype * func) {
       vector->data[i] = func( vector->data[i] );
   }
 }
-
+ 
 int <TYPE>_vector_count_equal( const <TYPE>_vector_type * vector , <TYPE> cmp_value) {
   int count = 0;
   for (int i=0; i < vector->size; i++)
@@ -1201,4 +1204,8 @@ int <TYPE>_vector_count_equal( const <TYPE>_vector_type * vector , <TYPE> cmp_va
       count += 1;
 
   return count;
+
 }
+ 
+
+//

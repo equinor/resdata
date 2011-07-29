@@ -25,7 +25,7 @@
   The file util_path.c is included in this, and contains path
   manipulation functions which explicitly use the PATH_SEP variable.
 */
-
+#include <fcntl.h>
 #include <string.h>
 #include <limits.h>
 #include <errno.h>
@@ -39,7 +39,6 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <dirent.h>
 #include <math.h>
 #include <stdarg.h>
@@ -49,15 +48,8 @@
 #include <buffer.h>
 
 
-#ifdef HAVE_ZLIB
-#include <zlib.h>
-#else
-int compress  ( void * buffer , unsigned long * compressed_size , const void * data , int data_size)    { util_abort("%s: Missing zlib\n",__func__); }
-int uncompress( void * buffer , unsigned long * size1 , const void * src , unsigned long size2) { util_abort("%s: Missing zlib\n",__func__); }
-#endif
 
-
-/**
+/*
    Macros for endian flipping. The macros create a new endian-flipped
    value, and should be used as: 
 
@@ -3947,7 +3939,7 @@ FILE * util_fopen_lockf(const char * filename, const char * mode) {
   return fdopen(fd , mode);
 }
 
-
+#ifdef HAVE_PTHREAD
 static pthread_mutex_t __fwrite_block_mutex = PTHREAD_MUTEX_INITIALIZER; /* Used to ensure that only one thread displays the block message. */
 static void __block_full_disk(const char * filename) {                   /* Filename can be NULL */
   if (pthread_mutex_trylock( &__fwrite_block_mutex ) == 0) {
@@ -3970,7 +3962,7 @@ static void __block_full_disk(const char * filename) {                   /* File
     */
     while (true) {
       usleep( 500000 ); /* half a second */
-            
+      
       if (pthread_mutex_trylock( &__fwrite_block_mutex ) == 0) {
         usleep( 5000 );  /* 5 ms - to avoid a heard of threads hitting the filesystem concurrently.       */
         break;           /* The user has entered return - and the main blocking thread has been released. */
@@ -3980,6 +3972,17 @@ static void __block_full_disk(const char * filename) {                   /* File
   pthread_mutex_unlock( &__fwrite_block_mutex );
 }
 
+#else
+
+static void __block_full_disk(const char * filename) {            
+  fprintf(stderr,"********************************************************************\n");
+  fprintf(stderr,"** The filesystem seems to be full  - and the program is veeeery  **\n");
+  fprintf(stderr,"** close to going down in flames. You can try clearing space, and **\n");
+  fprintf(stderr,"** then press return [with fingers crossed :-)].                  **\n");
+  fprintf(stderr,"********************************************************************\n");
+  getc( stdin ); /* Block while user clears some disk space. */
+} 
+#endif
 
 
 FILE * util_fopen(const char * filename , const char * mode) {
@@ -4227,255 +4230,6 @@ char * util_fscanf_alloc_filename(const char * prompt , int prompt_len , int exi
 
 /*****************************************************************/
 
-/**
-  This function reads data from the input pointer data, and writes a
-  compressed copy into the target buffer zbuffer. On input data_size
-  should be the *number of bytes* in data. compressed_size should be a
-  reference to the size (in bytes) of zbuffer, on return this has been
-  updated to reflect the new compressed size.
-*/
-
-void util_compress_buffer(const void * data , int data_size , void * zbuffer , unsigned long * compressed_size) {
-  int compress_result;
-  if (data_size > 0) {
-    compress_result = compress(zbuffer , compressed_size , data , data_size);
-    /**
-       Have some not reproducible "one-in-a-thousand" problems with
-       the return value from compress. It seemingly randomly returns:
-
-         -2  == Z_STREAM_ERROR. 
-         
-       According to the documentation in zlib.h compress should only
-       return one of the three values:
-
-           Z_OK == 0   ||   Z_MEM_ERROR == -4   Z_BUF_ERROR == -5
-
-       We mask the Z_STREAM_ERROR return value as Z_OK, with a
-       FAT-AND_UGLY_WARNING, and continue with fingers crossed.
-    */
-    
-    if (compress_result == Z_STREAM_ERROR) {
-      fprintf(stderr,"*****************************************************************\n");
-      fprintf(stderr,"**                       W A R N I N G                         **\n");
-      fprintf(stderr,"** ----------------------------------------------------------- **\n");
-      fprintf(stderr,"** Unrecognized return value:%d from compress(). Proceeding as **\n" , compress_result);
-      fprintf(stderr,"** if all is OK ??  Cross your fingers!!                       **\n");
-      fprintf(stderr,"*****************************************************************\n");
-      compress_result = Z_OK;
-
-      printf("data_size:%d   compressed_size:%ld \n",data_size , *compressed_size);
-      util_abort("%s - kkk \n", __func__ );
-    }
-    
-    if (compress_result != Z_OK) 
-      util_abort("%s: returned %d - different from Z_OK - aborting\n",__func__ , compress_result);
-  } else
-    *compressed_size = 0;
-}
-
-
-
-/**
-   This function allocates a new buffer which is a compressed version
-   of the input buffer data. The input variable data_size, and the
-   output * compressed_size are the size - *in bytes* - of input and
-   output.
-*/
-void * util_alloc_compressed_buffer(const void * data , int data_size , unsigned long * compressed_size) {
-  void * zbuffer = util_malloc(data_size , __func__);
-  *compressed_size = data_size;
-  util_compress_buffer(data , data_size , zbuffer , compressed_size);
-  zbuffer = util_realloc(zbuffer , *compressed_size , __func__ );
-  return zbuffer;
-}
-
-
-/**
-Layout on disk when using util_fwrite_compressed:
-
-  /-------------------------------
-  |uncompressed total size
-  |size of compression buffer
-  |----
-  |compressed size
-  |compressed block
-  |current uncompressed offset
-  |....
-  |compressed size
-  |compressed block
-  |current uncompressed offset
-  |....
-  |compressed size
-  |compressed block
-  |current uncompressed offset
-  \------------------------------
-
-Observe that the functions util_fwrite_compressed() and
-util_fread_compressed must be used as a pair, the files can **N O T**
-be interchanged with normal calls to gzip/gunzip. To avoid confusion
-it is therefor strongly advised NOT to give the files a .gz extension.
-
-*/
-
-void util_fwrite_compressed(const void * _data , int size , FILE * stream) {
-  if (size == 0) {
-    fwrite(&size , sizeof size , 1 , stream);
-    return;
-  }
-  {
-    const char * data = (const char *) _data;
-    const int max_buffer_size      = 128 * 1048580; /* 128 MB */
-    int       required_buffer_size = (int) ceil(size * 1.001 + 64);
-    int       buffer_size , block_size;
-    void *    zbuffer;
-    
-    buffer_size = util_int_min(required_buffer_size , max_buffer_size);
-    do {
-      zbuffer = malloc(buffer_size);
-      if (zbuffer == NULL)
-        buffer_size /= 2;
-    } while(zbuffer == NULL);
-    memset(zbuffer , 0 , buffer_size);
-    block_size = (int) (floor(buffer_size / 1.002) - 64);
-    
-    {
-      int header_write;
-      header_write  = fwrite(&size        , sizeof size        , 1 , stream);
-      header_write += fwrite(&buffer_size , sizeof buffer_size , 1 , stream);
-      if (header_write != 2)
-        util_abort("%s: failed to write header to disk: %s \n",__func__ , strerror(errno));
-    }
-    
-    {
-      int offset = 0;
-      do {
-        unsigned long compressed_size = buffer_size;
-        int this_block_size           = util_int_min(block_size , size - offset);
-        util_compress_buffer(&data[offset] , this_block_size , zbuffer , &compressed_size);
-        fwrite(&compressed_size , sizeof compressed_size , 1 , stream);
-        {
-          int bytes_written = fwrite(zbuffer , 1 , compressed_size , stream);
-          if (bytes_written < compressed_size) 
-            util_abort("%s: wrote only %d/%ld bytes to compressed file  - aborting \n",__func__ , bytes_written , compressed_size);
-        }
-        offset += this_block_size;
-        fwrite(&offset , sizeof offset , 1 , stream);
-      } while (offset < size);
-    }
-    free(zbuffer);
-  }
-}
-
-/**
-  This function is used to read compressed data from file, observe
-  that the file must have been created with util_fwrite_compressed()
-  first. Trying to read a file compressed with gzip will fail.
-*/
-
-void util_fread_compressed(void *__data , FILE * stream) {
-  char * data = (char *) __data;
-  int buffer_size;
-  int size , offset;
-  void * zbuffer;
-  
-  fread(&size  , sizeof size , 1 , stream); 
-  if (size == 0) return;
-
-
-  fread(&buffer_size , sizeof buffer_size , 1 , stream);
-  zbuffer = util_malloc(buffer_size , __func__);
-  offset = 0;
-  do {
-    unsigned long compressed_size;
-    unsigned long block_size = size - offset;
-    int uncompress_result;
-    fread(&compressed_size , sizeof compressed_size , 1 , stream);
-    {
-      int bytes_read = fread(zbuffer , 1 , compressed_size , stream);
-      if (bytes_read < compressed_size) 
-        util_abort("%s: read only %d/%d bytes from compressed file - aborting \n",__func__ , bytes_read , compressed_size);
-      
-    }
-    uncompress_result = uncompress(&data[offset] , &block_size , zbuffer , compressed_size);
-    if (uncompress_result != Z_OK) {
-      fprintf(stderr,"%s: ** Warning uncompress result:%d != Z_OK.\n" , __func__ , uncompress_result);
-      /**
-         According to the zlib documentation:
-
-         1. Values > 0 are not errors - just rare events?
-         2. The value Z_BUF_ERROR is not fatal - we let that pass?!
-      */
-      if (uncompress_result < 0 && uncompress_result != Z_BUF_ERROR)
-        util_abort("%s: fatal uncompress error: %d \n",__func__ , uncompress_result);
-    }
-    
-    offset += block_size;
-    {
-      int file_offset;
-      fread(&file_offset , sizeof offset , 1 , stream); 
-      if (file_offset != offset) 
-        util_abort("%s: something wrong when reding compressed stream - aborting \n",__func__);
-    }
-  } while (offset < size);
-  free(zbuffer);
-}
-
-
-
-/**
-   Allocates storage and reads in from compressed data from disk. If the
-   data on disk have zero size, NULL is returned.
-*/
-
-void * util_fread_alloc_compressed(FILE * stream) {
-  long   current_pos = ftell(stream);
-  char * data;
-  int    size;
-
-  fread(&size  , sizeof size , 1 , stream); 
-  if (size == 0) 
-    return NULL;
-  else {
-    fseek(stream , current_pos , SEEK_SET);
-    data = util_malloc(size , __func__);
-    util_fread_compressed(data , stream);
-    return data;
-  }
-}
-
-
-/**
-   Returns the **UNCOMPRESSED** size of a compressed section. 
-*/
-
-int util_fread_sizeof_compressed(FILE * stream) {
-  long   pos = ftell(stream);
-  int    size;
-
-  fread(&size  , sizeof size , 1 , stream); 
-  fseek(  stream , pos , SEEK_SET );
-  return size;
-}
-
-
-
-
-void util_fskip_compressed(FILE * stream) {
-  int size , offset;
-  int buffer_size;
-  fread(&size        , sizeof size        , 1 , stream);
-  if (size == 0) return;
-
-  
-  fread(&buffer_size , sizeof buffer_size , 1 , stream);
-  do {
-    unsigned long compressed_size;
-    fread(&compressed_size , sizeof compressed_size , 1 , stream);
-    fseek(stream  , compressed_size , SEEK_CUR);
-    fread(&offset , sizeof offset , 1 , stream);
-  } while (offset < size);
-}
-
 
 /**
    These small functions write formatted values onto a stream. The
@@ -4643,210 +4397,14 @@ char * util_alloc_PATH_executable(const char * executable) {
 }
 
 
-///**
-//   Will use external program lsof to (try) to determine which
-//   process(es) are currently accessing the file filename. The return
-//   type will be an array pid_t instances, the number of processes is
-//   returned by reference. 
-//*/
-//
-//pid_t * util_alloc_file_pid_list( const char * filename , int * __num_pids) {
-//  const char * lsof_executable = "/usr/sbin/lsof";
-//  int     buffer_size = 8;
-//  int     num_pids    = 0;
-//  uid_t * pid_list    = util_malloc( sizeof * pid_list * buffer_size , __func__);
-//  char * tmp_file     = util_alloc_tmp_file("/tmp" , "lsof" , false);
-//  util_fork_exec(lsof_executable , 2 , (const char *[2]) {"-F" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
-//  {
-//    FILE * stream = util_fopen(tmp_file , "r");
-//    while ( true ) {
-//      int pid , uid;
-//      char dummy_char;
-//      if (fscanf( stream , "%c%d %c%d" , &dummy_char , &pid , &dummy_char , &uid) == 4) {
-//        if (buffer_size == num_users) {
-//          buffer_size *= 2;
-//          users        = util_realloc( users , sizeof * users * buffer_size , __func__);
-//        }
-//        users[ num_users ] = uid;
-//        num_users++;
-//      } else 
-//        break; /* have reached the end of file - seems like we will not find the file descriptor we are looking for. */
-//    }
-//    fclose( stream );
-//    unlink( tmp_file );
-//  }
-//  free( tmp_file );
-//  users = util_realloc( users , sizeof * users * num_users , __func__);
-//  *__num_users = num_users;
-//  return users;
-//}
 
-
-/**
-   This function will use the external program /usr/sbin/lsof to
-   determine which users currently have 'filename' open. The return
-   value will be a (uid_t *) pointer of active users. The number of
-   active users is returned by reference.
-
-   * In the current implementation a user can occur several times if
-     the user has the file open in several processes.
-     
-   * If a NFS mounted file is opened on a remote machine it will not
-     appear in this listing. I.e. to check that an executable file can
-     be safely modified you must iterate through the relevant
-     computers.
+/* 
+   Implementation of util_addr2line_lookup() is based on fork_exec()
+   and located in the include util_fork.c file.
 */
-
-
-uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
-  const char * lsof_executable = "/usr/sbin/lsof";
-  int     buffer_size = 8;
-  int     num_users   = 0;
-  uid_t * users       = util_malloc( sizeof * users * buffer_size , __func__);
-  char * tmp_file     = util_alloc_tmp_file("/tmp" , "lsof" , false);
-  util_fork_exec(lsof_executable , 2 , (const char *[2]) {"-F" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
-  {
-    FILE * stream = util_fopen(tmp_file , "r");
-    while ( true ) {
-      int pid , uid;
-      char dummy_char;
-      if (fscanf( stream , "%c%d %c%d" , &dummy_char , &pid , &dummy_char , &uid) == 4) {
-        if (buffer_size == num_users) {
-          buffer_size *= 2;
-          users        = util_realloc( users , sizeof * users * buffer_size , __func__);
-        }
-        users[ num_users ] = uid;
-        num_users++;
-      } else 
-        break; /* have reached the end of file - seems like we will not find the file descriptor we are looking for. */
-    }
-    fclose( stream );
-    unlink( tmp_file );
-  }
-  free( tmp_file );
-  users = util_realloc( users , sizeof * users * num_users , __func__);
-  *__num_users = num_users;
-  return users;
-}
-
-
-
-/**
-   This function uses the external program lsof to (try) to associate
-   an open FILE * instance with a filename in the filesystem.
-   
-   If it succeds in finding the filename the function will allocate
-   storage and return a (char *) pointer with the filename. If the
-   filename can not be found, the function will return NULL.
-
-   This function is quite heavyweight (invoking an external program
-   +++), and also quite fragile, it should therefor not be used in
-   routine FILE -> name lookups, rather in situations where a FILE *
-   operation has failed extraordinary, and we want to provide as much
-   information as possible before going down in flames.  
-*/
-  
-char * util_alloc_filename_from_stream( FILE * input_stream ) {
-  char * filename = NULL;
-  const char * lsof_executable = "/usr/sbin/lsof";
-  int   fd     = fileno( input_stream );
-    
-  if (util_file_exists( lsof_executable ) && util_is_executable( lsof_executable ) && (fd != -1)) {
-    char  * fd_string = util_alloc_sprintf("f%d" , fd);
-    char    line_fd[32];
-    char    line_file[4096];
-    char * pid_string = util_alloc_sprintf("%d" , getpid());
-    char * tmp_file   = util_alloc_tmp_file("/tmp" , "lsof" , false);
-
-    /* 
-       The lsof executable is run as:
-
-       bash% lsof -p pid -Ffn
-
-    */
-    util_fork_exec(lsof_executable , 3 , (const char *[3]) {"-p" , pid_string , "-Ffn"}, true , NULL , NULL , NULL , tmp_file , NULL);
-    {
-      FILE * stream = util_fopen(tmp_file , "r");
-      fscanf( stream , "%s" , line_fd);  /* Skipping the first pxxxx marker */
-      while ( true ) {
-        if (fscanf( stream , "%s %s" , line_fd , line_file) == 2) {
-          if (util_string_equal( line_fd , fd_string )) {
-            /* We have found the file descriptor we are looking for. */
-            filename = util_alloc_string_copy( &line_file[1] );
-            break;
-          }
-        } else 
-          break; /* have reached the end of file - seems like we will not find the file descriptor we are looking for. */
-      }
-      fclose( stream );
-    }
-    unlink( tmp_file );
-    free( tmp_file );
-  }
-  return filename;
-}
-
- 
-
-
-
-/**
-  This function uses the external program addr2line to convert the
-  hexadecimal adress given by the libc function backtrace() into a
-  function name and file:line.
-
-  Observe that the function is quite involved, so if util_abort() is
-  called because something is seriously broken, it might very well fail.
-
-  The executable should be found from one line in the backtrace with
-  the function util_bt_alloc_current_executable(), the argument
-  bt_symbol is the lines generated by the  bt_symbols() function.
-
-  This function is purely a helper function for util_abort().
-*/
-
-static void util_addr2line_lookup(const char * executable , const char * bt_symbol , char ** func_name , char ** file_line) {
-  char *tmp_file = util_alloc_tmp_file("/tmp" , "addr2line" , true);
-  char * adress;
-  {
-    int start_pos = 0;
-    int end_pos;   
-    while ( bt_symbol[start_pos] != '[')
-      start_pos++;
-    
-      end_pos = start_pos;
-      while ( bt_symbol[end_pos] != ']') 
-        end_pos++;
-      
-      adress = util_alloc_substring_copy( &bt_symbol[start_pos + 1] , end_pos - start_pos - 1 );
-  }
-  
-  {
-    char ** argv;
-    
-    argv    = util_malloc(3 * sizeof * argv , __func__);
-    argv[0] = util_alloc_string_copy("--functions");
-    argv[1] = util_alloc_sprintf("--exe=%s" , executable);
-    argv[2] = util_alloc_string_copy(adress);
-    
-    util_fork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , NULL , tmp_file , NULL);
-    util_free_stringlist(argv , 3);
-  }
-  
-  {
-    bool at_eof;
-    FILE * stream = util_fopen(tmp_file , "r");
-    *func_name = util_fscanf_alloc_line(stream , &at_eof);
-    *file_line = util_fscanf_alloc_line(stream , &at_eof);
-    fclose(stream);
-  }
-  util_unlink_existing(tmp_file);
-  free(adress);
-  free(tmp_file);
-}
-
-
-
+#ifdef HAVE_FORK
+static void util_addr2line_lookup(const char * executable , const char * bt_symbol , char ** func_name , char ** file_line);
+#endif
 
 /**
   This function prints a message to stderr and aborts. The function is
@@ -4855,7 +4413,7 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
 
   Observe that it is __VERY__ important that the arguments and the
   format string match up, otherwise the util_abort() routine will hang
-  indefinetely.
+  indefinetely; without printing anything to stderr.
 
   A backtrace is also included, with the help of the exernal utility
   addr2line, this backtrace is converted into usable
@@ -4886,19 +4444,22 @@ static char * util_bt_alloc_current_executable(const char * bt_symbol) {
   if (__current_executable != NULL) 
     return util_alloc_string_copy(__current_executable );
   else {
-    int paren_pos = 0;
-    char * path;
-    while (bt_symbol[paren_pos] != '(' && bt_symbol[paren_pos] != ' ')
-      paren_pos++;
-    
-    path = util_alloc_substring_copy(bt_symbol , paren_pos);
-    if (util_is_abs_path(path))
-      return path;
-    else {
-      char * full_path = util_alloc_PATH_executable( path );
-      free(path);
-      return full_path;
-    }
+    if (bt_symbol != NULL) {
+      int paren_pos = 0;
+      char * path;
+      while (bt_symbol[paren_pos] != '(' && bt_symbol[paren_pos] != ' ')
+        paren_pos++;
+      
+      path = util_alloc_substring_copy(bt_symbol , paren_pos);
+      if (util_is_abs_path(path))
+        return path;
+      else {
+        char * full_path = util_alloc_PATH_executable( path );
+        free(path);
+        return full_path;
+      }
+    } else 
+      return NULL;
   }
 }
 
@@ -4926,7 +4487,6 @@ void util_abort_set_executable( const char * executable ) {
 void util_abort(const char * fmt , ...) {
   pthread_mutex_lock( &__abort_mutex ); /* Abort before unlock() */
   {
-    const bool include_backtrace = true;
     va_list ap;
 
     va_start(ap , fmt);
@@ -4935,6 +4495,12 @@ void util_abort(const char * fmt , ...) {
     vfprintf(stderr , fmt , ap);
     va_end(ap);
 
+    /*
+      The backtrace is based on calling the external program addr2line; 
+      the call is based on util_fork_exec() which is currently only available on POSIX.
+    */
+#ifdef HAVE_FORK  
+    const bool include_backtrace = true;
     if (include_backtrace) {
       const int max_bt = 50;
       char *executable;
@@ -5000,6 +4566,14 @@ void util_abort(const char * fmt , ...) {
       free(strings);
       util_safe_free(executable);
     }
+#else
+    {
+      char * executable = util_bt_alloc_current_executable( NULL );
+      fprintf(stderr,"Current executable : %s \n",executable);
+      util_safe_free(executable);
+    }
+#endif
+
     if (getenv("UTIL_ABORT") != NULL) {
       printf("Aborting ... \n");
       abort();
@@ -5047,8 +4621,9 @@ void util_exit(const char * fmt , ...) {
 /**
    This function is quite dangerous - it will always return something;
    it is the responsability of the calling scope to check that it
-   makes sense. Will return 0 on input NULL.
+   makes sense. Will return 0 on input NULL.  
 */
+
 int util_get_type( void * data ) {
   if (data == NULL)
     return 0;
@@ -5104,138 +4679,6 @@ void util_block_growing_directory(const char * directory) {
   } while (current_size != prev_size);
 }
 
-
-/** 
-    A small function used to redirect a file descriptior,
-    only used as a helper utility for util_fork_exec().
-*/
-    
-static void __util_redirect(int src_fd , const char * target_file , int open_flags) {
-  int new_fd = open(target_file , open_flags , 0644);
-  dup2(new_fd , src_fd);
-  close(new_fd);
-}
-
-
-
-
-/**
-   This function does the following:
-
-    1. Fork current process.
-    2. if (run_path != NULL) chdir(run_path)
-    3. The child execs() to run executable.
-    4. Parent can wait (blocking = true) on the child to complete executable.
-
-   If the executable is an absolute path it will run the command with
-   execv(), otherwise it will use execvp() which will (try) to look up
-   the executable with the PATH variable.
-
-   argc / argv are the number of arguments and their value to the
-   external executable. Observe that prior to calling execv the argv
-   list is prepended with the name of the executable (convention), and
-   a NULL pointer is appended (requirement by execv).
-
-   If stdout_file != NULL stdout is redirected to this file.  Same
-   with stdin_file and stderr_file.
-
-   If target_file != NULL, the parent will check that the target_file
-   has been created before returning; and abort if not. In this case
-   you *MUST* have blocking == true, otherwise it will abort on
-   internal error.
-
-
-   The return value from the function is the pid of the child process;
-   this is (obviously ?) only interesting if the blocking argument is
-   'false'.
-
-   Example:
-   --------
-   util_fork_exec("/local/gnu/bin/ls" , 1 , (const char *[1]) {"-l"} ,
-   true , NULL , NULL , NULL , "listing" , NULL);
-
-   
-   This program will run the command 'ls', with the argument '-l'. The
-   main process will block, i.e. wait until the 'ls' process is
-   complete, and the results of the 'ls' operation will be stored in
-   the file "listing". If the 'ls' should want to print something on
-   stderr, it will go there, as stderr is not redirected.
-
-*/
-
-pid_t util_fork_exec(const char * executable , int argc , const char ** argv , 
-                     bool blocking , const char * target_file , const char  * run_path , 
-                     const char * stdin_file , const char * stdout_file , const char * stderr_file) {
-  const char  ** __argv = NULL;
-  pid_t child_pid;
-  
-  if (target_file != NULL && blocking == false) 
-    util_abort("%s: When giving a target_file != NULL - you must use the blocking semantics. \n",__func__);
-
-  child_pid = fork();
-  if (child_pid == -1) {
-    fprintf(stderr,"Error: %s(%d) \n",strerror(errno) , errno);
-    util_abort("%s: fork() failed when trying to run external command:%s \n",__func__ , executable);
-  }
-  
-  if (child_pid == 0) {
-    /* This is the child */
-    int iarg;
-
-    nice(19);    /* Remote process is run with nice(19). */
-    if (run_path != NULL) {
-      if (chdir(run_path) != 0) 
-        util_abort("%s: failed to change to directory:%s  %s \n",__func__ , run_path , strerror(errno));
-    }
-
-    if (stdout_file != NULL) {
-      /** This is just to invoke the "block on full disk behaviour" before the external program starts. */
-      FILE * stream = util_fopen( stdout_file , "w");
-      fclose(stream);
-      __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
-    }
-
-    if (stderr_file != NULL) {
-      /** This is just to invoke the "block on full disk behaviour" before the external program starts. */
-      FILE * stream = util_fopen( stderr_file , "w");
-      fclose(stream);
-      __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
-    }
-    if (stdin_file  != NULL) __util_redirect(0 , stdin_file  , O_RDONLY);
-
-    
-    __argv        = util_malloc((argc + 2) * sizeof * __argv , __func__);  
-    __argv[0]     = executable;
-    for (iarg = 0; iarg < argc; iarg++)
-      __argv[iarg+1] = argv[iarg];
-    __argv[argc + 1] = NULL;
-
-    /* 
-       If executable is an absolute path, it is invoked directly, 
-       otherwise PATH is used to locate the executable.
-    */
-    execvp( executable , (char **) __argv);
-    /* 
-       Exec should *NOT* return - if this code is executed
-       the exec??? function has indeed returned, and this is
-       an error.
-    */
-    util_abort("%s: failed to execute external command: \'%s\': %s \n",__func__ , executable , strerror(errno));
-    
-  }  else  {
-    /* Parent */
-    if (blocking) {
-      waitpid(child_pid , NULL , 0);
-      
-      if (target_file != NULL)
-        if (!util_file_exists(target_file))
-          util_abort("%s: %s failed to produce target_file:%s aborting \n",__func__ , executable , target_file);
-    }
-  }
-  
-  util_safe_free( __argv );
-  return child_pid;
-}
 
 
 
@@ -5663,6 +5106,12 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
 }
 
 
+#ifdef HAVE_FORK
+#include "util_fork.c"
+#endif
+
+#ifdef HAVE_ZLIB
+#include "util_zlib.c"
+#endif
 
 #include "util_path.c"
-

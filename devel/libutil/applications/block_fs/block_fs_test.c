@@ -152,7 +152,7 @@ void apply( const action_node_type ** action_list , int action_length, block_fs_
 
 int main(int argc, char ** argv) {
   
-  const char * test_path  = "/tmp/block_fs"; // "/tmp/storage_1_27/default/mod_0"; 
+  const char * test_path  = "/tmp/block_fs"; 
   const char * file_fmt   = "file_%04d";
   char * file_path        = util_alloc_filename( test_path , "files" , NULL );
   char * test_mnt         = util_alloc_filename( test_path , "FORECAST" , "mnt");

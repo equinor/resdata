@@ -47,9 +47,9 @@ double statistics_empirical_quantile( double_vector_type * data , double quantil
 
 
 /**
-   This assumes that data has already been sorted, either by through
-   calling statistics_empirical_quantile( ) or by sorting data
-   explicitly with  double_vector_sort( data );
+   This assumes that data has already been sorted, either from a
+   previous call to statistics_empirical_quantile( ) or by sorting
+   data explicitly with double_vector_sort( data );
 */
 
 double statistics_empirical_quantile__( const double_vector_type * data , double quantile ) {

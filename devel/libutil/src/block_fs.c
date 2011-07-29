@@ -10,7 +10,7 @@
     
    ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
    WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
+   FITNESS FOR A PARTICULAR PURPOSE.    
     
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
    for more details. 
@@ -33,8 +33,10 @@
 #include <time.h>
 #include <fnmatch.h>
 
-#define MOUNT_MAP_MAGIC_INT 8861290
-#define BLOCK_FS_TYPE_ID    7100652
+#define MOUNT_MAP_MAGIC_INT  8861290
+#define BLOCK_FS_TYPE_ID     7100652
+#define INDEX_MAGIC_INT      1213775
+#define INDEX_FORMAT_VERSION       1
 
 // #define ENABLE_CACHE
 
@@ -415,15 +417,7 @@ static void file_node_dump_index( const file_node_type * file_node , FILE * inde
   util_fwrite_int( file_node->status , index_stream );
   util_fwrite_long( file_node->node_offset , index_stream );
   util_fwrite_int( file_node->node_size   , index_stream );
-
-  {
-    /* 
-       There are index files around there where the content is a long
-       value with the absolute offset. 
-    */
-    long abs_data_offset = file_node->node_offset + file_node->data_offset;
-    util_fwrite_long( abs_data_offset , index_stream );
-  }
+  util_fwrite_int( file_node->data_offset , index_stream );
   util_fwrite_int( file_node->data_size   , index_stream );
 }
 
@@ -435,10 +429,7 @@ static file_node_type * file_node_index_fread_alloc( FILE * stream ) {
   int node_size           = util_fread_int( stream );
   {
     file_node_type * file_node = file_node_alloc( status , node_offset , node_size );
-    {
-      long abs_data_offset = util_fread_long( stream );
-      file_node->data_offset = abs_data_offset - file_node->node_offset;
-    }
+    file_node->data_offset = util_fread_int( stream );
     file_node->data_size   = util_fread_int( stream );
     
     return file_node;
@@ -452,10 +443,8 @@ static file_node_type * file_node_index_buffer_fread_alloc( buffer_type * buffer
   int node_size           = buffer_fread_int( buffer );
   {
     file_node_type * file_node = file_node_alloc( status , node_offset , node_size );
-    {
-      long abs_data_offset = buffer_fread_long( buffer );
-      file_node->data_offset    = abs_data_offset - file_node->node_offset;
-    }
+
+    file_node->data_offset = buffer_fread_int( buffer );
     file_node->data_size   = buffer_fread_int( buffer );
     
     return file_node;
@@ -972,22 +961,36 @@ static void block_fs_build_index( block_fs_type * block_fs , long_vector_type * 
 }
 
 
+/**
+   Load an index for (slightly) faster mounting of the filesystem. The
+   function starts be reading a header and check if the current index
+   file is applicable.
+
+   Will return true of the loading succedeed, and false if no index
+   was loaded.  
+*/
+
 
 static bool block_fs_load_index( block_fs_type * block_fs ) {
   struct stat data_stat;
   if (fstat( block_fs->data_fd , &data_stat) == 0) {
     FILE * stream = fopen( block_fs->index_file , "r");
     if (stream != NULL) {
+      int    id          = util_fread_int( stream );
+      int    version     = util_fread_int( stream );
       time_t index_mtime = util_fread_time_t( stream );
+
       time_t data_mtime  = data_stat.st_mtime;
-      if (index_mtime == data_mtime) {
+      fclose( stream );
+
+      if ((id == INDEX_MAGIC_INT) &&               /* This is indeed an index file. */ 
+          (version == INDEX_FORMAT_VERSION) &&     /* The version on disk agrees with this version. */
+          (index_mtime == data_mtime)) {           /* The time stamp agrees with the time stamp of the data. */
+        
         /* Read the whole index file in one single read operation. */
         buffer_type * buffer = buffer_fread_alloc( block_fs->index_file );
-
-        /* OK - the index has the same age as the data file,
-           we can use it. */
         
-        buffer_fskip( buffer , sizeof( time_t ));
+        buffer_fskip( buffer , sizeof( time_t ) + 2 * sizeof( int ));
         /*1: Loading all the active nodes. */
         {
           int num_active_nodes = buffer_fread_int( buffer );
@@ -1011,12 +1014,12 @@ static bool block_fs_load_index( block_fs_type * block_fs ) {
           }
         }
         buffer_free( buffer );
-      }
-      fclose( stream );
-      if (index_mtime == data_mtime)
+        
         return true;
+      }
     } 
   }
+  /** No index was loaded - for whatever reason. */
   return false;
 }
 
@@ -1446,8 +1449,10 @@ static void block_fs_dump_index( block_fs_type * block_fs ) {
     {
       time_t data_mtime = stat_buffer.st_mtime;
       FILE * index_stream = util_fopen( block_fs->index_file , "w");
+      util_fwrite_int( INDEX_MAGIC_INT , index_stream );
+      util_fwrite_int( INDEX_FORMAT_VERSION , index_stream );
       util_fwrite_time_t( data_mtime , index_stream );
-      
+
       /* 1: Dumping the hash table of active nodes. */
       {
         hash_iter_type * index_iter = hash_iter_alloc( block_fs->index );
@@ -1754,3 +1759,4 @@ vector_type * block_fs_alloc_filelist( const block_fs_type * block_fs  , const c
 
   return sort_vector;
 }
+//

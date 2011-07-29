@@ -870,6 +870,7 @@ void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
 }
 
 
+#ifdef HAVE_THREAD_POOL
 static void * matrix_inplace_matmul_mt__(void * arg) {
 
   arg_pack_type * arg_pack = arg_pack_safe_cast( arg );
@@ -883,9 +884,10 @@ static void * matrix_inplace_matmul_mt__(void * arg) {
   matrix_free( A_view );
   return NULL;
 }
-
+#endif
 
 void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads){ 
+#ifdef HAVE_THREAD_POOL
   thread_pool_type  * thread_pool = thread_pool_alloc( num_threads , true );
   arg_pack_type    ** arglist     = util_malloc( num_threads * sizeof * arglist , __func__);
   int it;
@@ -915,6 +917,9 @@ void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_t
       arg_pack_free( arglist[it] );
     free( arglist );
   }
+#else
+  matrix_inplace_matmul( A , B );
+#endif
 }
 
 
@@ -1227,4 +1232,4 @@ void matrix_matlab_dump(const matrix_type * matrix, const char * filename) {
 }
 
 
-
+// Comment

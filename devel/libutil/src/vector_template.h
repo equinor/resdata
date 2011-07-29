@@ -96,6 +96,7 @@ void                 <TYPE>_vector_fread_data( <TYPE>_vector_type * vector , int
 bool                 <TYPE>_vector_equal(const <TYPE>_vector_type * vector1 , const <TYPE>_vector_type * vector2);
 void                 <TYPE>_vector_apply(<TYPE>_vector_type * vector , <TYPE>_ftype *func);
 int                  <TYPE>_vector_count_equal( const <TYPE>_vector_type * vector , <TYPE> cmp_value);
+int                  <TYPE>_vector_element_size( const <TYPE>_vector_type * vector );
 
 UTIL_SAFE_CAST_HEADER( <TYPE>_vector );
 
@@ -103,3 +104,8 @@ UTIL_SAFE_CAST_HEADER( <TYPE>_vector );
 }
 #endif
 #endif
+//
+
+
+
+

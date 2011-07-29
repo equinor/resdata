@@ -359,23 +359,22 @@ void     util_fwrite_int_vector   (const int     * , int , FILE * , const char *
 void     util_fwrite_double_vector(const double  * , int , FILE * , const char * );
 void     util_fread_char_vector(char * , int , FILE * , const char * );
 
+#ifdef HAVE_ZLIB
 void     util_compress_buffer(const void * , int , void * , unsigned long * );
 int      util_fread_sizeof_compressed(FILE * stream);
 void     util_fread_compressed(void * , FILE * );
 void   * util_fread_alloc_compressed(FILE * );
 void     util_fwrite_compressed(const void * , int , FILE * );
+#endif
+
 void     util_block_growing_file(const char * );
 void     util_block_growing_directory(const char * );
-pid_t    util_fork_exec(const char *  , int , const char ** , bool , const char * , const char *  , const char * , const char *  , const char * );
 char   * util_alloc_realpath(const char * );
 bool     util_try_lockf(const char *  , mode_t  , int * );
 bool     util_sscanf_bytesize(const char * , size_t *);
 void     util_sscanf_active_range(const char *  , int , bool * );
 int    * util_sscanf_alloc_active_list(const char *  , int * );
 int      util_get_current_linenr(FILE * stream);
-char   * util_alloc_filename_from_stream( FILE * input_stream );
-uid_t  * util_alloc_file_users( const char * filename , int * __num_users);
-uid_t  * util_alloc_file_users( const char * filename , int * __num_users);
 const char * util_update_path_var(const char * , const char * , bool );
 
 const char * util_setenv( const char * variable , const char * value);
@@ -388,6 +387,7 @@ bool     util_fseek_string(FILE * stream , const char * string , bool skip_strin
 char   * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool include_stop_string);
 bool     util_files_equal( const char * file1 , const char * file2 );
 double   util_kahan_sum(const double *data, size_t N);
+#include "util_fork.h"
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_SCALAR(s,stream)  { if (fread(&s , sizeof s , 1 , stream) != 1) util_abort("%s: read failed: %s\n",__func__ , strerror(errno)); }
@@ -462,13 +462,6 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
 
 
 
-#define HAVE_ZLIB
-
-#ifndef HAVE_ZLIB
-#define Z_STREAM_ERROR -1
-#define Z_OK           -1
-#define Z_BUF_ERROR    -1
-#endif
 
 
 #ifdef __cplusplus
