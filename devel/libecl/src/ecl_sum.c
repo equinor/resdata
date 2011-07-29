@@ -472,6 +472,22 @@ bool ecl_sum_var_is_total( const ecl_sum_type * ecl_sum , const char * gen_key) 
   return ecl_smspec_general_is_total( ecl_sum->smspec , gen_key );
 }
 
+/**
+   The identify_var_type function does not consider the ecl_sum
+   instance, only the characters in var. [Except if var is found in
+   the special keys hash] - i.e. it is safe to call :
+
+        ecl_sum_identify_var_type(ecl_sum , "WWCT:WELLXX")
+
+   even though the current ecl_sum instance does not have a well named
+   'WELLXX'.  
+*/
+
+ecl_smspec_var_type ecl_sum_identify_var_type(const ecl_sum_type * ecl_sum , const char * var) {
+  return ecl_smspec_identify_var_type( ecl_sum->smspec , var );
+}
+
+
 ecl_smspec_var_type ecl_sum_get_var_type( const ecl_sum_type * ecl_sum , const char * gen_key) {
   int index = ecl_sum_get_general_var_index( ecl_sum , gen_key );
   return ecl_smspec_iget_var_type(ecl_sum->smspec , index);
