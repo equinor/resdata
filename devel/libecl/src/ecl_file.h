@@ -32,8 +32,10 @@ extern "C" {
 typedef struct ecl_file_struct ecl_file_type;
 
 ecl_file_type * ecl_file_fread_alloc( const char * filename );
-
-
+bool            ecl_file_contains_report_step( const char * filename , int report_step);
+bool            ecl_file_contains_sim_time( const char * filename , time_t sim_time);
+bool            ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step);
+bool            ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time);
 ecl_file_type * ecl_file_copy_restart_section( const ecl_file_type * src_file , int report_step );
 ecl_file_type * ecl_file_copy_summary_section( const ecl_file_type * src_file , int report_step );
 void            ecl_file_free( ecl_file_type * ecl_file );

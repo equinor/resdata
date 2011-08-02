@@ -1030,8 +1030,9 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
    If the kw is found the fortio pointer is positioned at the
    beginning of the keyword, and the function returns true. If the the
    'kw' is NOT found the file will be repositioned to the initial
-   position, and the function will return false; unlessa bort_on_error
-   == true in which case the function will abort if the 'kw' s not found.
+   position, and the function will return false; unless abort_on_error
+   == true in which case the function will abort if the 'kw' is not
+   found.  
 */
    
 

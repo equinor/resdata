@@ -525,7 +525,8 @@ UTIL_SAFE_CAST_FUNCTION( ecl_smspec , ECL_SMSPEC_ID )
    See table 3.4 in the ECLIPSE file format reference manual. 
    
    This function does not consider the variables internalized in the
-   smspec instance, only the string 'var'.
+   smspec instance, only the string 'var' (and the
+   smspec->special_types table). 
 */
 
 ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec , const char * var) {

@@ -206,7 +206,18 @@ static bool ecl_file_ifseek_kw(fortio_type * fortio, const char * kw , int occur
 
 
 
-ecl_file_type * ecl_file_alloc_sub_copy( const ecl_file_type * src_file , const char * stop_kw , int kw_nr) {
+
+static ecl_file_type * ecl_file_alloc_icopy( const ecl_file_type * src_file , const int_vector_type * index_list) {
+  ecl_file_type * copy_file = ecl_file_alloc_empty();
+  for (int index=0; index < int_vector_size( index_list ); index++) 
+    vector_append_owned_ref( copy_file->kw_list , ecl_file_icopy_kw( src_file , index ), ecl_kw_free__);
+  
+  ecl_file_make_index( copy_file );
+  return copy_file;
+}
+
+
+static ecl_file_type * ecl_file_alloc_sub_copy( const ecl_file_type * src_file , const char * stop_kw , int kw_nr) {
   if (ecl_file_has_kw( src_file , stop_kw )) {
     int first_kw = ecl_file_get_global_index( src_file , stop_kw , kw_nr );
     int last_kw;
@@ -216,12 +227,15 @@ ecl_file_type * ecl_file_alloc_sub_copy( const ecl_file_type * src_file , const 
       last_kw = ecl_file_get_num_kw( src_file );
     
     {
-      ecl_file_type * copy_file = ecl_file_alloc_empty();
-
-      for (int kw_nr = first_kw; kw_nr < last_kw; kw_nr++) 
-        vector_append_owned_ref( copy_file->kw_list , ecl_file_icopy_kw( src_file , kw_nr ), ecl_kw_free__);
-      ecl_file_make_index( copy_file );
-
+      ecl_file_type * copy_file;
+      {
+        int_vector_type * index_list = int_vector_alloc(0,0);
+        for (int kw_nr = first_kw; kw_nr < last_kw; kw_nr++) 
+          int_vector_append( index_list , kw_nr );
+        copy_file = ecl_file_alloc_icopy( src_file , index_list );
+        int_vector_free( index_list );
+      }
+      
       return copy_file;
     }
   } else
@@ -229,14 +243,7 @@ ecl_file_type * ecl_file_alloc_sub_copy( const ecl_file_type * src_file , const 
 }
 
 
-ecl_file_type * ecl_file_copy_restart_section( const ecl_file_type * src_file , int report_step ) {
-  return ecl_file_alloc_sub_copy( src_file , SEQNUM_KW , report_step );
-}
 
-
-ecl_file_type * ecl_file_copy_summary_section( const ecl_file_type * src_file , int report_step ) {
-  return ecl_file_alloc_sub_copy( src_file , SEQHDR_KW , report_step );
-}
 
 
 /** 
@@ -246,7 +253,7 @@ ecl_file_type * ecl_file_copy_summary_section( const ecl_file_type * src_file , 
    pointer looking at the stop_kw keyword. If stop_kw == NULL the
    function will read the complete file. The stop_kw parameter is used
    to support partial reading of unified files (RFT/SUMMARY/RESTART).
-
+   
    If no keywords are read in the function will return NULL (and not
    an empty ecl_file skeleton).
 */
@@ -326,100 +333,8 @@ ecl_file_type * ecl_file_fread_alloc(const char * filename ) {
 
 
 
-/* 
-   This function will allocate a ecl_file_type instance going all the
-   way to the NEXT 'SEQHDR' keyword. Observe that it is assumed that
-   the fortio instance is already positioned at a SEQHDR keyword.
-   
-   Will return NULL if the fortio pointer is already at the end of
-   the file.
-*/
 
 
-ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
-  ecl_file_type * summary_section = ecl_file_fread_alloc_fortio(fortio , SEQHDR_KW);
-  return summary_section;
-}
-
-
-/**
-   This file will read and allocate section (i.e. corresponding to one
-   report step), for a unified summary file. If you are going to
-   allocate the whole damned file, you are better off with using
-   ecl_file_fread_alloc_summary_section().
-
-   Observe that there is some counting-fuckup here: The libecl library
-   generally follows C conventions, with all counters starting at
-   zero. However the first report_step in a summary file has (by
-   defintion number 1, i.e. the first summary file is ECLIPSE.S0001),
-   hence this function assumes index to be 1 offset (Ohhh this is so
-   ugly), and then shift it before going further.
-   
-   If the occurence you are asking for can not be found the whole
-   function will return NULL - calling scope has to check this.
-
-   The functions ecl_file_fread_alloc_unsmry_section() and
-   ecl_file_fread_alloc_summary_section() can be considered a pair,
-   where the first is the high level function operating with a
-   filename, and the second (which actually does the work) operates on
-   a fortio instance.
-*/
-
-
-ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int index) {
-  bool          fmt_file   = ecl_util_fmt_file( filename );
-  fortio_type * fortio     = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
-  ecl_file_type * ecl_file = NULL;
-
-  if (ecl_file_ifseek_kw( fortio , SEQHDR_KW , index - 1)) 
-    ecl_file = ecl_file_fread_alloc_summary_section(fortio);
-  else
-    util_abort("%s: sorry - could not lcoate summary report:%d in file:%s \n",__func__ , index , filename);
-  
-  fortio_fclose( fortio );
-  
-  return ecl_file;
-}
-
-
-
-
-/**
-   The SEQNUM number found in unified restart files corresponds to the 
-   REPORT_STEP.
-*/
-
-ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
-  return ecl_file_fread_alloc_fortio(fortio , SEQNUM_KW);
-}
-
-
-
-static time_t INTEHEAD_date( const ecl_kw_type * intehead_kw ) {
-  return util_make_date( ecl_kw_iget_int( intehead_kw , INTEHEAD_DAY_INDEX)   , 
-                         ecl_kw_iget_int( intehead_kw , INTEHEAD_MONTH_INDEX) , 
-                         ecl_kw_iget_int( intehead_kw , INTEHEAD_YEAR_INDEX)  );
-}
-
-
-/**
-   This function will look up the INTEHEAD keyword in a ecl_file_type
-   instance, and calculate simulation date from this instance.
-
-   Will fail hard if it is impossible to find the queried for INTEHEAD
-   occurence.
-*/
-
-
-static time_t ecl_file_iget_restart_sim_date__(const ecl_file_type * restart_file , int occurence) {
-  ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( restart_file , INTEHEAD_KW , occurence );
-  return INTEHEAD_date( intehead_kw );
-}
-
-
-time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int occurence ) {
-  return ecl_file_iget_restart_sim_date__( restart_file , occurence );
-}
 
 /*
   The input @file must be either an INIT file or a restart file. Will
@@ -462,174 +377,7 @@ int ecl_file_get_phases( const ecl_file_type * init_file ) {
   return phases;
 }
 
-/**
-   This function will scan through the ecl_file looking for INTEHEAD
-   headers corresponding to sim_time. If sim_time is found the
-   function will return the INTEHEAD occurence number, i.e. for a
-   unified restart file like:
 
-     INTEHEAD  /  01.01.2000
-     ...
-     PRESSURE
-     SWAT
-     ...
-     INTEHEAD  /  01.03.2000
-     ...
-     PRESSURE
-     SWAT
-     ...
-     INTEHEAD  /  01.05.2000
-     ...
-     PRESSURE
-     SWAT
-     ....
-
-   The function call:
-
-      ecl_file_get_restart_index( restart_file , (time_t) "01.03.2000")
-
-   will return 1. Observe that this will in general NOT agree with the
-   DATES step number.
-
-   If the sim_time can not be found the function will return -1, that
-   includes the case when the file in question is not a restart file
-   at all, and no INTEHEAD headers can be found.
-   
-   Observe that the function requires on-the-second-equality; which is
-   of course quite strict.
-*/
-
-
-int ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_time) {
-  int num_INTEHEAD = ecl_file_get_num_named_kw( restart_file , INTEHEAD_KW );
-  if (num_INTEHEAD == 0)
-    return -1;       /* We have no INTEHEAD headers - probably not a restart file at all. */
-  else {
-    /*
-      Should probably do something smarter than a linear search; but I dare not
-      take the chance that all INTEHEAD headers are properly set. This is from
-      Schlumberger after all.
-    */
-    int index = 0;
-    while (true) {
-      time_t itime = ecl_file_iget_restart_sim_date__( restart_file , index );
-      
-      if (itime == sim_time) /* Perfect hit. */
-        return index;
-
-      if (itime > sim_time)  /* We have gone past the target_time - i.e. we do not have it. */
-        return -1;
-      
-      index++;
-      if (index == num_INTEHEAD)  /* We have iterated through the whole thing without finding sim_time. */
-        return -1;
-    }
-  }
-}
-
-
-/**
-   Will look through the unified restart file and load the section
-   corresponding to report_step 'report_step'. If the report_step can
-   not be found the function will return NULL.
-
-   The ecl_file_fread_alloc_unrst_section() function positions the
-   fortio pointer correctly in the file, and then calls the
-   ecl_file_fread_alloc_restart_section() function which does the
-   actual loading.
-*/
-
-ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step) {
-  ecl_kw_type * seqnum_kw  = ecl_kw_alloc_new( SEQNUM_KW , 1 , ECL_INT_TYPE , &report_step);  
-                             /* We will use ecl_kw_equal() based on this kw to find the correct location in the file. */  
-  bool          fmt_file   = ecl_util_fmt_file( filename );
-  fortio_type * fortio     = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
-  FILE * stream            = fortio_get_FILE( fortio );
-  ecl_file_type * ecl_file = NULL;
-  long read_pos            = 0;
-  bool section_found       = false;
-  bool cont                = true;
-  ecl_kw_type * file_kw    = ecl_kw_alloc_empty();
-  do {
-    if (ecl_kw_fseek_kw( SEQNUM_KW , false, false , fortio)) {
-      read_pos              = ftell( stream );
-      if (ecl_kw_fread_header( file_kw , fortio )) {
-        if (ecl_kw_header_eq( file_kw , SEQNUM_KW)) {
-          ecl_kw_alloc_data( file_kw );  /* If we have the right header we continue to read in data. */
-          ecl_kw_fread_data( file_kw , fortio );
-          if (ecl_kw_equal( file_kw , seqnum_kw )) {
-            section_found = true;
-            cont          = false;
-          }
-          ecl_kw_free_data( file_kw ); /* Discard the data */
-        } else
-          ecl_kw_fskip_data( file_kw , fortio );
-      } else
-        cont = false;
-    } else cont = false;
-  } while (cont);
-  ecl_kw_free( file_kw );
-
-  if (section_found) {
-    fseek(stream , read_pos , SEEK_SET);
-    ecl_file = ecl_file_fread_alloc_restart_section( fortio );
-  } 
-  
-  fortio_fclose( fortio );
-  ecl_kw_free( seqnum_kw );
-  
-  return ecl_file;
-}
-
-
-
-/**
-   Will load one restart section from the file @filename corresponding
-   to the time given by @sim_time; if the restart section
-   corresponding to @sim_time can not be found the function will
-   return NULL.
-
-   The function works by scanning through INTEHEAD keywords and
-   looking for a match; if a match is found the
-   ecl_file_fread_alloc_unrst_section() is called for the actual load.
-*/
-
-ecl_file_type * ecl_file_fread_alloc_unrst_section_time( const char * filename , time_t sim_time) {
-  ecl_file_type * restart_section = NULL;
-  bool          fmt_file = ecl_util_fmt_file( filename );
-  fortio_type * fortio   = fortio_fopen( filename , "r" , ECL_ENDIAN_FLIP , fmt_file );
-  ecl_kw_type * seqnum   = ecl_kw_alloc_empty();
-  ecl_kw_type * intehead = ecl_kw_alloc_empty();
-
-  while (true) {
-    
-    if (ecl_kw_fseek_kw( SEQNUM_KW , false , false , fortio)) {
-      long seqnum_pos = fortio_ftell( fortio );
-      ecl_kw_fread_realloc( seqnum , fortio );
-      ecl_kw_fread_realloc( intehead , fortio );
-
-      if (ecl_kw_header_eq( seqnum , SEQNUM_KW) && ecl_kw_header_eq( intehead , INTEHEAD_KW)) {
-        if (INTEHEAD_date( intehead ) == sim_time) {
-          /* We found the correct position. Seek back to the beginning
-             of the seqnum_kw and load the whole thing. */
-          fortio_fseek( fortio , seqnum_pos , SEEK_SET );
-          restart_section = ecl_file_fread_alloc_restart_section( fortio );
-          break;
-        }
-      } else 
-        util_abort("%s: %s does not seem to be a normal restart file. Expected kw sequence: %s %s. Got: %s %s\n",
-                   __func__ , filename, SEQNUM_KW , INTEHEAD_KW , ecl_kw_get_header( seqnum ) , ecl_kw_get_header( intehead ));
-    } else 
-      break;  /* Could not find the section - return NULL */
-    
-  }
-  
-  ecl_kw_free( intehead );
-  ecl_kw_free( seqnum );
-  fortio_fclose( fortio );
-
-  return restart_section;
-}
 
 
 
@@ -909,6 +657,33 @@ bool ecl_file_has_kw_ptr(const ecl_file_type * ecl_file , const ecl_kw_type * ec
   return false;
 }
 
+/*
+  Will search through the whole file given by @filename and look for
+  an ecl_kw instance which compares equal with the input keyword @ecl_kw.
+*/
+  
+bool ecl_file_contains_kw( const char * filename , const ecl_kw_type * ecl_kw) {
+  bool has_kw = false;
+  bool          fmt_file = ecl_util_fmt_file( filename );
+  fortio_type * fortio   = fortio_fopen( filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
+  {
+    ecl_kw_type * file_kw = ecl_kw_alloc_empty();
+    while (true) {
+      if (ecl_kw_fseek_kw(ecl_kw_get_header( ecl_kw ) , false , false , fortio)) {
+        ecl_kw_fread_realloc( file_kw , fortio );
+        if (ecl_kw_equal( file_kw , ecl_kw )) {
+          has_kw = true;
+          break;
+        }
+      } else 
+        break;  /* Keyword not found. */
+    }
+    ecl_kw_free( file_kw );
+  }
+  fortio_fclose( fortio );
+  return has_kw;
+}
+
 
 
 
@@ -1030,3 +805,399 @@ void ecl_file_fprintf_kw_list( const ecl_file_type * ecl_file , FILE * stream ) 
 const char * ecl_file_enum_iget( int index , int * value) {
   return util_enum_iget( index , ECL_FILE_ENUM_SIZE , (const util_enum_element_type []) { ECL_FILE_ENUM_DEFS } , value);
 }
+
+
+/*****************************************************************/
+/*                   R E S T A R T   F I L E S                   */
+/*****************************************************************/
+
+/* 
+   There is no special datastructure for working with restart files,
+   they are mostly stock ecl_file instances with the following limited
+   structure:
+
+    * They are organized in blocks; where each block starts with a
+      SEQNUM keyword, which contains the report step.
+
+    * Each block contains an INTEHEAD keyword which contains the true
+      simulation date of of the block, and also some other
+      data. Observe that also INIT files and GRID files contain an
+      INTEHEAD keyword.
+
+   Here comes a couple of function which make use of this knowledge
+   about the content and structure of restart files.  
+*/
+
+
+static time_t INTEHEAD_date( const ecl_kw_type * intehead_kw ) {
+  return util_make_date( ecl_kw_iget_int( intehead_kw , INTEHEAD_DAY_INDEX)   , 
+                         ecl_kw_iget_int( intehead_kw , INTEHEAD_MONTH_INDEX) , 
+                         ecl_kw_iget_int( intehead_kw , INTEHEAD_YEAR_INDEX)  );
+}
+
+/**
+   Will look through the unified restart file and load the section
+   corresponding to report_step 'report_step'. If the report_step can
+   not be found the function will return NULL.
+
+   The ecl_file_fread_alloc_unrst_section() function positions the
+   fortio pointer correctly in the file, and then calls the
+   ecl_file_fread_alloc_restart_section() function which does the
+   actual loading.
+*/
+
+ecl_file_type * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step) {
+  ecl_kw_type * seqnum_kw  = ecl_kw_alloc_new( SEQNUM_KW , 1 , ECL_INT_TYPE , &report_step);  
+                             /* We will use ecl_kw_equal() based on this kw to find the correct location in the file. */  
+  bool          fmt_file   = ecl_util_fmt_file( filename );
+  fortio_type * fortio     = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
+  FILE * stream            = fortio_get_FILE( fortio );
+  ecl_file_type * ecl_file = NULL;
+  long read_pos            = 0;
+  bool section_found       = false;
+  bool cont                = true;
+  ecl_kw_type * file_kw    = ecl_kw_alloc_empty();
+  do {
+    if (ecl_kw_fseek_kw( SEQNUM_KW , false, false , fortio)) {
+      read_pos              = ftell( stream );
+      if (ecl_kw_fread_header( file_kw , fortio )) {
+        if (ecl_kw_header_eq( file_kw , SEQNUM_KW)) {
+          ecl_kw_alloc_data( file_kw );  /* If we have the right header we continue to read in data. */
+          ecl_kw_fread_data( file_kw , fortio );
+          if (ecl_kw_equal( file_kw , seqnum_kw )) {
+            section_found = true;
+            cont          = false;
+          }
+          ecl_kw_free_data( file_kw ); /* Discard the data */
+        } else
+          ecl_kw_fskip_data( file_kw , fortio );
+      } else
+        cont = false;
+    } else cont = false;
+  } while (cont);
+  ecl_kw_free( file_kw );
+
+  if (section_found) {
+    fseek(stream , read_pos , SEEK_SET);
+    ecl_file = ecl_file_fread_alloc_restart_section( fortio );
+  } 
+  
+  fortio_fclose( fortio );
+  ecl_kw_free( seqnum_kw );
+  
+  return ecl_file;
+}
+
+
+
+/**
+   Will load one restart section from the file @filename corresponding
+   to the time given by @sim_time; if the restart section
+   corresponding to @sim_time can not be found the function will
+   return NULL.
+
+   The function works by scanning through INTEHEAD keywords and
+   looking for a match; if a match is found the
+   ecl_file_fread_alloc_unrst_section() is called for the actual load.
+*/
+
+ecl_file_type * ecl_file_fread_alloc_unrst_section_time( const char * filename , time_t sim_time) {
+  ecl_file_type * restart_section = NULL;
+  bool          fmt_file = ecl_util_fmt_file( filename );
+  fortio_type * fortio   = fortio_fopen( filename , "r" , ECL_ENDIAN_FLIP , fmt_file );
+  ecl_kw_type * seqnum   = ecl_kw_alloc_empty();
+  ecl_kw_type * intehead = ecl_kw_alloc_empty();
+
+  while (true) {
+    
+    if (ecl_kw_fseek_kw( SEQNUM_KW , false , false , fortio)) {
+      long seqnum_pos = fortio_ftell( fortio );
+      ecl_kw_fread_realloc( seqnum , fortio );
+      ecl_kw_fread_realloc( intehead , fortio );
+
+      if (ecl_kw_header_eq( seqnum , SEQNUM_KW) && ecl_kw_header_eq( intehead , INTEHEAD_KW)) {
+        if (INTEHEAD_date( intehead ) == sim_time) {
+          /* We found the correct position. Seek back to the beginning
+             of the seqnum_kw and load the whole thing. */
+          fortio_fseek( fortio , seqnum_pos , SEEK_SET );
+          restart_section = ecl_file_fread_alloc_restart_section( fortio );
+          break;
+        }
+      } else 
+        util_abort("%s: %s does not seem to be a normal restart file. Expected kw sequence: %s %s. Got: %s %s\n",
+                   __func__ , filename, SEQNUM_KW , INTEHEAD_KW , ecl_kw_get_header( seqnum ) , ecl_kw_get_header( intehead ));
+    } else 
+      break;  /* Could not find the section - return NULL */
+    
+  }
+  
+  ecl_kw_free( intehead );
+  ecl_kw_free( seqnum );
+  fortio_fclose( fortio );
+
+  return restart_section;
+}
+
+
+/**
+   This function will look up the INTEHEAD keyword in a ecl_file_type
+   instance, and calculate simulation date from this instance.
+
+   Will return -1 if the requested INTEHEAD keyword can not be found.
+*/
+
+
+static time_t ecl_file_iget_restart_sim_date__(const ecl_file_type * restart_file , int occurence) {
+  if (ecl_file_get_num_named_kw( restart_file , INTEHEAD_KW) > occurence) {
+    ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( restart_file , INTEHEAD_KW , occurence );
+    return INTEHEAD_date( intehead_kw );
+  } else
+    return -1;
+}
+
+
+time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int occurence ) {
+  return ecl_file_iget_restart_sim_date__( restart_file , occurence );
+}
+
+
+
+/**
+   This function will scan through the ecl_file looking for INTEHEAD
+   headers corresponding to sim_time. If sim_time is found the
+   function will return the INTEHEAD occurence number, i.e. for a
+   unified restart file like:
+
+     INTEHEAD  /  01.01.2000
+     ...
+     PRESSURE
+     SWAT
+     ...
+     INTEHEAD  /  01.03.2000
+     ...
+     PRESSURE
+     SWAT
+     ...
+     INTEHEAD  /  01.05.2000
+     ...
+     PRESSURE
+     SWAT
+     ....
+
+   The function call:
+
+      ecl_file_get_restart_index( restart_file , (time_t) "01.03.2000")
+
+   will return 1. Observe that this will in general NOT agree with the
+   DATES step number.
+
+   If the sim_time can not be found the function will return -1, that
+   includes the case when the file in question is not a restart file
+   at all, and no INTEHEAD headers can be found.
+   
+   Observe that the function requires on-the-second-equality; which is
+   of course quite strict.
+*/
+
+
+int ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_time) {
+  int num_INTEHEAD = ecl_file_get_num_named_kw( restart_file , INTEHEAD_KW );
+  if (num_INTEHEAD == 0)
+    return -1;       /* We have no INTEHEAD headers - probably not a restart file at all. */
+  else {
+    /*
+      Should probably do something smarter than a linear search; but I dare not
+      take the chance that all INTEHEAD headers are properly set. This is from
+      Schlumberger after all.
+    */
+    int index = 0;
+    while (true) {
+      time_t itime = ecl_file_iget_restart_sim_date__( restart_file , index );
+      
+      if (itime == sim_time) /* Perfect hit. */
+        return index;
+
+      if (itime > sim_time)  /* We have gone past the target_time - i.e. we do not have it. */
+        return -1;
+      
+      index++;
+      if (index == num_INTEHEAD)  /* We have iterated through the whole thing without finding sim_time. */
+        return -1;
+    }
+  }
+}
+
+
+ecl_file_type * ecl_file_copy_restart_section( const ecl_file_type * src_file , int report_step ) {
+  return ecl_file_alloc_sub_copy( src_file , SEQNUM_KW , report_step );
+}
+
+
+/**
+   The SEQNUM number found in unified restart files corresponds to the 
+   REPORT_STEP.
+*/
+
+ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
+  return ecl_file_fread_alloc_fortio(fortio , SEQNUM_KW);
+}
+
+
+
+
+
+
+
+/**
+   Will look through all the SEQNUM kw instances of the current
+   ecl_file and look for @report_step. If the value is found true is
+   returned, otherwise false.
+*/
+
+bool ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step) {
+  bool has_report_step = false;
+  if ( ecl_file_has_kw( ecl_file , SEQNUM_KW)) {
+    const int_vector_type * seqnum_index_list = hash_get( ecl_file->kw_index , SEQNUM_KW );
+    int index = 0;
+    while (index < int_vector_size( seqnum_index_list )) {
+      const ecl_kw_type * seqnum_kw = ecl_file_iget_kw( ecl_file , int_vector_iget( seqnum_index_list , index ));
+      if (ecl_kw_iget_int( seqnum_kw , 0 ) == report_step) {
+        has_report_step = true;
+        break;
+      }
+      index++;
+    }
+  }
+  return has_report_step;
+}
+
+bool ecl_file_contains_report_step( const char * filename , int report_step) {
+  ecl_kw_type * seqnum_kw = ecl_kw_alloc_new( SEQNUM_KW , 1 , ECL_INT_TYPE , &report_step);
+  bool has_report_step = ecl_file_contains_kw( filename , seqnum_kw );
+  ecl_kw_free( seqnum_kw );
+  return has_report_step;
+}
+
+
+bool ecl_file_contains_sim_time( const char * filename , time_t sim_time) {
+  bool has_sim_time      = false;
+  bool          fmt_file = ecl_util_fmt_file( filename );
+  fortio_type * fortio   = fortio_fopen( filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
+  {
+    ecl_kw_type * intehead_kw = ecl_kw_alloc_empty();
+    while (true) {
+      if (ecl_kw_fseek_kw(INTEHEAD_KW , false , false , fortio)) {
+        ecl_kw_fread_realloc( intehead_kw , fortio );
+        if (INTEHEAD_date( intehead_kw ) == sim_time) {
+          has_sim_time = true;
+          break;
+        }
+      } else 
+        break;  /* Keyword not found. */
+    }
+    ecl_kw_free( intehead_kw );
+  }
+  fortio_fclose( fortio );
+  return has_sim_time;
+}
+
+
+
+/**
+   Will look through all the INTEHEAD kw instances of the current
+   ecl_file and look for @sim_time. If the value is found true is
+   returned, otherwise false.
+*/
+
+bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
+  bool has_sim_time = false;
+  if ( ecl_file_has_kw( ecl_file , INTEHEAD_KW)) {
+    const int_vector_type * intehead_index_list = hash_get( ecl_file->kw_index , INTEHEAD_KW );
+    int index = 0;
+    while (index < int_vector_size( intehead_index_list )) {
+      const ecl_kw_type * intehead_kw = ecl_file_iget_kw( ecl_file , int_vector_iget( intehead_index_list , index ));
+      if (INTEHEAD_date( intehead_kw ) == sim_time) {
+        has_sim_time = true;
+        break;
+      }
+      index++;
+    }
+  }
+  return has_sim_time;
+}
+
+/*****************************************************************/
+/*                   S U M M A R Y   F I L E S                   */
+/*****************************************************************/
+
+/*
+  Summary files are mainly internalized in the ecl_sum.c,
+  ecl_sum_data.c and ecl_smspec.c files; but in particular the
+  ecl_sum_data implementation, which loads the summary files, use a few
+  specialized functions from the ecl_file class.
+*/
+
+
+
+
+/* 
+   This function will allocate a ecl_file_type instance going all the
+   way to the NEXT 'SEQHDR' keyword. Observe that it is assumed that
+   the fortio instance is already positioned at a SEQHDR keyword.
+   
+   Will return NULL if the fortio pointer is already at the end of
+   the file.
+*/
+
+
+ecl_file_type * ecl_file_fread_alloc_summary_section(fortio_type * fortio) {
+  ecl_file_type * summary_section = ecl_file_fread_alloc_fortio(fortio , SEQHDR_KW);
+  return summary_section;
+}
+
+
+/**
+   This file will read and allocate section (i.e. corresponding to one
+   report step), for a unified summary file. If you are going to
+   allocate the whole damned file, you are better off with using
+   ecl_file_fread_alloc_summary_section().
+
+   Observe that there is some counting-fuckup here: The libecl library
+   generally follows C conventions, with all counters starting at
+   zero. However the first report_step in a summary file has (by
+   defintion number 1, i.e. the first summary file is ECLIPSE.S0001),
+   hence this function assumes index to be 1 offset (Ohhh this is so
+   ugly), and then shift it before going further.
+   
+   If the occurence you are asking for can not be found the whole
+   function will return NULL - calling scope has to check this.
+
+   The functions ecl_file_fread_alloc_unsmry_section() and
+   ecl_file_fread_alloc_summary_section() can be considered a pair,
+   where the first is the high level function operating with a
+   filename, and the second (which actually does the work) operates on
+   a fortio instance.
+*/
+
+
+ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int index) {
+  bool          fmt_file   = ecl_util_fmt_file( filename );
+  fortio_type * fortio     = fortio_fopen(filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
+  ecl_file_type * ecl_file = NULL;
+
+  if (ecl_file_ifseek_kw( fortio , SEQHDR_KW , index - 1)) 
+    ecl_file = ecl_file_fread_alloc_summary_section(fortio);
+  else
+    util_abort("%s: sorry - could not lcoate summary report:%d in file:%s \n",__func__ , index , filename);
+  
+  fortio_fclose( fortio );
+  
+  return ecl_file;
+}
+
+
+ecl_file_type * ecl_file_copy_summary_section( const ecl_file_type * src_file , int report_step ) {
+  return ecl_file_alloc_sub_copy( src_file , SEQHDR_KW , report_step );
+}
+
+

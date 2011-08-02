@@ -346,7 +346,6 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav ,
         int    pvtnum = ecl_kw_iget_int( pvtnum_kw , iactive );
         grav_phase->fluid_mass[ iactive ] = fip * double_vector_safe_iget( std_density , pvtnum );
       }
-      
     } else {
       ecl_version_enum      ecl_version = ecl_file_get_ecl_version( init_file );
       const char          * den_kw_name = get_den_kw( phase , ecl_version );
