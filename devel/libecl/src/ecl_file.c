@@ -210,36 +210,11 @@ static bool ecl_file_ifseek_kw(fortio_type * fortio, const char * kw , int occur
 static ecl_file_type * ecl_file_alloc_icopy( const ecl_file_type * src_file , const int_vector_type * index_list) {
   ecl_file_type * copy_file = ecl_file_alloc_empty();
   for (int index=0; index < int_vector_size( index_list ); index++) 
-    vector_append_owned_ref( copy_file->kw_list , ecl_file_icopy_kw( src_file , index ), ecl_kw_free__);
+    vector_append_owned_ref( copy_file->kw_list , ecl_file_icopy_kw( src_file , int_vector_iget(index_list , index) ), ecl_kw_free__);
   
   ecl_file_make_index( copy_file );
+  copy_file->src_file = util_alloc_string_copy( src_file->src_file );
   return copy_file;
-}
-
-
-static ecl_file_type * ecl_file_alloc_sub_copy( const ecl_file_type * src_file , const char * stop_kw , int kw_nr) {
-  if (ecl_file_has_kw( src_file , stop_kw )) {
-    int first_kw = ecl_file_get_global_index( src_file , stop_kw , kw_nr );
-    int last_kw;
-    if (ecl_file_get_num_named_kw( src_file , stop_kw ) > (kw_nr + 1))
-      last_kw = ecl_file_get_global_index( src_file , stop_kw , kw_nr + 1);
-    else
-      last_kw = ecl_file_get_num_kw( src_file );
-    
-    {
-      ecl_file_type * copy_file;
-      {
-        int_vector_type * index_list = int_vector_alloc(0,0);
-        for (int kw_nr = first_kw; kw_nr < last_kw; kw_nr++) 
-          int_vector_append( index_list , kw_nr );
-        copy_file = ecl_file_alloc_icopy( src_file , index_list );
-        int_vector_free( index_list );
-      }
-      
-      return copy_file;
-    }
-  } else
-    return NULL;  /* The stop kw is not there at all. */
 }
 
 
@@ -1028,8 +1003,124 @@ int ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_
 }
 
 
+/**
+   Will look through all the INTEHEAD kw instances of the current
+   ecl_file and look for @sim_time. If the value is found true is
+   returned, otherwise false.
+*/
+
+static int ecl_file_has_sim_time__( const ecl_file_type * ecl_file , time_t sim_time) {
+  int global_index = -1;
+  if ( ecl_file_has_kw( ecl_file , INTEHEAD_KW)) {
+    const int_vector_type * intehead_index_list = hash_get( ecl_file->kw_index , INTEHEAD_KW );
+    int index = 0;
+    while (index < int_vector_size( intehead_index_list )) {
+      const ecl_kw_type * intehead_kw = ecl_file_iget_kw( ecl_file , int_vector_iget( intehead_index_list , index ));
+      if (INTEHEAD_date( intehead_kw ) == sim_time) {
+        global_index = int_vector_iget( intehead_index_list , index );
+        break;
+      }
+      index++;
+    }
+  }
+  return global_index;
+}
+
+
+bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
+  int index = ecl_file_has_sim_time__( ecl_file , sim_time );
+  if (index >= 0)
+    return true;
+  else
+    return false;
+}
+
+/**
+   Will look through all the SEQNUM kw instances of the current
+   ecl_file and look for @report_step. If the value is found true is
+   returned, otherwise false.
+*/
+
+static int ecl_file_has_report_step__( const ecl_file_type * ecl_file , int report_step) {
+  int global_index = -1;
+  if ( ecl_file_has_kw( ecl_file , SEQNUM_KW)) {
+    const int_vector_type * seqnum_index_list = hash_get( ecl_file->kw_index , SEQNUM_KW );
+    int index = 0;
+    while (index < int_vector_size( seqnum_index_list )) {
+      const ecl_kw_type * seqnum_kw = ecl_file_iget_kw( ecl_file , int_vector_iget( seqnum_index_list , index ));
+      if (ecl_kw_iget_int( seqnum_kw , 0 ) == report_step) {
+        global_index = int_vector_iget( seqnum_index_list , index );
+        break;
+      }
+      index++;
+    }
+  }
+  return global_index;
+}
+
+bool ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step) {
+  int index = ecl_file_has_report_step__( ecl_file , report_step );
+  if (index >= 0)
+    return true;
+  else
+    return false;
+}
+
+
 ecl_file_type * ecl_file_copy_restart_section( const ecl_file_type * src_file , int report_step ) {
-  return ecl_file_alloc_sub_copy( src_file , SEQNUM_KW , report_step );
+  int kw_index = ecl_file_has_report_step__( src_file , report_step );
+  if (kw_index >= 0) {
+    ecl_file_type * copy_file;
+    int size = vector_get_size( src_file->kw_list );
+    int_vector_type * index_list = int_vector_alloc( 0 , 0 );
+
+    while (true) {
+      int_vector_append( index_list , kw_index );
+      printf("Adding %s \n",ecl_kw_get_header( ecl_file_iget_kw( src_file , kw_index)));
+      kw_index++;
+      if (kw_index == size) 
+        break;
+      else {
+        ecl_kw_type * ecl_kw = ecl_file_iget_kw( src_file , kw_index );
+        if (ecl_kw_header_eq( ecl_kw , SEQNUM_KW ))
+          break;
+      }
+    }
+    
+    copy_file = ecl_file_alloc_icopy( src_file , index_list );
+    int_vector_free( index_list );
+    return copy_file;
+  } else
+    return NULL;  /* The requested section does not exist. */
+}
+
+ecl_file_type * ecl_file_copy_restart_section_time_t( const ecl_file_type * src_file , time_t sim_time) {
+  int kw_index = ecl_file_has_sim_time__( src_file , sim_time );
+  if (kw_index >= 0) {
+    ecl_file_type * copy_file;
+    int size = vector_get_size( src_file->kw_list );
+    int_vector_type * index_list = int_vector_alloc( 0 , 0 );
+    kw_index--; /* kw_index now points to INTEHEAD - go one back to SEQNUM.*/
+    if (!ecl_kw_header_eq( ecl_file_iget_kw( src_file , kw_index) , SEQNUM_KW))
+      util_abort("%s: malformed restart section \n",__func__);
+    
+    while (true) {
+      int_vector_append( index_list , kw_index );
+      kw_index++;
+      if (kw_index == size) 
+        break;
+      else {
+        ecl_kw_type * ecl_kw = ecl_file_iget_kw( src_file , kw_index );
+        if (ecl_kw_header_eq( ecl_kw , SEQNUM_KW ))
+          break;
+      }
+    }
+
+    copy_file = ecl_file_alloc_icopy( src_file , index_list );
+    int_vector_free( index_list );
+    return copy_file;
+  } else
+    return NULL;  /* The requested section does not exist. */
 }
 
 
@@ -1045,31 +1136,6 @@ ecl_file_type * ecl_file_fread_alloc_restart_section(fortio_type * fortio) {
 
 
 
-
-
-
-/**
-   Will look through all the SEQNUM kw instances of the current
-   ecl_file and look for @report_step. If the value is found true is
-   returned, otherwise false.
-*/
-
-bool ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step) {
-  bool has_report_step = false;
-  if ( ecl_file_has_kw( ecl_file , SEQNUM_KW)) {
-    const int_vector_type * seqnum_index_list = hash_get( ecl_file->kw_index , SEQNUM_KW );
-    int index = 0;
-    while (index < int_vector_size( seqnum_index_list )) {
-      const ecl_kw_type * seqnum_kw = ecl_file_iget_kw( ecl_file , int_vector_iget( seqnum_index_list , index ));
-      if (ecl_kw_iget_int( seqnum_kw , 0 ) == report_step) {
-        has_report_step = true;
-        break;
-      }
-      index++;
-    }
-  }
-  return has_report_step;
-}
 
 bool ecl_file_contains_report_step( const char * filename , int report_step) {
   ecl_kw_type * seqnum_kw = ecl_kw_alloc_new( SEQNUM_KW , 1 , ECL_INT_TYPE , &report_step);
@@ -1103,28 +1169,6 @@ bool ecl_file_contains_sim_time( const char * filename , time_t sim_time) {
 
 
 
-/**
-   Will look through all the INTEHEAD kw instances of the current
-   ecl_file and look for @sim_time. If the value is found true is
-   returned, otherwise false.
-*/
-
-bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
-  bool has_sim_time = false;
-  if ( ecl_file_has_kw( ecl_file , INTEHEAD_KW)) {
-    const int_vector_type * intehead_index_list = hash_get( ecl_file->kw_index , INTEHEAD_KW );
-    int index = 0;
-    while (index < int_vector_size( intehead_index_list )) {
-      const ecl_kw_type * intehead_kw = ecl_file_iget_kw( ecl_file , int_vector_iget( intehead_index_list , index ));
-      if (INTEHEAD_date( intehead_kw ) == sim_time) {
-        has_sim_time = true;
-        break;
-      }
-      index++;
-    }
-  }
-  return has_sim_time;
-}
 
 /*****************************************************************/
 /*                   S U M M A R Y   F I L E S                   */
@@ -1194,10 +1238,4 @@ ecl_file_type * ecl_file_fread_alloc_unsmry_section(const char * filename , int 
   
   return ecl_file;
 }
-
-
-ecl_file_type * ecl_file_copy_summary_section( const ecl_file_type * src_file , int report_step ) {
-  return ecl_file_alloc_sub_copy( src_file , SEQHDR_KW , report_step );
-}
-
 
