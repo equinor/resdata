@@ -206,8 +206,14 @@ static bool ecl_file_ifseek_kw(fortio_type * fortio, const char * kw , int occur
 
 
 
+/**
+   Will create a copy ecl_file instance containing all the ecl_kw
+   instances from index_list; i.e. with index_list = {0,1,9} it will
+   create a copy consisting of elements nr 0,1 and 9 from the src_file
+   instance.  
+*/
 
-static ecl_file_type * ecl_file_alloc_icopy( const ecl_file_type * src_file , const int_vector_type * index_list) {
+ecl_file_type * ecl_file_alloc_icopy( const ecl_file_type * src_file , const int_vector_type * index_list) {
   ecl_file_type * copy_file = ecl_file_alloc_empty();
   for (int index=0; index < int_vector_size( index_list ); index++) 
     vector_append_owned_ref( copy_file->kw_list , ecl_file_icopy_kw( src_file , int_vector_iget(index_list , index) ), ecl_kw_free__);
@@ -794,13 +800,13 @@ const char * ecl_file_enum_iget( int index , int * value) {
     * They are organized in blocks; where each block starts with a
       SEQNUM keyword, which contains the report step.
 
-    * Each block contains an INTEHEAD keyword which contains the true
-      simulation date of of the block, and also some other
-      data. Observe that also INIT files and GRID files contain an
-      INTEHEAD keyword.
+    * Each block contains an INTEHEAD keyword, immediately after the
+      SEQNUM keyword, which contains the true simulation date of of
+      the block, and also some other data. Observe that also INIT
+      files and GRID files contain an INTEHEAD keyword.
 
-   Here comes a couple of function which make use of this knowledge
-   about the content and structure of restart files.  
+   Here comes a couple of function which utilize this knowledge about
+   the content and structure of restart files.
 */
 
 
