@@ -42,7 +42,7 @@ int main (int argc, char **argv) {
       {
         int i;
         for (i=0; i < 68; i++)
-          printf("grav_eval: %g \n",ecl_grav_eval( ecl_grav , "BASE" , "MONITOR" , 541003 , 6709907 , 297.023));
+          printf("grav_eval: %g \n",ecl_grav_eval( ecl_grav , "BASE" , "MONITOR" , 541003 , 6709907 , 297.023 , 0));
       }
 
       ecl_file_free( base_survey );
