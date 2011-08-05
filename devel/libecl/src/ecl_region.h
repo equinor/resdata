@@ -123,6 +123,15 @@ void              ecl_region_cmp_deselect_less( ecl_region_type * ecl_region , c
 void              ecl_region_cmp_select_more( ecl_region_type * ecl_region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2);
 void              ecl_region_cmp_deselect_more( ecl_region_type * ecl_region , const ecl_kw_type * kw1 , const ecl_kw_type * kw2);
 
+void              ecl_region_select_in_cylinder( ecl_region_type * region , double x0 , double y0, double R);
+void              ecl_region_deselect_in_cylinder( ecl_region_type * region , double x0 , double y0, double R);
+void              ecl_region_select_in_zcylinder( ecl_region_type * region , double x0 , double y0, double R , double z1 , double z2);
+void              ecl_region_deselect_in_zcylinder( ecl_region_type * region , double x0 , double y0, double R, double z1 , double z2);
+
+void              ecl_region_select_above_plane( ecl_region_type * region, const double n[3] , const double p[3]);
+void              ecl_region_select_below_plane( ecl_region_type * region, const double n[3] , const double p[3]);
+void              ecl_region_deselect_above_plane( ecl_region_type * region, const double n[3] , const double p[3]);
+void              ecl_region_deselect_below_plane( ecl_region_type * region, const double n[3] , const double p[3]);
 
 /*****************************************************************/
 /* Functions to manipulate ecl_kw instances . */

@@ -879,6 +879,129 @@ void ecl_region_deselect_global_index( ecl_region_type * region , int global_ind
 }
 
 /*****************************************************************/
+
+/**
+   Here comes functions for selecting all the cells which are in the
+   vertical cylinder located at (x0,y0) with radius R. The functions
+   with name 'zcylinder' operate on a finite cylinder in the z
+   direction, specified with the additional arguments z1 and z2; the
+   functions without z1 and z2 arguments operate on an infinite
+   cylinder piercing the complete reservoir.
+
+   Currently all user-exported functions call the
+   ecl_region_clyinder_select__() with select_inside == true.  
+*/
+
+static void ecl_region_cylinder_select__( ecl_region_type * region , double x0 , double y0, double R , double z1 , double z2 , bool select_inside , bool select) {
+  double R2 = R*R;
+
+  if (z1 < z2) {
+    int global_index;
+    for (global_index = 0; global_index < region->grid_vol; global_index++) {
+      double x,y,z;
+      ecl_grid_get_xyz1( region->parent_grid , global_index , &x , &y , &z);
+      if ((z >= z1) && (z <= z2)) {
+        double pointR2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
+        if ((pointR2 < R2) && (select_inside)) 
+          region->active_mask[ global_index ] = select;
+        else if ((pointR2 > R2) && (!select_inside))
+          region->active_mask[ global_index ] = select;
+      }
+    }
+  } else {
+    const int nx = region->grid_nx;
+    const int ny = region->grid_ny;
+    const int nz = region->grid_nz;
+    int i,j;
+    for (i=0; i < nx; i++) {
+      for (j=0; j < ny; j++) {
+        double x,y,z;
+        ecl_grid_get_xyz3( region->parent_grid , i,j,0 , &x , &y , &z);
+        double pointR2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
+        bool select_column = false;
+
+        if ((pointR2 < R2) && (select_inside))
+          select_column = true;
+        else if ((pointR2 > R2) && (!select_inside))
+          select_column = true;
+        
+        if (select_column) {
+          for (int k=0; k < nz; k++) {
+            int global_index = ecl_grid_get_global_index3( region->parent_grid , i,j,k);
+            region->active_mask[ global_index ] = select;
+          }
+        }
+
+      }
+    }
+  }
+  ecl_region_invalidate_index_list( region );
+}
+
+
+void ecl_region_select_in_cylinder( ecl_region_type * region , double x0 , double y0, double R) {
+  ecl_region_cylinder_select__( region , x0 , y0 , R , 1 , 0 , true ,  true );
+}
+
+
+void ecl_region_deselect_in_cylinder( ecl_region_type * region , double x0 , double y0, double R) {
+  ecl_region_cylinder_select__( region , x0 , y0 , R , 1 , 0 , true ,  false );
+}
+
+
+void ecl_region_select_in_zcylinder( ecl_region_type * region , double x0 , double y0, double R , double z1 , double z2) {
+  ecl_region_cylinder_select__( region , x0 , y0 , R , util_double_min(z1 , z2) , util_double_max(z1,z2) , true , true);
+}
+
+
+void ecl_region_deselect_in_zcylinder( ecl_region_type * region , double x0 , double y0, double R, double z1 , double z2) {
+  ecl_region_cylinder_select__( region , x0 , y0 , R , util_double_min(z1 , z2) , util_double_max(z1,z2) , true , false);
+}
+
+/*****************************************************************/
+
+static void ecl_region_plane_select__( ecl_region_type * region, const double n[3] , const double p[3], bool select_above , bool select){ 
+  const double a = n[0];
+  const double b = n[1];
+  const double c = -n[2];
+  const double d = -a*p[0] - b*p[1] - c*p[2];
+  /**
+     Plane: ax + by + cz + d = 0
+  */
+  {
+    int global_index;
+    for (global_index = 0; global_index < region->grid_vol; global_index++) {
+      double x,y,z;
+      double D;
+      ecl_grid_get_xyz1( region->parent_grid , global_index , &x , &y , &z);
+      D = a*x + b*y + c*z + d;
+      if ((D >= 0) && (select_above))
+        region->active_mask[ global_index ] = select;
+      else if ((D < 0) && (!select_above))
+        region->active_mask[ global_index ] = select;
+    }
+  }
+  ecl_region_invalidate_index_list( region );
+}
+
+
+void ecl_region_select_above_plane( ecl_region_type * region, const double n[3] , const double p[3]) {
+  ecl_region_plane_select__( region , n , p , true , true );
+}
+
+void ecl_region_select_below_plane( ecl_region_type * region, const double n[3] , const double p[3]) {
+  ecl_region_plane_select__( region , n , p , false , true );
+}
+
+void ecl_region_deselect_above_plane( ecl_region_type * region, const double n[3] , const double p[3]) {
+  ecl_region_plane_select__( region , n , p , true , false );
+}
+
+void ecl_region_deselect_below_plane( ecl_region_type * region, const double n[3] , const double p[3]) {
+  ecl_region_plane_select__( region , n , p , false , false );
+}
+
+/*****************************************************************/
 /**
    This function will select a cell based on active_index.
 */

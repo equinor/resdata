@@ -282,11 +282,11 @@ static double ecl_grav_phase_eval( const ecl_grav_phase_type * base_phase ,
         double dist_x  = (xpos[index] - utm_x );
         double dist_y  = (ypos[index] - utm_y );
         double dist_z  = (zpos[index] - depth );
-        double dist    = sqrt( dist_x * dist_x + dist_y * dist_y + dist_z * dist_z );
+        double dist    = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z*dist_z );
 
         if (monitor_phase != NULL)
           monitor_mass = monitor_phase->fluid_mass[index];
-
+        
         /**
            The Gravitational constant is 6.67E-11 N (m/kg)^2, we
            return the result in microGal, i.e. we scale with 10^2 * 
@@ -300,7 +300,6 @@ static double ecl_grav_phase_eval( const ecl_grav_phase_type * base_phase ,
         deltag += 6.67428E-3*(monitor_mass - base_mass) * dist_z/(dist * dist * dist );
       }
     }
-
     return deltag;
   } else {
     util_abort("%s comparing different phases ... \n",__func__);
@@ -314,7 +313,7 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav ,
                                                    ecl_phase_enum phase , 
                                                    const ecl_file_type * restart_file, 
                                                    grav_calc_type calc_type) {
-
+  
   const ecl_file_type * init_file             = ecl_grav->init_file;
   const ecl_grav_grid_cache_type * grid_cache = ecl_grav->grid_cache;
   const char * sat_kw_name                    = ecl_util_get_phase_name( phase );
@@ -647,18 +646,18 @@ static void ecl_grav_survey_free__( void * __grav_survey ) {
 
 static double ecl_grav_survey_eval( const ecl_grav_survey_type * base_survey, 
                                     const ecl_grav_survey_type * monitor_survey , 
-                                    double utm_x , double utm_y , double depth) {
+                                    double utm_x , double utm_y , double depth, int phase_mask) {
   int phase_nr;
   double deltag = 0;
   for (phase_nr = 0; phase_nr < vector_get_size( base_survey->phase_list ); phase_nr++) {
     const ecl_grav_phase_type * base_phase    = vector_iget_const( base_survey->phase_list , phase_nr );
-    
-    if (monitor_survey != NULL) {
-      const ecl_grav_phase_type * monitor_phase = vector_iget_const( monitor_survey->phase_list , phase_nr );
-      deltag += ecl_grav_phase_eval( base_phase , monitor_phase , utm_x , utm_y , depth );
-    } else
-      deltag += ecl_grav_phase_eval( base_phase , NULL , utm_x , utm_y , depth );
-
+    if (base_phase->phase & phase_mask) {
+      if (monitor_survey != NULL) {
+        const ecl_grav_phase_type * monitor_phase = vector_iget_const( monitor_survey->phase_list , phase_nr );
+        deltag += ecl_grav_phase_eval( base_phase , monitor_phase , utm_x , utm_y , depth );
+      } else
+        deltag += ecl_grav_phase_eval( base_phase , NULL , utm_x , utm_y , depth );
+    }
   }
   return deltag;
 }
@@ -738,11 +737,11 @@ static ecl_grav_survey_type * ecl_grav_get_survey( const ecl_grav_type * grav , 
 
 
 
-double ecl_grav_eval( const ecl_grav_type * grav , const char * base, const char * monitor , double utm_x, double utm_y , double depth) {
+double ecl_grav_eval( const ecl_grav_type * grav , const char * base, const char * monitor , double utm_x, double utm_y , double depth, int phase_mask) {
   ecl_grav_survey_type * base_survey    = ecl_grav_get_survey( grav , base );
   ecl_grav_survey_type * monitor_survey = ecl_grav_get_survey( grav , monitor );
 
-  return ecl_grav_survey_eval( base_survey , monitor_survey , utm_x , utm_y , depth );
+  return ecl_grav_survey_eval( base_survey , monitor_survey , utm_x , utm_y , depth , phase_mask);
 }
 
 /******************************************************************/

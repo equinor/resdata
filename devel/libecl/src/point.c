@@ -24,6 +24,14 @@
 
 
 
+void point_mapaxes_transform( point_type * p , const double origo[2], const double unit_x[2] , const double unit_y[2]) {
+  double new_x =  origo[0] + p->x*unit_x[0] + p->y*unit_y[0];
+  double new_y =  origo[1] + p->x*unit_x[1] + p->y*unit_y[1];
+    
+  p->x = new_x;
+  p->y = new_y;
+}
+
 
 void point_compare( const point_type *p1 , const point_type * p2, bool * equal) {
   const double tolerance = 0.0001;

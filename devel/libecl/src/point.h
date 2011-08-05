@@ -30,7 +30,7 @@ struct point_struct {
   double z;
 };
 
-
+void         point_mapaxes_transform( point_type * p , const double origo[2] , const double unit_x[2] , const double unit_y[2]);
 point_type * point_alloc_empty( );
 void         point_inplace_sub(point_type * point , const point_type * sub);
 void         point_inplace_add(point_type * point , const point_type * add);

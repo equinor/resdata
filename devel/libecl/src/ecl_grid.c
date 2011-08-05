@@ -366,8 +366,9 @@ struct ecl_grid_struct {
   hash_type           * LGR_hash;      /* A hash of pointers to ecl_grid instances - for name based lookup of LGR. */
   int                   parent_box[6]; /* Integers i1,i2, j1,j2, k1,k2 of the parent grid region containing this LGR. The indices are INCLUSIVE - zero offset */
                                        /* Not used yet .. */ 
-
-  double                rotation;
+  bool                  use_mapaxes;
+  double                unit_x[2];
+  double                unit_y[2];
   double                origo[2];
   /*------------------------------:       The fields below this line are used for blocking algorithms - and not allocated by default.*/
   int                    block_dim; /* == 2 for maps and 3 for fields. 0 when not in use. */
@@ -525,6 +526,13 @@ static void ecl_cell_fprintf( const ecl_cell_type * cell , FILE * stream ) {
 }
 
 
+static void ecl_cell_mapaxes_transform( ecl_cell_type * cell , const double origo[2] , const double unit_x[2] , const double unit_y[2]) {
+  for (int i=0; i < 8; i++) {
+    point_type * point = cell->corner_list[i];
+    point_mapaxes_transform( point , origo , unit_x , unit_y);
+  }
+  point_mapaxes_transform( cell->center , origo , unit_x , unit_y );
+}
 
 
 static void ecl_cell_init_tetrahedron( const ecl_cell_type * cell , tetrahedron_type * tet , int method_nr , int tetrahedron_nr) {
@@ -768,9 +776,15 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_n
   grid->inv_index_map = NULL;
   grid->index_map     = NULL;
   grid->cells         = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
-  grid->rotation      = 0;
+  
+  grid->unit_x[0]     = 1;
+  grid->unit_x[0]     = 0;
+  grid->unit_x[0]     = 0;
+  grid->unit_x[0]     = 1;
   grid->origo[0]      = 0;
   grid->origo[1]      = 0;
+
+  grid->use_mapaxes   = false;
   {
     int i;
     for (i=0; i < grid->size; i++)
@@ -805,6 +819,18 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
     point_inplace_scale(cell->center , 1.0 / 8.0);
   }
 }
+
+
+static void ecl_grid_mapaxes_transform( ecl_grid_type * ecl_grid ) {
+  if (ecl_grid->use_mapaxes) {
+    int i;
+    for (i=0; i < ecl_grid->size; i++) {
+      ecl_cell_type * cell = ecl_grid->cells[i];
+      ecl_cell_mapaxes_transform( cell , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
+    }
+  }
+}
+
 
 
 static inline int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid , int i , int j , int k) {
@@ -942,10 +968,28 @@ static void ecl_grid_pillar_cross_planes(const point_type * pillar , const doubl
 }
 
 
+/**
+   The functional form given by mapaxes allows for distortions; I have
+   assumed that does not take place.  
+*/
+
 static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , const float * mapaxes) {
-  ecl_grid->rotation = 0;
-  ecl_grid->origo[0] = 0;
-  ecl_grid->origo[1] = 0;
+  const double unit_y[2] = {mapaxes[0] - mapaxes[2] , mapaxes[1] - mapaxes[3]};
+  const double unit_x[2] = {mapaxes[4] - mapaxes[2] , mapaxes[5] - mapaxes[3]};
+  
+  {
+    double norm_x = 1.0/sqrt( unit_x[0]*unit_x[0] + unit_x[1]*unit_x[1] );
+    double norm_y = 1.0/sqrt( unit_y[0]*unit_y[0] + unit_y[1]*unit_y[1] );
+
+    ecl_grid->unit_x[0] = unit_x[0] * norm_x;
+    ecl_grid->unit_x[1] = unit_x[1] * norm_x;
+    ecl_grid->unit_y[0] = unit_y[0] * norm_y;
+    ecl_grid->unit_y[1] = unit_y[1] * norm_y;
+  }
+  ecl_grid->origo[0] = mapaxes[2];
+  ecl_grid->origo[1] = mapaxes[3];
+    
+  ecl_grid->use_mapaxes = true;
 }
 
 
@@ -1136,12 +1180,13 @@ static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid , int j1 , int 
 
 static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, int grid_nr) {
   ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(nx,ny,nz,grid_nr);
-  
-  ecl_grid_init_GRDECL_data__( ecl_grid , 0 , ny , zcorn , coord , actnum);
+
   if (mapaxes != NULL)
     ecl_grid_init_mapaxes( ecl_grid , mapaxes );
+  ecl_grid_init_GRDECL_data__( ecl_grid , 0 , ny , zcorn , coord , actnum);
     
   ecl_grid_set_center(ecl_grid);
+  ecl_grid_mapaxes_transform( ecl_grid );
   ecl_grid_update_index( ecl_grid );
   ecl_grid_taint_cells( ecl_grid );
   return ecl_grid;
@@ -1313,6 +1358,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
   }
   
   ecl_grid_set_center(grid);
+  ecl_grid_mapaxes_transform( grid );
   ecl_grid_update_index( grid );
   if (grid_nr > 0) ecl_grid_set_lgr_name_GRID(grid , ecl_file , grid_nr);
   ecl_grid_taint_cells( grid );
