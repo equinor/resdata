@@ -26,8 +26,8 @@ int main (int argc, char **argv) {
     char * grid_file = ecl_util_alloc_exfilename( path , base , ECL_EGRID_FILE , false , 0 );
     char * init_file = ecl_util_alloc_exfilename( path , base , ECL_INIT_FILE , false , 0 );
     char * restart_file = ecl_util_alloc_exfilename( path , base , ECL_UNIFIED_RESTART_FILE , false , 0 );
-
-    ecl_grav_type * ecl_grav = ecl_grav_alloc( grid_file , init_file );
+    
+    ecl_grav_type * ecl_grav = NULL; //ecl_grav_alloc( grid_file , init_file );
     {
       ecl_file_type * base_survey    = ecl_file_fread_alloc_unrst_section( restart_file , 117 );
       ecl_file_type * monitor_survey = ecl_file_fread_alloc_unrst_section( restart_file , 199 );

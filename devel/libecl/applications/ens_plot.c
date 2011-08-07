@@ -34,6 +34,7 @@
 #include <arg_pack.h>
 #include <statistics.h>
 #include <thread_pool.h>
+#include <pthread.h>
 
 /*******************************************************************/
 /**
@@ -125,6 +126,7 @@ bool use_viewer = false ; // Global variable to enable backwords compatible beha
 
 typedef struct {
   vector_type         * data;               /* This is a vector ecl_sum instances - actually holding the data. */
+  pthread_mutex_t       data_mutex;         /* mutex ensuring serial write access to the data vector. */
 
   plot_style_type       plot_style;         /* LINE | POINTS | LINE_POINTS */ 
   plot_color_type       plot_color;         /* See available colors in libplot/include/plot_const.h */
@@ -228,6 +230,24 @@ void ens_clear_quantiles( ens_type * ens ) {
   vector_clear( ens->quantile_data );
 }
 
+void ens_add_data__( ens_type * ens, void * data  , free_ftype * destructor) {
+  pthread_mutex_lock( &ens->data_mutex );
+  {
+    vector_append_owned_ref( ens->data , data , destructor );
+  }
+  pthread_mutex_unlock( &ens->data_mutex );
+}
+
+void ens_add_sum( ens_type * ens, ecl_sum_type * ecl_sum ) {
+  ens_add_data__( ens , ecl_sum , ecl_sum_free__);
+}
+
+
+void ens_add_rft( ens_type * ens, ecl_rft_file_type * rft ) {
+  ens_add_data__( ens , rft , ecl_rft_file_free__);
+}
+
+
 /** 
     Allocating an empty ens_type instance, with all plotting
     attributes initialized to default values.
@@ -238,13 +258,14 @@ void ens_clear_quantiles( ens_type * ens ) {
 ens_type * ens_alloc() {
   ens_type * ens   = util_malloc( sizeof * ens, __func__);
   ens->data        = vector_alloc_new();
+  pthread_mutex_init( &ens->data_mutex , NULL );
   /* Quantyile related stuff. */
   ens->quantiles     = double_vector_alloc(0 , 0);
   ens->interp_days      = double_vector_alloc(0 , 0); 
   ens->interp_data   = vector_alloc_new();
   ens->quantile_data = vector_alloc_new();
   ens->sim_length    = 0;
-
+  
   /* Setting defaults for the plot */
   ens_set_style( ens , LINE );
   ens_set_color( ens , BLUE );
@@ -261,6 +282,7 @@ ens_type * ens_alloc() {
 
 void ens_free( ens_type * ens) {
   vector_free( ens->data );
+  pthread_mutex_destroy( &ens->data_mutex );
   double_vector_free( ens->quantiles );
   double_vector_free( ens->interp_days  );
   vector_free( ens->interp_data );
@@ -287,7 +309,7 @@ void ens_load_summary(ens_type * ens, const char * data_file) {
     fflush(stdout);
     {
       ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( data_file , KEY_JOIN_STRING );
-      vector_append_owned_ref( ens->data , ecl_sum , ecl_sum_free__);
+      ens_add_sum( ens , ecl_sum );
       ens->sim_length = util_double_max( ens->sim_length , ecl_sum_get_sim_length( ecl_sum ));
     }
     vector_append_owned_ref( ens->interp_data , double_vector_alloc(0,0) , double_vector_free__ );
@@ -309,7 +331,7 @@ void ens_load_rft(ens_type * ens, const char * data_file) {
     if(rft_file != NULL){
       printf("Loading case: %s/%s ... ",path , base);
       fflush(stdout);
-      vector_append_owned_ref( ens->data , ecl_rft_file_alloc( rft_file) , ecl_rft_file_free__);
+      ens_add_rft( ens , ecl_rft_file_alloc( rft_file));
       printf("\n");
       free( base );
       util_safe_free( path );
@@ -330,7 +352,7 @@ void ens_load_batch(ens_type* ens, ens_type* ens_rft, const char * data_file) {
     util_alloc_file_components( data_file , &path , &base , NULL);
     {
       ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( data_file , KEY_JOIN_STRING );
-      vector_append_owned_ref( ens->data , ecl_sum , ecl_sum_free__);
+      ens_add_sum( ens , ecl_sum );
       ens->sim_length = util_double_max( ens->sim_length , ecl_sum_get_sim_length( ecl_sum ));
     }
     vector_append_owned_ref( ens->interp_data , double_vector_alloc(0,0) , double_vector_free__ );
@@ -338,7 +360,7 @@ void ens_load_batch(ens_type* ens, ens_type* ens_rft, const char * data_file) {
     char * rft_file = ecl_util_alloc_exfilename( path, base, ECL_RFT_FILE, false, -1 ); 
 
     if(rft_file != NULL){
-      vector_append_owned_ref( ens_rft->data , ecl_rft_file_alloc( rft_file) , ecl_rft_file_free__);
+      ens_add_rft( ens_rft , ecl_rft_file_alloc( rft_file));
       sprintf(message,"Case %s loaded",base) ;
       info_reply(message) ;
     } else {
@@ -1067,25 +1089,24 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
       util_split_string(key , ":" , &num_tokens , &token_list);  
 
       if(num_tokens != 3){
-	sprintf(message,"The key %s does not exist", key);
-	error_reply(message) ;
-	return;
+        sprintf(message,"The key %s does not exist", key);
+        error_reply(message) ;
+        return;
       }
       
       if(strcmp(token_list[0],"RFT") != 0){
-	sprintf(message,"The key %s does not exist", key);
-	error_reply(message) ;
-	failed = true ;
-	char tmp[32];    
-	scanf("%s" , tmp);
+        sprintf(message,"The key %s does not exist", key);
+        error_reply(message) ;
+        failed = true ;
+        char tmp[32];    
+        scanf("%s" , tmp);
       }
       else{
-	well = token_list[1];
-	date = token_list[2];
-	survey_time ;
-	util_sscanf_date(date , &survey_time) ;  
-	sprintf(message,"Will plot %s",key) ;
-	info_reply(message) ;
+        well = token_list[1];
+        date = token_list[2];
+        util_sscanf_date(date , &survey_time) ;  
+        sprintf(message,"Will plot %s",key) ;
+        info_reply(message) ;
       }
     } else if (strcmp(ens_name, "_stop_") == 0) {
       complete = true ;
@@ -1404,7 +1425,7 @@ void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
   char * base;
   
 
-  while (1){
+  while (1) {
     char * data_file = NULL;
     line = util_alloc_stdin_line();
     
