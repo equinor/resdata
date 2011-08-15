@@ -34,6 +34,7 @@
 #include <arg_pack.h>
 #include <statistics.h>
 #include <thread_pool.h>
+#include <signal.h>
 #include <pthread.h>
 
 /*******************************************************************/
@@ -181,6 +182,13 @@ void info_reply(char* message)
   printf("INFO: %s\n",message) ;
   fflush(stdout) ;
 };
+
+void install_SIGNALS(void) {
+  signal(SIGSEGV , util_abort_signal);    /* Segmentation violation, i.e. overwriting memory ... */
+  signal(SIGINT  , util_abort_signal);    /* Control C */
+  signal(SIGTERM , util_abort_signal);    /* If killing the program with SIGTERM (the default kill signal) you will get a backtrace. 
+                                             Killing with SIGKILL (-9) will not give a backtrace.*/
+}
 
 
 
@@ -352,13 +360,20 @@ void ens_load_batch(ens_type* ens, ens_type* ens_rft, const char * data_file) {
     util_alloc_file_components( data_file , &path , &base , NULL);
     {
       ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( data_file , KEY_JOIN_STRING );
-      ens_add_sum( ens , ecl_sum );
-      ens->sim_length = util_double_max( ens->sim_length , ecl_sum_get_sim_length( ecl_sum ));
+      if (ecl_sum != NULL){
+	ens_add_sum( ens , ecl_sum );
+	ens->sim_length = util_double_max( ens->sim_length , ecl_sum_get_sim_length( ecl_sum ));
+	vector_append_owned_ref( ens->interp_data , double_vector_alloc(0,0) , double_vector_free__ );
+      }
+      else{
+	sprintf(message,"No summary file for case %s loaded",base) ;
+	warning_reply(message) ;
+      }
     }
-    vector_append_owned_ref( ens->interp_data , double_vector_alloc(0,0) , double_vector_free__ );
+    
     
     char * rft_file = ecl_util_alloc_exfilename( path, base, ECL_RFT_FILE, false, -1 ); 
-
+    
     if(rft_file != NULL){
       ens_add_rft( ens_rft , ecl_rft_file_alloc( rft_file));
       sprintf(message,"Case %s loaded",base) ;
@@ -367,7 +382,7 @@ void ens_load_batch(ens_type* ens, ens_type* ens_rft, const char * data_file) {
       sprintf(message,"No RFT for case %s loaded",base) ;
       warning_reply(message) ;
     } ;
-
+    
     free( base );
     util_safe_free( path );
   } else {
@@ -382,7 +397,7 @@ void * ens_load_batch__(void * arg) {
   ens_type * ens         = arg_pack_iget_ptr( arg_pack , 0 );
   ens_type * ens_rft     = arg_pack_iget_ptr( arg_pack , 1 );
   const char * data_file = arg_pack_iget_ptr( arg_pack , 2 );
-
+  
   ens_load_batch( ens, ens_rft , data_file );
   return NULL;
 }
@@ -771,13 +786,21 @@ void set_range_rft(plot_type * plot){
 }
 
 double get_rft_depth (hash_type * ens_table, char * well, int i, int j, int k) {
-  ens_type * ens;
+
+  ens_type * ens = NULL;
   
   {
     hash_iter_type * ens_iter = hash_iter_alloc( ens_table );
-    ens = hash_iter_get_next_value( ens_iter );
-    hash_iter_free( ens_iter );
+    while (!hash_iter_is_complete( ens_iter )) {
+      ens = hash_iter_get_next_value( ens_iter );
+      if (ens !=NULL && ens->data && vector_get_size(ens->data) > 0){
+	hash_iter_free( ens_iter );
+	break;
+      }
+    }
   }
+  
+  
   const ecl_rft_file_type * ecl_rft = vector_iget_const( ens->data , 0 );
   const ecl_rft_node_type * ecl_rft_node = ecl_rft_file_iget_well_rft(ecl_rft, well, 0);
   const int node_size = ecl_rft_node_get_size(ecl_rft_node);
@@ -1046,24 +1069,31 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
   plot_set_window_size(plot , PLOT_WIDTH , PLOT_HEIGHT);
   plot_set_labels(plot , "Pressure" , "Depth" , key);
   
-  
+
   char ens_name[32];    
   int iens;
   int ens_size;
-  
-  ens_type * ens;
-  {
-    hash_iter_type * ens_iter = hash_iter_alloc( ens_rft_table );
-    ens = hash_iter_get_next_value( ens_iter );
-    hash_iter_free( ens_iter );
-  }
-  
+  bool ens_ok = false;
   
   // Check if there is anything to plot
-   if (!ens || !(ens->data) || vector_get_size(ens->data) <= 0) { // Denne satt langt inne !!!!
+  ens_type * ens = NULL;
+  {
+    hash_iter_type * ens_iter = hash_iter_alloc( ens_rft_table );
+    while (!hash_iter_is_complete( ens_iter )) {
+      ens = hash_iter_get_next_value( ens_iter );
+      if (ens != NULL && ens->data && vector_get_size(ens->data) > 0){
+	hash_iter_free( ens_iter );
+	ens_ok = true;
+	break;
+      }
+    }
+  }
+  
+  if (!ens_ok) { 
     error_reply("No ensembles or RFT files to plot\n");
     return;
   }
+  
 
   const ecl_rft_file_type * ecl_rft = vector_iget_const( ens->data , 0 );
   
@@ -1113,7 +1143,16 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
     } else if (hash_has_key(ens_rft_table , ens_name)){
       ens = hash_get(ens_rft_table , ens_name);
       
+      // Check if there is anything to plot
+      if (ens == NULL  || !(ens->data) || vector_get_size(ens->data) <= 0) { // Denne satt langt inne !!!!
+	sprintf(message,"No RFT files to plot in ensemble %s\n", ens_name);
+	error_reply(message);
+	return;
+      }
+
       ens_size = vector_get_size( ens->data );
+
+      
       // Check if the rft file has the requested well and date
       for (iens = 0; iens < ens_size && !failed; iens++) {
         ecl_rft = vector_iget_const( ens->data , iens );
@@ -1191,22 +1230,29 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
   plot_set_labels(plot , "Date" , key , key);
   
   // get the simulation start time, to be used in plot_meas_file
-  ens_type * ens;
+  ens_type * ens = NULL;
+  bool ens_ok = false;
   {
     hash_iter_type * ens_iter = hash_iter_alloc( ens_table );
-    ens = hash_iter_get_next_value( ens_iter );
-    hash_iter_free( ens_iter );
+    while (!hash_iter_is_complete( ens_iter )) {
+      ens = hash_iter_get_next_value( ens_iter );
+      if (ens != NULL && ens->data && vector_get_size(ens->data) > 0){
+	hash_iter_free( ens_iter );
+	ens_ok = true;
+	break;
+      }
+    }
   }
   
-  if (!ens || !(ens->data) || vector_get_size(ens->data) <= 0) { // Denne satt langt inne !!!!
-    error_reply("No ensembles found") ;
+  if ( !ens_ok ) { 
+    error_reply("No ensembles or summary files to plot\n");
     return ;
   } ;
+  
   const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , 0 );
   
   time_t start_time       = ecl_sum_get_start_time( ecl_sum );
   time_t end_time         = ecl_sum_get_end_time( ecl_sum );
-  //  time_t start_time       = ecl_sum_get_start_time(ecl_sum);
 
   sprintf(message,"Will plot %s",key) ;
   info_reply(message) ;
@@ -1236,6 +1282,13 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
     }  else  if (hash_has_key( ens_table , ens_name)){
       ens = hash_get(ens_table , ens_name);
       
+      // Check if there is anything to plot
+      if (ens == NULL || !(ens->data) || vector_get_size(ens->data) <= 0) { // Denne satt langt inne !!!!
+	sprintf(message,"No files to plot in ensemble %s\n", ens_name);
+	error_reply(message);
+	return;
+      }
+
       ens_size = vector_get_size( ens->data );
       // Check if the summary file has the requested key
       for (iens = 0; iens < ens_size && !failed; iens++) {
@@ -1424,9 +1477,9 @@ void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
   
   char * base;
   
-
   while (1) {
     char * data_file = NULL;
+    
     line = util_alloc_stdin_line();
     
     if(strcmp(line, "_stop_") == 0){
@@ -1448,7 +1501,7 @@ void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
       arg_pack_append_ptr( arg_pack , ens );
       arg_pack_append_ptr( arg_pack , ens_rft );
       arg_pack_append_owned_ptr( arg_pack , data_file , free);   /* The arg pack takes ownership of the data_file pointer. */
-      
+
       thread_pool_add_job(tp , ens_load_batch__ , arg_pack );
       //ens_load_batch(ens , ens_rft , data_file) ;
     } else {
@@ -1523,9 +1576,12 @@ void print_usage() {
 /*****************************************************************/
 
 int main(int argc , char ** argv) {
+  install_SIGNALS();
   
   //setvbuf(stdout, NULL, _IOFBF, 0);
   
+
+
   if(argc > 1){
     if(strcmp(argv[1], "-b") == 0 || strcmp(argv[1], "-s") == 0) {
       if (strcmp(argv[1], "-b") == 0) {
