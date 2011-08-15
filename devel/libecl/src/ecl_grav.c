@@ -33,14 +33,16 @@
 
 /**
    This file contains datastructures for calculating changes in
-   gravitational response in reservoars. The main datastructure is the
+   gravitational response in reservoirs. The main datastructure is the
    ecl_grav_type structure (which is the only structure which is
    exported). 
 */
 
 /**
    The various #define symbols listed here are the names of the
-   keywords used for various things in the remaining part of the code.
+   keywords used for various things in the remaining part of the code;
+   they are typically used to look keywords from INIT or RESTART
+   files.
 */
 
 #define AQUIFER_KW              "AQUIFERN"
@@ -67,7 +69,7 @@
 
 
 #define GRAV_CALC_USE_PORV 128
-#define GRAV_CALC_USE_RHO  256    // Not currently used
+#define GRAV_CALC_USE_RHO  256    // The GRAV_CALC_USE_RHO value is currently not used.
 
 typedef enum {
   GRAV_CALC_RPORV  = 1 + GRAV_CALC_USE_PORV + GRAV_CALC_USE_RHO, 
@@ -92,8 +94,10 @@ struct ecl_grav_struct {
   ecl_grav_grid_cache_type * grid_cache;  /* An internal specialized structure to facilitate fast grid lookup. */
   hash_type                * surveys;     /* A hash table containg ecl_grav_survey_type instances; one instance
                                              for each interesting time. */
-  hash_type                * std_density; /* Hash table indexed with "SWAT" , "SGAS" and "SOIL"; each element is a
-                                             double_vector() instance which is indexed by PVTNUM values. */
+  hash_type                * std_density; /* Hash table indexed with "SWAT" , "SGAS" and "SOIL"; each element
+                                             is a double_vector() instance which is indexed by PVTNUM
+                                             values. Used to lookup standard condition mass densities. Must
+                                             be suuplied by user __BEFORE__ adding a FIP based survey. */
 };
 
 
@@ -764,16 +768,13 @@ static ecl_grav_survey_type * ecl_grav_get_survey( const ecl_grav_type * grav , 
 
 
 
-double ecl_grav_eval_region( const ecl_grav_type * grav , const char * base, const char * monitor , ecl_region_type * region , double utm_x, double utm_y , double depth, int phase_mask) {
+double ecl_grav_eval( const ecl_grav_type * grav , const char * base, const char * monitor , ecl_region_type * region , double utm_x, double utm_y , double depth, int phase_mask) {
   ecl_grav_survey_type * base_survey    = ecl_grav_get_survey( grav , base );
   ecl_grav_survey_type * monitor_survey = ecl_grav_get_survey( grav , monitor );
 
   return ecl_grav_survey_eval( base_survey , monitor_survey , region , utm_x , utm_y , depth , phase_mask);
 }
 
-double ecl_grav_eval( const ecl_grav_type * grav , const char * base, const char * monitor , double utm_x, double utm_y , double depth, int phase_mask) {
-  return ecl_grav_eval_region( grav , base , monitor , NULL , utm_x , utm_y , depth , phase_mask);
-}
 
 /******************************************************************/
 /* The functions ecl_grav_new_std_density() and ecl_grav_add_std_density() are

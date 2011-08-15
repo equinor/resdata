@@ -48,6 +48,13 @@ const char     * ecl_file_get_src_file( const ecl_file_type * ecl_file );
 int              ecl_file_iget_occurence( const ecl_file_type *  ecl_file , int index);
 ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file );
 
+ecl_file_type * ecl_file_fread_alloc_selected_kw(const char * filename ,
+                                                 const stringlist_type * kw_list );
+
+
+ecl_file_type * ecl_file_fread_alloc_selected_kw_fortio(fortio_type * fortio , 
+                                                        const stringlist_type * kw_list , 
+                                                        const char * stop_kw );
 
 ecl_file_type  * ecl_file_alloc_empty( );
 ecl_file_type  * ecl_file_fread_alloc_RFT_section(fortio_type *     fortio);

@@ -225,6 +225,76 @@ ecl_file_type * ecl_file_alloc_icopy( const ecl_file_type * src_file , const int
 
 
 
+ecl_file_type * ecl_file_fread_alloc_selected_kw_fortio(fortio_type * fortio , 
+                                                        const stringlist_type * kw_list , 
+                                                        const char * stop_kw ) {
+  
+  ecl_file_type * ecl_file = ecl_file_alloc_empty();
+  ecl_file->src_file = util_alloc_string_copy( fortio_filename_ref( fortio ) );
+  {
+    ecl_kw_type   * work_kw = ecl_kw_alloc_new("WORK-KW" , 0 , ECL_INT_TYPE , NULL);
+    bool first_kw  = true;
+    int stop_count = 0;
+    
+    while( true ) {
+      bool load_kw = true;
+
+      if (ecl_kw_fread_header( work_kw , fortio )) {
+        if (kw_list != NULL) 
+          if (!stringlist_contains( kw_list , ecl_kw_get_header( work_kw )))   /* This keyword should not be included. */ 
+            load_kw = false;
+        
+        if (stop_kw != NULL) {
+          bool eq = ecl_kw_header_eq( work_kw , stop_kw);
+          if (first_kw) 
+            if (!eq)
+              util_abort("%s: expected to find:%s as first keyword - found:%s - aborting \n",__func__ , stop_kw , ecl_kw_get_header( work_kw ));
+
+          if (eq)
+            stop_count++;
+
+          if (stop_count == 2) {
+            ecl_kw_rewind( work_kw , fortio );   /* Rewind to facilitate new reading of this keyword. */
+            load_kw = false;
+            break;
+          }
+        }
+
+        if (load_kw) {
+          ecl_kw_rewind( work_kw , fortio );
+          vector_append_owned_ref( ecl_file->kw_list , ecl_kw_fread_alloc( fortio ) , ecl_kw_free__);
+        } else
+          ecl_kw_fskip_data( work_kw , fortio );
+        
+        first_kw = false;
+      } else 
+        break;  /* Reading the header failed - we are at EOF. */
+    }
+    ecl_kw_free( work_kw );
+  }
+  
+  /* Returning NULL for an empty file. */
+  if (vector_get_size(ecl_file->kw_list) == 0) {
+    ecl_file_free( ecl_file );
+    ecl_file = NULL;
+  } else
+    /* Building up the index for keyword/occurence based lookup. */
+    ecl_file_make_index( ecl_file );
+  
+  return ecl_file;
+}
+
+
+ecl_file_type * ecl_file_fread_alloc_selected_kw(const char * filename ,
+                                                 const stringlist_type * kw_list ) {
+
+  ecl_file_type * ecl_file;
+  bool          fmt_file   = ecl_util_fmt_file( filename );
+  fortio_type * fortio     = fortio_fopen( filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
+  ecl_file = ecl_file_fread_alloc_selected_kw_fortio( fortio , kw_list , NULL );
+  fortio_fclose( fortio );
+  return ecl_file;
+}
 
 
 /** 
@@ -241,54 +311,56 @@ ecl_file_type * ecl_file_alloc_icopy( const ecl_file_type * src_file , const int
 
 
 static ecl_file_type * ecl_file_fread_alloc_fortio(fortio_type * fortio , const char * stop_kw) {
-  bool first_kw            = true;
-  int stop_count           = 0;
-  ecl_file_type * ecl_file = ecl_file_alloc_empty();
-  ecl_kw_type   * ecl_kw;
-
-  ecl_file->src_file = util_alloc_string_copy( fortio_filename_ref( fortio ) );
-  do {
-    ecl_kw = ecl_kw_fread_alloc( fortio );
-    if (ecl_kw != NULL) {
-      if (stop_kw != NULL) {
-        bool eq = ecl_kw_header_eq( ecl_kw , stop_kw);
-        
-        if (first_kw) 
-          if (!eq)
-            util_abort("%s: expected to find:%s as first keyword - aborting \n",__func__ , stop_kw);
-        
-        if (eq)
-          stop_count++;
-        
-        if (stop_count == 2) { /* Two strikes and you are out ... */
-          ecl_kw_rewind(ecl_kw , fortio);
-          ecl_kw_free( ecl_kw );
-          ecl_kw = NULL;
-        }
-      }
-    }
-    
-    /* 
-       Must have a new check on NULL - because the ecl_kw instance can
-       be freed and set to to NULL in the preceeding block. 
-    */
-    if (ecl_kw != NULL) 
-      vector_append_owned_ref( ecl_file->kw_list , ecl_kw , ecl_kw_free__);
-    
-    first_kw = false;
-  } while (ecl_kw != NULL);
-
-  
-  
-  /* Returning NULL for an empty file. */
-  if (vector_get_size(ecl_file->kw_list) == 0) {
-    ecl_file_free( ecl_file );
-    ecl_file = NULL;
-  } else
-    /* Building up the index for keyword/occurence based lookup. */
-    ecl_file_make_index( ecl_file );
-  
-  return ecl_file;
+  return ecl_file_fread_alloc_selected_kw_fortio( fortio , NULL , stop_kw );
+  //bool first_kw            = true;
+  //int stop_count           = 0;
+  //ecl_file_type * ecl_file = ecl_file_alloc_empty();
+  //ecl_kw_type   * ecl_kw;
+  //
+  //ecl_file->src_file = util_alloc_string_copy( fortio_filename_ref( fortio ) );
+  //do {
+  //  
+  //  ecl_kw = ecl_kw_fread_alloc( fortio );
+  //  if (ecl_kw != NULL) {
+  //    if (stop_kw != NULL) {
+  //      bool eq = ecl_kw_header_eq( ecl_kw , stop_kw);
+  //      
+  //      if (first_kw) 
+  //        if (!eq)
+  //          util_abort("%s: expected to find:%s as first keyword - aborting \n",__func__ , stop_kw);
+  //      
+  //      if (eq)
+  //        stop_count++;
+  //      
+  //      if (stop_count == 2) { /* Two strikes and you are out ... */
+  //        ecl_kw_rewind(ecl_kw , fortio);
+  //        ecl_kw_free( ecl_kw );
+  //        ecl_kw = NULL;
+  //      }
+  //    }
+  //  }
+  //  
+  //  /* 
+  //     Must have a new check on NULL - because the ecl_kw instance can
+  //     be freed and set to to NULL in the preceeding block. 
+  //  */
+  //  if (ecl_kw != NULL) 
+  //    vector_append_owned_ref( ecl_file->kw_list , ecl_kw , ecl_kw_free__);
+  //  
+  //  first_kw = false;
+  //} while (ecl_kw != NULL);
+  //
+  //
+  //
+  ///* Returning NULL for an empty file. */
+  //if (vector_get_size(ecl_file->kw_list) == 0) {
+  //  ecl_file_free( ecl_file );
+  //  ecl_file = NULL;
+  //} else
+  //  /* Building up the index for keyword/occurence based lookup. */
+  //  ecl_file_make_index( ecl_file );
+  //
+  //return ecl_file;
 }
 
 
@@ -1082,7 +1154,6 @@ ecl_file_type * ecl_file_copy_restart_section( const ecl_file_type * src_file , 
 
     while (true) {
       int_vector_append( index_list , kw_index );
-      printf("Adding %s \n",ecl_kw_get_header( ecl_file_iget_kw( src_file , kw_index)));
       kw_index++;
       if (kw_index == size) 
         break;

@@ -981,7 +981,7 @@ void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 } 
 
 
-bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type *fortio) {
+bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
   const char null_char = '\0';
   FILE *stream  = fortio_get_FILE( fortio );
   bool fmt_file = fortio_fmt_file( fortio );

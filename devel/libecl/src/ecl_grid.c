@@ -526,13 +526,6 @@ static void ecl_cell_fprintf( const ecl_cell_type * cell , FILE * stream ) {
 }
 
 
-static void ecl_cell_mapaxes_transform( ecl_cell_type * cell , const double origo[2] , const double unit_x[2] , const double unit_y[2]) {
-  for (int i=0; i < 8; i++) {
-    point_type * point = cell->corner_list[i];
-    point_mapaxes_transform( point , origo , unit_x , unit_y);
-  }
-  point_mapaxes_transform( cell->center , origo , unit_x , unit_y );
-}
 
 
 static void ecl_cell_init_tetrahedron( const ecl_cell_type * cell , tetrahedron_type * tet , int method_nr , int tetrahedron_nr) {
@@ -763,28 +756,49 @@ static void ecl_grid_taint_cells( ecl_grid_type * ecl_grid ) {
 }
 
 
-static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_nr) {
+/**
+   Will create a new blank grid instance. If the global_grid argument
+   is != NULL the newly created grid instance will copy the mapaxes
+   transformations; and set the global_grid pointer of the new grid
+   instance. Apart from that no further lgr-relationsip initialisation
+   is performed.
+*/
+
+static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx , int ny , int nz, int grid_nr) {
   ecl_grid_type * grid = util_malloc(sizeof * grid , __func__);
   UTIL_TYPE_ID_INIT(grid , ECL_GRID_ID);
-  grid->nx = nx;
-  grid->ny = ny;
-  grid->nz = nz;
-  grid->size    = nx*ny*nz;
-  grid->grid_nr = grid_nr;
-  
+  grid->nx          = nx;
+  grid->ny          = ny;
+  grid->nz          = nz;
+  grid->size        = nx*ny*nz;
+  grid->grid_nr     = grid_nr;
+  grid->global_grid = global_grid;
+
   grid->visited       = NULL;
   grid->inv_index_map = NULL;
   grid->index_map     = NULL;
   grid->cells         = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
-  
-  grid->unit_x[0]     = 1;
-  grid->unit_x[0]     = 0;
-  grid->unit_x[0]     = 0;
-  grid->unit_x[0]     = 1;
-  grid->origo[0]      = 0;
-  grid->origo[1]      = 0;
 
-  grid->use_mapaxes   = false;
+  if (global_grid != NULL) {
+    /* This is an lgr instance, and we inherit the global grid
+       transformations from the main grid. */
+    grid->unit_x[0]     = global_grid->unit_x[0];  
+    grid->unit_x[0]     = global_grid->unit_x[0];  
+    grid->unit_y[0]     = global_grid->unit_y[0];  
+    grid->unit_y[0]     = global_grid->unit_y[0];  
+    grid->origo[0]      = global_grid->origo[0];   
+    grid->origo[1]      = global_grid->origo[1];   
+    grid->use_mapaxes   = global_grid->use_mapaxes;
+  } else {
+    grid->unit_x[0]     = 1;
+    grid->unit_x[0]     = 0;
+    grid->unit_y[0]     = 0;
+    grid->unit_y[0]     = 1;
+    grid->origo[0]      = 0;
+    grid->origo[1]      = 0;
+    grid->use_mapaxes   = false;
+  }
+
   {
     int i;
     for (i=0; i < grid->size; i++)
@@ -803,7 +817,6 @@ static ecl_grid_type * ecl_grid_alloc_empty(int nx , int ny , int nz, int grid_n
   grid->name        = NULL;
   grid->parent_name = NULL;
   grid->parent_grid = NULL;
-  grid->global_grid = NULL;
   grid->children    = hash_alloc();
   return grid;
 }
@@ -820,16 +833,6 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   }
 }
 
-
-static void ecl_grid_mapaxes_transform( ecl_grid_type * ecl_grid ) {
-  if (ecl_grid->use_mapaxes) {
-    int i;
-    for (i=0; i < ecl_grid->size; i++) {
-      ecl_cell_type * cell = ecl_grid->cells[i];
-      ecl_cell_mapaxes_transform( cell , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
-    }
-  }
-}
 
 
 
@@ -848,6 +851,9 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
     for (ip = 0; ip < 4; ip++) {
       int c = ip + iz * 4;
       point_set(cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
+      
+      if (ecl_grid->use_mapaxes)
+        point_mapaxes_transform( cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
     }
   }
 
@@ -899,9 +905,12 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
       break;
     }
     
-    for (c = 0; c < 8; c++)
+    for (c = 0; c < 8; c++) {
       point_set(cell->corner_list[c] , corners[3*c] , corners[3*c + 1] , corners[3*c + 2]);
-    
+      if (ecl_grid->use_mapaxes)
+        point_mapaxes_transform( cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
+    }
+
   }
 }
 
@@ -969,27 +978,35 @@ static void ecl_grid_pillar_cross_planes(const point_type * pillar , const doubl
 
 
 /**
-   The functional form given by mapaxes allows for distortions; I have
-   assumed that does not take place.  
+   This function must be run before the cell coordinates are calculated.
+
+   This function is only called for the main grid instance, and not
+   for LGR's. Do not really know if that is correct; probably the LGR
+   should inherit the mapaxes transform of the parent?
 */
 
-static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , const float * mapaxes) {
-  const double unit_y[2] = {mapaxes[0] - mapaxes[2] , mapaxes[1] - mapaxes[3]};
-  const double unit_x[2] = {mapaxes[4] - mapaxes[2] , mapaxes[5] - mapaxes[3]};
-  
-  {
-    double norm_x = 1.0/sqrt( unit_x[0]*unit_x[0] + unit_x[1]*unit_x[1] );
-    double norm_y = 1.0/sqrt( unit_y[0]*unit_y[0] + unit_y[1]*unit_y[1] );
 
-    ecl_grid->unit_x[0] = unit_x[0] * norm_x;
-    ecl_grid->unit_x[1] = unit_x[1] * norm_x;
-    ecl_grid->unit_y[0] = unit_y[0] * norm_y;
-    ecl_grid->unit_y[1] = unit_y[1] * norm_y;
-  }
-  ecl_grid->origo[0] = mapaxes[2];
-  ecl_grid->origo[1] = mapaxes[3];
+static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , const float * mapaxes) {
+  if (ecl_grid->global_grid != NULL)
+    util_abort("%s: Hmmmm - this is a major fuck up; trying to grid transformation data from MAPAXES for a subgrid(lgr)\n",__func__);
+  {
+    const double unit_y[2] = {mapaxes[0] - mapaxes[2] , mapaxes[1] - mapaxes[3]};
+    const double unit_x[2] = {mapaxes[4] - mapaxes[2] , mapaxes[5] - mapaxes[3]};
     
-  ecl_grid->use_mapaxes = true;
+    {
+      double norm_x = 1.0/sqrt( unit_x[0]*unit_x[0] + unit_x[1]*unit_x[1] );
+      double norm_y = 1.0/sqrt( unit_y[0]*unit_y[0] + unit_y[1]*unit_y[1] );
+      
+      ecl_grid->unit_x[0] = unit_x[0] * norm_x;
+      ecl_grid->unit_x[1] = unit_x[1] * norm_x;
+      ecl_grid->unit_y[0] = unit_y[0] * norm_y;
+      ecl_grid->unit_y[1] = unit_y[1] * norm_y;
+    }
+    ecl_grid->origo[0] = mapaxes[2];
+    ecl_grid->origo[1] = mapaxes[3];
+    
+    ecl_grid->use_mapaxes = true;
+  }
 }
 
 
@@ -1030,7 +1047,6 @@ static void ecl_grid_add_lgr( ecl_grid_type * main_grid , ecl_grid_type * lgr_gr
   {
     vector_append_owned_ref( main_grid->LGR_list , lgr_grid , ecl_grid_free__);
     hash_insert_ref( main_grid->LGR_hash , lgr_grid->name , lgr_grid);
-    lgr_grid->global_grid = main_grid;
   }
 }
 
@@ -1178,15 +1194,14 @@ static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid , int j1 , int 
   0---1
 */
 
-static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, int grid_nr) {
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(nx,ny,nz,grid_nr);
+static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid , int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, int grid_nr) {
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , nx,ny,nz,grid_nr);
 
   if (mapaxes != NULL)
     ecl_grid_init_mapaxes( ecl_grid , mapaxes );
   ecl_grid_init_GRDECL_data__( ecl_grid , 0 , ny , zcorn , coord , actnum);
     
-  ecl_grid_set_center(ecl_grid);
-  ecl_grid_mapaxes_transform( ecl_grid );
+  ecl_grid_set_center( ecl_grid );
   ecl_grid_update_index( ecl_grid );
   ecl_grid_taint_cells( ecl_grid );
   return ecl_grid;
@@ -1194,20 +1209,22 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(int nx , int ny , int nz , c
 
 /*
   If you create/load data for the various fields, this function can be
-   used to create a GRID instance, without going through a GRID/EGRID
-   file.
+  used to create a GRID instance, without going through a GRID/EGRID
+  file - currently the implementation does not support the creation of
+  a lgr hierarchy.
 */
 
 ecl_grid_type * ecl_grid_alloc_GRDECL_data(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes) {
-  return ecl_grid_alloc_GRDECL_data__(nx , ny , nz , zcorn , coord , actnum , mapaxes , 0);
+  return ecl_grid_alloc_GRDECL_data__(NULL , nx , ny , nz , zcorn , coord , actnum , mapaxes , 0);
 }
 
-static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__( const ecl_kw_type * gridhead_kw , 
-                                                   const ecl_kw_type * zcorn_kw , 
-                                                   const ecl_kw_type * coord_kw , 
-                                                   const ecl_kw_type * actnum_kw , 
-                                                   const ecl_kw_type * mapaxes_kw ,   /* Can be NULL */
-                                                   int grid_nr) {
+static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,  
+                                                  const ecl_kw_type * gridhead_kw , 
+                                                  const ecl_kw_type * zcorn_kw , 
+                                                  const ecl_kw_type * coord_kw , 
+                                                  const ecl_kw_type * actnum_kw , 
+                                                  const ecl_kw_type * mapaxes_kw ,   /* Can be NULL */
+                                                  int grid_nr) {
   
   int gtype, nx,ny,nz;
   
@@ -1223,7 +1240,8 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__( const ecl_kw_type * gridhead_
     if (mapaxes_kw != NULL)
       mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw );
     
-    return ecl_grid_alloc_GRDECL_data__(nx , ny , nz , 
+    return ecl_grid_alloc_GRDECL_data__(global_grid , 
+                                        nx , ny , nz , 
                                         ecl_kw_get_float_ptr(zcorn_kw) , 
                                         ecl_kw_get_float_ptr(coord_kw) , 
                                         ecl_kw_get_int_ptr(actnum_kw) , 
@@ -1240,7 +1258,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__( const ecl_kw_type * gridhead_
 */
 
 ecl_grid_type * ecl_grid_alloc_GRDECL_kw( const ecl_kw_type * gridhead_kw , const ecl_kw_type * zcorn_kw , const ecl_kw_type * coord_kw , const ecl_kw_type * actnum_kw , const ecl_kw_type * mapaxes_kw ) {
-  return ecl_grid_alloc_GRDECL_kw__(gridhead_kw , zcorn_kw , coord_kw , actnum_kw , mapaxes_kw , 0);
+  return ecl_grid_alloc_GRDECL_kw__(NULL , gridhead_kw , zcorn_kw , coord_kw , actnum_kw , mapaxes_kw , 0);
 }
 
 
@@ -1258,7 +1276,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( const ecl_kw_type * gridhead_kw , cons
 */
 
 
-static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl_file_type * ecl_file , int grid_nr) {
+static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const ecl_file_type * ecl_file , int grid_nr) {
   ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , "GRIDHEAD" , grid_nr);
   ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , "ZCORN"     , grid_nr);
   ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , "COORD"     , grid_nr);
@@ -1268,7 +1286,8 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__(const char * grid_file , const ecl
   if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , "MAPAXES"))) 
     mapaxes_kw   = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
   {
-    ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__( gridhead_kw , 
+    ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__( main_grid , 
+                                                           gridhead_kw , 
                                                            zcorn_kw , 
                                                            coord_kw , 
                                                            actnum_kw , 
@@ -1291,10 +1310,10 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
   {
     ecl_file_type * ecl_file   = ecl_file_fread_alloc( grid_file );
     int num_grid               = ecl_file_get_num_named_kw( ecl_file , "GRIDHEAD" );
-    ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( grid_file , ecl_file , 0);
+    ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( NULL , ecl_file , 0 );
     
     for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
-      ecl_grid_type * lgr_grid = ecl_grid_alloc_EGRID__(grid_file , ecl_file , grid_nr );
+      ecl_grid_type * lgr_grid = ecl_grid_alloc_EGRID__( main_grid , ecl_file , grid_nr );
       ecl_grid_add_lgr( main_grid , lgr_grid );
       {
         ecl_grid_type * host_grid;
@@ -1326,14 +1345,14 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
    
 */
 
-static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_type * ecl_file , int * cell_offset , int grid_nr) {
+static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const ecl_file_type * ecl_file , int * cell_offset , int grid_nr) {
   int index,nx,ny,nz;
   ecl_grid_type * grid;
   ecl_kw_type * dimens_kw   = ecl_file_iget_named_kw( ecl_file , "DIMENS" , grid_nr);
   nx   = ecl_kw_iget_int(dimens_kw , 0);
   ny   = ecl_kw_iget_int(dimens_kw , 1);
   nz   = ecl_kw_iget_int(dimens_kw , 2);
-  grid = ecl_grid_alloc_empty(nx , ny , nz, grid_nr);
+  grid = ecl_grid_alloc_empty(global_grid , nx , ny , nz, grid_nr);
   
   /*
     Possible LGR cells will follow *AFTER* the first nx*ny*nz cells;
@@ -1341,6 +1360,11 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
     discarded (by checking coords[5]) in the
     ecl_grid_set_cell_GRID() function.
   */
+  
+  if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , "MAPAXES"))) {
+    const ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
+    ecl_grid_init_mapaxes( grid , ecl_kw_get_float_ptr( mapaxes_kw) );
+  }
   
   {
     int num_coords = ecl_file_get_num_named_kw( ecl_file , "COORDS" );
@@ -1352,13 +1376,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(const char * file , const ecl_file_
     (*cell_offset) += num_coords;
   }
 
-  if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , "MAPAXES"))) {
-    const ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
-    ecl_grid_init_mapaxes( grid , ecl_kw_get_float_ptr( mapaxes_kw) );
-  }
-  
   ecl_grid_set_center(grid);
-  ecl_grid_mapaxes_transform( grid );
   ecl_grid_update_index( grid );
   if (grid_nr > 0) ecl_grid_set_lgr_name_GRID(grid , ecl_file , grid_nr);
   ecl_grid_taint_cells( grid );
@@ -1378,9 +1396,9 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
     int cell_offset = 0;
     ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file );
     int num_grid              = ecl_file_get_num_named_kw( ecl_file , "DIMENS");
-    ecl_grid_type * main_grid = ecl_grid_alloc_GRID__(grid_file , ecl_file , &cell_offset , 0);
+    ecl_grid_type * main_grid = ecl_grid_alloc_GRID__(NULL , ecl_file , &cell_offset , 0);
     for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
-      ecl_grid_type * lgr_grid = ecl_grid_alloc_GRID__(grid_file , ecl_file , &cell_offset , grid_nr );
+      ecl_grid_type * lgr_grid = ecl_grid_alloc_GRID__(main_grid , ecl_file , &cell_offset , grid_nr );
       ecl_grid_add_lgr( main_grid , lgr_grid );
       {
         ecl_grid_type * host_grid;
@@ -2419,6 +2437,10 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
   printf("      ny ..............: %d \n",ny);
   printf("      nz ..............: %d \n",nz);
   printf("      Volume ..........: %d \n",nx*ny*nz);
+  printf("      Origo X..........: %10.2f \n",ecl_grid->origo[0]);
+  printf("      Origo Y..........: %10.2f \n",ecl_grid->origo[1]);
+
+
   if (ecl_grid->grid_nr == 0) {
     for (int grid_nr=1; grid_nr < vector_get_size( ecl_grid->LGR_list ); grid_nr++) {
       printf("\n");
