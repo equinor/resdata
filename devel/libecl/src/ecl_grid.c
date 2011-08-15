@@ -783,17 +783,17 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
     /* This is an lgr instance, and we inherit the global grid
        transformations from the main grid. */
     grid->unit_x[0]     = global_grid->unit_x[0];  
-    grid->unit_x[0]     = global_grid->unit_x[0];  
+    grid->unit_x[1]     = global_grid->unit_x[1];  
     grid->unit_y[0]     = global_grid->unit_y[0];  
-    grid->unit_y[0]     = global_grid->unit_y[0];  
+    grid->unit_y[1]     = global_grid->unit_y[1];  
     grid->origo[0]      = global_grid->origo[0];   
     grid->origo[1]      = global_grid->origo[1];   
     grid->use_mapaxes   = global_grid->use_mapaxes;
   } else {
     grid->unit_x[0]     = 1;
-    grid->unit_x[0]     = 0;
+    grid->unit_x[1]     = 0;
     grid->unit_y[0]     = 0;
-    grid->unit_y[0]     = 1;
+    grid->unit_y[1]     = 1;
     grid->origo[0]      = 0;
     grid->origo[1]      = 0;
     grid->use_mapaxes   = false;
