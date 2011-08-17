@@ -54,8 +54,20 @@ typedef struct {
 } sum_case_type;
 
 
+/**
+   Microscopic data structure representing one column of data;
+   i.e. one ECLIPSE summary key and one accompanying quantile value. 
+*/
+
+typedef struct {
+  char    * sum_key;
+  double    quantile;
+} quant_key_type ;
+
+
+
 typedef struct  {
-  stringlist_type * keys;
+  vector_type     * keys;  /* Vector of quant_key_type instances. */
   char            * file;
   format_type       format;
 } output_type;
@@ -82,6 +94,24 @@ typedef struct {
 
 /*****************************************************************/
 
+static quant_key_type * quant_key_alloc( const char * sum_key , double quantile ) {
+  quant_key_type * qkey = util_malloc( sizeof * qkey , __func__ );
+  qkey->sum_key  = util_alloc_string_copy( sum_key );
+  qkey->quantile = quantile;
+  return qkey;
+}
+
+static void quant_key_free( quant_key_type * qkey) {
+  free( qkey->sum_key );
+  free( qkey );
+}
+
+static void quant_key_free__( void * qkey ) {
+  quant_key_free( (quant_key_type *) qkey);
+}
+
+
+/*****************************************************************/
 
 sum_case_type * sum_case_fread_alloc( const char * data_file , const time_t_vector_type * interp_time ) {
   sum_case_type * sum_case = util_malloc( sizeof * sum_case , __func__ );
@@ -211,10 +241,12 @@ void ensemble_init( ensemble_type * ensemble , config_type * config) {
   /*2: Remaining initialization */
   ensemble_init_time_interp( ensemble );
   if (vector_get_size( ensemble->data ) < MIN_SIZE )
-    util_exit("Sorry - quantiles make no bloody sense with with < %d realizations; should have ~> 100.\n" , MIN_SIZE);
+    util_exit("Sorry - quantiles make no sense with with < %d realizations; should have ~> 100.\n" , MIN_SIZE);
 }
 
-
+const ecl_sum_type * ensemble_get_refcase( const ensemble_type * ensemble ) {
+  return ensemble->refcase;
+}
 
 
 void ensemble_free( ensemble_type * ensemble ) {
@@ -227,7 +259,7 @@ void ensemble_free( ensemble_type * ensemble ) {
  
 static output_type * output_alloc( const char * file , const char * format_string) {
   output_type * output = util_malloc( sizeof * output , __func__);
-  output->keys = stringlist_alloc_new();
+  output->keys = vector_alloc_new();
   output->file = util_alloc_string_copy( file );
   {
     format_type  format;
@@ -238,9 +270,10 @@ static output_type * output_alloc( const char * file , const char * format_strin
       format = HEADER;
     else if ( util_string_equal( format_string , PLAIN_STRING) )
       format = PLAIN;
-    else
+    else {
+      format = PLAIN;  /* Compiler shut up. */
       util_abort("%s: unrecognized format string:%s \n",__func__ , format_string);
-    
+    }
     output->format = format;
   }
   
@@ -250,7 +283,7 @@ static output_type * output_alloc( const char * file , const char * format_strin
 
 
 static void output_free( output_type * output ) {
-  stringlist_free( output->keys );
+  vector_free( output->keys );
   free( output->file );
   free( output );
 }
@@ -258,9 +291,45 @@ static void output_free( output_type * output ) {
 static void output_free__( void * arg) {
   output_free( (output_type *) arg);
 }
+
+
+/**
+  The @qkey input argument can contain wildcards in the summary key;
+  i.e. to get 75% quantile of all wells starting with 'B' you can use
+  qkey == 'WOPR:B*:0.75' - the expansion is done based on the refcase
+  provided.
+*/
+
+static void output_add_key( const ecl_sum_type * refcase , output_type * output , const char * qkey) {
+  int tokens;
+  double  quantile;
+  char ** tmp;
+  char  * sum_key;
+
+  util_split_string( qkey , SUMMARY_JOIN , &tokens , &tmp);
+  if (tokens == 1)
+    util_exit("Hmmm - the key:%s is malformed - must be of the form SUMMARY_KEY:QUANTILE.\n",qkey);
+    
+  if (!util_sscanf_double( tmp[tokens - 1] , &quantile))
+    util_exit("Hmmmm - failed to interpret:%s as a quantile - must be a number (0,1).\n",tmp[tokens-1]);
+    
+  if (quantile <= 0 || quantile >= 1.0)
+    util_exit("Invalid quantile value:%g - must be in interval (0,1)\n", quantile);
   
-static void output_add_key( output_type * output , const char * key) {
-  stringlist_append_copy( output->keys , key );
+  sum_key = util_alloc_joined_string( (const char **) tmp , tokens - 1 , SUMMARY_JOIN);
+  {
+    stringlist_type * matching_keys = stringlist_alloc_new();
+    int i;
+    ecl_sum_select_matching_general_var_list( refcase , sum_key , matching_keys );
+    for (i=0; i < stringlist_get_size( matching_keys ); i++) 
+      vector_append_owned_ref( output->keys , quant_key_alloc( stringlist_iget( matching_keys , i ) , quantile) , quant_key_free__ );
+    
+    if (stringlist_get_size( matching_keys ) == 0)
+      fprintf(stderr,"** Warning: No summary vectors matching:\'%s\' found?? \n", sum_key);
+    stringlist_free( matching_keys );
+  }
+      
+  util_free_stringlist( tmp, tokens );
 }
 
 
@@ -269,10 +338,10 @@ static void output_add_key( output_type * output , const char * key) {
 /**
    Each output line should be of the format:
 
-   OUTPUT  output_file key.q    key.q    key.q    key.q    ...
+   OUTPUT  output_file    key.q    key.q    key.q    key.q    ...
 */
 
-void output_table_init( hash_type * output_table , const config_type * config ) {
+void output_table_init( const ecl_sum_type * refcase, hash_type * output_table , const config_type * config ) {
   int i,j;
   for (i=0; i < config_get_occurences( config , "OUTPUT" ); i++) {
     const stringlist_type * tokens = config_iget_stringlist_ref( config , "OUTPUT" , i);
@@ -280,9 +349,9 @@ void output_table_init( hash_type * output_table , const config_type * config ) 
     const char * format_string     = stringlist_iget( tokens , 1 );
     output_type * output           = output_alloc( file , format_string );
     
-    /* Alle the keys are just added - without any check. */
+    /* All the keys are just added - without any check. */
     for (j = 2; j < stringlist_get_size( tokens ); j++)
-      output_add_key( output , stringlist_iget( tokens , j));
+      output_add_key( refcase , output , stringlist_iget( tokens , j));
     
     hash_insert_hash_owned_ref( output_table , file , output , output_free__ );
   }
@@ -363,8 +432,8 @@ static void print_var( FILE * stream , const char * var , double q , const char 
 
 
 
-void output_save_S3Graph( const char * file , ensemble_type * ensemble , const double ** data , const stringlist_type * ecl_keys, const double_vector_type * quantiles) {
-  FILE * stream = util_mkdir_fopen( file , "w"); 
+void output_save_S3Graph( const output_type * output, ensemble_type * ensemble , const double ** data ) {
+  FILE * stream = util_mkdir_fopen( output->file , "w"); 
   const char * kw_fmt       = "\t%s";
   const char * unit_fmt     = "\t%s";
   const char * wgname_fmt   = "\t%s";
@@ -377,13 +446,13 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
   const char * time_header  = "DATE\tTIME";
   const char * time_unit    = "\tDAYS";
   const char * time_blank   = "\t";
-  const int    data_columns = stringlist_get_size( ecl_keys );
+  const int    data_columns = vector_get_size( output->keys );
   const int    data_rows    = time_t_vector_size( ensemble->interp_time );
   int row_nr,column_nr;
     
   {
     char       * origin; 
-    util_alloc_file_components( file , NULL ,&origin , NULL);
+    util_alloc_file_components( output->file , NULL ,&origin , NULL);
     fprintf(stream , "ORIGIN %s\n", origin );
     free( origin );
   }
@@ -391,17 +460,16 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
   /* 1: Writing first header line with variables. */
   fprintf(stream , time_header );
   for (column_nr = 0; column_nr < data_columns; column_nr++) {
-    const char * ecl_key = stringlist_iget( ecl_keys , column_nr );
-    double quantile      = double_vector_iget( quantiles , column_nr );
-    print_var( stream , ecl_sum_get_keyword( ensemble->refcase , ecl_key ) , quantile , kw_fmt);
+    const quant_key_type * qkey = vector_iget( output->keys , column_nr );
+    print_var( stream , ecl_sum_get_keyword( ensemble->refcase , qkey->sum_key ) , qkey->quantile , kw_fmt);
   }
   fprintf(stream , "\n");
 
   /* 2: Writing second header line with units. */
   fprintf(stream , time_unit );
   for (column_nr = 0; column_nr < data_columns; column_nr++) {
-    const char * ecl_key = stringlist_iget( ecl_keys , column_nr );
-    fprintf(stream , unit_fmt , ecl_sum_get_unit( ensemble->refcase , ecl_key ) );
+    const quant_key_type * qkey = vector_iget( output->keys , column_nr );
+    fprintf(stream , unit_fmt , ecl_sum_get_unit( ensemble->refcase , qkey->sum_key ) );
   }
   fprintf(stream , "\n");
   
@@ -410,7 +478,8 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
   fprintf(stream , time_blank );
   {
     for (column_nr = 0; column_nr < data_columns; column_nr++) {
-      const char * ecl_key         = stringlist_iget( ecl_keys , column_nr );
+      const quant_key_type * qkey  = vector_iget( output->keys , column_nr );
+      const char * ecl_key         = qkey->sum_key;
       const char * wgname          = ecl_sum_get_wgname( ensemble->refcase , ecl_key ); 
       int          num             = ecl_sum_get_num( ensemble->refcase , ecl_key );
       ecl_smspec_var_type var_type = ecl_sum_get_var_type( ensemble->refcase , ecl_key);
@@ -452,8 +521,8 @@ void output_save_S3Graph( const char * file , ensemble_type * ensemble , const d
 
 
 
-void output_save_plain__( const char * file , ensemble_type * ensemble , const double ** data , const stringlist_type * ecl_keys, const double_vector_type * quantiles , bool add_header) {
-  FILE * stream = util_mkdir_fopen( file , "w"); 
+void output_save_plain__( const output_type * output , ensemble_type * ensemble , const double ** data , bool add_header) {
+  FILE * stream = util_mkdir_fopen( output->file , "w"); 
   const char * key_fmt      = " %18s:%4.2f ";
   const char * time_header  = "--    DAYS      DATE    ";
   const char * time_dash    = "------------------------";
@@ -461,18 +530,20 @@ void output_save_plain__( const char * file , ensemble_type * ensemble , const d
   const char * float_fmt    = "%24.5f ";
   const char * days_fmt     = "%10.2f ";
   const char * date_fmt     = "  %02d/%02d/%04d ";
-  const int    data_columns = stringlist_get_size( ecl_keys );
+  const int    data_columns = vector_get_size( output->keys );
   const int    data_rows    = time_t_vector_size( ensemble->interp_time );
   int row_nr,column_nr;
 
   if (add_header) {
     fprintf( stream ,time_header);
-    for (int i=0; i < stringlist_get_size( ecl_keys ); i++) 
-      fprintf( stream , key_fmt , stringlist_iget( ecl_keys , i) , double_vector_iget( quantiles , i ));
+    for (int i=0; i < vector_get_size( output->keys ); i++) {
+      const quant_key_type * qkey = vector_iget( output->keys , i );
+      fprintf( stream , key_fmt , qkey->sum_key , qkey->quantile );
+    }
     fprintf(stream , "\n");
 
     fprintf( stream , time_dash );
-    for (int i=0; i < stringlist_get_size( ecl_keys ); i++) 
+    for (int i=0; i < vector_get_size( output->keys ); i++) 
       fprintf(stream , key_dash );
     fprintf(stream , "\n");
   }
@@ -497,19 +568,19 @@ void output_save_plain__( const char * file , ensemble_type * ensemble , const d
 
 
 
-void output_save( const char * file , ensemble_type * ensemble , const double ** data , const stringlist_type * ecl_keys , const double_vector_type * quantiles , format_type format) {
-  switch( format ) {
+void output_save( const output_type * output , ensemble_type * ensemble , const double ** data ) {
+  switch( output->format ) {
   case(S3GRAPH):
-    output_save_S3Graph( file , ensemble , data , ecl_keys ,  quantiles);
+    output_save_S3Graph( output , ensemble , data );
     break;
   case(PLAIN):
-    output_save_plain__( file , ensemble , data , ecl_keys , quantiles , false);
+    output_save_plain__( output , ensemble , data , false);
     break;
   case(HEADER):
-    output_save_plain__( file , ensemble , data , ecl_keys , quantiles , true);
+    output_save_plain__( output , ensemble , data , true);
     break;
   default:
-    util_exit("Sorry: output_format:%d not supported \n", format );
+    util_exit("Sorry: output_format:%d not supported \n", output->format );
   }
 }
       
@@ -519,14 +590,11 @@ void output_save( const char * file , ensemble_type * ensemble , const double **
 
 void output_run_line( const output_type * output , ensemble_type * ensemble) {
   
-  const int    data_columns = stringlist_get_size( output->keys );
+  const int    data_columns = vector_get_size( output->keys );
   const int    data_rows    = time_t_vector_size( ensemble->interp_time );
   double     ** data;
   int row_nr, column_nr;
 
-  stringlist_type * sum_keys     = stringlist_alloc_new();
-  double_vector_type * quantiles = double_vector_alloc(0,0);
-  
   data = util_malloc( data_rows * sizeof * data , __func__);
   /*
     time-direction, i.e. the row index is the first index and the
@@ -537,53 +605,31 @@ void output_run_line( const output_type * output , ensemble_type * ensemble) {
   
   printf("Creating output file: %s \n",output->file );
 
-  /* Going through the keys. */
-  for (column_nr = 0; column_nr < stringlist_get_size( output->keys ); column_nr++) {
-    const char * key = stringlist_iget( output->keys , column_nr );
-    char * sum_key;
-    double quantile;
-    {
-      int tokens;
-      char ** tmp;
-      util_split_string( key , SUMMARY_JOIN , &tokens , &tmp);
-      if (tokens == 1)
-        util_exit("Hmmm - the key:%s is malformed - must be of the form SUMMARY_KEY:QUANTILE.\n",key);
-      
-      sum_key = util_alloc_joined_string( (const char **) tmp , tokens - 1 , SUMMARY_JOIN);
-      if (!util_sscanf_double( tmp[tokens - 1] , &quantile))
-        util_exit("Hmmmm - failed to interpret:%s as a quantile - must be a number (0,1).\n",tmp[tokens-1]);
-      
-      if (quantile <= 0 || quantile >= 1.0)
-        util_exit("Invalid quantile value:%g - must be in interval (0,1)\n", quantile);
-      
-      util_free_stringlist( tmp, tokens );
-    }
-
-    /* 
-       Go through all the cases and check that they have this key;
-       exit if missing. Could also ignore the missing keys and just
-       continue; and even defer the checking to the inner loop.
-    */
+  
+  /* 
+     Go through all the cases and check that they have this key;
+     exit if missing. Could also ignore the missing keys and just
+     continue; and even defer the checking to the inner loop.
+  */
+  for (column_nr = 0; column_nr < vector_get_size( output->keys ); column_nr++) {
+    const quant_key_type * qkey = vector_iget( output->keys , column_nr );
     {
       bool OK = true;
       
       for (int iens = 0; iens < vector_get_size( ensemble->data ); iens++) {
         const sum_case_type * sum_case = vector_iget_const( ensemble->data , iens );
         
-        if (!ecl_sum_has_general_var(sum_case->ecl_sum , sum_key)) {
+        if (!ecl_sum_has_general_var(sum_case->ecl_sum , qkey->sum_key)) {
           OK = false;
-          fprintf(stderr,"** Sorry: the case:%s does not have the summary key:%s \n", ecl_sum_get_case( sum_case->ecl_sum ), sum_key);
+          fprintf(stderr,"** Sorry: the case:%s does not have the summary key:%s \n", ecl_sum_get_case( sum_case->ecl_sum ), qkey->sum_key);
         }
       }
 
-      if (OK) {
-        double_vector_append( quantiles , quantile );
-        stringlist_append_owned_ref( sum_keys , sum_key );
-      } else
+      if (!OK) 
         util_exit("Exiting due to missing summary vector(s).\n");
     }
   }
-
+  
   
   /* The main loop - outer loop is running over time. */
   {
@@ -591,28 +637,27 @@ void output_run_line( const output_type * output , ensemble_type * ensemble) {
        In the quite typical case that we are asking for several
        quantiles of the quantity, i.e.
 
-           WWCT:OP_1:0.10  WWCT:OP_1:0.50  WWCT:OP_1:0.90 
+       WWCT:OP_1:0.10  WWCT:OP_1:0.50  WWCT:OP_1:0.90 
 
-       this cache construction will ensure that the underlying ecl_sum
-       object is only queried once; and also the sorting will be
-       performed once.
+       the interp_data_cache construction will ensure that the
+       underlying ecl_sum object is only queried once; and also the
+       sorting will be performed once.
     */
     
     hash_type * interp_data_cache = hash_alloc();
 
     for (row_nr = 0; row_nr < data_rows; row_nr++) {
       time_t interp_time = time_t_vector_iget( ensemble->interp_time , row_nr);
-      for (column_nr = 0; column_nr < stringlist_get_size( sum_keys ); column_nr++) {
-        const char * sum_key = stringlist_iget( sum_keys , column_nr);
-        double quantile      = double_vector_iget( quantiles , column_nr);
+      for (column_nr = 0; column_nr < vector_get_size( output->keys ); column_nr++) {
+        const quant_key_type * qkey = vector_iget( output->keys , column_nr );
         double_vector_type * interp_data;
 
         /* Check if we have the vector in the cache table - if not create it. */
-        if (!hash_has_key( interp_data_cache , sum_key)) {
+        if (!hash_has_key( interp_data_cache , qkey->sum_key)) {
           interp_data = double_vector_alloc(0 , 0);
-          hash_insert_hash_owned_ref( interp_data_cache , sum_key , interp_data , double_vector_free__);
+          hash_insert_hash_owned_ref( interp_data_cache , qkey->sum_key , interp_data , double_vector_free__);
         }
-        interp_data = hash_get( interp_data_cache , sum_key );
+        interp_data = hash_get( interp_data_cache , qkey->sum_key );
 
         /* Check if the vector has data - if not initialize it. */
         if (double_vector_size( interp_data ) == 0) {
@@ -620,21 +665,19 @@ void output_run_line( const output_type * output , ensemble_type * ensemble) {
             const sum_case_type * sum_case = vector_iget_const( ensemble->data , iens );
             
             if ((interp_time >= sum_case->start_time) && (interp_time <= sum_case->end_time))  /* We allow the different simulations to have differing length */
-              double_vector_append( interp_data , ecl_sum_get_general_var_from_sim_time( sum_case->ecl_sum , interp_time , sum_key)) ;
+              double_vector_append( interp_data , ecl_sum_get_general_var_from_sim_time( sum_case->ecl_sum , interp_time , qkey->sum_key)) ;
             
             double_vector_sort( interp_data );
           }
         }
-        data[row_nr][column_nr] = statistics_empirical_quantile__( interp_data , quantile );
+        data[row_nr][column_nr] = statistics_empirical_quantile__( interp_data , qkey->quantile );
       }
       hash_apply( interp_data_cache , double_vector_reset__ );
     }
     hash_free( interp_data_cache );
   }
   
-  output_save( output->file , ensemble , (const double **) data , sum_keys , quantiles , output->format );
-  stringlist_free( sum_keys );
-  double_vector_free( quantiles );
+  output_save( output , ensemble , (const double **) data);
   for (row_nr=0; row_nr < data_rows; row_nr++)
     free( data[row_nr] );
   free( data );
@@ -775,7 +818,7 @@ int main( int argc , char ** argv ) {
 
     
       ensemble_init( ensemble , config );
-      output_table_init( output_table , config);
+      output_table_init( ensemble_get_refcase( ensemble ) , output_table , config);
       config_free( config );
 
     } 

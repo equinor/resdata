@@ -246,6 +246,7 @@ void ens_add_data__( ens_type * ens, void * data  , free_ftype * destructor) {
   pthread_mutex_unlock( &ens->data_mutex );
 }
 
+
 void ens_add_sum( ens_type * ens, ecl_sum_type * ecl_sum ) {
   ens_add_data__( ens , ecl_sum , ecl_sum_free__);
 }
