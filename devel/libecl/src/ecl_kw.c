@@ -1131,9 +1131,14 @@ bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error 
   }
 
   /* OK: If we are here - that means that we failed to find the kw. */
-  if (abort_on_error) 
-    util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , util_alloc_filename_from_stream( stream ));
-    
+  if (abort_on_error) {
+    char * filename = "????";
+#ifdef HAVE_FORK
+    filename = util_alloc_filename_from_stream( stream );
+#endif
+    util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , filename);
+  }
+
   return false;
 }
 
@@ -1515,35 +1520,6 @@ void ecl_kw_buffer_store(const ecl_kw_type * ecl_kw , buffer_type * buffer) {
   buffer_fwrite( buffer , ecl_kw->data , ecl_kw->sizeof_ctype , ecl_kw->size);
 }
 
-
-#ifdef HAVE_ZLIB
-void ecl_kw_fwrite_compressed(const ecl_kw_type *ecl_kw , FILE * stream) {
-  ecl_kw_cfwrite_header(ecl_kw , stream);
-  /*
-    Dumps out nine characters - including a \0 - for every char variable 
-  */
-  util_fwrite_compressed(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , stream);
-}
-
-
-
-void ecl_kw_fread_realloc_compressed(ecl_kw_type * ecl_kw , FILE * stream) {
-  ecl_kw_cfread_header(ecl_kw , stream); 
-  ecl_kw_alloc_data(ecl_kw);
-  util_fread_compressed(ecl_kw->data , stream);
-}
-
-
-/**
-   Function needed for upgrading fs version 103 in the ERT code.
-   Might be removed ...
-*/
-ecl_kw_type * ecl_kw_fread_alloc_compressed(FILE * stream) {
-  ecl_kw_type *ecl_kw = ecl_kw_alloc_empty(false , false);
-  ecl_kw_fread_realloc_compressed(ecl_kw , stream);
-  return ecl_kw;
-}
-#endif
 
 
 

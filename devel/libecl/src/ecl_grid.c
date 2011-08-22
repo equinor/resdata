@@ -516,16 +516,6 @@ static void ecl_cell_install_lgr( ecl_cell_type * cell , const ecl_grid_type * l
 }
 
 
-static void ecl_cell_fprintf( const ecl_cell_type * cell , FILE * stream ) {
-  int i;
-  for (i=0; i < 7; i++) {
-    printf("\nCorner[%d] => ",i);
-    point_fprintf( cell->corner_list[i] , stdout );
-  }
-  fprintf(stream , "-----------------------------------\n");
-}
-
-
 
 
 static void ecl_cell_init_tetrahedron( const ecl_cell_type * cell , tetrahedron_type * tet , int method_nr , int tetrahedron_nr) {

@@ -90,11 +90,6 @@ bool           ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_k
 void           ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
 void           ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
 
-#ifdef HAVE_ZLIB
-void ecl_kw_fwrite_compressed(const ecl_kw_type * , FILE *);
-void ecl_kw_fread_realloc_compressed(ecl_kw_type *  , FILE *);
-ecl_kw_type * ecl_kw_fread_alloc_compressed(FILE * );
-#endif
 
 bool ecl_kw_is_grdecl_file(FILE * );
 bool ecl_kw_is_kw_file(FILE * , bool );

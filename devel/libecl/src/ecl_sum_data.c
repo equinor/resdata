@@ -296,18 +296,10 @@ static double ecl_sum_ministep_get_sim_days(const ecl_sum_ministep_type * minist
   return ministep->sim_days;
 }
 
-static int ecl_sum_ministep_get_nr(const ecl_sum_ministep_type * ministep) {
-  return ministep->ministep;
-}
 
 
 
 /*****************************************************************/
-
-static void ecl_sum_data_fprintf( const ecl_sum_data_type * data , FILE * stream) {
-  
-}
-
 
  void ecl_sum_data_free( ecl_sum_data_type * data ) {
   vector_free( data->data );

@@ -27,10 +27,17 @@
 #include <hash_sll.h>
 #include <hash_node.h>
 #include <node_data.h>
-#include <pthread.h>
 #include <errno.h>
 #include <util.h>
 #include <stringlist.h>
+
+#ifdef HAVE_PTHREAD
+#include <pthread.h>
+typedef pthread_rwlock_t lock_type;
+#else
+typedef int lock_type; 
+#endif
+
 
 #define HASH_DEFAULT_SIZE 16
 #define HASH_TYPE_ID      771065
@@ -55,7 +62,6 @@ static uint32_t hash_index(const char *key, size_t len) {
 }
 
 
-
 struct hash_struct {
   UTIL_TYPE_ID_DECLARATION;
   uint32_t          size;            /* This is the size of the internal table **NOT**NOT** the number of elements in the table. */
@@ -63,7 +69,8 @@ struct hash_struct {
   double            resize_fill;
   hash_sll_type   **table;
   hashf_type       *hashf;
-  pthread_rwlock_t  rwlock;
+
+  lock_type         rwlock;
 };
 
 
@@ -77,7 +84,7 @@ typedef struct hash_sort_node {
 /*****************************************************************/
 /*                          locking                              */
 /*****************************************************************/
-
+#ifdef HAVE_PTHREAD
 static void __hash_deadlock_abort(hash_type * hash) {
   util_abort("%s: A deadlock condition has been detected in the hash routine - and the program will abort.\n", __func__);
 }
@@ -118,6 +125,23 @@ static void __hash_unlock( hash_type * hash) {
 }
 
 
+static void LOCK_DESTROY( lock_type * rwlock ) {
+  pthread_rwlock_destroy( rwlock );
+}
+
+static void LOCK_INIT( lock_type * rwlock ) {
+  pthread_rwlock_init( rwlock , NULL);
+}
+
+#else
+
+static void __hash_rdlock(hash_type * hash) {}
+static void __hash_wrlock(hash_type * hash) {}
+static void __hash_unlock(hash_type * hash) {}
+static void LOCK_DESTROY(lock_type * rwlock) {}
+static void LOCK_INIT(lock_type * rwlock) {}
+
+#endif
 
 /*****************************************************************/
 /*                    Low level access functions                 */
@@ -505,8 +529,7 @@ static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf
   hash->table     = hash_sll_alloc_table(hash->size);
   hash->elements  = 0;
   hash->resize_fill  = resize_fill;
-  if (pthread_rwlock_init( &hash->rwlock , NULL) != 0) 
-    util_abort("%s: failed to initialize rwlock \n",__func__);
+  LOCK_INIT( &hash->rwlock );
   
   return hash;
 }
@@ -524,7 +547,7 @@ void hash_free(hash_type *hash) {
   for (i=0; i < hash->size; i++) 
     hash_sll_free(hash->table[i]);
   free(hash->table);
-  pthread_rwlock_destroy( &hash->rwlock );
+  LOCK_DESTROY( &hash->rwlock );
   free(hash);
 }
 

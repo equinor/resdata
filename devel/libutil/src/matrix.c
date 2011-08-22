@@ -405,6 +405,11 @@ void matrix_free(matrix_type * matrix) {
   free(matrix);
 }
 
+void matrix_safe_free( matrix_type * matrix ) {
+  if (matrix != NULL)
+  matrix_free( matrix );
+}
+
 
 /*****************************************************************/
 
@@ -869,6 +874,11 @@ void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
     util_abort("%s: size mismatch: A:[%d,%d]   B:[%d,%d]\n",__func__ , matrix_get_rows(A) , matrix_get_columns(A) , matrix_get_rows(B) , matrix_get_columns(B));
 }
 
+/*****************************************************************/
+/* If the current build has a thread_pool implementation enabled a
+   proper matrix_implace_matmul_mt() function will be built, otherwise
+   only the serial version matrix_inplace_matmul() will be used.  */
+
 
 #ifdef HAVE_THREAD_POOL
 static void * matrix_inplace_matmul_mt__(void * arg) {
@@ -884,10 +894,9 @@ static void * matrix_inplace_matmul_mt__(void * arg) {
   matrix_free( A_view );
   return NULL;
 }
-#endif
+
 
 void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads){ 
-#ifdef HAVE_THREAD_POOL
   thread_pool_type  * thread_pool = thread_pool_alloc( num_threads , true );
   arg_pack_type    ** arglist     = util_malloc( num_threads * sizeof * arglist , __func__);
   int it;
@@ -917,11 +926,15 @@ void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_t
       arg_pack_free( arglist[it] );
     free( arglist );
   }
-#else
-  matrix_inplace_matmul( A , B );
-#endif
 }
 
+#else
+
+void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads){ 
+  matrix_inplace_matmul( A , B );
+}
+
+#endif
 
 
 
@@ -1165,6 +1178,20 @@ void matrix_diag_set(matrix_type * matrix , const double * diag) {
     util_abort("%s: size mismatch \n",__func__);
 }
 
+
+/**
+   Will set the scalar @value on all the diagonal elements of the
+   matrix; all off-diagonal elements are explicitly set to zero.  
+*/
+
+void matrix_diag_set_scalar(matrix_type * matrix , double value) {
+  if (matrix->rows == matrix->columns) {
+    matrix_set(matrix , 0);
+    for (int i=0; i < matrix->rows; i++)
+      matrix->data[ GET_INDEX(matrix , i , i) ] = value;
+  } else
+    util_abort("%s: size mismatch \n",__func__);
+}
 
 
 

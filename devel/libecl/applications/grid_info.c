@@ -25,6 +25,7 @@
 int main(int argc, char ** argv) {
   if (argc < 2) {
     fprintf(stderr,"%s: filename \n",argv[0]);
+    util_abort("%s: incorrect usage \n",__func__);
     exit(1);
   }
   {
@@ -38,11 +39,11 @@ int main(int argc, char ** argv) {
       ecl_grid_type * grid2 = ecl_grid_alloc( argv[2] );
       
       if (ecl_grid_compare( ecl_grid , grid2))
-	printf("\nThe grids %s %s are IDENTICAL.\n" , argv[1] , argv[2]);
+        printf("\nThe grids %s %s are IDENTICAL.\n" , argv[1] , argv[2]);
       else {
-	printf("\n");
-	ecl_grid_summarize( grid2 );
-	printf("\nThe grids %s %s are DIFFERENT.\n", argv[1] , argv[2]);
+        printf("\n");
+        ecl_grid_summarize( grid2 );
+        printf("\nThe grids %s %s are DIFFERENT.\n", argv[1] , argv[2]);
       }
       
       ecl_grid_free( grid2 );

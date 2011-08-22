@@ -15,6 +15,8 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
    for more details. 
 */
+#ifndef __MATRIX_LAPACK_H__
+#define __MATRIX_LAPACK_H__
 
 #include <matrix.h>
 
@@ -86,4 +88,6 @@ extern "C" {
   
 #ifdef __cplusplus
 }
+#endif
+
 #endif

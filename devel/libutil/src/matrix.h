@@ -41,6 +41,7 @@ matrix_type * matrix_safe_alloc_copy(const matrix_type * src);
 
 matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column , int rows , int columns);
 void          matrix_free(matrix_type * matrix);
+void          matrix_safe_free( matrix_type * matrix );
 void          matrix_pretty_print(const matrix_type * matrix , const char * name , const char * fmt);
 void          matrix_set(matrix_type * matrix, double value);
 void          matrix_set_name( matrix_type * matrix , const char * name);
@@ -101,8 +102,9 @@ void          matrix_get_dims(const matrix_type * matrix ,  int * rows , int * c
 bool          matrix_is_quadratic(const matrix_type * matrix);
 bool          matrix_equal( const matrix_type * m1 , const matrix_type * m2);
 
+void          matrix_diag_set_scalar(matrix_type * matrix , double value);
 void          matrix_diag_set(matrix_type * matrix , const double * diag);
-  void          matrix_random_init(matrix_type * matrix , rng_type * rng);
+void          matrix_random_init(matrix_type * matrix , rng_type * rng);
 void          matrix_matlab_dump(const matrix_type * matrix, const char * filename);
 
 double        matrix_column_column_dot_product(const matrix_type * m1 , int col1 , const matrix_type * m2 , int col2);

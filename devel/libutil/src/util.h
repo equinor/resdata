@@ -387,7 +387,10 @@ bool     util_fseek_string(FILE * stream , const char * string , bool skip_strin
 char   * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool include_stop_string);
 bool     util_files_equal( const char * file1 , const char * file2 );
 double   util_kahan_sum(const double *data, size_t N);
+
+#ifdef HAVE_FORK
 #include "util_fork.h"
+#endif
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_SCALAR(s,stream)  { if (fread(&s , sizeof s , 1 , stream) != 1) util_abort("%s: read failed: %s\n",__func__ , strerror(errno)); }

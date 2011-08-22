@@ -115,8 +115,13 @@ static unsigned int fscanf_4bytes( FILE * stream ) {
     int c;
     if ( fscanf(stream , "%d" , &c) == 1 )
       char_ptr[i] = c;
-    else
-      util_abort("%s: reading byte from: %s failed \n",__func__ , util_alloc_filename_from_stream( stream ));
+    else {
+      char * filename = "<file>";
+#ifdef HAVE_FORK
+      filename = util_alloc_filename_from_stream( stream );
+#endif      
+      util_abort("%s: reading byte from: %s failed \n",__func__ , filename);
+    }
   }
   return s;
 }

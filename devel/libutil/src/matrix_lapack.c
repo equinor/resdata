@@ -463,20 +463,6 @@ static void matrix_dgetrf__( matrix_type * A, int * ipiv, int * info) {
 
 
 /** 
-    This is currently only used as a precursor for the determinant
-    calculation.
- */
-static void matrix_dgetrf( matrix_type * A) {
-  int   info;
-  int m         = matrix_get_rows( A );
-  int n         = matrix_get_columns( A );  
-  int * ipiv    = util_malloc( sizeof * ipiv * util_int_min( m , n ) , __func__);
-  matrix_dgetrf__( A , ipiv , &info );
-  free( ipiv );
-}
-
-
-/** 
    Calculated the determinant of A. The matrix content will be
    destroyed.
 */
