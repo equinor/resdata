@@ -25,9 +25,9 @@
 int main(int argc, char ** argv) {
   if (argc < 2) {
     fprintf(stderr,"%s: filename \n",argv[0]);
-    util_abort("%s: incorrect usage \n",__func__);
     exit(1);
   }
+
   {
     ecl_grid_type * ecl_grid;
     const char    * grid_file = argv[1];

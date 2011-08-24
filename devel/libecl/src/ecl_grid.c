@@ -17,23 +17,25 @@
 */
 
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
 #include <stdio.h>
-#include <util.h>
-#include <ecl_kw.h>
-#include <ecl_grid.h>
 #include <stdbool.h>
-#include <ecl_util.h>
+#include <math.h>
+
+#include <util.h>
 #include <double_vector.h>
 #include <int_vector.h>
-#include <ecl_file.h>
 #include <hash.h>
 #include <vector.h>
 #include <stringlist.h>
+
+#include <ecl_util.h>
+#include <ecl_kw.h>
+#include <ecl_file.h>
+
+#include <ecl_grid.h>
 #include <point.h>
 #include <tetrahedron.h>
-#include <thread_pool.h>
 
 /**
   This function implements functionality to load ECLISPE grid files,
@@ -650,17 +652,11 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
     1. First check if the point z value is below the deepest point of
        the cell, or above the shallowest => Return False.
 
-    2. [Should do similar fast checks in x/y direction, but that
-        requires proper mapaxes support. ]
+    2. Should do similar fast checks in x/y direction.
 
     3. Full geometric verification.
   */
 
-  /* 
-     OK -the point is in the volume inside the large rectangle, and
-     outside the small rectangle. Then we must use the full
-     tetrahedron decomposition to determine.
-  */
   if (cell->tainted_geometry) 
     return false;
   
@@ -968,12 +964,11 @@ static void ecl_grid_pillar_cross_planes(const point_type * pillar , const doubl
 
 
 /**
-   This function must be run before the cell coordinates are calculated.
-
-   This function is only called for the main grid instance, and not
-   for LGR's. Do not really know if that is correct; probably the LGR
-   should inherit the mapaxes transform of the parent?
-*/
+   This function must be run before the cell coordinates are
+   calculated.  This function is only called for the main grid
+   instance, and not for LGRs; the LGRs will inherit the mapaxes
+   settings from the global grid.
+ */
 
 
 static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , const float * mapaxes) {
@@ -1127,7 +1122,7 @@ static void ecl_grid_set_lgr_name_GRID(ecl_grid_type * lgr_grid , const ecl_file
 
 /**
    This function can in principle be called by several threads with
-   different [j1, j2) intervals to speed things up a bit.  
+   different [j1, j2) intervals to speed things up a bit. 
 */
 
 static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid , int j1 , int j2 , const float * zcorn , const float * coord , const int * actnum) {
@@ -1261,8 +1256,10 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( const ecl_kw_type * gridhead_kw , cons
     3. Call xx_alloc_GRDECL_data__() to build the grid based on keyword data.
     
    The point is that external scope can create grid based on both a
-   list of keywords, and actual data - in addition to the normal loading
-   of a full file.
+   list of keywords, and actual data - in addition to the normal
+   loading of a full file. Currently the 'shortcuts'
+   ecl_grid_alloc_grdecl_kw() and ecl_grid_alloc_grdecl_data() do not
+   support LGRs.
 */
 
 

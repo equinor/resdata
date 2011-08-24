@@ -626,7 +626,7 @@ static void block_fs_set_filenames( block_fs_type * block_fs ) {
 
 
 static void block_fs_reinit( block_fs_type * block_fs ) {
-  block_fs->index               = hash_alloc();
+  block_fs->index               = hash_alloc_unlocked();
   block_fs->file_nodes          = vector_alloc_new();
   block_fs->free_nodes          = NULL;
   block_fs->num_free_nodes      = 0;
@@ -1142,8 +1142,22 @@ static file_node_type * block_fs_get_new_node( block_fs_type * block_fs , const 
 
 
 
-bool block_fs_has_file( const block_fs_type * block_fs , const char * filename) {
+
+
+bool block_fs_has_file__( const block_fs_type * block_fs , const char * filename) {
   return hash_has_key( block_fs->index , filename );
+}
+
+
+
+bool block_fs_has_file( block_fs_type * block_fs , const char * filename) {
+  bool has_file;
+  block_fs_aquire_rlock( block_fs );
+  {
+    has_file = block_fs_has_file__( block_fs , filename );
+  }
+  block_fs_release_rwlock( block_fs );
+  return has_file;
 }
 
 
@@ -1294,7 +1308,7 @@ static void block_fs_fwrite_file_unlocked(block_fs_type * block_fs , const char 
   bool   new_node = true;   
   size_t min_size = data_size + file_node_header_size( filename );
   
-  if (block_fs_has_file( block_fs , filename )) {
+  if (block_fs_has_file__( block_fs , filename )) {
     file_node = hash_get( block_fs->index , filename );
     if (file_node->node_size < min_size) {
       /* 
@@ -1312,6 +1326,7 @@ static void block_fs_fwrite_file_unlocked(block_fs_type * block_fs , const char 
       new_node = false;  /* We are reusing the existing node. */
   } else 
     file_node = block_fs_get_new_node( block_fs , filename , min_size );
+  
   
   /* The actual writing ... */
   block_fs_fwrite__( block_fs , filename , file_node , ptr , data_size);
@@ -1434,9 +1449,15 @@ void block_fs_fread_file( block_fs_type * block_fs , const char * filename , voi
 
 
 
-int block_fs_get_filesize( const block_fs_type * block_fs , const char * filename) {
-  file_node_type * node = hash_get( block_fs->index , filename );
-  return node->data_size;
+int block_fs_get_filesize( block_fs_type * block_fs , const char * filename) {
+  int data_size;
+  block_fs_aquire_rlock( block_fs );
+  {
+    file_node_type * node = hash_get( block_fs->index , filename );
+    data_size = node->data_size;
+  }
+  block_fs_release_rwlock( block_fs );
+  return data_size;
 }
 
 
@@ -1497,12 +1518,12 @@ void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
   
   if (block_fs->data_owner) 
     block_fs_aquire_wlock( block_fs );
-  if (block_fs->data_stream != NULL) fclose( block_fs->data_stream );
 
-  if (block_fs->data_owner) {
+  if (block_fs->data_stream != NULL) 
+    fclose( block_fs->data_stream );
+
+  if (block_fs->data_owner) 
     block_fs_dump_index( block_fs );
-    block_fs_release_rwlock( block_fs );
-  }
       
   if (block_fs->lock_fd > 0) {
     close( block_fs->lock_fd );     /* Closing the lock_file file descriptor - and releasing the lock. */
@@ -1515,6 +1536,7 @@ void block_fs_close( block_fs_type * block_fs , bool unlink_empty) {
       util_unlink_existing( block_fs->index_file );
       util_unlink_existing( block_fs->mount_file );
     }
+    block_fs_release_rwlock( block_fs );
   }
 
   free( block_fs->index_file );
@@ -1718,9 +1740,11 @@ static bool pattern_match( const char * pattern , const char * string ) {
 
 */
 
-vector_type * block_fs_alloc_filelist( const block_fs_type * block_fs  , const char * pattern , block_fs_sort_type sort_mode , bool include_free_nodes ) {
+vector_type * block_fs_alloc_filelist( block_fs_type * block_fs  , const char * pattern , block_fs_sort_type sort_mode , bool include_free_nodes ) {
   vector_type    * sort_vector = vector_alloc_new();
+
   /* Inserting the nodes from the index. */
+  block_fs_aquire_rlock( block_fs );
   {
     hash_iter_type * iter        = hash_iter_alloc( block_fs->index );
     while ( !hash_iter_is_complete( iter )) {
@@ -1733,6 +1757,8 @@ vector_type * block_fs_alloc_filelist( const block_fs_type * block_fs  , const c
     }
     hash_iter_free( iter );
   }
+  block_fs_release_rwlock( block_fs );
+
   if (pattern != NULL)
     include_free_nodes = false;  /* Doing fnmatch on free nodes makes no sense */
   
@@ -1759,4 +1785,4 @@ vector_type * block_fs_alloc_filelist( const block_fs_type * block_fs  , const c
 
   return sort_vector;
 }
-//
+

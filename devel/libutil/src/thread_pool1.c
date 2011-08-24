@@ -62,7 +62,7 @@ thread_pool_type * thread_pool_alloc(int pool_size) {
 
 
 void thread_pool_add_job(thread_pool_type * pool , 
-			 void * (start_func) (void *) , void *arg) {
+                         void * (start_func) (void *) , void *arg) {
 
   if (pool->pool_size == 0) 
     start_func(arg);
@@ -74,7 +74,7 @@ void thread_pool_add_job(thread_pool_type * pool ,
     {
       int pthread_return = pthread_create( &pool->thread_list[pool->jobs_running] , NULL , start_func , arg);
       if (pthread_return != 0) 
-	util_abort("%s: failed to add new job pthread_create return value: %d.\n",__func__ , pthread_return);
+        util_abort("%s: failed to add new job pthread_create return value: %d.\n",__func__ , pthread_return);
     }
 
     pool->jobs_running++;

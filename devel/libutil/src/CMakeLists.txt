@@ -45,8 +45,8 @@ if (HAVE_ZLIB)
    include_directories( ${ZLIB_HEADER} )
 endif()   
 
-target_link_libraries( util_static m lapack)
-target_link_libraries( util_shared m lapack)
+target_link_libraries( util_static m ${LAPACK_LIBRARY} )
+target_link_libraries( util_shared m ${LAPACK_LIBRARY} )
 
 set_target_properties( util_static PROPERTIES OUTPUT_NAME util )
 set_target_properties( util_shared PROPERTIES OUTPUT_NAME util )

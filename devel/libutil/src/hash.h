@@ -32,6 +32,7 @@ typedef void (hash_apply_ftype) (void * );
 void              hash_lock  (hash_type * );
 void              hash_unlock(hash_type * );
 hash_type       * hash_alloc();
+hash_type       * hash_alloc_unlocked();
 hash_type       * hash_safe_cast( void * arg);
 void              hash_iter_complete(hash_type * );
 void              hash_free(hash_type *);

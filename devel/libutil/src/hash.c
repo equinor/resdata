@@ -539,6 +539,13 @@ hash_type * hash_alloc() {
   return __hash_alloc(HASH_DEFAULT_SIZE , 0.50 , hash_index);
 }
 
+// Purely a helper in the process of removing the internal locking
+// in the hash implementation.
+hash_type * hash_alloc_unlocked() {  
+  return __hash_alloc(HASH_DEFAULT_SIZE , 0.50 , hash_index);
+}
+
+
 UTIL_SAFE_CAST_FUNCTION( hash , HASH_TYPE_ID)
 UTIL_IS_INSTANCE_FUNCTION(hash , HASH_TYPE_ID)
 

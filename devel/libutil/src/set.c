@@ -34,7 +34,7 @@ struct set_struct {
 
 set_type * set_alloc(int size, const char ** keyList) {
   set_type * set = malloc(sizeof * set);
-  set->key_hash  = hash_alloc();
+  set->key_hash  = hash_alloc_unlocked();
   {
     int ikey;
     for (ikey = 0; ikey < size; ikey++)
