@@ -16,6 +16,7 @@
    for more details. 
 */
 
+#include <stdint.h>
 #include <util.h>
 #include <rng.h>
 #include <stdlib.h>
@@ -45,7 +46,7 @@ struct rng_struct {
   rng_alg_type           type;             
   void                 * state;            /* The current state - the return value from alloc_state() - passed as parameter to all the function pointers. */
   int                    state_size;       /* How many bytes needed to specify the state of the rng. */
-  unsigned long          max_value;        /* The maximum value this rng can return. */
+  uint64_t               max_value;        /* The maximum value this rng can return. */
   double                 inv_max;
 };
   
@@ -62,7 +63,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
                        rng_fprintf_ftype   * fprintf_state ,
                        rng_alg_type          type , 
                        int state_size              , 
-                       unsigned long max_value) {
+                       uint64_t max_value) {
 
   rng_type * rng = util_malloc( sizeof * rng , __func__ );
   UTIL_TYPE_ID_INIT( rng , RNG_TYPE_ID )
