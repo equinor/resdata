@@ -31,8 +31,8 @@
     o The implementation is in terms of a <TYPE>, the following sed
       one-liners will then produce proper source and header files:
   
-        sed -e'/<TYPE>/int/g' vector_template.c > int_vector.c
-        sed -e'/<TYPE>/int/g' vector_template.h > int_vector.h
+        sed -e's/<TYPE>/int/g' vector_template.c > int_vector.c
+        sed -e's/<TYPE>/int/g' vector_template.h > int_vector.h
 
 
    Illustration of the interplay of size, alloc_size and default value.
