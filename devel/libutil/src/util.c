@@ -534,6 +534,35 @@ char * util_alloc_cwd(void) {
 }
 
 
+
+/* 
+   Homemade realpath() for not existing path or platforms without
+   realpath().  
+*/
+static char * util_alloc_cwd_abs_path( const char * path ) {
+  if (util_is_abs_path( path ))
+    return util_alloc_string_copy( path );
+  else {
+    char * cwd       = util_alloc_cwd( );
+    char * abs_path  = util_realloc( cwd , strlen( cwd ) + 1 + strlen( path ) + 1 , __func__);
+    strcat( abs_path , UTIL_PATH_SEP_STRING );
+    strcat( abs_path , path );
+    return abs_path;
+  }
+}
+
+
+static char * __alloc_realpath(const char *path) {
+#ifdef HAVE_REALPATH
+  char work_path[4096];
+  realpath( path , work_path );
+  return util_alloc_string_copy( work_path );
+#else
+  return util_alloc_cwd_abs_path( path );
+#endif
+}
+
+
 /**
    If @path points to an existing entry the standard realpath()
    function is used otherwise an absolute path is created after the
@@ -548,22 +577,10 @@ char * util_alloc_cwd(void) {
 */
 
 char * util_alloc_abs_path( const char * path ) {
-  if (util_entry_exists( path )) {
-    char work_path[4096];
-    realpath( path , work_path );
-    return util_alloc_string_copy( work_path );
-  } else {
-    /* Homemade realpath() for not existing path */
-    if (util_is_abs_path( path ))
-      return util_alloc_string_copy( path );
-    else {
-      char * cwd       = util_alloc_cwd( );
-      char * abs_path  = util_realloc( cwd , strlen( cwd ) + 1 + strlen( path ) + 1 , __func__);
-      strcat( abs_path , UTIL_PATH_SEP_STRING );
-      strcat( abs_path , path );
-      return abs_path;
-    }
-  }
+  if (util_entry_exists( path )) 
+    return __alloc_realpath( path );
+  else 
+    return util_alloc_cwd_abs_path( path );
 }
 
 

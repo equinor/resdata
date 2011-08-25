@@ -48,6 +48,9 @@ endif()
 #target_link_libraries( util_static m ${LAPACK_LIBRARY} )
 #target_link_libraries( util_shared m ${LAPACK_LIBRARY} )
 
+target_link_libraries( util_static m )
+target_link_libraries( util_shared m )
+
 set_target_properties( util_static PROPERTIES OUTPUT_NAME util )
 set_target_properties( util_shared PROPERTIES OUTPUT_NAME util )
 
