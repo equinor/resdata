@@ -62,7 +62,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
                        rng_fscanf_ftype    * fscanf_state ,
                        rng_fprintf_ftype   * fprintf_state ,
                        rng_alg_type          type , 
-                       int state_size              , 
+                       int state_size , 
                        uint64_t max_value) {
 
   rng_type * rng = util_malloc( sizeof * rng , __func__ );

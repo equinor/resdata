@@ -39,7 +39,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <signal.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -51,6 +50,7 @@
 
 #ifdef HAVE_FORK
 #include <unistd.h>
+#include <sys/wait.h>
 #endif
 
 #ifdef HAVE_PTHREAD
@@ -2294,6 +2294,7 @@ size_t util_file_size(const char *file) {
   
   return buffer.st_size;
 }
+
 
 
 uid_t util_get_entry_uid( const char * file ) {
