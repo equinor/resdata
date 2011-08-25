@@ -129,6 +129,7 @@ const ecl_grid_type   * ecl_grid_get_global_grid( const ecl_grid_type * grid );
 bool                    ecl_grid_is_lgr( const ecl_grid_type * ecl_grid );
 double                  ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k);
 void                    ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , FILE * stream , double double_default);
+bool                    ecl_grid_test_lgr_consistency( const ecl_grid_type * ecl_grid );
 
 #ifdef __cplusplus
 }

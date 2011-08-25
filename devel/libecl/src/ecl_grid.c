@@ -1,18 +1,18 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
+   copyright (c) 2011  statoil asa, norway. 
     
-   The file 'ecl_grid.c' is part of ERT - Ensemble based Reservoir Tool. 
+   the file 'ecl_grid.c' is part of ert - ensemble based reservoir tool. 
     
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
+   ert is free software: you can redistribute it and/or modify 
+   it under the terms of the gnu general public license as published by 
+   the free software foundation, either version 3 of the license, or 
    (at your option) any later version. 
     
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
+   ert is distributed in the hope that it will be useful, but without any 
+   warranty; without even the implied warranty of merchantability or 
+   fitness for a particular purpose.   
     
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+   see the gnu general public license at <http://www.gnu.org/licenses/gpl.html> 
    for more details. 
 */
 
@@ -37,203 +37,217 @@
 #include <point.h>
 #include <tetrahedron.h>
 
-/**
-  This function implements functionality to load ECLISPE grid files,
-  both .EGRID and .GRID files - in a transparent fashion.
+#define DIMENS_KW      "DIMENS"
+#define LGR_KW         "LGR"
+#define LGR_PARENT_KW  "LGRPARNT"
+#define GLOBAL_STRING  "GLOBAL"
+#define GRIDHEAD_KW    "GRIDHEAD"
+#define ZCORN_KW       "ZCORN"
+#define COORD_KW       "COORD"     // GRID
+#define ACTNUM_KW      "ACTNUM"
+#define MAPAXES_KW     "MAPAXES"
+#define HOSTNUM_KW     "HOSTNUM"
+#define COORDS_KW      "COORDS"    // EGRID
+#define CORNERS_KW     "CORNERS"    
 
-  Observe the following convention:
+
+/**
+  this function implements functionality to load eclispe grid files,
+  both .egrid and .grid files - in a transparent fashion.
+
+  observe the following convention:
 
   global_index:  [0 , nx*ny*nz)
   active_index:  [0 , nactive)
 
-  About indexing
+  about indexing
   --------------
 
-  There are three different ways to index/access a cell:
+  there are three different ways to index/access a cell:
 
-    1. By ijk
-    2. By global index, [0 , nx*ny*nz)
-    3. By active index, [0 , nactive)
+    1. by ijk
+    2. by global index, [0 , nx*ny*nz)
+    3. by active index, [0 , nactive)
 
-  Most of the query functions can take input in several of the
-  ways. The expected arguments are indicated as the last part of the
+  most of the query functions can take input in several of the
+  ways. the expected arguments are indicated as the last part of the
   function name:
 
     ecl_grid_get_pos3()  - 3:  this function expects i,j,k
     ecl_grid_get_pos1()  - 1:  this function expects a global index
-    ecl_grid_get_pos1A() - 1A: this function expects an active index.
+    ecl_grid_get_pos1a() - 1a: this function expects an active index.
     
 */
 
 
 /**
-   Note about LGR
+   note about lgr
    --------------
 
-   The ECLIPSE Local Grid Refinement (LGR) is organised as follows:
+   the eclipse local grid refinement (lgr) is organised as follows:
 
-     1. You start with a normal grid.
-     2. Some of the cells can be subdivided into further internal
-        grids, this is the LGR.
+     1. you start with a normal grid.
+     2. some of the cells can be subdivided into further internal
+        grids, this is the lgr.
 
-   This is illustrated below:
+   this is illustrated below:
 
 
     +--------------------------------------+
     |            |            |            |
     |            |            |            |
-    |     X      |      X     |     X      |
+    |     x      |      x     |     x      |
     |            |            |            |
     |            |            |            |
     -------------|------------|------------|
     |     |      |      |     |            |
     |     |  x   |   x  |     |            |
-    |-----X------|------X-----|     X      |
+    |-----x------|------x-----|     x      |
     |  x  |  x   |   x  |     |            |
     |     |      |      |     |            |
     -------------|------------|------------|
     |            |            |            |
     |            |            |            |
-    |     X      |            |            |
+    |     x      |            |            |
     |            |            |            |
     |            |            |            |
     +--------------------------------------+
 
 
-  The grid above shows the following:
+  the grid above shows the following:
 
-    1. The coarse (i.e. normal) grid has 9 cells, of which 7 marked
-       with 'X' are active.
+    1. the coarse (i.e. normal) grid has 9 cells, of which 7 marked
+       with 'x' are active.
 
-    2. Two of the cells have been refined into new 2x2 grids. In the
+    2. two of the cells have been refined into new 2x2 grids. in the
        refined cells only three and two of the refined cells are
        active.
 
-  In a GRID file the keywords for this grid will look like like this:
+  in a grid file the keywords for this grid will look like like this:
 
 
   .....    __
-  COORDS     \
-  CORNERS     |
-  COORDS      |
-  CORNERS     |
-  COORDS      |
-  CORNERS     |      Normal COORD / CORNERS kewyords
-  COORDS      |      for the nine coarse cells. Observe
-  CORNERS     |      that when reading in these cells it is
-  COORDS      |      IMPOSSIBLE to know that some of the
-  CORNERS     |      cells will be subdivieded in a following
-  COORDS      |      LGR definition.
-  CORNERS     |
-  COORDS      |
-  CORNERS     |
-  COORDS      |    
-  CORNERS     |      
-  COORDS      |      
-  CORNERS  __/________________________________________________________  
-  LGR        \
-  LGRILG      |     
-  DIMENS      |       
-  COORDS      |
-  CORNERS     |      First LGR, with some header information, 
-  COORDS      |      and then normal COORDS/CORNERS keywords for
-  CORNERS     |      the four refined cells.
-  COORDS      |
-  CORNERS     |
-  COORDS      |
-  CORNERS  __/
-  LGR        \
-  LGRILG      |
-  DIMENS      |
-  COORDS      |      Second LGR.
-  CORNERS     |
-  COORDS      |
-  CORNERS     |
-  COORDS      |
-  CORNERS     |
-  COORDS      |
-  CORNERS  __/
+  coords     \
+  corners     |
+  coords      |
+  corners     |
+  coords      |
+  corners     |      normal coord / corners kewyords
+  coords      |      for the nine coarse cells. observe
+  corners     |      that when reading in these cells it is
+  coords      |      impossible to know that some of the
+  corners     |      cells will be subdivieded in a following
+  coords      |      lgr definition.
+  corners     |
+  coords      |
+  corners     |
+  coords      |    
+  corners     |      
+  coords      |      
+  corners  __/________________________________________________________  
+  lgr        \
+  lgrilg      |     
+  dimens      |       
+  coords      |
+  corners     |      first lgr, with some header information, 
+  coords      |      and then normal coords/corners keywords for
+  corners     |      the four refined cells.
+  coords      |
+  corners     |
+  coords      |
+  corners  __/
+  lgr        \
+  lgrilg      |
+  dimens      |
+  coords      |      second lgr.
+  corners     |
+  coords      |
+  corners     |
+  coords      |
+  corners     |
+  coords      |
+  corners  __/
 
   
-  For EGRID files it is essentially the same, except for replacing the
-  keywords COORDS/CORNERS with COORD/ZCORN/ACTNUM. Also the LGR
+  for egrid files it is essentially the same, except for replacing the
+  keywords coords/corners with coord/zcorn/actnum. also the lgr
   headers are somewhat different.  
 
-  Solution data in restart files comes in a similar way, a restart
-  file with LGR can typically look like this:
+  solution data in restart files comes in a similar way, a restart
+  file with lgr can typically look like this:
 
   .....   __
   .....     \ 
-  STARTSOL   |   All restart data for the ordinary
-  PRESSURE   |   grid.
-  SWAT       |
-  SGAS       |
+  startsol   |   all restart data for the ordinary
+  pressure   |   grid.
+  swat       |
+  sgas       |
   ....       |
-  ENDSOL  __/____________________________ 
-  LGR       \
+  endsol  __/____________________________ 
+  lgr       \
   ....       |
-  STARTSOL   |   Restart data for 
-  PRESSURE   |   the first LGR.
-  SGAS       |
-  SWAT       |
+  startsol   |   restart data for 
+  pressure   |   the first lgr.
+  sgas       |
+  swat       |
   ...        |
-  ENDSOL     |
-  ENDLGR  __/   
-  LGR       \ 
+  endsol     |
+  endlgr  __/   
+  lgr       \ 
   ....       |
-  STARTSOL   |   Restart data for 
-  PRESSURE   |   the second LGR.
-  SGAS       |
-  SWAT       |
+  startsol   |   restart data for 
+  pressure   |   the second lgr.
+  sgas       |
+  swat       |
   ...        |
-  ENDSOL     |
-  ENDLGR  __/
+  endsol     |
+  endlgr  __/
 
 
-  The LGR implementation in is based on the following main principles:
+  the lgr implementation in is based on the following main principles:
 
-   1. When loading a EGRID/GRID file one ecl_grid_type instance will
+   1. when loading a egrid/grid file one ecl_grid_type instance will
       be allocated; this grid will contain the main grid, and all the
       lgr grids. 
 
-   2. Only one datatype (ecl_grid_type) is used both for the main grid
+   2. only one datatype (ecl_grid_type) is used both for the main grid
       and the lgr grids.
 
-   3. The main grid will own (memory wise) all the lgr grids, this
+   3. the main grid will own (memory wise) all the lgr grids, this
       even applies to nested subgrids whose parent is also a lgr.
 
-   4. When it comes to indexing and so on there is no difference
+   4. when it comes to indexing and so on there is no difference
       between lgr grid and the main grid.
 
 
-      Example:
+      example:
       --------
 
       {
          ecl_file_type * restart_data = ecl_file_fread_alloc(restart_filename , true);                      // load some restart info to inspect
          ecl_grid_type * grid         = ecl_grid_alloc(grid_filename , true);                               // bootstrap ecl_grid instance
-         stringlist_type * lgr_names  = ecl_grid_alloc_name_list( grid );                                   // get a list of all the LGR names.
+         stringlist_type * lgr_names  = ecl_grid_alloc_name_list( grid );                                   // get a list of all the lgr names.
       
-         printf("Grid:%s has %d a total of %d LGR's \n", grid_filename , stringlist_get_size( lgr_names ));
+         printf("grid:%s has %d a total of %d lgr's \n", grid_filename , stringlist_get_size( lgr_names ));
          for (int lgr_nr = 0; lgr_nr < stringlist_get_size( lgr_names); lgr_nr++) {
-            ecl_grid_type * lgr_grid  = ecl_grid_get_lgr( grid , stringlist_iget( lgr_names , lgr_nr ));    // Get the ecl_grid instance of the lgr - by name.
+            ecl_grid_type * lgr_grid  = ecl_grid_get_lgr( grid , stringlist_iget( lgr_names , lgr_nr ));    // get the ecl_grid instance of the lgr - by name.
             ecl_kw_type   * pressure_kw;
             int nx,ny,nz,active_size;
-            ecl_grid_get_dims( lgr_grid , &nx , &ny , &nz , &active_size);                             // Get some size info from this lgr.
-            printf("LGR:%s has %d x %d x %d elements \n",stringlist_iget(lgr_names , lgr_nr ) , nx , ny , nz);
+            ecl_grid_get_dims( lgr_grid , &nx , &ny , &nz , &active_size);                             // get some size info from this lgr.
+            printf("lgr:%s has %d x %d x %d elements \n",stringlist_iget(lgr_names , lgr_nr ) , nx , ny , nz);
 
-            // OK - now we want to extract the solution vector (pressure) corresponding to this lgr:
-            pressure_kw = ecl_file_iget_named_kw( ecl_file , "PRESSURE" , ecl_grid_get_grid_nr( lgr_grid ));
+            // ok - now we want to extract the solution vector (pressure) corresponding to this lgr:
+            pressure_kw = ecl_file_iget_named_kw( ecl_file , "pressure" , ecl_grid_get_grid_nr( lgr_grid ));
                                                                                       /|\
                                                                                        |
                                                                                        |   
-                                                                        We query the lgr_grid instance to find which
+                                                                        we query the lgr_grid instance to find which
                                                                         occurence of the solution data we should look
-                                                                        up in the ecl_file instance with restart data. Puuhh!!
+                                                                        up in the ecl_file instance with restart data. puuhh!!
 
             {
-               int center_index = ecl_grid_get_global_index3( lgr_grid , nx/2 , ny/2 , nz/2 );          // Ask the lgr_grid to get the index at the center of the lgr grid.
-               printf("The pressure in the middle of %s is %g \n", stinglist_iget( lgr_names , lgr_nr ) , ecl_kw_iget_as_double( pressure_kw , center_index ));
+               int center_index = ecl_grid_get_global_index3( lgr_grid , nx/2 , ny/2 , nz/2 );          // ask the lgr_grid to get the index at the center of the lgr grid.
+               printf("the pressure in the middle of %s is %g \n", stinglist_iget( lgr_names , lgr_nr ) , ecl_kw_iget_as_double( pressure_kw , center_index ));
             }
          }
          ecl_file_free( restart_data );
@@ -246,43 +260,43 @@
 
 
 /*
-  About tetraheder decomposition
+  about tetraheder decomposition
   ------------------------------
 
-  The table tetraheder_permutations describe how the cells can be
-  divided into twelve tetrahedrons. The dimensions in the the table
+  the table tetraheder_permutations describe how the cells can be
+  divided into twelve tetrahedrons. the dimensions in the the table
   are as follows:
 
-   1. The first dimension is the "way" the cell is divided into
-      tetrahedrons, there are two different ways. For cells where the
-      four point corners on a face are NOT in the same plane, the two
-      methods will not give the same result. Which one is "right"??
+   1. the first dimension is the "way" the cell is divided into
+      tetrahedrons, there are two different ways. for cells where the
+      four point corners on a face are not in the same plane, the two
+      methods will not give the same result. which one is "right"??
 
-   2. The second dimension is the tetrahedron number, for each way of
+   2. the second dimension is the tetrahedron number, for each way of
       the two ways there are a total of twelve tetrahedrons.
 
-   3. The third and list dimension is the point number in this
-      tetrahedron. When forming a tetrahedron the first input point
+   3. the third and list dimension is the point number in this
+      tetrahedron. when forming a tetrahedron the first input point
       should always be the point corresponding to center of the
-      cell. That is not explicit in this table.
+      cell. that is not explicit in this table.
 
-   I.e. for instance the third tetrahedron for the first method
+   i.e. for instance the third tetrahedron for the first method
    consists of the cells:
 
         tetraheheder_permutations[0][2] = {0 , 4 , 5}
 
-   in addition to the central point. The value [0..7] correspond the
-   the number scheme of the corners in a cell used by ECLIPSE:
+   in addition to the central point. the value [0..7] correspond the
+   the number scheme of the corners in a cell used by eclipse:
 
 
-       Lower layer:   Upper layer  
+       lower layer:   upper layer  
                     
          2---3           6---7
          |   |           |   |
          0---1           4---5
 
 
-   Table entries are ripped from ECLPOST code - file: kvpvos.f in
+   table entries are ripped from eclpost code - file: kvpvos.f in
    klib/
 */
 
@@ -314,11 +328,11 @@ static const int tetrahedron_permutations[2][12][3] = {{{0 , 2 , 6},
 
 /*
 
-  The implementation is based on a hierarchy of three datatypes:
+  the implementation is based on a hierarchy of three datatypes:
 
-   1. ecl_grid   - This is the only exported datatype
-   2. ecl_cell   - Internal
-   3. point      - Implemented in file point.c
+   1. ecl_grid   - this is the only exported datatype
+   2. ecl_cell   - internal
+   3. point      - implemented in file point.c
 
 */
 
@@ -332,10 +346,11 @@ struct ecl_cell_struct {
   int                    active_index;
   point_type            *center;
   point_type            *corner_list[8];
-  const ecl_grid_type   *lgr;                /* If this cell is part of an LGR; this will point to a grid instance for that LGR; NULL if not part of LGR. */
-  int                    host_cell;          /* The global index of the host cell for an LGR cell, set to -1 for normal cells. */
-  bool                   tainted_geometry;   /* Lazy fucking stupid reservoir engineers make invalid grid cells - for kicks?? 
-                                                Must keep those cells out of real-world calculations with some hysteric heuristics.*/
+  const ecl_grid_type   *lgr;                /* if this cell is part of an lgr; this will point to a grid instance for that lgr; NULL if not part of lgr. */
+  int                    host_cell;          /* the global index of the host cell for an lgr cell, set to -1 for normal cells. */
+  bool                   tainted_geometry;   /* lazy fucking stupid reservoir engineers make invalid grid
+                                                cells - for kicks??  must try to keep those cells out of
+                                                real-world calculations with some hysteric heuristics.*/
 };  
 
 
@@ -344,35 +359,36 @@ struct ecl_cell_struct {
 #define ECL_GRID_ID 991010
 struct ecl_grid_struct {
   UTIL_TYPE_ID_DECLARATION;
-  int                   grid_nr;       /* This corresponds to item 4 in GRIDHEAD - 0 for the main grid. */ 
-  char                * name;          /* The name of the file for the main grid - name of the LGR for LGRs. */
+  int                   grid_nr;       /* this corresponds to item 4 in gridhead - 0 for the main grid. */ 
+  char                * name;          /* the name of the file for the main grid - name of the lgr for lgrs. */
   int                   ny,nz,nx;
   int                   size;          /* == nx*ny*nz */
   int                   total_active; 
-  bool                * visited;       /* Internal helper struct used when searching for index - can be NULL. */
-  int                 * index_map;     /* This a list of nx*ny*nz elements, where value -1 means inactive cell .*/
-  int                 * inv_index_map; /* This is list of total_active elements - which point back to the index_map. */
+  bool                * visited;       /* internal helper struct used when searching for index - can be NULL. */
+  int                 * index_map;     /* this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
+  int                 * inv_index_map; /* this is list of total_active elements - which point back to the index_map. */
   ecl_cell_type      ** cells;         
 
-  char                * parent_name;   /* The name of the parent for a nested LGR - for a LGR descending directly from the main grid this will be NULL. */
-  hash_type           * children;      /* A table of LGR children for this grid. */
-  const ecl_grid_type * parent_grid;   /* The parent grid for this (lgr) - NULL for the main grid. */      
-  const ecl_grid_type * global_grid;   /* The global grid - NULL for the main grid. */
-
+  char                * parent_name;   /* the name of the parent for a nested lgr - for the main grid, and also a
+                                          lgr descending directly from the main grid this will be NULL. */
+  hash_type           * children;      /* a table of lgr children for this grid. */
+  const ecl_grid_type * parent_grid;   /* the parent grid for this (lgr) - NULL for the main grid. */      
+  const ecl_grid_type * global_grid;   /* the global grid - NULL for the main grid. */
+  
   /*
-    The two fields below are for *storing* LGR grid instances. Observe
-    that these fields will be NULL for LGR grids, i.e. grids with
+    the two fields below are for *storing* lgr grid instances. observe
+    that these fields will be NULL for lgr grids, i.e. grids with
     grid_nr > 0. 
   */
-  vector_type         * LGR_list;      /* A vector of ecl_grid instances for LGR's - the index corresponds to the grid_nr. */
-  hash_type           * LGR_hash;      /* A hash of pointers to ecl_grid instances - for name based lookup of LGR. */
-  int                   parent_box[6]; /* Integers i1,i2, j1,j2, k1,k2 of the parent grid region containing this LGR. The indices are INCLUSIVE - zero offset */
-                                       /* Not used yet .. */ 
+  vector_type         * LGR_list;      /* a vector of ecl_grid instances for lgr's - the index corresponds to the grid_nr. */
+  hash_type           * LGR_hash;      /* a hash of pointers to ecl_grid instances - for name based lookup of lgr. */
+  int                   parent_box[6]; /* integers i1,i2, j1,j2, k1,k2 of the parent grid region containing this lgr. the indices are inclusive - zero offset */
+                                       /* not used yet .. */ 
   bool                  use_mapaxes;
   double                unit_x[2];
   double                unit_y[2];
   double                origo[2];
-  /*------------------------------:       The fields below this line are used for blocking algorithms - and not allocated by default.*/
+  /*------------------------------:       the fields below this line are used for blocking algorithms - and not allocated by default.*/
   int                    block_dim; /* == 2 for maps and 3 for fields. 0 when not in use. */
   int                    block_size;
   int                    last_block_index;
@@ -434,7 +450,7 @@ static double ecl_cell_max_z( const ecl_cell_type * cell ) {
 
 
 /**
-   The grid can be rotated so that it is not safe to consider only one
+   the grid can be rotated so that it is not safe to consider only one
    plane for the x/y min/max.
 */
 
@@ -463,19 +479,19 @@ static double ecl_cell_max_y( const ecl_cell_type * cell ) {
 
 
 /**
-   The problem is that some EXTREMELY FUCKING STUPID reservoir
-   engineers purpousely have made grids with invalid cells. Typically
-   the cells accomodating numerical AQUIFERS are located at an utm
+   the problem is that some extremely fucking stupid reservoir
+   engineers purpousely have made grids with invalid cells. typically
+   the cells accomodating numerical aquifers are located at an utm
    position (0,0).
 
-   Cells which have some pillars located in (0,0) and some cells
+   cells which have some pillars located in (0,0) and some cells
    located among the rest of the grid become completely warped - with
    insane volumes, parts of the reservoir volume doubly covered, and
    so on.
    
-   To keep these cells out of the real-world (i.e. involving utm
+   to keep these cells out of the real-world (i.e. involving utm
    coordinates) computations they are marked as 'tainted' in this
-   function. The tainting procedure is completely heuristic, and
+   function. the tainting procedure is completely heuristic, and
    probably wrong.
 */
 
@@ -494,9 +510,9 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
 
 
 /**
-   Observe that when allocating based on a GRID file not all cells are
-   necessarily accessed beyond this function. In general not all cells
-   will have a COORDS/CORNERS section in the GRID file.
+   observe that when allocating based on a grid file not all cells are
+   necessarily accessed beyond this function. in general not all cells
+   will have a coords/corners section in the grid file.
 */
 
 
@@ -536,8 +552,8 @@ static double ecl_cell_get_volume( const ecl_cell_type * cell ) {
   double           volume = 0;
   for (itet = 0; itet < 12; itet++) {
     /* 
-       Using both tetrahedron decompositions - gives good agreement
-       with PORV from ECLIPSE INIT files.
+       using both tetrahedron decompositions - gives good agreement
+       with porv from eclipse init files.
     */
     ecl_cell_init_tetrahedron( cell , &tet , 0 , itet );
     volume += tetrahedron_volume( &tet );
@@ -561,27 +577,27 @@ static double triangle_area(double x1 , double y1 , double x2 , double y2 , doub
 static bool triangle_contains(const point_type *p0 , const point_type * p1 , const point_type *p2 , double x , double y) {
   double epsilon = 1e-10;
 
-  double VT = triangle_area(p0->x , p0->y,
+  double vt = triangle_area(p0->x , p0->y,
                             p1->x , p1->y,
                             p2->x , p2->y);
 
-  if (VT < epsilon)  /* Zero size cells do not contain anything. */
+  if (vt < epsilon)  /* zero size cells do not contain anything. */
     return false;
   {
-    double V1 = triangle_area(p0->x , p0->y,
+    double v1 = triangle_area(p0->x , p0->y,
                               p1->x , p1->y,
                               x     , y); 
     
-    double V2 = triangle_area(p0->x , p0->y,
+    double v2 = triangle_area(p0->x , p0->y,
                               x     , y,
                               p2->x , p2->y);
     
-    double V3 = triangle_area(x     , y,
+    double v3 = triangle_area(x     , y,
                               p1->x , p1->y,
                               p2->x , p2->y);
     
     
-    if (fabs( VT - (V1 + V2 + V3 )) < epsilon)
+    if (fabs( vt - (v1 + v2 + v3 )) < epsilon)
       return true;
     else
       return false;
@@ -592,11 +608,11 @@ static bool triangle_contains(const point_type *p0 , const point_type * p1 , con
 
 
 /* 
-   If the layer defined by the cell corners 0-1-2-3 (lower == true) or
+   if the layer defined by the cell corners 0-1-2-3 (lower == true) or
    4-5-6-7 (lower == false) contain the point (x,y) the function will
    return true - otehrwise false.
    
-   The function works by dividing the cell face into two triangles,
+   the function works by dividing the cell face into two triangles,
    which are checked one at a time with the function
    triangle_contains().
 */
@@ -628,7 +644,7 @@ static bool ecl_cell_layer_contains_xy( const ecl_cell_type * cell , bool lower_
 }
 
 /*
-Deeper layer: (larger (negative) z values).
+deeper layer: (larger (negative) z values).
 ------------
 
   6---7
@@ -649,12 +665,12 @@ Deeper layer: (larger (negative) z values).
 
 static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_type * p) {
   /*
-    1. First check if the point z value is below the deepest point of
-       the cell, or above the shallowest => Return False.
+    1. first check if the point z value is below the deepest point of
+       the cell, or above the shallowest => return false.
 
-    2. Should do similar fast checks in x/y direction.
+    2. should do similar fast checks in x/y direction.
 
-    3. Full geometric verification.
+    3. full geometric verification.
   */
 
   if (cell->tainted_geometry) 
@@ -686,7 +702,7 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
     tetrahedron_type tet;
     
     if (ecl_cell_get_volume( cell ) > 0) {
-      /* Does never exit from this loop - only returns from the whole function. */
+      /* does never exit from this loop - only returns from the whole function. */
       while (true) {   
         ecl_cell_init_tetrahedron( cell , &tet , method , tetrahedron_nr );
         if (tetrahedron_contains( &tet , p )) 
@@ -694,11 +710,11 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
         
         tetrahedron_nr++;
         if (tetrahedron_nr == 12)
-          return false;  /* OK - cell did not contain point. */
+          return false;  /* ok - cell did not contain point. */
       } 
     } 
   }
-  util_abort("%s: Internal error - should not be here \n",__func__);
+  util_abort("%s: internal error - should not be here \n",__func__);
   return false;
 }
 
@@ -714,21 +730,21 @@ static void ecl_cell_free(ecl_cell_type * cell) {
   free(cell);
 }
 
-/* End of cell implementation                                    */
+/* end of cell implementation                                    */
 /*****************************************************************/
-/* Starting on the ecl_grid proper implementation                */
+/* starting on the ecl_grid proper implementation                */
 
 UTIL_SAFE_CAST_FUNCTION(ecl_grid , ECL_GRID_ID);
 
 /**
-   This function allocates the internal index_map and inv_index_map fields.
+   this function allocates the internal index_map and inv_index_map fields.
 */
 
 
 
 
 /**
-   This function uses heuristics (ahhh - I hate it) in an attempt to
+   this function uses heuristics (ahhh - i hate it) in an attempt to
    mark cells with fucked geometry - see further comments in the
    function ecl_cell_taint_cell() which actually does it.
 */
@@ -743,10 +759,10 @@ static void ecl_grid_taint_cells( ecl_grid_type * ecl_grid ) {
 
 
 /**
-   Will create a new blank grid instance. If the global_grid argument
+   will create a new blank grid instance. if the global_grid argument
    is != NULL the newly created grid instance will copy the mapaxes
    transformations; and set the global_grid pointer of the new grid
-   instance. Apart from that no further lgr-relationsip initialisation
+   instance. apart from that no further lgr-relationsip initialisation
    is performed.
 */
 
@@ -766,7 +782,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
   grid->cells         = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
 
   if (global_grid != NULL) {
-    /* This is an lgr instance, and we inherit the global grid
+    /* this is an lgr instance, and we inherit the global grid
        transformations from the main grid. */
     grid->unit_x[0]     = global_grid->unit_x[0];  
     grid->unit_x[1]     = global_grid->unit_x[1];  
@@ -792,9 +808,9 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
   }
   grid->block_dim      = 0;
   grid->values         = NULL;
-  if (grid_nr == 0) {  /* This is the main grid */
+  if (grid_nr == 0) {  /* this is the main grid */
     grid->LGR_list = vector_alloc_new(); 
-    vector_append_ref( grid->LGR_list , grid ); /* Adding a 'self' pointer as first inistance - without destructor! */
+    vector_append_ref( grid->LGR_list , grid ); /* adding a 'self' pointer as first inistance - without destructor! */
     grid->LGR_hash = hash_alloc();
   } else {
     grid->LGR_list = NULL;
@@ -845,7 +861,7 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
 
 
   /*
-    For normal runs actnum will be 1 for active cells,
+    for normal runs actnum will be 1 for active cells,
     for dual porosity models it can also be 2 and 3.
   */
   if (actnum[global_index] > 0)
@@ -856,39 +872,57 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
 static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type * coords_kw , const ecl_kw_type * corners_kw) {
   const int   * coords  = ecl_kw_get_int_ptr(coords_kw);
   const float * corners = ecl_kw_get_float_ptr(corners_kw);
-  const int i  = coords[0]; /* ECLIPSE 1 offset */
+  const int i  = coords[0]; /* eclipse 1 offset */
   const int j  = coords[1];
   const int k  = coords[2];
   const int global_index   = ecl_grid_get_global_index__(ecl_grid , i - 1, j - 1 , k - 1);
   ecl_cell_type * cell     = ecl_grid->cells[global_index];
 
-  /* The coords keyword can optionally contain 4,5 or 7 elements:
+  /* the coords keyword can optionally contain 4,5 or 7 elements:
 
         coords[0..2] = i,j,k
         coords[3]    = global_cell number (not used here)
         ----
         coords[4]    = 1,0 for active/inactive cells
-        coords[5]    = 0 for normal cells, icell of host cell for LGR cell.
-        coords[6]    = 0 for normal cells, coarsening group for coarsened cell [NOT TREATED YET].
+        coords[5]    = 0 for normal cells, icell of host cell for lgr cell.
+        coords[6]    = 0 for normal cells, coarsening group for coarsened cell [not treated yet].
 
-     If coords[4] is not present it is assumed that the cell is active.
+     if coords[4] is not present it is assumed that the cell is active.
+
+     Note about LGRs: The GRID file format has an additional keyword called
+     LGRILG which maps out the parent box containing an LGR - this only
+     duplicates the information which can be learned from the coords[5] element,
+     and is not used in the current code - however in good Schlum tradition a
+     file 4/5 element COORDS keywords and LGRs might come any day - then we are
+     fucked.
   */
 
   {
     int c;
     int coords_size = ecl_kw_get_size(coords_kw);
 
+    /* 
+       The grid_nr > 0 test essentially checks if this is a LGR; if
+       this test applies we either have bug - or a GRID file with LGRs
+       and only 4/5 elemenets in the coords keywords. In the latter
+       case we must start using the LGRILG keyword.
+    */
+    if ((ecl_grid->grid_nr > 0) && (coords_size != 7)) 
+      util_abort("%s: Need 7 element coords keywords for LGR - or reimplement to use LGRILG keyword.\n",__func__);
+    
     switch(coords_size) {
-    case(4):                /* All cells active */
+    case(4):                /* all cells active */
       cell->active = true;
       break;
-    case(5):                /* Only spesific cells active - no LGR */
+    case(5):                /* only spesific cells active - no lgr */
       cell->active  = (coords[4] == 1) ? true : false;
       break;
     case(7):
       cell->active    = (coords[4] == 1) ? true : false;
       cell->host_cell = coords[5] - 1;
       break;
+    default:
+      util_abort("%s: coord size:%d unrecognized - should 4,5 or 7.\n",__func__ , coords_size);
     }
     
     for (c = 0; c < 8; c++) {
@@ -901,7 +935,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
 }
 
 /**
-   The functions ecl_grid_set_active_index() must be called
+   the functions ecl_grid_set_active_index() must be called
    immediately prior to calling this function, to ensure that
    ecl_grid->total_active is correct.
 */
@@ -964,16 +998,16 @@ static void ecl_grid_pillar_cross_planes(const point_type * pillar , const doubl
 
 
 /**
-   This function must be run before the cell coordinates are
-   calculated.  This function is only called for the main grid
-   instance, and not for LGRs; the LGRs will inherit the mapaxes
+   this function must be run before the cell coordinates are
+   calculated.  this function is only called for the main grid
+   instance, and not for lgrs; the lgrs will inherit the mapaxes
    settings from the global grid.
  */
 
 
 static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , const float * mapaxes) {
   if (ecl_grid->global_grid != NULL)
-    util_abort("%s: Hmmmm - this is a major fuck up; trying to grid transformation data from MAPAXES for a subgrid(lgr)\n",__func__);
+    util_abort("%s: hmmmm - this is a major fuck up; trying to grid transformation data from mapaxes for a subgrid(lgr)\n",__func__);
   {
     const double unit_y[2] = {mapaxes[0] - mapaxes[2] , mapaxes[1] - mapaxes[3]};
     const double unit_x[2] = {mapaxes[4] - mapaxes[2] , mapaxes[5] - mapaxes[3]};
@@ -999,36 +1033,36 @@ static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , const float * mapa
 
 
 /**
-   This function will add a ecl_grid instance as a LGR to the main
-   grid. The LGR grid as added to two different structures of the main
+   this function will add a ecl_grid instance as a lgr to the main
+   grid. the lgr grid as added to two different structures of the main
    grid:
 
-    1. In the main_grid->LGR_list the LGR instances are inserted in
-       order of occurence in the GRID file. The following equalities
+    1. in the main_grid->lgr_list the lgr instances are inserted in
+       order of occurence in the grid file. the following equalities
        should apply:
 
-          occurence number in file == lgr_grid->grid_nr == GRIDHEAD(4) for lgr == index in the LGR_list vector
+          occurence number in file == lgr_grid->grid_nr == gridhead(4) for lgr == index in the lgr_list vector
   
-       When installed in the LGR_list vector the lgr grid is installed
+       when installed in the lgr_list vector the lgr grid is installed
        with a destructor, i.e. the grid is destroyed when the vector
        is destroyed.
 
-    2. In the main->LGR_hash the lgr instance is installed with the
-       LGRNAME as key. Only a reference is installed in the hash
+    2. in the main->lgr_hash the lgr instance is installed with the
+       lgrname as key. only a reference is installed in the hash
        table. 
 
-    Observe that this is in principle somewhat different from the
+    observe that this is in principle somewhat different from the
     install functions below; here the lgr is added to the top level
     grid (i.e. the main grid) which has the storage responsability of
-    all the lgr instances. The cell->lgr relationship is established
-    in the _install_EGRID / install_GRID functions further down.
+    all the lgr instances. the cell->lgr relationship is established
+    in the _install_egrid / install_grid functions further down.
 */
 
 
 static void ecl_grid_add_lgr( ecl_grid_type * main_grid , ecl_grid_type * lgr_grid) {
   int next_grid_nr = vector_get_size( main_grid->LGR_list );
   if (next_grid_nr != lgr_grid->grid_nr) 
-    util_abort("%s: index based insertion of LGR grid failed. next_grid_nr:%d  lgr->grid_nr:%d \n",__func__ , next_grid_nr , lgr_grid->grid_nr);
+    util_abort("%s: index based insertion of lgr grid failed. next_grid_nr:%d  lgr->grid_nr:%d \n",__func__ , next_grid_nr , lgr_grid->grid_nr);
   {
     vector_append_owned_ref( main_grid->LGR_list , lgr_grid , ecl_grid_free__);
     hash_insert_ref( main_grid->LGR_hash , lgr_grid->name , lgr_grid);
@@ -1036,11 +1070,16 @@ static void ecl_grid_add_lgr( ecl_grid_type * main_grid , ecl_grid_type * lgr_gr
 }
 
 
+static void ecl_grid_install_lgr_common(ecl_grid_type * host_grid , ecl_grid_type * lgr_grid) {
+  hash_insert_ref( host_grid->children , lgr_grid->name , lgr_grid);
+  lgr_grid->parent_grid = host_grid;
+}
+
 
 /**
-   This function will set the lgr pointer of the relevant cells in the
-   host grid to point to the lgr_grid. Observe that the ecl_cell_type
-   instances do *NOT* own the lgr_grid - all lgr_grid instances are
+   this function will set the lgr pointer of the relevant cells in the
+   host grid to point to the lgr_grid. observe that the ecl_cell_type
+   instances do *not* own the lgr_grid - all lgr_grid instances are
    owned by the main grid.
 */
 
@@ -1048,48 +1087,45 @@ static void ecl_grid_install_lgr_EGRID(ecl_grid_type * host_grid , ecl_grid_type
   int global_lgr_index;
 
   for (global_lgr_index = 0; global_lgr_index < lgr_grid->size; global_lgr_index++) {
+    int host_index = hostnum[ global_lgr_index ] - 1;
     ecl_cell_type * lgr_cell = lgr_grid->cells[global_lgr_index];
-    if (lgr_cell->active) {
-      ecl_cell_type * host_cell = host_grid->cells[ hostnum[ global_lgr_index ] ];
-      ecl_cell_install_lgr( host_cell , lgr_grid );
-
-      lgr_cell->host_cell = hostnum[ global_lgr_index ] - 1;  /* HOSTNUM has offset 1 (I think ... ) */
-    }
+    ecl_cell_type * host_cell = host_grid->cells[ host_index ];
+  
+    ecl_cell_install_lgr( host_cell , lgr_grid );
+    lgr_cell->host_cell = host_index;
   }
-  hash_insert_ref( host_grid->children , lgr_grid->name , lgr_grid);
-  lgr_grid->parent_grid = host_grid;
+  ecl_grid_install_lgr_common( host_grid , lgr_grid );
 }
 
 
 /**
-   Similar to ecl_grid_install_lgr_EGRID for GRID based instances. 
+   similar to ecl_grid_install_lgr_egrid for grid based instances.
 */
-static void ecl_grid_install_lgr_GRID(ecl_grid_type * host_grid , const ecl_grid_type * lgr_grid) {
+static void ecl_grid_install_lgr_GRID(ecl_grid_type * host_grid , ecl_grid_type * lgr_grid) {
   int global_lgr_index;
   
   for (global_lgr_index = 0; global_lgr_index < lgr_grid->size; global_lgr_index++) {
     ecl_cell_type * lgr_cell = lgr_grid->cells[global_lgr_index];
-    if (lgr_cell->active) {
-      ecl_cell_type * host_cell = host_grid->cells[ lgr_cell->host_cell ];
-      ecl_cell_install_lgr( host_cell , lgr_grid );
-    }
+    ecl_cell_type * host_cell = host_grid->cells[ lgr_cell->host_cell ];
+    ecl_cell_install_lgr( host_cell , lgr_grid );
   }
+  ecl_grid_install_lgr_common( host_grid , lgr_grid );
 }
 
 
 
 /**
-   Sets the name of the lgr AND the name of the parent, if this is a
-   nested LGR. For normal LGR descending directly from the coarse grid
+   sets the name of the lgr and the name of the parent, if this is a
+   nested lgr. for normal lgr descending directly from the coarse grid
    the parent_name is set to NULL.
 */
    
 
 static void ecl_grid_set_lgr_name_EGRID(ecl_grid_type * lgr_grid , const ecl_file_type * ecl_file , int grid_nr) {
-  ecl_kw_type * lgrname_kw = ecl_file_iget_named_kw( ecl_file , "LGR" , grid_nr - 1);
-  lgr_grid->name = util_alloc_strip_copy( ecl_kw_iget_ptr( lgrname_kw , 0) );  /* Trailing zeros are stripped away. */
-  if (ecl_file_has_kw( ecl_file , "LGRPARNT")) {
-    ecl_kw_type * parent_kw = ecl_file_iget_named_kw( ecl_file , "LGRPARNT" , grid_nr - 1);
+  ecl_kw_type * lgrname_kw = ecl_file_iget_named_kw( ecl_file , LGR_KW , grid_nr - 1);
+  lgr_grid->name = util_alloc_strip_copy( ecl_kw_iget_ptr( lgrname_kw , 0) );  /* trailing zeros are stripped away. */
+  if (ecl_file_has_kw( ecl_file , LGR_PARENT_KW)) {
+    ecl_kw_type * parent_kw = ecl_file_iget_named_kw( ecl_file , LGR_PARENT_KW , grid_nr - 1);
     char * parent = util_alloc_strip_copy( ecl_kw_iget_ptr( parent_kw , 0));
 
     if (strlen( parent ) > 0) 
@@ -1100,21 +1136,29 @@ static void ecl_grid_set_lgr_name_EGRID(ecl_grid_type * lgr_grid , const ecl_fil
 }
 
 /**
-   Sets the name of the lgr AND the name of the parent, if this is a
-   nested LGR. For LGR descending directly from the parent ECLIPSE
-   will supply 'GLOBAL' (whereas for EGRID it will return '' -
-   cool?). Anyway GLOBAL -> NULL.
+   sets the name of the lgr and the name of the parent, if this is a
+   nested lgr. for lgr descending directly from the parent eclipse
+   will supply 'global' (whereas for egrid it will return '' -
+   cool?). anyway global -> NULL.
 */
 
 static void ecl_grid_set_lgr_name_GRID(ecl_grid_type * lgr_grid , const ecl_file_type * ecl_file , int grid_nr) {
-  ecl_kw_type * lgr_kw = ecl_file_iget_named_kw( ecl_file , "LGR" , grid_nr - 1);
-  lgr_grid->name = util_alloc_strip_copy( ecl_kw_iget_ptr( lgr_kw , 0) );  /* Trailing zeros are stripped away. */
+  ecl_kw_type * lgr_kw = ecl_file_iget_named_kw( ecl_file , LGR_KW , grid_nr - 1);
+  lgr_grid->name = util_alloc_strip_copy( ecl_kw_iget_ptr( lgr_kw , 0) );  /* trailing zeros are stripped away. */
   {
-    char * parent = util_alloc_strip_copy( ecl_kw_iget_ptr( lgr_kw , 1));
-    if ((strlen(parent) == 0) || (strcmp(parent , "GLOBAL") == 0))
-      free( parent );
-    else
-      lgr_grid->parent_name = parent;
+    /**
+       the lgr keyword can have one or two elements; in the case of two elements
+       the second element will be the name of the parent grid - in the case of
+       only one element the current lgr is assumed to descend from the main grid
+    */
+    if (ecl_kw_get_size( lgr_kw ) == 2) {
+      char * parent = util_alloc_strip_copy( ecl_kw_iget_ptr( lgr_kw , 1));
+      
+      if ((strlen(parent) == 0) || (strcmp(parent , GLOBAL_STRING ) == 0))
+        free( parent );
+      else
+        lgr_grid->parent_name = parent;
+    }
   }
 }
 
@@ -1264,14 +1308,14 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( const ecl_kw_type * gridhead_kw , cons
 
 
 static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const ecl_file_type * ecl_file , int grid_nr) {
-  ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , "GRIDHEAD" , grid_nr);
-  ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , "ZCORN"     , grid_nr);
-  ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , "COORD"     , grid_nr);
-  ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , "ACTNUM"    , grid_nr);
+  ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , GRIDHEAD_KW , grid_nr);
+  ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , ZCORN_KW     , grid_nr);
+  ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , COORD_KW     , grid_nr);
+  ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , ACTNUM_KW    , grid_nr);
   ecl_kw_type * mapaxes_kw   = NULL; 
   
-  if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , "MAPAXES"))) 
-    mapaxes_kw   = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
+  if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , MAPAXES_KW))) 
+    mapaxes_kw   = ecl_file_iget_named_kw( ecl_file , MAPAXES_KW , grid_nr);
   {
     ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__( main_grid , 
                                                            gridhead_kw , 
@@ -1296,7 +1340,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
     util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
   {
     ecl_file_type * ecl_file   = ecl_file_fread_alloc( grid_file );
-    int num_grid               = ecl_file_get_num_named_kw( ecl_file , "GRIDHEAD" );
+    int num_grid               = ecl_file_get_num_named_kw( ecl_file , GRIDHEAD_KW );
     ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( NULL , ecl_file , 0 );
     
     for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
@@ -1304,12 +1348,12 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
       ecl_grid_add_lgr( main_grid , lgr_grid );
       {
         ecl_grid_type * host_grid;
-        ecl_kw_type   * hostnum_kw = ecl_file_iget_named_kw( ecl_file , "HOSTNUM" , grid_nr - 1);
+        ecl_kw_type   * hostnum_kw = ecl_file_iget_named_kw( ecl_file , HOSTNUM_KW , grid_nr - 1);
         if (lgr_grid->parent_name == NULL)
           host_grid = main_grid;
         else 
           host_grid = ecl_grid_get_lgr( main_grid , lgr_grid->parent_name );
-          
+        
         ecl_grid_install_lgr_EGRID( host_grid , lgr_grid , ecl_kw_get_int_ptr( hostnum_kw) );
       }
     }
@@ -1333,13 +1377,14 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
 */
 
 static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const ecl_file_type * ecl_file , int * cell_offset , int grid_nr) {
-  int index,nx,ny,nz;
+  int index,nx,ny,nz,size;
   ecl_grid_type * grid;
-  ecl_kw_type * dimens_kw   = ecl_file_iget_named_kw( ecl_file , "DIMENS" , grid_nr);
+  ecl_kw_type * dimens_kw   = ecl_file_iget_named_kw( ecl_file , DIMENS_KW , grid_nr);
   nx   = ecl_kw_iget_int(dimens_kw , 0);
   ny   = ecl_kw_iget_int(dimens_kw , 1);
   nz   = ecl_kw_iget_int(dimens_kw , 2);
   grid = ecl_grid_alloc_empty(global_grid , nx , ny , nz, grid_nr);
+  size = nx*ny*nz;
   
   /*
     Possible LGR cells will follow *AFTER* the first nx*ny*nz cells;
@@ -1348,19 +1393,18 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
     ecl_grid_set_cell_GRID() function.
   */
   
-  if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , "MAPAXES"))) {
-    const ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , grid_nr);
+  if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , MAPAXES_KW))) {
+    const ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , MAPAXES_KW , grid_nr);
     ecl_grid_init_mapaxes( grid , ecl_kw_get_float_ptr( mapaxes_kw) );
   }
   
   {
-    int num_coords = ecl_file_get_num_named_kw( ecl_file , "COORDS" );
-    for (index = 0; index < num_coords; index++) {
-      ecl_kw_type * coords_kw  = ecl_file_iget_named_kw(ecl_file , "COORDS"  , index + (*cell_offset));
-      ecl_kw_type * corners_kw = ecl_file_iget_named_kw(ecl_file , "CORNERS" , index + (*cell_offset));
+    for (index = 0; index < size; index++) {
+      ecl_kw_type * coords_kw  = ecl_file_iget_named_kw(ecl_file , COORDS_KW  , index + (*cell_offset));
+      ecl_kw_type * corners_kw = ecl_file_iget_named_kw(ecl_file , CORNERS_KW , index + (*cell_offset));
       ecl_grid_set_cell_GRID(grid , coords_kw , corners_kw);
     }
-    (*cell_offset) += num_coords;
+    (*cell_offset) += size;
   }
 
   ecl_grid_set_center(grid);
@@ -1382,7 +1426,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
   {
     int cell_offset = 0;
     ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file );
-    int num_grid              = ecl_file_get_num_named_kw( ecl_file , "DIMENS");
+    int num_grid              = ecl_file_get_num_named_kw( ecl_file , DIMENS_KW);
     ecl_grid_type * main_grid = ecl_grid_alloc_GRID__(NULL , ecl_file , &cell_offset , 0);
     for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
       ecl_grid_type * lgr_grid = ecl_grid_alloc_GRID__(main_grid , ecl_file , &cell_offset , grid_nr );
@@ -2434,6 +2478,7 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
       ecl_grid_summarize( vector_iget_const( ecl_grid->LGR_list , grid_nr ));
     }
   }
+  ecl_grid_test_lgr_consistency( ecl_grid );
 }
 
 /*****************************************************************/
@@ -2647,4 +2692,43 @@ void ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_t
     util_abort("%s: size mismatch. ecl_kw must have either nx*ny*ny elements or nactive elements\n",__func__);
 
 }
+
+/*****************************************************************/
+
+
+static bool ecl_grid_test_lgr_consistency2( const ecl_grid_type * parent , const ecl_grid_type * child) {
+  bool consistent = true;
+
+  printf("Checking consistency %s <--> %s \n", ecl_grid_get_name( parent ) , ecl_grid_get_name( child ));
+  int child_size = ecl_grid_get_global_size( child );
+  for (int child_index = 0; child_index < child_size; child_index++) {
+    int parent_cell = ecl_grid_get_parent_cell1( child , child_index );
+    if (parent_cell >= 0) {
+      const ecl_grid_type * child_test = ecl_grid_get_cell_lgr1( parent , parent_cell );
+      if (child != child_test) {
+        fprintf(stderr , "Child parent mapping failure : ptr difference.\n");
+        consistent = false;
+      }
+    } else {
+      fprintf(stderr , "Child parent mapping failure : lgr has no parent cell.\n");
+      consistent = false;
+    }
+  }
+  return consistent;
+}
+
+
+
+bool ecl_grid_test_lgr_consistency( const ecl_grid_type * ecl_grid ) {
+  hash_iter_type * lgr_iter = hash_iter_alloc( ecl_grid->children );
+  bool consistent = true;
+  while (!hash_iter_is_complete( lgr_iter )) {
+    const ecl_grid_type * lgr = hash_iter_get_next_value( lgr_iter );
+    consistent &= ecl_grid_test_lgr_consistency2( ecl_grid , lgr );
+    consistent &= ecl_grid_test_lgr_consistency( lgr );
+  }
+  hash_iter_free( lgr_iter ); 
+  return consistent;
+}
+
 
