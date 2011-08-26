@@ -2470,10 +2470,12 @@ bool util_file_update_required(const char *src_file , const char *target_file) {
 
 
 
+static void util_localtime( time_t * t , struct tm * ts );
+
 static void __util_set_timevalues(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year) {
   struct tm ts;
 
-  localtime_r(&t , &ts);
+  util_localtime(&t , &ts);
   if (sec   != NULL) *sec   = ts.tm_sec;
   if (min   != NULL) *min   = ts.tm_min;
   if (hour  != NULL) *hour  = ts.tm_hour;
@@ -2582,10 +2584,10 @@ void util_inplace_forward_days(time_t * t , double days) {
   struct tm ts;
   int isdst;
   
-  localtime_r(t , &ts);
+  util_localtime(t , &ts);
   isdst = ts.tm_isdst;
   (*t) += ( time_t ) (days * 3600 * 24);
-  localtime_r(t , &ts);
+  util_localtime(t , &ts);
   (*t) += 3600 * (isdst - ts.tm_isdst);  /* Extra adjustment of +/- one hour if we have crossed exactly one daylight savings border. */
 }
 
@@ -4847,6 +4849,15 @@ void util_abort_set_executable( const char * executable ) {
 /* Conditional compilation; this last section includes several
    functions which are included if certain features like e.g. fork()
    are present. */
+
+static void util_localtime( time_t * t , struct tm * ts ) {
+#ifdef HAVE_LOCALTIME_R
+  localtime_r( t , ts );
+#else
+  struct tm * ts_shared = localtime( t );
+  memcpy( ts , ts_shared , sizeof * ts );
+#endif
+}
 
 #ifdef HAVE_FORK
 #include "util_fork.c"
