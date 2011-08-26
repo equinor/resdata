@@ -172,12 +172,10 @@ void         util_fprintf_int(int , int , FILE * );
 void         util_fprintf_string(const char *  , int , string_alignement_type ,  FILE * );
 void         util_fprintf_double(double , int , int , char , FILE *);
 bool         util_fscanf_date(FILE * , time_t *);
-char       * util_isscanf_alloc_envvar( const char * string , int env_index );
 bool         util_sscanf_date(const char * , time_t *);
 char       * util_blocking_alloc_stdin_line(unsigned long );
 char       * util_alloc_stdin_line();
 char       * util_realloc_stdin_line(char * );
-char       * util_alloc_PATH_executable(const char * );
 bool         util_is_executable(const char * );
 bool         util_entry_exists( const char * entry );
 bool         util_file_exists(const char *);
@@ -374,8 +372,7 @@ int    * util_sscanf_alloc_active_list(const char *  , int * );
 int      util_get_current_linenr(FILE * stream);
 const char * util_update_path_var(const char * , const char * , bool );
 
-const char * util_setenv( const char * variable , const char * value);
-char   * util_alloc_envvar( const char * value );
+
 int      util_get_type( void * data );
 void     util_fskip_int(FILE * stream);
 void     util_fskip_long(FILE * stream);
@@ -388,6 +385,14 @@ double   util_kahan_sum(const double *data, size_t N);
 #ifdef HAVE_FORK
 #include "util_fork.h"
 #endif
+
+#ifdef HAVE_GETENV
+char       * util_alloc_PATH_executable(const char * executable );
+char       * util_isscanf_alloc_envvar( const char * string , int env_index );
+const char * util_setenv( const char * variable , const char * value);
+char       * util_alloc_envvar( const char * value );
+#endif
+
 
 #ifdef HAVE_LOCKF
 FILE       * util_fopen_lockf(const char * , const char * );
