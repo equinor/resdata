@@ -552,6 +552,20 @@ static char * util_alloc_cwd_abs_path( const char * path ) {
 }
 
 
+#ifdef HAVE_REALPATH
+bool util_try_alloc_realpath(const char * input_path) {
+  char * buffer   = util_malloc(PATH_MAX + 1 , __func__);
+  char * new_path = NULL;
+
+  new_path = realpath( input_path , buffer);
+  free(buffer);
+  if (new_path == NULL) 
+    return false;
+  else 
+    return true;
+}
+#endif
+
 static char * __alloc_realpath(const char *path) {
 #ifdef HAVE_REALPATH
   char work_path[4096];
@@ -4559,6 +4573,10 @@ void util_abort_set_executable( const char * executable ) {
 /* Conditional compilation; this last section includes several
    functions which are included if certain features like e.g. fork()
    are present. */
+
+// Observe that there is some really ugly #ifdef HAVE_REALPATH in the
+// main code.
+
 
 static void util_localtime( time_t * t , struct tm * ts ) {
 #ifdef HAVE_LOCALTIME_R
