@@ -218,7 +218,6 @@ int          util_forward_line(FILE * , bool * );
 void         util_rewind_line(FILE *);
 int          util_count_content_file_lines(FILE * );
 int          util_count_file_lines(FILE * );
-FILE       * util_fopen_lockf(const char * , const char * );
 FILE       * util_mkdir_fopen( const char * filename , const char * mode );
 FILE       * util_fopen(const char *  , const char *);
 void         util_fclose( FILE * stream );
@@ -369,7 +368,6 @@ void     util_fwrite_compressed(const void * , int , FILE * );
 void     util_block_growing_file(const char * );
 void     util_block_growing_directory(const char * );
 char   * util_alloc_realpath(const char * );
-bool     util_try_lockf(const char *  , mode_t  , int * );
 bool     util_sscanf_bytesize(const char * , size_t *);
 void     util_sscanf_active_range(const char *  , int , bool * );
 int    * util_sscanf_alloc_active_list(const char *  , int * );
@@ -390,6 +388,12 @@ double   util_kahan_sum(const double *data, size_t N);
 #ifdef HAVE_FORK
 #include "util_fork.h"
 #endif
+
+#ifdef HAVE_LOCKF
+FILE       * util_fopen_lockf(const char * , const char * );
+bool     util_try_lockf(const char *  , mode_t  , int * );
+#endif
+
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_SCALAR(s,stream)  { if (fread(&s , sizeof s , 1 , stream) != 1) util_abort("%s: read failed: %s\n",__func__ , strerror(errno)); }
