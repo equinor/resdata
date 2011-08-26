@@ -208,7 +208,6 @@ bool         util_try_alloc_realpath(const char *);
 bool         util_string_match(const char * string , const char * pattern);
 bool         util_string_has_wildcard( const char * s);
 
-mode_t       util_get_entry_mode( const char * file );
 uid_t        util_get_entry_uid( const char * file );
 bool         util_entry_readable( const char * entry );
 bool         util_addmode_if_owner( const char * filename , mode_t add_mode );

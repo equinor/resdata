@@ -2312,17 +2312,6 @@ bool util_entry_readable( const char * entry ) {
 }
 
 
-/**
-   Returns the permission mode for the file.
-*/
-
-mode_t util_get_entry_mode( const char * file ) {
-  struct stat buffer;
-  stat( file , &buffer );
-  return buffer.st_mode & (S_IRWXU + S_IRWXG + S_IRWXO);
-}
-
-
 
 
 
