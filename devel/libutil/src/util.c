@@ -553,6 +553,20 @@ static char * util_alloc_cwd_abs_path( const char * path ) {
 
 
 #ifdef HAVE_REALPATH
+char * util_alloc_realpath(const char * input_path) {
+  char * buffer   = util_malloc(PATH_MAX + 1 , __func__);
+  char * new_path = NULL;
+  
+  new_path = realpath( input_path , buffer);
+  if (new_path == NULL) 
+    util_abort("%s: input_path:%s - failed %s(%d) \n",__func__ , input_path , strerror(errno) , errno);
+  else 
+    new_path = util_realloc(new_path , strlen(new_path) + 1, __func__);
+  
+  return new_path;
+}
+
+
 bool util_try_alloc_realpath(const char * input_path) {
   char * buffer   = util_malloc(PATH_MAX + 1 , __func__);
   char * new_path = NULL;
