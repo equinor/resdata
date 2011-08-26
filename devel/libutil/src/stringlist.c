@@ -19,12 +19,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <glob.h>
 #include <util.h>
 #include <stringlist.h>
 #include <vector.h>
 #include <buffer.h>
 
+#ifdef HAVE_GLOB
+#include <glob.h>
+#endif
 
 #define STRINGLIST_TYPE_ID 671855
 
@@ -588,6 +590,7 @@ void stringlist_sort(stringlist_type * s , string_cmp_ftype * string_cmp)
 
 /*****************************************************************/
 
+#ifdef HAVE_GLOB
 /*
   This function uses the stdlib function glob() to select file/path
   names matching a pattern. The stringlist is cleared when the
@@ -599,9 +602,9 @@ int stringlist_select_matching(stringlist_type * names , const char * pattern) {
   int match_count = 0;
   stringlist_clear( names );
   {
-    glob_t * pglob  = util_malloc( sizeof * pglob , __func__);
-    int glob_flags = 0;
     int i;
+    glob_t * pglob = util_malloc( sizeof * pglob , __func__);
+    int glob_flags = 0;
     glob( pattern , glob_flags , NULL , pglob);
     match_count = pglob->gl_pathc;
     for (i=0; i < pglob->gl_pathc; i++)
@@ -612,4 +615,4 @@ int stringlist_select_matching(stringlist_type * names , const char * pattern) {
   return match_count;
 }
 
-
+#endif
