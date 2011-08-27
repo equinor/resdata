@@ -42,8 +42,7 @@ struct ecl_kw_struct {
   char            * header8;              /* Header which is right padded with ' ' to become exactly 8 characters long. Should only be used internally.*/ 
   char            * header;               /* Header which is trimmed to no-space. */  
   char            * data;                 /* The actual data vector. */
-  bool              shared_data;          /* Whether this keyword has shared data or not. */ 
-  long int          __file_offset;        /* The in-file position of the start of this keyword - to support rewind() functionality. */
+  bool              shared_data;          /* Whether this keyword has shared data or not. */
 };
 
 
@@ -413,7 +412,6 @@ ecl_kw_type * ecl_kw_alloc_empty() {
   ecl_kw->shared_data    = false;
   ecl_kw->size           = 0;
   ecl_kw->sizeof_ctype   = 0;
-  ecl_kw->__file_offset  = -1;
 
   UTIL_TYPE_ID_INIT(ecl_kw , ECL_KW_TYPE_ID);
   
@@ -950,12 +948,6 @@ void ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 }
 
 
-void ecl_kw_rewind(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
-  if (ecl_kw->__file_offset >= 0)
-    fseek(fortio_get_FILE(fortio) , ecl_kw->__file_offset , SEEK_SET);
-  else
-    util_abort("%s: Trying to rewind a ecl_kw instance with invalid file_offset - not directly loaded from file? \n",__func__);
-}
 
 
 void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
@@ -991,7 +983,6 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
   int size;
   bool OK;
 
-  ecl_kw->__file_offset = fortio_ftell( fortio );
   if (fmt_file) {
     OK = ecl_kw_fscanf_qstring(header , "%8c" , 8 , stream); 
     if (OK) {
@@ -1044,10 +1035,11 @@ bool ecl_kw_fseek_kw(const char * kw , bool rewind , bool abort_on_error , forti
   cont     = true;
   kw_found = false;
   while (cont) {
+    long current_pos = fortio_ftell( fortio );
     bool header_OK = ecl_kw_fread_header(tmp_kw , fortio);
     if (header_OK) {
       if (ecl_kw_string_eq(ecl_kw_get_header8(tmp_kw) , kw)) {
-        ecl_kw_rewind(tmp_kw, fortio);
+        fortio_fseek( fortio , current_pos , SEEK_SET );
         kw_found = true;
         cont = false;
       } else
@@ -2189,9 +2181,10 @@ void ecl_kw_inplace_update_file(const ecl_kw_type * ecl_kw , const char * filena
       fortio_type * fortio =  fortio_fopen(filename , "r+" , ECL_ENDIAN_FLIP , fmt_file);
       ecl_kw_ifseek_kw(ecl_kw_get_header8(ecl_kw) , fortio , index);
       {
-        ecl_kw_type *file_kw = ecl_kw_alloc_empty();
+        ecl_kw_type * file_kw  = ecl_kw_alloc_empty();
+        long int   current_pos = fortio_ftell( fortio );
         ecl_kw_fread_header(file_kw , fortio);
-        ecl_kw_rewind(file_kw , fortio);
+        fortio_fseek( fortio , current_pos , SEEK_SET );
         
         if (!((file_kw->size == ecl_kw->size) && (file_kw->ecl_type == ecl_kw->ecl_type)))
           util_abort("%s: header mismatch when trying to update:%s in %s \n",__func__ , ecl_kw_get_header8(ecl_kw) , filename);

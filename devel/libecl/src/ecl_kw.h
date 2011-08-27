@@ -33,10 +33,9 @@ typedef struct ecl_kw_struct      ecl_kw_type;
 
 void           ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
 ecl_type_enum  ecl_kw_get_type(const ecl_kw_type *);
-const char   * ecl_kw_get_header8(const ecl_kw_type *);
+const char   * ecl_kw_get_header8(const ecl_kw_type *); 
 const char   * ecl_kw_get_header(const ecl_kw_type * ecl_kw );
 ecl_kw_type  * ecl_kw_alloc_empty();
-void           ecl_kw_rewind(const ecl_kw_type * , fortio_type *);
 bool           ecl_kw_fread_header(ecl_kw_type *, fortio_type *);
 void           ecl_kw_set_header_name(ecl_kw_type * , const char * );
 void           ecl_kw_set_header(ecl_kw_type  * , const char * , int , const char *);

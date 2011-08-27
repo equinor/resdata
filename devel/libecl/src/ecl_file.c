@@ -238,6 +238,7 @@ ecl_file_type * ecl_file_fread_alloc_selected_kw_fortio(fortio_type * fortio ,
     
     while( true ) {
       bool load_kw = true;
+      long current_offset  = fortio_ftell( fortio );
 
       if (ecl_kw_fread_header( work_kw , fortio )) {
         if (kw_list != NULL) 
@@ -254,14 +255,14 @@ ecl_file_type * ecl_file_fread_alloc_selected_kw_fortio(fortio_type * fortio ,
             stop_count++;
 
           if (stop_count == 2) {
-            ecl_kw_rewind( work_kw , fortio );   /* Rewind to facilitate new reading of this keyword. */
+            fortio_fseek( fortio , current_offset , SEEK_SET); /* Rewind to facilitate new reading of this keyword. */
             load_kw = false;
             break;
           }
         }
 
         if (load_kw) {
-          ecl_kw_rewind( work_kw , fortio );
+          fortio_fseek( fortio , current_offset , SEEK_SET);
           vector_append_owned_ref( ecl_file->kw_list , ecl_kw_fread_alloc( fortio ) , ecl_kw_free__);
         } else
           ecl_kw_fskip_data( work_kw , fortio );
