@@ -168,10 +168,14 @@ bool            ecl_util_fmt_file(const char *);
 char          * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , ecl_file_enum file_type , bool start_fmt , int report_nr);
 int             ecl_util_get_month_nr(const char * month_name);
 int             ecl_util_fname_report_cmp(const void *f1, const void *f2);
-int             ecl_util_select_filelist( const char * path , const char * base , ecl_file_enum file_type , bool fmt_file , stringlist_type * filelist);
+
 bool            ecl_util_valid_basename( const char * basename );
 const char *    ecl_util_get_phase_name( ecl_phase_enum phase );
 const char *    ecl_util_file_enum_iget( int index, int * value);
+
+#ifdef HAVE_GLOB
+int             ecl_util_select_filelist( const char * path , const char * base , ecl_file_enum file_type , bool fmt_file , stringlist_type * filelist);
+#endif
 
 #ifdef __cplusplus
 }
