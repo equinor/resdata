@@ -31,7 +31,10 @@
 #include <ecl_smspec.h>
 #include <ecl_file.h>
 #include <stringlist.h>
+
+#ifdef HAVE_FNMATCH
 #include <fnmatch.h>
+#endif
 
 
 /**
@@ -1608,6 +1611,7 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
    keys will match.
 */
 
+#ifdef HAVE_FNMATCH
 
 void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys) {
   hash_type * ex_keys = hash_alloc( );
@@ -1629,6 +1633,8 @@ void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec
   
   hash_free( ex_keys );
 }
+
+#endif
 
 
 /**
