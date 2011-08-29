@@ -29,6 +29,7 @@
 #define _GNU_SOURCE   // Defined to get access to pow10() function.
 #define __USE_GNU     // Defined to get access to pow10() function.
 #endif
+
 #include <string.h>
 #include <time.h>
 #include <math.h>
@@ -47,6 +48,11 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+#ifdef HAVE_FNMATCH
+#include <fnmatch.h>
+#else
+#include <windows.h>
+#endif
 
 #include <util.h>
 #include <buffer.h>
@@ -4599,6 +4605,20 @@ double util_pow10(double x) {
 #endif
 }
 
+
+int util_fnmatch( const char * pattern , const char * string ) {
+#ifdef HAVE_FNMATCH
+  return fnmatch( pattern , string , 0 );
+#esle
+
+  bool match = PathMatchSpec( string , pattern );
+  if (match)
+    return 0;
+  else
+    return 1;
+    
+#endif
+}
 
 /*****************************************************************/
 /* Conditional compilation; this last section includes several

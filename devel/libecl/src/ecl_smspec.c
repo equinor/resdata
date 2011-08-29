@@ -1611,7 +1611,6 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
    keys will match.
 */
 
-#ifdef HAVE_FNMATCH
 
 void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys) {
   hash_type * ex_keys = hash_alloc( );
@@ -1623,7 +1622,7 @@ void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec
     hash_iter_type * iter = hash_iter_alloc( smspec->gen_var_index );
     while (!hash_iter_is_complete( iter )) {
       const char * key = hash_iter_get_next_key( iter );
-      if ((pattern == NULL) || (fnmatch( pattern , key , 0) == 0)) {
+      if ((pattern == NULL) || (util_fnmatch( pattern , key ) == 0)) {
         if (!hash_has_key( ex_keys , key))
           stringlist_append_copy( keys , key );
       }
@@ -1633,8 +1632,6 @@ void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec
   
   hash_free( ex_keys );
 }
-
-#endif
 
 
 /**
