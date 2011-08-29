@@ -56,6 +56,14 @@ fwrite() from the standard library.
 */
 
 
+#define READ_MODE_TXT          "r"
+#define READ_MODE_BINARY       "rb"
+#define WRITE_MODE_TXT         "w"
+#define WRITE_MODE_BINARY      "wb" 
+#define READ_WRITE_MODE_TXT    "r+"
+#define READ_WRITE_MODE_BINARY "r+b"
+
+
 struct fortio_struct {
   FILE    *stream;
   char    *filename;
@@ -211,10 +219,38 @@ fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_
 }
 
 
-fortio_type * fortio_fopen(const char *filename , const char *mode, bool endian_flip_header , bool fmt_file) {
+fortio_type * fortio_fopen_reader(const char *filename , bool endian_flip_header , bool fmt_file) {
   fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
   
-  fortio->stream = util_fopen(fortio->filename , mode);
+  if (fmt_file)
+    fortio->stream = util_fopen(fortio->filename , READ_MODE_TXT);
+  else
+    fortio->stream = util_fopen(fortio->filename , READ_MODE_BINARY);
+  
+  return fortio;
+}
+
+
+fortio_type * fortio_fopen_readwrite(const char *filename , bool endian_flip_header , bool fmt_file) {
+  fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
+  
+  if (fmt_file)
+    fortio->stream = util_fopen(fortio->filename , READ_WRITE_MODE_TXT);
+  else
+    fortio->stream = util_fopen(fortio->filename , READ_WRITE_MODE_BINARY);
+  
+  return fortio;
+}
+
+
+fortio_type * fortio_fopen_writer(const char *filename , bool endian_flip_header , bool fmt_file) {
+  fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
+  
+  if (fmt_file)
+    fortio->stream = util_fopen(fortio->filename , WRITE_MODE_TXT);
+  else
+    fortio->stream = util_fopen(fortio->filename , WRITE_MODE_BINARY);
+  
   return fortio;
 }
 
@@ -226,7 +262,7 @@ static void fortio_free__(fortio_type * fortio) {
 }
 
 void fortio_free_FILE_wrapper(fortio_type * fortio) {
-  fortio_free__(fortio);
+  fortio_free__( fortio );
 }
 
 

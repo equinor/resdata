@@ -97,7 +97,7 @@ int main(int argc, char ** argv) {
     }
     
     {
-      fortio  = fortio_fopen(src_file , "w" , ECL_ENDIAN_FLIP, fmt_file );
+      fortio  = fortio_fopen_writer(src_file , ECL_ENDIAN_FLIP, fmt_file );
       for (ikw = 0; ikw < ecl_file_get_num_kw( ecl_file ); ikw++) {
         const ecl_kw_type * ecl_kw = ecl_file_iget_kw( ecl_file , ikw );
         const char * kw = ecl_kw_get_header( ecl_kw );

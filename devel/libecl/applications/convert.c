@@ -42,8 +42,8 @@ void file_convert(const char * src_file , const char * target_file, ecl_file_enu
       formatted_src = false;
   }
   
-  target = fortio_fopen(target_file , "w" , ECL_ENDIAN_FLIP , !formatted_src);
-  src    = fortio_fopen(src_file , "r" , ECL_ENDIAN_FLIP , formatted_src);
+  target = fortio_fopen_writer(target_file , ECL_ENDIAN_FLIP , !formatted_src);
+  src    = fortio_fopen_reader(src_file  , ECL_ENDIAN_FLIP , formatted_src);
   ecl_kw = ecl_kw_fread_alloc(src);
   if (ecl_kw == NULL) {
     fprintf(stderr,"Loading: %s failed - maybe you forgot the header? \n", src_file);
@@ -78,33 +78,33 @@ int main (int argc , char **argv) {
     
     if (file_type == ECL_OTHER_FILE) {
       if (argc != 3) {
-	fprintf(stderr,"When the file can not be recognized on the name as an ECLIPSE file you must give output_file as second (and final) argument \n");
-	exit(0);
+        fprintf(stderr,"When the file can not be recognized on the name as an ECLIPSE file you must give output_file as second (and final) argument \n");
+        exit(0);
       }
       target_file = argv[2];
       file_convert(src_file , target_file , file_type , fmt_file);
     } else {
       int file_nr;
       for (file_nr = 1; file_nr < argc; file_nr++) {
-	char *path;
-	char *basename;
-	char *extension;
-	src_file    = argv[file_nr];
-	file_type = ecl_util_get_file_type(src_file , &fmt_file , &report_nr);
-	if (file_type == ECL_OTHER_FILE) {
-	  fprintf(stderr,"File: %s - problem \n",src_file);
-	  fprintf(stderr,"In a list of many files ALL must be recognizable by their name. \n");
-	  exit(1);
-	}
-	util_alloc_file_components(src_file , &path , &basename , &extension);
-	
-	target_file = ecl_util_alloc_filename(path, basename , file_type , !fmt_file , report_nr);
-	file_convert(src_file , target_file , file_type , fmt_file);
-	
-	free(path);
-	free(basename);
-	free(extension);
-	free(target_file);
+        char *path;
+        char *basename;
+        char *extension;
+        src_file    = argv[file_nr];
+        file_type = ecl_util_get_file_type(src_file , &fmt_file , &report_nr);
+        if (file_type == ECL_OTHER_FILE) {
+          fprintf(stderr,"File: %s - problem \n",src_file);
+          fprintf(stderr,"In a list of many files ALL must be recognizable by their name. \n");
+          exit(1);
+        }
+        util_alloc_file_components(src_file , &path , &basename , &extension);
+        
+        target_file = ecl_util_alloc_filename(path, basename , file_type , !fmt_file , report_nr);
+        file_convert(src_file , target_file , file_type , fmt_file);
+        
+        free(path);
+        free(basename);
+        free(extension);
+        free(target_file);
       }
     }
     return 0;

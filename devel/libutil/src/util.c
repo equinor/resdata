@@ -4609,8 +4609,7 @@ double util_pow10(double x) {
 int util_fnmatch( const char * pattern , const char * string ) {
 #ifdef HAVE_FNMATCH
   return fnmatch( pattern , string , 0 );
-#esle
-
+#else
   bool match = PathMatchSpec( string , pattern );
   if (match)
     return 0;

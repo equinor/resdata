@@ -40,7 +40,7 @@ void unpack_file(const char * filename) {
     printf("** Warning: when unpacking unified summary files it as ambigous - starting with 0001  -> \n");
   }
   {
-    fortio_type   * fortio_src = fortio_fopen( filename , "r" , ECL_ENDIAN_FLIP , fmt_file );
+    fortio_type   * fortio_src = fortio_fopen_reader( filename , ECL_ENDIAN_FLIP , fmt_file );
     ecl_file_type * src_file;
     int    offset;
     int    report_step = 0;
@@ -80,7 +80,7 @@ void unpack_file(const char * filename) {
       
       if (src_file != NULL) {
         char * target_file = ecl_util_alloc_filename( NULL , base , target_type , fmt_file , report_step);
-        fortio_type * fortio_target = fortio_fopen( target_file , "w" , ECL_ENDIAN_FLIP , fmt_file );
+        fortio_type * fortio_target = fortio_fopen_writer( target_file , ECL_ENDIAN_FLIP , fmt_file );
         
         msg_update(msg , target_file);
         ecl_file_fwrite_fortio( src_file , fortio_target , offset);

@@ -735,7 +735,7 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
     } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
       /* Loading a unified summary file. */
       bool fmt_file = ecl_util_fmt_file( stringlist_iget(filelist ,0 ) );
-      fortio_type * fortio = fortio_fopen( stringlist_iget(filelist , 0) , "r" , ECL_ENDIAN_FLIP , fmt_file);
+      fortio_type * fortio = fortio_fopen_reader( stringlist_iget(filelist , 0) ,  ECL_ENDIAN_FLIP , fmt_file);
       bool complete = false;
       int report_step = 1; /* Corresponding to the first report_step in unified files - by assumption. */
       do {

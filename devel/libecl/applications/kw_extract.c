@@ -55,8 +55,8 @@ int main(int argc, char ** argv) {
     
     fmt_src           = ecl_util_fmt_file(src_file);
     fmt_target        = fmt_src;                         /* Can in principle be different */
-    fortio_src        = fortio_fopen(src_file    , "r" , ECL_ENDIAN_FLIP, fmt_src);
-    fortio_target     = fortio_fopen(target_file , "w" , ECL_ENDIAN_FLIP, fmt_target);
+    fortio_src        = fortio_fopen_reader(src_file     , ECL_ENDIAN_FLIP, fmt_src);
+    fortio_target     = fortio_fopen_writer(target_file , ECL_ENDIAN_FLIP, fmt_target);
 
     {
       ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();

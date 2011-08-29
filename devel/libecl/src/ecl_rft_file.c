@@ -88,7 +88,7 @@ static void ecl_rft_file_add_node(ecl_rft_file_type * rft_vector , const ecl_rft
 ecl_rft_file_type * ecl_rft_file_alloc(const char * filename) {
   bool fmt_file                  = ecl_util_fmt_file(filename); 
   ecl_rft_file_type * rft_vector = ecl_rft_file_alloc_empty(filename);
-  fortio_type   * fortio         = fortio_fopen( filename , "r" , ECL_ENDIAN_FLIP , fmt_file);
+  fortio_type   * fortio         = fortio_fopen_reader( filename , ECL_ENDIAN_FLIP , fmt_file);
   bool complete = false;
   int global_index = 0;
   do {
@@ -236,7 +236,7 @@ int ecl_rft_file_get_size__( const ecl_rft_file_type * rft_file, const char * we
         if (!match( well_pattern , ecl_rft_node_get_well_name( rft )))
           continue;
 #else
-	util_abort("%s: sorry - matching on well names not supported on this platform\n",__func__);
+        util_abort("%s: sorry - matching on well names not supported on this platform\n",__func__);
 #endif
       }
 
