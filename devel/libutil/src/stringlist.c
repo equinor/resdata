@@ -24,10 +24,10 @@
 #include <vector.h>
 #include <buffer.h>
 
-#ifdef HAVE_GLOB
-#include <glob.h>
-#else
+#ifdef WIN32
 #include <windows.h>
+#else
+#include <glob.h>
 #endif
 
 #define STRINGLIST_TYPE_ID 671855
@@ -624,7 +624,7 @@ int stringlist_select_matching(stringlist_type * names , const char * pattern) {
       do {
         stringlist_append_copy( names , file_data.cFileName );
         match_count++; 
-      } while (FindNextFile( file_handle , &file_date) != 0);
+      } while (FindNextFile( file_handle , &file_data) != 0);
     }
     FindClose( file_handle );
   }

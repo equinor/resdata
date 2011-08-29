@@ -16,8 +16,6 @@
    for more details. 
 */
 
-#define _GNU_SOURCE   // Defined to get access to pow10() function.
-#define __USE_GNU     // Defined to get access to pow10() function.
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -832,7 +830,7 @@ static double __fscanf_ECL_double( FILE * stream , const char * fmt) {
   double value , arg;
   read_count = fscanf( stream , fmt , &arg , &power);
   if (read_count == 2) 
-    value = arg * pow10( power );
+    value = arg * util_pow10( power );
   else {
     util_abort("%s: read failed \n",__func__);
     value = -1;

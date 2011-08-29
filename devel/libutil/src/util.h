@@ -163,7 +163,7 @@ double       util_difftime(time_t  , time_t  , int *  , int *  , int *  , int *)
 double       util_difftime_days(time_t  , time_t );
 char       * util_alloc_date_string( time_t t );
 char       * util_alloc_date_stamp( );
-
+double       util_pow10(double x);
 bool         util_char_in(char c, int , const char *);
 char       * util_alloc_sprintf_va(const char * fmt , va_list ap);
 char       * util_alloc_sprintf(const char *  , ...);
@@ -205,7 +205,9 @@ bool         util_try_alloc_realpath(const char *);
 bool         util_string_match(const char * string , const char * pattern);
 bool         util_string_has_wildcard( const char * s);
 
+#ifdef HAVE_UID_T
 uid_t        util_get_entry_uid( const char * file );
+#endif
 bool         util_entry_readable( const char * entry );
 bool         util_addmode_if_owner( const char * filename , mode_t add_mode );
 bool         util_delmode_if_owner( const char * filename , mode_t del_mode);

@@ -25,6 +25,10 @@
   The file util_path.c is included in this, and contains path
   manipulation functions which explicitly use the PATH_SEP variable.
 */
+#ifdef HAVE_POW10
+#define _GNU_SOURCE   // Defined to get access to pow10() function.
+#define __USE_GNU     // Defined to get access to pow10() function.
+#endif
 #include <string.h>
 #include <time.h>
 #include <math.h>
@@ -4266,6 +4270,10 @@ void util_exit(const char * fmt , ...) {
   va_end(ap);
   exit(1);
 }
+
+
+
+
     
   
 /**
@@ -4583,6 +4591,15 @@ void util_abort_set_executable( const char * executable ) {
 }
 
 
+double util_pow10(double x) {
+#ifdef HAVE_POW10
+  return pow10( x );
+#else
+  return exp( x * log(10));
+#endif
+}
+
+
 /*****************************************************************/
 /* Conditional compilation; this last section includes several
    functions which are included if certain features like e.g. fork()
@@ -4651,3 +4668,9 @@ char * util_alloc_link_target(const char * link) {
 
 
 #include "util_path.c"
+
+  
+
+
+
+

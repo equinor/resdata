@@ -25,6 +25,7 @@
 #define RNG_TYPE_ID 66154432
 
 
+
 /**
    The rng structure is a thin structure which wraps a specific Random
    Number Generator (rng) implementation. The rng_struct structure is
@@ -200,3 +201,4 @@ int rng_get_int( rng_type * rng , int max_value ) {
 rng_alg_type  rng_get_type( const rng_type * rng ) {
   return rng->type;
 }
+

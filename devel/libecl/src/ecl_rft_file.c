@@ -28,7 +28,10 @@
 #include <ecl_file.h>
 #include <int_vector.h>
 #include <ecl_endian_flip.h>
+
+#ifdef HAVE_FNMATCH
 #include <fnmatch.h>
+#endif
 
 /**
    This data structure is for loading one eclipse RFT file. One RFT
@@ -209,7 +212,7 @@ void ecl_rft_file_free__(void * arg) {
     @recording_time are included.
 */
 
-
+#ifdef HAVE_FNMATCH
 static bool match( const char * pattern , const char * string) {
   int fnm = fnmatch( pattern , string , 0);
   if (fnm == 0)
@@ -217,6 +220,7 @@ static bool match( const char * pattern , const char * string) {
   else
     return false;
 }
+#endif
 
 
 int ecl_rft_file_get_size__( const ecl_rft_file_type * rft_file, const char * well_pattern , time_t recording_time) {
@@ -228,8 +232,12 @@ int ecl_rft_file_get_size__( const ecl_rft_file_type * rft_file, const char * we
       const ecl_rft_node_type * rft = vector_iget_const( rft_file->data , i);
 
       if (well_pattern != NULL) {
+#ifdef HAVE_FNMATCH
         if (!match( well_pattern , ecl_rft_node_get_well_name( rft )))
           continue;
+#else
+	util_abort("%s: sorry - matching on well names not supported on this platform\n",__func__);
+#endif
       }
 
       /*OK - we either do not care about the well, or alternatively the well matches. */
