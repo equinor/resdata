@@ -26,6 +26,8 @@
 
 #ifdef HAVE_GLOB
 #include <glob.h>
+#else
+#include <windows.h>
 #endif
 
 #define STRINGLIST_TYPE_ID 671855
@@ -590,7 +592,6 @@ void stringlist_sort(stringlist_type * s , string_cmp_ftype * string_cmp)
 
 /*****************************************************************/
 
-#ifdef HAVE_GLOB
 /*
   This function uses the stdlib function glob() to select file/path
   names matching a pattern. The stringlist is cleared when the
@@ -601,6 +602,7 @@ void stringlist_sort(stringlist_type * s , string_cmp_ftype * string_cmp)
 int stringlist_select_matching(stringlist_type * names , const char * pattern) {
   int match_count = 0;
   stringlist_clear( names );
+  #ifdef HAVE_GLOB
   {
     int i;
     glob_t * pglob = util_malloc( sizeof * pglob , __func__);
@@ -612,7 +614,21 @@ int stringlist_select_matching(stringlist_type * names , const char * pattern) {
     globfree( pglob );  /* Only frees the _internal_ data structures of the pglob object. */
     free( pglob );
   }
+  #else
+  {
+    WIN32_FIND_DATA file_data;
+    HANDLE file_handle;
+
+    file_handle = FindFirstFile( pattern , &file_data );
+    if (file_handle != INVALID_HANDLE_VALUE) {
+      do {
+        stringlist_append_copy( names , file_data.cFileName );
+        match_count++; 
+      } while (FindNextFile( file_handle , &file_date) != 0);
+    }
+    FindClose( file_handle );
+  }
+  #endif
   return match_count;
 }
 
-#endif

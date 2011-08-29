@@ -708,10 +708,6 @@ int ecl_util_fname_report_cmp(const void *f1, const void *f2) {
 
 }
 
-
-
-
-
 /**
    This function will scan the directory @path (or cwd if @path == NULL) 
    for all ECLIPSE files of type @file_type. If base == NULL it will use 
@@ -720,7 +716,10 @@ int ecl_util_fname_report_cmp(const void *f1, const void *f2) {
    not originate from ECLIPSE will also be included).
 */
 
-#ifdef HAVE_GLOB
+
+
+
+
 int ecl_util_select_filelist( const char * path , const char * base , ecl_file_enum file_type , bool fmt_file , stringlist_type * filelist) {
   char       * pattern;
   char       * base_pattern;
@@ -739,7 +738,6 @@ int ecl_util_select_filelist( const char * path , const char * base , ecl_file_e
   free( pattern );
   return stringlist_get_size( filelist );
 }
-#endif
 
 
 
@@ -1153,7 +1151,7 @@ safely used as filenames, i.e for instance the substitution:
 The escape process is done 'in-place' memory-wise.
 */
 void ecl_util_escape_kw(char * kw) {
-  uint index;
+  int index;
   for (index = 0; index < strlen(kw); index++) {
     switch (kw[index]) {
     case('/'):
