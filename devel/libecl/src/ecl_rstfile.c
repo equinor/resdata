@@ -16,33 +16,126 @@
    for more details. 
 */
 
+/*****************************************************************/
+/*                   R E S T A R T   F I L E S                   */
+/*****************************************************************/
+
+
 /*
   This file is included from the ecl_file.c file with a #include
   statement, i.e. it is the same compilation unit as ecl_file. The
   seperation is only to increase readability.  
 */
 
-/*****************************************************************/
-/*                   R E S T A R T   F I L E S                   */
-/*****************************************************************/
-
 /* 
    There is no special datastructure for working with restart files,
-   they are mostly stock ecl_file instances with the following limited
+   they are 100% stock ecl_file instances with the following limited
    structure:
 
    * They are organized in blocks; where each block starts with a
-   SEQNUM keyword, which contains the report step.
+     SEQNUM keyword, which contains the report step.
 
    * Each block contains an INTEHEAD keyword, immediately after the
-   SEQNUM keyword, which contains the true simulation date of of
-   the block, and also some other data. Observe that also INIT
-   files and GRID files contain an INTEHEAD keyword.
+     SEQNUM keyword, which contains the true simulation date of of the
+     block, and also some other data. Observe that also INIT files and
+     GRID files contain an INTEHEAD keyword.
 
    Here comes a couple of function which utilize this knowledge about
    the content and structure of restart files.
 */
 
+
+/*
+
+About the time-direction
+========================
+
+For the following discussion we will focus on the following simplified
+unified restart file. The leading number is the global index of the
+keyword, the value in [] corresponds to the relevant part of the
+content of the keyword on the line, the labels A,B,C,D,E are used for
+references in the text below.
+
+ 0 | SEQNUM   [0]           \  A     
+ 1 | INTEHEAD [01.01.2005]  |
+ 2 | PRESSURE [... ]        |        
+ 3 | SWAT     [...]         |  
+   | -----------------------+
+ 4 | SEQNUM   [5]           |  B 
+ 5 | INTEHEAD [01.06.2005]  |
+ 6 | PRESSURE [... ]        |
+ 7 | SWAT     [...]         |
+   |------------------------+
+ 8 | SEQNUM   [10]          |  C
+ 9 | INTEHEAD [01.12.2006]  |
+10 | PRESSURE [...]         |
+11 | SWAT     [...]         |
+   |------------------------+
+12 | SEQNUM   [20]          |  D
+13 | INTEHEAD [01.12.2007]  |
+14 | PRESSURE [...]         |
+15 | SWAT     [...]         |
+16 | OIL_DEN  [...]         |
+   |------------------------+
+12 | SEQNUM   [40]          |  E
+13 | INTEHEAD [01.12.2009]  |
+14 | PRESSURE [...]         |
+15 | SWAT     [...]         /
+                          
+
+This restart file has the following features:
+
+ o It contains in total 16 keywords.
+
+ o It contains 5 blocks of collected keywords corresponding to one
+   time instant, each of these blocks is called a report_step,
+   typcially coming from one DATES keyword in the ECLIPSE
+   datafile. Observe that the file does not have the block structure
+   visualized on this figure, the only thing separating the blocks in
+   the file is the occurence of a SEQNUM keyword.
+ 
+ o Only a few of the report steps are present, namely 0, 5, 10, 20 and
+   40.
+
+ o The different keywords are not equally long, the fourth block has
+   an extra keyword OIL_DEN.
+
+To adress these keywords and blocks using different time coordinates
+we have introduced the following concepts:
+
+ report_step: This corresponds to the value of the SEQNUM keword,
+    i.e. to do queries based on the report_step we must load the
+    seqnum kewyord and read the value.
+
+        ecl_file_get_unrstmap_report_step( ecl_file , 0 ) => A
+        ecl_file_get_unrstmap_report_step( ecl_file , 1 ) => NULL
+
+        ecl_file_has_report_step( ecl_file , 5 ) => True
+        ecl_file_has_report_step( ecl_file , 2 ) => False
+
+ sim_time: This correpsonds to the true simulation time of the report
+    step, the simulation time is stored as integers DAY, MONTH, YEAR
+    in the INTEHEAD keyword; the function INTEHEAD_date() will extract
+    the DAY, MONTH and YEAR values from an INTEHEAD keyword instance
+    and convert to a time_t instance. The functions:
+
+     ecl_file_get_unrstmap_sim_time() and ecl_file_has_has_sim_time() 
+
+    can be used to query for simulation times and get the
+    corresponding block maps.
+
+ index/global_index : This is typically the global running index of
+    the keyword in the file; this is the unique address of the keyword
+    which is used for the final lookup.
+
+ occurence: The nth' time a particular keyword has occured in the
+    file, i.e. the SEQNUM keyword in block C is the third occurence of
+    SEQNUM. Instead of occurence xxxx_index is also used to indicate
+    the occurence of keyword xxxx. The occurence number is the integer
+    argument to the xxx_iget_named_kw() function, and also the final
+    call to create blockmaps.
+
+*/
 
 static time_t INTEHEAD_date( const ecl_kw_type * intehead_kw ) {
   return util_make_date( ecl_kw_iget_int( intehead_kw , INTEHEAD_DAY_INDEX)   , 
@@ -103,18 +196,18 @@ int ecl_file_map_get_restart_index( const ecl_file_map_type * file_map , time_t 
       take the chance that all INTEHEAD headers are properly set. This is from
       Schlumberger after all.
     */
-    int index = 0;
+    int intehead_index = 0;
     while (true) {
-      time_t itime = ecl_file_map_iget_restart_sim_date( file_map , index );
+      time_t itime = ecl_file_map_iget_restart_sim_date( file_map , intehead_index );
       
       if (itime == sim_time) /* Perfect hit. */
-        return index;
+        return intehead_index;
 
       if (itime > sim_time)  /* We have gone past the target_time - i.e. we do not have it. */
         return -1;
       
-      index++;
-      if (index == num_INTEHEAD)  /* We have iterated through the whole thing without finding sim_time. */
+      intehead_index++;
+      if (intehead_index == num_INTEHEAD)  /* We have iterated through the whole thing without finding sim_time. */
         return -1;
     }
   }
@@ -207,9 +300,9 @@ ecl_file_map_type * ecl_file_iget_unrstmap( ecl_file_type * ecl_file , int index
 
 
 ecl_file_map_type * ecl_file_get_unrstmap_time_t( ecl_file_type * ecl_file , time_t sim_time) {
-  int global_index = ecl_file_map_get_restart_index( ecl_file->active_map , sim_time );
-  if (global_index >= 0)
-    return ecl_file_get_blockmap( ecl_file , SEQNUM_KW , global_index);
+  int seqnum_index = ecl_file_map_get_restart_index( ecl_file->active_map , sim_time );
+  if (seqnum_index >= 0)
+    return ecl_file_get_blockmap( ecl_file , SEQNUM_KW , seqnum_index);
   else
     return NULL;
 }
