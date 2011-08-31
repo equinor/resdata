@@ -2498,7 +2498,6 @@ bool util_file_update_required(const char *src_file , const char *target_file) {
 
 
 
-static void util_localtime( time_t * t , struct tm * ts );
 
 static void __util_set_timevalues(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year) {
   struct tm ts;
@@ -4630,7 +4629,7 @@ int util_fnmatch( const char * pattern , const char * string ) {
 // main code.
 
 
-static void util_localtime( time_t * t , struct tm * ts ) {
+void util_localtime( time_t * t , struct tm * ts ) {
 #ifdef HAVE_LOCALTIME_R
   localtime_r( t , ts );
 #else

@@ -383,6 +383,7 @@ char   * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool i
 bool     util_files_equal( const char * file1 , const char * file2 );
 double   util_kahan_sum(const double *data, size_t N);
 int      util_fnmatch( const char * pattern , const char * string );
+void     util_localtime( time_t * t , struct tm * ts );
 
 #ifdef HAVE_FORK
 #include "util_fork.h"
