@@ -178,7 +178,7 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
 */
 
 bool fortio_is_fortran_file(const char * filename, bool * _endian_flip) {
-  FILE * stream = util_fopen(filename , "r");
+  FILE * stream = util_fopen(filename , "rb");
   bool endian_flip = false;          
   bool is_fortran_stream = fortio_is_fortran_stream__(stream , endian_flip);
   if (!is_fortran_stream) {
@@ -379,10 +379,13 @@ void fortio_complete_read(fortio_type *fortio) {
 */
 
 int fortio_fread_record(fortio_type *fortio, char *buffer) {
+  printf("Starting record\n");
   fortio_init_read(fortio);
   int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
+  printf("record size:%d \n",record_size);
   util_fread(buffer , 1 , fortio->active_header , fortio->stream , __func__);
   fortio_complete_read(fortio);
+  printf("Read complete\n");
   return record_size;
 }
 

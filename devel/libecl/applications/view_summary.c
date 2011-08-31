@@ -1,6 +1,5 @@
 /*
    Copyright (C) 2011  Statoil ASA, Norway. 
-    
    The file 'view_summary.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 

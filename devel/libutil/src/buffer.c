@@ -217,7 +217,7 @@ static size_t buffer_fread__(buffer_type * buffer , void * target_ptr , size_t i
       util_abort("%s: tried to read beyond the length of the buffer: Wanted:%ld Size:%ld \n",__func__ , items , read_items);
     else 
       /* OK we emulate fread() behaviour - setting errno to EOVERFLOW*/
-      errno = EOVERFLOW;
+      errno = ENOMEM;//EOVERFLOW;
   }
   
   return read_items;
