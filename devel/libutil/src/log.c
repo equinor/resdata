@@ -135,7 +135,9 @@ void log_add_message(log_type *logh, int message_level , FILE * dup_stream , cha
   if (logh->stream == NULL)
     util_abort("%s: logh->stream == NULL - must call log_reset_filename() first \n",__func__);
 
+#ifdef HAVE_PTHREAD
   pthread_mutex_lock( &logh->mutex );
+#endif
   {
     struct tm time_fields;
     time_t    epoch_time;
@@ -156,7 +158,9 @@ void log_add_message(log_type *logh, int message_level , FILE * dup_stream , cha
       log_sync( logh );
     }
   }
+#ifdef HAVE_PTHREAD
   pthread_mutex_unlock( &logh->mutex );
+#endif
   if (free_message)
     free( message );
 }
