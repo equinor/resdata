@@ -86,6 +86,8 @@ float          ecl_kw_iget_as_float(const ecl_kw_type * ecl_kw , int i);
 double         ecl_kw_iget_as_double(const ecl_kw_type * ecl_kw , int i);
 void           ecl_kw_get_data_as_double(const ecl_kw_type *, double *);
 bool           ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2);
+bool           ecl_kw_data_equal( const ecl_kw_type * ecl_kw , const void * data);
+void           ecl_kw_fskip_data__( ecl_type_enum ecl_type , int size , fortio_type * fortio);
 void           ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
 void           ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
 

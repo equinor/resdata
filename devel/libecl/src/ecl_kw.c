@@ -341,6 +341,10 @@ bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
 }
 
 
+bool ecl_kw_data_equal( const ecl_kw_type * ecl_kw , const void * data) {
+  return memcmp( ecl_kw->data , data , ecl_kw->size * ecl_kw->sizeof_ctype);
+}
+
 
 static void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
   if (!ecl_kw->shared_data) {
@@ -945,29 +949,33 @@ void ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
   return ecl_kw_fread_data(ecl_kw , fortio);
 }
 
+/**
+   Static method without a class instance.
+*/
 
-
-
-void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
+void ecl_kw_fskip_data__( ecl_type_enum ecl_type , int size , fortio_type * fortio) {
   bool fmt_file = fortio_fmt_file(fortio);
-  if (ecl_kw->size > 0) {
+  if (size > 0) {
     if (fmt_file) {
       /* Formatted skipping actually involves reading the data - nice ??? */
-      if (ecl_kw->data != NULL) 
-        ecl_kw_fread_data(ecl_kw , fortio);
-      else {
-        ecl_kw_alloc_data(ecl_kw);
-        ecl_kw_fread_data(ecl_kw , fortio);
-        ecl_kw_free_data(ecl_kw);
-      }
+      ecl_kw_type * tmp_kw = ecl_kw_alloc_empty( );
+      ecl_kw_initialize( tmp_kw , "WORK" , size , ecl_type );
+      ecl_kw_alloc_data(tmp_kw);
+      ecl_kw_fread_data(tmp_kw , fortio);
+      ecl_kw_free( tmp_kw );
     } else {
-      const int blocksize = get_blocksize( ecl_kw->ecl_type );
-      const int blocks    = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
+      const int blocksize = get_blocksize( ecl_type );
+      const int blocks    = size / blocksize + (size % blocksize == 0 ? 0 : 1);
       int ib;
       for (ib = 0; ib < blocks; ib++) 
         fortio_fskip_record(fortio);
     }
   }
+}
+
+
+void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
+  ecl_kw_fskip_data__( ecl_kw->ecl_type , ecl_kw->size , fortio );
 } 
 
 
@@ -1522,7 +1530,7 @@ void ecl_kw_fwrite_param_fortio(fortio_type * fortio, const char * header ,  ecl
 
 
 void ecl_kw_fwrite_param(const char * filename , bool fmt_file , const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
-  fortio_type   * fortio = fortio_fopen_writer(filename , ECL_ENDIAN_FLIP , fmt_file);
+  fortio_type   * fortio = fortio_open_writer(filename , ECL_ENDIAN_FLIP , fmt_file);
   ecl_kw_fwrite_param_fortio(fortio , header , ecl_type , size , data);
   fortio_fclose(fortio);
 }
@@ -1608,7 +1616,7 @@ ecl_kw_type * ecl_kw_alloc_scatter_copy( const ecl_kw_type * src_kw , int target
 
 
 void ecl_kw_fread_double_param(const char * filename , bool fmt_file , double * double_data) {
-  fortio_type   * fortio      = fortio_fopen_reader(filename , ECL_ENDIAN_FLIP , fmt_file);
+  fortio_type   * fortio      = fortio_open_reader(filename , ECL_ENDIAN_FLIP , fmt_file);
   ecl_kw_type   * ecl_kw      = ecl_kw_fread_alloc(fortio);
   fortio_fclose(fortio);
   

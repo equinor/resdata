@@ -40,10 +40,11 @@ void unpack_file(const char * filename) {
     printf("** Warning: when unpacking unified summary files it as ambigous - starting with 0001  -> \n");
   }
   {
-    fortio_type   * fortio_src = fortio_fopen_reader( filename , ECL_ENDIAN_FLIP , fmt_file );
-    ecl_file_type * src_file;
+    ecl_file_type * src_file = ecl_file_open( filename );
+    int    size;
     int    offset;
     int    report_step = 0;
+    int    block_index = 0;
     char * path; 
     char * base;
     msg_type * msg;
@@ -54,22 +55,29 @@ void unpack_file(const char * filename) {
       free( label );
     }
     msg_show(msg);
-    do {
+
+    if (target_type == ECL_SUMMARY_FILE) 
+      size = ecl_file_get_num_named_kw( src_file , "SEQHDR" );
+    else
+      size = ecl_file_get_num_named_kw( src_file , "SEQNUM" );
+    
+    
+    while (true) {
+      ecl_file_map_type * src_block;
+      if (block_index == size)
+        break;
 
       if (target_type == ECL_SUMMARY_FILE) {
-        src_file = ecl_file_fread_alloc_summary_section( fortio_src );
+        src_block = ecl_file_get_blockmap( src_file , "SEQHDR" , block_index );
         report_step += 1;
         offset = 0;
       } else {
         ecl_kw_type * seqnum_kw;
-        src_file = ecl_file_fread_alloc_restart_section( fortio_src );
-        if (src_file != NULL) {
-          seqnum_kw = ecl_file_iget_named_kw( src_file , "SEQNUM" , 0);
-          report_step = ecl_kw_iget_int( seqnum_kw , 0);
-        }
+        src_block = ecl_file_get_blockmap( src_file , "SEQNUM" , block_index );
+        seqnum_kw = ecl_file_map_iget_named_kw( src_block , "SEQNUM" , 0);
+        report_step = ecl_kw_iget_int( seqnum_kw , 0);
         offset = 1;
       }
-
 
       /**
          Will unpack to cwd, even though the source files might be
@@ -78,25 +86,23 @@ void unpack_file(const char * filename) {
          target_file.
       */
       
-      if (src_file != NULL) {
+      {
         char * target_file = ecl_util_alloc_filename( NULL , base , target_type , fmt_file , report_step);
-        fortio_type * fortio_target = fortio_fopen_writer( target_file , ECL_ENDIAN_FLIP , fmt_file );
+        fortio_type * fortio_target = fortio_open_writer( target_file , ECL_ENDIAN_FLIP , fmt_file );
         
         msg_update(msg , target_file);
-        ecl_file_fwrite_fortio( src_file , fortio_target , offset);
-
+        ecl_file_map_fwrite( src_block , fortio_target , offset);
+        
         fortio_fclose(fortio_target);
         free(target_file);
-        ecl_file_free(src_file);
       }
-    } while (src_file != NULL);
-    fortio_fclose( fortio_src );
+      block_index++;
+    } 
+    ecl_file_close( src_file );
     util_safe_free(path);
     free(base);
     msg_free(msg , true);
   }
-    
-
 }
 
 

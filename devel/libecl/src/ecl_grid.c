@@ -1339,7 +1339,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
   if (file_type != ECL_EGRID_FILE)
     util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
   {
-    ecl_file_type * ecl_file   = ecl_file_fread_alloc( grid_file );
+    ecl_file_type * ecl_file   = ecl_file_open( grid_file );
     int num_grid               = ecl_file_get_num_named_kw( ecl_file , GRIDHEAD_KW );
     ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( NULL , ecl_file , 0 );
     
@@ -1358,7 +1358,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
       }
     }
     main_grid->name = util_alloc_string_copy( grid_file );
-    ecl_file_free( ecl_file );
+    ecl_file_close( ecl_file );
     return main_grid;
   }
 }
@@ -1425,7 +1425,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
 
   {
     int cell_offset = 0;
-    ecl_file_type * ecl_file  = ecl_file_fread_alloc( grid_file );
+    ecl_file_type * ecl_file  = ecl_file_open( grid_file );
     int num_grid              = ecl_file_get_num_named_kw( ecl_file , DIMENS_KW);
     ecl_grid_type * main_grid = ecl_grid_alloc_GRID__(NULL , ecl_file , &cell_offset , 0);
     for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
@@ -1442,7 +1442,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
       }
     }
     main_grid->name = util_alloc_string_copy( grid_file );
-    ecl_file_free( ecl_file );
+    ecl_file_close( ecl_file );
     return main_grid;
   }
 }

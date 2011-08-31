@@ -84,13 +84,13 @@ static void usage() {
 
 static void vprofile__( int i , int j , 
                         const ecl_grid_type * ecl_grid , 
-                        const ecl_file_type * ecl_file , 
+                        const ecl_file_map_type * ecl_file , 
                         const char * kw , 
                         double_vector_type * depth , 
                         double_vector_type * profile) {
   int k;
   int nz = ecl_grid_get_nz( ecl_grid );
-  ecl_kw_type * ecl_kw = ecl_file_iget_named_kw( ecl_file , kw , ecl_grid_get_grid_nr( ecl_grid ));
+  ecl_kw_type * ecl_kw = ecl_file_map_iget_named_kw( ecl_file , kw , ecl_grid_get_grid_nr( ecl_grid ));
   for (k=0; k < nz; k++) {
     int active_index = ecl_grid_get_active_index3( ecl_grid , i,j,k);
     if (active_index >= 0) {
@@ -197,21 +197,24 @@ int main (int argc , char ** argv) {
         for (it = 0; it < num_tstep; it++) {
           int tstep;
           if (util_sscanf_int( tlist[it] , &tstep)) {
-            ecl_file_type * ecl_file = NULL;
+            ecl_file_type     * ecl_file = NULL;
+            ecl_file_map_type * map = NULL;
             
             if (unified) {
-              ecl_file = ecl_file_fread_alloc_unrst_section( restart_file , tstep );
+              ecl_file = ecl_file_open( restart_file );
+              map = ecl_file_get_unrstmap_report_step( ecl_file , tstep); 
               printf("Loading report step:%d from:%s \n",tstep , restart_file );
             } else {
               restart_file = ecl_util_alloc_exfilename( path , eclbase , ECL_RESTART_FILE , false , tstep );
               if (restart_file != NULL) {
-                ecl_file = ecl_file_fread_alloc( restart_file );
+                ecl_file = ecl_file_open( restart_file );
+                map = ecl_file_get_global_map( ecl_file ); 
                 printf("Loading report step:%d from:%s \n",tstep , restart_file );
               }
             }
             
-            if (ecl_file != NULL) 
-              vprofile( i - 1, j - 1, ecl_grid , ecl_file , kw , tstep , output_fmt );
+            if (map != NULL) 
+              vprofile( i - 1, j - 1, ecl_grid , map , kw , tstep , output_fmt );
             else
               fprintf(stderr , "** Failed to load restart information for step:%d \n", tstep);
             

@@ -921,9 +921,9 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
           if (!stringlist_contains( ecl_smspec->restart_list , restart_base)) {
             stringlist_insert_copy( ecl_smspec->restart_list , 0 , restart_base );
             {
-              ecl_file_type * restart_header = ecl_file_fread_alloc( smspec_header );
+              ecl_file_type * restart_header = ecl_file_open( smspec_header );
               ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */ 
-              ecl_file_free( restart_header );
+              ecl_file_close( restart_header );
             }
           }
         }
@@ -938,7 +938,7 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 
 
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file , bool include_restart) {
-  ecl_file_type * header = ecl_file_fread_alloc( header_file );
+  ecl_file_type * header = ecl_file_open( header_file );
   {
     int *date;
     ecl_kw_type *wells     = ecl_file_iget_named_kw(header, "WGNAMES"  , 0);
@@ -1112,7 +1112,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
   ecl_smspec->header_file = util_alloc_realpath( header_file );
   if (include_restart)
     ecl_smspec_load_restart( ecl_smspec , header );
-  ecl_file_free( header );
+  ecl_file_close( header );
 }
 
 

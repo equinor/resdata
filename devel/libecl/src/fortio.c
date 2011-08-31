@@ -219,7 +219,7 @@ fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_
 }
 
 
-fortio_type * fortio_fopen_reader(const char *filename , bool endian_flip_header , bool fmt_file) {
+fortio_type * fortio_open_reader(const char *filename , bool endian_flip_header , bool fmt_file) {
   fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
   
   if (fmt_file)
@@ -243,7 +243,7 @@ fortio_type * fortio_fopen_readwrite(const char *filename , bool endian_flip_hea
 }
 
 
-fortio_type * fortio_fopen_writer(const char *filename , bool endian_flip_header , bool fmt_file) {
+fortio_type * fortio_open_writer(const char *filename , bool endian_flip_header , bool fmt_file) {
   fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
   
   if (fmt_file)

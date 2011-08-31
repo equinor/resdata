@@ -29,8 +29,10 @@ int main (int argc, char **argv) {
     
     ecl_grav_type * ecl_grav = NULL; //ecl_grav_alloc( grid_file , init_file );
     {
-      ecl_file_type * base_survey    = ecl_file_fread_alloc_unrst_section( restart_file , 117 );
-      ecl_file_type * monitor_survey = ecl_file_fread_alloc_unrst_section( restart_file , 199 );
+      //ecl_file_type * base_survey    = ecl_file_fread_alloc_unrst_section( restart_file , 117 );
+      //ecl_file_type * monitor_survey = ecl_file_fread_alloc_unrst_section( restart_file , 199 );
+      ecl_file_type * base_survey    = NULL;
+      ecl_file_type * monitor_survey = NULL; 
 
       ecl_grav_add_survey_RPORV(ecl_grav  , "BASE"    , base_survey );
       ecl_grav_add_survey_RPORV( ecl_grav , "MONITOR" , monitor_survey );
@@ -45,8 +47,8 @@ int main (int argc, char **argv) {
           printf("grav_eval: %g \n",ecl_grav_eval( ecl_grav , "BASE" , "MONITOR" , NULL , 541003 , 6709907 , 297.023 , 0));
       }
 
-      ecl_file_free( base_survey );
-      ecl_file_free( monitor_survey );
+      //ecl_file_free( base_survey );
+      //ecl_file_free( monitor_survey );
     }
     ecl_grav_free( ecl_grav );
     free( grid_file );

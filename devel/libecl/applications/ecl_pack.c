@@ -60,7 +60,7 @@ int main(int argc, char ** argv) {
       char *  target_file_name   = ecl_util_alloc_filename( NULL , ecl_base , target_type , fmt_file , -1);
       stringlist_type * filelist = stringlist_alloc_argv_copy( (const char **) &argv[1] , num_files );
       ecl_kw_type * seqnum_kw    = NULL;
-      fortio_type * target       = fortio_fopen_writer( target_file_name , ECL_ENDIAN_FLIP , fmt_file );
+      fortio_type * target       = fortio_open_writer( target_file_name , ECL_ENDIAN_FLIP , fmt_file );
 
       if (target_type == ECL_UNIFIED_RESTART_FILE) {
         int dummy;
@@ -73,6 +73,7 @@ int main(int argc, char ** argv) {
         free( msg_format );
       }
       
+
       msg_show( msg );
       stringlist_sort( filelist , ecl_util_fname_report_cmp);
       prev_report_step = -1;
@@ -88,14 +89,14 @@ int main(int argc, char ** argv) {
           prev_report_step = report_step;
           msg_update(msg , stringlist_iget( filelist , i));
           {
-            ecl_file_type * src_file = ecl_file_fread_alloc( stringlist_iget( filelist , i) );
+            ecl_file_type * src_file = ecl_file_open( stringlist_iget( filelist , i) );
             if (target_type == ECL_UNIFIED_RESTART_FILE) {
               /* Must insert the SEQNUM keyword first. */
               ecl_kw_iset_int(seqnum_kw , 0 , report_step);
               ecl_kw_fwrite( seqnum_kw , target );
             }
             ecl_file_fwrite_fortio( src_file , target , 0);
-            ecl_file_free( src_file );
+            ecl_file_close( src_file );
           }
         }  /* Else skipping file of incorrect type. */
       }

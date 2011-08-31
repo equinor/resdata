@@ -254,15 +254,15 @@ static void ecl_sum_ministep_free__( void * __ministep) {
 
 static ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr            ,
                                                        int report_step    ,
-                                                       const ecl_kw_type * param_kw , 
+                                                       const ecl_kw_type * params_kw , 
                                                        const char * src_file , 
                                                        const ecl_smspec_type * smspec) {
-  int data_size = ecl_kw_get_size( param_kw );
+  int data_size = ecl_kw_get_size( params_kw );
   
   if (data_size == ecl_smspec_get_param_size( smspec )) {
     ecl_sum_ministep_type * ministep = util_malloc( sizeof * ministep , __func__);
     UTIL_TYPE_ID_INIT( ministep , ECL_SUM_MINISTEP_ID);
-    ministep->data        = ecl_kw_alloc_data_copy( param_kw );
+    ministep->data        = ecl_kw_alloc_data_copy( params_kw );
     ministep->data_size   = data_size;
     
     ministep->report_step = report_step;
@@ -567,6 +567,20 @@ static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministe
 
 
 
+static void ecl_sum_data_new_ministep( ecl_sum_data_type * ecl_sum_data , const char * src_file , int report_step , const ecl_kw_type * ministep_kw , const ecl_kw_type * params_kw , const ecl_smspec_type * smspec) {
+  
+  ecl_sum_ministep_type * ministep;
+  int ministep_nr = ecl_kw_iget_int( ministep_kw , 0 );
+  ministep = ecl_sum_ministep_alloc( ministep_nr,
+                                     report_step , 
+                                     params_kw , 
+                                     src_file , 
+                                     smspec );
+  if (ministep != NULL)
+    ecl_sum_data_append_ministep( ecl_sum_data , ministep_nr , ministep );
+}
+
+
 /**
    Malformed/incomplete files:
    ----------------------------
@@ -604,18 +618,9 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
 
     for (ikw = 0; ikw < num_ministep; ikw++) {
       ecl_kw_type * ministep_kw = ecl_file_iget_named_kw( ecl_file , "MINISTEP" , ikw);
-      ecl_kw_type * param_kw    = ecl_file_iget_named_kw( ecl_file , "PARAMS"   , ikw);
+      ecl_kw_type * params_kw    = ecl_file_iget_named_kw( ecl_file , "PARAMS"   , ikw);
       
-      ecl_sum_ministep_type * ministep;
-      int ministep_nr = ecl_kw_iget_int( ministep_kw , 0 );
-      ministep = ecl_sum_ministep_alloc( ministep_nr,
-                                         report_step , 
-                                         param_kw , 
-                                         ecl_file_get_src_file( ecl_file ) , 
-                                         smspec);
-      if (ministep != NULL)
-        ecl_sum_data_append_ministep( data , ministep_nr , ministep );
-      
+      ecl_sum_data_new_ministep( data , ecl_file_get_src_file( ecl_file ) , report_step , ministep_kw , params_kw , smspec );
     }
   }
 }
@@ -725,28 +730,50 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
         if (file_type != ECL_SUMMARY_FILE)
           util_abort("%s: file:%s has wrong type \n",__func__ , data_file);
         {
-          ecl_file_type * ecl_file = ecl_file_fread_alloc( data_file );
-          if (ecl_file != NULL) {
-            ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
-            ecl_file_free( ecl_file );
-          } 
+          ecl_file_type * ecl_file = ecl_file_open( data_file );
+          ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
+          ecl_file_close( ecl_file );
         }
       }
     } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
-      /* Loading a unified summary file. */
-      bool fmt_file = ecl_util_fmt_file( stringlist_iget(filelist ,0 ) );
-      fortio_type * fortio = fortio_fopen_reader( stringlist_iget(filelist , 0) ,  ECL_ENDIAN_FLIP , fmt_file);
-      bool complete = false;
-      int report_step = 1; /* Corresponding to the first report_step in unified files - by assumption. */
+      
+      /**
+         This code block hinges strongly on that the unified summary
+         file is organized as:
+
+            SEQHDR
+            MINISTEP
+            PARAMS
+            MINISTEP
+            PARAMS
+            SEQHDR
+            MINISTEP
+            PARAMS
+            MINISTEP
+            PARAMS
+            MINISTEP
+            PARAMS
+
+         I.e. blocks consisting of 'SEQHDR' follow by arbitrary many
+         pairs of MINISTEP,PARAMS.
+      */
+      
+      ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ));
+      int report_step = 0;
+      int kw_index    = 0;
       do {
-        ecl_file_type * ecl_file = ecl_file_fread_alloc_summary_section( fortio );
-        if (ecl_file != NULL) {
-          ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
-          ecl_file_free( ecl_file );
+        ecl_kw_type * ecl_kw = ecl_file_iget_kw( ecl_file , kw_index );
+        if (ecl_kw_header_eq( ecl_kw , SEQHDR_KW )) 
           report_step++;
-        } else complete = true;
-      } while ( !complete );
-      fortio_fclose(fortio);
+        else {
+          ecl_kw_type * ministep_kw = ecl_kw;
+          ecl_kw_type * params_kw   = ecl_file_iget_kw( ecl_file , kw_index + 1 );
+          kw_index++;
+          ecl_sum_data_new_ministep( data , ecl_file_get_src_file( ecl_file ) , report_step , ministep_kw , params_kw , data->smspec );
+        }
+        kw_index++;
+      } while ( kw_index < ecl_file_get_size( ecl_file ));
+      ecl_file_close( ecl_file );
     } else
       util_abort("%s: invalid file type:%s  \n",__func__ , ecl_util_file_type_name( file_type ));
   }
