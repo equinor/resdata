@@ -97,8 +97,8 @@ This restart file has the following features:
  o Only a few of the report steps are present, namely 0, 5, 10, 20 and
    40.
 
- o The different keywords are not equally long, the fourth block has
-   an extra keyword OIL_DEN.
+ o The different blocks are not equally long, the fourth block has an
+   extra keyword OIL_DEN.
 
 To adress these keywords and blocks using different time coordinates
 we have introduced the following concepts:
