@@ -99,8 +99,8 @@ void timer_reset(timer_type *timer) {
   timer->count    = 0;
   timer->sum1     = 0.0;
   timer->sum2     = 0.0;
-  timer->min_time =  HUGE;
-  timer->max_time = -HUGE;
+  timer->min_time =  99999999;
+  timer->max_time = -99999999;
   timer->running  = false;
 }
 
@@ -162,7 +162,14 @@ void timer_list_report(const timer_type **timer_list , int N , FILE *stream) {
     double mean,std_dev;
     printf("%s:   ", pad(timer->name,".", max_width,str_buffer));
     timer_stats(timer , &mean , &std_dev);
-    printf("%8.4f  (%6.2f %%)  %10zd          %10.8f +/- %10.8f       %10.8f %10.8f  \n",timer->sum1,perc_list[i],timer->count,mean,std_dev,timer->min_time,timer->max_time);
+    printf("%8.4f  (%6.2f %%)  %10d          %10.8f +/- %10.8f       %10.8f %10.8f  \n",
+           timer->sum1,
+           perc_list[i],
+           timer->count,
+           mean,
+           std_dev,
+           timer->min_time,
+           timer->max_time);
   }
            
   printf("%s\n" , pad("","-",total_width,str_buffer));

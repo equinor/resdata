@@ -52,6 +52,7 @@
 #include <fnmatch.h>
 #else
 #include <windows.h>
+#include <Shlwapi.h>
 #endif
 
 #include <util.h>
