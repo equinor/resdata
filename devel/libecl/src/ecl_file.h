@@ -25,6 +25,7 @@ extern "C" {
 
 #include <stdbool.h>
 #include <ecl_kw.h>
+#include <ecl_file_kw.h>
 #include <fortio.h>
 #include <time.h>
 #include <ecl_util.h>
@@ -36,13 +37,11 @@ typedef struct ecl_file_struct ecl_file_type;
 ecl_file_type  * ecl_file_open( const char * filename );
 void             ecl_file_close( ecl_file_type * ecl_file );
 void             ecl_file_free__(void * arg);
-ecl_kw_type    * ecl_file_iget_named_kw( const ecl_file_type *  ecl_file , const char * kw , int ith);
 ecl_kw_type    * ecl_file_icopy_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith);
 ecl_kw_type    * ecl_file_icopy_kw( const ecl_file_type * ecl_file , int index);
 bool             ecl_file_has_kw( const ecl_file_type * ecl_file , const char * kw);
 int              ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw);
 int              ecl_file_get_size( const ecl_file_type * ecl_fil );
-ecl_kw_type    * ecl_file_iget_kw( const ecl_file_type * ecl_file  , int index);
 int              ecl_file_get_num_distinct_kw(const ecl_file_type * ecl_file);
 const char     * ecl_file_iget_distinct_kw(const ecl_file_type * ecl_file , int index);
 const char     * ecl_file_get_src_file( const ecl_file_type * ecl_file );
@@ -67,6 +66,19 @@ int              ecl_file_get_phases( const ecl_file_type * init_file );
 void             ecl_file_fprintf_kw_list( const ecl_file_type * ecl_file , FILE * stream );
 
 
+ecl_file_kw_type * ecl_file_iget_file_kw( const ecl_file_type * file , int global_index);
+ecl_file_kw_type * ecl_file_iget_named_file_kw( const ecl_file_type * file , const char * kw, int ith);
+ecl_kw_type      * ecl_file_iget_kw( const ecl_file_type * file , int global_index);
+ecl_type_enum      ecl_file_iget_type( const ecl_file_type * file , int global_index);
+int                ecl_file_iget_size( const ecl_file_type * file , int global_index);
+const char       * ecl_file_iget_header( const ecl_file_type * file , int global_index);
+ecl_kw_type      * ecl_file_iget_named_kw( const ecl_file_type * file , const char * kw, int ith);
+ecl_type_enum      ecl_file_iget_named_type( const ecl_file_type * file , const char * kw , int ith);
+int                ecl_file_iget_named_size( const ecl_file_type * file , const char * kw , int ith);
+
+
+
+
 /*****************************************************************/
 /*               R E S T A R T  F I L E S                        */
 ecl_file_type  * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step);
@@ -88,6 +100,16 @@ ecl_file_map_type  *  ecl_file_get_unrstmap( ecl_file_type * ecl_file , int seqn
 ecl_file_map_type  *  ecl_file_get_unsmrymap( ecl_file_type * ecl_file , int seqhdr_nr);
 ecl_kw_type        *  ecl_file_map_iget_named_kw( const ecl_file_map_type *  file_map , const char * kw , int ith);
 bool                  ecl_file_map_has_kw( const ecl_file_map_type * file_map, const char * kw);
+
+ecl_file_kw_type   * ecl_file_map_iget_file_kw( const ecl_file_map_type * file_map , int global_index);
+ecl_file_kw_type   * ecl_file_map_iget_named_file_kw( const ecl_file_map_type * file_map , const char * kw, int ith);
+ecl_kw_type        * ecl_file_map_iget_kw( const ecl_file_map_type * file_map , int index);
+ecl_type_enum        ecl_file_map_iget_type( const ecl_file_map_type * file_map , int index);
+int                  ecl_file_map_iget_size( const ecl_file_map_type * file_map , int index);
+const char         * ecl_file_map_iget_header( const ecl_file_map_type * file_map , int index);
+ecl_kw_type        * ecl_file_map_iget_named_kw( const ecl_file_map_type * file_map , const char * kw, int ith);
+ecl_type_enum        ecl_file_map_iget_named_type( const ecl_file_map_type * file_map , const char * kw , int ith);
+int                  ecl_file_map_iget_named_size( const ecl_file_map_type * file_map , const char * kw , int ith);
 
 
 UTIL_IS_INSTANCE_HEADER( ecl_file )
