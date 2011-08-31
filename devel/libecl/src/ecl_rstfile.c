@@ -16,6 +16,11 @@
    for more details. 
 */
 
+/*
+  This file is included from the ecl_file.c file with a #include
+  statement, i.e. it is the same compilation unit as ecl_file. The
+  seperation is only to increase readability.  
+*/
 
 /*****************************************************************/
 /*                   R E S T A R T   F I L E S                   */

@@ -32,23 +32,12 @@
 #include <ecl_util.h>
 #include <ecl_kw.h>
 #include <ecl_file.h>
+#include <ecl_kw_magic.h>
 
 #include <ecl_grid.h>
 #include <point.h>
 #include <tetrahedron.h>
 
-#define DIMENS_KW      "DIMENS"
-#define LGR_KW         "LGR"
-#define LGR_PARENT_KW  "LGRPARNT"
-#define GLOBAL_STRING  "GLOBAL"
-#define GRIDHEAD_KW    "GRIDHEAD"
-#define ZCORN_KW       "ZCORN"
-#define COORD_KW       "COORD"     // GRID
-#define ACTNUM_KW      "ACTNUM"
-#define MAPAXES_KW     "MAPAXES"
-#define HOSTNUM_KW     "HOSTNUM"
-#define COORDS_KW      "COORDS"    // EGRID
-#define CORNERS_KW     "CORNERS"    
 
 
 /**

@@ -30,6 +30,7 @@
 #include <int_vector.h>
 #include <stringlist.h>
 #include <ecl_endian_flip.h>
+#include <ecl_kw_magic.h>
 #include <ecl_file_kw.h>
 
 
@@ -47,21 +48,6 @@
 */
 
 
-/*
-  Some keyword strings which are give special significance when
-  loading summary and restart files.
-*/
-
-#define INTEHEAD_KW  "INTEHEAD"    /* Restart files & init files*/
-#define SEQNUM_KW    "SEQNUM"      /* Restart files */
-
-
-/* The INTEHEAD_XXX_INDEX values apply to both INIT files and restart files. */
-#define INTEHEAD_DAY_INDEX     64   
-#define INTEHEAD_MONTH_INDEX   65
-#define INTEHEAD_YEAR_INDEX    66
-#define INTEHEAD_VERSION_INDEX 94    /* This is ECLIPSE100 || ECLIPSE300 - not temporal version. */
-#define INTEHEAD_PHASE_INDEX   14
 
 #define ECL_FILE_ID 776107
 

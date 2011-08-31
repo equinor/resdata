@@ -29,8 +29,6 @@ extern "C" {
 #include <time.h>
 #include <ecl_util.h>
 
-#define SEQHDR_KW    "SEQHDR"      /* Summary files */
-
 
 typedef struct ecl_file_map_struct ecl_file_map_type;
 typedef struct ecl_file_struct ecl_file_type;

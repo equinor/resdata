@@ -28,6 +28,7 @@
 #include <ecl_file.h>
 #include <int_vector.h>
 #include <ecl_endian_flip.h>
+#include <ecl_kw_magic.h>
 
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
@@ -92,7 +93,7 @@ ecl_rft_file_type * ecl_rft_file_alloc(const char * filename) {
   int block_nr = 0;
   
   while (true) {
-    ecl_file_map_type * file_map = ecl_file_get_blockmap( ecl_file , "TIME" , block_nr);
+    ecl_file_map_type * file_map = ecl_file_get_blockmap( ecl_file , TIME_KW , block_nr);
     if (file_map != NULL) {
       ecl_rft_node_type * rft_node = ecl_rft_node_alloc( file_map );
       if (rft_node != NULL) { 

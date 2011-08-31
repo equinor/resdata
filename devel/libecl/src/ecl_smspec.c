@@ -30,7 +30,9 @@
 #include <int_vector.h>
 #include <ecl_smspec.h>
 #include <ecl_file.h>
+#include <ecl_kw_magic.h>
 #include <stringlist.h>
+
 
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
@@ -941,11 +943,11 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
   ecl_file_type * header = ecl_file_open( header_file );
   {
     int *date;
-    ecl_kw_type *wells     = ecl_file_iget_named_kw(header, "WGNAMES"  , 0);
-    ecl_kw_type *keywords  = ecl_file_iget_named_kw(header, "KEYWORDS" , 0);
-    ecl_kw_type *startdat  = ecl_file_iget_named_kw(header, "STARTDAT" , 0);
-    ecl_kw_type *units     = ecl_file_iget_named_kw(header, "UNITS"    , 0 );
-    ecl_kw_type *dimens    = ecl_file_iget_named_kw(header, "DIMENS"   , 0);
+    ecl_kw_type *wells     = ecl_file_iget_named_kw(header, WGNAMES_KW  , 0);
+    ecl_kw_type *keywords  = ecl_file_iget_named_kw(header, KEYWORDS_KW , 0);
+    ecl_kw_type *startdat  = ecl_file_iget_named_kw(header, STARTDAT_KW , 0);
+    ecl_kw_type *units     = ecl_file_iget_named_kw(header, UNITS_KW    , 0 );
+    ecl_kw_type *dimens    = ecl_file_iget_named_kw(header, DIMENS_KW   , 0);
     ecl_kw_type *nums      = NULL;
     ecl_kw_type *lgrs      = NULL;
     ecl_kw_type *numlx     = NULL;
@@ -956,14 +958,14 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     if (startdat == NULL) 
       util_abort("%s: could not locate STARTDAT keyword in header - aborting \n",__func__);
     
-    if (ecl_file_has_kw(header , "NUMS"))
-      nums = ecl_file_iget_named_kw(header , "NUMS" , 0);
+    if (ecl_file_has_kw(header , NUMS_KW))
+      nums = ecl_file_iget_named_kw(header , NUMS_KW , 0);
     
-    if (ecl_file_has_kw( header , "LGRS" )) {/* The file has LGR information. */
-      lgrs  = ecl_file_iget_named_kw( header , "LGRS"  , 0 );
-      numlx = ecl_file_iget_named_kw( header , "NUMLX" , 0 ); 
-      numly = ecl_file_iget_named_kw( header , "NUMLY" , 0 ); 
-      numlz = ecl_file_iget_named_kw( header , "NUMLZ" , 0 ); 
+    if (ecl_file_has_kw( header , LGRS_KW )) {/* The file has LGR information. */
+      lgrs  = ecl_file_iget_named_kw( header , LGRS_KW  , 0 );
+      numlx = ecl_file_iget_named_kw( header , NUMLX_KW , 0 ); 
+      numly = ecl_file_iget_named_kw( header , NUMLY_KW , 0 ); 
+      numlz = ecl_file_iget_named_kw( header , NUMLZ_KW , 0 ); 
       ecl_smspec->has_lgr = true;
     } else
       ecl_smspec->has_lgr = false;

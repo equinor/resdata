@@ -27,7 +27,7 @@
 #include <ecl_endian_flip.h>
 #include <time_t_vector.h>
 #include <stringlist.h>
-
+#include <ecl_kw_magic.h>
 
 /*
   This file implements the type ecl_sum_data_type. The data structure 
@@ -612,13 +612,13 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
                                       const ecl_smspec_type * smspec) {
   
   
-  int num_ministep  = ecl_file_get_num_named_kw( ecl_file , "PARAMS");
+  int num_ministep  = ecl_file_get_num_named_kw( ecl_file , PARAMS_KW);
   if (num_ministep > 0) {
     int ikw;
 
     for (ikw = 0; ikw < num_ministep; ikw++) {
-      ecl_kw_type * ministep_kw = ecl_file_iget_named_kw( ecl_file , "MINISTEP" , ikw);
-      ecl_kw_type * params_kw    = ecl_file_iget_named_kw( ecl_file , "PARAMS"   , ikw);
+      ecl_kw_type * ministep_kw = ecl_file_iget_named_kw( ecl_file , MINISTEP_KW , ikw);
+      ecl_kw_type * params_kw    = ecl_file_iget_named_kw( ecl_file , PARAMS_KW   , ikw);
       
       ecl_sum_data_new_ministep( data , ecl_file_get_src_file( ecl_file ) , report_step , ministep_kw , params_kw , smspec );
     }
