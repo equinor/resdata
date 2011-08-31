@@ -144,7 +144,7 @@ void log_add_message(log_type *logh, int message_level , FILE * dup_stream , cha
   
     if (log_include_message(logh,message_level)) {
       time(&epoch_time);
-      localtime_r(&epoch_time , &time_fields);
+      util_localtime(&epoch_time , &time_fields);
 
       if (message != NULL)
         fprintf(logh->stream,"%02d/%02d - %02d:%02d:%02d  %s\n",time_fields.tm_mday, time_fields.tm_mon + 1, time_fields.tm_hour , time_fields.tm_min , time_fields.tm_sec , message);
@@ -200,7 +200,9 @@ FILE * log_get_stream(log_type * logh ) {
 
 
 inline void log_sync(log_type * logh) {
+#ifdef HAVE_FSYNC
   fsync( logh->fd );
+#endif
   fseek( logh->stream , 0 , SEEK_END );
 }
 
