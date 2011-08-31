@@ -204,7 +204,7 @@ void timer_report(const timer_type *timer , FILE *stream) {
   if (timer->count > 0) {
     double mean,std_dev;
     timer_stats(timer , &mean , &std_dev);
-    fprintf(stream,"%s: %12.6f    %10zd    %10.7f +/- %10.7f\n",timer->name,timer->sum1,timer->count,mean,std_dev);
+    fprintf(stream,"%s: %12.6f    %10d    %10.7f +/- %10.7f\n",timer->name,timer->sum1,timer->count,mean,std_dev);
   } else {
     fprintf(stderr,"No usage statistics collected for timer: %s  Aborting\n",timer->name);
     abort();

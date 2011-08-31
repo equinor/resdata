@@ -26,25 +26,22 @@
 #include <unistd.h>
 #include <util.h>
 #include <log.h>
-#include <pthread.h>
 #include <stdarg.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
-
-/**
-   This file implements a simple log structure. The characteristics of
-   this object are as follows:
-
-*/
-
+#ifdef HAVE_PTHREAD
+#include <pthread.h>
+#endif
 
 struct log_struct {
   char             * filename;
   FILE             * stream; 
   int                fd; 
   int                log_level;
+#ifdef HAVE_PTHREAD
   pthread_mutex_t    mutex;
+#endif
 };
 
 
@@ -59,7 +56,9 @@ void log_reset_filename(log_type *logh , const char *filename) {
   }
   
   logh->filename = util_realloc_string_copy( logh->filename , filename );
+#ifdef HAVE_PTHREAD
   pthread_mutex_lock( &logh->mutex );
+#endif
 
   if (filename != NULL) {
     logh->stream = util_mkdir_fopen( filename , "a+");
@@ -71,7 +70,9 @@ void log_reset_filename(log_type *logh , const char *filename) {
     logh->fd     = -1;
   }
 
+#ifdef HAVE_PTHREAD
   pthread_mutex_unlock( &logh->mutex );
+#endif
 }
 
 
@@ -97,7 +98,9 @@ static log_type *log_alloc_internal(const char *filename , bool new, int log_lev
   logh->log_level     = log_level;
   logh->filename      = NULL;
   logh->stream        = NULL;
+#ifdef HAVE_PTHREAD
   pthread_mutex_init( &logh->mutex , NULL );
+#endif
   log_reset_filename( logh ,filename );
     
   return logh;
