@@ -45,6 +45,11 @@ if (HAVE_ZLIB)
    include_directories( ${ZLIB_HEADER} )
 endif()   
 
+if ( SHLWAPI_LIBRARY )
+   target_link_libraries( util_static ${SHWLAPI_LIBRARY} )
+   target_link_libraries( util_shared ${SHWLAPI_LIBRARY} )
+endif()
+
 #target_link_libraries( util_static m ${LAPACK_LIBRARY} )
 #target_link_libraries( util_shared m ${LAPACK_LIBRARY} )
 
