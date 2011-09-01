@@ -55,8 +55,6 @@ target_link_libraries( util_static m ${LAPACK_LIBRARY} )
 target_link_libraries( util_shared m ${LAPACK_LIBRARY} )
 target_link_libraries( util_static m ${BLAS_LIBRARY} )
 target_link_libraries( util_shared m ${BLAS_LIBRARY} )
-target_link_libraries( util_shared m ${GFORTRAN_LIBRARY} )
-target_link_libraries( util_static m ${GFORTRAN_LIBRARY} )
 
 
 target_link_libraries( util_static m )
