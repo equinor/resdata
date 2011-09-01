@@ -56,6 +56,23 @@ char * util_alloc_PATH_executable(const char * executable) {
   }
 }
 
+static void util_unsetenv__( const char * variable ) {
+#ifdef HAVE_UNSETENV
+  unsetenv( variable );
+#else
+  SetEnvironmentVariable( variable , NULL );
+#endif
+}
+
+
+static void util_setenv__( const char * variable , const char * value) {
+#ifdef HAVE_SETENV
+  int overwrite = 1;
+  setenv( variable , value , overwrite );
+#else
+  SetEnvironmentVariable( variable , value );
+#endif
+}
 
 
 
@@ -77,7 +94,7 @@ const char * util_update_path_var(const char * variable, const char * value, boo
   const char * current_value = getenv( variable );
   if (current_value == NULL)
     /* The (path) variable is not currently set. */
-    setenv( variable , value , 1);
+    util_setenv__( variable , value );
   else {
     bool    update = true; 
 
@@ -103,14 +120,13 @@ const char * util_update_path_var(const char * variable, const char * value, boo
         new_value = util_alloc_sprintf("%s:%s" , current_value , value);
       else
         new_value = util_alloc_sprintf("%s:%s" , value , current_value);
-      setenv( variable , new_value , 1);
+      util_setenv__( variable , new_value );
       free( new_value );
     }
     
   }
   return getenv( variable );
 }
-
 
 
 
@@ -131,11 +147,11 @@ const char * util_update_path_var(const char * variable, const char * value, boo
 const char * util_setenv( const char * variable , const char * value) {
   char * interp_value = util_alloc_envvar( value );
   if (interp_value != NULL) {
-    setenv( variable , interp_value , 1);
+    util_setenv__( variable , interp_value);
     free( interp_value );
   } else
-    unsetenv( variable );
-
+    util_unsetenv__( variable );
+  
   return getenv( variable );
 }
 

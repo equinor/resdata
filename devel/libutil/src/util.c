@@ -4654,9 +4654,9 @@ void util_localtime( time_t * t , struct tm * ts ) {
 #include "util_lockf.c"
 #endif
 
-#ifdef HAVE_GETENV
+#include <Windows.h>
 #include "util_getenv.c"
-#endif
+
 
 #ifdef HAVE_SYMLINK
 #include "util_symlink.c"
