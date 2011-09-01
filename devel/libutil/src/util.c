@@ -51,7 +51,7 @@
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
 #else
-#include <windows.h>
+#include <Windows.h>
 #include <Shlwapi.h>
 #endif
 
@@ -4654,8 +4654,7 @@ void util_localtime( time_t * t , struct tm * ts ) {
 #include "util_lockf.c"
 #endif
 
-#include <Windows.h>
-#include "util_getenv.c"
+#include "util_env.c"
 
 
 #ifdef HAVE_SYMLINK

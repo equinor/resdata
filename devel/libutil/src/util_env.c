@@ -56,23 +56,25 @@ char * util_alloc_PATH_executable(const char * executable) {
   }
 }
 
-static void util_unsetenv__( const char * variable ) {
-#ifdef HAVE_UNSETENV
+
+#ifdef POSIX_SETENV
+void util_unsetenv( const char * variable ) {
   unsetenv( variable );
-#else
-  SetEnvironmentVariable( variable , NULL );
-#endif
 }
 
-
-static void util_setenv__( const char * variable , const char * value) {
-#ifdef HAVE_SETENV
+void util_setenv( const char * variable , const char * value) {
   int overwrite = 1;
   setenv( variable , value , overwrite );
-#else
-  SetEnvironmentVariable( variable , value );
-#endif
 }
+#else
+void util_setenv( const char * variable , const char * value) {
+  SetEnvironmentVariable( variable , NULL );
+}
+
+void util_unsetenv( const char * variable ) {
+  util_setenv( variable , NULL );
+}
+#endif
 
 
 
@@ -144,7 +146,7 @@ const char * util_update_path_var(const char * variable, const char * value, boo
    If @value == NULL a call to unsetenv( @variable ) will be issued.
 */
 
-const char * util_setenv( const char * variable , const char * value) {
+const char * util_interp_setenv( const char * variable , const char * value) {
   char * interp_value = util_alloc_envvar( value );
   if (interp_value != NULL) {
     util_setenv__( variable , interp_value);

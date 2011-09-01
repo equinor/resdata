@@ -766,6 +766,8 @@ ecl_file_map_type * ecl_file_get_blockmap( ecl_file_type * ecl_file , const char
 }
 
 
+
+
 ecl_file_map_type * ecl_file_get_unsmrymap( ecl_file_type * ecl_file , int seqhdr_nr) {
   return ecl_file_get_blockmap( ecl_file , SEQHDR_KW , seqhdr_nr );
 }
@@ -774,7 +776,6 @@ ecl_file_map_type * ecl_file_get_unsmrymap( ecl_file_type * ecl_file , int seqhd
 ecl_file_map_type * ecl_file_get_global_map( const ecl_file_type * ecl_file ) {
   return ecl_file->active_map;
 }
-
 
 
 ecl_file_type * ecl_file_open( const char * filename ) {
@@ -790,3 +791,12 @@ ecl_file_type * ecl_file_open( const char * filename ) {
 
   return ecl_file;
 }
+
+
+ecl_file_type * ecl_file_open_block( const char * filename , const char * kw , int occurence) {
+  ecl_file_type * file = ecl_file_open( filename );
+  ecl_file_map_type * blockmap = ecl_file_get_blockmap( file , kw , occurence );
+  file->active_map = blockmap;
+  return file;
+}
+

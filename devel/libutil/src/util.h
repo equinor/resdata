@@ -389,12 +389,13 @@ void     util_localtime( time_t * t , struct tm * ts );
 #include "util_fork.h"
 #endif
 
-#ifdef HAVE_GETENV
 char       * util_alloc_PATH_executable(const char * executable );
 char       * util_isscanf_alloc_envvar( const char * string , int env_index );
-const char * util_setenv( const char * variable , const char * value);
+void         util_setenv( const char * variable , const char * value);
+const char * util_interp_setenv( const char * variable , const char * value);
+void         util_unsetenv( const char * variable);
 char       * util_alloc_envvar( const char * value );
-#endif
+
 
 
 #ifdef HAVE_LOCKF
