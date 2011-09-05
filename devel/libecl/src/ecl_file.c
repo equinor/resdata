@@ -1,6 +1,6 @@
-o/*
+/*
    Copyright (C) 2011  Statoil ASA, Norway. 
-    
+   
    The file 'ecl_file.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
@@ -136,7 +136,8 @@ struct ecl_file_struct {
                                        ecl_file object. */
   file_map_type * global_map;       /* The index of all the ecl_kw instances in the file. */
   file_map_type * active_map;       /* The currently active index. */
-  vector_type       * map_list;     /* Storage container for the map instances. */
+  vector_type   * map_list;     /* Storage container for the map instances. */
+  bool            read_only;
 };
 
 
@@ -411,10 +412,11 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_file , ECL_FILE_ID)
 
 
 
-ecl_file_type * ecl_file_alloc_empty( ) {
+ecl_file_type * ecl_file_alloc_empty( bool read_only ) {
   ecl_file_type * ecl_file = util_malloc( sizeof * ecl_file , __func__);
   UTIL_TYPE_ID_INIT(ecl_file , ECL_FILE_ID);
-  ecl_file->map_list = vector_alloc_new();
+  ecl_file->map_list  = vector_alloc_new();
+  ecl_file->read_only = true;
   return ecl_file;
 }
 
@@ -784,17 +786,28 @@ void ecl_file_select_global( ecl_file_type * ecl_file ) {
    file until ecl_file_close() is called. 
 */
 
-ecl_file_type * ecl_file_open( const char * filename ) {
-  bool          fmt_file   = ecl_util_fmt_file( filename );
-  ecl_file_type * ecl_file = ecl_file_alloc_empty( );
 
-  ecl_file->fortio = fortio_open_reader( filename , ECL_ENDIAN_FLIP , fmt_file );
+static ecl_file_type * ecl_file_open__( const char * filename , bool read_only) {
+  bool          fmt_file   = ecl_util_fmt_file( filename );
+  ecl_file_type * ecl_file = ecl_file_alloc_empty( read_only );
+
+  
+  if (ecl_file->read_only)
+    ecl_file->fortio = fortio_open_reader( filename , ECL_ENDIAN_FLIP , fmt_file );    
+  else
+    ecl_file->fortio = fortio_open_readwrite( filename , ECL_ENDIAN_FLIP , fmt_file );
+  
   ecl_file->global_map = file_map_alloc( ecl_file->fortio , true );
   ecl_file_add_map( ecl_file , ecl_file->global_map );
   ecl_file_scan( ecl_file );
   ecl_file_select_global( ecl_file );
 
   return ecl_file;
+}
+
+
+ecl_file_type * ecl_file_open( const char * filename ) {
+  return ecl_file_open__(filename , true );
 }
 
 
