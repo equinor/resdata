@@ -4595,9 +4595,9 @@ void util_abort_set_executable( const char * executable ) {
 
 double util_pow10(double x) {
 #ifdef HAVE_POW10
-  return pow10( x );
+  return pow( 10 , x);
 #else
-  return exp( x * log(10));
+  return pow( 10 , x);
 #endif
 }
 
