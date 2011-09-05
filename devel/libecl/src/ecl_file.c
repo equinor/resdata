@@ -90,29 +90,36 @@
    
       ecl_file_get_blockmap( ecl_file , "SEQHDR" , 2 )
 
-   Will create a sub-index consisting of the (two) keywords in what is
-   called 'Block 2' in the figure above. In particular for restart
+   Will create a sub-index consisting of the (three) keywords in what
+   is called 'Block 2' in the figure above. In particular for restart
    files this abstraction is very convenient, because an extra layer
    of functionality is required to get from natural time coordinates
    (i.e. simulation time or report step) to the occurence number (see
-   ecl_rstfile for more details). 
+   ecl_rstfile for more details).
    
-   
-
+   To select a subindex as the active index you use the
+   ecl_file_select_block() function, or alternatively you can use
+   ecl_file_open_block() to directly select the relevant block
+   immediately after the open() statement. Observe that when using a
+   sub index thorugh ecl_file_select_block() function the global_map
+   will still be present in the ecl_file instance, and subsequent
+   calls to create a new sub index will also use the global index -
+   i.e. the indexing is not recursive, a sub index is always created
+   based on the global_map, and not on the currently active map.
 
 
    [1]: This is not entirely true - in the file ecl_rstfile.c; which
-   	is included from this file are several specialized function
-   	for working with restart files. However the restart files are
-   	still treated as collections of ecl_kw instances, and not
-   	internalized as in e.g. ecl_sum.
+        is included from this file are several specialized function
+        for working with restart files. However the restart files are
+        still treated as collections of ecl_kw instances, and not
+        internalized as in e.g. ecl_sum.
 */
 
 
 
 #define ECL_FILE_ID 776107
 
-
+typedef struct ecl_file_map_struct ecl_file_map_type;
 struct ecl_file_map_struct {
   vector_type       * kw_list;      /* This is a vector of ecl_file_kw instances corresponding to the content of the file. */
   hash_type         * kw_index;     /* A hash table with integer vectors of indices - see comment below. */
@@ -125,8 +132,8 @@ struct ecl_file_map_struct {
 struct ecl_file_struct {
   UTIL_TYPE_ID_DECLARATION;
   fortio_type       * fortio;       /* The source of all the keywords - must be retained
-				       open for reading for the entire lifetime of the
-				       ecl_file object. */
+                                       open for reading for the entire lifetime of the
+                                       ecl_file object. */
   ecl_file_map_type * global_map;   /* The index of all the ecl_kw instances in the file. */
   ecl_file_map_type * active_map;   /* The currently active index. */
   vector_type       * map_list;     /* Storage container for the map instances. */
@@ -158,6 +165,10 @@ struct ecl_file_struct {
 */
 
 /*****************************************************************/
+/* Here comes the functions related to the index ecl_file_map. These
+   functions are all of them static.
+*/
+
 
 static ecl_file_map_type * ecl_file_map_alloc( fortio_type * fortio , bool owner ) {
   ecl_file_map_type * file_map = util_malloc( sizeof * file_map ,__func__);
@@ -169,6 +180,11 @@ static ecl_file_map_type * ecl_file_map_alloc( fortio_type * fortio , bool owner
   return file_map;
 }
 
+static int ecl_file_map_get_global_index( const ecl_file_map_type * file_map , const char * kw , int ith) {
+  const int_vector_type * index_vector = hash_get(file_map->kw_index , kw);
+  int global_index = int_vector_iget( index_vector , ith);
+  return global_index;
+}
   
 
 
@@ -203,6 +219,29 @@ static void ecl_file_map_make_index( ecl_file_map_type * file_map ) {
   }
 }
 
+static bool ecl_file_map_has_kw( const ecl_file_map_type * file_map, const char * kw) {
+  return hash_has_key( file_map->kw_index , kw );
+} 
+
+
+static ecl_file_kw_type * ecl_file_map_iget_file_kw( const ecl_file_map_type * file_map , int global_index) {
+  ecl_file_kw_type * file_kw = vector_iget( file_map->kw_list , global_index);
+  return file_kw;
+}
+
+static ecl_file_kw_type * ecl_file_map_iget_named_file_kw( const ecl_file_map_type * file_map , const char * kw, int ith) {
+  int global_index = ecl_file_map_get_global_index( file_map , kw , ith);
+  ecl_file_kw_type * file_kw = ecl_file_map_iget_file_kw( file_map , global_index );
+  return file_kw;
+}
+
+
+static ecl_kw_type * ecl_file_map_iget_kw( const ecl_file_map_type * file_map , int index) {
+  ecl_file_kw_type * file_kw = ecl_file_map_iget_file_kw( file_map , index );
+  return ecl_file_kw_get_kw( file_kw , file_map->fortio );
+}
+
+
 static int ecl_file_map_find_kw_value( const ecl_file_map_type * file_map , const char * kw , const void * value) {
   int global_index = -1;
   if ( ecl_file_map_has_kw( file_map , kw)) {
@@ -220,77 +259,48 @@ static int ecl_file_map_find_kw_value( const ecl_file_map_type * file_map , cons
   return global_index;
 }
 
-const char * ecl_file_map_iget_distinct_kw( const ecl_file_map_type * file_map , int index) {
+static const char * ecl_file_map_iget_distinct_kw( const ecl_file_map_type * file_map , int index) {
   return stringlist_iget( file_map->distinct_kw , index);
 }
 
-int ecl_file_map_get_num_distinct_kw( const ecl_file_map_type * file_map ) {
+static int ecl_file_map_get_num_distinct_kw( const ecl_file_map_type * file_map ) {
   return stringlist_get_size( file_map->distinct_kw );
 }
 
-bool ecl_file_map_has_kw( const ecl_file_map_type * file_map, const char * kw) {
-  return hash_has_key( file_map->kw_index , kw );
-} 
-
-int ecl_file_map_get_size( const ecl_file_map_type * file_map ) {
+static int ecl_file_map_get_size( const ecl_file_map_type * file_map ) {
   return vector_get_size( file_map->kw_list );
 }
 
-static int ecl_file_map_get_global_index( const ecl_file_map_type * file_map , const char * kw , int ith) {
-  const int_vector_type * index_vector = hash_get(file_map->kw_index , kw);
-  int global_index = int_vector_iget( index_vector , ith);
-  return global_index;
-}
 
 
-/*****************************************************************/
-
-ecl_file_kw_type * ecl_file_map_iget_file_kw( const ecl_file_map_type * file_map , int global_index) {
-  ecl_file_kw_type * file_kw = vector_iget( file_map->kw_list , global_index);
-  return file_kw;
-}
-
-ecl_file_kw_type * ecl_file_map_iget_named_file_kw( const ecl_file_map_type * file_map , const char * kw, int ith) {
-  int global_index = ecl_file_map_get_global_index( file_map , kw , ith);
-  ecl_file_kw_type * file_kw = ecl_file_map_iget_file_kw( file_map , global_index );
-  return file_kw;
-}
-
-/* ---- */
-
-ecl_kw_type * ecl_file_map_iget_kw( const ecl_file_map_type * file_map , int index) {
-  ecl_file_kw_type * file_kw = ecl_file_map_iget_file_kw( file_map , index );
-  return ecl_file_kw_get_kw( file_kw , file_map->fortio );
-}
-
-ecl_type_enum ecl_file_map_iget_type( const ecl_file_map_type * file_map , int index) {
+static ecl_type_enum ecl_file_map_iget_type( const ecl_file_map_type * file_map , int index) {
   ecl_file_kw_type * file_kw = ecl_file_map_iget_file_kw( file_map , index );
   return ecl_file_kw_get_type( file_kw );
 }
 
-int ecl_file_map_iget_size( const ecl_file_map_type * file_map , int index) {
+static int ecl_file_map_iget_size( const ecl_file_map_type * file_map , int index) {
   ecl_file_kw_type * file_kw = ecl_file_map_iget_file_kw( file_map , index );
   return ecl_file_kw_get_size( file_kw );
 }
 
-const char * ecl_file_map_iget_header( const ecl_file_map_type * file_map , int index) {
+static const char * ecl_file_map_iget_header( const ecl_file_map_type * file_map , int index) {
   ecl_file_kw_type * file_kw = ecl_file_map_iget_file_kw( file_map , index );
   return ecl_file_kw_get_header( file_kw );
 }
 
 /* ---------- */
 
-ecl_kw_type * ecl_file_map_iget_named_kw( const ecl_file_map_type * file_map , const char * kw, int ith) {
+static ecl_kw_type * ecl_file_map_iget_named_kw( const ecl_file_map_type * file_map , const char * kw, int ith) {
   ecl_file_kw_type * file_kw = ecl_file_map_iget_named_file_kw( file_map , kw , ith);
   return ecl_file_kw_get_kw( file_kw , file_map->fortio );
 }
 
-ecl_type_enum ecl_file_map_iget_named_type( const ecl_file_map_type * file_map , const char * kw , int ith) {
+static ecl_type_enum ecl_file_map_iget_named_type( const ecl_file_map_type * file_map , const char * kw , int ith) {
   ecl_file_kw_type * file_kw = ecl_file_map_iget_named_file_kw( file_map , kw, ith);
   return ecl_file_kw_get_type( file_kw );
 }
 
-int ecl_file_map_iget_named_size( const ecl_file_map_type * file_map , const char * kw , int ith) {
+static int ecl_file_map_iget_named_size( const ecl_file_map_type * file_map , const char * kw , int ith) {
   ecl_file_kw_type * file_kw = ecl_file_map_iget_named_file_kw( file_map , kw , ith );
   return ecl_file_kw_get_size( file_kw );
 }
@@ -319,7 +329,7 @@ static void ecl_file_map_free__( void * arg ) {
 }
 
 
-int ecl_file_map_get_num_named_kw(const ecl_file_map_type * file_map , const char * kw) {
+static int ecl_file_map_get_num_named_kw(const ecl_file_map_type * file_map , const char * kw) {
   if (hash_has_key(file_map->kw_index , kw)) {
     const int_vector_type * index_vector = hash_get(file_map->kw_index , kw);
     return int_vector_size( index_vector );
@@ -327,15 +337,15 @@ int ecl_file_map_get_num_named_kw(const ecl_file_map_type * file_map , const cha
     return 0;
 }
 
-void ecl_file_map_fwrite( const ecl_file_map_type * file_map , fortio_type * target , int offset) {
+static void ecl_file_map_fwrite( const ecl_file_map_type * file_map , fortio_type * target , int offset) {
   int index;
   for (index = offset; index < vector_get_size( file_map->kw_list ); index++)
     ecl_file_kw_fwrite( vector_iget( file_map->kw_list , index ) , file_map->fortio , target);
 }
 
 
-static int ecl_file_map_iget_occurence( const ecl_file_map_type * file_map , int index) {
-  const ecl_file_kw_type * file_kw = vector_iget_const( file_map->kw_list , index);
+static int ecl_file_map_iget_occurence( const ecl_file_map_type * file_map , int global_index) {
+  const ecl_file_kw_type * file_kw = vector_iget_const( file_map->kw_list , global_index);
   const char * header              = ecl_file_kw_get_header( file_kw );
   const int_vector_type * index_vector = hash_get( file_map->kw_index , header );
   const int * index_data = int_vector_get_const_ptr( index_vector );
@@ -344,7 +354,7 @@ static int ecl_file_map_iget_occurence( const ecl_file_map_type * file_map , int
   {
     /* Manual reverse lookup. */
     for (int i=0; i < int_vector_size( index_vector ); i++)
-      if (index_data[i] == index)
+      if (index_data[i] == global_index)
         occurence = i;
   }
   if (occurence < 0)
@@ -353,7 +363,7 @@ static int ecl_file_map_iget_occurence( const ecl_file_map_type * file_map , int
   return occurence;
 }
 
-void ecl_file_map_fprintf_kw_list(const ecl_file_map_type * file_map , FILE * stream) {
+static void ecl_file_map_fprintf_kw_list(const ecl_file_map_type * file_map , FILE * stream) {
   int i;
   for (i=0; i < vector_get_size( file_map->kw_list ); i++) {
     const ecl_file_kw_type * file_kw = vector_iget_const( file_map->kw_list , i );
@@ -760,30 +770,16 @@ static void ecl_file_add_map( ecl_file_type * ecl_file , ecl_file_map_type * fil
   vector_append_owned_ref(ecl_file->map_list , file_map , ecl_file_map_free__ );
 }
 
+/**
+   Observe that new maps are ALWAYS based on the global map, and not
+   on the currently active map.  
+*/
 
 ecl_file_map_type * ecl_file_get_blockmap( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  ecl_file_map_type * blockmap = ecl_file_map_alloc_blockmap( ecl_file->active_map , kw , occurence );
+  ecl_file_map_type * blockmap = ecl_file_map_alloc_blockmap( ecl_file->global_map , kw , occurence );
   if (blockmap != NULL)
     ecl_file_add_map( ecl_file , blockmap );
   return blockmap;
-}
-
-
-ecl_file_map_type * ecl_file_get_unsmrymap( ecl_file_type * ecl_file , int seqhdr_nr) {
-  return ecl_file_get_blockmap( ecl_file , SEQHDR_KW , seqhdr_nr );
-}
-
-
-ecl_file_map_type * ecl_file_get_global_map( const ecl_file_type * ecl_file ) {
-  return ecl_file->active_map;
-}
-
-/*****************************************************************/
-
-
-void ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  ecl_file_map_type * blockmap = ecl_file_get_blockmap( file , kw , occurence );
-  file->active_map = blockmap;
 }
 
 
@@ -820,6 +816,10 @@ static void ecl_file_scan( ecl_file_type * ecl_file ) {
 }
 
 
+void ecl_file_select_global( ecl_file_type * ecl_file ) {
+  ecl_file->active_map = ecl_file->global_map;
+}
+
 
 /**
    The fundamental open file function; all alternative open()
@@ -840,7 +840,7 @@ ecl_file_type * ecl_file_open( const char * filename ) {
   ecl_file->global_map = ecl_file_map_alloc( ecl_file->fortio , true );
   ecl_file_add_map( ecl_file , ecl_file->global_map );
   ecl_file_scan( ecl_file );
-  ecl_file->active_map = ecl_file->global_map;
+  ecl_file_select_global( ecl_file );
 
   return ecl_file;
 }
@@ -852,10 +852,23 @@ ecl_file_type * ecl_file_open( const char * filename ) {
    the active map.
 */
 
+bool ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence) {
+  ecl_file_map_type * blockmap = ecl_file_get_blockmap( ecl_file , kw , occurence );
+  if (blockmap != NULL) {
+    ecl_file->active_map = blockmap;
+    return true;
+  } else
+    return false;
+}
+
+
 ecl_file_type * ecl_file_open_block( const char * filename , const char * kw , int occurence) {
   ecl_file_type * file = ecl_file_open( filename );
-  ecl_file_select_block( file , kw , occurence );
-  return file;
+  if (!ecl_file_select_block( file , kw , occurence )) {
+    ecl_file_close( file );
+    file = NULL;
+  } 
+  return NULL;
 }
 
 
@@ -880,12 +893,13 @@ void ecl_file_free__(void * arg) {
 
 /****************************************************************************/
 /* Here we include a file with functions specialized to work with
-   restart files. Observe that the file ecl_rstfile.c is compiled as
-   part of the same compilation unit as ecl_file.c.  
+   restart and summary files. Observe that the files ecl_rstfile.c and
+   ecl_smryfile are compiled as part of the same compilation unit as
+   ecl_file.c  
 */
 
 #include "ecl_rstfile.c"
-
+#include "ecl_smryfile.c"
 
 
 

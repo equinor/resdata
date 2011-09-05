@@ -93,9 +93,8 @@ ecl_rft_file_type * ecl_rft_file_alloc(const char * filename) {
   int block_nr = 0;
   
   while (true) {
-    ecl_file_map_type * file_map = ecl_file_get_blockmap( ecl_file , TIME_KW , block_nr);
-    if (file_map != NULL) {
-      ecl_rft_node_type * rft_node = ecl_rft_node_alloc( file_map );
+    if (ecl_file_select_block( ecl_file , TIME_KW , block_nr)) {
+      ecl_rft_node_type * rft_node = ecl_rft_node_alloc( ecl_file );
       if (rft_node != NULL) { 
         const char * well_name = ecl_rft_node_get_well_name( rft_node );
         ecl_rft_file_add_node(rft_vector , rft_node);

@@ -736,43 +736,15 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
         }
       }
     } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
-      
-      /**
-         This code block hinges strongly on that the unified summary
-         file is organized as:
-
-            SEQHDR
-            MINISTEP
-            PARAMS
-            MINISTEP
-            PARAMS
-            SEQHDR
-            MINISTEP
-            PARAMS
-            MINISTEP
-            PARAMS
-            MINISTEP
-            PARAMS
-
-         I.e. blocks consisting of 'SEQHDR' follow by arbitrary many
-         pairs of MINISTEP,PARAMS.
-      */
-      
       ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ));
       int report_step = 0;
-      int kw_index    = 0;
-      do {
-        ecl_kw_type * ecl_kw = ecl_file_iget_kw( ecl_file , kw_index );
-        if (ecl_kw_header_eq( ecl_kw , SEQHDR_KW )) 
+      while (true) {
+        if (ecl_file_select_smryblock( ecl_file , report_step )) {
+          ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
           report_step++;
-        else {
-          ecl_kw_type * ministep_kw = ecl_kw;
-          ecl_kw_type * params_kw   = ecl_file_iget_kw( ecl_file , kw_index + 1 );
-          kw_index++;
-          ecl_sum_data_new_ministep( data , ecl_file_get_src_file( ecl_file ) , report_step , ministep_kw , params_kw , data->smspec );
-        }
-        kw_index++;
-      } while ( kw_index < ecl_file_get_size( ecl_file ));
+        } else 
+          break;
+      }
       ecl_file_close( ecl_file );
     } else
       util_abort("%s: invalid file type:%s  \n",__func__ , ecl_util_file_type_name( file_type ));

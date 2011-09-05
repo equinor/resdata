@@ -330,18 +330,14 @@ static void load_stations(vector_type * grav_stations , const char * filename) {
 */
 
 
-static arg_pack_type * load_restart_info(const char ** input,           /* Input taken directly from argv */
-                                          int           input_length,    /* The length of input. */
-                                          int         * arg_offset,      /* Integer - value corresponding to the *NEXT* element in input which should be used by the calling scope. */
-                                          bool        * use_eclbase,     /* Should input[0] be interpreted as an ECLBASE string? */
-                                          bool        * fmt_file) {      /* Only relevant if (*use_eclbase == true): was formatted file used? */
+ecl_file_type ** load_restart_info(const char ** input,           /* Input taken directly from argv */
+                                   int           input_length,    /* The length of input. */
+                                   int         * arg_offset,      /* Integer - value corresponding to the *NEXT* element in input which should be used by the calling scope. */
+                                   bool        * use_eclbase,     /* Should input[0] be interpreted as an ECLBASE string? */
+                                   bool        * fmt_file) {      /* Only relevant if (*use_eclbase == true): was formatted file used? */
   
 
-  arg_pack_type * arg_pack = arg_pack_alloc();
   ecl_file_type ** restart_files = util_malloc( 2 * sizeof * restart_files , __func__);
-  ecl_file_map_type * map1;
-  ecl_file_map_type * map2;
-  
   int  report_nr;
   ecl_file_enum file_type;
 
@@ -355,8 +351,6 @@ static arg_pack_type * load_restart_info(const char ** input,           /* Input
       if (file_type == ECL_RESTART_FILE) {
         restart_files[0] = ecl_file_open( input[0] );
         restart_files[1] = ecl_file_open( input[1] );
-        map1 = ecl_file_get_global_map( restart_files[0] );
-        map2 = ecl_file_get_global_map( restart_files[1] );
         *arg_offset = 2;
       } else print_usage(__LINE__);
     } else print_usage(__LINE__);
@@ -368,8 +362,8 @@ static arg_pack_type * load_restart_info(const char ** input,           /* Input
         restart_files[0] = ecl_file_open( input[0] );
         restart_files[1] = ecl_file_open( input[0] );
         
-        map1 = ecl_file_get_unrstmap_report_step( restart_files[0] , report1 );
-        map2 = ecl_file_get_unrstmap_report_step( restart_files[1] , report2 );
+        ecl_file_select_rstblock_report_step( restart_files[0] , report1 );
+        ecl_file_select_rstblock_report_step( restart_files[1] , report2 );
         *arg_offset = 3;
       } else
         print_usage(__LINE__);
@@ -429,21 +423,15 @@ static arg_pack_type * load_restart_info(const char ** input,           /* Input
         if ((storage_mode == ECL_BINARY_UNIFIED) || (storage_mode == ECL_FORMATTED_UNIFIED)) {
           restart_files[0] = ecl_file_open( input[0] );
           restart_files[1] = ecl_file_open( input[0] );
-        
-          map1 = ecl_file_get_unrstmap_report_step( restart_files[0] , report1 );
-          map2 = ecl_file_get_unrstmap_report_step( restart_files[1] , report2 );
           
-          if (map1 == NULL)
+          if (!ecl_file_select_rstblock_report_step( restart_files[0] , report1 ))
             util_exit("Failed to load report:%d from %s \n",report1 , unified_file );
-
-          if (map2 == NULL)
+          
+          if (!ecl_file_select_rstblock_report_step( restart_files[1] , report2 )) 
             util_exit("Failed to load report:%d from %s \n",report2 , unified_file );
         } else {
           restart_files[0] = ecl_file_open( file1 );
           restart_files[1] = ecl_file_open( file2 );
-
-          map1 = ecl_file_get_global_map( restart_files[0] );
-          map2 = ecl_file_get_global_map( restart_files[1] );
         }
         
         *use_eclbase = true;
@@ -460,10 +448,7 @@ static arg_pack_type * load_restart_info(const char ** input,           /* Input
       }
     }
   }
-  arg_pack_append_ptr( arg_pack , restart_files );
-  arg_pack_append_ptr( arg_pack , map1 );
-  arg_pack_append_ptr( arg_pack , map2 );
-  return arg_pack;
+  return restart_files;
 }
 
 
@@ -485,8 +470,8 @@ static arg_pack_type * load_restart_info(const char ** input,           /* Input
 
 static double gravity_response(const ecl_grid_type * ecl_grid      , 
                                const ecl_file_type * init_file     , 
-                               const ecl_file_map_type * restart_file1 , 
-                               const ecl_file_map_type * restart_file2 ,
+                               const ecl_file_type * restart_file1 , 
+                               const ecl_file_type * restart_file2 ,
                                const grav_station_type * grav_station , 
                                int model_phases, 
                                int file_phases) {
@@ -507,8 +492,8 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
   double local_deltag = 0;
 
   /* Extracting the pore volumes */
-  rporv1_kw = ecl_file_map_iget_named_kw( restart_file1 , "RPORV" , 0);      
-  rporv2_kw = ecl_file_map_iget_named_kw( restart_file2 , "RPORV" , 0);      
+  rporv1_kw = ecl_file_iget_named_kw( restart_file1 , "RPORV" , 0);      
+  rporv2_kw = ecl_file_iget_named_kw( restart_file2 , "RPORV" , 0);      
   
   
   /** Extracting the densities */
@@ -516,33 +501,33 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
     // OIL_DEN
     if( has_phase(model_phases , OIL) ) {
       if (simulator == ECLIPSE100) {
-        oil_den1_kw  = ecl_file_map_iget_named_kw(restart_file1, "OIL_DEN", 0);
-        oil_den2_kw  = ecl_file_map_iget_named_kw(restart_file2, "OIL_DEN", 0);
+        oil_den1_kw  = ecl_file_iget_named_kw(restart_file1, "OIL_DEN", 0);
+        oil_den2_kw  = ecl_file_iget_named_kw(restart_file2, "OIL_DEN", 0);
       } else { // ECLIPSE300
-        oil_den1_kw  = ecl_file_map_iget_named_kw(restart_file1, "DENO", 0);
-        oil_den2_kw  = ecl_file_map_iget_named_kw(restart_file2, "DENO", 0);
+        oil_den1_kw  = ecl_file_iget_named_kw(restart_file1, "DENO", 0);
+        oil_den2_kw  = ecl_file_iget_named_kw(restart_file2, "DENO", 0);
       } ;
     }
     
     // GAS_DEN
     if( has_phase( model_phases , GAS) ) {
       if (simulator == ECLIPSE100) {
-        gas_den1_kw  = ecl_file_map_iget_named_kw(restart_file1, "GAS_DEN", 0);
-        gas_den2_kw  = ecl_file_map_iget_named_kw(restart_file2, "GAS_DEN", 0);
+        gas_den1_kw  = ecl_file_iget_named_kw(restart_file1, "GAS_DEN", 0);
+        gas_den2_kw  = ecl_file_iget_named_kw(restart_file2, "GAS_DEN", 0);
       } else { // ECLIPSE300
-        gas_den1_kw  = ecl_file_map_iget_named_kw(restart_file1, "DENG", 0);
-        gas_den2_kw  = ecl_file_map_iget_named_kw(restart_file2, "DENG", 0);
+        gas_den1_kw  = ecl_file_iget_named_kw(restart_file1, "DENG", 0);
+        gas_den2_kw  = ecl_file_iget_named_kw(restart_file2, "DENG", 0);
       } ;
     }
     
     // WAT_DEN
     if( has_phase( model_phases , WATER) ) {
       if (simulator == ECLIPSE100) {
-        wat_den1_kw  = ecl_file_map_iget_named_kw(restart_file1, "WAT_DEN", 0);
-        wat_den2_kw  = ecl_file_map_iget_named_kw(restart_file2, "WAT_DEN", 0);
+        wat_den1_kw  = ecl_file_iget_named_kw(restart_file1, "WAT_DEN", 0);
+        wat_den2_kw  = ecl_file_iget_named_kw(restart_file2, "WAT_DEN", 0);
       } else { // ECLIPSE300
-        wat_den1_kw  = ecl_file_map_iget_named_kw(restart_file1, "DENW", 0);
-        wat_den2_kw  = ecl_file_map_iget_named_kw(restart_file2, "DENW", 0);
+        wat_den1_kw  = ecl_file_iget_named_kw(restart_file1, "DENW", 0);
+        wat_den2_kw  = ecl_file_iget_named_kw(restart_file2, "DENW", 0);
       } ;
     }
   }
@@ -552,14 +537,14 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
   {
     // SGAS
     if( has_phase( file_phases , GAS )) {
-      sgas1_kw     = ecl_file_map_iget_named_kw(restart_file1, "SGAS", 0);
-      sgas2_kw     = ecl_file_map_iget_named_kw(restart_file2, "SGAS", 0);
+      sgas1_kw     = ecl_file_iget_named_kw(restart_file1, "SGAS", 0);
+      sgas2_kw     = ecl_file_iget_named_kw(restart_file2, "SGAS", 0);
     } 
     
     // SWAT
     if( has_phase( file_phases , WATER )) {
-      swat1_kw     = ecl_file_map_iget_named_kw(restart_file1, "SWAT", 0);
-      swat2_kw     = ecl_file_map_iget_named_kw(restart_file2, "SWAT", 0);
+      swat1_kw     = ecl_file_iget_named_kw(restart_file1, "SWAT", 0);
+      swat2_kw     = ecl_file_iget_named_kw(restart_file2, "SWAT", 0);
     } 
   }
   
@@ -687,12 +672,11 @@ static void * gravity_response_mt( void * arg ) {
   vector_type * grav_stations          = arg_pack_iget_ptr( arg_pack , 0 );
   const ecl_grid_type * ecl_grid       = arg_pack_iget_ptr( arg_pack , 1 );
   const ecl_file_type * init_file      = arg_pack_iget_ptr( arg_pack , 2 );
-  ecl_file_map_type * map1             = arg_pack_iget_ptr( arg_pack , 3 );
-  ecl_file_map_type * map2             = arg_pack_iget_ptr( arg_pack , 4 );
-  int station1                         = arg_pack_iget_int( arg_pack , 5 );
-  int station2                         = arg_pack_iget_int( arg_pack , 6 );
-  int model_phases                     = arg_pack_iget_int( arg_pack , 7 );
-  int file_phases                      = arg_pack_iget_int( arg_pack , 8 );
+  ecl_file_type ** restart_files       = arg_pack_iget_ptr( arg_pack , 3 );
+  int station1                         = arg_pack_iget_int( arg_pack , 4 );
+  int station2                         = arg_pack_iget_int( arg_pack , 5 );
+  int model_phases                     = arg_pack_iget_int( arg_pack , 6 );
+  int file_phases                      = arg_pack_iget_int( arg_pack , 7 );
   
   int station_nr;
   for (station_nr = station1; station_nr < station2; station_nr++) {
@@ -700,8 +684,8 @@ static void * gravity_response_mt( void * arg ) {
     
     gs->grav_diff = gravity_response( ecl_grid , 
                                       init_file , 
-                                      map1 , 
-                                      map2 , 
+                                      restart_files[0] , 
+                                      restart_files[1] , 
                                       gs , 
                                       model_phases , 
                                       file_phases);
@@ -749,8 +733,8 @@ static void * gravity_response_mt( void * arg ) {
 
 static int gravity_check_input( const ecl_grid_type * ecl_grid , 
                                 const ecl_file_type * init_file , 
-                                const ecl_file_map_type * restart_file1, 
-                                const ecl_file_map_type * restart_file2,
+                                const ecl_file_type * restart_file1, 
+                                const ecl_file_type * restart_file2,
                                 int   * __model_phases,
                                 int   * __file_phases) {
   {
@@ -758,35 +742,35 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
     int file_phases  = 0;
 
     /* Check which phases are present in the model */
-    if (ecl_file_map_has_kw(restart_file1 , "OIL_DEN")) {
+    if (ecl_file_has_kw(restart_file1 , "OIL_DEN")) {
       model_phases += OIL;  
       simulator = ECLIPSE100 ;
-    } else if (ecl_file_map_has_kw(restart_file1 , "DENO")) {
+    } else if (ecl_file_has_kw(restart_file1 , "DENO")) {
       model_phases += OIL;  
       simulator = ECLIPSE300 ;
     } ;
       
-    if (ecl_file_map_has_kw(restart_file1 , "WAT_DEN")) {
+    if (ecl_file_has_kw(restart_file1 , "WAT_DEN")) {
       model_phases += WATER;                         
       simulator = ECLIPSE100 ;
-    } else if (ecl_file_map_has_kw(restart_file1 , "DENW")) {
+    } else if (ecl_file_has_kw(restart_file1 , "DENW")) {
       model_phases += WATER;                         
       simulator = ECLIPSE300 ;
     } ;
     
-    if (ecl_file_map_has_kw(restart_file1 , "GAS_DEN")) {
+    if (ecl_file_has_kw(restart_file1 , "GAS_DEN")) {
       model_phases += GAS;
       simulator = ECLIPSE100 ;
-    } else if (ecl_file_map_has_kw(restart_file1 , "DENG")) {
+    } else if (ecl_file_has_kw(restart_file1 , "DENG")) {
       model_phases += GAS;
       simulator = ECLIPSE300 ;
     } ;
     
     
     /* Check which phases are present in the restart files. We assume the restart file NEVER has SOIL information */
-    if (ecl_file_map_has_kw(restart_file1 , "SWAT"))
+    if (ecl_file_has_kw(restart_file1 , "SWAT"))
       file_phases += WATER;
-    if (ecl_file_map_has_kw(restart_file1 , "SGAS"))
+    if (ecl_file_has_kw(restart_file1 , "SGAS"))
       file_phases += GAS;
     
     
@@ -825,7 +809,7 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
   }
   
   /* Check that the restart files have RPORV information. This is ensured by giving the argument RPORV to the RPTRST keyword. */
-  if ( !(ecl_file_map_has_kw( restart_file1 , "RPORV") && ecl_file_map_has_kw( restart_file2 , "RPORV")) )
+  if ( !(ecl_file_has_kw( restart_file1 , "RPORV") && ecl_file_has_kw( restart_file2 , "RPORV")) )
     util_exit("Sorry: the restartfiles do  not contain RPORV\n");       
 
 
@@ -835,8 +819,8 @@ static int gravity_check_input( const ecl_grid_type * ecl_grid ,
      versus RPORV for ten 'random' locations in the grid.
   */
   {
-    const ecl_kw_type * rporv1_kw     = ecl_file_map_iget_named_kw( restart_file1 , "RPORV" , 0);      
-    const ecl_kw_type * rporv2_kw     = ecl_file_map_iget_named_kw( restart_file2 , "RPORV" , 0);      
+    const ecl_kw_type * rporv1_kw     = ecl_file_iget_named_kw( restart_file1 , "RPORV" , 0);      
+    const ecl_kw_type * rporv2_kw     = ecl_file_iget_named_kw( restart_file2 , "RPORV" , 0);      
     const ecl_kw_type * init_porv_kw  = ecl_file_iget_named_kw( init_file     , "PORV" , 0);
 
     int    active_index;
@@ -904,26 +888,20 @@ int main(int argc , char ** argv) {
     int     input_length = argc - 1;   
     int     input_offset = 0;
     bool    use_eclbase, fmt_file; 
-    arg_pack_type * restart_args;
     
     const char * report_filen  = "RUN_GRAVITY.out"; 
     
     ecl_file_type ** restart_files;
     ecl_file_type  * init_file;
     ecl_grid_type  * ecl_grid;
-    ecl_file_map_type * map1;
-    ecl_file_map_type * map2;
-
+    
     int model_phases;
     int file_phases;
     vector_type * grav_stations = vector_alloc_new();
     
     
     /* Restart info */
-    restart_args = load_restart_info( (const char **) input , input_length , &input_offset , &use_eclbase , &fmt_file);
-    restart_files = arg_pack_iget_ptr( restart_args , 0 );
-    map1 = arg_pack_iget_ptr( restart_args , 1 );
-    map2 = arg_pack_iget_ptr( restart_args , 2 );
+    restart_files = load_restart_info( (const char **) input , input_length , &input_offset , &use_eclbase , &fmt_file);
     
     /* INIT and GRID/EGRID files */
     {
@@ -972,7 +950,7 @@ int main(int argc , char ** argv) {
         OK - now everything is loaded - check that all required
         keywords+++ are present.
     */
-    gravity_check_input(ecl_grid , init_file , map1 , map2 , &model_phases , &file_phases);
+    gravity_check_input(ecl_grid , init_file , restart_files[0] , restart_files[1] , &model_phases , &file_phases);
     
     /* 
        OK - now it seems the provided files have all the information
@@ -998,8 +976,7 @@ int main(int argc , char ** argv) {
           arg_pack_append_ptr( arg_list[i] , grav_stations );
           arg_pack_append_ptr( arg_list[i] , ecl_grid);
           arg_pack_append_ptr( arg_list[i] , init_file );
-          arg_pack_append_ptr( arg_list[i] , map1);
-          arg_pack_append_ptr( arg_list[i] , map2);
+          arg_pack_append_ptr( arg_list[i] , restart_files);
           arg_pack_append_int( arg_list[i] , station1 );
           arg_pack_append_int( arg_list[i] , station2 );
           arg_pack_append_int( arg_list[i] , model_phases );

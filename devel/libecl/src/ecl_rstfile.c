@@ -24,7 +24,7 @@
 /*
   This file is included from the ecl_file.c file with a #include
   statement, i.e. it is the same compilation unit as ecl_file. The
-  seperation is only to increase readability.  
+  separation is only to increase readability.  
 */
 
 /* 
@@ -40,13 +40,16 @@
      block, and also some other data. Observe that also INIT files and
      GRID files contain an INTEHEAD keyword.
 
-   Here comes a couple of function which utilize this knowledge about
-   the content and structure of restart files.
+   The natural time ordering when working with the file data is just
+   the running index in the file; however from a user perspective the
+   natural way to indicate time coordinate is through the report step
+   or the true simulation time (i.e. 22.th of October 2009). This file
+   is all about converting the natural input unit time and report_step
+   to the internal indexing. This is achieved by consulting the value
+   of the INTEHEAD and SEQNUM keywords respectively.
 */
 
-
 /*
-
 About the time-direction
 ========================
 
@@ -186,32 +189,6 @@ time_t ecl_file_map_iget_restart_sim_date(const ecl_file_map_type * file_map , i
 }
 
 
-int ecl_file_map_get_restart_index( const ecl_file_map_type * file_map , time_t sim_time) {
-  int num_INTEHEAD = ecl_file_map_get_num_named_kw( file_map , INTEHEAD_KW );
-  if (num_INTEHEAD == 0)
-    return -1;       /* We have no INTEHEAD headers - probably not a restart file at all. */
-  else {
-    /*
-      Should probably do something smarter than a linear search; but I dare not
-      take the chance that all INTEHEAD headers are properly set. This is from
-      Schlumberger after all.
-    */
-    int intehead_index = 0;
-    while (true) {
-      time_t itime = ecl_file_map_iget_restart_sim_date( file_map , intehead_index );
-      
-      if (itime == sim_time) /* Perfect hit. */
-        return intehead_index;
-
-      if (itime > sim_time)  /* We have gone past the target_time - i.e. we do not have it. */
-        return -1;
-      
-      intehead_index++;
-      if (intehead_index == num_INTEHEAD)  /* We have iterated through the whole thing without finding sim_time. */
-        return -1;
-    }
-  }
-}
 
 /**
    This function will look up the INTEHEAD keyword in a ecl_file_type
@@ -263,10 +240,33 @@ time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int 
    of course quite strict.
 */
 
+static int ecl_file_map_get_seqnum_index( const ecl_file_map_type * file_map , time_t sim_time) {
+  int num_INTEHEAD = ecl_file_map_get_num_named_kw( file_map , INTEHEAD_KW );
+  if (num_INTEHEAD == 0)
+    return -1;       /* We have no INTEHEAD headers - probably not a restart file at all. */
+  else {
+    /*
+      Should probably do something smarter than a linear search; but I dare not
+      take the chance that all INTEHEAD headers are properly set. This is from
+      Schlumberger after all.
+    */
+    int intehead_index = 0;
+    while (true) {
+      time_t itime = ecl_file_map_iget_restart_sim_date( file_map , intehead_index );
+      
+      if (itime == sim_time) /* Perfect hit. */
+        return intehead_index;
 
-int ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_time) {
-  return ecl_file_map_get_restart_index( restart_file->active_map , sim_time );
+      if (itime > sim_time)  /* We have gone past the target_time - i.e. we do not have it. */
+        return -1;
+      
+      intehead_index++;
+      if (intehead_index == num_INTEHEAD)  /* We have iterated through the whole thing without finding sim_time. */
+        return -1;
+    }
+  }
 }
+
 
 
 /**
@@ -293,35 +293,34 @@ bool ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step)
 }
 
 
+/*****************************************************************/
+/* Select and open functions, observe that these functions should 
+   only consider the global map.
+*/
 
-ecl_file_map_type * ecl_file_iget_unrstmap( ecl_file_type * ecl_file , int index) {
-  return ecl_file_get_blockmap( ecl_file , SEQNUM_KW , index );
+bool ecl_file_iselect_rstblock( ecl_file_type * ecl_file , int index ) {
+  return ecl_file_select_block( ecl_file , SEQNUM_KW , index );
 }
 
 
-ecl_file_map_type * ecl_file_get_unrstmap_time_t( ecl_file_type * ecl_file , time_t sim_time) {
-  int seqnum_index = ecl_file_map_get_restart_index( ecl_file->active_map , sim_time );
+bool ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , time_t sim_time) {
+  int seqnum_index = ecl_file_map_get_seqnum_index( ecl_file->global_map , sim_time );
   if (seqnum_index >= 0)
-    return ecl_file_get_blockmap( ecl_file , SEQNUM_KW , seqnum_index);
+    return ecl_file_select_block( ecl_file , SEQNUM_KW , seqnum_index);
   else
     return NULL;
 }
 
 
-ecl_file_map_type * ecl_file_get_unrstmap_report_step( ecl_file_type * ecl_file , int report_step) {
-  int global_index = ecl_file_map_find_kw_value( ecl_file->active_map , SEQNUM_KW , &report_step);
+bool ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report_step) {
+  int global_index = ecl_file_map_find_kw_value( ecl_file->global_map , SEQNUM_KW , &report_step);
   if ( global_index >= 0) {
-    int seqnum_index = ecl_file_map_iget_occurence( ecl_file->active_map , global_index );
-    return ecl_file_get_blockmap( ecl_file , SEQNUM_KW , seqnum_index );
+    int seqnum_index = ecl_file_map_iget_occurence( ecl_file->global_map , global_index );
+    return ecl_file_select_block( ecl_file , SEQNUM_KW , seqnum_index );
   } else 
-    return NULL;
+    return false;
 }
 
-
-/**
-   The SEQNUM number found in unified restart files corresponds to the 
-   REPORT_STEP.
-*/
 
 
 

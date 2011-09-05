@@ -23,6 +23,7 @@
 #include <ecl_kw.h>
 #include <msg.h>
 #include <ecl_endian_flip.h>
+#include <ecl_kw_magic.h>
 
 void unpack_file(const char * filename) {
   ecl_file_enum target_type = ECL_OTHER_FILE;
@@ -63,18 +64,17 @@ void unpack_file(const char * filename) {
     
     
     while (true) {
-      ecl_file_map_type * src_block;
       if (block_index == size)
         break;
 
       if (target_type == ECL_SUMMARY_FILE) {
-        src_block = ecl_file_get_blockmap( src_file , "SEQHDR" , block_index );
+        ecl_file_select_block( src_file , SEQHDR_KW , block_index );
         report_step += 1;
         offset = 0;
       } else {
         ecl_kw_type * seqnum_kw;
-        src_block = ecl_file_get_blockmap( src_file , "SEQNUM" , block_index );
-        seqnum_kw = ecl_file_map_iget_named_kw( src_block , "SEQNUM" , 0);
+        ecl_file_select_block( src_file , SEQNUM_KW , block_index );
+        seqnum_kw = ecl_file_iget_named_kw( src_file , SEQNUM_KW , 0);
         report_step = ecl_kw_iget_int( seqnum_kw , 0);
         offset = 1;
       }
@@ -91,7 +91,7 @@ void unpack_file(const char * filename) {
         fortio_type * fortio_target = fortio_open_writer( target_file , ECL_ENDIAN_FLIP , fmt_file );
         
         msg_update(msg , target_file);
-        ecl_file_map_fwrite( src_block , fortio_target , offset);
+        ecl_file_fwrite( src_file , fortio_target , offset);
         
         fortio_fclose(fortio_target);
         free(target_file);

@@ -379,13 +379,10 @@ void fortio_complete_read(fortio_type *fortio) {
 */
 
 int fortio_fread_record(fortio_type *fortio, char *buffer) {
-  printf("Starting record\n");
   fortio_init_read(fortio);
   int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
-  printf("record size:%d \n",record_size);
   util_fread(buffer , 1 , fortio->active_header , fortio->stream , __func__);
   fortio_complete_read(fortio);
-  printf("Read complete\n");
   return record_size;
 }
 
