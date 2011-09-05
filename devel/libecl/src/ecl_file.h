@@ -94,6 +94,9 @@ bool             ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , t
 bool             ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report_step);
 bool             ecl_file_iselect_rstblock( ecl_file_type * ecl_file , int index );
 
+ecl_file_type  * ecl_file_open_rstblock_sim_time( const char * filename , time_t sim_time); 
+ecl_file_type  * ecl_file_open_rstblock_report_step( const char * filename , int report_step );
+
 
 /*****************************************************************/
 /* SUMMARY FILES */

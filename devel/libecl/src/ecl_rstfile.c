@@ -146,13 +146,24 @@ static time_t INTEHEAD_date( const ecl_kw_type * intehead_kw ) {
                          ecl_kw_iget_int( intehead_kw , INTEHEAD_YEAR_INDEX)  );
 }
 
-bool ecl_file_map_has_report_step( const ecl_file_map_type * file_map , int report_step) {
+static bool ecl_file_map_has_report_step( const ecl_file_map_type * file_map , int report_step) {
   int global_index = ecl_file_map_find_kw_value( file_map , SEQNUM_KW , &report_step );
   if (global_index >= 0)
     return true;
   else
     return false;
 }
+
+
+static time_t ecl_file_map_iget_restart_sim_date(const ecl_file_map_type * file_map , int index) {
+  if (ecl_file_map_get_num_named_kw( file_map , INTEHEAD_KW) > index) {
+    ecl_kw_type * intehead_kw = ecl_file_map_iget_named_kw( file_map , INTEHEAD_KW , index);
+    return INTEHEAD_date( intehead_kw );
+  } else
+    return -1;
+}
+
+
 
 
 static int ecl_file_map_find_sim_time(const ecl_file_map_type * file_map , time_t sim_time) {
@@ -171,37 +182,6 @@ static int ecl_file_map_find_sim_time(const ecl_file_map_type * file_map , time_
   }
   return global_index;
 }
-
-bool ecl_file_map_has_sim_time( const ecl_file_map_type * file_map , time_t sim_time) {
-  int global_index = ecl_file_map_find_sim_time( file_map , sim_time );
-  if (global_index >= 0)
-    return true;
-  else
-    return false;
-}
-
-time_t ecl_file_map_iget_restart_sim_date(const ecl_file_map_type * file_map , int index) {
-  if (ecl_file_map_get_num_named_kw( file_map , INTEHEAD_KW) > index) {
-    ecl_kw_type * intehead_kw = ecl_file_map_iget_named_kw( file_map , INTEHEAD_KW , index);
-    return INTEHEAD_date( intehead_kw );
-  } else
-    return -1;
-}
-
-
-
-/**
-   This function will look up the INTEHEAD keyword in a ecl_file_type
-   instance, and calculate simulation date from this instance.
-
-   Will return -1 if the requested INTEHEAD keyword can not be found.
-*/
-
-time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int index ) {
-  return ecl_file_map_iget_restart_sim_date( restart_file->active_map , index );
-}
-
-
 
 /**
    This function will scan through the ecl_file looking for INTEHEAD
@@ -267,6 +247,8 @@ static int ecl_file_map_get_seqnum_index( const ecl_file_map_type * file_map , t
   }
 }
 
+/******************************************************************/
+/* Query functions. */
 
 
 /**
@@ -278,9 +260,12 @@ static int ecl_file_map_get_seqnum_index( const ecl_file_map_type * file_map , t
 
 
 bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
-  return ecl_file_map_has_sim_time( ecl_file->active_map , sim_time );
+  int global_index = ecl_file_map_find_sim_time( ecl_file->active_map , sim_time );
+  if (global_index >= 0)
+    return true;
+  else
+    return false;
 }
-
 
 /**
    Will look through all the SEQNUM kw instances of the current
@@ -290,6 +275,18 @@ bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
 
 bool ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step) {
   return ecl_file_map_has_report_step( ecl_file->active_map , report_step );
+}
+
+
+/**
+   This function will look up the INTEHEAD keyword in a ecl_file_type
+   instance, and calculate simulation date from this instance.
+
+   Will return -1 if the requested INTEHEAD keyword can not be found.
+*/
+
+time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int index ) {
+  return ecl_file_map_iget_restart_sim_date( restart_file->active_map , index );
 }
 
 
@@ -320,6 +317,27 @@ bool ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report
   } else 
     return false;
 }
+
+
+ecl_file_type * ecl_file_open_rstblock_report_step( const char * filename , int report_step ) {
+  ecl_file_type * ecl_file = ecl_file_open( filename );
+  if (!ecl_file_select_rstblock_report_step( ecl_file , report_step )) {
+    ecl_file_close( ecl_file );
+    ecl_file = NULL;
+  }
+  return ecl_file;
+}
+
+
+ecl_file_type * ecl_file_open_rstblock_sim_time( const char * filename , time_t sim_time) {
+  ecl_file_type * ecl_file = ecl_file_open( filename );
+  if (!ecl_file_select_rstblock_sim_time( ecl_file , sim_time)) {
+    ecl_file_close( ecl_file );
+    ecl_file = NULL;
+  }
+  return ecl_file;
+}
+
 
 
 
