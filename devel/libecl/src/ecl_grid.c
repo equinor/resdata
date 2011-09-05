@@ -1246,10 +1246,10 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
   
   int gtype, nx,ny,nz;
   
-  gtype   = ecl_kw_iget_int(gridhead_kw , 0);
-  nx      = ecl_kw_iget_int(gridhead_kw , 1);
-  ny      = ecl_kw_iget_int(gridhead_kw , 2);
-  nz      = ecl_kw_iget_int(gridhead_kw , 3);
+  gtype   = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_TYPE_INDEX);
+  nx      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NX_INDEX);
+  ny      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NY_INDEX);
+  nz      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NZ_INDEX);
   if (gtype != 1)
     util_abort("%s: gtype:%d fatal error when loading grid - must have corner point grid - aborting\n",__func__ , gtype );
   {
@@ -1369,9 +1369,9 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
   int index,nx,ny,nz,size;
   ecl_grid_type * grid;
   ecl_kw_type * dimens_kw   = ecl_file_iget_named_kw( ecl_file , DIMENS_KW , grid_nr);
-  nx   = ecl_kw_iget_int(dimens_kw , 0);
-  ny   = ecl_kw_iget_int(dimens_kw , 1);
-  nz   = ecl_kw_iget_int(dimens_kw , 2);
+  nx   = ecl_kw_iget_int(dimens_kw , DIMENS_NX_INDEX);
+  ny   = ecl_kw_iget_int(dimens_kw , DIMENS_NY_INDEX);
+  nz   = ecl_kw_iget_int(dimens_kw , DIMENS_NZ_INDEX);
   grid = ecl_grid_alloc_empty(global_grid , nx , ny , nz, grid_nr);
   size = nx*ny*nz;
   

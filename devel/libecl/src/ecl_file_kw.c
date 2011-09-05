@@ -27,6 +27,23 @@
 #include <ecl_file_kw.h>
 #include <fortio.h>
 
+/*
+  This file implements the datatype ecl_file_kw which is used to hold
+  header-information about an ecl_kw instance on file. When a
+  ecl_file_kw instance is created it is initialized with the header
+  information (name, size, type) for an ecl_kw instance and the offset
+  in a file actually containing the keyword.
+
+  If and when the keyword is actually queried for at a later stage the
+  ecl_file_kw_get_kw() method will seek to the keyword position in an
+  open fortio instance and call ecl_kw_fread_alloc() to instantiate
+  the keyword itself. 
+
+  The ecl_file_kw datatype is mainly used by the ecl_file datatype;
+  whose index tables consists of ecl_file_kw instances.
+*/
+
+
 #define ECL_FILE_KW_TYPE_ID 646107
 
 struct ecl_file_kw_struct {
@@ -56,23 +73,42 @@ static ecl_file_kw_type * ecl_file_kw_alloc__( const char * header , ecl_type_en
   return file_kw;
 }
 
+/**
+   Create a new ecl_file_kw instance based on header information from
+   the input keyword. Typically only the header has been loaded from
+   the keyword.  
+
+   Observe that it is the users responsability that the @offset
+   argument in ecl_file_kw_alloc() comes from the same fortio instance
+   as used when calling ecl_file_kw_get_kw() to actually instatiate
+   the ecl_kw. This is automatically assured when using ecl_file to
+   access the ecl_file_kw instances.  
+*/
+
 ecl_file_kw_type * ecl_file_kw_alloc( const ecl_kw_type * ecl_kw , long offset ) {
   return ecl_file_kw_alloc__( ecl_kw_get_header( ecl_kw ) , ecl_kw_get_type( ecl_kw ) , ecl_kw_get_size( ecl_kw ) , offset );
 }
 
 
-/* 
-   Does NOT copy the kw pointer which must be reloaded.
+/** 
+    Does NOT copy the kw pointer which must be reloaded.
 */
 ecl_file_kw_type * ecl_file_kw_alloc_copy( const ecl_file_kw_type * src ) {
   return ecl_file_kw_alloc__( src->header , src->ecl_type , src->kw_size , src->file_offset );
 }
 
 
-void ecl_file_kw_free( ecl_file_kw_type * file_kw ) {
-  free( file_kw->header );
-  if (file_kw->kw != NULL)
+static void ecl_kw_drop_kw( ecl_file_kw_type * file_kw ) {
+  if (file_kw->kw != NULL) {
     ecl_kw_free( file_kw->kw );
+    file_kw->kw = NULL;
+  }
+}
+
+
+void ecl_file_kw_free( ecl_file_kw_type * file_kw ) {
+  ecl_kw_drop_kw( file_kw );
+  free( file_kw->header );
   free( file_kw );
 }
 
@@ -107,6 +143,16 @@ static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fort
 }
 
 
+/*
+  Will return the ecl_kw instance of this file_kw; if it is not
+  currently loaded the method will instantiate the ecl_kw instance
+  from the @fortio input handle. 
+
+  After loading the keyword it will be kept in memory, so a possible
+  subsequent lookup will be served from memory.  
+*/
+
+
 ecl_kw_type * ecl_file_kw_get_kw( ecl_file_kw_type * file_kw , fortio_type * fortio) {
   if (file_kw->kw == NULL)
     ecl_file_kw_load_kw( file_kw , fortio );
@@ -120,8 +166,6 @@ bool ecl_file_kw_ptr_eq( const ecl_file_kw_type * file_kw , const ecl_kw_type * 
   else
     return false;
 }
-
-
 
 
 

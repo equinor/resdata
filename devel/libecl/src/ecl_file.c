@@ -35,16 +35,77 @@
 
 
 /**
-   This file implements functionality to load an entire ECLIPSE file
-   in ecl_kw format. In addition to loading a complete file it can
-   also load a section, by stopping when it meets a certain
-   keyword. This latter functionality is suitable for loading parts
-   (i.e. one report step) of unified files.
+   This file implements functionality to load an ECLIPSE file in
+   ecl_kw format. The implementation works by first searching through
+   the complete file to create an index over all the keywords present
+   in the file. The actual keyword data is not loaded before they are
+   explicitly requested.
 
-   The ecl_file struct is quite simply a vector of ecl_kw instances,
-   it has no knowledge of report steps and such, and does not know
-   whether it has been built from a complete file, or only from part
-   of a unified file.  
+   The ecl_file_type is the middle layer of abstraction in the libecl
+   hierarchy (see the file overview.txt in this directory); it works
+   with a collection of ecl_kw instances and has various query
+   functions, however it does not utilize knowledge of the
+   structure/content of the files in the e.g. ecl_grid.c does[1].
+   
+   The main datatype here is of the ecl_file type, but in addition
+   each ecl_kw instance is wrapped in an ecl_file_kw (implemented in
+   ecl_file_kw.c) structure and all the indexing is implemented with
+   the ecl_file_map type.
+   
+   When the file is opened an index of all the keywords is created and
+   stored in the field global_map, and the field active_map is set to
+   point to global_map, i.e. all query/get operations on the ecl_file
+   will be based on the complete index:
+
+   In many cases (in particular for unified restart files) it is quite
+   painful to work with this large and unvieldy index, and it is
+   convenient to create a sub index based on a subset of the
+   keywords. The creation of these sub indices is based on identifying
+   a keyword from name and occurence number, and then including all
+   keywords up to the next occurence of the same keyword:
+
+      SEQHDR            ---\ 
+      MINISTEP  0          |   
+      PARAMS    .....      | 
+      MINISTEP  1          |   Block 0
+      PARAMS    .....      |
+      MINISTEP  2          |
+      PARAMS    .....      |
+      SEQHDR            ---+
+      MINISTEP  3          |
+      PARAMS    .....      |
+      MINISTEP  4          |   Block 1
+      PARAMS    .....      |
+      MINISTEP  5          |
+      SEQHDR            ---+
+      MINISTEP  6          |   Block 2
+      PARAMS    ....       |
+      SEQHDR            ---+ 
+      MINISTEP  7          |   
+      PARAMS    ....       |   Block 3
+      MINISTEP  8          |
+      PARAMS    ....       |
+   
+   For the unified summary file depicted here e.g. the call
+   
+      ecl_file_get_blockmap( ecl_file , "SEQHDR" , 2 )
+
+   Will create a sub-index consisting of the (two) keywords in what is
+   called 'Block 2' in the figure above. In particular for restart
+   files this abstraction is very convenient, because an extra layer
+   of functionality is required to get from natural time coordinates
+   (i.e. simulation time or report step) to the occurence number (see
+   ecl_rstfile for more details). 
+   
+   
+
+
+
+   [1]: This is not entirely true - in the file ecl_rstfile.c; which
+   	is included from this file are several specialized function
+   	for working with restart files. However the restart files are
+   	still treated as collections of ecl_kw instances, and not
+   	internalized as in e.g. ecl_sum.
 */
 
 
@@ -56,17 +117,19 @@ struct ecl_file_map_struct {
   vector_type       * kw_list;      /* This is a vector of ecl_file_kw instances corresponding to the content of the file. */
   hash_type         * kw_index;     /* A hash table with integer vectors of indices - see comment below. */
   stringlist_type   * distinct_kw;  /* A stringlist of the keywords occuring in the file - each string occurs ONLY ONCE. */         
-  fortio_type       * fortio;
-  bool                owner;
+  fortio_type       * fortio;       /* The same fortio instance pointer as in the ecl_file styructure. */
+  bool                owner;        /* Is this map the owner of the ecl_file_kw instances; only true for the global_map. */
 };
 
 
 struct ecl_file_struct {
   UTIL_TYPE_ID_DECLARATION;
-  fortio_type       * fortio;
-  ecl_file_map_type * global_map;
-  ecl_file_map_type * active_map;
-  vector_type       * map_list;
+  fortio_type       * fortio;       /* The source of all the keywords - must be retained
+				       open for reading for the entire lifetime of the
+				       ecl_file object. */
+  ecl_file_map_type * global_map;   /* The index of all the ecl_kw instances in the file. */
+  ecl_file_map_type * active_map;   /* The currently active index. */
+  vector_type       * map_list;     /* Storage container for the map instances. */
 };
 
 
@@ -350,7 +413,7 @@ ecl_file_type * ecl_file_alloc_empty( ) {
   The input @file must be either an INIT file or a restart file. Will
   fail hard if an INTEHEAD kw can not be found - or if the INTEHEAD
   keyword is not sufficiently large.
-
+  
   The eclipse files can distinguish between ECLIPSE300 ( value == 300)
   and ECLIPSE300-Thermal option (value == 500). This function will
   return ECLIPSE300 in both those cases.  
@@ -553,34 +616,6 @@ void ecl_file_replace_kw( ecl_file_type * ecl_file , ecl_kw_type * old_kw , ecl_
 //}
 
 
-/*
-  Will search through the whole file given by @filename and look for
-  an ecl_kw instance which compares equal with the input keyword @ecl_kw.
-*/
-  
-//bool ecl_file_contains_kw( const char * filename , const ecl_kw_type * ecl_kw) {
-//  bool has_kw = false;
-//  bool          fmt_file = ecl_util_fmt_file( filename );
-//  fortio_type * fortio   = fortio_open_reader( filename , ECL_ENDIAN_FLIP , fmt_file);
-//  {
-//    ecl_kw_type * file_kw = ecl_kw_alloc_empty();
-//    while (true) {
-//      if (ecl_kw_fseek_kw(ecl_kw_get_header( ecl_kw ) , false , false , fortio)) {
-//        ecl_kw_fread_realloc( file_kw , fortio );
-//        if (ecl_kw_equal( file_kw , ecl_kw )) {
-//          has_kw = true;
-//          break;
-//        }
-//      } else 
-//        break;  /* Keyword not found. */
-//    }
-//    ecl_kw_free( file_kw );
-//  }
-//  fortio_fclose( fortio );
-//  return has_kw;
-//}
-
-
 
 
 
@@ -719,9 +754,51 @@ int ecl_file_iget_named_size( const ecl_file_type * file , const char * kw , int
 
 
 
-/****************************************************************************/
-#include "ecl_rstfile.c"
+/*****************************************************************/
 
+static void ecl_file_add_map( ecl_file_type * ecl_file , ecl_file_map_type * file_map) {
+  vector_append_owned_ref(ecl_file->map_list , file_map , ecl_file_map_free__ );
+}
+
+
+ecl_file_map_type * ecl_file_get_blockmap( ecl_file_type * ecl_file , const char * kw , int occurence) {
+  ecl_file_map_type * blockmap = ecl_file_map_alloc_blockmap( ecl_file->active_map , kw , occurence );
+  if (blockmap != NULL)
+    ecl_file_add_map( ecl_file , blockmap );
+  return blockmap;
+}
+
+
+ecl_file_map_type * ecl_file_get_unsmrymap( ecl_file_type * ecl_file , int seqhdr_nr) {
+  return ecl_file_get_blockmap( ecl_file , SEQHDR_KW , seqhdr_nr );
+}
+
+
+ecl_file_map_type * ecl_file_get_global_map( const ecl_file_type * ecl_file ) {
+  return ecl_file->active_map;
+}
+
+/*****************************************************************/
+
+
+void ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence) {
+  ecl_file_map_type * blockmap = ecl_file_get_blockmap( file , kw , occurence );
+  file->active_map = blockmap;
+}
+
+
+/*****************************************************************/
+/*
+  Different functions to open and close a file. 
+*/
+
+/**
+   The ecl_file_scan() function will scan through the whole file and
+   build up an index of all the kewyords. The map created from this
+   scan will be stored under the 'global_map' field; and all
+   subsequent lookup operations will ultimately be based on the global
+   map.
+*/
 
 static void ecl_file_scan( ecl_file_type * ecl_file ) {
   fortio_fseek( ecl_file->fortio , 0 , SEEK_SET );
@@ -739,8 +816,55 @@ static void ecl_file_scan( ecl_file_type * ecl_file ) {
     }
     ecl_kw_free( work_kw );
   }
+  ecl_file_map_make_index( ecl_file->global_map );
 }
 
+
+
+/**
+   The fundamental open file function; all alternative open()
+   functions start by calling this one. This function will read
+   through the complete file, extract all the keyword headers and
+   create the map/index stored in the global_map field of the ecl_file
+   structure. No keyword data will be loaded from the file.
+
+   The ecl_file instance will retain an open fortio reference to the
+   file until ecl_file_close() is called. 
+*/
+
+ecl_file_type * ecl_file_open( const char * filename ) {
+  bool          fmt_file   = ecl_util_fmt_file( filename );
+  ecl_file_type * ecl_file = ecl_file_alloc_empty( );
+
+  ecl_file->fortio = fortio_open_reader( filename , ECL_ENDIAN_FLIP , fmt_file );
+  ecl_file->global_map = ecl_file_map_alloc( ecl_file->fortio , true );
+  ecl_file_add_map( ecl_file , ecl_file->global_map );
+  ecl_file_scan( ecl_file );
+  ecl_file->active_map = ecl_file->global_map;
+
+  return ecl_file;
+}
+
+/**
+   The ecl_file_open_block() function will first call ecl_file_open(),
+   and then subsequently create a more limited file_map with the
+   ecl_file_get_blockmap() function and set the newly created map as
+   the active map.
+*/
+
+ecl_file_type * ecl_file_open_block( const char * filename , const char * kw , int occurence) {
+  ecl_file_type * file = ecl_file_open( filename );
+  ecl_file_select_block( file , kw , occurence );
+  return file;
+}
+
+
+
+/**
+   The ecl_file_close() function will close the fortio instance and
+   free all the data created by the ecl_file instance; this includes
+   the ecl_kw instances which have been loaded on demand.
+*/
 
 void ecl_file_close(ecl_file_type * ecl_file) {
   fortio_fclose( ecl_file->fortio );
@@ -753,50 +877,15 @@ void ecl_file_free__(void * arg) {
   ecl_file_close( ecl_file_safe_cast( arg ) );
 }
 
-static void ecl_file_add_map( ecl_file_type * ecl_file , ecl_file_map_type * file_map) {
-  vector_append_owned_ref(ecl_file->map_list , file_map , ecl_file_map_free__ );
-}
 
+/****************************************************************************/
+/* Here we include a file with functions specialized to work with
+   restart files. Observe that the file ecl_rstfile.c is compiled as
+   part of the same compilation unit as ecl_file.c.  
+*/
 
-ecl_file_map_type * ecl_file_get_blockmap( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  ecl_file_map_type * blockmap = ecl_file_map_alloc_blockmap( ecl_file->active_map , kw , occurence );
-  if (blockmap != NULL)
-    ecl_file_add_map( ecl_file , blockmap );
-  return blockmap;
-}
+#include "ecl_rstfile.c"
 
 
 
-
-ecl_file_map_type * ecl_file_get_unsmrymap( ecl_file_type * ecl_file , int seqhdr_nr) {
-  return ecl_file_get_blockmap( ecl_file , SEQHDR_KW , seqhdr_nr );
-}
-
-
-ecl_file_map_type * ecl_file_get_global_map( const ecl_file_type * ecl_file ) {
-  return ecl_file->active_map;
-}
-
-
-ecl_file_type * ecl_file_open( const char * filename ) {
-  bool          fmt_file   = ecl_util_fmt_file( filename );
-  ecl_file_type * ecl_file = ecl_file_alloc_empty( );
-
-  ecl_file->fortio = fortio_open_reader( filename , ECL_ENDIAN_FLIP , fmt_file );
-  ecl_file->global_map = ecl_file_map_alloc( ecl_file->fortio , true );
-  ecl_file_add_map( ecl_file , ecl_file->global_map );
-  ecl_file_scan( ecl_file );
-  ecl_file_map_make_index( ecl_file->global_map );
-  ecl_file->active_map = ecl_file->global_map;
-
-  return ecl_file;
-}
-
-
-ecl_file_type * ecl_file_open_block( const char * filename , const char * kw , int occurence) {
-  ecl_file_type * file = ecl_file_open( filename );
-  ecl_file_map_type * blockmap = ecl_file_get_blockmap( file , kw , occurence );
-  file->active_map = blockmap;
-  return file;
-}
 

@@ -550,6 +550,8 @@ char * util_alloc_cwd(void) {
    Homemade realpath() for not existing path or platforms without
    realpath().  
 */
+
+
 static char * util_alloc_cwd_abs_path( const char * path ) {
   if (util_is_abs_path( path ))
     return util_alloc_string_copy( path );
@@ -563,8 +565,15 @@ static char * util_alloc_cwd_abs_path( const char * path ) {
 }
 
 
-#ifdef HAVE_REALPATH
+/**
+   The util_alloc_realpath() will fail hard if the @input_path does
+   not exist. If the path might-not-exist you should use
+   util_alloc_abs_path() instead.  
+*/
+
+
 char * util_alloc_realpath(const char * input_path) {
+#ifdef HAVE_REALPATH
   char * buffer   = util_malloc(PATH_MAX + 1 , __func__);
   char * new_path = NULL;
   
@@ -575,31 +584,18 @@ char * util_alloc_realpath(const char * input_path) {
     new_path = util_realloc(new_path , strlen(new_path) + 1, __func__);
   
   return new_path;
-}
-
-
-bool util_try_alloc_realpath(const char * input_path) {
-  char * buffer   = util_malloc(PATH_MAX + 1 , __func__);
-  char * new_path = NULL;
-
-  new_path = realpath( input_path , buffer);
-  free(buffer);
-  if (new_path == NULL) 
-    return false;
-  else 
-    return true;
-}
-#endif
-
-static char * __alloc_realpath(const char *path) {
-#ifdef HAVE_REALPATH
-  char work_path[4096];
-  realpath( path , work_path );
-  return util_alloc_string_copy( work_path );
 #else
-  return util_alloc_cwd_abs_path( path );
-#endif
+  /* We do not have the realpath() implementation. Must first check if
+     the entry exists; and if not we abort. If the entry indeed exists
+     we call the util_alloc_cwd_abs_path() function: */
+  if (!util_entry_exists( input_path )) 
+    util_abort("%s: input_path:%s does not exist - realpath() failed.\n",__func__ , input_path);
+  
+  return util_alloc_cwd_abs_path( input_path );
+#endif 
 }
+
+
 
 
 /**
@@ -617,7 +613,7 @@ static char * __alloc_realpath(const char *path) {
 
 char * util_alloc_abs_path( const char * path ) {
   if (util_entry_exists( path )) 
-    return __alloc_realpath( path );
+    return util_alloc_realpath( path );
   else 
     return util_alloc_cwd_abs_path( path );
 }

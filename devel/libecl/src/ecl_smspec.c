@@ -942,7 +942,6 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file , bool include_restart) {
   ecl_file_type * header = ecl_file_open( header_file );
   {
-    int *date;
     ecl_kw_type *wells     = ecl_file_iget_named_kw(header, WGNAMES_KW  , 0);
     ecl_kw_type *keywords  = ecl_file_iget_named_kw(header, KEYWORDS_KW , 0);
     ecl_kw_type *startdat  = ecl_file_iget_named_kw(header, STARTDAT_KW , 0);
@@ -970,11 +969,15 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     } else
       ecl_smspec->has_lgr = false;
 
-    date = ecl_kw_get_int_ptr(startdat);
-    ecl_smspec->sim_start_time    = util_make_date(date[0] , date[1] , date[2]);
-    ecl_smspec->grid_nx           = ecl_kw_iget_int(dimens , 1);
-    ecl_smspec->grid_ny           = ecl_kw_iget_int(dimens , 2);
-    ecl_smspec->grid_nz           = ecl_kw_iget_int(dimens , 3);
+    {
+      int * date = ecl_kw_get_int_ptr(startdat);
+      ecl_smspec->sim_start_time    = util_make_date(date[STARTDAT_DAY_INDEX]   , 
+						     date[STARTDAT_MONTH_INDEX] , 
+						     date[STARTDAT_YEAR_INDEX]);
+    }
+    ecl_smspec->grid_nx           = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NX_INDEX );
+    ecl_smspec->grid_ny           = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NY_INDEX );
+    ecl_smspec->grid_nz           = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NZ_INDEX );
     ecl_smspec->params_size       = ecl_kw_get_size(keywords);
     ecl_smspec->smspec_index_list = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->smspec_index_list  ,  __func__);
     ecl_util_get_file_type( header_file , &ecl_smspec->formatted , NULL );

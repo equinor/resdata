@@ -201,7 +201,6 @@ void         util_copy_directory(const char *  , const char * , const char *);
 void         util_walk_directory(const char * root_path , walk_file_callback_ftype * file_callback , void * file_callback_arg , walk_dir_callback_ftype * dir_callback , void * dir_callback_arg);
 char       * util_alloc_cwd(void);
 char       * util_alloc_realpath(const char * );
-bool         util_try_alloc_realpath(const char *);
 bool         util_string_match(const char * string , const char * pattern);
 bool         util_string_has_wildcard( const char * s);
 
