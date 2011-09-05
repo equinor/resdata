@@ -25,10 +25,6 @@
   The file util_path.c is included in this, and contains path
   manipulation functions which explicitly use the PATH_SEP variable.
 */
-#ifdef HAVE_POW10
-#define _GNU_SOURCE   // Defined to get access to pow10() function.
-#define __USE_GNU     // Defined to get access to pow10() function.
-#endif
 
 #include <string.h>
 #include <time.h>
@@ -4593,13 +4589,6 @@ void util_abort_set_executable( const char * executable ) {
 }
 
 
-double util_pow10(double x) {
-#ifdef HAVE_POW10
-  return pow( 10 , x);
-#else
-  return pow( 10 , x);
-#endif
-}
 
 
 int util_fnmatch( const char * pattern , const char * string ) {
