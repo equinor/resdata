@@ -34,10 +34,10 @@ for type in vector_list:
     header_file = "%s_vector.h" % type
     src_file    = "%s_vector.c" % type
     if needs_update( header_file , "vector_template.h"):
-        os.system("sed -e \'s/<TYPE>/%s/g\' vector_template.h > %s" % ( type , header_file))
+        os.system("sed -e \'s/@TYPE@/%s/g\' vector_template.h > %s" % ( type , header_file))
     
     if needs_update( src_file , "vector_template.c"):
-        os.system("sed -e \'s/<TYPE>/%s/g\' vector_template.c > %s" % ( type , src_file ))
+        os.system("sed -e \'s/@TYPE@/%s/g\' vector_template.c > %s" % ( type , src_file ))
 
     header_list.append( header_file )
     src_list.append( src_file )

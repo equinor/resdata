@@ -6,19 +6,18 @@ if (HAVE_PTHREAD)
   list( APPEND header_files thread_pool_posix.h )
 endif()
 
-# The header dependencies are not correctly handled by this.
 foreach (type int double bool long time_t size_t float)
+  set(TYPE ${type} )      
   set(src_target        ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)    
   set(header_target     ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.h)    
 
-  add_custom_command( OUTPUT ${src_target}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/vector_template.c
-    COMMAND ${CMAKE_SOURCE_DIR}/CMake/Scripts/sed_filter.sh
-    ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/vector_template ${type} ${CMAKE_CURRENT_BINARY_DIR} )
+  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/vector_template.c ${src_target})
+  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/vector_template.h ${header_target})
 
   list( APPEND source_files ${src_target} )
   list( APPEND header_files ${header_target} )
 endforeach( type )
+
 
 # The block_fs filesystem is so heavily dependant on pthreads that it is not 
 # built if de not have pthreads.

@@ -55,7 +55,6 @@ ecl_file_type * ecl_file_fread_alloc_selected_kw_fortio(fortio_type * fortio ,
                                                         const stringlist_type * kw_list , 
                                                         const char * stop_kw );
 
-ecl_file_type  * ecl_file_alloc_empty( );
 void             ecl_file_fwrite_fortio(const ecl_file_type * ec_file  , fortio_type * fortio , int offset);
 void             ecl_file_fwrite(const ecl_file_type * ecl_file , const char * , bool fmt_file );
 

@@ -146,8 +146,8 @@ static time_t INTEHEAD_date( const ecl_kw_type * intehead_kw ) {
                          ecl_kw_iget_int( intehead_kw , INTEHEAD_YEAR_INDEX)  );
 }
 
-static bool ecl_file_map_has_report_step( const ecl_file_map_type * file_map , int report_step) {
-  int global_index = ecl_file_map_find_kw_value( file_map , SEQNUM_KW , &report_step );
+static bool file_map_has_report_step( const file_map_type * file_map , int report_step) {
+  int global_index = file_map_find_kw_value( file_map , SEQNUM_KW , &report_step );
   if (global_index >= 0)
     return true;
   else
@@ -155,9 +155,9 @@ static bool ecl_file_map_has_report_step( const ecl_file_map_type * file_map , i
 }
 
 
-static time_t ecl_file_map_iget_restart_sim_date(const ecl_file_map_type * file_map , int index) {
-  if (ecl_file_map_get_num_named_kw( file_map , INTEHEAD_KW) > index) {
-    ecl_kw_type * intehead_kw = ecl_file_map_iget_named_kw( file_map , INTEHEAD_KW , index);
+static time_t file_map_iget_restart_sim_date(const file_map_type * file_map , int index) {
+  if (file_map_get_num_named_kw( file_map , INTEHEAD_KW) > index) {
+    ecl_kw_type * intehead_kw = file_map_iget_named_kw( file_map , INTEHEAD_KW , index);
     return INTEHEAD_date( intehead_kw );
   } else
     return -1;
@@ -166,13 +166,13 @@ static time_t ecl_file_map_iget_restart_sim_date(const ecl_file_map_type * file_
 
 
 
-static int ecl_file_map_find_sim_time(const ecl_file_map_type * file_map , time_t sim_time) {
+static int file_map_find_sim_time(const file_map_type * file_map , time_t sim_time) {
   int global_index = -1;
-  if ( ecl_file_map_has_kw( file_map , INTEHEAD_KW)) {
+  if ( file_map_has_kw( file_map , INTEHEAD_KW)) {
     const int_vector_type * intehead_index_list = hash_get( file_map->kw_index , INTEHEAD_KW );
     int index = 0;
     while (index < int_vector_size( intehead_index_list )) {
-      const ecl_kw_type * intehead_kw = ecl_file_map_iget_kw( file_map , int_vector_iget( intehead_index_list , index ));
+      const ecl_kw_type * intehead_kw = file_map_iget_kw( file_map , int_vector_iget( intehead_index_list , index ));
       if (INTEHEAD_date( intehead_kw ) == sim_time) {
         global_index = int_vector_iget( intehead_index_list , index );
         break;
@@ -220,8 +220,8 @@ static int ecl_file_map_find_sim_time(const ecl_file_map_type * file_map , time_
    of course quite strict.
 */
 
-static int ecl_file_map_get_seqnum_index( const ecl_file_map_type * file_map , time_t sim_time) {
-  int num_INTEHEAD = ecl_file_map_get_num_named_kw( file_map , INTEHEAD_KW );
+static int file_map_get_seqnum_index( const file_map_type * file_map , time_t sim_time) {
+  int num_INTEHEAD = file_map_get_num_named_kw( file_map , INTEHEAD_KW );
   if (num_INTEHEAD == 0)
     return -1;       /* We have no INTEHEAD headers - probably not a restart file at all. */
   else {
@@ -232,7 +232,7 @@ static int ecl_file_map_get_seqnum_index( const ecl_file_map_type * file_map , t
     */
     int intehead_index = 0;
     while (true) {
-      time_t itime = ecl_file_map_iget_restart_sim_date( file_map , intehead_index );
+      time_t itime = file_map_iget_restart_sim_date( file_map , intehead_index );
       
       if (itime == sim_time) /* Perfect hit. */
         return intehead_index;
@@ -260,7 +260,7 @@ static int ecl_file_map_get_seqnum_index( const ecl_file_map_type * file_map , t
 
 
 bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
-  int global_index = ecl_file_map_find_sim_time( ecl_file->active_map , sim_time );
+  int global_index = file_map_find_sim_time( ecl_file->active_map , sim_time );
   if (global_index >= 0)
     return true;
   else
@@ -274,7 +274,7 @@ bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
 */
 
 bool ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step) {
-  return ecl_file_map_has_report_step( ecl_file->active_map , report_step );
+  return file_map_has_report_step( ecl_file->active_map , report_step );
 }
 
 
@@ -286,7 +286,7 @@ bool ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step)
 */
 
 time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int index ) {
-  return ecl_file_map_iget_restart_sim_date( restart_file->active_map , index );
+  return file_map_iget_restart_sim_date( restart_file->active_map , index );
 }
 
 
@@ -301,7 +301,7 @@ bool ecl_file_iselect_rstblock( ecl_file_type * ecl_file , int index ) {
 
 
 bool ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , time_t sim_time) {
-  int seqnum_index = ecl_file_map_get_seqnum_index( ecl_file->global_map , sim_time );
+  int seqnum_index = file_map_get_seqnum_index( ecl_file->global_map , sim_time );
   if (seqnum_index >= 0)
     return ecl_file_select_block( ecl_file , SEQNUM_KW , seqnum_index);
   else
@@ -310,9 +310,9 @@ bool ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , time_t sim_ti
 
 
 bool ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report_step) {
-  int global_index = ecl_file_map_find_kw_value( ecl_file->global_map , SEQNUM_KW , &report_step);
+  int global_index = file_map_find_kw_value( ecl_file->global_map , SEQNUM_KW , &report_step);
   if ( global_index >= 0) {
-    int seqnum_index = ecl_file_map_iget_occurence( ecl_file->global_map , global_index );
+    int seqnum_index = file_map_iget_occurence( ecl_file->global_map , global_index );
     return ecl_file_select_block( ecl_file , SEQNUM_KW , seqnum_index );
   } else 
     return false;

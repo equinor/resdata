@@ -2184,7 +2184,7 @@ void ecl_kw_inplace_update_file(const ecl_kw_type * ecl_kw , const char * filena
     bool fmt_file = util_fmt_bit8(filename);
     
     {
-      fortio_type * fortio =  fortio_fopen_readwrite(filename , ECL_ENDIAN_FLIP , fmt_file);
+      fortio_type * fortio =  fortio_open_readwrite(filename , ECL_ENDIAN_FLIP , fmt_file);
       ecl_kw_ifseek_kw(ecl_kw_get_header8(ecl_kw) , fortio , index);
       {
         ecl_kw_type * file_kw  = ecl_kw_alloc_empty();

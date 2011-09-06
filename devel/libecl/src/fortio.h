@@ -48,7 +48,7 @@ void               fortio_copy_record(fortio_type * , fortio_type * , int , void
 fortio_type *      fortio_alloc_FILE_wrapper(const char * , bool , bool , FILE * );
 fortio_type *      fortio_open_reader(const char *, bool , bool);
 fortio_type *      fortio_open_writer(const char *, bool , bool);
-fortio_type *      fortio_fopen_readwrite(const char *, bool , bool);
+fortio_type *      fortio_open_readwrite(const char *, bool , bool);
 void               fortio_free_FILE_wrapper(fortio_type *);
 void               fortio_fclose(fortio_type *);
 int                fortio_init_read(fortio_type *);
