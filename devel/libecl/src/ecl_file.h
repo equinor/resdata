@@ -34,6 +34,7 @@ extern "C" {
 typedef struct ecl_file_struct ecl_file_type;
 
 ecl_file_type  * ecl_file_open( const char * filename );
+ecl_file_type  * ecl_file_open_writable( const char * filename );
 void             ecl_file_close( ecl_file_type * ecl_file );
 void             ecl_file_free__(void * arg);
 ecl_kw_type    * ecl_file_icopy_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith);
@@ -77,6 +78,7 @@ int                ecl_file_iget_named_size( const ecl_file_type * file , const 
 
 bool               ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence);
 void               ecl_file_select_global( ecl_file_type * ecl_file );
+bool               ecl_file_writable( const ecl_file_type * ecl_file );
 
 /*****************************************************************/
 /*               R E S T A R T  F I L E S                        */
@@ -88,6 +90,7 @@ time_t           ecl_file_iget_restart_sim_date( const ecl_file_type * restart_f
 int              ecl_file_get_restart_index( const ecl_file_type * restart_file , time_t sim_time);
 bool             ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step);
 bool             ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time);
+
 
 bool             ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , time_t sim_time);
 bool             ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report_step);

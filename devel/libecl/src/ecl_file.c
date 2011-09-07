@@ -224,6 +224,16 @@ static bool file_map_has_kw( const file_map_type * file_map, const char * kw) {
   return hash_has_key( file_map->kw_index , kw );
 } 
 
+static bool file_map_has_kw_ptr( const file_map_type * file_map, const ecl_kw_type * ecl_kw) {
+  int index;
+  for (index = 0; index < vector_get_size( file_map->kw_list ); index++) {
+    const ecl_file_kw_type * file_kw = vector_iget_const( file_map->kw_list , index );
+    if (ecl_file_kw_ptr_eq( file_kw , ecl_kw ))
+      return true;
+  } 
+  return false;
+} 
+
 
 static ecl_file_kw_type * file_map_iget_file_kw( const file_map_type * file_map , int global_index) {
   ecl_file_kw_type * file_kw = vector_iget( file_map->kw_list , global_index);
@@ -568,16 +578,9 @@ void ecl_file_replace_kw( ecl_file_type * ecl_file , ecl_kw_type * old_kw , ecl_
 
 
 
-//bool ecl_file_has_kw_ptr(const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw) {
-//  int index;
-//
-//  for (index = 0; index < vector_get_size( ecl_file->kw_list ); index++) {
-//    const ecl_file_kw_type * file_kw = vector_iget_const( ecl_file->kw_list , index );
-//    if (ecl_file_kw_ptr_eq( file_kw , ecl_kw ))
-//      return true;
-//  } 
-//  return false;
-//}
+bool ecl_file_has_kw_ptr(const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw) {
+  return file_map_has_kw_ptr( ecl_file->active_map , ecl_kw );
+}
 
 
 
@@ -811,6 +814,12 @@ ecl_file_type * ecl_file_open( const char * filename ) {
 }
 
 
+ecl_file_type * ecl_file_open_writable( const char * filename ) {
+  return ecl_file_open__(filename , false );
+}
+
+
+
 bool ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence) {
   file_map_type * blockmap = ecl_file_get_blockmap( ecl_file , kw , occurence );
   if (blockmap != NULL) {
@@ -912,6 +921,12 @@ int ecl_file_get_phases( const ecl_file_type * init_file ) {
 }
 
 
+bool ecl_file_writable( const ecl_file_type * ecl_file ) {
+  if (fortio_get_mode( ecl_file->fortio ) & FORTIO_WRITE)
+    return true;
+  else
+    return false;
+}
 
 
 

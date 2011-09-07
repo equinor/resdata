@@ -65,12 +65,13 @@ fwrite() from the standard library.
 
 
 struct fortio_struct {
-  FILE    *stream;
-  char    *filename;
-  int      active_header;
-  int      rec_nr;
-  bool     endian_flip_header;  
-  bool     fmt_file;            /* This is not really used by the fortio instance - but it is very convenient to store it here. */
+  FILE             * stream;
+  char             * filename;
+  int                active_header;
+  int                rec_nr;
+  bool               endian_flip_header;  
+  bool               fmt_file;    /* This is not really used by the fortio instance - but it is very convenient to store it here. */
+  int                mode;
 };
 
 
@@ -226,7 +227,7 @@ fortio_type * fortio_open_reader(const char *filename , bool endian_flip_header 
     fortio->stream = util_fopen(fortio->filename , READ_MODE_TXT);
   else
     fortio->stream = util_fopen(fortio->filename , READ_MODE_BINARY);
-  
+  fortio->mode = FORTIO_READ;
   return fortio;
 }
 
@@ -238,7 +239,7 @@ fortio_type * fortio_open_readwrite(const char *filename , bool endian_flip_head
     fortio->stream = util_fopen(fortio->filename , READ_WRITE_MODE_TXT);
   else
     fortio->stream = util_fopen(fortio->filename , READ_WRITE_MODE_BINARY);
-  
+  fortio->mode = FORTIO_READ + FORTIO_WRITE;
   return fortio;
 }
 
@@ -250,7 +251,7 @@ fortio_type * fortio_open_writer(const char *filename , bool endian_flip_header 
     fortio->stream = util_fopen(fortio->filename , WRITE_MODE_TXT);
   else
     fortio->stream = util_fopen(fortio->filename , WRITE_MODE_BINARY);
-  
+  fortio->mode = FORTIO_WRITE;
   return fortio;
 }
 
@@ -603,3 +604,4 @@ int           fortio_get_record_size(const fortio_type *fortio) { return fortio-
 bool          fortio_fmt_file(const fortio_type *fortio)        { return fortio->fmt_file; }
 void          fortio_rewind(const fortio_type *fortio)          { rewind(fortio->stream); }
 const char  * fortio_filename_ref(const fortio_type * fortio)   { return (const char *) fortio->filename; }
+int           fortio_get_mode( const fortio_type * fortio )     { return fortio->mode; }

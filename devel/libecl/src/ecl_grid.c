@@ -1373,7 +1373,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
   ny   = ecl_kw_iget_int(dimens_kw , DIMENS_NY_INDEX);
   nz   = ecl_kw_iget_int(dimens_kw , DIMENS_NZ_INDEX);
   grid = ecl_grid_alloc_empty(global_grid , nx , ny , nz, grid_nr);
-  size = nx*ny*nz;
+  size = ecl_file_get_num_named_kw( ecl_file , COORDS_KW );
   
   /*
     Possible LGR cells will follow *AFTER* the first nx*ny*nz cells;

@@ -260,12 +260,18 @@ static int file_map_get_seqnum_index( const file_map_type * file_map , time_t si
 
 
 bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
-  int global_index = file_map_find_sim_time( ecl_file->active_map , sim_time );
-  if (global_index >= 0)
+  int active_index = file_map_find_sim_time( ecl_file->active_map , sim_time );
+  if (active_index >= 0)
     return true;
   else
     return false;
 }
+
+int ecl_file_get_restart_index( const ecl_file_type * ecl_file , time_t sim_time) {
+  int active_index = file_map_find_sim_time( ecl_file->active_map , sim_time );
+  return active_index;
+}
+
 
 /**
    Will look through all the SEQNUM kw instances of the current
