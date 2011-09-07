@@ -94,10 +94,11 @@ bool             ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t 
 
 bool             ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , time_t sim_time);
 bool             ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report_step);
-bool             ecl_file_iselect_rstblock( ecl_file_type * ecl_file , int index );
+bool             ecl_file_iselect_rstblock( ecl_file_type * ecl_file , int seqnum_index );
 
 ecl_file_type  * ecl_file_open_rstblock_sim_time( const char * filename , time_t sim_time); 
 ecl_file_type  * ecl_file_open_rstblock_report_step( const char * filename , int report_step );
+ecl_file_type  * ecl_file_iopen_rstblock( const char * filename , int seqnum_index);
 
 
 /*****************************************************************/
