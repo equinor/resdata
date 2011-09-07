@@ -16,6 +16,29 @@
    for more details. 
 */
 
+#define XMIN_CMD    "XMIN"
+#define XMAX_CMD    "XMAX"
+#define YMIN_CMD    "XMIN"
+#define YMAX_CMD    "YMAX"
+
+#define STOP_CMD    "_stop_"
+#define XY_CMD      "xy"
+#define XYY_CMD     "xyy"
+#define XXY_CMD     "xxy"
+
+#define RFT_CMD     "rft"
+
+#define MEAS_POINTS_CMD "_meas_points_"
+#define SET_RANGE_CMD   "_set_range_"
+#define NEW_VECTOR_CMD  "_newplotvector_"
+
+#define QUIT_CMD        "Q"
+#define CREATE_ENS_CMD  "C"
+#define PLOT_CMD        "P"
+#define ATTRIBUTES_CMD  "A"
+#define QUANTILES_CMD   "QUANTILES" 
+
+
 #include <util.h>
 #include <vector.h>
 #include <ecl_sum.h>
@@ -36,6 +59,9 @@
 #include <thread_pool.h>
 #include <signal.h>
 #include <pthread.h>
+
+
+
 
 /*******************************************************************/
 /**
@@ -362,13 +388,13 @@ void ens_load_batch(ens_type* ens, ens_type* ens_rft, const char * data_file) {
     {
       ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( data_file , KEY_JOIN_STRING );
       if (ecl_sum != NULL){
-	ens_add_sum( ens , ecl_sum );
-	ens->sim_length = util_double_max( ens->sim_length , ecl_sum_get_sim_length( ecl_sum ));
-	vector_append_owned_ref( ens->interp_data , double_vector_alloc(0,0) , double_vector_free__ );
+        ens_add_sum( ens , ecl_sum );
+        ens->sim_length = util_double_max( ens->sim_length , ecl_sum_get_sim_length( ecl_sum ));
+        vector_append_owned_ref( ens->interp_data , double_vector_alloc(0,0) , double_vector_free__ );
       }
       else{
-	sprintf(message,"No summary file for case %s loaded",base) ;
-	warning_reply(message) ;
+        sprintf(message,"No summary file for case %s loaded",base) ;
+        warning_reply(message) ;
       }
     }
     
@@ -427,7 +453,7 @@ void ens_set_plot_attributes(ens_type * ens) {
 void ens_set_plot_attributes_batch(hash_type * ens_table, hash_type * ens_rft_table) {
 
   char message[128];
-  char ens_name[32];
+  char ens_name[128];
   scanf("%s" , ens_name);
   int new_color;
   char tmp_col[32];
@@ -491,7 +517,7 @@ void ens_set_plot_attributes_batch(hash_type * ens_table, hash_type * ens_rft_ta
 
 void ens_set_plot_quantile_properties_batch( hash_type * ens_table ) {
   char message[128];
-  char ens_name[32];
+  char ens_name[128];
   scanf("%s" , ens_name);                                             /* Name of ensemble. */
   if (hash_has_key( ens_table , ens_name)){
     ens_type  * ens    = hash_get( ens_table , ens_name);
@@ -724,22 +750,22 @@ void set_range(plot_type * plot, time_t start_time){
   
   int i;
   for (i=0;i<num_tokens-1;i+=2){
-    if(strcmp(token_list[i], "XMIN") == 0){
+    if(strcmp(token_list[i], XMIN_CMD) == 0){
       time_t time = start_time;  
       util_sscanf_date(token_list[i+1] , &time);
       plot_set_xmin(plot , time);
     }
-    else if(strcmp(token_list[i], "XMAX") == 0){
+    else if(strcmp(token_list[i], XMAX_CMD) == 0){
       time_t time = start_time;  
       util_sscanf_date(token_list[i+1] , &time);
       plot_set_xmax(plot , time);
     }
-    else if(strcmp(token_list[i], "YMIN") == 0){
+    else if(strcmp(token_list[i], YMIN_CMD) == 0){
       double  ymin = 0.00;       
       util_sscanf_double(token_list[i+1] , &ymin);
       plot_set_ymin(plot , ymin);
     }
-    else if(strcmp(token_list[i], "YMAX") == 0){
+    else if(strcmp(token_list[i], YMAX_CMD) == 0){
       double  ymax = 0.00;       
       util_sscanf_double(token_list[i+1] , &ymax);
       plot_set_ymax(plot , ymax);
@@ -760,22 +786,22 @@ void set_range_rft(plot_type * plot){
   
   int i;
   for (i=0;i<num_tokens-1;i+=2){
-    if(strcmp(token_list[i], "XMIN") == 0){
+    if(strcmp(token_list[i], XMIN_CMD) == 0){
       double xmin = 0.00;
       util_sscanf_double(token_list[i+1] , &xmin);
       plot_set_xmin(plot , xmin);
     }
-    else if(strcmp(token_list[i], "XMAX") == 0){
+    else if(strcmp(token_list[i], XMAX_CMD) == 0){
       double xmax  = 0.00;
       util_sscanf_double(token_list[i+1] , &xmax);
       plot_set_xmax(plot , xmax);
     }
-    else if(strcmp(token_list[i], "YMIN") == 0){
+    else if(strcmp(token_list[i], YMIN_CMD) == 0){
       double  ymin = 0.00;       
       util_sscanf_double(token_list[i+1] , &ymin);
       plot_set_ymin(plot , ymin);
     }
-    else if(strcmp(token_list[i], "YMAX") == 0){
+    else if(strcmp(token_list[i], YMAX_CMD) == 0){
       double  ymax = 0.00;       
       util_sscanf_double(token_list[i+1] , &ymax);
       plot_set_ymax(plot , ymax);
@@ -795,8 +821,8 @@ double get_rft_depth (hash_type * ens_table, char * well, int i, int j, int k) {
     while (!hash_iter_is_complete( ens_iter )) {
       ens = hash_iter_get_next_value( ens_iter );
       if (ens !=NULL && ens->data && vector_get_size(ens->data) > 0){
-	hash_iter_free( ens_iter );
-	break;
+        hash_iter_free( ens_iter );
+        break;
       }
     }
   }
@@ -854,11 +880,11 @@ void plot_meas_file(plot_type * plot, time_t start_time){
     */      
     
     if (token_list[0] != NULL) {
-      if(strcmp(token_list[0], "_stop_") == 0){
+      if(strcmp(token_list[0], STOP_CMD) == 0){
         done = 1;
       }
       
-      if(strcmp(token_list[0], "xy") == 0){
+      if(strcmp(token_list[0], XY_CMD) == 0){
         util_sscanf_date(token_list[1] , &time);
         util_difftime(start_time, time, &days, NULL, NULL, NULL);
         x = time;
@@ -872,7 +898,7 @@ void plot_meas_file(plot_type * plot, time_t start_time){
         plot_dataset_set_line_color( plot_dataset , 15);
       }
       
-      if(strcmp(token_list[0], "xyy") == 0){
+      if(strcmp(token_list[0], XYY_CMD) == 0){
         util_sscanf_date(token_list[1] , &time);
         util_difftime(start_time, time, &days, NULL, NULL, NULL);
         //x = days;
@@ -886,7 +912,7 @@ void plot_meas_file(plot_type * plot, time_t start_time){
         plot_dataset_set_line_color( plot_dataset , 15);
       }
       
-      if(strcmp(token_list[0], "xxy") == 0){
+      if(strcmp(token_list[0], XXY_CMD) == 0){
         x1 = strtod(token_list[1], &error_ptr);
         x2 = strtod(token_list[2], &error_ptr);
         time_t time1 = start_time;       
@@ -938,11 +964,11 @@ void plot_meas_rft_file(plot_type * plot, char * well, hash_type * ens_table){
     */      
     
     if (token_list[0] != NULL) {
-      if(strcmp(token_list[0], "_stop_") == 0){
+      if(strcmp(token_list[0], STOP_CMD ) == 0){
         done = 1;
       }
       
-      if(strcmp(token_list[0], "rft") == 0){
+      if(strcmp(token_list[0], RFT_CMD) == 0){
         util_sscanf_int(token_list[1] , &i);
         util_sscanf_int(token_list[2] , &j);
         util_sscanf_int(token_list[3] , &k);
@@ -1083,9 +1109,9 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
     while (!hash_iter_is_complete( ens_iter )) {
       ens = hash_iter_get_next_value( ens_iter );
       if (ens != NULL && ens->data && vector_get_size(ens->data) > 0){
-	hash_iter_free( ens_iter );
-	ens_ok = true;
-	break;
+        hash_iter_free( ens_iter );
+        ens_ok = true;
+        break;
       }
     }
   }
@@ -1108,14 +1134,14 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
   while (!complete) {
     scanf("%s" , ens_name);
     
-    if(strcmp(ens_name, "_meas_points_") == 0){
+    if(strcmp(ens_name, MEAS_POINTS_CMD ) == 0){
       plot_meas_rft_file(plot, well, ens_rft_table);
       plotempty = false ;
       info_reply("Measured values plotted") ;
-    } else if(strcmp(ens_name, "_set_range_") == 0){
+    } else if(strcmp(ens_name, SET_RANGE_CMD) == 0){
       set_range_rft(plot);
       info_reply("Range set") ;
-    } else if(strcmp(ens_name, "_newplotvector_") == 0){
+    } else if(strcmp(ens_name, NEW_VECTOR_CMD ) == 0){
       scanf("%s" , key);
       util_split_string(key , ":" , &num_tokens , &token_list);  
 
@@ -1139,16 +1165,16 @@ void _plot_batch_rft(arg_pack_type* arg_pack, char* inkey){
         sprintf(message,"Will plot %s",key) ;
         info_reply(message) ;
       }
-    } else if (strcmp(ens_name, "_stop_") == 0) {
+    } else if (strcmp(ens_name, STOP_CMD) == 0) {
       complete = true ;
     } else if (hash_has_key(ens_rft_table , ens_name)){
       ens = hash_get(ens_rft_table , ens_name);
       
       // Check if there is anything to plot
       if (ens == NULL  || !(ens->data) || vector_get_size(ens->data) <= 0) { // Denne satt langt inne !!!!
-	sprintf(message,"No RFT files to plot in ensemble %s\n", ens_name);
-	error_reply(message);
-	return;
+        sprintf(message,"No RFT files to plot in ensemble %s\n", ens_name);
+        error_reply(message);
+        return;
       }
 
       ens_size = vector_get_size( ens->data );
@@ -1238,9 +1264,9 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
     while (!hash_iter_is_complete( ens_iter )) {
       ens = hash_iter_get_next_value( ens_iter );
       if (ens != NULL && ens->data && vector_get_size(ens->data) > 0){
-	hash_iter_free( ens_iter );
-	ens_ok = true;
-	break;
+        hash_iter_free( ens_iter );
+        ens_ok = true;
+        break;
       }
     }
   }
@@ -1269,25 +1295,25 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
   while (!complete) {
     scanf("%s" , ens_name);
 
-    if(strcmp(ens_name, "_meas_points_") == 0){
+    if(strcmp(ens_name, MEAS_POINTS_CMD) == 0){
       plot_meas_file(plot, start_time);
       plotempty = false ;
       info_reply("Measured values plotted") ;
-    } else if(strcmp(ens_name, "_set_range_") == 0){
+    } else if(strcmp(ens_name, SET_RANGE_CMD) == 0){
       set_range(plot, start_time);
       info_reply("Range set") ;
-    } else if(strcmp(ens_name, "_newplotvector_") == 0){// ??????????
+    } else if(strcmp(ens_name, NEW_VECTOR_CMD) == 0){// ??????????
       scanf("%s" , key);
-    } else if (strcmp(ens_name, "_stop_") == 0) {
+    } else if (strcmp(ens_name, STOP_CMD) == 0) {
       complete = true ;
     }  else  if (hash_has_key( ens_table , ens_name)){
       ens = hash_get(ens_table , ens_name);
       
       // Check if there is anything to plot
       if (ens == NULL || !(ens->data) || vector_get_size(ens->data) <= 0) { // Denne satt langt inne !!!!
-	sprintf(message,"No files to plot in ensemble %s\n", ens_name);
-	error_reply(message);
-	return;
+        sprintf(message,"No files to plot in ensemble %s\n", ens_name);
+        error_reply(message);
+        return;
       }
 
       ens_size = vector_get_size( ens->data );
@@ -1605,24 +1631,24 @@ int main(int argc , char ** argv) {
         util_strupr(line);
         
         //if(strcmp(line, "Q") == 0 || strcmp(line, "STOP") == 0 ){
-        if(strcmp(line, "Q") == 0){
+        if(strcmp(line, QUIT_CMD) == 0){
 
           plot_info_free( info );
           hash_free( ens_table );
           hash_free( ens_rft_table );
           return 0 ;
 
-        } else if(strcmp(line, "C") == 0){
+        } else if(strcmp(line, CREATE_ENS_CMD) == 0){
           
           create_ensemble_batch(ens_table, ens_rft_table);
 
-        } else if (strcmp(line, "P") == 0){
+        } else if (strcmp(line, PLOT_CMD) == 0){
           
           plot_batch(arg_pack);
 
-        } else if (strcmp(line, "A") == 0){
+        } else if (strcmp(line, ATTRIBUTES_CMD) == 0){
           ens_set_plot_attributes_batch(ens_table, ens_rft_table);
-        } else if (strcmp(line, "QUANTILES") == 0){
+        } else if (strcmp(line, QUANTILES_CMD) == 0){
           ens_set_plot_quantile_properties_batch( ens_table );
         } else {
           
