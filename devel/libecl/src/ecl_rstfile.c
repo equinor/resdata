@@ -319,6 +319,7 @@ bool ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report
   int global_index = file_map_find_kw_value( ecl_file->global_map , SEQNUM_KW , &report_step);
   if ( global_index >= 0) {
     int seqnum_index = file_map_iget_occurence( ecl_file->global_map , global_index );
+    printf("Looking for report_step:%d  Global:%d   Seqnum:%d \n",report_step , global_index , seqnum_index);
     return ecl_file_select_block( ecl_file , SEQNUM_KW , seqnum_index );
   } else 
     return false;

@@ -334,15 +334,19 @@ bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
     equal = false;
   else if (ecl_kw1->ecl_type != ecl_kw2->ecl_type) 
     equal = false;
-  else if (memcmp(ecl_kw1->data , ecl_kw2->data , ecl_kw1->size * ecl_kw1->sizeof_ctype) != 0) /** OK the headers are identical - time to compare the data content. */
-    equal = false;
+  else 
+    equal = ecl_kw_data_equal( ecl_kw1 , ecl_kw2->data );
 
   return equal;
 }
 
 
 bool ecl_kw_data_equal( const ecl_kw_type * ecl_kw , const void * data) {
-  return memcmp( ecl_kw->data , data , ecl_kw->size * ecl_kw->sizeof_ctype);
+  int cmp = memcmp( ecl_kw->data , data , ecl_kw->size * ecl_kw->sizeof_ctype);
+  if (cmp == 0)
+    return true;
+  else
+    return false;
 }
 
 

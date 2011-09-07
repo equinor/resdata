@@ -17,8 +17,8 @@ extern "C" {
 
 #define INTEHEAD_KW  "INTEHEAD"     /* Long array with lots of data. */
 #define SEQNUM_KW    "SEQNUM"       /* Contains the report step as the only data;
-				       not present in non-unified files, where the
-				       report step can be inferred from the filename. */
+                                       not present in non-unified files, where the
+                                       report step can be inferred from the filename. */
 
 
 /* Some magic indices used to look up in the INTEHEAD keyword. */
@@ -87,12 +87,12 @@ extern "C" {
 
 /* Common keywords */
 #define TIME_KW      "TIME"     /* The days since simulation start when
-				   an RFT is performed, also used as
-				   block header when splitting an RFT
-				   file into different wells and timesteps. */
+                                   an RFT is performed, also used as
+                                   block header when splitting an RFT
+                                   file into different wells and timesteps. */
 #define DATE_KW      "DATE"     /* The date of an RFT as integers: (day,month,year). */
-#define WELLETC_KW   "WELLECT"  /* The type of date RFT|PLT|SEGMENT and well name are
-				   extracted from this keyword. */
+#define WELLETC_KW   "WELLETC"  /* The type of date RFT|PLT|SEGMENT and well name are
+                                   extracted from this keyword. */
 #define CONIPOS_KW   "CONIPOS"  /* The i-index of the connections in the well. */
 #define CONJPOS_KW   "CONJPOS"  /* The j-index ... */
 #define CONKPOS_KW   "CONKPOS"  /* The k-index ... */
@@ -113,10 +113,10 @@ extern "C" {
 
 
 #define WELLETC_TYPE_INDEX  5 /* At this keyword the WELLETC keyword contains a string
-				 containing 'R', 'P' , or 'S' for RFT, PLT or SEGMENT data
-				 respectively.*/
+                                 containing 'R', 'P' , or 'S' for RFT, PLT or SEGMENT data
+                                 respectively.*/
 #define WELLETC_NAME_INDEX  1 /* The name of well being investigated is on this index of
-				 the WELLETC keyword. */
+                                 the WELLETC keyword. */
 
 /* Magic indices used to get day,month,year from the DATE
    keyword. */
@@ -134,9 +134,9 @@ extern "C" {
  
 /* Common keywords */
 #define MAPAXES_KW     "MAPAXES"    /* Keyword used to transform from grid coordinates to
-				       world coordinates. */
+                                       world coordinates. */
 #define LGR_KW         "LGR"        /* Name of LGR; for GRID files it can contain two elements, 
-				       the second element will be the name of the parent. */
+                                       the second element will be the name of the parent. */
 
 /* EGRID keywords */
 #define LGR_PARENT_KW  "LGRPARNT"   /* The name of the parent for an LGR. */
@@ -144,7 +144,7 @@ extern "C" {
 #define ZCORN_KW       "ZCORN"      /* Z coordinate where pillars cross planes. */
 #define ACTNUM_KW      "ACTNUM"     /* Integer flag of with active=0,1. */
 #define HOSTNUM_KW     "HOSTNUM"    /* For cells in LGR - pointing back to cell nr in
-				       parent grid. */
+                                       parent grid. */
 
 /* GRID keywords */
 #define GRIDHEAD_KW    "GRIDHEAD"   /* Header information for GRID files. */
