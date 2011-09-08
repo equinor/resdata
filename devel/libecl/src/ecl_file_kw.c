@@ -172,7 +172,7 @@ bool ecl_file_kw_ptr_eq( const ecl_file_kw_type * file_kw , const ecl_kw_type * 
 void ecl_file_kw_replace_kw( ecl_file_kw_type * file_kw , fortio_type * target , ecl_kw_type * new_kw ) {
   if ((file_kw->ecl_type == ecl_kw_get_type( new_kw )) && 
       (file_kw->kw_size == ecl_kw_get_size( new_kw ))) {
-
+    
     if (file_kw->kw != NULL)
       ecl_kw_free( file_kw->kw );
 

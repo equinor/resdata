@@ -64,5 +64,8 @@ target_link_libraries( util_shared m )
 set_target_properties( util_static PROPERTIES OUTPUT_NAME util )
 set_target_properties( util_shared PROPERTIES OUTPUT_NAME util )
 
+#-----------------------------------------------------------------
 
+install(TARGETS util_static util_shared DESTINATION ${UTIL_INSTALL_PREFIX}/lib)
+install(FILES ${header_files} DESTINATION ${UTIL_INSTALL_PREFIX}/include)
 

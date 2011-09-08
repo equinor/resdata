@@ -314,6 +314,29 @@ static int file_map_iget_named_size( const file_map_type * file_map , const char
   return ecl_file_kw_get_size( file_kw );
 }
 
+
+static void file_map_replace_kw( file_map_type * file_map , ecl_kw_type * old_kw , ecl_kw_type * new_kw , bool insert_copy) {
+  int index = 0;
+  while (index < vector_get_size( file_map->kw_list )) {
+    ecl_file_kw_type * ikw = vector_iget( file_map->kw_list , index );
+    if (ecl_file_kw_ptr_eq( ikw , old_kw)) {
+      /* 
+         Found it; observe that the vector_iset() function will
+         automatically invoke the destructor on the old_kw. 
+      */
+      ecl_kw_type * insert_kw = new_kw;
+      
+      if (insert_copy)
+        insert_kw = ecl_kw_alloc_copy( new_kw );
+      ecl_file_kw_replace_kw( ikw , file_map->fortio , insert_kw );
+      
+      file_map_make_index( file_map );
+      return;
+    }
+    index++;
+  }
+  util_abort("%s: could not find ecl_kw ptr: %p \n",__func__ , old_kw);
+}
 /*****************************************************************/
 
 
@@ -555,25 +578,7 @@ void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, boo
 
 
 void ecl_file_replace_kw( ecl_file_type * ecl_file , ecl_kw_type * old_kw , ecl_kw_type * new_kw , bool insert_copy) {
-  //file_map_replace_kw( ecl_file , old_kw , new_kw , insert_copy );
-  
-  //int index = 0;
-  //while (index < vector_get_size( ecl_file->kw_list )) {
-  //  ecl_file_kw_type * ikw = vector_iget( ecl_file->kw_list , index );
-  //  if (ecl_file_kw_ptr_eq( ikw , old_kw)) {
-  //    /* 
-  //       Found it; observe that the vector_iset() function will
-  //       automatically invoke the destructor on the old_kw. 
-  //    */
-  //    
-  //    ecl_file_kw_replace_kw( ikw , ecl_file->fortio , new_kw );
-  //    
-  //    ecl_file_make_index( ecl_file );
-  //    return;
-  //  }
-  //  index++;
-  //}
-  //util_abort("%s: could not find ecl_kw ptr: %p \n",__func__ , old_kw);
+  file_map_replace_kw( ecl_file->active_map , old_kw , new_kw , insert_copy );
 }
 
 
