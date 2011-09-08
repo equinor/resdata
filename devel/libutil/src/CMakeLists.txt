@@ -47,7 +47,6 @@ endif()
 if ( SHLWAPI_LIBRARY )
   target_link_libraries( util_static shlwapi )
   target_link_libraries( util_shared shlwapi )
-  message("Adding shlwapi library dependency")
 endif()
 
 target_link_libraries( util_static m ${LAPACK_LIBRARY} )
