@@ -16,6 +16,241 @@
    for more details. 
 */
 
+/*
+  The ens_plot program is a very simple program created to plot
+  ensembles of many related ECLIPSE simulations. The program is mainly
+  designed to be invoked from BASRA, and hence _not_ optimized for
+  simple standalone use. However the communication with BASRA is based
+  on reading commands from stdin, and those commands could in
+  prinicple just as well come from a user generated file. The format
+  for the command files is documented here. 
+
+  The very first element in the file should be the path to where you
+  want the created files to go. After the path name on the first line
+  the main loop of the ens_plot.x program evolves around the five
+  'commands':
+
+    C 	      : Create a new ensemble
+    P 	      : Plot 
+    A 	      : Set attributes of an ensemble
+    QUANTILES : Plot an ensemble using quantiles instead of many lines
+    Q         : Quit
+
+  Each command should be entered on a separate line of the command
+  stream. The various main commands then take options and arguments on
+  the following lines of the command stream.
+
+
+  C : CREATE_ENS_CMD
+  ------------------
+  The CREATE_ENS_CMD command will create a new ensemble. On the first
+  line after the 'C' command the program expects the name of the
+  ensemble, i.e. for instance 'Prior', and then the ECLIPSE datafiles
+  for each simulation case on seperate lines. The CREATE_ENS_CMD
+  command should be terminated with a '_stop_' line. For each case
+  the program will load the summary data of the case, and the .RFT
+  file - if present. In the example below we create an ensemble
+  called Prior consisting of three simulations:
+
+C
+Prior
+/path/to/sim1/ECLIPSE1.DATA
+/path/to/sim2/ECLIPSE2.DATA
+/path/to/sim3/ECLIPSE3.DATA
+_stop_
+
+  P : PLOT_CMD
+  ------------
+  The plot command will plot the selected variables and ensemble to a
+  png file. The 'P' command requires at the minimum the variable to
+  plot and ensembles to plot, but can in addition accept several extra
+  parameters. Assuming you have used the 'C' command to create two
+  ensembles 'Prior' and 'Posterior' you can plot the water cut in well
+  XYZ like this:
+
+P
+WWCT:XYZ
+Prior
+Posterior
+_stop_
+
+  The variable to plot, i.e. the WWCT:XYZ on the second line follows
+  the format from the summary.x program, alternatively the ens_plot.x
+  program can be used to plot pressure-depth relationships from RFT
+  surveys. In that case the key should be given as: 
+   
+           RFT:WELL:10/12/2008
+
+  i.e. the magic string 'RFT', followed by the well name and finally
+  the date of the survey, the items separated with ':'. 
+
+  The plot created will be a png file stored in the path given as
+  first element in the command file, and with the key as basename.
+
+  The 'P' command is quite flexible, and the following is possible, in
+  addition to the minimum behaviour described above:
+
+  - Additional keys: If you e.g. want to plot both the oil production
+    rate, and accumulated oil production you can do that with the
+    command _newplotvector_ followed by the new key:
+
+      P
+      WOPR:XYZ
+      Prior
+      Posterior
+      _newplotvector_
+      WOPT:XYZ
+      Prior
+      Posterior
+      _stop_
+
+    Observe that the ensemble names 'Prior' and 'Posterior' must be
+    repeated after the second key has been entered.
+
+  - Adding observations: In a history matching context it is typically
+    interesting to include observed data. This can be done with the
+    subcommand '_meas_points_'. The '_meas_points_' command expects
+    each datapoint to come on a separate line, the observed points can
+    come in different formats. In the case of summary plots the
+    alternatives are:
+
+      xy   date  	   value
+      xyy  date  	   low_value  high_value
+      xxy  days1   days2   value
+
+    The 'xy' format will plot a point, and the 'xyy' and 'xxy'
+    alternatives will plot a vertical and horizontal error bar
+    respectively. Observe that the '_meas_points_' command must be
+    terminated with it's own '_stop_' command; so to add two
+    observations of WWCT - with an accomanpying uncertainty - you
+    should plot like:
+    
+      P
+      WWCT:XYZ
+      Prior
+      Posterior
+      _meas_points_
+      xyy 10/10/2009  0.45  0.55
+      xyy 10/01/2010  0.70  0.80
+      _stop_
+      _stop_
+    
+    For RFT plots the format for adding observed values is different,
+    there each line of observed data should consist of a pressure
+    measurement from a cell. So to add two pressure measurements when
+    plotting an rft:
+
+      P 
+      RFT:XYZ:10/10/2010
+      Prior
+      Posterior
+      _meas_points_
+      rft <i> <j> <k> <P_low> <P_high> 
+      rft <i> <j> <k> <P_low> <P_high> 
+      _stop_
+      _stop_
+      
+    Of course actual values should be used for the cell coordinates
+    (i,j,k) and the low and high pressures P_low and P_high.
+
+  - Setting the range: By defualt the ens_plot program will adjust the
+    axis to include all the supplied data, but by using the
+    '_set_range_' command you can manually set the xmin,xmax,ymin and
+    ymax properties of the axes. The range should be set with one line
+    formatted like this:
+
+                 VAR  value   VAR  value   VAR   value ...
+ 
+    Where VAR is one of the identifieres 'XMIN', 'XMAX', 'YMIN' and
+    'YMAX' and value is the value of the preceeding identifier. In the
+    case of summary plots the XMIN and XMAX properties should be
+    dates, whereas they are pressures in the case of RFT plots. So; to
+    only focus on the the year 2010 in a summary plot you could use
+    the following statement:
+    
+      _set_range_
+      XMIN  01/01/2010   XMAX  31/12/2010
+
+    as part of your PLOT command.  
+
+    
+  A : ATTRIBUTES_CMD
+  ------------------
+  The attributes command can be used to set the color of the plotted
+  lines on a per-ensemble basis. So to set 'Prior' ensemble to be
+  plotted with red lines and the 'Posterior' with blue lines you can
+  issue the following command sequence:
+
+    A
+    Prior
+    1
+    A
+    Posterior
+    9
+  
+  The colors must be given with the numerical values, the codes are as
+  follows:
+
+    WHITE      	= 0,
+    RED        	= 1,
+    YELLOW     	= 2,
+    GREEN      	= 3,
+    AQUAMARINE 	= 4,
+    PINK    	= 5,
+    WHEAT  	= 6,
+    GRAY   	= 7,
+    BROWN  	= 8,
+    BLUE   	= 9,
+    VIOLET 	= 10,
+    CYAN   	= 11,
+    TURQUOISE   = 12,
+    MAGENTA 	= 13,
+    SALMON  	= 14,
+    BLACK   	= 15
+
+  No attributes beyond color ...
+
+  
+
+
+Complete example file:
+-------------------------------------------------------------------------------------------------------------------
+/path/to/plots                | All plots will be created here; the path will be created if it does not exist.
+C                             | Create a new ensemble
+Prior                         | Call the new ensemble 'Prior'
+/path/to/sim1/CASE1.DATA      | Case 1 in prior
+/path/to/sim2/CASE2.DATA      | Case 2 in prior
+/path/to/sim3/CASE3.DATA      | Case 3 in prior
+_stop_                        | All realizations added to 'Prior'
+A                             |--\ 
+Prior                         |   | Prior should be plotted in red
+1                             |--/
+C                             | Create a new ensemble
+Posterior                     | Call the new ensemble 'Posterior'
+/path/to/Post1/CASE1.DATA     | Case 1 in Posterior
+/path/to/Post2/CASE2.DATA     | Case 2 in Posterior
+/path/to/Post3/CASE3.DATA     | Case 3 in Posterior
+_stop_                        | All realizations added to 'Prior'
+A                             |--\ 
+Posterior                     |   | Posterior should be plotted in blue
+9                             |--/
+P                             | Create a plot
+WWCT:XYC                      | Of the watercut in well XYZ
+Posterior                     | Include the posterior ensemble
+Prior                         | Include the posterior ensemble
+Q                             | Quit
+-------------------------------------------------------------------------------------------------------------------
+
+*/
+
+
+
+#define CREATE_ENS_CMD  "C"
+#define PLOT_CMD        "P"
+#define ATTRIBUTES_CMD  "A"
+#define QUANTILES_CMD   "QUANTILES" 
+#define QUIT_CMD        "Q"
+
 #define XMIN_CMD    "XMIN"
 #define XMAX_CMD    "XMAX"
 #define YMIN_CMD    "XMIN"
@@ -31,12 +266,6 @@
 #define MEAS_POINTS_CMD "_meas_points_"
 #define SET_RANGE_CMD   "_set_range_"
 #define NEW_VECTOR_CMD  "_newplotvector_"
-
-#define QUIT_CMD        "Q"
-#define CREATE_ENS_CMD  "C"
-#define PLOT_CMD        "P"
-#define ATTRIBUTES_CMD  "A"
-#define QUANTILES_CMD   "QUANTILES" 
 
 
 #include <util.h>
@@ -1306,7 +1535,7 @@ void _plot_batch_summary(arg_pack_type* arg_pack, char * inkey){
       scanf("%s" , key);
     } else if (strcmp(ens_name, STOP_CMD) == 0) {
       complete = true ;
-    }  else  if (hash_has_key( ens_table , ens_name)){
+    } else  if (hash_has_key( ens_table , ens_name)){
       ens = hash_get(ens_table , ens_name);
       
       // Check if there is anything to plot
@@ -1494,7 +1723,7 @@ void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
   char message[128] ;
   char * line;  
   // scan stdin for ensemble name
-  char * ens_name  = util_alloc_stdin_line();
+o  char * ens_name  = util_alloc_stdin_line();
   
   ens_type* ens     = NULL ;
   ens_type* ens_rft = NULL ;
@@ -1639,7 +1868,7 @@ int main(int argc , char ** argv) {
           return 0 ;
 
         } else if(strcmp(line, CREATE_ENS_CMD) == 0){
-          
+	  
           create_ensemble_batch(ens_table, ens_rft_table);
 
         } else if (strcmp(line, PLOT_CMD) == 0){
