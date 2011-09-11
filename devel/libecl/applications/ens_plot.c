@@ -1765,7 +1765,7 @@ void create_ensemble_batch(hash_type* ens_table, hash_type* ens_rft_table) {
   char message[128] ;
   char * line;  
   // scan stdin for ensemble name
-o  char * ens_name  = util_alloc_stdin_line();
+  char * ens_name  = util_alloc_stdin_line();
   
   ens_type* ens     = NULL ;
   ens_type* ens_rft = NULL ;
