@@ -19,11 +19,11 @@
 /*
   The ens_plot program is a very simple program created to plot
   ensembles of many related ECLIPSE simulations. The program is mainly
-  designed to be invoked from BASRA, and hence _not_ optimized for
+  designed to be invoked from BASRA, and hence not optimized for
   simple standalone use. However the communication with BASRA is based
   on reading commands from stdin, and those commands could in
   prinicple just as well come from a user generated file. The format
-  for the command files is documented here. 
+  for the command files is documented here.
 
   The very first element in the file should be the path to where you
   want the created files to go. After the path name on the first line
@@ -105,7 +105,9 @@ _stop_
       _stop_
 
     Observe that the ensemble names 'Prior' and 'Posterior' must be
-    repeated after the second key has been entered.
+    repeated after the second key has been entered. The
+    _newplotvector_ can not be used to combine summary and RFT data in
+    the same plot.
 
   - Adding observations: In a history matching context it is typically
     interesting to include observed data. This can be done with the
@@ -210,37 +212,77 @@ _stop_
 
   No attributes beyond color ...
 
+
+  QUANTILES
+  ---------
   
+  By default the ens_plot program will plot the ensemble by plotting
+  all the realisations, by using the 'QUANTILES' command you can
+  choose to plot quantiles like P10 and P90 instead of the individual
+  realisations. The QUANTILES command takes additional arguments on
+  seperate lines lke this:
+
+    Turn on quantile plotting:
+    
+    QUANTILES
+    Prior            <- The name of the ensemble
+    1                <- Use quantiles 1:True  0:False
+    5                <- How many quantiles
+    0.10      -----\
+    0.25           |
+    0.50           +  The quantiles we are interested in, i.e.
+    0.75           |  P10, P25, P50, P75 and P90 in this case.
+    0.90      -----/
+    
+
+    Turn off quantile plotting:
+    
+    QUANTILES
+    Prior
+    0              <-- Turn off quantile plotting
+  
+  Quantiles is only an option for plotting summary vectors, not RFTs.
 
 
 Complete example file:
 -------------------------------------------------------------------------------------------------------------------
-/path/to/plots                | All plots will be created here; the path will be created if it does not exist.
-C                             | Create a new ensemble
-Prior                         | Call the new ensemble 'Prior'
-/path/to/sim1/CASE1.DATA      | Case 1 in prior
-/path/to/sim2/CASE2.DATA      | Case 2 in prior
-/path/to/sim3/CASE3.DATA      | Case 3 in prior
-_stop_                        | All realizations added to 'Prior'
-A                             |--\ 
-Prior                         |   | Prior should be plotted in red
-1                             |--/
-C                             | Create a new ensemble
-Posterior                     | Call the new ensemble 'Posterior'
-/path/to/Post1/CASE1.DATA     | Case 1 in Posterior
-/path/to/Post2/CASE2.DATA     | Case 2 in Posterior
-/path/to/Post3/CASE3.DATA     | Case 3 in Posterior
-_stop_                        | All realizations added to 'Prior'
-A                             |--\ 
-Posterior                     |   | Posterior should be plotted in blue
-9                             |--/
-P                             | Create a plot
-WWCT:XYC                      | Of the watercut in well XYZ
-Posterior                     | Include the posterior ensemble
-Prior                         | Include the posterior ensemble
-Q                             | Quit
+/path/to/plots                	 | All plots will be created here; the path will be created if it does not exist.
+C                             	 | Create a new ensemble
+Prior                         	 | Call the new ensemble 'Prior'
+/path/to/sim1/CASE1.DATA      	 | Case 1 in prior
+/path/to/sim2/CASE2.DATA      	 | Case 2 in prior
+/path/to/sim3/CASE3.DATA      	 | Case 3 in prior
+_stop_                        	 | All realizations added to 'Prior'
+A                             	 |--\ 
+Prior                         	 |   | Prior should be plotted in red
+1                             	 |--/
+C                             	 | Create a new ensemble
+Posterior                     	 | Call the new ensemble 'Posterior'
+/path/to/Post1/CASE1.DATA     	 | Case 1 in Posterior
+/path/to/Post2/CASE2.DATA     	 | Case 2 in Posterior
+/path/to/Post3/CASE3.DATA     	 | Case 3 in Posterior
+_stop_                        	 | All realizations added to 'Prior'
+A                             	 |--\ 
+Posterior                     	 |   | Posterior should be plotted in blue
+9                             	 |--/
+P                             	 | Create a plot: /path/to/plots/WWCT:XYC.png
+WWCT:XYC                      	 | Of the watercut in well XYZ
+Posterior                     	 | Include the posterior ensemble
+Prior                         	 | Include the posterior ensemble
+_stop_                        	 | All data added to the plot - go and make it.
+P                             	 | Create a plot: /path/to/plots/WOPR:XYC.png
+WOPR:XYC                      	 | Of the oil production rate in well XYC
+Posterior                     	 | Include the posterior ensemble
+Prior                         	 | Include the posterior ensemble
+_newplotvector_               	 | Include a the new ...
+WOPT:XYC                      	 | ... summary vector WOPT:XYZ
+Posterior                     	 | Include the posterior ensemble
+Prior                         	 | Include the posterior ensemble
+_set_range_                   	 | Manually adjust the plotting range
+XMIN 01/01/2009  XMAX 31/12/2009 | Include all of 2009 in the plot.   
+_stop_                        	 | All data added to the plot - go and make it.
+Q                             	 | Quit
 -------------------------------------------------------------------------------------------------------------------
-
 */
 
 
