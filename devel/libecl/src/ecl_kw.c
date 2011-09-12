@@ -818,9 +818,13 @@ static bool ecl_kw_fscanf_qstring(char *s , const char *fmt , int len, FILE *str
   bool OK;
   OK = ecl_kw_qskip(stream);
   if (OK) {
-    fscanf(stream , fmt , s);
+    int read_count = 0;
+    read_count += fscanf(stream , fmt , s);
     s[len] = null_char;
-    fscanf(stream , "%c" , &last_sep);
+    read_count += fscanf(stream , "%c" , &last_sep);
+    
+    if (read_count != 2)
+      util_abort("%s: reading \'xxxxxxxx\' formatted string failed \n",__func__);
   }
   return OK;
 }
@@ -893,13 +897,15 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
             case(ECL_BOOL_TYPE): 
               {
                 char bool_char;
-                fscanf(stream , read_fmt , &bool_char);
-                if (bool_char == BOOL_TRUE_CHAR) 
-                  ecl_kw_iset_bool(ecl_kw , index , true);
-                else if (bool_char == BOOL_FALSE_CHAR)
-                  ecl_kw_iset_bool(ecl_kw , index , false);
-                else 
-                  util_abort("%s: Logical value: [%c] not recogniced - aborting \n", __func__ , bool_char);
+                if (fscanf(stream , read_fmt , &bool_char) == 1) {
+		  if (bool_char == BOOL_TRUE_CHAR) 
+		    ecl_kw_iset_bool(ecl_kw , index , true);
+		  else if (bool_char == BOOL_FALSE_CHAR)
+		    ecl_kw_iset_bool(ecl_kw , index , false);
+		  else 
+		    util_abort("%s: Logical value: [%c] not recogniced - aborting \n", __func__ , bool_char);
+		} else
+		  util_abort("%s: read failed - premature file end? \n",__func__ );
               }
               break;
             case(ECL_MESS_TYPE):
@@ -926,8 +932,11 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
             int ir;
             fortio_init_read(fortio);
             for (ir = 0; ir < read_elm; ir++) {
-              fread(&ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream);
-              ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype + ECL_STRING_LENGTH] = null_char;
+              int read_count = fread(&ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream);
+	      if (read_count == ECL_STRING_LENGTH)
+		ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype + ECL_STRING_LENGTH] = null_char;
+	      else
+		util_abort("%s: reading failed - premature end of file? \n",__func__);
             }
             fortio_complete_read(fortio);
           } 
@@ -996,19 +1005,26 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
   if (fmt_file) {
     OK = ecl_kw_fscanf_qstring(header , "%8c" , 8 , stream); 
     if (OK) {
-      fscanf(stream , "%d" , &size);
-      ecl_kw_fscanf_qstring(ecl_type_str , "%4c" , 4 , stream);
-      fgetc(stream);             /* Reading the trailing newline ... */
+      int read_count = fscanf(stream , "%d" , &size);
+      if (read_count == 1) {
+	ecl_kw_fscanf_qstring(ecl_type_str , "%4c" , 4 , stream);
+	fgetc(stream);             /* Reading the trailing newline ... */
+      } else 
+	util_abort("%s: reading failed - at end of file?\n",__func__);
     }
   } else {
     header[ECL_STRING_LENGTH]        = null_char;
     ecl_type_str[ECL_TYPE_LENGTH] = null_char;
     record_size = fortio_init_read(fortio);
     if (record_size > 0) {
-      fread(header       , sizeof(char)   , ECL_STRING_LENGTH  , stream); 
-      fread(&size        , sizeof( size ) , 1            , stream); 
-      fread(ecl_type_str , sizeof(char)   , ECL_TYPE_LENGTH , stream);
+      int read_count = 0;
+      read_count += fread(header       , sizeof(char) , ECL_STRING_LENGTH , stream); 
+      read_count += fread(&size        , sizeof(size) , 1                 , stream); 
+      read_count += fread(ecl_type_str , sizeof(char) , ECL_TYPE_LENGTH   , stream);
       fortio_complete_read(fortio);
+      if (read_count != (1 + ECL_STRING_LENGTH + ECL_TYPE_LENGTH))
+	util_abort("%s: reading header failed - not all elements read \n",__func__);
+      
       OK = true;
       if (ECL_ENDIAN_FLIP) 
         util_endian_flip_vector(&size , sizeof size , 1);
