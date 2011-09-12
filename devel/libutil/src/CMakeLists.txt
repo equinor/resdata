@@ -65,6 +65,11 @@ set_target_properties( util_shared PROPERTIES OUTPUT_NAME util )
 
 #-----------------------------------------------------------------
 
-install(TARGETS util_static util_shared DESTINATION ${UTIL_INSTALL_PREFIX}/lib)
-install(FILES ${header_files} DESTINATION ${UTIL_INSTALL_PREFIX}/include)
+if (UTIL_INSTALL_PREFIX)
+  install(TARGETS util_static util_shared DESTINATION ${UTIL_INSTALL_PREFIX}/lib)
+  install(FILES ${header_files} DESTINATION ${UTIL_INSTALL_PREFIX}/include)
+else()
+  install(TARGETS util_static util_shared DESTINATION lib)
+  install(FILES ${header_files} DESTINATION include)
+endif()
 
