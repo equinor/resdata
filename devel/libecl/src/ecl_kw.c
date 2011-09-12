@@ -1428,15 +1428,6 @@ ecl_type_enum ecl_kw_get_type(const ecl_kw_type * ecl_kw) { return ecl_kw->ecl_t
 
 /******************************************************************/
 
-/** 
-    The functions cfwrite_header() and cfread_header() and write/read
-    *FAR TO MUCH* header information. But now they are out there ...,
-    with lot's of file images in place. I guess there is something to
-    be learned from this?
-    
-    Got to stick to this, at least for a while.
-*/
-    
 
 
 void ecl_kw_cfwrite_header(const ecl_kw_type * ecl_kw , FILE *stream) {
