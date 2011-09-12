@@ -348,7 +348,6 @@ bool ecl_file_iselect_rstblock( ecl_file_type * ecl_file , int seqnum_index ) {
 
 bool ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , time_t sim_time) {
   int seqnum_index = file_map_seqnum_index_from_sim_time( ecl_file->global_map , sim_time );
-  printf("%s: seqnum_index:%d \n",__func__ , seqnum_index);
   
   if (seqnum_index >= 0)
     return ecl_file_iselect_rstblock( ecl_file , seqnum_index);

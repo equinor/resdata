@@ -1236,10 +1236,11 @@ bool block_fs_rotate( block_fs_type * block_fs , double fragmentation_limit) {
 
 void block_fs_fsync( block_fs_type * block_fs ) {
   if (block_fs->data_owner) {
+    long pos;
     //fdatasync( block_fs->data_fd );
     fsync( block_fs->data_fd );
     block_fs_fseek( block_fs , block_fs->data_file_size );
-    ftell( block_fs->data_stream ); 
+    pos = ftell( block_fs->data_stream ); 
   }
 }
 

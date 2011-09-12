@@ -1471,7 +1471,7 @@ void ecl_kw_cfread_header(ecl_kw_type * ecl_kw , FILE * stream) {
   bool dummy_bool;
   int  dummy_int;
 
-  fread(&dummy_bool , sizeof dummy_bool , 1, stream);                         /* Old ecl_kw->fmt_file */
+  fread(&dummy_bool              , sizeof dummy_bool           , 1 , stream); /* Old ecl_kw->fmt_file */
   fread(&ecl_kw->sizeof_ctype    , sizeof ecl_kw->sizeof_ctype , 1 , stream);
   fread(&ecl_kw->size            , sizeof ecl_kw->size         , 1 , stream);
   fread(&dummy_int               , sizeof dummy_int            , 1 , stream); /* Old ecl_kw->fmt_linesize */
@@ -1661,12 +1661,17 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
   ecl_kw->sizeof_ctype = ecl_util_get_sizeof_ctype(ecl_kw->ecl_type);
   ecl_kw_alloc_data(ecl_kw);
   
-  fscanf(stream , "%s" , buffer);      /* Reading the header name */
-  ecl_kw_set_header_name(ecl_kw , buffer);
+  if (fscanf(stream , "%s" , buffer) == 1)       /* Reading the header name */
+    ecl_kw_set_header_name(ecl_kw , buffer);
+  else
+    util_abort("%s: could not read keyword header from stream - at end of file?\n",__func__);
+
   {
     fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL ,true , true , stream);  /* The endian flip is not used. */
     ecl_kw_fread_data(ecl_kw , fortio);
-    fscanf(stream , "%s" , buffer);
+    
+    if (fscanf(stream , "%s" , buffer) == 0)
+      util_abort("%s: could not read terminating \'/\' from stream - malformed file?\n",__func__);
     
     if (buffer[0] != '/') {
       fprintf(stderr,"\n");
