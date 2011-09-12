@@ -38,7 +38,9 @@
    * Each block contains an INTEHEAD keyword, immediately after the
      SEQNUM keyword, which contains the true simulation date of of the
      block, and also some other data. Observe that also INIT files and
-     GRID files contain an INTEHEAD keyword.
+     GRID files contain an INTEHEAD keyword; and that for files with
+     LGRs there is one INTEHEAD keyword for each LGR. This creates an
+     extra level of mess.
 
    The natural time ordering when working with the file data is just
    the running index in the file; however from a user perspective the
@@ -155,12 +157,17 @@ static bool file_map_has_report_step( const file_map_type * file_map , int repor
 }
 
 
-static time_t file_map_iget_restart_sim_date(const file_map_type * file_map , int index) {
-  if (file_map_get_num_named_kw( file_map , INTEHEAD_KW) > index) {
-    ecl_kw_type * intehead_kw = file_map_iget_named_kw( file_map , INTEHEAD_KW , index);
-    return INTEHEAD_date( intehead_kw );
-  } else
-    return -1;
+static time_t file_map_iget_restart_sim_date(const file_map_type * file_map , int seqnum_index) {
+  time_t sim_time = -1;
+  file_map_type * seqnum_map = seqnum_map = file_map_alloc_blockmap( file_map , SEQNUM_KW , seqnum_index);
+
+  if (seqnum_map != NULL) {
+    ecl_kw_type * intehead_kw = file_map_iget_named_kw( seqnum_map , INTEHEAD_KW , 0);
+    sim_time = INTEHEAD_date( intehead_kw );
+    file_map_free( seqnum_map );
+  } 
+  
+  return sim_time;
 }
 
 
@@ -182,6 +189,7 @@ static int file_map_find_sim_time(const file_map_type * file_map , time_t sim_ti
   }
   return global_index;
 }
+
 
 /**
    This function will scan through the ecl_file looking for INTEHEAD
@@ -218,12 +226,17 @@ static int file_map_find_sim_time(const file_map_type * file_map , time_t sim_ti
    
    Observe that the function requires on-the-second-equality; which is
    of course quite strict.
+
+   Each report step only has one occurence of SEQNUM, but one INTEHEAD
+   for each LGR; i.e. one should call iselect_rstblock() prior to
+   calling this function.  
 */
 
-static int file_map_get_seqnum_index( const file_map_type * file_map , time_t sim_time) {
+
+static bool file_map_has_sim_time( const file_map_type * file_map , time_t sim_time) {
   int num_INTEHEAD = file_map_get_num_named_kw( file_map , INTEHEAD_KW );
   if (num_INTEHEAD == 0)
-    return -1;       /* We have no INTEHEAD headers - probably not a restart file at all. */
+    return false;       /* We have no INTEHEAD headers - probably not a restart file at all. */
   else {
     /*
       Should probably do something smarter than a linear search; but I dare not
@@ -235,17 +248,42 @@ static int file_map_get_seqnum_index( const file_map_type * file_map , time_t si
       time_t itime = file_map_iget_restart_sim_date( file_map , intehead_index );
       
       if (itime == sim_time) /* Perfect hit. */
-        return intehead_index;
-
+        return true;
+      
       if (itime > sim_time)  /* We have gone past the target_time - i.e. we do not have it. */
-        return -1;
+        return false;
       
       intehead_index++;
       if (intehead_index == num_INTEHEAD)  /* We have iterated through the whole thing without finding sim_time. */
-        return -1;
+        return false;
     }
   }
 }
+
+
+static int file_map_seqnum_index_from_sim_time( file_map_type * parent_map , time_t sim_time) {
+  int num_seqnum = file_map_get_num_named_kw( parent_map , SEQNUM_KW );
+  int seqnum_index = 0;
+  file_map_type * seqnum_map;
+  
+  while (true) {
+    seqnum_map = file_map_alloc_blockmap( parent_map , SEQNUM_KW , seqnum_index);
+
+    if (seqnum_map != NULL) {
+      if (file_map_has_sim_time( seqnum_map , sim_time)) {
+        file_map_free( seqnum_map );
+        return seqnum_index;
+      } else {
+        file_map_free( seqnum_map );
+        seqnum_index++;
+      }
+    }
+    
+    if (num_seqnum == seqnum_index)
+      return -1;
+  }
+}
+
 
 /******************************************************************/
 /* Query functions. */
@@ -260,12 +298,9 @@ static int file_map_get_seqnum_index( const file_map_type * file_map , time_t si
 
 
 bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
-  int active_index = file_map_find_sim_time( ecl_file->active_map , sim_time );
-  if (active_index >= 0)
-    return true;
-  else
-    return false;
+  return file_map_has_sim_time( ecl_file->active_map , sim_time );
 }
+
 
 int ecl_file_get_restart_index( const ecl_file_type * ecl_file , time_t sim_time) {
   int active_index = file_map_find_sim_time( ecl_file->active_map , sim_time );
@@ -312,10 +347,12 @@ bool ecl_file_iselect_rstblock( ecl_file_type * ecl_file , int seqnum_index ) {
 
 
 bool ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , time_t sim_time) {
-  int seqnum_index = file_map_get_seqnum_index( ecl_file->global_map , sim_time );
+  int seqnum_index = file_map_seqnum_index_from_sim_time( ecl_file->global_map , sim_time );
+  printf("%s: seqnum_index:%d \n",__func__ , seqnum_index);
+  
   if (seqnum_index >= 0)
     return ecl_file_iselect_rstblock( ecl_file , seqnum_index);
-  else
+  else 
     return false;
 }
 

@@ -30,9 +30,9 @@
   the main loop of the ens_plot.x program evolves around the five
   'commands':
 
-    C 	      : Create a new ensemble
-    P 	      : Plot 
-    A 	      : Set attributes of an ensemble
+    C         : Create a new ensemble
+    P         : Plot 
+    A         : Set attributes of an ensemble
     QUANTILES : Plot an ensemble using quantiles instead of many lines
     Q         : Quit
 
@@ -74,7 +74,7 @@ Prior
 Posterior
 _stop_
 
-  The variable to plot, i.e. the WWCT:XYZ on the second line follows
+  The variable to plot, i.e. the WWCT:XYZ on the second line, follows
   the format from the summary.x program, alternatively the ens_plot.x
   program can be used to plot pressure-depth relationships from RFT
   surveys. In that case the key should be given as: 
@@ -116,8 +116,8 @@ _stop_
     come in different formats. In the case of summary plots the
     alternatives are:
 
-      xy   date  	   value
-      xyy  date  	   low_value  high_value
+      xy   date            value
+      xyy  date            low_value  high_value
       xxy  days1   days2   value
 
     The 'xy' format will plot a point, and the 'xyy' and 'xxy'
@@ -193,22 +193,22 @@ _stop_
   The colors must be given with the numerical values, the codes are as
   follows:
 
-    WHITE      	= 0,
-    RED        	= 1,
-    YELLOW     	= 2,
-    GREEN      	= 3,
-    AQUAMARINE 	= 4,
-    PINK    	= 5,
-    WHEAT  	= 6,
-    GRAY   	= 7,
-    BROWN  	= 8,
-    BLUE   	= 9,
-    VIOLET 	= 10,
-    CYAN   	= 11,
+    WHITE       = 0,
+    RED         = 1,
+    YELLOW      = 2,
+    GREEN       = 3,
+    AQUAMARINE  = 4,
+    PINK        = 5,
+    WHEAT       = 6,
+    GRAY        = 7,
+    BROWN       = 8,
+    BLUE        = 9,
+    VIOLET      = 10,
+    CYAN        = 11,
     TURQUOISE   = 12,
-    MAGENTA 	= 13,
-    SALMON  	= 14,
-    BLACK   	= 15
+    MAGENTA     = 13,
+    SALMON      = 14,
+    BLACK       = 15
 
   No attributes beyond color ...
 
@@ -220,7 +220,7 @@ _stop_
   all the realisations, by using the 'QUANTILES' command you can
   choose to plot quantiles like P10 and P90 instead of the individual
   realisations. The QUANTILES command takes additional arguments on
-  seperate lines lke this:
+  seperate lines like this:
 
     Turn on quantile plotting:
     
@@ -246,42 +246,42 @@ _stop_
 
 Complete example file:
 -------------------------------------------------------------------------------------------------------------------
-/path/to/plots                	 | All plots will be created here; the path will be created if it does not exist.
-C                             	 | Create a new ensemble
-Prior                         	 | Call the new ensemble 'Prior'
-/path/to/sim1/CASE1.DATA      	 | Case 1 in prior
-/path/to/sim2/CASE2.DATA      	 | Case 2 in prior
-/path/to/sim3/CASE3.DATA      	 | Case 3 in prior
-_stop_                        	 | All realizations added to 'Prior'
-A                             	 |--\ 
-Prior                         	 |   | Prior should be plotted in red
-1                             	 |--/
-C                             	 | Create a new ensemble
-Posterior                     	 | Call the new ensemble 'Posterior'
-/path/to/Post1/CASE1.DATA     	 | Case 1 in Posterior
-/path/to/Post2/CASE2.DATA     	 | Case 2 in Posterior
-/path/to/Post3/CASE3.DATA     	 | Case 3 in Posterior
-_stop_                        	 | All realizations added to 'Prior'
-A                             	 |--\ 
-Posterior                     	 |   | Posterior should be plotted in blue
-9                             	 |--/
-P                             	 | Create a plot: /path/to/plots/WWCT:XYC.png
-WWCT:XYC                      	 | Of the watercut in well XYZ
-Posterior                     	 | Include the posterior ensemble
-Prior                         	 | Include the posterior ensemble
-_stop_                        	 | All data added to the plot - go and make it.
-P                             	 | Create a plot: /path/to/plots/WOPR:XYC.png
-WOPR:XYC                      	 | Of the oil production rate in well XYC
-Posterior                     	 | Include the posterior ensemble
-Prior                         	 | Include the posterior ensemble
-_newplotvector_               	 | Include a the new ...
-WOPT:XYC                      	 | ... summary vector WOPT:XYZ
-Posterior                     	 | Include the posterior ensemble
-Prior                         	 | Include the posterior ensemble
-_set_range_                   	 | Manually adjust the plotting range
-XMIN 01/01/2009  XMAX 31/12/2009 | Include all of 2009 in the plot.   
-_stop_                        	 | All data added to the plot - go and make it.
-Q                             	 | Quit
+/path/to/plots                   | All plots will be created here; the path will be created if it does not exist.
+C                                | Create a new ensemble
+Prior                            | Call the new ensemble 'Prior'
+/path/to/sim1/CASE1.DATA         | Case 1 in prior
+/path/to/sim2/CASE2.DATA         | Case 2 in prior
+/path/to/sim3/CASE3.DATA         | Case 3 in prior
+_stop_                           | All realizations added to 'Prior'
+A                                |--\ 
+Prior                            |   | Prior should be plotted in red
+1                                |--/
+C                                | Create a new ensemble
+Posterior                        | Call the new ensemble 'Posterior'
+/path/to/Post1/CASE1.DATA        | Case 1 in Posterior
+/path/to/Post2/CASE2.DATA        | Case 2 in Posterior
+/path/to/Post3/CASE3.DATA        | Case 3 in Posterior
+_stop_                           | All realizations added to 'Prior'
+A                                |--\ 
+Posterior                        |   | Posterior should be plotted in blue
+9                                |--/
+P                                | Create a plot: /path/to/plots/WWCT:XYC.png
+WWCT:XYC                         | Of the watercut in well XYZ
+Posterior                        | Include the posterior ensemble
+Prior                            | Include the posterior ensemble
+_stop_                           | All data added to the plot - go and make it.
+P                                | Create a plot: /path/to/plots/WOPR:XYC.png
+WOPR:XYC                         | Of the oil production rate in well XYC
+Posterior                        | Include the posterior ensemble
+Prior                            | Include the prior ensemble
+_newplotvector_                  | Include a new ...
+WOPT:XYC                         | ... summary vector WOPT:XYZ
+Posterior                        | Include the posterior ensemble
+Prior                            | Include the prior ensemble
+_set_range_                      | Manually adjust the plotting range
+XMIN 01/01/2009  XMAX 31/12/2009 | Include all of 2009 in the plot; yrange still auto.
+_stop_                           | All data added to the plot - go and make it.
+Q                                | Quit
 -------------------------------------------------------------------------------------------------------------------
 */
 
@@ -1910,7 +1910,7 @@ int main(int argc , char ** argv) {
           return 0 ;
 
         } else if(strcmp(line, CREATE_ENS_CMD) == 0){
-	  
+          
           create_ensemble_batch(ens_table, ens_rft_table);
 
         } else if (strcmp(line, PLOT_CMD) == 0){
