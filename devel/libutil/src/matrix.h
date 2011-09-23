@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <rng.h>
+#include <thread_pool.h>
 
 #ifdef __cplusplus 
 extern "C" {
@@ -67,8 +68,8 @@ void          matrix_imul(matrix_type * matrix , int i , int j , double value);
 
 
 void          matrix_inplace_matmul(matrix_type * A, const matrix_type * B);
-void          matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads);
-
+void          matrix_inplace_matmul_mt1(matrix_type * A, const matrix_type * B , int num_threads);
+void          matrix_inplace_matmul_mt2(matrix_type * A, const matrix_type * B , thread_pool_type * thread_pool);
 
 void          matrix_shift_column(matrix_type * matrix , int column, double shift);
 void          matrix_shift_row(matrix_type * matrix , int row , double shift);

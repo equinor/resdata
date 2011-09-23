@@ -905,37 +905,55 @@ static void * matrix_inplace_matmul_mt__(void * arg) {
   return NULL;
 }
 
+/**
+   Observe that the calling scope is responsible for passing a
+   thread_pool in suitable state to this function. This implies one of
+   the following:
 
-void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads){ 
-  thread_pool_type  * thread_pool = thread_pool_alloc( num_threads , true );
-  arg_pack_type    ** arglist     = util_malloc( num_threads * sizeof * arglist , __func__);
+     1. The thread_pool is newly created, with the @start_queue
+        argument set to true.
+
+     2. The thread_pool has just been restarted with
+        thread_pool_restart().
+     
+   If the thread_pool has not been correctly prepared, according to
+   this specification, nothing will happen.  
+*/ 	
+
+void matrix_inplace_matmul_mt2(matrix_type * A, const matrix_type * B , thread_pool_type * thread_pool){
+  int num_threads             = thread_pool_get_max_running( thread_pool );
+  arg_pack_type    ** arglist = util_malloc( num_threads * sizeof * arglist , __func__);
   int it;
-  {
-    int rows       = matrix_get_rows( A ) / num_threads;
-    int rows_mod   = matrix_get_rows( A ) % num_threads;
-    int row_offset = 0;
+  int rows       = matrix_get_rows( A ) / num_threads;
+  int rows_mod   = matrix_get_rows( A ) % num_threads;
+  int row_offset = 0;
 
-    for (it = 0; it < num_threads; it++) {
-      int row_size;
-      arglist[it] = arg_pack_alloc();
-      row_size = rows;
-      if (it < rows_mod)
-        row_size += 1;
-      
-      arg_pack_append_int(arglist[it] , row_offset );
-      arg_pack_append_int(arglist[it] , row_size   );
-      arg_pack_append_ptr(arglist[it] , A );
-      arg_pack_append_ptr(arglist[it] , B );
-      
-      thread_pool_add_job( thread_pool , matrix_inplace_matmul_mt__ , arglist[it]);
-      row_offset += row_size;
-    }
-    thread_pool_join( thread_pool );
-    thread_pool_free( thread_pool );
-    for (it = 0; it < num_threads; it++) 
-      arg_pack_free( arglist[it] );
-    free( arglist );
+  for (it = 0; it < num_threads; it++) {
+    int row_size;
+    arglist[it] = arg_pack_alloc();
+    row_size = rows;
+    if (it < rows_mod)
+      row_size += 1;
+    
+    arg_pack_append_int(arglist[it] , row_offset );
+    arg_pack_append_int(arglist[it] , row_size   );
+    arg_pack_append_ptr(arglist[it] , A );
+    arg_pack_append_ptr(arglist[it] , B );
+    
+    thread_pool_add_job( thread_pool , matrix_inplace_matmul_mt__ , arglist[it]);
+    row_offset += row_size;
   }
+  thread_pool_join( thread_pool );
+  
+  for (it = 0; it < num_threads; it++) 
+    arg_pack_free( arglist[it] );
+  free( arglist );
+} 
+
+void matrix_inplace_matmul_mt1(matrix_type * A, const matrix_type * B , int num_threads){ 
+  thread_pool_type  * thread_pool = thread_pool_alloc( num_threads , true );
+  matrix_inplace_matmul_mt2( A , B , thread_pool );
+  thread_pool_free( thread_pool );
 }
 
 #else
