@@ -399,4 +399,6 @@ void thread_pool_free(thread_pool_type * pool) {
   free(pool);
 }
 
-
+int thread_pool_get_max_running( const thread_pool_type * pool ) {
+  return pool->max_running;
+}

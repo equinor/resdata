@@ -898,14 +898,14 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
               {
                 char bool_char;
                 if (fscanf(stream , read_fmt , &bool_char) == 1) {
-		  if (bool_char == BOOL_TRUE_CHAR) 
-		    ecl_kw_iset_bool(ecl_kw , index , true);
-		  else if (bool_char == BOOL_FALSE_CHAR)
-		    ecl_kw_iset_bool(ecl_kw , index , false);
-		  else 
-		    util_abort("%s: Logical value: [%c] not recogniced - aborting \n", __func__ , bool_char);
-		} else
-		  util_abort("%s: read failed - premature file end? \n",__func__ );
+                  if (bool_char == BOOL_TRUE_CHAR) 
+                    ecl_kw_iset_bool(ecl_kw , index , true);
+                  else if (bool_char == BOOL_FALSE_CHAR)
+                    ecl_kw_iset_bool(ecl_kw , index , false);
+                  else 
+                    util_abort("%s: Logical value: [%c] not recogniced - aborting \n", __func__ , bool_char);
+                } else
+                  util_abort("%s: read failed - premature file end? \n",__func__ );
               }
               break;
             case(ECL_MESS_TYPE):
@@ -932,11 +932,8 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
             int ir;
             fortio_init_read(fortio);
             for (ir = 0; ir < read_elm; ir++) {
-              int read_count = fread(&ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream);
-	      if (read_count == ECL_STRING_LENGTH)
-		ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype + ECL_STRING_LENGTH] = null_char;
-	      else
-		util_abort("%s: reading failed - premature end of file? \n",__func__);
+              util_fread( &ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream , __func__);
+              ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype + ECL_STRING_LENGTH] = null_char;
             }
             fortio_complete_read(fortio);
           } 
@@ -1007,23 +1004,20 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
     if (OK) {
       int read_count = fscanf(stream , "%d" , &size);
       if (read_count == 1) {
-	ecl_kw_fscanf_qstring(ecl_type_str , "%4c" , 4 , stream);
-	fgetc(stream);             /* Reading the trailing newline ... */
+        ecl_kw_fscanf_qstring(ecl_type_str , "%4c" , 4 , stream);
+        fgetc(stream);             /* Reading the trailing newline ... */
       } else 
-	util_abort("%s: reading failed - at end of file?\n",__func__);
+        util_abort("%s: reading failed - at end of file?\n",__func__);
     }
   } else {
     header[ECL_STRING_LENGTH]        = null_char;
     ecl_type_str[ECL_TYPE_LENGTH] = null_char;
     record_size = fortio_init_read(fortio);
     if (record_size > 0) {
-      int read_count = 0;
-      read_count += fread(header       , sizeof(char) , ECL_STRING_LENGTH , stream); 
-      read_count += fread(&size        , sizeof(size) , 1                 , stream); 
-      read_count += fread(ecl_type_str , sizeof(char) , ECL_TYPE_LENGTH   , stream);
+      util_fread(header       , sizeof(char) , ECL_STRING_LENGTH , stream , __func__); 
+      util_fread(&size        , sizeof(size) , 1                 , stream , __func__); 
+      util_fread(ecl_type_str , sizeof(char) , ECL_TYPE_LENGTH   , stream , __func__);
       fortio_complete_read(fortio);
-      if (read_count != (1 + ECL_STRING_LENGTH + ECL_TYPE_LENGTH))
-	util_abort("%s: reading header failed - not all elements read \n",__func__);
       
       OK = true;
       if (ECL_ENDIAN_FLIP) 
@@ -1653,14 +1647,25 @@ ecl_kw_type * ecl_kw_fscanf_alloc_parameter(FILE * stream , int size ) {
 
    Currently ONLY integer and float types are supported in ecl_type -
    any other types will lead to a hard failure.
+
+   The ecl_kw class has a quite deeply wired assumption that the
+   header is a string of length 8 (I hope/think that is an ECLIPSE
+   limitation), and the the class is not able to create ecl_kw
+   instances with header length of more than 8 characters - code will
+   abort hard if @kw is longer than 8 characters.
 */
 
 ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_type_enum ecl_type) {
   const int init_size = 10000;
   if (ecl_type == ECL_FLOAT_TYPE || ecl_type == ECL_INT_TYPE) {
     if (kw != NULL) {
+      
+      if (strlen(kw) > ECL_STRING_LENGTH) 
+        util_abort("%s: sorry - tried to create ecl_kw instance with header:%s - max length is eight characters\n",__func__ , kw);
+
       if (!ecl_kw_grdecl_fseek_kw( kw , true , false , stream ))
         return NULL;
+
     }
     {
       char header[9];
@@ -1670,6 +1675,14 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * k
         int    data_size      = init_size;
         char * data           = util_malloc( data_size * sizeof_ctype , __func__ ); 
         int    size           = 0;
+
+        /* 
+           If the header in the file is longer than 8 characters (and
+           not specified as input to the function). The header-reader
+           will read the 8 first characters, and then the code reading
+           data will immediately fail - the size will be set to 0 and
+           the function will return NULL overall.
+        */
         
         while (true) {
           int read_count = fscanf( stream , read_fmt , &data[ size * sizeof_ctype ]);

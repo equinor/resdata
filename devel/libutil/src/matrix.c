@@ -64,13 +64,15 @@ struct matrix_struct {
 
   int                     rows;           /* The number of rows in the matrix. */
   int                     columns;        /* The number of columns in the matrix. */
+  int                     alloc_rows;
+  int                     alloc_columns;
   int                     row_stride;     /* The distance in data between two conscutive row values. */
   int                     column_stride;  /* The distance in data between to consecutive column values. */
   
   /* 
      Observe that the stride is considered an internal property - if
      the matrix is stored to disk and then recovered the strides might
-     change, and alos matrix_alloc_copy() will not respect strides.
+     change, and also matrix_alloc_copy() will not respect strides.
   */
 };
 
@@ -94,10 +96,12 @@ static void matrix_init_header(matrix_type * matrix , int rows , int columns , i
     util_abort("%s: invalid stride combination \n",__func__);
   
   matrix->data_size     = 0;
-  matrix->rows          = rows;
-  matrix->columns       = columns;
+  matrix->alloc_rows    = rows;
+  matrix->alloc_columns = columns;
   matrix->row_stride    = row_stride;
   matrix->column_stride = column_stride;
+
+  matrix_full_size( matrix );
 }
 
 
@@ -393,6 +397,12 @@ void matrix_shrink_header(matrix_type * matrix , int rows , int columns) {
   if (columns <= matrix->columns)
     matrix->columns = columns;
 
+}
+
+
+void matrix_full_size( matrix_type * matrix ) {
+  matrix->rows    = matrix->alloc_rows;
+  matrix->columns = matrix->alloc_columns;
 }
 
 

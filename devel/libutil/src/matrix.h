@@ -94,6 +94,7 @@ void          matrix_set_column(matrix_type * matrix , const double * data , int
 void          matrix_set_many_on_column(matrix_type * matrix , int row_offset , int elements , const double * data , int column);
 void          matrix_ensure_rows(matrix_type * matrix, int rows, bool copy_content);
 void          matrix_shrink_header(matrix_type * matrix , int rows , int columns);
+void          matrix_full_size( matrix_type * matrix );
 int           matrix_get_rows(const matrix_type * matrix);
 int           matrix_get_columns(const matrix_type * matrix);
 int           matrix_get_row_stride(const matrix_type * matrix);
