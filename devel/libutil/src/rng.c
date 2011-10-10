@@ -21,6 +21,7 @@
 #include <rng.h>
 #include <stdlib.h>
 #include <mzran.h>
+#include <string.h>
 
 #define RNG_TYPE_ID 66154432
 
@@ -54,7 +55,7 @@ struct rng_struct {
 
 
 UTIL_SAFE_CAST_FUNCTION( rng , RNG_TYPE_ID)
-
+UTIL_IS_INSTANCE_FUNCTION( rng , RNG_TYPE_ID)
 
 rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
                        rng_free_ftype      * free_state ,
@@ -195,10 +196,33 @@ double rng_get_double( rng_type * rng ) {
 }
 
 int rng_get_int( rng_type * rng , int max_value ) {
+  rng_safe_cast( rng );
   return rng->forward( rng->state ) % max_value;
 }
 
 rng_alg_type  rng_get_type( const rng_type * rng ) {
   return rng->type;
+}
+
+/*****************************************************************/
+
+void rng_shuffle( rng_type * rng , char * data , size_t element_size , size_t num_elements) {
+  void * tmp = util_malloc( element_size , __func__);
+  for (int index1=0; index1 < num_elements; index1++) {
+    int index2 = rng_get_int( rng , num_elements );
+
+    size_t offset1 = index1 * element_size;
+    size_t offset2 = index2 * element_size;
+    
+    memcpy( tmp , &data[ offset1 ] , element_size );
+    memcpy( &data[ offset1 ] , &data[ offset2 ] , element_size );
+    memcpy( &data[ offset2 ] , tmp , element_size );
+  }
+  free( tmp );
+}
+
+
+void rng_shuffle_int( rng_type * rng , int * data , size_t num_elements) {
+  rng_shuffle( rng , (char *) data , sizeof * data , num_elements );
 }
 

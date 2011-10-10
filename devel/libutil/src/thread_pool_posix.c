@@ -296,22 +296,30 @@ static void * thread_pool_main_loop( void * arg ) {
    This function initializes a couple of counters, and starts up the
    dispatch thread. If the thread_pool should be reused after a join,
    this function must be called before adding new jobs.
-*/
-void thread_pool_restart( thread_pool_type * tp ) {
-  tp->join           = false;
-  tp->queue_index    = 0;
-  tp->queue_size     = 0;
-  {
-    int i;
-    for (i=0; i < tp->max_running; i++) {
-      tp->job_slots[i].run_count = 0;
-      tp->job_slots[i].running   = false;
-    }
-  }
 
-  /* Starting the dispatch thread. */
-  pthread_create( &tp->dispatch_thread , NULL , thread_pool_main_loop , tp );
-  tp->accepting_jobs = true;
+   The functions thread_pool_restart() and thread_pool_join() should
+   be joined up like open/close and malloc/free combinations.
+*/
+
+void thread_pool_restart( thread_pool_type * tp ) {
+  if (tp->accepting_jobs) 
+    util_abort("%s: fatal error - tried restart already running thread pool\n",__func__);
+  {
+    tp->join           = false;
+    tp->queue_index    = 0;
+    tp->queue_size     = 0;
+    {
+      int i;
+      for (i=0; i < tp->max_running; i++) {
+        tp->job_slots[i].run_count = 0;
+        tp->job_slots[i].running   = false;
+      }
+    }
+    
+    /* Starting the dispatch thread. */
+    pthread_create( &tp->dispatch_thread , NULL , thread_pool_main_loop , tp );
+    tp->accepting_jobs = true;
+  }
 }
 
 

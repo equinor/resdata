@@ -64,6 +64,7 @@ void          matrix_iset_safe(matrix_type * matrix , int i , int j, double valu
 void          matrix_iset(matrix_type * matrix , int i , int j, double value);
 double        matrix_iget(const matrix_type * matrix , int i , int j);
 void          matrix_iadd(matrix_type * matrix , int i , int j , double value);
+void          matrix_isub(matrix_type * matrix , int i , int j , double value);
 void          matrix_imul(matrix_type * matrix , int i , int j , double value);
 
 
@@ -114,6 +115,8 @@ double        matrix_row_column_dot_product(const matrix_type * m1 , int row1 , 
 matrix_type * matrix_alloc_view(double * data , int rows , int columns);
 matrix_type * matrix_alloc_transpose( const matrix_type * A);
 void          matrix_copy_row(matrix_type * target_matrix, const matrix_type * src_matrix , int target_row, int src_row);
+
+UTIL_SAFE_CAST_HEADER( matrix )
 
 #ifdef __cplusplus 
 }

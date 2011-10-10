@@ -54,9 +54,10 @@
   comes to using these functions - things can surely blow up!
 */
 
-
+#define MATRIX_TYPE_ID 712108
 
 struct matrix_struct {
+  UTIL_TYPE_ID_DECLARATION;
   char                  * name;           /* A name of the matrix - for printing - can be NULL. */
   double                * data;           /* The actual storage */
   bool                    data_owner;     /* is this matrix instance the owner of data? */
@@ -164,11 +165,14 @@ static void matrix_realloc_data__( matrix_type * matrix , bool safe_mode ) {
 }
 
 
+UTIL_SAFE_CAST_FUNCTION( matrix , MATRIX_TYPE_ID )
+
 /**
    The matrix objecty is NOT ready for use after this function. 
 */
 static matrix_type * matrix_alloc_empty( ) {
   matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
+  UTIL_TYPE_ID_INIT( matrix , MATRIX_TYPE_ID );
   matrix->name = NULL;
   return matrix;
 }
@@ -563,6 +567,11 @@ void  matrix_iadd(matrix_type * matrix , int i , int j , double value) {
 }
 
 
+void  matrix_isub(matrix_type * matrix , int i , int j , double value) {
+  matrix->data[ GET_INDEX(matrix , i,j) ] -= value;
+}
+
+
 void  matrix_imul(matrix_type * matrix , int i , int j , double value) {
   matrix->data[ GET_INDEX(matrix , i,j) ] *= value;
 }
@@ -911,37 +920,40 @@ static void * matrix_inplace_matmul_mt__(void * arg) {
    the following:
 
      1. The thread_pool is newly created, with the @start_queue
-        argument set to true.
+        argument set to false.
 
-     2. The thread_pool has just been restarted with
-        thread_pool_restart().
+     2. The thread_pool has been joined __without__ an interevening
+        call to thread_pool_restart().  
      
    If the thread_pool has not been correctly prepared, according to
-   this specification, nothing will happen.  
-*/ 	
+   this specification, it will be crash and burn.
+*/      
 
 void matrix_inplace_matmul_mt2(matrix_type * A, const matrix_type * B , thread_pool_type * thread_pool){
-  int num_threads             = thread_pool_get_max_running( thread_pool );
+  int num_threads  = thread_pool_get_max_running( thread_pool );
   arg_pack_type    ** arglist = util_malloc( num_threads * sizeof * arglist , __func__);
   int it;
-  int rows       = matrix_get_rows( A ) / num_threads;
-  int rows_mod   = matrix_get_rows( A ) % num_threads;
-  int row_offset = 0;
-
-  for (it = 0; it < num_threads; it++) {
-    int row_size;
-    arglist[it] = arg_pack_alloc();
-    row_size = rows;
-    if (it < rows_mod)
-      row_size += 1;
+  thread_pool_restart( thread_pool );
+  {
+    int rows       = matrix_get_rows( A ) / num_threads;
+    int rows_mod   = matrix_get_rows( A ) % num_threads;
+    int row_offset = 0;
     
-    arg_pack_append_int(arglist[it] , row_offset );
-    arg_pack_append_int(arglist[it] , row_size   );
-    arg_pack_append_ptr(arglist[it] , A );
-    arg_pack_append_ptr(arglist[it] , B );
-    
-    thread_pool_add_job( thread_pool , matrix_inplace_matmul_mt__ , arglist[it]);
-    row_offset += row_size;
+    for (it = 0; it < num_threads; it++) {
+      int row_size;
+      arglist[it] = arg_pack_alloc();
+      row_size = rows;
+      if (it < rows_mod)
+        row_size += 1;
+      
+      arg_pack_append_int(arglist[it] , row_offset );
+      arg_pack_append_int(arglist[it] , row_size   );
+      arg_pack_append_ptr(arglist[it] , A );
+      arg_pack_append_ptr(arglist[it] , B );
+      
+      thread_pool_add_job( thread_pool , matrix_inplace_matmul_mt__ , arglist[it]);
+      row_offset += row_size;
+    }
   }
   thread_pool_join( thread_pool );
   
@@ -951,14 +963,14 @@ void matrix_inplace_matmul_mt2(matrix_type * A, const matrix_type * B , thread_p
 } 
 
 void matrix_inplace_matmul_mt1(matrix_type * A, const matrix_type * B , int num_threads){ 
-  thread_pool_type  * thread_pool = thread_pool_alloc( num_threads , true );
+  thread_pool_type  * thread_pool = thread_pool_alloc( num_threads , false );
   matrix_inplace_matmul_mt2( A , B , thread_pool );
   thread_pool_free( thread_pool );
 }
 
 #else
 
-void matrix_inplace_matmul_mt(matrix_type * A, const matrix_type * B , int num_threads){ 
+void matrix_inplace_matmul_mt1(matrix_type * A, const matrix_type * B , int num_threads){ 
   matrix_inplace_matmul( A , B );
 }
 
