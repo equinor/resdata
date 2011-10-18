@@ -2288,6 +2288,12 @@ bool ecl_grid_cell_invalid3(const ecl_grid_type * ecl_grid , int i , int j , int
   return ecl_grid_cell_invalid1( ecl_grid , global_index );
 }
 
+double ecl_grid_cell_invalid1A(const ecl_grid_type * grid , int active_index) {
+  const int global_index = ecl_grid_get_global_index1A(grid , active_index);
+  return ecl_grid_cell_invalid1( grid , global_index );
+}
+
+
 
 /*****************************************************************/
 /* Functions for LGR query/lookup/... */

@@ -113,7 +113,7 @@ bool            ecl_grid_block_value_3d(ecl_grid_type * , double  , double  ,dou
 
 bool            ecl_grid_cell_invalid1(const ecl_grid_type * ecl_grid , int global_index);
 bool            ecl_grid_cell_invalid3(const ecl_grid_type * ecl_grid , int i , int j , int k);
-
+double          ecl_grid_cell_invalid1A(const ecl_grid_type * grid , int active_index);
 
 /* lgr related functions */
 const ecl_grid_type   * ecl_grid_get_cell_lgr3(const ecl_grid_type * grid , int i, int j , int k);
