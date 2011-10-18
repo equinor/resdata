@@ -155,6 +155,7 @@ const char    * ecl_util_file_type_name( ecl_file_enum file_type );
 char          * ecl_util_alloc_base_guess(const char *);
 int             ecl_util_filename_report_nr(const char *);
 ecl_file_enum   ecl_util_get_file_type(const char * , bool * , int * );
+ecl_file_enum   ecl_util_inspect_extension(const char * ext , bool *_fmt_file, int * _report_nr);
 char          * ecl_util_alloc_filename(const char * /* path */, const char * /* base */, ecl_file_enum , bool /* fmt_file */ , int /*report_nr*/);
 char          * ecl_util_alloc_exfilename(const char * /* path */, const char * /* base */, ecl_file_enum , bool /* fmt_file */ , int /*report_nr*/);
 void            ecl_util_memcpy_typed_data(void *, const void * , ecl_type_enum , ecl_type_enum , int );

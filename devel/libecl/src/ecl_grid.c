@@ -468,19 +468,19 @@ static double ecl_cell_max_y( const ecl_cell_type * cell ) {
 
 
 /**
-   the problem is that some extremely fucking stupid reservoir
-   engineers purpousely have made grids with invalid cells. typically
+   The problem is that some extremely fucking stupid reservoir
+   engineers purpousely have made grids with invalid cells. Typically
    the cells accomodating numerical aquifers are located at an utm
    position (0,0).
 
-   cells which have some pillars located in (0,0) and some cells
+   Cells which have some pillars located in (0,0) and some cells
    located among the rest of the grid become completely warped - with
    insane volumes, parts of the reservoir volume doubly covered, and
    so on.
    
-   to keep these cells out of the real-world (i.e. involving utm
+   To keep these cells out of the real-world (i.e. involving utm
    coordinates) computations they are marked as 'tainted' in this
-   function. the tainting procedure is completely heuristic, and
+   function. The tainting procedure is completely heuristic, and
    probably wrong.
 */
 
@@ -2274,6 +2274,18 @@ bool ecl_grid_cell_active1(const ecl_grid_type * ecl_grid , int global_index) {
 bool ecl_grid_cell_active3(const ecl_grid_type * ecl_grid, int i , int j , int k) {
   int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k);
   return ecl_grid_cell_active1( ecl_grid , global_index );
+}
+
+/*****************************************************************/
+
+bool ecl_grid_cell_invalid1(const ecl_grid_type * ecl_grid , int global_index) {
+  ecl_cell_type * cell = ecl_grid->cells[global_index];
+  return cell->tainted_geometry;
+}
+
+bool ecl_grid_cell_invalid3(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+  int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k);
+  return ecl_grid_cell_invalid1( ecl_grid , global_index );
 }
 
 

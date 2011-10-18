@@ -303,6 +303,17 @@ matrix_type * matrix_safe_alloc_copy(const matrix_type * src) {
   return matrix_alloc_copy__(src , true);
 }
 
+void matrix_copy_block( matrix_type * target_matrix , int target_row , int target_column , int rows , int columns,
+                        const matrix_type * src_matrix , int src_row , int src_column) {
+  matrix_type * target_view = matrix_alloc_shared(target_matrix , target_row , target_column , rows , columns);
+  matrix_type * src_view = matrix_alloc_shared( src_matrix , src_row , src_column , rows , columns);
+  matrix_assign( target_view , src_view );
+  matrix_free( target_view );
+  matrix_free( src_view );
+}
+                        
+
+
 /*****************************************************************/
 
 static bool matrix_resize__(matrix_type * matrix , int rows , int columns , bool copy_content , bool safe_mode) {

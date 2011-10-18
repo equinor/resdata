@@ -96,6 +96,7 @@ struct ecl_region_struct {
   bool                  global_index_list_valid;
   bool                  active_index_list_valid;
 
+  char                * name;                 /* User name attached to region will typically be NULL. */
   bool                  preselect;
   /******************************************************************/
   /* Grid properties */
@@ -143,6 +144,7 @@ ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool presel
   region->global_index_list  = int_vector_alloc(0 , 0);
   region->global_active_list = int_vector_alloc(0 , 0);
   region->preselect          = preselect;
+  region->name               = NULL;
   ecl_region_reset( region );  /* This MUST be called to ensure that xxx_valid is correctly initialized. */
   return region;
 }
@@ -165,6 +167,7 @@ void ecl_region_free( ecl_region_type * region ) {
   int_vector_free( region->active_index_list );
   int_vector_free( region->global_index_list );
   int_vector_free( region->global_active_list );
+  util_safe_free( region->name );
   free( region );
 }
 
@@ -1205,3 +1208,13 @@ void ecl_region_kw_copy( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , c
 }
 
 
+/*****************************************************************/
+
+void ecl_region_set_name( ecl_region_type * region , const char * name ) {
+  region->name = util_realloc_string_copy( region->name , name );
+}
+
+
+const char * ecl_region_get_name( const ecl_region_type * region ) {
+  return region->name;
+}

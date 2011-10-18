@@ -15,7 +15,7 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
    for more details. 
 */
-
+#include <math.h>
 #include <stdint.h>
 #include <util.h>
 #include <rng.h>
@@ -226,3 +226,12 @@ void rng_shuffle_int( rng_type * rng , int * data , size_t num_elements) {
   rng_shuffle( rng , (char *) data , sizeof * data , num_elements );
 }
 
+/*****************************************************************/
+
+double rng_std_normal( rng_type * rng ) {
+  const double pi = 3.141592653589;
+  double R1 = rng_get_double( rng );
+  double R2 = rng_get_double( rng );
+  
+  return sqrt(-2.0 * log(R1)) * cos(2.0 * pi * R2);
+}

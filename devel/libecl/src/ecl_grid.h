@@ -111,6 +111,8 @@ int             ecl_grid_get_block_count2d(const ecl_grid_type * ecl_grid , int 
 bool            ecl_grid_block_value_2d(ecl_grid_type * , double  , double  ,double );
 bool            ecl_grid_block_value_3d(ecl_grid_type * , double  , double  ,double , double);
 
+bool            ecl_grid_cell_invalid1(const ecl_grid_type * ecl_grid , int global_index);
+bool            ecl_grid_cell_invalid3(const ecl_grid_type * ecl_grid , int i , int j , int k);
 
 
 /* lgr related functions */

@@ -195,7 +195,9 @@ ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char *
   stringlist_type * summary_file_list = stringlist_alloc_new();
 
   util_alloc_file_components( input_file , &path , &base , &ext);
-  /* Should add ext to the base if ext does not represent a valid ECLIPSE extension. */
+  
+  
+  /* Should add ext to the base if ext does not represent a valid ECLIPSE extension ?? */
   if (ecl_util_alloc_summary_files( path , base , ext , &header_file , summary_file_list ))
     ecl_sum = ecl_sum_fread_alloc__( header_file , summary_file_list , key_join_string , include_restart);
 

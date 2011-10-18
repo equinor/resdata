@@ -115,6 +115,8 @@ double        matrix_row_column_dot_product(const matrix_type * m1 , int row1 , 
 matrix_type * matrix_alloc_view(double * data , int rows , int columns);
 matrix_type * matrix_alloc_transpose( const matrix_type * A);
 void          matrix_copy_row(matrix_type * target_matrix, const matrix_type * src_matrix , int target_row, int src_row);
+void          matrix_copy_block( matrix_type * target_matrix , int target_row , int target_column , int rows , int columns,
+                                 const matrix_type * src_matrix , int src_row , int src_column);
 
 UTIL_SAFE_CAST_HEADER( matrix )
 

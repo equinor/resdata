@@ -63,7 +63,7 @@ unsigned int    rng_forward( rng_type * rng );
 double          rng_get_double( rng_type * rng );
 int             rng_get_int( rng_type * rng , int max_value );
 
-
+double          rng_std_normal( rng_type * rng );
 void            rng_shuffle_int( rng_type * rng , int * data , size_t num_elements);
 void            rng_shuffle( rng_type * rng , char * data , size_t element_size , size_t num_elements);
 
