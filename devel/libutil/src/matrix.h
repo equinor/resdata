@@ -63,6 +63,7 @@ void          matrix_transpose(const matrix_type * A , matrix_type * T);
 void          matrix_iset_safe(matrix_type * matrix , int i , int j, double value);
 void          matrix_iset(matrix_type * matrix , int i , int j, double value);
 double        matrix_iget(const matrix_type * matrix , int i , int j);
+double        matrix_iget_safe(const matrix_type * matrix , int i , int j);
 void          matrix_iadd(matrix_type * matrix , int i , int j , double value);
 void          matrix_isub(matrix_type * matrix , int i , int j , double value);
 void          matrix_imul(matrix_type * matrix , int i , int j , double value);
@@ -118,6 +119,7 @@ void          matrix_copy_row(matrix_type * target_matrix, const matrix_type * s
 void          matrix_copy_block( matrix_type * target_matrix , int target_row , int target_column , int rows , int columns,
                                  const matrix_type * src_matrix , int src_row , int src_column);
 
+void          matrix_scalar_set( matrix_type * matrix , double value);
 UTIL_SAFE_CAST_HEADER( matrix )
 
 #ifdef __cplusplus 

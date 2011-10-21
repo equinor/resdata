@@ -50,14 +50,22 @@
 #include <lookup_table.h>
 
 
-void test( const char * s1 , const char *s2) {
-  int cmp = util_strcmp_int( s1 , s2 );
-  int scmp = strcmp( s1 , s2 );
-  printf(" cmp(%s,%s) = %d   strcmp(%s,%s) = %d\n",s1,s2,cmp,s1,s2,scmp);
-}
 
 int main(int argc , char ** argv) {
-  test("1.00123000","1.00123");
+  matrix_type * m1 = matrix_alloc(10,10);
+  matrix_type * m2 = matrix_alloc(5,5);
+
+  matrix_scalar_set( m1 , 1 );
+  matrix_scalar_set( m2 , 2 );
+
+  matrix_pretty_fprint( m1 , "m1" , " %1.0f " , stdout );
+  printf("\n\n");
+  matrix_pretty_fprint( m2 , "m2" , " %1.0f " , stdout );
+
+  printf("\n\n");
+  matrix_copy_block( m1 , 2 , 2 , 3 , 3 , m2 , 0 , 0 );
+  matrix_pretty_fprint( m1 , "m1" , " %1.0f " , stdout );
+
 }
 
 

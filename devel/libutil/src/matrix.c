@@ -215,7 +215,12 @@ void matrix_set_name( matrix_type * matrix , const char * name) {
 
 matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column , int rows , int columns) {
   if (((row + rows) > src->rows) || ((column + columns) > src->columns))
-    util_abort("%s: Invalid matrix subsection \n",__func__);
+    util_abort("%s: Invalid matrix subsection src:[%d,%d]  Offset:[%d,%d]  SubSize:[%d,%d] \n",
+               __func__,
+               src->rows , src->columns,
+               row,column,
+               rows,columns);
+  
   {
     matrix_type * matrix = matrix_alloc_empty();
     
@@ -306,7 +311,7 @@ matrix_type * matrix_safe_alloc_copy(const matrix_type * src) {
 void matrix_copy_block( matrix_type * target_matrix , int target_row , int target_column , int rows , int columns,
                         const matrix_type * src_matrix , int src_row , int src_column) {
   matrix_type * target_view = matrix_alloc_shared(target_matrix , target_row , target_column , rows , columns);
-  matrix_type * src_view = matrix_alloc_shared( src_matrix , src_row , src_column , rows , columns);
+  matrix_type * src_view    = matrix_alloc_shared( src_matrix , src_row , src_column , rows , columns);
   matrix_assign( target_view , src_view );
   matrix_free( target_view );
   matrix_free( src_view );
@@ -570,6 +575,12 @@ void matrix_iset_safe(matrix_type * matrix , int i , int j, double value) {
 
 double matrix_iget(const matrix_type * matrix , int i , int j) {
   return matrix->data[ GET_INDEX(matrix , i, j) ];
+}
+
+
+double matrix_iget_safe(const matrix_type * matrix , int i , int j) {
+  matrix_assert_ij( matrix , i , j );
+  return matrix_iget( matrix , i , j );
 }
 
 
@@ -1244,6 +1255,13 @@ void matrix_diag_set_scalar(matrix_type * matrix , double value) {
     util_abort("%s: size mismatch \n",__func__);
 }
 
+
+void matrix_scalar_set( matrix_type * matrix , double value) {
+  int i,j;
+  for (j=0; j < matrix->columns; j++)
+    for (i=0; i < matrix->rows; i++)
+      matrix->data[ GET_INDEX(matrix , i , j) ] = value;
+}
 
 
 
