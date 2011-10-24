@@ -31,6 +31,8 @@ extern "C" {
 
 typedef struct ecl_kw_struct      ecl_kw_type;
 
+void           ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , char * data);
+void           ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio);
 void           ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
 ecl_type_enum  ecl_kw_get_type(const ecl_kw_type *);
 const char   * ecl_kw_get_header8(const ecl_kw_type *); 
@@ -54,7 +56,6 @@ void           ecl_kw_fread(ecl_kw_type * , fortio_type * );
 ecl_kw_type *  ecl_kw_fscanf_alloc_grdecl_data(FILE * , int , ecl_type_enum );
 void           ecl_kw_fprintf_grdecl(const ecl_kw_type *  , FILE * stream);
 ecl_kw_type *  ecl_kw_fread_alloc(fortio_type *);
-ecl_kw_type *  ecl_kw_fscanf_alloc_parameter(FILE * , int );
 void           ecl_kw_free_data(ecl_kw_type *);
 void           ecl_kw_free(ecl_kw_type *);
 void           ecl_kw_free__(void *);
@@ -201,6 +202,7 @@ ECL_KW_MAX_MIN_HEADER( float )
 ECL_KW_MAX_MIN_HEADER( double )
 #undef ECL_KW_MAX_MIN_HEADER
 
+#include <ecl_kw_grdecl.h>
 
 #ifdef __cplusplus
 }

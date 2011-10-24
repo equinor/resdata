@@ -281,7 +281,8 @@ void * ecl_kw_alloc_data_copy(const ecl_kw_type * ecl_kw) {
 
 
 void ecl_kw_set_memcpy_data(ecl_kw_type *ecl_kw , const void *src) {
-  memcpy(ecl_kw->data , src , ecl_kw->size * ecl_kw->sizeof_ctype);
+  if (src != NULL)
+    memcpy(ecl_kw->data , src , ecl_kw->size * ecl_kw->sizeof_ctype);
 }
 
 
@@ -375,14 +376,16 @@ static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int s
 
 
 /**
-   The data is copied from the input argument to the ecl_kw. 
+   The data is copied from the input argument to the ecl_kw; data can be NULL. 
 */
 ecl_kw_type * ecl_kw_alloc_new(const char * header ,  int size, ecl_type_enum ecl_type , const void * data) {
   ecl_kw_type *ecl_kw;
   ecl_kw = ecl_kw_alloc_empty();
   ecl_kw_initialize(ecl_kw , header , size , ecl_type);
-  ecl_kw_alloc_data(ecl_kw);
-  ecl_kw_set_memcpy_data(ecl_kw , data);
+  if (data != NULL) {
+    ecl_kw_alloc_data(ecl_kw);
+    ecl_kw_set_memcpy_data(ecl_kw , data);
+  }
   return ecl_kw;
 }
 
@@ -1129,7 +1132,8 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
   
   Observe that the GRDECL files are exteremly weakly structured, it is
   therefor veeeery easy to fool this function with a malformed GRDECL
-  file. The current implementation just does string-search for 'kw'.
+  file. The current implementation just does string-search for 'kw';
+  i.e. comments is enough to wreak havock.
 */
 
 bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error , FILE * stream) {
@@ -1157,6 +1161,12 @@ bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error 
   return false;
 }
 
+
+void ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , char * data) {
+  if (!ecl_kw->shared_data)
+    util_safe_free( ecl_kw->data );
+  ecl_kw->data = data;
+}
 
 
 /**
@@ -1386,7 +1396,7 @@ static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * f
 }
 
 
-static void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio) {
+void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio) {
   ecl_kw_type *ecl_kw = (ecl_kw_type *) _ecl_kw;
   bool  fmt_file      = fortio_fmt_file( fortio );
   
@@ -1580,139 +1590,6 @@ void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
 }
 
 
-void ecl_kw_fprintf_grdecl(const ecl_kw_type * ecl_kw , FILE * stream) {
-  fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , true , stream);   /* Endian flip should *NOT* be used */
-  fprintf(stream,"%s\n" , ecl_kw_get_header8(ecl_kw));
-  ecl_kw_fwrite_data(ecl_kw , fortio);
-  fprintf(stream,"\n/\n"); /* Unsure about the leading newline ?? */
-  fortio_free_FILE_wrapper( fortio );
-}
-
-
-/**
-   These files are tricky to load - if there is something wrong
-   it is nearly impossible to detect.
-*/
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_type_enum ecl_type) {
-  char buffer[9];
-  
-  ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
-  ecl_kw->ecl_type     = ecl_type;
-  ecl_kw->size         = size;
-  ecl_kw->sizeof_ctype = ecl_util_get_sizeof_ctype(ecl_kw->ecl_type);
-  ecl_kw_alloc_data(ecl_kw);
-  
-  if (fscanf(stream , "%s" , buffer) == 1)       /* Reading the header name */
-    ecl_kw_set_header_name(ecl_kw , buffer);
-  else
-    util_abort("%s: could not read keyword header from stream - at end of file?\n",__func__);
-
-  {
-    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL ,true , true , stream);  /* The endian flip is not used. */
-    ecl_kw_fread_data(ecl_kw , fortio);
-    
-    if (fscanf(stream , "%s" , buffer) == 0)
-      util_abort("%s: could not read terminating \'/\' from stream - malformed file?\n",__func__);
-    
-    if (buffer[0] != '/') {
-      fprintf(stderr,"\n");
-      fprintf(stderr,"Have read:%d items \n",size);
-      fprintf(stderr,"File is malformed for some reason ...\n");
-      fprintf(stderr,"Looking at: %s \n",buffer);
-      fprintf(stderr,"Current buffer position: %ld \n", ftell(stream));
-      util_abort("%s: Did not find '/' at end of %s - size mismatch / malformed file ??\n",__func__ , ecl_kw->header8);
-    }
-    fortio_free_FILE_wrapper(fortio);
-  }
-
-  return ecl_kw;
-}
-
-
-ecl_kw_type * ecl_kw_fscanf_alloc_parameter(FILE * stream , int size ) {
-  return ecl_kw_fscanf_alloc_grdecl_data(stream , size , ECL_FLOAT_TYPE);
-}
-
-
-/**
-   This function will load a keyword from a grdecl file, and return
-   it. If input argument @kw is NULL it will just try loading from the
-   current position, otherwise it will start with seeking to find @kw
-   first.
-
-   Observe that the grdecl files are very weakly structured, so the
-   loading of ecl_kw instances from a grdecl file can go wrong in many
-   ways; if the loading fails the function returns NULL.
-
-   The main loop is extremely simple - it is just repeated calls to
-   fscanf() to read one-number-at-atime; when that reading fails that
-   is interpreted as the end of the keyword.
-
-   Currently ONLY integer and float types are supported in ecl_type -
-   any other types will lead to a hard failure.
-
-   The ecl_kw class has a quite deeply wired assumption that the
-   header is a string of length 8 (I hope/think that is an ECLIPSE
-   limitation), and the the class is not able to create ecl_kw
-   instances with header length of more than 8 characters - code will
-   abort hard if @kw is longer than 8 characters.
-*/
-
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_type_enum ecl_type) {
-  const int init_size = 10000;
-  if (ecl_type == ECL_FLOAT_TYPE || ecl_type == ECL_INT_TYPE) {
-    if (kw != NULL) {
-      
-      if (strlen(kw) > ECL_STRING_LENGTH) 
-        util_abort("%s: sorry - tried to create ecl_kw instance with header:%s - max length is eight characters\n",__func__ , kw);
-
-      if (!ecl_kw_grdecl_fseek_kw( kw , true , false , stream ))
-        return NULL;
-
-    }
-    {
-      char header[9];
-      if (fscanf( stream , "%8s" , header) == 1) {
-        const char * read_fmt = get_read_fmt( ecl_type );
-        int    sizeof_ctype   = ecl_util_get_sizeof_ctype( ecl_type );
-        int    data_size      = init_size;
-        char * data           = util_malloc( data_size * sizeof_ctype , __func__ ); 
-        int    size           = 0;
-
-        /* 
-           If the header in the file is longer than 8 characters (and
-           not specified as input to the function). The header-reader
-           will read the 8 first characters, and then the code reading
-           data will immediately fail - the size will be set to 0 and
-           the function will return NULL overall.
-        */
-        
-        while (true) {
-          int read_count = fscanf( stream , read_fmt , &data[ size * sizeof_ctype ]);
-          if (read_count == 1) {
-            size++;
-            if (size == data_size) {
-              data_size *= 2;
-              data       = util_realloc( data , data_size * sizeof_ctype , __func__ );
-            }
-          } else break;
-        }
-        { 
-          ecl_kw_type * ecl_kw = NULL;
-          
-          if (size > 0) 
-            ecl_kw = ecl_kw_alloc_new( header , size , ecl_type , data );
-          
-          free( data );
-          return ecl_kw;
-        }
-      } else
-        return NULL; /* Could not read header */
-    }
-  } else
-    util_abort("%s: sorry - only FLOAT and INT supported");
-  return NULL;
-}
 
 
 

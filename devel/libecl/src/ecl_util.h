@@ -142,6 +142,8 @@ typedef enum {
 // For unformatted files:
 #define ECL_BOOL_TRUE_INT         -1   // Binary representation: 11111111  11111111  11111111  1111111
 #define ECL_BOOL_FALSE_INT         0   // Binary representation: 00000000  00000000  00000000  0000000     
+#define ECL_COMMENT               "--"
+#define ECL_DATA_TERMINATION      "/"
 
 
 int              ecl_util_get_sizeof_ctype(ecl_type_enum );
