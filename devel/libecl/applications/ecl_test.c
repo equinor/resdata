@@ -31,8 +31,9 @@ void install_SIGNALS(void) {
 int main (int argc, char **argv) {
   install_SIGNALS();
   {
-    FILE * stream = util_fopen("../src/Perm_21_10" , "r");
-    ecl_kw_type * kw = ecl_kw_fscanf_alloc_grdecl_dynamic( stream , "PERMX" , ECL_FLOAT_TYPE );
+    FILE * stream = util_fopen("/private/joaho/ERT/NR/python/ctypes/test/data/eclipse/Petrel/GRID.GRDECL" , "r");
+    ecl_kw_type * kw = ecl_kw_fscanf_alloc_grdecl_dynamic( stream , "ACTNUM" , ECL_INT_TYPE );
+    ecl_kw_free( kw );
     fclose( stream );
   }
 }

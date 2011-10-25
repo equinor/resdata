@@ -1125,41 +1125,6 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
 
 
 
-/** 
-  This function will search through a GRDECL file to look for the
-  'kw'; input variables and return vales are similar to
-  ecl_kw_fseek_kw(). 
-  
-  Observe that the GRDECL files are exteremly weakly structured, it is
-  therefor veeeery easy to fool this function with a malformed GRDECL
-  file. The current implementation just does string-search for 'kw';
-  i.e. comments is enough to wreak havock.
-*/
-
-bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error , FILE * stream) {
-  if (util_fseek_string(stream , kw , false , true))
-    return true;       /* OK - we found the kw between current file pos and EOF. */
-  else if (rewind) {
-    long int init_pos = ftell(stream);
-    
-    fseek(stream , 0L , SEEK_SET);
-    if (util_fseek_string(stream , kw , false , true)) /* Try again from the beginning of the file. */
-      return true;                              
-    else
-      fseek(stream , init_pos , SEEK_SET);              /* Could not find it - reposition to initial position. */
-  }
-
-  /* OK: If we are here - that means that we failed to find the kw. */
-  if (abort_on_error) {
-    char * filename = "????";
-#ifdef HAVE_FORK
-    filename = util_alloc_filename_from_stream( stream );
-#endif
-    util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , filename);
-  }
-
-  return false;
-}
 
 
 void ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , char * data) {

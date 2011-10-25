@@ -16,8 +16,9 @@
    for more details. 
 */
 
-#include <util.h>
 #include <string.h>
+#include <ctype.h>
+#include <util.h>
 #include <ecl_kw.h>
 #include <ecl_util.h>
 
@@ -48,6 +49,127 @@
 */
 
 
+
+/** 
+  This function will search through a GRDECL file to look for the
+  'kw'; input variables and return vales are similar to
+  ecl_kw_fseek_kw(). 
+  
+  Observe that the GRDECL files are exteremly weakly structured, it is
+  therefor veeeery easy to fool this function with a malformed GRDECL
+  file. The current implementation just does string-search for 'kw';
+  i.e. comments is enough to wreak havock.
+*/
+
+
+static bool ecl_kw_grdecl_fseek_kw__(const char * kw , FILE * stream) {
+  const int newline_char = '\n';
+  long int init_pos = ftell(stream);
+  if (util_fseek_string(stream , kw , false , true)) {
+    /*
+      OK the keyword is found in the file; now we must verify that:
+
+      1. It is terminated with a blank, i.e. when searching for
+         'COORD' we do not want a positiv on 'COORDSYS'.
+
+      2. That the keyword indeed starts with a isspace() character; we
+         are interested in the 'SYS' in 'COORDSYS'. 
+
+      3. That the current location is not a comment section.
+    */
+    long int kw_pos = ftell( stream );
+    bool valid_kw = false;
+    int c;
+
+    fseek( stream , strlen(kw) , SEEK_CUR);    // Seek to end of kw
+    c = fgetc( stream );                       // Read one character  
+    fseek( stream , kw_pos , SEEK_SET );       // Seek back to beginning of kw
+
+    if (isspace(c)) {
+      if (kw_pos > 0) {
+        fseek( stream , kw_pos - 1 , SEEK_SET);
+        c = fgetc( stream );
+        if (isspace(c))
+          // OK - we have verifed that the kw string we have found both
+          // starts and ends with a isspace() character.
+          valid_kw = true;
+      } else
+        valid_kw = true;  // kw is at the very beginning of the file.
+    } 
+    
+
+    if (valid_kw) {
+      // OK - the kw is validly terminated with a space/tab/newline; now
+      // we must verify that it is not in a comment section.
+      fseek( stream , 1 , SEEK_CUR );
+      while (true) {
+        fseek( stream , -2 , SEEK_CUR );
+        c = fgetc( stream );
+        if ((c == newline_char) || (ftell(stream) == 0)) 
+          break;
+      }
+      {
+        // We have gone as far back as necessary.
+        int line_length = kw_pos - ftell( stream );
+        char * line = util_malloc(line_length + 1  , __func__);
+        
+        fread( stream , sizeof * line , line_length , stream);
+        line[line_length] = '\0';
+        
+        if (strstr( line , ECL_COMMENT_STRING) == NULL) 
+          // We are not in a commen section.  
+          valid_kw = true;
+        else
+          valid_kw = false;
+        
+        free( line );
+      }
+    } else
+      valid_kw = false;
+    
+    if (valid_kw) 
+      return true;
+    else {
+      fseek( stream , strlen(kw) , SEEK_CUR );  // Skip over the kw so we don't find it again.
+      if (ecl_kw_grdecl_fseek_kw__(kw , stream))
+        return true;
+      else {
+        fseek( stream , init_pos , SEEK_SET );
+        return false;
+      }
+    } 
+  } else 
+    return false;
+}
+
+bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error , FILE * stream) {
+  if (ecl_kw_grdecl_fseek_kw__(kw , stream))
+    return true;       /* OK - we found the kw between current file pos and EOF. */
+  else if (rewind) {
+    long int init_pos = ftell(stream);
+    
+    fseek(stream , 0L , SEEK_SET);
+    if (ecl_kw_grdecl_fseek_kw__( kw , stream )) /* Try again from the beginning of the file. */
+      return true;                              
+    else
+      fseek(stream , init_pos , SEEK_SET);              /* Could not find it - reposition to initial position. */
+  }
+
+  /* OK: If we are here - that means that we failed to find the kw. */
+  if (abort_on_error) {
+    char * filename = "????";
+#ifdef HAVE_FORK
+    filename = util_alloc_filename_from_stream( stream );
+#endif
+    util_abort("%s: failed to locate keyword:%s in file:%s - aborting \n",__func__ , kw , filename);
+  }
+
+  return false;
+}
+
+
+
+
 /**
    Observe that this function does not preserve the '*' structure
    which (might) have been used in the input.  
@@ -73,7 +195,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , ecl_type_enum ecl_
 
   while (true) {
     if (fscanf(stream , "%32s" , buffer) == 1) {
-      if (strcmp(buffer , ECL_COMMENT) == 0) {
+      if (strcmp(buffer , ECL_COMMENT_STRING) == 0) {
         // We have read a comment marker - just read up to the end of line.
         char c;
         while (true) {
@@ -122,7 +244,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , ecl_type_enum ecl_
         
         
         if (data_index + multiplier >= data_size) {
-          data_size *= 2;
+          data_size  = 2*(data_index + multiplier);
           data       = util_realloc( data , sizeof_ctype * data_size * sizeof * data , __func__);
         }
         
@@ -134,6 +256,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , ecl_type_enum ecl_
     } else 
       break;
   }
+  free( buffer );
   *kw_size = data_index;
   data = util_realloc( data , sizeof_ctype * data_index * sizeof * data , __func__);
   return data;
