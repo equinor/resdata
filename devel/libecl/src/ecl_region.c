@@ -963,6 +963,12 @@ void ecl_region_deselect_in_zcylinder( ecl_region_type * region , double x0 , do
 
 /*****************************************************************/
 
+
+/**
+   Select or deselect points based on their distance to the plane
+   specified by normal vector @n and point @p.  
+*/
+
 static void ecl_region_plane_select__( ecl_region_type * region, const double n[3] , const double p[3], bool select_above , bool select){ 
   const double a = n[0];
   const double b = n[1];
@@ -1002,6 +1008,98 @@ void ecl_region_deselect_above_plane( ecl_region_type * region, const double n[3
 
 void ecl_region_deselect_below_plane( ecl_region_type * region, const double n[3] , const double p[3]) {
   ecl_region_plane_select__( region , n , p , false , false );
+}
+
+/*****************************************************************/
+
+static bool between(double v1, double v2 , double v) {
+  return ((( v > v1) && (v < v2)) || (( v < v1) && (v > v2)));
+}
+
+static bool inside_polygon(const double * xlist , const double * ylist , int num_points , double x0 , double y0) {
+  bool inside = false;
+  int point_num;
+  double y = y0;
+  
+  for (point_num = 0; point_num < num_points; point_num++) {
+    int next_point = ((point_num + 1) % num_points);
+    double x1 = xlist[point_num];  double y1 = ylist[point_num];
+    double x2 = xlist[next_point]; double y2 = ylist[next_point];
+    
+    if (between(x1,x2,x0)) {
+      double yc = (y2 - y1)/(x2 - x1) * (x0 - x1) + y1;  
+      if (y < yc) {
+        y = yc;
+        inside = !inside;
+      }
+    }
+  }
+  return inside;
+}
+
+
+/**
+   When it comes to depth the polygon select function works as
+   follows:
+
+     1. The defining polygon is layed out at the top of the reservoir.
+     
+     2. The set {(i,j,0)} of cells in the top layer inside the polygon
+        is selected by checking the polygon perimeter.
+
+     3. The set {(i,j,0)} is extended to all k vertically. This implies that:
+
+        * If the pillars of the grid are not vertical the selection
+          polygon will effectively qbe translated as a function of
+          depth.
+
+        * If the pillars are not parallell the selection polygon will
+          effectively change in size.
+*/
+
+
+static void ecl_region_polygon_select__( ecl_region_type * region , 
+                                         const double * xlist , const double * ylist , 
+                                         int num_points,
+                                         bool select_inside , bool select) {
+
+  const int define_k = 0;                  // The k-level where the polygon is checked.
+  const int k1       = 0;                  // Selection range in k
+  const int k2       = region->grid_nz;    
+
+  for (int i=0; i < region->grid_nx; i++) {
+    for (int j=0; j < region->grid_ny; j++) {
+      double x,y,z;
+      bool inside;
+      int global_index = ecl_grid_get_global_index3( region->parent_grid , i , j , define_k);
+
+      ecl_grid_get_xyz1( region->parent_grid , global_index , &x , &y , &z);
+      inside = inside_polygon( xlist , ylist , num_points , x , y );
+
+      if (select_inside == inside) {
+        for (int k=k1; k < k2; k++) {
+          global_index = ecl_grid_get_global_index3( region->parent_grid , i , j , k);
+          region->active_mask[ global_index ] = select;
+        }
+      }
+    }
+  }
+}
+
+void ecl_region_select_inside_polygon( ecl_region_type * region , const double * xlist , const double * ylist , int num_points) {
+  ecl_region_polygon_select__( region , xlist , ylist , num_points , true , true );
+}
+
+void ecl_region_deselect_inside_polygon( ecl_region_type * region , const double * xlist , const double * ylist, int num_points) {
+  ecl_region_polygon_select__( region , xlist , ylist , num_points , true , false );
+}
+
+void ecl_region_select_outside_polygon( ecl_region_type * region , const double * xlist , const double * ylist , int num_points) {
+  ecl_region_polygon_select__( region , xlist , ylist , num_points , false , true );
+}
+
+void ecl_region_deselect_outside_polygon( ecl_region_type * region , const double * xlist , const double * ylist , int num_points) {
+  ecl_region_polygon_select__( region , xlist , ylist , num_points , false , false );
 }
 
 /*****************************************************************/

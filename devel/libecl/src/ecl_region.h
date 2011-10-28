@@ -133,6 +133,11 @@ void              ecl_region_select_below_plane( ecl_region_type * region, const
 void              ecl_region_deselect_above_plane( ecl_region_type * region, const double n[3] , const double p[3]);
 void              ecl_region_deselect_below_plane( ecl_region_type * region, const double n[3] , const double p[3]);
 
+void              ecl_region_select_inside_polygon( ecl_region_type * region , const double * xlist , const double * ylist ,    int num_points);
+void              ecl_region_deselect_inside_polygon( ecl_region_type * region , const double * xlist , const double * ylist ,  int num_points );
+void              ecl_region_select_outside_polygon( ecl_region_type * region , const double * xlist , const double * ylist ,   int num_points );
+void              ecl_region_deselect_outside_polygon( ecl_region_type * region , const double * xlist , const double * ylist , int num_points );
+
 /*****************************************************************/
 /* Functions to manipulate ecl_kw instances . */
 

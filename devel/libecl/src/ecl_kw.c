@@ -2158,6 +2158,28 @@ void ecl_kw_element_sum(const ecl_kw_type * ecl_kw , void * _sum) {
 #undef KW_SUM
 
 
+double ecl_kw_element_sum_float( const ecl_kw_type * ecl_kw ) {
+  float float_sum;
+  double double_sum;
+  void * sum_ptr = NULL;
+
+  if (ecl_kw->ecl_type == ECL_DOUBLE_TYPE)
+    sum_ptr = &double_sum;
+  else if (ecl_kw->ecl_type == ECL_FLOAT_TYPE)
+    sum_ptr = &float_sum;
+  else
+    util_abort("%s: invalid type: \n",__func__);
+  
+  ecl_kw_element_sum( ecl_kw , sum_ptr );
+  
+  if (ecl_kw->ecl_type == ECL_DOUBLE_TYPE)
+    return double_sum;
+  else if (ecl_kw->ecl_type == ECL_FLOAT_TYPE)
+    return float_sum;
+  else
+    return 0;
+}
+
 /*****************************************************************/
 
 

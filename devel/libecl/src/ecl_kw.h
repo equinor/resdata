@@ -97,10 +97,11 @@ void ecl_kw_inplace_sub(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_mul(ecl_kw_type * , const ecl_kw_type * );
 void ecl_kw_inplace_div(ecl_kw_type * , const ecl_kw_type * );
 
-void   ecl_kw_inplace_inv(ecl_kw_type * my_kw);
-void   ecl_kw_element_sum(const ecl_kw_type * , void * );
-void   ecl_kw_max_min(const ecl_kw_type * , void * , void *);
-void * ecl_kw_get_void_ptr(const ecl_kw_type * ecl_kw);
+double     ecl_kw_element_sum_float( const ecl_kw_type * ecl_kw );
+void       ecl_kw_inplace_inv(ecl_kw_type * my_kw);
+void       ecl_kw_element_sum(const ecl_kw_type * , void * );
+void       ecl_kw_max_min(const ecl_kw_type * , void * , void *);
+void     * ecl_kw_get_void_ptr(const ecl_kw_type * ecl_kw);
 
 double   ecl_kw_iget_as_double(const ecl_kw_type *  , int );
 

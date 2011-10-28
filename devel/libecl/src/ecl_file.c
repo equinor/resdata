@@ -172,7 +172,7 @@ struct ecl_file_struct {
 
 
 static file_map_type * file_map_alloc( fortio_type * fortio , bool owner ) {
-  file_map_type * file_map = util_malloc( sizeof * file_map ,__func__);
+  file_map_type * file_map     = util_malloc( sizeof * file_map ,__func__);
   file_map->kw_list            = vector_alloc_new();
   file_map->kw_index           = hash_alloc();
   file_map->distinct_kw        = stringlist_alloc_new();
