@@ -346,6 +346,7 @@ time_t   util_fread_time_t(FILE * stream);
 int      util_fread_int(FILE * );
 long     util_fread_long(FILE * );
 bool     util_fread_bool(FILE * );
+double   util_fread_double(FILE * stream);
 void     util_fwrite_int   (int    , FILE * );
 void     util_fwrite_long  (long    , FILE * );
 void     util_fwrite_bool  (bool    , FILE * );

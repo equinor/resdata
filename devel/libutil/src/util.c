@@ -3602,6 +3602,11 @@ void util_fread_char_vector(char * ptr , int size , FILE * stream , const char *
 }
 
 
+double util_fread_double(FILE * stream) {
+  double file_value;
+  UTIL_FREAD_SCALAR(file_value , stream);
+  return file_value;
+}
 
 int util_fread_int(FILE * stream) {
   int file_value;
