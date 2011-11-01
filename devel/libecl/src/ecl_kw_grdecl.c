@@ -157,7 +157,7 @@ bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error 
     if (ecl_kw_grdecl_fseek_kw__( kw , stream )) /* Try again from the beginning of the file. */
       return true;                              
     else
-      fseek(stream , init_pos , SEEK_SET);              /* Could not find it - reposition to initial position. */
+      fseek(stream , init_pos , SEEK_SET);       /* Could not find it - reposition to initial position. */
   }
 
   /* OK: If we are here - that means that we failed to find the kw. */
