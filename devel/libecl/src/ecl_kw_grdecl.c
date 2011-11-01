@@ -85,6 +85,8 @@ static bool ecl_kw_grdecl_fseek_kw__(const char * kw , FILE * stream) {
     c = fgetc( stream );                       // Read one character  
     fseek( stream , kw_pos , SEEK_SET );       // Seek back to beginning of kw
 
+    printf("kw_pos:%d \n",kw_pos);
+
     if (isspace(c)) {
       if (kw_pos > 0) {
         fseek( stream , kw_pos - 1 , SEEK_SET);
@@ -101,28 +103,31 @@ static bool ecl_kw_grdecl_fseek_kw__(const char * kw , FILE * stream) {
     if (valid_kw) {
       // OK - the kw is validly terminated with a space/tab/newline; now
       // we must verify that it is not in a comment section.
-      fseek( stream , 1 , SEEK_CUR );
-      while (true) {
-        fseek( stream , -2 , SEEK_CUR );
-        c = fgetc( stream );
-        if ((c == newline_char) || (ftell(stream) == 0)) 
-          break;
-      }
-      {
-        // We have gone as far back as necessary.
-        int line_length = kw_pos - ftell( stream );
-        char * line = util_malloc(line_length + 1  , __func__);
-        
-        fread( stream , sizeof * line , line_length , stream);
-        line[line_length] = '\0';
-        
-        if (strstr( line , ECL_COMMENT_STRING) == NULL) 
-          // We are not in a commen section.  
-          valid_kw = true;
-        else
-          valid_kw = false;
-        
-        free( line );
+      if (kw_pos >= strlen(ECL_COMMENT_STRING) ) {  // Must have this check to avoid infinite spinning
+                                                    // when the keyword is in the very beginning of the file.
+        fseek( stream , 1 , SEEK_CUR );
+        while (true) {
+          fseek( stream , -2 , SEEK_CUR );
+          c = fgetc( stream );
+          if ((c == newline_char) || (ftell(stream) == 0)) 
+            break;
+        }
+        {
+          // We have gone as far back as necessary.
+          int line_length = kw_pos - ftell( stream );
+          char * line = util_malloc(line_length + 1  , __func__);
+          
+          fread( stream , sizeof * line , line_length , stream);
+          line[line_length] = '\0';
+          
+          if (strstr( line , ECL_COMMENT_STRING) == NULL) 
+            // We are not in a commen section.  
+            valid_kw = true;
+          else
+            valid_kw = false;
+          
+          free( line );
+        }
       }
     } else
       valid_kw = false;
