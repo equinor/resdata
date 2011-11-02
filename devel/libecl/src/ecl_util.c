@@ -832,7 +832,7 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 void ecl_util_alloc_summary_data_files(const char * path , const char * base , bool fmt_file , stringlist_type * filelist) {
   char  * unif_data_file = ecl_util_alloc_exfilename(path , base , ECL_UNIFIED_SUMMARY_FILE , fmt_file , -1);
   int files = ecl_util_select_filelist( path , base , ECL_SUMMARY_FILE , fmt_file , filelist);
-    
+
   if ((files > 0) && (unif_data_file != NULL)) {
     /* 
        We have both a unified file AND a list of files: BASE.S0000,
@@ -842,7 +842,7 @@ void ecl_util_alloc_summary_data_files(const char * path , const char * base , b
     bool unified_newest = true;
     int file_nr = 0;
     while (unified_newest && (file_nr < files)) {
-      if (util_file_difftime(stringlist_iget(filelist , file_nr) , unif_data_file) < 0) 
+      if (util_file_difftime( stringlist_iget(filelist , file_nr) , unif_data_file ) > 0) 
         unified_newest = false;
       file_nr++;
     }
