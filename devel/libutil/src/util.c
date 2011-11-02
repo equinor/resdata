@@ -2437,6 +2437,15 @@ bool util_fmt_bit8(const char *filename ) {
   time_t        st_ctime;    time of last status change 
 */
 
+/*
+  The returned value is the difference in file mtime from the file2 to
+  file1 (what a mess). I.e. if file1 is newer than file2 the returned
+  value will be positive.  
+*/
+
+
+
+
 double util_file_difftime(const char *file1 , const char *file2) {
   struct stat b1, b2;
   int f1,f2;

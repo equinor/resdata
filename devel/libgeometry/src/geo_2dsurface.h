@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2011  Statoil ASA, Norway. 
     
-   The file 'surface.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'geo_2dsurface.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -17,17 +17,17 @@
 */
 
 
-#ifndef __SURFACE_H__
-#define __SURFACE_H__
+#ifndef __GEO_2DSURFACE_H__
+#define __GEO_2DGEO_2DSURFACE_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct surface_struct surface_type;
+typedef struct geo_2dsurface_struct geo_2dsurface_type;
 
 
-void surface_free( surface_type * surface );
+void geo_2dsurface_free( geo_2dsurface_type * geo_2dsurface );
 
 
 

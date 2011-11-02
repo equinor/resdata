@@ -706,6 +706,7 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
   __NOT__ been updated when leaving this function. That is done with a
   call to ecl_sum_data_build_index().
 */
+
 static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_type * filelist) {
   ecl_file_enum file_type;
   file_type = ecl_util_get_file_type( stringlist_iget( filelist , 0 ) , NULL , NULL);
