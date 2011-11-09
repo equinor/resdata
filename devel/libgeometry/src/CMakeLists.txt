@@ -1,5 +1,5 @@
-set( source_files geo_2dsurface.c )
-set( header_files geo_2dsurface.h )
+set( source_files geo_2dsurface.c geo_util.c)
+set( header_files geo_2dsurface.h geo_util.h)
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 include_directories( ${libutil_build_path} )
@@ -11,8 +11,8 @@ add_library( geometry_shared  SHARED ${source_files} )
 set_target_properties( geometry_static PROPERTIES OUTPUT_NAME geometry )
 set_target_properties( geometry_shared PROPERTIES OUTPUT_NAME geometry )
 
-target_link_libraries( geometry_static util_static )
-target_link_libraries( geometry_shared util_shared )
+target_link_libraries( geometry_static ${util_static} )
+target_link_libraries( geometry_shared ${util_shared} )
 
 #-----------------------------------------------------------------
 if (GEOMETRY_INSTALL_PREFIX)

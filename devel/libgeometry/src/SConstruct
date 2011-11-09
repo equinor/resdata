@@ -20,8 +20,8 @@ conf = global_config.get_conf(os.getcwd() , package , 2)
 env  = Environment()
 conf.update_env( env , [LIBUTIL ] )
 
-src_list    = Split("geo_2dsurface.c")
-header_list = Split("geo_2dsurface.h")
+src_list    = Split("geo_surface.c geo_util.c geo_pointset.c geo_region.c")
+header_list = Split("geo_surface.h geo_util.h geo_pointset.h geo_region.h")
 
 add_static_library( env , conf , lib_path  , package , src_list )
 add_shared_library( env , conf , slib_path , package , src_list )
