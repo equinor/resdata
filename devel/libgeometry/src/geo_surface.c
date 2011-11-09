@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2011  Statoil ASA, Norway. 
     
-   The file 'geo_2dsurface.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'geo_surface.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -21,8 +21,7 @@
 #include <stdbool.h>
 #include <util.h>
 #include <geo_pointset.h>
-#include <geo_2dsurface.h>
-
+#include <geo_surface.h>
 
 
 /*
@@ -41,7 +40,7 @@ typedef struct {
 
 
 
-struct geo_2dsurface_struct {
+struct geo_surface_struct {
   int         nx;
   int         ny;     
   
@@ -50,29 +49,29 @@ struct geo_2dsurface_struct {
 };
 
 
-static int geo_2dsurface_cornerindex( const geo_2dsurface_type * geo_2dsurface , int cell_ix , int cell_iy) {
-  return (geo_2dsurface->nx + 1) * cell_iy + cell_ix;
+static int geo_surface_cornerindex( const geo_surface_type * geo_surface , int cell_ix , int cell_iy) {
+  return (geo_surface->nx + 1) * cell_iy + cell_ix;
 }
 
 
-static void geo_2dsurface_init_cells( geo_2dsurface_type * geo_2dsurface ) {
+static void geo_surface_init_cells( geo_surface_type * geo_surface ) {
   int ix,iy;
-  geo_2dsurface->cells = util_malloc( geo_2dsurface->nx * geo_2dsurface->ny * sizeof * geo_2dsurface->cells , __func__);
-  for (iy = 0; iy < geo_2dsurface->ny; iy++) {
-    for (ix = 0; ix < geo_2dsurface->nx; ix++) {
-      int cell_index = iy * geo_2dsurface->nx + ix;
+  geo_surface->cells = util_malloc( geo_surface->nx * geo_surface->ny * sizeof * geo_surface->cells , __func__);
+  for (iy = 0; iy < geo_surface->ny; iy++) {
+    for (ix = 0; ix < geo_surface->nx; ix++) {
+      int cell_index = iy * geo_surface->nx + ix;
       
-      geo_2dsurface->cells[ cell_index ].index_list[0] = geo_2dsurface_cornerindex( geo_2dsurface , ix     , iy    );
-      geo_2dsurface->cells[ cell_index ].index_list[1] = geo_2dsurface_cornerindex( geo_2dsurface , ix + 1 , iy    );
-      geo_2dsurface->cells[ cell_index ].index_list[2] = geo_2dsurface_cornerindex( geo_2dsurface , ix + 1 , iy + 1);
-      geo_2dsurface->cells[ cell_index ].index_list[3] = geo_2dsurface_cornerindex( geo_2dsurface , ix     , iy + 1);
+      geo_surface->cells[ cell_index ].index_list[0] = geo_surface_cornerindex( geo_surface , ix     , iy    );
+      geo_surface->cells[ cell_index ].index_list[1] = geo_surface_cornerindex( geo_surface , ix + 1 , iy    );
+      geo_surface->cells[ cell_index ].index_list[2] = geo_surface_cornerindex( geo_surface , ix + 1 , iy + 1);
+      geo_surface->cells[ cell_index ].index_list[3] = geo_surface_cornerindex( geo_surface , ix     , iy + 1);
       
     }
   }
 }
 
 
-static void geo_2dsurface_init_regular( geo_2dsurface_type * surface , const double origo[2], const double vec1[2], const double vec2[2]) {
+static void geo_surface_init_regular( geo_surface_type * surface , const double origo[2], const double vec1[2], const double vec2[2]) {
   int ix,iy;
   for (iy=0; iy <= surface->ny; iy++) {
     for (ix=0; ix <= surface->nx; ix++) {
@@ -81,11 +80,11 @@ static void geo_2dsurface_init_regular( geo_2dsurface_type * surface , const dou
       geo_pointset_add_xy( surface->pointset , x , y );
     }
   }
-  geo_2dsurface_init_cells( surface );
+  geo_surface_init_cells( surface );
 }
 
 
-void geo_2dsurface_free( geo_2dsurface_type * surface ) {
+void geo_surface_free( geo_surface_type * surface ) {
   geo_pointset_free( surface->pointset );
   free( surface->cells );
   free( surface );
