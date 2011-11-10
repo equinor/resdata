@@ -29,7 +29,7 @@
 struct geo_pointset_struct {
   int         size;
   int         alloc_size;
-  bool        external_z;
+  bool        internal_z;
   
   double    * xcoord;
   double    * ycoord;
@@ -41,19 +41,19 @@ struct geo_pointset_struct {
 static void geo_pointset_resize( geo_pointset_type * pointset, int new_alloc_size) {
   pointset->xcoord = util_realloc( pointset->xcoord , new_alloc_size * sizeof * pointset->xcoord , __func__);
   pointset->ycoord = util_realloc( pointset->ycoord , new_alloc_size * sizeof * pointset->ycoord , __func__);
-  if (!pointset->external_z)  
+  if (pointset->internal_z)  
     pointset->zcoord = util_realloc( pointset->zcoord , new_alloc_size * sizeof * pointset->zcoord , __func__);
   
   pointset->alloc_size = new_alloc_size;
 }
 
 
-geo_pointset_type *  geo_pointset_alloc( bool external_z) {
+geo_pointset_type *  geo_pointset_alloc( bool internal_z) {
   geo_pointset_type * pointset = util_malloc( sizeof * pointset , __func__);
   pointset->xcoord = NULL;
   pointset->ycoord = NULL;
   pointset->zcoord = NULL;
-  pointset->external_z = external_z;
+  pointset->internal_z = internal_z;
   pointset->size = 0;
   geo_pointset_resize( pointset , INIT_SIZE );
   return pointset;
@@ -61,27 +61,31 @@ geo_pointset_type *  geo_pointset_alloc( bool external_z) {
 
 
 void geo_pointset_add_xy( geo_pointset_type * pointset , double x , double y) {
-  if (pointset->external_z) {
+  if (!pointset->internal_z) {
     if (pointset->size == pointset->alloc_size) 
       geo_pointset_resize( pointset , 1 + pointset->alloc_size * 2);
     
     pointset->xcoord[ pointset->size ] = x;
     pointset->ycoord[ pointset->size ] = y;
+
+    pointset->size++;
   } else
     util_abort("%s: can not use function %s for pointsets with internal z.\n",__func__ , __func__);
 }
 
 
 void geo_pointset_add_xyz( geo_pointset_type * pointset , double x , double y, double z) {
-  if (!pointset->external_z) {
+  if (pointset->internal_z) {
     if (pointset->size == pointset->alloc_size) 
       geo_pointset_resize( pointset , 1 + pointset->alloc_size * 2);
     
     pointset->xcoord[ pointset->size ] = x;
     pointset->ycoord[ pointset->size ] = y;
     pointset->zcoord[ pointset->size ] = z;
+    
+    pointset->size++;
   } else
-    util_abort("%s: can not use function %s for pointsets with external z.\n",__func__ , __func__);
+    util_abort("%s: can not use function %s for pointsets with internal z.\n",__func__ , __func__);
 }
 
 
@@ -89,11 +93,17 @@ void geo_pointset_free( geo_pointset_type * pointset ) {
   free( pointset->xcoord );
   free( pointset->ycoord );
   util_safe_free( pointset->zcoord );
+  free( pointset ); 
 }
 
 
 int geo_pointset_get_size( const geo_pointset_type * pointset ) {
   return pointset->size;
+}
+
+
+const double * geo_pointset_get_zcoord( const geo_pointset_type * pointset ) {
+  return pointset->zcoord;
 }
 
 

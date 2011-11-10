@@ -24,14 +24,20 @@
 extern "C" {
 #endif
 
-typedef struct geo_surface_struct geo_surface_type;
+#include <stdbool.h>
+#include <geo_pointset.h>
 
 
-void geo_surface_free( geo_surface_type * geo_surface );
+  typedef struct geo_surface_struct geo_surface_type;
 
 
-
-
+  void                geo_surface_free( geo_surface_type * geo_surface );
+  geo_pointset_type * geo_surface_get_pointset( const geo_surface_type * surface );
+  geo_surface_type  * geo_surface_fload_alloc_irap( const char * filename , bool loadz);
+  void                geo_surface_fload_irap_data( const geo_surface_type * surface, const char * filename, double *zlist);
+  int                 geo_surface_get_size( const geo_surface_type * surface );
+  void                geo_surface_fprintf_irap( const geo_surface_type * surface, const char * filename );
+  void                geo_surface_fprintf_irap_external_zcoord( const geo_surface_type * surface, const char * filename , const double * zcoord);
 
 #ifdef __cplusplus
 }
