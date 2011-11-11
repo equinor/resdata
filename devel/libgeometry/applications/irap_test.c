@@ -18,7 +18,7 @@ int main( int argc , char ** argv) {
 
     {
       double * zlist = util_malloc( sizeof * zlist * geo_surface_get_size( surface ) , __func__);
-      geo_surface_fload_irap_data( surface , irap_file , zlist );
+      geo_surface_fload_irap_zcoord( surface , irap_file , zlist );
       free( zlist );
     }
     
