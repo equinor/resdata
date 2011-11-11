@@ -113,7 +113,7 @@ const type ## _type * type ## _safe_cast_const( const void * __arg ) {          
    if ( arg->__type_id == TYPE_ID)                                                       \
       return arg;                                                                        \
    else {                                                                                \
-      util_abort("%s: runtime cast failed. File:%s Line:%d. \n", __func__ , __FILE__ , __LINE__); \
+      util_abort("%s: runtime cast failed: File:%s Line:%d. Got:%d  Expected:%d \n", __func__ , __FILE__ , __LINE__ , arg->__type_id , TYPE_ID); \
       return NULL;                                                                       \
    }                                                                                     \
 }
