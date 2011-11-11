@@ -91,25 +91,12 @@ static void geo_surface_init_regular( geo_surface_type * surface , const double 
 }
 
 
-static void geo_surface_fscanf_data( const geo_surface_type * surface , FILE * stream , double * zcoord) {
+static void geo_surface_fscanf_zcoord( const geo_surface_type * surface , FILE * stream , double * zcoord) {
   for (int i=0; i < surface->nx * surface->ny; i++) 
     if (fscanf(stream , "%lg" , &zcoord[i]) != 1)
       util_abort("%s: hmm - fatal error when loading surface ..." , __func__);
 }
 
-//
-static void geo_surface_fskip_irap_header( const geo_surface_type * surface , FILE * stream ) {
-  double d;
-  int i;               
-  //                   1   2    3    4    5    6    7   8    9   10  11  12  13  14  15  16  17  18  19
-  if (fscanf(stream , "%d  %d  %lg  %lg  %lg  %lg  %lg  %lg  %d  %lg %lg %lg %d  %d  %d  %d  %d  %d  %d ",
-             &i,&i,                       //  1-2
-             &d,&d,&d,&d,&d,&d,           //  3-8 
-             &i,                          //  9-9
-             &d,&d,&d,                    // 10-12  
-             &i,&i,&i,&i,&i,&i,&i) != 19) // 13-19
-    util_abort("%s: skipping header failed \n",__func__);
-}
 
 
 static void geo_surface_fprintf_irap_header( const geo_surface_type * surface , FILE * stream ) {
@@ -129,6 +116,7 @@ static void geo_surface_fprintf_irap_header( const geo_surface_type * surface , 
   fprintf(stream , float_fmt , surface->origo[0]);
   fprintf(stream , float_fmt , surface->origo[1]);
   fprintf(stream , "0  0  0  0  0  0  0  \n");
+
 }
 
 
@@ -166,9 +154,7 @@ void geo_surface_fprintf_irap_external_zcoord( const geo_surface_type * surface,
 }
 
 
-
-static void geo_surface_fload_irap( geo_surface_type * surface , const char * filename , bool loadz) {
-  FILE * stream = util_fopen( filename , "r");
+static void geo_surface_fload_irap_header( geo_surface_type * surface, FILE * stream ) {
   int const996;
   int ny,nx;
   double xinc, yinc,xstart, xend,ystart,yend,angle;
@@ -190,7 +176,7 @@ static void geo_surface_fload_irap( geo_surface_type * surface , const char * fi
         double d;
         int i;
         if (fscanf(stream , "%lg %lg %d %d %d %d %d %d %d " , &d , &d , &i, &i, &i, &i, &i, &i, &i) != 9)
-          util_abort("%s: reading header failed in file: %s \n",__func__ , filename );
+          util_abort("%s: reading irap header failed \n",__func__ );
       }
       
       surface->origo[0]  = xstart;
@@ -207,29 +193,59 @@ static void geo_surface_fload_irap( geo_surface_type * surface , const char * fi
       
       surface->cell_size[0] = xinc;
       surface->cell_size[1] = yinc;
-      
-      {
-        double * zcoord = NULL;
-        
-        if (loadz) {
-          zcoord = util_malloc( sizeof * zcoord * surface->nx * surface->ny , __func__);
-          geo_surface_fscanf_data( surface , stream , zcoord );
-        }
+    }  else
+    util_abort("%s: reading irap header failed\n",__func__ );
+}
 
-        geo_surface_init_regular( surface , zcoord );
-        util_safe_free( zcoord );
-      }
-    } else
-    util_abort("%s: reading header failed in file: %s \n",__func__ , filename );
+
+
+static void geo_surface_fload_irap( geo_surface_type * surface , const char * filename , bool loadz) {
+  FILE * stream = util_fopen( filename , "r");
+  geo_surface_fload_irap_header( surface , stream );
+  {
+    double * zcoord = NULL;
+        
+    if (loadz) {
+      zcoord = util_malloc( sizeof * zcoord * surface->nx * surface->ny , __func__);
+      geo_surface_fscanf_zcoord( surface , stream , zcoord );
+    }
+
+    geo_surface_init_regular( surface , zcoord );
+    util_safe_free( zcoord );
+  }
   fclose( stream );
 }
 
 
-void geo_surface_fload_irap_data( const geo_surface_type * surface, const char * filename, double *zcoord) {
+static bool geo_surface_assert_equal_header( const geo_surface_type * surface1 , const geo_surface_type * surface2 ) {
+  bool equal = true;
+
+  
+
+  equal = equal && (surface1->nx == surface2->nx);
+  equal = equal && (surface1->ny == surface2->ny);
+  
+  if (!equal)
+    util_abort("%s: failed - surface headers not identical \n",__func__);
+
+  return equal;
+}
+
+
+/**
+   The loading will fail hard if the header of surface does not agree
+   with the header found in file.  */
+
+void geo_surface_fload_irap_zcoord( const geo_surface_type * surface, const char * filename, double *zcoord) {
   FILE * stream = util_fopen( filename , "r");
   {
-    geo_surface_fskip_irap_header( surface , stream );
-    geo_surface_fscanf_data( surface , stream , zcoord);
+    {
+      geo_surface_type * tmp_surface = geo_surface_alloc_empty( false );
+      geo_surface_fload_irap_header( tmp_surface , stream );
+      geo_surface_assert_equal_header( surface , tmp_surface );
+      geo_surface_free( tmp_surface );
+    }
+    geo_surface_fscanf_zcoord( surface , stream , zcoord);
   }
   fclose( stream );
 }

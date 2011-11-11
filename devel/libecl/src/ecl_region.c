@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <int_vector.h>
+#include <geo_util.h>
 #include <ecl_kw.h>
 #include <ecl_grid.h>
 #include <ecl_box.h>
@@ -111,9 +112,6 @@ UTIL_SAFE_CAST_FUNCTION( ecl_region , ECL_REGION_TYPE_ID)
 
 
 static void ecl_region_invalidate_index_list( ecl_region_type * region ) {
-  int_vector_reset( region->global_index_list  );
-  int_vector_reset( region->active_index_list  );
-  int_vector_reset( region->global_active_list );
   region->global_index_list_valid  = false; 
   region->active_index_list_valid  = false; 
 }
@@ -185,12 +183,8 @@ void ecl_region_free__( void * __region ) {
 static void ecl_region_assert_global_index_list( ecl_region_type * region ) {
   if (!region->global_index_list_valid) {
     int global_index;
-    /* 
-       If this code is erronously run twice (probably due to some fuckup with
-       the global_index_list_valid flag) there will be hell to pay.
-    */
 
-    
+    int_vector_reset( region->global_index_list  );
     for (global_index = 0; global_index < region->grid_vol; global_index++) 
       if (region->active_mask[ global_index ]) 
         int_vector_append( region->global_index_list , global_index );
@@ -203,6 +197,9 @@ static void ecl_region_assert_global_index_list( ecl_region_type * region ) {
 static void ecl_region_assert_active_index_list( ecl_region_type * region ) {
   if (!region->active_index_list_valid) {
     int global_index;
+
+    int_vector_reset( region->active_index_list  );
+    int_vector_reset( region->global_active_list );
     for (global_index = 0; global_index < region->grid_vol; global_index++) {
       if (region->active_mask[ global_index ]) {
         int active_index = ecl_grid_get_active_index1( region->parent_grid , global_index );
@@ -1012,30 +1009,6 @@ void ecl_region_deselect_below_plane( ecl_region_type * region, const double n[3
 
 /*****************************************************************/
 
-static bool between(double v1, double v2 , double v) {
-  return ((( v > v1) && (v < v2)) || (( v < v1) && (v > v2)));
-}
-
-static bool inside_polygon(const double * xlist , const double * ylist , int num_points , double x0 , double y0) {
-  bool inside = false;
-  int point_num;
-  double y = y0;
-  
-  for (point_num = 0; point_num < num_points; point_num++) {
-    int next_point = ((point_num + 1) % num_points);
-    double x1 = xlist[point_num];  double y1 = ylist[point_num];
-    double x2 = xlist[next_point]; double y2 = ylist[next_point];
-    
-    if (between(x1,x2,x0)) {
-      double yc = (y2 - y1)/(x2 - x1) * (x0 - x1) + y1;  
-      if (y < yc) {
-        y = yc;
-        inside = !inside;
-      }
-    }
-  }
-  return inside;
-}
 
 
 /**
@@ -1074,7 +1047,7 @@ static void ecl_region_polygon_select__( ecl_region_type * region ,
       int global_index = ecl_grid_get_global_index3( region->parent_grid , i , j , define_k);
 
       ecl_grid_get_xyz1( region->parent_grid , global_index , &x , &y , &z);
-      inside = inside_polygon( xlist , ylist , num_points , x , y );
+      inside = geo_util_inside_polygon( xlist , ylist , num_points , x , y );
 
       if (select_inside == inside) {
         for (int k=k1; k < k2; k++) {
