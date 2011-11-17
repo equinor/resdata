@@ -33,6 +33,8 @@ extern "C" {
 
 typedef struct ecl_file_struct ecl_file_type;
 
+void             ecl_file_push_block( ecl_file_type * ecl_file );
+void             ecl_file_pop_block( ecl_file_type * ecl_file );
 ecl_file_type  * ecl_file_open( const char * filename );
 ecl_file_type  * ecl_file_open_writable( const char * filename );
 void             ecl_file_close( ecl_file_type * ecl_file );
@@ -76,12 +78,14 @@ ecl_type_enum      ecl_file_iget_named_type( const ecl_file_type * file , const 
 int                ecl_file_iget_named_size( const ecl_file_type * file , const char * kw , int ith);
 
 
+bool               ecl_file_subselect_block( ecl_file_type * ecl_file , const char * kw , int occurence);
 bool               ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence);
 void               ecl_file_select_global( ecl_file_type * ecl_file );
 bool               ecl_file_writable( const ecl_file_type * ecl_file );
 
 /*****************************************************************/
 /*               R E S T A R T  F I L E S                        */
+
 ecl_file_type  * ecl_file_fread_alloc_unrst_section(const char * filename , int report_step);
 ecl_file_type  * ecl_file_fread_alloc_unrst_section_time( const char * filename , time_t sim_time);
 ecl_file_type  * ecl_file_fread_alloc_restart_section(fortio_type * fortio);

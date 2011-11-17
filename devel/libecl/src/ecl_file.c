@@ -31,6 +31,7 @@
 #include <stringlist.h>
 #include <ecl_endian_flip.h>
 #include <ecl_kw_magic.h>
+#include <ecl_intehead.h>
 #include <ecl_file_kw.h>
 
 
@@ -136,8 +137,9 @@ struct ecl_file_struct {
                                        ecl_file object. */
   file_map_type * global_map;       /* The index of all the ecl_kw instances in the file. */
   file_map_type * active_map;       /* The currently active index. */
-  vector_type   * map_list;     /* Storage container for the map instances. */
+  vector_type   * map_list;         /* Storage container for the map instances. */
   bool            read_only;
+  vector_type   * map_stack;
 };
 
 
@@ -449,6 +451,7 @@ ecl_file_type * ecl_file_alloc_empty( bool read_only ) {
   ecl_file_type * ecl_file = util_malloc( sizeof * ecl_file , __func__);
   UTIL_TYPE_ID_INIT(ecl_file , ECL_FILE_ID);
   ecl_file->map_list  = vector_alloc_new();
+  ecl_file->map_stack = vector_alloc_new();
   ecl_file->read_only = true;
   return ecl_file;
 }
@@ -732,13 +735,14 @@ static void ecl_file_add_map( ecl_file_type * ecl_file , file_map_type * file_ma
   vector_append_owned_ref(ecl_file->map_list , file_map , file_map_free__ );
 }
 
-/**
-   Observe that new maps are ALWAYS based on the global map, and not
-   on the currently active map.  
-*/
 
-file_map_type * ecl_file_get_blockmap( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  file_map_type * blockmap = file_map_alloc_blockmap( ecl_file->global_map , kw , occurence );
+static file_map_type * ecl_file_get_blockmap( ecl_file_type * ecl_file , const char * kw , int occurence , bool use_global) {
+  file_map_type * blockmap;
+  if (use_global)
+    blockmap = file_map_alloc_blockmap( ecl_file->global_map , kw , occurence );
+  else
+    blockmap = file_map_alloc_blockmap( ecl_file->active_map , kw , occurence );
+  
   if (blockmap != NULL)
     ecl_file_add_map( ecl_file , blockmap );
   return blockmap;
@@ -824,9 +828,27 @@ ecl_file_type * ecl_file_open_writable( const char * filename ) {
 }
 
 
+void ecl_file_push_block( ecl_file_type * ecl_file ) {
+  vector_append_ref( ecl_file->map_stack , ecl_file->active_map );
+}
 
-bool ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  file_map_type * blockmap = ecl_file_get_blockmap( ecl_file , kw , occurence );
+void ecl_file_pop_block( ecl_file_type * ecl_file ) {
+  ecl_file->active_map = vector_pop( ecl_file->map_stack );
+}
+
+
+bool ecl_file_subselect_block( ecl_file_type * ecl_file , const char * kw , int occurence) {
+  file_map_type * blockmap = ecl_file_get_blockmap( ecl_file , kw , occurence , false);
+  if (blockmap != NULL) {
+    ecl_file->active_map = blockmap;
+    return true;
+  } else
+    return false;
+}
+
+
+bool ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence ) {
+  file_map_type * blockmap = ecl_file_get_blockmap( ecl_file , kw , occurence , true);
   if (blockmap != NULL) {
     ecl_file->active_map = blockmap;
     return true;
@@ -860,8 +882,9 @@ ecl_file_type * ecl_file_open_block( const char * filename , const char * kw , i
 */
 
 void ecl_file_close(ecl_file_type * ecl_file) {
-  fortio_fclose( ecl_file->fortio );
-  vector_free( ecl_file->map_list );
+  fortio_fclose( ecl_file->fortio  );
+  vector_free( ecl_file->map_list  );
+  vector_free( ecl_file->map_stack );
   free( ecl_file );
 }
 

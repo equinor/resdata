@@ -4,6 +4,7 @@ import sys
 sys.path += ["../../build"]
 import global_config
 from   global_config import LIBUTIL
+from   global_config import LIBRMS
 from   global_config import add_static_library
 from   global_config import add_shared_library
 from   global_config import add_header
@@ -18,10 +19,10 @@ bin_path         = "../bin"
 
 conf = global_config.get_conf(os.getcwd() , package , 2)
 env  = Environment()
-conf.update_env( env , [LIBUTIL ] )
+conf.update_env( env , [LIBUTIL] )
 
-src_list    = Split("geo_surface.c geo_util.c geo_pointset.c geo_region.c")
-header_list = Split("geo_surface.h geo_util.h geo_pointset.h geo_region.h")
+src_list    = Split("geo_surface.c geo_util.c geo_pointset.c geo_region.c geo_polygon.c")
+header_list = Split("geo_surface.h geo_util.h geo_pointset.h geo_region.h geo_polygon.h")
 
 add_static_library( env , conf , lib_path  , package , src_list )
 add_shared_library( env , conf , slib_path , package , src_list )

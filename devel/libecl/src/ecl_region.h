@@ -25,6 +25,7 @@ extern "C" {
 #include <ecl_grid.h>
 #include <stdbool.h>
 #include <int_vector.h>
+#include <geo_polygon.h>
   
 typedef enum {
   SELECT_ALL           =  0,
@@ -133,10 +134,10 @@ void              ecl_region_select_below_plane( ecl_region_type * region, const
 void              ecl_region_deselect_above_plane( ecl_region_type * region, const double n[3] , const double p[3]);
 void              ecl_region_deselect_below_plane( ecl_region_type * region, const double n[3] , const double p[3]);
 
-void              ecl_region_select_inside_polygon( ecl_region_type * region , const double * xlist , const double * ylist ,    int num_points);
-void              ecl_region_deselect_inside_polygon( ecl_region_type * region , const double * xlist , const double * ylist ,  int num_points );
-void              ecl_region_select_outside_polygon( ecl_region_type * region , const double * xlist , const double * ylist ,   int num_points );
-void              ecl_region_deselect_outside_polygon( ecl_region_type * region , const double * xlist , const double * ylist , int num_points );
+  void              ecl_region_select_inside_polygon( ecl_region_type * region    , const geo_polygon_type * polygon);
+  void              ecl_region_deselect_inside_polygon( ecl_region_type * region  , const geo_polygon_type * polygon);
+  void              ecl_region_select_outside_polygon( ecl_region_type * region   , const geo_polygon_type * polygon);
+  void              ecl_region_deselect_outside_polygon( ecl_region_type * region , const geo_polygon_type * polygon);
 
 /*****************************************************************/
 /* Functions to manipulate ecl_kw instances . */

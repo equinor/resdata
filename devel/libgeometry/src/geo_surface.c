@@ -24,10 +24,11 @@
 #include <geo_surface.h>
 
 
+#define GEO_SURFACE_TYPE_ID 111743
 
 
 struct geo_surface_struct {
-
+  UTIL_TYPE_ID_DECLARATION;
   // Irap data:
   int    nx,ny;
   double rot_angle;  // Radians
@@ -67,9 +68,13 @@ static void geo_surface_init_cells( geo_surface_type * geo_surface ) {
 
 static geo_surface_type * geo_surface_alloc_empty( bool internal_z ) {
   geo_surface_type * surface = util_malloc( sizeof * surface , __func__);
+  UTIL_TYPE_ID_INIT( surface , GEO_SURFACE_TYPE_ID )
   surface->pointset = geo_pointset_alloc( internal_z );
   return surface;
 }
+
+
+static UTIL_SAFE_CAST_FUNCTION( geo_surface , GEO_SURFACE_TYPE_ID )
 
 
 static void geo_surface_init_regular( geo_surface_type * surface , const double * zcoord) {
@@ -262,6 +267,11 @@ geo_surface_type * geo_surface_fload_alloc_irap( const char * filename , bool lo
 void geo_surface_free( geo_surface_type * surface ) {
   geo_pointset_free( surface->pointset );
   free( surface );
+}
+
+void geo_surface_free__( void * arg) {
+  geo_surface_type * surface = geo_surface_safe_cast( arg );
+  geo_surface_free( surface );
 }
 
 

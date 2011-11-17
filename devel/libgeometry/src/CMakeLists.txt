@@ -1,5 +1,5 @@
-set( source_files geo_2dsurface.c geo_util.c)
-set( header_files geo_2dsurface.h geo_util.h)
+set( source_files geo_surface.c geo_util.c geo_pointset.c geo_region.c geo_polygon.c)
+set( header_files geo_surface.h geo_util.h geo_pointset.h geo_region.h geo_polygon.h)
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 include_directories( ${libutil_build_path} )

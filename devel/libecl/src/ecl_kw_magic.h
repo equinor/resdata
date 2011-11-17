@@ -7,7 +7,9 @@ extern "C" {
 
 /* 
    This header file contains names and indices of ECLIPSE keywords
-   which have special significance in various files. 
+   which have special significance in various files; everything
+   related to the INTEHEAD keyword is in the ecl_intehead.h header
+   file.
 */
 
 
@@ -15,19 +17,14 @@ extern "C" {
 /*                INIT and RESTART files:                        */
 /*****************************************************************/
 
-#define INTEHEAD_KW  "INTEHEAD"     /* Long array with lots of data. */
 #define SEQNUM_KW    "SEQNUM"       /* Contains the report step as the only data;
                                        not present in non-unified files, where the
                                        report step can be inferred from the filename. */
 
 
-/* Some magic indices used to look up in the INTEHEAD keyword. */
-#define INTEHEAD_DAY_INDEX     64   
-#define INTEHEAD_MONTH_INDEX   65
-#define INTEHEAD_YEAR_INDEX    66
-#define INTEHEAD_VERSION_INDEX 94    /* This is ECLIPSE100 || ECLIPSE300 - not temporal version. */
-#define INTEHEAD_PHASE_INDEX   14
-
+#define IWEL_KW      "IWEL"
+#define ZWEL_KW      "ZWEL"
+#define ICON_KW      "ICON"
 
 /*****************************************************************/
 /*                     Summary files                             */

@@ -21,6 +21,7 @@
 #include <string.h>
 #include <int_vector.h>
 #include <geo_util.h>
+#include <geo_polygon.h>
 #include <ecl_kw.h>
 #include <ecl_grid.h>
 #include <ecl_box.h>
@@ -1032,8 +1033,7 @@ void ecl_region_deselect_below_plane( ecl_region_type * region, const double n[3
 
 
 static void ecl_region_polygon_select__( ecl_region_type * region , 
-                                         const double * xlist , const double * ylist , 
-                                         int num_points,
+                                         const geo_polygon_type * polygon , 
                                          bool select_inside , bool select) {
 
   const int define_k = 0;                  // The k-level where the polygon is checked.
@@ -1047,8 +1047,8 @@ static void ecl_region_polygon_select__( ecl_region_type * region ,
       int global_index = ecl_grid_get_global_index3( region->parent_grid , i , j , define_k);
 
       ecl_grid_get_xyz1( region->parent_grid , global_index , &x , &y , &z);
-      inside = geo_util_inside_polygon( xlist , ylist , num_points , x , y );
-
+      inside = geo_polygon_contains_point( polygon , x , y );
+      
       if (select_inside == inside) {
         for (int k=k1; k < k2; k++) {
           global_index = ecl_grid_get_global_index3( region->parent_grid , i , j , k);
@@ -1059,20 +1059,20 @@ static void ecl_region_polygon_select__( ecl_region_type * region ,
   }
 }
 
-void ecl_region_select_inside_polygon( ecl_region_type * region , const double * xlist , const double * ylist , int num_points) {
-  ecl_region_polygon_select__( region , xlist , ylist , num_points , true , true );
+void ecl_region_select_inside_polygon( ecl_region_type * region , const geo_polygon_type * polygon) {
+  ecl_region_polygon_select__( region , polygon , true , true );
 }
 
-void ecl_region_deselect_inside_polygon( ecl_region_type * region , const double * xlist , const double * ylist, int num_points) {
-  ecl_region_polygon_select__( region , xlist , ylist , num_points , true , false );
+void ecl_region_deselect_inside_polygon( ecl_region_type * region , const geo_polygon_type * polygon) {
+  ecl_region_polygon_select__( region , polygon , true , false );
 }
 
-void ecl_region_select_outside_polygon( ecl_region_type * region , const double * xlist , const double * ylist , int num_points) {
-  ecl_region_polygon_select__( region , xlist , ylist , num_points , false , true );
+void ecl_region_select_outside_polygon( ecl_region_type * region , const geo_polygon_type * polygon) {
+  ecl_region_polygon_select__( region , polygon , false , true );
 }
 
-void ecl_region_deselect_outside_polygon( ecl_region_type * region , const double * xlist , const double * ylist , int num_points) {
-  ecl_region_polygon_select__( region , xlist , ylist , num_points , false , false );
+void ecl_region_deselect_outside_polygon( ecl_region_type * region , const geo_polygon_type * polygon) {
+  ecl_region_polygon_select__( region , polygon , false , false );
 }
 
 /*****************************************************************/

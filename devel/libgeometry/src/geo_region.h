@@ -21,6 +21,7 @@
 #include <stdbool.h>
 #include <util.h>
 #include <geo_pointset.h>
+#include <geo_polygon.h>
 
 #ifndef __GEO_REGION_H__
 #define __GEO_REGION_H__
@@ -35,14 +36,19 @@ extern "C" {
 
   geo_region_type *       geo_region_alloc( const geo_pointset_type * pointset , bool preselect);
   void                    geo_region_free( geo_region_type * region );
+  void                    geo_region_free__( void * arg );
   void                    geo_region_reset( geo_region_type * region );
   const int_vector_type * geo_region_get_index_list( geo_region_type * region );
 
-  void              geo_region_select_inside_polygon( geo_region_type * region , const double * xlist , const double * ylist , int num_points);
-  void              geo_region_select_outside_polygon( geo_region_type * region , const double * xlist , const double * ylist , int num_points);
-  void              geo_region_dselect_inside_polygon( geo_region_type * region , const double * xlist , const double * ylist , int num_points);
-  void              geo_region_dselect_outside_polygon( geo_region_type * region , const double * xlist , const double * ylist , int num_points);
-
+  void                    geo_region_select_inside_polygon( geo_region_type * region   , const geo_polygon_type * polygon);
+  void                    geo_region_select_outside_polygon( geo_region_type * region  , const geo_polygon_type * polygon);
+  void                    geo_region_dselect_inside_polygon( geo_region_type * region  , const geo_polygon_type * polygon);
+  void                    geo_region_dselect_outside_polygon( geo_region_type * region , const geo_polygon_type * polygon);
+  
+  void                    geo_region_select_above_line( geo_region_type * region, const double xcoords[2] , const double ycoords[2]);
+  void                    geo_region_select_below_line( geo_region_type * region, const double xcoords[2] , const double ycoords[2]);
+  void                    geo_region_deselect_above_line( geo_region_type * region, const double xcoords[2] , const double ycoords[2]);
+  void                    geo_region_deselect_below_line( geo_region_type * region, const double xcoords[2] , const double ycoords[2]);
 
 #ifdef __cplusplus
 }
