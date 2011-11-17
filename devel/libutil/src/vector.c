@@ -400,8 +400,9 @@ void * vector_pop(vector_type * vector) {
     node_data_type * node = vector->data[vector->size - 1];
     void * data = node_data_get_ptr( node );
     
-    node_data_free_container( node );  /* Free the container holding data. */
-    vector->size--;                    /* Shrink the vector */
+    node_data_free_container( node );        /* Free the container holding data. */
+    vector->data[ vector->size -1 ] = NULL;  
+    vector->size--;                          /* Shrink the vector */
     return data;
   }
 }
