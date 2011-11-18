@@ -37,6 +37,12 @@
 #include <ecl_grid.h>
 #include <point.h>
 #include <tetrahedron.h>
+
+
+/*
+  If openmp is enabled the main loop in ecl_grid_init_GRDECL_data__ is
+  parallelized with openmp.  
+*/
 #ifdef HAVE_OPENMP
 #include <omp.h>
 #endif
@@ -814,6 +820,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
 }
 
 
+// OpenMP?
 static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   int c , i;
   for (i=0; i < ecl_grid->size; i++) {
@@ -1387,6 +1394,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
   }
   
   {
+    // Could have openmp here as well.
     for (index = 0; index < size; index++) {
       ecl_kw_type * coords_kw  = ecl_file_iget_named_kw(ecl_file , COORDS_KW  , index + (*cell_offset));
       ecl_kw_type * corners_kw = ecl_file_iget_named_kw(ecl_file , CORNERS_KW , index + (*cell_offset));
