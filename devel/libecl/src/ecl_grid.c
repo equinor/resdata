@@ -37,8 +37,9 @@
 #include <ecl_grid.h>
 #include <point.h>
 #include <tetrahedron.h>
-
-
+#ifdef HAVE_OPENMP
+#include <omp.h>
+#endif
 
 /**
   this function implements functionality to load eclispe grid files,
@@ -1153,19 +1154,17 @@ static void ecl_grid_set_lgr_name_GRID(ecl_grid_type * lgr_grid , const ecl_file
 
 
 
-/**
-   This function can in principle be called by several threads with
-   different [j1, j2) intervals to speed things up a bit. 
-*/
-
-static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid , int j1 , int j2 , const float * zcorn , const float * coord , const int * actnum) {
+static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum) {
   const int nx = ecl_grid->nx;
   const int ny = ecl_grid->ny;
   const int nz = ecl_grid->nz;
   point_type pillars[4][2];
   int i,j,k;
-  
-  for (j=j1; j < j2; j++) {
+
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
+  for (j=0; j < ny; j++) {
     for (i=0; i < nx; i++) {
       int pillar_index[4];
       int ip;
@@ -1217,7 +1216,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid 
 
   if (mapaxes != NULL)
     ecl_grid_init_mapaxes( ecl_grid , mapaxes );
-  ecl_grid_init_GRDECL_data__( ecl_grid , 0 , ny , zcorn , coord , actnum);
+  ecl_grid_init_GRDECL_data__( ecl_grid , zcorn , coord , actnum);
     
   ecl_grid_set_center( ecl_grid );
   ecl_grid_update_index( ecl_grid );

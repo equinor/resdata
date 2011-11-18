@@ -6,6 +6,10 @@ include_directories( ${libutil_build_path} )
 include_directories( ${libutil_src_path} )
 include_directories( ${libgeometry_src_path} )
 
+if (OPENMP)
+   add_definitions( -DHAVE_OPENMP -fopenmp )
+endif()
+
 
 add_library( ecl_static  STATIC ${source_files} )
 add_library( ecl_shared  SHARED ${source_files} )
@@ -15,6 +19,13 @@ set_target_properties( ecl_shared PROPERTIES OUTPUT_NAME ecl )
 
 target_link_libraries( ecl_static ${util_static} ${geometry_static} )
 target_link_libraries( ecl_shared ${util_shared} ${geometry_shared})
+
+INCLUDE(CheckCCompilerFlag)
+CHECK_C_COMPILER_FLAG(-fopenmp OPENMP)
+if (OPENMP)
+   target_link_libraries( ecl_static gomp )
+   target_link_libraries( ecl_shared gomp )
+endif()
 
 #-----------------------------------------------------------------
 if (ECL_INSTALL_PREFIX)
