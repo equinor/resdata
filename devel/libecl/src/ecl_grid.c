@@ -500,7 +500,12 @@ static double ecl_cell_max_y( const ecl_cell_type * cell ) {
    completely. We therefor try to invalidate such cells here. The
    algorithm used is the same as used for RMS; however RMS will mark
    the cells as inactive - whereas we mark already inactive cells as
-   invalid.
+   invalid. 
+
+   It is very important that this mechanism is NOT used to set cells
+   to inactive; as that will break completely when it comes to
+   e.g. data like PRESSURE and SWAT which are defined as a number of
+   active elements.
  */
 
 
