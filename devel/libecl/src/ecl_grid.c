@@ -489,15 +489,54 @@ static double ecl_cell_max_y( const ecl_cell_type * cell ) {
    coordinates) computations they are marked as 'tainted' in this
    function. The tainting procedure is completely heuristic, and
    probably wrong.
-*/
+   
+   --------------
+
+   There is second heuristic which marks cells as invalid. In some
+   cases (which ??) cells outside the area of interest are just set to
+   have all four corner at the same arbitrary depth; these cells are
+   inactive and do not affect flow simulations - however the arbitrary
+   location of the cells warps visualisation of normal inactive cells
+   completely. We therefor try to invalidate such cells here. The
+   algorithm used is the same as used for RMS; however RMS will mark
+   the cells as inactive - whereas we mark already inactive cells as
+   invalid.
+ */
 
 
 static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
   int c;
   for (c = 0; c < 8; c++) {
     const point_type *p = cell->corner_list[c];
-    if ((p->x == 0) && (p->y == 0))
+    if ((p->x == 0) && (p->y == 0)) {
       cell->tainted_geometry = true;
+      break;
+    }
+  }
+
+  /*
+    Second heuristic to invalidate cells.
+  */
+  if (!cell->active) {
+    if (!cell->tainted_geometry) {
+      const point_type *p0 = cell->corner_list[0];
+      int cell_index = 1;
+      while (true) {
+        const point_type * pi = cell->corner_list[cell_index];
+        // There is a difference - the cell is valid.
+        if (pi->z != p0->z)
+          break; 
+        else {
+          cell_index++;
+          if (cell_index == 8) {
+            // They have all been at the same height up until now;
+            // the cell is marked as invalid.
+            cell->tainted_geometry = true;
+            break;
+          }
+        }
+      }
+    }
   }
 }
 
