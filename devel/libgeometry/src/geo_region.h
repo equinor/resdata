@@ -42,8 +42,8 @@ extern "C" {
 
   void                    geo_region_select_inside_polygon( geo_region_type * region   , const geo_polygon_type * polygon);
   void                    geo_region_select_outside_polygon( geo_region_type * region  , const geo_polygon_type * polygon);
-  void                    geo_region_dselect_inside_polygon( geo_region_type * region  , const geo_polygon_type * polygon);
-  void                    geo_region_dselect_outside_polygon( geo_region_type * region , const geo_polygon_type * polygon);
+  void                    geo_region_deselect_inside_polygon( geo_region_type * region  , const geo_polygon_type * polygon);
+  void                    geo_region_deselect_outside_polygon( geo_region_type * region , const geo_polygon_type * polygon);
   
   void                    geo_region_select_above_line( geo_region_type * region, const double xcoords[2] , const double ycoords[2]);
   void                    geo_region_select_below_line( geo_region_type * region, const double xcoords[2] , const double ycoords[2]);
