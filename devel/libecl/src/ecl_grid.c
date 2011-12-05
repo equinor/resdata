@@ -528,8 +528,8 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
       int cell_index = 1;
       while (true) {
         const point_type * pi = cell->corner_list[cell_index];
-        // There is a difference - the cell is valid.
         if (pi->z != p0->z)
+          // There is a difference - the cell is certainly valid.
           break; 
         else {
           cell_index++;
@@ -550,9 +550,9 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
 
 
 /**
-   observe that when allocating based on a grid file not all cells are
-   necessarily accessed beyond this function. in general not all cells
-   will have a coords/corners section in the grid file.
+   Observe that when allocating based on a grid file not all cells are
+   necessarily accessed beyond this function. In general not all cells
+   will have a coords/corners section in the grid file.  
 */
 
 
