@@ -1,9 +1,10 @@
 add_executable( convert.x convert.c )
 add_executable( kw_list.x kw_list.c )
 add_executable( grid_info.x grid_info.c )
+add_executable( grid_dump.x grid_dump.c )
 add_executable( summary.x view_summary.c )
 
-set(program_list convert.x kw_list.x grid_info.x summary.x)
+set(program_list grid_dump.x convert.x kw_list.x grid_info.x summary.x)
 foreach(prog ${program_list})
    target_link_libraries( ${prog} ecl_static util_static )
    #-----------------------------------------------------------------

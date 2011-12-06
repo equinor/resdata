@@ -115,6 +115,8 @@ bool            ecl_grid_cell_invalid1(const ecl_grid_type * ecl_grid , int glob
 bool            ecl_grid_cell_invalid3(const ecl_grid_type * ecl_grid , int i , int j , int k);
 double          ecl_grid_cell_invalid1A(const ecl_grid_type * grid , int active_index);
 
+void            ecl_grid_dump(const ecl_grid_type * grid , FILE * stream);
+
 /* lgr related functions */
 const ecl_grid_type   * ecl_grid_get_cell_lgr3(const ecl_grid_type * grid , int i, int j , int k);
 const ecl_grid_type   * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int active_index);

@@ -40,6 +40,14 @@ void point_compare( const point_type *p1 , const point_type * p2, bool * equal) 
 }
 
 
+void point_dump( const point_type * p , FILE * stream) {
+  util_fwrite_double( p->x , stream );
+  util_fwrite_double( p->y , stream );
+  util_fwrite_double( p->z , stream );
+}
+
+
+
 void point_set(point_type * p , double x , double y , double z) {
   p->x = x;
   p->y = y;
