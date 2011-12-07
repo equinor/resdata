@@ -982,10 +982,11 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , const ecl_kw_type 
 }
 
 /**
-   the functions ecl_grid_set_active_index() must be called
-   immediately prior to calling this function, to ensure that
+   The function ecl_grid_set_active_index() must be called immediately
+   prior to calling this function, to ensure that
    ecl_grid->total_active is correct.
 */
+
 static void ecl_grid_realloc_index_map(ecl_grid_type * ecl_grid) {
   ecl_grid->index_map     = util_realloc(ecl_grid->index_map     , ecl_grid->size         * sizeof * ecl_grid->index_map     , __func__);
   ecl_grid->inv_index_map = util_realloc(ecl_grid->inv_index_map , ecl_grid->total_active * sizeof * ecl_grid->inv_index_map , __func__);
@@ -1452,9 +1453,9 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
     (*cell_offset) += size;
   }
 
+  if (grid_nr > 0) ecl_grid_set_lgr_name_GRID(grid , ecl_file , grid_nr);
   ecl_grid_set_center(grid);
   ecl_grid_update_index( grid );
-  if (grid_nr > 0) ecl_grid_set_lgr_name_GRID(grid , ecl_file , grid_nr);
   ecl_grid_taint_cells( grid );
   return grid;
 }
