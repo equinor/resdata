@@ -52,14 +52,15 @@
 
 
 int main(int argc , char ** argv) {
-  vector_type * v = vector_alloc_new();
-  
-  vector_append_ref( v , NULL );
-  vector_append_ref( v , NULL );
-  
-  vector_pop( v );
-  vector_pop( v );
-
+  int a = 1;
+  int b = 1;
+  for (int i=0; i < 24; i++) {
+    matrix_type * m = matrix_alloc( a , b );
+    printf(" m: [%d,%d] \n",a,b);
+    a *= 2;
+    b *= 2;
+    matrix_free( m );
+  }
 }
 
 

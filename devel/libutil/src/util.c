@@ -4035,7 +4035,7 @@ void * util_malloc(size_t size , const char * caller) {
   else {
     data = malloc( size );
     if (data == NULL) 
-      util_abort("%s: failed to allocate %d bytes - aborting \n",caller , size);
+      util_abort("%s: failed to allocate %zu bytes - aborting \n",caller , size);
 
     /* 
        Initializing with something different from zero - hopefully

@@ -80,12 +80,15 @@ struct matrix_struct {
 
 /*#define GET_INDEX(m,i,j) (m->row_stride * (i) + m->column_stride * (j))*/
 
-static inline int GET_INDEX( const matrix_type * m , int i , int j) {
+static inline size_t GET_INDEX( const matrix_type * m , size_t i , size_t j) {
   return m->row_stride *i + m->column_stride *j;
 }
 
 static inline size_t MATRIX_DATA_SIZE( const matrix_type * m) {
-  return m->columns * m->column_stride;
+  size_t col    = m->columns;
+  size_t stride = m->column_stride;
+
+  return col*stride;
 }
 
 
@@ -150,7 +153,7 @@ static void matrix_realloc_data__( matrix_type * matrix , bool safe_mode ) {
 
     /* Initializing matrix content to zero. */
     if (matrix->data != NULL) {
-      for (int i = 0; i < data_size; i++)
+      for (size_t i = 0; i < data_size; i++)
         matrix->data[i] = 0;
     } else 
       data_size = 0;
@@ -858,8 +861,8 @@ void matrix_transpose(const matrix_type * A , matrix_type * T) {
     int i,j;
     for (i=0; i < A->rows; i++) {
       for (j=0; j < A->columns; j++) {
-        int src_index    = GET_INDEX(A , i , j );
-        int target_index = GET_INDEX(T , j , i );
+        size_t src_index    = GET_INDEX(A , i , j );
+        size_t target_index = GET_INDEX(T , j , i );
         
         T->data[ target_index ] = A->data[ src_index ];
       }
