@@ -549,6 +549,7 @@ static void ecl_kw_iset_static(ecl_kw_type *ecl_kw , int i , const void *iptr) {
   memcpy(&ecl_kw->data[i * ecl_kw->sizeof_ctype] , iptr, ecl_kw->sizeof_ctype);
 }
 
+
 void ecl_kw_iget(const ecl_kw_type *ecl_kw , int i , void *iptr) { 
   ecl_kw_iget_static(ecl_kw , i , iptr);
 }

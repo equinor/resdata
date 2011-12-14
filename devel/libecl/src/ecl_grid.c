@@ -2578,30 +2578,108 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
 
 */
 
+static int ecl_grid_get_property_index__(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
+  int kw_size        = ecl_kw_get_size( ecl_kw );
+  int lookup_index   = -1;
+
+  if (kw_size == ecl_grid->nx * ecl_grid->ny * ecl_grid->nz) 
+    lookup_index = ecl_grid_get_global_index3(ecl_grid , i , j , k);
+  else if (kw_size == ecl_grid->total_active) 
+    /* Will be set to -1 if the cell is not active. */ 
+    lookup_index = ecl_grid_get_active_index3(ecl_grid , i , j , k);
+  else 
+    util_abort("%s: incommensurable size ... \n",__func__);
+
+  return lookup_index;
+}
+
+
+
+static bool ecl_grid_get_property__(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k, void * value) {
+  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
+  if ((ecl_type == ECL_FLOAT_TYPE) || (ecl_type == ECL_INT_TYPE) || (ecl_type == ECL_DOUBLE_TYPE)) {
+    int lookup_index   = ecl_grid_get_property_index__( ecl_grid , ecl_kw , i , j , k );
+
+    if (lookup_index >= 0) {
+      ecl_kw_iget( ecl_kw , lookup_index , value );
+      return true;
+    } else 
+      return false;
+      
+  } else {
+    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_util_get_type_name( ecl_type ) , __func__);
+    return false;
+  }
+}
+
+
+double ecl_grid_get_double_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
+  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
+  if (ecl_type == ECL_DOUBLE_TYPE) {
+    double value;
+    if (ecl_grid_get_property__( ecl_grid , ecl_kw , i , j , k , &value))
+      return value;
+    else
+      return -1;   // (i,j,k) Points to an inactive cell.
+  } else {
+    util_abort("%s: Wrong type \n" , __func__);
+    return -1;
+  }
+}
+
+
+int ecl_grid_get_int_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
+  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
+  if (ecl_type == ECL_INT_TYPE) {
+    int value;
+
+    if (ecl_grid_get_property__( ecl_grid , ecl_kw , i , j , k , &value))
+      return value;
+    else
+      return -1;    // (i,j,k) Points to an inactive cell.
+
+  } else {
+    util_abort("%s: Wrong type \n" , __func__);
+    return -1;
+  }
+}
+
+
+float ecl_grid_get_float_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
+  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
+  if (ecl_type == ECL_FLOAT_TYPE) {
+    float value;
+    
+    if (ecl_grid_get_property__( ecl_grid , ecl_kw , i , j , k , &value))
+      return value;
+    else
+      return -1;    // (i,j,k) Points to an inactive cell.
+    
+  } else {
+    util_abort("%s: Wrong type \n" , __func__);
+    return -1;
+  }
+}
 
 double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
   ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
   if ((ecl_type == ECL_FLOAT_TYPE) || (ecl_type == ECL_INT_TYPE) || (ecl_type == ECL_DOUBLE_TYPE)) {
-    int kw_size        = ecl_kw_get_size( ecl_kw );
-    int lookup_index   = -1;
-
-    if (kw_size == ecl_grid->nx * ecl_grid->ny * ecl_grid->nz) 
-      lookup_index = ecl_grid_get_global_index3(ecl_grid , i , j , k);
-    else if (kw_size == ecl_grid->total_active) 
-      /* Will be set to -1 if the cell is not active. */ 
-      lookup_index = ecl_grid_get_active_index3(ecl_grid , i , j , k);
-    else 
-      util_abort("%s: incommensurable size ... \n",__func__);
-
+    int lookup_index   = ecl_grid_get_property_index__( ecl_grid , ecl_kw , i , j , k );
+    
     if (lookup_index >= 0)
       return ecl_kw_iget_as_double( ecl_kw , lookup_index );
     else
       return -1;   /* Tried to lookup an inactive cell. */
+
   } else {
     util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_util_get_type_name( ecl_type ) , __func__);
     return -1;
   }
 }
+
+
+
+
 
 
 /**
@@ -2620,7 +2698,7 @@ double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type 
 void ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j, double_vector_type * column) {
   ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
   if ((ecl_type == ECL_FLOAT_TYPE) || (ecl_type == ECL_INT_TYPE) || (ecl_type == ECL_DOUBLE_TYPE)) {
-    int kw_size        = ecl_kw_get_size( ecl_kw );
+    int kw_size           = ecl_kw_get_size( ecl_kw );
     bool use_global_index = false;
 
     if (kw_size == ecl_grid->nx * ecl_grid->ny * ecl_grid->nz) 

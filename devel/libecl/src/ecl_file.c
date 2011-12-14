@@ -765,7 +765,7 @@ static file_map_type * ecl_file_get_blockmap( ecl_file_type * ecl_file , const c
 static void ecl_file_scan( ecl_file_type * ecl_file ) {
   fortio_fseek( ecl_file->fortio , 0 , SEEK_SET );
   {
-    ecl_kw_type   * work_kw = ecl_kw_alloc_new("WORK-KW" , 0 , ECL_INT_TYPE , NULL);
+    ecl_kw_type * work_kw = ecl_kw_alloc_new("WORK-KW" , 0 , ECL_INT_TYPE , NULL);
     long current_offset;
     while (true) {
       current_offset = fortio_ftell( ecl_file->fortio );
