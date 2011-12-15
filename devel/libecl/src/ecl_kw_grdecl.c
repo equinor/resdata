@@ -85,8 +85,6 @@ static bool ecl_kw_grdecl_fseek_kw__(const char * kw , FILE * stream) {
     c = fgetc( stream );                       // Read one character  
     fseek( stream , kw_pos , SEEK_SET );       // Seek back to beginning of kw
 
-    printf("kw_pos:%d \n",kw_pos);
-
     if (isspace(c)) {
       if (kw_pos > 0) {
         fseek( stream , kw_pos - 1 , SEEK_SET);

@@ -272,6 +272,21 @@ void ecl_kw_get_memcpy_data(const ecl_kw_type *ecl_kw , void *target) {
   memcpy(target , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
 }
 
+void ecl_kw_get_memcpy_int_data(const ecl_kw_type *ecl_kw , int * target) {
+  if (ecl_kw->ecl_type == ECL_INT_TYPE)
+    ecl_kw_get_memcpy_data( ecl_kw , target );
+}
+
+void ecl_kw_get_memcpy_float_data(const ecl_kw_type *ecl_kw , float *target) {
+  if (ecl_kw->ecl_type == ECL_FLOAT_TYPE)
+    ecl_kw_get_memcpy_data( ecl_kw , target );
+}
+
+void ecl_kw_get_memcpy_double_data(const ecl_kw_type *ecl_kw , double *target) {
+if (ecl_kw->ecl_type == ECL_DOUBLE_TYPE)
+    ecl_kw_get_memcpy_data( ecl_kw , target );
+}
+
 
 /** Allocates a untyped buffer with exactly the same content as the ecl_kw instances data. */
 void * ecl_kw_alloc_data_copy(const ecl_kw_type * ecl_kw) {
@@ -565,7 +580,7 @@ double ecl_kw_iget_as_double(const ecl_kw_type * ecl_kw , int index) {
   else if (ecl_kw->ecl_type == ECL_DOUBLE_TYPE)
     return ecl_kw_iget_double( ecl_kw, index);
   else if (ecl_kw->ecl_type == ECL_INT_TYPE)
-    return ecl_kw_iget_int( ecl_kw, index);
+    return ecl_kw_iget_int( ecl_kw, index); /*  */
   else {
     util_abort("%s: can not be converted to double - no data for you! \n",__func__);
     return -1;
@@ -1461,19 +1476,47 @@ void ecl_kw_fwrite_param(const char * filename , bool fmt_file , const char * he
 void ecl_kw_get_data_as_double(const ecl_kw_type * ecl_kw , double * double_data) {
 
   if (ecl_kw->ecl_type == ECL_DOUBLE_TYPE)
+    // Direct memcpy - no conversion
     ecl_kw_get_memcpy_data(ecl_kw , double_data);
   else {
     if (ecl_kw->ecl_type == ECL_FLOAT_TYPE) {
       const float * float_data = (const float *) ecl_kw->data;
       util_float_to_double(double_data , float_data  , ecl_kw->size);
-    }
-    else {
+    } else if (ecl_kw->ecl_type == ECL_INT_TYPE) {
+      const int * int_data = (const int *) ecl_kw->data;
+      for (int i=0; i < ecl_kw->size; i++)
+        double_data[i] = int_data[i];
+    } else {
       fprintf(stderr,"%s: type can not be converted to double - aborting \n",__func__);
       ecl_kw_summarize(ecl_kw);
-      util_abort("%s: ABorting \n",__func__);
+      util_abort("%s: Aborting \n",__func__);
     }
   }
 }
+
+
+void ecl_kw_get_data_as_float(const ecl_kw_type * ecl_kw , float * float_data) {
+
+  if (ecl_kw->ecl_type == ECL_FLOAT_TYPE)
+    // Direct memcpy - no conversion
+    ecl_kw_get_memcpy_data(ecl_kw , float_data);
+  else {
+    if (ecl_kw->ecl_type == ECL_DOUBLE_TYPE) {
+      const double * double_data = (const double *) ecl_kw->data;
+      util_double_to_float(float_data , double_data  , ecl_kw->size);
+    } else if (ecl_kw->ecl_type == ECL_INT_TYPE) {
+      const int * int_data = (const int *) ecl_kw->data;
+      for (int i=0; i < ecl_kw->size; i++)
+        float_data[i] = int_data[i];
+    } else {
+      fprintf(stderr,"%s: type can not be converted to float - aborting \n",__func__);
+      ecl_kw_summarize(ecl_kw);
+      util_abort("%s: Aborting \n",__func__);
+    }
+  }
+}
+
+
 
 
 /**
