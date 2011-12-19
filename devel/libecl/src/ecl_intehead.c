@@ -43,12 +43,18 @@ ecl_intehead_type * ecl_intehead_alloc( const ecl_kw_type * intehead_kw ) {
   intehead->year      = data[INTEHEAD_YEAR_INDEX];
   intehead->version   = data[INTEHEAD_VERSION_INDEX];
   intehead->phase_sum = data[INTEHEAD_PHASE_INDEX];
-  intehead->num_wells = data[INTEHEAD_NWELLS_INDEX];
+
+  intehead->nwells    = data[INTEHEAD_NWELLS_INDEX];
   intehead->niwelz    = data[INTEHEAD_NIWELZ_INDEX];
   intehead->nzwelz    = data[INTEHEAD_NZWELZ_INDEX];
+
   intehead->niconz    = data[INTEHEAD_NICONZ_INDEX];
   intehead->ncwmax    = data[INTEHEAD_NCWMAX_INDEX];
-  
+
+  intehead->nisegz    = data[INTEHEAD_NISEGZ_INDEX];
+  intehead->nsegmx    = data[INTEHEAD_NSEGMX_INDEX];
+  intehead->nswlmx    = data[INTEHEAD_NSWLMX_INDEX];
+
   // The only derived quantity
   intehead->sim_time  = intehead_date( intehead->day , intehead->month , intehead->year );
   return intehead;
