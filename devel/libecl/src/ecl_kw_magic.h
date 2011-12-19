@@ -25,6 +25,8 @@ extern "C" {
 #define IWEL_KW      "IWEL"
 #define ZWEL_KW      "ZWEL"
 #define ICON_KW      "ICON"
+#define ISEG_KW      "ISEG"
+
 
 /*****************************************************************/
 /*                     Summary files                             */

@@ -44,6 +44,11 @@ ecl_intehead_type * ecl_intehead_alloc( const ecl_kw_type * intehead_kw ) {
   intehead->version   = data[INTEHEAD_VERSION_INDEX];
   intehead->phase_sum = data[INTEHEAD_PHASE_INDEX];
 
+  intehead->nx        = data[INTEHEAD_NX_INDEX];
+  intehead->ny        = data[INTEHEAD_NY_INDEX];
+  intehead->nz        = data[INTEHEAD_NZ_INDEX];
+  intehead->nactive   = data[INTEHEAD_NACTIVE_INDEX];
+
   intehead->nwells    = data[INTEHEAD_NWELLS_INDEX];
   intehead->niwelz    = data[INTEHEAD_NIWELZ_INDEX];
   intehead->nzwelz    = data[INTEHEAD_NZWELZ_INDEX];

@@ -36,7 +36,10 @@ extern "C" {
     int    version;         // 100, 300, 500 (Eclipse300-Thermal)
     int    phase_sum;       // Oil = 1   Gas = 2    Water = 4
     
-
+    int    nx;
+    int    ny;
+    int    nz;
+    int    nactive;
     /*-----------------------------------------------------------------*/
     /* All fields below the line are taken literally (apart from
        lowercasing) from the section about restart files in the
@@ -57,6 +60,8 @@ extern "C" {
     int    nisegz;          // Number of entries pr segment in the ISEG array     
     int    nsegmx;          // The maximum number of segments pr well               
     int    nswlmx;          // The maximum number of segmented wells                
+    int    nlbrmx;          // The maximum number of lateral branches pr well
+    int    nilbrz;          // The number of entries pr segment in ILBR array  
   } ecl_intehead_type;
 
 
@@ -65,20 +70,26 @@ extern "C" {
 #define INTEHEAD_MONTH_INDEX   65
 #define INTEHEAD_YEAR_INDEX    66
 
-#define INTEHEAD_VERSION_INDEX 94    /* This is ECLIPSE100 || ECLIPSE300 - not temporal version. */
+#define INTEHEAD_NX_INDEX       8
+#define INTEHEAD_NY_INDEX       9
+#define INTEHEAD_NZ_INDEX      10
+#define INTEHEAD_NACTIVE_INDEX 11
+
 #define INTEHEAD_PHASE_INDEX   14
+#define INTEHEAD_VERSION_INDEX 94    /* This is ECLIPSE100 || ECLIPSE300 - not temporal version. */
 
 #define INTEHEAD_NWELLS_INDEX  16
 #define INTEHEAD_NIWELZ_INDEX  24
 #define INTEHEAD_NZWELZ_INDEX  27
 
-#define INTEHEAD_NICONZ_INDEX  32
 #define INTEHEAD_NCWMAX_INDEX  17
+#define INTEHEAD_NICONZ_INDEX  32
 
 #define INTEHEAD_NSWLMX_INDEX  175
 #define INTEHEAD_NSEGMX_INDEX  176
+#define INTEHEAD_NLBRMX_INDEX  177
 #define INTEHEAD_NISEGZ_INDEX  178
-
+#define INTEHEAD_NILBRZ_INDEX  180
 
   void                ecl_intehead_free( ecl_intehead_type * intehead );
   ecl_intehead_type * ecl_intehead_alloc( const ecl_kw_type * intehead_kw );
