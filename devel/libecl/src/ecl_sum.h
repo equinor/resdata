@@ -129,9 +129,11 @@ double ecl_sum_iget_general_var(const ecl_sum_type * ecl_sum , int internal_inde
 void                 ecl_sum_init_data_vector( const ecl_sum_type * ecl_sum , double_vector_type * data_vector , int data_index , bool report_only );
 double_vector_type * ecl_sum_alloc_data_vector( const ecl_sum_type * ecl_sum  , int data_index , bool report_only);
 time_t_vector_type * ecl_sum_alloc_time_vector( const ecl_sum_type * ecl_sum  , bool report_only);
-time_t       ecl_sum_get_end_time( const ecl_sum_type * ecl_sum);
-time_t       ecl_sum_get_start_time(const ecl_sum_type * );
-const char * ecl_sum_get_case(const ecl_sum_type * );
+  time_t       ecl_sum_get_data_start( const ecl_sum_type * ecl_sum );
+  time_t       ecl_sum_get_end_time( const ecl_sum_type * ecl_sum);
+  time_t       ecl_sum_get_start_time(const ecl_sum_type * );
+  
+  const char * ecl_sum_get_case(const ecl_sum_type * );
 bool         ecl_sum_same_case( const ecl_sum_type * ecl_sum , const char * input_file );
 
 void ecl_sum_resample_from_sim_days( const ecl_sum_type * ecl_sum , const double_vector_type * sim_days , double_vector_type * value , const char * gen_key);
@@ -139,6 +141,7 @@ void ecl_sum_resample_from_sim_time( const ecl_sum_type * ecl_sum , const time_t
 time_t ecl_sum_time_from_days( const ecl_sum_type * ecl_sum , double sim_days );
 double ecl_sum_days_from_time( const ecl_sum_type * ecl_sum , time_t sim_time );
 double                ecl_sum_get_sim_length( const ecl_sum_type * ecl_sum ) ;
+  double                ecl_sum_get_first_day( const ecl_sum_type * ecl_sum );
 
 /*****************************************************************/
   stringlist_type     * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum , const char * pattern);

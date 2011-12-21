@@ -217,6 +217,9 @@ struct ecl_sum_ministep_struct {
 struct ecl_sum_data_struct {
   vector_type            * data;                   /* Vector of ecl_sum_ministep_type instances. */
   const ecl_smspec_type  * smspec;                 /* A shared reference - only used for providing good error messages. */
+  double                   days_start;
+  time_t                   data_start_time;        /* This is the first time_t we have data for; will typically agree with sim_start, 
+                                                      but in the case of restarts it will be after sim_start. */
   time_t                   sim_end;
   double                   sim_length;
   int                      first_ministep;
@@ -321,6 +324,8 @@ static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
   
   data->first_report_step     =  1024 * 1024;
   data->last_report_step      = -1024 * 1024;
+  data->days_start            = 0;
+  data->data_start_time       = -1;
   data->sim_end               = -1;
   data->sim_length            = -1;
   data->first_ministep        = -1;
@@ -344,8 +349,11 @@ static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
 }
 
 
-time_t ecl_sum_data_get_sim_end   ( const ecl_sum_data_type * data ) { return data->sim_end; }
+time_t ecl_sum_data_get_sim_end   (const ecl_sum_data_type * data ) { return data->sim_end; }
 
+time_t ecl_sum_data_get_data_start   ( const ecl_sum_data_type * data ) { return data->data_start_time; }
+
+double ecl_sum_data_get_first_day( const ecl_sum_data_type * data) { return data->days_start; }
 
 /**
    Returns the number of simulations days from the start of the
@@ -366,9 +374,16 @@ static const ecl_sum_ministep_type * ecl_sum_data_iget_ministep( const ecl_sum_d
 
 
 
+/**
+   The check_sim_time() and check_sim_days() routines check if you
+   have summary data for the requested date/days value. In the case of
+   a restarted case, where the original case is missing - this will
+   return false if the input values are in the region after simulation
+   start with no data. 
+*/
+
 bool ecl_sum_data_check_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
-  time_t sim_start = ecl_smspec_get_start_time( data->smspec );
-  if ((sim_time < sim_start) || (sim_time > data->sim_end))
+  if ((sim_time < data->data_start_time) || (sim_time > data->sim_end))
     return false;
   else
     return true;
@@ -376,13 +391,11 @@ bool ecl_sum_data_check_sim_time( const ecl_sum_data_type * data , time_t sim_ti
 
 
 bool ecl_sum_data_check_sim_days( const ecl_sum_data_type * data , double sim_days) {
-  if ((sim_days < 0) || ( sim_days > data->sim_length))
+  if ((sim_days < data->days_start) || ( sim_days > data->sim_length))
     return false;
   else
     return true;
 }
-
-
 
 
 
@@ -425,10 +438,15 @@ bool ecl_sum_data_check_sim_days( const ecl_sum_data_type * data , double sim_da
 
 
 static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
-  time_t sim_start = ecl_smspec_get_start_time( data->smspec );
-
-  if ((sim_time < sim_start) || (sim_time > data->sim_end))
-    util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",__func__, sim_time , sim_start , data->sim_end);
+  time_t data_start_time = data->data_start_time;
+  
+  if ((sim_time < data_start_time) || (sim_time > data->sim_end)) {
+    fprintf(stderr , "Simulation start: "); util_fprintf_date( ecl_smspec_get_start_time( data->smspec ) , stderr );
+    fprintf(stderr , "Data start......: "); util_fprintf_date( data_start_time , stderr );
+    fprintf(stderr , "Simulation end .: "); util_fprintf_date( data->sim_end , stderr );
+    fprintf(stderr , "Requested date .: "); util_fprintf_date( sim_time , stderr );
+    util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",__func__, sim_time , data_start_time , data->sim_end);
+  }
   
   /* 
      The moment we have passed the intial test we MUST find a valid
@@ -459,7 +477,7 @@ static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data 
           if (sim_time > ministep->sim_time)    /*     Low-----Center---X---High */
             low_index = center_index;
           else {
-            time_t prev_time = sim_start;
+            time_t prev_time = data_start_time;
             if (center_index > 0) {
               const ecl_sum_ministep_type * prev_step = ecl_sum_data_iget_ministep( data , center_index - 1  );
               prev_time = prev_step->sim_time;
@@ -659,8 +677,20 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
     
     sum_data->first_ministep = first_ministep->ministep;
     sum_data->last_ministep  = last_ministep->ministep;
-    sum_data->sim_length     = last_ministep->sim_days;
-    sum_data->sim_end        = last_ministep->sim_time;
+
+
+    /* 
+       In most cases the days_start and data_start_time will agree
+       with the global simulation start; however in the case where we
+       have loaded a summary case from a restarted simulation where
+       the case we have restarted from is not available - then there
+       will be a difference.
+    */
+    
+    sum_data->days_start      = first_ministep->sim_days;
+    sum_data->data_start_time = first_ministep->sim_time;
+    sum_data->sim_length      = last_ministep->sim_days;
+    sum_data->sim_end         = last_ministep->sim_time;
   }
   
   

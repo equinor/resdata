@@ -641,6 +641,10 @@ time_t ecl_sum_iget_sim_time( const ecl_sum_type * ecl_sum , int index ) {
   return ecl_sum_data_iget_sim_time( ecl_sum->data , index );
 }
 
+time_t ecl_sum_get_data_start( const ecl_sum_type * ecl_sum ) {
+  return ecl_sum_data_get_data_start( ecl_sum->data );
+}
+
 time_t ecl_sum_get_start_time( const ecl_sum_type * ecl_sum) {
   return ecl_smspec_get_start_time( ecl_sum->smspec );
 }
@@ -833,6 +837,10 @@ double ecl_sum_days_from_time( const ecl_sum_type * ecl_sum , time_t sim_time ) 
   return seconds_diff * 1.0 / (3600 * 24.0);
 }
 
+
+double ecl_sum_get_first_day( const ecl_sum_type * ecl_sum ) {
+  return ecl_sum_data_get_first_day( ecl_sum->data );
+}
 
 double ecl_sum_get_sim_length( const ecl_sum_type * ecl_sum ) {
   return ecl_sum_data_get_sim_length( ecl_sum->data );
