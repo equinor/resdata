@@ -1664,8 +1664,22 @@ const char * ecl_smspec_get_join_string( const ecl_smspec_type * smspec) {
     with stringlist_free();
 */
 
-stringlist_type * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec ) {
-  return hash_alloc_stringlist( smspec->well_var_index );
+stringlist_type * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec , const char * pattern) {
+  stringlist_type * well_list = stringlist_alloc_new( );
+  {
+    hash_iter_type * iter = hash_iter_alloc( smspec->well_var_index );
+    
+    while (!hash_iter_is_complete( iter )) {
+      const char * well_name = hash_iter_get_next_key( iter );
+      if (pattern == NULL)
+        stringlist_append_copy( well_list , well_name );
+      else if (util_fnmatch( pattern , well_name) == 0) 
+        stringlist_append_copy( well_list , well_name );
+    }
+    hash_iter_free(iter);
+  }
+  
+  return well_list;
 }
 
 

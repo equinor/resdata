@@ -786,8 +786,8 @@ void ecl_sum_select_matching_general_var_list( const ecl_sum_type * ecl_sum , co
   ecl_smspec_select_matching_general_var_list( ecl_sum->smspec , pattern , keys );
 }
 
-stringlist_type * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum ) {
-  return ecl_smspec_alloc_well_list( ecl_sum->smspec );
+stringlist_type * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum , const char * pattern) {
+  return ecl_smspec_alloc_well_list( ecl_sum->smspec , pattern );
 }
 
 stringlist_type * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum ) {

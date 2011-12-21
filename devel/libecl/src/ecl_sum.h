@@ -141,7 +141,7 @@ double ecl_sum_days_from_time( const ecl_sum_type * ecl_sum , time_t sim_time );
 double                ecl_sum_get_sim_length( const ecl_sum_type * ecl_sum ) ;
 
 /*****************************************************************/
-stringlist_type     * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum );
+  stringlist_type     * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum , const char * pattern);
 stringlist_type     * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum );
 stringlist_type     * ecl_sum_alloc_matching_general_var_list(const ecl_sum_type * ecl_sum , const char * pattern);  
 void                  ecl_sum_select_matching_general_var_list( const ecl_sum_type * ecl_sum , const char * pattern , stringlist_type * keys);
