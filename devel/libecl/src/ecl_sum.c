@@ -794,6 +794,10 @@ stringlist_type * ecl_sum_alloc_well_list( const ecl_sum_type * ecl_sum , const 
   return ecl_smspec_alloc_well_list( ecl_sum->smspec , pattern );
 }
 
+stringlist_type * ecl_sum_alloc_group_list( const ecl_sum_type * ecl_sum , const char * pattern) {
+  return ecl_smspec_alloc_group_list( ecl_sum->smspec , pattern );
+}
+
 stringlist_type * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum ) {
   return ecl_smspec_alloc_well_var_list( ecl_sum->smspec );
 }

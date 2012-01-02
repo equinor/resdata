@@ -115,6 +115,7 @@ bool                    ecl_smspec_get_formatted( const ecl_smspec_type * ecl_sm
 const char            * ecl_smspec_get_header_file( const ecl_smspec_type * ecl_smspec );
 const char            * ecl_smspec_get_simulation_case(const ecl_smspec_type * );
   stringlist_type       * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec , const char * pattern);
+  stringlist_type       * ecl_smspec_alloc_group_list( const ecl_smspec_type * smspec , const char * pattern);
 stringlist_type       * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec );
 const char            * ecl_smspec_get_simulation_path(const ecl_smspec_type * ecl_smspec);
 const char            * ecl_smspec_get_base_name( const ecl_smspec_type * ecl_smspec);

@@ -912,7 +912,8 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
     if (strlen(restart_base)) {  /* We ignore the empty ones. */
       char * smspec_header = ecl_util_alloc_exfilename( ecl_smspec->simulation_path , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
       if (smspec_header == NULL) 
-        fprintf(stderr,"Warning - the file: %s refers to restart from case: %s - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
+        fprintf(stderr,"Warning - the case: %s refers to restart from case: %s - which was not found.... \n", ecl_smspec->simulation_case , restart_base);
+      
       else {
         if (!util_same_file(smspec_header , ecl_smspec->header_file)) {   /* Restart from the current case is ignored. */
           /* 
@@ -1680,6 +1681,31 @@ stringlist_type * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec , c
   }
   
   return well_list;
+}
+
+
+/** 
+    Returns a stringlist instance with all the (valid) group names. It
+    is the responsability of the calling scope to free the stringlist
+    with stringlist_free();
+*/
+
+stringlist_type * ecl_smspec_alloc_group_list( const ecl_smspec_type * smspec , const char * pattern) {
+  stringlist_type * group_list = stringlist_alloc_new( );
+  {
+    hash_iter_type * iter = hash_iter_alloc( smspec->group_var_index );
+    
+    while (!hash_iter_is_complete( iter )) {
+      const char * group_name = hash_iter_get_next_key( iter );
+      if (pattern == NULL)
+        stringlist_append_copy( group_list , group_name );
+      else if (util_fnmatch( pattern , group_name) == 0) 
+        stringlist_append_copy( group_list , group_name );
+    }
+    hash_iter_free(iter);
+  }
+  
+  return group_list;
 }
 
 
