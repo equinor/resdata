@@ -88,7 +88,8 @@ void              stringlist_fread(stringlist_type * , FILE * );
 void              stringlist_fwrite(const stringlist_type * , FILE * );
 void              stringlist_buffer_fread( stringlist_type * s , buffer_type * buffer );
 void              stringlist_buffer_fwrite( const stringlist_type * s , buffer_type * buffer );
-void              stringlist_sort(stringlist_type * , string_cmp_ftype * string_cmp);
+  void              stringlist_sort(stringlist_type * , string_cmp_ftype * string_cmp);
+  void stringlist_python_sort( stringlist_type * s , int cmp_flag);
 
 int               stringlist_select_matching(stringlist_type * names , const char * pattern);
 UTIL_IS_INSTANCE_HEADER(stringlist);

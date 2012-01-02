@@ -363,7 +363,9 @@ char ** stringlist_alloc_char_copy(const stringlist_type * stringlist) {
 
 /** 
     Scans the stringlist (linear scan) to see if it contains (at
-    least) one occurence of 's';
+    least) one occurence of 's'. Will never return true if the input
+    string @s equals NULL, altough the stringlist itself can contain
+    NULL elements.
 */
 
 bool stringlist_contains(const stringlist_type * stringlist , const char * s) {
@@ -377,6 +379,7 @@ bool stringlist_contains(const stringlist_type * stringlist , const char * s) {
       if (strcmp(istring , s) == 0) contains = true;
     index++;
   }
+
   return contains;
 }
 
@@ -587,6 +590,18 @@ void stringlist_sort(stringlist_type * s , string_cmp_ftype * string_cmp)
     vector_sort( s->strings , strcmp__ );
   else
     vector_sort( s->strings , string_cmp );
+}
+
+
+void stringlist_python_sort( stringlist_type * s , int cmp_flag) {
+  if (cmp_flag == 0)
+    stringlist_sort( s , NULL);
+  else if (cmp_flag == 1)
+    stringlist_sort( s , (string_cmp_ftype *) util_strcmp_int);
+  else if (cmp_flag == 2)
+    stringlist_sort( s , (string_cmp_ftype *) util_strcmp_float);
+  else
+    util_abort("%s: unrecognized cmp_flag:%d \n",__func__ , cmp_flag );
 }
 
 
