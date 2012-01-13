@@ -21,6 +21,7 @@ struct stepwise_struct {
   matrix_type      * beta;           // Quantities estimated by the stepwise algorithm
   double             y0; 
   bool_vector_type * active_set;
+  rng_type         * rng;           // Needed in the cross-validation 
 };
 
 
@@ -135,6 +136,15 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
     int block_size                 = nsample / blocks;
     matrix_type * beta             = matrix_alloc( nvar , 1 );
     bool_vector_type * active_rows = bool_vector_alloc( nsample, true );
+
+    /*True Cross-Validation: */
+    int * randperms     = util_malloc( sizeof * randperms * nsample, __func__);
+    for (int i=0; i < nsample; i++)
+      randperms[i] = i;
+    
+    /* Randomly perturb ensemble indices */
+    rng_shuffle_int( stepwise->rng , randperms , nsample );
+    
     
     for (int iblock = 0; iblock < blocks; iblock++) {
       int validation_start = iblock * block_size;
@@ -158,7 +168,7 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
         */
         if (blocks > 1) {                                      
           for (int i = validation_start; i <= validation_end; i++)
-            bool_vector_iset( active_rows , i , false );
+            bool_vector_iset( active_rows , randperms[i] , false );
         }
       }
       
@@ -188,8 +198,11 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
     }
     
     matrix_free( beta );  
+    free( randperms );
     bool_vector_free( active_rows );
   }
+  
+  /*inactivate the test_var-variable after completion*/
   bool_vector_iset( stepwise->active_set , test_var , false );  
   return prediction_error;
 }
@@ -258,6 +271,7 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
 
 static stepwise_type * stepwise_alloc__( int nsample , int nvar) {
   stepwise_type * stepwise = util_malloc( sizeof * stepwise , __func__ );
+
   
   stepwise->X0          = NULL;
   stepwise->Y0          = NULL;
@@ -268,9 +282,10 @@ static stepwise_type * stepwise_alloc__( int nsample , int nvar) {
 }
 
 
-stepwise_type * stepwise_alloc1( int nsample , int nvar) {
+stepwise_type * stepwise_alloc1( int nsample , int nvar, rng_type * rng) {
   stepwise_type * stepwise = stepwise_alloc__( nsample , nvar );
-  
+
+  stepwise->rng         = rng;
   stepwise->X0          = matrix_alloc( nsample , nvar );
   stepwise->Y0          = matrix_alloc( nsample , 1 );
   stepwise->data_owner  = true;
@@ -292,6 +307,7 @@ stepwise_type * stepwise_alloc2( matrix_type * X , matrix_type * Y , bool intern
   }
   return stepwise;
 }
+
 
 
 
