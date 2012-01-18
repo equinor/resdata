@@ -811,7 +811,7 @@ int main( int argc , char ** argv ) {
       const char    * config_arg  = argv[1];
       
       config_init( config );
-      config_parse( config , config_arg , "--" , NULL , NULL , false , true );
+      config_parse( config , config_arg , "--" , NULL , NULL , true , false , true );
       
       {
         char * config_path;
