@@ -1163,15 +1163,22 @@ void @TYPE@_vector_buffer_fwrite(const @TYPE@_vector_type * vector , buffer_type
 }
 
 
-@TYPE@_vector_type * @TYPE@_vector_buffer_fread_alloc( buffer_type * buffer ) {
+void @TYPE@_vector_buffer_fread(@TYPE@_vector_type * vector , buffer_type * buffer) {
   @TYPE@     default_value;
   int size = buffer_fread_int( buffer );
   buffer_fread( buffer , &default_value , sizeof default_value , 1 );
-  {
-    @TYPE@_vector_type * vector = @TYPE@_vector_alloc( size , default_value );
-    buffer_fread( buffer , vector->data , sizeof * vector->data , size );
-    return vector;
-  }
+  
+  @TYPE@_vector_set_default( vector , default_value );
+  @TYPE@_vector_resize( vector , size );
+  buffer_fread( buffer , vector->data , sizeof * vector->data , size );
+  vector->size = size;
+}
+
+
+@TYPE@_vector_type * @TYPE@_vector_buffer_fread_alloc( buffer_type * buffer ) {
+  @TYPE@_vector_type * vector = @TYPE@_vector_alloc( 0 , 0);
+  @TYPE@_vector_buffer_fread( vector , buffer );
+  return vector;
 }
 
 

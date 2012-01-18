@@ -1749,6 +1749,43 @@ bool util_copy_file(const char * src_file , const char * target_file) {
   }
 }
 
+void util_move_file(const char * src_file , const char * target_file) {
+  if (util_file_exists( src_file )) {
+    if (util_copy_file( src_file , target_file))
+      unlink( src_file );
+  }
+}
+
+
+void util_move_file4( const char * src_name , const char * target_name , const char *src_path , const char * target_path) {
+  char * src;
+  char * target;
+
+  if (src_path != NULL)
+    src = util_alloc_filename( src_path , src_name , NULL);
+  else
+    src = util_alloc_string_copy( src_name );
+
+  if (target_name == NULL)
+    target_name = src_name;
+
+  if (target_path == NULL)
+    target_path = src_path;
+  
+  if (target_path != NULL)
+    target = util_alloc_filename( target_path , target_name , NULL);
+  else
+    target = util_alloc_string_copy( target_name );
+
+
+  util_move_file( src , target );
+  
+  free( target );
+  free( src );
+}
+
+
+
 /**
    Only the file _content_ is considered - file metadata is ignored.
 */
@@ -2347,6 +2384,9 @@ bool util_entry_readable( const char * entry ) {
 
 
 
+
+// The symlink resolver is broken when it comes to links
+// in another directory.
 
 bool util_same_file(const char * file1 , const char * file2) {
   char * target1 = (char *) file1;

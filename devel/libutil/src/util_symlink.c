@@ -73,3 +73,46 @@ char * util_alloc_link_target(const char * link) {
     return util_alloc_string_copy( link );
 }
 
+
+char * util_alloc_atlink_target(const char * path , const char * link) {
+  if (util_is_abs_path( link ))
+    return util_alloc_link_target( link );
+  else {
+    char * target   = NULL;
+    DIR * dir;
+    int   path_fd;
+
+    dir = opendir( path );
+    if (dir == NULL)
+      return NULL;
+    
+    path_fd = dirfd( dir );
+    if (path_fd == -1)
+      return NULL;
+    
+    {
+      bool retry = true;
+      int target_length;
+      int buffer_size = 256;
+      do {
+        target        = util_realloc(target , buffer_size , __func__);
+        target_length = readlinkat( path_fd , link , target , buffer_size);
+        
+        if (target_length == -1) 
+          util_abort("%s: readlinkat(%s,...) failed with error:%s - aborting\n",__func__ , link , strerror(errno));
+        
+        if (target_length < (buffer_size - 1))   /* Must leave room for the trailing \0 */
+          retry = false;
+        else
+          buffer_size *= 2;
+        
+      } while (retry);
+      target[target_length] = '\0';
+      target = util_realloc( target , strlen( target ) + 1 , __func__ );   /* Shrink down to accurate size. */
+    } 
+    closedir( dir );
+    return target;
+  }
+}
+
+

@@ -122,8 +122,8 @@ const char            * ecl_smspec_get_base_name( const ecl_smspec_type * ecl_sm
 const stringlist_type * ecl_smspec_get_restart_list( const ecl_smspec_type * ecl_smspec);
 const char            * ecl_smspec_get_join_string( const ecl_smspec_type * smspec);
 
-int                     ecl_smspec_get_param_size( const ecl_smspec_type * smspec );
-
+  int                     ecl_smspec_get_param_size( const ecl_smspec_type * smspec );
+  const char            * ecl_smspec_iget_general_key( const ecl_smspec_type * smspec , int index);
 
 
 #ifdef __cplusplus

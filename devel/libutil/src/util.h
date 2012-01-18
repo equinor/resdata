@@ -189,13 +189,14 @@ double       util_file_difftime(const char * , const char *);
 bool         util_file_update_required(const char *, const char *);
 size_t       util_file_size(const char *);
 void         util_clear_directory(const char *path, bool strict_uid , bool unlink_root);
-char       * util_alloc_link_target(const char * link);
 void         util_unlink_existing(const char *filename);
 void         util_strupr(char *);
 bool         util_string_equal(const char * s1 , const char * s2 );
 char       * util_alloc_strupr_copy(const char * );
 void         util_string_tr(char * , char , char);
 bool         util_copy_stream(FILE *, FILE *, int , void * , bool abort_on_error);
+  void         util_move_file(const char * src_file , const char * target_file);
+  void         util_move_file4( const char * src_name , const char * target_name , const char *src_path , const char * target_path);
 bool         util_copy_file(const char * , const char * );
 void         util_copy_directory(const char *  , const char * , const char *);
 void         util_walk_directory(const char * root_path , walk_file_callback_ftype * file_callback , void * file_callback_arg , walk_dir_callback_ftype * dir_callback , void * dir_callback_arg);
@@ -275,8 +276,6 @@ void     util_free_stringlist(char **, int );
 char   * util_alloc_substring_copy(const char *, int );
 bool     util_is_directory(const char * );
 bool     util_is_file(const char * );
-bool     util_is_link(const char * );
-void     util_make_slink(const char *, const char * );
 void     util_set_datetime_values(time_t , int * , int * , int * , int * , int *  , int *);
 void     util_set_date_values(time_t , int * , int * , int * );
 
@@ -395,6 +394,13 @@ void         util_setenv( const char * variable , const char * value);
 const char * util_interp_setenv( const char * variable , const char * value);
 void         util_unsetenv( const char * variable);
 char       * util_alloc_envvar( const char * value );
+
+#ifdef HAVE_SYMLINK
+  bool         util_is_link(const char * );
+  void         util_make_slink(const char *, const char * );
+  char     *   util_alloc_atlink_target(const char * path , const char * link);
+  char       * util_alloc_link_target(const char * link);
+#endif
 
 
 

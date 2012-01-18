@@ -111,6 +111,7 @@ typedef struct {
   char                 * wgname;             /* The value of the WGNAMES vector for this element. */
   char                 * keyword;            /* The value of the KEYWORDS vector for this elements. */
   char                 * unit;               /* The value of the UNITS vector for this elements. */
+  char                 * gen_key;            /* The composite key, i.e. WWCT:OP3 for this element. */ 
   int                    num;                /* The value of the NUMS vector for this elements - NB this will have the value NUMS_INVALID if the smspec file does not have a NUMS vector. */
   bool                   rate_variable;      /* Is this a rate variable (i.e. WOPR) or a state variable (i.e. BPR). Relevant when doing time interpolation. */
   bool                   total_variable;     /* Is this a total variable like WOPT? */
@@ -227,6 +228,7 @@ static smspec_index_type * smspec_index_alloc_empty(ecl_smspec_var_type var_type
   index->wgname      = NULL;
   index->num         = NUMS_INVALID;
 
+  index->gen_key     = NULL;
 
   /** All smspec_index instances should have valid values of these fields. */
   index->var_type    = var_type;
@@ -269,8 +271,114 @@ static void smspec_index_set_num( smspec_index_type * index , int num) {
   index->num = num;
 }
 
+/**
+   This function will init the gen_key field of the smspec_index
+   instance; this is the keyw which is used to install the
+   smspec_index instance in the gen_var dictionary. The node related
+   to grid locations are installed with both a XXX:num and XXX:i,j,k
+   in the gen_var dictionary; this function will initializethe XXX:num
+   form.
+*/
 
-static void smspec_index_set_flags( smspec_index_type * smspec_index) {
+
+static void smspec_index_set_gen_key( smspec_index_type * smspec_index , const char * key_join_string) {
+  switch( smspec_index->var_type) {
+  case(ECL_SMSPEC_COMPLETION_VAR):
+    // KEYWORD:WGNAME:NUM
+    smspec_index->gen_key = util_alloc_sprintf("%s%s%s%s%d" ,    
+                                               smspec_index->keyword , 
+                                               key_join_string , 
+                                               smspec_index->wgname , 
+                                               key_join_string , 
+                                               smspec_index->num );
+    break;
+  case(ECL_SMSPEC_FIELD_VAR):
+    // KEYWORD
+    smspec_index->gen_key = util_alloc_string_copy( smspec_index->keyword );
+    break;
+  case(ECL_SMSPEC_GROUP_VAR):
+    // KEYWORD:WGNAME 
+    smspec_index->gen_key = util_alloc_sprintf("%s%s%s" , 
+                                               smspec_index->keyword , 
+                                               key_join_string , 
+                                               smspec_index->wgname );
+    break;
+  case(ECL_SMSPEC_WELL_VAR):
+    // KEYWORD:WGNAME 
+    smspec_index->gen_key = util_alloc_sprintf("%s%s%s" , 
+                                               smspec_index->keyword , 
+                                               key_join_string , 
+                                               smspec_index->wgname );
+    break;
+  case(ECL_SMSPEC_REGION_VAR):
+    // KEYWORD:NUM
+    smspec_index->gen_key = util_alloc_sprintf("%s%s%d" , 
+                                               smspec_index->keyword , 
+                                               key_join_string , 
+                                               smspec_index->num );
+    break;
+  case(ECL_SMSPEC_SEGMENT_VAR):
+    // KEYWORD:WGNAME:NUM 
+    smspec_index->gen_key = util_alloc_sprintf("%s%s%s%s%d" , 
+                                               smspec_index->keyword , 
+                                               key_join_string , 
+                                               smspec_index->wgname , 
+                                               key_join_string , 
+                                               smspec_index->num );
+
+  case(ECL_SMSPEC_MISC_VAR):
+    // KEYWORD
+    /* Misc variable - i.e. date or CPU time ... */
+    smspec_index->gen_key = util_alloc_string_copy( smspec_index->keyword );
+    break;
+  case(ECL_SMSPEC_BLOCK_VAR):
+    // KEYWORD:NUM
+    smspec_index->gen_key = util_alloc_sprintf("%s%s%d" , 
+                                               smspec_index->keyword , 
+                                               key_join_string , 
+                                               smspec_index->num );
+    break;
+  case(ECL_SMSPEC_LOCAL_WELL_VAR):
+    /** KEYWORD:LGR:WGNAME */
+    smspec_index->gen_key = util_alloc_sprintf("%s%s%s%s%s" , 
+                                               smspec_index->keyword , 
+                                               key_join_string , 
+                                               smspec_index->lgr_name , 
+                                               key_join_string , 
+                                               smspec_index->wgname);
+    
+    break;
+  case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
+    /* KEYWORD:LGR:i,j,k */
+    smspec_index->gen_key = util_alloc_sprintf("%s%s%s%s%d,%d,%d" , 
+                                               smspec_index->keyword , 
+                                               key_join_string , 
+                                               smspec_index->lgr_name , 
+                                               key_join_string , 
+                                               smspec_index->lgr_ijk[0] , 
+                                               smspec_index->lgr_ijk[1] , 
+                                               smspec_index->lgr_ijk[2] );
+    break;
+  case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
+    /* KEYWORD:LGR:WELL:i,j,k */
+    smspec_index->gen_key = util_alloc_sprintf("%s%s%s%s%s%s%d,%d,%d" , 
+                                               smspec_index->keyword  , 
+                                               key_join_string , 
+                                               smspec_index->lgr_name , 
+                                               key_join_string ,
+                                               smspec_index->wgname , 
+                                               key_join_string ,
+                                               smspec_index->lgr_ijk[0] , 
+                                               smspec_index->lgr_ijk[1] , 
+                                               smspec_index->lgr_ijk[2]);
+    break;
+  default:
+    util_abort("%s: internal error - should not be here? \n");
+  }
+}
+
+
+  static void smspec_index_set_flags( smspec_index_type * smspec_index) {
   /* 
      Check if this is a rate variabel - that info is used when
      interpolating results to true_time between ministeps. 
@@ -336,6 +444,7 @@ static smspec_index_type * smspec_index_alloc( ecl_smspec_var_type var_type ,
                                                const char * wgname  , 
                                                const char * keyword , 
                                                const char * unit    , 
+                                               const char * key_join_string , 
                                                int num , int index) {
   smspec_index_type * smspec_index = NULL;
   
@@ -393,8 +502,10 @@ static smspec_index_type * smspec_index_alloc( ecl_smspec_var_type var_type ,
   }
   
   
-  if (smspec_index != NULL) 
+  if (smspec_index != NULL) {
     smspec_index_set_flags( smspec_index );
+    smspec_index_set_gen_key( smspec_index , key_join_string );
+  }
   return smspec_index;
 }
 
@@ -404,6 +515,7 @@ static smspec_index_type * smspec_index_alloc_lgr( ecl_smspec_var_type var_type 
                                                    const char * keyword , 
                                                    const char * unit    , 
                                                    const char * lgr , 
+                                                   const char * key_join_string , 
                                                    int   lgr_i, int lgr_j , int lgr_k,
                                                    int index) {
   smspec_index_type * smspec_index = NULL;
@@ -432,6 +544,7 @@ static smspec_index_type * smspec_index_alloc_lgr( ecl_smspec_var_type var_type 
     util_abort("%s: internal error:  in LGR function with  non-LGR keyword:%s \n",__func__ , keyword);
   }
   smspec_index_set_flags( smspec_index );
+  smspec_index_set_gen_key( smspec_index , key_join_string );
   return smspec_index;
 }
 
@@ -440,6 +553,7 @@ static void smspec_index_free( smspec_index_type * index ) {
   if (index != NULL) {
     free( index->unit );
     free( index->keyword );
+    util_safe_free( index->gen_key );
     util_safe_free( index->wgname );
     util_safe_free( index->lgr_name );
     util_safe_free( index->lgr_ijk );
@@ -713,99 +827,33 @@ char * ecl_smspec_alloc_gen_key( const ecl_smspec_type * smspec , const char * f
 */
 
 static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_index_type * smspec_index ) {
-  char * gen_key = NULL;
 
-  switch( smspec_index->var_type) {
-  case(ECL_SMSPEC_COMPLETION_VAR):
-    gen_key = util_alloc_sprintf("%s%s%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname , smspec->key_join_string , smspec_index->num );
-    hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
-    /* Inserted with two keys - just like the block variables. */
-    {
-      int i,j,k;
-      ecl_smspec_get_ijk(smspec , smspec_index->num , &i,&j,&k);
-      gen_key = util_realloc_sprintf(gen_key , "%s%s%s%s%d,%d,%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname , smspec->key_join_string , i,j,k);
-      hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
-    }
-    break;
-  case(ECL_SMSPEC_FIELD_VAR):
-    hash_insert_ref(smspec->gen_var_index , smspec_index->keyword , smspec_index);  
-    break;
-  case(ECL_SMSPEC_GROUP_VAR):
-    gen_key = util_alloc_sprintf("%s%s%s" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname );
-    hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index );
-    break;
-  case(ECL_SMSPEC_WELL_VAR):
-    gen_key = util_alloc_sprintf("%s%s%s" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname );
-    hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index );
-    break;
-  case(ECL_SMSPEC_REGION_VAR):
-    gen_key = util_alloc_sprintf("%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->num );
-    hash_insert_ref( smspec->gen_var_index , gen_key , smspec_index);
-    break;
-  case(ECL_SMSPEC_SEGMENT_VAR):
-    /* SEGMENT:WELL:NUM */
-    gen_key = util_alloc_sprintf("%s%s%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->wgname , smspec->key_join_string , smspec_index->num );
-    hash_insert_ref( smspec->gen_var_index , gen_key , smspec_index);
-  case(ECL_SMSPEC_MISC_VAR):
-    /* Misc variable - i.e. date or CPU time ... */
-    hash_insert_ref(smspec->gen_var_index  , smspec_index->keyword , smspec_index );
-    break;
-  case(ECL_SMSPEC_BLOCK_VAR):
-    /* A block variable */
-    {
-
-      /* Block variables are installed with two keys:
-
-         VAR:NUM
-         VAR:i,j,k
-      */
-      
-      gen_key = util_alloc_sprintf("%s%s%d" , smspec_index->keyword , smspec->key_join_string , smspec_index->num );
-      hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
-      
-      {
-        int i,j,k;
-        ecl_smspec_get_ijk(smspec , smspec_index->num , &i,&j,&k);
-        gen_key = util_realloc_sprintf(gen_key , "%s%s%d,%d,%d" , smspec_index->keyword , smspec->key_join_string , i,j,k);
-        hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
-      }
-    }
-    break;
-  case(ECL_SMSPEC_LOCAL_WELL_VAR):
-    /** KW:LGR:WELL */
-    gen_key = util_alloc_sprintf("%s%s%s%s%s" , smspec_index->keyword , smspec->key_join_string , smspec_index->lgr_name , smspec->key_join_string , smspec_index->wgname);
-    hash_insert_ref(smspec->gen_var_index  , gen_key, smspec_index );
-    break;
-  case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
-    /* KW:LGR:i,j,k */
+  /* Inserting the general mapping. */
+  hash_insert_ref(smspec->gen_var_index , smspec_index->gen_key , smspec_index);
+  
+  /* Inserting extra mappings for grid block related variables */
+  if (smspec_index->var_type == ECL_SMSPEC_COMPLETION_VAR) {
+    int i,j,k;
+    char * gen_key;
+    ecl_smspec_get_ijk(smspec , smspec_index->num , &i,&j,&k);
     gen_key = util_alloc_sprintf("%s%s%s%s%d,%d,%d" , 
                                  smspec_index->keyword , 
                                  smspec->key_join_string , 
-                                 smspec_index->lgr_name , 
-                                 smspec->key_join_string , 
-                                 smspec_index->lgr_ijk[0] , 
-                                 smspec_index->lgr_ijk[1] , 
-                                 smspec_index->lgr_ijk[2] );
-    hash_insert_ref(smspec->gen_var_index  , gen_key, smspec_index );
-    break;
-  case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
-    /* KW:LGR:WELL:i,j,k */
-    gen_key = util_alloc_sprintf("%s%s%s%s%s%s%d,%d,%d" , 
-                                 smspec_index->keyword  , 
-                                 smspec->key_join_string , 
-                                 smspec_index->lgr_name , 
-                                 smspec->key_join_string ,
                                  smspec_index->wgname , 
-                                 smspec->key_join_string ,
-                                 smspec_index->lgr_ijk[0] , 
-                                 smspec_index->lgr_ijk[1] , 
-                                 smspec_index->lgr_ijk[2]);
-    hash_insert_ref(smspec->gen_var_index  , gen_key, smspec_index );
-    break;
-  default:
-    util_abort("%s: internal error - should not be here? \n");
+                                 smspec->key_join_string , 
+                                 i,j,k);
+    hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
+    free( gen_key );
+  } 
+
+  if (smspec_index->var_type == ECL_SMSPEC_BLOCK_VAR) {
+    int i,j,k;
+    char * gen_key;
+    ecl_smspec_get_ijk(smspec , smspec_index->num , &i,&j,&k);
+    gen_key = util_alloc_sprintf("%s%s%d,%d,%d" , smspec_index->keyword , smspec->key_join_string , i,j,k);
+    hash_insert_ref(smspec->gen_var_index , gen_key , smspec_index);
+    free( gen_key );
   }
-  util_safe_free( gen_key );
 }
 
 
@@ -1000,9 +1048,9 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           int lgr_i = ecl_kw_iget_int( numlx , index );
           int lgr_j = ecl_kw_iget_int( numly , index );
           int lgr_k = ecl_kw_iget_int( numlz , index );
-          smspec_index = smspec_index_alloc_lgr( var_type , well , kw , unit , lgr_name , lgr_i , lgr_j , lgr_k , index);
+          smspec_index = smspec_index_alloc_lgr( var_type , well , kw , unit , lgr_name , ecl_smspec->key_join_string , lgr_i , lgr_j , lgr_k , index);
         } else 
-          smspec_index = smspec_index_alloc( var_type , well , kw , unit , num , index );
+          smspec_index = smspec_index_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , num , index );
 
         ecl_smspec->smspec_index_list[ index ] = smspec_index;
         if (smspec_index != NULL) {
@@ -1728,6 +1776,22 @@ stringlist_type * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec
 int ecl_smspec_get_param_size( const ecl_smspec_type * smspec ) {
   return smspec->params_size;
 }
+
+
+/*
+  Observe that this function can return NULL if the variable at this
+  index is not internalized; this does not imply that the input is
+  invalid as such.
+*/
+
+const char * ecl_smspec_iget_general_key( const ecl_smspec_type * smspec , int index) {
+  const smspec_index_type * smspec_index = smspec->smspec_index_list[ index ];
+  if (smspec_index == NULL)
+    return NULL;
+  else 
+    return smspec_index->gen_key;
+}
+
 
 
 #undef ECL_SMSPEC_ID
