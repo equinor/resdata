@@ -228,6 +228,8 @@ struct ecl_sum_data_struct {
   int_vector_type        * report_last_index;      /* Indexed by report_step - giving last internal_index in report_step.    */   
   int                      first_report_step;
   int                      last_report_step;
+  time_t                   __min_time;             /* An internal member used during the load of 
+                                                      restarted cases; see doc in ecl_sum_data_append_ministep. */
 };
 
 
@@ -336,9 +338,10 @@ static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
 
 static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
   ecl_sum_data_type * data = util_malloc( sizeof * data , __func__);
-  data->data         = vector_alloc_new();
-  data->smspec                = smspec;
-
+  data->data        = vector_alloc_new();
+  data->smspec      = smspec;
+  data->__min_time  = 0;
+  
   data->report_first_index    = int_vector_alloc( 0 , -1 );  /* This -1 value is hard-wired around in the place - not good. */
   data->report_last_index     = int_vector_alloc( 0 , -1 );
   
@@ -580,12 +583,48 @@ static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministe
      Here the ministep is just appended naively, the vector will be
      sorted by ministep nr before the data instance is returned.
   */
+
+  /*
+    We keep track of the earliest (in true time sence) ministep we
+    have added so far; this is done somewhat manuyally because we need
+    this information before the index is ready.
+
+    The __min_time field is used to limit loading of restarted data in
+    time periods where both the main case and the source case we have
+    restarted from have data. This situation typically arises when we
+    have restarted a simulation from a report step before the end of
+    the initial simulation:
+
+    Simulation 1:      T1-------------TR------------T2
+                                      |             
+    Simulation 2:                     \-----------------------T3            
+
+
+    In the time interval [TR,T2] we have data from two simulations, we
+    want to use only the data from simulation 2 in this period.
+  */
+
+
+  if (data->__min_time == 0)
+    data->__min_time = ministep->sim_time;
+  else {
+    if (ministep->sim_time < data->__min_time)
+      data->__min_time = ministep->sim_time;
+  }
+  
+    
   vector_append_owned_ref( data->data , ministep , ecl_sum_ministep_free__);
 }
 
 
 
-static void ecl_sum_data_new_ministep( ecl_sum_data_type * ecl_sum_data , const char * src_file , int report_step , const ecl_kw_type * ministep_kw , const ecl_kw_type * params_kw , const ecl_smspec_type * smspec) {
+static void ecl_sum_data_new_ministep( ecl_sum_data_type * ecl_sum_data , 
+                                       time_t load_end ,                    /* A value of 0 means that all data should be loaded. */
+                                       const char * src_file , 
+                                       int report_step , 
+                                       const ecl_kw_type * ministep_kw , 
+                                       const ecl_kw_type * params_kw , 
+                                       const ecl_smspec_type * smspec) {
   
   ecl_sum_ministep_type * ministep;
   int ministep_nr = ecl_kw_iget_int( ministep_kw , 0 );
@@ -594,9 +633,14 @@ static void ecl_sum_data_new_ministep( ecl_sum_data_type * ecl_sum_data , const 
                                      params_kw , 
                                      src_file , 
                                      smspec );
-  if (ministep != NULL)
-    ecl_sum_data_append_ministep( ecl_sum_data , ministep_nr , ministep );
+  if (ministep != NULL) {
+    if (load_end == 0 || (ministep->sim_time < load_end))
+      ecl_sum_data_append_ministep( ecl_sum_data , ministep_nr , ministep );
+    else 
+      ecl_sum_ministep_free( ministep );
+  }
 }
+
 
 
 /**
@@ -625,6 +669,7 @@ static void ecl_sum_data_new_ministep( ecl_sum_data_type * ecl_sum_data , const 
 */
 
 static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         , 
+                                      time_t load_end , 
                                       int   report_step                , 
                                       const ecl_file_type   * ecl_file , 
                                       const ecl_smspec_type * smspec) {
@@ -636,9 +681,9 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
 
     for (ikw = 0; ikw < num_ministep; ikw++) {
       ecl_kw_type * ministep_kw = ecl_file_iget_named_kw( ecl_file , MINISTEP_KW , ikw);
-      ecl_kw_type * params_kw    = ecl_file_iget_named_kw( ecl_file , PARAMS_KW   , ikw);
+      ecl_kw_type * params_kw   = ecl_file_iget_named_kw( ecl_file , PARAMS_KW   , ikw);
       
-      ecl_sum_data_new_ministep( data , ecl_file_get_src_file( ecl_file ) , report_step , ministep_kw , params_kw , smspec );
+      ecl_sum_data_new_ministep( data , load_end , ecl_file_get_src_file( ecl_file ) , report_step , ministep_kw , params_kw , smspec );
     }
   }
 }
@@ -737,7 +782,7 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
   call to ecl_sum_data_build_index().
 */
 
-static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_type * filelist) {
+static void ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , const stringlist_type * filelist) {
   ecl_file_enum file_type;
   file_type = ecl_util_get_file_type( stringlist_iget( filelist , 0 ) , NULL , NULL);
   if ((stringlist_get_size( filelist ) > 1) && (file_type != ECL_SUMMARY_FILE))
@@ -762,7 +807,7 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
           util_abort("%s: file:%s has wrong type \n",__func__ , data_file);
         {
           ecl_file_type * ecl_file = ecl_file_open( data_file );
-          ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
+          ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file , data->smspec);
           ecl_file_close( ecl_file );
         }
       }
@@ -771,7 +816,7 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
       int report_step = 0;
       while (true) {
         if (ecl_file_select_smryblock( ecl_file , report_step )) {
-          ecl_sum_data_add_ecl_file( data , report_step , ecl_file , data->smspec);
+          ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file , data->smspec);
           report_step++;
         } else 
           break;
@@ -782,6 +827,10 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
   }
 }
 
+
+static time_t ecl_sum_data_get_load_end( const ecl_sum_data_type * data ) {
+  return data->__min_time;
+}
 
 
 /**
@@ -794,7 +843,7 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , const stringlist_ty
 
 ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , const stringlist_type * filelist , bool include_restart) {
   ecl_sum_data_type * data = ecl_sum_data_alloc(smspec);
-  ecl_sum_data_fread__( data , filelist );
+  ecl_sum_data_fread__( data , 0 , filelist );
 
   if (include_restart) {
     const char * path                     = ecl_smspec_get_simulation_path( smspec );
@@ -804,8 +853,9 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , co
                                                                                       status as the current case. */
     int restart_nr;
     for (restart_nr = 0; restart_nr < stringlist_get_size( restart_cases ); restart_nr++) {
+      time_t load_end = ecl_sum_data_get_load_end( data );
       ecl_util_alloc_summary_data_files(path , stringlist_iget( restart_cases , restart_nr ) , fmt_file , restart_files );
-      ecl_sum_data_fread__( data , restart_files );
+      ecl_sum_data_fread__( data , load_end , restart_files );
     }
     stringlist_free( restart_files );
   }
