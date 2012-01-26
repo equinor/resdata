@@ -269,6 +269,13 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
 
 
 
+double stepwise_eval( const stepwise_type * stepwise , const matrix_type * x ) { 
+  double yHat = stepwise_eval__(stepwise, x );
+  return yHat;
+}
+
+
+
 static stepwise_type * stepwise_alloc__( int nsample , int nvar) {
   stepwise_type * stepwise = util_malloc( sizeof * stepwise , __func__ );
 
@@ -308,6 +315,14 @@ stepwise_type * stepwise_alloc2( matrix_type * X , matrix_type * Y , bool intern
   return stepwise;
 }
 
+
+void stepwise_set_Y0( stepwise_type * stepwise , const matrix_type * Y) {
+  stepwise->Y0 = Y;
+}
+
+void stepwise_set_X0( stepwise_type * stepwise , const matrix_type * X) {
+  stepwise->X0 = X;
+}
 
 
 
