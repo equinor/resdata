@@ -66,6 +66,12 @@ ecl_intehead_type * ecl_intehead_alloc( const ecl_kw_type * intehead_kw ) {
 }
 
 
+void ecl_intehead_fprintf( const ecl_intehead_type * header , FILE * stream) {
+  fprintf(stream , "nx      %d \n",header->nx);
+  fprintf(stream , "nwells  %d \n",header->nwells);
+  fprintf(stream , "niwelz  %d \n\n",header->niwelz);
+}
+
 void ecl_intehead_free( ecl_intehead_type * intehead ) {
   free( intehead );
 }

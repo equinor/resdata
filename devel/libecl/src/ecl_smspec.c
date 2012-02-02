@@ -325,7 +325,7 @@ static void smspec_index_set_gen_key( smspec_index_type * smspec_index , const c
                                                smspec_index->wgname , 
                                                key_join_string , 
                                                smspec_index->num );
-
+    break;
   case(ECL_SMSPEC_MISC_VAR):
     // KEYWORD
     /* Misc variable - i.e. date or CPU time ... */
@@ -890,7 +890,7 @@ bool ecl_smspec_needs_wgname( ecl_smspec_var_type var_type ) {
     return false;
     break;
   case(ECL_SMSPEC_SEGMENT_VAR):
-    return false;
+    return true;
     break;
   default:
     util_exit("Sorry: support for variables of type:%s is not implemented in %s.\n",ecl_smspec_get_var_type_name( var_type ), __FILE__);
@@ -1056,9 +1056,10 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         if (smspec_index != NULL) {
           /** OK - we know this is valid shit. */
           
-          /* The gen_key is installed in the ecl_smspec_install_gen_key()
+          /* 
+             The gen_key is installed in the ecl_smspec_install_gen_key()
              function. That is the most important, in addition wells, groups and
-             so on can be access with well specific functions and lookup, that
+             so on can be accessed with well specific functions and lookup, that
              is handled in the large switch below.
           */
           ecl_smspec_install_gen_key( ecl_smspec , smspec_index );
@@ -1094,7 +1095,6 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
             /*
               Field variable
             */
-            hash_insert_ref(ecl_smspec->gen_var_index , kw , smspec_index);
             hash_insert_int(ecl_smspec->field_var_index , kw , index);
             break;
           case(ECL_SMSPEC_GROUP_VAR):

@@ -73,7 +73,7 @@ static bool ecl_kw_grdecl_fseek_kw__(const char * kw , FILE * stream) {
          'COORD' we do not want a positiv on 'COORDSYS'.
 
       2. That the keyword indeed starts with a isspace() character; we
-         are interested in the 'SYS' in 'COORDSYS'. 
+         are not interested in the 'SYS' in 'COORDSYS'. 
 
       3. That the current location is not a comment section.
     */
@@ -185,7 +185,23 @@ static void iset_range( char * data , int data_offset , int sizeof_ctype , void 
 }
 
 
-static char * fscanf_alloc_grdecl_data( const char * header , ecl_type_enum ecl_type , int * kw_size , FILE * stream ) {
+/**
+   The @strict flag is used to indicate whether the loader will accept
+   character string emebedded into a numerical grdecl keyword; this
+   should of course in general not be allowed and @strict should be
+   set to true. However the SPECGRID keyword used when specifying a
+   grid is often given as:
+
+     SPECGRID
+         10 10 100 100 F /
+
+   Whatever that 'F' is - it is discarded when the SPECGRID header is
+   written to a GRID/EGRID file. For this reason we have the
+   possibility of setting @strict to false; in which case the 'F' or
+   other characters in the numerical input will be ignored.  
+*/
+
+static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_type_enum ecl_type , int * kw_size , FILE * stream ) {
   char newline        = '\n';
   bool atEOF          = false;
   int init_size       = 32;
@@ -219,6 +235,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , ecl_type_enum ecl_
 
         int multiplier;
         void * value_ptr = NULL;
+        bool   char_input = false;
         
         if (ecl_type == ECL_INT_TYPE) {
           int value;
@@ -227,9 +244,12 @@ static char * fscanf_alloc_grdecl_data( const char * header , ecl_type_enum ecl_
             {}
           else if (sscanf( buffer , "%d" , &value) == 1) 
             multiplier = 1;
-          else
-            util_abort("%s: Malformed content:\"%s\" when reading keyword:%s \n",__func__ , buffer , header);
-
+          else {
+            char_input = true;
+            if (strict)
+              util_abort("%s: Malformed content:\"%s\" when reading keyword:%s \n",__func__ , buffer , header);
+          }
+          
           value_ptr = &value;
         } else if (ecl_type == ECL_FLOAT_TYPE) {
           float value;
@@ -238,21 +258,28 @@ static char * fscanf_alloc_grdecl_data( const char * header , ecl_type_enum ecl_
             {}
           else if (sscanf( buffer , "%g" , &value) == 1) 
             multiplier = 1;
-          else
-            util_abort("%s: Malformed content:\"%s\" when reading keyword:%s \n",__func__ , buffer , header);
+          else {
+            char_input = true;
+            if (strict)
+              util_abort("%s: Malformed content:\"%s\" when reading keyword:%s \n",__func__ , buffer , header);
+          }
 
           value_ptr = &value;
         } else 
           util_abort("%s: sorry type:%s not supported \n",__func__ , ecl_util_get_type_name(ecl_type));
         
-        
-        if (data_index + multiplier >= data_size) {
-          data_size  = 2*(data_index + multiplier);
-          data       = util_realloc( data , sizeof_ctype * data_size * sizeof * data , __func__);
+        if (char_input)
+          fprintf(stderr,"Warning: character string: \'%s\' ignored when reading keyword:%s \n",buffer , header);
+        else {
+          if (data_index + multiplier >= data_size) {
+            data_size  = 2*(data_index + multiplier);
+            data       = util_realloc( data , sizeof_ctype * data_size * sizeof * data , __func__);
+          }
+          
+          iset_range( data , data_index , sizeof_ctype , value_ptr , multiplier );
+          data_index += multiplier;
         }
-        
-        iset_range( data , data_index , sizeof_ctype , value_ptr , multiplier );
-        data_index += multiplier;
+
       }
       if (atEOF)
         break;
@@ -292,7 +319,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , ecl_type_enum ecl_
 
 */
 
-static ecl_kw_type * ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , int size , ecl_type_enum ecl_type) {
+static ecl_kw_type * ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , bool strict , int size , ecl_type_enum ecl_type) {
   if (!(ecl_type == ECL_FLOAT_TYPE || ecl_type == ECL_INT_TYPE))
     util_abort("%s: sorry only types FLOAT and INT supported\n",__func__);
 
@@ -304,7 +331,7 @@ static ecl_kw_type * ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * h
     char file_header[9];
     if (fscanf(stream , "%s" , file_header) == 1) {
       int kw_size;
-      char * data = fscanf_alloc_grdecl_data( file_header , ecl_type , &kw_size , stream );
+      char * data = fscanf_alloc_grdecl_data( file_header , strict , ecl_type , &kw_size , stream );
       
       // Verify size
       if (size > 0)
@@ -335,7 +362,8 @@ static ecl_kw_type * ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * h
    it is nearly impossible to detect.
 */
 ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_type_enum ecl_type) {
-  return ecl_kw_fscanf_alloc_grdecl__( stream , NULL , size , ecl_type );
+  bool strict = true;
+  return ecl_kw_fscanf_alloc_grdecl__( stream , NULL , strict , size , ecl_type );
 }
 
 
@@ -365,7 +393,8 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
 */
 
 ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_type_enum ecl_type) {
-  return ecl_kw_fscanf_alloc_grdecl__( stream , kw , 0 , ecl_type );
+  bool strict = true;
+  return ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , 0 , ecl_type );
 }
 
 

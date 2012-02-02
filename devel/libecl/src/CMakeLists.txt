@@ -17,9 +17,6 @@ add_library( ecl_shared  SHARED ${source_files} )
 set_target_properties( ecl_static PROPERTIES OUTPUT_NAME ecl )
 set_target_properties( ecl_shared PROPERTIES OUTPUT_NAME ecl )
 
-target_link_libraries( ecl_static ${util_static} ${geometry_static} )
-target_link_libraries( ecl_shared ${util_shared} ${geometry_shared})
-
 if (OPENMP)
    target_link_libraries( ecl_static gomp )
    target_link_libraries( ecl_shared gomp )
@@ -34,5 +31,7 @@ else()
    install(TARGETS ecl_static ecl_shared DESTINATION ${INSTALL_ROOT}/lib)
    install(FILES ${header_files} DESTINATION ${INSTALL_ROOT}/include)
 endif()        
+
+
 
 

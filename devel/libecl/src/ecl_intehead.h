@@ -94,6 +94,7 @@ extern "C" {
   void                ecl_intehead_free( ecl_intehead_type * intehead );
   ecl_intehead_type * ecl_intehead_alloc( const ecl_kw_type * intehead_kw );
   time_t              ecl_intehead_date( const ecl_kw_type * intehead_kw );
+  void                ecl_intehead_fprintf( const ecl_intehead_type * header , FILE * stream);
 
 #ifdef __cplusplus
 }

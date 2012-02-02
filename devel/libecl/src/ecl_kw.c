@@ -246,7 +246,7 @@ static int get_columns( ecl_type_enum ecl_type ) {
 
 static void ecl_kw_assert_index(const ecl_kw_type *ecl_kw , int index, const char *caller) {
   if (index < 0 || index >= ecl_kw->size) 
-    util_abort("%s: Invalid index lookup. input_index:%d   size:%d \n",caller , index , ecl_kw->size);
+    util_abort("%s: Invalid index lookup. kw:%s input_index:%d   size:%d \n",caller , ecl_kw->header , index , ecl_kw->size);
 }
 
 
