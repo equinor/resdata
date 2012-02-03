@@ -35,7 +35,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
 
    Only the variable types marked with "X" below are supported in the
    remaining implementation. To add support for a new variable type
-   the functions smspec_index_alloc(), ecl_smsepec_fread_header() and
+   the functions smspec_node_alloc(), ecl_smsepec_fread_header() and
    ecl_smspec_install_gen_key() must be updated.
 */
 
