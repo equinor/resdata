@@ -42,6 +42,10 @@ void          vector_iset_ref( vector_type * , int , const void *);
 void          vector_iset_owned_ref( vector_type * , int , const void * , free_ftype * del);
 void          vector_iset_copy(vector_type * , int , const void *, copyc_ftype *, free_ftype *);
 
+void          vector_safe_iset_copy(vector_type * vector , int index , const void * data, copyc_ftype * copyc , free_ftype * del);
+void          vector_safe_iset_owned_ref(vector_type * vector , int index , const void * data, free_ftype * del);
+void          vector_safe_iset_ref(vector_type * vector , int index , const void * data);
+
 void          vector_insert_ref( vector_type * , int , const void *);
 void          vector_insert_owned_ref( vector_type * , int , const void * , free_ftype * del);
 void          vector_insert_copy(vector_type * , int , const void *, copyc_ftype *, free_ftype *);
@@ -58,6 +62,8 @@ void          vector_free__( void * arg );
 void          vector_append_buffer(vector_type * , const void * , int);
 void          vector_push_buffer(vector_type * , const void * , int);
 int           vector_get_size(const vector_type * );
+void        * vector_safe_iget(const vector_type * vector, int index);
+const void  * vector_safe_iget_const(const vector_type * vector, int index);
 const void  * vector_iget_const(const vector_type * , int );
 void        * vector_iget(const vector_type * , int );
 void          vector_idel(vector_type * vector , int index);

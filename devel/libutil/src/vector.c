@@ -65,6 +65,7 @@ static void vector_resize__(vector_type * vector, int new_alloc_size) {
 }
 
 
+
 vector_type * vector_alloc_new() {
   vector_type * vector = util_malloc( sizeof * vector , __func__);
   UTIL_TYPE_ID_INIT(vector , VECTOR_TYPE_ID);
@@ -150,6 +151,8 @@ static int vector_append_node(vector_type * vector , node_data_type * node) {
 }
 
 
+
+
 /*
   This is like the vector_append_node() function, but the node is
   pushed in at the front.
@@ -169,6 +172,17 @@ static void vector_push_node(vector_type * vector , node_data_type * node) {
   vector_iset__(vector , 0 , node);
 }
 
+
+
+/**
+   Will append NULL pointers until the vectors length is equal to
+   @min_size.  
+*/
+
+static void vector_assert_size( vector_type * vector , int min_size) {
+  while (vector->size < min_size) 
+    vector_append_ref( vector , NULL );
+}
 
 
 /**
@@ -192,6 +206,12 @@ void vector_iset_ref(vector_type * vector , int index , const void * data) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , NULL);
   vector_iset__(vector , index , node);
 }
+
+void vector_safe_iset_ref(vector_type * vector , int index , const void * data) {
+  vector_assert_size( vector , index + 1);
+  vector_iset_ref( vector , index , data );
+}
+
 
 void vector_insert_ref(vector_type * vector , int index , const void * data) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , NULL);
@@ -225,6 +245,12 @@ void vector_iset_owned_ref(vector_type * vector , int index , const void * data 
 }
 
 
+ void vector_safe_iset_owned_ref(vector_type * vector , int index , const void * data, free_ftype * del) {
+  vector_assert_size( vector , index + 1);
+  vector_iset_owned_ref( vector , index , data , del);
+}
+
+
 void vector_insert_owned_ref(vector_type * vector , int index , const void * data , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , del);
   vector_insert__(vector , index , node);
@@ -254,6 +280,13 @@ void vector_iset_copy(vector_type * vector , int index , const void * data , cop
   node_data_type * node = node_data_alloc_ptr( data, copyc , del);
   vector_iset__(vector , index , node);
 }
+
+
+void vector_safe_iset_copy(vector_type * vector , int index , const void * data, copyc_ftype * copyc , free_ftype * del) {
+  vector_assert_size( vector , index + 1);
+  vector_iset_copy( vector , index , data , copyc , del);
+}
+
 
 void vector_insert_copy(vector_type * vector , int index , const void * data , copyc_ftype * copyc , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, copyc , del);
@@ -314,6 +347,29 @@ void * vector_iget(const vector_type * vector, int index) {
     util_abort("%s: Invald index:%d  Valid range: [0,%d> \n",__func__ , index , vector->size);
     return NULL;
   }
+}
+
+
+/**
+   The safe_iget() functions will return NULL if index is greater than
+   the length of the vector.  
+*/
+
+const void * vector_safe_iget_const(const vector_type * vector, int index) {
+  if ((index >= 0) && (index < vector->size)) {
+    const node_data_type * node = vector->data[index];
+    return node_data_get_ptr( node );
+  } else 
+    return NULL;
+}
+
+
+void * vector_safe_iget(const vector_type * vector, int index) {
+  if ((index >= 0) && (index < vector->size)) {
+    const node_data_type * node = vector->data[index];
+    return node_data_get_ptr( node );
+  } else 
+    return NULL;
 }
 
 

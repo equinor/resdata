@@ -49,19 +49,19 @@ if ( SHLWAPI_LIBRARY )
   target_link_libraries( util_shared shlwapi )
 endif()
 
-target_link_libraries( util_static m ${LAPACK_LIBRARY} )
-target_link_libraries( util_shared m ${LAPACK_LIBRARY} )
+target_link_libraries( util_static ${LAPACK_LIBRARY} )
+target_link_libraries( util_shared ${LAPACK_LIBRARY} )
 if (NEED_BLAS)
-  target_link_libraries( util_static m ${BLAS_LIBRARY} )
-  target_link_libraries( util_shared m ${BLAS_LIBRARY} )
+  target_link_libraries( util_static ${BLAS_LIBRARY} )
+  target_link_libraries( util_shared ${BLAS_LIBRARY} )
 endif()
 
 
 target_link_libraries( util_static m )
 target_link_libraries( util_shared m )
 
-set_target_properties( util_static PROPERTIES OUTPUT_NAME util )
-set_target_properties( util_shared PROPERTIES OUTPUT_NAME util )
+set_target_properties( util_static PROPERTIES OUTPUT_NAME util ARCHIVE_OUTPUT_DIRECTORY /tmp/libutilXX)
+set_target_properties( util_shared PROPERTIES OUTPUT_NAME util LIBRARY_OUTPUT_DIRECTORY /tmp/libutilXX)
 
 #-----------------------------------------------------------------
 

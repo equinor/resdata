@@ -6,7 +6,7 @@ add_executable( summary.x view_summary.c )
 
 set(program_list grid_dump.x convert.x kw_list.x grid_info.x summary.x)
 foreach(prog ${program_list})
-   target_link_libraries( ${prog} ecl_static util_static )
+   target_link_libraries( ${prog} ecl_shared util_shared geometry_shared )
    #-----------------------------------------------------------------
    if (ECL_INSTALL_PREFIX)
       set (destination ${INSTALL_ROOT}/${ECL_INSTALL_PREFIX}/bin)

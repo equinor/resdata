@@ -82,6 +82,7 @@ double        matrix_get_row_abssum(const matrix_type * matrix , int row);
 double        matrix_get_column_abssum(const matrix_type * matrix , int column);
 double        matrix_get_row_sum2(const matrix_type * matrix , int column);
 void          matrix_subtract_row_mean(matrix_type * matrix);
+void          matrix_subtract_and_store_row_mean(matrix_type * matrix, matrix_type * row_mean);
 void          matrix_scale_column(matrix_type * matrix , int column  , double scale_factor);
 void          matrix_scale_row(matrix_type * matrix , int row  , double scale_factor);
 void          matrix_set_const_column(matrix_type * matrix , const double value , int column);
@@ -111,6 +112,7 @@ void          matrix_diag_set(matrix_type * matrix , const double * diag);
 void          matrix_random_init(matrix_type * matrix , rng_type * rng);
 void          matrix_matlab_dump(const matrix_type * matrix, const char * filename);
 
+void          matrix_imul_col( matrix_type * matrix , int column , double factor);
 double        matrix_column_column_dot_product(const matrix_type * m1 , int col1 , const matrix_type * m2 , int col2);
 double        matrix_row_column_dot_product(const matrix_type * m1 , int row1 , const matrix_type * m2 , int col2);
 matrix_type * matrix_alloc_view(double * data , int rows , int columns);

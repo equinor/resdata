@@ -1090,6 +1090,19 @@ void matrix_subtract_row_mean(matrix_type * matrix) {
   }
 }
 
+void matrix_subtract_and_store_row_mean(matrix_type * matrix, matrix_type * row_mean) {
+  for (int i=0; i < matrix->rows; i++) {
+    double mean = matrix_get_row_sum(matrix , i) / matrix->columns;
+    matrix_shift_row( matrix , i , -mean);
+    matrix_iset(row_mean , i , 0, mean );
+  }
+}
+
+void matrix_imul_col( matrix_type * matrix , int column , double factor) {
+  for (int i=0; i < matrix->rows; i++)
+    matrix_imul( matrix , i , column , factor );
+}
+
 
 /*****************************************************************/
 /** 
