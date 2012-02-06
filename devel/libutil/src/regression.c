@@ -65,9 +65,8 @@ double regression_scale(matrix_type * X , matrix_type * Y , matrix_type * X_mean
       }
       
       for (col=0; col < nvar; col++) {
-        double norm = 1.0 / sqrt(matrix_get_column_sum2( X , col ));
-        matrix_scale_column( X , col , norm );
-        matrix_iset( X_norm , 0 , col , norm );
+        double norm = 1.0 / sqrt( (1.0 / (nsample - 1)) * matrix_get_column_sum2( X , col ));
+	matrix_iset( X_norm , 0 , col , norm );
       }
     }
     return y_mean;
