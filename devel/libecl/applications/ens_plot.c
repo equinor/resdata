@@ -406,7 +406,7 @@ bool use_viewer = false ; // Global variable to enable backwords compatible beha
 #define KEY_JOIN_STRING  ":"    /* The string used when joining strings to form a gen_key lookup key - can be anything (even ""). */
 #define PLOT_WIDTH  640
 #define PLOT_HEIGHT 480
-#define PROMPT_LEN 50
+#define PROMPT_LEN  60
 #define MAX_LOAD_THREADS 4
 
 
