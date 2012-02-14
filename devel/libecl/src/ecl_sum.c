@@ -662,7 +662,7 @@ double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int index ) {
 /* This is essentially the summary.x program. */
 
 #define DAYS_DATE_FORMAT    "%7.2f   %02d/%02d/%04d   "
-#define FLOAT_FORMAT        " %15.6f "
+#define FLOAT_FORMAT        " %15.6g "
 #define HEADER_FORMAT       " %15s "
 #define DATE_HEADER         "-- Days   dd/mm/yyyy   "
 #define DATE_DASH           "-----------------------"
