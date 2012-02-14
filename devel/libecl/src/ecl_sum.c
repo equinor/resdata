@@ -666,7 +666,7 @@ double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int index ) {
 #define HEADER_FORMAT       " %15s "
 #define DATE_HEADER         "-- Days   dd/mm/yyyy   "
 #define DATE_DASH           "-----------------------"
-#define FLOAT_DASH          "--------------"
+#define FLOAT_DASH          "-----------------"
 
 static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream , int internal_index , const bool_vector_type * has_var , const int_vector_type * var_index ) {
   int ivar , day,month,year;
