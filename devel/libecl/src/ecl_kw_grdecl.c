@@ -187,7 +187,7 @@ static void iset_range( char * data , int data_offset , int sizeof_ctype , void 
 
 /**
    The @strict flag is used to indicate whether the loader will accept
-   character string emebedded into a numerical grdecl keyword; this
+   character strings embedded into a numerical grdecl keyword; this
    should of course in general not be allowed and @strict should be
    set to true. However the SPECGRID keyword used when specifying a
    grid is often given as:
@@ -199,6 +199,19 @@ static void iset_range( char * data , int data_offset , int sizeof_ctype , void 
    written to a GRID/EGRID file. For this reason we have the
    possibility of setting @strict to false; in which case the 'F' or
    other characters in the numerical input will be ignored.  
+
+   If @strict is set to true the function will bomb when meeting a
+   non-numeric character like the 'F' above.  
+   
+   ----------------------------------------------------------------
+
+   The function supports multiplier keywords like:
+
+   PERMX
+      10000*0.15  0.16 0.17 0.18 0.19 10000*0.20
+   /
+   
+   Observe that no-spaces-are-allowed-around-the-*
 */
 
 static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_type_enum ecl_type , int * kw_size , FILE * stream ) {
@@ -392,9 +405,13 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
    abort hard if @kw is longer than 8 characters.
 */
 
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE * stream , const char * kw , bool strict , ecl_type_enum ecl_type) {
+  return ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , 0 , ecl_type );
+}
+
 ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_type_enum ecl_type) {
   bool strict = true;
-  return ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , 0 , ecl_type );
+  return ecl_kw_fscanf_alloc_grdecl_dynamic__( stream , kw , strict , ecl_type );
 }
 
 

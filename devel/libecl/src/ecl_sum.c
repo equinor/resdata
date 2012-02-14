@@ -662,13 +662,13 @@ double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int index ) {
 /* This is essentially the summary.x program. */
 
 #define DAYS_DATE_FORMAT    "%7.2f   %02d/%02d/%04d   "
-#define FLOAT_FORMAT        " %12.3f "
-#define HEADER_FORMAT       " %12s "
+#define FLOAT_FORMAT        " %15.6f "
+#define HEADER_FORMAT       " %15s "
 #define DATE_HEADER         "-- Days   dd/mm/yyyy   "
 #define DATE_DASH           "-----------------------"
 #define FLOAT_DASH          "--------------"
 
-static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream , int internal_index , const bool_vector_type * has_var , const int_vector_type * var_index) {
+static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream , int internal_index , const bool_vector_type * has_var , const int_vector_type * var_index ) {
   int ivar , day,month,year;
   util_set_date_values(ecl_sum_iget_sim_time(ecl_sum , internal_index ) , &day , &month, &year);
   fprintf(stream , DAYS_DATE_FORMAT , ecl_sum_iget_sim_days(ecl_sum , internal_index) , day , month , year);
@@ -699,7 +699,7 @@ static void ecl_sum_fprintf_header( const ecl_sum_type * ecl_sum , const stringl
 void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const stringlist_type * var_list , bool report_only , bool print_header) {
   bool_vector_type  * has_var   = bool_vector_alloc( stringlist_get_size( var_list ), false );
   int_vector_type   * var_index = int_vector_alloc( stringlist_get_size( var_list ), -1 );
-
+  
   {
     int ivar;
     for (ivar = 0; ivar < stringlist_get_size( var_list ); ivar++) {
@@ -708,7 +708,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const string
         int_vector_iset( var_index , ivar , ecl_sum_get_general_var_index( ecl_sum , stringlist_iget( var_list , ivar) ));
       } else {
         fprintf(stderr,"** Warning: could not find variable: \'%s\' in summary file \n", stringlist_iget( var_list , ivar));
-        bool_vector_iset( has_var , ivar , false);
+        bool_vector_iset( has_var , ivar , false );
       }
     }
   }

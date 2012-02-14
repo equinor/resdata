@@ -44,6 +44,7 @@ typedef struct ecl_kw_struct      ecl_kw_type;
   void           ecl_kw_set_header_alloc(ecl_kw_type  * , const char * , int , const char *);
   bool           ecl_kw_grdecl_fseek_kw(const char *  , bool  , bool  , FILE * );
   ecl_kw_type *  ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_type_enum ecl_type);
+  ecl_kw_type *  ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE * stream , const char * kw , bool strict , ecl_type_enum ecl_type);
   bool           ecl_kw_fseek_kw(const char * , bool , bool , fortio_type *);
   bool           ecl_kw_fseek_last_kw(const char * , bool  , fortio_type *);
   void           ecl_kw_inplace_update_file(const ecl_kw_type * , const char * , int ) ;
