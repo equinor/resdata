@@ -398,8 +398,10 @@ char       * util_alloc_envvar( const char * value );
 #ifdef HAVE_SYMLINK
   bool         util_is_link(const char * );
   void         util_make_slink(const char *, const char * );
-  char     *   util_alloc_atlink_target(const char * path , const char * link);
   char       * util_alloc_link_target(const char * link);
+#ifdef HAVE_READLINKAT
+  char     *   util_alloc_atlink_target(const char * path , const char * link);
+#endif
 #endif
 
 

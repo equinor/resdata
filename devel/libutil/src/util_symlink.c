@@ -73,7 +73,7 @@ char * util_alloc_link_target(const char * link) {
     return util_alloc_string_copy( link );
 }
 
-
+#ifdef HAVE_READLINKAT
 char * util_alloc_atlink_target(const char * path , const char * link) {
   if (util_is_abs_path( link ))
     return util_alloc_link_target( link );
@@ -114,5 +114,5 @@ char * util_alloc_atlink_target(const char * path , const char * link) {
     return target;
   }
 }
-
+#endif
 
