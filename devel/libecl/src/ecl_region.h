@@ -113,6 +113,8 @@ void              ecl_region_deselect_active_index( ecl_region_type * ecl_region
 
 void              ecl_region_intersection( ecl_region_type * region , const ecl_region_type * new_region );
 void              ecl_region_union( ecl_region_type * region , const ecl_region_type * new_region );
+void              ecl_region_subtract( ecl_region_type * region , const ecl_region_type * new_region);
+void              ecl_region_xor( ecl_region_type * region , const ecl_region_type * new_region);
 
 void              ecl_region_select_smaller( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);
 void              ecl_region_deselect_smaller( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , float limit);

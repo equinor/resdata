@@ -1149,7 +1149,10 @@ bool ecl_region_contains_ijk( const ecl_region_type * ecl_region , int i , int j
    Will update the selection in @region to ONLY contain the elements
    which are also present in @new_region. Will FAIL hard if the two
    regions do not share the same grid instance (checked by pointer
-   equality).  */
+   equality).  
+
+   A &= B
+*/
 
 void ecl_region_intersection( ecl_region_type * region , const ecl_region_type * new_region ) {
   if (region->parent_grid == new_region->parent_grid) {
@@ -1166,12 +1169,50 @@ void ecl_region_intersection( ecl_region_type * region , const ecl_region_type *
 /**
    Will update the selection in @region to contain all the elements
    which are selected in either @region or @new_region.
+
+   A |= B
 */
 void ecl_region_union( ecl_region_type * region , const ecl_region_type * new_region ) {
   if (region->parent_grid == new_region->parent_grid) {
     int global_index;
     for (global_index = 0; global_index < region->grid_vol; global_index++)
       region->active_mask[global_index] = (region->active_mask[global_index] || new_region->active_mask[global_index]);
+    
+    ecl_region_invalidate_index_list( region );
+  } else 
+    util_abort("%s: The two regions do not share grid - aborting \n",__func__);
+}
+
+
+/**
+   Will update the selection in @region to deselect the elements which
+   are also in:
+
+   A &= !B
+*/
+void ecl_region_subtract( ecl_region_type * region , const ecl_region_type * new_region) {
+  if (region->parent_grid == new_region->parent_grid) {
+    int global_index;
+    for (global_index = 0; global_index < region->grid_vol; global_index++)
+      region->active_mask[global_index] &= !new_region->active_mask[global_index];
+    
+    ecl_region_invalidate_index_list( region );
+  } else 
+    util_abort("%s: The two regions do not share grid - aborting \n",__func__);
+}
+
+
+/**
+   Will update the selection in @region to seselect the elements which
+   are either in A or B:
+
+   A ^= B 
+*/
+void ecl_region_xor( ecl_region_type * region , const ecl_region_type * new_region) {
+  if (region->parent_grid == new_region->parent_grid) {
+    int global_index;
+    for (global_index = 0; global_index < region->grid_vol; global_index++)
+      region->active_mask[global_index] ^= !new_region->active_mask[global_index];
     
     ecl_region_invalidate_index_list( region );
   } else 
