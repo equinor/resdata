@@ -1255,17 +1255,19 @@ void ecl_region_xor( ecl_region_type * region , const ecl_region_type * new_regi
 
 const int_vector_type * ecl_region_get_kw_index_list( ecl_region_type * ecl_region , const ecl_kw_type * ecl_kw , bool force_active) {
   const int_vector_type * index_set = NULL;
-  int kw_size = ecl_kw_get_size( ecl_kw );
+  int kw_size     = ecl_kw_get_size( ecl_kw );
+  int grid_active = ecl_grid_get_active_size( ecl_region->parent_grid );
+  int grid_global = ecl_grid_get_global_size( ecl_region->parent_grid );
 
-  if (kw_size == ecl_grid_get_active_size( ecl_region->parent_grid )) 
+  if (kw_size == grid_active) 
     index_set = ecl_region_get_active_list( ecl_region );
-  else if (kw_size == ecl_grid_get_global_size( ecl_region->parent_grid)) {
+  else if (kw_size == grid_global) {
     if (force_active)
       index_set = ecl_region_get_global_active_list( ecl_region );
     else
       index_set = ecl_region_get_global_list( ecl_region );
   } else 
-    util_abort("%s: size mismatch \n",__func__); 
+    util_abort("%s: size mismatch: grid_active:%d   grid_global:%d  kw_size:%d \n",__func__ , grid_active , grid_global , kw_size); 
   
   return index_set;
 }
