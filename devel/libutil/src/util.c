@@ -1538,8 +1538,8 @@ void util_printf_prompt(const char * prompt , int prompt_len, char fill_char , c
 
 /**
    This functions presents the user with a prompt, and reads an
-   integer - the integer value is returned. The functions will loop
-   indefinitely until a valid integer is entered.
+   integer - the integer value is returned. The functions returns
+   NULL on empty input.
 */
 
 int util_scanf_int(const char * prompt , int prompt_len) {
@@ -1553,6 +1553,33 @@ int util_scanf_int(const char * prompt , int prompt_len) {
   } while (!OK);
   getchar(); /* eating a \r left in the stdin input buffer. */
   return int_value;
+}
+
+/**
+   This functions presents the user with a prompt, and reads an
+   integer - the integer value is returned. The functions will loop
+   indefinitely until a valid integer is entered.
+*/
+
+char * util_scanf_int_return_char(const char * prompt , int prompt_len) {
+  char input[256];
+  int  int_value;
+  bool OK = false;
+  while(!OK){
+    util_printf_prompt(prompt , prompt_len, '=', "=> ");
+    fgets(input, prompt_len, stdin);
+    char *newline = strchr(input,'\n');
+    if(newline)
+      *newline = 0;
+
+    if(strlen(input) !=0){
+      OK = util_sscanf_int(input , &int_value);
+    }
+    else {
+      OK = true;
+    }
+  }
+  return util_alloc_string_copy(input);
 }
 
 
@@ -1583,6 +1610,24 @@ int util_scanf_int_with_limits(const char * prompt , int prompt_len , int min_va
   return value;
 }
 
+/** 
+    The limits are inclusive, yet the function returns the input char and stops on empty string.
+*/
+char * util_scanf_int_with_limits_return_char(const char * prompt , int prompt_len , int min_value , int max_value) {
+  int value = min_value-1;
+  char * value_char;
+  char * new_prompt = util_alloc_sprintf("%s [%d:%d]" , prompt , min_value , max_value);
+  while(value < min_value || value > max_value ){
+    value_char = util_scanf_int_return_char(new_prompt , prompt_len);
+    if(strlen(value_char) == 0)
+      value = min_value;
+    
+    else
+      util_sscanf_int(value_char , &value);
+  }
+  free(new_prompt);
+  return value_char;
+}
 
 
 
@@ -4485,6 +4530,7 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
   int  value,value1,value2;
   char  * start_ptr = (char *) range_string;
   char  * end_ptr;
+  bool didnt_work = false;
   
   if (active != NULL) {
     for (value = 0; value <= max_value; value++)
@@ -4494,15 +4540,17 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
     active_list = util_malloc( list_length * sizeof * active_list , __func__);
   }
     
-
+    
   while (start_ptr != NULL) {
     value1 = strtol(start_ptr , &end_ptr , 10);
     if (active != NULL && value1 > max_value)
       fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value1 , max_value);
     
-    if (end_ptr == start_ptr) 
-      util_abort("%s: failed to parse integer from: %s \n",__func__ , start_ptr);
-    
+    if (end_ptr == start_ptr){
+      printf("Returning to menu: %s \n" , start_ptr);
+      didnt_work = true;
+      break;
+    }
     /* OK - we have found the first integer, now there are three possibilities:
        
       1. The string contains nothing more (except) possibly whitespace.
@@ -4537,20 +4585,26 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
           while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
             start_ptr++;
           
-          if (start_ptr[0] == '\0') 
+          if (start_ptr[0] == '\0') {
             /* The range just ended - without second value. */
-            util_abort("%s[0]: malformed string: %s \n",__func__ , start_ptr);
-
+            printf("%s[0]: malformed string: %s \n",__func__ , start_ptr);
+	    didnt_work = true; 
+	    break;
+	  }
           value2 = strtol(start_ptr , &end_ptr , 10);
-          if (end_ptr == start_ptr) 
-            util_abort("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
-
+          if (end_ptr == start_ptr) {
+            printf("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
+	    didnt_work = true;
+	    break;
+	  }
           if (active != NULL && value2 > max_value)
             fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value2 , max_value);
           
-          if (value2 < value1)
-            util_abort("%s[2]: invalid interval - must have increasing range \n",__func__);
-          
+          if (value2 < value1){
+            printf("%s[2]: invalid interval - must have increasing range \n",__func__);
+	    didnt_work = true;
+	    break;
+          }
           start_ptr = end_ptr;
           { 
             int value;
@@ -4572,8 +4626,11 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
           else {
             if (start_ptr[0] == ',')
               start_ptr++;
-            else
-              util_abort("%s[3]: malformed string: %s \n",__func__ , start_ptr);
+            else{
+              printf("%s[3]: malformed string: %s \n",__func__ , start_ptr);
+	      didnt_work = true;
+	      break;
+	    }
           }
         } else 
           start_ptr++;  /* Skipping "," */
@@ -4587,13 +4644,21 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
            The start_ptr should point at "78".
         */
 
-      } else 
-        util_abort("%s[4]: malformed string: %s \n",__func__ , start_ptr);
+      } else{
+        printf("%s[4]: malformed string: %s \n",__func__ , start_ptr);
+	didnt_work = true;
+	break;
+      }
     }
   }
   if (_list_length != NULL)
     *_list_length = current_length;
-
+  
+  if (didnt_work){
+    for (value = 0; value <= max_value; value++)
+      active[value] = false;
+  }
+  
   return active_list;
 }
 
