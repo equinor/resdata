@@ -276,6 +276,12 @@ static ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr          
 
     return ministep;
   } else {
+    /* 
+       This is actually a fatal error / bug; the difference in smspec
+       header structure should have been detected already in the
+       ecl_smspec_load_restart() function and the restart case
+       discarded.
+    */
     fprintf(stderr , "** Warning size mismatch between timestep loaded from:%s and header:%s - timestep discarded.\n" , src_file , ecl_smspec_get_simulation_case( smspec ));
     return NULL;
   }

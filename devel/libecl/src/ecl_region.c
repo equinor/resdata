@@ -1347,8 +1347,8 @@ void ecl_region_kw_isub( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , c
 
 
 void ecl_region_kw_copy( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * src_kw , bool force_active) {
-  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
-  ecl_kw_copy_indexed( ecl_kw , index_set , src_kw );
+  const int_vector_type * target_index = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_copy_indexed( ecl_kw , target_index , src_kw );
 }
 
 

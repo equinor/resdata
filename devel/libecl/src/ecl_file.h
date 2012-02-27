@@ -43,6 +43,7 @@ ecl_kw_type    * ecl_file_icopy_named_kw( const ecl_file_type * ecl_file , const
 ecl_kw_type    * ecl_file_icopy_kw( const ecl_file_type * ecl_file , int index);
 bool             ecl_file_has_kw( const ecl_file_type * ecl_file , const char * kw);
 int              ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw);
+int              ecl_file_get_num_kw( const ecl_file_type * ecl_file);
 int              ecl_file_get_size( const ecl_file_type * ecl_fil );
 int              ecl_file_get_num_distinct_kw(const ecl_file_type * ecl_file);
 const char     * ecl_file_iget_distinct_kw(const ecl_file_type * ecl_file , int index);
