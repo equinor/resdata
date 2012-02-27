@@ -572,36 +572,36 @@ static bool ecl_smspec_kw_equal(const ecl_file_type * header , const ecl_file_ty
 /**
    When loading historical summary results the SMSPEC header of the
    historical results is not internalized, i.e. it is absolutely
-   essential that the historical case has identical header. This
-   function compares the ecl_file represeantation of two SMSPEC
-   headers.  
+   essential that the historical case has identical header as the main
+   case. This function compares the ecl_file represeantation of two
+   SMSPEC headers.
 */
 
-static bool ecl_smspec_file_equal( const ecl_file_type * header , const ecl_file_type * restart_header) {
-  if (ecl_file_get_num_kw(header) != ecl_file_get_num_kw( restart_header ))
+static bool ecl_smspec_file_equal( const ecl_file_type * header1 , const ecl_file_type * header2) {
+  if (ecl_file_get_size(header1) != ecl_file_get_size( header2 ))
     return false;
   
-  if (! ecl_smspec_kw_equal( header , restart_header , WGNAMES_KW))
+  if (! ecl_smspec_kw_equal( header1 , header2 , WGNAMES_KW))
     return false;
   
-  if (! ecl_smspec_kw_equal( header , restart_header , KEYWORDS_KW))
+  if (! ecl_smspec_kw_equal( header1 , header2 , KEYWORDS_KW))
     return false;
   
-  if (! ecl_smspec_kw_equal( header , restart_header , STARTDAT_KW))
+  if (! ecl_smspec_kw_equal( header1 , header2 , STARTDAT_KW))
     return false;
 
-  if (! ecl_smspec_kw_equal( header , restart_header , UNITS_KW))
+  if (! ecl_smspec_kw_equal( header1 , header2 , UNITS_KW))
     return false;
   
-  if (! ecl_smspec_kw_equal( header , restart_header , DIMENS_KW))
+  if (! ecl_smspec_kw_equal( header1 , header2 , DIMENS_KW))
     return false;
   
-  if (ecl_file_has_kw(header , NUMS_KW))
-    if (!ecl_smspec_kw_equal( header, restart_header , NUMS_KW))
+  if (ecl_file_has_kw(header1 , NUMS_KW))
+    if (!ecl_smspec_kw_equal( header1, header2 , NUMS_KW))
       return false;
 
-  if (ecl_file_has_kw(header , LGRS_KW))
-    if (!ecl_smspec_kw_equal( header, restart_header , LGRS_KW))
+  if (ecl_file_has_kw(header1 , LGRS_KW))
+    if (!ecl_smspec_kw_equal( header1, header2 , LGRS_KW))
       return false;
   
   return false;

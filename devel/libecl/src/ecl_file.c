@@ -612,6 +612,8 @@ int ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw) 
 
 
 
+
+
 /**
    This function does the following:
 
