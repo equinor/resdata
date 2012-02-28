@@ -27,6 +27,8 @@ extern "C" {
 #define ICON_KW      "ICON"
 #define ISEG_KW      "ISEG"
 
+#define PORV_KW      "PORV"
+#define AQUIFER_KW   "AQUIFERN"
 
 /*****************************************************************/
 /*                     Summary files                             */
