@@ -114,5 +114,10 @@ char * util_alloc_atlink_target(const char * path , const char * link) {
     return target;
   }
 }
+#else
+#warning "Platform does not have readlinkat() function - calls to util_alloc_atlink_target() will exit."
+char * util_alloc_atlink_target(const char * path , const char * link) {
+  util_exit("Sorry: readlinkat() function not implemented");
+}
 #endif
 
