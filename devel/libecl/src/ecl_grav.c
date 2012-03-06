@@ -113,8 +113,8 @@ struct ecl_grav_struct {
 #define ECL_GRAV_SURVEY_ID 88517
 struct ecl_grav_survey_struct {
   UTIL_TYPE_ID_DECLARATION;
-  const ecl_grid_cache_type * grid_cache;
-  const bool                * aquifer_cell;
+  const ecl_grid_cache_type      * grid_cache;
+  const bool                     * aquifer_cell;
   char                           * name;           /* Name of the survey - arbitrary string. */
   double                         * porv;           /* Reference shared by the ecl_grav_phase structures - i.e. it must not be updated. */
   vector_type                    * phase_list;     /* ecl_grav_phase_type objects - one for each phase present in the model. */
@@ -132,6 +132,7 @@ struct ecl_grav_phase_struct {
   const ecl_grid_cache_type  * grid_cache;
   const bool                 * aquifer_cell;
   double                          * fluid_mass;  /* The total fluid in place (mass) of this phase - for each active cell.*/
+  double                           * work;           /* Temporary used in the summation over all cells. */
   ecl_phase_enum                    phase;
 };
 
@@ -179,75 +180,53 @@ static const char * get_den_kw( ecl_phase_enum phase , ecl_version_enum ecl_vers
 }
 
 
-static double ecl_grav_phase_eval( const ecl_grav_phase_type * base_phase , 
+static void ecl_grav_phase_ensure_work( ecl_grav_phase_type * grav_phase) {
+  if (grav_phase == NULL)
+    grav_phase->work = util_malloc( sizeof * grav_phase->work * ecl_grid_cache_get_size( grav_phase->grid_cache ) , __func__);
+}
+
+
+static double ecl_grav_phase_eval( ecl_grav_phase_type * base_phase , 
                                    const ecl_grav_phase_type * monitor_phase,
                                    ecl_region_type * region , 
                                    double utm_x , double utm_y , double depth) {
-  
+
+  ecl_grav_phase_ensure_work( base_phase );
   if ((monitor_phase == NULL) || (base_phase->phase == monitor_phase->phase)) {
     const ecl_grid_cache_type * grid_cache = base_phase->grid_cache;
-    const double * xpos    = ecl_grid_cache_get_xpos( grid_cache );
-    const double * ypos    = ecl_grid_cache_get_ypos( grid_cache );
-    const double * zpos    = ecl_grid_cache_get_zpos( grid_cache );
-    const bool   * aquifer = base_phase->aquifer_cell;
-    int index;
-    double deltag = 0;
+    const bool   * aquifer   = base_phase->aquifer_cell;
+    double * mass_diff       = base_phase->work;
+    double deltag;
     
-    if (region == NULL) {
-      const int      size   = ecl_grid_cache_get_size( grid_cache );
-      for (index = 0; index < size; index++) {
-        if (!aquifer[index]) {
-          double base_mass    = base_phase->fluid_mass[index];
-          double monitor_mass = 0;
-          double dist_x  = (xpos[index] - utm_x );
-          double dist_y  = (ypos[index] - utm_y );
-          double dist_z  = (zpos[index] - depth );
-          double dist    = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z*dist_z );
-          
-          if (monitor_phase != NULL)
-            monitor_mass = monitor_phase->fluid_mass[index];
-          
-          /**
-             The Gravitational constant is 6.67E-11 N (m/kg)^2, we
-             return the result in microGal, i.e. we scale with 10^2 * 
-             10^6 => 6.67E-3.
-          */
-          
-          /** 
-              For numerical precision it might be benficial to use the
-              util_kahan_sum() function to do a Kahan summation.
-          */
-          deltag += 6.67428E-3*(monitor_mass - base_mass) * dist_z/(dist * dist * dist );
-        }
-      }
-    } else {
-      const int_vector_type * index_vector = ecl_region_get_active_list( region );
-      const int size = int_vector_size( index_vector );
-      const int * index_list = int_vector_get_const_ptr( index_vector );
-      int i;
-      for (i = 0; i < size; i++) {
-        index = index_list[i];
-        if (!aquifer[index]) {
-          double base_mass    = base_phase->fluid_mass[index];
-          double monitor_mass = 0;
-          double dist_x  = (xpos[index] - utm_x );
-          double dist_y  = (ypos[index] - utm_y );
-          double dist_z  = (zpos[index] - depth );
-          double dist    = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z*dist_z );
-          
-          if (monitor_phase != NULL)
-            monitor_mass = monitor_phase->fluid_mass[index];
-          
-          deltag += 6.67428E-3*(monitor_mass - base_mass) * dist_z/(dist * dist * dist );
-        }
+    /* 
+       Initialize a work array to contain the difference in mass for
+       every cell.
+    */
+    {
+      int index;
+      if (monitor_phase == NULL) {
+        for (index = 0; index < ecl_grid_cache_get_size( grid_cache ); index++)
+          mass_diff[index] = - base_phase->fluid_mass[index];
+      } else {
+        for (index = 0; index < ecl_grid_cache_get_size( grid_cache ); index++)
+          mass_diff[index] = monitor_phase->fluid_mass[index] - base_phase->fluid_mass[index];
       }
     }
+      
+    /**
+       The Gravitational constant is 6.67E-11 N (m/kg)^2, we
+       return the result in microGal, i.e. we scale with 10^2 * 
+       10^6 => 6.67E-3.
+    */
+    deltag = 6.67428E-3 * ecl_grav_common_eval_biot_savart( grid_cache , region , aquifer , mass_diff , utm_x , utm_y , depth);
+    
     return deltag;
   } else {
     util_abort("%s comparing different phases ... \n",__func__);
     return -1;
   }
 }
+
 
 
 static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav , 
@@ -268,6 +247,7 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav ,
     grav_phase->aquifer_cell = ecl_grav->aquifer_cell;
     grav_phase->fluid_mass   = util_malloc( size * sizeof * grav_phase->fluid_mass , __func__ );
     grav_phase->phase        = phase;
+    grav_phase->work         = NULL;
 
     if (calc_type == GRAV_CALC_FIP) {
       ecl_kw_type * pvtnum_kw = ecl_file_iget_named_kw( init_file , PVTNUM_KW , 0 );
@@ -351,6 +331,7 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav ,
 
 
 static void ecl_grav_phase_free( ecl_grav_phase_type * grav_phase ) {
+  util_safe_free( grav_phase->work );
   free( grav_phase->fluid_mass );
   free( grav_phase );
 }
@@ -594,7 +575,7 @@ static double ecl_grav_survey_eval( const ecl_grav_survey_type * base_survey,
   int phase_nr;
   double deltag = 0;
   for (phase_nr = 0; phase_nr < vector_get_size( base_survey->phase_list ); phase_nr++) {
-    const ecl_grav_phase_type * base_phase    = vector_iget_const( base_survey->phase_list , phase_nr );
+    ecl_grav_phase_type * base_phase    = vector_iget( base_survey->phase_list , phase_nr );
     if (base_phase->phase & phase_mask) {
       if (monitor_survey != NULL) {
         const ecl_grav_phase_type * monitor_phase = vector_iget_const( monitor_survey->phase_list , phase_nr );

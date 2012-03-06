@@ -42,17 +42,6 @@
 */
 
 
-#define PORV_KW                 "PORV"
-#define PRESSURE_KW                 "PRESSURE"
-
-
-#define SUBSIDENCE_CALC_USE_PRESSURE 128
-
-typedef enum {
-  SUBSIDENCE_CALC_PRESSURE = SUBSIDENCE_CALC_USE_PRESSURE
-} subsidence_calc_type;
-
-
 /**
    The ecl_subsidence_struct datastructure is the main structure for
    calculating the subsidence from time lapse ECLIPSE simulations.  
@@ -65,7 +54,7 @@ struct ecl_subsidence_struct {
   hash_type            * surveys;      /* A hash table containg ecl_subsidence_survey_type instances; one instance
                                           for each interesting time. */
   double               * compressibility; /*total compressibility*/
-  double	       * poisson_ratio;
+  double               * poisson_ratio;
 };
 
 
@@ -91,22 +80,16 @@ struct ecl_subsidence_survey_struct {
 
 
 static ecl_subsidence_survey_type * ecl_subsidence_survey_alloc_empty(const ecl_subsidence_type * sub, 
-                                                                      const char * name ,
-                                                                      subsidence_calc_type calc_type) {
+                                                                      const char * name) {
   ecl_subsidence_survey_type * survey = util_malloc( sizeof * survey , __func__ );
   UTIL_TYPE_ID_INIT( survey , ECL_SUBSIDENCE_SURVEY_ID );
   survey->grid_cache   = sub->grid_cache;
   survey->aquifer_cell = sub->aquifer_cell;
   survey->name         = util_alloc_string_copy( name );
   
-  if (calc_type & SUBSIDENCE_CALC_USE_PRESSURE) {
-    survey->porv = util_malloc( ecl_grid_cache_get_size( sub->grid_cache ) * sizeof * survey->porv , __func__ );
-    survey->pressure    = util_malloc( ecl_grid_cache_get_size( sub->grid_cache ) * sizeof * survey->pressure , __func__ );
-  } else {
-    survey->porv = NULL;
-    survey->pressure    = NULL;
-  }
-
+  survey->porv     = util_malloc( ecl_grid_cache_get_size( sub->grid_cache ) * sizeof * survey->porv , __func__ );
+  survey->pressure = util_malloc( ecl_grid_cache_get_size( sub->grid_cache ) * sizeof * survey->pressure , __func__ );
+  
   return survey;
 }
 
@@ -115,14 +98,15 @@ static UTIL_SAFE_CAST_FUNCTION( ecl_subsidence_survey , ECL_SUBSIDENCE_SURVEY_ID
 static ecl_subsidence_survey_type * ecl_subsidence_survey_alloc_PRESSURE(ecl_subsidence_type * ecl_subsidence ,
                                                                          const ecl_file_type * restart_file ,
                                                                          const char * name ) {
-  ecl_subsidence_survey_type * survey = ecl_subsidence_survey_alloc_empty( ecl_subsidence , name , SUBSIDENCE_CALC_PRESSURE);
 
+  ecl_subsidence_survey_type * survey = ecl_subsidence_survey_alloc_empty( ecl_subsidence , name );
   ecl_grid_cache_type * grid_cache = ecl_subsidence->grid_cache;
   const int * global_index = ecl_grid_cache_get_global_index( grid_cache );
   const int size = ecl_grid_cache_get_size( grid_cache );
   int active_index;
   ecl_kw_type * init_porv_kw = ecl_file_iget_named_kw( ecl_subsidence->init_file , PORV_KW , 0); /*Global indexing*/
   ecl_kw_type * pressure_kw = ecl_file_iget_named_kw( restart_file , PRESSURE_KW , 0); /*Active indexing*/
+  
   for (active_index = 0; active_index < size; active_index++){
     survey->porv[ active_index ] = ecl_kw_iget_float( init_porv_kw , global_index[active_index] );
     survey->pressure[ active_index ] = ecl_kw_iget_float( pressure_kw , active_index );
@@ -155,63 +139,23 @@ static double ecl_subsidence_survey_eval( const ecl_subsidence_survey_type * bas
                                           double utm_x , double utm_y , double depth, double compressibility, double poisson_ratio) {
 
   const ecl_grid_cache_type * grid_cache = base_survey->grid_cache;
-
-  const double * xpos   = ecl_grid_cache_get_xpos( grid_cache );
-  const double * ypos   = ecl_grid_cache_get_ypos( grid_cache );
-  const double * zpos   = ecl_grid_cache_get_zpos( grid_cache );
+  const int size = ecl_grid_cache_get_size( grid_cache );
+  double * weight = util_malloc( size * sizeof * weight , __func__ );
+  double deltaz;
   int index;
 
-  double deltaz = 0;
-  if (region == NULL) {
-    const int size = ecl_grid_cache_get_size( grid_cache );
-    for (index = 0; index < size; index++) {
-      if (!base_survey->aquifer_cell[index]) {
-
-        double base_p = base_survey->pressure[index];
-        double monitor_p = monitor_survey->pressure[index];
-        double base_porv = base_survey->porv[index];
-
-        double delta_porv = compressibility * base_porv * (base_p - monitor_p);
-
-        double dist_x  = (xpos[index] - utm_x );
-        double dist_y  = (ypos[index] - utm_y );
-        double dist_z  = (zpos[index] - depth );
-        double dist    = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z*dist_z );
-        /**
-           Geertsma formula for subsidence
-           1/pi(1-poisson ratio)*dist_z/pow(dist_sq, 1.5)
-           We scale to get the result in cm.
-        */
-
-        /**
-           For numerical precision it might be benficial to use the
-           util_kahan_sum() function to do a Kahan summation.
-        */
-        deltaz += 31.83099*(1-poisson_ratio) * delta_porv * dist_z/( dist * dist * dist );
-      }
-    }
+  if (monitor_survey != NULL) {
+    for (index = 0; index < size; index++)
+      weight[index] = base_survey->porv[index] * (base_survey->pressure[index] - monitor_survey->pressure[index]);
   } else {
-    const int_vector_type * index_vector = ecl_region_get_active_list( region );
-    const int size = int_vector_size( index_vector );
-    const int * index_list = int_vector_get_const_ptr( index_vector );
-    int i;
-    for (i = 0; i < size; i++) {
-      index = index_list[i];
-      if (!base_survey->aquifer_cell[index]) {
-        double base_p = base_survey->pressure[index];
-        double monitor_p = monitor_survey->pressure[index];
-        double base_porv = base_survey->porv[index];
-
-        double delta_porv = compressibility * base_porv * (base_p - monitor_p);
-        double dist_x  = (xpos[index] - utm_x );
-        double dist_y  = (ypos[index] - utm_y );
-        double dist_z  = (zpos[index] - depth );
-        double dist    = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z*dist_z );
-
-        deltaz += 31.83099*(1-poisson_ratio)*delta_porv* dist_z/(dist * dist * dist );
-      }
-    }
+    for (index = 0; index < size; index++)
+      weight[index] = base_survey->porv[index] * base_survey->pressure[index];
   }
+  
+  deltaz = compressibility * 31.83099*(1-poisson_ratio) * 
+    ecl_grav_common_eval_biot_savart( grid_cache , region , base_survey->aquifer_cell , weight , utm_x , utm_y , depth );
+  
+  free( weight );
   return deltaz;
 }
 
