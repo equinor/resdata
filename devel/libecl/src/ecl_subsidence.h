@@ -38,7 +38,7 @@ extern "C" {
   double                       ecl_subsidence_eval( const ecl_subsidence_type * subsidence , 
                                                     const char * base, const char * monitor , 
                                                     ecl_region_type * region , 
-                                                    double utm_x, double utm_y , double depth, double compressibility);
+                                                    double utm_x, double utm_y , double depth, double compressibility, double poisson_ratio);
 
 
 #ifdef __plusplus
