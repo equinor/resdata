@@ -2159,10 +2159,35 @@ void ecl_kw_max_min_ ## ctype ( const ecl_kw_type * ecl_kw , ctype * _max , ctyp
  KW_MAX_MIN( ctype );                                                                 \
 } 
 
+
+#define ECL_KW_MAX( ctype )                                       \
+  ctype ecl_kw_ ## ctype ## _max( const ecl_kw_type * ecl_kw ) {  \
+  ctype max,min;                                                  \
+  ecl_kw_max_min_ ## ctype( ecl_kw , &max , &min);                \
+  return max;                                                     \
+}
+
+#define ECL_KW_MIN( ctype )                                       \
+  ctype ecl_kw_ ## ctype ## _min( const ecl_kw_type * ecl_kw ) {  \
+  ctype max,min;                                                  \
+  ecl_kw_max_min_ ## ctype( ecl_kw , &max , &min);                \
+  return min;                                                     \
+}
+
 ECL_KW_MAX_MIN( int )
 ECL_KW_MAX_MIN( float )
 ECL_KW_MAX_MIN( double )
 
+ECL_KW_MAX( int )
+ECL_KW_MAX( float )
+ECL_KW_MAX( double )
+
+ECL_KW_MIN( int )
+ECL_KW_MIN( float )
+ECL_KW_MIN( double )
+
+#undef ECL_KW_MAX
+#undef ECL_KW_MIN
 #undef KW_MAX_MIN
 #undef ECL_KW_MAX_MIN
 

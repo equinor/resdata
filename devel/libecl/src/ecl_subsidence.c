@@ -136,10 +136,11 @@ static void ecl_subsidence_survey_free__( void * __subsidence_survey ) {
 static double ecl_subsidence_survey_eval( const ecl_subsidence_survey_type * base_survey ,
                                           const ecl_subsidence_survey_type * monitor_survey,
                                           ecl_region_type * region ,
-                                          double utm_x , double utm_y , double depth, double compressibility, double poisson_ratio) {
+                                          double utm_x , double utm_y , double depth, 
+                                          double compressibility, double poisson_ratio) {
 
   const ecl_grid_cache_type * grid_cache = base_survey->grid_cache;
-  const int size = ecl_grid_cache_get_size( grid_cache );
+  const int size  = ecl_grid_cache_get_size( grid_cache );
   double * weight = util_malloc( size * sizeof * weight , __func__ );
   double deltaz;
   int index;
@@ -210,8 +211,9 @@ static ecl_subsidence_survey_type * ecl_subsidence_get_survey( const ecl_subside
 }
 
 
-double ecl_subsidence_eval( const ecl_subsidence_type * subsidence , const char * base, const char * monitor , ecl_region_type * region , double utm_x, double utm_y ,
-double depth, double compressibility, double poisson_ratio) {
+double ecl_subsidence_eval( const ecl_subsidence_type * subsidence , const char * base, const char * monitor , ecl_region_type * region , 
+                            double utm_x, double utm_y , double depth, 
+                            double compressibility, double poisson_ratio) {
   ecl_subsidence_survey_type * base_survey    = ecl_subsidence_get_survey( subsidence , base );
   ecl_subsidence_survey_type * monitor_survey = ecl_subsidence_get_survey( subsidence , monitor );
   return ecl_subsidence_survey_eval( base_survey , monitor_survey , region , utm_x , utm_y , depth , compressibility, poisson_ratio);
