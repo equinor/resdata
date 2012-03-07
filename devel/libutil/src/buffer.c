@@ -330,6 +330,13 @@ int buffer_fread_int(buffer_type * buffer) {
 }
 
 
+bool buffer_fread_bool(buffer_type * buffer) {
+  bool value;
+  buffer_fread(buffer , &value , sizeof value , 1);
+  return value;
+}
+
+
 long int buffer_fread_long(buffer_type * buffer) {
   long value;
   buffer_fread(buffer , &value , sizeof value , 1);
@@ -376,6 +383,11 @@ void buffer_fwrite_int(buffer_type * buffer , int value) {
 }
 
 
+void buffer_fwrite_bool(buffer_type * buffer , bool value) {
+  buffer_fwrite(buffer , &value , sizeof value , 1);
+}
+
+
 void buffer_fskip_time_t(buffer_type * buffer) {
   buffer_fseek( buffer , sizeof(time_t) , SEEK_CUR );
 }
@@ -383,6 +395,10 @@ void buffer_fskip_time_t(buffer_type * buffer) {
 
 void buffer_fskip_int(buffer_type * buffer) {
   buffer_fseek( buffer , sizeof( int ) , SEEK_CUR );
+}
+
+void buffer_fskip_bool(buffer_type * buffer) {
+  buffer_fseek( buffer , sizeof( bool ) , SEEK_CUR );
 }
 
 

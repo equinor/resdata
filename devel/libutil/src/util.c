@@ -1617,11 +1617,10 @@ char * util_scanf_int_with_limits_return_char(const char * prompt , int prompt_l
   int value = min_value-1;
   char * value_char;
   char * new_prompt = util_alloc_sprintf("%s [%d:%d]" , prompt , min_value , max_value);
-  while(value < min_value || value > max_value ){
+  while( value < min_value || value > max_value ){
     value_char = util_scanf_int_return_char(new_prompt , prompt_len);
     if(strlen(value_char) == 0)
       value = min_value;
-    
     else
       util_sscanf_int(value_char , &value);
   }
@@ -4588,22 +4587,22 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
           if (start_ptr[0] == '\0') {
             /* The range just ended - without second value. */
             printf("%s[0]: malformed string: %s \n",__func__ , start_ptr);
-	    didnt_work = true; 
-	    break;
-	  }
+            didnt_work = true; 
+            break;
+          }
           value2 = strtol(start_ptr , &end_ptr , 10);
           if (end_ptr == start_ptr) {
             printf("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
-	    didnt_work = true;
-	    break;
-	  }
+            didnt_work = true;
+            break;
+          }
           if (active != NULL && value2 > max_value)
             fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value2 , max_value);
           
           if (value2 < value1){
             printf("%s[2]: invalid interval - must have increasing range \n",__func__);
-	    didnt_work = true;
-	    break;
+            didnt_work = true;
+            break;
           }
           start_ptr = end_ptr;
           { 
@@ -4628,9 +4627,9 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
               start_ptr++;
             else{
               printf("%s[3]: malformed string: %s \n",__func__ , start_ptr);
-	      didnt_work = true;
-	      break;
-	    }
+              didnt_work = true;
+              break;
+            }
           }
         } else 
           start_ptr++;  /* Skipping "," */
@@ -4646,8 +4645,8 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
 
       } else{
         printf("%s[4]: malformed string: %s \n",__func__ , start_ptr);
-	didnt_work = true;
-	break;
+        didnt_work = true;
+        break;
       }
     }
   }

@@ -52,7 +52,10 @@ void               buffer_fwrite_char_ptr(buffer_type * buffer , const char * st
 void               buffer_terminate_char_ptr( buffer_type * buffer );
 void               buffer_fwrite_char(buffer_type * buffer , char value);
 void               buffer_fwrite_int(buffer_type * buffer , int value);
+void               buffer_fskip_bool(buffer_type * buffer);
+void               buffer_fwrite_bool(buffer_type * buffer , bool value);
 int                buffer_fread_int(buffer_type * buffer );
+bool               buffer_fread_bool(buffer_type * buffer);
 long     int buffer_fread_long(buffer_type * buffer);
 void               buffer_store(const buffer_type * buffer , const char * filename);
 size_t             buffer_get_offset(const buffer_type * buffer);
