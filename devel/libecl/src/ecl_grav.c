@@ -181,7 +181,7 @@ static const char * get_den_kw( ecl_phase_enum phase , ecl_version_enum ecl_vers
 
 
 static void ecl_grav_phase_ensure_work( ecl_grav_phase_type * grav_phase) {
-  if (grav_phase == NULL)
+  if (grav_phase->work == NULL)
     grav_phase->work = util_malloc( sizeof * grav_phase->work * ecl_grid_cache_get_size( grav_phase->grid_cache ) , __func__);
 }
 
@@ -197,7 +197,6 @@ static double ecl_grav_phase_eval( ecl_grav_phase_type * base_phase ,
     const bool   * aquifer   = base_phase->aquifer_cell;
     double * mass_diff       = base_phase->work;
     double deltag;
-    
     /* 
        Initialize a work array to contain the difference in mass for
        every cell.
