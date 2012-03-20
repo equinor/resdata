@@ -4707,6 +4707,45 @@ void util_abort_set_executable( const char * executable ) {
 }
 
 
+/*****************************************************************/
+
+/*
+  Will check if the vector @data contains the element @value. The
+  @date vector should be sorted in increasing order prior to calling
+  this function. If the vector is not correctly sorted this will be
+  crash and burn.
+*/
+
+#define CONTAINS(TYPE) bool util_sorted_contains_ ## TYPE(const TYPE * data , int size , TYPE value) { \
+  if ((data[0] == value) || (data[size - 1] == value))  \
+     return true;                                       \
+  else if ((value < data[0]) || (value > data[size-1])) \
+     return false;                                      \
+  else {                                                \
+     int index1 = 0;                                    \
+     int index2 = size - 1;                             \
+     while (true) {                                     \
+        int center_index = (index1 + index2) / 2;       \
+        TYPE center_value = data[center_index];         \
+        if (center_value == value)                      \
+           return true;                                 \
+        else {                                          \
+          if (value < center_value)                     \
+            index2 = center_index;                      \
+          else                                          \
+            index1 = center_index;                      \
+          if ((index2 - index1) == 1)                   \
+            return false;                               \
+        }                                               \
+     }                                                  \
+  }                                                     \
+}                                            
+
+CONTAINS(int)
+CONTAINS(time_t)
+#undef CONTAINS    
+
+/*****************************************************************/
 
 
 int util_fnmatch( const char * pattern , const char * string ) {

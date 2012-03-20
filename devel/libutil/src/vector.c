@@ -185,6 +185,7 @@ static void vector_assert_size( vector_type * vector , int min_size) {
 }
 
 
+
 /**
    Append a user-pointer which comes without either copy constructor
    or destructor, this implies that the calling scope has FULL

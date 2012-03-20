@@ -283,6 +283,33 @@ static void @TYPE@_vector_assert_writable( const @TYPE@_vector_type * vector ) {
 }
 
 
+
+/**
+   This function will copy a block starting at index @src_offset in
+   the src vector to a block starting at @target_offset in the target
+   vector. The target vector will be resized and initialized with
+   default values as required.
+   
+   If len goes beyond the length of the src vector the function will
+   fail hard.
+*/
+void @TYPE@_vector_memcpy_data_block( @TYPE@_vector_type * target , const @TYPE@_vector_type * src , int target_offset , int src_offset , int len) {
+  if ((src_offset + len) > src->size)
+    util_abort("%s: offset:%d  blocksize:%d  vector_size:%d - invalid \n",__func__ , src_offset , len , src->size);
+
+  /* Force a resize + default initialisation of the target. */
+  if (target->alloc_size < (target_offset + len))
+    @TYPE@_vector_iset( target , target_offset + len - 1 , target->default_value) ;
+  
+  /* Copy the content. */
+  memcpy( &target->data[target_offset] , &src->data[src_offset] , len * sizeof * src->data );
+  
+  /* Update size of target. */
+  if (target->size < (target_offset + len))
+    target->size = target_offset + len;
+}
+
+
 /**
    This function will copy all the content (both header and data) from
    the src vector to the target vector. If the the current allocation
@@ -294,16 +321,13 @@ static void @TYPE@_vector_assert_writable( const @TYPE@_vector_type * vector ) {
 
 
 void @TYPE@_vector_memcpy( @TYPE@_vector_type * target, const @TYPE@_vector_type * src ) {
-  if (target->alloc_size < src->size)
-    @TYPE@_vector_realloc_data__( target , src->alloc_size );  /* Must grow the target vector */
-  
-  /* Copy the content. */
-  memcpy(target->data , src->data , src->size * sizeof * src->data );
-  
-  /* Copy the headers */
-  target->size          = src->size;
+  @TYPE@_vector_reset( target );
   target->default_value = src->default_value;
+
+  @TYPE@_vector_memcpy_data_block( target  , src , 0 , 0 , src->size );
 }
+
+
 
 
 /**
@@ -544,7 +568,7 @@ void @TYPE@_vector_iset(@TYPE@_vector_type * vector , int index , @TYPE@ value) 
 
    V = [ 0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9]
 
-   vector_idel_block( vector , 5 , 2 ) =>  V = [ 0 , 1 , 2 , 3 , 6 , 7 , 8 , 9]
+   vector_idel_block( vector , 4 , 2 ) =>  V = [ 0 , 1 , 2 , 3 , 6 , 7 , 8 , 9]
 
    The function is based on memmove() and probably not a high
    performance player....  

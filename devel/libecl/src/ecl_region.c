@@ -1171,6 +1171,17 @@ bool ecl_region_contains_ijk( const ecl_region_type * ecl_region , int i , int j
 }
 
 
+bool ecl_region_contains_global( const ecl_region_type * ecl_region , int global_index) {
+  return ecl_region->active_mask[ global_index ];
+}
+
+
+bool ecl_region_contains_active( const ecl_region_type * ecl_region , int active_index) {
+  int global_index = ecl_grid_get_global_index1A( ecl_region->parent_grid , active_index );
+  return ecl_region->active_mask[ global_index ];
+}
+
+
 
 /*****************************************************************/
 

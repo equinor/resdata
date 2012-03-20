@@ -357,6 +357,11 @@ void     util_fwrite_int_vector   (const int     * , int , FILE * , const char *
 void     util_fwrite_double_vector(const double  * , int , FILE * , const char * );
 void     util_fread_char_vector(char * , int , FILE * , const char * );
 
+#define CONTAINS_HEADER(TYPE) bool util_sorted_contains_ ## TYPE(const TYPE * data , int size , TYPE value);
+  CONTAINS_HEADER(int);
+  CONTAINS_HEADER(time_t);
+#undef CONTAINS_HEADER
+
 #ifdef HAVE_ZLIB
 void     util_compress_buffer(const void * , int , void * , unsigned long * );
 int      util_fread_sizeof_compressed(FILE * stream);
@@ -386,10 +391,6 @@ double   util_kahan_sum(const double *data, size_t N);
 int      util_fnmatch( const char * pattern , const char * string );
 void     util_localtime( time_t * t , struct tm * ts );
 
-#ifdef HAVE_FORK
-#include "util_fork.h"
-#endif
-
 char       * util_alloc_PATH_executable(const char * executable );
 char       * util_isscanf_alloc_envvar( const char * string , int env_index );
 void         util_setenv( const char * variable , const char * value);
@@ -406,6 +407,9 @@ char       * util_alloc_envvar( const char * value );
 #endif
 #endif
 
+#ifdef HAVE_FORK
+#include "util_fork.h"
+#endif
 
 
 #ifdef HAVE_LOCKF
