@@ -72,6 +72,7 @@ static double stepwise_estimate__( stepwise_type * stepwise , bool_vector_type *
               acol++;
             }
           }
+	  
           matrix_iset( Y , arow , 0 , matrix_iget( stepwise->Y0 , irow , 0 ));
           arow++;
         }
@@ -313,6 +314,7 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
       printf("deltaR2 for variable %d = %0.2f\n",best_var,deltaR2);
 
       if (( currentR2 < 0) || deltaR2 < deltaR2_limit) {
+	printf("adding %d to active set:\n",best_var);
         bool_vector_iset( stepwise->active_set , best_var , true );
         currentR2 = minR2;
         y0 = stepwise_estimate__( stepwise , active_rows );
@@ -368,7 +370,7 @@ static stepwise_type * stepwise_alloc__( int nsample , int nvar , rng_type * rng
   stepwise->Y0          = NULL;
   stepwise->active_set  = bool_vector_alloc( nvar , true );
   stepwise->beta        = matrix_alloc( nvar , 1 );
-
+  
   return stepwise;
 }
 
@@ -421,8 +423,9 @@ stepwise_type * stepwise_alloc2( matrix_type * X , matrix_type * Y , bool intern
 
 
 void stepwise_set_Y0( stepwise_type * stepwise , matrix_type * Y) {
-  if (stepwise->Y0 != NULL)
+  if (stepwise->Y0 != NULL) {
     matrix_free( stepwise->Y0 );
+  }
   
   stepwise->Y0 = Y;
 }
@@ -473,11 +476,24 @@ void stepwise_isetY0( stepwise_type * stepwise , int i , double value ) {
 
 
 void stepwise_free( stepwise_type * stepwise ) {
+  if (stepwise->active_set != NULL) {
+    bool_vector_free( stepwise->active_set );
+  }
   
-  bool_vector_free( stepwise->active_set );
-  matrix_free( stepwise->beta );
-  matrix_free( stepwise->X_mean );
-  matrix_free( stepwise->X_norm );
+
+  if (stepwise->beta != NULL)
+    matrix_free( stepwise->beta );
+
+
+
+  if (stepwise->X_mean != NULL)  
+    matrix_free( stepwise->X_mean );
+
+
+  if (stepwise->X_norm != NULL)
+    matrix_free( stepwise->X_norm );
+  
+
 
   if (stepwise->data_owner) {
     matrix_free( stepwise->X0 );
