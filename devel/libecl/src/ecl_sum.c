@@ -19,20 +19,23 @@
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
-#include <ecl_util.h>
-#include <ecl_sum.h>
+#include <time.h>
+
 #include <hash.h>
 #include <util.h>
-#include <time.h>
 #include <set.h>
 #include <util.h>
 #include <vector.h>
 #include <int_vector.h>
 #include <bool_vector.h>
 #include <time_t_vector.h>
+#include <stringlist.h>
+
+#include <ecl_util.h>
+#include <ecl_sum.h>
 #include <ecl_smspec.h>
 #include <ecl_sum_data.h>
-#include <stringlist.h>
+
 
 /**
    The ECLIPSE summary data is organised in a header file (.SMSPEC)
@@ -397,7 +400,11 @@ double ecl_sum_get_well_completion_var(const ecl_sum_type * ecl_sum , int time_i
 /* General variables - this means WWCT:OP_1 - i.e. composite variables*/
 
 int  ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * lookup_kw) {
-  return ecl_smspec_get_general_var_index( ecl_sum->smspec , lookup_kw);
+  int index = ecl_smspec_get_general_var_index( ecl_sum->smspec , lookup_kw);
+  if (index >= 0)
+    return index;
+  else 
+    util_abort("%s: summary case:%s does not contain key:%s\n",__func__ , ecl_sum_get_case( ecl_sum ) , lookup_kw );
 }
 
 bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw)       { return ecl_smspec_has_general_var( ecl_sum->smspec , lookup_kw); }

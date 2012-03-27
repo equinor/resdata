@@ -133,6 +133,9 @@ static void ecl_file_kw_assert_kw( const ecl_file_kw_type * file_kw ) {
 
 
 static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fortio ) {
+  if (fortio == NULL)
+    util_abort("%s: trying to load a keyword after the backing file has been detached.\n",__func__);
+  
   if (file_kw->kw != NULL)
     ecl_kw_free( file_kw->kw );
   {

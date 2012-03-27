@@ -19,16 +19,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <fortio.h>
-#include <ecl_kw.h>
-#include <ecl_file.h>
 #include <errno.h>
+#include <time.h>
+
 #include <hash.h>
 #include <util.h>
-#include <time.h>
 #include <vector.h>
 #include <int_vector.h>
 #include <stringlist.h>
+
+#include <fortio.h>
+#include <ecl_kw.h>
+#include <ecl_file.h>
 #include <ecl_endian_flip.h>
 #include <ecl_kw_magic.h>
 #include <ecl_intehead.h>
@@ -339,6 +341,16 @@ static void file_map_replace_kw( file_map_type * file_map , ecl_kw_type * old_kw
   }
   util_abort("%s: could not find ecl_kw ptr: %p \n",__func__ , old_kw);
 }
+
+
+static void file_map_load_all( file_map_type * file_map ) {
+  for (int index = 0; index < vector_get_size( file_map->kw_list); index++) {
+    ecl_file_kw_type * ikw = vector_iget( file_map->kw_list , index );
+    ecl_file_kw_get_kw( ikw , file_map->fortio );
+  }
+}
+
+
 /*****************************************************************/
 
 
@@ -620,7 +632,7 @@ int ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw) 
    1. Takes an input index which goes in to the global kw_list vector.
    2. Looks up the corresponding keyword.
    3. Return the number of this particular keyword instance, among
-      the other instance with the same header.
+   the other instance with the same header.
 
    With the example above we get:
 
@@ -860,34 +872,39 @@ bool ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occ
 
 
 /**
-   The ecl_file_open_block() function will first call ecl_file_open(),
-   and then subsequently create a more limited file_map with the
-   ecl_file_get_blockmap() function and set the newly created map as
-   the active map.
-*/
-
-ecl_file_type * ecl_file_open_block( const char * filename , const char * kw , int occurence) {
-  ecl_file_type * file = ecl_file_open( filename );
-  if (!ecl_file_select_block( file , kw , occurence )) {
-    ecl_file_close( file );
-    file = NULL;
-  } 
-  return NULL;
-}
-
-
-
-/**
    The ecl_file_close() function will close the fortio instance and
    free all the data created by the ecl_file instance; this includes
    the ecl_kw instances which have been loaded on demand.
 */
 
 void ecl_file_close(ecl_file_type * ecl_file) {
-  fortio_fclose( ecl_file->fortio  );
+  if (ecl_file->fortio != NULL)
+    fortio_fclose( ecl_file->fortio  );
+
   vector_free( ecl_file->map_list  );
   vector_free( ecl_file->map_stack );
   free( ecl_file );
+}
+
+
+/**
+   This function will detach the current ecl_file instance from the
+   underlying fortio instance. The ecl_file instance can be used
+   further to access the ecl_kw instances which have been loaded
+   already, but if you try on-demand loading of a keyword you will get
+   crash-and-burn. To ensure that all keywords are in memory you can
+   call ecl_file_load_all() prior to the detach call.
+*/
+
+
+void ecl_file_fortio_detach( ecl_file_type * ecl_file ) {
+  fortio_fclose( ecl_file->fortio );
+  ecl_file->fortio = NULL;
+}
+
+
+void ecl_file_load_all( ecl_file_type * ecl_file ) {
+  file_map_load_all( ecl_file->active_map );
 }
 
 

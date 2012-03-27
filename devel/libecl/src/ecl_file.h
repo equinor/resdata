@@ -24,20 +24,23 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <time.h>
+
+
 #include <ecl_kw.h>
 #include <ecl_file_kw.h>
 #include <fortio.h>
-#include <time.h>
 #include <ecl_util.h>
 
 
 typedef struct ecl_file_struct ecl_file_type;
-
+void             ecl_file_load_all( ecl_file_type * ecl_file );
 void             ecl_file_push_block( ecl_file_type * ecl_file );
 void             ecl_file_pop_block( ecl_file_type * ecl_file );
 ecl_file_type  * ecl_file_open( const char * filename );
 ecl_file_type  * ecl_file_open_writable( const char * filename );
 void             ecl_file_close( ecl_file_type * ecl_file );
+void             ecl_file_fortio_detach( ecl_file_type * ecl_file );
 void             ecl_file_free__(void * arg);
 ecl_kw_type    * ecl_file_icopy_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith);
 ecl_kw_type    * ecl_file_icopy_kw( const ecl_file_type * ecl_file , int index);

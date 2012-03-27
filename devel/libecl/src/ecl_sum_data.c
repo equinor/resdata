@@ -293,7 +293,7 @@ static double ecl_sum_ministep_iget(const ecl_sum_ministep_type * ministep , int
   if ((index >= 0) && (index < ministep->data_size))
     return ministep->data[index];
   else {
-    util_abort("%s: invalid index:%d Valid range: [0,%d) \n",__func__ , index , ministep->data_size);
+    util_abort("%s: param index:%d invalid: Valid range: [0,%d) \n",__func__ , index , ministep->data_size);
     return -1;
   }
 }
