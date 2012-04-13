@@ -407,7 +407,9 @@ int  ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * l
     util_abort("%s: summary case:%s does not contain key:%s\n",__func__ , ecl_sum_get_case( ecl_sum ) , lookup_kw );
 }
 
-bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw)       { return ecl_smspec_has_general_var( ecl_sum->smspec , lookup_kw); }
+bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw) { 
+  return ecl_smspec_has_general_var( ecl_sum->smspec , lookup_kw); 
+}
 
 double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , const char * lookup_kw) {
   int index = ecl_sum_get_general_var_index(ecl_sum , lookup_kw);
