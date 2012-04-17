@@ -403,8 +403,10 @@ int  ecl_sum_get_general_var_index(const ecl_sum_type * ecl_sum , const char * l
   int index = ecl_smspec_get_general_var_index( ecl_sum->smspec , lookup_kw);
   if (index >= 0)
     return index;
-  else 
+  else {
     util_abort("%s: summary case:%s does not contain key:%s\n",__func__ , ecl_sum_get_case( ecl_sum ) , lookup_kw );
+    return -1;
+  }
 }
 
 bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_kw) { 
