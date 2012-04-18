@@ -55,7 +55,7 @@ extern "C" {
                                               int index);
 
   void                smspec_node_free( smspec_node_type * index );
-  inline int          smspec_node_get_index( const smspec_node_type * smspec_node );  
+  int                 smspec_node_get_index( const smspec_node_type * smspec_node );  
   const char        * smspec_node_get_gen_key( const smspec_node_type * smspec_node);
   ecl_smspec_var_type smspec_node_get_var_type( const smspec_node_type * smspec_node);
   int                 smspec_node_get_num( const smspec_node_type * smspec_node);

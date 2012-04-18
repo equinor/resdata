@@ -406,7 +406,7 @@ void smspec_node_free( smspec_node_type * index ) {
 
 /*****************************************************************/
 
-inline int smspec_node_get_index( const smspec_node_type * smspec_node ) {
+int smspec_node_get_index( const smspec_node_type * smspec_node ) {
   return smspec_node->index;
 }
 
