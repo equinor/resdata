@@ -190,12 +190,12 @@ stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type * src) {
   Allocates a new stringlist where the strings are references to the
   num_strings found in stringlist from start.
 */
-stringlist_type * stringlist_alloc_shallow_copy_with_limits(const stringlist_type * stringlist, int start, int num_strings) {
+stringlist_type * stringlist_alloc_shallow_copy_with_limits(const stringlist_type * stringlist, int offset, int num_strings) {
   stringlist_type * copy = stringlist_alloc_empty( true );
 
   for(int i=0; i<num_strings; i++)
-  {
-    const char * str = stringlist_iget(stringlist, i + start);
+    {
+    const char * str = stringlist_iget(stringlist, i + offset);
     vector_append_ref(copy->strings, str);
   }
 
@@ -209,13 +209,24 @@ stringlist_type * stringlist_alloc_shallow_copy_with_limits(const stringlist_typ
   we know the copy constructor.
 */
 
-stringlist_type * stringlist_alloc_deep_copy(const stringlist_type * src) {
+
+stringlist_type * stringlist_alloc_deep_copy_with_limits(const stringlist_type * src, int offset , int num_strings) {
   stringlist_type * copy = stringlist_alloc_empty( true );
   int i;
-  for (i = 0; i < stringlist_get_size( src ); i++) 
-    stringlist_append_copy( copy , stringlist_iget( src , i));
+  for (i = 0; i < num_strings; i++) 
+    stringlist_append_copy( copy , stringlist_iget( src , i + offset));
   return copy;
 }
+
+
+stringlist_type * stringlist_alloc_deep_copy_with_offset(const stringlist_type * src, int offset) {
+  return stringlist_alloc_deep_copy_with_limits( src , offset , stringlist_get_size( src ) - offset );
+}
+
+stringlist_type * stringlist_alloc_deep_copy(const stringlist_type * src) {
+  return stringlist_alloc_deep_copy_with_offset( src , 0 );
+}
+
 
 
 
@@ -456,34 +467,38 @@ bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
 
 /* Based on buffer?? */
 
-char * stringlist_alloc_joined_segment_string( const stringlist_type * s , int start_index , int end_index , const char * sep ) {
-  char * string = NULL;
-  int i;
-
-  /* Start with allocating a string long enough to hold all the substrings. */
+char * stringlist_alloc_joined_substring( const stringlist_type * s , int start_index , int end_index , const char * sep ) {
+  if (start_index >= stringlist_get_size( s ))
+    return NULL;
   {
-    int sep_length   = strlen( sep );
-    int total_length = 0;
-    for (i=start_index; i < end_index; i++)
-      total_length += (strlen(stringlist_iget( s , i)) + sep_length);
-
-    total_length += (1 - sep_length);
-    string    = util_malloc( total_length * sizeof * string , __func__);
-    string[0] = '\0';
+    char * string = NULL;
+    int i;
+    
+    /* Start with allocating a string long enough to hold all the substrings. */
+    {
+      int sep_length   = strlen( sep );
+      int total_length = 0;
+      for (i=start_index; i < end_index; i++)
+        total_length += (strlen(stringlist_iget( s , i)) + sep_length);
+      
+      total_length += (1 - sep_length);
+      string    = util_malloc( total_length * sizeof * string , __func__);
+      string[0] = '\0';
+    }
+    
+    for (i = start_index; i < end_index; i ++) {
+      strcat( string , stringlist_iget( s , i));
+      if (i < (end_index - 1))
+        strcat( string , sep );
+    }
+    
+    return string;
   }
-  
-  for (i = start_index; i < end_index; i ++) {
-    strcat( string , stringlist_iget( s , i));
-    if (i < (end_index - 1))
-      strcat( string , sep );
-  }
-  
-  return string;
 }
 
 
 char * stringlist_alloc_joined_string(const stringlist_type * s , const char * sep) {
-  return stringlist_alloc_joined_segment_string( s , 0 , stringlist_get_size( s ) , sep );
+  return stringlist_alloc_joined_substring( s , 0 , stringlist_get_size( s ) , sep );
 }
 
 /**
