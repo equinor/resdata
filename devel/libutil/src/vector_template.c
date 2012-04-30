@@ -830,7 +830,79 @@ int @TYPE@_vector_get_min_index(const @TYPE@_vector_type * vector, bool reverse)
 }
 
 
+/**
+   Checks if the vector contains the value @value. The comparison is
+   done with ==; i.e. it is only suitable for integer-like types.
 
+   The implementation does a linear search through the vector and
+   returns the index of the @value, or -1 if @value is not found. If
+   the vector is known to be sorted you should use the
+   @TYPE@_vector_index_sorted() instead.
+*/
+
+int @TYPE@_vector_index(const @TYPE@_vector_type * vector , @TYPE@ value) {
+  int index = 0;
+  while (true) {
+    if (vector->data[index] == value)
+      break;
+    
+    index++;
+    if (index == vector->size) {
+      index = -1;  /* Not found */
+      break;
+    }
+  }
+  
+  return index;
+}
+
+
+
+/*
+  Should be reimplemented with util_sorted_contains_xxx().
+*/
+
+int @TYPE@_vector_index_sorted(const @TYPE@_vector_type * vector , @TYPE@ value) {
+  if (value < vector->data[0])
+    return -1;
+  if (value == vector->data[ 0 ])
+    return 0;
+
+  {
+    int last_index = vector->size - 1;
+    if (value > vector->data[ last_index ])
+      return -1;
+    if (value == vector->data[ last_index])
+      return last_index;
+  }
+
+
+  {
+    int lower_index = 0;
+    int upper_index = vector->size - 1;
+    
+    while (true) {
+      if ((upper_index - lower_index) <= 1)
+        /* Not found */
+        return -1;
+
+      {
+        int center_index = (lower_index + upper_index) / 2;
+        @TYPE@ center_value = vector->data[ center_index ];
+        
+        if (center_value == value)
+          /* Found it */
+          return center_index;
+        else {
+          if (center_value > value)
+            upper_index = center_index;
+          else
+            lower_index = center_index;
+        }
+      }
+    }
+  }
+}
 
 
 /*****************************************************************/

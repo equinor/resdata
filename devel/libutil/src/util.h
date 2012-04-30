@@ -357,9 +357,10 @@ void     util_fwrite_int_vector   (const int     * , int , FILE * , const char *
 void     util_fwrite_double_vector(const double  * , int , FILE * , const char * );
 void     util_fread_char_vector(char * , int , FILE * , const char * );
 
-#define CONTAINS_HEADER(TYPE) bool util_sorted_contains_ ## TYPE(const TYPE * data , int size , TYPE value);
+#define CONTAINS_HEADER(TYPE) int util_sorted_contains_ ## TYPE(const TYPE * data , int size , TYPE value);
   CONTAINS_HEADER(int);
   CONTAINS_HEADER(time_t);
+  CONTAINS_HEADER(size_t);
 #undef CONTAINS_HEADER
 
 #ifdef HAVE_ZLIB

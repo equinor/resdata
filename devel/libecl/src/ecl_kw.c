@@ -22,11 +22,13 @@
 #include <string.h>
 #include <math.h>
 #include <inttypes.h>
+
+#include <util.h>
+#include <buffer.h>
+
 #include <ecl_kw.h>
 #include <ecl_util.h>
 #include <fortio.h>
-#include <util.h>
-#include <buffer.h>
 #include <ecl_endian_flip.h>
 
 
@@ -43,6 +45,8 @@ struct ecl_kw_struct {
   bool              shared_data;          /* Whether this keyword has shared data or not. */
 };
 
+
+UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 
 
 
@@ -1011,6 +1015,26 @@ void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 } 
 
 
+/**
+   This function will skip the header part of an ecl_kw instance. The
+   function will read the file content at the current position, it is
+   therefor essential that the file pointer is positioned at the
+   beginning of a keyword when this function is called; otherwise it
+   will be complete crash and burn.  
+*/
+
+
+void ecl_kw_fskip_header( fortio_type * fortio) {
+  bool fmt_file = fortio_fmt_file( fortio );
+  if (fmt_file) {
+    ecl_kw_type * ecl_kw = ecl_kw_alloc_empty( );
+    ecl_kw_fread_header( ecl_kw , fortio );
+    ecl_kw_free( ecl_kw );
+  } else 
+    fortio_fskip_record( fortio );
+}
+
+
 bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
   const char null_char = '\0';
   FILE *stream  = fortio_get_FILE( fortio );
@@ -1032,7 +1056,7 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
         util_abort("%s: reading failed - at end of file?\n",__func__);
     }
   } else {
-    header[ECL_STRING_LENGTH]        = null_char;
+    header[ECL_STRING_LENGTH]     = null_char;
     ecl_type_str[ECL_TYPE_LENGTH] = null_char;
     record_size = fortio_init_read(fortio);
     if (record_size > 0) {
@@ -1056,7 +1080,7 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
 
 /**
    Will seek through the open fortio file and search for a keyword with
-   header 'kw'.It will always start the search from the present
+   header 'kw'. It will always start the search from the present
    position in the file, but if rewind is true it will rewind the
    fortio file if not finding 'kw' between current offset and EOF.
 

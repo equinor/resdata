@@ -22,6 +22,7 @@
 extern "C" {
 #endif
 #include <stdio.h>
+
 #include <buffer.h>
 #include <util.h>
 
@@ -81,6 +82,8 @@ typedef @TYPE@ (@TYPE@_ftype) (@TYPE@);
   void                 @TYPE@_vector_append_default(@TYPE@_vector_type * vector , @TYPE@ default_value);
   void                 @TYPE@_vector_iset_default(@TYPE@_vector_type * vector , int index , @TYPE@ default_value);
   bool                 @TYPE@_vector_is_sorted( const @TYPE@_vector_type * vector , bool reverse);
+  int                  @TYPE@_vector_index(const @TYPE@_vector_type * vector , @TYPE@ value);
+  int                  @TYPE@_vector_index_sorted(const @TYPE@_vector_type * vector , @TYPE@ value);
   void                 @TYPE@_vector_sort(@TYPE@_vector_type * vector);
   void                 @TYPE@_vector_rsort(@TYPE@_vector_type * vector);
   void                 @TYPE@_vector_permute(@TYPE@_vector_type * vector , const int * perm);

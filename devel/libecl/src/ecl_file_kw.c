@@ -19,7 +19,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
+#include <size_t_vector.h>
 #include <util.h>
 
 #include <ecl_util.h>
@@ -46,6 +48,12 @@
 
 #define ECL_FILE_KW_TYPE_ID 646107
 
+struct inv_map_struct {
+  size_t_vector_type * file_kw_ptr;
+  size_t_vector_type * ecl_kw_ptr;
+  bool                 sorted; 
+};
+
 struct ecl_file_kw_struct {
   UTIL_TYPE_ID_DECLARATION
   long             file_offset;
@@ -55,8 +63,75 @@ struct ecl_file_kw_struct {
   ecl_kw_type    * kw;
 };
 
-static UTIL_SAFE_CAST_FUNCTION( ecl_file_kw , ECL_FILE_KW_TYPE_ID )
 
+
+/*****************************************************************/
+
+inv_map_type * inv_map_alloc() {
+  inv_map_type * map = util_malloc( sizeof * map , __func__);
+  map->file_kw_ptr = size_t_vector_alloc( 0 , 0 );
+  map->ecl_kw_ptr  = size_t_vector_alloc( 0 , 0 );
+  map->sorted = false;
+  return map;
+}
+
+void inv_map_free( inv_map_type * map ) {
+  size_t_vector_free( map->file_kw_ptr );
+  size_t_vector_free( map->ecl_kw_ptr );
+  free( map );
+}
+
+
+static void inv_map_assert_sort( inv_map_type * map ) {
+  if (!map->sorted) {
+    int * perm = size_t_vector_alloc_sort_perm( map->ecl_kw_ptr );
+    
+    size_t_vector_permute( map->ecl_kw_ptr , perm );
+    size_t_vector_permute( map->file_kw_ptr , perm );
+    map->sorted = true;
+
+    free( perm );
+  }
+}
+
+static void inv_map_drop_kw( inv_map_type * map , const ecl_kw_type * ecl_kw) {
+  inv_map_assert_sort( map );
+  {
+    int index = size_t_vector_index_sorted( map->ecl_kw_ptr , (size_t) ecl_kw );
+    if (index == -1)
+      util_abort("%s: trying to drop non-existent kw \n",__func__);
+    
+    size_t_vector_idel( map->ecl_kw_ptr  , index );
+    size_t_vector_idel( map->file_kw_ptr , index );
+    map->sorted = false;
+  }
+}
+
+
+static void inv_map_add_kw( inv_map_type * map , const ecl_file_kw_type * file_kw , const ecl_kw_type * ecl_kw) {
+  size_t_vector_append( map->file_kw_ptr , (size_t) file_kw );
+  size_t_vector_append( map->ecl_kw_ptr  , (size_t) ecl_kw );
+  map->sorted = false;
+}
+
+
+ecl_file_kw_type * inv_map_get_file_kw( inv_map_type * inv_map , const ecl_kw_type * ecl_kw ) {
+  inv_map_assert_sort( inv_map );
+  {
+    int index = size_t_vector_index_sorted( inv_map->ecl_kw_ptr , (size_t) ecl_kw );
+    if (index == -1)
+      /* ecl_kw ptr not found. */
+      return NULL;
+    else 
+      return (ecl_file_kw_type * ) size_t_vector_iget( inv_map->file_kw_ptr , index );
+  }
+}
+
+
+/*****************************************************************/
+
+static UTIL_SAFE_CAST_FUNCTION( ecl_file_kw , ECL_FILE_KW_TYPE_ID )
+UTIL_IS_INSTANCE_FUNCTION( ecl_file_kw , ECL_FILE_KW_TYPE_ID )
 
 
 
@@ -98,16 +173,13 @@ ecl_file_kw_type * ecl_file_kw_alloc_copy( const ecl_file_kw_type * src ) {
 }
 
 
-static void ecl_kw_drop_kw( ecl_file_kw_type * file_kw ) {
+
+
+void ecl_file_kw_free( ecl_file_kw_type * file_kw ) {
   if (file_kw->kw != NULL) {
     ecl_kw_free( file_kw->kw );
     file_kw->kw = NULL;
   }
-}
-
-
-void ecl_file_kw_free( ecl_file_kw_type * file_kw ) {
-  ecl_kw_drop_kw( file_kw );
   free( file_kw->header );
   free( file_kw );
 }
@@ -132,16 +204,27 @@ static void ecl_file_kw_assert_kw( const ecl_file_kw_type * file_kw ) {
 }
 
 
-static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fortio ) {
+static void ecl_file_kw_drop_kw( ecl_file_kw_type * file_kw , inv_map_type * inv_map ) {
+  if (file_kw->kw != NULL) {
+    inv_map_drop_kw( inv_map , file_kw->kw );
+    ecl_kw_free( file_kw->kw );
+    file_kw->kw = NULL;
+  }
+}
+
+
+static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map) {
   if (fortio == NULL)
     util_abort("%s: trying to load a keyword after the backing file has been detached.\n",__func__);
   
-  if (file_kw->kw != NULL)
-    ecl_kw_free( file_kw->kw );
+  if (file_kw->kw != NULL) 
+    ecl_file_kw_drop_kw( file_kw , inv_map );
+  
   {
     fortio_fseek( fortio , file_kw->file_offset , SEEK_SET );
     file_kw->kw = ecl_kw_fread_alloc( fortio );
     ecl_file_kw_assert_kw( file_kw );
+    inv_map_add_kw( inv_map , file_kw , file_kw->kw );
   }
 }
 
@@ -150,15 +233,21 @@ static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fort
   Will return the ecl_kw instance of this file_kw; if it is not
   currently loaded the method will instantiate the ecl_kw instance
   from the @fortio input handle. 
-
+  
   After loading the keyword it will be kept in memory, so a possible
-  subsequent lookup will be served from memory.  
+  subsequent lookup will be served from memory. 
+
+  The ecl_file layer maintains a pointer mapping between the
+  ecl_kw_type pointers and their ecl_file_kw_type containers; this
+  mapping needs the new_load return value from the
+  ecl_file_kw_get_kw() function.  
 */
 
 
-ecl_kw_type * ecl_file_kw_get_kw( ecl_file_kw_type * file_kw , fortio_type * fortio) {
-  if (file_kw->kw == NULL)
-    ecl_file_kw_load_kw( file_kw , fortio );
+ecl_kw_type * ecl_file_kw_get_kw( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map ) {
+  if (file_kw->kw == NULL) 
+    ecl_file_kw_load_kw( file_kw , fortio , inv_map);
+
   return file_kw->kw;
 }
 
@@ -202,14 +291,24 @@ ecl_type_enum ecl_file_kw_get_type( const ecl_file_kw_type * file_kw) {
 }
 
 
-void ecl_file_kw_fwrite( ecl_file_kw_type * file_kw , fortio_type * src , fortio_type * target) {
-  ecl_kw_type * ecl_kw = ecl_file_kw_get_kw( file_kw , src);
-  ecl_kw_fwrite( ecl_kw , target );
-}
-
-
 void ecl_file_kw_fskip_data( const ecl_file_kw_type * file_kw , fortio_type * fortio) {
   ecl_kw_fskip_data__( file_kw->ecl_type , file_kw->kw_size , fortio );
 }
+
+
+/**
+   This function will replace the file content of the keyword pointed
+   to by @file_kw, with the new content given by @ecl_kw. The new
+   @ecl_kw keyword must have identical header to the one already
+   present in the file.
+*/
+
+void ecl_file_kw_inplace_fwrite( ecl_file_kw_type * file_kw , fortio_type * fortio) {
+  ecl_file_kw_assert_kw( file_kw );
+  fortio_fseek( fortio , file_kw->file_offset , SEEK_SET );
+  ecl_kw_fskip_header( fortio );
+  ecl_kw_fwrite_data( file_kw->kw , fortio );
+}
+
 
 

@@ -201,7 +201,7 @@ char * util_alloc_filename_from_stream( FILE * input_stream ) {
   const char * lsof_executable = "/usr/sbin/lsof";
   int   fd     = fileno( input_stream );
     
-  if (util_file_exists( lsof_executable ) && util_is_executable( lsof_executable ) && (fd != -1)) {
+  if (util_is_executable( lsof_executable ) && (fd != -1)) {
     char  * fd_string = util_alloc_sprintf("f%d" , fd);
     char    line_fd[32];
     char    line_file[4096];

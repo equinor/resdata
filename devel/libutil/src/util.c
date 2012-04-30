@@ -2228,9 +2228,8 @@ bool util_is_file(const char * path) {
 
 
 /**
-   Checks that is file as well.
+   Will return false if the path does not exist.
 */
-
 bool util_is_executable(const char * path) {
   if (util_file_exists(path)) {
     struct stat stat_buffer;
@@ -2239,10 +2238,8 @@ bool util_is_executable(const char * path) {
       return (stat_buffer.st_mode & S_IXUSR);
     else
       return false; /* It is not a file. */
-  } else {
-    util_abort("%s: file:%s does not exist - aborting \n",__func__ , path);
-    return false; /* Dummy to shut up compiler */
-  }
+  } else  /* Entry does not exist - return false. */
+    return false; 
 }
 
 
@@ -4711,16 +4708,21 @@ void util_abort_set_executable( const char * executable ) {
 
 /*
   Will check if the vector @data contains the element @value. The
-  @date vector should be sorted in increasing order prior to calling
+  @data vector should be sorted in increasing order prior to calling
   this function. If the vector is not correctly sorted this will be
   crash and burn.
+
+  If the element is found the index is returned, otherwise the value -1
+  is returned.
 */
 
-#define CONTAINS(TYPE) bool util_sorted_contains_ ## TYPE(const TYPE * data , int size , TYPE value) { \
-  if ((data[0] == value) || (data[size - 1] == value))  \
-     return true;                                       \
+#define CONTAINS(TYPE) int util_sorted_contains_ ## TYPE(const TYPE * data , int size , TYPE value) { \
+  if ((data[0] == value))                               \
+     return 0;                                          \
+  else if ((data[size - 1] == value))                   \
+     return size - 1;                                   \
   else if ((value < data[0]) || (value > data[size-1])) \
-     return false;                                      \
+     return -1;                                         \
   else {                                                \
      int index1 = 0;                                    \
      int index2 = size - 1;                             \
@@ -4728,14 +4730,14 @@ void util_abort_set_executable( const char * executable ) {
         int center_index = (index1 + index2) / 2;       \
         TYPE center_value = data[center_index];         \
         if (center_value == value)                      \
-           return true;                                 \
+           return center_index;                         \
         else {                                          \
           if (value < center_value)                     \
             index2 = center_index;                      \
           else                                          \
             index1 = center_index;                      \
           if ((index2 - index1) == 1)                   \
-            return false;                               \
+            return -1;                                  \
         }                                               \
      }                                                  \
   }                                                     \
@@ -4743,6 +4745,7 @@ void util_abort_set_executable( const char * executable ) {
 
 CONTAINS(int)
 CONTAINS(time_t)
+CONTAINS(size_t)
 #undef CONTAINS    
 
 /*****************************************************************/

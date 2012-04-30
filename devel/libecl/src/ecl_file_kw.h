@@ -23,24 +23,31 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 #include <ecl_kw.h>
 #include <fortio.h>
 
 typedef struct ecl_file_kw_struct ecl_file_kw_type;
+typedef struct inv_map_struct inv_map_type;
 
-ecl_file_kw_type * ecl_file_kw_alloc( const ecl_kw_type * ecl_kw , long offset);
-void               ecl_file_kw_free( ecl_file_kw_type * file_kw );
-void               ecl_file_kw_free__( void * arg );
-ecl_kw_type      * ecl_file_kw_get_kw( ecl_file_kw_type * file_kw , fortio_type * fortio);
-ecl_file_kw_type * ecl_file_kw_alloc_copy( const ecl_file_kw_type * src );
-const char       * ecl_file_kw_get_header( const ecl_file_kw_type * file_kw );
-int                ecl_file_kw_get_size( const ecl_file_kw_type * file_kw );
-ecl_type_enum      ecl_file_kw_get_type( const ecl_file_kw_type * file_kw);
-bool               ecl_file_kw_ptr_eq( const ecl_file_kw_type * file_kw , const ecl_kw_type * ecl_kw);
-void               ecl_file_kw_fwrite( ecl_file_kw_type * file_kw , fortio_type * src , fortio_type * target);
-void               ecl_file_kw_replace_kw( ecl_file_kw_type * file_kw , fortio_type * target , ecl_kw_type * new_kw );
-void               ecl_file_kw_fskip_data( const ecl_file_kw_type * file_kw , fortio_type * fortio);
+  inv_map_type     * inv_map_alloc();
+  ecl_file_kw_type * inv_map_get_file_kw( inv_map_type * inv_map , const ecl_kw_type * ecl_kw );
+  void               inv_map_free( inv_map_type * map );
 
+  ecl_file_kw_type * ecl_file_kw_alloc( const ecl_kw_type * ecl_kw , long offset);
+  void               ecl_file_kw_free( ecl_file_kw_type * file_kw );
+  void               ecl_file_kw_free__( void * arg );
+  ecl_kw_type      * ecl_file_kw_get_kw( ecl_file_kw_type * file_kw , fortio_type * fortio, inv_map_type * inv_map);
+  ecl_file_kw_type * ecl_file_kw_alloc_copy( const ecl_file_kw_type * src );
+  const char       * ecl_file_kw_get_header( const ecl_file_kw_type * file_kw );
+  int                ecl_file_kw_get_size( const ecl_file_kw_type * file_kw );
+  ecl_type_enum      ecl_file_kw_get_type( const ecl_file_kw_type * file_kw);
+  bool               ecl_file_kw_ptr_eq( const ecl_file_kw_type * file_kw , const ecl_kw_type * ecl_kw);
+  void               ecl_file_kw_replace_kw( ecl_file_kw_type * file_kw , fortio_type * target , ecl_kw_type * new_kw );
+  void               ecl_file_kw_fskip_data( const ecl_file_kw_type * file_kw , fortio_type * fortio);
+  void               ecl_file_kw_inplace_fwrite( ecl_file_kw_type * file_kw , fortio_type * fortio);
+ 
 #ifdef __cplusplus
 }
 #endif

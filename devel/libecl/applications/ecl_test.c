@@ -28,13 +28,29 @@ void install_SIGNALS(void) {
 }
 
 
+int test_ecl_file_save() {
+  ecl_file_type * ecl_file = ecl_file_open_writable( "/tmp/ECLIPSE.UNRST" );
+  ecl_kw_type * swat = ecl_file_iget_named_kw( ecl_file , "SWAT" , 0 );
+  ecl_file_save_kw( ecl_file , swat );
+  ecl_file_close( ecl_file );
+}
+
+
+int test_grdecl_loader() {
+  FILE * stream = util_fopen("/private/joaho/ERT/NR/python/ctypes/test/data/eclipse/case/PERMX.grdecl" , "r");
+  ecl_kw_type * kw = ecl_kw_fscanf_alloc_grdecl_dynamic( stream , "PERMX" , ECL_FLOAT_TYPE );
+  ecl_kw_free( kw );
+  fclose( stream );
+  
+  return 1;
+}
+
+
 int main (int argc, char **argv) {
   install_SIGNALS();
   {
-    FILE * stream = util_fopen("/private/joaho/ERT/NR/python/ctypes/test/data/eclipse/case/PERMX.grdecl" , "r");
-    ecl_kw_type * kw = ecl_kw_fscanf_alloc_grdecl_dynamic( stream , "PERMX" , ECL_FLOAT_TYPE );
-    ecl_kw_free( kw );
-    fclose( stream );
+    test_grdecl_loader();
+    test_ecl_file_save();
   }
 }
 

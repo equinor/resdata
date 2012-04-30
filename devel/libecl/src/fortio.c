@@ -21,8 +21,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <fortio.h>
+
 #include <util.h>
+#include <fortio.h>
 
 extern int errno;
 
@@ -234,27 +235,27 @@ fortio_type * fortio_open_reader(const char *filename , bool endian_flip_header 
 
 fortio_type * fortio_open_readwrite(const char *filename , bool endian_flip_header , bool fmt_file) {
   fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
-  
+
   if (fmt_file)
     fortio->stream = util_fopen(fortio->filename , READ_WRITE_MODE_TXT);
   else
     fortio->stream = util_fopen(fortio->filename , READ_WRITE_MODE_BINARY);
+
   fortio->mode = FORTIO_READ + FORTIO_WRITE;
   return fortio;
 }
 
 
 fortio_type * fortio_open_writer(const char *filename , bool endian_flip_header , bool fmt_file) {
-  {
-    fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
+  fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
   
   if (fmt_file)
     fortio->stream = util_fopen(fortio->filename , WRITE_MODE_TXT);
   else
     fortio->stream = util_fopen(fortio->filename , WRITE_MODE_BINARY);
   fortio->mode = FORTIO_WRITE;
+  
   return fortio;
-  }
 }
 
 
