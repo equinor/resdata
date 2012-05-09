@@ -77,12 +77,14 @@ extern "C" {
   void           ecl_kw_set_memcpy_data(ecl_kw_type * , const void *);
   void           ecl_kw_fwrite(const ecl_kw_type *,  fortio_type *);
   void           ecl_kw_iget(const ecl_kw_type *, int , void *);
+  void           ecl_kw_iset(ecl_kw_type *ecl_kw , int i , const void *iptr);
   void           ecl_kw_iset_char_ptr( ecl_kw_type * ecl_kw , int index, const char * s);
   const char  *  ecl_kw_iget_char_ptr( const ecl_kw_type * ecl_kw , int i);
   void        *  ecl_kw_iget_ptr(const ecl_kw_type *, int);
   int            ecl_kw_get_size(const ecl_kw_type *);
   bool           ecl_kw_header_eq(const ecl_kw_type *, const char *);
   bool           ecl_kw_ichar_eq(const ecl_kw_type *, int , const char *);
+  ecl_kw_type *  ecl_kw_alloc( const char * header , int size , ecl_type_enum ecl_type );
   ecl_kw_type *  ecl_kw_alloc_new(const char * ,  int , ecl_type_enum , const void * );
   ecl_kw_type *  ecl_kw_alloc_new_shared(const char * ,  int , ecl_type_enum , void * );
   void           ecl_kw_fwrite_param(const char * , bool  , const char * ,  ecl_type_enum , int , void * );

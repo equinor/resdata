@@ -60,7 +60,7 @@ int main(int argc, char ** argv) {
       char *  target_file_name   = ecl_util_alloc_filename( NULL , ecl_base , target_type , fmt_file , -1);
       stringlist_type * filelist = stringlist_alloc_argv_copy( (const char **) &argv[1] , num_files );
       ecl_kw_type * seqnum_kw    = NULL;
-      fortio_type * target       = fortio_open_writer( target_file_name , ECL_ENDIAN_FLIP , fmt_file );
+      fortio_type * target       = fortio_open_writer( target_file_name , fmt_file , ECL_ENDIAN_FLIP);
 
       if (target_type == ECL_UNIFIED_RESTART_FILE) {
         int dummy;

@@ -88,7 +88,7 @@ void unpack_file(const char * filename) {
       
       {
         char * target_file = ecl_util_alloc_filename( NULL , base , target_type , fmt_file , report_step);
-        fortio_type * fortio_target = fortio_open_writer( target_file , ECL_ENDIAN_FLIP , fmt_file );
+        fortio_type * fortio_target = fortio_open_writer( target_file , fmt_file , ECL_ENDIAN_FLIP );
         msg_update(msg , target_file);
         ecl_file_fwrite_fortio( src_file , fortio_target , offset);
         

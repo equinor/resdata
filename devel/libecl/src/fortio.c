@@ -77,7 +77,7 @@ struct fortio_struct {
 
 
 
-static fortio_type * fortio_alloc__(const char *filename , bool endian_flip_header, bool fmt_file) {
+static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool endian_flip_header) {
   fortio_type * fortio       = (fortio_type *) util_malloc(sizeof * fortio , __func__);
   fortio->filename           = util_alloc_string_copy(filename);
   fortio->endian_flip_header = endian_flip_header;
@@ -221,8 +221,8 @@ fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_
 }
 
 
-fortio_type * fortio_open_reader(const char *filename , bool endian_flip_header , bool fmt_file) {
-  fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
+fortio_type * fortio_open_reader(const char *filename , bool fmt_file , bool endian_flip_header) {
+  fortio_type *fortio = fortio_alloc__(filename , fmt_file , endian_flip_header);
   
   if (fmt_file)
     fortio->stream = util_fopen(fortio->filename , READ_MODE_TXT);
@@ -233,8 +233,8 @@ fortio_type * fortio_open_reader(const char *filename , bool endian_flip_header 
 }
 
 
-fortio_type * fortio_open_readwrite(const char *filename , bool endian_flip_header , bool fmt_file) {
-  fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
+fortio_type * fortio_open_readwrite(const char *filename , bool fmt_file , bool endian_flip_header) {
+  fortio_type *fortio = fortio_alloc__(filename , fmt_file , endian_flip_header);
 
   if (fmt_file)
     fortio->stream = util_fopen(fortio->filename , READ_WRITE_MODE_TXT);
@@ -246,8 +246,8 @@ fortio_type * fortio_open_readwrite(const char *filename , bool endian_flip_head
 }
 
 
-fortio_type * fortio_open_writer(const char *filename , bool endian_flip_header , bool fmt_file) {
-  fortio_type *fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
+fortio_type * fortio_open_writer(const char *filename , bool fmt_file , bool endian_flip_header ) {
+  fortio_type *fortio = fortio_alloc__(filename , fmt_file , endian_flip_header);
   
   if (fmt_file)
     fortio->stream = util_fopen(fortio->filename , WRITE_MODE_TXT);

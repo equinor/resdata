@@ -506,7 +506,7 @@ void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, boo
     __fmt_file = fmt_file;
   
   {
-    fortio_type * target = fortio_open_writer( filename , ECL_ENDIAN_FLIP , __fmt_file);
+    fortio_type * target = fortio_open_writer( filename , __fmt_file , ECL_ENDIAN_FLIP);
     ecl_file_fwrite_fortio( ecl_file , target , 0);
     fortio_fclose( target );
   }
@@ -828,9 +828,9 @@ static ecl_file_type * ecl_file_open__( const char * filename , bool read_only) 
 
   
   if (ecl_file->read_only)
-    ecl_file->fortio = fortio_open_reader( filename , ECL_ENDIAN_FLIP , fmt_file );    
+    ecl_file->fortio = fortio_open_reader( filename , fmt_file , ECL_ENDIAN_FLIP);    
   else 
-    ecl_file->fortio = fortio_open_readwrite( filename , ECL_ENDIAN_FLIP , fmt_file );
+    ecl_file->fortio = fortio_open_readwrite( filename , fmt_file , ECL_ENDIAN_FLIP);
   
   ecl_file->global_map = file_map_alloc( ecl_file->fortio , ecl_file->inv_map , true );
   ecl_file_add_map( ecl_file , ecl_file->global_map );
