@@ -1,6 +1,6 @@
 #include <iostream>
-
 #include <fortio.hpp>
+
 
 void FortIO::close() {
   if (c_ptr)
