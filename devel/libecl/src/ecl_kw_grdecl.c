@@ -18,7 +18,9 @@
 
 #include <string.h>
 #include <ctype.h>
+
 #include <util.h>
+
 #include <ecl_kw.h>
 #include <ecl_util.h>
 
@@ -53,9 +55,9 @@
 /** 
   This function will search through a GRDECL file to look for the
   'kw'; input variables and return vales are similar to
-  ecl_kw_fseek_kw(). Observe that the GRDECL files are exteremly
+  ecl_kw_fseek_kw(). Observe that the GRDECL files are extremely
   weakly structured, it is therefor veeeery easy to fool this function
-  with a malformed GRDECL file.
+  with a malformed GRDECL file.  
 */
 
 
@@ -478,11 +480,13 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl( FILE * stream , const char * kw , int 
 
 
 void ecl_kw_fprintf_grdecl(const ecl_kw_type * ecl_kw , FILE * stream) {
-  fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , true , stream);   /* Endian flip should *NOT* be used */
   fprintf(stream,"%s\n" , ecl_kw_get_header8(ecl_kw));
-  ecl_kw_fwrite_data(ecl_kw , fortio);
+  {
+    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , true , stream);   /* Endian flip should *NOT* be used */
+    ecl_kw_fwrite_data(ecl_kw , fortio);
+    fortio_free_FILE_wrapper( fortio );
+  }
   fprintf(stream,"/\n"); 
-  fortio_free_FILE_wrapper( fortio );
 }
 
 
