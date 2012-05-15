@@ -29,6 +29,9 @@ extern "C" {
 
 typedef struct ecl_smspec_struct ecl_smspec_type; 
 
+#define ECL_SUM_KEYFMT_BLOCK_IJK   "%s%s%d,%d,%d"
+
+
 /**
    These are the different variable types, see table 3.4 in the
    ECLIPFE file format docuemntation for naming conventions.

@@ -650,7 +650,7 @@ const char * ecl_kw_iget_char_ptr( const ecl_kw_type * ecl_kw , int i) {
    be padded, if s8 is longer than 8 characters the characters from 9
    and out will be ignored. 
 */
-static void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s8) {
+void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s8) {
   char * ecl_string = (char *) ecl_kw_iget_ptr( ecl_kw , index );
   if (strlen( s8 ) >= ECL_STRING_LENGTH) {
     /* The whole string goes in - possibly loosing content at the end. */
@@ -1442,8 +1442,13 @@ void ecl_kw_fwrite(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
 
 
 
+
 static void * ecl_kw_get_data_ref(const ecl_kw_type *ecl_kw) {
   return ecl_kw->data;
+}
+
+void * ecl_kw_get_ptr(const ecl_kw_type *ecl_kw) {
+  return ecl_kw_get_data_ref( ecl_kw );
 }
 
 

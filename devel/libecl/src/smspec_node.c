@@ -59,6 +59,119 @@ struct smspec_node_struct {
   int                  * lgr_ijk;            /* The (i,j,k) coordinate, in the local grid, if this is a LGR variable. WIll be NULL for no-lgr variables. */
 };
 
+
+/*****************************************************************/
+#define ECL_SUM_KEYFMT_BLOCK_IJK              "%s%s%d,%d,%d"
+#define ECL_SUM_KEYFMT_BLOCK_NUM              "%s%s%d"
+#define ECL_SUM_KEYFMT_LOCAL_BLOCK            "%s%s%s%s%d,%d,%d"
+#define ECL_SUM_KEYFMT_COMPLETION_IJK         "%s%s%s%s%d,%d,%d" 
+#define ECL_SUM_COMPLETION_NUM                "%s%s%s%s%d"
+#define ECL_SUM_KEYFMT_COMPLETION_NUM         "%s%s%s%s%d"
+#define ECL_SUM_KEYFMT_LOCAL_COMPLETION       "%s%s%s%s%s%s%d,%d,%d"
+#define ECL_SUM_KEYFMT_GROUP                  "%s%s%s"
+#define ECL_SUM_KEYFMT_WELL                   "%s%s%s"
+#define ECL_SUM_KEYFMT_REGION                 "%s%s%d"
+#define ECL_SUM_KEYFMT_SEGMENT                "%s%s%s%s%d"
+#define ECL_SUM_KEYFMT_LOCAL_WELL             "%s%s%s%s%s"
+
+
+char * smspec_alloc_block_ijk_key( const char * join_string , const char * keyword , int i , int j , int k) {
+  return util_alloc_sprintf(ECL_SUM_KEYFMT_BLOCK_IJK , 
+                            keyword,
+                            join_string , 
+                            i,j,k);
+}
+
+
+char * smspec_alloc_completion_ijk_key( const char * join_string , const char * keyword, const char * wgname , int i , int j , int k) {
+  return util_alloc_sprintf( ECL_SUM_KEYFMT_COMPLETION_IJK , keyword , wgname , i , j , k );
+}
+
+char * smspec_alloc_completion_num_key( const char * join_string , const char * keyword, const char * wgname , int num) {
+  return util_alloc_sprintf(ECL_SUM_KEYFMT_COMPLETION_NUM,
+                            keyword , 
+                            join_string , 
+                            wgname , 
+                            join_string , 
+                            num );
+}
+
+char * smspec_alloc_group_key( const char * join_string , const char * keyword , const char * wgname) {
+  return util_alloc_sprintf(ECL_SUM_KEYFMT_GROUP,
+                            keyword , 
+                            join_string , 
+                            wgname );
+}
+
+
+char * smspec_alloc_well_key( const char * join_string , const char * keyword , const char * wgname) {
+  return util_alloc_sprintf(ECL_SUM_KEYFMT_WELL,
+                            keyword , 
+                            join_string , 
+                            wgname );
+}
+
+
+char * smspec_alloc_region_key( const char * join_string , const char * keyword , int num) {
+  return util_alloc_sprintf(ECL_SUM_KEYFMT_REGION , 
+                            keyword , 
+                            join_string , 
+                            num );
+}
+
+char * smspec_alloc_segment_key( const char * join_string , const char * keyword , const char * wgname , int num) {
+  return util_alloc_sprintf(ECL_SUM_KEYFMT_SEGMENT , 
+                            keyword , 
+                            join_string , 
+                            wgname , 
+                            join_string , 
+                            num );
+}
+
+
+char * smspec_alloc_block_num_key( const char * join_string , const char * keyword , int num) {
+  return util_alloc_sprintf(ECL_SUM_KEYFMT_BLOCK_NUM,
+                            keyword , 
+                            join_string , 
+                            num );
+}
+
+
+char * smspec_alloc_local_well_key( const char * join_string , const char * keyword , const char * lgr_name , const char * wgname) {
+  
+  return util_alloc_sprintf( ECL_SUM_KEYFMT_LOCAL_WELL , 
+                             keyword , 
+                             join_string , 
+                             lgr_name , 
+                             join_string , 
+                             wgname);
+}
+
+
+char * smspec_alloc_local_block_key( const char * join_string , const char * keyword , const char * lgr_name , int i , int j , int k) {
+  return util_alloc_sprintf(ECL_SUM_KEYFMT_LOCAL_BLOCK , 
+                            keyword , 
+                            join_string , 
+                            lgr_name , 
+                            join_string , 
+                            i,j,k);
+}
+
+char * smspec_alloc_local_completion_key( const char * join_string, const char * keyword , const char * lgr_name , const char * wgname , int i , int j , int k) {
+  return util_alloc_sprintf(ECL_SUM_KEYFMT_LOCAL_COMPLETION , 
+                            keyword  , 
+                            join_string , 
+                            lgr_name , 
+                            join_string ,
+                            wgname , 
+                            join_string ,
+                            i,j,k);
+}
+
+/*****************************************************************/
+
+
+
 /**
    Implementation of the small smspec_node_type data type.
 */
@@ -128,12 +241,7 @@ void smspec_node_set_gen_key( smspec_node_type * smspec_node , const char * key_
   switch( smspec_node->var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
     // KEYWORD:WGNAME:NUM
-    smspec_node->gen_key = util_alloc_sprintf("%s%s%s%s%d" ,    
-                                               smspec_node->keyword , 
-                                               key_join_string , 
-                                               smspec_node->wgname , 
-                                               key_join_string , 
-                                               smspec_node->num );
+    smspec_node->gen_key = smspec_alloc_completion_num_key( key_join_string , smspec_node->keyword , smspec_node->wgname , smspec_node->num);
     break;
   case(ECL_SMSPEC_FIELD_VAR):
     // KEYWORD
@@ -141,33 +249,19 @@ void smspec_node_set_gen_key( smspec_node_type * smspec_node , const char * key_
     break;
   case(ECL_SMSPEC_GROUP_VAR):
     // KEYWORD:WGNAME 
-    smspec_node->gen_key = util_alloc_sprintf("%s%s%s" , 
-                                               smspec_node->keyword , 
-                                               key_join_string , 
-                                               smspec_node->wgname );
+    smspec_node->gen_key = smspec_alloc_group_key( key_join_string , smspec_node->keyword , smspec_node->wgname);
     break;
   case(ECL_SMSPEC_WELL_VAR):
     // KEYWORD:WGNAME 
-    smspec_node->gen_key = util_alloc_sprintf("%s%s%s" , 
-                                               smspec_node->keyword , 
-                                               key_join_string , 
-                                               smspec_node->wgname );
+    smspec_node->gen_key = smspec_alloc_well_key( key_join_string , smspec_node->keyword , smspec_node->wgname);
     break;
   case(ECL_SMSPEC_REGION_VAR):
     // KEYWORD:NUM
-    smspec_node->gen_key = util_alloc_sprintf("%s%s%d" , 
-                                               smspec_node->keyword , 
-                                               key_join_string , 
-                                               smspec_node->num );
+    smspec_node->gen_key = smspec_alloc_region_key( key_join_string , smspec_node->keyword , smspec_node->num);
     break;
   case(ECL_SMSPEC_SEGMENT_VAR):
     // KEYWORD:WGNAME:NUM 
-    smspec_node->gen_key = util_alloc_sprintf("%s%s%s%s%d" , 
-                                               smspec_node->keyword , 
-                                               key_join_string , 
-                                               smspec_node->wgname , 
-                                               key_join_string , 
-                                               smspec_node->num );
+    smspec_node->gen_key = smspec_alloc_segment_key( key_join_string , smspec_node->keyword , smspec_node->wgname , smspec_node->num);
     break;
   case(ECL_SMSPEC_MISC_VAR):
     // KEYWORD
@@ -176,44 +270,31 @@ void smspec_node_set_gen_key( smspec_node_type * smspec_node , const char * key_
     break;
   case(ECL_SMSPEC_BLOCK_VAR):
     // KEYWORD:NUM
-    smspec_node->gen_key = util_alloc_sprintf("%s%s%d" , 
-                                               smspec_node->keyword , 
-                                               key_join_string , 
-                                               smspec_node->num );
+    smspec_node->gen_key = smspec_alloc_block_num_key( key_join_string , smspec_node->keyword , smspec_node->num);
     break;
   case(ECL_SMSPEC_LOCAL_WELL_VAR):
     /** KEYWORD:LGR:WGNAME */
-    smspec_node->gen_key = util_alloc_sprintf("%s%s%s%s%s" , 
-                                               smspec_node->keyword , 
-                                               key_join_string , 
-                                               smspec_node->lgr_name , 
-                                               key_join_string , 
-                                               smspec_node->wgname);
-    
+    smspec_node->gen_key = smspec_alloc_local_well_key( key_join_string , smspec_node->keyword , smspec_node->lgr_name , smspec_node->wgname);
     break;
   case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
     /* KEYWORD:LGR:i,j,k */
-    smspec_node->gen_key = util_alloc_sprintf("%s%s%s%s%d,%d,%d" , 
-                                               smspec_node->keyword , 
-                                               key_join_string , 
-                                               smspec_node->lgr_name , 
-                                               key_join_string , 
-                                               smspec_node->lgr_ijk[0] , 
-                                               smspec_node->lgr_ijk[1] , 
-                                               smspec_node->lgr_ijk[2] );
+    smspec_node->gen_key = smspec_alloc_local_block_key( key_join_string , 
+                                                         smspec_node->keyword , 
+                                                         smspec_node->lgr_name , 
+                                                         smspec_node->lgr_ijk[0] , 
+                                                         smspec_node->lgr_ijk[1] , 
+                                                         smspec_node->lgr_ijk[2] );
     break;
   case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
     /* KEYWORD:LGR:WELL:i,j,k */
-    smspec_node->gen_key = util_alloc_sprintf("%s%s%s%s%s%s%d,%d,%d" , 
-                                               smspec_node->keyword  , 
-                                               key_join_string , 
-                                               smspec_node->lgr_name , 
-                                               key_join_string ,
-                                               smspec_node->wgname , 
-                                               key_join_string ,
-                                               smspec_node->lgr_ijk[0] , 
-                                               smspec_node->lgr_ijk[1] , 
-                                               smspec_node->lgr_ijk[2]);
+    smspec_node->gen_key = smspec_alloc_local_completion_key( key_join_string , 
+                                                              smspec_node->keyword , 
+                                                              smspec_node->lgr_name , 
+                                                              smspec_node->wgname , 
+                                                              smspec_node->lgr_ijk[0],
+                                                              smspec_node->lgr_ijk[1],
+                                                              smspec_node->lgr_ijk[2]);
+    
     break;
   default:
     util_abort("%s: internal error - should not be here? \n");

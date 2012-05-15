@@ -5,17 +5,11 @@
 #include <fortio.hpp>
 
 void FortIO::close() {
-  std::cout << "Calling fortio_free() destructor" << std::endl;
   if (c_ptr)
     fortio_fclose( c_ptr );
   c_ptr = NULL;
 }
 
-/*
-  FortIO::~FortIO() {
-  close();
-  }
-*/
 
 FortIO FortIO::reader( const char * filename , bool fmt_file , bool endian_flip_header) {
   fortio_type * c_ptr = fortio_open_reader( filename ,  fmt_file , endian_flip_header);

@@ -138,6 +138,8 @@ extern "C" {
                                        world coordinates. */
 #define LGR_KW         "LGR"        /* Name of LGR; for GRID files it can contain two elements, 
                                        the second element will be the name of the parent. */
+#define MAPUNITS_KW    "MAPUNITS"
+#define GRIDUNIT_KW    "GRIDUNIT"
 
 /* EGRID keywords */
 #define LGR_PARENT_KW  "LGRPARNT"   /* The name of the parent for an LGR. */
@@ -152,6 +154,7 @@ extern "C" {
 #define COORD_KW       "COORD"      /* Header information for one cell in GRID file. */
 #define CORNERS_KW     "CORNERS"    /* Vector containing (x,y,z) x 8 elements - all corners in a cell. */
 #define DIMENS_KW      "DIMENS"     /* The dimensions of the grid. */
+#define RADIAL_KW      "RADIAL"
 
 #define GLOBAL_STRING  "GLOBAL"
 

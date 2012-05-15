@@ -17,11 +17,11 @@
 */
 
 #include <stdlib.h>
-#include <util.h>
-#include <point.h>
 #include <stdbool.h>
 
+#include <util.h>
 
+#include <point.h>
 
 
 void point_mapaxes_transform( point_type * p , const double origo[2], const double unit_x[2] , const double unit_y[2]) {
@@ -31,6 +31,20 @@ void point_mapaxes_transform( point_type * p , const double origo[2], const doub
   p->x = new_x;
   p->y = new_y;
 }
+
+
+void point_mapaxes_invtransform( point_type * p , const double origo[2], const double unit_x[2] , const double unit_y[2]) {
+  double norm   =  1.0 / (unit_x[0]*unit_y[1] - unit_x[1] * unit_y[0]);
+  double dx     = p->x - origo[0];
+  double dy     = p->y - origo[1];
+
+  double org_x  =  (dx*unit_y[1] - dy*unit_y[0]) * norm;
+  double org_y  =  (-dx*unit_x[1] + dy*unit_x[0]) * norm;
+  
+  p->x = org_x;
+  p->y = org_y;
+}
+
 
 
 void point_compare( const point_type *p1 , const point_type * p2, bool * equal) {
@@ -70,6 +84,7 @@ point_type * point_alloc( double x , double y , double z) {
   point_set( p , x , y , z );
   return p;
 }
+
 
 
 point_type * point_copyc( const point_type * p) {

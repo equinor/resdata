@@ -18,7 +18,7 @@ private:
 public:
   ecl_kw_type  * C_PTR( ) { return c_ptr; } 
     
-  static EclKW create (const char * name ,  int size , ecl_type_enum type);
+  static EclKW create (const char * name ,  int size , ecl_type_enum type , void * data = NULL);
   static EclKW wrap   (ecl_kw_type * c_ptr , bool owner = false);
   static EclKW wrap_data(const char * name ,  int size , ecl_type_enum type, void * data);
   

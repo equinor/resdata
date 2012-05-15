@@ -30,8 +30,23 @@ extern "C" {
 #define SMSPEC_NUMS_INVALID   -991199
 
   typedef struct smspec_node_struct smspec_node_type;
+
+  char * smspec_alloc_block_ijk_key( const char * join_string , const char * keyword , int i , int j , int k);
+  char * smspec_alloc_completion_ijk_key( const char * join_string , const char * keyword, const char * wgname , int i , int j , int k);
+  char * smspec_alloc_completion_num_key( const char * join_string , const char * keyword, const char * wgname , int num);
+  char * smspec_alloc_group_key( const char * join_string , const char * keyword , const char * wgname);
+  char * smspec_alloc_well_key( const char * join_string , const char * keyword , const char * wgname);
+  char * smspec_alloc_region_key( const char * join_string , const char * keyword , int num);
+  char * smspec_alloc_segment_key( const char * join_string , const char * keyword , const char * wgname , int num);
+  char * smspec_alloc_block_num_key( const char * join_string , const char * keyword , int num);
+  char * smspec_alloc_local_well_key( const char * join_string , const char * keyword , const char * lgr_name , const char * wgname);
+  char * smspec_alloc_local_block_key( const char * join_string , const char * keyword , const char * lgr_name , int i , int j , int k);
+  char * smspec_alloc_local_completion_key( const char * join_string, const char * keyword , const char * lgr_name , const char * wgname , int i , int j , int k);
+
+
+
   
-  smspec_node_type * smspec_node_alloc_empty(ecl_smspec_var_type var_type, const char * keyword , const char * unit , int param_index);
+  smspec_node_type *  smspec_node_alloc_empty(ecl_smspec_var_type var_type, const char * keyword , const char * unit , int param_index);
   void                smspec_node_set_wgname( smspec_node_type * index , const char * wgname );
   void                smspec_node_set_lgr_name( smspec_node_type * index , const char * lgr_name );
   void                smspec_node_set_num( smspec_node_type * index , int num);

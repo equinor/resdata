@@ -413,6 +413,10 @@ bool ecl_sum_has_general_var(const ecl_sum_type * ecl_sum , const char * lookup_
   return ecl_smspec_has_general_var( ecl_sum->smspec , lookup_kw); 
 }
 
+bool ecl_sum_has_key(const ecl_sum_type * ecl_sum , const char * lookup_kw) { 
+  return ecl_sum_has_general_var( ecl_sum , lookup_kw );
+}
+
 double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , const char * lookup_kw) {
   int index = ecl_sum_get_general_var_index(ecl_sum , lookup_kw);
   return ecl_sum_data_iget( ecl_sum->data , time_index , index);

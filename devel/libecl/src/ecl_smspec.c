@@ -193,9 +193,9 @@ Completion var:    VAR_TYPE:WELL_NAME:NUM
 
 */
 
+
+
 /*****************************************************************/
-
-
 
 static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char * base_name, const char * key_join_string) {
   ecl_smspec_type *ecl_smspec;
@@ -462,21 +462,17 @@ static void ecl_smspec_install_gen_key( ecl_smspec_type * smspec , smspec_node_t
     int i,j,k;
     char * gen_key;
     ecl_smspec_get_ijk(smspec , smspec_node_get_num(smspec_node) , &i,&j,&k);
-    gen_key = util_alloc_sprintf("%s%s%s%s%d,%d,%d" , 
-                                 smspec_node_get_keyword( smspec_node ), 
-                                 smspec->key_join_string , 
-                                 smspec_node_get_wgname( smspec_node ),
-                                 smspec->key_join_string , 
-                                 i,j,k);
+    gen_key = smspec_alloc_completion_ijk_key( smspec->key_join_string , smspec_node_get_keyword( smspec_node ), smspec_node_get_wgname( smspec_node ),i,j,k);
     hash_insert_ref(smspec->gen_var_index , gen_key , smspec_node);
     free( gen_key );
   } 
-
+  
+  
   if (smspec_node_get_var_type(smspec_node) == ECL_SMSPEC_BLOCK_VAR) {
     int i,j,k;
     char * gen_key;
     ecl_smspec_get_ijk(smspec , smspec_node_get_num(smspec_node) , &i,&j,&k);
-    gen_key = util_alloc_sprintf("%s%s%d,%d,%d" , smspec_node_get_keyword(smspec_node) , smspec->key_join_string , i,j,k);
+    gen_key = smspec_alloc_block_ijk_key( smspec->key_join_string , smspec_node_get_keyword(smspec_node) , i,j,k);
     hash_insert_ref(smspec->gen_var_index , gen_key , smspec_node);
     free( gen_key );
   }

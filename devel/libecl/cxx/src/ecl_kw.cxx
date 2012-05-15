@@ -17,8 +17,10 @@ EclKW EclKW::wrap_data(const char * name ,  int size , ecl_type_enum type, void 
 }
 
 
-EclKW EclKW::create( const char * name , int size , ecl_type_enum type ) {
+EclKW EclKW::create( const char * name , int size , ecl_type_enum type , void * data) {
   ecl_kw_type * c_ptr = ecl_kw_alloc( name , size , type );
+  if (data != NULL)
+    ecl_kw_set_memcpy_data( c_ptr , data );
   return EclKW( c_ptr , true );
 }
 
