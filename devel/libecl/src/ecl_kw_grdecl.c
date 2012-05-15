@@ -53,12 +53,9 @@
 /** 
   This function will search through a GRDECL file to look for the
   'kw'; input variables and return vales are similar to
-  ecl_kw_fseek_kw(). 
-  
-  Observe that the GRDECL files are exteremly weakly structured, it is
-  therefor veeeery easy to fool this function with a malformed GRDECL
-  file. The current implementation just does string-search for 'kw';
-  i.e. comments is enough to wreak havock.
+  ecl_kw_fseek_kw(). Observe that the GRDECL files are exteremly
+  weakly structured, it is therefor veeeery easy to fool this function
+  with a malformed GRDECL file.
 */
 
 
@@ -144,6 +141,7 @@ static bool ecl_kw_grdecl_fseek_kw__(const char * kw , FILE * stream) {
   } else 
     return false;
 }
+
 
 bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , bool abort_on_error , FILE * stream) {
   if (ecl_kw_grdecl_fseek_kw__(kw , stream))
@@ -306,18 +304,29 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
 }
 
 /*
-  
-  This is the fundamental 'load a grdecl formatted keyword'
-  function. The @ecl_type keyword must be specified to give the type
-  of the keyword, currently only integer and float are supported. The
-  @kw and @size argument are optional; if supplied the reliability
-  will be improved:
+   This function will load a keyword from a grdecl file, and return
+   it. If input argument @kw is NULL it will just try loading from the
+   current position, otherwise it will start with seeking to find @kw
+   first.
 
-    size: If the @size is set to <= 0 the function will just load all
-      data it can find until a terminating '/' is found. If a size
-      argument is given the function will check that there is
-      agreement between the size input argument and the number of
-      elements found on the file.
+   Observe that the grdecl files are very weakly structured, so the
+   loading of ecl_kw instances from a grdecl file can go wrong in many
+   ways; if the loading fails the function returns NULL.
+
+   The main loop is extremely simple - it is just repeated calls to
+   fscanf() to read one-number-at-atime; when that reading fails that
+   is interpreted as the end of the keyword.
+
+   Currently ONLY integer and float types are supported in ecl_type -
+   any other types will lead to a hard failure.
+
+   The ecl_kw class has a quite deeply wired assumption that the
+   header is a string of length 8 (I hope/think that is an ECLIPSE
+   limitation), and the the class is not able to create ecl_kw
+   instances with header length of more than 8 characters - code will
+   abort hard if @kw is longer than 8 characters.
+
+   -----------------------------------------------------------------
 
     header: If the @header argument is != NULL the function will start
       by seeking through the file to find the header string; if the
@@ -330,9 +339,31 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
       it is highly recommended to supply a valid string for the
       @header argument.
 
+    strict: see the documentation of the strict flag in the
+      fscanf_alloc_grdecl_data() function. Most of the exported
+      functions have hardwired strict = true.
+
+
+    size: If the @size is set to <= 0 the function will just load all
+      data it can find until a terminating '/' is found. If a size
+      argument is given the function will check that there is
+      agreement between the size input argument and the number of
+      elements found on the file.
+
+
+    ecl_type: The files have no embedded type information and the type
+      must be supplied by the calling scope. Currently only the
+      ECL_FLOAT_TYPE and ECL_INT_TYPE types are supported.
+
+   -----------------------------------------------------------------
+
+   This function is static; there are several exported varieties with
+   different sets of default values. These files are tricky to load -
+   if there is something wrong it can be difficult to detect.
 */
 
-static ecl_kw_type * ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , bool strict , int size , ecl_type_enum ecl_type) {
+
+static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , bool strict , int size , ecl_type_enum ecl_type) {
   if (!(ecl_type == ECL_FLOAT_TYPE || ecl_type == ECL_INT_TYPE))
     util_abort("%s: sorry only types FLOAT and INT supported\n",__func__);
 
@@ -366,52 +397,80 @@ static ecl_kw_type * ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * h
     }
   }
 }
-
-
-
+/*****************************************************************/
+/* 
+   Here comes the exported functions for loading a grdecl formatted
+   keyword. All of these function invoke the fundamental
+   ecl_kw_fscanf_alloc_grdecl__() function, but the set of input
+   parameters varies. The function varieties with a trailing '__'
+   accepts a @strict flag from calling scope; in general you should
+   use strict == true.
+*/
+   
 
 /**
-   These files are tricky to load - if there is something wrong
-   it is nearly impossible to detect.
+   This function assumes that the file pointer has already been
+   positioned at the beginning of a keyword header, and will just
+   start reading a header string right away; if the file pointer is
+   incorrectly positioned this will most probably blow up big time.
 */
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_type_enum ecl_type) {
-  bool strict = true;
-  return ecl_kw_fscanf_alloc_grdecl__( stream , NULL , strict , size , ecl_type );
+
+/*****************************************************************/
+
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data__(FILE * stream , bool strict , int size ,  ecl_type_enum ecl_type) {
+  return __ecl_kw_fscanf_alloc_grdecl__( stream , NULL , strict , size , ecl_type );
 }
 
 
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_type_enum ecl_type) {
+ bool strict = true;
+ return ecl_kw_fscanf_alloc_grdecl_data__( stream , strict , size , ecl_type );
+}
 
-/**
-   This function will load a keyword from a grdecl file, and return
-   it. If input argument @kw is NULL it will just try loading from the
-   current position, otherwise it will start with seeking to find @kw
-   first.
+/*****************************************************************/
 
-   Observe that the grdecl files are very weakly structured, so the
-   loading of ecl_kw instances from a grdecl file can go wrong in many
-   ways; if the loading fails the function returns NULL.
-
-   The main loop is extremely simple - it is just repeated calls to
-   fscanf() to read one-number-at-atime; when that reading fails that
-   is interpreted as the end of the keyword.
-
-   Currently ONLY integer and float types are supported in ecl_type -
-   any other types will lead to a hard failure.
-
-   The ecl_kw class has a quite deeply wired assumption that the
-   header is a string of length 8 (I hope/think that is an ECLIPSE
-   limitation), and the the class is not able to create ecl_kw
-   instances with header length of more than 8 characters - code will
-   abort hard if @kw is longer than 8 characters.
+/* 
+   This function will seek through the file and position the file
+   pointer at the beginning of @kw before starting to load (this
+   includes rewinding the file pointer). If @kw can not be found the
+   function will return NULL. 
+   
+   As size is not supplied the function will keep loading data until
+   the whole keyword is loaded, and then return.
 */
 
 ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE * stream , const char * kw , bool strict , ecl_type_enum ecl_type) {
-  return ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , 0 , ecl_type );
+  return __ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , 0 , ecl_type );
 }
 
 ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_type_enum ecl_type) {
   bool strict = true;
   return ecl_kw_fscanf_alloc_grdecl_dynamic__( stream , kw , strict , ecl_type );
+}
+
+/*****************************************************************/
+
+/* 
+   This function will seek through the file and position the file
+   pointer at the beginning of @kw before starting to load (this
+   includes rewinding the file pointer). If @kw can not be found the
+   function will return NULL. 
+   
+   When the data has been loaded the function will compare actual size
+   with the supplied size argument and verify equality; if they differ
+   it will crash hard. If you are uncertain of the size use the
+   ecl_kw_fscanf_alloc_grdecl_dynamic() function instead; or supply
+   size == 0.
+*/
+
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl__( FILE * stream , const char * kw , bool strict , int size , ecl_type_enum ecl_type) {
+  return __ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , size , ecl_type );
+}
+
+
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl( FILE * stream , const char * kw , int size , ecl_type_enum ecl_type) {
+  bool strict = true;
+  return ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , size , ecl_type );
 }
 
 

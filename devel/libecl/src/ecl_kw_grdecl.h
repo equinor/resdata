@@ -16,10 +16,11 @@
    for more details. 
 */
 
-// This header does not define datatypes; just a couple of functions. It should
-// be included from the ecl_kw.h header, so application do not need to include this
-// header explicitly.
-
+/*
+ This header does not define datatypes; just a couple of functions. It should
+ be included from the ecl_kw.h header, so applications do not need to include this
+ header explicitly.
+*/
 
 #ifndef __ECL_KW_GRDECL_H__
 #define __ECL_KW_GRDECL_H__
@@ -28,6 +29,20 @@ extern "C" {
 #endif
 
 
+  
+  bool            ecl_kw_grdecl_fseek_kw(const char *  , bool  , bool  , FILE * );
+  
+  ecl_kw_type  *  ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE * stream , const char * kw , bool strict , ecl_type_enum ecl_type);
+  ecl_kw_type  *  ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_type_enum ecl_type);
+  
+  ecl_kw_type  *  ecl_kw_fscanf_alloc_grdecl_data__(FILE * stream , bool strict , int size, ecl_type_enum ecl_type );
+  ecl_kw_type  *  ecl_kw_fscanf_alloc_grdecl_data(  FILE * stream , int size , ecl_type_enum ecl_type);
+  
+  ecl_kw_type  *  ecl_kw_fscanf_alloc_grdecl__(FILE * stream, const char * kw , bool strict , int size, ecl_type_enum ecl_type);
+  ecl_kw_type  *  ecl_kw_fscanf_alloc_grdecl(FILE * stream , const char * kw, int size, ecl_type_enum ecl_type);
+
+  
+  void            ecl_kw_fprintf_grdecl(const ecl_kw_type * ecl_kw , FILE * stream);
 
 #ifdef __cplusplus
 }
