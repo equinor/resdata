@@ -1,5 +1,3 @@
-#include <fortio.h>
-
 #include <iostream>
 
 #include <fortio.hpp>
