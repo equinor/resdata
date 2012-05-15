@@ -1,4 +1,3 @@
-#include <iostream>
 #include <fortio.hpp>
 
 
@@ -25,5 +24,4 @@ FortIO FortIO::readwrite( const char * filename , bool fmt_file , bool endian_fl
   fortio_type * c_ptr = fortio_open_readwrite( filename , fmt_file  , endian_flip_header);
   return FortIO( c_ptr );
 }
-
 
