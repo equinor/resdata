@@ -18,21 +18,23 @@
 
 #include <string.h>
 #include <stdbool.h>
-#include <ecl_kw.h>
 #include <math.h>
-#include <ecl_util.h>
+#include <time.h>
+
 #include <hash.h>
 #include <util.h>
-#include <time.h>
 #include <set.h>
-#include <util.h>
 #include <vector.h>
 #include <int_vector.h>
+#include <stringlist.h>
+
+#include <ecl_kw.h>
+#include <ecl_util.h>
 #include <ecl_smspec.h>
 #include <smspec_node.h>
 #include <ecl_file.h>
 #include <ecl_kw_magic.h>
-#include <stringlist.h>
+
 
 #define DUMMY_WELL(well) (strcmp((well) , ":+:+:+:+") == 0)
 
@@ -337,7 +339,6 @@ void smspec_node_set_flags( smspec_node_type * smspec_node) {
                                     "WVPT" , "WVIT" , "GMT"  , "GPTF" , "GIT"  , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" , 
                                     "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" };
       int ivar;
-      bool is_total = false;
       for (ivar = 0; ivar < 29; ivar++) {
         if (util_string_equal( total_vars[ivar] , &smspec_node->keyword[1])) {
           is_total = true;
