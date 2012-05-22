@@ -472,11 +472,10 @@ void ecl_rft_node_fprintf_rft_obs(const ecl_rft_node_type * rft_node , double ep
   int    *k            = util_malloc(size * sizeof * k,   __func__);
 
   {
-    double *arg1 , *arg2 , *arg3;
+    double *arg1 , *arg2;
     int line;
     arg1 = p;
     arg2 = tvd;
-    arg3 = md;
     for (line = 0; line < size; line++)
       if (fscanf(input_stream , "%lg  %lg", &arg1[line] , &arg2[line]) != 2) {
         fprintf(stderr,"%s: something wrong when reading: %s - aborting \n",__func__ , tvd_file);
