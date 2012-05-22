@@ -27,8 +27,8 @@ if (OPENMP)
    target_link_libraries( ecl_shared gomp )
 endif()
 
-target_link_libraries( ecl_static util_static )
-target_link_libraries( ecl_shared util_shared )
+target_link_libraries( ecl_static geometry_static util_static )
+target_link_libraries( ecl_shared geometry_shared util_shared )
 
 
 #-----------------------------------------------------------------
