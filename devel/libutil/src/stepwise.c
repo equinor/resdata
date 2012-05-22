@@ -316,7 +316,7 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
         printf("adding %d to active set:\n",best_var);
         bool_vector_iset( stepwise->active_set , best_var , true );
         currentR2 = minR2;
-        y0 = stepwise_estimate__( stepwise , active_rows );
+        stepwise_estimate__( stepwise , active_rows );
       } else {
         printf("Done with forward stepwise regression! \n");
         /* The gain in prediction error is so small that we just leave the building. */
