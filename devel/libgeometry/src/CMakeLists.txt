@@ -11,6 +11,9 @@ add_library( geometry_shared  SHARED ${source_files} )
 set_target_properties( geometry_static PROPERTIES OUTPUT_NAME geometry )
 set_target_properties( geometry_shared PROPERTIES OUTPUT_NAME geometry )
 
+target_link_libraries( geometry_static util_static )
+target_link_libraries( geometry_shared util_shared )
+
 #-----------------------------------------------------------------
 if (GEOMETRY_INSTALL_PREFIX)
    install(TARGETS geometry_static geometry_shared DESTINATION ${INSTALL_ROOT}/${GEOMETRY_INSTALL_PREFIX}/lib)
