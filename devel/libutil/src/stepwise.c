@@ -72,7 +72,7 @@ static double stepwise_estimate__( stepwise_type * stepwise , bool_vector_type *
               acol++;
             }
           }
-	  
+          
           matrix_iset( Y , arow , 0 , matrix_iget( stepwise->Y0 , irow , 0 ));
           arow++;
         }
@@ -209,7 +209,7 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
         if (blocks > 1) {                                      
           for (int i = validation_start; i <= validation_end; i++) {
             bool_vector_iset( active_rows , randperms[i] , false );
-	  }
+          }
         }
       }
       
@@ -257,7 +257,6 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
   int nvar          = matrix_get_columns( stepwise->X0 );
   int nsample       = matrix_get_rows( stepwise->X0 );
   double currentR2 = -1;
-  double y0;
   bool_vector_type * active_rows = bool_vector_alloc( nsample , true );
 
 
@@ -314,22 +313,21 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
       printf("deltaR2 for variable %d = %0.2f\n",best_var,deltaR2);
 
       if (( currentR2 < 0) || deltaR2 < deltaR2_limit) {
-	printf("adding %d to active set:\n",best_var);
+        printf("adding %d to active set:\n",best_var);
         bool_vector_iset( stepwise->active_set , best_var , true );
         currentR2 = minR2;
         y0 = stepwise_estimate__( stepwise , active_rows );
       } else {
-	printf("Done with forward stepwise regression! \n");
+        printf("Done with forward stepwise regression! \n");
         /* The gain in prediction error is so small that we just leave the building. */
-	/* NB! Need one final compuation of beta (since the test_var function does not reset the last tested beta value !) */
-	y0 = stepwise_estimate__( stepwise , active_rows );
+        /* NB! Need one final compuation of beta (since the test_var function does not reset the last tested beta value !) */
+        stepwise_estimate__( stepwise , active_rows );
         break;
       } 
       
       if (bool_vector_count_equal( stepwise->active_set , true) == matrix_get_columns( stepwise->X0 )) {
-	printf("All variable are active -  done with the forward stepwise regression!\n");
-	y0 = stepwise_estimate__( stepwise , active_rows );
-	y0 = stepwise_estimate__( stepwise , active_rows );
+        printf("All variable are active -  done with the forward stepwise regression!\n");
+        stepwise_estimate__( stepwise , active_rows );
         break;   /* All variables are active. */
       }
     }

@@ -339,9 +339,8 @@ static bool matrix_resize__(matrix_type * matrix , int rows , int columns , bool
       copy      = matrix_alloc_copy__( copy_view , safe_mode );                            /* Now copy contains the part of the old matrix which should be copied over - with private storage. */
     }
     {
-      int old_rows , old_columns, old_row_stride , old_column_stride,old_data_size;
+      int old_rows , old_columns, old_row_stride , old_column_stride;
       matrix_get_dims( matrix , &old_rows , &old_columns , &old_row_stride , &old_column_stride);        /* Storing the old header information - in case the realloc() fails. */
-      old_data_size = matrix->data_size;
       
       matrix_init_header(matrix , rows , columns , 1 , rows);                                            /* Resetting the header for the matrix */
       matrix_realloc_data__(matrix , safe_mode);
