@@ -934,7 +934,7 @@ void ecl_file_free__(void * arg) {
 #include "ecl_smryfile.c"
 
 /*****************************************************************/
-/* To small lookup functions which consider the INTEHEAD keyword,
+/* Two small lookup functions which consider the INTEHEAD keyword,
    work equally well for both restart and INIT files. */
 
 /*

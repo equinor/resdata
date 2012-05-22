@@ -35,7 +35,7 @@ extern "C" {
 
   typedef struct ecl_kw_struct      ecl_kw_type;
   
-  void           ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , char * data);
+  void           ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , void * data);
   void           ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio);
   void           ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
   ecl_type_enum  ecl_kw_get_type(const ecl_kw_type *);

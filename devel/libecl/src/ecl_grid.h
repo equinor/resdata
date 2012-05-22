@@ -134,6 +134,16 @@ extern "C" {
 
   void                    ecl_grid_fwrite_GRID( const ecl_grid_type * grid , const char * filename);
   
+
+  float          * ecl_grid_alloc_coord_data( const ecl_grid_type * grid );
+  ecl_kw_type    * ecl_grid_alloc_coord_kw( const ecl_grid_type * grid );
+  float          * ecl_grid_alloc_zcorn_data( const ecl_grid_type * grid );
+  ecl_kw_type    * ecl_grid_alloc_zcorn_kw( const ecl_grid_type * grid );
+  int            * ecl_grid_alloc_actnum_data( const ecl_grid_type * grid );
+  ecl_kw_type    * ecl_grid_alloc_actnum_kw( const ecl_grid_type * grid );
+  ecl_kw_type   * ecl_grid_alloc_hostnum_kw( const ecl_grid_type * grid );
+  
+
 #ifdef __cplusplus
 }
 #endif

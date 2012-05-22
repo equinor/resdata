@@ -1167,7 +1167,7 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
 
 
 
-void ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , char * data) {
+void ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , void * data) {
   if (!ecl_kw->shared_data)
     util_safe_free( ecl_kw->data );
   ecl_kw->data = data;

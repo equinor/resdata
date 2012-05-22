@@ -141,6 +141,7 @@ extern "C" {
 #define MAPUNITS_KW    "MAPUNITS"
 #define GRIDUNIT_KW    "GRIDUNIT"
 
+
 /* EGRID keywords */
 #define LGR_PARENT_KW  "LGRPARNT"   /* The name of the parent for an LGR. */
 #define COORDS_KW      "COORDS"     /* The (x,y) coordinates of the top and bottom of the pillars constituting the grid. */
@@ -148,6 +149,9 @@ extern "C" {
 #define ACTNUM_KW      "ACTNUM"     /* Integer flag of with active=0,1. */
 #define HOSTNUM_KW     "HOSTNUM"    /* For cells in LGR - pointing back to cell nr in
                                        parent grid. */
+#define FILEHEAD_KW    "FILEHEAD"
+#define ENDGRID_KW     "ENDGRID"
+#define ENDLGR_KW      "ENDLGR"
 
 /* GRID keywords */
 #define GRIDHEAD_KW    "GRIDHEAD"   /* Header information for GRID files. */
@@ -162,12 +166,26 @@ extern "C" {
 #define GRIDHEAD_NX_INDEX     1
 #define GRIDHEAD_NY_INDEX     2
 #define GRIDHEAD_NZ_INDEX     3
+#define GRIDHEAD_LGR_INDEX    4
 
-/* Observe that these indices are one value lower the values used
+/* Observe that these indices are one value lower than the values used
    in the ecl_smspec file. */
 #define DIMENS_NX_INDEX     0
 #define DIMENS_NY_INDEX     1
 #define DIMENS_NZ_INDEX     2
+
+#define FILEHEAD_VERSION_INDEX   0
+#define FILEHEAD_YEAR_INDEX      1
+#define FILEHEAD_COMPAT_INDEX    3
+#define FILEHEAD_TYPE_INDEX      4
+#define FILEHEAD_DUALP_INDEX     5
+#define FILEHEAD_ORGFORMAT_INDEX 6
+
+#define GRIDHEAD_GRIDTYPE_CORNERPOINT 1 /*  <----\                       */
+                                        /*       | Fucking hysterical!   */
+#define FILEHEAD_GRIDTYPE_CORNERPOINT 0 /*  <----/                       */
+#define FILEHEAD_SINGLE_POROSITY      0 
+#define FILEHEAD_ORGTYPE_CORNERPOINT  1
 
 #ifdef __cplusplus
 }
