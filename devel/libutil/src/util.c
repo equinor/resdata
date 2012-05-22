@@ -176,6 +176,8 @@ double util_kahan_sum(const double *data, size_t N) {
 
 
 
+
+
 char * util_alloc_substring_copy(const char *src , int N) {
   char *copy;
   if (N < strlen(src)) {
@@ -1867,6 +1869,92 @@ bool util_files_equal( const char * file1 , const char * file2 ) {
 }
 
 
+static void util_fclear_region( FILE * stream , long offset , long region_size) {
+  fseek( stream , offset , SEEK_SET );
+  for (int i=0; i < region_size; i++)
+    fputc( 0 , stream );
+}
+
+
+static void util_fmove_block(FILE * stream , long offset , long shift , char * buffer , int buffer_size) {
+  fseek( stream , offset , SEEK_SET );
+  {
+    int bytes_read = fread( buffer , sizeof * buffer , buffer_size , stream );
+    fseek( stream , offset + shift , SEEK_SET );
+    fwrite( buffer , sizeof * buffer , bytes_read , stream );
+  }
+}
+
+
+/**
+   This function will modify a file in place by moving the part from
+   @offset and to the end of the file @shift bytes. If @shift is
+   positive a 'hole' will be created in the file, if @shift is
+   negative a part of the file will be overwritten:
+
+     Original        : "ABCDEFGHIJKILMNOPQ"
+     fmove( 10 , 5 ) : "ABCDEFGHIJ     KILMNOPQ"   
+     fmove( 10 , -5) : "ABCDEKILMNOPQ"
+
+  If offset is positioned at the end of the file a section initialized
+  to zero will be appended to the file. If @offset is beyond the end
+  of the file the function will return EINVAL.
+
+  For this function to work the file must be opened in read-write mode
+  (i.e. r+).  
+*/
+
+int util_fmove( FILE * stream , long offset , long shift) {
+  long file_size;
+  // Determine size of file.
+  {
+    long init_pos = ftell( stream );
+    fseek( stream , 0 , SEEK_END);
+    file_size = ftell( stream );
+    fseek( stream , init_pos , SEEK_SET );
+  }
+    
+  // Validate offset and shift input values.
+  if ((offset > file_size) || (offset < 0))
+    return EINVAL;
+  
+  if (offset + shift < 0)
+    return EINVAL;
+  
+  if (shift != 0) {
+    int buffer_size = 1024 * 1024 * 4;  /* 4MB buffer size. */
+    char * buffer = util_malloc( sizeof * buffer * buffer_size , __func__);
+    
+    /* Shift > 0: We are opening up a hole in the file. */
+    if (shift > 0) {
+      long pos = offset;
+      while (( pos + buffer_size ) < file_size)
+        pos += buffer_size;
+      
+      while (pos >= offset) {
+        util_fmove_block( stream , pos , shift , buffer , buffer_size );
+        pos -= buffer_size;
+      }
+      util_fclear_region( stream , offset , shift );
+    } else {
+      /* Shift < 0: We are overwriting a part of the file internally. */  
+      long pos = offset;
+      while (pos <= file_size) {
+        util_fmove_block( stream , pos , shift , buffer , buffer_size );
+        pos += buffer_size;
+      }
+      
+      // Make sure the file actually shrinks.
+      ftruncate( fileno( stream ) , file_size + shift );
+    }
+    free( buffer );
+  }
+  return 0; 
+}  
+
+
+
+
 
 
 /**
@@ -2433,8 +2521,10 @@ bool util_same_file(const char * file1 , const char * file2) {
   char * target1 = (char *) file1;
   char * target2 = (char *) file2;
 
+#ifdef HAVE_SYMLINK
   if (util_is_link(file1)) target1 = util_alloc_link_target(file1);
   if (util_is_link(file2)) target2 = util_alloc_link_target(file2);
+#endif
   {
     struct stat buffer1 , buffer2;
     
