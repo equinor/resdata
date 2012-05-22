@@ -22,7 +22,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <rng.h>
+
+#ifdef HAVE_THREAD_POOL
 #include <thread_pool.h>
+#endif
 
 #ifdef __cplusplus 
 extern "C" {
@@ -71,7 +74,9 @@ void          matrix_imul(matrix_type * matrix , int i , int j , double value);
 
 void          matrix_inplace_matmul(matrix_type * A, const matrix_type * B);
 void          matrix_inplace_matmul_mt1(matrix_type * A, const matrix_type * B , int num_threads);
+#ifdef HAVE_THREAD_POOL
 void          matrix_inplace_matmul_mt2(matrix_type * A, const matrix_type * B , thread_pool_type * thread_pool);
+#endif
 
 void          matrix_shift_column(matrix_type * matrix , int column, double shift);
 void          matrix_shift_row(matrix_type * matrix , int row , double shift);
