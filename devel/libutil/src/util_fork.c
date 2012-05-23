@@ -171,7 +171,7 @@ uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
         break; /* have reached the end of file - seems like we will not find the file descriptor we are looking for. */
     }
     fclose( stream );
-    unlink( tmp_file );
+    remove( tmp_file );
   }
   free( tmp_file );
   users = util_realloc( users , sizeof * users * num_users , __func__);
@@ -230,7 +230,7 @@ char * util_alloc_filename_from_stream( FILE * input_stream ) {
       }
       fclose( stream );
     }
-    unlink( tmp_file );
+    remove( tmp_file );
     free( tmp_file );
   }
   return filename;

@@ -30,6 +30,7 @@
 #include <time.h>
 #include <math.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include <fcntl.h>
 #include <limits.h>
@@ -37,7 +38,6 @@
 
 #include <inttypes.h>
 #include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -1828,7 +1828,7 @@ bool util_copy_file(const char * src_file , const char * target_file) {
 void util_move_file(const char * src_file , const char * target_file) {
   if (util_file_exists( src_file )) {
     if (util_copy_file( src_file , target_file))
-      unlink( src_file );
+      remove( src_file );
   }
 }
 
@@ -2579,7 +2579,7 @@ bool util_same_file(const char * file1 , const char * file2) {
 
 void util_unlink_existing(const char *filename) {
   if (util_file_exists(filename))
-    unlink(filename);
+    remove(filename);
 }
 
 
@@ -3323,7 +3323,7 @@ void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mo
           printf("    %s\n",fileList[filenr].filename);
         else {
           printf("Deleting: %s \n",fileList[filenr].filename);
-          unlink(fileList[filenr].filename);
+          remove(fileList[filenr].filename);
         }
       } 
     }

@@ -19,6 +19,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <util.h>
 #include <vector.h>
 #include <node_data.h>
@@ -650,7 +651,7 @@ void subst_list_filter_file(const subst_list_type * subst_list , const char * sr
   
   /* OK - all went hunka dory - unlink the backup file and leave the building. */
   if (backup_file != NULL) {
-    unlink( backup_file );
+    remove( backup_file );
     free( backup_file );
   }
   free(buffer);
