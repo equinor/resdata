@@ -41,7 +41,7 @@
 
 
 /*
-  If openmp is enabled the main loop in ecl_grid_init_GRDECL_data__ is
+  If openmp is enabled the main loop in ecl_grid_init_GRDECL_data is
   parallelized with openmp.  
 */
 #ifdef HAVE_OPENMP
@@ -1246,7 +1246,8 @@ static void ecl_grid_set_lgr_name_GRID(ecl_grid_type * lgr_grid , const ecl_file
 
 
 
-static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum) {
+
+static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum, int j) {
   const int nx = ecl_grid->nx;
   const int ny = ecl_grid->ny;
   const int nz = ecl_grid->nz;
@@ -1278,12 +1279,8 @@ static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid ,  const float 
         double z[4][2];
         int c;
 
-        for (c = 0; c < 2; c++) {
-          z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
-          z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
-          z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
-          z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
-        }
+      for (ip = 0; ip <  4; ip++)
+        ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
 
         for (int ip = 0; ip <  4; ip++)
           ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
@@ -1292,6 +1289,18 @@ static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid ,  const float 
       }
     }
   }
+}
+
+
+
+static void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum) {
+  const int ny = ecl_grid->ny;
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
+  for (int j=0; j < ny; j++) 
+    ecl_grid_init_GRDECL_data__( ecl_grid , zcorn, coord , actnum , j );
+
 }
 
 
@@ -1306,7 +1315,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid 
 
   if (mapaxes != NULL)
     ecl_grid_init_mapaxes( ecl_grid , mapaxes );
-  ecl_grid_init_GRDECL_data__( ecl_grid , zcorn , coord , actnum);
+  ecl_grid_init_GRDECL_data( ecl_grid , zcorn , coord , actnum);
     
   ecl_grid_set_center( ecl_grid );
   ecl_grid_update_index( ecl_grid );

@@ -126,14 +126,6 @@ const type ## _type * type ## _safe_cast_const( const void * __arg ) {          
   
 */
 
-#define LIBRARY_VERSION(libname) \
-const char * libname ## _svn_version() { return SVN_VERSION; } \
-const char * libname ## _build_time()  { return NULL; }
-
-
-#define LIBRARY_VERSION_HEADER(libname) \
-const char * libname ## _svn_version(); \
-const char * libname ## _build_time();
 
 /*****************************************************************/
 typedef void (walk_file_callback_ftype)   (const char * , /* The current directory */
@@ -150,7 +142,6 @@ typedef enum {left_pad  = 0,
               right_pad = 1,
               center    = 2} string_alignement_type;
 
-LIBRARY_VERSION_HEADER(libutil);
 
   void         util_bitmask_on(int *  , int );
   time_t       util_make_datetime(int , int , int , int , int , int );
