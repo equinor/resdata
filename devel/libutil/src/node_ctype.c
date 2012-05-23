@@ -48,6 +48,7 @@ const char * node_ctype_name(node_ctype ctype) {
     name =  "size_t value";
     break;
   default:
+    name = NULL;
     util_abort("%s: fatal internal error node_ctype:%d not recognized - aborting. \n", __func__ , ctype);
   }
   return name;
