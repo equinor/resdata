@@ -23,6 +23,7 @@ extern "C" {
 #endif
 #include <stdbool.h>
 #include <inttypes.h>
+
 #include <node_data.h>
 
 typedef struct hash_node_struct hash_node_type;
