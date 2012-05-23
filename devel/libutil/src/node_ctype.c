@@ -18,8 +18,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <util.h>
 #include <node_ctype.h>
-#include <stdlib.h>
 
 
 const char * node_ctype_name(node_ctype ctype) {
@@ -47,8 +48,7 @@ const char * node_ctype_name(node_ctype ctype) {
     name =  "size_t value";
     break;
   default:
-    fprintf(stderr,"%s: fatal internal error node_ctype:%d not recognized - aborting. \n", __func__ , ctype);
-    abort();
+    util_abort("%s: fatal internal error node_ctype:%d not recognized - aborting. \n", __func__ , ctype);
   }
   return name;
 }
