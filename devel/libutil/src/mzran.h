@@ -33,7 +33,7 @@ typedef struct mzran_struct mzran_type;
 
 void              mzran_fscanf_state( void * __rng , FILE * stream );
 unsigned int      mzran_forward(void * __rng);
-void            * mzran_alloc( );
+void            * mzran_alloc( void );
 void              mzran_set_state(void * __rng , const char * seed_buffer);
 double            mzran_get_double(mzran_type * rng);
 int               mzran_get_int( mzran_type * rng, int max);

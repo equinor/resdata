@@ -82,7 +82,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
   rng->type        = type;
   rng->state       = NULL;
   
-  rng->state = rng->alloc_state();
+  rng->state = rng->alloc_state( );
 
   rng_forward( rng );
   return rng;

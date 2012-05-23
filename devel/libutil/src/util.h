@@ -118,7 +118,7 @@ const type ## _type * type ## _safe_cast_const( const void * __arg ) {          
 }
 #define UTIL_SAFE_CAST_HEADER_CONST( type ) const type ## _type * type ## _safe_cast_const( const void * __arg )
 
-#define UTIL_TYPE_ID_DECLARATION           int   __type_id; 
+#define UTIL_TYPE_ID_DECLARATION           int   __type_id
 #define UTIL_TYPE_ID_INIT(var , TYPE_ID)   var->__type_id = TYPE_ID;
 
 /*****************************************************************/
