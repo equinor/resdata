@@ -26,6 +26,7 @@ add_program(env , conf , bin_path , "mem_free.x"          , "mem_free.c" )
 add_program(env , conf , bin_path , "eol-fix.x"           , "eol-fix.c" )
 add_program(env , conf , bin_path , "util-test"           , "util-test.c" )
 add_program(env , conf , bin_path , "util_contains_test"  , "util_contains_test.c" )
+add_program(env , conf , bin_path , "util_fmove_test"     , "util_fmove_test.c" )
 
 
 Default( bin_path )
