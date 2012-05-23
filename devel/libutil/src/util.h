@@ -211,6 +211,10 @@ LIBRARY_VERSION_HEADER(libutil);
   bool         util_delmode_if_owner( const char * filename , mode_t del_mode);
   bool         util_chmod_if_owner( const char * filename , mode_t new_mode);
 #endif 
+
+#ifdef HAVE_PROC
+  bool    util_proc_alive(pid_t pid);
+#endif
   
   int          util_forward_line(FILE * , bool * );
   void         util_rewind_line(FILE *);
@@ -312,7 +316,6 @@ LIBRARY_VERSION_HEADER(libutil);
   char *  util_fread_alloc_string(FILE *);
   void    util_fskip_string(FILE *stream);
   void    util_endian_flip_vector(void *, int , int );
-  bool    util_proc_alive(pid_t pid);
   int     util_proc_mem_free(void);
   
   
