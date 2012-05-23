@@ -26,6 +26,7 @@
 
 #ifdef HAVE_GETUID
 #include <sys/stat.h>
+#include <sys/types.h>
 #endif
 
 #define UTIL_PATH_SEP_STRING           "/"   /* A \0 terminated separator used when we want a (char *) instance.                   */
@@ -144,6 +145,7 @@ typedef enum {left_pad  = 0,
               right_pad = 1,
               center    = 2} string_alignement_type;
 
+  //#define UTIL_CXX_MALLOC(var , num_elm) (typeof (var)) util_malloc( (num_elm) * sizeof var, __func__)
 
   void         util_bitmask_on(int *  , int );
   time_t       util_make_datetime(int , int , int , int , int , int );

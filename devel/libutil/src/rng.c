@@ -17,11 +17,12 @@
 */
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <util.h>
 #include <rng.h>
-#include <stdlib.h>
 #include <mzran.h>
-#include <string.h>
 
 #define RNG_TYPE_ID 66154432
 
@@ -67,7 +68,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
                        int state_size , 
                        uint64_t max_value) {
 
-  rng_type * rng = util_malloc( sizeof * rng , __func__ );
+  rng_type * rng = (rng_type *) util_malloc( sizeof * rng , __func__ );
   UTIL_TYPE_ID_INIT( rng , RNG_TYPE_ID );
   rng->alloc_state   = alloc_state;
   rng->free_state    = free_state; 
@@ -99,7 +100,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
 
 
 void rng_init( rng_type * rng , rng_init_mode init_mode ) {
-  char * seed_buffer = util_malloc( rng->state_size * sizeof * seed_buffer , __func__ );
+  char * seed_buffer = (char *) util_malloc( rng->state_size * sizeof * seed_buffer , __func__ );
   
   switch (init_mode) {
   case(INIT_CLOCK):
@@ -132,7 +133,8 @@ void rng_rng_init( rng_type * rng , rng_type * seed_src) {
     if (int_size * 4 < byte_size)
       int_size += 1;
 
-    seed_buffer = util_malloc( int_size * sizeof * seed_buffer , __func__ );
+    seed_buffer = (unsigned int *) util_malloc( int_size * sizeof * seed_buffer , __func__ );
+    //seed_buffer = UTIL_CXX_MALLOC( seed_buffer , int_size );
     for (int i =0; i < int_size; i++) 
       seed_buffer[i] = rng_forward( seed_src );
     
