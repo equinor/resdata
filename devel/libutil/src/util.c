@@ -501,7 +501,7 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
    getchar() to clear the EOL character.
 */
 
-char * util_alloc_stdin_line() {
+char * util_alloc_stdin_line(void) {
   int input_size = 256;
   char * input   = util_malloc(input_size , __func__);
   int index = 0;

@@ -203,21 +203,21 @@ LIBRARY_VERSION_HEADER(libutil);
   char       * util_alloc_realpath(const char * );
   bool         util_string_match(const char * string , const char * pattern);
   bool         util_string_has_wildcard( const char * s);
-  
-#ifdef HAVE_UID_T
+  bool         util_entry_readable( const char * entry );  
+
+#ifdef HAVE_GETUID
   uid_t        util_get_entry_uid( const char * file );
-#endif
-  bool         util_entry_readable( const char * entry );
   bool         util_addmode_if_owner( const char * filename , mode_t add_mode );
   bool         util_delmode_if_owner( const char * filename , mode_t del_mode);
   bool         util_chmod_if_owner( const char * filename , mode_t new_mode);
+#endif 
   
   int          util_forward_line(FILE * , bool * );
   void         util_rewind_line(FILE *);
   int          util_count_content_file_lines(FILE * );
   int          util_count_file_lines(FILE * );
   FILE       * util_mkdir_fopen( const char * filename , const char * mode );
-  int        util_fmove( FILE * stream , long offset , long shift);
+  int          util_fmove( FILE * stream , long offset , long shift);
   FILE       * util_fopen(const char *  , const char *);
   void         util_fclose( FILE * stream );
   bool         util_fopen_test(const char *, const char *);
