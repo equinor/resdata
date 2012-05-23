@@ -21,8 +21,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <ecl_file.h>
 #include <stdbool.h>
+
+#include <ecl_file.h>
 
 typedef enum { RFT     = 1 , 
                PLT     = 2 , 

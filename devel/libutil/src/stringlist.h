@@ -25,6 +25,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <type_macros.h>
 #include <int_vector.h>
 #include <buffer.h>
 

@@ -23,8 +23,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 #include <stdbool.h>
+
 #include <ecl_grid_cache.h>
 #include <ecl_file.h>
 

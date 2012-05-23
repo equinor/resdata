@@ -22,8 +22,10 @@
 extern "C" {
 #endif
 #include <stdbool.h>
-#include <ecl_rft_node.h>
+
 #include <stringlist.h>
+
+#include <ecl_rft_node.h>
 
 typedef struct ecl_rft_file_struct ecl_rft_file_type;
 

@@ -21,11 +21,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include <stdbool.h>
+
+#include <int_vector.h>
+
+#include <geo_polygon.h>
+
 #include <ecl_box.h>
 #include <ecl_grid.h>
-#include <stdbool.h>
-#include <int_vector.h>
-#include <geo_polygon.h>
+
   
 typedef enum {
   SELECT_ALL           =  0,

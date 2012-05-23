@@ -23,7 +23,7 @@
 #include <stdbool.h>
 
 #include <rng.h>
-
+#include <type_macros.h>
 #ifdef HAVE_THREAD_POOL
 #include <thread_pool.h>
 #endif

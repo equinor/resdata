@@ -24,7 +24,7 @@ extern "C" {
 #include <stdio.h>
 
 #include <buffer.h>
-#include <util.h>
+#include <type_macros.h>
 
 typedef struct @TYPE@_vector_struct @TYPE@_vector_type;
 typedef @TYPE@ (@TYPE@_ftype) (@TYPE@);
