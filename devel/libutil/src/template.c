@@ -18,6 +18,8 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
+
 #include <subst_list.h>
 #include <subst_func.h>
 #include <template.h>

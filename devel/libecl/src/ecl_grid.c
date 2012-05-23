@@ -1277,11 +1277,10 @@ static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid ,  const float 
         double x[4][2];
         double y[4][2];
         double z[4][2];
-        int c;
 
-      for (ip = 0; ip <  4; ip++)
-        ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
-
+	for (int ip = 0; ip <  4; ip++)
+	  ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
+	
         for (int ip = 0; ip <  4; ip++)
           ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
 

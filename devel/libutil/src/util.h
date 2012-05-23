@@ -22,9 +22,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <stdarg.h>
+
+#ifdef HAVE_GETUID
+#include <sys/stat.h>
+#endif
 
 #define UTIL_PATH_SEP_STRING           "/"   /* A \0 terminated separator used when we want a (char *) instance.                   */
 #define UTIL_PATH_SEP_CHAR             '/'   /* A simple character used when we want an actual char instance (i.e. not a pointer). */
