@@ -1,3 +1,10 @@
+#ifndef __TYPE_MACROS_H__
+#define __TYPE_MACROS_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*****************************************************************/
 /**
    
@@ -82,3 +89,9 @@ const type ## _type * type ## _safe_cast_const( const void * __arg ) {          
 
 #define UTIL_TYPE_ID_DECLARATION           int   __type_id
 #define UTIL_TYPE_ID_INIT(var , TYPE_ID)   var->__type_id = TYPE_ID;
+
+
+#ifdef __cplusplus
+}
+#endif
+#endif

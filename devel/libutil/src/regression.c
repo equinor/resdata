@@ -18,12 +18,14 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
+
 #include <util.h>
 #include <matrix.h>
 #include <matrix_blas.h>
 #include <matrix_lapack.h>
 #include <regression.h>
-#include <math.h>
+
 
 
 /**

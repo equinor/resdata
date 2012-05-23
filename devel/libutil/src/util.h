@@ -34,12 +34,14 @@
 #define UTIL_NEWLINE_STRING "          \n"       
 #define UTIL_DEFAULT_MKDIR_MODE 0777         /* Directories are by default created with mode a+rwx - and then comes the umask ... */
 
+#include "type_macros.h"
+
 #ifdef __cplusplus
 extern"C" {
 #endif
 
 
-#include "type_macros.h"
+
 /*****************************************************************/
 /*
   

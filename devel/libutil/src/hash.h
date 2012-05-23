@@ -24,6 +24,7 @@ extern"C" {
 
 #include <stdlib.h>
 #include <stringlist.h>
+
 typedef struct hash_struct      hash_type;
 typedef struct hash_iter_struct hash_iter_type;
 typedef void (hash_apply_ftype) (void * );

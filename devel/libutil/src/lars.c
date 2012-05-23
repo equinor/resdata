@@ -19,11 +19,10 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
+
 #include <util.h>
-#include <matrix.h>
 #include <int_vector.h>
-#include <math.h>
-#include <math.h>
 #include <matrix.h>
 #include <matrix_blas.h>
 #include <matrix_lapack.h>

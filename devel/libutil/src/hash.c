@@ -23,11 +23,12 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <dirent.h>
+#include <errno.h>
+
 #include <hash.h>
 #include <hash_sll.h>
 #include <hash_node.h>
 #include <node_data.h>
-#include <errno.h>
 #include <util.h>
 #include <stringlist.h>
 
