@@ -19,11 +19,12 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
+
+#include <thread_pool.h>
 #include <util.h>
 #include <matrix.h>
-#include <thread_pool.h>
 #include <arg_pack.h>
-#include <math.h>
 #include <rng.h>
 
 /**

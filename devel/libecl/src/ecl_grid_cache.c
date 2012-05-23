@@ -20,12 +20,16 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
+
+#include <util.h>
+
 #include <ecl_kw.h>
 #include <ecl_util.h>
 #include <ecl_file.h>
 #include <ecl_grid.h>
 #include <ecl_grid_cache.h>
-#include <util.h>
+
+
 
 
 /**

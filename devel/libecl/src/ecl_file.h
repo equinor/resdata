@@ -106,7 +106,7 @@ extern "C" {
   ecl_file_type  * ecl_file_open_smryblock( const char * filename , int ministep_nr );
 
 
-UTIL_IS_INSTANCE_HEADER( ecl_file )
+  UTIL_IS_INSTANCE_HEADER( ecl_file );
 
 #ifdef __cplusplus
 }

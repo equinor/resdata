@@ -1648,12 +1648,12 @@ int util_scanf_int_with_limits(const char * prompt , int prompt_len , int min_va
     The limits are inclusive, yet the function returns the input char and stops on empty string.
 */
 char * util_scanf_int_with_limits_return_char(const char * prompt , int prompt_len , int min_value , int max_value) {
-  int value = min_value-1;
-  char * value_char;
+  int value = min_value - 1;
+  char * value_char = '0';
   char * new_prompt = util_alloc_sprintf("%s [%d:%d]" , prompt , min_value , max_value);
   while( value < min_value || value > max_value ){
     value_char = util_scanf_int_return_char(new_prompt , prompt_len);
-    if(strlen(value_char) == 0)
+    if (strlen(value_char) == 0)
       value = min_value;
     else
       util_sscanf_int(value_char , &value);

@@ -25,9 +25,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct ecl_grid_cache_struct ecl_grid_cache_type;
-
+  
+  typedef struct ecl_grid_cache_struct ecl_grid_cache_type;
+  
 
   ecl_grid_cache_type  * ecl_grid_cache_alloc( const ecl_grid_type * grid );
   int                    ecl_grid_cache_get_size( const ecl_grid_cache_type * grid_cache );

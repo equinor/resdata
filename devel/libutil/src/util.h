@@ -21,7 +21,6 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-//#include <unistd.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -87,7 +86,7 @@ bool type ## _is_instance( const void * __arg ) {          \
 }
 
 
-#define UTIL_IS_INSTANCE_HEADER(type) bool type ## _is_instance( const void * __arg );
+#define UTIL_IS_INSTANCE_HEADER(type) bool type ## _is_instance( const void * __arg )
 
 
 #define UTIL_SAFE_CAST_FUNCTION(type , TYPE_ID)                                          \
@@ -104,7 +103,7 @@ type ## _type * type ## _safe_cast( void * __arg ) {                            
       return NULL;                                                                       \
    }                                                                                     \
 }
-#define UTIL_SAFE_CAST_HEADER( type ) type ## _type * type ## _safe_cast( void * __arg );
+#define UTIL_SAFE_CAST_HEADER( type ) type ## _type * type ## _safe_cast( void * __arg )
 
 
 #define UTIL_SAFE_CAST_FUNCTION_CONST(type , TYPE_ID)                                    \
@@ -117,7 +116,7 @@ const type ## _type * type ## _safe_cast_const( const void * __arg ) {          
       return NULL;                                                                       \
    }                                                                                     \
 }
-#define UTIL_SAFE_CAST_HEADER_CONST( type ) const type ## _type * type ## _safe_cast_const( const void * __arg );
+#define UTIL_SAFE_CAST_HEADER_CONST( type ) const type ## _type * type ## _safe_cast_const( const void * __arg )
 
 #define UTIL_TYPE_ID_DECLARATION           int   __type_id; 
 #define UTIL_TYPE_ID_INIT(var , TYPE_ID)   var->__type_id = TYPE_ID;

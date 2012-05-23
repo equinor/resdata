@@ -68,7 +68,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
                        uint64_t max_value) {
 
   rng_type * rng = util_malloc( sizeof * rng , __func__ );
-  UTIL_TYPE_ID_INIT( rng , RNG_TYPE_ID )
+  UTIL_TYPE_ID_INIT( rng , RNG_TYPE_ID );
   rng->alloc_state   = alloc_state;
   rng->free_state    = free_state; 
   rng->forward       = forward;
