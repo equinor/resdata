@@ -21,7 +21,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
-#include <inttypes.h>
 
 #include <util.h>
 #include <buffer.h>
