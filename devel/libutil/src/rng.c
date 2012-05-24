@@ -23,7 +23,7 @@
 #include <util.h>
 #include <rng.h>
 #include <mzran.h>
-
+#include <type_macros.h>
 #define RNG_TYPE_ID 66154432
 
 
