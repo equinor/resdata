@@ -19,10 +19,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <util.h>
 #include <stdbool.h>
-#include <msg.h>
 
+#include <util.h>
+#include <msg.h>
+#include <type_macros.h>
 
 #define MSG_TYPE_ID 1999867
 

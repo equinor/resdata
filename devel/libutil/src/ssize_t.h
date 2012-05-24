@@ -20,6 +20,7 @@
 #define __SSIZE_T_H__
 
 #ifdef _MSC_VER
+// This should of course check 32/64/...
 typedef long ssize_t;
 #endif
 

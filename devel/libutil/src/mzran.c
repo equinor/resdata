@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include <util.h>
-
+#include <type_macros.h>
 #include <mzran.h>
 
 /*****************************************************************/

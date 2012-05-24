@@ -21,8 +21,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <util.h>
 #include <stdbool.h>
+#include <type_macros.h>
 
 
 typedef struct msg_struct msg_type;

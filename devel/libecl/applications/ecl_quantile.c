@@ -20,17 +20,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <glob.h>
+
 #include <util.h>
-#include <ecl_sum.h>
 #include <double_vector.h>
 #include <time_t_vector.h>
-#include <config.h>
+#include <statistics.h>
 #include <vector.h>
 #include <arg_pack.h>
-#include <glob.h>
-#include <statistics.h>
 #include <thread_pool.h>
-#include <pthread.h>
+
+#include <config.h>
+
+#include <ecl_sum.h>
 
 #define DEFAULT_NUM_INTERP  50
 #define SUMMARY_JOIN       ":"

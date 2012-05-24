@@ -19,6 +19,7 @@
 #include <ecl_grav.h>
 #include <ecl_file.h>
 #include <signal.h>
+#include <util.h>
 
 void install_SIGNALS(void) {
   signal(SIGSEGV , util_abort_signal);    /* Segmentation violation, i.e. overwriting memory ... */

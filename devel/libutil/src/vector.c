@@ -20,8 +20,8 @@
 #include <string.h>
 #include <util.h>
 #include <node_data.h>
+#include <type_macros.h>
 #include <vector.h>
-
 
 
 #define VECTOR_TYPE_ID      551087

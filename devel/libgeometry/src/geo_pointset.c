@@ -19,7 +19,9 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include <util.h>
+
 #include <geo_pointset.h>
 
 

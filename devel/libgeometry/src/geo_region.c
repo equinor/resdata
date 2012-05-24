@@ -19,9 +19,12 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include <util.h>
 #include <int_vector.h>
 #include <bool_vector.h>
+#include <type_macros.h>
+
 #include <geo_util.h>
 #include <geo_pointset.h>
 #include <geo_region.h>

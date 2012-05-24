@@ -19,7 +19,10 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include <util.h>
+#include <type_macros.h>
+
 #include <geo_pointset.h>
 #include <geo_surface.h>
 
