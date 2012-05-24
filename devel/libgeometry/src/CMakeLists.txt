@@ -16,11 +16,11 @@ target_link_libraries( geometry_shared util_shared )
 
 #-----------------------------------------------------------------
 if (GEOMETRY_INSTALL_PREFIX)
-   install(TARGETS geometry_static geometry_shared DESTINATION ${INSTALL_ROOT}/${GEOMETRY_INSTALL_PREFIX}/lib)
-   install(FILES ${header_files} DESTINATION ${INSTALL_ROOT}/${GEOMETRY_INSTALL_PREFIX}/include)
+   install(TARGETS geometry_static geometry_shared DESTINATION ${CMAKE_INSTALL_PREFIX}/${GEOMETRY_INSTALL_PREFIX}/lib)
+   install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/${GEOMETRY_INSTALL_PREFIX}/include)
 else()
-   install(TARGETS geometry_static geometry_shared DESTINATION ${INSTALL_ROOT}/lib)
-   install(FILES ${header_files} DESTINATION ${INSTALL_ROOT}/include)
+   install(TARGETS geometry_static geometry_shared DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+   install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 endif()
 
 

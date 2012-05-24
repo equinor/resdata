@@ -66,10 +66,10 @@ set_target_properties( util_shared PROPERTIES OUTPUT_NAME util LIBRARY_OUTPUT_DI
 #-----------------------------------------------------------------
 
 if (UTIL_INSTALL_PREFIX)
-  install(TARGETS util_static util_shared DESTINATION ${INSTALL_ROOT}/${UTIL_INSTALL_PREFIX}/lib)
-  install(FILES ${header_files} DESTINATION ${INSTALL_ROOT}/${UTIL_INSTALL_PREFIX}/include)
+  install(TARGETS util_static util_shared DESTINATION ${CMAKE_INSTALL_PREFIX}/${UTIL_INSTALL_PREFIX}/lib)
+  install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/${UTIL_INSTALL_PREFIX}/include)
 else()
-  install(TARGETS util_static util_shared DESTINATION ${INSTALL_ROOT}/lib)
-  install(FILES ${header_files} DESTINATION ${INSTALL_ROOT}/include)
+  install(TARGETS util_static util_shared DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+  install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 endif()
 

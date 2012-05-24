@@ -9,9 +9,9 @@ foreach(prog ${program_list})
    target_link_libraries( ${prog} ecl_shared util_shared geometry_shared )
    #-----------------------------------------------------------------
    if (ECL_INSTALL_PREFIX)
-      set (destination ${INSTALL_ROOT}/${ECL_INSTALL_PREFIX}/bin)
+      set (destination ${CMAKE_INSTALL_PREFIX}/${ECL_INSTALL_PREFIX}/bin)
    else()
-      set (destination ${INSTALL_ROOT}/bin)
+      set (destination ${CMAKE_INSTALL_PREFIX}/bin)
    endif()
 
    install(TARGETS ${prog} DESTINATION ${destination})
