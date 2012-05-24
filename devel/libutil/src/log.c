@@ -20,12 +20,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <time.h>
 #include <unistd.h>
-#include <util.h>
-#include <log.h>
 #include <stdarg.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -33,6 +31,9 @@
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
 #endif
+
+#include <util.h>
+#include <log.h>
 
 struct log_struct {
   char             * filename;
@@ -199,7 +200,7 @@ FILE * log_get_stream(log_type * logh ) {
 }
 
 
-inline void log_sync(log_type * logh) {
+void log_sync(log_type * logh) {
 #ifdef HAVE_FSYNC
   fsync( logh->fd );
 #endif
