@@ -33,11 +33,11 @@ target_link_libraries( ecl_shared geometry_shared util_shared )
 
 #-----------------------------------------------------------------
 if (ECL_INSTALL_PREFIX)
-   install(TARGETS ecl_static ecl_shared DESTINATION ${CMAKE_INSTALL_PREFIX}/${ECL_INSTALL_PREFIX}/lib)
-   install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/${ECL_INSTALL_PREFIX}/include)
+   install(TARGETS ecl_static ecl_shared DESTINATION ${ECL_INSTALL_PREFIX}/lib)
+   install(FILES ${header_files} DESTINATION ${ECL_INSTALL_PREFIX}/include)
 else()
-   install(TARGETS ecl_static ecl_shared DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-   install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+   install(TARGETS ecl_static ecl_shared DESTINATION lib)
+   install(FILES ${header_files} DESTINATION include)
 endif()        
 
 
