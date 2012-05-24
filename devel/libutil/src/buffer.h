@@ -28,6 +28,8 @@ extern "C" {
 #include <string.h>
 #include <time.h>
 
+#include <ssize_t.h>
+
 typedef struct     buffer_struct buffer_type;
 
 bool               buffer_replace( buffer_type * buffer , const char * old_string , const char * new_string);
