@@ -86,7 +86,12 @@ char * smspec_alloc_block_ijk_key( const char * join_string , const char * keywo
 
 
 char * smspec_alloc_completion_ijk_key( const char * join_string , const char * keyword, const char * wgname , int i , int j , int k) {
-  return util_alloc_sprintf( ECL_SUM_KEYFMT_COMPLETION_IJK , keyword , wgname , i , j , k );
+  return util_alloc_sprintf( ECL_SUM_KEYFMT_COMPLETION_IJK , 
+                             keyword , 
+                             join_string , 
+                             wgname , 
+                             join_string , 
+                             i , j , k );
 }
 
 char * smspec_alloc_completion_num_key( const char * join_string , const char * keyword, const char * wgname , int num) {
