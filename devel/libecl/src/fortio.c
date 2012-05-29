@@ -215,7 +215,7 @@ bool fortio_guess_endian_flip(const char * filename , bool * _endian_flip) {
 
 
 fortio_type * fortio_alloc_FILE_wrapper(const char *filename , bool endian_flip_header , bool fmt_file , FILE * stream) {
-  fortio_type * fortio = fortio_alloc__(filename , endian_flip_header , fmt_file);
+  fortio_type * fortio = fortio_alloc__(filename , fmt_file , endian_flip_header);
   fortio->stream = stream;
   return fortio;
 }

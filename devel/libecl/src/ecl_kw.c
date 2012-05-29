@@ -663,9 +663,11 @@ void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s8) {
     
     for (i=0; i < string_length; i++)
       ecl_string[i] = s8[i];
-
-    for (i=0; i < pad_length; i++)
-      ecl_string[string_length + i] = ' ';
+    
+    for (i=string_length; i < ECL_STRING_LENGTH; i++)
+      ecl_string[i] = ' ';
+    
+    ecl_string[ ECL_STRING_LENGTH ] = '\0';
   }
 }
 

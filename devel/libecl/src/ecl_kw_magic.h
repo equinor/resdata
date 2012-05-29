@@ -134,6 +134,7 @@ extern "C" {
 
  
 /* Common keywords */
+#define SPECGRID_KW    "SPECGRID"
 #define MAPAXES_KW     "MAPAXES"    /* Keyword used to transform from grid coordinates to
                                        world coordinates. */
 #define LGR_KW         "LGR"        /* Name of LGR; for GRID files it can contain two elements, 
@@ -167,6 +168,7 @@ extern "C" {
 #define GRIDHEAD_NY_INDEX     2
 #define GRIDHEAD_NZ_INDEX     3
 #define GRIDHEAD_LGR_INDEX    4
+#define GRIDHEAD_SIZE       100
 
 /* Observe that these indices are one value lower than the values used
    in the ecl_smspec file. */
