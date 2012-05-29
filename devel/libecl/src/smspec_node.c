@@ -63,6 +63,14 @@ struct smspec_node_struct {
 
 
 /*****************************************************************/
+/*
+  The key formats for the combined keys like e.g. 'WWCT:OP_5' should
+  have the keyword, i.e. 'WWCT', as the first part of the string. That
+  guarantees that the function ecl_smspec_identify_var_type() can take
+  both a pure ECLIPSE variable name, like .e.g 'WWCT' and also an
+  ecl_sum combined key like 'WWCT:OPX' as input.
+*/
+
 #define ECL_SUM_KEYFMT_BLOCK_IJK              "%s%s%d,%d,%d"
 #define ECL_SUM_KEYFMT_BLOCK_NUM              "%s%s%d"
 #define ECL_SUM_KEYFMT_LOCAL_BLOCK            "%s%s%s%s%d,%d,%d"
@@ -145,7 +153,6 @@ char * smspec_alloc_block_num_key( const char * join_string , const char * keywo
 
 
 char * smspec_alloc_local_well_key( const char * join_string , const char * keyword , const char * lgr_name , const char * wgname) {
-  
   return util_alloc_sprintf( ECL_SUM_KEYFMT_LOCAL_WELL , 
                              keyword , 
                              join_string , 

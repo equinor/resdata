@@ -29,8 +29,6 @@ extern "C" {
 
 typedef struct ecl_smspec_struct ecl_smspec_type; 
 
-#define ECL_SUM_KEYFMT_BLOCK_IJK   "%s%s%d,%d,%d"
-
 
 /**
    These are the different variable types, see table 3.4 in the
@@ -62,7 +60,7 @@ ecl_smspec_var_type ecl_smspec_iget_var_type( const ecl_smspec_type * smspec , i
 bool                ecl_smspec_needs_num( ecl_smspec_var_type var_type );
 bool                ecl_smspec_needs_wgname( ecl_smspec_var_type var_type );
 const char        * ecl_smspec_get_var_type_name( ecl_smspec_var_type var_type );
-ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec , const char * );
+ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var);
 
 bool              ecl_smspec_general_is_total(const ecl_smspec_type * ecl_smspec , const char * gen_key);
 bool              ecl_smspec_is_rate(const ecl_smspec_type * smspec , int kw_index);

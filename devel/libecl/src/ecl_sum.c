@@ -500,8 +500,8 @@ bool ecl_sum_var_is_total( const ecl_sum_type * ecl_sum , const char * gen_key) 
    'WELLXX'.  
 */
 
-ecl_smspec_var_type ecl_sum_identify_var_type(const ecl_sum_type * ecl_sum , const char * var) {
-  return ecl_smspec_identify_var_type( ecl_sum->smspec , var );
+ecl_smspec_var_type ecl_sum_identify_var_type( const char * var ) {
+  return ecl_smspec_identify_var_type( var );
 }
 
 

@@ -18,20 +18,20 @@
 
 #include <string.h>
 #include <stdbool.h>
-#include <ecl_kw.h>
 #include <math.h>
-#include <ecl_util.h>
-#include <hash.h>
-#include <util.h>
 #include <time.h>
-#include <set.h>
+
+#include <hash.h>
 #include <util.h>
 #include <vector.h>
 #include <int_vector.h>
+#include <stringlist.h>
+
 #include <ecl_smspec.h>
 #include <ecl_file.h>
 #include <ecl_kw_magic.h>
-#include <stringlist.h>
+#include <ecl_kw.h>
+#include <ecl_util.h>
 #include <smspec_node.h>
 
 
@@ -109,7 +109,6 @@ struct ecl_smspec_struct {
   hash_type          * misc_var_index;             /* Variables like 'TCPU' and 'NEWTON'. */
   hash_type          * block_var_index;            /* Block variables like BPR */ 
   hash_type          * gen_var_index;              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
-  hash_type          * special_types;              /* Table of funky keywords which break ECLIPSE own default naming scheme. */
 
   smspec_node_type ** smspec_node_list;          /* This is the storage of smspec_node instances. */
 
@@ -194,6 +193,30 @@ Completion var:    VAR_TYPE:WELL_NAME:NUM
 */
 
 
+/**
+   The special_vars list is used to associate keywords with special
+   types, when the kewyord name is in conflict with the default vector
+   naming convention; all the variables mentioned in the list below
+   are given the type ECL_SMSPEC_MISC_VAR.
+   
+   For instance the keyword 'NEWTON' starts with 'N' and is
+   classified as a NETWORK type variable. However it should rather
+   be classified as a MISC type variable. (What a fucking mess).
+
+   The special_vars list is used in the functions
+   ecl_smspec_identify_special_var() and ecl_smspec_identify_var_type().
+*/
+
+static const char* special_vars[] = {"NEWTON",
+                                     "NLINEARS",
+                                     "ELAPSED",
+                                     "MAXDPR",
+                                     "MAXDSO",
+                                     "MAXDSG",
+                                     "MAXDSW",
+                                     "STEPTYPE"};
+
+
 
 /*****************************************************************/
 
@@ -210,25 +233,6 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   ecl_smspec->misc_var_index                 = hash_alloc();
   ecl_smspec->block_var_index                = hash_alloc();
   ecl_smspec->gen_var_index                  = hash_alloc();
-  ecl_smspec->special_types                  = hash_alloc();
-  /**
-     The special_types hash table is used to associate keywords with
-     special types, when the kewyord name is in conflict with the
-     default vector naming convention.
-     
-     For instance the keyword 'NEWTON' starts with 'N' and is
-     classified as a NETWORK type variable. However it should rather
-     be classified as a MISC type variable. (What a fucking mess).
-  */
-  hash_insert_int(ecl_smspec->special_types , "NEWTON"    , ECL_SMSPEC_MISC_VAR );
-  hash_insert_int(ecl_smspec->special_types , "NLINEARS"  , ECL_SMSPEC_MISC_VAR );
-  hash_insert_int(ecl_smspec->special_types , "ELAPSED"   , ECL_SMSPEC_MISC_VAR );
-  hash_insert_int(ecl_smspec->special_types , "MAXDPR"    , ECL_SMSPEC_MISC_VAR );
-  hash_insert_int(ecl_smspec->special_types , "MAXDSO"    , ECL_SMSPEC_MISC_VAR );
-  hash_insert_int(ecl_smspec->special_types , "MAXDSG"    , ECL_SMSPEC_MISC_VAR );
-  hash_insert_int(ecl_smspec->special_types , "MAXDSW"    , ECL_SMSPEC_MISC_VAR );
-  hash_insert_int(ecl_smspec->special_types , "STEPTYPE"  , ECL_SMSPEC_MISC_VAR );
-  
 
   ecl_smspec->sim_start_time                 = -1;
   ecl_smspec->simulation_path                = util_alloc_string_copy( path );
@@ -253,22 +257,46 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
 UTIL_SAFE_CAST_FUNCTION( ecl_smspec , ECL_SMSPEC_ID )
 
 
+/**
+   Goes through the special_vars static table to check if @var is one
+   the special variables which does not follow normal naming
+   convention. If the test eavulates to true the function will return
+   ECL_SMSPEC_MISC_VAR, otherwise the function will return
+   ECL_SMSPEC_INVALID_VAR and the variable type will be determined
+   from the var name according to standard naming conventions.
+
+   It is important that this function is called before the standard
+   method.
+*/
+
+static ecl_smspec_var_type ecl_smspec_identify_special_var( const char * var ) {
+  ecl_smspec_var_type var_type = ECL_SMSPEC_INVALID_VAR;
+
+  int num_special = sizeof( special_vars ) / sizeof( special_vars[0] );
+  for (int i=0; i < num_special; i++) {
+    if (strcmp( var , special_vars[i]) == 0) {
+      var_type = ECL_SMSPEC_MISC_VAR;
+      break;
+    }
+  }
+  
+  return var_type;
+}
 
 
 /* 
-   See table 3.4 in the ECLIPSE file format reference manual. 
-   
-   This function does not consider the variables internalized in the
-   smspec instance, only the string 'var' (and the
-   smspec->special_types table). 
+   See table 3.4 in the ECLIPSE file format reference manual.
+
+   Observe that the combined ecl_sum style keys like e.g. WWCT:OP1
+   should be formatted with the keyword first, so that this function
+   will identify both 'WWCT' and 'WWCT:OP_1' as a ECL_SMSPEC_WELL_VAR
+   instance.
 */
 
-ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec , const char * var) {
-  ecl_smspec_var_type var_type = ECL_SMSPEC_MISC_VAR;
-  
-  if (hash_has_key( smspec->special_types , var ))
-    return hash_get_int( smspec->special_types , var);
-  else {
+
+ecl_smspec_var_type  ecl_smspec_identify_var_type(const char * var) {
+  ecl_smspec_var_type var_type = ecl_smspec_identify_special_var( var );
+  if (var_type == ECL_SMSPEC_INVALID_VAR) {
     switch(var[0]) {
     case('A'):
       var_type = ECL_SMSPEC_AQUIFER_VAR;
@@ -322,8 +350,8 @@ ecl_smspec_var_type ecl_smspec_identify_var_type(const ecl_smspec_type * smspec 
       */
       var_type = ECL_SMSPEC_MISC_VAR;
     }
-    return var_type;
   }
+  return var_type;
 }
 
 
@@ -715,7 +743,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 
         smspec_node_type * smspec_node;
 
-        ecl_smspec_var_type var_type = ecl_smspec_identify_var_type(ecl_smspec , kw);
+        ecl_smspec_var_type var_type = ecl_smspec_identify_var_type( kw );
         if (nums != NULL) num        = ecl_kw_iget_int(nums , index);
         if (ecl_smspec_lgr_var_type( var_type )) {
           lgr_name  = util_alloc_strip_copy(  ecl_kw_iget_ptr( lgrs , index ));
@@ -1245,7 +1273,6 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->misc_var_index);
   hash_free(ecl_smspec->block_var_index);
   hash_free(ecl_smspec->gen_var_index);
-  hash_free(ecl_smspec->special_types);
   util_safe_free( ecl_smspec->header_file );
   free(ecl_smspec->simulation_case);
   free(ecl_smspec->simulation_path);
