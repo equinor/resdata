@@ -4920,7 +4920,10 @@ char * util_alloc_link_target(const char * link) {
 
 #include "util_path.c"
 
-  
+int util_type_get_id( const void * data ) {
+  int type_id = ((const int*) data)[0];
+  return type_id;
+}  
 
 
 

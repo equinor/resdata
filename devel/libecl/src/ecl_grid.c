@@ -1,18 +1,18 @@
 /*
-   copyright (c) 2011  statoil asa, norway. 
+   Copyright (c) 2011  statoil asa, norway. 
     
-   the file 'ecl_grid.c' is part of ert - ensemble based reservoir tool. 
+   The file 'ecl_grid.c' is part of ert - ensemble based reservoir tool. 
     
-   ert is free software: you can redistribute it and/or modify 
+   ERT is free software: you can redistribute it and/or modify 
    it under the terms of the gnu general public license as published by 
    the free software foundation, either version 3 of the license, or 
    (at your option) any later version. 
     
-   ert is distributed in the hope that it will be useful, but without any 
+   ERT is distributed in the hope that it will be useful, but without any 
    warranty; without even the implied warranty of merchantability or 
    fitness for a particular purpose.   
     
-   see the gnu general public license at <http://www.gnu.org/licenses/gpl.html> 
+   See the gnu general public license at <http://www.gnu.org/licenses/gpl.html> 
    for more details. 
 */
 
@@ -3195,11 +3195,11 @@ static void ecl_grid_fwrite_main_EGRID_header( const ecl_grid_type * grid , fort
     ecl_kw_type * filehead_kw = ecl_kw_alloc( FILEHEAD_KW , 100 , ECL_INT_TYPE );
     ecl_kw_scalar_set_int( filehead_kw , 0 );
 
-    ecl_kw_iset_int( filehead_kw , FILEHEAD_VERSION_INDEX , EGRID_VERSION );
-    ecl_kw_iset_int( filehead_kw , FILEHEAD_YEAR_INDEX , RELEASE_YEAR );
-    ecl_kw_iset_int( filehead_kw , FILEHEAD_COMPAT_INDEX , COMPAT_VERSION );
-    ecl_kw_iset_int( filehead_kw , FILEHEAD_TYPE_INDEX , FILEHEAD_GRIDTYPE_CORNERPOINT );
-    ecl_kw_iset_int( filehead_kw , FILEHEAD_DUALP_INDEX , FILEHEAD_SINGLE_POROSITY );
+    ecl_kw_iset_int( filehead_kw , FILEHEAD_VERSION_INDEX   , EGRID_VERSION );
+    ecl_kw_iset_int( filehead_kw , FILEHEAD_YEAR_INDEX      , RELEASE_YEAR );
+    ecl_kw_iset_int( filehead_kw , FILEHEAD_COMPAT_INDEX    , COMPAT_VERSION );
+    ecl_kw_iset_int( filehead_kw , FILEHEAD_TYPE_INDEX      , FILEHEAD_GRIDTYPE_CORNERPOINT );
+    ecl_kw_iset_int( filehead_kw , FILEHEAD_DUALP_INDEX     , FILEHEAD_SINGLE_POROSITY );
     ecl_kw_iset_int( filehead_kw , FILEHEAD_ORGFORMAT_INDEX , FILEHEAD_ORGTYPE_CORNERPOINT );
 
     ecl_kw_fwrite( filehead_kw , fortio );
@@ -3531,6 +3531,4 @@ void ecl_grid_fprintf_grdecl( const ecl_grid_type * grid , FILE * stream ) {
     ecl_kw_free( actnum_kw );
     fprintf(stream , "\n");
   }
-
-    
 }  

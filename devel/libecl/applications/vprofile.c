@@ -15,14 +15,19 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
    for more details. 
 */
+#include <math.h>
+
+#include <util.h>
+#include <path_fmt.h>
+#include <double_vector.h>
 
 #include <ecl_grid.h>
 #include <ecl_file.h>
 #include <ecl_kw.h>
 #include <ecl_util.h>
-#include <path_fmt.h>
-#include <double_vector.h>
-#include <math.h>
+
+
+
 
 
 static void usage() {

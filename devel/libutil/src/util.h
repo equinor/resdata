@@ -272,20 +272,9 @@ typedef enum {left_pad  = 0,
   void     util_fwrite_int_vector   (const int     * , int , FILE * , const char * );
   void     util_fwrite_double_vector(const double  * , int , FILE * , const char * );
   void     util_fread_char_vector(char * , int , FILE * , const char * );
+  int      util_type_get_id( const void * data );
+
   
-#define CONTAINS_HEADER(TYPE) int util_sorted_contains_ ## TYPE(const TYPE * data , int size , TYPE value);
-  CONTAINS_HEADER(int);
-  CONTAINS_HEADER(time_t);
-  CONTAINS_HEADER(size_t);
-#undef CONTAINS_HEADER
-  
-#ifdef HAVE_ZLIB
-  void     util_compress_buffer(const void * , int , void * , unsigned long * );
-  int      util_fread_sizeof_compressed(FILE * stream);
-  void     util_fread_compressed(void * , FILE * );
-  void   * util_fread_alloc_compressed(FILE * );
-  void     util_fwrite_compressed(const void * , int , FILE * );
-#endif
   
   void     util_block_growing_file(const char * );
   void     util_block_growing_directory(const char * );
@@ -315,30 +304,18 @@ typedef enum {left_pad  = 0,
   void         util_unsetenv( const char * variable);
   char       * util_alloc_envvar( const char * value );
   bool         util_is_link(const char * );  // Will always return false on windows
-#ifdef HAVE_SYMLINK
-  void         util_make_slink(const char *, const char * );
-  char       * util_alloc_link_target(const char * link);
-#ifdef HAVE_READLINKAT
-  char     *   util_alloc_atlink_target(const char * path , const char * link);
-#endif
-#endif
-
-#ifdef HAVE_FORK
-#include "util_fork.h"
-#endif
-
-
-#ifdef HAVE_LOCKF
-  FILE       * util_fopen_lockf(const char * , const char * );
-  bool     util_try_lockf(const char *  , mode_t  , int * );
-#endif
-
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_SCALAR(s,stream)  { if (fread(&s , sizeof s , 1 , stream) != 1) util_abort("%s: read failed: %s\n",__func__ , strerror(errno)); }
 
 #define UTIL_FWRITE_VECTOR(s,n,stream) { if (fwrite(s , sizeof s , (n) , stream) != (n)) util_abort("%s: write failed: %s \n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_VECTOR(s,n,stream)  { if (fread(s , sizeof s , (n) , stream) != (n)) util_abort("%s: read failed: %s \n",__func__ , strerror(errno)); }
+  
+#define CONTAINS_HEADER(TYPE) int util_sorted_contains_ ## TYPE(const TYPE * data , int size , TYPE value);
+  CONTAINS_HEADER(int);
+  CONTAINS_HEADER(time_t);
+  CONTAINS_HEADER(size_t);
+#undef CONTAINS_HEADER
 
 /*****************************************************************/
 /*
@@ -405,6 +382,35 @@ typedef struct {
 
 const char * util_enum_iget( int index , int size , const util_enum_element_type * enum_defs , int * value);
 
+
+/*****************************************************************/
+/* Conditional section below here */
+
+#ifdef HAVE_ZLIB
+  void     util_compress_buffer(const void * , int , void * , unsigned long * );
+  int      util_fread_sizeof_compressed(FILE * stream);
+  void     util_fread_compressed(void * , FILE * );
+  void   * util_fread_alloc_compressed(FILE * );
+  void     util_fwrite_compressed(const void * , int , FILE * );
+#endif
+
+#ifdef HAVE_SYMLINK
+  void         util_make_slink(const char *, const char * );
+  char       * util_alloc_link_target(const char * link);
+  #ifdef HAVE_READLINKAT
+    char     *   util_alloc_atlink_target(const char * path , const char * link);
+  #endif
+#endif
+
+#ifdef HAVE_FORK
+#include "util_fork.h"
+#endif
+
+
+#ifdef HAVE_LOCKF
+  FILE       * util_fopen_lockf(const char * , const char * );
+  bool     util_try_lockf(const char *  , mode_t  , int * );
+#endif
 
 
 
