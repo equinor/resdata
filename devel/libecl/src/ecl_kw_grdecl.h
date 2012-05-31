@@ -41,6 +41,9 @@ extern "C" {
   ecl_kw_type  *  ecl_kw_fscanf_alloc_grdecl__(FILE * stream, const char * kw , bool strict , int size, ecl_type_enum ecl_type);
   ecl_kw_type  *  ecl_kw_fscanf_alloc_grdecl(FILE * stream , const char * kw, int size, ecl_type_enum ecl_type);
 
+  ecl_kw_type  * ecl_kw_fscanf_alloc_current_grdecl__( FILE * stream , bool strict , ecl_type_enum ecl_type);
+  ecl_kw_type  * ecl_kw_fscanf_alloc_current_grdecl( FILE * stream , ecl_type_enum ecl_type);
+
   
   void            ecl_kw_fprintf_grdecl(const ecl_kw_type * ecl_kw , FILE * stream);
 

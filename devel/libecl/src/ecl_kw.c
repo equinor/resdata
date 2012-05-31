@@ -658,7 +658,6 @@ void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s8) {
   } else {
     /* The string is padded with trailing spaces. */
     int string_length = strlen( s8 );
-    int pad_length    = ECL_STRING_LENGTH - string_length;
     int i;
     
     for (i=0; i < string_length; i++)

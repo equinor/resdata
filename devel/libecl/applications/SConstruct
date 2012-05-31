@@ -26,6 +26,7 @@ conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBGEOMETRY , LIBUTIL ] 
 env.Append( CPPPATH = conf.PLPLOT_INCLUDE_PATH )
 env.Append( LIBPATH = conf.PLPLOT_LIB_PATH )
 
+add_program(env , conf ,  bin_path , "grdecl_test.x"     , "grdecl_test.c"        )
 add_program(env , conf ,  bin_path , "key_list.x"        , "key_list.c"        )
 add_program(env , conf ,  bin_path , "ecl_quantile"      , "ecl_quantile.c"    )
 add_program(env , conf ,  bin_path , "convert.x"         , "convert.c"         )

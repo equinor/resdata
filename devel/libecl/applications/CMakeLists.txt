@@ -1,4 +1,5 @@
 add_executable( convert.x convert.c )
+add_executable( grdecl_test.x grdecl_test.c )
 add_executable( kw_list.x kw_list.c )
 add_executable( grid_info.x grid_info.c )
 add_executable( grid_dump.x grid_dump.c )

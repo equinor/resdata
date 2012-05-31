@@ -51,7 +51,6 @@
 */
 
 
-
 /** 
   This function will search through a GRDECL file to look for the
   'kw'; input variables and return vales are similar to
@@ -393,10 +392,9 @@ static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char *
         return ecl_kw;
       }
 
-    } else {
-      util_abort("%s: failed to read header \n",__func__);
+    } else 
+      /** No header read - probably at EOF */
       return NULL;
-    }
   }
 }
 /*****************************************************************/
@@ -474,6 +472,28 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl( FILE * stream , const char * kw , int 
   bool strict = true;
   return ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , size , ecl_type );
 }
+
+/*****************************************************************/
+
+/* 
+   This function will read and allocate the next keyword in the
+   file. This function does not take either kw or the size of the kw
+   as input, and has virtually zero possibilities to check what it is
+   doing. The possibilities of failure are fucking endless, and the
+   function should only be used when you are goddamn certain that the
+   input file is well formatted.
+*/
+
+ecl_kw_type * ecl_kw_fscanf_alloc_current_grdecl__( FILE * stream , bool strict , ecl_type_enum ecl_type) {
+  return __ecl_kw_fscanf_alloc_grdecl__( stream , NULL , strict , 0 , ecl_type );
+}
+
+
+ecl_kw_type * ecl_kw_fscanf_alloc_current_grdecl( FILE * stream , ecl_type_enum ecl_type) {
+  bool strict = true;
+  return ecl_kw_fscanf_alloc_current_grdecl__( stream , strict ,  ecl_type );
+}
+
 
 
 /*****************************************************************/
