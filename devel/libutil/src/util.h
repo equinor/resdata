@@ -59,9 +59,9 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
                                           void *);       /* Arbitrary argument */
 
 
-typedef enum {left_pad  = 0,
-              right_pad = 1,
-              center    = 2} string_alignement_type;
+typedef enum {left_pad   = 0,
+              right_pad  = 1,
+              center_pad = 2} string_alignement_type;
 
   //#define UTIL_CXX_MALLOC(var , num_elm) (typeof (var)) util_malloc( (num_elm) * sizeof var, __func__)
 

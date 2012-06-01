@@ -65,11 +65,11 @@
 
 
 struct menu_item_struct {
-  bool             separator; 	 /* If this is a separator - in that case all the following fields are moot. */ 
-  char    	 * key_set;   	 /* The characters which will activate this item , e.g. "sS" - must be a \0 terminated string */
-  char    	 * label;     	 /* The label/description of this menu item */
-  menu_func_type * func;      	 /* The function called when this item is activated. */
-  void           * arg;       	 /* The argument passed to func. */
+  bool             separator;    /* If this is a separator - in that case all the following fields are moot. */ 
+  char           * key_set;      /* The characters which will activate this item , e.g. "sS" - must be a \0 terminated string */
+  char           * label;        /* The label/description of this menu item */
+  menu_func_type * func;         /* The function called when this item is activated. */
+  void           * arg;          /* The argument passed to func. */
   int              label_length; /* The length of the label - zero for separators. */
   arg_free_ftype * free_arg;     /* Destructor for the argument - will typically be NULL */
 };
@@ -269,7 +269,8 @@ static void menu_display(const menu_type * menu) {
 
   printf("\n");
   __print_line(length + 10 , 0);
-  printf("| ");   util_fprintf_string(menu->title , length + 6 , center , stdout);  printf(" |\n");
+  printf("| ");   
+  util_fprintf_string(menu->title , length + 6 , center_pad , stdout);  printf(" |\n");
   __print_line(length + 10 , 1);
   for (i=0; i < vector_get_size(menu->items); i++) {
     const menu_item_type * item = vector_iget_const( menu->items , i);
@@ -308,7 +309,7 @@ static int menu_read_cmd(const menu_type * menu) {
   do { 
     printf("==> ");
     fflush(stdout); fscanf(stdin , "%s" , cmd); /* We read a full string -
-						   but we only consider it if it is exactly *ONE* character long. */
+                                                   but we only consider it if it is exactly *ONE* character long. */
   } while ((strchr(menu->complete_key_set , cmd[0]) == NULL) || strlen(cmd) > 1);
   
   getchar(); /* Discards trailing <RETURN> from standard input buffer? */
@@ -325,8 +326,8 @@ menu_item_type * menu_get_item(const menu_type * menu, char cmd) {
     menu_item_type * current_item = vector_iget(menu->items , item_index);
     if (!current_item->separator) {
       if (strchr(current_item->key_set , cmd) != NULL) {
-	item = current_item;
-	break;
+        item = current_item;
+        break;
       }
       item_index++;
     }
@@ -355,15 +356,15 @@ void menu_run(const menu_type * menu) {
     {
       int item_index = 0;
       while (1) {
-	const menu_item_type * item = vector_iget_const(menu->items , item_index);
-	if (!item->separator) {
-	  if (strchr(item->key_set , cmd) != NULL) {
-	    /* Calling the function ... */
-	    item->func(item->arg);
-	    break;
-	  }
-	}
-	item_index++;
+        const menu_item_type * item = vector_iget_const(menu->items , item_index);
+        if (!item->separator) {
+          if (strchr(item->key_set , cmd) != NULL) {
+            /* Calling the function ... */
+            item->func(item->arg);
+            break;
+          }
+        }
+        item_index++;
       }
     }
   }
