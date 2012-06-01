@@ -667,7 +667,6 @@ int stringlist_select_matching_files(stringlist_type * names , const char * path
       do {
         char * full_path = util_alloc_filename( path , file_data.cFileName , NULL);
         stringlist_append_owned_ref( names , full_path );
-        match_count++; 
       } while (FindNextFile( file_handle , &file_data) != 0);
     }
     FindClose( file_handle );
