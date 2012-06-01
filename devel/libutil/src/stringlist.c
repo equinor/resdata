@@ -672,7 +672,7 @@ int stringlist_select_matching_files(stringlist_type * names , const char * path
     FindClose( file_handle );
     free( pattern );
     
-    return stringlist_get_length( names );
+    return stringlist_get_size( names );
   }
 #endif
 }
