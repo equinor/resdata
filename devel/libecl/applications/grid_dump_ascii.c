@@ -1,7 +1,7 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
+   Copyright (C) 2012  Statoil ASA, Norway. 
     
-   The file 'grid_info.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'grid_dump_ascii.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -25,7 +25,6 @@
 
 
 
-
 int main(int argc, char ** argv) {
   if (argc < 2) {
     fprintf(stderr,"%s: filename \n",argv[0]);
@@ -45,7 +44,7 @@ int main(int argc, char ** argv) {
       stream = stdout;
     
     ecl_grid = ecl_grid_alloc(grid_file);
-    ecl_grid_dump( ecl_grid , stream );
+    ecl_grid_dump_ascii( ecl_grid , stream );
     
     if (output_file != NULL)
       fclose( stream );

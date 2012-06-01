@@ -41,6 +41,7 @@ extern "C" {
   void         point_inplace_scale(point_type * point , double scale_factor);
   void         point_compare( const point_type *p1 , const point_type * p2, bool * equal);
   void         point_dump( const point_type * p , FILE * stream);
+  void         point_dump_ascii( const point_type * p , FILE * stream);
   void         point_fprintf( const point_type * p , FILE * stream );
   void         point_free( point_type * p);
   void         point_set( point_type *p , double x , double y , double z);

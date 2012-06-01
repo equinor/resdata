@@ -727,7 +727,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const string
       }
     }
   }
-
+  
   if (print_header)
     ecl_sum_fprintf_header( ecl_sum , var_list , has_var , stream );
 

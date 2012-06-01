@@ -61,6 +61,11 @@ void point_dump( const point_type * p , FILE * stream) {
 }
 
 
+void point_dump_ascii( const point_type * p , FILE * stream) {
+  fprintf(stream , "(%7.2f, %7.2f, %7.2f) " , p->x , p->y , p->z);
+}
+
+
 
 void point_set(point_type * p , double x , double y , double z) {
   p->x = x;

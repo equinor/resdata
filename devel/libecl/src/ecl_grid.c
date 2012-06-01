@@ -414,6 +414,14 @@ static void ecl_cell_dump( const ecl_cell_type * cell , FILE * stream) {
 }
 
 
+static void ecl_cell_dump_ascii( const ecl_cell_type * cell , int i , int j , int k , FILE * stream) {
+  fprintf(stream , "Cell: i:%3d  j:%3d    k:%3d   active_nr:%6d  Corners:",i,j,k,cell->active_index);
+  for (int l=0; l < 8; l++)
+    point_dump_ascii( cell->corner_list[l] , stream );
+  fprintf(stream , "\n");
+}
+
+
 static void ecl_cell_fwrite_GRID( const ecl_grid_type * grid , const ecl_cell_type * cell , int coords_size , int i, int j , int k , int global_index , ecl_kw_type * coords_kw , ecl_kw_type * corners_kw, fortio_type * fortio) {
   ecl_kw_iset_int( coords_kw , 0 , i + 1);
   ecl_kw_iset_int( coords_kw , 1 , j + 1);
@@ -3014,6 +3022,26 @@ static void ecl_grid_dump__(const ecl_grid_type * grid , FILE * stream) {
 }
 
 
+static void ecl_grid_dump_ascii__(const ecl_grid_type * grid , FILE * stream) {
+  fprintf(stream , "Grid nr   : %d\n",grid->grid_nr);
+  fprintf(stream , "Grid name : %s\n",grid->name);
+  fprintf(stream , "nx        : %6d\n",grid->nx);
+  fprintf(stream , "ny        : %6d\n",grid->ny);
+  fprintf(stream , "nz        : %6d\n",grid->nz);
+  fprintf(stream , "nactive   : %6d\n",grid->total_active);
+  
+  {
+    int l;
+    for (l=0; l < grid->size; l++) {
+      const ecl_cell_type * cell = grid->cells[l];
+      int i,j,k;
+      ecl_grid_get_ijk1( grid , l , &i , &j , &k);
+      ecl_cell_dump_ascii( cell , i,j,k , stream );
+    }
+  }
+}
+
+
 /**
    The dump function will dump a binary image of the internal grid
    representation. The purpose of these dumps is to be able to test
@@ -3027,6 +3055,13 @@ void ecl_grid_dump(const ecl_grid_type * grid , FILE * stream) {
   for (int i = 0; i < vector_get_size( grid->LGR_list ); i++) 
     ecl_grid_dump__( vector_iget_const( grid->LGR_list , i) , stream ); 
 }
+
+void ecl_grid_dump_ascii(const ecl_grid_type * grid , FILE * stream) {
+  for (int i = 0; i < vector_get_size( grid->LGR_list ); i++) 
+    ecl_grid_dump_ascii__( vector_iget_const( grid->LGR_list , i) , stream ); 
+}
+
+
 
 /*****************************************************************/
 
