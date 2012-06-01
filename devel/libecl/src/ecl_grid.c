@@ -1285,8 +1285,12 @@ static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid ,  const float 
         double y[4][2];
         double z[4][2];
 
-        for (int ip = 0; ip <  4; ip++)
-          ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
+        for (int c = 0; c < 2; c++) {
+          z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
+          z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
+          z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
+          z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
+        }
         
         for (int ip = 0; ip <  4; ip++)
           ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
@@ -3022,7 +3026,7 @@ static void ecl_grid_dump__(const ecl_grid_type * grid , FILE * stream) {
 }
 
 
-static void ecl_grid_dump_ascii__(const ecl_grid_type * grid , FILE * stream) {
+static void ecl_grid_dump_ascii__(const ecl_grid_type * grid , bool active_only , FILE * stream) {
   fprintf(stream , "Grid nr   : %d\n",grid->grid_nr);
   fprintf(stream , "Grid name : %s\n",grid->name);
   fprintf(stream , "nx        : %6d\n",grid->nx);
@@ -3034,9 +3038,11 @@ static void ecl_grid_dump_ascii__(const ecl_grid_type * grid , FILE * stream) {
     int l;
     for (l=0; l < grid->size; l++) {
       const ecl_cell_type * cell = grid->cells[l];
-      int i,j,k;
-      ecl_grid_get_ijk1( grid , l , &i , &j , &k);
-      ecl_cell_dump_ascii( cell , i,j,k , stream );
+      if (cell->active_index >= 0 || !active_only) {
+        int i,j,k;
+        ecl_grid_get_ijk1( grid , l , &i , &j , &k);
+        ecl_cell_dump_ascii( cell , i,j,k , stream );
+      }
     }
   }
 }
@@ -3056,9 +3062,9 @@ void ecl_grid_dump(const ecl_grid_type * grid , FILE * stream) {
     ecl_grid_dump__( vector_iget_const( grid->LGR_list , i) , stream ); 
 }
 
-void ecl_grid_dump_ascii(const ecl_grid_type * grid , FILE * stream) {
+void ecl_grid_dump_ascii(const ecl_grid_type * grid , bool active_only , FILE * stream) {
   for (int i = 0; i < vector_get_size( grid->LGR_list ); i++) 
-    ecl_grid_dump_ascii__( vector_iget_const( grid->LGR_list , i) , stream ); 
+    ecl_grid_dump_ascii__( vector_iget_const( grid->LGR_list , i) , active_only , stream ); 
 }
 
 

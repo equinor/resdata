@@ -108,7 +108,7 @@ extern "C" {
   double          ecl_grid_cell_invalid1A(const ecl_grid_type * grid , int active_index);
   
   void            ecl_grid_dump(const ecl_grid_type * grid , FILE * stream);
-  void            ecl_grid_dump_ascii(const ecl_grid_type * grid , FILE * stream);
+  void            ecl_grid_dump_ascii(const ecl_grid_type * grid , bool active_only , FILE * stream);
   
   /* lgr related functions */
   const ecl_grid_type   * ecl_grid_get_cell_lgr3(const ecl_grid_type * grid , int i, int j , int k);
