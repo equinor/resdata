@@ -30,8 +30,9 @@ int main(int argc , char ** argv) {
       if (grdecl_kw != NULL) {
         printf("Loaded %s - %d elements \n", ecl_kw_get_header( grdecl_kw ) , ecl_kw_get_size( grdecl_kw ));
         ecl_kw_free( grdecl_kw );
-      } else
+      } else 
         break;
+      
     }
   }
   

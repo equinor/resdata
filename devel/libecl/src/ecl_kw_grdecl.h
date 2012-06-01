@@ -30,7 +30,7 @@ extern "C" {
 
 
   
-  bool            ecl_kw_grdecl_fseek_kw(const char *  , bool  , bool  , FILE * );
+  bool            ecl_kw_grdecl_fseek_kw(const char *  , bool  , FILE * );
   
   ecl_kw_type  *  ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE * stream , const char * kw , bool strict , ecl_type_enum ecl_type);
   ecl_kw_type  *  ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_type_enum ecl_type);
@@ -43,9 +43,11 @@ extern "C" {
 
   ecl_kw_type  * ecl_kw_fscanf_alloc_current_grdecl__( FILE * stream , bool strict , ecl_type_enum ecl_type);
   ecl_kw_type  * ecl_kw_fscanf_alloc_current_grdecl( FILE * stream , ecl_type_enum ecl_type);
-
   
-  void            ecl_kw_fprintf_grdecl(const ecl_kw_type * ecl_kw , FILE * stream);
+  bool           ecl_kw_grdecl_fseek_next_kw( FILE * stream );
+  char         * ecl_kw_grdecl_alloc_next_header( FILE * stream );
+  
+  void           ecl_kw_fprintf_grdecl(const ecl_kw_type * ecl_kw , FILE * stream);
 
 #ifdef __cplusplus
 }

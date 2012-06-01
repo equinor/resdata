@@ -729,6 +729,22 @@ void util_fskip_lines(FILE * stream , int lines) {
       if (c == EOF)
         at_eof = true;
     } while (c != '\r' && c != '\n' && !at_eof);
+
+    /* 
+       If we have read a \r this is quite probably a DOS formatted
+       file, and we read another character in the anticipation that it
+       is a \n character.
+    */
+    if (c == '\r') {
+      c = fgetc( stream );
+      if (c == EOF)
+        at_eof = true;
+      else {
+        if (c != '\n')
+          fseek( stream , -1 , SEEK_CUR );
+      }
+    }
+    
     line_nr++;
     if (line_nr == lines || at_eof) cont = false;
   } while (cont);
@@ -4081,10 +4097,12 @@ FILE * util_fopen(const char * filename , const char * mode) {
   return stream;
 }
 
+
+
 /**
    This micro function is only provided for the convenience of java
    wrapping; if you wonder "What on earth should I use this function
-   for" - you can just forget about it.x  
+   for" - you can just forget about it.
 */
 
 void util_fclose( FILE * stream ) {

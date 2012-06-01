@@ -143,6 +143,7 @@ typedef enum {
 #define ECL_BOOL_TRUE_INT         -1   // Binary representation: 11111111  11111111  11111111  1111111
 #define ECL_BOOL_FALSE_INT         0   // Binary representation: 00000000  00000000  00000000  0000000     
 #define ECL_COMMENT_STRING       "--"
+#define ECL_COMMENT_CHAR         '-'   // Need to consecutive to make an ECLIPSE comment
 #define ECL_DATA_TERMINATION      "/"
 
 
