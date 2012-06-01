@@ -628,11 +628,11 @@ void stringlist_python_sort( stringlist_type * s , int cmp_flag) {
   function starts.
 */
 
-
+#ifdef HAVE_GLOB
 int stringlist_select_matching(stringlist_type * names , const char * pattern) {
   int match_count = 0;
   stringlist_clear( names );
-  #ifdef HAVE_GLOB
+
   {
     int i;
     glob_t * pglob = util_malloc( sizeof * pglob , __func__);
@@ -644,21 +644,39 @@ int stringlist_select_matching(stringlist_type * names , const char * pattern) {
     globfree( pglob );  /* Only frees the _internal_ data structures of the pglob object. */
     free( pglob );
   }
-  #else
+  return match_count;
+}
+#endif
+
+
+int stringlist_select_matching_files(stringlist_type * names , const char * path , const char * file_pattern) {
+#ifdef HAVE_GLOB
+  char * pattern  = util_alloc_filename( path , file_pattern , NULL );
+  int match_count = stringlist_select_matching( names , pattern );
+  free( pattern );
+  return match_count;
+#else
   {
     WIN32_FIND_DATA file_data;
-    HANDLE file_handle;
-
+    HANDLE          file_handle;
+    char * pattern  = util_alloc_filename( path , file_pattern , NULL );
+    
+    stringlist_clear( names );
     file_handle = FindFirstFile( pattern , &file_data );
     if (file_handle != INVALID_HANDLE_VALUE) {
       do {
-        stringlist_append_copy( names , file_data.cFileName );
+        char * full_path = util_alloc_filename( path , file_data.cFileName , NULL);
+        stringlist_append_owned_ref( names , full_path );
         match_count++; 
       } while (FindNextFile( file_handle , &file_data) != 0);
     }
     FindClose( file_handle );
+    free( pattern );
+    
+    return stringlist_get_length( names );
   }
-  #endif
-  return match_count;
+#endif
 }
+
+
 

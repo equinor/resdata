@@ -723,21 +723,21 @@ int ecl_util_fname_report_cmp(const void *f1, const void *f2) {
 
 
 int ecl_util_select_filelist( const char * path , const char * base , ecl_file_enum file_type , bool fmt_file , stringlist_type * filelist) {
-  char       * pattern;
+  char       * file_pattern;
   char       * base_pattern;
   const char * extension = ecl_util_get_file_pattern( file_type , fmt_file );
   if (base == NULL)
     base_pattern = util_alloc_string_copy( "*" );
   else
     base_pattern = util_alloc_string_copy( base );
-
-  pattern = util_alloc_filename( path , base_pattern , extension );
-  stringlist_select_matching( filelist , pattern );
+  
+  file_pattern = util_alloc_filename( NULL , base_pattern , extension );
+  stringlist_select_matching_files( filelist , path , file_pattern );
   if ((file_type == ECL_SUMMARY_FILE) || (file_type == ECL_RESTART_FILE))
     stringlist_sort( filelist , ecl_util_fname_report_cmp );
   
   free( base_pattern );
-  free( pattern );
+  free( file_pattern );
   return stringlist_get_size( filelist );
 }
 
