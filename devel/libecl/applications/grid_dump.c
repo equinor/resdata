@@ -40,7 +40,7 @@ int main(int argc, char ** argv) {
     } else
       stream = stdout;
     
-    ecl_grid = ecl_grid_alloc(grid_file );
+    ecl_grid = ecl_grid_alloc(grid_file);
     ecl_grid_dump( ecl_grid , stream );
     
     if (output_file != NULL)

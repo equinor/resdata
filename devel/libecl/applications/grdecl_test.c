@@ -18,8 +18,11 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <ecl_kw.h>
+
 #include <util.h>
+
+#include <ecl_kw.h>
+
 
 int main(int argc , char ** argv) {
   FILE * stream = util_fopen( argv[1] , "r");

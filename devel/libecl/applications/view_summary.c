@@ -109,11 +109,21 @@ void print_help_and_exit()  {
 
 static void build_key_list( const ecl_sum_type * ecl_sum , stringlist_type * key_list , int argc , const char ** argv) {
   for (int iarg = 0; iarg < argc; iarg++) {
-    stringlist_type * tmp_keys = stringlist_alloc_new( );
-    ecl_sum_select_matching_general_var_list( ecl_sum , argv[iarg] , tmp_keys);
-    stringlist_sort( tmp_keys , (string_cmp_ftype *) util_strcmp_int );
-    stringlist_append_stringlist_copy( key_list , tmp_keys );
-    stringlist_free( tmp_keys );
+    /**
+       If the string does not contain wildcards we add it
+       unconditionally; and then subsequently let the
+       ecl_sum_fprintf() function print a message on stderr about
+       missing keys.
+    */
+
+    if (util_string_has_wildcard( argv[iarg] )) {
+      stringlist_type * tmp_keys = stringlist_alloc_new( );
+      ecl_sum_select_matching_general_var_list( ecl_sum , argv[iarg] , tmp_keys);
+      stringlist_sort( tmp_keys , (string_cmp_ftype *) util_strcmp_int );
+      stringlist_append_stringlist_copy( key_list , tmp_keys );
+      stringlist_free( tmp_keys );
+    } else
+      stringlist_append_copy( key_list , argv[iarg] );
   }
 }
 
