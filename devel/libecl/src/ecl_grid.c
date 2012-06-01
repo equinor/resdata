@@ -3008,7 +3008,7 @@ bool ecl_grid_test_lgr_consistency( const ecl_grid_type * ecl_grid ) {
 
 static void ecl_grid_dump__(const ecl_grid_type * grid , FILE * stream) {
   util_fwrite_int( grid->grid_nr , stream );
-  util_fwrite_string( grid->name , stream );
+  //util_fwrite_string( grid->name , stream );
   util_fwrite_int( grid->nx   , stream );
   util_fwrite_int( grid->nz   , stream );
   util_fwrite_int( grid->ny   , stream );
