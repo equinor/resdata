@@ -38,7 +38,7 @@ int main(int argc, char ** argv) {
     if (argc >= 3) {
       ecl_grid_type * grid2 = ecl_grid_alloc( argv[2] );
       
-      if (ecl_grid_compare( ecl_grid , grid2))
+      if (ecl_grid_compare( ecl_grid , grid2 , true))
         printf("\nThe grids %s %s are IDENTICAL.\n" , argv[1] , argv[2]);
       else {
         printf("\n");

@@ -399,10 +399,10 @@ struct ecl_grid_struct {
 
 static void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2, bool * equal) {
   int i;
-  if (c1->active != c2->active)
+  if (c1->active != c2->active) 
     *equal = false;
   else {
-    for (i=0; i < 8; i++)
+    for (i=0; i < 8; i++) 
       point_compare(c1->corner_list[i] , c2->corner_list[i] , equal);
     point_compare(c1->center , c2->center , equal);
   }
@@ -1819,10 +1819,10 @@ bool ecl_grid_exists( const char * case_input ) {
 
 /**
    Return true if grids g1 and g2 are equal, and false otherwise. To
-   return true all cells must be identical.
+   return true all cells must be identical. 
 */
 
-bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
+static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
   int i;
 
   bool equal = true;
@@ -1833,6 +1833,8 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
       ecl_cell_type *c1 = g1->cells[i];
       ecl_cell_type *c2 = g2->cells[i];
       ecl_cell_compare(c1 , c2 , &equal);
+      if (!equal)
+        break;
     }
   }
   
@@ -1840,6 +1842,26 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
 }
 
 
+bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool include_lgr) {
+  if (!include_lgr) 
+    return ecl_grid_compare__(g1 , g2 );
+  else {
+    if (vector_get_size( g1->LGR_list ) == vector_get_size( g2->LGR_list )) {
+      bool equal;
+      int grid_nr;
+      for (grid_nr = 0; grid_nr < vector_get_size( g1->LGR_list ); grid_nr++) {
+        const ecl_grid_type * lgr1 = vector_iget_const( g1->LGR_list , grid_nr);
+        const ecl_grid_type * lgr2 = vector_iget_const( g2->LGR_list , grid_nr);
+
+        equal = ecl_grid_compare__(lgr1 , lgr2 );
+        if (!equal) 
+          break;
+      }
+      return equal;
+    } else
+      return false;
+  }
+}
 
 
 
@@ -3369,10 +3391,12 @@ ecl_kw_type * ecl_grid_alloc_zcorn_kw( const ecl_grid_type * grid ) {
 
 static void ecl_grid_init_actnum_data( const ecl_grid_type * grid , int * actnum ) {
   for (int i=0; i < grid->size; i++) {
-    if (grid->index_map >= 0)
+
+    if (grid->index_map[i] >= 0)
       actnum[i] = 1;
     else
       actnum[i] = 0;
+    
   }
 }
 
