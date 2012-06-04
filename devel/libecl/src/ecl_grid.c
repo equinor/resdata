@@ -3036,8 +3036,10 @@ static void ecl_grid_dump__(const ecl_grid_type * grid , FILE * stream) {
   util_fwrite_int( grid->ny   , stream );
   util_fwrite_int( grid->size , stream );
   util_fwrite_int( grid->total_active , stream );
-  util_fwrite_int_vector( grid->index_map     , grid->size , stream , __func__ );
-  util_fwrite_int_vector( grid->inv_index_map , grid->total_active , stream , __func__ );
+  /*
+    util_fwrite_int_vector( grid->index_map     , grid->size , stream , __func__ );
+    util_fwrite_int_vector( grid->inv_index_map , grid->total_active , stream , __func__ );
+  */
   
   /*{
     int i;
