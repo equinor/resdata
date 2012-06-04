@@ -40,7 +40,7 @@ int main(int argc, char ** argv) {
 
     if (argc == 3) {
       output_file = argv[2];
-      stream = util_mkdir_fopen( output_file , "w");
+      stream = util_mkdir_fopen( output_file , "wb");
     } else
       stream = stdout;
     
