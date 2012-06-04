@@ -3030,7 +3030,7 @@ bool ecl_grid_test_lgr_consistency( const ecl_grid_type * ecl_grid ) {
 
 static void ecl_grid_dump__(const ecl_grid_type * grid , FILE * stream) {
   util_fwrite_int( grid->grid_nr , stream );
-  util_fwrite_string( grid->name , stream );
+  //util_fwrite_string( grid->name , stream );
   util_fwrite_int( grid->nx   , stream );
   util_fwrite_int( grid->nz   , stream );
   util_fwrite_int( grid->ny   , stream );
@@ -3038,13 +3038,15 @@ static void ecl_grid_dump__(const ecl_grid_type * grid , FILE * stream) {
   util_fwrite_int( grid->total_active , stream );
   util_fwrite_int_vector( grid->index_map     , grid->size , stream , __func__ );
   util_fwrite_int_vector( grid->inv_index_map , grid->total_active , stream , __func__ );
-  {
+  
+  /*{
     int i;
     for (i=0; i < grid->size; i++) {
       const ecl_cell_type * cell = grid->cells[i];
       ecl_cell_dump( cell , stream );
     }
   }
+  */
 }
 
 
