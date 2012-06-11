@@ -10,3 +10,11 @@ set_target_properties( eclxx_shared PROPERTIES OUTPUT_NAME eclxx )
 target_link_libraries( eclxx_static ecl_static )
 target_link_libraries( eclxx_shared ecl_shared )
 
+if (ECL_INSTALL_PREFIX)
+   install(TARGETS eclxx_static eclxx_shared DESTINATION ${ECL_INSTALL_PREFIX}/lib)
+   install(FILES ${header_files} DESTINATION ${ECL_INSTALL_PREFIX}/include)
+else()
+   #
+   install(TARGETS eclxx_static DESTINATION lib)
+   install(FILES ${header_files} DESTINATION include)
+endif()        

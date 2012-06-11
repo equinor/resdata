@@ -44,6 +44,7 @@
   If openmp is enabled the main loop in ecl_grid_init_GRDECL_data is
   parallelized with openmp.  
 */
+#undef HAVE_OPENMP
 #ifdef HAVE_OPENMP
 #include <omp.h>
 #endif
@@ -345,6 +346,7 @@ struct ecl_cell_struct {
   point_type            *corner_list[8];
   const ecl_grid_type   *lgr;                /* if this cell is part of an lgr; this will point to a grid instance for that lgr; NULL if not part of lgr. */
   int                    host_cell;          /* the global index of the host cell for an lgr cell, set to -1 for normal cells. */
+  bool                   valid_geometry;     /* In the case of GRID files not necessarily all cells geometry values set - in that case this will be left as false. */
   bool                   tainted_geometry;   /* lazy fucking stupid reservoir engineers make invalid grid
                                                 cells - for kicks??  must try to keep those cells out of
                                                 real-world calculations with some hysteric heuristics.*/
@@ -612,6 +614,7 @@ static ecl_cell_type * ecl_cell_alloc(void) {
   for (int i=0; i < 8; i++)
     cell->corner_list[i] = point_alloc_empty();
 
+  cell->valid_geometry   = false;
   cell->tainted_geometry = false;
   cell->host_cell        = -1;
   return cell;
@@ -911,7 +914,6 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
 }
 
 
-// OpenMP?
 static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   int c , i;
   for (i=0; i < ecl_grid->size; i++) {
@@ -954,6 +956,7 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
   */
   if (actnum[global_index] > 0)
     cell->active = true;
+  cell->valid_geometry = true;
 }
 
 
@@ -964,7 +967,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , int coords_size , 
   const int k  = coords[2];
   const int global_index   = ecl_grid_get_global_index__(ecl_grid , i - 1, j - 1 , k - 1);
   ecl_cell_type * cell     = ecl_grid->cells[global_index];
-
+  
   /* the coords keyword can optionally contain 4,5 or 7 elements:
 
         coords[0..2] = i,j,k
@@ -974,14 +977,14 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , int coords_size , 
         coords[5]    = 0 for normal cells, icell of host cell for lgr cell.
         coords[6]    = 0 for normal cells, coarsening group for coarsened cell [not treated yet].
 
-     if coords[4] is not present it is assumed that the cell is active.
+        if coords[4] is not present it is assumed that the cell is active.
 
-     Note about LGRs: The GRID file format has an additional keyword
-     called LGRILG which maps out the parent box containing an LGR -
-     this only duplicates the information which can be learned from
-     the coords[5] element, and is not used in the current code -
-     however in good Schlum tradition a file 4/5 element COORDS
-     keywords and LGRs might come any day - then we are fucked.
+        Note about LGRs: The GRID file format has an additional keyword
+        called LGRILG which maps out the parent box containing an LGR -
+        this only duplicates the information which can be learned from
+        the coords[5] element, and is not used in the current code -
+        however in good Schlum tradition a file 4/5 element COORDS
+        keywords and LGRs might come any day - then we are fucked.
   */
 
   {
@@ -1018,6 +1021,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , int coords_size , 
         point_mapaxes_transform( cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
     }
 
+    cell->valid_geometry = true;
   }
 }
 
@@ -1305,9 +1309,6 @@ static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid ,  const float 
 
 static void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum) {
   const int ny = ecl_grid->ny;
-#ifdef HAVE_OPENMP
-#pragma omp parallel for
-#endif
   for (int j=0; j < ny; j++) 
     ecl_grid_init_GRDECL_data__( ecl_grid , zcorn, coord , actnum , j );
 
@@ -3280,6 +3281,41 @@ static void ecl_grid_fwrite_main_EGRID_header( const ecl_grid_type * grid , fort
 /*****************************************************************/
 
 
+/*
+  Will scan the halfopen k-interval [k1,k2) to find a cell which has
+  valid geometry. If no cell is found the function will return -1.  
+*/
+
+static int ecl_grid_get_valid_index( const ecl_grid_type * grid , int i , int j , int k1 , int k2) {
+  int global_index;
+  int k = k1;
+  int delta = (k1 < k2) ? 1 : -1 ;
+
+  while (true) {
+    ecl_cell_type * cell;
+    global_index = ecl_grid_get_global_index3( grid , i , j , k );
+    
+    cell = grid->cells[ global_index ];
+    if (cell->valid_geometry)
+      return global_index;
+    else {
+      k += delta;
+      if (k == k2)
+        return -1;
+    }
+  }
+  
+}
+
+
+static int ecl_grid_get_bottom_valid_index( const ecl_grid_type * grid , int i , int j ) {
+  return ecl_grid_get_valid_index( grid , i , j ,  grid->nz - 1 , -1);
+}
+
+static int ecl_grid_get_top_valid_index( const ecl_grid_type * grid , int i , int j ) {
+  return ecl_grid_get_valid_index( grid , i , j ,  0 , grid->nz);
+}
+
 static void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord ) {
   /*
     The coord vector contains the points defining the top and bottom
@@ -3292,43 +3328,46 @@ static void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord
   
   for (int j=0; j <= grid->ny; j++) {
     for (int i=0; i <= grid->nx; i++) {
-      const int top_index    = ecl_grid_get_global_index3( grid , util_int_min( i , grid->nx - 1) , util_int_min( j , grid->ny - 1) , 0 );
-      const int bottom_index = ecl_grid_get_global_index3( grid , util_int_min( i , grid->nx - 1) , util_int_min( j , grid->ny - 1) , grid->nz - 1 );
-      
-      const ecl_cell_type * bottom_cell = grid->cells[ bottom_index ];
-      const ecl_cell_type * top_cell    = grid->cells[ top_index ];
-      
-      /*
-        2---3
-        |   |
-        0---1
-      */
-      int coord_offset = 6 * ( j * (grid->nx + 1) + i );
-      int corner_index  = 0;
-      if (i == grid->nx) 
-        corner_index += 1;
-      
-      if (j == grid->ny)
-        corner_index += 2;
-      
-      {
-        point_copy_values( top_point , top_cell->corner_list[ corner_index]);
-        point_copy_values( bottom_point , bottom_cell->corner_list[ corner_index + 4]);
-        point_mapaxes_invtransform( top_point    , grid->origo , grid->unit_x , grid->unit_y );
-        point_mapaxes_invtransform( bottom_point , grid->origo , grid->unit_x , grid->unit_y );
-        
-        coord[coord_offset]     = top_point->x;
-        coord[coord_offset + 1] = top_point->y;
-        coord[coord_offset + 2] = top_point->z;
+      const int top_index    = ecl_grid_get_top_valid_index( grid , util_int_min( i , grid->nx - 1) , util_int_min( j , grid->ny - 1) );
+      const int bottom_index = ecl_grid_get_bottom_valid_index( grid , util_int_min( i , grid->nx - 1) , util_int_min( j , grid->ny - 1) );
 
-        coord[coord_offset + 3] = bottom_point->x;
-        coord[coord_offset + 4] = bottom_point->y;
-        coord[coord_offset + 5] = bottom_point->z;
+      if (top_index == -1) 
+        util_exit("% : no cell with a valid geometry description found in (i,j) = %d,%d - then what? \n",__func__ , i,j);
+      else {
+        const ecl_cell_type * bottom_cell = grid->cells[ bottom_index ];
+        const ecl_cell_type * top_cell    = grid->cells[ top_index ];
+      
+        /*
+          2---3
+          |   |
+          0---1
+        */
+        int coord_offset = 6 * ( j * (grid->nx + 1) + i );
+        int corner_index  = 0;
+        if (i == grid->nx) 
+          corner_index += 1;
+        
+        if (j == grid->ny)
+          corner_index += 2;
+        
+        {
+          point_copy_values( top_point , top_cell->corner_list[ corner_index]);
+          point_copy_values( bottom_point , bottom_cell->corner_list[ corner_index + 4]);
+          point_mapaxes_invtransform( top_point    , grid->origo , grid->unit_x , grid->unit_y );
+          point_mapaxes_invtransform( bottom_point , grid->origo , grid->unit_x , grid->unit_y );
+          
+          coord[coord_offset]     = top_point->x;
+          coord[coord_offset + 1] = top_point->y;
+          coord[coord_offset + 2] = top_point->z;
+          
+          coord[coord_offset + 3] = bottom_point->x;
+          coord[coord_offset + 4] = bottom_point->y;
+          coord[coord_offset + 5] = bottom_point->z;
+        }
       }
     }
   }
 }
-
 
 float * ecl_grid_alloc_coord_data( const ecl_grid_type * grid ) {
   float * coord = util_malloc( (grid->nx + 1) * (grid->ny + 1) * 6 * sizeof * coord , __func__);
