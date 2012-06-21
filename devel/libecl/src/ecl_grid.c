@@ -1258,49 +1258,44 @@ static void ecl_grid_set_lgr_name_GRID(ecl_grid_type * lgr_grid , const ecl_file
 
 
 
-static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum, int j) {
+static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum, int j) {
   const int nx = ecl_grid->nx;
   const int ny = ecl_grid->ny;
   const int nz = ecl_grid->nz;
 
-#ifdef HAVE_OPENMP
-#pragma omp parallel for
-#endif
-  for (int j=0; j < ny; j++) {
-    for (int i=0; i < nx; i++) {
-      point_type pillars[4][2];
-      int pillar_index[4];
-      pillar_index[0] = 6 * ( j      * (nx + 1) + i    );
-      pillar_index[1] = 6 * ( j      * (nx + 1) + i + 1);
-      pillar_index[2] = 6 * ((j + 1) * (nx + 1) + i    );
-      pillar_index[3] = 6 * ((j + 1) * (nx + 1) + i + 1);
-
-      for (int ip = 0; ip < 4; ip++) {
-        int index = pillar_index[ip];
-        point_set(&pillars[ip][0] , coord[index] , coord[index + 1] , coord[index + 2]);
-        
-        index += 3;
-        point_set(&pillars[ip][1] , coord[index] , coord[index + 1] , coord[index + 2]);
-      }
-
+  for (int i=0; i < nx; i++) {
+    point_type pillars[4][2];
+    int pillar_index[4];
+    pillar_index[0] = 6 * ( j      * (nx + 1) + i    );
+    pillar_index[1] = 6 * ( j      * (nx + 1) + i + 1);
+    pillar_index[2] = 6 * ((j + 1) * (nx + 1) + i    );
+    pillar_index[3] = 6 * ((j + 1) * (nx + 1) + i + 1);
+    
+    for (int ip = 0; ip < 4; ip++) {
+      int index = pillar_index[ip];
+      point_set(&pillars[ip][0] , coord[index] , coord[index + 1] , coord[index + 2]);
       
-      for (int k=0; k < nz; k++) {
-        double x[4][2];
-        double y[4][2];
-        double z[4][2];
-
-        for (int c = 0; c < 2; c++) {
-          z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
-          z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
-          z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
-          z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
-        }
-        
-        for (int ip = 0; ip <  4; ip++)
-          ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
-
-        ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum);
+      index += 3;
+      point_set(&pillars[ip][1] , coord[index] , coord[index + 1] , coord[index + 2]);
+    }
+    
+    
+    for (int k=0; k < nz; k++) {
+      double x[4][2];
+      double y[4][2];
+      double z[4][2];
+      
+      for (int c = 0; c < 2; c++) {
+        z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
+        z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
+        z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
+        z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
       }
+      
+      for (int ip = 0; ip <  4; ip++)
+        ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
+      
+      ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum);
     }
   }
 }
@@ -1309,9 +1304,11 @@ static void ecl_grid_init_GRDECL_data__(ecl_grid_type * ecl_grid ,  const float 
 
 static void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum) {
   const int ny = ecl_grid->ny;
+#ifdef HAVE_OPENMP
+#pragma omp parallel for
+#endif
   for (int j=0; j < ny; j++) 
-    ecl_grid_init_GRDECL_data__( ecl_grid , zcorn, coord , actnum , j );
-
+    ecl_grid_init_GRDECL_data_jslice( ecl_grid , zcorn, coord , actnum , j );
 }
 
 
@@ -1446,7 +1443,7 @@ static void zcorn_check( const ecl_grid_type * ecl_grid , const ecl_kw_type * zc
 
 
 static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const ecl_file_type * ecl_file , int grid_nr) {
-  ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , GRIDHEAD_KW , grid_nr);
+  ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , GRIDHEAD_KW  , grid_nr);
   ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , ZCORN_KW     , grid_nr);
   ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , COORD_KW     , grid_nr);
   ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , ACTNUM_KW    , grid_nr);
