@@ -136,7 +136,8 @@ extern "C" {
   void                    ecl_grid_fwrite_EGRID( const ecl_grid_type * grid , const char * filename);
   void                    ecl_grid_fwrite_GRID( const ecl_grid_type * grid , const char * filename);
   void                    ecl_grid_fprintf_grdecl( const ecl_grid_type * grid , FILE * stream );
-
+  void                    ecl_grid_fwrite_EGRID_header( int dims[3] , const float mapaxes[6], fortio_type * fortio);
+  
   float          * ecl_grid_alloc_coord_data( const ecl_grid_type * grid );
   ecl_kw_type    * ecl_grid_alloc_coord_kw( const ecl_grid_type * grid );
   float          * ecl_grid_alloc_zcorn_data( const ecl_grid_type * grid );

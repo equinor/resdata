@@ -17,10 +17,10 @@ extern "C" {
 /*                INIT and RESTART files:                        */
 /*****************************************************************/
 
-#define SEQNUM_KW    "SEQNUM"       /* Contains the report step as the only data;
-                                       not present in non-unified files, where the
-                                       report step can be inferred from the filename. */
-
+#define SEQNUM_KW    "SEQNUM"       /* Contains the report step as the only data; not
+                                       present in non-unified files, where the report
+                                       step must be inferred from the filename. */
+  
 
 #define IWEL_KW      "IWEL"
 #define ZWEL_KW      "ZWEL"
@@ -183,9 +183,9 @@ extern "C" {
 #define FILEHEAD_DUALP_INDEX     5
 #define FILEHEAD_ORGFORMAT_INDEX 6
 
-#define GRIDHEAD_GRIDTYPE_CORNERPOINT 1 /*  <----\                       */
-                                        /*       | Fucking hysterical!   */
-#define FILEHEAD_GRIDTYPE_CORNERPOINT 0 /*  <----/                       */
+#define GRIDHEAD_GRIDTYPE_CORNERPOINT 1 /*  <----\                        */
+                                        /*       |  Fucking hysterical!   */
+#define FILEHEAD_GRIDTYPE_CORNERPOINT 0 /*  <----/                        */
 #define FILEHEAD_SINGLE_POROSITY      0 
 #define FILEHEAD_ORGTYPE_CORNERPOINT  1
 

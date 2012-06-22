@@ -6,8 +6,10 @@ add_executable( grid_dump.x grid_dump.c )
 add_executable( grid_dump_ascii.x grid_dump_ascii.c )
 add_executable( summary.x view_summary.c )
 add_executable( select_test.x select_test.c )
+add_executable( load_test.x load_test.c )
 
-set(program_list grdecl_test.x grid_dump_ascii.x select_test.x grid_dump.x convert.x kw_list.x grid_info.x summary.x)
+
+set(program_list load_test.x grdecl_test.x grid_dump_ascii.x select_test.x grid_dump.x convert.x kw_list.x grid_info.x summary.x)
 foreach(prog ${program_list})
    target_link_libraries( ${prog} ecl_shared util_shared geometry_shared )
    #-----------------------------------------------------------------
