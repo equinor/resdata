@@ -740,6 +740,18 @@ int ecl_util_select_filelist( const char * path , const char * base , ecl_file_e
 }
 
 
+bool ecl_util_unified_file(const char *filename) {
+  int report_nr;
+  ecl_file_enum file_type;
+  bool fmt_file;
+  file_type = ecl_util_get_file_type(filename , &fmt_file , &report_nr);
+  
+  if ((file_type == ECL_UNIFIED_RESTART_FILE) || (file_type == ECL_UNIFIED_SUMMARY_FILE))
+    return true;
+  else
+    return false;
+}
+
 
 bool ecl_util_fmt_file(const char *filename) {
   /*const int min_size = 32768;*/

@@ -2197,6 +2197,10 @@ int ecl_grid_get_ny( const ecl_grid_type * grid ) {
   return grid->ny;
 }
 
+int ecl_grid_get_nactive( const ecl_grid_type * grid ) {
+  return grid->total_active;
+}
+
 int ecl_grid_get_parent_cell1( const ecl_grid_type * grid , int global_index ) {
   return grid->cells[global_index]->host_cell;
 }
@@ -2660,7 +2664,7 @@ int ecl_grid_get_global_size( const ecl_grid_type * ecl_grid ) {
 }
 
 int ecl_grid_get_active_size( const ecl_grid_type * ecl_grid ) {
-  return ecl_grid->total_active;
+  return ecl_grid_get_nactive( ecl_grid );
 }
 
 double ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_index ) {

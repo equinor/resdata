@@ -7,28 +7,138 @@ extern "C" {
 
 /* 
    This header file contains names and indices of ECLIPSE keywords
-   which have special significance in various files; everything
-   related to the INTEHEAD keyword is in the ecl_intehead.h header
-   file.
+   which have special significance in various files. Observe that many
+   of the keywords like e.g. INTEHEAD occur in many different file
+   types, with partly overlapping layout and values.
+ */
+
+/*****************************************************************/
+/*                INIT files:                                    */
+/*****************************************************************/
+
+#define PORO_KW      "PORO"
+#define PORV_KW      "PORV"
+#define AQUIFER_KW   "AQUIFERN"
+#define INTEHEAD_KW  "INTEHEAD"
+#define LOGIHEAD_KW  "LOGIHEAD"
+#define DOUBHEAD_KW  "DOUBHEAD"
+#define RPORV_KW     "RPORV"
+#define PORV_KW      "PORV"
+#define PORMOD_KW    "PORV_MOD"  
+
+#define PVTNUM_KW    "PVTNUM"
+
+/* 
+   Observe that many of the elements in the INTEHEAD keyword is shared
+   between the restart and init files. The ones listed below here are
+   in both the INIT and the restart files. In addition the restart
+   files have many well related items which are only in the restart
+   files.
 */
+   
+     
+#define INTEHEAD_UNIT_INDEX     2   
+#define INTEHEAD_NX_INDEX       8   
+#define INTEHEAD_NY_INDEX       9   
+#define INTEHEAD_NZ_INDEX      10   
+#define INTEHEAD_NACTIVE_INDEX 11   
+#define INTEHEAD_PHASE_INDEX   14   
+#define INTEHEAD_DAY_INDEX     64   
+#define INTEHEAD_MONTH_INDEX   65   
+#define INTEHEAD_YEAR_INDEX    66   
+#define INTEHEAD_IPROG_INDEX   94   
+
+
+#define INTEHEAD_METRIC_VALUE              1
+#define INTEHEAD_ECLIPSE100_VALUE        100
+#define INTEHEAD_ECLIPSE300_VALUE        300    
+#define INTEHEAD_ECLIPSE300THERMAL_VALUE 500
+
+#define INTEHEAD_INIT_SIZE                95
+#define INTEHEAD_RESTART_SIZE             180
+
+#define LOGIHEAD_ECLIPSE300_RADIAL_INDEX   3
+#define LOGIHEAD_ECLIPSE100_RADIAL_INDEX   4
+#define LOGIHEAD_DUALP_INDEX              14
+#define LOGIHEAD_INIT_SIZE                80 
+#define LOGIHEAD_RESTART_SIZE             15
+
+
+#define LOGIHEAD_RS_INDEX                           0  
+#define LOGIHEAD_RV_INDEX                           1
+#define LOGIHEAD_DIR_RELPERM_INDEX                  2   
+/*-----------------------------------------------------------------*/
+#define LOGIHEAD_REV_RELPERM100_INDEX               3   /* The indices for reversible relperm and */
+#define LOGIHEAD_RADIAL100_INDEX                    4   /* use of radial grids is interchanged between */
+#define LOGIHEAD_REV_RELPERM300_INDEX               4   /* ECLIPSE100 and ECLIPSE300. */
+#define LOGIHEAD_RADIAL300_INDEX                    3   
+/*-----------------------------------------------------------------*/
+#define LOGIHEAD_HYSTERISIS_INDEX                   6
+#define LOGIHEAD_DUALP_INDEX                       14
+#define LOGIHEAD_ENDPOINT_SCALING_INDEX            16
+#define LOGIHEAD_DIR_ENDPOINT_SCALING_INDEX        17
+#define LOGIHEAD_REV_ENDPOINT_SCALING_INDEX        18
+#define LOGIHEAD_ALT_ENDPOINT_SCALING_INDEX        19
+#define LOGIHEAD_MISC_DISPLACEMENT_INDEX           35  
+#define LOGIHEAD_SCALE_WATER_PC_AT_MAX_SAT_INDEX   55
+#define LOGIHEAD_SCALE_GAS_PC_AT_MAX_SAT_INDEX     56
+
+
+
+
+#define DOUBHEAD_INIT_SIZE                 1
+#define DOUBHEAD_RESTART_SIZE              1
 
 
 /*****************************************************************/
-/*                INIT and RESTART files:                        */
+/*                RESTART files:                                 */
 /*****************************************************************/
 
 #define SEQNUM_KW    "SEQNUM"       /* Contains the report step as the only data; not
                                        present in non-unified files, where the report
                                        step must be inferred from the filename. */
-  
+#define STARTSOL_KW  "STARTSOL"
+#define ENDSOL_KW    "ENDSOL"  
 
 #define IWEL_KW      "IWEL"
 #define ZWEL_KW      "ZWEL"
 #define ICON_KW      "ICON"
 #define ISEG_KW      "ISEG"
 
-#define PORV_KW      "PORV"
-#define AQUIFER_KW   "AQUIFERN"
+#define ECLIPSE100_OIL_DEN_KW   "OIL_DEN"
+#define ECLIPSE100_GAS_DEN_KW   "GAS_DEN"
+#define ECLIPSE100_WATER_DEN_KW "WAT_DEN"
+
+#define ECLIPSE300_OIL_DEN_KW   "DENO"
+#define ECLIPSE300_GAS_DEN_KW   "DENG"
+#define ECLIPSE300_WATER_DEN_KW "DENW"
+
+#define FIPGAS_KW               "FIPGAS"
+#define FIPWAT_KW               "FIPWAT"
+#define FIPOIL_KW               "FIPOIL"     
+#define RFIPGAS_KW              "RFIPGAS"
+#define RFIPWAT_KW              "RFIPWAT"
+#define RFIPOIL_KW              "RFIPOIL"     
+
+  
+#define INTEHEAD_NWELLS_INDEX  16     // Number of wells
+#define INTEHEAD_NIWELZ_INDEX  24     // Number of elements pr. well in the IWEL array.
+#define INTEHEAD_NZWELZ_INDEX  27     // Number of 8 character words pr. well
+
+#define INTEHEAD_NCWMAX_INDEX  17     // Maximum number of completions per well
+#define INTEHEAD_NWGMAX_INDEX  19     // Maximum number of wells in any group
+#define INTEHEAD_NGMAXZ_INDEX  20     // Maximum number of groups in field
+#define INTEHEAD_NICONZ_INDEX  32     // Number of elements pr completion in the ICON arra.y
+#define INTEHEAD_NIGRPZ_INDEX  36     // Number of elements pr group in the IGRP array.
+
+#define INTEHEAD_NSWLMX_INDEX  175
+#define INTEHEAD_NSEGMX_INDEX  176
+#define INTEHEAD_NLBRMX_INDEX  177
+#define INTEHEAD_NISEGZ_INDEX  178
+#define INTEHEAD_NILBRZ_INDEX  180
+
+
+#define DOUBHEAD_DAYS_INDEX 0
 
 /*****************************************************************/
 /*                     Summary files                             */

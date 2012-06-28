@@ -122,6 +122,7 @@ extern "C" {
   bool ecl_kw_assert_numeric( const ecl_kw_type * kw );
   bool ecl_kw_assert_binary( const ecl_kw_type * kw1, const ecl_kw_type * kw2);
   
+  void ecl_kw_scalar_set_bool( ecl_kw_type * ecl_kw , bool bool_value);
   void ecl_kw_scalar_set__(ecl_kw_type * ecl_kw , const void * value);
   void ecl_kw_scalar_set_float_or_double( ecl_kw_type * ecl_kw , double value );
 #define ECL_KW_SCALAR_SET_TYPED_HEADER( ctype ) void ecl_kw_scalar_set_ ## ctype( ecl_kw_type * ecl_kw , ctype value);

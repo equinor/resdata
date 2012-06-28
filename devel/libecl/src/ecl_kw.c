@@ -1647,6 +1647,22 @@ ECL_KW_SCALAR_SET_TYPED( float , ECL_FLOAT_TYPE )
 ECL_KW_SCALAR_SET_TYPED( double , ECL_DOUBLE_TYPE )
 #undef ECL_KW_SCALAR_SET_TYPED
 
+void ecl_kw_scalar_set_bool( ecl_kw_type * ecl_kw , bool bool_value) {
+  if (ecl_kw_get_type(ecl_kw) != ECL_BOOL_TYPE)                                                                     
+    util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));        
+  {
+    int * data = ecl_kw_get_data_ref(ecl_kw);
+    int int_value;
+    if (bool_value)
+      int_value = ECL_BOOL_TRUE_INT;
+    else
+      int_value = ECL_BOOL_FALSE_INT;
+    
+    for (int i=0; i < ecl_kw->size; i++)
+      data[i] = int_value;
+  }
+}
+
 
 void ecl_kw_scalar_set_float_or_double( ecl_kw_type * ecl_kw , double value ) {
   ecl_type_enum ecl_type = ecl_kw_get_type(ecl_kw);

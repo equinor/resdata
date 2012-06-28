@@ -63,6 +63,8 @@ fwrite() from the standard library.
 #define WRITE_MODE_BINARY      "wb" 
 #define READ_WRITE_MODE_TXT    "r+"
 #define READ_WRITE_MODE_BINARY "r+b"
+#define APPEND_MODE_TXT        "a"
+#define APPEND_MODE_BINARY     "ab"  
 
 
 struct fortio_struct {
@@ -232,6 +234,18 @@ fortio_type * fortio_open_reader(const char *filename , bool fmt_file , bool end
   return fortio;
 }
 
+fortio_type * fortio_open_writer(const char *filename , bool fmt_file , bool endian_flip_header ) {
+  fortio_type *fortio = fortio_alloc__(filename , fmt_file , endian_flip_header);
+  
+  if (fmt_file)
+    fortio->stream = util_fopen(fortio->filename , WRITE_MODE_TXT);
+  else
+    fortio->stream = util_fopen(fortio->filename , WRITE_MODE_BINARY);
+  fortio->mode = FORTIO_WRITE;
+  
+  return fortio;
+}
+
 
 fortio_type * fortio_open_readwrite(const char *filename , bool fmt_file , bool endian_flip_header) {
   fortio_type *fortio = fortio_alloc__(filename , fmt_file , endian_flip_header);
@@ -246,15 +260,15 @@ fortio_type * fortio_open_readwrite(const char *filename , bool fmt_file , bool 
 }
 
 
-fortio_type * fortio_open_writer(const char *filename , bool fmt_file , bool endian_flip_header ) {
+fortio_type * fortio_open_append(const char *filename , bool fmt_file , bool endian_flip_header) {
   fortio_type *fortio = fortio_alloc__(filename , fmt_file , endian_flip_header);
-  
+
   if (fmt_file)
-    fortio->stream = util_fopen(fortio->filename , WRITE_MODE_TXT);
+    fortio->stream = util_fopen(fortio->filename , APPEND_MODE_TXT);
   else
-    fortio->stream = util_fopen(fortio->filename , WRITE_MODE_BINARY);
-  fortio->mode = FORTIO_WRITE;
-  
+    fortio->stream = util_fopen(fortio->filename , APPEND_MODE_BINARY);
+
+  fortio->mode =  FORTIO_WRITE;
   return fortio;
 }
 

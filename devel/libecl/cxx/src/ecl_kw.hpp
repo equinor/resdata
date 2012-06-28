@@ -1,3 +1,7 @@
+#ifndef __ECL_KW_HPP__
+#define __ECL_KW_HPP__
+#include <iostream>
+
 #include <ecl_util.h>
 #include <ecl_kw.h>
 
@@ -12,16 +16,21 @@ private:
   EclKW(ecl_kw_type * c_ptr , bool owner) {
     this->c_ptr = c_ptr;
     this->owner = owner;
+    std::cout << "Have created: " << ecl_kw_get_header( c_ptr ) << "\n";
   }
   
   
 public:
   ecl_kw_type  * C_PTR( ) { return c_ptr; } 
+
+  //EclKW( const std::string& name , size_t size , ecl_type_enum type , void * data = NULL);
     
   static EclKW create (const char * name ,  int size , ecl_type_enum type , void * data = NULL);
   static EclKW wrap   (ecl_kw_type * c_ptr , bool owner = false);
   static EclKW wrap_data(const char * name ,  int size , ecl_type_enum type, void * data);
-  
+
+
+  //EclKW( EclKW& src);
   ~EclKW();
   void  fwrite( FortIO& fortio );
 
@@ -45,4 +54,4 @@ public:
 
 };
 
-
+#endif

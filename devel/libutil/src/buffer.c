@@ -674,9 +674,9 @@ void buffer_summarize(const buffer_type * buffer , const char * header) {
   printf("-----------------------------------------------------------------\n");
   if (header != NULL)
     printf("%s \n",header);
-  printf("   Allocated size .....: %10d bytes \n",buffer->alloc_size);
-  printf("   Content size .......: %10d bytes \n",buffer->content_size);
-  printf("   Current position ...: %10d bytes \n",buffer->pos);
+  printf("   Allocated size .....: %zd10 bytes \n",buffer->alloc_size);
+  printf("   Content size .......: %zd10 bytes \n",buffer->content_size);
+  printf("   Current position ...: %zd10 bytes \n",buffer->pos);
   printf("-----------------------------------------------------------------\n");
 }
 

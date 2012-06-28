@@ -14,8 +14,8 @@ FortIO FortIO::reader( const char * filename , bool fmt_file , bool endian_flip_
 }
 
 
-FortIO FortIO::writer( const char * filename , bool fmt_file , bool endian_flip_header ) {
-  fortio_type * c_ptr = fortio_open_writer( filename  , fmt_file , endian_flip_header);
+FortIO FortIO::writer( const std::string & filename , bool fmt_file , bool endian_flip_header ) {
+  fortio_type * c_ptr = fortio_open_writer( filename.c_str()  , fmt_file , endian_flip_header);
   return FortIO( c_ptr );
 }
 

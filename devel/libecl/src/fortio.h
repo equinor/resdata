@@ -49,6 +49,7 @@ typedef struct fortio_struct fortio_type;
   fortio_type *      fortio_open_reader(const char *, bool fmt_file , bool endian_flip_header);
   fortio_type *      fortio_open_writer(const char *, bool fmt_file , bool endian_flip_header);
   fortio_type *      fortio_open_readwrite(const char *, bool fmt_file , bool endian_flip_header);
+  fortio_type *      fortio_open_append(const char *filename , bool fmt_file , bool endian_flip_header);
   void               fortio_free_FILE_wrapper(fortio_type *);
   void               fortio_fclose(fortio_type *);
   int                fortio_init_read(fortio_type *);

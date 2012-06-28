@@ -2600,7 +2600,7 @@ void util_unlink_existing(const char *filename) {
 
 
 bool util_fmt_bit8_stream(FILE * stream ) {
-  const int    min_read      = 256; /* Crirtically small */
+  const int    min_read      = 256; /* Critically small */
   const double bit8set_limit = 0.00001;
   const int    buffer_size   = 131072;
   long int start_pos         = ftell(stream);
@@ -2620,6 +2620,7 @@ bool util_fmt_bit8_stream(FILE * stream ) {
     
     
     free(buffer);
+  
     bit8set_fraction = 1.0 * N_bit8set / elm_read;
     if (bit8set_fraction < bit8set_limit) 
       fmt_file =  true;

@@ -19,7 +19,7 @@
 #include <util.h>
 #include <ecl_kw.h>
 #include <ecl_intehead.h>
-
+#include <ecl_kw_magic.h>
 
 static time_t intehead_date( int day , int month , int year) {
   return util_make_date( day , month, year );
@@ -41,7 +41,7 @@ ecl_intehead_type * ecl_intehead_alloc( const ecl_kw_type * intehead_kw ) {
   intehead->day       = data[INTEHEAD_DAY_INDEX];
   intehead->month     = data[INTEHEAD_MONTH_INDEX];
   intehead->year      = data[INTEHEAD_YEAR_INDEX];
-  intehead->version   = data[INTEHEAD_VERSION_INDEX];
+  intehead->version   = data[INTEHEAD_IPROG_INDEX];
   intehead->phase_sum = data[INTEHEAD_PHASE_INDEX];
 
   intehead->nx        = data[INTEHEAD_NX_INDEX];

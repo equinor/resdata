@@ -41,33 +41,7 @@
    exported). 
 */
 
-/**
-   The various #define symbols listed here are the names of the
-   keywords used for various things in the remaining part of the code;
-   they are typically used to look keywords from INIT or RESTART
-   files.
-*/
 
-#define RPORV_KW                "RPORV"
-#define PORV_KW                 "PORV"
-#define PORMOD_KW               "PORV_MOD"  
-
-#define ECLIPSE100_OIL_DEN_KW   "OIL_DEN"
-#define ECLIPSE100_GAS_DEN_KW   "GAS_DEN"
-#define ECLIPSE100_WATER_DEN_KW "WAT_DEN"
-
-#define ECLIPSE300_OIL_DEN_KW   "DENO"
-#define ECLIPSE300_GAS_DEN_KW   "DENG"
-#define ECLIPSE300_WATER_DEN_KW "DENW"
-
-#define PVTNUM_KW               "PVTNUM"
-
-#define FIPGAS_KW               "FIPGAS"
-#define FIPWAT_KW               "FIPWAT"
-#define FIPOIL_KW               "FIPOIL"     
-#define RFIPGAS_KW              "RFIPGAS"
-#define RFIPWAT_KW              "RFIPWAT"
-#define RFIPOIL_KW              "RFIPOIL"     
 
 
 #define GRAV_CALC_USE_PORV 128

@@ -19,7 +19,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <math.h>
 
 #include <util.h>
@@ -106,15 +105,6 @@ void timer_reset(timer_type *timer) {
 }
 
 
-static char *pad(const char *string , const char *padchar, size_t w , char *buffer) {
-  strcpy(buffer , string);
-  
-  while (strlen(buffer) < w) {
-    strcat(buffer , padchar);
-  };
-  
-  return buffer;
-}
 
 
 
@@ -123,62 +113,6 @@ void timer_stats(const timer_type *timer , double *mean, double *std_dev) {
   *mean    = timer->sum1 / timer->count;
   *std_dev = sqrt(timer->sum2 / timer->count - (*mean) * (*mean));
 }
-
-
-
-
-void timer_list_report(const timer_type **timer_list , int N , FILE *stream) {
-  double *perc_list;
-  double  total_time = 0;
-
-  size_t  max_width = 0;
-  size_t  total_width;
-  char *str_buffer;
-  size_t i;
-
-  perc_list  = util_malloc( N * sizeof * perc_list , __func__);
-  str_buffer = util_malloc( 128 , __func__);
-  
-  for (i=0; i < N; i++) {
-    total_time += timer_list[i]->sum1;
-    max_width = util_int_max(strlen(timer_list[i]->name) , max_width);
-  }
-  max_width += 3;
-  total_width = max_width + 102;
-
-  if (total_time > 0.0) {
-    for (i=0; i < N; i++)
-      perc_list[i] = timer_list[i]->sum1 * 100 / total_time;
-  } else {
-    for (i=0; i < N; i++)
-      perc_list[i] = -1;
-  }
-  
-
-  printf("%s" , pad("Timer name"," ",max_width,str_buffer));
-  printf("        Total time [sec]          Count           Avg. time [sec]        Min time [sec]  Max time[sec] \n");
-  printf("%s\n" , pad("","-",total_width,str_buffer));
-  for (i=0; i < N; i++) {
-    const timer_type *timer = timer_list[i];
-    double mean,std_dev;
-    printf("%s:   ", pad(timer->name,".", max_width,str_buffer));
-    timer_stats(timer , &mean , &std_dev);
-    printf("%8.4f  (%6.2f %%)  %10d          %10.8f +/- %10.8f       %10.8f %10.8f  \n",
-           timer->sum1,
-           perc_list[i],
-           timer->count,
-           mean,
-           std_dev,
-           timer->min_time,
-           timer->max_time);
-  }
-           
-  printf("%s\n" , pad("","-",total_width,str_buffer));
-  
-  free( perc_list );
-  free( str_buffer );
-}
-
 
 
 double timer_get_total_time(const timer_type *timer) {
@@ -197,19 +131,6 @@ double timer_get_min_time(const timer_type *timer) {
 
 double timer_get_avg_time(const timer_type *timer) {
   return timer->sum1 / timer->count;
-}
-
-
-
-void timer_report(const timer_type *timer , FILE *stream) {
-  if (timer->count > 0) {
-    double mean,std_dev;
-    timer_stats(timer , &mean , &std_dev);
-    fprintf(stream,"%s: %12.6f    %10d    %10.7f +/- %10.7f\n",timer->name,timer->sum1,timer->count,mean,std_dev);
-  } else {
-    fprintf(stderr,"No usage statistics collected for timer: %s  Aborting\n",timer->name);
-    abort();
-  }
 }
 
 

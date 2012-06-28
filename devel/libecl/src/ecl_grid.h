@@ -75,6 +75,7 @@ extern "C" {
   int             ecl_grid_get_nz( const ecl_grid_type * grid );
   int             ecl_grid_get_nx( const ecl_grid_type * grid );
   int             ecl_grid_get_ny( const ecl_grid_type * grid );
+  int             ecl_grid_get_nactive( const ecl_grid_type * grid );
   int             ecl_grid_get_active_index(const ecl_grid_type *  , int  , int  , int );
   void            ecl_grid_summarize(const ecl_grid_type * );
   void            ecl_grid_get_ijk1(const ecl_grid_type * , int global_index , int *, int * , int *);

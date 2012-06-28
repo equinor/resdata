@@ -949,11 +949,11 @@ void ecl_file_free__(void * arg) {
 
 ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file ) {
   ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( file , INTEHEAD_KW , 0 );
-  int int_value = ecl_kw_iget_int( intehead_kw , INTEHEAD_VERSION_INDEX );
+  int int_value = ecl_kw_iget_int( intehead_kw , INTEHEAD_IPROG_INDEX );
 
-  if (int_value == 100)
+  if (int_value == INTEHEAD_ECLIPSE100_VALUE)
     return ECLIPSE100;
-  else if ((int_value == 300) || (int_value == 500))
+  else if ((int_value == INTEHEAD_ECLIPSE300_VALUE) || (int_value == INTEHEAD_ECLIPSE300THERMAL_VALUE))
     return ECLIPSE300;
   else {
     util_abort("%s: ECLIPSE version value:%d not recognized \n",__func__ , int_value );
