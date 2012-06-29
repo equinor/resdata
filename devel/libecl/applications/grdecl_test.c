@@ -20,18 +20,23 @@
 #include <stdio.h>
 
 #include <util.h>
+#include <timer.h>
 
 #include <ecl_kw.h>
 
 
 int main(int argc , char ** argv) {
   FILE * stream = util_fopen( argv[1] , "r");
-
+  timer_type * timer = timer_alloc(false);
   {
     while (true) {
-      ecl_kw_type * grdecl_kw = ecl_kw_fscanf_alloc_current_grdecl( stream , ECL_FLOAT_TYPE );
+      ecl_kw_type * grdecl_kw;
+      timer_start( timer );
+      grdecl_kw = ecl_kw_fscanf_alloc_current_grdecl( stream , ECL_FLOAT_TYPE );
+      timer_stop( timer );
+
       if (grdecl_kw != NULL) {
-        printf("Loaded %s - %d elements \n", ecl_kw_get_header( grdecl_kw ) , ecl_kw_get_size( grdecl_kw ));
+        printf("Loaded %s - %d elements : %g \n", ecl_kw_get_header( grdecl_kw ) , ecl_kw_get_size( grdecl_kw ) , timer_get_total_time( timer ));
         ecl_kw_free( grdecl_kw );
       } else 
         break;

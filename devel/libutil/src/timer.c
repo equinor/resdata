@@ -25,7 +25,6 @@
 #include <timer.h>
 
 struct timer_struct {
-  char    *name;
   size_t   count;
 
   clock_t  clock_start;
@@ -37,10 +36,9 @@ struct timer_struct {
 
 
 
-timer_type * timer_alloc(const char *name, bool epoch_time) {
+timer_type * timer_alloc(bool epoch_time) {
   timer_type *timer;
   timer       = util_malloc(sizeof * timer , __func__);
-  timer->name = util_alloc_string_copy( name );
   
   timer->epoch_time = epoch_time;
   timer_reset(timer);
@@ -49,14 +47,13 @@ timer_type * timer_alloc(const char *name, bool epoch_time) {
 
 
 void timer_free(timer_type *timer) {
-  free(timer->name);
   free(timer);
 }
 
 
 void timer_start(timer_type *timer) {
   if (timer->running) 
-    util_abort("%s: Timer:%s already running. Use timer_stop() or timer_restart(). Aborting \n",__func__ , timer->name);
+    util_abort("%s: Timer already running. Use timer_stop() or timer_restart(). Aborting \n",__func__ );
   timer->running    = true;
 
   if (timer->epoch_time)
@@ -88,7 +85,7 @@ double timer_stop(timer_type *timer) {
 
     return cpu_sec;
   } else 
-    util_abort("%s: Timer:%s is not running. Aborting \n",__func__ , timer->name);
+    util_abort("%s: Timer is not running. Aborting \n",__func__ );
   
   return -1;
 }

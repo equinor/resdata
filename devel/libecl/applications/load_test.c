@@ -27,9 +27,9 @@
 
 
 void test_case( const char * base ) {
-  timer_type * ti = timer_alloc("INIT"    , false);
-  timer_type * tr = timer_alloc("RESTART" , false);
-  timer_type * tg = timer_alloc("GRID"    , false);
+  timer_type * ti = timer_alloc(false);
+  timer_type * tr = timer_alloc(false);
+  timer_type * tg = timer_alloc(false);
 
   char * grid_file    = ecl_util_alloc_filename( NULL , base , ECL_EGRID_FILE , false , 0 );
   char * init_file    = ecl_util_alloc_filename( NULL , base , ECL_INIT_FILE , false , 0 );

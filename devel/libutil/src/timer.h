@@ -25,12 +25,11 @@ extern "C" {
 
 #include <time.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 
 typedef struct timer_struct timer_type;
 
-  timer_type * timer_alloc(const char *, bool );
+  timer_type * timer_alloc( bool );
   void         timer_free(timer_type *);
   void         timer_start(timer_type *);
   double       timer_stop(timer_type *);
