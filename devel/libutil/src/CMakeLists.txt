@@ -60,8 +60,8 @@ endif()
 target_link_libraries( util_static m )
 target_link_libraries( util_shared m )
 
-set_target_properties( util_static PROPERTIES OUTPUT_NAME util ARCHIVE_OUTPUT_DIRECTORY /tmp/libutil)
-set_target_properties( util_shared PROPERTIES OUTPUT_NAME util LIBRARY_OUTPUT_DIRECTORY /tmp/libutil)
+set_target_properties( util_static PROPERTIES OUTPUT_NAME ert_util ARCHIVE_OUTPUT_DIRECTORY /tmp/libutil)
+set_target_properties( util_shared PROPERTIES OUTPUT_NAME ert_util LIBRARY_OUTPUT_DIRECTORY /tmp/libutil)
 
 #-----------------------------------------------------------------
 

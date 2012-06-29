@@ -10,9 +10,8 @@ from   global_config import get_target
 from   global_config import add_program
 
 bin_path = "../../bin"
-package  = "util"
 env      = Environment()
-conf     = global_config.get_conf(os.getcwd() , package , 3)
+conf     = global_config.get_conf(os.getcwd() , 3)
 conf.update_env( env , [ LIBUTIL ] , ext_liblist = ["pthread" , "m" , "z"] , link = True)
 
             
