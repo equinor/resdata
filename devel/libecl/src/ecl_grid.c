@@ -951,11 +951,18 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
 
 
   /*
+    If actnum == NULL that is taken to mean active.
+
     for normal runs actnum will be 1 for active cells,
     for dual porosity models it can also be 2 and 3.
   */
-  if (actnum[global_index] > 0)
+  if (actnum == NULL)
     cell->active = true;
+  else {
+    if (actnum[global_index] > 0)
+      cell->active = true;
+  }
+
   cell->valid_geometry = true;
 }
 
@@ -1346,7 +1353,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
                                                   const ecl_kw_type * gridhead_kw , 
                                                   const ecl_kw_type * zcorn_kw , 
                                                   const ecl_kw_type * coord_kw , 
-                                                  const ecl_kw_type * actnum_kw , 
+                                                  const ecl_kw_type * actnum_kw ,    /* Can be NULL */ 
                                                   const ecl_kw_type * mapaxes_kw ,   /* Can be NULL */
                                                   int grid_nr) {
   
@@ -1365,15 +1372,19 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
 
   {
     const float * mapaxes_data = NULL;
-
+    const int   * actnum_data  = NULL;
+    
     if (mapaxes_kw != NULL)
       mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw );
+
+    if (actnum_kw != NULL)
+      actnum_data = ecl_kw_get_int_ptr(actnum_kw);
     
     return ecl_grid_alloc_GRDECL_data__(global_grid , 
                                         nx , ny , nz , 
                                         ecl_kw_get_float_ptr(zcorn_kw) , 
                                         ecl_kw_get_float_ptr(coord_kw) , 
-                                        ecl_kw_get_int_ptr(actnum_kw) , 
+                                        actnum_data,
                                         mapaxes_data, 
                                         grid_nr);
   }
@@ -1446,8 +1457,12 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
   ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , GRIDHEAD_KW  , grid_nr);
   ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , ZCORN_KW     , grid_nr);
   ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , COORD_KW     , grid_nr);
-  ecl_kw_type * actnum_kw    = ecl_file_iget_named_kw( ecl_file , ACTNUM_KW    , grid_nr);
+  ecl_kw_type * actnum_kw    = NULL;
   ecl_kw_type * mapaxes_kw   = NULL; 
+
+  /** If ACTNUM is not present - that is is interpreted as - all active. */
+  if (ecl_file_get_num_named_kw(ecl_file , ACTNUM_KW) > grid_nr)
+    actnum_kw = ecl_file_iget_named_kw( ecl_file , ACTNUM_KW    , grid_nr);
   
   if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , MAPAXES_KW))) 
     mapaxes_kw   = ecl_file_iget_named_kw( ecl_file , MAPAXES_KW , grid_nr);
