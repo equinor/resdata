@@ -110,7 +110,11 @@ struct ecl_smspec_struct {
   hash_type          * block_var_index;            /* Block variables like BPR */ 
   hash_type          * gen_var_index;              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
 
+
+  
   smspec_node_type ** smspec_node_list;          /* This is the storage of smspec_node instances. */
+  int                 nodes;                     /* The number of elements in the smspec_node_list vector. */
+  int                 node_alloc_size;           /* Internal variable - just holding the number of currently allocated nodes in smspec_node_list. */
 
   /*-----------------------------------------------------------------*/
 
@@ -241,6 +245,10 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   ecl_smspec->key_join_string                = util_alloc_string_copy( key_join_string );
   ecl_smspec->header_file                    = NULL;
 
+  ecl_smspec->smspec_node_list               = NULL;
+  ecl_smspec->nodes                          = 0;
+  ecl_smspec->node_alloc_size                = 0;  
+  
   ecl_smspec->time_index  = -1;
   ecl_smspec->day_index   = -1;
   ecl_smspec->year_index  = -1;
@@ -689,6 +697,21 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 }
 
 
+void ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node) {
+  
+}
+
+
+static void ecl_smspec_resize_node_list( ecl_smspec_type * ecl_smspec , int alloc_size ) {
+  ecl_smspec->smspec_node_list  = util_realloc( ecl_smspec->smspec_node_list , alloc_size * sizeof * ecl_smspec->smspec_node_list  ,  __func__);
+  {
+    for (int i=ecl_smspec->node_alloc_size; i < alloc_size; i++)
+      ecl_smspec->smspec_node_list[i] = NULL;
+  }
+  ecl_smspec->node_alloc_size   = alloc_size;
+}
+
+
 
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file , bool include_restart) {
   ecl_file_type * header = ecl_file_open( header_file );
@@ -730,7 +753,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_smspec->grid_ny           = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NY_INDEX );
     ecl_smspec->grid_nz           = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NZ_INDEX );
     ecl_smspec->params_size       = ecl_kw_get_size(keywords);
-    ecl_smspec->smspec_node_list = util_malloc( ecl_smspec->params_size * sizeof * ecl_smspec->smspec_node_list  ,  __func__);
+    ecl_smspec_resize_node_list( ecl_smspec , ecl_smspec->params_size );
     ecl_util_get_file_type( header_file , &ecl_smspec->formatted , NULL );
     
     {
@@ -1280,8 +1303,11 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   free(ecl_smspec->key_join_string);
   {
     int index;
-    for (index = 0; index < ecl_smspec->params_size; index++) 
-      smspec_node_free( ecl_smspec->smspec_node_list[ index ] );
+    for (index = 0; index < ecl_smspec->node_alloc_size; index++) {
+      smspec_node_type * index_node = ecl_smspec->smspec_node_list[ index ];
+      if (index_node != NULL)
+        smspec_node_free( ecl_smspec->smspec_node_list[ index ] );
+    }
     free( ecl_smspec->smspec_node_list );
   }
   stringlist_free( ecl_smspec->restart_list );

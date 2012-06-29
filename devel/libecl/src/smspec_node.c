@@ -56,7 +56,7 @@ struct smspec_node_struct {
   int                    num;                /* The value of the NUMS vector for this elements - NB this will have the value SMSPEC_NUMS_INVALID if the smspec file does not have a NUMS vector. */
   bool                   rate_variable;      /* Is this a rate variable (i.e. WOPR) or a state variable (i.e. BPR). Relevant when doing time interpolation. */
   bool                   total_variable;     /* Is this a total variable like WOPT? */
-  int                    index;              /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
+  int                    params_index;       /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
   char                 * lgr_name;           /* The lgr name of the current variable - will be NULL for non-lgr variables. */
   int                  * lgr_ijk;            /* The (i,j,k) coordinate, in the local grid, if this is a LGR variable. WIll be NULL for no-lgr variables. */
 };
@@ -195,18 +195,18 @@ char * smspec_alloc_local_completion_key( const char * join_string, const char *
 smspec_node_type * smspec_node_alloc_empty(ecl_smspec_var_type var_type, const char * keyword , const char * unit , int param_index) {
   smspec_node_type * index = util_malloc( sizeof * index , __func__);
   /** These can stay with values NULL / SMSPEC_NUMS_INVALID for variables where those fields are not accessed. */
-  index->wgname      = NULL;
-  index->num         = SMSPEC_NUMS_INVALID;
+  index->wgname       = NULL;
+  index->num          = SMSPEC_NUMS_INVALID;
 
-  index->gen_key     = NULL;
+  index->gen_key      = NULL;
 
   /** All smspec_node instances should have valid values of these fields. */
-  index->var_type    = var_type;
-  index->unit        = util_alloc_string_copy( unit );
-  index->keyword     = util_alloc_string_copy( keyword );
-  index->index       = param_index;
-  index->lgr_name    = NULL;
-  index->lgr_ijk     = NULL;
+  index->var_type     = var_type;
+  index->unit         = util_alloc_string_copy( unit );
+  index->keyword      = util_alloc_string_copy( keyword );
+  index->params_index = param_index;
+  index->lgr_name     = NULL;
+  index->lgr_ijk      = NULL;
   return index;
 }
 
@@ -487,21 +487,19 @@ smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
 
 
 void smspec_node_free( smspec_node_type * index ) {
-  if (index != NULL) {
-    free( index->unit );
-    free( index->keyword );
-    util_safe_free( index->gen_key );
-    util_safe_free( index->wgname );
-    util_safe_free( index->lgr_name );
-    util_safe_free( index->lgr_ijk );
-    free( index );
-  }
+  free( index->unit );
+  free( index->keyword );
+  util_safe_free( index->gen_key );
+  util_safe_free( index->wgname );
+  util_safe_free( index->lgr_name );
+  util_safe_free( index->lgr_ijk );
+  free( index );
 }
 
 /*****************************************************************/
 
 int smspec_node_get_index( const smspec_node_type * smspec_node ) {
-  return smspec_node->index;
+  return smspec_node->params_index;
 }
 
 const char * smspec_node_get_gen_key( const smspec_node_type * smspec_node) {
