@@ -244,7 +244,7 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
   ecl_smspec->simulation_case                = util_alloc_filename(path , base_name , NULL);
   ecl_smspec->key_join_string                = util_alloc_string_copy( key_join_string );
   ecl_smspec->header_file                    = NULL;
-
+  
   ecl_smspec->smspec_node_list               = NULL;
   ecl_smspec->nodes                          = 0;
   ecl_smspec->node_alloc_size                = 0;  
