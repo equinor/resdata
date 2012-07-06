@@ -81,6 +81,7 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 #define COLUMNS_MESSAGE  1
 #define COLUMNS_BOOL    25
    
+#define ECL_KW_FORTIO_HEADER_SIZE  4 + ECL_STRING_LENGTH + 4 + ECL_TYPE_LENGTH + 4
 
 
 /*****************************************************************/
@@ -391,6 +392,32 @@ static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int s
 }
 
 
+static size_t ecl_kw_fortio_header_size( const ecl_kw_type * ecl_kw , bool fmt_file ) {
+  if (fmt_file) {
+    util_exit("%s: not implemented \n",__func__);
+    return 0;
+  } else 
+    return ECL_KW_FORTIO_HEADER_SIZE;
+}
+
+
+static size_t ecl_kw_fortio_data_size( const ecl_kw_type * ecl_kw , bool fmt_file ) {
+  if (fmt_file) {
+    util_exit("%s: not implemented \n",__func__);
+    return 0;
+  } else {
+    return 100;
+  }
+}
+
+
+
+
+size_t ecl_kw_fortio_size( const ecl_kw_type * ecl_kw , bool fmt_file) {
+  size_t size = ecl_kw_fortio_header_size( ecl_kw , fmt_file );
+  size += ecl_kw_fortio_data_size(ecl_kw , fmt_file );
+  return size;
+}
 
 
 /**

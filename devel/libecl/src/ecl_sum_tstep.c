@@ -1,7 +1,7 @@
  /*
    Copyright (C) 2012  Statoil ASA, Norway. 
     
-   The file 'ecl_sum_ministep.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'ecl_sum_tstep.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -21,13 +21,13 @@
 #include <util.h>
 #include <type_macros.h>
 
-#include <ecl_sum_ministep.h>
+#include <ecl_sum_tstep.h>
 #include <ecl_kw.h>
 #include <ecl_smspec.h>
 
-#define ECL_SUM_MINISTEP_ID 88631
+#define ECL_SUM_TSTEP_ID 88631
 
-struct ecl_sum_ministep_struct {
+struct ecl_sum_tstep_struct {
   UTIL_TYPE_ID_DECLARATION;
   float                  * data;            /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
   time_t                   sim_time;      
@@ -39,20 +39,20 @@ struct ecl_sum_ministep_struct {
 };
 
 
-UTIL_SAFE_CAST_FUNCTION( ecl_sum_ministep , ECL_SUM_MINISTEP_ID)
-UTIL_SAFE_CAST_FUNCTION_CONST( ecl_sum_ministep , ECL_SUM_MINISTEP_ID)
+UTIL_SAFE_CAST_FUNCTION( ecl_sum_tstep , ECL_SUM_TSTEP_ID)
+UTIL_SAFE_CAST_FUNCTION_CONST( ecl_sum_tstep , ECL_SUM_TSTEP_ID)
 
 
-void ecl_sum_ministep_free( ecl_sum_ministep_type * ministep ) {
+void ecl_sum_tstep_free( ecl_sum_tstep_type * ministep ) {
   free( ministep->data );
   free( ministep );
 }
 
 
 
- void ecl_sum_ministep_free__( void * __ministep) {
-  ecl_sum_ministep_type * ministep = ecl_sum_ministep_safe_cast( __ministep );
-  ecl_sum_ministep_free( ministep );
+ void ecl_sum_tstep_free__( void * __ministep) {
+  ecl_sum_tstep_type * ministep = ecl_sum_tstep_safe_cast( __ministep );
+  ecl_sum_tstep_free( ministep );
 }
 
 
@@ -63,7 +63,7 @@ void ecl_sum_ministep_free( ecl_sum_ministep_type * ministep ) {
 */
 
 
-ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr            ,
+ecl_sum_tstep_type * ecl_sum_tstep_alloc( int ministep_nr            ,
                                                 int report_step    ,
                                                 const ecl_kw_type * params_kw , 
                                                 const char * src_file , 
@@ -71,8 +71,8 @@ ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr            ,
   int data_size = ecl_kw_get_size( params_kw );
   
   if (data_size == ecl_smspec_get_param_size( smspec )) {
-    ecl_sum_ministep_type * ministep = util_malloc( sizeof * ministep , __func__);
-    UTIL_TYPE_ID_INIT( ministep , ECL_SUM_MINISTEP_ID);
+    ecl_sum_tstep_type * ministep = util_malloc( sizeof * ministep , __func__);
+    UTIL_TYPE_ID_INIT( ministep , ECL_SUM_TSTEP_ID);
     ministep->data        = ecl_kw_alloc_data_copy( params_kw );
     ministep->data_size   = data_size;
     
@@ -95,7 +95,7 @@ ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr            ,
 
 
 
-double ecl_sum_ministep_iget(const ecl_sum_ministep_type * ministep , int index) {
+double ecl_sum_tstep_iget(const ecl_sum_tstep_type * ministep , int index) {
   if ((index >= 0) && (index < ministep->data_size))
     return ministep->data[index];
   else {
@@ -105,20 +105,20 @@ double ecl_sum_ministep_iget(const ecl_sum_ministep_type * ministep , int index)
 }
 
 
-time_t ecl_sum_ministep_get_sim_time(const ecl_sum_ministep_type * ministep) {
+time_t ecl_sum_tstep_get_sim_time(const ecl_sum_tstep_type * ministep) {
   return ministep->sim_time;
 }
 
 
- double ecl_sum_ministep_get_sim_days(const ecl_sum_ministep_type * ministep) {
+ double ecl_sum_tstep_get_sim_days(const ecl_sum_tstep_type * ministep) {
   return ministep->sim_days;
 }
 
-int ecl_sum_ministep_get_report(const ecl_sum_ministep_type * ministep) {
+int ecl_sum_tstep_get_report(const ecl_sum_tstep_type * ministep) {
   return ministep->report_step;
 }
 
 
-int ecl_sum_ministep_get_ministep(const ecl_sum_ministep_type * ministep) {
+int ecl_sum_tstep_get_ministep(const ecl_sum_tstep_type * ministep) {
   return ministep->ministep;
 }
