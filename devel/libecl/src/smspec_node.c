@@ -27,6 +27,7 @@
 #include <vector.h>
 #include <int_vector.h>
 #include <stringlist.h>
+#include <type_macros.h>
 
 #include <ecl_kw.h>
 #include <ecl_util.h>
@@ -47,18 +48,23 @@
    probably the most important field.  
 */
 
+#define SMSPEC_TYPE_ID 61550451
+
+
 struct smspec_node_struct {
+  UTIL_TYPE_ID_DECLARATION;
+  char                 * gen_key;            /* The composite key, i.e. WWCT:OP3 for this element. */ 
   ecl_smspec_var_type    var_type;           /* The variable type */
   char                 * wgname;             /* The value of the WGNAMES vector for this element. */
   char                 * keyword;            /* The value of the KEYWORDS vector for this elements. */
   char                 * unit;               /* The value of the UNITS vector for this elements. */
-  char                 * gen_key;            /* The composite key, i.e. WWCT:OP3 for this element. */ 
   int                    num;                /* The value of the NUMS vector for this elements - NB this will have the value SMSPEC_NUMS_INVALID if the smspec file does not have a NUMS vector. */
+  char                 * lgr_name;           /* The lgr name of the current variable - will be NULL for non-lgr variables. */
+  int                  * lgr_ijk;            /* The (i,j,k) coordinate, in the local grid, if this is a LGR variable. WIll be NULL for no-lgr variables. */
   bool                   rate_variable;      /* Is this a rate variable (i.e. WOPR) or a state variable (i.e. BPR). Relevant when doing time interpolation. */
   bool                   total_variable;     /* Is this a total variable like WOPT? */
   int                    params_index;       /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
-  char                 * lgr_name;           /* The lgr name of the current variable - will be NULL for non-lgr variables. */
-  int                  * lgr_ijk;            /* The (i,j,k) coordinate, in the local grid, if this is a LGR variable. WIll be NULL for no-lgr variables. */
+  float                  default_value;      /* Default value for this variable. */
 };
 
 
@@ -83,6 +89,8 @@ struct smspec_node_struct {
 #define ECL_SUM_KEYFMT_REGION                 "%s%s%d"
 #define ECL_SUM_KEYFMT_SEGMENT                "%s%s%s%s%d"
 #define ECL_SUM_KEYFMT_LOCAL_WELL             "%s%s%s%s%s"
+
+UTIL_SAFE_CAST_FUNCTION( smspec_node , SMSPEC_TYPE_ID )
 
 
 char * smspec_alloc_block_ijk_key( const char * join_string , const char * keyword , int i , int j , int k) {
@@ -185,29 +193,81 @@ char * smspec_alloc_local_completion_key( const char * join_string, const char *
 /*****************************************************************/
 
 
+static smspec_node_set_flags( smspec_node_type * smspec_node) {
+  /* 
+     Check if this is a rate variabel - that info is used when
+     interpolating results to true_time between ministeps. 
+  */
+  {
+    const char *rate_vars[] = {"OPR" , "GPR" , "WPR" , "GOR" , "WCT"};
+    int num_rate_vars = sizeof( rate_vars ) / sizeof( rate_vars[0] );
+    bool  is_rate           = false;
+    int ivar;
+    for (ivar = 0; ivar < num_rate_vars; ivar++) {
+      const char * var_substring = &smspec_node->keyword[1];
+      if (util_string_equal( rate_vars[ivar] , var_substring)) {
+        is_rate = true;
+        break;
+      }
+    }
+    smspec_node->rate_variable = is_rate;
+  }
+  
+  /*
+    This code checks in a predefined list whether a certain WGNAMES
+    variable represents a total accumulated quantity. Only the last three
+    characters in the variable is considered (i.e. the leading 'W', 'G' or
+    'F' is discarded).
+    
+    The list below is all the keyowrds with 'Total' in the information from
+    the tables 2.7 - 2.11 in the ECLIPSE fileformat documentation.  Have
+    skipped some of the most exotic keywords (AND ALL THE HISTORICAL).
+  */
+  {
+    bool is_total = false;
+    if (smspec_node->var_type == ECL_SMSPEC_WELL_VAR || smspec_node->var_type == ECL_SMSPEC_GROUP_VAR || smspec_node->var_type == ECL_SMSPEC_FIELD_VAR) {
+      const char *total_vars[] = {"OPT"  , "GPT"  , "WPT" , "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" , "WIT" ,
+                                  "WVPT" , "WVIT" , "GMT"  , "GPTF" , "GIT"  , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" , 
+                                  "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" };
 
-/**
-   Implementation of the small smspec_node_type data type.
-*/
+      int num_total_vars = sizeof( total_vars ) / sizeof( total_vars[0] );
+      int ivar;
+      for (ivar = 0; ivar < num_total_vars; ivar++) {
+        const char * var_substring = &smspec_node->keyword[1];
+        if (util_string_equal( total_vars[ivar] , var_substring)) {
+          is_total = true;
+          break;
+        }
+      }
+    }
+    smspec_node->total_variable = is_total;
+  }
+}
 
 
 
-smspec_node_type * smspec_node_alloc_empty(ecl_smspec_var_type var_type, const char * keyword , const char * unit , int param_index) {
-  smspec_node_type * index = util_malloc( sizeof * index , __func__);
+static smspec_node_type * smspec_node_alloc_empty(ecl_smspec_var_type var_type, const char * keyword , const char * unit , int params_index, float default_value) {
+  smspec_node_type * node = util_malloc( sizeof * node , __func__);
+  
+  UTIL_TYPE_ID_INIT( node , SMSPEC_TYPE_ID);
   /** These can stay with values NULL / SMSPEC_NUMS_INVALID for variables where those fields are not accessed. */
-  index->wgname       = NULL;
-  index->num          = SMSPEC_NUMS_INVALID;
+  node->wgname        = NULL;
+  node->num           = SMSPEC_NUMS_INVALID;
 
-  index->gen_key      = NULL;
+  node->gen_key       = NULL;
+  node->params_index  = SMSPEC_PARAMS_INDEX_INVALID;
 
   /** All smspec_node instances should have valid values of these fields. */
-  index->var_type     = var_type;
-  index->unit         = util_alloc_string_copy( unit );
-  index->keyword      = util_alloc_string_copy( keyword );
-  index->params_index = param_index;
-  index->lgr_name     = NULL;
-  index->lgr_ijk      = NULL;
-  return index;
+  node->var_type      = var_type;
+  node->unit          = util_alloc_string_copy( unit );
+  node->keyword       = util_alloc_string_copy( keyword );
+  node->params_index  = params_index;
+  node->lgr_name      = NULL;
+  node->lgr_ijk       = NULL;
+  node->default_value = default_value;
+  
+  smspec_node_set_flags( node );
+  return node;
 }
 
 
@@ -316,51 +376,6 @@ void smspec_node_set_gen_key( smspec_node_type * smspec_node , const char * key_
 }
 
 
-void smspec_node_set_flags( smspec_node_type * smspec_node) {
-  /* 
-     Check if this is a rate variabel - that info is used when
-     interpolating results to true_time between ministeps. 
-  */
-  {
-    const char *rate_vars[5] = {"OPR" , "GPR" , "WPR" , "GOR" , "WCT"};
-    bool  is_rate            = false;
-    int ivar;
-    for (ivar = 0; ivar < 5; ivar++) {
-      if (util_string_equal( rate_vars[ivar] , &smspec_node->keyword[1])) {
-        is_rate = true;
-        break;
-      }
-    }
-    smspec_node->rate_variable = is_rate;
-  }
-  
-  /*
-    This code checks in a predefined list whether a certain WGNAMES
-    variable represents a total accumulated quantity. Only the last three
-    characters in the variable is considered (i.e. the leading 'W', 'G' or
-    'F' is discarded).
-    
-    The list below is all the keyowrds with 'Total' in the information from
-    the tables 2.7 - 2.11 in the ECLIPSE fileformat documentation.  Have
-    skipped some of the most exotic keywords (AND ALL THE HISTORICAL).
-  */
-  {
-    bool is_total = false;
-    if (smspec_node->var_type == ECL_SMSPEC_WELL_VAR || smspec_node->var_type == ECL_SMSPEC_GROUP_VAR || smspec_node->var_type == ECL_SMSPEC_FIELD_VAR) {
-      const char *total_vars[29] = {"OPT"  , "GPT"  , "WPT" , "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" , "WIT" ,
-                                    "WVPT" , "WVIT" , "GMT"  , "GPTF" , "GIT"  , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" , 
-                                    "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" };
-      int ivar;
-      for (ivar = 0; ivar < 29; ivar++) {
-        if (util_string_equal( total_vars[ivar] , &smspec_node->keyword[1])) {
-          is_total = true;
-          break;
-        }
-      }
-    }
-    smspec_node->total_variable = is_total;
-  }
-}
   
 /**
    This function will allocate a smspec_node instance, and initialize
@@ -377,61 +392,76 @@ void smspec_node_set_flags( smspec_node_type * smspec_node) {
 */
 
 
+smspec_node_type * smspec_alloc_well_var( const char * wgname , 
+                                          const char * keyword , 
+                                          const char * unit , 
+                                          const char * key_join_string , 
+                                          int param_index , 
+                                          float default_value) {
+
+  smspec_node_type * smspec_node = smspec_node_alloc_empty( ECL_SMSPEC_WELL_VAR , keyword , unit , param_index , default_value);
+  smspec_node_set_wgname( smspec_node , wgname );
+  
+  return smspec_node;
+}
+
+
+
  smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type , 
-                                               const char * wgname  , 
-                                               const char * keyword , 
-                                               const char * unit    , 
-                                               const char * key_join_string , 
-                                               int num , int index) {
+                                       const char * wgname  , 
+                                       const char * keyword , 
+                                       const char * unit    , 
+                                       const char * key_join_string , 
+                                       int num , int param_index, float default_value) {
   smspec_node_type * smspec_node = NULL;
   
   switch (var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
     /* Completion variable : WGNAME & NUM */
     if (!DUMMY_WELL(wgname)) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , index);
+      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_wgname( smspec_node , wgname );
       smspec_node_set_num( smspec_node , num );
     }
     break;
   case(ECL_SMSPEC_FIELD_VAR):
     /* Field variable : */
-    smspec_node = smspec_node_alloc_empty( var_type ,  keyword , unit , index);
+    smspec_node = smspec_node_alloc_empty( var_type ,  keyword , unit , param_index , default_value);
     break;
   case(ECL_SMSPEC_GROUP_VAR):
     /* Group variable : WGNAME */
     if (!DUMMY_WELL(wgname)) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , index);
+      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_wgname( smspec_node , wgname );
     }
     break;
   case(ECL_SMSPEC_WELL_VAR):
     /* Well variable : WGNAME */
     if (!DUMMY_WELL(wgname)) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , index);
+      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_wgname( smspec_node , wgname );
     }
     break;
   case(ECL_SMSPEC_SEGMENT_VAR):
     if (!DUMMY_WELL( wgname )) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , index);
+      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_wgname( smspec_node , wgname );
       smspec_node_set_num( smspec_node , num );
     }
     break;
   case(ECL_SMSPEC_REGION_VAR):
     /* Region variable : NUM */
-    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , index);
+    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
     smspec_node_set_num( smspec_node , num );
     break;
   case(ECL_SMSPEC_BLOCK_VAR):
     /* A block variable : NUM*/
-    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , index);
+    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
     smspec_node_set_num( smspec_node , num );
     break;
   case(ECL_SMSPEC_MISC_VAR):
     /* Misc variable : */
-    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , index);
+    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
     break;
   default:
     /* Lots of legitimate alternatives which are not handled .. */
@@ -439,39 +469,39 @@ void smspec_node_set_flags( smspec_node_type * smspec_node) {
   }
   
   
-  if (smspec_node != NULL) {
-    smspec_node_set_flags( smspec_node );
+  if (smspec_node != NULL) 
     smspec_node_set_gen_key( smspec_node , key_join_string );
-  }
+
   return smspec_node;
 }
 
 
 smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type , 
-                                            const char * wgname  , 
-                                            const char * keyword , 
-                                            const char * unit    , 
-                                            const char * lgr , 
-                                            const char * key_join_string , 
-                                            int   lgr_i, int lgr_j , int lgr_k,
-                                            int index) {
+                                          const char * wgname  , 
+                                          const char * keyword , 
+                                          const char * unit    , 
+                                          const char * lgr , 
+                                          const char * key_join_string , 
+                                          int   lgr_i, int lgr_j , int lgr_k,
+                                          int param_index , float default_value) {
+
   smspec_node_type * smspec_node = NULL;
   switch (var_type) {
   case(ECL_SMSPEC_LOCAL_WELL_VAR):
     if (!DUMMY_WELL(wgname)) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , index);
+      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_wgname( smspec_node , wgname );
       smspec_node_set_lgr_name( smspec_node , lgr );
     }
     break;
   case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
-    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , index);
+    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
     smspec_node_set_lgr_name( smspec_node , lgr );
     smspec_node_set_lgr_ijk( smspec_node , lgr_i, lgr_j , lgr_k );
     break;
   case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
     if (!DUMMY_WELL(wgname)) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , index);
+      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_lgr_name( smspec_node , lgr );
       smspec_node_set_wgname( smspec_node , wgname );
       smspec_node_set_lgr_ijk( smspec_node , lgr_i, lgr_j , lgr_k );
@@ -480,7 +510,6 @@ smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
   default:
     util_abort("%s: internal error:  in LGR function with  non-LGR keyword:%s \n",__func__ , keyword);
   }
-  smspec_node_set_flags( smspec_node );
   smspec_node_set_gen_key( smspec_node , key_join_string );
   return smspec_node;
 }
@@ -496,10 +525,21 @@ void smspec_node_free( smspec_node_type * index ) {
   free( index );
 }
 
+void smspec_node_free__( void * arg ) {
+  smspec_node_type * node = smspec_node_safe_cast( arg );
+  smspec_node_free( node );
+}
+
+
 /*****************************************************************/
 
-int smspec_node_get_index( const smspec_node_type * smspec_node ) {
+int smspec_node_get_params_index( const smspec_node_type * smspec_node ) {
   return smspec_node->params_index;
+}
+
+
+void smspec_node_set_params_index( smspec_node_type * smspec_node , int params_index) {
+  smspec_node->params_index = params_index;
 }
 
 const char * smspec_node_get_gen_key( const smspec_node_type * smspec_node) {
@@ -534,4 +574,9 @@ bool smspec_node_is_total( const smspec_node_type * smspec_node ){
 
 const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
   return smspec_node->unit;
+}
+
+
+float smspec_node_get_default_value( const smspec_node_type * smspec_node ) {
+  return smspec_node->default_value;
 }

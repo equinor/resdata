@@ -958,7 +958,7 @@ void plot_ensemble(const ens_type * ens , plot_type * plot , const char * user_k
     for (iens = 0; iens < ens_size; iens++) {
       plot_dataset_type * plot_dataset = plot_alloc_new_dataset( plot , label , PLOT_XY );
       const ecl_sum_type * ecl_sum = vector_iget_const( ens->data , iens );
-      int param_index = ecl_sum_get_general_var_index( ecl_sum , user_key );
+      int param_index = ecl_sum_get_general_var_params_index( ecl_sum , user_key );
       int time_index;
 
       for (time_index = 0; time_index < ecl_sum_get_data_length( ecl_sum ); time_index++) {

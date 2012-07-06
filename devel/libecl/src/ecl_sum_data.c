@@ -1,4 +1,4 @@
-/*
+ /*
    Copyright (C) 2011  Statoil ASA, Norway. 
     
    The file 'ecl_sum_data.c' is part of ERT - Ensemble based Reservoir Tool. 
@@ -16,17 +16,22 @@
    for more details. 
 */
 
-#include <ecl_util.h>
-#include <util.h>
 #include <string.h>
+
+#include <util.h>
+#include <vector.h>
+#include <time_t_vector.h>
+#include <int_vector.h>
+#include <stringlist.h>
+
+#include <ecl_util.h>
 #include <ecl_smspec.h>
 #include <ecl_sum_data.h>
+#include <ecl_sum_ministep.h>
+#include <smspec_node.h>
 #include <ecl_kw.h>
-#include <vector.h>
 #include <ecl_file.h>
 #include <ecl_endian_flip.h>
-#include <time_t_vector.h>
-#include <stringlist.h>
 #include <ecl_kw_magic.h>
 
 /*
@@ -93,6 +98,10 @@
        use the last ministep in the block.
 
      * There is no BASE.SOOOO file
+     
+     * The report steps are halfopen intervals in the "wrong way":
+       (....]
+
 
 
 
@@ -111,7 +120,7 @@
    consisting of two reportsteps:
 
 
-   S0000                                          S0001                                          S0002
+                                                 S0001                                          S0002
    ||------|------|------------|------------------||----------------------|----------------------||
           M1     M2           M3                 M4                      M5                     M6     
    
@@ -192,25 +201,6 @@
 
 
 
-#include <int_vector.h>
-
-#define ECL_SUM_MINISTEP_ID 88631
-
-
-typedef struct ecl_sum_ministep_struct ecl_sum_ministep_type;
-
-
-struct ecl_sum_ministep_struct {
-  UTIL_TYPE_ID_DECLARATION;
-  float                  * data;            /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
-  time_t                   sim_time;      
-  int                      ministep;      
-  int                      report_step;
-  double                   sim_days;        /* Accumulated simulation time up to this ministep. */
-  int                      data_size;       /* Number of elements in data - only used for checking indices. */
-  int                      internal_index;  /* Used for lookups of the next / previous ministep based on an existing ministep. */
-};
-
 
 
 
@@ -232,80 +222,6 @@ struct ecl_sum_data_struct {
                                                       restarted cases; see doc in ecl_sum_data_append_ministep. */
 };
 
-
-static void ecl_sum_ministep_free( ecl_sum_ministep_type * ministep ) {
-  free( ministep->data );
-  free( ministep );
-}
-
-
-
-static UTIL_SAFE_CAST_FUNCTION( ecl_sum_ministep , ECL_SUM_MINISTEP_ID)
-static UTIL_SAFE_CAST_FUNCTION_CONST( ecl_sum_ministep , ECL_SUM_MINISTEP_ID)
-
-
-static void ecl_sum_ministep_free__( void * __ministep) {
-  ecl_sum_ministep_type * ministep = ecl_sum_ministep_safe_cast( __ministep );
-  ecl_sum_ministep_free( ministep );
-}
-
-
-
-/**
-   If the ecl_kw instance is in some way invalid (i.e. wrong size);
-   the function will return NULL:
-*/
-
-
-static ecl_sum_ministep_type * ecl_sum_ministep_alloc( int ministep_nr            ,
-                                                       int report_step    ,
-                                                       const ecl_kw_type * params_kw , 
-                                                       const char * src_file , 
-                                                       const ecl_smspec_type * smspec) {
-  int data_size = ecl_kw_get_size( params_kw );
-  
-  if (data_size == ecl_smspec_get_param_size( smspec )) {
-    ecl_sum_ministep_type * ministep = util_malloc( sizeof * ministep , __func__);
-    UTIL_TYPE_ID_INIT( ministep , ECL_SUM_MINISTEP_ID);
-    ministep->data        = ecl_kw_alloc_data_copy( params_kw );
-    ministep->data_size   = data_size;
-    
-    ministep->report_step = report_step;
-    ministep->ministep    = ministep_nr;
-    ecl_smspec_set_time_info( smspec , ministep->data , &ministep->sim_days , &ministep->sim_time);
-
-    return ministep;
-  } else {
-    /* 
-       This is actually a fatal error / bug; the difference in smspec
-       header structure should have been detected already in the
-       ecl_smspec_load_restart() function and the restart case
-       discarded.
-    */
-    fprintf(stderr , "** Warning size mismatch between timestep loaded from:%s and header:%s - timestep discarded.\n" , src_file , ecl_smspec_get_simulation_case( smspec ));
-    return NULL;
-  }
-}
-
-
-
-static double ecl_sum_ministep_iget(const ecl_sum_ministep_type * ministep , int index) {
-  if ((index >= 0) && (index < ministep->data_size))
-    return ministep->data[index];
-  else {
-    util_abort("%s: param index:%d invalid: Valid range: [0,%d) \n",__func__ , index , ministep->data_size);
-    return -1;
-  }
-}
-
-static time_t ecl_sum_ministep_get_sim_time(const ecl_sum_ministep_type * ministep) {
-  return ministep->sim_time;
-}
-
-
-static double ecl_sum_ministep_get_sim_days(const ecl_sum_ministep_type * ministep) {
-  return ministep->sim_days;
-}
 
 
 
@@ -478,18 +394,18 @@ static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data 
         
         if ((high_index - low_index) == 1) {
           /* Degenerate special case. */
-          if (sim_time < ministep->sim_time)
+          if (sim_time < ecl_sum_ministep_get_sim_time( ministep ))
             internal_index = low_index;
           else
             internal_index = high_index;
         } else {
-          if (sim_time > ministep->sim_time)    /*     Low-----Center---X---High */
+          if (sim_time > ecl_sum_ministep_get_sim_time( ministep ))    /*     Low-----Center---X---High */
             low_index = center_index;
           else {
             time_t prev_time = data_start_time;
             if (center_index > 0) {
               const ecl_sum_ministep_type * prev_step = ecl_sum_data_iget_ministep( data , center_index - 1  );
-              prev_time = prev_step->sim_time;
+              prev_time = ecl_sum_ministep_get_sim_time( prev_step );
             }
             
             if (prev_time < sim_time)
@@ -610,14 +526,13 @@ static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministe
     want to use only the data from simulation 2 in this period.
   */
 
-
-  if (data->__min_time == 0)
-    data->__min_time = ministep->sim_time;
-  else {
-    if (ministep->sim_time < data->__min_time)
-      data->__min_time = ministep->sim_time;
-  }
   
+  if (data->__min_time == 0)
+    data->__min_time = ecl_sum_ministep_get_sim_time( ministep );
+  else {
+    if (ecl_sum_ministep_get_sim_time( ministep ) < data->__min_time)
+      data->__min_time = ecl_sum_ministep_get_sim_time( ministep );
+  }
     
   vector_append_owned_ref( data->data , ministep , ecl_sum_ministep_free__);
 }
@@ -640,7 +555,7 @@ static void ecl_sum_data_new_ministep( ecl_sum_data_type * ecl_sum_data ,
                                      src_file , 
                                      smspec );
   if (ministep != NULL) {
-    if (load_end == 0 || (ministep->sim_time < load_end))
+    if (load_end == 0 || (ecl_sum_ministep_get_sim_time( ministep ) < load_end))
       ecl_sum_data_append_ministep( ecl_sum_data , ministep_nr , ministep );
     else 
       ecl_sum_ministep_free( ministep );
@@ -700,11 +615,14 @@ static int cmp_ministep( const void * arg1 , const void * arg2) {
   const ecl_sum_ministep_type * ministep1 = ecl_sum_ministep_safe_cast_const( arg1 );
   const ecl_sum_ministep_type * ministep2 = ecl_sum_ministep_safe_cast_const( arg2 );  
 
-  if (ministep1->sim_time < ministep2->sim_time)
+  time_t time1 = ecl_sum_ministep_get_sim_time( ministep1 );
+  time_t time2 = ecl_sum_ministep_get_sim_time( ministep2 );
+
+  if (time1 < time2)
     return -1;
-  else if (ministep1->sim_time == ministep2->sim_time) {
+  else if (time1 == time2)
     return 0;
-  } else
+  else
     return 1;
 }
 
@@ -726,8 +644,8 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
     const ecl_sum_ministep_type * first_ministep = ecl_sum_data_iget_ministep( sum_data , 0 );
     const ecl_sum_ministep_type * last_ministep  = vector_get_last_const( sum_data->data );
     
-    sum_data->first_ministep = first_ministep->ministep;
-    sum_data->last_ministep  = last_ministep->ministep;
+    sum_data->first_ministep = ecl_sum_ministep_get_ministep( first_ministep );
+    sum_data->last_ministep  = ecl_sum_ministep_get_ministep( last_ministep );
 
 
     /* 
@@ -738,10 +656,11 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
        will be a difference.
     */
     
-    sum_data->days_start      = first_ministep->sim_days;
-    sum_data->data_start_time = first_ministep->sim_time;
-    sum_data->sim_length      = last_ministep->sim_days;
-    sum_data->sim_end         = last_ministep->sim_time;
+    sum_data->days_start      = ecl_sum_ministep_get_sim_days( first_ministep );
+    sum_data->data_start_time = ecl_sum_ministep_get_sim_time( first_ministep );
+
+    sum_data->sim_length      = ecl_sum_ministep_get_sim_days( last_ministep );
+    sum_data->sim_end         = ecl_sum_ministep_get_sim_time( last_ministep );
   }
   
   
@@ -750,7 +669,7 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
     int internal_index;
     for (internal_index = 0; internal_index < vector_get_size( sum_data->data ); internal_index++) {
       const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( sum_data , internal_index  );
-        int report_step = ministep->report_step;
+      int report_step = ecl_sum_ministep_get_report(ministep);
         
         /* Indexing internal_index - report_step */
         {
@@ -819,18 +738,24 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
       }
     } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
       ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ));
-      int report_step = 0;
+      int report_step = 1;   /* <- ECLIPSE numbering - starting at 1. */
       while (true) {
-        if (ecl_file_select_smryblock( ecl_file , report_step )) {
-          ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file , data->smspec);
-          report_step++;
-        } else 
-          break;
+        /*
+          Observe that there is a number discrepancy between ECLIPSE
+          and the ecl_file_select_smryblock() function. ECLIPSE
+          starts counting report steps at 1; whereas the first
+          SEQHDR block in the unified summary file is block zero (in
+          ert counting). 
+        */
+        if (ecl_file_select_smryblock( ecl_file , report_step - 1)) {
+          ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file , data->smspec); 
+          report_step++; 
+        } else break; 
       }
-      ecl_file_close( ecl_file );
-    } else
-      util_abort("%s: invalid file type:%s  \n",__func__ , ecl_util_file_type_name( file_type ));
-  }
+      ecl_file_close( ecl_file ); 
+    } else 
+      util_abort("%s: invalid file type:%s \n",__func__ , ecl_util_file_type_name(file_type )); 
+  } 
 }
 
 
@@ -884,8 +809,8 @@ void ecl_sum_data_summarize(const ecl_sum_data_type * data , FILE * stream) {
     for (index = 0; index < vector_get_size( data->data ); index++) {
       const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , index );
       int day,month,year;
-      util_set_date_values( ministep->sim_time , &day, &month , &year);
-      fprintf(stream , "%04d          %6d               %02d/%02d/%4d           %7.2f \n", ministep->report_step , index , day,month,year, ministep->sim_days);
+      util_set_date_values( ecl_sum_ministep_get_sim_time( ministep ) , &day, &month , &year);
+      fprintf(stream , "%04d          %6d               %02d/%02d/%4d           %7.2f \n", ecl_sum_ministep_get_report( ministep ) , index , day,month,year, ecl_sum_ministep_get_sim_days( ministep ));
     }
   }
   fprintf(stream , "---------------------------------------------------------------\n");
@@ -966,7 +891,7 @@ int ecl_sum_data_iget_report_start( const ecl_sum_data_type * data , int report_
 int ecl_sum_data_iget_report_step(const ecl_sum_data_type * data , int internal_index) {
   {
     const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index );
-    return ministep->report_step;
+    return ecl_sum_ministep_get_report( ministep );
   }
 }
 
@@ -974,7 +899,7 @@ int ecl_sum_data_iget_report_step(const ecl_sum_data_type * data , int internal_
 int ecl_sum_data_iget_mini_step(const ecl_sum_data_type * data , int internal_index) {
   {
     const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index );
-    return ministep->ministep;
+    return ecl_sum_ministep_get_ministep( ministep );
   }
 }
 
@@ -989,8 +914,8 @@ int ecl_sum_data_iget_mini_step(const ecl_sum_data_type * data , int internal_in
 */
 
 
-double ecl_sum_data_iget( const ecl_sum_data_type * data , int internal_index , int params_index ) {
-  const ecl_sum_ministep_type * ministep_data = ecl_sum_data_iget_ministep( data , internal_index  );
+double ecl_sum_data_iget( const ecl_sum_data_type * data , int time_index , int params_index ) {
+  const ecl_sum_ministep_type * ministep_data = ecl_sum_data_iget_ministep( data , time_index  );
   return ecl_sum_ministep_iget( ministep_data , params_index);  
 }
 
@@ -1019,8 +944,9 @@ double ecl_sum_data_interp_get(const ecl_sum_data_type * data , int time_index1 
 
 
 
-double ecl_sum_data_get_from_sim_time( const ecl_sum_data_type * data , time_t sim_time , int params_index) {
-  if (ecl_smspec_is_rate( data->smspec , params_index)) {
+double ecl_sum_data_get_from_sim_time( const ecl_sum_data_type * data , time_t sim_time , const smspec_node_type * smspec_node) {
+  int params_index = smspec_node_get_params_index( smspec_node );
+  if (smspec_node_is_rate( smspec_node )) {
     int time_index = ecl_sum_data_get_index_from_sim_time( data , sim_time );
     return ecl_sum_data_iget( data , time_index , params_index);
   } else {
@@ -1035,16 +961,98 @@ double ecl_sum_data_get_from_sim_time( const ecl_sum_data_type * data , time_t s
 }
 
 
-double ecl_sum_data_get_from_sim_days( const ecl_sum_data_type * data , double sim_days , int params_index) {
+int ecl_sum_data_get_report_step_from_days(const ecl_sum_data_type * data , double sim_days) {
+  if ((sim_days < data->days_start) || (sim_days > data->sim_length))
+    return -1;
+  else {
+    int report_step = -1;
+
+    double_vector_type * days_map = double_vector_alloc( 0 , 0 );
+    int_vector_type    * report_map = int_vector_alloc( 0 , 0 );
+    
+    for (int i=1; i < int_vector_size( data->report_last_index ); i++) {
+      int ministep_index = int_vector_iget( data->report_last_index , i );
+      const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , ministep_index );
+      
+      double_vector_iset( days_map , i , ecl_sum_ministep_get_sim_days( ministep ));
+      int_vector_iset( report_map , i , ecl_sum_ministep_get_report( ministep ));
+    }
+    
+    {
+      /** Hmmmm - double == comparison ... */
+      int index = double_vector_index_sorted( days_map , sim_days );
+      
+      if (index >= 0)
+        report_step = int_vector_iget( report_map , index );
+    }
+    
+    int_vector_free( report_map );
+    double_vector_free( days_map );
+    return report_step;
+  }
+}
+
+/**
+   Will go through the data and find the report step which EXACTLY
+   matches the input sim_time. If no report step matches exactly the
+   function will return -1.  
+*/
+
+
+int ecl_sum_data_get_report_step_from_time(const ecl_sum_data_type * data , time_t sim_time) {
+  if ((sim_time < data->data_start_time) || (sim_time > data->sim_end))
+    return -1;
+
+  {
+    int report_step = -1;
+
+    time_t_vector_type * time_map = time_t_vector_alloc( 0 , 0 );
+    int_vector_type    * report_map = int_vector_alloc( 0 , 0 );
+    
+    for (int i=1; i < int_vector_size( data->report_last_index ); i++) {
+      int ministep_index = int_vector_iget( data->report_last_index , i );
+      const ecl_sum_ministep_type * ministep = vector_iget_const( data->data , ministep_index );
+      
+      time_t_vector_iset( time_map , i , ecl_sum_ministep_get_sim_time( ministep ));
+      int_vector_iset( report_map , i , ecl_sum_ministep_get_report( ministep ));
+      
+    }
+    
+    {
+      int index = time_t_vector_index_sorted( time_map , sim_time );
+      
+      if (index >= 0)
+        report_step = int_vector_iget( report_map , index );
+    }
+    
+    int_vector_free( report_map );
+    time_t_vector_free( time_map );
+    return report_step;
+  }
+}
+
+
+double ecl_sum_data_get_from_sim_days( const ecl_sum_data_type * data , double sim_days , const smspec_node_type * smspec_node) {
   time_t sim_time = ecl_smspec_get_start_time( data->smspec );
   util_inplace_forward_days( &sim_time , sim_days );
-  return ecl_sum_data_get_from_sim_time( data , sim_time , params_index );
+  return ecl_sum_data_get_from_sim_time( data , sim_time , smspec_node );
 }
 
 
 time_t ecl_sum_data_iget_sim_time( const ecl_sum_data_type * data , int internal_index ) {
   const ecl_sum_ministep_type * ministep_data = ecl_sum_data_iget_ministep( data , internal_index  );
   return ecl_sum_ministep_get_sim_time( ministep_data );
+}
+
+
+time_t ecl_sum_data_get_report_time( const ecl_sum_data_type * data , int report_step) {
+  if (report_step == 0)
+    return ecl_smspec_get_start_time( data->smspec );
+  else {
+    int internal_index = ecl_sum_data_iget_report_end( data , report_step );
+    const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index );
+    return ecl_sum_ministep_get_sim_time( ministep );
+  }
 }
 
 
@@ -1085,13 +1093,13 @@ void ecl_sum_data_init_time_vector( const ecl_sum_data_type * data , time_t_vect
     for (report_step = data->first_report_step; report_step <= data->last_report_step; report_step++) {
       int last_index = int_vector_iget(data->report_last_index , report_step);
       const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , last_index );
-      time_t_vector_append( time_vector , ministep->sim_time );
+      time_t_vector_append( time_vector , ecl_sum_ministep_get_sim_time( ministep ) );
     }
   } else {
     int i;
     for (i = 0; i < vector_get_size(data->data); i++) {
       const ecl_sum_ministep_type * ministep = ecl_sum_data_iget_ministep( data , i  );
-      time_t_vector_append( time_vector , ministep->sim_time );
+      time_t_vector_append( time_vector , ecl_sum_ministep_get_sim_time( ministep ));
     }
   }
 }

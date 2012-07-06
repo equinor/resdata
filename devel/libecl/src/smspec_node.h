@@ -25,9 +25,27 @@
 #include <ecl_smspec.h>
 
 
+#define SMSPEC_PARAMS_INDEX_INVALID -77
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
+              ECL_SMSPEC_AQUIFER_VAR            =  1 ,   
+              ECL_SMSPEC_WELL_VAR               =  2 ,   /* X */
+              ECL_SMSPEC_REGION_VAR             =  3 ,   /* X */
+              ECL_SMSPEC_FIELD_VAR              =  4 ,   /* X */
+              ECL_SMSPEC_GROUP_VAR              =  5 ,   /* X */
+              ECL_SMSPEC_BLOCK_VAR              =  6 ,   /* X */
+              ECL_SMSPEC_COMPLETION_VAR         =  7 ,   /* X */ 
+              ECL_SMSPEC_LOCAL_BLOCK_VAR        =  8 ,   /* X */
+              ECL_SMSPEC_LOCAL_COMPLETION_VAR   =  9 ,   /* X */
+              ECL_SMSPEC_LOCAL_WELL_VAR         = 10 ,   /* X */
+              ECL_SMSPEC_NETWORK_VAR            = 11 ,
+              ECL_SMSPEC_REGION_2_REGION_VAR    = 12 ,
+              ECL_SMSPEC_SEGMENT_VAR            = 13 ,   /* X */ 
+              ECL_SMSPEC_MISC_VAR               = 14     /* X */}  ecl_smspec_var_type;
 
 
 #define SMSPEC_NUMS_INVALID   -991199
@@ -47,33 +65,29 @@ extern "C" {
   char * smspec_alloc_local_completion_key( const char * join_string, const char * keyword , const char * lgr_name , const char * wgname , int i , int j , int k);
 
 
-
   
-  smspec_node_type *  smspec_node_alloc_empty(ecl_smspec_var_type var_type, const char * keyword , const char * unit , int param_index);
-  void                smspec_node_set_wgname( smspec_node_type * index , const char * wgname );
-  void                smspec_node_set_lgr_name( smspec_node_type * index , const char * lgr_name );
-  void                smspec_node_set_num( smspec_node_type * index , int num);
-  void                smspec_node_set_gen_key( smspec_node_type * smspec_node , const char * key_join_string);
-  void                smspec_node_set_flags( smspec_node_type * smspec_node);
-
   smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type , 
-                                          const char * wgname  , 
-                                          const char * keyword , 
-                                          const char * unit    , 
-                                          const char * key_join_string , 
-                                          int num , int index);
+                                        const char * wgname  , 
+                                        const char * keyword , 
+                                        const char * unit    , 
+                                        const char * key_join_string , 
+                                        int num , int param_index, float default_value);
 
   smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type , 
-                                              const char * wgname  , 
-                                              const char * keyword , 
-                                              const char * unit    , 
-                                              const char * lgr , 
-                                              const char * key_join_string , 
-                                              int   lgr_i, int lgr_j , int lgr_k,
-                                              int index);
+                                            const char * wgname  , 
+                                            const char * keyword , 
+                                            const char * unit    , 
+                                            const char * lgr , 
+                                            const char * key_join_string , 
+                                            int   lgr_i, int lgr_j , int lgr_k,
+                                            int param_index, 
+                                            float default_value);
+
 
   void                smspec_node_free( smspec_node_type * index );
-  int                 smspec_node_get_index( const smspec_node_type * smspec_node );  
+  void                smspec_node_free__(void * arg);
+  void                smspec_node_set_params_index( smspec_node_type * smspec_node , int params_index);
+  int                 smspec_node_get_params_index( const smspec_node_type * smspec_node );  
   const char        * smspec_node_get_gen_key( const smspec_node_type * smspec_node);
   ecl_smspec_var_type smspec_node_get_var_type( const smspec_node_type * smspec_node);
   int                 smspec_node_get_num( const smspec_node_type * smspec_node);
@@ -82,7 +96,7 @@ extern "C" {
   const char        * smspec_node_get_unit( const smspec_node_type * smspec_node);
   bool                smspec_node_is_rate( const smspec_node_type * smspec_node );
   bool                smspec_node_is_total( const smspec_node_type * smspec_node );
-  
+  float               smspec_node_get_default_value( const smspec_node_type * smspec_node );
   
 #ifdef __cplusplus
 }
