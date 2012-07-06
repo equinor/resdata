@@ -146,14 +146,13 @@ typedef enum {
 #define ECL_COMMENT_CHAR         '-'   // Need to consecutive to make an ECLIPSE comment
 #define ECL_DATA_TERMINATION      "/"
 
-
+int              ecl_util_get_sizeof_ctype_fortio(ecl_type_enum ecl_type);
 int              ecl_util_get_sizeof_ctype(ecl_type_enum );
 ecl_type_enum    ecl_util_get_type_from_name( const char * type_name );
 const char     * ecl_util_get_type_name( ecl_type_enum ecl_type );
 
 /*****************************************************************/
 bool            ecl_util_unified_file(const char *filename);
-void            ecl_util_init_stdin(const char * , const char *);
 const char    * ecl_util_file_type_name( ecl_file_enum file_type );
 char          * ecl_util_alloc_base_guess(const char *);
 int             ecl_util_filename_report_nr(const char *);

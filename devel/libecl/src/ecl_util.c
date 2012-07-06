@@ -142,12 +142,25 @@ ecl_type_enum ecl_util_get_type_from_name( const char * type_name ) {
 }
 
 
+int ecl_util_get_sizeof_ctype_fortio(ecl_type_enum ecl_type) {
+  int size = ecl_util_get_sizeof_ctype ( ecl_type );
+  if (ecl_type == ECL_CHAR_TYPE)
+    size = ECL_STRING_LENGTH  * sizeof(char); 
+  
+  return size;
+}
 
 int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
   int sizeof_ctype = -1;
   switch (ecl_type) {
   case(ECL_CHAR_TYPE):
-    sizeof_ctype = (ECL_STRING_LENGTH + 1) * sizeof(char); /* One element of character data is a string section of 8 characters + \0. */
+    /* 
+       One element of character data is a string section of 8
+       characters + \0.  Observe that the return value here
+       corresponds to the size requirements of ECL_CHAR_TYPE instance
+       in memory; on disk the trailing \0 is not stored.
+    */
+    sizeof_ctype = (ECL_STRING_LENGTH + 1) * sizeof(char); 
     break;
   case(ECL_FLOAT_TYPE):
     sizeof_ctype = sizeof(float);
@@ -175,25 +188,6 @@ int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
 
 
 /*****************************************************************/
-/**
-   This little function writes the pathetic little file read by
-   ECLIPSE on startup. This is actually read from stdin, so on startup
-   of ECLIPSE stdin must be redirected to this file.
-*/
-   
-
-static void ecl_util_init_stdin__(const char * stdin_file , const char * ecl_base , int max_cpu_sec , int max_wall_sec) {
-  FILE * stream = util_fopen(stdin_file , "w");
-  fprintf(stream , "%s\n" , ecl_base);
-  fprintf(stream , "%s\n" , ecl_base);
-  fprintf(stream , "%d\n" , max_cpu_sec);
-  fprintf(stream , "%d\n\n" , max_wall_sec);
-  fclose(stream);
-}
-
-void ecl_util_init_stdin(const char * stdin_file, const char * ecl_base) {
-  ecl_util_init_stdin__(stdin_file , ecl_base , 10000000 , 99999999);  /* Default values applied at Hydro Sandsli. */ 
-}
 
 
 

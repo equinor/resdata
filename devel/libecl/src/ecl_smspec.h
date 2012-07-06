@@ -51,9 +51,10 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var);
   
   
-  ecl_smspec_type * ecl_smspec_fread_alloc(const char * , const char *, bool include_restart);
-  void              ecl_smspec_free( ecl_smspec_type *);
-  void              ecl_smspec_set_time_info( const ecl_smspec_type *  , const float *  , double *  , time_t * );
+  ecl_smspec_type *        ecl_smspec_fread_alloc(const char * , const char *, bool include_restart);
+  void                     ecl_smspec_free( ecl_smspec_type *);
+  void                     ecl_smspec_set_time_info( const ecl_smspec_type *  , const float *  , double *  , time_t * );
+
 
   const smspec_node_type * ecl_smspec_get_well_var_node( const ecl_smspec_type * smspec , const char * well , const char * var);
   int                      ecl_smspec_get_well_var_params_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var);

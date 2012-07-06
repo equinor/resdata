@@ -121,11 +121,11 @@ log_type *log_alloc_existing(const char *filename, int log_level) {
 
 
 
-static bool log_include_message(const log_type *logh, int message_level) {
-  if (message_level > logh->log_level)
-    return false;
-  else
+static bool log_include_message(const log_type *logh , int message_level) {
+  if (message_level <= logh->log_level)
     return true;
+  else
+    return false;
 }
 
 
@@ -178,6 +178,7 @@ void log_add_fmt_message(log_type * logh , int message_level , FILE * dup_stream
     va_start(ap , fmt);
     message = util_alloc_sprintf_va( fmt , ap );
     log_add_message( logh , message_level , dup_stream , message , true);
+    va_end(ap);
   }
 }
 

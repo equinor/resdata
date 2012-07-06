@@ -33,6 +33,10 @@ menu_item_type * menu_add_item(menu_type *, const char * , const char * , menu_f
 void             menu_add_separator(menu_type * );
 menu_item_type * menu_get_item(const menu_type * , char );
 void             menu_set_title(menu_type *, const char *);
+
 void             menu_item_set_label( menu_item_type * , const char *);
+void             menu_item_disable( menu_item_type * item );
+void             menu_item_enable( menu_item_type * item );
+
 
 #endif

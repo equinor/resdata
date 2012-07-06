@@ -111,6 +111,8 @@ struct ecl_smspec_struct {
 
 
   vector_type        * smspec_nodes;
+  bool                 write_mode;
+
   /*-----------------------------------------------------------------*/
 
   int               grid_nx , grid_ny , grid_nz;   /* Grid dimensions - in DIMENS[1,2,3] */
@@ -220,7 +222,7 @@ static const char* special_vars[] = {"NEWTON",
 
 /*****************************************************************/
 
-static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char * base_name, const char * key_join_string) {
+static ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * path , const char * base_name, const char * key_join_string) {
   ecl_smspec_type *ecl_smspec;
   ecl_smspec = util_malloc(sizeof *ecl_smspec , __func__);
   UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
@@ -250,6 +252,7 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(const char * path , const char *
 
   ecl_smspec->restart_list = stringlist_alloc_new();
   ecl_smspec->params_default = NULL;
+  ecl_smspec->write_mode = write_mode;
 
   return ecl_smspec;
 }
@@ -895,13 +898,18 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 
 
 
+ecl_smspec_type * ecl_smspec_alloc_writer() {
+  return NULL;
+}
+
+
 ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * key_join_string , bool include_restart) {
   ecl_smspec_type *ecl_smspec;
   
   {
     char * base_name , *path;
     util_alloc_file_components(header_file , &path , &base_name , NULL);
-    ecl_smspec = ecl_smspec_alloc_empty(path , base_name , key_join_string);
+    ecl_smspec = ecl_smspec_alloc_empty(false , path , base_name , key_join_string);
     util_safe_free(base_name);
     util_safe_free(path);
   }

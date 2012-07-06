@@ -34,7 +34,6 @@
 #define UTIL_NEWLINE_STRING "          \n"       
 #define UTIL_DEFAULT_MKDIR_MODE 0777         /* Directories are by default created with mode a+rwx - and then comes the umask ... */
 
-//#include "type_macros.h"
 
 #ifdef __cplusplus
 extern"C" {
@@ -205,7 +204,6 @@ typedef enum {left_pad   = 0,
   void         util_fread_dev_random(int , char * );
   void         util_fread_dev_urandom(int , char * );
   char *       util_alloc_string_copy(const char *);
-  void         util_enkf_unlink_ensfiles(const char *, const char *, int , bool );
   bool         util_string_isspace(const char * s);
   
   void    util_exit(const char * fmt , ...);

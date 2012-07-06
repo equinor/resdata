@@ -3251,108 +3251,6 @@ char * util_alloc_string_sum(const char ** string_list , int N) {
 }
 
 
-
-/*****************************************************************/
-
-
-typedef struct {
-  const char *filename;
-  int         num_offset;
-} filenr_type;
-
-
-static int enkf_filenr(filenr_type filenr) {
-  const char * num_string = &filenr.filename[filenr.num_offset];
-  return strtol(num_string , NULL , 10);
-}
-
-
-static int enkf_filenr_cmp(const void *_file1 , const void *_file2) {
-  const filenr_type  *file1 = (const filenr_type *) _file1;
-  const filenr_type  *file2 = (const filenr_type *) _file2;
-  
-  int nr1 = enkf_filenr(*file1);
-  int nr2 = enkf_filenr(*file2);
-  
-  if (nr1 < nr2)
-    return -1;
-  else if (nr1 > nr2)
-    return 1;
-  else
-    return 0;
-}
-
-
-void util_enkf_unlink_ensfiles(const char *enspath , const char *ensbase, int mod_keep , bool dryrun) {
-  DIR *dir_stream;
-  
-
-  if ( (dir_stream = opendir(enspath)) ) {
-    const int len_ensbase = strlen(ensbase);
-    const int num_offset  = len_ensbase + 1 + strlen(enspath);
-    filenr_type *fileList;
-    struct dirent *entry;
-
-    int first_file = 999999;
-    int last_file  = 0;
-    int filenr;
-    int files = 0;
-    
-    while ( (entry = readdir(dir_stream)) ) {
-      if (strncmp(ensbase , entry->d_name , len_ensbase) == 0)
-        files++;
-    }
-    if (files == 0) {
-      closedir(dir_stream);
-      fprintf(stderr,"%s: found no matching ensemble files \n",__func__);
-      return;
-    }
-    
-    fileList = util_malloc(files * sizeof *fileList , __func__);
-    
-    filenr = 0;
-    rewinddir(dir_stream);
-    while ( (entry = readdir(dir_stream)) ) {
-      if (strncmp(ensbase , entry->d_name , len_ensbase) == 0) {
-        fileList[filenr].filename   = util_alloc_filename(enspath , entry->d_name , NULL);
-        fileList[filenr].num_offset = num_offset;
-        {
-          int num = enkf_filenr(fileList[filenr]);
-          if (num < first_file) first_file = num;
-          if (num > last_file)  last_file  = num;
-        }
-        filenr++;
-      }
-    } 
-    closedir(dir_stream);
-    qsort(fileList , files , sizeof *fileList , enkf_filenr_cmp);
-
-    for (filenr = 0; filenr < files; filenr++) {
-      int num = enkf_filenr(fileList[filenr]);
-      bool delete_file = false;
-
-      if (num != first_file && num != last_file) 
-        if ( (num % mod_keep) != 0) 
-          delete_file = true;
-
-      if (delete_file) {
-        if (dryrun)
-          printf("    %s\n",fileList[filenr].filename);
-        else {
-          printf("Deleting: %s \n",fileList[filenr].filename);
-          remove(fileList[filenr].filename);
-        }
-      } 
-    }
-    for (filenr = 0; filenr < files; filenr++) 
-      free((char *) fileList[filenr].filename);
-    free(fileList);
-  } else 
-    util_abort("%s: failed to open directory: %s - aborting \n",__func__ , enspath);
-}
-
-
-
 /*****************************************************************/
 
 
@@ -4401,7 +4299,7 @@ char * util_alloc_sprintf_va(const char * fmt , va_list ap) {
   int length;
   va_list tmp_va;
   va_copy(tmp_va , ap);
-  length = vsnprintf(s , 0 , fmt , tmp_va);
+  length = vsnprintf(NULL , 0 , fmt , tmp_va);
   s = util_malloc(length + 1 , __func__);
   vsprintf(s , fmt , ap);
   return s;
@@ -4419,20 +4317,35 @@ char * util_alloc_sprintf(const char * fmt , ...) {
 
 
 
-
+/*
 char * util_realloc_sprintf(char * s , const char * fmt , ...) {
   va_list ap;
   va_start(ap , fmt);
+  printf("1: %s  s:%s / p:%p \n",__func__ , s , s );
   {
     int length;
     va_list tmp_va;
     va_copy(tmp_va , ap);
     length = vsnprintf(s , 0 , fmt , tmp_va);
     s = util_realloc(s , length + 1 , __func__);
+    printf("2: %s  s:%s / p:%p  length:%d\n",__func__ , s , s );
   }
   vsprintf(s , fmt , ap);
   va_end(ap);
   return s;
+}
+*/
+
+char * util_realloc_sprintf(char * s , const char * fmt , ...) {
+  char * new_s;
+  va_list ap;
+  va_start(ap , fmt);
+  
+  new_s = util_alloc_sprintf_va( fmt , ap );
+  util_safe_free(s);
+  
+  va_end(ap);
+  return new_s;
 }
 
 

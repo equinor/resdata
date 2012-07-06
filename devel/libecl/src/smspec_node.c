@@ -193,7 +193,7 @@ char * smspec_alloc_local_completion_key( const char * join_string, const char *
 /*****************************************************************/
 
 
-static smspec_node_set_flags( smspec_node_type * smspec_node) {
+static void smspec_node_set_flags( smspec_node_type * smspec_node) {
   /* 
      Check if this is a rate variabel - that info is used when
      interpolating results to true_time between ministeps. 

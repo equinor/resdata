@@ -398,6 +398,10 @@ void buffer_fskip_int(buffer_type * buffer) {
   buffer_fseek( buffer , sizeof( int ) , SEEK_CUR );
 }
 
+void buffer_fskip_long(buffer_type * buffer) {
+  buffer_fseek( buffer , sizeof( long ) , SEEK_CUR );
+}
+
 void buffer_fskip_bool(buffer_type * buffer) {
   buffer_fseek( buffer , sizeof( bool ) , SEEK_CUR );
 }

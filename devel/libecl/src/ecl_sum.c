@@ -90,8 +90,8 @@
 
 struct ecl_sum_struct {
   UTIL_TYPE_ID_DECLARATION;
-  ecl_smspec_type   * smspec;   /* Internalized version of the SMSPEC file. */
-  ecl_sum_data_type * data;     /* The data - can be NULL. */
+  ecl_smspec_type   * smspec;     /* Internalized version of the SMSPEC file. */
+  ecl_sum_data_type * data;       /* The data - can be NULL. */
 };
 
 
@@ -111,13 +111,20 @@ static void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , const stringlist
   ecl_sum->data   = ecl_sum_data_fread_alloc( ecl_sum->smspec , data_files , include_restart);
 }
 
-
-static ecl_sum_type * ecl_sum_fread_alloc__(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
+static ecl_sum_type * ecl_sum_alloc__( ) {
   ecl_sum_type *ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
   UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
+  return ecl_sum;
+}
+
+
+static ecl_sum_type * ecl_sum_fread_alloc__(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
+  ecl_sum_type * ecl_sum = ecl_sum_alloc__(  );
+  
   ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , key_join_string , include_restart);
   ecl_sum->data   = NULL;
   ecl_sum_fread_realloc_data(ecl_sum , data_files , include_restart);
+
   return ecl_sum;
 }
 
@@ -132,6 +139,10 @@ ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_ty
   return ecl_sum_fread_alloc__( header_file , data_files , key_join_string , false );
 }
 
+
+ecl_sum_type * ecl_sum_alloc_writer( const char * path , const char * base_name , bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , int nx , int ny , int nz) {
+  return NULL;
+}
 
 
 UTIL_SAFE_CAST_FUNCTION( ecl_sum , ECL_SUM_ID );

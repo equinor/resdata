@@ -406,7 +406,11 @@ static size_t ecl_kw_fortio_data_size( const ecl_kw_type * ecl_kw , bool fmt_fil
     util_exit("%s: not implemented \n",__func__);
     return 0;
   } else {
-    return 100;
+    const int blocksize  = get_blocksize( ecl_kw->ecl_type );
+    const int num_blocks = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
+    
+    return num_blocks * (4 + 4) +                                           // Fortran fluff
+      ecl_kw->size * ecl_util_get_sizeof_ctype_fortio( ecl_kw->ecl_type );  // Actual data
   }
 }
 

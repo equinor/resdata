@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+
 #include <util.h>
 #include <menu.h>
 #include <vector.h>
@@ -72,7 +73,10 @@ struct menu_item_struct {
   void           * arg;          /* The argument passed to func. */
   int              label_length; /* The length of the label - zero for separators. */
   arg_free_ftype * free_arg;     /* Destructor for the argument - will typically be NULL */
+  bool             enabled;
 };
+
+
 
 
 struct menu_struct {
@@ -152,7 +156,8 @@ static menu_item_type * menu_item_alloc_empty() {
   item->separator    = false;
   item->label_length = 0;
   item->free_arg = NULL;
-  
+  item->enabled  = true;
+
   return item;
 }
 
@@ -170,11 +175,34 @@ void menu_set_title(menu_type * menu, const char * title) {
 }
 
 
+void menu_item_disable( menu_item_type * item ) {
+  item->enabled = false;
+}
+
+void menu_item_enable( menu_item_type * item ) {
+  item->enabled = true;
+}
+
+char menu_item_get_key( const menu_item_type * item ) {
+  if (item->enabled)
+    return item->key_set[0];
+  else
+    return '-';
+}
+
+
+void menu_item_call( const menu_item_type * item ) {
+  if (item->enabled)
+    item->func(item->arg);
+}
+
+
 
 void menu_item_set_label(menu_item_type * item , const char * label) {
   item->label = util_realloc_string_copy(item->label , label);
   item->label_length = strlen(item->label);
 }
+
 /**
   Adds (appends) an item to the menu. 
 
@@ -277,7 +305,7 @@ static void menu_display(const menu_type * menu) {
     if (item->separator) 
       __print_sep(length + 6);
     else {
-      printf("| %c: ", item->key_set[0]);
+      printf("| %c: ", menu_item_get_key( item ));
       util_fprintf_string(item->label , length + 3 , right_pad , stdout);
       printf(" |\n");
     }
@@ -360,7 +388,7 @@ void menu_run(const menu_type * menu) {
         if (!item->separator) {
           if (strchr(item->key_set , cmd) != NULL) {
             /* Calling the function ... */
-            item->func(item->arg);
+            menu_item_call( item );
             break;
           }
         }
