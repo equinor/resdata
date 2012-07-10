@@ -391,35 +391,24 @@ static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int s
   ecl_kw->size = size;
 }
 
-
-static size_t ecl_kw_fortio_header_size( const ecl_kw_type * ecl_kw , bool fmt_file ) {
-  if (fmt_file) {
-    util_exit("%s: not implemented \n",__func__);
-    return 0;
-  } else 
-    return ECL_KW_FORTIO_HEADER_SIZE;
-}
-
-
-static size_t ecl_kw_fortio_data_size( const ecl_kw_type * ecl_kw , bool fmt_file ) {
-  if (fmt_file) {
-    util_exit("%s: not implemented \n",__func__);
-    return 0;
-  } else {
-    const int blocksize  = get_blocksize( ecl_kw->ecl_type );
-    const int num_blocks = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
+static size_t ecl_kw_fortio_data_size( const ecl_kw_type * ecl_kw) {
+  const int blocksize  = get_blocksize( ecl_kw->ecl_type );
+  const int num_blocks = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
     
-    return num_blocks * (4 + 4) +                                           // Fortran fluff
-      ecl_kw->size * ecl_util_get_sizeof_ctype_fortio( ecl_kw->ecl_type );  // Actual data
-  }
+  return num_blocks * (4 + 4) +                                           // Fortran fluff for each block
+    ecl_kw->size * ecl_util_get_sizeof_ctype_fortio( ecl_kw->ecl_type );  // Actual data
 }
 
 
 
+/**
+   Returns the number of bytes this ecl_kw instance would occupy in
+   BINARY file.  
+*/
 
-size_t ecl_kw_fortio_size( const ecl_kw_type * ecl_kw , bool fmt_file) {
-  size_t size = ecl_kw_fortio_header_size( ecl_kw , fmt_file );
-  size += ecl_kw_fortio_data_size(ecl_kw , fmt_file );
+size_t ecl_kw_fortio_size( const ecl_kw_type * ecl_kw ) {
+  size_t size = ECL_KW_FORTIO_HEADER_SIZE;
+  size += ecl_kw_fortio_data_size(ecl_kw );
   return size;
 }
 
@@ -697,8 +686,9 @@ void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s8) {
     for (i=string_length; i < ECL_STRING_LENGTH; i++)
       ecl_string[i] = ' ';
     
-    ecl_string[ ECL_STRING_LENGTH ] = '\0';
   }
+  
+  ecl_string[ ECL_STRING_LENGTH ] = '\0';
 }
 
 /**

@@ -25,11 +25,14 @@
 #include <ecl_smspec.h>
 
 
-#define SMSPEC_PARAMS_INDEX_INVALID -77
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define DUMMY_WELL ":+:+:+:+"
+#define IS_DUMMY_WELL(well) (strcmp((well) , DUMMY_WELL) == 0)
+#define SMSPEC_PARAMS_INDEX_INVALID -77
+
 
 typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
               ECL_SMSPEC_AQUIFER_VAR            =  1 ,   
@@ -96,7 +99,9 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   const char        * smspec_node_get_unit( const smspec_node_type * smspec_node);
   bool                smspec_node_is_rate( const smspec_node_type * smspec_node );
   bool                smspec_node_is_total( const smspec_node_type * smspec_node );
+  bool                smspec_node_need_nums( const smspec_node_type * smspec_node );
   float               smspec_node_get_default_value( const smspec_node_type * smspec_node );
+  void                smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream);
   
 #ifdef __cplusplus
 }

@@ -24,6 +24,7 @@
 #include <ecl_sum_tstep.h>
 #include <ecl_kw.h>
 #include <ecl_smspec.h>
+#include <ecl_kw_magic.h>
 
 #define ECL_SUM_TSTEP_ID 88631
 
@@ -50,7 +51,7 @@ void ecl_sum_tstep_free( ecl_sum_tstep_type * ministep ) {
 
 
 
- void ecl_sum_tstep_free__( void * __ministep) {
+void ecl_sum_tstep_free__( void * __ministep) {
   ecl_sum_tstep_type * ministep = ecl_sum_tstep_safe_cast( __ministep );
   ecl_sum_tstep_free( ministep );
 }
@@ -64,13 +65,14 @@ void ecl_sum_tstep_free( ecl_sum_tstep_type * ministep ) {
 
 
 ecl_sum_tstep_type * ecl_sum_tstep_alloc( int ministep_nr            ,
-                                                int report_step    ,
-                                                const ecl_kw_type * params_kw , 
-                                                const char * src_file , 
-                                                const ecl_smspec_type * smspec) {
+                                          int report_step    ,
+                                          const ecl_kw_type * params_kw , 
+                                          const char * src_file , 
+                                          const ecl_smspec_type * smspec) {
+
   int data_size = ecl_kw_get_size( params_kw );
   
-  if (data_size == ecl_smspec_get_param_size( smspec )) {
+  if (data_size == ecl_smspec_get_params_size( smspec )) {
     ecl_sum_tstep_type * ministep = util_malloc( sizeof * ministep , __func__);
     UTIL_TYPE_ID_INIT( ministep , ECL_SUM_TSTEP_ID);
     ministep->data        = ecl_kw_alloc_data_copy( params_kw );
@@ -88,7 +90,7 @@ ecl_sum_tstep_type * ecl_sum_tstep_alloc( int ministep_nr            ,
        ecl_smspec_load_restart() function and the restart case
        discarded.
     */
-    fprintf(stderr , "** Warning size mismatch between timestep loaded from:%s and header:%s - timestep discarded.\n" , src_file , ecl_smspec_get_simulation_case( smspec ));
+    fprintf(stderr , "** Warning size mismatch between timestep loaded from:%s and header:%s - timestep discarded.\n" , src_file , ecl_smspec_get_header_file( smspec ));
     return NULL;
   }
 }
@@ -122,3 +124,23 @@ int ecl_sum_tstep_get_report(const ecl_sum_tstep_type * ministep) {
 int ecl_sum_tstep_get_ministep(const ecl_sum_tstep_type * ministep) {
   return ministep->ministep;
 }
+
+
+/*****************************************************************/
+
+void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , fortio_type * fortio) {
+  {
+    ecl_kw_type * ministep_kw = ecl_kw_alloc( MINISTEP_KW , 1 , ECL_INT_TYPE );
+    ecl_kw_iset_int( ministep_kw , 0 , ministep->ministep );
+    ecl_kw_fwrite( ministep_kw , fortio );
+    ecl_kw_free( ministep_kw );
+  }
+
+  {
+    ecl_kw_type * params_kw = ecl_kw_alloc_new_shared( PARAMS_KW , ministep->data_size , ECL_FLOAT_TYPE , ministep->data);
+    ecl_kw_fwrite( params_kw , fortio );
+    ecl_kw_free( params_kw );
+  }
+  
+}
+

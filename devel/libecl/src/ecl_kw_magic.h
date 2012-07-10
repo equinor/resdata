@@ -145,6 +145,7 @@ extern "C" {
 /*****************************************************************/
 
 /* Summary header file */
+#define MINISTEP_KW  "MINISTEP"
 #define STARTDAT_KW  "STARTDAT"   /* Intgere keyword containing day,month,year. */
 #define WGNAMES_KW   "WGNAMES"    /* The names of wells/groups for the summary vectors. */
 #define KEYWORDS_KW  "KEYWORDS"   /* The variable type for the various summary vectors. */
@@ -161,15 +162,19 @@ extern "C" {
 #define STARTDAT_DAY_INDEX   0
 #define STARTDAT_MONTH_INDEX 1
 #define STARTDAT_YEAR_INDEX  2
+#define STARTDAT_SIZE        3
 
 
 /* Magic indices uset to locate the grid dimensions from the DIMENS
    keyword in the SMSPEC files. Observe that these magic indices
    differ from the magic indices used to look up grid dimensions from
    the DIMENS keyword in GRID files.  */
+#define DIMENS_SMSPEC_SIZE_INDEX      0
 #define DIMENS_SMSPEC_NX_INDEX 1
 #define DIMENS_SMSPEC_NY_INDEX 2
 #define DIMENS_SMSPEC_NZ_INDEX 3
+
+#define DIMENS_SIZE            6   // Do not know what the two last items are?
 
 
 /* Summary data files: */

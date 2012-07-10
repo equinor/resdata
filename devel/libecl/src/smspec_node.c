@@ -37,7 +37,6 @@
 #include <ecl_kw_magic.h>
 
 
-#define DUMMY_WELL(well) (strcmp((well) , ":+:+:+:+") == 0)
 
 
 /**
@@ -63,6 +62,7 @@ struct smspec_node_struct {
   int                  * lgr_ijk;            /* The (i,j,k) coordinate, in the local grid, if this is a LGR variable. WIll be NULL for no-lgr variables. */
   bool                   rate_variable;      /* Is this a rate variable (i.e. WOPR) or a state variable (i.e. BPR). Relevant when doing time interpolation. */
   bool                   total_variable;     /* Is this a total variable like WOPT? */
+  bool                   need_nums;          /* Do we use the NUMS vector - relevant for storing. */
   int                    params_index;       /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
   float                  default_value;      /* Default value for this variable. */
 };
@@ -242,6 +242,22 @@ static void smspec_node_set_flags( smspec_node_type * smspec_node) {
     }
     smspec_node->total_variable = is_total;
   }
+
+  /*
+    Check if this node needs the nums field; if at least one of the
+    nodes need the NUMS field must be stored when writing a SMSPEC
+    file. 
+  */
+  {
+    if (smspec_node->var_type == ECL_SMSPEC_COMPLETION_VAR || 
+        smspec_node->var_type == ECL_SMSPEC_SEGMENT_VAR || 
+        smspec_node->var_type == ECL_SMSPEC_REGION_VAR  ||
+        smspec_node->var_type == ECL_SMSPEC_BLOCK_VAR   ||
+        smspec_node->var_type == ECL_SMSPEC_AQUIFER_VAR) 
+      smspec_node->need_nums = true;
+    else
+      smspec_node->need_nums = false;
+  }
 }
 
 
@@ -270,12 +286,21 @@ static smspec_node_type * smspec_node_alloc_empty(ecl_smspec_var_type var_type, 
   return node;
 }
 
+/**
+   Observe that the wellname can have max 8 characters; anything
+   beyond that is silently dropped.  
+*/
 
 void smspec_node_set_wgname( smspec_node_type * index , const char * wgname ) {
-  if (DUMMY_WELL( wgname ))
-    util_abort("%s: trying to set/dereference WGNAME = %s which is invalid \n",__func__);
-  
-  index->wgname = util_realloc_string_copy(index->wgname , wgname );
+  if (wgname == NULL) {
+    util_safe_free( index->wgname );
+    index->wgname = NULL;
+  } else {
+    if (strlen(wgname) > 8) 
+      index->wgname = util_realloc_substring_copy(index->wgname , wgname , 8);
+    else
+      index->wgname = util_realloc_string_copy(index->wgname , wgname );
+  }
 }
 
 
@@ -418,7 +443,7 @@ smspec_node_type * smspec_alloc_well_var( const char * wgname ,
   switch (var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
     /* Completion variable : WGNAME & NUM */
-    if (!DUMMY_WELL(wgname)) {
+    if (!IS_DUMMY_WELL(wgname)) {
       smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_wgname( smspec_node , wgname );
       smspec_node_set_num( smspec_node , num );
@@ -430,20 +455,20 @@ smspec_node_type * smspec_alloc_well_var( const char * wgname ,
     break;
   case(ECL_SMSPEC_GROUP_VAR):
     /* Group variable : WGNAME */
-    if (!DUMMY_WELL(wgname)) {
+    if (!IS_DUMMY_WELL(wgname)) {
       smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_wgname( smspec_node , wgname );
     }
     break;
   case(ECL_SMSPEC_WELL_VAR):
     /* Well variable : WGNAME */
-    if (!DUMMY_WELL(wgname)) {
+    if (!IS_DUMMY_WELL(wgname)) {
       smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_wgname( smspec_node , wgname );
     }
     break;
   case(ECL_SMSPEC_SEGMENT_VAR):
-    if (!DUMMY_WELL( wgname )) {
+    if (!IS_DUMMY_WELL( wgname )) {
       smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_wgname( smspec_node , wgname );
       smspec_node_set_num( smspec_node , num );
@@ -488,7 +513,7 @@ smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
   smspec_node_type * smspec_node = NULL;
   switch (var_type) {
   case(ECL_SMSPEC_LOCAL_WELL_VAR):
-    if (!DUMMY_WELL(wgname)) {
+    if (!IS_DUMMY_WELL(wgname)) {
       smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_wgname( smspec_node , wgname );
       smspec_node_set_lgr_name( smspec_node , lgr );
@@ -500,7 +525,7 @@ smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
     smspec_node_set_lgr_ijk( smspec_node , lgr_i, lgr_j , lgr_k );
     break;
   case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
-    if (!DUMMY_WELL(wgname)) {
+    if (!IS_DUMMY_WELL(wgname)) {
       smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
       smspec_node_set_lgr_name( smspec_node , lgr );
       smspec_node_set_wgname( smspec_node , wgname );
@@ -532,6 +557,8 @@ void smspec_node_free__( void * arg ) {
 
 
 /*****************************************************************/
+
+
 
 int smspec_node_get_params_index( const smspec_node_type * smspec_node ) {
   return smspec_node->params_index;
@@ -579,4 +606,15 @@ const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
 
 float smspec_node_get_default_value( const smspec_node_type * smspec_node ) {
   return smspec_node->default_value;
+}
+
+
+bool smspec_node_need_nums( const smspec_node_type * smspec_node ) {
+  return smspec_node->need_nums;
+}
+
+void smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream) {
+  fprintf(stream, "KEYWORD: %s \n",smspec_node->keyword);
+  fprintf(stream, "WGNAME : %s \n",smspec_node->wgname);
+  fprintf(stream, "UNIT   : %s \n",smspec_node->unit);
 }

@@ -35,6 +35,7 @@
 #include <ecl_sum.h>
 #include <ecl_smspec.h>
 #include <ecl_sum_data.h>
+#include <smspec_node.h>
 
 
 /**
@@ -92,7 +93,18 @@ struct ecl_sum_struct {
   UTIL_TYPE_ID_DECLARATION;
   ecl_smspec_type   * smspec;     /* Internalized version of the SMSPEC file. */
   ecl_sum_data_type * data;       /* The data - can be NULL. */
+
+
+  bool                fmt_case;
+  bool                unified;
+  char              * ecl_case;   /* This is the current case, with optional path component. */
+  char              * key_join_string;
+  char              * path;       /* Can be NULL for CWD. */ 
 };
+
+
+UTIL_SAFE_CAST_FUNCTION( ecl_sum , ECL_SUM_ID );
+UTIL_IS_INSTANCE_FUNCTION( ecl_sum , ECL_SUM_ID );
 
 
 
@@ -104,49 +116,170 @@ struct ecl_sum_struct {
    The actual loading is implemented in the ecl_sum_data.c file.
 */
 
-
-static void ecl_sum_fread_realloc_data(ecl_sum_type * ecl_sum , const stringlist_type * data_files , bool include_restart) {
-  if (ecl_sum->data != NULL)
-    ecl_sum_free_data( ecl_sum );
-  ecl_sum->data   = ecl_sum_data_fread_alloc( ecl_sum->smspec , data_files , include_restart);
+void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
+  util_safe_free( ecl_sum->ecl_case );
+  util_safe_free( ecl_sum->path );
+  {
+    char * path , * base, *ext;
+  
+    util_alloc_file_components( ecl_case , &path , &base , &ext);
+    ecl_sum->ecl_case = util_alloc_string_copy( ecl_case );
+    ecl_sum->path     = util_alloc_string_copy( path );
+    
+    util_safe_free( base );
+    util_safe_free( path );
+    util_safe_free( ext );
+  }
 }
 
-static ecl_sum_type * ecl_sum_alloc__( ) {
+
+static ecl_sum_type * ecl_sum_alloc__( const char * input_arg , const char * key_join_string) {
   ecl_sum_type *ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
   UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
-  return ecl_sum;
-}
-
-
-static ecl_sum_type * ecl_sum_fread_alloc__(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
-  ecl_sum_type * ecl_sum = ecl_sum_alloc__(  );
   
-  ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , key_join_string , include_restart);
+  ecl_sum->ecl_case = NULL;
+  ecl_sum->path = NULL;
+  ecl_sum_set_case( ecl_sum , input_arg );
+  ecl_sum->key_join_string = util_alloc_string_copy( key_join_string );
+  
+  ecl_sum->smspec = NULL;
   ecl_sum->data   = NULL;
-  ecl_sum_fread_realloc_data(ecl_sum , data_files , include_restart);
 
   return ecl_sum;
 }
+
+
+static void ecl_sum_fread_data( ecl_sum_type * ecl_sum , const stringlist_type * data_files , bool include_restart) {
+  if (ecl_sum->data != NULL)
+    ecl_sum_free_data( ecl_sum );
+  ecl_sum->data = ecl_sum_data_alloc( ecl_sum->smspec );
+  ecl_sum_data_fread( ecl_sum->data , data_files );
+  
+  if (include_restart) {
+    const char * path                     = ecl_sum->path;
+    const stringlist_type * restart_cases = ecl_smspec_get_restart_list( ecl_sum->smspec );
+    stringlist_type       * restart_files = stringlist_alloc_new();
+    
+    int restart_nr;
+    for (restart_nr = 0; restart_nr < stringlist_get_size( restart_cases ); restart_nr++) {
+      ecl_util_alloc_summary_data_files(path , stringlist_iget( restart_cases , restart_nr ) , ecl_sum->fmt_case , restart_files );
+      ecl_sum_data_fread_restart( ecl_sum->data , restart_files );
+    }
+    stringlist_free( restart_files );
+  }
+
+}
+
+
+
+static void ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , const stringlist_type *data_files , bool include_restart) {
+  
+  ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , ecl_sum->key_join_string , include_restart);
+  ecl_sum_fread_data( ecl_sum , data_files , include_restart );
+  {
+    bool fmt_file;
+    ecl_file_enum file_type = ecl_util_get_file_type( stringlist_iget( data_files , 0 ) , &fmt_file , NULL);
+    
+    ecl_sum_set_fmt_output( ecl_sum , fmt_file );
+    
+    if (file_type == ECL_SUMMARY_FILE)
+      ecl_sum_set_unified( ecl_sum , false );
+    else if (file_type == ECL_UNIFIED_SUMMARY_FILE)
+      ecl_sum_set_unified( ecl_sum , true);
+    else
+      util_abort("%s: what the fuck? \n",__func__);
+    
+  }
+}
+
+
+static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart , const char * input_arg) {
+  char * header_file;
+  stringlist_type * summary_file_list = stringlist_alloc_new();
+
+  {
+    /* This is the second pass thorugh the input_arg dissecation ... */
+    char * path , * base, *ext;
+
+    util_alloc_file_components( input_arg , &path , &base , &ext);
+    ecl_util_alloc_summary_files( path , base , ext , &header_file , summary_file_list );
+
+    util_safe_free( base );
+    util_safe_free( path );
+    util_safe_free( ext );
+  }
+  {
+    bool caseOK = false;
+
+    if ((header_file != NULL) && (stringlist_get_size( summary_file_list ) > 0)) {
+      ecl_sum_fread( ecl_sum , header_file , summary_file_list , include_restart );
+      caseOK = true;
+    }
+    util_safe_free( header_file );
+    stringlist_free( summary_file_list );
+    
+    return caseOK;
+  }
+}
+  
 
 /**
    This will explicitly load the summary specified by @header_file and
    @data_files, i.e. if the case has been restarted from another case,
    it will NOT look for old summary information - that functionality
-   is only invoked when using ecl_sum_fread_alloc_case() function.
+   is only invoked when using ecl_sum_fread_alloc_case() function;
+   however the list of data_files could in principle be achieved by
+   initializing the data_files list with files from the restarted
+   case.
 */
-
+  
+  
 ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_type *data_files , const char * key_join_string) {
-  return ecl_sum_fread_alloc__( header_file , data_files , key_join_string , false );
+  ecl_sum_type * ecl_sum = ecl_sum_alloc__( header_file , key_join_string );
+  ecl_sum_fread( ecl_sum , header_file , data_files , false );
+  return ecl_sum;
+}
+
+/*****************************************************************/
+
+void ecl_sum_set_unified( ecl_sum_type * ecl_sum , bool unified ) {
+  ecl_sum->unified = unified;
 }
 
 
-ecl_sum_type * ecl_sum_alloc_writer( const char * path , const char * base_name , bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , int nx , int ny , int nz) {
-  return NULL;
+void ecl_sum_set_fmt_output( ecl_sum_type * ecl_sum , bool fmt_case ) {
+  ecl_sum->fmt_case = fmt_case;
 }
 
 
-UTIL_SAFE_CAST_FUNCTION( ecl_sum , ECL_SUM_ID );
-UTIL_IS_INSTANCE_FUNCTION( ecl_sum , ECL_SUM_ID );
+void ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , const char * unit , int num , float default_value) {
+  ecl_smspec_var_type var_type = ecl_smspec_identify_var_type( keyword );
+  smspec_node_type * smspec_node = smspec_node_alloc( var_type , wgname , keyword , unit , ecl_sum->key_join_string , num , -1 , default_value );
+  ecl_smspec_add_node( ecl_sum->smspec , smspec_node );
+}
+
+
+
+ecl_sum_type * ecl_sum_alloc_writer( const char * ecl_case , bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , int nx , int ny , int nz) {
+  ecl_sum_type * ecl_sum = ecl_sum_alloc__( ecl_case , key_join_string );
+  ecl_sum_set_unified( ecl_sum , unified );
+  ecl_sum_set_fmt_output( ecl_sum , fmt_output );
+
+  ecl_sum->smspec = ecl_smspec_alloc_writer( key_join_string , sim_start , nx , ny , nz );
+  ecl_sum->data = ecl_sum_data_alloc_writer( ecl_sum->smspec );
+  
+  return ecl_sum;
+}
+
+
+
+void ecl_sum_fwrite( const ecl_sum_type * ecl_sum ) {
+  ecl_smspec_fwrite( ecl_sum->smspec , ecl_sum->ecl_case , ecl_sum->fmt_case );
+}
+
+
+/*****************************************************************/
+
 
 /**
    This function frees the data from the ecl_sum instance and sets the
@@ -161,8 +294,15 @@ void ecl_sum_free_data( ecl_sum_type * ecl_sum ) {
 
 
 void ecl_sum_free( ecl_sum_type * ecl_sum ) {
-  ecl_sum_free_data( ecl_sum );
-  ecl_smspec_free( ecl_sum->smspec );
+  if (ecl_sum->data != NULL)
+    ecl_sum_free_data( ecl_sum );
+
+  if (ecl_sum->smspec != NULL)
+    ecl_smspec_free( ecl_sum->smspec );
+  
+  util_safe_free( ecl_sum->path );
+  free( ecl_sum->ecl_case );
+  free( ecl_sum->key_join_string );
   free( ecl_sum );
 }
 
@@ -196,33 +336,28 @@ void ecl_sum_free__(void * __ecl_sum) {
 */
 
 
+ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char * key_join_string , bool include_restart){
+  ecl_sum_type * ecl_sum     = ecl_sum_alloc__(input_file , key_join_string);
+  if (ecl_sum_fread_case( ecl_sum , include_restart , input_file))
+    return ecl_sum;
+  else {
+    /*
+      Loading a case failed - we discard the partly initialized
+      ecl_sum structure and jump ship.
+    */
+    ecl_sum_free( ecl_sum );
+    return NULL;
+  }
+}
+
+
+
 ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , const char * key_join_string){
   bool include_restart = true;
   return ecl_sum_fread_alloc_case__( input_file , key_join_string , include_restart );
 }
 
 
-ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char * key_join_string , bool include_restart){
-  ecl_sum_type * ecl_sum     = NULL;
-  char * path , * base, *ext;
-  char * header_file;
-  stringlist_type * summary_file_list = stringlist_alloc_new();
-
-  util_alloc_file_components( input_file , &path , &base , &ext);
-  
-  
-  /* Should add ext to the base if ext does not represent a valid ECLIPSE extension ?? */
-  if (ecl_util_alloc_summary_files( path , base , ext , &header_file , summary_file_list ))
-    ecl_sum = ecl_sum_fread_alloc__( header_file , summary_file_list , key_join_string , include_restart);
-
-  util_safe_free( base );
-  util_safe_free( path );
-  util_safe_free( ext );
-  util_safe_free( header_file );
-  stringlist_free( summary_file_list );
-
-  return ecl_sum;
-}
 /*****************************************************************/
 
 double ecl_sum_get_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const smspec_node_type * node) {
@@ -741,7 +876,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const string
 
 
 const char * ecl_sum_get_case(const ecl_sum_type * ecl_sum) {
-  return ecl_smspec_get_simulation_case( ecl_sum->smspec );
+  return ecl_sum->ecl_case;
 }
 
 

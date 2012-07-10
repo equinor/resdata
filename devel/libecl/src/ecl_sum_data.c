@@ -220,6 +220,7 @@ struct ecl_sum_data_struct {
   int                      last_report_step;
   time_t                   __min_time;             /* An internal member used during the load of 
                                                       restarted cases; see doc in ecl_sum_data_append_ministep. */
+  bool                     index_valid;
 };
 
 
@@ -254,11 +255,11 @@ static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
   data->sim_length            = -1;
   data->first_ministep        = -1;
   data->last_ministep         = -1;  
-
+  data->index_valid           = false;
 }
 
 
-static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
+ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
   ecl_sum_data_type * data = util_malloc( sizeof * data , __func__);
   data->data        = vector_alloc_new();
   data->smspec      = smspec;
@@ -269,9 +270,17 @@ static ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
   
 
   ecl_sum_data_clear_index( data );
-
   return data;
 }
+
+
+ecl_sum_data_type * ecl_sum_data_alloc_writer( const ecl_smspec_type * smspec ) {
+  ecl_sum_data_type * data = ecl_sum_data_alloc( smspec );
+  return data;
+}
+
+
+
 
 
 time_t ecl_sum_data_get_sim_end   (const ecl_sum_data_type * data ) { return data->sim_end; }
@@ -523,9 +532,11 @@ static void ecl_sum_data_append_ministep( ecl_sum_data_type * data , int ministe
 
 
     In the time interval [TR,T2] we have data from two simulations, we
-    want to use only the data from simulation 2 in this period.
+    want to use only the data from simulation 2 in this period. The
+    decision whether to to actually append the ministep or not must
+    have been performed by the scope calling this function; when a
+    ministep has arrived here it will be added.
   */
-
   
   if (data->__min_time == 0)
     data->__min_time = ecl_sum_tstep_get_sim_time( ministep );
@@ -638,7 +649,6 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
   vector_sort( sum_data->data , cmp_ministep );
 
   
-  
   /* Identify various global first and last values.  */
   {
     const ecl_sum_tstep_type * first_ministep = ecl_sum_data_iget_ministep( sum_data , 0 );
@@ -694,6 +704,13 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
         sum_data->last_report_step  = util_int_max( sum_data->last_report_step  , report_step );
     }
   }
+  sum_data->index_valid = true;
+}
+
+
+static void ecl_sum_data_ensure_index( ecl_sum_data_type * data ) {
+  if (!data->index_valid)
+    ecl_sum_data_build_index( data );
 }
 
 
@@ -756,12 +773,28 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
     } else 
       util_abort("%s: invalid file type:%s \n",__func__ , ecl_util_file_type_name(file_type )); 
   } 
+  ecl_sum_data_build_index( data );
 }
+
+void ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist) {
+  ecl_sum_data_fread__( data , 0 , filelist );
+}
+
 
 
 static time_t ecl_sum_data_get_load_end( const ecl_sum_data_type * data ) {
   return data->__min_time;
 }
+
+
+
+void ecl_sum_data_fread_restart( ecl_sum_data_type * data , const stringlist_type * filelist) {
+  time_t load_end = ecl_sum_data_get_load_end( data );
+  ecl_sum_data_fread__( data , load_end , filelist );
+}
+
+
+
 
 
 /**
@@ -773,24 +806,9 @@ static time_t ecl_sum_data_get_load_end( const ecl_sum_data_type * data ) {
 */
 
 ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , const stringlist_type * filelist , bool include_restart) {
-  ecl_sum_data_type * data = ecl_sum_data_alloc(smspec);
+  ecl_sum_data_type * data = ecl_sum_data_alloc( smspec );
   ecl_sum_data_fread__( data , 0 , filelist );
 
-  if (include_restart) {
-    const char * path                     = ecl_smspec_get_simulation_path( smspec );
-    const stringlist_type * restart_cases = ecl_smspec_get_restart_list( smspec );
-    stringlist_type       * restart_files = stringlist_alloc_new();
-    bool fmt_file                         = ecl_smspec_get_formatted( smspec );    /* The restart cases must have the same formatted|unformatted 
-                                                                                      status as the current case. */
-    int restart_nr;
-    for (restart_nr = 0; restart_nr < stringlist_get_size( restart_cases ); restart_nr++) {
-      time_t load_end = ecl_sum_data_get_load_end( data );
-      ecl_util_alloc_summary_data_files(path , stringlist_iget( restart_cases , restart_nr ) , fmt_file , restart_files );
-      ecl_sum_data_fread__( data , load_end , restart_files );
-    }
-    stringlist_free( restart_files );
-  }
-  
   /*****************************************************************/
   /* OK - now we have loaded all the data. Must sort the internal
      storage vector, and build up various internal indexing vectors;

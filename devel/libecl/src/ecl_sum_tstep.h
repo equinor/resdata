@@ -42,6 +42,8 @@ typedef struct ecl_sum_tstep_struct ecl_sum_tstep_type;
   double ecl_sum_tstep_get_sim_days(const ecl_sum_tstep_type * ministep);
   int  ecl_sum_tstep_get_report(const ecl_sum_tstep_type * ministep);
   int  ecl_sum_tstep_get_ministep(const ecl_sum_tstep_type * ministep);
+
+  void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , fortio_type * fortio);
   
   UTIL_SAFE_CAST_HEADER( ecl_sum_tstep );
   UTIL_SAFE_CAST_HEADER_CONST( ecl_sum_tstep );

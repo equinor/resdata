@@ -710,6 +710,9 @@ int ecl_util_fname_report_cmp(const void *f1, const void *f2) {
    '*' as pattern for basename. If file_type == ECL_OTHER_FILE it will 
    use '*' as pattern for the extension (as a consequence files which do 
    not originate from ECLIPSE will also be included).
+
+   The stringlist will be cleared before the actual matching process
+   starts.
 */
 
 
@@ -831,7 +834,10 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 }
 
 
-
+/*
+  The stringlist will be cleared before the actual matching process
+  starts.  
+*/
 
 void ecl_util_alloc_summary_data_files(const char * path , const char * base , bool fmt_file , stringlist_type * filelist) {
   char  * unif_data_file = ecl_util_alloc_exfilename(path , base , ECL_UNIFIED_SUMMARY_FILE , fmt_file , -1);

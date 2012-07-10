@@ -33,7 +33,11 @@ extern "C" {
 #include <smspec_node.h>
 
 typedef struct ecl_sum_data_struct ecl_sum_data_type ; 
-
+  
+  void                     ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist);
+  void                     ecl_sum_data_fread_restart( ecl_sum_data_type * data , const stringlist_type * filelist);
+  ecl_sum_data_type      * ecl_sum_data_alloc_writer( const ecl_smspec_type * smspec );
+  ecl_sum_data_type      * ecl_sum_data_alloc(const ecl_smspec_type * smspec);
   int                      ecl_sum_data_get_report_step_from_time(const ecl_sum_data_type * data , time_t sim_time);
   int                      ecl_sum_data_get_report_step_from_days(const ecl_sum_data_type * data , double days);
   bool                     ecl_sum_data_check_sim_time( const ecl_sum_data_type * data , time_t sim_time);

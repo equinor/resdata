@@ -42,19 +42,19 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
    the functions smspec_node_alloc(), ecl_smsepec_fread_header() and
    ecl_smspec_install_gen_key() must be updated.
 */
-
-  
+  void                ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node);
   ecl_smspec_var_type ecl_smspec_iget_var_type( const ecl_smspec_type * smspec , int index );
   bool                ecl_smspec_needs_num( ecl_smspec_var_type var_type );
   bool                ecl_smspec_needs_wgname( ecl_smspec_var_type var_type );
   const char        * ecl_smspec_get_var_type_name( ecl_smspec_var_type var_type );
   ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var);
-  
+  ecl_smspec_type   * ecl_smspec_alloc_writer( const char * key_join_string , time_t sim_start , int nx , int ny , int nz);
+  void                ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case , bool fmt_file );
   
   ecl_smspec_type *        ecl_smspec_fread_alloc(const char * , const char *, bool include_restart);
   void                     ecl_smspec_free( ecl_smspec_type *);
   void                     ecl_smspec_set_time_info( const ecl_smspec_type *  , const float *  , double *  , time_t * );
-
+  
 
   const smspec_node_type * ecl_smspec_get_well_var_node( const ecl_smspec_type * smspec , const char * well , const char * var);
   int                      ecl_smspec_get_well_var_params_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var);
@@ -113,17 +113,15 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   /*****************************************************************/
   bool                    ecl_smspec_get_formatted( const ecl_smspec_type * ecl_smspec);
   const char            * ecl_smspec_get_header_file( const ecl_smspec_type * ecl_smspec );
-  const char            * ecl_smspec_get_simulation_case(const ecl_smspec_type * );
   stringlist_type       * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec , const char * pattern);
   stringlist_type       * ecl_smspec_alloc_group_list( const ecl_smspec_type * smspec , const char * pattern);
   stringlist_type       * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec );
   const char            * ecl_smspec_get_simulation_path(const ecl_smspec_type * ecl_smspec);
-  const char            * ecl_smspec_get_base_name( const ecl_smspec_type * ecl_smspec);
   const stringlist_type * ecl_smspec_get_restart_list( const ecl_smspec_type * ecl_smspec);
   const char            * ecl_smspec_get_join_string( const ecl_smspec_type * smspec);
-  const float * ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec );
+  const float          * ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec );
 
-  int                     ecl_smspec_get_param_size( const ecl_smspec_type * smspec );
+  int                     ecl_smspec_get_params_size( const ecl_smspec_type * smspec );
   const   smspec_node_type * ecl_smspec_iget_node( const ecl_smspec_type * smspec , int index );
 
 #ifdef __cplusplus
