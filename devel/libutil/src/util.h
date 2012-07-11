@@ -116,6 +116,8 @@ typedef enum {left_pad   = 0,
   bool         util_string_match(const char * string , const char * pattern);
   bool         util_string_has_wildcard( const char * s);
   bool         util_entry_readable( const char * entry );  
+  void         util_ftruncate(FILE * stream , long size);
+  
 
 #ifdef HAVE_GETUID
   uid_t        util_get_entry_uid( const char * file );

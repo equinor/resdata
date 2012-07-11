@@ -68,6 +68,12 @@
 #include <execinfo.h>
 #endif
 
+#ifdef HAVE_FTRUNCATE
+#include <unistd.h>
+#include <sys/types.h>
+#else
+#include <io.h>
+#endif
 
 /*
    Macros for endian flipping. The macros create a new endian-flipped
@@ -1991,7 +1997,7 @@ int util_fmove( FILE * stream , long offset , long shift) {
       }
       
       // Make sure the file actually shrinks.
-      ftruncate( fileno( stream ) , file_size + shift );
+      util_ftruncate( stream  , file_size + shift );
     }
     free( buffer );
   }
@@ -2555,6 +2561,15 @@ bool util_entry_readable( const char * entry ) {
 }
 
 
+
+void util_ftruncate(FILE * stream , long size) {
+  int fd = fileno( stream );
+#ifdef HAVE_FTRUNCATE
+  ftruncate( fd , size );
+#else
+  _chsize( fd , size );
+#endif
+}
 
 
 
@@ -4846,6 +4861,7 @@ char * util_alloc_link_target(const char * link) {
 #ifndef HAVE_UTIL_ABORT
 #include "util_abort_simple.c"
 #endif
+
 
 
 
