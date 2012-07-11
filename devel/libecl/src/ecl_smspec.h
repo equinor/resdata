@@ -42,6 +42,8 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
    the functions smspec_node_alloc(), ecl_smsepec_fread_header() and
    ecl_smspec_install_gen_key() must be updated.
 */
+  const int_vector_type * ecl_smspec_get_index_map( const ecl_smspec_type * smspec );
+  
   void                ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node);
   ecl_smspec_var_type ecl_smspec_iget_var_type( const ecl_smspec_type * smspec , int index );
   bool                ecl_smspec_needs_num( ecl_smspec_var_type var_type );

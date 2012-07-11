@@ -23,6 +23,8 @@
 extern "C" {
 #endif
 
+#include <int_vector.h>
+
 #include <ecl_smspec.h>
 #include <ecl_kw.h>
 
@@ -43,7 +45,7 @@ typedef struct ecl_sum_tstep_struct ecl_sum_tstep_type;
   int  ecl_sum_tstep_get_report(const ecl_sum_tstep_type * ministep);
   int  ecl_sum_tstep_get_ministep(const ecl_sum_tstep_type * ministep);
 
-  void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , fortio_type * fortio);
+  void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int_vector_type * index_map , fortio_type * fortio);
   
   UTIL_SAFE_CAST_HEADER( ecl_sum_tstep );
   UTIL_SAFE_CAST_HEADER_CONST( ecl_sum_tstep );

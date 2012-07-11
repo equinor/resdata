@@ -182,6 +182,11 @@ extern "C" {
 #define PARAMS_KW    "PARAMS"      // Contains the actual summary data for one timestep.
 #define MINISTEP_KW  "MINISTEP"    // Scalar integer - contains the timestep number.
 
+#define SEQHDR_SIZE  1
+
+#define RESTART_KW    "RESTART"
+#define SUMMARY_RESTART_SIZE 8
+
 /* 
    There are no magic indices in the summary data files, for all
    interesting data the table created from the ecl_smspec file must be

@@ -612,6 +612,10 @@ int fortio_fseek( fortio_type * fortio , long offset , int whence) {
 }
 
 
+int fortio_fileno( fortio_type * fortio ) {
+  return fileno( fortio->stream );
+}
+
 
 /*****************************************************************/
 void          fortio_fflush(fortio_type * fortio) { fflush( fortio->stream); }

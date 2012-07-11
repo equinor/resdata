@@ -33,7 +33,8 @@ extern "C" {
 #include <smspec_node.h>
 
 typedef struct ecl_sum_data_struct ecl_sum_data_type ; 
-  
+  void                     ecl_sum_data_fwrite_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified, int report_step);
+  void                     ecl_sum_data_fwrite( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified);
   void                     ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist);
   void                     ecl_sum_data_fread_restart( ecl_sum_data_type * data , const stringlist_type * filelist);
   ecl_sum_data_type      * ecl_sum_data_alloc_writer( const ecl_smspec_type * smspec );
@@ -49,7 +50,7 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   time_t_vector_type     * ecl_sum_data_alloc_time_vector( const ecl_sum_data_type * data , bool report_only);
   time_t                   ecl_sum_data_get_data_start( const ecl_sum_data_type * data );  
   time_t                   ecl_sum_data_get_report_time( const ecl_sum_data_type * data , int report_step);
-  double ecl_sum_data_get_first_day( const ecl_sum_data_type * data);
+  double                   ecl_sum_data_get_first_day( const ecl_sum_data_type * data);
   time_t                   ecl_sum_data_get_sim_start ( const ecl_sum_data_type * data ); 
   time_t                   ecl_sum_data_get_sim_end   ( const ecl_sum_data_type * data ); 
   double                   ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ); 

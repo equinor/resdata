@@ -97,9 +97,11 @@ struct ecl_sum_struct {
 
   bool                fmt_case;
   bool                unified;
-  char              * ecl_case;   /* This is the current case, with optional path component. */
   char              * key_join_string;
   char              * path;       /* Can be NULL for CWD. */ 
+  char              * base;       /* Only the basename. */
+  char              * ecl_case;   /* This is the current case, with optional path component. == path + base */
+  char              * ext;        /* Only to support selective loading of formatted|unformatted and unified|multiple. (can be NULL) */ 
 };
 
 
@@ -119,12 +121,17 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_sum , ECL_SUM_ID );
 void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
   util_safe_free( ecl_sum->ecl_case );
   util_safe_free( ecl_sum->path );
+  util_safe_free( ecl_sum->base );
+  util_safe_free( ecl_sum->ext );
   {
-    char * path , * base, *ext;
+    char  *path , *base, *ext;
   
     util_alloc_file_components( ecl_case , &path , &base , &ext);
+
     ecl_sum->ecl_case = util_alloc_string_copy( ecl_case );
     ecl_sum->path     = util_alloc_string_copy( path );
+    ecl_sum->base     = util_alloc_string_copy( base );
+    ecl_sum->ext      = util_alloc_string_copy( ext );
     
     util_safe_free( base );
     util_safe_free( path );
@@ -139,6 +146,8 @@ static ecl_sum_type * ecl_sum_alloc__( const char * input_arg , const char * key
   
   ecl_sum->ecl_case = NULL;
   ecl_sum->path = NULL;
+  ecl_sum->base = NULL;
+  ecl_sum->ext  = NULL;
   ecl_sum_set_case( ecl_sum , input_arg );
   ecl_sum->key_join_string = util_alloc_string_copy( key_join_string );
   
@@ -193,33 +202,21 @@ static void ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , con
 }
 
 
-static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart , const char * input_arg) {
+static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart) {
   char * header_file;
   stringlist_type * summary_file_list = stringlist_alloc_new();
-
-  {
-    /* This is the second pass thorugh the input_arg dissecation ... */
-    char * path , * base, *ext;
-
-    util_alloc_file_components( input_arg , &path , &base , &ext);
-    ecl_util_alloc_summary_files( path , base , ext , &header_file , summary_file_list );
-
-    util_safe_free( base );
-    util_safe_free( path );
-    util_safe_free( ext );
+  
+  bool caseOK = false;
+  
+  ecl_util_alloc_summary_files( ecl_sum->path , ecl_sum->base , ecl_sum->ext , &header_file , summary_file_list );
+  if ((header_file != NULL) && (stringlist_get_size( summary_file_list ) > 0)) {
+    ecl_sum_fread( ecl_sum , header_file , summary_file_list , include_restart );
+    caseOK = true;
   }
-  {
-    bool caseOK = false;
-
-    if ((header_file != NULL) && (stringlist_get_size( summary_file_list ) > 0)) {
-      ecl_sum_fread( ecl_sum , header_file , summary_file_list , include_restart );
-      caseOK = true;
-    }
-    util_safe_free( header_file );
-    stringlist_free( summary_file_list );
-    
-    return caseOK;
-  }
+  util_safe_free( header_file );
+  stringlist_free( summary_file_list );
+  
+  return caseOK;
 }
   
 
@@ -275,6 +272,7 @@ ecl_sum_type * ecl_sum_alloc_writer( const char * ecl_case , bool fmt_output , b
 
 void ecl_sum_fwrite( const ecl_sum_type * ecl_sum ) {
   ecl_smspec_fwrite( ecl_sum->smspec , ecl_sum->ecl_case , ecl_sum->fmt_case );
+  ecl_sum_data_fwrite( ecl_sum->data , ecl_sum->ecl_case , ecl_sum->fmt_case , ecl_sum->unified );
 }
 
 
@@ -301,7 +299,11 @@ void ecl_sum_free( ecl_sum_type * ecl_sum ) {
     ecl_smspec_free( ecl_sum->smspec );
   
   util_safe_free( ecl_sum->path );
+  util_safe_free( ecl_sum->ext );
+
+  free( ecl_sum->base );
   free( ecl_sum->ecl_case );
+  
   free( ecl_sum->key_join_string );
   free( ecl_sum );
 }
@@ -338,7 +340,7 @@ void ecl_sum_free__(void * __ecl_sum) {
 
 ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char * key_join_string , bool include_restart){
   ecl_sum_type * ecl_sum     = ecl_sum_alloc__(input_file , key_join_string);
-  if (ecl_sum_fread_case( ecl_sum , include_restart , input_file))
+  if (ecl_sum_fread_case( ecl_sum , include_restart))
     return ecl_sum;
   else {
     /*

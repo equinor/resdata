@@ -128,7 +128,7 @@ int ecl_sum_tstep_get_ministep(const ecl_sum_tstep_type * ministep) {
 
 /*****************************************************************/
 
-void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , fortio_type * fortio) {
+void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int_vector_type * index_map , fortio_type * fortio) {
   {
     ecl_kw_type * ministep_kw = ecl_kw_alloc( MINISTEP_KW , 1 , ECL_INT_TYPE );
     ecl_kw_iset_int( ministep_kw , 0 , ministep->ministep );
@@ -137,10 +137,17 @@ void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , fortio_type * f
   }
 
   {
-    ecl_kw_type * params_kw = ecl_kw_alloc_new_shared( PARAMS_KW , ministep->data_size , ECL_FLOAT_TYPE , ministep->data);
+    int compact_size = int_vector_size( index_map );
+    ecl_kw_type * params_kw = ecl_kw_alloc( PARAMS_KW , compact_size , ECL_FLOAT_TYPE );
+
+    const int * index = int_vector_get_ptr( index_map );
+    float * data      = ecl_kw_get_ptr( params_kw );
+
+    for (int i=0; i < compact_size; i++)
+      data[i] = ministep->data[ index[i] ];
+    
     ecl_kw_fwrite( params_kw , fortio );
     ecl_kw_free( params_kw );
   }
-  
 }
 

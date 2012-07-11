@@ -71,7 +71,8 @@ typedef struct fortio_struct fortio_type;
   long               fortio_ftell( const fortio_type * fortio );
   int                fortio_fseek( fortio_type * fortio , long offset , int whence);
   int                fortio_get_mode( const fortio_type * fortio );
-  
+  int                fortio_fileno( fortio_type * fortio );
+
 #ifdef __cplusplus
 }
 #endif

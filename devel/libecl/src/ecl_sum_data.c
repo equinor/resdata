@@ -34,6 +34,9 @@
 #include <ecl_endian_flip.h>
 #include <ecl_kw_magic.h>
 
+
+
+
 /*
   This file implements the type ecl_sum_data_type. The data structure 
   is involved with holding all the actual summary data (i.e. the
@@ -274,9 +277,159 @@ ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
 }
 
 
+/**
+   This function will take a report as input , and update the two
+   pointers ministep1 and ministep2 with the range of the report step
+   (in terms of ministeps). 
+
+   Calling this function with report_step == 2 for the example
+   documented at the top of the file will yield: *ministep1 = 3 and
+   *ministep2 = 7. If you are only interested in one of the limits you
+   can pass in NULL for the other limit, i.e. 
+
+      xxx(data , report_step , NULL , &ministep2); 
+
+   to get the last step.
+   
+   If the supplied report_step is invalid the function will set both
+   return values to -1 (the return value from safe_iget). In that case
+   it is the responsability of the calling scope to check the return
+   values, alternatively one can use the query function
+   ecl_sum_data_has_report_step() first.
+*/
+
+
+static const ecl_sum_tstep_type * ecl_sum_data_iget_ministep( const ecl_sum_data_type * data , int internal_index ) {
+  return vector_iget_const( data->data , internal_index );
+}
+
+
+
+void ecl_sum_data_report2internal_range(const ecl_sum_data_type * data , int report_step , int * index1 , int * index2 ){
+  if (index1 != NULL)
+    *index1 = int_vector_safe_iget( data->report_first_index , report_step );
+  
+  if (index2 != NULL)
+    *index2 = int_vector_safe_iget( data->report_last_index  , report_step ); 
+}
+
+
+
 ecl_sum_data_type * ecl_sum_data_alloc_writer( const ecl_smspec_type * smspec ) {
   ecl_sum_data_type * data = ecl_sum_data_alloc( smspec );
   return data;
+}
+
+
+static void ecl_sum_data_fwrite_report__( const ecl_sum_data_type * data , int report_step , fortio_type * fortio) {
+  {
+    ecl_kw_type * seqhdr_kw = ecl_kw_alloc( SEQHDR_KW , SEQHDR_SIZE , ECL_INT_TYPE );
+    ecl_kw_iset_int( seqhdr_kw , 0 , 0 );
+    ecl_kw_fwrite( seqhdr_kw , fortio );
+    ecl_kw_free( seqhdr_kw );
+  }
+
+  {
+    int index1,index2;
+    
+    ecl_sum_data_report2internal_range( data , report_step , &index1 , &index2);
+    for (int index = index1; index <= index2; index++) {
+      const ecl_sum_tstep_type * tstep = ecl_sum_data_iget_ministep( data , index );
+      ecl_sum_tstep_fwrite( tstep , ecl_smspec_get_index_map( data->smspec ) , fortio );
+    }
+  }
+}
+
+
+
+static void ecl_sum_data_fwrite_multiple_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , int report_step) {
+  char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_UNIFIED_SUMMARY_FILE , fmt_case , 0 );
+  fortio_type * fortio = fortio_open_readwrite( filename , fmt_case , ECL_ENDIAN_FLIP );
+  
+  ecl_sum_data_fwrite_report__( data , report_step , fortio );
+  
+  fortio_fclose( fortio );
+  free(filename);
+}
+
+
+static void ecl_sum_data_fwrite_unified_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , int report_step) {
+  char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_UNIFIED_SUMMARY_FILE , fmt_case , 0 );
+  fortio_type * fortio = fortio_open_readwrite( filename , fmt_case , ECL_ENDIAN_FLIP );
+  
+  int current_step = 1;
+  if (report_step > 1) {
+    while (true) {
+      if (ecl_kw_fseek_kw( SEQHDR_KW , false , false , fortio )) {
+        if (current_step == report_step)
+          break;
+        current_step++;
+      } else {
+        current_step++;
+        break;
+      }
+    }
+  }
+  
+  if (current_step == report_step) { // We found the position:
+    off_t size = fortio_ftell( fortio );
+    
+    util_ftruncate( fortio_get_FILE( fortio ) , size );
+    ecl_sum_data_fwrite_report__( data , report_step , fortio );
+  } else
+    util_abort("%s: hmm could not locate the position for report step:%d in summary file:%s \n",__func__ , report_step , filename);
+  
+  fortio_fclose( fortio );
+  free( filename );
+}
+
+
+
+static void ecl_sum_data_fwrite_unified( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case ) {
+  char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_UNIFIED_SUMMARY_FILE , fmt_case , 0 );
+  fortio_type * fortio = fortio_open_writer( filename , fmt_case , ECL_ENDIAN_FLIP );
+  
+  for (int report_step = data->first_report_step; report_step <= data->last_report_step; report_step++) {
+    if (ecl_sum_data_has_report_step( data , report_step ))
+      ecl_sum_data_fwrite_report__( data , report_step , fortio );
+  } 
+  
+  fortio_fclose( fortio );
+  free( filename );
+}
+
+
+static void ecl_sum_data_fwrite_multiple( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case ) {
+
+  for (int report_step = data->first_report_step; report_step <= data->last_report_step; report_step++) {
+    if (ecl_sum_data_has_report_step( data , report_step )) {
+      char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_SUMMARY_FILE , fmt_case , report_step );
+      fortio_type * fortio = fortio_open_writer( filename , fmt_case , ECL_ENDIAN_FLIP );
+      
+      ecl_sum_data_fwrite_report__( data , report_step , fortio );
+      
+      fortio_fclose( fortio );
+      free( filename );
+    }
+  } 
+  
+}
+
+
+
+void ecl_sum_data_fwrite_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified, int report_step) {
+  if (unified)
+    ecl_sum_data_fwrite_unified_step( data , ecl_case , fmt_case , report_step);
+  else
+    ecl_sum_data_fwrite_multiple_step( data , ecl_case , fmt_case , report_step);
+}
+
+
+void ecl_sum_data_fwrite( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified) {
+  if (unified)
+    ecl_sum_data_fwrite_unified( data , ecl_case , fmt_case );
+  else
+    ecl_sum_data_fwrite_multiple( data , ecl_case , fmt_case );
 }
 
 
@@ -301,9 +454,6 @@ double ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ) {
 
 
 
-static const ecl_sum_tstep_type * ecl_sum_data_iget_ministep( const ecl_sum_data_type * data , int internal_index ) {
-  return vector_iget_const( data->data , internal_index );
-}
 
 
 
@@ -846,36 +996,6 @@ bool  ecl_sum_data_has_report_step(const ecl_sum_data_type * data , int report_s
 }
 
 
-/**
-   This function will take a report as input , and update the two
-   pointers ministep1 and ministep2 with the range of the report step
-   (in terms of ministeps). 
-
-   Calling this function with report_step == 2 for the example
-   documented at the top of the file will yield: *ministep1 = 3 and
-   *ministep2 = 7. If you are only interested in one of the limits you
-   can pass in NULL for the other limit, i.e. 
-
-      xxx(data , report_step , NULL , &ministep2); 
-
-   to get the last step.
-   
-   If the supplied report_step is invalid the function will set both
-   return values to -1 (the return value from safe_iget). In that case
-   it is the responsability of the calling scope to check the return
-   values, alternatively one can use the query function
-   ecl_sum_data_has_report_step() first.
-*/
-
-
-
-void ecl_sum_data_report2internal_range(const ecl_sum_data_type * data , int report_step , int * index1 , int * index2 ){
-  if (index1 != NULL)
-    *index1 = int_vector_safe_iget( data->report_first_index , report_step );
-  
-  if (index2 != NULL)
-    *index2 = int_vector_safe_iget( data->report_last_index  , report_step ); 
-}
 
 /**
    Returns the last index included in report step @report_step.

@@ -114,6 +114,7 @@ struct ecl_smspec_struct {
   vector_type        * smspec_nodes;
   bool                 write_mode;
   bool                 need_nums;
+  int_vector_type    * index_map;
 
   /*-----------------------------------------------------------------*/
 
@@ -244,7 +245,8 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * k
   ecl_smspec->day_index   = -1;
   ecl_smspec->year_index  = -1;
   ecl_smspec->month_index = -1;
-
+  
+  ecl_smspec->index_map = int_vector_alloc(0,0);
   ecl_smspec->restart_list = stringlist_alloc_new();
   ecl_smspec->params_default = NULL;
   ecl_smspec->write_mode = write_mode;
@@ -281,6 +283,15 @@ int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
 
 static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_type * fortio) {
   int num_nodes           = ecl_smspec_num_nodes( smspec );
+  {
+    ecl_kw_type * restart_kw = ecl_kw_alloc( RESTART_KW , SUMMARY_RESTART_SIZE , ECL_CHAR_TYPE );
+    
+    for (int i=0; i < SUMMARY_RESTART_SIZE; i++)
+      ecl_kw_iset_string8( restart_kw , i , "");
+    
+    ecl_kw_fwrite( restart_kw , fortio );
+    ecl_kw_free( restart_kw );
+  }
   {
     ecl_kw_type * dimens_kw = ecl_kw_alloc( DIMENS_KW , DIMENS_SIZE , ECL_INT_TYPE );
     ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_SIZE_INDEX , num_nodes );
@@ -762,7 +773,7 @@ static bool ecl_smspec_file_equal( const ecl_file_type * header1 , const ecl_fil
 */
 
 static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_file_type * header ) {
-  if (ecl_file_has_kw( header , "RESTART" )) {
+  if (ecl_file_has_kw( header , RESTART_KW )) {
     const ecl_kw_type * restart_kw = ecl_file_iget_kw( header , 0 );
     char   tmp_base[73];   /* To accomodate a maximum of 9 items which consist of 8 characters each. */
     char * restart_base;
@@ -816,13 +827,26 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 
 
 void ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node) {
-  if (smspec_node_get_params_index( smspec_node ) < 0)
-    smspec_node_set_params_index( smspec_node , vector_get_size( ecl_smspec->smspec_nodes ));
-
+  int internal_index = vector_get_size( ecl_smspec->smspec_nodes );
+    
+  /* This IF test should only apply in write_mode. */
+  if (smspec_node_get_params_index( smspec_node ) < 0) {
+    if (!ecl_smspec->write_mode)
+      util_abort("%s: internal error \n",__func__);
+    smspec_node_set_params_index( smspec_node , internal_index);
+  }
   vector_append_owned_ref( ecl_smspec->smspec_nodes , smspec_node , smspec_node_free__ );
 
+  /* This indexing must be used when writing. */
+  int_vector_iset( ecl_smspec->index_map , internal_index , smspec_node_get_params_index( smspec_node ));
+  
   if (smspec_node_need_nums( smspec_node ))
     ecl_smspec->need_nums = true;
+}
+
+
+const int_vector_type * ecl_smspec_get_index_map( const ecl_smspec_type * smspec ) {
+  return smspec->index_map;
 }
 
 
