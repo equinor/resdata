@@ -33,11 +33,13 @@ typedef struct ecl_sum_tstep_struct ecl_sum_tstep_type;
 
   void ecl_sum_tstep_free( ecl_sum_tstep_type * ministep );
   void ecl_sum_tstep_free__( void * __ministep);
-  ecl_sum_tstep_type * ecl_sum_tstep_alloc( int ministep_nr            ,
-                                                  int report_step    ,
-                                                  const ecl_kw_type * params_kw , 
-                                                  const char * src_file , 
-                                                  const ecl_smspec_type * smspec);
+  ecl_sum_tstep_type * ecl_sum_tstep_alloc_from_file(int report_step    ,
+                                                     int ministep_nr            ,
+                                                     const ecl_kw_type * params_kw , 
+                                                     const char * src_file , 
+                                                     const ecl_smspec_type * smspec);
+  
+  ecl_sum_tstep_type * ecl_sum_tstep_alloc_new( int report_step , int ministep , float sim_days , const ecl_smspec_type * smspec );
   
   double ecl_sum_tstep_iget(const ecl_sum_tstep_type * ministep , int index);
   time_t ecl_sum_tstep_get_sim_time(const ecl_sum_tstep_type * ministep);
@@ -46,6 +48,7 @@ typedef struct ecl_sum_tstep_struct ecl_sum_tstep_type;
   int  ecl_sum_tstep_get_ministep(const ecl_sum_tstep_type * ministep);
 
   void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int_vector_type * index_map , fortio_type * fortio);
+  void ecl_sum_tstep_iset( ecl_sum_tstep_type * tstep , int index , float value);
   
   UTIL_SAFE_CAST_HEADER( ecl_sum_tstep );
   UTIL_SAFE_CAST_HEADER_CONST( ecl_sum_tstep );

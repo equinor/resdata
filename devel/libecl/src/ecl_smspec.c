@@ -1480,41 +1480,22 @@ void ecl_smspec_free__(void * __ecl_smspec) {
   ecl_smspec_free( ecl_smspec );
 }
 
-
-
-/*
-  This function just 'exports functionality', the point is that the
-  ecl_smspec object has all the information about indices, whereas the
-  data object owns the final (pr. timestep) time information.
-*/
-
-
-void ecl_smspec_set_time_info( const ecl_smspec_type * smspec , const float * param_data , double * _sim_days , time_t * _sim_time) {
-  double sim_days = -1;
-  time_t sim_time = -1;
-
-  if (smspec->time_index >= 0) {
-    sim_days = param_data[smspec->time_index];
-    sim_time = smspec->sim_start_time;
-    util_inplace_forward_days( &sim_time , sim_days);
-  } else if (smspec->day_index >= 0) {
-    int sec  = 0;
-    int min  = 0;
-    int hour = 0;
-    
-    int day   = roundf(param_data[smspec->day_index]);
-    int month = roundf(param_data[smspec->month_index]);
-    int year  = roundf(param_data[smspec->year_index]);
-    
-    sim_time = util_make_datetime(sec , min , hour , day , month , year);
-    sim_days = util_difftime_days( smspec->sim_start_time , sim_time);
-  } else 
-    util_abort("%s: internal error - invalid config. Should not be here \n",__func__);
-  
-  
-  *_sim_days = sim_days;
-  *_sim_time= sim_time;
+int ecl_smspec_get_sim_days_index( const ecl_smspec_type * smspec ) {
+  return smspec->time_index;
 }
+
+int ecl_smspec_get_date_day_index( const ecl_smspec_type * smspec ) {
+  return smspec->day_index;
+}
+
+int ecl_smspec_get_date_month_index( const ecl_smspec_type * smspec ) {
+  return smspec->month_index;
+}
+
+int ecl_smspec_get_date_year_index( const ecl_smspec_type * smspec ) {
+  return smspec->year_index;
+}
+
 
 
 /**

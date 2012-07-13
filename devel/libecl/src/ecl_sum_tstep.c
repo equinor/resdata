@@ -17,6 +17,7 @@
 */
 
 #include <time.h>
+#include <math.h>
 
 #include <util.h>
 #include <type_macros.h>
@@ -40,6 +41,17 @@ struct ecl_sum_tstep_struct {
 };
 
 
+static ecl_sum_tstep_type * ecl_sum_tstep_alloc( int report_step , int ministep_nr , int data_size) {
+  ecl_sum_tstep_type * tstep = util_malloc( sizeof * tstep , __func__);
+  UTIL_TYPE_ID_INIT( tstep , ECL_SUM_TSTEP_ID);
+  tstep->report_step = report_step;
+  tstep->ministep    = ministep_nr;
+  tstep->data_size   = data_size;
+  tstep->data        = util_malloc( data_size * sizeof * tstep->data , __func__); 
+  return tstep;
+}
+
+
 UTIL_SAFE_CAST_FUNCTION( ecl_sum_tstep , ECL_SUM_TSTEP_ID)
 UTIL_SAFE_CAST_FUNCTION_CONST( ecl_sum_tstep , ECL_SUM_TSTEP_ID)
 
@@ -59,29 +71,85 @@ void ecl_sum_tstep_free__( void * __ministep) {
 
 
 /**
+   This function sets the internal time representation in the
+   ecl_sum_tstep. The treatment of time is a bit weird; on the one
+   hand the time elements in the summary data are just like any other
+   element like e.g. the FOPT or GGPR:NAME - on the other hand the
+   time information is strictly required and the summary file will
+   fall to pieces if it is missing.
+   
+   The time can be provided in using (at least) two different
+   keywords:
+
+      DAYS: The data vector will contain the number of days since the
+            simulation start.
+            
+      DAY,MONTH,YEAR: The data vector will contain the true date of
+           the tstep.
+
+   The ecl_sum_tstep class can utilize both types of information, but
+   will select the DAYS variety if both are present.
+*/
+
+static void ecl_sum_tstep_set_time_info_from_days( ecl_sum_tstep_type * tstep , time_t sim_start , float sim_days) {
+  tstep->sim_days = sim_days;
+  tstep->sim_time = sim_start;
+  util_inplace_forward_days( &tstep->sim_time , tstep->sim_days );
+}
+
+
+static void ecl_sum_tstep_set_time_info_from_date( ecl_sum_tstep_type * tstep , time_t sim_start , time_t sim_time) {
+  tstep->sim_time = sim_time;
+  tstep->sim_days = util_difftime_days( sim_start , tstep->sim_time);
+}
+
+
+static void ecl_sum_tstep_set_time_info( ecl_sum_tstep_type * tstep , const ecl_smspec_type * smspec ) {
+  int date_day_index   = ecl_smspec_get_date_day_index( smspec );
+  int date_month_index = ecl_smspec_get_date_month_index( smspec );
+  int date_year_index  = ecl_smspec_get_date_year_index( smspec );
+  int sim_days_index   = ecl_smspec_get_sim_days_index( smspec );
+  time_t sim_start     = ecl_smspec_get_start_time( smspec );
+
+  if (sim_days_index >= 0) {
+    float sim_days = tstep->data[ sim_days_index ];
+    ecl_sum_tstep_set_time_info_from_days( tstep , sim_start , sim_days );
+  } else if ( date_day_index >= 0) {
+    int sec  = 0;
+    int min  = 0;
+    int hour = 0;
+    
+    int day   = roundf(tstep->data[date_day_index]);
+    int month = roundf(tstep->data[date_month_index]);
+    int year  = roundf(tstep->data[date_year_index]);
+    
+    time_t sim_time = util_make_datetime(sec , min , hour , day , month , year);
+    ecl_sum_tstep_set_time_info_from_date( tstep , sim_start , sim_time );
+  } else
+    util_abort("%s: Hmmm - could not extract date/time information from SMSPEC header file? \n",__func__);
+
+}
+
+
+
+/**
    If the ecl_kw instance is in some way invalid (i.e. wrong size);
    the function will return NULL:
 */
 
 
-ecl_sum_tstep_type * ecl_sum_tstep_alloc( int ministep_nr            ,
-                                          int report_step    ,
-                                          const ecl_kw_type * params_kw , 
-                                          const char * src_file , 
-                                          const ecl_smspec_type * smspec) {
+ecl_sum_tstep_type * ecl_sum_tstep_alloc_from_file( int report_step    ,
+                                                    int ministep_nr    ,
+                                                    const ecl_kw_type * params_kw , 
+                                                    const char * src_file , 
+                                                    const ecl_smspec_type * smspec) {
 
   int data_size = ecl_kw_get_size( params_kw );
   
   if (data_size == ecl_smspec_get_params_size( smspec )) {
-    ecl_sum_tstep_type * ministep = util_malloc( sizeof * ministep , __func__);
-    UTIL_TYPE_ID_INIT( ministep , ECL_SUM_TSTEP_ID);
-    ministep->data        = ecl_kw_alloc_data_copy( params_kw );
-    ministep->data_size   = data_size;
-    
-    ministep->report_step = report_step;
-    ministep->ministep    = ministep_nr;
-    ecl_smspec_set_time_info( smspec , ministep->data , &ministep->sim_days , &ministep->sim_time);
-
+    ecl_sum_tstep_type * ministep = ecl_sum_tstep_alloc( report_step , ministep_nr , data_size);
+    ecl_kw_get_memcpy_data( params_kw , ministep->data );
+    ecl_sum_tstep_set_time_info( ministep , smspec );
     return ministep;
   } else {
     /* 
@@ -94,6 +162,23 @@ ecl_sum_tstep_type * ecl_sum_tstep_alloc( int ministep_nr            ,
     return NULL;
   }
 }
+
+
+
+ecl_sum_tstep_type * ecl_sum_tstep_alloc_new( int report_step , int ministep , float sim_days , const ecl_smspec_type * smspec ) {
+  int data_size = ecl_smspec_get_params_size( smspec );
+  ecl_sum_tstep_type * tstep = ecl_sum_tstep_alloc( report_step , ministep , data_size );
+  const float * default_data = ecl_smspec_get_params_default( smspec );
+  if (default_data != NULL)
+    memcpy( tstep->data , default_data , data_size * sizeof * tstep->data );
+  else {
+    for (int i=0; i < data_size; i++)
+      tstep->data[i] = 0;
+  }
+  ecl_sum_tstep_set_time_info_from_days( tstep , ecl_smspec_get_start_time( smspec ) , sim_days );
+  return tstep;
+}
+
 
 
 
@@ -112,7 +197,7 @@ time_t ecl_sum_tstep_get_sim_time(const ecl_sum_tstep_type * ministep) {
 }
 
 
- double ecl_sum_tstep_get_sim_days(const ecl_sum_tstep_type * ministep) {
+double ecl_sum_tstep_get_sim_days(const ecl_sum_tstep_type * ministep) {
   return ministep->sim_days;
 }
 
@@ -151,3 +236,10 @@ void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int_vecto
   }
 }
 
+
+void ecl_sum_tstep_iset( ecl_sum_tstep_type * tstep , int index , float value) {
+  if ((index < tstep->data_size) && (index >= 0))
+    tstep->data[index] = value;
+  else
+    util_abort("%s: index:%d invalid. Valid range: [0,%d) \n",__func__  ,index , tstep->data_size);
+}
