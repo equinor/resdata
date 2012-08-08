@@ -148,7 +148,7 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
    NULL, but not the basename. 
    
    Observe that this function does pure string manipulation; there is
-   no input check on whether path exists, if basaneme contains "."
+   no input check on whether path exists, if baseneme contains "."
    (or even a '/') and so on.
 */
 
@@ -177,6 +177,7 @@ char * util_alloc_filename(const char * path , const char * basename , const cha
     else
       sprintf(file , "%s%c%s.%s" , path , UTIL_PATH_SEP_CHAR , basename , extension);
   }
+
   return file;
 }
 

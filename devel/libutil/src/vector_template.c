@@ -310,6 +310,12 @@ void @TYPE@_vector_memcpy_data_block( @TYPE@_vector_type * target , const @TYPE@
 }
 
 
+
+void @TYPE@_vector_memcpy_data( @TYPE@ * target, const @TYPE@_vector_type * src ) {
+  memcpy( target , src->data , src->size * sizeof src->data );
+}
+
+
 /**
    This function will copy all the content (both header and data) from
    the src vector to the target vector. If the the current allocation
@@ -326,6 +332,8 @@ void @TYPE@_vector_memcpy( @TYPE@_vector_type * target, const @TYPE@_vector_type
 
   @TYPE@_vector_memcpy_data_block( target  , src , 0 , 0 , src->size );
 }
+
+
 
 
 

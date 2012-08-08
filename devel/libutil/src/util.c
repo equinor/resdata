@@ -54,7 +54,6 @@
 #include <util.h>
 #include <buffer.h>
 
-
 #ifdef HAVE_FORK
 #include <unistd.h>
 #include <sys/wait.h>
@@ -74,6 +73,16 @@
 #else
 #include <io.h>
 #endif
+
+#include <stdint.h>
+#if UINTPTR_MAX == 0xFFFFFFFF
+#define ARCH32
+#elif UINTPTR_MAX == 0xFFFFFFFFFFFFFFFF
+#define ARCH64
+#else
+#error "Could not determine if this is a 32 bit or 64 bit computer?"
+#endif
+
 
 /*
    Macros for endian flipping. The macros create a new endian-flipped
@@ -103,6 +112,48 @@
                       ((var << 56) & 0xff00000000000000))
 
 
+
+
+static inline uint16_t convert16( uint16_t u ) {
+  return (( u >> 8U ) & 0xFFU) | (( u & 0xFFU) >> 8U);
+}
+
+
+static inline uint32_t convert32( uint32_t u ) {
+  const uint32_t m8  = (uint32_t) 0x00FF00FFUL;
+  const uint32_t m16 = (uint32_t) 0x0000FFFFUL;
+  
+  u = (( u >> 8U ) & m8)   | ((u & m8) << 8U);
+  u = (( u >> 16U ) & m16) | ((u & m16) << 16U);
+  return u;
+}
+
+
+static inline uint64_t convert64( uint64_t u ) {
+  const uint64_t m8  = (uint64_t) 0x00FF00FF00FF00FFULL;
+  const uint64_t m16 = (uint64_t) 0x0000FFFF0000FFFFULL;
+  const uint64_t m32 = (uint64_t) 0x00000000FFFFFFFFULL;
+
+  
+  u = (( u >> 8U ) & m8)   | ((u & m8) << 8U);
+  u = (( u >> 16U ) & m16) | ((u & m16) << 16U);
+  u = (( u >> 32U ) & m32) | ((u & m32) << 32U);
+  return u;
+}
+
+
+static inline uint64_t convert32_64( uint64_t u ) {
+  const uint64_t m8  = (uint64_t) 0x00FF00FF00FF00FFULL;
+  const uint64_t m16 = (uint64_t) 0x0000FFFF0000FFFFULL;
+
+  
+  u = (( u >> 8U ) & m8)   | ((u & m8) << 8U);
+  u = (( u >> 16U ) & m16) | ((u & m16) << 16U);
+  return u;
+}
+
+
+
 void util_endian_flip_vector(void *data, int element_size , int elements) {
   int i;
   switch (element_size) {
@@ -110,7 +161,58 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
     break;
   case(2): 
     {
+      uint16_t *tmp16 = (uint16_t *) data;
+
+      for (i = 0; i <elements; i++)
+        tmp16[i] = convert16(tmp16[i]);
+      break;
+    }
+  case(4):
+    {
+#ifdef ARCH64
+      uint64_t *tmp64 = (uint64_t *) data;
+
+      for (i = 0; i <elements/2; i++)
+        tmp64[i] = convert32_64(tmp64[i]);
+
+      if ( elements & 1 ) {
+        // Odd number of elements - flip the last element as an ordinary 32 bit swap.
+        uint32_t *tmp32 = (uint32_t *) data;
+        tmp32[ elements - 1] = convert32( tmp32[elements - 1] );
+      }
+      break;
+#else
+      uint32_t *tmp32 = (uint32_t *) data;
+
+      for (i = 0; i <elements; i++)
+        tmp_int[i] = convert32(tmp32[i]);
+      
+      break;
+#endif
+    }
+  case(8):
+    {
+      uint64_t *tmp64 = (uint64_t *) data;
+
+      for (i = 0; i <elements; i++)
+        tmp64[i] = convert64(tmp64[i]);
+      break;
+    }
+  default:
+    fprintf(stderr,"%s: current element size: %d \n",__func__ , element_size);
+    util_abort("%s: can only endian flip 1/2/4/8 byte variables - aborting \n",__func__);
+  }
+}
+
+void util_endian_flip_vector_old(void *data, int element_size , int elements) {
+  int i;
+  switch (element_size) {
+  case(1):
+    break;
+  case(2): 
+    {
       uint16_t *tmp_int = (uint16_t *) data;
+
       for (i = 0; i <elements; i++)
         tmp_int[i] = FLIP16(tmp_int[i]);
       break;
@@ -118,13 +220,16 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
   case(4):
     {
       uint32_t *tmp_int = (uint32_t *) data;
+
       for (i = 0; i <elements; i++)
         tmp_int[i] = FLIP32(tmp_int[i]);
+      
       break;
     }
   case(8):
     {
       uint64_t *tmp_int = (uint64_t *) data;
+
       for (i = 0; i <elements; i++)
         tmp_int[i] = FLIP64(tmp_int[i]);
       break;
@@ -134,6 +239,7 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
     util_abort("%s: can only endian flip 1/2/4/8 byte variables - aborting \n",__func__);
   }
 }
+
 
 
 /*****************************************************************/
@@ -1669,7 +1775,7 @@ int util_scanf_int_with_limits(const char * prompt , int prompt_len , int min_va
 */
 char * util_scanf_int_with_limits_return_char(const char * prompt , int prompt_len , int min_value , int max_value) {
   int value = min_value - 1;
-  char * value_char = '0';
+  char * value_char = NULL;
   char * new_prompt = util_alloc_sprintf("%s [%d:%d]" , prompt , min_value , max_value);
   while( value < min_value || value > max_value ){
     value_char = util_scanf_int_return_char(new_prompt , prompt_len);

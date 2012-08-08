@@ -56,7 +56,6 @@ if (NEED_BLAS)
   target_link_libraries( util_shared ${BLAS_LIBRARY} )
 endif()
 
-
 target_link_libraries( util_static m )
 target_link_libraries( util_shared m )
 

@@ -228,7 +228,8 @@ typedef enum {left_pad   = 0,
   char *  util_fread_realloc_string(char *  , FILE *);
   char *  util_fread_alloc_string(FILE *);
   void    util_fskip_string(FILE *stream);
-  void    util_endian_flip_vector(void *, int , int );
+  void    util_endian_flip_vector(void * data , int element_size , int elements);
+  void    util_endian_flip_vector__(void *data, int element_size , int elements , bool copy);
   int     util_proc_mem_free(void);
   
   

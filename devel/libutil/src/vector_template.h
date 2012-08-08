@@ -38,6 +38,7 @@ typedef @TYPE@ (@TYPE@_ftype) (@TYPE@);
   void                 @TYPE@_vector_set_read_only( @TYPE@_vector_type * vector , bool read_only);
   bool                 @TYPE@_vector_get_read_only( const @TYPE@_vector_type * vector );
   void                 @TYPE@_vector_resize( @TYPE@_vector_type * vector , int new_alloc_size );
+  void                 @TYPE@_vector_memcpy_data( @TYPE@ * target, const @TYPE@_vector_type * src );
   void                 @TYPE@_vector_memcpy(  @TYPE@_vector_type * target , const @TYPE@_vector_type * src);
   void @TYPE@_vector_memcpy_data_block( @TYPE@_vector_type * target , const @TYPE@_vector_type * src , int target_offset , int src_offset , int len);
   bool                 @TYPE@_vector_growable( const @TYPE@_vector_type * vector);

@@ -334,7 +334,7 @@ const void * vector_iget_const(const vector_type * vector, int index) {
     const node_data_type * node = vector->data[index];
     return node_data_get_ptr( node );
   } else {
-    util_abort("%s: Invald index:%d  Valid range: [0,%d> \n",__func__ , index , vector->size);
+    util_abort("%s: Invalid index:%d  Valid range: [0,%d> \n",__func__ , index , vector->size);
     return NULL;
   }
 }
@@ -345,7 +345,7 @@ void * vector_iget(const vector_type * vector, int index) {
     const node_data_type * node = vector->data[index];
     return node_data_get_ptr( node );
   } else {
-    util_abort("%s: Invald index:%d  Valid range: [0,%d> \n",__func__ , index , vector->size);
+    util_abort("%s: Invalid index:%d  Valid range: [0,%d> \n",__func__ , index , vector->size);
     return NULL;
   }
 }
@@ -393,7 +393,7 @@ void vector_idel(vector_type * vector , int index) {
       vector->size--;
     }
   } else 
-    util_abort("%s: Invald index:%d  Valid range: [0,%d> \n",__func__ , index , vector->size);
+    util_abort("%s: Invalid index:%d  Valid range: [0,%d> \n",__func__ , index , vector->size);
 }
 
 
