@@ -72,6 +72,8 @@ typedef enum {left_pad   = 0,
   void         util_inplace_forward_days(time_t *  , double);
   double       util_difftime(time_t  , time_t  , int *  , int *  , int *  , int *);
   double       util_difftime_days(time_t  , time_t );
+  bool         util_file_newer( const char * file , time_t t0);
+  bool         util_file_older( const char * file , time_t t0);
   char       * util_alloc_date_string( time_t t );
   char       * util_alloc_date_stamp( );
   double       util_pow10(double x);

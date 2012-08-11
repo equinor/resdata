@@ -170,6 +170,13 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
   case(4):
     {
 #ifdef ARCH64
+      /*
+        In the case of a 64 bit CPU the fastest way to swap 32 bit
+        variables will be by swapping two elements in one operation;
+        this is provided by the convert32_64() function. In the case
+        of binary ECLIPSE files this case is quite common, and
+        therefor worth supporting as a special case. 
+      */
       uint64_t *tmp64 = (uint64_t *) data;
 
       for (i = 0; i <elements/2; i++)
@@ -183,9 +190,9 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
       break;
 #else
       uint32_t *tmp32 = (uint32_t *) data;
-
+      
       for (i = 0; i <elements; i++)
-        tmp_int[i] = convert32(tmp32[i]);
+        tmp32[i] = convert32(tmp32[i]);
       
       break;
 #endif
@@ -719,7 +726,7 @@ char * util_alloc_realpath(const char * input_path) {
   
   new_path = realpath( input_path , buffer);
   if (new_path == NULL) 
-    util_abort("%s: input_path:%s - failed %s(%d) \n",__func__ , input_path , strerror(errno) , errno);
+    util_abort("%s: input_path:%s - failed: %s(%d) \n",__func__ , input_path , strerror(errno) , errno);
   else 
     new_path = util_realloc(new_path , strlen(new_path) + 1, __func__);
   
@@ -2802,6 +2809,50 @@ double util_file_difftime(const char *file1 , const char *file2) {
 
   return difftime(t1 , t2);
 }
+
+
+time_t util_file_mtime(const char * file) {
+  time_t mtime = -1;
+  int fd = open( file , O_RDONLY);
+  if (fd != -1) {
+    struct stat f_stat;
+    fstat(fd , &f_stat );
+    mtime = f_stat.st_mtime;
+    close( fd );
+  } 
+  return mtime;
+}
+
+
+
+
+/**
+   Will check if the st_mtime (i.e. last modification) of the file is
+   after the time given by @t0.  
+*/
+
+bool util_file_newer( const char * file , time_t t0) {
+  time_t mtime = util_file_mtime( file );
+  if (difftime(mtime , t0) > 0)
+    return true;
+  else
+    return false;
+}
+
+/**
+   Will check if the st_mtime (i.e. last modification) of the file is
+   before the time given by @t0.  
+*/
+
+
+bool util_file_older( const char * file , time_t t0) {
+  time_t mtime = util_file_mtime( file );
+  if (difftime(mtime , t0) < 0)
+    return true;
+  else
+    return false;
+}
+
 
 
 /** 
