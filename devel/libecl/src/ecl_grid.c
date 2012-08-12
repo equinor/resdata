@@ -44,7 +44,6 @@
   If openmp is enabled the main loop in ecl_grid_init_GRDECL_data is
   parallelized with openmp.  
 */
-#undef HAVE_OPENMP
 #ifdef HAVE_OPENMP
 #include <omp.h>
 #endif
@@ -340,10 +339,12 @@ typedef struct ecl_cell_struct  ecl_cell_type;
 
 
 struct ecl_cell_struct {
+  point_type center;
+  point_type corner_list[8];
+
+
   bool                   active;
   int                    active_index;
-  point_type            *center;
-  point_type            *corner_list[8];
   const ecl_grid_type   *lgr;                /* if this cell is part of an lgr; this will point to a grid instance for that lgr; NULL if not part of lgr. */
   int                    host_cell;          /* the global index of the host cell for an lgr cell, set to -1 for normal cells. */
   bool                   valid_geometry;     /* In the case of GRID files not necessarily all cells geometry values set - in that case this will be left as false. */
@@ -405,21 +406,22 @@ static void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2, bool
     *equal = false;
   else {
     for (i=0; i < 8; i++) 
-      point_compare(c1->corner_list[i] , c2->corner_list[i] , equal);
-    point_compare(c1->center , c2->center , equal);
+      point_compare( &c1->corner_list[i] , &c2->corner_list[i] , equal );
+    
+    point_compare(&c1->center , &c2->center , equal);
   }
 }
 
 static void ecl_cell_dump( const ecl_cell_type * cell , FILE * stream) {
   for (int i=0; i < 8; i++)
-    point_dump( cell->corner_list[i] , stream );
+    point_dump( &cell->corner_list[i] , stream );
 }
 
 
 static void ecl_cell_dump_ascii( const ecl_cell_type * cell , int i , int j , int k , FILE * stream) {
   fprintf(stream , "Cell: i:%3d  j:%3d    k:%3d   active_nr:%6d  Corners:",i,j,k,cell->active_index);
   for (int l=0; l < 8; l++)
-    point_dump_ascii( cell->corner_list[l] , stream );
+    point_dump_ascii( &cell->corner_list[l] , stream );
   fprintf(stream , "\n");
 }
 
@@ -441,17 +443,17 @@ static void ecl_cell_fwrite_GRID( const ecl_grid_type * grid , const ecl_cell_ty
   ecl_kw_fwrite( coords_kw , fortio );
   {
     float * corners = ecl_kw_get_void_ptr( corners_kw );
-    point_type * point = point_alloc_empty();
+    point_type point;
+
     for (int c = 0; c < 8; c++) {
-      point_copy_values( point , cell->corner_list[c] );
+      point_copy_values( &point , &cell->corner_list[c] );
       if (grid->use_mapaxes)
-        point_mapaxes_invtransform( point , grid->origo , grid->unit_x , grid->unit_y );
+        point_mapaxes_invtransform( &point , grid->origo , grid->unit_x , grid->unit_y );
       
-      corners[3*c ]    = point->x;
-      corners[3*c + 1] = point->y;
-      corners[3*c + 2] = point->z;
+      corners[3*c ]    = point.x;
+      corners[3*c + 1] = point.y;
+      corners[3*c + 2] = point.z;
     }
-    point_free( point );
   }
   ecl_kw_fwrite( corners_kw , fortio );
 }
@@ -488,11 +490,11 @@ static inline double min8( double x1 , double x2 , double x3, double x4 , double
 /*****************************************************************/
 
 static double ecl_cell_min_z( const ecl_cell_type * cell) {
-  return min4( cell->corner_list[0]->z , cell->corner_list[1]->z , cell->corner_list[2]->z , cell->corner_list[3]->z);
+  return min4( cell->corner_list[0].z , cell->corner_list[1].z , cell->corner_list[2].z , cell->corner_list[3].z);
 }
 
 static double ecl_cell_max_z( const ecl_cell_type * cell ) {
-  return max4( cell->corner_list[4]->z , cell->corner_list[5]->z , cell->corner_list[6]->z , cell->corner_list[7]->z );
+  return max4( cell->corner_list[4].z , cell->corner_list[5].z , cell->corner_list[6].z , cell->corner_list[7].z );
 }
 
 
@@ -502,25 +504,25 @@ static double ecl_cell_max_z( const ecl_cell_type * cell ) {
 */
 
 static double ecl_cell_min_x( const ecl_cell_type * cell) {
-  return min8( cell->corner_list[0]->x , cell->corner_list[1]->x , cell->corner_list[2]->x , cell->corner_list[3]->x,
-               cell->corner_list[4]->x , cell->corner_list[5]->x , cell->corner_list[6]->x , cell->corner_list[7]->x );
+  return min8( cell->corner_list[0].x , cell->corner_list[1].x , cell->corner_list[2].x , cell->corner_list[3].x,
+               cell->corner_list[4].x , cell->corner_list[5].x , cell->corner_list[6].x , cell->corner_list[7].x );
 }
 
 
 static double ecl_cell_max_x( const ecl_cell_type * cell ) {
-  return max8( cell->corner_list[0]->x , cell->corner_list[1]->x , cell->corner_list[2]->x , cell->corner_list[3]->x,
-               cell->corner_list[4]->x , cell->corner_list[5]->x , cell->corner_list[6]->x , cell->corner_list[7]->x );
+  return max8( cell->corner_list[0].x , cell->corner_list[1].x , cell->corner_list[2].x , cell->corner_list[3].x,
+               cell->corner_list[4].x , cell->corner_list[5].x , cell->corner_list[6].x , cell->corner_list[7].x );
 }
 
 static double ecl_cell_min_y( const ecl_cell_type * cell) {
-  return min8( cell->corner_list[0]->y , cell->corner_list[1]->y , cell->corner_list[2]->y , cell->corner_list[3]->y,
-               cell->corner_list[4]->y , cell->corner_list[5]->y , cell->corner_list[6]->y , cell->corner_list[7]->y );
+  return min8( cell->corner_list[0].y , cell->corner_list[1].y , cell->corner_list[2].y , cell->corner_list[3].y,
+               cell->corner_list[4].y , cell->corner_list[5].y , cell->corner_list[6].y , cell->corner_list[7].y );
 }
 
 
 static double ecl_cell_max_y( const ecl_cell_type * cell ) {
-  return max8( cell->corner_list[0]->y , cell->corner_list[1]->y , cell->corner_list[2]->y , cell->corner_list[3]->y,
-               cell->corner_list[4]->y , cell->corner_list[5]->y , cell->corner_list[6]->y , cell->corner_list[7]->y );
+  return max8( cell->corner_list[0].y , cell->corner_list[1].y , cell->corner_list[2].y , cell->corner_list[3].y,
+               cell->corner_list[4].y , cell->corner_list[5].y , cell->corner_list[6].y , cell->corner_list[7].y );
 }
 
 
@@ -563,8 +565,8 @@ static double ecl_cell_max_y( const ecl_cell_type * cell ) {
 static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
   int c;
   for (c = 0; c < 8; c++) {
-    const point_type *p = cell->corner_list[c];
-    if ((p->x == 0) && (p->y == 0)) {
+    const point_type p = cell->corner_list[c];
+    if ((p.x == 0) && (p.y == 0)) {
       cell->tainted_geometry = true;
       break;
     }
@@ -575,11 +577,11 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
   */
   if (!cell->active) {
     if (!cell->tainted_geometry) {
-      const point_type *p0 = cell->corner_list[0];
+      const point_type p0 = cell->corner_list[0];
       int cell_index = 1;
       while (true) {
-        const point_type * pi = cell->corner_list[cell_index];
-        if (pi->z != p0->z)
+        const point_type pi = cell->corner_list[cell_index];
+        if (pi.z != p0.z)
           // There is a difference - the cell is certainly valid.
           break; 
         else {
@@ -606,14 +608,16 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
    will have a coords/corners section in the grid file.  
 */
 
-static ecl_cell_type * ecl_cell_alloc(void) {
+ecl_cell_type * ecl_cell_alloc(void) {
   ecl_cell_type * cell = util_malloc(sizeof * cell , __func__);
   cell->active         = false;
   cell->lgr            = NULL;
-  cell->center         = point_alloc_empty();
-  for (int i=0; i < 8; i++)
+  
+  /*
+    cell->center         = point_alloc_empty();
+    for (int i=0; i < 8; i++)
     cell->corner_list[i] = point_alloc_empty();
-
+  */
   cell->valid_geometry   = false;
   cell->tainted_geometry = false;
   cell->host_cell        = -1;
@@ -632,7 +636,7 @@ static void ecl_cell_init_tetrahedron( const ecl_cell_type * cell , tetrahedron_
   int point1 = tetrahedron_permutations[ method_nr ][ tetrahedron_nr ][ 1 ];
   int point2 = tetrahedron_permutations[ method_nr ][ tetrahedron_nr ][ 2 ];
 
-  tetrahedron_set_shared( tet , cell->center , cell->corner_list[ point0 ] , cell->corner_list[point1] , cell->corner_list[point2]);
+  tetrahedron_init( tet , &cell->center , &cell->corner_list[ point0 ] , &cell->corner_list[point1] , &cell->corner_list[point2]);
 }
 
 
@@ -651,7 +655,6 @@ static double ecl_cell_get_volume( const ecl_cell_type * cell ) {
 
     ecl_cell_init_tetrahedron( cell , &tet , 1 , itet );
     volume += tetrahedron_volume( &tet );
-
   }
   
   return volume * 0.5;
@@ -713,7 +716,7 @@ static bool ecl_cell_layer_contains_xy( const ecl_cell_type * cell , bool lower_
   if (cell->tainted_geometry)
     return false;
   {
-    point_type * p0,*p1,*p2,*p3;
+    const point_type *p0,*p1,*p2,*p3;
     {
       int corner_offset;
       if (lower_layer) 
@@ -721,10 +724,10 @@ static bool ecl_cell_layer_contains_xy( const ecl_cell_type * cell , bool lower_
       else
         corner_offset = 4;
       
-      p0 = cell->corner_list[corner_offset + 0];
-      p1 = cell->corner_list[corner_offset + 1];
-      p2 = cell->corner_list[corner_offset + 2];
-      p3 = cell->corner_list[corner_offset + 3];
+      p0 = &cell->corner_list[corner_offset + 0];
+      p1 = &cell->corner_list[corner_offset + 1];
+      p2 = &cell->corner_list[corner_offset + 2];
+      p3 = &cell->corner_list[corner_offset + 3];
     }
     
     if (triangle_contains(p0,p1,p2,x,y))
@@ -811,12 +814,6 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
 
 
 static void ecl_cell_free(ecl_cell_type * cell) {
-  point_free( cell->center );
-  {
-    int i;
-    for (i=0; i < 8; i++)
-      point_free( cell->corner_list[i] );
-  }
   free(cell);
 }
 
@@ -896,6 +893,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
     for (i=0; i < grid->size; i++)
       grid->cells[i] = ecl_cell_alloc();
   }
+
   grid->block_dim      = 0;
   grid->values         = NULL;
   if (grid_nr == 0) {  /* this is the main grid */
@@ -915,13 +913,13 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
 
 
 static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
-  int c , i;
+  int i;
   for (i=0; i < ecl_grid->size; i++) {
     ecl_cell_type * cell = ecl_grid->cells[i];
-    point_set(cell->center , 0 , 0 , 0);
-    for (c = 0; c < 8; c++)
-      point_inplace_add(cell->center , cell->corner_list[c]);
-    point_inplace_scale(cell->center , 1.0 / 8.0);
+    point_set(&cell->center , 0 , 0 , 0);
+    for (int c = 0; c < 8; c++)
+      point_inplace_add(&cell->center , &cell->corner_list[c]);
+    point_inplace_scale(&cell->center , 1.0 / 8.0);
   }
 }
 
@@ -942,10 +940,10 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
   for (iz = 0; iz < 2; iz++) {
     for (ip = 0; ip < 4; ip++) {
       int c = ip + iz * 4;
-      point_set(cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
+      point_set(&cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
       
       if (ecl_grid->use_mapaxes)
-        point_mapaxes_transform( cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
+        point_mapaxes_transform( &cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
     }
   }
 
@@ -1023,9 +1021,9 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , int coords_size , 
     }
     
     for (c = 0; c < 8; c++) {
-      point_set(cell->corner_list[c] , corners[3*c] , corners[3*c + 1] , corners[3*c + 2]);
+      point_set(&cell->corner_list[c] , corners[3*c] , corners[3*c + 1] , corners[3*c + 2]);
       if (ecl_grid->use_mapaxes)
-        point_mapaxes_transform( cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
+        point_mapaxes_transform( &cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
     }
 
     cell->valid_geometry = true;
@@ -1308,15 +1306,16 @@ static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid ,  const f
 }
 
 
-
 static void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum) {
   const int ny = ecl_grid->ny;
 #ifdef HAVE_OPENMP
 #pragma omp parallel for
 #endif
+
   for (int j=0; j < ny; j++) 
     ecl_grid_init_GRDECL_data_jslice( ecl_grid , zcorn, coord , actnum , j );
 }
+
 
 
 /*
@@ -2158,9 +2157,9 @@ void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int g
   const ecl_cell_type * cell1 = grid->cells[global_index1];
   const ecl_cell_type * cell2 = grid->cells[global_index2];
   
-  *dx = cell1->center->x - cell2->center->x;
-  *dy = cell1->center->y - cell2->center->y;
-  *dz = cell1->center->z - cell2->center->z;
+  *dx = cell1->center.x - cell2->center.x;
+  *dy = cell1->center.y - cell2->center.y;
+  *dz = cell1->center.z - cell2->center.z;
 
 }
 
@@ -2314,9 +2313,9 @@ void ecl_grid_get_ijk1A(const ecl_grid_type *ecl_grid , int active_index , int *
 
 void ecl_grid_get_xyz1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos) {
   const ecl_cell_type * cell = grid->cells[global_index];
-  *xpos = cell->center->x;
-  *ypos = cell->center->y;
-  *zpos = cell->center->z;
+  *xpos = cell->center.x;
+  *ypos = cell->center.y;
+  *zpos = cell->center.z;
 }
 
 
@@ -2340,10 +2339,10 @@ void ecl_grid_get_xyz3(const ecl_grid_type * grid , int i, int j , int k, double
 void ecl_grid_get_corner_xyz1(const ecl_grid_type * grid , int global_index , int corner_nr , double * xpos , double * ypos , double * zpos ) {
   if ((corner_nr >= 0) &&  (corner_nr <= 7)) {
     const ecl_cell_type * cell  = grid->cells[ global_index ];
-    const point_type    * point = cell->corner_list[ corner_nr ];
-    *xpos = point->x;
-    *ypos = point->y;
-    *zpos = point->z;
+    const point_type      point = cell->corner_list[ corner_nr ];
+    *xpos = point.x;
+    *ypos = point.y;
+    *zpos = point.z;
   }
 }
 
@@ -2364,7 +2363,7 @@ void ecl_grid_get_xyz1A(const ecl_grid_type * grid , int active_index , double *
 
 double ecl_grid_get_cdepth1(const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = grid->cells[global_index];
-  return cell->center->z;
+  return cell->center.z;
 }
 
 
@@ -2407,7 +2406,7 @@ double ecl_grid_get_top1(const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = grid->cells[global_index];
   double depth = 0;
   for (int ij = 0; ij < 4; ij++) 
-    depth += cell->corner_list[ij]->z;
+    depth += cell->corner_list[ij].z;
   
   return depth * 0.25;
 }
@@ -2447,7 +2446,7 @@ double ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = grid->cells[global_index];
   double depth = 0;
   for (int ij = 0; ij < 4; ij++) 
-    depth += cell->corner_list[ij + 4]->z;
+    depth += cell->corner_list[ij + 4].z;
   
   return depth * 0.25;
 }
@@ -2471,7 +2470,7 @@ double ecl_grid_get_cell_thickness1( const ecl_grid_type * grid , int global_ind
   const ecl_cell_type * cell = grid->cells[global_index];
   double thickness = 0;
   for (int ij = 0; ij < 4; ij++) 
-    thickness += (cell->corner_list[ij + 4]->z - cell->corner_list[ij]->z);
+    thickness += (cell->corner_list[ij + 4].z - cell->corner_list[ij].z);
   
   return thickness * 0.25;
 }
@@ -3368,8 +3367,8 @@ static void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord
     chunks of data, where each chunk contains the coordinates (x,y,z)
     for the top and the bottom of the pillar.
   */
-  point_type * top_point    = point_alloc_empty();
-  point_type * bottom_point = point_alloc_empty();
+  point_type top_point;
+  point_type bottom_point;
   
   for (int j=0; j <= grid->ny; j++) {
     for (int i=0; i <= grid->nx; i++) {
@@ -3396,18 +3395,18 @@ static void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord
           corner_index += 2;
         
         {
-          point_copy_values( top_point , top_cell->corner_list[ corner_index]);
-          point_copy_values( bottom_point , bottom_cell->corner_list[ corner_index + 4]);
-          point_mapaxes_invtransform( top_point    , grid->origo , grid->unit_x , grid->unit_y );
-          point_mapaxes_invtransform( bottom_point , grid->origo , grid->unit_x , grid->unit_y );
+          point_copy_values( &top_point , &top_cell->corner_list[ corner_index]);
+          point_copy_values( &bottom_point , &bottom_cell->corner_list[ corner_index + 4]);
+          point_mapaxes_invtransform( &top_point    , grid->origo , grid->unit_x , grid->unit_y );
+          point_mapaxes_invtransform( &bottom_point , grid->origo , grid->unit_x , grid->unit_y );
           
-          coord[coord_offset]     = top_point->x;
-          coord[coord_offset + 1] = top_point->y;
-          coord[coord_offset + 2] = top_point->z;
+          coord[coord_offset]     = top_point.x;
+          coord[coord_offset + 1] = top_point.y;
+          coord[coord_offset + 2] = top_point.z;
           
-          coord[coord_offset + 3] = bottom_point->x;
-          coord[coord_offset + 4] = bottom_point->y;
-          coord[coord_offset + 5] = bottom_point->z;
+          coord[coord_offset + 3] = bottom_point.x;
+          coord[coord_offset + 4] = bottom_point.y;
+          coord[coord_offset + 5] = bottom_point.z;
         }
       }
     }
@@ -3442,15 +3441,15 @@ static void ecl_grid_init_zcorn_data( const ecl_grid_type * grid , float * zcorn
         const ecl_cell_type * cell = grid->cells[ cell_index ];
         
         for (int l=0; l < 2; l++) {
-          point_type * p0 = cell->corner_list[ 4*l];
-          point_type * p1 = cell->corner_list[ 4*l + 1];
-          point_type * p2 = cell->corner_list[ 4*l + 2];
-          point_type * p3 = cell->corner_list[ 4*l + 3];
+          point_type p0 = cell->corner_list[ 4*l];
+          point_type p1 = cell->corner_list[ 4*l + 1];
+          point_type p2 = cell->corner_list[ 4*l + 2];
+          point_type p3 = cell->corner_list[ 4*l + 3];
 
-          zcorn[k*8*nx*ny + j*4*nx + 2*i            + l*4*nx*ny] = p0->z;
-          zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + l*4*nx*ny] = p1->z;
-          zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + l*4*nx*ny] = p2->z;
-          zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + l*4*nx*ny] = p3->z;
+          zcorn[k*8*nx*ny + j*4*nx + 2*i            + l*4*nx*ny] = p0.z;
+          zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + l*4*nx*ny] = p1.z;
+          zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + l*4*nx*ny] = p2.z;
+          zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + l*4*nx*ny] = p3.z;
         }
       }
     }
