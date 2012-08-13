@@ -6,6 +6,14 @@ if (HAVE_PTHREAD)
   list( APPEND header_files thread_pool_posix.h )
 endif()
 
+if (BUILD_LATEX)
+   add_definitions( -DBUILD_LATEX )
+   add_definitions( -DLATEX_CMD=${LATEX})
+
+   list( APPEND source_files latex.c )
+   list( APPEND header_files latex.h )
+endif()
+
 foreach (type int double bool long time_t size_t float)
   set(TYPE ${type} )      
   set(src_target        ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)    

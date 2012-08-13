@@ -57,7 +57,7 @@ void timer_start(timer_type *timer) {
   timer->running    = true;
 
   if (timer->epoch_time)
-    time(&timer->epoch_start);
+    time( &timer->epoch_start );
   else
     timer->clock_start = clock();
   
