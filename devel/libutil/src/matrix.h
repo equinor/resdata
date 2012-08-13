@@ -127,7 +127,12 @@ typedef struct matrix_struct matrix_type;
   void          matrix_copy_block( matrix_type * target_matrix , int target_row , int target_column , int rows , int columns,
                                    const matrix_type * src_matrix , int src_row , int src_column);
   
-  void          matrix_scalar_set( matrix_type * matrix , double value);
+  void    	matrix_scalar_set( matrix_type * matrix , double value);
+  void    	matrix_inplace_diag_sqrt(matrix_type *Cd);
+  void    	matrix_create_identiy(int n,matrix_type *Id);
+  double  	matrix_trace(const matrix_type *matrix);
+  double  	matrix_diag_std(const matrix_type * Sk,double mean);
+
   UTIL_SAFE_CAST_HEADER( matrix );
 
 #ifdef __cplusplus 

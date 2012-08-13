@@ -1345,3 +1345,65 @@ void matrix_matlab_dump(const matrix_type * matrix, const char * filename) {
 
 
 // Comment
+void matrix_inplace_diag_sqrt(matrix_type *Cd)
+{ 
+  int nrows = Cd->rows;
+    
+  if (Cd->rows != Cd->columns) {
+    util_abort("%s: size mismatch \n",__func__);
+  }
+  else{
+    
+    for (int i=0; i<nrows; i++)
+      {
+	Cd->data[GET_INDEX(Cd , i , i)] = sqrt(Cd->data[GET_INDEX(Cd , i , i)]); 
+      }
+  }
+}                                 
+
+
+
+double matrix_trace(const matrix_type *matrix) {
+
+  int nrows  = matrix->rows;
+  double sum = 0;
+    
+  if (matrix->rows != matrix->columns) {
+    util_abort("%s: matrix is not square \n",__func__);
+  }
+  else{
+    
+    for (int i=0; i<nrows; i++)
+      {
+	sum = sum + matrix->data[GET_INDEX(matrix , i , i)]; 
+      }
+  }
+  return sum;
+}
+
+
+
+double matrix_diag_std(const matrix_type * Sk,double mean)
+{
+
+  if (Sk->rows != Sk->columns) {
+    util_abort("%s: matrix is not square \n",__func__);
+  }
+  else{
+    int nrows  = Sk->rows;
+    double std = 0;
+
+    for (int i=0; i<nrows; i++) {
+      Sk->data[GET_INDEX(Sk , i , i)] =  Sk->data[GET_INDEX(Sk , i , i)]-mean; 
+    }
+
+    for (int i=0; i<nrows; i++) {
+      double d = Sk->data[GET_INDEX(Sk , i , i)] - mean;
+      std += d*d;
+    }
+
+    
+    std = sqrt(std)/nrows;
+    return std;
+  }
+}
