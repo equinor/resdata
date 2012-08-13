@@ -87,7 +87,7 @@ point_type * point_alloc_empty( ) {
 }
 
 point_type * point_alloc( double x , double y , double z) {
-  point_type * p = util_malloc( sizeof * p , __func__);
+  point_type * p = point_alloc_empty( );
   point_set( p , x , y , z );
   return p;
 }

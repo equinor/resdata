@@ -26,6 +26,7 @@ extern "C" {
 #include <time.h>
 #include <stdbool.h>
 
+#include <float_vector.h>
 #include <stringlist.h>
 
 #include <smspec_node.h>
@@ -114,21 +115,25 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   
   void              ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys);
   stringlist_type * ecl_smspec_alloc_matching_general_var_list(const ecl_smspec_type * smspec , const char * pattern);
-  
+
+  int               ecl_smspec_get_time_index( const ecl_smspec_type * ecl_smspec );
   time_t            ecl_smspec_get_start_time(const ecl_smspec_type * );
   /*****************************************************************/
-  bool                    ecl_smspec_get_formatted( const ecl_smspec_type * ecl_smspec);
-  const char            * ecl_smspec_get_header_file( const ecl_smspec_type * ecl_smspec );
-  stringlist_type       * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec , const char * pattern);
-  stringlist_type       * ecl_smspec_alloc_group_list( const ecl_smspec_type * smspec , const char * pattern);
-  stringlist_type       * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec );
-  const char            * ecl_smspec_get_simulation_path(const ecl_smspec_type * ecl_smspec);
-  const stringlist_type * ecl_smspec_get_restart_list( const ecl_smspec_type * ecl_smspec);
-  const char            * ecl_smspec_get_join_string( const ecl_smspec_type * smspec);
-  const float          * ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec );
+  bool                       ecl_smspec_get_formatted( const ecl_smspec_type * ecl_smspec);
+  const char               * ecl_smspec_get_header_file( const ecl_smspec_type * ecl_smspec );
+  stringlist_type          * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec , const char * pattern);
+  stringlist_type          * ecl_smspec_alloc_group_list( const ecl_smspec_type * smspec , const char * pattern);
+  stringlist_type          * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec );
+  const char               * ecl_smspec_get_simulation_path(const ecl_smspec_type * ecl_smspec);
+  const stringlist_type    * ecl_smspec_get_restart_list( const ecl_smspec_type * ecl_smspec);
+  const char               * ecl_smspec_get_join_string( const ecl_smspec_type * smspec);
+  const float_vector_type  * ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec );
+  void                       ecl_smspec_update_wgname( ecl_smspec_type * smspec , smspec_node_type * node , const char * wgname );
 
-  int                     ecl_smspec_get_params_size( const ecl_smspec_type * smspec );
+  const int                * ecl_smspec_get_grid_dims( const ecl_smspec_type * smspec );
+  int                        ecl_smspec_get_params_size( const ecl_smspec_type * smspec );
   const   smspec_node_type * ecl_smspec_iget_node( const ecl_smspec_type * smspec , int index );
+  void                       ecl_smspec_lock( ecl_smspec_type * smspec );
 
 #ifdef __cplusplus
 }

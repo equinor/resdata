@@ -49,7 +49,9 @@ typedef struct ecl_sum_tstep_struct ecl_sum_tstep_type;
 
   void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int_vector_type * index_map , fortio_type * fortio);
   void ecl_sum_tstep_iset( ecl_sum_tstep_type * tstep , int index , float value);
-  
+  void ecl_sum_tstep_set_from_node( ecl_sum_tstep_type * tstep , const smspec_node_type * smspec_node , float value);
+  void ecl_sum_tstep_set_from_key( ecl_sum_tstep_type * tstep , const char * gen_key , float value);
+
   UTIL_SAFE_CAST_HEADER( ecl_sum_tstep );
   UTIL_SAFE_CAST_HEADER_CONST( ecl_sum_tstep );
 

@@ -74,6 +74,7 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
                                         const char * keyword , 
                                         const char * unit    , 
                                         const char * key_join_string , 
+                                        const int grid_dims[3] , 
                                         int num , int param_index, float default_value);
 
   smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type , 
@@ -91,10 +92,12 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   void                smspec_node_free__(void * arg);
   void                smspec_node_set_params_index( smspec_node_type * smspec_node , int params_index);
   int                 smspec_node_get_params_index( const smspec_node_type * smspec_node );  
-  const char        * smspec_node_get_gen_key( const smspec_node_type * smspec_node);
+  const char        * smspec_node_get_gen_key1( const smspec_node_type * smspec_node);
+  const char        * smspec_node_get_gen_key2( const smspec_node_type * smspec_node);
   ecl_smspec_var_type smspec_node_get_var_type( const smspec_node_type * smspec_node);
   int                 smspec_node_get_num( const smspec_node_type * smspec_node);
   const char        * smspec_node_get_wgname( const smspec_node_type * smspec_node);
+  void                smspec_node_update_wgname( smspec_node_type * index , const char * wgname , const char * key_join_string);
   const char        * smspec_node_get_keyword( const smspec_node_type * smspec_node);
   const char        * smspec_node_get_unit( const smspec_node_type * smspec_node);
   bool                smspec_node_is_rate( const smspec_node_type * smspec_node );

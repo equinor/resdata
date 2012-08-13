@@ -32,6 +32,7 @@ extern "C" {
 #include <double_vector.h>
 
 #include <ecl_smspec.h>
+#include <ecl_sum_tstep.h>
 #include <smspec_node.h>
 
 
@@ -41,7 +42,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   double         ecl_sum_get_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const smspec_node_type * node);
   
   void           ecl_sum_set_unified( ecl_sum_type * ecl_sum , bool unified );
-  void           ecl_sum_set_fmt_output( ecl_sum_type * ecl_sum , bool fmt_case );
+  void           ecl_sum_set_fmt_case( ecl_sum_type * ecl_sum , bool fmt_case );
 
   int              ecl_sum_get_report_step_from_time( const ecl_sum_type * sum , time_t sim_time);
   int              ecl_sum_get_report_step_from_days( const ecl_sum_type * sum , double sim_days);
@@ -163,10 +164,15 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   
   int                   ecl_sum_iget_report_end( const ecl_sum_type * ecl_sum , int report_step );
   int                   ecl_sum_iget_report_start( const ecl_sum_type * ecl_sum , int report_step );
-  
+
+  ecl_sum_type        * ecl_sum_alloc_writer( const char * ecl_case , bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , int nx , int ny , int nz);
   void                  ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case);
   void                  ecl_sum_fwrite( const ecl_sum_type * ecl_sum );
-  
+  void                  ecl_sum_fwrite_smspec( const ecl_sum_type * ecl_sum );
+  smspec_node_type    * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value);
+  ecl_sum_tstep_type  * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step , double sim_days);
+  void                  ecl_sum_update_wgname( ecl_sum_type * ecl_sum , smspec_node_type * node , const char * wgname );
+
 UTIL_IS_INSTANCE_HEADER( ecl_sum );
 
 #ifdef __cplusplus

@@ -26,7 +26,7 @@
 #include <ecl_file.h>
 
 
-void test_case( const char * base ) {
+void test_case( const char * base , bool load_all) {
   timer_type * ti = timer_alloc(false);
   timer_type * tr = timer_alloc(false);
   timer_type * tg = timer_alloc(false);
@@ -46,12 +46,14 @@ void test_case( const char * base ) {
 
   timer_start( ti );
   init = ecl_file_open( init_file );
-  ecl_file_load_all( init );
+  if (load_all)
+    ecl_file_load_all( init );
   timer_stop( ti );
 
   timer_start( tr );
   restart = ecl_file_open( restart_file );
-  ecl_file_load_all( restart );
+  if (load_all)
+    ecl_file_load_all( restart );
   timer_stop( tr );
 
 
@@ -74,9 +76,9 @@ void test_case( const char * base ) {
 
 
 int main(int argc, char ** argv) {
-  const char * base = argv[1];
+  bool load_all = true;
   int i;
   for (i=1; i < argc; i++)
-    test_case( argv[i] );
+    test_case( argv[i] , load_all);
   
 }

@@ -141,7 +141,7 @@ void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
 
 
 static ecl_sum_type * ecl_sum_alloc__( const char * input_arg , const char * key_join_string) {
-  ecl_sum_type *ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
+  ecl_sum_type * ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
   UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
   
   ecl_sum->ecl_case = NULL;
@@ -184,12 +184,15 @@ static void ecl_sum_fread_data( ecl_sum_type * ecl_sum , const stringlist_type *
 static void ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , const stringlist_type *data_files , bool include_restart) {
   
   ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , ecl_sum->key_join_string , include_restart);
-  ecl_sum_fread_data( ecl_sum , data_files , include_restart );
   {
     bool fmt_file;
-    ecl_file_enum file_type = ecl_util_get_file_type( stringlist_iget( data_files , 0 ) , &fmt_file , NULL);
-    
-    ecl_sum_set_fmt_output( ecl_sum , fmt_file );
+    ecl_util_get_file_type( header_file , &fmt_file , NULL);
+    ecl_sum_set_fmt_case( ecl_sum , fmt_file );
+  }
+  ecl_sum_fread_data( ecl_sum , data_files , include_restart );
+
+  {
+    ecl_file_enum file_type = ecl_util_get_file_type( stringlist_iget( data_files , 0 ) , NULL , NULL);
     
     if (file_type == ECL_SUMMARY_FILE)
       ecl_sum_set_unified( ecl_sum , false );
@@ -197,7 +200,6 @@ static void ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , con
       ecl_sum_set_unified( ecl_sum , true);
     else
       util_abort("%s: what the fuck? \n",__func__);
-    
   }
 }
 
@@ -244,26 +246,31 @@ void ecl_sum_set_unified( ecl_sum_type * ecl_sum , bool unified ) {
 }
 
 
-void ecl_sum_set_fmt_output( ecl_sum_type * ecl_sum , bool fmt_case ) {
+void ecl_sum_set_fmt_case( ecl_sum_type * ecl_sum , bool fmt_case ) {
   ecl_sum->fmt_case = fmt_case;
 }
 
 
-void ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , const char * unit , int num , float default_value) {
+smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value) {
   ecl_smspec_var_type var_type = ecl_smspec_identify_var_type( keyword );
-  smspec_node_type * smspec_node = smspec_node_alloc( var_type , wgname , keyword , unit , ecl_sum->key_join_string , num , -1 , default_value );
+  smspec_node_type * smspec_node = smspec_node_alloc( var_type , wgname , keyword , unit , ecl_sum->key_join_string , ecl_smspec_get_grid_dims( ecl_sum->smspec ) , num , -1 , default_value );
   ecl_smspec_add_node( ecl_sum->smspec , smspec_node );
+  return smspec_node;
 }
 
+
+ecl_sum_tstep_type * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step , double sim_days) {
+  return ecl_sum_data_add_new_tstep( ecl_sum->data , report_step , sim_days );
+}
 
 
 ecl_sum_type * ecl_sum_alloc_writer( const char * ecl_case , bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , int nx , int ny , int nz) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc__( ecl_case , key_join_string );
   ecl_sum_set_unified( ecl_sum , unified );
-  ecl_sum_set_fmt_output( ecl_sum , fmt_output );
+  ecl_sum_set_fmt_case( ecl_sum , fmt_output );
 
   ecl_sum->smspec = ecl_smspec_alloc_writer( key_join_string , sim_start , nx , ny , nz );
-  ecl_sum->data = ecl_sum_data_alloc_writer( ecl_sum->smspec );
+  ecl_sum->data   = ecl_sum_data_alloc_writer( ecl_sum->smspec );
   
   return ecl_sum;
 }
@@ -271,10 +278,14 @@ ecl_sum_type * ecl_sum_alloc_writer( const char * ecl_case , bool fmt_output , b
 
 
 void ecl_sum_fwrite( const ecl_sum_type * ecl_sum ) {
-  ecl_smspec_fwrite( ecl_sum->smspec , ecl_sum->ecl_case , ecl_sum->fmt_case );
+  ecl_sum_fwrite_smspec( ecl_sum );
   ecl_sum_data_fwrite( ecl_sum->data , ecl_sum->ecl_case , ecl_sum->fmt_case , ecl_sum->unified );
 }
 
+
+void ecl_sum_fwrite_smspec( const ecl_sum_type * ecl_sum ) {
+  ecl_smspec_fwrite( ecl_sum->smspec , ecl_sum->ecl_case , ecl_sum->fmt_case );
+}
 
 /*****************************************************************/
 
@@ -1022,3 +1033,8 @@ int ecl_sum_get_report_step_from_days( const ecl_sum_type * sum , double sim_day
 const ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum ) {
   return ecl_sum->smspec;
 }
+
+void ecl_sum_update_wgname( ecl_sum_type * ecl_sum , smspec_node_type * node , const char * wgname ) {
+  ecl_smspec_update_wgname( ecl_sum->smspec ,node , wgname );
+}
+

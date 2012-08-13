@@ -26,6 +26,7 @@ conf.update_env( env , [ LIBECL , LIBPLOT , LIBCONFIG , LIBGEOMETRY , LIBUTIL ] 
 env.Append( CPPPATH = conf.PLPLOT_INCLUDE_PATH )
 env.Append( LIBPATH = conf.PLPLOT_LIB_PATH )
 
+add_program(env , conf ,  bin_path , "sum_write"         , "sum_write.c" )
 add_program(env , conf ,  bin_path , "grdecl_test.x"     , "grdecl_test.c"        )
 add_program(env , conf ,  bin_path , "load_test.x"       , "load_test.c"        )
 add_program(env , conf ,  bin_path , "select_test.x"     , "select_test.c"        )

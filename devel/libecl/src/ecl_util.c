@@ -606,39 +606,6 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
     }
   }
   
-  
-
-  //if (must_exist) {
-  //  const int max_usleep_time = 10000000;  /* 10 seconds   */ 
-  //  const int usleep_time     =    10000;  /* 1/100 second */
-  //  int   total_usleep_time   =        0;
-  //
-  //
-  //  /*
-  //    If we require the file to exist we do several attempts, waiting
-  //    up to ten seconds. The reason for this funny approach is that we
-  //    have quite a lot of problems with file-system synchronization (I
-  //    think ...). Where a file which clearly "is there" fails to show
-  //    up.
-  //  */
-  //  
-  //
-  //  while (1) {
-  //    if (util_file_exists(filename)) 
-  //      break;
-  //    else {
-  //      /* Return NULL if the file does not exist */
-  //      if (total_usleep_time >= max_usleep_time) {
-  //        filename = util_safe_free( filename );  
-  //        break;
-  //      }
-  //      
-  //      total_usleep_time += usleep_time;
-  //      usleep(usleep_time);
-  //    }
-  //  }
-  //}
-  
   return filename;
 }
 
@@ -836,7 +803,8 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
 
 /*
   The stringlist will be cleared before the actual matching process
-  starts.  
+  starts. Observe that in addition to the @path input parameter the
+  @base input can contain an embedded path component.
 */
 
 void ecl_util_alloc_summary_data_files(const char * path , const char * base , bool fmt_file , stringlist_type * filelist) {

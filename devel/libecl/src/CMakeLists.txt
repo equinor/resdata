@@ -7,6 +7,16 @@ set( source_files ecl_sum_tstep.c ecl_rst_file.c ecl_init_file.c ecl_grid_cache.
 set( header_files ecl_sum_tstep.h ecl_rst_file.h ecl_init_file.h smspec_node.h ecl_grid_cache.h ecl_kw_grdecl.h ecl_file_kw.h ecl_grav.h ecl_grav_calc.h ecl_endian_flip.h ecl_smspec.h ecl_sum_data.h ecl_util.h ecl_kw.h ecl_sum.h fortio.h ecl_rft_file.h ecl_rft_node.h ecl_box.h ecl_grid.h ecl_io_config.h ecl_file.h ecl_region.h ecl_intehead.h ecl_kw_magic.h ecl_subsidence.h ${ext_header} ecl_grav_common.h)
 
 
+
+
+add_library( ecl_static  STATIC ${source_files} )
+add_library( ecl_shared  SHARED ${source_files} )
+
+set_target_properties( ecl_static PROPERTIES OUTPUT_NAME ecl )
+set_target_properties( ecl_shared PROPERTIES OUTPUT_NAME ecl )
+
+#-----------------------------------------------------------------
+option(USE_OPENMP "Include OpenMP support" OFF)
 if (USE_OPENMP)
    INCLUDE(CheckCCompilerFlag)
    CHECK_C_COMPILER_FLAG(-fopenmp OPENMP)
@@ -15,12 +25,6 @@ if (USE_OPENMP)
    endif()
 endif()
 
-
-add_library( ecl_static  STATIC ${source_files} )
-add_library( ecl_shared  SHARED ${source_files} )
-
-set_target_properties( ecl_static PROPERTIES OUTPUT_NAME ecl )
-set_target_properties( ecl_shared PROPERTIES OUTPUT_NAME ecl )
 
 if (OPENMP)
    target_link_libraries( ecl_static gomp )

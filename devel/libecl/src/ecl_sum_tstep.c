@@ -38,16 +38,18 @@ struct ecl_sum_tstep_struct {
   double                   sim_days;        /* Accumulated simulation time up to this ministep. */
   int                      data_size;       /* Number of elements in data - only used for checking indices. */
   int                      internal_index;  /* Used for lookups of the next / previous ministep based on an existing ministep. */
+  const ecl_smspec_type  * smspec;                   
 };
 
 
-static ecl_sum_tstep_type * ecl_sum_tstep_alloc( int report_step , int ministep_nr , int data_size) {
+static ecl_sum_tstep_type * ecl_sum_tstep_alloc( int report_step , int ministep_nr , const ecl_smspec_type * smspec) {
   ecl_sum_tstep_type * tstep = util_malloc( sizeof * tstep , __func__);
   UTIL_TYPE_ID_INIT( tstep , ECL_SUM_TSTEP_ID);
+  tstep->smspec      = smspec;
   tstep->report_step = report_step;
   tstep->ministep    = ministep_nr;
-  tstep->data_size   = data_size;
-  tstep->data        = util_malloc( data_size * sizeof * tstep->data , __func__); 
+  tstep->data_size   = ecl_smspec_get_params_size( smspec );
+  tstep->data        = util_malloc( tstep->data_size * sizeof * tstep->data , __func__); 
   return tstep;
 }
 
@@ -147,7 +149,7 @@ ecl_sum_tstep_type * ecl_sum_tstep_alloc_from_file( int report_step    ,
   int data_size = ecl_kw_get_size( params_kw );
   
   if (data_size == ecl_smspec_get_params_size( smspec )) {
-    ecl_sum_tstep_type * ministep = ecl_sum_tstep_alloc( report_step , ministep_nr , data_size);
+    ecl_sum_tstep_type * ministep = ecl_sum_tstep_alloc( report_step , ministep_nr , smspec);
     ecl_kw_get_memcpy_data( params_kw , ministep->data );
     ecl_sum_tstep_set_time_info( ministep , smspec );
     return ministep;
@@ -164,18 +166,17 @@ ecl_sum_tstep_type * ecl_sum_tstep_alloc_from_file( int report_step    ,
 }
 
 
+/*
+  Should be called in write mode.
+*/
 
 ecl_sum_tstep_type * ecl_sum_tstep_alloc_new( int report_step , int ministep , float sim_days , const ecl_smspec_type * smspec ) {
-  int data_size = ecl_smspec_get_params_size( smspec );
-  ecl_sum_tstep_type * tstep = ecl_sum_tstep_alloc( report_step , ministep , data_size );
-  const float * default_data = ecl_smspec_get_params_default( smspec );
-  if (default_data != NULL)
-    memcpy( tstep->data , default_data , data_size * sizeof * tstep->data );
-  else {
-    for (int i=0; i < data_size; i++)
-      tstep->data[i] = 0;
-  }
+  ecl_sum_tstep_type * tstep = ecl_sum_tstep_alloc( report_step , ministep , smspec );
+  const float_vector_type * default_data = ecl_smspec_get_params_default( smspec );
+  float_vector_memcpy_data( tstep->data , default_data );
+
   ecl_sum_tstep_set_time_info_from_days( tstep , ecl_smspec_get_start_time( smspec ) , sim_days );
+  ecl_sum_tstep_iset( tstep , ecl_smspec_get_time_index( smspec ) , sim_days );
   return tstep;
 }
 
@@ -237,9 +238,25 @@ void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int_vecto
 }
 
 
+/*****************************************************************/
+
 void ecl_sum_tstep_iset( ecl_sum_tstep_type * tstep , int index , float value) {
   if ((index < tstep->data_size) && (index >= 0))
     tstep->data[index] = value;
   else
     util_abort("%s: index:%d invalid. Valid range: [0,%d) \n",__func__  ,index , tstep->data_size);
 }
+
+
+void ecl_sum_tstep_set_from_node( ecl_sum_tstep_type * tstep , const smspec_node_type * smspec_node , float value) {
+  int data_index = smspec_node_get_params_index( smspec_node );
+  ecl_sum_tstep_iset( tstep , data_index , value);
+}
+
+
+void ecl_sum_tstep_set_from_key( ecl_sum_tstep_type * tstep , const char * gen_key , float value) {
+  const smspec_node_type * smspec_node = ecl_smspec_get_general_var_node( tstep->smspec , gen_key );
+  ecl_sum_tstep_set_from_node( tstep , smspec_node , value);
+}
+
+

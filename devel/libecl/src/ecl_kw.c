@@ -336,16 +336,7 @@ bool ecl_kw_ichar_eq(const ecl_kw_type *ecl_kw , int i , const char *value) {
 }
 
 
-bool ecl_kw_header_eq(const ecl_kw_type *ecl_kw , const char *kw) {
-  return ecl_kw_string_eq(ecl_kw_get_header8(ecl_kw) , kw);
-}
-
-
-/**
-   This function compares two ecl_kw instances, and returns true if they are equal.
-*/
-
-bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
+static bool ecl_kw_header_eq(const ecl_kw_type *ecl_kw1 , const ecl_kw_type * ecl_kw2) {
   bool  equal = true;
 
   if (strcmp(ecl_kw1->header8 , ecl_kw2->header8) != 0)            
@@ -354,20 +345,49 @@ bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
     equal = false;
   else if (ecl_kw1->ecl_type != ecl_kw2->ecl_type) 
     equal = false;
-  else 
-    equal = ecl_kw_data_equal( ecl_kw1 , ecl_kw2->data );
 
   return equal;
 }
 
-
-bool ecl_kw_data_equal( const ecl_kw_type * ecl_kw , const void * data) {
-  int cmp = memcmp( ecl_kw->data , data , ecl_kw->size * ecl_kw->sizeof_ctype);
+static bool ecl_kw_data_equal__( const ecl_kw_type * ecl_kw , const void * data , int cmp_elements) {
+  int cmp = memcmp( ecl_kw->data , data , cmp_elements * ecl_kw->sizeof_ctype);
   if (cmp == 0)
     return true;
   else
     return false;
 }
+
+
+
+bool ecl_kw_data_equal( const ecl_kw_type * ecl_kw , const void * data) {
+  return ecl_kw_data_equal__( ecl_kw , data , ecl_kw->size);
+}
+
+
+
+/**
+   This function compares two ecl_kw instances, and returns true if they are equal.
+*/
+
+bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
+  bool equal = ecl_kw_header_eq( ecl_kw1 , ecl_kw2 );
+  if (equal)
+    equal = ecl_kw_data_equal( ecl_kw1 , ecl_kw2->data );
+  
+  return equal;
+}
+
+
+bool ecl_kw_block_equal( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int cmp_elements) {
+  if (ecl_kw_header_eq( ecl_kw1 , ecl_kw2)) {
+    if (cmp_elements == 0)
+      cmp_elements = ecl_kw1->size;
+    
+    return ecl_kw_data_equal__( ecl_kw1 , ecl_kw2->data , cmp_elements );
+  } else
+    return false;
+}
+
 
 
 static void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
@@ -974,14 +994,16 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
                Due to the necessary terminating \0 characters there is
                not a continous file/memory mapping.
             */
-            int read_elm = util_int_min((ib + 1) * blocksize , ecl_kw->size) - ib * blocksize;
-            FILE *stream = fortio_get_FILE(fortio);
+            int  read_elm = util_int_min((ib + 1) * blocksize , ecl_kw->size) - ib * blocksize;
+            FILE * stream = fortio_get_FILE(fortio);
             int ir;
             fortio_init_read(fortio);
+
             for (ir = 0; ir < read_elm; ir++) {
               util_fread( &ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream , __func__);
               ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype + ECL_STRING_LENGTH] = null_char;
             }
+
             fortio_complete_read(fortio);
           } 
         } else

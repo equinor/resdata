@@ -791,7 +791,8 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
   This function is meant to be called in write mode; and will create a
   new and empty tstep which is appended to the current data. The tstep
   will also be returned, so the calling scope can call
-  ecl_sum_tstep_iset() to set elements in the tstep.  */
+  ecl_sum_tstep_iset() to set elements in the tstep.
+*/
   
 ecl_sum_tstep_type * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int report_step , double sim_days) {
   int ministep_nr = vector_get_size( data->data );
@@ -802,7 +803,6 @@ ecl_sum_tstep_type * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int 
     prev_tstep = vector_get_last( data->data );
   
   ecl_sum_data_append_tstep__( data , ministep_nr , tstep );
-  
   {
     bool rebuild_index = true;
 
@@ -827,7 +827,7 @@ ecl_sum_tstep_type * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int 
     if (rebuild_index)
       ecl_sum_data_build_index( data );
   }
-
+  ecl_smspec_lock( data->smspec );
   
   return tstep;
 }
@@ -920,6 +920,10 @@ static void ecl_sum_data_ensure_index( ecl_sum_data_type * data ) {
 
 static void ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , const stringlist_type * filelist) {
   ecl_file_enum file_type;
+
+  if (stringlist_get_size( filelist ) == 0)
+    util_abort("%s: internal error - function called with empty list of data files.\n",__func__);
+  
   file_type = ecl_util_get_file_type( stringlist_iget( filelist , 0 ) , NULL , NULL);
   if ((stringlist_get_size( filelist ) > 1) && (file_type != ECL_SUMMARY_FILE))
     util_abort("%s: internal error - when calling with more than one file - you can not supply a unified file - come on?! \n",__func__);

@@ -16,51 +16,25 @@
    for more details. 
 */
 
-#include <util.h>
 #include <stdlib.h>
-#include <point.h>
-#include <tetrahedron.h>
 #include <math.h>
+
+#include <util.h>
 #include <matrix.h>
 #include <matrix_lapack.h>
 
+#include <point.h>
+#include <tetrahedron.h>
 
-void tetrahedron_set_shared( tetrahedron_type * tet , point_type * p0 , point_type * p1 , point_type * p2 , point_type * p3) {
-  tet->point_owner = false;
-  tet->p0 = p0 ;
-  tet->p1 = p1 ;
-  tet->p2 = p2 ;
-  tet->p3 = p3 ;
+
+
+void tetrahedron_init( tetrahedron_type * tet , const point_type * p0 , const point_type * p1 , const point_type * p2 , const point_type * p3) {
+  tet->p0 = p0;
+  tet->p1 = p1;
+  tet->p2 = p2;
+  tet->p3 = p3;
 }
 
-
-tetrahedron_type * tetrahedron_alloc( point_type * p0 , point_type * p1 , point_type * p2 , point_type * p3 , bool point_owner) {
-  tetrahedron_type * tet = util_malloc( sizeof * tet , __func__);
-  
-  
-  if (point_owner) {
-    tet->point_owner = true;
-    tet->p0 = point_copyc( p0 );
-    tet->p1 = point_copyc( p1 );
-    tet->p2 = point_copyc( p2 );
-    tet->p3 = point_copyc( p3 );
-  } else
-    tetrahedron_set_shared( tet , p0 , p1 , p2 , p3 );
-  
-  return tet;
-}
-
-
-
-void tetrahedron_free( tetrahedron_type * tet ) {
-  if (tet->point_owner) {
-    point_free(tet->p0);
-    point_free(tet->p1);
-    point_free(tet->p2);
-    point_free(tet->p3);
-  } 
-  free( tet );
-}
 
 
 
