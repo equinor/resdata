@@ -34,7 +34,7 @@
 #define __LATEX_CMD "/usr/bin/pdflatex"
 #endif
 
-#define LATEX_EXTENSION  "tex"
+
 #define TARGET_EXTENSION "pdf"
 #define RUNPATH_FMT      "/tmp/latex-XXXXXX"
 #define DEFAULT_TIMEOUT  60

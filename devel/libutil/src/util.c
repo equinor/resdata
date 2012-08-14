@@ -2478,8 +2478,6 @@ bool util_is_file(const char * path) {
 
 
 
-
-
 /**
    Will return false if the path does not exist.
 */

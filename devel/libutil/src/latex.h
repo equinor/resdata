@@ -26,6 +26,8 @@ extern "C" {
 
 #include <stdbool.h>
 
+#define LATEX_EXTENSION  "tex"
+
   typedef struct latex_struct latex_type;
   
 
