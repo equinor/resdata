@@ -304,6 +304,20 @@ matrix_type * matrix_alloc_copy(const matrix_type * src) {
   return matrix_alloc_copy__(src , false );
 }
 
+
+matrix_type * matrix_realloc_copy(matrix_type * T , const matrix_type * src) {
+  if (T == NULL)
+    return matrix_alloc_copy( src );
+  else {
+    matrix_resize( T , src->rows , src->columns , false );
+    matrix_assign( T , src );
+    return T;
+  }
+}
+
+
+
+
 /**
    Will return NULL if allocation of the copy failed. 
 */

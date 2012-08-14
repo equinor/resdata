@@ -43,6 +43,7 @@ typedef struct matrix_struct matrix_type;
   bool          matrix_safe_resize(matrix_type * matrix , int rows , int columns , bool copy_content);
   matrix_type * matrix_alloc_copy(const matrix_type * src);
   matrix_type * matrix_safe_alloc_copy(const matrix_type * src);
+  matrix_type * matrix_realloc_copy(matrix_type * T , const matrix_type * src);
   
   matrix_type * matrix_alloc_shared(const matrix_type * src , int row , int column , int rows , int columns);
   void          matrix_free(matrix_type * matrix);
@@ -127,11 +128,11 @@ typedef struct matrix_struct matrix_type;
   void          matrix_copy_block( matrix_type * target_matrix , int target_row , int target_column , int rows , int columns,
                                    const matrix_type * src_matrix , int src_row , int src_column);
   
-  void    	matrix_scalar_set( matrix_type * matrix , double value);
-  void    	matrix_inplace_diag_sqrt(matrix_type *Cd);
-  void    	matrix_create_identiy(int n,matrix_type *Id);
-  double  	matrix_trace(const matrix_type *matrix);
-  double  	matrix_diag_std(const matrix_type * Sk,double mean);
+  void          matrix_scalar_set( matrix_type * matrix , double value);
+  void          matrix_inplace_diag_sqrt(matrix_type *Cd);
+  void          matrix_create_identiy(int n,matrix_type *Id);
+  double        matrix_trace(const matrix_type *matrix);
+  double        matrix_diag_std(const matrix_type * Sk,double mean);
 
   UTIL_SAFE_CAST_HEADER( matrix );
 
