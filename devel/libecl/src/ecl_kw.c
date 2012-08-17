@@ -358,6 +358,10 @@ static bool ecl_kw_data_equal__( const ecl_kw_type * ecl_kw , const void * data 
 }
 
 
+/**
+   Observe that the comparison is done with memcmp() -
+   i.e. "reasonably good" numerical agreement is *not* enough.  
+*/
 
 bool ecl_kw_data_equal( const ecl_kw_type * ecl_kw , const void * data) {
   return ecl_kw_data_equal__( ecl_kw , data , ecl_kw->size);
@@ -2050,6 +2054,47 @@ void ecl_kw_inplace_mul( ecl_kw_type * target_kw , const ecl_kw_type * mul_kw) {
   }
 }
 
+#define ECL_KW_TYPED_INPLACE_MUL_INDEXED( ctype ) \
+static void ecl_kw_inplace_mul_indexed_ ## ctype( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * mul_kw) { \
+ if (!ecl_kw_assert_binary_ ## ctype( target_kw , mul_kw ))                                \
+    util_abort("%s: type/size  mismatch\n",__func__);                                      \
+ {                                                                                         \
+    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * mul_data = ecl_kw_get_data_ref( mul_kw );                                \
+    int set_size     = int_vector_size( index_set );                                       \
+    const int * index_data = int_vector_get_const_ptr( index_set );                        \
+    for (int i=0; i < set_size; i++) {                                                     \
+      int index = index_data[i];                                                           \
+      target_data[index] *= mul_data[index];                                               \
+    }                                                                                      \
+  }                                                                                        \
+}
+
+
+ECL_KW_TYPED_INPLACE_MUL_INDEXED( int )
+ECL_KW_TYPED_INPLACE_MUL_INDEXED( double )
+ECL_KW_TYPED_INPLACE_MUL_INDEXED( float )
+#undef ECL_KW_TYPED_INPLACE_MUL
+
+void ecl_kw_inplace_mul_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * mul_kw) {
+  ecl_type_enum type = ecl_kw_get_type(target_kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_mul_indexed_float( target_kw , index_set , mul_kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_mul_indexed_double( target_kw , index_set , mul_kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_mul_indexed_int( target_kw , index_set , mul_kw );
+    break;
+  default:
+    util_abort("%s: inplace mul not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+  }
+}
+
+
+
 /*****************************************************************/
 
 #define ECL_KW_TYPED_INPLACE_DIV( ctype ) \
@@ -2084,6 +2129,47 @@ void ecl_kw_inplace_div( ecl_kw_type * target_kw , const ecl_kw_type * div_kw) {
     util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
   }
 }
+
+
+#define ECL_KW_TYPED_INPLACE_DIV_INDEXED( ctype ) \
+static void ecl_kw_inplace_div_indexed_ ## ctype( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * div_kw) { \
+ if (!ecl_kw_assert_binary_ ## ctype( target_kw , div_kw ))                                \
+    util_abort("%s: type/size  mismatch\n",__func__);                                      \
+ {                                                                                         \
+    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * div_data = ecl_kw_get_data_ref( div_kw );                                \
+    int set_size     = int_vector_size( index_set );                                       \
+    const int * index_data = int_vector_get_const_ptr( index_set );                        \
+    for (int i=0; i < set_size; i++) {                                                     \
+      int index = index_data[i];                                                           \
+      target_data[index] *= div_data[index];                                               \
+    }                                                                                      \
+  }                                                                                        \
+}
+
+
+ECL_KW_TYPED_INPLACE_DIV_INDEXED( int )
+ECL_KW_TYPED_INPLACE_DIV_INDEXED( double )
+ECL_KW_TYPED_INPLACE_DIV_INDEXED( float )
+#undef ECL_KW_TYPED_INPLACE_DIV
+
+void ecl_kw_inplace_div_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * div_kw) {
+  ecl_type_enum type = ecl_kw_get_type(target_kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_div_indexed_float( target_kw , index_set , div_kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_div_indexed_double( target_kw , index_set , div_kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_div_indexed_int( target_kw , index_set , div_kw );
+    break;
+  default:
+    util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+  }
+}
+
 
 
 

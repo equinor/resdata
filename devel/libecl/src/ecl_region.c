@@ -382,6 +382,10 @@ void ecl_region_deselect_in_interval( ecl_region_type * region , const ecl_kw_ty
    Float / Int / double *  Active / Global  *  More / Less ==> In total 12 code blocks written out ...
 */
 
+
+/*
+  NBNBNBNB: Select >= on float values and select > on integer!!!!!!
+*/
 static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl_kw_type * ecl_kw, float limit , bool select_less , bool select) {
   bool global_kw;
   ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
@@ -422,7 +426,7 @@ static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl
       }
     } else if (ecl_type == ECL_INT_TYPE) {
       const int * kw_data = ecl_kw_get_int_ptr( ecl_kw );
-      int   int_limit = (int) limit;
+      int int_limit = (int) limit;
       if (global_kw) {
         int global_index;
         for (global_index = 0; global_index < region->grid_vol; global_index++) {
@@ -430,7 +434,7 @@ static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl
             if (kw_data[ global_index ] < int_limit)
               region->active_mask[ global_index ] = select;
           } else {
-            if (kw_data[ global_index ] >= int_limit)
+            if (kw_data[ global_index ] > int_limit)
               region->active_mask[ global_index ] = select;
           }
         }
@@ -443,7 +447,7 @@ static void ecl_region_select_with_limit__( ecl_region_type * region , const ecl
               region->active_mask[ global_index ] = select;
             }
           } else {
-            if (kw_data[ active_index ] >= int_limit) {
+            if (kw_data[ active_index ] > int_limit) {
               int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
               region->active_mask[ global_index ] = select;
             }
@@ -1198,7 +1202,7 @@ bool ecl_region_contains_active( const ecl_region_type * ecl_region , int active
 void ecl_region_intersection( ecl_region_type * region , const ecl_region_type * new_region ) {
   if (region->parent_grid == new_region->parent_grid) {
     int global_index;
-    for (global_index = 0; global_index < region->grid_vol; global_index++)
+    for (global_index = 0; global_index < region->grid_vol; global_index++) 
       region->active_mask[global_index] = (region->active_mask[global_index] && new_region->active_mask[global_index]);
     
     ecl_region_invalidate_index_list( region );
@@ -1227,7 +1231,7 @@ void ecl_region_union( ecl_region_type * region , const ecl_region_type * new_re
 
 /**
    Will update the selection in @region to deselect the elements which
-   are also in:
+   are also in new_region:
 
    A &= !B
 */
@@ -1245,7 +1249,7 @@ void ecl_region_subtract( ecl_region_type * region , const ecl_region_type * new
 
 /**
    Will update the selection in @region to seselect the elements which
-   are either in A or B:
+   are either in region or new_region:
 
    A ^= B 
 */
@@ -1348,6 +1352,17 @@ void ecl_region_scale_kw_double( ecl_region_type * ecl_region , ecl_kw_type * ec
 void ecl_region_kw_iadd( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * delta_kw , bool force_active) {
   const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
   ecl_kw_inplace_add_indexed( ecl_kw , index_set , delta_kw );
+}
+
+void ecl_region_kw_idiv( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * div_kw , bool force_active) {
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_inplace_div_indexed( ecl_kw , index_set , div_kw );
+}
+
+
+void ecl_region_kw_imul( ecl_region_type * ecl_region , ecl_kw_type * ecl_kw , const ecl_kw_type * mul_kw , bool force_active) {
+  const int_vector_type * index_set = ecl_region_get_kw_index_list( ecl_region , ecl_kw , force_active);
+  ecl_kw_inplace_mul_indexed( ecl_kw , index_set , mul_kw );
 }
 
 
