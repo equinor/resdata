@@ -21,6 +21,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <time.h>
 #include <stdarg.h>
 
@@ -230,9 +231,8 @@ typedef enum {left_pad   = 0,
   char *  util_fread_realloc_string(char *  , FILE *);
   char *  util_fread_alloc_string(FILE *);
   void    util_fskip_string(FILE *stream);
-  void    util_endian_flip_vector(void * data , int element_size , int elements);
-  void    util_endian_flip_vector__(void *data, int element_size , int elements , bool copy);
-  int     util_proc_mem_free(void);
+  void     util_endian_flip_vector(void * data , int element_size , int elements);
+  int      util_proc_mem_free(void);
   
   
   void     util_apply_int_limits(int * , int , int );
@@ -307,6 +307,8 @@ typedef enum {left_pad   = 0,
   void         util_unsetenv( const char * variable);
   char       * util_alloc_envvar( const char * value );
   bool         util_is_link(const char * );  // Will always return false on windows
+
+
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_SCALAR(s,stream)  { if (fread(&s , sizeof s , 1 , stream) != 1) util_abort("%s: read failed: %s\n",__func__ , strerror(errno)); }

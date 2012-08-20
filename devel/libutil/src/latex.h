@@ -36,6 +36,7 @@ extern "C" {
   void         latex_set_target_file( latex_type * latex , const char * target_file );
   bool         latex_compile( latex_type * latex , bool ignore_errors , bool with_xref); 
   void         latex_set_timeout( latex_type * latex , int timeout);
+  int          latex_get_timeout( const latex_type * latex );
   const char * latex_get_runpath( const latex_type * latex );
   const char * latex_get_target_file( const latex_type * latex );
 

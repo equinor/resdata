@@ -114,12 +114,12 @@
 
 
 
-static inline uint16_t convert16( uint16_t u ) {
+static inline uint16_t util_endian_convert16( uint16_t u ) {
   return (( u >> 8U ) & 0xFFU) | (( u & 0xFFU) >> 8U);
 }
 
 
-static inline uint32_t convert32( uint32_t u ) {
+static inline uint32_t util_endian_convert32( uint32_t u ) {
   const uint32_t m8  = (uint32_t) 0x00FF00FFUL;
   const uint32_t m16 = (uint32_t) 0x0000FFFFUL;
   
@@ -129,7 +129,7 @@ static inline uint32_t convert32( uint32_t u ) {
 }
 
 
-static inline uint64_t convert64( uint64_t u ) {
+static inline uint64_t util_endian_convert64( uint64_t u ) {
   const uint64_t m8  = (uint64_t) 0x00FF00FF00FF00FFULL;
   const uint64_t m16 = (uint64_t) 0x0000FFFF0000FFFFULL;
   const uint64_t m32 = (uint64_t) 0x00000000FFFFFFFFULL;
@@ -142,7 +142,7 @@ static inline uint64_t convert64( uint64_t u ) {
 }
 
 
-static inline uint64_t convert32_64( uint64_t u ) {
+static inline uint64_t util_endian_convert32_64( uint64_t u ) {
   const uint64_t m8  = (uint64_t) 0x00FF00FF00FF00FFULL;
   const uint64_t m16 = (uint64_t) 0x0000FFFF0000FFFFULL;
 
@@ -164,7 +164,7 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
       uint16_t *tmp16 = (uint16_t *) data;
 
       for (i = 0; i <elements; i++)
-        tmp16[i] = convert16(tmp16[i]);
+        tmp16[i] = util_endian_convert16(tmp16[i]);
       break;
     }
   case(4):
@@ -173,26 +173,26 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
       /*
         In the case of a 64 bit CPU the fastest way to swap 32 bit
         variables will be by swapping two elements in one operation;
-        this is provided by the convert32_64() function. In the case
+        this is provided by the util_endian_convert32_64() function. In the case
         of binary ECLIPSE files this case is quite common, and
         therefor worth supporting as a special case. 
       */
       uint64_t *tmp64 = (uint64_t *) data;
 
       for (i = 0; i <elements/2; i++)
-        tmp64[i] = convert32_64(tmp64[i]);
+        tmp64[i] = util_endian_convert32_64(tmp64[i]);
 
       if ( elements & 1 ) {
         // Odd number of elements - flip the last element as an ordinary 32 bit swap.
         uint32_t *tmp32 = (uint32_t *) data;
-        tmp32[ elements - 1] = convert32( tmp32[elements - 1] );
+        tmp32[ elements - 1] = util_endian_convert32( tmp32[elements - 1] );
       }
       break;
 #else
       uint32_t *tmp32 = (uint32_t *) data;
       
       for (i = 0; i <elements; i++)
-        tmp32[i] = convert32(tmp32[i]);
+        tmp32[i] = util_endian_convert32(tmp32[i]);
       
       break;
 #endif
@@ -202,7 +202,7 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
       uint64_t *tmp64 = (uint64_t *) data;
 
       for (i = 0; i <elements; i++)
-        tmp64[i] = convert64(tmp64[i]);
+        tmp64[i] = util_endian_convert64(tmp64[i]);
       break;
     }
   default:
@@ -2686,30 +2686,25 @@ void util_ftruncate(FILE * stream , long size) {
 
 
 
-// The symlink resolver is broken when it comes to links
-// in another directory.
 
 bool util_same_file(const char * file1 , const char * file2) {
   char * target1 = (char *) file1;
   char * target2 = (char *) file2;
 
-#ifdef HAVE_SYMLINK
-  if (util_is_link(file1)) target1 = util_alloc_link_target(file1);
-  if (util_is_link(file2)) target2 = util_alloc_link_target(file2);
-#endif
   {
     struct stat buffer1 , buffer2;
-    
-    stat(target1, &buffer1);
-    stat(target2, &buffer2);
+    int stat1,stat2;
 
-    if (target1 != file1) free(target1);
-    if (target2 != file2) free(target2);
-    
-    if (buffer1.st_ino == buffer2.st_ino) 
-      return true;
-    else
-      return false;
+    stat1 = stat(file1, &buffer1);   // In the case of symlinks the stat call will stat the target file and not the link.
+    stat2 = stat(file2, &buffer2);
+
+    if ((stat1 == 1) && (stat1 == stat2)) {
+      if (buffer1.st_ino == buffer2.st_ino) 
+        return true;
+      else
+        return false;
+    } else
+      return false;  // Files which do not exist are no equal!
   }
 }
 

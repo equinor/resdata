@@ -39,6 +39,12 @@
 #define RUNPATH_FMT      "/tmp/latex-XXXXXX"
 #define DEFAULT_TIMEOUT  60
 
+static const char* delete_extensions[] = { "log", 
+                                           "aux",
+                                           "nav",
+                                           "out",
+                                           "snm",
+                                           "toc" };
 
 struct latex_struct {
   char * latex_cmd;
@@ -177,7 +183,12 @@ static void latex_copy_target( latex_type * latex ) {
 
 static void latex_cleanup( latex_type * latex ) {
   if (latex->in_place) {
-    /* in_place cleanup - not implemented yet. */
+    int num_extensions = sizeof( delete_extensions ) / sizeof( delete_extensions[0] );
+    for (int iext = 0; iext < num_extensions; iext++) {
+      char * filename = util_alloc_filename( latex->run_path , latex->basename , delete_extensions[iext]);
+      unlink(filename);
+      free( filename );
+    }
   } else 
     util_clear_directory(latex->run_path , true , true );
 }
@@ -189,8 +200,7 @@ static void latex_ensure_target_file( latex_type * latex) {
     latex->target_file = util_alloc_filename( latex->target_path , latex->basename , latex->target_extension);
 }
 
-
-static bool latex_compile__( latex_type * latex , bool ignore_errors ) {
+static bool latex_compile__( latex_type * latex , bool ignore_errors) {
   bool    normal_exit = true;
   char ** argv;
   int     argc;
@@ -204,21 +214,23 @@ static bool latex_compile__( latex_type * latex , bool ignore_errors ) {
     argv[0] = "-interaction=nonstopmode";
   else
     argv[0] = "-halt-on-error";
-  
+  argv[0] = latex->src_file;
+
   argv[1] = latex->src_file;
   {
-    pid_t  child_pid  = util_fork_exec( latex->latex_cmd , argc , (const char **) argv , false , NULL , latex->run_path , NULL , stdout_file , stderr_file );
+    pid_t  child_pid  = util_fork_exec( latex->latex_cmd , argc - 1 , (const char **) argv , false , NULL , latex->run_path , NULL , stdout_file , stderr_file );
     double total_wait = 0;
-    
+    int status;
+
     while (true) {
-      if (waitpid(child_pid , NULL , WNOHANG) == 0) {
+      if (waitpid(child_pid , &status , WNOHANG) == 0) {
         usleep( usleep_time );
         total_wait += usleep_time / 1000000.0;
-
+        
         if (total_wait > latex->timeout) {
           // Exit due to excessive time usage.
           normal_exit = false;
-          break;
+          kill( child_pid , SIGKILL );
         }
       } else 
         // The child has exited - succesfull or not?
@@ -233,14 +245,24 @@ static bool latex_compile__( latex_type * latex , bool ignore_errors ) {
   return normal_exit;
 }
 
+/**
+   Unfortunately it is very difficult to determine whether a latex
+   compilation has been successfull or not.
+*/
+
 bool latex_compile( latex_type * latex , bool ignore_errors , bool with_xref) {
   int num_compile = 1;
   time_t compile_start;
   
   time( &compile_start );
   latex_ensure_target_file( latex );
-  
   latex->result_file = util_alloc_filename( latex->run_path , latex->basename , latex->target_extension );
+
+  /* If we are compiling out of place we might have created a symlink
+     from the compile path to an old version of the target file.  */
+  if (util_is_link(latex->result_file))
+    unlink( latex->result_file );
+
   if (with_xref)
     num_compile = 2;
 
@@ -261,17 +283,21 @@ bool latex_compile( latex_type * latex , bool ignore_errors , bool with_xref) {
       bool success = false;
       if (normal_exit)
         success = latex_inspect_run( latex , compile_start );
-
+      
       if (success) {
         latex_copy_target( latex );
         latex_cleanup( latex );
       }
-      
+  
       return success;
     }
   }
 }
 
+
+int latex_get_timeout( const latex_type * latex ) {
+  return latex->timeout;
+}
 
 void latex_set_timeout( latex_type * latex , int timeout) {
   latex->timeout = timeout;
