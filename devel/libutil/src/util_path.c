@@ -67,16 +67,6 @@ void util_make_path(const char *_path) {
             if (util_is_directory(active_path))
               fail = false;
             break;
-          case(ENOSPC):
-            /* 
-               We try to handle "No space left on the device" by letting the user 
-               get a chance to clean out the disk.
-            */
-            __block_full_disk(active_path);
-            fail = false;
-            /* Recursive call: */
-            util_make_path(active_path);
-            break;
           default:
             fail = true;
             break;

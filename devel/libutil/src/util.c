@@ -2044,8 +2044,8 @@ bool util_files_equal( const char * file1 , const char * file2 ) {
 static void util_fclear_region( FILE * stream , long offset , long region_size) {
   fseek( stream , offset , SEEK_SET );
   { 
-	  int i;
-		for ( i=0; i < region_size; i++)
+          int i;
+                for ( i=0; i < region_size; i++)
     fputc( 0 , stream );
   }
 }
@@ -2422,24 +2422,19 @@ void util_ftruncate(FILE * stream , long size) {
 
 
 bool util_same_file(const char * file1 , const char * file2) {
-  char * target1 = (char *) file1;
-  char * target2 = (char *) file2;
+  struct stat buffer1 , buffer2;
+  int stat1,stat2;
 
-  {
-    struct stat buffer1 , buffer2;
-    int stat1,stat2;
-
-    stat1 = stat(file1, &buffer1);   // In the case of symlinks the stat call will stat the target file and not the link.
-    stat2 = stat(file2, &buffer2);
-
-    if ((stat1 == 1) && (stat1 == stat2)) {
-      if (buffer1.st_ino == buffer2.st_ino) 
-        return true;
-      else
-        return false;
-    } else
-      return false;  // Files which do not exist are no equal!
-  }
+  stat1 = stat(file1, &buffer1);   // In the case of symlinks the stat call will stat the target file and not the link.
+  stat2 = stat(file2, &buffer2);
+  
+  if ((stat1 == 1) && (stat1 == stat2)) {
+    if (buffer1.st_ino == buffer2.st_ino) 
+      return true;
+    else
+      return false;
+  } else
+    return false;  // Files which do not exist are no equal!
 }
 
 
@@ -3051,7 +3046,7 @@ bool util_string_match(const char * string , const char * pattern) {
     if (string_ptr != NULL) {
       /* Inital part matched */
       int i;
-	  string_ptr += strlen( sub_pattern[0] );
+          string_ptr += strlen( sub_pattern[0] );
       for (i=1; i < num_patterns; i++) {
         char * match_ptr = strstr(string_ptr , sub_pattern[i]);
         if (match_ptr != NULL) 
@@ -3467,7 +3462,7 @@ char * util_string_replacen_alloc(const char * buff_org, int num_expr, const cha
   char * new_buffer = util_malloc(buffer_size * sizeof * new_buffer , __func__);
   memcpy(new_buffer , buff_org , strlen(buff_org) + 1);
   {
-	  int i;
+          int i;
   for( i=0; i<num_expr; i++)
     util_string_replace_inplace__( &new_buffer , expr[i] , subs[i]);
   }
@@ -3838,65 +3833,12 @@ void util_bitmask_on(int * value , int mask) {
 
 
 
-#ifdef HAVE_PTHREAD
-static pthread_mutex_t __fwrite_block_mutex = PTHREAD_MUTEX_INITIALIZER; /* Used to ensure that only one thread displays the block message. */
-static void __block_full_disk(const char * filename) {                   /* Filename can be NULL */
-  if (pthread_mutex_trylock( &__fwrite_block_mutex ) == 0) {
-    /** 
-        Okay this was the first thread to register a full disk. This
-        thread will display the message and await user input. If other
-        threads also encounter full disk they will just spinn sleeping
-        until this thread terminates.
-    */
-    fprintf(stderr,"********************************************************************\n");
-    fprintf(stderr,"** The filesystem seems to be full  - and the program is veeeery  **\n");
-    fprintf(stderr,"** close to going down in flames. You can try clearing space, and **\n");
-    fprintf(stderr,"** then press return [with fingers crossed :-)].                  **\n");
-    fprintf(stderr,"********************************************************************\n");
-    getc( stdin ); /* Block while user clears some disk space. */
-  } else {
-    /* 
-       Another thread is already blocking - waiting for user
-       input. This thread will block, waiting on the first thread.
-    */
-    while (true) {
-      usleep( 500000 ); /* half a second */
-      
-      if (pthread_mutex_trylock( &__fwrite_block_mutex ) == 0) {
-        usleep( 5000 );  /* 5 ms - to avoid a heard of threads hitting the filesystem concurrently.       */
-        break;           /* The user has entered return - and the main blocking thread has been released. */
-      }
-    }
-  }
-  pthread_mutex_unlock( &__fwrite_block_mutex );
-}
-
-#else
-
-static void __block_full_disk(const char * filename) {            
-  fprintf(stderr,"********************************************************************\n");
-  fprintf(stderr,"** The filesystem seems to be full  - and the program is veeeery  **\n");
-  fprintf(stderr,"** close to going down in flames. You can try clearing space, and **\n");
-  fprintf(stderr,"** then press return [with fingers crossed :-)].                  **\n");
-  fprintf(stderr,"********************************************************************\n");
-  getc( stdin ); /* Block while user clears some disk space. */
-} 
-#endif
-
 
 FILE * util_fopen(const char * filename , const char * mode) {
   FILE * stream = fopen(filename , mode);
-  if (stream == NULL) {
-    /* 
-       We try to handle "No space left on the device" by letting the user 
-       get a chance to clean out the disk.
-    */
-    if (errno == ENOSPC) {
-      __block_full_disk(filename);
-      return util_fopen(filename , mode); /* Try again. */
-    } else
-      util_abort("%s: failed to open:%s with mode:\'%s\' - error:%s(%d) \n",__func__ , filename , mode , strerror(errno) , errno);
-  }
+  if (stream == NULL) 
+    util_abort("%s: failed to open:%s with mode:\'%s\' - error:%s(%d) \n",__func__ , filename , mode , strerror(errno) , errno);
+  
   return stream;
 }
 
@@ -3950,18 +3892,8 @@ FILE * util_mkdir_fopen( const char * filename , const char * mode ) {
 
 void util_fwrite(const void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {
   int items_written = fwrite(ptr , element_size , items , stream);
-  if (items_written != items) {
-    /* 
-       We try to handle "No space left on the device" by letting the user 
-       get a chance to clean out the disk.
-    */
-    if (errno == ENOSPC) {
-      __block_full_disk( NULL );
-      const char * char_ptr = ptr;
-      util_fwrite( &char_ptr[ items_written * element_size ] , element_size , items - items_written , stream , caller);
-    } else
-      util_abort("%s/%s: only wrote %d/%d items to disk - aborting: %s(%d) .\n",caller , __func__ , items_written , items , strerror(errno) , errno);
-  }
+  if (items_written != items) 
+    util_abort("%s/%s: only wrote %d/%d items to disk - aborting: %s(%d) .\n",caller , __func__ , items_written , items , strerror(errno) , errno);
 }
 
 
@@ -4306,52 +4238,6 @@ int util_get_type( void * data ) {
 }
 
 
-
-/** 
-    This funny function is used to block execution while a file is
-    growing. It is a completely heuristic attempt to ensure that the
-    writing of a certain file is finished before execution continues.
-
-    It is assumed (and not checked for) that the file already exists.
-*/
-
-void util_block_growing_file(const char * file) {
-  const int usleep_time = 10000; /* 1/100 of a second */
-  int prev_size;
-  int current_size = 0;
-  do {
-    prev_size = current_size;
-    usleep(usleep_time);
-    current_size = util_file_size(file);
-  } while (current_size != prev_size);
-}
-
-
-/**
-   This is much similar to the previous function, this function blocks
-   until the number of entries in directory is constant (it does not
-   consider wether the size of the files is changing), again this is
-   quite special-purpose function for the enkf + ECLIPSE cooperation.
-*/ 
-
-void util_block_growing_directory(const char * directory) {
-  const int usleep_time = 10000; /* 1/100 of a second */
-  int prev_size;
-  int current_size = 0;
-  do {
-    prev_size  = current_size;
-    usleep(usleep_time);
-    current_size = 0;
-    {
-      DIR * dirH  = opendir( directory );
-      struct dirent * dentry;
-      while ( (dentry = readdir(dirH)) != NULL) 
-        current_size++;
-
-      closedir(dirH);
-    }
-  } while (current_size != prev_size);
-}
 
 
 

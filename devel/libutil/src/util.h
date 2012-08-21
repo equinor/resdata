@@ -282,9 +282,6 @@ typedef enum {left_pad   = 0,
   int      util_type_get_id( const void * data );
 
   
-  
-  void     util_block_growing_file(const char * );
-  void     util_block_growing_directory(const char * );
   char   * util_alloc_realpath(const char * );
   bool     util_sscanf_bytesize(const char * , size_t *);
   void     util_sscanf_active_range(const char *  , int , bool * );
