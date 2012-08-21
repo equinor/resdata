@@ -14,6 +14,11 @@ if (BUILD_LATEX)
    list( APPEND header_files latex.h )
 endif()
 
+if (!STDBOOL_HEADER)
+   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/ert_stdbool.h stdbool.h)
+   list( APPEND header_files stdbool.h )
+endif()
+
 foreach (type int double bool long time_t size_t float)
   set(TYPE ${type} )      
   set(src_target        ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)    
