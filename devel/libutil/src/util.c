@@ -36,7 +36,7 @@
 #include <limits.h>
 #include <errno.h>
 
-#include <inttypes.h>
+#include <stdint.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <sys/types.h>
