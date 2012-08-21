@@ -468,8 +468,8 @@ bool util_fseek_string(FILE * stream , const char * __string , bool skip_string 
       if (c == string[0]) {  /* OK - we got the first character right - lets try in more detail: */
         long int current_pos  = ftell(stream);
         bool     equal        = true;
-        
-        for (int string_index = 1; string_index < len; string_index++) {
+        int string_index;
+        for (string_index = 1; string_index < len; string_index++) {
           c = fgetc( stream );
           if (!case_sensitive)
             c = toupper( c );
@@ -1229,7 +1229,7 @@ bool util_sscanf_int(const char * buffer , int * value) {
   return false.
 */
 
-inline bool util_string_equal(const char * s1 , const char * s2 ) {
+bool util_string_equal(const char * s1 , const char * s2 ) {
   if (s1 == NULL || s2 == NULL) 
     return false;
   
@@ -2010,7 +2010,7 @@ void util_move_file4( const char * src_name , const char * target_name , const c
 
 bool util_files_equal( const char * file1 , const char * file2 ) {
   bool equal = true;
-  int buffer_size = 4096;
+  const int buffer_size = 4096;
   char buffer1[ buffer_size ];
   char buffer2[ buffer_size ];
   
@@ -2043,8 +2043,11 @@ bool util_files_equal( const char * file1 , const char * file2 ) {
 
 static void util_fclear_region( FILE * stream , long offset , long region_size) {
   fseek( stream , offset , SEEK_SET );
-  for (int i=0; i < region_size; i++)
+  { 
+	  int i;
+		for ( i=0; i < region_size; i++)
     fputc( 0 , stream );
+  }
 }
 
 
@@ -3047,8 +3050,9 @@ bool util_string_match(const char * string , const char * pattern) {
     
     if (string_ptr != NULL) {
       /* Inital part matched */
-      string_ptr += strlen( sub_pattern[0] );
-      for (int i=1; i < num_patterns; i++) {
+      int i;
+	  string_ptr += strlen( sub_pattern[0] );
+      for (i=1; i < num_patterns; i++) {
         char * match_ptr = strstr(string_ptr , sub_pattern[i]);
         if (match_ptr != NULL) 
           string_ptr = match_ptr + strlen( sub_pattern[i] );
@@ -3462,9 +3466,11 @@ char * util_string_replacen_alloc(const char * buff_org, int num_expr, const cha
   int buffer_size   = strlen(buff_org) * 2;
   char * new_buffer = util_malloc(buffer_size * sizeof * new_buffer , __func__);
   memcpy(new_buffer , buff_org , strlen(buff_org) + 1);
-
-  for(int i=0; i<num_expr; i++)
+  {
+	  int i;
+  for( i=0; i<num_expr; i++)
     util_string_replace_inplace__( &new_buffer , expr[i] , subs[i]);
+  }
   
   int size = strlen(new_buffer);
   new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer, __func__);
@@ -3780,8 +3786,8 @@ void util_double_vector_max_min(int N , const double *vector, double *_max , dou
 
 double util_double_vector_mean(int N, const double * vector) {
   double mean = 0.0;
-  
-  for(int i=0; i<N; i++)
+  int i;
+  for(i=0; i<N; i++)
     mean = mean + vector[i];
 
   return mean / N;
@@ -3796,13 +3802,15 @@ double util_double_vector_stddev(int N, const double * vector) {
   double   stddev         = 0.0;
   double   mean           = util_double_vector_mean(N, vector);
   double * vector_shifted = util_malloc(N * sizeof *vector_shifted, __func__);
-
-  for(int i=0; i<N; i++)
+  
+  {
+  int i;
+  for(i=0; i<N; i++)
     vector_shifted[i] = vector[i] - mean;
 
-  for(int i=0; i<N; i++)
+  for(i=0; i<N; i++)
     stddev = stddev + vector_shifted[i] * vector_shifted[i];
-
+  }
   free(vector_shifted);
 
   return sqrt( stddev / (N-1));
