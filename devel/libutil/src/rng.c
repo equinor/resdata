@@ -26,7 +26,9 @@
 #include <type_macros.h>
 #define RNG_TYPE_ID 66154432
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
    The rng structure is a thin structure which wraps a specific Random
@@ -54,9 +56,16 @@ struct rng_struct {
 };
   
 
+#define __func__ "What the fuck??"
 
-UTIL_SAFE_CAST_FUNCTION( rng , RNG_TYPE_ID)
-UTIL_IS_INSTANCE_FUNCTION( rng , RNG_TYPE_ID)
+rng_type * rng_safe_cast( void * __arg ) {
+	return (rng_type * ) __arg;
+}
+
+
+//UTIL_SAFE_CAST_FUNCTION( rng , RNG_TYPE_ID)
+//UTIL_IS_INSTANCE_FUNCTION( rng , RNG_TYPE_ID)
+
 
 rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
                        rng_free_ftype      * free_state ,
@@ -105,7 +114,8 @@ void rng_init( rng_type * rng , rng_init_mode init_mode ) {
   switch (init_mode) {
   case(INIT_CLOCK):
     {
-      for (int i=0; i < rng->state_size; i++)
+	  int i;
+      for (i=0; i < rng->state_size; i++)
         seed_buffer[i] = ( char ) util_clock_seed();
     }
     break;
@@ -135,9 +145,11 @@ void rng_rng_init( rng_type * rng , rng_type * seed_src) {
 
     seed_buffer = (unsigned int *) util_malloc( int_size * sizeof * seed_buffer , __func__ );
     //seed_buffer = UTIL_CXX_MALLOC( seed_buffer , int_size );
-    for (int i =0; i < int_size; i++) 
-      seed_buffer[i] = rng_forward( seed_src );
-    
+	{
+		int i;
+		for (i =0; i < int_size; i++) 
+			seed_buffer[i] = rng_forward( seed_src );
+	}    
     rng->set_state( rng->state , (char *) seed_buffer );
     
     free( seed_buffer );
@@ -237,3 +249,7 @@ double rng_std_normal( rng_type * rng ) {
   
   return sqrt(-2.0 * log(R1)) * cos(2.0 * pi * R2);
 }
+
+#ifdef __cplusplus
+}
+#endif
