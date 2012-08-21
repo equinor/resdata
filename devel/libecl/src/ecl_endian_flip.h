@@ -36,6 +36,8 @@ extern "C" {
 */
 
 #define ECLIPSE_BYTE_ORDER  __BIG_ENDIAN   // Alternatively: __LITTLE_ENDIAN
+#define WIN32 1
+
 
 #ifdef BYTE_ORDER
   #if  BYTE_ORDER == ECLIPSE_BYTE_ORDER
