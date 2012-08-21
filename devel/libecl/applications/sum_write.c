@@ -183,8 +183,8 @@ int main( int argc , char ** argv) {
          collection of files - one for each report step. Can be
          modified with ecl_sum_set_unified_output().
 
-      5: What is the real-world start time of this simulation, as a
-         unix time_t value.
+      5: The real-world start time of this simulation, as a unix
+         time_t value.
 
       6-8: Grid dimensions.
   */

@@ -83,7 +83,6 @@ struct smspec_node_struct {
 #define ECL_SUM_KEYFMT_BLOCK_NUM              "%s%s%d"
 #define ECL_SUM_KEYFMT_LOCAL_BLOCK            "%s%s%s%s%d,%d,%d"
 #define ECL_SUM_KEYFMT_COMPLETION_IJK         "%s%s%s%s%d,%d,%d" 
-#define ECL_SUM_COMPLETION_NUM                "%s%s%s%s%d"
 #define ECL_SUM_KEYFMT_COMPLETION_NUM         "%s%s%s%s%d"
 #define ECL_SUM_KEYFMT_LOCAL_COMPLETION       "%s%s%s%s%s%s%d,%d,%d"
 #define ECL_SUM_KEYFMT_GROUP                  "%s%s%s"
