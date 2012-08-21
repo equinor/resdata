@@ -20,10 +20,10 @@ if (HAVE_LAPACK)
    list( APPEND header_files ${CMAKE_CURRENT_SOURCE_DIR}/matrix_lapack.h ${CMAKE_CURRENT_SOURCE_DIR}/matrix_blas.h regression.h lars.h stepwise.h)
 endif()
 
-#if (!STDBOOL_HEADER)
+# if (!STDBOOL_HEADER)
 #   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/ert_stdbool.h ${CMAKE_CURRENT_BINARY_DIR}/stdbool.h)
 #   list( APPEND header_files stdbool.h )
-#endif()
+# endif()
 
 foreach (type int double bool long time_t size_t float)
   set(TYPE ${type} )      
