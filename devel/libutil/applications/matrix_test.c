@@ -19,9 +19,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <matrix.h>
-#include <matrix_lapack.h>
 #include <rng.h>
-
+#ifdef HAVE_LAPACK
+#include <matrix_lapack.h>
+#endif
 
 int main( int argc, char ** argv)  {
   rng_type * rng   =  rng_alloc( MZRAN , INIT_DEV_RANDOM );
@@ -30,12 +31,15 @@ int main( int argc, char ** argv)  {
   matrix_random_init( A , rng );
   matrix_assign( B , A );
   matrix_pretty_print( A , "    A " , "%8.4f" );
+  
+#ifdef HAVE_LAPACK
   matrix_inv( B );
   printf("\n");
   matrix_pretty_print( B , "inv(A)" , "%8.4f" );
   matrix_inplace_matmul( B , A );
   printf("\n");
   matrix_pretty_print( B , "    I " , "%8.4f" );
+#endif
   
   matrix_free( A );
   matrix_free( B );
