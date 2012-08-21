@@ -2229,7 +2229,7 @@ static int util_get_path_length(const char * file) {
   if (util_is_directory(file)) 
     return strlen(file);
   else {
-    char * last_slash = strrchr(file , UTIL_PATH_SEP_CHAR);
+    const char * last_slash = strrchr(file , UTIL_PATH_SEP_CHAR);
     if (last_slash == NULL)
       return 0;
     else 
