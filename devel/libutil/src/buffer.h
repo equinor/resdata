@@ -32,13 +32,14 @@ extern "C" {
 
 typedef struct     buffer_struct buffer_type;
 
+buffer_type      * buffer_alloc( size_t buffer_size );
+buffer_type      * buffer_alloc_private_wrapper(void * data , size_t buffer_size );
 bool               buffer_replace( buffer_type * buffer , const char * old_string , const char * new_string);
 void               buffer_shrink_to_fit( buffer_type * buffer );
 void               buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift);
 bool               buffer_strstr( buffer_type * buffer , const char * expr );
 bool               buffer_strchr( buffer_type * buffer , int c);
-buffer_type      * buffer_alloc( size_t buffer_size );
-buffer_type      * buffer_alloc_private_wrapper(void * data , size_t buffer_size );
+
 void               buffer_free_container( buffer_type * buffer );
 void               buffer_free( buffer_type * buffer);
 size_t             buffer_safe_fread(buffer_type * buffer , void * target_ptr , size_t item_size , size_t items);
