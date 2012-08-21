@@ -511,6 +511,9 @@ double matrix_det( matrix_type *A ) {
 }
 
 
+
+
+
 /*****************************************************************/
 /* The matrix will be inverted in-place, the inversion is based on LU
    factorisation in the routine matrix_dgetrf__(  ).

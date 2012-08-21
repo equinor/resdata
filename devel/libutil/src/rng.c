@@ -59,7 +59,7 @@ struct rng_struct {
 #define __func__ "What the fuck??"
 
 rng_type * rng_safe_cast( void * __arg ) {
-	return (rng_type * ) __arg;
+        return (rng_type * ) __arg;
 }
 
 
@@ -114,7 +114,7 @@ void rng_init( rng_type * rng , rng_init_mode init_mode ) {
   switch (init_mode) {
   case(INIT_CLOCK):
     {
-	  int i;
+          int i;
       for (i=0; i < rng->state_size; i++)
         seed_buffer[i] = ( char ) util_clock_seed();
     }
@@ -145,11 +145,11 @@ void rng_rng_init( rng_type * rng , rng_type * seed_src) {
 
     seed_buffer = (unsigned int *) util_malloc( int_size * sizeof * seed_buffer , __func__ );
     //seed_buffer = UTIL_CXX_MALLOC( seed_buffer , int_size );
-	{
-		int i;
-		for (i =0; i < int_size; i++) 
-			seed_buffer[i] = rng_forward( seed_src );
-	}    
+        {
+                int i;
+                for (i =0; i < int_size; i++) 
+                        seed_buffer[i] = rng_forward( seed_src );
+        }    
     rng->set_state( rng->state , (char *) seed_buffer );
     
     free( seed_buffer );

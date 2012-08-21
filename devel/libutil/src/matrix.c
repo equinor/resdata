@@ -1427,6 +1427,27 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
   }
 }
 
+double matrix_det3( const matrix_type * A) {
+  if ((A->rows == 3) && (A->columns == 3)) {
+    double a = A->data[GET_INDEX(A,0,0)];
+    double b = A->data[GET_INDEX(A,0,1)];
+    double c = A->data[GET_INDEX(A,0,2)];
+
+    double d = A->data[GET_INDEX(A,1,0)];
+    double e = A->data[GET_INDEX(A,1,1)];
+    double f = A->data[GET_INDEX(A,1,2)];
+
+    double g = A->data[GET_INDEX(A,2,0)];
+    double h = A->data[GET_INDEX(A,2,1)];
+    double i = A->data[GET_INDEX(A,2,2)];
+    
+    return a*e*i + b*f*g + c*d*h - c*e*g - b*d*i - a*f*h;
+  } else {
+    util_abort("%s: hardcoded for 3x3 matrices\n",__func__);
+    return 0;
+  }
+}
+
 
 #ifdef __cplusplus
 }
