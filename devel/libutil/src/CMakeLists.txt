@@ -1,7 +1,7 @@
-set(source_files rng.c lookup_table.c statistics.c mzran.c set.c hash_node.c hash_sll.c hash.c node_data.c node_ctype.c util.c thread_pool.c msg.c arg_pack.c path_fmt.c menu.c subst_list.c subst_func.c vector.c parser.c stringlist.c matrix.c buffer.c log.c template.c lars.c timer.c regression.c stepwise.c)
+set(source_files rng.c lookup_table.c statistics.c mzran.c set.c hash_node.c hash_sll.c hash.c node_data.c node_ctype.c util.c thread_pool.c msg.c arg_pack.c path_fmt.c menu.c subst_list.c subst_func.c vector.c parser.c stringlist.c matrix.c buffer.c log.c template.c timer.c)
 
 
-set(header_files ssize_t.h type_macros.h rng.h lookup_table.h statistics.h mzran.h set.h hash.h hash_node.h hash_sll.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h path_fmt.h  stringlist.h menu.h subst_list.h subst_func.h vector.h parser.h matrix.h buffer.h log.h template.h timer.h lars.h regression.h stepwise.h)
+set(header_files ssize_t.h type_macros.h rng.h lookup_table.h statistics.h mzran.h set.h hash.h hash_node.h hash_sll.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h path_fmt.h  stringlist.h menu.h subst_list.h subst_func.h vector.h parser.h matrix.h buffer.h log.h template.h timer.h )
 
 if (HAVE_PTHREAD)
   list( APPEND header_files thread_pool_posix.h )
@@ -16,8 +16,8 @@ if (BUILD_LATEX)
 endif()
 
 if (HAVE_LAPACK)
-   list( APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/matrix_lapack.c ${CMAKE_CURRENT_SOURCE_DIR}/matrix_blas.c )
-   list( APPEND header_files ${CMAKE_CURRENT_SOURCE_DIR}/matrix_lapack.h ${CMAKE_CURRENT_SOURCE_DIR}/matrix_blas.h )
+   list( APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/matrix_lapack.c ${CMAKE_CURRENT_SOURCE_DIR}/matrix_blas.c regression.c lars.c stepwise.c)
+   list( APPEND header_files ${CMAKE_CURRENT_SOURCE_DIR}/matrix_lapack.h ${CMAKE_CURRENT_SOURCE_DIR}/matrix_blas.h regression.h lars.h stepwise.h)
 endif()
 
 #if (!STDBOOL_HEADER)
