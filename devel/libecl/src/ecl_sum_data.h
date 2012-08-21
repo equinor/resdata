@@ -38,8 +38,8 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   void                     ecl_sum_data_fwrite( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified);
   void                     ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist);
   void                     ecl_sum_data_fread_restart( ecl_sum_data_type * data , const stringlist_type * filelist);
-  ecl_sum_data_type      * ecl_sum_data_alloc_writer( const ecl_smspec_type * smspec );
-  ecl_sum_data_type      * ecl_sum_data_alloc(const ecl_smspec_type * smspec);
+  ecl_sum_data_type      * ecl_sum_data_alloc_writer( ecl_smspec_type * smspec );
+  ecl_sum_data_type      * ecl_sum_data_alloc( ecl_smspec_type * smspec);
   int                      ecl_sum_data_get_report_step_from_time(const ecl_sum_data_type * data , time_t sim_time);
   int                      ecl_sum_data_get_report_step_from_days(const ecl_sum_data_type * data , double days);
   bool                     ecl_sum_data_check_sim_time( const ecl_sum_data_type * data , time_t sim_time);
@@ -64,7 +64,7 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   
   bool                     ecl_sum_data_has_report_step(const ecl_sum_data_type *  , int );
   
-  ecl_sum_data_type      * ecl_sum_data_fread_alloc(const ecl_smspec_type *  , const stringlist_type * filelist , bool include_restart);
+  ecl_sum_data_type      * ecl_sum_data_fread_alloc( ecl_smspec_type *  , const stringlist_type * filelist , bool include_restart);
   void                     ecl_sum_data_free( ecl_sum_data_type * );
   int                      ecl_sum_data_get_last_report_step( const ecl_sum_data_type * data );
   int                      ecl_sum_data_get_first_report_step( const ecl_sum_data_type * data );

@@ -263,7 +263,7 @@ static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
 }
 
 
-ecl_sum_data_type * ecl_sum_data_alloc(const ecl_smspec_type * smspec) {
+ecl_sum_data_type * ecl_sum_data_alloc(ecl_smspec_type * smspec) {
   ecl_sum_data_type * data = util_malloc( sizeof * data , __func__);
   data->data        = vector_alloc_new();
   data->smspec      = smspec;
@@ -316,7 +316,7 @@ void ecl_sum_data_report2internal_range(const ecl_sum_data_type * data , int rep
 
 
 
-ecl_sum_data_type * ecl_sum_data_alloc_writer( const ecl_smspec_type * smspec ) {
+ecl_sum_data_type * ecl_sum_data_alloc_writer( ecl_smspec_type * smspec ) {
   ecl_sum_data_type * data = ecl_sum_data_alloc( smspec );
   return data;
 }
@@ -1003,7 +1003,7 @@ void ecl_sum_data_fread_restart( ecl_sum_data_type * data , const stringlist_typ
    (manually) changed from the historical part.
 */
 
-ecl_sum_data_type * ecl_sum_data_fread_alloc(const ecl_smspec_type * smspec , const stringlist_type * filelist , bool include_restart) {
+ecl_sum_data_type * ecl_sum_data_fread_alloc( ecl_smspec_type * smspec , const stringlist_type * filelist , bool include_restart) {
   ecl_sum_data_type * data = ecl_sum_data_alloc( smspec );
   ecl_sum_data_fread__( data , 0 , filelist );
 
