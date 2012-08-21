@@ -1443,7 +1443,7 @@ double matrix_det3( const matrix_type * A) {
     
     return a*e*i + b*f*g + c*d*h - c*e*g - b*d*i - a*f*h;
   } else {
-    util_abort("%s: hardcoded for 3x3 matrices\n",__func__);
+    util_abort("%s: hardcoded for 3x3 matrices A is: %d x %d \n",__func__, A->rows , A->columns); 
     return 0;
   }
 }

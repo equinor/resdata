@@ -39,6 +39,14 @@ int main( int argc, char ** argv)  {
   matrix_inplace_matmul( B , A );
   printf("\n");
   matrix_pretty_print( B , "    I " , "%8.4f" );
+  {
+    matrix_type * A3 = matrix_alloc(3,3);
+    matrix_random_init( A3 , rng );
+    
+    printf("matrix_det3:%g  ",matrix_det3( A3 ));
+    printf("matrix_det:%g \n",matrix_det( A3 ));
+  }
+  
 #endif
   
   matrix_free( A );
