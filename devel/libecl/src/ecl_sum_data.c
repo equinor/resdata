@@ -208,7 +208,7 @@
 
 
 struct ecl_sum_data_struct {
-  const ecl_smspec_type  * smspec;                 /* A shared reference - only used for providing good error messages. */
+  ecl_smspec_type        * smspec;                 /* A shared reference - only used for providing good error messages. */
   vector_type            * data;                   /* Vector of ecl_sum_tstep_type instances. */
   int                      first_ministep;
   int                      last_ministep; 
