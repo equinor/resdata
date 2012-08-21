@@ -93,9 +93,10 @@
 
 */
 
-
-#include <util.h>
 #include <string.h>
+
+#include <type_macros.h>
+#include <util.h>
 #include <buffer.h>
 #include <@TYPE@_vector.h>
 
@@ -393,8 +394,9 @@ bool @TYPE@_vector_growable( const @TYPE@_vector_type * vector) {
 void @TYPE@_vector_set_default(@TYPE@_vector_type * vector, @TYPE@ default_value) {
   @TYPE@_vector_assert_writable( vector ); 
   {
+    int i;
     vector->default_value = default_value;
-    for (int i=vector->size; i < vector->alloc_size; i++)
+    for (i=vector->size; i < vector->alloc_size; i++)
       vector->data[i] = default_value;
   }
 }
@@ -461,13 +463,15 @@ void @TYPE@_vector_imul(@TYPE@_vector_type * vector, int index, @TYPE@ factor) {
 
 /* Vector * scalar */
 void @TYPE@_vector_scale(@TYPE@_vector_type * vector, @TYPE@ factor) {
-  for (int i=0; i < vector->size; i++)
+  int i;
+  for (i=0; i < vector->size; i++)
     vector->data[i] *= factor;
 }
 
 /* vector + scalar */
 void @TYPE@_vector_shift(@TYPE@_vector_type * vector, @TYPE@ delta) {
-  for (int i=0; i < vector->size; i++)
+  int i;
+  for (i=0; i < vector->size; i++)
     vector->data[i] += delta;
 }
 
@@ -728,8 +732,11 @@ void @TYPE@_vector_set_many(@TYPE@_vector_type * vector , int index , const @TYP
 
 void @TYPE@_vector_set_all(@TYPE@_vector_type * vector , @TYPE@ value) {
   @TYPE@_vector_assert_writable( vector ); 
-  for (int i=0; i< vector->size; i++)
-    vector->data[i] = value;
+  {
+    int i;
+    for (i=0; i< vector->size; i++)
+      vector->data[i] = value;
+  }
 }
 
 
@@ -1315,7 +1322,8 @@ void  @TYPE@_vector_apply(@TYPE@_vector_type * vector , @TYPE@_ftype * func) {
  
 int @TYPE@_vector_count_equal( const @TYPE@_vector_type * vector , @TYPE@ cmp_value) {
   int count = 0;
-  for (int i=0; i < vector->size; i++)
+  int i;
+  for (i=0; i < vector->size; i++)
     if (vector->data[i] == cmp_value)
       count += 1;
 
