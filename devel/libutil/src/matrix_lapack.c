@@ -16,10 +16,15 @@
    for more details. 
 */
 
+#include <math.h>    
+
+#include <util.h>
 #include <matrix.h>
 #include <matrix_lapack.h>
-#include <util.h>
-#include <math.h>    
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** 
     The external lapack routines 
@@ -552,5 +557,7 @@ int matrix_inv( matrix_type * A ) {
 }
 
 
-
+#ifdef __cplusplus
+}
+#endif
 

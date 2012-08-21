@@ -28,6 +28,10 @@
 #include <util.h>
 #include <latex.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef LATEX_CMD
 #define __LATEX_CMD "LATEX_CMD"
 #else
@@ -373,6 +377,8 @@ void latex_link_directory_content(const latex_type * latex , const char * path) 
 }
 
 
-
+#ifdef __cplusplus
+}
+#endif
 
 

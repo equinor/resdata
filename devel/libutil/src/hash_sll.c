@@ -16,12 +16,17 @@
    for more details. 
 */
 
-#include <util.h>
+
 #include <stdlib.h>
 #include <stdio.h>
+
+#include <util.h>
 #include <hash_node.h>
 #include <hash_sll.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct hash_sll_struct {
   int              length;
@@ -126,3 +131,6 @@ bool hash_sll_has_key(const hash_sll_type *hash_sll , uint32_t global_index , co
 }
 
 
+#ifdef __cplusplus
+}
+#endif

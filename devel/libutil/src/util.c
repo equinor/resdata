@@ -94,6 +94,10 @@
    util_endian_flip_vector().  
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #define FLIP16(var) (((var >> 8) & 0x00ff) | ((var << 8) & 0xff00))
 
@@ -5026,3 +5030,6 @@ int util_type_get_id( const void * data ) {
 
 
 
+#ifdef __cplusplus
+}
+#endif

@@ -55,6 +55,10 @@
   comes to using these functions - things can surely blow up!
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MATRIX_TYPE_ID 712108
 
 struct matrix_struct {
@@ -1422,3 +1426,8 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
     return std;
   }
 }
+
+
+#ifdef __cplusplus
+}
+#endif

@@ -19,6 +19,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <util.h>
 #include <stringlist.h>
 #include <vector.h>
@@ -41,6 +42,9 @@
    stateless functions in util.c
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct stringlist_struct {
   UTIL_TYPE_ID_DECLARATION;
@@ -679,3 +683,6 @@ int stringlist_select_matching_files(stringlist_type * names , const char * path
 
 
 
+#ifdef __cplusplus
+}
+#endif

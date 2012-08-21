@@ -44,6 +44,9 @@
 
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define BUFFER_TYPE_ID 661043
 
@@ -814,4 +817,8 @@ void buffer_store(const buffer_type * buffer , const char * filename) {
 
 #ifdef HAVE_ZLIB
 #include "buffer_zlib.c"
+#endif
+
+#ifdef __cplusplus
+}
 #endif

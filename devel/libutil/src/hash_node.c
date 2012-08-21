@@ -25,6 +25,9 @@
 #include <node_data.h>
 #include <hash_node.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct hash_node_struct {
   char             *key;
@@ -105,7 +108,9 @@ void hash_node_free(hash_node_type * node) {
 }
 
 
-
+#ifdef __cplusplus
+}
+#endif
 
 
 

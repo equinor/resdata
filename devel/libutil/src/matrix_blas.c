@@ -17,10 +17,14 @@
 */
 
 #include <stdbool.h>
+
 #include <util.h>
 #include <matrix.h>
 #include <matrix_blas.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*****************************************************************/
 void  dgemm_(char * , char * , int * , int * , int * , double * , double * , int * , double * , int *  , double * , double * , int *);
@@ -253,3 +257,7 @@ matrix_type * matrix_alloc_gram( const matrix_type * X , bool col) {
   matrix_gram_set( X , G , col);
   return G;
 }
+
+#ifdef __cplusplus
+}
+#endif

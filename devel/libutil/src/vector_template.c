@@ -99,6 +99,10 @@
 #include <buffer.h>
 #include <@TYPE@_vector.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static const char * string_type = "@TYPE@";
 #define TYPE_VECTOR_ID ((int *) string_type )[0]
 
@@ -1320,4 +1324,6 @@ int @TYPE@_vector_count_equal( const @TYPE@_vector_type * vector , @TYPE@ cmp_va
 }
  
 
-//
+#ifdef __cplusplus
+}
+#endif

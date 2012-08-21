@@ -39,6 +39,9 @@ typedef pthread_rwlock_t lock_type;
 typedef int lock_type; 
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define HASH_DEFAULT_SIZE 16
 #define HASH_TYPE_ID      771065
@@ -953,3 +956,7 @@ void hash_apply( hash_type * hash , hash_apply_ftype * func) {
 #undef HASH_GET_ARRAY_PTR
 #undef HASH_NODE_AS
 #undef HASH_DEFAULT_SIZE
+
+#ifdef __cplusplus
+}
+#endif

@@ -24,6 +24,10 @@
 #include <util.h>
 #include <timer.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct timer_struct {
   size_t   count;
 
@@ -130,7 +134,9 @@ double timer_get_avg_time(const timer_type *timer) {
   return timer->sum1 / timer->count;
 }
 
-
+#ifdef __cplusplus
+}
+#endif
 
 
 
