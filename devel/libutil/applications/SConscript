@@ -14,6 +14,7 @@ env  = Environment()
 conf = global_config.get_conf(os.getcwd() ,  2)
 conf.update_env( env , [ LIBUTIL ] , ext_liblist = ["pthread" , "m" , "lapack" , "blas" , "z"] , link = True)
 
+add_program(env , conf , bin_path , "template_test"          , "template_test.c"  )
 add_program(env , conf , bin_path , "latex_test"          , "latex_test.c"  )
 add_program(env , conf , bin_path , "replace.x"           , "replace.c"  )
 add_program(env , conf , bin_path , "matrix_test"         , "matrix_test.c"  )

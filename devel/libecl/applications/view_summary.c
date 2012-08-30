@@ -208,7 +208,7 @@ int main(int argc , char ** argv) {
           stringlist_type * keys = stringlist_alloc_new();
           if (num_keys == 0) {
             ecl_sum_select_matching_general_var_list( ecl_sum , "*" , keys);
-            stringlist_sort( keys , NULL );
+            stringlist_sort(keys , NULL );
           } else 
             build_key_list( ecl_sum , keys , num_keys , arg_list);
           

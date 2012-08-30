@@ -570,13 +570,13 @@ static void matrix_assert_ij( const matrix_type * matrix , int i , int j) {
 }
 
 
-static void matrix_matrix_assert_equal_rows( const matrix_type * m1 , const matrix_type * m2) {
+static void matrix_assert_equal_rows( const matrix_type * m1 , const matrix_type * m2) {
   if (m1->rows != m2->rows)
     util_abort("%s: size mismatch in binary matrix operation %d %d \n",__func__ , m1->rows , m2->rows);
 }
 
 
-static void matrix_matrix_assert_equal_columns( const matrix_type * m1 , const matrix_type * m2) {
+static void matrix_assert_equal_columns( const matrix_type * m1 , const matrix_type * m2) {
   if (m1->columns != m2->columns)
     util_abort("%s: size mismatch in binary matrix operation %d %d \n",__func__ , m1->columns , m2->columns);
 }
@@ -603,7 +603,7 @@ double matrix_iget_safe(const matrix_type * matrix , int i , int j) {
   matrix_assert_ij( matrix , i , j );
   return matrix_iget( matrix , i , j );
 }
-
+  
 
 void  matrix_iadd(matrix_type * matrix , int i , int j , double value) {
   matrix->data[ GET_INDEX(matrix , i,j) ] += value;
@@ -682,7 +682,7 @@ void matrix_set_const_row(matrix_type * matrix , const double value , int row) {
 
 
 void matrix_copy_column(matrix_type * target_matrix, const matrix_type * src_matrix , int target_column, int src_column) {
-  matrix_matrix_assert_equal_rows( target_matrix , src_matrix );
+  matrix_assert_equal_rows( target_matrix , src_matrix );
   for(int row = 0; row < target_matrix->rows; row++)
     target_matrix->data[ GET_INDEX( target_matrix, row , target_column)] = src_matrix->data[ GET_INDEX( src_matrix, row, src_column)];
 } 
@@ -699,7 +699,7 @@ void matrix_scale_row(matrix_type * matrix , int row  , double scale_factor) {
 }
 
 void matrix_copy_row(matrix_type * target_matrix, const matrix_type * src_matrix , int target_row, int src_row) {
-  matrix_matrix_assert_equal_columns( target_matrix , src_matrix );
+  matrix_assert_equal_columns( target_matrix , src_matrix );
   for(int col = 0; col < target_matrix->columns; col++)
     target_matrix->data[ GET_INDEX( target_matrix , target_row , col)] = src_matrix->data[ GET_INDEX( src_matrix, src_row, col)];
 } 
@@ -1412,10 +1412,9 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
     int nrows  = Sk->rows;
     double std = 0;
 
-    for (int i=0; i<nrows; i++) {
-      Sk->data[GET_INDEX(Sk , i , i)] =  Sk->data[GET_INDEX(Sk , i , i)]-mean; 
-    }
-
+    for (int i=0; i<nrows; i++) 
+      Sk->data[GET_INDEX(Sk , i , i)] =  Sk->data[GET_INDEX(Sk , i , i)] - mean; 
+    
     for (int i=0; i<nrows; i++) {
       double d = Sk->data[GET_INDEX(Sk , i , i)] - mean;
       std += d*d;
@@ -1426,6 +1425,14 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
     return std;
   }
 }
+
+/**
+   The matrix_det3() is an explicit implementation of the determinant
+   of a 3x3 matrix. The ecl_grid class uses the determinant of 3x3
+   matrices to determine whether a point is inside a cell. By using
+   this explicit implementation the ecl_grid library has no LAPACK
+   dependency.  
+*/
 
 double matrix_det3( const matrix_type * A) {
   if ((A->rows == 3) && (A->columns == 3)) {

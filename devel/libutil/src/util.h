@@ -195,12 +195,12 @@ typedef enum {left_pad   = 0,
   int          util_string_replace_inplace(char ** , const char *  , const char *);
   char       * util_string_strip_chars_alloc(const char *, const char * );
   char       * util_realloc_string_copy(char * , const char *);
-  char       * util_realloc_substring_copy(char * , const char *, int );
+  char       * util_realloc_substring_copy(char * , const char *, int N);
   char       * util_realloc_dequoted_string(char *);
   char       * util_alloc_dequoted_copy(const char *s);
   void         util_safe_free(void *);
   void         util_free_stringlist(char **, int );
-  char       * util_alloc_substring_copy(const char *, int );
+  char       * util_alloc_substring_copy(const char *, int offset , int N);
   bool         util_is_directory(const char * );
   bool         util_is_file(const char * );
   void         util_set_datetime_values(time_t , int * , int * , int * , int * , int *  , int *);

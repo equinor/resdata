@@ -304,8 +304,8 @@ static smspec_node_type * smspec_node_alloc_empty(ecl_smspec_var_type var_type, 
 
   /** All smspec_node instances should have valid values of these fields. */
   node->var_type      = var_type;
-  node->unit          = util_alloc_substring_copy( unit , 8);       // Max eight characters - everything beyond is silently dropped
-  node->keyword       = util_alloc_substring_copy( keyword , 8);
+  node->unit          = util_alloc_substring_copy( unit , 0 , 8);       // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
+  node->keyword       = util_alloc_substring_copy( keyword , 0 , 8);
   node->params_index  = params_index;
   node->lgr_name      = NULL;
   node->lgr_ijk       = NULL;

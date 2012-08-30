@@ -44,9 +44,6 @@
 
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define BUFFER_TYPE_ID 661043
 
@@ -490,6 +487,9 @@ char * buffer_fread_alloc_string(buffer_type * buffer) {
 
 
 
+/**
+   Observe that this function writes a leading integer string length.
+*/
 void buffer_fwrite_string(buffer_type * buffer , const char * string) {
   buffer_fwrite_int( buffer , strlen( string ));               /* Writing the length of the string */
   buffer_fwrite(buffer , string , 1 , strlen( string ) + 1);   /* Writing the string content ** WITH ** the terminating \0 */
@@ -508,6 +508,11 @@ size_t buffer_get_offset(const buffer_type * buffer) {
 
 size_t buffer_get_size(const buffer_type * buffer) {
   return buffer->content_size;
+}
+
+
+size_t buffer_get_string_size( const buffer_type * buffer ) {
+  return strlen( buffer->data );
 }
 
 size_t buffer_get_alloc_size(const buffer_type * buffer) {
@@ -592,7 +597,7 @@ void buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift) {
       buffer_resize__(buffer , new_size , true );
     }
   }
-
+  
   {
     size_t move_size;
     if (shift < 0)
@@ -604,6 +609,20 @@ void buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift) {
     buffer->content_size += shift;
     buffer->pos           = util_size_t_min( buffer->pos , buffer->content_size);  
   }
+}
+
+
+void buffer_replace_data(buffer_type * buffer , size_t offset , size_t old_size , const void * new_data , size_t new_size) {
+  ssize_t shift = new_size - old_size;
+  buffer_memshift( buffer , offset , shift );
+  buffer_fseek( buffer , offset , SEEK_SET );
+  buffer_fwrite( buffer , new_data , 1 , new_size );
+}
+
+
+void buffer_replace_string( buffer_type * buffer , size_t offset , size_t old_size , const char * new_string) {
+  
+  buffer_replace_data( buffer , offset , old_size , new_string , strlen(new_string));
 }
 
 
@@ -620,7 +639,7 @@ void buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift) {
 
 bool buffer_strstr( buffer_type * buffer , const char * expr ) {
   /** 
-      If this condition is satisfied the assumption tha buffer->data
+      If this condition is satisfied the assumption that buffer->data
       is a \0 terminated string certainly breaks down.
   */
   if ((buffer->content_size == 0) || (buffer->pos == buffer->content_size))
@@ -661,7 +680,7 @@ bool buffer_strchr( buffer_type * buffer , int c) {
 
 
 
-bool buffer_replace( buffer_type * buffer , const char * old_string , const char * new_string) {
+bool buffer_search_replace( buffer_type * buffer , const char * old_string , const char * new_string) {
   const int shift = strlen( new_string ) - strlen( old_string );
   bool match = buffer_strstr( buffer , old_string ); 
   if (match) {
@@ -819,6 +838,3 @@ void buffer_store(const buffer_type * buffer , const char * filename) {
 #include "buffer_zlib.c"
 #endif
 
-#ifdef __cplusplus
-}
-#endif

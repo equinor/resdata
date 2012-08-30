@@ -74,6 +74,13 @@ char * util_alloc_link_target(const char * link) {
 }
 
 #ifdef HAVE_READLINKAT
+
+/*
+  The manual page says that the readlinkat() function should be in the unistd.h header file,
+  but no?!
+*/
+int   readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz);
+
 char * util_alloc_atlink_target(const char * path , const char * link) {
   if (util_is_abs_path( link ))
     return util_alloc_link_target( link );

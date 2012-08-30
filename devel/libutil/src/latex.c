@@ -218,11 +218,11 @@ static bool latex_compile__( latex_type * latex , bool ignore_errors) {
     argv[0] = "-interaction=nonstopmode";
   else
     argv[0] = "-halt-on-error";
-  argv[0] = latex->src_file;
+  argv[0] = "-halt-on-error";//latex->src_file;
 
   argv[1] = latex->src_file;
   {
-    pid_t  child_pid  = util_fork_exec( latex->latex_cmd , argc - 1 , (const char **) argv , false , NULL , latex->run_path , NULL , stdout_file , stderr_file );
+    pid_t  child_pid  = util_fork_exec( latex->latex_cmd , argc  , (const char **) argv , false , NULL , latex->run_path , NULL , stdout_file , stderr_file );
     double total_wait = 0;
     int status;
 

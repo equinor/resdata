@@ -200,11 +200,11 @@ char * util_alloc_envvar( const char * value ) {
         }
 
         {
-          char * var_name        = util_alloc_substring_copy( &data[offset-1] , var_length + 1);  /* Include the leading $ */
+          char * var_name        = util_alloc_substring_copy( data , offset - 1 , var_length + 1);  /* Include the leading $ */
           const char * var_value = getenv( &var_name[1] );
           
           if (var_value != NULL)
-            buffer_replace( buffer , var_name , var_value);                                      /* The actual string replacement. */
+            buffer_search_replace( buffer , var_name , var_value);                                      /* The actual string replacement. */
           else  
             buffer_fseek( buffer , var_length , SEEK_CUR );                                      /* The variable is not defined, and we leave the $name. */
           

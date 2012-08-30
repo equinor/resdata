@@ -322,7 +322,7 @@ int main( int argc , char ** argv) {
     well:
   */
   ecl_sum_update_wgname( ecl_sum , wwct_wellx , "OPX");
-
+  ecl_sum_update_wgname( ecl_sum , wopr_wellx , "OPX");
 
   
   ecl_sum_fwrite( ecl_sum );

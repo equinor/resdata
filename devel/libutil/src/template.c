@@ -20,9 +20,28 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#ifdef HAVE_REGEXP
+#include <sys/types.h>
+#include <regex.h>
+
+#define END_REGEXP      "[{]%[[:space:]]+endfor[[:space:]]+%[}]"
+#define LOOP_REGEXP     "[{]%[[:space:]]+for[[:space:]]+([[:alpha:]][[:alnum:]]*)[[:space:]]+in[[:space:]]+[[]([^]]*)[]][[:space:]]+%[}]"
+#define VAR_REGEXP_FMT  "[^[:alnum:]]%s[^[:alnum:]]" 
+/*                                   /|\
+                                      |
+           The name of the variable we are searching for will go in here.
+*/
+
+#define LOOP_OPTIONS REG_EXTENDED
+#define END_OPTIONS  REG_EXTENDED
+#endif
+
+
 #include <subst_list.h>
 #include <subst_func.h>
 #include <template.h>
+#include <stringlist.h>
+
 
 
 
@@ -35,8 +54,15 @@ struct template_struct {
   bool              internalize_template;    /* Should the template be loadad and internalized at template_alloc(). */
   subst_list_type * arg_list;                /* Key-value mapping established at alloc time. */
   char            * arg_string;              /* A string representation of the arguments - ONLY used for a _get_ function. */ 
+  #ifdef HAVE_REGEXP
+  regex_t start_regexp;
+  regex_t end_regexp;
+  #endif
 };
 
+#ifdef HAVE_REGEXP
+#include "template_loop.c"
+#endif
 
 
 
@@ -100,10 +126,17 @@ template_type * template_alloc( const char * template_file , bool internalize_te
   template->template_file        = NULL;
   template->internalize_template = internalize_template;
   template->arg_string           = NULL;
-  
   template_set_template_file( template , template_file );
+
+#ifdef HAVE_REGEXP
+  template_init_loop_regexp( template );
+#endif
   return template;
 }
+
+
+
+
 
 
 
@@ -112,6 +145,12 @@ void template_free( template_type * template ) {
   util_safe_free( template->template_file );
   util_safe_free( template->template_buffer );
   util_safe_free( template->arg_string );
+
+#ifdef HAVE_REGEXP
+  regfree( &template->start_regexp );
+  regfree( &template->end_regexp );
+#endif
+  
   free( template );
 }
 
@@ -144,7 +183,7 @@ void template_free( template_type * template ) {
    
 
 
-void template_instansiate( const template_type * template , const char * __target_file , const subst_list_type * arg_list , bool override_symlink) {
+void template_instantiate( const template_type * template , const char * __target_file , const subst_list_type * arg_list , bool override_symlink) {
   char * target_file = util_alloc_string_copy( __target_file );
 
   /* Finding the name of the target file. */
@@ -152,16 +191,26 @@ void template_instansiate( const template_type * template , const char * __targe
   if (arg_list != NULL) subst_list_update_string( arg_list , &target_file );
 
   {
-    char * buffer;
+    char * char_buffer;
     /* Loading the template - possibly expanding keys in the filename */
     if (template->internalize_template)
-      buffer = util_alloc_string_copy( template->template_buffer);
+      char_buffer = util_alloc_string_copy( template->template_buffer);
     else
-      buffer = template_load( template , arg_list );
+      char_buffer = template_load( template , arg_list );
     
     /* Substitutions on the content. */
-    subst_list_update_string( template->arg_list , &buffer );
-    if (arg_list != NULL) subst_list_update_string( arg_list , &buffer );
+    subst_list_update_string( template->arg_list , &char_buffer );
+    if (arg_list != NULL) subst_list_update_string( arg_list , &char_buffer );
+
+    
+#ifdef HAVE_REGEXP
+    {
+      buffer_type * buffer = buffer_alloc_private_wrapper( char_buffer , strlen( char_buffer ) + 1);
+      template_eval_loops( template , buffer );
+      char_buffer = buffer_get_data( buffer );
+      buffer_free_container( buffer );
+    }
+#endif
 
     /* 
        Check if target file already exists as a symlink, 
@@ -175,10 +224,10 @@ void template_instansiate( const template_type * template , const char * __targe
     /* Write the content out. */
     {
       FILE * stream = util_mkdir_fopen( target_file , "w");
-      fprintf(stream , "%s" , buffer);
+      fprintf(stream , "%s" , char_buffer);
       fclose( stream );
     }
-    free( buffer );
+    free( char_buffer );
   }
   
   free( target_file );
@@ -209,3 +258,7 @@ char * template_get_args_as_string( template_type * template ) {
   template->arg_string = subst_list_alloc_string_representation( template->arg_list );
   return template->arg_string;
 }
+
+/*****************************************************************/
+
+

@@ -334,14 +334,14 @@ double util_kahan_sum(const double *data, size_t N) {
 
 
 
-char * util_alloc_substring_copy(const char *src , int N) {
+char * util_alloc_substring_copy(const char *src , int offset , int N) {
   char *copy;
-  if (N < strlen(src)) {
+  if ((N + offset) < strlen(src)) {
     copy = util_malloc(N + 1 , __func__);
-    strncpy(copy , src , N);
+    strncpy(copy , &src[offset] , N);
     copy[N] = '\0';
   } else 
-    copy = util_alloc_string_copy(src);
+    copy = util_alloc_string_copy(&src[offset]);
   return copy;
 }
 
@@ -362,7 +362,7 @@ char * util_alloc_dequoted_copy(const char *s) {
   else 
     len = strlen(s) - offset;
   
-  new = util_alloc_substring_copy(&s[offset] , len);
+  new = util_alloc_substring_copy(s , offset , len);
   return new;
 }
 
@@ -388,7 +388,7 @@ char * util_realloc_dequoted_string(char *s) {
   else 
     len = strlen(s) - offset;
   
-  new = util_alloc_substring_copy(&s[offset] , len);
+  new = util_alloc_substring_copy(s , offset , len);
   free(s);
   return new;
 }
@@ -833,7 +833,7 @@ char * util_isscanf_alloc_envvar( const char * string , int env_index ) {
         cont = false;
     } while (cont);
     
-    return util_alloc_substring_copy( env_ptr , length );
+    return util_alloc_substring_copy( env_ptr , 0 , length );
   } else
     return NULL; /* Could not find any env variable occurences. */
 }
@@ -2339,18 +2339,18 @@ void util_alloc_file_components(const char * file, char **_path , char **_basena
   int slash_length = 1;
   
   if (path_length > 0) 
-    path = util_alloc_substring_copy(file , path_length);
+    path = util_alloc_substring_copy(file , 0 , path_length);
   else
     slash_length = 0;
 
 
   if (base_length > 0)
-    basename = util_alloc_substring_copy(&file[path_length + slash_length] , base_length);
+    basename = util_alloc_substring_copy(file , path_length + slash_length , base_length);
 
   
   ext_length = strlen(file) - (path_length + base_length + 1);
   if (ext_length > 0)
-    extension = util_alloc_substring_copy(&file[path_length + slash_length + base_length + 1] , ext_length);
+    extension = util_alloc_substring_copy(file , (path_length + slash_length + base_length + 1) , ext_length);
 
   if (_extension != NULL) 
     *_extension = extension;
@@ -3234,7 +3234,7 @@ void util_split_string(const char *line , const char *sep_set, int *_tokens, cha
     do {
       token_length = strcspn(&line[offset] , sep_set);
       if (token_length > 0) {
-        token_list[token] = util_alloc_substring_copy(&line[offset] , token_length);
+        token_list[token] = util_alloc_substring_copy(line , offset , token_length);
         token++;
       } else
         token_list[token] = NULL;
@@ -3300,7 +3300,7 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
       if (pos < 0)
         src = NULL;
       else
-        src = util_alloc_substring_copy(__src , pos + 1);
+        src = util_alloc_substring_copy(__src , 0 , pos + 1);
     }
 
     
@@ -3345,7 +3345,7 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
 
         if (split_on_first) {
           sep_end = pos;
-          first_part = util_alloc_substring_copy(src , sep_start);
+          first_part = util_alloc_substring_copy(src , 0 , sep_start);
           
           if (sep_end == end_pos)
             second_part = NULL;
@@ -3358,7 +3358,7 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
             first_part = NULL;
             second_part = util_alloc_string_copy( &src[sep_end+1] );
           } else {
-            first_part  = util_alloc_substring_copy( src , sep_start + 1);
+            first_part  = util_alloc_substring_copy( src , 0 , sep_start + 1);
             second_part = util_alloc_string_copy( &src[sep_end + 1]);
           }
         }

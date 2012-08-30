@@ -1619,7 +1619,7 @@ stringlist_type * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec , c
     }
     hash_iter_free(iter);
   }
-  
+  stringlist_sort( well_list , (string_cmp_ftype *) util_strcmp_int );
   return well_list;
 }
 
@@ -1644,7 +1644,7 @@ stringlist_type * ecl_smspec_alloc_group_list( const ecl_smspec_type * smspec , 
     }
     hash_iter_free(iter);
   }
-  
+  stringlist_sort( group_list , (string_cmp_ftype *) util_strcmp_int );
   return group_list;
 }
 

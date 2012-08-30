@@ -43,9 +43,9 @@
 
     2. Insert key,value pairs to for search-replace with the functions
 
-       	* subst_list_insert_ref(subst_list , key , value);
-       	* subst_list_insert_owned_ref(subst_list , key , value);
-       	* subst_list_insert_copy(subst_list , key , value );  
+        * subst_list_insert_ref(subst_list , key , value);
+        * subst_list_insert_owned_ref(subst_list , key , value);
+        * subst_list_insert_copy(subst_list , key , value );  
    
        The difference between these functions is who is owning the memory
        pointed to by the value pointer.
@@ -71,8 +71,8 @@
 
 
 typedef enum { SUBST_DEEP_COPY   = 1,     
-	       SUBST_MANAGED_REF = 2,
-	       SUBST_SHARED_REF  = 3} subst_insert_type; /* Mode used in the subst_list_insert__() function */
+               SUBST_MANAGED_REF = 2,
+               SUBST_SHARED_REF  = 3} subst_insert_type; /* Mode used in the subst_list_insert__() function */
   
 #define SUBST_LIST_TYPE_ID 6614320
 
@@ -245,7 +245,7 @@ static UTIL_IS_INSTANCE_FUNCTION( subst_list , SUBST_LIST_TYPE_ID )
 */
 
 void subst_list_set_parent( subst_list_type * subst_list , const subst_list_type * parent) {
-  subst_list->parent    = parent;
+  subst_list->parent = parent;
   if (parent != NULL)
     subst_list->func_pool = subst_list->parent->func_pool;
 }
@@ -425,7 +425,7 @@ static void subst_list_replace_strings__(const subst_list_type * subst_list , bu
       bool    match;
       buffer_rewind( buffer );
       do {
-        match = buffer_replace( buffer , node->key , node->value);
+        match = buffer_search_replace( buffer , node->key , node->value);
       } while (match);
     }
   }
@@ -487,7 +487,7 @@ static void subst_list_eval_funcs____(const subst_list_type * subst_list , const
             char * arg_end = strchr( arg_start , ')');
             if (arg_end != NULL) {
               /* OK - we found an enclosing () pair. */
-              char            * arg_content = util_alloc_substring_copy( &arg_start[1] , arg_end - arg_start - 1);
+              char            * arg_content = util_alloc_substring_copy( arg_start, 1 , arg_end - arg_start - 1);
               stringlist_type * arg_list    = parser_tokenize_buffer( parser , arg_content , true);
               char            * func_eval   = subst_list_func_eval( subst_func , arg_list );
               int               old_len     = strlen(func_name) + strlen( arg_content) + 2;       
@@ -872,13 +872,13 @@ int subst_list_add_from_string( subst_list_type * subst_list , const char * arg_
           tmp++;
         
         arg_length = strcspn(tmp , " =");
-        key  = util_alloc_substring_copy(tmp , arg_length);
+        key  = util_alloc_substring_copy(tmp , 0 , arg_length);
         tmp += arg_length;
         while ((*tmp == ' ') || (*tmp == '='))
           tmp++;
         
         value_length = strcspn(tmp , " ");
-        value = util_alloc_substring_copy( tmp , value_length);
+        value = util_alloc_substring_copy( tmp , 0 , value_length);
         
         /* Setting the argument */
         if (append)

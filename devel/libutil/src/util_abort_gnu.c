@@ -40,7 +40,7 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
       while ( bt_symbol[end_pos] != ']') 
         end_pos++;
       
-      adress = util_alloc_substring_copy( &bt_symbol[start_pos + 1] , end_pos - start_pos - 1 );
+      adress = util_alloc_substring_copy( bt_symbol , start_pos + 1 , end_pos - start_pos - 1 );
   }
   
   {
@@ -110,7 +110,7 @@ static char * util_bt_alloc_current_executable(const char * bt_symbol) {
       while (bt_symbol[paren_pos] != '(' && bt_symbol[paren_pos] != ' ')
         paren_pos++;
       
-      path = util_alloc_substring_copy(bt_symbol , paren_pos);
+      path = util_alloc_substring_copy(bt_symbol , 0 , paren_pos);
       if (util_is_abs_path(path))
         return path;
       else {

@@ -18,9 +18,10 @@
 
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
+
 #include <util.h>
 #include <parser.h>
-#include <ctype.h>
 #include <buffer.h>
 
 #define PARSER_ESCAPE_CHAR '\\'
