@@ -911,7 +911,18 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
   }
 }
 
+/**
+   This function is the opposite of the ecl_smspec_index_node
+   function; i.e. it will remove the smspec_node from the various
+   index tables. It will not actually destroy the node itself.  
+*/
+
+static void ecl_smspec_delete_node_index(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node) {
   
+}
+  
+
+
 static void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node) {
   /*
     It is possible crate a node which is not fully specified, e.g. the
@@ -930,7 +941,8 @@ static void ecl_smspec_set_params_size( ecl_smspec_type * ecl_smspec , int param
 }
 
 
-static void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node) {
+
+static void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node){ 
   int internal_index = vector_get_size( ecl_smspec->smspec_nodes );
   
   /* This IF test should only apply in write_mode. */
