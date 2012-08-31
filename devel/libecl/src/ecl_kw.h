@@ -118,7 +118,7 @@ extern "C" {
   ecl_kw_type * ecl_kw_buffer_alloc(buffer_type * buffer);
   void          ecl_kw_buffer_store(const ecl_kw_type * ecl_kw , buffer_type * buffer);
   
-  
+  void ecl_kw_fprintf_data( const ecl_kw_type * ecl_kw , const char * fmt , FILE * stream);
   void ecl_kw_memcpy_data( ecl_kw_type * target , const ecl_kw_type * src);
   
   bool ecl_kw_assert_numeric( const ecl_kw_type * kw );
@@ -127,6 +127,8 @@ extern "C" {
   void ecl_kw_scalar_set_bool( ecl_kw_type * ecl_kw , bool bool_value);
   void ecl_kw_scalar_set__(ecl_kw_type * ecl_kw , const void * value);
   void ecl_kw_scalar_set_float_or_double( ecl_kw_type * ecl_kw , double value );
+
+
 #define ECL_KW_SCALAR_SET_TYPED_HEADER( ctype ) void ecl_kw_scalar_set_ ## ctype( ecl_kw_type * ecl_kw , ctype value);
   ECL_KW_SCALAR_SET_TYPED_HEADER( int )
   ECL_KW_SCALAR_SET_TYPED_HEADER( float )

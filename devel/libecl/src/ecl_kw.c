@@ -2425,4 +2425,46 @@ double ecl_kw_element_sum_float( const ecl_kw_type * ecl_kw ) {
 
 /*****************************************************************/
 
+#define ECL_KW_FPRINTF_DATA(ctype)                                                                        \
+static void ecl_kw_fprintf_data_ ## ctype(const ecl_kw_type * ecl_kw , const char * fmt , FILE * stream)  \
+{                                                                                                         \
+  const ctype * data = (const ctype *) ecl_kw->data;                                                      \
+  for (int i=0; i < ecl_kw->size; i++)                                                                    \
+    fprintf(stream , fmt , data[i]);                                                                      \
+}
+
+ECL_KW_FPRINTF_DATA( int )
+ECL_KW_FPRINTF_DATA( float )
+ECL_KW_FPRINTF_DATA( double )
+#undef ECL_KW_FPRINTF_DATA
+
+static void ecl_kw_fprintf_data_bool( const ecl_kw_type * ecl_kw , const char * fmt , FILE * stream) {
+  const int * data = (const int *) ecl_kw->data;
+  for (int i=0; i < ecl_kw->size; i++) {
+    if (data[i] == ECL_BOOL_TRUE_INT)
+      fprintf(stream , fmt , 1);
+    else
+      fprintf(stream , fmt , 0);
+  }
+}
+
+
+static void ecl_kw_fprintf_data_char( const ecl_kw_type * ecl_kw , const char * fmt , FILE * stream) {
+  for (int i=0; i < ecl_kw->size; i++) 
+    fprintf(stream , fmt , &ecl_kw->data[ i * ecl_kw->sizeof_ctype]);
+}
+
+
+void ecl_kw_fprintf_data( const ecl_kw_type * ecl_kw , const char * fmt , FILE * stream) {
+  if (ecl_kw->ecl_type == ECL_DOUBLE_TYPE)
+    ecl_kw_fprintf_data_double( ecl_kw , fmt , stream );
+  else if (ecl_kw->ecl_type == ECL_FLOAT_TYPE)
+    ecl_kw_fprintf_data_float( ecl_kw , fmt , stream );
+  else if (ecl_kw->ecl_type == ECL_INT_TYPE)
+    ecl_kw_fprintf_data_int( ecl_kw , fmt , stream );
+  else if (ecl_kw->ecl_type == ECL_BOOL_TYPE)
+    ecl_kw_fprintf_data_bool( ecl_kw , fmt , stream );
+  else if (ecl_kw->ecl_type == ECL_CHAR_TYPE)
+    ecl_kw_fprintf_data_char( ecl_kw , fmt , stream );
+}
 
