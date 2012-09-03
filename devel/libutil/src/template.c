@@ -23,14 +23,10 @@
 #ifdef HAVE_REGEXP
 #include <sys/types.h>
 #include <regex.h>
+#include <ctype.h>
 
-#define END_REGEXP      "[{]%[[:space:]]+endfor[[:space:]]+%[}]"
-#define LOOP_REGEXP     "[{]%[[:space:]]+for[[:space:]]+([[:alpha:]][[:alnum:]]*)[[:space:]]+in[[:space:]]+[[]([^]]*)[]][[:space:]]+%[}]"
-#define VAR_REGEXP_FMT  "[^[:alnum:]]%s[^[:alnum:]]" 
-/*                                   /|\
-                                      |
-           The name of the variable we are searching for will go in here.
-*/
+#define END_REGEXP           "[{]%[[:space:]]+endfor[[:space:]]+%[}]"
+#define LOOP_REGEXP          "[{]%[[:space:]]+for[[:space:]]+([$]?[[:alpha:]][[:alnum:]]*)[[:space:]]+in[[:space:]]+[[]([^]]*)[]][[:space:]]+%[}]"
 
 #define LOOP_OPTIONS REG_EXTENDED
 #define END_OPTIONS  REG_EXTENDED

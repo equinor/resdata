@@ -19,6 +19,7 @@
 #include <parser.h>
 #include <stringlist.h>
 
+#define DOLLAR  '$'
 /*
   This file implements a simple looping construct in the
   templates. The support is strongly based on the POSIX regexp
@@ -38,8 +39,8 @@ typedef struct {
   int               body_offset;
   int               body_length;
 
+  bool              replace_substring; 
   int               var_length;
-  regex_t           var_regexp;
   char            * loop_var;
   stringlist_type * items;
 } loop_type;
@@ -63,7 +64,6 @@ static loop_type * loop_alloc( const char * buffer , int global_offset , regmatc
 
   loop->opentag_offset  = global_offset + tag_offset.rm_so;
   loop->opentag_length  = tag_offset.rm_eo - tag_offset.rm_so;
-  //loop->opentag_length += 1; // Eat the newline Newline ??
   
   loop->endtag_offset  = -1;
   loop->endtag_length  = -1;
@@ -75,6 +75,10 @@ static loop_type * loop_alloc( const char * buffer , int global_offset , regmatc
     int var_length = __var_offset.rm_eo - __var_offset.rm_so;
     loop->loop_var   = util_alloc_substring_copy( buffer , var_offset , var_length );
     loop->var_length = strlen( loop->loop_var );
+    if (loop->loop_var[0] == DOLLAR)
+      loop->replace_substring = true;
+    else
+      loop->replace_substring = false;
   }
   {
     int items_offset = global_offset + __items_offset.rm_so;
@@ -86,11 +90,6 @@ static loop_type * loop_alloc( const char * buffer , int global_offset , regmatc
 
     parser_free( parser );
     free( items_string );
-  }
-  {
-    char * reg_string = util_alloc_sprintf(VAR_REGEXP_FMT , loop->loop_var);
-    regcompile( &loop->var_regexp , reg_string , 0 );
-    free( reg_string );
   }
   return loop;
 }
@@ -111,37 +110,75 @@ static void loop_set_endmatch( loop_type * loop , int global_offset , regmatch_t
 static void loop_free( loop_type * loop ) {
   free( loop->loop_var );
   stringlist_free( loop->items );
-  regfree( &loop->var_regexp );
   free( loop );
 }
 
 
-static void template_eval_loop_var( const template_type * template , const loop_type * loop , const char * body , buffer_type * var_expansion , int ivar) {
+
+
+static void replace_1var( buffer_type * var_expansion , int shift , int write_offset , int shift_offset , const char * value) {
+  buffer_memshift( var_expansion , shift_offset , shift );
+  buffer_fseek( var_expansion , write_offset , SEEK_SET );
+  buffer_fwrite_char_ptr( var_expansion , value );
+}
+
+
+static void loop_eval( const loop_type * loop , const char * body , buffer_type * var_expansion , int ivar) {
   buffer_clear( var_expansion );
   buffer_fwrite_char_ptr( var_expansion , body );
   buffer_terminate_char_ptr( var_expansion );
 
   {
-    int NMATCH=1;
-    regmatch_t match_list[NMATCH];
     const char * value = stringlist_iget( loop->items , ivar );
     int value_length = strlen( value );
+    int shift        = value_length - loop->var_length;
     int search_offset = 0;
+    
+    
     while (true) {
       char * data = buffer_get_data( var_expansion );
-      int var_match = regexec( &loop->var_regexp , &data[search_offset], NMATCH , match_list , 0);
-      if (var_match == REG_NOMATCH) 
+      char * match_ptr = strstr( &data[search_offset] , loop->loop_var );
+      
+      if (match_ptr == NULL) 
         break;
       else {
-        int write_offset = search_offset + match_list[0].rm_so + 1;  // +/- 1 adjustments to skip the [^[:alnum:]] character packing the variable
-        int shift_offset = search_offset + match_list[0].rm_eo - 1;
-        int shift        = value_length - loop->var_length;
 
-        buffer_memshift( var_expansion , shift_offset , shift );
-        buffer_fseek( var_expansion , write_offset , SEEK_SET );
-        buffer_fwrite_char_ptr( var_expansion , value );
+        /* Check that the match is either at the very start of the
+           string, or alternatively NOT preceeded by alphanumeric
+           character. If the variable starts with a '$' we ignore this
+           test.
+        */  
+        if (!loop->replace_substring) {
+          if (match_ptr != &data[search_offset]) { char
+              pre_char = match_ptr[-1]; if (isalnum( pre_char )) {
+              search_offset = match_ptr - data + 1;
+              
+              if (search_offset >= strlen(data))
+                break;
+              else
+                continue;
+            }
+          }
 
-        search_offset = write_offset + loop->var_length;
+
+          /* 
+             Check that the match is at the very end of the string, or
+             alternatively followed by a NON alphanumeric character. */
+          if (strlen(match_ptr) > loop->var_length) {
+            char end_char = match_ptr[ loop->var_length ];
+            if (isalnum( end_char )) 
+              break;
+          }
+        }
+          
+        /* OK - this is a valid match; update the string buffer. */
+        {
+          int write_offset = match_ptr - data;
+          int shift_offset = write_offset + loop->var_length;
+          
+          replace_1var( var_expansion , shift , write_offset , shift_offset , value );
+          search_offset = write_offset + loop->var_length;
+        }
       }
     }
   }
@@ -197,7 +234,7 @@ static int template_eval_loop( const template_type * template , buffer_type * bu
         int ivar;
         
         for (ivar =0; ivar < stringlist_get_size( loop->items ); ivar++) {
-          template_eval_loop_var( template , loop , body , var_expansion , ivar );
+          loop_eval(loop , body , var_expansion , ivar );
           buffer_fwrite_char_ptr( loop_expansion , buffer_get_data( var_expansion ));
         }
         
