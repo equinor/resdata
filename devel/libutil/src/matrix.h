@@ -54,8 +54,6 @@ typedef struct matrix_struct matrix_type;
   void          matrix_scale(matrix_type * matrix, double value);
   void          matrix_shift(matrix_type * matrix, double value);
   
-  void          matrix_assert_finite( const matrix_type * matrix );
-  
   void          matrix_assign(matrix_type * A , const matrix_type * B);
   void          matrix_inplace_add(matrix_type * A , const matrix_type * B);
   void          matrix_inplace_sub(matrix_type * A , const matrix_type * B);
@@ -97,7 +95,6 @@ typedef struct matrix_struct matrix_type;
   void          matrix_set_const_row(matrix_type * matrix , const double value , int row);
   
   double      * matrix_get_data(const matrix_type * matrix);
-  bool          matrix_is_finite(const matrix_type * matrix);
   double        matrix_orthonormality( const matrix_type * matrix );
   
   matrix_type * matrix_alloc_steal_data(int rows , int columns , double * data , int data_size);
@@ -136,7 +133,8 @@ typedef struct matrix_struct matrix_type;
   double        matrix_det3( const matrix_type * A);
   
   #ifdef HAVE_ISFINITE
-  bool matrix_is_finite(const matrix_type * matrix);
+  bool          matrix_is_finite(const matrix_type * matrix);
+  void          matrix_assert_finite( const matrix_type * matrix );
   #endif
 
   UTIL_SAFE_CAST_HEADER( matrix );

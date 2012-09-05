@@ -1207,7 +1207,6 @@ bool matrix_is_finite(const matrix_type * matrix) {
 
   return true;
 }
-#endif
 
 void matrix_assert_finite( const matrix_type * matrix ) {
   if (!matrix_is_finite( matrix )) {
@@ -1217,6 +1216,9 @@ void matrix_assert_finite( const matrix_type * matrix ) {
     util_abort("%s: matrix:%s is not finite. \n",__func__ , matrix->name); 
   }
 }
+
+#endif
+
 
 
 /**
