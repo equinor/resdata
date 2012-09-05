@@ -78,7 +78,7 @@ path_fmt_type * path_fmt_safe_cast(const void * arg) {
 void path_fmt_reset_fmt(path_fmt_type * path , const char * fmt) {
   path->fmt = util_realloc_string_copy(path->fmt , fmt);
   if (path->is_directory) 
-    path->file_fmt = util_alloc_string_sum((const char *[2]) {path->fmt , "/%s"} , 2);
+    path->file_fmt = util_alloc_sprintf("%s/%%s" , fmt);
 }
 
 
