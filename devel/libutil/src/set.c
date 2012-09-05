@@ -49,8 +49,9 @@ set_type * set_copyc(const set_type * set)
   int         size     = set_get_size(set);
   char     ** keylist  = set_alloc_keylist(set);
   set_type  * set_copy = set_alloc(size, (const char **) keylist);
-  
-  for(int key_nr = 0; key_nr < size; key_nr++)
+  int key_nr;
+
+  for( key_nr = 0; key_nr < size; key_nr++)
     free(keylist[key_nr]);
   free(keylist);
 
@@ -164,7 +165,8 @@ set_type * set_fread_alloc(FILE * stream) {
 void set_intersect(set_type * set1 , const set_type * set2) {
   char ** key_list1 = set_alloc_keylist(set1);
   int size1 = set_get_size(set1);
-  for (int i=0; i < size1; i++) {
+  int i;
+  for ( i=0; i < size1; i++) {
     if (!set_has_key(set2 , key_list1[i]))
       set_remove_key(set1 , key_list1[i]);
     free(key_list1[i]);
@@ -184,7 +186,8 @@ void set_intersect(set_type * set1 , const set_type * set2) {
 void set_union(set_type * set1 , const set_type * set2) {
   char ** key_list2 = set_alloc_keylist(set2);
   int size2 = set_get_size(set2);
-  for (int i=0; i < size2; i++) {
+  int i;
+  for ( i=0; i < size2; i++) {
     set_add_key(set1 , key_list2[i]);
     free(key_list2[i]);
   }
@@ -201,7 +204,8 @@ void set_union(set_type * set1 , const set_type * set2) {
 void set_minus(set_type * set1, const set_type * set2) {
   char ** key_list2 = set_alloc_keylist(set2);
   int size2 = set_get_size(set2);
-  for (int i=0; i < size2; i++) {
+  int i;
+  for ( i=0; i < size2; i++) {
     if( set_has_key(set1 , key_list2[i]) )
       set_remove_key(set1, key_list2[i]);
     free(key_list2[i]);

@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <util.h>
-#include <inttypes.h>
+#include <stdint.h>
 #include <node_data.h>
 #include <hash_node.h>
 

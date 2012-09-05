@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 #include <stdbool.h>
-#include <inttypes.h>
+#include <stdint.h>
 
 #include <node_data.h>
 
