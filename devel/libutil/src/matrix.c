@@ -159,7 +159,7 @@ static void matrix_realloc_data__( matrix_type * matrix , bool safe_mode ) {
     /* Initializing matrix content to zero. */
     if (matrix->data != NULL) {
       size_t i;
-		for (i = 0; i < data_size; i++)
+                for (i = 0; i < data_size; i++)
         matrix->data[i] = 0;
     } else 
       data_size = 0;
@@ -685,7 +685,7 @@ void matrix_set_const_row(matrix_type * matrix , const double value , int row) {
 void matrix_copy_column(matrix_type * target_matrix, const matrix_type * src_matrix , int target_column, int src_column) {
   matrix_assert_equal_rows( target_matrix , src_matrix );
   { 
-	 int row;
+         int row;
      for(row = 0; row < target_matrix->rows; row++)
         target_matrix->data[ GET_INDEX( target_matrix, row , target_column)] = src_matrix->data[ GET_INDEX( src_matrix, row, src_column)];
   }
@@ -694,7 +694,7 @@ void matrix_copy_column(matrix_type * target_matrix, const matrix_type * src_mat
 
 void matrix_scale_column(matrix_type * matrix , int column  , double scale_factor) {
     int row; 
-	for (row = 0; row < matrix->rows; row++)
+        for (row = 0; row < matrix->rows; row++)
     matrix->data[ GET_INDEX( matrix , row , column) ] *= scale_factor;
 }
 
@@ -707,8 +707,8 @@ void matrix_scale_row(matrix_type * matrix , int row  , double scale_factor) {
 void matrix_copy_row(matrix_type * target_matrix, const matrix_type * src_matrix , int target_row, int src_row) {
   matrix_assert_equal_columns( target_matrix , src_matrix );
   {
-	  int col;
-	  for(col = 0; col < target_matrix->columns; col++)
+          int col;
+          for(col = 0; col < target_matrix->columns; col++)
          target_matrix->data[ GET_INDEX( target_matrix , target_row , col)] = src_matrix->data[ GET_INDEX( src_matrix, src_row, col)];
   }
 } 
@@ -1119,16 +1119,16 @@ void matrix_shift_row(matrix_type * matrix , int row , double shift) {
 */
 
 void matrix_subtract_row_mean(matrix_type * matrix) {
-	int i; 
-	for ( i=0; i < matrix->rows; i++) {
+        int i; 
+        for ( i=0; i < matrix->rows; i++) {
     double row_mean = matrix_get_row_sum(matrix , i) / matrix->columns;
     matrix_shift_row( matrix , i , -row_mean);
   }
 }
 
 void matrix_subtract_and_store_row_mean(matrix_type * matrix, matrix_type * row_mean) {
-	int i;
-	for ( i=0; i < matrix->rows; i++) {
+        int i;
+        for ( i=0; i < matrix->rows; i++) {
     double mean = matrix_get_row_sum(matrix , i) / matrix->columns;
     matrix_shift_row( matrix , i , -mean);
     matrix_iset(row_mean , i , 0, mean );
@@ -1137,7 +1137,7 @@ void matrix_subtract_and_store_row_mean(matrix_type * matrix, matrix_type * row_
 
 void matrix_imul_col( matrix_type * matrix , int column , double factor) {
    int i;
-	for ( i=0; i < matrix->rows; i++)
+        for ( i=0; i < matrix->rows; i++)
     matrix_imul( matrix , i , column , factor );
 }
 
@@ -1195,6 +1195,7 @@ bool matrix_is_quadratic(const matrix_type * matrix) {
    Goes through all the elements in the matrix - and return true if they are all finite.
 */
 
+#ifdef HAVE_ISFINITE
 bool matrix_is_finite(const matrix_type * matrix) {
   int i,j;
   for (i = 0; i < matrix->rows; i++)
@@ -1206,7 +1207,7 @@ bool matrix_is_finite(const matrix_type * matrix) {
 
   return true;
 }
-
+#endif
 
 void matrix_assert_finite( const matrix_type * matrix ) {
   if (!matrix_is_finite( matrix )) {
@@ -1288,7 +1289,7 @@ bool matrix_equal( const matrix_type * m1 , const matrix_type * m2) {
 void matrix_diag_set(matrix_type * matrix , const double * diag) {
   if (matrix->rows == matrix->columns) {
     int i;
-	matrix_set(matrix , 0);
+        matrix_set(matrix , 0);
     for ( i=0; i < matrix->rows; i++)
       matrix->data[ GET_INDEX(matrix , i , i) ] = diag[i];
   } else
@@ -1304,7 +1305,7 @@ void matrix_diag_set(matrix_type * matrix , const double * diag) {
 void matrix_diag_set_scalar(matrix_type * matrix , double value) {
   if (matrix->rows == matrix->columns) {
     int i;
-	matrix_set(matrix , 0);
+        matrix_set(matrix , 0);
     for ( i=0; i < matrix->rows; i++)
       matrix->data[ GET_INDEX(matrix , i , i) ] = value;
   } else
@@ -1433,7 +1434,7 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
   else{
     int nrows  = Sk->rows;
     double std = 0;
-	int i;
+        int i;
 
     for ( i=0; i<nrows; i++) 
       Sk->data[GET_INDEX(Sk , i , i)] =  Sk->data[GET_INDEX(Sk , i , i)] - mean; 
