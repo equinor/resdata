@@ -18,7 +18,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include <unistd.h>
+#include <stdio.h>
 
 #ifdef HAVE_REGEXP
 #include <sys/types.h>
@@ -214,7 +214,7 @@ void template_instantiate( const template_type * template , const char * __targe
     */
     if (override_symlink) {
       if (util_is_link( target_file ))
-        unlink( target_file );
+        remove( target_file );
     }
     
     /* Write the content out. */
