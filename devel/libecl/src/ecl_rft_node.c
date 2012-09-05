@@ -229,8 +229,8 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft) {
       const float * SW = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , SWAT_KW , 0));
       const float * SG = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , SGAS_KW , 0)); 
       const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , PRESSURE_KW , 0));
-
-      for (int c = 0; c < rft_node->size; c++) {
+	  int c;
+      for (c = 0; c < rft_node->size; c++) {
         rft_node->rft_data[c].swat     = SW[c];
         rft_node->rft_data[c].sgas     = SG[c];
         rft_node->cells[c].pressure     = P[c];
@@ -241,8 +241,8 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft) {
       const float * GR = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONGRAT_KW , 0)); 
       const float * OR = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONORAT_KW , 0)); 
       const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONPRES_KW , 0));
-
-      for (int c = 0; c < rft_node->size; c++) {
+	  int c;
+      for ( c = 0; c < rft_node->size; c++) {
         rft_node->plt_data[c].orat     = OR[c];
         rft_node->plt_data[c].grat     = GR[c];
         rft_node->plt_data[c].wrat     = WR[c];
@@ -257,9 +257,9 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft) {
        reasonably safely try some blocking.
     */
     {
-      int i;
-      rft_node->__vertical_well = true;
+      int i;      
       double first_delta = rft_node->cells[1].depth - rft_node->cells[0].depth;
+	  rft_node->__vertical_well = true;
       for (i = 1; i < (rft_node->size - 1); i++) {
         double delta = rft_node->cells[i+1].depth - rft_node->cells[i].depth;
         if (fabs(delta) > 0) {
