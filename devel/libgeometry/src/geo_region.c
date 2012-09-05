@@ -67,8 +67,9 @@ static void geo_region_invalidate_index_list( geo_region_type * region ) {
 
 static void geo_region_assert_index_list( geo_region_type * region ) {
   if (!region->index_valid) {
+    int i;
     int_vector_reset( region->index_list );
-    for (int i=0; i < region->pointset_size; i++)
+    for (i=0; i < region->pointset_size; i++)
       if (region->active_mask[i])
         int_vector_append( region->index_list , i );
 
@@ -78,7 +79,8 @@ static void geo_region_assert_index_list( geo_region_type * region ) {
 
 
 void geo_region_reset( geo_region_type * region ) {
-  for (int i=0; i < region->pointset_size; i++)
+  int i;
+  for (i=0; i < region->pointset_size; i++)
     region->active_mask[i] = region->preselect;
   geo_region_invalidate_index_list( region );
 }
@@ -139,8 +141,9 @@ void geo_region_deselect_outside_polygon( geo_region_type * region , const geo_p
 static void geo_region_select_line__( geo_region_type * region, const double xcoords[2] , const double ycoords[2], bool select_above , bool select){
   double vx = xcoords[1] - xcoords[0];   // Vector from point 1 to point 2 
   double vy = ycoords[1] - ycoords[0];
-  
-  for (int index = 0; index < region->pointset_size; index++) {
+  int index;
+
+  for (index = 0; index < region->pointset_size; index++) {
     bool   above;
     double x , y ;
     double px , py;

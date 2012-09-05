@@ -100,7 +100,8 @@ static void geo_surface_init_regular( geo_surface_type * surface , const double 
 
 
 static void geo_surface_fscanf_zcoord( const geo_surface_type * surface , FILE * stream , double * zcoord) {
-  for (int i=0; i < surface->nx * surface->ny; i++) 
+  int i;
+  for (i=0; i < surface->nx * surface->ny; i++) 
     if (fscanf(stream , "%lg" , &zcoord[i]) != 1)
       util_abort("%s: hmm - fatal error when loading surface ..." , __func__);
 }
@@ -132,8 +133,8 @@ static void geo_surface_fprintf_irap_header( const geo_surface_type * surface , 
 static void geo_surface_fprintf_zcoord( const geo_surface_type * surface , FILE * stream , const double * zcoord ) {
   int num_columns = 6;
   const char * fmt = "%12.4f  ";
-  
-  for (int i=0; i < geo_surface_get_size( surface ); i++) {
+  int i;
+  for (i=0; i < geo_surface_get_size( surface ); i++) {
     fprintf(stream , fmt , zcoord[i]);
 
     if (((i + 1) % num_columns) == 0)
