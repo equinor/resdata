@@ -105,7 +105,8 @@ const char * util_update_path_var(const char * variable, const char * value, boo
       int     num_path;
       util_split_string( current_value , ":" , &num_path , &path_list);
       if (append) {
-        for (int i = 0; i < num_path; i++) {
+        int i;
+        for (i = 0; i < num_path; i++) {
           if (util_string_equal( path_list[i] , value)) 
             update = false;                            /* The environment variable already contains @value - no point in appending it at the end. */
         } 
