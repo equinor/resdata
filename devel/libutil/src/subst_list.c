@@ -146,16 +146,16 @@ static void subst_list_string_free__(void * node) {
 
 
 /**
-   __value can be NULL. 
+   input_value can be NULL. 
 */
-static void subst_list_string_set_value(subst_list_string_type * node, const char * __value , const char * doc_string , subst_insert_type insert_mode) {
+static void subst_list_string_set_value(subst_list_string_type * node, const char * input_value , const char * doc_string , subst_insert_type insert_mode) {
   subst_list_string_free_content( node );
   {
     char * value;
     if (insert_mode == SUBST_DEEP_COPY)
-      value = util_alloc_string_copy(__value);
+      value = util_alloc_string_copy(input_value);
     else
-      value = (char *) __value;
+      value = (char *) input_value;
     
     if (insert_mode == SUBST_SHARED_REF)
       node->value_owner = false;

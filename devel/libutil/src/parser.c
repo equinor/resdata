@@ -228,7 +228,7 @@ int length_of_quotation(
   const char * buffer)
 {
   assert( buffer != NULL );
-
+  {
   int  length  = 1;
   char target  = buffer[0];
   char current = buffer[1]; 
@@ -247,6 +247,7 @@ int length_of_quotation(
   
   
   return length;
+  }
 }
 
 

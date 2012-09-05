@@ -113,7 +113,8 @@ static void mzran_set_state4(mzran_type * rng ,
 static unsigned int fscanf_4bytes( FILE * stream ) {
   unsigned int s;
   char * char_ptr = (char *) &s;
-  for (int i=0; i < 4; i++) {
+  int i;
+  for ( i=0; i < 4; i++) {
     int c;
     if ( fscanf(stream , "%d" , &c) == 1 )
       char_ptr[i] = c;
@@ -151,7 +152,8 @@ void mzran_fscanf_state( void * __rng , FILE * stream ) {
 
 static void fprintf_4bytes( unsigned int s , FILE * stream) {
   char * char_ptr = (char *) &s;
-  for (int i=0; i < 4; i++)
+  int i;
+  for ( i=0; i < 4; i++)
     fprintf(stream , "%d " , (int) char_ptr[i]);
 }
 

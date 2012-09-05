@@ -27,7 +27,8 @@ double statistics_mean( const double_vector_type * data_vector ) {
   const double * data = double_vector_get_const_ptr( data_vector );
   int size = double_vector_size( data_vector );
   double sum = 0;
-  for (int i=0; i < size; i++)
+  int i;
+  for (i=0; i < size; i++)
     sum += data[i];
 
   return sum / size;

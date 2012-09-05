@@ -214,7 +214,8 @@ rng_alg_type  rng_get_type( const rng_type * rng ) {
 
 void rng_shuffle( rng_type * rng , char * data , size_t element_size , size_t num_elements) {
   void * tmp = util_malloc( element_size , __func__);
-  for (int index1=0; index1 < num_elements; index1++) {
+  int index1;
+  for ( index1=0; index1 < num_elements; index1++) {
     int index2 = rng_get_int( rng , num_elements );
 
     size_t offset1 = index1 * element_size;

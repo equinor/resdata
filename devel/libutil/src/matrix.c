@@ -158,7 +158,8 @@ static void matrix_realloc_data__( matrix_type * matrix , bool safe_mode ) {
 
     /* Initializing matrix content to zero. */
     if (matrix->data != NULL) {
-      for (size_t i = 0; i < data_size; i++)
+      size_t i;
+		for (i = 0; i < data_size; i++)
         matrix->data[i] = 0;
     } else 
       data_size = 0;
@@ -683,25 +684,33 @@ void matrix_set_const_row(matrix_type * matrix , const double value , int row) {
 
 void matrix_copy_column(matrix_type * target_matrix, const matrix_type * src_matrix , int target_column, int src_column) {
   matrix_assert_equal_rows( target_matrix , src_matrix );
-  for(int row = 0; row < target_matrix->rows; row++)
-    target_matrix->data[ GET_INDEX( target_matrix, row , target_column)] = src_matrix->data[ GET_INDEX( src_matrix, row, src_column)];
+  { 
+	 int row;
+     for(row = 0; row < target_matrix->rows; row++)
+        target_matrix->data[ GET_INDEX( target_matrix, row , target_column)] = src_matrix->data[ GET_INDEX( src_matrix, row, src_column)];
+  }
 } 
 
 
 void matrix_scale_column(matrix_type * matrix , int column  , double scale_factor) {
-  for (int row = 0; row < matrix->rows; row++)
+    int row; 
+	for (row = 0; row < matrix->rows; row++)
     matrix->data[ GET_INDEX( matrix , row , column) ] *= scale_factor;
 }
 
 void matrix_scale_row(matrix_type * matrix , int row  , double scale_factor) {
-  for (int column = 0; column < matrix->columns; column++)
+  int column;
+  for (column = 0; column < matrix->columns; column++)
     matrix->data[ GET_INDEX( matrix , row , column) ] *= scale_factor;
 }
 
 void matrix_copy_row(matrix_type * target_matrix, const matrix_type * src_matrix , int target_row, int src_row) {
   matrix_assert_equal_columns( target_matrix , src_matrix );
-  for(int col = 0; col < target_matrix->columns; col++)
-    target_matrix->data[ GET_INDEX( target_matrix , target_row , col)] = src_matrix->data[ GET_INDEX( src_matrix, src_row, col)];
+  {
+	  int col;
+	  for(col = 0; col < target_matrix->columns; col++)
+         target_matrix->data[ GET_INDEX( target_matrix , target_row , col)] = src_matrix->data[ GET_INDEX( src_matrix, src_row, col)];
+  }
 } 
 
 
@@ -1027,7 +1036,8 @@ void matrix_inplace_matmul_mt1(matrix_type * A, const matrix_type * B , int num_
 
 double matrix_get_row_sum(const matrix_type * matrix , int row) {
   double sum = 0;
-  for (int j=0; j < matrix->columns; j++)
+  int j;
+  for (j=0; j < matrix->columns; j++)
     sum += matrix->data[ GET_INDEX( matrix , row , j ) ];
   return sum;
 }
@@ -1035,7 +1045,8 @@ double matrix_get_row_sum(const matrix_type * matrix , int row) {
 
 double matrix_get_column_sum(const matrix_type * matrix , int column) {
   double sum = 0;
-  for (int i=0; i < matrix->rows; i++)
+  int i;
+  for (i=0; i < matrix->rows; i++)
     sum += matrix->data[ GET_INDEX( matrix , i , column ) ];
   return sum;
 }
@@ -1043,7 +1054,8 @@ double matrix_get_column_sum(const matrix_type * matrix , int column) {
 
 double matrix_get_column_abssum(const matrix_type * matrix , int column) {
   double sum = 0;
-  for (int i=0; i < matrix->rows; i++)
+  int i;
+  for (i=0; i < matrix->rows; i++)
     sum += fabs( matrix->data[ GET_INDEX( matrix , i , column ) ] );
   return sum;
 }
@@ -1051,7 +1063,8 @@ double matrix_get_column_abssum(const matrix_type * matrix , int column) {
 
 double matrix_get_row_sum2(const matrix_type * matrix , int row) {
   double sum2 = 0;
-  for (int j=0; j < matrix->columns; j++) {
+  int j;
+  for ( j=0; j < matrix->columns; j++) {
     double m = matrix->data[ GET_INDEX( matrix , row , j ) ];
     sum2 += m*m;
   }
@@ -1061,7 +1074,8 @@ double matrix_get_row_sum2(const matrix_type * matrix , int row) {
 
 double matrix_get_row_abssum(const matrix_type * matrix , int row) {
   double sum_abs = 0;
-  for (int j=0; j < matrix->columns; j++) {
+  int j;
+  for ( j=0; j < matrix->columns; j++) {
     double m = matrix->data[ GET_INDEX( matrix , row , j ) ];
     sum_abs += fabs( m );
   }
@@ -1073,7 +1087,8 @@ double matrix_get_row_abssum(const matrix_type * matrix , int row) {
 */
 double matrix_get_column_sum2(const matrix_type * matrix , int column) {
   double sum2 = 0;
-  for (int i=0; i < matrix->rows; i++) {
+  int i;
+  for ( i=0; i < matrix->rows; i++) {
     double m = matrix->data[ GET_INDEX( matrix , i , column ) ];
     sum2 += m*m;
   }
@@ -1083,13 +1098,15 @@ double matrix_get_column_sum2(const matrix_type * matrix , int column) {
 
 
 void matrix_shift_column(matrix_type * matrix , int column, double shift) {
-  for (int i=0; i < matrix->rows; i++) 
+  int i;
+  for ( i=0; i < matrix->rows; i++) 
     matrix->data[ GET_INDEX( matrix , i , column) ] += shift;
 }
 
 
 void matrix_shift_row(matrix_type * matrix , int row , double shift) {
-  for (int j=0; j < matrix->columns; j++) 
+   int j;
+  for ( j=0; j < matrix->columns; j++) 
     matrix->data[ GET_INDEX( matrix , row , j ) ] += shift;
 }
 
@@ -1102,14 +1119,16 @@ void matrix_shift_row(matrix_type * matrix , int row , double shift) {
 */
 
 void matrix_subtract_row_mean(matrix_type * matrix) {
-  for (int i=0; i < matrix->rows; i++) {
+	int i; 
+	for ( i=0; i < matrix->rows; i++) {
     double row_mean = matrix_get_row_sum(matrix , i) / matrix->columns;
     matrix_shift_row( matrix , i , -row_mean);
   }
 }
 
 void matrix_subtract_and_store_row_mean(matrix_type * matrix, matrix_type * row_mean) {
-  for (int i=0; i < matrix->rows; i++) {
+	int i;
+	for ( i=0; i < matrix->rows; i++) {
     double mean = matrix_get_row_sum(matrix , i) / matrix->columns;
     matrix_shift_row( matrix , i , -mean);
     matrix_iset(row_mean , i , 0, mean );
@@ -1117,7 +1136,8 @@ void matrix_subtract_and_store_row_mean(matrix_type * matrix, matrix_type * row_
 }
 
 void matrix_imul_col( matrix_type * matrix , int column , double factor) {
-  for (int i=0; i < matrix->rows; i++)
+   int i;
+	for ( i=0; i < matrix->rows; i++)
     matrix_imul( matrix , i , column , factor );
 }
 
@@ -1267,8 +1287,9 @@ bool matrix_equal( const matrix_type * m1 , const matrix_type * m2) {
 
 void matrix_diag_set(matrix_type * matrix , const double * diag) {
   if (matrix->rows == matrix->columns) {
-    matrix_set(matrix , 0);
-    for (int i=0; i < matrix->rows; i++)
+    int i;
+	matrix_set(matrix , 0);
+    for ( i=0; i < matrix->rows; i++)
       matrix->data[ GET_INDEX(matrix , i , i) ] = diag[i];
   } else
     util_abort("%s: size mismatch \n",__func__);
@@ -1282,8 +1303,9 @@ void matrix_diag_set(matrix_type * matrix , const double * diag) {
 
 void matrix_diag_set_scalar(matrix_type * matrix , double value) {
   if (matrix->rows == matrix->columns) {
-    matrix_set(matrix , 0);
-    for (int i=0; i < matrix->rows; i++)
+    int i;
+	matrix_set(matrix , 0);
+    for ( i=0; i < matrix->rows; i++)
       matrix->data[ GET_INDEX(matrix , i , i) ] = value;
   } else
     util_abort("%s: size mismatch \n",__func__);
@@ -1411,8 +1433,9 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
   else{
     int nrows  = Sk->rows;
     double std = 0;
+	int i;
 
-    for (int i=0; i<nrows; i++) 
+    for ( i=0; i<nrows; i++) 
       Sk->data[GET_INDEX(Sk , i , i)] =  Sk->data[GET_INDEX(Sk , i , i)] - mean; 
     
     for (int i=0; i<nrows; i++) {
