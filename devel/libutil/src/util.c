@@ -2194,6 +2194,14 @@ bool util_entry_exists( const char * entry ) {
 */
 
 #ifdef HAVE_ISREG
+#endif 
+
+#ifndef S_ISDIR
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#endif
+
+
 
 bool util_is_directory(const char * path) {
   struct stat stat_buffer;
@@ -2245,14 +2253,16 @@ bool util_is_executable(const char * path) {
 /* 
    Will not differtiate between files and directories.
 */
+#ifdef HAVE_ISREG
+
 bool util_entry_readable( const char * entry ) {
   struct stat buffer;
   stat( entry , &buffer );
   return buffer.st_mode & S_IRUSR;
 }
 
+#endif 
 
-#endif
 
 
 static int util_get_path_length(const char * file) {

@@ -37,7 +37,7 @@ char * util_alloc_PATH_executable(const char * executable) {
       int     path_size , ipath;
       
       ipath = 0;
-      util_split_string(getenv("PATH") , ":" , &path_size , &path_list);
+      util_split_string(path_env , ":" , &path_size , &path_list);
       while ( cont ) {
         char * current_attempt = util_alloc_filename(path_list[ipath] , executable , NULL);
         if ( util_is_file( current_attempt ) && util_is_executable( current_attempt )) {
