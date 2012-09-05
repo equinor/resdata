@@ -29,11 +29,11 @@
 void kw_list(const char *filename) {
   fortio_type *fortio;
   bool fmt_file = ecl_util_fmt_file(filename);
+  ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
 
   printf("-----------------------------------------------------------------\n");
   printf("%s: \n",filename); 
-  fortio = fortio_open_reader(filename , fmt_file , ECL_ENDIAN_FLIP);
-  ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
+  fortio = fortio_open_reader(filename , fmt_file , ECL_ENDIAN_FLIP);  
   while(  ecl_kw_fread_realloc(ecl_kw , fortio) ) 
     ecl_kw_summarize(ecl_kw);
   printf("-----------------------------------------------------------------\n");
