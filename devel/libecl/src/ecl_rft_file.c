@@ -219,7 +219,8 @@ int ecl_rft_file_get_size__( const ecl_rft_file_type * rft_file, const char * we
     return vector_get_size( rft_file->data );
   else {
     int match_count = 0;
-    for (int i=0; i < vector_get_size( rft_file->data ); i++) {
+    int i;
+    for ( i=0; i < vector_get_size( rft_file->data ); i++) {
       const ecl_rft_node_type * rft = vector_iget_const( rft_file->data , i);
 
       if (well_pattern != NULL) {

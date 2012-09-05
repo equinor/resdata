@@ -413,15 +413,19 @@ static void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2, bool
 }
 
 static void ecl_cell_dump( const ecl_cell_type * cell , FILE * stream) {
-  for (int i=0; i < 8; i++)
+  int i;
+  for (i=0; i < 8; i++)
     point_dump( &cell->corner_list[i] , stream );
 }
 
 
 static void ecl_cell_dump_ascii( const ecl_cell_type * cell , int i , int j , int k , FILE * stream) {
   fprintf(stream , "Cell: i:%3d  j:%3d    k:%3d   active_nr:%6d  Corners:",i,j,k,cell->active_index);
-  for (int l=0; l < 8; l++)
-    point_dump_ascii( &cell->corner_list[l] , stream );
+  {
+    int l;
+    for (l=0; l < 8; l++)
+      point_dump_ascii( &cell->corner_list[l] , stream );
+  }
   fprintf(stream , "\n");
 }
 
@@ -444,8 +448,9 @@ static void ecl_cell_fwrite_GRID( const ecl_grid_type * grid , const ecl_cell_ty
   {
     float * corners = ecl_kw_get_void_ptr( corners_kw );
     point_type point;
-
-    for (int c = 0; c < 8; c++) {
+    int c;
+    
+    for (c = 0; c < 8; c++) {
       point_copy_values( &point , &cell->corner_list[c] );
       if (grid->use_mapaxes)
         point_mapaxes_invtransform( &point , grid->origo , grid->unit_x , grid->unit_y );
@@ -917,8 +922,11 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   for (i=0; i < ecl_grid->size; i++) {
     ecl_cell_type * cell = ecl_grid->cells[i];
     point_set(&cell->center , 0 , 0 , 0);
-    for (int c = 0; c < 8; c++)
-      point_inplace_add(&cell->center , &cell->corner_list[c]);
+    {
+      int c;
+      for (c = 0; c < 8; c++)
+        point_inplace_add(&cell->center , &cell->corner_list[c]);
+    }
     point_inplace_scale(&cell->center , 1.0 / 8.0);
   }
 }
@@ -1267,8 +1275,9 @@ static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid ,  const f
   const int nx = ecl_grid->nx;
   const int ny = ecl_grid->ny;
   const int nz = ecl_grid->nz;
+  int i;
 
-  for (int i=0; i < nx; i++) {
+  for (i=0; i < nx; i++) {
     point_type pillars[4][2];
     int pillar_index[4];
     pillar_index[0] = 6 * ( j      * (nx + 1) + i    );
@@ -1276,31 +1285,43 @@ static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid ,  const f
     pillar_index[2] = 6 * ((j + 1) * (nx + 1) + i    );
     pillar_index[3] = 6 * ((j + 1) * (nx + 1) + i + 1);
     
-    for (int ip = 0; ip < 4; ip++) {
-      int index = pillar_index[ip];
-      point_set(&pillars[ip][0] , coord[index] , coord[index + 1] , coord[index + 2]);
-      
-      index += 3;
-      point_set(&pillars[ip][1] , coord[index] , coord[index + 1] , coord[index + 2]);
+    { 
+      int ip;
+      for (ip = 0; ip < 4; ip++) {
+        int index = pillar_index[ip];
+        point_set(&pillars[ip][0] , coord[index] , coord[index + 1] , coord[index + 2]);
+        
+        index += 3;
+        point_set(&pillars[ip][1] , coord[index] , coord[index + 1] , coord[index + 2]);
+      }
     }
     
-    
-    for (int k=0; k < nz; k++) {
-      double x[4][2];
-      double y[4][2];
-      double z[4][2];
-      
-      for (int c = 0; c < 2; c++) {
-        z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
-        z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
-        z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
-        z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
+    {
+      int k;
+      for (k=0; k < nz; k++) {
+        double x[4][2];
+        double y[4][2];
+        double z[4][2];
+
+        {
+          int c;
+          for (c = 0; c < 2; c++) {
+            z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
+            z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
+            z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
+            z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
+          }
+        }
+        
+
+        {
+          int ip;
+          for (ip = 0; ip <  4; ip++)
+            ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
+        }
+        
+        ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum);
       }
-      
-      for (int ip = 0; ip <  4; ip++)
-        ecl_grid_pillar_cross_planes(pillars[ip] , z[ip] , x[ip] , y[ip]);
-      
-      ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum);
     }
   }
 }
@@ -1308,11 +1329,12 @@ static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid ,  const f
 
 static void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum) {
   const int ny = ecl_grid->ny;
+  int j;
 #ifdef HAVE_OPENMP
 #pragma omp parallel for
 #endif
 
-  for (int j=0; j < ny; j++) 
+  for ( j=0; j < ny; j++) 
     ecl_grid_init_GRDECL_data_jslice( ecl_grid , zcorn, coord , actnum , j );
 }
 
@@ -1409,8 +1431,9 @@ static void coord_check( const ecl_grid_type * ecl_grid , const ecl_kw_type * co
   if (ecl_kw_equal( coord_kw , new_coord ))
     printf("coord reproduced correctly .... ");
   else {
+    int i;
     printf("coord problems ....\n");
-    for (int i=0; i < ecl_kw_get_size( coord_kw ); i++) {
+    for (i=0; i < ecl_kw_get_size( coord_kw ); i++) {
       printf("coord[%05d:%d]  %10.3f  %10.3f\n",i , (i % 6) , ecl_kw_iget_float( coord_kw , i ) , ecl_kw_iget_float( new_coord , i ));
       if ((i % 6) == 5)
         printf("\n");
@@ -1425,8 +1448,9 @@ static void zcorn_check( const ecl_grid_type * ecl_grid , const ecl_kw_type * zc
   if (ecl_kw_equal( zcorn_kw , new_zcorn ))
     printf("zcorn reproduced correctly .... ");
   else {
+    int i;
     printf("zcorn problems .... TRUE    Guess\n");
-    for (int i=0; i < ecl_kw_get_size( zcorn_kw ); i++) {
+    for (i=0; i < ecl_kw_get_size( zcorn_kw ); i++) {
       printf("zcorn[%05d:%d]  %10.3f  %10.3f\n",i , (i % (ecl_grid->nz + 1)) , ecl_kw_iget_float( zcorn_kw , i ) , ecl_kw_iget_float( new_zcorn , i ));
       if ((i % (ecl_grid->nz + 1)) == ecl_grid->nz)
         printf("\n");
@@ -1497,8 +1521,9 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
     ecl_file_type * ecl_file   = ecl_file_open( grid_file );
     int num_grid               = ecl_file_get_num_named_kw( ecl_file , GRIDHEAD_KW );
     ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( NULL , ecl_file , 0 );
+    int grid_nr;
     
-    for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
+    for ( grid_nr = 1; grid_nr < num_grid; grid_nr++) {
       ecl_grid_type * lgr_grid = ecl_grid_alloc_EGRID__( main_grid , ecl_file , grid_nr );
       ecl_grid_add_lgr( main_grid , lgr_grid );
       {
@@ -1530,8 +1555,11 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , 
   if (mapaxes != NULL)
     ecl_grid_init_mapaxes( grid , mapaxes );
   
-  for (int index=0; index < num_coords; index++) 
-    ecl_grid_set_cell_GRID(grid , coords_size , coords[index] , corners[index]);
+  {
+    int index;
+    for ( index=0; index < num_coords; index++) 
+      ecl_grid_set_cell_GRID(grid , coords_size , coords[index] , corners[index]);
+  }
   
   ecl_grid_set_center(grid);
   ecl_grid_update_index( grid );
@@ -1670,9 +1698,11 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
     ecl_file_type * ecl_file  = ecl_file_open( grid_file );
     int num_grid              = ecl_file_get_num_named_kw( ecl_file , DIMENS_KW);
     ecl_grid_type * main_grid = ecl_grid_alloc_GRID__(NULL , ecl_file , cell_offset , 0);
+    int grid_nr;
     cell_offset              += ecl_grid_get_global_size( main_grid );
 
-    for (int grid_nr = 1; grid_nr < num_grid; grid_nr++) {
+
+    for (grid_nr = 1; grid_nr < num_grid; grid_nr++) {
       ecl_grid_type * lgr_grid = ecl_grid_alloc_GRID__(main_grid , ecl_file , cell_offset , grid_nr );
       cell_offset += ecl_grid_get_global_size( lgr_grid );
       ecl_grid_add_lgr( main_grid , lgr_grid );
@@ -1926,9 +1956,12 @@ int ecl_grid_get_global_index_from_xy_bottom( const ecl_grid_type * ecl_grid , d
 static void ecl_grid_clear_visited( ecl_grid_type * grid ) {
   if (grid->visited == NULL)
     grid->visited = util_calloc( grid->size , sizeof * grid->visited , __func__);
-
-  for (int i=0; i < grid->size; i++)
-    grid->visited[i] = false;
+  
+  { 
+    int i;
+    for (i=0; i < grid->size; i++)
+      grid->visited[i] = false;
+  }
 }
 
 
@@ -2405,7 +2438,9 @@ int ecl_grid_locate_depth( const ecl_grid_type * grid , double depth , int i , i
 double ecl_grid_get_top1(const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = grid->cells[global_index];
   double depth = 0;
-  for (int ij = 0; ij < 4; ij++) 
+  int ij;
+
+  for (ij = 0; ij < 4; ij++) 
     depth += cell->corner_list[ij].z;
   
   return depth * 0.25;
@@ -2445,7 +2480,9 @@ double ecl_grid_get_top1A(const ecl_grid_type * grid , int active_index) {
 double ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = grid->cells[global_index];
   double depth = 0;
-  for (int ij = 0; ij < 4; ij++) 
+  int ij;
+
+  for (ij = 0; ij < 4; ij++) 
     depth += cell->corner_list[ij + 4].z;
   
   return depth * 0.25;
@@ -2469,7 +2506,9 @@ double ecl_grid_get_bottom1A(const ecl_grid_type * grid , int active_index) {
 double ecl_grid_get_cell_thickness1( const ecl_grid_type * grid , int global_index ) {
   const ecl_cell_type * cell = grid->cells[global_index];
   double thickness = 0;
-  for (int ij = 0; ij < 4; ij++) 
+  int ij;
+  
+  for (ij = 0; ij < 4; ij++) 
     thickness += (cell->corner_list[ij + 4].z - cell->corner_list[ij].z);
   
   return thickness * 0.25;
@@ -2707,7 +2746,8 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
 
 
   if (ecl_grid->grid_nr == 0) {
-    for (int grid_nr=1; grid_nr < vector_get_size( ecl_grid->LGR_list ); grid_nr++) {
+    int grid_nr;
+    for (grid_nr=1; grid_nr < vector_get_size( ecl_grid->LGR_list ); grid_nr++) {
       printf("\n");
       ecl_grid_summarize( vector_iget_const( ecl_grid->LGR_list , grid_nr ));
     }
@@ -2880,7 +2920,8 @@ void ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_
 
     double_vector_reset( column );
     {
-      for (int k=0; k < ecl_grid->nz; k++) {
+      int k;
+      for (k=0; k < ecl_grid->nz; k++) {
         if (use_global_index) {
           int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k );
           double_vector_iset( column , k , ecl_kw_iget_as_double( ecl_kw , global_index ));
@@ -3010,10 +3051,9 @@ void ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_t
 
 static bool ecl_grid_test_lgr_consistency2( const ecl_grid_type * parent , const ecl_grid_type * child) {
   bool consistent = true;
-
-  printf("Checking consistency %s <--> %s \n", ecl_grid_get_name( parent ) , ecl_grid_get_name( child ));
   int child_size = ecl_grid_get_global_size( child );
-  for (int child_index = 0; child_index < child_size; child_index++) {
+  int child_index;
+  for (child_index = 0; child_index < child_size; child_index++) {
     int parent_cell = ecl_grid_get_parent_cell1( child , child_index );
     if (parent_cell >= 0) {
       const ecl_grid_type * child_test = ecl_grid_get_cell_lgr1( parent , parent_cell );
@@ -3097,12 +3137,14 @@ static void ecl_grid_dump_ascii__(const ecl_grid_type * grid , bool active_only 
 
 
 void ecl_grid_dump(const ecl_grid_type * grid , FILE * stream) {
-  for (int i = 0; i < vector_get_size( grid->LGR_list ); i++) 
+  int i;
+  for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
     ecl_grid_dump__( vector_iget_const( grid->LGR_list , i) , stream ); 
 }
 
 void ecl_grid_dump_ascii(const ecl_grid_type * grid , bool active_only , FILE * stream) {
-  for (int i = 0; i < vector_get_size( grid->LGR_list ); i++) 
+  int i;
+  for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
     ecl_grid_dump_ascii__( vector_iget_const( grid->LGR_list , i) , active_only , stream ); 
 }
 
@@ -3226,10 +3268,10 @@ static void ecl_grid_fwrite_GRID__( const ecl_grid_type * grid , int coords_size
   {
     ecl_kw_type * coords_kw  = ecl_kw_alloc( COORDS_KW  , coords_size , ECL_INT_TYPE );
     ecl_kw_type * corners_kw = ecl_kw_alloc( CORNERS_KW , 24 , ECL_FLOAT_TYPE );
-
-    for (int k=0; k < grid->nz; k++) {
-      for (int j=0; j < grid->ny; j++) {
-        for (int i=0; i < grid->nx; i++) {
+    int i,j,k;
+    for (k=0; k < grid->nz; k++) {
+      for (j=0; j < grid->ny; j++) {
+        for (i=0; i < grid->nx; i++) {
           int global_index = ecl_grid_get_global_index__(grid , i , j , k );
           const ecl_cell_type * cell = grid->cells[ global_index ];
           
@@ -3369,9 +3411,9 @@ static void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord
   */
   point_type top_point;
   point_type bottom_point;
-  
-  for (int j=0; j <= grid->ny; j++) {
-    for (int i=0; i <= grid->nx; i++) {
+  int i,j;
+  for (j=0; j <= grid->ny; j++) {
+    for (i=0; i <= grid->nx; i++) {
       const int top_index    = ecl_grid_get_top_valid_index( grid , util_int_min( i , grid->nx - 1) , util_int_min( j , grid->ny - 1) );
       const int bottom_index = ecl_grid_get_bottom_valid_index( grid , util_int_min( i , grid->nx - 1) , util_int_min( j , grid->ny - 1) );
 
@@ -3434,13 +3476,15 @@ static void ecl_grid_init_zcorn_data( const ecl_grid_type * grid , float * zcorn
   int nx = grid->nx;
   int ny = grid->ny;
   int nz = grid->nz;
-  for (int j=0; j < ny; j++) {
-    for (int i=0; i < nx; i++) {
-      for (int k=0; k < nz; k++) {
+  int i,j,k;
+  for (j=0; j < ny; j++) {
+    for (i=0; i < nx; i++) {
+      for (k=0; k < nz; k++) {
         const int cell_index   = ecl_grid_get_global_index3( grid , i,j,k);
         const ecl_cell_type * cell = grid->cells[ cell_index ];
-        
-        for (int l=0; l < 2; l++) {
+        int l;
+
+        for (l=0; l < 2; l++) {
           point_type p0 = cell->corner_list[ 4*l];
           point_type p1 = cell->corner_list[ 4*l + 1];
           point_type p2 = cell->corner_list[ 4*l + 2];
@@ -3474,7 +3518,8 @@ ecl_kw_type * ecl_grid_alloc_zcorn_kw( const ecl_grid_type * grid ) {
 /*****************************************************************/
 
 static void ecl_grid_init_actnum_data( const ecl_grid_type * grid , int * actnum ) {
-  for (int i=0; i < grid->size; i++) {
+  int i;
+  for (i=0; i < grid->size; i++) {
 
     if (grid->index_map[i] >= 0)
       actnum[i] = 1;
@@ -3502,7 +3547,8 @@ ecl_kw_type * ecl_grid_alloc_actnum_kw( const ecl_grid_type * grid ) {
 /*****************************************************************/
 
 static void ecl_grid_init_hostnum_data( const ecl_grid_type * grid , int * hostnum ) {
-  for (int i=0; i < grid->size; i++) {
+  int i;
+  for (i=0; i < grid->size; i++) {
     const ecl_cell_type * cell = grid->cells[ i ];
     hostnum[i] = cell->host_cell;
   }

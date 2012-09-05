@@ -832,15 +832,22 @@ static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream
 
 static void ecl_sum_fprintf_header( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const bool_vector_type * has_var , FILE * stream) {
   fprintf(stream , DATE_HEADER);
-  for (int i=0; i < stringlist_get_size( key_list ); i++)
-    if (bool_vector_iget( has_var , i ))
-      fprintf(stream , HEADER_FORMAT , stringlist_iget( key_list , i ));
-  fprintf( stream , "\n");
+  { 
+    int i;
+    for (i=0; i < stringlist_get_size( key_list ); i++)
+      if (bool_vector_iget( has_var , i ))
+        fprintf(stream , HEADER_FORMAT , stringlist_iget( key_list , i ));
+  }
 
+  fprintf( stream , "\n");
   fprintf(stream , DATE_DASH);
-  for (int i=0; i < stringlist_get_size( key_list ); i++)
-    if (bool_vector_iget( has_var , i ))
-      fprintf(stream , FLOAT_DASH);
+
+  {
+    int i;
+    for (i=0; i < stringlist_get_size( key_list ); i++)
+      if (bool_vector_iget( has_var , i ))
+        fprintf(stream , FLOAT_DASH);
+  }
   fprintf( stream , "\n");
 }
 

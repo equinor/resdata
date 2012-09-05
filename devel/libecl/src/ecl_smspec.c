@@ -303,8 +303,8 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
   int num_nodes           = ecl_smspec_num_nodes( smspec );
   {
     ecl_kw_type * restart_kw = ecl_kw_alloc( RESTART_KW , SUMMARY_RESTART_SIZE , ECL_CHAR_TYPE );
-    
-    for (int i=0; i < SUMMARY_RESTART_SIZE; i++)
+    int i;
+    for (i=0; i < SUMMARY_RESTART_SIZE; i++)
       ecl_kw_iset_string8( restart_kw , i , "");
     
     ecl_kw_fwrite( restart_kw , fortio );
@@ -334,20 +334,22 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
     
     if (smspec->need_nums)
       nums_kw = ecl_kw_alloc( NUMS_KW , num_nodes , ECL_INT_TYPE);
-    
-    for (int i=0; i < ecl_smspec_num_nodes( smspec ); i++) {
-      const smspec_node_type * smspec_node = ecl_smspec_iget_node( smspec , i );
-      ecl_kw_iset_string8( keywords_kw , i , smspec_node_get_keyword( smspec_node ));
-      ecl_kw_iset_string8( units_kw , i , smspec_node_get_unit( smspec_node ));
-      {
-        const char * wgname = DUMMY_WELL;
-        if (smspec_node_get_wgname( smspec_node ) != NULL)
-          wgname = smspec_node_get_wgname( smspec_node );
-        ecl_kw_iset_string8( wgnames_kw , i , wgname);
+    {
+      int i;
+      for (i=0; i < ecl_smspec_num_nodes( smspec ); i++) {
+        const smspec_node_type * smspec_node = ecl_smspec_iget_node( smspec , i );
+        ecl_kw_iset_string8( keywords_kw , i , smspec_node_get_keyword( smspec_node ));
+        ecl_kw_iset_string8( units_kw , i , smspec_node_get_unit( smspec_node ));
+        {
+          const char * wgname = DUMMY_WELL;
+          if (smspec_node_get_wgname( smspec_node ) != NULL)
+            wgname = smspec_node_get_wgname( smspec_node );
+          ecl_kw_iset_string8( wgnames_kw , i , wgname);
+        }
+        
+        if (nums_kw != NULL)
+          ecl_kw_iset_int( nums_kw , i , smspec_node_get_num( smspec_node ));
       }
-
-      if (nums_kw != NULL)
-        ecl_kw_iset_int( nums_kw , i , smspec_node_get_num( smspec_node ));
     }
 
 
@@ -434,7 +436,8 @@ static ecl_smspec_var_type ecl_smspec_identify_special_var( const char * var ) {
   ecl_smspec_var_type var_type = ECL_SMSPEC_INVALID_VAR;
 
   int num_special = sizeof( special_vars ) / sizeof( special_vars[0] );
-  for (int i=0; i < num_special; i++) {
+  int i;
+  for (i=0; i < num_special; i++) {
     if (strcmp( var , special_vars[i]) == 0) {
       var_type = ECL_SMSPEC_MISC_VAR;
       break;
@@ -1572,8 +1575,8 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
 
 void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys) {
   hash_type * ex_keys = hash_alloc( );
-  
-  for (int i=0; i < stringlist_get_size( keys ); i++) 
+  int i;
+  for (i=0; i < stringlist_get_size( keys ); i++) 
     hash_insert_int( ex_keys , stringlist_iget( keys , i ) , 1);
 
   {

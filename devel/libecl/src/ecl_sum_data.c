@@ -331,10 +331,10 @@ static void ecl_sum_data_fwrite_report__( const ecl_sum_data_type * data , int r
   }
 
   {
-    int index1,index2;
+    int index , index1 , index2;
     
     ecl_sum_data_report2internal_range( data , report_step , &index1 , &index2);
-    for (int index = index1; index <= index2; index++) {
+    for (index = index1; index <= index2; index++) {
       const ecl_sum_tstep_type * tstep = ecl_sum_data_iget_ministep( data , index );
       ecl_sum_tstep_fwrite( tstep , ecl_smspec_get_index_map( data->smspec ) , fortio );
     }
@@ -389,8 +389,9 @@ static void ecl_sum_data_fwrite_unified_step( const ecl_sum_data_type * data , c
 static void ecl_sum_data_fwrite_unified( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case ) {
   char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_UNIFIED_SUMMARY_FILE , fmt_case , 0 );
   fortio_type * fortio = fortio_open_writer( filename , fmt_case , ECL_ENDIAN_FLIP );
+  int report_step;
   
-  for (int report_step = data->first_report_step; report_step <= data->last_report_step; report_step++) {
+  for (report_step = data->first_report_step; report_step <= data->last_report_step; report_step++) {
     if (ecl_sum_data_has_report_step( data , report_step ))
       ecl_sum_data_fwrite_report__( data , report_step , fortio );
   } 
@@ -401,8 +402,9 @@ static void ecl_sum_data_fwrite_unified( const ecl_sum_data_type * data , const 
 
 
 static void ecl_sum_data_fwrite_multiple( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case ) {
+  int report_step;
 
-  for (int report_step = data->first_report_step; report_step <= data->last_report_step; report_step++) {
+  for (report_step = data->first_report_step; report_step <= data->last_report_step; report_step++) {
     if (ecl_sum_data_has_report_step( data , report_step )) {
       char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_SUMMARY_FILE , fmt_case , report_step );
       fortio_type * fortio = fortio_open_writer( filename , fmt_case , ECL_ENDIAN_FLIP );
@@ -1153,8 +1155,9 @@ int ecl_sum_data_get_report_step_from_days(const ecl_sum_data_type * data , doub
 
     double_vector_type * days_map = double_vector_alloc( 0 , 0 );
     int_vector_type    * report_map = int_vector_alloc( 0 , 0 );
-    
-    for (int i=1; i < int_vector_size( data->report_last_index ); i++) {
+    int i;
+
+    for (i=1; i < int_vector_size( data->report_last_index ); i++) {
       int ministep_index = int_vector_iget( data->report_last_index , i );
       const ecl_sum_tstep_type * ministep = vector_iget_const( data->data , ministep_index );
       
@@ -1192,8 +1195,9 @@ int ecl_sum_data_get_report_step_from_time(const ecl_sum_data_type * data , time
 
     time_t_vector_type * time_map = time_t_vector_alloc( 0 , 0 );
     int_vector_type    * report_map = int_vector_alloc( 0 , 0 );
-    
-    for (int i=1; i < int_vector_size( data->report_last_index ); i++) {
+    int i;
+
+    for (i=1; i < int_vector_size( data->report_last_index ); i++) {
       int ministep_index = int_vector_iget( data->report_last_index , i );
       const ecl_sum_tstep_type * ministep = vector_iget_const( data->data , ministep_index );
       

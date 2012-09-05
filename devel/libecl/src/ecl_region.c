@@ -586,8 +586,9 @@ void ecl_region_cmp_deselect_more( ecl_region_type * ecl_region , const ecl_kw_t
 static void ecl_region_select_from_box__( ecl_region_type * region , const ecl_box_type * ecl_box , bool select) {
   const int   box_size    = ecl_box_get_global_size( ecl_box );
   const int * active_list = ecl_box_get_global_list( ecl_box );
-  
-  for (int box_index = 0; box_index < box_size; box_index++) 
+  int box_index;
+
+  for (box_index = 0; box_index < box_size; box_index++) 
     region->active_mask[ active_list[box_index] ] = select;
       
   ecl_region_invalidate_index_list( region );
@@ -648,9 +649,10 @@ static void ecl_region_select_i1i2__( ecl_region_type * region , int i1 , int i2
   i1 = util_int_max(0 , i1);
   i2 = util_int_min(region->grid_nx - 1 , i2);
   {
-    for (int k = 0; k < region->grid_nz; k++)
-      for (int j = 0; j < region->grid_ny; j++)
-        for (int i = i1; i <= i2; i++) {
+    int i,j,k;
+    for (k = 0; k < region->grid_nz; k++)
+      for (j = 0; j < region->grid_ny; j++)
+        for (i = i1; i <= i2; i++) {
           int global_index = ecl_grid_get_global_index3( region->parent_grid , i,j,k);
           region->active_mask[global_index] = select;
         }
@@ -686,9 +688,10 @@ static void ecl_region_select_j1j2__( ecl_region_type * region , int j1 , int j2
   j1 = util_int_max(0 , j1);
   j2 = util_int_min(region->grid_nx - 1 , j2);
   {
-    for (int k = 0; k < region->grid_nz; k++)
-      for (int j = j1; j <= j2; j++)
-        for (int i = 0; i < region->grid_nx; i++) {
+    int i,j,k;
+    for (k = 0; k < region->grid_nz; k++)
+      for ( j = j1; j <= j2; j++)
+        for ( i = 0; i < region->grid_nx; i++) {
           int global_index = ecl_grid_get_global_index3( region->parent_grid , i,j,k);
           region->active_mask[global_index] = select;
         }
@@ -724,9 +727,10 @@ static void ecl_region_select_k1k2__( ecl_region_type * region , int k1 , int k2
   k1 = util_int_max(0 , k1);
   k2 = util_int_min(region->grid_nx - 1 , k2);
   {
-    for (int k = k1; k <= k2; k++)
-      for (int j = 0; j < region->grid_ny; j++)
-        for (int i = 0; i < region->grid_nx; i++) {
+    int i,j,k;
+    for (k = k1; k <= k2; k++)
+      for (j = 0; j < region->grid_ny; j++)
+        for (i = 0; i < region->grid_nx; i++) {
           int global_index = ecl_grid_get_global_index3( region->parent_grid , i,j,k);
           region->active_mask[global_index] = select;
         }
@@ -961,7 +965,8 @@ static void ecl_region_cylinder_select__( ecl_region_type * region , double x0 ,
           select_column = true;
         
         if (select_column) {
-          for (int k=0; k < nz; k++) {
+          int k;
+          for (k=0; k < nz; k++) {
             int global_index = ecl_grid_get_global_index3( region->parent_grid , i,j,k);
             region->active_mask[ global_index ] = select;
           }
@@ -1074,19 +1079,23 @@ static void ecl_region_polygon_select__( ecl_region_type * region ,
   const int k1       = 0;                  // Selection range in k
   const int k2       = region->grid_nz;    
 
-  for (int i=0; i < region->grid_nx; i++) {
-    for (int j=0; j < region->grid_ny; j++) {
-      double x,y,z;
-      bool inside;
-      int global_index = ecl_grid_get_global_index3( region->parent_grid , i , j , define_k);
-
-      ecl_grid_get_xyz1( region->parent_grid , global_index , &x , &y , &z);
-      inside = geo_polygon_contains_point( polygon , x , y );
-      
-      if (select_inside == inside) {
-        for (int k=k1; k < k2; k++) {
-          global_index = ecl_grid_get_global_index3( region->parent_grid , i , j , k);
-          region->active_mask[ global_index ] = select;
+  {
+    int i,j;
+    for (i=0; i < region->grid_nx; i++) {
+      for (j=0; j < region->grid_ny; j++) {
+        double x,y,z;
+        bool inside;
+        int global_index = ecl_grid_get_global_index3( region->parent_grid , i , j , define_k);
+        
+        ecl_grid_get_xyz1( region->parent_grid , global_index , &x , &y , &z);
+        inside = geo_polygon_contains_point( polygon , x , y );
+        
+        if (select_inside == inside) {
+          int k;
+          for (k=k1; k < k2; k++) {
+            global_index = ecl_grid_get_global_index3( region->parent_grid , i , j , k);
+            region->active_mask[ global_index ] = select;
+          }
         }
       }
     }

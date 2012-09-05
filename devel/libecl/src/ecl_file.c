@@ -352,7 +352,8 @@ static void file_map_replace_kw( file_map_type * file_map , ecl_kw_type * old_kw
 
 
 static void file_map_load_all( file_map_type * file_map ) {
-  for (int index = 0; index < vector_get_size( file_map->kw_list); index++) {
+  int index;
+  for (index = 0; index < vector_get_size( file_map->kw_list); index++) {
     ecl_file_kw_type * ikw = vector_iget( file_map->kw_list , index );
     ecl_file_kw_get_kw( ikw , file_map->fortio , file_map->inv_map);
   }
@@ -411,7 +412,8 @@ static int file_map_iget_occurence( const file_map_type * file_map , int global_
   int occurence = -1;
   {
     /* Manual reverse lookup. */
-    for (int i=0; i < int_vector_size( index_vector ); i++)
+    int i;
+    for (i=0; i < int_vector_size( index_vector ); i++)
       if (index_data[i] == global_index)
         occurence = i;
   }

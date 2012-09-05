@@ -1261,7 +1261,7 @@ int ecl_util_get_num_cpu(const char * data_file) {
       util_abort("%s: sorry - could not find \"/\" termination of PARALLEL keyword in data_file: \n",__func__ , data_file);
     
     buffer_size = (ftell(stream) - start_pos)  ;
-    buffer = util_calloc( buffer_size + 1  , sizeof * buffer, __func__);
+    buffer = util_calloc( buffer_size + 1  , sizeof * buffer , __func__);
     fseek( stream , start_pos , SEEK_SET);
     util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
     buffer[buffer_size] = '\0';
@@ -1301,8 +1301,9 @@ int ecl_util_get_num_cpu(const char * data_file) {
 bool ecl_util_valid_basename( const char * basename ) {
   int upper_count = 0;
   int lower_count = 0;
-  
-  for (int index = 0; index < strlen( basename ); index++) {
+  int index;
+
+  for (index = 0; index < strlen( basename ); index++) {
     int c = basename[index];
     if (isalpha(c)) {
       if (isupper(c))

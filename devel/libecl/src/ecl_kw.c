@@ -697,7 +697,8 @@ void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s8) {
   char * ecl_string = (char *) ecl_kw_iget_ptr( ecl_kw , index );
   if (strlen( s8 ) >= ECL_STRING_LENGTH) {
     /* The whole string goes in - possibly loosing content at the end. */
-    for (int i=0; i < ECL_STRING_LENGTH; i++)
+    int i;
+    for (i=0; i < ECL_STRING_LENGTH; i++)
       ecl_string[i] = s8[i];
   } else {
     /* The string is padded with trailing spaces. */
@@ -730,9 +731,11 @@ void ecl_kw_iset_char_ptr( ecl_kw_type * ecl_kw , int index, const char * s) {
   int strings = strlen( s ) / ECL_STRING_LENGTH;
   if ((strlen( s ) %  ECL_STRING_LENGTH) != 0)
     strings++;
-
-  for (int sub_index = 0; sub_index < strings; sub_index++) 
-    ecl_kw_iset_string8( ecl_kw , index + sub_index , &s[ sub_index * ECL_STRING_LENGTH ]);
+  {
+    int sub_index;
+    for (sub_index = 0; sub_index < strings; sub_index++) 
+      ecl_kw_iset_string8( ecl_kw , index + sub_index , &s[ sub_index * ECL_STRING_LENGTH ]);
+  }
 }
 
 
@@ -759,7 +762,8 @@ void ecl_kw_set_indexed_ ## ctype( ecl_kw_type * ecl_kw, const int_vector_type *
      ctype * data = (ctype *) ecl_kw->data;                                                                    \
      int size = int_vector_size( index_list );                                                                 \
      const int * index_ptr = int_vector_get_const_ptr( index_list );                                           \
-     for (int i = 0; i < size; i++)                                                                            \
+     int i;                                                                                                    \
+     for (i = 0; i < size; i++)                                                                                \
          data[index_ptr[i]] = value;                                                                           \
    }                                                                                                           \
 }
@@ -778,7 +782,8 @@ void ecl_kw_shift_indexed_ ## ctype( ecl_kw_type * ecl_kw, const int_vector_type
      ctype * data = (ctype *) ecl_kw->data;                                                                      \
      int size = int_vector_size( index_list );                                                                   \
      const int * index_ptr = int_vector_get_const_ptr( index_list );                                             \
-     for (int i = 0; i < size; i++)                                                                              \
+     int i;                                                                                                      \
+     for (i = 0; i < size; i++)                                                                                  \
           data[index_ptr[i]] += shift;                                                                           \
    }                                                                                                             \
 }
@@ -798,7 +803,8 @@ void ecl_kw_scale_indexed_ ## ctype( ecl_kw_type * ecl_kw, const int_vector_type
      ctype * data = (ctype *) ecl_kw->data;                                                                   \
      int size = int_vector_size( index_list );                                                                \
      const int * index_ptr = int_vector_get_const_ptr( index_list );                                          \
-     for (int i = 0; i < size; i++)                                                                           \
+     int i;                                                                                                   \
+     for (i = 0; i < size; i++)                                                                               \
           data[index_ptr[i]] *= scale;                                                                        \
    }                                                                                                          \
 }
@@ -1560,7 +1566,8 @@ void ecl_kw_get_data_as_double(const ecl_kw_type * ecl_kw , double * double_data
       util_float_to_double(double_data , float_data  , ecl_kw->size);
     } else if (ecl_kw->ecl_type == ECL_INT_TYPE) {
       const int * int_data = (const int *) ecl_kw->data;
-      for (int i=0; i < ecl_kw->size; i++)
+      int i;
+      for (i=0; i < ecl_kw->size; i++)
         double_data[i] = int_data[i];
     } else {
       fprintf(stderr,"%s: type can not be converted to double - aborting \n",__func__);
@@ -1582,7 +1589,8 @@ void ecl_kw_get_data_as_float(const ecl_kw_type * ecl_kw , float * float_data) {
       util_double_to_float(float_data , double_data  , ecl_kw->size);
     } else if (ecl_kw->ecl_type == ECL_INT_TYPE) {
       const int * int_data = (const int *) ecl_kw->data;
-      for (int i=0; i < ecl_kw->size; i++)
+      int i;
+      for (i=0; i < ecl_kw->size; i++)
         float_data[i] = int_data[i];
     } else {
       fprintf(stderr,"%s: type can not be converted to float - aborting \n",__func__);
@@ -1684,7 +1692,8 @@ void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
 void ecl_kw_scalar_set_ ## ctype( ecl_kw_type * ecl_kw , ctype value){  \
  if (ecl_kw->ecl_type == ECL_TYPE) {                                    \
     ctype * data = ecl_kw_get_data_ref(ecl_kw);                         \
-    for (int i=0;i < ecl_kw->size; i++)                                 \
+    int i;                                                              \
+    for (i=0;i < ecl_kw->size; i++)                                     \
       data[i] = value;                                                  \
  } else util_abort("%s: wrong type\n",__func__);                        \
 }
@@ -1704,9 +1713,11 @@ void ecl_kw_scalar_set_bool( ecl_kw_type * ecl_kw , bool bool_value) {
       int_value = ECL_BOOL_TRUE_INT;
     else
       int_value = ECL_BOOL_FALSE_INT;
-    
-    for (int i=0; i < ecl_kw->size; i++)
-      data[i] = int_value;
+    {
+      int i;
+      for ( i=0; i < ecl_kw->size; i++)
+        data[i] = int_value;
+    }
   }
 }
 
@@ -1726,7 +1737,8 @@ void ecl_kw_scalar_set_float_or_double( ecl_kw_type * ecl_kw , double value ) {
 */
 void ecl_kw_scalar_set__(ecl_kw_type * ecl_kw , const void * value) {
   int sizeof_ctype = ecl_util_get_sizeof_ctype( ecl_kw->ecl_type );
-  for (int i=0;i < ecl_kw->size; i++)
+  int i;
+  for (i=0;i < ecl_kw->size; i++)
     memcpy( &ecl_kw->data[ i * sizeof_ctype ] , value , sizeof_ctype);
 }
 
@@ -1755,7 +1767,8 @@ void ecl_kw_scale_ ## ctype (ecl_kw_type * ecl_kw , ctype scale_factor) {       
   {                                                                                                   \
      ctype * data = ecl_kw_get_data_ref(ecl_kw);                                                      \
      int    size  = ecl_kw_get_size(ecl_kw);                                                          \
-     for (int i=0; i < size; i++)                                                                     \
+     int i;                                                                                           \
+     for (i=0; i < size; i++)                                                                         \
         data[i] *= scale_factor;                                                                      \
   }                                                                                                   \
 }
@@ -1783,7 +1796,8 @@ void ecl_kw_shift_ ## ctype (ecl_kw_type * ecl_kw , ctype shift_value) {        
   {                                                                                                   \
      ctype * data = ecl_kw_get_data_ref(ecl_kw);                                                      \
      int    size  = ecl_kw_get_size(ecl_kw);                                                          \
-     for (int i=0; i < size; i++)                                                                     \
+     int i;                                                                                           \
+     for (i=0; i < size; i++)                                                                         \
         data[i] += shift_value;                                                                       \
   }                                                                                                   \
 }
@@ -1857,7 +1871,8 @@ void ecl_kw_copy_indexed( ecl_kw_type * target_kw , const int_vector_type * inde
     int sizeof_ctype = ecl_util_get_sizeof_ctype(target_kw->ecl_type);                     
     int set_size     = int_vector_size( index_set );
     const int * index_data = int_vector_get_const_ptr( index_set );
-    for (int i=0; i < set_size; i++) {                                                    
+    int i;
+    for (i=0; i < set_size; i++) {                                                    
       int index = index_data[i];                                         
       memcpy( &target_data[ index * sizeof_ctype ] , &src_data[ index * sizeof_ctype] , sizeof_ctype);
     }                                                                                     
@@ -1875,7 +1890,8 @@ static void ecl_kw_inplace_add_indexed_ ## ctype( ecl_kw_type * target_kw , cons
     const ctype * add_data = ecl_kw_get_data_ref( add_kw );                                \
     int set_size     = int_vector_size( index_set );                                       \
     const int * index_data = int_vector_get_const_ptr( index_set );                        \
-    for (int i=0; i < set_size; i++) {                                                     \
+    int i;                                                                                 \
+    for (i=0; i < set_size; i++) {                                                         \
       int index = index_data[i];                                                           \
       target_data[index] += add_data[index];                                               \
     }                                                                                      \
@@ -1915,7 +1931,8 @@ static void ecl_kw_inplace_add_ ## ctype( ecl_kw_type * target_kw , const ecl_kw
  {                                                                                         \
     ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
     const ctype * add_data = ecl_kw_get_data_ref( add_kw );                                \
-    for (int i=0; i < target_kw->size; i++)                                                \
+    int i;                                                                                 \       
+    for (i=0; i < target_kw->size; i++)                                                    \
       target_data[i] += add_data[i];                                                       \
  }                                                                                         \
 }
@@ -1953,7 +1970,8 @@ void ecl_kw_inplace_sub_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type *
  {                                                                                         \
     ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
     const ctype * sub_data = ecl_kw_get_data_ref( sub_kw );                                \
-    for (int i=0; i < target_kw->size; i++)                                                \
+    int i;                                                                                 \
+    for (i=0; i < target_kw->size; i++)                                                    \
       target_data[i] -= sub_data[i];                                                       \
  }                                                                                         \
 }
@@ -1988,7 +2006,8 @@ static void ecl_kw_inplace_sub_indexed_ ## ctype( ecl_kw_type * target_kw , cons
     const ctype * sub_data = ecl_kw_get_data_ref( sub_kw );                                \
     int set_size     = int_vector_size( index_set );                                       \
     const int * index_data = int_vector_get_const_ptr( index_set );                        \
-    for (int i=0; i < set_size; i++) {                                                     \
+    int i;                                                                                 \
+    for (i=0; i < set_size; i++) {                                                         \
       int index = index_data[i];                                                           \
       target_data[index] -= sub_data[index];                                               \
     }                                                                                      \
@@ -2028,7 +2047,8 @@ void ecl_kw_inplace_mul_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type *
  {                                                                                         \
     ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
     const ctype * mul_data = ecl_kw_get_data_ref( mul_kw );                                \
-    for (int i=0; i < target_kw->size; i++)                                                \
+    int i;                                                                                 \
+    for (i=0; i < target_kw->size; i++)                                                    \
       target_data[i] *= mul_data[i];                                                       \
  }                                                                                         \
 }
@@ -2063,7 +2083,8 @@ static void ecl_kw_inplace_mul_indexed_ ## ctype( ecl_kw_type * target_kw , cons
     const ctype * mul_data = ecl_kw_get_data_ref( mul_kw );                                \
     int set_size     = int_vector_size( index_set );                                       \
     const int * index_data = int_vector_get_const_ptr( index_set );                        \
-    for (int i=0; i < set_size; i++) {                                                     \
+    int i;                                                                                 \
+    for (i=0; i < set_size; i++) {                                                         \
       int index = index_data[i];                                                           \
       target_data[index] *= mul_data[index];                                               \
     }                                                                                      \
@@ -2104,7 +2125,8 @@ void ecl_kw_inplace_div_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type *
  {                                                                                         \
     ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
     const ctype * div_data = ecl_kw_get_data_ref( div_kw );                                \
-    for (int i=0; i < target_kw->size; i++)                                                \
+    int i;                                                                                 \
+    for (i=0; i < target_kw->size; i++)                                                    \
       target_data[i] /= div_data[i];                                                       \
  }                                                                                         \
 }
@@ -2140,7 +2162,8 @@ static void ecl_kw_inplace_div_indexed_ ## ctype( ecl_kw_type * target_kw , cons
     const ctype * div_data = ecl_kw_get_data_ref( div_kw );                                \
     int set_size     = int_vector_size( index_set );                                       \
     const int * index_data = int_vector_get_const_ptr( index_set );                        \
-    for (int i=0; i < set_size; i++) {                                                     \
+    int i;                                                                                 \
+    for (i=0; i < set_size; i++) {                                                         \
       int index = index_data[i];                                                           \
       target_data[index] *= div_data[index];                                               \
     }                                                                                      \
@@ -2429,7 +2452,8 @@ double ecl_kw_element_sum_float( const ecl_kw_type * ecl_kw ) {
 static void ecl_kw_fprintf_data_ ## ctype(const ecl_kw_type * ecl_kw , const char * fmt , FILE * stream)  \
 {                                                                                                         \
   const ctype * data = (const ctype *) ecl_kw->data;                                                      \
-  for (int i=0; i < ecl_kw->size; i++)                                                                    \
+  int i;                                                                                                  \
+  for (i=0; i < ecl_kw->size; i++)                                                                        \
     fprintf(stream , fmt , data[i]);                                                                      \
 }
 
@@ -2440,7 +2464,8 @@ ECL_KW_FPRINTF_DATA( double )
 
 static void ecl_kw_fprintf_data_bool( const ecl_kw_type * ecl_kw , const char * fmt , FILE * stream) {
   const int * data = (const int *) ecl_kw->data;
-  for (int i=0; i < ecl_kw->size; i++) {
+  int i;
+  for (i=0; i < ecl_kw->size; i++) {
     if (data[i] == ECL_BOOL_TRUE_INT)
       fprintf(stream , fmt , 1);
     else
@@ -2450,7 +2475,8 @@ static void ecl_kw_fprintf_data_bool( const ecl_kw_type * ecl_kw , const char * 
 
 
 static void ecl_kw_fprintf_data_char( const ecl_kw_type * ecl_kw , const char * fmt , FILE * stream) {
-  for (int i=0; i < ecl_kw->size; i++) 
+  int i;
+  for (i=0; i < ecl_kw->size; i++) 
     fprintf(stream , fmt , &ecl_kw->data[ i * ecl_kw->sizeof_ctype]);
 }
 
