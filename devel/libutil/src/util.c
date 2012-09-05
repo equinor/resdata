@@ -2242,6 +2242,16 @@ bool util_is_executable(const char * path) {
     return false; 
 }
 
+/* 
+   Will not differtiate between files and directories.
+*/
+bool util_entry_readable( const char * entry ) {
+  struct stat buffer;
+  stat( entry , &buffer );
+  return buffer.st_mode & S_IRUSR;
+}
+
+
 #endif
 
 
@@ -2413,14 +2423,6 @@ size_t util_file_size(const char *file) {
 
 
 
-/* 
-   Will not differtiate between files and directories.
-*/
-bool util_entry_readable( const char * entry ) {
-  struct stat buffer;
-  stat( entry , &buffer );
-  return buffer.st_mode & S_IRUSR;
-}
 
 
 
@@ -3291,7 +3293,7 @@ void util_split_string(const char *line , const char *sep_set, int *_tokens, cha
      strings will be NULL.
 
 */
-#if 0
+
 
 void util_binary_split_string(const char * __src , const char * sep_set, bool split_on_first , char ** __first_part , char ** __second_part) {
   char * first_part = NULL;
@@ -3483,8 +3485,10 @@ char * util_string_replacen_alloc(const char * buff_org, int num_expr, const cha
     util_string_replace_inplace__( &new_buffer , expr[i] , subs[i]);
   }
   
-  int size = strlen(new_buffer);
-  new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer, __func__);
+  {
+	  int size = strlen(new_buffer);
+	  new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer, __func__);
+  }
   
   return new_buffer;
 }
@@ -3809,22 +3813,23 @@ double util_double_vector_mean(int N, const double * vector) {
 double util_double_vector_stddev(int N, const double * vector) {
   if(N <= 1)
     return 0.0;
-  
-  double   stddev         = 0.0;
-  double   mean           = util_double_vector_mean(N, vector);
-  double * vector_shifted = util_calloc(N , sizeof *vector_shifted, __func__);
-  
   {
-  int i;
-  for(i=0; i<N; i++)
-    vector_shifted[i] = vector[i] - mean;
+	  double   stddev         = 0.0;
+	  double   mean           = util_double_vector_mean(N, vector);
+	  double * vector_shifted = util_calloc(N , sizeof *vector_shifted, __func__);
+  
+	  {
+	  int i;
+	  for(i=0; i<N; i++)
+		vector_shifted[i] = vector[i] - mean;
 
-  for(i=0; i<N; i++)
-    stddev = stddev + vector_shifted[i] * vector_shifted[i];
+	  for(i=0; i<N; i++)
+		stddev = stddev + vector_shifted[i] * vector_shifted[i];
+	  }
+	  free(vector_shifted);
+
+	  return sqrt( stddev / (N-1));
   }
-  free(vector_shifted);
-
-  return sqrt( stddev / (N-1));
 }
 
 
@@ -4633,8 +4638,9 @@ void util_localtime( time_t * t , struct tm * ts ) {
 #include "util_lockf.c"
 #endif
 
+#if 0
 #include "util_env.c"
-
+#endif 
 
 #ifdef HAVE_SYMLINK
 #include "util_symlink.c"
@@ -4676,7 +4682,6 @@ int util_type_get_id( const void * data ) {
   return type_id;
 }  
 
-#endif
 
 
 #ifdef __cplusplus

@@ -47,8 +47,8 @@ void util_make_path(const char *_path) {
   int current_pos = 0;
   
   if (!util_is_directory(path)) {
-    active_path = util_calloc(strlen(path) + 1 , sizeof * active_path , __func__);
     int i = 0;
+    active_path = util_calloc(strlen(path) + 1 , sizeof * active_path , __func__);
     do {
       int n = strcspn(path , UTIL_PATH_SEP_STRING);
       if (n < strlen(path))
@@ -102,7 +102,7 @@ void util_make_path(const char *_path) {
 
 
 
-
+#if 0
 char * util_alloc_tmp_file(const char * path, const char * prefix , bool include_pid ) {
   // Should be reimplemented to use mkstemp() 
   const int pid_digits    = 6;
@@ -130,7 +130,7 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
   free( tmp_prefix );
   return file;
 }
-
+#endif 
 
 /**
    This file allocates a filename consisting of a leading path, a
