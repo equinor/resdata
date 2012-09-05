@@ -901,8 +901,9 @@ void util_fskip_lines(FILE * stream , int lines) {
   
 int util_forward_line(FILE * stream , bool * at_eof) {
   bool at_eol = false;
-  *at_eof     = false;
   int col = 0;
+  *at_eof     = false;
+  
   do {
     char c = fgetc(stream);
     if (c == EOF) {
@@ -1748,9 +1749,11 @@ char * util_scanf_int_return_char(const char * prompt , int prompt_len) {
   while(!OK){
     util_printf_prompt(prompt , prompt_len, '=', "=> ");
     fgets(input, prompt_len, stdin);
-    char *newline = strchr(input,'\n');
-    if(newline)
-      *newline = 0;
+    {
+		char *newline = strchr(input,'\n');
+		if(newline)
+			*newline = 0;
+	}
 
     if(strlen(input) !=0){
       OK = util_sscanf_int(input , &int_value);
@@ -2053,9 +2056,9 @@ bool util_files_equal( const char * file1 , const char * file2 ) {
 static void util_fclear_region( FILE * stream , long offset , long region_size) {
   fseek( stream , offset , SEEK_SET );
   { 
-          int i;
-                for ( i=0; i < region_size; i++)
-    fputc( 0 , stream );
+     int i;
+     for ( i=0; i < region_size; i++)
+        fputc( 0 , stream );
   }
 }
 
@@ -2959,7 +2962,6 @@ char * util_alloc_string_copy(const char *src ) {
 
 
 
-
 char * util_realloc_string_copy(char * old_string , const char *src ) {
   if (src != NULL) {
     char *copy = util_realloc(old_string , (strlen(src) + 1) * sizeof *copy , __func__);
@@ -3284,7 +3286,7 @@ void util_split_string(const char *line , const char *sep_set, int *_tokens, cha
      strings will be NULL.
 
 */
-
+#if 0
 
 void util_binary_split_string(const char * __src , const char * sep_set, bool split_on_first , char ** __first_part , char ** __second_part) {
   char * first_part = NULL;
@@ -4669,7 +4671,7 @@ int util_type_get_id( const void * data ) {
   return type_id;
 }  
 
-
+#endif
 
 
 #ifdef __cplusplus
