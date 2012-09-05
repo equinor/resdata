@@ -85,11 +85,11 @@ struct matrix_struct {
 
 /*#define GET_INDEX(m,i,j) (m->row_stride * (i) + m->column_stride * (j))*/
 
-static inline size_t GET_INDEX( const matrix_type * m , size_t i , size_t j) {
+static size_t GET_INDEX( const matrix_type * m , size_t i , size_t j) {
   return m->row_stride *i + m->column_stride *j;
 }
 
-static inline size_t MATRIX_DATA_SIZE( const matrix_type * m) {
+static size_t MATRIX_DATA_SIZE( const matrix_type * m) {
   size_t col    = m->columns;
   size_t stride = m->column_stride;
 
@@ -1393,8 +1393,8 @@ void matrix_inplace_diag_sqrt(matrix_type *Cd)
     util_abort("%s: size mismatch \n",__func__);
   }
   else{
-    
-    for (int i=0; i<nrows; i++)
+    int i;
+    for ( i=0; i<nrows; i++)
       {
         Cd->data[GET_INDEX(Cd , i , i)] = sqrt(Cd->data[GET_INDEX(Cd , i , i)]); 
       }
@@ -1412,8 +1412,8 @@ double matrix_trace(const matrix_type *matrix) {
     util_abort("%s: matrix is not square \n",__func__);
   }
   else{
-    
-    for (int i=0; i<nrows; i++)
+    int i;
+    for ( i=0; i<nrows; i++)
       {
         sum = sum + matrix->data[GET_INDEX(matrix , i , i)]; 
       }
@@ -1438,7 +1438,7 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
     for ( i=0; i<nrows; i++) 
       Sk->data[GET_INDEX(Sk , i , i)] =  Sk->data[GET_INDEX(Sk , i , i)] - mean; 
     
-    for (int i=0; i<nrows; i++) {
+    for ( i=0; i<nrows; i++) {
       double d = Sk->data[GET_INDEX(Sk , i , i)] - mean;
       std += d*d;
     }
