@@ -61,7 +61,8 @@ double ecl_grav_common_eval_biot_savart( const ecl_grid_cache_type * grid_cache 
   double sum = 0;
   if (region == NULL) {
     const int      size   = ecl_grid_cache_get_size( grid_cache );
-    for (int index = 0; index < size; index++) {
+	int index;
+    for ( index = 0; index < size; index++) {
       if (!aquifer[index]) {
         double dist_x  = (xpos[index] - utm_x );
         double dist_y  = (ypos[index] - utm_y );
