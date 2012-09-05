@@ -26,7 +26,7 @@
 #include <geo_pointset.h>
 #include <geo_surface.h>
 
-
+#define __PI                3.14159265
 #define GEO_SURFACE_TYPE_ID 111743
 
 
@@ -121,7 +121,7 @@ static void geo_surface_fprintf_irap_header( const geo_surface_type * surface , 
   fprintf(stream , float_fmt , surface->origo[1]);
   fprintf(stream , float_fmt , surface->origo[1] + surface->cell_size[1] * (surface->ny - 1));
   fprintf(stream , int_fmt   , surface->nx);
-  fprintf(stream , float_fmt , surface->rot_angle * 180 / M_PI );
+  fprintf(stream , float_fmt , surface->rot_angle * 180 / __PI );
   fprintf(stream , float_fmt , surface->origo[0]);
   fprintf(stream , float_fmt , surface->origo[1]);
   fprintf(stream , "0  0  0  0  0  0  0  \n");
@@ -190,7 +190,7 @@ static void geo_surface_fload_irap_header( geo_surface_type * surface, FILE * st
       
       surface->origo[0]  = xstart;
       surface->origo[1]  = ystart;
-      surface->rot_angle = angle * M_PI / 180.0;
+      surface->rot_angle = angle * __PI / 180.0;
       surface->nx = nx;
       surface->ny = ny;
       
