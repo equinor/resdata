@@ -23,11 +23,13 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
+#ifdef HAVE_FSYNC
+#include <unistd.h>
+#endif
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
 #endif
@@ -53,7 +55,7 @@ void log_reset_filename(log_type *logh , const char *filename) {
     fclose( logh->stream );
     file_size = util_file_size( logh->filename );
     if (file_size == 0)
-      unlink( logh->filename ); /* Unlink the old log file if it had zero size. */ 
+      remove( logh->filename ); /* Unlink the old log file if it had zero size. */ 
   }
   
   logh->filename = util_realloc_string_copy( logh->filename , filename );
