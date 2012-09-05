@@ -553,7 +553,7 @@ static int vector_cmp(const void * s1 , const void * s2) {
 
 
 void vector_sort(vector_type * vector , vector_cmp_ftype * cmp) {
-  vector_sort_node_type * sort_data = util_malloc( vector->size * sizeof * sort_data , __func__);
+  vector_sort_node_type * sort_data = util_calloc( vector->size , sizeof * sort_data , __func__);
   {
     int i;
     

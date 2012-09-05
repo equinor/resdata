@@ -99,8 +99,8 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int __i1,int __i2 
       int global_counter = 0;
       int i,j,k;
       ecl_box->active_size = 0;
-      ecl_box->active_list = util_malloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz * sizeof * ecl_box->active_list , __func__);
-      ecl_box->global_list = util_malloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz * sizeof * ecl_box->global_list , __func__);
+      ecl_box->active_list = util_calloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz , sizeof * ecl_box->active_list , __func__);
+      ecl_box->global_list = util_calloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz , sizeof * ecl_box->global_list , __func__);
       for (k=k1; k <= k2; k++) 
         for (j=j1; j <= j2; j++)
           for (i=i1; i <= i2; i++) {

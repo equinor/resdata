@@ -176,7 +176,7 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
       
 
     /*True Cross-Validation: */
-    int * randperms     = util_malloc( sizeof * randperms * nsample, __func__);
+    int * randperms     = util_calloc( nsample , sizeof * randperms , __func__);
     for (int i=0; i < nsample; i++)
       randperms[i] = i;
     

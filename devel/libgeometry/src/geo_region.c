@@ -54,7 +54,7 @@ geo_region_type * geo_region_alloc( const geo_pointset_type * pointset , bool pr
   region->pointset_size = geo_pointset_get_size( pointset );
   region->preselect = preselect;
   region->index_list = int_vector_alloc( 0, 0);
-  region->active_mask = util_malloc( region->pointset_size * sizeof * region->active_mask , __func__ );
+  region->active_mask = util_calloc( region->pointset_size , sizeof * region->active_mask , __func__ );
   geo_region_reset( region );
 
   return region;

@@ -214,7 +214,7 @@ static void geo_surface_fload_irap( geo_surface_type * surface , const char * fi
     double * zcoord = NULL;
         
     if (loadz) {
-      zcoord = util_malloc( sizeof * zcoord * surface->nx * surface->ny , __func__);
+      zcoord = util_calloc( surface->nx * surface->ny , sizeof * zcoord   , __func__);
       geo_surface_fscanf_zcoord( surface , stream , zcoord );
     }
 

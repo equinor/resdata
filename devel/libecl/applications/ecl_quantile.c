@@ -599,13 +599,13 @@ void output_run_line( const output_type * output , ensemble_type * ensemble) {
   double     ** data;
   int row_nr, column_nr;
 
-  data = util_malloc( data_rows * sizeof * data , __func__);
+  data = util_calloc( data_rows , sizeof * data , __func__);
   /*
     time-direction, i.e. the row index is the first index and the
     column number (i.e. the different keys) is the second index. 
   */
   for (row_nr=0; row_nr < data_rows; row_nr++)
-    data[row_nr] = util_malloc( sizeof * data[row_nr] * data_columns, __func__);
+    data[row_nr] = util_calloc( data_columns , sizeof * data[row_nr] , __func__);
   
   printf("Creating output file: %s \n",output->file );
 

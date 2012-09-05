@@ -47,7 +47,7 @@ void util_make_path(const char *_path) {
   int current_pos = 0;
   
   if (!util_is_directory(path)) {
-    active_path = util_malloc(strlen(path) + 1 , __func__);
+    active_path = util_calloc(strlen(path) + 1 , sizeof * active_path , __func__);
     int i = 0;
     do {
       int n = strcspn(path , UTIL_PATH_SEP_STRING);
@@ -112,7 +112,7 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
 
   
   pid_t  pid            = getpid() % pid_max;
-  char * file           = util_malloc(strlen(path) + 1 + strlen(prefix) + 1 + pid_digits + 1 + random_digits + 1 , __func__);
+  char * file           = util_calloc(strlen(path) + 1 + strlen(prefix) + 1 + pid_digits + 1 + random_digits + 1 , sizeof * file , __func__);
   char * tmp_prefix     = util_alloc_string_copy( prefix );
   
   if (!util_is_directory(path))
@@ -152,7 +152,7 @@ char * util_alloc_filename(const char * path , const char * basename , const cha
   if (extension != NULL)
     length += strlen(extension) + 1;
 
-  file = util_malloc(length , __func__);
+  file = util_calloc(length , sizeof * file , __func__);
 
   if (path == NULL) {
     if (extension == NULL)

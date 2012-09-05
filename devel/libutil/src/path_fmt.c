@@ -168,7 +168,7 @@ static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
     path_length = vsnprintf(new_path , 0 , fmt , tmp_va);
   }
 
-  new_path = util_malloc(path_length + 1 , __func__);
+  new_path = util_calloc(path_length + 1 , sizeof * new_path , __func__);
   vsnprintf(new_path , path_length + 1 , fmt , ap);
   return new_path;
 }
@@ -238,7 +238,7 @@ char * path_fmt_alloc_file(const path_fmt_type * path , bool auto_mkdir , ...) {
     if (auto_mkdir) {
       const char * __path = __fmt_alloc_path_va__(path->fmt , tmp_va);
       if (! util_is_directory(__path)) 
-	util_make_path( __path );
+        util_make_path( __path );
       free((char *) __path );
     }
     va_end(ap);

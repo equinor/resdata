@@ -341,7 +341,7 @@ static void smspec_node_set_lgr_name( smspec_node_type * index , const char * lg
 
 static void smspec_node_set_lgr_ijk( smspec_node_type * index , int lgr_i , int lgr_j , int lgr_k) {
   if (index->lgr_ijk == NULL)
-    index->lgr_ijk = util_malloc( 3 * sizeof * index->lgr_ijk , __func__);
+    index->lgr_ijk = util_calloc( 3 , sizeof * index->lgr_ijk , __func__);
   
   index->lgr_ijk[0] = lgr_i;
   index->lgr_ijk[1] = lgr_j;
@@ -356,7 +356,7 @@ static void smspec_node_set_num( smspec_node_type * index , const int grid_dims[
   index->num = num;
   if ((index->var_type == ECL_SMSPEC_COMPLETION_VAR) || (index->var_type == ECL_SMSPEC_BLOCK_VAR)) {
     int global_index = num - 1;
-    index->ijk = util_malloc( 3 * sizeof * index->ijk , __func__);
+    index->ijk = util_calloc( 3 , sizeof * index->ijk , __func__);
     
     index->ijk[2] = global_index / ( grid_dims[0] * grid_dims[1] );   global_index -= index->ijk[2] * (grid_dims[0] * grid_dims[1]);
     index->ijk[1] = global_index /  grid_dims[0] ;                    global_index -= index->ijk[1] * grid_dims[0];

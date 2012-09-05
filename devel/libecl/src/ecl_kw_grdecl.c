@@ -339,8 +339,8 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
   int data_index      = 0;
   int sizeof_ctype    = ecl_util_get_sizeof_ctype( ecl_type );
   int data_size       = init_size;
-  char * buffer       = util_malloc( (buffer_size + 1) * sizeof * buffer , __func__);
-  char * data         = util_malloc( sizeof_ctype * data_size * sizeof * data , __func__);
+  char * buffer       = util_calloc( (buffer_size + 1) , sizeof * buffer , __func__);
+  char * data         = util_calloc( sizeof_ctype * data_size , sizeof * data , __func__);
 
   while (true) {
     if (fscanf(stream , "%32s" , buffer) == 1) {

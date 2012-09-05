@@ -156,7 +156,7 @@ static const char * get_den_kw( ecl_phase_enum phase , ecl_version_enum ecl_vers
 
 static void ecl_grav_phase_ensure_work( ecl_grav_phase_type * grav_phase) {
   if (grav_phase->work == NULL)
-    grav_phase->work = util_malloc( sizeof * grav_phase->work * ecl_grid_cache_get_size( grav_phase->grid_cache ) , __func__);
+    grav_phase->work = util_calloc( ecl_grid_cache_get_size( grav_phase->grid_cache ) , sizeof * grav_phase->work  , __func__);
 }
 
 
@@ -218,7 +218,7 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav ,
     UTIL_TYPE_ID_INIT( grav_phase , ECL_GRAV_PHASE_TYPE_ID );
     grav_phase->grid_cache   = grid_cache;
     grav_phase->aquifer_cell = ecl_grav->aquifer_cell;
-    grav_phase->fluid_mass   = util_malloc( size * sizeof * grav_phase->fluid_mass , __func__ );
+    grav_phase->fluid_mass   = util_calloc( size , sizeof * grav_phase->fluid_mass , __func__ );
     grav_phase->phase        = phase;
     grav_phase->work         = NULL;
 
@@ -357,7 +357,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_empty(const ecl_grav_type * 
   survey->phase_map    = hash_alloc();
 
   if (calc_type & GRAV_CALC_USE_PORV)
-    survey->porv       = util_malloc( ecl_grid_cache_get_size( ecl_grav->grid_cache ) * sizeof * survey->porv , __func__ );
+    survey->porv       = util_calloc( ecl_grid_cache_get_size( ecl_grav->grid_cache ) , sizeof * survey->porv , __func__ );
   else
     survey->porv       = NULL;
 

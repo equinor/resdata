@@ -56,15 +56,8 @@ struct rng_struct {
 };
   
 
-#define __func__ "What the fuck??"
-
-rng_type * rng_safe_cast( void * __arg ) {
-        return (rng_type * ) __arg;
-}
-
-
-//UTIL_SAFE_CAST_FUNCTION( rng , RNG_TYPE_ID)
-//UTIL_IS_INSTANCE_FUNCTION( rng , RNG_TYPE_ID)
+UTIL_SAFE_CAST_FUNCTION( rng , RNG_TYPE_ID)
+UTIL_IS_INSTANCE_FUNCTION( rng , RNG_TYPE_ID)
 
 
 rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
@@ -109,7 +102,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
 
 
 void rng_init( rng_type * rng , rng_init_mode init_mode ) {
-  char * seed_buffer = (char *) util_malloc( rng->state_size * sizeof * seed_buffer , __func__ );
+  char * seed_buffer = (char *) util_calloc( rng->state_size , sizeof * seed_buffer , __func__ );
   
   switch (init_mode) {
   case(INIT_CLOCK):
@@ -143,8 +136,7 @@ void rng_rng_init( rng_type * rng , rng_type * seed_src) {
     if (int_size * 4 < byte_size)
       int_size += 1;
 
-    seed_buffer = (unsigned int *) util_malloc( int_size * sizeof * seed_buffer , __func__ );
-    //seed_buffer = UTIL_CXX_MALLOC( seed_buffer , int_size );
+    seed_buffer = (unsigned int *) util_calloc( int_size , sizeof * seed_buffer , __func__ );
         {
                 int i;
                 for (i =0; i < int_size; i++) 

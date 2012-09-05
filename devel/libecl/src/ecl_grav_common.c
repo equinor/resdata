@@ -34,7 +34,7 @@
 */
 
 bool * ecl_grav_common_alloc_aquifer_cell( const ecl_grid_cache_type * grid_cache , const ecl_file_type * init_file) {
-  bool * aquifer_cell = util_malloc( sizeof * aquifer_cell * ecl_grid_cache_get_size( grid_cache ) , __func__ );
+  bool * aquifer_cell = util_calloc( ecl_grid_cache_get_size( grid_cache ) , sizeof * aquifer_cell  , __func__ );
   
   if (ecl_file_has_kw( init_file , AQUIFER_KW)) {
     ecl_kw_type * aquifer_kw = ecl_file_iget_named_kw( init_file , AQUIFER_KW , 0);

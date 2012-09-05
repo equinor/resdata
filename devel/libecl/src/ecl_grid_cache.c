@@ -55,10 +55,10 @@ ecl_grid_cache_type * ecl_grid_cache_alloc( const ecl_grid_type * grid ) {
   ecl_grid_cache_type * grid_cache = util_malloc( sizeof * grid_cache , __func__);
   
   grid_cache->size          = ecl_grid_get_active_size( grid );
-  grid_cache->xpos          = util_malloc( grid_cache->size * sizeof * grid_cache->xpos , __func__ );
-  grid_cache->ypos          = util_malloc( grid_cache->size * sizeof * grid_cache->ypos , __func__ );
-  grid_cache->zpos          = util_malloc( grid_cache->size * sizeof * grid_cache->zpos , __func__ );
-  grid_cache->global_index  = util_malloc( grid_cache->size * sizeof * grid_cache->global_index , __func__ );
+  grid_cache->xpos          = util_calloc( grid_cache->size , sizeof * grid_cache->xpos , __func__ );
+  grid_cache->ypos          = util_calloc( grid_cache->size , sizeof * grid_cache->ypos , __func__ );
+  grid_cache->zpos          = util_calloc( grid_cache->size , sizeof * grid_cache->zpos , __func__ );
+  grid_cache->global_index  = util_calloc( grid_cache->size , sizeof * grid_cache->global_index , __func__ );
   {
     int active_index;
     

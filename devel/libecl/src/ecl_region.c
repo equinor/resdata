@@ -138,7 +138,7 @@ ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool presel
   region->parent_grid = ecl_grid;
   ecl_grid_get_dims( ecl_grid , &region->grid_nx , &region->grid_ny , &region->grid_nz , &region->grid_active);
   region->grid_vol          = region->grid_nx * region->grid_ny * region->grid_nz;
-  region->active_mask       = util_malloc(region->grid_vol * sizeof * region->active_mask , __func__);
+  region->active_mask       = util_calloc(region->grid_vol , sizeof * region->active_mask , __func__);
   region->active_index_list  = int_vector_alloc(0 , 0);
   region->global_index_list  = int_vector_alloc(0 , 0);
   region->global_active_list = int_vector_alloc(0 , 0);

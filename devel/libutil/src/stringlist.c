@@ -369,7 +369,7 @@ char ** stringlist_alloc_char_copy(const stringlist_type * stringlist) {
   char ** strings = NULL;
   int size = stringlist_get_size( stringlist );
   if (size > 0) {
-    strings = util_malloc(size * sizeof * strings , __func__);
+    strings = util_calloc(size , sizeof * strings , __func__);
     for (int i = 0; i <size; i++)
       strings[i] = stringlist_iget_copy( stringlist , i);
   }

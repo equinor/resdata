@@ -708,7 +708,7 @@ const @TYPE@ * @TYPE@_vector_get_const_ptr(const @TYPE@_vector_type * vector) {
 
 @TYPE@ * @TYPE@_vector_alloc_data_copy( const @TYPE@_vector_type * vector ) {
   int      size = vector->size * sizeof ( @TYPE@ ); 
-  @TYPE@ * copy = util_malloc(size , __func__);
+  @TYPE@ * copy = util_calloc(vector->size , sizeof * copy ,  __func__);
   if (copy != NULL)
     memcpy( copy , vector->data , size);
   return copy;
@@ -1037,8 +1037,8 @@ static int @TYPE@_vector_rcmp_node(const void *a, const void *b) {
 
    
 static int * @TYPE@_vector_alloc_sort_perm__(const @TYPE@_vector_type * vector, bool reverse) {
-  int * sort_perm             = util_malloc( vector->size * sizeof * sort_perm , __func__);
-  sort_node_type * sort_nodes = util_malloc( vector->size * sizeof * sort_nodes , __func__);
+  int * sort_perm             = util_calloc( vector->size , sizeof * sort_perm , __func__);
+  sort_node_type * sort_nodes = util_calloc( vector->size , sizeof * sort_nodes , __func__);
   int i;
   for (i=0; i < vector->size; i++) {
     sort_nodes[i].index = i;

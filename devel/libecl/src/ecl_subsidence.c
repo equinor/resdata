@@ -87,8 +87,8 @@ static ecl_subsidence_survey_type * ecl_subsidence_survey_alloc_empty(const ecl_
   survey->aquifer_cell = sub->aquifer_cell;
   survey->name         = util_alloc_string_copy( name );
   
-  survey->porv     = util_malloc( ecl_grid_cache_get_size( sub->grid_cache ) * sizeof * survey->porv , __func__ );
-  survey->pressure = util_malloc( ecl_grid_cache_get_size( sub->grid_cache ) * sizeof * survey->pressure , __func__ );
+  survey->porv     = util_calloc( ecl_grid_cache_get_size( sub->grid_cache ) , sizeof * survey->porv , __func__ );
+  survey->pressure = util_calloc( ecl_grid_cache_get_size( sub->grid_cache ) , sizeof * survey->pressure , __func__ );
   
   return survey;
 }
@@ -141,7 +141,7 @@ static double ecl_subsidence_survey_eval( const ecl_subsidence_survey_type * bas
 
   const ecl_grid_cache_type * grid_cache = base_survey->grid_cache;
   const int size  = ecl_grid_cache_get_size( grid_cache );
-  double * weight = util_malloc( size * sizeof * weight , __func__ );
+  double * weight = util_calloc( size , sizeof * weight , __func__ );
   double deltaz;
   int index;
 

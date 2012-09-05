@@ -210,7 +210,7 @@ void * util_fread_alloc_compressed(FILE * stream) {
     return NULL;
   else {
     fseek(stream , current_pos , SEEK_SET);
-    data = util_malloc(size , __func__);
+    data = util_calloc(size , sizeof * data , __func__);
     util_fread_compressed(data , stream);
     return data;
   }

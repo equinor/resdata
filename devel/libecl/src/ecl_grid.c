@@ -866,7 +866,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
   grid->visited       = NULL;
   grid->inv_index_map = NULL;
   grid->index_map     = NULL;
-  grid->cells         = util_malloc(nx*ny*nz * sizeof * grid->cells , __func__);
+  grid->cells         = util_calloc(nx*ny*nz , sizeof * grid->cells , __func__);
 
   if (global_grid != NULL) {
     /* this is an lgr instance, and we inherit the global grid
@@ -1633,8 +1633,8 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
       int coords_size = -1;
       int index;
     
-      int ** coords    = util_malloc( num_coords * sizeof * coords , __func__);
-      float ** corners = util_malloc( num_coords * sizeof * corners , __func__);
+      int ** coords    = util_calloc( num_coords , sizeof * coords , __func__);
+      float ** corners = util_calloc( num_coords , sizeof * corners , __func__);
       
       for (index = 0; index < num_coords; index++) {
         const ecl_kw_type * coords_kw = ecl_file_iget_named_kw(ecl_file , COORDS_KW  , index + cell_offset);
@@ -1925,7 +1925,7 @@ int ecl_grid_get_global_index_from_xy_bottom( const ecl_grid_type * ecl_grid , d
 
 static void ecl_grid_clear_visited( ecl_grid_type * grid ) {
   if (grid->visited == NULL)
-    grid->visited = util_malloc( sizeof * grid->visited * grid->size , __func__);
+    grid->visited = util_calloc( grid->size , sizeof * grid->visited , __func__);
 
   for (int i=0; i < grid->size; i++)
     grid->visited[i] = false;
@@ -2071,7 +2071,7 @@ void ecl_grid_alloc_blocking_variables(ecl_grid_type * grid, int block_dim) {
   else
     util_abort("%: valid values are two and three. Value:%d invaid \n",__func__ , block_dim);
 
-  grid->values         = util_malloc( grid->block_size * sizeof * grid->values , __func__);
+  grid->values         = util_calloc( grid->block_size , sizeof * grid->values , __func__);
   for (index = 0; index < grid->block_size; index++)
     grid->values[index] = double_vector_alloc( 0 , 0.0 );
 }
@@ -3414,7 +3414,7 @@ static void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord
 }
 
 float * ecl_grid_alloc_coord_data( const ecl_grid_type * grid ) {
-  float * coord = util_malloc( (grid->nx + 1) * (grid->ny + 1) * 6 * sizeof * coord , __func__);
+  float * coord = util_calloc( (grid->nx + 1) * (grid->ny + 1) * 6 , sizeof * coord , __func__);
   ecl_grid_init_coord_data( grid , coord );
   return coord;
 }
@@ -3458,7 +3458,7 @@ static void ecl_grid_init_zcorn_data( const ecl_grid_type * grid , float * zcorn
 
 
 float * ecl_grid_alloc_zcorn_data( const ecl_grid_type * grid ) {
-  float * zcorn = util_malloc( 8 * grid->size * sizeof * zcorn , __func__);
+  float * zcorn = util_calloc( 8 * grid->size , sizeof * zcorn , __func__);
   ecl_grid_init_zcorn_data( grid , zcorn );
   return zcorn;
 }
@@ -3486,7 +3486,7 @@ static void ecl_grid_init_actnum_data( const ecl_grid_type * grid , int * actnum
 
 
 int * ecl_grid_alloc_actnum_data( const ecl_grid_type * grid ) {
-  int * actnum = util_malloc( grid->size * sizeof * actnum , __func__);
+  int * actnum = util_calloc( grid->size , sizeof * actnum , __func__);
   ecl_grid_init_actnum_data( grid , actnum );
   return actnum;
 }
@@ -3510,7 +3510,7 @@ static void ecl_grid_init_hostnum_data( const ecl_grid_type * grid , int * hostn
 
 
 int * ecl_grid_alloc_hostnum_data( const ecl_grid_type * grid ) {
-  int * hostnum = util_malloc( grid->size * sizeof * hostnum , __func__);
+  int * hostnum = util_calloc( grid->size , sizeof * hostnum , __func__);
   ecl_grid_init_hostnum_data( grid , hostnum );
   return hostnum;
 }

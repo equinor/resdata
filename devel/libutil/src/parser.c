@@ -303,13 +303,13 @@ char * alloc_quoted_token(
   char * token;
   if(!strip_quote_marks)
   {
-    token = util_malloc( (length + 1) * sizeof * token, __func__ );
+    token = util_calloc( (length + 1) , sizeof * token, __func__ );
     memmove(token, &buffer[0], length * sizeof * token );
     token[length] = '\0';
   }
   else
   {
-    token = util_malloc( (length - 1) * sizeof * token, __func__ );
+    token = util_calloc( (length - 1) , sizeof * token, __func__ );
     memmove(token, &buffer[1], (length -1) * sizeof * token);
     token[length-2] = '\0';
     /**
@@ -490,7 +490,7 @@ stringlist_type * parser_tokenize_buffer(
 
     {
       int length   = length_of_normal_non_splitters( &buffer[position], parser );
-      char * token = util_malloc( (length + 1) * sizeof * token, __func__ );
+      char * token = util_calloc( (length + 1) , sizeof * token, __func__ );
       int token_length;
       if (parser->delete_set == NULL) {
         token_length = length;
@@ -683,7 +683,7 @@ bool parser_fseek_string(const parser_type * parser , FILE * stream , const char
 
 void parser_strip_buffer(const parser_type * parser , char ** __buffer) {
   char * src     = *__buffer;
-  char * target  = util_malloc( sizeof * target * ( strlen( *__buffer ) + 1) , __func__);
+  char * target  = util_calloc( ( strlen( *__buffer ) + 1) , sizeof * target , __func__);
 
   int src_position    = 0;
   int target_position = 0;

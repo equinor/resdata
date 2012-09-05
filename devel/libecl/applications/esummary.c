@@ -76,7 +76,7 @@ int main(int argc , char ** argv) {
       nvars    =  argc - vector_get_size( ecl_sum_list ) - 1;
       if (nvars == 0) util_exit(" --- No variables \n");
       var_list = &argv[vector_get_size( ecl_sum_list ) + 1];
-      has_var = util_malloc( nvars * sizeof * has_var , __func__);
+      has_var = util_calloc( nvars , sizeof * has_var , __func__);
 
       
       /** Checking time consistency - and discarding those with unmatching time vector. */
