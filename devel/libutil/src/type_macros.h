@@ -82,7 +82,7 @@ const type ## _type * type ## _safe_cast_const( const void * __arg ) {          
    if (__arg == NULL) {                                                                  \
       util_abort("%s: runtime cast failed - tried to dereference NULL\n",__func__);      \
       return NULL;                                                                       \
-   }                                                                                     \ 
+   }                                                                                     \
    {                                                                                     \
    const type ## _type * arg = (const type ## _type *) __arg;                            \
    if ( arg->__type_id == TYPE_ID)                                                       \

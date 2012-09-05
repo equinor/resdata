@@ -3486,8 +3486,8 @@ char * util_string_replacen_alloc(const char * buff_org, int num_expr, const cha
   }
   
   {
-	  int size = strlen(new_buffer);
-	  new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer, __func__);
+          int size = strlen(new_buffer);
+          new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer, __func__);
   }
   
   return new_buffer;
@@ -3814,21 +3814,21 @@ double util_double_vector_stddev(int N, const double * vector) {
   if(N <= 1)
     return 0.0;
   {
-	  double   stddev         = 0.0;
-	  double   mean           = util_double_vector_mean(N, vector);
-	  double * vector_shifted = util_calloc(N , sizeof *vector_shifted, __func__);
+          double   stddev         = 0.0;
+          double   mean           = util_double_vector_mean(N, vector);
+          double * vector_shifted = util_calloc(N , sizeof *vector_shifted, __func__);
   
-	  {
-	  int i;
-	  for(i=0; i<N; i++)
-		vector_shifted[i] = vector[i] - mean;
+          {
+          int i;
+          for(i=0; i<N; i++)
+                vector_shifted[i] = vector[i] - mean;
 
-	  for(i=0; i<N; i++)
-		stddev = stddev + vector_shifted[i] * vector_shifted[i];
-	  }
-	  free(vector_shifted);
+          for(i=0; i<N; i++)
+                stddev = stddev + vector_shifted[i] * vector_shifted[i];
+          }
+          free(vector_shifted);
 
-	  return sqrt( stddev / (N-1));
+          return sqrt( stddev / (N-1));
   }
 }
 
@@ -4638,9 +4638,8 @@ void util_localtime( time_t * t , struct tm * ts ) {
 #include "util_lockf.c"
 #endif
 
-#if 0
+
 #include "util_env.c"
-#endif 
 
 #ifdef HAVE_SYMLINK
 #include "util_symlink.c"
