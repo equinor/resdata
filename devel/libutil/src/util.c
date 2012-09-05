@@ -2192,6 +2192,9 @@ bool util_entry_exists( const char * entry ) {
    3. If stat() fails with error != ENOENT => util_abort().   
 
 */
+
+#ifdef HAVE_ISREG
+
 bool util_is_directory(const char * path) {
   struct stat stat_buffer;
 
@@ -2207,7 +2210,6 @@ bool util_is_directory(const char * path) {
 }
 
 
-#ifdef HAVE_ISREG
 
 bool util_is_file(const char * path) {
   struct stat stat_buffer;
