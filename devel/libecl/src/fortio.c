@@ -398,10 +398,12 @@ void fortio_complete_read(fortio_type *fortio) {
 
 int fortio_fread_record(fortio_type *fortio, char *buffer) {
   fortio_init_read(fortio);
-  int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
-  util_fread(buffer , 1 , fortio->active_header , fortio->stream , __func__);
-  fortio_complete_read(fortio);
-  return record_size;
+  {
+	  int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
+      util_fread(buffer , 1 , fortio->active_header , fortio->stream , __func__);
+      fortio_complete_read(fortio);
+      return record_size;
+  }
 }
 
 

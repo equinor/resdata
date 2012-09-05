@@ -229,9 +229,11 @@ void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int_vecto
     const int * index = int_vector_get_ptr( index_map );
     float * data      = ecl_kw_get_ptr( params_kw );
 
-    for (int i=0; i < compact_size; i++)
-      data[i] = ministep->data[ index[i] ];
-    
+	{
+		int i;
+        for (i=0; i < compact_size; i++)
+           data[i] = ministep->data[ index[i] ];
+	}
     ecl_kw_fwrite( params_kw , fortio );
     ecl_kw_free( params_kw );
   }

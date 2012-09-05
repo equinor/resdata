@@ -956,7 +956,8 @@ static void ecl_region_cylinder_select__( ecl_region_type * region , double x0 ,
       for (j=0; j < ny; j++) {
         double x,y,z;
         ecl_grid_get_xyz3( region->parent_grid , i,j,0 , &x , &y , &z);
-        double pointR2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
+        {
+			double pointR2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
         bool select_column = false;
 
         if ((pointR2 < R2) && (select_inside))
@@ -971,7 +972,7 @@ static void ecl_region_cylinder_select__( ecl_region_type * region , double x0 ,
             region->active_mask[ global_index ] = select;
           }
         }
-
+		}
       }
     }
   }

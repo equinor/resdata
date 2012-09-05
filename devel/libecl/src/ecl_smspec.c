@@ -1045,11 +1045,11 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         smspec_node_type * smspec_node;
         ecl_smspec_var_type var_type = ecl_smspec_identify_var_type( kw );
         if (nums != NULL) num        = ecl_kw_iget_int(nums , params_index);
-        if (ecl_smspec_lgr_var_type( var_type )) {
-          lgr_name  = util_alloc_strip_copy(  ecl_kw_iget_ptr( lgrs , params_index ));
+        if (ecl_smspec_lgr_var_type( var_type )) {        
           int lgr_i = ecl_kw_iget_int( numlx , params_index );
           int lgr_j = ecl_kw_iget_int( numly , params_index );
           int lgr_k = ecl_kw_iget_int( numlz , params_index );
+		  lgr_name  = util_alloc_strip_copy(  ecl_kw_iget_ptr( lgrs , params_index ));
           smspec_node = smspec_node_alloc_lgr( var_type , well , kw , unit , lgr_name , ecl_smspec->key_join_string , lgr_i , lgr_j , lgr_k , params_index, default_value);
         } else 
           smspec_node = smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value);

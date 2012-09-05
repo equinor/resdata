@@ -297,7 +297,8 @@ bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , FILE * stream) {
 
 
 static void iset_range( char * data , int data_offset , int sizeof_ctype , void * value_ptr , int multiplier) {
-  for (int index =0; index < multiplier; index++) 
+  int index;
+  for ( index =0; index < multiplier; index++) 
     memcpy( &data[ (index + data_offset) * sizeof_ctype ] , value_ptr , sizeof_ctype);
 }
 

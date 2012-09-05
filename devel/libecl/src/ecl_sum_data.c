@@ -373,7 +373,7 @@ static void ecl_sum_data_fwrite_unified_step( const ecl_sum_data_type * data , c
   }
   
   if (current_step == report_step) { // We found the position:
-    off_t size = fortio_ftell( fortio );
+    long size = fortio_ftell( fortio );
     
     util_ftruncate( fortio_get_FILE( fortio ) , size );
     ecl_sum_data_fwrite_report__( data , report_step , fortio );

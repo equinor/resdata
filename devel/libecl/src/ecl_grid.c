@@ -476,19 +476,19 @@ static double min2( double x1 , double x2) {
 }  
 
 
-static inline double min4(double x1 , double x2 , double x3 , double x4) {
+static  double min4(double x1 , double x2 , double x3 , double x4) {
   return min2( min2(x1 , x2) , min2(x3 , x4 ));
 }
 
-static inline double max4(double x1 , double x2 , double x3 , double x4) {
+static  double max4(double x1 , double x2 , double x3 , double x4) {
   return max2( max2(x1 , x2) , max2(x3 , x4 ));
 }
 
-static inline double max8( double x1 , double x2 , double x3, double x4 , double x5 , double x6 , double x7 , double x8) {
+static  double max8( double x1 , double x2 , double x3, double x4 , double x5 , double x6 , double x7 , double x8) {
   return max2( max4(x1,x2,x3,x4) , max4(x5,x6,x7,x8));
 }
 
-static inline double min8( double x1 , double x2 , double x3, double x4 , double x5 , double x6 , double x7 , double x8) {
+static  double min8( double x1 , double x2 , double x3, double x4 , double x5 , double x6 , double x7 , double x8) {
   return min2( min4(x1,x2,x3,x4) , min4(x5,x6,x7,x8));
 }
 
@@ -934,7 +934,7 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
 
 
 
-static inline int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+static  int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid , int i , int j , int k) {
   return i + j * ecl_grid->nx + k * ecl_grid->nx * ecl_grid->ny;
 }
 
@@ -2971,8 +2971,9 @@ int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type
   int cells_found = 0;
   if (ecl_kw_get_size( region_kw ) == ecl_grid->size) {
     if (ecl_kw_get_type( region_kw ) == ECL_INT_TYPE) {
-      int_vector_reset( index_list );
-      const int * region_ptr = ecl_kw_iget_ptr( region_kw , 0);
+		const int * region_ptr = ecl_kw_iget_ptr( region_kw , 0);
+		int_vector_reset( index_list );
+      
 
       {
         int global_index;

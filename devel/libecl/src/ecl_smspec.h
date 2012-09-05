@@ -54,7 +54,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   ecl_smspec_type   * ecl_smspec_alloc_writer( const char * key_join_string , time_t sim_start , int nx , int ny , int nz);
   void                ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case , bool fmt_file );
   
-  ecl_smspec_type *        ecl_smspec_fread_alloc(const char * , const char *, bool include_restart);
+  ecl_smspec_type *        ecl_smspec_fread_alloc(const char *header_file, const char * key_join_string , bool include_restart);
   void                     ecl_smspec_free( ecl_smspec_type *);
   
   int                      ecl_smspec_get_sim_days_index( const ecl_smspec_type * smspec );

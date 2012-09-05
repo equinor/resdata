@@ -1652,7 +1652,8 @@ ecl_kw_type * ecl_kw_alloc_scatter_copy( const ecl_kw_type * src_kw , int target
   
   {
     int sizeof_ctype = ecl_util_get_sizeof_ctype( src_kw->ecl_type );
-    for(int i =0; i < src_kw->size; i++) {
+    int i;
+	for( i =0; i < src_kw->size; i++) {
       int target_index = mapping[i];
       memcpy( &new_kw->data[ target_index * sizeof_ctype ] , &src_kw->data[ i * sizeof_ctype] , sizeof_ctype);
     }
@@ -1931,7 +1932,7 @@ static void ecl_kw_inplace_add_ ## ctype( ecl_kw_type * target_kw , const ecl_kw
  {                                                                                         \
     ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
     const ctype * add_data = ecl_kw_get_data_ref( add_kw );                                \
-    int i;                                                                                 \       
+    int i;                                                                                 \
     for (i=0; i < target_kw->size; i++)                                                    \
       target_data[i] += add_data[i];                                                       \
  }                                                                                         \
@@ -1939,6 +1940,7 @@ static void ecl_kw_inplace_add_ ## ctype( ecl_kw_type * target_kw , const ecl_kw
 ECL_KW_TYPED_INPLACE_ADD( int )
 ECL_KW_TYPED_INPLACE_ADD( double )
 ECL_KW_TYPED_INPLACE_ADD( float )
+
 #undef ECL_KW_TYPED_INPLACE_ADD
 
 void ecl_kw_inplace_add( ecl_kw_type * target_kw , const ecl_kw_type * add_kw) {
