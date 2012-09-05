@@ -2017,8 +2017,8 @@ void util_move_file4( const char * src_name , const char * target_name , const c
 bool util_files_equal( const char * file1 , const char * file2 ) {
   bool equal = true;
   const int buffer_size = 4096;
-  char buffer1[ buffer_size ];
-  char buffer2[ buffer_size ];
+  char * buffer1 = util_calloc( buffer_size , sizeof * buffer1 , __func__);
+  char * buffer2 = util_calloc( buffer_size , sizeof * buffer2 , __func__);
   
   FILE * stream1 = util_fopen( file1 , "r" );
   FILE * stream2 = util_fopen( file2 , "r" );
@@ -2043,6 +2043,9 @@ bool util_files_equal( const char * file1 , const char * file2 ) {
   } while (equal);
   fclose( stream1 );
   fclose( stream2 );
+
+  free( buffer1 );
+  free( buffer2 );
   return equal;
 }
 
@@ -4357,7 +4360,7 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
       active[value] = false;
   } else {
     list_length = 10;
-    active_list = util_malloc( list_length * sizeof * active_list , __func__);
+    active_list = util_calloc( list_length , sizeof * active_list , __func__);
   }
     
     
