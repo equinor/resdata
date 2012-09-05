@@ -62,6 +62,10 @@
 #include <sys/wait.h>
 #endif
 
+#ifdef HAVE_USLEEP
+#include <unistd.h>
+#endif
+
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
 #endif
@@ -669,6 +673,7 @@ char * util_realloc_stdin_line(char * p) {
    microseconds and try again.
 */
 
+#ifdef HAVE_USLEEP
 char * util_blocking_alloc_stdin_line(unsigned long usec) {
   char * line;
   do {
@@ -678,6 +683,7 @@ char * util_blocking_alloc_stdin_line(unsigned long usec) {
   } while (line == NULL);
   return line;
 }
+#endif
 
 
 char * util_alloc_cwd(void) {

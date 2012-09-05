@@ -87,7 +87,6 @@ typedef enum {left_pad   = 0,
   void         util_fprintf_double(double , int , int , char , FILE *);
   bool         util_fscanf_date(FILE * , time_t *);
   bool         util_sscanf_date(const char * , time_t *);
-  char       * util_blocking_alloc_stdin_line(unsigned long );
   char       * util_alloc_stdin_line();
   char       * util_realloc_stdin_line(char * );
   bool         util_is_executable(const char * );
@@ -119,6 +118,11 @@ typedef enum {left_pad   = 0,
   bool         util_entry_readable( const char * entry );  
   void         util_ftruncate(FILE * stream , long size);
   
+
+#ifdef HAVE_USLEEP
+  char       * util_blocking_alloc_stdin_line(unsigned long );
+#endif
+
 
 #ifdef HAVE_OPENDIR
   void         util_copy_directory(const char *  , const char * , const char *);

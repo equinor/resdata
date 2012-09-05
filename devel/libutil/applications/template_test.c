@@ -23,8 +23,26 @@
 #include <template.h>
 
 
-int main( int argc , char ** argv) {
-  template_type * template = template_alloc( "/tmp/latex-Nuk2LY/report1.tex" , true , NULL );
-  template_instantiate( template , "/tmp/target.txt" , NULL , true );
+
+bool test_path( const char * src_file , const char * cmp_file ) {
+  const char * target_file = "/tmp/target.txt";
+  template_type * template = template_alloc( src_file , true , NULL );
+  printf("Instantiating template: %s ...... " , src_file);
+  template_instantiate( template , target_file  , NULL , true );
+  if (util_files_equal( target_file , cmp_file ))
+    printf("OK\n");
+  else {
+    printf("ERROR \n");
+    printf("Compare files: %s and %s \n",cmp_file , target_file );
+    exit(1);
+  }
   template_free( template );
+}
+
+
+
+int main( int argc , char ** argv) {
+  test_path("template_test_data/template1.txt" , "template_test_data/result1.txt");
+  test_path("template_test_data/template2.txt" , "template_test_data/result2.txt");
+  test_path("template_test_data/template3.txt" , "template_test_data/result3.txt");
 }

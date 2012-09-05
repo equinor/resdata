@@ -192,43 +192,26 @@ int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
 
 
 char * ecl_util_alloc_base_guess(const char * path) {
-  char *base = NULL;
-  int   data_count = 0;
-  struct dirent *dentry;
-  DIR *dirH;
-  dirH = opendir( path ); 
-  if (dirH == NULL)
-    util_abort("%s: failed to open directory: %s - aborting.\n",__func__ , path);
+  char * base = NULL;
+  stringlist_type * data_files = stringlist_alloc_new( );
+  stringlist_type * DATA_files = stringlist_alloc_new( );
+  stringlist_select_matching_files( data_files , path , "*.data");
+  stringlist_select_matching_files( DATA_files , path , "*.DATA");
   
-  while ( (dentry = readdir(dirH)) != NULL) {
-    const char * entry = dentry->d_name;
-    char *this_base , *ext;
+  if ((stringlist_get_size( data_files ) + stringlist_get_size( DATA_files)) == 1) {
+    const char * path_name;
 
-    if (entry[0] == '.') continue; 
-    util_alloc_file_components(entry , NULL , &this_base , &ext);
-    if (ext != NULL) {
-      
-      if ((strcmp(ext,"DATA") == 0) || (strcmp(ext , "data") == 0)) {
-        if (data_count == 0) 
-          base = util_alloc_string_copy(this_base);
-        else if (data_count == 1) {
-          free(base);
-          base = NULL;
-        }
-        data_count++;
-      }
-      
-      free(ext);
-    }
-    if (this_base != NULL) free(this_base);
-    
-  }
-  closedir(dirH);
-  
-  if (data_count > 1)
-    fprintf(stderr,"%s: found several files with extension DATA in:%s  can not guess ECLIPSE base - returning NULL\n",__func__ , path);
-  else if (data_count == 0)
-    fprintf(stderr,"%s: could not find any files ending with data / DATA in:%s - can not guess ECLIPSE base - returning NULL \n",__func__ , path);
+    if (stringlist_get_size( data_files ) == 1)
+      path_name = stringlist_iget( data_files , 0 );
+    else
+      path_name = stringlist_iget( DATA_files , 0 );
+
+    util_alloc_file_components( path_name , NULL , &base , NULL );
+  } // Else - found either 0 or more than 1 file with extension DATA - impossible to guess.
+
+  stringlist_free( data_files );
+  stringlist_free( DATA_files );
+
   return base;
 }
 
