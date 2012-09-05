@@ -227,7 +227,8 @@ typedef enum {left_pad   = 0,
   void    util_abort_set_executable( const char * executable );
   void *  util_realloc(void *  , size_t  , const char * );
   void *  util_malloc(size_t , const char * );
-  void * util_realloc_copy(void * org_ptr , const void * src , size_t byte_size , const char * caller);
+  void *  util_calloc( size_t elements , size_t element_size , const char * caller);
+  void *  util_realloc_copy(void * org_ptr , const void * src , size_t byte_size , const char * caller);
   void *  util_alloc_copy(const void * , size_t , const char * );
   void    util_double_to_float(float  * , const double * , int );
   void    util_float_to_double(double * , const float  * , int );

@@ -3951,7 +3951,7 @@ void * util_realloc(void * old_ptr , size_t new_size , const char * caller) {
 
 
 
-void * util_malloc(size_t size , const char * caller) {
+static void * util_malloc__(size_t size , const char * caller) {
   void * data;
   if (size == 0) 
     /* 
@@ -3971,6 +3971,15 @@ void * util_malloc(size_t size , const char * caller) {
     memset(data , 255 , size);
   }
   return data;
+}
+
+void * util_malloc(size_t size , const char * caller) {
+  return util_malloc__( size , caller );
+}
+
+
+void * util_calloc( size_t elements , size_t element_size , const char * caller) {
+  return util_malloc( elements * element_size , caller );
 }
 
 
