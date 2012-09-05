@@ -64,12 +64,14 @@ type ## _type * type ## _safe_cast( void * __arg ) {                            
       util_abort("%s: runtime cast failed - tried to dereference NULL\n",__func__);      \
       return NULL;                                                                       \
    }                                                                                     \
-   type ## _type * arg = (type ## _type *) __arg;                                        \
-   if ( arg->__type_id == TYPE_ID)                                                       \
-      return arg;                                                                        \
-   else {                                                                                \
-      util_abort("%s: runtime cast failed: File:%s Line:%d. Got:%d  Expected:%d \n", __func__ , __FILE__ , __LINE__ , arg->__type_id , TYPE_ID); \
-      return NULL;                                                                       \
+   {                                                                                     \
+      type ## _type * arg = (type ## _type *) __arg;                                     \
+      if ( arg->__type_id == TYPE_ID)                                                       \
+         return arg;                                                                        \
+      else {                                                                                \
+         util_abort("%s: runtime cast failed: File:%s Line:%d. Got:%d  Expected:%d \n", __func__ , __FILE__ , __LINE__ , arg->__type_id , TYPE_ID); \
+         return NULL;                                                                       \
+      }                                                                                   \
    }                                                                                     \
 }
 #define UTIL_SAFE_CAST_HEADER( type ) type ## _type * type ## _safe_cast( void * __arg )
@@ -77,12 +79,18 @@ type ## _type * type ## _safe_cast( void * __arg ) {                            
 
 #define UTIL_SAFE_CAST_FUNCTION_CONST(type , TYPE_ID)                                    \
 const type ## _type * type ## _safe_cast_const( const void * __arg ) {                   \
+   if (__arg == NULL) {                                                                  \
+      util_abort("%s: runtime cast failed - tried to dereference NULL\n",__func__);      \
+      return NULL;                                                                       \
+   }                                                                                     \ 
+   {                                                                                     \
    const type ## _type * arg = (const type ## _type *) __arg;                            \
    if ( arg->__type_id == TYPE_ID)                                                       \
       return arg;                                                                        \
    else {                                                                                \
       util_abort("%s: runtime cast failed: File:%s Line:%d. Got:%d  Expected:%d \n", __func__ , __FILE__ , __LINE__ , arg->__type_id , TYPE_ID); \
       return NULL;                                                                       \
+   }                                                                                     \
    }                                                                                     \
 }
 #define UTIL_SAFE_CAST_HEADER_CONST( type ) const type ## _type * type ## _safe_cast_const( const void * __arg )
