@@ -143,8 +143,8 @@ static ecl_kw_type * ecl_init_file_alloc_DOUBHEAD( ) {
 static void ecl_init_file_fwrite_poro( fortio_type * fortio , const ecl_grid_type * ecl_grid , const ecl_kw_type * poro ) {
   {
     ecl_kw_type * porv = ecl_kw_alloc( PORV_KW , ecl_grid_get_global_size( ecl_grid ) , ECL_FLOAT_TYPE);
-    
-    for (int global_index = 0; global_index < ecl_grid_get_global_size( ecl_grid ); global_index++) {
+    int global_index;
+    for ( global_index = 0; global_index < ecl_grid_get_global_size( ecl_grid ); global_index++) {
       int active_index = ecl_grid_get_active_index1( ecl_grid , global_index );
       if (active_index >= 0)
         ecl_kw_iset_float( porv , global_index , ecl_kw_iget_float( poro , active_index ) * ecl_grid_get_cell_volume1( ecl_grid , global_index ));
