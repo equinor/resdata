@@ -1750,10 +1750,10 @@ char * util_scanf_int_return_char(const char * prompt , int prompt_len) {
     util_printf_prompt(prompt , prompt_len, '=', "=> ");
     fgets(input, prompt_len, stdin);
     {
-		char *newline = strchr(input,'\n');
-		if(newline)
-			*newline = 0;
-	}
+                char *newline = strchr(input,'\n');
+                if(newline)
+                        *newline = 0;
+        }
 
     if(strlen(input) !=0){
       OK = util_sscanf_int(input , &int_value);
@@ -2207,6 +2207,7 @@ bool util_is_directory(const char * path) {
 }
 
 
+#ifdef HAVE_ISREG
 
 bool util_is_file(const char * path) {
   struct stat stat_buffer;
@@ -2238,6 +2239,8 @@ bool util_is_executable(const char * path) {
   } else  /* Entry does not exist - return false. */
     return false; 
 }
+
+#endif
 
 
 static int util_get_path_length(const char * file) {
