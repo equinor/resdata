@@ -561,8 +561,8 @@ static bool fseek_quote_end( char quoter , FILE * stream ) {
 static bool fgetc_while_equal( FILE * stream , const char * string , bool case_sensitive) {
   bool     equal        = true;
   long int current_pos  = ftell(stream);
-  
-  for (int string_index = 0; string_index < strlen(string); string_index++) {
+  int string_index;
+  for ( string_index = 0; string_index < strlen(string); string_index++) {
     int c = fgetc( stream );
     if (!case_sensitive)
       c = toupper( c );

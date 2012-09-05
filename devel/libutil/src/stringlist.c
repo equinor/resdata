@@ -25,11 +25,12 @@
 #include <vector.h>
 #include <buffer.h>
 
-#ifdef WIN32
-#include <windows.h>
-#else
+#ifdef HAVE_GLOB
 #include <glob.h>
+#else
+#include <Windows.h>
 #endif
+
 
 #define STRINGLIST_TYPE_ID 671855
 
@@ -200,8 +201,8 @@ stringlist_type * stringlist_alloc_shallow_copy(const stringlist_type * src) {
 */
 stringlist_type * stringlist_alloc_shallow_copy_with_limits(const stringlist_type * stringlist, int offset, int num_strings) {
   stringlist_type * copy = stringlist_alloc_empty( true );
-
-  for(int i=0; i<num_strings; i++)
+  int i;
+  for( i=0; i<num_strings; i++)
     {
     const char * str = stringlist_iget(stringlist, i + offset);
     vector_append_ref(copy->strings, str);
@@ -264,33 +265,36 @@ void stringlist_insert_stringlist_copy(stringlist_type * stringlist, const strin
   /** Cannot use assert_index here. */
   if(pos < 0 || pos > size_old)
     util_abort("%s: Position %d is out of bounds. Min: 0 Max: %d\n", pos, size_old);
-
+  {
   stringlist_type * start = stringlist_alloc_new();
   stringlist_type * end   = stringlist_alloc_new();
-  stringlist_type * new   = stringlist_alloc_new();
+  stringlist_type * newList   = stringlist_alloc_new();
+  int i;
 
-  for(int i=0; i<pos; i++)
+  for( i=0; i<pos; i++)
     stringlist_append_ref(start, stringlist_iget(stringlist, i));
 
-  for(int i=pos; i<size_old; i++)
+  for( i=pos; i<size_old; i++)
     stringlist_append_ref(end  , stringlist_iget(stringlist, i));
 
-  stringlist_append_stringlist_copy(new, start);
-  stringlist_append_stringlist_copy(new, src  );
-  stringlist_append_stringlist_copy(new, end  );
+  stringlist_append_stringlist_copy(newList, start);
+  stringlist_append_stringlist_copy(newList, src  );
+  stringlist_append_stringlist_copy(newList, end  );
 
   stringlist_clear(stringlist);
-  stringlist_append_stringlist_copy(stringlist, new);
+  stringlist_append_stringlist_copy(stringlist, newList);
 
-  stringlist_free(new);
+  stringlist_free(newList);
   stringlist_free(start);
   stringlist_free(end);
+  }
 }
 
 void stringlist_deep_copy( stringlist_type * target , const stringlist_type * src) {
   stringlist_clear( target );
   {
-    for (int i=0; i < stringlist_get_size( src ); i++)
+    int i;
+    for ( i=0; i < stringlist_get_size( src ); i++)
       stringlist_append_copy( target , stringlist_iget( src , i ));
   }
 }
@@ -369,8 +373,9 @@ char ** stringlist_alloc_char_copy(const stringlist_type * stringlist) {
   char ** strings = NULL;
   int size = stringlist_get_size( stringlist );
   if (size > 0) {
+	int i;
     strings = util_calloc(size , sizeof * strings , __func__);
-    for (int i = 0; i <size; i++)
+    for (i = 0; i <size; i++)
       strings[i] = stringlist_iget_copy( stringlist , i);
   }
   return strings;
@@ -457,7 +462,8 @@ bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
   int size2 = stringlist_get_size( s2 );
   if (size1 == size2) {
     bool equal = true;
-    for (int i = 0; i < size1; i++) {
+	int i;
+    for ( i = 0; i < size1; i++) {
       if (strcmp(stringlist_iget(s1 , i) , stringlist_iget(s2 , i)) != 0) {
         equal = false;
         break;
