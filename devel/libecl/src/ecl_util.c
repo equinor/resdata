@@ -22,7 +22,6 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <ecl_util.h>
-#include <dirent.h>
 #include <util.h>
 #include <hash.h>
 #include <stringlist.h>
