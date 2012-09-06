@@ -246,7 +246,7 @@ static bool file_map_has_kw_ptr( const file_map_type * file_map, const ecl_kw_ty
 
 
 static ecl_file_kw_type * file_map_iget_file_kw( const file_map_type * file_map , int global_index) {
-  ecl_file_kw_type * file_kw = (ecl_kw_type *) vector_iget( file_map->kw_list , global_index);
+  ecl_file_kw_type * file_kw = vector_iget( file_map->kw_list , global_index);
   return file_kw;
 }
 
