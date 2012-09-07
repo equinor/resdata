@@ -68,8 +68,8 @@ if (HAVE_ZLIB)
 endif()   
 
 if ( SHLWAPI_LIBRARY )
-  target_link_libraries( util_static shlwapi )
-  target_link_libraries( util_shared shlwapi )
+  target_link_libraries( util_static ${SHWLAPI_LIBRARY} )
+  target_link_libraries( util_shared ${SHWLAPI_LIBRARY} )
 endif()
 
 if (HAVE_LAPACK)
