@@ -2266,7 +2266,7 @@ bool util_entry_readable( const char * entry ) {
   // Windows: purely on extension ....
 bool util_is_executable(const char * path) {
   char * ext;
-  util_alloc_name_components( path , NULL , NULL , &ext);
+  util_alloc_file_components( path , NULL , NULL , &ext);
   if (ext != NULL)
     if (strcmp(ext , "exe") == 0)
       return true;
