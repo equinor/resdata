@@ -2238,6 +2238,8 @@ bool util_is_file(const char * path) {
 /**
    Will return false if the path does not exist.
 */
+
+#ifdef HAVE_FORK
 bool util_is_executable(const char * path) {
   if (util_file_exists(path)) {
     struct stat stat_buffer;
@@ -2250,15 +2252,26 @@ bool util_is_executable(const char * path) {
     return false; 
 }
 
+
 /* 
    Will not differtiate between files and directories.
 */
-#ifdef HAVE_ISREG
-
 bool util_entry_readable( const char * entry ) {
   struct stat buffer;
   stat( entry , &buffer );
   return buffer.st_mode & S_IRUSR;
+}
+
+#else
+  // Windows: purely on extension ....
+bool util_is_executable(const char * path) {
+  char * ext;
+  util_alloc_name_components( path , NULL , NULL , &ext);
+  if (ext != NULL)
+    if (strcmp(ext , "exe") == 0)
+      return true;
+  
+  return false;
 }
 
 #endif 
@@ -4605,7 +4618,7 @@ int util_fnmatch( const char * pattern , const char * string ) {
   return fnmatch( pattern , string , 0 );
 #else
   
-  bool match = PathMatchSpec( string , pattern );
+  bool match = PathMatchSpec( string , pattern ); // shlwapi
   if (match)
     return 0;
   else
