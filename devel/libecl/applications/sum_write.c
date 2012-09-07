@@ -266,7 +266,8 @@ int main( int argc , char ** argv) {
     int num_dates = 10;
     int num_step = 10;
     double sim_days = 0;
-
+	int report_step;
+	int step;
     for (int report_step = 0; report_step < num_dates; report_step++) {
       for (int step = 0; step < num_step; step++) {
         /* Simulate .... */
