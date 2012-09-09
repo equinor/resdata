@@ -48,10 +48,6 @@ endif()
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
-
-set(source_files util.c)
-set(header_files util.h)
-
 add_library( util_static  STATIC  ${source_files} )
 add_library( util_shared  SHARED  ${source_files} )
 
