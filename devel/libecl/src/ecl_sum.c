@@ -98,9 +98,10 @@ struct ecl_sum_struct {
   bool                fmt_case;
   bool                unified;
   char              * key_join_string;
-  char              * path;       /* Can be NULL for CWD. */ 
+  char              * path;       /* The path - as given for the case input. Can be NULL for cwd. */
+  char              * abs_path;   /* Absolute path. */
   char              * base;       /* Only the basename. */
-  char              * ecl_case;   /* This is the current case, with optional path component. == path + base */
+  char              * ecl_case;   /* This is the current case, with optional path component. == path + base*/
   char              * ext;        /* Only to support selective loading of formatted|unformatted and unified|multiple. (can be NULL) */ 
 };
 
@@ -121,6 +122,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_sum , ECL_SUM_ID );
 void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
   util_safe_free( ecl_sum->ecl_case );
   util_safe_free( ecl_sum->path );
+  util_safe_free( ecl_sum->abs_path );
   util_safe_free( ecl_sum->base );
   util_safe_free( ecl_sum->ext );
   {
@@ -132,6 +134,10 @@ void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
     ecl_sum->path     = util_alloc_string_copy( path );
     ecl_sum->base     = util_alloc_string_copy( base );
     ecl_sum->ext      = util_alloc_string_copy( ext );
+    if (path != NULL)
+      ecl_sum->abs_path = util_alloc_abs_path( path );
+    else
+      ecl_sum->abs_path = util_alloc_cwd();
     
     util_safe_free( base );
     util_safe_free( path );
@@ -144,10 +150,11 @@ static ecl_sum_type * ecl_sum_alloc__( const char * input_arg , const char * key
   ecl_sum_type * ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
   UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
   
-  ecl_sum->ecl_case = NULL;
-  ecl_sum->path = NULL;
-  ecl_sum->base = NULL;
-  ecl_sum->ext  = NULL;
+  ecl_sum->ecl_case  = NULL;
+  ecl_sum->path      = NULL;
+  ecl_sum->base      = NULL;
+  ecl_sum->ext       = NULL;
+  ecl_sum->abs_path  = NULL;
   ecl_sum_set_case( ecl_sum , input_arg );
   ecl_sum->key_join_string = util_alloc_string_copy( key_join_string );
   
@@ -897,6 +904,21 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const string
 
 const char * ecl_sum_get_case(const ecl_sum_type * ecl_sum) {
   return ecl_sum->ecl_case;
+}
+
+
+const char * ecl_sum_get_path(const ecl_sum_type * ecl_sum ) {
+  return ecl_sum->path;
+}
+
+
+const char * ecl_sum_get_abs_path(const ecl_sum_type * ecl_sum ) {
+  return ecl_sum->abs_path;
+}
+
+
+const char * ecl_sum_get_base(const ecl_sum_type * ecl_sum ) {
+  return ecl_sum->base;
 }
 
 
