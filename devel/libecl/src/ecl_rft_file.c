@@ -60,7 +60,7 @@ struct ecl_rft_file_struct {
 
 
 static ecl_rft_file_type * ecl_rft_file_alloc_empty(const char * filename) {
-  ecl_rft_file_type * rft_vector = util_malloc(sizeof * rft_vector , __func__);
+  ecl_rft_file_type * rft_vector = util_malloc(sizeof * rft_vector );
   UTIL_TYPE_ID_INIT( rft_vector , ECL_RFT_FILE_ID );
   rft_vector->data       = vector_alloc_new();
   rft_vector->filename   = util_alloc_string_copy(filename);

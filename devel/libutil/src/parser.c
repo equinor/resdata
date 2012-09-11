@@ -88,7 +88,7 @@ parser_type * parser_alloc(
   const char * comment_start,    /** Set to NULL if not interessting.            */
   const char * comment_end)      /** Set to NULL  if not interessting.           */
 {
-  parser_type * parser = util_malloc(sizeof * parser, __func__);
+  parser_type * parser = util_malloc(sizeof * parser);
   parser->splitters     = NULL;
   parser->delete_set    = NULL;
   parser->quoters       = NULL;
@@ -304,13 +304,13 @@ char * alloc_quoted_token(
   char * token;
   if(!strip_quote_marks)
   {
-    token = util_calloc( (length + 1) , sizeof * token, __func__ );
+    token = util_calloc( (length + 1) , sizeof * token );
     memmove(token, &buffer[0], length * sizeof * token );
     token[length] = '\0';
   }
   else
   {
-    token = util_calloc( (length - 1) , sizeof * token, __func__ );
+    token = util_calloc( (length - 1) , sizeof * token);
     memmove(token, &buffer[1], (length -1) * sizeof * token);
     token[length-2] = '\0';
     /**
@@ -491,7 +491,7 @@ stringlist_type * parser_tokenize_buffer(
 
     {
       int length   = length_of_normal_non_splitters( &buffer[position], parser );
-      char * token = util_calloc( (length + 1) , sizeof * token, __func__ );
+      char * token = util_calloc( (length + 1) , sizeof * token);
       int token_length;
       if (parser->delete_set == NULL) {
         token_length = length;
@@ -684,7 +684,7 @@ bool parser_fseek_string(const parser_type * parser , FILE * stream , const char
 
 void parser_strip_buffer(const parser_type * parser , char ** __buffer) {
   char * src     = *__buffer;
-  char * target  = util_calloc( ( strlen( *__buffer ) + 1) , sizeof * target , __func__);
+  char * target  = util_calloc( ( strlen( *__buffer ) + 1) , sizeof * target );
 
   int src_position    = 0;
   int target_position = 0;
@@ -734,7 +734,7 @@ void parser_strip_buffer(const parser_type * parser , char ** __buffer) {
     target_position += 1;
   }
   target[target_position] = '\0';
-  target = util_realloc( target , sizeof * target * (target_position + 1) , __func__);
+  target = util_realloc( target , sizeof * target * (target_position + 1) );
   
   free( src );
   *__buffer = target;

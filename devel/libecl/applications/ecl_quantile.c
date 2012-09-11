@@ -99,7 +99,7 @@ typedef struct {
 /*****************************************************************/
 
 static quant_key_type * quant_key_alloc( const char * sum_key , double quantile ) {
-  quant_key_type * qkey = util_malloc( sizeof * qkey , __func__ );
+  quant_key_type * qkey = util_malloc( sizeof * qkey );
   qkey->sum_key  = util_alloc_string_copy( sum_key );
   qkey->quantile = quantile;
   return qkey;
@@ -118,7 +118,7 @@ static void quant_key_free__( void * qkey ) {
 /*****************************************************************/
 
 sum_case_type * sum_case_fread_alloc( const char * data_file , const time_t_vector_type * interp_time ) {
-  sum_case_type * sum_case = util_malloc( sizeof * sum_case , __func__ );
+  sum_case_type * sum_case = util_malloc( sizeof * sum_case );
 
   sum_case->ecl_sum     = ecl_sum_fread_alloc_case( data_file , SUMMARY_JOIN );
   sum_case->interp_data = double_vector_alloc(0 , 0);
@@ -202,7 +202,7 @@ void ensemble_load_from_glob( ensemble_type * ensemble , const char * pattern , 
 
 
 ensemble_type * ensemble_alloc( ) {
-  ensemble_type * ensemble = util_malloc( sizeof * ensemble , __func__ );
+  ensemble_type * ensemble = util_malloc( sizeof * ensemble );
 
   ensemble->num_interp  = DEFAULT_NUM_INTERP;
   ensemble->start_time  = -1;
@@ -262,7 +262,7 @@ void ensemble_free( ensemble_type * ensemble ) {
 /*****************************************************************/
  
 static output_type * output_alloc( const char * file , const char * format_string) {
-  output_type * output = util_malloc( sizeof * output , __func__);
+  output_type * output = util_malloc( sizeof * output );
   output->keys = vector_alloc_new();
   output->file = util_alloc_string_copy( file );
   {
@@ -599,13 +599,13 @@ void output_run_line( const output_type * output , ensemble_type * ensemble) {
   double     ** data;
   int row_nr, column_nr;
 
-  data = util_calloc( data_rows , sizeof * data , __func__);
+  data = util_calloc( data_rows , sizeof * data );
   /*
     time-direction, i.e. the row index is the first index and the
     column number (i.e. the different keys) is the second index. 
   */
   for (row_nr=0; row_nr < data_rows; row_nr++)
-    data[row_nr] = util_calloc( data_columns , sizeof * data[row_nr] , __func__);
+    data[row_nr] = util_calloc( data_columns , sizeof * data[row_nr] );
   
   printf("Creating output file: %s \n",output->file );
 

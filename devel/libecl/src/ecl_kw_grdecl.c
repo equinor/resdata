@@ -340,8 +340,8 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
   int data_index      = 0;
   int sizeof_ctype    = ecl_util_get_sizeof_ctype( ecl_type );
   int data_size       = init_size;
-  char * buffer       = util_calloc( (buffer_size + 1) , sizeof * buffer , __func__);
-  char * data         = util_calloc( sizeof_ctype * data_size , sizeof * data , __func__);
+  char * buffer       = util_calloc( (buffer_size + 1) , sizeof * buffer      );
+  char * data         = util_calloc( sizeof_ctype * data_size , sizeof * data );
 
   while (true) {
     if (fscanf(stream , "%32s" , buffer) == 1) {
@@ -404,7 +404,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
         else {
           if (data_index + multiplier >= data_size) {
             data_size  = 2*(data_index + multiplier);
-            data       = util_realloc( data , sizeof_ctype * data_size * sizeof * data , __func__);
+            data       = util_realloc( data , sizeof_ctype * data_size * sizeof * data);
           }
           
           iset_range( data , data_index , sizeof_ctype , value_ptr , multiplier );
@@ -419,7 +419,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
   }
   free( buffer );
   *kw_size = data_index;
-  data = util_realloc( data , sizeof_ctype * data_index * sizeof * data , __func__);
+  data = util_realloc( data , sizeof_ctype * data_index * sizeof * data );
   return data;
 }
 

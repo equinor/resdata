@@ -40,7 +40,7 @@ struct node_data_struct {
     
     if they are present they are used.
   */
-  copyc_ftype  	 *copyc;  /* Copy constructor - can be NULL. */
+  copyc_ftype    *copyc;  /* Copy constructor - can be NULL. */
   free_ftype     *del;    /* Destructor - can be NULL. */ 
 };
 
@@ -52,7 +52,7 @@ struct node_data_struct {
 */
 
 static node_data_type * node_data_alloc__(const void * data , node_ctype ctype , int buffer_size , copyc_ftype * copyc, free_ftype * del) {
-  node_data_type * node = util_malloc(sizeof * node , __func__);
+  node_data_type * node = util_malloc(sizeof * node );
   node->ctype           = ctype;
   node->copyc           = copyc;
   node->del             = del;
@@ -73,7 +73,7 @@ node_data_type * node_data_alloc_ptr(const void * data  , copyc_ftype * copyc, f
 
 
 node_data_type * node_data_alloc_buffer(const void * data, int buffer_size) {  /* The buffer is copied on insert. */
-  void * data_copy = util_alloc_copy( data , buffer_size , __func__);
+  void * data_copy = util_alloc_copy( data , buffer_size );
   return node_data_alloc__( data_copy , CTYPE_VOID_POINTER , buffer_size , NULL , free);
 }
 
@@ -93,14 +93,14 @@ static node_data_type * node_data_copyc(const node_data_type * src , bool deep_c
        The source node has internal storage - it has been allocated with _alloc_buffer() 
     */
     if (deep_copy) 
-      new  = node_data_alloc__(util_alloc_copy( src->data , src->buffer_size , __func__)  /* A new copy is allocated prior to insert. */
-			       , src->ctype , src->buffer_size , NULL , free);
+      new  = node_data_alloc__(util_alloc_copy( src->data , src->buffer_size )  /* A new copy is allocated prior to insert. */
+                               , src->ctype , src->buffer_size , NULL , free);
     else
       new  = node_data_alloc__(src->data , src->ctype , src->buffer_size , NULL , NULL);  /* The copy does not have destructor. */
   } else {
     if (deep_copy) {
       if (src->copyc == NULL) 
-	util_abort("%s: Tried allocate deep_copy of mnode with no constructor - aborting. \n",__func__);  
+        util_abort("%s: Tried allocate deep_copy of mnode with no constructor - aborting. \n",__func__);  
       new = node_data_alloc__(src->data , src->ctype , 0 , src->copyc , src->del);
     } else
       new = node_data_alloc__(src->data , src->ctype , 0 , NULL , NULL); /*shallow copy - we 'hide' constructor and destructor. */
@@ -192,7 +192,7 @@ int node_data_fetch_and_inc_int( node_data_type * node_data ) {
 
 
 node_data_type * node_data_alloc_int(int value) {
-  void * data_copy = util_alloc_copy( &value , sizeof value , __func__);
+  void * data_copy = util_alloc_copy( &value , sizeof value );
   return node_data_alloc__( data_copy , CTYPE_INT_VALUE , sizeof value , NULL , free);
 }
 
@@ -208,7 +208,7 @@ double node_data_get_double(const node_data_type * node_data) {
 
 
 node_data_type * node_data_alloc_double(double value) {
-  void * data_copy = util_alloc_copy( &value , sizeof value , __func__);
+  void * data_copy = util_alloc_copy( &value , sizeof value );
   return node_data_alloc__( data_copy , CTYPE_DOUBLE_VALUE , sizeof value , NULL , free);
 }
 

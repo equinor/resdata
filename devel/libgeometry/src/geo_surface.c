@@ -70,7 +70,7 @@ static void geo_surface_init_cells( geo_surface_type * geo_surface ) {
 
 
 static geo_surface_type * geo_surface_alloc_empty( bool internal_z ) {
-  geo_surface_type * surface = util_malloc( sizeof * surface , __func__);
+  geo_surface_type * surface = util_malloc( sizeof * surface );
   UTIL_TYPE_ID_INIT( surface , GEO_SURFACE_TYPE_ID )
   surface->pointset = geo_pointset_alloc( internal_z );
   return surface;
@@ -215,7 +215,7 @@ static void geo_surface_fload_irap( geo_surface_type * surface , const char * fi
     double * zcoord = NULL;
         
     if (loadz) {
-      zcoord = util_calloc( surface->nx * surface->ny , sizeof * zcoord   , __func__);
+      zcoord = util_calloc( surface->nx * surface->ny , sizeof * zcoord  );
       geo_surface_fscanf_zcoord( surface , stream , zcoord );
     }
 

@@ -84,7 +84,7 @@ void path_fmt_reset_fmt(path_fmt_type * path , const char * fmt) {
 
 
 static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory) {
-  path_fmt_type * path = util_malloc(sizeof * path , __func__);
+  path_fmt_type * path = util_malloc(sizeof * path );
   path->__id           = PATH_FMT_ID;
   path->fmt            = NULL;
   path->file_fmt       = NULL;
@@ -168,7 +168,7 @@ static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
     path_length = vsnprintf(new_path , 0 , fmt , tmp_va);
   }
 
-  new_path = util_calloc(path_length + 1 , sizeof * new_path , __func__);
+  new_path = util_calloc(path_length + 1 , sizeof * new_path );
   vsnprintf(new_path , path_length + 1 , fmt , ap);
   return new_path;
 }

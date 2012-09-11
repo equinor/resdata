@@ -43,13 +43,13 @@ struct ecl_sum_tstep_struct {
 
 
 static ecl_sum_tstep_type * ecl_sum_tstep_alloc( int report_step , int ministep_nr , const ecl_smspec_type * smspec) {
-  ecl_sum_tstep_type * tstep = util_malloc( sizeof * tstep , __func__);
+  ecl_sum_tstep_type * tstep = util_malloc( sizeof * tstep );
   UTIL_TYPE_ID_INIT( tstep , ECL_SUM_TSTEP_ID);
   tstep->smspec      = smspec;
   tstep->report_step = report_step;
   tstep->ministep    = ministep_nr;
   tstep->data_size   = ecl_smspec_get_params_size( smspec );
-  tstep->data        = util_malloc( tstep->data_size * sizeof * tstep->data , __func__); 
+  tstep->data        = util_calloc( tstep->data_size , sizeof * tstep->data ); 
   return tstep;
 }
 
@@ -229,11 +229,11 @@ void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int_vecto
     const int * index = int_vector_get_ptr( index_map );
     float * data      = ecl_kw_get_ptr( params_kw );
 
-	{
-		int i;
+        {
+                int i;
         for (i=0; i < compact_size; i++)
            data[i] = ministep->data[ index[i] ];
-	}
+        }
     ecl_kw_fwrite( params_kw , fortio );
     ecl_kw_free( params_kw );
   }

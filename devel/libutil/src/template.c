@@ -115,7 +115,7 @@ const char * template_get_template_file( const template_type * template ) {
 
 
 template_type * template_alloc( const char * template_file , bool internalize_template , subst_list_type * parent_subst) {
-  template_type * template = util_malloc( sizeof * template , __func__);
+  template_type * template = util_malloc( sizeof * template );
   UTIL_TYPE_ID_INIT(template , TEMPLATE_TYPE_ID);
   template->arg_list             = subst_list_alloc( parent_subst );
   template->template_buffer      = NULL;

@@ -294,7 +294,7 @@ if (ecl_kw->ecl_type == ECL_DOUBLE_TYPE)
 
 /** Allocates a untyped buffer with exactly the same content as the ecl_kw instances data. */
 void * ecl_kw_alloc_data_copy(const ecl_kw_type * ecl_kw) {
-  void * buffer = util_alloc_copy( ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , __func__);
+  void * buffer = util_alloc_copy( ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype );
   return buffer;
 }
 
@@ -476,7 +476,7 @@ ecl_kw_type * ecl_kw_alloc_new_shared(const char * header ,  int size, ecl_type_
 ecl_kw_type * ecl_kw_alloc_empty() {
   ecl_kw_type *ecl_kw;
   
-  ecl_kw                 = util_malloc(sizeof *ecl_kw , __func__);
+  ecl_kw                 = util_malloc(sizeof *ecl_kw );
   ecl_kw->header         = NULL;
   ecl_kw->header8        = NULL;
   ecl_kw->data           = NULL;
@@ -1234,7 +1234,7 @@ void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
   if (ecl_kw->shared_data) 
     util_abort("%s: trying to allocate data for ecl_kw object which has been declared with shared storage - aborting \n",__func__);
   
-  ecl_kw->data = util_realloc(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype , __func__);
+  ecl_kw->data = util_realloc(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype );
 }
 
 
@@ -1653,7 +1653,7 @@ ecl_kw_type * ecl_kw_alloc_scatter_copy( const ecl_kw_type * src_kw , int target
   {
     int sizeof_ctype = ecl_util_get_sizeof_ctype( src_kw->ecl_type );
     int i;
-	for( i =0; i < src_kw->size; i++) {
+        for( i =0; i < src_kw->size; i++) {
       int target_index = mapping[i];
       memcpy( &new_kw->data[ target_index * sizeof_ctype ] , &src_kw->data[ i * sizeof_ctype] , sizeof_ctype);
     }

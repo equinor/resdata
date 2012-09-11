@@ -226,7 +226,7 @@ static const char* special_vars[] = {"NEWTON",
 
 static ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join_string) {
   ecl_smspec_type *ecl_smspec;
-  ecl_smspec = util_malloc(sizeof *ecl_smspec , __func__);
+  ecl_smspec = util_malloc(sizeof *ecl_smspec );
   UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
 
   ecl_smspec->well_var_index                 = hash_alloc();
@@ -1049,7 +1049,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           int lgr_i = ecl_kw_iget_int( numlx , params_index );
           int lgr_j = ecl_kw_iget_int( numly , params_index );
           int lgr_k = ecl_kw_iget_int( numlz , params_index );
-		  lgr_name  = util_alloc_strip_copy(  ecl_kw_iget_ptr( lgrs , params_index ));
+                  lgr_name  = util_alloc_strip_copy(  ecl_kw_iget_ptr( lgrs , params_index ));
           smspec_node = smspec_node_alloc_lgr( var_type , well , kw , unit , lgr_name , ecl_smspec->key_join_string , lgr_i , lgr_j , lgr_k , params_index, default_value);
         } else 
           smspec_node = smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value);

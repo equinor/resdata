@@ -82,7 +82,7 @@ void point_copy_values(point_type * p , const point_type * src) {
 
 
 point_type * point_alloc_empty( ) {
-  point_type * p = util_malloc( sizeof * p , __func__);
+  point_type * p = util_malloc( sizeof * p );
   return p;
 }
 
@@ -95,7 +95,7 @@ point_type * point_alloc( double x , double y , double z) {
 
 
 point_type * point_copyc( const point_type * p) {
-  point_type * copy = util_alloc_copy( p , sizeof * p , __func__);
+  point_type * copy = util_alloc_copy( p , sizeof * p );
   return copy;
 }
 

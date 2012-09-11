@@ -91,8 +91,8 @@
 
 
 typedef struct {
-  void 	      	       * buffer;        /* This is the actual content - can either point to a remote object, or to storage managed by the arg_pack instance. */
-  node_ctype  	         ctype;         /* The type of the data which is stored. */
+  void                 * buffer;        /* This is the actual content - can either point to a remote object, or to storage managed by the arg_pack instance. */
+  node_ctype             ctype;         /* The type of the data which is stored. */
   arg_node_free_ftype  * destructor;    /* destructor called on buffer - can be NULL. */
   arg_node_copyc_ftype * copyc;         /* copy constructor - will typically be NULL. */
 } arg_node_type;
@@ -112,7 +112,7 @@ struct arg_pack_struct {
 /* First comes the arg_node functions. These are all fully static.*/
 
 static arg_node_type * arg_node_alloc_empty() {
-  arg_node_type * node = util_malloc( sizeof * node , __func__);
+  arg_node_type * node = util_malloc( sizeof * node );
   node->buffer      = NULL;
   node->destructor  = NULL;
   node->ctype       = CTYPE_INVALID;
@@ -121,7 +121,7 @@ static arg_node_type * arg_node_alloc_empty() {
 
 
 static void arg_node_realloc_buffer(arg_node_type * node , int new_size) {
-  node->buffer      = util_realloc(node->buffer , new_size , __func__);
+  node->buffer      = util_realloc(node->buffer , new_size );
 }
 
 
@@ -342,7 +342,7 @@ static void __arg_pack_assert_index(const arg_pack_type * arg , int iarg) {
 
 
 static void arg_pack_realloc_nodes(arg_pack_type * arg_pack , int new_size) {
-  arg_pack->nodes      = util_realloc(arg_pack->nodes , new_size * sizeof * arg_pack->nodes , __func__);
+  arg_pack->nodes      = util_realloc(arg_pack->nodes , new_size * sizeof * arg_pack->nodes );
   {
     int i;
     for (i = arg_pack->alloc_size; i < new_size; i++)
@@ -398,7 +398,7 @@ void arg_pack_lock(arg_pack_type * arg_pack) {
 
 
 arg_pack_type * arg_pack_alloc() {
-  arg_pack_type * arg_pack = util_malloc(sizeof * arg_pack , __func__);
+  arg_pack_type * arg_pack = util_malloc(sizeof * arg_pack );
   UTIL_TYPE_ID_INIT( arg_pack , ARG_PACK_TYPE_ID);
   arg_pack->nodes      = NULL;
   arg_pack->alloc_size = 0;

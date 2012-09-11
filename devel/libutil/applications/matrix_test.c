@@ -18,6 +18,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
+
 #include <matrix.h>
 #include <rng.h>
 #ifdef HAVE_LAPACK
@@ -32,6 +34,7 @@ int main( int argc, char ** argv)  {
   matrix_assign( B , A );
   matrix_pretty_print( A , "    A " , "%8.4f" );
   
+
 #ifdef HAVE_LAPACK
   matrix_inv( B );
   printf("\n");
@@ -42,13 +45,12 @@ int main( int argc, char ** argv)  {
   {
     matrix_type * A3 = matrix_alloc(3,3);
     matrix_random_init( A3 , rng );
-    
+    matrix_iset( A3 , 0 , 0 , sin(0.98));
     printf("matrix_det3:%g  ",matrix_det3( A3 ));
     printf("matrix_det:%g \n",matrix_det( A3 ));
   }
-  
 #endif
-  
+
   matrix_free( A );
   matrix_free( B );
   rng_free( rng );

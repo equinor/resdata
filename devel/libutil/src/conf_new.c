@@ -455,7 +455,7 @@ static
 conf_type * conf_alloc_root()
 {
 
-  conf_type * conf = util_malloc(sizeof * conf, __func__);
+  conf_type * conf = util_malloc(sizeof * conf);
 
   conf->__id  = __CONF_ID;
   conf->super = NULL;
@@ -556,7 +556,7 @@ conf_item_type * conf_insert_item(
   assert(conf != NULL);
   assert(name != NULL);
 
-  conf_item_type * item = util_malloc(sizeof * item, __func__);
+  conf_item_type * item = util_malloc(sizeof * item );
   item->__id   = __CONF_ITEM_ID;
   item->values = stringlist_alloc_new();
 
@@ -578,7 +578,7 @@ conf_type * conf_append_child(
   assert(type != NULL );
   assert(name != NULL );
 
-  conf_type * child = util_malloc(sizeof * child, __func__);
+  conf_type * child = util_malloc(sizeof * child );
 
   child->__id  = __CONF_ID;
   child->super = conf;

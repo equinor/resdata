@@ -55,10 +55,10 @@ void util_compress_buffer(const void * data , int data_size , void * zbuffer , u
    output.
 */
 void * util_alloc_compressed_buffer(const void * data , int data_size , unsigned long * compressed_size) {
-  void * zbuffer = util_malloc(data_size , __func__);
+  void * zbuffer = util_malloc(data_size );
   *compressed_size = data_size;
   util_compress_buffer(data , data_size , zbuffer , compressed_size);
-  zbuffer = util_realloc(zbuffer , *compressed_size , __func__ );
+  zbuffer = util_realloc(zbuffer , *compressed_size );
   return zbuffer;
 }
 
@@ -156,7 +156,7 @@ void util_fread_compressed(void *__data , FILE * stream) {
 
 
   fread(&buffer_size , sizeof buffer_size , 1 , stream);
-  zbuffer = util_malloc(buffer_size , __func__);
+  zbuffer = util_malloc(buffer_size );
   offset = 0;
   do {
     unsigned long compressed_size;
@@ -210,7 +210,7 @@ void * util_fread_alloc_compressed(FILE * stream) {
     return NULL;
   else {
     fseek(stream , current_pos , SEEK_SET);
-    data = util_calloc(size , sizeof * data , __func__);
+    data = util_calloc(size , sizeof * data );
     util_fread_compressed(data , stream);
     return data;
   }

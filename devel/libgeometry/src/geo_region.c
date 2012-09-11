@@ -47,14 +47,14 @@ struct geo_region_struct {
 static UTIL_SAFE_CAST_FUNCTION( geo_region , GEO_REGION_TYPE_ID )
 
 geo_region_type * geo_region_alloc( const geo_pointset_type * pointset , bool preselect) {
-  geo_region_type * region = util_malloc( sizeof * region , __func__);
+  geo_region_type * region = util_malloc( sizeof * region );
   UTIL_TYPE_ID_INIT( region , GEO_REGION_TYPE_ID );
 
   region->pointset = pointset;
   region->pointset_size = geo_pointset_get_size( pointset );
   region->preselect = preselect;
   region->index_list = int_vector_alloc( 0, 0);
-  region->active_mask = util_calloc( region->pointset_size , sizeof * region->active_mask , __func__ );
+  region->active_mask = util_calloc( region->pointset_size , sizeof * region->active_mask );
   geo_region_reset( region );
 
   return region;

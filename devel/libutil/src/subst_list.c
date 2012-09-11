@@ -115,7 +115,7 @@ typedef struct {
 
 /** Allocates an empty instance with no values. */
 static subst_list_string_type * subst_list_string_alloc(const char * key) {
-  subst_list_string_type * node = util_malloc(sizeof * node , __func__);
+  subst_list_string_type * node = util_malloc(sizeof * node );
   node->value_owner       = false;
   node->value             = NULL;
   node->doc_string        = NULL; 
@@ -176,7 +176,7 @@ static void subst_list_string_set_value(subst_list_string_type * node, const cha
 */
    
 static subst_list_func_type * subst_list_func_alloc( const char * func_name, subst_func_type * func) {
-  subst_list_func_type * subst_func = util_malloc( sizeof * subst_func , __func__);
+  subst_list_func_type * subst_func = util_malloc( sizeof * subst_func );
   subst_func->name      = util_alloc_string_copy( func_name );
   subst_func->func      = func;
   return subst_func;
@@ -270,7 +270,7 @@ const subst_list_type * subst_list_get_parent( const subst_list_type * subst_lis
 
 
 subst_list_type * subst_list_alloc(const void * input_arg) {
-  subst_list_type * subst_list = util_malloc(sizeof * subst_list , __func__);
+  subst_list_type * subst_list = util_malloc(sizeof * subst_list );
   UTIL_TYPE_ID_INIT( subst_list , SUBST_LIST_TYPE_ID);
   subst_list->parent           = NULL;
   subst_list->func_pool        = NULL;

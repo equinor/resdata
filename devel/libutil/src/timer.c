@@ -42,7 +42,7 @@ struct timer_struct {
 
 timer_type * timer_alloc(bool epoch_time) {
   timer_type *timer;
-  timer       = util_malloc(sizeof * timer , __func__);
+  timer       = util_malloc(sizeof * timer );
   
   timer->epoch_time = epoch_time;
   timer_reset(timer);

@@ -27,7 +27,7 @@ typedef struct {
 
 
 action_node_type * action_node_alloc_new() {
-  action_node_type * node = util_malloc( sizeof * node , __func__);
+  action_node_type * node = util_malloc( sizeof * node );
   node->filename = NULL;
   return node;
 }
@@ -65,8 +65,8 @@ void apply_check( block_fs_type * fs , const char * file_path ) {
     int size = user_file_node_get_data_size( node );
     if (size > current_size) {
       current_size = size;
-      buffer1 = util_realloc( buffer1 , current_size , __func__);
-      buffer2 = util_realloc( buffer2 , current_size , __func__);
+      buffer1 = util_realloc( buffer1 , current_size );
+      buffer2 = util_realloc( buffer2 , current_size );
     }
     block_fs_fread_file( fs , user_file_node_get_filename( node ) , buffer1 );
     {
@@ -108,7 +108,7 @@ void apply_write_file( const action_node_type * node , block_fs_type * fs , cons
     length = min + (rand() % (max - min + 1));
   }
   {
-    char * buffer = util_malloc( length * sizeof * buffer , __func__);
+    char * buffer = util_malloc( length * sizeof * buffer );
     int i;
     for (i=0; i < length; i++)
       buffer[i] = rand() % 256;
@@ -171,7 +171,7 @@ int main(int argc, char ** argv) {
 
   block_fs_type * block_fs = block_fs_mount( test_mnt , fs_block_size , cache_size , frag_limit , fsync_interval , preload , false );
   
-  action_node_type ** action_list = util_malloc( block_size * sizeof * action_list , __func__);
+  action_node_type ** action_list = util_malloc( block_size * sizeof * action_list );
   {
     int i;
     for (i=0; i < block_size; i++) {

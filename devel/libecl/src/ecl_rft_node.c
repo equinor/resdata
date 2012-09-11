@@ -150,20 +150,20 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(int size , const char * data
   }
 
   {
-    ecl_rft_node_type * rft_node = util_malloc(sizeof * rft_node , __func__);
+    ecl_rft_node_type * rft_node = util_malloc(sizeof * rft_node );
     rft_node->plt_data     = NULL;
     rft_node->rft_data     = NULL;
     rft_node->segment_data = NULL;
     
     UTIL_TYPE_ID_INIT( rft_node , ECL_RFT_NODE_ID );
     
-    rft_node->cells = util_calloc( size , sizeof * rft_node->cells , __func__);
+    rft_node->cells = util_calloc( size , sizeof * rft_node->cells );
     if (data_type == RFT)
-      rft_node->rft_data = util_calloc( size , sizeof * rft_node->rft_data , __func__);
+      rft_node->rft_data = util_calloc( size , sizeof * rft_node->rft_data );
     else if (data_type == PLT)
-      rft_node->plt_data = util_calloc( size , sizeof * rft_node->plt_data , __func__);
+      rft_node->plt_data = util_calloc( size , sizeof * rft_node->plt_data);
     else if (data_type == SEGMENT)
-      rft_node->segment_data = util_calloc( size , sizeof * rft_node->segment_data , __func__);
+      rft_node->segment_data = util_calloc( size , sizeof * rft_node->segment_data );
     
     rft_node->__vertical_well = false;
     rft_node->size = size;
@@ -229,7 +229,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft) {
       const float * SW = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , SWAT_KW , 0));
       const float * SG = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , SGAS_KW , 0)); 
       const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , PRESSURE_KW , 0));
-	  int c;
+          int c;
       for (c = 0; c < rft_node->size; c++) {
         rft_node->rft_data[c].swat     = SW[c];
         rft_node->rft_data[c].sgas     = SG[c];
@@ -241,7 +241,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft) {
       const float * GR = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONGRAT_KW , 0)); 
       const float * OR = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONORAT_KW , 0)); 
       const float * P  = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONPRES_KW , 0));
-	  int c;
+          int c;
       for ( c = 0; c < rft_node->size; c++) {
         rft_node->plt_data[c].orat     = OR[c];
         rft_node->plt_data[c].grat     = GR[c];
@@ -259,7 +259,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft) {
     {
       int i;      
       double first_delta = rft_node->cells[1].depth - rft_node->cells[0].depth;
-	  rft_node->__vertical_well = true;
+          rft_node->__vertical_well = true;
       for (i = 1; i < (rft_node->size - 1); i++) {
         double delta = rft_node->cells[i+1].depth - rft_node->cells[i].depth;
         if (fabs(delta) > 0) {
@@ -327,7 +327,7 @@ void ecl_rft_node_summarize(const ecl_rft_node_type * rft_node , bool print_cell
 void ecl_rft_node_block(const ecl_rft_node_type * rft_node , double epsilon , int size , const double * tvd , int * i, int * j , int *k) {
   int rft_index , tvd_index;
   int last_rft_index   = 0;
-  bool  * blocked      = util_calloc(rft_node->size , sizeof * blocked, __func__);
+  bool  * blocked      = util_calloc(rft_node->size , sizeof * blocked);
 
   if (!rft_node->__vertical_well) {
     fprintf(stderr,"**************************************************************************\n");
@@ -386,7 +386,7 @@ void ecl_rft_node_block(const ecl_rft_node_type * rft_node , double epsilon , in
   Faen - dette er jeg egentlig *ikke* interessert i ....
 */
 static double * ecl_rft_node_alloc_well_md(const ecl_rft_node_type * rft_node , int fixed_index , double md_offset) {
-  double * md = util_calloc(rft_node->size , sizeof * md , __func__);
+  double * md = util_calloc(rft_node->size , sizeof * md );
   
   
     
@@ -464,12 +464,12 @@ void ecl_rft_node_block2(const ecl_rft_node_type * rft_node , int tvd_size , con
 void ecl_rft_node_fprintf_rft_obs(const ecl_rft_node_type * rft_node , double epsilon , const char * tvd_file , const char * target_file , double p_std) {
   FILE * input_stream  = util_fopen(tvd_file    , "r" );
   int size             = util_count_file_lines(input_stream);
-  double *p            = util_calloc(size , sizeof * p,   __func__);
-  double *tvd          = util_calloc(size , sizeof * tvd, __func__);
-  double *md           = util_calloc(size , sizeof * md,  __func__);
-  int    *i            = util_calloc(size , sizeof * i,   __func__);
-  int    *j            = util_calloc(size , sizeof * j,   __func__);
-  int    *k            = util_calloc(size , sizeof * k,   __func__);
+  double *p            = util_calloc(size , sizeof * p   );
+  double *tvd          = util_calloc(size , sizeof * tvd );
+  double *md           = util_calloc(size , sizeof * md  );
+  int    *i            = util_calloc(size , sizeof * i);
+  int    *j            = util_calloc(size , sizeof * j);
+  int    *k            = util_calloc(size , sizeof * k);
 
   {
     double *arg1 , *arg2;

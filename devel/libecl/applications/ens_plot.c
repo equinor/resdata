@@ -562,7 +562,7 @@ void ens_add_rft( ens_type * ens, ecl_rft_file_type * rft ) {
 
 
 ens_type * ens_alloc() {
-  ens_type * ens   = util_malloc( sizeof * ens, __func__);
+  ens_type * ens   = util_malloc( sizeof * ens );
   ens->data        = vector_alloc_new();
   pthread_mutex_init( &ens->data_mutex , NULL );
   /* Quantyile related stuff. */
@@ -842,7 +842,7 @@ void plot_info_free( plot_info_type * plot_info) {
 
 
 plot_info_type * plot_info_alloc(const char * plot_path , const char * device , const char * viewer) {
-  plot_info_type * info = util_malloc( sizeof * info , __func__);
+  plot_info_type * info = util_malloc( sizeof * info );
   info->plot_path   = NULL;
   info->plot_device = NULL;
   info->viewer      = NULL;

@@ -63,7 +63,7 @@ typedef enum {left_pad   = 0,
               right_pad  = 1,
               center_pad = 2} string_alignement_type;
 
-  //#define UTIL_CXX_MALLOC(var , num_elm) (typeof (var)) util_malloc( (num_elm) * sizeof var, __func__)
+  //#define UTIL_CXX_MALLOC(var , num_elm) (typeof (var)) util_malloc( (num_elm) * sizeof var)
 
   void         util_bitmask_on(int *  , int );
   time_t       util_make_datetime(int , int , int , int , int , int );
@@ -225,11 +225,11 @@ typedef enum {left_pad   = 0,
   void    util_abort_append_version_info(const char * );
   void    util_abort_free_version_info();
   void    util_abort_set_executable( const char * executable );
-  void *  util_realloc(void *  , size_t  , const char * );
-  void *  util_malloc(size_t , const char * );
-  void *  util_calloc( size_t elements , size_t element_size , const char * caller);
-  void *  util_realloc_copy(void * org_ptr , const void * src , size_t byte_size , const char * caller);
-  void *  util_alloc_copy(const void * , size_t , const char * );
+  void *  util_realloc(void *  , size_t  );
+  void *  util_malloc(size_t );
+  void *  util_calloc( size_t elements , size_t element_size );
+  void *  util_realloc_copy(void * org_ptr , const void * src , size_t byte_size );
+  void *  util_alloc_copy(const void * , size_t );
   void    util_double_to_float(float  * , const double * , int );
   void    util_float_to_double(double * , const float  * , int );
   

@@ -147,7 +147,7 @@ struct thread_pool_struct {
 static void thread_pool_resize_queue( thread_pool_type * pool, int queue_length ) {
   pthread_rwlock_wrlock( &pool->queue_lock );
   {
-    pool->queue            = util_realloc( pool->queue , queue_length * sizeof * pool->queue , __func__);
+    pool->queue            = util_realloc( pool->queue , queue_length * sizeof * pool->queue );
     pool->queue_alloc_size = queue_length;
   }
   pthread_rwlock_unlock( &pool->queue_lock );
@@ -237,7 +237,7 @@ static void * thread_pool_main_loop( void * arg ) {
                take a copy of the node we are interested in.
             */
             pthread_rwlock_rdlock( &tp->queue_lock );
-            tp_arg = util_alloc_copy( &tp->queue[ tp->queue_index ] , sizeof * tp_arg , __func__);
+            tp_arg = util_alloc_copy( &tp->queue[ tp->queue_index ] , sizeof * tp_arg );
             pthread_rwlock_unlock( &tp->queue_lock );            
 
             tp_arg->slot_index = slot_index;
@@ -353,8 +353,8 @@ void thread_pool_join(thread_pool_type * pool) {
 */
 
 thread_pool_type * thread_pool_alloc(int max_running , bool start_queue) {
-  thread_pool_type * pool = util_malloc(sizeof *pool , __func__);
-  pool->job_slots       = util_malloc( max_running * sizeof * pool->job_slots      , __func__);
+  thread_pool_type * pool = util_malloc( sizeof *pool );
+  pool->job_slots       = util_calloc( max_running , sizeof * pool->job_slots );
   pool->max_running     = max_running;
   pool->queue           = NULL;
   pool->accepting_jobs  = false;

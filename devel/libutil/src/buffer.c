@@ -33,13 +33,13 @@
 
    I.e. instead of
 
-     int * p = util_malloc( sizeof * p * 10 , __func__);
+     int * p = util_malloc( sizeof * p * 10 );
      fread( p , sizeof * p , 10 , stream);
 
    To read ten integers from a FILE * instance we should be able to
    call
 
-     int * p = util_malloc( sizeof * p * 10 , __func__);
+     int * p = util_malloc( sizeof * p * 10 );
      buffer_fread( buffer , p , sizeof * p , 10);
 
 */
@@ -79,7 +79,7 @@ struct buffer_struct {
 
 static void buffer_resize__(buffer_type * buffer , size_t new_size, bool abort_on_error) {
   if (abort_on_error) {
-    buffer->data       = util_realloc(buffer->data , new_size , __func__);
+    buffer->data       = util_realloc(buffer->data , new_size );
     buffer->alloc_size = new_size;
   } else {
     void * tmp   = realloc(buffer->data , new_size);
@@ -94,7 +94,7 @@ static void buffer_resize__(buffer_type * buffer , size_t new_size, bool abort_o
 
 
 static buffer_type * buffer_alloc_empty( ) {
-  buffer_type * buffer = util_malloc( sizeof * buffer , __func__);
+  buffer_type * buffer = util_malloc( sizeof * buffer );
   buffer->__id = BUFFER_TYPE_ID;
   buffer->data = NULL;
 
@@ -540,7 +540,7 @@ void * buffer_get_data(const buffer_type * buffer) {
    buffer content.
 */
 void * buffer_alloc_data_copy(const buffer_type * buffer) { 
-  return util_alloc_copy(buffer->data , buffer->content_size , __func__);
+  return util_alloc_copy(buffer->data , buffer->content_size );
 }
 
 

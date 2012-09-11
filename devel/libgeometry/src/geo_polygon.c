@@ -37,7 +37,7 @@ struct geo_polygon_struct {
 static UTIL_SAFE_CAST_FUNCTION( geo_polygon , GEO_POLYGON_TYPE_ID );
 
 geo_polygon_type * geo_polygon_alloc() {
-  geo_polygon_type * polygon = util_malloc( sizeof * polygon , __func__);
+  geo_polygon_type * polygon = util_malloc( sizeof * polygon );
   
   UTIL_TYPE_ID_INIT( polygon , GEO_POLYGON_TYPE_ID );
   polygon->xcoord = double_vector_alloc( 0 , 0 );

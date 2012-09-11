@@ -153,7 +153,7 @@ static void matrix_realloc_data__( matrix_type * matrix , bool safe_mode ) {
       */
       matrix->data = malloc( sizeof * matrix->data * data_size );
     } else
-      matrix->data = util_malloc( sizeof * matrix->data * data_size , __func__);
+      matrix->data = util_malloc( sizeof * matrix->data * data_size );
     
 
     /* Initializing matrix content to zero. */
@@ -180,7 +180,7 @@ UTIL_SAFE_CAST_FUNCTION( matrix , MATRIX_TYPE_ID )
    The matrix objecty is NOT ready for use after this function. 
 */
 static matrix_type * matrix_alloc_empty( ) {
-  matrix_type * matrix  = util_malloc( sizeof * matrix, __func__);
+  matrix_type * matrix  = util_malloc( sizeof * matrix );
   UTIL_TYPE_ID_INIT( matrix , MATRIX_TYPE_ID );
   matrix->name = NULL;
   return matrix;
@@ -920,7 +920,7 @@ matrix_type * matrix_alloc_transpose( const matrix_type * A) {
 
 void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
   if ((A->columns == B->rows) && (B->rows == B->columns)) {
-    double * tmp = util_malloc( sizeof * A->data * A->columns , __func__);
+    double * tmp = util_malloc( sizeof * A->data * A->columns );
     int i,j,k;
     
     for (i=0; i < A->rows; i++) {
@@ -983,7 +983,7 @@ static void * matrix_inplace_matmul_mt__(void * arg) {
 
 void matrix_inplace_matmul_mt2(matrix_type * A, const matrix_type * B , thread_pool_type * thread_pool){
   int num_threads  = thread_pool_get_max_running( thread_pool );
-  arg_pack_type    ** arglist = util_malloc( num_threads * sizeof * arglist , __func__);
+  arg_pack_type    ** arglist = util_malloc( num_threads * sizeof * arglist );
   int it;
   thread_pool_restart( thread_pool );
   {

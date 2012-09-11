@@ -46,7 +46,7 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
   {
     char ** argv;
     
-    argv    = util_calloc(3 , sizeof * argv , __func__);
+    argv    = util_calloc(3 , sizeof * argv );
     argv[0] = util_alloc_string_copy("--functions");
     argv[1] = util_alloc_sprintf("--exe=%s" , executable);
     argv[2] = util_alloc_string_copy(adress);
@@ -177,8 +177,8 @@ void util_abort(const char * fmt , ...) {
       if (executable != NULL) {
         fprintf(stderr,"Current executable : %s \n",executable);
         
-        func_list      = util_calloc(size , sizeof * func_list      , __func__);
-        file_line_list = util_calloc(size , sizeof * file_line_list , __func__);
+        func_list      = util_calloc(size , sizeof * func_list      );
+        file_line_list = util_calloc(size , sizeof * file_line_list );
         
         for (i=0; i < size; i++) {
           util_addr2line_lookup(executable , strings[i] , &func_list[i] , &file_line_list[i]);

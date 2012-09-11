@@ -80,7 +80,7 @@ struct fortio_struct {
 
 
 static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool endian_flip_header) {
-  fortio_type * fortio       = (fortio_type *) util_malloc(sizeof * fortio , __func__);
+  fortio_type * fortio       = (fortio_type *) util_malloc(sizeof * fortio );
   fortio->filename           = util_alloc_string_copy(filename);
   fortio->endian_flip_header = endian_flip_header;
   fortio->active_header      = 0;
@@ -399,7 +399,7 @@ void fortio_complete_read(fortio_type *fortio) {
 int fortio_fread_record(fortio_type *fortio, char *buffer) {
   fortio_init_read(fortio);
   {
-	  int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
+          int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
       util_fread(buffer , 1 , fortio->active_header , fortio->stream , __func__);
       fortio_complete_read(fortio);
       return record_size;
@@ -507,7 +507,7 @@ void fortio_fwrite_record(fortio_type *fortio, const char *buffer , int record_s
 void * fortio_fread_alloc_record(fortio_type * fortio) {
   void * buffer;
   fortio_init_read(fortio);
-  buffer = util_malloc(fortio->active_header , __func__);
+  buffer = util_malloc(fortio->active_header );
   util_fread(buffer , 1 , fortio->active_header , fortio->stream , __func__);
   fortio_complete_read(fortio);
   return buffer;

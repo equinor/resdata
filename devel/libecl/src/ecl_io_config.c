@@ -40,12 +40,12 @@
 
 
 typedef enum {  UNIFIED        = 0,
-	        MULTIPLE       = 1, 
-	        UNIF_UNDEFINED = 2 } unified_type;
+                MULTIPLE       = 1, 
+                UNIF_UNDEFINED = 2 } unified_type;
 
 typedef enum {  FORMATTED     = 0,
-	        UNFORMATTED   = 1,
-	        FMT_UNDEFINED = 2 } formatted_type;
+                UNFORMATTED   = 1,
+                FMT_UNDEFINED = 2 } formatted_type;
 
 
 struct ecl_io_config_struct {
@@ -58,7 +58,7 @@ struct ecl_io_config_struct {
 /*****************************************************************/
 
 static ecl_io_config_type * ecl_io_config_alloc__() {
-  ecl_io_config_type * ecl_io_config = util_malloc(sizeof * ecl_io_config , __func__);
+  ecl_io_config_type * ecl_io_config = util_malloc(sizeof * ecl_io_config );
 
   ecl_io_config->formatted       = FMT_UNDEFINED;
   ecl_io_config->unified_restart = UNIF_UNDEFINED;

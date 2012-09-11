@@ -70,7 +70,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
                        int state_size , 
                        uint64_t max_value) {
 
-  rng_type * rng = (rng_type *) util_malloc( sizeof * rng , __func__ );
+  rng_type * rng = (rng_type *) util_malloc( sizeof * rng );
   UTIL_TYPE_ID_INIT( rng , RNG_TYPE_ID );
   rng->alloc_state   = alloc_state;
   rng->free_state    = free_state; 
@@ -102,7 +102,7 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
 
 
 void rng_init( rng_type * rng , rng_init_mode init_mode ) {
-  char * seed_buffer = (char *) util_calloc( rng->state_size , sizeof * seed_buffer , __func__ );
+  char * seed_buffer = (char *) util_calloc( rng->state_size , sizeof * seed_buffer );
   
   switch (init_mode) {
   case(INIT_CLOCK):
@@ -136,12 +136,12 @@ void rng_rng_init( rng_type * rng , rng_type * seed_src) {
     if (int_size * 4 < byte_size)
       int_size += 1;
 
-    seed_buffer = (unsigned int *) util_calloc( int_size , sizeof * seed_buffer , __func__ );
-        {
-                int i;
-                for (i =0; i < int_size; i++) 
-                        seed_buffer[i] = rng_forward( seed_src );
-        }    
+    seed_buffer = (unsigned int *) util_calloc( int_size , sizeof * seed_buffer );
+    {
+      int i;
+      for (i =0; i < int_size; i++) 
+        seed_buffer[i] = rng_forward( seed_src );
+    }    
     rng->set_state( rng->state , (char *) seed_buffer );
     
     free( seed_buffer );
@@ -213,7 +213,7 @@ rng_alg_type  rng_get_type( const rng_type * rng ) {
 /*****************************************************************/
 
 void rng_shuffle( rng_type * rng , char * data , size_t element_size , size_t num_elements) {
-  void * tmp = util_malloc( element_size , __func__);
+  void * tmp = util_malloc( element_size );
   int index1;
   for ( index1=0; index1 < num_elements; index1++) {
     int index2 = rng_get_int( rng , num_elements );

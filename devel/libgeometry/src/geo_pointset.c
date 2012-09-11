@@ -41,17 +41,17 @@ struct geo_pointset_struct {
 
 
 static void geo_pointset_resize( geo_pointset_type * pointset, int new_alloc_size) {
-  pointset->xcoord = util_realloc( pointset->xcoord , new_alloc_size * sizeof * pointset->xcoord , __func__);
-  pointset->ycoord = util_realloc( pointset->ycoord , new_alloc_size * sizeof * pointset->ycoord , __func__);
+  pointset->xcoord = util_realloc( pointset->xcoord , new_alloc_size * sizeof * pointset->xcoord  );
+  pointset->ycoord = util_realloc( pointset->ycoord , new_alloc_size * sizeof * pointset->ycoord  );
   if (pointset->internal_z)  
-    pointset->zcoord = util_realloc( pointset->zcoord , new_alloc_size * sizeof * pointset->zcoord , __func__);
+    pointset->zcoord = util_realloc( pointset->zcoord , new_alloc_size * sizeof * pointset->zcoord);
   
   pointset->alloc_size = new_alloc_size;
 }
 
 
 geo_pointset_type *  geo_pointset_alloc( bool internal_z) {
-  geo_pointset_type * pointset = util_malloc( sizeof * pointset , __func__);
+  geo_pointset_type * pointset = util_malloc( sizeof * pointset );
   pointset->xcoord = NULL;
   pointset->ycoord = NULL;
   pointset->zcoord = NULL;

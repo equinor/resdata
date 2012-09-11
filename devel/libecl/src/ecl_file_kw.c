@@ -68,7 +68,7 @@ struct ecl_file_kw_struct {
 /*****************************************************************/
 
 inv_map_type * inv_map_alloc() {
-  inv_map_type * map = util_malloc( sizeof * map , __func__);
+  inv_map_type * map = util_malloc( sizeof * map );
   map->file_kw_ptr = size_t_vector_alloc( 0 , 0 );
   map->ecl_kw_ptr  = size_t_vector_alloc( 0 , 0 );
   map->sorted = false;
@@ -136,7 +136,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_file_kw , ECL_FILE_KW_TYPE_ID )
 
 
 static ecl_file_kw_type * ecl_file_kw_alloc__( const char * header , ecl_type_enum ecl_type , int size , long offset) {
-  ecl_file_kw_type * file_kw = util_malloc( sizeof * file_kw , __func__);
+  ecl_file_kw_type * file_kw = util_malloc( sizeof * file_kw );
   UTIL_TYPE_ID_INIT( file_kw , ECL_FILE_KW_TYPE_ID );
   
   file_kw->header = util_alloc_string_copy( header );

@@ -98,7 +98,7 @@ void latex_set_target_file( latex_type * latex , const char * target_file ) {
 latex_type * latex_alloc( const char * input_file , bool in_place ) {
   char * input_path;
   char * input_extension;
-  latex_type * latex = util_malloc( sizeof * latex , __func__ );
+  latex_type * latex = util_malloc( sizeof * latex );
   
   latex->in_place = in_place;
   util_alloc_file_components( input_file , &input_path , &latex->basename , &input_extension );
@@ -213,7 +213,7 @@ static bool latex_compile__( latex_type * latex , bool ignore_errors) {
   int     usleep_time = 500000;  /* 1/2 second. */
     
   argc = 2;
-  argv = util_malloc( argc * sizeof * argv , __func__);
+  argv = util_malloc( argc * sizeof * argv );
   if (ignore_errors)
     argv[0] = "-interaction=nonstopmode";
   else

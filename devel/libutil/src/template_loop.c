@@ -60,7 +60,7 @@ static void regcompile(regex_t * reg , const char * reg_string , int flags) {
 
 
 static loop_type * loop_alloc( const char * buffer , int global_offset , regmatch_t tag_offset , regmatch_t __var_offset , regmatch_t __items_offset) {
-  loop_type * loop  = util_malloc( sizeof * loop , __func__);
+  loop_type * loop  = util_malloc( sizeof * loop);
 
   loop->opentag_offset  = global_offset + tag_offset.rm_so;
   loop->opentag_length  = tag_offset.rm_eo - tag_offset.rm_so;

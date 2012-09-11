@@ -264,7 +264,7 @@ static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
 
 
 ecl_sum_data_type * ecl_sum_data_alloc(ecl_smspec_type * smspec) {
-  ecl_sum_data_type * data = util_malloc( sizeof * data , __func__);
+  ecl_sum_data_type * data = util_malloc( sizeof * data );
   data->data        = vector_alloc_new();
   data->smspec      = smspec;
   data->__min_time  = 0;

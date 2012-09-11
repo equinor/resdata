@@ -524,7 +524,7 @@ void * hash_pop( hash_type * hash , const char * key) {
 
 static hash_type * __hash_alloc(int size, double resize_fill , hashf_type *hashf) {
   hash_type* hash;
-  hash = util_malloc(sizeof *hash , __func__);
+  hash = util_malloc(sizeof *hash );
   UTIL_TYPE_ID_INIT(hash , HASH_TYPE_ID);
   hash->size      = size;
   hash->hashf     = hashf;
@@ -861,7 +861,7 @@ void hash_iter_restart( hash_iter_type * iter ) {
 
 
 hash_iter_type * hash_iter_alloc(const hash_type * hash) {
-  hash_iter_type * iter = util_malloc(sizeof * iter, __func__); 
+  hash_iter_type * iter = util_malloc(sizeof * iter ); 
 
   iter->hash            = hash;
   iter->num_keys        = hash_get_size(hash);

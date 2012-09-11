@@ -47,7 +47,7 @@ struct ecl_rst_file_struct {
 static ecl_rst_file_type * ecl_rst_file_alloc( const char * filename ) {
   bool fmt_file = ecl_util_fmt_file( filename );
   bool unified  = ecl_util_unified_file( filename );
-  ecl_rst_file_type * rst_file = util_malloc( sizeof * rst_file , __func__ );
+  ecl_rst_file_type * rst_file = util_malloc( sizeof * rst_file );
 
   rst_file->unified = unified;
   rst_file->fmt_file = fmt_file;

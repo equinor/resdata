@@ -198,7 +198,7 @@ static inline void block_fs_fseek(block_fs_type * block_fs , long offset) {
 
 
 static file_node_type * file_node_alloc( node_status_type status , long int offset , int node_size) {
-  file_node_type * file_node = util_malloc( sizeof * file_node , __func__);
+  file_node_type * file_node = util_malloc( sizeof * file_node );
   
   file_node->node_offset = offset;    /* These should NEVER change. */
   file_node->node_size   = node_size; /* -------------------------  */
@@ -246,7 +246,7 @@ static void file_node_buffer_read_from_cache( const file_node_type * file_node ,
 
 static void file_node_update_cache( file_node_type * file_node , int data_size , const void * data) {
   if (data_size != file_node->cache_size) {
-    file_node->cache = util_realloc_copy( file_node->cache , data , data_size , __func__);
+    file_node->cache = util_realloc_copy( file_node->cache , data , data_size );
     file_node->cache_size = data_size;
   } else 
     memcpy( file_node->cache , data , data_size);
@@ -455,7 +455,7 @@ static file_node_type * file_node_index_buffer_fread_alloc( buffer_type * buffer
 /*****************************************************************/
 
 static free_node_type * free_node_alloc( file_node_type * file_node ) {
-  free_node_type * free_node = util_malloc( sizeof * free_node , __func__ );
+  free_node_type * free_node = util_malloc( sizeof * free_node );
 
   free_node->file_node = file_node;
   free_node->next = NULL;
@@ -641,7 +641,7 @@ static void block_fs_reinit( block_fs_type * block_fs ) {
 
 
 static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block_size , int max_cache_size, float fragmentation_limit, int fsync_interval , bool read_only) {
-  block_fs_type * block_fs      = util_malloc( sizeof * block_fs , __func__);
+  block_fs_type * block_fs      = util_malloc( sizeof * block_fs );
   UTIL_TYPE_ID_INIT(block_fs , BLOCK_FS_TYPE_ID);
   
   block_fs->mount_file           = util_alloc_string_copy( mount_file );
@@ -827,7 +827,7 @@ static void block_fs_update_cache_node( block_fs_type * block_fs, file_node_type
 
 static void block_fs_preload( block_fs_type * block_fs ) {
   if ((block_fs->max_cache_size > 0) && (block_fs->data_stream != NULL) && (block_fs->max_total_cache_size > 0)) {
-    void * buffer = util_malloc( block_fs->max_cache_size , __func__);
+    void * buffer = util_malloc( block_fs->max_cache_size );
     hash_iter_type * index_iter = hash_iter_alloc( block_fs->index );
     
     while (!hash_iter_is_complete( index_iter )) {
@@ -1646,7 +1646,7 @@ struct user_file_node_struct {
 
 
 static user_file_node_type * user_file_node_alloc( const char * name , const file_node_type * file_node) {
-  user_file_node_type * user_node = util_malloc( sizeof * user_node , __func__ );
+  user_file_node_type * user_node = util_malloc( sizeof * user_node );
 
   user_node->filename = util_alloc_string_copy( name );   /* name can be NULL */
   user_node->file_node = file_node;

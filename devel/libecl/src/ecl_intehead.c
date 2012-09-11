@@ -35,7 +35,7 @@ time_t ecl_intehead_date( const ecl_kw_type * intehead_kw ) {
 
 
 ecl_intehead_type * ecl_intehead_alloc( const ecl_kw_type * intehead_kw ) {
-  ecl_intehead_type * intehead = util_malloc( sizeof * intehead , __func__ );
+  ecl_intehead_type * intehead = util_malloc( sizeof * intehead );
   const int * data = (const int *) ecl_kw_get_void_ptr( intehead_kw );
 
   intehead->day       = data[INTEHEAD_DAY_INDEX];

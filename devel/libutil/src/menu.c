@@ -135,7 +135,7 @@ static bool __string_contains(const char * string , const char * char_set) {
 
 
 menu_type * menu_alloc(const char * title , const char * quit_label , const char * quit_keys) {
-  menu_type * menu = util_malloc(sizeof * menu , __func__);
+  menu_type * menu = util_malloc(sizeof * menu );
   
   menu->title     = util_alloc_string_copy( title );
   menu->quit_keys = util_alloc_string_copy( quit_keys );
@@ -147,7 +147,7 @@ menu_type * menu_alloc(const char * title , const char * quit_label , const char
 }
 
 static menu_item_type * menu_item_alloc_empty() {
-  menu_item_type * item = util_malloc(sizeof * item , __func__);
+  menu_item_type * item = util_malloc(sizeof * item );
 
   item->label   = NULL; 
   item->key_set = NULL; 

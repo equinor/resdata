@@ -52,7 +52,7 @@ void thread_pool_join(thread_pool_type * pool) {
 
 
 thread_pool_type * thread_pool_alloc(int pool_size) {
-  thread_pool_type * pool = util_malloc(sizeof *pool , __func__);
+  thread_pool_type * pool = util_malloc(sizeof *pool);
   pool->thread_list = NULL;
   thread_pool_resize(pool , pool_size);
   pool->jobs_running = 0;

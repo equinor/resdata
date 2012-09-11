@@ -230,7 +230,7 @@ struct set_iter_struct
 
 set_iter_type * set_iter_alloc(const set_type * set)
 {
-  set_iter_type * set_iter = util_malloc(sizeof * set_iter, __func__);
+  set_iter_type * set_iter = util_malloc(sizeof * set_iter);
   set_iter->hash_iter = hash_iter_alloc(set->key_hash);
   return set_iter;
 }

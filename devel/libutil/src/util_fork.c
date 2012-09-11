@@ -95,7 +95,7 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
     if (stdin_file  != NULL) __util_redirect(0 , stdin_file  , O_RDONLY);
 
     
-    __argv        = util_malloc((argc + 2) * sizeof * __argv , __func__);  
+    __argv        = util_malloc((argc + 2) * sizeof * __argv );  
     __argv[0]     = executable;
     for (iarg = 0; iarg < argc; iarg++)
       __argv[iarg+1] = argv[iarg];
@@ -152,7 +152,7 @@ uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
   const char * lsof_executable = "/usr/sbin/lsof";
   int     buffer_size = 8;
   int     num_users   = 0;
-  uid_t * users       = util_malloc( sizeof * users * buffer_size , __func__);
+  uid_t * users       = util_malloc( sizeof * users * buffer_size );
   char * tmp_file     = util_alloc_tmp_file("/tmp" , "lsof" , false);
   util_fork_exec(lsof_executable , 2 , (const char *[2]) {"-F" , filename }, true , NULL , NULL , NULL , tmp_file , NULL);
   {
@@ -163,7 +163,7 @@ uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
       if (fscanf( stream , "%c%d %c%d" , &dummy_char , &pid , &dummy_char , &uid) == 4) {
         if (buffer_size == num_users) {
           buffer_size *= 2;
-          users        = util_realloc( users , sizeof * users * buffer_size , __func__);
+          users        = util_realloc( users , sizeof * users * buffer_size );
         }
         users[ num_users ] = uid;
         num_users++;
@@ -174,7 +174,7 @@ uid_t * util_alloc_file_users( const char * filename , int * __num_users) {
     remove( tmp_file );
   }
   free( tmp_file );
-  users = util_realloc( users , sizeof * users * num_users , __func__);
+  users = util_realloc( users , sizeof * users * num_users );
   *__num_users = num_users;
   return users;
 }

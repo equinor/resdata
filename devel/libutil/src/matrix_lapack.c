@@ -87,7 +87,7 @@ void matrix_dgesv(matrix_type * A , matrix_type * B) {
     int lda  = matrix_get_column_stride( A );
     int ldb  = matrix_get_column_stride( B );
     int nrhs = matrix_get_columns( B );
-    long int * ipivot = util_calloc( n , sizeof * ipivot , __func__ );
+    long int * ipivot = util_calloc( n , sizeof * ipivot );
     int info;
     
     dgesv_(&n , &nrhs , matrix_get_data( A ) , &lda , ipivot , matrix_get_data( B ), &ldb , &info);
@@ -183,7 +183,7 @@ void matrix_dgesvd(dgesvd_vector_enum jobu , dgesvd_vector_enum jobvt ,  matrix_
      Query the routine for optimal worksize. 
   */
   
-  work     = util_calloc( 1 , sizeof * work , __func__);
+  work     = util_calloc( 1 , sizeof * work );
   worksize = -1;
   dgesvd_(&_jobu               , /* 1  */
           &_jobvt              , /* 2  */
@@ -207,7 +207,7 @@ void matrix_dgesvd(dgesvd_vector_enum jobu , dgesvd_vector_enum jobvt ,  matrix_
   if (work == NULL) {
     /* Could not allocate optimal worksize - settle for the minimum. This can not fail. */
     worksize = min_worksize;
-    work = util_calloc( worksize , sizeof * work , __func__);
+    work = util_calloc( worksize , sizeof * work );
   }
 
   dgesvd_(&_jobu , &_jobvt , &m , &n , matrix_get_data( A ) , &lda , S , U_data , &ldu , VT_data , &ldvt , work , &worksize , &info);
@@ -270,9 +270,9 @@ int  matrix_dsyevx(bool             compute_eig_vectors ,
   
   {
     int      num_eigenvalues , ldz, info , worksize;
-    int    * ifail = util_calloc( n     , sizeof * ifail , __func__);
-    int    * iwork = util_calloc( 5 * n , sizeof * iwork , __func__);
-    double * work  = util_calloc( 1     , sizeof * work , __func__);
+    int    * ifail = util_calloc( n     , sizeof * ifail );
+    int    * iwork = util_calloc( 5 * n , sizeof * iwork );
+    double * work  = util_calloc( 1     , sizeof * work  );
     double * z_data;
     double   abstol = 0.0; /* SHopuld */
 
@@ -320,7 +320,7 @@ int  matrix_dsyevx(bool             compute_eig_vectors ,
            try again with the minimum.
         */
         worksize = 8 * n;
-        work = util_realloc(work , sizeof * work * worksize , __func__);
+        work = util_realloc(work , sizeof * work * worksize );
       } else
         work = tmp; /* The request for optimal worksize succeeded */
     }
@@ -379,7 +379,7 @@ void matrix_dgeqrf(matrix_type * A , double * tau) {
   int lda       = matrix_get_column_stride( A );
   int m         = matrix_get_rows( A );
   int n         = matrix_get_columns( A );  
-  double * work = util_calloc(1 , sizeof * work , __func__);
+  double * work = util_calloc(1 , sizeof * work );
   int worksize;
   int info;
 
@@ -398,7 +398,7 @@ void matrix_dgeqrf(matrix_type * A , double * tau) {
          try again with the minimum.
       */
       worksize = n;
-      work = util_realloc(work , sizeof * work * worksize , __func__);
+      work = util_realloc(work , sizeof * work * worksize );
     } else
       work = tmp; /* The request for optimal worksize succeeded */
   }
@@ -420,7 +420,7 @@ void matrix_dorgqr(matrix_type * A , double * tau, int num_reflectors) {  /* num
   int lda       = matrix_get_column_stride( A );
   int m         = matrix_get_rows( A );
   int n         = matrix_get_columns( A );  
-  double * work = util_malloc(sizeof * work , __func__);
+  double * work = util_malloc(sizeof * work );
   int worksize;
   int info;
 
@@ -439,7 +439,7 @@ void matrix_dorgqr(matrix_type * A , double * tau, int num_reflectors) {  /* num
          try again with the minimum.
       */
       worksize = n;
-      work = util_realloc(work , sizeof * work * worksize , __func__);
+      work = util_realloc(work , sizeof * work * worksize );
     } else
       work = tmp; /* The request for optimal worksize succeeded */
   }
@@ -480,7 +480,7 @@ double matrix_det( matrix_type *A ) {
     double    det       = 1;
     double    det_scale = 0;
     int       n         = matrix_get_columns( A );
-    int * ipiv          = util_malloc( n * sizeof * ipiv , __func__ );
+    int * ipiv          = util_malloc( n * sizeof * ipiv );
     matrix_dgetrf__( A , ipiv , &dgetrf_info );
     {
       int i;
@@ -534,11 +534,11 @@ int matrix_inv( matrix_type * A ) {
     int       dgetrf_info;
     int       info;
     int       n         = matrix_get_columns( A );
-    int * ipiv          = util_malloc( n * sizeof * ipiv , __func__ );
+    int * ipiv          = util_malloc( n * sizeof * ipiv );
     matrix_dgetrf__( A , ipiv , &dgetrf_info );
     {
       int lda  = matrix_get_column_stride( A );
-      double * work = util_malloc( sizeof * work , __func__ );
+      double * work = util_malloc( sizeof * work );
       int work_size;
 
       /* First call: determine optimal worksize: */
@@ -547,7 +547,7 @@ int matrix_inv( matrix_type * A ) {
 
       if (info == 0) {
         work_size = (int) work[0];
-        work = util_realloc( work , sizeof * work * work_size , __func__);
+        work = util_realloc( work , sizeof * work * work_size );
         dgetri_( &n , matrix_get_data( A ), &lda , ipiv , work , &work_size , &info);
       } else
         util_abort("%s: dgetri_ returned info:%d \n",__func__ , info); 

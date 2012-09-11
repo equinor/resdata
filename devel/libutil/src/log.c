@@ -95,7 +95,7 @@ void log_set_level( log_type * logh , int log_level) {
 
 static log_type *log_alloc_internal(const char *filename , bool new, int log_level) {
   log_type   *logh;
-  logh = util_malloc(sizeof *logh , __func__ );
+  logh = util_malloc(sizeof *logh );
   
   logh->log_level     = log_level;
   logh->filename      = NULL;

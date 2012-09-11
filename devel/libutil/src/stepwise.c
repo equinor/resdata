@@ -176,7 +176,7 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
       
 
     /*True Cross-Validation: */
-    int * randperms     = util_calloc( nsample , sizeof * randperms , __func__);
+    int * randperms     = util_calloc( nsample , sizeof * randperms );
     for (int i=0; i < nsample; i++)
       randperms[i] = i;
     
@@ -358,7 +358,7 @@ double stepwise_eval( const stepwise_type * stepwise , const matrix_type * x ) {
 
 
 static stepwise_type * stepwise_alloc__( int nsample , int nvar , rng_type * rng) {
-  stepwise_type * stepwise = util_malloc( sizeof * stepwise , __func__ );
+  stepwise_type * stepwise = util_malloc( sizeof * stepwise );
   
   stepwise->X_mean      = NULL;
   stepwise->X_norm      = NULL;
@@ -374,7 +374,7 @@ static stepwise_type * stepwise_alloc__( int nsample , int nvar , rng_type * rng
 
 
 stepwise_type * stepwise_alloc0( rng_type * rng) {
-  stepwise_type * stepwise = util_malloc( sizeof * stepwise , __func__ );
+  stepwise_type * stepwise = util_malloc( sizeof * stepwise );
   
   stepwise->rng         = rng;
   stepwise->X0          = NULL;

@@ -147,7 +147,7 @@ void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
 
 
 static ecl_sum_type * ecl_sum_alloc__( const char * input_arg , const char * key_join_string) {
-  ecl_sum_type * ecl_sum = util_malloc( sizeof * ecl_sum , __func__);
+  ecl_sum_type * ecl_sum = util_malloc( sizeof * ecl_sum );
   UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
   
   ecl_sum->ecl_case  = NULL;

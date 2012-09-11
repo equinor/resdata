@@ -180,7 +180,7 @@ static void grav_station_free__( void * arg) {
 
 
 static grav_station_type * grav_station_alloc_new( const char * name , double x , double y , double d) {
-  grav_station_type * s = util_malloc(sizeof * s , __func__);
+  grav_station_type * s = util_malloc(sizeof * s );
   s->name  = util_alloc_string_copy( name );
   s->utm_x = x;
   s->utm_y = y;
@@ -337,7 +337,7 @@ ecl_file_type ** load_restart_info(const char ** input,           /* Input taken
                                    bool        * fmt_file) {      /* Only relevant if (*use_eclbase == true): was formatted file used? */
   
 
-  ecl_file_type ** restart_files = util_calloc( 2 , sizeof * restart_files , __func__);
+  ecl_file_type ** restart_files = util_calloc( 2 , sizeof * restart_files );
   int  report_nr;
   ecl_file_enum file_type;
 
@@ -554,8 +554,8 @@ static double gravity_response(const ecl_grid_type * ecl_grid      ,
     aquifern_kw     = ecl_file_iget_named_kw(init_file, "AQUIFERN", 0);
   {
     int     nactive  = ecl_grid_get_active_size( ecl_grid );
-    float * zero     = util_calloc( nactive , sizeof * zero     , __func__);    /* Fake vector of zeros used for densities / sturations when you do not have data. */
-    int   * int_zero = util_calloc( nactive , sizeof * int_zero , __func__);    /* Fake vector of zeros used for AQUIFER when the init file does not supply data. */
+    float * zero     = util_calloc( nactive , sizeof * zero     );    /* Fake vector of zeros used for densities / sturations when you do not have data. */
+    int   * int_zero = util_calloc( nactive , sizeof * int_zero );    /* Fake vector of zeros used for AQUIFER when the init file does not supply data. */
     /* 
        Observe that the fake vectors are only a coding simplification,
        they should not be really used.
@@ -962,7 +962,7 @@ int main(int argc , char ** argv) {
       int i;
       int num_threads = 4;
       thread_pool_type * tp = thread_pool_alloc( num_threads , true);
-      arg_pack_type ** arg_list = util_malloc( sizeof * arg_list * num_threads , __func__);
+      arg_pack_type ** arg_list = util_calloc( num_threads , sizeof * arg_list);
       {
         int station_delta = vector_get_size( grav_stations ) / num_threads;
         for (i = 0; i < num_threads; i++) {

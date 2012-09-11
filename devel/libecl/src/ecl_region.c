@@ -133,12 +133,12 @@ void ecl_region_unlock( ecl_region_type * region ){
 
 
 ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool preselect) {
-  ecl_region_type * region = util_malloc( sizeof * region , __func__);
+  ecl_region_type * region = util_malloc( sizeof * region );
   UTIL_TYPE_ID_INIT( region , ECL_REGION_TYPE_ID);
   region->parent_grid = ecl_grid;
   ecl_grid_get_dims( ecl_grid , &region->grid_nx , &region->grid_ny , &region->grid_nz , &region->grid_active);
   region->grid_vol          = region->grid_nx * region->grid_ny * region->grid_nz;
-  region->active_mask       = util_calloc(region->grid_vol , sizeof * region->active_mask , __func__);
+  region->active_mask       = util_calloc(region->grid_vol , sizeof * region->active_mask );
   region->active_index_list  = int_vector_alloc(0 , 0);
   region->global_index_list  = int_vector_alloc(0 , 0);
   region->global_active_list = int_vector_alloc(0 , 0);
@@ -957,7 +957,7 @@ static void ecl_region_cylinder_select__( ecl_region_type * region , double x0 ,
         double x,y,z;
         ecl_grid_get_xyz3( region->parent_grid , i,j,0 , &x , &y , &z);
         {
-			double pointR2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
+                        double pointR2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
         bool select_column = false;
 
         if ((pointR2 < R2) && (select_inside))
@@ -972,7 +972,7 @@ static void ecl_region_cylinder_select__( ecl_region_type * region , double x0 ,
             region->active_mask[ global_index ] = select;
           }
         }
-		}
+                }
       }
     }
   }
