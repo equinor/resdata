@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include <util.h>
+#include <util_datetime.h>
 #include <latex.h>
 
 #ifdef __cplusplus
@@ -228,7 +229,7 @@ static bool latex_compile__( latex_type * latex , bool ignore_errors) {
 
     while (true) {
       if (waitpid(child_pid , &status , WNOHANG) == 0) {
-        usleep( usleep_time );
+        util_usleep( usleep_time );
         total_wait += usleep_time / 1000000.0;
         
         if (total_wait > latex->timeout) {

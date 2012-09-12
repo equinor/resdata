@@ -101,10 +101,6 @@
    util_endian_flip_vector().  
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 
 #define FLIP16(var) (((var >> 8) & 0x00ff) | ((var << 8) & 0xff00))
 
@@ -667,23 +663,41 @@ char * util_realloc_stdin_line(char * p) {
 
 
 /**
+   WIndows does not have the usleep() function, on the other hand
+   sleep() function in windows has millisecond resolution, instead of
+   seconds as in linux.
+*/
+
+void util_usleep( unsigned long micro_seconds ) {
+#ifdef HAVE_USLEEP
+  usleep( micro_seconds );
+#else 
+  #ifdef ERT_WINDOWS
+  {
+    int milli_seconds = micro_seconds / 1000;
+    sleep( milli_seconds );
+  }
+#endif
+#endif
+}
+
+
+/**
    This function will allocate and read a line from stdin. If there is
    no input waiting on stdin (this typically only applies if stdin is
    redirected from a file/PIPE), the function will sleep for 'usec'
    microseconds and try again.
 */
 
-#ifdef HAVE_USLEEP
 char * util_blocking_alloc_stdin_line(unsigned long usec) {
   char * line;
   do {
     line = util_alloc_stdin_line();
     if (line == NULL) 
-      usleep(usec);
+      util_usleep(usec);
   } while (line == NULL);
   return line;
 }
-#endif
 
 
 char * util_alloc_cwd(void) {
@@ -4166,7 +4180,6 @@ void util_fprintf_string(const char * s , int width , string_alignement_type ali
 
 
 
-
 /**
    This function allocates a string acoording to the fmt
    specification, and arguments. The arguments (except the format) are
@@ -4187,7 +4200,7 @@ char * util_alloc_sprintf_va(const char * fmt , va_list ap) {
   char *s = NULL;
   int length;
   va_list tmp_va;
-  va_copy(tmp_va , ap);
+  UTIL_VA_COPY(tmp_va , ap);
   length = vsnprintf(NULL , 0 , fmt , tmp_va);
   s = util_calloc(length + 1 , sizeof * s );
   vsprintf(s , fmt , ap);
@@ -4705,8 +4718,4 @@ int util_type_get_id( const void * data ) {
 }  
 
 
-double util_sin(double x) { return sin(x); }
 
-#ifdef __cplusplus
-}
-#endif

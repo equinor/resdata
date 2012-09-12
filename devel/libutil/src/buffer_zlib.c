@@ -1,9 +1,8 @@
-#include <zlib.h>
 /*
   This file is compiled as part of the buffer.c file; if the symbol
   HAVE_ZLIB is defined.  
 */
-
+#include <zlib.h>
 /**
    Unfortunately the old RedHat3 computers have a zlib version which
    does not have the compressBound function. For that reason the

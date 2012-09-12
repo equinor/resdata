@@ -158,27 +158,11 @@ path_fmt_type * path_fmt_copyc(const path_fmt_type *path) {
   return new_path;
 }
 
-
-static char * __fmt_alloc_path_va__(const char * fmt , va_list ap) {
-  char * new_path = NULL;
-  int path_length;
-  {
-    va_list tmp_va;
-    va_copy(tmp_va , ap);
-    path_length = vsnprintf(new_path , 0 , fmt , tmp_va);
-  }
-
-  new_path = util_calloc(path_length + 1 , sizeof * new_path );
-  vsnprintf(new_path , path_length + 1 , fmt , ap);
-  return new_path;
-}
-
-
 char * path_fmt_alloc_path_va(const path_fmt_type * path ,bool auto_mkdir,  va_list ap) {
-  char * new_path = __fmt_alloc_path_va__(path->fmt , ap);
-  if (auto_mkdir)
-    if (! util_is_directory(new_path) )
-      util_make_path(new_path);
+ char * new_path = util_alloc_sprintf_va(path->fmt , ap );
+ if (auto_mkdir)
+   if (! util_is_directory(new_path) )
+     util_make_path(new_path);
   return new_path;
 }
 
@@ -233,10 +217,10 @@ char * path_fmt_alloc_file(const path_fmt_type * path , bool auto_mkdir , ...) {
     char * filename;
     va_list tmp_va , ap;
     va_start(ap , auto_mkdir);
-    va_copy(tmp_va , ap);
-    filename = __fmt_alloc_path_va__(path->file_fmt , ap);
+    UTIL_VA_COPY(tmp_va , ap);
+    filename = util_alloc_sprintf_va( path->file_fmt , tmp_va );
     if (auto_mkdir) {
-      const char * __path = __fmt_alloc_path_va__(path->fmt , tmp_va);
+      const char * __path = util_alloc_sprintf_va( path->fmt , tmp_va );
       if (! util_is_directory(__path)) 
         util_make_path( __path );
       free((char *) __path );
@@ -248,8 +232,8 @@ char * path_fmt_alloc_file(const path_fmt_type * path , bool auto_mkdir , ...) {
     char * filename;
     va_list tmp_va , ap;
     va_start(ap , auto_mkdir);
-    va_copy(tmp_va , ap);
-    filename = __fmt_alloc_path_va__(path->fmt , ap);
+    UTIL_VA_COPY(tmp_va , ap);
+    filename = util_alloc_sprintf_va( path->fmt , tmp_va );
     if (auto_mkdir) {
       char * __path;
       util_alloc_file_components(filename , &__path , NULL , NULL);

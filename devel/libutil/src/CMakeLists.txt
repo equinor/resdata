@@ -16,33 +16,38 @@ if (BUILD_LATEX)
 endif()
 
 if (HAVE_LAPACK)
-   list( APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/matrix_lapack.c ${CMAKE_CURRENT_SOURCE_DIR}/matrix_blas.c regression.c lars.c stepwise.c)
-   list( APPEND header_files ${CMAKE_CURRENT_SOURCE_DIR}/matrix_lapack.h ${CMAKE_CURRENT_SOURCE_DIR}/matrix_blas.h regression.h lars.h stepwise.h)
+   list( APPEND source_files matrix_lapack.c matrix_blas.c regression.c lars.c stepwise.c)
+   list( APPEND header_files matrix_lapack.h matrix_blas.h regression.h lars.h stepwise.h)
 endif()
 
-# if (!STDBOOL_HEADER)
-#   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/ert_stdbool.h ${CMAKE_CURRENT_BINARY_DIR}/stdbool.h)
-#   list( APPEND header_files stdbool.h )
-# endif()
+if (MSVC)
+  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/msvc_stdbool.h ${CMAKE_CURRENT_BINARY_DIR}/stdbool.h)
+  list( APPEND header_files stdbool.h )
+endif()
 
 foreach (type int double bool long time_t size_t float)
   set(TYPE ${type} )      
   set(src_target        ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)    
   set(header_target     ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.h)    
 
-  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/vector_template.c ${src_target})
-  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/vector_template.h ${header_target})
+  configure_file( vector_template.c ${src_target})
+  configure_file( vector_template.h ${header_target})
 
   list( APPEND source_files ${src_target} )
   list( APPEND header_files ${header_target} )
 endforeach( type )
 
 
+#if (HAVE_ZLIB)
+#   list( APPEND source_files util_zlib.c )
+#   list( APPEND header_files util_zlib.h )
+#endif()
+
 # The block_fs filesystem is so heavily dependant on pthreads that it is not 
 # built if de not have pthreads.
 if (HAVE_PTHREAD)
-  list( APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/block_fs.c )
-  list( APPEND header_files ${CMAKE_CURRENT_SOURCE_DIR}/block_fs.h )
+  list( APPEND source_files block_fs.c )
+  list( APPEND header_files block_fs.h )
 endif()
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
@@ -63,7 +68,7 @@ if (HAVE_ZLIB)
   include_directories( ${ZLIB_HEADER} )
 endif()   
 
-if ( SHLWAPI_LIBRARY )
+if ( ERT_WINDOWS )
   target_link_libraries( util_static ${SHWLAPI_LIBRARY} )
   target_link_libraries( util_shared ${SHWLAPI_LIBRARY} )
 endif()

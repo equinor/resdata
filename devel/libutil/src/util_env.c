@@ -1,3 +1,52 @@
+/*
+   Copyright (C) 2012  Statoil ASA, Norway. 
+    
+   The file 'util_env.c' is part of ERT - Ensemble based Reservoir Tool. 
+    
+   ERT is free software: you can redistribute it and/or modify 
+   it under the terms of the GNU General Public License as published by 
+   the Free Software Foundation, either version 3 of the License, or 
+   (at your option) any later version. 
+    
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+   FITNESS FOR A PARTICULAR PURPOSE.   
+    
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+   for more details. 
+*/
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+#include <util_env.h>
+#include <util.h>
+#include <buffer.h>
+
+#ifdef POSIX_SETENV
+#define PATHVAR_SPLIT ":"
+
+void util_unsetenv( const char * variable ) {
+  unsetenv( variable );
+}
+
+void util_setenv( const char * variable , const char * value) {
+  int overwrite = 1;
+  setenv( variable , value , overwrite );
+}
+#else
+
+#define PATHVAR_SPLIT ";"
+void util_setenv( const char * variable , const char * value) {
+  SetEnvironmentVariable( variable , NULL );
+}
+
+void util_unsetenv( const char * variable ) {
+  util_setenv( variable , NULL );
+}
+#endif
+
+
 /**
    This function searches through the content of the (currently set)
    PATH variable, and allocates a string containing the full path
@@ -20,14 +69,17 @@ char * util_alloc_PATH_executable(const char * executable) {
     else
       return NULL;
   } else if (strncmp(executable , "./" , 2) == 0) {
-    char * path = util_alloc_filename(getenv("PWD") , &executable[2] , NULL);
+    char * cwd = util_alloc_cwd();
+    char * path = util_alloc_filename(cwd , &executable[2] , NULL);
+
     /* The program has been invoked as ./xxxx */
-    if (util_is_file(path) && util_is_executable( path )) 
-      return path; 
-    else {
+    if (!(util_is_file(path) && util_is_executable( path ))) {
       free( path );
-      return NULL;
+      path = NULL;
     }
+    free( cwd );
+
+    return path;
   } else {
     char *  full_path = NULL;
     char *  path_env  = getenv("PATH");
@@ -37,7 +89,7 @@ char * util_alloc_PATH_executable(const char * executable) {
       int     path_size , ipath;
       
       ipath = 0;
-      util_split_string(path_env , ":" , &path_size , &path_list);
+      util_split_string(path_env , PATHVAR_SPLIT , &path_size , &path_list);
       while ( cont ) {
         char * current_attempt = util_alloc_filename(path_list[ipath] , executable , NULL);
         if ( util_is_file( current_attempt ) && util_is_executable( current_attempt )) {
@@ -57,24 +109,6 @@ char * util_alloc_PATH_executable(const char * executable) {
 }
 
 
-#ifdef POSIX_SETENV
-void util_unsetenv( const char * variable ) {
-  unsetenv( variable );
-}
-
-void util_setenv( const char * variable , const char * value) {
-  int overwrite = 1;
-  setenv( variable , value , overwrite );
-}
-#else
-void util_setenv( const char * variable , const char * value) {
-  SetEnvironmentVariable( variable , NULL );
-}
-
-void util_unsetenv( const char * variable ) {
-  util_setenv( variable , NULL );
-}
-#endif
 
 
 

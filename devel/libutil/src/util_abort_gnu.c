@@ -207,6 +207,7 @@ void util_abort(const char * fmt , ...) {
       free(strings);
       util_safe_free(executable);
     }
+
     if (getenv("UTIL_ABORT") != NULL) {
       fprintf(stderr , "Aborting ... \n");
       abort();

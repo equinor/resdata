@@ -256,9 +256,9 @@ static void * thread_pool_main_loop( void * arg ) {
         } while (!slot_found && (counter < tp->max_running));
         
         if (!slot_found)
-          usleep( usleep_busy );  /* There are no available job slots. */
+          util_usleep( usleep_busy );  /* There are no available job slots. */
       } else
-        usleep( usleep_init );    /* There are no jobs wanting to run. */
+        util_usleep( usleep_init );    /* There are no jobs wanting to run. */
 
       /*****************************************************************/
       /*

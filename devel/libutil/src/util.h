@@ -118,9 +118,12 @@ typedef enum {left_pad   = 0,
   bool         util_entry_readable( const char * entry );  
   void         util_ftruncate(FILE * stream , long size);
   
-
-#ifdef HAVE_USLEEP
+  void         util_usleep( unsigned long micro_seconds );
   char       * util_blocking_alloc_stdin_line(unsigned long );
+
+
+#ifdef HAVE_VA_COPY
+#define UTIL_VA_COPY(target,src) va_copy(target,src)
 #endif
 
 
