@@ -10,4 +10,7 @@
     #include statement with an empty file.
 */
 
+typedef int bool;
+#define true  1
+#define false 0
 
