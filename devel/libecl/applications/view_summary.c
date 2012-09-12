@@ -15,14 +15,20 @@
    for more details. 
 */
 
-#include <ecl_kw.h>
 #include <stdlib.h>
-#include <ecl_sum.h>
-#include <util.h>
 #include <string.h>
 #include <signal.h>
+
+#ifdef HAVE_GETOPT
 #include <getopt.h>
+#endif
+
+#include <util.h>
 #include <stringlist.h>
+
+#include <ecl_kw.h>
+#include <ecl_sum.h>
+
 
 
 void install_SIGNALS(void) {
@@ -53,6 +59,8 @@ void print_help_and_exit()  {
   printf("   BPR:10,10,10       - The block pressure in cell 10,10,10.\n");
   printf("   LBPR:LGR3:10,10,10 - The block pressure in cell 10,10,10 - in LGR3\n");
   printf("\n");
+
+#ifdef HAVE_GETOPT
   printf("The option --list can be used to list all available keys.\n");
   printf("\n");
   printf("Options:\n");
@@ -88,6 +96,7 @@ void print_help_and_exit()  {
   printf("  This example will list all the available keys which end with\n");
   printf("  ':F-36' and those which start with 'BPR:'. Observe the use of \n");
   printf("  quoting characters \"\" when using shell wildcards.\n");
+#endif
   printf("\n");
   printf("The summary.x program will look for and load both unified and\n");
   printf("non-unified and formatted and non-formatted files. The default\n");
@@ -137,6 +146,7 @@ int main(int argc , char ** argv) {
     bool           print_header    = true;
     int            arg_offset      = 1;  
     
+#ifdef HAVE_GETOPT
     if (argc == 1)
       print_help_and_exit();
     else {
@@ -180,6 +190,7 @@ int main(int argc , char ** argv) {
       }
       arg_offset = optind;  /* External static variable in the getopt scope*/
     }
+#endif
     
     if (arg_offset >= argc)
       print_help_and_exit();
