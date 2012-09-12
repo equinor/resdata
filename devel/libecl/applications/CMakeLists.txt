@@ -12,7 +12,12 @@ add_executable( load_test.x load_test.c )
 
 set(program_list sum_write load_test.x grdecl_test.x grid_dump_ascii.x select_test.x grid_dump.x convert.x kw_list.x grid_info.x summary.x)
 foreach(prog ${program_list})
-   target_link_libraries( ${prog} ecl_shared util_shared geometry_shared )
+   if (LINK_STATIC)
+      target_link_libraries( ${prog} ecl_shared util_shared geometry_shared )
+   else()
+      target_link_libraries( ${prog} ecl_static util_static geometry_static )
+   endif()
+
    #-----------------------------------------------------------------
    if (ECL_INSTALL_PREFIX)
       set (destination ${CMAKE_INSTALL_PREFIX}/${ECL_INSTALL_PREFIX}/bin)

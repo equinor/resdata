@@ -664,7 +664,7 @@ char * util_realloc_stdin_line(char * p) {
 
 /**
    WIndows does not have the usleep() function, on the other hand
-   sleep() function in windows has millisecond resolution, instead of
+   Sleep() function in windows has millisecond resolution, instead of
    seconds as in linux.
 */
 
