@@ -124,6 +124,8 @@ typedef enum {left_pad   = 0,
 
 #ifdef HAVE_VA_COPY
 #define UTIL_VA_COPY(target,src) va_copy(target,src)
+#else
+#define UTIL_VA_COPY(target,src) target = src
 #endif
 
 
