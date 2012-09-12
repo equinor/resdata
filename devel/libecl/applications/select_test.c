@@ -32,7 +32,8 @@ int main(int argc , char ** argv) {
 
   ecl_util_select_filelist( path , base , ECL_OTHER_FILE , false , names );
   {
-    for (int i=0; i < stringlist_get_size( names ); i++) 
+    int i;
+    for (i=0; i < stringlist_get_size( names ); i++) 
       printf("list[%02d] = %s \n",i , stringlist_iget( names , i ));
   }
   
