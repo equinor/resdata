@@ -109,7 +109,7 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
   const int random_digits = 6;
   const int random_max    = 1000000;
 
-#ifdef HAVE_GETPID  
+#ifdef HAVE_PID_T  
   pid_t  pid            = getpid() % pid_max;
 #else
   int    pid            = 0;
