@@ -673,10 +673,9 @@ void util_usleep( unsigned long micro_seconds ) {
   usleep( micro_seconds );
 #else 
   #ifdef ERT_WINDOWS
-#pragma comment(lib , "kernel32.lib");
   {
     int milli_seconds = micro_seconds / 1000;
-    sleep( milli_seconds );
+    Sleep( milli_seconds );
   }
 #endif
 #endif
