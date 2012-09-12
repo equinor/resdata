@@ -94,6 +94,7 @@
 */
 
 #include <string.h>
+#include <stdbool.h>
 
 #include <type_macros.h>
 #include <util.h>
