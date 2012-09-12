@@ -121,6 +121,9 @@ typedef enum {left_pad   = 0,
   void         util_usleep( unsigned long micro_seconds );
   char       * util_blocking_alloc_stdin_line(unsigned long );
 
+  int          util_roundf( float x );
+  int          util_round( double x );
+
 
 #ifdef HAVE_VA_COPY
 #define UTIL_VA_COPY(target,src) va_copy(target,src)

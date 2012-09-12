@@ -121,9 +121,9 @@ static void ecl_sum_tstep_set_time_info( ecl_sum_tstep_type * tstep , const ecl_
     int min  = 0;
     int hour = 0;
     
-    int day   = roundf(tstep->data[date_day_index]);
-    int month = roundf(tstep->data[date_month_index]);
-    int year  = roundf(tstep->data[date_year_index]);
+    int day   = util_roundf(tstep->data[date_day_index]);
+    int month = util_roundf(tstep->data[date_month_index]);
+    int year  = util_roundf(tstep->data[date_year_index]);
     
     time_t sim_time = util_make_datetime(sec , min , hour , day , month , year);
     ecl_sum_tstep_set_time_info_from_date( tstep , sim_start , sim_time );

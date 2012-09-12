@@ -4709,6 +4709,13 @@ char * util_alloc_link_target(const char * link) {
 #endif
 
 
+#ifdef HAVE_ROUND
+int util_roundf( float x ) { return roundf(x); }
+int util_round( double x ) { return round(x); }
+#else
+int util_roundf( float x ) { return (int) (x + 0.5); }
+int util_round( double x ) { return (int) (x + 0.5); }
+#endif
 
 #include "util_path.c"
 
