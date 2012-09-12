@@ -117,7 +117,8 @@ void print_help_and_exit()  {
 
 
 static void build_key_list( const ecl_sum_type * ecl_sum , stringlist_type * key_list , int argc , const char ** argv) {
-  for (int iarg = 0; iarg < argc; iarg++) {
+  int iarg;
+  for (iarg = 0; iarg < argc; iarg++) {
     /**
        If the string does not contain wildcards we add it
        unconditionally; and then subsequently let the
@@ -225,7 +226,8 @@ int main(int argc , char ** argv) {
           
           {
             int columns = 5;
-            for (int i=0; i< stringlist_get_size( keys );  i++) {
+	    int i;
+            for (i=0; i< stringlist_get_size( keys );  i++) {
               printf("%-24s ",stringlist_iget( keys , i ));
               if ((i % columns) == 4)
                 printf("\n");
