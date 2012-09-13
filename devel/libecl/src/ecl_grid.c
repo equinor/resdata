@@ -1336,9 +1336,7 @@ static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid ,  const f
 static void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum) {
   const int ny = ecl_grid->ny;
   int j;
-#ifdef HAVE_OPENMP
 #pragma omp parallel for
-#endif
 
   for ( j=0; j < ny; j++) 
     ecl_grid_init_GRDECL_data_jslice( ecl_grid , zcorn, coord , actnum , j );
