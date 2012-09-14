@@ -19,6 +19,7 @@
 
 #include <util.h>
 #include <string.h>
+#include <vector.h>
 
 #include <ecl_kw.h>
 #include <ecl_sum.h>
@@ -163,6 +164,7 @@ int main( int argc , char ** argv) {
 
   smspec_node_type * wwct_wellx;
   smspec_node_type * wopr_wellx;
+  vector_type      * blank_nodes = vector_alloc_new();
 
 
   /*
@@ -216,6 +218,16 @@ int main( int argc , char ** argv) {
       5. The unit for this variable.
       
       6. A defualt value for this variable.
+
+    Observe that as an alternative to ecl_sum_add_var() you can use
+    the combination:
+
+       smspec_node_type * var = ecl_sum_add_blank_var( ecl_sum , DEFAULT_VALUE );
+       .....
+       ecl_sum_init_var( ecl_sum , var , keyword , wgname , num , unit );
+
+    This is an alternative when e.g. the name of wells is not known in
+    advance.
   */
   ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 ); 
   ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
@@ -260,15 +272,36 @@ int main( int argc , char ** argv) {
 
   wwct_wellx = ecl_sum_add_var( ecl_sum , "WWCT" , NULL , 0 , "(1)"     , 0.0);
   wopr_wellx = ecl_sum_add_var( ecl_sum , "WOPR" , NULL , 0 , "Barrels" , 0.0);
+
+  /*
+    Here we add a collection of ten variables which are not
+    initialized. Before they can be actually used you must initialize
+    them with:
+    
+       ecl_sum_init_var( ecl_sum , node , keyword , wgname , num , unit );
+
+    If you do not init them at all they will appear in the SMSPEC file
+    as WWCT variable of the DUMMY_WELL (i.e. they will be discarded in
+    a subsequent load, but the will be there).
+  */
+  {
+    int i;
+    for (i=0; i < 10; i++) {
+      smspec_node_type * blank_node = ecl_sum_add_blank_var( ecl_sum , i * 1.0 );
+      vector_append_ref( blank_nodes , blank_node );
+    }
+  }
+  
   
   
   {
     int num_dates = 10;
     int num_step = 10;
     double sim_days = 0;
-	int step, report_step;
-    for (report_step = 0; report_step < num_dates; report_step++) {
-      for ( step = 0; step < num_step; step++) {
+    int report_step;
+    int step;
+    for (int report_step = 0; report_step < num_dates; report_step++) {
+      for (int step = 0; step < num_step; step++) {
         /* Simulate .... */
 
         sim_days += 10;
@@ -324,7 +357,7 @@ int main( int argc , char ** argv) {
   ecl_sum_update_wgname( ecl_sum , wwct_wellx , "OPX");
   ecl_sum_update_wgname( ecl_sum , wopr_wellx , "OPX");
 
-  
+  vector_free( blank_nodes );
   ecl_sum_fwrite( ecl_sum );
   ecl_sum_free( ecl_sum );
 }

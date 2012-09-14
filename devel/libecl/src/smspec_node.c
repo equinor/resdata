@@ -219,6 +219,23 @@ char * smspec_alloc_local_completion_key( const char * join_string, const char *
 
 /*****************************************************************/
 
+static void smspec_node_set_keyword( smspec_node_type * smspec_node , const char * keyword ) {
+  // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
+  // This function can __ONLY__ be called on time; run-time chaning of keyword is not
+  // allowed.
+  if (smspec_node->keyword == NULL)
+    smspec_node->keyword = util_alloc_substring_copy( keyword , 0 , 8);       
+  else
+    util_abort("%s: fatal error - attempt to change keyword runtime detected - aborting\n",__func__);
+}
+
+
+static void smspec_node_set_invalid_flags( smspec_node_type * smspec_node) {
+  smspec_node->rate_variable  = false;
+  smspec_node->total_variable = false;
+  smspec_node->need_nums      = false;
+}
+
 
 static void smspec_node_set_flags( smspec_node_type * smspec_node) {
   /* 
@@ -287,33 +304,40 @@ static void smspec_node_set_flags( smspec_node_type * smspec_node) {
   }
 }
 
+void smspec_node_set_default( smspec_node_type * smspec_node , float default_value) {
+  smspec_node->default_value = default_value;
+}
 
 
-static smspec_node_type * smspec_node_alloc_empty(ecl_smspec_var_type var_type, const char * keyword , const char * unit , int params_index, float default_value) {
+float smspec_node_get_default( const smspec_node_type * smspec_node ) {
+  return smspec_node->default_value;
+}
+
+
+smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) {
   smspec_node_type * node = util_malloc( sizeof * node );
   
   UTIL_TYPE_ID_INIT( node , SMSPEC_TYPE_ID);
-  /** These can stay with values NULL / SMSPEC_NUMS_INVALID for variables where those fields are not accessed. */
+  node->params_index  = params_index;
+  smspec_node_set_default( node , default_value );
+
   node->wgname        = NULL;
   node->num           = SMSPEC_NUMS_INVALID;
   node->ijk           = NULL; 
   
   node->gen_key1      = NULL;
   node->gen_key2      = NULL;
-  node->params_index  = SMSPEC_PARAMS_INDEX_INVALID;
 
-  /** All smspec_node instances should have valid values of these fields. */
-  node->var_type      = var_type;
-  node->unit          = util_alloc_substring_copy( unit , 0 , 8);       // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
-  node->keyword       = util_alloc_substring_copy( keyword , 0 , 8);
-  node->params_index  = params_index;
+  node->var_type      = ECL_SMSPEC_INVALID_VAR;
+  node->unit          = NULL;
+  node->keyword       = NULL;
   node->lgr_name      = NULL;
-  node->lgr_ijk       = NULL;
-  node->default_value = default_value;
+  node->lgr_ijk       = NULL;  
   
-  smspec_node_set_flags( node );
-  return node;
+  smspec_node_set_invalid_flags( node );
+  return node;               // This is NOT usable
 }
+
 
 /**
    Observe that the wellname can have max 8 characters; anything
@@ -440,7 +464,7 @@ static void smspec_node_set_gen_keys( smspec_node_type * smspec_node , const cha
     
     break;
   default:
-    util_abort("%s: internal error - should not be here? \n");
+    util_abort("%s: internal error - should not be here? \n" , __func__);
   }
 }
 
@@ -453,8 +477,88 @@ void smspec_node_update_wgname( smspec_node_type * index , const char * wgname ,
   smspec_node_set_gen_keys( index , key_join_string );
 }
 
+static void smspec_node_common_init( smspec_node_type * node , ecl_smspec_var_type var_type , const char * keyword , const char * unit ) {
+  if (node->var_type == ECL_SMSPEC_INVALID_VAR) {
+    smspec_node_set_unit( node , unit );
+    smspec_node_set_keyword( node , keyword);
+    node->var_type = var_type;
+    smspec_node_set_flags( node );
+  } else
+    util_abort("%s: trying to re-init smspec node with keyword:%s - invalid \n",__func__ , keyword );
+}
 
 
+
+bool smspec_node_init( smspec_node_type * smspec_node, 
+                        ecl_smspec_var_type var_type , 
+                        const char * wgname  , 
+                        const char * keyword , 
+                        const char * unit    , 
+                        const char * key_join_string , 
+                        const int grid_dims[3] , 
+                        int num) {
+  
+  bool initOK    = true;
+  bool wgnameOK = true;
+  if ((wgname != NULL) && (IS_DUMMY_WELL(wgname)))
+    wgnameOK = false;
+  
+  smspec_node_common_init( smspec_node , var_type , keyword , unit );
+  switch (var_type) {
+  case(ECL_SMSPEC_COMPLETION_VAR):
+    /* Completion variable : WGNAME & NUM */
+    if (wgnameOK) {
+      smspec_node_set_num( smspec_node , grid_dims , num );
+      smspec_node_set_wgname( smspec_node , wgname );
+    } else
+      initOK = false;
+    break;
+  case(ECL_SMSPEC_GROUP_VAR):
+    /* Group variable : WGNAME */
+    if (wgnameOK) 
+      smspec_node_set_wgname( smspec_node , wgname );
+    else
+      initOK = false;
+    break;
+  case(ECL_SMSPEC_WELL_VAR):
+    /* Well variable : WGNAME */
+    if (wgnameOK) 
+      smspec_node_set_wgname( smspec_node , wgname );
+    else
+      initOK = false;
+    break;
+  case(ECL_SMSPEC_SEGMENT_VAR):
+    if (wgnameOK) {
+      smspec_node_set_wgname( smspec_node , wgname );
+      smspec_node_set_num( smspec_node , grid_dims , num );
+    } else
+      initOK = false;
+    break;
+  case(ECL_SMSPEC_FIELD_VAR):
+    /* Field variable : */
+    /* Fully initialized with the smspec_common_init() function */
+    break;
+  case(ECL_SMSPEC_REGION_VAR):
+    /* Region variable : NUM */
+    smspec_node_set_num( smspec_node , grid_dims , num );
+    break;
+  case(ECL_SMSPEC_BLOCK_VAR):
+    /* A block variable : NUM*/
+    smspec_node_set_num( smspec_node , grid_dims , num );
+    break;
+  case(ECL_SMSPEC_MISC_VAR):
+    /* Misc variable : */
+    /* Fully initialized with the smspec_common_init() function */
+    break;
+  default:
+    /* Lots of legitimate alternatives which are not internalized. */
+    initOK = false;
+    break;
+  }
+  if (initOK)
+    smspec_node_set_gen_keys( smspec_node , key_join_string );
+  return initOK;
+}
   
 /**
    This function will allocate a smspec_node instance, and initialize
@@ -472,14 +576,13 @@ void smspec_node_update_wgname( smspec_node_type * index , const char * wgname ,
 
 
 
- smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type , 
+smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type , 
                                        const char * wgname  , 
                                        const char * keyword , 
                                        const char * unit    , 
                                        const char * key_join_string , 
                                        const int grid_dims[3] , 
                                        int num , int param_index, float default_value) {
-  smspec_node_type * smspec_node = NULL;
   /*
     Well and group names in the wgname parameter is quite messy. The
     situation is as follows:
@@ -510,69 +613,60 @@ void smspec_node_update_wgname( smspec_node_type * index , const char * wgname ,
        completely.
   */
   
-  bool wgname_OK = true;
+  smspec_node_type * smspec_node = smspec_node_alloc_new( param_index , default_value );
+  if (smspec_node_init( smspec_node , var_type , wgname , keyword , unit , key_join_string , grid_dims, num))
+    return smspec_node;
+  else {
+    smspec_node_free( smspec_node );
+    return NULL;
+  }
+}
+
+
+
+bool smspec_node_init_lgr( smspec_node_type * smspec_node , 
+                           ecl_smspec_var_type var_type , 
+                           const char * wgname  , 
+                           const char * keyword , 
+                           const char * unit    , 
+                           const char * lgr , 
+                           const char * key_join_string , 
+                           int   lgr_i, int lgr_j , int lgr_k
+                           ) {
+  bool initOK = true;
+  bool wgnameOK = true;
   if ((wgname != NULL) && (IS_DUMMY_WELL(wgname)))
-    wgname_OK = false;
+    wgnameOK = false;
   
+  smspec_node_common_init( smspec_node , var_type , keyword , unit );
   switch (var_type) {
-  case(ECL_SMSPEC_COMPLETION_VAR):
-    /* Completion variable : WGNAME & NUM */
-    if (wgname_OK) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
-      smspec_node_set_num( smspec_node , grid_dims , num );
+  case(ECL_SMSPEC_LOCAL_WELL_VAR):
+    if (wgnameOK) {
       smspec_node_set_wgname( smspec_node , wgname );
-    }
+      smspec_node_set_lgr_name( smspec_node , lgr );
+    } else
+      initOK = false;
     break;
-  case(ECL_SMSPEC_GROUP_VAR):
-    /* Group variable : WGNAME */
-    if (wgname_OK) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
+  case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
+    smspec_node_set_lgr_name( smspec_node , lgr );
+    smspec_node_set_lgr_ijk( smspec_node , lgr_i, lgr_j , lgr_k );
+    break;
+  case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
+    if (wgnameOK) {
+      smspec_node_set_lgr_name( smspec_node , lgr );
       smspec_node_set_wgname( smspec_node , wgname );
-    } 
-    break;
-  case(ECL_SMSPEC_WELL_VAR):
-    /* Well variable : WGNAME */
-    if (wgname_OK) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
-      smspec_node_set_wgname( smspec_node , wgname );
-    } 
-    break;
-  case(ECL_SMSPEC_SEGMENT_VAR):
-    if (wgname_OK) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
-      smspec_node_set_wgname( smspec_node , wgname );
-      smspec_node_set_num( smspec_node , grid_dims , num );
-    }
-    break;
-  case(ECL_SMSPEC_FIELD_VAR):
-    /* Field variable : */
-    smspec_node = smspec_node_alloc_empty( var_type ,  keyword , unit , param_index , default_value);
-    break;
-  case(ECL_SMSPEC_REGION_VAR):
-    /* Region variable : NUM */
-    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
-    smspec_node_set_num( smspec_node , grid_dims , num );
-    break;
-  case(ECL_SMSPEC_BLOCK_VAR):
-    /* A block variable : NUM*/
-    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
-    smspec_node_set_num( smspec_node , grid_dims , num );
-    break;
-  case(ECL_SMSPEC_MISC_VAR):
-    /* Misc variable : */
-    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
+      smspec_node_set_lgr_ijk( smspec_node , lgr_i, lgr_j , lgr_k );
+    } else
+      initOK = false;
     break;
   default:
-    /* Lots of legitimate alternatives which are not handled .. */
-    break;
+    util_abort("%s: internal error:  in LGR function with  non-LGR keyword:%s \n",__func__ , keyword);
   }
-  
-  
-  if (smspec_node != NULL) 
+  if (initOK)
     smspec_node_set_gen_keys( smspec_node , key_join_string );
-
-  return smspec_node;
+  return initOK;
 }
+
 
 
 smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type , 
@@ -583,44 +677,20 @@ smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
                                           const char * key_join_string , 
                                           int   lgr_i, int lgr_j , int lgr_k,
                                           int param_index , float default_value) {
-
-  smspec_node_type * smspec_node = NULL;
-  bool wgname_OK = true;
-  if ((wgname != NULL) && (IS_DUMMY_WELL(wgname)))
-    wgname_OK = false;
-
-  switch (var_type) {
-  case(ECL_SMSPEC_LOCAL_WELL_VAR):
-    if (wgname_OK) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
-      smspec_node_set_wgname( smspec_node , wgname );
-      smspec_node_set_lgr_name( smspec_node , lgr );
-    }
-    break;
-  case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
-    smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
-    smspec_node_set_lgr_name( smspec_node , lgr );
-    smspec_node_set_lgr_ijk( smspec_node , lgr_i, lgr_j , lgr_k );
-    break;
-  case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
-    if (wgname_OK) {
-      smspec_node = smspec_node_alloc_empty( var_type , keyword , unit , param_index , default_value);
-      smspec_node_set_lgr_name( smspec_node , lgr );
-      smspec_node_set_wgname( smspec_node , wgname );
-      smspec_node_set_lgr_ijk( smspec_node , lgr_i, lgr_j , lgr_k );
-    }
-    break;
-  default:
-    util_abort("%s: internal error:  in LGR function with  non-LGR keyword:%s \n",__func__ , keyword);
+  
+  smspec_node_type * smspec_node = smspec_node_alloc_new( param_index , default_value );
+  if (smspec_node_init_lgr( smspec_node , var_type , wgname , keyword , lgr , unit , key_join_string , lgr_i, lgr_j , lgr_k))
+    return smspec_node;
+  else {
+    smspec_node_free( smspec_node );
+    return NULL;
   }
-  smspec_node_set_gen_keys( smspec_node , key_join_string );
-  return smspec_node;
 }
 
 
 void smspec_node_free( smspec_node_type * index ) {
-  free( index->unit );
-  free( index->keyword );
+  util_safe_free( index->unit );
+  util_safe_free( index->keyword );
   util_safe_free( index->ijk );
   util_safe_free( index->gen_key1 );
   util_safe_free( index->gen_key2 );
@@ -666,6 +736,8 @@ const char * smspec_node_get_keyword( const smspec_node_type * smspec_node) {
   return smspec_node->keyword;
 }
 
+
+
 ecl_smspec_var_type smspec_node_get_var_type( const smspec_node_type * smspec_node) {
   return smspec_node->var_type;
 }
@@ -688,10 +760,15 @@ const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
   return smspec_node->unit;
 }
 
-
-float smspec_node_get_default_value( const smspec_node_type * smspec_node ) {
-  return smspec_node->default_value;
+void smspec_node_set_unit( smspec_node_type * smspec_node , const char * unit ) {
+  // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
+  util_safe_free( smspec_node->unit );
+  smspec_node->unit = util_alloc_substring_copy( unit , 0 , 8);       
 }
+
+
+
+
 
 
 bool smspec_node_need_nums( const smspec_node_type * smspec_node ) {

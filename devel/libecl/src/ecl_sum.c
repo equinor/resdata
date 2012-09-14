@@ -258,12 +258,25 @@ void ecl_sum_set_fmt_case( ecl_sum_type * ecl_sum , bool fmt_case ) {
 }
 
 
+void ecl_sum_init_var( ecl_sum_type * ecl_sum , smspec_node_type * smspec_node , const char * keyword , const char * wgname , int num , const char * unit) {
+  ecl_smspec_init_var( ecl_sum->smspec , smspec_node , keyword , wgname , num, unit );
+}
+
+
 smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value) {
-  ecl_smspec_var_type var_type = ecl_smspec_identify_var_type( keyword );
-  smspec_node_type * smspec_node = smspec_node_alloc( var_type , wgname , keyword , unit , ecl_sum->key_join_string , ecl_smspec_get_grid_dims( ecl_sum->smspec ) , num , -1 , default_value );
+  smspec_node_type * smspec_node = ecl_sum_add_blank_var( ecl_sum , default_value );
+  ecl_sum_init_var( ecl_sum , smspec_node , keyword , wgname , num , unit );
+  return smspec_node;
+}
+
+
+smspec_node_type * ecl_sum_add_blank_var( ecl_sum_type * ecl_sum , float default_value) {
+  smspec_node_type * smspec_node = smspec_node_alloc_new( -1 , default_value );
   ecl_smspec_add_node( ecl_sum->smspec , smspec_node );
   return smspec_node;
 }
+
+
 
 
 ecl_sum_tstep_type * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step , double sim_days) {

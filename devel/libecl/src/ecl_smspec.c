@@ -338,15 +338,40 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
       int i;
       for (i=0; i < ecl_smspec_num_nodes( smspec ); i++) {
         const smspec_node_type * smspec_node = ecl_smspec_iget_node( smspec , i );
-        ecl_kw_iset_string8( keywords_kw , i , smspec_node_get_keyword( smspec_node ));
-        ecl_kw_iset_string8( units_kw , i , smspec_node_get_unit( smspec_node ));
-        {
-          const char * wgname = DUMMY_WELL;
-          if (smspec_node_get_wgname( smspec_node ) != NULL)
-            wgname = smspec_node_get_wgname( smspec_node );
-          ecl_kw_iset_string8( wgnames_kw , i , wgname);
+        /*
+          It is possible to add variables with deferred initialisation
+          with the ecl_sum_add_blank_var() function. Before these
+          variables can be actually used for anything interesting they
+          must be initialized with the ecl_sum_init_var() function.
+
+          If a call to save the smspec file comes before all the
+          variable have been initialized things will potentially go
+          belly up. This is solved with the following uber-hack:
+
+            o One of the well related keywords is chosen; in
+              particular 'WWCT' in this case.
+
+            o The wgname value is set to DUMMY_WELL
+
+          The use of DUMMY_WELL ensures that this field will be
+          ignored when/if this smspec file is read in at a later
+          stage.
+        */
+        if (smspec_node_get_var_type( smspec_node ) == ECL_SMSPEC_INVALID_VAR) {
+          ecl_kw_iset_string8( keywords_kw , i , "WWCT" );
+          ecl_kw_iset_string8( units_kw , i , "????????");
+          ecl_kw_iset_string8( wgnames_kw , i , DUMMY_WELL);
+        } else {
+          ecl_kw_iset_string8( keywords_kw , i , smspec_node_get_keyword( smspec_node ));
+          ecl_kw_iset_string8( units_kw , i , smspec_node_get_unit( smspec_node ));
+          {
+            const char * wgname = DUMMY_WELL;
+            if (smspec_node_get_wgname( smspec_node ) != NULL)
+              wgname = smspec_node_get_wgname( smspec_node );
+            ecl_kw_iset_string8( wgnames_kw , i , wgname);
+          }
         }
-        
+
         if (nums_kw != NULL)
           ecl_kw_iset_int( nums_kw , i , smspec_node_get_num( smspec_node ));
       }
@@ -921,22 +946,35 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 */
 
 static void ecl_smspec_delete_node_index(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node) {
-  
+  {
+    const char * gen_key1 = smspec_node_get_gen_key1( smspec_node );
+    const char * gen_key2 = smspec_node_get_gen_key2( smspec_node );
+
+    if (gen_key1 != NULL)
+      hash_del( ecl_smspec->gen_var_index , gen_key1 );
+    
+    if (gen_key2 != NULL)
+      hash_del( ecl_smspec->gen_var_index , gen_key2 );
+  }
+  // Is currently not deleted from the special dictionaries.
 }
   
 
-
-static void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node) {
+void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node) {
   /*
     It is possible crate a node which is not fully specified, e.g. the
     well or group name can be left at NULL. In that case the node is
     not installed in the different indexes. 
   */
+  // var_type == ECL_SMSPEC_INVALID_VAR??
   if (smspec_node_get_gen_key1( smspec_node ) != NULL) {
     ecl_smspec_install_gen_keys( ecl_smspec , smspec_node );
     ecl_smspec_install_special_keys( ecl_smspec , smspec_node );
   }
+  if (smspec_node_need_nums( smspec_node ))
+    ecl_smspec->need_nums = true;
 }
+
 
 static void ecl_smspec_set_params_size( ecl_smspec_type * ecl_smspec , int params_size) {
   ecl_smspec->params_size = params_size;
@@ -945,40 +983,46 @@ static void ecl_smspec_set_params_size( ecl_smspec_type * ecl_smspec , int param
 
 
 
-static void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node){ 
-  int internal_index = vector_get_size( ecl_smspec->smspec_nodes );
-  
-  /* This IF test should only apply in write_mode. */
-  if (smspec_node_get_params_index( smspec_node ) < 0) {
-    if (!ecl_smspec->write_mode)
-      util_abort("%s: internal error \n",__func__);
-    smspec_node_set_params_index( smspec_node , internal_index);
-
-    if (internal_index >= ecl_smspec->params_size)
-      ecl_smspec_set_params_size( ecl_smspec , internal_index + 1);
-  }
-  vector_append_owned_ref( ecl_smspec->smspec_nodes , smspec_node , smspec_node_free__ );
-
-  {
-    int params_index = smspec_node_get_params_index( smspec_node );
+void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node){ 
+  if (!ecl_smspec->locked) {
+    int internal_index = vector_get_size( ecl_smspec->smspec_nodes );
     
-    /* This indexing must be used when writing. */
-    int_vector_iset( ecl_smspec->index_map , internal_index , params_index);
+    /* This IF test should only apply in write_mode. */
+    if (smspec_node_get_params_index( smspec_node ) < 0) {
+      if (!ecl_smspec->write_mode)
+        util_abort("%s: internal error \n",__func__);
+      smspec_node_set_params_index( smspec_node , internal_index);
+      
+      if (internal_index >= ecl_smspec->params_size)
+        ecl_smspec_set_params_size( ecl_smspec , internal_index + 1);
+    }
+    vector_append_owned_ref( ecl_smspec->smspec_nodes , smspec_node , smspec_node_free__ );
     
-    float_vector_iset( ecl_smspec->params_default , params_index , smspec_node_get_default_value(smspec_node) );
-  }
-    
-  if (smspec_node_need_nums( smspec_node ))
-    ecl_smspec->need_nums = true;
+    {
+      int params_index = smspec_node_get_params_index( smspec_node );
+      
+      /* This indexing must be used when writing. */
+      int_vector_iset( ecl_smspec->index_map , internal_index , params_index);
+      
+      float_vector_iset( ecl_smspec->params_default , params_index , smspec_node_get_default(smspec_node) );
+    }
+  } else
+    util_abort("%s: sorry - the smspec header has been locked (can not mix ecl_sum_add_var() and ecl_sum_add_tstep() calls.)\n",__func__);
 }
 
 
-void ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node) {
-  if (!ecl_smspec->locked) {
-    ecl_smspec_insert_node( ecl_smspec , smspec_node );
+void ecl_smspec_add_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node ) {
+  ecl_smspec_insert_node( ecl_smspec , smspec_node );
+  ecl_smspec_index_node( ecl_smspec , smspec_node );
+}
+
+
+
+void ecl_smspec_init_var( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node , const char * keyword , const char * wgname , int num, const char * unit ) {
+  if (smspec_node_init( smspec_node , ecl_smspec_identify_var_type( keyword ) , wgname , keyword , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num ))
     ecl_smspec_index_node( ecl_smspec , smspec_node );
-  } else
-    util_abort("%s: sorry - the smspec header has been locked (can not mix ecl_sum_add_var() and ecl_sum_add_tstep() calls.)\n",__func__);
+  else
+    util_abort("%s: initializing node failed \n",__func__);
 }
 
 
@@ -1049,7 +1093,7 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           int lgr_i = ecl_kw_iget_int( numlx , params_index );
           int lgr_j = ecl_kw_iget_int( numly , params_index );
           int lgr_k = ecl_kw_iget_int( numlz , params_index );
-                  lgr_name  = util_alloc_strip_copy(  ecl_kw_iget_ptr( lgrs , params_index ));
+          lgr_name  = util_alloc_strip_copy(  ecl_kw_iget_ptr( lgrs , params_index ));
           smspec_node = smspec_node_alloc_lgr( var_type , well , kw , unit , lgr_name , ecl_smspec->key_join_string , lgr_i , lgr_j , lgr_k , params_index, default_value);
         } else 
           smspec_node = smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value);
