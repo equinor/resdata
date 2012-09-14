@@ -304,6 +304,12 @@ static void smspec_node_set_flags( smspec_node_type * smspec_node) {
   }
 }
 
+/**
+   It is possible to change the default value of an smspec node
+   runtime, but observe that the new value will only be applied to the
+   new timesteps you add after the change. Already created timesteps
+   will not be updated if the default value is changed.
+*/
 void smspec_node_set_default( smspec_node_type * smspec_node , float default_value) {
   smspec_node->default_value = default_value;
 }
