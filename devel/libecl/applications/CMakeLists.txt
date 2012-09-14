@@ -26,14 +26,8 @@ endif()
 
 
 foreach(prog ${program_list})
-   if (LINK_STATIC)
-      target_link_libraries( ${prog} ecl_static util_static geometry_static )
-   else()
-      if (BUILD_SHARED)
-         target_link_libraries( ${prog} ecl_shared util_shared geometry_shared )
-      endif()
-   endif()
-
+   target_link_libraries( ${prog} ecl util geometry )
+   
    #-----------------------------------------------------------------
    if (ECL_INSTALL_PREFIX)
       set (destination ${CMAKE_INSTALL_PREFIX}/${ECL_INSTALL_PREFIX}/bin)

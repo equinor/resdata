@@ -18,7 +18,7 @@
 
 #include <thread_pool.h>
 
-#ifdef HAVE_PTHREAD
+#ifdef WITH_PTHREAD
 #include "thread_pool_posix.c"
 #else
 #endif

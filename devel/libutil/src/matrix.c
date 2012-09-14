@@ -951,7 +951,8 @@ void matrix_inplace_matmul(matrix_type * A, const matrix_type * B) {
    only the serial version matrix_inplace_matmul() will be used.  */
 
 
-#ifdef HAVE_THREAD_POOL
+#ifdef WITH_THREAD_POOL
+
 static void * matrix_inplace_matmul_mt__(void * arg) {
 
   arg_pack_type * arg_pack = arg_pack_safe_cast( arg );

@@ -66,7 +66,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef HAVE_PTHREAD
+#ifdef WITH_PTHREAD
 #include <pthread.h>
 #endif
 
@@ -4662,7 +4662,7 @@ void util_localtime( time_t * t , struct tm * ts ) {
 #include "util_fork.c"
 #endif
 
-#ifdef HAVE_ZLIB
+#ifdef WITH_ZLIB
 #include "util_zlib.c"
 #endif
 
@@ -4690,7 +4690,7 @@ char * util_alloc_link_target(const char * link) {
 #endif
 
 #ifdef HAVE_FORK
-#ifdef HAVE_PTHREAD
+#ifdef WITH_PTHREAD
 #ifdef HAVE_EXECINFO
 #include "util_abort_gnu.c"
 #define HAVE_UTIL_ABORT

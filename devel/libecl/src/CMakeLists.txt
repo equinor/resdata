@@ -8,15 +8,7 @@ set( header_files ecl_sum_tstep.h ecl_rst_file.h ecl_init_file.h smspec_node.h e
 
 
 
-
-if (BUILD_SHARED)
-   add_library( ecl_shared  SHARED ${source_files} )
-   set_target_properties( ecl_shared PROPERTIES OUTPUT_NAME ecl )
-endif()
-
-add_library( ecl_static  STATIC ${source_files} )
-set_target_properties( ecl_static PROPERTIES OUTPUT_NAME ecl )
-
+add_library( ecl ${LIBRARY_TYPE} ${source_files} )
 
 #-----------------------------------------------------------------
 option(USE_OPENMP "Include OpenMP support" OFF)
@@ -30,31 +22,16 @@ endif()
 
 
 if (OPENMP)
-   target_link_libraries( ecl_static gomp )
-   if (BUILD_SHARED)
-      target_link_libraries( ecl_shared gomp )
-   endif()
+   target_link_libraries( ecl gomp )
 endif()
-
-target_link_libraries( ecl_static geometry_static util_static )
-if (BUILD_SHARED)
-   target_link_libraries( ecl_shared geometry_shared util_shared )
-endif()
-
+target_link_libraries( ecl geometry util )
 
 #-----------------------------------------------------------------
 if (ECL_INSTALL_PREFIX)
-   if (BUILD_SHARED)
-      install(TARGETS ecl_shared DESTINATION ${ECL_INSTALL_PREFIX}/lib)
-   endif()
-   install(TARGETS ecl_static DESTINATION ${ECL_INSTALL_PREFIX}/lib)
+   install(TARGETS ecl DESTINATION ${ECL_INSTALL_PREFIX}/lib)
    install(FILES ${header_files} DESTINATION ${ECL_INSTALL_PREFIX}/include)
 else()
-   #
-   install(TARGETS ecl_static DESTINATION lib)
-   if (BUILD_SHARED)
-      install(TARGETS ecl_shared DESTINATION lib)
-   endif()
+   install(TARGETS ecl DESTINATION lib)
    install(FILES ${header_files} DESTINATION include)
 endif()        
 

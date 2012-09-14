@@ -22,7 +22,7 @@
 
 #include <matrix.h>
 #include <rng.h>
-#ifdef HAVE_LAPACK
+#ifdef WITH_LAPACK
 #include <matrix_lapack.h>
 #endif
 
@@ -35,7 +35,7 @@ int main( int argc, char ** argv)  {
   matrix_pretty_print( A , "    A " , "%8.4f" );
   
 
-#ifdef HAVE_LAPACK
+#ifdef WITH_LAPACK
   matrix_inv( B );
   printf("\n");
   matrix_pretty_print( B , "inv(A)" , "%8.4f" );
