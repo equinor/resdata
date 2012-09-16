@@ -45,6 +45,7 @@ extern "C" {
   void         point_fprintf( const point_type * p , FILE * stream );
   void         point_free( point_type * p);
   void         point_set( point_type *p , double x , double y , double z);
+  void         point_shift(point_type * p , double dx , double dy , double dz);
   point_type * point_alloc( double x , double y , double z);
   point_type * point_copyc( const point_type * p);
   void         point_copy_values(point_type * p , const point_type * src);

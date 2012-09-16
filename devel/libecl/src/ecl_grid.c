@@ -286,7 +286,7 @@
    the number scheme of the corners in a cell used by eclipse:
 
 
-       lower layer:   upper layer  
+       lower layer:   upper layer  (higher value of z - i.e. lower down in resrvoir).
                     
          2---3           6---7
          |   |           |   |
@@ -823,6 +823,51 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
 static void ecl_cell_free(ecl_cell_type * cell) {
   free(cell);
 }
+
+
+/**
+       lower layer:   upper layer  
+                    
+         2---3           6---7
+         |   |           |   |
+         0---1           4---5
+*/
+static void ecl_cell_init_regular( ecl_cell_type * cell , const double * offset , int i , int j , int k , int global_index , const double * ivec , const double * jvec , const double * kvec , const int * actnum ) {
+  {
+    double x0 = offset[0] + i*ivec[0] + j*jvec[0] + k*kvec[0];
+    double y0 = offset[0] + i*ivec[0] + j*jvec[0] + k*kvec[0];
+    double z0 = offset[0] + i*ivec[0] + j*jvec[0] + k*kvec[0];
+    
+    point_set(&cell->corner_list[0] , x0 , y0 , z0 );                // Point 0
+  } 
+  cell->corner_list[1] = cell->corner_list[0];                       // Point 1
+  cell->corner_list[2] = cell->corner_list[0];                       // Point 2
+  point_shift(&cell->corner_list[1] , ivec[0] , ivec[1] , ivec[2]);
+  point_shift(&cell->corner_list[2] , jvec[0] , jvec[1] , jvec[2]);
+  cell->corner_list[3] = cell->corner_list[1];                       // Point 3
+  point_shift(&cell->corner_list[3] , jvec[0] , jvec[1] , jvec[2]);
+
+
+
+  {
+    int i;
+    for (i=0; i < 4; i++) {
+      cell->corner_list[i+4] = cell->corner_list[i];                      // Point 4-7
+      point_shift(&cell->corner_list[i+4] , kvec[0] , kvec[1] , kvec[2]);
+    }
+  }
+
+  if (actnum != NULL) {
+    if (actnum[global_index])
+      cell->active = true;
+    else
+        cell->active = false;
+  } else
+    cell->active = true;
+  
+  cell->valid_geometry = true;
+}
+
 
 /* end of cell implementation                                    */
 /*****************************************************************/
@@ -1728,6 +1773,58 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
 }
                                  
 
+
+/**
+   This function will allocate a new regular grid with dimensions nx x
+   ny x nz. The cells in the grid are spanned by the the three unit
+   vectors ivec, jvec and kvec.
+
+   The actnum argument should be a pointer to an integer array of
+   length nx*ny*nz where actnum[i + j*nx + k*nx*ny] == 1 for active
+   cells and 0 for inactive cells. The actnum array can be NULL, in
+   which case all cells will be active.
+*/
+
+ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double * ivec, const double * jvec , const double * kvec , const int * actnum) {
+  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , nx , ny , nz , 0);
+  const double offset[3] = {0,0,0};
+
+  int k,j,i;
+  for (k=0; k < nz; k++) {
+    for (j=0; j< ny; j++) {
+      for (i=0; i < nx; i++) {
+        int global_index = i + j*nx + k*nx*ny;
+
+        ecl_cell_type * cell = ecl_grid_get_cell(grid , global_index );
+        
+        ecl_cell_init_regular( cell , offset , i,j,k,global_index , ivec , jvec , kvec , actnum );
+      }
+    }
+  }
+  ecl_grid_set_center( grid );
+  ecl_grid_update_index( grid );
+  return grid;
+}
+
+
+/**
+   This function will allocate a new rectangular grid with dimensions
+   nx x ny x nz. The cells in the grid are rectangular with dimensions
+   dx x dy x dz.
+
+   The actnum argument should be a pointer to an integer array of
+   length nx*ny*nz where actnum[i + j*nx + k*nx*ny] == 1 for active
+   cells and 0 for inactive cells. The actnum array can be NULL, in
+   which case all cells will be active.
+*/
+
+ecl_grid_type * ecl_grid_alloc_rectangular( int nx , int ny , int nz , double dx , double dy , double dz , const int * actnum) {
+  const double ivec[3] = {dx , 0 , 0};
+  const double jvec[3] = {0 , dy , 0};
+  const double kvec[3] = {0 , 0 , dz};
+
+  return ecl_grid_alloc_regular( nx , ny , nz , ivec , jvec , kvec , actnum);
+}
 
 
 /**

@@ -76,6 +76,13 @@ void point_set(point_type * p , double x , double y , double z) {
 }
 
 
+void point_shift(point_type * p , double dx , double dy , double dz) {
+  p->x += dx;
+  p->y += dy;
+  p->z += dz;
+}
+
+
 void point_copy_values(point_type * p , const point_type * src) {
   point_set(p , src->x , src->y , src->z);
 }
