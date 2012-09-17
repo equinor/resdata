@@ -357,7 +357,7 @@ int main( int argc , char ** argv) {
   ecl_sum_update_wgname( ecl_sum , wwct_wellx , "OPX");
   ecl_sum_update_wgname( ecl_sum , wopr_wellx , "OPX");
 
-  vector_free( blank_nodes );
+  vector_free( blank_nodes ); // Only frees the container - the actual nodes are handled by the ecl_sum instance.
   ecl_sum_fwrite( ecl_sum );
   ecl_sum_free( ecl_sum );
 }

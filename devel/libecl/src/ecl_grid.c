@@ -841,12 +841,13 @@ static void ecl_cell_init_regular( ecl_cell_type * cell , const double * offset 
     point_set(&cell->corner_list[0] , x0 , y0 , z0 );                // Point 0
   } 
   cell->corner_list[1] = cell->corner_list[0];                       // Point 1
-  cell->corner_list[2] = cell->corner_list[0];                       // Point 2
   point_shift(&cell->corner_list[1] , ivec[0] , ivec[1] , ivec[2]);
+
+  cell->corner_list[2] = cell->corner_list[0];                       // Point 2
   point_shift(&cell->corner_list[2] , jvec[0] , jvec[1] , jvec[2]);
+  
   cell->corner_list[3] = cell->corner_list[1];                       // Point 3
   point_shift(&cell->corner_list[3] , jvec[0] , jvec[1] , jvec[2]);
-
 
 
   {
@@ -1155,7 +1156,7 @@ static void ecl_grid_pillar_cross_planes(const point_type * pillar , const doubl
 
 
 /**
-   this function must be run before the cell coordinates are
+   This function must be run before the cell coordinates are
    calculated.  This function is only called for the main grid
    instance, and not for lgrs; the lgrs will inherit the mapaxes
    settings from the global grid.

@@ -48,7 +48,6 @@ int main(int argc, char ** argv) {
       
       ecl_grid_free( grid2 );
     }
-    //ecl_grid_fwrite_EGRID( ecl_grid , "/tmp/test.EGRID" );
     ecl_grid_free(ecl_grid);
   }
 }

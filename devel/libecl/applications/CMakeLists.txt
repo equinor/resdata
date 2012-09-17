@@ -1,4 +1,6 @@
 add_executable( sum_write sum_write.c )
+add_executable( make_grid make_grid.c )
+add_executable( grdecl_grid grdecl_grid.c )
 if (ERT_LINUX)
    add_executable( convert.x convert.c )
    add_executable( grdecl_test.x grdecl_test.c )
