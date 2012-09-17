@@ -26,7 +26,6 @@
 #include <string.h>
 
 #include <util.h>
-#include <util_datetime.h>
 #include <latex.h>
 
 #ifdef __cplusplus
