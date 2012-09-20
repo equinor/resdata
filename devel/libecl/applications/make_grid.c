@@ -61,7 +61,9 @@ int main(int argc, char ** argv) {
       free( grdecl_file );
       printf("\n");
     }
-
+    
+    free( basename );
+    util_safe_free( path );
     ecl_grid_free( ecl_grid );
   }
 }

@@ -2492,7 +2492,7 @@ void ecl_grid_get_ijk1A(const ecl_grid_type *ecl_grid , int active_index , int *
 */
 
 void ecl_grid_get_xyz1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
   ecl_cell_assert_center( cell );
   {
     *xpos = cell->center.x;
@@ -3877,3 +3877,22 @@ void ecl_grid_fprintf_grdecl( const ecl_grid_type * grid , FILE * stream ) {
     fprintf(stream , "\n");
   }
 }  
+
+
+/*****************************************************************/
+
+void ecl_grid_ri_export( const ecl_grid_type * ecl_grid , double * ri_points) {
+  int global_index;
+  for (global_index = 0; global_index < ecl_grid->size; global_index++) {
+    const ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
+    int point_nr;
+    int offset = global_index * 8 * 3;
+    
+    for (point_nr =0; point_nr < 8; point_nr++) {
+      ri_points[ offset + point_nr * 3     ] =  cell->corner_list[point_nr].x;
+      ri_points[ offset + point_nr * 3 + 1 ] =  cell->corner_list[point_nr].y;
+      ri_points[ offset + point_nr * 3 + 2 ] = -cell->corner_list[point_nr].z;
+    }
+  }
+}
+

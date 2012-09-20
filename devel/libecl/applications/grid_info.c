@@ -16,10 +16,12 @@
    for more details. 
 */
 
-#include <ecl_grid.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <ecl_grid.h>
+
+#include <util.h>
 
 
 int main(int argc, char ** argv) {
@@ -45,9 +47,17 @@ int main(int argc, char ** argv) {
         ecl_grid_summarize( grid2 );
         printf("\nThe grids %s %s are DIFFERENT.\n", argv[1] , argv[2]);
       }
-      
       ecl_grid_free( grid2 );
     }
+    /*
+    printf("----\n");
+    {
+      double * ri_points = util_calloc( ecl_grid_get_global_size( ecl_grid ) * 24 , sizeof * ri_points ); 
+      ecl_grid_ri_export( ecl_grid , ri_points );
+      free( ri_points );
+    }
+    printf("----\n");
+    */
     ecl_grid_free(ecl_grid);
   }
 }
