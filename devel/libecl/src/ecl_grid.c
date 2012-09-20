@@ -333,10 +333,17 @@ static const int tetrahedron_permutations[2][12][3] = {{{0 , 2 , 6},
 
 */
 
+#define CELL_FLAG_VALID    1     /* In the case of GRID files not necessarily all cells geometry values set - in that case this will be left as false. */
+#define CELL_FLAG_CENTER   2     /* Has the center value been calculated - this is by default not done to speed up loading a tiny bit. */
+#define CELL_FLAG_TAINTED  4     /* lazy fucking stupid reservoir engineers make invalid grid
+                                    cells - for kicks??  must try to keep those cells out of
+                                    real-world calculations with some hysteric heuristics.*/
 
 typedef struct ecl_cell_struct  ecl_cell_type;
 
 
+#define GET_CELL_FLAG(cell,flag) (((cell->cell_flags & (flag)) == 0) ? false : true)
+#define SET_CELL_FLAG(cell,flag) ((cell->cell_flags |= (flag)))
 
 struct ecl_cell_struct {
   point_type center;
@@ -347,16 +354,14 @@ struct ecl_cell_struct {
   int                    active_index;
   const ecl_grid_type   *lgr;                /* if this cell is part of an lgr; this will point to a grid instance for that lgr; NULL if not part of lgr. */
   int                    host_cell;          /* the global index of the host cell for an lgr cell, set to -1 for normal cells. */
-  bool                   valid_geometry;     /* In the case of GRID files not necessarily all cells geometry values set - in that case this will be left as false. */
-  bool                   tainted_geometry;   /* lazy fucking stupid reservoir engineers make invalid grid
-                                                cells - for kicks??  must try to keep those cells out of
-                                                real-world calculations with some hysteric heuristics.*/
+  int                    cell_flags;
 };  
 
 
 
+#define LARGE_CELL_MALLOC 1
+#define ECL_GRID_ID       991010
 
-#define ECL_GRID_ID 991010
 struct ecl_grid_struct {
   UTIL_TYPE_ID_DECLARATION;
   int                   grid_nr;       /* this corresponds to item 4 in gridhead - 0 for the main grid. */ 
@@ -367,7 +372,12 @@ struct ecl_grid_struct {
   bool                * visited;       /* internal helper struct used when searching for index - can be NULL. */
   int                 * index_map;     /* this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_index_map; /* this is list of total_active elements - which point back to the index_map. */
+
+#ifdef LARGE_CELL_MALLOC
+  ecl_cell_type      *  cells;
+#else
   ecl_cell_type      ** cells;         
+#endif
 
   char                * parent_name;   /* the name of the parent for a nested lgr - for the main grid, and also a
                                           lgr descending directly from the main grid this will be NULL. */
@@ -572,7 +582,7 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
   for (c = 0; c < 8; c++) {
     const point_type p = cell->corner_list[c];
     if ((p.x == 0) && (p.y == 0)) {
-      cell->tainted_geometry = true;
+      SET_CELL_FLAG(cell , CELL_FLAG_TAINTED);
       break;
     }
   }
@@ -581,7 +591,7 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
     Second heuristic to invalidate cells.
   */
   if (!cell->active) {
-    if (!cell->tainted_geometry) {
+    if (!GET_CELL_FLAG(cell , CELL_FLAG_TAINTED)) {
       const point_type p0 = cell->corner_list[0];
       int cell_index = 1;
       while (true) {
@@ -594,7 +604,7 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
           if (cell_index == 8) {
             // They have all been at the same height up until now;
             // the cell is marked as invalid.
-            cell->tainted_geometry = true;
+            SET_CELL_FLAG(cell , CELL_FLAG_TAINTED);
             break;
           }
         }
@@ -615,21 +625,39 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
    will have a coords/corners section in the grid file.  
 */
 
-static void ecl_cell_init( ecl_cell_type * cell ) {
+static void ecl_cell_init( ecl_cell_type * cell , bool init_valid) {
   cell->active           = false;
   cell->lgr              = NULL;
-  cell->valid_geometry   = false;
-  cell->tainted_geometry = false;
   cell->host_cell        = -1;
+  cell->cell_flags       = 0;
+  
+  if (init_valid)
+    cell->cell_flags = CELL_FLAG_VALID;
 }
 
 
-static ecl_cell_type * ecl_cell_alloc(void) {
-  ecl_cell_type * cell = util_malloc(sizeof * cell );
-  ecl_cell_init( cell );
-  return cell;
+static void ecl_cell_set_center( ecl_cell_type * cell) {
+  point_set(&cell->center , 0 , 0 , 0);
+  {
+    int c;
+    for (c = 0; c < 8; c++)
+      point_inplace_add(&cell->center , &cell->corner_list[c]);
+  }
+  point_inplace_scale(&cell->center , 1.0 / 8.0);
+  SET_CELL_FLAG( cell , CELL_FLAG_CENTER );
 }
 
+
+static void ecl_cell_assert_center( ecl_cell_type * cell) {
+  if (!GET_CELL_FLAG(cell , CELL_FLAG_CENTER))
+    ecl_cell_set_center( cell );
+}
+
+
+
+static void ecl_cell_memcpy( ecl_cell_type * target_cell , const ecl_cell_type * src_cell ) {
+  memcpy( target_cell , src_cell , sizeof * target_cell );
+}
 
 static void ecl_cell_install_lgr( ecl_cell_type * cell , const ecl_grid_type * lgr_grid) {
   cell->lgr       = lgr_grid;
@@ -648,23 +676,26 @@ static void ecl_cell_init_tetrahedron( const ecl_cell_type * cell , tetrahedron_
 
 
 
-static double ecl_cell_get_volume( const ecl_cell_type * cell ) {
-  tetrahedron_type tet;
-  int              itet;
-  double           volume = 0;
-  for (itet = 0; itet < 12; itet++) {
-    /* 
-       using both tetrahedron decompositions - gives good agreement
-       with porv from eclipse init files.
-    */
-    ecl_cell_init_tetrahedron( cell , &tet , 0 , itet );
-    volume += tetrahedron_volume( &tet );
-
-    ecl_cell_init_tetrahedron( cell , &tet , 1 , itet );
-    volume += tetrahedron_volume( &tet );
+static double ecl_cell_get_volume( ecl_cell_type * cell ) {
+  ecl_cell_assert_center( cell );
+  {
+    tetrahedron_type tet;
+    int              itet;
+    double           volume = 0;
+    for (itet = 0; itet < 12; itet++) {
+      /* 
+         using both tetrahedron decompositions - gives good agreement
+         with porv from eclipse init files.
+      */
+      ecl_cell_init_tetrahedron( cell , &tet , 0 , itet );
+      volume += tetrahedron_volume( &tet );
+      
+      ecl_cell_init_tetrahedron( cell , &tet , 1 , itet );
+      volume += tetrahedron_volume( &tet );
+    }
+    
+    return volume * 0.5;
   }
-  
-  return volume * 0.5;
 }
 
 
@@ -720,7 +751,7 @@ static bool triangle_contains(const point_type *p0 , const point_type * p1 , con
 
 
 static bool ecl_cell_layer_contains_xy( const ecl_cell_type * cell , bool lower_layer , double x , double y) {
-  if (cell->tainted_geometry)
+  if (GET_CELL_FLAG(cell,CELL_FLAG_TAINTED))
     return false;
   {
     const point_type *p0,*p1,*p2,*p3;
@@ -763,7 +794,7 @@ deeper layer: (larger (negative) z values).
   
 
 
-static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_type * p) {
+static bool ecl_cell_contains_point( ecl_cell_type * cell , const point_type * p) {
   /*
     1. first check if the point z value is below the deepest point of
        the cell, or above the shallowest => return false.
@@ -773,7 +804,7 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
     3. full geometric verification.
   */
 
-  if (cell->tainted_geometry) 
+  if (GET_CELL_FLAG(cell , CELL_FLAG_TAINTED))
     return false;
   
   if (p->z < ecl_cell_min_z( cell ))
@@ -820,11 +851,6 @@ static bool ecl_cell_contains_point( const ecl_cell_type * cell , const point_ty
 
 
 
-static void ecl_cell_free(ecl_cell_type * cell) {
-  free(cell);
-}
-
-
 /**
        lower layer:   upper layer  
                     
@@ -835,8 +861,8 @@ static void ecl_cell_free(ecl_cell_type * cell) {
 static void ecl_cell_init_regular( ecl_cell_type * cell , const double * offset , int i , int j , int k , int global_index , const double * ivec , const double * jvec , const double * kvec , const int * actnum ) {
   {
     double x0 = offset[0] + i*ivec[0] + j*jvec[0] + k*kvec[0];
-    double y0 = offset[0] + i*ivec[0] + j*jvec[0] + k*kvec[0];
-    double z0 = offset[0] + i*ivec[0] + j*jvec[0] + k*kvec[0];
+    double y0 = offset[1] + i*ivec[1] + j*jvec[1] + k*kvec[1];
+    double z0 = offset[2] + i*ivec[2] + j*jvec[2] + k*kvec[2];
     
     point_set(&cell->corner_list[0] , x0 , y0 , z0 );                // Point 0
   } 
@@ -865,8 +891,6 @@ static void ecl_cell_init_regular( ecl_cell_type * cell , const double * offset 
         cell->active = false;
   } else
     cell->active = true;
-  
-  cell->valid_geometry = true;
 }
 
 
@@ -883,7 +907,11 @@ UTIL_SAFE_CAST_FUNCTION(ecl_grid , ECL_GRID_ID);
 
 
 static ecl_cell_type * ecl_grid_get_cell(const ecl_grid_type * grid , int global_index) {
+#ifdef LARGE_CELL_MALLOC
+  return &grid->cells[global_index];
+#else
   return grid->cells[global_index];
+#endif
 }
 
 
@@ -902,6 +930,39 @@ static void ecl_grid_taint_cells( ecl_grid_type * ecl_grid ) {
 }
 
 
+static void ecl_grid_free_cells( ecl_grid_type * grid ) {
+#ifndef LARGE_CELL_MALLOC
+  int i;
+  for (i=0; i < grid->size; i++) {
+    ecl_cell_type * cell = ecl_grid_get_cell( grid , i );
+    ecl_cell_free( cell );
+  }
+#endif
+  free( grid->cells );
+}
+
+static void ecl_grid_alloc_cells( ecl_grid_type * grid , bool init_valid) {
+  grid->cells           = util_calloc(grid->size , sizeof * grid->cells );
+#ifndef LARGE_CELL_MALLOC
+  {
+    int i;
+    for (i=0; i < grid->size; i++) 
+      grid->cells[i] = ecl_cell_alloc();
+  }
+#endif
+  {
+    ecl_cell_type * cell0 = ecl_grid_get_cell( grid , 0 );
+    ecl_cell_init( cell0 , init_valid );
+    {
+      int i;
+      for (i=1; i < grid->size; i++) {
+        ecl_cell_type * target_cell = ecl_grid_get_cell( grid , i );
+        ecl_cell_memcpy( target_cell , cell0 );
+      }
+    }
+  }
+}
+
 /**
    will create a new blank grid instance. if the global_grid argument
    is != NULL the newly created grid instance will copy the mapaxes
@@ -910,7 +971,7 @@ static void ecl_grid_taint_cells( ecl_grid_type * ecl_grid ) {
    is performed.
 */
 
-static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx , int ny , int nz, int grid_nr) {
+static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx , int ny , int nz, int grid_nr , bool init_valid) {
   ecl_grid_type * grid = util_malloc(sizeof * grid );
   UTIL_TYPE_ID_INIT(grid , ECL_GRID_ID);
   grid->nx          = nx;
@@ -923,7 +984,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
   grid->visited       = NULL;
   grid->inv_index_map = NULL;
   grid->index_map     = NULL;
-  grid->cells         = util_calloc(nx*ny*nz , sizeof * grid->cells );
+  ecl_grid_alloc_cells( grid , init_valid );
 
   if (global_grid != NULL) {
     /* this is an lgr instance, and we inherit the global grid
@@ -945,11 +1006,6 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
     grid->use_mapaxes   = false;
   }
 
-  {
-    int i;
-    for (i=0; i < grid->size; i++)
-      grid->cells[i] = ecl_cell_alloc();
-  }
 
   grid->block_dim      = 0;
   grid->values         = NULL;
@@ -973,13 +1029,7 @@ static void ecl_grid_set_center(ecl_grid_type * ecl_grid) {
   int i;
   for (i=0; i < ecl_grid->size; i++) {
     ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , i );
-    point_set(&cell->center , 0 , 0 , 0);
-    {
-      int c;
-      for (c = 0; c < 8; c++)
-        point_inplace_add(&cell->center , &cell->corner_list[c]);
-    }
-    point_inplace_scale(&cell->center , 1.0 / 8.0);
+    ecl_cell_set_center( cell );
   }
 }
 
@@ -1020,8 +1070,6 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
     if (actnum[global_index] > 0)
       cell->active = true;
   }
-
-  cell->valid_geometry = true;
 }
 
 
@@ -1085,9 +1133,8 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid , int coords_size , 
       if (ecl_grid->use_mapaxes)
         point_mapaxes_transform( &cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
     }
-
-    cell->valid_geometry = true;
   }
+  SET_CELL_FLAG(cell , CELL_FLAG_VALID );
 }
 
 
@@ -1379,7 +1426,7 @@ static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid ,  const f
 }
 
 
-static void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum) {
+void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum) {
   const int ny = ecl_grid->ny;
   int j;
 #pragma omp parallel for
@@ -1397,13 +1444,12 @@ static void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * 
 */
 
 static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid , int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, int grid_nr) {
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , nx,ny,nz,grid_nr);
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , nx,ny,nz,grid_nr,true);
 
   if (mapaxes != NULL)
     ecl_grid_init_mapaxes( ecl_grid , mapaxes );
   ecl_grid_init_GRDECL_data( ecl_grid , zcorn , coord , actnum);
     
-  ecl_grid_set_center( ecl_grid );
   ecl_grid_update_index( ecl_grid );
   ecl_grid_taint_cells( ecl_grid );
   return ecl_grid;
@@ -1600,7 +1646,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
 
 
 static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , int num_coords , int nx, int ny , int nz , int grid_nr , int coords_size , int ** coords , float ** corners , const float * mapaxes) {
-  ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , nx , ny , nz , grid_nr );
+  ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , nx , ny , nz , grid_nr , false);
 
   if (mapaxes != NULL)
     ecl_grid_init_mapaxes( grid , mapaxes );
@@ -1611,7 +1657,6 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , 
       ecl_grid_set_cell_GRID(grid , coords_size , coords[index] , corners[index]);
   }
   
-  ecl_grid_set_center(grid);
   ecl_grid_update_index( grid );
   ecl_grid_taint_cells( grid );
   return grid;
@@ -1787,7 +1832,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
 */
 
 ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double * ivec, const double * jvec , const double * kvec , const int * actnum) {
-  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , nx , ny , nz , 0);
+  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , nx , ny , nz , 0,true);
   const double offset[3] = {0,0,0};
 
   int k,j,i;
@@ -1802,7 +1847,7 @@ ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double *
       }
     }
   }
-  ecl_grid_set_center( grid );
+
   ecl_grid_update_index( grid );
   return grid;
 }
@@ -2255,11 +2300,7 @@ int ecl_grid_get_block_count3d(const ecl_grid_type * grid , int i , int j, int k
 /*****************************************************************/
 
 void ecl_grid_free(ecl_grid_type * grid) {
-  int i;
-  for (i=0; i < grid->size; i++)
-    ecl_cell_free(ecl_grid_get_cell( grid , i));
-  
-  free(grid->cells);
+  ecl_grid_free_cells( grid );
   util_safe_free(grid->index_map);
   util_safe_free(grid->inv_index_map);
 
@@ -2290,13 +2331,15 @@ void ecl_grid_free__( void * arg ) {
 
 
 void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int global_index2 , double *dx , double *dy , double *dz) {
-  const ecl_cell_type * cell1 = ecl_grid_get_cell( grid , global_index1);
-  const ecl_cell_type * cell2 = ecl_grid_get_cell( grid , global_index2);
-  
-  *dx = cell1->center.x - cell2->center.x;
-  *dy = cell1->center.y - cell2->center.y;
-  *dz = cell1->center.z - cell2->center.z;
-
+  ecl_cell_type * cell1 = ecl_grid_get_cell( grid , global_index1);
+  ecl_cell_type * cell2 = ecl_grid_get_cell( grid , global_index2);
+  ecl_cell_assert_center( cell1 );
+  ecl_cell_assert_center( cell2 );
+  {
+    *dx = cell1->center.x - cell2->center.x;
+    *dy = cell1->center.y - cell2->center.y;
+    *dz = cell1->center.z - cell2->center.z;
+  }
 }
 
 
@@ -2450,9 +2493,12 @@ void ecl_grid_get_ijk1A(const ecl_grid_type *ecl_grid , int active_index , int *
 
 void ecl_grid_get_xyz1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos) {
   const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
-  *xpos = cell->center.x;
-  *ypos = cell->center.y;
-  *zpos = cell->center.z;
+  ecl_cell_assert_center( cell );
+  {
+    *xpos = cell->center.x;
+    *ypos = cell->center.y;
+    *zpos = cell->center.z;
+  }
 }
 
 
@@ -2499,7 +2545,8 @@ void ecl_grid_get_xyz1A(const ecl_grid_type * grid , int active_index , double *
 
 
 double ecl_grid_get_cdepth1(const ecl_grid_type * grid , int global_index) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  ecl_cell_assert_center( cell );
   return cell->center.z;
 }
 
@@ -2650,7 +2697,7 @@ bool ecl_grid_cell_active3(const ecl_grid_type * ecl_grid, int i , int j , int k
 
 bool ecl_grid_cell_invalid1(const ecl_grid_type * ecl_grid , int global_index) {
   ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index);
-  return cell->tainted_geometry;
+  return GET_CELL_FLAG(cell , CELL_FLAG_TAINTED);
 }
 
 bool ecl_grid_cell_invalid3(const ecl_grid_type * ecl_grid , int i , int j , int k) {
@@ -2825,7 +2872,7 @@ int ecl_grid_get_active_size( const ecl_grid_type * ecl_grid ) {
 }
 
 double ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_index ) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
+  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
   return ecl_cell_get_volume( cell );
 }
 
@@ -3487,7 +3534,7 @@ static int ecl_grid_get_valid_index( const ecl_grid_type * grid , int i , int j 
     global_index = ecl_grid_get_global_index3( grid , i , j , k );
     
     cell = ecl_grid_get_cell( grid ,  global_index );
-    if (cell->valid_geometry)
+    if (GET_CELL_FLAG(cell , CELL_FLAG_VALID))
       return global_index;
     else {
       k += delta;
@@ -3773,7 +3820,8 @@ void ecl_grid_fwrite_EGRID( const ecl_grid_type * grid , const char * filename) 
 
 /**
    Writes the current grid as grdecl keywords suitable to be read by
-   ECLIPSE. This function will only write the main grid.
+   ECLIPSE. This function will only write the main grid and not
+   possible LGRs which are attached.
 */
 
 void ecl_grid_fprintf_grdecl( const ecl_grid_type * grid , FILE * stream ) {
