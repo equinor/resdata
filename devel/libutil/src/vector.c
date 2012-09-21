@@ -77,6 +77,12 @@ vector_type * vector_alloc_new() {
 }
 
 
+void vector_grow_NULL( vector_type * vector , int new_size ) {
+  int i;
+  for (i = vector->size; i < new_size; i++)
+    vector_append_ref( vector , NULL );
+}
+
 /**
    This functon will allocate a vector 'size' elements. Each of these
    elements is initialized with NULL pointers.
@@ -84,9 +90,7 @@ vector_type * vector_alloc_new() {
 
 vector_type * vector_alloc_NULL_initialized( int size ) { 
   vector_type * vector = vector_alloc_new();
-  int i;
-  for (i=0; i < size; i++)
-    vector_append_ref( vector , NULL );
+  vector_grow_NULL( vector , size );
   return vector;
 }
 

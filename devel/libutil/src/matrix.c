@@ -1454,11 +1454,11 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
 }
 
 /**
-   The matrix_det3() is an explicit implementation of the determinant
-   of a 3x3 matrix. The ecl_grid class uses the determinant of 3x3
-   matrices to determine whether a point is inside a cell. By using
-   this explicit implementation the ecl_grid library has no LAPACK
-   dependency.  
+   The matrix_det3() and matrix_det4() are explicit implementations of
+   the determinant of a 3x3 and 4x4 matrices. The ecl_grid class uses
+   these determinants determine whether a point is inside a cell. By
+   using this explicit implementation the ecl_grid library has no
+   LAPACK dependency.
 */
 
 double matrix_det3( const matrix_type * A) {
@@ -1478,6 +1478,38 @@ double matrix_det3( const matrix_type * A) {
     return a*e*i + b*f*g + c*d*h - c*e*g - b*d*i - a*f*h;
   } else {
     util_abort("%s: hardcoded for 3x3 matrices A is: %d x %d \n",__func__, A->rows , A->columns); 
+    return 0;
+  }
+}
+
+
+double matrix_det4( const matrix_type * A) {
+  if ((A->rows == 4) && (A->columns == 4)) {
+    double a00 = A->data[GET_INDEX(A,0,0)];
+    double a01 = A->data[GET_INDEX(A,0,1)];
+    double a02 = A->data[GET_INDEX(A,0,2)];
+    double a03 = A->data[GET_INDEX(A,0,3)];
+    double a10 = A->data[GET_INDEX(A,1,0)];
+    double a11 = A->data[GET_INDEX(A,1,1)];
+    double a12 = A->data[GET_INDEX(A,1,2)];
+    double a13 = A->data[GET_INDEX(A,1,3)];
+    double a20 = A->data[GET_INDEX(A,2,0)];
+    double a21 = A->data[GET_INDEX(A,2,1)];
+    double a22 = A->data[GET_INDEX(A,2,2)];
+    double a23 = A->data[GET_INDEX(A,2,3)];
+    double a30 = A->data[GET_INDEX(A,3,0)];
+    double a31 = A->data[GET_INDEX(A,3,1)];
+    double a32 = A->data[GET_INDEX(A,3,2)];
+    double a33 = A->data[GET_INDEX(A,3,3)];
+
+    double det = (a00*(a11*(a22*a33 - a23*a32)-a12*(a21*a33 - a23*a31)+a13*(a21*a32 - a22*a31)) -
+                  a01*(a10*(a22*a33 - a23*a32)-a12*(a20*a33 - a23*a30)+a13*(a20*a32 - a22*a30)) + 
+                  a02*(a10*(a21*a33 - a23*a31)-a11*(a20*a33 - a23*a30)+a13*(a20*a31 - a21*a30)) - 
+                  a03*(a10*(a21*a32 - a22*a31)-a11*(a20*a32 - a22*a30)+a12*(a20*a31 - a21*a30)));
+    
+    return det;
+  } else {
+    util_abort("%s: hardcoded for 4x4 matrices A is: %d x %d \n",__func__, A->rows , A->columns); 
     return 0;
   }
 }
