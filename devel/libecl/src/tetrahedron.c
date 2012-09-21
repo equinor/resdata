@@ -193,7 +193,7 @@ bool tetrahedron_contains__( const tetrahedron_type * tet , const point_type * p
   matrix_iset( D , 3 , 1 , p4->y);
   matrix_iset( D , 3 , 2 , p4->z);
   matrix_iset( D , 3 , 3 , 1);
-  D0 = matrix_det3( D );
+  D0 = matrix_det4( D );
   current_sign = __sign( D0 );
   if (current_sign == 0)
     return false; /* A zero volume cell. */
@@ -218,7 +218,7 @@ bool tetrahedron_contains__( const tetrahedron_type * tet , const point_type * p
   matrix_iset( D , 3 , 1 , p4->y);
   matrix_iset( D , 3 , 2 , p4->z);
   matrix_iset( D , 3 , 3 , 1);
-  D1 = matrix_det3( D );
+  D1 = matrix_det4( D );
   sign = __sign( D1 );
   if ((sign != 0) && (sign != current_sign)) return false;
   
@@ -242,7 +242,7 @@ bool tetrahedron_contains__( const tetrahedron_type * tet , const point_type * p
   matrix_iset( D , 3 , 1 , p4->y);
   matrix_iset( D , 3 , 2 , p4->z);
   matrix_iset( D , 3 , 3 , 1);
-  D2 = matrix_det3( D );
+  D2 = matrix_det4( D );
   sign = __sign( D2 );
   if ((sign != 0) && (sign != current_sign)) return false;
   /*****************************************************************/
@@ -265,7 +265,7 @@ bool tetrahedron_contains__( const tetrahedron_type * tet , const point_type * p
   matrix_iset( D , 3 , 1 , p4->y);
   matrix_iset( D , 3 , 2 , p4->z);
   matrix_iset( D , 3 , 3 , 1);
-  D3 = matrix_det3( D );
+  D3 = matrix_det4( D );
   sign = __sign( D3 );
   if ((sign != 0) && (sign != current_sign)) return false;
   /*****************************************************************/
@@ -288,7 +288,7 @@ bool tetrahedron_contains__( const tetrahedron_type * tet , const point_type * p
   matrix_iset( D , 3 , 1 , p->y);
   matrix_iset( D , 3 , 2 , p->z);
   matrix_iset( D , 3 , 3 , 1);
-  D4 = matrix_det3( D );
+  D4 = matrix_det4( D );
   sign = __sign( D4 );
   if ((sign != 0) && (sign != current_sign)) return false;
   /*****************************************************************/
