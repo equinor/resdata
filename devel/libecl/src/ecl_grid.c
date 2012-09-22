@@ -473,6 +473,14 @@ static void ecl_cell_fwrite_GRID( const ecl_grid_type * grid , const ecl_cell_ty
   ecl_kw_fwrite( corners_kw , fortio );
 }
 
+static void ecl_cell_ri_export( const ecl_cell_type * cell , double * ri_points) {
+  int point_nr;
+  for (point_nr =0; point_nr < 8; point_nr++) {
+    ri_points[ point_nr * 3     ] =  cell->corner_list[point_nr].x;
+    ri_points[ point_nr * 3 + 1 ] =  cell->corner_list[point_nr].y;
+    ri_points[ point_nr * 3 + 2 ] = -cell->corner_list[point_nr].z;
+  }
+}
 
 /*****************************************************************/
 
@@ -1162,20 +1170,17 @@ static void ecl_grid_realloc_index_map(ecl_grid_type * ecl_grid) {
   
 
 static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
-  int i,j,k;
   int active_index = 0;
+  int global_index;
 
-  for (k=0; k < ecl_grid->nz; k++)
-    for (j=0; j < ecl_grid->ny; j++)
-      for (i=0; i < ecl_grid->nx; i++) {
-        const int global_index   = ecl_grid_get_global_index__(ecl_grid , i , j , k );
-        ecl_cell_type * cell     = ecl_grid_get_cell( ecl_grid , global_index);
-        if (cell->active) {
-          cell->active_index = active_index;
-          active_index++;
-        } else
-          cell->active_index = -1;
-      }
+  for (global_index = 0; global_index < ecl_grid->size; global_index++) {
+    ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index);
+    if (cell->active) {
+      cell->active_index = active_index;
+      active_index++;
+    } else
+      cell->active_index = -1;
+  }
 
   ecl_grid->total_active = active_index;
 }
@@ -3881,18 +3886,22 @@ void ecl_grid_fprintf_grdecl( const ecl_grid_type * grid , FILE * stream ) {
 
 /*****************************************************************/
 
+/**
+   The ri_points pointer should point to the base address of the
+   points data; this function will calculate the correct offset based on
+   global_index.  
+*/
+
+void ecl_grid_cell_ri_export( const ecl_grid_type * ecl_grid , int global_index , double * ri_points) {
+  const ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
+  int offset = global_index * 8 * 3;
+  ecl_cell_ri_export( cell , &ri_points[ offset ] );
+}
+
+
 void ecl_grid_ri_export( const ecl_grid_type * ecl_grid , double * ri_points) {
   int global_index;
-  for (global_index = 0; global_index < ecl_grid->size; global_index++) {
-    const ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
-    int point_nr;
-    int offset = global_index * 8 * 3;
-    
-    for (point_nr =0; point_nr < 8; point_nr++) {
-      ri_points[ offset + point_nr * 3     ] =  cell->corner_list[point_nr].x;
-      ri_points[ offset + point_nr * 3 + 1 ] =  cell->corner_list[point_nr].y;
-      ri_points[ offset + point_nr * 3 + 2 ] = -cell->corner_list[point_nr].z;
-    }
-  }
+  for (global_index = 0; global_index < ecl_grid->size; global_index++) 
+    ecl_grid_cell_ri_export( ecl_grid , global_index , ri_points );
 }
 

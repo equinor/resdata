@@ -151,8 +151,9 @@ extern "C" {
   ecl_kw_type    * ecl_grid_alloc_actnum_kw( const ecl_grid_type * grid );
   ecl_kw_type    * ecl_grid_alloc_hostnum_kw( const ecl_grid_type * grid );
   ecl_kw_type    * ecl_grid_alloc_gridhead_kw( int nx, int ny , int nz , int grid_nr);
-
+  
   void             ecl_grid_ri_export( const ecl_grid_type * ecl_grid , double * ri_points);
+  void             ecl_grid_cell_ri_export( const ecl_grid_type * ecl_grid , int global_index , double * ri_points);
   
 #ifdef __cplusplus
 }
