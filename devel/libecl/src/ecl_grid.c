@@ -473,12 +473,45 @@ static void ecl_cell_fwrite_GRID( const ecl_grid_type * grid , const ecl_cell_ty
   ecl_kw_fwrite( corners_kw , fortio );
 }
 
+//static const size_t cellMappingECLRi[8] = { 0, 1, 3, 2, 4, 5, 7, 6 };
 static void ecl_cell_ri_export( const ecl_cell_type * cell , double * ri_points) {
-  int point_nr;
-  for (point_nr =0; point_nr < 8; point_nr++) {
-    ri_points[ point_nr * 3     ] =  cell->corner_list[point_nr].x;
-    ri_points[ point_nr * 3 + 1 ] =  cell->corner_list[point_nr].y;
-    ri_points[ point_nr * 3 + 2 ] = -cell->corner_list[point_nr].z;
+  int ecl_offset = 4;
+  int ri_offset =  ecl_offset * 3;
+  {
+    int point_nr;
+    // Handling the points 0,1 & 4,5 which map directly between ECLIPSE and RI
+    for (point_nr =0; point_nr < 2; point_nr++) {
+      // Points 0 & 1
+      ri_points[ point_nr * 3     ] =  cell->corner_list[point_nr].x;
+      ri_points[ point_nr * 3 + 1 ] =  cell->corner_list[point_nr].y;
+      ri_points[ point_nr * 3 + 2 ] = -cell->corner_list[point_nr].z;
+
+      // Points 4 & 5
+      ri_points[ ri_offset + point_nr * 3     ] =  cell->corner_list[ecl_offset + point_nr].x;
+      ri_points[ ri_offset + point_nr * 3 + 1 ] =  cell->corner_list[ecl_offset + point_nr].y;
+      ri_points[ ri_offset + point_nr * 3 + 2 ] = -cell->corner_list[ecl_offset + point_nr].z;
+    }
+  }
+
+  {
+    int ecl_point;
+    /*
+      Handling the points 2,3 & 6,7 which are flipped when (2,3) ->
+      (3,2) and (6,7) -> (7,6) when going between ECLIPSE and ResInsight.
+    */
+    for (ecl_point =2; ecl_point < 4; ecl_point++) {
+      int ri_point = 5 - ecl_point;
+      // Points 2 & 3
+      ri_points[ ri_point * 3     ] =  cell->corner_list[ecl_point].x;
+      ri_points[ ri_point * 3 + 1 ] =  cell->corner_list[ecl_point].y;
+      ri_points[ ri_point * 3 + 2 ] = -cell->corner_list[ecl_point].z;
+      
+      
+      // Points 6 & 7
+      ri_points[ ri_offset + ri_point * 3     ] =  cell->corner_list[ecl_offset + ecl_point].x;
+      ri_points[ ri_offset + ri_point * 3 + 1 ] =  cell->corner_list[ecl_offset + ecl_point].y;
+      ri_points[ ri_offset + ri_point * 3 + 2 ] = -cell->corner_list[ecl_offset + ecl_point].z;
+    }
   }
 }
 
