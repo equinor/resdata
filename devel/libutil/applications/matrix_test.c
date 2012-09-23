@@ -49,6 +49,14 @@ int main( int argc, char ** argv)  {
     printf("matrix_det3:%g  ",matrix_det3( A3 ));
     printf("matrix_det:%g \n",matrix_det( A3 ));
   }
+
+  {
+    matrix_type * A4 = matrix_alloc(4,4);
+    matrix_random_init( A4 , rng );
+    matrix_iset( A4 , 0 , 0 , sin(0.98));
+    printf("matrix_det4:%g  ",matrix_det4( A4 ));
+    printf("matrix_det:%g \n",matrix_det( A4 ));
+  }
 #endif
 
   matrix_free( A );
