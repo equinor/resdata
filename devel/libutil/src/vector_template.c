@@ -1050,7 +1050,7 @@ static int * @TYPE@_vector_alloc_sort_perm__(const @TYPE@_vector_type * vector, 
   else
     qsort(sort_nodes , vector->size , sizeof * sort_nodes ,  @TYPE@_vector_cmp_node);
     
-  for (i=0; i < vector->size; i++)
+  for (i=0; i < vector->size; i++) 
     sort_perm[i] = sort_nodes[i].index;
   
   free( sort_nodes );
@@ -1064,7 +1064,7 @@ int * @TYPE@_vector_alloc_sort_perm(const @TYPE@_vector_type * vector) {
 
 
 int * @TYPE@_vector_alloc_rsort_perm(const @TYPE@_vector_type * vector) {
-  return @TYPE@_vector_alloc_sort_perm__( vector , false );
+  return @TYPE@_vector_alloc_sort_perm__( vector , true );
 }
 
 
