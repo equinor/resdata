@@ -1183,6 +1183,19 @@ int ecl_sum_data_get_report_step_from_days(const ecl_sum_data_type * data , doub
    Will go through the data and find the report step which EXACTLY
    matches the input sim_time. If no report step matches exactly the
    function will return -1.  
+
+   Observe that by default the report steps consist of half-open time
+   intervals like this: (t1, t2]. However the first report step
+   (i.e. report step 1, is a fully inclusive interval: [t0 , t1] where
+   t0 is the simulation start time. That is not implemented here;
+   meaning that if you supply the start time as @sim_time argument you
+   will get -1 and not 0 as you might expect. 
+
+   It would certainly be possible to detect the start_time input
+   argument and special case the return, but the opposite would be
+   'impossible' - you would never get anything sensible out when using
+   report_step == 0 as input to one of the functions expection
+   report_step input.
 */
 
 
