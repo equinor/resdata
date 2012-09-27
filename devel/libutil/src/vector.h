@@ -23,6 +23,7 @@
 extern "C" {
 #endif
 #include <node_data.h>
+#include <type_macros.h>
 
   typedef void ( vector_func_type ) (void * , void *);
   typedef int  ( vector_cmp_ftype)  (const void * , const void *);
@@ -77,6 +78,7 @@ extern "C" {
   
   void          vector_iset_buffer(vector_type * vector , int index , const void * buffer, int buffer_size);
   
+  UTIL_IS_INSTANCE_HEADER( vector );
 
 #ifdef __cplusplus
 }

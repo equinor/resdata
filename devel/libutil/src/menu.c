@@ -183,6 +183,7 @@ void menu_item_enable( menu_item_type * item ) {
   item->enabled = true;
 }
 
+
 char menu_item_get_key( const menu_item_type * item ) {
   if (item->enabled)
     return item->key_set[0];

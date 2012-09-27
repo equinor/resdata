@@ -46,7 +46,7 @@ typedef struct {
   
 
 UTIL_SAFE_CAST_FUNCTION(vector , VECTOR_TYPE_ID)
-
+UTIL_IS_INSTANCE_FUNCTION(vector , VECTOR_TYPE_ID)
 
 
 static void vector_resize__(vector_type * vector, int new_alloc_size) {
