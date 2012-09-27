@@ -1194,7 +1194,7 @@ int ecl_sum_data_get_report_step_from_days(const ecl_sum_data_type * data , doub
    It would certainly be possible to detect the start_time input
    argument and special case the return, but the opposite would be
    'impossible' - you would never get anything sensible out when using
-   report_step == 0 as input to one of the functions expection
+   report_step == 0 as input to one of the functions expecting
    report_step input.
 */
 
