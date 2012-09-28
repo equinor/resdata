@@ -18,12 +18,15 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <path_fmt.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <util.h>
 #include <stdbool.h>
+
+
+#include <util.h>
+#include <type_macros.h>
 #include <node_ctype.h>
+#include <path_fmt.h>
 
 /**
 The basic idea of the path_fmt_type is that it should be possible for
@@ -55,25 +58,14 @@ char * path = path_fmt_alloc(path_fmt , "BaseCase" , 67);
    
 
 struct path_fmt_struct {
-  int   __id;              /* Used for run_time checking */
+  UTIL_TYPE_ID_DECLARATION;
   char *fmt;
   char *file_fmt;
   bool  is_directory;
 };
 
 
-
-path_fmt_type * path_fmt_safe_cast(const void * arg) {
-  path_fmt_type * path_fmt = (path_fmt_type *) arg;
-  if (path_fmt->__id == PATH_FMT_ID)
-    return path_fmt;
-  else {
-    util_abort("%s: run_time cast failed \n",__func__);
-    return NULL;
-  }
-}
-
-
+static UTIL_SAFE_CAST_FUNCTION( path_fmt , PATH_FMT_ID)
 
 void path_fmt_reset_fmt(path_fmt_type * path , const char * fmt) {
   path->fmt = util_realloc_string_copy(path->fmt , fmt);
@@ -85,7 +77,7 @@ void path_fmt_reset_fmt(path_fmt_type * path , const char * fmt) {
 
 static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory) {
   path_fmt_type * path = util_malloc(sizeof * path );
-  path->__id           = PATH_FMT_ID;
+  UTIL_TYPE_ID_INIT(path , PATH_FMT_ID);
   path->fmt            = NULL;
   path->file_fmt       = NULL;
   path->is_directory   = is_directory;
@@ -315,3 +307,8 @@ void path_fmt_free(path_fmt_type * path) {
   free(path);
 }
 
+
+void path_fmt_free__( void * arg ) {
+  path_fmt_type * path_fmt = path_fmt_safe_cast( arg );
+  path_fmt_free( path_fmt );
+}

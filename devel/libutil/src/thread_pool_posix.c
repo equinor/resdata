@@ -294,6 +294,7 @@ static void * thread_pool_main_loop( void * arg ) {
 
 
 
+
 /**
    This function initializes a couple of counters, and starts up the
    dispatch thread. If the thread_pool should be reused after a join,
