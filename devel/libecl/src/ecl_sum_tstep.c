@@ -29,16 +29,43 @@
 
 #define ECL_SUM_TSTEP_ID 88631
 
+
+/*
+  This file implements the ecl_sum_tstep datatype which contains the
+  summary information for all summary vectors at one instant in
+  time. If we view the summary data as this:
+
+  
+Header direction: ecl_smspec   DAYS     WWCT:OP_3     FOPT     BPR:15,10,25     
+                               --------------------------------------------
+  /|\                           0.00    0.00          0.00           256.00   <-- One timestep ecl_sum_tstep
+   |                           10.00    0.56         10.00           255.00
+ Time direction: ecl_sum_data  20.00    0.61         18.70           253.00
+   |                           30.00    0.63         21.20           251.00
+   |                           ...
+  \|/                          90.00    0.80         39.70           244.00  
+                               --------------------------------------------
+
+  The ecl_sum_tstep structure corresponds to one 'horizontal line' in
+  the summary data. 
+
+  These timesteps correspond exactly to the simulators timesteps,
+  i.e. when convergence is poor they are closely spaced. In the
+  ECLIPSE summary files these time steps are called "MINISTEPS" - and
+  that term is also used some places in the ecl_sum_xxx codebase.
+ */
+
+
 struct ecl_sum_tstep_struct {
   UTIL_TYPE_ID_DECLARATION;
   float                  * data;            /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
-  time_t                   sim_time;      
-  int                      ministep;      
-  int                      report_step;
+  time_t                   sim_time;        /* The true time (i.e. 20.th of october 2010) of corresponding to this timestep. */ 
+  int                      ministep;        /* The ECLIPSE internal time-step number; one ministep per numerical timestep. */
+  int                      report_step;     /* The report step this time-step is part of - in general there can be many timestep for each report step. */
   double                   sim_days;        /* Accumulated simulation time up to this ministep. */
   int                      data_size;       /* Number of elements in data - only used for checking indices. */
   int                      internal_index;  /* Used for lookups of the next / previous ministep based on an existing ministep. */
-  const ecl_smspec_type  * smspec;                   
+  const ecl_smspec_type  * smspec;          /* The smespec header information for this tstep - must be compatible. */         
 };
 
 
@@ -229,11 +256,11 @@ void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int_vecto
     const int * index = int_vector_get_ptr( index_map );
     float * data      = ecl_kw_get_ptr( params_kw );
 
-        {
-                int i;
-        for (i=0; i < compact_size; i++)
-           data[i] = ministep->data[ index[i] ];
-        }
+    {
+      int i;
+      for (i=0; i < compact_size; i++)
+        data[i] = ministep->data[ index[i] ];
+    }
     ecl_kw_fwrite( params_kw , fortio );
     ecl_kw_free( params_kw );
   }
