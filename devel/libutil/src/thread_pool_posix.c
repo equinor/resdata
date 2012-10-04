@@ -355,10 +355,10 @@ void thread_pool_join(thread_pool_type * pool) {
 
 thread_pool_type * thread_pool_alloc(int max_running , bool start_queue) {
   thread_pool_type * pool = util_malloc( sizeof *pool );
-  pool->job_slots       = util_calloc( max_running , sizeof * pool->job_slots );
-  pool->max_running     = max_running;
-  pool->queue           = NULL;
-  pool->accepting_jobs  = false;
+  pool->job_slots         = util_calloc( max_running , sizeof * pool->job_slots );
+  pool->max_running       = max_running;
+  pool->queue             = NULL;
+  pool->accepting_jobs    = false;
   pthread_rwlock_init( &pool->queue_lock , NULL);
   thread_pool_resize_queue( pool  , 32 );  
   if (start_queue) 
