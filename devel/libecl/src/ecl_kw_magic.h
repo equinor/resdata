@@ -276,6 +276,7 @@ extern "C" {
 #define FILEHEAD_KW    "FILEHEAD"
 #define ENDGRID_KW     "ENDGRID"
 #define ENDLGR_KW      "ENDLGR"
+#define CORSNUM_KW     "CORSNUM"
 
 /* GRID keywords */
 #define GRIDHEAD_KW    "GRIDHEAD"   /* Header information for GRID files. */

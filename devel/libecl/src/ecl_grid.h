@@ -27,12 +27,22 @@ extern "C" {
 #include <int_vector.h>
 #include <stringlist.h>
 
+#include <ecl_coarse_cell.h>
 #include <ecl_kw.h>  
 
 
   typedef double (block_function_ftype) ( const double_vector_type *); 
   typedef struct ecl_grid_struct ecl_grid_type;
+
+  bool                         ecl_grid_have_coarse_cells( const ecl_grid_type * main_grid );
+  bool                         ecl_grid_cell_in_coarse_group1( const ecl_grid_type * main_grid , int global_index );   
+  bool                         ecl_grid_cell_in_coarse_group3( const ecl_grid_type * main_grid , int i , int j , int k);   
+  int                          ecl_grid_get_num_coarse_groups( const ecl_grid_type * main_grid );
+  ecl_coarse_cell_type       * ecl_grid_iget_coarse_group( const ecl_grid_type * ecl_grid , int coarse_nr );
+  ecl_coarse_cell_type       * ecl_grid_get_cell_coarse_group1( const ecl_grid_type * ecl_grid , int global_index);
+  ecl_coarse_cell_type       * ecl_grid_get_cell_coarse_group3( const ecl_grid_type * ecl_grid , int i , int j , int k);
   
+
   void            ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j, double_vector_type * column);
   int             ecl_grid_get_global_index_from_xy_top( const ecl_grid_type * ecl_grid , double x , double y);
   int             ecl_grid_get_global_index_from_xy_bottom( const ecl_grid_type * ecl_grid , double x , double y);
@@ -89,7 +99,7 @@ extern "C" {
   void            ecl_grid_get_xyz1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos);
   void            ecl_grid_get_xyz1A(const ecl_grid_type * grid , int active_index , double *xpos , double *ypos , double *zpos);
   int             ecl_grid_get_global_size( const ecl_grid_type * ecl_grid );
-  bool            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool include_lgr);
+  bool            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool include_lgr, bool verbose);
   int             ecl_grid_get_active_size( const ecl_grid_type * ecl_grid );
   
   double          ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index);
@@ -138,9 +148,9 @@ extern "C" {
   void                    ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , FILE * stream , double double_default);
   bool                    ecl_grid_test_lgr_consistency( const ecl_grid_type * ecl_grid );
   
-  void                    ecl_grid_fwrite_EGRID( const ecl_grid_type * grid , const char * filename);
+  void                    ecl_grid_fwrite_EGRID(  ecl_grid_type * grid , const char * filename);
   void                    ecl_grid_fwrite_GRID( const ecl_grid_type * grid , const char * filename);
-  void                    ecl_grid_fprintf_grdecl( const ecl_grid_type * grid , FILE * stream );
+  void                    ecl_grid_fprintf_grdecl(  ecl_grid_type * grid , FILE * stream );
   void                    ecl_grid_fwrite_EGRID_header( int dims[3] , const float mapaxes[6], fortio_type * fortio);
   
   float          * ecl_grid_alloc_coord_data( const ecl_grid_type * grid );

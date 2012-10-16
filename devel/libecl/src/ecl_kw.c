@@ -336,7 +336,7 @@ bool ecl_kw_ichar_eq(const ecl_kw_type *ecl_kw , int i , const char *value) {
 }
 
 
-static bool ecl_kw_header_eq(const ecl_kw_type *ecl_kw1 , const ecl_kw_type * ecl_kw2) {
+bool ecl_kw_header_eq(const ecl_kw_type *ecl_kw1 , const ecl_kw_type * ecl_kw2) {
   bool  equal = true;
 
   if (strcmp(ecl_kw1->header8 , ecl_kw2->header8) != 0)            
@@ -380,6 +380,70 @@ bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
   
   return equal;
 }
+
+
+#define CMP(ctype) \
+static bool CMP_ ## ctype( ctype v1, ctype v2 , ctype epsilon) { \
+  if ((abs(v1) + abs(v2)) == 0)                                  \
+     return true;                                                \
+  else {                                                         \
+      ctype d = fabs(v1 - v2) / (fabs(v1) + fabs(v2));           \
+      if (d < epsilon)                                           \
+        return true;                                             \
+   else                                                          \
+        return false;                                            \
+    }                                                            \
+}                   
+CMP(float)
+CMP(double)
+#undef CMP
+
+#define ECL_KW_NUMERIC_CMP(ctype)                                                                                           \
+  static bool ecl_kw_numeric_equal_ ## ctype( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , ctype rel_diff) { \
+  int index;                                                                                                                \
+  bool equal = true;                                                                                                        \
+  {                                                                                                                         \
+     const ctype * data1 = (const ctype *) ecl_kw1->data;                                                                   \
+     const ctype * data2 = (const ctype *) ecl_kw2->data;                                                                   \
+     for (index = 0; index < ecl_kw1->size; index++) {                                                                      \
+        equal = CMP_ ## ctype( data1[index] , data2[index] , rel_diff);                                                     \
+        if (!equal)                                                                                                         \
+           break;                                                                                                           \
+     }                                                                                                                      \
+  }                                                                                                                         \
+  return equal;                                                                                                             \
+}
+
+ECL_KW_NUMERIC_CMP( float )
+ECL_KW_NUMERIC_CMP( double )
+#undef ECL_KW_NUMERIC_CMP
+
+
+/**
+   This function compares the data of two ecl_kw instances, and
+   returns true if the relative numerical difference is less than
+   @rel_diff. Does not consider consider the kw header.  
+*/
+
+bool ecl_kw_numeric_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2 , double rel_diff) {
+  bool equal = true;
+  if ( ecl_kw1->ecl_type != ecl_kw2->ecl_type)
+    equal = false;
+  
+  if ( ecl_kw1->size != ecl_kw2->size)
+    equal = false;
+  
+  if (equal) {
+    if (ecl_kw1->ecl_type == ECL_FLOAT_TYPE)
+      equal = ecl_kw_numeric_equal_float( ecl_kw1 , ecl_kw2 , rel_diff );
+    else if (ecl_kw1->ecl_type == ECL_DOUBLE_TYPE)
+      equal = ecl_kw_numeric_equal_double( ecl_kw1 , ecl_kw2 , rel_diff );
+    else
+      equal = ecl_kw_data_equal( ecl_kw1 , ecl_kw2->data );
+  }
+  return equal;
+}
+
 
 
 bool ecl_kw_block_equal( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int cmp_elements) {

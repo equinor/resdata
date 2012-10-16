@@ -7,6 +7,7 @@ include_directories( ${libgeometry_src_path} )
 
 add_subdirectory( src )
 add_subdirectory( applications )
+add_subdirectory( tests )
 
 #if (BUILD_CXX)
 #   add_subdirectory( cxx )
