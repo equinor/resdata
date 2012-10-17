@@ -3426,6 +3426,80 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
 }
 
 
+void util_binary_split_string_from_max_length(const char * __src , const char * sep_set, int max_length , char ** __first_part , char ** __second_part) {
+  char * first_part = NULL;
+  char * second_part = NULL;
+  if (__src != NULL) {
+    char * src;
+    int pos;
+    /* Removing leading separators. */
+    pos = 0;
+    while ((pos < strlen(__src)) && (strchr(sep_set , __src[pos]) != NULL))
+      pos += 1;
+    if (pos == strlen(__src))  /* The string consisted ONLY of separators. */
+      src = NULL;
+    else
+      src = util_alloc_string_copy(&__src[pos]);
+    
+    /*Remove trailing separators. */
+    pos = strlen(__src) - 1;
+    while ((pos >= 0) && (strchr(sep_set , __src[pos]) != NULL))
+      pos -= 1;
+    if (pos < 0)
+      src = NULL;
+    else
+      src = util_alloc_substring_copy(__src , 0 , pos + 1);
+    
+    
+    /* 
+       OK - we have removed all leading (or trailing) separators, and we have
+       a valid string which we can continue with.
+    */
+    if (src != NULL) {
+      int pos;
+      int start_pos , delta , end_pos;
+      start_pos = max_length;
+      delta     = -1;
+      end_pos   = -1;
+      pos = start_pos;
+      while ((pos != end_pos) && (strchr(sep_set , src[pos]) == NULL)) 
+        pos += delta;
+      /* 
+         OK - now we have either iterated through the whole string - or
+         we hav found a character in the sep_set. 
+      */
+      if (pos == end_pos) {
+        /* There was no split. */
+        first_part = util_alloc_string_copy( src );
+        second_part   = NULL;
+      } else {
+        int sep_start = 0;
+        int sep_end   = 0;
+	sep_end = pos;
+        /* Iterate through the separation string - can be e.g. many " " */
+        while ((pos != end_pos) && (strchr(sep_set , src[pos]) != NULL))
+          pos += delta;
+	
+	
+	sep_start = pos;
+	if (sep_start == end_pos) {
+	  // ":String" => (NULL , "String")
+	  first_part = NULL;
+	  second_part = util_alloc_string_copy( &src[sep_end+1] );
+	} else {
+	  first_part  = util_alloc_substring_copy( src , 0 , sep_start + 1);
+	  second_part = util_alloc_string_copy( &src[sep_end + 1]);
+	}
+      }
+      free(src);
+    }
+  }
+  *__first_part  = first_part;
+  *__second_part = second_part;
+}
+
+
+
 /**
    The function will, in-place, update all occurencese: expr->subs.
    The return value is the number of substitutions which have been

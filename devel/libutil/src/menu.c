@@ -67,6 +67,7 @@
 
 struct menu_item_struct {
   bool             separator;    /* If this is a separator - in that case all the following fields are moot. */ 
+  bool             helptext;     /* If this is help text - Only label is present  */
   char           * key_set;      /* The characters which will activate this item , e.g. "sS" - must be a \0 terminated string */
   char           * label;        /* The label/description of this menu item */
   menu_func_type * func;         /* The function called when this item is activated. */
@@ -94,9 +95,12 @@ struct menu_struct {
 */
 static void menu_item_free(menu_item_type * item) {
   if (!item->separator) {
-    free(item->key_set);
     free(item->label);
   }
+  if (!item->separator && !item->helptext){
+    free(item->key_set); 
+  }
+
 
   if (item->free_arg != NULL)
     item->free_arg(item->arg);
@@ -154,6 +158,7 @@ static menu_item_type * menu_item_alloc_empty() {
   item->func    = NULL;
   item->arg     = NULL;
   item->separator    = false;
+  item->helptext     = false;
   item->label_length = 0;
   item->free_arg = NULL;
   item->enabled  = true;
@@ -222,6 +227,7 @@ menu_item_type * menu_add_item(menu_type * menu , const char * label , const cha
     item->func    = func;
     item->arg     = arg;
     item->separator = false;
+    item->helptext = false;
     item->free_arg  = free_arg;
     menu_append_item__(menu , item);
     menu_item_set_label(item , label);
@@ -243,6 +249,16 @@ void menu_add_separator(menu_type * menu) {
 }
 
 
+/**
+   Will print helptext to screen
+*/
+
+void menu_add_helptext(menu_type * menu, const char * label ) {
+  menu_item_type * item = menu_item_alloc_empty();
+  item->helptext = true;
+  menu_append_item__(menu , item);
+  menu_item_set_label(item , label);
+}
 
 
 
@@ -287,12 +303,73 @@ static void __print_sep(int l) {
 }
 
 
+static void __print_helptext(char * label, int l){
+  bool end_reached = false;
+  char * label_copy = util_realloc(label , (strlen(label) + 1) * sizeof *label_copy );
+  int ended = 0;
+  char * first_part = "Dummy3";
+  char * second_part = "Dummy4";
+  while(!end_reached){
+    if(strlen(label_copy) > l){
+      util_binary_split_string_from_max_length(label_copy , " ", l , &first_part , &second_part);
+      printf("|    %s",first_part);
+      for (int i=strlen(first_part); i < l; i++)
+	fputc(' ' , stdout);
+      printf("    |\n");
+      label_copy = util_realloc_string_copy(label_copy, second_part);
+    }
+    else{
+      printf("|    %s",label_copy);
+      for (int i=strlen(label_copy); i < l; i++)
+	fputc(' ' , stdout);
+      printf("    |\n");
+      end_reached = true;
+    }
+    
+    
+    
+    /*    if(ended + strlen(first_part) > l){
+      for (int i=ended; i < l; i++)
+	fputc(' ' , stdout);
+      printf("     |\n");
+      ended = 0;
+    }
+    printf(" %s",first_part);
+    ended = ended + strlen(first_part)+1;
+    printf("\nsecond_part%s %d\n",second_part,strlen(second_part));
+    end_reached = true;
+    if (strlen(second_part) > 0){
+      end_reached = true;
+      for (int i=ended; i < l; i++)
+	fputc(' ' , stdout);
+      printf("     |\n");
+    }
+    else{
+      for (int i=ended; i < l; i++)
+	fputc(' ' , stdout);
+      printf("     |\n");
+      //label_copy = util_realloc_string_copy(label_copy, second_part);
+      }*/
+  }
+  //if (strlen(second_part) > 0)
+  //  free(second_part);
+  //if (strlen(first_part) > 0)
+  //  free(first_part);
+  //free(label_copy);
+}
+
+
+
+
 static void menu_display(const menu_type * menu) {
   int i;
   int length = strlen(menu->title);
   for (i = 0; i < vector_get_size(menu->items); i++) {
     const menu_item_type * item = vector_iget_const( menu->items , i);
-    length = util_int_max(length , item->label_length);
+    if(!item->helptext)
+      length = util_int_max(length , item->label_length);
+    if(item->helptext)
+      length = util_int_max(length , 60); /* Hardcoded length for helptext*/
   }
 
 
@@ -305,6 +382,8 @@ static void menu_display(const menu_type * menu) {
     const menu_item_type * item = vector_iget_const( menu->items , i);
     if (item->separator) 
       __print_sep(length + 6);
+    else if (item->helptext)
+      __print_helptext(item->label,length);
     else {
       printf("| %c: ", menu_item_get_key( item ));
       util_fprintf_string(item->label , length + 3 , right_pad , stdout);
@@ -353,7 +432,7 @@ menu_item_type * menu_get_item(const menu_type * menu, char cmd) {
   menu_item_type * item = NULL;
   while (item_index < vector_get_size(menu->items)) {
     menu_item_type * current_item = vector_iget(menu->items , item_index);
-    if (!current_item->separator) {
+    if (!current_item->separator || !current_item->helptext) {
       if (strchr(current_item->key_set , cmd) != NULL) {
         item = current_item;
         break;
@@ -387,12 +466,14 @@ void menu_run(const menu_type * menu) {
       while (1) {
         const menu_item_type * item = vector_iget_const(menu->items , item_index);
         if (!item->separator) {
-          if (strchr(item->key_set , cmd) != NULL) {
-            /* Calling the function ... */
-            menu_item_call( item );
-            break;
-          }
-        }
+	  if(!item->helptext) {
+	    if (strchr(item->key_set , cmd) != NULL) {
+	      /* Calling the function ... */
+	      menu_item_call( item );
+	      break;
+	    }
+	  }
+	}
         item_index++;
       }
     }

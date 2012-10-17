@@ -200,6 +200,7 @@ typedef enum {left_pad   = 0,
   void         util_split_string(const char *, const char *, int *, char ***);
   void         util_path_split(const char * , int *, char ***);
   void         util_binary_split_string(const char * , const char * , bool  , char ** , char ** );
+  void         util_binary_split_string_from_max_length(const char * , const char * , int  , char ** , char ** );
   char       * util_alloc_joined_string(const char **  , int , const char * );
   char       * util_alloc_multiline_string(const char ** , int );
   char       * util_string_replace_alloc(const char *, const char *, const char *);
