@@ -310,8 +310,12 @@ extern "C" {
 #define GRIDHEAD_GRIDTYPE_CORNERPOINT 1 /*  <----\                        */
                                         /*       |  Fucking hysterical!   */
 #define FILEHEAD_GRIDTYPE_CORNERPOINT 0 /*  <----/                        */
-#define FILEHEAD_SINGLE_POROSITY      0 
+
 #define FILEHEAD_ORGTYPE_CORNERPOINT  1
+#define FILEHEAD_SINGLE_POROSITY      0 
+#define FILEHEAD_DUAL_POROSITY        1 
+#define FILEHEAD_DUAL_PERMEABILITY    2 
+
 
 #ifdef __cplusplus
 }

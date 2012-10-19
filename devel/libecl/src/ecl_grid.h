@@ -151,6 +151,7 @@ extern "C" {
   void                    ecl_grid_fwrite_EGRID(  ecl_grid_type * grid , const char * filename);
   void                    ecl_grid_fwrite_GRID( const ecl_grid_type * grid , const char * filename);
   void                    ecl_grid_fprintf_grdecl(  ecl_grid_type * grid , FILE * stream );
+  void                    ecl_grid_fwrite_EGRID_header__( int dims[3] , const float mapaxes[6], int dualp_flag , fortio_type * fortio);
   void                    ecl_grid_fwrite_EGRID_header( int dims[3] , const float mapaxes[6], fortio_type * fortio);
   
   float          * ecl_grid_alloc_coord_data( const ecl_grid_type * grid );

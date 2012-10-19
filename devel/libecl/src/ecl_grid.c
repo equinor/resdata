@@ -445,7 +445,7 @@ struct ecl_grid_struct {
   int                   parent_box[6]; /* integers i1,i2, j1,j2, k1,k2 of the parent grid region containing this lgr. the indices are inclusive - zero offset */
                                        /* not used yet .. */ 
   
-
+  int                   dualp_flag;    
   bool                  use_mapaxes;
   double                unit_x[2];
   double                unit_y[2];
@@ -1080,7 +1080,7 @@ static void ecl_grid_alloc_cells( ecl_grid_type * grid , bool init_valid) {
    is performed.
 */
 
-static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx , int ny , int nz, int grid_nr , bool init_valid) {
+static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int dualp_flag , int nx , int ny , int nz, int grid_nr , bool init_valid) {
   ecl_grid_type * grid = util_malloc(sizeof * grid );
   UTIL_TYPE_ID_INIT(grid , ECL_GRID_ID);
   grid->nx                = nx;
@@ -1091,6 +1091,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int nx
   grid->global_grid       = global_grid;
   grid->coarsening_active = false;
 
+  grid->dualp_flag    = dualp_flag;
   grid->coord_kw      = NULL;
   grid->visited       = NULL;
   grid->inv_index_map = NULL;
@@ -1695,8 +1696,8 @@ void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * zcorn ,
   0---1
 */
 
-static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid , int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, const int * corsnum, int grid_nr) {
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , nx,ny,nz,grid_nr,true);
+static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid , int dualp_flag , int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, const int * corsnum, int grid_nr) {
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , dualp_flag , nx,ny,nz,grid_nr,true);
   
   if (mapaxes != NULL)
     ecl_grid_init_mapaxes( ecl_grid , mapaxes );
@@ -1721,10 +1722,11 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid 
 */
 
 ecl_grid_type * ecl_grid_alloc_GRDECL_data(int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes) {
-  return ecl_grid_alloc_GRDECL_data__(NULL , nx , ny , nz , zcorn , coord , actnum , mapaxes , NULL , 0);
+  return ecl_grid_alloc_GRDECL_data__(NULL , FILEHEAD_SINGLE_POROSITY , nx , ny , nz , zcorn , coord , actnum , mapaxes , NULL , 0);
 }
 
 static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,  
+                                                  int dualp_flag, 
                                                   const ecl_kw_type * gridhead_kw , 
                                                   const ecl_kw_type * zcorn_kw , 
                                                   const ecl_kw_type * coord_kw , 
@@ -1761,6 +1763,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
       corsnum_data = ecl_kw_get_int_ptr( corsnum_kw );
     
     return ecl_grid_alloc_GRDECL_data__(global_grid , 
+                                        dualp_flag , 
                                         nx , ny , nz , 
                                         ecl_kw_get_float_ptr(zcorn_kw) , 
                                         ecl_kw_get_float_ptr(coord_kw) , 
@@ -1787,7 +1790,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
                                          
 
   ecl_kw_type * gridhead_kw = ecl_grid_alloc_gridhead_kw( nx , ny , nz , 0);
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__(NULL , gridhead_kw , zcorn_kw , coord_kw , actnum_kw , mapaxes_kw , NULL , 0);
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__(NULL , FILEHEAD_SINGLE_POROSITY , gridhead_kw , zcorn_kw , coord_kw , actnum_kw , mapaxes_kw , NULL , 0);
   ecl_kw_free( gridhead_kw );
   return ecl_grid;
 
@@ -1855,10 +1858,12 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
   ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , GRIDHEAD_KW  , grid_nr);
   ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , ZCORN_KW     , grid_nr);
   ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , COORD_KW     , grid_nr);
+  ecl_kw_type * filehead_kw  = ecl_file_iget_named_kw( ecl_file , FILEHEAD_KW  , grid_nr);
   ecl_kw_type * corsnum_kw   = NULL;
   ecl_kw_type * actnum_kw    = NULL;
   ecl_kw_type * mapaxes_kw   = NULL; 
-
+  int dualp_flag             = ecl_kw_iget_int( filehead_kw , FILEHEAD_DUALP_INDEX );
+  
   /** If ACTNUM is not present - that is is interpreted as - all active. */
   if (ecl_file_get_num_named_kw(ecl_file , ACTNUM_KW) > grid_nr)
     actnum_kw = ecl_file_iget_named_kw( ecl_file , ACTNUM_KW    , grid_nr);
@@ -1871,9 +1876,12 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
     if (ecl_file_has_kw( ecl_file , CORSNUM_KW)) 
       corsnum_kw   = ecl_file_iget_named_kw( ecl_file , CORSNUM_KW , 0);
   }
+
+  
   
   {
     ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__( main_grid , 
+                                                           dualp_flag , 
                                                            gridhead_kw , 
                                                            zcorn_kw , 
                                                            coord_kw , 
@@ -1932,8 +1940,8 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file ) {
 
 
 
-static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , int num_coords , int nx, int ny , int nz , int grid_nr , int coords_size , int ** coords , float ** corners , const float * mapaxes) {
-  ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , nx , ny , nz , grid_nr , false);
+static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , int num_coords , int dualp_flag , int nx, int ny , int nz , int grid_nr , int coords_size , int ** coords , float ** corners , const float * mapaxes) {
+  ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , dualp_flag , nx , ny , nz , grid_nr , false);
 
   if (mapaxes != NULL)
     ecl_grid_init_mapaxes( grid , mapaxes );
@@ -1956,7 +1964,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , 
 */
 
 ecl_grid_type * ecl_grid_alloc_GRID_data(int num_coords , int nx , int ny , int nz , int coords_size , int ** coords , float ** corners , const float * mapaxes) {
-  return ecl_grid_alloc_GRID_data__( NULL , num_coords , nx , ny , nz , 0 , coords_size , coords , corners , mapaxes);
+  return ecl_grid_alloc_GRID_data__( NULL , num_coords , FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0 , coords_size , coords , corners , mapaxes);
 }
 
 
@@ -2041,6 +2049,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
     // 3: Fetching the main chunk of cell data from the COORDS and
     //    CORNERS keywords.
     {
+      int dualp_flag  = FILEHEAD_SINGLE_POROSITY;   // Does not seem there is a simple way to get this from the GRID files?
       int coords_size = -1;
       int index;
     
@@ -2056,7 +2065,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
         coords_size = ecl_kw_get_size( coords_kw );
       }
       // Create the grid:
-      grid = ecl_grid_alloc_GRID_data__( global_grid , num_coords , nx , ny , nz , grid_nr , coords_size , coords , corners , mapaxes_data );
+      grid = ecl_grid_alloc_GRID_data__( global_grid , num_coords , dualp_flag , nx , ny , nz , grid_nr , coords_size , coords , corners , mapaxes_data );
 
       free( coords );
       free( corners );
@@ -2120,7 +2129,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
 */
 
 ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double * ivec, const double * jvec , const double * kvec , const int * actnum) {
-  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , nx , ny , nz , 0,true);
+  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0,true);
   const double offset[3] = {0,0,0};
 
   int k,j,i;
@@ -3799,7 +3808,7 @@ ENDGRID             0:INTE
    a standard EGRID header without creating a grid instance first. 
 */
 
-static void ecl_grid_fwrite_main_EGRID_header( const float * mapaxes, fortio_type * fortio ) {
+static void ecl_grid_fwrite_main_EGRID_header( const float * mapaxes, int dualp_flag , fortio_type * fortio ) {
   int EGRID_VERSION  = 3;
   int RELEASE_YEAR   = 2007;
   int COMPAT_VERSION = 0;
@@ -3812,7 +3821,7 @@ static void ecl_grid_fwrite_main_EGRID_header( const float * mapaxes, fortio_typ
     ecl_kw_iset_int( filehead_kw , FILEHEAD_YEAR_INDEX      , RELEASE_YEAR );
     ecl_kw_iset_int( filehead_kw , FILEHEAD_COMPAT_INDEX    , COMPAT_VERSION );
     ecl_kw_iset_int( filehead_kw , FILEHEAD_TYPE_INDEX      , FILEHEAD_GRIDTYPE_CORNERPOINT );
-    ecl_kw_iset_int( filehead_kw , FILEHEAD_DUALP_INDEX     , FILEHEAD_SINGLE_POROSITY );
+    ecl_kw_iset_int( filehead_kw , FILEHEAD_DUALP_INDEX     , dualp_flag );
     ecl_kw_iset_int( filehead_kw , FILEHEAD_ORGFORMAT_INDEX , FILEHEAD_ORGTYPE_CORNERPOINT );
 
     ecl_kw_fwrite( filehead_kw , fortio );
@@ -3835,9 +3844,14 @@ static void ecl_grid_fwrite_gridhead_kw( int nx, int ny , int nz, int grid_nr, f
 
 
 
-void ecl_grid_fwrite_EGRID_header( int dims[3] , const float mapaxes[6], fortio_type * fortio) {
-  ecl_grid_fwrite_main_EGRID_header( mapaxes , fortio );
+
+void ecl_grid_fwrite_EGRID_header__( int dims[3] , const float mapaxes[6], int dualp_flag , fortio_type * fortio) {
+  ecl_grid_fwrite_main_EGRID_header( mapaxes , dualp_flag , fortio );
   ecl_grid_fwrite_gridhead_kw( dims[0] , dims[1] , dims[2] , 0 , fortio);
+}
+
+void ecl_grid_fwrite_EGRID_header( int dims[3] , const float mapaxes[6], fortio_type * fortio) {
+  ecl_grid_fwrite_EGRID_header__(dims , mapaxes , FILEHEAD_SINGLE_POROSITY , fortio );
 }
 
 
@@ -4153,7 +4167,7 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
 
   /* Writing header */
   if (!is_lgr)
-    ecl_grid_fwrite_main_EGRID_header( ecl_grid_get_mapaxes( grid ) , fortio );
+    ecl_grid_fwrite_main_EGRID_header( ecl_grid_get_mapaxes( grid ) , grid->dualp_flag , fortio );
   else {
     {
       ecl_kw_type * lgr_kw = ecl_kw_alloc(LGR_KW , 1 , ECL_CHAR_TYPE );
