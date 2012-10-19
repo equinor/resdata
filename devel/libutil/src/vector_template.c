@@ -95,6 +95,7 @@
 
 #include <string.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 #include <type_macros.h>
 #include <util.h>
@@ -136,6 +137,7 @@ typedef struct {
 UTIL_SAFE_CAST_FUNCTION(@TYPE@_vector , TYPE_VECTOR_ID);
 
 
+
 static void @TYPE@_vector_realloc_data__(@TYPE@_vector_type * vector , int new_alloc_size) {
   if (new_alloc_size != vector->alloc_size) {
     if (vector->data_owner) {
@@ -155,6 +157,25 @@ static void @TYPE@_vector_realloc_data__(@TYPE@_vector_type * vector , int new_a
       util_abort("%s: tried to change the storage are for a shared data segment \n",__func__);
   }
 }
+
+
+static void @TYPE@_vector_memmove(@TYPE@_vector_type * vector , int offset , int count) {
+  if ((count + offset) < 0)
+    util_abort("%s: offset:%d  left_shift:%d - invalid \n",__func__ , offset , -count);
+
+  if ((count + vector->size > vector->alloc_size))
+    @TYPE@_vector_realloc_data__( vector , util_int_min( 2*vector->alloc_size , count + vector->size ));
+  
+  {
+    int block_size     = abs(count) * sizeof(@TYPE@);
+    @TYPE@ * target    = &vector->data[offset + count];
+    const @TYPE@ * src = &vector->data[offset];
+    memmove( target , src , block_size );
+    
+    vector->size += count;
+  }
+}
+
 
 
 static void @TYPE@_vector_assert_index(const @TYPE@_vector_type * vector , int index) {
@@ -598,13 +619,9 @@ void @TYPE@_vector_idel_block( @TYPE@_vector_type * vector , int index , int blo
     if ((index >= 0) && (index < vector->size) && (block_size >= 0)) {
       if (index + block_size > vector->size)
         block_size = vector->size - index;
-      {
-        int move_size      = (vector->size - (index + block_size)) * sizeof(@TYPE@);
-        @TYPE@ * target    = &vector->data[index];
-        const @TYPE@ * src = &vector->data[index + block_size];
-        memmove( target , src , move_size );
-      }
-      vector->size -= block_size;
+      
+      index += block_size;
+      @TYPE@_vector_memmove( vector , index , -block_size );
     } else
       util_abort("%s: invalid input \n",__func__);
   }
@@ -621,6 +638,16 @@ void @TYPE@_vector_idel_block( @TYPE@_vector_type * vector , int index , int blo
   @TYPE@ del_value = @TYPE@_vector_iget( vector , index );
   @TYPE@_vector_idel_block( vector , index , 1 );
   return del_value;
+}
+
+
+void @TYPE@_vector_insert( @TYPE@_vector_type * vector , int index , @TYPE@ value) {
+  if (index >= vector->size)
+    @TYPE@_vector_iset( vector , index , value );
+  else {
+    @TYPE@_vector_memmove( vector , index , 1 );
+    @TYPE@_vector_iset( vector , index , value );
+  }
 }
 
 

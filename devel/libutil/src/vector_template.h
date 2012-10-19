@@ -60,6 +60,7 @@ typedef @TYPE@ (@TYPE@_ftype) (@TYPE@);
   void                 @TYPE@_vector_iset(@TYPE@_vector_type *       , int , @TYPE@);
   void                 @TYPE@_vector_idel_block( @TYPE@_vector_type * vector , int index , int block_size);
   @TYPE@               @TYPE@_vector_idel( @TYPE@_vector_type * vector , int index);
+  void                 @TYPE@_vector_insert( @TYPE@_vector_type * vector , int index , @TYPE@ value);
   void                 @TYPE@_vector_append(@TYPE@_vector_type *     , @TYPE@);
   void                 @TYPE@_vector_free(@TYPE@_vector_type *);  
   void                 @TYPE@_vector_free__(void *);  

@@ -2272,12 +2272,15 @@ bool util_is_executable(const char * path) {
 */
 bool util_entry_readable( const char * entry ) {
   struct stat buffer;
-  stat( entry , &buffer );
-  return buffer.st_mode & S_IRUSR;
+  if (stat( entry , &buffer ) == 0)
+    return buffer.st_mode & S_IRUSR;
+  else
+    return false;  /* If stat failed - typically not existing entry - we return false. */
 }
 
 #else
   // Windows: purely on extension ....
+
 bool util_is_executable(const char * path) {
   char * ext;
   util_alloc_file_components( path , NULL , NULL , &ext);

@@ -99,27 +99,24 @@ static int vector_append_node(vector_type * vector , node_data_type * node);
 
 
 /** 
-    This function assumes that the index is *inside* the vector,
-    otherwise it will fail HARD. Should NOT be exported (then we
-    suddenly have to check for 'holes' in the vector.
-
-    If (index == vector->size) i.e. this amounts to an append, the
-    append routine will be called (which again will call this function
-    ...) ; if index > vector->size, the function will fail hard.
+    If the index is beyond the length of the vector the hole in the
+    vector will be filled with NULL nodes.  
 */
 
 static void vector_iset__(vector_type * vector , int index , node_data_type * node) {
+  if (index > vector->size)
+    vector_grow_NULL( vector , index );
+
   if (index == vector->size) 
     vector_append_node( vector , node );
-  else if (index > vector->size) 
-    util_abort("%s: called with index:%d  max_value:%d \n",__func__ , index , vector->size);
   else {
     if (vector->data[index] != NULL) 
       node_data_free( vector->data[index] );
-
+    
     vector->data[index] = node;
   }
 }
+
 
 /**
    This is the low level function opposite to the vector_idel()
