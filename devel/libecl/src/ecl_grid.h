@@ -66,12 +66,15 @@ extern "C" {
   const  char   * ecl_grid_get_name( const ecl_grid_type * );
   int             ecl_grid_get_active_index3(const ecl_grid_type * ecl_grid , int i , int j , int k);
   int             ecl_grid_get_active_index1(const ecl_grid_type * ecl_grid , int global_index);
+  int             ecl_grid_get_active_fracture_index3(const ecl_grid_type * ecl_grid , int i , int j , int k);
+  int             ecl_grid_get_active_fracture_index1(const ecl_grid_type * ecl_grid , int global_index);
   bool            ecl_grid_cell_active3(const ecl_grid_type * , int  , int  , int );
   bool            ecl_grid_cell_active1(const ecl_grid_type * , int);
   bool            ecl_grid_ijk_valid(const ecl_grid_type * , int  , int , int ); 
   int             ecl_grid_get_global_index3(const ecl_grid_type * , int  , int , int );
   int             ecl_grid_get_global_index1A(const ecl_grid_type * ecl_grid , int active_index);
-
+  int             ecl_grid_get_global_index1F(const ecl_grid_type * ecl_grid , int active_fracture_index);
+  
   ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz , const ecl_kw_type * zcorn_kw , const ecl_kw_type * coord_kw , const ecl_kw_type * actnum_kw , const ecl_kw_type * mapaxes_kw );
   ecl_grid_type * ecl_grid_alloc_GRDECL_data(int , int , int , const float *  , const float *  , const int * , const float * mapaxes);
   ecl_grid_type * ecl_grid_alloc_GRID_data(int num_coords , int nx, int ny , int nz , int coords_size , int ** coords , float ** corners , const float * mapaxes);
@@ -90,6 +93,7 @@ extern "C" {
   int             ecl_grid_get_nx( const ecl_grid_type * grid );
   int             ecl_grid_get_ny( const ecl_grid_type * grid );
   int             ecl_grid_get_nactive( const ecl_grid_type * grid );
+  int             ecl_grid_get_nactive_fracture( const ecl_grid_type * grid );
   int             ecl_grid_get_active_index(const ecl_grid_type *  , int  , int  , int );
   void            ecl_grid_summarize(const ecl_grid_type * );
   void            ecl_grid_get_ijk1(const ecl_grid_type * , int global_index , int *, int * , int *);
@@ -165,6 +169,8 @@ extern "C" {
   
   void             ecl_grid_ri_export( const ecl_grid_type * ecl_grid , double * ri_points);
   void             ecl_grid_cell_ri_export( const ecl_grid_type * ecl_grid , int global_index , double * ri_points);
+
+  bool             ecl_grid_dual_grid( const ecl_grid_type * ecl_grid );
   
 #ifdef __cplusplus
 }

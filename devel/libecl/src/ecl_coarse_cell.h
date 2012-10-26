@@ -43,13 +43,13 @@ extern "C" {
   int                     ecl_coarse_cell_iget_cell_index( ecl_coarse_cell_type * coarse_cell , int group_index);
   const int *             ecl_coarse_cell_get_index_ptr( ecl_coarse_cell_type * coarse_cell );
   const int_vector_type * ecl_coarse_cell_get_index_vector( ecl_coarse_cell_type * coarse_cell );
-  
-  void                    ecl_coarse_cell_update_index( ecl_coarse_cell_type * coarse_cell , int global_index , int * active_index , int active_value);
-  int                     ecl_coarse_cell_get_active_index( const ecl_coarse_cell_type * coarse_cell );
+
+  void                    ecl_coarse_cell_update_index( ecl_coarse_cell_type * coarse_cell , int global_index , int * active_index , int * active_fracture_index , int active_value);   int                     ecl_coarse_cell_get_active_index( const ecl_coarse_cell_type * coarse_cell );
+  int                     ecl_coarse_cell_get_active_fracture_index( const ecl_coarse_cell_type * coarse_cell );
   int                     ecl_coarse_cell_iget_active_cell_index( const ecl_coarse_cell_type * coarse_cell , int index);
   int                     ecl_coarse_cell_iget_active_value( const ecl_coarse_cell_type * coarse_cell , int index);
   int                     ecl_coarse_cell_get_num_active( const ecl_coarse_cell_type * coarse_cell);
-  
+  void                    ecl_coarse_cell_fprintf( ecl_coarse_cell_type * coarse_cell , FILE * stream );
 
 #ifdef __cplusplus
 }
