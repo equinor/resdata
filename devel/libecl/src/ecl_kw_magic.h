@@ -317,6 +317,13 @@ extern "C" {
 #define FILEHEAD_DUAL_PERMEABILITY    2 
 
 
+#define INACTIVE            0 
+#define ACTIVE_MATRIX       1
+#define ACTIVE              ACTIVE_MATRIX 
+#define ACTIVE_FRACTURE     2 
+
+
+
 #ifdef __cplusplus
 }
 #endif
