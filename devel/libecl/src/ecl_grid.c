@@ -300,7 +300,61 @@
 /*
   About dual porosity
   -------------------
-  
+
+  Eclipse has support for dual porosity systems where the reservoir is
+  made from an interleaved system of matrix blocks and fractures. The
+  current implementation has some support for reading such properties
+  from the grid files:
+
+    - The active property of the cells is an integer which is a sum of
+      the flag values ACTIVE_MATRIX and ACTIVE_FRACTURE. 
+
+    - All functions operating on fracture properties have 'fracture'
+      as part of the name. The functions operating on the matrix do
+      (typically) not have matrix as part of the name. The matrix
+      properties are the default properties which apply in the single
+      porosity case.
+
+    - In the EGRID files the dual porosity properties are set in the
+      ACTNUM field in the file. The numerical values are [0,1,2,3] for
+      inactive cells, matrix active, fracture active and
+      matrix+fracture active respectively.
+
+    - For the GRID files there is abolutely no metadata to tell that
+      this is a dual porosity run (I think ...) - instead the whole
+      grid is repeated one more time with cells for the fractures
+      following after the matrix cells. 
+      
+      Naively the GRID file of a dual porosity run will report that it
+      contains 2*NZ layers. In the current implementation heuristics
+      is used to detect the situation, and the grid will only be
+      loaded as consisting of 'NZ' geometric layers.
+
+    - The documentation seems to indicate that the number of active
+      fracture cells can in general be different from the number of
+      active matrix cells, and the current implementation takes pains
+      to support that possibility - but all examples I have come over
+      have nactive_fracture == nactive_matrix?
+
+    - Properties and solution data in restart/init/grdecl files are
+      not treated here. These properties will just increase (typically
+      double) in size - and how to treat them will be a question of
+      convention. The following shows a possible solution:
+
+      {
+         char fracture_kw[9];
+         char matrix_kw[9];
+         int  matrix_size   = ecl_grid_get_nactive( ecl_grid );
+         int  fracture_size = ecl_grid_get_nactive_fracture( ecl_grid );
+
+         swat = ecl_file_iget_name_kw( rst_file , "SWAT" , 0);
+
+         snsprintf(fracture_kw , 9 , "F-%6s" , ecl_kw_get_header( swat ));
+         snsprintf(matrix_kw   , 9 , "M-%6s" , ecl_kw_get_header( swat ));
+
+         ecl_kw_type * M = ecl_kw_alloc_sub_copy( swat , matrix_kw   , 0  , matrix_size );
+         ecl_kw_type * F = ecl_kw_alloc_sub_copy( swat , fracture_kw , matrix_size  , fracture_size );
+      }
 */
 
 
