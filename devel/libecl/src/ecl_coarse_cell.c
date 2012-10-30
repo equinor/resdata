@@ -22,6 +22,7 @@
 #include <type_macros.h>
 #include <int_vector.h>
 
+#include <ecl_kw_magic.h>
 #include <ecl_coarse_cell.h>
 
 /******************************************************************/
@@ -109,6 +110,7 @@ struct ecl_coarse_cell_struct {
   UTIL_TYPE_ID_DECLARATION;
   int               ijk[6];  // {i1, i2 , j1 , j2 , k1 , k2}
   int               active_index;
+  int               active_fracture_index;
 
   bool              __cell_list_sorted;  
   int_vector_type * cell_list;
@@ -145,7 +147,8 @@ ecl_coarse_cell_type * ecl_coarse_cell_alloc() {
   coarse_cell->ijk[3] = -LARGE;
   coarse_cell->ijk[5] = -LARGE;
 
-  coarse_cell->active_index = -1;
+  coarse_cell->active_index          = -1;
+  coarse_cell->active_fracture_index = -1;
   coarse_cell->__cell_list_sorted     = false;
   coarse_cell->cell_list     = int_vector_alloc(0,0);
   coarse_cell->active_cells  = int_vector_alloc(0,0);
@@ -250,19 +253,39 @@ const int * ecl_coarse_cell_get_box_ptr( const ecl_coarse_cell_type * coarse_cel
 
 /*****************************************************************/
 
-void ecl_coarse_cell_update_index( ecl_coarse_cell_type * coarse_cell , int global_index , int * active_index , int active_value) {
-  if (coarse_cell->active_index == -1) {
-    coarse_cell->active_index = *active_index;
-    (*active_index) += 1;
+void ecl_coarse_cell_update_index( ecl_coarse_cell_type * coarse_cell , int global_index , int * active_index , int * active_fracture_index , int active_value) {
+  if (active_value & ACTIVE_MATRIX) {
+    if (coarse_cell->active_index == -1) {
+      coarse_cell->active_index = *active_index;
+      (*active_index) += 1;
+    }
   }
+  
+  if (active_value & ACTIVE_FRACTURE) {
+    if (coarse_cell->active_fracture_index == -1) {
+      coarse_cell->active_fracture_index = *active_fracture_index;
+      (*active_fracture_index) += 1;
+    }
+  }
+  
   int_vector_append( coarse_cell->active_cells , global_index );
   int_vector_append( coarse_cell->active_values , active_value );
+  
+  if (int_vector_size( coarse_cell->active_values ) > 1) {
+    if (int_vector_reverse_iget( coarse_cell->active_values , -2 ) != active_value)
+      util_abort("%s: Sorry - current coarse cell implementation requires that all active cells have the same active value\n",__func__);
+  }
 }
 
 
 int ecl_coarse_cell_get_active_index( const ecl_coarse_cell_type * coarse_cell ) {
   return coarse_cell->active_index;
 }
+
+int ecl_coarse_cell_get_active_fracture_index( const ecl_coarse_cell_type * coarse_cell ) {
+  return coarse_cell->active_fracture_index;
+}
+
 
 /**
    Will return the global index of the 'ith active cell in the coarse
@@ -285,9 +308,10 @@ int ecl_coarse_cell_get_num_active( const ecl_coarse_cell_type * coarse_cell) {
 
 void ecl_coarse_cell_fprintf( ecl_coarse_cell_type * coarse_cell , FILE * stream ) {
   fprintf(stream,"Coarse box: \n");
-  fprintf(stream,"   i       : %3d - %3d\n",coarse_cell->ijk[0] , coarse_cell->ijk[1]);
-  fprintf(stream,"   j       : %3d - %3d\n",coarse_cell->ijk[2] , coarse_cell->ijk[3]);
-  fprintf(stream,"   k       : %3d - %3d\n",coarse_cell->ijk[4] , coarse_cell->ijk[5]);
-
-  fprintf(stream," Cells     : "); int_vector_fprintf( coarse_cell->cell_list , stream , "" , "%5d ");
+  fprintf(stream,"   i             : %3d - %3d\n",coarse_cell->ijk[0] , coarse_cell->ijk[1]);
+  fprintf(stream,"   j             : %3d - %3d\n",coarse_cell->ijk[2] , coarse_cell->ijk[3]);
+  fprintf(stream,"   k             : %3d - %3d\n",coarse_cell->ijk[4] , coarse_cell->ijk[5]);
+  fprintf(stream,"   active_cells  : " ); int_vector_fprintf( coarse_cell->active_cells  , stream , "" , "%5d "); 
+  fprintf(stream,"   active_values : " ); int_vector_fprintf( coarse_cell->active_values , stream , "" , "%5d "); 
+  fprintf(stream,"   Cells         : " ); int_vector_fprintf( coarse_cell->cell_list , stream , "" , "%5d ");
 }

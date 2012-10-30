@@ -595,7 +595,6 @@ ecl_kw_type *ecl_kw_alloc_copy(const ecl_kw_type *src) {
   return new;
 }
 
-
 /**
    This function will allocate a new copy of @src, where only the
    elements corresponding to the slice [index1:index2) is included.
@@ -608,8 +607,6 @@ ecl_kw_type *ecl_kw_alloc_copy(const ecl_kw_type *src) {
 
    If index1 > index2 it will fail hard; the same applies if stride is
    <= 0.  
-
-   
 */
 
    
@@ -654,6 +651,36 @@ ecl_kw_type * ecl_kw_alloc_slice_copy( const ecl_kw_type * src, int index1, int 
   }
 }
       
+
+
+   
+
+/**
+   Will allocate a copy of the src_kw. Will copy @count elements
+   starting at @offset. If @count < 0 all remaining elements from
+   @offset will be copied. If new_kw == NULL the new keyword will have
+   the same header as the @src, otherwise the value @new_kw will be
+   used.
+*/
+
+
+ecl_kw_type * ecl_kw_alloc_sub_copy( const ecl_kw_type * src, const char * new_kw , int offset , int count) {
+  if (new_kw == NULL)
+    new_kw = src->header;
+
+  if (count < 0)
+    count = src->size - offset;
+
+  if ((offset < 0) || (offset >= src->size)) util_abort("%s: invalid offset - limits: [%d,%d) \n",__func__ , 0 , src->size);
+  if ((count + offset) > src->size) util_abort("%s: invalid count value: %d \n",__func__ , count);
+  
+  {
+    void * src_data = ecl_kw_iget_ptr( src , offset );
+    return ecl_kw_alloc_new( new_kw , count , src->ecl_type , src_data );
+  }
+}
+
+
 
 const void * ecl_kw_copyc__(const void * void_kw) {
   return ecl_kw_alloc_copy((const ecl_kw_type *) void_kw); 

@@ -2278,6 +2278,17 @@ bool util_entry_readable( const char * entry ) {
     return false;  /* If stat failed - typically not existing entry - we return false. */
 }
 
+
+bool util_entry_writable( const char * entry ) {
+  struct stat buffer;
+  if (stat( entry , &buffer ) == 0)
+    return buffer.st_mode & S_IWUSR;
+  else
+    return false;  /* If stat failed - typically not existing entry - we return false. */
+}
+
+
+
 #else
   // Windows: purely on extension ....
 
@@ -3478,21 +3489,21 @@ void util_binary_split_string_from_max_length(const char * __src , const char * 
       } else {
         int sep_start = 0;
         int sep_end   = 0;
-	sep_end = pos;
+        sep_end = pos;
         /* Iterate through the separation string - can be e.g. many " " */
         while ((pos != end_pos) && (strchr(sep_set , src[pos]) != NULL))
           pos += delta;
-	
-	
-	sep_start = pos;
-	if (sep_start == end_pos) {
-	  // ":String" => (NULL , "String")
-	  first_part = NULL;
-	  second_part = util_alloc_string_copy( &src[sep_end+1] );
-	} else {
-	  first_part  = util_alloc_substring_copy( src , 0 , sep_start + 1);
-	  second_part = util_alloc_string_copy( &src[sep_end + 1]);
-	}
+        
+        
+        sep_start = pos;
+        if (sep_start == end_pos) {
+          // ":String" => (NULL , "String")
+          first_part = NULL;
+          second_part = util_alloc_string_copy( &src[sep_end+1] );
+        } else {
+          first_part  = util_alloc_substring_copy( src , 0 , sep_start + 1);
+          second_part = util_alloc_string_copy( &src[sep_end + 1]);
+        }
       }
       free(src);
     }

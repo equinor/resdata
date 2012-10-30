@@ -465,11 +465,22 @@ void @TYPE@_vector_iset_default(@TYPE@_vector_type * vector , int index , @TYPE@
 
 
 
-
 @TYPE@ @TYPE@_vector_iget(const @TYPE@_vector_type * vector , int index) {
   @TYPE@_vector_assert_index(vector , index);
   return vector->data[index];
 }
+
+/* Will start counting from the reverse end, as negative indexing in python:
+   
+   vector_reverse_iget( v , -1 ) => The last element
+   vector_reverse_iget( v , -2 ) => The second to last element
+
+*/
+@TYPE@ @TYPE@_vector_reverse_iget(const @TYPE@_vector_type * vector , int index) {
+  return @TYPE@_vector_iget( vector , index + vector->size );
+}
+
+
 
 /**
    This might very well operate on a default value. 

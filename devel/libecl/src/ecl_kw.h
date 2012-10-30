@@ -62,6 +62,7 @@ extern "C" {
   void           ecl_kw_free(ecl_kw_type *);
   void           ecl_kw_free__(void *);
   ecl_kw_type *  ecl_kw_alloc_copy (const ecl_kw_type *);
+  ecl_kw_type *  ecl_kw_alloc_sub_copy( const ecl_kw_type * src, const char * new_kw , int offset , int count);
   const void  *  ecl_kw_copyc__(const void *);
   ecl_kw_type *  ecl_kw_alloc_slice_copy( const ecl_kw_type * src, int index1, int index2, int stride);
   //void        * ecl_kw_get_data_ref(const ecl_kw_type *);
