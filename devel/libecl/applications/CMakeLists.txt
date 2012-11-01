@@ -45,3 +45,23 @@ foreach(prog ${program_list})
       install(CODE "EXECUTE_PROCESS(COMMAND chmod g+w ${destination}/${prog})")
    endif()
 endforeach()
+
+if (BUILD_ENS_PLOT)
+   include_directories( ${PLPLOT_INCLUDE_PATH} )
+   include_directories( ${libplot_src_path} )
+   add_executable( ens_plot.x ens_plot.c )
+   target_link_libraries( ens_plot.x plot ecl util)
+
+   if (ECL_INSTALL_PREFIX)
+      set (destination ${CMAKE_INSTALL_PREFIX}/${ECL_INSTALL_PREFIX}/bin)
+   else()
+      set (destination ${CMAKE_INSTALL_PREFIX}/bin)
+   endif()
+
+   install(TARGETS ens_plot.x DESTINATION ${destination})
+   if (INSTALL_GROUP)
+      install(CODE "EXECUTE_PROCESS(COMMAND chgrp ${INSTALL_GROUP} ${destination}/ens_plot.x)")
+      install(CODE "EXECUTE_PROCESS(COMMAND chmod g+w ${destination}/ens_plot.x)")
+   endif()
+endif()
+ 

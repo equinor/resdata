@@ -286,6 +286,7 @@ Q                                | Quit
 */
 
 
+#define VIEWER          "/usr/bin/display"
 
 #define CREATE_ENS_CMD  "C"
 #define PLOT_CMD        "P"
