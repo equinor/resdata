@@ -1197,6 +1197,7 @@ bool matrix_is_quadratic(const matrix_type * matrix) {
 */
 
 #ifdef HAVE_ISFINITE
+
 bool matrix_is_finite(const matrix_type * matrix) {
   int i,j;
   for (i = 0; i < matrix->rows; i++)

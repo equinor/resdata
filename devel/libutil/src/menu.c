@@ -305,8 +305,7 @@ static void __print_sep(int l) {
 
 static void __print_helptext(char * label, int l){
   bool end_reached = false;
-  char * label_copy = util_realloc(label , (strlen(label) + 1) * sizeof *label_copy );
-  int ended = 0;
+  char * label_copy = util_alloc_string_copy( label );
   char * first_part = "Dummy3";
   char * second_part = "Dummy4";
   while(!end_reached){
@@ -314,48 +313,18 @@ static void __print_helptext(char * label, int l){
       util_binary_split_string_from_max_length(label_copy , " ", l , &first_part , &second_part);
       printf("|    %s",first_part);
       for (int i=strlen(first_part); i < l; i++)
-	fputc(' ' , stdout);
+        fputc(' ' , stdout);
       printf("    |\n");
       label_copy = util_realloc_string_copy(label_copy, second_part);
     }
     else{
       printf("|    %s",label_copy);
       for (int i=strlen(label_copy); i < l; i++)
-	fputc(' ' , stdout);
+        fputc(' ' , stdout);
       printf("    |\n");
       end_reached = true;
     }
-    
-    
-    
-    /*    if(ended + strlen(first_part) > l){
-      for (int i=ended; i < l; i++)
-	fputc(' ' , stdout);
-      printf("     |\n");
-      ended = 0;
-    }
-    printf(" %s",first_part);
-    ended = ended + strlen(first_part)+1;
-    printf("\nsecond_part%s %d\n",second_part,strlen(second_part));
-    end_reached = true;
-    if (strlen(second_part) > 0){
-      end_reached = true;
-      for (int i=ended; i < l; i++)
-	fputc(' ' , stdout);
-      printf("     |\n");
-    }
-    else{
-      for (int i=ended; i < l; i++)
-	fputc(' ' , stdout);
-      printf("     |\n");
-      //label_copy = util_realloc_string_copy(label_copy, second_part);
-      }*/
   }
-  //if (strlen(second_part) > 0)
-  //  free(second_part);
-  //if (strlen(first_part) > 0)
-  //  free(first_part);
-  //free(label_copy);
 }
 
 
@@ -466,14 +435,14 @@ void menu_run(const menu_type * menu) {
       while (1) {
         const menu_item_type * item = vector_iget_const(menu->items , item_index);
         if (!item->separator) {
-	  if(!item->helptext) {
-	    if (strchr(item->key_set , cmd) != NULL) {
-	      /* Calling the function ... */
-	      menu_item_call( item );
-	      break;
-	    }
-	  }
-	}
+          if(!item->helptext) {
+            if (strchr(item->key_set , cmd) != NULL) {
+              /* Calling the function ... */
+              menu_item_call( item );
+              break;
+            }
+          }
+        }
         item_index++;
       }
     }
