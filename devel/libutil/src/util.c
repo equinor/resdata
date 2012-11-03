@@ -2290,7 +2290,7 @@ bool util_entry_writable( const char * entry ) {
 
 
 #else
-  // Windows: purely on extension ....
+  // Windows: executable status based purely on extension ....
 
 bool util_is_executable(const char * path) {
   char * ext;

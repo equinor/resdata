@@ -47,7 +47,7 @@ foreach(prog ${program_list})
 endforeach()
 
 if (BUILD_ENS_PLOT)
-   include_directories( ${PLPLOT_INCLUDE_PATH} )
+   include_directories( ${PLPLOT_HEADER} )
    include_directories( ${libplot_src_path} )
    add_executable( ens_plot.x ens_plot.c )
    target_link_libraries( ens_plot.x plot ecl util)
