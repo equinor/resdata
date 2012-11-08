@@ -158,8 +158,6 @@ extern "C" {
   void                    ecl_grid_fwrite_EGRID_header__( int dims[3] , const float mapaxes[6], int dualp_flag , fortio_type * fortio);
   void                    ecl_grid_fwrite_EGRID_header( int dims[3] , const float mapaxes[6], fortio_type * fortio);
   
-  float          * ecl_grid_alloc_coord_data( const ecl_grid_type * grid );
-  ecl_kw_type    * ecl_grid_alloc_coord_kw( const ecl_grid_type * grid );
   float          * ecl_grid_alloc_zcorn_data( const ecl_grid_type * grid );
   ecl_kw_type    * ecl_grid_alloc_zcorn_kw( const ecl_grid_type * grid );
   int            * ecl_grid_alloc_actnum_data( const ecl_grid_type * grid );

@@ -1971,46 +1971,6 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
 }
 
 
-static void coord_check( const ecl_grid_type * ecl_grid , const ecl_kw_type * coord_kw) {
-  double epsilon = 1e-6;
-  ecl_kw_type * new_coord = ecl_grid_alloc_coord_kw( ecl_grid );
-  /* Due to the MAPAXES transform we can not require exact numeric equality for the COORD keyword. */
-  if (ecl_kw_numeric_equal( coord_kw , new_coord , epsilon))
-    printf("coord reproduced correctly .... \n ");
-  else {
-    int i;
-    printf("coord problems ....\n");
-    for (i=0; i < ecl_kw_get_size( coord_kw ); i++) {
-      float v1 = ecl_kw_iget_float( coord_kw , i );
-      float v2 = ecl_kw_iget_float( new_coord , i );
-      float d  = (fabsf(v1 - v2)) / (fabsf(v1) + fabsf(v2));
-      if (d > epsilon)
-        printf("coord[%05d:%d]  %10.3f  %10.3f  d:%g\n",i , (i % 6) , v1 , v2,d);
-    }
-    printf("coord problems ....\n");
-    exit(1);
-  }
-  ecl_kw_free( new_coord );
-}
-
-
-static void zcorn_check( const ecl_grid_type * ecl_grid , const ecl_kw_type * zcorn_kw) {
-  ecl_kw_type * new_zcorn = ecl_grid_alloc_zcorn_kw( ecl_grid );
-  if (ecl_kw_equal( zcorn_kw , new_zcorn ))
-    printf("zcorn reproduced correctly .... \n");
-  else {
-    int i;
-    printf("zcorn problems .... TRUE    Guess\n");
-    for (i=0; i < ecl_kw_get_size( zcorn_kw ); i++) {
-      printf("zcorn[%05d:%d]  %10.3f  %10.3f\n",i , (i % (ecl_grid->nz + 1)) , ecl_kw_iget_float( zcorn_kw , i ) , ecl_kw_iget_float( new_zcorn , i ));
-      if ((i % (ecl_grid->nz + 1)) == ecl_grid->nz)
-        printf("\n");
-    }
-  }
-  ecl_kw_free( new_zcorn );
-}
-
-
 
 /**
    Creating a grid based on a EGRID file is a three step process:
@@ -2028,7 +1988,6 @@ static void zcorn_check( const ecl_grid_type * ecl_grid , const ecl_kw_type * zc
 
 
 static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const ecl_file_type * ecl_file , int grid_nr) {
-  bool check = false;
   ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , GRIDHEAD_KW  , grid_nr);
   ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , ZCORN_KW     , grid_nr);
   ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , COORD_KW     , grid_nr);
@@ -2065,12 +2024,6 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
                                                            grid_nr );
 
     if (grid_nr > 0) ecl_grid_set_lgr_name_EGRID(ecl_grid , ecl_file , grid_nr);
-    
-    if (check) {
-      coord_check( ecl_grid , coord_kw );
-      zcorn_check( ecl_grid , zcorn_kw );
-    }
-
     return ecl_grid;
   }
 }
