@@ -296,7 +296,6 @@ typedef enum {left_pad   = 0,
   int      util_type_get_id( const void * data );
 
   
-  char   * util_alloc_realpath(const char * );
   bool     util_sscanf_bytesize(const char * , size_t *);
   void     util_sscanf_active_range(const char *  , int , bool * );
   int    * util_sscanf_alloc_active_list(const char *  , int * );
