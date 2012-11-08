@@ -226,7 +226,6 @@ typedef enum {left_pad   = 0,
   unsigned int util_clock_seed( );
   void         util_fread_dev_random(int , char * );
   void         util_fread_dev_urandom(int , char * );
-  char *       util_alloc_string_copy(const char *);
   bool         util_string_isspace(const char * s);
   
   void    util_exit(const char * fmt , ...);
