@@ -1,0 +1,70 @@
+/*
+   Copyright (C) 2011  Statoil ASA, Norway. 
+   The file 'summary2cvs.c' is part of ERT - Ensemble based Reservoir Tool. 
+    
+   ERT is free software: you can redistribute it and/or modify 
+   it under the terms of the GNU General Public License as published by 
+   the Free Software Foundation, either version 3 of the License, or 
+   (at your option) any later version. 
+    
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+   FITNESS FOR A PARTICULAR PURPOSE.   
+    
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+   for more details. 
+*/
+
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#include <stdbool.h>
+
+#include <stringlist.h>
+
+#include <ecl_sum.h>
+
+
+static void build_key_list( const ecl_sum_type * ecl_sum , stringlist_type * key_list ) {
+  int iw;
+  int last_step = ecl_sum_get_data_length( ecl_sum ) - 1;
+  stringlist_type * well_list = ecl_sum_alloc_well_list( ecl_sum , NULL );
+  for (iw = 0; iw < stringlist_get_size( well_list ); iw++) {
+    const char * well = stringlist_iget( well_list , iw );
+    if (ecl_sum_get_well_var( ecl_sum , last_step , well , "WOPT") > 0 ) {
+      stringlist_append_owned_ref( key_list , ecl_sum_alloc_well_key( ecl_sum  , "WOPR", well) );
+      stringlist_append_owned_ref( key_list , ecl_sum_alloc_well_key( ecl_sum  , "WOPT", well) );
+      stringlist_append_owned_ref( key_list , ecl_sum_alloc_well_key( ecl_sum  , "WGPR", well) );
+      stringlist_append_owned_ref( key_list , ecl_sum_alloc_well_key( ecl_sum  , "WGPT", well) );
+      stringlist_append_owned_ref( key_list , ecl_sum_alloc_well_key( ecl_sum  , "WWPR", well) );
+      stringlist_append_owned_ref( key_list , ecl_sum_alloc_well_key( ecl_sum  , "WWPT", well) );
+    } else
+      printf("Ignoring well: %s \n",well);
+  }
+  stringlist_free( well_list );
+}
+
+
+int main(int argc , char ** argv) {
+  {
+    bool           include_restart = true;
+    bool           print_header    = true;
+    int            arg_offset      = 1;  
+    
+    {
+      char         * data_file = argv[arg_offset];
+      ecl_sum_type * ecl_sum;
+      
+      ecl_sum = ecl_sum_fread_alloc_case__( data_file , ":" , include_restart);
+      if (ecl_sum != NULL) {
+        stringlist_type * key_list = stringlist_alloc_new( );
+        char * cvs_file = util_alloc_filename( NULL , ecl_sum_get_base(ecl_sum) , "CVS");  // Weill save to current path; can use ecl_sum_get_path() to save to target path instead.
+        build_key_list( ecl_sum , key_list );
+        ecl_sum_2cvs( ecl_sum , key_list , cvs_file );
+        stringlist_free( key_list );
+        ecl_sum_free(ecl_sum);
+      } else 
+        fprintf(stderr,"summary2cvs: No summary data found for case:%s\n", data_file );
+    }
+  }
+}

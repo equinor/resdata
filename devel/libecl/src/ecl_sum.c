@@ -612,15 +612,16 @@ bool ecl_sum_has_key(const ecl_sum_type * ecl_sum , const char * lookup_kw) {
   return ecl_sum_has_general_var( ecl_sum , lookup_kw );
 }
 
+
 double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , const char * lookup_kw) {
   int params_index = ecl_sum_get_general_var_params_index(ecl_sum , lookup_kw);
-  return ecl_sum_data_iget( ecl_sum->data , time_index , params_index);
+  return ecl_sum_data_iget( ecl_sum->data , time_index  , params_index);
 }
 
-double ecl_sum_iget_general_var(const ecl_sum_type * ecl_sum , int internal_index , const char * lookup_kw) {
-  int params_index = ecl_sum_get_general_var_params_index(ecl_sum , lookup_kw);
-  return ecl_sum_data_iget( ecl_sum->data , internal_index  , params_index);
+double ecl_sum_iget_general_var(const ecl_sum_type * ecl_sum , int time_index , const char * lookup_kw) {
+  return ecl_sum_get_general_var( ecl_sum , time_index , lookup_kw );
 }
+
 
 double ecl_sum_get_general_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var) {
   const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , var );
@@ -631,6 +632,7 @@ double ecl_sum_get_general_var_from_sim_days( const ecl_sum_type * ecl_sum , dou
   const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , var );
   return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , node );
 }
+
 
 const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const char * var) {
   const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , var );
@@ -899,15 +901,15 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const string
 
     for (report = first_report; report <= last_report; report++) {
       if (ecl_sum_data_has_report_step(ecl_sum->data , report)) {
-        int internal_index;
-        internal_index = ecl_sum_data_iget_report_end( ecl_sum->data , report );
-        __ecl_sum_fprintf_line( ecl_sum , stream , internal_index , has_var , var_index );
+        int time_index;
+        time_index = ecl_sum_data_iget_report_end( ecl_sum->data , report );
+        __ecl_sum_fprintf_line( ecl_sum , stream , time_index , has_var , var_index );
       }
     }
   } else {
-    int internal_index;
-    for (internal_index = 0; internal_index < ecl_sum_get_data_length( ecl_sum ); internal_index++)
-      __ecl_sum_fprintf_line( ecl_sum , stream , internal_index , has_var , var_index );
+    int time_index;
+    for (time_index = 0; time_index < ecl_sum_get_data_length( ecl_sum ); time_index++)
+      __ecl_sum_fprintf_line( ecl_sum , stream , time_index , has_var , var_index );
   }
 
   int_vector_free( var_index );
@@ -1080,3 +1082,47 @@ void ecl_sum_update_wgname( ecl_sum_type * ecl_sum , smspec_node_type * node , c
   ecl_smspec_update_wgname( ecl_sum->smspec ,node , wgname );
 }
 
+/*****************************************************************/
+
+/* 
+   The functions below are extremly simple functions which only serve
+   as an easy access to the smspec_alloc_xxx_key() functions which
+   know how to create the various composite keys.  
+*/
+
+char * ecl_sum_alloc_well_key( const ecl_sum_type * ecl_sum , const char * keyword , const char * wgname) {
+  return ecl_smspec_alloc_well_key( ecl_sum->smspec , keyword , wgname );
+}
+
+
+/*****************************************************************/
+
+void ecl_sum_2cvs( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const char * cvs_file ) {
+  int ikey;
+  FILE * stream = util_fopen( cvs_file , "w");
+
+  {
+    fprintf(stream , "DAYS,DATE");
+    for (ikey=0; ikey< stringlist_get_size( key_list); ikey++) 
+      fprintf(stream,",%s",stringlist_iget( key_list , ikey));
+    fprintf(stream,"\n");
+  }
+  {
+    const int last_step = ecl_sum_get_data_length( ecl_sum )-1;
+    int tstep;
+    for (tstep=0; tstep <= last_step; tstep++) {
+      {
+        int day,month,year;
+        util_set_date_values(ecl_sum_iget_sim_time(ecl_sum , tstep ) , &day , &month, &year);
+        fprintf(stream , "%7.2f,%02d/%02d/%04d" , ecl_sum_iget_sim_days(ecl_sum , tstep) , day , month , year);
+      }
+      {
+        for (ikey=0; ikey< stringlist_get_size( key_list); ikey++) 
+          fprintf(stream , ",%g" , ecl_sum_get_general_var( ecl_sum , tstep , stringlist_iget( key_list , ikey)));
+        fprintf(stream , "\n");
+      }
+    }
+  }
+
+  fclose( stream );
+}
