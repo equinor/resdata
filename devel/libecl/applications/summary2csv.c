@@ -48,6 +48,10 @@ static void build_key_list( const ecl_sum_type * ecl_sum , stringlist_type * key
 
 int main(int argc , char ** argv) {
   {
+    const char * date_format = "%d/%m/%y";
+    const char * sep         = "\t";
+    const char * locale      = "Norwegian";
+    
     bool           include_restart = true;
     int            arg_offset      = 1;  
     
@@ -65,7 +69,7 @@ int main(int argc , char ** argv) {
         stringlist_type * key_list = stringlist_alloc_new( );
         char * csv_file = util_alloc_filename( NULL , ecl_sum_get_base(ecl_sum) , "CSV");  // Weill save to current path; can use ecl_sum_get_path() to save to target path instead.
         build_key_list( ecl_sum , key_list );
-        ecl_sum_2csv( ecl_sum , key_list , csv_file );
+        ecl_sum_2csv( ecl_sum , key_list , csv_file , date_format , sep , locale);
         stringlist_free( key_list );
         ecl_sum_free(ecl_sum);
       } else 

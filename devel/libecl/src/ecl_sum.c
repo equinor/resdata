@@ -1094,32 +1094,53 @@ char * ecl_sum_alloc_well_key( const ecl_sum_type * ecl_sum , const char * keywo
 
 /*****************************************************************/
 
-void ecl_sum_2csv( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const char * cvs_file ) {
-  int ikey;
-  FILE * stream = util_fopen( cvs_file , "w");
+#include <locale.h>
+void ecl_sum_2csv( const ecl_sum_type * ecl_sum , 
+                   const stringlist_type * key_list , 
+                   const char * cvs_file , 
+                   const char * date_format ,  // %d/%m/%y
+                   const char * sep , 
+                   const char * locale) {
 
+  char * current_locale = NULL;
+  if (locale != NULL)
+    current_locale = setlocale(LC_NUMERIC , locale);
   {
-    fprintf(stream , "DAYS,DATE");
-    for (ikey=0; ikey< stringlist_get_size( key_list); ikey++) 
-      fprintf(stream,",%s",stringlist_iget( key_list , ikey));
-    fprintf(stream,"\n");
-  }
-  {
-    const int last_step = ecl_sum_get_data_length( ecl_sum )-1;
-    int tstep;
-    for (tstep=0; tstep <= last_step; tstep++) {
-      {
-        int day,month,year;
-        util_set_date_values(ecl_sum_iget_sim_time(ecl_sum , tstep ) , &day , &month, &year);
-        fprintf(stream , "%7.2f,%02d/%02d/%04d" , ecl_sum_iget_sim_days(ecl_sum , tstep) , day , month , year);
-      }
-      {
-        for (ikey=0; ikey< stringlist_get_size( key_list); ikey++) 
-          fprintf(stream , ",%g" , ecl_sum_get_general_var( ecl_sum , tstep , stringlist_iget( key_list , ikey)));
-        fprintf(stream , "\n");
+    const int date_string_length = 128;
+    char date_string[date_string_length];
+    int ikey;
+    FILE * stream = util_fopen( cvs_file , "w");
+    
+    
+    
+    {
+      fprintf(stream , "DAYS%sDATE" , sep);
+      for (ikey=0; ikey< stringlist_get_size( key_list); ikey++) 
+        fprintf(stream,"%s%s",sep,stringlist_iget( key_list , ikey));
+      fprintf(stream,"\n");
+    }
+    {
+      const int last_step = ecl_sum_get_data_length( ecl_sum )-1;
+      int tstep;
+      for (tstep=0; tstep <= last_step; tstep++) {
+        {
+          struct tm ts;
+          time_t sim_time = ecl_sum_iget_sim_time(ecl_sum , tstep );
+          util_localtime( &sim_time , &ts);
+          
+          strftime( date_string , date_string_length - 1 , date_format , &ts); 
+          fprintf(stream , "%7.2f%s%s" , ecl_sum_iget_sim_days(ecl_sum , tstep) , sep , date_string);
+        }
+        {
+          for (ikey=0; ikey< stringlist_get_size( key_list); ikey++) 
+            fprintf(stream , "%s%g" , sep , ecl_sum_get_general_var( ecl_sum , tstep , stringlist_iget( key_list , ikey)));
+          fprintf(stream , "\n");
+        }
       }
     }
+    
+    fclose( stream );
   }
-
-  fclose( stream );
+  if (current_locale != NULL)
+    setlocale( LC_NUMERIC , current_locale);
 }

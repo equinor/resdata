@@ -179,7 +179,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   void                  ecl_sum_update_wgname( ecl_sum_type * ecl_sum , smspec_node_type * node , const char * wgname );
 
   char                * ecl_sum_alloc_well_key( const ecl_sum_type * ecl_sum , const char * keyword , const char * wgname);
-  void                  ecl_sum_2csv( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const char * cvs_file );
+  void                  ecl_sum_2csv( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const char * cvs_file , const char * date_format , const char * sep, const char * locale);
 UTIL_IS_INSTANCE_HEADER( ecl_sum );
 
 #ifdef __cplusplus
