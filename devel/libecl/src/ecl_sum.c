@@ -1094,7 +1094,7 @@ char * ecl_sum_alloc_well_key( const ecl_sum_type * ecl_sum , const char * keywo
 
 /*****************************************************************/
 
-void ecl_sum_2cvs( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const char * cvs_file ) {
+void ecl_sum_2csv( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const char * cvs_file ) {
   int ikey;
   FILE * stream = util_fopen( cvs_file , "w");
 

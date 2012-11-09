@@ -1,6 +1,6 @@
 /*
    Copyright (C) 2011  Statoil ASA, Norway. 
-   The file 'summary2cvs.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'summary2csv.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -58,13 +58,13 @@ int main(int argc , char ** argv) {
       ecl_sum = ecl_sum_fread_alloc_case__( data_file , ":" , include_restart);
       if (ecl_sum != NULL) {
         stringlist_type * key_list = stringlist_alloc_new( );
-        char * cvs_file = util_alloc_filename( NULL , ecl_sum_get_base(ecl_sum) , "CVS");  // Weill save to current path; can use ecl_sum_get_path() to save to target path instead.
+        char * csv_file = util_alloc_filename( NULL , ecl_sum_get_base(ecl_sum) , "CSV");  // Weill save to current path; can use ecl_sum_get_path() to save to target path instead.
         build_key_list( ecl_sum , key_list );
-        ecl_sum_2cvs( ecl_sum , key_list , cvs_file );
+        ecl_sum_2csv( ecl_sum , key_list , csv_file );
         stringlist_free( key_list );
         ecl_sum_free(ecl_sum);
       } else 
-        fprintf(stderr,"summary2cvs: No summary data found for case:%s\n", data_file );
+        fprintf(stderr,"summary2csv: No summary data found for case:%s\n", data_file );
     }
   }
 }
