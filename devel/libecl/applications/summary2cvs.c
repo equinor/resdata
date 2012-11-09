@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <stdbool.h>
 
+#include <util.h>
 #include <stringlist.h>
 
 #include <ecl_sum.h>
@@ -48,7 +49,6 @@ static void build_key_list( const ecl_sum_type * ecl_sum , stringlist_type * key
 int main(int argc , char ** argv) {
   {
     bool           include_restart = true;
-    bool           print_header    = true;
     int            arg_offset      = 1;  
     
     {

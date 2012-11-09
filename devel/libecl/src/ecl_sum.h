@@ -53,7 +53,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   const char *     ecl_sum_get_unit( const ecl_sum_type * sum , const char * gen_key );
   int              ecl_sum_get_num( const ecl_sum_type * sum , const char * gen_key );
 
-  double           ecl_sum_iiget( const ecl_sum_type * ecl_sum , int internal_index , int param_index);
+  double           ecl_sum_iget( const ecl_sum_type * ecl_sum , int time_index , int param_index);
   int              ecl_sum_iget_num( const ecl_sum_type * sum , int param_index );
   const char *     ecl_sum_iget_wgname( const ecl_sum_type * sum , int param_index );
   const char *     ecl_sum_iget_keyword( const ecl_sum_type * sum , int param_index );
@@ -179,7 +179,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   void                  ecl_sum_update_wgname( ecl_sum_type * ecl_sum , smspec_node_type * node , const char * wgname );
 
   char                * ecl_sum_alloc_well_key( const ecl_sum_type * ecl_sum , const char * keyword , const char * wgname);
-
+  void                  ecl_sum_2cvs( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const char * cvs_file );
 UTIL_IS_INSTANCE_HEADER( ecl_sum );
 
 #ifdef __cplusplus

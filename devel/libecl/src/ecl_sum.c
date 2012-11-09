@@ -618,9 +618,6 @@ double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , c
   return ecl_sum_data_iget( ecl_sum->data , time_index  , params_index);
 }
 
-double ecl_sum_iget_general_var(const ecl_sum_type * ecl_sum , int time_index , const char * lookup_kw) {
-  return ecl_sum_get_general_var( ecl_sum , time_index , lookup_kw );
-}
 
 
 double ecl_sum_get_general_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var) {
@@ -641,8 +638,8 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 
 /*****************************************************************/
 
-double ecl_sum_iiget( const ecl_sum_type * ecl_sum , int internal_index , int param_index) {
-  return ecl_sum_data_iget(ecl_sum->data , internal_index , param_index);
+double ecl_sum_iget( const ecl_sum_type * ecl_sum , int time_index , int param_index) {
+  return ecl_sum_data_iget(ecl_sum->data , time_index , param_index);
 }
 
 /*****************************************************************/
@@ -846,7 +843,7 @@ static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream
 
   for (ivar = 0; ivar < int_vector_size( var_index ); ivar++)
     if (bool_vector_iget( has_var , ivar ))
-      fprintf(stream , FLOAT_FORMAT , ecl_sum_iiget(ecl_sum , internal_index, int_vector_iget( var_index , ivar )));
+      fprintf(stream , FLOAT_FORMAT , ecl_sum_iget(ecl_sum , internal_index, int_vector_iget( var_index , ivar )));
 
   fprintf(stream , "\n");
 }
