@@ -51,6 +51,11 @@ int main(int argc , char ** argv) {
     bool           include_restart = true;
     int            arg_offset      = 1;  
     
+    if (argc != 2) {
+      printf("You must supply the name of a case as:\n\n   summary2csv.exe  ECLIPSE_CASE\n\nThe case can optionally contain a leading path component.\n");
+      exit(1);
+    }
+
     {
       char         * data_file = argv[arg_offset];
       ecl_sum_type * ecl_sum;
