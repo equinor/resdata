@@ -1107,7 +1107,7 @@ void ecl_sum_2csv( const ecl_sum_type * ecl_sum ,
     current_locale = setlocale(LC_NUMERIC , locale);
   {
     const int date_string_length = 128;
-    char date_string[date_string_length];
+	char * date_string = util_malloc( date_string_length * sizeof date_string );
     int ikey;
     FILE * stream = util_fopen( cvs_file , "w");
     
@@ -1139,6 +1139,7 @@ void ecl_sum_2csv( const ecl_sum_type * ecl_sum ,
       }
     }
     
+	free( date_string );
     fclose( stream );
   }
   if (current_locale != NULL)

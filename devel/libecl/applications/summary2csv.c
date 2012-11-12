@@ -67,7 +67,7 @@ int main(int argc , char ** argv) {
       ecl_sum = ecl_sum_fread_alloc_case__( data_file , ":" , include_restart);
       if (ecl_sum != NULL) {
         stringlist_type * key_list = stringlist_alloc_new( );
-        char * csv_file = util_alloc_filename( NULL , ecl_sum_get_base(ecl_sum) , "CSV");  // Weill save to current path; can use ecl_sum_get_path() to save to target path instead.
+        char * csv_file = util_alloc_filename( NULL , ecl_sum_get_base(ecl_sum) , "txt");  // Weill save to current path; can use ecl_sum_get_path() to save to target path instead.
         build_key_list( ecl_sum , key_list );
         ecl_sum_2csv( ecl_sum , key_list , csv_file , date_format , sep , locale);
         stringlist_free( key_list );
