@@ -713,7 +713,7 @@ void config_init( config_type * config ) {
   {
     config_schema_item_type * item;
     item = config_add_schema_item( config , "OUTPUT" , true , true );
-    config_schema_item_set_argc_minmax( item , 2 , -1 , 0 , NULL );
+    config_schema_item_set_argc_minmax( item , 2 , CONFIG_DEFAULT_ARG_MAX , 0 , NULL );
     config_schema_item_set_indexed_selection_set( item , 1 , 3 , (const char *[3]) { S3GRAPH_STRING , HEADER_STRING , PLAIN_STRING });
   }
   
