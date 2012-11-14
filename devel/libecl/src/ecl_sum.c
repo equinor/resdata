@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <time.h>
+#include <locale.h>
 
 #include <hash.h>
 #include <util.h>
@@ -829,6 +830,21 @@ double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int index ) {
 /*****************************************************************/
 /* This is essentially the summary.x program. */
 
+void ecl_sum_fmt_init_csv( ecl_sum_fmt_type * fmt ) {
+  fmt->locale     = "Norwegian";
+  fmt->sep        = "\t";
+  fmt->date_fmt   = "%d/%m/%y";
+  fmt->value_fmt  = "%g";
+  fmt->days_fmt   = "%7.2f";
+  fmt->header_fmt = "%s";
+
+  fmt->date_header = "DAYS\tDATE";
+  fmt->print_header = true;
+  fmt->print_dash = false;
+}
+
+
+
 void ecl_sum_fmt_init_summary_x( ecl_sum_fmt_type * fmt ) {
   fmt->locale     = NULL;
   fmt->sep        = "";
@@ -841,16 +857,18 @@ void ecl_sum_fmt_init_summary_x( ecl_sum_fmt_type * fmt ) {
   fmt->print_dash = true;
   fmt->date_dash  = "-----------------------";
   fmt->value_dash = "-----------------";
+  fmt->date_header= "-- Days   dd/mm/yyyy   ";
 }
 
 
-#define DAYS_DATE_FORMAT    "%7.2f   %02d/%02d/%04d   "
+/*#define DAYS_DATE_FORMAT    "%7.2f   %02d/%02d/%04d   "
 #define FLOAT_FORMAT        " %15.6g "
 #define HEADER_FORMAT       " %15s "
-#define DATE_HEADER         "-- Days   dd/mm/yyyy   "
 #define DATE_DASH           "-----------------------"
 #define FLOAT_DASH          "-----------------"
+*/
 
+#define DATE_HEADER         "-- Days   dd/mm/yyyy   "
 #define DATE_STRING_LENGTH 128
 
 static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream , int internal_index , const bool_vector_type * has_var , const int_vector_type * var_index , char * date_string , const ecl_sum_fmt_type * fmt) {
@@ -879,7 +897,7 @@ static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream
 
 
 static void ecl_sum_fprintf_header( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const bool_vector_type * has_var , FILE * stream, const ecl_sum_fmt_type * fmt) {
-  fprintf(stream , DATE_HEADER);
+  fprintf(stream , fmt->date_header);
   { 
     int i;
     for (i=0; i < stringlist_get_size( key_list ); i++)
@@ -909,6 +927,11 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const string
   bool_vector_type  * has_var   = bool_vector_alloc( stringlist_get_size( var_list ), false );
   int_vector_type   * var_index = int_vector_alloc( stringlist_get_size( var_list ), -1 );
   char * date_string            = util_malloc( DATE_STRING_LENGTH * sizeof * date_string);
+
+  char * current_locale = NULL;
+  if (fmt->locale != NULL)
+    current_locale = setlocale(LC_NUMERIC , fmt->locale);
+  
   {
     int ivar;
     for (ivar = 0; ivar < stringlist_get_size( var_list ); ivar++) {
@@ -945,6 +968,8 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const string
 
   int_vector_free( var_index );
   bool_vector_free( has_var );
+  if (current_locale != NULL)
+    setlocale( LC_NUMERIC , current_locale);
 }
 #undef DATE_STRING_LENGTH
 
@@ -1127,73 +1152,9 @@ char * ecl_sum_alloc_well_key( const ecl_sum_type * ecl_sum , const char * keywo
 }
 
 
-/*****************************************************************/
-
-void ecl_sum_fmt_init_csv( ecl_sum_fmt_type * fmt ) {
-  fmt->locale     = "Norwegian";
-  fmt->sep        = "\t";
-  fmt->date_fmt   = "%d/%m/%y";
-  fmt->value_fmt  = "%g";
-  fmt->days_fmt   = "%7.2f";
-  fmt->header_fmt = "%s";
-
-  fmt->print_header = true;
-  fmt->print_dash = false;
-}
 
 
 
 
 
 
-#include <locale.h>
-void ecl_sum_2csv( const ecl_sum_type * ecl_sum , 
-                   const stringlist_type * key_list , 
-                   FILE * stream , 
-                   const ecl_sum_fmt_type * fmt) {
-
-  char * current_locale = NULL;
-  if (fmt->locale != NULL)
-    current_locale = setlocale(LC_NUMERIC , fmt->locale);
-  {
-    const int date_string_length = 128;
-    char * date_string = util_malloc( date_string_length * sizeof date_string );
-    int ikey;
-    
-    if (fmt->print_header)
-    {
-      fprintf(stream , "DAYS%sDATE" , fmt->sep);
-      for (ikey=0; ikey< stringlist_get_size( key_list); ikey++) {
-        fprintf(stream, fmt->sep);
-        fprintf(stream, fmt->header_fmt , stringlist_iget( key_list , ikey));
-      }
-      fprintf(stream,"\n");
-    }
-    {
-      const int last_step = ecl_sum_get_data_length( ecl_sum )-1;
-      int tstep;
-      for (tstep=0; tstep <= last_step; tstep++) {
-        {
-          struct tm ts;
-          time_t sim_time = ecl_sum_iget_sim_time(ecl_sum , tstep );
-          util_localtime( &sim_time , &ts);
-          
-          strftime( date_string , date_string_length - 1 , fmt->date_fmt , &ts); 
-          fprintf(stream , fmt->days_fmt , ecl_sum_iget_sim_days(ecl_sum , tstep));
-          fprintf(stream , "%s%s" , fmt->sep , date_string);
-        }
-        {
-          for (ikey=0; ikey< stringlist_get_size( key_list); ikey++) {
-            fprintf(stream , fmt->sep);
-            fprintf(stream , fmt->value_fmt , ecl_sum_get_general_var( ecl_sum , tstep , stringlist_iget( key_list , ikey)));
-          }   
-          fprintf(stream , "\n");
-        }
-      }
-    }
-    
-    free( date_string );
-  }
-  if (current_locale != NULL)
-    setlocale( LC_NUMERIC , current_locale);
-}

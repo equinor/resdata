@@ -241,6 +241,7 @@ int main(int argc , char ** argv) {
           stringlist_type * key_list = stringlist_alloc_new( );
           build_key_list( ecl_sum , key_list , num_keys , arg_list);
           ecl_sum_fprintf(ecl_sum , stdout , key_list , report_only , &fmt);
+
           stringlist_free( key_list );
         }
         ecl_sum_free(ecl_sum);
