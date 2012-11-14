@@ -226,7 +226,6 @@ typedef enum {left_pad   = 0,
   unsigned int util_clock_seed( );
   void         util_fread_dev_random(int , char * );
   void         util_fread_dev_urandom(int , char * );
-  char *       util_alloc_string_copy(const char *);
   bool         util_string_isspace(const char * s);
   
   void    util_exit(const char * fmt , ...);
@@ -297,7 +296,6 @@ typedef enum {left_pad   = 0,
   int      util_type_get_id( const void * data );
 
   
-  char   * util_alloc_realpath(const char * );
   bool     util_sscanf_bytesize(const char * , size_t *);
   void     util_sscanf_active_range(const char *  , int , bool * );
   int    * util_sscanf_alloc_active_list(const char *  , int * );
@@ -332,7 +330,7 @@ typedef enum {left_pad   = 0,
 #define UTIL_FWRITE_VECTOR(s,n,stream) { if (fwrite(s , sizeof s , (n) , stream) != (n)) util_abort("%s: write failed: %s \n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_VECTOR(s,n,stream)  { if (fread(s , sizeof s , (n) , stream) != (n)) util_abort("%s: read failed: %s \n",__func__ , strerror(errno)); }
   
-#define CONTAINS_HEADER(TYPE) int util_sorted_contains_ ## TYPE(const TYPE * data , int size , TYPE value);
+#define CONTAINS_HEADER(TYPE) int util_sorted_contains_ ## TYPE(const TYPE * data , int size , TYPE value)
   CONTAINS_HEADER(int);
   CONTAINS_HEADER(time_t);
   CONTAINS_HEADER(size_t);
