@@ -838,6 +838,7 @@ void ecl_sum_fmt_init_csv( ecl_sum_fmt_type * fmt ) {
   fmt->days_fmt   = "%7.2f";
   fmt->header_fmt = "%s";
 
+  fmt->newline     = "\r\n";
   fmt->date_header = "DAYS\tDATE";
   fmt->print_header = true;
   fmt->print_dash = false;
@@ -853,6 +854,7 @@ void ecl_sum_fmt_init_summary_x( ecl_sum_fmt_type * fmt ) {
   fmt->days_fmt   = "%7.2f   ";
   fmt->header_fmt = " %15s ";
 
+  fmt->newline = "\n";
   fmt->print_header= true;
   fmt->print_dash = true;
   fmt->date_dash  = "-----------------------";
@@ -892,7 +894,7 @@ static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream
     }   
   }   
   
-  fprintf(stream , "\n");
+  fprintf(stream , fmt->newline);
 }
 
 
@@ -907,8 +909,8 @@ static void ecl_sum_fprintf_header( const ecl_sum_type * ecl_sum , const stringl
       }
   }
 
+  fprintf( stream , fmt->newline);
   if (fmt->print_dash)   {
-    fprintf( stream , "\n");
     fprintf(stream , fmt->date_dash);
     
     {
@@ -917,7 +919,7 @@ static void ecl_sum_fprintf_header( const ecl_sum_type * ecl_sum , const stringl
         if (bool_vector_iget( has_var , i ))
           fprintf(stream , fmt->value_dash);
     }
-    fprintf( stream , "\n");
+    fprintf( stream , fmt->newline);
   }
 }
 
