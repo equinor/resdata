@@ -51,42 +51,40 @@ endif()
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
-add_library( util  ${LIBRARY_TYPE}  ${source_files} )
+add_library( ert_util  ${LIBRARY_TYPE}  ${source_files} )
 
 if (WITH_PTHREAD)
-  target_link_libraries( util ${PTHREAD_LIBRARY} )
+  target_link_libraries( ert_util ${PTHREAD_LIBRARY} )
   include_directories( ${PTHREAD_HEADER} )
 endif()   
 
 if (WITH_ZLIB)
-  target_link_libraries( util ${ZLIB_LIBRARY} )
+  target_link_libraries( ert_util ${ZLIB_LIBRARY} )
   include_directories( ${ZLIB_HEADER} )
 endif()   
 
 if ( ERT_WINDOWS )
-  target_link_libraries( util ${SHWLAPI_LIBRARY} )
+  target_link_libraries( ert_util ${SHWLAPI_LIBRARY} )
 endif()
 
 if (WITH_LAPACK)
-   target_link_libraries( util ${LAPACK_LIBRARY} )
+   target_link_libraries( ert_util ${LAPACK_LIBRARY} )
    if (NEED_BLAS)
-     target_link_libraries( util ${BLAS_LIBRARY} )
+     target_link_libraries( ert_util ${BLAS_LIBRARY} )
    endif()
 endif()
 
 if (NEED_LIBM)
-   target_link_libraries( util m )
+   target_link_libraries( ert_util m )
 endif()
-
-set_target_properties( util PROPERTIES OUTPUT_NAME ert_util ARCHIVE_OUTPUT_DIRECTORY /tmp/libutil)
 
 #-----------------------------------------------------------------
 
 if (UTIL_INSTALL_PREFIX)
-  install(TARGETS util DESTINATION ${CMAKE_INSTALL_PREFIX}/${UTIL_INSTALL_PREFIX}/lib)
+  install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_PREFIX}/${UTIL_INSTALL_PREFIX}/lib)
   install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/${UTIL_INSTALL_PREFIX}/include)
 else()
-  install(TARGETS util DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+  install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
   install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 endif()
 
