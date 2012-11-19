@@ -39,8 +39,8 @@ extern "C" {
   typedef struct {
     char * locale;
     char * sep;
-	char * newline;
-	char * value_fmt;
+    char * newline;
+    char * value_fmt;
     char * date_fmt;
     char * days_fmt;
     char * header_fmt;
