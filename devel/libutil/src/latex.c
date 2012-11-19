@@ -33,7 +33,7 @@ extern "C" {
 #endif
 
 #ifdef LATEX_CMD
-#define __LATEX_CMD "LATEX_CMD"
+#define __LATEX_CMD LATEX_CMD
 #else
 #define __LATEX_CMD "/usr/bin/pdflatex"
 #endif

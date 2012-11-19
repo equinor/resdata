@@ -5,7 +5,7 @@ set(header_files ssize_t.h type_macros.h rng.h lookup_table.h statistics.h mzran
 
 if (WITH_LATEX)
    add_definitions( -DWITH_LATEX )
-   add_definitions( -DLATEX_CMD="\"${LATEX_PATH}\"")
+   add_definitions( -DLATEX_CMD=\"${LATEX_PATH}\")
 
    list( APPEND source_files latex.c )
    list( APPEND header_files latex.h )
