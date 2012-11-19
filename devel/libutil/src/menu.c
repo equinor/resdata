@@ -309,17 +309,18 @@ static void __print_helptext(char * label, int l){
   char * first_part = "Dummy3";
   char * second_part = "Dummy4";
   while(!end_reached){
+    int i;
     if(strlen(label_copy) > l){
-      util_binary_split_string_from_max_length(label_copy , " ", l , &first_part , &second_part);
+	  util_binary_split_string_from_max_length(label_copy , " ", l , &first_part , &second_part);
       printf("|    %s",first_part);
-      for (int i=strlen(first_part); i < l; i++)
+      for (i=strlen(first_part); i < l; i++)
         fputc(' ' , stdout);
       printf("    |\n");
       label_copy = util_realloc_string_copy(label_copy, second_part);
     }
     else{
       printf("|    %s",label_copy);
-      for (int i=strlen(label_copy); i < l; i++)
+      for (i=strlen(label_copy); i < l; i++)
         fputc(' ' , stdout);
       printf("    |\n");
       end_reached = true;

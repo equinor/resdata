@@ -2302,6 +2302,26 @@ bool util_is_executable(const char * path) {
   return false;
 }
 
+/* If it exists on windows it is readable ... */
+bool util_entry_readable( const char * entry ) {
+  struct stat buffer;
+  if (stat( entry , &buffer ) == 0)
+    return true;
+  else
+    return false;  /* If stat failed - typically not existing entry - we return false. */
+}
+
+/* If it exists on windows it is readable ... */
+bool util_entry_writable( const char * entry ) {
+  struct stat buffer;
+  if (stat( entry , &buffer ) == 0)
+    return true;
+  else
+    return false;  /* If stat failed - typically not existing entry - we return false. */
+}
+
+
+
 #endif 
 
 

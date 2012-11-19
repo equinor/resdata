@@ -39,6 +39,5 @@ int test_grid( const char * filename) {
 
 
 int main(int argc , char ** argv) {
-  test_grid( "../../../Ceetron/simu/LGCcase/LGC_TESTCASE2.EGRID" );
-  //test_grid( "../../../Ceetron/simu/LGCcase/LGC_TESTCASE2.GRID");
+  test_grid( argv[1] );
 }
