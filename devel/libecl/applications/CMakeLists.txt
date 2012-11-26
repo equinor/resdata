@@ -1,6 +1,7 @@
 add_executable( sum_write sum_write.c )
 add_executable( make_grid make_grid.c )
 add_executable( grdecl_grid grdecl_grid.c )
+add_executable( summary2csv summary2csv.c )
 if (ERT_LINUX)
    add_executable( convert.x convert.c )
    add_executable( grdecl_test.x grdecl_test.c )
@@ -12,7 +13,7 @@ if (ERT_LINUX)
    add_executable( summary.x view_summary.c )
    add_executable( select_test.x select_test.c )
    add_executable( load_test.x load_test.c )
-   set(program_list kw_extract.x grdecl_grid make_grid sum_write load_test.x grdecl_test.x grid_dump_ascii.x select_test.x grid_dump.x convert.x kw_list.x grid_info.x summary.x)
+   set(program_list summary2csv kw_extract.x grdecl_grid make_grid sum_write load_test.x grdecl_test.x grid_dump_ascii.x select_test.x grid_dump.x convert.x kw_list.x grid_info.x summary.x)
 else()
    # The stupid .x extension creates problems on windows
    add_executable( convert convert.c )
@@ -25,12 +26,12 @@ else()
    add_executable( summary view_summary.c )
    add_executable( select_test select_test.c )
    add_executable( load_test load_test.c )
-   set(program_list kw_extract grdecl_grid make_grid  sum_write load_test grdecl_test grid_dump_ascii select_test grid_dump convert kw_list grid_info summary)
+   set(program_list summary2csv kw_extract grdecl_grid make_grid  sum_write load_test grdecl_test grid_dump_ascii select_test grid_dump convert kw_list grid_info summary)
 endif()
 
 
 foreach(prog ${program_list})
-   target_link_libraries( ${prog} ecl util geometry )
+   target_link_libraries( ${prog} ecl ert_util geometry )
    
    #-----------------------------------------------------------------
    if (ECL_INSTALL_PREFIX)
