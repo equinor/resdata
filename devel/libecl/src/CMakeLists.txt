@@ -24,7 +24,7 @@ endif()
 if (OPENMP)
    target_link_libraries( ecl gomp )
 endif()
-target_link_libraries( ecl geometry util )
+target_link_libraries( ecl geometry ert_util )
 
 #-----------------------------------------------------------------
 if (ECL_INSTALL_PREFIX)
