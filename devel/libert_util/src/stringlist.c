@@ -373,7 +373,7 @@ char ** stringlist_alloc_char_copy(const stringlist_type * stringlist) {
   char ** strings = NULL;
   int size = stringlist_get_size( stringlist );
   if (size > 0) {
-        int i;
+    int i;
     strings = util_calloc(size , sizeof * strings );
     for (i = 0; i <size; i++)
       strings[i] = stringlist_iget_copy( stringlist , i);
