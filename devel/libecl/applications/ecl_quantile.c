@@ -815,16 +815,18 @@ int main( int argc , char ** argv ) {
       const char    * config_arg  = argv[1];
       
       config_init( config );
-      config_parse( config , config_arg , "--" , NULL , NULL , true , true );
-      
-      {
+      if (config_parse( config , config_arg , "--" , NULL , NULL , true , true )) {
         char * config_path;
         util_alloc_file_components( config_arg , &config_path , NULL , NULL);
         if (config_path != NULL) {
           chdir( config_path );
           free( config_path );
         }
+      } else {
+        config_fprintf_errors( config , stderr );
+        exit(1);
       }
+        
 
     
       ensemble_init( ensemble , config );
