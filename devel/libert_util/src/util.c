@@ -2870,6 +2870,11 @@ double util_difftime_days(time_t start_time , time_t end_time) {
 }
 
 
+double util_difftime_seconds( time_t start_time , time_t end_time) {
+  double dt = difftime(end_time , start_time);
+  return dt;
+}
+
 
 /*
   Observe that this routine does the following transform before calling mktime:

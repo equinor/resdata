@@ -80,6 +80,7 @@ typedef enum {left_pad   = 0,
   time_t       util_file_mtime(const char * file);
   double       util_difftime(time_t  , time_t  , int *  , int *  , int *  , int *);
   double       util_difftime_days(time_t  , time_t );
+  double       util_difftime_seconds( time_t start_time , time_t end_time);
   bool         util_file_newer( const char * file , time_t t0);
   bool         util_file_older( const char * file , time_t t0);
   char       * util_alloc_date_string( time_t t );
