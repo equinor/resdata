@@ -56,15 +56,17 @@ struct stringlist_struct {
 
 
 static void stringlist_fprintf__(const stringlist_type * stringlist, const char * sep , FILE * stream) {
-  int i;
   int length = vector_get_size( stringlist->strings );
-
-  for (i=0; i < length - 1; i++) {
-    const char * s = stringlist_iget(stringlist , i);
-    fprintf(stream , "%s%s", s  , sep);
+  if (length > 0) {
+    int i;
+    
+    for (i=0; i < length - 1; i++) {
+      const char * s = stringlist_iget(stringlist , i);
+      fprintf(stream , "%s%s", s  , sep);
+    }
+    
+    fprintf(stream , "%s", stringlist_iget( stringlist , length - 1 ));
   }
-  
-  fprintf(stream , "%s", stringlist_iget( stringlist , length - 1 ));
 }
 
 
