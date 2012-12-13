@@ -332,6 +332,11 @@ void stringlist_idel(stringlist_type * stringlist , int index) {
 }
 
 
+char * stringlist_pop( stringlist_type * stringlist) {
+  return vector_pop( stringlist->strings );
+}
+
+
 const char * stringlist_iget(const stringlist_type * stringlist , int index) {
   return vector_iget(stringlist->strings ,index);
 }
