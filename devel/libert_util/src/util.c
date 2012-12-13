@@ -254,6 +254,10 @@ void util_endian_flip_vector_old(void *data, int element_size , int elements) {
   }
 }
 
+#ifndef S_ISDIR
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#endif
 
 
 /*****************************************************************/
@@ -717,6 +721,35 @@ char * util_alloc_cwd(void) {
   cwd = util_realloc(cwd , strlen(cwd) + 1 );
   return cwd;
 }
+
+
+
+bool util_is_cwd( const char * path ) {
+  bool is_cwd = false;
+  struct stat path_stat;
+
+  if (stat(path , &path_stat) == 0) {
+    if (S_ISDIR( path_stat.st_mode )) {
+      char * cwd = util_alloc_cwd();
+#ifdef ERT_WINDOWS
+      /*
+        The windows stat structure has the inode element, but it is
+        not set. Actually - this is a property of the filesystem, and
+        not the operating system - this check is probably broken?
+      */
+      ERROR
+#else
+      struct stat cwd_stat;
+      stat(cwd , &cwd_stat);
+      if (cwd_stat.st_ino == path_stat.st_ino)
+        is_cwd = true;
+#endif
+      free( cwd );
+    }
+  }
+  return is_cwd;
+}
+
 
 
 
@@ -2207,13 +2240,7 @@ bool util_entry_exists( const char * entry ) {
 
 */
 
-#ifdef HAVE_ISREG
-#endif 
 
-#ifndef S_ISDIR
-#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
-#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
-#endif
 
 
 
@@ -2510,6 +2537,17 @@ void util_ftruncate(FILE * stream , long size) {
 
 
 
+/*
+  The windows stat structure has the inode element, but it is not
+  set. Actually - this is a property of the filesystem, and not the
+  operating system - this check is probably broken on two levels:
+  
+   1. One should really check the filesystem involved - whether it
+      supports inodes.
+      
+   2. The code below will compile on windows, but for a windows
+      filesystem it will yield rubbish.
+*/
 
 bool util_same_file(const char * file1 , const char * file2) {
   struct stat buffer1 , buffer2;

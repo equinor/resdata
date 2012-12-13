@@ -8,6 +8,10 @@ add_executable( vector_test vector_test.c )
 target_link_libraries( vector_test ert_util )
 add_test( vector_test ${EXECUTABLE_OUTPUT_PATH}/vector_test )
 
+add_executable( ert_util_cwd_test ert_util_cwd_test.c )
+target_link_libraries( ert_util_cwd_test ert_util )
+add_test( ert_util_cwd_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_cwd_test ${CMAKE_CURRENT_BINARY_DIR})
+
 if (WITH_LATEX)
    add_executable( latex_test latex_test.c )
    target_link_libraries( latex_test ert_util )

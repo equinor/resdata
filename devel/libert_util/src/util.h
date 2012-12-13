@@ -120,6 +120,7 @@ typedef enum {left_pad   = 0,
   void         util_move_file4( const char * src_name , const char * target_name , const char *src_path , const char * target_path);
   bool         util_copy_file(const char * , const char * );
   char       * util_alloc_cwd(void);
+  bool         util_is_cwd( const char * path );
   char       * util_alloc_realpath(const char * );
   bool         util_string_match(const char * string , const char * pattern);
   bool         util_string_has_wildcard( const char * s);
