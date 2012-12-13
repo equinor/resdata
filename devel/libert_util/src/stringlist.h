@@ -32,6 +32,7 @@ extern "C" {
 typedef struct stringlist_struct stringlist_type;
 typedef int  ( string_cmp_ftype)  (const void * , const void *);
 
+  const      char * stringlist_get_last( const stringlist_type * stringlist );
   char            * stringlist_pop( stringlist_type * stringlist);
   void              stringlist_deep_copy( stringlist_type * target , const stringlist_type * src);
   stringlist_type * stringlist_alloc_deep_copy_with_limits(const stringlist_type * src , int offset, int num_strings);

@@ -341,6 +341,10 @@ const char * stringlist_iget(const stringlist_type * stringlist , int index) {
   return vector_iget(stringlist->strings ,index);
 }
 
+const char * stringlist_get_last( const stringlist_type * stringlist ) {
+  return vector_get_last( stringlist->strings );
+}
+
 
 bool stringlist_iequal( const stringlist_type * stringlist , int index, const char * s ) {
   return util_string_equal( stringlist_iget( stringlist , index ) , s);
