@@ -76,11 +76,14 @@ void path_stack_free( path_stack_type * path_stack ) {
    chdir() to the input path. If the chdir() call fails the function
    will return false, and the stack will be unmodified; if the chdir()
    succeeds the input @path will be pushed onto the stack.
+
+   If path is NULL that is interpreted as cwd.
 */
 
 bool path_stack_push( path_stack_type * path_stack , const char * path ) {
-  if (chdir( path ) != 0)
-    return false;
+  if (path != NULL)
+    if (chdir( path ) != 0)
+      return false;
   
   path_stack_push_cwd( path_stack );
   return true;
@@ -113,5 +116,4 @@ int path_stack_size( const path_stack_type * path_stack ) {
 const char * path_stack_peek( const path_stack_type * path_stack ) {
   return stringlist_get_last( path_stack->stack );
 }
-
 

@@ -38,7 +38,7 @@ int main(int argc , char ** argv) {
 
     path_stack_push_cwd( path_stack );
     
-    if (path_stack_push( path_stack , "ThisDoesNotExist-1111"))
+    if (path_stack_push( path_stack , "NotExist-1111"))
       test_error_exit("Pushed unexisting path\n");
     
     if (!path_stack_push( path_stack, path1 ))
@@ -67,6 +67,14 @@ int main(int argc , char ** argv) {
 
     if (path_stack_size( path_stack ) != 0)
       test_error_exit("Wrong stack size");
+    
+    if (!path_stack_push(path_stack , NULL))
+      test_error_exit("Hmmm - push(NULL) failed \n");
+
+    if (path_stack_size( path_stack ) != 1)
+      test_error_exit("Wrong stack size");
+    
+    path_stack_pop( path_stack );
     path_stack_free( path_stack);
   }
   exit(0);
