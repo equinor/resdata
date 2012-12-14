@@ -242,7 +242,7 @@ typedef enum {left_pad   = 0,
   void    util_abort_signal(int );
   void    util_abort_append_version_info(const char * );
   void    util_abort_free_version_info();
-  void    util_abort_set_executable( const char * executable );
+  void    util_abort_set_executable( const char * argv0 );
   void *  util_realloc(void *  , size_t  );
   void *  util_malloc(size_t );
   void *  util_calloc( size_t elements , size_t element_size );

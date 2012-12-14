@@ -146,7 +146,7 @@ void util_abort(const char * fmt , ...) {
       const int max_bt = 50;
       char *executable;
       void *array[max_bt];
-      char **strings;
+      char **bt_symbols;
       char ** func_list;
       char ** file_line_list;
       int    max_func_length = 0;
@@ -172,8 +172,8 @@ void util_abort(const char * fmt , ...) {
       fprintf(stderr,"**                                                                        **\n");
       fprintf(stderr,"****************************************************************************\n");
       size       = backtrace(array , max_bt);
-      strings    = backtrace_symbols(array , size);    
-      executable = util_bt_alloc_current_executable(strings[0]);
+      bt_symbols    = backtrace_symbols(array , size);    
+      executable = util_bt_alloc_current_executable(bt_symbols[0]);
       if (executable != NULL) {
         fprintf(stderr,"Current executable : %s \n",executable);
         
@@ -181,30 +181,32 @@ void util_abort(const char * fmt , ...) {
         file_line_list = util_calloc(size , sizeof * file_line_list );
         
         for (i=0; i < size; i++) {
-          util_addr2line_lookup(executable , strings[i] , &func_list[i] , &file_line_list[i]);
+          util_addr2line_lookup(executable , bt_symbols[i] , &func_list[i] , &file_line_list[i]);
           max_func_length = util_int_max(max_func_length , strlen(func_list[i]));
         }
         
         {
-          char string_fmt[64];
-          sprintf(string_fmt, " #%s02d %s-%ds(..) in %ss   \n" , "%" , "%" , max_func_length , "%");
+          char line_fmt[64];
+          const char * bt_fmt = " %02d: %s\n";
+          sprintf(line_fmt , " #%%02d: %%-%ds(..) in %%s   \n" , max_func_length );
+          
           fprintf(stderr , "--------------------------------------------------------------------------------\n");
           for (i=0; i < size; i++) {
-            
-            int line_nr;
-            if (util_sscanf_int(file_line_list[i] , &line_nr))
-              fprintf(stderr, string_fmt , i , func_list[i], file_line_list[i]);
+
+            if (strspn(file_line_list[i] , "?") != 2)
+              fprintf(stderr, line_fmt , i , func_list[i], file_line_list[i]);
             else
-              fprintf(stderr, string_fmt , i , func_list[i], file_line_list[i]);
+              fprintf(stderr, bt_fmt  , i , bt_symbols[i] );
+            
           }
           fprintf(stderr , "--------------------------------------------------------------------------------\n");
           util_free_stringlist(func_list      , size);
           util_free_stringlist(file_line_list , size);
         }
       } else
-        fprintf(stderr,"Could not determine executable file for:%s - no backtrace. \n",strings[0]);
+        fprintf(stderr,"Could not determine executable file for:%s - no backtrace. \n",bt_symbols[0]);
       
-      free(strings);
+      free(bt_symbols);
       util_safe_free(executable);
     }
 

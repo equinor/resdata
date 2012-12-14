@@ -4725,8 +4725,22 @@ void util_abort_free_version_info() {
 }
 
 
-void util_abort_set_executable( const char * executable ) {
-  __current_executable = util_realloc_string_copy( __current_executable , executable );
+void util_abort_set_executable( const char * argv0 ) {
+  if (util_is_abs_path(argv0)) {
+    printf("Setting executable:%s \n",argv0);
+    __current_executable = util_realloc_string_copy( __current_executable , argv0 );
+  }
+  else {
+    char * executable;
+    if (util_is_executable( argv0 )) 
+      executable = util_alloc_realpath(argv0);
+    else
+      executable = util_alloc_PATH_executable( argv0 );
+
+    
+    util_abort_set_executable( executable );
+    free( executable );
+  }
 }
 
 
