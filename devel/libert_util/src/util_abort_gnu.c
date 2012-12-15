@@ -187,7 +187,7 @@ void util_abort(const char * fmt , ...) {
         
         {
           char line_fmt[64];
-          const char * bt_fmt = " %02d: %s\n";
+          const char * bt_fmt = " #%02d: %s\n";
           sprintf(line_fmt , " #%%02d: %%-%ds(..) in %%s   \n" , max_func_length );
           
           fprintf(stderr , "--------------------------------------------------------------------------------\n");
