@@ -323,7 +323,8 @@ typedef enum {left_pad   = 0,
   double   util_kahan_sum(const double *data, size_t N);
   int      util_fnmatch( const char * pattern , const char * string );
   void     util_localtime( time_t * t , struct tm * ts );
-  
+
+  char      ** util_alloc_PATH_list();
   char       * util_alloc_PATH_executable(const char * executable );
   char       * util_isscanf_alloc_envvar( const char * string , int env_index );
   void         util_setenv( const char * variable , const char * value);
