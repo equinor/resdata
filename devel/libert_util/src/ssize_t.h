@@ -20,8 +20,15 @@
 #define __SSIZE_T_H__
 
 #ifdef _MSC_VER
-// This should of course check 32/64/...
+/* maximum number of bytes addressable */
+#ifdef _WIN64
+typedef __int64 ssize_t;
+#else
 typedef long ssize_t;
+#endif
+#else
+/* POSIX 2008 states that it should be defined here */
+#include <sys/types.h>
 #endif
 
 #endif
