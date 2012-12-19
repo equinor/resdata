@@ -3240,6 +3240,25 @@ void util_free_stringlist(char **list , int N) {
 }
 
 
+/**
+   Will free a list of strings where the last element is NULL. Will
+   go completely canacas if the list is not NULL terminated.
+*/
+
+void util_free_NULL_terminated_stringlist(char ** string_list) {
+  if (string_list != NULL) {
+    int i = 0;
+    while (true) {
+      if (string_list[i] == NULL)
+        break;
+      else
+        free( string_list[i] );
+      i++;
+    }
+    free( string_list );
+  }
+}
+
 
 
 
