@@ -821,9 +821,57 @@ char * util_alloc_realpath(const char * input_path) {
 char * util_alloc_abs_path( const char * path ) {
   if (util_entry_exists( path )) 
     return util_alloc_realpath( path );
-  else 
+  else
     return util_alloc_cwd_abs_path( path );
 }
+
+
+
+char * util_alloc_rel_path( const char * root_path , const char * path) {
+  if (util_is_abs_path(root_path) && util_is_abs_path(path)) {
+    int root_length = strlen( root_path );
+    int path_length = strlen( path );
+
+    if (root_path[root_length - 1] == UTIL_PATH_SEP_CHAR)
+      root_length--;
+    
+    if (root_length < path_length) {
+      if (strncmp( root_path , path , root_length) == 0) {
+        int offset = root_length;
+        if (path[offset] == UTIL_PATH_SEP_CHAR) {
+          offset++;
+          return util_alloc_string_copy( &path[offset] );
+        } else
+          /*
+            They do not have a common subpath after all.
+            
+            util_alloc_rel_path("/root/path" , "/root/pathX/file" );
+          */
+          return NULL;
+      }
+      /*
+        The root_path is NOT a subpath of the input path; return NULL.
+        
+        util_alloc_rel_path("/root/path" , "/tmp/path" );
+      */
+      return NULL;
+    } else
+      /*
+        We are trying to create a path relative to a root element
+        which is deeper down in the filesystem hiearchy than we are
+        currently - that does not make much sense, return NULL.
+
+        util_alloc_rel_path("/root/deep/path" , "/root/deep" );
+      */
+      return NULL; 
+  } else
+    /* 
+       One or both the input arguments do not correspond to an
+       absolute path; just return a copy of the input back.
+    */
+    return util_alloc_string_copy( path );
+}
+
 
 
 /**
