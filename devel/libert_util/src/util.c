@@ -826,51 +826,69 @@ char * util_alloc_abs_path( const char * path ) {
 }
 
 
+/**
+   Both path arguments must be absolute paths; if not a copy of the
+   input path will be returned. Neither of the input arguments can
+   have "/../" elements - that will just fuck things up.
+*/
 
 char * util_alloc_rel_path( const char * root_path , const char * path) {
   if (util_is_abs_path(root_path) && util_is_abs_path(path)) {
-    int root_length = strlen( root_path );
-    int path_length = strlen( path );
+    const char * back_path = "..";
+    char * rel_path = util_alloc_string_copy("");
+    char ** root_path_list;
+    char ** path_list;
+    int     root_path_length , path_length , back_length;
 
-    if (root_path[root_length - 1] == UTIL_PATH_SEP_CHAR)
-      root_length--;
+    /* 1. Split both input paths into list of path elements. */
+    util_path_split( root_path, &root_path_length  , &root_path_list );
+    util_path_split( path     , &path_length       , &path_list      );
     
-    if (root_length < path_length) {
-      if (strncmp( root_path , path , root_length) == 0) {
-        int offset = root_length;
-        if (path[offset] == UTIL_PATH_SEP_CHAR) {
-          offset++;
-          return util_alloc_string_copy( &path[offset] );
-        } else
-          /*
-            They do not have a common subpath after all.
-            
-            util_alloc_rel_path("/root/path" , "/root/pathX/file" );
-          */
-          return NULL;
-      }
-      /*
-        The root_path is NOT a subpath of the input path; return NULL.
+    {
+      /* 2: Determine the number of common leading path elements. */
+      int common_length = 0;
+      while (true) {
+        if (strcmp(root_path_list[common_length] , path_list[common_length]) == 0)
+          common_length++;
+        else
+          break;
         
-        util_alloc_rel_path("/root/path" , "/tmp/path" );
-      */
-      return NULL;
-    } else
-      /*
-        We are trying to create a path relative to a root element
-        which is deeper down in the filesystem hiearchy than we are
-        currently - that does not make much sense, return NULL.
+        if (common_length == util_int_min( root_path_length , path_length))
+          break;
+      }
+      
+      /* 3: Start building up the relative path with leading ../ elements. */
+      back_length = root_path_length - common_length;
+      if (back_length > 0) {
+        int i; 
+        for (i=0; i < back_length; i++) {
+          rel_path = util_strcat_realloc( rel_path , back_path );
+          rel_path = util_strcat_realloc( rel_path , UTIL_PATH_SEP_STRING );
+        }        
+      }
 
-        util_alloc_rel_path("/root/deep/path" , "/root/deep" );
-      */
-      return NULL; 
-  } else
+      /* 4: Add the remaining elements from the input path. */
+      {
+        int i;
+        for (i=common_length; i < path_length; i++) {
+          rel_path = util_strcat_realloc( rel_path , path_list[i] );
+          if (i != (path_length - 1))
+            rel_path = util_strcat_realloc( rel_path , UTIL_PATH_SEP_STRING );
+        }
+      }
+    }
+    
+    util_free_stringlist( root_path_list , root_path_length );
+    util_free_stringlist( path_list , path_length );
+    return rel_path;
+  } else 
     /* 
        One or both the input arguments do not correspond to an
        absolute path; just return a copy of the input back.
     */
     return util_alloc_string_copy( path );
 }
+
 
 
 
