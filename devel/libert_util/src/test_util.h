@@ -24,7 +24,8 @@
 extern "C" {
 #endif
 
-void test_error_exit( const char * fmt , ...);
+  void  test_error_exit( const char * fmt , ...);
+  bool  test_string_equal( const char * s1 , const char * s2 );
 
 #ifdef __cplusplus
 }

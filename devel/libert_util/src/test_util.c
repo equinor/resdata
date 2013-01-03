@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #include <util.h>
 #include <test_util.h>
@@ -33,4 +34,21 @@ void test_error_exit( const char * fmt , ...) {
 
   fprintf( stderr , s );
   exit(1);
+}
+
+
+bool test_string_equal( const char * s1 , const char * s2 ) {
+  if (s1 == NULL && s2 == NULL)
+    return true;
+  else {
+    if (s1 == NULL)
+      return false;
+    if (s2 == NULL)
+      return false;
+
+    if (strcmp(s1,s2) == 0)
+      return true;
+    else
+      return false;
+  }
 }

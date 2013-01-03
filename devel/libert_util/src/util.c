@@ -3312,16 +3312,22 @@ void util_free_NULL_terminated_stringlist(char ** string_list) {
 
 /**
    This function will reallocate the string s1 to become the sum of s1
-   and s2. If s1 == NULL it will just return a copy of s2.
+   and s2. If s1 == NULL it will just return a copy of s2. 
+
+   Observe that due to the use realloc() the s1 input argument MUST BE
+   the return value from a malloc() call; this is not intuitive and
+   the function should be discontinued.
 */
 
 char * util_strcat_realloc(char *s1 , const char * s2) {
   if (s1 == NULL) 
     s1 = util_alloc_string_copy(s2);
   else {
-    int new_length = strlen(s1) + strlen(s2) + 1;
-    s1 = util_realloc( s1 , new_length );
-    strcat(s1 , s2);
+    if (s2 != NULL) {
+      int new_length = strlen(s1) + strlen(s2) + 1;
+      s1 = util_realloc( s1 , new_length );
+      strcat(s1 , s2);
+    } 
   }
   return s1;
 }
