@@ -1,6 +1,6 @@
 link_directories( ${ERT_BINARY_DIR}/libert_util/src )
 
-add_executable( ert_util_type_vector_test type_vector_test.c )
+add_executable( ert_util_type_vector_test ert_util_type_vector_test.c )
 target_link_libraries( ert_util_type_vector_test ert_util )
 add_test( ert_util_type_vector_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_type_vector_test )
 
