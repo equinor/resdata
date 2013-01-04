@@ -28,6 +28,11 @@ add_executable( ert_util_strcat_test ert_util_strcat_test.c )
 target_link_libraries( ert_util_strcat_test ert_util )
 add_test( ert_util_strcat_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_strcat_test )
 
+add_executable( ert_util_stringlist_test ert_util_stringlist_test.c )
+target_link_libraries( ert_util_stringlist_test ert_util )
+add_test( ert_util_stringlist_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_stringlist_test )
+
+
 if (WITH_LATEX)
    add_executable( latex_test latex_test.c )
    target_link_libraries( latex_test ert_util )

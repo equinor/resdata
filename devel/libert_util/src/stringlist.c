@@ -380,18 +380,30 @@ int stringlist_get_size(const stringlist_type * stringlist) {
 /*
   Return NULL if the list has zero entries. 
 */
-char ** stringlist_alloc_char_copy(const stringlist_type * stringlist) {
+static char ** stringlist_alloc_char__(const stringlist_type * stringlist, bool deep_copy) {
   char ** strings = NULL;
   int size = stringlist_get_size( stringlist );
   if (size > 0) {
     int i;
     strings = util_calloc(size , sizeof * strings );
-    for (i = 0; i <size; i++)
-      strings[i] = stringlist_iget_copy( stringlist , i);
+    for (i = 0; i <size; i++) {
+      if (deep_copy)
+        strings[i] = stringlist_iget_copy( stringlist , i);
+      else
+        strings[i] = (char *) stringlist_iget( stringlist , i);
+    }
   }
   return strings;
 }
 
+char ** stringlist_alloc_char_copy(const stringlist_type * stringlist) {
+  return stringlist_alloc_char__( stringlist , true );
+}
+
+
+char ** stringlist_alloc_char_ref(const stringlist_type * stringlist) {
+  return stringlist_alloc_char__( stringlist , false );
+}
 
 
 
@@ -473,7 +485,7 @@ bool stringlist_equal(const stringlist_type * s1 , const stringlist_type *s2) {
   int size2 = stringlist_get_size( s2 );
   if (size1 == size2) {
     bool equal = true;
-        int i;
+    int i;
     for ( i = 0; i < size1; i++) {
       if (strcmp(stringlist_iget(s1 , i) , stringlist_iget(s2 , i)) != 0) {
         equal = false;

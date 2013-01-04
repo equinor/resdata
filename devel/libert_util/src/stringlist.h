@@ -89,6 +89,7 @@ typedef int  ( string_cmp_ftype)  (const void * , const void *);
   int               stringlist_find_first(const stringlist_type * , const char * );
   int               stringlist_get_argc(const stringlist_type * );
   char           ** stringlist_alloc_char_copy(const stringlist_type * );
+  char           ** stringlist_alloc_char_ref(const stringlist_type * stringlist);
   void              stringlist_fread(stringlist_type * , FILE * );
   void              stringlist_fwrite(const stringlist_type * , FILE * );
   void              stringlist_buffer_fread( stringlist_type * s , buffer_type * buffer );
