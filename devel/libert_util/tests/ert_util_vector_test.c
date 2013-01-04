@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2012  Statoil ASA, Norway. 
     
-   The file 'latex_test.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'ert_util_vector_test.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -17,24 +17,31 @@
 */
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
 
-#include <latex.h>
+#include <vector.h>
+
+void assert_equal( bool equal ) {
+  if (!equal)
+    exit(1);
+}
+
+
+int test_iset( ) {
+  vector_type * vector = vector_alloc_new( 0 );
+  vector_iset_ref( vector , 2 , vector );
+  
+  assert_equal( vector_get_size( vector ) == 3 );
+  assert_equal( vector_iget( vector , 0 ) == NULL );
+  assert_equal( vector_iget( vector , 1 ) == NULL );
+  assert_equal( vector_iget( vector , 2 ) == vector );
+  vector_free( vector );
+  return 0;
+}
+
 
 
 int main(int argc , char ** argv) {
-  bool ok;
-
-  {
-    latex_type * latex = latex_alloc( argv[1] , false );
-    printf("input:%s \n",argv[1]);
-    ok = latex_compile( latex , true , true );
-    printf("OK: %d \n",ok);
-    latex_free( latex );
-  }
-
-  if (ok) 
-    exit(0);
-  else
-    exit(1);
+  test_iset( );
+  
+  exit(0);
 }
