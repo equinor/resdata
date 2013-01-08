@@ -123,6 +123,7 @@ typedef enum {left_pad   = 0,
   char       * util_alloc_cwd(void);
   bool         util_is_cwd( const char * path );
   char       * util_alloc_realpath(const char * );
+  char       * util_alloc_realpath__(const char * input_path);
   bool         util_string_match(const char * string , const char * pattern);
   bool         util_string_has_wildcard( const char * s);
   bool         util_entry_readable( const char * entry );  

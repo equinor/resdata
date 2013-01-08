@@ -773,6 +773,80 @@ static char * util_alloc_cwd_abs_path( const char * path ) {
 
 
 /**
+   Manual realpath() implementation to be used on platforms without
+   realpath() support. Will remove /../, ./ and extra //. Will not
+   handle symlinks.
+*/
+
+
+#define BACKREF ".."
+#define CURRENT "."
+
+char * util_alloc_realpath__(const char * input_path) {
+  char * abs_path  = util_alloc_cwd_abs_path( input_path );
+  char * real_path = util_malloc( strlen(abs_path) + 1 );
+  real_path[0] = '\0';
+  
+  {
+    bool  * mask;
+    char ** path_list;
+    int     path_len;
+
+    util_path_split( abs_path , &path_len , &path_list );
+    mask = util_malloc( path_len * sizeof * mask );
+    {
+      int i;
+      for (i=0; i < path_len; i++)
+        mask[i] = true;
+    }
+        
+    {
+      int path_index = 1;  // Path can not start with ..
+      int prev_index = 0;
+      while (true) {
+        if (path_index == path_len)
+          break;
+
+        if (strcmp(path_list[path_index] , BACKREF ) == 0) {
+          mask[path_index] = false;
+          mask[prev_index] = false;
+          prev_index--;
+          path_index++;
+        } else if (strcmp( path_list[path_index] , CURRENT) == 0) {
+          mask[path_index] = false;
+          path_index++;
+        } else {
+          path_index++;
+          prev_index++;
+          while (!mask[prev_index])
+            prev_index++;
+        }
+      }
+
+      /* Build up the new string. */
+      {
+        int i;
+        for (i=0; i < path_len; i++) {
+          if (mask[i]) {
+            strcat( real_path , UTIL_PATH_SEP_STRING );
+            strcat( real_path , path_list[i]);
+          }
+        }
+      }
+    }             
+    free(mask);
+    util_free_stringlist( path_list , path_len );
+  }
+
+  return real_path;
+}
+
+#undef BACKREF 
+#undef CURRENT 
+
+
+
+/**
    The util_alloc_realpath() will fail hard if the @input_path does
    not exist. If the path might-not-exist you should use
    util_alloc_abs_path() instead.  
@@ -795,10 +869,13 @@ char * util_alloc_realpath(const char * input_path) {
   /* We do not have the realpath() implementation. Must first check if
      the entry exists; and if not we abort. If the entry indeed exists
      we call the util_alloc_cwd_abs_path() function: */
+#ifdef HAVE_SYMLINK
+  ERROR - What the fuck; have symlinks and not realpath();
+#endif
   if (!util_entry_exists( input_path )) 
-    util_abort("%s: input_path:%s does not exist - realpath() failed.\n",__func__ , input_path);
+    util_abort("%s: input_path:%s does not exist - failed.\n",__func__ , input_path);
   
-  return util_alloc_cwd_abs_path( input_path );
+  return util_alloc_realpath__( input_path );
 #endif 
 }
 
