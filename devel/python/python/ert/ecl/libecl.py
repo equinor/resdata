@@ -30,4 +30,4 @@ try:
 except ImportError:
     openmp = False
     
-lib = clib.load("libecl.so")
+lib = clib.ert_load("libecl.so")
