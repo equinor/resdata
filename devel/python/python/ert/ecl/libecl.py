@@ -1,6 +1,6 @@
 #  Copyright (C) 2011  Statoil ASA, Norway. 
 #   
-#  The file 'libenkf.py' is part of ERT - Ensemble based Reservoir Tool. 
+#  The file 'libecl.py' is part of ERT - Ensemble based Reservoir Tool. 
 #   
 #  ERT is free software: you can redistribute it and/or modify 
 #  it under the terms of the GNU General Public License as published by 
@@ -13,13 +13,21 @@
 #   
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
+"""
+This module will load the libecl.so shared library.
+"""
+
+# This statement is necessary for side-effects (i.e. the final
+# dlopen("libutil.so") call).
 import ert.util.libutil               
-import ert.ecl.libecl
-import ert.job_queue.libjob_queue
-import ert.rms.librms
+import ert.geo.libgeo
+
 import ert.cwrap.clib as clib
 
-clib.load("libsched.so")
-clib.load("libanalysis.so")
-lib = clib.load("libenkf.so")
+try:
+    clib.load("libgomp" , "libgomp.so.1")
+    openmp = True
+except ImportError:
+    openmp = False
     
+lib = clib.ert_load("libecl.so")
