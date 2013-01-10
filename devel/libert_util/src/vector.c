@@ -448,7 +448,8 @@ const void * vector_get_last_const(const vector_type * vector) {
    This function removes the last element from the vector and returns
    it to the calling scope. Irrespective of whether the element _was_
    inserted with a destructor: when calling vector_pop() the calling
-   scope takes responsability for freeing data.
+   scope takes responsability for freeing data; i.e. vector_pop will
+   NEVER call a destructor.
 */
 
 

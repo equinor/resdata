@@ -912,7 +912,7 @@ char * util_alloc_abs_path( const char * path ) {
 char * util_alloc_rel_path( const char * root_path , const char * path) {
   if (util_is_abs_path(root_path) && util_is_abs_path(path)) {
     const char * back_path = "..";
-    char * rel_path = util_alloc_string_copy("");
+    char * rel_path = util_alloc_string_copy("");  // In case strcmp(root_path , path) == 0 the empty string "" will be returned
     char ** root_path_list;
     char ** path_list;
     int     root_path_length , path_length , back_length;
