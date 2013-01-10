@@ -39,17 +39,33 @@ void test_error_exit( const char * fmt , ...) {
 
 
 bool test_string_equal( const char * s1 , const char * s2 ) {
+  bool equal = true;
   if (s1 == NULL && s2 == NULL)
     return true;
   else {
     if (s1 == NULL)
-      return false;
+      equal = false;
     if (s2 == NULL)
-      return false;
+      equal = false;
 
     if (strcmp(s1,s2) == 0)
       return true;
     else
-      return false;
+      equal = false;
+  }
+  return equal;
+}
+
+
+
+void test_assert_string_equal( const char * s1 , const char * s2 , const char * fmt) {
+  bool equal = test_string_equal( s1 , s2 );
+  if (!equal) {
+    if (fmt == NULL)
+      test_error_exit( "String are different s1:[%s]  s2:[%s]\n" , s1 , s2 );
+    else
+      test_error_exit( fmt , s1 , s2 );
   }
 }
+
+
