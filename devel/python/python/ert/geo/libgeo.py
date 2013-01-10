@@ -14,20 +14,13 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 """
-This module will load the libecl.so shared library.
+This module will load the libgeometry.so shared library.
 """
 
 # This statement is necessary for side-effects (i.e. the final
 # dlopen("libutil.so") call).
+import ctypes
 import ert.util.libutil               
-import ert.geo.libgeo
-
 import ert.cwrap.clib as clib
 
-try:
-    clib.load("libgomp" , "libgomp.so.1")
-    openmp = True
-except ImportError:
-    openmp = False
-    
-lib = clib.load("libecl.so")
+lib = clib.ert_load("libgeometry.so")

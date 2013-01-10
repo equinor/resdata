@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2012  Statoil ASA, Norway. 
     
-   The file 'latex_test.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'ecl_coarse_test.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -17,24 +17,27 @@
 */
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
 
-#include <latex.h>
+#include <ecl_grid.h>
+#include <ecl_coarse_cell.h>
+
+void assert_equal( bool equal ) {
+  if (!equal)
+    exit(1);
+}
+
+
+int test_grid( const char * filename) {
+  ecl_grid_type * GRID = ecl_grid_alloc( filename );
+
+  assert_equal( ecl_grid_have_coarse_cells( GRID ));
+  assert_equal( ecl_grid_get_num_coarse_groups( GRID ) == 3384 );
+  return 0;
+}
+
+
 
 
 int main(int argc , char ** argv) {
-  bool ok;
-
-  {
-    latex_type * latex = latex_alloc( argv[1] , false );
-    printf("input:%s \n",argv[1]);
-    ok = latex_compile( latex , true , true );
-    printf("OK: %d \n",ok);
-    latex_free( latex );
-  }
-
-  if (ok) 
-    exit(0);
-  else
-    exit(1);
+  test_grid( argv[1] );
 }

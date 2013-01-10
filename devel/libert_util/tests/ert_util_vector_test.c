@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2012  Statoil ASA, Norway. 
     
-   The file 'coarse_test.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'ert_util_vector_test.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -18,8 +18,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ecl_grid.h>
-#include <ecl_coarse_cell.h>
+#include <vector.h>
 
 void assert_equal( bool equal ) {
   if (!equal)
@@ -27,17 +26,22 @@ void assert_equal( bool equal ) {
 }
 
 
-int test_grid( const char * filename) {
-  ecl_grid_type * GRID = ecl_grid_alloc( filename );
-
-  assert_equal( ecl_grid_have_coarse_cells( GRID ));
-  assert_equal( ecl_grid_get_num_coarse_groups( GRID ) == 3384 );
+int test_iset( ) {
+  vector_type * vector = vector_alloc_new( 0 );
+  vector_iset_ref( vector , 2 , vector );
+  
+  assert_equal( vector_get_size( vector ) == 3 );
+  assert_equal( vector_iget( vector , 0 ) == NULL );
+  assert_equal( vector_iget( vector , 1 ) == NULL );
+  assert_equal( vector_iget( vector , 2 ) == vector );
+  vector_free( vector );
   return 0;
 }
 
 
 
-
 int main(int argc , char ** argv) {
-  test_grid( argv[1] );
+  test_iset( );
+  
+  exit(0);
 }
