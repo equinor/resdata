@@ -907,9 +907,17 @@ char * util_alloc_abs_path( const char * path ) {
    Both path arguments must be absolute paths; if not a copy of the
    input path will be returned. Neither of the input arguments can
    have "/../" elements - that will just fuck things up.
+
+   root_path can be NULL - in which case cwd is used.
 */
 
-char * util_alloc_rel_path( const char * root_path , const char * path) {
+char * util_alloc_rel_path( const char * __root_path , const char * path) {
+  char * root_path;
+  if (__root_path == NULL)
+    root_path = util_alloc_cwd();
+  else
+    root_path = util_alloc_string_copy( __root_path );
+
   if (util_is_abs_path(root_path) && util_is_abs_path(path)) {
     const char * back_path = "..";
     char * rel_path = util_alloc_string_copy("");  // In case strcmp(root_path , path) == 0 the empty string "" will be returned
@@ -957,13 +965,16 @@ char * util_alloc_rel_path( const char * root_path , const char * path) {
     
     util_free_stringlist( root_path_list , root_path_length );
     util_free_stringlist( path_list , path_length );
+    free( root_path );
     return rel_path;
-  } else 
+  } else {
     /* 
        One or both the input arguments do not correspond to an
        absolute path; just return a copy of the input back.
     */
+    free( root_path );
     return util_alloc_string_copy( path );
+  }
 }
 
 

@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <vector.h>
 #include <util.h>
@@ -64,6 +65,11 @@ int main(int argc , char ** argv) {
   const char * root7 = "/tmp/root/path";
   const char * path7 = "/tmp/root/path";
   const char * true7 = "";
+
+  const char * root8 = "/tmp";
+  const char * path8 = "root/path";
+  const char * true8 = "root/path";
+
 #endif
   
   test_path( 1 , root1 , path1 , true1 );
@@ -73,6 +79,10 @@ int main(int argc , char ** argv) {
   test_path( 5 , root5 , path5 , true5 );
   test_path( 6 , root6 , path6 , true6 );
   test_path( 7 , root7 , path7 , true7 );
+  {
+    chdir(root8);
+    test_path( 8 , NULL , path8 , true8 );
+  }
 
   exit(0);
 }
