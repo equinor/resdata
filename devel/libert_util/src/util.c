@@ -892,14 +892,18 @@ char * util_alloc_realpath(const char * input_path) {
   
     2. Else cwd is prepended to the path.
 
-   In the manual realpath() neither "/../" nor symlinks are resolved.
+   In the manual realpath() neither "/../" nor symlinks are resolved. If path == NULL the function will return cwd().
 */
 
 char * util_alloc_abs_path( const char * path ) {
-  if (util_entry_exists( path )) 
-    return util_alloc_realpath( path );
-  else
-    return util_alloc_cwd_abs_path( path );
+  if (path == NULL)
+    return util_alloc_cwd();
+  else {
+    if (util_entry_exists( path )) 
+      return util_alloc_realpath( path );
+    else
+      return util_alloc_cwd_abs_path( path );
+  }
 }
 
 
@@ -966,7 +970,11 @@ char * util_alloc_rel_path( const char * __root_path , const char * path) {
     util_free_stringlist( root_path_list , root_path_length );
     util_free_stringlist( path_list , path_length );
     free( root_path );
-    return rel_path;
+
+    if (strlen(rel_path) == 0) {
+      free(rel_path);
+      rel_path = NULL;
+    } return rel_path;
   } else {
     /* 
        One or both the input arguments do not correspond to an
