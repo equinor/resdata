@@ -69,3 +69,13 @@ void test_assert_string_equal( const char * s1 , const char * s2 , const char * 
 }
 
 
+void test_assert_int_equal( int i1 , int i2 , const char * fmt) {
+  if (i1 != i2) {
+    if (fmt == NULL)
+      test_error_exit( "Integers are different i1:[%d]  i2:[%d]\n" , i1 , i2 );
+    else
+      test_error_exit( fmt , i1 , i2 );
+  }
+}
+
+

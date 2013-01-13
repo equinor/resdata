@@ -27,6 +27,7 @@ extern "C" {
   void  test_error_exit( const char * fmt , ...);
   bool  test_string_equal( const char * s1 , const char * s2 );
 
+  void  test_assert_int_equal( int i1 , int i2 , const char * fmt);
   void  test_assert_string_equal( const char * s1 , const char * s2 , const char * fmt);
   
 #ifdef __cplusplus
