@@ -23,6 +23,7 @@
 #include <util.h>
 #include <vector.h>
 #include <node_data.h>
+#include <hash.h>
 #include <buffer.h>
 #include <subst_list.h>
 #include <subst_func.h>
@@ -82,6 +83,7 @@ struct subst_list_struct {
   vector_type                 * string_data;  /* The string substitutions we should do. */
   vector_type                 * func_data;    /* The functions we support. */
   const subst_func_pool_type  * func_pool;    /* NOT owned by the subst_list instance - can be NULL */
+  hash_type                   * map; 
 };
 
 
@@ -207,7 +209,7 @@ static subst_list_string_type * subst_list_get_string_node(const subst_list_type
   subst_list_string_type * node = NULL;
   int  index                  = 0;
 
-  /* Linear search ... */
+  /* Linear search ... */  /*Should use map*/
   while ((index < vector_get_size(subst_list->string_data)) && (node == NULL)) {
     subst_list_string_type * inode = vector_iget( subst_list->string_data , index);
 
@@ -224,10 +226,12 @@ static subst_list_string_type * subst_list_get_string_node(const subst_list_type
 
 static subst_list_string_type * subst_list_insert_new_node(subst_list_type * subst_list , const char * key , bool append) {
   subst_list_string_type * new_node = subst_list_string_alloc(key);
+
   if (append)
     vector_append_owned_ref( subst_list->string_data , new_node , subst_list_string_free__ );
   else
     vector_insert_owned_ref( subst_list->string_data , 0 , new_node , subst_list_string_free__ );
+
   return new_node;
 }
 
@@ -274,6 +278,7 @@ subst_list_type * subst_list_alloc(const void * input_arg) {
   UTIL_TYPE_ID_INIT( subst_list , SUBST_LIST_TYPE_ID);
   subst_list->parent           = NULL;
   subst_list->func_pool        = NULL;
+  subst_list->map              = hash_alloc();
   subst_list->string_data      = vector_alloc_new();
   subst_list->func_data        = vector_alloc_new();
 
@@ -387,6 +392,7 @@ void subst_list_clear( subst_list_type * subst_list ) {
 void subst_list_free(subst_list_type * subst_list) {
   vector_free( subst_list->string_data );
   vector_free( subst_list->func_data );
+  hash_free( subst_list->map );
   free(subst_list);
 }
 
@@ -817,6 +823,7 @@ const char * subst_list_iget_doc_string( const subst_list_type * subst_list , in
     return NULL;
   }
 }
+
 
 
 void subst_list_fprintf(const subst_list_type * subst_list , FILE * stream) {
