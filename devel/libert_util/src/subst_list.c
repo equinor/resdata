@@ -520,7 +520,7 @@ static bool subst_list_eval_funcs____(const subst_list_type * subst_list , const
     } while (match);
   }
   if (subst_list->parent != NULL) 
-    global_match = (global_match || subst_list_eval_funcs____( subst_list->parent , parser , buffer ));
+    global_match = (subst_list_eval_funcs____( subst_list->parent , parser , buffer ) || global_match);
   return global_match;
 }
 
@@ -594,7 +594,7 @@ static bool subst_list_replace_strings( const subst_list_type * subst_list , buf
     match = subst_list_replace_strings( subst_list->parent , buffer );
   
   /* The actual string replace */
-  match = (match || subst_list_replace_strings__( subst_list , buffer ));
+  match = (subst_list_replace_strings__( subst_list , buffer ) || match);
   return match;
 }
 
@@ -610,9 +610,9 @@ static bool subst_list_replace_strings( const subst_list_type * subst_list , buf
 
 
 bool subst_list_update_buffer( const subst_list_type * subst_list , buffer_type * buffer ) {
-  bool match = subst_list_replace_strings( subst_list , buffer );
-  match = (match || subst_list_eval_funcs__( subst_list , buffer ));
-  return match;
+  bool match1 = subst_list_replace_strings( subst_list , buffer );
+  bool match2 = subst_list_eval_funcs__( subst_list , buffer );
+  return (match1 || match2);   // Funny construction to ensure to avoid fault short circuit.
 }
 
 
