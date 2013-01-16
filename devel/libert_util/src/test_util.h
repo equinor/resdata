@@ -29,7 +29,14 @@ extern "C" {
 
   void  test_assert_int_equal( int i1 , int i2 , const char * fmt);
   void  test_assert_string_equal( const char * s1 , const char * s2 , const char * fmt);
+
+  void test_assert_true( bool value, const char * fmt );
+  void test_assert_false( bool value, const char * fmt );
+
+  void test_assert_time_t_equal( time_t t1 , time_t t2 , const char * fmt);
+  void test_assert_time_t_not_equal( time_t t1 , time_t t2 , const char * fmt);
   
+
 #ifdef __cplusplus
 }
 #endif

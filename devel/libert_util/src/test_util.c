@@ -78,4 +78,44 @@ void test_assert_int_equal( int i1 , int i2 , const char * fmt) {
   }
 }
 
+/*****************************************************************/
 
+void test_assert_time_t_equal( time_t t1 , time_t t2 , const char * fmt) {
+  if (t1 != t2) {
+    if (fmt == NULL)
+      test_error_exit("time_t values are different t1:%d  t2:[%d]" , t1 , t2);
+    else
+      test_error_exit( fmt , t1 , t2 );
+  }
+}
+
+
+void test_assert_time_t_not_equal( time_t t1 , time_t t2 , const char * fmt) {
+  if (t1 == t2) {
+    if (fmt == NULL)
+      test_error_exit("time_t values are different t1:%d  t2:[%d]" , t1 , t2);
+    else
+      test_error_exit( fmt , t1 , t2 );
+  }
+}
+
+/*****************************************************************/
+
+void test_assert_true( bool value, const char * fmt ) {
+  if (!value) {
+    if (fmt == NULL)
+      test_error_exit("assert( true ) failed");
+    else
+      test_error_exit(fmt);
+  }
+}
+
+
+void test_assert_false( bool value, const char * fmt ) {
+  if (value) {
+    if (fmt == NULL)
+      test_error_exit("assert( false ) failed");
+    else
+      test_error_exit(fmt);
+  }
+}
