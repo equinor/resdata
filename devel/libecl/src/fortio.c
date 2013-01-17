@@ -23,7 +23,8 @@
 #include <errno.h>
 
 #include <util.h>
-#include <fortio.h>
+
+#include <ert/ecl/fortio.h>
 
 extern int errno;
 

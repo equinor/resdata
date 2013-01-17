@@ -20,7 +20,7 @@
 #ifndef __ECL_GRID_CACHE_H__
 #define __ECL_GRID_CACHE_H__
 
-#include <ecl_grid.h>
+#include <ert/ecl/ecl_grid.h>
 
 #ifdef __cplusplus
 extern "C" {

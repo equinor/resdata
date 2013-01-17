@@ -27,10 +27,10 @@ extern "C" {
 #include <time.h>
 
 
-#include <ecl_kw.h>
-#include <ecl_file_kw.h>
-#include <fortio.h>
-#include <ecl_util.h>
+#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_file_kw.h>
+#include <ert/ecl/fortio.h>
+#include <ert/ecl/ecl_util.h>
 
 
   typedef struct ecl_file_struct ecl_file_type;

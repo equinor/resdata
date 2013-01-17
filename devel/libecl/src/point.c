@@ -21,7 +21,7 @@
 
 #include <util.h>
 
-#include <point.h>
+#include <ert/ecl/point.h>
 
 
 void point_mapaxes_transform( point_type * p , const double origo[2], const double unit_x[2] , const double unit_y[2]) {

@@ -25,8 +25,8 @@ extern "C" {
 #endif
 #include <stdbool.h>
 
-#include <ecl_grid_cache.h>
-#include <ecl_file.h>
+#include <ert/ecl/ecl_grid_cache.h>
+#include <ert/ecl/ecl_file.h>
 
   bool   * ecl_grav_common_alloc_aquifer_cell( const ecl_grid_cache_type * grid_cache , const ecl_file_type * init_file);
   double   ecl_grav_common_eval_biot_savart( const ecl_grid_cache_type * grid_cache , ecl_region_type * region , const bool * aquifer , const double * weight ,  double utm_x , double utm_y , double depth);

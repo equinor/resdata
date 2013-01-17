@@ -32,11 +32,11 @@
 #include <time_t_vector.h>
 #include <stringlist.h>
 
-#include <ecl_util.h>
-#include <ecl_sum.h>
-#include <ecl_smspec.h>
-#include <ecl_sum_data.h>
-#include <smspec_node.h>
+#include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_sum.h>
+#include <ert/ecl/ecl_smspec.h>
+#include <ert/ecl/ecl_sum_data.h>
+#include <ert/ecl/smspec_node.h>
 
 
 /**

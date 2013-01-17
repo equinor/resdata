@@ -34,7 +34,7 @@
 
 #include <config.h>
 
-#include <ecl_sum.h>
+#include <ert/ecl/ecl_sum.h>
 
 #define DEFAULT_NUM_INTERP  50
 #define SUMMARY_JOIN       ":"

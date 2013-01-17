@@ -31,9 +31,9 @@ extern "C" {
 #include <time_t_vector.h>
 #include <double_vector.h>
 
-#include <ecl_smspec.h>
-#include <ecl_sum_tstep.h>
-#include <smspec_node.h>
+#include <ert/ecl/ecl_smspec.h>
+#include <ert/ecl/ecl_sum_tstep.h>
+#include <ert/ecl/smspec_node.h>
 
 
   typedef struct {

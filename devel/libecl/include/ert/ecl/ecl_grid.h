@@ -27,8 +27,8 @@ extern "C" {
 #include <int_vector.h>
 #include <stringlist.h>
 
-#include <ecl_coarse_cell.h>
-#include <ecl_kw.h>  
+#include <ert/ecl/ecl_coarse_cell.h>
+#include <ert/ecl/ecl_kw.h>  
 
 
   typedef double (block_function_ftype) ( const double_vector_type *); 

@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ecl_grid.h>
+#include <ert/ecl/ecl_grid.h>
 
 #include <util.h>
 

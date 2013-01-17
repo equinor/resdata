@@ -21,9 +21,9 @@
 #include <string.h>
 #include <vector.h>
 
-#include <ecl_kw.h>
-#include <ecl_sum.h>
-#include <smspec_node.h>
+#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_sum.h>
+#include <ert/ecl/smspec_node.h>
 
 
 /*

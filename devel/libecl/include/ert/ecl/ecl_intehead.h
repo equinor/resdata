@@ -24,7 +24,8 @@ extern "C" {
 #endif
 
 #include <time.h>
-#include <ecl_kw.h>
+
+#include <ert/ecl/ecl_kw.h>
 
 #define INTEHEAD_KW  "INTEHEAD"     /* Long array with lots of data. */
 

@@ -29,16 +29,15 @@
 #include <vector.h>
 #include <stringlist.h>
 
-#include <ecl_util.h>
-#include <ecl_kw.h>
-#include <ecl_file.h>
-#include <ecl_kw_magic.h>
-#include <ecl_endian_flip.h>
-
-#include <ecl_coarse_cell.h>
-#include <ecl_grid.h>
-#include <point.h>
-#include <tetrahedron.h>
+#include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_endian_flip.h>
+#include <ert/ecl/ecl_coarse_cell.h>
+#include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/point.h>
+#include <ert/ecl/tetrahedron.h>
 
 
 /*

@@ -28,13 +28,13 @@
 #include <int_vector.h>
 #include <stringlist.h>
 
-#include <fortio.h>
-#include <ecl_kw.h>
-#include <ecl_file.h>
-#include <ecl_endian_flip.h>
-#include <ecl_kw_magic.h>
-#include <ecl_intehead.h>
-#include <ecl_file_kw.h>
+#include <ert/ecl/fortio.h>
+#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_endian_flip.h>
+#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_intehead.h>
+#include <ert/ecl/ecl_file_kw.h>
 
 
 /**

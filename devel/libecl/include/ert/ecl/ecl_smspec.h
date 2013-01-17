@@ -29,7 +29,7 @@ extern "C" {
 #include <float_vector.h>
 #include <stringlist.h>
 
-#include <smspec_node.h>
+#include <ert/ecl/smspec_node.h>
 
 typedef struct ecl_smspec_struct ecl_smspec_type; 
 

@@ -25,9 +25,9 @@ extern "C" {
 
 #include <time.h>
 
-#include <fortio.h>
-#include <ecl_kw.h>
-#include <ecl_grid.h>
+#include <ert/ecl/fortio.h>
+#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_grid.h>
 
   
   void ecl_init_file_fwrite_header( fortio_type * fortio , const ecl_grid_type * grid , const ecl_kw_type * poro , int phases , time_t start_date);

@@ -27,8 +27,8 @@ extern "C" {
 
 #include <geo_polygon.h>
 
-#include <ecl_box.h>
-#include <ecl_grid.h>
+#include <ert/ecl/ecl_box.h>
+#include <ert/ecl/ecl_grid.h>
 
   
 typedef enum {

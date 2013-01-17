@@ -22,8 +22,8 @@
 #include <util.h>
 #include <matrix.h>
 
-#include <point.h>
-#include <tetrahedron.h>
+#include <ert/ecl/point.h>
+#include <ert/ecl/tetrahedron.h>
 
 
 

@@ -27,8 +27,8 @@ extern "C" {
 
 #include <buffer.h>
 
-#include <fortio.h>
-#include <ecl_util.h>
+#include <ert/ecl/fortio.h>
+#include <ert/ecl/ecl_util.h>
 
   UTIL_IS_INSTANCE_HEADER(ecl_kw);
 
@@ -220,7 +220,7 @@ extern "C" {
   ECL_KW_MAX_MIN_HEADER( double );
 #undef ECL_KW_MAX_MIN_HEADER
   
-#include <ecl_kw_grdecl.h>
+#include <ert/ecl/ecl_kw_grdecl.h>
   
 #ifdef __cplusplus
 }

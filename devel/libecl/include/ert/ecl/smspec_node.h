@@ -22,7 +22,7 @@
 
 #include <stdbool.h>
 
-#include <ecl_smspec.h>
+#include <ert/ecl/ecl_smspec.h>
 
 
 #ifdef __cplusplus

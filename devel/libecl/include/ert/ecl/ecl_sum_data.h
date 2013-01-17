@@ -30,8 +30,8 @@ extern "C" {
 #include <double_vector.h>
 #include <stringlist.h>
 
-#include <ecl_sum_tstep.h>
-#include <smspec_node.h>
+#include <ert/ecl/ecl_sum_tstep.h>
+#include <ert/ecl/smspec_node.h>
 
 typedef struct ecl_sum_data_struct ecl_sum_data_type ; 
   void                     ecl_sum_data_fwrite_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified, int report_step);

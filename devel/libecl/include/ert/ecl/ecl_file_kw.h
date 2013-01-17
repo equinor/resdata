@@ -25,8 +25,8 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include <ecl_kw.h>
-#include <fortio.h>
+#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/fortio.h>
 
 typedef struct ecl_file_kw_struct ecl_file_kw_type;
 typedef struct inv_map_struct inv_map_type;

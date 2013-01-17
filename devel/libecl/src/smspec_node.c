@@ -29,12 +29,12 @@
 #include <stringlist.h>
 #include <type_macros.h>
 
-#include <ecl_kw.h>
-#include <ecl_util.h>
-#include <ecl_smspec.h>
-#include <smspec_node.h>
-#include <ecl_file.h>
-#include <ecl_kw_magic.h>
+#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_smspec.h>
+#include <ert/ecl/smspec_node.h>
+#include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_kw_magic.h>
 
 
 
