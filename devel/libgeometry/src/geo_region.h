@@ -19,7 +19,10 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include <util.h>
+#include <int_vector.h>
+
 #include <geo_pointset.h>
 #include <geo_polygon.h>
 
@@ -30,6 +33,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 
   typedef struct geo_region_struct geo_region_type;
