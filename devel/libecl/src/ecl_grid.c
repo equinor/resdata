@@ -1991,11 +1991,16 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
   ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , GRIDHEAD_KW  , grid_nr);
   ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , ZCORN_KW     , grid_nr);
   ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , COORD_KW     , grid_nr);
-  ecl_kw_type * filehead_kw  = ecl_file_iget_named_kw( ecl_file , FILEHEAD_KW  , grid_nr);
   ecl_kw_type * corsnum_kw   = NULL;
   ecl_kw_type * actnum_kw    = NULL;
   ecl_kw_type * mapaxes_kw   = NULL; 
-  int dualp_flag             = ecl_kw_iget_int( filehead_kw , FILEHEAD_DUALP_INDEX );
+
+  // Seems LGR + Dual porosity is a no-go?
+  int dualp_flag             = FILEHEAD_SINGLE_POROSITY;  
+  if (grid_nr == 0) {
+    ecl_kw_type * filehead_kw  = ecl_file_iget_named_kw( ecl_file , FILEHEAD_KW  , grid_nr);
+    dualp_flag                 = ecl_kw_iget_int( filehead_kw , FILEHEAD_DUALP_INDEX );
+  }
   
   /** If ACTNUM is not present - that is is interpreted as - all active. */
   if (ecl_file_get_num_named_kw(ecl_file , ACTNUM_KW) > grid_nr)
