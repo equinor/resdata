@@ -1994,14 +1994,14 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
   ecl_kw_type * corsnum_kw   = NULL;
   ecl_kw_type * actnum_kw    = NULL;
   ecl_kw_type * mapaxes_kw   = NULL; 
-
-  // Seems LGR + Dual porosity is a no-go?
-  int dualp_flag             = FILEHEAD_SINGLE_POROSITY;  
+  int dualp_flag;
   if (grid_nr == 0) {
     ecl_kw_type * filehead_kw  = ecl_file_iget_named_kw( ecl_file , FILEHEAD_KW  , grid_nr);
     dualp_flag                 = ecl_kw_iget_int( filehead_kw , FILEHEAD_DUALP_INDEX );
-  }
+  } else
+    dualp_flag = main_grid->dualp_flag;
   
+
   /** If ACTNUM is not present - that is is interpreted as - all active. */
   if (ecl_file_get_num_named_kw(ecl_file , ACTNUM_KW) > grid_nr)
     actnum_kw = ecl_file_iget_named_kw( ecl_file , ACTNUM_KW    , grid_nr);
@@ -2100,7 +2100,10 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , 
 */
 
 ecl_grid_type * ecl_grid_alloc_GRID_data(int num_coords , int nx , int ny , int nz , int coords_size , int ** coords , float ** corners , const float * mapaxes) {
-  return ecl_grid_alloc_GRID_data__( NULL , num_coords , FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0 , coords_size , coords , corners , mapaxes);
+  return ecl_grid_alloc_GRID_data__( NULL , 
+                                     num_coords , 
+                                     FILEHEAD_SINGLE_POROSITY , /* Does currently not support to determine dualp_flag from inspection. */
+                                     nx , ny , nz , 0 , coords_size , coords , corners , mapaxes);
 }
 
 
