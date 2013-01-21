@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#include <well_conn.h>
+#include <ert/ecl_well/well_conn.h>
 
   typedef struct well_branch_struct well_branch_type;
 

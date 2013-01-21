@@ -16,12 +16,14 @@
    for more details. 
 */
 
-#include <util.h>
 #include <stdlib.h>
-#include <well_path.h>
-#include <well_branch.h>
-#include <well_const.h>
-#include <well_conn.h>
+
+#include <util.h>
+
+#include <ert/ecl_well/well_path.h>
+#include <ert/ecl_well/well_branch.h>
+#include <ert/ecl_well/well_const.h>
+#include <ert/ecl_well/well_conn.h>
 
 /*
   This file implements the well_path structure which is container for

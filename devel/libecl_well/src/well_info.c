@@ -30,11 +30,11 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_util.h>
 
-#include <well_const.h>
-#include <well_conn.h>
-#include <well_state.h>
-#include <well_info.h>
-#include <well_ts.h>
+#include <ert/ecl_well/well_const.h>
+#include <ert/ecl_well/well_conn.h>
+#include <ert/ecl_well/well_state.h>
+#include <ert/ecl_well/well_info.h>
+#include <ert/ecl_well/well_ts.h>
 
 
 /*

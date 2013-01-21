@@ -37,10 +37,10 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_util.h>
 
-#include <well_const.h>
-#include <well_conn.h>
-#include <well_state.h>
-#include <well_path.h>
+#include <ert/ecl_well/well_const.h>
+#include <ert/ecl_well/well_conn.h>
+#include <ert/ecl_well/well_state.h>
+#include <ert/ecl_well/well_path.h>
 
 #define WELL_STATE_TYPE_ID 613307832
 

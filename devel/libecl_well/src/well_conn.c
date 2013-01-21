@@ -22,8 +22,8 @@
 
 #include <ert/ecl/ecl_kw.h>
 
-#include <well_const.h>
-#include <well_conn.h>
+#include <ert/ecl_well/well_const.h>
+#include <ert/ecl_well/well_conn.h>
 
 /*
   Observe that when the (ijk) values are initialized they are

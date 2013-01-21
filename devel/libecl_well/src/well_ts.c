@@ -61,11 +61,13 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include <util.h>
 #include <vector.h>
-#include <well_ts.h>
-#include <well_const.h>
-#include <well_state.h>
+
+#include <ert/ecl_well/well_ts.h>
+#include <ert/ecl_well/well_const.h>
+#include <ert/ecl_well/well_state.h>
 
 
 

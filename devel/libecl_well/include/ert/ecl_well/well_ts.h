@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#include <well_state.h>
+#include <ert/ecl_well/well_state.h>
 
 
   typedef struct well_ts_struct well_ts_type;

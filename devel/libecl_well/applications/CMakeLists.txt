@@ -1,8 +1,5 @@
 add_executable( well_info_test well_info_test.c )
 
-include_directories( ${libecl_src_path} )
-include_directories( ${libwell_src_path} )
-
 set(program_list well_info_test )
 foreach(prog ${program_list})
    target_link_libraries( ${prog} well ecl ert_util )

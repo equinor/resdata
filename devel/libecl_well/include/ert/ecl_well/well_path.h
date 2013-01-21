@@ -25,8 +25,9 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include <well_conn.h>
-#include <well_branch.h>
+
+#include <ert/ecl_well/well_conn.h>
+#include <ert/ecl_well/well_branch.h>
 
   
   typedef struct          well_path_struct well_path_type;

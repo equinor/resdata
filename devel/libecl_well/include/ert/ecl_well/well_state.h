@@ -29,8 +29,8 @@ extern "C" {
 #include <ert/ecl/ecl_file.h> 
 #include <ert/ecl/ecl_intehead.h>
 
-#include <well_conn.h>
-#include <well_const.h>
+#include <ert/ecl_well/well_conn.h>
+#include <ert/ecl_well/well_const.h>
 
 
 #define GLOBAL_GRID_NAME   "GLOBAL" // The name assigned to the global grid for name based lookup.
