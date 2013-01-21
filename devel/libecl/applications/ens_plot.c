@@ -311,26 +311,30 @@ Q                                | Quit
 #define NEW_VECTOR_CMD  "_newplotvector_"
 
 
-#include <util.h>
-#include <vector.h>
-#include <ecl_sum.h>
-#include <ecl_rft_file.h>
-#include <hash.h>
-#include <menu.h>
-#include <plot_const.h>
-#include <plot_range.h>
-#include <ecl_util.h>
-#include <plot.h>
-#include <plot_dataset.h>
-#include <path_fmt.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
+#include <pthread.h>
+
+#include <util.h>
+#include <vector.h>
+#include <hash.h>
+#include <menu.h>
 #include <int_vector.h>
 #include <arg_pack.h>
 #include <statistics.h>
 #include <thread_pool.h>
-#include <signal.h>
-#include <pthread.h>
+#include <path_fmt.h>
+
+#include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_sum.h>
+#include <ert/ecl/ecl_rft_file.h>
+
+#include <ert/plot/plot.h>
+#include <ert/plot/plot_dataset.h>
+#include <ert/plot/plot_const.h>
+#include <ert/plot/plot_range.h>
+
 
 
 
