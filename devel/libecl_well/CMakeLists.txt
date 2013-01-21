@@ -1,5 +1,3 @@
-set( WELL_INSTALL_PREFIX "" CACHE STRING "Prefix for installation of libwell")
-
 include_directories( ${libecl_src_path}/../include )
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/include )
 

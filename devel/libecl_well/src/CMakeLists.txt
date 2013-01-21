@@ -9,12 +9,7 @@ add_library( well ${LIBRARY_TYPE} ${source_files} )
 target_link_libraries( well ecl )
 
 #-----------------------------------------------------------------
-if (WELL_INSTALL_PREFIX)
-   install(TARGETS well DESTINATION ${CMAKE_INSTALL_PREFIX}/${WELL_INSTALL_PREFIX}/lib)
-   install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/${WELL_INSTALL_PREFIX}/include)
-else()
-   install(TARGETS well DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-   install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-endif()        
+install(TARGETS well DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 

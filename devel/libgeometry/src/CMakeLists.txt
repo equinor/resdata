@@ -10,12 +10,9 @@ target_link_libraries( geometry ert_util )
 
 
 #-----------------------------------------------------------------
-if (GEOMETRY_INSTALL_PREFIX)
-   install(TARGETS geometry DESTINATION ${CMAKE_INSTALL_PREFIX}/${GEOMETRY_INSTALL_PREFIX}/lib)
-   install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/${GEOMETRY_INSTALL_PREFIX}/include)
-else()
-   install(TARGETS geometry DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-   install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-endif()
+install(TARGETS geometry DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+foreach(header ${header_files})
+    install(FILES ../include/ert/geometry/${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/geometry)
+endforeach()
 
 

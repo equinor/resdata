@@ -27,13 +27,8 @@ endif()
 target_link_libraries( ecl geometry ert_util )
 
 #-----------------------------------------------------------------
-if (ECL_INSTALL_PREFIX)
-   install(TARGETS ecl DESTINATION ${ECL_INSTALL_PREFIX}/lib)
-   install(FILES ${header_files} DESTINATION ${ECL_INSTALL_PREFIX}/include)
-else()
-   install(TARGETS ecl DESTINATION lib)
-   install(FILES ${header_files} DESTINATION include)
-endif()        
+install(TARGETS ecl DESTINATION lib)
+install(FILES ${header_files} DESTINATION include)
 
 
 

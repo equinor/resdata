@@ -79,14 +79,8 @@ if (NEED_LIBM)
 endif()
 
 #-----------------------------------------------------------------
-
-if (UTIL_INSTALL_PREFIX)
-  install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_PREFIX}/${UTIL_INSTALL_PREFIX}/lib)
-  install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/${UTIL_INSTALL_PREFIX}/include)
-else()
-  install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-  install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-endif()
+install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 
 
