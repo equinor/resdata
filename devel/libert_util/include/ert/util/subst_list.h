@@ -24,9 +24,7 @@ extern "C" {
 #endif
 #include <stdio.h>
 
-#include <util.h>
-#include <node_data.h>
-#include <subst_func.h>
+#include <ert/util/subst_func.h>
 
   typedef struct          subst_list_struct subst_list_type;
   void                    subst_list_update_buffer( const subst_list_type * subst_list , buffer_type * buffer );

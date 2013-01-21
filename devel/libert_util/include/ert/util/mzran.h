@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 #include <stdlib.h>
-#include <util.h>
+#include <stdio.h>
 
 typedef struct mzran_struct mzran_type;
 

@@ -23,9 +23,9 @@ extern "C" {
 #endif
 #include <stdbool.h>
 
-#include <double_vector.h>
-#include <int_vector.h>
-#include <stringlist.h>
+#include <ert/util/double_vector.h>
+#include <ert/util/int_vector.h>
+#include <ert/util/stringlist.h>
 
 #include <ert/ecl/ecl_coarse_cell.h>
 #include <ert/ecl/ecl_kw.h>  

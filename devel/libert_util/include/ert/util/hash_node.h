@@ -24,7 +24,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <node_data.h>
+#include <ert/util/node_data.h>
 
 typedef struct hash_node_struct hash_node_type;
 typedef uint32_t      (hashf_type) (const char *key, size_t len);

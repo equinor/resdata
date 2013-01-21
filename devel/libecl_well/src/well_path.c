@@ -18,7 +18,7 @@
 
 #include <stdlib.h>
 
-#include <util.h>
+#include <ert/util/util.h>
 
 #include <ert/ecl_well/well_path.h>
 #include <ert/ecl_well/well_branch.h>

@@ -20,8 +20,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <util.h>
-#include <double_vector.h>
+#include <ert/util/util.h>
+#include <ert/util/double_vector.h>
 
 #include <ert/geometry/geo_util.h>
 #include <ert/geometry/geo_polygon.h>        

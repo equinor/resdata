@@ -23,7 +23,8 @@ extern "C" {
 #endif
 #include <stdarg.h>
 #include <stdbool.h>
-#include <node_ctype.h>
+
+#include <ert/util/node_ctype.h>
 
   typedef struct path_fmt_struct path_fmt_type;
   

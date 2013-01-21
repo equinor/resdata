@@ -25,10 +25,10 @@
 #include <fnmatch.h>
 #endif
 
-#include <util.h>
-#include <hash.h>
-#include <vector.h>
-#include <int_vector.h>
+#include <ert/util/util.h>
+#include <ert/util/hash.h>
+#include <ert/util/vector.h>
+#include <ert/util/int_vector.h>
 
 #include <ert/ecl/ecl_rft_file.h>
 #include <ert/ecl/ecl_rft_node.h>

@@ -26,8 +26,8 @@ extern "C" {
 #include <time.h>
 #include <stdbool.h>
 
-#include <float_vector.h>
-#include <stringlist.h>
+#include <ert/util/float_vector.h>
+#include <ert/util/stringlist.h>
 
 #include <ert/ecl/smspec_node.h>
 

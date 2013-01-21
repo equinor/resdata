@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-#include <type_macros.h>
+#include <ert/util/type_macros.h>
 
 
 typedef enum {

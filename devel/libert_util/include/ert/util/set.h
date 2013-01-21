@@ -25,7 +25,6 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <hash.h>
 
 typedef struct set_struct set_type;
 typedef struct set_iter_struct set_iter_type;

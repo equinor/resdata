@@ -25,11 +25,11 @@
 #include <time.h>
 #include <stdbool.h>
 
-#include <util.h>
-#include <vector.h>
-#include <hash.h>
-#include <int_vector.h>
-#include <type_macros.h>
+#include <ert/util/util.h>
+#include <ert/util/vector.h>
+#include <ert/util/hash.h>
+#include <ert/util/int_vector.h>
+#include <ert/util/type_macros.h>
 
 #include <ert/ecl/ecl_intehead.h>
 #include <ert/ecl/ecl_file.h>

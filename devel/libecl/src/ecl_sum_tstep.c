@@ -19,8 +19,8 @@
 #include <time.h>
 #include <math.h>
 
-#include <util.h>
-#include <type_macros.h>
+#include <ert/util/util.h>
+#include <ert/util/type_macros.h>
 
 #include <ert/ecl/ecl_sum_tstep.h>
 #include <ert/ecl/ecl_kw.h>

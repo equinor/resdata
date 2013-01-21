@@ -21,8 +21,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <size_t_vector.h>
-#include <util.h>
+#include <ert/util/size_t_vector.h>
+#include <ert/util/util.h>
 
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_kw.h>

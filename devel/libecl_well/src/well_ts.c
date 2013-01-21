@@ -62,8 +62,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <util.h>
-#include <vector.h>
+#include <ert/util/util.h>
+#include <ert/util/vector.h>
 
 #include <ert/ecl_well/well_ts.h>
 #include <ert/ecl_well/well_const.h>

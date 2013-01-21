@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-#include <matrix.h>
+#include <ert/util/matrix.h>
 
 
 double  regression_scale( matrix_type * X ,  matrix_type * Y , matrix_type * X_mean , matrix_type * X_norm);

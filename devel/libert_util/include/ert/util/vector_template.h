@@ -23,8 +23,8 @@ extern "C" {
 #endif
 #include <stdio.h>
 
-#include <buffer.h>
-#include <type_macros.h>
+#include <ert/util/buffer.h>
+#include <ert/util/type_macros.h>
 
 typedef struct @TYPE@_vector_struct @TYPE@_vector_type;
 typedef @TYPE@ (@TYPE@_ftype) (@TYPE@);

@@ -21,13 +21,13 @@
 #include <math.h>
 #include <time.h>
 
-#include <hash.h>
-#include <util.h>
-#include <set.h>
-#include <vector.h>
-#include <int_vector.h>
-#include <stringlist.h>
-#include <type_macros.h>
+#include <ert/util/hash.h>
+#include <ert/util/util.h>
+#include <ert/util/set.h>
+#include <ert/util/vector.h>
+#include <ert/util/int_vector.h>
+#include <ert/util/stringlist.h>
+#include <ert/util/type_macros.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_util.h>

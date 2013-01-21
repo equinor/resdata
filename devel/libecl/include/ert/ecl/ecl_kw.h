@@ -25,7 +25,7 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <buffer.h>
+#include <ert/util/buffer.h>
 
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_util.h>

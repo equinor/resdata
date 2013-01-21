@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-#include <int_vector.h>
+#include <ert/util/int_vector.h>
 
 #include <ert/ecl/ecl_smspec.h>
 #include <ert/ecl/ecl_kw.h>

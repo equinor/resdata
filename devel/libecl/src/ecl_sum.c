@@ -22,15 +22,15 @@
 #include <time.h>
 #include <locale.h>
 
-#include <hash.h>
-#include <util.h>
-#include <set.h>
-#include <util.h>
-#include <vector.h>
-#include <int_vector.h>
-#include <bool_vector.h>
-#include <time_t_vector.h>
-#include <stringlist.h>
+#include <ert/util/hash.h>
+#include <ert/util/util.h>
+#include <ert/util/set.h>
+#include <ert/util/util.h>
+#include <ert/util/vector.h>
+#include <ert/util/int_vector.h>
+#include <ert/util/bool_vector.h>
+#include <ert/util/time_t_vector.h>
+#include <ert/util/stringlist.h>
 
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_sum.h>

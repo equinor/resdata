@@ -27,9 +27,9 @@ extern "C" {
 #include <stdbool.h>
 #include <time.h>
 
-#include <stringlist.h>
-#include <time_t_vector.h>
-#include <double_vector.h>
+#include <ert/util/stringlist.h>
+#include <ert/util/time_t_vector.h>
+#include <ert/util/double_vector.h>
 
 #include <ert/ecl/ecl_smspec.h>
 #include <ert/ecl/ecl_sum_tstep.h>

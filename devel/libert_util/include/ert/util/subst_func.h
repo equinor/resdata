@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#include <stringlist.h>
+#include <ert/util/stringlist.h>
 
 typedef  char * (subst_func_ftype) (const stringlist_type * , void * );
 typedef  struct subst_func_struct        subst_func_type;

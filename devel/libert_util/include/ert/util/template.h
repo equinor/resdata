@@ -24,7 +24,8 @@ extern "C" {
 
 
 #include <stdbool.h>
-#include <subst_list.h>
+
+#include <ert/util/subst_list.h>
 
 typedef struct template_struct template_type;
 

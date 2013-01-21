@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include <matrix.h>
-#include <bool_vector.h>
+#include <ert/util/matrix.h>
+#include <ert/util/bool_vector.h>
 
   typedef struct stepwise_struct stepwise_type;
 

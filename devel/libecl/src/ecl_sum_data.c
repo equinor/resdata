@@ -18,11 +18,11 @@
 
 #include <string.h>
 
-#include <util.h>
-#include <vector.h>
-#include <time_t_vector.h>
-#include <int_vector.h>
-#include <stringlist.h>
+#include <ert/util/util.h>
+#include <ert/util/vector.h>
+#include <ert/util/time_t_vector.h>
+#include <ert/util/int_vector.h>
+#include <ert/util/stringlist.h>
 
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_smspec.h>

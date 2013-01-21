@@ -18,9 +18,9 @@
 
 #ifndef __BLOCK_FS__
 #define __BLOCK_FS__
-#include <buffer.h>
-#include <vector.h>
-#include <type_macros.h>
+#include <ert/util/buffer.h>
+#include <ert/util/vector.h>
+#include <ert/util/type_macros.h>
 
 #ifdef __cplusplus
 extern "C" {

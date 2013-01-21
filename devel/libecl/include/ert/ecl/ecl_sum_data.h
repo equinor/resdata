@@ -26,9 +26,9 @@ extern "C" {
 #include <stdlib.h>
 #include <time.h>
 
-#include <time_t_vector.h>
-#include <double_vector.h>
-#include <stringlist.h>
+#include <ert/util/time_t_vector.h>
+#include <ert/util/double_vector.h>
+#include <ert/util/stringlist.h>
 
 #include <ert/ecl/ecl_sum_tstep.h>
 #include <ert/ecl/smspec_node.h>

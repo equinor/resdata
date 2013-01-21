@@ -20,8 +20,8 @@
 #include <stdbool.h>
 #include <signal.h>
 
-#include <util.h>
-#include <int_vector.h>
+#include <ert/util/util.h>
+#include <ert/util/int_vector.h>
 
 #include <ert/ecl/ecl_intehead.h>
 #include <ert/ecl/ecl_file.h>

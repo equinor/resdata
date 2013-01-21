@@ -24,13 +24,10 @@ endif()
 foreach (type int double bool long time_t size_t float)
   set(TYPE ${type} )      
   set(src_target        ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)    
-  set(header_target     ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.h)    
 
   configure_file( vector_template.c ${src_target})
-  configure_file( vector_template.h ${header_target})
 
   list( APPEND source_files ${src_target} )
-  list( APPEND header_files ${header_target} )
 endforeach( type )
 
 
@@ -47,9 +44,6 @@ if (WITH_PTHREAD)
 
   list( APPEND header_files thread_pool_posix.h )
 endif()
-
-include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
 add_library( ert_util  ${LIBRARY_TYPE}  ${source_files} )
 

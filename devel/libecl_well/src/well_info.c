@@ -19,10 +19,10 @@
 #include <time.h>
 #include <stdbool.h>
 
-#include <util.h>
-#include <hash.h>
-#include <int_vector.h>
-#include <stringlist.h>
+#include <ert/util/util.h>
+#include <ert/util/hash.h>
+#include <ert/util/int_vector.h>
+#include <ert/util/stringlist.h>
 
 #include <ert/ecl/ecl_intehead.h>
 #include <ert/ecl/ecl_file.h>

@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#include <hash_node.h>
+#include <ert/util/hash_node.h>
 
 typedef struct hash_sll_struct hash_sll_type;
 

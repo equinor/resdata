@@ -20,7 +20,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <util.h>
+#include <ert/util/util.h>
 
 #include <ert/ecl/ecl_io_config.h>
 #include <ert/ecl/ecl_util.h>

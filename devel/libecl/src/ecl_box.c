@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <util.h>
+#include <ert/util/util.h>
 
 #include <ert/ecl/ecl_box.h>
 #include <ert/ecl/ecl_grid.h>

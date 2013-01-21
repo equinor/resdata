@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2011  Statoil ASA, Norway. 
     
-   The file 'str_buffer.h' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'msg.h' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -16,21 +16,32 @@
    for more details. 
 */
 
-#include <stdlib.h>
-#include <stdio.h>
+#ifndef __MSG_H__
+#define __MSG_H__
 #ifdef __cplusplus
 extern "C" {
+#endif
+#include <stdbool.h>
+
+#include <ert/util/type_macros.h>
+
+
+typedef struct msg_struct msg_type;
+
+
+
+msg_type   * msg_alloc(const char * , bool debug);
+void         msg_show(msg_type * );
+void         msg_free(msg_type *  , bool);
+void         msg_update(msg_type * , const char * );
+void         msg_update_int(msg_type * , const char * , int );
+void         msg_hide(msg_type *);
+void         msg_clear_msg(msg_type * msg);
+
+
+UTIL_SAFE_CAST_HEADER( msg );
+
 #ifdef __cplusplus
 }
 #endif
 #endif
-
-typedef struct str_buffer_struct str_buffer_type;
-
-
-str_buffer_type * str_buffer_alloc(int );
-str_buffer_type * str_buffer_alloc_with_string(const char *);
-void              str_buffer_free(str_buffer_type *);
-void              str_buffer_add_string(str_buffer_type *, const char *);
-void              str_buffer_fprintf_substring(str_buffer_type * , int , int , FILE *);
-const char      * str_buffer_get_char_ptr(const str_buffer_type *);

@@ -17,7 +17,8 @@
 */
 
 #include <stdbool.h>
-#include <matrix.h>
+
+#include <ert/util/matrix.h>
 
 
 #ifdef __cplusplus 

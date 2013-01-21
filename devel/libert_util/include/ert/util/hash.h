@@ -23,12 +23,15 @@ extern"C" {
 #endif
 
 #include <stdlib.h>
-#include <stringlist.h>
-#include <type_macros.h>
+
+#include <ert/util/stringlist.h>
+#include <ert/util/type_macros.h>
+#include <ert/util/node_data.h>
+
 typedef struct hash_struct      hash_type;
 typedef struct hash_iter_struct hash_iter_type;
 typedef void (hash_apply_ftype) (void * );
-#include <hash_node.h>
+
 
 void              hash_lock  (hash_type * );
 void              hash_unlock(hash_type * );

@@ -23,7 +23,7 @@ extern "C" {
 #endif
 #include <stdbool.h>
 
-#include <int_vector.h>
+#include <ert/util/int_vector.h>
 
 #include <ert/geometry/geo_polygon.h>
 

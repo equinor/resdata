@@ -22,10 +22,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <rng.h>
-#include <type_macros.h>
+#include <ert/util/rng.h>
+#include <ert/util/type_macros.h>
 #ifdef HAVE_THREAD_POOL
-#include <thread_pool.h>
+#include <ert/util/thread_pool.h>
 #endif
 
 #ifdef __cplusplus 

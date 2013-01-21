@@ -24,7 +24,7 @@ extern "C" {
 #include <stdbool.h>
 #include <time.h>
 
-#include <stringlist.h>
+#include <ert/util/stringlist.h>
 
 typedef enum { ECL_OTHER_FILE           = 0   , 
                ECL_RESTART_FILE         = 1   , 

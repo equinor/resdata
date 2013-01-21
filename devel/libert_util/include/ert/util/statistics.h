@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2011  Statoil ASA, Norway. 
     
-   The file 'msg.h' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'statistics.h' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -16,29 +16,17 @@
    for more details. 
 */
 
-#ifndef __MSG_H__
-#define __MSG_H__
+#ifndef __STATISTICS_H__
+#define __STATISTICS_H__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <stdbool.h>
-#include <type_macros.h>
+#include <ert/util/double_vector.h>
 
-
-typedef struct msg_struct msg_type;
-
-
-
-msg_type   * msg_alloc(const char * , bool debug);
-void         msg_show(msg_type * );
-void         msg_free(msg_type *  , bool);
-void         msg_update(msg_type * , const char * );
-void         msg_update_int(msg_type * , const char * , int );
-void         msg_hide(msg_type *);
-void         msg_clear_msg(msg_type * msg);
-
-
-UTIL_SAFE_CAST_HEADER( msg );
+double      statistics_mean( const double_vector_type * data_vector );
+double      statistics_empirical_quantile( double_vector_type * data , double quantile );
+double      statistics_empirical_quantile__( const double_vector_type * data , double quantile );
 
 #ifdef __cplusplus
 }

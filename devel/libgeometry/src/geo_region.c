@@ -20,10 +20,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <util.h>
-#include <int_vector.h>
-#include <bool_vector.h>
-#include <type_macros.h>
+#include <ert/util/util.h>
+#include <ert/util/int_vector.h>
+#include <ert/util/bool_vector.h>
+#include <ert/util/type_macros.h>
 
 #include <ert/geometry/geo_util.h>
 #include <ert/geometry/geo_pointset.h>

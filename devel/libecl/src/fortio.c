@@ -22,7 +22,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include <util.h>
+#include <ert/util/util.h>
 
 #include <ert/ecl/fortio.h>
 

@@ -24,8 +24,8 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <node_ctype.h>
-#include <type_macros.h>
+#include <ert/util/node_ctype.h>
+#include <ert/util/type_macros.h>
 
 typedef struct arg_pack_struct arg_pack_type;
 typedef void   (arg_node_free_ftype)  (void *);

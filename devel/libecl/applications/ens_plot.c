@@ -316,15 +316,15 @@ Q                                | Quit
 #include <signal.h>
 #include <pthread.h>
 
-#include <util.h>
-#include <vector.h>
-#include <hash.h>
-#include <menu.h>
-#include <int_vector.h>
-#include <arg_pack.h>
-#include <statistics.h>
-#include <thread_pool.h>
-#include <path_fmt.h>
+#include <ert/util/util.h>
+#include <ert/util/vector.h>
+#include <ert/util/hash.h>
+#include <ert/util/menu.h>
+#include <ert/util/int_vector.h>
+#include <ert/util/arg_pack.h>
+#include <ert/util/statistics.h>
+#include <ert/util/thread_pool.h>
+#include <ert/util/path_fmt.h>
 
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_sum.h>
