@@ -25,7 +25,8 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include <geo_pointset.h>
+
+#include <ert/geometry/geo_pointset.h>
 
 
   typedef struct geo_surface_struct geo_surface_type;

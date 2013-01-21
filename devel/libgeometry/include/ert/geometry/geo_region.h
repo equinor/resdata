@@ -23,8 +23,8 @@
 #include <util.h>
 #include <int_vector.h>
 
-#include <geo_pointset.h>
-#include <geo_polygon.h>
+#include <ert/geometry/geo_pointset.h>
+#include <ert/geometry/geo_polygon.h>
 
 #ifndef __GEO_REGION_H__
 #define __GEO_REGION_H__

@@ -25,7 +25,7 @@ extern "C" {
 
 #include <int_vector.h>
 
-#include <geo_polygon.h>
+#include <ert/geometry/geo_polygon.h>
 
 #include <ert/ecl/ecl_box.h>
 #include <ert/ecl/ecl_grid.h>

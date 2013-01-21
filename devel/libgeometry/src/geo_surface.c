@@ -23,8 +23,8 @@
 #include <util.h>
 #include <type_macros.h>
 
-#include <geo_pointset.h>
-#include <geo_surface.h>
+#include <ert/geometry/geo_pointset.h>
+#include <ert/geometry/geo_surface.h>
 
 #define __PI                3.14159265
 #define GEO_SURFACE_TYPE_ID 111743

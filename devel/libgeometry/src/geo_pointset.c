@@ -22,7 +22,7 @@
 
 #include <util.h>
 
-#include <geo_pointset.h>
+#include <ert/geometry/geo_pointset.h>
 
 
 #define INIT_SIZE 256

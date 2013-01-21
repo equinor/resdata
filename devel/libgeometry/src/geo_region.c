@@ -25,10 +25,10 @@
 #include <bool_vector.h>
 #include <type_macros.h>
 
-#include <geo_util.h>
-#include <geo_pointset.h>
-#include <geo_region.h>
-#include <geo_polygon.h>
+#include <ert/geometry/geo_util.h>
+#include <ert/geometry/geo_pointset.h>
+#include <ert/geometry/geo_region.h>
+#include <ert/geometry/geo_polygon.h>
 
 #define GEO_REGION_TYPE_ID 4431973
 
