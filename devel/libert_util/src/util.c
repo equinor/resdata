@@ -3582,47 +3582,48 @@ void util_split_string(const char *line , const char *sep_set, int *_tokens, cha
        util_binary_split_string("A:B:C:D , ":" , false , ) => "A:B:C" & "D"
 
 
-   o Characters in the split_set at the front (or back if
-     split_on_first == false) are discarded _before_ the actual
-     splitting process.
+   o Characters in the split_set at the front and back are discarded
+     _BEFORE_ the actual splitting process.
 
-       util_binary_split_string(":::A:B:C:D" , ":" , true , )  => "A" & "B:C:D"
+       util_binary_split_string(":A:B:C:D:" , ":" , true , )   => "A"     & "B:C:D"
+       util_binary_split_string(":A:B:C:D:" , ":" , false , )  => "A:B:C" & "D"
 
 
    o If no split is found the whole content is in first_part, and
      second_part is NULL. If the input string == NULL, both return
-     strings will be NULL.
+     strings will be NULL. Observe that because leading split
+     characters are removed before the splitting starts:
 
+        util_binary_split_string(":ABCD" , ":" , true , )   => "ABCD" & NULL
+        
 */
 
 
 void util_binary_split_string(const char * __src , const char * sep_set, bool split_on_first , char ** __first_part , char ** __second_part) {
   char * first_part = NULL;
   char * second_part = NULL;
-  if (__src != NULL) {
-    char * src;
-    int pos;
-    if (split_on_first) {
-      /* Removing leading separators. */
-      pos = 0;
-      while ((pos < strlen(__src)) && (strchr(sep_set , __src[pos]) != NULL))
-        pos += 1;
-      if (pos == strlen(__src))  /* The string consisted ONLY of separators. */
-        src = NULL;
-      else
-        src = util_alloc_string_copy(&__src[pos]);
-    } else {
-      /*Remove trailing separators. */
-      pos = strlen(__src) - 1;
-      while ((pos >= 0) && (strchr(sep_set , __src[pos]) != NULL))
-        pos -= 1;
-      if (pos < 0)
-        src = NULL;
-      else
-        src = util_alloc_substring_copy(__src , 0 , pos + 1);
-    }
+  char * src;
 
+  if (__src != NULL) {
+    int offset = 0;
+    int len;
+    /* 1: Remove leading split characters. */
+    while ((offset < strlen(__src)) && (strchr(sep_set , __src[offset]) != NULL))
+      offset++;
     
+    
+    len = strlen( __src ) - offset;
+    if (len > 0) {
+      int tail_pos = strlen( __src ) - 1;
+      /* 2: Remove trailing split characters. */
+      while (strchr(sep_set , __src[tail_pos]) != NULL) 
+        tail_pos--;
+      len = 1 + tail_pos - offset;
+      
+      src = util_alloc_substring_copy(__src , offset , len);
+    } else
+      src = NULL;
+
     /* 
        OK - we have removed all leading (or trailing) separators, and we have
        a valid string which we can continue with.
