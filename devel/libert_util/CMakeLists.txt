@@ -1,5 +1,10 @@
 add_subdirectory( include/ert/util )
 
 add_subdirectory( src )
-add_subdirectory( applications )
-add_subdirectory( tests )
+if (BUILD_APPLICATONS)
+   add_subdirectory( applications )
+endif()
+
+if (BUILD_TESTS)
+   add_subdirectory( tests )
+endif()

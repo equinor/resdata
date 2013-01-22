@@ -31,7 +31,7 @@ endif()
 
 
 foreach(prog ${program_list})
-   target_link_libraries( ${prog} ecl ert_util geometry )
+   target_link_libraries( ${prog} ecl ert_util )
    
    #-----------------------------------------------------------------
    if (ECL_INSTALL_PREFIX)

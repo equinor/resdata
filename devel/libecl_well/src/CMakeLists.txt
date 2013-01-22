@@ -5,11 +5,15 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 include_directories( ${libgeometry_src_path} )
 
 
-add_library( well ${LIBRARY_TYPE} ${source_files} )
-target_link_libraries( well ecl )
+add_library( ecl_well ${LIBRARY_TYPE} ${source_files} )
+set_target_properties( ecl_well PROPERTIES VERSION 1.0 SOVERSION 1.0 )
+target_link_libraries( ecl_well ecl )
 
 #-----------------------------------------------------------------
-install(TARGETS well DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+install(TARGETS ecl_well DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+foreach(header ${header_files})
+    install(FILES ../include/ert/ecl_well/${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/ecl_well)
+endforeach()
+
 
 

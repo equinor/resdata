@@ -2,7 +2,7 @@ add_executable( well_info_test well_info_test.c )
 
 set(program_list well_info_test )
 foreach(prog ${program_list})
-   target_link_libraries( ${prog} well ecl ert_util )
+   target_link_libraries( ${prog} ecl_well ecl)
    
    #-----------------------------------------------------------------
 

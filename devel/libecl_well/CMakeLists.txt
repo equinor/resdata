@@ -1,5 +1,8 @@
-include_directories( ${libecl_src_path}/../include )
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/include )
-
 add_subdirectory( src )
-add_subdirectory( applications )
+if (BUILD_APPLICATONS)
+   add_subdirectory( applications )
+endif()
+
+#if (BUILD_TESTS)
+#   add_subdirectory( tests )
+#endif()

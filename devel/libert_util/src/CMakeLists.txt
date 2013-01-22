@@ -46,6 +46,7 @@ if (WITH_PTHREAD)
 endif()
 
 add_library( ert_util  ${LIBRARY_TYPE}  ${source_files} )
+set_target_properties( ert_util PROPERTIES VERSION 1.0 SOVERSION 1.0 )
 
 if (WITH_PTHREAD)
   target_link_libraries( ert_util ${PTHREAD_LIBRARY} )
@@ -74,7 +75,10 @@ endif()
 
 #-----------------------------------------------------------------
 install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+foreach(header ${header_files})
+    install(FILES ../include/ert/util/${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/util)
+endforeach()
+
 
 
 

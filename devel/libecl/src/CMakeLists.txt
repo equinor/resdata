@@ -9,6 +9,7 @@ set( header_files ecl_sum_tstep.h ecl_rst_file.h ecl_init_file.h smspec_node.h e
 
 
 add_library( ecl ${LIBRARY_TYPE} ${source_files} )
+set_target_properties( ecl PROPERTIES VERSION 1.0 SOVERSION 1.0 )
 
 #-----------------------------------------------------------------
 option(USE_OPENMP "Include OpenMP support" OFF)
@@ -24,11 +25,14 @@ endif()
 if (OPENMP)
    target_link_libraries( ecl gomp )
 endif()
-target_link_libraries( ecl geometry ert_util )
+target_link_libraries( ecl ert_geometry ert_util )
 
 #-----------------------------------------------------------------
 install(TARGETS ecl DESTINATION lib)
-install(FILES ${header_files} DESTINATION include)
+foreach(header ${header_files})
+    install(FILES ../include/ert/ecl/${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/ecl)
+endforeach()
+
 
 
 
