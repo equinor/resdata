@@ -19,9 +19,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <ert/util/util.h>
+
 #include <ert/ecl/ecl_grid.h>
 
-#include <util.h>
+
 
 
 int main(int argc, char ** argv) {
