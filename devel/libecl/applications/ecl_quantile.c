@@ -32,9 +32,9 @@
 #include <arg_pack.h>
 #include <thread_pool.h>
 
-#include <config.h>
+#include <ert/config/config.h>
 
-#include <ecl_sum.h>
+#include <ert/ecl/ecl_sum.h>
 
 #define DEFAULT_NUM_INTERP  50
 #define SUMMARY_JOIN       ":"

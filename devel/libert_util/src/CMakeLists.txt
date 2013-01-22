@@ -24,13 +24,10 @@ endif()
 foreach (type int double bool long time_t size_t float)
   set(TYPE ${type} )      
   set(src_target        ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)    
-  set(header_target     ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.h)    
 
   configure_file( vector_template.c ${src_target})
-  configure_file( vector_template.h ${header_target})
 
   list( APPEND source_files ${src_target} )
-  list( APPEND header_files ${header_target} )
 endforeach( type )
 
 
@@ -48,10 +45,8 @@ if (WITH_PTHREAD)
   list( APPEND header_files thread_pool_posix.h )
 endif()
 
-include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
-
 add_library( ert_util  ${LIBRARY_TYPE}  ${source_files} )
+set_target_properties( ert_util PROPERTIES VERSION 1.0 SOVERSION 1.0 )
 
 if (WITH_PTHREAD)
   target_link_libraries( ert_util ${PTHREAD_LIBRARY} )
@@ -79,14 +74,11 @@ if (NEED_LIBM)
 endif()
 
 #-----------------------------------------------------------------
+install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+foreach(header ${header_files})
+    install(FILES ../include/ert/util/${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/util)
+endforeach()
 
-if (UTIL_INSTALL_PREFIX)
-  install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_PREFIX}/${UTIL_INSTALL_PREFIX}/lib)
-  install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/${UTIL_INSTALL_PREFIX}/include)
-else()
-  install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-  install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-endif()
 
 
 

@@ -31,7 +31,7 @@ endif()
 
 
 foreach(prog ${program_list})
-   target_link_libraries( ${prog} ecl ert_util geometry )
+   target_link_libraries( ${prog} ecl ert_util )
    
    #-----------------------------------------------------------------
    if (ECL_INSTALL_PREFIX)
@@ -49,7 +49,7 @@ endforeach()
 
 if (BUILD_ENS_PLOT)
    include_directories( ${PLPLOT_HEADER} )
-   include_directories( ${libplot_src_path} )
+   include_directories( ${libplot_src_path}/../include )
    add_executable( ens_plot.x ens_plot.c )
    target_link_libraries( ens_plot.x plot ecl util)
 

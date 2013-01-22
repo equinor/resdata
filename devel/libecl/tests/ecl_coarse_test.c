@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ecl_grid.h>
-#include <ecl_coarse_cell.h>
+#include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/ecl_coarse_cell.h>
 
 void assert_equal( bool equal ) {
   if (!equal)
