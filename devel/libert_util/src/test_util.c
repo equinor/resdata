@@ -48,9 +48,7 @@ bool test_string_equal( const char * s1 , const char * s2 ) {
     if (s2 == NULL)
       equal = false;
 
-    if (strcmp(s1,s2) == 0)
-      return true;
-    else
+    if (equal && (strcmp(s1,s2) != 0))
       equal = false;
   }
   return equal;
@@ -117,5 +115,18 @@ void test_assert_false( bool value, const char * fmt ) {
       test_error_exit("assert( false ) failed");
     else
       test_error_exit(fmt);
+  }
+}
+
+
+/*****************************************************************/
+
+void test_assert_ptr_equal( const void * p1 , const void * p2 , const char * fmt) {
+  bool equal = (p1 == p2);
+  if (!equal) {
+    if (fmt == NULL)
+      test_error_exit( "Pointers are different p1:[%p]  p2:[%p]\n" , p1 , p2 );
+    else
+      test_error_exit( fmt , p1 , p2 );
   }
 }

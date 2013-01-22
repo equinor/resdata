@@ -35,6 +35,8 @@ extern "C" {
 
   void test_assert_time_t_equal( time_t t1 , time_t t2 , const char * fmt);
   void test_assert_time_t_not_equal( time_t t1 , time_t t2 , const char * fmt);
+
+  void test_assert_ptr_equal( const void * p1 , const void * p2 , const char * fmt);
   
 
 #ifdef __cplusplus
