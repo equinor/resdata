@@ -16,10 +16,10 @@
 */
 
 #include <stdlib.h>
-
-#include <util.h>
 #include <string.h>
-#include <vector.h>
+
+#include <ert/util/util.h>
+#include <ert/util/vector.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_sum.h>
