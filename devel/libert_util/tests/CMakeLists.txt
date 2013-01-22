@@ -36,6 +36,13 @@ add_executable( ert_util_realpath ert_util_realpath.c )
 target_link_libraries( ert_util_realpath ert_util )
 add_test( ert_util_realpath ${EXECUTABLE_OUTPUT_PATH}/ert_util_realpath )
 
+add_executable( ert_util_hash_test ert_util_hash_test.c )
+target_link_libraries( ert_util_hash_test ert_util )
+add_test( ert_util_hash_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_hash_test )
+
+add_executable( ert_util_binary_split ert_util_binary_split.c )
+target_link_libraries( ert_util_binary_split ert_util )
+add_test( ert_util_binary_split ${EXECUTABLE_OUTPUT_PATH}/ert_util_binary_split )
 
 if (WITH_LATEX)
    add_executable( ert_util_latex_test ert_util_latex_test.c )
