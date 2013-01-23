@@ -1,5 +1,5 @@
 add_subdirectory( src )
-if (BUILD_APPLICATONS)
+if (BUILD_APPLICATONS OR BUILD_ECL_SUMMARY)
    add_subdirectory( applications )
 endif()
 
