@@ -74,7 +74,7 @@ if (NEED_LIBM)
 endif()
 
 #-----------------------------------------------------------------
-install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_LIBDIR})
 foreach(header ${header_files})
     install(FILES ../include/ert/util/${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/util)
 endforeach()
