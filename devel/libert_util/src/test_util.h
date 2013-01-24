@@ -24,17 +24,31 @@
 extern "C" {
 #endif
 
+  
+
   void  test_error_exit( const char * fmt , ...);
   bool  test_string_equal( const char * s1 , const char * s2 );
 
-  void  test_assert_int_equal( int i1 , int i2 , const char * fmt);
-  void  test_assert_string_equal( const char * s1 , const char * s2 , const char * fmt);
+#define test_assert_string_equal( s1 , s2 ) test_assert_string_equal__(s1 , s2 , __FILE__ , __LINE__)  
+  void test_assert_string_equal__( const char * s1 , const char * s2 , const char * file , int line);
 
-  void test_assert_true( bool value, const char * fmt );
-  void test_assert_false( bool value, const char * fmt );
+#define test_assert_int_equal( i1 , i2 ) test_assert_int_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
+  void  test_assert_int_equal__( int i1 , int i2 , const char * file , int line );
 
-  void test_assert_time_t_equal( time_t t1 , time_t t2 , const char * fmt);
-  void test_assert_time_t_not_equal( time_t t1 , time_t t2 , const char * fmt);
+#define test_assert_bool_equal( b1 , b2 ) test_assert_bool_equal__( (b1) , (b2) , __FILE__ , __LINE__ )
+  void test_assert_bool_equal__( bool b1 , bool b2 , const char * file , int line);
+
+#define test_assert_true( value ) test_assert_true__( (value) , __FILE__ , __LINE__);
+  void test_assert_true__( bool value, const char * file , int line);
+  
+#define test_assert_false( value ) test_assert_false__( (value) , __FILE__ , __LINE__);
+  void test_assert_false__( bool value, const char * file , int line);
+  
+#define test_assert_time_t_equal( t1 , t2) test_assert_time_t_equal__((t1) , (t2) , __FILE__ , __LINE__);
+  void test_assert_time_t_equal__( time_t t1 , time_t t2 , const char * file , int line);
+
+#define test_assert_time_t_not_equal( t1 , t2) test_assert_time_t_not_equal__((t1) , (t2) , __FILE__ , __LINE__);
+  void test_assert_time_t_not_equal__( time_t t1 , time_t t2 , const char * file , int line);
 
   void test_assert_ptr_equal( const void * p1 , const void * p2 , const char * fmt);
   

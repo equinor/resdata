@@ -836,25 +836,21 @@ hash_type * hash_alloc_from_options(const stringlist_type * options) {
 }
 
 
-const char * hash_add_option( hash_type * hash, const char * key_value) {
-  char * key;
-  {
-    char * value;
+ bool hash_add_option( hash_type * hash, const char * key_value) {
+   bool addOK = false;
+   {
+     char * value;
+     char * key;
 
-    util_binary_split_string( key_value , ":" , true , &key , &value);
-    if (value == NULL)
-      hash_insert_ref( hash , key , value );
-    else
-      hash_insert_hash_owned_ref( hash , key , value , free );
-    
-  }
-
-  {
-    const void * return_ptr = hash_get( hash , key );
-    util_safe_free( key );
-    
-    return return_ptr;
-  }
+     util_binary_split_string( key_value , ":" , true , &key , &value);
+     if (value != NULL) {
+       hash_insert_hash_owned_ref( hash , key , value , free );
+       addOK = true;
+     }
+     
+     util_safe_free( key );
+   }
+   return addOK;
 }
 
 

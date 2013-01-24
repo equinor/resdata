@@ -27,16 +27,16 @@ void test_split(const char * test_string , bool split_on_first , const char * tr
 
   
   util_binary_split_string( test_string , ":" , split_on_first , &part1 , &part2 );
-  test_assert_string_equal( true1 , part1 , NULL);
-  test_assert_string_equal( true2 , part2 , NULL);
+  test_assert_string_equal( true1 , part1 );
+  test_assert_string_equal( true2 , part2 );
 
   util_binary_split_string( test_string , ":;" , split_on_first , &part1 , &part2 );
-  test_assert_string_equal( true1 , part1 , NULL);
-  test_assert_string_equal( true2 , part2 , NULL);
+  test_assert_string_equal( true1 , part1 );
+  test_assert_string_equal( true2 , part2 );
 
   util_binary_split_string( test_string , ";" , split_on_first , &part1 , &part2 );
-  test_assert_string_equal( test_string , part1 , NULL);
-  test_assert_string_equal( NULL , part2 , NULL);
+  test_assert_string_equal( test_string , part1 );
+  test_assert_string_equal( NULL , part2 );
 }
 
 int main(int argc , char ** argv) {

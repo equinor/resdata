@@ -56,66 +56,51 @@ bool test_string_equal( const char * s1 , const char * s2 ) {
 
 
 
-void test_assert_string_equal( const char * s1 , const char * s2 , const char * fmt) {
+void test_assert_string_equal__( const char * s1 , const char * s2 , const char * file, int line) {
   bool equal = test_string_equal( s1 , s2 );
-  if (!equal) {
-    if (fmt == NULL)
-      test_error_exit( "String are different s1:[%s]  s2:[%s]\n" , s1 , s2 );
-    else
-      test_error_exit( fmt , s1 , s2 );
-  }
+  if (!equal) 
+    test_error_exit( "%s:%d => String are different s1:[%s]  s2:[%s]\n" , file , line , s1 , s2 );
 }
 
 
-void test_assert_int_equal( int i1 , int i2 , const char * fmt) {
-  if (i1 != i2) {
-    if (fmt == NULL)
-      test_error_exit( "Integers are different i1:[%d]  i2:[%d]\n" , i1 , i2 );
-    else
-      test_error_exit( fmt , i1 , i2 );
-  }
+
+void test_assert_int_equal__( int i1 , int i2 , const char * file , int line) {
+  if (i1 != i2) 
+    test_error_exit( "%s:%d => Integers are different i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
+}
+
+
+void test_assert_bool_equal__( bool b1 , bool b2 , const char * file , int line) {
+  if (b1 != b2) 
+    test_error_exit( "%s:%d => Booleans are different b1:[%d]  b2:[%d]\n" , file , line , b1 , b2 );
+}
+
+
+
+/*****************************************************************/
+
+void test_assert_time_t_equal__( time_t t1 , time_t t2 , const char * file , int line) {
+  if (t1 != t2) 
+    test_error_exit("%s:%d => time_t values are different t1:%d  t2:[%d]" , file , line , t1 , t2);
+}
+
+
+void test_assert_time_t_not_equal__( time_t t1 , time_t t2 , const char * file , int line) {
+  if (t1 == t2) 
+    test_error_exit("%s:%d => time_t values are different t1:%d  t2:[%d]" , file , line , t1 , t2);
 }
 
 /*****************************************************************/
 
-void test_assert_time_t_equal( time_t t1 , time_t t2 , const char * fmt) {
-  if (t1 != t2) {
-    if (fmt == NULL)
-      test_error_exit("time_t values are different t1:%d  t2:[%d]" , t1 , t2);
-    else
-      test_error_exit( fmt , t1 , t2 );
-  }
+void test_assert_true__( bool value, const char * file , int line) {
+  if (!value) 
+    test_error_exit("%s:%d => assert( true ) failed" , file , line);
 }
 
 
-void test_assert_time_t_not_equal( time_t t1 , time_t t2 , const char * fmt) {
-  if (t1 == t2) {
-    if (fmt == NULL)
-      test_error_exit("time_t values are different t1:%d  t2:[%d]" , t1 , t2);
-    else
-      test_error_exit( fmt , t1 , t2 );
-  }
-}
-
-/*****************************************************************/
-
-void test_assert_true( bool value, const char * fmt ) {
-  if (!value) {
-    if (fmt == NULL)
-      test_error_exit("assert( true ) failed");
-    else
-      test_error_exit(fmt);
-  }
-}
-
-
-void test_assert_false( bool value, const char * fmt ) {
-  if (value) {
-    if (fmt == NULL)
-      test_error_exit("assert( false ) failed");
-    else
-      test_error_exit(fmt);
-  }
+void test_assert_false__( bool value, const char * file , int line) {
+  if (value) 
+    test_error_exit("%s:%d => assert( false ) failed" , file , line);
 }
 
 
