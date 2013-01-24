@@ -19,9 +19,9 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <vector.h>
-#include <util.h>
-#include <test_util.h>
+#include <ert/util/vector.h>
+#include <ert/util/util.h>
+#include <ert/util/test_util.h>
 
 
 void test_strcat(char * s1 , const char *s2 , const char * expected) {

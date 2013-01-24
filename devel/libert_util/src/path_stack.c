@@ -22,9 +22,9 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <stringlist.h>
-#include <util.h>
-#include <path_stack.h>
+#include <ert/util/stringlist.h>
+#include <ert/util/util.h>
+#include <ert/util/path_stack.h>
 
 /**
    This file implements the structure path_stack which is vaguely

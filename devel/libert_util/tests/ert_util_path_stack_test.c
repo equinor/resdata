@@ -21,10 +21,10 @@
 #include <string.h>
 
 
-#include <util.h>
-#include <vector.h>
-#include <path_stack.h>
-#include <test_util.h>
+#include <ert/util/util.h>
+#include <ert/util/vector.h>
+#include <ert/util/path_stack.h>
+#include <ert/util/test_util.h>
 
 
 

@@ -18,9 +18,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <util.h>
-#include <test_util.h>
-#include <stringlist.h>
+#include <ert/util/util.h>
+#include <ert/util/test_util.h>
+#include <ert/util/stringlist.h>
 
 void test_path(const char * input , const char * expected) {
   char * rpath = util_alloc_realpath__( input );

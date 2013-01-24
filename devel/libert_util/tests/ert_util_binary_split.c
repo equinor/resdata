@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <test_util.h>
-#include <util.h>
+#include <ert/util/test_util.h>
+#include <ert/util/util.h>
 
 void test_split(const char * test_string , bool split_on_first , const char * true1, const char * true2) {
   char * part1;

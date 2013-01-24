@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <test_util.h>
-#include <hash.h>
+#include <ert/util/test_util.h>
+#include <ert/util/hash.h>
 
 int main(int argc , char ** argv) {
   

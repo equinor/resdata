@@ -23,8 +23,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <util.h>
-#include <test_util.h>
+#include <ert/util/util.h>
+#include <ert/util/test_util.h>
 
 void test_error_exit( const char * fmt , ...) {
   char * s;
