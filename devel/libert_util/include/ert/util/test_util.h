@@ -50,7 +50,14 @@ extern "C" {
 #define test_assert_time_t_not_equal( t1 , t2) test_assert_time_t_not_equal__((t1) , (t2) , __FILE__ , __LINE__);
   void test_assert_time_t_not_equal__( time_t t1 , time_t t2 , const char * file , int line);
 
-  void test_assert_ptr_equal( const void * p1 , const void * p2 , const char * fmt);
+#define test_assert_ptr_equal( p1 , p2 ) test_assert_ptr_equal__( (p1) , (p2) , __FILE__ , __LINE__);  
+  void test_assert_ptr_equal__( const void * p1 , const void * p2 , const char * file , int line);
+
+#define test_assert_NULL( p ) test_assert_NULL__( (p) , __FILE__ , __LINE__);
+  void test_assert_NULL__( const void * p , const char * file , int line);
+
+#define test_assert_not_NULL( p ) test_assert_not_NULL__( (p) , __FILE__ , __LINE__);
+  void test_assert_not_NULL__( const void * p , const char * file , int line);
   
 
 #ifdef __cplusplus

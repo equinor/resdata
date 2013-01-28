@@ -106,12 +106,20 @@ void test_assert_false__( bool value, const char * file , int line) {
 
 /*****************************************************************/
 
-void test_assert_ptr_equal( const void * p1 , const void * p2 , const char * fmt) {
+void test_assert_ptr_equal__( const void * p1 , const void * p2 , const char * file , int line) {
   bool equal = (p1 == p2);
-  if (!equal) {
-    if (fmt == NULL)
-      test_error_exit( "Pointers are different p1:[%p]  p2:[%p]\n" , p1 , p2 );
-    else
-      test_error_exit( fmt , p1 , p2 );
-  }
+  if (!equal) 
+    test_error_exit( "%s:%d => Pointers are different p1:[%p]  p2:[%p]\n" , file , line , p1 , p2 );
+}
+
+
+void test_assert_NULL__( const void * p , const char * file , int line) {
+  if (p != NULL) 
+    test_error_exit( "%s:%d => Pointer is != NULL \n" , file , line , p);
+}
+
+
+void test_assert_not_NULL__( const void * p , const char * file , int line) {
+  if (p == NULL) 
+    test_error_exit( "%s:%d => Pointer is NULL \n" , file , line , p);
 }
