@@ -70,6 +70,12 @@ void test_assert_int_equal__( int i1 , int i2 , const char * file , int line) {
 }
 
 
+void test_assert_int_not_equal__( int i1 , int i2 , const char * file , int line) {
+  if (i1 == i2) 
+    test_error_exit( "%s:%d => Integers are equal i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
+}
+
+
 void test_assert_bool_equal__( bool b1 , bool b2 , const char * file , int line) {
   if (b1 != b2) 
     test_error_exit( "%s:%d => Booleans are different b1:[%d]  b2:[%d]\n" , file , line , b1 , b2 );
@@ -122,4 +128,16 @@ void test_assert_NULL__( const void * p , const char * file , int line) {
 void test_assert_not_NULL__( const void * p , const char * file , int line) {
   if (p == NULL) 
     test_error_exit( "%s:%d => Pointer is NULL \n" , file , line , p);
+}
+
+
+void test_assert_mem_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line) {
+  if (memcmp(p1 ,p2 , byte_size) != 0)
+    test_error_exit( "%s:%d => Memory regions have different content \n" , file , line);
+}
+
+
+void test_assert_mem_not_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line) {
+  if (memcmp(p1 ,p2 , byte_size) == 0)
+    test_error_exit( "%s:%d => Memory regions have the same content \n" , file , line);
 }

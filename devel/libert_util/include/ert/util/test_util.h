@@ -35,6 +35,9 @@ extern "C" {
 #define test_assert_int_equal( i1 , i2 ) test_assert_int_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
   void  test_assert_int_equal__( int i1 , int i2 , const char * file , int line );
 
+#define test_assert_int_not_equal( i1 , i2 ) test_assert_int_not_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
+  void  test_assert_int_not_equal__( int i1 , int i2 , const char * file , int line );
+
 #define test_assert_bool_equal( b1 , b2 ) test_assert_bool_equal__( (b1) , (b2) , __FILE__ , __LINE__ )
   void test_assert_bool_equal__( bool b1 , bool b2 , const char * file , int line);
 
@@ -59,6 +62,11 @@ extern "C" {
 #define test_assert_not_NULL( p ) test_assert_not_NULL__( (p) , __FILE__ , __LINE__);
   void test_assert_not_NULL__( const void * p , const char * file , int line);
   
+#define test_assert_mem_equal( p1 , p2 , byte_size ) test_assert_mem_equal__( (p1) , (p2) , (byte_size), __FILE__ , __LINE__);
+  void test_assert_mem_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line);
+
+#define test_assert_mem_not_equal( p1 , p2 , byte_size ) test_assert_mem_not_equal__( (p1) , (p2) , (byte_size), __FILE__ , __LINE__);
+  void test_assert_mem_not_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line);
 
 #ifdef __cplusplus
 }
