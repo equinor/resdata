@@ -18,21 +18,20 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <ert/util/test_util.h>
+
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_coarse_cell.h>
 
-void assert_equal( bool equal ) {
-  if (!equal)
-    exit(1);
-}
 
 
-int test_grid( const char * filename) {
+void test_grid( const char * filename) {
   ecl_grid_type * GRID = ecl_grid_alloc( filename );
 
-  assert_equal( ecl_grid_have_coarse_cells( GRID ));
-  assert_equal( ecl_grid_get_num_coarse_groups( GRID ) == 3384 );
-  return 0;
+  test_assert_true( ecl_grid_have_coarse_cells( GRID ) );
+  test_assert_int_equal( ecl_grid_get_num_coarse_groups( GRID ) , 3384);
+  
+  ecl_grid_free( GRID );
 }
 
 
@@ -40,4 +39,6 @@ int test_grid( const char * filename) {
 
 int main(int argc , char ** argv) {
   test_grid( argv[1] );
+
+  exit(0);
 }
