@@ -44,6 +44,10 @@ add_executable( ert_util_binary_split ert_util_binary_split.c )
 target_link_libraries( ert_util_binary_split ert_util )
 add_test( ert_util_binary_split ${EXECUTABLE_OUTPUT_PATH}/ert_util_binary_split )
 
+add_executable( ert_util_logh ert_util_logh.c )
+target_link_libraries( ert_util_logh ert_util )
+add_test( ert_util_logh ${EXECUTABLE_OUTPUT_PATH}/ert_util_logh )
+
 if (WITH_LATEX)
    add_executable( ert_util_latex_test ert_util_latex_test.c )
    target_link_libraries(ert_util_latex_test ert_util )
