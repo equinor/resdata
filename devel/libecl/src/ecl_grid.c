@@ -1406,7 +1406,6 @@ static void ecl_grid_realloc_index_map(ecl_grid_type * ecl_grid) {
     int coarse_group;
     for (coarse_group = 0; coarse_group < ecl_grid_get_num_coarse_groups( ecl_grid ); coarse_group++) {
       ecl_coarse_cell_type * coarse_cell = ecl_grid_iget_coarse_group( ecl_grid , coarse_group );
-      //printf("coarse:%d  global_size:%d   active_size:%d\n",coarse_group , ecl_coarse_cell_get_size( coarse_cell ) , ecl_coarse_cell_get_num_active( coarse_cell ));
       if (ecl_coarse_cell_get_num_active( coarse_cell ) > 0) {
         int global_index          = ecl_coarse_cell_iget_active_cell_index( coarse_cell , 0 );
         int active_value          = ecl_coarse_cell_iget_active_value( coarse_cell , 0 );
@@ -1426,10 +1425,6 @@ static void ecl_grid_realloc_index_map(ecl_grid_type * ecl_grid) {
           for (ic =0; ic < coarse_size; ic++) {
             int gi = int_vector_iget( global_index_list , ic );
             
-            if (coarse_group == 0) {
-              printf("ic:%d gi:%d  -> %d \n",ic,gi,active_index);
-            }
-
             if (active_value & ACTIVE_MATRIX) 
               ecl_grid->index_map[ gi ] = active_index;        // All the cells in the coarse group point to the same active index.
             
