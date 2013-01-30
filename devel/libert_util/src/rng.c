@@ -124,8 +124,6 @@ void rng_init( rng_type * rng , rng_init_mode init_mode ) {
     case(INIT_DEV_URANDOM):
       util_fread_dev_urandom( rng->state_size * sizeof * seed_buffer , seed_buffer );
       break;
-  case(INIT_DEFAULT):
-    
     default:
       util_abort("%s: unrecognized init_code:%d \n",__func__ , init_mode);
     }
