@@ -15,11 +15,6 @@ if (WITH_LAPACK)
    list( APPEND header_files matrix_lapack.h matrix_blas.h regression.h lars.h stepwise.h)
 endif()
 
-if (MSVC)
-  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/msvc_stdbool.h ${CMAKE_CURRENT_BINARY_DIR}/stdbool.h)
-  list( APPEND header_files ${CMAKE_CURRENT_BINARY_DIR}/stdbool.h)
-endif()
-
 foreach (type int double bool long time_t size_t float)
   set(TYPE ${type} )      
   set(src_target        ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)    
