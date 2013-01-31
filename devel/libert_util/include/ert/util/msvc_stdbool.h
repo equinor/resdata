@@ -7,7 +7,7 @@
     statements fail when compiling. 
 
   - When included in a C++ project the compiler already has a bool
-    defined; it is therefor important not to redifine this symbol if
+    defined; it is therefor important not to redefine this symbol if
     we are compiling C++.
  
 */
