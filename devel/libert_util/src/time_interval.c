@@ -21,27 +21,38 @@
 #include <ert/util/util.h>
 #include <ert/util/time_interval.h>
 
-#define TIME_INTERVAL_EMPTY -1
+#define TIME_INTERVAL_EMPTY   (time_t) -1
+#define TIME_T_MAX            (time_t) ((1UL << (( sizeof(time_t) << 3) -1 )) -1 ) 
+#define TIME_T_MIN           -TIME_T_MAX
 
 
 struct time_interval_struct {
-  bool   empty;
+  bool   valid;
   time_t start_time;
   time_t end_time;
 };
 
 
+/* 
+   If you set something invalid - the whole interval is destroyed. 
+*/
+
 bool time_interval_update( time_interval_type * ti , time_t start_time , time_t end_time) {
-  if (start_time < end_time) {
-    ti->start_time = start_time;
-    ti->end_time   = end_time;
-    ti->empty = false;
-  } else {
-    ti->start_time = TIME_INTERVAL_EMPTY;
-    ti->end_time   = TIME_INTERVAL_EMPTY;
-    ti->empty = true;
-  }
-  return !ti->empty;
+  ti->start_time = start_time;
+  ti->end_time   = end_time;
+
+  ti->valid = (start_time <= end_time) ? true : false;
+  return ti->valid;
+}
+
+
+bool time_interval_update_start( time_interval_type * ti , time_t start_time ) {
+  return time_interval_update( ti , start_time , ti->end_time );
+}
+
+
+bool time_interval_update_end( time_interval_type * ti , time_t end_time ) {
+  return time_interval_update( ti , ti->start_time , end_time );
 }
 
 
@@ -52,18 +63,23 @@ time_interval_type * time_interval_alloc( time_t start_time , time_t end_time ) 
 }
 
 
+time_interval_type * time_interval_alloc_open( ) {
+  return time_interval_alloc( TIME_T_MIN , TIME_T_MAX );
+}
+
+
 void time_interval_free( time_interval_type * ti ) {
   free( ti );
 }
   
 
 bool time_interval_is_empty( time_interval_type * ti ) {
-  return ti->empty;
+  return (ti->end_time <= ti->start_time);
 }
 
 
 bool time_interval_contains( const time_interval_type * ti , time_t t) {
-  if (ti->empty)
+  if (!ti->valid)
     return false;
   else {
     if (t < ti->start_time)
@@ -78,9 +94,7 @@ bool time_interval_contains( const time_interval_type * ti , time_t t) {
 
 
 bool time_interval_has_overlap( const time_interval_type * t1 , const time_interval_type * t2) {
-  if (t1->empty || t2->empty)
-    return false;
-  else {
+  if (t1->valid && t2->valid) {
     if (time_interval_contains(t1 , t2->start_time))
       return true;
 
@@ -88,5 +102,17 @@ bool time_interval_has_overlap( const time_interval_type * t1 , const time_inter
       return true;
     
     return false;
-  }
+  } else
+    return false;
+}
+
+
+time_t time_interval_get_start( const time_interval_type * ti) {
+  return ti->start_time;
+}
+
+
+
+time_t time_interval_get_end( const time_interval_type * ti) {
+  return ti->end_time;
 }

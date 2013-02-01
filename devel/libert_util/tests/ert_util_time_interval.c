@@ -88,5 +88,51 @@ int main( int argc , char ** argv) {
     time_interval_free( t2 );
   }
 
+  {
+    time_interval_type * ti = time_interval_alloc_open();
+
+    test_assert_false( time_interval_is_empty( ti ));
+
+    test_assert_true( time_interval_contains( ti , start_time ));
+    test_assert_true( time_interval_contains( ti , in ));
+    test_assert_true( time_interval_contains( ti , before ));
+    test_assert_true( time_interval_contains( ti , end_time ));
+    test_assert_true( time_interval_contains( ti , after ));
+
+    test_assert_true( time_interval_update_start( ti , start_time ));
+    test_assert_true( time_interval_contains( ti , start_time ));
+    test_assert_true( time_interval_update_start( ti , in ));
+    test_assert_false( time_interval_contains( ti , start_time ));
+    test_assert_false( time_interval_is_empty( ti ));
+    
+    test_assert_false( time_interval_update_end( ti , start_time ));
+    test_assert_true( time_interval_is_empty( ti ));
+    test_assert_true( time_interval_update_end( ti , end_time ));
+    test_assert_false( time_interval_is_empty( ti ));
+    test_assert_false( time_interval_contains( ti , start_time ));
+    
+    time_interval_free( ti );
+  }
+
+  {
+    time_interval_type * t1 = time_interval_alloc( start_time , end_time );
+
+    test_assert_time_t_equal( start_time , time_interval_get_start( t1 ));
+    test_assert_time_t_equal( end_time   , time_interval_get_end( t1 ));
+    test_assert_false( time_interval_is_empty( t1 ));
+    
+    test_assert_false( time_interval_update_end( t1 , before ));
+    test_assert_true( time_interval_is_empty( t1 ));
+    test_assert_time_t_equal( start_time , time_interval_get_start( t1 ));
+    test_assert_time_t_equal( before   , time_interval_get_end( t1 ));
+
+    test_assert_true( time_interval_update_end( t1 , in ));
+    test_assert_false( time_interval_is_empty( t1 ));
+    test_assert_time_t_equal( start_time , time_interval_get_start( t1 ));
+    test_assert_time_t_equal( in   , time_interval_get_end( t1 ));
+    
+    time_interval_free( t1 );
+  }
+
   exit(0);
 }

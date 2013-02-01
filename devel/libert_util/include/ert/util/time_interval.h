@@ -28,12 +28,17 @@ extern "C" {
   typedef struct time_interval_struct time_interval_type;
 
   time_interval_type * time_interval_alloc( time_t start_time , time_t end_time );
+  time_interval_type * time_interval_alloc_open( );
   void                 time_interval_free( time_interval_type * ti );
   bool                 time_interval_is_empty( time_interval_type * ti );
   bool                 time_interval_update( time_interval_type * ti , time_t start_time , time_t end_time);
   bool                 time_interval_contains( const time_interval_type * ti , time_t t);
   bool                 time_interval_has_overlap( const time_interval_type * t1 , const time_interval_type * t2);
-
+  bool                 time_interval_update_start( time_interval_type * ti , time_t start_time );
+  bool                 time_interval_update_end( time_interval_type * ti , time_t end_time );
+  time_t               time_interval_get_start( const time_interval_type * ti);
+  time_t               time_interval_get_end( const time_interval_type * ti);
+  
 #ifdef __cplusplus
 }
 #endif
