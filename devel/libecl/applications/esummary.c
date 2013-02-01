@@ -61,11 +61,11 @@ int main(int argc , char ** argv) {
           char * path , * basename;
           ecl_sum_type * ecl_sum;
           util_alloc_file_components( argv[iarg] , &path , &basename  , NULL); 
+          fprintf(stderr,"Loading case: %s/%s" , path , basename); fflush(stderr);
           ecl_sum = ecl_sum_fread_alloc_case( argv[iarg] , ":");
           if (iarg == 1)
             first_ecl_sum = ecl_sum;  /* Keep track of this  - might sort the vector */
 
-          fprintf(stderr,"Loading case: %s/%s" , path , basename); fflush(stderr);
           vector_append_owned_ref( ecl_sum_list , ecl_sum , ecl_sum_free__ );
           iarg++;
           fprintf(stderr,"\n");

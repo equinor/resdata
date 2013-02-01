@@ -1,0 +1,70 @@
+/*
+   Copyright (C) 2012  Statoil ASA, Norway. 
+    
+   The file 'ert_util_time_interval.c' is part of ERT - Ensemble based Reservoir Tool. 
+    
+   ERT is free software: you can redistribute it and/or modify 
+   it under the terms of the GNU General Public License as published by 
+   the Free Software Foundation, either version 3 of the License, or 
+   (at your option) any later version. 
+    
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+   FITNESS FOR A PARTICULAR PURPOSE.   
+    
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+   for more details. 
+*/
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+
+#include <ert/util/test_util.h>
+#include <ert/util/util.h>
+#include <ert/util/time_interval.h>
+  
+
+
+int main( int argc , char ** argv) {
+  time_t start_time = util_make_date(1,1,2000);
+  time_t end_time = util_make_date(1,1,2010);
+  time_t in = util_make_date( 1,1,2005);
+  time_t before = util_make_date( 1,1,1995);
+  time_t after  = util_make_date( 1,1,2015);
+  
+  {
+    time_interval_type * ti = time_interval_alloc( start_time , end_time );
+    test_assert_not_NULL( ti );
+    test_assert_false( time_interval_is_empty( ti ));
+
+    test_assert_true( time_interval_contains( ti , start_time ));
+    test_assert_true( time_interval_contains( ti , in ));
+    test_assert_false( time_interval_contains( ti , before ));
+    test_assert_false( time_interval_contains( ti , end_time ));
+    test_assert_false( time_interval_contains( ti , after ));
+    
+    test_assert_false( time_interval_update( ti , end_time , start_time ));
+    test_assert_true( time_interval_is_empty( ti ));
+
+    test_assert_false( time_interval_contains( ti , start_time ));
+    test_assert_false( time_interval_contains( ti , in ));
+    test_assert_false( time_interval_contains( ti , before ));
+    test_assert_false( time_interval_contains( ti , end_time ));
+    test_assert_false( time_interval_contains( ti , after ));
+
+    test_assert_true( time_interval_update( ti , start_time , end_time ));
+    test_assert_false( time_interval_is_empty( ti ));
+    
+    time_interval_free( ti );
+  }
+
+  {
+    time_interval_type * ti = time_interval_alloc( end_time , start_time );
+    test_assert_not_NULL( ti );
+    test_assert_true( time_interval_is_empty( ti ));
+    test_assert_true( time_interval_update( ti , start_time , end_time ));
+    test_assert_false( time_interval_is_empty( ti ));
+    time_interval_free( ti );
+  }
+  exit(0);
+}
