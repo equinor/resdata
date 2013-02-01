@@ -106,6 +106,13 @@ bool time_interval_has_overlap( const time_interval_type * t1 , const time_inter
     return false;
 }
 
+bool time_interval_is_adjacent( const time_interval_type * t1 , const time_interval_type * t2) {
+  if ((t1->end_time == t2->start_time) || (t1->start_time == t2->end_time))
+    return true;
+  else
+    return false;
+}
+
 
 time_t time_interval_get_start( const time_interval_type * ti) {
   return ti->start_time;
@@ -116,3 +123,26 @@ time_t time_interval_get_start( const time_interval_type * ti) {
 time_t time_interval_get_end( const time_interval_type * ti) {
   return ti->end_time;
 }
+
+
+bool time_interval_extend( time_interval_type * t1 , const time_interval_type * t2) {
+  if (time_interval_has_overlap(t1,t2) || time_interval_is_adjacent( t1 , t2)) {
+    time_t start_time = util_time_t_min( t1->start_time , t2->start_time );
+    time_t end_time = util_time_t_max( t1->end_time , t2->end_time );
+
+    return time_interval_update(t1 , start_time , end_time);
+  } else
+    return false;
+}
+
+
+bool time_interval_intersect( time_interval_type * t1 , const time_interval_type * t2) {
+  if (time_interval_has_overlap(t1,t2) || time_interval_is_adjacent( t1 , t2)) {
+    time_t start_time = util_time_t_max( t1->start_time , t2->start_time );
+    time_t end_time = util_time_t_min( t1->end_time , t2->end_time );
+
+    return time_interval_update(t1 , start_time , end_time);
+  } else
+    return false;
+}
+

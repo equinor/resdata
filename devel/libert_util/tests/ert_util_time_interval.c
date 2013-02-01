@@ -134,5 +134,77 @@ int main( int argc , char ** argv) {
     time_interval_free( t1 );
   }
 
+  {
+    time_interval_type * t1 = time_interval_alloc( start_time , in );
+    time_interval_type * t2 = time_interval_alloc( in , end_time );
+    time_interval_type * t3 = time_interval_alloc( start_time , end_time);
+
+    test_assert_true( time_interval_is_adjacent( t1 , t2 ));
+    test_assert_true( time_interval_is_adjacent( t2 , t1 ));
+    
+    test_assert_false( time_interval_is_adjacent( t1 , t3 ));
+    test_assert_false( time_interval_is_adjacent( t3 , t1 ));
+    test_assert_false( time_interval_is_adjacent( t2 , t3 ));
+    test_assert_false( time_interval_is_adjacent( t3 , t2 ));
+    
+    time_interval_free( t1 );
+    time_interval_free( t2 );
+    time_interval_free( t3 );
+  }
+
+
+
+  {
+    time_interval_type * t1 = time_interval_alloc( start_time , end_time );
+    time_interval_type * t2 = time_interval_alloc( in , end_time );
+    time_interval_type * t3 = time_interval_alloc( end_time , after );
+    time_interval_type * t4 = time_interval_alloc( before , start_time );
+    
+    test_assert_true( time_interval_extend(t1 , t2 ));
+    test_assert_time_t_equal( start_time , time_interval_get_start( t1 ));
+    test_assert_time_t_equal( end_time   , time_interval_get_end( t1 ));
+
+    test_assert_true( time_interval_extend(t1 , t3 ));
+    test_assert_time_t_equal( start_time , time_interval_get_start( t1 ));
+    test_assert_time_t_equal( after   , time_interval_get_end( t1 ));
+
+    test_assert_true( time_interval_update_start(t1 , in ));
+    test_assert_time_t_equal( in , time_interval_get_start( t1 ));
+
+    
+    test_assert_false( time_interval_extend(t1 , t4 ));
+    test_assert_time_t_equal( in    , time_interval_get_start( t1 ));
+    test_assert_time_t_equal( after , time_interval_get_end( t1 ));
+
+
+    test_assert_true( time_interval_update_end(t4 , in ));
+    test_assert_true( time_interval_extend(t1 , t4 ));
+    test_assert_time_t_equal( before , time_interval_get_start( t1 ));
+    test_assert_time_t_equal( after , time_interval_get_end( t1 ));
+
+
+    time_interval_free( t1 );
+    time_interval_free( t2 );
+    time_interval_free( t3 );
+    time_interval_free( t4 );
+  }
+  
+  {
+    time_interval_type * t1 = time_interval_alloc( start_time , end_time );
+    time_interval_type * t2 = time_interval_alloc( in , end_time );
+    time_interval_type * t3 = time_interval_alloc( end_time , after );
+    time_interval_type * t4 = time_interval_alloc( before , start_time );
+    
+    test_assert_true( time_interval_intersect(t1 , t2 ));
+    test_assert_time_t_equal( in , time_interval_get_start( t1 ));
+    test_assert_time_t_equal( end_time , time_interval_get_end( t1 ));
+    
+    time_interval_free( t1 );
+    time_interval_free( t2 );
+    time_interval_free( t3 );
+    time_interval_free( t4 );
+  }
+
+  
   exit(0);
 }
