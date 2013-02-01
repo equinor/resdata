@@ -32,7 +32,8 @@ extern "C" {
   bool                 time_interval_is_empty( time_interval_type * ti );
   bool                 time_interval_update( time_interval_type * ti , time_t start_time , time_t end_time);
   bool                 time_interval_contains( const time_interval_type * ti , time_t t);
-  
+  bool                 time_interval_has_overlap( const time_interval_type * t1 , const time_interval_type * t2);
+
 #ifdef __cplusplus
 }
 #endif

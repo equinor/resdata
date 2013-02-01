@@ -74,3 +74,19 @@ bool time_interval_contains( const time_interval_type * ti , time_t t) {
       return true;
   }
 }
+
+
+
+bool time_interval_has_overlap( const time_interval_type * t1 , const time_interval_type * t2) {
+  if (t1->empty || t2->empty)
+    return false;
+  else {
+    if (time_interval_contains(t1 , t2->start_time))
+      return true;
+
+    if (time_interval_contains(t1 , t2->end_time))
+      return true;
+    
+    return false;
+  }
+}

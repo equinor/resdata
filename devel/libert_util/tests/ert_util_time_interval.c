@@ -66,5 +66,27 @@ int main( int argc , char ** argv) {
     test_assert_false( time_interval_is_empty( ti ));
     time_interval_free( ti );
   }
+
+  {
+    time_interval_type * t1 = time_interval_alloc( start_time , end_time );
+    time_interval_type * t2 = time_interval_alloc( in , after );
+    time_interval_type * t3 = time_interval_alloc( end_time , start_time );
+    time_interval_type * t4 = time_interval_alloc( before , start_time );
+    time_interval_type * t5 = time_interval_alloc( end_time , after );
+
+    test_assert_true( time_interval_has_overlap( t1 , t2 ));
+
+    test_assert_true( time_interval_is_empty( t3 ));
+    test_assert_false( time_interval_has_overlap( t1 , t3 ));
+    test_assert_false( time_interval_has_overlap( t3 , t1 ));
+    test_assert_false( time_interval_has_overlap( t3 , t3 ));
+    test_assert_false( time_interval_has_overlap( t4 , t5 ));
+    test_assert_false( time_interval_has_overlap( t1 , t5 ));
+    
+
+    time_interval_free( t1 );
+    time_interval_free( t2 );
+  }
+
   exit(0);
 }
