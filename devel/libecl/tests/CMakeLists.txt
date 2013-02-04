@@ -25,6 +25,11 @@ target_link_libraries( ecl_dualp ecl )
 add_test( ecl_dualp ${EXECUTABLE_OUTPUT_PATH}/ecl_dualp  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/LGCcase/LGC_TESTCASE2 )
 
 
+add_executable( ecl_util_month_range ecl_util_month_range.c )
+target_link_libraries( ecl_util_month_range ecl )
+add_test( ecl_util_month_range ${EXECUTABLE_OUTPUT_PATH}/ecl_util_month_range  )
+
+
 set_property( TEST ecl_coarse_test PROPERTY LABELS Statoil )
 set_property( TEST ecl_restart_test PROPERTY LABELS Statoil )
 set_property( TEST ecl_lgr_test1 PROPERTY LABELS Statoil )

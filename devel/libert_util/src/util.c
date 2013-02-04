@@ -2732,6 +2732,16 @@ void util_set_date_values(time_t t , int * mday , int * month , int * year) {
 }
 
 
+bool util_is_first_day_in_month( time_t t) {
+  int mday;
+  __util_set_timevalues(t , NULL , NULL , NULL , &mday ,NULL, NULL);
+  if (mday == 1)
+    return true;
+  else
+    return false;
+}
+
+
 /**
    If the parsing fails the time_t pointer is set to -1;
 */
@@ -2905,6 +2915,12 @@ time_t util_make_date(int mday , int month , int year) {
   return util_make_datetime(0 , 0 , 0 , mday , month , year);
 }
 
+
+time_t util_make_pure_date(time_t t) {
+  int day,month,year;
+  util_set_date_values( t , &day , &month , &year);
+  return util_make_date( day , month , year );
+}
 
 
 
