@@ -56,6 +56,11 @@ bool time_interval_update_end( time_interval_type * ti , time_t end_time ) {
 }
 
 
+void time_interval_reopen( time_interval_type * time_interval) {
+  time_interval_update( time_interval , TIME_T_MIN , TIME_T_MAX);
+}
+
+
 time_interval_type * time_interval_alloc( time_t start_time , time_t end_time ) {
   time_interval_type * ti = util_malloc( sizeof * ti );
   time_interval_update( ti , start_time , end_time );
