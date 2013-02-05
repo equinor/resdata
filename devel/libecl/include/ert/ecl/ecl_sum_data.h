@@ -29,6 +29,7 @@ extern "C" {
 #include <ert/util/time_t_vector.h>
 #include <ert/util/double_vector.h>
 #include <ert/util/stringlist.h>
+#include <ert/util/time_interval.h>
 
 #include <ert/ecl/ecl_sum_tstep.h>
 #include <ert/ecl/smspec_node.h>
@@ -52,6 +53,7 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   time_t                   ecl_sum_data_get_data_start( const ecl_sum_data_type * data );  
   time_t                   ecl_sum_data_get_report_time( const ecl_sum_data_type * data , int report_step);
   double                   ecl_sum_data_get_first_day( const ecl_sum_data_type * data);
+  const time_interval_type * ecl_sum_data_get_sim_time( const ecl_sum_data_type * data);
   time_t                   ecl_sum_data_get_sim_start ( const ecl_sum_data_type * data ); 
   time_t                   ecl_sum_data_get_sim_end   ( const ecl_sum_data_type * data ); 
   double                   ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ); 

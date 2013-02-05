@@ -213,9 +213,6 @@ struct ecl_sum_data_struct {
   int                      first_ministep;
   int                      last_ministep; 
   double                   days_start;
-  time_t                   data_start_time;        /* This is the first time_t we have data for; will typically agree 
-                                                      with sim_start, but in the case of restarts it will be after sim_start. */
-  time_t                   sim_end;
   double                   sim_length;
   int_vector_type        * report_first_index ;    /* Indexed by report_step - giving first internal_index in report_step.   */
   int_vector_type        * report_last_index;      /* Indexed by report_step - giving last internal_index in report_step.    */   
@@ -224,7 +221,9 @@ struct ecl_sum_data_struct {
   time_t                   __min_time;             /* An internal member used during the load of 
                                                       restarted cases; see doc in ecl_sum_data_append_tstep. */
   bool                     index_valid;
-  time_interval_type     * sim_time;
+  time_interval_type     * sim_time;               /* The time interval sim_time goes from the first time value where we have
+                                                      data to the end of the simulation. In the case of restarts the start
+                                                      value might disagree with the simulation start reported by the smspec file. */
 };
 
 
@@ -255,8 +254,6 @@ static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
   data->first_report_step     =  1024 * 1024;
   data->last_report_step      = -1024 * 1024;
   data->days_start            = 0;
-  data->data_start_time       = -1;
-  data->sim_end               = -1;
   data->sim_length            = -1;
   data->first_ministep        = -1;
   data->last_ministep         = -1;  
@@ -440,10 +437,11 @@ void ecl_sum_data_fwrite( const ecl_sum_data_type * data , const char * ecl_case
 
 
 
+const time_interval_type * ecl_sum_data_get_sim_time( const ecl_sum_data_type * data) { return data->sim_time; }
 
-time_t ecl_sum_data_get_sim_end   (const ecl_sum_data_type * data ) { return data->sim_end; }
+time_t ecl_sum_data_get_sim_end   (const ecl_sum_data_type * data ) { return time_interval_get_end( data->sim_time ); }
 
-time_t ecl_sum_data_get_data_start   ( const ecl_sum_data_type * data ) { return data->data_start_time; }
+time_t ecl_sum_data_get_data_start   ( const ecl_sum_data_type * data ) { return time_interval_get_start( data->sim_time ); }
 
 double ecl_sum_data_get_first_day( const ecl_sum_data_type * data) { return data->days_start; }
 
@@ -472,10 +470,10 @@ double ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ) {
 */
 
 bool ecl_sum_data_check_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
-  if ((sim_time < data->data_start_time) || (sim_time > data->sim_end))
-    return false;
-  else
+  if (time_interval_contains( data->sim_time , sim_time ) || (sim_time == time_interval_get_end( data->sim_time)))
     return true;
+  else
+    return false;
 }
 
 
@@ -527,14 +525,15 @@ bool ecl_sum_data_check_sim_days( const ecl_sum_data_type * data , double sim_da
 
 
 static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
-  time_t data_start_time = data->data_start_time;
+  time_t data_start_time = time_interval_get_start( data->sim_time );
+  time_t sim_end         = time_interval_get_end( data->sim_time );
   
-  if ((sim_time < data_start_time) || (sim_time > data->sim_end)) {
+  if (!ecl_sum_data_check_sim_time( data , sim_time )) {
     fprintf(stderr , "Simulation start: "); util_fprintf_date( ecl_smspec_get_start_time( data->smspec ) , stderr );
     fprintf(stderr , "Data start......: "); util_fprintf_date( data_start_time , stderr );
-    fprintf(stderr , "Simulation end .: "); util_fprintf_date( data->sim_end , stderr );
+    fprintf(stderr , "Simulation end .: "); util_fprintf_date( sim_end , stderr );
     fprintf(stderr , "Requested date .: "); util_fprintf_date( sim_time , stderr );
-    util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",__func__, sim_time , data_start_time , data->sim_end);
+    util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",__func__, sim_time , data_start_time , sim_end);
   }
   
   /* 
@@ -710,7 +709,6 @@ static void ecl_sum_data_update_end_info( ecl_sum_data_type * sum_data ) {
    
   sum_data->last_ministep   = ecl_sum_tstep_get_ministep( last_ministep );
   sum_data->sim_length      = ecl_sum_tstep_get_sim_days( last_ministep );
-  sum_data->sim_end         = ecl_sum_tstep_get_sim_time( last_ministep ); 
   time_interval_update_end( sum_data->sim_time , ecl_sum_tstep_get_sim_time( last_ministep ));
 }
  
@@ -753,7 +751,6 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
        will be a difference.
     */
     sum_data->days_start      = ecl_sum_tstep_get_sim_days( first_ministep );
-    sum_data->data_start_time = ecl_sum_tstep_get_sim_time( first_ministep );
     time_interval_update_start( sum_data->sim_time , ecl_sum_tstep_get_sim_time( first_ministep ));
   }
   ecl_sum_data_update_end_info( sum_data );
@@ -1204,7 +1201,8 @@ int ecl_sum_data_get_report_step_from_days(const ecl_sum_data_type * data , doub
 
 
 int ecl_sum_data_get_report_step_from_time(const ecl_sum_data_type * data , time_t sim_time) {
-  if ((sim_time < data->data_start_time) || (sim_time > data->sim_end))
+  
+  if (!ecl_sum_data_check_sim_time(data , sim_time))
     return -1;
 
   {
