@@ -56,6 +56,9 @@ extern "C" {
 #define test_assert_ptr_equal( p1 , p2 ) test_assert_ptr_equal__( (p1) , (p2) , __FILE__ , __LINE__)
   void test_assert_ptr_equal__( const void * p1 , const void * p2 , const char * file , int line);
 
+#define test_assert_ptr_not_equal(p1 , p2) test_assert_ptr_not_equal__( (p1) , (p2) , __FILE__ , __LINE__)
+  void test_assert_ptr_not_equal__( const void * p1 , const void * p2 , const char * file , int line);
+
 #define test_assert_NULL( p ) test_assert_NULL__( (p) , __FILE__ , __LINE__)
   void test_assert_NULL__( const void * p , const char * file , int line);
 

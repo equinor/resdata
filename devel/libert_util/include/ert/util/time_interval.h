@@ -29,6 +29,7 @@ extern "C" {
 
   time_interval_type * time_interval_alloc( time_t start_time , time_t end_time );
   time_interval_type * time_interval_alloc_open( );
+  time_interval_type * time_interval_alloc_copy( const time_interval_type * src);
   void                 time_interval_reopen( time_interval_type * time_interval);
   void                 time_interval_free( time_interval_type * ti );
   bool                 time_interval_is_empty( time_interval_type * ti );
@@ -42,7 +43,7 @@ extern "C" {
   time_t               time_interval_get_end( const time_interval_type * ti);
   bool                 time_interval_extend( time_interval_type * t1 , const time_interval_type * t2);
   bool                 time_interval_intersect( time_interval_type * t1 , const time_interval_type * t2);
-  
+  bool                 time_interval_equal( const time_interval_type * t1 , const time_interval_type * t2);
 
 #ifdef __cplusplus
 }

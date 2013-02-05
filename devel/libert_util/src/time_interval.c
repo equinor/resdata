@@ -72,6 +72,10 @@ time_interval_type * time_interval_alloc_open( ) {
   return time_interval_alloc( TIME_T_MIN , TIME_T_MAX );
 }
 
+time_interval_type * time_interval_alloc_copy( const time_interval_type * src) {
+  return time_interval_alloc( src->start_time , src->end_time );
+}
+
 
 void time_interval_free( time_interval_type * ti ) {
   free( ti );
@@ -151,3 +155,10 @@ bool time_interval_intersect( time_interval_type * t1 , const time_interval_type
     return false;
 }
 
+
+bool time_interval_equal( const time_interval_type * t1 , const time_interval_type * t2) {
+  if ((t1->start_time == t2->start_time) && (t1->end_time == t2->end_time))
+    return true;
+  else
+    return false;
+}

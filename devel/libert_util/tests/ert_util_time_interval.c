@@ -205,6 +205,22 @@ int main( int argc , char ** argv) {
     time_interval_free( t4 );
   }
 
+  {
+    time_interval_type * t1 = time_interval_alloc( start_time , end_time );
+    time_interval_type * t2 = time_interval_alloc( start_time , end_time );
+    time_interval_type * t3 = time_interval_alloc( end_time , after );
+    time_interval_type * t4 = time_interval_alloc_copy( t1 );
+
+    test_assert_true( time_interval_equal( t1 , t2 ));
+    test_assert_false( time_interval_equal( t1 , t3 ));
+
+    test_assert_true( time_interval_equal( t4 , t2 ));
+    test_assert_false( time_interval_equal( t4 , t3 ));
+
+    test_assert_ptr_not_equal( t4 , t1 );
+  }
+
+
   
   exit(0);
 }

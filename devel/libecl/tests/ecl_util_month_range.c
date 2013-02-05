@@ -76,7 +76,7 @@ void test_append( const char * name , time_t_vector_type * date_list , time_t da
 }
 
 
-test_init( const char * name , time_t_vector_type * date_list , time_t start_date , time_t end_date) {
+void test_init( const char * name , time_t_vector_type * date_list , time_t start_date , time_t end_date) {
   printf("%s ...",name); 
   fflush( stdout );
   {
