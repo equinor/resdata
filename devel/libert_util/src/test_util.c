@@ -96,6 +96,8 @@ void test_assert_time_t_not_equal__( time_t t1 , time_t t2 , const char * file ,
     test_error_exit("%s:%d => time_t values are different t1:%d  t2:[%d]" , file , line , t1 , t2);
 }
 
+
+
 /*****************************************************************/
 
 void test_assert_true__( bool value, const char * file , int line) {
@@ -115,6 +117,13 @@ void test_assert_false__( bool value, const char * file , int line) {
 void test_assert_ptr_equal__( const void * p1 , const void * p2 , const char * file , int line) {
   bool equal = (p1 == p2);
   if (!equal) 
+    test_error_exit( "%s:%d => Pointers are different p1:[%p]  p2:[%p]\n" , file , line , p1 , p2 );
+}
+
+
+void test_assert_ptr_not_equal__( const void * p1 , const void * p2 , const char * file , int line) {
+  bool equal = (p1 == p2);
+  if (equal) 
     test_error_exit( "%s:%d => Pointers are different p1:[%p]  p2:[%p]\n" , file , line , p1 , p2 );
 }
 
