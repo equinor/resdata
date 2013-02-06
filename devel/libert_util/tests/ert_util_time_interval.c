@@ -236,7 +236,7 @@ int main( int argc , char ** argv) {
     
     test_assert_false( time_interval_arg_after( t1 , start_time));
     test_assert_false( time_interval_arg_after( t1 , in));
-    test_assert_false( time_interval_arg_after( t1 , after));
+    test_assert_true( time_interval_arg_after( t1 , after));
     
     time_interval_free( t1 );
   }
