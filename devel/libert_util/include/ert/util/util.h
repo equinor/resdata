@@ -76,11 +76,14 @@ typedef enum {left_pad   = 0,
   void         util_fprintf_datetime(time_t  , FILE * );
   void         util_fprintf_date(time_t  , FILE * );
   time_t       util_make_date(int , int , int);
+  time_t       util_make_pure_date(time_t t);
   void         util_inplace_forward_days(time_t *  , double);
   time_t       util_file_mtime(const char * file);
   double       util_difftime(time_t  , time_t  , int *  , int *  , int *  , int *);
   double       util_difftime_days(time_t  , time_t );
   double       util_difftime_seconds( time_t start_time , time_t end_time);
+  bool         util_after( time_t t , time_t limit);
+  bool         util_before( time_t t , time_t limit);
   bool         util_file_newer( const char * file , time_t t0);
   bool         util_file_older( const char * file , time_t t0);
   char       * util_alloc_date_string( time_t t );
@@ -231,6 +234,7 @@ typedef enum {left_pad   = 0,
   bool         util_is_file(const char * );
   void         util_set_datetime_values(time_t , int * , int * , int * , int * , int *  , int *);
   void         util_set_date_values(time_t , int * , int * , int * );
+  bool         util_is_first_day_in_month( time_t t);
 
 
   void     util_fread_from_buffer(void *  , size_t  , size_t , char ** );

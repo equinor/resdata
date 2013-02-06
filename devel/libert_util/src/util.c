@@ -2866,6 +2866,22 @@ bool util_file_older( const char * file , time_t t0) {
 }
 
 
+bool util_before( time_t t , time_t limit) {
+  if (difftime(limit , t) > 0)
+    return true;
+  else
+    return false;
+}
+
+
+bool util_after( time_t t , time_t limit) {
+  if (difftime(limit , t) < 0)
+    return true;
+  else
+    return false;
+}
+
+
 
 /** 
     This function will return a pointer to the newest of the two
@@ -2929,6 +2945,16 @@ void util_set_datetime_values(time_t t , int * sec , int * min , int * hour , in
 
 void util_set_date_values(time_t t , int * mday , int * month , int * year) {
   __util_set_timevalues(t , NULL , NULL , NULL , mday , month , year);
+}
+
+
+bool util_is_first_day_in_month( time_t t) {
+  int mday;
+  __util_set_timevalues(t , NULL , NULL , NULL , &mday ,NULL, NULL);
+  if (mday == 1)
+    return true;
+  else
+    return false;
 }
 
 
@@ -3110,6 +3136,12 @@ time_t util_make_date(int mday , int month , int year) {
   return util_make_datetime(0 , 0 , 0 , mday , month , year);
 }
 
+
+time_t util_make_pure_date(time_t t) {
+  int day,month,year;
+  util_set_date_values( t , &day , &month , &year);
+  return util_make_date( day , month , year );
+}
 
 
 
