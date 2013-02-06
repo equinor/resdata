@@ -137,10 +137,10 @@ class EclCase:
 
         
     def run( self , 
-             ecl_cmd = ecl_default.default.ecl_cmd , 
-             ecl_version = ecl_default.default.ecl_version , 
+             ecl_cmd = None,
+             ecl_version = None,
              driver = None , 
-             driver_type = ecl_default.default.driver_type, 
+             driver_type = None,
              driver_options = None, 
              blocking = False ):
         """
@@ -192,6 +192,16 @@ class EclCase:
         """
         num_cpu = ecl_util.get_num_cpu( self.datafile )
         argv = [ecl_version , self.datafile , num_cpu]
+
+        if ecl_cmd is None:
+            ecl_cmd = ecl_default.default.ecl_cmd
+
+        if driver_type is None:
+            driver_type = ecl_default.default.driver_type
+
+        if ecl_version is None:
+            ecl_version = ecl_default.default.ecl_version
+
         if driver is None:
             if driver_options is None:
                 driver_options = ecl_default.default.driver_options[ driver_type ]
