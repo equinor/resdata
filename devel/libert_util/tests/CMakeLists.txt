@@ -16,6 +16,10 @@ add_executable( ert_util_time_interval ert_util_time_interval.c )
 target_link_libraries( ert_util_time_interval ert_util )
 add_test( ert_util_time_interval ${EXECUTABLE_OUTPUT_PATH}/ert_util_time_interval )
 
+add_executable( ert_util_before_after ert_util_before_after.c )
+target_link_libraries( ert_util_before_after ert_util )
+add_test( ert_util_before_after ${EXECUTABLE_OUTPUT_PATH}/ert_util_before_after )
+
 
 if (WITH_LATEX)
    add_executable( ert_util_latex_test ert_util_latex_test.c )

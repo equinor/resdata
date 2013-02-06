@@ -218,9 +218,28 @@ int main( int argc , char ** argv) {
     test_assert_false( time_interval_equal( t4 , t3 ));
 
     test_assert_ptr_not_equal( t4 , t1 );
+    time_interval_free( t1 );
+    time_interval_free( t2 );
+    time_interval_free( t3 );
+    time_interval_free( t4 );
   }
 
+  {
+    time_interval_type * t1 = time_interval_alloc( start_time , end_time );
+    
+    test_assert_true( time_interval_arg_before( t1 , before ));
+    test_assert_true( time_interval_arg_after( t1 , after));
 
+    test_assert_false( time_interval_arg_before( t1 , start_time ));
+    test_assert_false( time_interval_arg_before( t1 , in ));
+    test_assert_false( time_interval_arg_before( t1 , after ));
+    
+    test_assert_false( time_interval_arg_after( t1 , start_time));
+    test_assert_false( time_interval_arg_after( t1 , in));
+    test_assert_false( time_interval_arg_after( t1 , after));
+    
+    time_interval_free( t1 );
+  }
   
   exit(0);
 }

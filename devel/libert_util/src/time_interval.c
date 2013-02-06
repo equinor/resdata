@@ -162,3 +162,13 @@ bool time_interval_equal( const time_interval_type * t1 , const time_interval_ty
   else
     return false;
 }
+
+
+bool time_interval_arg_after( const time_interval_type * ti , time_t arg) {
+  return util_after( arg , ti->end_time );
+}
+
+
+bool time_interval_arg_before( const time_interval_type * ti , time_t arg) {
+  return util_before( arg , ti->start_time );
+}

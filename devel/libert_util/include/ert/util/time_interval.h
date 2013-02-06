@@ -44,6 +44,8 @@ extern "C" {
   bool                 time_interval_extend( time_interval_type * t1 , const time_interval_type * t2);
   bool                 time_interval_intersect( time_interval_type * t1 , const time_interval_type * t2);
   bool                 time_interval_equal( const time_interval_type * t1 , const time_interval_type * t2);
+  bool                 time_interval_arg_before( const time_interval_type * ti , time_t arg);
+  bool                 time_interval_arg_after( const time_interval_type * ti , time_t arg);
 
 #ifdef __cplusplus
 }

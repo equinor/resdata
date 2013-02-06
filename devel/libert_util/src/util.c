@@ -2666,6 +2666,22 @@ bool util_file_older( const char * file , time_t t0) {
 }
 
 
+bool util_before( time_t t , time_t limit) {
+  if (difftime(limit , t) > 0)
+    return true;
+  else
+    return false;
+}
+
+
+bool util_after( time_t t , time_t limit) {
+  if (difftime(limit , t) < 0)
+    return true;
+  else
+    return false;
+}
+
+
 
 /** 
     This function will return a pointer to the newest of the two

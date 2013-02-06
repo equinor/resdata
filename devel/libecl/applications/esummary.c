@@ -54,9 +54,9 @@ int main(int argc , char ** argv) {
     {
       ecl_sum_type * first_ecl_sum;   /* This governs the timing */
       vector_type  * ecl_sum_list = vector_alloc_new();
-      time_interval_type * time_union     ;
-      time_interval_type * time_intersect ;
-      time_interval_type * time;
+      time_interval_type * time_union = NULL;
+      time_interval_type * time_intersect = NULL;
+      time_interval_type * time = NULL;
       bool use_time_union = true;
       
       int load_count = 0;
@@ -74,7 +74,6 @@ int main(int argc , char ** argv) {
           util_alloc_file_components( argv[iarg] , &path , &basename  , NULL); 
           fprintf(stderr,"Loading case: %s/%s" , path , basename); fflush(stderr);
           ecl_sum = ecl_sum_fread_alloc_case( argv[iarg] , ":");
-          load_count++;
 
           if (iarg == 1) {
             first_ecl_sum = ecl_sum;  /* Keep track of this  - might sort the vector */
@@ -93,6 +92,7 @@ int main(int argc , char ** argv) {
               time_interval_extend( time_union , ti );
               
               vector_append_owned_ref( ecl_sum_list , ecl_sum , ecl_sum_free__ );
+              load_count++;
             } else {
               fprintf(stderr,"** Warning case:%s has no time overlap - discarded \n",ecl_sum_get_case( ecl_sum ));
               ecl_sum_free( ecl_sum );
@@ -105,6 +105,9 @@ int main(int argc , char ** argv) {
           free( basename );
         }
       }
+      if (load_count == 0)
+        usage();
+
       nvars    =  argc - load_count - 1;
       if (nvars == 0) util_exit(" --- No variables \n");
       var_list = &argv[load_count + 1];
@@ -157,7 +160,6 @@ int main(int argc , char ** argv) {
             if (has_var[ivar]) { 
               for (iens = 0; iens < vector_get_size( ecl_sum_list ); iens++) {            /* Iterating over the ensemble members */
                 const ecl_sum_type * ecl_sum = vector_iget_const( ecl_sum_list , iens );  
-                double value = 0;
                 
                 if (ivar == 0 && iens == 0) {                                             /* Display time info in the first columns */
                   int day,month,year;
@@ -165,12 +167,19 @@ int main(int argc , char ** argv) {
                   fprintf(stream , "%7.2f   %02d/%02d/%04d   " , util_difftime_days( start_time , current_time ) , day , month , year);
                 }
                 
-                if (ecl_sum_check_sim_time( ecl_sum , current_time)) {
-                  value = ecl_sum_get_general_var_from_sim_time(ecl_sum , current_time , var_list[ivar]);
-                  fprintf(stream , " %12.3f " , value);
-                } else 
-                  fprintf(stream , " %s " , MISSING_STRING);
+                {
+                  const time_interval_type * sim_time = ecl_sum_get_sim_time( ecl_sum );
 
+                  if (time_interval_arg_before( sim_time , current_time)) 
+                    fprintf(stream , " %s " , MISSING_STRING); // We are before this case has data.
+                  else if (time_interval_arg_after( sim_time , current_time)) 
+                    fprintf(stream , " %s " , MISSING_STRING); // We are after this case has data.
+                  else {
+                    double value = ecl_sum_get_general_var_from_sim_time(ecl_sum , current_time , var_list[ivar]);
+                    fprintf(stream , " %12.3f " , value);
+                  } 
+
+                }
               }
             }
           }
