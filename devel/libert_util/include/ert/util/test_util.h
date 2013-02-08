@@ -41,31 +41,34 @@ extern "C" {
 #define test_assert_bool_equal( b1 , b2 ) test_assert_bool_equal__( (b1) , (b2) , __FILE__ , __LINE__ )
   void test_assert_bool_equal__( bool b1 , bool b2 , const char * file , int line);
 
-#define test_assert_true( value ) test_assert_true__( (value) , __FILE__ , __LINE__);
+#define test_assert_true( value ) test_assert_true__( (value) , __FILE__ , __LINE__)
   void test_assert_true__( bool value, const char * file , int line);
   
-#define test_assert_false( value ) test_assert_false__( (value) , __FILE__ , __LINE__);
+#define test_assert_false( value ) test_assert_false__( (value) , __FILE__ , __LINE__)
   void test_assert_false__( bool value, const char * file , int line);
-  
-#define test_assert_time_t_equal( t1 , t2) test_assert_time_t_equal__((t1) , (t2) , __FILE__ , __LINE__);
+
+#define test_assert_time_t_equal( t1 , t2) test_assert_time_t_equal__((t1) , (t2) , __FILE__ , __LINE__)
   void test_assert_time_t_equal__( time_t t1 , time_t t2 , const char * file , int line);
 
-#define test_assert_time_t_not_equal( t1 , t2) test_assert_time_t_not_equal__((t1) , (t2) , __FILE__ , __LINE__);
+#define test_assert_time_t_not_equal( t1 , t2) test_assert_time_t_not_equal__((t1) , (t2) , __FILE__ , __LINE__)
   void test_assert_time_t_not_equal__( time_t t1 , time_t t2 , const char * file , int line);
 
-#define test_assert_ptr_equal( p1 , p2 ) test_assert_ptr_equal__( (p1) , (p2) , __FILE__ , __LINE__);  
+#define test_assert_ptr_equal( p1 , p2 ) test_assert_ptr_equal__( (p1) , (p2) , __FILE__ , __LINE__)
   void test_assert_ptr_equal__( const void * p1 , const void * p2 , const char * file , int line);
 
-#define test_assert_NULL( p ) test_assert_NULL__( (p) , __FILE__ , __LINE__);
+#define test_assert_ptr_not_equal(p1 , p2) test_assert_ptr_not_equal__( (p1) , (p2) , __FILE__ , __LINE__)
+  void test_assert_ptr_not_equal__( const void * p1 , const void * p2 , const char * file , int line);
+
+#define test_assert_NULL( p ) test_assert_NULL__( (p) , __FILE__ , __LINE__)
   void test_assert_NULL__( const void * p , const char * file , int line);
 
-#define test_assert_not_NULL( p ) test_assert_not_NULL__( (p) , __FILE__ , __LINE__);
+#define test_assert_not_NULL( p ) test_assert_not_NULL__( (p) , __FILE__ , __LINE__)
   void test_assert_not_NULL__( const void * p , const char * file , int line);
   
-#define test_assert_mem_equal( p1 , p2 , byte_size ) test_assert_mem_equal__( (p1) , (p2) , (byte_size), __FILE__ , __LINE__);
+#define test_assert_mem_equal( p1 , p2 , byte_size ) test_assert_mem_equal__( (p1) , (p2) , (byte_size), __FILE__ , __LINE__)
   void test_assert_mem_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line);
 
-#define test_assert_mem_not_equal( p1 , p2 , byte_size ) test_assert_mem_not_equal__( (p1) , (p2) , (byte_size), __FILE__ , __LINE__);
+#define test_assert_mem_not_equal( p1 , p2 , byte_size ) test_assert_mem_not_equal__( (p1) , (p2) , (byte_size), __FILE__ , __LINE__)
   void test_assert_mem_not_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line);
 
 #ifdef __cplusplus

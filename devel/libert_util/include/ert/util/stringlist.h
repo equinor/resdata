@@ -94,7 +94,8 @@ typedef int  ( string_cmp_ftype)  (const void * , const void *);
   void              stringlist_buffer_fread( stringlist_type * s , buffer_type * buffer );
   void              stringlist_buffer_fwrite( const stringlist_type * s , buffer_type * buffer );
   void              stringlist_sort(stringlist_type * , string_cmp_ftype * string_cmp);
-  void stringlist_python_sort( stringlist_type * s , int cmp_flag);
+  void              stringlist_reverse( stringlist_type * s );
+  void              stringlist_python_sort( stringlist_type * s , int cmp_flag);
   
 #ifdef HAVE_GLOB
   int               stringlist_select_matching(stringlist_type * names , const char * pattern);
