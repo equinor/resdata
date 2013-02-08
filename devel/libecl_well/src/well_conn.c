@@ -61,18 +61,6 @@ well_conn_type * well_conn_alloc_wellhead( const ecl_kw_type * iwel_kw , const e
     conn->j    = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADJ_ITEM ) - 1;
     conn->k    = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADK_ITEM ) - 1;
 
-    /*
-      For some cases the k coordinate of the wellhead is set to the
-      value nz, i.e. out of grid range. The ECLIPSE documentation says
-      that this coordinate is not used bu GRAF, which is often an
-      indication that the data is crappy. We just set the wellhead
-      location to topmost layer, but ideally it should in addition be
-      checked that the cell (i,j,0) is indeed active.
-    */
-    
-    if (conn->k >= header->nz) 
-      conn->k = 0;
-
     conn->open           = true;  // This is not really specified anywhere.
     conn->branch         = 0;
     conn->segment        = 0;   
