@@ -634,6 +634,13 @@ class EclSum( CClass ):
         """
         return self.get_vector( key )
 
+
+    def check_sim_time( self , date):
+        """
+        Will check if the input date is in the time span [sim_start , sim_end].
+        """
+        return cfunc.check_sim_time( self , ctime(date) )
+
     
     def get_interp( self , key , days = None , date = None):
         """
@@ -658,7 +665,7 @@ class EclSum( CClass ):
                 else:
                     raise ValueError("days:%s is outside range of simulation: [%g,%g]" % (days , self.first_day , self.sim_length))
         elif date:
-            if cfunc.check_sim_time( self , ctime(date) ):
+            if self.check_sim_time( date ):
                 return cfunc.get_general_var_from_sim_time( self , ctime(date) , key )
             else:
                 raise ValueError("date:%s is outside range of simulation data" % date)
