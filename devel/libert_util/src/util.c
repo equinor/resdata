@@ -334,8 +334,20 @@ double util_kahan_sum(const double *data, size_t N) {
 }
 
 
-
-
+bool util_double_approx_equal( double d1 , double d2) {
+  if (d1 == d2)
+    return true;
+  else {
+    double epsilon = 1e-6;
+    double diff = fabs(d1 - d2);
+    double sum  = fabs(d1) + fabs(d2);
+    
+    if ((diff / sum) < epsilon)
+      return true;
+    else
+      return false;
+  }
+}
 
 
 char * util_alloc_substring_copy(const char *src , int offset , int N) {
@@ -905,6 +917,7 @@ char * util_alloc_abs_path( const char * path ) {
       return util_alloc_cwd_abs_path( path );
   }
 }
+
 
 
 /**
@@ -1987,6 +2000,11 @@ double util_scanf_double(const char * prompt , int prompt_len) {
   getchar(); /* eating a \r left in the stdin input buffer. */
   return double_value;
 }
+
+
+
+
+
 
 
 /** 
@@ -3642,8 +3660,6 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
     /* 1: Remove leading split characters. */
     while ((offset < strlen(__src)) && (strchr(sep_set , __src[offset]) != NULL))
       offset++;
-    
-    
     len = strlen( __src ) - offset;
     if (len > 0) {
       int tail_pos = strlen( __src ) - 1;

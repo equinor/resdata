@@ -61,6 +61,11 @@ target_link_libraries( ert_util_before_after ert_util )
 add_test( ert_util_before_after ${EXECUTABLE_OUTPUT_PATH}/ert_util_before_after )
 
 
+add_executable( ert_util_approx_equal ert_util_approx_equal.c )
+target_link_libraries( ert_util_approx_equal ert_util )
+add_test( ert_util_approx_equal ${EXECUTABLE_OUTPUT_PATH}/ert_util_approx_equal )
+
+
 if (WITH_LATEX)
    add_executable( ert_util_latex_test ert_util_latex_test.c )
    target_link_libraries(ert_util_latex_test ert_util )

@@ -578,6 +578,21 @@ void vector_sort(vector_type * vector , vector_cmp_ftype * cmp) {
 }
 
 
+void vector_inplace_reverse(vector_type * vector) {
+  if (vector->size > 0) {
+    node_data_type ** new_data = util_calloc( vector->size , sizeof * new_data );
+    int index;
+    for (index = 0; index < vector->size; index++) {
+      int rev_index = vector->size - 1 - index;
+      new_data[index] = vector->data[ rev_index ];
+    }
+    free(vector->data);
+    vector->data = new_data;
+  }
+}
+
+
+
 /*****************************************************************/
 
 

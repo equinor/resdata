@@ -657,6 +657,11 @@ void stringlist_python_sort( stringlist_type * s , int cmp_flag) {
 }
 
 
+void stringlist_reverse( stringlist_type * s ) {
+  vector_inplace_reverse( s->strings );
+}
+
+
 /*****************************************************************/
 
 /*
