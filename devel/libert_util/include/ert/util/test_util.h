@@ -38,6 +38,12 @@ extern "C" {
 #define test_assert_int_not_equal( i1 , i2 ) test_assert_int_not_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
   void  test_assert_int_not_equal__( int i1 , int i2 , const char * file , int line );
 
+#define test_assert_double_equal( d1 , d2 ) test_assert_double_equal__( (d1) , (d2) , __FILE__ , __LINE__  )
+  void  test_assert_double_equal__( double d1 , double d2 , const char * file , int line );
+
+#define test_assert_double_not_equal( d1 , d2 ) test_assert_double_not_equal__( (d1) , (d2) , __FILE__ , __LINE__  )
+  void  test_assert_double_not_equal__( double d1 , double d2 , const char * file , int line );
+
 #define test_assert_bool_equal( b1 , b2 ) test_assert_bool_equal__( (b1) , (b2) , __FILE__ , __LINE__ )
   void test_assert_bool_equal__( bool b1 , bool b2 , const char * file , int line);
 
