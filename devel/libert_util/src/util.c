@@ -254,6 +254,10 @@ void util_endian_flip_vector_old(void *data, int element_size , int elements) {
   }
 }
 
+#ifndef S_ISDIR
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#endif
 
 
 /*****************************************************************/
@@ -330,8 +334,20 @@ double util_kahan_sum(const double *data, size_t N) {
 }
 
 
-
-
+bool util_double_approx_equal( double d1 , double d2) {
+  if (d1 == d2)
+    return true;
+  else {
+    double epsilon = 1e-6;
+    double diff = fabs(d1 - d2);
+    double sum  = fabs(d1) + fabs(d2);
+    
+    if ((diff / sum) < epsilon)
+      return true;
+    else
+      return false;
+  }
+}
 
 
 char * util_alloc_substring_copy(const char *src , int offset , int N) {
@@ -720,6 +736,34 @@ char * util_alloc_cwd(void) {
 
 
 
+bool util_is_cwd( const char * path ) {
+  bool is_cwd = false;
+  struct stat path_stat;
+
+  if (stat(path , &path_stat) == 0) {
+    if (S_ISDIR( path_stat.st_mode )) {
+      char * cwd = util_alloc_cwd();
+#ifdef ERT_WINDOWS
+      /*
+        The windows stat structure has the inode element, but it is
+        not set. Actually - this is a property of the filesystem, and
+        not the operating system - this check is probably broken?
+      */
+      ERROR
+#else
+      struct stat cwd_stat;
+      stat(cwd , &cwd_stat);
+      if (cwd_stat.st_ino == path_stat.st_ino)
+        is_cwd = true;
+#endif
+      free( cwd );
+    }
+  }
+  return is_cwd;
+}
+
+
+
 /* 
    Homemade realpath() for not existing path or platforms without
    realpath().  
@@ -737,6 +781,81 @@ static char * util_alloc_cwd_abs_path( const char * path ) {
     return abs_path;
   }
 }
+
+
+
+/**
+   Manual realpath() implementation to be used on platforms without
+   realpath() support. Will remove /../, ./ and extra //. Will not
+   handle symlinks.
+*/
+
+
+#define BACKREF ".."
+#define CURRENT "."
+
+char * util_alloc_realpath__(const char * input_path) {
+  char * abs_path  = util_alloc_cwd_abs_path( input_path );
+  char * real_path = util_malloc( strlen(abs_path) + 1 );
+  real_path[0] = '\0';
+  
+  {
+    bool  * mask;
+    char ** path_list;
+    int     path_len;
+
+    util_path_split( abs_path , &path_len , &path_list );
+    mask = util_malloc( path_len * sizeof * mask );
+    {
+      int i;
+      for (i=0; i < path_len; i++)
+        mask[i] = true;
+    }
+        
+    {
+      int path_index = 1;  // Path can not start with ..
+      int prev_index = 0;
+      while (true) {
+        if (path_index == path_len)
+          break;
+
+        if (strcmp(path_list[path_index] , BACKREF ) == 0) {
+          mask[path_index] = false;
+          mask[prev_index] = false;
+          prev_index--;
+          path_index++;
+        } else if (strcmp( path_list[path_index] , CURRENT) == 0) {
+          mask[path_index] = false;
+          path_index++;
+        } else {
+          path_index++;
+          prev_index++;
+          while (!mask[prev_index])
+            prev_index++;
+        }
+      }
+
+      /* Build up the new string. */
+      {
+        int i;
+        for (i=0; i < path_len; i++) {
+          if (mask[i]) {
+            strcat( real_path , UTIL_PATH_SEP_STRING );
+            strcat( real_path , path_list[i]);
+          }
+        }
+      }
+    }             
+    free(mask);
+    util_free_stringlist( path_list , path_len );
+  }
+
+  return real_path;
+}
+
+#undef BACKREF 
+#undef CURRENT 
+
 
 
 /**
@@ -762,10 +881,13 @@ char * util_alloc_realpath(const char * input_path) {
   /* We do not have the realpath() implementation. Must first check if
      the entry exists; and if not we abort. If the entry indeed exists
      we call the util_alloc_cwd_abs_path() function: */
+#ifdef HAVE_SYMLINK
+  ERROR - What the fuck; have symlinks and not realpath()?!
+#endif
   if (!util_entry_exists( input_path )) 
-    util_abort("%s: input_path:%s does not exist - realpath() failed.\n",__func__ , input_path);
+    util_abort("%s: input_path:%s does not exist - failed.\n",__func__ , input_path);
   
-  return util_alloc_cwd_abs_path( input_path );
+  return util_alloc_realpath__( input_path );
 #endif 
 }
 
@@ -782,15 +904,100 @@ char * util_alloc_realpath(const char * input_path) {
   
     2. Else cwd is prepended to the path.
 
-   In the manual realpath() neither "/../" nor symlinks are resolved.
+   In the manual realpath() neither "/../" nor symlinks are resolved. If path == NULL the function will return cwd().
 */
 
 char * util_alloc_abs_path( const char * path ) {
-  if (util_entry_exists( path )) 
-    return util_alloc_realpath( path );
-  else 
-    return util_alloc_cwd_abs_path( path );
+  if (path == NULL)
+    return util_alloc_cwd();
+  else {
+    if (util_entry_exists( path )) 
+      return util_alloc_realpath( path );
+    else
+      return util_alloc_cwd_abs_path( path );
+  }
 }
+
+
+/**
+   Both path arguments must be absolute paths; if not a copy of the
+   input path will be returned. Neither of the input arguments can
+   have "/../" elements - that will just fuck things up.
+
+   root_path can be NULL - in which case cwd is used.
+*/
+
+char * util_alloc_rel_path( const char * __root_path , const char * path) {
+  char * root_path;
+  if (__root_path == NULL)
+    root_path = util_alloc_cwd();
+  else
+    root_path = util_alloc_string_copy( __root_path );
+
+  if (util_is_abs_path(root_path) && util_is_abs_path(path)) {
+    const char * back_path = "..";
+    char * rel_path = util_alloc_string_copy("");  // In case strcmp(root_path , path) == 0 the empty string "" will be returned
+    char ** root_path_list;
+    char ** path_list;
+    int     root_path_length , path_length , back_length;
+
+    /* 1. Split both input paths into list of path elements. */
+    util_path_split( root_path, &root_path_length  , &root_path_list );
+    util_path_split( path     , &path_length       , &path_list      );
+    
+    {
+      /* 2: Determine the number of common leading path elements. */
+      int common_length = 0;
+      while (true) {
+        if (strcmp(root_path_list[common_length] , path_list[common_length]) == 0)
+          common_length++;
+        else
+          break;
+        
+        if (common_length == util_int_min( root_path_length , path_length))
+          break;
+      }
+      
+      /* 3: Start building up the relative path with leading ../ elements. */
+      back_length = root_path_length - common_length;
+      if (back_length > 0) {
+        int i; 
+        for (i=0; i < back_length; i++) {
+          rel_path = util_strcat_realloc( rel_path , back_path );
+          rel_path = util_strcat_realloc( rel_path , UTIL_PATH_SEP_STRING );
+        }        
+      }
+
+      /* 4: Add the remaining elements from the input path. */
+      {
+        int i;
+        for (i=common_length; i < path_length; i++) {
+          rel_path = util_strcat_realloc( rel_path , path_list[i] );
+          if (i != (path_length - 1))
+            rel_path = util_strcat_realloc( rel_path , UTIL_PATH_SEP_STRING );
+        }
+      }
+    }
+    
+    util_free_stringlist( root_path_list , root_path_length );
+    util_free_stringlist( path_list , path_length );
+    free( root_path );
+
+    if (strlen(rel_path) == 0) {
+      free(rel_path);
+      rel_path = NULL;
+    } return rel_path;
+  } else {
+    /* 
+       One or both the input arguments do not correspond to an
+       absolute path; just return a copy of the input back.
+    */
+    free( root_path );
+    return util_alloc_string_copy( path );
+  }
+}
+
+
 
 
 /**
@@ -1794,6 +2001,11 @@ double util_scanf_double(const char * prompt , int prompt_len) {
 }
 
 
+
+
+
+
+
 /** 
     The limits are inclusive.
 */
@@ -2207,13 +2419,7 @@ bool util_entry_exists( const char * entry ) {
 
 */
 
-#ifdef HAVE_ISREG
-#endif 
 
-#ifndef S_ISDIR
-#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
-#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
-#endif
 
 
 
@@ -2510,6 +2716,17 @@ void util_ftruncate(FILE * stream , long size) {
 
 
 
+/*
+  The windows stat structure has the inode element, but it is not
+  set. Actually - this is a property of the filesystem, and not the
+  operating system - this check is probably broken on two levels:
+  
+   1. One should really check the filesystem involved - whether it
+      supports inodes.
+      
+   2. The code below will compile on windows, but for a windows
+      filesystem it will yield rubbish.
+*/
 
 bool util_same_file(const char * file1 , const char * file2) {
   struct stat buffer1 , buffer2;
@@ -2896,6 +3113,11 @@ double util_difftime_days(time_t start_time , time_t end_time) {
 }
 
 
+double util_difftime_seconds( time_t start_time , time_t end_time) {
+  double dt = difftime(end_time , start_time);
+  return dt;
+}
+
 
 /*
   Observe that this routine does the following transform before calling mktime:
@@ -3229,21 +3451,46 @@ void util_free_stringlist(char **list , int N) {
 }
 
 
+/**
+   Will free a list of strings where the last element is NULL. Will
+   go completely canacas if the list is not NULL terminated.
+*/
+
+void util_free_NULL_terminated_stringlist(char ** string_list) {
+  if (string_list != NULL) {
+    int i = 0;
+    while (true) {
+      if (string_list[i] == NULL)
+        break;
+      else
+        free( string_list[i] );
+      i++;
+    }
+    free( string_list );
+  }
+}
+
 
 
 
 /**
    This function will reallocate the string s1 to become the sum of s1
-   and s2. If s1 == NULL it will just return a copy of s2.
+   and s2. If s1 == NULL it will just return a copy of s2. 
+
+   Observe that due to the use realloc() the s1 input argument MUST BE
+   the return value from a malloc() call; this is not intuitive and
+   the function should be discontinued.
 */
 
 char * util_strcat_realloc(char *s1 , const char * s2) {
   if (s1 == NULL) 
     s1 = util_alloc_string_copy(s2);
   else {
-    int new_length = strlen(s1) + strlen(s2) + 1;
-    s1 = util_realloc( s1 , new_length );
-    strcat(s1 , s2);
+    if (s2 != NULL) {
+      int new_length = strlen(s1) + strlen(s2) + 1;
+      s1 = util_realloc( s1 , new_length );
+      strcat(s1 , s2);
+    } 
   }
   return s1;
 }
@@ -3384,47 +3631,48 @@ void util_split_string(const char *line , const char *sep_set, int *_tokens, cha
        util_binary_split_string("A:B:C:D , ":" , false , ) => "A:B:C" & "D"
 
 
-   o Characters in the split_set at the front (or back if
-     split_on_first == false) are discarded _before_ the actual
-     splitting process.
+   o Characters in the split_set at the front and back are discarded
+     _BEFORE_ the actual splitting process.
 
-       util_binary_split_string(":::A:B:C:D" , ":" , true , )  => "A" & "B:C:D"
+       util_binary_split_string(":A:B:C:D:" , ":" , true , )   => "A"     & "B:C:D"
+       util_binary_split_string(":A:B:C:D:" , ":" , false , )  => "A:B:C" & "D"
 
 
    o If no split is found the whole content is in first_part, and
      second_part is NULL. If the input string == NULL, both return
-     strings will be NULL.
+     strings will be NULL. Observe that because leading split
+     characters are removed before the splitting starts:
 
+        util_binary_split_string(":ABCD" , ":" , true , )   => "ABCD" & NULL
+        
 */
 
 
 void util_binary_split_string(const char * __src , const char * sep_set, bool split_on_first , char ** __first_part , char ** __second_part) {
   char * first_part = NULL;
   char * second_part = NULL;
-  if (__src != NULL) {
-    char * src;
-    int pos;
-    if (split_on_first) {
-      /* Removing leading separators. */
-      pos = 0;
-      while ((pos < strlen(__src)) && (strchr(sep_set , __src[pos]) != NULL))
-        pos += 1;
-      if (pos == strlen(__src))  /* The string consisted ONLY of separators. */
-        src = NULL;
-      else
-        src = util_alloc_string_copy(&__src[pos]);
-    } else {
-      /*Remove trailing separators. */
-      pos = strlen(__src) - 1;
-      while ((pos >= 0) && (strchr(sep_set , __src[pos]) != NULL))
-        pos -= 1;
-      if (pos < 0)
-        src = NULL;
-      else
-        src = util_alloc_substring_copy(__src , 0 , pos + 1);
-    }
+  char * src;
 
+  if (__src != NULL) {
+    int offset = 0;
+    int len;
+    /* 1: Remove leading split characters. */
+    while ((offset < strlen(__src)) && (strchr(sep_set , __src[offset]) != NULL))
+      offset++;
     
+    
+    len = strlen( __src ) - offset;
+    if (len > 0) {
+      int tail_pos = strlen( __src ) - 1;
+      /* 2: Remove trailing split characters. */
+      while (strchr(sep_set , __src[tail_pos]) != NULL) 
+        tail_pos--;
+      len = 1 + tail_pos - offset;
+      
+      src = util_alloc_substring_copy(__src , offset , len);
+    } else
+      src = NULL;
+
     /* 
        OK - we have removed all leading (or trailing) separators, and we have
        a valid string which we can continue with.
@@ -4714,8 +4962,22 @@ void util_abort_free_version_info() {
 }
 
 
-void util_abort_set_executable( const char * executable ) {
-  __current_executable = util_realloc_string_copy( __current_executable , executable );
+void util_abort_set_executable( const char * argv0 ) {
+  if (util_is_abs_path(argv0)) {
+    printf("Setting executable:%s \n",argv0);
+    __current_executable = util_realloc_string_copy( __current_executable , argv0 );
+  }
+  else {
+    char * executable;
+    if (util_is_executable( argv0 )) 
+      executable = util_alloc_realpath(argv0);
+    else
+      executable = util_alloc_PATH_executable( argv0 );
+
+    
+    util_abort_set_executable( executable );
+    free( executable );
+  }
 }
 
 

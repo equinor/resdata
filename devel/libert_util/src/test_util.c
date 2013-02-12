@@ -141,12 +141,33 @@ void test_assert_not_NULL__( const void * p , const char * file , int line) {
 
 
 void test_assert_mem_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line) {
-  if (memcmp(p1 ,p2 , byte_size) != 0)
-    test_error_exit( "%s:%d => Memory regions have different content \n" , file , line);
+  if (memcmp(p1 ,p2 , byte_size) != 0) {
+    const char * char_ptr1 = (const char *) p1;
+    const char * char_ptr2 = (const char *) p2;
+    size_t offset = 0;
+
+    while( char_ptr1[offset] == char_ptr2[offset])
+      offset++;
+    
+    test_error_exit( "%s:%d => Memory regions have different content. First difference at offset:%ld\n" , file , line , offset);
+  }
 }
 
 
 void test_assert_mem_not_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line) {
   if (memcmp(p1 ,p2 , byte_size) == 0)
     test_error_exit( "%s:%d => Memory regions have the same content \n" , file , line);
+}
+
+
+
+void test_assert_double_equal__( double d1 , double d2, const char * file , int line) {
+  if (!util_double_approx_equal(d1 , d2))
+    test_error_exit( "%s:%d => double values:%g %g are not sufficiently similar\n" , file , line , d1 , d2);
+}
+
+
+void test_assert_double_not_equal__( double d1 , double d2, const char * file , int line) {
+  if (util_double_approx_equal(d1 , d2))
+    test_error_exit( "%s:%d => double values:%15.12g %15.12g are equal.\n" , file , line , d1 , d2);
 }
