@@ -38,6 +38,11 @@ add_executable( ert_util_strcat_test ert_util_strcat_test.c )
 target_link_libraries( ert_util_strcat_test ert_util )
 add_test( ert_util_strcat_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_strcat_test )
 
+add_executable( ert_util_sprintf_escape ert_util_sprintf_escape.c )
+target_link_libraries( ert_util_sprintf_escape ert_util )
+add_test( ert_util_sprintf_escape ${EXECUTABLE_OUTPUT_PATH}/ert_util_sprintf_escape )
+
+
 add_executable( ert_util_stringlist_test ert_util_stringlist_test.c )
 target_link_libraries( ert_util_stringlist_test ert_util )
 add_test( ert_util_stringlist_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_stringlist_test )

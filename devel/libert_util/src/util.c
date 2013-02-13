@@ -4606,6 +4606,41 @@ char * util_alloc_sprintf(const char * fmt , ...) {
 }
 
 
+char * util_alloc_sprintf_escape(const char * src , int max_escape) {
+  if (src == NULL)
+    return NULL;
+  
+  if (max_escape == 0)
+    max_escape = strlen( src );
+  
+  {
+    const int src_len = strlen( src );
+    char * target = util_calloc( max_escape + strlen(src) + 1 , sizeof * target);
+
+    int escape_count = 0;
+    int src_offset = 0;
+    int target_offset = 0;
+    
+    while (true) {
+      if (src[src_offset] == '%') {
+        if (escape_count < max_escape) {
+          target[target_offset] = '%';
+          target_offset++;
+          escape_count++;
+        }
+      }
+      target[target_offset] = src[src_offset];
+      target_offset++;
+      src_offset++;
+      if (src_offset == src_len) 
+        break;
+    }
+    target[target_offset] = '\0';
+    target = util_realloc( target , (target_offset + 1) * sizeof * target);
+    return target;
+  }
+}
+
 
 /*
 char * util_realloc_sprintf(char * s , const char * fmt , ...) {
