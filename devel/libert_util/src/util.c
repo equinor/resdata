@@ -78,6 +78,7 @@
 #include <io.h>
 #endif
 
+
 #include <stdint.h>
 #if UINTPTR_MAX == 0xFFFFFFFF
 #define ARCH32
@@ -5025,6 +5026,8 @@ CONTAINS(size_t)
 #undef CONTAINS    
 
 /*****************************************************************/
+
+
 
 
 int util_fnmatch( const char * pattern , const char * string ) {

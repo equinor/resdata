@@ -444,6 +444,7 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
   pid_t    util_fork_exec(const char *  , int , const char ** , bool , const char * , const char *  , const char * , const char *  , const char * );
   uid_t  * util_alloc_file_users( const char * filename , int * __num_users);
   char   * util_alloc_filename_from_stream( FILE * input_stream );
+  bool     util_ping( const char * hostname);
 #endif
 
 
