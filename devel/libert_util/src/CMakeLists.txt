@@ -25,6 +25,9 @@ foreach (type int double bool long time_t size_t float)
   list( APPEND source_files ${src_target} )
 endforeach( type )
 
+if (PING_PATH)
+   add_definitions( -DPING_CMD=\"${PING_PATH}\")
+endif()
 
 # The block_fs filesystem is so heavily dependant on pthreads that it is not 
 # built if de not have pthreads.
