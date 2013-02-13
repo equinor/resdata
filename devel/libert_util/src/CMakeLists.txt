@@ -26,11 +26,6 @@ foreach (type int double bool long time_t size_t float)
 endforeach( type )
 
 
-#if (WITH_ZLIB)
-#   list( APPEND source_files util_zlib.c )
-#   list( APPEND header_files util_zlib.h )
-#endif()
-
 # The block_fs filesystem is so heavily dependant on pthreads that it is not 
 # built if de not have pthreads.
 if (WITH_PTHREAD)
