@@ -32,8 +32,8 @@ class LaTeX(CClass):
     def runpath(self):
         return cfunc.get_runpath( self )
 
-    def compile(self , ignore_errors = False , with_xref = False):
-        return cfunc.compile( self , ignore_errors , with_xref)
+    def compile(self , ignore_errors = False , with_xref = False , cleanup = True):
+        return cfunc.compile( self , ignore_errors , with_xref , cleanup)
 
     #-----------------------------------------------------------------
     def set_target( self , target_file):
@@ -63,7 +63,7 @@ cwrapper.registerType( "latex" , LaTeX )
 cfunc = CWrapperNameSpace("latex")
 cfunc.alloc             = cwrapper.prototype("c_void_p  latex_alloc( char* , bool )")
 cfunc.free              = cwrapper.prototype("void      latex_free( latex )")
-cfunc.compile           = cwrapper.prototype("bool      latex_compile(latex , bool , bool)")
+cfunc.compile           = cwrapper.prototype("bool      latex_compile(latex , bool , bool , bool)")
 cfunc.get_runpath       = cwrapper.prototype("char*     latex_get_runpath( latex )") 
 cfunc.get_target        = cwrapper.prototype("char*     latex_get_target_file( latex )")
 cfunc.set_target        = cwrapper.prototype("void      latex_set_target_file( latex , char* )")
