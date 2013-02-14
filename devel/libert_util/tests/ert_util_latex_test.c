@@ -28,7 +28,7 @@ int main(int argc , char ** argv) {
   {
     latex_type * latex = latex_alloc( argv[1] , false );
     printf("input:%s \n",argv[1]);
-    ok = latex_compile( latex , true , true );
+    ok = latex_compile( latex , true , true , true);
     printf("OK: %d \n",ok);
     latex_free( latex );
   }
