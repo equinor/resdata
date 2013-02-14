@@ -2737,7 +2737,7 @@ bool util_same_file(const char * file1 , const char * file2) {
   stat1 = stat(file1, &buffer1);   // In the case of symlinks the stat call will stat the target file and not the link.
   stat2 = stat(file2, &buffer2);
   
-  if ((stat1 == 1) && (stat1 == stat2)) {
+  if ((stat1 == 0) && (stat1 == stat2)) {
     if (buffer1.st_ino == buffer2.st_ino) 
       return true;
     else
