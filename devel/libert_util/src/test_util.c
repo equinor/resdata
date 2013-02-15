@@ -76,6 +76,18 @@ void test_assert_int_not_equal__( int i1 , int i2 , const char * file , int line
 }
 
 
+void test_assert_uint_equal__( unsigned int i1 , unsigned int i2 , const char * file , int line) {
+  if (i1 != i2) 
+    test_error_exit( "%s:%d => Integers are different i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
+}
+
+
+void test_assert_uint_not_equal__( unsigned int i1 , unsigned int i2 , const char * file , int line) {
+  if (i1 == i2) 
+    test_error_exit( "%s:%d => Integers are equal i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
+}
+
+
 void test_assert_bool_equal__( bool b1 , bool b2 , const char * file , int line) {
   if (b1 != b2) 
     test_error_exit( "%s:%d => Booleans are different b1:[%d]  b2:[%d]\n" , file , line , b1 , b2 );
