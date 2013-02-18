@@ -117,9 +117,7 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
     /* Parent */
   
     if (blocking) {
-      printf("Waiting for child:%d \n" , child_pid);
       waitpid(child_pid , NULL , 0);
-      printf("ewaitpidf OK \n");
       
       if (target_file != NULL)
         if (!util_file_exists(target_file))
