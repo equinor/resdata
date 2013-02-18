@@ -66,9 +66,33 @@ void test_reverse() {
 }
 
 
+void test_iget_as_int() {
+  stringlist_type * s = stringlist_alloc_new();
+  stringlist_append_ref(s , "1000" );
+  stringlist_append_ref(s , "1000X" );
+  stringlist_append_ref(s , "XXXX" );
+
+  {
+    int value;
+    bool valid;
+
+    value = stringlist_iget_as_int( s , 0 , &valid);
+    test_assert_int_equal( value , 1000);
+    test_assert_true( valid );
+    
+    value = stringlist_iget_as_int( s , 1 , &valid);
+    test_assert_int_equal( value , -1);
+    test_assert_false( valid );
+
+    value = stringlist_iget_as_int( s , 2 , NULL);
+    test_assert_int_equal( value , -1);
+  }
+}
+
 
 int main( int argc , char ** argv) {
   test_char();
   test_reverse();
+  test_iget_as_int();
   exit(0);
 }

@@ -341,6 +341,20 @@ const char * stringlist_iget(const stringlist_type * stringlist , int index) {
   return vector_iget(stringlist->strings ,index);
 }
 
+int stringlist_iget_as_int( const stringlist_type * stringlist , int index , bool * valid) {
+  const char * string_value = stringlist_iget( stringlist , index );
+  int value = -1;
+  
+  if (valid != NULL)
+    *valid = false;
+
+  if (util_sscanf_int(string_value , &value)) 
+    if (valid != NULL)
+      *valid = true;
+
+  return value;
+}
+
 const char * stringlist_get_last( const stringlist_type * stringlist ) {
   return vector_get_last( stringlist->strings );
 }
