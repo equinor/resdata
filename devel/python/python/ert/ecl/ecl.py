@@ -43,11 +43,17 @@ from   ecl_grav              import EclGrav
 from   ecl_subsidence        import EclSubsidence
 from   ecl_region            import EclRegion
 from   fortio                import FortIO
-from   ecl_queue             import EclQueue
+
+#try:
+#    from   ecl_queue             import EclQueue
+#except ImportError:
+#    pass
+
 import ecl_util
 from   ecl_util              import *  
 
 import ecl_default
+
 
 
 
