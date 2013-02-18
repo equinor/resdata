@@ -26,7 +26,6 @@ import ecl_grid
 import ecl_rft
 import ecl_default
 import ecl_util
-import ert.job_queue.driver as queue_driver
 import warnings
 
 class EclCase:
@@ -190,6 +189,8 @@ class EclCase:
         you might want use an EclQueue() and the submit() method instead, in
         particular if you are running locally.
         """
+        import ert.job_queue.driver as queue_driver
+        
         num_cpu = ecl_util.get_num_cpu( self.datafile )
         argv = [ecl_version , self.datafile , num_cpu]
 
