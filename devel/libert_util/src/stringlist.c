@@ -59,7 +59,6 @@ static void stringlist_fprintf__(const stringlist_type * stringlist, const char 
   int length = vector_get_size( stringlist->strings );
   if (length > 0) {
     int i;
-    
     for (i=0; i < length - 1; i++) {
       const char * s = stringlist_iget(stringlist , i);
       fprintf(stream , "%s%s", s  , sep);

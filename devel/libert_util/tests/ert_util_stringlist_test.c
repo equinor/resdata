@@ -89,8 +89,14 @@ void test_iget_as_int() {
   }
 }
 
+void test_empty() {
+  stringlist_type * s = stringlist_alloc_new();
+  stringlist_fprintf( s , "\n" , stdout );
+}
+
 
 int main( int argc , char ** argv) {
+  test_empty();
   test_char();
   test_reverse();
   test_iget_as_int();

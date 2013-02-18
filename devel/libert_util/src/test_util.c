@@ -99,13 +99,13 @@ void test_assert_bool_equal__( bool b1 , bool b2 , const char * file , int line)
 
 void test_assert_time_t_equal__( time_t t1 , time_t t2 , const char * file , int line) {
   if (t1 != t2) 
-    test_error_exit("%s:%d => time_t values are different t1:%d  t2:[%d]" , file , line , t1 , t2);
+    test_error_exit("%s:%d => time_t values are different t1:%d  t2:[%d]\n" , file , line , t1 , t2);
 }
 
 
 void test_assert_time_t_not_equal__( time_t t1 , time_t t2 , const char * file , int line) {
   if (t1 == t2) 
-    test_error_exit("%s:%d => time_t values are different t1:%d  t2:[%d]" , file , line , t1 , t2);
+    test_error_exit("%s:%d => time_t values are different t1:%d  t2:[%d]\n" , file , line , t1 , t2);
 }
 
 
@@ -114,7 +114,7 @@ void test_assert_time_t_not_equal__( time_t t1 , time_t t2 , const char * file ,
 
 void test_assert_true__( bool value, const char * file , int line) {
   if (!value) 
-    test_error_exit("%s:%d => assert( true ) failed" , file , line);
+    test_error_exit("%s:%d => assert( true ) failed\n" , file , line);
 }
 
 
