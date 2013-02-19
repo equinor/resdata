@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2012  Statoil ASA, Norway. 
     
-   The file 'ert_util_latex_test.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'ert_util_before_after.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -17,24 +17,25 @@
 */
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
+#include <time.h>
 
-#include <ert/util/latex.h>
+#include <ert/util/test_util.h>
+#include <ert/util/util.h>
+  
 
 
-int main(int argc , char ** argv) {
-  bool ok;
+int main( int argc , char ** argv) {
+  time_t t1 = util_make_date(1,1,2000);
+  time_t t2 = util_make_date(1,1,2001);
 
-  {
-    latex_type * latex = latex_alloc( argv[1] , false );
-    printf("input:%s \n",argv[1]);
-    ok = latex_compile( latex , true , true , true);
-    printf("OK: %d \n",ok);
-    latex_free( latex );
-  }
+  test_assert_true( util_before( t1 , t2 ));
+  test_assert_true( util_after( t2 , t1 ));
+  
+  test_assert_false( util_before( t2 , t1 ));
+  test_assert_false( util_after( t1 , t2 ));
 
-  if (ok) 
-    exit(0);
-  else
-    exit(1);
+  test_assert_false( util_before( t1 , t1 ));
+  test_assert_false( util_after( t1 , t1 ));
+  
+  exit(0);
 }

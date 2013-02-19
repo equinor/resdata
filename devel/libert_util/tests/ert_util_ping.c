@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2012  Statoil ASA, Norway. 
     
-   The file 'ert_util_latex_test.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'ert_util_ping.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -17,24 +17,25 @@
 */
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
 
-#include <ert/util/latex.h>
+#include <ert/util/test_util.h>
+#include <ert/util/stringlist.h>
+#include <ert/util/util.h>
 
 
-int main(int argc , char ** argv) {
-  bool ok;
 
-  {
-    latex_type * latex = latex_alloc( argv[1] , false );
-    printf("input:%s \n",argv[1]);
-    ok = latex_compile( latex , true , true , true);
-    printf("OK: %d \n",ok);
-    latex_free( latex );
-  }
+int main( int argc , char ** argv) {
+  stringlist_type * server_list = stringlist_alloc_from_split( argv[1] , " ");
+  argc = stringlist_get_size( server_list );
+  
+  if (argc >= 1)
+    test_assert_true( util_ping( stringlist_iget( server_list , 0 )));
 
-  if (ok) 
-    exit(0);
-  else
-    exit(1);
+  if (argc >= 2)
+    test_assert_false( util_ping( stringlist_iget( server_list , 1 )));
+  
+  if (argc >= 3)
+    test_assert_false( util_ping( stringlist_iget( server_list , 2 )));
+  
+  exit(0);
 }
