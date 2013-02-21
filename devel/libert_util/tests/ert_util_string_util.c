@@ -86,7 +86,10 @@ void test_active_mask() {
   test2( active_mask );
   test_assert_true( string_util_init_active_mask("1,3- 10,15" , active_mask));
   test2( active_mask );
-  
+
+  test_assert_false( string_util_update_active_mask("11,X" , active_mask));
+  test2( active_mask );
+
   bool_vector_free( active_mask );
 }
 
