@@ -4818,7 +4818,7 @@ int util_get_current_linenr(FILE * stream) {
 
 
 
-static int * util_sscanf_active_range__(const char * range_string , int max_value , bool * active , int * _list_length) {
+static int * util_sscanf_active_range__(const char * range_string , int * _list_length) {
   int *active_list    = NULL;
   int  current_length = 0;
   int  list_length;
@@ -4827,19 +4827,12 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
   char  * end_ptr;
   bool didnt_work = false;
   
-  if (active != NULL) {
-    for (value = 0; value <= max_value; value++)
-      active[value] = false;
-  } else {
-    list_length = 10;
-    active_list = util_calloc( list_length , sizeof * active_list );
-  }
-    
+  list_length = 10;
+  active_list = util_calloc( list_length , sizeof * active_list );
+  
     
   while (start_ptr != NULL) {
     value1 = strtol(start_ptr , &end_ptr , 10);
-    if (active != NULL && value1 > max_value)
-      fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value1 , max_value);
     
     if (end_ptr == start_ptr){
       printf("Returning to menu: %s \n" , start_ptr);
@@ -4856,13 +4849,7 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
     */
 
 
-    /* Storing the value. */
-    if (active != NULL) {
-      if (value1 <= max_value) active[value1] = true;
-    } else 
-      __add_item__(&active_list , &current_length , &list_length , value1);
-
-
+    __add_item__(&active_list , &current_length , &list_length , value1);
 
     /* Skipping trailing whitespace. */
     start_ptr = end_ptr;
@@ -4892,8 +4879,6 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
             didnt_work = true;
             break;
           }
-          if (active != NULL && value2 > max_value)
-            fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value2 , max_value);
           
           if (value2 < value1){
             printf("%s[2]: invalid interval - must have increasing range \n",__func__);
@@ -4903,12 +4888,8 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
           start_ptr = end_ptr;
           { 
             int value;
-            for (value = value1 + 1; value <= value2; value++) {
-              if (active != NULL) {
-                if (value <= max_value) active[value] = true;
-              } else
-                __add_item__(&active_list , &current_length , &list_length , value);
-            }
+            for (value = value1 + 1; value <= value2; value++) 
+              __add_item__(&active_list , &current_length , &list_length , value);
           }
           
           /* Skipping trailing whitespace. */
@@ -4949,21 +4930,12 @@ static int * util_sscanf_active_range__(const char * range_string , int max_valu
   if (_list_length != NULL)
     *_list_length = current_length;
   
-  if (didnt_work){
-    for (value = 0; value <= max_value; value++)
-      active[value] = false;
-  }
-  
   return active_list;
 }
 
 
-void util_sscanf_active_range(const char * range_string , int max_value , bool * active) {
-  util_sscanf_active_range__(range_string , max_value , active , NULL);
-}
-
 int * util_sscanf_alloc_active_list(const char * range_string , int * list_length) {
-  return util_sscanf_active_range__(range_string , 0 , NULL , list_length);
+  return util_sscanf_active_range__(range_string , list_length);
 }
 
 
