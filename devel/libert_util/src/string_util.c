@@ -16,6 +16,8 @@
    for more details. 
 */
 
+#include <ctype.h>
+
 #include <ert/util/util.h>
 #include <ert/util/int_vector.h>
 #include <ert/util/bool_vector.h>
@@ -61,36 +63,14 @@
    
 
 
-static void  __add_item__(int **_active_list , int * _current_length , int *_list_length , int value) {
-  int *active_list    = *_active_list;
-  int  current_length = *_current_length;
-  int  list_length    = *_list_length;
-
-  active_list[current_length] = value;
-  current_length++;
-  if (current_length == list_length) {
-    list_length *= 2;
-    active_list  = util_realloc( active_list , list_length * sizeof * active_list );
-    
-    *_active_list = active_list;
-    *_list_length = list_length;
-  }
-  *_current_length = current_length;
-}
 
 
-
-static int * util_sscanf_active_range__(const char * range_string , int * _list_length) {
-  int *active_list    = NULL;
-  int  current_length = 0;
-  int  list_length;
-  int  value,value1,value2;
+static int_vector_type * util_sscanf_active_range__(const char * range_string ) {
+  int_vector_type *active_list = int_vector_alloc(0,0);
+  int  value1,value2;
   char  * start_ptr = (char *) range_string;
   char  * end_ptr;
   bool didnt_work = false;
-  
-  list_length = 10;
-  active_list = util_calloc( list_length , sizeof * active_list );
   
     
   while (start_ptr != NULL) {
@@ -110,8 +90,7 @@ static int * util_sscanf_active_range__(const char * range_string , int * _list_
     Otherwise it is a an invalid string.
     */
 
-
-    __add_item__(&active_list , &current_length , &list_length , value1);
+    int_vector_append( active_list , value1);
 
     /* Skipping trailing whitespace. */
     start_ptr = end_ptr;
@@ -151,7 +130,7 @@ static int * util_sscanf_active_range__(const char * range_string , int * _list_
           { 
             int value;
             for (value = value1 + 1; value <= value2; value++) 
-              __add_item__(&active_list , &current_length , &list_length , value);
+              int_vector_append( active_list , value );
           }
           
           /* Skipping trailing whitespace. */
@@ -189,16 +168,13 @@ static int * util_sscanf_active_range__(const char * range_string , int * _list_
       }
     }
   }
-  if (_list_length != NULL)
-    *_list_length = current_length;
-  
   return active_list;
 }
 
 
 
-static int * util_sscanf_alloc_active_list(const char * range_string , int * list_length) {
-  return util_sscanf_active_range__(range_string , list_length);
+static int_vector_type *  util_sscanf_alloc_active_list(const char * range_string ) {
+  return util_sscanf_active_range__(range_string );
 }
 
 
@@ -257,12 +233,12 @@ int_vector_type *  string_util_alloc_active_list( const char * range_string ) {
 */
 
 void string_util_update_active_mask( const char * range_string , bool_vector_type * active_mask) {
-  int length , i;
-  int * sscanf_active = util_sscanf_alloc_active_list( range_string , &length);
-  for (i=0; i < length; i++)
-    bool_vector_iset( active_mask , sscanf_active[i] , true );
+  int i;
+  int_vector_type * sscanf_active = util_sscanf_alloc_active_list( range_string );
+  for (i=0; i < int_vector_size( sscanf_active ); i++)
+    bool_vector_iset( active_mask , int_vector_iget(sscanf_active , i) , true );
   
-  util_safe_free( sscanf_active );
+  int_vector_free( sscanf_active );
 }
 
 
