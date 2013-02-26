@@ -458,7 +458,7 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
 #ifdef WITH_PTHREAD
 #ifdef HAVE_EXECINFO
 
-  bool util_addr2line_lookup(const char * executable , const void * bt_addr , const char * bt_symbol , char ** func_name , char ** file_line, int * line_nr);
+  bool util_addr2line_lookup(const void * bt_addr , char ** func_name , char ** file_line, int * line_nr);
 
 #define HAVE_UTIL_ABORT
 #endif
