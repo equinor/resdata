@@ -244,7 +244,8 @@ void util_abort(const char * fmt , ...) {
 
     signal(SIGABRT , SIG_DFL);
     fprintf(stderr , "Aborting ... \n");
-    abort();
+    exit(1);
+    //abort();
   }
   pthread_mutex_unlock( &__abort_mutex );
 }
