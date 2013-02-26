@@ -84,6 +84,11 @@ extern "C" {
 #define test_assert_mem_not_equal( p1 , p2 , byte_size ) test_assert_mem_not_equal__( (p1) , (p2) , (byte_size), __FILE__ , __LINE__)
   void test_assert_mem_not_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line);
 
+
+#ifdef HAVE_UTIL_ABORT
+  void test_util_addr2line();
+#endif
+
 #ifdef __cplusplus
 }
 #endif

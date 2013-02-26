@@ -454,6 +454,17 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
   bool     util_try_lockf(const char *  , mode_t  , int * );
 #endif
 
+#ifdef HAVE_FORK
+#ifdef WITH_PTHREAD
+#ifdef HAVE_EXECINFO
+
+  bool util_addr2line_lookup(const void * bt_addr , char ** func_name , char ** file_line, int * line_nr);
+
+#define HAVE_UTIL_ABORT
+#endif
+#endif
+#endif
+
 
 
 

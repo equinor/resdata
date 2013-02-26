@@ -65,6 +65,7 @@ endif()
 if (NEED_LIBM)
    target_link_libraries( ert_util m )
 endif()
+target_link_libraries( ert_util dl )
 
 #-----------------------------------------------------------------
 install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_LIBDIR})
