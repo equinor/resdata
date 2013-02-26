@@ -2,9 +2,10 @@
   This file implements the fully fledged util abort() function which
   assumes that the current build has the following features:
 
-    fork()     : To support calling external program addr2line().
-    pthread    : To serialize the use of util abort() - not very important.
-    execinfo.h : The backtrace functions backtrace() and backtrace symbols().
+    fork()      : To support calling external program addr2line().
+    pthread     : To serialize the use of util abort() - not very important.
+    execinfo.h  : The backtrace functions backtrace() and backtrace symbols().
+    _GNU_SOURCE : To get the dladdr() function.
 
   If not all these features are availbale the simpler version in
   util abort_simple.c is built instead.
@@ -27,30 +28,37 @@
   This function is purely a helper function for util_abort().
 */
 
-static void util_addr2line_lookup(const char * executable , const char * bt_symbol , char ** func_name , char ** file_line) {
+#define __USE_GNU  1 // Must be defined to get access to the dladdr() function; Man page says the symbol should be: _GNU_SOURCE but that does not seem to work?
+#define _GNU_SOURCE
+#include <dlfcn.h>
+
+#define UNDEFINED_FUNCTION "??"
+
+static bool util_addr2line_lookup__(const char * executable , const void * bt_addr , const char * bt_symbol , char ** func_name , char ** file_line , int * line_nr, bool subtract_base_adress) {
   char *tmp_file = util_alloc_tmp_file("/tmp" , "addr2line" , true);
-  char * adress;
   {
-    int start_pos = 0;
-    int end_pos;   
-    while ( bt_symbol[start_pos] != '[')
-      start_pos++;
-    
-      end_pos = start_pos;
-      while ( bt_symbol[end_pos] != ']') 
-        end_pos++;
-      
-      adress = util_alloc_substring_copy( bt_symbol , start_pos + 1 , end_pos - start_pos - 1 );
-  }
-  
-  {
+    Dl_info dl_info;
     char ** argv;
+
+    dladdr(bt_addr , &dl_info);
+
+    printf("dli_fname:%s   dli_fbase:%p   dli_sname:%s   dli_saddr:%p \n",dl_info.dli_fname , dl_info.dli_fbase , dl_info.dli_sname , dl_info.dli_saddr);
     
     argv    = util_calloc(3 , sizeof * argv );
     argv[0] = util_alloc_string_copy("--functions");
-    argv[1] = util_alloc_sprintf("--exe=%s" , executable);
-    argv[2] = util_alloc_string_copy(adress);
-    
+    argv[1] = util_alloc_sprintf("--exe=%s" , dl_info.dli_fname);
+    {
+      char * rel_address = (char *) bt_addr;
+      if (subtract_base_adress)
+        rel_address -= (char *) dl_info.dli_fbase;
+      argv[2] = util_alloc_sprintf("%p" , (void *) rel_address);
+    }
+    printf("bt_addr    %p \n",bt_addr);
+    printf("fname      %s \n",dl_info.dli_fname);
+    printf("base:      %p \n",dl_info.dli_fbase);
+    printf("rel        %s \n",argv[2]);
+    printf("backtrace: %p \n",bt_addr);
+    printf("%s  %s  %s\n",argv[0] , argv[1] , argv[2]);
     util_fork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , NULL , tmp_file , NULL);
     util_free_stringlist(argv , 3);
   }
@@ -59,14 +67,32 @@ static void util_addr2line_lookup(const char * executable , const char * bt_symb
     bool at_eof;
     FILE * stream = util_fopen(tmp_file , "r");
     *func_name = util_fscanf_alloc_line(stream , &at_eof);
-    *file_line = util_fscanf_alloc_line(stream , &at_eof);
+    if (strcmp(*func_name , UNDEFINED_FUNCTION) == 0) {
+      char * tmp_file_line = util_fscanf_alloc_line(stream , &at_eof);
+      char * line_string;
+      util_binary_split_string( tmp_file_line , ":" , false , file_line , &line_string);
+      
+    }
+    
+    printf("func: %s  file_line:%s  \n",*func_name , *file_line);
+    printf("-----------------------------------------------------------------\n");
     fclose(stream);
   }
   util_unlink_existing(tmp_file);
-  free(adress);
   free(tmp_file);
+  if (strcmp(*func_name , UNDEFINED_FUNCTION) == 0)
+    return false;
+  else
+    return true;
 }
 
+
+bool util_addr2line_lookup(const char * executable , const void * bt_addr , const char * bt_symbol , char ** func_name , char ** file_line , int * line_nr) {
+  if (util_addr2line_lookup__(NULL , bt_addr , bt_symbol , func_name , file_line , line_nr , false))
+    return true;
+  else
+    return util_addr2line_lookup__(NULL , bt_addr , bt_symbol , func_name , file_line , line_nr , true);
+}
 
 
 /**
@@ -144,8 +170,8 @@ void util_abort(const char * fmt , ...) {
     const bool include_backtrace = true;
     if (include_backtrace) {
       const int max_bt = 50;
+      void *bt_addr[max_bt];
       char *executable;
-      void *array[max_bt];
       char **strings;
       char ** func_list;
       char ** file_line_list;
@@ -171,8 +197,8 @@ void util_abort(const char * fmt , ...) {
       fprintf(stderr,"**  broken as well.                                                       **\n");
       fprintf(stderr,"**                                                                        **\n");
       fprintf(stderr,"****************************************************************************\n");
-      size       = backtrace(array , max_bt);
-      strings    = backtrace_symbols(array , size);    
+      size       = backtrace(bt_addr , max_bt);
+      strings    = backtrace_symbols(bt_addr , size);    
       executable = util_bt_alloc_current_executable(strings[0]);
       if (executable != NULL) {
         fprintf(stderr,"Current executable : %s \n",executable);
@@ -181,7 +207,8 @@ void util_abort(const char * fmt , ...) {
         file_line_list = util_calloc(size , sizeof * file_line_list );
         
         for (i=0; i < size; i++) {
-          util_addr2line_lookup(executable , strings[i] , &func_list[i] , &file_line_list[i]);
+          int line_nr;
+          util_addr2line_lookup(executable , bt_addr[i] , strings[i] , &func_list[i] , &file_line_list[i] , &line_nr);
           max_func_length = util_int_max(max_func_length , strlen(func_list[i]));
         }
         
@@ -208,13 +235,9 @@ void util_abort(const char * fmt , ...) {
       util_safe_free(executable);
     }
 
-    if (getenv("UTIL_ABORT") != NULL) {
-      fprintf(stderr , "Aborting ... \n");
-      abort();
-    } else {
-      fprintf(stderr , "Exiting ... \n");
-      exit(1);
-    }
+    signal(SIGABRT , SIG_DFL);
+    fprintf(stderr , "Aborting ... \n");
+    abort();
     // Would have preferred abort() here - but that comes in conflict with the SIGABRT signal.
   }
   pthread_mutex_unlock( &__abort_mutex );
