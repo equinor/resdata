@@ -136,13 +136,13 @@ bool util_addr2line_lookup(const void * bt_addr , char ** func_name , char ** fi
 
 
 /**
-  This function prints a message to stderr and aborts. The function is
+  This function prints a message to stream and aborts. The function is
   implemented with the help of a variable length argument list - just
   like printf(fmt , arg1, arg2 , arg3 ...);
 
   Observe that it is __VERY__ important that the arguments and the
   format string match up, otherwise the util_abort() routine will hang
-  indefinetely; without printing anything to stderr.
+  indefinetely; without printing anything to stream.
 
   A backtrace is also included, with the help of the exernal utility
   addr2line, this backtrace is converted into usable
@@ -164,14 +164,54 @@ static char * realloc_padding(char * pad_ptr , int pad_length) {
 
 
 
+static void util_fprintf_backtrace(FILE * stream) {
+  const char * with_linenr_format = " #%02d %s(..) %s in %s:%d\n";
+  const char * func_format        = " #%02d %s(..) %s in ???\n";
+  const char * unknown_format     = " #%02d ???? \n";
+
+  const int max_bt = 50;
+  const int max_func_length = 45;
+  void *bt_addr[max_bt];
+  int    size,i;
+
+  size       = backtrace(bt_addr , max_bt);
+
+  fprintf(stream , "--------------------------------------------------------------------------------\n");
+  for (i=0; i < size; i++) {
+    int line_nr;
+    char * func_name;
+    char * file_name;
+    char * padding = NULL;
+    if (util_addr2line_lookup(bt_addr[i] , &func_name , &file_name , &line_nr)) {
+      int pad_length = 2 + max_func_length - strlen(func_name);
+      padding = realloc_padding( padding , pad_length);
+      fprintf(stream , with_linenr_format , i , func_name , padding , file_name , line_nr);
+    } else {
+      if (func_name != NULL) {
+        int pad_length = 2 + max_func_length - strlen(func_name);
+        padding = realloc_padding( padding , pad_length);
+        fprintf(stream , func_format , i , func_name , padding);
+      } else {
+        padding = realloc_padding( padding , 2 + max_func_length );
+        fprintf(stream , unknown_format , i , padding);
+      }
+    }
+    
+    util_safe_free( func_name );
+    util_safe_free( file_name );
+    util_safe_free( padding );
+  }
+  fprintf(stream , "--------------------------------------------------------------------------------\n");
+}
+
 void util_abort(const char * fmt , ...) {
   pthread_mutex_lock( &__abort_mutex ); /* Abort before unlock() */
   {
     va_list ap;
 
     va_start(ap , fmt);
-    printf("\n\n");
-    fprintf(stderr,"\n\n");
+    fprintf(stderr , "\n\n");
+    fprintf(stderr , "\n\n");
     vfprintf(stderr , fmt , ap);
     va_end(ap);
 
@@ -183,11 +223,6 @@ void util_abort(const char * fmt , ...) {
 
     const bool include_backtrace = true;
     if (include_backtrace) {
-      const int max_bt = 50;
-      const int max_func_length = 45;
-      void *bt_addr[max_bt];
-      int    size,i;
-  
       if (__abort_program_message != NULL) {
         fprintf(stderr,"--------------------------------------------------------------------------------\n");
         fprintf(stderr,"%s",__abort_program_message);
@@ -208,38 +243,8 @@ void util_abort(const char * fmt , ...) {
       fprintf(stderr,"**  broken as well.                                                       **\n");
       fprintf(stderr,"**                                                                        **\n");
       fprintf(stderr,"****************************************************************************\n");
-      size       = backtrace(bt_addr , max_bt);
-      {
-        const char * with_linenr_format = " #%02d %s(..) %s in %s:%d\n";
-        const char * func_format        = " #%02d %s(..) %s in ???\n";
-        const char * unknown_format     = " #%02d ???? \n";
-        fprintf(stderr , "--------------------------------------------------------------------------------\n");
-        for (i=0; i < size; i++) {
-          int line_nr;
-          char * func_name;
-          char * file_name;
-          char * padding = NULL;
 
-          if (util_addr2line_lookup(bt_addr[i] , &func_name , &file_name , &line_nr)) {
-            int pad_length = 2 + max_func_length - strlen(func_name);
-            padding = realloc_padding( padding , pad_length);
-            fprintf(stderr , with_linenr_format , i , func_name , padding , file_name , line_nr);
-          } else {
-            if (func_name != NULL) {
-              int pad_length = 2 + max_func_length - strlen(func_name);
-              padding = realloc_padding( padding , pad_length);
-              fprintf(stderr , func_format , i , func_name , padding);
-            } else {
-              padding = realloc_padding( padding , 2 + max_func_length );
-              fprintf(stderr , unknown_format , i , padding);
-            }
-          }
-          
-          util_safe_free( func_name );
-          util_safe_free( file_name );
-          util_safe_free( padding );
-        }
-      } 
+      util_fprintf_backtrace( stderr );
     }
 
     signal(SIGABRT , SIG_DFL);
