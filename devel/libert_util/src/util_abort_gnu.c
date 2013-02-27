@@ -77,7 +77,7 @@ static bool util_addr2line_lookup__(const void * bt_addr , char ** func_name , c
   {
     bool  address_found = false;
     Dl_info dl_info;
-    
+
     if (dladdr(bt_addr , &dl_info)) {
       const char * executable = dl_info.dli_fname;
       *func_name = util_alloc_string_copy( dl_info.dli_sname );
@@ -119,8 +119,8 @@ static bool util_addr2line_lookup__(const void * bt_addr , char ** func_name , c
         }
         util_unlink_existing(stdout_file);
         free( stdout_file );
-      }
-    }
+      } 
+    } 
     return address_found;
   }
 }
@@ -182,10 +182,19 @@ static void util_fprintf_backtrace(FILE * stream) {
     char * func_name;
     char * file_name;
     char * padding = NULL;
+    
     if (util_addr2line_lookup(bt_addr[i] , &func_name , &file_name , &line_nr)) {
-      int pad_length = 2 + max_func_length - strlen(func_name);
+      int pad_length;
+      char * function;
+      // Seems it can return true - but with func_name == NULL?! Static/inlinded functions?
+      if (func_name)
+        function = func_name;
+      else
+        function = "???";
+
+      pad_length = 2 + max_func_length - strlen(function);
       padding = realloc_padding( padding , pad_length);
-      fprintf(stream , with_linenr_format , i , func_name , padding , file_name , line_nr);
+      fprintf(stream , with_linenr_format , i , function , padding , file_name , line_nr);
     } else {
       if (func_name != NULL) {
         int pad_length = 2 + max_func_length - strlen(func_name);
