@@ -255,13 +255,12 @@ void util_abort(const char * fmt , ...) {
 
       util_fprintf_backtrace( stderr );
     }
-
-    signal(SIGABRT , SIG_DFL);
-    fprintf(stderr , "Aborting ... \n");
-    exit(1);
-    //abort();
   }
   pthread_mutex_unlock( &__abort_mutex );
+
+  signal(SIGABRT , SIG_DFL);
+  fprintf(stderr , "Aborting ... \n");
+  abort();
 }
 
 
