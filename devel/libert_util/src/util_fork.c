@@ -236,7 +236,32 @@ char * util_alloc_filename_from_stream( FILE * input_stream ) {
   return filename;
 }
 
- 
+
+/**
+   The ping program must(?) be setuid root, so implementing a simple
+   version based on sockets() proved to be nontrivial.
+
+   The PING_CMD is passed as -D from the build system.
+*/
+
+bool util_ping(const char *hostname) { 
+  pid_t ping_pid = util_fork_exec(PING_CMD , 4 , (const char *[4]) {"-c" , "3" , "-q", hostname} , false , NULL , NULL , NULL , NULL , NULL);
+  int wait_status;
+  pid_t wait_pid = waitpid(ping_pid , &wait_status , 0);
+
+  if (wait_pid == -1)
+    return false;
+  else {
+    if (WIFEXITED( wait_status )) {
+      int ping_status = WEXITSTATUS( wait_status );
+      if (ping_status == 0)
+        return true;
+      else
+        return false;
+    } else
+      return false;
+  }
+}
 
 
 

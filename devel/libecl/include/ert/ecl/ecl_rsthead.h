@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2011  Statoil ASA, Norway. 
    
-   The file 'ecl_INTEHEAD.h' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'ecl_RSTHEAD.h' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -16,8 +16,8 @@
    for more details. 
 */
 
-#ifndef __ECL_INTEHEAD_H__
-#define __ECL_INTEHEAD_H__
+#ifndef __ECL_RSTHEAD_H__
+#define __ECL_RSTHEAD_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,9 +25,9 @@ extern "C" {
 
 #include <time.h>
 
+#include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_kw.h>
 
-#define INTEHEAD_KW  "INTEHEAD"     /* Long array with lots of data. */
 
   typedef struct {
     int    day;
@@ -63,14 +63,24 @@ extern "C" {
     int    nswlmx;          // The maximum number of segmented wells                
     int    nlbrmx;          // The maximum number of lateral branches pr well
     int    nilbrz;          // The number of entries pr segment in ILBR array  
-  } ecl_intehead_type;
+
+    // Properteies from the LOGIHEAD keyword:
+    bool   dualp;
+
+    
+    // Properties from the DOUBHEAD keyword:
+    double sim_days;
+  } ecl_rsthead_type;
 
 
 
-  void                ecl_intehead_free( ecl_intehead_type * intehead );
-  ecl_intehead_type * ecl_intehead_alloc( const ecl_kw_type * intehead_kw );
-  time_t              ecl_intehead_date( const ecl_kw_type * intehead_kw );
-  void                ecl_intehead_fprintf( const ecl_intehead_type * header , FILE * stream);
+  void                ecl_rsthead_free( ecl_rsthead_type * rsthead );
+  ecl_rsthead_type  * ecl_rsthead_ialloc( const ecl_file_type * rst_file , int occurence);
+  ecl_rsthead_type  * ecl_rsthead_alloc( const ecl_file_type * rst_file );
+  time_t              ecl_rsthead_date( const ecl_kw_type * intehead_kw );
+  void                ecl_rsthead_fprintf( const ecl_rsthead_type * header , FILE * stream);
+  void                ecl_rsthead_fprintf_struct( const ecl_rsthead_type * header , FILE * stream);
+  bool                ecl_rsthead_equal( const ecl_rsthead_type * header1 , const ecl_rsthead_type * header2);
 
 #ifdef __cplusplus
 }
