@@ -447,6 +447,31 @@ class EclSMSPECNode( CClass ):
         """
         return cfunc.node_unit( self )
 
+    @property
+    def wgname(self):
+        """
+        Returns the WGNAME property for this node.
+
+        Many variables do not have the WGNAME property, i.e. the field
+        related variables like FOPT and the block properties like
+        BPR:10,10,10. For these variables the function will return
+        None, and not the ECLIPSE dummy value: ":+:+:+:+".
+        """
+        return cfunc.node_wgname(self)
+
+
+    @property
+    def keyword(self):
+        """
+        Returns the KEYWORD property for this node.
+
+        The KEYWORD property is the main classification property in
+        the ECLIPSE SMSPEC file. The properties of a variable can be
+        read from the KEWYORD value; see table 3.4 in the ECLIPSE file
+        format reference manual.
+        """
+        return cfunc.node_keyword( self )
+    
 
 
 class EclSum( CClass ):
@@ -1226,4 +1251,6 @@ cfunc.node_is_total                 = cwrapper.prototype("bool smspec_node_is_to
 cfunc.node_is_historical            = cwrapper.prototype("bool smspec_node_is_historical( smspec_node )")
 cfunc.node_is_rate                  = cwrapper.prototype("bool smspec_node_is_rate( smspec_node )")
 cfunc.node_unit                     = cwrapper.prototype("char* smspec_node_get_unit( smspec_node )")
+cfunc.node_wgname                   = cwrapper.prototype("char* smspec_node_get_wgname( smspec_node )")
+cfunc.node_keyword                  = cwrapper.prototype("char* smspec_node_get_keyword( smspec_node )")
 
