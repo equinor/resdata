@@ -472,6 +472,28 @@ class EclSMSPECNode( CClass ):
         """
         return cfunc.node_keyword( self )
     
+    @property
+    def num(self):
+        """
+        Returns the NUMS value for this keyword; or None.
+
+        Many of the summary keywords have an integer stored in the
+        vector NUMS as an attribute, i.e. the block properties have
+        the global index of the cell in the nums vector. If the
+        variable in question makes use of the NUMS value this property
+        will return the value, otherwise it will return None:
+
+           sum.smspec_node("FOPT").num     => None
+           sum.smspec_node("BPR:1000").num => 1000
+        """
+        if cfunc.node_need_num( self ):
+            return cfunc.node_num(self)
+        else:
+            return None
+        
+
+        
+
 
 
 class EclSum( CClass ):
@@ -1253,4 +1275,5 @@ cfunc.node_is_rate                  = cwrapper.prototype("bool smspec_node_is_ra
 cfunc.node_unit                     = cwrapper.prototype("char* smspec_node_get_unit( smspec_node )")
 cfunc.node_wgname                   = cwrapper.prototype("char* smspec_node_get_wgname( smspec_node )")
 cfunc.node_keyword                  = cwrapper.prototype("char* smspec_node_get_keyword( smspec_node )")
-
+cfunc.node_num                      = cwrapper.prototype("int   smspec_node_get_num( smspec_node )")
+cfunc.node_need_num                 = cwrapper.prototype("bool  smspec_node_need_nums( smspec_node )")
