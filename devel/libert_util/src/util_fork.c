@@ -79,21 +79,14 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
         util_abort("%s: failed to change to directory:%s  %s \n",__func__ , run_path , strerror(errno));
     }
 
-    if (stdout_file != NULL) {
-      /** This is just to invoke the "block on full disk behaviour" before the external program starts. */
-      FILE * stream = util_fopen( stdout_file , "w");
-      fclose(stream);
+    if (stdout_file != NULL) 
       __util_redirect(1 , stdout_file , O_WRONLY | O_TRUNC | O_CREAT);
-    }
-
-    if (stderr_file != NULL) {
-      /** This is just to invoke the "block on full disk behaviour" before the external program starts. */
-      FILE * stream = util_fopen( stderr_file , "w");
-      fclose(stream);
+    
+    if (stderr_file != NULL) 
       __util_redirect(2 , stderr_file , O_WRONLY | O_TRUNC | O_CREAT);
-    }
-    if (stdin_file  != NULL) __util_redirect(0 , stdin_file  , O_RDONLY);
-
+    
+    if (stdin_file  != NULL) 
+      __util_redirect(0 , stdin_file  , O_RDONLY);
     
     __argv        = util_malloc((argc + 2) * sizeof * __argv );  
     __argv[0]     = executable;
@@ -115,6 +108,7 @@ pid_t util_fork_exec(const char * executable , int argc , const char ** argv ,
     
   }  else  {
     /* Parent */
+    
     if (blocking) {
       waitpid(child_pid , NULL , 0);
       
