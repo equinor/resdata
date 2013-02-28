@@ -394,6 +394,61 @@ class EclSumVector:
 
     #################################################################
 
+
+class EclSMSPECNode( CClass ):
+    def __new__(cls , c_ptr , parent):
+        if c_ptr:
+            obj = object.__new__( cls )
+            obj.init_cref( c_ptr , parent )
+            return obj
+        else:
+            return None
+
+    @property
+    def is_total(self):
+        """
+        Will check if the node corresponds to a total quantity.
+
+        The question of whether a variable corresponds to a 'total'
+        quantity or not can be interesting for e.g. interpolation
+        purposes. The actual question whether a quantity is total or
+        not is based on a hardcoded list in smspec_node_set_flags() in
+        smspec_node.c; this list again is based on the tables 2.7 -
+        2.11 in the ECLIPSE fileformat documentation.
+        """
+        return cfunc.node_is_total( self )
+
+    @property
+    def is_rate(self):
+        """
+        Will check if the variable in question is a rate variable.
+
+        The conecpt of rate variabel is important (internally) when
+        interpolation values to arbitrary times.
+        """
+        return cfunc.node_is_rate( self )
+
+
+    @property
+    def is_historical(self):
+        """
+        Checks if the key corresponds to a historical variable.
+        
+        The check is only based on the last character; all variables
+        ending with 'H' are considered historical.
+        """
+        return cfunc.node_is_historical( self )
+
+    
+    @property
+    def unit(self):
+        """
+        Returns the unit of this node as a string.
+        """
+        return cfunc.node_unit( self )
+
+
+
 class EclSum( CClass ):
     
     def __new__( cls , load_case , join_string = ":" , include_restart = True):
@@ -490,6 +545,7 @@ class EclSum( CClass ):
         return index_list
 
 
+    
     def wells( self , pattern = None ):
         """
         Will return a list of all the well names in case.
@@ -735,7 +791,6 @@ class EclSum( CClass ):
             raise ValueError("Must supply either days_list or date_list")
         return vector
                 
-    
 
     def get_from_report( self , key , report_step ):
         """
@@ -751,11 +806,30 @@ class EclSum( CClass ):
         """
         return cfunc.has_key( self, key )
 
+
+    def smspec_node( self , key ):
+        """
+        Will return a EclSMSPECNode instance corresponding to @key.
+
+        The returned EclSMPECNode instance can then be used to ask for
+        various properties of the variable; i.e. if it is a rate
+        variable, what is the unit, if it is a total variable and so
+        on.
+        """
+        if self.has_key( key ):
+            c_ptr = cfunc.get_var_node( self , key )
+            return EclSMSPECNode( c_ptr , self )
+        else:
+            raise KeyError("Summary case does not have key:%s" % key)
+
+
     def unit(self , key):
         """
         Will return the unit of @key. 
         """
-        return cfunc.get_unit( self , key )
+        node = self.smspec_node( key )
+        return node.unit
+        
 
     @property
     def case(self):
@@ -1094,6 +1168,7 @@ class EclSum( CClass ):
 #    registering the type map : ecl_kw <-> EclKW
 cwrapper = CWrapper( libecl.lib )
 cwrapper.registerType( "ecl_sum" , EclSum )
+cwrapper.registerType( "smspec_node" , EclSMSPECNode )
 
 
 # 3. Installing the c-functions used to manipulate ecl_kw instances.
@@ -1142,3 +1217,13 @@ cfunc.get_report_time               = cwrapper.prototype("time_t   ecl_sum_get_r
 
 cfunc.fwrite_sum                    = cwrapper.prototype("void     ecl_sum_fwrite(ecl_sum)")
 cfunc.set_case                      = cwrapper.prototype("void     ecl_sum_set_case(ecl_sum, char*)")
+
+#-----------------------------------------------------------------
+# smspec node related stuff
+
+cfunc.get_var_node                  = cwrapper.prototype("c_void_p ecl_sum_get_general_var_node(ecl_sum , char* )")
+cfunc.node_is_total                 = cwrapper.prototype("bool smspec_node_is_total( smspec_node )")
+cfunc.node_is_historical            = cwrapper.prototype("bool smspec_node_is_historical( smspec_node )")
+cfunc.node_is_rate                  = cwrapper.prototype("bool smspec_node_is_rate( smspec_node )")
+cfunc.node_unit                     = cwrapper.prototype("char* smspec_node_get_unit( smspec_node )")
+
