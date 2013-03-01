@@ -91,6 +91,9 @@ void test_active_mask() {
   test2( active_mask );
 
   bool_vector_free( active_mask );
+
+  
+
 }
 
 
