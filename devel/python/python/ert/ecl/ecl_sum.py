@@ -396,6 +396,15 @@ class EclSumVector:
 
 
 class EclSMSPECNode( CClass ):
+    """
+    Small class with some meta information about a summary variable.
+
+    The summary variables have different attributes, like if they
+    represent a total quantity, a rate or a historical quantity. These
+    quantities, in addition to the underlying values like WGNAMES,
+    KEYWORD and NUMS taken from the the SMSPEC file are stored in this
+    structure.
+    """
     def __new__(cls , c_ptr , parent):
         if c_ptr:
             obj = object.__new__( cls )

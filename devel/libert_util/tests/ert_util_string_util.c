@@ -35,24 +35,26 @@ static void test1( const int_vector_type * active_list ) {
 
 void test_active_list() {
   int_vector_type * active_list = string_util_alloc_active_list("1,3- 10,15");
-  string_util_init_active_list("1,3- 10,15" , active_list);
+  test_assert_true( string_util_init_active_list("1,3- 10,15" , active_list) );
   test1( active_list );
   
-  string_util_update_active_list("1,3- 10,15,8" , active_list);  
+  test_assert_true( string_util_update_active_list("1,3- 10,15,8" , active_list) );
+  test1( active_list );
+  test_assert_false( string_util_update_active_list("1,X" , active_list) );
   test1( active_list );
 
-  string_util_update_active_list("14-16" , active_list);  
+  test_assert_true( string_util_update_active_list("14-16" , active_list) );
   test_assert_int_equal( int_vector_size( active_list )    , 12);
   test_assert_int_equal( int_vector_iget( active_list , 9 )  ,14 );
   test_assert_int_equal( int_vector_iget( active_list , 11 )  ,16 );
   
-  string_util_update_active_list("0" , active_list);  
+  test_assert_true( string_util_update_active_list("0" , active_list) );
   test_assert_int_equal( int_vector_size( active_list ) , 13);
   test_assert_int_equal( int_vector_iget( active_list , 0 )  ,0 );
   test_assert_int_equal( int_vector_iget( active_list , 10 )  ,14 );
   test_assert_int_equal( int_vector_iget( active_list , 12 )  ,16 );
 
-  string_util_update_active_list("4-6" , active_list);  
+  test_assert_true( string_util_update_active_list("4-6" , active_list) );
   test_assert_int_equal( int_vector_size( active_list ) , 13);
   test_assert_int_equal( int_vector_iget( active_list , 0 )  ,0 );
   test_assert_int_equal( int_vector_iget( active_list , 10 )  ,14 );
@@ -82,9 +84,12 @@ void test_active_mask() {
   bool_vector_type * active_mask = string_util_alloc_active_mask("1,3 -6,6-  10, 15");
   
   test2( active_mask );
-  string_util_init_active_mask("1,3- 10,15" , active_mask);
+  test_assert_true( string_util_init_active_mask("1,3- 10,15" , active_mask));
   test2( active_mask );
-  
+
+  test_assert_false( string_util_update_active_mask("11,X" , active_mask));
+  test2( active_mask );
+
   bool_vector_free( active_mask );
 }
 
