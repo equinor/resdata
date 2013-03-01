@@ -672,6 +672,11 @@ void @TYPE@_vector_reset(@TYPE@_vector_type * vector) {
 }
 
 
+void @TYPE@_vector_free_container(@TYPE@_vector_type * vector) {
+  free( vector );
+}
+
+
 void @TYPE@_vector_free_data(@TYPE@_vector_type * vector) {
   @TYPE@_vector_reset(vector);
   @TYPE@_vector_realloc_data__(vector , 0);
@@ -681,7 +686,7 @@ void @TYPE@_vector_free_data(@TYPE@_vector_type * vector) {
 void @TYPE@_vector_free(@TYPE@_vector_type * vector) {
   if (vector->data_owner)
     util_safe_free( vector->data );
-  free( vector );
+  @TYPE@_vector_free_container( vector );
 }
 
 
