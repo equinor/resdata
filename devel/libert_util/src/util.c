@@ -34,6 +34,20 @@
 
 #include <fcntl.h>
 #include <limits.h>
+
+#ifdef HAVE_FORK
+#ifdef WITH_PTHREAD
+#ifdef HAVE_EXECINFO
+#define HAVE_UTIL_ABORT
+#endif
+#endif
+#endif
+
+#ifdef HAVE_UTIL_ABORT
+#define __USE_GNU       // Must be defined to get access to the dladdr() function; Man page says the symbol should be: _GNU_SOURCE but that does not seem to work?
+#define _GNU_SOURCE     // Must be defined _before_ #include <errno.h> to get the symbol 'program_invocation_name'. 
+#include <dlfcn.h>
+#endif
 #include <errno.h>
 
 #include <stdint.h>
@@ -3445,8 +3459,7 @@ void util_free_stringlist(char **list , int N) {
   int i;
   if (list != NULL) {
     for (i=0; i < N; i++) {
-      if (list[i] != NULL)
-        free(list[i]);
+      util_safe_free( list[i] );
     }
     free(list);
   }
@@ -4797,10 +4810,8 @@ void util_abort_free_version_info() {
 
 
 void util_abort_set_executable( const char * argv0 ) {
-  if (util_is_abs_path(argv0)) {
-    printf("Setting executable:%s \n",argv0);
+  if (util_is_abs_path(argv0)) 
     __current_executable = util_realloc_string_copy( __current_executable , argv0 );
-  }
   else {
     char * executable;
     if (util_is_executable( argv0 )) 
@@ -4808,11 +4819,11 @@ void util_abort_set_executable( const char * argv0 ) {
     else
       executable = util_alloc_PATH_executable( argv0 );
 
-    
     util_abort_set_executable( executable );
     free( executable );
   }
 }
+
 
 
 /*****************************************************************/
@@ -4927,17 +4938,11 @@ char * util_alloc_link_target(const char * link) {
 }
 #endif
 
-#ifdef HAVE_FORK
-#ifdef WITH_PTHREAD
-#ifdef HAVE_EXECINFO
+
+
+#ifdef HAVE_UTIL_ABORT
 #include "util_abort_gnu.c"
-#define HAVE_UTIL_ABORT
-#endif
-#endif
-#endif
-
-
-#ifndef HAVE_UTIL_ABORT
+#else
 #include "util_abort_simple.c"
 #endif
 

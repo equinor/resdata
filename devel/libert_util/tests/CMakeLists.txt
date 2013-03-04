@@ -87,6 +87,10 @@ add_executable( ert_util_ping ert_util_ping.c )
 target_link_libraries( ert_util_ping ert_util )
 add_test( ert_util_ping ${EXECUTABLE_OUTPUT_PATH}/ert_util_ping ${PING_SERVERS})
 
+add_executable( ert_util_addr2line ert_util_addr2line.c )
+target_link_libraries( ert_util_addr2line ert_util )
+add_test( ert_util_addr2line ${EXECUTABLE_OUTPUT_PATH}/ert_util_addr2line)
+
 if (WITH_LATEX)
    add_executable( ert_util_latex_test ert_util_latex_test.c )
    target_link_libraries(ert_util_latex_test ert_util )
