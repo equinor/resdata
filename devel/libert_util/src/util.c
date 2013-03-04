@@ -934,6 +934,7 @@ char * util_alloc_abs_path( const char * path ) {
 }
 
 
+
 /**
    Both path arguments must be absolute paths; if not a copy of the
    input path will be returned. Neither of the input arguments can
@@ -3673,8 +3674,6 @@ void util_binary_split_string(const char * __src , const char * sep_set, bool sp
     /* 1: Remove leading split characters. */
     while ((offset < strlen(__src)) && (strchr(sep_set , __src[offset]) != NULL))
       offset++;
-    
-    
     len = strlen( __src ) - offset;
     if (len > 0) {
       int tail_pos = strlen( __src ) - 1;
