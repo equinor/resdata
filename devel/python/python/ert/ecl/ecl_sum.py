@@ -1264,7 +1264,8 @@ cfunc.get_report_time               = cwrapper.prototype("time_t   ecl_sum_get_r
 
 cfunc.fwrite_sum                    = cwrapper.prototype("void     ecl_sum_fwrite(ecl_sum)")
 cfunc.set_case                      = cwrapper.prototype("void     ecl_sum_set_case(ecl_sum, char*)")
-
+cfunc.alloc_time_vector             = cwrapper.prototype("time_vector ecl_sum_alloc_time_vector(ecl_sum, bool)")
+cfunc.alloc_data_vector             = cwrapper.prototype("double_vector ecl_sum_alloc_data_vector(ecl_sum, int, bool)")
 #-----------------------------------------------------------------
 # smspec node related stuff
 
