@@ -167,6 +167,7 @@ static int well_state_get_lgr_well_nr( const well_state_type * well_state , cons
   int well_nr = -1;
   
   if (ecl_file_has_kw( ecl_file , ZWEL_KW)) {
+    ecl_rsthead_type  * header  = ecl_rsthead_alloc( ecl_file );                      //
     const ecl_kw_type * zwel_kw = ecl_file_iget_named_kw( ecl_file , ZWEL_KW   , 0);
     int num_wells = ecl_kw_get_size( zwel_kw );
     well_nr = 0;
@@ -174,7 +175,8 @@ static int well_state_get_lgr_well_nr( const well_state_type * well_state , cons
       bool found = false;
       
       {
-        char * lgr_well_name = util_alloc_strip_copy( ecl_kw_iget_ptr( zwel_kw , well_nr) );
+        char * lgr_well_name = util_alloc_strip_copy( ecl_kw_iget_ptr( zwel_kw , well_nr * header->nzwelz) );
+
         if ( strcmp( well_state->name , lgr_well_name) == 0)
           found = true;
         else
@@ -189,7 +191,9 @@ static int well_state_get_lgr_well_nr( const well_state_type * well_state , cons
         well_nr = -1;
         break;
       }
+      
     }
+    ecl_rsthead_free( header );
   }
   return well_nr;
 }
@@ -263,7 +267,6 @@ well_state_type * well_state_alloc( ecl_file_type * ecl_file , int report_nr ,  
             ecl_file_subselect_block( ecl_file , LGR_KW , lgr_nr );                               // 
             {                                                                                     //  Restrict the file view 
               int well_nr = well_state_get_lgr_well_nr( well_state , ecl_file);                   //  to one LGR block.   
-              //
               if (well_nr >= 0)                                                                   // 
                 well_state_add_connections( well_state , ecl_file , lgr_nr + 1, well_nr );        //
             }                                                                                     //
