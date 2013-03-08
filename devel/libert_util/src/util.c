@@ -34,6 +34,20 @@
 
 #include <fcntl.h>
 #include <limits.h>
+
+#ifdef HAVE_FORK
+#ifdef WITH_PTHREAD
+#ifdef HAVE_EXECINFO
+#define HAVE_UTIL_ABORT
+#endif
+#endif
+#endif
+
+#ifdef HAVE_UTIL_ABORT
+#define __USE_GNU       // Must be defined to get access to the dladdr() function; Man page says the symbol should be: _GNU_SOURCE but that does not seem to work?
+#define _GNU_SOURCE     // Must be defined _before_ #include <errno.h> to get the symbol 'program_invocation_name'. 
+#include <dlfcn.h>
+#endif
 #include <errno.h>
 
 #include <stdint.h>
@@ -3444,8 +3458,7 @@ void util_free_stringlist(char **list , int N) {
   int i;
   if (list != NULL) {
     for (i=0; i < N; i++) {
-      if (list[i] != NULL)
-        free(list[i]);
+      util_safe_free( list[i] );
     }
     free(list);
   }
@@ -4735,22 +4748,6 @@ int util_get_type( void * data ) {
 
 
 
-static void  __add_item__(int **_active_list , int * _current_length , int *_list_length , int value) {
-  int *active_list    = *_active_list;
-  int  current_length = *_current_length;
-  int  list_length    = *_list_length;
-
-  active_list[current_length] = value;
-  current_length++;
-  if (current_length == list_length) {
-    list_length *= 2;
-    active_list  = util_realloc( active_list , list_length * sizeof * active_list );
-    
-    *_active_list = active_list;
-    *_list_length = list_length;
-  }
-  *_current_length = current_length;
-}
 
 
 /**
@@ -4780,191 +4777,6 @@ int util_get_current_linenr(FILE * stream) {
 
 
 
-/* 
-   This functions parses an input string 'range_string' of the type:
-
-     "0,1,8, 10 - 20 , 15,17-21"
- 
-   I.e. integers separated by "," and "-". The integer values are
-   parsed out. The result can be returned in two different ways:
-
-
-    o If active != NULL the entries in active (corresponding to the
-      values in the range) are marked as true. All other entries are
-      marked as false. The active array must be allocated by the
-      calling scope, with length (at least) "max_value + 1".
-      
-    o If active == NULL - an (int *) pointer is allocated, filled with
-      the active indices and returned.
-
-*/
-
-//#include <stringlist.h>
-//#include <tokenizer.h>
-//static int * util_sscanf_active_range__NEW(const char * range_string , int max_value , bool * active , int * _list_length) {
-//  tokenizer_type * tokenizer = tokenizer_alloc( NULL  , /* No ordinary split characters. */
-//                                                NULL  , /* No quoters. */
-//                                                ",-"  , /* Special split on ',' and '-' */
-//                                                " \t" , /* Removing ' ' and '\t' */
-//                                                NULL  , /* No comment */
-//                                                NULL  );
-//  stringlist_type * tokens;
-//  tokens = tokenize_buffer( tokenizer , range_string , true);
-//  
-//  stringlist_free( tokens );
-//  tokenizer_free( tokenizer );
-//} 
-   
-
-
-
-static int * util_sscanf_active_range__(const char * range_string , int max_value , bool * active , int * _list_length) {
-  int *active_list    = NULL;
-  int  current_length = 0;
-  int  list_length;
-  int  value,value1,value2;
-  char  * start_ptr = (char *) range_string;
-  char  * end_ptr;
-  bool didnt_work = false;
-  
-  if (active != NULL) {
-    for (value = 0; value <= max_value; value++)
-      active[value] = false;
-  } else {
-    list_length = 10;
-    active_list = util_calloc( list_length , sizeof * active_list );
-  }
-    
-    
-  while (start_ptr != NULL) {
-    value1 = strtol(start_ptr , &end_ptr , 10);
-    if (active != NULL && value1 > max_value)
-      fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value1 , max_value);
-    
-    if (end_ptr == start_ptr){
-      printf("Returning to menu: %s \n" , start_ptr);
-      didnt_work = true;
-      break;
-    }
-    /* OK - we have found the first integer, now there are three possibilities:
-       
-      1. The string contains nothing more (except) possibly whitespace.
-      2. The next characters are " , " - with more or less whitespace.
-      3. The next characters are " - " - with more or less whitespace.
-    
-    Otherwise it is a an invalid string.
-    */
-
-
-    /* Storing the value. */
-    if (active != NULL) {
-      if (value1 <= max_value) active[value1] = true;
-    } else 
-      __add_item__(&active_list , &current_length , &list_length , value1);
-
-
-
-    /* Skipping trailing whitespace. */
-    start_ptr = end_ptr;
-    while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
-      start_ptr++;
-    
-    
-    if (start_ptr[0] == '\0') /* We have found the end */
-      start_ptr = NULL;
-    else {
-      /* OK - now we can point at "," or "-" - else malformed string. */
-      if (start_ptr[0] == ',' || start_ptr[0] == '-') {
-        if (start_ptr[0] == '-') {  /* This is a range */
-          start_ptr++; /* Skipping the "-" */
-          while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
-            start_ptr++;
-          
-          if (start_ptr[0] == '\0') {
-            /* The range just ended - without second value. */
-            printf("%s[0]: malformed string: %s \n",__func__ , start_ptr);
-            didnt_work = true; 
-            break;
-          }
-          value2 = strtol(start_ptr , &end_ptr , 10);
-          if (end_ptr == start_ptr) {
-            printf("%s[1]: failed to parse integer from: %s \n",__func__ , start_ptr);
-            didnt_work = true;
-            break;
-          }
-          if (active != NULL && value2 > max_value)
-            fprintf(stderr , "** Warning - value:%d is larger than the maximum value: %d \n",value2 , max_value);
-          
-          if (value2 < value1){
-            printf("%s[2]: invalid interval - must have increasing range \n",__func__);
-            didnt_work = true;
-            break;
-          }
-          start_ptr = end_ptr;
-          { 
-            int value;
-            for (value = value1 + 1; value <= value2; value++) {
-              if (active != NULL) {
-                if (value <= max_value) active[value] = true;
-              } else
-                __add_item__(&active_list , &current_length , &list_length , value);
-            }
-          }
-          
-          /* Skipping trailing whitespace. */
-          while (start_ptr[0] != '\0' && isspace(start_ptr[0]))
-            start_ptr++;
-          
-          
-          if (start_ptr[0] == '\0')
-            start_ptr = NULL; /* We are done */
-          else {
-            if (start_ptr[0] == ',')
-              start_ptr++;
-            else{
-              printf("%s[3]: malformed string: %s \n",__func__ , start_ptr);
-              didnt_work = true;
-              break;
-            }
-          }
-        } else 
-          start_ptr++;  /* Skipping "," */
-
-        /**
-           When this loop is finished the start_ptr should point at a
-           valid integer. I.e. for instance for the following input
-           string:  "1-3 , 78"
-                           ^
-                           
-           The start_ptr should point at "78".
-        */
-
-      } else{
-        printf("%s[4]: malformed string: %s \n",__func__ , start_ptr);
-        didnt_work = true;
-        break;
-      }
-    }
-  }
-  if (_list_length != NULL)
-    *_list_length = current_length;
-  
-  if (didnt_work){
-    for (value = 0; value <= max_value; value++)
-      active[value] = false;
-  }
-  
-  return active_list;
-}
-
-
-void util_sscanf_active_range(const char * range_string , int max_value , bool * active) {
-  util_sscanf_active_range__(range_string , max_value , active , NULL);
-}
-
-int * util_sscanf_alloc_active_list(const char * range_string , int * list_length) {
-  return util_sscanf_active_range__(range_string , 0 , NULL , list_length);
-}
 
 
 const char * util_enum_iget( int index , int size , const util_enum_element_type * enum_defs , int * value) {
@@ -4999,10 +4811,8 @@ void util_abort_free_version_info() {
 
 
 void util_abort_set_executable( const char * argv0 ) {
-  if (util_is_abs_path(argv0)) {
-    printf("Setting executable:%s \n",argv0);
+  if (util_is_abs_path(argv0)) 
     __current_executable = util_realloc_string_copy( __current_executable , argv0 );
-  }
   else {
     char * executable;
     if (util_is_executable( argv0 )) 
@@ -5010,11 +4820,11 @@ void util_abort_set_executable( const char * argv0 ) {
     else
       executable = util_alloc_PATH_executable( argv0 );
 
-    
     util_abort_set_executable( executable );
     free( executable );
   }
 }
+
 
 
 /*****************************************************************/
@@ -5129,17 +4939,11 @@ char * util_alloc_link_target(const char * link) {
 }
 #endif
 
-#ifdef HAVE_FORK
-#ifdef WITH_PTHREAD
-#ifdef HAVE_EXECINFO
+
+
+#ifdef HAVE_UTIL_ABORT
 #include "util_abort_gnu.c"
-#define HAVE_UTIL_ABORT
-#endif
-#endif
-#endif
-
-
-#ifndef HAVE_UTIL_ABORT
+#else
 #include "util_abort_simple.c"
 #endif
 

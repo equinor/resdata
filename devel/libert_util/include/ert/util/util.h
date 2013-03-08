@@ -314,8 +314,6 @@ typedef enum {left_pad   = 0,
 
   
   bool     util_sscanf_bytesize(const char * , size_t *);
-  void     util_sscanf_active_range(const char *  , int , bool * );
-  int    * util_sscanf_alloc_active_list(const char *  , int * );
   int      util_get_current_linenr(FILE * stream);
   const char * util_update_path_var(const char * , const char * , bool );
   
@@ -452,6 +450,17 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
 #ifdef HAVE_LOCKF
   FILE       * util_fopen_lockf(const char * , const char * );
   bool     util_try_lockf(const char *  , mode_t  , int * );
+#endif
+
+#ifdef HAVE_FORK
+#ifdef WITH_PTHREAD
+#ifdef HAVE_EXECINFO
+
+  bool util_addr2line_lookup(const void * bt_addr , char ** func_name , char ** file_line, int * line_nr);
+
+#define HAVE_UTIL_ABORT
+#endif
+#endif
 #endif
 
 

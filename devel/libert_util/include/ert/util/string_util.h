@@ -24,12 +24,12 @@ extern "C" {
 #include <ert/util/int_vector.h>
 #include <ert/util/bool_vector.h>
 
-  void               string_util_init_active_list( const char * range_string , int_vector_type * active_list );
-  void               string_util_update_active_list( const char * range_string , int_vector_type * active_list );
+  bool               string_util_init_active_list( const char * range_string , int_vector_type * active_list );
+  bool               string_util_update_active_list( const char * range_string , int_vector_type * active_list );
   int_vector_type *  string_util_alloc_active_list( const char * range_string );
 
-  void               string_util_init_active_mask( const char * range_string , bool_vector_type * active_mask);
-  void               string_util_update_active_mask( const char * range_string , bool_vector_type * active_mask);
+  bool               string_util_init_active_mask( const char * range_string , bool_vector_type * active_mask);
+  bool               string_util_update_active_mask( const char * range_string , bool_vector_type * active_mask);
   bool_vector_type * string_util_alloc_active_mask( const char * range_string );
 
 #ifdef __cplusplus
