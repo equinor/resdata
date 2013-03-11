@@ -586,9 +586,20 @@ class EclFile(CClass):
         INTEHEAD keyword. 
         """
         dates = []
-        for index in range( self.num_named_kw( 'SEQNUM' )):
-            dates.append( self.iget_restart_sim_time( index ))
+        if self.has_kw('SEQNUM'):
+            for index in range( self.num_named_kw( 'SEQNUM' )):
+                dates.append( self.iget_restart_sim_time( index ))
+        else:
+            # This is a uber-hack; should export the ecl_rsthead
+            # object as ctypes structure.
+            intehead = self["INTEHEAD"][0]
+            year = intehead[66]
+            month = intehead[65]
+            day = intehead[64]
+            date = datetime.datetime( year , month , day )
+            dates = [ date ]
         return dates
+    
 
     @property
     def dates( self ):
