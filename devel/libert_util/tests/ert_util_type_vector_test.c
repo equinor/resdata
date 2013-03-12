@@ -60,5 +60,20 @@ int main(int argc , char ** argv) {
     free( data1 );
   }
   
+  
+  test_assert_true( int_vector_init_range( int_vector , 100 , 1000 , 115 ) );
+  test_assert_int_equal( int_vector_iget( int_vector , 0 ) , 100);
+  test_assert_int_equal( int_vector_iget( int_vector , 1 ) , 215);
+  test_assert_int_equal( int_vector_iget( int_vector , 2 ) , 330);
+  test_assert_int_equal( int_vector_iget( int_vector , 3 ) , 445);
+  test_assert_int_equal( int_vector_get_last( int_vector ) , 1000);
+  
+  test_assert_false( int_vector_init_range( int_vector , 100 , -1000 , 115 ) );
+  test_assert_int_equal( int_vector_iget( int_vector , 0 ) , 100);
+  test_assert_int_equal( int_vector_iget( int_vector , 1 ) , 215);
+  test_assert_int_equal( int_vector_iget( int_vector , 2 ) , 330);
+  test_assert_int_equal( int_vector_iget( int_vector , 3 ) , 445);
+  test_assert_int_equal( int_vector_get_last( int_vector ) , 1000);
+  
   exit(0);
 }

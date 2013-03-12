@@ -782,6 +782,20 @@ void @TYPE@_vector_set_all(@TYPE@_vector_type * vector , @TYPE@ value) {
   }
 }
 
+bool @TYPE@_vector_init_range(@TYPE@_vector_type * vector , @TYPE@ min_value , @TYPE@ max_value , @TYPE@ delta) {
+  if (max_value >= min_value) {
+    @TYPE@_vector_reset( vector );
+    @TYPE@ current_value = min_value;
+    while (current_value < max_value) {
+      @TYPE@_vector_append( vector , current_value );
+      current_value += delta;
+    }
+    @TYPE@_vector_append( vector , max_value );
+    return true;
+  } else
+    return false;
+}
+
 
 void @TYPE@_vector_append_many(@TYPE@_vector_type * vector , const @TYPE@ * data , int length) {
   @TYPE@_vector_set_many( vector , @TYPE@_vector_size( vector ) , data , length);
