@@ -219,5 +219,5 @@ cfunc.stringlist_iget       = cwrapper.prototype("char* stringlist_iget( stringl
 cfunc.stringlist_get_size   = cwrapper.prototype("int  stringlist_get_size( stringlist )") 
 cfunc.contains              = cwrapper.prototype("bool stringlist_contains(stringlist , char*)")
 cfunc.sort                  = cwrapper.prototype("void stringlist_python_sort( stringlist , int)")
-cfunc.pop                   = cwrapper.prototype("char* stringlist_pop( stringlist )")
-cfunc.last                  = cwrapper.prototype("char* stringlist_get_last( stringlist )")
+cfunc.pop                   = cwrapper.safe_prototype("char* stringlist_pop( stringlist )")
+cfunc.last                  = cwrapper.safe_prototype("char* stringlist_get_last( stringlist )")
