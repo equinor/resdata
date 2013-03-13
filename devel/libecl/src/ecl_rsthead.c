@@ -31,7 +31,7 @@ static time_t rsthead_date( int day , int month , int year) {
 
 
 time_t ecl_rsthead_date( const ecl_kw_type * intehead_kw ) {
-  return rsthead_date( ecl_kw_iget_int( intehead_kw , INTEHEAD_DAY_INDEX)   , 
+  return rsthead_date(  ecl_kw_iget_int( intehead_kw , INTEHEAD_DAY_INDEX)   , 
                         ecl_kw_iget_int( intehead_kw , INTEHEAD_MONTH_INDEX) , 
                         ecl_kw_iget_int( intehead_kw , INTEHEAD_YEAR_INDEX)  );
 }

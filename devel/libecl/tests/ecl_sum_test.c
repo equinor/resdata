@@ -36,6 +36,20 @@ void test_time_range( const ecl_sum_type * ecl_sum ) {
 }
 
 
+void test_days( const ecl_sum_type * ecl_sum ) {
+  time_t date1  = util_make_date( 1,1,2000);
+  time_t date2  = util_make_date( 31,12,2004 );
+  time_t date3  = util_make_date( 2,1,2000 );
+
+  double days1 = ecl_sum_time2days( ecl_sum , date1 );
+  double days2 = ecl_sum_time2days( ecl_sum , date2);
+  double days3 = ecl_sum_time2days( ecl_sum , date3 );
+
+  test_assert_double_equal( days1 , 0 );
+  test_assert_double_equal( days2 , 1826 );
+  test_assert_double_equal( days3 , 1 );
+}
+
 
 
 
@@ -46,6 +60,7 @@ int main( int argc , char ** argv) {
   ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( casename , ":");
 
   test_time_range( ecl_sum );
+  test_days( ecl_sum );
 
   exit(0);
 }

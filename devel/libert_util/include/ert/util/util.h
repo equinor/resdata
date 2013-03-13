@@ -106,7 +106,7 @@ typedef enum {left_pad   = 0,
   bool         util_file_exists(const char *);
   bool         util_is_abs_path(const char * );
   char       * util_alloc_abs_path( const char * path );
-  char       * util_alloc_rel_path( const char * root_path , const char * path);
+  char       * util_alloc_rel_path( const char * __root_path , const char * path);
   bool         util_fmt_bit8   (const char *);
   bool         util_fmt_bit8_stream(FILE * );
   void         util_make_path  (const char *);
@@ -450,6 +450,17 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
 #ifdef HAVE_LOCKF
   FILE       * util_fopen_lockf(const char * , const char * );
   bool     util_try_lockf(const char *  , mode_t  , int * );
+#endif
+
+#ifdef HAVE_FORK
+#ifdef WITH_PTHREAD
+#ifdef HAVE_EXECINFO
+
+  bool util_addr2line_lookup(const void * bt_addr , char ** func_name , char ** file_line, int * line_nr);
+
+#define HAVE_UTIL_ABORT
+#endif
+#endif
 #endif
 
 

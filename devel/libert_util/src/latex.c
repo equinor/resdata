@@ -99,9 +99,24 @@ latex_type * latex_alloc( const char * input_file , bool in_place ) {
   char * input_path;
   char * input_extension;
   latex_type * latex = util_malloc( sizeof * latex );
-  
+
+  latex->latex_cmd        = NULL;
+  latex->target_file      = NULL;
+  latex->target_extension = NULL;
+  latex->target_path      = NULL;
+  latex->result_file      = NULL;
+  latex->basename         = NULL;
+  latex->run_path         = NULL;
+
   latex->in_place = in_place;
-  util_alloc_file_components( input_file , &input_path , &latex->basename , &input_extension );
+  {
+    char * basename;
+    util_alloc_file_components( input_file , &input_path , &basename , &input_extension );
+    if (basename == NULL)
+      util_abort("%s: must provide a basename \n",__func__);
+    latex->basename = basename;
+  }
+
   if (input_path == NULL)
     input_path = util_alloc_cwd( );
   else {
@@ -141,12 +156,6 @@ latex_type * latex_alloc( const char * input_file , bool in_place ) {
   /*
     Setting various default values.
   */
-  latex->target_file      = NULL;
-  latex->latex_cmd        = NULL;
-  latex->target_extension = NULL;
-  latex->target_path      = NULL;
-  latex->result_file      = NULL;
-
   latex_set_target_extension( latex , TARGET_EXTENSION );
   latex_set_target_path( latex , input_path );
   latex_set_command( latex , __LATEX_CMD );
@@ -197,6 +206,10 @@ void latex_cleanup( latex_type * latex ) {
     util_clear_directory(latex->run_path , true , true );
 }
 
+
+bool latex_compile_in_place( const latex_type * latex ) {
+  return latex->in_place;
+}
 
 
 static void latex_ensure_target_file( latex_type * latex) {
@@ -314,13 +327,12 @@ void latex_set_timeout( latex_type * latex , int timeout) {
 
 
 void latex_free( latex_type * latex ) {
-
-  free( latex->latex_cmd );
-  free( latex->run_path );
-  free( latex->src_file );
-  free( latex->basename );
-  free( latex->target_extension );
-  free( latex->target_path );
+  util_safe_free( latex->latex_cmd );
+  util_safe_free( latex->run_path );
+  util_safe_free( latex->src_file );
+  util_safe_free( latex->basename );
+  util_safe_free( latex->target_extension );
+  util_safe_free( latex->target_path );
   
   util_safe_free( latex->target_file );
   util_safe_free( latex->result_file );

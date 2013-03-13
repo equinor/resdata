@@ -403,6 +403,9 @@ double ecl_sum_get_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days
   return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , node );
 }
 
+double ecl_sum_time2days( const ecl_sum_type * ecl_sum , time_t sim_time) {
+  return ecl_sum_data_time2days( ecl_sum->data , sim_time );
+}
 
 
 
