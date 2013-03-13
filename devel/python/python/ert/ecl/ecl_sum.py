@@ -397,6 +397,15 @@ class EclSumVector:
 
 
 class EclSMSPECNode( CClass ):
+    """
+    Small class with some meta information about a summary variable.
+
+    The summary variables have different attributes, like if they
+    represent a total quantity, a rate or a historical quantity. These
+    quantities, in addition to the underlying values like WGNAMES,
+    KEYWORD and NUMS taken from the the SMSPEC file are stored in this
+    structure.
+    """
     def __new__(cls , c_ptr , parent):
         if c_ptr:
             obj = object.__new__( cls )
@@ -738,6 +747,13 @@ class EclSum( CClass ):
         """
         return self.get_vector( key )
 
+
+    def check_sim_time( self , date):
+        """
+        Will check if the input date is in the time span [sim_start , sim_end].
+        """
+        return cfunc.check_sim_time( self , ctime(date) )
+
     
     def get_interp( self , key , days = None , date = None):
         """
@@ -762,7 +778,7 @@ class EclSum( CClass ):
                 else:
                     raise ValueError("days:%s is outside range of simulation: [%g,%g]" % (days , self.first_day , self.sim_length))
         elif date:
-            if cfunc.check_sim_time( self , ctime(date) ):
+            if self.check_sim_time( date ):
                 return cfunc.get_general_var_from_sim_time( self , ctime(date) , key )
             else:
                 raise ValueError("date:%s is outside range of simulation data" % date)
