@@ -825,7 +825,7 @@ void ecl_file_select_global( ecl_file_type * ecl_file ) {
 */
 
 
-static ecl_file_type * ecl_file_open__( const char * filename , bool read_only) {
+static ecl_file_type * ecl_file_open__( const char * filename , int flags , bool read_only) {
   bool          fmt_file   = ecl_util_fmt_file( filename );
   ecl_file_type * ecl_file = ecl_file_alloc_empty( read_only );
 
@@ -845,13 +845,13 @@ static ecl_file_type * ecl_file_open__( const char * filename , bool read_only) 
 }
 
 
-ecl_file_type * ecl_file_open( const char * filename ) {
-  return ecl_file_open__(filename , true );
+ecl_file_type * ecl_file_open( const char * filename , int flags) {
+  return ecl_file_open__(filename , flags , true );
 }
 
-ecl_file_type * ecl_file_try_open( const char * filename) {
+ecl_file_type * ecl_file_try_open( const char * filename, int flags) {
   if (util_entry_readable( filename ))
-    return ecl_file_open( filename );
+    return ecl_file_open( filename , flags);
   else
     return NULL;
 }
@@ -863,9 +863,9 @@ ecl_file_type * ecl_file_try_open( const char * filename) {
    existing file is truncated to zero upon successfull open.  
 */
 
-ecl_file_type * ecl_file_open_writable( const char * filename ) {
+ecl_file_type * ecl_file_open_writable( const char * filename , int flags) {
   if (util_entry_readable( filename ) && util_entry_writable( filename ))
-    return ecl_file_open__(filename , false );
+    return ecl_file_open__(filename , flags , false );
   else
     return NULL;
 }

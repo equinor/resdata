@@ -2055,7 +2055,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file) {
   if (file_type != ECL_EGRID_FILE)
     util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
   {
-    ecl_file_type * ecl_file   = ecl_file_open( grid_file );
+    ecl_file_type * ecl_file   = ecl_file_open( grid_file , 0);
     int num_grid               = ecl_file_get_num_named_kw( ecl_file , GRIDHEAD_KW );
     ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( NULL , ecl_file , 0 );
     int grid_nr;
@@ -2283,7 +2283,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
   
   {
     int cell_offset = 0;
-    ecl_file_type * ecl_file  = ecl_file_open( grid_file );
+    ecl_file_type * ecl_file  = ecl_file_open( grid_file , 0);
     int num_grid              = ecl_file_get_num_named_kw( ecl_file , DIMENS_KW);
     ecl_grid_type * main_grid;
     int grid_nr;

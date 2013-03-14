@@ -173,7 +173,7 @@ class EclFile(CClass):
         return "EclFile: %s" % self.name
 
         
-    def __init__( self , filename , read_only = True):
+    def __init__( self , filename , flags = 0 , read_only = True):
         """
         Loads the complete file @filename.
 
@@ -194,9 +194,9 @@ class EclFile(CClass):
         FIPNUM from an INIT file.
         """
         if read_only:
-            c_ptr = cfunc.open( filename )
+            c_ptr = cfunc.open( filename , flags )
         else:
-            c_ptr = cfunc.open_writable( filename )
+            c_ptr = cfunc.open_writable( filename , flags)
 
         self.init_cobj( c_ptr , cfunc.close )
         if c_ptr is None:
@@ -712,8 +712,8 @@ cwrapper.registerType( "ecl_file" , EclFile )
 #    used outside this scope.
 cfunc = CWrapperNameSpace("ecl_file")
 
-cfunc.open                        = cwrapper.prototype("c_void_p    ecl_file_try_open( char* )")
-cfunc.open_writable               = cwrapper.prototype("c_void_p    ecl_file_open_writable( char* )")
+cfunc.open                        = cwrapper.prototype("c_void_p    ecl_file_try_open( char* , int )")
+cfunc.open_writable               = cwrapper.prototype("c_void_p    ecl_file_open_writable( char* , int)")
 cfunc.is_writable                 = cwrapper.prototype("bool        ecl_file_writable( ecl_file )")
 cfunc.new                         = cwrapper.prototype("c_void_p    ecl_file_alloc_empty(  )")
 cfunc.save_kw                     = cwrapper.prototype("void        ecl_file_save_kw( ecl_file , ecl_kw )")
