@@ -40,6 +40,7 @@ extern "C" {
   int          latex_get_timeout( const latex_type * latex );
   const char * latex_get_runpath( const latex_type * latex );
   const char * latex_get_target_file( const latex_type * latex );
+  bool         latex_compile_in_place( const latex_type * latex );
 
   void         latex_link_path( const latex_type * latex , const char * path);
   void         latex_link_directory_content(const latex_type * latex , const char * path);

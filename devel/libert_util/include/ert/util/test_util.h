@@ -38,6 +38,13 @@ extern "C" {
 #define test_assert_int_not_equal( i1 , i2 ) test_assert_int_not_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
   void  test_assert_int_not_equal__( int i1 , int i2 , const char * file , int line );
 
+#define test_assert_uint_equal( i1 , i2 ) test_assert_uint_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
+  void  test_assert_uint_equal__( unsigned int i1 , unsigned int i2 , const char * file , int line );
+
+#define test_assert_uint_not_equal( i1 , i2 ) test_assert_uint_not_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
+  void  test_assert_uint_not_equal__( unsigned int i1 , unsigned int i2 , const char * file , int line );
+
+
 #define test_assert_double_equal( d1 , d2 ) test_assert_double_equal__( (d1) , (d2) , __FILE__ , __LINE__  )
   void  test_assert_double_equal__( double d1 , double d2 , const char * file , int line );
 
@@ -76,6 +83,11 @@ extern "C" {
 
 #define test_assert_mem_not_equal( p1 , p2 , byte_size ) test_assert_mem_not_equal__( (p1) , (p2) , (byte_size), __FILE__ , __LINE__)
   void test_assert_mem_not_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line);
+
+
+#ifdef HAVE_UTIL_ABORT
+  void test_util_addr2line();
+#endif
 
 #ifdef __cplusplus
 }

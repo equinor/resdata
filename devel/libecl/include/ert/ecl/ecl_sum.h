@@ -60,6 +60,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
 
   double         ecl_sum_get_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const smspec_node_type * node);
   double         ecl_sum_get_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const smspec_node_type * node);
+  double         ecl_sum_time2days( const ecl_sum_type * ecl_sum , time_t sim_time);
   
   void           ecl_sum_set_unified( ecl_sum_type * ecl_sum , bool unified );
   void           ecl_sum_set_fmt_case( ecl_sum_type * ecl_sum , bool fmt_case );
