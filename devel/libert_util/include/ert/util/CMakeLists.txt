@@ -13,11 +13,10 @@ if (MSVC)
   list( APPEND header_files ${CMAKE_CURRENT_BINARY_DIR}/stdbool.h)
 endif()
 
-if (INSTALL_ERT)
-   foreach(header ${header_files})
-       install(FILES ${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/util)
-   endforeach()
-endif()
+foreach(header ${header_files})
+    install(FILES ${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/util)
+endforeach()
+
 
 
 

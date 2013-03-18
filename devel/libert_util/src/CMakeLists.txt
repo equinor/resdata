@@ -68,12 +68,11 @@ endif()
 target_link_libraries( ert_util dl )
 
 #-----------------------------------------------------------------
-if (INSTALL_ERT)
-   install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_LIBDIR})
-   foreach(header ${header_files})
-       install(FILES ../include/ert/util/${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/util)
-   endforeach()
-endif()
+install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_LIBDIR})
+foreach(header ${header_files})
+    install(FILES ../include/ert/util/${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/util)
+endforeach()
+
 
 
 
