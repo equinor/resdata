@@ -2501,6 +2501,13 @@ bool util_entry_readable( const char * entry ) {
 }
 
 
+bool util_file_readable( const char * file ) {
+  if (util_entry_readable( file ) && util_is_file( file ))
+    return true;
+  else
+    return false;
+}
+
 bool util_entry_writable( const char * entry ) {
   struct stat buffer;
   if (stat( entry , &buffer ) == 0)
