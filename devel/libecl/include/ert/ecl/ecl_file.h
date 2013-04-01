@@ -75,7 +75,7 @@ extern "C" {
   bool               ecl_file_subselect_block( ecl_file_type * ecl_file , const char * kw , int occurence);
   bool               ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence);
   void               ecl_file_select_global( ecl_file_type * ecl_file );
-  bool               ecl_file_writable( const ecl_file_type * ecl_file );
+  //bool               ecl_file_writable( const ecl_file_type * ecl_file );
   void               ecl_file_save_kw( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw);
   bool               ecl_file_has_kw_ptr( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw);
 

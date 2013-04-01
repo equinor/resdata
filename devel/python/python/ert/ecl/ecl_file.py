@@ -195,8 +195,10 @@ class EclFile(CClass):
         """
         if read_only:
             c_ptr = cfunc.open( filename , flags )
+            self.writable = False
         else:
             c_ptr = cfunc.open_writable( filename , flags)
+            self.writable = True
 
         self.init_cobj( c_ptr , cfunc.close )
         if c_ptr is None:
@@ -227,7 +229,7 @@ class EclFile(CClass):
              keyword you got from this EclFile instance, otherwise the
              function will fail.
         """
-        if cfunc.is_writable( self ):
+        if self.writable:
             cfunc.save_kw( self , kw )
         else:
             raise IOError("save_kw: the file:%s has been opened read only." % self.name)
@@ -714,7 +716,6 @@ cfunc = CWrapperNameSpace("ecl_file")
 
 cfunc.open                        = cwrapper.prototype("c_void_p    ecl_file_try_open( char* , int )")
 cfunc.open_writable               = cwrapper.prototype("c_void_p    ecl_file_open_writable( char* , int)")
-cfunc.is_writable                 = cwrapper.prototype("bool        ecl_file_writable( ecl_file )")
 cfunc.new                         = cwrapper.prototype("c_void_p    ecl_file_alloc_empty(  )")
 cfunc.save_kw                     = cwrapper.prototype("void        ecl_file_save_kw( ecl_file , ecl_kw )")
 

@@ -826,34 +826,39 @@ void ecl_file_select_global( ecl_file_type * ecl_file ) {
 
 
 static ecl_file_type * ecl_file_open__( const char * filename , int flags , bool read_only) {
+  fortio_type * fortio;
   bool          fmt_file   = ecl_util_fmt_file( filename );
-  ecl_file_type * ecl_file = ecl_file_alloc_empty( read_only );
-
-  
-  if (ecl_file->read_only)
-    ecl_file->fortio = fortio_open_reader( filename , fmt_file , ECL_ENDIAN_FLIP);    
+  if (read_only)
+    fortio = fortio_open_reader( filename , fmt_file , ECL_ENDIAN_FLIP);    
   else 
-    ecl_file->fortio = fortio_open_readwrite( filename , fmt_file , ECL_ENDIAN_FLIP);
-  
-  ecl_file->global_map = file_map_alloc( ecl_file->fortio , ecl_file->inv_map , true );
-  
-  ecl_file_add_map( ecl_file , ecl_file->global_map );
-  ecl_file_scan( ecl_file );
-  ecl_file_select_global( ecl_file );
+    fortio = fortio_open_readwrite( filename , fmt_file , ECL_ENDIAN_FLIP);
 
-  return ecl_file;
+  if (fortio) {
+    ecl_file_type * ecl_file = ecl_file_alloc_empty( read_only );
+    ecl_file->fortio = fortio;
+    ecl_file->global_map = file_map_alloc( ecl_file->fortio , ecl_file->inv_map , true );
+    
+    ecl_file_add_map( ecl_file , ecl_file->global_map );
+    ecl_file_scan( ecl_file );
+    ecl_file_select_global( ecl_file );
+
+    return ecl_file;
+  } else 
+    return NULL;
 }
 
 
 ecl_file_type * ecl_file_open( const char * filename , int flags) {
-  return ecl_file_open__(filename , flags , true );
+  ecl_file_type * ecl_file = ecl_file_open__(filename , flags , true );
+  if (ecl_file)
+    return ecl_file;
+  else
+    util_abort("%s: failed to open ECLIPSE file:%s \n",__func__ , filename);
 }
 
+
 ecl_file_type * ecl_file_try_open( const char * filename, int flags) {
-  if (util_entry_readable( filename ))
-    return ecl_file_open( filename , flags);
-  else
-    return NULL;
+  return ecl_file_open__(filename , flags , true );
 }
 
 /**

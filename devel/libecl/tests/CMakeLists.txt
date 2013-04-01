@@ -41,6 +41,10 @@ add_executable( ecl_sum_test ecl_sum_test.c )
 target_link_libraries( ecl_sum_test ecl )
 add_test( ecl_sum_test ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_test ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE )
 
+add_executable( ecl_fortio ecl_fortio.c )
+target_link_libraries( ecl_fortio  ecl )
+add_test( ecl_fortio ${EXECUTABLE_OUTPUT_PATH}/ecl_fortio ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST )
+
 add_executable( ecl_rsthead ecl_rsthead.c )
 target_link_libraries( ecl_rsthead ecl )
 add_test( ecl_rsthead ${EXECUTABLE_OUTPUT_PATH}/ecl_rsthead ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST 
@@ -53,3 +57,4 @@ set_property( TEST ecl_lgr_test2 PROPERTY LABELS Statoil )
 set_property( TEST ecl_grid_simple PROPERTY LABELS Statoil )
 set_property( TEST ecl_dualp PROPERTY LABELS Statoil )
 set_property( TEST ecl_sum_test PROPERTY LABELS Statoil )
+set_property( TEST ecl_fortio PROPERTY LABELS Statoil)
