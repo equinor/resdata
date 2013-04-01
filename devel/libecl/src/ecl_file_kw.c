@@ -219,8 +219,8 @@ static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fort
   
   if (file_kw->kw != NULL) 
     ecl_file_kw_drop_kw( file_kw , inv_map );
-  
-  {
+
+  if (fortio_assert_stream_open( fortio )) {
     fortio_fseek( fortio , file_kw->file_offset , SEEK_SET );
     file_kw->kw = ecl_kw_fread_alloc( fortio );
     ecl_file_kw_assert_kw( file_kw );

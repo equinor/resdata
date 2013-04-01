@@ -380,13 +380,21 @@ bool fortio_fopen_stream( fortio_type * fortio ) {
 }
 
 
-
-
 bool fortio_stream_is_open( const fortio_type * fortio ) {
   if (fortio->stream)
     return true;
   else
     return false;
+}
+
+
+bool fortio_assert_stream_open( fortio_type * fortio ) {
+  if (fortio->stream)
+    return true;
+  else {
+    fortio_fopen_stream( fortio );
+    return fortio_stream_is_open( fortio );
+  }
 }
 
 

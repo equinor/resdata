@@ -73,6 +73,7 @@ typedef struct fortio_struct fortio_type;
   bool               fortio_fclose_stream( fortio_type * fortio );
   bool               fortio_fopen_stream( fortio_type * fortio );
   bool               fortio_stream_is_open( const fortio_type * fortio );
+  bool               fortio_assert_stream_open( fortio_type * fortio );
 
 #ifdef __cplusplus
 }

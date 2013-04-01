@@ -32,9 +32,14 @@ extern "C" {
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_util.h>
 
+  typedef enum {
+    ECL_FILE_CLOSE_STREAM  =  1 ,
+    ECL_FILE_WRITABLE      =  2 
+  } ecl_file_flag_type;
+
 
   typedef struct ecl_file_struct ecl_file_type;
-  void             ecl_file_load_all( ecl_file_type * ecl_file );
+  bool             ecl_file_load_all( ecl_file_type * ecl_file );
   void             ecl_file_push_block( ecl_file_type * ecl_file );
   void             ecl_file_pop_block( ecl_file_type * ecl_file );
   ecl_file_type  * ecl_file_open( const char * filename , int flags);
@@ -59,6 +64,10 @@ extern "C" {
   void             ecl_file_replace_kw( ecl_file_type * ecl_file , ecl_kw_type * old_kw , ecl_kw_type * new_kw , bool insert_copy);
   int              ecl_file_get_phases( const ecl_file_type * init_file );
   void             ecl_file_fprintf_kw_list( const ecl_file_type * ecl_file , FILE * stream );
+  
+  int              ecl_file_get_flags( const ecl_file_type * ecl_file );
+  bool             ecl_file_flags_set( const ecl_file_type * ecl_file , int flags);
+
   
   
   ecl_file_kw_type * ecl_file_iget_file_kw( const ecl_file_type * file , int global_index);

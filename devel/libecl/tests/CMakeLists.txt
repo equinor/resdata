@@ -45,6 +45,10 @@ add_executable( ecl_fortio ecl_fortio.c )
 target_link_libraries( ecl_fortio  ecl )
 add_test( ecl_fortio ${EXECUTABLE_OUTPUT_PATH}/ecl_fortio ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST )
 
+add_executable( ecl_file ecl_file.c )
+target_link_libraries( ecl_file  ecl )
+add_test( ecl_file ${EXECUTABLE_OUTPUT_PATH}/ecl_file ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST ECLIPSE.UNRST)
+
 add_executable( ecl_rsthead ecl_rsthead.c )
 target_link_libraries( ecl_rsthead ecl )
 add_test( ecl_rsthead ${EXECUTABLE_OUTPUT_PATH}/ecl_rsthead ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST 
