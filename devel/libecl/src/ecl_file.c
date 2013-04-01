@@ -998,12 +998,11 @@ int ecl_file_get_phases( const ecl_file_type * init_file ) {
 }
 
 
+/*
 bool ecl_file_writable( const ecl_file_type * ecl_file ) {
-  if (fortio_get_mode( ecl_file->fortio ) & FORTIO_WRITE)
-    return true;
-  else
-    return false;
+  return fortio_writable( ecl_file->fortio );
 }
+*/
 
 /**
    Checks if the ecl_file contains ecl_kw; this check is based on
