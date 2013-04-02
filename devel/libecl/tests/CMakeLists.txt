@@ -49,11 +49,17 @@ add_executable( ecl_file ecl_file.c )
 target_link_libraries( ecl_file  ecl )
 add_test( ecl_file ${EXECUTABLE_OUTPUT_PATH}/ecl_file ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST ECLIPSE.UNRST)
 
+add_executable( ecl_fmt ecl_fmt.c )
+target_link_libraries( ecl_fmt  ecl )
+add_test( ecl_fmt ${EXECUTABLE_OUTPUT_PATH}/ecl_fmt ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.DATA)
+
+
 add_executable( ecl_rsthead ecl_rsthead.c )
 target_link_libraries( ecl_rsthead ecl )
 add_test( ecl_rsthead ${EXECUTABLE_OUTPUT_PATH}/ecl_rsthead ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST 
                                                             ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/DualPoro/DUALPORO.X0005 ) 
 
+set_property( TEST ecl_fmt         PROPERTY LABELS Statoil )
 set_property( TEST ecl_coarse_test PROPERTY LABELS Statoil )
 set_property( TEST ecl_restart_test PROPERTY LABELS Statoil )
 set_property( TEST ecl_lgr_test1 PROPERTY LABELS Statoil )

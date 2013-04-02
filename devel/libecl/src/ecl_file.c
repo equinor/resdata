@@ -868,8 +868,9 @@ void ecl_file_select_global( ecl_file_type * ecl_file ) {
 
 static ecl_file_type * ecl_file_open__( const char * filename , int flags) {
   fortio_type * fortio;
-  bool          fmt_file   = ecl_util_fmt_file( filename );
+  bool          fmt_file;
 
+  ecl_util_fmt_file( filename , &fmt_file);
   flags |= ECL_FILE_CLOSE_STREAM;   // DEBUG DEBUG DEBUG
   
   if (FILE_FLAGS_SET(flags , ECL_FILE_WRITABLE))
