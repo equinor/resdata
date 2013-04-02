@@ -272,11 +272,16 @@ static ecl_file_kw_type * file_map_iget_named_file_kw( const file_map_type * fil
 
 static ecl_kw_type * file_map_iget_kw( const file_map_type * file_map , int index) {
   ecl_file_kw_type * file_kw = file_map_iget_file_kw( file_map , index );
-  ecl_kw_type * ecl_kw = ecl_file_kw_get_kw( file_kw , file_map->fortio , file_map->inv_map);
-    
-  if (FILE_FLAGS_SET( file_map->flags , ECL_FILE_CLOSE_STREAM))
-    fortio_fclose_stream( file_map->fortio );
+  ecl_kw_type * ecl_kw = ecl_file_kw_get_kw_ptr( file_kw , file_map->fortio , file_map->inv_map);
+  if (!ecl_kw) {
+    if (fortio_assert_stream_open( file_map->fortio )) {
+      
+      ecl_kw = ecl_file_kw_get_kw( file_kw , file_map->fortio , file_map->inv_map);
 
+      if (FILE_FLAGS_SET( file_map->flags , ECL_FILE_CLOSE_STREAM))
+        fortio_fclose_stream( file_map->fortio );
+    }
+  }
   return ecl_kw;
 }
 
@@ -329,11 +334,16 @@ static const char * file_map_iget_header( const file_map_type * file_map , int i
 
 static ecl_kw_type * file_map_iget_named_kw( const file_map_type * file_map , const char * kw, int ith) {
   ecl_file_kw_type * file_kw = file_map_iget_named_file_kw( file_map , kw , ith);
-  ecl_kw_type * ecl_kw = ecl_file_kw_get_kw( file_kw , file_map->fortio , file_map->inv_map );
-
-  if (FILE_FLAGS_SET( file_map->flags , ECL_FILE_CLOSE_STREAM))
-    fortio_fclose_stream( file_map->fortio );
-
+  ecl_kw_type * ecl_kw = ecl_file_kw_get_kw_ptr( file_kw , file_map->fortio , file_map->inv_map );
+  if (!ecl_kw) {
+    if (fortio_assert_stream_open( file_map->fortio )) {
+      
+      ecl_kw = ecl_file_kw_get_kw( file_kw , file_map->fortio , file_map->inv_map);
+      
+      if (FILE_FLAGS_SET( file_map->flags , ECL_FILE_CLOSE_STREAM))
+        fortio_fclose_stream( file_map->fortio );
+    }
+  }
   return ecl_kw;
 }
 
@@ -860,6 +870,8 @@ static ecl_file_type * ecl_file_open__( const char * filename , int flags) {
   fortio_type * fortio;
   bool          fmt_file   = ecl_util_fmt_file( filename );
 
+  flags |= ECL_FILE_CLOSE_STREAM;
+  
   if (FILE_FLAGS_SET(flags , ECL_FILE_WRITABLE))
     fortio = fortio_open_readwrite( filename , fmt_file , ECL_ENDIAN_FLIP);
   else 
@@ -887,8 +899,10 @@ ecl_file_type * ecl_file_open( const char * filename , int flags) {
   ecl_file_type * ecl_file = ecl_file_open__(filename , flags );
   if (ecl_file)
     return ecl_file;
-  else
+  else {
     util_abort("%s: failed to open ECLIPSE file:%s \n",__func__ , filename);
+    return NULL;
+  }
 }
 
 
@@ -1089,12 +1103,23 @@ bool ecl_file_has_kw_ptr( const ecl_file_type * ecl_file , const ecl_kw_type * e
      open functions.  
 */
 
-void ecl_file_save_kw( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw) {
+bool ecl_file_save_kw( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw) {
   ecl_file_kw_type * file_kw = inv_map_get_file_kw( ecl_file->inv_map , ecl_kw );  // We just verify that the input ecl_kw points to an ecl_kw 
-  if (file_kw != NULL)                                                             // we manage; from then on we use the reference contained in
-    ecl_file_kw_inplace_fwrite( file_kw , ecl_file->fortio );                      // the corresponding ecl_file_kw instance.
-  else 
+  if (file_kw != NULL) {                                                           // we manage; from then on we use the reference contained in
+    if (fortio_assert_stream_open( ecl_file->fortio )) {                           // the corresponding ecl_file_kw instance. 
+    
+      ecl_file_kw_inplace_fwrite( file_kw , ecl_file->fortio );                      
+      
+      if (FILE_FLAGS_SET( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
+        fortio_fclose_stream( ecl_file->fortio );
+      
+      return true;
+    } else
+      return false;
+  } else {
     util_abort("%s: keyword pointer:%p not found in ecl_file instance. \n",__func__ , ecl_kw);
+    return false;
+  }
 }
 
 
