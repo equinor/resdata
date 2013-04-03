@@ -19,6 +19,10 @@ add_executable( ecl_grid_simple ecl_grid_simple.c )
 target_link_libraries( ecl_grid_simple ecl )
 add_test( ecl_grid_simple ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_simple  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
 
+add_executable( ecl_grid_dims ecl_grid_dims.c )
+target_link_libraries( ecl_grid_dims ecl )
+add_test( ecl_grid_dims ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_dims  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.GRID )
+
 
 add_executable( ecl_kw_grdecl ecl_kw_grdecl.c )
 target_link_libraries( ecl_kw_grdecl ecl )
