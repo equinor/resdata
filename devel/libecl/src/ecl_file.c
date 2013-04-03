@@ -871,7 +871,7 @@ static ecl_file_type * ecl_file_open__( const char * filename , int flags) {
   bool          fmt_file;
 
   ecl_util_fmt_file( filename , &fmt_file);
-  flags |= ECL_FILE_CLOSE_STREAM;   // DEBUG DEBUG DEBUG
+  //flags |= ECL_FILE_CLOSE_STREAM;   // DEBUG DEBUG DEBUG
   
   if (FILE_FLAGS_SET(flags , ECL_FILE_WRITABLE))
     fortio = fortio_open_readwrite( filename , fmt_file , ECL_ENDIAN_FLIP);
