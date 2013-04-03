@@ -70,7 +70,9 @@ endif()
 if (NEED_LIBM)
    target_link_libraries( ert_util m )
 endif()
-target_link_libraries( ert_util dl )
+if (NEED_LIBDL)
+   target_link_libraries( ert_util dl )
+endif()
 
 #-----------------------------------------------------------------
 if (INSTALL_ERT)
