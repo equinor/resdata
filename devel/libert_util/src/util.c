@@ -762,9 +762,9 @@ bool util_is_cwd( const char * path ) {
       /*
         The windows stat structure has the inode element, but it is
         not set. Actually - this is a property of the filesystem, and
-        not the operating system - this check is probably broken?
+        not the operating system - the whole check is probably broken?
       */
-      ERROR
+      util_abort("%s: Internal error - function not properly implmented on Windows \n",__func__);
 #else
       struct stat cwd_stat;
       stat(cwd , &cwd_stat);
@@ -2500,6 +2500,13 @@ bool util_entry_readable( const char * entry ) {
     return false;  /* If stat failed - typically not existing entry - we return false. */
 }
 
+
+bool util_file_readable( const char * file ) {
+  if (util_entry_readable( file ) && util_is_file( file ))
+    return true;
+  else
+    return false;
+}
 
 bool util_entry_writable( const char * entry ) {
   struct stat buffer;
