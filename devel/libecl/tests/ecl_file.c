@@ -17,6 +17,7 @@
 */
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <ert/util/test_util.h>
 #include <ert/util/util.h>
@@ -94,8 +95,29 @@ void test_close_stream1(const char * src_file , const char * target_file ) {
   ecl_kw_type * kw2 = ecl_file_iget_kw( ecl_file , 2 );
   test_assert_NULL( kw2 );
   
+  test_assert_false( ecl_file_writable( ecl_file ));
+
   ecl_file_close( ecl_file );
   
+}
+
+
+void test_writable(const char * src_file ) {
+  util_copy_file( src_file , "/tmp/ECL.UNRST" );
+  {
+    ecl_file_type * ecl_file = ecl_file_open( "/tmp/ECL.UNRST" , ECL_FILE_WRITABLE);
+    ecl_kw_type * swat = ecl_file_iget_named_kw( ecl_file , "SWAT" , 0 );
+    ecl_kw_type * swat0 = ecl_kw_alloc_copy( swat );
+    test_assert_true( ecl_kw_equal( swat , swat0 ));
+    ecl_kw_iset_float( swat , 0 , 1000.0 );
+    ecl_file_save_kw( ecl_file , swat );
+    test_assert_true( ecl_file_writable( ecl_file ));
+    ecl_file_close( ecl_file );
+
+    ecl_file = ecl_file_open( "/tmp/ECL.UNRST" , 0);
+    swat = ecl_file_iget_named_kw( ecl_file , "SWAT" , 0 );
+    test_assert_true( util_double_approx_equal( ecl_kw_iget_float( swat , 0 ) , 1000 ));
+  }
 }
 
 
@@ -109,6 +131,7 @@ int main( int argc , char ** argv) {
   test_loadall(src_file , target_file );
   test_close_stream1( src_file , target_file );
   test_close_stream2( src_file , target_file );
+  test_writable( src_file );
                  
   exit(0);
 }

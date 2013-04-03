@@ -911,20 +911,7 @@ ecl_file_type * ecl_file_try_open( const char * filename, int flags) {
   return ecl_file_open__(filename , flags );
 }
 
-/**
-   This function opens the file in a mode where it can be updated and
-   modified, but it must still exist and be readable. I.e. this should
-   not compared with the normal: fopen(filename , "w") where an
-   existing file is truncated to zero upon successfull open.  
-*/
 
-ecl_file_type * ecl_file_open_writable( const char * filename , int flags) {
-  flags |= ECL_FILE_WRITABLE;
-  if (util_entry_readable( filename ) && util_entry_writable( filename ))
-    return ecl_file_open__(filename , flags );
-  else
-    return NULL;
-}
 
 int ecl_file_get_flags( const ecl_file_type * ecl_file ) {
   return ecl_file->flags;
@@ -933,6 +920,10 @@ int ecl_file_get_flags( const ecl_file_type * ecl_file ) {
 
 bool ecl_file_flags_set( const ecl_file_type * ecl_file , int flags) {
   return FILE_FLAGS_SET( ecl_file->flags , flags );
+}
+
+bool ecl_file_writable( const ecl_file_type * ecl_file ) {
+  return FILE_FLAGS_SET( ecl_file->flags , ECL_FILE_WRITABLE );
 }
 
 
@@ -1123,6 +1114,14 @@ bool ecl_file_save_kw( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_
   }
 }
 
+/* Small function to support Python based enum introspection. */
 
+#ifdef HAVE_FORK
+
+const char * ecl_util_file_flags_enum_iget( int index , int * value) {
+  return util_enum_iget( index , ECL_FILE_FLAGS_ENUM_SIZE , (const util_enum_element_type []) { ECL_FILE_FLAGS_ENUM_DEFS }, value);
+}
+
+#endif
 
 

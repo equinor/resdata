@@ -411,10 +411,6 @@ ecl_file_type * ecl_file_open_rstblock_report_step( const char * filename , int 
   return ecl_file_open_rstblock_report_step__(filename , report_step , flags );
 }
 
-ecl_file_type * ecl_file_open_rstblock_report_step_writable( const char * filename , int report_step , int flags) {
-  flags |= ECL_FILE_WRITABLE;
-  return ecl_file_open_rstblock_report_step__(filename , report_step , flags );
-}
 
 /******************************************************************/
 
@@ -431,11 +427,6 @@ ecl_file_type * ecl_file_open_rstblock_sim_time( const char * filename , time_t 
   return ecl_file_open_rstblock_sim_time__( filename , sim_time , flags );
 }
 
-ecl_file_type * ecl_file_open_rstblock_sim_time_writable( const char * filename , time_t sim_time, int flags) {
-  flags |= ECL_FILE_WRITABLE;
-  return ecl_file_open_rstblock_sim_time__( filename , sim_time , flags );
-}
-
 /******************************************************************/
 
 static ecl_file_type * ecl_file_iopen_rstblock__( const char * filename , int seqnum_index, int flags ) {
@@ -449,12 +440,6 @@ static ecl_file_type * ecl_file_iopen_rstblock__( const char * filename , int se
 
 
 ecl_file_type * ecl_file_iopen_rstblock( const char * filename , int seqnum_index , int flags) {
-  return ecl_file_iopen_rstblock__(filename , seqnum_index , flags );
-}
-
-
-ecl_file_type * ecl_file_iopen_rstblock_writable( const char * filename , int seqnum_index , int flags) {
-  flags |= ECL_FILE_WRITABLE;
   return ecl_file_iopen_rstblock__(filename , seqnum_index , flags );
 }
 
