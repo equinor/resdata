@@ -28,11 +28,12 @@ endif()
 target_link_libraries( ecl ert_geometry ert_util )
 
 #-----------------------------------------------------------------
-install(TARGETS ecl DESTINATION ${CMAKE_INSTALL_LIBDIR})
-foreach(header ${header_files})
-    install(FILES ../include/ert/ecl/${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/ecl)
-endforeach()
-
+if (INSTALL_ERT) 
+    install(TARGETS ecl DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    foreach(header ${header_files})
+        install(FILES ../include/ert/ecl/${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/ert/ecl)
+    endforeach()
+endif()
 
 
 
