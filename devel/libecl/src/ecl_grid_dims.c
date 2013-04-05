@@ -132,6 +132,7 @@ ecl_grid_dims_type * ecl_grid_dims_alloc( const char * grid_file , const char * 
 
 
 void ecl_grid_dims_free( ecl_grid_dims_type * grid_dims ) {
+  vector_free( grid_dims->dims_list );
   free( grid_dims );
 }
 
