@@ -173,7 +173,6 @@ static int well_state_get_lgr_well_nr( const well_state_type * well_state , cons
     well_nr = 0;
     while (true) {
       bool found = false;
-      printf("Looking for:%s  num_wells:%d  \n" , well_state->name , header->nzwelz);
       {
         char * lgr_well_name = util_alloc_strip_copy( ecl_kw_iget_ptr( zwel_kw , well_nr * header->nzwelz) );
 
@@ -207,7 +206,6 @@ well_state_type * well_state_alloc( ecl_file_type * ecl_file , int report_nr ,  
     const ecl_kw_type * global_iwel_kw = ecl_file_iget_named_kw( ecl_file , IWEL_KW   , 0);
     const ecl_kw_type * global_zwel_kw = ecl_file_iget_named_kw( ecl_file , ZWEL_KW   , 0);
     
-    printf("well_nr:%d \n",global_well_nr);
     const int iwel_offset = global_header->niwelz * global_well_nr;
     {
       const int zwel_offset         = global_header->nzwelz * global_well_nr;
@@ -217,7 +215,6 @@ well_state_type * well_state_alloc( ecl_file_type * ecl_file , int report_nr ,  
       well_state->valid_from_report = report_nr;
       well_state->name              = util_alloc_strip_copy(ecl_kw_iget_ptr( global_zwel_kw , zwel_offset ));  // Hardwired max 8 characters in Well Name
 
-      printf("Looking for well:%d/%s \n",global_well_nr , well_state->name);
       {
         int int_state = ecl_kw_iget_int( global_iwel_kw , iwel_offset + IWEL_STATUS_ITEM );
         if (int_state > 0)
