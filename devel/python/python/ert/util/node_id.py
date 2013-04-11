@@ -15,9 +15,18 @@
 #  for more details. 
 
 from ctypes import *
-class NodeId(Structure):
-    _fields_ = [("report_step", c_int),
-                ("state", c_int),
-                ("iens", c_int)]
+#import  ctypes
+from    ert.cwrap.cwrap       import *
+from    ert.cwrap.cclass      import CClass
+from    ert.ert.c_enums import *
+import libutil
+class NodeId(Structure): pass
+NodeId._fields_ = [
+    ("report_step", c_int),
+    ("state", c_uint),
+    ("iens", c_int)
+    ]
 
     
+cwrapper = CWrapper( libutil.lib )
+cwrapper.registerType( "node_id" , NodeId )

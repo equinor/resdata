@@ -1228,6 +1228,7 @@ class EclSum( CClass ):
     def alloc_data_vector(self, data_index, report_only):
         return double_vector(cfunc.alloc_data_vector(self, data_index, report_only))
 
+
     def get_general_var_index(self, key):
         return cfunc.get_general_var_index( self , key )
 
