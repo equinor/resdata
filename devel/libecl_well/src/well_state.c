@@ -169,11 +169,10 @@ static int well_state_get_lgr_well_nr( const well_state_type * well_state , cons
   if (ecl_file_has_kw( ecl_file , ZWEL_KW)) {
     ecl_rsthead_type  * header  = ecl_rsthead_alloc( ecl_file );                      //
     const ecl_kw_type * zwel_kw = ecl_file_iget_named_kw( ecl_file , ZWEL_KW   , 0);
-    int num_wells = ecl_kw_get_size( zwel_kw );
+    int num_wells               = header->nwells;
     well_nr = 0;
     while (true) {
       bool found = false;
-      
       {
         char * lgr_well_name = util_alloc_strip_copy( ecl_kw_iget_ptr( zwel_kw , well_nr * header->nzwelz) );
 
@@ -184,6 +183,7 @@ static int well_state_get_lgr_well_nr( const well_state_type * well_state , cons
         
         free( lgr_well_name );
       }
+      
       if (found)
         break;
       else if (well_nr == num_wells) {
@@ -214,7 +214,7 @@ well_state_type * well_state_alloc( ecl_file_type * ecl_file , int report_nr ,  
       well_state->valid_from_time   = global_header->sim_time;
       well_state->valid_from_report = report_nr;
       well_state->name              = util_alloc_strip_copy(ecl_kw_iget_ptr( global_zwel_kw , zwel_offset ));  // Hardwired max 8 characters in Well Name
-      
+
       {
         int int_state = ecl_kw_iget_int( global_iwel_kw , iwel_offset + IWEL_STATUS_ITEM );
         if (int_state > 0)

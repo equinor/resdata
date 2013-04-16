@@ -54,6 +54,9 @@ extern "C" {
 #define test_assert_bool_equal( b1 , b2 ) test_assert_bool_equal__( (b1) , (b2) , __FILE__ , __LINE__ )
   void test_assert_bool_equal__( bool b1 , bool b2 , const char * file , int line);
 
+#define test_assert_bool_not_equal( b1 , b2 ) test_assert_bool_not_equal__( (b1) , (b2) , __FILE__ , __LINE__ )
+  void test_assert_bool_not_equal__( bool b1 , bool b2 , const char * file , int line);
+
 #define test_assert_true( value ) test_assert_true__( (value) , __FILE__ , __LINE__)
   void test_assert_true__( bool value, const char * file , int line);
   
