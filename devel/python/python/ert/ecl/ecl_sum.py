@@ -33,7 +33,7 @@ from   ert.cwrap.cwrap       import *
 from   ert.cwrap.cclass      import CClass
 from   ert.util.stringlist   import StringList
 from   ert.util.ctime        import ctime 
-from   ert.ert.erttypes      import time_vector
+from   ert.ert.erttypes      import time_vector, double_vector
 
 import  numpy
 
@@ -1222,9 +1222,15 @@ class EclSum( CClass ):
         cfunc.fwrite_sum( self )
         
         
-        
+    def alloc_time_vector(self, report_only):
+        return time_vector(cfunc.alloc_time_vector(self, report_only))
+
+    def alloc_data_vector(self, data_index, report_only):
+        return double_vector(cfunc.alloc_data_vector(self, data_index, report_only))
 
 
+    def get_general_var_index(self, key):
+        return cfunc.get_general_var_index( self , key )
 
 #################################################################
 
@@ -1282,7 +1288,7 @@ cfunc.get_report_time               = cwrapper.prototype("time_t   ecl_sum_get_r
 cfunc.fwrite_sum                    = cwrapper.prototype("void     ecl_sum_fwrite(ecl_sum)")
 cfunc.set_case                      = cwrapper.prototype("void     ecl_sum_set_case(ecl_sum, char*)")
 cfunc.alloc_time_vector             = cwrapper.prototype("c_void_p ecl_sum_alloc_time_vector(ecl_sum, bool)")
-cfunc.alloc_data_vector             = cwrapper.prototype("c_void_p ecl_sum_alloc_data_vector(ecl_sum, int, bool)")
+cfunc.alloc_data_vector            = cwrapper.prototype("c_void_p ecl_sum_alloc_data_vector(ecl_sum, int, bool)")
 #-----------------------------------------------------------------
 # smspec node related stuff
 

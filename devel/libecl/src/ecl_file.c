@@ -932,7 +932,7 @@ void ecl_file_push_block( ecl_file_type * ecl_file ) {
 }
 
 void ecl_file_pop_block( ecl_file_type * ecl_file ) {
-  ecl_file->active_map = vector_pop( ecl_file->map_stack );
+  ecl_file->active_map = vector_pop_back( ecl_file->map_stack );
 }
 
 
