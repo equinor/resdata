@@ -508,7 +508,7 @@ class EclSMSPECNode( CClass ):
 
 class EclSum( CClass ):
     
-    def __new__( cls , load_case , join_string = ":" , include_restart = True):
+    def __new__( cls , load_case , join_string = ":" , include_restart = True, cptr = None, parent = None):
         """
         Loads a new EclSum instance with summary data.
 
@@ -526,13 +526,21 @@ class EclSum( CClass ):
         loader will, in the case of a restarted ECLIPSE simulation,
         try to load summary results also from the restarted case.
         """
-        c_ptr = cfunc.fread_alloc( load_case , join_string , include_restart)
         if c_ptr:
             obj = object.__new__( cls )
-            obj.init_cobj( c_ptr , cfunc.free )
+            if parent:
+                obj.init_cref( c_ptr , parent)
+            else:
+                obj.init_cobj( c_ptr , cfunc.free )
             return obj
         else:
-            return None
+            c_ptr = cfunc.fread_alloc( load_case , join_string , include_restart)
+            if c_ptr:
+                obj = object.__new__( cls )
+                obj.init_cobj( c_ptr , cfunc.free )
+                return obj
+            else:
+                return None
         
 
     def __init__(self , load_case , join_string = ":" ,include_restart = True , c_ptr = None):
