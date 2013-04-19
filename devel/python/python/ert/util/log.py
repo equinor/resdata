@@ -21,18 +21,15 @@ from    ert.util.tvector      import *
 import  libutil
 class Log(CClass):
     
-    def __init__(self , c_ptr = None):
-        self.owner = False
-        self.c_ptr = c_ptr
-        
-        
-    def __del__(self):
-        if self.owner:
-            cfunc.free( self )
-            
+    def __init__(self , c_ptr , parent = None):
+        if parent:
+            self.init_cref( c_ptr , parent)
+        else:
+            self.init_cobj( c_ptr , cfunc.free )
+                        
     @property
     def get_filename(self):
-        #retur = cfunc.get_filename( self )
+        #return cfunc.get_filename( self )
         return "ert_config.log"
     
     def reopen(self, filename):
