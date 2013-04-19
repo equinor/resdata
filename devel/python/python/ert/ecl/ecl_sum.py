@@ -508,7 +508,7 @@ class EclSMSPECNode( CClass ):
 
 class EclSum( CClass ):
     
-    def __new__( cls , load_case , join_string = ":" , include_restart = True, cptr = None, parent = None):
+    def __new__( cls , load_case , join_string = ":" , include_restart = True, c_ptr = None, parent = None):
         """
         Loads a new EclSum instance with summary data.
 
@@ -543,7 +543,7 @@ class EclSum( CClass ):
                 return None
         
 
-    def __init__(self , load_case , join_string = ":" ,include_restart = True , c_ptr = None):
+    def __init__(self , load_case , join_string = ":" ,include_restart = True , c_ptr = None, parent = None):
         """
         Initialize a new EclSum instance.
 
