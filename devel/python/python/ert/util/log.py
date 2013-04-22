@@ -33,7 +33,8 @@ class Log(CClass):
         return "ert_config.log"
     
     def reopen(self, filename):
-        cfunc.reopen( self , filename)
+        print "Logfile cannot be reopened"
+        #cfunc.reopen( self , filename)
         
     @property
     def get_level(self):
