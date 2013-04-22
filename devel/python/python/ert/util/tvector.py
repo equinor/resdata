@@ -361,7 +361,7 @@ class TVector(CClass):
 
     def __len__(self):
         """
-        The number of elements in the vector."
+        The number of elements in the vector.
         """
         return self.get_size( self )
     
@@ -598,6 +598,17 @@ class BoolVector(TVector):
         new_obj.init_cobj( c_ptr , new_obj.free )
         return new_obj
 
+    @classmethod
+    def create_from_list(cls, size, list):
+        """Allocates a bool vector from a Python list"""
+        new_obj = BoolVector.__new__(cls)
+        c_ptr = cfunc.bool_vector_alloc(size , False) 
+        for index in list:
+            cfunc.bool_vector_iset(c_ptr, index, True)
+
+        #c_ptr = cfunc.bool_vector_data_ptr(mask)
+        new_obj.init_cobj( c_ptr , new_obj.free )
+        return new_obj
 
 
 
@@ -751,7 +762,7 @@ cfunc.int_vector_element_size        = cwrapper.prototype("int    int_vector_ele
 
 
 cfunc.bool_vector_alloc_copy          = cwrapper.prototype("c_void_p bool_vector_alloc_copy( bool_vector )")
-cfunc.bool_vector_alloc               = cwrapper.prototype("c_void_p   bool_vector_alloc( bool , bool )")
+cfunc.bool_vector_alloc               = cwrapper.prototype("c_void_p   bool_vector_alloc( int , bool )")
 cfunc.bool_vector_strided_copy        = cwrapper.prototype("c_void_p   bool_vector_alloc_strided_copy( bool_vector , bool , bool , bool)")
 cfunc.bool_vector_free                = cwrapper.prototype("void   bool_vector_free( bool_vector )")
 cfunc.bool_vector_iget                = cwrapper.prototype("bool    bool_vector_iget( bool_vector , bool )")
