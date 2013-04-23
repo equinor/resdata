@@ -73,7 +73,7 @@
 #include <sys/wait.h>
 #endif
 
-#ifdef HAVE_USLEEP
+#ifdef HAVE__USLEEP
 #include <unistd.h>
 #endif
 
@@ -700,7 +700,7 @@ char * util_realloc_stdin_line(char * p) {
 */
 
 void util_usleep( unsigned long micro_seconds ) {
-#ifdef HAVE_USLEEP
+#ifdef HAVE__USLEEP
   usleep( micro_seconds );
 #else 
   #ifdef ERT_WINDOWS

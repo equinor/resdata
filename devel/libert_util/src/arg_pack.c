@@ -524,7 +524,7 @@ void  arg_pack_iset_copy(arg_pack_type * arg_pack , int index , void * ptr, arg_
 }
 
 
-void arg_pack_iset_ptr(arg_pack_type * arg_pack, int index , const void * ptr) {
+void arg_pack_iset_ptr(arg_pack_type * arg_pack, int index , void * ptr) {
   arg_pack_iset_copy(arg_pack , index , ptr , NULL , NULL);
 }
 
@@ -538,7 +538,7 @@ void  arg_pack_append_copy(arg_pack_type * arg_pack , void * ptr, arg_node_copyc
 }
 
 
-void arg_pack_append_ptr(arg_pack_type * arg_pack, const void * ptr) {
+void arg_pack_append_ptr(arg_pack_type * arg_pack, void * ptr) {
   arg_pack_iset_ptr( arg_pack , arg_pack->size , ptr );
 }
 

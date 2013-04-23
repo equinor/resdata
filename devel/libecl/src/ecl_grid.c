@@ -2479,7 +2479,7 @@ bool ecl_grid_file_dims( const char * grid_filename , const char * init_restart_
       bool data_fmt_file;
       
       if (init_restart_filename) {
-        ecl_file_enum data_file_type = ecl_util_get_file_type( init_restart_filename , &data_fmt_file , NULL );
+        ecl_util_get_file_type( init_restart_filename , &data_fmt_file , NULL );
         data_fortio = fortio_open_reader( init_restart_filename , data_fmt_file , ECL_ENDIAN_FLIP );
       }
       
