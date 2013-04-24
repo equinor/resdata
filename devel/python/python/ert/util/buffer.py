@@ -17,7 +17,7 @@
 import  ctypes
 from    ert.cwrap.cwrap        import *
 from    ert.cwrap.cclass       import CClass
-from    ert.ert.erttypes       import time_t
+from    ert.util.ctime         import ctime
 from    ert.util.tvector       import * 
 import  libutil
 from    ert.enkf.libenkf       import *
