@@ -88,7 +88,20 @@ class StringList(CClass):
                     else:
                         raise TypeError("Item:%s not a string" % s)
 
-            
+
+    def __setitem__(self, index , value):
+        if isinstance( index , types.IntType):
+            length = self.__len__()
+            if index < 0:
+                # Will only wrap backwards once
+                index = self.size + index
+
+            if index < 0 or index >= length:
+                raise IndexError
+            if isinstance(value , types.StringType):
+                cfunc.stringlist_iset( self , index , value)
+            else:
+                raise TypeError("Item:%s not string type" % value)
 
 
     def __getitem__(self , index):
@@ -220,6 +233,7 @@ cfunc.free                  = cwrapper.prototype("void stringlist_free( stringli
 cfunc.stringlist_append     = cwrapper.prototype("void stringlist_append_copy( stringlist , char* )")
 cfunc.stringlist_iget       = cwrapper.prototype("char* stringlist_iget( stringlist , int )")
 cfunc.stringlist_iget_copy  = cwrapper.prototype("char* stringlist_iget_copy(stringlist, int)")
+cfunc.stringlist_iset       = cwrapper.prototype("void  stringlist_iset_copy( stringlist , int , char* )")
 cfunc.stringlist_get_size   = cwrapper.prototype("int  stringlist_get_size( stringlist )") 
 cfunc.contains              = cwrapper.prototype("bool stringlist_contains(stringlist , char*)")
 cfunc.sort                  = cwrapper.prototype("void stringlist_python_sort( stringlist , int)")
