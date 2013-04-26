@@ -118,6 +118,7 @@ void test_writable(const char * src_file ) {
     swat = ecl_file_iget_named_kw( ecl_file , "SWAT" , 0 );
     test_assert_true( util_double_approx_equal( ecl_kw_iget_float( swat , 0 ) , 1000 ));
   }
+  util_unlink_existing( "/tmp/ECL.UNRST" );
 }
 
 
@@ -132,6 +133,7 @@ int main( int argc , char ** argv) {
   test_close_stream1( src_file , target_file );
   test_close_stream2( src_file , target_file );
   test_writable( src_file );
+  util_unlink_existing( target_file );
                  
   exit(0);
 }
