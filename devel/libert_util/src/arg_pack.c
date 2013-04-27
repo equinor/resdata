@@ -334,6 +334,7 @@ static void arg_node_fprintf(const arg_node_type * node , FILE * stream) {
 /*****************************************************************/
 
 UTIL_SAFE_CAST_FUNCTION( arg_pack , ARG_PACK_TYPE_ID)
+UTIL_SAFE_CAST_FUNCTION_CONST( arg_pack , ARG_PACK_TYPE_ID)
 
 static void __arg_pack_assert_index(const arg_pack_type * arg , int iarg) {
   if (iarg < 0 || iarg >= arg->size) 
