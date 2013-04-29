@@ -38,6 +38,7 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/point.h>
 #include <ert/ecl/tetrahedron.h>
+#include <ert/ecl/grid_dims.h>
 
 
 /*
@@ -2501,7 +2502,6 @@ bool ecl_grid_file_dims( const char * grid_filename , const char * init_restart_
 
 
 
-
 /**
    Will load the grid corresponding to the input @input_case;
    depending on the value of @input_case many different paths will be
@@ -3020,6 +3020,26 @@ int ecl_grid_get_ny( const ecl_grid_type * grid ) {
 int ecl_grid_get_nactive( const ecl_grid_type * grid ) {
   return grid->total_active;
 }
+
+
+grid_dims_type  ecl_grid_iget_dims( const ecl_grid_type * grid , int grid_nr) {
+  grid_dims_type dims;
+  ecl_grid_type * lgr;
+
+  if (grid_nr == 0) 
+    lgr = grid;
+  else
+    lgr = ecl_grid_iget_lgr( grid , grid_nr - 1 );
+  
+  dims.nx = lgr->nx;
+  dims.ny = lgr->ny;
+  dims.nz = lgr->nz;
+  dims.nactive = lgr->total_active;
+  
+  return dims;
+}
+
+
 
 int ecl_grid_get_nactive_fracture( const ecl_grid_type * grid ) {
   return grid->total_active_fracture;
