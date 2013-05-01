@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
+   Copyright (C) 2013  Statoil ASA, Norway. 
    
    The file 'well_segment.c' is part of ERT - Ensemble based Reservoir Tool. 
     
