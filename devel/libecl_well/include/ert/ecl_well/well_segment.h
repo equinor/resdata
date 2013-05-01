@@ -1,0 +1,58 @@
+/*
+   Copyright (C) 2011  Statoil ASA, Norway. 
+   
+   The file 'well_segment.h' is part of ERT - Ensemble based Reservoir Tool. 
+    
+   ERT is free software: you can redistribute it and/or modify 
+   it under the terms of the GNU General Public License as published by 
+   the Free Software Foundation, either version 3 of the License, or 
+   (at your option) any later version. 
+    
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+   FITNESS FOR A PARTICULAR PURPOSE.   
+    
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+   for more details. 
+*/
+
+
+#ifndef __WELL_SEGMENT_H__
+#define __WELL_SEGMENT_H__
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdbool.h>
+
+  /* The values are shifted one down compared to ISEG description in table 6.1 in ECLIPSE file formats reference. */
+  
+#define ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE        -1    
+#define ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE   0
+#define ECLIPSE_WELL_SEGMENT_BRANCH_INACTIVE_VALUE   -1
+
+
+  
+  typedef struct well_segment_struct well_segment_type;
+  
+  well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , int branch_id );
+  void                well_segment_free(well_segment_type * segment );
+
+  bool                well_segment_active( const well_segment_type * segment );
+  bool                well_segment_main_stem( const well_segment_type * segment );
+  bool                well_segment_nearest_wellhead( const well_segment_type * segment );
+  
+  int                 well_segment_get_link_count( const well_segment_type * segment );  
+  int                 well_segment_get_branch_id( const well_segment_type * segment );
+  int                 well_segment_get_outlet_id( const well_segment_type * segment );
+  int                 well_segment_get_id( const well_segment_type * segment );
+  well_segment_type * well_segment_get_outlet( const well_segment_type * segment );
+  bool                well_segment_link( well_segment_type * segment , well_segment_type * outlet_segment );
+  void                well_segment_link_strict( well_segment_type * segment , well_segment_type * outlet_segment );
+
+#ifdef __cplusplus
+}
+#endif
+#endif

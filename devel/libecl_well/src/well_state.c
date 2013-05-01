@@ -147,7 +147,8 @@ static void well_state_add_connections( well_state_type * well_state ,  const ec
   {
     int conn_nr;
     for (conn_nr = 0; conn_nr < num_connections; conn_nr++) {
-      well_conn_type * conn =  well_conn_alloc( icon_kw , iseg_kw , header , well_nr , seg_well_nr , conn_nr );
+      //well_conn_type * conn =  well_conn_alloc_from_kw( icon_kw , iseg_kw , header , well_nr , seg_well_nr , conn_nr );
+      well_conn_type * conn =  well_conn_alloc_from_kw( icon_kw , header , well_nr , conn_nr );
       if (conn != NULL)
         well_path_add_conn( path , conn );
     }
