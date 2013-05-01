@@ -43,10 +43,17 @@ extern "C" {
 
   void             well_conn_free( well_conn_type * conn);
   void             well_conn_free__( void * arg );
-  well_conn_type * well_conn_alloc( const ecl_kw_type * icon_kw , const ecl_kw_type * iseg_kw , const ecl_rsthead_type * header , int well_nr , int seg_well_nr , int conn_nr);
+
+  well_conn_type * well_conn_alloc( int i , int j , int k , well_conn_dir_enum dir, bool open);
+  well_conn_type * well_conn_alloc_MSW( int i , int j , int k , well_conn_dir_enum dir, bool open, int segment);
+  well_conn_type * well_conn_alloc_fracture( int i , int j , int k , well_conn_dir_enum dir, bool open);
+  well_conn_type * well_conn_alloc_fracture_MSW( int i , int j , int k , well_conn_dir_enum dir, bool open, int segment);
+
+  bool             well_conn_MSW(const well_conn_type * conn);
+
+  well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw , const ecl_rsthead_type * header , int well_nr , int conn_nr);
   well_conn_type * well_conn_alloc_wellhead( const ecl_kw_type * iwel_kw , const ecl_rsthead_type * header , int well_nr);
 
-  int                well_conn_get_branch(const well_conn_type * conn);
   int                well_conn_get_i(const well_conn_type * conn);
   int                well_conn_get_j(const well_conn_type * conn);
   int                well_conn_get_k(const well_conn_type * conn);
