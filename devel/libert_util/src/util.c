@@ -2102,11 +2102,16 @@ int util_count_content_file_lines(FILE * stream) {
       col = 0;
       c = fgetc(stream);
       if (! feof(stream) ) {
-        if (!EOL_CHAR(c))
+        if (!EOL_CHAR(c)){
           fseek(stream , -1 , SEEK_CUR);
+	}
+      }else if (c == EOF){
+	lines++;
       }
-    } else if (c == EOF)
+      
+    } else if (c == EOF){
       lines++;
+    }
     else {
       if (c != ' ')
         col++;
