@@ -3024,7 +3024,7 @@ int ecl_grid_get_nactive( const ecl_grid_type * grid ) {
 
 grid_dims_type  ecl_grid_iget_dims( const ecl_grid_type * grid , int grid_nr) {
   grid_dims_type dims;
-  ecl_grid_type * lgr;
+  const ecl_grid_type * lgr;
 
   if (grid_nr == 0) 
     lgr = grid;
