@@ -22,6 +22,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
+#include <signal.h>
 
 #include <ert/util/util.h>
 #include <ert/util/test_util.h>
@@ -198,6 +199,14 @@ void test_assert_double_not_equal__( double d1 , double d2, const char * file , 
     test_error_exit( "%s:%d => double values:%15.12g %15.12g are equal.\n" , file , line , d1 , d2);
 }
 
+/*****************************************************************/
+
+void test_install_SIGNALS(void) {
+  signal(SIGSEGV , util_abort_signal);    /* Segmentation violation, i.e. overwriting memory ... */
+  signal(SIGINT  , util_abort_signal);    /* Control C */
+  signal(SIGTERM , util_abort_signal);    /* If killing the program with SIGTERM (the default kill signal) you will get a backtrace. 
+                                             Killing with SIGKILL (-9) will not give a backtrace.*/
+}
 
 
 /*****************************************************************/
