@@ -287,8 +287,8 @@ static void well_info_add_state( well_info_type * well_info , well_state_type * 
  */
 
 void well_info_add_wells( well_info_type * well_info , ecl_file_type * rst_file , int report_nr) {
-  ecl_rsthead_type * global_header = ecl_rsthead_alloc( rst_file );
   int well_nr;
+  ecl_rsthead_type * global_header = ecl_rsthead_alloc( rst_file );
   for (well_nr = 0; well_nr < global_header->nwells; well_nr++) {
     well_state_type * well_state = well_state_alloc( rst_file , report_nr , well_nr );
     if (well_state != NULL)
@@ -340,7 +340,7 @@ void well_info_load_rstfile( well_info_type * well_info , const char * filename)
       well_info_add_wells( well_info , ecl_file , report_nr );
     else
       well_info_add_UNRST_wells( well_info , ecl_file );
-
+    
     ecl_file_close( ecl_file );
   } else
     util_abort("%s: invalid file type:%s - must be a restart file\n",__func__ , filename);

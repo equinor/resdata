@@ -16,6 +16,12 @@ set_target_properties( well_segment PROPERTIES COMPILE_FLAGS "-Werror")
 add_test( well_segment ${EXECUTABLE_OUTPUT_PATH}/well_segment )
 
 
+add_executable( well_info well_info.c )
+target_link_libraries( well_info ecl_well )
+set_target_properties( well_info PROPERTIES COMPILE_FLAGS "-Werror")                                    
+add_test( well_info ${EXECUTABLE_OUTPUT_PATH}/well_info ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
+
+
 add_executable( well_segment_collection well_segment_collection.c )
 target_link_libraries( well_segment_collection ecl_well )
 set_target_properties( well_segment_collection PROPERTIES COMPILE_FLAGS "-Werror")                                    
@@ -60,3 +66,4 @@ set_property( TEST well_conn_load3 PROPERTY LABELS Statoil )
 set_property( TEST well_conn_load4 PROPERTY LABELS Statoil )
 set_property( TEST well_conn_load5 PROPERTY LABELS Statoil )
 set_property( TEST well_conn_load6 PROPERTY LABELS Statoil )
+set_property( TEST well_info PROPERTY LABELS Statoil )
