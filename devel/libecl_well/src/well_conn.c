@@ -19,6 +19,7 @@
 #include <stdbool.h>
 
 #include <ert/util/util.h>
+#include <ert/util/type_macros.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_rsthead.h>
@@ -36,14 +37,17 @@
   ert libraries. 
 */
 
+#define WELL_CONN_TYPE_ID 702052013
+
 struct  well_conn_struct {
-    int                i;
-    int                j;
-    int                k;
-    well_conn_dir_enum dir;
-    bool               open;         
-    int                segment;             // -1: Ordinary well
-    bool               matrix_connection;   // k >= nz => fracture (and k -= nz )
+  UTIL_TYPE_ID_DECLARATION;
+  int                i;
+  int                j;
+  int                k;
+  well_conn_dir_enum dir;
+  bool               open;         
+  int                segment;             // -1: Ordinary well
+  bool               matrix_connection;   // k >= nz => fracture (and k -= nz )
 };
   
 
@@ -106,11 +110,14 @@ static bool well_conn_assert_direction( well_conn_dir_enum dir, bool matrix_conn
 }
 
 
+UTIL_IS_INSTANCE_FUNCTION( well_conn , WELL_CONN_TYPE_ID)
+UTIL_SAFE_CAST_FUNCTION( well_conn , WELL_CONN_TYPE_ID)
 
 
 static well_conn_type * well_conn_alloc__( int i , int j , int k , well_conn_dir_enum dir , bool open, int segment_id, bool matrix_connection) {
   if (well_conn_assert_direction( dir , matrix_connection)) {
     well_conn_type * conn = util_malloc( sizeof * conn );
+    UTIL_TYPE_ID_INIT( conn , WELL_CONN_TYPE_ID );
     conn->i = i;
     conn->j = j;
     conn->k = k;
@@ -263,7 +270,7 @@ void well_conn_free( well_conn_type * conn) {
 
 
 void well_conn_free__( void * arg ) {
-  well_conn_type * conn = (well_conn_type *) arg;
+  well_conn_type * conn = well_conn_safe_cast( arg );
   well_conn_free( conn );
 }
 

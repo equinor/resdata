@@ -27,6 +27,8 @@ extern "C" {
   
 #include <stdbool.h>
 
+#include <ert/util/type_macros.h>
+
 #include <ert/ecl/ecl_rsthead.h>
 
   typedef enum {
@@ -62,6 +64,10 @@ extern "C" {
   int                well_conn_get_segment( const well_conn_type * conn );
   bool               well_conn_fracture_connection( const well_conn_type * conn);
   bool               well_conn_matrix_connection( const well_conn_type * conn);
+
+  UTIL_IS_INSTANCE_HEADER( well_conn );
+  UTIL_SAFE_CAST_HEADER( well_conn );
+
 
 #ifdef __cplusplus
 }
