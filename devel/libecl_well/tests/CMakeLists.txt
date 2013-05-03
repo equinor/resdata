@@ -15,6 +15,11 @@ target_link_libraries( well_segment ecl_well )
 set_target_properties( well_segment PROPERTIES COMPILE_FLAGS "-Werror")                                    
 add_test( well_segment ${EXECUTABLE_OUTPUT_PATH}/well_segment )
 
+add_executable( well_segment_load well_segment_load.c )
+target_link_libraries( well_segment_load ecl_well )
+set_target_properties( well_segment_load PROPERTIES COMPILE_FLAGS "-Werror")                                    
+add_test( well_segment_load ${EXECUTABLE_OUTPUT_PATH}/well_segment_load ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/MSWcase/MSW_CASE.X0021)
+
 
 add_executable( well_info well_info.c )
 target_link_libraries( well_info ecl_well )
@@ -66,3 +71,4 @@ set_property( TEST well_conn_load4 PROPERTY LABELS Statoil )
 set_property( TEST well_conn_load5 PROPERTY LABELS Statoil )
 set_property( TEST well_conn_load6 PROPERTY LABELS Statoil )
 set_property( TEST well_info PROPERTY LABELS Statoil )
+set_property( TEST well_segment_load PROPERTY LABELS Statoil )

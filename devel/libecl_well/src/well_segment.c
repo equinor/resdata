@@ -27,8 +27,10 @@
 #include <ert/ecl_well/well_conn.h>
 #include <ert/ecl_well/well_segment.h>
 
+#define WELL_SEGMENT_TYPE_ID  2209166 
+
 struct well_segment_struct {
-  
+  UTIL_TYPE_ID_DECLARATION;
   int                 link_count;
   int                 segment_id;  
   int                 branch_id; 
@@ -37,10 +39,14 @@ struct well_segment_struct {
 };
 
 
+UTIL_IS_INSTANCE_FUNCTION( well_segment , WELL_SEGMENT_TYPE_ID )
+static UTIL_SAFE_CAST_FUNCTION( well_segment , WELL_SEGMENT_TYPE_ID )
+
 
 well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , int branch_id ) {
   well_segment_type * segment = util_malloc( sizeof * segment );
-
+  UTIL_TYPE_ID_INIT( segment , WELL_SEGMENT_TYPE_ID );
+  
   segment->link_count = 0;
   segment->segment_id = segment_id;
   segment->outlet_segment_id = outlet_segment_id;
@@ -51,8 +57,38 @@ well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , 
 }
 
 
+well_segment_type * well_segment_alloc_from_kw( const ecl_kw_type * iseg_kw , const ecl_rsthead_type * header , int well_nr, int segment_id) {
+  const int iseg_offset = header->nisegz * ( header->nsegmx * well_nr + segment_id);
+  int outlet_segment_id = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_OUTLET_ITEM );   
+  int branch_id         = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_BRANCH_ITEM );  
+  
+  well_segment_type * segment = well_segment_alloc( segment_id , outlet_segment_id , branch_id );
+  return segment;
+}
+
+
+/*
+    if (iseg_kw != NULL) {
+      if (conn->segment != WELL_CONN_NORMAL_WELL_SEGMENT_ID) {
+  
+      } else {
+        conn->branch = 0;
+        conn->outlet_segment = 0;
+      }
+    } else {
+      conn->branch = 0;
+      conn->outlet_segment = 0;
+    }
+    */
+
+
 void well_segment_free(well_segment_type * segment ) {
   free( segment );
+}
+
+void well_segment_free__(void * arg) {
+  well_segment_type * segment = well_segment_safe_cast( arg );
+  well_segment_free( segment );
 }
 
 

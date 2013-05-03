@@ -27,6 +27,9 @@ extern "C" {
 
 #include <stdbool.h>
 
+#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_rsthead.h>
+
   /* The values are shifted one down compared to ISEG description in table 6.1 in ECLIPSE file formats reference. */
   
 #define ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE        -1    
@@ -36,9 +39,11 @@ extern "C" {
 
   
   typedef struct well_segment_struct well_segment_type;
-  
+
+  well_segment_type * well_segment_alloc_from_kw( const ecl_kw_type * iseg_kw , const ecl_rsthead_type * header , int well_nr, int segment_id);
   well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , int branch_id );
   void                well_segment_free(well_segment_type * segment );
+  void                well_segment_free__(void * arg);
 
   bool                well_segment_active( const well_segment_type * segment );
   bool                well_segment_main_stem( const well_segment_type * segment );
@@ -51,6 +56,9 @@ extern "C" {
   well_segment_type * well_segment_get_outlet( const well_segment_type * segment );
   bool                well_segment_link( well_segment_type * segment , well_segment_type * outlet_segment );
   void                well_segment_link_strict( well_segment_type * segment , well_segment_type * outlet_segment );
+
+
+  UTIL_IS_INSTANCE_HEADER( well_segment );
 
 #ifdef __cplusplus
 }
