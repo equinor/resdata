@@ -35,7 +35,8 @@ int main(int argc , char ** argv) {
     int outlet_segment_id = 100;
     int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
     well_segment_type * ws = well_segment_alloc(segment_id , outlet_segment_id , branch_nr);
-    
+
+    test_assert_true( well_segment_is_instance( ws ));
     test_assert_int_equal( 0 , well_segment_get_link_count( ws ));
     test_assert_NULL( well_segment_get_outlet( ws ));
     test_assert_int_equal( well_segment_get_outlet_id( ws ) , outlet_segment_id );

@@ -53,3 +53,13 @@ void well_segment_collection_free(well_segment_collection_type * segment_collect
 int well_segment_collection_get_size( const well_segment_collection_type * segment_collection ) {
   return vector_get_size( segment_collection->segment_list );
 }
+
+
+void well_segment_collection_add( well_segment_collection_type * segment_collection , well_segment_type * segment) {
+  vector_append_owned_ref( segment_collection->segment_list , segment , well_segment_free__);
+}
+
+
+well_segment_type * well_segment_collection_iget( const well_segment_collection_type * segment_collection , int index) {
+  return vector_iget( segment_collection->segment_list , index );
+}
