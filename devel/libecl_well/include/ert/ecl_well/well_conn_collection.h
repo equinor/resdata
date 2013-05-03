@@ -35,6 +35,7 @@ extern "C" {
   const well_conn_type *      well_conn_collection_iget_const( const well_conn_collection_type * wellcc , int index);
   well_conn_type       *      well_conn_collection_iget(const well_conn_collection_type * wellcc , int index);
   void                        well_conn_collection_add( well_conn_collection_type * wellcc , well_conn_type * conn);
+  void                        well_conn_collection_add_ref( well_conn_collection_type * wellcc , well_conn_type * conn);
 
 #ifdef __cplusplus
 }

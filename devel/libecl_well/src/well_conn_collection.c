@@ -51,6 +51,13 @@ void well_conn_collection_add( well_conn_collection_type * wellcc , well_conn_ty
   vector_append_owned_ref( wellcc->connection_list , conn , well_conn_free__);
 }
 
+/*
+  The collection only stores a refernce to the object, which will be destroyed by 'someone else'. 
+*/
+
+void well_conn_collection_add_ref( well_conn_collection_type * wellcc , well_conn_type * conn) {
+  vector_append_ref( wellcc->connection_list , conn );
+}
 
 
 void well_conn_collection_free( well_conn_collection_type * wellcc ) {
