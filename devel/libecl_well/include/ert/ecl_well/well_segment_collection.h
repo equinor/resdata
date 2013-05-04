@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
+#include <ert/ecl/ecl_kw.h>
+
 #include <ert/ecl_well/well_segment.h>
   
   typedef struct well_segment_collection_struct well_segment_collection_type;
@@ -33,8 +37,13 @@ extern "C" {
   void                           well_segment_collection_free(well_segment_collection_type * segment_collection );
   int                            well_segment_collection_get_size( const well_segment_collection_type * segment_collection );
   void                           well_segment_collection_add( well_segment_collection_type * segment_collection , well_segment_type * segment);
+  bool                           well_segment_collection_has_segment( const well_segment_collection_type * segment_collection , int segment_id);
+  well_segment_type            * well_segment_collection_get( const well_segment_collection_type * segment_collection , int segment_id);
   well_segment_type            * well_segment_collection_iget( const well_segment_collection_type * segment_collection , int index);
-
+  int                            well_segment_collection_load_from_kw( well_segment_collection_type * segment_collection , int well_nr , 
+                                                                       const ecl_kw_type * iwel_kw , 
+                                                                       const ecl_kw_type * iseg_kw , const ecl_rsthead_type * rst_head);
+  
 #ifdef __cplusplus
 }
 #endif

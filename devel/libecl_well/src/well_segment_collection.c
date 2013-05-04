@@ -24,11 +24,13 @@
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_rsthead.h>
 
+#include <ert/ecl_well/well_const.h>
 #include <ert/ecl_well/well_segment.h>
 #include <ert/ecl_well/well_segment_collection.h>
 
 struct well_segment_collection_struct {
-  vector_type * segment_list;
+  int_vector_type * segment_index_map;
+  vector_type * __segment_storage;
 };
 
 
@@ -36,30 +38,83 @@ struct well_segment_collection_struct {
 well_segment_collection_type * well_segment_collection_alloc() {
   well_segment_collection_type * segment_collection = util_malloc( sizeof * segment_collection );
 
-  segment_collection->segment_list = vector_alloc_new();
-
+  segment_collection->__segment_storage = vector_alloc_new();
+  segment_collection->segment_index_map = int_vector_alloc( 0 , -1 );
   return segment_collection;
 }
 
 
 
 void well_segment_collection_free(well_segment_collection_type * segment_collection ) {
-  vector_free( segment_collection->segment_list );
+  vector_free( segment_collection->__segment_storage );
   free( segment_collection );
 }
 
 
 
 int well_segment_collection_get_size( const well_segment_collection_type * segment_collection ) {
-  return vector_get_size( segment_collection->segment_list );
+  return vector_get_size( segment_collection->__segment_storage );
 }
 
 
 void well_segment_collection_add( well_segment_collection_type * segment_collection , well_segment_type * segment) {
-  vector_append_owned_ref( segment_collection->segment_list , segment , well_segment_free__);
+  int segment_id = well_segment_get_id( segment );
+  int current_index = int_vector_safe_iget( segment_collection->segment_index_map , segment_id );
+  if (current_index >= 0) 
+    vector_iset_owned_ref( segment_collection->__segment_storage , current_index , segment , well_segment_free__);
+  else {
+    int new_index = vector_get_size(segment_collection->__segment_storage);
+    vector_append_owned_ref( segment_collection->__segment_storage , segment , well_segment_free__);
+    int_vector_iset( segment_collection->segment_index_map , segment_id , new_index);
+  }
 }
+
 
 
 well_segment_type * well_segment_collection_iget( const well_segment_collection_type * segment_collection , int index) {
-  return vector_iget( segment_collection->segment_list , index );
+  return vector_iget( segment_collection->__segment_storage , index );
 }
+
+
+well_segment_type * well_segment_collection_get( const well_segment_collection_type * segment_collection , int segment_id) {
+  int internal_index = int_vector_safe_iget( segment_collection->segment_index_map , segment_id );
+  if (internal_index >= 0)
+    return well_segment_collection_iget( segment_collection , internal_index );
+  else
+    return NULL;
+}
+
+
+bool  well_segment_collection_has_segment( const well_segment_collection_type * segment_collection , int segment_id) {
+  int internal_index = int_vector_safe_iget( segment_collection->segment_index_map , segment_id );
+  if (internal_index >= 0)
+    return true;
+  else
+    return false;
+}
+
+
+
+int well_segment_collection_load_from_kw( well_segment_collection_type * segment_collection , int well_nr , 
+                                          const ecl_kw_type * iwel_kw , 
+                                          const ecl_kw_type * iseg_kw , const ecl_rsthead_type * rst_head) {
+  int iwel_offset = rst_head->niwelz * well_nr;
+  int segment_well_nr = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_SEGMENTED_WELL_NR_ITEM) - 1; 
+  int segments_added = 0;
+      
+  if (segment_well_nr != IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE) {
+    int segment_id;
+    for (segment_id = 0; segment_id < rst_head->nsegmx; segment_id++) {
+      well_segment_type * segment = well_segment_alloc_from_kw( iseg_kw , rst_head , segment_well_nr , segment_id );
+      
+      if (well_segment_active( segment )) {
+        well_segment_collection_add( segment_collection , segment );
+        segments_added++;
+      } else
+        well_segment_free( segment );
+    }
+  }
+  
+  return segments_added;
+}
+
