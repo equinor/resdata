@@ -104,6 +104,7 @@ extern "C" {
 #define ZWEL_KW      "ZWEL"
 #define ICON_KW      "ICON"
 #define ISEG_KW      "ISEG"
+#define RSEG_KW      "RSEG"
 
 #define ECLIPSE100_OIL_DEN_KW   "OIL_DEN"
 #define ECLIPSE100_GAS_DEN_KW   "GAS_DEN"
