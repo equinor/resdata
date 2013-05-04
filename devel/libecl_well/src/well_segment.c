@@ -174,3 +174,13 @@ void well_segment_link_strict( well_segment_type * segment , well_segment_type *
   if (!well_segment_link( segment , outlet_segment))
     util_abort("%s: tried to create invalid link between segments %d and %d \n",segment->segment_id , outlet_segment->segment_id);
 }
+
+
+bool well_segment_add_connection( well_segment_type * segment , const char * grid_name , const well_conn_type * conn) {
+  int conn_segment_id = well_conn_get_segment( conn );
+  if (conn_segment_id == segment->segment_id) {
+    
+    return true;
+  } else
+    return false;  
+}

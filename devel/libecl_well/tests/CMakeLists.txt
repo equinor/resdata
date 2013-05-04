@@ -15,6 +15,11 @@ target_link_libraries( well_segment ecl_well )
 set_target_properties( well_segment PROPERTIES COMPILE_FLAGS "-Werror")                                    
 add_test( well_segment ${EXECUTABLE_OUTPUT_PATH}/well_segment )
 
+add_executable( well_segment_conn well_segment_conn.c )
+target_link_libraries( well_segment_conn ecl_well )
+set_target_properties( well_segment_conn PROPERTIES COMPILE_FLAGS "-Werror")                                    
+add_test( well_segment_conn ${EXECUTABLE_OUTPUT_PATH}/well_segment_conn )
+
 add_executable( well_segment_load well_segment_load.c )
 target_link_libraries( well_segment_load ecl_well )
 set_target_properties( well_segment_load PROPERTIES COMPILE_FLAGS "-Werror")                                    

@@ -27,6 +27,8 @@
 #include <ert/ecl_well/well_const.h>
 #include <ert/ecl_well/well_segment.h>
 #include <ert/ecl_well/well_segment_collection.h>
+#include <ert/ecl_well/well_conn_collection.h>
+#include <ert/ecl_well/well_conn.h>
 
 struct well_segment_collection_struct {
   int_vector_type * segment_index_map;
@@ -135,3 +137,17 @@ void well_segment_collection_link(const  well_segment_collection_type * segment_
   }
 }
 
+
+void well_segment_collection_add_connections(well_segment_collection_type * segment_collection , 
+                                             const char * grid_name , 
+                                             const well_conn_collection_type * connections) {
+  /*int iconn;
+  for (iconn = 0; iconn < well_conn_collection_get_size( connections ); iconn++) {
+    const well_conn_type * conn = well_conn_collection_iget( connections , iconn );
+    int segment_id =  well_conn_get_segment( conn );
+    well_segment_type * segment = well_segment_collection_get( segment_collection , segment_id );
+
+    well_segment_add_connection( segment , grid_name , segment );
+  }
+  */
+}

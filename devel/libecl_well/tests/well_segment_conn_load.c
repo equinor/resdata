@@ -26,6 +26,7 @@
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_rsthead.h>
 #include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_grid.h>
 
 #include <ert/ecl_well/well_conn_collection.h>
 #include <ert/ecl_well/well_segment.h>
@@ -55,6 +56,7 @@ int main(int argc , char ** argv) {
         well_conn_collection_load_from_kw( connections , iwel_kw , icon_kw , well_nr , rst_head);
       
         well_segment_collection_link( segments );
+        //well_segment_collection_add_connections( segments , ECL_GRID_GLOBAL_GRID , connections ); 
         well_segment_collection_free( segments );
         well_conn_collection_free( connections );
       }
