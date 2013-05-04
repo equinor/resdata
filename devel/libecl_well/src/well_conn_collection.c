@@ -19,6 +19,7 @@
 #include <stdbool.h>
 
 #include <ert/util/util.h>
+#include <ert/util/type_macros.h>
 #include <ert/util/vector.h>
 
 #include <ert/ecl/ecl_kw.h>
@@ -29,15 +30,21 @@
 #include <ert/ecl_well/well_conn_collection.h>
 
 
+#define WELL_CONN_COLLECTION_TYPE_ID 67150087
 
 struct well_conn_collection_struct {
+  UTIL_TYPE_ID_DECLARATION;
   vector_type * connection_list;
 };
 
 
+UTIL_IS_INSTANCE_FUNCTION( well_conn_collection , WELL_CONN_COLLECTION_TYPE_ID )
+static UTIL_SAFE_CAST_FUNCTION( well_conn_collection , WELL_CONN_COLLECTION_TYPE_ID )
+
 
 well_conn_collection_type * well_conn_collection_alloc() {
   well_conn_collection_type * wellcc = util_malloc( sizeof * wellcc );
+  UTIL_TYPE_ID_INIT( wellcc , WELL_CONN_COLLECTION_TYPE_ID );
   wellcc->connection_list = vector_alloc_new();
   return wellcc;
 }
@@ -65,6 +72,11 @@ void well_conn_collection_free( well_conn_collection_type * wellcc ) {
   free( wellcc );
 }
 
+void well_conn_collection_free__( void * arg ) {
+  well_conn_collection_type * wellcc = well_conn_collection_safe_cast( arg );
+  well_conn_collection_free( wellcc );
+}
+
 
 int well_conn_collection_get_size( const well_conn_collection_type * wellcc ) {
   return vector_get_size( wellcc->connection_list );
@@ -85,4 +97,17 @@ well_conn_type * well_conn_collection_iget(const well_conn_collection_type * wel
     return vector_iget( wellcc->connection_list , index );
   else
     return NULL;
+}
+
+
+int well_conn_collection_load_from_kw( well_conn_collection_type * wellcc , const ecl_kw_type * iwel_kw , const ecl_kw_type * icon_kw , int iwell , const ecl_rsthead_type * rst_head) {
+  const int iwel_offset = rst_head->niwelz * iwell;
+  int num_connections   = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_CONNECTIONS_ITEM );
+  int iconn;
+
+  for (iconn = 0; iconn < num_connections; iconn++) {
+    well_conn_type * conn = well_conn_alloc_from_kw( icon_kw , rst_head , iwell , iconn );
+    well_conn_collection_add( wellcc , conn );
+  }
+  return num_connections;
 }

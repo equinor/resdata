@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+#include <ert/util/type_macros.h>
+
+#include <ert/ecl/ecl_kw.h>                           
+
 #include <ert/ecl_well/well_conn.h>
 
   typedef struct well_conn_collection_struct well_conn_collection_type;
@@ -36,6 +40,9 @@ extern "C" {
   well_conn_type       *      well_conn_collection_iget(const well_conn_collection_type * wellcc , int index);
   void                        well_conn_collection_add( well_conn_collection_type * wellcc , well_conn_type * conn);
   void                        well_conn_collection_add_ref( well_conn_collection_type * wellcc , well_conn_type * conn);
+  int                         well_conn_collection_load_from_kw( well_conn_collection_type * wellcc , const ecl_kw_type * iwel_kw , const ecl_kw_type * icon_kw , int iwell , const ecl_rsthead_type * rst_head);
+
+  UTIL_IS_INSTANCE_HEADER( well_conn_collection );
 
 #ifdef __cplusplus
 }

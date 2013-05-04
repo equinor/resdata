@@ -17,6 +17,7 @@
 */
 
 #include <stdbool.h>
+#include <string.h>
 
 #include <ert/util/util.h>
 #include <ert/util/type_macros.h>
@@ -50,6 +51,14 @@ struct  well_conn_struct {
   bool               matrix_connection;   // k >= nz => fracture (and k -= nz )
 };
   
+
+
+bool well_conn_equal( const well_conn_type *conn1  , const well_conn_type * conn2) {
+  if (memcmp(conn1 , conn2 , sizeof * conn1) == 0)
+    return true;
+  else
+    return false;
+}
 
 
 static void well_conn_set_k( well_conn_type * conn , const ecl_rsthead_type * header , int icon_k) {

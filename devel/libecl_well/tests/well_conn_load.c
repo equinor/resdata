@@ -78,8 +78,21 @@ int main(int argc , char ** argv) {
 
         int i;
         for (i=0; i < well_conn_collection_get_size( wellcc ); i++)
-          test_assert_true( well_conn_collection_iget_const( wellcc , i ));
-
+          test_assert_true( well_conn_is_instance( well_conn_collection_iget_const( wellcc , i )));
+        
+      }
+      {
+        well_conn_collection_type * wellcc2 = well_conn_collection_alloc();
+        int i;
+        
+        test_assert_int_equal( well_conn_collection_get_size( wellcc ) , 
+                               well_conn_collection_load_from_kw( wellcc2 , iwel_kw , icon_kw , iwell , rst_head));
+        
+        for (i=0; i < well_conn_collection_get_size( wellcc2 ); i++) {
+          test_assert_true( well_conn_is_instance( well_conn_collection_iget_const( wellcc2 , i )));
+          test_assert_true( well_conn_equal( well_conn_collection_iget_const( wellcc2 , i ) , well_conn_collection_iget_const( wellcc , i )));
+        }
+        well_conn_collection_free( wellcc2 );
       }
       well_conn_collection_free( wellcc );
     }
