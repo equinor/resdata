@@ -39,6 +39,8 @@ int main(int argc , char ** argv) {
   {
     well_conn_dir_enum dir = well_conn_dirX;
     well_conn_type * conn = well_conn_alloc(i,j,k,dir,open);
+    well_conn_type * conn2 = well_conn_alloc(i,j,k,dir,open);
+    well_conn_type * conn3 = well_conn_alloc(i,j,k+1,dir,open);
     test_assert_not_NULL( conn );
     test_assert_true( well_conn_is_instance( conn ));
     test_assert_int_equal( i , well_conn_get_i( conn ));
@@ -48,6 +50,8 @@ int main(int argc , char ** argv) {
     test_assert_bool_equal( open , well_conn_open( conn ));
     test_assert_false( well_conn_MSW( conn ));
     test_assert_true( well_conn_matrix_connection( conn ));
+    test_assert_true( well_conn_equal( conn , conn2 ));
+    test_assert_false( well_conn_equal( conn , conn3 ));
     well_conn_free( conn );
   }
 

@@ -32,6 +32,7 @@
 void test_empty() {
   well_conn_collection_type * wellcc = well_conn_collection_alloc( );
   test_assert_not_NULL( wellcc );
+  test_assert_true( well_conn_collection_is_instance( wellcc ));
   
   test_assert_int_equal( 0 , well_conn_collection_get_size( wellcc ));
   {
