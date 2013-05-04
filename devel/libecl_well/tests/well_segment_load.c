@@ -36,8 +36,9 @@ int main(int argc , char ** argv) {
   const char * Xfile = argv[1];
   ecl_file_type * rst_file = ecl_file_open( Xfile , 0 );
   ecl_rsthead_type * rst_head = ecl_rsthead_alloc( rst_file );
-  const ecl_kw_type * iseg_kw = ecl_file_iget_named_kw( rst_file , ISEG_KW , 0 );
   const ecl_kw_type * iwel_kw = ecl_file_iget_named_kw( rst_file , IWEL_KW , 0 );
+  const ecl_kw_type * iseg_kw = ecl_file_iget_named_kw( rst_file , ISEG_KW , 0 );
+  const ecl_kw_type * rseg_kw = ecl_file_iget_named_kw( rst_file , RSEG_KW , 0 );
   
   test_install_SIGNALS();
   test_assert_not_NULL( rst_file );
@@ -55,7 +56,7 @@ int main(int argc , char ** argv) {
         int segment_count = 0;
         
         for (segment_id = 0; segment_id < rst_head->nsegmx; segment_id++) {
-          well_segment_type * segment = well_segment_alloc_from_kw( iseg_kw , rst_head , seg_well_nr , segment_id );
+          well_segment_type * segment = well_segment_alloc_from_kw( iseg_kw , rseg_kw , rst_head , seg_well_nr , segment_id );
           
           test_assert_true( well_segment_is_instance( segment ));
           
@@ -71,10 +72,13 @@ int main(int argc , char ** argv) {
 
       {
         well_segment_collection_type * segments2 = well_segment_collection_alloc();
-        test_assert_int_equal( well_segment_collection_load_from_kw( segments2 , well_nr , iwel_kw , iseg_kw , rst_head ) , 
+        test_assert_int_equal( well_segment_collection_load_from_kw( segments2 , well_nr , iwel_kw , iseg_kw , rseg_kw , rst_head ) , 
                                well_segment_collection_get_size( segments));
-        
+
+        well_segment_collection_link( segments );
+        well_segment_collection_link( segments2 );
         well_segment_collection_free( segments );
+        well_segment_collection_free( segments2 );
       }
     }
   }

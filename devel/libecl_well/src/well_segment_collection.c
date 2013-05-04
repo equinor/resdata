@@ -98,7 +98,10 @@ bool  well_segment_collection_has_segment( const well_segment_collection_type * 
 
 int well_segment_collection_load_from_kw( well_segment_collection_type * segment_collection , int well_nr , 
                                           const ecl_kw_type * iwel_kw , 
-                                          const ecl_kw_type * iseg_kw , const ecl_rsthead_type * rst_head) {
+                                          const ecl_kw_type * iseg_kw , 
+                                          const ecl_kw_type * rseg_kw , 
+                                          const ecl_rsthead_type * rst_head) {
+
   int iwel_offset = rst_head->niwelz * well_nr;
   int segment_well_nr = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_SEGMENTED_WELL_NR_ITEM) - 1; 
   int segments_added = 0;
@@ -106,7 +109,7 @@ int well_segment_collection_load_from_kw( well_segment_collection_type * segment
   if (segment_well_nr != IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE) {
     int segment_id;
     for (segment_id = 0; segment_id < rst_head->nsegmx; segment_id++) {
-      well_segment_type * segment = well_segment_alloc_from_kw( iseg_kw , rst_head , segment_well_nr , segment_id );
+      well_segment_type * segment = well_segment_alloc_from_kw( iseg_kw , rseg_kw , rst_head , segment_well_nr , segment_id );
       
       if (well_segment_active( segment )) {
         well_segment_collection_add( segment_collection , segment );
@@ -117,5 +120,18 @@ int well_segment_collection_load_from_kw( well_segment_collection_type * segment
   }
   
   return segments_added;
+}
+
+
+void well_segment_collection_link(const  well_segment_collection_type * segment_collection) {
+  int index;
+  for (index = 0; index < vector_get_size( segment_collection->__segment_storage); index++) {
+    well_segment_type * segment = well_segment_collection_iget( segment_collection , index );
+    int outlet_segment_id = well_segment_get_outlet_id( segment );
+    if (!well_segment_nearest_wellhead(segment)) {
+      well_segment_type * target_segment = well_segment_collection_get( segment_collection , outlet_segment_id );
+      well_segment_link( segment , target_segment );
+    }
+  }
 }
 

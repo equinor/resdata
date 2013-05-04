@@ -38,7 +38,7 @@ int main(int argc , char ** argv) {
   {
     int outlet_segment_id = ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE;
     int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_INACTIVE_VALUE;
-    well_segment_type * ws = well_segment_alloc(89 , outlet_segment_id , branch_nr);
+    well_segment_type * ws = well_segment_alloc(89 , outlet_segment_id , branch_nr, NULL);
     
     well_segment_collection_add( sc , ws );
     test_assert_int_equal( well_segment_collection_get_size( sc ) , 1);
@@ -52,7 +52,7 @@ int main(int argc , char ** argv) {
   {
     int outlet_segment_id = ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE;
     int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_INACTIVE_VALUE;
-    well_segment_type * ws = well_segment_alloc(90 , outlet_segment_id , branch_nr);
+    well_segment_type * ws = well_segment_alloc(90 , outlet_segment_id , branch_nr , NULL);
     
     well_segment_collection_add( sc , ws );
     test_assert_int_equal( well_segment_collection_get_size( sc ) , 2);
@@ -68,7 +68,7 @@ int main(int argc , char ** argv) {
   {
     int outlet_segment_id = ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE;
     int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_INACTIVE_VALUE;
-    well_segment_type * ws = well_segment_alloc(89 , outlet_segment_id , branch_nr);
+    well_segment_type * ws = well_segment_alloc(89 , outlet_segment_id , branch_nr, NULL);
     
     well_segment_collection_add( sc , ws );
     test_assert_int_equal( well_segment_collection_get_size( sc ) , 2);

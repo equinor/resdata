@@ -42,7 +42,10 @@ extern "C" {
   well_segment_type            * well_segment_collection_iget( const well_segment_collection_type * segment_collection , int index);
   int                            well_segment_collection_load_from_kw( well_segment_collection_type * segment_collection , int well_nr , 
                                                                        const ecl_kw_type * iwel_kw , 
-                                                                       const ecl_kw_type * iseg_kw , const ecl_rsthead_type * rst_head);
+                                                                       const ecl_kw_type * iseg_kw , 
+                                                                       const ecl_kw_type * rseg_kw , 
+                                                                       const ecl_rsthead_type * rst_head);
+  void                           well_segment_collection_link(const  well_segment_collection_type * segment_collection);
   
 #ifdef __cplusplus
 }

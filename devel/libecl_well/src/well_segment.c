@@ -19,6 +19,7 @@
 #include <stdbool.h>
 
 #include <ert/util/util.h>
+#include <ert/util/string_util.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_rsthead.h>
@@ -36,6 +37,7 @@ struct well_segment_struct {
   int                 branch_id; 
   int                 outlet_segment_id;  // This is in the global index space given by the ISEG keyword.
   well_segment_type * outlet_segment;
+  const double      * rseg_data;          // Shared data - owned by the RSEG keyword
 };
 
 
@@ -43,7 +45,7 @@ UTIL_IS_INSTANCE_FUNCTION( well_segment , WELL_SEGMENT_TYPE_ID )
 static UTIL_SAFE_CAST_FUNCTION( well_segment , WELL_SEGMENT_TYPE_ID )
 
 
-well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , int branch_id ) {
+well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , int branch_id , const double * rseg_data) {
   well_segment_type * segment = util_malloc( sizeof * segment );
   UTIL_TYPE_ID_INIT( segment , WELL_SEGMENT_TYPE_ID );
   
@@ -52,17 +54,33 @@ well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , 
   segment->outlet_segment_id = outlet_segment_id;
   segment->branch_id = branch_id;
   segment->outlet_segment = NULL;
+  segment->rseg_data = rseg_data;
 
   return segment;
 }
 
 
-well_segment_type * well_segment_alloc_from_kw( const ecl_kw_type * iseg_kw , const ecl_rsthead_type * header , int well_nr, int segment_id) {
+well_segment_type * well_segment_alloc_from_kw( const ecl_kw_type * iseg_kw , const ecl_kw_type * rseg_kw , const ecl_rsthead_type * header , int well_nr, int segment_id) {
   const int iseg_offset = header->nisegz * ( header->nsegmx * well_nr + segment_id);
+  const int rseg_offset = header->nrsegz * ( header->nsegmx * well_nr + segment_id);
   int outlet_segment_id = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_OUTLET_ITEM );   
   int branch_id         = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_BRANCH_ITEM );  
+  const double * rseg_data = ecl_kw_iget_ptr( rseg_kw , rseg_offset );
   
-  well_segment_type * segment = well_segment_alloc( segment_id , outlet_segment_id , branch_id );
+  well_segment_type * segment = well_segment_alloc( segment_id , outlet_segment_id , branch_id , rseg_data);
+
+  {
+    int_vector_type * index_list = string_util_alloc_active_list("0,2-7,16-19,29-32,57,66-69,93");
+    if (0) {
+      printf("-----------------------------------------------------------------\n");
+      for (int i=0;i < int_vector_size(index_list); i++) {
+        int index = int_vector_iget( index_list , i );
+        printf("%d:%g ",index , rseg_data[index]); 
+      }
+      printf("\n");
+    }
+    int_vector_free( index_list );
+  }
   return segment;
 }
 
