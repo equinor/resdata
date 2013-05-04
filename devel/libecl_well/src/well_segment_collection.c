@@ -47,6 +47,7 @@ well_segment_collection_type * well_segment_collection_alloc() {
 
 void well_segment_collection_free(well_segment_collection_type * segment_collection ) {
   vector_free( segment_collection->__segment_storage );
+  int_vector_free( segment_collection->segment_index_map );
   free( segment_collection );
 }
 
