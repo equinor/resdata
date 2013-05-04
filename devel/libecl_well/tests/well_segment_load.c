@@ -48,11 +48,11 @@ int main(int argc , char ** argv) {
     
     for (well_nr = 0; well_nr < rst_head->nwells; well_nr++) {
       int iwel_offset = rst_head->niwelz * well_nr;
+      well_segment_collection_type * segments = well_segment_collection_alloc();
       int seg_well_nr = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_SEGMENTED_WELL_NR_ITEM) - 1; // -1: Ordinary well.
       if (seg_well_nr >= 0) {
         int segment_id;
         int segment_count = 0;
-        well_segment_collection_type * segments = well_segment_collection_alloc();
         
         for (segment_id = 0; segment_id < rst_head->nsegmx; segment_id++) {
           well_segment_type * segment = well_segment_alloc_from_kw( iseg_kw , rst_head , seg_well_nr , segment_id );
@@ -67,6 +67,12 @@ int main(int argc , char ** argv) {
           } else
             well_segment_free( segment );
         }
+      }  
+
+      {
+        well_segment_collection_type * segments2 = well_segment_collection_alloc();
+        test_assert_int_equal( well_segment_collection_load_from_kw( segments2 , well_nr , iwel_kw , iseg_kw , rst_head ) , 
+                               well_segment_collection_get_size( segments));
         
         well_segment_collection_free( segments );
       }

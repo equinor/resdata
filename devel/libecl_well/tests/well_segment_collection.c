@@ -34,6 +34,52 @@ int main(int argc , char ** argv) {
   well_segment_collection_type * sc = well_segment_collection_alloc();
   test_assert_not_NULL( sc );
   test_assert_int_equal( well_segment_collection_get_size( sc ) , 0 );
+
+  {
+    int outlet_segment_id = ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE;
+    int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_INACTIVE_VALUE;
+    well_segment_type * ws = well_segment_alloc(89 , outlet_segment_id , branch_nr);
+    
+    well_segment_collection_add( sc , ws );
+    test_assert_int_equal( well_segment_collection_get_size( sc ) , 1);
+    test_assert_ptr_equal( well_segment_collection_iget( sc , 0 ) , ws );
+    
+    test_assert_false( well_segment_collection_has_segment( sc , 451 ));
+    test_assert_true( well_segment_collection_has_segment( sc , 89 ));
+    test_assert_ptr_equal( well_segment_collection_get( sc , 89 ) , ws );
+  }
+
+  {
+    int outlet_segment_id = ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE;
+    int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_INACTIVE_VALUE;
+    well_segment_type * ws = well_segment_alloc(90 , outlet_segment_id , branch_nr);
+    
+    well_segment_collection_add( sc , ws );
+    test_assert_int_equal( well_segment_collection_get_size( sc ) , 2);
+    test_assert_ptr_equal( well_segment_collection_iget( sc , 1 ) , ws );
+    
+    test_assert_false( well_segment_collection_has_segment( sc , 451 ));
+    test_assert_true( well_segment_collection_has_segment( sc , 89 ));
+    test_assert_true( well_segment_collection_has_segment( sc , 90 ));
+    test_assert_ptr_equal( well_segment_collection_get( sc , 90 ) , ws );
+    test_assert_NULL( well_segment_collection_get( sc , 76 ));
+  }
+
+  {
+    int outlet_segment_id = ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE;
+    int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_INACTIVE_VALUE;
+    well_segment_type * ws = well_segment_alloc(89 , outlet_segment_id , branch_nr);
+    
+    well_segment_collection_add( sc , ws );
+    test_assert_int_equal( well_segment_collection_get_size( sc ) , 2);
+    test_assert_ptr_equal( well_segment_collection_iget( sc , 0 ) , ws );
+    
+    test_assert_false( well_segment_collection_has_segment( sc , 451 ));
+    test_assert_true( well_segment_collection_has_segment( sc , 89 ));
+    test_assert_ptr_equal( well_segment_collection_get( sc , 89 ) , ws );
+  }
+  
+
   well_segment_collection_free( sc );
   
   exit(0);
