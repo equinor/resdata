@@ -27,6 +27,7 @@
 
 #include <ert/ecl_well/well_segment.h>
 #include <ert/ecl_well/well_conn.h>
+#include <ert/ecl_well/well_conn_collection.h>
 
 
 int main(int argc , char ** argv) {
@@ -39,8 +40,18 @@ int main(int argc , char ** argv) {
     well_conn_type * conn1 = well_conn_alloc_MSW(1,1,1,true,well_conn_dirX,segment_id);
     well_conn_type * conn2 = well_conn_alloc_MSW(1,1,1,true,well_conn_dirX,segment_id + 1);
     
+    test_assert_false( well_segment_has_global_grid_connections( ws ));
+
     test_assert_true( well_segment_add_connection( ws , ECL_GRID_GLOBAL_GRID , conn1 ));
     test_assert_false( well_segment_add_connection( ws , ECL_GRID_GLOBAL_GRID , conn2 ));
+
+    test_assert_true( well_segment_has_grid_connections( ws , ECL_GRID_GLOBAL_GRID ));
+    test_assert_true( well_segment_has_global_grid_connections( ws ));
+    test_assert_false( well_segment_has_grid_connections( ws , "DoesNotExist"));
+
+    test_assert_true( well_conn_collection_is_instance( well_segment_get_connections( ws , ECL_GRID_GLOBAL_GRID)));
+    test_assert_true( well_conn_collection_is_instance( well_segment_get_global_connections( ws)));
+    test_assert_NULL( well_segment_get_connections( ws , "doesNotExist"));
   }
   exit(0);
 }

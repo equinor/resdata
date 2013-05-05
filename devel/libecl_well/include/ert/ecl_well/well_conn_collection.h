@@ -35,6 +35,7 @@ extern "C" {
 
   well_conn_collection_type * well_conn_collection_alloc();
   void                        well_conn_collection_free( well_conn_collection_type * wellcc );
+  void                        well_conn_collection_free__( void * arg );
   int                         well_conn_collection_get_size( const well_conn_collection_type * wellcc );
   const well_conn_type *      well_conn_collection_iget_const( const well_conn_collection_type * wellcc , int index);
   well_conn_type       *      well_conn_collection_iget(const well_conn_collection_type * wellcc , int index);
