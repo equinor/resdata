@@ -17,6 +17,7 @@
 */
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <ert/util/test_util.h>
 #include <ert/util/stringlist.h>
@@ -57,9 +58,8 @@ int main(int argc , char ** argv) {
         if (well_segment_collection_load_from_kw( segments , well_nr , iwel_kw , iseg_kw , rseg_kw , rst_head )) {
           well_branch_collection_type * branches = well_branch_collection_alloc();
           
-          
+          test_assert_true( well_segment_well_is_MSW( well_nr , iwel_kw , rst_head));
           well_segment_collection_link( segments );
-          well_segment_collection_add_branches( segments , branches );
           {
             int is;
             for (is=0; is < well_segment_collection_get_size( segments ); is++) {
@@ -69,12 +69,30 @@ int main(int argc , char ** argv) {
                 test_assert_NULL( well_segment_get_outlet( segment ));
               else
                 test_assert_not_NULL( well_segment_get_outlet( segment ));
-              
+
+              test_assert_int_not_equal( well_segment_get_id( segment ) , well_segment_get_outlet_id( segment ));
+              test_assert_ptr_not_equal( segment , well_segment_get_outlet( segment ));
             }
+          }
+          well_segment_collection_add_branches( segments , branches );
+          {
+            int ib;
+            for (ib = 0; ib < well_branch_collection_get_size( branches ); ib++) {
+              const well_segment_type * start_segment = well_branch_collection_iget_start_segment( branches , ib );
+              const well_segment_type * segment = start_segment;
+              
+              printf("Branch %d " , ib );
+              while (segment) {
+                printf("%d -> ",well_segment_get_id( segment ));
+                segment = well_segment_get_outlet( segment );
+              }
+              printf(" X \n");
+            } 
           }
           well_segment_collection_add_connections( segments , ECL_GRID_GLOBAL_GRID , connections ); 
           well_branch_collection_free( branches );
-        }
+        } else
+          test_assert_false( well_segment_well_is_MSW( well_nr , iwel_kw , rst_head ));
 
         well_segment_collection_free( segments );
       }
