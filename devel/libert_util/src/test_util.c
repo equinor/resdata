@@ -151,7 +151,7 @@ void test_assert_ptr_equal__( const void * p1 , const void * p2 , const char * f
 void test_assert_ptr_not_equal__( const void * p1 , const void * p2 , const char * file , int line) {
   bool equal = (p1 == p2);
   if (equal) 
-    test_error_exit( "%s:%d => Pointers are different p1:[%p]  p2:[%p]\n" , file , line , p1 , p2 );
+    test_error_exit( "%s:%d => Pointers are equal p1:[%p]  p2:[%p]\n" , file , line , p1 , p2 );
 }
 
 
