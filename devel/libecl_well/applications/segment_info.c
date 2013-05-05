@@ -18,10 +18,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <math.h>
 
 #include <ert/util/stringlist.h>
 #include <ert/util/util.h>
-#include <ert/util/string_util.h>
 #include <ert/util/test_util.h>
 
 #include <ert/ecl/ecl_util.h>
@@ -45,7 +45,6 @@ int main(int argc , char ** argv) {
   const ecl_kw_type * rseg_kw = ecl_file_iget_named_kw( rst_file , RSEG_KW , 0 );
   const ecl_kw_type * icon_kw = ecl_file_iget_named_kw( rst_file , ICON_KW , 0 );
   const ecl_kw_type * zwel_kw = ecl_file_iget_named_kw( rst_file , ZWEL_KW , 0 );
-  int_vector_type * index_list = string_util_alloc_active_list("0,2-7,16-19,29-32,57,66-69,93");
 
   test_install_SIGNALS();
   { 
@@ -94,9 +93,10 @@ int main(int argc , char ** argv) {
               {
                 int i;
                 const double * rseg_data = well_segment_get_RSEG_data( segment );
-                for (i=0; i < int_vector_size( index_list ); i++) {
-                  int rseg_index = int_vector_iget( index_list , i );
-                  printf("RSEG[%3d]   : %g\n",rseg_index, rseg_data[ rseg_index ]);
+                for (i=0; i < rst_head->nrsegz; i++) {
+                  int rseg_index = i;
+                  if (fabs( rseg_data[ rseg_index] > 1e-20))
+                    printf("RSEG[%3d]   : %g\n",rseg_index, rseg_data[ rseg_index ]);
                 }
               }
             }
