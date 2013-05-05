@@ -36,7 +36,8 @@ extern "C" {
 
   typedef struct well_state_struct well_state_type;
   
-  well_state_type      * well_state_alloc( ecl_file_type * ecl_file , int report_step , int well_nr);
+  well_state_type      * well_state_alloc(const char * well_name , int global_well_nr , bool open, well_type_enum type , int report_nr, time_t valid_from);
+  well_state_type      * well_state_alloc_from_file( ecl_file_type * ecl_file , int report_step , int well_nr);
   void                   well_state_free( well_state_type * well );
   const char           * well_state_get_name( const well_state_type * well );
   int                    well_state_get_report_nr( const well_state_type * well_state );
@@ -44,7 +45,8 @@ extern "C" {
   well_conn_type       * well_state_iget_connection( const well_state_type * well_state , int index);
   well_type_enum         well_state_get_type( const well_state_type * well_state);
   bool                   well_state_is_open( const well_state_type * well_state );   
-  
+  int                    well_state_get_well_nr( const well_state_type * well_state );
+
   const well_conn_type * well_state_iget_wellhead( const well_state_type * well_state , int grid_nr);
   const well_conn_type * well_state_get_wellhead( const well_state_type * well_state , const char * grid_name);
   
@@ -62,7 +64,7 @@ extern "C" {
   int                     well_state_get_num_branches(const well_state_type * well_state );
 
   void                    well_state_summarize( const well_state_type * well_state , FILE * stream );
-
+  well_type_enum          well_state_translate_ecl_type_int(int int_type);
   UTIL_IS_INSTANCE_HEADER( well_state );
   
 #ifdef __cplusplus
