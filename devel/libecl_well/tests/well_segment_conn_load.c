@@ -49,18 +49,36 @@ int main(int argc , char ** argv) {
   { 
     int well_nr;
     for (well_nr = 0; well_nr < rst_head->nwells; well_nr++) {
+      well_conn_collection_type * connections = well_conn_collection_alloc();
+      well_conn_collection_load_from_kw( connections , iwel_kw , icon_kw , well_nr , rst_head);
       {
         well_segment_collection_type * segments = well_segment_collection_alloc();
-        well_conn_collection_type * connections = well_conn_collection_alloc();
-        well_segment_collection_load_from_kw( segments , well_nr , iwel_kw , iseg_kw , rseg_kw , rst_head );
-        well_conn_collection_load_from_kw( connections , iwel_kw , icon_kw , well_nr , rst_head);
-      
-        well_segment_collection_link( segments );
-        well_segment_collection_add_connections( segments , ECL_GRID_GLOBAL_GRID , connections ); 
+                
+        if (well_segment_collection_load_from_kw( segments , well_nr , iwel_kw , iseg_kw , rseg_kw , rst_head )) {
+          well_branch_collection_type * branches = well_branch_collection_alloc();
+          
+          
+          well_segment_collection_link( segments );
+          well_segment_collection_add_branches( segments , branches );
+          {
+            int is;
+            for (is=0; is < well_segment_collection_get_size( segments ); is++) {
+              well_segment_type * segment = well_segment_collection_iget( segments , is );
+              
+              if (well_segment_nearest_wellhead( segment )) 
+                test_assert_NULL( well_segment_get_outlet( segment ));
+              else
+                test_assert_not_NULL( well_segment_get_outlet( segment ));
+              
+            }
+          }
+          well_segment_collection_add_connections( segments , ECL_GRID_GLOBAL_GRID , connections ); 
+          well_branch_collection_free( branches );
+        }
 
         well_segment_collection_free( segments );
-        well_conn_collection_free( connections );
       }
+      well_conn_collection_free( connections );
     }
   }
 

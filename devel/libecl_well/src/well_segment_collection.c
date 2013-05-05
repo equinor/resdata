@@ -26,9 +26,11 @@
 
 #include <ert/ecl_well/well_const.h>
 #include <ert/ecl_well/well_segment.h>
+#include <ert/ecl_well/well_conn.h>
 #include <ert/ecl_well/well_segment_collection.h>
 #include <ert/ecl_well/well_conn_collection.h>
-#include <ert/ecl_well/well_conn.h>
+#include <ert/ecl_well/well_branch_collection.h>
+
 
 struct well_segment_collection_struct {
   int_vector_type * segment_index_map;
@@ -152,3 +154,16 @@ void well_segment_collection_add_connections(well_segment_collection_type * segm
     }
   }
 }
+
+
+
+void well_segment_collection_add_branches( const well_segment_collection_type * segment_collection , 
+                                           well_branch_collection_type * branches ) {
+  int iseg;
+  for (iseg =0; iseg < well_segment_collection_get_size( segment_collection ); iseg++) {
+    const well_segment_type * segment = well_segment_collection_iget( segment_collection , iseg );
+    if (well_segment_get_link_count( segment ) == 0)
+      well_branch_collection_add_start_segment( branches , segment );
+  }
+}
+
