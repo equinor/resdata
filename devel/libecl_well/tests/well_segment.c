@@ -77,6 +77,7 @@ int main(int argc , char ** argv) {
     test_assert_true( well_segment_link( ws , outlet ));
     test_assert_ptr_equal( well_segment_get_outlet( ws ) , outlet );
     test_assert_int_equal( well_segment_get_link_count( outlet ) , 1 );
+    test_assert_ptr_not_equal( ws , well_segment_get_outlet( ws ));
 
     well_segment_link_strict( ws , outlet );  // This relinks - not very logical; refcount gets wrong.
     well_segment_free( ws );

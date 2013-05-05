@@ -64,8 +64,8 @@ extern "C" {
   bool                well_segment_add_connection( well_segment_type * segment , const char * grid_name , well_conn_type * conn);
   const well_conn_collection_type * well_segment_get_connections(const well_segment_type * segment , const char * grid_name );
   const well_conn_collection_type * well_segment_get_global_connections(const well_segment_type * segment );
-
-
+  bool                well_segment_well_is_MSW(int well_nr , const ecl_kw_type * iwel_kw , const ecl_rsthead_type * rst_head);
+  const double      * well_segment_get_RSEG_data( const well_segment_type * segment );
 
   UTIL_IS_INSTANCE_HEADER( well_segment );
 

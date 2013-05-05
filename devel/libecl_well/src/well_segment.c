@@ -19,7 +19,6 @@
 #include <stdbool.h>
 
 #include <ert/util/util.h>
-#include <ert/util/string_util.h>
 #include <ert/util/hash.h>
 
 #include <ert/ecl/ecl_kw.h>
@@ -68,24 +67,11 @@ well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , 
 well_segment_type * well_segment_alloc_from_kw( const ecl_kw_type * iseg_kw , const ecl_kw_type * rseg_kw , const ecl_rsthead_type * header , int well_nr, int segment_id) {
   const int iseg_offset = header->nisegz * ( header->nsegmx * well_nr + segment_id);
   const int rseg_offset = header->nrsegz * ( header->nsegmx * well_nr + segment_id);
-  int outlet_segment_id = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_OUTLET_ITEM );   
-  int branch_id         = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_BRANCH_ITEM );  
+  int outlet_segment_id = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_OUTLET_ITEM ) - 1;
+  int branch_id         = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_BRANCH_ITEM ) - 1;  
   const double * rseg_data = ecl_kw_iget_ptr( rseg_kw , rseg_offset );
   
   well_segment_type * segment = well_segment_alloc( segment_id , outlet_segment_id , branch_id , rseg_data);
-
-  {
-    int_vector_type * index_list = string_util_alloc_active_list("0,2-7,16-19,29-32,57,66-69,93");
-    if (0) {
-      printf("-----------------------------------------------------------------\n");
-      for (int i=0;i < int_vector_size(index_list); i++) {
-        int index = int_vector_iget( index_list , i );
-        printf("%d:%g ",index , rseg_data[index]); 
-      }
-      printf("\n");
-    }
-    int_vector_free( index_list );
-  }
   return segment;
 }
 
@@ -219,4 +205,20 @@ const well_conn_collection_type * well_segment_get_connections(const well_segmen
 
 const well_conn_collection_type * well_segment_get_global_connections(const well_segment_type * segment ) {
   return well_segment_get_connections( segment , ECL_GRID_GLOBAL_GRID );
+}
+
+
+bool well_segment_well_is_MSW(int well_nr , const ecl_kw_type * iwel_kw , const ecl_rsthead_type * rst_head) {
+  int iwel_offset = rst_head->niwelz * well_nr;
+  int segment_well_nr = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_SEGMENTED_WELL_NR_ITEM) - 1; 
+  
+  if (segment_well_nr == IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE) 
+    return false;
+  else
+    return true;
+}
+
+
+const double * well_segment_get_RSEG_data( const well_segment_type * segment ) {
+  return segment->rseg_data;
 }
