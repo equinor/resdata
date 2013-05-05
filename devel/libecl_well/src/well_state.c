@@ -49,6 +49,7 @@ struct well_state_struct {
   char           * name;
   time_t           valid_from_time;
   int              valid_from_report;
+  int              global_well_nr;
   bool             open;
   well_type_enum   type;
   
@@ -66,7 +67,7 @@ struct well_state_struct {
 UTIL_IS_INSTANCE_FUNCTION( well_state , WELL_STATE_TYPE_ID)
 
 
-static well_state_type * well_state_alloc_empty() {
+well_state_type * well_state_alloc(const char * well_name , int global_well_nr , bool open, well_type_enum type , int report_nr, time_t valid_from) {
   well_state_type * well_state = util_malloc( sizeof * well_state );
   UTIL_TYPE_ID_INIT( well_state , WELL_STATE_TYPE_ID );
   well_state->index_lgr_path = vector_alloc_new();
@@ -76,8 +77,21 @@ static well_state_type * well_state_alloc_empty() {
   well_state->name_wellhead  = hash_alloc();
 
   well_state->null_path = well_path_alloc( NULL );
+
+  //
+  well_state->name = util_alloc_string_copy( well_name );
+  well_state->valid_from_time = valid_from;
+  well_state->valid_from_report = report_nr;
+  well_state->open = open;
+  well_state->type = type;
+  well_state->global_well_nr = global_well_nr;
+  
+  /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */
+  if ((type == UNDOCUMENTED_ZERO) && open)
+    util_abort("%s: Invalid type value for open wells.\n",__func__ );
   return well_state;
 }
+
 
 
 /*
@@ -200,7 +214,34 @@ static int well_state_get_lgr_well_nr( const well_state_type * well_state , cons
 }
 
 
-well_state_type * well_state_alloc( ecl_file_type * ecl_file , int report_nr ,  int global_well_nr) {
+
+well_type_enum well_state_translate_ecl_type_int(int int_type) {
+  well_type_enum type = UNDOCUMENTED_ZERO;
+
+  switch (int_type) {
+    /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */
+  case(IWEL_UNDOCUMENTED_ZERO):
+    type = UNDOCUMENTED_ZERO;
+    break;
+  case(IWEL_PRODUCER):
+    type = PRODUCER;
+    break;
+  case(IWEL_OIL_INJECTOR):
+    type = OIL_INJECTOR;
+    break;
+  case(IWEL_GAS_INJECTOR):
+    type = GAS_INJECTOR;
+    break;
+  case(IWEL_WATER_INJECTOR):
+    type = WATER_INJECTOR;
+    break;
+  default:
+    util_abort("%s: Invalid type value %d\n",__func__ , int_type);
+  }
+  return type;
+}
+
+well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , int report_nr ,  int global_well_nr) {
   if (ecl_file_has_kw( ecl_file , IWEL_KW)) {
     well_state_type   * well_state = NULL;
     ecl_rsthead_type  * global_header  = ecl_rsthead_alloc( ecl_file );
@@ -209,47 +250,28 @@ well_state_type * well_state_alloc( ecl_file_type * ecl_file , int report_nr ,  
     
     const int iwel_offset = global_header->niwelz * global_well_nr;
     {
-      const int zwel_offset         = global_header->nzwelz * global_well_nr;
-      well_state = well_state_alloc_empty();
+      bool open;
+      well_type_enum type = UNDOCUMENTED_ZERO;
+      char * name;
+      {
+        const int zwel_offset         = global_header->nzwelz * global_well_nr;
+        name = util_alloc_strip_copy(ecl_kw_iget_ptr( global_zwel_kw , zwel_offset ));  // Hardwired max 8 characters in Well Name
+      }
       
-      well_state->valid_from_time   = global_header->sim_time;
-      well_state->valid_from_report = report_nr;
-      well_state->name              = util_alloc_strip_copy(ecl_kw_iget_ptr( global_zwel_kw , zwel_offset ));  // Hardwired max 8 characters in Well Name
-
       {
         int int_state = ecl_kw_iget_int( global_iwel_kw , iwel_offset + IWEL_STATUS_ITEM );
         if (int_state > 0)
-          well_state->open = true;
+          open = true;
         else
-          well_state->open = false;
+          open = false;
       }
       
       {
         int int_type = ecl_kw_iget_int( global_iwel_kw , iwel_offset + IWEL_TYPE_ITEM);
-        switch (int_type) {
-          /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */
-        case(IWEL_UNDOCUMENTED_ZERO):
-          well_state->type = UNDOCUMENTED_ZERO;
-          if (well_state->open)
-            util_abort("%s: Invalid type value %d\n",__func__ , int_type);
-          break;
-        case(IWEL_PRODUCER):
-          well_state->type = PRODUCER;
-          break;
-        case(IWEL_OIL_INJECTOR):
-          well_state->type = OIL_INJECTOR;
-          break;
-        case(IWEL_GAS_INJECTOR):
-          well_state->type = GAS_INJECTOR;
-          break;
-        case(IWEL_WATER_INJECTOR):
-          well_state->type = WATER_INJECTOR;
-          break;
-        default:
-          util_abort("%s: Invalid type value %d\n",__func__ , int_type);
-        }
+        type = well_state_translate_ecl_type_int( int_type );
       }
-      
+      well_state = well_state_alloc(name , global_well_nr , open , type , report_nr , global_header->sim_time);
+      free( name );
       
       // Add global connections:
       well_state_add_connections( well_state , ecl_file , 0 , global_well_nr );
@@ -329,6 +351,11 @@ well_type_enum well_state_get_type( const well_state_type * well_state){
 bool well_state_is_open( const well_state_type * well_state ) {
   return well_state->open;
 }
+
+int well_state_get_well_nr( const well_state_type * well_state ) {
+  return well_state->global_well_nr;
+}
+
 
 const char * well_state_get_name( const well_state_type * well_state ) {
   return well_state->name;

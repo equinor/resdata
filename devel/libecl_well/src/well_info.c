@@ -279,8 +279,8 @@ static void well_info_add_state( well_info_type * well_info , well_state_type * 
    by calling this function repeatedly.
 
    This function will go through all the wells by number and call the
-   well_state_alloc() function to create a well state object for each
-   well. The well_state_alloc() function will iterate through all the
+   well_state_alloc_from_file() function to create a well state object for each
+   well. The well_state_alloc_from_file() function will iterate through all the
    grids and assign well properties corresponding to each of the
    grids, the global grid special-cased to determine is consulted to
    determine the number of wells.
@@ -290,7 +290,7 @@ void well_info_add_wells( well_info_type * well_info , ecl_file_type * rst_file 
   int well_nr;
   ecl_rsthead_type * global_header = ecl_rsthead_alloc( rst_file );
   for (well_nr = 0; well_nr < global_header->nwells; well_nr++) {
-    well_state_type * well_state = well_state_alloc( rst_file , report_nr , well_nr );
+    well_state_type * well_state = well_state_alloc_from_file( rst_file , report_nr , well_nr );
     if (well_state != NULL)
       well_info_add_state( well_info , well_state );
   }
