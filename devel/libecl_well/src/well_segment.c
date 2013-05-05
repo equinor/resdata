@@ -20,13 +20,16 @@
 
 #include <ert/util/util.h>
 #include <ert/util/string_util.h>
+#include <ert/util/hash.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_rsthead.h>
+#include <ert/ecl/ecl_grid.h>
 
 #include <ert/ecl_well/well_const.h>
 #include <ert/ecl_well/well_conn.h>
 #include <ert/ecl_well/well_segment.h>
+#include <ert/ecl_well/well_conn_collection.h>
 
 #define WELL_SEGMENT_TYPE_ID  2209166 
 
@@ -38,6 +41,7 @@ struct well_segment_struct {
   int                 outlet_segment_id;  // This is in the global index space given by the ISEG keyword.
   well_segment_type * outlet_segment;
   const double      * rseg_data;          // Shared data - owned by the RSEG keyword
+  hash_type         * connections;        // hash_type<grid_name , well_conn_collection>;
 };
 
 
@@ -54,8 +58,9 @@ well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , 
   segment->outlet_segment_id = outlet_segment_id;
   segment->branch_id = branch_id;
   segment->outlet_segment = NULL;
+  segment->connections = hash_alloc();
   segment->rseg_data = rseg_data;
-
+  
   return segment;
 }
 
@@ -101,6 +106,7 @@ well_segment_type * well_segment_alloc_from_kw( const ecl_kw_type * iseg_kw , co
 
 
 void well_segment_free(well_segment_type * segment ) {
+  hash_free( segment->connections );
   free( segment );
 }
 
@@ -176,11 +182,41 @@ void well_segment_link_strict( well_segment_type * segment , well_segment_type *
 }
 
 
-bool well_segment_add_connection( well_segment_type * segment , const char * grid_name , const well_conn_type * conn) {
+
+bool well_segment_has_grid_connections( const well_segment_type * segment , const char * grid_name) {
+  return hash_has_key( segment->connections , grid_name );
+}
+
+
+bool well_segment_has_global_grid_connections( const well_segment_type * segment) {
+  return well_segment_has_grid_connections( segment , ECL_GRID_GLOBAL_GRID );
+}
+
+
+bool well_segment_add_connection( well_segment_type * segment , const char * grid_name , well_conn_type * conn) {
   int conn_segment_id = well_conn_get_segment( conn );
   if (conn_segment_id == segment->segment_id) {
+    if (!well_segment_has_grid_connections( segment , grid_name ))
+      hash_insert_hash_owned_ref( segment->connections , grid_name , well_conn_collection_alloc() , well_conn_collection_free__ );
     
+    {
+      well_conn_collection_type * connections = hash_get( segment->connections , grid_name );
+      well_conn_collection_add_ref( connections , conn );
+    }
     return true;
   } else
     return false;  
+}
+
+
+const well_conn_collection_type * well_segment_get_connections(const well_segment_type * segment , const char * grid_name ) {
+  if (well_segment_has_grid_connections( segment , grid_name))
+    return hash_get( segment->connections , grid_name);
+  else
+    return NULL;
+}
+
+
+const well_conn_collection_type * well_segment_get_global_connections(const well_segment_type * segment ) {
+  return well_segment_get_connections( segment , ECL_GRID_GLOBAL_GRID );
 }

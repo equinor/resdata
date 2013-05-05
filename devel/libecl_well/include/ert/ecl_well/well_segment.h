@@ -30,6 +30,7 @@ extern "C" {
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_rsthead.h>
 
+#include <ert/ecl_well/well_conn_collection.h>
 #include <ert/ecl_well/well_conn.h>
 
   /* The values are shifted one down compared to ISEG description in table 6.1 in ECLIPSE file formats reference. */
@@ -58,7 +59,13 @@ extern "C" {
   well_segment_type * well_segment_get_outlet( const well_segment_type * segment );
   bool                well_segment_link( well_segment_type * segment , well_segment_type * outlet_segment );
   void                well_segment_link_strict( well_segment_type * segment , well_segment_type * outlet_segment );
-  bool                well_segment_add_connection( well_segment_type * segment , const char * grid_name , const well_conn_type * conn);
+  bool                well_segment_has_grid_connections( const well_segment_type * segment , const char * grid_name);
+  bool                well_segment_has_global_grid_connections( const well_segment_type * segment);
+  bool                well_segment_add_connection( well_segment_type * segment , const char * grid_name , well_conn_type * conn);
+  const well_conn_collection_type * well_segment_get_connections(const well_segment_type * segment , const char * grid_name );
+  const well_conn_collection_type * well_segment_get_global_connections(const well_segment_type * segment );
+
+
 
   UTIL_IS_INSTANCE_HEADER( well_segment );
 
