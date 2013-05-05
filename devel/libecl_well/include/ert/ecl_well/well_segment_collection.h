@@ -31,6 +31,7 @@ extern "C" {
 
 #include <ert/ecl_well/well_segment.h>
 #include <ert/ecl_well/well_conn_collection.h>
+#include <ert/ecl_well/well_branch_collection.h>
   
   typedef struct well_segment_collection_struct well_segment_collection_type;
 
@@ -50,6 +51,8 @@ extern "C" {
   void                           well_segment_collection_add_connections(well_segment_collection_type * segment_collection , 
                                                                          const char * grid_name , 
                                                                          const well_conn_collection_type * connections);
+  void                           well_segment_collection_add_branches( const well_segment_collection_type * segment_collection , 
+                                                                       well_branch_collection_type * branches );
   
 #ifdef __cplusplus
 }

@@ -3,6 +3,10 @@ target_link_libraries( well_conn_collection ecl_well )
 set_target_properties( well_conn_collection PROPERTIES COMPILE_FLAGS "-Werror")                                    
 add_test( well_conn_collection ${EXECUTABLE_OUTPUT_PATH}/well_conn_collection )
 
+add_executable( well_branch_collection well_branch_collection.c )
+target_link_libraries( well_branch_collection ecl_well )
+set_target_properties( well_branch_collection PROPERTIES COMPILE_FLAGS "-Werror")                                    
+add_test( well_branch_collection ${EXECUTABLE_OUTPUT_PATH}/well_branch_collection )
 
 add_executable( well_conn well_conn.c )
 target_link_libraries( well_conn ecl_well )
