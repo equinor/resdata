@@ -290,7 +290,7 @@ void well_info_add_wells( well_info_type * well_info , ecl_file_type * rst_file 
   int well_nr;
   ecl_rsthead_type * global_header = ecl_rsthead_alloc( rst_file );
   for (well_nr = 0; well_nr < global_header->nwells; well_nr++) {
-    well_state_type * well_state = well_state_alloc_from_file( rst_file , report_nr , well_nr );
+    well_state_type * well_state = well_state_alloc_from_file( rst_file , well_info->grid , report_nr , well_nr );
     if (well_state != NULL)
       well_info_add_state( well_info , well_state );
   }

@@ -27,8 +27,10 @@ extern "C" {
 #include <time.h>
 
 #include <ert/ecl/ecl_file.h> 
+#include <ert/ecl/ecl_grid.h>
 
 #include <ert/ecl_well/well_conn.h>
+#include <ert/ecl_well/well_conn_collection.h>
 #include <ert/ecl_well/well_const.h>
 
 
@@ -37,7 +39,7 @@ extern "C" {
   typedef struct well_state_struct well_state_type;
   
   well_state_type      * well_state_alloc(const char * well_name , int global_well_nr , bool open, well_type_enum type , int report_nr, time_t valid_from);
-  well_state_type      * well_state_alloc_from_file( ecl_file_type * ecl_file , int report_step , int well_nr);
+  well_state_type      * well_state_alloc_from_file( ecl_file_type * ecl_file , const ecl_grid_type * grid , int report_step , int well_nr);
   void                   well_state_free( well_state_type * well );
   const char           * well_state_get_name( const well_state_type * well );
   int                    well_state_get_report_nr( const well_state_type * well_state );
@@ -65,6 +67,12 @@ extern "C" {
 
   void                    well_state_summarize( const well_state_type * well_state , FILE * stream );
   well_type_enum          well_state_translate_ecl_type_int(int int_type);
+
+  const well_conn_collection_type * well_state_get_grid_connections( const well_state_type * well_state , const char * grid_name);
+  const well_conn_collection_type * well_state_get_global_connections( const well_state_type * well_state );
+  bool                              well_state_has_grid_connections( const well_state_type * well_state , const char * grid_name);
+  bool                              well_state_has_global_connections( const well_state_type * well_state );
+
   UTIL_IS_INSTANCE_HEADER( well_state );
   
 #ifdef __cplusplus
