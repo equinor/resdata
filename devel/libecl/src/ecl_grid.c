@@ -513,12 +513,12 @@ struct ecl_grid_struct {
   int                   parent_box[6]; /* integers i1,i2, j1,j2, k1,k2 of the parent grid region containing this lgr. the indices are inclusive - zero offset */
                                        /* not used yet .. */ 
   
-  int                   dualp_flag;    
-  bool                  use_mapaxes;
-  double                unit_x[2];
-  double                unit_y[2];
-  double                origo[2];
-  float                 mapaxes[6];
+  int                    dualp_flag;    
+  bool                   use_mapaxes;
+  double                 unit_x[2];
+  double                 unit_y[2];
+  double                 origo[2];
+  float                  mapaxes[6];
   /*------------------------------:       the fields below this line are used for blocking algorithms - and not allocated by default.*/
   int                    block_dim; /* == 2 for maps and 3 for fields. 0 when not in use. */
   int                    block_size;
@@ -3422,6 +3422,15 @@ stringlist_type * ecl_grid_alloc_lgr_name_list(const ecl_grid_type * ecl_grid) {
   {
     return hash_alloc_stringlist( ecl_grid->LGR_hash );
   }
+}
+
+const char * ecl_grid_iget_lgr_name( const ecl_grid_type * ecl_grid , int lgr_nr) {
+  __assert_main_grid( ecl_grid );
+  if (lgr_nr < (vector_get_size( ecl_grid->LGR_list ) - 1)) {
+    const ecl_grid_type * lgr = vector_iget( ecl_grid->LGR_list , lgr_nr + 1);
+    return lgr->name;
+  } else 
+    return NULL;
 }
 
 
