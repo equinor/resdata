@@ -53,6 +53,11 @@ int main(int argc , char ** argv) {
     test_assert_int_equal( type , well_state_get_type( well_state ));
     test_assert_int_equal( report_nr , well_state_get_report_nr( well_state ));
     test_assert_time_t_equal( valid_from , well_state_get_sim_time( well_state ));
+
+    test_assert_NULL( well_state_get_global_connections( well_state ));
+    test_assert_false( well_state_has_global_connections( well_state ));
+    test_assert_NULL( well_state_get_grid_connections( well_state , "GRID"));
+    test_assert_false( well_state_has_grid_connections( well_state , "GRID"));
     
     well_state_free( well_state );
   }

@@ -36,6 +36,7 @@
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_grid.h>
 
 #include <ert/ecl_well/well_const.h>
 #include <ert/ecl_well/well_conn.h>
@@ -52,6 +53,10 @@ struct well_state_struct {
   int              global_well_nr;
   bool             open;
   well_type_enum   type;
+
+  hash_type      * connections;     // hash<grid_name,well_conn_collection>
+
+  /*****************************************************************/
   
   well_path_type * null_path;        // This is a valid - empty path instance returned when the well does not have any cells in a particular LGR.
 
@@ -85,7 +90,8 @@ well_state_type * well_state_alloc(const char * well_name , int global_well_nr ,
   well_state->open = open;
   well_state->type = type;
   well_state->global_well_nr = global_well_nr;
-  
+  well_state->connections = hash_alloc();
+
   /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */
   if ((type == UNDOCUMENTED_ZERO) && open)
     util_abort("%s: Invalid type value for open wells.\n",__func__ );
@@ -126,7 +132,7 @@ void well_state_add_wellhead( well_state_type * well_state , const ecl_rsthead_t
   to one LGR block with the ecl_file_subselect_block() function.
 */
 
-static void well_state_add_connections( well_state_type * well_state ,  const ecl_file_type * rst_file , int grid_nr, int well_nr ) {
+static void well_state_add_connections( well_state_type * well_state ,  const ecl_file_type * rst_file , const char * grid_name , int grid_nr, int well_nr ) {
   ecl_rsthead_type  * header   = ecl_rsthead_alloc( rst_file );
   const ecl_kw_type * icon_kw  = ecl_file_iget_named_kw( rst_file , ICON_KW   , 0);
   const ecl_kw_type * iwel_kw  = ecl_file_iget_named_kw( rst_file , IWEL_KW   , 0);
@@ -135,9 +141,9 @@ static void well_state_add_connections( well_state_type * well_state ,  const ec
   ecl_kw_type * iseg_kw        = NULL;
   bool MSW                     = false;   // MultiSegmentWell
   int seg_well_nr              = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_SEGMENTED_WELL_NR_ITEM) - 1; // -1: Ordinary well.
-  well_path_type * path;
+  //well_path_type * path;
 
-  {
+  /*{
     char * grid_name;
 
     if (grid_nr > 0) {
@@ -147,9 +153,12 @@ static void well_state_add_connections( well_state_type * well_state ,  const ec
       grid_name = util_alloc_string_copy( GLOBAL_GRID_NAME );
 
     path = well_state_add_path( well_state , rst_file , grid_name , grid_nr );
-    well_state_add_wellhead( well_state , header , iwel_kw , well_nr , grid_name , grid_nr );
+
     free( grid_name );
-  }
+    }
+  */
+
+  well_state_add_wellhead( well_state , header , iwel_kw , well_nr , grid_name , grid_nr );
   
   /* The MSW information is only attached to the global grid. */
   if (seg_well_nr >= 0 && grid_nr == 0)
@@ -158,13 +167,19 @@ static void well_state_add_connections( well_state_type * well_state ,  const ec
   if (MSW)
     iseg_kw = ecl_file_iget_named_kw( rst_file , ISEG_KW , 0 );
 
+  if (!well_state_has_grid_connections( well_state , grid_name ))
+    hash_insert_hash_owned_ref( well_state->connections , grid_name, well_conn_collection_alloc , well_conn_collection_free__ );
+  
   {
     int conn_nr;
+    well_conn_collection_type * wellcc = hash_get( well_state->connections , grid_name );
     for (conn_nr = 0; conn_nr < num_connections; conn_nr++) {
-      //well_conn_type * conn =  well_conn_alloc_from_kw( icon_kw , iseg_kw , header , well_nr , seg_well_nr , conn_nr );
       well_conn_type * conn =  well_conn_alloc_from_kw( icon_kw , header , well_nr , conn_nr );
-      if (conn != NULL)
+      well_conn_collection_add( wellcc , conn );
+      /*
+        if (conn != NULL)
         well_path_add_conn( path , conn );
+      */
     }
   }
   ecl_rsthead_free( header );
@@ -178,12 +193,12 @@ static void well_state_add_connections( well_state_type * well_state ,  const ec
   all.  
 */
 
-static int well_state_get_lgr_well_nr( const well_state_type * well_state , const ecl_file_type * ecl_file) {
+static int well_state_get_lgr_well_nr( const well_state_type * well_state , const ecl_file_type * ecl_file, int grid_nr) {
   int well_nr = -1;
-  
-  if (ecl_file_has_kw( ecl_file , ZWEL_KW)) {
-    ecl_rsthead_type  * header  = ecl_rsthead_alloc( ecl_file );                      //
-    const ecl_kw_type * zwel_kw = ecl_file_iget_named_kw( ecl_file , ZWEL_KW   , 0);
+
+  if (ecl_file_get_num_named_kw( ecl_file , ZWEL_KW) > grid_nr) {
+    ecl_rsthead_type  * header  = ecl_rsthead_ialloc( ecl_file , grid_nr );                      
+    const ecl_kw_type * zwel_kw = ecl_file_iget_named_kw( ecl_file , ZWEL_KW  , grid_nr);
     int num_wells               = header->nwells;
     well_nr = 0;
     while (true) {
@@ -241,7 +256,11 @@ well_type_enum well_state_translate_ecl_type_int(int int_type) {
   return type;
 }
 
-well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , int report_nr ,  int global_well_nr) {
+
+static void well_state_add_LGR_connections( well_state_type * well_state , const ecl_grid_type * grid, ecl_file_type * ecl_file, int global_well_nr );
+
+
+well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , const ecl_grid_type * grid , int report_nr ,  int global_well_nr) {
   if (ecl_file_has_kw( ecl_file , IWEL_KW)) {
     well_state_type   * well_state = NULL;
     ecl_rsthead_type  * global_header  = ecl_rsthead_alloc( ecl_file );
@@ -274,29 +293,8 @@ well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , int rep
       free( name );
       
       // Add global connections:
-      well_state_add_connections( well_state , ecl_file , 0 , global_well_nr );
-      
-      
-      
-    // Go through all the LGRs and add connections; both in the bulk
-    // grid and as wellhead.
-      
-      {
-        int num_lgr = ecl_file_get_num_named_kw( ecl_file , LGR_KW );
-        int lgr_nr;
-        for (lgr_nr = 0; lgr_nr < num_lgr; lgr_nr++) {
-          ecl_file_push_block( ecl_file );                                  // <--------------------
-          {                                                                                       //  
-            ecl_file_subselect_block( ecl_file , LGR_KW , lgr_nr );                               // 
-            {                                                                                     //  Restrict the file view 
-              int well_nr = well_state_get_lgr_well_nr( well_state , ecl_file);                   //  to one LGR block.   
-              if (well_nr >= 0)                                                                   // 
-                well_state_add_connections( well_state , ecl_file , lgr_nr + 1, well_nr );        //
-            }                                                                                     //
-          }                                                                                       //
-          ecl_file_pop_block( ecl_file );                                   // <--------------------  
-        }
-      }
+      well_state_add_connections( well_state , ecl_file , ECL_GRID_GLOBAL_GRID , 0 , global_well_nr );
+      well_state_add_LGR_connections( well_state , grid , ecl_file , global_well_nr);
     } 
     ecl_rsthead_free( global_header );
     return well_state;
@@ -304,6 +302,30 @@ well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , int rep
     /* This seems a bit weird - have come over E300 restart files without the IWEL keyword. */
     return NULL;
 }
+
+
+static void well_state_add_LGR_connections( well_state_type * well_state , const ecl_grid_type * grid , ecl_file_type * ecl_file, int global_well_nr ) {
+  // Go through all the LGRs and add connections; both in the bulk
+  // grid and as wellhead.
+  int num_lgr = ecl_file_get_num_named_kw( ecl_file , LGR_KW );
+  int lgr_nr;
+  for (lgr_nr = 0; lgr_nr < num_lgr; lgr_nr++) {
+    ecl_file_push_block( ecl_file );                                  // <--------------------
+    {                                                                                       //  
+      ecl_file_subselect_block( ecl_file , LGR_KW , lgr_nr );                               // 
+      {                                                                                     //  Restrict the file view 
+        const char * grid_name = ecl_grid_iget_lgr_name( grid , lgr_nr );
+        int well_nr = well_state_get_lgr_well_nr( well_state , ecl_file , 0 /* lgr_nr + 1*/); //  to one LGR block.   
+        if (well_nr >= 0)                                                                     // 
+          well_state_add_connections( well_state , ecl_file , grid_name , lgr_nr + 1, well_nr );        //
+      }                                                                                     //
+    }                                                                                       //
+    ecl_file_pop_block( ecl_file );                                   // <--------------------  
+  }
+}
+
+
+
 
 void well_state_free( well_state_type * well ) {
   hash_free( well->name_lgr_path );
@@ -313,6 +335,7 @@ void well_state_free( well_state_type * well ) {
   vector_free( well->index_wellhead );
   
   well_path_free( well->null_path );
+  hash_free( well->connections );
 
   free( well->name );
   free( well );
@@ -500,3 +523,32 @@ void well_state_summarize( const well_state_type * well_state , FILE * stream ) 
     }
   }
 }
+
+
+const well_conn_collection_type * well_state_get_grid_connections( const well_state_type * well_state , const char * grid_name) {
+  if (hash_has_key( well_state->connections , grid_name))
+    return hash_get( well_state->connections , grid_name);
+  else
+    return NULL;
+}
+
+
+const well_conn_collection_type * well_state_get_global_connections( const well_state_type * well_state ) {
+  return well_state_get_grid_connections( well_state , ECL_GRID_GLOBAL_GRID );
+}
+
+
+bool well_state_has_grid_connections( const well_state_type * well_state , const char * grid_name) {
+  if (hash_has_key( well_state->connections , grid_name))
+    return true;
+  else
+    return false;
+}
+
+
+bool well_state_has_global_connections( const well_state_type * well_state ) {
+  return well_state_has_grid_connections( well_state , ECL_GRID_GLOBAL_GRID );
+}
+
+
+
