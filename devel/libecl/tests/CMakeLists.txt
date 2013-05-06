@@ -8,6 +8,11 @@ target_link_libraries( ecl_restart_test ecl )
 add_test( ecl_restart_test ${EXECUTABLE_OUTPUT_PATH}/ecl_restart_test ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST )
 
 
+add_executable( ecl_grid_lgr_name ecl_grid_lgr_name.c )
+target_link_libraries( ecl_grid_lgr_name ecl )
+set_target_properties( ecl_grid_lgr_name PROPERTIES COMPILE_FLAGS "-Werror")                                    
+add_test( ecl_grid_lgr_name ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_lgr_name  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC.EGRID)
+
 
 add_executable( ecl_lgr_test ecl_lgr_test.c )
 target_link_libraries( ecl_lgr_test ecl )
@@ -81,6 +86,7 @@ set_property( TEST ecl_restart_test PROPERTY LABELS Statoil )
 set_property( TEST ecl_lgr_test1 PROPERTY LABELS Statoil )
 set_property( TEST ecl_lgr_test2 PROPERTY LABELS Statoil )
 set_property( TEST ecl_lgr_test3 PROPERTY LABELS Statoil )
+set_property( TEST ecl_grid_lgr_name PROPERTY LABELS Statoil )
 set_property( TEST ecl_grid_simple PROPERTY LABELS Statoil )
 set_property( TEST ecl_dualp PROPERTY LABELS Statoil )
 set_property( TEST ecl_sum_test PROPERTY LABELS Statoil )
