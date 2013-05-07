@@ -47,6 +47,7 @@ int main(int argc , char ** argv) {
     well_state_type * well_state = well_state_alloc(well_name , global_well_nr , open , type , report_nr , valid_from);
     test_assert_true( well_state_is_instance( well_state) );
 
+    test_assert_false( well_state_is_MSW( well_state ));
     test_assert_string_equal( well_name , well_state_get_name( well_state ));
     test_assert_int_equal( global_well_nr , well_state_get_well_nr( well_state ));
     test_assert_bool_equal( open , well_state_is_open( well_state ));

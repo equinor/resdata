@@ -30,8 +30,10 @@ extern "C" {
 #include <ert/ecl/ecl_grid.h>
 
 #include <ert/ecl_well/well_conn.h>
-#include <ert/ecl_well/well_conn_collection.h>
 #include <ert/ecl_well/well_const.h>
+#include <ert/ecl_well/well_conn_collection.h>
+#include <ert/ecl_well/well_segment_collection.h>
+#include <ert/ecl_well/well_branch_collection.h>
 
 
 #define GLOBAL_GRID_NAME   "GLOBAL" // The name assigned to the global grid for name based lookup.
@@ -40,6 +42,22 @@ extern "C" {
   
   well_state_type      * well_state_alloc(const char * well_name , int global_well_nr , bool open, well_type_enum type , int report_nr, time_t valid_from);
   well_state_type      * well_state_alloc_from_file( ecl_file_type * ecl_file , const ecl_grid_type * grid , int report_step , int well_nr);
+
+  void well_state_add_connections( well_state_type * well_state , 
+                                   const ecl_grid_type * grid , 
+                                   ecl_file_type * rst_file ,  
+                                   int well_nr);
+
+  bool well_state_add_MSW( well_state_type * well_state , 
+                           const ecl_file_type * rst_file , 
+                           int well_nr);
+
+  bool well_state_is_MSW( const well_state_type * well_state);
+
+  well_segment_collection_type * well_state_get_segments( const well_state_type * well_state );
+  well_branch_collection_type * well_state_get_branches( const well_state_type * well_state );
+
+
   void                   well_state_free( well_state_type * well );
   const char           * well_state_get_name( const well_state_type * well );
   int                    well_state_get_report_nr( const well_state_type * well_state );
