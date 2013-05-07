@@ -193,12 +193,12 @@ static void well_state_add_connections( well_state_type * well_state ,  const ec
   all.  
 */
 
-static int well_state_get_lgr_well_nr( const well_state_type * well_state , const ecl_file_type * ecl_file, int grid_nr) {
+static int well_state_get_lgr_well_nr( const well_state_type * well_state , const ecl_file_type * ecl_file) {
   int well_nr = -1;
 
-  if (ecl_file_get_num_named_kw( ecl_file , ZWEL_KW) > grid_nr) {
-    ecl_rsthead_type  * header  = ecl_rsthead_ialloc( ecl_file , grid_nr );                      
-    const ecl_kw_type * zwel_kw = ecl_file_iget_named_kw( ecl_file , ZWEL_KW  , grid_nr);
+  if (ecl_file_has_kw( ecl_file , ZWEL_KW)) {
+    ecl_rsthead_type  * header  = ecl_rsthead_alloc( ecl_file );                      
+    const ecl_kw_type * zwel_kw = ecl_file_iget_named_kw( ecl_file , ZWEL_KW  , 0 );
     int num_wells               = header->nwells;
     well_nr = 0;
     while (true) {
@@ -307,20 +307,20 @@ well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , const e
 static void well_state_add_LGR_connections( well_state_type * well_state , const ecl_grid_type * grid , ecl_file_type * ecl_file, int global_well_nr ) {
   // Go through all the LGRs and add connections; both in the bulk
   // grid and as wellhead.
-  int num_lgr = ecl_file_get_num_named_kw( ecl_file , LGR_KW );
+  int num_lgr = ecl_grid_get_num_lgr( grid );
   int lgr_nr;
   for (lgr_nr = 0; lgr_nr < num_lgr; lgr_nr++) {
-    ecl_file_push_block( ecl_file );                                  // <--------------------
-    {                                                                                       //  
-      ecl_file_subselect_block( ecl_file , LGR_KW , lgr_nr );                               // 
-      {                                                                                     //  Restrict the file view 
-        const char * grid_name = ecl_grid_iget_lgr_name( grid , lgr_nr );
-        int well_nr = well_state_get_lgr_well_nr( well_state , ecl_file , 0 /* lgr_nr + 1*/); //  to one LGR block.   
-        if (well_nr >= 0)                                                                     // 
-          well_state_add_connections( well_state , ecl_file , grid_name , lgr_nr + 1, well_nr );        //
-      }                                                                                     //
-    }                                                                                       //
-    ecl_file_pop_block( ecl_file );                                   // <--------------------  
+    ecl_file_push_block( ecl_file );                                  // <-------------------------//
+    {                                                                                              //  
+      ecl_file_subselect_block( ecl_file , LGR_KW , lgr_nr );                                      // 
+      {                                                                                            //  Restrict the file view 
+        const char * grid_name = ecl_grid_iget_lgr_name( grid , lgr_nr );                          //
+        int well_nr = well_state_get_lgr_well_nr( well_state , ecl_file );                         //  to one LGR block.   
+        if (well_nr >= 0)                                                                          //     
+          well_state_add_connections( well_state , ecl_file , grid_name , lgr_nr + 1, well_nr );   //
+      }                                                                                            //
+    }                                                                                              //     
+    ecl_file_pop_block( ecl_file );                                   // <-------------------------//  
   }
 }
 
