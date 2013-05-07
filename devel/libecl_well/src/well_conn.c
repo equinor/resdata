@@ -61,49 +61,6 @@ bool well_conn_equal( const well_conn_type *conn1  , const well_conn_type * conn
 }
 
 
-static void well_conn_set_k( well_conn_type * conn , const ecl_rsthead_type * header , int icon_k) {
-  conn->k = icon_k;
-  conn->matrix_connection = true;
-
-  if (header->dualp) {
-    int geometric_nz = header->nz / 2;
-    if (icon_k >= geometric_nz) {
-      conn->k -= geometric_nz;
-      conn->matrix_connection = false;
-    }
-  }
-}
-
-
-
-
-well_conn_type * well_conn_alloc_wellhead( const ecl_kw_type * iwel_kw , const ecl_rsthead_type * header , int well_nr)  {
-  const int iwel_offset = header->niwelz * well_nr;
-  int conn_i = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADI_ITEM );
-  
-  if (conn_i > 0) {
-    well_conn_type * conn = util_malloc( sizeof * conn );
-    
-    conn->i    = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADI_ITEM ) - 1;
-    conn->j    = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADJ_ITEM ) - 1;
-    {
-      int icon_k = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADK_ITEM ) - 1;
-      well_conn_set_k( conn , header , icon_k);
-    }
-   
-    conn->open           = true;  // This is not really specified anywhere.
-    conn->segment        = 0;   
-    /*
-      conn->branch         = 0;
-      conn->outlet_segment = 0;
-    */
-    return conn;
-  } else
-    // The well is completed in this LGR - however the wellhead is in another LGR.
-    return NULL;
-}
-
-
 bool well_conn_MSW( const well_conn_type * conn ) {
   if (conn->segment == WELL_CONN_NORMAL_WELL_SEGMENT_ID)
     return false;
@@ -282,6 +239,37 @@ void well_conn_free__( void * arg ) {
   well_conn_type * conn = well_conn_safe_cast( arg );
   well_conn_free( conn );
 }
+
+
+well_conn_type * well_conn_alloc_wellhead( const ecl_kw_type * iwel_kw , const ecl_rsthead_type * header , int well_nr)  {
+  const int iwel_offset = header->niwelz * well_nr;
+  int conn_i = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADI_ITEM ) - 1;
+  
+  if (conn_i >= 0) {
+    //well_conn_type * conn = util_malloc( sizeof * conn );
+    int conn_j = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADJ_ITEM ) - 1;
+    int conn_k = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADK_ITEM ) - 1;
+    bool matrix_connection = true;
+    bool open = true;
+
+    if (header->dualp) {
+      int geometric_nz = header->nz / 2;
+      if (conn_k >= geometric_nz) {
+        conn_k -= geometric_nz;
+        matrix_connection = false;
+      }
+    }
+    
+    if (matrix_connection)
+      return well_conn_alloc( conn_i , conn_j , conn_k , open , well_conn_dirZ );
+    else
+      return well_conn_alloc_fracture( conn_i , conn_j , conn_k , open , well_conn_dirZ );
+  } else
+    // The well is completed in this LGR - however the wellhead is in another LGR.
+    return NULL;
+}
+
+
 
 
 

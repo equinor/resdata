@@ -18,6 +18,21 @@ target_link_libraries( well_state ecl_well )
 set_target_properties( well_state PROPERTIES COMPILE_FLAGS "-Werror")                                    
 add_test( well_state ${EXECUTABLE_OUTPUT_PATH}/well_state )
 
+add_executable( well_state_load well_state_load.c )
+target_link_libraries( well_state_load ecl_well )
+set_target_properties( well_state_load PROPERTIES COMPILE_FLAGS "-Werror")                                    
+add_test( well_state_load1 ${EXECUTABLE_OUTPUT_PATH}/well_state_load ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID
+                                                                    ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.X0030)
+
+add_test( well_state_load2 ${EXECUTABLE_OUTPUT_PATH}/well_state_load ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/MSWcase/MSW_CASE.EGRID
+                                                                     ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/MSWcase/MSW_CASE.X0021)
+
+add_test( well_state_load3 ${EXECUTABLE_OUTPUT_PATH}/well_state_load ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW/MSW.EGRID
+                                                                     ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW/MSW.X0123)
+
+add_test( well_state_load4 ${EXECUTABLE_OUTPUT_PATH}/well_state_load ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/LGR.EGRID
+                                                                     ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/LGR.X0095)
+
 add_executable( well_segment well_segment.c )
 target_link_libraries( well_segment ecl_well )
 set_target_properties( well_segment PROPERTIES COMPILE_FLAGS "-Werror")                                    
@@ -32,6 +47,7 @@ add_executable( well_segment_load well_segment_load.c )
 target_link_libraries( well_segment_load ecl_well )
 set_target_properties( well_segment_load PROPERTIES COMPILE_FLAGS "-Werror")                                    
 add_test( well_segment_load ${EXECUTABLE_OUTPUT_PATH}/well_segment_load ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/MSWcase/MSW_CASE.X0021)
+
 
 add_executable( well_segment_branch_conn_load well_segment_branch_conn_load.c )
 target_link_libraries( well_segment_branch_conn_load ecl_well )
@@ -80,6 +96,10 @@ add_test( well_lgr_load2  ${EXECUTABLE_OUTPUT_PATH}/well_lgr_load ${PROJECT_SOUR
 set_property( TEST well_lgr_load1 PROPERTY LABELS Statoil )
 set_property( TEST well_lgr_load2 PROPERTY LABELS Statoil )
 set_property( TEST well_dualp    PROPERTY LABELS Statoil )
+set_property( TEST well_state_load1 PROPERTY LABELS Statoil )
+set_property( TEST well_state_load2 PROPERTY LABELS Statoil )
+set_property( TEST well_state_load3 PROPERTY LABELS Statoil )
+set_property( TEST well_state_load4 PROPERTY LABELS Statoil )
 set_property( TEST well_ts PROPERTY LABELS Statoil )
 set_property( TEST well_dualp PROPERTY LABELS Statoil )
 set_property( TEST well_conn_load1 PROPERTY LABELS Statoil )
