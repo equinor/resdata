@@ -53,51 +53,61 @@ Connections, segments and branches
    +-----+
    |     |  <- Wellhead
    |     |
-   +-----+
-      | \
-      |  \-----0------------------<----------------------O
-      \
+   +-----+ _________ Segment 2  
+      |\  /
+      | \/         Segment 1               Segment 0
+      |  \-----0---------------0--<----------------------O           <-- Branch: 0
+      \        |               |      |                  |
        \    +-----+         +-----++-----+            +-----+
-        \   |     |         |     ||     |            |     |
+        \   | C3  |         | C2  || C1  |            | C0  |
          \  |     |         |     ||     |            |     |
           \ +-----+         +-----++-----+            +-----+
            \
-            \
+Segment 5   \
              \
-              \
-               \-<--O-------<-------O----------------<------------O
-
+              \        Segment 4                Segment 3    
+               \-<--O-------<-------O----------------<------------O   <-- Branch: 1
+                    |               |          |                  |
                  +-----+         +-----+    +-----+            +-----+
-                 |     |         |     |    |     |            |     |
+                 | C7  |         | C6  |    | C5  |            | C4  |
                  |     |         |     |    |     |            |     |
                  +-----+         +-----+    +-----+            +-----+
 
 
 
 
-The boxes show connections to the grid; as indicated by the use of
-isolated boxes the ECLIPSE model contains no geomtric concept linking
-the different connections into 'well-like' object.
+The boxes show connections C0 - C7; the connections serve as sinks (or
+sources in the case of injectors) removing fluids from the
+reservoir. As indicated by the use of isolated boxes the ECLIPSE model
+contains no geomtric concept linking the different connections into a
+connected 'well-like' object.
 
+Ordinary wells in the ECLIPSE model are just a collection of
+connections like these illustrated boxes, and to draw a connected 1D
+object heuristics of some kind must be used to determine how the
+various connections should be connected. In particular for wells which
+consist of multiple branches this heuristic is non obvious.
 
+More advanced (i.e. newer) wells are modelles as multisegment wells;
+the important thing about multisegment wells is that the 1D segments
+constituting the flowpipe are modelled explicitly as 'segments', and
+the equations of fluid flow are solved by ECLIPSE in these 1D
+domains. The figure above shows a multisegment well with six segments
+marked as Segment0 ... Segment5. The segments themselves are quite
+abstract objects not directly linked to the grid, but indriectly
+through the connections. In the figure the segment <-> connection
+links are as follows:
 
+    
+  Segment0: C0, C1
+  Segment1: C2
+  Segment2: C3
+  Segment3: C4, C5
+  Segment4: C6
+  Segment5: C7
 
-
-
-
-
-At the most basic and fundamental level the wells are connected to the
-grid in the form of connections, in this code connections are
-implemented in the well_conn.c file and well_conn_collection.c
-implements a collection of connections. The popular view of a well is
-a one dimensional, possibly branched, object going through the
-grid. However in the form of connections there is no such geometric
-concept; i.e. the well_conn_collection has no notion of 'this
-connection comes before that connection' or similar geometric
-questions.
-
-
-
+Each segment has an outlet segment, which will link the segments
+together into a geometry. 
 */
 
 
@@ -112,7 +122,7 @@ struct well_state_struct {
   bool             open;
   well_type_enum   type;
 
-  hash_type      * connections;     // hash<grid_name,well_conn_collection>
+  hash_type      * connections;                                                       // hash<grid_name,well_conn_collection>
   well_segment_collection_type * segments;
   well_branch_collection_type * branches;
 
@@ -124,10 +134,10 @@ struct well_state_struct {
 
 
 
-UTIL_IS_INSTANCE_FUNCTION( well_state , WELL_STATE_TYPE_ID)
+UTIL_IS_INSTANCE_FUNCTION( well_state , WELL_STATE_TYPE_                                        ID)
 
 
-well_state_type * well_state_alloc(const char * well_name , int global_well_nr , bool open, well_type_enum type , int report_nr, time_t valid_from) {
+wel  l_state_type * well_state_alloc(const char * well_name , int global_well_nr , bool open, well_type_enum type , int report_nr, time_t valid_from) {
   well_state_type * well_state = util_malloc( sizeof * well_state );
   UTIL_TYPE_ID_INIT( well_state , WELL_STATE_TYPE_ID );
   well_state->index_wellhead = vector_alloc_new();
