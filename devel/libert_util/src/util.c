@@ -4303,10 +4303,12 @@ void util_bitmask_on(int * value , int mask) {
 }
 
 
-
+FILE * util_fopen__(const char * filename , const char * mode) {
+  return fopen(filename, mode);
+}
 
 FILE * util_fopen(const char * filename , const char * mode) {
-  FILE * stream = fopen(filename , mode);
+  FILE * stream = util_fopen__(filename , mode);
   if (stream == NULL) 
     util_abort("%s: failed to open:%s with mode:\'%s\' - error:%s(%d) \n",__func__ , filename , mode , strerror(errno) , errno);
   

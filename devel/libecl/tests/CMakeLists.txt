@@ -85,7 +85,6 @@ set_property( TEST ecl_grid_simple PROPERTY LABELS Statoil )
 set_property( TEST ecl_dualp PROPERTY LABELS Statoil )
 set_property( TEST ecl_sum_test PROPERTY LABELS Statoil )
 set_property( TEST ecl_fortio PROPERTY LABELS Statoil)
-
 set_property( TEST ecl_grid_dims1 PROPERTY LABELS Statoil )
 set_property( TEST ecl_grid_dims2 PROPERTY LABELS Statoil )
 set_property( TEST ecl_grid_dims3 PROPERTY LABELS Statoil )
