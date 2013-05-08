@@ -23,18 +23,18 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_region.h>
 
-void test_list( ecl_region_type * region ) {
+void test_list( int volume , int nactive , ecl_region_type * region ) {
   const int_vector_type * active_list;
   const int_vector_type * global_list;
-  active_list = ecl_region_get_active_list( ecl_region );
-  global_list = ecl_region_get_global_list( ecl_region );
-  test_assert_int_equal( nactive  , int_vector_size( active_list ));
-  test_assert_int_equal( nx*ny*nz , int_vector_size( global_list ));
+  active_list = ecl_region_get_active_list( region );
+  global_list = ecl_region_get_global_list( region );
+  test_assert_int_equal( nactive , int_vector_size( active_list ));
+  test_assert_int_equal( volume  , int_vector_size( global_list ));
 
 
-  ecl_region_deselct_all( region );
-  active_list = ecl_region_get_active_list( ecl_region );
-  global_list = ecl_region_get_global_list( ecl_region );
+  ecl_region_deselect_all( region );
+  active_list = ecl_region_get_active_list( region );
+  global_list = ecl_region_get_global_list( region );
   test_assert_int_equal( 0 , int_vector_size( active_list ));
   test_assert_int_equal( 0 , int_vector_size( global_list ));
 }
@@ -49,11 +49,11 @@ void test_slice( const ecl_grid_type * grid ) {
   ecl_region_type * region = ecl_region_alloc( grid , false );
   
   ecl_region_select_i1i2( region , 0 , nx - 1);
-  test_list( region );
+  test_list( nx*ny*nz , nactive , region );
   ecl_region_select_j1j2( region , 0 , ny - 1);
-  test_list( region );
+  test_list( nx*ny*nz , nactive , region );
   ecl_region_select_k1k2( region , 0 , nz - 1);
-  test_list( region );
+  test_list( nx*ny*nz , nactive , region );
   
   ecl_region_free( region );
 }
