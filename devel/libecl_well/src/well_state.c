@@ -78,7 +78,7 @@ Segment 5   \
 
 The boxes show connections C0 - C7; the connections serve as sinks (or
 sources in the case of injectors) removing fluids from the
-reservoir. As indicated by the use of isolated boxes the ECLIPSE model
+reservoir. As ind             icated by the use of isolated boxes the ECLIPSE model
 contains no geomtric concept linking the different connections into a
 connected 'well-like' object.
 
@@ -97,7 +97,6 @@ marked as Segment0 ... Segment5. The segments themselves are quite
 abstract objects not directly linked to the grid, but indriectly
 through the connections. In the figure the segment <-> connection
 links are as follows:
-
     
   Segment0: C0, C1
   Segment1: C2
@@ -108,6 +107,53 @@ links are as follows:
 
 Each segment has an outlet segment, which will link the segments
 together into a geometry. 
+
+The connection can in general be both to the main global grid, and to
+an LGR. Hence all questions about connections must be LGR aware. This
+is in contrast to the segments and branches which are geometric
+objects, not directly coupled to a specific grid; however the segments
+have a collection of connections - and these connections are of course
+coupledte implementation these objects are modelled as such:
+
+ 1. The well_state has hash table which is indexed by LGR name, and
+    the values are well_conn_collection instances. The
+    well_conn_collection type is a quite simple collection which can
+    tell how may connections there are, and index based lookup:
+
+
+       well_conn_collection_type * connections = well_state_get_grid_connections( well_state , LGR_NAME);
+       if (connections) {
+          well_conn_type * conn = well_conn_collection_iget( connections , 0 );
+          printf("Have %d connections \n",well_conn_collection_get_size( connections );
+       }  
+
+    The connections to the global grid are stored with the 'LGR' name
+    given by the symbole ECL_GRID_GLOBAL_GRID, or alternatively the
+    function well_state_get_global_connections( well_state ) can be
+    used.
+
+
+
+ 2. If - AND ONLY IF - the well is a multisegment well, you can query
+    the well_state object for information about segments and branches:
+
+       if (well_state_is_MSW( well_state )) {
+          well_segment_collection_type * segments = well_state_get_segments( well_state );  
+          well_branch_collection_type * branches = well_state_get_branches( well_state );
+          int branch_nr;
+          
+          for (branch_nr = 0; branch_nr < well_branch_collection_get_size( branches ); branch_nr++) {             
+              well_segment_type * segment = well_branch_collection_iget_start_segment( branches , branhc_nr );
+              while (segment) {
+                  // Inspect the current segment. 
+                  segment = well_segment_get_outlet( segment );
+              }
+          }
+       }
+
+     
+    
+
 */
 
 
@@ -134,10 +180,10 @@ struct well_state_struct {
 
 
 
-UTIL_IS_INSTANCE_FUNCTION( well_state , WELL_STATE_TYPE_                                        ID)
+UTIL_IS_INSTANCE_FUNCTION( well_state , WELL_STATE_TYPE_ID)
 
 
-wel  l_state_type * well_state_alloc(const char * well_name , int global_well_nr , bool open, well_type_enum type , int report_nr, time_t valid_from) {
+well_state_type * well_state_alloc(const char * well_name , int global_well_nr , bool open, well_type_enum type , int report_nr, time_t valid_from) {
   well_state_type * well_state = util_malloc( sizeof * well_state );
   UTIL_TYPE_ID_INIT( well_state , WELL_STATE_TYPE_ID );
   well_state->index_wellhead = vector_alloc_new();
