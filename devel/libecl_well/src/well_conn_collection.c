@@ -106,8 +106,10 @@ int well_conn_collection_load_from_kw( well_conn_collection_type * wellcc , cons
   int iconn;
 
   for (iconn = 0; iconn < num_connections; iconn++) {
-    well_conn_type * conn = well_conn_alloc_from_kw( icon_kw , rst_head , iwell , iconn );
-    well_conn_collection_add( wellcc , conn );
+    well_conn_type * conn = well_conn_alloc_from_kw( icon_kw , rst_head , iwell , iconn ); 
+    if (conn)
+      well_conn_collection_add( wellcc , conn );
   }
   return num_connections;
 }
+

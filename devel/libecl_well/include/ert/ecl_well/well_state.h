@@ -70,19 +70,6 @@ extern "C" {
   const well_conn_type * well_state_iget_wellhead( const well_state_type * well_state , int grid_nr);
   const well_conn_type * well_state_get_wellhead( const well_state_type * well_state , const char * grid_name);
   
-  
-  const well_conn_type ** well_state_iget_lgr_connections(const well_state_type * well_state , int grid_nr , int branch_nr );
-  const well_conn_type ** well_state_get_lgr_connections(const well_state_type * well_state , const char * lgr_name , int branch_nr);
-  const well_conn_type ** well_state_get_connections(const well_state_type * well_state , int branch_nr );
-
-  int                     well_state_iget_num_lgr_connections(const well_state_type * well_state , int grid_nr , int branch_nr );
-  int                     well_state_get_num_lgr_connections(const well_state_type * well_state , const char * lgr_name , int branch_nr);
-  int                     well_state_get_num_connections(const well_state_type * well_state , int branch_nr );
-
-  int                     well_state_iget_lgr_num_branches( const well_state_type * well_state , int grid_nr);
-  int                     well_state_get_lgr_num_branches( const well_state_type * well_state , const char * lgr_name);
-  int                     well_state_get_num_branches(const well_state_type * well_state );
-
   void                    well_state_summarize( const well_state_type * well_state , FILE * stream );
   well_type_enum          well_state_translate_ecl_type_int(int int_type);
 

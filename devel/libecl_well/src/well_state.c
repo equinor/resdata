@@ -41,7 +41,6 @@
 #include <ert/ecl_well/well_const.h>
 #include <ert/ecl_well/well_conn.h>
 #include <ert/ecl_well/well_state.h>
-#include <ert/ecl_well/well_path.h>
 #include <ert/ecl_well/well_segment_collection.h>
 #include <ert/ecl_well/well_branch_collection.h>
 
@@ -65,9 +64,6 @@ struct well_state_struct {
   
   vector_type    * index_wellhead;   // An well_conn_type instance representing the wellhead - indexed by grid_nr.
   hash_type      * name_wellhead;    // An well_conn_type instance representing the wellhead - indexed by lgr_name.
-  
-  vector_type    * index_lgr_path;   // Contains the various   well_path instances indexed by grid_nr - global has grid_nr == 0.
-  hash_type      * name_lgr_path;    // Contains the different well_path instances indexed by lgr_name  
 };
 
 
@@ -78,9 +74,6 @@ UTIL_IS_INSTANCE_FUNCTION( well_state , WELL_STATE_TYPE_ID)
 well_state_type * well_state_alloc(const char * well_name , int global_well_nr , bool open, well_type_enum type , int report_nr, time_t valid_from) {
   well_state_type * well_state = util_malloc( sizeof * well_state );
   UTIL_TYPE_ID_INIT( well_state , WELL_STATE_TYPE_ID );
-  well_state->index_lgr_path = vector_alloc_new();
-  well_state->name_lgr_path  = hash_alloc();
-
   well_state->index_wellhead = vector_alloc_new();
   well_state->name_wellhead  = hash_alloc();
 
@@ -102,20 +95,6 @@ well_state_type * well_state_alloc(const char * well_name , int global_well_nr ,
 
 
 
-/*
-  This function assumes that the ecl_file state has been restricted
-  to one LGR block with the ecl_file_subselect_block() function.
-*/
-
-well_path_type * well_state_add_path( well_state_type * well_state , const ecl_file_type * rst_file , const char * grid_name , int grid_nr) {
-  well_path_type * well_path;
-  well_path = well_path_alloc( grid_name );
-    
-  vector_safe_iset_owned_ref( well_state->index_lgr_path , grid_nr , well_path , well_path_free__);
-  hash_insert_ref( well_state->name_lgr_path , grid_name , well_path );
-
-  return well_path;
-}
 
 
 void well_state_add_wellhead( well_state_type * well_state , const ecl_rsthead_type * header , const ecl_kw_type * iwel_kw , int well_nr , const char * grid_name , int grid_nr) {
@@ -368,12 +347,8 @@ well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , const e
 
 
 void well_state_free( well_state_type * well ) {
-  hash_free( well->name_lgr_path );
-  vector_free( well->index_lgr_path );
-
   hash_free( well->name_wellhead );
   vector_free( well->index_wellhead );
-  
   hash_free( well->connections );
   well_segment_collection_free( well->segments );
   well_branch_collection_free( well->branches );
@@ -425,137 +400,10 @@ const char * well_state_get_name( const well_state_type * well_state ) {
   return well_state->name;
 }
 
-/*****************************************************************/
-
-well_path_type * well_state_get_path( const well_state_type * well_state , const char * lgr_name) {
-  return NULL;
-}
-
-well_path_type * well_state_iget_path( const well_state_type * well_state , int grid_nr) {
-  return NULL;
-}
-
-
-const well_conn_type ** well_state_iget_lgr_connections(const well_state_type * well_state , int grid_nr , int branch_nr ) {
-  well_path_type * well_path = well_state_iget_path( well_state , grid_nr );
-  well_branch_type * branch = well_path_iget_branch( well_path , branch_nr );
-
-  if (branch != NULL)
-    return well_branch_get_connections( branch );
-  else
-    return NULL; // Branch does not exist - or has 0 connections.
-}
-
-
-const well_conn_type ** well_state_get_lgr_connections(const well_state_type * well_state , const char * lgr_name , int branch_nr) {
-  well_path_type * well_path = well_state_get_path( well_state , lgr_name );
-  well_branch_type * branch = well_path_iget_branch( well_path , branch_nr );
-  if (branch != NULL)
-    return well_branch_get_connections( branch );
-  else
-    return NULL; // Branch does not exist - or has 0 connections.
-}
-
-
-const well_conn_type ** well_state_get_connections(const well_state_type * well_state , int branch_nr ) {
-  return well_state_iget_lgr_connections(well_state , 0 , branch_nr );
-} 
-
-/*****************************************************************/
-
-int well_state_iget_num_lgr_connections(const well_state_type * well_state , int grid_nr , int branch_nr ) {
-  well_path_type * well_path = well_state_iget_path( well_state , grid_nr );
-  well_branch_type * branch = well_path_iget_branch( well_path , branch_nr );
-  if (branch != NULL)
-    return well_branch_get_length( branch );
-  else
-    return 0;
-}
-
-int well_state_get_num_lgr_connections(const well_state_type * well_state , const char * lgr_name , int branch_nr) {
-  well_path_type * well_path = well_state_get_path( well_state , lgr_name );
-  well_branch_type * branch = well_path_iget_branch( well_path , branch_nr );
-  if (branch != NULL)
-    return well_branch_get_length( branch );
-  else
-    return 0;
-}
-
-
-int well_state_get_num_connections(const well_state_type * well_state , int branch_nr ) {
-  return well_state_iget_num_lgr_connections(well_state , 0 , branch_nr );
-}
-
-/*****************************************************************/
-
-int well_state_iget_lgr_num_branches( const well_state_type * well_state , int grid_nr) {
-  well_path_type * well_path = well_state_iget_path( well_state , grid_nr );
-  return well_path_get_max_branches( well_path );
-}
-
-int well_state_get_lgr_num_branches( const well_state_type * well_state , const char * lgr_name) {
-  well_path_type * well_path = well_state_get_path( well_state , lgr_name );
-  return well_path_get_max_branches( well_path );
-}
-
-
-int well_state_get_num_branches(const well_state_type * well_state ) {
-  return well_state_iget_lgr_num_branches( well_state , 0 );
-}
-
-/*****************************************************************/
-
-int well_state_get_num_paths( const well_state_type * well_state ) {
-  return vector_get_size( well_state->index_lgr_path );
-}
 
 /*****************************************************************/
 
 void well_state_summarize( const well_state_type * well_state , FILE * stream ) {
-  fprintf(stream , "Well: %s \n" , well_state->name );
-  {
-    int grid_nr;
-    for (grid_nr=0; grid_nr < well_state_get_num_paths( well_state ); grid_nr++) {
-      well_path_type * well_path = well_state_iget_path(well_state , grid_nr );
-      if (well_path_get_grid_name( well_path ) != NULL) {
-        fprintf(stream , "   Grid: %-8s\n",well_path_get_grid_name( well_path ));
-
-        {
-          const well_conn_type * global_head = well_state_iget_wellhead( well_state , grid_nr );
-          if (global_head != NULL)
-            fprintf(stream , "   Wellhead: (%3d,%3d,%3d)\n" , well_conn_get_i( global_head ) , well_conn_get_j(global_head) , well_conn_get_k( global_head) );
-          else
-            fprintf(stream , "   Wellhead: ------------\n" );
-        }
-
-        {
-          int num_branches = well_path_get_max_branches(well_path);
-          int branch_nr;
-          for (branch_nr = 0; branch_nr < num_branches; branch_nr++) {
-            well_branch_type * branch = well_path_iget_branch( well_path , branch_nr );
-            if (branch != NULL) {
-              const well_conn_type ** connections = well_branch_get_connections( branch );
-              int num_connections = well_branch_get_length( branch );
-              int iconn;
-
-              fprintf(stream , "      Branch %2d: [" , branch_nr );
-              for (iconn=0; iconn < num_connections; iconn++) {
-                const well_conn_type * conn = connections[ iconn ];
-                fprintf(stream, "(%3d,%3d,%3d)",well_conn_get_i( conn ) , well_conn_get_j( conn ), well_conn_get_k( conn ));
-                if (iconn == (num_connections - 1))
-                  fprintf(stream , "]\n");
-                else {
-                  fprintf(stream , ", ");
-                  if ((iconn + 1) % 10 == 0)
-                    fprintf(stream , "\n                  ");
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
 }
 
 
