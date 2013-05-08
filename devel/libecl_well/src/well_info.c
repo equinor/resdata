@@ -52,22 +52,9 @@
        contains a time series for one well.
 
     well_state_type: The well_state_type datatype contains the
-       state/properties of one well at one particular instant of time.
-
-    well_path_type: The well_path_type datatype hold information about
-       the path of the well, i.e. which cells it goes through. The
-       well_path_type instance is for one grid only; and if the well
-       goes through LGRs the well_state instance contains one
-       well_path instance for the global grid and additional well_path
-       instances for each LGR.
-
-    well_branch_type: The wells can be split into several
-       branches. The well_branch_type datatype contain a collection of
-       well connections which form a 1-dimensional segment.
-
-    well_conn_type: This is the connection of a well to one cell. This
-      datatype is exported, i.e. calling scope can inspect
-      (read-only!) the members of a well_conn_type instance.
+       state/properties of one well at one particular instant of
+       time. The well_state.c file contains further documentation of
+       the concepts connections, branches and segments.
 
               
                WELL1
