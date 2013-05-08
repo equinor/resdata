@@ -1675,7 +1675,11 @@ static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , const float * mapa
        order of occurence in the grid file. the following equalities
        should apply:
 
-          occurence number in file == lgr_grid->grid_nr == gridhead(4) for lgr == index in the lgr_list vector
+          occurence number in file == lgr_grid->grid_nr
+
+       This 'mostly' agrees with the GRIDHEAD(4) item, but
+       unfortunately not always. Cases have popped up where the series
+       of GRIDHEAD(4) values from lgr to lgr have holes :-(
   
        when installed in the lgr_list vector the lgr grid is installed
        with a destructor, i.e. the grid is destroyed when the vector
@@ -1885,7 +1889,11 @@ void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid ,  const float * zcorn ,
   0---1
 */
 
-static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid , int dualp_flag , int nx , int ny , int nz , const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, const int * corsnum, int grid_nr) {
+static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid , 
+                                                    int dualp_flag , int nx , int ny , int nz , 
+                                                    const float * zcorn , const float * coord , const int * actnum, const float * mapaxes, const int * corsnum, 
+                                                    int grid_nr) {
+
   ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , dualp_flag , nx,ny,nz,grid_nr,true);
   
   if (mapaxes != NULL)
@@ -1931,8 +1939,14 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
   ny      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NY_INDEX);
   nz      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NZ_INDEX);
 
-  if (grid_nr != ecl_kw_iget_int( gridhead_kw , GRIDHEAD_LGR_INDEX))
-    util_abort("%s: internal error in grid loader - lgr index mismatch\n",__func__);
+  /*
+    The code used to have this test:
+
+       if (grid_nr != ecl_kw_iget_int( gridhead_kw , GRIDHEAD_LGR_INDEX))
+          util_abort("%s: internal error in grid loader - lgr index mismatch\n",__func__);
+          
+    But then suddenly a EGRID file where this did not apply appeared :-(
+  */
 
   if (gtype != GRIDHEAD_GRIDTYPE_CORNERPOINT)
     util_abort("%s: gtype:%d fatal error when loading grid - must have corner point grid - aborting\n",__func__ , gtype );
