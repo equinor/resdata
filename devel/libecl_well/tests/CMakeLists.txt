@@ -17,5 +17,5 @@ add_test( well_lgr_load2  ${EXECUTABLE_OUTPUT_PATH}/well_lgr_load ${PROJECT_SOUR
 
 set_property( TEST well_lgr_load1 PROPERTY LABELS Statoil )
 set_property( TEST well_lgr_load2 PROPERTY LABELS Statoil )
+set_property( TEST well_dualp    PROPERTY LABELS Statoil )
 set_property( TEST well_ts PROPERTY LABELS Statoil )
-set_property( TEST well_dualp PROPERTY LABELS Statoil )
