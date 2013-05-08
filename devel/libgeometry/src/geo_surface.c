@@ -240,16 +240,6 @@ static bool geo_surface_equal_header( const geo_surface_type * surface1 , const 
 }
 
 
-static bool geo_surface_assert_equal_header( const geo_surface_type * surface1 , const geo_surface_type * surface2 ) {
-  if (geo_surface_equal_header( surface1 , surface2 )) 
-    return true;
-  else {
-    util_abort("%s: failed - surface headers not identical \n",__func__);
-    return false;
-  }
-}
-
-
 /**
    The loading will fail hard if the header of surface does not agree
    with the header found in file.
