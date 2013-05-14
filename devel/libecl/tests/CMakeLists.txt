@@ -8,6 +8,11 @@ target_link_libraries( ecl_restart_test ecl )
 add_test( ecl_restart_test ${EXECUTABLE_OUTPUT_PATH}/ecl_restart_test ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST )
 
 
+add_executable( ecl_region ecl_region.c )
+target_link_libraries( ecl_region ecl )
+add_test( ecl_region ${EXECUTABLE_OUTPUT_PATH}/ecl_region ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
+
+
 
 add_executable( ecl_lgr_test ecl_lgr_test.c )
 target_link_libraries( ecl_lgr_test ecl )
@@ -92,3 +97,4 @@ set_property( TEST ecl_grid_dims4 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_dims5 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_file PROPERTY LABELS StatoilData)
 set_property( TEST ecl_rsthead PROPERTY LABELS StatoilData)
+set_property( TEST ecl_region PROPERTY LABELS StatoilData)
