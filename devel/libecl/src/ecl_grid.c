@@ -1089,6 +1089,7 @@ static void ecl_cell_init_regular( ecl_cell_type * cell , const double * offset 
 /* starting on the ecl_grid proper implementation                */
 
 UTIL_SAFE_CAST_FUNCTION(ecl_grid , ECL_GRID_ID);
+UTIL_IS_INSTANCE_FUNCTION( ecl_grid , ECL_GRID_ID);
 
 /**
    this function allocates the internal index_map and inv_index_map fields.
