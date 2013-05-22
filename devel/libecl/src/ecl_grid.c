@@ -2602,7 +2602,10 @@ ecl_grid_type * ecl_grid_load_case( const char * case_input ) {
   ecl_grid_type * ecl_grid = NULL;
   char * grid_file = ecl_grid_alloc_case_filename( case_input );
   if (grid_file != NULL) {
-    ecl_grid = ecl_grid_alloc( grid_file );
+
+    if (util_file_exists( grid_file )) 
+      ecl_grid = ecl_grid_alloc( grid_file );
+    
     free( grid_file );
   }
   return ecl_grid;
