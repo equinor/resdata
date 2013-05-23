@@ -1089,6 +1089,7 @@ static void ecl_cell_init_regular( ecl_cell_type * cell , const double * offset 
 /* starting on the ecl_grid proper implementation                */
 
 UTIL_SAFE_CAST_FUNCTION(ecl_grid , ECL_GRID_ID);
+UTIL_IS_INSTANCE_FUNCTION( ecl_grid , ECL_GRID_ID);
 
 /**
    this function allocates the internal index_map and inv_index_map fields.
@@ -2601,7 +2602,10 @@ ecl_grid_type * ecl_grid_load_case( const char * case_input ) {
   ecl_grid_type * ecl_grid = NULL;
   char * grid_file = ecl_grid_alloc_case_filename( case_input );
   if (grid_file != NULL) {
-    ecl_grid = ecl_grid_alloc( grid_file );
+
+    if (util_file_exists( grid_file )) 
+      ecl_grid = ecl_grid_alloc( grid_file );
+    
     free( grid_file );
   }
   return ecl_grid;
