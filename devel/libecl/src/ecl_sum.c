@@ -333,6 +333,7 @@ void ecl_sum_free( ecl_sum_type * ecl_sum ) {
   
   util_safe_free( ecl_sum->path );
   util_safe_free( ecl_sum->ext );
+  util_safe_free( ecl_sum->abs_path );
 
   free( ecl_sum->base );
   free( ecl_sum->ecl_case );
@@ -980,6 +981,7 @@ void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const string
   bool_vector_free( has_var );
   if (current_locale != NULL)
     setlocale( LC_NUMERIC , current_locale);
+  free( date_string );
 }
 #undef DATE_STRING_LENGTH
 
