@@ -26,15 +26,25 @@
 
 
 #include <ert/ecl_well/well_segment.h>
-
+#include <ert/ecl_well/well_const.h>
 
 int main(int argc , char ** argv) {
   test_install_SIGNALS();
+  double * rseg_data = util_calloc( 100 , sizeof * rseg_data );
+  const double depth = 100;
+  const double length = 20;
+  const double total_length = 200;
+  const double diameter = 10;
+
+  rseg_data[ RSEG_DEPTH_INDEX ]  = depth;    
+  rseg_data[ RSEG_LENGTH_INDEX ] = length;
+  rseg_data[ RSEG_TOTAL_LENGTH_INDEX ] = total_length;
+  rseg_data[ RSEG_DIAMETER_INDEX ] = diameter;  
   {
     int segment_id = 78;
     int outlet_segment_id = 100;
     int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
-    well_segment_type * ws = well_segment_alloc(segment_id , outlet_segment_id , branch_nr, NULL);
+    well_segment_type * ws = well_segment_alloc(segment_id , outlet_segment_id , branch_nr, rseg_data);
 
     test_assert_true( well_segment_is_instance( ws ));
     test_assert_int_equal( 0 , well_segment_get_link_count( ws ));
@@ -47,13 +57,18 @@ int main(int argc , char ** argv) {
     test_assert_true( well_segment_active( ws ));
     test_assert_true( well_segment_main_stem( ws ));
 
+    test_assert_double_equal( depth  , well_segment_get_depth( ws ));
+    test_assert_double_equal( length , well_segment_get_length( ws ));
+    test_assert_double_equal( total_length , well_segment_get_total_length( ws ));
+    test_assert_double_equal( diameter , well_segment_get_diameter( ws ));
+
     well_segment_free( ws );
   }
 
   {
     int outlet_segment_id = ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE;
     int branch_nr = 100;
-    well_segment_type * ws = well_segment_alloc(12 , outlet_segment_id , branch_nr, NULL);
+    well_segment_type * ws = well_segment_alloc(12 , outlet_segment_id , branch_nr, rseg_data);
     
     test_assert_true( well_segment_nearest_wellhead( ws ));
     test_assert_false( well_segment_main_stem( ws ));
@@ -63,7 +78,7 @@ int main(int argc , char ** argv) {
   {
     int outlet_segment_id = ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE;
     int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_INACTIVE_VALUE;
-    well_segment_type * ws = well_segment_alloc(89 , outlet_segment_id , branch_nr, NULL);
+    well_segment_type * ws = well_segment_alloc(89 , outlet_segment_id , branch_nr, rseg_data);
     
     test_assert_false( well_segment_active( ws ));
   }
@@ -71,8 +86,8 @@ int main(int argc , char ** argv) {
   {
     int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
     int outlet_id = 0;
-    well_segment_type * outlet = well_segment_alloc(outlet_id , ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE , branch_nr, NULL);
-    well_segment_type * ws = well_segment_alloc(100 , outlet_id , branch_nr, NULL);
+    well_segment_type * outlet = well_segment_alloc(outlet_id , ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE , branch_nr, rseg_data);
+    well_segment_type * ws = well_segment_alloc(100 , outlet_id , branch_nr, rseg_data);
     
     test_assert_true( well_segment_link( ws , outlet ));
     test_assert_ptr_equal( well_segment_get_outlet( ws ) , outlet );
@@ -86,8 +101,8 @@ int main(int argc , char ** argv) {
   {
     int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
     int outlet_id = 0;
-    well_segment_type * outlet = well_segment_alloc(outlet_id , ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE , branch_nr , NULL);
-    well_segment_type * ws = well_segment_alloc(100 , outlet_id + 1, branch_nr, NULL);
+    well_segment_type * outlet = well_segment_alloc(outlet_id , ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE , branch_nr , rseg_data);
+    well_segment_type * ws = well_segment_alloc(100 , outlet_id + 1, branch_nr, rseg_data);
     
     test_assert_false( well_segment_link( ws , outlet ));
     test_assert_NULL( well_segment_get_outlet( ws ) );
@@ -95,6 +110,6 @@ int main(int argc , char ** argv) {
     
     well_segment_free( ws );
   }
-
+  free( rseg_data );
   exit(0);
 }

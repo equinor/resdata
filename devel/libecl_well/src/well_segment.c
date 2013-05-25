@@ -39,8 +39,12 @@ struct well_segment_struct {
   int                 branch_id; 
   int                 outlet_segment_id;  // This is in the global index space given by the ISEG keyword.
   well_segment_type * outlet_segment;
-  const double      * rseg_data;          // Shared data - owned by the RSEG keyword
   hash_type         * connections;        // hash_type<grid_name , well_conn_collection>;
+
+  double              depth;              // The depth of the segment node; furthest away from the wellhead.
+  double              length;
+  double              total_length;       // Total length from wellhead.
+  double              diameter;           // The tube diametere available for flow.
 };
 
 
@@ -58,7 +62,11 @@ well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , 
   segment->branch_id = branch_id;
   segment->outlet_segment = NULL;
   segment->connections = hash_alloc();
-  segment->rseg_data = rseg_data;
+
+  segment->depth = rseg_data[ RSEG_DEPTH_INDEX ];
+  segment->length = rseg_data[ RSEG_LENGTH_INDEX ];
+  segment->total_length = rseg_data[ RSEG_TOTAL_LENGTH_INDEX ];
+  segment->diameter = rseg_data[ RSEG_DIAMETER_INDEX ];
   
   return segment;
 }
@@ -219,6 +227,18 @@ bool well_segment_well_is_MSW(int well_nr , const ecl_kw_type * iwel_kw , const 
 }
 
 
-const double * well_segment_get_RSEG_data( const well_segment_type * segment ) {
-  return segment->rseg_data;
+double well_segment_get_depth( const well_segment_type * segment ) {
+  return segment->depth;
+}
+
+double well_segment_get_length( const well_segment_type * segment ) {
+  return segment->length;
+}
+
+double well_segment_get_total_length( const well_segment_type * segment ) {
+  return segment->total_length;
+}
+
+double well_segment_get_diameter( const well_segment_type * segment ) {
+  return segment->diameter;
 }

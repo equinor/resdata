@@ -32,11 +32,12 @@
 
 int main(int argc , char ** argv) {
   test_install_SIGNALS();
+  double * rseg_data = util_calloc( 100 , sizeof * rseg_data );
   {
     int segment_id = 78;
     int outlet_segment_id = 100;
     int branch_nr = ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE;
-    well_segment_type * ws = well_segment_alloc(segment_id , outlet_segment_id , branch_nr, NULL);
+    well_segment_type * ws = well_segment_alloc(segment_id , outlet_segment_id , branch_nr, rseg_data);
     well_conn_type * conn1 = well_conn_alloc_MSW(1,1,1,true,well_conn_dirX,segment_id);
     well_conn_type * conn2 = well_conn_alloc_MSW(1,1,1,true,well_conn_dirX,segment_id + 1);
     
@@ -53,5 +54,6 @@ int main(int argc , char ** argv) {
     test_assert_true( well_conn_collection_is_instance( well_segment_get_global_connections( ws)));
     test_assert_NULL( well_segment_get_connections( ws , "doesNotExist"));
   }
+  free( rseg_data );
   exit(0);
 }

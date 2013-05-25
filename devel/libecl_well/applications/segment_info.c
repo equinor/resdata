@@ -90,15 +90,6 @@ int main(int argc , char ** argv) {
               }
               
               printf("]\n");
-              {
-                int i;
-                const double * rseg_data = well_segment_get_RSEG_data( segment );
-                for (i=0; i < rst_head->nrsegz; i++) {
-                  int rseg_index = i;
-                  if (fabs( rseg_data[ rseg_index] > 1e-20))
-                    printf("RSEG[%3d]   : %g\n",rseg_index, rseg_data[ rseg_index ]);
-                }
-              }
             }
           }
           well_branch_collection_free( branches );

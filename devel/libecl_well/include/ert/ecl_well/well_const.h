@@ -61,6 +61,11 @@ extern "C" {
 #define ICON_DEFAULT_DIR_TARGET   ICON_DIRZ
 
 
+#define RSEG_LENGTH_INDEX       0
+#define RSEG_DIAMETER_INDEX     2
+#define RSEG_TOTAL_LENGTH_INDEX 6
+#define RSEG_DEPTH_INDEX        7
+
 /*
   The ECLIPSE documentation says that a certain item in the IWEL array
   should indicate the type of the well, the available types are the
