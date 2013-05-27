@@ -52,7 +52,7 @@ static bool extend_key_list( const ecl_sum_type * ecl_sum , const stringlist_typ
 int main(int argc , char ** argv) {
   {
     ecl_sum_fmt_type fmt;
-    bool           well_rows = true;   
+    bool           well_rows       = false;   
     bool           include_restart = true;
     int            arg_offset      = 1;  
     

@@ -27,32 +27,51 @@
 
 
 
-static bool extend_key_list( const ecl_sum_type * ecl_sum , const stringlist_type * var_list , const char * well , stringlist_type * key_list ) {
-  bool oil_producer = false;
-  int last_step = ecl_sum_get_data_length( ecl_sum ) - 1;
-  char * wopt_key = ecl_sum_alloc_well_key( ecl_sum  , "WOPT", well);
-  if (ecl_sum_has_key( ecl_sum , wopt_key) && (ecl_sum_get_well_var( ecl_sum , last_step , well , "WOPT") > 0 )) {
-    /* 
-       We add all the keys unconditionally here; and then let the
-       ecl_sum_fprintf() function print a message on stderr if it is
-       missing. 
-    */
+
+
+static void fprintf_line( const ecl_sum_type * ecl_sum , const ecl_sum_fmt_type * fmt , const char * well , int time_index , const stringlist_type * var_list , FILE * stream) {
+  /* WELL */
+  fprintf(stream , fmt->header_fmt , well);
+  fprintf(stream , fmt->sep );
+
+  /* DAYS */
+  fprintf(stream , fmt->days_fmt , ecl_sum_iget_sim_days(ecl_sum , time_index));
+  fprintf(stream , fmt->sep );
+
+  /* DATE */
+  {  
+    struct tm ts;
+    const int DATE_STRING_LENGTH = 128;
+    char * date_string            = util_malloc( DATE_STRING_LENGTH * sizeof * date_string);
+    time_t sim_time = ecl_sum_iget_sim_time(ecl_sum , time_index );
+    util_localtime( &sim_time , &ts);
+    strftime( date_string , DATE_STRING_LENGTH - 1 , fmt->date_fmt , &ts);
+    fprintf(stream , date_string );
+    free( date_string );
+  }
+
+  {
     int ivar;
     for (ivar = 0; ivar < stringlist_get_size( var_list ); ivar++) {
       const char * var = stringlist_iget( var_list , ivar );
-      stringlist_append_owned_ref( key_list , ecl_sum_alloc_well_key( ecl_sum  , var, well) );
+      double value = 0;
+      if (ecl_sum_has_well_var( ecl_sum , well , var )) 
+        value = ecl_sum_get_well_var( ecl_sum , time_index , well , var );
+      else
+        fprintf(stderr,"Missing variable:%s for well:%s - substituting 0.0 \n",var , well);
+      
+      fprintf(stream , fmt->sep );
+      fprintf(stream , fmt->value_fmt , value );
     }
-    oil_producer = true;
-  } 
-  free( wopt_key );
-  return oil_producer;
+    fprintf( stream , fmt->newline );
+  }
 }
+
 
 
 int main(int argc , char ** argv) {
   {
     ecl_sum_fmt_type fmt;
-    bool           well_rows       = false;   
     bool           include_restart = true;
     int            arg_offset      = 1;  
     
@@ -74,22 +93,36 @@ int main(int argc , char ** argv) {
         
         stringlist_type * well_list = ecl_sum_alloc_well_list( ecl_sum , NULL );
         stringlist_type * key_list = stringlist_alloc_new( );
-        int iw;
 
-        for (iw = 0; iw < stringlist_get_size( well_list ); iw++) {
-          const char * well = stringlist_iget( well_list , iw );
-          if (!extend_key_list( ecl_sum , var_list , well , key_list))
-            fprintf(stderr , "Ignoring well: %s \n",well);
-          
-          if (well_rows) {
-            if (stringlist_get_size(key_list)) { 
-              ecl_sum_fprintf(ecl_sum , stream , key_list , false , &fmt);
-              stringlist_clear( key_list );
-            }
-          }                  
+        fprintf(stream , fmt.header_fmt , "WELL");
+
+        fprintf(stream , fmt.sep );
+        fprintf(stream , fmt.header_fmt , "DAYS");
+
+        fprintf(stream , fmt.sep );
+        fprintf(stream , fmt.header_fmt , "DATE");
+        
+        {
+          int ivar;
+          for (ivar = 0; ivar < stringlist_get_size( var_list ); ivar++) {
+            const char * var = stringlist_iget( var_list , ivar );
+            fprintf(stream , fmt.sep );
+            fprintf(stream , fmt.header_fmt , var );
+          }
+          fprintf(stream , "\n");
         }
-        if (!well_rows) 
-          ecl_sum_fprintf(ecl_sum , stream , key_list , false , &fmt);
+        
+        {
+          int iw;
+          for (iw = 0; iw < stringlist_get_size( well_list ); iw++) {
+            const char * well = stringlist_iget( well_list , iw );
+            if (ecl_sum_is_oil_producer( ecl_sum , well )) {
+              int time_index;
+              for (time_index = 0; time_index < ecl_sum_get_data_length( ecl_sum ); time_index++) 
+                fprintf_line( ecl_sum , &fmt , well , time_index , var_list , stream);
+            }           
+          }
+        }
 
         stringlist_free( well_list );
         stringlist_free( key_list );
@@ -97,7 +130,7 @@ int main(int argc , char ** argv) {
         fclose( stream );
         free( csv_file );
       } else 
-        fprintf(stderr,"summary2csv: No summary data found for case:%s\n", data_file );
+        fprintf(stderr,"summary2csv2: No summary data found for case:%s\n", data_file );
       
       stringlist_free( var_list );
     }
