@@ -1165,6 +1165,21 @@ char * ecl_sum_alloc_well_key( const ecl_sum_type * ecl_sum , const char * keywo
 
 
 
+bool ecl_sum_is_oil_producer( const ecl_sum_type * ecl_sum , const char * well) {
+  const char * WOPT_KEY = "WOPT";
+  bool oil_producer = false;
+
+  if (ecl_sum_has_well_var( ecl_sum , well , WOPT_KEY)) {
+    int last_step = ecl_sum_get_data_length( ecl_sum ) - 1;
+    double wopt = ecl_sum_get_well_var( ecl_sum , last_step , well , WOPT_KEY);
+
+    if (wopt > 0)
+      oil_producer = true;
+  }
+  
+  return oil_producer;
+}
+
 
 
 
