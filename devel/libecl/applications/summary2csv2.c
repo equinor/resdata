@@ -94,13 +94,13 @@ int main(int argc , char ** argv) {
         stringlist_type * well_list = ecl_sum_alloc_well_list( ecl_sum , NULL );
         stringlist_type * key_list = stringlist_alloc_new( );
 
-        fprintf(stream , fmt.header_fmt , "WELL");
+        fprintf(stream , fmt.header_fmt , "WELLNAME");
 
         fprintf(stream , fmt.sep );
         fprintf(stream , fmt.header_fmt , "DAYS");
 
         fprintf(stream , fmt.sep );
-        fprintf(stream , fmt.header_fmt , "DATE");
+        fprintf(stream , fmt.header_fmt , "DATES");
         
         {
           int ivar;
