@@ -64,7 +64,14 @@ int main(int argc , char ** argv) {
     {
       char         * data_file = argv[arg_offset];
       ecl_sum_type * ecl_sum;
-      stringlist_type * var_list = stringlist_alloc_argv_ref( (const char *[]) {"WOPR" , "WOPT" , "WGPR" , "WGPT" , "WWPR" , "WWPT"} , 6);
+      stringlist_type * var_list = stringlist_alloc_new();
+
+      stringlist_append_ref( var_list , "WOPR" );
+      stringlist_append_ref( var_list , "WOPT" );
+      stringlist_append_ref( var_list , "WGPR" );
+      stringlist_append_ref( var_list , "WGPT" );
+      stringlist_append_ref( var_list , "WWPR" );
+      stringlist_append_ref( var_list , "WWPT" );
     
       ecl_sum_fmt_init_csv( &fmt );
       ecl_sum = ecl_sum_fread_alloc_case__( data_file , ":" , include_restart);
