@@ -171,6 +171,8 @@ extern "C" {
   void             ecl_grid_cell_ri_export( const ecl_grid_type * ecl_grid , int global_index , double * ri_points);
 
   bool             ecl_grid_dual_grid( const ecl_grid_type * ecl_grid );
+
+  UTIL_IS_INSTANCE_HEADER( ecl_grid );
   
 #ifdef __cplusplus
 }
