@@ -25,23 +25,69 @@
 #include <ert/ecl/ecl_rft_file.h>
 
 
+// Hardcoded GURBAT values
 void test_rft( const char * rft_file ) {
   ecl_rft_file_type * rft = ecl_rft_file_alloc( rft_file );
   const ecl_rft_node_type * rft_node = ecl_rft_file_iget_node( rft , 0 );
   
   test_assert_true( ecl_rft_node_is_RFT( rft_node ));
+  test_assert_int_equal( 14 , ecl_rft_node_get_size( rft_node ));
+  
+  test_assert_double_equal( 259.146    , ecl_rft_node_iget_pressure( rft_node , 0 ));
+  test_assert_double_equal( 0.0580598  , ecl_rft_node_iget_soil( rft_node , 0 ));
+  test_assert_double_equal( 0.940477   , ecl_rft_node_iget_swat( rft_node , 0 ));
+  test_assert_double_equal( 0.00146271 , ecl_rft_node_iget_sgas( rft_node , 0 ));
+
+  {
+    int i,j,k;
+
+    ecl_rft_node_iget_ijk( rft_node , 0 , &i , &j , &k );
+    test_assert_int_equal( 33 , i );
+    test_assert_int_equal( 54 , j );
+    test_assert_int_equal( 1  , k );    
+
+    ecl_rft_node_iget_ijk( rft_node , 13 , &i , &j , &k );
+    test_assert_int_equal( 33 , i );
+    test_assert_int_equal( 55 , j );
+    test_assert_int_equal( 13 , k );    
+  }
 
   ecl_rft_file_free( rft );
 }
 
 
 
+
+
+
+// Hardcoded values from a test case with a PLT.
 void test_plt( const char * plt_file ) {
   ecl_rft_file_type * plt = ecl_rft_file_alloc( plt_file );
   const ecl_rft_node_type * plt_node = ecl_rft_file_iget_node( plt , 11 );
 
   test_assert_true( ecl_rft_node_is_PLT( plt_node ));
+  test_assert_int_equal( 22 , ecl_rft_node_get_size( plt_node ));
+
+  test_assert_double_equal( 244.284  , ecl_rft_node_iget_pressure( plt_node , 0 ));
+  test_assert_double_equal( 167.473  , ecl_rft_node_iget_orat( plt_node , 0 ));
+  test_assert_double_equal( 41682.2  , ecl_rft_node_iget_grat( plt_node , 0 ));
+  test_assert_double_equal( 0.958927 , ecl_rft_node_iget_wrat( plt_node , 0 ));
   
+  {
+    int i,j,k;
+
+    ecl_rft_node_iget_ijk( plt_node , 0 , &i , &j , &k );
+    test_assert_int_equal( 40 , i );
+    test_assert_int_equal( 34 , j );
+    test_assert_int_equal( 17 , k );    
+    
+    ecl_rft_node_iget_ijk( plt_node , 21 , &i , &j , &k );
+    test_assert_int_equal( 45 , i );
+    test_assert_int_equal( 35 , j );
+    test_assert_int_equal(  8 , k );    
+  }
+
+
   ecl_rft_file_free( plt );
 }
 

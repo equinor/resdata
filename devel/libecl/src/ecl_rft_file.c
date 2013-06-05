@@ -367,15 +367,6 @@ stringlist_type * ecl_rft_file_alloc_well_list(const ecl_rft_file_type * rft_fil
 }
 
 
-/*****************************************************************/
 
-
-void ecl_rft_file_summarize(const ecl_rft_file_type * rft_vector , bool show_completions) {
-  int iw;
-  for (iw = 0; iw < vector_get_size( rft_vector->data ); iw++) {
-    ecl_rft_node_summarize(vector_iget( rft_vector->data , iw) , show_completions);
-    printf("\n");
-  }
-}
 
 

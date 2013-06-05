@@ -89,6 +89,9 @@ target_link_libraries( ecl_rft ecl )
 add_test( ecl_rft_rft ${EXECUTABLE_OUTPUT_PATH}/ecl_rft ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.RFT RFT)
 add_test( ecl_rft_plt ${EXECUTABLE_OUTPUT_PATH}/ecl_rft ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/RFT/TEST1_1A.RFT PLT)
 
+add_executable( ecl_rft_cell ecl_rft_cell.c )
+target_link_libraries( ecl_rft_cell ecl )
+add_test( ecl_rft_cell ${EXECUTABLE_OUTPUT_PATH}/ecl_rft_cell )
 
 
 set_property( TEST ecl_fmt         PROPERTY LABELS StatoilData )
