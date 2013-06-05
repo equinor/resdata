@@ -62,9 +62,14 @@ struct rft_data_struct {
 
 struct plt_data_struct {
   UTIL_TYPE_ID_DECLARATION;
-  double orat;
-  double wrat;
-  double grat;
+  double  orat;
+  double  wrat;
+  double  grat;
+  double  connection_start;
+  double  flowrate;
+  double  oil_flowrate;
+  double  gas_flowrate;
+  double  water_flowrate;
 };
 
 
@@ -90,13 +95,18 @@ static UTIL_IS_INSTANCE_FUNCTION( rft_data , RFT_DATA_TYPE_ID)
 
 /*****************************************************************/
 
-static plt_data_type * plt_data_alloc( double orat , double grat , double wrat) {
+     static plt_data_type * plt_data_alloc( double orat , double grat , double wrat,double connection_start, double flowrate , double oil_flowrate , double gas_flowrate , double water_flowrate) {
   plt_data_type * data = util_malloc( sizeof * data );
   UTIL_TYPE_ID_INIT( data , PLT_DATA_TYPE_ID );
 
   data->orat = orat;
   data->grat = grat;
   data->wrat = wrat;
+  data->connection_start = connection_start;
+  data->flowrate       = flowrate;
+  data->oil_flowrate   = oil_flowrate;
+  data->gas_flowrate   = gas_flowrate; 
+  data->water_flowrate = water_flowrate;
   
   return data;
 }
@@ -141,10 +151,23 @@ ecl_rft_cell_type * ecl_rft_cell_alloc_RFT( int i , int j , int k , double depth
 }
 
 
-ecl_rft_cell_type * ecl_rft_cell_alloc_PLT( int i , int j , int k , double depth , double pressure , double orat , double grat , double wrat) {
+ecl_rft_cell_type * ecl_rft_cell_alloc_PLT( int i , 
+                                            int j , 
+                                            int k , 
+                                            double depth , 
+                                            double pressure , 
+                                            double orat , 
+                                            double grat , 
+                                            double wrat, 
+                                            double connection_start, 
+                                            double flowrate ,
+                                            double oil_flowrate , 
+                                            double gas_flowrate , 
+                                            double water_flowrate) {
+
   ecl_rft_cell_type * cell = ecl_rft_cell_alloc_common( i , j , k , depth , pressure );
 
-  cell->data = plt_data_alloc( orat , grat , wrat);
+  cell->data = plt_data_alloc( orat , grat , wrat  , connection_start , flowrate , oil_flowrate , gas_flowrate , water_flowrate);
   return cell;
 }
 
@@ -249,6 +272,52 @@ double ecl_rft_cell_get_wrat( const ecl_rft_cell_type * cell ) {
   else
     return ECL_RFT_CELL_INVALID_VALUE; 
 }
+
+double ecl_rft_cell_get_connection_start( const ecl_rft_cell_type * cell ) {
+  const plt_data_type * data = plt_data_try_cast_const( cell->data );
+  if (data) 
+    return data->connection_start;
+  else
+    return ECL_RFT_CELL_INVALID_VALUE; 
+}
+
+
+double ecl_rft_cell_get_flowrate( const ecl_rft_cell_type * cell ) {
+  const plt_data_type * data = plt_data_try_cast_const( cell->data );
+  if (data) 
+    return data->flowrate;
+  else
+    return ECL_RFT_CELL_INVALID_VALUE; 
+}
+
+
+double ecl_rft_cell_get_oil_flowrate( const ecl_rft_cell_type * cell ) {
+  const plt_data_type * data = plt_data_try_cast_const( cell->data );
+  if (data) 
+    return data->oil_flowrate;
+  else
+    return ECL_RFT_CELL_INVALID_VALUE; 
+}
+
+
+double ecl_rft_cell_get_gas_flowrate( const ecl_rft_cell_type * cell ) {
+  const plt_data_type * data = plt_data_try_cast_const( cell->data );
+  if (data) 
+    return data->gas_flowrate;
+  else
+    return ECL_RFT_CELL_INVALID_VALUE; 
+}
+
+
+double ecl_rft_cell_get_water_flowrate( const ecl_rft_cell_type * cell ) {
+  const plt_data_type * data = plt_data_try_cast_const( cell->data );
+  if (data) 
+    return data->water_flowrate;
+  else
+    return ECL_RFT_CELL_INVALID_VALUE; 
+}
+
+
 
 
 

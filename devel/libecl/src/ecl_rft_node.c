@@ -200,21 +200,35 @@ static void ecl_rft_node_init_PLT_cells( ecl_rft_node_type * rft_node , const ec
   const ecl_kw_type * conipos     = ecl_file_iget_named_kw( rft , CONIPOS_KW  , 0);
   const ecl_kw_type * conjpos     = ecl_file_iget_named_kw( rft , CONJPOS_KW  , 0);
   const ecl_kw_type * conkpos     = ecl_file_iget_named_kw( rft , CONKPOS_KW  , 0);  
-  
-  const float * WR    = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONWRAT_KW , 0));
-  const float * GR    = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONGRAT_KW , 0)); 
-  const float * OR    = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONORAT_KW , 0)); 
-  const float * P     = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONPRES_KW , 0));
-  const float * depth = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONDEPTH_KW , 0));
 
   const int   * i      = ecl_kw_get_int_ptr( conipos );
   const int   * j      = ecl_kw_get_int_ptr( conjpos );
   const int   * k      = ecl_kw_get_int_ptr( conkpos );
   
+  const float * WR               = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONWRAT_KW , 0));
+  const float * GR               = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONGRAT_KW , 0)); 
+  const float * OR               = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONORAT_KW , 0)); 
+  const float * P                = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONPRES_KW , 0));
+  const float * depth            = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONDEPTH_KW , 0));
+  const float * flowrate         = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONVTUB_KW , 0));
+  const float * oil_flowrate     = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONOTUB_KW , 0));
+  const float * gas_flowrate     = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONGTUB_KW , 0));
+  const float * water_flowrate   = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONWTUB_KW , 0));
+  const float * connection_start = NULL;
+
+  /* This keyword is ONLY present if we are dealing with a MSW well. */
+  if (ecl_file_has_kw( rft , CONLENST_KW))
+    connection_start = ecl_kw_get_float_ptr( ecl_file_iget_named_kw( rft , CONLENST_KW , 0));
+
   {
     int c;
     for ( c = 0; c < ecl_kw_get_size( conipos ); c++) {
-      ecl_rft_cell_type * cell = ecl_rft_cell_alloc_PLT( i[c] , j[c] , k[c] , depth[c] , P[c] , OR[c] , GR[c] , WR[c]);
+      ecl_rft_cell_type * cell;
+      double cs = 0;
+      if (connection_start)
+        cs = connection_start[c];
+      
+      cell = ecl_rft_cell_alloc_PLT( i[c] , j[c] , k[c] , depth[c] , P[c] , OR[c] , GR[c] , WR[c] , cs , flowrate[c] , oil_flowrate[c] , gas_flowrate[c] , water_flowrate[c]);
       vector_append_owned_ref( rft_node->cells , cell , ecl_rft_cell_free__ );
     }
   }

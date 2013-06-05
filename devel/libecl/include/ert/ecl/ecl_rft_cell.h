@@ -31,9 +31,22 @@ typedef struct ecl_rft_cell_struct ecl_rft_cell_type;
 
 
 
-  UTIL_IS_INSTANCE_HEADER( ecl_rft_cell );
+UTIL_IS_INSTANCE_HEADER( ecl_rft_cell );
   
-  ecl_rft_cell_type * ecl_rft_cell_alloc_PLT( int i , int j , int k , double depth , double pressure , double orat , double grat , double wrat);
+  ecl_rft_cell_type * ecl_rft_cell_alloc_PLT( int i , 
+                                              int j , 
+                                              int k , 
+                                              double depth , 
+                                              double pressure , 
+                                              double orat , 
+                                              double grat ,
+                                              double wrat , 
+                                              double connection_start, 
+                                              double flowrate,
+                                              double oil_flowrate,
+                                              double gas_flowrate,
+                                              double water_flowrate);
+
   ecl_rft_cell_type * ecl_rft_cell_alloc_RFT( int i , int j , int k , double depth , double pressure , double swat , double sgas);
   void                ecl_rft_cell_free( ecl_rft_cell_type * cell );
   void                ecl_rft_cell_free__( void * arg);
@@ -53,7 +66,11 @@ typedef struct ecl_rft_cell_struct ecl_rft_cell_type;
   double              ecl_rft_cell_get_wrat( const ecl_rft_cell_type * cell );
   double              ecl_rft_cell_get_grat( const ecl_rft_cell_type * cell );
   double              ecl_rft_cell_get_orat( const ecl_rft_cell_type * cell );
-
+  double              ecl_rft_cell_get_connection_start( const ecl_rft_cell_type * cell );
+  double              ecl_rft_cell_get_flowrate( const ecl_rft_cell_type * cell );
+  double              ecl_rft_cell_get_oil_flowrate( const ecl_rft_cell_type * cell );  
+  double              ecl_rft_cell_get_gas_flowrate( const ecl_rft_cell_type * cell );
+  double              ecl_rft_cell_get_water_flowrate( const ecl_rft_cell_type * cell );
 
 #ifdef __cplusplus
 }
