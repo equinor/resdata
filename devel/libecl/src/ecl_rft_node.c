@@ -120,8 +120,6 @@ struct ecl_rft_node_struct {
   segment_data_type * segment_data;    
   rft_data_type     * rft_data;
   plt_data_type     * plt_data;
-
-  bool         __vertical_well;        /* Internal variable - when this is true we can try to block - otherwise it is NO FUXXXX WAY. */
 };
 
 
@@ -167,7 +165,6 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(int size , const char * data
     else if (data_type == SEGMENT)
       rft_node->segment_data = util_calloc( size , sizeof * rft_node->segment_data );
     
-    rft_node->__vertical_well = false;
     rft_node->size = size;
     rft_node->data_type = data_type;
 
@@ -251,24 +248,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft) {
         rft_node->cells[c].pressure     = P[c];   
       }
     } else {
-      /* Segmnet code - not implemented. */
-    }
-
-    /* 
-       Checking if the well is monotone in the z-direction; if it is we can
-       reasonably safely try some blocking.
-    */
-    {
-      int i;      
-      double first_delta = rft_node->cells[1].depth - rft_node->cells[0].depth;
-          rft_node->__vertical_well = true;
-      for (i = 1; i < (rft_node->size - 1); i++) {
-        double delta = rft_node->cells[i+1].depth - rft_node->cells[i].depth;
-        if (fabs(delta) > 0) {
-          if (first_delta * delta < 0)
-            rft_node->__vertical_well = false;
-        }
-      }
+      /* Segment code - not implemented. */
     }
   }
   return rft_node;
@@ -300,7 +280,6 @@ void ecl_rft_node_summarize(const ecl_rft_node_type * rft_node , bool print_cell
   printf("--------------------------------------------------------------\n");
   printf("Well.............: %s \n",rft_node->well_name);
   printf("Completed cells..: %d \n",rft_node->size);
-  printf("Vertical well....: %d \n",rft_node->__vertical_well);
   {
     int day , month , year;
     util_set_date_values(rft_node->recording_date , &day , &month , &year);
@@ -321,218 +300,6 @@ void ecl_rft_node_summarize(const ecl_rft_node_type * rft_node , bool print_cell
   }
 }
 
-
-
-/* 
-   For this function to work the ECLIPSE keyword COMPORD must be used.
-*/
-void ecl_rft_node_block(const ecl_rft_node_type * rft_node , double epsilon , int size , const double * tvd , int * i, int * j , int *k) {
-  int rft_index , tvd_index;
-  int last_rft_index   = 0;
-  bool  * blocked      = util_calloc(rft_node->size , sizeof * blocked);
-
-  if (!rft_node->__vertical_well) {
-    fprintf(stderr,"**************************************************************************\n");
-    fprintf(stderr,"** WARNING: Trying to block horizontal well: %s from only tvd, this **\n", ecl_rft_node_get_well_name(rft_node));
-    fprintf(stderr,"** is extremely error prone - blocking should be carefully checked.     **\n");
-    fprintf(stderr,"**************************************************************************\n");
-  }
-  ecl_rft_node_summarize(rft_node , true);
-  for (tvd_index = 0; tvd_index < size; tvd_index++) {
-    double min_diff       = 100000;
-    int    min_diff_index = 0;
-    if (rft_node->__vertical_well) {
-      for (rft_index = last_rft_index; rft_index < rft_node->size; rft_index++) {      
-        double diff = fabs(tvd[tvd_index] - rft_node->cells[rft_index].depth);
-        if (diff < min_diff) {
-          min_diff = diff;
-          min_diff_index = rft_index;
-        }
-      }
-    } else {
-      for (rft_index = last_rft_index; rft_index < (rft_node->size - 1); rft_index++) {      
-        int next_rft_index = rft_index + 1;
-        if ((rft_node->cells[next_rft_index].depth - tvd[tvd_index]) * (tvd[tvd_index] - rft_node->cells[rft_index].depth) > 0) {
-          /*
-            We have bracketing ... !!
-          */
-          min_diff_index = rft_index;
-          min_diff = 0;
-          printf("Bracketing:  %g  |  %g  | %g \n",rft_node->cells[next_rft_index].depth , 
-                 tvd[tvd_index] , rft_node->cells[rft_index].depth);
-          break;
-        }
-      }
-    }
-
-    if (min_diff < epsilon) {
-      i[tvd_index] = rft_node->cells[min_diff_index].i;
-      j[tvd_index] = rft_node->cells[min_diff_index].j;
-      k[tvd_index] = rft_node->cells[min_diff_index].k;
-      
-      blocked[min_diff_index] = true;
-      last_rft_index          = min_diff_index;
-    } else {
-      i[tvd_index] = -1;
-      j[tvd_index] = -1;
-      k[tvd_index] = -1;
-      fprintf(stderr,"%s: Warning: True Vertical Depth:%g (Point:%d/%d) could not be mapped to well_path for well:%s \n",__func__ , tvd[tvd_index] , tvd_index+1 , size , rft_node->well_name);
-    }
-  }
-  free(blocked);
-}
-
-
-
-/*
-  Faen - dette er jeg egentlig *ikke* interessert i ....
-*/
-static double * ecl_rft_node_alloc_well_md(const ecl_rft_node_type * rft_node , int fixed_index , double md_offset) {
-  double * md = util_calloc(rft_node->size , sizeof * md );
-  
-  
-    
-  return md;
-}
-
-
-void ecl_rft_node_block_static(const ecl_rft_node_type * rft_node , int rft_index_offset , int md_size , int md_index_offset , const double * md , int * i , int * j , int * k) {
-  const double md_offset = md[md_index_offset];
-  double *well_md        = ecl_rft_node_alloc_well_md(rft_node , rft_index_offset , md_offset);
-  int index;
-  for (index = 0; index < md_size; index++) {
-    i[index] = -1;
-    j[index] = -1;
-    k[index] = -1;
-  }
-  i[md_index_offset] = rft_node->cells[rft_index_offset].i;
-  j[md_index_offset] = rft_node->cells[rft_index_offset].j;
-  k[md_index_offset] = rft_node->cells[rft_index_offset].k;
-  
-
-  free(well_md);
-}
-
-
-
-
-void ecl_rft_node_block2(const ecl_rft_node_type * rft_node , int tvd_size , const double * md , const double * tvd , int * i, int * j , int *k) {
-  const double epsilon = 1.0;
-  int rft_index ;
-  
-  ecl_rft_node_summarize(rft_node , true);
-  {
-    double min_diff       = 100000;
-    int    min_diff_index = 0;  
-    int    tvd_index      = 0;
-    double local_tvd_peak = 99999999;
-    {
-      int index;
-      for (index = 1; index < (tvd_size - 1); index++) 
-        if (tvd[index] < tvd[index+1] && tvd[index] < tvd[index-1]) 
-          local_tvd_peak = util_double_min(tvd[index] , local_tvd_peak);
-    }
-    
-    
-    while (min_diff > epsilon) {
-      for (rft_index = 0; rft_index < rft_node->size; rft_index++) {      
-        double diff = fabs(tvd[tvd_index] - rft_node->cells[rft_index].depth);
-        if (diff < min_diff) {
-          min_diff = diff;
-          min_diff_index = rft_index;
-        }
-      }
-      if (min_diff > epsilon) {
-        tvd_index++;
-        if (tvd_index == tvd_size) {
-          fprintf(stderr,"%s: could not map tvd:%g to well-path depth - aborting \n",__func__ , tvd[tvd_index]);
-          abort();
-        }
-
-        if (tvd[tvd_index] > local_tvd_peak) {
-          fprintf(stderr,"%s: could not determine offset before well path becomes multivalued - aborting\n",__func__);
-          abort();
-        }
-      }
-    }
-    ecl_rft_node_block_static(rft_node , min_diff_index , tvd_size , tvd_index , md , i , j , k);
-  }
-}
-
-
-
-
-
-void ecl_rft_node_fprintf_rft_obs(const ecl_rft_node_type * rft_node , double epsilon , const char * tvd_file , const char * target_file , double p_std) {
-  FILE * input_stream  = util_fopen(tvd_file    , "r" );
-  int size             = util_count_file_lines(input_stream);
-  double *p            = util_calloc(size , sizeof * p   );
-  double *tvd          = util_calloc(size , sizeof * tvd );
-  double *md           = util_calloc(size , sizeof * md  );
-  int    *i            = util_calloc(size , sizeof * i);
-  int    *j            = util_calloc(size , sizeof * j);
-  int    *k            = util_calloc(size , sizeof * k);
-
-  {
-    double *arg1 , *arg2;
-    int line;
-    arg1 = p;
-    arg2 = tvd;
-    for (line = 0; line < size; line++)
-      if (fscanf(input_stream , "%lg  %lg", &arg1[line] , &arg2[line]) != 2) {
-        fprintf(stderr,"%s: something wrong when reading: %s - aborting \n",__func__ , tvd_file);
-        abort();
-      }
-  }
-  fclose(input_stream);
-  ecl_rft_node_block(rft_node , epsilon , size , tvd , i , j , k);
-
-  {
-    int active_lines = 0;
-    int line;
-    for (line = 0; line < size; line++)
-      if (i[line] != -1)
-        active_lines++;
-    
-    if (active_lines > 0) {
-      FILE * output_stream = util_fopen(target_file , "w" );
-      fprintf(output_stream,"%d\n" , active_lines);
-      for (line = 0; line < size; line++)
-        if (i[line] != -1)
-          fprintf(output_stream , "%3d %3d %3d %g %g\n",i[line] , j[line] , k[line] , p[line] , p_std);
-      fclose(output_stream);
-    } else 
-      fprintf(stderr,"%s: Warning found no active cells when blocking well:%s to data_file:%s \n",__func__ , rft_node->well_name , tvd_file);
-  }
-
-  free(md);
-  free(p);
-  free(tvd);
-  free(i);
-  free(j);
-  free(k);
-}
-
-
-void ecl_rft_node_export_DEPTH(const ecl_rft_node_type * rft_node , const char * path) {
-  FILE * stream;
-  char * full;
-  char * filename = util_alloc_string_copy(ecl_rft_node_get_well_name(rft_node));
-  int i;
-  
-  filename = util_strcat_realloc(filename , ".DEPTH");
-  full     = util_alloc_filename(path , filename , NULL);
-
-  stream = fopen(full , "w");
-  for (i=0; i < rft_node->size; i++) 
-    fprintf(stream , "%d  %g \n",i , rft_node->cells[i].depth);
-  fclose(stream);
-
-  /*
-    free(full);
-    free(filename);
-  */
-}
 
 
 int          ecl_rft_node_get_size(const ecl_rft_node_type * rft_node) { return rft_node->size; }
@@ -640,4 +407,23 @@ double ecl_rft_node_iget_grat( const ecl_rft_node_type * rft_node , int index) {
     return plt_data.grat;
   }
 }
+
+
+
+bool ecl_rft_node_is_PLT( const ecl_rft_node_type * rft_node ) {
+  if (rft_node->data_type == PLT)
+    return true;
+  else
+    return false;
+}
+
+
+
+bool ecl_rft_node_is_RFT( const ecl_rft_node_type * rft_node ) {
+  if (rft_node->data_type == RFT)
+    return true;
+  else
+    return false;
+}
+
 
