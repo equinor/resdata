@@ -84,6 +84,13 @@ target_link_libraries( ecl_rsthead ecl )
 add_test( ecl_rsthead ${EXECUTABLE_OUTPUT_PATH}/ecl_rsthead ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST 
                                                             ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/DualPoro/DUALPORO.X0005 ) 
 
+add_executable( ecl_rft ecl_rft.c )
+target_link_libraries( ecl_rft ecl )
+add_test( ecl_rft_rft ${EXECUTABLE_OUTPUT_PATH}/ecl_rft ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.RFT RFT)
+add_test( ecl_rft_plt ${EXECUTABLE_OUTPUT_PATH}/ecl_rft ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/RFT/TEST1_1A.RFT PLT)
+
+
+
 set_property( TEST ecl_fmt         PROPERTY LABELS StatoilData )
 set_property( TEST ecl_coarse_test PROPERTY LABELS StatoilData )
 set_property( TEST ecl_restart_test PROPERTY LABELS StatoilData )
@@ -103,3 +110,5 @@ set_property( TEST ecl_file PROPERTY LABELS StatoilData)
 set_property( TEST ecl_rsthead PROPERTY LABELS StatoilData)
 set_property( TEST ecl_region PROPERTY LABELS StatoilData)
 set_property( TEST ecl_grid_case PROPERTY LABELS StatoilData)
+set_property( TEST ecl_rft_rft PROPERTY LABELS StatoilData)
+set_property( TEST ecl_rft_plt PROPERTY LABELS StatoilData)
