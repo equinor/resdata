@@ -75,7 +75,6 @@ void test_sort() {
   vector_type * v1 = vector_alloc_new();
   vector_type * v2 = vector_alloc_new();
 
-
   vector_append_ref(v1 , "2");
   vector_append_ref(v2 , "2");
 
@@ -117,5 +116,6 @@ void test_sort() {
 int main(int argc , char ** argv) {
   test_iset( );
   test_reverse( );
+  test_sort( );
   exit(0);
 }
