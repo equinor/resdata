@@ -94,6 +94,11 @@ class EclRFT(CClass):
     def __len__(self):
         return cfunc_rft.get_size( self )
 
+    def is_RFT(self):
+        return cfunc_rft.is_RFT( self )
+
+    def is_PLT(self):
+        return cfunc_rft.is_PLT( self )
 
 
     @property
@@ -261,17 +266,18 @@ cfunc_file.iget                     = cwrapper.prototype("long ecl_rft_file_iget
 cfunc_file.get_num_wells            = cwrapper.prototype("int  ecl_rft_file_get_num_wells( ecl_rft_file )")
 cfunc_file.get_rft                  = cwrapper.prototype("long ecl_rft_file_get_well_time_rft( ecl_rft_file , char* , time_t)")
 
-cfunc_rft.get_type                      = cwrapper.prototype("int    ecl_rft_node_get_type( ecl_rft )")
-cfunc_rft.get_well                      = cwrapper.prototype("char*  ecl_rft_node_get_well_name( ecl_rft )")
-cfunc_rft.get_date                      = cwrapper.prototype("time_t ecl_rft_node_get_date( ecl_rft )")
-cfunc_rft.get_size                      = cwrapper.prototype("int ecl_rft_node_get_size( ecl_rft )")
-cfunc_rft.iget_depth                    = cwrapper.prototype("double ecl_rft_node_iget_depth( ecl_rft )")
-cfunc_rft.iget_pressure                 = cwrapper.prototype("double ecl_rft_node_iget_pressure(ecl_rft)")
-cfunc_rft.iget_ijk                      = cwrapper.prototype("void ecl_rft_node_iget_ijk( ecl_rft , int , int*, int*, int*)") 
-cfunc_rft.iget_swat                     = cwrapper.prototype("double ecl_rft_node_iget_swat(ecl_rft)")
-cfunc_rft.iget_sgas                     = cwrapper.prototype("double ecl_rft_node_iget_sgas(ecl_rft)")
-cfunc_rft.iget_orat                     = cwrapper.prototype("double ecl_rft_node_iget_orat(ecl_rft)")
-cfunc_rft.iget_wrat                     = cwrapper.prototype("double ecl_rft_node_iget_wrat(ecl_rft)")
-cfunc_rft.iget_grat                     = cwrapper.prototype("double ecl_rft_node_iget_grat(ecl_rft)")
-cfunc_rft.lookup_ijk                    = cwrapper.prototype("int    ecl_rft_node_lookup_ijk( ecl_rft , int , int , int)")
-
+cfunc_rft.get_type                  = cwrapper.prototype("int    ecl_rft_node_get_type( ecl_rft )")
+cfunc_rft.get_well                  = cwrapper.prototype("char*  ecl_rft_node_get_well_name( ecl_rft )")
+cfunc_rft.get_date                  = cwrapper.prototype("time_t ecl_rft_node_get_date( ecl_rft )")
+cfunc_rft.get_size                  = cwrapper.prototype("int ecl_rft_node_get_size( ecl_rft )")
+cfunc_rft.iget_depth                = cwrapper.prototype("double ecl_rft_node_iget_depth( ecl_rft )")
+cfunc_rft.iget_pressure             = cwrapper.prototype("double ecl_rft_node_iget_pressure(ecl_rft)")
+cfunc_rft.iget_ijk                  = cwrapper.prototype("void ecl_rft_node_iget_ijk( ecl_rft , int , int*, int*, int*)") 
+cfunc_rft.iget_swat                 = cwrapper.prototype("double ecl_rft_node_iget_swat(ecl_rft)")
+cfunc_rft.iget_sgas                 = cwrapper.prototype("double ecl_rft_node_iget_sgas(ecl_rft)")
+cfunc_rft.iget_orat                 = cwrapper.prototype("double ecl_rft_node_iget_orat(ecl_rft)")
+cfunc_rft.iget_wrat                 = cwrapper.prototype("double ecl_rft_node_iget_wrat(ecl_rft)")
+cfunc_rft.iget_grat                 = cwrapper.prototype("double ecl_rft_node_iget_grat(ecl_rft)")
+cfunc_rft.lookup_ijk                = cwrapper.prototype("int    ecl_rft_node_lookup_ijk( ecl_rft , int , int , int)")
+cfunc_rft.is_RFT                    = cwrapper.prototype("bool   ecl_rft_node_is_RFT( ecl_rft )")
+cfunc_rft.is_PLT                    = cwrapper.prototype("bool   ecl_rft_node_is_PLT( ecl_rft )")
