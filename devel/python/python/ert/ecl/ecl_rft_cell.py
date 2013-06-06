@@ -22,9 +22,6 @@ import libecl
 from   ert.cwrap.cwrap       import *
 from   ert.cwrap.cclass      import CClass
 
-RFT = 1
-PLT = 2
-
 class RFTCell(CClass):
     
     def warn(self , old , new):

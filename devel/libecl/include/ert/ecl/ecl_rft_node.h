@@ -46,6 +46,7 @@ void                ecl_rft_node_iget_ijk( const ecl_rft_node_type * rft_node , 
 
 bool                ecl_rft_node_is_RFT( const ecl_rft_node_type * rft_node );
 bool                ecl_rft_node_is_PLT( const ecl_rft_node_type * rft_node );
+bool                ecl_rft_node_is_SEGMENT( const ecl_rft_node_type * rft_node );
 
 double ecl_rft_node_iget_pressure( const ecl_rft_node_type * rft_node , int index);
 double ecl_rft_node_iget_depth( const ecl_rft_node_type * rft_node , int index);

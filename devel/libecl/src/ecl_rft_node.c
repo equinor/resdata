@@ -412,7 +412,12 @@ bool ecl_rft_node_is_PLT( const ecl_rft_node_type * rft_node ) {
     return false;
 }
 
-
+bool ecl_rft_node_is_SEGMENT( const ecl_rft_node_type * rft_node ) {
+  if (rft_node->data_type == SEGMENT)
+    return true;
+  else
+    return false;
+}
 
 bool ecl_rft_node_is_RFT( const ecl_rft_node_type * rft_node ) {
   if (rft_node->data_type == RFT)

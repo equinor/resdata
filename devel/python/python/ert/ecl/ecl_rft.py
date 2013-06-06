@@ -17,16 +17,16 @@
 Module for loading ECLIPSE RFT files.
 """
 
-import libecl
 import ctypes
 import types
+import warnings
+
+import libecl
 from   ert.cwrap.cwrap       import *
 from   ert.cwrap.cclass      import CClass
 from   ert.util.ctime        import ctime
 from   ecl_rft_cell          import EclRFTCell, EclPLTCell
 
-RFT = 1
-PLT = 2
         
 
 class EclRFTFile(CClass):
@@ -101,6 +101,9 @@ class EclRFT(CClass):
     def is_PLT(self):
         return cfunc_rft.is_PLT( self )
 
+    def is_SEGMENT(self):
+        return cfunc_rft.is_SEGMENT( self )
+
 
     @property
     def type(self):
@@ -108,6 +111,7 @@ class EclRFT(CClass):
         # RFT     = 1
         # PLT     = 2
         # Segment = 3  -- Not properly implemented
+        warnings.warn("The property type is deprecated, use the query  methods is_RFT(), is_PLT() and is_SEGMENT() instead.")
         return cfunc_rft.get_type( self )
 
     @property
@@ -166,13 +170,13 @@ cwrapper.registerType( "ecl_rft"      , EclRFT )
 cfunc_file = CWrapperNameSpace("ecl_rft_file")
 cfunc_rft  = CWrapperNameSpace("ecl_rft")
 
-cfunc_file.load                     = cwrapper.prototype("long ecl_rft_file_alloc_case( char* )")
+cfunc_file.load                     = cwrapper.prototype("c_void_p ecl_rft_file_alloc_case( char* )")
 cfunc_file.has_rft                  = cwrapper.prototype("bool ecl_rft_file_case_has_rft( char* )")
 cfunc_file.free                     = cwrapper.prototype("void ecl_rft_file_free( ecl_rft_file )")
 cfunc_file.get_size                 = cwrapper.prototype("int ecl_rft_file_get_size__( ecl_rft_file , char* , time_t)")
-cfunc_file.iget                     = cwrapper.prototype("long ecl_rft_file_iget_node( ecl_rft_file , int )")
+cfunc_file.iget                     = cwrapper.prototype("c_void_p ecl_rft_file_iget_node( ecl_rft_file , int )")
 cfunc_file.get_num_wells            = cwrapper.prototype("int  ecl_rft_file_get_num_wells( ecl_rft_file )")
-cfunc_file.get_rft                  = cwrapper.prototype("long ecl_rft_file_get_well_time_rft( ecl_rft_file , char* , time_t)")
+cfunc_file.get_rft                  = cwrapper.prototype("c_void_p ecl_rft_file_get_well_time_rft( ecl_rft_file , char* , time_t)")
 
 cfunc_rft.get_type                  = cwrapper.prototype("int    ecl_rft_node_get_type( ecl_rft )")
 cfunc_rft.get_well                  = cwrapper.prototype("char*  ecl_rft_node_get_well_name( ecl_rft )")
@@ -190,3 +194,4 @@ cfunc_rft.iget_grat                 = cwrapper.prototype("double ecl_rft_node_ig
 cfunc_rft.lookup_ijk                = cwrapper.prototype("int    ecl_rft_node_lookup_ijk( ecl_rft , int , int , int)")
 cfunc_rft.is_RFT                    = cwrapper.prototype("bool   ecl_rft_node_is_RFT( ecl_rft )")
 cfunc_rft.is_PLT                    = cwrapper.prototype("bool   ecl_rft_node_is_PLT( ecl_rft )")
+cfunc_rft.is_SEGMENT                = cwrapper.prototype("bool   ecl_rft_node_is_SEGMENT( ecl_rft )")
