@@ -324,13 +324,9 @@ double ecl_rft_cell_get_water_flowrate( const ecl_rft_cell_type * cell ) {
 /*****************************************************************/
 
 
-/* 
-   Input    : i,j,k offset 0
-   Internal : i,j,k offset 1
-*/
 
 bool ecl_rft_cell_ijk_equal( const ecl_rft_cell_type * cell , int i , int j , int k) {
-    return ( (i == (cell->i - 1)) && 
-             (j == (cell->j - 1)) && 
-             (k == (cell->k - 1)) );
+    return ( (i == cell->i) && 
+             (j == cell->j) && 
+             (k == cell->k) );
 }

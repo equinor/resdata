@@ -126,6 +126,14 @@ class EclRFT(CClass):
     def size(self):
         return self.__len__()
 
+    def cell_ref( self , cell_ptr ):
+        if self.is_RFT():
+            return EclRFTCell.ref( cell_ptr , self )
+        elif self.is_PLT():
+            return EclPLTCell.ref( cell_ptr , self )
+        else:
+            raise NotImplementedError("Only RFT and PLT cells are implemented")
+
 
     def __getitem__(self , index):
         if isinstance( index , types.IntType):
@@ -134,12 +142,7 @@ class EclRFT(CClass):
                 raise IndexError
             else:
                 cell_ptr = cfunc_rft.iget_cell( self , index )
-                if self.is_RFT():
-                    return EclRFTCell.ref( cell_ptr , self )
-                elif self.is_PLT():
-                    return EclPLTCell.ref( cell_ptr , self )
-                else:
-                    raise NotImplementedError("Only RFT and PLT cells are implemented")
+                return self.cell_ref( cell_ptr )
         else:
             raise TypeError("Index should be integer type")
 
@@ -148,14 +151,14 @@ class EclRFT(CClass):
         return self.__getitem__( index )
         
 
+
     # ijk are zero offset
     def ijkget( self , ijk ):
-        index = cfunc_rft.lookup_ijk( self , ijk[0] , ijk[1] , ijk[2])
-        if index >= 0:
-            return self.iget( index )
+        cell_ptr = cfunc_rft.lookup_ijk( self , ijk[0] , ijk[1] , ijk[2])
+        if cell_ptr:
+            return self.cell_ref( cell_ptr )
         else:
             return None
-
 
 
 
@@ -191,7 +194,7 @@ cfunc_rft.iget_sgas                 = cwrapper.prototype("double ecl_rft_node_ig
 cfunc_rft.iget_orat                 = cwrapper.prototype("double ecl_rft_node_iget_orat(ecl_rft)")
 cfunc_rft.iget_wrat                 = cwrapper.prototype("double ecl_rft_node_iget_wrat(ecl_rft)")
 cfunc_rft.iget_grat                 = cwrapper.prototype("double ecl_rft_node_iget_grat(ecl_rft)")
-cfunc_rft.lookup_ijk                = cwrapper.prototype("int    ecl_rft_node_lookup_ijk( ecl_rft , int , int , int)")
+cfunc_rft.lookup_ijk                = cwrapper.prototype("c_void_p ecl_rft_node_lookup_ijk( ecl_rft , int , int , int)")
 cfunc_rft.is_RFT                    = cwrapper.prototype("bool   ecl_rft_node_is_RFT( ecl_rft )")
 cfunc_rft.is_PLT                    = cwrapper.prototype("bool   ecl_rft_node_is_PLT( ecl_rft )")
 cfunc_rft.is_SEGMENT                = cwrapper.prototype("bool   ecl_rft_node_is_SEGMENT( ecl_rft )")

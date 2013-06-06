@@ -42,14 +42,14 @@ void test_rft( const char * rft_file ) {
     int i,j,k;
 
     ecl_rft_node_iget_ijk( rft_node , 0 , &i , &j , &k );
-    test_assert_int_equal( 33 , i );
-    test_assert_int_equal( 54 , j );
-    test_assert_int_equal( 1  , k );    
+    test_assert_int_equal( 32 , i );
+    test_assert_int_equal( 53 , j );
+    test_assert_int_equal( 0  , k );    
 
     ecl_rft_node_iget_ijk( rft_node , 13 , &i , &j , &k );
-    test_assert_int_equal( 33 , i );
-    test_assert_int_equal( 55 , j );
-    test_assert_int_equal( 13 , k );    
+    test_assert_int_equal( 32 , i );
+    test_assert_int_equal( 54 , j );
+    test_assert_int_equal( 12 , k );    
   }
 
   ecl_rft_file_free( rft );
@@ -77,14 +77,14 @@ void test_plt( const char * plt_file ) {
     int i,j,k;
 
     ecl_rft_node_iget_ijk( plt_node , 0 , &i , &j , &k );
-    test_assert_int_equal( 40 , i );
-    test_assert_int_equal( 34 , j );
-    test_assert_int_equal( 17 , k );    
+    test_assert_int_equal( 39 , i );
+    test_assert_int_equal( 33 , j );
+    test_assert_int_equal( 16 , k );    
     
     ecl_rft_node_iget_ijk( plt_node , 21 , &i , &j , &k );
-    test_assert_int_equal( 45 , i );
-    test_assert_int_equal( 35 , j );
-    test_assert_int_equal(  8 , k );    
+    test_assert_int_equal( 44 , i );
+    test_assert_int_equal( 34 , j );
+    test_assert_int_equal(  7 , k );    
   }
 
 

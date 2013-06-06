@@ -185,7 +185,9 @@ static void ecl_rft_node_init_RFT_cells( ecl_rft_node_type * rft_node , const ec
   {
     int c;
     for (c = 0; c < ecl_kw_get_size( conipos ); c++) {
-      ecl_rft_cell_type * cell = ecl_rft_cell_alloc_RFT( i[c] , j[c] , k[c] , depth[c] , P[c] , SW[c] , SG[c]);
+      /* The connection coordinates are shifted -= 1; i.e. all internal usage is offset 0. */
+      ecl_rft_cell_type * cell = ecl_rft_cell_alloc_RFT( i[c] - 1 , j[c] - 1 , k[c] - 1 , 
+                                                         depth[c] , P[c] , SW[c] , SG[c]);
       vector_append_owned_ref( rft_node->cells , cell , ecl_rft_cell_free__ );
     }
   }
@@ -227,8 +229,10 @@ static void ecl_rft_node_init_PLT_cells( ecl_rft_node_type * rft_node , const ec
       double cs = 0;
       if (connection_start)
         cs = connection_start[c];
-      
-      cell = ecl_rft_cell_alloc_PLT( i[c] , j[c] , k[c] , depth[c] , P[c] , OR[c] , GR[c] , WR[c] , cs , flowrate[c] , oil_flowrate[c] , gas_flowrate[c] , water_flowrate[c]);
+
+      /* The connection coordinates are shifted -= 1; i.e. all internal usage is offset 0. */
+      cell = ecl_rft_cell_alloc_PLT( i[c] -1 , j[c] -1 , k[c] -1 , 
+                                     depth[c] , P[c] , OR[c] , GR[c] , WR[c] , cs , flowrate[c] , oil_flowrate[c] , gas_flowrate[c] , water_flowrate[c]);
       vector_append_owned_ref( rft_node->cells , cell , ecl_rft_cell_free__ );
     }
   }
