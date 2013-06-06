@@ -124,6 +124,7 @@ static UTIL_IS_INSTANCE_FUNCTION( plt_data , PLT_DATA_TYPE_ID)
 /*****************************************************************/
 
 static UTIL_SAFE_CAST_FUNCTION( ecl_rft_cell , ECL_RFT_CELL_TYPE_ID)
+static UTIL_SAFE_CAST_FUNCTION_CONST( ecl_rft_cell , ECL_RFT_CELL_TYPE_ID)
 UTIL_IS_INSTANCE_FUNCTION( ecl_rft_cell , ECL_RFT_CELL_TYPE_ID)
 
 
@@ -350,7 +351,7 @@ int ecl_rft_cell_cmp( const ecl_rft_cell_type * cell1 , const ecl_rft_cell_type 
 
 
 int ecl_rft_cell_cmp__( const void * arg1 , const void * arg2) {
-  const ecl_rft_cell_type * cell1 = ecl_rft_cell_safe_cast( arg1 );
-  const ecl_rft_cell_type * cell2 = ecl_rft_cell_safe_cast( arg2 );
+  const ecl_rft_cell_type * cell1 = ecl_rft_cell_safe_cast_const( arg1 );
+  const ecl_rft_cell_type * cell2 = ecl_rft_cell_safe_cast_const( arg2 );
   return ecl_rft_cell_cmp( cell1 , cell2 );
 }

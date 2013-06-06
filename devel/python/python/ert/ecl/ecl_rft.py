@@ -135,21 +135,33 @@ class EclRFT(CClass):
             raise NotImplementedError("Only RFT and PLT cells are implemented")
 
 
-    def __getitem__(self , index):
+    def assert_cell_index( self , index ):
         if isinstance( index , types.IntType):
             length = self.__len__()
             if index < 0 or index >= length:
                 raise IndexError
-            else:
-                cell_ptr = cfunc_rft.iget_cell( self , index )
-                return self.cell_ref( cell_ptr )
         else:
             raise TypeError("Index should be integer type")
 
 
+    def __getitem__(self , index):
+        self.assert_cell_index( index )
+        cell_ptr = cfunc_rft.iget_cell( self , index )
+        return self.cell_ref( cell_ptr )
+        
+
     def iget( self , index ):
         return self.__getitem__( index )
+
         
+    def iget_sorted( self , index ):
+        self.assert_cell_index( index )
+        cell_ptr = cfunc_rft.iget_cell_sorted( self , index )
+        return self.cell_ref( cell_ptr )
+        
+
+    def sort(self):
+        cfunc_rft.sort_cells( self )
 
 
     # ijk are zero offset
@@ -186,6 +198,8 @@ cfunc_rft.get_well                  = cwrapper.prototype("char*  ecl_rft_node_ge
 cfunc_rft.get_date                  = cwrapper.prototype("time_t ecl_rft_node_get_date( ecl_rft )")
 cfunc_rft.get_size                  = cwrapper.prototype("int ecl_rft_node_get_size( ecl_rft )")
 cfunc_rft.iget_cell                 = cwrapper.prototype("c_void_p ecl_rft_node_iget_cell( ecl_rft )")
+cfunc_rft.iget_cell_sorted          = cwrapper.prototype("c_void_p ecl_rft_node_iget_cell_sorted( ecl_rft )")
+cfunc_rft.sort_cells                = cwrapper.prototype("c_void_p ecl_rft_node_inplace_sort_cells( ecl_rft )")
 cfunc_rft.iget_depth                = cwrapper.prototype("double ecl_rft_node_iget_depth( ecl_rft )")
 cfunc_rft.iget_pressure             = cwrapper.prototype("double ecl_rft_node_iget_pressure(ecl_rft)")
 cfunc_rft.iget_ijk                  = cwrapper.prototype("void ecl_rft_node_iget_ijk( ecl_rft , int , int*, int*, int*)") 
