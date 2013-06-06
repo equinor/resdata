@@ -23,6 +23,7 @@ import types
 from   ert.cwrap.cwrap       import *
 from   ert.cwrap.cclass      import CClass
 from   ert.util.ctime        import ctime
+from   ecl_rft_cell          import EclRFTCell, EclPLTCell
 
 RFT = 1
 PLT = 2
@@ -123,23 +124,26 @@ class EclRFT(CClass):
 
 
     def __make_node( self , index ):
-        i = ctypes.c_int()
-        j = ctypes.c_int()
-        k = ctypes.c_int()
-        pressure = cfunc_rft.iget_pressure( self, index )
-        depth    = cfunc_rft.iget_depth( self, index )
-        cfunc_rft.iget_ijk( self, index , ctypes.byref(i), ctypes.byref(j) , ctypes.byref(k))
+        #i = ctypes.c_int()
+        #j = ctypes.c_int()
+        #k = ctypes.c_int()
+        #pressure = cfunc_rft.iget_pressure( self, index )
+        #depth    = cfunc_rft.iget_depth( self, index )
+        #cfunc_rft.iget_ijk( self, index , ctypes.byref(i), ctypes.byref(j) , ctypes.byref(k))
 
-        
+        cell_ptr = cfunc_rft.iget_cell( self , index )
         if self.type == RFT:
-            swat = cfunc_rft.iget_swat( self, index )
-            sgas = cfunc_rft.iget_sgas( self, index )
-            return EclRFTCell.RFTCell( i,j,k,depth , pressure,swat,sgas)
+            #swat = cfunc_rft.iget_swat( self, index )
+            #sgas = cfunc_rft.iget_sgas( self, index )
+            #return EclRFTCell.RFTCell( i,j,k,depth , pressure,swat,sgas)
+            return EclRFTCell.ref( cell_ptr , self )
         else:
-            orat = cfunc_rft.iget_orat( self, index )
-            wrat = cfunc_rft.iget_wrat( self, index )
-            grat = cfunc_rft.iget_grat( self, index )
-            return EclRFTCell.PLTCell( i,j,k,depth , pressure,orat,grat,wrat)
+            return EclPLTCell.ref( cell_ptr , self )
+            #orat = cfunc_rft.iget_orat( self, index )
+            #wrat = cfunc_rft.iget_wrat( self, index )
+            #grat = cfunc_rft.iget_grat( self, index )
+            #return EclRFTCell.PLTCell( i,j,k,depth , pressure,orat,grat,wrat)
+
 
     def __getitem__(self , index):
         if isinstance( index , types.IntType):
@@ -165,86 +169,86 @@ class EclRFT(CClass):
 
 
 
-class EclRFTCell:
-    def __init__(self , type , i , j , k , depth , pressure):
-        self.type = type
-        self.__i = i
-        self.__j = j
-        self.__k = k
-        self.__depth    = depth
-        self.__pressure = pressure
-
-        self.__sgas     = None 
-        self.__swat     = None
-        self.__orat     = None
-        self.__wrat     = None
-        self.__grat     = None
-
-    @classmethod
-    def RFTCell( cls , i,j,k,depth,pressure,swat,sgas):
-        cell = cls(RFT , i,j,k,depth,pressure)
-        cell.__swat = swat
-        cell.__sgas = sgas
-        return cell
-
-    @classmethod
-    def PLTCell(cls , i,j,k,depth,pressure,orat,grat,wrat):
-        cell = cls(PLT , i,j,k,depth,pressure)
-        cell.__orat = orat
-        cell.__wrat = wrat
-        cell.__grat = grat
-        return cell
-        
-    @property
-    def i(self):
-        return self.__i.value
-
-    @property
-    def j(self):
-        return self.__j.value
-
-    @property
-    def k(self):
-        return self.__k.value
-
-    @property
-    def ijk(self):
-        return (self.__i.value , self.__j.value , self.__k.value)
-
-    @property
-    def pressure(self):
-        return self.__pressure
-    
-    @property
-    def depth(self):
-        return self.__depth
-
-    @property
-    def PLT(self):
-        if self.type == PLT:
-            return True
-        else:
-            return False
-
-    @property
-    def sgas(self):
-        return self.__sgas
-
-    @property
-    def swat(self):
-        return self.__swat
-
-    @property
-    def orat(self):
-        return self.__orat
-
-    @property
-    def grat(self):
-        return self.__grat
-
-    @property
-    def wrat(self):
-        return self.__wrat
+#class EclRFTCell:
+#    def __init__(self , type , i , j , k , depth , pressure):
+#        self.type = type
+#        self.__i = i
+#        self.__j = j
+#        self.__k = k
+#        self.__depth    = depth
+#        self.__pressure = pressure
+#
+#        self.__sgas     = None 
+#        self.__swat     = None
+#        self.__orat     = None
+#        self.__wrat     = None
+#        self.__grat     = None
+#
+#    @classmethod
+#    def RFTCell( cls , i,j,k,depth,pressure,swat,sgas):
+#        cell = cls(RFT , i,j,k,depth,pressure)
+#        cell.__swat = swat
+#        cell.__sgas = sgas
+#        return cell
+#
+#    @classmethod
+#    def PLTCell(cls , i,j,k,depth,pressure,orat,grat,wrat):
+#        cell = cls(PLT , i,j,k,depth,pressure)
+#        cell.__orat = orat
+#        cell.__wrat = wrat
+#        cell.__grat = grat
+#        return cell
+#        
+#    @property
+#    def i(self):
+#        return self.__i.value
+#
+#    @property
+#    def j(self):
+#        return self.__j.value
+#
+#    @property
+#    def k(self):
+#        return self.__k.value
+#
+#    @property
+#    def ijk(self):
+#        return (self.__i.value , self.__j.value , self.__k.value)
+#
+#    @property
+#    def pressure(self):
+#        return self.__pressure
+#    
+#    @property
+#    def depth(self):
+#        return self.__depth
+#
+#    @property
+#    def PLT(self):
+#        if self.type == PLT:
+#            return True
+#        else:
+#            return False
+#
+#    @property
+#    def sgas(self):
+#        return self.__sgas
+#
+#    @property
+#    def swat(self):
+#        return self.__swat
+#
+#    @property
+#    def orat(self):
+#        return self.__orat
+#
+#    @property
+#    def grat(self):
+#        return self.__grat
+#
+#    @property
+#    def wrat(self):
+#        return self.__wrat
 
 
 
@@ -270,6 +274,7 @@ cfunc_rft.get_type                  = cwrapper.prototype("int    ecl_rft_node_ge
 cfunc_rft.get_well                  = cwrapper.prototype("char*  ecl_rft_node_get_well_name( ecl_rft )")
 cfunc_rft.get_date                  = cwrapper.prototype("time_t ecl_rft_node_get_date( ecl_rft )")
 cfunc_rft.get_size                  = cwrapper.prototype("int ecl_rft_node_get_size( ecl_rft )")
+cfunc_rft.iget_cell                 = cwrapper.prototype("c_void_p ecl_rft_node_iget_cell( ecl_rft )")
 cfunc_rft.iget_depth                = cwrapper.prototype("double ecl_rft_node_iget_depth( ecl_rft )")
 cfunc_rft.iget_pressure             = cwrapper.prototype("double ecl_rft_node_iget_pressure(ecl_rft)")
 cfunc_rft.iget_ijk                  = cwrapper.prototype("void ecl_rft_node_iget_ijk( ecl_rft , int , int*, int*, int*)") 

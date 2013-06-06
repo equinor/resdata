@@ -297,7 +297,7 @@ ecl_rft_enum ecl_rft_node_get_type(const ecl_rft_node_type * rft_node) { return 
 /*****************************************************************/
 /* various functions to access properties at the cell level      */
 
-static const ecl_rft_cell_type * ecl_rft_node_iget_cell( const ecl_rft_node_type * rft_node , int index) {
+const ecl_rft_cell_type * ecl_rft_node_iget_cell( const ecl_rft_node_type * rft_node , int index) {
   return vector_iget_const( rft_node->cells , index );
 }
 

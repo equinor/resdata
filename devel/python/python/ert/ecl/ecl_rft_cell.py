@@ -25,7 +25,7 @@ RFT = 1
 PLT = 2
 
 class RFTCell(CClass):
-
+    
     def get_i(self):
         return cfunc.get_i( self )
 
@@ -50,10 +50,16 @@ class RFTCell(CClass):
 class EclRFTCell(RFTCell):
     
     @classmethod
-    def new(self , i , j , k , depth , pressure , swat , sgas ):
+    def new(cls , i , j , k , depth , pressure , swat , sgas ):
         cell = EclRFTCell()
         c_ptr = cfunc.alloc_RFT( i,j,k,depth,pressure,swat,sgas)
         cell.init_cobj( c_ptr , cfunc.free )
+        return cell
+
+    @classmethod
+    def ref(cls, c_ptr , parent):
+        cell = EclRFTCell()
+        cell.init_cref( c_ptr , parent )
         return cell
 
     @property
@@ -79,6 +85,12 @@ class EclPLTCell(RFTCell):
         cell = EclPLTCell()
         c_ptr = cfunc.alloc_PLT( i,j,k,depth,pressure,orat , grat , wrat , conn_start , flowrate , oil_flowrate , gas_flowrate , water_flowrate)
         cell.init_cobj( c_ptr , cfunc.free )
+        return cell
+
+    @classmethod
+    def ref(cls, c_ptr , parent):
+        cell = EclPLTCell()
+        cell.init_cref( c_ptr , parent )
         return cell
 
     @property
