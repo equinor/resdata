@@ -330,3 +330,27 @@ bool ecl_rft_cell_ijk_equal( const ecl_rft_cell_type * cell , int i , int j , in
              (j == cell->j) && 
              (k == cell->k) );
 }
+
+
+/*
+  Currently only comparison based on connection length along PLT is supported. 
+*/
+int ecl_rft_cell_cmp( const ecl_rft_cell_type * cell1 , const ecl_rft_cell_type * cell2) {
+  double val1 = ecl_rft_cell_get_connection_start( cell1 );
+  double val2 = ecl_rft_cell_get_connection_start( cell2 );
+
+  if (val1 < val2)
+    return -1;
+  else if (val1 == val2)
+    return 0;
+  else
+    return 0;
+    
+}
+
+
+int ecl_rft_cell_cmp__( const void * arg1 , const void * arg2) {
+  const ecl_rft_cell_type * cell1 = ecl_rft_cell_safe_cast( arg1 );
+  const ecl_rft_cell_type * cell2 = ecl_rft_cell_safe_cast( arg2 );
+  return ecl_rft_cell_cmp( cell1 , cell2 );
+}

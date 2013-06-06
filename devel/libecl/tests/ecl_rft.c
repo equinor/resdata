@@ -25,10 +25,12 @@
 #include <ert/ecl/ecl_rft_file.h>
 
 
+
+
 // Hardcoded GURBAT values
 void test_rft( const char * rft_file ) {
   ecl_rft_file_type * rft = ecl_rft_file_alloc( rft_file );
-  const ecl_rft_node_type * rft_node = ecl_rft_file_iget_node( rft , 0 );
+  ecl_rft_node_type * rft_node = ecl_rft_file_iget_node( rft , 0 );
   
   test_assert_true( ecl_rft_node_is_RFT( rft_node ));
   test_assert_int_equal( 14 , ecl_rft_node_get_size( rft_node ));
@@ -50,20 +52,30 @@ void test_rft( const char * rft_file ) {
     test_assert_int_equal( 32 , i );
     test_assert_int_equal( 54 , j );
     test_assert_int_equal( 12 , k );    
+
+    for (i=0; i < ecl_rft_node_get_size( rft_node );  i++) {
+      const ecl_rft_cell_type * cell1 = ecl_rft_node_iget_cell( rft_node , i );
+      const ecl_rft_cell_type * cell2 = ecl_rft_node_iget_cell_sorted( rft_node , i );
+
+      test_assert_ptr_equal( cell1 , cell2 );
+    }
   }
+  ecl_rft_node_inplace_sort_cells( rft_node );
 
   ecl_rft_file_free( rft );
 }
 
 
+// Have no such case yet ...
+void test_plt_msw( const char * plt_file ) {
 
-
+}
 
 
 // Hardcoded values from a test case with a PLT.
 void test_plt( const char * plt_file ) {
   ecl_rft_file_type * plt = ecl_rft_file_alloc( plt_file );
-  const ecl_rft_node_type * plt_node = ecl_rft_file_iget_node( plt , 11 );
+  ecl_rft_node_type * plt_node = ecl_rft_file_iget_node( plt , 11 );
 
   test_assert_true( ecl_rft_node_is_PLT( plt_node ));
   test_assert_int_equal( 22 , ecl_rft_node_get_size( plt_node ));
@@ -85,9 +97,16 @@ void test_plt( const char * plt_file ) {
     test_assert_int_equal( 44 , i );
     test_assert_int_equal( 34 , j );
     test_assert_int_equal(  7 , k );    
+
+    for (i=0; i < ecl_rft_node_get_size( plt_node );  i++) {
+      const ecl_rft_cell_type * cell1 = ecl_rft_node_iget_cell( plt_node , i );
+      const ecl_rft_cell_type * cell2 = ecl_rft_node_iget_cell_sorted( plt_node , i );
+
+      test_assert_ptr_equal( cell1 , cell2 );
+    }
+    ecl_rft_node_inplace_sort_cells( plt_node );
   }
-
-
+  
   ecl_rft_file_free( plt );
 }
 
@@ -101,6 +120,8 @@ int main( int argc , char ** argv) {
     test_rft( rft_file );
   else if (strcmp( mode_string , "PLT") == 0)
     test_plt( rft_file );
+  else if (strcmp( mode_string , "MSW-PLT") == 0)
+    test_plt_msw( rft_file );
   else
     test_error_exit("Second argument:%s not recognized. Valid values are: RFT and PLT" , mode_string);
   

@@ -269,8 +269,8 @@ const char * ecl_rft_file_get_filename( const ecl_rft_file_type * rft_file ) {
    handle that.
 */
 
-const ecl_rft_node_type * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_file , int index) {
-  return vector_iget_const( rft_file->data , index );
+ecl_rft_node_type * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_file , int index) {
+  return vector_iget( rft_file->data , index );
 }
 
 
@@ -301,7 +301,7 @@ const ecl_rft_node_type * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_
 
 
 
-const ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_file , const char * well, int index) {
+ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_file , const char * well, int index) {
   const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
   return ecl_rft_file_iget_node( rft_file , int_vector_iget(index_vector , index));
 }
@@ -315,8 +315,8 @@ const ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * 
 */
 
 
-const ecl_rft_node_type * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
-  const ecl_rft_node_type * node = NULL;
+ecl_rft_node_type * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
+  ecl_rft_node_type * node = NULL;
   if (hash_has_key( rft_file->well_index , well)) {
     const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
     int index = 0;

@@ -26,6 +26,7 @@
 #include <ert/util/util.h>
 #include <ert/util/hash.h>
 #include <ert/util/vector.h>
+#include <ert/util/int_vector.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_kw_magic.h>
@@ -49,62 +50,6 @@
 */
 
 
-/** 
-  Here comes some small structs containing various pieces of
-  information. Observe the following which is common to all these
-  structs:
-
-   * In the implementation only 'full instance' are employed, and
-     not pointers. This implies that the code does not provide
-     xxx_alloc() and xx_free() functions.
-
-   * They should NOT be exported out of this file.
-*/
-
-
-/** 
-    This type is used to hold the coordinates of a perforated
-    cell. This type is used irrespective of whether this is a simple
-    RFT or a PLT.
-*/
-
-typedef struct {
-  int    i;
-  int    j;
-  int    k; 
-  double depth;
-  double pressure; /* both CONPRES from PLT and PRESSURE from RFT are internalized as pressure in the cell_type. */
-} cell_type;
-
-/*-----------------------------------------------------------------*/
-/** 
-    Type which contains the information for one cell in an RFT.
-*/
-typedef struct {
-  double swat;
-  double sgas;
-} rft_data_type;
-
-
-/*-----------------------------------------------------------------*/
-/** 
-    Type which contains the information for one cell in an PLT.
-*/
-typedef struct {
-  double orat;
-  double grat;
-  double wrat;
-  /* There is quite a lot of more information in the PLT - not yet internalized. */
-} plt_data_type;
-
-
-
-
-/* This is not implemented at all ..... */
-typedef struct {
-  double data;
-} segment_data_type;
-
 
 #define ECL_RFT_NODE_ID 887195
 struct ecl_rft_node_struct {
@@ -114,12 +59,10 @@ struct ecl_rft_node_struct {
   ecl_rft_enum data_type;              /* What type of data: RFT|PLT|SEGMENT */
   time_t       recording_date;         /* When was the RFT recorded - date.*/ 
   double       days;                   /* When was the RFT recorded - days after simulaton start. */
-  vector_type *cells; 
 
-  /* Only one of segment_data, rft_data or plt_data can be != NULL */
-  segment_data_type * segment_data;    
-  //rft_data_type     * rft_data;
-  //plt_data_type     * plt_data;
+  bool              sorted;   
+  int_vector_type * sort_perm;
+  vector_type *cells; 
 };
 
 
@@ -155,7 +98,9 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(const char * data_type_strin
     
     rft_node->cells = vector_alloc_new();
     rft_node->data_type = data_type;
-
+    rft_node->sort_perm = NULL;
+    rft_node->sorted = false;
+    
     return rft_node;
   }
 }
@@ -163,6 +108,13 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(const char * data_type_strin
 
 UTIL_SAFE_CAST_FUNCTION( ecl_rft_node   , ECL_RFT_NODE_ID );
 UTIL_IS_INSTANCE_FUNCTION( ecl_rft_node , ECL_RFT_NODE_ID );
+
+
+static void ecl_rft_node_append_cell( ecl_rft_node_type * rft_node , ecl_rft_cell_type * cell) {
+  vector_append_owned_ref( rft_node->cells , cell , ecl_rft_cell_free__ );
+  rft_node->sorted = false;
+}
+
 
 
 static void ecl_rft_node_init_RFT_cells( ecl_rft_node_type * rft_node , const ecl_file_type * rft) {
@@ -188,7 +140,7 @@ static void ecl_rft_node_init_RFT_cells( ecl_rft_node_type * rft_node , const ec
       /* The connection coordinates are shifted -= 1; i.e. all internal usage is offset 0. */
       ecl_rft_cell_type * cell = ecl_rft_cell_alloc_RFT( i[c] - 1 , j[c] - 1 , k[c] - 1 , 
                                                          depth[c] , P[c] , SW[c] , SG[c]);
-      vector_append_owned_ref( rft_node->cells , cell , ecl_rft_cell_free__ );
+      ecl_rft_node_append_cell( rft_node , cell );
     }
   }
 }
@@ -233,7 +185,7 @@ static void ecl_rft_node_init_PLT_cells( ecl_rft_node_type * rft_node , const ec
       /* The connection coordinates are shifted -= 1; i.e. all internal usage is offset 0. */
       cell = ecl_rft_cell_alloc_PLT( i[c] -1 , j[c] -1 , k[c] -1 , 
                                      depth[c] , P[c] , OR[c] , GR[c] , WR[c] , cs , flowrate[c] , oil_flowrate[c] , gas_flowrate[c] , water_flowrate[c]);
-      vector_append_owned_ref( rft_node->cells , cell , ecl_rft_cell_free__ );
+      ecl_rft_node_append_cell( rft_node , cell );
     }
   }
 }
@@ -279,8 +231,12 @@ const char * ecl_rft_node_get_well_name(const ecl_rft_node_type * rft_node) {
 
 
 void ecl_rft_node_free(ecl_rft_node_type * rft_node) {
+
   free(rft_node->well_name);
   vector_free( rft_node->cells );
+  if (rft_node->sort_perm)
+    int_vector_free( rft_node->sort_perm );
+
   free(rft_node);
 }
 
@@ -303,6 +259,30 @@ ecl_rft_enum ecl_rft_node_get_type(const ecl_rft_node_type * rft_node) { return 
 
 const ecl_rft_cell_type * ecl_rft_node_iget_cell( const ecl_rft_node_type * rft_node , int index) {
   return vector_iget_const( rft_node->cells , index );
+}
+
+
+static void ecl_rft_node_create_sort_perm( ecl_rft_node_type * rft_node ) {
+  if (rft_node->sort_perm)
+    int_vector_free( rft_node->sort_perm );
+  
+  rft_node->sort_perm = vector_alloc_sort_perm( rft_node->cells , ecl_rft_cell_cmp__ );
+  rft_node->sorted = true;
+}
+
+void ecl_rft_node_inplace_sort_cells( ecl_rft_node_type * rft_node ) {
+  vector_sort( rft_node->cells , ecl_rft_cell_cmp__ );
+}
+
+const ecl_rft_cell_type * ecl_rft_node_iget_cell_sorted( ecl_rft_node_type * rft_node , int index) {
+  if (ecl_rft_node_is_RFT( rft_node ))
+    return ecl_rft_node_iget_cell( rft_node , index );
+  else {
+    if (!rft_node->sorted)
+      ecl_rft_node_create_sort_perm( rft_node );
+    
+    return vector_iget_const( rft_node->cells , int_vector_iget( rft_node->sort_perm , index ));
+  }
 }
 
 

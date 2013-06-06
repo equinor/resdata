@@ -32,6 +32,8 @@ typedef enum { RFT     = 1 ,
 
 typedef struct ecl_rft_node_struct ecl_rft_node_type;
 
+void                      ecl_rft_node_inplace_sort_cells( ecl_rft_node_type * rft_node );
+const ecl_rft_cell_type * ecl_rft_node_iget_cell_sorted( ecl_rft_node_type * rft_node , int index);
 const ecl_rft_cell_type * ecl_rft_node_iget_cell( const ecl_rft_node_type * rft_node , int index);
 const ecl_rft_cell_type * ecl_rft_node_lookup_ijk( const ecl_rft_node_type * rft_node , int i, int j , int k);
 void                ecl_rft_node_fprintf_rft_obs(const ecl_rft_node_type * , double , const char * , const char * , double );

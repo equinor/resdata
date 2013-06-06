@@ -40,12 +40,12 @@ void                   ecl_rft_file_block(const ecl_rft_file_type *  , double , 
 void                   ecl_rft_file_fprintf_rft_obs(const ecl_rft_file_type  * , double , const char * , const char *, const char * , double);
 ecl_rft_node_type    * ecl_rft_file_get_node(const ecl_rft_file_type * , const char * );
 
-const ecl_rft_node_type * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time);
 
 int                       ecl_rft_file_get_size__( const ecl_rft_file_type * rft_file, const char * well_pattern , time_t recording_time);
 int                       ecl_rft_file_get_size( const ecl_rft_file_type * rft_file);
-const ecl_rft_node_type * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_file , int index);
-const ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_file , const char * well, int index);
+ecl_rft_node_type       * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time);
+ecl_rft_node_type       * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_file , int index);
+ecl_rft_node_type       * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_file , const char * well, int index);
 bool                      ecl_rft_file_has_well( const ecl_rft_file_type * rft_file , const char * well);
 int                       ecl_rft_file_get_well_occurences( const ecl_rft_file_type * rft_file , const char * well);
 stringlist_type         * ecl_rft_file_alloc_well_list(const ecl_rft_file_type * rft_file );

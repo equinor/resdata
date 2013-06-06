@@ -72,6 +72,9 @@ UTIL_IS_INSTANCE_HEADER( ecl_rft_cell );
   double              ecl_rft_cell_get_gas_flowrate( const ecl_rft_cell_type * cell );
   double              ecl_rft_cell_get_water_flowrate( const ecl_rft_cell_type * cell );
 
+  int                 ecl_rft_cell_cmp__( const void * arg1 , const void * arg2);
+  int                 ecl_rft_cell_cmp( const ecl_rft_cell_type * cell1 , const ecl_rft_cell_type * cell2);
+
 #ifdef __cplusplus
 }
 #endif
