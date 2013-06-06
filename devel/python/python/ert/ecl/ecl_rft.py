@@ -123,37 +123,22 @@ class EclRFT(CClass):
         return self.__len__()
 
 
-    def __make_node( self , index ):
-        #i = ctypes.c_int()
-        #j = ctypes.c_int()
-        #k = ctypes.c_int()
-        #pressure = cfunc_rft.iget_pressure( self, index )
-        #depth    = cfunc_rft.iget_depth( self, index )
-        #cfunc_rft.iget_ijk( self, index , ctypes.byref(i), ctypes.byref(j) , ctypes.byref(k))
-
-        cell_ptr = cfunc_rft.iget_cell( self , index )
-        if self.type == RFT:
-            #swat = cfunc_rft.iget_swat( self, index )
-            #sgas = cfunc_rft.iget_sgas( self, index )
-            #return EclRFTCell.RFTCell( i,j,k,depth , pressure,swat,sgas)
-            return EclRFTCell.ref( cell_ptr , self )
-        else:
-            return EclPLTCell.ref( cell_ptr , self )
-            #orat = cfunc_rft.iget_orat( self, index )
-            #wrat = cfunc_rft.iget_wrat( self, index )
-            #grat = cfunc_rft.iget_grat( self, index )
-            #return EclRFTCell.PLTCell( i,j,k,depth , pressure,orat,grat,wrat)
-
-
     def __getitem__(self , index):
         if isinstance( index , types.IntType):
             length = self.__len__()
             if index < 0 or index >= length:
                 raise IndexError
             else:
-                return self.__make_node( index )
+                cell_ptr = cfunc_rft.iget_cell( self , index )
+                if self.is_RFT():
+                    return EclRFTCell.ref( cell_ptr , self )
+                elif self.is_PLT():
+                    return EclPLTCell.ref( cell_ptr , self )
+                else:
+                    raise NotImplementedError("Only RFT and PLT cells are implemented")
         else:
             raise TypeError("Index should be integer type")
+
 
     def iget( self , index ):
         return self.__getitem__( index )
@@ -168,87 +153,6 @@ class EclRFT(CClass):
             return None
 
 
-
-#class EclRFTCell:
-#    def __init__(self , type , i , j , k , depth , pressure):
-#        self.type = type
-#        self.__i = i
-#        self.__j = j
-#        self.__k = k
-#        self.__depth    = depth
-#        self.__pressure = pressure
-#
-#        self.__sgas     = None 
-#        self.__swat     = None
-#        self.__orat     = None
-#        self.__wrat     = None
-#        self.__grat     = None
-#
-#    @classmethod
-#    def RFTCell( cls , i,j,k,depth,pressure,swat,sgas):
-#        cell = cls(RFT , i,j,k,depth,pressure)
-#        cell.__swat = swat
-#        cell.__sgas = sgas
-#        return cell
-#
-#    @classmethod
-#    def PLTCell(cls , i,j,k,depth,pressure,orat,grat,wrat):
-#        cell = cls(PLT , i,j,k,depth,pressure)
-#        cell.__orat = orat
-#        cell.__wrat = wrat
-#        cell.__grat = grat
-#        return cell
-#        
-#    @property
-#    def i(self):
-#        return self.__i.value
-#
-#    @property
-#    def j(self):
-#        return self.__j.value
-#
-#    @property
-#    def k(self):
-#        return self.__k.value
-#
-#    @property
-#    def ijk(self):
-#        return (self.__i.value , self.__j.value , self.__k.value)
-#
-#    @property
-#    def pressure(self):
-#        return self.__pressure
-#    
-#    @property
-#    def depth(self):
-#        return self.__depth
-#
-#    @property
-#    def PLT(self):
-#        if self.type == PLT:
-#            return True
-#        else:
-#            return False
-#
-#    @property
-#    def sgas(self):
-#        return self.__sgas
-#
-#    @property
-#    def swat(self):
-#        return self.__swat
-#
-#    @property
-#    def orat(self):
-#        return self.__orat
-#
-#    @property
-#    def grat(self):
-#        return self.__grat
-#
-#    @property
-#    def wrat(self):
-#        return self.__wrat
 
 
 

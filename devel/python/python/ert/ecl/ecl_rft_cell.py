@@ -14,10 +14,11 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-
-import libecl
+import warnings
 import ctypes
 import types
+
+import libecl
 from   ert.cwrap.cwrap       import *
 from   ert.cwrap.cclass      import CClass
 
@@ -25,6 +26,37 @@ RFT = 1
 PLT = 2
 
 class RFTCell(CClass):
+    
+    def warn(self , old , new):
+        msg = """ 
+
+The cell property:%s has been deprecated, and the method:%s() should
+be used instead. Observe that the new method %s() returns coordinate
+values starting at 0, whereas the old property %s returned values
+starting at 1; hence you must adapt the calling code when you change
+from %s -> %s() 
+""" % (old , new , new , old , old , new)
+        warnings.warn( msg , DeprecationWarning )
+
+    @property
+    def i(self):
+        self.warn("i" , "get_i")
+        return self.get_i() + 1
+
+    @property
+    def j(self):
+        self.warn("j" , "get_j")
+        return self.get_j() + 1
+
+    @property
+    def k(self):
+        self.warn("k" , "get_k")
+        return self.get_k() + 1
+
+    @property
+    def ijk(self):
+        self.warn("ijk" , "get_ijk")
+        return (self.get_i() + 1 , self.get_j() + 1 , self.get_k() + 1)
     
     def get_i(self):
         return cfunc.get_i( self )
@@ -34,6 +66,9 @@ class RFTCell(CClass):
 
     def get_k(self):
         return cfunc.get_k( self )
+
+    def get_ijk(self):
+        return (cfunc.get_i( self ) , cfunc.get_j( self ) , cfunc.get_k( self ))
 
     @property
     def pressure(self):
