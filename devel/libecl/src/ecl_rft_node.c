@@ -272,6 +272,7 @@ static void ecl_rft_node_create_sort_perm( ecl_rft_node_type * rft_node ) {
 
 void ecl_rft_node_inplace_sort_cells( ecl_rft_node_type * rft_node ) {
   vector_sort( rft_node->cells , ecl_rft_cell_cmp__ );
+  rft_node->sorted = false;  // The permutation is no longer sorted; however the vector itself is sorted ....
 }
 
 const ecl_rft_cell_type * ecl_rft_node_iget_cell_sorted( ecl_rft_node_type * rft_node , int index) {
