@@ -156,12 +156,21 @@ class EclRFT(CClass):
         return cfunc_rft.get_size( self )
 
     def is_RFT(self):
+        """
+        Is instance an RFT; in that case all the cells will be EclRFTCell instances.
+        """
         return cfunc_rft.is_RFT( self )
 
     def is_PLT(self):
+        """
+        Is instance a PLT; in that case all the cells will be EclPLTCell instances.
+        """
         return cfunc_rft.is_PLT( self )
 
     def is_SEGMENT(self):
+        """
+        Is this a SEGMENT - not implemented.
+        """
         return cfunc_rft.is_SEGMENT( self )
 
 
@@ -176,15 +185,25 @@ class EclRFT(CClass):
 
     @property
     def well(self):
+        """
+        The name of the well we are considering.
+        """
         return cfunc_rft.get_well( self )
 
     @property
     def date(self):
+        """
+        The date when this RFT/PLT/... was recorded.
+        """
         return cfunc_rft.get_date( self )
 
     @property
     def size(self):
+        """
+        The number of completed cells.
+        """
         return self.__len__()
+
 
     def cell_ref( self , cell_ptr ):
         if self.is_RFT():
@@ -205,6 +224,16 @@ class EclRFT(CClass):
 
 
     def __getitem__(self , index):
+        """Implements the [] operator to return the cells.
+
+        To get the object related to cell nr 5:
+
+           cell = rft[4]
+
+        The return value from the __getitem__() method is either an
+        EclRFTCell instance or a EclPLTCell instance, depending on the
+        type of this particular RFT object. 
+        """
         self.assert_cell_index( index )
         cell_ptr = cfunc_rft.iget_cell( self , index )
         return self.cell_ref( cell_ptr )
