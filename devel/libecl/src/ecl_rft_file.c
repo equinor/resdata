@@ -226,8 +226,8 @@ int ecl_rft_file_get_size__( const ecl_rft_file_type * rft_file, const char * we
     for ( i=0; i < vector_get_size( rft_file->data ); i++) {
       const ecl_rft_node_type * rft = vector_iget_const( rft_file->data , i);
 
-      if (well_pattern != NULL) {
-        if (!util_fnmatch( well_pattern , ecl_rft_node_get_well_name( rft )))
+      if (well_pattern) {
+        if (util_fnmatch( well_pattern , ecl_rft_node_get_well_name( rft )) != 0)
           continue;
       }
 
