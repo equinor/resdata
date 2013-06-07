@@ -102,14 +102,22 @@ class EclRFTFile(CClass):
 
     @property
     def headers(self):
+        """
+        Returns a list of two tuples (well_name , date) for the whole file.
+        """
         header_list = []
         for i in (range(cfunc_file.get_size( self , None , -1))):
             rft = self.iget( i )
             header_list.append( (rft.well , rft.date) )
         return header_list
 
+
     def iget(self , index):
+        """
+        Will lookup RFT @index - equivalent to [@index].
+        """
         return self.__getitem__( index )
+
 
     def get(self , well_name , date ):
         """
@@ -173,6 +181,12 @@ class EclRFT(CClass):
         """
         return cfunc_rft.is_SEGMENT( self )
 
+    def is_MSW(self):
+        """
+        Is this well a MSW well. Observe that the test ONLY applies to PLTs.
+        """
+        return cfunc_rft.is_MSW( self )
+
 
     @property
     def type(self):
@@ -180,6 +194,9 @@ class EclRFT(CClass):
         # RFT     = 1
         # PLT     = 2
         # Segment = 3  -- Not properly implemented
+        """
+        Deprecated - use query methods: is_RFT(), is_PLT() and is_SEGMENT() instead.
+        """
         warnings.warn("The property type is deprecated, use the query methods is_RFT(), is_PLT() and is_SEGMENT() instead.")
         return cfunc_rft.get_type( self )
 
@@ -205,7 +222,7 @@ class EclRFT(CClass):
         return self.__len__()
 
 
-    def cell_ref( self , cell_ptr ):
+    def __cell_ref( self , cell_ptr ):
         if self.is_RFT():
             return EclRFTCell.ref( cell_ptr , self )
         elif self.is_PLT():
@@ -236,7 +253,7 @@ class EclRFT(CClass):
         """
         self.assert_cell_index( index )
         cell_ptr = cfunc_rft.iget_cell( self , index )
-        return self.cell_ref( cell_ptr )
+        return self.__cell_ref( cell_ptr )
         
 
     def iget( self , index ):
@@ -251,18 +268,50 @@ class EclRFT(CClass):
         """
         self.assert_cell_index( index )
         cell_ptr = cfunc_rft.iget_cell_sorted( self , index )
-        return self.cell_ref( cell_ptr )
+        return self.__cell_ref( cell_ptr )
         
 
     def sort(self):
+        """
+        Will sort cells in RFT; currently only applies to MSW wells.
+
+        By default the cells in the RFT come in the order they are
+        specified in the ECLIPSE input file; that is not necessarily
+        in a suitable order. In the case of MSW wells it is possible
+        to sort the connections after distance along the wellpath. To
+        access the cells in sort order you have two options:
+
+           1. Sort the cells using the sort() method, and then
+              subsequently access them sequentially:
+
+                rft.sort()
+                for cell in rft:
+                    print cell
+
+           2. Let the rft object stay unsorted, but access the cells
+              using the iget_sorted() method:
+
+                 for i in range(len(rft)):
+                     cell = rft.iget_sorted( i )
+        
+        Currently only MSW/PLTs are sorted, based on the CONLENST
+        keyword; for other wells the sort() method does nothing.  
+        """
         cfunc_rft.sort_cells( self )
 
 
     # ijk are zero offset
     def ijkget( self , ijk ):
+        """
+        Will look up the cell based on (i,j,k).
+
+        If the cell (i,j,k) is not part of this RFT/PLT None will be
+        returned. The (i,j,k) input values should be zero offset,
+        i.e. you must subtract 1 from the (i,j,k) values given in the ECLIPSE input.
+        """
         cell_ptr = cfunc_rft.lookup_ijk( self , ijk[0] , ijk[1] , ijk[2])
         if cell_ptr:
-            return self.cell_ref( cell_ptr )
+            return self.__cell_ref( cell_ptr )
         else:
             return None
 
@@ -306,3 +355,4 @@ cfunc_rft.lookup_ijk                = cwrapper.prototype("c_void_p ecl_rft_node_
 cfunc_rft.is_RFT                    = cwrapper.prototype("bool   ecl_rft_node_is_RFT( ecl_rft )")
 cfunc_rft.is_PLT                    = cwrapper.prototype("bool   ecl_rft_node_is_PLT( ecl_rft )")
 cfunc_rft.is_SEGMENT                = cwrapper.prototype("bool   ecl_rft_node_is_SEGMENT( ecl_rft )")
+cfunc_rft.is_MSW                    = cwrapper.prototype("bool   ecl_rft_node_is_MSW( ecl_rft )")

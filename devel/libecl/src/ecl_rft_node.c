@@ -59,8 +59,9 @@ struct ecl_rft_node_struct {
   ecl_rft_enum data_type;              /* What type of data: RFT|PLT|SEGMENT */
   time_t       recording_date;         /* When was the RFT recorded - date.*/ 
   double       days;                   /* When was the RFT recorded - days after simulaton start. */
-
-  bool              sorted;   
+  bool         MSW;
+  
+  bool              sort_perm_in_sync            ;   
   int_vector_type * sort_perm;
   vector_type *cells; 
 };
@@ -81,7 +82,7 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(const char * data_type_strin
   else if (strchr(data_type_string, 'R') != NULL)
     data_type = RFT;
   else if (strchr(data_type_string , 'S') != NULL)
-    data_type = SEGMENT;
+    data_type = SEGMENT;                    
   else 
     util_abort("%s: Could not determine type of RFT/PLT/SEGMENT data - aborting\n",__func__);
   
@@ -99,7 +100,7 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(const char * data_type_strin
     rft_node->cells = vector_alloc_new();
     rft_node->data_type = data_type;
     rft_node->sort_perm = NULL;
-    rft_node->sorted = false;
+    rft_node->sort_perm_in_sync = false;
     
     return rft_node;
   }
@@ -112,7 +113,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_rft_node , ECL_RFT_NODE_ID );
 
 static void ecl_rft_node_append_cell( ecl_rft_node_type * rft_node , ecl_rft_cell_type * cell) {
   vector_append_owned_ref( rft_node->cells , cell , ecl_rft_cell_free__ );
-  rft_node->sorted = false;
+  rft_node->sort_perm_in_sync = false;
 }
 
 
@@ -218,13 +219,17 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft) {
       rft_node->recording_date = util_make_date( time[DATE_DAY_INDEX] , time[DATE_MONTH_INDEX] , time[DATE_YEAR_INDEX] );
     }
     rft_node->days = ecl_kw_iget_float( ecl_file_iget_named_kw( rft , TIME_KW , 0 ) , 0);
-    
+    if (ecl_file_has_kw( rft , CONLENST_KW))
+      rft_node->MSW = true;
+    else
+      rft_node->MSW = false;
+
     ecl_rft_node_init_cells( rft_node , rft );
   }
   return rft_node;
 }
 
-
+                        
 const char * ecl_rft_node_get_well_name(const ecl_rft_node_type * rft_node) { 
   return rft_node->well_name; 
 }
@@ -267,19 +272,19 @@ static void ecl_rft_node_create_sort_perm( ecl_rft_node_type * rft_node ) {
     int_vector_free( rft_node->sort_perm );
   
   rft_node->sort_perm = vector_alloc_sort_perm( rft_node->cells , ecl_rft_cell_cmp__ );
-  rft_node->sorted = true;
+  rft_node->sort_perm_in_sync = true;
 }
 
 void ecl_rft_node_inplace_sort_cells( ecl_rft_node_type * rft_node ) {
   vector_sort( rft_node->cells , ecl_rft_cell_cmp__ );
-  rft_node->sorted = false;  // The permutation is no longer sorted; however the vector itself is sorted ....
+  rft_node->sort_perm_in_sync = false;  // The permutation is no longer sorted; however the vector itself is sorted ....
 }
 
 const ecl_rft_cell_type * ecl_rft_node_iget_cell_sorted( ecl_rft_node_type * rft_node , int index) {
   if (ecl_rft_node_is_RFT( rft_node ))
     return ecl_rft_node_iget_cell( rft_node , index );
   else {
-    if (!rft_node->sorted)
+    if (!rft_node->sort_perm_in_sync)
       ecl_rft_node_create_sort_perm( rft_node );
     
     return vector_iget_const( rft_node->cells , int_vector_iget( rft_node->sort_perm , index ));
@@ -388,6 +393,10 @@ double ecl_rft_node_iget_grat( const ecl_rft_node_type * rft_node , int index) {
   }
 }
 
+
+bool ecl_rft_node_is_MSW( const ecl_rft_node_type * rft_node ) {
+  return rft_node->MSW;
+}
 
 
 bool ecl_rft_node_is_PLT( const ecl_rft_node_type * rft_node ) {

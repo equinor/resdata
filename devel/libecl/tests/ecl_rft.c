@@ -34,6 +34,7 @@ void test_rft( const char * rft_file ) {
   
   test_assert_true( ecl_rft_node_is_RFT( rft_node ));
   test_assert_int_equal( 14 , ecl_rft_node_get_size( rft_node ));
+  test_assert_false( ecl_rft_node_is_MSW( rft_node ));
   
   test_assert_double_equal( 259.146    , ecl_rft_node_iget_pressure( rft_node , 0 ));
   test_assert_double_equal( 0.0580598  , ecl_rft_node_iget_soil( rft_node , 0 ));
@@ -78,6 +79,7 @@ void test_plt( const char * plt_file ) {
   ecl_rft_node_type * plt_node = ecl_rft_file_iget_node( plt , 11 );
 
   test_assert_true( ecl_rft_node_is_PLT( plt_node ));
+  test_assert_false( ecl_rft_node_is_MSW( plt_node ));
   test_assert_int_equal( 22 , ecl_rft_node_get_size( plt_node ));
 
   test_assert_double_equal( 244.284  , ecl_rft_node_iget_pressure( plt_node , 0 ));
