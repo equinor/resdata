@@ -30,6 +30,20 @@ from   ecl_rft_cell          import EclRFTCell, EclPLTCell
         
 
 class EclRFTFile(CClass):
+    """
+    The EclRFTFile class is used to load an ECLIPSE RFT file.
+
+    The EclRFTFile serves as a container which can load and hold the
+    content of an ECLIPSE RFT file. The RFT files will in general
+    contain data for several wells and several times in one large
+    container. The EclRFTClass class contains methods get the the RFT
+    results for a specific time and/or well.
+
+    The EclRFTFile class can in general contain a mix of RFT and PLT
+    measurements. The class does not really differntiate between
+    these.
+    """
+    
     def __new__( cls , case ):
         c_ptr = cfunc_file.load( case )
         if c_ptr:
@@ -111,7 +125,9 @@ class EclRFT(CClass):
         # RFT     = 1
         # PLT     = 2
         # Segment = 3  -- Not properly implemented
-        warnings.warn("The property type is deprecated, use the query  methods is_RFT(), is_PLT() and is_SEGMENT() instead.")
+        warnings.war
+
+    n("The property type is deprecated, use the query  methods is_RFT(), is_PLT() and is_SEGMENT() instead.")
         return cfunc_rft.get_type( self )
 
     @property
@@ -211,4 +227,6 @@ cfunc_rft.iget_grat                 = cwrapper.prototype("double ecl_rft_node_ig
 cfunc_rft.lookup_ijk                = cwrapper.prototype("c_void_p ecl_rft_node_lookup_ijk( ecl_rft , int , int , int)")
 cfunc_rft.is_RFT                    = cwrapper.prototype("bool   ecl_rft_node_is_RFT( ecl_rft )")
 cfunc_rft.is_PLT                    = cwrapper.prototype("bool   ecl_rft_node_is_PLT( ecl_rft )")
-cfunc_rft.is_SEGMENT                = cwrapper.prototype("bool   ecl_rft_node_is_SEGMENT( ecl_rft )")
+cfunc_rft.is_SEGMENT                = cwrapper.prototype("bool   ecl_rft_node_is_SEGMENT( ecl_rft
+
+    )")
