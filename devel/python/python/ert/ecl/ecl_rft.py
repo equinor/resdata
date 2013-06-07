@@ -244,6 +244,11 @@ class EclRFT(CClass):
 
         
     def iget_sorted( self , index ):
+        """
+        Will return the cell nr @index in the list of sorted cells. 
+
+        See method sort() for further documentation.
+        """
         self.assert_cell_index( index )
         cell_ptr = cfunc_rft.iget_cell_sorted( self , index )
         return self.cell_ref( cell_ptr )
