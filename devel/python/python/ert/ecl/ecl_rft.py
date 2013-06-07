@@ -37,10 +37,10 @@ class EclRFTFile(CClass):
     content of an ECLIPSE RFT file. The RFT files will in general
     contain data for several wells and several times in one large
     container. The EclRFTClass class contains methods get the the RFT
-    results for a specific time and/or well.
+    results for a specific time and/or well. 
 
     The EclRFTFile class can in general contain a mix of RFT and PLT
-    measurements. The class does not really differntiate between
+    measurements. The class does not really differentiate between
     these.
     """
     
@@ -68,14 +68,36 @@ class EclRFTFile(CClass):
         else:
             raise TypeError("Index should be integer type")
 
-
     
-    @property
     def size( self , well = None , date = None):
-        return cfunc_file.get_size( self , well , -1)
+        """
+        The number of elements in EclRFTFile container. 
+
+        By default the size() method will return the total number of
+        RFTs/PLTs in the container, but by specifying the optional
+        arguments date and/or well the function will only count the
+        number of well measurements matching that time or well
+        name. The well argument can contain wildcards.
+
+           rftFile = ecl.EclRFTFile( "ECLIPSE.RFT" )
+           print "Total number of RFTs : %d" % rftFile.size( )
+           print "RFTs matching OP*    : %d" % rftFile.size( well = "OP*" )
+           print "RFTs at 01/01/2010   : %d" % rftFile.size( date = datetime.date( 2010 , 1 , 1 ))
+
+        """
+        if date:
+            cdate = ctime( date )
+        else:
+            cdate = -1
+
+        return cfunc_file.get_size( self , well , cdate)
+
 
     @property
     def num_wells( self ):
+        """
+        Returns the total number of distinct wells in the RFT file.
+        """
         return cfunc_file.get_num_wells( self )
 
     @property
@@ -83,7 +105,6 @@ class EclRFTFile(CClass):
         header_list = []
         for i in (range(cfunc_file.get_size( self , None , -1))):
             rft = self.iget( i )
-            print rft
             header_list.append( (rft.well , rft.date) )
         return header_list
 
@@ -91,6 +112,11 @@ class EclRFTFile(CClass):
         return self.__getitem__( index )
 
     def get(self , well_name , date ):
+        """
+        Will look up the RFT object corresponding to @well and @date.
+
+        Returns None if no matching RFT can be found.
+        """
         c_ptr = cfunc_file.get_rft( self , well_name , ctime( date )) 
         if c_ptr:
             return EclRFT( c_ptr , self)
@@ -125,9 +151,7 @@ class EclRFT(CClass):
         # RFT     = 1
         # PLT     = 2
         # Segment = 3  -- Not properly implemented
-        warnings.war
-
-    n("The property type is deprecated, use the query  methods is_RFT(), is_PLT() and is_SEGMENT() instead.")
+        warnings.warn("The property type is deprecated, use the query methods is_RFT(), is_PLT() and is_SEGMENT() instead.")
         return cfunc_rft.get_type( self )
 
     @property
@@ -227,6 +251,4 @@ cfunc_rft.iget_grat                 = cwrapper.prototype("double ecl_rft_node_ig
 cfunc_rft.lookup_ijk                = cwrapper.prototype("c_void_p ecl_rft_node_lookup_ijk( ecl_rft , int , int , int)")
 cfunc_rft.is_RFT                    = cwrapper.prototype("bool   ecl_rft_node_is_RFT( ecl_rft )")
 cfunc_rft.is_PLT                    = cwrapper.prototype("bool   ecl_rft_node_is_PLT( ecl_rft )")
-cfunc_rft.is_SEGMENT                = cwrapper.prototype("bool   ecl_rft_node_is_SEGMENT( ecl_rft
-
-    )")
+cfunc_rft.is_SEGMENT                = cwrapper.prototype("bool   ecl_rft_node_is_SEGMENT( ecl_rft )")
