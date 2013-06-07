@@ -23,7 +23,20 @@ from   ert.cwrap.cwrap       import *
 from   ert.cwrap.cclass      import CClass
 
 class RFTCell(CClass):
+    """The RFTCell is a base class for the cells which are part of an RFT/PLT.
     
+    The RFTCell class contains the elements which are common to both
+    RFT and PLT. The list of common elements include the corrdinates
+    (i,j,k) the pressure and the depth of the cell. Actual user access
+    should be based on the derived classes EclRFTCell and EclPLTCell.
+
+    Observe that from june 2013 the properties i,j and k which return
+    offset 1 coordinate values are deprecated, and you should rather
+    use the methods get_i(), get_j() and get_k() which return offset 0
+    coordinate values.
+    """
+
+
     def warn(self , old , new):
         msg = """ 
 
@@ -139,6 +152,14 @@ class EclPLTCell(RFTCell):
 
     @property
     def conn_start(self):
+        """Will return the length from wellhead(?) to connection.
+
+        For MSW wells this property will return the distance from a
+        fixed point (wellhead) to the current connection. This value
+        will be used to sort the completed cells along the well
+        path. In the case of non MSW wells this will just return a
+        fixed default value.
+        """
         return cfunc.get_conn_start( self )
 
     @property
