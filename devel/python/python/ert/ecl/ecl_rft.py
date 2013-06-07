@@ -128,11 +128,31 @@ class EclRFTFile(CClass):
 
 
 class EclRFT(CClass):
+    """The EclRFT class contains the information for *one* RFT.
+
+    The ECLIPSE RFT file can contain three different types of RFT like
+    objects which are lumped together; the EclRFTClass is a container
+    for such objects. The three different object types which can be
+    found in an RFT file are:
+   
+       RFT: This is old-fashioned RFT which contains measurements of
+            saturations for each of the completed cells.
+       
+       PLT: This contains production and flow rates for each phase in
+            each cell.
+
+       SEGMENT: Not implemented.
+
+    In addition to the measurements specific for RFT and PLT each cell
+    has coordinates, pressure and depth.
+    """
     def __init__(self , c_ptr , parent):
         self.init_cref( c_ptr , parent )
 
-
     def __len__(self):
+        """
+        The number of completed cells in this RFT.
+        """
         return cfunc_rft.get_size( self )
 
     def is_RFT(self):
