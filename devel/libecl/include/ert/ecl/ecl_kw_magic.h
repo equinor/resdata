@@ -230,7 +230,11 @@ extern "C" {
 #define CONGRAT_KW   "CONGRAT"  /* Gas ... */
 #define CONORAT_KW   "CONORAT"  /* Oil ... */
 #define CONPRES_KW   "CONPRES"  /* Pressure ... */
-
+#define CONLENST_KW  "CONLENST" /* Length along MSW well */ 
+#define CONVTUB_KW   "CONVTUB"  /* Volumetric flow at tubing head conditions. */ 
+#define CONOTUB_KW   "CONOTUB"  /* Volumetric oil flow at tubing head conditions. */ 
+#define CONGTUB_KW   "CONGTUB"  /* Volumetric gas flow at tubing head conditions. */ 
+#define CONWTUB_KW   "CONWTUB"  /* Volumetric water flow at tubing head conditions. */ 
 
 
 #define WELLETC_TYPE_INDEX  5 /* At this keyword the WELLETC keyword contains a string
