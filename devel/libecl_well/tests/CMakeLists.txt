@@ -21,6 +21,12 @@ add_test( well_state ${EXECUTABLE_OUTPUT_PATH}/well_state )
 add_executable( well_state_load well_state_load.c )
 target_link_libraries( well_state_load ecl_well )
 set_target_properties( well_state_load PROPERTIES COMPILE_FLAGS "-Werror")                                    
+
+add_executable( well_state_load_missing_RSEG well_state_load_missing_RSEG.c )
+target_link_libraries( well_state_load_missing_RSEG ecl_well )
+set_target_properties( well_state_load_missing_RSEG PROPERTIES COMPILE_FLAGS "-Werror")                                    
+
+
 add_test( well_state_load1 ${EXECUTABLE_OUTPUT_PATH}/well_state_load ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID
                                                                     ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.X0030)
 
@@ -32,6 +38,16 @@ add_test( well_state_load3 ${EXECUTABLE_OUTPUT_PATH}/well_state_load ${PROJECT_S
 
 add_test( well_state_load4 ${EXECUTABLE_OUTPUT_PATH}/well_state_load ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/LGR.EGRID
                                                                      ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/LGR.X0095)
+
+add_test( well_state_load5 ${EXECUTABLE_OUTPUT_PATH}/well_state_load ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC.EGRID
+                                                                     ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC.X0061)
+
+add_test( well_state_load_missing_RSEG1 ${EXECUTABLE_OUTPUT_PATH}/well_state_load_missing_RSEG ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC.EGRID
+                                                                                               ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC.X0061)
+
+add_test( well_state_load_missing_RSEG2 ${EXECUTABLE_OUTPUT_PATH}/well_state_load_missing_RSEG ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW/MSW.EGRID
+                                                                                               ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW/MSW.X0123)
+
 
 add_executable( well_segment well_segment.c )
 target_link_libraries( well_segment ecl_well )
@@ -100,6 +116,9 @@ set_property( TEST well_state_load1 PROPERTY LABELS StatoilData )
 set_property( TEST well_state_load2 PROPERTY LABELS StatoilData )
 set_property( TEST well_state_load3 PROPERTY LABELS StatoilData )
 set_property( TEST well_state_load4 PROPERTY LABELS StatoilData )
+set_property( TEST well_state_load5 PROPERTY LABELS StatoilData )
+set_property( TEST well_state_load_missing_RSEG1 PROPERTY LABELS StatoilData )
+set_property( TEST well_state_load_missing_RSEG2 PROPERTY LABELS StatoilData )
 set_property( TEST well_dualp PROPERTY LABELS StatoilData )
 set_property( TEST well_conn_load1 PROPERTY LABELS StatoilData )
 set_property( TEST well_conn_load2 PROPERTY LABELS StatoilData )
