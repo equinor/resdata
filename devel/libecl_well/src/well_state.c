@@ -377,7 +377,7 @@ bool well_state_add_MSW( well_state_type * well_state ,
     
     int segments;
 
-    if (ecl_file_has_kw( rst_file , RSEG_KW )) {
+    if (ecl_file_has_kw( rst_file , RSEG_KW )) 
       /* 
          Here we check that the file has the RSEG_KW keyword, and pass
          NULL if not. The rseg_kw pointer will later be used in
