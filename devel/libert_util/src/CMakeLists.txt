@@ -45,6 +45,10 @@ endif()
 
 add_library( ert_util  ${LIBRARY_TYPE}  ${source_files} )
 set_target_properties( ert_util PROPERTIES VERSION 1.0 SOVERSION 1.0 )
+if (USE_RUNPATH)
+   add_runpath( ert_util )
+endif()   
+
 
 if (WITH_PTHREAD)
   target_link_libraries( ert_util ${PTHREAD_LIBRARY} )

@@ -11,7 +11,7 @@ set( header_files ecl_rsthead.h ecl_sum_tstep.h ecl_rst_file.h ecl_init_file.h s
 add_library( ecl ${LIBRARY_TYPE} ${source_files} )
 set_target_properties( ecl PROPERTIES VERSION 1.0 SOVERSION 1.0 )
 if (USE_RUNPATH)
-   set_target_properties( ecl PROPERTIES LINK_FLAGS -Wl,--enable-new-dtags)
+   add_runpath( ecl )
 endif()
 
 #-----------------------------------------------------------------
