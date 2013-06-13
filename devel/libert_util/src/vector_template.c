@@ -132,9 +132,8 @@ typedef struct {
 } sort_node_type;
 
 
-
-UTIL_SAFE_CAST_FUNCTION(@TYPE@_vector , TYPE_VECTOR_ID);
-
+static UTIL_SAFE_CAST_FUNCTION(@TYPE@_vector , TYPE_VECTOR_ID);
+UTIL_IS_INSTANCE_FUNCTION(@TYPE@_vector , TYPE_VECTOR_ID);
 
 
 static void @TYPE@_vector_realloc_data__(@TYPE@_vector_type * vector , int new_alloc_size) {

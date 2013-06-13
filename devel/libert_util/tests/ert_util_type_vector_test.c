@@ -19,6 +19,7 @@
 #include <stdbool.h>
 
 #include <ert/util/int_vector.h>
+#include <ert/util/double_vector.h>
 #include <ert/util/test_util.h>
 
 void assert_equal( bool equal ) {
@@ -43,7 +44,9 @@ void test_div() {
 int main(int argc , char ** argv) {
   
   int_vector_type * int_vector = int_vector_alloc( 0 , 99);
-  
+
+  test_assert_true( int_vector_is_instance( int_vector ));
+  test_assert_false( double_vector_is_instance( int_vector ));
   int_vector_iset( int_vector , 2 , 0);       
   int_vector_insert( int_vector , 2 , 77 );   
   int_vector_iset( int_vector , 5 , -10);     
