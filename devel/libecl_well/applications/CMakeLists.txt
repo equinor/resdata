@@ -4,6 +4,10 @@ add_executable( segment_info segment_info.c )
 set(program_list well_info_test segment_info )
 foreach(prog ${program_list})
    target_link_libraries( ${prog} ecl_well ecl)
+   if (USE_RUNPATH)
+      add_runpath( ${prog} )
+   endif()   
+
    
    #-----------------------------------------------------------------
 
