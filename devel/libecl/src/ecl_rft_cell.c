@@ -345,7 +345,7 @@ int ecl_rft_cell_cmp( const ecl_rft_cell_type * cell1 , const ecl_rft_cell_type 
   else if (val1 == val2)
     return 0;
   else
-    return 0;
+    return 1;
     
 }
 
