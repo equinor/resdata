@@ -38,7 +38,7 @@ import os.path
 from   ert.job_queue.queue  import JobQueue
 import ert.job_queue.driver as queue_driver
 import libecl
-from   ecl_default import default
+import ecl_default 
 import ecl_util
 
 
@@ -158,8 +158,9 @@ class EclQueue( JobQueue ):
         self.ecl_cmd     = ecl_cmd
         if driver is None:
             if driver_options is None:
-                driver_options = default.driver_options[ driver_type ]
+                driver_options = ecl_default.default.driver_options[ driver_type ]
             driver = queue_driver.Driver( driver_type , max_running = max_running , options = driver_options )
+            
         JobQueue.__init__( self , driver , size = size)
 
         
