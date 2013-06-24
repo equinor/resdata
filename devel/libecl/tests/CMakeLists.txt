@@ -12,6 +12,9 @@ add_executable( ecl_region ecl_region.c )
 target_link_libraries( ecl_region ecl )
 add_test( ecl_region ${EXECUTABLE_OUTPUT_PATH}/ecl_region ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
 
+add_executable( ecl_region2region ecl_region2region_test.c )
+target_link_libraries( ecl_region2region ecl )
+add_test( ecl_region2region ${EXECUTABLE_OUTPUT_PATH}/ecl_region2region ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/R2R/R2R_hiddin.FSMSPEC ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/R2R/R2R.UNSMRY )
 
 add_executable( ecl_grid_case ecl_grid_case.c )
 target_link_libraries( ecl_grid_case ecl )
