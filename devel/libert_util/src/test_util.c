@@ -194,7 +194,7 @@ void test_assert_mem_not_equal__( const void * p1 , const void * p2 , size_t byt
 
 
 void test_assert_double_equal__( double d1 , double d2, const char * file , int line) {
-  if (!util_double_approx_equal(d1 , d2))
+  if (!util_double_approx_equal__(d1 , d2, 1e-5))
     test_error_exit( "%s:%d => double values:%g %g are not sufficiently similar\n" , file , line , d1 , d2);
 }
 
