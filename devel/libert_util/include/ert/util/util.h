@@ -329,6 +329,7 @@ typedef enum {left_pad   = 0,
   bool     util_files_equal( const char * file1 , const char * file2 );
   double   util_kahan_sum(const double *data, size_t N);
   bool     util_double_approx_equal( double d1 , double d2);
+  bool     util_double_approx_equal__( double d1 , double d2, double epsilon);
   int      util_fnmatch( const char * pattern , const char * string );
   void     util_localtime( time_t * t , struct tm * ts );
 
