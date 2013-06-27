@@ -4,10 +4,11 @@ add_python_package("Python ert.ecl"  ${PYTHON_INSTALL_PREFIX}/ert/ecl  "ecl_case
 set( ECL_LOCAL_TARGET  ""  CACHE FILE "Name of optional external ecl_local module")
 
 if (EXISTS ${ECL_LOCAL_TARGET})
-   if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ecl_local.py")
-      EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E create_symlink "${ECL_LOCAL_TARGET}" "${CMAKE_CURRENT_SOURCE_DIR}/ecl_local.py")            
-      message("-- Adding symlink ${CMAKE_CURRENT_SOURCE_DIR}/ecl_local.py -> ${ECL_LOCAL_TARGET}")
-   endif()
+   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ecl_local.py")
+      EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_CURRENT_SOURCE_DIR}/ecl_local.py")
+   endif() 
+
+   EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E create_symlink "${ECL_LOCAL_TARGET}" "${CMAKE_CURRENT_SOURCE_DIR}/ecl_local.py")            
 endif()
 
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ecl_local.py")

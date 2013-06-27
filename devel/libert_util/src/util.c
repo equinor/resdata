@@ -349,11 +349,10 @@ double util_kahan_sum(const double *data, size_t N) {
 }
 
 
-bool util_double_approx_equal( double d1 , double d2) {
+bool util_double_approx_equal__( double d1 , double d2, double epsilon) {
   if (d1 == d2)
     return true;
   else {
-    double epsilon = 1e-6;
     double diff = fabs(d1 - d2);
     double sum  = fabs(d1) + fabs(d2);
     
@@ -362,6 +361,12 @@ bool util_double_approx_equal( double d1 , double d2) {
     else
       return false;
   }
+}
+
+
+bool util_double_approx_equal( double d1 , double d2) {
+  double epsilon = 1e-6;
+  return util_double_approx_equal__( d1 , d2 , epsilon );
 }
 
 
@@ -2104,9 +2109,9 @@ int util_count_content_file_lines(FILE * stream) {
       if (! feof(stream) ) {
         if (!EOL_CHAR(c)){
           fseek(stream , -1 , SEEK_CUR);
-	}
+        }
       }else if (c == EOF){
-	lines++;
+        lines++;
       }
       
     } else if (c == EOF){
