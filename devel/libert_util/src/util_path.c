@@ -106,6 +106,7 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
   // Should be reimplemented to use mkstemp() 
   const int pid_digits    = 6;
   const int pid_max       = 1000000;
+  (void)pid_max; // Avoid compiler warning
   const int random_digits = 6;
   const int random_max    = 1000000;
 
