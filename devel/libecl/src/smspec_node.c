@@ -472,9 +472,11 @@ static void smspec_node_set_gen_keys( smspec_node_type * smspec_node , const cha
   case(ECL_SMSPEC_REGION_2_REGION_VAR):
     // KEYWORDS:RXF:NUM and RXF:R1-R2
     smspec_node->gen_key1 = smspec_alloc_region_2_region_num_key( key_join_string , smspec_node->keyword , smspec_node->num);
-    int r1 = smspec_node->num % 32768;
-    int r2 = ((smspec_node->num-r1) / 32768)-10;
-    smspec_node->gen_key2 = smspec_alloc_region_2_region_r1r2_key( key_join_string , smspec_node->keyword , r1, r2);
+    {
+      int r1 = smspec_node->num % 32768;
+      int r2 = ((smspec_node->num-r1) / 32768)-10;
+      smspec_node->gen_key2 = smspec_alloc_region_2_region_r1r2_key( key_join_string , smspec_node->keyword , r1, r2);
+    }
     break;
   case(ECL_SMSPEC_MISC_VAR):
     // KEYWORD
