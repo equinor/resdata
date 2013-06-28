@@ -98,7 +98,7 @@ void test_plt_cell() {
   const double wrat = 0.45;
   const double flowrate = 100.0;
   const double connection_start = 891;
-  const double connection_end = 300; 
+  const double connection_end = 979; 
   const double oil_flowrate = 0.891;
   const double gas_flowrate = 7771;
   const double water_flowrate = 77614;
