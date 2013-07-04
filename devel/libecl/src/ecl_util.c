@@ -1271,20 +1271,21 @@ int ecl_util_get_num_cpu(const char * data_file) {
     buffer[buffer_size] = '\0';
   
     {
-      stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , true );
+      stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , false );
       int i;
       char * item = NULL;
       for (i=0; i < stringlist_get_size( tokens ); i++) {
         item = util_realloc_string_copy( item , stringlist_iget( tokens , i ));
         util_strupr( item );
-        if ( util_string_equal( item , "DISTRIBUTED" )) {
+        if (( util_string_equal( item , "DISTRIBUTED" )) ||
+            ( util_string_equal( item , "\'DIST\'" ))) { 
           num_cpu = atoi( stringlist_iget( tokens , i - 1));
           break;
         }
       }
       free( item );  
       stringlist_free( tokens );
-    }
+    }  
     free( buffer );
   }
 
