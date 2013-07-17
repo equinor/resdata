@@ -126,9 +126,9 @@ class EclRFTCell(RFTCell):
 class EclPLTCell(RFTCell):
 
     @classmethod
-    def new(self , i , j , k , depth , pressure , orat , grat , wrat , conn_start , flowrate , oil_flowrate , gas_flowrate , water_flowrate ):
+    def new(self , i , j , k , depth , pressure , orat , grat , wrat , conn_start ,conn_end, flowrate , oil_flowrate , gas_flowrate , water_flowrate ):
         cell = EclPLTCell()
-        c_ptr = cfunc.alloc_PLT( i,j,k,depth,pressure,orat , grat , wrat , conn_start , flowrate , oil_flowrate , gas_flowrate , water_flowrate)
+        c_ptr = cfunc.alloc_PLT( i,j,k,depth,pressure,orat , grat , wrat , conn_start , conn_end, flowrate , oil_flowrate , gas_flowrate , water_flowrate)
         cell.init_cobj( c_ptr , cfunc.free )
         return cell
 
@@ -163,6 +163,18 @@ class EclPLTCell(RFTCell):
         return cfunc.get_conn_start( self )
 
     @property
+    def conn_end(self):
+        """Will return the length from wellhead(?) to connection end.
+
+        For MSW wells this property will return the distance from a
+        fixed point (wellhead) to the current connection end. This value
+        will be used to sort the completed cells along the well
+        path. In the case of non MSW wells this will just return a
+        fixed default value.
+        """
+        return cfunc.get_conn_end( self )
+
+    @property
     def flowrate(self):
         return cfunc.get_flowrate( self )
 
@@ -190,7 +202,7 @@ cwrapper.registerType( "ecl_plt_cell" , EclPLTCell )
 cfunc = CWrapperNameSpace("ecl_rft_cell")
 
 cfunc.alloc_RFT    = cwrapper.prototype("c_void_p ecl_rft_cell_alloc_RFT( int, int , int , double , double , double , double)")
-cfunc.alloc_PLT    = cwrapper.prototype("c_void_p ecl_rft_cell_alloc_PLT( int, int , int , double , double , double , double, double , double , double , double , double , double )")
+cfunc.alloc_PLT    = cwrapper.prototype("c_void_p ecl_rft_cell_alloc_PLT( int, int , int , double , double , double, double , double, double , double , double , double , double , double )")
 cfunc.free         = cwrapper.prototype("void ecl_rft_cell_free( rft_cell )")
 
 cfunc.get_pressure = cwrapper.prototype("double ecl_rft_cell_get_pressure( rft_cell )")
@@ -208,6 +220,7 @@ cfunc.get_grat = cwrapper.prototype("double ecl_rft_cell_get_grat( ecl_plt_cell 
 cfunc.get_wrat = cwrapper.prototype("double ecl_rft_cell_get_wrat( ecl_plt_cell )")
 
 cfunc.get_conn_start = cwrapper.prototype("double ecl_rft_cell_get_connection_start( ecl_plt_cell )")
+cfunc.get_conn_end   = cwrapper.prototype("double ecl_rft_cell_get_connection_end( ecl_plt_cell )")
 
 cfunc.get_flowrate       = cwrapper.prototype("double ecl_rft_cell_get_flowrate( ecl_plt_cell )")
 cfunc.get_oil_flowrate   = cwrapper.prototype("double ecl_rft_cell_get_oil_flowrate( ecl_plt_cell )")

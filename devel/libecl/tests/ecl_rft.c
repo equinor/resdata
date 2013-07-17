@@ -82,6 +82,7 @@ void test_plt_msw( const char * plt_file ) {
       const ecl_rft_cell_type * this_cell = ecl_rft_node_iget_cell( plt_node , i );
 
       test_assert_true( ecl_rft_cell_get_connection_start( prev_cell ) < ecl_rft_cell_get_connection_start( this_cell ));
+      test_assert_true( ecl_rft_cell_get_connection_end( prev_cell ) < ecl_rft_cell_get_connection_end( this_cell ));
     }
   }
 
