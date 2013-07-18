@@ -19,7 +19,7 @@
 #include <stdbool.h>
 
 #include <ert/util/test_util.h>
-
+#include <ert/ecl/ecl_util.h>
    
 
 int main(int argc , char ** argv) {
