@@ -269,8 +269,15 @@ extern "C" {
                                        the second element will be the name of the parent. */
 #define MAPUNITS_KW    "MAPUNITS"
 #define GRIDUNIT_KW    "GRIDUNIT"
-
-
+  
+#define NNCHEAD_KW     "NNCHEAD"   /*Non-neighbour connection header*/           
+#define NNC1_KW        "NNC1"      /*Upstream cell numbers for non-neighbour connections*/           
+#define NNC2_KW        "NNC2"      /*Downstream cell numbers for non-neighbour connections*/    
+#define NNCL_KW        "NNCL"      /*Cell numbers for LGR cells that are connected to global grid cells*/           
+#define NNCG_KW        "NNCG"      /*Cell numbers for global cells connected to LGR cells*/     
+#define NNCHEAD_NUMNNC_INDEX  0    /*Item 1 in non-neighbour connection header: number of NNCs. Only present for main grid*/
+#define NNCHEAD_LGR_INDEX     1    /*Item 2 in non-neighbour connection header: LGR number (0 for global grid)*/
+  
 /* EGRID keywords */
 #define LGR_PARENT_KW  "LGRPARNT"   /* The name of the parent for an LGR. */
 #define COORDS_KW      "COORDS"     /* The (x,y) coordinates of the top and bottom of the pillars constituting the grid. */
@@ -282,7 +289,7 @@ extern "C" {
 #define ENDGRID_KW     "ENDGRID"
 #define ENDLGR_KW      "ENDLGR"
 #define CORSNUM_KW     "CORSNUM"
-
+  
 /* GRID keywords */
 #define GRIDHEAD_KW    "GRIDHEAD"   /* Header information for GRID files. */
 #define COORD_KW       "COORD"      /* Header information for one cell in GRID file. */
@@ -298,7 +305,7 @@ extern "C" {
 #define GRIDHEAD_NZ_INDEX     3
 #define GRIDHEAD_LGR_INDEX    4
 #define GRIDHEAD_SIZE       100
-
+  
 /* Observe that these indices are one value lower than the values used
    in the ecl_smspec file. */
 #define DIMENS_NX_INDEX     0

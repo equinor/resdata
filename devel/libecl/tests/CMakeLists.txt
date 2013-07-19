@@ -45,6 +45,11 @@ add_test( ecl_grid_dims5 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_dims  ${PROJECT_SOUR
                                                                   ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/AmalgLGRcase/TESTCASE_AMALG_LGR.INIT )
 
 
+add_executable( ecl_nnc_test ecl_nnc_test.c )
+target_link_libraries( ecl_nnc_test ecl )
+add_test (ecl_nnc_test ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_test  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID 
+                                                               ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC.EGRID
+                                                               ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID )
 
 
 
@@ -116,6 +121,7 @@ set_property( TEST ecl_grid_dims2 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_dims3 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_dims4 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_dims5 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_nnc_test PROPERTY LABELS StatoilData )
 set_property( TEST ecl_file PROPERTY LABELS StatoilData)
 set_property( TEST ecl_rsthead PROPERTY LABELS StatoilData)
 set_property( TEST ecl_region PROPERTY LABELS StatoilData)
