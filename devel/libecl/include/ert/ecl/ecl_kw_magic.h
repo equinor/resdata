@@ -232,6 +232,7 @@ extern "C" {
 #define CONORAT_KW   "CONORAT"  /* Oil ... */
 #define CONPRES_KW   "CONPRES"  /* Pressure ... */
 #define CONLENST_KW  "CONLENST" /* Length along MSW well */ 
+#define CONLENEN_KW  "CONLENEN" /* Length to connection end for MSW well */   
 #define CONVTUB_KW   "CONVTUB"  /* Volumetric flow at tubing head conditions. */ 
 #define CONOTUB_KW   "CONOTUB"  /* Volumetric oil flow at tubing head conditions. */ 
 #define CONGTUB_KW   "CONGTUB"  /* Volumetric gas flow at tubing head conditions. */ 

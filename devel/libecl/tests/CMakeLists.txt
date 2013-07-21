@@ -102,6 +102,9 @@ add_executable( ecl_rft_cell ecl_rft_cell.c )
 target_link_libraries( ecl_rft_cell ecl )
 add_test( ecl_rft_cell ${EXECUTABLE_OUTPUT_PATH}/ecl_rft_cell )
 
+add_executable( ecl_get_num_cpu ecl_get_num_cpu_test.c )
+target_link_libraries( ecl_get_num_cpu ecl )
+add_test( ecl_get_num_cpu ${EXECUTABLE_OUTPUT_PATH}/ecl_get_num_cpu ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu1 ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu2)
 
 set_property( TEST ecl_fmt         PROPERTY LABELS StatoilData )
 set_property( TEST ecl_coarse_test PROPERTY LABELS StatoilData )
