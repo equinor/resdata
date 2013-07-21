@@ -1277,14 +1277,15 @@ int ecl_util_get_num_cpu(const char * data_file) {
       for (i=0; i < stringlist_get_size( tokens ); i++) {
         item = util_realloc_string_copy( item , stringlist_iget( tokens , i ));
         util_strupr( item );
-        if ( util_string_equal( item , "DISTRIBUTED" )) {
+        if (( util_string_equal( item , "DISTRIBUTED" )) || 
+            ( util_string_equal( item , "DIST" ))) { 
           num_cpu = atoi( stringlist_iget( tokens , i - 1));
           break;
         }
       }
       free( item );  
       stringlist_free( tokens );
-    }
+    }  
     free( buffer );
   }
 
