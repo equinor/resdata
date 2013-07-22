@@ -1376,3 +1376,25 @@ bool ecl_sum_data_report_step_equal( const ecl_sum_data_type * data1 , const ecl
 
   return equal;
 }
+
+
+bool ecl_sum_data_report_step_compatible( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2) {
+  bool compatible = true;
+  int min_size = util_int_min( int_vector_size( data1->report_last_index ) , int_vector_size( data2->report_last_index));
+  int i; 
+  for (i = 0; i < min_size; i++) {
+    int time_index1 = int_vector_iget( data1->report_last_index , i );
+    int time_index2 = int_vector_iget( data2->report_last_index , i );
+
+    if ((time_index1 != INVALID_MINISTEP_NR) && (time_index2 != INVALID_MINISTEP_NR)) {
+      const ecl_sum_tstep_type * ministep1 = ecl_sum_data_iget_ministep( data1 , time_index1 );
+      const ecl_sum_tstep_type * ministep2 = ecl_sum_data_iget_ministep( data2 , time_index2 );
+      
+      if (!ecl_sum_tstep_sim_time_equal( ministep1 , ministep2)) {
+        compatible = false;
+        break;
+      }
+    } 
+  } 
+  return compatible;
+}

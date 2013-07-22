@@ -1191,4 +1191,12 @@ bool ecl_sum_report_step_equal( const ecl_sum_type * ecl_sum1 , const ecl_sum_ty
 }
 
 
+bool ecl_sum_report_step_compatible( const ecl_sum_type * ecl_sum1 , const ecl_sum_type * ecl_sum2) {
+  if (ecl_sum1 == ecl_sum2)
+    return true; 
+  else
+    return ecl_sum_data_report_step_compatible( ecl_sum1->data , ecl_sum2->data );
+}
+
+
 
