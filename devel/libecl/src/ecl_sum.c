@@ -1183,6 +1183,12 @@ bool ecl_sum_is_oil_producer( const ecl_sum_type * ecl_sum , const char * well) 
 
 
 
+bool ecl_sum_tstep_equal( const ecl_sum_type * ecl_sum1 , const ecl_sum_type * ecl_sum2) {
+  if (ecl_sum1 == ecl_sum2)
+    return true; 
+  else
+    return ecl_sum_data_tstep_equal( ecl_sum1->data , ecl_sum2->data );
+}
 
 
 
