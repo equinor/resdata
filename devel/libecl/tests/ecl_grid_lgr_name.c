@@ -1,7 +1,7 @@
 /*
-   Copyright (C) 2012  Statoil ASA, Norway. 
+   Copyright (C) 2013  Statoil ASA, Norway. 
     
-   The file 'ecl_get_num_cpu_test.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'ecl_grid_lgr_name.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -18,16 +18,21 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <ert/util/util.h>
 #include <ert/util/test_util.h>
-#include <ert/ecl/ecl_util.h>
-   
+
+#include <ert/ecl/ecl_grid.h>
+
+
 
 int main(int argc , char ** argv) {
-  const char * filename1 = argv[1];
-  const char * filename2 = argv[2];
-  int num_cpu = 4;
-  test_assert_int_equal(ecl_util_get_num_cpu(filename1), num_cpu);
-  test_assert_int_equal(ecl_util_get_num_cpu(filename2), num_cpu);
+  const char * grid_file = argv[1];
+  ecl_grid_type * ecl_grid = ecl_grid_alloc( grid_file );
+  
+  test_assert_int_equal( 1 , ecl_grid_get_num_lgr( ecl_grid ));
+  test_assert_string_equal( "LGR1" , ecl_grid_iget_lgr_name( ecl_grid , 0 ));
+  test_assert_string_equal( NULL , ecl_grid_iget_lgr_name( ecl_grid , 1 ));
+
+  ecl_grid_free( ecl_grid );
   exit(0);
 }
-

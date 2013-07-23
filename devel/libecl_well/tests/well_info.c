@@ -1,7 +1,7 @@
 /*
-   Copyright (C) 2012  Statoil ASA, Norway. 
+   Copyright (C) 2013  Statoil ASA, Norway. 
     
-   The file 'ecl_get_num_cpu_test.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'well_conn.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -19,15 +19,26 @@
 #include <stdbool.h>
 
 #include <ert/util/test_util.h>
+#include <ert/util/stringlist.h>
+#include <ert/util/util.h>
+
 #include <ert/ecl/ecl_util.h>
-   
+#include <ert/ecl/ecl_grid.h>
+
+
+#include <ert/ecl_well/well_info.h>
+
 
 int main(int argc , char ** argv) {
-  const char * filename1 = argv[1];
-  const char * filename2 = argv[2];
-  int num_cpu = 4;
-  test_assert_int_equal(ecl_util_get_num_cpu(filename1), num_cpu);
-  test_assert_int_equal(ecl_util_get_num_cpu(filename2), num_cpu);
+  const char * grid_file    = argv[1];
+  
+  ecl_grid_type * grid = ecl_grid_alloc( grid_file );
+  test_assert_not_NULL( grid );
+  {
+    well_info_type * well_info = well_info_alloc( grid );
+    test_assert_not_NULL( well_info );
+    well_info_free( well_info );
+  }
+  ecl_grid_free( grid );
   exit(0);
 }
-
