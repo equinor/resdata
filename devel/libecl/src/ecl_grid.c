@@ -1127,7 +1127,8 @@ static void ecl_grid_taint_cells( ecl_grid_type * ecl_grid ) {
 
 static void ecl_grid_free_cells( ecl_grid_type * grid ) {
 
-  for (int i=0; i < grid->size; i++) {
+  int i;
+  for (i=0; i < grid->size; i++) {
     ecl_cell_type * cell = ecl_grid_get_cell( grid , i );
     if (cell->nnc_info)
       nnc_info_free(cell->nnc_info);
@@ -2028,7 +2029,8 @@ static ecl_grid_type * ecl_grid_iget_lgr_nr(const ecl_grid_type * main_grid, int
  */
 static void ecl_grid_init_nnc_cells (ecl_grid_type * ecl_grid, int numnnc,  const int * nnc1, const int * nnc2) {
   if ((numnnc > 0) && (ecl_grid)) { 
-    for (int i = 0; i < numnnc; i++) {
+    int i;
+    for (i = 0; i < numnnc; i++) {
       ecl_cell_type * cell = ecl_grid_get_cell(ecl_grid ,nnc1[i] - 1);
       if (cell) {
         if (!cell->nnc_info) {
@@ -2060,7 +2062,8 @@ static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_fil
   int num_nncg_kw            = ecl_file_get_num_named_kw( ecl_file , NNCG_KW );
   int lgr_nr                 = 0;
       
-  for (int i = 0; i < num_nnchead_kw; i++) { 
+  int i; 
+  for (i = 0; i < num_nnchead_kw; i++) { 
     
     nnchead_kw = ecl_file_iget_named_kw( ecl_file , NNCHEAD_KW , i);
     lgr_nr = ecl_kw_iget_int(nnchead_kw, NNCHEAD_LGR_INDEX);  

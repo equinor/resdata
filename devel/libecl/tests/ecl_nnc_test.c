@@ -38,7 +38,8 @@ void test_nnc_global_grid( const char * grid_filename ) {
   
   test_assert_int_equal(int_vector_size(nnc_info->nnc_cell_numbers), (sizeof(data)/sizeof(data[0])));
   
-  for (int i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++) 
+  int i;
+  for (i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++) 
     test_assert_int_equal(int_vector_iget(nnc_info->nnc_cell_numbers, i), data[i]); 
   
   ecl_grid_free(ecl_grid);
@@ -68,7 +69,8 @@ void test_nnc_lgr( const char * grid_filename ) {
   
   test_assert_int_equal(int_vector_size(lgr_nnc_info->nnc_cell_numbers), (sizeof(data)/sizeof(data[0])));
   
-  for (int i = 0; i < int_vector_size(lgr_nnc_info->nnc_cell_numbers); i++)
+  int i;
+  for (i = 0; i < int_vector_size(lgr_nnc_info->nnc_cell_numbers); i++)
     test_assert_int_equal(int_vector_iget(lgr_nnc_info->nnc_cell_numbers, i), data[i]); 
   
   ecl_grid_free(ecl_grid);
@@ -90,7 +92,8 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     test_assert_int_equal(int_vector_size(nnc_info->nnc_cell_numbers), (sizeof(data)/sizeof(data[0])));
     
-    for (int i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
+    int i;
+    for (i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
       test_assert_int_equal(int_vector_iget(nnc_info->nnc_cell_numbers, i), data[i]); 
   }
   
@@ -101,7 +104,8 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(ecl_grid, 138291);
     test_assert_not_NULL(nnc_info); 
     
-    for (int i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
+    int i;
+    for (i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
       test_assert_int_equal(int_vector_iget(nnc_info->nnc_cell_numbers, i), data[i]); 
   } 
   
@@ -118,7 +122,8 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     test_assert_int_equal(int_vector_size(nnc_info->nnc_cell_numbers), (sizeof(data)/sizeof(data[0])));
     
-    for (int i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
+    int i;
+    for (i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
       test_assert_int_equal(int_vector_iget(nnc_info->nnc_cell_numbers, i), data[i]); 
   }
   
@@ -134,7 +139,8 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     test_assert_int_equal(int_vector_size(nnc_info->nnc_cell_numbers), (sizeof(data)/sizeof(data[0])));
     
-    for (int i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
+    int i;
+    for (i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
       test_assert_int_equal(int_vector_iget(nnc_info->nnc_cell_numbers, i), data[i]); 
   }
   
@@ -150,7 +156,8 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     test_assert_int_equal(int_vector_size(nnc_info->nnc_cell_numbers), (sizeof(data)/sizeof(data[0])));
     
-    for (int i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
+    int i;
+    for (i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
       test_assert_int_equal(int_vector_iget(nnc_info->nnc_cell_numbers, i), data[i]); 
   }
   
@@ -166,7 +173,8 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     test_assert_int_equal(int_vector_size(nnc_info->nnc_cell_numbers), (sizeof(data)/sizeof(data[0])));
     
-    for (int i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
+    int i;
+    for (i = 0; i < int_vector_size(nnc_info->nnc_cell_numbers); i++)
       test_assert_int_equal(int_vector_iget(nnc_info->nnc_cell_numbers, i), data[i]); 
   }
   
