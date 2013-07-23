@@ -30,6 +30,7 @@ extern "C" {
 #include <ert/ecl/ecl_coarse_cell.h>
 #include <ert/ecl/ecl_kw.h>  
 #include <ert/ecl/grid_dims.h>
+#include <ert/ecl/nnc_info.h>
 
 #define ECL_GRID_GLOBAL_GRID   "Global"  // used as key in hash tables over grids.
 
@@ -78,9 +79,9 @@ extern "C" {
   int             ecl_grid_get_global_index1A(const ecl_grid_type * ecl_grid , int active_index);
   int             ecl_grid_get_global_index1F(const ecl_grid_type * ecl_grid , int active_fracture_index);
      
-  const int_vector_type * ecl_grid_get_cell_nnc_global3( const ecl_grid_type * grid , int i , int j , int k); 
-  const int_vector_type * ecl_grid_get_cell_nnc_global1( const ecl_grid_type * grid , int global_index); 
-    
+  const nnc_info_type * ecl_grid_get_cell_nnc_info3( const ecl_grid_type * grid , int i , int j , int k); 
+  const nnc_info_type * ecl_grid_get_cell_nnc_info1( const ecl_grid_type * grid , int global_index); 
+  
   ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz , const ecl_kw_type * zcorn_kw , const ecl_kw_type * coord_kw , const ecl_kw_type * actnum_kw , const ecl_kw_type * mapaxes_kw );
   ecl_grid_type * ecl_grid_alloc_GRDECL_data(int , int , int , const float *  , const float *  , const int * , const float * mapaxes);
   ecl_grid_type * ecl_grid_alloc_GRID_data(int num_coords , int nx, int ny , int nz , int coords_size , int ** coords , float ** corners , const float * mapaxes);

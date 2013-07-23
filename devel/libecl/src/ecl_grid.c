@@ -467,8 +467,7 @@ struct ecl_cell_struct {
   int                    host_cell;          /* the global index of the host cell for an lgr cell, set to -1 for normal cells. */
   int                    coarse_group;       /* The index of the coarse group holding this cell -1 for non-coarsened cells. */
   int                    cell_flags;
-  int_vector_type      * nnc_list_global;    /* List of non-neighbour connection cell numbers(global indexes). Fluid can flow between grid cells that are 
-                                                not obviously geometric connections*/
+  nnc_info_type        * nnc_info;           /* Non-neighbour connection info*/
 };  
 
 
@@ -830,7 +829,7 @@ static void ecl_cell_init( ecl_cell_type * cell , bool init_valid) {
   if (init_valid)
     cell->cell_flags = CELL_FLAG_VALID;
   
-  cell->nnc_list_global = NULL;
+  cell->nnc_info = NULL;
 }
 
 
@@ -1130,8 +1129,8 @@ static void ecl_grid_free_cells( ecl_grid_type * grid ) {
 
   for (int i=0; i < grid->size; i++) {
     ecl_cell_type * cell = ecl_grid_get_cell( grid , i );
-    if (cell->nnc_list_global)
-      int_vector_free(cell->nnc_list_global);
+    if (cell->nnc_info)
+      nnc_info_free(cell->nnc_info);
   }
 
 #ifndef LARGE_CELL_MALLOC
@@ -2025,17 +2024,17 @@ static ecl_grid_type * ecl_grid_iget_lgr_nr(const ecl_grid_type * main_grid, int
 
 
 /*
-  This function populates the nnc_list_global for cells with non neighbour connections to global cells
+  This function populates nnc_info for cells with non neighbour connections
  */
 static void ecl_grid_init_nnc_cells (ecl_grid_type * ecl_grid, int numnnc,  const int * nnc1, const int * nnc2) {
   if ((numnnc > 0) && (ecl_grid)) { 
     for (int i = 0; i < numnnc; i++) {
       ecl_cell_type * cell = ecl_grid_get_cell(ecl_grid ,nnc1[i] - 1);
       if (cell) {
-        if (!cell->nnc_list_global) {
-          cell->nnc_list_global = int_vector_alloc(0, 0); 
+        if (!cell->nnc_info) {
+          cell->nnc_info = nnc_info_alloc(); 
         } 
-        int_vector_append(cell->nnc_list_global, nnc2[i] - 1);
+        nnc_info_add_nnc(cell->nnc_info, nnc2[i] - 1, 0);
       }
       else
       {
@@ -3468,22 +3467,18 @@ double ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j 
 
 
 
-/*
-  Returns a pointer to a vector with global indexes to global cells that the given cell has a non-neighbour connection to. NULL if 0 connections 
- */
-const int_vector_type * ecl_grid_get_cell_nnc_global1( const ecl_grid_type * grid , int global_index ) {
+
+const nnc_info_type * ecl_grid_get_cell_nnc_info1( const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
-  return cell->nnc_list_global;
-}
+  return cell->nnc_info;
+} 
 
 
-/*
-  Returns a pointer to a vector with global indexes to global cells that the given cell has a non-neighbour connection to. NULL if 0 connections
- */
-const int_vector_type * ecl_grid_get_cell_nnc_global3( const ecl_grid_type * grid , int i , int j , int k) {
+
+const nnc_info_type * ecl_grid_get_cell_nnc_info3( const ecl_grid_type * grid , int i , int j , int k) {
   const int global_index = ecl_grid_get_global_index3(grid , i,j,k);
   const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
-  return cell->nnc_list_global;
+  return cell->nnc_info;
 }
 
 
