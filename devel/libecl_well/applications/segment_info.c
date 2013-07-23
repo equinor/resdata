@@ -79,7 +79,7 @@ int main(int argc , char ** argv) {
               printf("Branch      : %d \n",well_segment_get_branch_id( segment ));
               printf("Connections : [");
               {
-                well_conn_collection_type * connections = well_segment_get_global_connections( segment );
+                const well_conn_collection_type * connections = well_segment_get_global_connections( segment );
                 if (connections) {
                   int ic;
                   for (ic = 0; ic < well_conn_collection_get_size( connections ); ic++) {
