@@ -22,13 +22,22 @@
 #include <ert/util/util.h>
 
 
+
+
+struct nnc_info_struct {
+  int_vector_type * nnc_cell_numbers;
+}; 
+
+
+
 nnc_info_type * nnc_info_alloc() {
   nnc_info_type * nnc_info = util_malloc( sizeof * nnc_info );
   nnc_info->nnc_cell_numbers = int_vector_alloc(0,0); 
   return nnc_info; 
+  return NULL; 
 }
 
-void nnc_info_add_nnc(nnc_info_type * nnc_info, int global_cell_number, int lgr_nr) {
+void nnc_info_add_nnc(nnc_info_type * nnc_info, int global_cell_number) {
   int_vector_append(nnc_info->nnc_cell_numbers, global_cell_number); 
 }
 
@@ -36,3 +45,8 @@ void nnc_info_free( nnc_info_type * nnc_info ) {
   int_vector_free(nnc_info->nnc_cell_numbers);
   free (nnc_info); 
 }
+
+int_vector_type * get_nnc_info_cell_numbers(nnc_info_type * nnc_info) {
+  return nnc_info->nnc_cell_numbers;
+}
+

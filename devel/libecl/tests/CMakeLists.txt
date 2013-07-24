@@ -56,6 +56,9 @@ add_test (ecl_nnc_test ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_test  ${PROJECT_SOURCE_
                                                                ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC.EGRID
                                                                ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID )
 
+add_executable( ecl_nnc_info_test ecl_nnc_info_test.c )
+target_link_libraries( ecl_nnc_info_test ecl )
+add_test (ecl_nnc_info_test ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_info_test )
 
 
 add_executable( ecl_kw_grdecl ecl_kw_grdecl.c )

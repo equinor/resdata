@@ -25,13 +25,15 @@ extern "C" {
   
 #include <ert/util/int_vector.h>  
 
-typedef struct {
-  int_vector_type * nnc_cell_numbers;
-} nnc_info_type;
+  
 
-  nnc_info_type * nnc_info_alloc();   
-  void            nnc_info_add_nnc(nnc_info_type * nnc_info, int global_cell_number, int lgr_nr); 
-  void            nnc_info_free( nnc_info_type * nnc_info );
+  typedef struct nnc_info_struct nnc_info_type; 
+  
+  
+  nnc_info_type   * nnc_info_alloc();   
+  void              nnc_info_add_nnc(nnc_info_type * nnc_info, int global_cell_number); 
+  void              nnc_info_free( nnc_info_type * nnc_info );
+  int_vector_type * get_nnc_info_cell_numbers();
  
   
 #ifdef __cplusplus

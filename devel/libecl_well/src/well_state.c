@@ -337,15 +337,15 @@ static void well_state_add_LGR_connections( well_state_type * well_state , const
   // grid and as wellhead.
   int num_lgr = ecl_grid_get_num_lgr( grid );
   int lgr_nr;
-  for (lgr_nr = 0; lgr_nr < num_lgr; lgr_nr++) {
+  for (lgr_nr = 1; lgr_nr <= num_lgr; lgr_nr++) {
     ecl_file_push_block( ecl_file );                                  // <-------------------------//
     {                                                                                              //
-      ecl_file_subselect_block( ecl_file , LGR_KW , lgr_nr );                                      //
+      ecl_file_subselect_block( ecl_file , LGR_KW , lgr_nr-1 );                                      //
       {                                                                                            //  Restrict the file view
-        const char * grid_name = ecl_grid_iget_lgr_name( grid , lgr_nr );                          //
+        const char * grid_name = ecl_grid_get_lgr_name( grid , lgr_nr);                          //
         int well_nr = well_state_get_lgr_well_nr( well_state , ecl_file );                         //  to one LGR block.
         if (well_nr >= 0)                                                                          //
-          well_state_add_connections__( well_state , ecl_file , grid_name , lgr_nr + 1, well_nr ); //
+          well_state_add_connections__( well_state , ecl_file , grid_name , lgr_nr, well_nr ); //
       }                                                                                            //
     }                                                                                              //
     ecl_file_pop_block( ecl_file );                                   // <-------------------------//

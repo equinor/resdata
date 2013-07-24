@@ -2017,9 +2017,9 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
    The lgr nr is equal to the grid nr if the grid's are consecutive numbered and read from file in increasing 
    lgr nr order. This method can only be used for EGRID files. For GRID files the lgr_nr is 0 for all grids.
  */
-static ecl_grid_type * ecl_grid_iget_lgr_nr(const ecl_grid_type * main_grid, int lgr_nr) {
+static ecl_grid_type * ecl_grid_get_lgr_from_nr(const ecl_grid_type * main_grid, int lgr_nr) {
   int index = int_vector_iget(main_grid->lgr_index_map, lgr_nr);
-  return ecl_grid_iget_lgr(main_grid, index-1); 
+  return ecl_grid_iget_lgr(main_grid, index); 
 }
 
 
@@ -2036,7 +2036,7 @@ static void ecl_grid_init_nnc_cells (ecl_grid_type * ecl_grid, int numnnc,  cons
         if (!cell->nnc_info) {
           cell->nnc_info = nnc_info_alloc(); 
         } 
-        nnc_info_add_nnc(cell->nnc_info, nnc2[i] - 1, 0);
+        nnc_info_add_nnc(cell->nnc_info, nnc2[i] - 1);
       }
       else
       {
@@ -2069,9 +2069,9 @@ static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_fil
     lgr_nr = ecl_kw_iget_int(nnchead_kw, NNCHEAD_LGR_INDEX);  
     
     int nnc_lgr_index = (num_nnchead_kw == num_nncg_kw) ? i : i-1; //Subtract 1 if no nnc data for main grid
-    ecl_grid_type * grid = NULL;
+    ecl_grid_type * grid = ecl_grid_get_lgr_from_nr(main_grid, lgr_nr); 
     int numnnc = 0; 
-        
+    
     if (0 == lgr_nr) {
       nnc1_kw = ecl_file_iget_named_kw( ecl_file , NNC1_KW , i);
       nnc2_kw = ecl_file_iget_named_kw( ecl_file , NNC2_KW , i);
@@ -2079,14 +2079,12 @@ static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_fil
       numnnc  = ecl_kw_iget_int(nnchead_kw, NNCHEAD_NUMNNC_INDEX);
       nnc1_data = ecl_kw_get_int_ptr(nnc1_kw);
       nnc2_data = ecl_kw_get_int_ptr(nnc2_kw);
-      grid = main_grid; 
     } else {
       nncl_kw = ecl_file_iget_named_kw( ecl_file , NNCL_KW , nnc_lgr_index);
       nncg_kw = ecl_file_iget_named_kw( ecl_file , NNCG_KW , nnc_lgr_index);
       nnc1_data = ecl_kw_get_int_ptr(nncl_kw);
       nnc2_data = ecl_kw_get_int_ptr(nncg_kw);
       numnnc = ecl_kw_get_size(nncl_kw); 
-      grid = ecl_grid_iget_lgr_nr(main_grid, lgr_nr); 
     }
     
         
@@ -3140,14 +3138,11 @@ int ecl_grid_get_nactive( const ecl_grid_type * grid ) {
 }
 
 
-grid_dims_type  ecl_grid_iget_dims( const ecl_grid_type * grid , int grid_nr) {
+grid_dims_type  ecl_grid_iget_dims( const ecl_grid_type * grid , int lgr_nr) {
   grid_dims_type dims;
   const ecl_grid_type * lgr;
 
-  if (grid_nr == 0) 
-    lgr = grid;
-  else
-    lgr = ecl_grid_iget_lgr( grid , grid_nr - 1 );
+  lgr = ecl_grid_get_lgr_from_nr( grid , lgr_nr);
   
   dims.nx = lgr->nx;
   dims.ny = lgr->ny;
@@ -3593,16 +3588,15 @@ int ecl_grid_get_num_lgr(const ecl_grid_type * main_grid ) {
 }
 
 /**
-   The lgr_nr has zero offset, not counting the main grid, i.e.
-
-      ecl_grid_iget_lgr( ecl_grid , 0);
-   
-   will return the first LGR - and fail HARD if there are no LGR's.
+   The lgr_index has zero offset, counting the main grid, i.e.
+   ecl_grid_iget_lgr( ecl_grid , 0); will return the main grid
+   ecl_grid_iget_lgr( ecl_grid , 1); will return the the first lgr
+   The method will fail HARD if lgr_index is out of bounds.
 */
 
-ecl_grid_type * ecl_grid_iget_lgr(const ecl_grid_type * main_grid, int lgr_nr) {
+ecl_grid_type * ecl_grid_iget_lgr(const ecl_grid_type * main_grid, int lgr_index) {
   __assert_main_grid( main_grid );
-  return vector_iget(  main_grid->LGR_list , lgr_nr + 1);
+  return vector_iget(  main_grid->LGR_list , lgr_index);
 }
 
 
@@ -3662,10 +3656,10 @@ stringlist_type * ecl_grid_alloc_lgr_name_list(const ecl_grid_type * ecl_grid) {
   }
 }
 
-const char * ecl_grid_iget_lgr_name( const ecl_grid_type * ecl_grid , int lgr_nr) {
+const char * ecl_grid_get_lgr_name( const ecl_grid_type * ecl_grid , int lgr_nr) {
   __assert_main_grid( ecl_grid );
-  if (lgr_nr < (vector_get_size( ecl_grid->LGR_list ) - 1)) {
-    const ecl_grid_type * lgr = vector_iget( ecl_grid->LGR_list , lgr_nr + 1);
+  if (lgr_nr < (vector_get_size( ecl_grid->LGR_list ))) {
+    const ecl_grid_type * lgr = ecl_grid_get_lgr_from_nr(ecl_grid, lgr_nr); 
     return lgr->name;
   } else 
     return NULL;
@@ -3681,10 +3675,6 @@ const char * ecl_grid_iget_lgr_name( const ecl_grid_type * ecl_grid , int lgr_nr
    grid, and then increasing consecutively through the lgr sections.
    For EGRID files, this is the LGR number (fourth element in the 
    gridhead).
-   Observe that there is A MAJOR POTENTIAL for confusion with the
-   ecl_grid_iget_lgr() function, the latter does not refer to the main
-   grid and returns the first lgr section (which has grid_nr == 1) for
-   input argument 0.
 */
 
 

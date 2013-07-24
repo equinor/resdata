@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2013  Statoil ASA, Norway. 
     
-   The file 'ecl_grid_lgr_name.c' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'ecl_nnc_info_test.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -18,21 +18,25 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
 #include <ert/util/test_util.h>
+#include <ert/util/util.h>
 
+#include <ert/util/int_vector.h>
 #include <ert/ecl/ecl_grid.h>
-
-
+#include <ert/ecl/nnc_info.h>
+ 
 
 int main(int argc , char ** argv) {
-  const char * grid_file = argv[1];
-  ecl_grid_type * ecl_grid = ecl_grid_alloc( grid_file );
+  nnc_info_type * nnc_info = nnc_info_alloc();   
+  test_assert_not_NULL(nnc_info); 
   
-  test_assert_int_equal( 1 , ecl_grid_get_num_lgr( ecl_grid ));
-  test_assert_string_equal( "LGR1" , ecl_grid_get_lgr_name( ecl_grid , 1 ));
-  test_assert_string_equal( NULL , ecl_grid_get_lgr_name( ecl_grid , 2 ));
-
-  ecl_grid_free( ecl_grid );
+  nnc_info_add_nnc(nnc_info, 110);
+  nnc_info_add_nnc(nnc_info, 111);
+  
+  int_vector_type * nnc_cells = get_nnc_info_cell_numbers(nnc_info); 
+  test_assert_int_equal(int_vector_size(nnc_cells), 2); 
+  
+  nnc_info_free(nnc_info);
+  
   exit(0);
 }
