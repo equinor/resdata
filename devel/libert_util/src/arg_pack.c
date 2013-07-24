@@ -559,7 +559,9 @@ void arg_pack_append_owned_ptr(arg_pack_type * arg_pack, void * ptr, arg_node_fr
   arg_pack_iset_owned_ptr( arg_pack , arg_pack->size , ptr , freef);
 }
 
-
+int arg_pack_size( const arg_pack_type * arg_pack ) {
+  return arg_pack->size;
+}
 
 /******************************************************************/
 /* Functions for formatted reading/writing of arg_pack instances. */

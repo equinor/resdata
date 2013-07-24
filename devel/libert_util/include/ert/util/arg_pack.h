@@ -57,6 +57,8 @@ typedef void * (arg_node_copyc_ftype) (const void *);
   void          * arg_pack_iget_ptr(const arg_pack_type * , int);
   void          * arg_pack_iget_adress(const arg_pack_type * , int);
   node_ctype      arg_pack_iget_ctype(const arg_pack_type * arg_pack ,int index);
+
+  int arg_pack_size( const arg_pack_type * arg_pack );
   
   /*****************************************************************/
   
