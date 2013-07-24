@@ -83,6 +83,7 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   int                      ecl_sum_data_iget_report_end( const ecl_sum_data_type * data , int report_step );
   int                      ecl_sum_data_iget_report_start( const ecl_sum_data_type * data , int report_step );
   ecl_sum_tstep_type     * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int report_step , double sim_days);
+  bool                     ecl_sum_data_tstep_equal( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2);
   
 #ifdef __cplusplus
 }
