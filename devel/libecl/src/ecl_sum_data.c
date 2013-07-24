@@ -1376,7 +1376,6 @@ bool ecl_sum_data_report_step_equal( const ecl_sum_data_type * data1 , const ecl
 
   return equal;
 }
-<<<<<<< HEAD
 
 
 bool ecl_sum_data_report_step_compatible( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2) {
@@ -1399,5 +1398,3 @@ bool ecl_sum_data_report_step_compatible( const ecl_sum_data_type * data1 , cons
   } 
   return compatible;
 }
-=======
->>>>>>> upstream/master
