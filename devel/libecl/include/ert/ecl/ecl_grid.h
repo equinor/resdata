@@ -32,8 +32,6 @@ extern "C" {
 #include <ert/ecl/grid_dims.h>
 #include <ert/ecl/nnc_info.h>
 
-#define ECL_GRID_GLOBAL_GRID   "Global"  // used as key in hash tables over grids.
-
 
   typedef double (block_function_ftype) ( const double_vector_type *); 
   typedef struct ecl_grid_struct ecl_grid_type;
