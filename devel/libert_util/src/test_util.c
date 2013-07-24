@@ -52,7 +52,7 @@ void test_exit__(const char * file , int line , const char * fmt , ...) {
 }
 
 
-bool test_string_equal( const char * s1 , const char * s2 ) {
+bool test_check_string_equal( const char * s1 , const char * s2 ) {
   bool equal = true;
   if (s1 == NULL && s2 == NULL)
     return true;
@@ -71,7 +71,7 @@ bool test_string_equal( const char * s1 , const char * s2 ) {
 
 
 void test_assert_string_equal__( const char * s1 , const char * s2 , const char * file, int line) {
-  bool equal = test_string_equal( s1 , s2 );
+  bool equal = test_check_string_equal( s1 , s2 );
   if (!equal) 
     test_error_exit( "%s:%d => String are different s1:[%s]  s2:[%s]\n" , file , line , s1 , s2 );
 }
@@ -192,15 +192,19 @@ void test_assert_mem_not_equal__( const void * p1 , const void * p2 , size_t byt
 }
 
 
+bool test_check_double_equal( double d1 , double d2) {
+  return util_double_approx_equal( d1 , d2 );
+}
+
 
 void test_assert_double_equal__( double d1 , double d2, const char * file , int line) {
-  if (!util_double_approx_equal__(d1 , d2, 1e-5))
+  if (!test_check_double_equal(d1 , d2))
     test_error_exit( "%s:%d => double values:%g %g are not sufficiently similar\n" , file , line , d1 , d2);
 }
 
 
 void test_assert_double_not_equal__( double d1 , double d2, const char * file , int line) {
-  if (util_double_approx_equal(d1 , d2))
+  if (test_check_double_equal(d1 , d2))
     test_error_exit( "%s:%d => double values:%15.12g %15.12g are equal.\n" , file , line , d1 , d2);
 }
 
