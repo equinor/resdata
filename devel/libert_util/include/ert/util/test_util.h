@@ -30,7 +30,6 @@ extern "C" {
   
 
   void  test_error_exit( const char * fmt , ...);
-  bool  test_check_string_equal( const char * s1 , const char * s2 );
 
 #define test_exit( fmt, ...) test_exit__( __FILE__ , __LINE__ , fmt , __VA_ARGS__);
   void  test_exit__(const char * file , int line , const char * fmt , ...);
