@@ -17,36 +17,60 @@
    for more details. 
 */
 
-#include <ert/ecl/nnc_info.h>
 #include <stdlib.h>
+
 #include <ert/util/util.h>
+#include <ert/util/vector.h>  
+#include <ert/util/type_macros.h>
+
+#include <ert/ecl/nnc_info.h>
 
 
+#define NNC_INFO_TYPE_ID 675415078
 
 
 struct nnc_info_struct {
-  int_vector_type * nnc_cell_numbers;
+  UTIL_TYPE_ID_DECLARATION;
+  vector_type * lgr_nnc_map; 
 }; 
 
+
+UTIL_IS_INSTANCE_FUNCTION( nnc_info , NNC_INFO_TYPE_ID )
 
 
 nnc_info_type * nnc_info_alloc() {
   nnc_info_type * nnc_info = util_malloc( sizeof * nnc_info );
-  nnc_info->nnc_cell_numbers = int_vector_alloc(0,0); 
+  UTIL_TYPE_ID_INIT(nnc_info , NNC_INFO_TYPE_ID);
+  nnc_info->lgr_nnc_map = vector_alloc_new(); 
   return nnc_info; 
-  return NULL; 
-}
-
-void nnc_info_add_nnc(nnc_info_type * nnc_info, int global_cell_number) {
-  int_vector_append(nnc_info->nnc_cell_numbers, global_cell_number); 
 }
 
 void nnc_info_free( nnc_info_type * nnc_info ) {
-  int_vector_free(nnc_info->nnc_cell_numbers);
+  vector_free(nnc_info->lgr_nnc_map); 
   free (nnc_info); 
 }
 
-int_vector_type * get_nnc_info_cell_numbers(nnc_info_type * nnc_info) {
-  return nnc_info->nnc_cell_numbers;
+void nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number) {
+  
+  if (lgr_nr+1 > vector_get_size(nnc_info->lgr_nnc_map)) {
+    vector_grow_NULL(nnc_info->lgr_nnc_map,lgr_nr ); 
+    int_vector_type * nnc_for_lgr_vec = int_vector_alloc(0,0);
+    int_vector_append(nnc_for_lgr_vec, global_cell_number);         
+    vector_insert_owned_ref(nnc_info->lgr_nnc_map, lgr_nr, nnc_for_lgr_vec, (void*)int_vector_free );
+  } else if (NULL == vector_iget(nnc_info->lgr_nnc_map, lgr_nr)) {
+    int_vector_type * nnc_for_lgr_vec = int_vector_alloc(0,0);
+    int_vector_append(nnc_for_lgr_vec, global_cell_number);   
+    vector_insert_owned_ref(nnc_info->lgr_nnc_map, lgr_nr, nnc_for_lgr_vec, (void*)int_vector_free );
+  } else {
+    int_vector_append(vector_iget(nnc_info->lgr_nnc_map, lgr_nr), global_cell_number);
+  }
+}
+
+const int_vector_type * get_nnc_to_lgr(const nnc_info_type * nnc_info, int lgr_nr) { 
+  int_vector_type * ret = NULL;
+  if (lgr_nr < vector_get_size(nnc_info->lgr_nnc_map)) {
+    ret = vector_iget(nnc_info->lgr_nnc_map, lgr_nr); 
+  }
+  return ret;
 }
 

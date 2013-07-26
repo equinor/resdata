@@ -277,7 +277,13 @@ extern "C" {
 #define NNCG_KW        "NNCG"      /*Cell numbers for global cells connected to LGR cells*/     
 #define NNCHEAD_NUMNNC_INDEX  0    /*Item 1 in non-neighbour connection header: number of NNCs. Only present for main grid*/
 #define NNCHEAD_LGR_INDEX     1    /*Item 2 in non-neighbour connection header: LGR number (0 for global grid)*/
-  
+#define NNCHEADA_KW    "NNCHEADA"  /*Header for NNC's between two amalgamated LGRs*/
+#define NNA1_KW        "NNA1"      /*Cell numbers in connecting local grid ILOC1*/            
+#define NNA2_KW        "NNA2"      /*Cell numbers in connecting local grid ILOC2*/
+#define NNCHEADA_ILOC1_INDEX 0     /*ILOC1: Index of first LGR*/
+#define NNCHEADA_ILOC2_INDEX 1     /*ILOC2: Index of second LGR*/
+#define NNA_NUMNNC_INDEX     0     /*Item 1 in NNA1 or NNA2 is number of NNCs*/  
+
 /* EGRID keywords */
 #define LGR_PARENT_KW  "LGRPARNT"   /* The name of the parent for an LGR. */
 #define COORDS_KW      "COORDS"     /* The (x,y) coordinates of the top and bottom of the pillars constituting the grid. */

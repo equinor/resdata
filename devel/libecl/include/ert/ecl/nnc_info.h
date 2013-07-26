@@ -24,17 +24,18 @@ extern "C" {
 #endif
   
 #include <ert/util/int_vector.h>  
-
-  
+#include <ert/util/type_macros.h>
 
   typedef struct nnc_info_struct nnc_info_type; 
   
+  UTIL_IS_INSTANCE_HEADER(nnc_info);
+    
+  nnc_info_type         * nnc_info_alloc();   
+  void                    nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number); 
+  void                    nnc_info_free( nnc_info_type * nnc_info );
+  const int_vector_type * get_nnc_to_lgr(const nnc_info_type * nnc_info, int lgr_nr); 
   
-  nnc_info_type   * nnc_info_alloc();   
-  void              nnc_info_add_nnc(nnc_info_type * nnc_info, int global_cell_number); 
-  void              nnc_info_free( nnc_info_type * nnc_info );
-  int_vector_type * get_nnc_info_cell_numbers();
- 
+   
   
 #ifdef __cplusplus
 }
