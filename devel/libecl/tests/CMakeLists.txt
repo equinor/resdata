@@ -50,7 +50,15 @@ add_test( ecl_grid_dims5 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_dims  ${PROJECT_SOUR
                                                                   ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/AmalgLGRcase/TESTCASE_AMALG_LGR.INIT )
 
 
-
+add_executable( ecl_nnc_test ecl_nnc_test.c )
+target_link_libraries( ecl_nnc_test ecl )
+add_test (ecl_nnc_test ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_test  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID 
+                                                               ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC.EGRID
+                                                               ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID 
+                                                               ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/DualPoro/DUAL_DIFF.EGRID )
+add_executable( ecl_nnc_info_test ecl_nnc_info_test.c )
+target_link_libraries( ecl_nnc_info_test ecl )
+add_test (ecl_nnc_info_test ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_info_test )
 
 
 add_executable( ecl_kw_grdecl ecl_kw_grdecl.c )
@@ -73,6 +81,24 @@ add_test( ecl_util_month_range ${EXECUTABLE_OUTPUT_PATH}/ecl_util_month_range  )
 add_executable( ecl_sum_test ecl_sum_test.c )
 target_link_libraries( ecl_sum_test ecl )
 add_test( ecl_sum_test ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_test ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE )
+
+add_executable( ecl_sum_report_step_equal ecl_sum_report_step_equal.c )
+target_link_libraries( ecl_sum_report_step_equal ecl )
+add_test( ecl_sum_report_step_equal1 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_equal ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Snorre/SNORRE FALSE)
+add_test( ecl_sum_report_step_equal2 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_equal ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE TRUE)
+add_test( ecl_sum_report_step_equal3 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_equal ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/modGurbat/extraMinistep/ECLIPSE TRUE)
+add_test( ecl_sum_report_step_equal4 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_equal ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/modGurbat/short/ECLIPSE FALSE)
+add_test( ecl_sum_report_step_equal5 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_equal ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/modGurbat/enkf/ECLIPSE FALSE)
+add_test( ecl_sum_report_step_equal6 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_equal ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Snorre/SNORRE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Snorre2/SNORRE2 FALSE)
+
+add_executable( ecl_sum_report_step_compatible ecl_sum_report_step_compatible.c )
+target_link_libraries( ecl_sum_report_step_compatible ecl )
+add_test( ecl_sum_report_step_compatible1 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_compatible ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Snorre/SNORRE FALSE)
+add_test( ecl_sum_report_step_compatible2 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_compatible ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE TRUE)
+add_test( ecl_sum_report_step_compatible3 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_compatible ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/modGurbat/extraMinistep/ECLIPSE TRUE)
+add_test( ecl_sum_report_step_compatible4 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_compatible ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/modGurbat/short/ECLIPSE TRUE)
+add_test( ecl_sum_report_step_compatible5 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_compatible ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/modGurbat/enkf/ECLIPSE TRUE)
+add_test( ecl_sum_report_step_compatible6 ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_report_step_equal ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Snorre/SNORRE ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Snorre2/SNORRE2 FALSE)
 
 add_executable( ecl_fortio ecl_fortio.c )
 target_link_libraries( ecl_fortio  ecl )
@@ -116,12 +142,28 @@ set_property( TEST ecl_grid_lgr_name PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_simple PROPERTY LABELS StatoilData )
 set_property( TEST ecl_dualp PROPERTY LABELS StatoilData )
 set_property( TEST ecl_sum_test PROPERTY LABELS StatoilData )
+
+set_property( TEST ecl_sum_report_step_equal1 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_report_step_equal2 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_report_step_equal3 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_report_step_equal4 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_report_step_equal5 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_report_step_equal6 PROPERTY LABELS StatoilData )
+
+set_property( TEST ecl_sum_report_step_compatible1 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_report_step_compatible2 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_report_step_compatible3 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_report_step_compatible4 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_report_step_compatible5 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_report_step_compatible6 PROPERTY LABELS StatoilData )
+
 set_property( TEST ecl_fortio PROPERTY LABELS StatoilData)
 set_property( TEST ecl_grid_dims1 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_dims2 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_dims3 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_dims4 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_dims5 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_nnc_test PROPERTY LABELS StatoilData )
 set_property( TEST ecl_file PROPERTY LABELS StatoilData)
 set_property( TEST ecl_rsthead PROPERTY LABELS StatoilData)
 set_property( TEST ecl_region PROPERTY LABELS StatoilData)
