@@ -2033,7 +2033,6 @@ static void ecl_grid_init_cell_nnc_info(ecl_grid_type * ecl_grid, int global_ind
 /*
   This function populates nnc_info for cells with non neighbour connections
  */
-//static void ecl_grid_init_nnc_cells (ecl_grid_type * grid1, ecl_grid_type * grid2, int nnc_count,  const int * grid1_nnc_cells, const int * grid2_nnc_cells) {
 static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid2, const ecl_kw_type * keyword1, const ecl_kw_type * keyword2) {
   
   int * grid1_nnc_cells = ecl_kw_get_int_ptr(keyword1);
@@ -2063,10 +2062,6 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
     ecl_cell_type * grid1_cell = ecl_grid_get_cell(grid1, grid1_cell_index);
     ecl_cell_type * grid2_cell = ecl_grid_get_cell(grid2, grid2_cell_index); 
 
-    if((grid1_cell_index == 125132) || (grid2_cell_index == 125132))
-    {
-      int test = 0; 
-    }    
     //Add the non-neighbour connection in both directions
     nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr, grid2_cell_index);
     nnc_info_add_nnc(grid2_cell->nnc_info, grid1->lgr_nr, grid1_cell_index);
