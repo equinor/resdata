@@ -69,7 +69,7 @@ void test_nnc_lgr( const char * grid_filename ) {
   //LGR
   const int data[] = {126394, 126305};
     
-  ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 1);
+  ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 0);
   test_assert_not_NULL( lgr_grid );
   
   const nnc_info_type * lgr_nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 2017-1);
@@ -133,7 +133,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     //LGR nr 1, cell global index 0:  check NNCs to main grid
     int data[] = {29012, 26220};
     
-    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 1); 
+    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 0); 
     test_assert_not_NULL(lgr_grid);
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 0);
@@ -154,7 +154,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     //LGR nr 1, cell global index 0:  check NNCs to grid with lgr nr 20
     int data[] = {12};
     
-    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 1); 
+    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 0); 
     test_assert_not_NULL(lgr_grid);
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 0);
@@ -177,7 +177,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     //LGR nr 3, check NNC for cell with global index 8
     int data[] = {20681, 23474, 26267, 37440}; 
     
-    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 3); 
+    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 2); 
     test_assert_not_NULL(lgr_grid);
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 8);
@@ -197,7 +197,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     //LGR nr 99, check NNC for cell with global index 736
     int data[] = {126671, 79142};
     
-    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 99-1); //Subtract 1: LGR nr 98 is not present in the test file. LGRs are numbered 1-97 and 99-110 in test file.
+    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 98-1); //Subtract 1: LGR nr 98 is not present in the test file. LGRs are numbered 1-97 and 99-110 in test file.
     test_assert_not_NULL(lgr_grid);
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 736);
@@ -217,7 +217,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     //LGR nr 110, cell with global index 271: Check NNCs to global grid
     int data[] = {20191, 22983};
         
-    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 110-1); //Subtract 1: LGR nr 98 is not present in the test file. LGRs are numbered 1-97 and 99-110 in test file.
+    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 109-1); //Subtract 1: LGR nr 98 is not present in the test file. LGRs are numbered 1-97 and 99-110 in test file.
     test_assert_not_NULL(lgr_grid);
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 271);
@@ -237,7 +237,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
   //LGR nr 110, cell with global index 271: Check NNCs to lgr nr 109
     int data[] = {275};
         
-    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 110-1); //Subtract 1: LGR nr 98 is not present in the test file. LGRs are numbered 1-97 and 99-110 in test file.
+    ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 109-1); //Subtract 1: LGR nr 98 is not present in the test file. LGRs are numbered 1-97 and 99-110 in test file.
     test_assert_not_NULL(lgr_grid);
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 271);
@@ -281,7 +281,7 @@ void test_nnc_amalgamated_lgrs(const char * grid_filename) {
   
   
   //Get the NNC info for cell with global index 0 in LGR nr 1
-  ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 1); 
+  ecl_grid_type * lgr_grid = ecl_grid_iget_lgr(ecl_grid, 0); 
   test_assert_not_NULL(lgr_grid);
 
   const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 0);
@@ -309,7 +309,7 @@ int main(int argc , char ** argv) {
   test_nnc_lgr( EGRID_file2 );
   test_nnc_multiple_lgr( EGRID_file3 ); 
   test_nnc_amalgamated_lgrs(EGRID_file3);
-  test_nnc_dual_poro( EGRID_file4 ); 
+  test_nnc_dual_poro( EGRID_file4 );
   
   exit(0);
 }

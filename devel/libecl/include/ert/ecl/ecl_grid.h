@@ -93,7 +93,7 @@ extern "C" {
   
   void            ecl_grid_free(ecl_grid_type * );
   void            ecl_grid_free__( void * arg );
-  grid_dims_type  ecl_grid_iget_dims( const ecl_grid_type * grid , int lgr_nr);
+  grid_dims_type  ecl_grid_iget_dims( const ecl_grid_type * grid , int grid_nr);
   void            ecl_grid_get_dims(const ecl_grid_type * , int *, int * , int * , int *);
   int             ecl_grid_get_nz( const ecl_grid_type * grid );
   int             ecl_grid_get_nx( const ecl_grid_type * grid );

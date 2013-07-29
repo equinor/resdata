@@ -1218,24 +1218,22 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int du
   }
 
 
-  grid->block_dim      = 0;
-  grid->values         = NULL;
+  grid->block_dim       = 0;
+  grid->values          = NULL;
   if (lgr_nr == 0) {  /* this is the main grid */
-    grid->LGR_list = vector_alloc_new(); 
-    vector_append_ref( grid->LGR_list , grid ); /* adding a 'self' pointer as first inistance - without destructor! */
+    grid->LGR_list      = vector_alloc_new(); 
     grid->lgr_index_map = int_vector_alloc(0,0);
-    int_vector_iset(grid->lgr_index_map, 0, 0);
-    grid->LGR_hash = hash_alloc();
+    grid->LGR_hash      = hash_alloc();
   } else {
-    grid->LGR_list  = NULL;
+    grid->LGR_list      = NULL;
     grid->lgr_index_map = NULL; 
-    grid->LGR_hash     = NULL;
+    grid->LGR_hash      = NULL;
   }
-  grid->name         = NULL;
-  grid->parent_name  = NULL;
-  grid->parent_grid  = NULL;
-  grid->children     = hash_alloc();
-  grid->coarse_cells = vector_alloc_new();
+  grid->name            = NULL;
+  grid->parent_name     = NULL;
+  grid->parent_grid     = NULL;
+  grid->children        = hash_alloc();
+  grid->coarse_cells    = vector_alloc_new();
   return grid;
 }
 
@@ -2092,7 +2090,7 @@ static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_fil
     }
     
     if (nnc1_data && nnc2_data) {
-      ecl_grid_type * grid = ecl_grid_get_lgr_from_nr(main_grid, lgr_nr); 
+      ecl_grid_type * grid = (lgr_nr > 0) ? ecl_grid_get_lgr_from_nr(main_grid, lgr_nr) : main_grid;  
       ecl_grid_init_nnc_cells(grid, main_grid , numnnc, nnc1_data, nnc2_data);
     }
   }
@@ -3172,11 +3170,14 @@ int ecl_grid_get_nactive( const ecl_grid_type * grid ) {
 }
 
 
-grid_dims_type  ecl_grid_iget_dims( const ecl_grid_type * grid , int lgr_nr) {
+grid_dims_type  ecl_grid_iget_dims( const ecl_grid_type * grid , int grid_nr) {
   grid_dims_type dims;
   const ecl_grid_type * lgr;
 
-  lgr = ecl_grid_get_lgr_from_nr( grid , lgr_nr);
+  if (grid_nr == 0)
+    lgr = grid;
+  else
+    lgr = ecl_grid_iget_lgr(grid, grid_nr - 1); 
   
   dims.nx = lgr->nx;
   dims.ny = lgr->ny;
@@ -3618,13 +3619,13 @@ bool ecl_grid_have_coarse_cells( const ecl_grid_type * main_grid ) {
 */
 int ecl_grid_get_num_lgr(const ecl_grid_type * main_grid ) {
   __assert_main_grid( main_grid );
-  return vector_get_size( main_grid->LGR_list ) - 1;  
+  return vector_get_size( main_grid->LGR_list );  
 }
 
 /**
-   The lgr_index has zero offset, counting the main grid, i.e.
-   ecl_grid_iget_lgr( ecl_grid , 0); will return the main grid
-   ecl_grid_iget_lgr( ecl_grid , 1); will return the the first lgr
+   The lgr_index has zero offset
+   ecl_grid_iget_lgr( ecl_grid , 0); will return the first lgr
+   ecl_grid_iget_lgr( ecl_grid , 1); will return the second lgr
    The method will fail HARD if lgr_index is out of bounds.
 */
 
@@ -4150,12 +4151,14 @@ static void ecl_grid_dump_ascii__(const ecl_grid_type * grid , bool active_only 
 
 
 void ecl_grid_dump(const ecl_grid_type * grid , FILE * stream) {
+  ecl_grid_dump__(grid, stream ); 
   int i;
   for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
     ecl_grid_dump__( vector_iget_const( grid->LGR_list , i) , stream ); 
 }
 
 void ecl_grid_dump_ascii(const ecl_grid_type * grid , bool active_only , FILE * stream) {
+  ecl_grid_dump_ascii__( grid , active_only , stream ); 
   int i;
   for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
     ecl_grid_dump_ascii__( vector_iget_const( grid->LGR_list , i) , active_only , stream ); 
@@ -4322,6 +4325,8 @@ void ecl_grid_fwrite_GRID( const ecl_grid_type * grid , const char * filename) {
   
   if (grid->coarsening_active)
     coords_size = 7;
+  
+  ecl_grid_fwrite_GRID__( grid , coords_size , fortio );
   
   {
     int grid_nr; 
@@ -4780,6 +4785,8 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
 void ecl_grid_fwrite_EGRID( ecl_grid_type * grid , const char * filename) {  
   bool fmt_file        = false;
   fortio_type * fortio = fortio_open_writer( filename , fmt_file , ECL_ENDIAN_FLIP );
+  
+  ecl_grid_fwrite_EGRID__( grid , fortio );
   {
     int grid_nr; 
     for (grid_nr = 0; grid_nr < vector_get_size( grid->LGR_list ); grid_nr++) {
