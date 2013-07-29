@@ -104,6 +104,7 @@ extern "C" {
 #define ZWEL_KW      "ZWEL"
 #define ICON_KW      "ICON"
 #define ISEG_KW      "ISEG"
+#define RSEG_KW      "RSEG"
 
 #define ECLIPSE100_OIL_DEN_KW   "OIL_DEN"
 #define ECLIPSE100_GAS_DEN_KW   "GAS_DEN"
@@ -135,8 +136,8 @@ extern "C" {
 #define INTEHEAD_NSEGMX_INDEX  176
 #define INTEHEAD_NLBRMX_INDEX  177
 #define INTEHEAD_NISEGZ_INDEX  178
+#define INTEHEAD_NRSEGZ_INDEX  179
 #define INTEHEAD_NILBRZ_INDEX  180
-
 
 #define DOUBHEAD_DAYS_INDEX 0
 
