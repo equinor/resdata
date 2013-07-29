@@ -34,10 +34,10 @@ int main(int argc , char ** argv) {
   nnc_info_add_nnc(nnc_info, 1, 110);
   nnc_info_add_nnc(nnc_info, 1, 111);
   
-  const int_vector_type * nnc_cells = get_nnc_to_lgr(nnc_info, 1); 
+  const int_vector_type * nnc_cells = nnc_info_get_index_list(nnc_info, 1); 
   test_assert_int_equal(int_vector_size(nnc_cells), 2); 
   
-  const int_vector_type * nnc_cells_null = get_nnc_to_lgr(nnc_info, 2); 
+  const int_vector_type * nnc_cells_null = nnc_info_get_index_list(nnc_info, 2); 
   test_assert_NULL(nnc_cells_null); 
   
   nnc_info_free(nnc_info);

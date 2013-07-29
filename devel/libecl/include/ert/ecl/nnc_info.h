@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
+   Copyright (C) 2013  Statoil ASA, Norway. 
     
    The file 'nnc_info.h' is part of ERT - Ensemble based Reservoir Tool. 
     
@@ -31,9 +31,9 @@ extern "C" {
   UTIL_IS_INSTANCE_HEADER(nnc_info);
     
   nnc_info_type         * nnc_info_alloc();   
-  void                    nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number); 
   void                    nnc_info_free( nnc_info_type * nnc_info );
-  const int_vector_type * get_nnc_to_lgr(const nnc_info_type * nnc_info, int lgr_nr); 
+  void                    nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number); 
+  const int_vector_type * nnc_info_get_index_list(const nnc_info_type * nnc_info, int lgr_nr); 
   
    
   
