@@ -2,7 +2,7 @@ set(source_files rng.c lookup_table.c statistics.c mzran.c set.c hash_node.c has
 
 set(header_files ssize_t.h type_macros.h rng.h lookup_table.h statistics.h mzran.h set.h hash.h hash_node.h hash_sll.h node_data.h node_ctype.h util.h thread_pool.h msg.h arg_pack.h path_fmt.h  stringlist.h menu.h subst_list.h subst_func.h vector.h parser.h matrix.h buffer.h log.h template.h timer.h time_interval.h string_util.h)
 
-set( test_source test_util.c )
+set( test_source test_util.c test_work_area.c )
 
 
 set_property(SOURCE hash.c PROPERTY COMPILE_FLAGS "-Wno-error")
