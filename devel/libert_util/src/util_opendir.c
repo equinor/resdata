@@ -35,6 +35,14 @@ static void util_copy_directory__(const char * src_path , const char * target_pa
 }
 
 
+void util_copy_directory_content(const char * src_path , const char * target_path) {
+  int buffer_size = 16 * 1024 * 1024; /* 16 MB */
+  void * buffer   = util_malloc( buffer_size );
+  
+  util_copy_directory__( src_path , target_path , buffer_size , buffer);
+  free( buffer );
+}
+
 /** 
     Equivalent to shell command cp -r src_path target_path
 */
@@ -47,23 +55,13 @@ void util_copy_directory(const char * src_path , const char * __target_path) {
   char ** path_parts;
   char  * path_tail;
   char  * target_path;
-  void * buffer   = NULL;
-  int buffer_size = 16 * 1024 * 1024; /* 16 MB */
-  do {
-    buffer = malloc(buffer_size);
-    if (buffer == NULL) buffer_size /= 2;
-  } while ((buffer == NULL) && (buffer_size > 0));
-  
-  if (buffer_size == 0)
-    util_abort("%s: failed to allocate any memory ?? \n",__func__);
 
   util_path_split(src_path , &num_components , &path_parts);
   path_tail   = path_parts[num_components - 1];
   target_path = util_alloc_filename(__target_path , path_tail , NULL);
 
-  util_copy_directory__(src_path , target_path , buffer_size , buffer);
+  util_copy_directory_content(src_path , target_path );
   
-  free( buffer );
   free(target_path);
   util_free_stringlist( path_parts , num_components );
 }
