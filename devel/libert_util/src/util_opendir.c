@@ -20,7 +20,7 @@ static void util_copy_directory__(const char * src_path , const char * target_pa
             if (util_is_file( full_src_path )) {
               util_copy_file__( full_src_path , full_target_path , buffer_size , buffer , true);
             } else {
-              if (util_is_directory( full_target_path ) && !util_is_link( full_target_path))
+              if (util_is_directory( full_src_path ) && !util_is_link( full_src_path))
                 util_copy_directory__( full_src_path , full_target_path , buffer_size , buffer);
             }
 
