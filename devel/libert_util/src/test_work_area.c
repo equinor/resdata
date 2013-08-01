@@ -29,8 +29,9 @@
 #define PATH_FMT "/tmp/ert-test/%s/%s"
 
 struct test_work_area_struct {
-  char * cwd;
-  bool   store;
+  bool        store;
+  char      * cwd;
+  char      * original_cwd;
 };
 
 
@@ -44,6 +45,7 @@ test_work_area_type * test_work_area_alloc(const char * test_name, bool store) {
     
     work_area->cwd = util_alloc_sprintf( PATH_FMT , pw->pw_name , test_name );
   }
+  work_area->original_cwd = util_alloc_cwd();
   util_make_path( work_area->cwd );
   chdir( work_area->cwd );
   return work_area;
@@ -53,7 +55,9 @@ test_work_area_type * test_work_area_alloc(const char * test_name, bool store) {
 void test_work_area_free(test_work_area_type * work_area) { 
   if (!work_area->store)
     util_clear_directory( work_area->cwd , true , true );
-  
+
+  chdir( work_area->original_cwd );
+  free( work_area->original_cwd );
   free( work_area->cwd );
   free( work_area );
 }
@@ -64,3 +68,38 @@ const char * test_work_area_get_cwd( const test_work_area_type * work_area ) {
 }
 
 
+
+void test_work_area_install_file( test_work_area_type * work_area , const char * input_src_file ) {
+  if (util_is_abs_path( input_src_file ))
+    return;
+  else {
+    char * src_file = util_alloc_filename( work_area->original_cwd , input_src_file , NULL );
+    char * src_path;
+    
+    util_alloc_file_components( input_src_file , &src_path , NULL , NULL);
+    if (!util_entry_exists( src_path ))
+      util_make_path( src_path );
+
+    if (util_file_exists( src_file )) {
+      char * target_file   = util_alloc_filename( work_area->cwd , input_src_file , NULL );
+      util_copy_file( src_file , target_file );
+      free( target_file );
+    }
+    free( src_file );
+  }
+}
+
+
+void test_work_area_copy_directory( test_work_area_type * work_area , const char * input_directory) {
+  char * src_directory;
+
+  if (util_is_abs_path( input_directory ))
+    src_directory = util_alloc_string_copy( input_directory );
+  else
+    src_directory = util_alloc_filename( work_area->original_cwd , input_directory , NULL);
+
+  printf("arg:%s ",src_directory);
+  util_copy_directory(src_directory , work_area->cwd );
+
+  free( src_directory );
+}
