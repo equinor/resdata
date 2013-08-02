@@ -5,7 +5,7 @@
 # 1. First server - this should be an existing server which should return true.
 # 2. This should be an invalid hostname - should return false.
 # 3. This should be an valid host which does not answer ping - i.e currently off?
-set(PING_SERVERS "localhost" CACHE STRING  "List of LSF servers for testing")
+set(PING_SERVERS "" CACHE STRING  "List of servers for testing ping")
 
 
 link_directories( ${ERT_BINARY_DIR}/libert_util/src )
