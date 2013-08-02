@@ -35,6 +35,7 @@ void test_get_cwd() {
 
 
 
+
 void create_test_area(const char * test_name , bool store) {
   char * pre_cwd = util_alloc_cwd();
   test_work_area_type * work_area = test_work_area_alloc( test_name , store);
@@ -79,20 +80,9 @@ void test_input() {
 }
 
 
-void test_create_with_prefix() {
-  test_work_area_type * work_area = test_work_area_alloc( "AREA" , false );
-  {
-    uid_t uid = getuid();
-    struct passwd * pw = getpwuid( uid );
-    test_work_area_type * sub_area = test_work_area_alloc_with_prefix("sub" , "subName" , true);
-    char * sub_path = util_alloc_sprintf( "%s/%s/%s/%s" , test_work_area_get_cwd( work_area ) , "sub" , pw->pw_name  , "subName");
-    
-    test_assert_true( util_is_directory( sub_path ));
-    free( sub_path );
-    test_work_area_free( sub_area );
-  }
-  test_work_area_free( work_area );
-}
+
+
+
 
 int main(int argc , char ** argv) {
   const char * rel_path_file = argv[1];
@@ -106,6 +96,5 @@ int main(int argc , char ** argv) {
   test_copy_directory( rel_directory );
   test_input();
   test_get_cwd();
-  test_create_with_prefix();
   exit(0);
 }

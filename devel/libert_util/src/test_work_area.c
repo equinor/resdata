@@ -26,8 +26,20 @@
 #include <ert/util/test_work_area.h>
 #include <ert/util/util.h>
 
-#define DEFAULT_PREFIX "/tmp/ert-test"
-#define PATH_FMT       "%s/%s/%s"     /* PREFIX / username / test_name */
+/*
+  It is absolutely essential element of this data structure that
+  different users should not get "permission problems" by stepping on
+  eachothers toes. By default the directories created by one
+  particular user will be owned by that user and the default mode will
+  not allow other users to access that directory. To ensure that this
+  does not create problems we must ensure that users do not create
+  directories which should be used by others, and that again is
+  ensured by insisting that $USER is the first (i.e. uniqeq) path
+  element following /tmp.
+*/
+  
+
+#define PATH_FMT       "/tmp/%s/ert-test/%s"     /* /tmp/username/ert-test/test_name */
 
 struct test_work_area_struct {
   bool        store;
@@ -36,28 +48,33 @@ struct test_work_area_struct {
 };
 
 
-
-test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , const char * test_name, bool store) {
-  if (test_name) {
+static test_work_area_type * test_work_area_alloc__(const char * path , bool store) {
+  util_make_path( path );
+  if (true) {
     test_work_area_type * work_area = util_malloc( sizeof * work_area );
     work_area->store = store;
-    {
-      uid_t uid = getuid();
-      struct passwd * pw = getpwuid( uid );
-      
-      work_area->cwd = util_alloc_sprintf( PATH_FMT , prefix , pw->pw_name , test_name );
-    }
+    work_area->cwd = util_alloc_string_copy( path );
     work_area->original_cwd = util_alloc_cwd();
-    util_make_path( work_area->cwd );
-    chdir( work_area->cwd );
+    chdir( work_area->cwd );  
+    
+    return work_area;
+  }
+}
+
+
+
+test_work_area_type * test_work_area_alloc(const char * test_name, bool store) {
+  if (test_name) {
+    uid_t uid = getuid();
+    struct passwd * pw = getpwuid( uid );
+    char * path = util_alloc_sprintf( PATH_FMT , pw->pw_name , test_name );
+    test_work_area_type * work_area = test_work_area_alloc__( path , store );
+    free( path );
     return work_area;
   } else 
     return NULL;
 }
 
-test_work_area_type * test_work_area_alloc(const char * test_name, bool store) {
-  return test_work_area_alloc_with_prefix( DEFAULT_PREFIX , test_name , store );
-}
 
 
 void test_work_area_free(test_work_area_type * work_area) { 
