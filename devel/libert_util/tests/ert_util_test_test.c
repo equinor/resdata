@@ -17,6 +17,9 @@
 */
 
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #include <ert/util/test_util.h>
 #include <ert/util/test_work_area.h>
@@ -60,6 +63,26 @@ void test_copy_directory(const char * rel_path) {
 }
 
 
+void test_input() {
+  test_work_area_type * work_area = test_work_area_alloc( NULL , false );
+  test_assert_NULL( work_area );
+}
+
+
+void test_create_with_prefix() {
+  test_work_area_type * work_area = test_work_area_alloc( "AREA" , false );
+  {
+    uid_t uid = getuid();
+    struct passwd * pw = getpwuid( uid );
+    test_work_area_type * sub_area = test_work_area_alloc_with_prefix("sub" , "subName" , true);
+    char * sub_path = util_alloc_sprintf( "%s/%s/%s/%s" , test_work_area_get_cwd( work_area ) , "sub" , pw->pw_name  , "subName");
+    
+    test_assert_true( util_is_directory( sub_path ));
+    free( sub_path );
+    test_work_area_free( sub_area );
+  }
+  test_work_area_free( work_area );
+}
 
 int main(int argc , char ** argv) {
   const char * rel_path_file = argv[1];
@@ -71,6 +94,8 @@ int main(int argc , char ** argv) {
   test_install_file_exists( rel_path_file );
   test_install_file_exists( abs_path_file );
   test_copy_directory( rel_directory );
+  test_input();
+  test_create_with_prefix();
   
   exit(0);
 }

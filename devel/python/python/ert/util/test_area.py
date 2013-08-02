@@ -20,8 +20,14 @@ from   ert.cwrap.cclass import CClass
 
 class TestArea(CClass):
 
-    def __init__(self , test_name , store_area = False):
-        c_ptr = cfunc.test_area_alloc( test_name , store_area)
+    def __init__(self , test_name , store_area = False , prefix = None):
+        if prefix:
+            c_ptr = cfunc.test_area_alloc_with_prefix( prefix , test_name , store_area)
+        else:
+            c_ptr = cfunc.test_area_alloc( test_name , store_area)
+        if not c_ptr:
+            raise Exception("Failed to create TestArea instance")
+            
         self.init_cobj(c_ptr , cfunc.free)
 
 
@@ -43,7 +49,8 @@ CWrapper.registerType( "test_area" , TestArea )
 
 cwrapper = CWrapper( libtest_util.lib )
 cfunc    = CWrapperNameSpace("TestArea")    
-cfunc.test_area_alloc = cwrapper.prototype("c_void_p test_work_area_alloc( char* , bool)")
+cfunc.test_area_alloc             = cwrapper.prototype("c_void_p test_work_area_alloc( char* , bool)")
+cfunc.test_area_alloc_with_prefix = cwrapper.prototype("c_void_p test_work_area_alloc_with_prefix( char* , char* , bool)")
 cfunc.free            = cwrapper.prototype("void test_work_area_free( test_area )")
 cfunc.install_file    = cwrapper.prototype("void test_work_area_install_file( test_area , char* )")
 cfunc.copy_directory  = cwrapper.prototype("void test_work_area_copy_directory( test_area , char* )")

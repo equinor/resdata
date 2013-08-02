@@ -26,7 +26,8 @@
 #include <ert/util/test_work_area.h>
 #include <ert/util/util.h>
 
-#define PATH_FMT "/tmp/ert-test/%s/%s"
+#define DEFAULT_PREFIX "/tmp/ert-test"
+#define PATH_FMT       "/%s/%s/%s"     /* PREFIX / username / test_name */
 
 struct test_work_area_struct {
   bool        store;
@@ -36,19 +37,26 @@ struct test_work_area_struct {
 
 
 
+test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , const char * test_name, bool store) {
+  if (test_name) {
+    test_work_area_type * work_area = util_malloc( sizeof * work_area );
+    work_area->store = store;
+    {
+      uid_t uid = getuid();
+      struct passwd * pw = getpwuid( uid );
+      
+      work_area->cwd = util_alloc_sprintf( PATH_FMT , prefix , pw->pw_name , test_name );
+    }
+    work_area->original_cwd = util_alloc_cwd();
+    util_make_path( work_area->cwd );
+    chdir( work_area->cwd );
+    return work_area;
+  } else 
+    return NULL;
+}
+
 test_work_area_type * test_work_area_alloc(const char * test_name, bool store) {
-  test_work_area_type * work_area = util_malloc( sizeof * work_area );
-  work_area->store = store;
-  {
-    uid_t uid = getuid();
-    struct passwd * pw = getpwuid( uid );
-    
-    work_area->cwd = util_alloc_sprintf( PATH_FMT , pw->pw_name , test_name );
-  }
-  work_area->original_cwd = util_alloc_cwd();
-  util_make_path( work_area->cwd );
-  chdir( work_area->cwd );
-  return work_area;
+  return test_work_area_alloc_with_prefix( DEFAULT_PREFIX , test_name , store );
 }
 
 
