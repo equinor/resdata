@@ -150,6 +150,7 @@ typedef enum {left_pad   = 0,
 
 
 #ifdef HAVE_OPENDIR
+  void         util_copy_directory_content(const char * src_path , const char * target_path);
   void         util_copy_directory(const char *  , const char *);
   void         util_walk_directory(const char * root_path , walk_file_callback_ftype * file_callback , void * file_callback_arg , walk_dir_callback_ftype * dir_callback , void * dir_callback_arg);
 #endif

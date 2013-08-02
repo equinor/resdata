@@ -98,8 +98,23 @@ void test_work_area_copy_directory( test_work_area_type * work_area , const char
   else
     src_directory = util_alloc_filename( work_area->original_cwd , input_directory , NULL);
 
-  printf("arg:%s ",src_directory);
   util_copy_directory(src_directory , work_area->cwd );
-
   free( src_directory );
 }
+
+
+void test_work_area_copy_directory_content( test_work_area_type * work_area , const char * input_directory) {
+  char * src_directory;
+
+  if (util_is_abs_path( input_directory ))
+    src_directory = util_alloc_string_copy( input_directory );
+  else
+    src_directory = util_alloc_filename( work_area->original_cwd , input_directory , NULL);
+
+  util_copy_directory_content(src_directory , work_area->cwd );
+  free( src_directory );
+}
+
+
+
+
