@@ -21,7 +21,7 @@ from   ert.cwrap.cclass import CClass
 class TestArea(CClass):
 
     def __init__(self , test_name , store_area = False):
-        c_ptr = cfunc.test_area_allo( test_name , store_area)
+        c_ptr = cfunc.test_area_alloc( test_name , store_area)
         self.init_cobj(c_ptr , cfunc.free)
 
 
