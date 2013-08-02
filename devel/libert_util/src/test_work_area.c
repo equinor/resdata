@@ -27,7 +27,7 @@
 #include <ert/util/util.h>
 
 #define DEFAULT_PREFIX "/tmp/ert-test"
-#define PATH_FMT       "/%s/%s/%s"     /* PREFIX / username / test_name */
+#define PATH_FMT       "%s/%s/%s"     /* PREFIX / username / test_name */
 
 struct test_work_area_struct {
   bool        store;
