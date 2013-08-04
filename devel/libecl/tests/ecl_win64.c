@@ -28,8 +28,8 @@
 
 
 int main( int argc , char ** argv) {
-  int num_kw  = 1000;
-  int kw_size = 4100000;
+  int num_kw  = 1000;       // Total file size should roughly exceed 2GB
+  int kw_size = 600000;
   ecl_kw_type * kw = ecl_kw_alloc("KW" , kw_size , ECL_INT_TYPE );
   rng_type * rng = rng_alloc( MZRAN , INIT_DEFAULT );
   int i;
@@ -45,17 +45,23 @@ int main( int argc , char ** argv) {
     fortio_fclose( fortio );
   }
 
-  printf("Reading LARGE_FILE...\n");
   {
-    ecl_file_type * ecl_file = ecl_file_open( "LARGE_FILE" , 0);
-    ecl_kw_type * file_kw = ecl_file_iget_named_kw( ecl_file , "KW" , num_kw - 1);
-    if (ecl_kw_equal( kw , file_kw ))
-      printf("Keyword read back from file correctly :-) \n");
-    else
-      printf("Fatal error - keyword different on return ...\n");
-    ecl_file_close( ecl_file );
+    fortio_type * fortio = fortio_open_reader( "LARGE_FILE" , false , ECL_ENDIAN_FLIP);
+    for (i = 0; i < num_kw - 1; i++) {
+       printf("SKipping keyword %d/%d from file:LARGE_FILE \n",i+1 , num_kw );
+       ecl_kw_fskip( fortio );
+    }
+    {
+       ecl_kw_type * file_kw = ecl_kw_fread_alloc( fortio );
+       if (ecl_kw_equal( kw , file_kw ))
+          printf("Keyword read back from file correctly :-) \n");
+        else
+          printf("Fatal error - keyword different on return ...\n");
+       ecl_kw_free( file_kw );
+    }
+    fortio_fclose( fortio );
   }
-   //remove( "LARGE_FILE" );
+  remove( "LARGE_FILE" );
   
   exit(0);
 }
