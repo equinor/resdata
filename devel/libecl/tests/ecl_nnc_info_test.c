@@ -27,18 +27,26 @@
  
 
 int main(int argc , char ** argv) {
-  nnc_info_type * nnc_info = nnc_info_alloc();   
+  int lgr_nr = 77;
+  nnc_info_type * nnc_info = nnc_info_alloc(lgr_nr);   
+  
+  test_assert_int_equal( lgr_nr , nnc_info_get_lgr_nr(  nnc_info ));
   test_assert_true(nnc_info_is_instance(nnc_info));
   test_assert_not_NULL(nnc_info); 
   
   nnc_info_add_nnc(nnc_info, 1, 110);
   nnc_info_add_nnc(nnc_info, 1, 111);
-  
+
+  const nnc_vector_type * nnc_vector = nnc_info_get_vector( nnc_info , 1);
   const int_vector_type * nnc_cells = nnc_info_get_index_list(nnc_info, 1); 
   test_assert_int_equal(int_vector_size(nnc_cells), 2); 
-  
+  test_assert_ptr_equal( nnc_cells , nnc_vector_get_index_list( nnc_vector ));
+
+
+  const nnc_vector_type * nnc_vector_null  = nnc_info_get_vector( nnc_info , 2);
   const int_vector_type * nnc_cells_null = nnc_info_get_index_list(nnc_info, 2); 
   test_assert_NULL(nnc_cells_null); 
+  test_assert_NULL(nnc_vector_null); 
   
   nnc_info_free(nnc_info);
   
