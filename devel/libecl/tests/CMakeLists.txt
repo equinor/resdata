@@ -106,7 +106,7 @@ add_test( ecl_fortio ${EXECUTABLE_OUTPUT_PATH}/ecl_fortio ${PROJECT_SOURCE_DIR}/
 
 add_executable( ecl_file ecl_file.c )
 target_link_libraries( ecl_file  ecl test_util )
-add_test( ecl_file ${EXECUTABLE_OUTPUT_PATH}/ecl_file ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST ECLIPSE.UNRST)
+add_test( ecl_file ${EXECUTABLE_OUTPUT_PATH}/ecl_file ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST ECLIPSE_TMP.UNRST)
 
 add_executable( ecl_fmt ecl_fmt.c )
 target_link_libraries( ecl_fmt  ecl test_util )

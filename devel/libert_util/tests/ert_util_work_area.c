@@ -81,6 +81,16 @@ void test_input() {
 
 
 
+void test_copy_file( const char * src_file ) {
+  char * filename = util_split_alloc_filename( src_file );
+  test_work_area_type * work_area = test_work_area_alloc( "copy-file" , true );
+  test_work_area_copy_file( work_area , src_file );
+  
+  test_assert_true( util_file_exists( filename ));
+  
+  test_work_area_free( work_area );
+  free( filename );
+}
 
 
 
@@ -96,5 +106,9 @@ int main(int argc , char ** argv) {
   test_copy_directory( rel_directory );
   test_input();
   test_get_cwd();
+  
+  test_copy_file( rel_path_file );
+  test_copy_file( abs_path_file );
+
   exit(0);
 }
