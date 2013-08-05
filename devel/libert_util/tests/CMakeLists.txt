@@ -95,10 +95,10 @@ add_executable( ert_util_addr2line ert_util_addr2line.c )
 target_link_libraries( ert_util_addr2line ert_util test_util )
 add_test( ert_util_addr2line ${EXECUTABLE_OUTPUT_PATH}/ert_util_addr2line)
 
-add_executable( ert_util_test_test ert_util_test_test.c )
-target_link_libraries( ert_util_test_test ert_util test_util )
-add_test( NAME ert_util_test_test 
-          COMMAND ${EXECUTABLE_OUTPUT_PATH}/ert_util_test_test data/file1.txt ${CMAKE_CURRENT_SOURCE_DIR}/data/file2.txt data
+add_executable( ert_util_work_area ert_util_work_area.c )
+target_link_libraries( ert_util_work_area ert_util test_util )
+add_test( NAME ert_util_work_area 
+          COMMAND ${EXECUTABLE_OUTPUT_PATH}/ert_util_work_area data/file1.txt ${CMAKE_CURRENT_SOURCE_DIR}/data/file2.txt data
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 

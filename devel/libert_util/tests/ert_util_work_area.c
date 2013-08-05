@@ -17,9 +17,23 @@
 */
 
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #include <ert/util/test_util.h>
 #include <ert/util/test_work_area.h>
+
+
+void test_get_cwd() {
+   test_work_area_type * work_area = test_work_area_alloc( "CWD-TEST", false);
+   char * cwd = util_alloc_cwd();
+   test_assert_string_equal( cwd , test_work_area_get_cwd( work_area ));
+   free( cwd );
+   test_work_area_free( work_area );
+}
+
+
 
 
 void create_test_area(const char * test_name , bool store) {
@@ -60,6 +74,15 @@ void test_copy_directory(const char * rel_path) {
 }
 
 
+void test_input() {
+  test_work_area_type * work_area = test_work_area_alloc( NULL , false );
+  test_assert_NULL( work_area );
+}
+
+
+
+
+
 
 int main(int argc , char ** argv) {
   const char * rel_path_file = argv[1];
@@ -71,6 +94,7 @@ int main(int argc , char ** argv) {
   test_install_file_exists( rel_path_file );
   test_install_file_exists( abs_path_file );
   test_copy_directory( rel_directory );
-  
+  test_input();
+  test_get_cwd();
   exit(0);
 }
