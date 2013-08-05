@@ -131,6 +131,11 @@ const char * test_work_area_get_cwd( const test_work_area_type * work_area ) {
 }
 
 
+const char * test_work_area_get_original_cwd( const test_work_area_type * work_area ) {
+  return work_area->original_cwd;
+}
+
+
 /**
    The point of this function is that the test code should be able to
    access the file @input_file independent of the fact that it has
@@ -187,5 +192,22 @@ void test_work_area_copy_directory_content( test_work_area_type * work_area , co
 }
 
 
+
+void test_work_area_copy_file( test_work_area_type * work_area , const char * input_file) {
+  if (input_file) {
+    char * src_file;
+
+    if (util_is_abs_path( input_file )) 
+      src_file = util_alloc_string_copy( input_file );
+    else
+      src_file = util_alloc_filename( work_area->original_cwd , input_file , NULL);
+    
+    if (util_file_exists( src_file )) {
+      char * target_file = util_split_alloc_filename( input_file );
+      util_copy_file( src_file , target_file );
+    }
+    free( src_file );
+  }
+}
 
 

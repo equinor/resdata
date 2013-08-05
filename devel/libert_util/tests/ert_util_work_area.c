@@ -34,6 +34,15 @@ void test_get_cwd() {
 }
 
 
+void test_get_original_cwd() {
+   char * cwd = util_alloc_cwd();
+   test_work_area_type * work_area = test_work_area_alloc( "CWD-ORG-TEST", false);
+   test_assert_string_equal( cwd , test_work_area_get_original_cwd( work_area ));
+   free( cwd );
+   test_work_area_free( work_area );
+}
+
+
 
 
 void create_test_area(const char * test_name , bool store) {
@@ -81,6 +90,16 @@ void test_input() {
 
 
 
+void test_copy_file( const char * src_file ) {
+  char * filename = util_split_alloc_filename( src_file );
+  test_work_area_type * work_area = test_work_area_alloc( "copy-file" , true );
+  test_work_area_copy_file( work_area , src_file );
+  
+  test_assert_true( util_file_exists( filename ));
+  
+  test_work_area_free( work_area );
+  free( filename );
+}
 
 
 
@@ -96,5 +115,10 @@ int main(int argc , char ** argv) {
   test_copy_directory( rel_directory );
   test_input();
   test_get_cwd();
+  test_get_original_cwd();
+  
+  test_copy_file( rel_path_file );
+  test_copy_file( abs_path_file );
+
   exit(0);
 }

@@ -201,7 +201,30 @@ int util_proc_mem_free(void) {
 
 
 
+char * util_split_alloc_dirname( const char * input_path ) {
+  char * path;
+  util_alloc_file_components( input_path , &path , NULL , NULL);
+  return path;
+}
 
+
+char * util_split_alloc_filename( const char * input_path ) {
+  char * filename = NULL;
+  {
+    char * basename;
+    char * extension;
+  
+    util_alloc_file_components( input_path , NULL , &basename , &extension);
+  
+    if (basename) 
+      filename = util_alloc_filename( NULL , basename , extension );
+    
+    util_safe_free( basename );
+    util_safe_free( extension );
+  }
+  
+  return filename;
+}
 
 
 
