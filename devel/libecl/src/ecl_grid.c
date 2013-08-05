@@ -39,6 +39,7 @@
 #include <ert/ecl/point.h>
 #include <ert/ecl/tetrahedron.h>
 #include <ert/ecl/grid_dims.h>
+#include <ert/ecl/nnc_info.h>
 
 
 /*
@@ -2026,7 +2027,7 @@ static void ecl_grid_init_cell_nnc_info(ecl_grid_type * ecl_grid, int global_ind
   ecl_cell_type * grid_cell = ecl_grid_get_cell(ecl_grid, global_index);
   
   if (!grid_cell->nnc_info) 
-    grid_cell->nnc_info = nnc_info_alloc(); 
+    grid_cell->nnc_info = nnc_info_alloc(ecl_grid->lgr_nr); 
 }
 
 
@@ -2044,12 +2045,20 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
     int grid1_cell_index = grid1_nnc_cells[i] -1;
     int grid2_cell_index = grid2_nnc_cells[i] -1;
     
+    
+  /*
+    In the ECLIPSE output format grids with dual porosity are (to some
+    extent ...) modeled as two independent grids stacked on top of
+    eachother, where the fracture cells have global index in the range
+    [nx*ny*nz, 2*nx*ny*nz). 
 
-  /*In the ECLIPSE output format grids with dual porosity are (to some extent ...) modeled as two independent grids stacked 
-    on top of eachother, where the fracture cells have global index in the range [nx*ny*nz, 2*nx*ny*nz). The physical connection
-    between the matrix and the fractures in cell nr c is modelled as an nnc: cell[c] -> cell[c + nx*ny*nz]. In the ert ecl library
-    we only have cells in the range [0,nx*ny*nz), and fracture is a property of a cell, we therefor do not included the nnc 
-    connection between matrix and fracture in the same cell in the nnc setup.*/
+    The physical connection between the matrix and the fractures in
+    cell nr c is modelled as an nnc: cell[c] -> cell[c + nx*ny*nz]. In
+    the ert ecl library we only have cells in the range [0,nx*ny*nz),
+    and fracture is a property of a cell, we therefor do not include
+    the nnc connection between matrix and fracture in the same cell in
+    the nnc setup.
+  */
     if ((grid1 == grid2) && 
         (FILEHEAD_SINGLE_POROSITY != grid1->dualp_flag) &&
         (abs(grid1_cell_index-grid2_cell_index) == grid1->size)) {
