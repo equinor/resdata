@@ -34,6 +34,7 @@ extern "C" {
   void                  test_work_area_install_file( test_work_area_type * work_area , const char * input_src_file );
   void                  test_work_area_copy_directory( test_work_area_type * work_area , const char * input_directory);
   void                  test_work_area_copy_directory_content( test_work_area_type * work_area , const char * input_directory);
+  void                  test_work_area_copy_file( test_work_area_type * work_area , const char * input_file);
 
 #ifdef __cplusplus
 }

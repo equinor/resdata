@@ -21,6 +21,7 @@
 
 #include <ert/util/test_util.h>
 #include <ert/util/util.h>
+#include <ert/util/test_work_area.h>
 
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_endian_flip.h>
@@ -123,17 +124,18 @@ void test_writable(const char * src_file ) {
 
 
 int main( int argc , char ** argv) {
-  
   const char * src_file = argv[1];
-  const char * filename = argv[2];
-  char * target_file = util_alloc_filename("/tmp" , filename , NULL );
-  
+  const char * target_file = argv[2];
+  test_work_area_type * work_area = test_work_area_alloc("ecl_file" , true);
+
   test_flags( src_file );
+  test_work_area_install_file( work_area , src_file );
   test_loadall(src_file , target_file );
-  test_close_stream1( src_file , target_file );
-  test_close_stream2( src_file , target_file );
-  test_writable( src_file );
-  util_unlink_existing( target_file );
-                 
+
+  test_close_stream1( src_file , target_file);
+  test_close_stream2( src_file , target_file);
+  //test_writable( src_file );
+
+  test_work_area_free( work_area );
   exit(0);
 }
