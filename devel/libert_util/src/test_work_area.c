@@ -131,6 +131,11 @@ const char * test_work_area_get_cwd( const test_work_area_type * work_area ) {
 }
 
 
+const char * test_work_area_get_original_cwd( const test_work_area_type * work_area ) {
+  return work_area->original_cwd;
+}
+
+
 /**
    The point of this function is that the test code should be able to
    access the file @input_file independent of the fact that it has
