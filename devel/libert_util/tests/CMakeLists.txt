@@ -14,6 +14,10 @@ add_executable( ert_util_type_vector_test ert_util_type_vector_test.c )
 target_link_libraries( ert_util_type_vector_test ert_util test_util )
 add_test( ert_util_type_vector_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_type_vector_test )
 
+add_executable( ert_util_filename ert_util_filename.c )
+target_link_libraries( ert_util_filename ert_util test_util )
+add_test( ert_util_filename ${EXECUTABLE_OUTPUT_PATH}/ert_util_filename )
+
 add_executable( ert_util_string_util ert_util_string_util.c )
 target_link_libraries( ert_util_string_util ert_util test_util )
 add_test( ert_util_string_util ${EXECUTABLE_OUTPUT_PATH}/ert_util_string_util )

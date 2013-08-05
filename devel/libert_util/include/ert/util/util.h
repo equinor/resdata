@@ -177,6 +177,8 @@ typedef enum {left_pad   = 0,
   FILE       * util_fopen__(const char * filename , const char * mode);
   void         util_fclose( FILE * stream );
   bool         util_fopen_test(const char *, const char *);
+  char       * util_split_alloc_dirname( const char * input_path );
+  char       * util_split_alloc_filename( const char * input_path );
   void         util_alloc_file_components(const char * , char ** , char **, char **);
   //char           * util_realloc_full_path(char * , const char *, const char *);
   char       * util_alloc_tmp_file(const char * , const char * , bool );
