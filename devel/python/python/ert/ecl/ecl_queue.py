@@ -174,7 +174,8 @@ class EclQueue( JobQueue ):
         """
         (path_base , ext) = os.path.splitext( data_file )
         (run_path , base) = os.path.split( path_base )
-        
-        argv = [ self.ecl_version , path_base , "%s" % ecl_util.get_num_cpu( data_file )]
-        return JobQueue.submit( self , self.ecl_cmd , run_path , base , argv)
+
+        num_cpu = ecl_util.get_num_cpu( data_file )
+        argv = [ self.ecl_version , path_base , "%s" % num_cpu]
+        return JobQueue.submit( self , self.ecl_cmd , run_path , base , argv , num_cpu = num_cpu)
 
