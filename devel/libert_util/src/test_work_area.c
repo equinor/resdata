@@ -27,32 +27,70 @@
 #include <ert/util/util.h>
 
 /*
-  It is absolutely essential element of this data structure that
-  different users should not get "permission problems" by stepping on
-  eachothers toes. By default the directories created by one
-  particular user will be owned by that user and the default mode will
-  not allow other users to access that directory. To ensure that this
-  does not create problems we must ensure that users do not create
-  directories which should be used by others, and that again is
-  ensured by insisting that $USER is the first (i.e. uniqeq) path
-  element following /tmp.
+  This file implements a small work area implementation to be used for
+  tests which write to disk. The implementation works by creating a
+  work area in /tmp and then call chdir() change the current working
+  directory.
+
+  An important aspect of this implementation is that test output from
+  different users should not come in conflict with e.g. permission
+  problems, to achieve this the directories created will be per user.
+
+  When creating the work area you pass in a boolean flag whether you
+  want the area to be retained when the destructor is called. After
+  the the work_area is destroyed the cwd is changed back to the value
+  it had before the area was created.
+
+  The functions test_work_area_install_file(),
+  test_work_area_copy_directory() and
+  test_work_area_copy_directory_content() can be used to populate the
+  work area with files and directories needed for the test
+  execution. These functions have some intelligence when it comes to
+  interpreting relative paths; a relative path input argument is
+  interpreted relative to the original cwd.
+
+  Basic usage example:
+  --------------------
+
+
+  -- Create directory /tmp/$USER/ert-test/my/funn/test and call 
+  -- chdir() to the newly created directory. 
+  test_work_area_type * work_area = test_work_area_alloc("my/funny/test" , true);    
+
+  -- Make files available from the test directory. 
+  test_work_area_install_file(work_area , "/home/user/build/test-data/file1");
+  test_work_area_install_file(work_area , "relative/path/file2");
+
+  -- Recursively copy directory and directory content into test area:
+  test_work_area_copy_directory(work_area , "/home/user/build/test-data/case1");  
+  
+  ...
+  -- Do normal test operations
+  ...
+
+  -- Destroy test_work_area structure; since the work_area is created
+  -- with input flag @retain set to true the are on disk will not be
+  -- cleared. After the test_work_area_free( ) function has been
+  -- called the original cwd will be restored.
+
+  test_work_area_free( work_area );
 */
   
 
 #define PATH_FMT       "/tmp/%s/ert-test/%s"     /* /tmp/username/ert-test/test_name */
 
 struct test_work_area_struct {
-  bool        store;
+  bool        retain;
   char      * cwd;
   char      * original_cwd;
 };
 
 
-static test_work_area_type * test_work_area_alloc__(const char * path , bool store) {
+static test_work_area_type * test_work_area_alloc__(const char * path , bool retain) {
   util_make_path( path );
   if (true) {
     test_work_area_type * work_area = util_malloc( sizeof * work_area );
-    work_area->store = store;
+    work_area->retain = retain;
     work_area->cwd = util_alloc_string_copy( path );
     work_area->original_cwd = util_alloc_cwd();
     chdir( work_area->cwd );  
@@ -63,12 +101,12 @@ static test_work_area_type * test_work_area_alloc__(const char * path , bool sto
 
 
 
-test_work_area_type * test_work_area_alloc(const char * test_name, bool store) {
+test_work_area_type * test_work_area_alloc(const char * test_name, bool retain) {
   if (test_name) {
     uid_t uid = getuid();
     struct passwd * pw = getpwuid( uid );
     char * path = util_alloc_sprintf( PATH_FMT , pw->pw_name , test_name );
-    test_work_area_type * work_area = test_work_area_alloc__( path , store );
+    test_work_area_type * work_area = test_work_area_alloc__( path , retain );
     free( path );
     return work_area;
   } else 
@@ -78,7 +116,7 @@ test_work_area_type * test_work_area_alloc(const char * test_name, bool store) {
 
 
 void test_work_area_free(test_work_area_type * work_area) { 
-  if (!work_area->store)
+  if (!work_area->retain)
     util_clear_directory( work_area->cwd , true , true );
 
   chdir( work_area->original_cwd );
@@ -93,6 +131,14 @@ const char * test_work_area_get_cwd( const test_work_area_type * work_area ) {
 }
 
 
+/**
+   The point of this function is that the test code should be able to
+   access the file @input_file independent of the fact that it has
+   changed path. If @input_file is an absolute path the function will
+   do nothing, if @input_file is a realtive path the function will
+   copy @input_file from the location relative to the original cwd to
+   the corresponding location relative to the test cwd.
+*/
 
 void test_work_area_install_file( test_work_area_type * work_area , const char * input_src_file ) {
   if (util_is_abs_path( input_src_file ))
