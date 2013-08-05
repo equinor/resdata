@@ -61,6 +61,17 @@ int main( int argc , char ** argv) {
     }
     fortio_fclose( fortio );
   }
+  printf("Doing ecl_file_open(..)\n");
+  {
+    ecl_file_type * file = ecl_file_open( "LARGE_FILE" , 0);
+    ecl_kw_type * file_kw = ecl_file_iget_named_kw( file , "KW" , num_kw - 1);
+    if (ecl_kw_equal( kw , file_kw ))
+      printf("Keyword read back from file correctly :-) \n");
+    else
+      printf("Fatal error - keyword different on return ...\n");
+    ecl_file_close( file );
+  }
+
   remove( "LARGE_FILE" );
   
   exit(0);
