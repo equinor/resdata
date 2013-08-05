@@ -17,9 +17,32 @@
 */
 
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #include <ert/util/test_util.h>
 #include <ert/util/test_work_area.h>
+
+
+void test_get_cwd() {
+   test_work_area_type * work_area = test_work_area_alloc( "CWD-TEST", false);
+   char * cwd = util_alloc_cwd();
+   test_assert_string_equal( cwd , test_work_area_get_cwd( work_area ));
+   free( cwd );
+   test_work_area_free( work_area );
+}
+
+
+void test_get_original_cwd() {
+   char * cwd = util_alloc_cwd();
+   test_work_area_type * work_area = test_work_area_alloc( "CWD-ORG-TEST", false);
+   test_assert_string_equal( cwd , test_work_area_get_original_cwd( work_area ));
+   free( cwd );
+   test_work_area_free( work_area );
+}
+
+
 
 
 void create_test_area(const char * test_name , bool store) {
@@ -60,6 +83,25 @@ void test_copy_directory(const char * rel_path) {
 }
 
 
+void test_input() {
+  test_work_area_type * work_area = test_work_area_alloc( NULL , false );
+  test_assert_NULL( work_area );
+}
+
+
+
+void test_copy_file( const char * src_file ) {
+  char * filename = util_split_alloc_filename( src_file );
+  test_work_area_type * work_area = test_work_area_alloc( "copy-file" , true );
+  test_work_area_copy_file( work_area , src_file );
+  
+  test_assert_true( util_file_exists( filename ));
+  
+  test_work_area_free( work_area );
+  free( filename );
+}
+
+
 
 int main(int argc , char ** argv) {
   const char * rel_path_file = argv[1];
@@ -71,6 +113,12 @@ int main(int argc , char ** argv) {
   test_install_file_exists( rel_path_file );
   test_install_file_exists( abs_path_file );
   test_copy_directory( rel_directory );
+  test_input();
+  test_get_cwd();
+  test_get_original_cwd();
   
+  test_copy_file( rel_path_file );
+  test_copy_file( abs_path_file );
+
   exit(0);
 }
