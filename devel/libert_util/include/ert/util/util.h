@@ -47,6 +47,13 @@ extern"C" {
 #endif
 
 
+#ifdef _WIN64
+typedef struct stat64 stat_type;
+#else
+typedef struct stat stat_type;
+#endif
+
+
 
 /*****************************************************************/
 /*
@@ -63,6 +70,7 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
                                           const char * , /* The current file / directory */
                                           int          , /* The current depth in the file hiearcrcy. */
                                           void *);       /* Arbitrary argument */
+
 
 
 typedef enum {left_pad   = 0,
@@ -144,8 +152,8 @@ typedef enum {left_pad   = 0,
   long         util_ftell(FILE * stream);
   int          util_fseek(FILE * stream, long offset, int whence);
   void         util_rewind(FILE * stream);
-
-
+  int          util_stat(const char * filename , stat_type * stat_info);
+  int          util_fstat(int fileno, stat_type * stat_info);
 
 #ifdef HAVE_VA_COPY
 #define UTIL_VA_COPY(target,src) va_copy(target,src)

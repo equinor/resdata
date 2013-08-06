@@ -24,26 +24,48 @@
 
 long util_ftell(FILE * stream) {
 #ifdef _WIN64
-	return _ftelli64(stream);
+  return _ftelli64(stream);
 #else
-	return ftell(stream);
+  return ftell(stream);
 #endif
 } 
 
 
 int util_fseek(FILE * stream, long offset, int whence) {
 #ifdef _WIN64
-	return _fseeki64(stream , offset , whence);
+  return _fseeki64(stream , offset , whence);
 #else
   return fseek( stream , offset , whence );
 #endif
 } 
 
 
+
 void util_rewind(FILE * stream) {
 #ifdef _WIN64
-	_fseeki64(stream , 0L , SEEK_SET);
+  _fseeki64(stream , 0L , SEEK_SET);
 #else
-	rewind( stream );
+  rewind( stream );
+#endif
+}
+
+
+
+
+
+int util_stat(const char * filename , stat_type * stat_info) {
+#ifdef _WIN64
+  return _stat64(filename , stat_info);
+#else
+  return stat(filename , stat_info);
+#endif
+}
+
+
+int util_fstat(int fileno, stat_type * stat_info) {
+#ifdef _WIN64
+  return _fstat64(fileno , stat_info);
+#else
+  return fstat(fileno , stat_info);
 #endif
 }

@@ -758,9 +758,9 @@ char * util_alloc_cwd(void) {
 
 bool util_is_cwd( const char * path ) {
   bool is_cwd = false;
-  struct stat path_stat;
+  stat_type path_stat;
 
-  if (stat(path , &path_stat) == 0) {
+  if (util_stat(path , &path_stat) == 0) {
     if (S_ISDIR( path_stat.st_mode )) {
       char * cwd = util_alloc_cwd();
 #ifdef ERT_WINDOWS
@@ -771,8 +771,8 @@ bool util_is_cwd( const char * path ) {
       */
       util_abort("%s: Internal error - function not properly implmented on Windows \n",__func__);
 #else
-      struct stat cwd_stat;
-      stat(cwd , &cwd_stat);
+      stat_type cwd_stat;
+      util_stat(cwd , &cwd_stat);
       if (cwd_stat.st_ino == path_stat.st_ino)
         is_cwd = true;
 #endif
@@ -2414,8 +2414,8 @@ bool util_file_exists(const char *filename) {
 */
 
 bool util_entry_exists( const char * entry ) {
-  struct stat stat_buffer;
-  int stat_return = stat(entry, &stat_buffer);
+  stat_type stat_buffer;
+  int stat_return = util_stat(entry, &stat_buffer);
   if (stat_return == 0)
     return true;
   else {
@@ -2450,9 +2450,9 @@ bool util_entry_exists( const char * entry ) {
 
 
 bool util_is_directory(const char * path) {
-  struct stat stat_buffer;
+  stat_type stat_buffer;
 
-  if (stat(path , &stat_buffer) == 0)
+  if (util_stat(path , &stat_buffer) == 0)
     return S_ISDIR(stat_buffer.st_mode);
   else if (errno == ENOENT)
     /*Path does not exist at all. */
@@ -2466,9 +2466,9 @@ bool util_is_directory(const char * path) {
 
 
 bool util_is_file(const char * path) {
-  struct stat stat_buffer;
+  stat_type stat_buffer;
 
-  if (stat(path , &stat_buffer) == 0)
+  if (util_stat(path , &stat_buffer) == 0)
     return S_ISREG(stat_buffer.st_mode);
   else if (errno == ENOENT)
     /*Path does not exist at all. */
@@ -2488,8 +2488,8 @@ bool util_is_file(const char * path) {
 #ifdef HAVE_FORK
 bool util_is_executable(const char * path) {
   if (util_file_exists(path)) {
-    struct stat stat_buffer;
-    stat(path , &stat_buffer);
+    stat_type stat_buffer;
+    util_stat(path , &stat_buffer);
     if (S_ISREG(stat_buffer.st_mode))
       return (stat_buffer.st_mode & S_IXUSR);
     else
@@ -2503,8 +2503,8 @@ bool util_is_executable(const char * path) {
    Will not differtiate between files and directories.
 */
 bool util_entry_readable( const char * entry ) {
-  struct stat buffer;
-  if (stat( entry , &buffer ) == 0)
+  stat_type buffer;
+  if (util_stat( entry , &buffer ) == 0)
     return buffer.st_mode & S_IRUSR;
   else
     return false;  /* If stat failed - typically not existing entry - we return false. */
@@ -2519,8 +2519,8 @@ bool util_file_readable( const char * file ) {
 }
 
 bool util_entry_writable( const char * entry ) {
-  struct stat buffer;
-  if (stat( entry , &buffer ) == 0)
+  stat_type buffer;
+  if (util_stat( entry , &buffer ) == 0)
     return buffer.st_mode & S_IWUSR;
   else
     return false;  /* If stat failed - typically not existing entry - we return false. */
@@ -2543,8 +2543,8 @@ bool util_is_executable(const char * path) {
 
 /* If it exists on windows it is readable ... */
 bool util_entry_readable( const char * entry ) {
-  struct stat buffer;
-  if (stat( entry , &buffer ) == 0)
+  stat_type buffer;
+  if (util_stat( entry , &buffer ) == 0)
     return true;
   else
     return false;  /* If stat failed - typically not existing entry - we return false. */
@@ -2552,8 +2552,8 @@ bool util_entry_readable( const char * entry ) {
 
 /* If it exists on windows it is readable ... */
 bool util_entry_writable( const char * entry ) {
-  struct stat buffer;
-  if (stat( entry , &buffer ) == 0)
+  stat_type buffer;
+  if (util_stat( entry , &buffer ) == 0)
     return true;
   else
     return false;  /* If stat failed - typically not existing entry - we return false. */
@@ -2715,14 +2715,14 @@ void util_alloc_file_components(const char * file, char **_path , char **_basena
 
 
 size_t util_file_size(const char *file) {
-  struct stat buffer;
+  stat_type buffer;
   int fildes;
   
   fildes = open(file , O_RDONLY);
   if (fildes == -1) 
     util_abort("%s: failed to open:%s - %s \n",__func__ , file , strerror(errno));
   
-  fstat(fildes, &buffer);
+  util_fstat(fildes, &buffer);
   close(fildes);
   
   return buffer.st_size;
@@ -2762,11 +2762,11 @@ void util_ftruncate(FILE * stream , long size) {
 */
 
 bool util_same_file(const char * file1 , const char * file2) {
-  struct stat buffer1 , buffer2;
+  stat_type buffer1 , buffer2;
   int stat1,stat2;
 
-  stat1 = stat(file1, &buffer1);   // In the case of symlinks the stat call will stat the target file and not the link.
-  stat2 = stat(file2, &buffer2);
+  stat1 = util_stat(file1, &buffer1);   // In the case of symlinks the stat call will stat the target file and not the link.
+  stat2 = util_stat(file2, &buffer2);
   
   if ((stat1 == 0) && (stat1 == stat2)) {
     if (buffer1.st_ino == buffer2.st_ino) 
@@ -2855,17 +2855,17 @@ bool util_fmt_bit8(const char *filename ) {
 
 
 double util_file_difftime(const char *file1 , const char *file2) {
-  struct stat b1, b2;
+  stat_type b1, b2;
   int f1,f2;
   time_t t1,t2;
 
   f1 = open(file1 , O_RDONLY);
-  fstat(f1, &b1);
+  util_fstat(f1, &b1);
   t1 = b1.st_mtime;
   close(f1);
 
   f2 = open(file2 , O_RDONLY);
-  fstat(f2, &b2);
+  util_fstat(f2, &b2);
   t2 = b2.st_mtime;
   close(f2);
 
@@ -2877,8 +2877,8 @@ time_t util_file_mtime(const char * file) {
   time_t mtime = -1;
   int fd = open( file , O_RDONLY);
   if (fd != -1) {
-    struct stat f_stat;
-    fstat(fd , &f_stat );
+    stat_type f_stat;
+    util_fstat(fd , &f_stat );
     mtime = f_stat.st_mtime;
     close( fd );
   } 
