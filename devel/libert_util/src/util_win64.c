@@ -23,15 +23,27 @@
 */
 
 long util_ftell(FILE * stream) {
-  return ftell(stream);
+#ifdef _WIN64
+	return _ftelli64(stream);
+#else
+	return ftell(stream);
+#endif
 } 
 
 
 int util_fseek(FILE * stream, long offset, int whence) {
+#ifdef _WIN64
+	return _fseeki64(stream , offset , whence);
+#else
   return fseek( stream , offset , whence );
+#endif
 } 
 
 
 void util_rewind(FILE * stream) {
-  rewind( stream );
+#ifdef _WIN64
+	_fseeki64(stream , 0L , SEEK_SET);
+#else
+	rewind( stream );
+#endif
 }

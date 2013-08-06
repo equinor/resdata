@@ -4898,7 +4898,7 @@ int util_fnmatch( const char * pattern , const char * string ) {
 #ifdef HAVE_FNMATCH
   return fnmatch( pattern , string , 0 );
 #else
-#pragma comment(lib , "shlwapi.lib");
+#pragma comment(lib , "shlwapi.lib")
   bool match = PathMatchSpec( string , pattern ); // shlwapi
   if (match)
     return 0;
