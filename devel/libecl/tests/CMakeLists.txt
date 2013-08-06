@@ -6,6 +6,6 @@ endif()
 # into the CTEST system. Should be invoked manually on Windows.
 if (ERT_WINDOWS) 
    add_executable( ecl_win64 ecl_win64.c ) 
-   target_link_libraries( ecl_win64 ecl util ) 
+   target_link_libraries( ecl_win64 ecl ert_util ) 
 endif()
 

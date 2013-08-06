@@ -5,7 +5,8 @@ set(header_files ssize_t.h type_macros.h rng.h lookup_table.h statistics.h mzran
 set( test_source test_util.c test_work_area.c )
 
 
-set_property(SOURCE hash.c PROPERTY COMPILE_FLAGS "-Wno-error")
+#set_property(SOURCE hash.c PROPERTY COMPILE_FLAGS "-Wno-error")
+
 
 if (WITH_LATEX)
    add_definitions( -DWITH_LATEX )
