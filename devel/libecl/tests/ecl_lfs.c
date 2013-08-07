@@ -33,7 +33,7 @@ int main( int argc , char ** argv) {
   ecl_kw_type * kw = ecl_kw_alloc("KW" , kw_size , ECL_INT_TYPE );
   rng_type * rng = rng_alloc( MZRAN , INIT_DEFAULT );
   int i;
-  off_t file_size;
+  offset_type file_size;
   for (i=0; i < kw_size; i++) 
     ecl_kw_iset_int( kw , i , rng_get_int( rng , 912732 ));
 

@@ -49,7 +49,9 @@ extern"C" {
 
 #ifdef WINDOWS_LFS_SUPPORT
 typedef struct stat64 stat_type;
+typedef __int64 offset_type;
 #else
+typedef off_t offset_type;
 typedef struct stat stat_type;
 #endif
 
@@ -149,8 +151,8 @@ typedef enum {left_pad   = 0,
   int          util_roundf( float x );
   int          util_round( double x );
 
-  off_t        util_ftell(FILE * stream);
-  int          util_fseek(FILE * stream, off_t offset, int whence);
+  offset_type        util_ftell(FILE * stream);
+  int          util_fseek(FILE * stream, offset_type offset, int whence);
   void         util_rewind(FILE * stream);
   int          util_stat(const char * filename , stat_type * stat_info);
   int          util_fstat(int fileno, stat_type * stat_info);

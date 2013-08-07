@@ -4980,7 +4980,7 @@ int util_round( double x ) { return (int) (x + 0.5); }
 #endif
 
 #include "util_path.c"
-#include "util_win64.c"
+#include "util_lfs.c"
 
 int util_type_get_id( const void * data ) {
   int type_id = ((const int*) data)[0];
