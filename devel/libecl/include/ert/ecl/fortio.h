@@ -26,6 +26,8 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 
+#include <ert/util/util.h>
+
 typedef enum {
   FORTIO_NOENTRY         = 0,    /* File does not exists at all - application error. */
   FORTIO_EOF             = 1,    /* The file / record is empty */
