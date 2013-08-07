@@ -128,7 +128,7 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
     cont = false;
     if (__read_int(stream , &header , endian_flip)) {
       if (header >= 0) {
-        if (fseek(stream , header , SEEK_CUR) == 0) {
+        if (util_fseek(stream , (off_t) header , SEEK_CUR) == 0) {
           if (__read_int(stream , &tail , endian_flip)) {
             cont = true;
             /* 
@@ -155,7 +155,7 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
       } 
     }
   } while (cont);
-  fseek(stream , init_pos , SEEK_SET);
+  util_fseek(stream , init_pos , SEEK_SET);
   return is_fortran_stream;
 }
 
@@ -423,7 +423,7 @@ void fortio_fclose(fortio_type *fortio) {
 
 bool fortio_is_fortio_file(fortio_type * fortio) {
   FILE * stream = fortio->stream;
-  int init_pos = util_ftell(stream);
+  off_t init_pos = fortio_ftell(fortio);
   int elm_read;
   bool is_fortio_file = false;
   elm_read = fread(&fortio->active_header , sizeof(fortio->active_header) , 1 , fortio->stream);
@@ -433,7 +433,7 @@ bool fortio_is_fortio_file(fortio_type * fortio) {
     if (fortio->endian_flip_header)
       util_endian_flip_vector(&fortio->active_header , sizeof fortio->active_header , 1);
 
-    if (fseek(stream , fortio->active_header , SEEK_CUR) == 0) {
+    if (fortio_fseek(fortio , (off_t) fortio->active_header , SEEK_CUR) == 0) {
       if (fread(&trailer , sizeof(fortio->active_header) , 1 , fortio->stream) == 1) {
         if (fortio->endian_flip_header)
           util_endian_flip_vector(&trailer , sizeof trailer , 1);
@@ -444,7 +444,7 @@ bool fortio_is_fortio_file(fortio_type * fortio) {
     } 
   }
 
-  fseek(stream , init_pos , SEEK_SET);
+  fortio_fseek(fortio , init_pos , SEEK_SET);
   return is_fortio_file;
 }
 
@@ -527,7 +527,7 @@ void fortio_fread_buffer(fortio_type * fortio, char * buffer , int buffer_size) 
 
 int fortio_fskip_record(fortio_type *fortio) {
   int record_size = fortio_init_read(fortio);
-  fseek(fortio->stream , record_size , SEEK_CUR);
+  fortio_fseek(fortio , (off_t) record_size , SEEK_CUR);
   fortio_complete_read(fortio);
   return record_size;
 }
@@ -624,7 +624,7 @@ static fortio_status_type fortio_check_record( FILE * stream , bool endian_flip 
     if (endian_flip)
       util_endian_flip_vector(&header , sizeof header , 1);
     
-    if (fseek(  stream , header , SEEK_CUR ) != 0) 
+    if (util_fseek(  stream , (off_t) header , SEEK_CUR ) != 0) 
       /* The fseek() failed - i.e. the data section was not sufficiently long. */
       status = FORTIO_MISSING_DATA;
     else {
