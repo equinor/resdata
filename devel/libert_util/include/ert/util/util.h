@@ -24,10 +24,10 @@
 #include <stdint.h>
 #include <time.h>
 #include <stdarg.h>
+#include <sys/types.h>
 
 #ifdef HAVE_GETUID
 #include <sys/stat.h>
-#include <sys/types.h>
 #endif
 
 #ifdef ERT_WINDOWS
@@ -52,7 +52,11 @@ typedef struct _stat64 stat_type;
 typedef __int64 offset_type;
 #else
 typedef struct stat stat_type;
-typedef off_t offset_type;
+#ifdef HAVE_FSEEKO
+  typedef off_t offset_type;
+#else
+  typedef long offset_type;
+#endif
 #endif
 
 
