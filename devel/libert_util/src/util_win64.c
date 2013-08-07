@@ -22,20 +22,20 @@
   the file is included into util.c.
 */
 
-long util_ftell(FILE * stream) {
+off_t util_ftell(FILE * stream) {
 #ifdef _WIN64
   return _ftelli64(stream);
 #else
-  return ftell(stream);
+  return ftello(stream);
 #endif
 } 
 
 
-int util_fseek(FILE * stream, long offset, int whence) {
+int util_fseek(FILE * stream, off_t offset, int whence) {
 #ifdef _WIN64
   return _fseeki64(stream , offset , whence);
 #else
-  return fseek( stream , offset , whence );
+  return fseeko( stream , offset , whence );
 #endif
 } 
 

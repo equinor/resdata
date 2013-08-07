@@ -149,8 +149,8 @@ typedef enum {left_pad   = 0,
   int          util_roundf( float x );
   int          util_round( double x );
 
-  long         util_ftell(FILE * stream);
-  int          util_fseek(FILE * stream, long offset, int whence);
+  off_t        util_ftell(FILE * stream);
+  int          util_fseek(FILE * stream, off_t offset, int whence);
   void         util_rewind(FILE * stream);
   int          util_stat(const char * filename , stat_type * stat_info);
   int          util_fstat(int fileno, stat_type * stat_info);
