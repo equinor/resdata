@@ -47,7 +47,7 @@ extern"C" {
 #endif
 
 
-#ifdef _WIN64
+#ifdef WINDOWS_LFS_SUPPORT
 typedef struct stat64 stat_type;
 #else
 typedef struct stat stat_type;
