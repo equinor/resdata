@@ -22,7 +22,7 @@
   the file is included into util.c.
 */
 
-off_t util_ftell(FILE * stream) {
+offset_type util_ftell(FILE * stream) {
 #ifdef WINDOWS_LFS_SUPPORT
   return _ftelli64(stream);
 #else
@@ -31,7 +31,7 @@ off_t util_ftell(FILE * stream) {
 } 
 
 
-int util_fseek(FILE * stream, off_t offset, int whence) {
+int util_fseek(FILE * stream, offset_type offset, int whence) {
 #ifdef WINDOWS_LFS_SUPPORT
   return _fseeki64(stream , offset , whence);
 #else
