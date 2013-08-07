@@ -48,11 +48,11 @@ extern"C" {
 
 
 #ifdef WINDOWS_LFS_SUPPORT
-typedef struct stat64 stat_type;
+typedef struct _stat64 stat_type;
 typedef __int64 offset_type;
 #else
-typedef off_t offset_type;
 typedef struct stat stat_type;
+typedef off_t offset_type;
 #endif
 
 
