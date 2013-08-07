@@ -66,8 +66,8 @@ typedef struct fortio_struct fortio_type;
   void               fortio_rewind(const fortio_type *fortio);
   const char  *      fortio_filename_ref(const fortio_type * );
   bool               fortio_fmt_file(const fortio_type *);
-  long               fortio_ftell( const fortio_type * fortio );
-  int                fortio_fseek( fortio_type * fortio , long offset , int whence);
+  off_t              fortio_ftell( const fortio_type * fortio );
+  int                fortio_fseek( fortio_type * fortio , off_t offset , int whence);
   int                fortio_fileno( fortio_type * fortio );
 
   bool               fortio_fclose_stream( fortio_type * fortio );

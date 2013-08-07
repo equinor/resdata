@@ -37,18 +37,18 @@ int main( int argc , char ** argv) {
     ecl_kw_iset_int( kw , i , rng_get_int( rng , 912732 ));
 
   {
-    fortio_type * fortio = fortio_open_writer( "LARGE_FILE" , false , ECL_ENDIAN_FLIP);
+    fortio_type * fortio = fortio_open_writer( "LARGE_FILE.UNRST" , false , ECL_ENDIAN_FLIP);
     for (i = 0; i < num_kw; i++) {
-      printf("Writing keyword %d/%d to file:LARGE_FILE \n",i+1 , num_kw );
+      printf("Writing keyword %d/%d to file:LARGE_FILE.UNRST \n",i+1 , num_kw );
       ecl_kw_fwrite( kw , fortio );
     }
     fortio_fclose( fortio );
   }
 
   {
-    fortio_type * fortio = fortio_open_reader( "LARGE_FILE" , false , ECL_ENDIAN_FLIP);
+    fortio_type * fortio = fortio_open_reader( "LARGE_FILE.UNRST" , false , ECL_ENDIAN_FLIP);
     for (i = 0; i < num_kw - 1; i++) {
-       printf("SKipping keyword %d/%d from file:LARGE_FILE \n",i+1 , num_kw );
+       printf("SKipping keyword %d/%d from file:LARGE_FILE.UNRST \n",i+1 , num_kw );
        ecl_kw_fskip( fortio );
     }
     {
@@ -63,7 +63,7 @@ int main( int argc , char ** argv) {
   }
   printf("Doing ecl_file_open(..)\n");
   {
-    ecl_file_type * file = ecl_file_open( "LARGE_FILE" , 0);
+    ecl_file_type * file = ecl_file_open( "LARGE_FILE.UNRST" , 0);
     ecl_kw_type * file_kw = ecl_file_iget_named_kw( file , "KW" , num_kw - 1);
     if (ecl_kw_equal( kw , file_kw ))
       printf("Keyword read back from file correctly :-) \n");
@@ -72,7 +72,7 @@ int main( int argc , char ** argv) {
     ecl_file_close( file );
   }
 
-  remove( "LARGE_FILE" );
+  remove( "LARGE_FILE.UNRST" );
   
   exit(0);
 }

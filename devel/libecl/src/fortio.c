@@ -119,7 +119,7 @@ static bool __read_int(FILE * stream , int * value, bool endian_flip) {
 
 static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
   const bool strict_checking = true;          /* True: requires that *ALL* records in the file are fortran formatted */
-  long init_pos              = util_ftell(stream);
+  off_t init_pos              = util_ftell(stream);
   bool is_fortran_stream     = false;
   int header , tail;
   bool cont;
@@ -697,12 +697,12 @@ fortio_status_type fortio_check_file( const char * filename , bool endian_flip) 
 }
 
 
-long fortio_ftell( const fortio_type * fortio ) {
+off_t fortio_ftell( const fortio_type * fortio ) {
   return util_ftell( fortio->stream );
 }
 
 
-int fortio_fseek( fortio_type * fortio , long offset , int whence) {
+int fortio_fseek( fortio_type * fortio , off_t offset , int whence) {
   int fseek_return = util_fseek( fortio->stream , offset , whence );
   /*
     if fseek_return != 0 -> util_abort().
