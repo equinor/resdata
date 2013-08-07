@@ -23,7 +23,7 @@
 */
 
 off_t util_ftell(FILE * stream) {
-#ifdef _WIN64
+#ifdef WINDOWS_LFS_SUPPORT
   return _ftelli64(stream);
 #else
   return ftello(stream);
@@ -32,7 +32,7 @@ off_t util_ftell(FILE * stream) {
 
 
 int util_fseek(FILE * stream, off_t offset, int whence) {
-#ifdef _WIN64
+#ifdef WINDOWS_LFS_SUPPORT
   return _fseeki64(stream , offset , whence);
 #else
   return fseeko( stream , offset , whence );
@@ -42,7 +42,7 @@ int util_fseek(FILE * stream, off_t offset, int whence) {
 
 
 void util_rewind(FILE * stream) {
-#ifdef _WIN64
+#ifdef WINDOWS_LFS_SUPPORT
   _fseeki64(stream , 0L , SEEK_SET);
 #else
   rewind( stream );
@@ -54,7 +54,7 @@ void util_rewind(FILE * stream) {
 
 
 int util_stat(const char * filename , stat_type * stat_info) {
-#ifdef _WIN64
+#ifdef WINDOWS_LFS_SUPPORT
   return _stat64(filename , stat_info);
 #else
   return stat(filename , stat_info);
@@ -63,7 +63,7 @@ int util_stat(const char * filename , stat_type * stat_info) {
 
 
 int util_fstat(int fileno, stat_type * stat_info) {
-#ifdef _WIN64
+#ifdef WINDOWS_LFS_SUPPORT
   return _fstat64(fileno , stat_info);
 #else
   return fstat(fileno , stat_info);
