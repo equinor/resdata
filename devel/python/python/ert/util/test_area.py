@@ -39,6 +39,9 @@ class TestArea(CClass):
     def copy_directory_content( self , directory ):
         cfunc.copy_directory_content( self , directory )
         
+    def copy_file( self , file):
+        cfunc.copy_file( self , file )
+
 
 CWrapper.registerType( "test_area" , TestArea )
 
@@ -50,4 +53,5 @@ cfunc.test_area_alloc             = cwrapper.prototype("c_void_p test_work_area_
 cfunc.free            = cwrapper.prototype("void test_work_area_free( test_area )")
 cfunc.install_file    = cwrapper.prototype("void test_work_area_install_file( test_area , char* )")
 cfunc.copy_directory  = cwrapper.prototype("void test_work_area_copy_directory( test_area , char* )")
+cfunc.copy_file  = cwrapper.prototype("void test_work_area_copy_file( test_area , char* )")
 cfunc.copy_directory_content  = cwrapper.prototype("void test_work_area_copy_directory_content( test_area , char* )")
