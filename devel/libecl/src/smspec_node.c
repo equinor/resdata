@@ -578,7 +578,7 @@ bool smspec_node_init( smspec_node_type * smspec_node,
       initOK = false;
     break;
   case(ECL_SMSPEC_SEGMENT_VAR):
-    if (wgnameOK) {
+    if (wgnameOK && num >= 0) {
       smspec_node_set_wgname( smspec_node , wgname );
       smspec_node_set_num( smspec_node , grid_dims , num );
     } else
