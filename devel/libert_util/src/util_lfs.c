@@ -17,9 +17,40 @@
 */
 
 /*
-  The util_win64 function contains superthin wrappers for a couple of
-  stdlib functions which require different names on Windows 64 bit,
-  the file is included into util.c.
+  This file, together with ifdef and typedef in util.h together try to
+  define transparent large file (> 2GB) support on windows and
+  linux. To support large files the datatype used to hold a file
+  offset must be 64 bit, in practical consequences this means:
+
+    - functions ftell() and fseek() must use 64 bit offset types.
+    - The size field in struct stat must be 64 bit.
+
+  On linux (at least on 64 bit platform) this is the deafult,
+  i.e. large files can be accessed out of the box. On windows the
+  situaton is more complicated:
+
+     - functions ftell() and fseek() expect 32 bit offset types.
+     - The size field in struct stat is a 32 bit variable.
+
+  Observe that the situation where 32 bit offset variables are used on
+  windows apply even on a 64 bit platform. To provide large file
+  support windows has the functions _ftelli64() and _fseeki64() and
+  the struct _stat64. Here we provide small wrapper functions
+  util_ftell(), util_fseek() and typedef struct stat_info. 
+
+  The final challenge is that the types 'long' and 'off_t == long'
+  have different size on windows and linux:
+
+
+     Windows(64 bit): sizeof(long)  = 4
+                      sizeof(off_t) = 4  
+
+     Linux(64 bit):   sizeof(long)  = 8
+                      sizeof(off_t) = 8  
+
+
+  To protect against this confusion we have typedefed a type
+  'offset_type' in util.h, and all file operations should use that type.
 */
 
 offset_type util_ftell(FILE * stream) {
