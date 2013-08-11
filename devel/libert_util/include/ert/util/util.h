@@ -52,11 +52,11 @@ extern"C" {
   transparently on both Windows and Linux. See source file
   libert_util/src/util_lfs.c for more details.
 
-  The symbol WINDOWS_LFS_SUPPORT should be defined during compilation
+  The symbol WINDOWS_LFS should be defined during compilation
   if you want support of large files on windows.
 */
 
-#ifdef WINDOWS_LFS_SUPPORT
+#ifdef WINDOWS_LFS
 typedef struct _stat64 stat_type;
 typedef __int64 offset_type;
 #else

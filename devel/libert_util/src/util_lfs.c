@@ -54,7 +54,7 @@
 */
 
 offset_type util_ftell(FILE * stream) {
-#ifdef WINDOWS_LFS_SUPPORT
+#ifdef WINDOWS_LFS
   return _ftelli64(stream);
 #else
   #ifdef HAVE_FSEEKO
@@ -67,7 +67,7 @@ offset_type util_ftell(FILE * stream) {
 
 
 int util_fseek(FILE * stream, offset_type offset, int whence) {
-#ifdef WINDOWS_LFS_SUPPORT
+#ifdef WINDOWS_LFS
   return _fseeki64(stream , offset , whence);
 #else
   #ifdef HAVE_FSEEKO
