@@ -24,6 +24,7 @@
 
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/nnc_info.h>
+#include <ert/ecl/nnc_vector.h>
  
 
 int main(int argc , char ** argv) {
