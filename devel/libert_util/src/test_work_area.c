@@ -25,6 +25,7 @@
 
 #include <ert/util/test_work_area.h>
 #include <ert/util/util.h>
+#include <ert/util/rng.h>
 
 /*
   This file implements a small work area implementation to be used for
@@ -77,7 +78,7 @@
 */
   
 
-#define PATH_FMT       "/tmp/%s/ert-test/%s"     /* /tmp/username/ert-test/test_name */
+#define PATH_FMT       "/tmp/%s/ert-test/%s/%08d"     /* /tmp/username/ert-test/test_name/random-integer */
 
 struct test_work_area_struct {
   bool        retain;
@@ -105,9 +106,11 @@ test_work_area_type * test_work_area_alloc(const char * test_name, bool retain) 
   if (test_name) {
     uid_t uid = getuid();
     struct passwd * pw = getpwuid( uid );
-    char * path = util_alloc_sprintf( PATH_FMT , pw->pw_name , test_name );
+    rng_type * rng = rng_alloc(MZRAN , INIT_CLOCK );
+    char * path = util_alloc_sprintf( PATH_FMT , pw->pw_name , test_name , rng_get_int( rng , 100000000 ));
     test_work_area_type * work_area = test_work_area_alloc__( path , retain );
     free( path );
+    rng_free( rng );
     return work_area;
   } else 
     return NULL;
