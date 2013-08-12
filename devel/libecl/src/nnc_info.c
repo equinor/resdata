@@ -63,6 +63,12 @@ nnc_vector_type * nnc_info_get_vector( const nnc_info_type * nnc_info , int lgr_
     return vector_iget( nnc_info->lgr_list , lgr_index );
 }
 
+
+nnc_vector_type * nnc_info_get_self_vector( const nnc_info_type * nnc_info ) {
+  return nnc_info_get_vector( nnc_info , nnc_info->lgr_nr );
+}
+
+
 static void nnc_info_assert_vector( nnc_info_type * nnc_info , int lgr_nr ) {
   nnc_vector_type * nnc_vector = nnc_info_get_vector( nnc_info , lgr_nr);
   if (!nnc_vector) {
@@ -93,6 +99,10 @@ const int_vector_type * nnc_info_get_index_list(const nnc_info_type * nnc_info, 
     return NULL;
 }
 
+
+const int_vector_type * nnc_info_get_self_index_list(const nnc_info_type * nnc_info) { 
+  return nnc_info_get_index_list( nnc_info , nnc_info->lgr_nr );
+}
 
 
 

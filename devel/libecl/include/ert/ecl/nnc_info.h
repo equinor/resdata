@@ -38,6 +38,8 @@ extern "C" {
   const int_vector_type * nnc_info_get_index_list(const nnc_info_type * nnc_info, int lgr_nr); 
   int                     nnc_info_get_lgr_nr(const nnc_info_type * nnc_info );
   nnc_vector_type       * nnc_info_get_vector( const nnc_info_type * nnc_info , int lgr_nr);
+  const int_vector_type * nnc_info_get_self_index_list(const nnc_info_type * nnc_info);
+  nnc_vector_type       * nnc_info_get_self_vector( const nnc_info_type * nnc_info );
   
 #ifdef __cplusplus
 }

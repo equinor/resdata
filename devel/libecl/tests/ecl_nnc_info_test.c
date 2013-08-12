@@ -49,6 +49,14 @@ int main(int argc , char ** argv) {
   test_assert_NULL(nnc_cells_null); 
   test_assert_NULL(nnc_vector_null); 
   
+  const nnc_vector_type * nnc_vector_self  = nnc_info_get_self_vector( nnc_info );
+  const nnc_vector_type * nnc_vector_77  = nnc_info_get_vector( nnc_info , lgr_nr );
+  test_assert_ptr_equal( nnc_vector_77 , nnc_vector_self );
+
+  const int_vector_type * nnc_cells_77 = nnc_info_get_index_list(nnc_info, lgr_nr); 
+  const int_vector_type * nnc_cells_self = nnc_info_get_self_index_list(nnc_info); 
+  test_assert_ptr_equal( nnc_cells_77 , nnc_cells_self );
+  
   nnc_info_free(nnc_info);
   
   exit(0);
