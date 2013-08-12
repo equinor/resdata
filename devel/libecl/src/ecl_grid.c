@@ -359,6 +359,73 @@
 */
 
 
+/*
+  About nnc
+  ---------
+
+  When loading a grid file the various NNC related keywords are read
+  in to assemble information of the NNC. The NNC information is
+  organized as follows:
+
+    1. The field nnc_index_list is a thin wrapper around a int_vector
+       instance which will return a sorted list of indicies of cells
+       which have attached NNC information.
+
+    2. For cells with NNC's attached the information is kept in a
+       nnc_info_type structure. For a particular cell the nnc_info
+       structure keeps track of which other cells this particular cell
+       is connected to, on a per grid (i.e. LGR) basis. 
+
+       In the nnc_info structure the different grids are identified
+       through the lgr_nr.
+
+
+
+  Example usage:
+  --------------
+
+     ecl_grid_type * grid = ecl_grid_alloc("FILE.EGRID");
+
+     // Get a int_vector instance with all the cells which have nnc info
+     // attached.
+     const int_vector_type * cells_with_nnc = ecl_grid_get_nnc_index_list( grid );
+
+     // Iterate over all the cells with nnc info:
+     for (int i=0; i < int_vector_size( cells_with_nnc ); i++) {
+         int cell_index =  int_vector_iget( cells_with_nnc , i);
+         const nnc_info_type * nnc_info = ecl_grid_get_nnc_info1( grid , cell_index);
+
+         // Get all the nnc connections from @cell_index to other cells in the same grid
+         {
+            const int_vector_type * nnc_list = nnc_info_get_self_index_list( nnc_info );
+            for (int j=0; j < int_vector_size( nnc_list ); j++) 
+               printf("Cell[%d] -> %d  in the same grid \n",cell_index , int_vector_iget(nnc_list , j));
+         }
+             
+
+         {
+             for (int lgr_index=0; lgr_index < nnc_info_get_size( nnc_info ); lgr_index++) {
+                nnc_vector_type * nnc_vector = nnc_info_iget_vector( nnc_info , lgr_index );
+                int lgr_nr = nnc_vector_get_lgr_nr( nnc_vector );
+                if (lgr_nr != nnc_info_get_lgr_nr( nnc_info )) {
+                   const int_vector_type * nnc_list = nnc_vector_get_index_list( nnc_vector );
+                   for (int j=0; j < int_vector_size( nnc_list ); j++) 
+                       printf("Cell[%d] -> %d  in lgr:%d/%s \n",cell_index , int_vector_iget(nnc_list , j) , lgr_nr  , ecl_grid_get_lgr_name(ecl_grid , lgr_nr));   
+                }  
+             }   
+         }  
+     }
+
+
+  Dual porosity and nnc: In ECLIPSE the connection between the matrix
+  properties and the fracture properties in a cell is implemented as a
+  nnc where the fracture cell has global index in the range [nx*ny*nz,
+  2*nz*ny*nz). In ert we we have not implemented this double covering
+  in the case of dual porosity models, and therefor NNC involving 
+  fracture cells are not considered.
+*/
+
+
 
 /*
   about tetraheder decomposition

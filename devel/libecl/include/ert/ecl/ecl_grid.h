@@ -149,6 +149,7 @@ extern "C" {
   ecl_grid_type         * ecl_grid_get_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
   bool                    ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
   const char            * ecl_grid_iget_lgr_name( const ecl_grid_type * ecl_grid , int lgr_index);
+  const char            * ecl_grid_get_lgr_name( const ecl_grid_type * ecl_grid , int lgr_nr);
   stringlist_type       * ecl_grid_alloc_lgr_name_list(const ecl_grid_type * ecl_grid);
   int                     ecl_grid_get_parent_cell1( const ecl_grid_type * grid , int global_index);
   int                     ecl_grid_get_parent_cell3( const ecl_grid_type * grid , int i , int j , int k);
