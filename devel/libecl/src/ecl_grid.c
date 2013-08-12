@@ -2058,14 +2058,14 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
     cell nr c is modelled as an nnc: cell[c] -> cell[c + nx*ny*nz]. In
     the ert ecl library we only have cells in the range [0,nx*ny*nz),
     and fracture is a property of a cell, we therefor do not include
-    the nnc connection between matrix and fracture in the same cell in
-    the nnc setup.
+    nnc connections involving fracture cells (i.e. cell_index >=
+    nx*ny*nz).
   */
-    if ((grid1 == grid2) && 
-        (FILEHEAD_SINGLE_POROSITY != grid1->dualp_flag) &&
-        (abs(grid1_cell_index-grid2_cell_index) == grid1->size)) {
+    if ((FILEHEAD_SINGLE_POROSITY != grid1->dualp_flag) &&  
+        ((grid1_cell_index >= grid1->size) ||                      
+         (grid2_cell_index >= grid2->size)))
       break; 
-    }
+    
 
     ecl_grid_init_cell_nnc_info(grid1, grid1_cell_index);
     ecl_grid_init_cell_nnc_info(grid2, grid2_cell_index);
