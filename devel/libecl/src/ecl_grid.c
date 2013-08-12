@@ -2014,15 +2014,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
 
 
 
-/* 
-   This function returns the lgr with the given lgr_nr. The lgr_nr is the fourth element in the GRIDHEAD for EGRID files.
-   The lgr nr is equal to the grid nr if the grid's are consecutive numbered and read from file in increasing 
-   lgr nr order. This method can only be used for EGRID files. For GRID files the lgr_nr is 0 for all grids.
- */
-ecl_grid_type * ecl_grid_get_lgr_from_lgr_nr(const ecl_grid_type * main_grid, int lgr_nr) {
-  int index = int_vector_iget(main_grid->lgr_index_map, lgr_nr);
-  return ecl_grid_iget_lgr(main_grid, index); 
-}
+
 
 
 static void ecl_grid_init_cell_nnc_info(ecl_grid_type * ecl_grid, int global_index) {
@@ -3647,6 +3639,24 @@ ecl_grid_type * ecl_grid_iget_lgr(const ecl_grid_type * main_grid, int lgr_index
   return vector_iget(  main_grid->LGR_list , lgr_index);
 }
 
+/* 
+   This function returns the lgr with the given lgr_nr. The lgr_nr is
+   the fourth element in the GRIDHEAD for EGRID files.  The lgr nr is
+   equal to the grid nr if the grid's are consecutive numbered and
+   read from file in increasing lgr nr order. 
+
+   This method can only be used for EGRID files. For GRID files the
+   lgr_nr is 0 for all grids.
+*/
+
+ecl_grid_type * ecl_grid_get_lgr_from_lgr_nr(const ecl_grid_type * main_grid, int lgr_nr) {
+  __assert_main_grid( main_grid );
+  {
+    int lgr_index = int_vector_iget( main_grid->lgr_index_map , lgr_nr );
+    return vector_iget(  main_grid->LGR_list , lgr_index);
+  }
+}
+
 
 /**
    The following functions will return the LGR subgrid referenced by
@@ -3711,6 +3721,15 @@ const char * ecl_grid_iget_lgr_name( const ecl_grid_type * ecl_grid , int lgr_in
     return lgr->name;
   } else 
     return NULL;
+}
+
+
+const char * ecl_grid_get_lgr_name( const ecl_grid_type * ecl_grid , int lgr_nr) {
+  __assert_main_grid( ecl_grid );
+  {
+    int lgr_index = int_vector_iget( ecl_grid->lgr_index_map , lgr_nr );
+    return ecl_grid_iget_lgr_name( ecl_grid , lgr_index );
+  }
 }
 
 
