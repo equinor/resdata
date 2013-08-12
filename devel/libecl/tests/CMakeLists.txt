@@ -132,6 +132,10 @@ add_executable( ecl_rft_cell ecl_rft_cell.c )
 target_link_libraries( ecl_rft_cell ecl test_util )
 add_test( ecl_rft_cell ${EXECUTABLE_OUTPUT_PATH}/ecl_rft_cell )
 
+add_executable( ecl_nnc_index_list ecl_nnc_index_list.c )
+target_link_libraries( ecl_nnc_index_list ecl test_util )
+add_test( ecl_nnc_index_list ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_index_list )
+
 add_executable( ecl_get_num_cpu ecl_get_num_cpu_test.c )
 target_link_libraries( ecl_get_num_cpu ecl test_util )
 add_test( ecl_get_num_cpu ${EXECUTABLE_OUTPUT_PATH}/ecl_get_num_cpu ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu1 ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu2)
