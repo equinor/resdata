@@ -78,7 +78,8 @@ extern "C" {
   int             ecl_grid_get_global_index3(const ecl_grid_type * , int  , int , int );
   int             ecl_grid_get_global_index1A(const ecl_grid_type * ecl_grid , int active_index);
   int             ecl_grid_get_global_index1F(const ecl_grid_type * ecl_grid , int active_fracture_index);
-     
+
+  const int_vector_type * ecl_grid_get_nnc_index_list( ecl_grid_type * grid );
   const nnc_info_type * ecl_grid_get_cell_nnc_info3( const ecl_grid_type * grid , int i , int j , int k); 
   const nnc_info_type * ecl_grid_get_cell_nnc_info1( const ecl_grid_type * grid , int global_index); 
   

@@ -116,6 +116,10 @@ add_executable( ecl_fmt ecl_fmt.c )
 target_link_libraries( ecl_fmt  ecl test_util )
 add_test( ecl_fmt ${EXECUTABLE_OUTPUT_PATH}/ecl_fmt ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.DATA)
 
+add_executable( ecl_nnc_index_list_grid ecl_nnc_index_list_grid.c )
+target_link_libraries( ecl_nnc_index_list_grid  ecl test_util )
+add_test( ecl_nnc_index_list_grid ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_index_list_grid ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID)
+
 
 add_executable( ecl_rsthead ecl_rsthead.c )
 target_link_libraries( ecl_rsthead ecl test_util )
@@ -172,6 +176,7 @@ set_property( TEST ecl_grid_dims3 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_dims4 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_dims5 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_nnc_test PROPERTY LABELS StatoilData )
+set_property( TEST ecl_nnc_index_list_grid PROPERTY LABELS StatoilData )
 set_property( TEST ecl_file PROPERTY LABELS StatoilData)
 set_property( TEST ecl_rsthead PROPERTY LABELS StatoilData)
 set_property( TEST ecl_region PROPERTY LABELS StatoilData)

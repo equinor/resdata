@@ -40,7 +40,7 @@
 #include <ert/ecl/tetrahedron.h>
 #include <ert/ecl/grid_dims.h>
 #include <ert/ecl/nnc_info.h>
-
+#include <ert/ecl/nnc_index_list.h>
 
 /*
   If openmp is enabled the main loop in ecl_grid_init_GRDECL_data is
@@ -491,6 +491,7 @@ struct ecl_grid_struct {
 
   int                 * fracture_index_map;     /* For fractures: this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_fracture_index_map; /* For fractures: this is list of total_active elements - which point back to the index_map. */ 
+  nnc_index_list_type * nnc_index_list;
 
 #ifdef LARGE_CELL_MALLOC
   ecl_cell_type      *  cells;
@@ -1196,8 +1197,9 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int du
   grid->index_map             = NULL; 
   grid->fracture_index_map    = NULL;
   grid->inv_fracture_index_map = NULL;
+  grid->nnc_index_list         = nnc_index_list_alloc( );
   ecl_grid_alloc_cells( grid , init_valid );
-
+  
 
   if (global_grid != NULL) {
     /* this is an lgr instance, and we inherit the global grid
@@ -2074,6 +2076,8 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
     //Add the non-neighbour connection in both directions
     nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr, grid2_cell_index);
     nnc_info_add_nnc(grid2_cell->nnc_info, grid1->lgr_nr, grid1_cell_index);
+
+    nnc_index_list_add_index( grid1->nnc_index_list , grid1_cell_index );
   }
 }
 
@@ -3093,6 +3097,7 @@ void ecl_grid_free(ecl_grid_type * grid) {
   if (grid->coord_kw != NULL)
     ecl_kw_free( grid->coord_kw );
   
+  nnc_index_list_free( grid->nnc_index_list );
   vector_free( grid->coarse_cells );
   hash_free( grid->children );
   util_safe_free( grid->parent_name );
@@ -3505,6 +3510,9 @@ double ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j 
 }
 
 
+const int_vector_type * ecl_grid_get_nnc_index_list( ecl_grid_type * grid ) {
+  return nnc_index_list_get_list( grid->nnc_index_list );
+}
 
 
 const nnc_info_type * ecl_grid_get_cell_nnc_info1( const ecl_grid_type * grid , int global_index) {

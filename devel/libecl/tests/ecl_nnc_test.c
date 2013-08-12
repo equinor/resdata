@@ -324,6 +324,7 @@ void test_nnc_amalgamated_lgrs(const char * grid_filename) {
 
  
 
+
 int main(int argc , char ** argv) {
   const char * EGRID_file1 = argv[1];
   const char * EGRID_file2 = argv[2];
