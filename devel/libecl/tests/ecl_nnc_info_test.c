@@ -56,7 +56,10 @@ int main(int argc , char ** argv) {
   const int_vector_type * nnc_cells_77 = nnc_info_get_index_list(nnc_info, lgr_nr); 
   const int_vector_type * nnc_cells_self = nnc_info_get_self_index_list(nnc_info); 
   test_assert_ptr_equal( nnc_cells_77 , nnc_cells_self );
-  
+
+
+  test_assert_int_equal( 1 , nnc_info_get_size( nnc_info ));
+  test_assert_ptr_equal( nnc_info_get_vector( nnc_info , 1 ) , nnc_info_iget_vector( nnc_info , 0 ));
   nnc_info_free(nnc_info);
   
   exit(0);
