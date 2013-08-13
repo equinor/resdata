@@ -41,14 +41,15 @@ float and size_t not currently implemented in the Python version.
 """
 
 import  sys
-import  types
+from    types import IntType, SliceType
 import  ctypes
-import  libutil
+
 from    ert.cwrap.cwrap       import *
 from    ert.cwrap.cfile       import CFILE
 from    ert.cwrap.cclass      import CClass
 import  numpy
 
+from ert.util import UTIL_LIB
 
 
 
@@ -57,7 +58,7 @@ import  numpy
 class TVector(CClass):
     
     @classmethod
-    def strided_copy( cls , obj , slice ):
+    def strided_copy( cls , obj , slice_range ):
         """
         Will create a new copy according to @slice.
 
@@ -73,7 +74,7 @@ class TVector(CClass):
         Now 'c' will be a Intvector() instance containing every tenth
         element from 'v'.
         """
-        (start , stop , step) = slice.indices( obj.size )
+        (start , stop , step) = slice_range.indices( obj.size )
         if stop > start:
             new_obj = TVector.__new__( cls )
             c_ptr = cls.cstrided_copy( obj  , start , stop , step )
@@ -188,7 +189,7 @@ class TVector(CClass):
         """
         Implements read [] operator - @index can be slice instance.
         """
-        if isinstance( index , types.IntType):
+        if isinstance( index , IntType):
             length = self.__len__()
             if index < 0:
                 index += length
@@ -197,7 +198,7 @@ class TVector(CClass):
                 raise IndexError
             else:
                 return self.iget( self , index )
-        elif isinstance( index , types.SliceType ):
+        elif isinstance( index , SliceType ):
             return self.strided_copy( self , index )
         else:
             raise TypeError("Index should be integer or slice type.")
@@ -206,7 +207,7 @@ class TVector(CClass):
         """
         Implements write [] operator - @index must be integer.
         """
-        if isinstance( index , types.IntType):
+        if isinstance( index , IntType):
             self.iset( self, index , value )
         else:
             raise TypeError("Index should be integer type")
@@ -514,6 +515,7 @@ class DoubleVector(TVector):
     def __new__( cls , **kwargs ):
         if not cls.initialized:
             cls.csort         = cfunc.double_vector_sort
+            cls.csort         = cfunc.double_vector_sort
             cls.crsort        = cfunc.double_vector_rsort
             cls.alloc         = cfunc.double_vector_alloc
             cls.alloc_copy    = cfunc.double_vector_alloc_copy
@@ -549,7 +551,7 @@ class DoubleVector(TVector):
             cls.def_fmt       = "%8.4f"
             cls.initialized = True
 
-        obj = TVector.__new__( cls , kwargs )
+        obj = TVector.__new__( cls , **kwargs )
         return obj
     
 
@@ -712,7 +714,7 @@ CWrapper.registerType( "int_vector"    , IntVector )
 CWrapper.registerType( "bool_vector"   , BoolVector ) 
 
 
-cwrapper = CWrapper( libutil.lib )
+cwrapper = CWrapper(UTIL_LIB)
 cfunc    = CWrapperNameSpace("tvector")
 
 
