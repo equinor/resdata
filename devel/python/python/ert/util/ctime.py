@@ -32,7 +32,7 @@ class ctime(ctypes.c_long):
                 # Input value is assumed to be datetime.datetime instance
                 self.value = int(math.floor(time.mktime(
                     (value.year, value.month, value.day, value.hour, value.minute, value.second, 0, 0, -1 ))))
-            except:  #TODO: missing
+            except (OverflowError, ValueError):
                 # Input value is assumed to be datetime.date instance
                 self.value = int(math.floor(time.mktime((value.year, value.month, value.day, 0, 0, 0, 0, 0, -1 ))))
 
@@ -59,6 +59,9 @@ class ctime(ctypes.c_long):
 
     def __lt__(self, other):
         return not self >= other
+
+    def __eq__(self, other):
+        return self.value == other.value
 
     @property
     def stripped(self):

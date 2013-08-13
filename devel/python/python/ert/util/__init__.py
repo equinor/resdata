@@ -55,7 +55,7 @@ except:
 
 UTIL_LIB = clib.ert_load("libert_util.so")
 
-from .tvector import DoubleVector, IntVector, BoolVector, TVector
+from .tvector import DoubleVector, IntVector, BoolVector, TimeVector, TVector
 from .stringlist import StringList
 from .stat import quantile, quantile_sorted
 from .matrix import Matrix
@@ -64,5 +64,5 @@ from .lookup_table import LookupTable
 from .buffer import Buffer
 from .ctime import ctime
 from .hash import Hash
-# from .test_area import TestArea
+from .test_area import TestArea
 from .latex import LaTeX
