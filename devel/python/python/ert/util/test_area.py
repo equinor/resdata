@@ -12,12 +12,12 @@
 #  FITNESS FOR A PARTICULAR PURPOSE.   
 #   
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  for more details.
 
-from ert.util import UTIL_LIB
-from ert.cwrap.cwrap import *
-from ert.cwrap.cclass import CClass
+from ert.cwrap import clib, CClass, CWrapper, CWrapperNameSpace
 
+
+lib = clib.ert_load("libtest_util.so")
 
 class TestArea(CClass):
     def __init__(self, test_name, store_area=False):
@@ -45,7 +45,7 @@ class TestArea(CClass):
 
 CWrapper.registerType("test_area", TestArea)
 
-cwrapper = CWrapper(UTIL_LIB)
+cwrapper = CWrapper(lib)
 
 cfunc = CWrapperNameSpace("TestArea")
 

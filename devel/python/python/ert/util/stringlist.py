@@ -30,11 +30,11 @@ be an iterable consisting of strings, and the strings property will
 return a normal python list of string objects, used in this way you
 hardly need to notice that the StringList class is at play.
 """
+import sys
 
 from ert.util import UTIL_LIB
 from types import StringType, IntType
-from ert.cwrap.cwrap import *
-from ert.cwrap.cclass import CClass
+from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
 
 
 class StringList(CClass):

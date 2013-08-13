@@ -16,8 +16,7 @@
 """
 Module implmenting LaTeX class for wrapping the latex compilation of a file.
 """
-from ert.cwrap.cclass import CClass
-from ert.cwrap.cwrap import CWrapper, CWrapperNameSpace
+from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
 from ert.util import UTIL_LIB
 
 

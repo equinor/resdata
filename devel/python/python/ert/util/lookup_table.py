@@ -16,8 +16,7 @@
 
 
 from ert.util import UTIL_LIB
-from ert.cwrap.cwrap import *
-from ert.cwrap.cclass import CClass
+from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
 
 
 class LookupTable(CClass):

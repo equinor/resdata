@@ -14,8 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-from ert.cwrap.cclass import CClass
-from ert.cwrap.cwrap import CWrapper, CWrapperNameSpace
+from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
 from ert.util import UTIL_LIB
 
 

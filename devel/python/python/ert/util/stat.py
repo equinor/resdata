@@ -16,7 +16,7 @@
 
 
 from ert.util import UTIL_LIB
-from ert.cwrap.cwrap import *
+from ert.cwrap import CWrapper, CWrapperNameSpace
 
 
 def quantile( data, q ):

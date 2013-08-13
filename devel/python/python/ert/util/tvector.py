@@ -43,11 +43,9 @@ float and size_t not currently implemented in the Python version.
 import  sys
 from    types import IntType, SliceType
 import  ctypes
-
-from    ert.cwrap.cwrap       import *
-from    ert.cwrap.cfile       import CFILE
-from    ert.cwrap.cclass      import CClass
 import  numpy
+
+from    ert.cwrap import CWrapper, CClass, CFILE, CWrapperNameSpace
 
 from ert.util import UTIL_LIB
 
@@ -56,7 +54,7 @@ from ert.util import UTIL_LIB
 
 
 class TVector(CClass):
-    
+
     @classmethod
     def strided_copy( cls , obj , slice_range ):
         """
@@ -90,8 +88,8 @@ class TVector(CClass):
         c_ptr = cls.alloc_copy( obj )
         new_obj.init_cobj( c_ptr , new_obj.free )
         return new_obj
-    
-    
+
+
     def __new__( cls , **kwargs):
         obj = object.__new__( cls )
         return obj
@@ -103,7 +101,7 @@ class TVector(CClass):
         obj.init_cref( c_ptr , parent )
         return obj
 
-    
+
     def copy( self ):
         """
         Create a new copy of the current vector.
@@ -123,7 +121,7 @@ class TVector(CClass):
         init_size  = 0
         c_ptr = self.alloc( init_size , default_value )
         self.init_cobj( c_ptr , self.free )
-        self.element_size = self.get_element_size( self ) 
+        self.element_size = self.get_element_size( self )
 
 
     def str_data( self , width , index1 , index2 , fmt):
@@ -202,7 +200,7 @@ class TVector(CClass):
             return self.strided_copy( self , index )
         else:
             raise TypeError("Index should be integer or slice type.")
-        
+
     def __setitem__( self , index , value ):
         """
         Implements write [] operator - @index must be integer.
@@ -318,11 +316,11 @@ class TVector(CClass):
         return copy
 
     def __rsub__( self , delta):
-        return self.__sub__( delta ) * -1 
+        return self.__sub__( delta ) * -1
 
     def __imul__(self , factor ):
         return self.__IMUL__( factor )
-        
+
     def __mul__( self , factor ):
         copy = self.__copy__( self )
         copy *= factor
@@ -330,7 +328,7 @@ class TVector(CClass):
 
     def __rmul__(self , factor):
         return self.__mul__( factor )
-    
+
 
     def __div__(self , divisor):
         if isinstance( divisor , int ) or isinstance( divisor , float):
@@ -339,7 +337,7 @@ class TVector(CClass):
             return copy
         else:
             raise TypeError("Divisor has wrong type:%s" % type( divisor ))
-    
+
     # No __rdiv__()
 
 
@@ -379,7 +377,7 @@ class TVector(CClass):
         The number of elements in the vector.
         """
         return self.get_size( self )
-    
+
 
     def printf( self , fmt = None , name = None , stream = sys.stdout ):
         """
@@ -411,7 +409,7 @@ class TVector(CClass):
             return self.get_min( self )
         else:
             raise IndexError
-        
+
 
     def min_index( self , reverse = False ):
         if self.get_size( self ) > 0:
@@ -459,7 +457,7 @@ class TVector(CClass):
 
     def get_read_only( self ):
         return self.get_read_only( self )
-        
+
     read_only = property( get_read_only , set_read_only )
 
     def set_default( self , value ):
@@ -525,7 +523,7 @@ class DoubleVector(TVector):
             cls.iset          = cfunc.double_vector_iset
             cls.fprintf       = cfunc.double_vector_fprintf
             cls.cappend       = cfunc.double_vector_append
-            cls.idel_block    = cfunc.double_vector_idel_block            
+            cls.idel_block    = cfunc.double_vector_idel_block
             cls.cclear        = cfunc.double_vector_reset
             cls.cstrided_copy = cfunc.double_vector_strided_copy
             cls.csafe_iget    = cfunc.double_vector_safe_iget
@@ -553,7 +551,7 @@ class DoubleVector(TVector):
 
         obj = TVector.__new__( cls , **kwargs )
         return obj
-    
+
 
 
 class BoolVector(TVector):
@@ -571,7 +569,7 @@ class BoolVector(TVector):
             cls.iset          = cfunc.bool_vector_iset
             cls.fprintf       = cfunc.bool_vector_fprintf
             cls.cappend       = cfunc.bool_vector_append
-            cls.idel_block    = cfunc.bool_vector_idel_block            
+            cls.idel_block    = cfunc.bool_vector_idel_block
             cls.cclear        = cfunc.bool_vector_reset
             cls.cstrided_copy = cfunc.bool_vector_strided_copy
             cls.csafe_iget    = cfunc.bool_vector_safe_iget
@@ -622,11 +620,11 @@ class BoolVector(TVector):
         return new_obj
 
     @classmethod
-    def create_from_list(cls, size, list):
+    def create_from_list(cls, size, source_list):
         """Allocates a bool vector from a Python list"""
         new_obj = BoolVector.__new__(cls)
-        c_ptr = cfunc.bool_vector_alloc(size , False) 
-        for index in list:
+        c_ptr = cfunc.bool_vector_alloc(size , False)
+        for index in source_list:
             cfunc.bool_vector_iset(c_ptr, index, True)
 
         #c_ptr = cfunc.bool_vector_data_ptr(mask)
@@ -635,12 +633,12 @@ class BoolVector(TVector):
 
 
 
-    
+
 
 
 class IntVector(TVector):
     initialized = False
-    
+
     def __new__( cls , **kwargs ):
         if not cls.initialized:
             cls.csort         = cfunc.int_vector_sort
@@ -653,7 +651,7 @@ class IntVector(TVector):
             cls.iset          = cfunc.int_vector_iset
             cls.fprintf       = cfunc.int_vector_fprintf
             cls.cappend       = cfunc.int_vector_append
-            cls.idel_block    = cfunc.int_vector_idel_block            
+            cls.idel_block    = cfunc.int_vector_idel_block
             cls.cclear        = cfunc.int_vector_reset
             cls.cstrided_copy = cfunc.int_vector_strided_copy
             cls.csafe_iget    = cfunc.int_vector_safe_iget
@@ -681,7 +679,7 @@ class IntVector(TVector):
 
         obj = TVector.__new__( cls , **kwargs)
         return obj
-    
+
     @classmethod
     def active_list(cls , range_string):
         """
@@ -711,7 +709,7 @@ buffer_from_ptr.argtypes = [ ctypes.c_void_p , ctypes.c_long ]
 
 CWrapper.registerType( "double_vector" , DoubleVector )
 CWrapper.registerType( "int_vector"    , IntVector )
-CWrapper.registerType( "bool_vector"   , BoolVector ) 
+CWrapper.registerType( "bool_vector"   , BoolVector )
 
 
 cwrapper = CWrapper(UTIL_LIB)
@@ -726,24 +724,24 @@ cfunc.double_vector_iget             = cwrapper.prototype("double double_vector_
 cfunc.double_vector_safe_iget        = cwrapper.prototype("double double_vector_safe_iget( int_vector , int )")
 cfunc.double_vector_iset             = cwrapper.prototype("double double_vector_iset( double_vector , int , double)")
 cfunc.double_vector_size             = cwrapper.prototype("int    double_vector_size( double_vector )")
-cfunc.double_vector_append           = cwrapper.prototype("void   double_vector_append( double_vector , double )") 
-cfunc.double_vector_idel_block       = cwrapper.prototype("void   double_vector_idel_block( double_vector , int , int )") 
+cfunc.double_vector_append           = cwrapper.prototype("void   double_vector_append( double_vector , double )")
+cfunc.double_vector_idel_block       = cwrapper.prototype("void   double_vector_idel_block( double_vector , int , int )")
 cfunc.double_vector_fprintf          = cwrapper.prototype("void   double_vector_fprintf( double_vector , FILE , char* , char*)")
-cfunc.double_vector_sort             = cwrapper.prototype("void   double_vector_sort( double_vector )") 
-cfunc.double_vector_rsort            = cwrapper.prototype("void   double_vector_rsort( double_vector )") 
-cfunc.double_vector_reset            = cwrapper.prototype("void   double_vector_reset( double_vector )") 
-cfunc.double_vector_get_read_only    = cwrapper.prototype("bool   double_vector_set_read_only( double_vector )") 
-cfunc.double_vector_set_read_only    = cwrapper.prototype("void   double_vector_set_read_only( double_vector , bool )") 
+cfunc.double_vector_sort             = cwrapper.prototype("void   double_vector_sort( double_vector )")
+cfunc.double_vector_rsort            = cwrapper.prototype("void   double_vector_rsort( double_vector )")
+cfunc.double_vector_reset            = cwrapper.prototype("void   double_vector_reset( double_vector )")
+cfunc.double_vector_get_read_only    = cwrapper.prototype("bool   double_vector_set_read_only( double_vector )")
+cfunc.double_vector_set_read_only    = cwrapper.prototype("void   double_vector_set_read_only( double_vector , bool )")
 cfunc.double_vector_get_max          = cwrapper.prototype("double    double_vector_get_max( double_vector )")
 cfunc.double_vector_get_min          = cwrapper.prototype("double    double_vector_get_min( double_vector )")
 cfunc.double_vector_get_max_index    = cwrapper.prototype("int    double_vector_get_max_index( double_vector , bool)")
 cfunc.double_vector_get_min_index    = cwrapper.prototype("int    double_vector_get_min_index( double_vector , bool)")
 cfunc.double_vector_shift            = cwrapper.prototype("void   double_vector_shift( double_vector , double )")
-cfunc.double_vector_scale            = cwrapper.prototype("void   double_vector_scale( double_vector , double )") 
-cfunc.double_vector_div              = cwrapper.prototype("void   double_vector_div( double_vector , double )") 
+cfunc.double_vector_scale            = cwrapper.prototype("void   double_vector_scale( double_vector , double )")
+cfunc.double_vector_div              = cwrapper.prototype("void   double_vector_div( double_vector , double )")
 cfunc.double_vector_inplace_add      = cwrapper.prototype("void   double_vector_inplace_add( double_vector , double_vector )")
 cfunc.double_vector_inplace_mul      = cwrapper.prototype("void   double_vector_inplace_mul( double_vector , double_vector )")
-cfunc.double_vector_assign              = cwrapper.prototype("void   double_vector_set_all( double_vector , double)")  
+cfunc.double_vector_assign              = cwrapper.prototype("void   double_vector_set_all( double_vector , double)")
 cfunc.double_vector_memcpy              = cwrapper.prototype("void   double_vector_memcpy(double_vector , double_vector )")
 cfunc.double_vector_set_default         = cwrapper.prototype("void   double_vector_set_default( double_vector , double)")
 cfunc.double_vector_get_default         = cwrapper.prototype("double    double_vector_get_default( double_vector )")
@@ -760,24 +758,24 @@ cfunc.int_vector_iget                = cwrapper.prototype("int    int_vector_ige
 cfunc.int_vector_safe_iget           = cwrapper.prototype("int    int_vector_safe_iget( int_vector , int )")
 cfunc.int_vector_iset                = cwrapper.prototype("int    int_vector_iset( int_vector , int , int)")
 cfunc.int_vector_size                = cwrapper.prototype("int    int_vector_size( int_vector )")
-cfunc.int_vector_append              = cwrapper.prototype("void   int_vector_append( int_vector , int )") 
-cfunc.int_vector_idel_block          = cwrapper.prototype("void   int_vector_idel_block( int_vector , int , int )") 
+cfunc.int_vector_append              = cwrapper.prototype("void   int_vector_append( int_vector , int )")
+cfunc.int_vector_idel_block          = cwrapper.prototype("void   int_vector_idel_block( int_vector , int , int )")
 cfunc.int_vector_fprintf             = cwrapper.prototype("void   int_vector_fprintf( int_vector , FILE , char* , char*)")
-cfunc.int_vector_sort                = cwrapper.prototype("void   int_vector_sort( int_vector )") 
-cfunc.int_vector_rsort               = cwrapper.prototype("void   int_vector_rsort( int_vector )") 
-cfunc.int_vector_reset               = cwrapper.prototype("void   int_vector_reset( int_vector )") 
-cfunc.int_vector_set_read_only       = cwrapper.prototype("void   int_vector_set_read_only( int_vector , bool )") 
-cfunc.int_vector_get_read_only       = cwrapper.prototype("bool   int_vector_get_read_only( int_vector )") 
+cfunc.int_vector_sort                = cwrapper.prototype("void   int_vector_sort( int_vector )")
+cfunc.int_vector_rsort               = cwrapper.prototype("void   int_vector_rsort( int_vector )")
+cfunc.int_vector_reset               = cwrapper.prototype("void   int_vector_reset( int_vector )")
+cfunc.int_vector_set_read_only       = cwrapper.prototype("void   int_vector_set_read_only( int_vector , bool )")
+cfunc.int_vector_get_read_only       = cwrapper.prototype("bool   int_vector_get_read_only( int_vector )")
 cfunc.int_vector_get_max             = cwrapper.prototype("int    int_vector_get_max( int_vector )")
 cfunc.int_vector_get_min             = cwrapper.prototype("int    int_vector_get_min( int_vector )")
 cfunc.int_vector_get_max_index       = cwrapper.prototype("int    int_vector_get_max_index( int_vector , bool)")
 cfunc.int_vector_get_min_index       = cwrapper.prototype("int    int_vector_get_min_index( int_vector , bool)")
 cfunc.int_vector_shift               = cwrapper.prototype("void   int_vector_shift( int_vector , int )")
-cfunc.int_vector_scale               = cwrapper.prototype("void   int_vector_scale( int_vector , int )") 
-cfunc.int_vector_div                 = cwrapper.prototype("void   int_vector_div( int_vector , int )") 
+cfunc.int_vector_scale               = cwrapper.prototype("void   int_vector_scale( int_vector , int )")
+cfunc.int_vector_div                 = cwrapper.prototype("void   int_vector_div( int_vector , int )")
 cfunc.int_vector_inplace_add         = cwrapper.prototype("void   int_vector_inplace_add( int_vector , int_vector )")
 cfunc.int_vector_inplace_mul         = cwrapper.prototype("void   int_vector_inplace_mul( int_vector , int_vector )")
-cfunc.int_vector_assign              = cwrapper.prototype("void   int_vector_set_all( int_vector , int)")  
+cfunc.int_vector_assign              = cwrapper.prototype("void   int_vector_set_all( int_vector , int)")
 cfunc.int_vector_memcpy              = cwrapper.prototype("void   int_vector_memcpy(int_vector , int_vector )")
 cfunc.int_vector_set_default         = cwrapper.prototype("void   int_vector_set_default( int_vector , int)")
 cfunc.int_vector_get_default         = cwrapper.prototype("int    int_vector_get_default( int_vector )")
@@ -794,24 +792,24 @@ cfunc.bool_vector_iget                = cwrapper.prototype("bool    bool_vector_
 cfunc.bool_vector_safe_iget           = cwrapper.prototype("bool    bool_vector_safe_iget( bool_vector , bool )")
 cfunc.bool_vector_iset                = cwrapper.prototype("bool    bool_vector_iset( bool_vector , bool , bool)")
 cfunc.bool_vector_size                = cwrapper.prototype("bool    bool_vector_size( bool_vector )")
-cfunc.bool_vector_append              = cwrapper.prototype("void   bool_vector_append( bool_vector , bool )") 
-cfunc.bool_vector_idel_block          = cwrapper.prototype("void   bool_vector_idel_block( bool_vector , bool , bool )") 
+cfunc.bool_vector_append              = cwrapper.prototype("void   bool_vector_append( bool_vector , bool )")
+cfunc.bool_vector_idel_block          = cwrapper.prototype("void   bool_vector_idel_block( bool_vector , bool , bool )")
 cfunc.bool_vector_fprintf             = cwrapper.prototype("void   bool_vector_fprintf( bool_vector , FILE , char* , char*)")
-cfunc.bool_vector_sort                = cwrapper.prototype("void   bool_vector_sort( bool_vector )") 
-cfunc.bool_vector_rsort               = cwrapper.prototype("void   bool_vector_rsort( bool_vector )") 
-cfunc.bool_vector_reset               = cwrapper.prototype("void   bool_vector_reset( bool_vector )") 
-cfunc.bool_vector_set_read_only       = cwrapper.prototype("void   bool_vector_set_read_only( bool_vector , bool )") 
-cfunc.bool_vector_get_read_only       = cwrapper.prototype("bool   bool_vector_get_read_only( bool_vector )") 
+cfunc.bool_vector_sort                = cwrapper.prototype("void   bool_vector_sort( bool_vector )")
+cfunc.bool_vector_rsort               = cwrapper.prototype("void   bool_vector_rsort( bool_vector )")
+cfunc.bool_vector_reset               = cwrapper.prototype("void   bool_vector_reset( bool_vector )")
+cfunc.bool_vector_set_read_only       = cwrapper.prototype("void   bool_vector_set_read_only( bool_vector , bool )")
+cfunc.bool_vector_get_read_only       = cwrapper.prototype("bool   bool_vector_get_read_only( bool_vector )")
 cfunc.bool_vector_get_max             = cwrapper.prototype("bool    bool_vector_get_max( bool_vector )")
 cfunc.bool_vector_get_min             = cwrapper.prototype("bool    bool_vector_get_min( bool_vector )")
 cfunc.bool_vector_get_max_index       = cwrapper.prototype("bool    bool_vector_get_max_index( bool_vector , bool)")
 cfunc.bool_vector_get_min_index       = cwrapper.prototype("bool    bool_vector_get_min_index( bool_vector , bool)")
 cfunc.bool_vector_shift               = cwrapper.prototype("void   bool_vector_shift( bool_vector , bool )")
-cfunc.bool_vector_scale               = cwrapper.prototype("void   bool_vector_scale( bool_vector , bool )") 
-cfunc.bool_vector_div                 = cwrapper.prototype("void   bool_vector_div( bool_vector , bool )") 
+cfunc.bool_vector_scale               = cwrapper.prototype("void   bool_vector_scale( bool_vector , bool )")
+cfunc.bool_vector_div                 = cwrapper.prototype("void   bool_vector_div( bool_vector , bool )")
 cfunc.bool_vector_inplace_add         = cwrapper.prototype("void   bool_vector_inplace_add( bool_vector , bool_vector )")
 cfunc.bool_vector_inplace_mul         = cwrapper.prototype("void   bool_vector_inplace_mul( bool_vector , bool_vector )")
-cfunc.bool_vector_assign              = cwrapper.prototype("void   bool_vector_set_all( bool_vector , bool)")  
+cfunc.bool_vector_assign              = cwrapper.prototype("void   bool_vector_set_all( bool_vector , bool)")
 cfunc.bool_vector_memcpy              = cwrapper.prototype("void   bool_vector_memcpy(bool_vector , bool_vector )")
 cfunc.bool_vector_set_default         = cwrapper.prototype("void   bool_vector_set_default( bool_vector , bool)")
 cfunc.bool_vector_get_default         = cwrapper.prototype("bool   bool_vector_get_default( bool_vector )")

@@ -15,11 +15,11 @@
 #  for more details. 
 
 
-from ert.cwrap.cwrap import *
+from ert.cwrap import CWrapper, CWrapperNameSpace, CClass
 from ert.util import UTIL_LIB
 
 
-class Hash:
+class Hash(CClass):
     def __init__( self ):
         self.c_ptr = cfunc.hash_alloc()
 

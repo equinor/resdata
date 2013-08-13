@@ -20,7 +20,7 @@ import ctypes
 import types
 import datetime
 import time
-from ert.cwrap.cwrap import *
+from ert.cwrap import CWrapper
 
 
 class ctime(ctypes.c_long):

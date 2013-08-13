@@ -63,7 +63,7 @@ from .log import Log
 from .lookup_table import LookupTable
 from .buffer import Buffer
 from .ctime import ctime
-# todo: what about these
-# from .hash import Hash
+# todo: what about hash
+from .hash import Hash
 # from .test_area import TestArea
 from .latex import LaTeX
