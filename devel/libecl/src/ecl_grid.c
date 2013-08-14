@@ -2137,6 +2137,7 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
     nnc_info_add_nnc(grid2_cell->nnc_info, grid1->lgr_nr, grid1_cell_index);
 
     nnc_index_list_add_index( grid1->nnc_index_list , grid1_cell_index );
+    nnc_index_list_add_index( grid2->nnc_index_list , grid2_cell_index );
   }
 }
 
