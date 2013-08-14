@@ -49,8 +49,10 @@ if (WITH_PTHREAD)
 endif()
 
 add_library( ert_util   ${LIBRARY_TYPE}  ${source_files} )
-add_library( test_util  ${LIBRARY_TYPE}  ${test_source} )
-target_link_libraries( test_util ert_util )
+if (BUILD_TESTS)
+   add_library( test_util  ${LIBRARY_TYPE}  ${test_source} )
+   target_link_libraries( test_util ert_util )
+endif()
 
 set_target_properties( ert_util PROPERTIES VERSION 1.0 SOVERSION 1.0 )
 if (USE_RUNPATH)
