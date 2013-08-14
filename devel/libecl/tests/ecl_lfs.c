@@ -69,7 +69,7 @@ int main( int argc , char ** argv) {
     fortio_type * fortio = fortio_open_reader( "LARGE_FILE.UNRST" , false , ECL_ENDIAN_FLIP);
     printf("Seeking to file end: ");
     fortio_fseek( fortio , file_size , SEEK_SET);
-    fortio_fclose();
+    fortio_fclose( fortio );
     printf("Seek OK \n");
   }
   
