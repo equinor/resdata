@@ -39,7 +39,8 @@
 #include <ert/ecl/point.h>
 #include <ert/ecl/tetrahedron.h>
 #include <ert/ecl/grid_dims.h>
-
+#include <ert/ecl/nnc_info.h>
+#include <ert/ecl/nnc_index_list.h>
 
 /*
   If openmp is enabled the main loop in ecl_grid_init_GRDECL_data is
@@ -358,6 +359,73 @@
 */
 
 
+/*
+  About nnc
+  ---------
+
+  When loading a grid file the various NNC related keywords are read
+  in to assemble information of the NNC. The NNC information is
+  organized as follows:
+
+    1. The field nnc_index_list is a thin wrapper around a int_vector
+       instance which will return a sorted list of indicies of cells
+       which have attached NNC information.
+
+    2. For cells with NNC's attached the information is kept in a
+       nnc_info_type structure. For a particular cell the nnc_info
+       structure keeps track of which other cells this particular cell
+       is connected to, on a per grid (i.e. LGR) basis. 
+
+       In the nnc_info structure the different grids are identified
+       through the lgr_nr.
+
+
+
+  Example usage:
+  --------------
+
+     ecl_grid_type * grid = ecl_grid_alloc("FILE.EGRID");
+
+     // Get a int_vector instance with all the cells which have nnc info
+     // attached.
+     const int_vector_type * cells_with_nnc = ecl_grid_get_nnc_index_list( grid );
+
+     // Iterate over all the cells with nnc info:
+     for (int i=0; i < int_vector_size( cells_with_nnc ); i++) {
+         int cell_index =  int_vector_iget( cells_with_nnc , i);
+         const nnc_info_type * nnc_info = ecl_grid_get_nnc_info1( grid , cell_index);
+
+         // Get all the nnc connections from @cell_index to other cells in the same grid
+         {
+            const int_vector_type * nnc_list = nnc_info_get_self_index_list( nnc_info );
+            for (int j=0; j < int_vector_size( nnc_list ); j++) 
+               printf("Cell[%d] -> %d  in the same grid \n",cell_index , int_vector_iget(nnc_list , j));
+         }
+             
+
+         {
+             for (int lgr_index=0; lgr_index < nnc_info_get_size( nnc_info ); lgr_index++) {
+                nnc_vector_type * nnc_vector = nnc_info_iget_vector( nnc_info , lgr_index );
+                int lgr_nr = nnc_vector_get_lgr_nr( nnc_vector );
+                if (lgr_nr != nnc_info_get_lgr_nr( nnc_info )) {
+                   const int_vector_type * nnc_list = nnc_vector_get_index_list( nnc_vector );
+                   for (int j=0; j < int_vector_size( nnc_list ); j++) 
+                       printf("Cell[%d] -> %d  in lgr:%d/%s \n",cell_index , int_vector_iget(nnc_list , j) , lgr_nr  , ecl_grid_get_lgr_name(ecl_grid , lgr_nr));   
+                }  
+             }   
+         }  
+     }
+
+
+  Dual porosity and nnc: In ECLIPSE the connection between the matrix
+  properties and the fracture properties in a cell is implemented as a
+  nnc where the fracture cell has global index in the range [nx*ny*nz,
+  2*nz*ny*nz). In ert we we have not implemented this double covering
+  in the case of dual porosity models, and therefor NNC involving 
+  fracture cells are not considered.
+*/
+
+
 
 /*
   about tetraheder decomposition
@@ -490,6 +558,7 @@ struct ecl_grid_struct {
 
   int                 * fracture_index_map;     /* For fractures: this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_fracture_index_map; /* For fractures: this is list of total_active elements - which point back to the index_map. */ 
+  nnc_index_list_type * nnc_index_list;
 
 #ifdef LARGE_CELL_MALLOC
   ecl_cell_type      *  cells;
@@ -1195,8 +1264,9 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int du
   grid->index_map             = NULL; 
   grid->fracture_index_map    = NULL;
   grid->inv_fracture_index_map = NULL;
+  grid->nnc_index_list         = nnc_index_list_alloc( );
   ecl_grid_alloc_cells( grid , init_valid );
-
+  
 
   if (global_grid != NULL) {
     /* this is an lgr instance, and we inherit the global grid
@@ -2011,22 +2081,14 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
 
 
 
-/* 
-   This function returns the lgr with the given lgr_nr. The lgr_nr is the fourth element in the GRIDHEAD for EGRID files.
-   The lgr nr is equal to the grid nr if the grid's are consecutive numbered and read from file in increasing 
-   lgr nr order. This method can only be used for EGRID files. For GRID files the lgr_nr is 0 for all grids.
- */
-ecl_grid_type * ecl_grid_get_lgr_from_lgr_nr(const ecl_grid_type * main_grid, int lgr_nr) {
-  int index = int_vector_iget(main_grid->lgr_index_map, lgr_nr);
-  return ecl_grid_iget_lgr(main_grid, index); 
-}
+
 
 
 static void ecl_grid_init_cell_nnc_info(ecl_grid_type * ecl_grid, int global_index) {
   ecl_cell_type * grid_cell = ecl_grid_get_cell(ecl_grid, global_index);
   
   if (!grid_cell->nnc_info) 
-    grid_cell->nnc_info = nnc_info_alloc(); 
+    grid_cell->nnc_info = nnc_info_alloc(ecl_grid->lgr_nr); 
 }
 
 
@@ -2044,17 +2106,25 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
     int grid1_cell_index = grid1_nnc_cells[i] -1;
     int grid2_cell_index = grid2_nnc_cells[i] -1;
     
+    
+  /*
+    In the ECLIPSE output format grids with dual porosity are (to some
+    extent ...) modeled as two independent grids stacked on top of
+    eachother, where the fracture cells have global index in the range
+    [nx*ny*nz, 2*nx*ny*nz). 
 
-  /*In the ECLIPSE output format grids with dual porosity are (to some extent ...) modeled as two independent grids stacked 
-    on top of eachother, where the fracture cells have global index in the range [nx*ny*nz, 2*nx*ny*nz). The physical connection
-    between the matrix and the fractures in cell nr c is modelled as an nnc: cell[c] -> cell[c + nx*ny*nz]. In the ert ecl library
-    we only have cells in the range [0,nx*ny*nz), and fracture is a property of a cell, we therefor do not included the nnc 
-    connection between matrix and fracture in the same cell in the nnc setup.*/
-    if ((grid1 == grid2) && 
-        (FILEHEAD_SINGLE_POROSITY != grid1->dualp_flag) &&
-        (abs(grid1_cell_index-grid2_cell_index) == grid1->size)) {
+    The physical connection between the matrix and the fractures in
+    cell nr c is modelled as an nnc: cell[c] -> cell[c + nx*ny*nz]. In
+    the ert ecl library we only have cells in the range [0,nx*ny*nz),
+    and fracture is a property of a cell, we therefor do not include
+    nnc connections involving fracture cells (i.e. cell_index >=
+    nx*ny*nz).
+  */
+    if ((FILEHEAD_SINGLE_POROSITY != grid1->dualp_flag) &&  
+        ((grid1_cell_index >= grid1->size) ||                      
+         (grid2_cell_index >= grid2->size)))
       break; 
-    }
+    
 
     ecl_grid_init_cell_nnc_info(grid1, grid1_cell_index);
     ecl_grid_init_cell_nnc_info(grid2, grid2_cell_index);
@@ -2065,6 +2135,9 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
     //Add the non-neighbour connection in both directions
     nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr, grid2_cell_index);
     nnc_info_add_nnc(grid2_cell->nnc_info, grid1->lgr_nr, grid1_cell_index);
+
+    nnc_index_list_add_index( grid1->nnc_index_list , grid1_cell_index );
+    nnc_index_list_add_index( grid2->nnc_index_list , grid2_cell_index );
   }
 }
 
@@ -3084,6 +3157,7 @@ void ecl_grid_free(ecl_grid_type * grid) {
   if (grid->coord_kw != NULL)
     ecl_kw_free( grid->coord_kw );
   
+  nnc_index_list_free( grid->nnc_index_list );
   vector_free( grid->coarse_cells );
   hash_free( grid->children );
   util_safe_free( grid->parent_name );
@@ -3496,6 +3570,9 @@ double ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j 
 }
 
 
+const int_vector_type * ecl_grid_get_nnc_index_list( ecl_grid_type * grid ) {
+  return nnc_index_list_get_list( grid->nnc_index_list );
+}
 
 
 const nnc_info_type * ecl_grid_get_cell_nnc_info1( const ecl_grid_type * grid , int global_index) {
@@ -3630,6 +3707,24 @@ ecl_grid_type * ecl_grid_iget_lgr(const ecl_grid_type * main_grid, int lgr_index
   return vector_iget(  main_grid->LGR_list , lgr_index);
 }
 
+/* 
+   This function returns the lgr with the given lgr_nr. The lgr_nr is
+   the fourth element in the GRIDHEAD for EGRID files.  The lgr nr is
+   equal to the grid nr if the grid's are consecutive numbered and
+   read from file in increasing lgr nr order. 
+
+   This method can only be used for EGRID files. For GRID files the
+   lgr_nr is 0 for all grids.
+*/
+
+ecl_grid_type * ecl_grid_get_lgr_from_lgr_nr(const ecl_grid_type * main_grid, int lgr_nr) {
+  __assert_main_grid( main_grid );
+  {
+    int lgr_index = int_vector_iget( main_grid->lgr_index_map , lgr_nr );
+    return vector_iget(  main_grid->LGR_list , lgr_index);
+  }
+}
+
 
 /**
    The following functions will return the LGR subgrid referenced by
@@ -3694,6 +3789,15 @@ const char * ecl_grid_iget_lgr_name( const ecl_grid_type * ecl_grid , int lgr_in
     return lgr->name;
   } else 
     return NULL;
+}
+
+
+const char * ecl_grid_get_lgr_name( const ecl_grid_type * ecl_grid , int lgr_nr) {
+  __assert_main_grid( ecl_grid );
+  {
+    int lgr_index = int_vector_iget( ecl_grid->lgr_index_map , lgr_nr );
+    return ecl_grid_iget_lgr_name( ecl_grid , lgr_index );
+  }
 }
 
 
