@@ -133,14 +133,15 @@ int main( int argc , char ** argv) {
   {
     test_work_area_type * work_area = test_work_area_alloc("ecl_file" , true);
     
-    test_flags( src_file );
     test_work_area_install_file( work_area , src_file );
+    test_flags( src_file );
     test_loadall(src_file , target_file );
     
     test_close_stream1( src_file , target_file);
     test_close_stream2( src_file , target_file);
+    test_writable( src_file );
+
     test_work_area_free( work_area );
   }
-  test_writable( src_file );
   exit(0);
 }
