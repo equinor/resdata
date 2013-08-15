@@ -24,7 +24,7 @@
 #include <ert/util/type_macros.h>
 
 #include <ert/ecl/nnc_info.h>
-
+#include <ert/ecl/nnc_vector.h>
 
 #define NNC_INFO_TYPE_ID 675415078
 
@@ -33,17 +33,19 @@ struct nnc_info_struct {
   UTIL_TYPE_ID_DECLARATION;
   vector_type     * lgr_list;       /*List of int vector * for nnc connections for LGRs*/
   int_vector_type * lgr_index_map; /* A vector that maps LGR-nr to index into the LGR_list.*/
+  int               lgr_nr;        /* The lgr_nr of the cell holding this nnc_info structure. */ 
 }; 
 
 
 UTIL_IS_INSTANCE_FUNCTION( nnc_info , NNC_INFO_TYPE_ID )
 
 
-nnc_info_type * nnc_info_alloc() {
+nnc_info_type * nnc_info_alloc(int lgr_nr) {
   nnc_info_type * nnc_info = util_malloc( sizeof * nnc_info );
   UTIL_TYPE_ID_INIT(nnc_info , NNC_INFO_TYPE_ID);
   nnc_info->lgr_list = vector_alloc_new(); 
   nnc_info->lgr_index_map = int_vector_alloc(0, -1); 
+  nnc_info->lgr_nr = lgr_nr;
   return nnc_info; 
 }
 
@@ -53,35 +55,74 @@ void nnc_info_free( nnc_info_type * nnc_info ) {
   free (nnc_info); 
 }
 
+nnc_vector_type * nnc_info_get_vector( const nnc_info_type * nnc_info , int lgr_nr) {
+  int lgr_index = int_vector_safe_iget( nnc_info->lgr_index_map , lgr_nr );
+  if (-1 == lgr_index)
+    return NULL;
+  else
+    return vector_iget( nnc_info->lgr_list , lgr_index );
+}
+
+
+nnc_vector_type * nnc_info_iget_vector( const nnc_info_type * nnc_info , int lgr_index) {
+  return vector_iget( nnc_info->lgr_list , lgr_index );
+}
+
+
+nnc_vector_type * nnc_info_get_self_vector( const nnc_info_type * nnc_info ) {
+  return nnc_info_get_vector( nnc_info , nnc_info->lgr_nr );
+}
+
+
+static void nnc_info_assert_vector( nnc_info_type * nnc_info , int lgr_nr ) {
+  nnc_vector_type * nnc_vector = nnc_info_get_vector( nnc_info , lgr_nr);
+  if (!nnc_vector) {
+    nnc_vector = nnc_vector_alloc( lgr_nr );
+    vector_append_owned_ref( nnc_info->lgr_list , nnc_vector , nnc_vector_free__ );
+    int_vector_iset( nnc_info->lgr_index_map , lgr_nr , vector_get_size( nnc_info->lgr_list ) - 1 );
+  }
+}
+
+
+
+
+
 void nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number) {
-   
-  bool index_list_initialized = false; 
-  
-  if (int_vector_size(nnc_info->lgr_index_map) > lgr_nr) {
-    int lgr_index = int_vector_iget(nnc_info->lgr_index_map, lgr_nr); 
-    if (-1 != lgr_index) {
-      int_vector_append(vector_iget(nnc_info->lgr_list, lgr_index), global_cell_number);
-      index_list_initialized = true; 
-    }
+  nnc_info_assert_vector( nnc_info , lgr_nr );
+  {
+    nnc_vector_type * nnc_vector = nnc_info_get_vector( nnc_info , lgr_nr );
+    nnc_vector_add_nnc( nnc_vector , global_cell_number );
   }
-  
-  if (!index_list_initialized) {
-    int_vector_type * nnc_for_lgr_vec = int_vector_alloc(0,0); 
-    int_vector_append(nnc_for_lgr_vec, global_cell_number); 
-    vector_append_owned_ref(nnc_info->lgr_list, nnc_for_lgr_vec, int_vector_free__); 
-    int_vector_iset(nnc_info->lgr_index_map , lgr_nr, vector_get_size(nnc_info->lgr_list) -1 ); 
-  }
- }
+}
    
 
 const int_vector_type * nnc_info_get_index_list(const nnc_info_type * nnc_info, int lgr_nr) { 
-  int_vector_type * ret = NULL;
-  if (int_vector_size(nnc_info->lgr_index_map) > lgr_nr) {
-    int lgr_index = int_vector_iget(nnc_info->lgr_index_map, lgr_nr); 
-    if (-1 != lgr_index) {
-      ret = vector_iget(nnc_info->lgr_list, lgr_index); 
-    }
-  }
-  return ret;
+  nnc_vector_type * nnc_vector = nnc_info_get_vector( nnc_info , lgr_nr );
+  if (nnc_vector)
+    return nnc_vector_get_index_list( nnc_vector );
+  else
+    return NULL;
 }
 
+
+const int_vector_type * nnc_info_iget_index_list(const nnc_info_type * nnc_info, int lgr_index) { 
+  nnc_vector_type * nnc_vector = nnc_info_iget_vector( nnc_info , lgr_index );
+  return nnc_vector_get_index_list( nnc_vector );
+}
+
+
+
+const int_vector_type * nnc_info_get_self_index_list(const nnc_info_type * nnc_info) { 
+  return nnc_info_get_index_list( nnc_info , nnc_info->lgr_nr );
+}
+
+
+
+int nnc_info_get_lgr_nr( const nnc_info_type * nnc_info ) {
+  return nnc_info->lgr_nr;
+}
+
+
+int nnc_info_get_size( const nnc_info_type * nnc_info ) {
+  return vector_get_size( nnc_info->lgr_list );
+}
