@@ -34,7 +34,8 @@ void test_nnc_global_grid( const char * grid_filename ) {
     
   const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(ecl_grid, 114);
   test_assert_not_NULL( nnc_info );
-  
+  test_assert_int_equal( ecl_grid_get_lgr_nr( ecl_grid ) , nnc_info_get_lgr_nr( nnc_info ));
+
   const int_vector_type * nnc_cell_number_vec = nnc_info_get_index_list(nnc_info, 0); 
   test_assert_not_NULL(nnc_cell_number_vec);
   test_assert_int_equal(int_vector_size(nnc_cell_number_vec), (sizeof(data)/sizeof(data[0])));
@@ -59,6 +60,7 @@ void test_nnc_lgr( const char * grid_filename ) {
   //Global grid
   const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(ecl_grid, 125132);
   test_assert_not_NULL( nnc_info );
+  test_assert_int_equal( ecl_grid_get_lgr_nr( ecl_grid ) , nnc_info_get_lgr_nr( nnc_info ));
   
   const int_vector_type * nnc_cell_number_vec = nnc_info_get_index_list(nnc_info, 0);
   test_assert_not_NULL(nnc_cell_number_vec);
@@ -74,6 +76,7 @@ void test_nnc_lgr( const char * grid_filename ) {
   
   const nnc_info_type * lgr_nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 2017-1);
   test_assert_not_NULL( lgr_nnc_info );
+  test_assert_int_equal( ecl_grid_get_lgr_nr( lgr_grid ) , nnc_info_get_lgr_nr( lgr_nnc_info ));
   
   const int_vector_type * lgr_nnc_cell_number_vec = nnc_info_get_index_list(lgr_nnc_info, 0);
   test_assert_not_NULL(lgr_nnc_cell_number_vec);
@@ -99,6 +102,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(ecl_grid, 736);
     test_assert_not_NULL(nnc_info); 
+    test_assert_int_equal( ecl_grid_get_lgr_nr( ecl_grid ) , nnc_info_get_lgr_nr( nnc_info ));
     
     const int_vector_type * nnc_cell_number_vec = nnc_info_get_index_list(nnc_info, 0);
     test_assert_not_NULL(nnc_cell_number_vec);
@@ -120,6 +124,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(ecl_grid, 138291);
     test_assert_not_NULL(nnc_info); 
+    test_assert_int_equal( ecl_grid_get_lgr_nr( ecl_grid ) , nnc_info_get_lgr_nr( nnc_info ));
     
     const int_vector_type * nnc_cell_number_vec = nnc_info_get_index_list(nnc_info, 0);
     test_assert_not_NULL(nnc_cell_number_vec);
@@ -140,6 +145,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 0);
     test_assert_not_NULL(nnc_info);
+    test_assert_int_equal( ecl_grid_get_lgr_nr( lgr_grid ) , nnc_info_get_lgr_nr( nnc_info ));
     
     const int_vector_type * nnc_cell_number_vec = nnc_info_get_index_list(nnc_info, 0);
     test_assert_not_NULL(nnc_cell_number_vec);
@@ -164,6 +170,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 0);
     test_assert_not_NULL(nnc_info);
+    test_assert_int_equal( ecl_grid_get_lgr_nr( lgr_grid ) , nnc_info_get_lgr_nr( nnc_info ));
     
     const int_vector_type * nnc_cell_number_vec = nnc_info_get_index_list(nnc_info, 20);
     test_assert_not_NULL(nnc_cell_number_vec);
@@ -187,6 +194,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 8);
     test_assert_not_NULL(nnc_info);
+    test_assert_int_equal( ecl_grid_get_lgr_nr( lgr_grid ) , nnc_info_get_lgr_nr( nnc_info ));
     
     const int_vector_type * nnc_cell_number_vec = nnc_info_get_index_list(nnc_info, 0);
     test_assert_not_NULL(nnc_cell_number_vec);
@@ -210,6 +218,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 736);
     test_assert_not_NULL(nnc_info);
+    test_assert_int_equal( ecl_grid_get_lgr_nr( lgr_grid ) , nnc_info_get_lgr_nr( nnc_info ));
     
     const int_vector_type * nnc_cell_number_vec = nnc_info_get_index_list(nnc_info, 0);
     test_assert_not_NULL(nnc_cell_number_vec);
@@ -233,6 +242,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 271);
     test_assert_not_NULL(nnc_info);
+    test_assert_int_equal( ecl_grid_get_lgr_nr( lgr_grid ) , nnc_info_get_lgr_nr( nnc_info ));
     
     const int_vector_type * nnc_cell_number_vec = nnc_info_get_index_list(nnc_info, 0);
     test_assert_not_NULL(nnc_cell_number_vec);
@@ -256,6 +266,7 @@ void test_nnc_multiple_lgr( const char * grid_filename) {
     
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1(lgr_grid, 271);
     test_assert_not_NULL(nnc_info);
+    test_assert_int_equal( ecl_grid_get_lgr_nr( lgr_grid ) , nnc_info_get_lgr_nr( nnc_info ));
     
     const int_vector_type * nnc_cell_number_vec = nnc_info_get_index_list(nnc_info, 109);
     test_assert_not_NULL(nnc_cell_number_vec);
@@ -312,6 +323,7 @@ void test_nnc_amalgamated_lgrs(const char * grid_filename) {
 }
 
  
+
 
 int main(int argc , char ** argv) {
   const char * EGRID_file1 = argv[1];
