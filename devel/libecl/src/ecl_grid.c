@@ -2129,16 +2129,17 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
     ecl_grid_init_cell_nnc_info(grid1, grid1_cell_index);
     ecl_grid_init_cell_nnc_info(grid2, grid2_cell_index);
     
-    ecl_cell_type * grid1_cell = ecl_grid_get_cell(grid1, grid1_cell_index);
-    ecl_cell_type * grid2_cell = ecl_grid_get_cell(grid2, grid2_cell_index); 
+    {
+      ecl_cell_type * grid1_cell = ecl_grid_get_cell(grid1, grid1_cell_index);
+      ecl_cell_type * grid2_cell = ecl_grid_get_cell(grid2, grid2_cell_index); 
 
-    //Add the non-neighbour connection in both directions
-    nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr, grid2_cell_index);
-    nnc_info_add_nnc(grid2_cell->nnc_info, grid1->lgr_nr, grid1_cell_index);
-
-    nnc_index_list_add_index( grid1->nnc_index_list , grid1_cell_index );
-    nnc_index_list_add_index( grid2->nnc_index_list , grid2_cell_index );
-  }
+                //Add the non-neighbour connection in both directions
+      nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr, grid2_cell_index);
+      nnc_info_add_nnc(grid2_cell->nnc_info, grid1->lgr_nr, grid1_cell_index);
+      
+      nnc_index_list_add_index( grid1->nnc_index_list , grid1_cell_index );
+      nnc_index_list_add_index( grid2->nnc_index_list , grid2_cell_index );
+    }
 }
 
 
@@ -2166,8 +2167,10 @@ static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_fil
       keyword2 = ecl_file_iget_named_kw( ecl_file , NNCG_KW , nnc_lgr_index);
     }
     
-    ecl_grid_type * grid = (lgr_nr > 0) ? ecl_grid_get_lgr_from_lgr_nr(main_grid, lgr_nr) : main_grid;  
-    ecl_grid_init_nnc_cells(grid, main_grid, keyword1, keyword2); 
+    {
+                ecl_grid_type * grid = (lgr_nr > 0) ? ecl_grid_get_lgr_from_lgr_nr(main_grid, lgr_nr) : main_grid;  
+                ecl_grid_init_nnc_cells(grid, main_grid, keyword1, keyword2); 
+        }
   }
 }
 
@@ -4249,16 +4252,20 @@ static void ecl_grid_dump_ascii__(const ecl_grid_type * grid , bool active_only 
 
 void ecl_grid_dump(const ecl_grid_type * grid , FILE * stream) {
   ecl_grid_dump__(grid, stream ); 
-  int i;
-  for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
-    ecl_grid_dump__( vector_iget_const( grid->LGR_list , i) , stream ); 
+  {
+          int i;
+      for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
+         ecl_grid_dump__( vector_iget_const( grid->LGR_list , i) , stream ); 
+  }
 }
 
 void ecl_grid_dump_ascii(const ecl_grid_type * grid , bool active_only , FILE * stream) {
   ecl_grid_dump_ascii__( grid , active_only , stream ); 
-  int i;
-  for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
-    ecl_grid_dump_ascii__( vector_iget_const( grid->LGR_list , i) , active_only , stream ); 
+  {
+          int i;
+          for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
+         ecl_grid_dump_ascii__( vector_iget_const( grid->LGR_list , i) , active_only , stream ); 
+        }
 }
 
 
