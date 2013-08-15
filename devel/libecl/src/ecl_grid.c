@@ -2140,13 +2140,13 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
       nnc_index_list_add_index( grid1->nnc_index_list , grid1_cell_index );
       nnc_index_list_add_index( grid2->nnc_index_list , grid2_cell_index );
     }
+  }
 }
-
 
 
 /*
   This function reads the non-neighbour connection data from file and initializes the grid structure with the the nnc data
- */
+*/
 static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_file) {
   int num_nnchead_kw = ecl_file_get_num_named_kw( ecl_file , NNCHEAD_KW ); 
   int num_nncg_kw    = ecl_file_get_num_named_kw( ecl_file , NNCG_KW );
@@ -2168,9 +2168,9 @@ static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_fil
     }
     
     {
-                ecl_grid_type * grid = (lgr_nr > 0) ? ecl_grid_get_lgr_from_lgr_nr(main_grid, lgr_nr) : main_grid;  
-                ecl_grid_init_nnc_cells(grid, main_grid, keyword1, keyword2); 
-        }
+      ecl_grid_type * grid = (lgr_nr > 0) ? ecl_grid_get_lgr_from_lgr_nr(main_grid, lgr_nr) : main_grid;  
+      ecl_grid_init_nnc_cells(grid, main_grid, keyword1, keyword2); 
+    }
   }
 }
 
