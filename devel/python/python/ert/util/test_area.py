@@ -19,6 +19,7 @@ from ert.cwrap import clib, CClass, CWrapper, CWrapperNameSpace
 
 lib = clib.ert_load("libtest_util.so")
 
+
 class TestArea(CClass):
     def __init__(self, test_name, store_area=False):
         c_ptr = cfunc.test_area_alloc(test_name, store_area)
@@ -41,6 +42,25 @@ class TestArea(CClass):
 
     def copy_file( self, filename):
         cfunc.copy_file(self, filename)
+
+
+class TestAreaContext(object):
+    def __init__(self, test_name, store_area=False):
+        self.test_name = test_name
+        self.store_area = store_area
+
+    def __enter__(self):
+        """
+         @rtype: TestArea
+        """
+        self.test_area = TestArea(self.test_name, self.store_area)
+        return self.test_area
+
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        del self.test_area
+        return False
+
 
 
 CWrapper.registerType("test_area", TestArea)

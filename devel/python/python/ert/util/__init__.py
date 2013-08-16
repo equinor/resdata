@@ -47,7 +47,7 @@ try:
     # First try to load without libg2c
     clib.load("libblas.so" , "libblas.so.3")
     clib.load("liblapack.so")
-except:
+except ImportError:
     # Then try to load with libg2c
     clib.load("libg2c.so.0")
     clib.load("libblas.so" , "libblas.so.3")
@@ -64,5 +64,5 @@ from .lookup_table import LookupTable
 from .buffer import Buffer
 from .ctime import ctime
 from .hash import Hash
-from .test_area import TestArea
+from .test_area import TestArea, TestAreaContext
 from .latex import LaTeX
