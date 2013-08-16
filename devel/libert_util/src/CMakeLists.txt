@@ -5,7 +5,8 @@ set(header_files ssize_t.h type_macros.h rng.h lookup_table.h statistics.h mzran
 set( test_source test_util.c test_work_area.c )
 
 
-set_property(SOURCE hash.c PROPERTY COMPILE_FLAGS "-Wno-error")
+#set_property(SOURCE hash.c PROPERTY COMPILE_FLAGS "-Wno-error")
+
 
 if (WITH_LATEX)
    add_definitions( -DWITH_LATEX )
@@ -48,8 +49,10 @@ if (WITH_PTHREAD)
 endif()
 
 add_library( ert_util   ${LIBRARY_TYPE}  ${source_files} )
-add_library( test_util  ${LIBRARY_TYPE}  ${test_source} )
-target_link_libraries( test_util ert_util )
+if (BUILD_TESTS)
+   add_library( test_util  ${LIBRARY_TYPE}  ${test_source} )
+   target_link_libraries( test_util ert_util )
+endif()
 
 set_target_properties( ert_util PROPERTIES VERSION 1.0 SOVERSION 1.0 )
 if (USE_RUNPATH)

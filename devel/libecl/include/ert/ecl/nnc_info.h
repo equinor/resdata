@@ -26,17 +26,28 @@ extern "C" {
 #include <ert/util/int_vector.h>  
 #include <ert/util/type_macros.h>
 
+#include <ert/ecl/nnc_vector.h>
+
   typedef struct nnc_info_struct nnc_info_type; 
   
   UTIL_IS_INSTANCE_HEADER(nnc_info);
     
-  nnc_info_type         * nnc_info_alloc();   
+  nnc_info_type         * nnc_info_alloc(int lgr_nr);   
   void                    nnc_info_free( nnc_info_type * nnc_info );
   void                    nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number); 
+
+  const int_vector_type * nnc_info_iget_index_list(const nnc_info_type * nnc_info, int lgr_index); 
+  nnc_vector_type       * nnc_info_iget_vector( const nnc_info_type * nnc_info , int lgr_index);
+
   const int_vector_type * nnc_info_get_index_list(const nnc_info_type * nnc_info, int lgr_nr); 
-  
-   
-  
+  nnc_vector_type       * nnc_info_get_vector( const nnc_info_type * nnc_info , int lgr_nr);
+
+  const int_vector_type * nnc_info_get_self_index_list(const nnc_info_type * nnc_info);
+  nnc_vector_type       * nnc_info_get_self_vector( const nnc_info_type * nnc_info );
+
+  int                     nnc_info_get_lgr_nr(const nnc_info_type * nnc_info );
+  int                     nnc_info_get_size( const nnc_info_type * nnc_info );
+
 #ifdef __cplusplus
 }
 #endif
