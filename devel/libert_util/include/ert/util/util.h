@@ -24,8 +24,11 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <sys/types.h>
-#include <pwd.h>
 #include <time.h>
+
+#ifdef HAVE_GETPWUID
+#include <pwd.h>
+#endif
 
 
 #ifdef HAVE_GETUID
