@@ -190,12 +190,11 @@ void util_abort(const char * fmt , ...) {
   {
     char * filename = util_alloc_dump_filename();
 
+    bool dump_to_file = true;
     FILE * abort_dump = fopen(filename, "w");
-    if (abort_dump != NULL) {
-      fprintf(stderr, "\n\nA fatal error occured, see file %s for details \n", filename);
-    }
-    else {
+    if (abort_dump == NULL) {
       abort_dump = stderr;
+      dump_to_file = false;
     }
     
     va_list ap;
@@ -223,7 +222,12 @@ void util_abort(const char * fmt , ...) {
       fprintf(abort_dump,"\n");
       util_fprintf_backtrace( abort_dump );
     }
-    util_fclose(abort_dump);
+
+    if (dump_to_file) {
+      util_fclose(abort_dump);
+      fprintf(stderr, "\n\nA fatal error occured, see file %s for details \n", filename);
+    }
+
     free(filename);
   }
   
