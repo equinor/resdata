@@ -820,7 +820,9 @@ class EclRegion(CClass):
         """
         # c_ptr = cfunc.get_global_list( self )
         # global_list = IntVector.asPythonReference( c_ptr , self )
-        return cfunc.get_global_list(self)
+        global_list = cfunc.get_global_list(self)
+        global_list.setParent(self)
+        return global_list
 
     @property
     def active_size( self ):
