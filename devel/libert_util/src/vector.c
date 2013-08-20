@@ -43,6 +43,7 @@ struct vector_struct {
 typedef struct {
   vector_cmp_ftype * user_cmp;
   node_data_type   * data;
+  int                index;
 } vector_sort_node_type;
   
 
@@ -201,7 +202,7 @@ int vector_append_ref(vector_type * vector , const void * data) {
   return vector_append_node(vector , node);
 }
 
-void vector_push_ref(vector_type * vector , const void * data) {
+void vector_push_front_ref(vector_type * vector , const void * data) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , NULL);
   vector_push_node(vector , node);
 }
@@ -237,7 +238,7 @@ int vector_append_owned_ref(vector_type * vector , const void * data , free_ftyp
   return vector_append_node(vector , node);
 }
 
-void vector_push_owned_ref(vector_type * vector , const void * data , free_ftype * del) {
+void vector_push_front_owned_ref(vector_type * vector , const void * data , free_ftype * del) {
   node_data_type * node = node_data_alloc_ptr( data, NULL , del);
   vector_push_node(vector , node);
 }
@@ -454,7 +455,7 @@ const void * vector_get_last_const(const vector_type * vector) {
 */
 
 
-void * vector_pop(vector_type * vector) {
+void * vector_pop_back(vector_type * vector) {
   if (vector->size == 0)
     util_abort("%s: asking to get the last element in an empty vector - impossible ... \n",__func__);
   {
@@ -474,11 +475,11 @@ void * vector_pop(vector_type * vector) {
    to vector_pop():
 */
 
-void * vector_unshift(vector_type * vector ) {
+void * vector_pop_front(vector_type * vector ) {
   if (vector->size == 0)
     util_abort("%s: asking to get the last element in an empty vector - impossible ... \n",__func__);
   {
-    node_data_type * node = vector->data[vector->size - 1];
+    node_data_type * node = vector->data[0];
     void * data = node_data_get_ptr( node );
     
     node_data_free_container( node );  /* Free the container holding data. */
@@ -555,27 +556,48 @@ static int vector_cmp(const void * s1 , const void * s2) {
 */
 
 
+static vector_sort_node_type * vector_alloc_sort_data( const vector_type * vector , vector_cmp_ftype * cmp) {
+  vector_sort_node_type * sort_data = util_calloc( vector->size , sizeof * sort_data );
+  int i;
+    
+  /* Fill up the temporary storage used for sorting */
+  for (i = 0; i < vector->size; i++) {
+    sort_data[i].data     = vector->data[i];
+    sort_data[i].user_cmp = cmp;
+    sort_data[i].index    = i;
+  }
+    
+  /* Sort the temporary vector */
+  qsort(sort_data , vector->size , sizeof * sort_data ,  vector_cmp);
+    
+  return sort_data;
+}
+
 
 void vector_sort(vector_type * vector , vector_cmp_ftype * cmp) {
-  vector_sort_node_type * sort_data = util_calloc( vector->size , sizeof * sort_data );
-  {
-    int i;
-    
-    /* Fill up the temporary storage used for sorting */
-    for (i = 0; i < vector->size; i++) {
-      sort_data[i].data     = vector->data[i];
-      sort_data[i].user_cmp = cmp;
-    }
-    
-    /* Sort the temporary vector */
-    qsort(sort_data , vector->size , sizeof * sort_data ,  vector_cmp);
-    
-    /* Recover the sorted vector */
-    for (i = 0; i < vector->size; i++) 
-      vector->data[i] = sort_data[i].data;
-  }
+  vector_sort_node_type * sort_data = vector_alloc_sort_data( vector , cmp );
+  int i;
+  /* Recover the sorted vector */
+  for (i = 0; i < vector->size; i++) 
+    vector->data[i] = sort_data[i].data;
+
   free( sort_data );
 }
+
+
+int_vector_type * vector_alloc_sort_perm(const vector_type * vector , vector_cmp_ftype * cmp) {
+  vector_sort_node_type * sort_data = vector_alloc_sort_data( vector , cmp );
+  int_vector_type * sort_perm = int_vector_alloc(0,0);
+  int i;
+  for (i = 0; i < vector->size; i++) 
+    int_vector_iset( sort_perm , i , sort_data[i].index);
+
+  free( sort_data );
+  return sort_perm;
+}
+
+
+
 
 
 void vector_inplace_reverse(vector_type * vector) {

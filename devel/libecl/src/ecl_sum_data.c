@@ -204,7 +204,7 @@
 
 
 
-
+#define INVALID_MINISTEP_NR -1
 
 
 struct ecl_sum_data_struct {
@@ -255,8 +255,8 @@ static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
   data->last_report_step      = -1024 * 1024;
   data->days_start            = 0;
   data->sim_length            = -1;
-  data->first_ministep        = -1;
-  data->last_ministep         = -1;  
+  data->first_ministep        = INVALID_MINISTEP_NR;
+  data->last_ministep         = INVALID_MINISTEP_NR;  
   data->index_valid           = false;
   time_interval_reopen( data->sim_time );
 }
@@ -268,8 +268,8 @@ ecl_sum_data_type * ecl_sum_data_alloc(ecl_smspec_type * smspec) {
   data->smspec      = smspec;
   data->__min_time  = 0;
   
-  data->report_first_index    = int_vector_alloc( 0 , -1 );  /* This -1 value is hard-wired around in the place - not good. */
-  data->report_last_index     = int_vector_alloc( 0 , -1 );
+  data->report_first_index    = int_vector_alloc( 0 , INVALID_MINISTEP_NR );  
+  data->report_last_index     = int_vector_alloc( 0 , INVALID_MINISTEP_NR );
   data->sim_time              = time_interval_alloc_open();
 
   ecl_sum_data_clear_index( data );
@@ -545,7 +545,7 @@ static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data 
   {
     int  low_index      = 0;
     int  high_index     = vector_get_size( data->data );
-    int  internal_index = -1;
+    int  internal_index = INVALID_MINISTEP_NR;
     
 
     while (internal_index < 0) {
@@ -904,14 +904,6 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
 
 
 
-
-static void ecl_sum_data_ensure_index( ecl_sum_data_type * data ) {
-  if (!data->index_valid)
-    ecl_sum_data_build_index( data );
-}
-
-
-
 /*
   Observe that this can be called several times (but not with the same
   data - that will die). 
@@ -949,13 +941,13 @@ static void ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
         if (file_type != ECL_SUMMARY_FILE)
           util_abort("%s: file:%s has wrong type \n",__func__ , data_file);
         {
-          ecl_file_type * ecl_file = ecl_file_open( data_file );
+          ecl_file_type * ecl_file = ecl_file_open( data_file , 0);
           ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file , data->smspec);
           ecl_file_close( ecl_file );
         }
       }
     } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
-      ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ));
+      ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ) , 0);
       int report_step = 1;   /* <- ECLIPSE numbering - starting at 1. */
       while (true) {
         /*
@@ -1051,7 +1043,7 @@ bool ecl_sum_data_has_report_step(const ecl_sum_data_type * data , int report_st
 /**
    Returns the last index included in report step @report_step.
    Observe that if the dataset does not include @report_step at all,
-   the function will return -1; this must be checked for in the
+   the function will return INVALID_MINISTEP_NR; this must be checked for in the
    calling scope.
 */
 
@@ -1064,7 +1056,7 @@ int ecl_sum_data_iget_report_end( const ecl_sum_data_type * data , int report_st
 /**
    Returns the first index included in report step @report_step.
    Observe that if the dataset does not include @report_step at all,
-   the function will return -1; this must be checked for in the
+   the function will return INVALID_MINISTEP_NR; this must be checked for in the
    calling scope.
 */
 
@@ -1357,3 +1349,52 @@ int ecl_sum_data_get_length( const ecl_sum_data_type * data ) {
   return vector_get_size( data->data );
 }
 
+
+bool ecl_sum_data_report_step_equal( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2) {
+  bool equal = true;
+  if (int_vector_size( data1->report_last_index ) == int_vector_size(data2->report_last_index)) {
+    int i; 
+    for (i = 0; i < int_vector_size( data1->report_last_index ); i++) {
+      int time_index1 = int_vector_iget( data1->report_last_index , i );
+      int time_index2 = int_vector_iget( data2->report_last_index , i );
+
+      if ((time_index1 != INVALID_MINISTEP_NR) && (time_index2 != INVALID_MINISTEP_NR)) {
+        const ecl_sum_tstep_type * ministep1 = ecl_sum_data_iget_ministep( data1 , time_index1 );
+        const ecl_sum_tstep_type * ministep2 = ecl_sum_data_iget_ministep( data2 , time_index2 );
+        
+        if (!ecl_sum_tstep_sim_time_equal( ministep1 , ministep2)) {
+          equal = false;
+          break;
+        }
+      } else if (time_index1 != time_index2) {
+        equal = false;
+        break;
+      }
+    }
+  } else
+    equal = false;
+
+  return equal;
+}
+
+
+bool ecl_sum_data_report_step_compatible( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2) {
+  bool compatible = true;
+  int min_size = util_int_min( int_vector_size( data1->report_last_index ) , int_vector_size( data2->report_last_index));
+  int i; 
+  for (i = 0; i < min_size; i++) {
+    int time_index1 = int_vector_iget( data1->report_last_index , i );
+    int time_index2 = int_vector_iget( data2->report_last_index , i );
+
+    if ((time_index1 != INVALID_MINISTEP_NR) && (time_index2 != INVALID_MINISTEP_NR)) {
+      const ecl_sum_tstep_type * ministep1 = ecl_sum_data_iget_ministep( data1 , time_index1 );
+      const ecl_sum_tstep_type * ministep2 = ecl_sum_data_iget_ministep( data2 , time_index2 );
+      
+      if (!ecl_sum_tstep_sim_time_equal( ministep1 , ministep2)) {
+        compatible = false;
+        break;
+      }
+    } 
+  } 
+  return compatible;
+}

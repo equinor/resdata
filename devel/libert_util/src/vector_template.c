@@ -500,6 +500,15 @@ void @TYPE@_vector_scale(@TYPE@_vector_type * vector, @TYPE@ factor) {
     vector->data[i] *= factor;
 }
 
+
+/* Vector / scalar; seperate _div function to ensure correct integer division. */
+void @TYPE@_vector_div(@TYPE@_vector_type * vector, @TYPE@ divisor) {
+  int i;
+  for (i=0; i < vector->size; i++)
+    vector->data[i] /= divisor;
+}
+
+
 /* vector + scalar */
 void @TYPE@_vector_shift(@TYPE@_vector_type * vector, @TYPE@ delta) {
   int i;
@@ -799,6 +808,10 @@ bool @TYPE@_vector_init_range(@TYPE@_vector_type * vector , @TYPE@ min_value , @
 
 void @TYPE@_vector_append_many(@TYPE@_vector_type * vector , const @TYPE@ * data , int length) {
   @TYPE@_vector_set_many( vector , @TYPE@_vector_size( vector ) , data , length);
+}
+
+void @TYPE@_vector_append_vector(@TYPE@_vector_type * vector , const @TYPE@_vector_type * other) {
+  @TYPE@_vector_append_many( vector , @TYPE@_vector_get_const_ptr( other ), @TYPE@_vector_size( other ));
 }
 
 

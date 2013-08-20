@@ -24,6 +24,7 @@ extern "C" {
 #endif
 #include <ert/util/node_data.h>
 #include <ert/util/type_macros.h>
+#include <ert/util/int_vector.h>
 
   typedef void ( vector_func_type ) (void * , void *);
   typedef int  ( vector_cmp_ftype)  (const void * , const void *);
@@ -52,9 +53,9 @@ extern "C" {
   void          vector_insert_copy(vector_type * , int , const void *, copyc_ftype *, free_ftype *);
   void          vector_insert_buffer(vector_type * vector , int index , const void * buffer, int buffer_size);
   
-  void          vector_push_ref( vector_type * ,  const void *);
-  void          vector_push_owned_ref( vector_type * ,  const void * , free_ftype * del);
-  void          vector_push_copy(vector_type * ,  const void *, copyc_ftype *, free_ftype *);
+  void          vector_push_front_ref( vector_type * ,  const void *);
+  void          vector_push_front_owned_ref( vector_type * ,  const void * , free_ftype * del);
+  void          vector_push_front_copy(vector_type * ,  const void *, copyc_ftype *, free_ftype *);
   
   
   void          vector_clear(vector_type * vector);
@@ -72,8 +73,10 @@ extern "C" {
   void        * vector_get_last(const vector_type * );
   const void  * vector_get_last_const(const vector_type * );
   int           vector_get_size( const vector_type * );
-  void        * vector_pop(vector_type * );
+  void        * vector_pop_back(vector_type * );
+  void        * vector_pop_front(vector_type * );
   void          vector_sort(vector_type * vector , vector_cmp_ftype * cmp);
+  int_vector_type * vector_alloc_sort_perm(const vector_type * vector , vector_cmp_ftype * cmp);
   void          vector_inplace_reverse(vector_type * vector);
   vector_type * vector_alloc_copy(const vector_type * src , bool deep_copy);
   

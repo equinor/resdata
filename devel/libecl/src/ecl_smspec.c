@@ -485,6 +485,7 @@ static ecl_smspec_var_type ecl_smspec_identify_special_var( const char * var ) {
 
 ecl_smspec_var_type  ecl_smspec_identify_var_type(const char * var) {
   ecl_smspec_var_type var_type = ecl_smspec_identify_special_var( var );
+  int str_length = strlen(var); 
   if (var_type == ECL_SMSPEC_INVALID_VAR) {
     switch(var[0]) {
     case('A'):
@@ -521,10 +522,13 @@ ecl_smspec_var_type  ecl_smspec_identify_var_type(const char * var) {
       var_type = ECL_SMSPEC_NETWORK_VAR;
       break;
     case('R'):
-      if (var[2] == 'F')
-        var_type  = ECL_SMSPEC_REGION_2_REGION_VAR;
-      else
+      if (((3 == str_length) && var[2] == 'F') || 
+          ((4 == str_length) && var[3] == 'F')) {
+       var_type  = ECL_SMSPEC_REGION_2_REGION_VAR;
+      }
+      else {
         var_type  = ECL_SMSPEC_REGION_VAR;
+      }
       break;
     case('S'):
       var_type = ECL_SMSPEC_SEGMENT_VAR;
@@ -649,7 +653,7 @@ static void ecl_smspec_install_gen_keys( ecl_smspec_type * smspec , smspec_node_
       hash_insert_ref(smspec->gen_var_index , gen_key1 , smspec_node);
   }
 
-  /* Insert the (optional) extra mapping for block related variables: */
+  /* Insert the (optional) extra mapping for block related variables and region_2_region variables: */
   {
     const char * gen_key2 = smspec_node_get_gen_key2( smspec_node );
     if (gen_key2 != NULL) 
@@ -751,6 +755,8 @@ static void ecl_smspec_install_special_keys( ecl_smspec_type * ecl_smspec , smsp
     break;
   case(ECL_SMSPEC_SEGMENT_VAR):
     break;
+  case(ECL_SMSPEC_REGION_2_REGION_VAR):
+    break;
   default:
     util_abort("%: Internal error - should never be here ?? \n",__func__);
     break;
@@ -776,6 +782,9 @@ bool ecl_smspec_needs_wgname( ecl_smspec_var_type var_type ) {
     return true;
     break;
   case(ECL_SMSPEC_REGION_VAR):
+    return false;
+    break;
+  case(ECL_SMSPEC_REGION_2_REGION_VAR):
     return false;
     break;
   case(ECL_SMSPEC_MISC_VAR):
@@ -819,6 +828,9 @@ bool ecl_smspec_needs_num( ecl_smspec_var_type var_type ) {
     return false;
     break;
   case(ECL_SMSPEC_REGION_VAR):
+    return true;
+    break;
+  case(ECL_SMSPEC_REGION_2_REGION_VAR):
     return true;
     break;
   case(ECL_SMSPEC_MISC_VAR):
@@ -919,7 +931,7 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
              nevertheless prevents against a recursive death.
           */
           if (!stringlist_contains( ecl_smspec->restart_list , restart_base)) {
-            ecl_file_type * restart_header = ecl_file_open( smspec_header );
+            ecl_file_type * restart_header = ecl_file_open( smspec_header , 0);
             
             if (ecl_smspec_file_equal( header , restart_header)) {
               stringlist_insert_copy( ecl_smspec->restart_list , 0 , restart_base );
@@ -939,25 +951,6 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
   }
 }
 
-/**
-   This function is the opposite of the ecl_smspec_index_node
-   function; i.e. it will remove the smspec_node from the various
-   index tables. It will not actually destroy the node itself.  
-*/
-
-static void ecl_smspec_delete_node_index(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node) {
-  {
-    const char * gen_key1 = smspec_node_get_gen_key1( smspec_node );
-    const char * gen_key2 = smspec_node_get_gen_key2( smspec_node );
-
-    if (gen_key1 != NULL)
-      hash_del( ecl_smspec->gen_var_index , gen_key1 );
-    
-    if (gen_key2 != NULL)
-      hash_del( ecl_smspec->gen_var_index , gen_key2 );
-  }
-  // Is currently not deleted from the special dictionaries.
-}
   
 
 void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node) {
@@ -1034,7 +1027,7 @@ const int_vector_type * ecl_smspec_get_index_map( const ecl_smspec_type * smspec
 
 
 static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file , bool include_restart) {
-  ecl_file_type * header = ecl_file_open( header_file );
+  ecl_file_type * header = ecl_file_open( header_file , 0);
   {
     ecl_kw_type *wells     = ecl_file_iget_named_kw(header, WGNAMES_KW  , 0);
     ecl_kw_type *keywords  = ecl_file_iget_named_kw(header, KEYWORDS_KW , 0);

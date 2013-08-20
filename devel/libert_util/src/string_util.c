@@ -93,7 +93,7 @@ static int_vector_type * string_util_sscanf_alloc_active_list(const char * range
     
     for (item = 0; item < stringlist_get_size( tokens ); item++) {
       const char * string_item = stringlist_iget( tokens , item );
-      char * pos_ptr = string_item;
+      char * pos_ptr = (char *) string_item;
       int value1 , value2;
       
       value1 = strtol( string_item , &pos_ptr , 10);
@@ -205,4 +205,32 @@ bool_vector_type * string_util_alloc_active_mask( const char * range_string ) {
   bool_vector_type * mask  = bool_vector_alloc(0 , false );
   string_util_init_active_mask( range_string , mask );
   return mask;
+}
+
+
+/*****************************************************************/
+
+
+bool string_util_update_value_list( const char * range_string , int_vector_type * value_list) {
+  int_vector_type * new_values = string_util_sscanf_alloc_active_list( range_string );
+  if (new_values) {
+    int_vector_append_vector( value_list , new_values);
+    int_vector_free( new_values );
+    return true;
+  } else
+    return false;
+}
+
+
+
+bool string_util_init_value_list( const char * range_string , int_vector_type * value_list ) {
+  int_vector_reset( value_list );
+  return string_util_update_value_list( range_string , value_list );
+}
+
+
+int_vector_type * string_util_alloc_value_list(const char * range_string) {
+  int_vector_type * value_list = int_vector_alloc(0,0);
+  string_util_init_value_list( range_string , value_list); 
+  return value_list;
 }

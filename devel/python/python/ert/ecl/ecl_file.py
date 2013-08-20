@@ -35,19 +35,13 @@ implementation from the libecl library.
 [1]: In particular for restart files, which do not have a special
      RestartFile class, there is some specialized functionality.
 """
-
-import os.path
-import datetime
-import ctypes
-import types
-import libecl
 import re
+import types
+import datetime
+from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
+from ert.ecl import EclKW, ECL_LIB
+from ert.util import ctime
 
-from   ert.cwrap.cwrap       import *
-from   ert.cwrap.cclass      import CClass
-from   ecl_kw                import EclKW
-from   ert.util.ctime        import ctime 
-from   ert.util.stringlist   import StringList
 
 class EclFile(CClass):
 
@@ -73,7 +67,7 @@ class EclFile(CClass):
         
         if dtime:
             OK = cfunc.restart_block_time( obj , ctime( dtime ))
-        elif not report_step == None:
+        elif not report_step is None:
             OK = cfunc.restart_block_step( obj , report_step )
         else:
             raise TypeError("restart_block() requires either dtime or report_step argument - none given.")
@@ -173,31 +167,31 @@ class EclFile(CClass):
         return "EclFile: %s" % self.name
 
         
-    def __init__( self , filename , read_only = True):
+    def __init__( self , filename , flags = 0):
         """
         Loads the complete file @filename.
 
         Will create a new EclFile instance with the content of file
         @filename. The file @filename must be in 'restart format' -
         otherwise it will be crash and burn. 
+
+        The optional argument flags can be an or'ed combination of the
+        flags:
+
+           ecl.ECL_FILE_WRITABLE : It is possible to update the
+              content of the keywords in the file.
+
+           ecl.ECL_FILE_CLOSE_STREAM : The underlying FILE * is closed
+              when not used; to save number of open file descriptors
+              in cases where a high number of EclFile instances are
+              open concurrently.
         
-        The optional argument @kw_list can be used to limit the
-        loading to only some of the keywords in the file, @kw_list
-        should be a an ordinary Python list of strings. To load only
-        the solution data from a restart file:
-
-            sol_data = ecl.EclFile("ECLIPSE.UNRST" , kw_list = ["PRESSURE" , "SWAT" , "SGAS"])
-
         When the file has been loaded the EclFile instance can be used
         to query for and get reference to the EclKW instances
         constituting the file, like e.g. SWAT from a restart file or
         FIPNUM from an INIT file.
         """
-        if read_only:
-            c_ptr = cfunc.open( filename )
-        else:
-            c_ptr = cfunc.open_writable( filename )
-
+        c_ptr = cfunc.open( filename , flags )
         self.init_cobj( c_ptr , cfunc.close )
         if c_ptr is None:
             raise IOError("Failed to open file file:%s" % filename)
@@ -227,7 +221,7 @@ class EclFile(CClass):
              keyword you got from this EclFile instance, otherwise the
              function will fail.
         """
-        if cfunc.is_writable( self ):
+        if cfunc.writable( self ):
             cfunc.save_kw( self , kw )
         else:
             raise IOError("save_kw: the file:%s has been opened read only." % self.name)
@@ -703,7 +697,7 @@ class EclFile(CClass):
         
 
 # 2. Creating a wrapper object around the libecl library, 
-cwrapper = CWrapper( libecl.lib )
+cwrapper = CWrapper(ECL_LIB)
 cwrapper.registerType( "ecl_file" , EclFile )
 
 
@@ -712,9 +706,8 @@ cwrapper.registerType( "ecl_file" , EclFile )
 #    used outside this scope.
 cfunc = CWrapperNameSpace("ecl_file")
 
-cfunc.open                        = cwrapper.prototype("c_void_p    ecl_file_try_open( char* )")
-cfunc.open_writable               = cwrapper.prototype("c_void_p    ecl_file_open_writable( char* )")
-cfunc.is_writable                 = cwrapper.prototype("bool        ecl_file_writable( ecl_file )")
+cfunc.open                        = cwrapper.prototype("c_void_p    ecl_file_try_open( char* , int )")
+cfunc.writable                    = cwrapper.prototype("bool        ecl_file_writable( ecl_file )")
 cfunc.new                         = cwrapper.prototype("c_void_p    ecl_file_alloc_empty(  )")
 cfunc.save_kw                     = cwrapper.prototype("void        ecl_file_save_kw( ecl_file , ecl_kw )")
 

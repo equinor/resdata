@@ -1,5 +1,5 @@
-/*
-   Copyright (C) 2012  Statoil ASA, Norway. 
+/*                
+   Copyri                ght (C) 2012  Statoil ASA, Norway. 
     
    The file 'ert_util_type_vector_test.c' is part of ERT - Ensemble based Reservoir Tool. 
     
@@ -25,6 +25,19 @@ void assert_equal( bool equal ) {
   if (!equal)
     exit(1);
 }
+
+
+void test_div() {
+  int_vector_type * int_vector = int_vector_alloc( 0 , 100);
+  int_vector_iset( int_vector , 10 , 100 );
+  int_vector_div( int_vector , 10 );
+  {
+    int i;
+    for (i=0; i < int_vector_size( int_vector ); i++) 
+      test_assert_int_equal( 10 , int_vector_iget( int_vector , i ));
+  }
+}
+
 
 
 int main(int argc , char ** argv) {
@@ -58,7 +71,7 @@ int main(int argc , char ** argv) {
     test_assert_int_equal(  data1[N1-1] , 99);
     int_vector_free( v2 );
     free( data1 );
-  }
+  }                 
   
   
   test_assert_true( int_vector_init_range( int_vector , 100 , 1000 , 115 ) );
@@ -74,6 +87,32 @@ int main(int argc , char ** argv) {
   test_assert_int_equal( int_vector_iget( int_vector , 2 ) , 330);
   test_assert_int_equal( int_vector_iget( int_vector , 3 ) , 445);
   test_assert_int_equal( int_vector_get_last( int_vector ) , 1000);
-  
+
+  {
+    int_vector_type * v1 = int_vector_alloc(0,0);
+    int_vector_type * v2 = int_vector_alloc(0,0);
+    int_vector_append(v1 , 10);
+    int_vector_append(v1 , 15);
+    int_vector_append(v1 , 20);
+
+    int_vector_append(v2 , 1);
+    int_vector_append(v2 , 2);
+    int_vector_append(v2 , 3);
+
+    int_vector_append_vector( v1 , v2 );
+    test_assert_int_equal( int_vector_size( v1 ) , 6 );
+    test_assert_int_equal( int_vector_iget (v1 ,  0 ), 10 );
+    test_assert_int_equal( int_vector_iget (v1 ,  1 ), 15 );
+    test_assert_int_equal( int_vector_iget (v1 ,  2 ), 20 );
+                                                               
+    test_assert_int_equal( int_vector_iget (v1 ,  3 ), 1 );
+    test_assert_int_equal( int_vector_iget (v1 ,  4 ), 2 );
+    test_assert_int_equal( int_vector_iget (v1 ,  5 ), 3 );
+
+    int_vector_free( v1 );
+    int_vector_free( v2 );
+  }
+
+  test_div();
   exit(0);
 }

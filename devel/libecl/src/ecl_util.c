@@ -702,29 +702,31 @@ bool ecl_util_unified_file(const char *filename) {
 }
 
 
-bool ecl_util_fmt_file(const char *filename) {
+bool ecl_util_fmt_file(const char *filename , bool * __fmt_file) {
   /*const int min_size = 32768;*/
   const int min_size = 256; /* Veeeery small */
   
   int report_nr;
   ecl_file_enum file_type;
-
+  bool status = true;
   bool fmt_file;
+  
   if (util_file_exists(filename)) {
     file_type = ecl_util_get_file_type(filename , &fmt_file , &report_nr);
     if (file_type == ECL_OTHER_FILE) {
       if (util_file_size(filename) > min_size)
         fmt_file = util_fmt_bit8(filename);
       else 
-        util_abort("%s: sorry could not determine formatted|unformatted of file:%s file_size:%d - aborting \n",__func__ , filename , util_file_size(filename));
+        status = false; // Do not know ??
     }
   } else {
     file_type = ecl_util_get_file_type(filename , &fmt_file , &report_nr);
     if (file_type == ECL_OTHER_FILE) 
-      util_abort("%s: sorry could not determine formatted|unformatted of file:%s - aborting \n",__func__ , filename);
+      status = false; // Do not know ??
   }
-  
-  return fmt_file;
+
+  *__fmt_file = fmt_file;
+  return status;
 }
 
 
@@ -1213,16 +1215,16 @@ time_t ecl_util_get_start_date(const char * data_file) {
     util_abort("%s: sorry - could not find START in DATA file %s \n",__func__ , data_file);
   
   {
-    long int start_pos = ftell( stream );
+    long int start_pos = util_ftell( stream );
     int buffer_size;
 
     /* Look for terminating '/' */
     if (!parser_fseek_string( parser , stream , "/" , false , true))
       util_abort("%s: sorry - could not find \"/\" termination of START keyword in data_file: \n",__func__ , data_file);
     
-    buffer_size = (ftell(stream) - start_pos)  ;
+    buffer_size = (util_ftell(stream) - start_pos)  ;
     buffer = util_calloc( buffer_size + 1 , sizeof * buffer  );
-    fseek( stream , start_pos , SEEK_SET);
+    util_fseek( stream , start_pos , SEEK_SET);
     util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
     buffer[buffer_size] = '\0';
   }
@@ -1255,16 +1257,16 @@ int ecl_util_get_num_cpu(const char * data_file) {
   char * buffer;
   
   if (parser_fseek_string( parser , stream , "PARALLEL" , true , true)) {  /* Seeks case insensitive. */
-    long int start_pos = ftell( stream );
+    long int start_pos = util_ftell( stream );
     int buffer_size;
 
     /* Look for terminating '/' */
     if (!parser_fseek_string( parser , stream , "/" , false , true))
       util_abort("%s: sorry - could not find \"/\" termination of PARALLEL keyword in data_file: \n",__func__ , data_file);
     
-    buffer_size = (ftell(stream) - start_pos)  ;
+    buffer_size = (util_ftell(stream) - start_pos)  ;
     buffer = util_calloc( buffer_size + 1  , sizeof * buffer );
-    fseek( stream , start_pos , SEEK_SET);
+    util_fseek( stream , start_pos , SEEK_SET);
     util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
     buffer[buffer_size] = '\0';
   
@@ -1275,14 +1277,15 @@ int ecl_util_get_num_cpu(const char * data_file) {
       for (i=0; i < stringlist_get_size( tokens ); i++) {
         item = util_realloc_string_copy( item , stringlist_iget( tokens , i ));
         util_strupr( item );
-        if ( util_string_equal( item , "DISTRIBUTED" )) {
+        if (( util_string_equal( item , "DISTRIBUTED" )) || 
+            ( util_string_equal( item , "DIST" ))) { 
           num_cpu = atoi( stringlist_iget( tokens , i - 1));
           break;
         }
       }
       free( item );  
       stringlist_free( tokens );
-    }
+    }  
     free( buffer );
   }
 
@@ -1401,4 +1404,5 @@ const char * ecl_util_phase_enum_iget( int index, int * value) {
 const char * ecl_util_type_enum_iget( int index, int * value) {
   return util_enum_iget( index , ECL_TYPE_ENUM_SIZE , (const util_enum_element_type []) { ECL_TYPE_ENUM_DEFS }, value);
 }
+
 #endif

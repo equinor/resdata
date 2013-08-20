@@ -25,6 +25,8 @@ extern "C" {
 
 #include <stdbool.h>
 
+#include <ert/util/util.h>
+
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/fortio.h>
 
@@ -35,10 +37,11 @@ typedef struct inv_map_struct inv_map_type;
   ecl_file_kw_type * inv_map_get_file_kw( inv_map_type * inv_map , const ecl_kw_type * ecl_kw );
   void               inv_map_free( inv_map_type * map );
 
-  ecl_file_kw_type * ecl_file_kw_alloc( const ecl_kw_type * ecl_kw , long offset);
+  ecl_file_kw_type * ecl_file_kw_alloc( const ecl_kw_type * ecl_kw , offset_type offset);
   void               ecl_file_kw_free( ecl_file_kw_type * file_kw );
   void               ecl_file_kw_free__( void * arg );
   ecl_kw_type      * ecl_file_kw_get_kw( ecl_file_kw_type * file_kw , fortio_type * fortio, inv_map_type * inv_map);
+  ecl_kw_type      * ecl_file_kw_get_kw_ptr( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map );
   ecl_file_kw_type * ecl_file_kw_alloc_copy( const ecl_file_kw_type * src );
   const char       * ecl_file_kw_get_header( const ecl_file_kw_type * file_kw );
   int                ecl_file_kw_get_size( const ecl_file_kw_type * file_kw );
