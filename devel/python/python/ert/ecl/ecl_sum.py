@@ -615,8 +615,8 @@ class EclSum( CClass ):
         matching the pattern will be returned; the matching is based
         on fnmatch(), i.e. shell style wildcards.
         """
-        c_ptr = cfunc.create_well_list( self , pattern )
-        return StringList( c_ptr = c_ptr )
+        # c_ptr = cfunc.create_well_list( self , pattern )
+        return cfunc.create_well_list( self , pattern )
 
 
     def groups( self , pattern = None ):
@@ -627,8 +627,8 @@ class EclSum( CClass ):
         matching the pattern will be returned; the matching is based
         on fnmatch(), i.e. shell style wildcards.
         """
-        c_ptr = cfunc.create_group_list( self , pattern )
-        return StringList( c_ptr = c_ptr )
+        # c_ptr = cfunc.create_group_list( self , pattern )
+        return cfunc.create_group_list( self , pattern )
 
     
     def get_values( self , key , report_only = False):
@@ -1256,8 +1256,8 @@ cwrapper.registerType( "smspec_node" , EclSMSPECNode )
 #    used outside this scope.
 cfunc = CWrapperNameSpace("ecl_sum")
 
-cfunc.create_well_list              = cwrapper.prototype("c_void_p ecl_sum_alloc_well_list( ecl_sum , char* )")
-cfunc.create_group_list             = cwrapper.prototype("c_void_p ecl_sum_alloc_group_list( ecl_sum , char* )")
+cfunc.create_well_list              = cwrapper.prototype("stringlist_obj ecl_sum_alloc_well_list( ecl_sum , char* )")
+cfunc.create_group_list             = cwrapper.prototype("stringlist_obj ecl_sum_alloc_group_list( ecl_sum , char* )")
 cfunc.fread_alloc                   = cwrapper.prototype("c_void_p ecl_sum_fread_alloc_case__( char* , char* , bool)") 
 cfunc.iiget                         = cwrapper.prototype("double   ecl_sum_iget( ecl_sum , int , int)")
 cfunc.free                          = cwrapper.prototype("void     ecl_sum_free( ecl_sum )")
