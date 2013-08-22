@@ -24,7 +24,7 @@ extern "C" {
 #include <ert/util/int_vector.h>
 #include <ert/util/bool_vector.h>
   
-  int_vector_type * bool_vector_alloc_index_list( const bool_vector_type * mask );
+  int_vector_type * bool_vector_alloc_active_list( const bool_vector_type * mask );
   bool_vector_type * int_vector_alloc_mask( const int_vector_type * active_list );
 
 #ifdef __cplusplus
