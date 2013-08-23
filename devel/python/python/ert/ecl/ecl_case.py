@@ -21,7 +21,7 @@ C based functions.
 """
 import os
 import warnings
-from ert.ecl import EclRFTFile, EclGrid, EclSum, EclUtil, EclDefault
+from ert.ecl import EclRFTFile, EclGrid, EclSum, EclUtil, EclDefault, EclQueue
 
 
 
@@ -222,5 +222,7 @@ class EclCase:
         The @queue argument should be an existing EclQueue() instance
         which will collect the jobs, and pass them on to a driver when
         there is free capacity.
+
+        @type queue: EclQueue
         """
-        queue.submit( self.datafile )
+        queue.submitDatafile( self.datafile )
