@@ -21,41 +21,44 @@ from ert.cwrap import BaseCClass, CWrapper, CWrapperNameSpace
 
 class LookupTable(BaseCClass):
     def __init__(self):
-        super(LookupTable, self).__init__(self.cNamespace().alloc())
+        super(LookupTable, self).__init__(LookupTable.cNamespace().alloc())
 
 
     @property
     def max(self):
-        return self.cNamespace().max(self)
+        return LookupTable.cNamespace().max(self)
 
     @property
     def min(self):
-        return self.cNamespace().min(self)
+        return LookupTable.cNamespace().min(self)
 
     @property
     def arg_max(self):
-        return self.cNamespace().arg_max(self)
+        return LookupTable.cNamespace().arg_max(self)
 
     @property
     def arg_min(self):
-        return self.cNamespace().arg_min(self)
+        return LookupTable.cNamespace().arg_min(self)
 
     def interp(self, x):
-        return self.cNamespace().interp(self, x)
+        return LookupTable.cNamespace().interp(self, x)
 
     def append(self, x, y):
-        self.cNamespace().append(self, x, y)
+        LookupTable.cNamespace().append(self, x, y)
 
     @property
     def size(self):
-        return self.cNamespace().size(self)
+        return LookupTable.cNamespace().size(self)
 
 
     def __del__(self):
-        self.cNamespace().free(self)
+        LookupTable.cNamespace().free(self)
 
     def __len__(self):
         return self.size
+
+    def free(self):
+        LookupTable.cNamespace().free(self)
 
 
 cwrapper = CWrapper(UTIL_LIB)
