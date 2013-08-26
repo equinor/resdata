@@ -51,7 +51,7 @@ from ert.util import UTIL_LIB, ctime
 
 
 
-
+#TVector takes advantage of the fact that self.cNamespace belongs to the inheriting class
 class TVector(BaseCClass):
 
     @classmethod
