@@ -58,7 +58,7 @@ class StringList(BaseCClass):
         ownership of the underlying object.
         """
 
-        c_ptr = self.cNamespace().stringlist_alloc()
+        c_ptr = StringList.cNamespace().stringlist_alloc()
         super(StringList, self).__init__(c_ptr)
 
         if initial:
@@ -79,7 +79,7 @@ class StringList(BaseCClass):
             if index < 0 or index >= length:
                 raise IndexError
             if isinstance(value, StringType):
-                self.cNamespace().stringlist_iset(self, index, value)
+                StringList.cNamespace().stringlist_iset(self, index, value)
             else:
                 raise TypeError("Item:%s not string type" % value)
 
@@ -98,7 +98,7 @@ class StringList(BaseCClass):
             if index < 0 or index >= length:
                 raise IndexError
             else:
-                return self.cNamespace().stringlist_iget(self, index)
+                return StringList.cNamespace().stringlist_iget(self, index)
         else:
             raise TypeError("Index should be integer type")
 
@@ -108,7 +108,7 @@ class StringList(BaseCClass):
 
         The 'in' check is based on string equality.
         """
-        return self.cNamespace().contains(self, s)
+        return StringList.cNamespace().contains(self, s)
 
     def contains(self, s):
         """
@@ -124,7 +124,7 @@ class StringList(BaseCClass):
         """
         The length of the list - used to support builtin len().
         """
-        return self.cNamespace().stringlist_get_size(self)
+        return StringList.cNamespace().stringlist_get_size(self)
 
 
     def __str__(self):
@@ -149,7 +149,7 @@ class StringList(BaseCClass):
         Will raise IndexError if list is empty.
         """
         if len(self):
-            return self.cNamespace().pop(self)
+            return StringList.cNamespace().pop(self)
         else:
             raise IndexError("pop() failed - the list is empty")
 
@@ -159,7 +159,7 @@ class StringList(BaseCClass):
         Appends a new string @s to list.
         """
         if isinstance(s, StringType):
-            self.cNamespace().stringlist_append(self, s)
+            StringList.cNamespace().stringlist_append(self, s)
         else:
             sys.exit("Type mismatch")
 
@@ -183,7 +183,7 @@ class StringList(BaseCClass):
         Will return the last element in list. Raise IndexError if empty.
         """
         if len(self):
-            return self.cNamespace().last(self)
+            return StringList.cNamespace().last(self)
         else:
             raise IndexError("The list is empty")
 
@@ -200,7 +200,7 @@ class StringList(BaseCClass):
              2 : util_strcmp_float() string comparison
 
         """
-        self.cNamespace().sort(self, cmp_flag)
+        StringList.cNamespace().sort(self, cmp_flag)
 
     def free(self):
         StringList.cNamespace().free(self)

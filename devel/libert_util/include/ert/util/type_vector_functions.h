@@ -1,7 +1,7 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
+   Copyright (C) 2013  Statoil ASA, Norway. 
     
-   The file 'thread_pool.h' is part of ERT - Ensemble based Reservoir Tool. 
+   The file 'type_vector_functions.h' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
@@ -15,12 +15,19 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
    for more details. 
 */
-#ifndef __THREAD_POOL_H__
-#define __THREAD_POOL_H__
+#ifndef __TYPE_VECTOR_FUNCTIONS_H__
+#define __TYPE_VECTOR_FUNCTIONS_H__
 
-#ifdef  WITH_PTHREAD
-#define WITH_THREAD_POOL   
-#include <ert/util/thread_pool_posix.h>
+#ifdef __cplusplus 
+extern "C" {
 #endif
+#include <ert/util/int_vector.h>
+#include <ert/util/bool_vector.h>
+  
+  int_vector_type * bool_vector_alloc_active_list( const bool_vector_type * mask );
+  bool_vector_type * int_vector_alloc_mask( const int_vector_type * active_list );
 
+#ifdef __cplusplus
+}
+#endif
 #endif
