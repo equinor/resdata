@@ -29,7 +29,7 @@ class EclSMSPECNode(BaseCClass):
         smspec_node.c; this list again is based on the tables 2.7 -
         2.11 in the ECLIPSE fileformat documentation.
         """
-        return self.cNamespace().node_is_total(self)
+        return EclSMSPECNode.cNamespace().node_is_total(self)
 
     @property
     def is_rate(self):
@@ -39,7 +39,7 @@ class EclSMSPECNode(BaseCClass):
         The conecpt of rate variabel is important (internally) when
         interpolation values to arbitrary times.
         """
-        return self.cNamespace().node_is_rate(self)
+        return EclSMSPECNode.cNamespace().node_is_rate(self)
 
 
     @property
@@ -50,7 +50,7 @@ class EclSMSPECNode(BaseCClass):
         The check is only based on the last character; all variables
         ending with 'H' are considered historical.
         """
-        return self.cNamespace().node_is_historical(self)
+        return EclSMSPECNode.cNamespace().node_is_historical(self)
 
 
     @property
@@ -58,7 +58,7 @@ class EclSMSPECNode(BaseCClass):
         """
         Returns the unit of this node as a string.
         """
-        return self.cNamespace().node_unit(self)
+        return EclSMSPECNode.cNamespace().node_unit(self)
 
     @property
     def wgname(self):
@@ -70,7 +70,7 @@ class EclSMSPECNode(BaseCClass):
         BPR:10,10,10. For these variables the function will return
         None, and not the ECLIPSE dummy value: ":+:+:+:+".
         """
-        return self.cNamespace().node_wgname(self)
+        return EclSMSPECNode.cNamespace().node_wgname(self)
 
 
     @property
@@ -83,7 +83,7 @@ class EclSMSPECNode(BaseCClass):
         read from the KEWYORD value; see table 3.4 in the ECLIPSE file
         format reference manual.
         """
-        return self.cNamespace().node_keyword(self)
+        return EclSMSPECNode.cNamespace().node_keyword(self)
 
     @property
     def num(self):
@@ -99,8 +99,8 @@ class EclSMSPECNode(BaseCClass):
            sum.smspec_node("FOPT").num     => None
            sum.smspec_node("BPR:1000").num => 1000
         """
-        if self.cNamespace().node_need_num(self):
-            return self.cNamespace().node_num(self)
+        if EclSMSPECNode.cNamespace().node_need_num(self):
+            return EclSMSPECNode.cNamespace().node_num(self)
         else:
             return None
 
