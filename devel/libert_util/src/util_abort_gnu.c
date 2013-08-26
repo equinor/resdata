@@ -177,7 +177,7 @@ char * util_alloc_dump_filename() {
   time_t timestamp = time(NULL);
   struct tm *converted = localtime(&timestamp);
   char day[32];
-  size_t last = strftime(day, 32, "%Y%m%d", converted);
+  size_t last = strftime(day, 32, "%Y%m%d-%H%M%S", converted);
   day[last] = '\0';
 
   struct passwd *pwd = getpwuid(getuid());
