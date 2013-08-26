@@ -22,15 +22,15 @@
 
 
 
-int_vector_type * bool_vector_alloc_index_list( const bool_vector_type * mask ) {
-  int_vector_type * index_list = int_vector_alloc(0,0);
+int_vector_type * bool_vector_alloc_active_list( const bool_vector_type * mask ) {
+  int_vector_type * active_list = int_vector_alloc(0,0);
   int i;
 
   for (i =0; i < bool_vector_size( mask ); i++)
     if (bool_vector_iget( mask , i ))
-      int_vector_append( index_list , i );
+      int_vector_append( active_list , i );
   
-  return index_list;
+  return active_list;
 }
 
 
