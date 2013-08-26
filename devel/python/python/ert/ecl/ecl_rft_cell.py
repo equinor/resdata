@@ -15,12 +15,9 @@
 #  for more details. 
 
 import warnings
-import ctypes
-import types
+from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
+from ert.ecl import ECL_LIB
 
-import libecl
-from   ert.cwrap.cwrap       import *
-from   ert.cwrap.cclass      import CClass
 
 class RFTCell(CClass):
     """The RFTCell is a base class for the cells which are part of an RFT/PLT.
@@ -102,7 +99,7 @@ class EclRFTCell(RFTCell):
         return cell
 
     @classmethod
-    def ref(cls, c_ptr , parent):
+    def asPythonReference(cls, c_ptr , parent):
         cell = EclRFTCell()
         cell.init_cref( c_ptr , parent )
         return cell
@@ -133,7 +130,7 @@ class EclPLTCell(RFTCell):
         return cell
 
     @classmethod
-    def ref(cls, c_ptr , parent):
+    def asPythonReference(cls, c_ptr , parent):
         cell = EclPLTCell()
         cell.init_cref( c_ptr , parent )
         return cell
@@ -194,7 +191,7 @@ class EclPLTCell(RFTCell):
 #################################################################
 
 
-cwrapper = CWrapper( libecl.lib )
+cwrapper = CWrapper(ECL_LIB)
 cwrapper.registerType( "rft_cell"     , RFTCell)
 cwrapper.registerType( "ecl_rft_cell" , EclRFTCell )
 cwrapper.registerType( "ecl_plt_cell" , EclPLTCell )

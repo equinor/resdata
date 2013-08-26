@@ -38,7 +38,9 @@
 #ifdef HAVE_FORK
 #ifdef WITH_PTHREAD
 #ifdef HAVE_EXECINFO
+#ifdef HAVE_GETPWUID
 #define HAVE_UTIL_ABORT
+#endif
 #endif
 #endif
 #endif
@@ -458,14 +460,14 @@ void util_rewind_line(FILE *stream) {
   int c;
 
   do {
-    if (ftell(stream) == 0)
+    if (util_ftell(stream) == 0)
       at_eol = true;
     else {
-      fseek(stream , -1 , SEEK_CUR);
+      util_fseek(stream , -1 , SEEK_CUR);
       c = fgetc(stream);
       at_eol = EOL_CHAR(c);
       if (!at_eol)
-        fseek(stream , -1 , SEEK_CUR);
+        util_fseek(stream , -1 , SEEK_CUR);
     }
   } while (!at_eol);
 }
@@ -494,7 +496,7 @@ bool util_fseek_string(FILE * stream , const char * __string , bool skip_string 
     util_strupr( string );
   {
     int len              = strlen( string );
-    long int initial_pos = ftell( stream );   /* Store the inital position. */
+    long int initial_pos = util_ftell( stream );   /* Store the inital position. */
     bool cont            = true;
     do {
       int c = fgetc( stream );
@@ -502,7 +504,7 @@ bool util_fseek_string(FILE * stream , const char * __string , bool skip_string 
         c = toupper( c );
       
       if (c == string[0]) {  /* OK - we got the first character right - lets try in more detail: */
-        long int current_pos  = ftell(stream);
+        long int current_pos  = util_ftell(stream);
         bool     equal        = true;
         int string_index;
         for (string_index = 1; string_index < len; string_index++) {
@@ -520,7 +522,7 @@ bool util_fseek_string(FILE * stream , const char * __string , bool skip_string 
           string_found = true;
           cont = false;
         } else /* Go back to current pos and continue searching. */
-          fseek(stream , current_pos , SEEK_SET);
+          util_fseek(stream , current_pos , SEEK_SET);
         
       }
       if (c == EOF) 
@@ -530,9 +532,9 @@ bool util_fseek_string(FILE * stream , const char * __string , bool skip_string 
     
     if (string_found) {
       if (!skip_string)
-        fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
+        util_fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
     } else
-      fseek(stream , initial_pos , SEEK_SET);       /* Could not find the string reposition at initial position. */
+      util_fseek(stream , initial_pos , SEEK_SET);       /* Could not find the string reposition at initial position. */
     
   }
   free( string );
@@ -556,13 +558,13 @@ bool util_fseek_string(FILE * stream , const char * __string , bool skip_string 
 
 
 char * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool include_stop_string) {
-  long int start_pos = ftell(stream);
+  long int start_pos = util_ftell(stream);
   if (util_fseek_string(stream , stop_string , include_stop_string , true)) {   /* Default case sensitive. */
-    long int end_pos = ftell(stream);
+    long int end_pos = util_ftell(stream);
     int      len     = end_pos - start_pos;
     char * buffer    = util_calloc( (len + 1) ,  sizeof * buffer );
 
-    fseek(stream , start_pos , SEEK_SET);
+    util_fseek(stream , start_pos , SEEK_SET);
     util_fread( buffer , 1 , len , stream , __func__);
     buffer[len] = '\0';
     
@@ -574,7 +576,7 @@ char * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool inc
 
 
 static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line) {
-  int init_pos = ftell(stream);
+  int init_pos = util_ftell(stream);
   char * new_line;
   int len;
   char end_char;
@@ -603,7 +605,7 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
     end_char = c;
   }
   
-  if (fseek(stream , init_pos , SEEK_SET) != 0) 
+  if (util_fseek(stream , init_pos , SEEK_SET) != 0) 
     util_abort("%s: fseek failed: %d/%s \n",__func__ , errno , strerror(errno));
 
   new_line = util_realloc(line , len + 1 );
@@ -758,9 +760,9 @@ char * util_alloc_cwd(void) {
 
 bool util_is_cwd( const char * path ) {
   bool is_cwd = false;
-  struct stat path_stat;
+  stat_type path_stat;
 
-  if (stat(path , &path_stat) == 0) {
+  if (util_stat(path , &path_stat) == 0) {
     if (S_ISDIR( path_stat.st_mode )) {
       char * cwd = util_alloc_cwd();
 #ifdef ERT_WINDOWS
@@ -771,8 +773,8 @@ bool util_is_cwd( const char * path ) {
       */
       util_abort("%s: Internal error - function not properly implmented on Windows \n",__func__);
 #else
-      struct stat cwd_stat;
-      stat(cwd , &cwd_stat);
+      stat_type cwd_stat;
+      util_stat(cwd , &cwd_stat);
       if (cwd_stat.st_ino == path_stat.st_ino)
         is_cwd = true;
 #endif
@@ -1115,7 +1117,7 @@ void util_fskip_lines(FILE * stream , int lines) {
         at_eof = true;
       else {
         if (c != '\n')
-          fseek( stream , -1 , SEEK_CUR );
+          util_fseek( stream , -1 , SEEK_CUR );
       }
     }
     
@@ -1159,7 +1161,7 @@ int util_forward_line(FILE * stream , bool * at_eof) {
           *at_eof = true;
         else {
           if (!EOL_CHAR(c)) 
-            fseek(stream , -1 , SEEK_CUR);
+            util_fseek(stream , -1 , SEEK_CUR);
         }
       } else
         col++;
@@ -1224,7 +1226,7 @@ static void util_fskip_chars__(FILE * stream , const char * skip_set , bool comp
     }
   } while (cont);
   if (!*at_eof)
-    fseek(stream , -1 , SEEK_CUR);
+    util_fseek(stream , -1 , SEEK_CUR);
 }
 
 
@@ -1257,7 +1259,7 @@ static void util_fskip_space__(FILE * stream , bool complimentary_set , bool *at
     }
   } while (cont);
   if (!*at_eof)
-    fseek(stream , -1 , SEEK_CUR);
+    util_fseek(stream , -1 , SEEK_CUR);
 }
 
 
@@ -1329,16 +1331,16 @@ char * util_fscanf_alloc_token(FILE * stream) {
 
   /* Skipping initial whitespace */
   do {
-    int pos = ftell(stream);
+    int pos = util_ftell(stream);
     c = fgetc(stream);
     if (EOL_CHAR(c)) {
       /* Going back to position at newline */
-      fseek(stream , pos , SEEK_SET);
+      util_fseek(stream , pos , SEEK_SET);
       cont = false;
     } else if (c == EOF) 
       cont = false;
     else if (!util_char_in(c , 2 , space_set)) {
-      fseek(stream , pos , SEEK_SET);
+      util_fseek(stream , pos , SEEK_SET);
       cont = false;
     }
   } while (cont);
@@ -1351,7 +1353,7 @@ char * util_fscanf_alloc_token(FILE * stream) {
   cont = true;
   {
     int length = 0;
-    long int token_start = ftell(stream);
+    long int token_start = util_ftell(stream);
 
     do {
       c = fgetc(stream);
@@ -1364,10 +1366,10 @@ char * util_fscanf_alloc_token(FILE * stream) {
       else
         length++;
     } while (cont);
-    if (EOL_CHAR(c)) fseek(stream , -1 , SEEK_CUR);
+    if (EOL_CHAR(c)) util_fseek(stream , -1 , SEEK_CUR);
   
     token = util_calloc(length + 1 , sizeof * token );
-    fseek(stream , token_start , SEEK_SET);
+    util_fseek(stream , token_start , SEEK_SET);
     { 
       int i;
       for (i = 0; i < length; i++)
@@ -1912,14 +1914,14 @@ bool util_fscanf_bool(FILE * stream , bool * value) {
    
 
 bool util_fscanf_int(FILE * stream , int * value) {
-  long int start_pos = ftell(stream);
+  long int start_pos = util_ftell(stream);
   char * token       = util_fscanf_alloc_token(stream);
   
   bool   value_OK = false;
   if (token != NULL) {
     value_OK = util_sscanf_int(token , value);
     if (!value_OK)
-      fseek(stream , start_pos , SEEK_SET);
+      util_fseek(stream , start_pos , SEEK_SET);
     free(token);
   }
   return value_OK;
@@ -2077,14 +2079,14 @@ char * util_scanf_alloc_string(const char * prompt) {
 
 
 int util_count_file_lines(FILE * stream) {
-  long int init_pos = ftell(stream);
+  long int init_pos = util_ftell(stream);
   int lines = 0;
   bool at_eof = false;
   do {
     int col = util_forward_line(stream , &at_eof);
     if (col > 0) lines++;
   } while (!at_eof);
-  fseek(stream , init_pos , SEEK_SET);
+  util_fseek(stream , init_pos , SEEK_SET);
   return lines;
 }
 
@@ -2108,7 +2110,7 @@ int util_count_content_file_lines(FILE * stream) {
       c = fgetc(stream);
       if (! feof(stream) ) {
         if (!EOL_CHAR(c)){
-          fseek(stream , -1 , SEEK_CUR);
+          util_fseek(stream , -1 , SEEK_CUR);
         }
       }else if (c == EOF){
         lines++;
@@ -2306,7 +2308,7 @@ bool util_files_equal( const char * file1 , const char * file2 ) {
 
 
 static void util_fclear_region( FILE * stream , long offset , long region_size) {
-  fseek( stream , offset , SEEK_SET );
+  util_fseek( stream , offset , SEEK_SET );
   { 
      int i;
      for ( i=0; i < region_size; i++)
@@ -2316,10 +2318,10 @@ static void util_fclear_region( FILE * stream , long offset , long region_size) 
 
 
 static void util_fmove_block(FILE * stream , long offset , long shift , char * buffer , int buffer_size) {
-  fseek( stream , offset , SEEK_SET );
+  util_fseek( stream , offset , SEEK_SET );
   {
     int bytes_read = fread( buffer , sizeof * buffer , buffer_size , stream );
-    fseek( stream , offset + shift , SEEK_SET );
+    util_fseek( stream , offset + shift , SEEK_SET );
     fwrite( buffer , sizeof * buffer , bytes_read , stream );
   }
 }
@@ -2347,10 +2349,10 @@ int util_fmove( FILE * stream , long offset , long shift) {
   long file_size;
   // Determine size of file.
   {
-    long init_pos = ftell( stream );
-    fseek( stream , 0 , SEEK_END);
-    file_size = ftell( stream );
-    fseek( stream , init_pos , SEEK_SET );
+    long init_pos = util_ftell( stream );
+    util_fseek( stream , 0 , SEEK_END);
+    file_size = util_ftell( stream );
+    util_fseek( stream , init_pos , SEEK_SET );
   }
     
   // Validate offset and shift input values.
@@ -2414,8 +2416,8 @@ bool util_file_exists(const char *filename) {
 */
 
 bool util_entry_exists( const char * entry ) {
-  struct stat stat_buffer;
-  int stat_return = stat(entry, &stat_buffer);
+  stat_type stat_buffer;
+  int stat_return = util_stat(entry, &stat_buffer);
   if (stat_return == 0)
     return true;
   else {
@@ -2450,9 +2452,9 @@ bool util_entry_exists( const char * entry ) {
 
 
 bool util_is_directory(const char * path) {
-  struct stat stat_buffer;
+  stat_type stat_buffer;
 
-  if (stat(path , &stat_buffer) == 0)
+  if (util_stat(path , &stat_buffer) == 0)
     return S_ISDIR(stat_buffer.st_mode);
   else if (errno == ENOENT)
     /*Path does not exist at all. */
@@ -2466,9 +2468,9 @@ bool util_is_directory(const char * path) {
 
 
 bool util_is_file(const char * path) {
-  struct stat stat_buffer;
+  stat_type stat_buffer;
 
-  if (stat(path , &stat_buffer) == 0)
+  if (util_stat(path , &stat_buffer) == 0)
     return S_ISREG(stat_buffer.st_mode);
   else if (errno == ENOENT)
     /*Path does not exist at all. */
@@ -2488,8 +2490,8 @@ bool util_is_file(const char * path) {
 #ifdef HAVE_FORK
 bool util_is_executable(const char * path) {
   if (util_file_exists(path)) {
-    struct stat stat_buffer;
-    stat(path , &stat_buffer);
+    stat_type stat_buffer;
+    util_stat(path , &stat_buffer);
     if (S_ISREG(stat_buffer.st_mode))
       return (stat_buffer.st_mode & S_IXUSR);
     else
@@ -2503,8 +2505,8 @@ bool util_is_executable(const char * path) {
    Will not differtiate between files and directories.
 */
 bool util_entry_readable( const char * entry ) {
-  struct stat buffer;
-  if (stat( entry , &buffer ) == 0)
+  stat_type buffer;
+  if (util_stat( entry , &buffer ) == 0)
     return buffer.st_mode & S_IRUSR;
   else
     return false;  /* If stat failed - typically not existing entry - we return false. */
@@ -2519,8 +2521,8 @@ bool util_file_readable( const char * file ) {
 }
 
 bool util_entry_writable( const char * entry ) {
-  struct stat buffer;
-  if (stat( entry , &buffer ) == 0)
+  stat_type buffer;
+  if (util_stat( entry , &buffer ) == 0)
     return buffer.st_mode & S_IWUSR;
   else
     return false;  /* If stat failed - typically not existing entry - we return false. */
@@ -2543,8 +2545,8 @@ bool util_is_executable(const char * path) {
 
 /* If it exists on windows it is readable ... */
 bool util_entry_readable( const char * entry ) {
-  struct stat buffer;
-  if (stat( entry , &buffer ) == 0)
+  stat_type buffer;
+  if (util_stat( entry , &buffer ) == 0)
     return true;
   else
     return false;  /* If stat failed - typically not existing entry - we return false. */
@@ -2552,8 +2554,8 @@ bool util_entry_readable( const char * entry ) {
 
 /* If it exists on windows it is readable ... */
 bool util_entry_writable( const char * entry ) {
-  struct stat buffer;
-  if (stat( entry , &buffer ) == 0)
+  stat_type buffer;
+  if (util_stat( entry , &buffer ) == 0)
     return true;
   else
     return false;  /* If stat failed - typically not existing entry - we return false. */
@@ -2715,14 +2717,14 @@ void util_alloc_file_components(const char * file, char **_path , char **_basena
 
 
 size_t util_file_size(const char *file) {
-  struct stat buffer;
+  stat_type buffer;
   int fildes;
   
   fildes = open(file , O_RDONLY);
   if (fildes == -1) 
     util_abort("%s: failed to open:%s - %s \n",__func__ , file , strerror(errno));
   
-  fstat(fildes, &buffer);
+  util_fstat(fildes, &buffer);
   close(fildes);
   
   return buffer.st_size;
@@ -2762,11 +2764,11 @@ void util_ftruncate(FILE * stream , long size) {
 */
 
 bool util_same_file(const char * file1 , const char * file2) {
-  struct stat buffer1 , buffer2;
+  stat_type buffer1 , buffer2;
   int stat1,stat2;
 
-  stat1 = stat(file1, &buffer1);   // In the case of symlinks the stat call will stat the target file and not the link.
-  stat2 = stat(file2, &buffer2);
+  stat1 = util_stat(file1, &buffer1);   // In the case of symlinks the stat call will stat the target file and not the link.
+  stat2 = util_stat(file2, &buffer2);
   
   if ((stat1 == 0) && (stat1 == stat2)) {
     if (buffer1.st_ino == buffer2.st_ino) 
@@ -2793,7 +2795,7 @@ bool util_fmt_bit8_stream(FILE * stream ) {
   const int    min_read      = 256; /* Critically small */
   const double bit8set_limit = 0.00001;
   const int    buffer_size   = 131072;
-  long int start_pos         = ftell(stream);
+  long int start_pos         = util_ftell(stream);
   bool fmt_file;
   {
     double bit8set_fraction;
@@ -2817,7 +2819,7 @@ bool util_fmt_bit8_stream(FILE * stream ) {
     else 
       fmt_file = false;
   }
-  fseek(stream , start_pos , SEEK_SET);
+  util_fseek(stream , start_pos , SEEK_SET);
   return fmt_file;
 }  
 
@@ -2855,17 +2857,17 @@ bool util_fmt_bit8(const char *filename ) {
 
 
 double util_file_difftime(const char *file1 , const char *file2) {
-  struct stat b1, b2;
+  stat_type b1, b2;
   int f1,f2;
   time_t t1,t2;
 
   f1 = open(file1 , O_RDONLY);
-  fstat(f1, &b1);
+  util_fstat(f1, &b1);
   t1 = b1.st_mtime;
   close(f1);
 
   f2 = open(file2 , O_RDONLY);
-  fstat(f2, &b2);
+  util_fstat(f2, &b2);
   t2 = b2.st_mtime;
   close(f2);
 
@@ -2877,8 +2879,8 @@ time_t util_file_mtime(const char * file) {
   time_t mtime = -1;
   int fd = open( file , O_RDONLY);
   if (fd != -1) {
-    struct stat f_stat;
-    fstat(fd , &f_stat );
+    stat_type f_stat;
+    util_fstat(fd , &f_stat );
     mtime = f_stat.st_mtime;
     close( fd );
   } 
@@ -3026,10 +3028,10 @@ bool util_sscanf_date(const char * date_token , time_t * t) {
 
 
 bool util_fscanf_date(FILE *stream , time_t *t)  {
-  int init_pos = ftell(stream);
+  int init_pos = util_ftell(stream);
   char * date_token = util_fscanf_alloc_token(stream);
   bool return_value = util_sscanf_date(date_token , t);
-  if (!return_value) fseek(stream , init_pos , SEEK_SET);
+  if (!return_value) util_fseek(stream , init_pos , SEEK_SET);
   free(date_token);
   return return_value;
 }
@@ -4077,9 +4079,9 @@ void util_fskip_string(FILE *stream) {
   if (len == 0)        
     return;                                  /* The user has written NULL with util_fwrite_string(). */ 
   else if (len == -1)  
-    fseek( stream , 1 , SEEK_CUR);           /* Magic length for "" - skip the '\0' */
+    util_fseek( stream , 1 , SEEK_CUR);           /* Magic length for "" - skip the '\0' */
   else
-    fseek(stream , len + 1 , SEEK_CUR);      /* Skip the data in a normal string. */
+    util_fseek(stream , len + 1 , SEEK_CUR);      /* Skip the data in a normal string. */
 }
 
 
@@ -4133,15 +4135,15 @@ bool util_fread_bool(FILE * stream) {
 
 
 void util_fskip_int(FILE * stream) {
-  fseek( stream , sizeof (int) , SEEK_CUR);
+  util_fseek( stream , sizeof (int) , SEEK_CUR);
 }
 
 void util_fskip_long(FILE * stream) {
-  fseek( stream , sizeof (long) , SEEK_CUR);
+  util_fseek( stream , sizeof (long) , SEEK_CUR);
 }
 
 void util_fskip_bool(FILE * stream) {
-  fseek( stream , sizeof (bool) , SEEK_CUR);
+  util_fseek( stream , sizeof (bool) , SEEK_CUR);
 }
 
 
@@ -4778,9 +4780,9 @@ int util_get_type( void * data ) {
 */
 
 int util_get_current_linenr(FILE * stream) {
-  long init_pos = ftell(stream);
+  long init_pos = util_ftell(stream);
   int line_nr   = 0;
-  fseek( stream , 0L , SEEK_SET);
+  util_fseek( stream , 0L , SEEK_SET);
   {
     int char_nr;
     int c;
@@ -4898,7 +4900,7 @@ int util_fnmatch( const char * pattern , const char * string ) {
 #ifdef HAVE_FNMATCH
   return fnmatch( pattern , string , 0 );
 #else
-#pragma comment(lib , "shlwapi.lib");
+#pragma comment(lib , "shlwapi.lib")
   bool match = PathMatchSpec( string , pattern ); // shlwapi
   if (match)
     return 0;
@@ -4980,6 +4982,7 @@ int util_round( double x ) { return (int) (x + 0.5); }
 #endif
 
 #include "util_path.c"
+#include "util_lfs.c"
 
 int util_type_get_id( const void * data ) {
   int type_id = ((const int*) data)[0];

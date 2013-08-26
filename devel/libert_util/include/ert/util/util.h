@@ -22,12 +22,17 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <time.h>
 #include <stdarg.h>
+#include <sys/types.h>
+#include <time.h>
+
+#ifdef HAVE_GETPWUID
+#include <pwd.h>
+#endif
+
 
 #ifdef HAVE_GETUID
 #include <sys/stat.h>
-#include <sys/types.h>
 #endif
 
 #ifdef ERT_WINDOWS
@@ -47,6 +52,28 @@ extern"C" {
 #endif
 
 
+/*
+  These ifdefs are an attempt to support large files (> 2GB)
+  transparently on both Windows and Linux. See source file
+  libert_util/src/util_lfs.c for more details.
+
+  The symbol WINDOWS_LFS should be defined during compilation
+  if you want support of large files on windows.
+*/
+
+#ifdef WINDOWS_LFS
+typedef struct _stat64 stat_type;
+typedef __int64 offset_type;
+#else
+typedef struct stat stat_type;
+#ifdef HAVE_FSEEKO
+  typedef off_t offset_type;
+#else
+  typedef long offset_type;
+#endif
+#endif
+
+
 
 /*****************************************************************/
 /*
@@ -63,6 +90,7 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
                                           const char * , /* The current file / directory */
                                           int          , /* The current depth in the file hiearcrcy. */
                                           void *);       /* Arbitrary argument */
+
 
 
 typedef enum {left_pad   = 0,
@@ -141,6 +169,11 @@ typedef enum {left_pad   = 0,
   int          util_roundf( float x );
   int          util_round( double x );
 
+  offset_type        util_ftell(FILE * stream);
+  int          util_fseek(FILE * stream, offset_type offset, int whence);
+  void         util_rewind(FILE * stream);
+  int          util_stat(const char * filename , stat_type * stat_info);
+  int          util_fstat(int fileno, stat_type * stat_info);
 
 #ifdef HAVE_VA_COPY
 #define UTIL_VA_COPY(target,src) va_copy(target,src)
@@ -250,6 +283,7 @@ typedef enum {left_pad   = 0,
   void         util_fread_dev_urandom(int , char * );
   bool         util_string_isspace(const char * s);
   
+  char *  util_alloc_dump_filename();
   void    util_exit(const char * fmt , ...);
   void    util_abort(const char * fmt , ...);
   void    util_abort_signal(int );
