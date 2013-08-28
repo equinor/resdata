@@ -14,33 +14,24 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-import  ctypes
-from    ert.cwrap.cwrap        import *
-from    ert.cwrap.cclass       import CClass
-from    ert.util.ctime         import ctime
-from    ert.util.tvector       import * 
-import  libutil
-from    ert.enkf.libenkf       import *
-#from ert.job_queue.ext_joblist import ExtJoblist
+from ert.cwrap import BaseCClass, CWrapper
+from ert.util import UTIL_LIB
 
-class Buffer(CClass):
-    
-    def __init__(self , size , parent = None):
-        c_ptr = cfunc.alloc(size)
-        if parent:
-            self.init_cref( c_ptr , parent)
-        else:
-            self.init_cobj( c_ptr , cfunc.free )
-            
+
+class Buffer(BaseCClass):
+    def __init__(self, size):
+        super(Buffer, self).__init__(Buffer.cNamespace().alloc(size))
+
+    def free(self):
+        Buffer.cNamespace().free(self)
 
 ##################################################################
-cwrapper = CWrapper( libutil.lib )
-cwrapper.registerType( "buffer" , Buffer )
 
-cfunc = CWrapperNameSpace("buffer")
+cwrapper = CWrapper(UTIL_LIB)
+cwrapper.registerType("buffer", Buffer)
+cwrapper.registerType("buffer_obj", Buffer.createPythonObject)
+cwrapper.registerType("buffer_ref", Buffer.createCReference)
 
-##################################################################
-##################################################################
 
-cfunc.free  = cwrapper.prototype("void buffer_free( buffer )")           
-cfunc.alloc = cwrapper.prototype("c_void_p buffer_alloc(int)")    
+Buffer.cNamespace().free = cwrapper.prototype("void buffer_free(buffer)")
+Buffer.cNamespace().alloc = cwrapper.prototype("c_void_p buffer_alloc(int)")
