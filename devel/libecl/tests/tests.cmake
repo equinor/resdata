@@ -7,6 +7,9 @@ add_executable( ecl_restart_test ecl_restart_test.c )
 target_link_libraries( ecl_restart_test ecl test_util )
 add_test( ecl_restart_test ${EXECUTABLE_OUTPUT_PATH}/ecl_restart_test ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST )
 
+add_executable( ecl_valid_basename ecl_valid_basename.c )
+target_link_libraries( ecl_valid_basename ecl test_util )
+add_test( ecl_valid_basename ${EXECUTABLE_OUTPUT_PATH}/ecl_valid_basename)
 
 add_executable( ecl_grid_lgr_name ecl_grid_lgr_name.c )
 target_link_libraries( ecl_grid_lgr_name ecl test_util )

@@ -1325,6 +1325,33 @@ bool ecl_util_valid_basename( const char * basename ) {
 }
 
 
+bool ecl_util_valid_basename_fmt(const char * basename_fmt)
+{
+  bool valid;
+  const char * percent_ptr = strchr(basename_fmt, '%');
+  if (percent_ptr) {
+    percent_ptr++;
+    while (true)
+    {
+      if (*percent_ptr == 'd')
+      {
+        char * basename_instance = util_alloc_sprintf(basename_fmt, 0);
+        valid = ecl_util_valid_basename(basename_instance);
+        free(basename_instance);
+        break;
+      } else if (!isdigit(*percent_ptr)) {
+        valid = false;
+        break;
+      } else
+        percent_ptr++;
+    }
+  } else
+    valid = ecl_util_valid_basename(basename_fmt);
+
+  return valid;
+}
+
+
 /*
   Will append time_t values corresponding to the first day in every
   month in the open interval (start_date , end_date). Iff start_date
