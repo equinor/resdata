@@ -66,3 +66,5 @@ from .ctime import ctime
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .latex import LaTeX
 from .substitution_list import SubstitutionList
+from .ui_return import UIReturn
+from .ui_return import UIReturnStatus
