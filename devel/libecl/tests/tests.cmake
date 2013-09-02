@@ -61,6 +61,14 @@ target_link_libraries( ecl_nnc_info_test ecl test_util )
 add_test (ecl_nnc_info_test ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_info_test )
 
 
+add_executable( ecl_nnc_vector ecl_nnc_vector.c )
+target_link_libraries( ecl_nnc_vector ecl test_util )
+add_test(ecl_nnc_vector ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_vector )
+
+add_executable( ecl_nnc_index_list ecl_nnc_index_list.c )
+target_link_libraries( ecl_nnc_index_list ecl test_util )
+add_test (ecl_nnc_index_list ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_index_list )
+
 add_executable( ecl_kw_grdecl ecl_kw_grdecl.c )
 target_link_libraries( ecl_kw_grdecl ecl test_util )
 add_test( ecl_kw_grdecl ${EXECUTABLE_OUTPUT_PATH}/ecl_kw_grdecl )
