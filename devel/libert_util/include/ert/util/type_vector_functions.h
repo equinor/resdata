@@ -26,6 +26,7 @@ extern "C" {
   
   int_vector_type * bool_vector_alloc_active_list( const bool_vector_type * mask );
   bool_vector_type * int_vector_alloc_mask( const int_vector_type * active_list );
+  int_vector_type * bool_vector_alloc_active_index_list(const bool_vector_type * mask , int default_value);
 
 #ifdef __cplusplus
 }
