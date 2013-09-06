@@ -68,8 +68,39 @@ void test_mask() {
 }
 
 
+void test_active_index_list() {
+  int default_value = -1;
+  bool_vector_type * mask = bool_vector_alloc(0 , false);
+
+  bool_vector_iset(mask , 10, true);
+  bool_vector_iset(mask , 15, true);
+  bool_vector_iset(mask , 20, true);
+
+  {
+    int_vector_type * active_index_list = bool_vector_alloc_active_index_list(mask , default_value);
+
+    test_assert_int_equal( default_value , int_vector_get_default(active_index_list));
+    test_assert_int_equal( 21 , int_vector_size( active_index_list ));
+
+    test_assert_int_equal( default_value , int_vector_iget( active_index_list , 0));
+    test_assert_int_equal( default_value , int_vector_iget( active_index_list , 1));
+    test_assert_int_equal( default_value , int_vector_iget( active_index_list , 12));
+    test_assert_int_equal( default_value , int_vector_iget( active_index_list , 19));
+
+    test_assert_int_equal( 0 , int_vector_iget( active_index_list , 10));
+    test_assert_int_equal( 1 , int_vector_iget( active_index_list , 15));
+    test_assert_int_equal( 2 , int_vector_iget( active_index_list , 20));
+
+
+    int_vector_free( active_index_list);
+  }
+  bool_vector_free(mask);
+}
+
+
 int main( int argc , char ** argv) {
   test_index_list();
   test_mask();
+  test_active_index_list();
   exit(0);
 }
