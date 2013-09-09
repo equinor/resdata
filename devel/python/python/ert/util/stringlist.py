@@ -202,6 +202,11 @@ class StringList(BaseCClass):
         """
         StringList.cNamespace().sort(self, cmp_flag)
 
+    def index(self, value):
+        """ @rtype: int """
+        assert isinstance(value, str)
+        return StringList.cNamespace().find_first(self, value)
+
     def free(self):
         StringList.cNamespace().free(self)
 
@@ -222,3 +227,4 @@ StringList.cNamespace().contains = cwrapper.prototype("bool stringlist_contains(
 StringList.cNamespace().sort = cwrapper.prototype("void stringlist_python_sort( stringlist , int)")
 StringList.cNamespace().pop = cwrapper.safe_prototype("char* stringlist_pop( stringlist )")
 StringList.cNamespace().last = cwrapper.safe_prototype("char* stringlist_get_last( stringlist )")
+StringList.cNamespace().find_first = cwrapper.safe_prototype("int stringlist_find_first(stringlist, char*)")
