@@ -104,8 +104,6 @@ class EclSMSPECNode(BaseCClass):
         else:
             return None
 
-    def free(self):
-        pass
 
 
 cwrapper = CWrapper(ECL_LIB)
