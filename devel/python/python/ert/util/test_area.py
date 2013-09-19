@@ -15,9 +15,7 @@
 #  for more details.
 
 from ert.cwrap import clib, BaseCClass, CWrapper
-
-
-lib = clib.ert_load("libtest_util.so")
+from ert.util import UTIL_LIB
 
 
 class TestArea(BaseCClass):
@@ -67,7 +65,7 @@ class TestAreaContext(object):
 
 
 
-cwrapper = CWrapper(lib)
+cwrapper = CWrapper(UTIL_LIB)
 CWrapper.registerType("test_area", TestArea)
 CWrapper.registerType("test_area_obj", TestArea.createPythonObject)
 CWrapper.registerType("test_area_ref", TestArea.createCReference)
