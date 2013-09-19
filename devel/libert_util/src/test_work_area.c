@@ -16,9 +16,12 @@
    for more details. 
 */
 
+#ifdef HAVE_GETUID
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -104,13 +107,19 @@ static test_work_area_type * test_work_area_alloc__(const char * path , bool ret
 
 test_work_area_type * test_work_area_alloc(const char * test_name, bool retain) {
   if (test_name) {
+#ifdef HAVE_GETUID
     uid_t uid = getuid();
     struct passwd * pw = getpwuid( uid );
+    char * user_name = util_alloc_string_copy( pw->pw_name );
+#else
+    char * user_name =  util_alloc_sprintf("ert-test-%08d" , rng_get_int(rng , 100000000));
+#endif
     rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM );
-    char * path = util_alloc_sprintf( PATH_FMT , pw->pw_name , test_name , rng_get_int( rng , 100000000 ));
+    char * path = util_alloc_sprintf( PATH_FMT , user_name , test_name , rng_get_int( rng , 100000000 ));
     test_work_area_type * work_area = test_work_area_alloc__( path , retain );
     free( path );
     rng_free( rng );
+    free( user_name );
     return work_area;
   } else 
     return NULL;
