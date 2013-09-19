@@ -25,7 +25,10 @@ class TestArea(BaseCClass):
         c_ptr = TestArea.cNamespace().test_area_alloc(test_name, store_area)
         super(TestArea, self).__init__(c_ptr)
 
-
+        
+    def get_cwd(self):
+        return TestArea.cNamespace().get_cwd(self)
+        
 
     def install_file( self, filename):
         TestArea.cNamespace().install_file(self, filename)
@@ -75,3 +78,4 @@ TestArea.cNamespace().install_file = cwrapper.prototype("void test_work_area_ins
 TestArea.cNamespace().copy_directory = cwrapper.prototype("void test_work_area_copy_directory( test_area , char* )")
 TestArea.cNamespace().copy_file = cwrapper.prototype("void test_work_area_copy_file( test_area , char* )")
 TestArea.cNamespace().copy_directory_content = cwrapper.prototype("void test_work_area_copy_directory_content( test_area , char* )")
+TestArea.cNamespace().get_cwd = cwrapper.prototype("char* test_work_area_get_cwd( test_area )")
