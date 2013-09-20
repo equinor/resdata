@@ -13,6 +13,7 @@
 #   
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
+import os.path
 
 from ert.cwrap import clib, BaseCClass, CWrapper
 from ert.util import UTIL_LIB
@@ -21,7 +22,10 @@ from ert.util import UTIL_LIB
 class TestArea(BaseCClass):
     def __init__(self, test_name, prefix = None , store_area=False):
         if prefix:
-            c_ptr = TestArea.cNamespace().test_area_alloc__(prefix , test_name , store_area)
+            if os.path.exists( prefix ):
+                c_ptr = TestArea.cNamespace().test_area_alloc__(prefix , test_name , store_area)
+            else:
+                raise IOError("The prefix path:%s must exist" % prefix)
         else:
             c_ptr = TestArea.cNamespace().test_area_alloc(test_name, store_area)
         super(TestArea, self).__init__(c_ptr)
