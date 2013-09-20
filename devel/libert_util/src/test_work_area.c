@@ -26,8 +26,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <ert/util/test_work_area.h>
 #include <ert/util/util.h>
+#include <ert/util/test_work_area.h>
+#include <ert/util/type_macros.h>
 #include <ert/util/rng.h>
 
 /*
@@ -80,32 +81,46 @@
   test_work_area_free( work_area );
 */
   
+#define DEFAULT_PREFIX "/tmp"
 
-#define PATH_FMT       "/tmp/%s/ert-test/%s/%08d"     /* /tmp/username/ert-test/test_name/random-integer */
+#define TEST_PATH_FMT  "%s/ert-test/%s/%08d"     /* username/ert-test/test_name/random-integer */
+#define FULL_PATH_FMT  "%s/%s"                   /* prefix/test-path */
+
+#define TEST_WORK_AREA_TYPE_ID 1107355
 
 struct test_work_area_struct {
+  UTIL_TYPE_ID_DECLARATION;
   bool        retain;
   char      * cwd;
   char      * original_cwd;
 };
 
 
-static test_work_area_type * test_work_area_alloc__(const char * path , bool retain) {
-  util_make_path( path );
-  if (true) {
-    test_work_area_type * work_area = util_malloc( sizeof * work_area );
-    work_area->retain = retain;
-    work_area->cwd = util_alloc_string_copy( path );
-    work_area->original_cwd = util_alloc_cwd();
-    chdir( work_area->cwd );  
-    
-    return work_area;
-  }
+test_work_area_type * test_work_area_alloc__(const char * prefix , const char * test_path , bool retain) {
+  test_work_area_type * work_area = NULL;
+  
+  if (util_is_directory( prefix )) {
+    char * test_cwd = util_alloc_sprintf(FULL_PATH_FMT , prefix , test_path );
+    util_make_path( test_cwd );
+    if (true) {
+      work_area = util_malloc( sizeof * work_area );
+
+      UTIL_TYPE_ID_INIT( work_area , TEST_WORK_AREA_TYPE_ID );
+      work_area->retain = retain;
+      work_area->original_cwd = util_alloc_cwd();
+      work_area->cwd = test_cwd;
+      chdir( work_area->cwd );  
+      
+    } else 
+      free( test_cwd );
+  } 
+  return work_area;
 }
 
 
+UTIL_IS_INSTANCE_FUNCTION( test_work_area , TEST_WORK_AREA_TYPE_ID)
 
-test_work_area_type * test_work_area_alloc(const char * test_name, bool retain) {
+test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , const char * test_name, bool retain) {
   if (test_name) {
 #ifdef HAVE_GETUID
     uid_t uid = getuid();
@@ -115,14 +130,19 @@ test_work_area_type * test_work_area_alloc(const char * test_name, bool retain) 
     char * user_name =  util_alloc_sprintf("ert-test-%08d" , rng_get_int(rng , 100000000));
 #endif
     rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM );
-    char * path = util_alloc_sprintf( PATH_FMT , user_name , test_name , rng_get_int( rng , 100000000 ));
-    test_work_area_type * work_area = test_work_area_alloc__( path , retain );
-    free( path );
+    char * test_path = util_alloc_sprintf( TEST_PATH_FMT , user_name , test_name , rng_get_int( rng , 100000000 ));
+    test_work_area_type * work_area = test_work_area_alloc__( prefix , test_path , retain );
+    free( test_path );
     rng_free( rng );
     free( user_name );
     return work_area;
   } else 
     return NULL;
+}
+
+
+test_work_area_type * test_work_area_alloc(const char * test_name, bool retain) {
+  return test_work_area_alloc_with_prefix( DEFAULT_PREFIX , test_name , retain );
 }
 
 

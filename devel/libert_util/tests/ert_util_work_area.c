@@ -123,6 +123,23 @@ void test_copy_parent_directory( const char * path ) {
 }
 
 
+void test_with_prefix() {
+  test_work_area_type * work_area = test_work_area_alloc( "with-prefix" , true );
+
+  util_make_path( "PREFIX" );
+  {
+    test_work_area_type * sub_area = test_work_area_alloc__("PREFIX" , "sub-work" , true);
+    test_assert_true( test_work_area_is_instance( sub_area ));
+    test_work_area_free( sub_area );
+    test_assert_true( util_entry_exists("PREFIX/sub-work"));
+  }
+  {
+    test_work_area_type * sub_area = test_work_area_alloc__("DoesNotExist" , "sub-work" , true);
+    test_assert_NULL( sub_area );
+  }
+  test_work_area_free( work_area );
+}
+
 
 int main(int argc , char ** argv) {
   const char * rel_path_file = argv[1];
@@ -143,6 +160,8 @@ int main(int argc , char ** argv) {
 
   test_copy_parent_directory( rel_path_file ); 
   test_copy_parent_directory( abs_path_file ); 
+
+  test_with_prefix();
 
   exit(0);
 }

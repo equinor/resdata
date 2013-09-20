@@ -19,8 +19,11 @@ from ert.util import UTIL_LIB
 
 
 class TestArea(BaseCClass):
-    def __init__(self, test_name, store_area=False):
-        c_ptr = TestArea.cNamespace().test_area_alloc(test_name, store_area)
+    def __init__(self, test_name, prefix = None , store_area=False):
+        if prefix:
+            c_ptr = TestArea.cNamespace().test_area_alloc__(prefix , test_name , store_area)
+        else:
+            c_ptr = TestArea.cNamespace().test_area_alloc(test_name, store_area)
         super(TestArea, self).__init__(c_ptr)
 
         
@@ -49,15 +52,16 @@ class TestArea(BaseCClass):
 
 
 class TestAreaContext(object):
-    def __init__(self, test_name, store_area=False):
+    def __init__(self, test_name, prefix = None , store_area=False):
         self.test_name = test_name
         self.store_area = store_area
+        self.prefix = prefix
 
     def __enter__(self):
         """
          @rtype: TestArea
         """
-        self.test_area = TestArea(self.test_name, self.store_area)
+        self.test_area = TestArea(self.test_name, prefix = self.prefix , store_area = self.store_area )
         return self.test_area
 
 
@@ -72,7 +76,8 @@ CWrapper.registerType("test_area", TestArea)
 CWrapper.registerType("test_area_obj", TestArea.createPythonObject)
 CWrapper.registerType("test_area_ref", TestArea.createCReference)
 
-TestArea.cNamespace().test_area_alloc = cwrapper.prototype("c_void_p test_work_area_alloc( char* , bool)")
+TestArea.cNamespace().test_area_alloc   = cwrapper.prototype("c_void_p test_work_area_alloc( char* , bool)")
+TestArea.cNamespace().test_area_alloc__ = cwrapper.prototype("c_void_p test_work_area_alloc__( char* , char* , bool)")
 TestArea.cNamespace().free = cwrapper.prototype("void test_work_area_free( test_area )")
 TestArea.cNamespace().install_file = cwrapper.prototype("void test_work_area_install_file( test_area , char* )")
 TestArea.cNamespace().copy_directory = cwrapper.prototype("void test_work_area_copy_directory( test_area , char* )")
