@@ -35,6 +35,8 @@ class TestArea(BaseCClass):
     def copy_directory( self, directory):
         TestArea.cNamespace().copy_directory(self, directory)
 
+    def copy_parent_directory( self , path):
+        TestArea.cNamespace().copy_parent_directory(self , path)
 
     def copy_directory_content( self, directory):
         TestArea.cNamespace().copy_directory_content(self, directory)
@@ -76,4 +78,5 @@ TestArea.cNamespace().install_file = cwrapper.prototype("void test_work_area_ins
 TestArea.cNamespace().copy_directory = cwrapper.prototype("void test_work_area_copy_directory( test_area , char* )")
 TestArea.cNamespace().copy_file = cwrapper.prototype("void test_work_area_copy_file( test_area , char* )")
 TestArea.cNamespace().copy_directory_content = cwrapper.prototype("void test_work_area_copy_directory_content( test_area , char* )")
+TestArea.cNamespace().copy_parent_directory = cwrapper.prototype("void test_work_area_copy_parent_directory( test_area , char* )")
 TestArea.cNamespace().get_cwd = cwrapper.prototype("char* test_work_area_get_cwd( test_area )")
