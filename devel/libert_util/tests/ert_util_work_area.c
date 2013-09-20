@@ -102,6 +102,27 @@ void test_copy_file( const char * src_file ) {
 }
 
 
+void test_copy_parent_directory( const char * path ) {
+  test_work_area_type * work_area = test_work_area_alloc( "copy-parent-directory" , true );
+  char * parent_path;
+
+  {
+    char * full_path = util_alloc_abs_path( path );
+    util_alloc_file_components( path , &parent_path , NULL , NULL);
+    free( full_path );
+  }
+
+  test_assert_false( test_work_area_copy_parent_directory( work_area , "Does/not/exist") );
+  test_assert_true( test_work_area_copy_parent_directory( work_area , path ) );
+  
+  test_assert_true( util_entry_exists( parent_path ));
+  test_assert_true( util_is_directory( parent_path ));
+
+  test_work_area_free( work_area );
+  free( parent_path );
+}
+
+
 
 int main(int argc , char ** argv) {
   const char * rel_path_file = argv[1];
@@ -119,6 +140,9 @@ int main(int argc , char ** argv) {
   
   test_copy_file( rel_path_file );
   test_copy_file( abs_path_file );
+
+  test_copy_parent_directory( rel_path_file ); 
+  test_copy_parent_directory( abs_path_file ); 
 
   exit(0);
 }

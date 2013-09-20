@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <string.h>
 
 #include <ert/util/test_work_area.h>
 #include <ert/util/util.h>
@@ -148,6 +148,7 @@ const char * test_work_area_get_original_cwd( const test_work_area_type * work_a
 }
 
 
+
 /**
    The point of this function is that the test code should be able to
    access the file @input_file independent of the fact that it has
@@ -223,3 +224,47 @@ void test_work_area_copy_file( test_work_area_type * work_area , const char * in
 }
 
 
+
+bool test_work_area_copy_parent_directory( test_work_area_type * work_area , const char * input_path) {
+  char * full_path;
+  
+  if (util_is_abs_path( input_path ))
+    full_path = util_alloc_string_copy( input_path );
+  else 
+    full_path = util_alloc_filename( work_area->original_cwd , input_path , NULL);
+    
+  if (util_entry_exists( full_path)) {
+    char * parent_path = NULL;
+    {
+      int path_ncomp , ip;
+      char ** path_component_list;
+      int    current_length = 4;
+    
+      parent_path = util_realloc( parent_path , current_length * sizeof * parent_path);
+      parent_path[0] = '\0';
+    
+      util_path_split( full_path , &path_ncomp , &path_component_list );
+      for (ip=0; ip < path_ncomp - 1; ip++) {
+        const char * ipath = path_component_list[ip];
+        int min_length = strlen(parent_path) + strlen(ipath) + 1;
+
+        if (min_length >= current_length) {
+          current_length = 2 * min_length;
+          parent_path = util_realloc( parent_path , current_length * sizeof * parent_path);
+        }
+        strcat( parent_path , UTIL_PATH_SEP_STRING );
+        strcat(parent_path , ipath );
+      }
+      util_free_stringlist( path_component_list , path_ncomp );
+
+    }
+    
+    test_work_area_copy_directory( work_area , parent_path );
+    free( full_path );
+    free( parent_path );
+    return true;
+  } else {
+    free( full_path );
+    return false;
+  }
+}
