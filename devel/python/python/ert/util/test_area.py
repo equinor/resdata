@@ -57,6 +57,10 @@ class TestArea(BaseCClass):
     def free(self):
         TestArea.cNamespace().free(self)
 
+    def set_store(self, store):
+        TestArea.cNamespace().set_store(self , store)
+
+
 
 class TestAreaContext(object):
     def __init__(self, test_name, prefix = None , store_area=False):
@@ -93,3 +97,4 @@ TestArea.cNamespace().copy_directory_content = cwrapper.prototype("void test_wor
 TestArea.cNamespace().copy_parent_directory = cwrapper.prototype("void test_work_area_copy_parent_directory( test_area , char* )")
 TestArea.cNamespace().copy_parent_content = cwrapper.prototype("void test_work_area_copy_parent_content( test_area , char* )")
 TestArea.cNamespace().get_cwd = cwrapper.prototype("char* test_work_area_get_cwd( test_area )")
+TestArea.cNamespace().set_store = cwrapper.prototype("void test_work_area_set_store( test_area , bool)")

@@ -106,11 +106,10 @@ test_work_area_type * test_work_area_alloc__(const char * prefix , const char * 
       work_area = util_malloc( sizeof * work_area );
 
       UTIL_TYPE_ID_INIT( work_area , TEST_WORK_AREA_TYPE_ID );
-      work_area->retain = retain;
       work_area->original_cwd = util_alloc_cwd();
       work_area->cwd = test_cwd;
       chdir( work_area->cwd );  
-      
+      test_work_area_set_store( work_area , retain );
     } else 
       free( test_cwd );
   } 
@@ -145,6 +144,10 @@ test_work_area_type * test_work_area_alloc(const char * test_name, bool retain) 
   return test_work_area_alloc_with_prefix( DEFAULT_PREFIX , test_name , retain );
 }
 
+
+void test_work_area_set_store( test_work_area_type * work_area , bool store) {
+  work_area->retain = store;
+}
 
 
 void test_work_area_free(test_work_area_type * work_area) { 

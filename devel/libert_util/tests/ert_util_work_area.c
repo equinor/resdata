@@ -175,6 +175,39 @@ void test_with_prefix() {
 }
 
 
+void test_update_store() {
+  {
+    test_work_area_type * work_area = test_work_area_alloc( "update-store1" , true );
+    char * work_cwd = util_alloc_string_copy( test_work_area_get_cwd( work_area ));
+    test_work_area_free( work_area );
+    test_assert_true( util_entry_exists( work_cwd ));
+  }
+
+  {
+    test_work_area_type * work_area = test_work_area_alloc( "update-store2" , false);
+    char * work_cwd = util_alloc_string_copy( test_work_area_get_cwd( work_area ));
+    test_work_area_free( work_area );
+    test_assert_false( util_entry_exists( work_cwd ));
+  }
+
+  {
+    test_work_area_type * work_area = test_work_area_alloc( "update-store3" , true );
+    char * work_cwd = util_alloc_string_copy( test_work_area_get_cwd( work_area ));
+    test_work_area_set_store( work_area , false );
+    test_work_area_free( work_area );
+    test_assert_false( util_entry_exists( work_cwd ));
+  }
+
+  {
+    test_work_area_type * work_area = test_work_area_alloc( "update-store4" , true );
+    char * work_cwd = util_alloc_string_copy( test_work_area_get_cwd( work_area ));
+    test_work_area_set_store( work_area , true);
+    test_work_area_free( work_area );
+    test_assert_true( util_entry_exists( work_cwd ));
+  }
+}
+
+
 int main(int argc , char ** argv) {
   const char * rel_path_file = argv[1];
   const char * abs_path_file = argv[2];
@@ -199,6 +232,7 @@ int main(int argc , char ** argv) {
   test_copy_parent_content( abs_path_file ); 
 
   test_with_prefix();
+  test_update_store();
 
   exit(0);
 }
