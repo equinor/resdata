@@ -42,6 +42,8 @@ extern "C" {
   void                  test_work_area_copy_directory_content( test_work_area_type * work_area , const char * input_directory);
   void                  test_work_area_copy_file( test_work_area_type * work_area , const char * input_file);
   bool                  test_work_area_copy_parent_directory( test_work_area_type * work_area , const char * input_path);
+  bool                  test_work_area_copy_parent_content( test_work_area_type * work_area , const char * input_path);
+
 
   UTIL_IS_INSTANCE_HEADER( test_work_area );
 

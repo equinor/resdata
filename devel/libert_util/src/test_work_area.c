@@ -245,7 +245,7 @@ void test_work_area_copy_file( test_work_area_type * work_area , const char * in
 
 
 
-bool test_work_area_copy_parent_directory( test_work_area_type * work_area , const char * input_path) {
+static bool test_work_area_copy_parent__( test_work_area_type * work_area , const char * input_path, bool copy_content) {
   char * full_path;
   
   if (util_is_abs_path( input_path ))
@@ -255,31 +255,14 @@ bool test_work_area_copy_parent_directory( test_work_area_type * work_area , con
     
   if (util_entry_exists( full_path)) {
     char * parent_path = NULL;
-    {
-      int path_ncomp , ip;
-      char ** path_component_list;
-      int    current_length = 4;
-    
-      parent_path = util_realloc( parent_path , current_length * sizeof * parent_path);
-      parent_path[0] = '\0';
-    
-      util_path_split( full_path , &path_ncomp , &path_component_list );
-      for (ip=0; ip < path_ncomp - 1; ip++) {
-        const char * ipath = path_component_list[ip];
-        int min_length = strlen(parent_path) + strlen(ipath) + 1;
 
-        if (min_length >= current_length) {
-          current_length = 2 * min_length;
-          parent_path = util_realloc( parent_path , current_length * sizeof * parent_path);
-        }
-        strcat( parent_path , UTIL_PATH_SEP_STRING );
-        strcat(parent_path , ipath );
-      }
-      util_free_stringlist( path_component_list , path_ncomp );
-
-    }
+    parent_path = util_alloc_parent_path( full_path );
     
-    test_work_area_copy_directory( work_area , parent_path );
+    if (copy_content)
+      test_work_area_copy_directory_content( work_area , parent_path );
+    else
+      test_work_area_copy_directory( work_area , parent_path );
+    
     free( full_path );
     free( parent_path );
     return true;
@@ -287,4 +270,14 @@ bool test_work_area_copy_parent_directory( test_work_area_type * work_area , con
     free( full_path );
     return false;
   }
+}
+
+
+bool test_work_area_copy_parent_directory( test_work_area_type * work_area , const char * input_path) {
+  return test_work_area_copy_parent__( work_area , input_path , false );
+}
+
+
+bool test_work_area_copy_parent_content( test_work_area_type * work_area , const char * input_path) {
+  return test_work_area_copy_parent__( work_area , input_path , true );
 }

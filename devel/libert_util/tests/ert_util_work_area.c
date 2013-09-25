@@ -17,6 +17,7 @@
 */
 
 #include <stdlib.h>
+#include <dirent.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -123,6 +124,39 @@ void test_copy_parent_directory( const char * path ) {
 }
 
 
+void test_copy_parent_content( const char * path ) {
+  char * full_path = util_alloc_abs_path( path );
+  char * parent_path = util_alloc_parent_path( full_path );
+  test_work_area_type * work_area = test_work_area_alloc( "copy-parent-content" , true );
+
+  test_assert_false( test_work_area_copy_parent_content( work_area , "Does/not/exist") );
+  test_assert_true( test_work_area_copy_parent_content( work_area , path ) );
+  
+  {
+
+    struct dirent ** src_namelist;
+    struct dirent ** target_namelist;
+    int src_size    = scandir( parent_path                         , &src_namelist    , NULL , alphasort);
+    int target_size = scandir( test_work_area_get_cwd( work_area ) , &target_namelist , NULL , alphasort);
+
+    test_assert_int_equal( src_size , target_size );
+    for (int i=0; i < src_size; i++) {
+      test_assert_string_equal( src_namelist[i]->d_name , target_namelist[i]->d_name);
+      
+      free( src_namelist[i] );
+      free( target_namelist[i] );
+    }
+
+    free( src_namelist );
+    free( target_namelist );
+  }
+  free( parent_path );
+  free( full_path );
+
+  test_work_area_free( work_area );
+}
+
+
 void test_with_prefix() {
   test_work_area_type * work_area = test_work_area_alloc( "with-prefix" , true );
 
@@ -160,6 +194,9 @@ int main(int argc , char ** argv) {
 
   test_copy_parent_directory( rel_path_file ); 
   test_copy_parent_directory( abs_path_file ); 
+
+  test_copy_parent_content( rel_path_file ); 
+  test_copy_parent_content( abs_path_file ); 
 
   test_with_prefix();
 
