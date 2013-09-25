@@ -23,14 +23,15 @@ class TestArea(BaseCClass):
     def __init__(self, test_name, prefix = None , store_area=False):
         if prefix:
             if os.path.exists( prefix ):
-                c_ptr = TestArea.cNamespace().test_area_alloc__(prefix , test_name , store_area)
+                c_ptr = TestArea.cNamespace().test_area_alloc__(prefix , test_name)
             else:
                 raise IOError("The prefix path:%s must exist" % prefix)
         else:
-            c_ptr = TestArea.cNamespace().test_area_alloc(test_name, store_area)
+            c_ptr = TestArea.cNamespace().test_area_alloc(test_name)
         super(TestArea, self).__init__(c_ptr)
-
+        self.set_store( store_area )
         
+
     def get_cwd(self):
         return TestArea.cNamespace().get_cwd(self)
         
@@ -87,8 +88,8 @@ CWrapper.registerType("test_area", TestArea)
 CWrapper.registerType("test_area_obj", TestArea.createPythonObject)
 CWrapper.registerType("test_area_ref", TestArea.createCReference)
 
-TestArea.cNamespace().test_area_alloc   = cwrapper.prototype("c_void_p test_work_area_alloc( char* , bool)")
-TestArea.cNamespace().test_area_alloc__ = cwrapper.prototype("c_void_p test_work_area_alloc__( char* , char* , bool)")
+TestArea.cNamespace().test_area_alloc   = cwrapper.prototype("c_void_p test_work_area_alloc( char* )")
+TestArea.cNamespace().test_area_alloc__ = cwrapper.prototype("c_void_p test_work_area_alloc__( char* , char* )")
 TestArea.cNamespace().free = cwrapper.prototype("void test_work_area_free( test_area )")
 TestArea.cNamespace().install_file = cwrapper.prototype("void test_work_area_install_file( test_area , char* )")
 TestArea.cNamespace().copy_directory = cwrapper.prototype("void test_work_area_copy_directory( test_area , char* )")

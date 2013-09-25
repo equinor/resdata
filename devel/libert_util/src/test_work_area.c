@@ -42,7 +42,7 @@
   problems, to achieve this the directories created will be per user.
 
   When creating the work area you pass in a boolean flag whether you
-  want the area to be retained when the destructor is called. After
+  want the area to be storeed when the destructor is called. After
   the the work_area is destroyed the cwd is changed back to the value
   it had before the area was created.
 
@@ -74,13 +74,14 @@
   ...
 
   -- Destroy test_work_area structure; since the work_area is created
-  -- with input flag @retain set to true the are on disk will not be
+  -- with input flag @store set to true the are on disk will not be
   -- cleared. After the test_work_area_free( ) function has been
   -- called the original cwd will be restored.
 
   test_work_area_free( work_area );
 */
   
+#define DEFAULT_STORE  false
 #define DEFAULT_PREFIX "/tmp"
 
 #define TEST_PATH_FMT  "%s/ert-test/%s/%08d"     /* username/ert-test/test_name/random-integer */
@@ -90,13 +91,13 @@
 
 struct test_work_area_struct {
   UTIL_TYPE_ID_DECLARATION;
-  bool        retain;
+  bool        store;
   char      * cwd;
   char      * original_cwd;
 };
 
 
-test_work_area_type * test_work_area_alloc__(const char * prefix , const char * test_path , bool retain) {
+test_work_area_type * test_work_area_alloc__(const char * prefix , const char * test_path) {
   test_work_area_type * work_area = NULL;
   
   if (util_is_directory( prefix )) {
@@ -109,7 +110,7 @@ test_work_area_type * test_work_area_alloc__(const char * prefix , const char * 
       work_area->original_cwd = util_alloc_cwd();
       work_area->cwd = test_cwd;
       chdir( work_area->cwd );  
-      test_work_area_set_store( work_area , retain );
+      test_work_area_set_store( work_area , DEFAULT_STORE);
     } else 
       free( test_cwd );
   } 
@@ -119,7 +120,7 @@ test_work_area_type * test_work_area_alloc__(const char * prefix , const char * 
 
 UTIL_IS_INSTANCE_FUNCTION( test_work_area , TEST_WORK_AREA_TYPE_ID)
 
-test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , const char * test_name, bool retain) {
+test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , const char * test_name) {
   if (test_name) {
 #ifdef HAVE_GETUID
     uid_t uid = getuid();
@@ -130,7 +131,7 @@ test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , con
 #endif
     rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM );
     char * test_path = util_alloc_sprintf( TEST_PATH_FMT , user_name , test_name , rng_get_int( rng , 100000000 ));
-    test_work_area_type * work_area = test_work_area_alloc__( prefix , test_path , retain );
+    test_work_area_type * work_area = test_work_area_alloc__( prefix , test_path);
     free( test_path );
     rng_free( rng );
     free( user_name );
@@ -140,20 +141,20 @@ test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , con
 }
 
 
-test_work_area_type * test_work_area_alloc(const char * test_name, bool retain) {
-  return test_work_area_alloc_with_prefix( DEFAULT_PREFIX , test_name , retain );
+test_work_area_type * test_work_area_alloc(const char * test_name) {
+  return test_work_area_alloc_with_prefix( DEFAULT_PREFIX , test_name);
 }
 
 
 void test_work_area_set_store( test_work_area_type * work_area , bool store) {
-  work_area->retain = store;
+  work_area->store = store;
 }
 
 
 void test_work_area_free(test_work_area_type * work_area) { 
-  if (!work_area->retain)
+  if (!work_area->store)
     util_clear_directory( work_area->cwd , true , true );
-
+  
   chdir( work_area->original_cwd );
   free( work_area->original_cwd );
   free( work_area->cwd );
