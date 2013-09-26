@@ -39,7 +39,9 @@
 #ifdef WITH_PTHREAD
 #ifdef HAVE_EXECINFO
 #ifdef HAVE_GETPWUID
+#ifdef HAVE_DLADDR
 #define HAVE_UTIL_ABORT
+#endif
 #endif
 #endif
 #endif
