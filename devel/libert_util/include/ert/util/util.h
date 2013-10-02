@@ -253,6 +253,7 @@ typedef enum {left_pad   = 0,
   char      ** util_alloc_stringlist_copy(const char **, int );
   void         util_split_string(const char *, const char *, int *, char ***);
   void         util_path_split(const char * , int *, char ***);
+  char       * util_alloc_parent_path( const char * path);
   void         util_binary_split_string(const char * , const char * , bool  , char ** , char ** );
   void         util_binary_split_string_from_max_length(const char * , const char * , int  , char ** , char ** );
   char       * util_alloc_joined_string(const char **  , int , const char * );
