@@ -51,6 +51,7 @@ void create_test_area(const char * test_name , bool store) {
   test_work_area_type * work_area = test_work_area_alloc( test_name );
   char * work_path = util_alloc_string_copy( test_work_area_get_cwd( work_area ));
   
+  test_work_area_set_store( work_area , store );
   test_assert_true( util_is_directory( work_path ));
   test_work_area_free( work_area );
   test_assert_bool_equal( store , util_entry_exists( work_path ));
@@ -179,6 +180,7 @@ void test_update_store() {
   {
     test_work_area_type * work_area = test_work_area_alloc( "update-store1" );
     char * work_cwd = util_alloc_string_copy( test_work_area_get_cwd( work_area ));
+    test_work_area_set_store( work_area , true );
     test_work_area_free( work_area );
     test_assert_true( util_entry_exists( work_cwd ));
   }
