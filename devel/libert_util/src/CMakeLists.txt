@@ -5,7 +5,9 @@ set(header_files ssize_t.h type_macros.h rng.h lookup_table.h statistics.h mzran
 set( test_source test_util.c )
 set( test_headers test_util.h )
 
-set_property(SOURCE hash.c PROPERTY COMPILE_FLAGS "-Wno-error")
+if (CMAKE_COMPILER_IS_GNUCC)
+   set_property(SOURCE hash.c PROPERTY COMPILE_FLAGS "-Wno-error")
+endif()
 
 
 if (WITH_LATEX)
