@@ -20,10 +20,11 @@
 #include <unistd.h>
 #endif
 
+/*
 #ifdef HAVE_WINDOWS_CHDIR
 #include <direct.h>
 #endif
-
+*/
 
 int util_chdir(const char * path) {
 #ifdef HAVE_CHDIR
