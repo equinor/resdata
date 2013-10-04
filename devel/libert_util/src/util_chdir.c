@@ -20,7 +20,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef HAVE__CHDIR
+#ifdef HAVE_WINDOWS_CHDIR
 #include <direct.h>
 #endif
 
@@ -29,7 +29,7 @@ int util_chdir(const char * path) {
 #ifdef HAVE_CHDIR
   return chdir( path );
 #else
-#ifdef HAVE__CHDIR
+#ifdef HAVE_WINDOWS_CHDIR
   return _chdir( path );
 #endif
 #endif
