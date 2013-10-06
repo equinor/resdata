@@ -14,6 +14,15 @@ add_executable( ecl_valid_basename ecl_valid_basename.c )
 target_link_libraries( ecl_valid_basename ecl test_util )
 add_test( ecl_valid_basename ${EXECUTABLE_OUTPUT_PATH}/ecl_valid_basename)
 
+add_executable( ecl_util_make_date_no_shift ecl_util_make_date_no_shift.c )
+target_link_libraries( ecl_util_make_date_no_shift ecl test_util )
+add_test( ecl_util_make_date_no_shift ${EXECUTABLE_OUTPUT_PATH}/ecl_util_make_date_no_shift )
+
+add_executable( ecl_util_make_date_shift ecl_util_make_date_shift.c )
+target_link_libraries( ecl_util_make_date_shift ecl test_util )
+add_test( ecl_util_make_date_shift ${EXECUTABLE_OUTPUT_PATH}/ecl_util_make_date_shift )
+
+
 add_executable( ecl_grid_lgr_name ecl_grid_lgr_name.c )
 target_link_libraries( ecl_grid_lgr_name ecl test_util )
 set_target_properties( ecl_grid_lgr_name PROPERTIES COMPILE_FLAGS "-Werror")                                    

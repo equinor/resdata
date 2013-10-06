@@ -68,3 +68,4 @@ from .latex import LaTeX
 from .substitution_list import SubstitutionList
 from .ui_return import UIReturn
 from .ui_return import UIReturnStatus
+from .test_area import TestArea , TestAreaContext
