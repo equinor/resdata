@@ -379,7 +379,7 @@ typedef enum {left_pad   = 0,
   void         util_unsetenv( const char * variable);
   char       * util_alloc_envvar( const char * value );
   bool         util_is_link(const char * );  // Will always return false on windows
-
+  int          util_chdir(const char * path);  
 
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }

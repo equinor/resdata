@@ -109,7 +109,7 @@ test_work_area_type * test_work_area_alloc__(const char * prefix , const char * 
       UTIL_TYPE_ID_INIT( work_area , TEST_WORK_AREA_TYPE_ID );
       work_area->original_cwd = util_alloc_cwd();
       work_area->cwd = test_cwd;
-      chdir( work_area->cwd );  
+      util_chdir( work_area->cwd );  
       test_work_area_set_store( work_area , DEFAULT_STORE);
     } else 
       free( test_cwd );
@@ -122,6 +122,7 @@ UTIL_IS_INSTANCE_FUNCTION( test_work_area , TEST_WORK_AREA_TYPE_ID)
 
 test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , const char * test_name) {
   if (test_name) {
+    rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM );
 #ifdef HAVE_GETUID
     uid_t uid = getuid();
     struct passwd * pw = getpwuid( uid );
@@ -129,7 +130,6 @@ test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , con
 #else
     char * user_name =  util_alloc_sprintf("ert-test-%08d" , rng_get_int(rng , 100000000));
 #endif
-    rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM );
     char * test_path = util_alloc_sprintf( TEST_PATH_FMT , user_name , test_name , rng_get_int( rng , 100000000 ));
     test_work_area_type * work_area = test_work_area_alloc__( prefix , test_path);
     free( test_path );
@@ -155,7 +155,7 @@ void test_work_area_free(test_work_area_type * work_area) {
   if (!work_area->store)
     util_clear_directory( work_area->cwd , true , true );
   
-  chdir( work_area->original_cwd );
+  util_chdir( work_area->original_cwd );
   free( work_area->original_cwd );
   free( work_area->cwd );
   free( work_area );
