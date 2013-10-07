@@ -33,11 +33,22 @@ extern "C" {
 #include <ert/ecl_well/well_conn_collection.h>
 #include <ert/ecl_well/well_conn.h>
 
-  /* The values are shifted one down compared to ISEG description in table 6.1 in ECLIPSE file formats reference. */
-  
-#define ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE        -1    
-#define ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE   0
-#define ECLIPSE_WELL_SEGMENT_BRANCH_INACTIVE_VALUE   -1
+#define WELL_SEGMENT_OFFSET 0
+#define WELL_BRANCH_OFFSET  0
+
+#define ECLIPSE_WELL_SEGMENT_OFFSET                 1
+#define ECLIPSE_WELL_BRANCH_OFFSET                  1
+
+
+/* These values are taken from the ISEG description in table 6.1 in ECLIPSE file formats reference. */
+#define ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE       0
+#define ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE 1
+#define ECLIPSE_WELL_SEGMENT_INACTIVE_VALUE         0
+
+
+#define WELL_SEGMENT_OUTLET_END_VALUE        (WELL_SEGMENT_OFFSET + ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE       - ECLIPSE_WELL_SEGMENT_OFFSET) // -1
+#define WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE  (WELL_SEGMENT_OFFSET + ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE - ECLIPSE_WELL_SEGMENT_OFFSET) //  0
+#define WELL_SEGMENT_BRANCH_INACTIVE_VALUE   (WELL_SEGMENT_OFFSET + ECLIPSE_WELL_SEGMENT_INACTIVE_VALUE         - ECLIPSE_WELL_SEGMENT_OFFSET) // -1
 
 
   

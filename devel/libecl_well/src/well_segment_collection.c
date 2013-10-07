@@ -111,8 +111,9 @@ int well_segment_collection_load_from_kw( well_segment_collection_type * segment
   int segments_added = 0;
       
   if (segment_well_nr != IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE) {
-    int segment_id;
-    for (segment_id = 0; segment_id < rst_head->nsegmx; segment_id++) {
+    int segment_index;
+    for (segment_index = 0; segment_index < rst_head->nsegmx; segment_index++) {
+      int segment_id = segment_index + WELL_SEGMENT_OFFSET;
       well_segment_type * segment = well_segment_alloc_from_kw( iseg_kw , rseg_kw , rst_head , segment_well_nr , segment_id );
       
       if (well_segment_active( segment )) {
