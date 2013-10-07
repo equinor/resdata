@@ -24,7 +24,7 @@
 
 #include <ert/ecl/ecl_util.h>
 
-
+#include <ert/ecl_well/well_const.h>
 #include <ert/ecl_well/well_segment_collection.h>
 
 

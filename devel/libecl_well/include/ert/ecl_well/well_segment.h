@@ -33,28 +33,12 @@ extern "C" {
 #include <ert/ecl_well/well_conn_collection.h>
 #include <ert/ecl_well/well_conn.h>
 
-#define WELL_SEGMENT_OFFSET 0
-#define WELL_BRANCH_OFFSET  0
-
-#define ECLIPSE_WELL_SEGMENT_OFFSET                 1
-#define ECLIPSE_WELL_BRANCH_OFFSET                  1
-
-
-/* These values are taken from the ISEG description in table 6.1 in ECLIPSE file formats reference. */
-#define ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE       0
-#define ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE 1
-#define ECLIPSE_WELL_SEGMENT_INACTIVE_VALUE         0
-
-
-#define WELL_SEGMENT_OUTLET_END_VALUE        (WELL_SEGMENT_OFFSET + ECLIPSE_WELL_SEGMENT_OUTLET_END_VALUE       - ECLIPSE_WELL_SEGMENT_OFFSET) // -1
-#define WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE  (WELL_SEGMENT_OFFSET + ECLIPSE_WELL_SEGMENT_BRANCH_MAIN_STEM_VALUE - ECLIPSE_WELL_SEGMENT_OFFSET) //  0
-#define WELL_SEGMENT_BRANCH_INACTIVE_VALUE   (WELL_SEGMENT_OFFSET + ECLIPSE_WELL_SEGMENT_INACTIVE_VALUE         - ECLIPSE_WELL_SEGMENT_OFFSET) // -1
 
 
   
   typedef struct well_segment_struct well_segment_type;
 
-  well_segment_type * well_segment_alloc_from_kw( const ecl_kw_type * iseg_kw , const ecl_kw_type * rseg_kw , const ecl_rsthead_type * header , int well_nr, int segment_id);
+  well_segment_type * well_segment_alloc_from_kw( const ecl_kw_type * iseg_kw , const ecl_kw_type * rseg_kw , const ecl_rsthead_type * header , int well_nr, int segment_index , int segment_id);
   well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , int branch_id , const double * rseg_data);
   void                well_segment_free(well_segment_type * segment );
   void                well_segment_free__(void * arg);

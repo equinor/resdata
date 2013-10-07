@@ -25,6 +25,7 @@
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_grid.h>
 
+#include <ert/ecl_well/well_const.h>
 #include <ert/ecl_well/well_segment.h>
 #include <ert/ecl_well/well_conn.h>
 #include <ert/ecl_well/well_conn_collection.h>
