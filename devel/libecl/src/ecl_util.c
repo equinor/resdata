@@ -1251,47 +1251,93 @@ time_t ecl_util_get_start_date(const char * data_file) {
 
 
 int ecl_util_get_num_cpu(const char * data_file) { 
+  int num_cpu = 1; 
   parser_type * parser = parser_alloc(" \t\r\n" , "\"\'" , NULL , NULL , "--" , "\n");
-  int num_cpu        = 1;
-  FILE * stream      = util_fopen(data_file , "r");
-  char * buffer;
+  FILE * stream = util_fopen(data_file , "r");
   
   if (parser_fseek_string( parser , stream , "PARALLEL" , true , true)) {  /* Seeks case insensitive. */
-    long int start_pos = util_ftell( stream );
-    int buffer_size;
-
-    /* Look for terminating '/' */
-    if (!parser_fseek_string( parser , stream , "/" , false , true))
-      util_abort("%s: sorry - could not find \"/\" termination of PARALLEL keyword in data_file: \n",__func__ , data_file);
-    
-    buffer_size = (util_ftell(stream) - start_pos)  ;
-    buffer = util_calloc( buffer_size + 1  , sizeof * buffer );
-    util_fseek( stream , start_pos , SEEK_SET);
-    util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
-    buffer[buffer_size] = '\0';
-  
-    {
-      stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , true );
-      int i;
-      char * item = NULL;
-      for (i=0; i < stringlist_get_size( tokens ); i++) {
-        item = util_realloc_string_copy( item , stringlist_iget( tokens , i ));
-        util_strupr( item );
-        if (( util_string_equal( item , "DISTRIBUTED" )) || 
-            ( util_string_equal( item , "DIST" ))) { 
-          num_cpu = atoi( stringlist_iget( tokens , i - 1));
-          break;
-        }
-      }
-      free( item );  
-      stringlist_free( tokens );
-    }  
-    free( buffer );
+    num_cpu = ecl_util_get_num_parallel_cpu__(parser, stream, data_file); 
+  } else if (parser_fseek_string( parser , stream , "SLAVES" , true , true)) {  /* Seeks case insensitive. */
+    num_cpu = ecl_util_get_num_slave_cpu__(parser, stream, data_file) + 1; 
+    fprintf(stderr, "Information: \"SLAVES\" option found, returning %d number of CPUs", num_cpu); 
   }
 
   parser_free( parser );
   fclose(stream);
   return num_cpu;
+}
+
+
+static int ecl_util_get_num_parallel_cpu__(parser_type* parser, FILE* stream, const char * data_file) {
+  int num_cpu = 1;
+  char * buffer;  
+  long int start_pos = util_ftell( stream );
+  int buffer_size;
+
+  /* Look for terminating '/' */
+  if (!parser_fseek_string( parser , stream , "/" , false , true))
+    util_abort("%s: sorry - could not find \"/\" termination of PARALLEL keyword in data_file: \n",__func__ , data_file);
+
+  buffer_size = (util_ftell(stream) - start_pos)  ;
+  buffer = util_calloc( buffer_size + 1  , sizeof * buffer );
+  util_fseek( stream , start_pos , SEEK_SET);
+  util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
+  buffer[buffer_size] = '\0';
+
+  {
+    stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , true );
+    int i;
+    char * item = NULL;
+    for (i=0; i < stringlist_get_size( tokens ); i++) {
+      item = util_realloc_string_copy( item , stringlist_iget( tokens , i ));
+      util_strupr( item );
+      if (( util_string_equal( item , "DISTRIBUTED" )) || 
+          ( util_string_equal( item , "DIST" ))) { 
+        num_cpu = atoi( stringlist_iget( tokens , i - 1));
+        break;
+      }
+    }
+    free( item );  
+    stringlist_free( tokens );
+  }  
+  free( buffer );
+  return num_cpu; 
+}
+
+
+static int ecl_util_get_num_slave_cpu__(parser_type* parser, FILE* stream, const char * data_file) {
+  int num_cpu = 0;
+  int linecount = 0; 
+
+  parser_fseek_string( parser , stream , "\n" , true , true);  /* Go to next line after the SLAVES keyword*/
+
+  while (true) {
+    char * buffer = util_fscanf_alloc_line( stream , NULL);
+    ++linecount; 
+    if (linecount > 10) 
+      util_abort("%s: Did not find ending \"/\" character after SLAVES keyword, aborting \n", __func__);
+
+    {
+      stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , true );
+      if (stringlist_get_size(tokens) > 0 ) {
+        
+        char * first_item = stringlist_iget(tokens, 0);
+        
+        if (first_item[0] == '/') {
+          break; 
+        }
+        else 
+          ++num_cpu;
+      }
+      stringlist_free( tokens );
+    }
+      
+    free( buffer );
+  } 
+  
+  if (0 == num_cpu)
+    util_abort("%s: Did not any CPUs after SLAVES keyword, aborting \n", __func__);
+  return num_cpu; 
 }
 
 
