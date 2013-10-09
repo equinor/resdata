@@ -1249,25 +1249,6 @@ time_t ecl_util_get_start_date(const char * data_file) {
 }
 
 
-
-int ecl_util_get_num_cpu(const char * data_file) { 
-  int num_cpu = 1; 
-  parser_type * parser = parser_alloc(" \t\r\n" , "\"\'" , NULL , NULL , "--" , "\n");
-  FILE * stream = util_fopen(data_file , "r");
-  
-  if (parser_fseek_string( parser , stream , "PARALLEL" , true , true)) {  /* Seeks case insensitive. */
-    num_cpu = ecl_util_get_num_parallel_cpu__(parser, stream, data_file); 
-  } else if (parser_fseek_string( parser , stream , "SLAVES" , true , true)) {  /* Seeks case insensitive. */
-    num_cpu = ecl_util_get_num_slave_cpu__(parser, stream, data_file) + 1; 
-    fprintf(stderr, "Information: \"SLAVES\" option found, returning %d number of CPUs", num_cpu); 
-  }
-
-  parser_free( parser );
-  fclose(stream);
-  return num_cpu;
-}
-
-
 static int ecl_util_get_num_parallel_cpu__(parser_type* parser, FILE* stream, const char * data_file) {
   int num_cpu = 1;
   char * buffer;  
@@ -1305,6 +1286,7 @@ static int ecl_util_get_num_parallel_cpu__(parser_type* parser, FILE* stream, co
 }
 
 
+
 static int ecl_util_get_num_slave_cpu__(parser_type* parser, FILE* stream, const char * data_file) {
   int num_cpu = 0;
   int linecount = 0; 
@@ -1321,7 +1303,7 @@ static int ecl_util_get_num_slave_cpu__(parser_type* parser, FILE* stream, const
       stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , true );
       if (stringlist_get_size(tokens) > 0 ) {
         
-        char * first_item = stringlist_iget(tokens, 0);
+        const char * first_item = stringlist_iget(tokens, 0);
         
         if (first_item[0] == '/') {
           break; 
@@ -1338,6 +1320,25 @@ static int ecl_util_get_num_slave_cpu__(parser_type* parser, FILE* stream, const
   if (0 == num_cpu)
     util_abort("%s: Did not any CPUs after SLAVES keyword, aborting \n", __func__);
   return num_cpu; 
+}
+
+
+
+int ecl_util_get_num_cpu(const char * data_file) { 
+  int num_cpu = 1; 
+  parser_type * parser = parser_alloc(" \t\r\n" , "\"\'" , NULL , NULL , "--" , "\n");
+  FILE * stream = util_fopen(data_file , "r");
+  
+  if (parser_fseek_string( parser , stream , "PARALLEL" , true , true)) {  /* Seeks case insensitive. */
+    num_cpu = ecl_util_get_num_parallel_cpu__(parser, stream, data_file); 
+  } else if (parser_fseek_string( parser , stream , "SLAVES" , true , true)) {  /* Seeks case insensitive. */
+    num_cpu = ecl_util_get_num_slave_cpu__(parser, stream, data_file) + 1; 
+    fprintf(stderr, "Information: \"SLAVES\" option found, returning %d number of CPUs", num_cpu); 
+  }
+
+  parser_free( parser );
+  fclose(stream);
+  return num_cpu;
 }
 
 
