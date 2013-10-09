@@ -26,6 +26,8 @@ extern "C" {
 
 #include <ert/util/stringlist.h>
 #include <ert/util/time_t_vector.h>
+#include <ert/util/parser.h>
+  
 
 typedef enum { ECL_OTHER_FILE           = 0   , 
                ECL_RESTART_FILE         = 1   , 
@@ -169,6 +171,8 @@ void            ecl_util_alloc_summary_data_files(const char * path , const char
 void            ecl_util_alloc_restart_files(const char *  , const char *  , char *** , int *  , bool * , bool *);
 time_t          ecl_util_get_start_date(const char * );
 int             ecl_util_get_num_cpu(const char * data_file);
+int             ecl_util_get_num_parallel_cpu__(parser_type * parser, FILE * stream, const char * data_file);
+int             ecl_util_get_num_slave_cpu__(parser_type * parser, FILE * stream, const char * data_file);
 bool            ecl_util_fmt_file(const char * filename , bool * __fmt_file);
 char          * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , ecl_file_enum file_type , bool start_fmt , int report_nr);
 int             ecl_util_get_month_nr(const char * month_name);
