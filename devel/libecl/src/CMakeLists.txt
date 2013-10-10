@@ -6,7 +6,12 @@ set( source_files ecl_rsthead.c ecl_sum_tstep.c ecl_rst_file.c ecl_init_file.c e
 
 set( header_files ecl_rsthead.h ecl_sum_tstep.h ecl_rst_file.h ecl_init_file.h smspec_node.h ecl_grid_cache.h ecl_kw_grdecl.h ecl_file_kw.h ecl_grav.h ecl_grav_calc.h ecl_endian_flip.h ecl_smspec.h ecl_sum_data.h ecl_util.h ecl_kw.h ecl_sum.h fortio.h ecl_rft_file.h ecl_rft_node.h ecl_rft_cell.h ecl_box.h ecl_coarse_cell.h ecl_grid.h ecl_io_config.h ecl_file.h ecl_region.h ecl_kw_magic.h ecl_subsidence.h ecl_grid_dims.h grid_dims.h nnc_info.h nnc_vector.h ${ext_header} ecl_grav_common.h nnc_index_list.h)
 
-
+if (ERT_USE_OPENMP)
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${OpenMP_SHARED_LINKER_FLAGS}")
+endif()
 
 add_library( ecl ${LIBRARY_TYPE} ${source_files} )
 set_target_properties( ecl PROPERTIES VERSION 1.0 SOVERSION 1.0 )
