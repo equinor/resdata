@@ -76,14 +76,7 @@ import ert.geo
 
 
 
-try:
-    clib.load("libgomp" , "libgomp.so.1")
-    openmp = True
-except ImportError:
-    openmp = False
-
 ECL_LIB = clib.ert_load("libecl.so")
-
 
 from .ecl_sum import EclSum #, EclSumVector, EclSumNode, EclSMSPECNode
 from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclTypeEnum, EclUtil
