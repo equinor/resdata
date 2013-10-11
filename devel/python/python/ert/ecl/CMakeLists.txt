@@ -8,6 +8,7 @@ set(PYTHON_SOURCES
     ecl_grav_calc.py
     ecl_grid.py
     ecl_kw.py
+    ecl_local.py
     ecl_queue.py
     ecl_region.py
     ecl_rft.py
