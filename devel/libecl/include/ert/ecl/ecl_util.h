@@ -26,6 +26,8 @@ extern "C" {
 
 #include <ert/util/stringlist.h>
 #include <ert/util/time_t_vector.h>
+#include <ert/util/parser.h>
+  
 
 typedef enum { ECL_OTHER_FILE           = 0   , 
                ECL_RESTART_FILE         = 1   , 

@@ -10,11 +10,10 @@ set(PYTHON_SOURCES
     stat.py
     stringlist.py
     substitution_list.py
+    test_area.py
     tvector.py
     util_func.py
     ui_return.py
 )
 
-
-add_python_package("Python ert.util" ${PYTHON_INSTALL_PREFIX}/ert/util "${PYTHON_SOURCES}" T)
-add_python_package("Python ert.util test" ${PYTHON_INSTALL_PREFIX}/ert/util "test_area.py" F)
+add_python_package("python.ert.util"  ${PYTHON_INSTALL_PREFIX}/ert/util "${PYTHON_SOURCES}" True)
