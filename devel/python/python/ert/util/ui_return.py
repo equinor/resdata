@@ -17,10 +17,10 @@
 from ert.cwrap import BaseCClass , CWrapper , BaseCEnum
 from ert.util import UTIL_LIB
 
-class UIReturnStatus(BaseCEnum):
+class UIReturnStatusEnum(BaseCEnum):
     pass
 
-UIReturnStatus.populateEnum(UTIL_LIB , "ui_return_type_enum_iget")
+UIReturnStatusEnum.populateEnum(UTIL_LIB , "ui_return_type_enum_iget")
 
     
 
@@ -32,7 +32,7 @@ class UIReturn(BaseCClass):
 
 
     def __nonzero__(self):
-        if self.status() == UIReturnStatus.UI_RETURN_OK:
+        if self.status() == UIReturnStatusEnum.UI_RETURN_OK:
             return True
         else:
             return False
@@ -72,7 +72,7 @@ class UIReturn(BaseCClass):
         
     
     def __assert_error__(self):
-        if self.status() == UIReturnStatus.UI_RETURN_OK:
+        if self.status() == UIReturnStatusEnum.UI_RETURN_OK:
             raise ValueError("Can not add error messages to object in state RETURN_OK")
     
     
@@ -97,7 +97,7 @@ class UIReturn(BaseCClass):
 
 
 
-CWrapper.registerType("ui_return_status" , UIReturnStatus)
+CWrapper.registerType("ui_return_status" , UIReturnStatusEnum)
 CWrapper.registerType("ui_return", UIReturn)
 CWrapper.registerType("ui_return_obj", UIReturn.createPythonObject)
 CWrapper.registerType("ui_return_ref", UIReturn.createCReference)
