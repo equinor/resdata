@@ -22,6 +22,13 @@ add_executable( ecl_util_make_date_shift ecl_util_make_date_shift.c )
 target_link_libraries( ecl_util_make_date_shift ecl test_util )
 add_test( ecl_util_make_date_shift ${EXECUTABLE_OUTPUT_PATH}/ecl_util_make_date_shift )
 
+add_executable( ecl_sum_case_exists ecl_sum_case_exists.c )
+target_link_libraries( ecl_sum_case_exists ecl test_util )
+add_test( ecl_sum_case_exists ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_case_exists 
+          ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE
+          ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/GurbatSummary/missingHe        ader/ECLIPSE  
+          ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/GurbatSummary/missingData/ECLIPSE )
+          
 
 add_executable( ecl_grid_lgr_name ecl_grid_lgr_name.c )
 target_link_libraries( ecl_grid_lgr_name ecl test_util )
@@ -197,3 +204,4 @@ set_property( TEST ecl_grid_case PROPERTY LABELS StatoilData)
 set_property( TEST ecl_rft_rft PROPERTY LABELS StatoilData)
 set_property( TEST ecl_rft_plt PROPERTY LABELS StatoilData)
 set_property( TEST ecl_nnc_amalgamated PROPERTY LABELS StatoilData)
+set_property( TEST ecl_sum_case_exists PROPERTY LABELS StatoilData)
