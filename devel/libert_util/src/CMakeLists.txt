@@ -10,7 +10,7 @@ if (CMAKE_COMPILER_IS_GNUCC)
 endif()
 
 
-if (WITH_LATEX)
+if (WITH_LATEX AND HAVE_FORK)
    add_definitions( -DWITH_LATEX )
    add_definitions( -DLATEX_CMD=\"${LATEX_PATH}\")
 
