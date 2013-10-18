@@ -1119,13 +1119,8 @@ static bool ecl_cell_contains_point( ecl_cell_type * cell , const point_type * p
          0---1           4---5
 */
 static void ecl_cell_init_regular( ecl_cell_type * cell , const double * offset , int i , int j , int k , int global_index , const double * ivec , const double * jvec , const double * kvec , const int * actnum ) {
-  {
-    double x0 = offset[0] + i*ivec[0] + j*jvec[0] + k*kvec[0];
-    double y0 = offset[1] + i*ivec[1] + j*jvec[1] + k*kvec[1];
-    double z0 = offset[2] + i*ivec[2] + j*jvec[2] + k*kvec[2];
-    
-    point_set(&cell->corner_list[0] , x0 , y0 , z0 );                // Point 0
-  } 
+  point_set(&cell->corner_list[0] , offset[0] , offset[1] , offset[2] ); // Point 0
+
   cell->corner_list[1] = cell->corner_list[0];                       // Point 1
   point_shift(&cell->corner_list[1] , ivec[0] , ivec[1] , ivec[2]);
 
@@ -1134,7 +1129,6 @@ static void ecl_cell_init_regular( ecl_cell_type * cell , const double * offset 
   
   cell->corner_list[3] = cell->corner_list[1];                       // Point 3
   point_shift(&cell->corner_list[3] , jvec[0] , jvec[1] , jvec[2]);
-
 
   {
     int i;
@@ -1149,7 +1143,6 @@ static void ecl_cell_init_regular( ecl_cell_type * cell , const double * offset 
   else
     cell->active = ACTIVE;
 }
-
 
 /* end of cell implementation                                    */
 /*****************************************************************/
@@ -2544,19 +2537,22 @@ static ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file) {
    cells and 0 for inactive cells. The actnum array can be NULL, in
    which case all cells will be active.
 */
-
 ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double * ivec, const double * jvec , const double * kvec , const int * actnum) {
   ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
-  const double offset[3] = {0,0,0};
+  const double grid_offset[3] = {0,0,0};
 
   int k,j,i;
   for (k=0; k < nz; k++) {
     for (j=0; j< ny; j++) {
       for (i=0; i < nx; i++) {
         int global_index = i + j*nx + k*nx*ny;
+        double offset[3] = {
+            grid_offset[0] + i*ivec[0] + j*jvec[0] + k*kvec[0],
+            grid_offset[1] + i*ivec[1] + j*jvec[1] + k*kvec[1],
+            grid_offset[2] + i*ivec[2] + j*jvec[2] + k*kvec[2]
+        };
 
         ecl_cell_type * cell = ecl_grid_get_cell(grid , global_index );
-        
         ecl_cell_init_regular( cell , offset , i,j,k,global_index , ivec , jvec , kvec , actnum );
       }
     }
@@ -2565,7 +2561,6 @@ ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double *
   ecl_grid_update_index( grid );
   return grid;
 }
-
 
 /**
    This function will allocate a new rectangular grid with dimensions
@@ -2586,6 +2581,56 @@ ecl_grid_type * ecl_grid_alloc_rectangular( int nx , int ny , int nz , double dx
   return ecl_grid_alloc_regular( nx , ny , nz , ivec , jvec , kvec , actnum);
 }
 
+/**
+   This function will allocate a new grid with logical dimensions nx x
+   ny x nz. The cells in the grid are spanned by the dxv, dyv and dzv
+   vectors which are of size nx, ny and nz and specify the thickness
+   of a cell in x, y, and in z direction.
+
+   The actnum argument is a pointer to an integer array of length
+   nx*ny*nz where actnum[i + j*nx + k*nx*ny] == 1 for active cells and
+   0 for inactive cells. The actnum array can be NULL, in which case
+   all cells will be active.  */
+ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const double * dxv , const double * dyv , const double * dzv , const int * actnum)
+{
+    ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
+                                               FILEHEAD_SINGLE_POROSITY,
+                                               nx, ny, nz,
+                                               /*lgr_nr=*/0, /*init_valid=*/true);
+
+    double ivec[3] = { 0, 0, 0 };
+    double jvec[3] = { 0, 0, 0 };
+    double kvec[3] = { 0, 0, 0 };
+
+    const double grid_offset[3] = {0,0,0};
+    double offset[3];
+    int i, j, k;
+    offset[2] = grid_offset[2];
+    for (k=0; k < nz; k++) {
+        kvec[2] = dzv[k];
+        offset[1] = grid_offset[1];
+        for (j=0; j < ny; j++) {
+            jvec[1] = dyv[j];
+            offset[0] = grid_offset[0];
+            for (i=0; i < nx; i++) {
+                int global_index = i + j*nx + k*nx*ny;
+                ivec[0] = dxv[i];
+
+                ecl_cell_type* cell = ecl_grid_get_cell(grid, global_index);
+                ecl_cell_init_regular(cell, offset,
+                                      i,j,k,global_index,
+                                      ivec,jvec,kvec,
+                                      actnum);
+                offset[0] += dxv[i];
+            }
+            offset[1] += dyv[j];
+        }
+        offset[2] += dzv[k];
+    }
+
+    ecl_grid_update_index(grid);
+    return grid;
+}
 
 /**
    This function will allocate a ecl_grid instance. As input it takes
