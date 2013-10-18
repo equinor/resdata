@@ -11,15 +11,15 @@ endif()
 
 
 if (WITH_LATEX)
-if (HAVE_FORK)
-   add_definitions( -DWITH_LATEX )
-   add_definitions( -DLATEX_CMD=\"${LATEX_PATH}\")
+   if (HAVE_FORK)
+      add_definitions( -DWITH_LATEX )
+      add_definitions( -DLATEX_CMD=\"${LATEX_PATH}\")
 
-   list( APPEND source_files latex.c )
-   list( APPEND header_files latex.h )
-else()
-message( STATUS "Disabling latex support due to missing fork() call")
-endif()
+      list( APPEND source_files latex.c )
+      list( APPEND header_files latex.h )
+   else()
+      message( STATUS "Disabling latex support due to missing fork() call")
+   endif()
 endif()
 
 if (WITH_LAPACK)
