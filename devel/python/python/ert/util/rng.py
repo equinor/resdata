@@ -15,18 +15,6 @@
 #  for more details.
 
 
-# The Matrix class implemented here wraps the C matrix implementation
-# in matrix.c from the libutil library. The C matrix implementation
-# has the very limited ambition of just barely satisfying the matrix
-# needs of the EnKF algorithm, i.e. for general linear algebra
-# applications you will probably be better served by a more complete
-# matrix library. This applies even more so to this Python
-# implementation; it is only here facilitate use of C libraries which
-# expect a matrix instance as input (i.e. the LARS estimator). For
-# general linear algebra in Python the numpy library is a natural
-# choice.
-
-
 from ert.util import UTIL_LIB
 from ert.cwrap import CWrapper, BaseCClass
 from ert.util.enums import RngInitModeEnum
