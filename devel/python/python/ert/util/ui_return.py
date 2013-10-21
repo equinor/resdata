@@ -1,6 +1,6 @@
-#  Copyright (C) 2011  Statoil ASA, Norway. 
+#  Copyright (C) 2013  Statoil ASA, Norway. 
 #   
-#  The file 'stringlist.py' is part of ERT - Ensemble based Reservoir Tool. 
+#  The file 'ui_return.py' is part of ERT - Ensemble based Reservoir Tool. 
 #   
 #  ERT is free software: you can redistribute it and/or modify 
 #  it under the terms of the GNU General Public License as published by 
@@ -16,12 +16,7 @@
 
 from ert.cwrap import BaseCClass , CWrapper , BaseCEnum
 from ert.util import UTIL_LIB
-
-class UIReturnStatusEnum(BaseCEnum):
-    pass
-
-UIReturnStatusEnum.populateEnum(UTIL_LIB , "ui_return_type_enum_iget")
-
+from enums import UIReturnStatusEnum
     
 
 class UIReturn(BaseCClass):
@@ -71,23 +66,23 @@ class UIReturn(BaseCClass):
         return UIReturn.cNamespace().get_status(self)
         
     
-    def __assert_error__(self):
+    def __assert_error(self):
         if self.status() == UIReturnStatusEnum.UI_RETURN_OK:
             raise ValueError("Can not add error messages to object in state RETURN_OK")
     
     
     def add_error(self, error):
-        self.__assert_error__()
+        self.__assert_error()
         UIReturn.cNamespace().add_error(self , error)
 
     
     def last_error(self):
-        self.__assert_error__()
+        self.__assert_error()
         return UIReturn.cNamespace().last_error(self)
     
     
     def first_error(self):
-        self.__assert_error__()
+        self.__assert_error()
         return UIReturn.cNamespace().first_error(self)
     
 
