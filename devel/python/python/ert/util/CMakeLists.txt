@@ -13,7 +13,9 @@ set(PYTHON_SOURCES
     test_area.py
     tvector.py
     util_func.py
-    rng.py )
+    ui_return.py
+    rng.py
+)
 
 
 add_python_package("Python ert.util" ${PYTHON_INSTALL_PREFIX}/ert/util "${PYTHON_SOURCES}" True)
