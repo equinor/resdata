@@ -107,6 +107,11 @@ add_executable( ert_util_addr2line ert_util_addr2line.c )
 target_link_libraries( ert_util_addr2line ert_util test_util )
 add_test( ert_util_addr2line ${EXECUTABLE_OUTPUT_PATH}/ert_util_addr2line)
 
+
+add_executable( ert_util_ui_return ert_util_ui_return.c )
+target_link_libraries( ert_util_ui_return ert_util test_util )
+add_test( ert_util_ui_return  ${EXECUTABLE_OUTPUT_PATH}/ert_util_ui_return )
+
 add_executable( ert_util_parent_path ert_util_parent_path.c )
 target_link_libraries( ert_util_parent_path ert_util test_util )
 add_test( ert_util_parent_path ${EXECUTABLE_OUTPUT_PATH}/ert_util_parent_path)
