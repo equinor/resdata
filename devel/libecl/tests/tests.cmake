@@ -1,3 +1,7 @@
+add_executable( ecl_alloc_grid_dxv_dyv_dzv ecl_alloc_grid_dxv_dyv_dzv.c )
+target_link_libraries( ecl_alloc_grid_dxv_dyv_dzv ecl test_util )
+add_test( ecl_alloc_grid_dxv_dyv_dzv  ${EXECUTABLE_OUTPUT_PATH}/ecl_alloc_grid_dxv_dyv_dzv )
+
 add_executable( ecl_coarse_test ecl_coarse_test.c )
 target_link_libraries( ecl_coarse_test ecl test_util )
 add_test( ecl_coarse_test  ${EXECUTABLE_OUTPUT_PATH}/ecl_coarse_test  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/LGCcase/LGC_TESTCASE2 )
