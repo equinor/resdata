@@ -91,6 +91,8 @@ from .ecl_region import EclRegion
 from .ecl_subsidence import EclSubsidence
 from .ecl_grav_calc import phase_deltag, deltag
 from .ecl_queue import EclQueue
+from .ecl_sum_node import EclSumNode
+from .ecl_sum_vector import EclSumVector
 
 #from .ecl_queue import
 
