@@ -27,6 +27,7 @@
 
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_endian_flip.h>
+#include <ert/ecl/ecl_sum.h>
 
 
 void test_case( const char * sum_case , bool expected_exist) {
