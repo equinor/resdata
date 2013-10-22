@@ -4595,7 +4595,7 @@ static int ecl_grid_get_top_valid_index( const ecl_grid_type * grid , int i , in
 
 
 
-static bool ecl_grid_init_coord_section__( const ecl_grid_type * grid , int i, int j , int corner_index , bool force_set , float * coord ) {
+static bool ecl_grid_init_coord_section__( const ecl_grid_type * grid , int i, int j , int i_corner, int j_corner , bool force_set , float * coord ) {
   
   const int top_index    = ecl_grid_get_top_valid_index( grid , i , j );
   const int bottom_index = ecl_grid_get_bottom_valid_index( grid , i , j );
@@ -4615,7 +4615,8 @@ static bool ecl_grid_init_coord_section__( const ecl_grid_type * grid , int i, i
       |   |
       0---1
     */
-    int coord_offset = 6 * ( j * (grid->nx + 1) + i );
+    int corner_index = j_corner*2 + i_corner;
+    int coord_offset = 6 * ( (j + j_corner) * (grid->nx + 1) + (i + i_corner) );
     {
       point_copy_values( &top_point    , &top_cell->corner_list[corner_index]);
       point_copy_values( &bottom_point , &bottom_cell->corner_list[ corner_index + 4]);
@@ -4643,19 +4644,20 @@ static bool ecl_grid_init_coord_section__( const ecl_grid_type * grid , int i, i
 
 
 static void ecl_grid_init_coord_section( const ecl_grid_type * grid , int i, int j , float * coord ) {
-  int corner_index = 0;
-  
+  int i_corner = 0;
+  int j_corner = 0;
+
   if (i == grid->nx) {
     i -= 1;
-    corner_index += 1;
+    i_corner = 1;
   }
-  
+
   if (j == grid->ny) {
     j -= 1;
-    corner_index += 2;
+    j_corner = 1;
   }
-    
-  ecl_grid_init_coord_section__( grid , i , j , corner_index, true, coord);
+
+  ecl_grid_init_coord_section__( grid , i,j, i_corner,j_corner, /*force_set=*/true, coord);
 }
 
 
