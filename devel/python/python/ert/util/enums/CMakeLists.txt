@@ -5,5 +5,5 @@ set(PYTHON_SOURCES
     ui_return_status_enum.py
 )
 
-add_python_package("Python ert.util.enums"  ${PYTHON_INSTALL_PREFIX}/ert/util/enums "${PYTHON_SOURCES}" True)
+add_python_package("python.ert.util.enums"  ${PYTHON_INSTALL_PREFIX}/ert/util/enums "${PYTHON_SOURCES}" True)
 

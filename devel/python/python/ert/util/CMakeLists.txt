@@ -17,10 +17,6 @@ set(PYTHON_SOURCES
     rng.py
 )
 
-
-add_python_package("Python ert.util" ${PYTHON_INSTALL_PREFIX}/ert/util "${PYTHON_SOURCES}" True)
-
-add_python_package("Python ert.util test" ${PYTHON_INSTALL_PREFIX}/ert/util "test_area.py" False)
+add_python_package("python.ert.util"  ${PYTHON_INSTALL_PREFIX}/ert/util "${PYTHON_SOURCES}" True)
 
 add_subdirectory(enums)
-
