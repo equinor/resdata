@@ -2614,9 +2614,9 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const doub
             offset[0] = grid_offset[0];
             for (i=0; i < nx; i++) {
                 int global_index = i + j*nx + k*nx*ny;
+                ecl_cell_type* cell = ecl_grid_get_cell(grid, global_index);
                 ivec[0] = dxv[i];
 
-                ecl_cell_type* cell = ecl_grid_get_cell(grid, global_index);
                 ecl_cell_init_regular(cell, offset,
                                       i,j,k,global_index,
                                       ivec,jvec,kvec,
