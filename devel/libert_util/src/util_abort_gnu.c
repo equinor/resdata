@@ -142,7 +142,7 @@ static void util_fprintf_backtrace(FILE * stream) {
   const char * unknown_format     = " #%02d ???? \n";
 
   const int max_bt = 50;
-  const int max_func_length = 45;
+  const int max_func_length = 60;
   void *bt_addr[max_bt];
   int    size,i;
 
@@ -164,7 +164,7 @@ static void util_fprintf_backtrace(FILE * stream) {
       else
         function = "???";
 
-      pad_length = 2 + max_func_length - strlen(function);
+      pad_length = util_int_max (2, 2 + max_func_length - strlen(function));
       padding = realloc_padding( padding , pad_length);
       fprintf(stream , with_linenr_format , i , function , padding , file_name , line_nr);
     } else {
