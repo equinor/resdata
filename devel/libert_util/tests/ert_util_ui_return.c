@@ -22,18 +22,6 @@
 #include <ert/util/ui_return.h>
 
 
-void test_enum() {
-  int value;
-  const char * name;
-
-  name = ui_return_type_enum_iget(0 , &value);
-  test_assert_int_equal( UI_RETURN_OK , value );
-  test_assert_string_equal( "UI_RETURN_OK" , name);
-
-  name = ui_return_type_enum_iget(1 , &value);
-  test_assert_int_equal( UI_RETURN_FAIL , value );
-  test_assert_string_equal( "UI_RETURN_FAIL" , name);
-}
 
 
 void test_create() {
@@ -102,7 +90,6 @@ void test_help() {
 }
 
 int main(int argc , char ** argv) {
-  test_enum();
   test_create();
   test_default();
   test_errors_inconsistent();
