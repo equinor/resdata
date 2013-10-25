@@ -114,12 +114,3 @@ void ui_return_add_help(ui_return_type * ui_return, const char * help_text) {
 }
 
 
-/****************************************************************/
-
-const char * ui_return_type_enum_iget( int index, int * value) {
-  return util_enum_iget( index , UI_RETURN_STATUS_ENUM_SIZE , (const util_enum_element_type []) { UI_RETURN_STATUS_ENUM_DEFS }, value);
-}
-
-
-
-

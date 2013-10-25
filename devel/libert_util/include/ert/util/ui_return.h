@@ -35,13 +35,6 @@ typedef enum {
   UI_RETURN_FAIL = 2
 } ui_return_status_enum;
 
-#define UI_RETURN_STATUS_ENUM_DEFS           \
-{.value =    1 , .name="UI_RETURN_OK"},      \
-{.value =    2 , .name="UI_RETURN_FAIL"}
-#define UI_RETURN_STATUS_ENUM_SIZE 2
-
-
-
 
 
 ui_return_type * ui_return_alloc(ui_return_status_enum status);
@@ -54,7 +47,6 @@ const char * ui_return_get_first_error(const ui_return_type * ui_return);
 const char * ui_return_get_last_error(const ui_return_type * ui_return);
 const char * ui_return_get_help(const ui_return_type * ui_return);
 const char * ui_return_iget_error( const ui_return_type * ui_return , int index);
-const char * ui_return_type_enum_iget(int index, int * value);
 
 
 UTIL_IS_INSTANCE_HEADER(ui_return);

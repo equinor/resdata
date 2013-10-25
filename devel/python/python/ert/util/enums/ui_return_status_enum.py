@@ -1,5 +1,4 @@
 from ert.cwrap import BaseCEnum
-from ert.util import UTIL_LIB
 
 
 class UIReturnStatusEnum(BaseCEnum):
@@ -8,4 +7,3 @@ class UIReturnStatusEnum(BaseCEnum):
 
 UIReturnStatusEnum.addEnum( "UI_RETURN_OK" , 1 )
 UIReturnStatusEnum.addEnum( "UI_RETURN_FAIL" , 2 )
-UIReturnStatusEnum.registerEnum(UTIL_LIB , "ui_return_type_enum_iget")
