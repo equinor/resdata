@@ -2878,7 +2878,7 @@ bool ecl_grid_exists( const char * case_input ) {
 */
 
 static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool verbose) {
-
+  
   bool equal = true;
   if (g1->size != g2->size)
     equal = false;
@@ -2916,11 +2916,9 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
 
 
 bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool include_lgr, bool verbose) {
-  if (!include_lgr) 
-    return ecl_grid_compare__(g1 , g2 , verbose);
-  else {
+  bool equal = ecl_grid_compare__(g1 , g2 , verbose);
+  if (equal && include_lgr) {
     if (vector_get_size( g1->LGR_list ) == vector_get_size( g2->LGR_list )) {
-      bool equal;
       int grid_nr;
       for (grid_nr = 0; grid_nr < vector_get_size( g1->LGR_list ); grid_nr++) {
         const ecl_grid_type * lgr1 = vector_iget_const( g1->LGR_list , grid_nr);
@@ -2930,10 +2928,9 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool
         if (!equal) 
           break;
       }
-      return equal;
-    } else
-      return false;
+    }
   }
+  return equal;
 }
 
 
