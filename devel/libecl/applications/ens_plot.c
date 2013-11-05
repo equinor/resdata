@@ -296,7 +296,7 @@ Q                                | Quit
 
 #define XMIN_CMD    "XMIN"
 #define XMAX_CMD    "XMAX"
-#define YMIN_CMD    "XMIN"
+#define YMIN_CMD    "YMIN"
 #define YMAX_CMD    "YMAX"
 
 #define STOP_CMD    "_stop_"
