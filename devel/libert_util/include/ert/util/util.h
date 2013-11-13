@@ -310,6 +310,7 @@ typedef enum {left_pad   = 0,
   int      util_proc_mem_free(void);
   
   
+  void     util_clamp_double(double * value , double limit1, double limit2);
   double   util_double_vector_mean(int , const double * );
   double   util_double_vector_stddev(int , const double * );
   void     util_double_vector_max_min(int  , const double *, double * , double *);

@@ -4210,6 +4210,13 @@ void util_update_double_max_min(double value , double * max , double * min) {
   *max = util_double_max(value , *max);
 }
   
+void util_clamp_double(double * value , double limit1 , double limit2) {
+  double min = util_double_min( limit1 , limit2 );
+  double max = util_double_max( limit1 , limit2 );
+  
+  *value = util_double_max( *value , min );
+  *value = util_double_min( *value , max );
+}
 
 
 
