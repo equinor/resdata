@@ -4210,26 +4210,12 @@ void util_update_double_max_min(double value , double * max , double * min) {
   *max = util_double_max(value , *max);
 }
   
-
-void util_apply_double_limits(double * value , double min_value , double max_value) {
-  if (*value < min_value)
-    *value = min_value;
-  else if (*value > max_value)
-    *value = max_value;
-}
-
-void util_apply_float_limits(float * value , float min_value , float max_value) {
-  if (*value < min_value)
-    *value = min_value;
-  else if (*value > max_value)
-    *value = max_value;
-}
-
-void util_apply_int_limits(int * value , int min_value , int max_value) {
-  if (*value < min_value)
-    *value = min_value;
-  else if (*value > max_value)
-    *value = max_value;
+void util_clamp_double(double * value , double limit1 , double limit2) {
+  double min = util_double_min( limit1 , limit2 );
+  double max = util_double_max( limit1 , limit2 );
+  
+  *value = util_double_max( *value , min );
+  *value = util_double_min( *value , max );
 }
 
 
