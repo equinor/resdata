@@ -4211,27 +4211,6 @@ void util_update_double_max_min(double value , double * max , double * min) {
 }
   
 
-void util_apply_double_limits(double * value , double min_value , double max_value) {
-  if (*value < min_value)
-    *value = min_value;
-  else if (*value > max_value)
-    *value = max_value;
-}
-
-void util_apply_float_limits(float * value , float min_value , float max_value) {
-  if (*value < min_value)
-    *value = min_value;
-  else if (*value > max_value)
-    *value = max_value;
-}
-
-void util_apply_int_limits(int * value , int min_value , int max_value) {
-  if (*value < min_value)
-    *value = min_value;
-  else if (*value > max_value)
-    *value = max_value;
-}
-
 
 
 /**
