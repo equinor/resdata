@@ -461,35 +461,6 @@
    klib/
 */
 
-
-static const int tetrahedron_permutations[2][12][3] = {{{1,2,0},
-                                                        {1,3,2},
-                                                        {4,1,0},
-                                                        {4,5,1},
-                                                        {5,3,1},
-                                                        {5,7,3},
-                                                        {7,2,3},
-                                                        {7,6,2},
-                                                        {6,0,2},
-                                                        {6,4,0},
-                                                        {7,5,4},
-                                                        {7,4,6}},
-                                                       {{0 , 2 , 4},  
-                                                        {2 , 4 , 6},  
-                                                        {0 , 4 , 1},  
-                                                        {4 , 5 , 1},  
-                                                        {1 , 3 , 5},  
-                                                        {3 , 5 , 7},  
-                                                        {2 , 3 , 6},   
-                                                        {3 , 6 , 7},   
-                                                        {0 , 1 , 3},  
-                                                        {0 , 2 , 3},  
-                                                        {4 , 5 , 7},  
-                                                        {4 , 6 , 7}}};
-
-
-
-/*
 static const int tetrahedron_permutations[2][12][3] = {{{0 , 2 , 6},
                                                         {0 , 4 , 6},
                                                         {0 , 4 , 5},
@@ -514,7 +485,8 @@ static const int tetrahedron_permutations[2][12][3] = {{{0 , 2 , 6},
                                                         {0 , 2 , 3},  
                                                         {4 , 5 , 7},  
                                                         {4 , 6 , 7}}};
-*/
+
+
 
 /*
 
@@ -1050,23 +1022,6 @@ static double ecl_cell_get_volume_wrong( ecl_cell_type * cell ) {
     }
     
     return volume * 0.5;
-  }
-}
-
-
-static double ecl_cell_get_volume__( ecl_cell_type * cell , int decomp_nr) {
-  ecl_cell_assert_center( cell );
-  {
-    tetrahedron_type tet;
-    int              itet;
-    double           volume = 0;
-    for (itet = 0; itet < 12; itet++) {
-      ecl_cell_init_tetrahedron( cell , &tet , decomp_nr , itet );
-      volume += tetrahedron_volume( &tet );
-      printf("V[%d][%d] = %g \n",decomp_nr, itet , tetrahedron_volume( &tet ));
-    }
-    
-    return volume;
   }
 }
 
@@ -3991,16 +3946,6 @@ double ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_ind
   return ecl_cell_get_volume( cell );
 }
 
-
-double ecl_grid_get_cell_volume1_1( const ecl_grid_type * ecl_grid, int global_index ) {
-  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
-  return ecl_cell_get_volume__( cell , 0);
-}
-
-double ecl_grid_get_cell_volume1_2( const ecl_grid_type * ecl_grid, int global_index ) {
-  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
-  return ecl_cell_get_volume__( cell , 1);
-}
 
 
 double ecl_grid_get_cell_volume3( const ecl_grid_type * ecl_grid, int i , int j , int k) {
