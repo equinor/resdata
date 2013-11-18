@@ -461,7 +461,6 @@
    klib/
 */
 
-
 static const int tetrahedron_permutations[2][12][3] = {{{0 , 2 , 6},
                                                         {0 , 4 , 6},
                                                         {0 , 4 , 5},
@@ -486,6 +485,8 @@ static const int tetrahedron_permutations[2][12][3] = {{{0 , 2 , 6},
                                                         {0 , 2 , 3},  
                                                         {4 , 5 , 7},  
                                                         {4 , 6 , 7}}};
+
+
 
 /*
 
@@ -936,7 +937,74 @@ static void ecl_cell_init_tetrahedron( const ecl_cell_type * cell , tetrahedron_
 
 
 
+
+static double C(double *r,int f1,int f2,int f3){
+  if (f1 == 0) {
+    if (f2 == 0) {
+      if (f3 == 0)
+        return r[0];                        // 000
+      else 
+        return r[4] - r[0];                 // 001
+    } else {
+      if (f3 == 0) 
+        return r[2] - r[0];                 // 010         
+      else
+        return r[6] + r[0] - r[4] - r[2];   // 011
+    }
+  } else {
+    if (f2 == 0) {
+      if (f3 == 0)
+        return r[1] - r[0];                 // 100
+      else 
+        return r[5]+r[0]-r[4]-r[1];         // 101
+    } else {
+      if (f3 == 0) 
+        return r[3]+r[0]-r[2]-r[1];         // 110         
+      else
+        return r[7]+r[4]+r[2]+r[1]-r[6]-r[5]-r[3]-r[0];   // 111
+    }
+  }
+}
+
+
 static double ecl_cell_get_volume( ecl_cell_type * cell ) {
+  double volume = 0;
+  int pb,pg,qa,qg,ra,rb;
+  double X[8];
+  double Y[8];
+  double Z[8];
+  {
+    int c;
+    for (c = 0; c < 8; c++) {
+      X[c] = cell->corner_list[c].x;
+      Y[c] = cell->corner_list[c].y;
+      Z[c] = cell->corner_list[c].z;
+    }
+  }
+  
+  for (pb=0;pb<=1;pb++)
+    for (pg=0;pg<=1;pg++)
+      for (qa=0;qa<=1;qa++)
+        for (qg=0;qg<=1;qg++)
+          for (ra=0;ra<=1;ra++)
+            for (rb=0;rb<=1;rb++) {
+              int divisor = (qa+ra+1)*(pb+rb+1)*(pg+qg+1);
+              double dV = C(X,1,pb,pg) * C(Y,qa,1,qg) * C(Z,ra,rb,1) - 
+                          C(X,1,pb,pg) * C(Z,qa,1,qg) * C(Y,ra,rb,1) - 
+                          C(Y,1,pb,pg) * C(X,qa,1,qg) * C(Z,ra,rb,1) + 
+                          C(Y,1,pb,pg) * C(Z,qa,1,qg) * C(X,ra,rb,1) + 
+                          C(Z,1,pb,pg) * C(X,qa,1,qg) * C(Y,ra,rb,1) - 
+                          C(Z,1,pb,pg) * C(Y,qa,1,qg) * C(X,ra,rb,1);
+              
+              volume += dV / divisor;
+            }
+              
+  return fabs(volume);
+}
+
+
+
+static double ecl_cell_get_volume_wrong( ecl_cell_type * cell ) {
   ecl_cell_assert_center( cell );
   {
     tetrahedron_type tet;
@@ -3878,6 +3946,7 @@ double ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_ind
   ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
   return ecl_cell_get_volume( cell );
 }
+
 
 
 double ecl_grid_get_cell_volume3( const ecl_grid_type * ecl_grid, int i , int j , int k) {
