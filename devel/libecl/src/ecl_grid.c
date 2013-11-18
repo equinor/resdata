@@ -974,7 +974,8 @@ static double ecl_cell_get_volume( ecl_cell_type * cell ) {
   double Y[8];
   double Z[8];
   {
-    for (int c = 0; c < 8; c++) {
+    int c;
+    for (c = 0; c < 8; c++) {
       X[c] = cell->corner_list[c].x;
       Y[c] = cell->corner_list[c].y;
       Z[c] = cell->corner_list[c].z;
