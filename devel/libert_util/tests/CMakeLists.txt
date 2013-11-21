@@ -116,6 +116,10 @@ add_executable( ert_util_clamp ert_util_clamp.c )
 target_link_libraries( ert_util_clamp ert_util test_util )
 add_test( ert_util_clamp  ${EXECUTABLE_OUTPUT_PATH}/ert_util_clamp )
 
+add_executable( ert_util_strstr_int_format ert_util_strstr_int_format.c )
+target_link_libraries( ert_util_strstr_int_format ert_util test_util )
+add_test( ert_util_strstr_int_format  ${EXECUTABLE_OUTPUT_PATH}/ert_util_strstr_int_format )
+
 add_executable( ert_util_parent_path ert_util_parent_path.c )
 target_link_libraries( ert_util_parent_path ert_util test_util )
 add_test( ert_util_parent_path ${EXECUTABLE_OUTPUT_PATH}/ert_util_parent_path)
