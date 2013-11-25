@@ -201,13 +201,13 @@ void util_abort(const char * fmt , ...) {
   pthread_mutex_lock( &__abort_mutex ); /* Abort before unlock() */
   {
     char * filename = util_alloc_dump_filename();
+    FILE * abort_dump = NULL;
 
-    bool dump_to_file = true;
-    FILE * abort_dump = fopen(filename, "w");
-    if (abort_dump == NULL) {
-      abort_dump = stderr;
-      dump_to_file = false;
-    }
+    if (!getenv("ERT_SHOW_BACKTRACE")) 
+      abort_dump = fopen(filename, "w");
+    
+    if (abort_dump == NULL) 
+      abort_dump   = stderr;
     
     va_list ap;
 
@@ -245,9 +245,9 @@ void util_abort(const char * fmt , ...) {
       util_fprintf_backtrace( abort_dump );
     }
 
-    if (dump_to_file) {
+    if (abort_dump != stderr) {
       util_fclose(abort_dump);
-      fprintf(stderr, "\n\nA fatal error occured, see file %s for details \n", filename);
+      fprintf(stderr, "\n\nA fatal error occured, see file: %s for details.\nSetting the environment variable \"ERT_SHOW_BACKTRACE\" will show the backtrace on stderr.\n", filename);
     }
 
     free(filename);
