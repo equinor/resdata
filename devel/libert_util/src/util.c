@@ -3487,6 +3487,46 @@ void util_free_stringlist(char **list , int N) {
 }
 
 
+
+char * util_strstr_int_format(const char * string ) {
+  char * percent_ptr = strchr(string , '%');
+
+  if (percent_ptr) {
+
+    percent_ptr++;
+    if (percent_ptr[0] == 'd')
+      return percent_ptr++;
+    else {
+      if (percent_ptr[0] == '0') {
+
+        while (isdigit(percent_ptr[0])) 
+          percent_ptr++;
+
+        if (percent_ptr[0] == 'd')
+          return percent_ptr++;
+        else
+          return NULL;
+
+      } 
+      return NULL;
+    }
+  }
+  return percent_ptr;
+}
+
+
+int util_int_format_count(const char * string ) {
+  int count = 0;
+  const char * str = util_strstr_int_format(string);
+  while (str) {
+    count++;
+    str = util_strstr_int_format( str );
+  }
+  return count;
+}
+
+
+
 /**
    Will free a list of strings where the last element is NULL. Will
    go completely canacas if the list is not NULL terminated.
