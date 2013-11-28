@@ -2180,19 +2180,19 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
       break; 
     
 
-    ecl_grid_init_cell_nnc_info(grid1, grid1_cell_index);
-    ecl_grid_init_cell_nnc_info(grid2, grid2_cell_index);
-    
+
     {
       ecl_cell_type * grid1_cell = ecl_grid_get_cell(grid1, grid1_cell_index);
-      ecl_cell_type * grid2_cell = ecl_grid_get_cell(grid2, grid2_cell_index); 
-
-      //Add the non-neighbour connection in both directions
+      ecl_grid_init_cell_nnc_info(grid1, grid1_cell_index);
       nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr, grid2_cell_index);
+    }
+
+    //Add the non-neighbour connection in both directions
+
+    {
+      ecl_cell_type * grid2_cell = ecl_grid_get_cell(grid2, grid2_cell_index); 
+      ecl_grid_init_cell_nnc_info(grid2, grid2_cell_index);
       nnc_info_add_nnc(grid2_cell->nnc_info, grid1->lgr_nr, grid1_cell_index);
-      
-      nnc_index_list_add_index( grid1->nnc_index_list , grid1_cell_index );
-      nnc_index_list_add_index( grid2->nnc_index_list , grid2_cell_index );
     }
   }
 }
