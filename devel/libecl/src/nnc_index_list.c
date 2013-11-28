@@ -58,6 +58,7 @@ void nnc_index_list_free( nnc_index_list_type * nnc_index_list ) {
 
 
 const int_vector_type * nnc_index_list_get_list( nnc_index_list_type * nnc_index_list) {
+  
   if (!nnc_index_list->sorted) 
     int_vector_select_unique( nnc_index_list->index_list );
 

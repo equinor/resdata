@@ -14,6 +14,10 @@ add_executable( ecl_restart_test ecl_restart_test.c )
 target_link_libraries( ecl_restart_test ecl test_util )
 add_test( ecl_restart_test ${EXECUTABLE_OUTPUT_PATH}/ecl_restart_test ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST )
 
+add_executable( ecl_nnc_export ecl_nnc_export.c )
+target_link_libraries( ecl_nnc_export ecl test_util )
+add_test( ecl_nnc_export1 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE 1 )
+
 add_executable( ecl_valid_basename ecl_valid_basename.c )
 target_link_libraries( ecl_valid_basename ecl test_util )
 add_test( ecl_valid_basename ${EXECUTABLE_OUTPUT_PATH}/ecl_valid_basename)
@@ -196,6 +200,8 @@ set_property( TEST ecl_sum_report_step_compatible3 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_sum_report_step_compatible4 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_sum_report_step_compatible5 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_sum_report_step_compatible6 PROPERTY LABELS StatoilData )
+
+set_property( TEST ecl_nnc_export1 PROPERTY LABELS StatoilData )
 
 set_property( TEST ecl_fortio PROPERTY LABELS StatoilData)
 set_property( TEST ecl_grid_dims1 PROPERTY LABELS StatoilData )
