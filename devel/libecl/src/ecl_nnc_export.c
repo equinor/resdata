@@ -21,7 +21,6 @@
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_nnc_export.h>
-#include <ert/ecl/nnc_index_list.h>
 
 
 int ecl_nnc_export_get_size( ecl_grid_type * grid , const ecl_file_type * init_file) {

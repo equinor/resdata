@@ -40,7 +40,6 @@
 #include <ert/ecl/tetrahedron.h>
 #include <ert/ecl/grid_dims.h>
 #include <ert/ecl/nnc_info.h>
-#include <ert/ecl/nnc_index_list.h>
 
 
 /**
@@ -360,11 +359,7 @@
   in to assemble information of the NNC. The NNC information is
   organized as follows:
 
-    1. The field nnc_index_list is a thin wrapper around a int_vector
-       instance which will return a sorted list of indicies of cells
-       which have attached NNC information.
-
-    2. For cells with NNC's attached the information is kept in a
+       For cells with NNC's attached the information is kept in a
        nnc_info_type structure. For a particular cell the nnc_info
        structure keeps track of which other cells this particular cell
        is connected to, on a per grid (i.e. LGR) basis. 
@@ -552,7 +547,6 @@ struct ecl_grid_struct {
 
   int                 * fracture_index_map;     /* For fractures: this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_fracture_index_map; /* For fractures: this is list of total_active elements - which point back to the index_map. */ 
-  nnc_index_list_type * nnc_index_list;
 
 #ifdef LARGE_CELL_MALLOC
   ecl_cell_type      *  cells;
@@ -1318,7 +1312,6 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int du
   grid->index_map             = NULL; 
   grid->fracture_index_map    = NULL;
   grid->inv_fracture_index_map = NULL;
-  grid->nnc_index_list         = nnc_index_list_alloc( );
   ecl_grid_alloc_cells( grid , init_valid );
   
 
@@ -2147,8 +2140,19 @@ static void ecl_grid_init_cell_nnc_info(ecl_grid_type * ecl_grid, int global_ind
 
 
 /*
-  This function populates nnc_info for cells with non neighbour connections
- */
+  This function populates nnc_info for cells with non neighbour
+  connections. For cells C1 and C2 the function will only add the directed link: 
+
+      C1 -> C2
+
+  i.e. it is impossible to go from C2 and back to C1. The functions
+  will add links as:
+
+    NNC1 -> NNC2   For nnc between cells in the same grid.
+    NNCG -> NNCL   For global -> lgr connection
+    NNA1 -> NNA2   For links between different LGRs 
+*/
+
 static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid2, const ecl_kw_type * keyword1, const ecl_kw_type * keyword2) {
   
   int * grid1_nnc_cells = ecl_kw_get_int_ptr(keyword1);
@@ -2180,19 +2184,11 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
       break; 
     
 
-
+    
     {
       ecl_cell_type * grid1_cell = ecl_grid_get_cell(grid1, grid1_cell_index);
       ecl_grid_init_cell_nnc_info(grid1, grid1_cell_index);
       nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr, grid2_cell_index);
-    }
-
-    //Add the non-neighbour connection in both directions
-
-    {
-      ecl_cell_type * grid2_cell = ecl_grid_get_cell(grid2, grid2_cell_index); 
-      ecl_grid_init_cell_nnc_info(grid2, grid2_cell_index);
-      nnc_info_add_nnc(grid2_cell->nnc_info, grid1->lgr_nr, grid1_cell_index);
     }
   }
 }
@@ -2227,7 +2223,7 @@ static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_fil
         const ecl_kw_type * nncg = ecl_file_iget_named_kw(ecl_file, NNCG_KW, 0);
         {
           ecl_grid_type * grid = (lgr_nr > 0) ? ecl_grid_get_lgr_from_lgr_nr(main_grid, lgr_nr) : main_grid;
-          ecl_grid_init_nnc_cells(grid, main_grid, nncl, nncg);
+          ecl_grid_init_nnc_cells(main_grid, grid , nncg, nncl);
         }
       }
     }
@@ -2236,9 +2232,10 @@ static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_fil
 }
 
 /*
-  This function reads the non-neighbour connection data for amalgamated LGRs (that is, non-neighbour
-  connections between two LGRs) and initializes the grid structure with the nnc data. 
- */
+  This function reads the non-neighbour connection data for
+  amalgamated LGRs (that is, non-neighbour connections between two
+  LGRs) and initializes the grid structure with the nnc data.
+*/
 static void ecl_grid_init_nnc_amalgamated(ecl_grid_type * main_grid, ecl_file_type * ecl_file) {
   int num_nncheada_kw   = ecl_file_get_num_named_kw( ecl_file , NNCHEADA_KW ); 
       
@@ -3270,7 +3267,6 @@ void ecl_grid_free(ecl_grid_type * grid) {
   if (grid->coord_kw != NULL)
     ecl_kw_free( grid->coord_kw );
   
-  nnc_index_list_free( grid->nnc_index_list );
   vector_free( grid->coarse_cells );
   hash_free( grid->children );
   util_safe_free( grid->parent_name );
@@ -3683,9 +3679,6 @@ double ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j 
 }
 
 
-const int_vector_type * ecl_grid_get_nnc_index_list( ecl_grid_type * grid ) {
-  return nnc_index_list_get_list( grid->nnc_index_list );
-}
 
 
 const nnc_info_type * ecl_grid_get_cell_nnc_info1( const ecl_grid_type * grid , int global_index) {
@@ -3877,7 +3870,7 @@ const ecl_grid_type * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int a
    Will return the global grid for a lgr. If the input grid is indeed
    a global grid itself the function will return NULL.
 */
-    const ecl_grid_type * ecl_grid_get_global_grid( const ecl_grid_type * grid ) {
+const ecl_grid_type * ecl_grid_get_global_grid( const ecl_grid_type * grid ) {
   return grid->global_grid;
 }
 
@@ -4364,19 +4357,19 @@ static void ecl_grid_dump_ascii__(const ecl_grid_type * grid , bool active_only 
 void ecl_grid_dump(const ecl_grid_type * grid , FILE * stream) {
   ecl_grid_dump__(grid, stream ); 
   {
-          int i;
-      for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
-         ecl_grid_dump__( vector_iget_const( grid->LGR_list , i) , stream ); 
+    int i;
+    for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
+      ecl_grid_dump__( vector_iget_const( grid->LGR_list , i) , stream ); 
   }
 }
 
 void ecl_grid_dump_ascii(const ecl_grid_type * grid , bool active_only , FILE * stream) {
   ecl_grid_dump_ascii__( grid , active_only , stream ); 
   {
-          int i;
-          for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
-         ecl_grid_dump_ascii__( vector_iget_const( grid->LGR_list , i) , active_only , stream ); 
-        }
+    int i;
+    for (i = 0; i < vector_get_size( grid->LGR_list ); i++) 
+      ecl_grid_dump_ascii__( vector_iget_const( grid->LGR_list , i) , active_only , stream ); 
+  }
 }
 
 
