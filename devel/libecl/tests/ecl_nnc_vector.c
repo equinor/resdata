@@ -43,7 +43,7 @@ int main(int argc , char ** argv) {
   {
     const int_vector_type * index_list = nnc_vector_get_index_list( vector );
     
-    test_assert_int_equal( 3 , int_vector_size( index_list ));
+    test_assert_int_equal( 6   , int_vector_size( index_list ));
     test_assert_int_equal( 100 , int_vector_iget( index_list , 0 ));
     test_assert_int_equal( 200 , int_vector_iget( index_list , 1 ));
     test_assert_int_equal( 300 , int_vector_iget( index_list , 2 ));
