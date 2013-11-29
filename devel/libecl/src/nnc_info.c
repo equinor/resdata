@@ -107,7 +107,10 @@ const int_vector_type * nnc_info_get_index_list(const nnc_info_type * nnc_info, 
 
 const int_vector_type * nnc_info_iget_index_list(const nnc_info_type * nnc_info, int lgr_index) { 
   nnc_vector_type * nnc_vector = nnc_info_iget_vector( nnc_info , lgr_index );
-  return nnc_vector_get_index_list( nnc_vector );
+  if (nnc_vector)
+    return nnc_vector_get_index_list( nnc_vector );
+  else
+    return NULL;
 }
 
 
