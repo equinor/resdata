@@ -47,6 +47,7 @@ extern "C" {
 
   int                     nnc_info_get_lgr_nr(const nnc_info_type * nnc_info );
   int                     nnc_info_get_size( const nnc_info_type * nnc_info );
+  void                    nnc_info_fprintf(const nnc_info_type * nnc_info , FILE * stream);
 
 #ifdef __cplusplus
 }
