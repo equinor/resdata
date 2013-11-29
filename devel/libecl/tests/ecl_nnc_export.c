@@ -31,7 +31,7 @@ void test_case1(const char * name) {
   char * init_file = ecl_util_alloc_filename(NULL , name , ECL_INIT_FILE , false  , -1);
   char * grid_file = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
   ecl_grid_type * grid = ecl_grid_alloc( grid_file );
-  ecl_file_type * init = ecl_file_open( init_file , 0 );
+  ecl_file_type *                     init = ecl_file_open( init_file , 0 );
 
   //test_assert_int_equal( 2351 , ecl_nnc_export_get_size( grid , init )); 
 

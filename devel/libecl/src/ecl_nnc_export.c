@@ -25,9 +25,7 @@
 
 
 int ecl_nnc_export_get_size( ecl_grid_type * grid , const ecl_file_type * init_file) {
-  const int_vector_type * nnc_index_list = ecl_grid_get_nnc_index_list( grid );
-  
-  return int_vector_size( nnc_index_list );
+  return 0;
 }
 
 
