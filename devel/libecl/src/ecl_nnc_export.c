@@ -23,8 +23,11 @@
 #include <ert/ecl/ecl_nnc_export.h>
 
 
-int ecl_nnc_export_get_size( ecl_grid_type * grid , const ecl_file_type * init_file) {
-  return 0;
+int ecl_nnc_export_get_size( ecl_grid_type * grid ) {
+  return ecl_grid_get_num_nnc( grid );
 }
 
 
+void  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_file , ecl_nnc_type * nnc_data) {
+  
+}

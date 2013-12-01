@@ -27,8 +27,18 @@ extern "C" {
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_file.h>
 
+typedef struct {
+  size_t grid_nr1;
+  size_t global_index1;
+  size_t grid_nr2;
+  size_t global_index2;
 
-int   ecl_nnc_export_get_size( ecl_grid_type * grid , const ecl_file_type * init_file);
+  double trans;
+} ecl_nnc_type;
+
+
+  int   ecl_nnc_export_get_size( ecl_grid_type * grid );
+  void  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_file , ecl_nnc_type * nnc_data);
 
 
 #ifdef __cplusplus

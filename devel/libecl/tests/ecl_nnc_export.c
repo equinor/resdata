@@ -51,7 +51,7 @@ void test_count(const char * name) {
   num_nnc += count_kw_data( grid_file , "NNCG" );
   num_nnc += count_kw_data( grid_file , "NNA1");
   
-  test_assert_int_equal( num_nnc , ecl_grid_get_num_nnc( grid ));
+  test_assert_int_equal( num_nnc , ecl_nnc_export_get_size( grid ));
 
   free(grid_file_name);
   ecl_grid_free( grid );
@@ -59,12 +59,33 @@ void test_count(const char * name) {
 }
 
 
+void test_export(const char * name) {
+  char * grid_file_name = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
+  char * init_file_name = ecl_util_alloc_filename(NULL , name , ECL_INIT_FILE , false  , -1);  
+  ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
+  ecl_file_type * grid_file = ecl_file_open( grid_file_name , 0 );
+  ecl_file_type * init_file = ecl_file_open( init_file_name , 0);
+  ecl_nnc_type * nnc_data1 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof( nnc_data1 ));
+  ecl_nnc_type * nnc_data2 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof( nnc_data2 ));
+
+  // Init nnc_data1 by manual scan
+  ecl_nnc_export( grid , init_file , nnc_data2 );
+  test_assert_int_equal( 0 , memcmp( nnc_data1 , nnc_data2 , ecl_nnc_export_get_size( grid ) * sizeof( nnc_data2 )));
+  
+  free( nnc_data2 );
+  free( nnc_data1 );
+  free(grid_file_name);
+  ecl_grid_free( grid );
+  ecl_file_close( grid_file );
+  ecl_file_close( init_file );
+}
+
 
 
 int main(int argc, char ** argv) {
   const char * base = argv[1];
 
   test_count( base );
-  
+  test_export( base );
   exit(0);
 }
