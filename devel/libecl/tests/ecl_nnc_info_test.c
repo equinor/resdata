@@ -30,13 +30,19 @@
 int main(int argc , char ** argv) {
   int lgr_nr = 77;
   nnc_info_type * nnc_info = nnc_info_alloc(lgr_nr);   
-  
+
+  test_assert_int_equal( 0 , nnc_info_get_total_size( nnc_info ));
   test_assert_int_equal( lgr_nr , nnc_info_get_lgr_nr(  nnc_info ));
   test_assert_true(nnc_info_is_instance(nnc_info));
   test_assert_not_NULL(nnc_info); 
   
+  nnc_info_add_nnc(nnc_info, lgr_nr, 110);
+  test_assert_int_equal( 1, nnc_info_get_total_size( nnc_info ));
+  
   nnc_info_add_nnc(nnc_info, 1, 110);
   nnc_info_add_nnc(nnc_info, 1, 111);
+  test_assert_int_equal( 3, nnc_info_get_total_size( nnc_info ));
+  
 
   nnc_vector_type * nnc_vector = nnc_info_get_vector( nnc_info , 1);
   const int_vector_type * nnc_cells = nnc_info_get_index_list(nnc_info, 1); 
@@ -58,8 +64,8 @@ int main(int argc , char ** argv) {
   test_assert_ptr_equal( nnc_cells_77 , nnc_cells_self );
 
 
-  test_assert_int_equal( 1 , nnc_info_get_size( nnc_info ));
-  test_assert_ptr_equal( nnc_info_get_vector( nnc_info , 1 ) , nnc_info_iget_vector( nnc_info , 0 ));
+  test_assert_int_equal( 2 , nnc_info_get_size( nnc_info ));
+  test_assert_ptr_equal( nnc_info_get_vector( nnc_info , 1 ) , nnc_info_iget_vector( nnc_info , 1 ));
   nnc_info_free(nnc_info);
   
   exit(0);

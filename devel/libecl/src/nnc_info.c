@@ -1,4 +1,3 @@
-
 /*
    Copyright (C) 2013  Statoil ASA, Norway. 
     
@@ -128,6 +127,17 @@ int nnc_info_get_lgr_nr( const nnc_info_type * nnc_info ) {
 
 int nnc_info_get_size( const nnc_info_type * nnc_info ) {
   return vector_get_size( nnc_info->lgr_list );
+}
+
+
+int nnc_info_get_total_size( const nnc_info_type * nnc_info ) {
+  int num_nnc = 0;
+  int ivec;
+  for (ivec = 0; ivec < vector_get_size( nnc_info->lgr_list ); ivec++) {
+    const nnc_vector_type * nnc_vector = vector_iget( nnc_info->lgr_list , ivec );
+    num_nnc += nnc_vector_get_size( nnc_vector );
+  }
+  return num_nnc;
 }
 
 
