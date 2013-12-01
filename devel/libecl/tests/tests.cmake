@@ -13,7 +13,12 @@ add_test( ecl_restart_test ${EXECUTABLE_OUTPUT_PATH}/ecl_restart_test ${PROJECT_
 
 add_executable( ecl_nnc_export ecl_nnc_export.c )
 target_link_libraries( ecl_nnc_export ecl test_util )
-add_test( ecl_nnc_export1 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE 1 )
+add_test (ecl_nnc_export1 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE )
+add_test (ecl_nnc_export2 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC )
+add_test (ecl_nnc_export3 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3)
+#add_test (ecl_nnc_export4 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/DualPoro/DUAL_DIFF )
+add_test (ecl_nnc_export5 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/nestedLGRcase/TESTCASE_NESTEDLGR)
+
 
 add_executable( ecl_valid_basename ecl_valid_basename.c )
 target_link_libraries( ecl_valid_basename ecl test_util )

@@ -5098,3 +5098,28 @@ bool ecl_grid_dual_grid( const ecl_grid_type * ecl_grid ) {
   else
     return true;
 }
+
+static int ecl_grid_get_num_nnc__( const ecl_grid_type * grid ) {
+  int g;
+  int num_nnc = 0;
+  for (g = 0; g < grid->size; g++) {
+    const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1( grid , g );
+    if (nnc_info) 
+      num_nnc += nnc_info_get_total_size( nnc_info );
+  }
+  return num_nnc;
+}
+
+
+
+int ecl_grid_get_num_nnc( const ecl_grid_type * grid ) {
+  int num_nnc = ecl_grid_get_num_nnc__( grid );
+  {
+    int grid_nr; 
+    for (grid_nr = 0; grid_nr < vector_get_size( grid->LGR_list ); grid_nr++) {
+      ecl_grid_type * igrid = vector_iget( grid->LGR_list , grid_nr );
+      num_nnc += ecl_grid_get_num_nnc__( igrid );
+    }
+  }
+  return num_nnc;
+}

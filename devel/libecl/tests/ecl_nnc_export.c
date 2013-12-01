@@ -27,16 +27,35 @@
 #include <ert/ecl/ecl_nnc_export.h>
 
 
-void test_case1(const char * name) {
-  char * init_file = ecl_util_alloc_filename(NULL , name , ECL_INIT_FILE , false  , -1);
-  char * grid_file = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
-  ecl_grid_type * grid = ecl_grid_alloc( grid_file );
-  ecl_file_type * init = ecl_file_open( init_file , 0 );
-  
-  //test_assert_int_equal( 2351 , ecl_nnc_export_get_size( grid , init )); 
+int count_kw_data( const ecl_file_type * file , const char * kw ) {
+  int i;
+  int count = 0;
 
-  free(init_file);
-  free(grid_file);
+  for (i=0; i < ecl_file_get_num_named_kw( file , kw ); i++) {
+    ecl_kw_type * ecl_kw = ecl_file_iget_named_kw( file , kw , i );
+
+    count += ecl_kw_get_size( ecl_kw );
+  }
+  return count;
+}
+
+
+void test_count(const char * name) {
+  char * grid_file_name = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
+  ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
+  ecl_file_type * grid_file = ecl_file_open( grid_file_name , 0 );
+  
+  int num_nnc = 0;
+
+  num_nnc  = count_kw_data( grid_file , "NNC1" );
+  num_nnc += count_kw_data( grid_file , "NNCG" );
+  num_nnc += count_kw_data( grid_file , "NNA1");
+  
+  test_assert_int_equal( num_nnc , ecl_grid_get_num_nnc( grid ));
+
+  free(grid_file_name);
+  ecl_grid_free( grid );
+  ecl_file_close( grid_file );
 }
 
 
@@ -44,17 +63,8 @@ void test_case1(const char * name) {
 
 int main(int argc, char ** argv) {
   const char * base = argv[1];
-  int case_nr;
 
-  test_assert_true( util_sscanf_int(argv[2] , &case_nr) );
-
-  switch( case_nr) {
-  case 1:
-    test_case1(base);
-    break;
-  default:
-    util_abort("%s: case_nr:%d is nore recognized \n",__func__ , case_nr);
-  }
+  test_count( base );
   
   exit(0);
 }
