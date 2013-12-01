@@ -36,6 +36,7 @@ extern "C" {
   const int_vector_type   * nnc_vector_get_index_list(nnc_vector_type * nnc_vector);
   int                       nnc_vector_get_lgr_nr(const nnc_vector_type * nnc_vector );
   void                      nnc_vector_free__(void * arg);
+  int                       nnc_vector_get_size( const nnc_vector_type * nnc_vector );
   
 #ifdef __cplusplus
 }
