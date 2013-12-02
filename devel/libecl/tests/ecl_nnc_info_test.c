@@ -36,11 +36,11 @@ int main(int argc , char ** argv) {
   test_assert_true(nnc_info_is_instance(nnc_info));
   test_assert_not_NULL(nnc_info); 
   
-  nnc_info_add_nnc(nnc_info, lgr_nr, 110);
+  nnc_info_add_nnc(nnc_info, lgr_nr, 110 , 0);
   test_assert_int_equal( 1, nnc_info_get_total_size( nnc_info ));
   
-  nnc_info_add_nnc(nnc_info, 1, 110);
-  nnc_info_add_nnc(nnc_info, 1, 111);
+  nnc_info_add_nnc(nnc_info, 1, 110 , 1);
+  nnc_info_add_nnc(nnc_info, 1, 111 , 2);
   test_assert_int_equal( 3, nnc_info_get_total_size( nnc_info ));
   
 

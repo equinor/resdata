@@ -2159,10 +2159,10 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
   int * grid2_nnc_cells = ecl_kw_get_int_ptr(keyword2);
   int nnc_count = ecl_kw_get_size(keyword2); 
 
-  int i;
-  for (i = 0; i < nnc_count; i++) {
-    int grid1_cell_index = grid1_nnc_cells[i] -1;
-    int grid2_cell_index = grid2_nnc_cells[i] -1;
+  int nnc_index;
+  for (nnc_index = 0; nnc_index < nnc_count; nnc_index++) {
+    int grid1_cell_index = grid1_nnc_cells[nnc_index] -1;
+    int grid2_cell_index = grid2_nnc_cells[nnc_index] -1;
     
     
   /*
@@ -2188,7 +2188,7 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
     {
       ecl_cell_type * grid1_cell = ecl_grid_get_cell(grid1, grid1_cell_index);
       ecl_grid_init_cell_nnc_info(grid1, grid1_cell_index);
-      nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr, grid2_cell_index);
+      nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr, grid2_cell_index , nnc_index);
     }
   }
 }

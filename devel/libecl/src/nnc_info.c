@@ -86,11 +86,11 @@ static void nnc_info_assert_vector( nnc_info_type * nnc_info , int lgr_nr ) {
 
 
 
-void nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number) {
+void nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number, int nnc_index) {
   nnc_info_assert_vector( nnc_info , lgr_nr );
   {
     nnc_vector_type * nnc_vector = nnc_info_get_vector( nnc_info , lgr_nr );
-    nnc_vector_add_nnc( nnc_vector , global_cell_number );
+    nnc_vector_add_nnc( nnc_vector , global_cell_number , nnc_index);
   }
 }
    

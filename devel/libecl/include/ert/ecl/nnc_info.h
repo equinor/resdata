@@ -34,7 +34,7 @@ extern "C" {
     
   nnc_info_type         * nnc_info_alloc(int lgr_nr);   
   void                    nnc_info_free( nnc_info_type * nnc_info );
-  void                    nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number); 
+  void                    nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number, int nnc_index); 
 
   const int_vector_type * nnc_info_iget_grid_index_list(const nnc_info_type * nnc_info, int lgr_index); 
   nnc_vector_type       * nnc_info_iget_vector( const nnc_info_type * nnc_info , int lgr_index);
