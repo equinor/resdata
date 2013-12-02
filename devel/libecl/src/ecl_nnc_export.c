@@ -31,3 +31,39 @@ int ecl_nnc_export_get_size( ecl_grid_type * grid ) {
 void  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_file , ecl_nnc_type * nnc_data) {
   
 }
+
+
+
+int ecl_nnc_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
+
+  if (nnc1->grid_nr1 != nnc2->grid_nr1) {
+    if (nnc1->grid_nr1 < nnc2->grid_nr1) 
+      return -1;
+    else
+      return 1;
+  }
+
+  if (nnc1->grid_nr2 != nnc2->grid_nr2) {
+    if (nnc1->grid_nr2 < nnc2->grid_nr2) 
+      return -1;
+    else
+      return 1;
+  }
+
+  if (nnc1->global_index1 != nnc2->global_index1) {
+    if (nnc1->global_index1 < nnc2->global_index1) 
+      return -1;
+    else
+      return 1;
+  }
+
+
+  if (nnc1->global_index2 != nnc2->global_index2) {
+    if (nnc1->global_index2 < nnc2->global_index2) 
+      return -1;
+    else
+      return 1;
+  }
+  
+  return 0;
+}

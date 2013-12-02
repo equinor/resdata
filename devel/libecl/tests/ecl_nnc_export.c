@@ -25,7 +25,7 @@
 
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_nnc_export.h>
-
+#include <ert/ecl/ecl_kw_magic.h>
 
 int count_kw_data( const ecl_file_type * file , const char * kw ) {
   int i;
@@ -81,11 +81,55 @@ void test_export(const char * name) {
 }
 
 
+void test_cmp() {
+  ecl_nnc_type nnc1 = {.grid_nr1 = 1,
+                       .grid_nr2 = 1,
+                       .global_index1 = 1,
+                       .global_index2 = 1 };
+
+  ecl_nnc_type nnc2 = {.grid_nr1 = 1,   // nnc1 == nnc2
+                       .grid_nr2 = 1,
+                       .global_index1 = 1,
+                       .global_index2 = 1 };
+
+  ecl_nnc_type nnc3 = {.grid_nr1 = 4,   // nnc3 > nnc1
+                       .grid_nr2 = 1,
+                       .global_index1 = 1,
+                       .global_index2 = 1 };
+  
+
+  ecl_nnc_type nnc4 = {.grid_nr1 = 4,   // nnc4 > nnc1
+                       .grid_nr2 = 2,   // nnc4 > nnc2
+                       .global_index1 = 1,
+                       .global_index2 = 1 };
+  
+  ecl_nnc_type nnc5 = {.grid_nr1 = 4,   // nnc5 > nnc4
+                       .grid_nr2 = 2,   
+                       .global_index1 = 3,
+                       .global_index2 = 1 };
+
+
+  ecl_nnc_type nnc6 = {.grid_nr1 = 4,   // nnc6 > nnc5
+                       .grid_nr2 = 2,   
+                       .global_index1 = 3,
+                       .global_index2 = 5 };
+
+  
+
+  test_assert_int_equal( 0 , ecl_nnc_cmp( &nnc1 , &nnc2 ));
+  test_assert_int_equal( 1 , ecl_nnc_cmp( &nnc3 , &nnc1 ));
+  test_assert_int_equal( 1 , ecl_nnc_cmp( &nnc4 , &nnc1 ));
+  test_assert_int_equal( 1 , ecl_nnc_cmp( &nnc5 , &nnc4 ));
+  test_assert_int_equal(-1 , ecl_nnc_cmp( &nnc4 , &nnc5 ));
+  test_assert_int_equal(-1 , ecl_nnc_cmp( &nnc5 , &nnc6 ));
+  
+}
+
 
 int main(int argc, char ** argv) {
   const char * base = argv[1];
-
+  test_cmp( );
   test_count( base );
-  test_export( base );
+  //test_export( base );
   exit(0);
 }
