@@ -56,7 +56,7 @@ void test_scan( const char * grid_filename) {
       
             if (g2 < ecl_grid_get_global_size( lgr )) {  // Skipping matrix <-> fracture link in dual poro.
               const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1( lgr , g1 );
-              const int_vector_type * index_list = nnc_info_get_index_list( nnc_info , lgr_nr);
+              const int_vector_type * index_list = nnc_info_get_grid_index_list( nnc_info , lgr_nr);
               test_assert_not_NULL( nnc_info );
               test_assert_int_not_equal( -1 , int_vector_index( index_list , g2 ));
             }
@@ -80,7 +80,7 @@ void test_scan( const char * grid_filename) {
           const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1( ecl_grid , g );
           test_assert_not_NULL( nnc_info );
           {
-            const int_vector_type * index_list = nnc_info_get_index_list( nnc_info , lgr_nr );
+            const int_vector_type * index_list = nnc_info_get_grid_index_list( nnc_info , lgr_nr );
             test_assert_not_NULL( index_list );
             test_assert_int_not_equal( -1 , int_vector_index( index_list , l ));
           }
@@ -103,7 +103,7 @@ void test_scan( const char * grid_filename) {
           const int g2 = ecl_kw_iget_int( nnc2_kw , i ) - 1;
           
           const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1( lgr1 , g1 );
-          const int_vector_type * index_list = nnc_info_get_index_list( nnc_info , lgr_nr2);
+          const int_vector_type * index_list = nnc_info_get_grid_index_list( nnc_info , lgr_nr2);
           test_assert_not_NULL( nnc_info );
           test_assert_int_not_equal( -1 , int_vector_index( index_list , g2 ));
         } 

@@ -45,13 +45,13 @@ int main(int argc , char ** argv) {
   
 
   nnc_vector_type * nnc_vector = nnc_info_get_vector( nnc_info , 1);
-  const int_vector_type * nnc_cells = nnc_info_get_index_list(nnc_info, 1); 
+  const int_vector_type * nnc_cells = nnc_info_get_grid_index_list(nnc_info, 1); 
   test_assert_int_equal(int_vector_size(nnc_cells), 2); 
-  test_assert_ptr_equal( nnc_cells , nnc_vector_get_index_list( nnc_vector ));
+  test_assert_ptr_equal( nnc_cells , nnc_vector_get_grid_index_list( nnc_vector ));
 
 
   nnc_vector_type * nnc_vector_null  = nnc_info_get_vector( nnc_info , 2);
-  const int_vector_type * nnc_cells_null = nnc_info_get_index_list(nnc_info, 2); 
+  const int_vector_type * nnc_cells_null = nnc_info_get_grid_index_list(nnc_info, 2); 
   test_assert_NULL(nnc_cells_null); 
   test_assert_NULL(nnc_vector_null); 
   
@@ -59,8 +59,8 @@ int main(int argc , char ** argv) {
   const nnc_vector_type * nnc_vector_77  = nnc_info_get_vector( nnc_info , lgr_nr );
   test_assert_ptr_equal( nnc_vector_77 , nnc_vector_self );
 
-  const int_vector_type * nnc_cells_77 = nnc_info_get_index_list(nnc_info, lgr_nr); 
-  const int_vector_type * nnc_cells_self = nnc_info_get_self_index_list(nnc_info); 
+  const int_vector_type * nnc_cells_77 = nnc_info_get_grid_index_list(nnc_info, lgr_nr); 
+  const int_vector_type * nnc_cells_self = nnc_info_get_self_grid_index_list(nnc_info); 
   test_assert_ptr_equal( nnc_cells_77 , nnc_cells_self );
 
 

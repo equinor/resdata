@@ -95,27 +95,27 @@ void nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_numb
 }
    
 
-const int_vector_type * nnc_info_get_index_list(const nnc_info_type * nnc_info, int lgr_nr) { 
+const int_vector_type * nnc_info_get_grid_index_list(const nnc_info_type * nnc_info, int lgr_nr) { 
   nnc_vector_type * nnc_vector = nnc_info_get_vector( nnc_info , lgr_nr );
   if (nnc_vector)
-    return nnc_vector_get_index_list( nnc_vector );
+    return nnc_vector_get_grid_index_list( nnc_vector );
   else
     return NULL;
 }
 
 
-const int_vector_type * nnc_info_iget_index_list(const nnc_info_type * nnc_info, int lgr_index) { 
+const int_vector_type * nnc_info_iget_grid_index_list(const nnc_info_type * nnc_info, int lgr_index) { 
   nnc_vector_type * nnc_vector = nnc_info_iget_vector( nnc_info , lgr_index );
   if (nnc_vector)
-    return nnc_vector_get_index_list( nnc_vector );
+    return nnc_vector_get_grid_index_list( nnc_vector );
   else
     return NULL;
 }
 
 
 
-const int_vector_type * nnc_info_get_self_index_list(const nnc_info_type * nnc_info) { 
-  return nnc_info_get_index_list( nnc_info , nnc_info->lgr_nr );
+const int_vector_type * nnc_info_get_self_grid_index_list(const nnc_info_type * nnc_info) { 
+  return nnc_info_get_grid_index_list( nnc_info , nnc_info->lgr_nr );
 }
 
 
@@ -149,7 +149,7 @@ void nnc_info_fprintf(const nnc_info_type * nnc_info , FILE * stream) {
       int lgr_index = int_vector_iget( nnc_info->lgr_index_map , lgr_nr );
       if (lgr_index >= 0) {
         printf("   %02d -> %02d  => ",lgr_nr , lgr_index);
-        const int_vector_type * index_list = nnc_info_iget_index_list( nnc_info , lgr_index );
+        const int_vector_type * index_list = nnc_info_iget_grid_index_list( nnc_info , lgr_index );
         int_vector_fprintf( index_list , stream , " " , "%d");
         printf("\n");
       }
