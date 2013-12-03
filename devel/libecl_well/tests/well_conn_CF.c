@@ -33,8 +33,6 @@
 
 
 void well_conn_test_CF( const ecl_kw_type * iwel_kw , const ecl_kw_type * icon_kw , const ecl_kw_type * scon_kw , const const ecl_rsthead_type * rst_head , int iwell , int iconn, double CF) {
-  const int iwel_offset = rst_head->niwelz * iwell;
-
   well_conn_type * conn = well_conn_alloc_from_kw( icon_kw , scon_kw , rst_head , iwell , iconn );
   test_assert_double_equal( CF , well_conn_get_connection_factor(conn));
   well_conn_free( conn );
