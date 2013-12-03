@@ -68,7 +68,21 @@ void test_export(const char * name) {
   ecl_nnc_type * nnc_data1 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof( nnc_data1 ));
   ecl_nnc_type * nnc_data2 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof( nnc_data2 ));
 
-  // Init nnc_data1 by manual scan
+  {
+    int nnc_offset = 0;
+    int i;
+    for (i = 0; i < ecl_file_get_num_named_kw( grid_file , NNCHEAD_KW); i++) {
+      ecl_kw_type * nnc1_kw = ecl_file_iget_named_kw( grid_file , NNC1_KW , i );
+      ecl_kw_type * nnc2_kw = ecl_file_iget_named_kw( grid_file , NNC2_KW , i );
+      ecl_kw_type * nnchead = ecl_file_iget_named_kw( grid_file , NNCHEAD_KW , i);
+      
+      nnc_data1[ i + nnc_offset ].grid_nr1 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
+      nnc_data1[ i + nnc_offset ].grid_nr2 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
+      nnc_data1[ i + nnc_offset ].global_index1 = ecl_kw_iget_int( nnc1_kw , i) - 1;
+      nnc_data1[ i + nnc_offset ].global_index2 = ecl_kw_iget_int( nnc2_kw , i) - 1;
+    }
+  }
+
   ecl_nnc_export( grid , init_file , nnc_data2 );
   test_assert_int_equal( 0 , memcmp( nnc_data1 , nnc_data2 , ecl_nnc_export_get_size( grid ) * sizeof( nnc_data2 )));
   
@@ -82,6 +96,7 @@ void test_export(const char * name) {
 
 
 void test_cmp() {
+
   ecl_nnc_type nnc1 = {.grid_nr1 = 1,
                        .grid_nr2 = 1,
                        .global_index1 = 1,
@@ -115,14 +130,12 @@ void test_cmp() {
                        .global_index2 = 5 };
 
   
-
   test_assert_int_equal( 0 , ecl_nnc_cmp( &nnc1 , &nnc2 ));
   test_assert_int_equal( 1 , ecl_nnc_cmp( &nnc3 , &nnc1 ));
   test_assert_int_equal( 1 , ecl_nnc_cmp( &nnc4 , &nnc1 ));
   test_assert_int_equal( 1 , ecl_nnc_cmp( &nnc5 , &nnc4 ));
   test_assert_int_equal(-1 , ecl_nnc_cmp( &nnc4 , &nnc5 ));
   test_assert_int_equal(-1 , ecl_nnc_cmp( &nnc5 , &nnc6 ));
-  
 }
 
 
