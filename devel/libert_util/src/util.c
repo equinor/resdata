@@ -874,6 +874,7 @@ char * util_alloc_realpath__(const char * input_path) {
     util_free_stringlist( path_list , path_len );
   }
 
+  free(abs_path); 
   return real_path;
 }
 
