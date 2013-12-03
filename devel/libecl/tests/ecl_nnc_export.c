@@ -65,8 +65,8 @@ void test_export(const char * name) {
   ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
   ecl_file_type * grid_file = ecl_file_open( grid_file_name , 0 );
   ecl_file_type * init_file = ecl_file_open( init_file_name , 0);
-  ecl_nnc_type * nnc_data1 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof( nnc_data1 ));
-  ecl_nnc_type * nnc_data2 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof( nnc_data2 ));
+  ecl_nnc_type * nnc_data1 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof * nnc_data1 );
+  ecl_nnc_type * nnc_data2 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof * nnc_data2 );
 
   {
     int nnc_offset = 0;
@@ -84,7 +84,7 @@ void test_export(const char * name) {
   }
 
   ecl_nnc_export( grid , init_file , nnc_data2 );
-  test_assert_int_equal( 0 , memcmp( nnc_data1 , nnc_data2 , ecl_nnc_export_get_size( grid ) * sizeof( nnc_data2 )));
+  test_assert_int_equal( 0 , memcmp( nnc_data1 , nnc_data2 , ecl_nnc_export_get_size( grid ) * sizeof * nnc_data2 ));
   
   free( nnc_data2 );
   free( nnc_data1 );
@@ -162,6 +162,6 @@ int main(int argc, char ** argv) {
   test_cmp( );
   test_sort();
   test_count( base );
-  //test_export( base );
+  test_export( base );
   exit(0);
 }

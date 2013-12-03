@@ -37,7 +37,7 @@ typedef struct {
 } ecl_nnc_type;
 
 
-  int   ecl_nnc_export_get_size( ecl_grid_type * grid );
+  int   ecl_nnc_export_get_size( const ecl_grid_type * grid );
   void  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_file , ecl_nnc_type * nnc_data);
   int   ecl_nnc_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2);
   void  ecl_nnc_sort( ecl_nnc_type * nnc_list , int size);

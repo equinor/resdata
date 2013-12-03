@@ -24,13 +24,16 @@
 #include <ert/ecl/ecl_nnc_export.h>
 
 
-int ecl_nnc_export_get_size( ecl_grid_type * grid ) {
+int ecl_nnc_export_get_size( const ecl_grid_type * grid ) {
   return ecl_grid_get_num_nnc( grid );
 }
 
 
 void  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_file , ecl_nnc_type * nnc_data) {
+  int nnc_index = 0;
   
+  nnc_index = ecl_nnc_export_get_size( grid );
+  ecl_nnc_sort( nnc_data , nnc_index );
 }
 
 
@@ -69,9 +72,11 @@ int ecl_nnc_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
   return 0;
 }
 
-
+static int ecl_nnc_cmp__( const void * nnc1 , const void * nnc2) {
+  return ecl_nnc_cmp( nnc1 , nnc2 );
+}
 
 
 void ecl_nnc_sort( ecl_nnc_type * nnc_list , int size) {
-  qsort( nnc_list , size , sizeof * nnc_list , ecl_nnc_cmp );
+  qsort( nnc_list , size , sizeof * nnc_list , ecl_nnc_cmp__ );
 }
