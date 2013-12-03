@@ -139,9 +139,28 @@ void test_cmp() {
 }
 
 
+void test_sort() {
+  const int N = 1000;
+  ecl_nnc_type * nnc_list = util_calloc(N , sizeof( nnc_list ));
+  int i;
+  for (i=0; i < N; i++) {
+    ecl_nnc_type nnc = {.grid_nr1 = (i % 19),
+                        .grid_nr2 = (i % 3),   
+                        .global_index1 = (i % 7),
+                        .global_index2 = (i % 13)};
+    nnc_list[i] = nnc;
+  }
+  ecl_nnc_sort( nnc_list , N );
+  for (i=0; i < (N - 1); i++)
+    test_assert_int_equal( -1 , ecl_nnc_cmp(&nnc_list[i] , &nnc_list[i+1]));
+  
+}
+
+
 int main(int argc, char ** argv) {
   const char * base = argv[1];
   test_cmp( );
+  test_sort();
   test_count( base );
   //test_export( base );
   exit(0);

@@ -15,6 +15,7 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
    for more details. 
 */
+#include <stdlib.h>
 
 #include <ert/util/int_vector.h>
 
@@ -66,4 +67,11 @@ int ecl_nnc_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
   }
   
   return 0;
+}
+
+
+
+
+void ecl_nnc_sort( ecl_nnc_type * nnc_list , int size) {
+  qsort( nnc_list , size , sizeof * nnc_list , ecl_nnc_cmp );
 }
