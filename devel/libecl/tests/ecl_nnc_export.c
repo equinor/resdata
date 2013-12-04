@@ -70,20 +70,32 @@ void test_export(const char * name) {
 
   {
     int nnc_offset = 0;
-    int i;
-    for (i = 0; i < ecl_file_get_num_named_kw( grid_file , NNCHEAD_KW); i++) {
-      ecl_kw_type * nnc1_kw = ecl_file_iget_named_kw( grid_file , NNC1_KW , i );
-      ecl_kw_type * nnc2_kw = ecl_file_iget_named_kw( grid_file , NNC2_KW , i );
-      ecl_kw_type * nnchead = ecl_file_iget_named_kw( grid_file , NNCHEAD_KW , i);
-      
-      nnc_data1[ i + nnc_offset ].grid_nr1 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
-      nnc_data1[ i + nnc_offset ].grid_nr2 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
-      nnc_data1[ i + nnc_offset ].global_index1 = ecl_kw_iget_int( nnc1_kw , i) - 1;
-      nnc_data1[ i + nnc_offset ].global_index2 = ecl_kw_iget_int( nnc2_kw , i) - 1;
+    int block_nr;
+    for (block_nr = 0; block_nr < ecl_file_get_num_named_kw( grid_file , NNCHEAD_KW); block_nr++) {
+      ecl_kw_type * nnc1_kw = ecl_file_iget_named_kw( grid_file , NNC1_KW , block_nr );
+      ecl_kw_type * nnc2_kw = ecl_file_iget_named_kw( grid_file , NNC2_KW , block_nr );
+      ecl_kw_type * nnchead = ecl_file_iget_named_kw( grid_file , NNCHEAD_KW , block_nr);
+      int i;
+      for (i=0; i < ecl_kw_get_size( nnc1_kw); i++) {
+        nnc_data1[ i + nnc_offset ].grid_nr1 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
+        nnc_data1[ i + nnc_offset ].grid_nr2 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
+        nnc_data1[ i + nnc_offset ].global_index1 = ecl_kw_iget_int( nnc1_kw , i) - 1;
+        nnc_data1[ i + nnc_offset ].global_index2 = ecl_kw_iget_int( nnc2_kw , i) - 1;
+        nnc_data1[ i + nnc_offset ].trans = 0;
+      }
+      nnc_offset += ecl_kw_get_size( nnc1_kw );
     }
+    ecl_nnc_sort( nnc_data1 , nnc_offset );
   }
-
+  
   ecl_nnc_export( grid , init_file , nnc_data2 );
+  if (0)
+  {
+    int i;
+    for (i=0; i < ecl_nnc_export_get_size( grid ); i++) 
+      printf("Comparing: %d    1:(%d,%d)   2:(%d,%d) \n",i , nnc_data1[i].global_index1 , nnc_data1[i].global_index2 , nnc_data2[i].global_index1 , nnc_data2[i].global_index2);
+    
+  }
   test_assert_int_equal( 0 , memcmp( nnc_data1 , nnc_data2 , ecl_nnc_export_get_size( grid ) * sizeof * nnc_data2 ));
   
   free( nnc_data2 );
