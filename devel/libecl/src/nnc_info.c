@@ -24,6 +24,7 @@
 
 #include <ert/ecl/nnc_info.h>
 #include <ert/ecl/nnc_vector.h>
+#include <ert/ecl/ecl_kw_magic.h>
 
 #define NNC_INFO_TYPE_ID 675415078
 
@@ -83,7 +84,14 @@ static void nnc_info_assert_vector( nnc_info_type * nnc_info , int lgr_nr ) {
 }
 
 
-
+const char * nnc_info_which_tran_kw( const nnc_info_type * nnc_info , int target_lgr_nr) {
+  if (target_lgr_nr == nnc_info->lgr_nr)
+    return TRANNNC_KW;
+  else if (nnc_info->lgr_nr == 0)
+    return TRANGL_KW;
+  else
+    return TRANLL_KW;
+}
 
 
 void nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_number, int nnc_index) {

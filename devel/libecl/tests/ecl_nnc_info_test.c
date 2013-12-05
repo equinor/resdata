@@ -25,7 +25,35 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/nnc_info.h>
 #include <ert/ecl/nnc_vector.h>
- 
+#include <ert/ecl/ecl_kw_magic.h>
+
+void test_which_tran_kw() {
+  {
+    int lgr_nr = 77;
+    nnc_info_type * nnc_info = nnc_info_alloc(lgr_nr);   
+    
+    nnc_info_add_nnc(nnc_info , lgr_nr , 100 , 0);
+    nnc_info_add_nnc(nnc_info , lgr_nr + 1 , 100 , 0);
+    
+    test_assert_string_equal( TRANNNC_KW , nnc_info_which_tran_kw( nnc_info , lgr_nr ));
+    test_assert_string_equal( TRANLL_KW  , nnc_info_which_tran_kw( nnc_info , lgr_nr + 1));
+    nnc_info_free( nnc_info );
+  }
+
+  {
+    int lgr_nr = 0;
+    nnc_info_type * nnc_info = nnc_info_alloc(lgr_nr);   
+    
+    nnc_info_add_nnc(nnc_info , lgr_nr , 100 , 0);
+    nnc_info_add_nnc(nnc_info , lgr_nr + 1 , 100 , 0);
+    
+    test_assert_string_equal( TRANNNC_KW , nnc_info_which_tran_kw( nnc_info , lgr_nr ));
+    test_assert_string_equal( TRANGL_KW  , nnc_info_which_tran_kw( nnc_info , lgr_nr + 1));
+    nnc_info_free( nnc_info );
+  }
+}
+
+
 
 int main(int argc , char ** argv) {
   int lgr_nr = 77;
@@ -68,5 +96,7 @@ int main(int argc , char ** argv) {
   test_assert_ptr_equal( nnc_info_get_vector( nnc_info , 1 ) , nnc_info_iget_vector( nnc_info , 1 ));
   nnc_info_free(nnc_info);
   
+
+  test_which_tran_kw();
   exit(0);
 }
