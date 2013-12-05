@@ -27,17 +27,29 @@
 #include <ert/ecl/ecl_nnc_export.h>
 #include <ert/ecl/ecl_kw_magic.h>
 
-int count_kw_data( const ecl_file_type * file , const char * kw ) {
-  int i;
+int count_kw_data( const ecl_file_type * file , ecl_grid_type * grid , const char * kw ) {
+  int i,j;
   int count = 0;
 
   for (i=0; i < ecl_file_get_num_named_kw( file , kw ); i++) {
     ecl_kw_type * ecl_kw = ecl_file_iget_named_kw( file , kw , i );
-
-    count += ecl_kw_get_size( ecl_kw );
+    ecl_grid_type * igrid;
+    
+    if (i == 0)
+      igrid= grid;
+    else
+      igrid = ecl_grid_iget_lgr( grid , i );
+    {
+      int global_size = ecl_grid_get_global_size( grid );
+      for (j=0; j < ecl_kw_get_size( ecl_kw ); j++) {
+        if (ecl_kw_iget_int( ecl_kw , j ) <= global_size)
+          count +=1;
+      }
+    }
   }
   return count;
 }
+
 
 
 void test_count(const char * name) {
@@ -47,9 +59,9 @@ void test_count(const char * name) {
   
   int num_nnc = 0;
 
-  num_nnc  = count_kw_data( grid_file , "NNC1" );
-  num_nnc += count_kw_data( grid_file , "NNCG" );
-  num_nnc += count_kw_data( grid_file , "NNA1");
+  num_nnc  = count_kw_data( grid_file , grid , "NNC1" );
+  num_nnc += count_kw_data( grid_file , grid , "NNCG" );
+  num_nnc += count_kw_data( grid_file , grid , "NNA1");
   
   test_assert_int_equal( num_nnc , ecl_nnc_export_get_size( grid ));
 
@@ -57,6 +69,8 @@ void test_count(const char * name) {
   ecl_grid_free( grid );
   ecl_file_close( grid_file );
 }
+
+
 
 
 void test_export(const char * name) {
@@ -70,14 +84,26 @@ void test_export(const char * name) {
 
   {
     int nnc_offset = 0;
-    int block_nr;
+    int block_nr = 0;
     for (block_nr = 0; block_nr < ecl_file_get_num_named_kw( grid_file , NNCHEAD_KW); block_nr++) {
-      {
-        ecl_kw_type * nnc1_kw = ecl_file_iget_named_kw( grid_file , NNC1_KW , block_nr );
-        ecl_kw_type * nnc2_kw = ecl_file_iget_named_kw( grid_file , NNC2_KW , block_nr );
-        ecl_kw_type * nnchead = ecl_file_iget_named_kw( grid_file , NNCHEAD_KW , block_nr);
-        ecl_kw_type * nnc_tran = ecl_file_iget_named_kw( init_file , TRANNNC_KW , block_nr );
+      ecl_file_push_block( init_file );
+      ecl_file_push_block( grid_file );
+      ecl_file_select_block( grid_file , NNCHEAD_KW , block_nr );
+
+      // This is too simple
+      if (ecl_file_has_kw( init_file , TRANLL_KW))
+        ecl_file_select_block( init_file , TRANLL_KW , block_nr );
+      else
+        ecl_file_select_block( init_file , TRANNNC_KW , block_nr );
+      
+      if (ecl_file_has_kw( grid_file , NNC1_KW )) {
+        ecl_kw_type * nnc1_kw  = ecl_file_iget_named_kw( grid_file , NNC1_KW , 0 );
+        ecl_kw_type * nnc2_kw  = ecl_file_iget_named_kw( grid_file , NNC2_KW , 0 );
+        ecl_kw_type * nnchead  = ecl_file_iget_named_kw( grid_file , NNCHEAD_KW , 0);
+        ecl_kw_type * nnc_tran = ecl_file_iget_named_kw( init_file , TRANNNC_KW , 0 );
         int i;
+
+        test_asert_int_equal( ecl_kw_get_size( nnc1_kw ) , ecl_kw_get_size( nnc_tran ));
         for (i=0; i < ecl_kw_get_size( nnc1_kw); i++) {
           nnc_data1[ i + nnc_offset ].grid_nr1 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
           nnc_data1[ i + nnc_offset ].grid_nr2 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
@@ -88,51 +114,71 @@ void test_export(const char * name) {
         nnc_offset += ecl_kw_get_size( nnc1_kw );
       }
       
-      /*{
-        ecl_kw_type * nncl_kw = ecl_file_iget_named_kw( grid_file , NNCL_KW , block_nr );
-        ecl_kw_type * nncg_kw = ecl_file_iget_named_kw( grid_file , NNCG_KW , block_nr );
-        ecl_kw_type * nnchead = ecl_file_iget_named_kw( grid_file , NNCHEAD_KW , block_nr);
+      
+      if (ecl_file_has_kw( grid_file, NNCL_KW)) {
+        ecl_kw_type * nncl_kw  = ecl_file_iget_named_kw( grid_file , NNCL_KW , 0 );
+        ecl_kw_type * nncg_kw  = ecl_file_iget_named_kw( grid_file , NNCG_KW , 0 );
+        ecl_kw_type * nnchead  = ecl_file_iget_named_kw( grid_file , NNCHEAD_KW , 0);
+        ecl_kw_type * nnc_tran = ecl_file_iget_named_kw( init_file , TRANGL_KW , 0 );
         int i;
-        for (i=0; i < ecl_kw_get_size( nnc1_kw); i++) {
-          nnc_data1[ i + nnc_offset ].grid_nr1 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
+        
+        test_asert_int_equal( ecl_kw_get_size( nncl_kw ) , ecl_kw_get_size( nnc_tran ));
+        for (i=0; i < ecl_kw_get_size( nncl_kw); i++) {
+          nnc_data1[ i + nnc_offset ].grid_nr1 = 0;
           nnc_data1[ i + nnc_offset ].grid_nr2 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
-          nnc_data1[ i + nnc_offset ].global_index1 = ecl_kw_iget_int( nnc1_kw , i) - 1;
-          nnc_data1[ i + nnc_offset ].global_index2 = ecl_kw_iget_int( nnc2_kw , i) - 1;
-          nnc_data1[ i + nnc_offset ].trans = 0;
+          nnc_data1[ i + nnc_offset ].global_index1 = ecl_kw_iget_int( nncg_kw , i) - 1;
+          nnc_data1[ i + nnc_offset ].global_index2 = ecl_kw_iget_int( nncl_kw , i) - 1;
+          nnc_data1[ i + nnc_offset ].trans = ecl_kw_iget_as_double( nnc_tran , i );
         }
-        nnc_offset += ecl_kw_get_size( nnc1_kw );
+        nnc_offset += ecl_kw_get_size( nncl_kw );
       }
+      
+      if (ecl_file_has_kw( grid_file , NNA1_KW )) {
+        ecl_kw_type * nnc1_kw = ecl_file_iget_named_kw( grid_file , NNA1_KW , block_nr );
+        ecl_kw_type * nnc2_kw = ecl_file_iget_named_kw( grid_file , NNA2_KW , block_nr );
+        ecl_kw_type * nnchead = ecl_file_iget_named_kw( grid_file , NNCHEADA_KW , block_nr);
+        ecl_kw_type * nnc_tran = ecl_file_iget_named_kw( init_file , TRANLL_KW , 0 );
+        int i;
 
-      {
-        ecl_kw_type * nnc1_kw = ecl_file_iget_named_kw( grid_file , NNC1_KW , block_nr );
-        ecl_kw_type * nnc2_kw = ecl_file_iget_named_kw( grid_file , NNC2_KW , block_nr );
-        ecl_kw_type * nnchead = ecl_file_iget_named_kw( grid_file , NNCHEAD_KW , block_nr);
-        int i;
+        test_asert_int_equal( ecl_kw_get_size( nnc1_kw ) , ecl_kw_get_size( nnc_tran ));
         for (i=0; i < ecl_kw_get_size( nnc1_kw); i++) {
-          nnc_data1[ i + nnc_offset ].grid_nr1 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
-          nnc_data1[ i + nnc_offset ].grid_nr2 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
+          nnc_data1[ i + nnc_offset ].grid_nr1 = ecl_kw_iget_int( nnchead , NNCHEADA_ILOC1_INDEX );
+          nnc_data1[ i + nnc_offset ].grid_nr2 = ecl_kw_iget_int( nnchead , NNCHEADA_ILOC1_INDEX );
           nnc_data1[ i + nnc_offset ].global_index1 = ecl_kw_iget_int( nnc1_kw , i) - 1;
           nnc_data1[ i + nnc_offset ].global_index2 = ecl_kw_iget_int( nnc2_kw , i) - 1;
-          nnc_data1[ i + nnc_offset ].trans = 0;
+          nnc_data1[ i + nnc_offset ].trans = ecl_kw_iget_as_double( nnc_tran , i );;
         }
         nnc_offset += ecl_kw_get_size( nnc1_kw );
       }
-      */
+      ecl_file_pop_block( grid_file );
+      ecl_file_pop_block( init_file );
     }
-
-
-
-
+   
+    
     ecl_nnc_sort( nnc_data1 , nnc_offset );
   }
   
   ecl_nnc_export( grid , init_file , nnc_data2 );
-  if (0)
+  if (1)
   {
     int i;
-    for (i=0; i < ecl_nnc_export_get_size( grid ); i++) 
-      printf("Comparing: %d    1:(%d,%d)   2:(%d,%d) \n",i , nnc_data1[i].global_index1 , nnc_data1[i].global_index2 , nnc_data2[i].global_index1 , nnc_data2[i].global_index2);
-    
+    for (i=0; i < ecl_nnc_export_get_size( grid ); i++) {
+      if (ecl_nnc_cmp( &nnc_data1[i] , &nnc_data2[i])) 
+        printf("Comparing: %d 1:(%d,%d)  2:(%d,%d)   1:(%ld,%ld)   2:(%ld,%ld) %g,%g\n",
+             i , 
+             nnc_data1[i].grid_nr1 , 
+             nnc_data1[i].grid_nr2 , 
+             nnc_data2[i].grid_nr1 , 
+             nnc_data2[i].grid_nr2, 
+             nnc_data1[i].global_index1 , 
+             nnc_data1[i].global_index2 , 
+             nnc_data2[i].global_index1 , 
+             nnc_data2[i].global_index2, 
+             nnc_data1[i].trans , 
+             nnc_data2[i].trans);
+
+      test_assert_int_equal( 0 , ecl_nnc_cmp( &nnc_data1[i] , &nnc_data2[i]));
+    }
   }
   test_assert_int_equal( 0 , memcmp( nnc_data1 , nnc_data2 , ecl_nnc_export_get_size( grid ) * sizeof * nnc_data2 ));
   
