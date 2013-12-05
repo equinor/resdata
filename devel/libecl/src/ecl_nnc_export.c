@@ -28,7 +28,7 @@ int ecl_nnc_export_get_size( const ecl_grid_type * grid ) {
   return ecl_grid_get_num_nnc( grid );
 }
 
-static void  ecl_nnc_export__( const ecl_grid_type * grid , const ecl_file_type * init_file , ecl_nnc_type * nnc_data, int * nnc_offset) {
+static void  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , const ecl_file_type * init_file , ecl_nnc_type * nnc_data, int * nnc_offset) {
   int nnc_index = *nnc_offset;
   int lgr_nr1 = ecl_grid_get_lgr_nr( grid );
   int global_index1;
@@ -41,17 +41,18 @@ static void  ecl_nnc_export__( const ecl_grid_type * grid , const ecl_file_type 
         const nnc_vector_type * nnc_vector = nnc_info_iget_vector( nnc_info , lgr_index2 );
         const int_vector_type * grid2_index_list = nnc_vector_get_grid_index_list( nnc_vector );
         const int_vector_type * nnc_index_list = nnc_vector_get_nnc_index_list( nnc_vector );
-        
         int lgr_nr2 = nnc_vector_get_lgr_nr( nnc_vector );
-        int global_index2;
+        const ecl_kw_type * tran_kw = ecl_file_iget_named_kw( init_file , nnc_info_which_tran_kw( nnc_info , lgr_nr2 ) , lgr_index1);
+        int index2;
+
         ecl_nnc_type nnc = {.grid_nr1 = lgr_nr1 ,
                             .grid_nr2 = lgr_nr2 , 
                             .global_index1 = global_index1 };
 
-        for (global_index2 = 0; global_index2 < nnc_vector_get_size( nnc_vector ); global_index2++) {
-          double trans = 0;
-          nnc.global_index2 = int_vector_iget( grid2_index_list , global_index2 );
-          nnc.trans = trans;
+        for (index2 = 0; index2 < nnc_vector_get_size( nnc_vector ); index2++) {
+          nnc.global_index2 = int_vector_iget( grid2_index_list , index2 );
+          nnc.trans = ecl_kw_iget_as_double( tran_kw , int_vector_iget( nnc_index_list , index2));
+
           nnc_data[nnc_index] = nnc;
           nnc_index++;
         }
@@ -64,12 +65,12 @@ static void  ecl_nnc_export__( const ecl_grid_type * grid , const ecl_file_type 
 
 void  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_file , ecl_nnc_type * nnc_data) {
   int nnc_index = 0;
-  ecl_nnc_export__( grid , init_file , nnc_data , &nnc_index );
+  ecl_nnc_export__( grid , 0 , init_file , nnc_data , &nnc_index );
   {
     int lgr_index; 
     for (lgr_index = 0; lgr_index < ecl_grid_get_num_lgr(grid); lgr_index++) {
       ecl_grid_type * igrid = ecl_grid_iget_lgr( grid , lgr_index );
-      ecl_nnc_export__( igrid , init_file , nnc_data , &nnc_index );
+      ecl_nnc_export__( igrid , lgr_index , init_file , nnc_data , &nnc_index );
     }
   }
   nnc_index = ecl_nnc_export_get_size( grid );

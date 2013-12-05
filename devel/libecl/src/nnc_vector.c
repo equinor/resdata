@@ -72,11 +72,11 @@ void nnc_vector_add_nnc(nnc_vector_type * nnc_vector, int global_cell_number , i
 }
    
 
-const int_vector_type * nnc_vector_get_grid_index_list(nnc_vector_type * nnc_vector) {
+const int_vector_type * nnc_vector_get_grid_index_list(const nnc_vector_type * nnc_vector) {
   return nnc_vector->grid_index_list;
 }
 
-const int_vector_type * nnc_vector_get_nnc_index_list(nnc_vector_type * nnc_vector) {
+const int_vector_type * nnc_vector_get_nnc_index_list(const nnc_vector_type * nnc_vector) {
   return nnc_vector->nnc_index_list;
 }
 
