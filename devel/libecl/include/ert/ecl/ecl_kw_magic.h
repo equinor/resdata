@@ -27,6 +27,8 @@ extern "C" {
 #define PORMOD_KW    "PORV_MOD"  
 
 #define PVTNUM_KW    "PVTNUM"
+#define LGRHEADI_KW  "LGRHEADI"
+#define LGRHEADI_LGR_NR_INDEX 0
 
 /* 
    Observe that many of the elements in the INTEHEAD keyword is shared
