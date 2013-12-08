@@ -82,6 +82,19 @@ void test_get_tran(const char * name) {
     test_assert_double_equal( 0.87355447 , ecl_kw_iget_as_double( tran_kw , 0 ));
     test_assert_double_equal( 26.921568 , ecl_kw_iget_as_double( tran_kw ,  259 ));
   }
+
+
+  /* Get lgr_nr: 110 */
+  {
+    ecl_kw_type * tran_kw = ecl_nnc_export_get_tran_kw( init_file , TRANNNC_KW , 110 );
+    test_assert_true( ecl_kw_is_instance( tran_kw ));
+    test_assert_int_equal( 0 , ecl_kw_get_size( tran_kw ));
+    
+    tran_kw = ecl_nnc_export_get_tran_kw( init_file , TRANGL_KW , 110 );
+    test_assert_int_equal( 208 , ecl_kw_get_size( tran_kw ));
+    test_assert_double_equal( 17.287283 , ecl_kw_iget_as_double( tran_kw , 0 ));
+    test_assert_double_equal( 569.26312 , ecl_kw_iget_as_double( tran_kw ,  207 ));
+  }
   
 
   free( init_file_name );

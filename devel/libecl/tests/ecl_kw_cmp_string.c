@@ -30,13 +30,13 @@ void test_cmp_string() {
   ecl_kw_iset_string8( ecl_kw , 0 , "ABCD");
   
   test_assert_int_equal( 0 , strcmp( ecl_kw_iget_char_ptr( ecl_kw , 0 ) , "ABCD    "));
-  test_assert_int_equal( 0 , ecl_kw_icmp_string( ecl_kw , 0 , "ABCD"));
-  test_assert_int_equal( 0 , ecl_kw_icmp_string( ecl_kw , 0 , "ABCD    "));
-  test_assert_int_equal( 0 , ecl_kw_icmp_string( ecl_kw , 0 , "ABCD "));
+  test_assert_true(ecl_kw_icmp_string( ecl_kw , 0 , "ABCD"));
+  test_assert_true(ecl_kw_icmp_string( ecl_kw , 0 , "ABCD    "));
+  test_assert_true(ecl_kw_icmp_string( ecl_kw , 0 , "ABCD "));
 
-  test_assert_int_not_equal( 0 , ecl_kw_icmp_string( ecl_kw , 0 , "Different"));
-  test_assert_int_not_equal( 0 , ecl_kw_icmp_string( ecl_kw , 0 , ""));
-  test_assert_int_not_equal( 0 , ecl_kw_icmp_string( ecl_kw , 0 , ""));
+  test_assert_false( ecl_kw_icmp_string( ecl_kw , 0 , "Different"));
+  test_assert_false( ecl_kw_icmp_string( ecl_kw , 0 , ""));
+  test_assert_false( ecl_kw_icmp_string( ecl_kw , 0 , ""));
   
 }
 
