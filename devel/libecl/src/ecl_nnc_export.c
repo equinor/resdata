@@ -127,7 +127,32 @@ void ecl_nnc_sort( ecl_nnc_type * nnc_list , int size) {
 
 
 ecl_kw_type * ecl_nnc_export_get_tranll_kw( const ecl_grid_type * grid , const ecl_file_type * init_file ,  int lgr_nr1, int lgr_nr2 ) {
-  return NULL;
+  const char * lgr_name1 = ecl_grid_get_lgr_name( grid , lgr_nr1 );
+  const char * lgr_name2 = ecl_grid_get_lgr_name( grid , lgr_nr2 );
+
+  ecl_kw_type * tran_kw = NULL;
+  const int file_num_kw = ecl_file_get_size( init_file );
+  int global_kw_index = 0;
+  
+  while (true) {
+    if (global_kw_index >= file_num_kw) 
+      break;
+    {
+      ecl_kw_type * ecl_kw = ecl_file_iget_kw( init_file , global_kw_index );
+      if (strcmp( LGRJOIN_KW , ecl_kw_get_header( ecl_kw)) == 0) {
+        
+        if ((strcmp( lgr_name1 , ecl_kw_iget_char_ptr( ecl_kw , 0 )) == 0) &&
+            (strcmp( lgr_name2 , ecl_kw_iget_char_ptr( ecl_kw , 1 )) == 0)) {
+          
+          tran_kw = ecl_file_iget_kw( init_file , global_kw_index + 1);
+          break;
+        }
+      } 
+      global_kw_index++;
+    }
+  }
+
+  return tran_kw;
 }
 
 

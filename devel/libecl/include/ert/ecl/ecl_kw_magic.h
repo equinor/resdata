@@ -29,6 +29,7 @@ extern "C" {
 #define PVTNUM_KW    "PVTNUM"
 #define LGRHEADI_KW  "LGRHEADI"
 #define LGRHEADI_LGR_NR_INDEX 0
+#define LGRJOIN_KW   "LGRJOIN" 
 
 /* 
    Observe that many of the elements in the INTEHEAD keyword is shared

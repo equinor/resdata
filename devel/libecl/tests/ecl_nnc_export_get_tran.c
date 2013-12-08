@@ -99,13 +99,15 @@ void test_tranLL( const ecl_grid_type * grid , const ecl_file_type * init_file ,
                   double last) {
   
   ecl_kw_type * ecl_kw = ecl_nnc_export_get_tranll_kw(grid , init_file , lgr_nr1 , lgr_nr2 );
-
-  test_assert_true(ecl_kw_is_instance( ecl_kw ));
   
+  printf("lgr: %d -> %d \n",lgr_nr1 , lgr_nr2);
+  test_assert_not_NULL(ecl_kw);
+  test_assert_true(ecl_kw_is_instance( ecl_kw ));
   test_assert_int_equal( size , ecl_kw_get_size( ecl_kw ));
   test_assert_double_equal( first , ecl_kw_iget_as_double( ecl_kw , 0 ));
   test_assert_double_equal( last , ecl_kw_iget_as_double( ecl_kw , size - 1 ));
 }
+
 
 
 void test_get_tranLL(const char * name) {
@@ -115,37 +117,21 @@ void test_get_tranLL(const char * name) {
   ecl_file_type * grid_file = ecl_file_open( grid_file_name , 0 );
   ecl_file_type * init_file = ecl_file_open( init_file_name , 0 );
   
-  test_assert_NULL( ecl_nnc_export_get_tranll_kw( grid , init_file , 1000 , 1002 ));
+  test_tranLL( grid , init_file , ecl_grid_get_lgr_nr_from_name( grid , "LG003017" ), ecl_grid_get_lgr_nr_from_name( grid , "LG003018" ),
+               172 , 5.3957253 , 1.0099934);
+
+  test_tranLL( grid , init_file , ecl_grid_get_lgr_nr_from_name( grid , "LG002016" ), ecl_grid_get_lgr_nr_from_name( grid , "LG002017" ),
+               93 , 1.4638059 , 0.36407200 );
   
-  /*  
-      
+  test_tranLL( grid , init_file , ecl_grid_get_lgr_nr_from_name( grid , "LG002016" ), ecl_grid_get_lgr_nr_from_name( grid , "LG003016" ),
+               56 , 2.7360380 , 10.053267);
 
-   LG003017 -> LG003018
-   Size: 172
-   First: 5.3957253
-   Last:  1.0099934
-   
-   LG002016 -> LG002017
-   Size: 172
-   First: 1.4638059
-   Last : 0.36407200
+  test_tranLL( grid , init_file , ecl_grid_get_lgr_nr_from_name( grid , "LG009027" ), ecl_grid_get_lgr_nr_from_name( grid , "LG009026" ),
+               152 , 155.47754, 219.23553);
 
-   LG002016 -> LG002017
-   Size: 56
-   First:  2.7360380
-   Last : 10.053267
-
-   LG009027 -> LG009026
-   Size: 152
-   First: 0.15547754E+03
-   Last : 0.21923553E+03
-
-   LG009027 -> LG008027
-   Size: 317
-   First: 0.040260997
-   Last : 
-  */
-   
+  test_tranLL( grid , init_file , ecl_grid_get_lgr_nr_from_name( grid , "LG009027" ), ecl_grid_get_lgr_nr_from_name( grid , "LG008027" ),
+               317 , 0.040260997 , 0.0066288318);
+  
 
   free( init_file_name );
   free(grid_file_name);
@@ -162,12 +148,4 @@ int main( int argc , char ** argv) {
   test_get_tranLL( argv[1] );
   exit(0);
 }
-
-
-
-
-
-
-
-
 
