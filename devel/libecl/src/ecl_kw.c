@@ -850,6 +850,25 @@ void ecl_kw_iset_char_ptr( ecl_kw_type * ecl_kw , int index, const char * s) {
 }
 
 
+/**
+   This function will compare the string at position @index with the
+   input @other string. The comparison will be done in
+   'space-tolerant', i.e. trailing spaces are ignored in the
+   comparison. If the strings are considered equal 0 is returned,
+   otherwise the normal strcmp() return value is ised.
+*/
+
+int ecl_kw_icmp_string( const ecl_kw_type * ecl_kw , int index, const char * other_string) {
+  const char * kw_string = ecl_kw_iget_char_ptr( ecl_kw , index );
+  if (strlen(other_string)) {
+    char * match = strstr( kw_string , other_string);
+    if (match == kw_string)
+      return 0;
+  }
+
+  return strcmp( kw_string , other_string );
+}
+
   
 
 #define ECL_KW_ISET_TYPED(ctype , ECL_TYPE)                                                                 \

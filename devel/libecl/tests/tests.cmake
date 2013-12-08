@@ -115,6 +115,10 @@ add_executable( ecl_kw_equal ecl_kw_equal.c )
 target_link_libraries( ecl_kw_equal ecl test_util )
 add_test( ecl_kw_equal ${EXECUTABLE_OUTPUT_PATH}/ecl_kw_equal )
 
+add_executable( ecl_kw_cmp_string ecl_kw_cmp_string.c )
+target_link_libraries( ecl_kw_cmp_string ecl test_util )
+add_test( ecl_kw_cmp_string ${EXECUTABLE_OUTPUT_PATH}/ecl_kw_cmp_string )
+
 
 add_executable( ecl_dualp ecl_dualp.c )
 target_link_libraries( ecl_dualp ecl test_util )
