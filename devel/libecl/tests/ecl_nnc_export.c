@@ -103,7 +103,7 @@ void test_export(const char * name) {
         ecl_kw_type * nnc_tran = ecl_file_iget_named_kw( init_file , TRANNNC_KW , 0 );
         int i;
 
-        test_asert_int_equal( ecl_kw_get_size( nnc1_kw ) , ecl_kw_get_size( nnc_tran ));
+        test_assert_int_equal( ecl_kw_get_size( nnc1_kw ) , ecl_kw_get_size( nnc_tran ));
         for (i=0; i < ecl_kw_get_size( nnc1_kw); i++) {
           nnc_data1[ i + nnc_offset ].grid_nr1 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
           nnc_data1[ i + nnc_offset ].grid_nr2 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
@@ -122,7 +122,7 @@ void test_export(const char * name) {
         ecl_kw_type * nnc_tran = ecl_file_iget_named_kw( init_file , TRANGL_KW , 0 );
         int i;
         
-        test_asert_int_equal( ecl_kw_get_size( nncl_kw ) , ecl_kw_get_size( nnc_tran ));
+        test_assert_int_equal( ecl_kw_get_size( nncl_kw ) , ecl_kw_get_size( nnc_tran ));
         for (i=0; i < ecl_kw_get_size( nncl_kw); i++) {
           nnc_data1[ i + nnc_offset ].grid_nr1 = 0;
           nnc_data1[ i + nnc_offset ].grid_nr2 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
@@ -140,7 +140,7 @@ void test_export(const char * name) {
         ecl_kw_type * nnc_tran = ecl_file_iget_named_kw( init_file , TRANLL_KW , 0 );
         int i;
 
-        test_asert_int_equal( ecl_kw_get_size( nnc1_kw ) , ecl_kw_get_size( nnc_tran ));
+        test_assert_int_equal( ecl_kw_get_size( nnc1_kw ) , ecl_kw_get_size( nnc_tran ) );
         for (i=0; i < ecl_kw_get_size( nnc1_kw); i++) {
           nnc_data1[ i + nnc_offset ].grid_nr1 = ecl_kw_iget_int( nnchead , NNCHEADA_ILOC1_INDEX );
           nnc_data1[ i + nnc_offset ].grid_nr2 = ecl_kw_iget_int( nnchead , NNCHEADA_ILOC1_INDEX );

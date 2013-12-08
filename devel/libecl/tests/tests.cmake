@@ -16,9 +16,12 @@ target_link_libraries( ecl_nnc_export ecl test_util )
 add_test (ecl_nnc_export1 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE )
 add_test (ecl_nnc_export2 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC )
 add_test (ecl_nnc_export3 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3)
-#add_test (ecl_nnc_export4 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/DualPoro/DUAL_DIFF )
+add_test (ecl_nnc_export4 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/DualPoro/DUAL_DIFF )
 add_test (ecl_nnc_export5 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/nestedLGRcase/TESTCASE_NESTEDLGR)
 
+add_executable( ecl_nnc_export_get_tran ecl_nnc_export_get_tran.c )
+target_link_libraries( ecl_nnc_export_get_tran ecl test_util )
+add_test (ecl_nnc_export_get_tran ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export_get_tran  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3)
 
 add_executable( ecl_valid_basename ecl_valid_basename.c )
 target_link_libraries( ecl_valid_basename ecl test_util )
@@ -202,7 +205,7 @@ set_property( TEST ecl_sum_report_step_compatible4 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_sum_report_step_compatible5 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_sum_report_step_compatible6 PROPERTY LABELS StatoilData )
 
-set_property( TEST ecl_nnc_export1 PROPERTY LABELS StatoilData )
+
 
 set_property( TEST ecl_fortio PROPERTY LABELS StatoilData)
 set_property( TEST ecl_grid_dims1 PROPERTY LABELS StatoilData )
@@ -224,3 +227,11 @@ set_property( TEST ecl_rft_plt PROPERTY LABELS StatoilData)
 set_property( TEST ecl_sum_case_exists PROPERTY LABELS StatoilData)
 set_property( TEST ecl_grid_volume1 PROPERTY LABELS StatoilData)
 set_property( TEST ecl_grid_volume2 PROPERTY LABELS StatoilData)
+
+set_property( TEST ecl_nnc_export1 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_nnc_export2 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_nnc_export3 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_nnc_export4 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_nnc_export5 PROPERTY LABELS StatoilData )
+
+set_property( TEST ecl_nnc_export_get_tran PROPERTY LABELS StatoilData )

@@ -23,6 +23,8 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_nnc_export.h>
 #include <ert/ecl/nnc_info.h>
+#include <ert/ecl/ecl_kw_magic.h>
+
 
 int ecl_nnc_export_get_size( const ecl_grid_type * grid ) {
   return ecl_grid_get_num_nnc( grid );
@@ -120,4 +122,73 @@ static int ecl_nnc_cmp__( const void * nnc1 , const void * nnc2) {
 
 void ecl_nnc_sort( ecl_nnc_type * nnc_list , int size) {
   qsort( nnc_list , size , sizeof * nnc_list , ecl_nnc_cmp__ );
+}
+
+
+
+ecl_kw_type * ecl_nnc_export_get_tranll_kw( const ecl_grid_type * grid , const ecl_file_type * init_file ,  int lgr_nr1, int lgr_nr2 ) {
+  return NULL;
+}
+
+
+
+ecl_kw_type * ecl_nnc_export_get_tran_kw( const ecl_file_type * init_file , const char * kw , int lgr_nr ) {
+  ecl_kw_type * tran_kw = NULL;
+
+  if (lgr_nr == 0) {
+    if (strcmp(kw , TRANNNC_KW) == 0)
+      tran_kw = ecl_file_iget_named_kw( init_file , TRANNNC_KW , 0 );
+  } else {
+    if ((strcmp(kw , TRANNNC_KW) == 0) ||
+        (strcmp(kw , TRANGL_KW) == 0)) {
+      
+      const int file_num_kw = ecl_file_get_size( init_file );
+      int global_kw_index = 0;
+      bool finished = false;
+
+      while (!finished) {
+        ecl_kw_type * ecl_kw = ecl_file_iget_kw( init_file , global_kw_index );
+        
+        if (strcmp( LGRHEADI_KW , ecl_kw_get_header( ecl_kw )) == 0) {
+          if (ecl_kw_iget_int( ecl_kw , LGRHEADI_LGR_NR_INDEX) == lgr_nr) {
+            /* Inner loop */
+            
+            while (true) {
+              global_kw_index++;
+              /* 
+                 We have continued to EOF - without finding the keyword. We break out of
+                 the inner loop; the outer loop will detect (global_kw_index ==
+                 file_num_kw) and exit completely.
+              */
+              if (global_kw_index == file_num_kw) 
+                break;
+
+              ecl_kw = ecl_file_iget_kw( init_file , global_kw_index );
+              //printf("kw[%d] = %s \n",global_kw_index , ecl_kw_get_header( ecl_kw));
+
+              /* 
+                 We have found the next LGRHEADI_KW; break out of the inner loop, but
+                 continue in the outer loop.
+              */
+              if (strcmp( LGRHEADI_KW , ecl_kw_get_header( ecl_kw )) == 0) 
+                break;
+
+              /* We found TRANLL keyword we are after. */
+              if (strcmp( kw , ecl_kw_get_header( ecl_kw )) == 0) {
+                tran_kw = ecl_kw;
+                finished = true;
+                break;
+              }
+            }
+          } else
+            global_kw_index++;
+        } else
+          global_kw_index++;
+        
+        if (global_kw_index == file_num_kw)
+          finished = true;
+      } 
+    }
+  }
+  return tran_kw;
 }
