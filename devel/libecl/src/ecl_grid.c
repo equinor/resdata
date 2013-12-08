@@ -3900,9 +3900,22 @@ const char * ecl_grid_iget_lgr_name( const ecl_grid_type * ecl_grid , int lgr_in
 
 const char * ecl_grid_get_lgr_name( const ecl_grid_type * ecl_grid , int lgr_nr) {
   __assert_main_grid( ecl_grid );
+  if (lgr_nr == 0)
+    return ecl_grid->name;
   {
     int lgr_index = int_vector_iget( ecl_grid->lgr_index_map , lgr_nr );
     return ecl_grid_iget_lgr_name( ecl_grid , lgr_index );
+  }
+}
+
+
+int ecl_grid_get_lgr_nr_from_name( const ecl_grid_type * grid , const char * name) {
+  __assert_main_grid( grid );
+  if (strcmp( name , grid->name) == 0)
+    return 0;
+  else {
+    const ecl_grid_type * lgr = ecl_grid_get_lgr( grid , name );
+    return lgr->lgr_nr;
   }
 }
 
@@ -3952,6 +3965,7 @@ void ecl_grid_summarize(const ecl_grid_type * ecl_grid) {
   int             active_cells , nx,ny,nz;
   ecl_grid_get_dims(ecl_grid , &nx , &ny , &nz , &active_cells);
   printf("      Name ..................: %s  \n",ecl_grid->name);
+  printf("      Grid nr ...............: %d  \n",ecl_grid->lgr_nr );
   printf("      Active cells ..........: %d \n",active_cells);
   printf("      Active fracture cells..: %d \n",ecl_grid_get_nactive_fracture( ecl_grid ));
   printf("      nx ....................: %d \n",nx);

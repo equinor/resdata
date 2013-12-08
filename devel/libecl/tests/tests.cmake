@@ -46,7 +46,7 @@ add_test( ecl_sum_case_exists ${EXECUTABLE_OUTPUT_PATH}/ecl_sum_case_exists
 add_executable( ecl_grid_lgr_name ecl_grid_lgr_name.c )
 target_link_libraries( ecl_grid_lgr_name ecl test_util )
 set_target_properties( ecl_grid_lgr_name PROPERTIES COMPILE_FLAGS "-Werror")                                    
-add_test( ecl_grid_lgr_name ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_lgr_name  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC.EGRID)
+add_test( ecl_grid_lgr_name ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_lgr_name  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID)
 
 add_executable( ecl_region ecl_region.c )
 target_link_libraries( ecl_region ecl test_util )

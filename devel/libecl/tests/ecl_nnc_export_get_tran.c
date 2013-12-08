@@ -93,6 +93,20 @@ void test_get_tran(const char * name) {
 
 
 
+void test_tranLL( const ecl_grid_type * grid , const ecl_file_type * init_file , int lgr_nr1 , int lgr_nr2, 
+                  int size,
+                  double first , 
+                  double last) {
+  
+  ecl_kw_type * ecl_kw = ecl_nnc_export_get_tranll_kw(grid , init_file , lgr_nr1 , lgr_nr2 );
+
+  test_assert_true(ecl_kw_is_instance( ecl_kw ));
+  
+  test_assert_int_equal( size , ecl_kw_get_size( ecl_kw ));
+  test_assert_double_equal( first , ecl_kw_iget_as_double( ecl_kw , 0 ));
+  test_assert_double_equal( last , ecl_kw_iget_as_double( ecl_kw , size - 1 ));
+}
+
 
 void test_get_tranLL(const char * name) {
   char * grid_file_name = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
@@ -102,7 +116,37 @@ void test_get_tranLL(const char * name) {
   ecl_file_type * init_file = ecl_file_open( init_file_name , 0 );
   
   test_assert_NULL( ecl_nnc_export_get_tranll_kw( grid , init_file , 1000 , 1002 ));
-    
+  
+  /*  
+      
+
+   LG003017 -> LG003018
+   Size: 172
+   First: 5.3957253
+   Last:  1.0099934
+   
+   LG002016 -> LG002017
+   Size: 172
+   First: 1.4638059
+   Last : 0.36407200
+
+   LG002016 -> LG002017
+   Size: 56
+   First:  2.7360380
+   Last : 10.053267
+
+   LG009027 -> LG009026
+   Size: 152
+   First: 0.15547754E+03
+   Last : 0.21923553E+03
+
+   LG009027 -> LG008027
+   Size: 317
+   First: 0.040260997
+   Last : 
+  */
+   
+
   free( init_file_name );
   free(grid_file_name);
   ecl_grid_free( grid );
