@@ -142,7 +142,10 @@ class EclSum(BaseCClass):
         have @key.
         """
         if self.has_key( key ):
-            return EclSumVector( self , key , report_only )
+            if report_only:
+                return EclSumVector( self , key, report_only = True)
+            else:
+                return EclSumVector( self , key)
         else:
             raise KeyError("Summary object does not have key: %s" % key)
 
