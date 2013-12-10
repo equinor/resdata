@@ -36,6 +36,9 @@ extern "C" {
 
 #define test_assert_string_equal( s1 , s2 ) test_assert_string_equal__(s1 , s2 , __FILE__ , __LINE__)  
   void  test_assert_string_equal__( const char * s1 , const char * s2 , const char * file , int line);
+#define test_assert_string_not_equal( s1 , s2 ) test_assert_string_not_equal__(s1 , s2 , __FILE__ , __LINE__)  
+  void  test_assert_string_not_equal__( const char * s1 , const char * s2 , const char * file , int line);
+
   bool  test_check_string_equal( const char *s1 , const char * s2);
 
 #define test_assert_int_equal( i1 , i2 ) test_assert_int_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
