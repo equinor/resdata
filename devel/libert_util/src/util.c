@@ -874,6 +874,7 @@ char * util_alloc_realpath__(const char * input_path) {
     util_free_stringlist( path_list , path_len );
   }
 
+  free(abs_path); 
   return real_path;
 }
 
@@ -2420,7 +2421,7 @@ bool util_file_exists(const char *filename) {
 bool util_entry_exists( const char * entry ) {
   stat_type stat_buffer;
   int stat_return = util_stat(entry, &stat_buffer);
-  if (stat_return == 0)
+  if (stat_return == 0) 
     return true;
   else {
     if (errno == ENOENT)
