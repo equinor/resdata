@@ -449,8 +449,7 @@ class EclFile(CClass):
 
 
     def restart_get_kw( self , kw_name , dtime , copy = False):
-        """
-        Will return EclKW @kw_name from restart file at time @dtime.
+        """Will return EclKW @kw_name from restart file at time @dtime.
 
         This function assumes that the current EclFile instance
         represents a restart file. It will then look for keyword
@@ -466,18 +465,25 @@ class EclFile(CClass):
         out of scope. If the optional argument @copy is True the
         returned kw will be a true copy.
 
-        If the file does not have the keyword at the specified time the
-        function will return None.
+        If the file does not have the keyword at the specified time
+        the function will raise IndexError(); if the file does not
+        have the keyword at all - KeyError will be raised.
         """
         index = cfunc.get_restart_index( self , ctime( dtime ) )
         if index >= 0:
-            kw = self.iget_named_kw( kw_name , index )
-            if copy:
-                return EclKW.copy( kw )
+            if self.num_named_kw(kw_name) > index:
+                kw = self.iget_named_kw( kw_name , index )
+                if copy:
+                    return EclKW.copy( kw )
+                else:
+                    return kw
             else:
-                return kw
+                if self.has_kw(kw_name):
+                    raise IndexError("Does not have keyword:%s at time:%s" % (kw_name , dtime))
+                else:
+                    raise KeyError("Key:%s not recognized" % kw_name)
         else:
-            return None
+            raise IndexError("Does not have keyword:%s at time:%s" % (kw_name , dtime))
 
 
     def replace_kw( self , old_kw , new_kw):
