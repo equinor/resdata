@@ -456,6 +456,44 @@
    klib/
 */
 
+
+/*
+About ordering of the corners in the cell
+-----------------------------------------
+
+This code reads and builds the grid structure from the ECLIPSE
+GRID/EGRID files without really considering the question about where
+the cells are located in "the real world", the format is quite general
+and it should(?) be possible to formulate different conventions
+(i.e. handedness and direction of z-axis) with the same format.
+
+The corners in a cell are numbered 0 - 7, where corners 0-3 constitute
+one layer and the corners 4-7 consitute the other layer. Observe the
+numbering does not follow a consistent rotation around the face:
+
+
+                                  j
+  6---7                        /|\
+  |   |                         |
+  4---5                         |
+                                | 
+                                o---------->  i
+  2---3
+  |   |
+  0---1
+
+Many grids are left-handed, i.e. the direction of increasing z will
+point down towards the center of the earth. Hence in the figure above
+the layer 4-7 will be deeper down in the reservoir than layer 0-3, and
+also have higher z-value.
+
+Warning: The main author of this code suspects that the coordinate
+system can be right-handed as well, giving a z axis which will
+increase 'towards the sky'; the safest is probaly to check this
+explicitly if it matters for the case at hand.
+*/
+
+
 static const int tetrahedron_permutations[2][12][3] = {{{0 , 2 , 6},
                                                         {0 , 4 , 6},
                                                         {0 , 4 , 5},
@@ -1097,23 +1135,6 @@ static bool ecl_cell_layer_contains_xy( const ecl_cell_type * cell , bool lower_
   }
 }
 
-/*
-deeper layer: (larger (negative) z values).
-------------
-
-  6---7
-  |   |
-  4---5
-
-
-  2---3
-  |   |
-  0---1
-
-
-*/
-
-  
 
 
 static bool ecl_cell_contains_point( ecl_cell_type * cell , const point_type * p) {
