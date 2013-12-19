@@ -103,6 +103,7 @@ extern "C" {
 #define IWEL_KW      "IWEL"
 #define ZWEL_KW      "ZWEL"
 #define ICON_KW      "ICON"
+#define SCON_KW      "SCON"
 #define ISEG_KW      "ISEG"
 #define RSEG_KW      "RSEG"
 
@@ -129,7 +130,8 @@ extern "C" {
 #define INTEHEAD_NCWMAX_INDEX  17     // Maximum number of completions per well
 #define INTEHEAD_NWGMAX_INDEX  19     // Maximum number of wells in any group
 #define INTEHEAD_NGMAXZ_INDEX  20     // Maximum number of groups in field
-#define INTEHEAD_NICONZ_INDEX  32     // Number of elements pr completion in the ICON arra.y
+#define INTEHEAD_NICONZ_INDEX  32     // Number of elements pr completion in the ICON array.
+#define INTEHEAD_NSCONZ_INDEX  33     // Number of elements pr completion in the SCON array.
 #define INTEHEAD_NIGRPZ_INDEX  36     // Number of elements pr group in the IGRP array.
 
 #define INTEHEAD_NSWLMX_INDEX  175

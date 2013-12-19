@@ -14,6 +14,10 @@ add_executable( ert_util_type_vector_test ert_util_type_vector_test.c )
 target_link_libraries( ert_util_type_vector_test ert_util test_util )
 add_test( ert_util_type_vector_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_type_vector_test )
 
+add_executable( ert_util_matrix ert_util_matrix.c )
+target_link_libraries( ert_util_matrix ert_util test_util )
+add_test( ert_util_matrix ${EXECUTABLE_OUTPUT_PATH}/ert_util_matrix )
+
 add_executable( ert_util_filename ert_util_filename.c )
 target_link_libraries( ert_util_filename ert_util test_util )
 add_test( ert_util_filename ${EXECUTABLE_OUTPUT_PATH}/ert_util_filename )
@@ -95,14 +99,35 @@ add_executable( ert_util_file_readable ert_util_file_readable.c )
 target_link_libraries( ert_util_file_readable ert_util test_util )
 add_test( ert_util_file_readable ${EXECUTABLE_OUTPUT_PATH}/ert_util_file_readable ${FILE_READABLE_SERVERS})
 
+add_executable( ert_util_type_vector_functions ert_util_type_vector_functions.c )
+target_link_libraries( ert_util_type_vector_functions ert_util test_util )
+add_test( ert_util_type_vector_functions ${EXECUTABLE_OUTPUT_PATH}/ert_util_type_vector_functions)
+
 add_executable( ert_util_addr2line ert_util_addr2line.c )
 target_link_libraries( ert_util_addr2line ert_util test_util )
 add_test( ert_util_addr2line ${EXECUTABLE_OUTPUT_PATH}/ert_util_addr2line)
 
+
+add_executable( ert_util_ui_return ert_util_ui_return.c )
+target_link_libraries( ert_util_ui_return ert_util test_util )
+add_test( ert_util_ui_return  ${EXECUTABLE_OUTPUT_PATH}/ert_util_ui_return )
+
+add_executable( ert_util_clamp ert_util_clamp.c )
+target_link_libraries( ert_util_clamp ert_util test_util )
+add_test( ert_util_clamp  ${EXECUTABLE_OUTPUT_PATH}/ert_util_clamp )
+
+add_executable( ert_util_strstr_int_format ert_util_strstr_int_format.c )
+target_link_libraries( ert_util_strstr_int_format ert_util test_util )
+add_test( ert_util_strstr_int_format  ${EXECUTABLE_OUTPUT_PATH}/ert_util_strstr_int_format )
+
+add_executable( ert_util_parent_path ert_util_parent_path.c )
+target_link_libraries( ert_util_parent_path ert_util test_util )
+add_test( ert_util_parent_path ${EXECUTABLE_OUTPUT_PATH}/ert_util_parent_path)
+
 add_executable( ert_util_work_area ert_util_work_area.c )
 target_link_libraries( ert_util_work_area ert_util test_util )
 add_test( NAME ert_util_work_area 
-          COMMAND ${EXECUTABLE_OUTPUT_PATH}/ert_util_work_area data/file1.txt ${CMAKE_CURRENT_SOURCE_DIR}/data/file2.txt data
+          COMMAND ${EXECUTABLE_OUTPUT_PATH}/ert_util_work_area data2/file1 ${CMAKE_CURRENT_SOURCE_DIR}/data2/file2 data2
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 
@@ -110,7 +135,7 @@ add_test( NAME ert_util_work_area
 if (WITH_LATEX)
    add_executable( ert_util_latex_test ert_util_latex_test.c )
    target_link_libraries(ert_util_latex_test ert_util test_util )
-   add_test( ert_util_latex_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_latex_test ${CMAKE_CURRENT_SOURCE_DIR}/data/latex_OK.tex )
+   add_test( ert_util_latex_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_latex_test ${CMAKE_CURRENT_SOURCE_DIR}/data/latex_OK.tex  latex_OK.tex)
 endif()
 
 
@@ -118,3 +143,7 @@ add_executable( ert_util_arg_pack ert_util_arg_pack.c)
 set_target_properties( ert_util_arg_pack PROPERTIES COMPILE_FLAGS "-Werror")
 target_link_libraries( ert_util_arg_pack ert_util test_util )
 add_test( ert_util_arg_pack ${EXECUTABLE_OUTPUT_PATH}/ert_util_arg_pack)
+
+add_executable( ert_util_abort_gnu_tests ert_util_abort_gnu_tests.c)
+target_link_libraries( ert_util_abort_gnu_tests ert_util test_util)
+add_test( ert_util_abort_gnu_tests ${EXECUTABLE_OUTPUT_PATH}/ert_util_abort_gnu_tests)

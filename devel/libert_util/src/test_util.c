@@ -78,6 +78,13 @@ void test_assert_string_equal__( const char * s1 , const char * s2 , const char 
 }
 
 
+void test_assert_string_not_equal__( const char * s1 , const char * s2 , const char * file, int line) {
+  bool equal = test_check_string_equal( s1 , s2 );
+  if (equal) 
+    test_error_exit( "%s:%d => String are equal s1:[%s]  s2:[%s]\n" , file , line , s1 , s2 );
+}
+
+
 
 void test_assert_int_equal__( int i1 , int i2 , const char * file , int line) {
   if (i1 != i2) 

@@ -340,6 +340,15 @@ const char * stringlist_iget(const stringlist_type * stringlist , int index) {
   return vector_iget(stringlist->strings ,index);
 }
 
+const char * stringlist_front(const stringlist_type * stringlist) {
+  return vector_iget(stringlist->strings , 0);
+}
+
+const char * stringlist_back(const stringlist_type * stringlist) {
+  return vector_iget(stringlist->strings , vector_get_size( stringlist->strings ) - 1);
+}
+
+
 int stringlist_iget_as_int( const stringlist_type * stringlist , int index , bool * valid) {
   const char * string_value = stringlist_iget( stringlist , index );
   int value = -1;
@@ -732,7 +741,23 @@ int stringlist_select_matching_files(stringlist_type * names , const char * path
 #endif
 }
 
-
+int stringlist_append_matching_elements(stringlist_type * target , const stringlist_type * src , const char * pattern) {
+      int ielm;
+    int match_count = 0;
+    for (ielm = 0; ielm < stringlist_get_size( src ); ielm++) {
+      const char * item = stringlist_iget( src , ielm );
+      if (util_fnmatch( pattern , item ) == 0) {
+        stringlist_append_copy( target , item );
+        match_count++;
+      }
+    }
+    return match_count;
+}
+  
+  int stringlist_select_matching_elements(stringlist_type * target , const stringlist_type * src , const char * pattern) {
+  stringlist_clear( target );
+  return stringlist_append_matching_elements( target , src , pattern );
+}
 
 #ifdef __cplusplus
 }

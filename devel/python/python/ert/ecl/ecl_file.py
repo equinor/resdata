@@ -35,19 +35,13 @@ implementation from the libecl library.
 [1]: In particular for restart files, which do not have a special
      RestartFile class, there is some specialized functionality.
 """
-
-import os.path
-import datetime
-import ctypes
-import types
-import libecl
 import re
+import types
+import datetime
+from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
+from ert.ecl import EclKW, ECL_LIB
+from ert.util import ctime
 
-from   ert.cwrap.cwrap       import *
-from   ert.cwrap.cclass      import CClass
-from   ecl_kw                import EclKW
-from   ert.util.ctime        import ctime 
-from   ert.util.stringlist   import StringList
 
 class EclFile(CClass):
 
@@ -73,7 +67,7 @@ class EclFile(CClass):
         
         if dtime:
             OK = cfunc.restart_block_time( obj , ctime( dtime ))
-        elif not report_step == None:
+        elif not report_step is None:
             OK = cfunc.restart_block_step( obj , report_step )
         else:
             raise TypeError("restart_block() requires either dtime or report_step argument - none given.")
@@ -455,8 +449,7 @@ class EclFile(CClass):
 
 
     def restart_get_kw( self , kw_name , dtime , copy = False):
-        """
-        Will return EclKW @kw_name from restart file at time @dtime.
+        """Will return EclKW @kw_name from restart file at time @dtime.
 
         This function assumes that the current EclFile instance
         represents a restart file. It will then look for keyword
@@ -472,18 +465,25 @@ class EclFile(CClass):
         out of scope. If the optional argument @copy is True the
         returned kw will be a true copy.
 
-        If the file does not have the keyword at the specified time the
-        function will return None.
+        If the file does not have the keyword at the specified time
+        the function will raise IndexError(); if the file does not
+        have the keyword at all - KeyError will be raised.
         """
         index = cfunc.get_restart_index( self , ctime( dtime ) )
         if index >= 0:
-            kw = self.iget_named_kw( kw_name , index )
-            if copy:
-                return EclKW.copy( kw )
+            if self.num_named_kw(kw_name) > index:
+                kw = self.iget_named_kw( kw_name , index )
+                if copy:
+                    return EclKW.copy( kw )
+                else:
+                    return kw
             else:
-                return kw
+                if self.has_kw(kw_name):
+                    raise IndexError("Does not have keyword:%s at time:%s" % (kw_name , dtime))
+                else:
+                    raise KeyError("Key:%s not recognized" % kw_name)
         else:
-            return None
+            raise IndexError("Does not have keyword:%s at time:%s" % (kw_name , dtime))
 
 
     def replace_kw( self , old_kw , new_kw):
@@ -675,6 +675,15 @@ class EclFile(CClass):
         return ctime.datetime()
 
 
+    def iget_restart_sim_days( self , index ):
+        """
+        Will locate restart block nr @index and return the number of days
+        (in METRIC at least ...) since the simulation started.
+        
+        """
+        return cfunc.iget_restart_days( self , index ) 
+    
+
     @property
     def name(self):
         """
@@ -703,7 +712,7 @@ class EclFile(CClass):
         
 
 # 2. Creating a wrapper object around the libecl library, 
-cwrapper = CWrapper( libecl.lib )
+cwrapper = CWrapper(ECL_LIB)
 cwrapper.registerType( "ecl_file" , EclFile )
 
 
@@ -730,6 +739,7 @@ cfunc.get_size                    = cwrapper.prototype("int         ecl_file_get
 cfunc.get_unique_size             = cwrapper.prototype("int         ecl_file_get_num_distinct_kw( ecl_file )")
 cfunc.get_num_named_kw            = cwrapper.prototype("int         ecl_file_get_num_named_kw( ecl_file , char* )")
 cfunc.iget_restart_time           = cwrapper.prototype("time_t      ecl_file_iget_restart_sim_date( ecl_file , int )")
+cfunc.iget_restart_days           = cwrapper.prototype("double      ecl_file_iget_restart_sim_days( ecl_file , int )")
 cfunc.get_restart_index           = cwrapper.prototype("int         ecl_file_get_restart_index( ecl_file , time_t)")
 cfunc.get_src_file                = cwrapper.prototype("char*       ecl_file_get_src_file( ecl_file )")
 cfunc.replace_kw                  = cwrapper.prototype("void        ecl_file_replace_kw( ecl_file , ecl_kw , ecl_kw , bool)")

@@ -22,12 +22,17 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <time.h>
 #include <stdarg.h>
+#include <sys/types.h>
+#include <time.h>
+
+#ifdef HAVE_GETPWUID
+#include <pwd.h>
+#endif
+
 
 #ifdef HAVE_GETUID
 #include <sys/stat.h>
-#include <sys/types.h>
 #endif
 
 #ifdef ERT_WINDOWS
@@ -47,6 +52,28 @@ extern"C" {
 #endif
 
 
+/*
+  These ifdefs are an attempt to support large files (> 2GB)
+  transparently on both Windows and Linux. See source file
+  libert_util/src/util_lfs.c for more details.
+
+  The symbol WINDOWS_LFS should be defined during compilation
+  if you want support of large files on windows.
+*/
+
+#ifdef WINDOWS_LFS
+typedef struct _stat64 stat_type;
+typedef __int64 offset_type;
+#else
+typedef struct stat stat_type;
+#ifdef HAVE_FSEEKO
+  typedef off_t offset_type;
+#else
+  typedef long offset_type;
+#endif
+#endif
+
+
 
 /*****************************************************************/
 /*
@@ -63,6 +90,7 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
                                           const char * , /* The current file / directory */
                                           int          , /* The current depth in the file hiearcrcy. */
                                           void *);       /* Arbitrary argument */
+
 
 
 typedef enum {left_pad   = 0,
@@ -109,6 +137,8 @@ typedef enum {left_pad   = 0,
   char       * util_alloc_rel_path( const char * __root_path , const char * path);
   bool         util_fmt_bit8   (const char *);
   bool         util_fmt_bit8_stream(FILE * );
+  char       * util_strstr_int_format(const char * string );
+  int          util_int_format_count(const char * string );
   void         util_make_path  (const char *);
   char       * util_newest_file(const char *, const char *);
   double       util_file_difftime(const char * , const char *);
@@ -141,6 +171,11 @@ typedef enum {left_pad   = 0,
   int          util_roundf( float x );
   int          util_round( double x );
 
+  offset_type        util_ftell(FILE * stream);
+  int          util_fseek(FILE * stream, offset_type offset, int whence);
+  void         util_rewind(FILE * stream);
+  int          util_stat(const char * filename , stat_type * stat_info);
+  int          util_fstat(int fileno, stat_type * stat_info);
 
 #ifdef HAVE_VA_COPY
 #define UTIL_VA_COPY(target,src) va_copy(target,src)
@@ -220,6 +255,7 @@ typedef enum {left_pad   = 0,
   char      ** util_alloc_stringlist_copy(const char **, int );
   void         util_split_string(const char *, const char *, int *, char ***);
   void         util_path_split(const char * , int *, char ***);
+  char       * util_alloc_parent_path( const char * path);
   void         util_binary_split_string(const char * , const char * , bool  , char ** , char ** );
   void         util_binary_split_string_from_max_length(const char * , const char * , int  , char ** , char ** );
   char       * util_alloc_joined_string(const char **  , int , const char * );
@@ -250,6 +286,7 @@ typedef enum {left_pad   = 0,
   void         util_fread_dev_urandom(int , char * );
   bool         util_string_isspace(const char * s);
   
+  char *  util_alloc_dump_filename();
   void    util_exit(const char * fmt , ...);
   void    util_abort(const char * fmt , ...);
   void    util_abort_signal(int );
@@ -275,9 +312,7 @@ typedef enum {left_pad   = 0,
   int      util_proc_mem_free(void);
   
   
-  void     util_apply_int_limits(int * , int , int );
-  void     util_apply_float_limits(float * , float , float );
-  void     util_apply_double_limits(double * , double , double );
+  void     util_clamp_double(double * value , double limit1, double limit2);
   double   util_double_vector_mean(int , const double * );
   double   util_double_vector_stddev(int , const double * );
   void     util_double_vector_max_min(int  , const double *, double * , double *);
@@ -344,7 +379,7 @@ typedef enum {left_pad   = 0,
   void         util_unsetenv( const char * variable);
   char       * util_alloc_envvar( const char * value );
   bool         util_is_link(const char * );  // Will always return false on windows
-
+  int          util_chdir(const char * path);  
 
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }

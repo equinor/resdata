@@ -1215,16 +1215,16 @@ time_t ecl_util_get_start_date(const char * data_file) {
     util_abort("%s: sorry - could not find START in DATA file %s \n",__func__ , data_file);
   
   {
-    long int start_pos = ftell( stream );
+    long int start_pos = util_ftell( stream );
     int buffer_size;
 
     /* Look for terminating '/' */
     if (!parser_fseek_string( parser , stream , "/" , false , true))
       util_abort("%s: sorry - could not find \"/\" termination of START keyword in data_file: \n",__func__ , data_file);
     
-    buffer_size = (ftell(stream) - start_pos)  ;
+    buffer_size = (util_ftell(stream) - start_pos)  ;
     buffer = util_calloc( buffer_size + 1 , sizeof * buffer  );
-    fseek( stream , start_pos , SEEK_SET);
+    util_fseek( stream , start_pos , SEEK_SET);
     util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
     buffer[buffer_size] = '\0';
   }
@@ -1235,7 +1235,7 @@ time_t ecl_util_get_start_date(const char * data_file) {
     int day, year, month_nr;
     if ( util_sscanf_int( stringlist_iget( tokens , 0 ) , &day)   &&   util_sscanf_int( stringlist_iget(tokens , 2) , &year)) {
       month_nr   = ecl_util_get_month_nr(stringlist_iget( tokens , 1));
-      start_date = util_make_date(day , month_nr , year );
+      start_date = ecl_util_make_date(day , month_nr , year );
     } else
       util_abort("%s: failed to parse DAY MONTH YEAR from : \"%s\" \n",__func__ , buffer);
     stringlist_free( tokens );
@@ -1249,44 +1249,91 @@ time_t ecl_util_get_start_date(const char * data_file) {
 }
 
 
+static int ecl_util_get_num_parallel_cpu__(parser_type* parser, FILE* stream, const char * data_file) {
+  int num_cpu = 1;
+  char * buffer;  
+  long int start_pos = util_ftell( stream );
+  int buffer_size;
 
-int ecl_util_get_num_cpu(const char * data_file) { 
-  parser_type * parser = parser_alloc(" \t\r\n" , "\"\'" , NULL , NULL , "--" , "\n");
-  int num_cpu        = 1;
-  FILE * stream      = util_fopen(data_file , "r");
-  char * buffer;
-  
-  if (parser_fseek_string( parser , stream , "PARALLEL" , true , true)) {  /* Seeks case insensitive. */
-    long int start_pos = ftell( stream );
-    int buffer_size;
+  /* Look for terminating '/' */
+  if (!parser_fseek_string( parser , stream , "/" , false , true))
+    util_abort("%s: sorry - could not find \"/\" termination of PARALLEL keyword in data_file: \n",__func__ , data_file);
 
-    /* Look for terminating '/' */
-    if (!parser_fseek_string( parser , stream , "/" , false , true))
-      util_abort("%s: sorry - could not find \"/\" termination of PARALLEL keyword in data_file: \n",__func__ , data_file);
-    
-    buffer_size = (ftell(stream) - start_pos)  ;
-    buffer = util_calloc( buffer_size + 1  , sizeof * buffer );
-    fseek( stream , start_pos , SEEK_SET);
-    util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
-    buffer[buffer_size] = '\0';
-  
+  buffer_size = (util_ftell(stream) - start_pos)  ;
+  buffer = util_calloc( buffer_size + 1  , sizeof * buffer );
+  util_fseek( stream , start_pos , SEEK_SET);
+  util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
+  buffer[buffer_size] = '\0';
+
+  {
+    stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , true );
+    int i;
+    char * item = NULL;
+    for (i=0; i < stringlist_get_size( tokens ); i++) {
+      item = util_realloc_string_copy( item , stringlist_iget( tokens , i ));
+      util_strupr( item );
+      if (( util_string_equal( item , "DISTRIBUTED" )) || 
+          ( util_string_equal( item , "DIST" ))) { 
+        num_cpu = atoi( stringlist_iget( tokens , i - 1));
+        break;
+      }
+    }
+    free( item );  
+    stringlist_free( tokens );
+  }  
+  free( buffer );
+  return num_cpu; 
+}
+
+
+
+static int ecl_util_get_num_slave_cpu__(parser_type* parser, FILE* stream, const char * data_file) {
+  int num_cpu = 0;
+  int linecount = 0; 
+
+  parser_fseek_string( parser , stream , "\n" , true , true);  /* Go to next line after the SLAVES keyword*/
+
+  while (true) {
+    char * buffer = util_fscanf_alloc_line( stream , NULL);
+    ++linecount; 
+    if (linecount > 10) 
+      util_abort("%s: Did not find ending \"/\" character after SLAVES keyword, aborting \n", __func__);
+
     {
       stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , true );
-      int i;
-      char * item = NULL;
-      for (i=0; i < stringlist_get_size( tokens ); i++) {
-        item = util_realloc_string_copy( item , stringlist_iget( tokens , i ));
-        util_strupr( item );
-        if (( util_string_equal( item , "DISTRIBUTED" )) || 
-            ( util_string_equal( item , "DIST" ))) { 
-          num_cpu = atoi( stringlist_iget( tokens , i - 1));
-          break;
+      if (stringlist_get_size(tokens) > 0 ) {
+        
+        const char * first_item = stringlist_iget(tokens, 0);
+        
+        if (first_item[0] == '/') {
+          break; 
         }
+        else 
+          ++num_cpu;
       }
-      free( item );  
       stringlist_free( tokens );
-    }  
+    }
+      
     free( buffer );
+  } 
+  
+  if (0 == num_cpu)
+    util_abort("%s: Did not any CPUs after SLAVES keyword, aborting \n", __func__);
+  return num_cpu; 
+}
+
+
+
+int ecl_util_get_num_cpu(const char * data_file) { 
+  int num_cpu = 1; 
+  parser_type * parser = parser_alloc(" \t\r\n" , "\"\'" , NULL , NULL , "--" , "\n");
+  FILE * stream = util_fopen(data_file , "r");
+  
+  if (parser_fseek_string( parser , stream , "PARALLEL" , true , true)) {  /* Seeks case insensitive. */
+    num_cpu = ecl_util_get_num_parallel_cpu__(parser, stream, data_file); 
+  } else if (parser_fseek_string( parser , stream , "SLAVES" , true , true)) {  /* Seeks case insensitive. */
+    num_cpu = ecl_util_get_num_slave_cpu__(parser, stream, data_file) + 1; 
+    fprintf(stderr, "Information: \"SLAVES\" option found, returning %d number of CPUs", num_cpu); 
   }
 
   parser_free( parser );
@@ -1322,6 +1369,33 @@ bool ecl_util_valid_basename( const char * basename ) {
     return false;
   else
     return true;
+}
+
+
+bool ecl_util_valid_basename_fmt(const char * basename_fmt)
+{
+  bool valid;
+  const char * percent_ptr = strchr(basename_fmt, '%');
+  if (percent_ptr) {
+    percent_ptr++;
+    while (true)
+    {
+      if (*percent_ptr == 'd')
+      {
+        char * basename_instance = util_alloc_sprintf(basename_fmt, 0);
+        valid = ecl_util_valid_basename(basename_instance);
+        free(basename_instance);
+        break;
+      } else if (!isdigit(*percent_ptr)) {
+        valid = false;
+        break;
+      } else
+        percent_ptr++;
+    }
+  } else
+    valid = ecl_util_valid_basename(basename_fmt);
+
+  return valid;
 }
 
 
@@ -1364,7 +1438,7 @@ void ecl_util_append_month_range( time_t_vector_type * date_list , time_t start_
       } else
         month += 1;
       
-      current_date = util_make_date( 1 , month , year );
+      current_date = ecl_util_make_date( 1 , month , year );
       if (current_date < end_date)
         time_t_vector_append( date_list , current_date );
       else {
@@ -1388,6 +1462,38 @@ void ecl_util_init_month_range( time_t_vector_type * date_list , time_t start_da
   ecl_util_append_month_range( date_list , start_date , end_date , true );
 }
 
+
+
+
+time_t ecl_util_make_date__(int mday , int month , int year, int * __year_offset) {
+time_t date;
+
+#ifdef TIME_T_64BIT_ACCEPT_PRE1970
+  *__year_offset = 0;
+  date = util_make_date(mday , month , year);
+#else
+  static bool offset_initialized = false;
+  static int  year_offset = 0;
+
+  if (!offset_initialized) {
+    if (year < 1970) {
+      year_offset = 2000 - year;
+      fprintf(stderr,"Warning: all year values will be shifted %d years forward. \n", year_offset);
+    }
+    offset_initialized = true;
+  }
+  *__year_offset = year_offset;
+  date = util_make_date(mday , month , year + year_offset);
+#endif
+
+  return date;
+}
+
+
+time_t ecl_util_make_date(int mday , int month , int year) {
+  int year_offset;
+  return ecl_util_make_date__( mday , month , year , &year_offset);
+}
 
 /*****************************************************************/
 /* Small functions to support enum introspection. */

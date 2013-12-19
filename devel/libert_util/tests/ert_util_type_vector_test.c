@@ -19,6 +19,7 @@
 #include <stdbool.h>
 
 #include <ert/util/int_vector.h>
+#include <ert/util/double_vector.h>
 #include <ert/util/test_util.h>
 
 void assert_equal( bool equal ) {
@@ -39,11 +40,30 @@ void test_div() {
 }
 
 
+void test_alloc() {
+  const int size = 100;
+  const int default_value = 77;
+  int_vector_type * v = int_vector_alloc(size , default_value);
+
+  test_assert_int_equal(size , int_vector_size(v));
+  for (int i=0; i < size; i++)
+    test_assert_int_equal( default_value , int_vector_iget( v , i));
+
+
+  int_vector_free( v);
+}
+
+
 
 int main(int argc , char ** argv) {
   
   int_vector_type * int_vector = int_vector_alloc( 0 , 99);
-  
+
+  test_assert_int_equal( -1 , int_vector_index(int_vector , 100));
+  test_assert_int_equal( -1 , int_vector_index_sorted(int_vector , 100));
+
+  test_assert_true( int_vector_is_instance( int_vector ));
+  test_assert_false( double_vector_is_instance( int_vector ));
   int_vector_iset( int_vector , 2 , 0);       
   int_vector_insert( int_vector , 2 , 77 );   
   int_vector_iset( int_vector , 5 , -10);     
@@ -112,7 +132,7 @@ int main(int argc , char ** argv) {
     int_vector_free( v1 );
     int_vector_free( v2 );
   }
-
+  test_alloc();
   test_div();
   exit(0);
 }
