@@ -38,6 +38,7 @@ class ctime(ctypes.c_long):
 
 
     def ctime(self):
+        """ @rtype: int """
         return self.value
 
     def time(self):
