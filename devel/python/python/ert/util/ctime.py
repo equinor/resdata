@@ -62,7 +62,11 @@ class ctime(ctypes.c_long):
         return not self >= other
 
     def __eq__(self, other):
-        return self.value == other.value
+        if isinstance(other , ctime):
+            return self.value == other.value
+        else:
+            return self.__eq__( ctime(other) )
+
 
     def __hash__(self):
         return hash(self.value)
