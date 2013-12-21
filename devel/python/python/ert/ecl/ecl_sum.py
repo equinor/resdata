@@ -368,7 +368,8 @@ class EclSum(BaseCClass):
     def blockedProduction(self , totalKey , timeRange):
         node = self.smspec_node(totalKey)
         if node.is_total():
-            pass
+            prod = DoubleVector()
+            return prod
         else:
             raise TypeError("The blockedProduction method must be called with one of the TOTAL keys like e.g. FOPT or GWIT")
 
