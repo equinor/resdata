@@ -25,6 +25,58 @@ class TimeVector(VectorTemplate):
         super(TimeVector, self).__init__(default_value, initial_size)
 
 
+    @classmethod
+    def createRegular(cls , start , end , deltaString):
+        """
+        The last element in the vector will be <= end; i.e. if the
+        question of whether the range is closed in the upper end
+        depends on the commensurability of the [start,end] interval
+        and the delta:
+
+        createRegular(0 , 10 , delta=3) => [0,3,6,9]
+        createRegular(0 , 10 , delta=2) => [0,2,4,6,8,10]
+        """
+        
+        deltaRegexp = re.compile("(?P<num>\d*)(?P<unit>[dmy])" , re.IGNORECASE)
+        matchObj = deltaRegexp.match( deltaString )
+        if matchObj:
+            try:
+                num = int(matchObj.group("num"))
+            except:
+                num = 1
+                
+            timeUnit = matchObj.group("unit").lower()
+            hour = start.hour
+            minute = start.minute
+            second = start.second
+
+            timeVector = TimeVector()
+            currentTime = start
+            while currentTime <= end:
+                timeVector.append( ctime.ctime( currentTime) )
+                if timeUnit == "d":
+                    td = datetime.timedelta( days = num )
+                    currentTime += td
+                else:
+                    day = currentTime.day
+                    month = currentTime.month
+                    year = currentTime.year
+
+                    if timeUnit == "y":
+                        year += num
+                    else:
+                        month += num - 1
+                        (deltaYear , newMonth) = divmod( month , 12 )
+                        month = newMonth + 1
+                        year += deltaYear
+                    
+                    currentTime = datetime.datetime(year , month , day , hour , minute , second )
+            return timeVector
+            
+        else:
+            raise TypeError("The delta string must be on form \'1d\', \'2m\', \'Y\' for one day, two months or one year respectively")
+
+
 #################################################################
 
 cwrapper = CWrapper(UTIL_LIB)
