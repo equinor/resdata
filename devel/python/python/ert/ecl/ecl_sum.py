@@ -365,6 +365,14 @@ class EclSum(BaseCClass):
             raise ValueError("Must supply either days or date")
 
 
+    def blockedProduction(self , totalKey , timeRange):
+        node = self.smspec_node(totalKey)
+        if node.is_total():
+            pass
+        else:
+            raise TypeError("The blockedProduction method must be called with one of the TOTAL keys like e.g. FOPT or GWIT")
+
+
     def get_report( self , date = None , days = None):
         """
         Will return the report step corresponding to input @date or @days.
