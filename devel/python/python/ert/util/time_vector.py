@@ -19,7 +19,7 @@ from ert.util import UTIL_LIB, VectorTemplate, ctime
 
 
 class TimeVector(VectorTemplate):
-    default_format = "%d"
+        default_format = "%d"
 
     def __init__(self, default_value=0, initial_size=0):
         super(TimeVector, self).__init__(default_value, initial_size)
@@ -38,6 +38,7 @@ class TimeVector(VectorTemplate):
             return (num , timeUnit)
         else:
             raise TypeError("The delta string must be on form \'1d\', \'2m\', \'Y\' for one day, two months or one year respectively")
+
 
 
     @classmethod
@@ -89,6 +90,7 @@ class TimeVector(VectorTemplate):
                 
                 currentTime = datetime.datetime(year , month , day , hour , minute , second )
         return timeVector
+                
 
 
 #################################################################
