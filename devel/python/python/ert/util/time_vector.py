@@ -24,6 +24,21 @@ class TimeVector(VectorTemplate):
     def __init__(self, default_value=0, initial_size=0):
         super(TimeVector, self).__init__(default_value, initial_size)
 
+    @classmethod
+    def parseTimeUnit(cls , deltaString):
+        deltaRegexp = re.compile("(?P<num>\d*)(?P<unit>[dmy])" , re.IGNORECASE)
+        matchObj = deltaRegexp.match( deltaString )
+        if matchObj:
+            try:
+                num = int(matchObj.group("num"))
+            except:
+                num = 1
+                
+            timeUnit = matchObj.group("unit").lower()
+            return (num , timeUnit)
+        else:
+            raise TypeError("The delta string must be on form \'1d\', \'2m\', \'Y\' for one day, two months or one year respectively")
+
 
     @classmethod
     def createRegular(cls , start , end , deltaString):
@@ -37,44 +52,43 @@ class TimeVector(VectorTemplate):
         createRegular(0 , 10 , delta=2) => [0,2,4,6,8,10]
         """
         
-        deltaRegexp = re.compile("(?P<num>\d*)(?P<unit>[dmy])" , re.IGNORECASE)
-        matchObj = deltaRegexp.match( deltaString )
-        if matchObj:
-            try:
-                num = int(matchObj.group("num"))
-            except:
-                num = 1
-                
-            timeUnit = matchObj.group("unit").lower()
+        (num , timeUnit) = cls.parseTimeUnit( deltaString )
+        try:
             hour = start.hour
             minute = start.minute
             second = start.second
+        except AttributeError:
+            # The start/end input are assumed to be datetime.date()
+            # instances; they do not mix as freely as wanted with the
+            # datetime.datetime() instances.
+            hour = 0
+            minute = 0
+            second = 0
+            start = datetime.datetime( start.year , start.month , start.day , hour , minute , second )
+            end = datetime.datetime( end.year , end.month , end.day , hour , minute , second )
 
-            timeVector = TimeVector()
-            currentTime = start
-            while currentTime <= end:
-                timeVector.append( ctime.ctime( currentTime) )
-                if timeUnit == "d":
-                    td = datetime.timedelta( days = num )
-                    currentTime += td
+        timeVector = TimeVector()
+        currentTime = start
+        while currentTime <= end:
+            timeVector.append( ctime.ctime( currentTime) )
+            if timeUnit == "d":
+                td = datetime.timedelta( days = num )
+                currentTime += td
+            else:
+                day = currentTime.day
+                month = currentTime.month
+                year = currentTime.year
+
+                if timeUnit == "y":
+                    year += num
                 else:
-                    day = currentTime.day
-                    month = currentTime.month
-                    year = currentTime.year
-
-                    if timeUnit == "y":
-                        year += num
-                    else:
-                        month += num - 1
-                        (deltaYear , newMonth) = divmod( month , 12 )
-                        month = newMonth + 1
-                        year += deltaYear
-                    
-                    currentTime = datetime.datetime(year , month , day , hour , minute , second )
-            return timeVector
-            
-        else:
-            raise TypeError("The delta string must be on form \'1d\', \'2m\', \'Y\' for one day, two months or one year respectively")
+                    month += num - 1
+                    (deltaYear , newMonth) = divmod( month , 12 )
+                    month = newMonth + 1
+                    year += deltaYear
+                
+                currentTime = datetime.datetime(year , month , day , hour , minute , second )
+        return timeVector
 
 
 #################################################################
