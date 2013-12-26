@@ -426,8 +426,7 @@ class EclSum(BaseCClass):
                     total.append( self.get_last_value( totalKey ))
                 else:
                     total.append( self.get_interp( totalKey , date = t ))
-            tmp = total.copy()
-            tmp.lshift(1)
+            tmp = total << 1
             total.pop()
             return tmp - total
         else:

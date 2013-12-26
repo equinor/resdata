@@ -17,9 +17,8 @@
 from ert.cwrap import CWrapper
 from ert.util import UTIL_LIB, VectorTemplate, ctime
 
-
-class TimeVector(VectorTemplate):
-        default_format = "%d"
+class TimeVector(TVector):
+    default_format = "%d"
 
     def __init__(self, default_value=0, initial_size=0):
         super(TimeVector, self).__init__(default_value, initial_size)
