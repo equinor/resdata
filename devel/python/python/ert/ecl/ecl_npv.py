@@ -19,7 +19,7 @@ from ert.ecl import EclSum
 
 
 class EclNPV(object):
-    totalKeyRE = re.compile("[[]([\w:,]+)[]]")
+    sumKeyRE = re.compile("[[]([\w:,]+)[]]")
 
 
     def __init__(self , baseCase):
@@ -50,12 +50,13 @@ class EclNPV(object):
     def getKeyList(self):
         return self.keyList
 
+
     def compile(self , expression):
         if expression.count("[") != expression.count("]"):
             raise ValueError("Expression:%s invalid - not mathcing [ and ]" % expression)
 
         self.keyList = []
-        for key in self.totalKeyRE.findall( expression ):
+        for key in self.sumKeyRE.findall( expression ):
             if self.baseCase.has_key( key ):
                 smspec = self.baseCase.smspec_node( key )
                 if not smspec.is_total:
@@ -63,3 +64,4 @@ class EclNPV(object):
             else:
                 raise KeyError("Summary case does not have key:%s" % key)
             self.keyList.append( key )
+        
