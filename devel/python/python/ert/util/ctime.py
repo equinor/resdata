@@ -59,10 +59,16 @@ class ctime(ctypes.c_long):
         return "%s" % (str(self.datetime()))
 
     def __ge__(self, other):
-        return self.value >= other.value
+        if isinstance(other , ctime):
+            return self.value >= other.value
+        else:
+            return self.__ge__( ctime(other))
 
     def __lt__(self, other):
-        return not self >= other
+        if isinstance(other , ctime):
+            return self.value < other.value
+        else:
+            return self.__lt__( ctime(other))
 
     def __eq__(self, other):
         if isinstance(other , ctime):
