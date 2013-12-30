@@ -17,6 +17,7 @@
 from ert.cwrap import CWrapper
 from ert.util import UTIL_LIB, VectorTemplate, ctime
 
+
 class TimeVector(TVector):
     default_format = "%d"
 
@@ -39,6 +40,36 @@ class TimeVector(TVector):
             raise TypeError("The delta string must be on form \'1d\', \'2m\', \'Y\' for one day, two months or one year respectively")
 
 
+    def nextTime(self , num , timeUnit ):
+        currentTime = self[-1].datetime()
+        hour = currentTime.hour
+        minute = currentTime.minute
+        second = currentTime.second
+
+        if timeUnit == "d":
+            td = datetime.timedelta( days = num )
+            currentTime += td
+        else:
+            day = currentTime.day
+            month = currentTime.month
+            year = currentTime.year
+
+            if timeUnit == "y":
+                year += num
+            else:
+                month += num - 1
+                (deltaYear , newMonth) = divmod( month , 12 )
+                month = newMonth + 1
+                year += deltaYear
+                
+            currentTime = datetime.datetime(year , month , day , hour , minute , second )
+        return currentTime
+
+
+    def appendTime(self , num , timeUnit):
+        next = self.nextTime( num , timeUnit )
+        self.append( ctime.ctime(next) )
+
 
     @classmethod
     def createRegular(cls , start , end , deltaString):
@@ -51,6 +82,8 @@ class TimeVector(TVector):
         createRegular(0 , 10 , delta=3) => [0,3,6,9]
         createRegular(0 , 10 , delta=2) => [0,2,4,6,8,10]
         """
+        if start > end:
+            raise ValueError("The time interval is invalid start is after end")
         
         (num , timeUnit) = cls.parseTimeUnit( deltaString )
         try:
@@ -69,25 +102,11 @@ class TimeVector(TVector):
 
         timeVector = TimeVector()
         currentTime = start
-        while currentTime <= end:
-            timeVector.append( ctime.ctime( currentTime) )
-            if timeUnit == "d":
-                td = datetime.timedelta( days = num )
-                currentTime += td
-            else:
-                day = currentTime.day
-                month = currentTime.month
-                year = currentTime.year
 
-                if timeUnit == "y":
-                    year += num
-                else:
-                    month += num - 1
-                    (deltaYear , newMonth) = divmod( month , 12 )
-                    month = newMonth + 1
-                    year += deltaYear
-                
-                currentTime = datetime.datetime(year , month , day , hour , minute , second )
+        while currentTime <= end:
+            timeVector.append( ctime.ctime( currentTime ))
+            currentTime = timeVector.nextTime( num , timeUnit )
+            
         return timeVector
                 
 
