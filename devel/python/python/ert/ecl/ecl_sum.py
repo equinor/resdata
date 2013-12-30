@@ -370,17 +370,16 @@ class EclSum(BaseCClass):
     
     def timeRange(self , start = None , end = None , interval = "1Y"):
         (num , timeUnit) = TimeVector.parseTimeUnit( interval )
+
         if start is None:
             start = self.start_time
-        else:
-            if isinstance(start , datetime.date):
-                start = datetime.datetime( start.year , start.month , start.day , 0 , 0 , 0 )
+        if isinstance(start , datetime.date):
+            start = datetime.datetime( start.year , start.month , start.day , 0 , 0 , 0 )
                 
         if end is None:
             end = self.end_time
-        else:
-            if isinstance(end , datetime.date):
-                end = datetime.datetime( end.year , end.month , end.day , 0 , 0 , 0 )
+        if isinstance(end , datetime.date):
+            end = datetime.datetime( end.year , end.month , end.day , 0 , 0 , 0 )
         
         if end < start:
             raise ValueError("Invalid time interval start after end")
@@ -410,9 +409,11 @@ class EclSum(BaseCClass):
             start = datetime.date( year1, month1 , day1)
             end =  datetime.date(year2 , month2 , day2)
                 
-        return TimeVector.createRegular(start , end , interval)
-
-
+        trange = TimeVector.createRegular(start , end , interval)
+        if trange[-1] < end:
+            trange.appendTime( num , timeUnit )
+        return trange
+        
 
 
     def blockedProduction(self , totalKey , timeRange):
