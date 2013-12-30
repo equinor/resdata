@@ -18,6 +18,23 @@ import re
 from ert.ecl import EclSum
 
 
+class NPVParseKey(object):
+    def __init__(self , eclNPV):
+        self.baseCase = eclNPV.baseCase
+        self.NPV = eclNPV
+
+
+    def __call__(self , matchObject):
+        key = matchObject.group(1)
+        smspecNode = self.baseCase.smspec_node( key )
+        if smspecNode.is_total:
+            self.NPV.addKey( key )
+            return key.replace(":" , "_") + "[i]"
+        else:
+            raise ValueError("Sorry - the key: %s is not a total key - aborting" % key)
+
+        
+
 class EclNPV(object):
     sumKeyRE = re.compile("[[]([\w:,]+)[]]")
 
@@ -29,7 +46,7 @@ class EclNPV(object):
         else:
             raise Error("Failed to open ECLIPSE sumamry case:%s" % baseCase)
         self.expression = None
-        self.keyList = []
+        self.keyList = {}
 
     
     def eval(self):
@@ -48,20 +65,22 @@ class EclNPV(object):
 
 
     def getKeyList(self):
-        return self.keyList
+        return self.keyList.keys()
+
+
+    def addKey(self , key):
+        self.keyList[key] = True
+
+
+    def parseExpression(self , expression):
+        self.keyList = {}
+        if expression.count("[") != expression.count("]"):
+            raise ValueError("Expression:%s invalid - not matching [ and ]" % expression)
+
+        replaceKey = NPVParseKey( self )
+        parsedExpression = self.sumKeyRE.sub( replaceKey , expression )
+        return parsedExpression
 
 
     def compile(self , expression):
-        if expression.count("[") != expression.count("]"):
-            raise ValueError("Expression:%s invalid - not mathcing [ and ]" % expression)
-
-        self.keyList = []
-        for key in self.sumKeyRE.findall( expression ):
-            if self.baseCase.has_key( key ):
-                smspec = self.baseCase.smspec_node( key )
-                if not smspec.is_total:
-                    raise KeyError("Key:%s is not a total quantity" % key)
-            else:
-                raise KeyError("Summary case does not have key:%s" % key)
-            self.keyList.append( key )
-        
+        parsedExpression = self.parseExpression( expression )
