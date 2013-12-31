@@ -28,8 +28,9 @@ class NPVParseKey(object):
         key = matchObject.group(1)
         smspecNode = self.baseCase.smspec_node( key )
         if smspecNode.is_total:
-            self.NPV.addKey( key )
-            return key.replace(":" , "_") + "[i]"
+            var = key.replace(":" , "_")
+            self.NPV.addKey( key , var )
+            return var + "[i]"
         else:
             raise ValueError("Sorry - the key: %s is not a total key - aborting" % key)
 
@@ -47,6 +48,9 @@ class EclNPV(object):
             raise Error("Failed to open ECLIPSE sumamry case:%s" % baseCase)
         self.expression = None
         self.keyList = {}
+        self.start = None
+        self.end = None
+        self.interval = "1Y"
 
     
     def eval(self):
@@ -68,9 +72,9 @@ class EclNPV(object):
         return self.keyList.keys()
 
 
-    def addKey(self , key):
-        self.keyList[key] = True
-
+    def addKey(self , key , var):
+        self.keyList[key] = var
+        
 
     def parseExpression(self , expression):
         self.keyList = {}
@@ -84,3 +88,22 @@ class EclNPV(object):
 
     def compile(self , expression):
         parsedExpression = self.parseExpression( expression )
+        self.code = "trange = self.baseCase.timeRange( self.start , self.end , self.interval)\n"  
+        for (key,var) in self.keyList.items():
+            self.code += "%s = self.baseCase.blockedProduction( \"%s\" , trange )\n" % (var , key)
+        
+        self.code += "npv = 0\n"
+        self.code += """
+for i in range(len(trange) - 1):
+   npv += %s
+varDict[\"npv\"] = npv
+""" % parsedExpression
+
+
+
+    def evalNPV(self):
+        byteCode = compile( self.code , "<string>" , 'exec')
+        varDict = {}
+        eval(byteCode)
+        return varDict["npv"]
+        
