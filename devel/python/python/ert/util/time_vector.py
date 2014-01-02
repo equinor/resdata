@@ -21,8 +21,17 @@ from ert.util import UTIL_LIB, VectorTemplate, ctime
 class TimeVector(TVector):
     default_format = "%d"
 
-    def __init__(self, default_value=0, initial_size=0):
-        super(TimeVector, self).__init__(default_value, initial_size)
+    def __init__(self, default_value=None, initial_size=0):
+        if default_value is None:
+            super(TimeVector, self).__init__(ctime.ctime(0), initial_size)
+        else:
+            try:
+                default = ctime.ctime( default_value )
+            except:
+                raise ValueError("default value invalid - must be type ctime() or date/datetime")
+            
+            super(TimeVector, self).__init__(default , initial_size)
+                
 
     @classmethod
     def parseTimeUnit(cls , deltaString):
@@ -108,6 +117,7 @@ class TimeVector(TVector):
             currentTime = timeVector.nextTime( num , timeUnit )
             
         return timeVector
+                
                 
 
 

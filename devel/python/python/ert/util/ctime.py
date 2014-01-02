@@ -23,7 +23,7 @@ import time
 from ert.cwrap import CWrapper
 
 
-class ctime(ctypes.c_long):
+class ctime(object):
     def __init__(self, value):
         if isinstance(value, types.IntType):
             self.value = value
@@ -39,6 +39,9 @@ class ctime(ctypes.c_long):
                     # Input value is assumed to be datetime.date instance
                     self.value = int(math.floor(time.mktime((value.year, value.month, value.day, 0, 0, 0, 0, 0, -1 ))))
 
+    @classmethod
+    def from_param(cls,obj):
+        return ctypes.c_long( obj.value )
 
     def ctime(self):
         """ @rtype: int """
@@ -76,16 +79,46 @@ class ctime(ctypes.c_long):
         else:
             return self.__eq__( ctime(other) )
 
+            
+    def __imul__(self , other):
+        value = int( self.value * other )
+        self.value = value
+        return self
 
     def __hash__(self):
         return hash(self.value)
 
+    def __iadd__(self , other):
+        if isinstance(other , ctime):
+            self.value += other.value
+            return self
+        else:
+            return self.__iadd__( ctime(other) )
+
+    def __add__(self,other):
+        copy = ctime( self )
+        copy += other
+        return copy
+
+    def __radd__(self,other):
+        return self.__add__(other)
+
+
+    def __mul__(self , other):
+        copy = ctime( self )
+        copy *= other
+        return copy
+
+    def __rmul__(self , other):
+        return self.__mul__( other )
+
+        
     @property
     def stripped(self):
         return time.strptime(self, "%Y-%m-%d %H:%M:S%")
 
 
 cwrapper = CWrapper(None)
-cwrapper.registerType("time_t", ctime)
-cwrapper.registerType("time_t*", ctypes.POINTER(ctime))
+cwrapper.registerType("time_t"  , ctime)
+cwrapper.registerType("time_t*" , ctypes.POINTER(ctypes.c_long))
 
