@@ -95,10 +95,11 @@ class EclSum(BaseCClass):
         try to load summary results also from the restarted case.
         """
         c_pointer = EclSum.cNamespace().fread_alloc( load_case , join_string , include_restart)
-        assert c_pointer is not None
-        super(EclSum, self).__init__(c_pointer)
-
-        self._initialize()
+        if c_pointer is None:
+            raise AssertionError("Failed to create summary instance from argument:%s" % load_case)
+        else:
+            super(EclSum, self).__init__(c_pointer)
+            self._initialize()
 
 
     def _initialize(self):
