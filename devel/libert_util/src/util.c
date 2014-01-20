@@ -4773,6 +4773,16 @@ void util_abort_signal(int signal) {
 }
 
 
+void util_install_signals(void) {
+  signal(SIGSEGV , util_abort_signal);    /* Segmentation violation, i.e. overwriting memory ... */
+  signal(SIGTERM , util_abort_signal);    /* If killing the enkf program with SIGTERM (the default kill signal) you will get a backtrace. 
+                                             Killing with SIGKILL (-9) will not give a backtrace.*/
+  signal(SIGABRT , util_abort_signal);    /* Signal abort. */ 
+  signal(SIGILL  , util_abort_signal);    /* Signal illegal instruction. */
+}
+
+
+
 void util_exit(const char * fmt , ...) {
   va_list ap;
   va_start(ap , fmt);
