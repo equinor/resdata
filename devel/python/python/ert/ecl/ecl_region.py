@@ -675,7 +675,7 @@ class EclRegion(CClass):
         """
         cfunc.select_outside_polygon( self , GeoPolygon( points ))
 
-    def deselect_outside_polygon( self , points ):
+    def deselect_inside_polygon( self , points ):
         """
         Will select all points outside polygon.
 
