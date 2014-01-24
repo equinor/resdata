@@ -632,7 +632,7 @@ class EclRegion(CClass):
 
         See method 'select_above_plane' for further documentation.
         """
-        (n_vec , p_vec) = self.__init_plane_deselect( n , p )
+        (n_vec , p_vec) = self.__init_plane_select( n , p )
         cfunc.deselect_above_plane( self , n_vec , p_vec )
 
     def deselect_below_plane( self , n , p):
@@ -641,7 +641,7 @@ class EclRegion(CClass):
         
         See method 'select_above_plane' for further documentation.
         """
-        (n_vec , p_vec) = self.__init_plane_deselect( n , p )
+        (n_vec , p_vec) = self.__init_plane_select( n , p )
         cfunc.deselect_below_plane( self , n_vec , p_vec )
 
     @select_method
@@ -917,6 +917,7 @@ cfunc.scale_kw_float               = cwrapper.prototype("void ecl_region_scale_k
 cfunc.scale_kw_double              = cwrapper.prototype("void ecl_region_scale_kw_double( ecl_region , ecl_kw , double , bool) ")
 
 cfunc.select_box                 = cwrapper.prototype("void ecl_region_select_from_ijkbox(ecl_region , int , int , int , int , int , int)")     
+cfunc.deselect_box               = cwrapper.prototype("void ecl_region_deselect_from_ijkbox(ecl_region , int , int , int , int , int , int)")     
 
 cfunc.imul_kw                    = cwrapper.prototype("void  ecl_region_kw_imul( ecl_region , ecl_kw , ecl_kw , bool)")
 cfunc.idiv_kw                    = cwrapper.prototype("void  ecl_region_kw_idiv( ecl_region , ecl_kw , ecl_kw , bool)")
