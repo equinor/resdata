@@ -810,6 +810,10 @@ class EclKW(CClass):
 
     
     @property
+    def type( self ):
+        return self.ecl_type
+
+    @property
     def type_name( self ):
         return EclUtil.type_name( self.ecl_type )
     
