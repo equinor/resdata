@@ -810,7 +810,7 @@ class EclRegion(CClass):
         IntVector instance with active indices in the region.
         """
         c_ptr = cfunc.get_active_list( self )
-        active_list = IntVector.createCReference( c_ptr )
+        active_list = IntVector.createCReference( c_ptr, self )
         return active_list
 
     @property
@@ -863,7 +863,7 @@ class EclRegion(CClass):
     
     def kw_index_list(self , ecl_kw , force_active):
         c_ptr = cfunc.get_kw_index_list( self , ecl_kw , force_active)
-        index_list = IntVector.createCReference( c_ptr )
+        index_list = IntVector.createCReference( c_ptr, self )
         return index_list
 
 
