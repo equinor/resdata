@@ -662,7 +662,7 @@ class EclRegion(CClass):
         the cells in the grid. The selection is based the top k=0
         layer, and then extending this selection to all k values; this
         implies that the selection polygon will effectively be
-        translated if the pillars are not vertical_error_bar.
+        translated if the pillars are not vertical.
         """
         cfunc.select_inside_polygon( self , GeoPolygon( points ))
 
