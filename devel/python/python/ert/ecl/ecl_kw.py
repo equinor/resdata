@@ -746,22 +746,6 @@ class EclKW(CClass):
 
     name = property( get_name , set_name )
 
-    @property
-    def type( self ):
-        # enum ecl_type_enum from ecl_util.h
-        if self.ecl_type == EclTypeEnum.ECL_CHAR_TYPE:
-            return "CHAR"
-        if self.ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
-            return "REAL"
-        if self.ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
-            return "DOUB"
-        if self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
-            return "INTE"
-        if self.ecl_type == EclTypeEnum.ECL_BOOL_TYPE:
-            return "BOOL"
-        if self.ecl_type == EclTypeEnum.ECL_MESS_TYPE:
-            return "MESS"
-
 
     @property    
     def min_max( self ):
