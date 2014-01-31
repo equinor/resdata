@@ -64,6 +64,9 @@ class ctime(ctypes.c_long):
     def __eq__(self, other):
         return self.value == other.value
 
+    def __hash__(self):
+        return hash(self.value)
+
     @property
     def stripped(self):
         return time.strptime(self, "%Y-%m-%d %H:%M:S%")

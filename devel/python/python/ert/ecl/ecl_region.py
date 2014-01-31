@@ -809,8 +809,8 @@ class EclRegion(CClass):
         """
         IntVector instance with active indices in the region.
         """
-        c_ptr = cfunc.get_active_list( self )
-        active_list = IntVector.asPythonReference( c_ptr , self )
+        active_list = cfunc.get_active_list(self)
+        active_list.setParent(self)
         return active_list
 
     @property
@@ -818,8 +818,6 @@ class EclRegion(CClass):
         """
         IntVector instance with global indices in the region.
         """
-        # c_ptr = cfunc.get_global_list( self )
-        # global_list = IntVector.asPythonReference( c_ptr , self )
         global_list = cfunc.get_global_list(self)
         global_list.setParent(self)
         return global_list
@@ -931,7 +929,7 @@ cfunc.subtract                   = cwrapper.prototype("void ecl_region_subtract(
 cfunc.xor                        = cwrapper.prototype("void ecl_region_xor( ecl_region , ecl_region )")
 
 cfunc.get_kw_index_list          = cwrapper.prototype("c_void_p ecl_region_get_kw_index_list( ecl_region , ecl_kw , bool )")
-cfunc.get_active_list            = cwrapper.prototype("c_void_p ecl_region_get_active_list( ecl_region )")
+cfunc.get_active_list            = cwrapper.prototype("int_vector_ref ecl_region_get_active_list( ecl_region )")
 cfunc.get_global_list            = cwrapper.prototype("int_vector_ref ecl_region_get_global_list( ecl_region )")
 cfunc.get_active_global          = cwrapper.prototype("c_void_p ecl_region_get_global_active_list( ecl_region )")
 

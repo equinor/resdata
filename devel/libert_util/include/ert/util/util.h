@@ -290,6 +290,7 @@ typedef enum {left_pad   = 0,
   void    util_exit(const char * fmt , ...);
   void    util_abort(const char * fmt , ...);
   void    util_abort_signal(int );
+  void    util_install_signals(void);
   void    util_abort_append_version_info(const char * );
   void    util_abort_free_version_info();
   void    util_abort_set_executable( const char * argv0 );
