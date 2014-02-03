@@ -39,6 +39,19 @@ void test_div() {
   }
 }
 
+void test_memcpy_from_data() {
+  int_vector_type * int_vector = int_vector_alloc( 10 , 77 );
+  int data[5] = {1,2,3,4,5};
+
+  int_vector_memcpy_from_data( int_vector , data , 5 );
+  test_assert_int_equal( 5 , int_vector_size( int_vector ));
+
+  for (int i=0; i < int_vector_size( int_vector ); i++) 
+    test_assert_int_equal( i + 1 , int_vector_iget( int_vector , i ));
+  
+  int_vector_free( int_vector );
+}
+
 
 void test_alloc() {
   const int size = 100;
@@ -134,5 +147,6 @@ int main(int argc , char ** argv) {
   }
   test_alloc();
   test_div();
+  test_memcpy_from_data();
   exit(0);
 }
