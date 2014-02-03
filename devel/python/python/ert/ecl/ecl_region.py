@@ -632,7 +632,7 @@ class EclRegion(CClass):
 
         See method 'select_above_plane' for further documentation.
         """
-        (n_vec , p_vec) = self.__init_plane_deselect( n , p )
+        (n_vec , p_vec) = self.__init_plane_select( n , p )
         cfunc.deselect_above_plane( self , n_vec , p_vec )
 
     def deselect_below_plane( self , n , p):
@@ -641,7 +641,7 @@ class EclRegion(CClass):
         
         See method 'select_above_plane' for further documentation.
         """
-        (n_vec , p_vec) = self.__init_plane_deselect( n , p )
+        (n_vec , p_vec) = self.__init_plane_select( n , p )
         cfunc.deselect_below_plane( self , n_vec , p_vec )
 
     @select_method
@@ -675,7 +675,7 @@ class EclRegion(CClass):
         """
         cfunc.select_outside_polygon( self , GeoPolygon( points ))
 
-    def deselect_outside_polygon( self , points ):
+    def deselect_inside_polygon( self , points ):
         """
         Will select all points outside polygon.
 
@@ -809,8 +809,8 @@ class EclRegion(CClass):
         """
         IntVector instance with active indices in the region.
         """
-        c_ptr = cfunc.get_active_list( self )
-        active_list = IntVector.asPythonReference( c_ptr , self )
+        active_list = cfunc.get_active_list(self)
+        active_list.setParent(self)
         return active_list
 
     @property
@@ -818,8 +818,6 @@ class EclRegion(CClass):
         """
         IntVector instance with global indices in the region.
         """
-        # c_ptr = cfunc.get_global_list( self )
-        # global_list = IntVector.asPythonReference( c_ptr , self )
         global_list = cfunc.get_global_list(self)
         global_list.setParent(self)
         return global_list
@@ -863,7 +861,7 @@ class EclRegion(CClass):
     
     def kw_index_list(self , ecl_kw , force_active):
         c_ptr = cfunc.get_kw_index_list( self , ecl_kw , force_active)
-        index_list = IntVector.asPythonReference( c_ptr , self )
+        index_list = IntVector.createCReference( c_ptr, self )
         return index_list
 
 
@@ -917,6 +915,7 @@ cfunc.scale_kw_float               = cwrapper.prototype("void ecl_region_scale_k
 cfunc.scale_kw_double              = cwrapper.prototype("void ecl_region_scale_kw_double( ecl_region , ecl_kw , double , bool) ")
 
 cfunc.select_box                 = cwrapper.prototype("void ecl_region_select_from_ijkbox(ecl_region , int , int , int , int , int , int)")     
+cfunc.deselect_box               = cwrapper.prototype("void ecl_region_deselect_from_ijkbox(ecl_region , int , int , int , int , int , int)")     
 
 cfunc.imul_kw                    = cwrapper.prototype("void  ecl_region_kw_imul( ecl_region , ecl_kw , ecl_kw , bool)")
 cfunc.idiv_kw                    = cwrapper.prototype("void  ecl_region_kw_idiv( ecl_region , ecl_kw , ecl_kw , bool)")
@@ -931,7 +930,7 @@ cfunc.subtract                   = cwrapper.prototype("void ecl_region_subtract(
 cfunc.xor                        = cwrapper.prototype("void ecl_region_xor( ecl_region , ecl_region )")
 
 cfunc.get_kw_index_list          = cwrapper.prototype("c_void_p ecl_region_get_kw_index_list( ecl_region , ecl_kw , bool )")
-cfunc.get_active_list            = cwrapper.prototype("c_void_p ecl_region_get_active_list( ecl_region )")
+cfunc.get_active_list            = cwrapper.prototype("int_vector_ref ecl_region_get_active_list( ecl_region )")
 cfunc.get_global_list            = cwrapper.prototype("int_vector_ref ecl_region_get_global_list( ecl_region )")
 cfunc.get_active_global          = cwrapper.prototype("c_void_p ecl_region_get_global_active_list( ecl_region )")
 
