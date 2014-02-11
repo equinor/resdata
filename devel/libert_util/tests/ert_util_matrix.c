@@ -22,6 +22,29 @@
 
 #include <ert/util/test_util.h>
 #include <ert/util/matrix.h>
+#include <ert/util/rng.h>
+#include <ert/util/mzran.h>
+
+
+void test_resize() {
+  matrix_type * m1 = matrix_alloc(5,5);
+  matrix_type * m2 = matrix_alloc(5,5);
+  rng_type * rng = rng_alloc( MZRAN , INIT_DEFAULT ); 
+
+  matrix_random_init( m1 , rng );
+  matrix_assign( m2 , m1 );
+  
+  test_assert_true( matrix_equal( m1 , m2 ));
+  matrix_resize( m1 , 5 , 5 , false );
+  test_assert_true( matrix_equal( m1 , m2 ));
+  matrix_resize( m1 , 5 , 5 , true );
+  test_assert_true( matrix_equal( m1 , m2 ));
+  
+  rng_free( rng );
+  matrix_free( m1 );
+  matrix_free( m2 );
+}
+
 
 
 
