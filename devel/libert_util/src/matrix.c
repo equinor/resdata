@@ -1283,6 +1283,22 @@ bool matrix_equal( const matrix_type * m1 , const matrix_type * m2) {
 }
 
 
+bool matrix_columns_equal( const matrix_type * m1 , int col1 , const matrix_type * m2 , int col2) {
+  if (m1->rows != m2->rows)
+    return false;
+
+  {    
+    int row;
+    for (row=0; row < m1->rows; row++) {
+      if (memcmp( &m1->data[ GET_INDEX(m1 , row , col1)]  , &m2->data[ GET_INDEX(m2 , row , col2)] , sizeof * m1->data) != 0)
+        return false;
+    }
+  }
+
+  return true;
+}
+
+
 /*****************************************************************/
 /* Various special matrices */
 
