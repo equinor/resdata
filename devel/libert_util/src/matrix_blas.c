@@ -206,6 +206,10 @@ void matrix_dgemm(matrix_type *C , const matrix_type *A , const matrix_type * B 
 
 
 
+void matrix_matmul_with_transpose(matrix_type * C, const matrix_type * A , const matrix_type * B , bool transA , bool transB) {
+  matrix_dgemm( C , A , B , transA , transB , 1 , 0);
+}
+
 
 /* 
    This function does a general matrix multiply of A * B, and stores
