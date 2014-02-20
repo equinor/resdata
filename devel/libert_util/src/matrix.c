@@ -193,17 +193,20 @@ static matrix_type * matrix_alloc_empty( ) {
   allocation fails.
 */
 static matrix_type * matrix_alloc_with_stride(int rows , int columns , int row_stride , int column_stride, bool safe_mode) {
-  matrix_type * matrix = matrix_alloc_empty();
-  matrix->data      = NULL;
-  matrix->data_size = 0;
-  matrix_init_header( matrix , rows , columns , row_stride , column_stride);
-  matrix->data_owner    = true;
-  matrix_realloc_data__( matrix  , safe_mode );
-  if (safe_mode) {
-    if (matrix->data == NULL) {  
-      /* Allocation failed - we return NULL */
-      matrix_free(matrix);
-      matrix = NULL;
+  matrix_type * matrix = NULL;
+  if ((rows > 0) && (columns > 0)) {
+    matrix = matrix_alloc_empty();
+    matrix->data      = NULL;
+    matrix->data_size = 0;
+    matrix_init_header( matrix , rows , columns , row_stride , column_stride);
+    matrix->data_owner    = true;
+    matrix_realloc_data__( matrix  , safe_mode );
+    if (safe_mode) {
+      if (matrix->data == NULL) {  
+        /* Allocation failed - we return NULL */
+        matrix_free(matrix);
+        matrix = NULL;
+      }
     }
   }
   return matrix;
