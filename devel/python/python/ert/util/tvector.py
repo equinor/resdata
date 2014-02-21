@@ -503,6 +503,16 @@ class BoolVector(TVector):
     def __init__(self, default_value=0, initial_size=0):
         super(BoolVector, self).__init__(default_value, initial_size)
 
+    def count(self, value=True):
+        """ @rtype: int """
+        count = 0
+
+        for b in self:
+            if b == value:
+                count += 1
+
+        return count
+
     @classmethod
     def active_mask(cls, range_string):
         """
