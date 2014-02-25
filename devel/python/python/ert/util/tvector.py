@@ -503,6 +503,10 @@ class BoolVector(TVector):
     def __init__(self, default_value=0, initial_size=0):
         super(BoolVector, self).__init__(default_value, initial_size)
 
+    def count(self, value=True):
+        """ @rtype: int """
+        return BoolVector.cNamespace().count_equal(self, value)
+
     @classmethod
     def active_mask(cls, range_string):
         """
@@ -708,6 +712,7 @@ BoolVector.cNamespace().get_default         = cwrapper.prototype("bool   bool_ve
 BoolVector.cNamespace().alloc_data_copy     = cwrapper.prototype("bool*  bool_vector_alloc_data_copy( bool_vector )")
 BoolVector.cNamespace().data_ptr            = cwrapper.prototype("bool*  bool_vector_get_ptr( bool_vector )")
 BoolVector.cNamespace().element_size        = cwrapper.prototype("int    bool_vector_element_size( bool_vector )")
+BoolVector.cNamespace().count_equal         = cwrapper.prototype("int    bool_vector_count_equal( bool_vector, bool)")
 
 BoolVector.cNamespace().create_active_mask = cwrapper.prototype("bool_vector_obj string_util_alloc_active_mask( char* )")
 BoolVector.cNamespace().update_active_mask = cwrapper.prototype("bool string_util_update_active_mask(char*, bool_vector)")
