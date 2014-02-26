@@ -299,6 +299,15 @@ class EclSum(BaseCClass):
         return EclSum.cNamespace().get_general_var( self , time_index , key )
 
 
+    def __len__(self):
+        """
+        The number of timesteps in the dataset; the return when evaluating
+        len(case).
+
+        """
+        return EclSum.cNamespace().data_length( self )
+
+
     def __getitem__(self , key):
         """
         Implements [] operator - @key should be a summary key.
