@@ -573,7 +573,10 @@ class IntVector(TVector):
         The empty list will evaluate to false
         """
         return cls.cNamespace().create_active_list(range_string)
-
+        
+    def count(self, value):
+        """ @rtype: int """
+        return IntVector.cNamespace().count_equal(self, value)
 
 
 class TimeVector(TVector):
@@ -676,7 +679,7 @@ IntVector.cNamespace().get_default         = cwrapper.prototype("int    int_vect
 IntVector.cNamespace().alloc_data_copy     = cwrapper.prototype("int*  int_vector_alloc_data_copy( int_vector )")
 IntVector.cNamespace().data_ptr            = cwrapper.prototype("int*  int_vector_get_ptr( int_vector )")
 IntVector.cNamespace().element_size        = cwrapper.prototype("int    int_vector_element_size( int_vector )")
-
+IntVector.cNamespace().count_equal         = cwrapper.prototype("int    int_vector_count_equal( int_vector, int)")
 IntVector.cNamespace().create_active_list = cwrapper.prototype("int_vector_obj string_util_alloc_active_list( char* )")
 
 
@@ -716,7 +719,6 @@ BoolVector.cNamespace().count_equal         = cwrapper.prototype("int    bool_ve
 
 BoolVector.cNamespace().create_active_mask = cwrapper.prototype("bool_vector_obj string_util_alloc_active_mask( char* )")
 BoolVector.cNamespace().update_active_mask = cwrapper.prototype("bool string_util_update_active_mask(char*, bool_vector)")
-
 
 TimeVector.cNamespace().alloc               = cwrapper.prototype("c_void_p time_t_vector_alloc(int, time_t )")
 TimeVector.cNamespace().alloc_copy          = cwrapper.prototype("time_t_vector_obj time_t_vector_alloc_copy(time_t_vector )")
