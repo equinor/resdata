@@ -67,6 +67,13 @@ void test_column_equal() {
 
 
 
+void test_create_invalid() {
+  test_assert_NULL( matrix_alloc(0, 100));
+  test_assert_NULL( matrix_alloc(100, 0));
+  test_assert_NULL( matrix_alloc(0, 0));
+  test_assert_NULL( matrix_alloc(-1, -1));
+}
+
 
 
 int main( int argc , char ** argv) {
@@ -74,10 +81,12 @@ int main( int argc , char ** argv) {
   const int columns = 13;
   matrix_type * m = matrix_alloc(rows , columns);
 
-  test_assert_true( matrix_check_dims(m , rows , columns));
+  test_assert_true(  matrix_check_dims(m , rows , columns));
   test_assert_false( matrix_check_dims(m , rows + 1 , columns));
   test_assert_false( matrix_check_dims(m , rows , columns + 1));
 
   matrix_free( m );
+  
+  test_create_invalid();
   exit(0);
 }
