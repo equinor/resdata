@@ -27,6 +27,9 @@ extern "C" {
 #define PORMOD_KW    "PORV_MOD"  
 
 #define PVTNUM_KW    "PVTNUM"
+#define LGRHEADI_KW  "LGRHEADI"
+#define LGRHEADI_LGR_NR_INDEX 0
+#define LGRJOIN_KW   "LGRJOIN" 
 
 /* 
    Observe that many of the elements in the INTEHEAD keyword is shared
@@ -286,6 +289,10 @@ extern "C" {
 #define NNCHEADA_ILOC1_INDEX 0     /*ILOC1: Index of first LGR*/
 #define NNCHEADA_ILOC2_INDEX 1     /*ILOC2: Index of second LGR*/
 #define NNA_NUMNNC_INDEX     0     /*Item 1 in NNA1 or NNA2 is number of NNCs*/  
+
+#define TRANNNC_KW     "TRANNNC"
+#define TRANGL_KW      "TRANGL"
+#define TRANLL_KW      "TRANLL"
 
 /* EGRID keywords */
 #define LGR_PARENT_KW  "LGRPARNT"   /* The name of the parent for an LGR. */

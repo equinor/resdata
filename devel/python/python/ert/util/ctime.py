@@ -38,6 +38,7 @@ class ctime(ctypes.c_long):
 
 
     def ctime(self):
+        """ @rtype: int """
         return self.value
 
     def time(self):
@@ -62,6 +63,9 @@ class ctime(ctypes.c_long):
 
     def __eq__(self, other):
         return self.value == other.value
+
+    def __hash__(self):
+        return hash(self.value)
 
     @property
     def stripped(self):
