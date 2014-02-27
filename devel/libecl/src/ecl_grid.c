@@ -493,33 +493,30 @@ increase 'towards the sky'; the safest is probaly to check this
 explicitly if it matters for the case at hand.
 */
 
-
-static const int tetrahedron_permutations[2][12][3] = {{{0 , 2 , 6},
-                                                        {0 , 4 , 6},
-                                                        {0 , 4 , 5},
-                                                        {0 , 1 , 5},
-                                                        {1 , 3 , 7},
-                                                        {1 , 5 , 7},
-                                                        {2 , 3 , 7},
-                                                        {2 , 6 , 7},
-                                                        {0 , 1 , 2},
-                                                        {1 , 2 , 3},
-                                                        {4 , 5 , 6},
-                                                        {5 , 6 , 7}},
-                                                       {{0 , 2 , 4},  
-                                                        {2 , 4 , 6},  
-                                                        {0 , 4 , 1},  
-                                                        {4 , 5 , 1},  
-                                                        {1 , 3 , 5},  
-                                                        {3 , 5 , 7},  
-                                                        {2 , 3 , 6},   
-                                                        {3 , 6 , 7},   
-                                                        {0 , 1 , 3},  
-                                                        {0 , 2 , 3},  
-                                                        {4 , 5 , 7},  
-                                                        {4 , 6 , 7}}};
-
-
+static const int tetrahedron_permutations[2][12][3] = {{{0,1,2},
+                                                        {3,2,1},
+                                                        {0,4,1},
+                                                        {5,1,4},
+                                                        {0,2,4},
+                                                        {6,4,2},
+                                                        {3,7,2},
+                                                        {6,2,7},
+                                                        {3,1,7},
+                                                        {5,7,1},
+                                                        {5,4,7},
+                                                        {6,7,4}},
+                                                       {{1,5,3},
+                                                        {1,3,0},
+                                                        {1,0,5},
+                                                        {2,0,3},
+                                                        {2,6,0},
+                                                        {2,3,6},
+                                                        {4,5,0},
+                                                        {4,6,5},
+                                                        {4,0,6},
+                                                        {7,5,6},
+                                                        {7,3,5},
+                                                        {7,6,3}}};
 
 /*
 
@@ -1035,14 +1032,14 @@ static double ecl_cell_get_volume( ecl_cell_type * cell ) {
 }
 
 
-
-static double ecl_cell_get_volume_wrong( ecl_cell_type * cell ) {
+static double ecl_cell_get_volume_tskille( ecl_cell_type * cell , int i , int j , int k) {
   ecl_cell_assert_center( cell );
   {
     tetrahedron_type tet;
     int              itet;
     double           volume = 0;
     for (itet = 0; itet < 12; itet++) {
+      
       /* 
          using both tetrahedron decompositions - gives good agreement
          with porv from eclipse init files.

@@ -24,7 +24,7 @@
 #include <ert/util/matrix.h>
 #include <ert/util/rng.h>
 #include <ert/util/mzran.h>
-
+#include <ert/util/matrix_lapack.h>
 
 void test_resize() {
   matrix_type * m1 = matrix_alloc(5,5);
@@ -67,6 +67,7 @@ void test_column_equal() {
 
 
 
+
 void test_create_invalid() {
   test_assert_NULL( matrix_alloc(0, 100));
   test_assert_NULL( matrix_alloc(100, 0));
@@ -76,7 +77,7 @@ void test_create_invalid() {
 
 
 
-int main( int argc , char ** argv) {
+void test_dims() {
   const int rows = 10;
   const int columns = 13;
   matrix_type * m = matrix_alloc(rows , columns);
@@ -86,7 +87,67 @@ int main( int argc , char ** argv) {
   test_assert_false( matrix_check_dims(m , rows , columns + 1));
 
   matrix_free( m );
-  
+}
+
+
+void test_det4() {
+  matrix_type * m = matrix_alloc(4  , 4 );
+  rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM ); 
+  for (int i=0; i < 10; i++) {
+    matrix_random_init( m , rng );
+    {
+      double det4 = matrix_det4( m );
+      double det = matrix_det( m );
+   
+      test_assert_double_equal( det , det4 );
+    }
+  }
+
+  matrix_free( m );
+  rng_free( rng );
+}
+
+
+void test_det3() {
+  matrix_type * m = matrix_alloc(3  , 3 );
+  rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM ); 
+  matrix_random_init( m , rng );
+
+  {
+    double det3 = matrix_det3( m );
+    double det = matrix_det( m );
+
+    test_assert_double_equal( det , det3 );
+  }
+
+  matrix_free( m );
+  rng_free( rng );
+}
+
+
+void test_det2() {
+  matrix_type * m = matrix_alloc(2,2);
+  rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM ); 
+  matrix_random_init( m , rng );
+  {
+    double det2 = matrix_det2( m );
+    double det = matrix_det( m );
+
+    test_assert_double_equal( det , det2 );
+  }
+  matrix_free( m );
+  rng_free( rng );
+}
+
+
+
+int main( int argc , char ** argv) {
   test_create_invalid();
+  test_resize();
+  test_column_equal();
+  test_dims();
+  test_det2();
+  test_det3();
+  test_det4();
   exit(0);
 }
