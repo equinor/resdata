@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <ert/util/util.h>
 
@@ -57,6 +58,11 @@ void point_compare( const point_type *p1 , const point_type * p2, bool * equal) 
 }
 
 
+bool point_equal( const point_type *p1 , const point_type * p2) {
+  return (memcmp( p1 , p2 , sizeof * p1 ) == 0);
+}
+
+
 void point_dump( const point_type * p , FILE * stream) {
   util_fwrite_double( p->x , stream );
   util_fwrite_double( p->y , stream );
@@ -64,8 +70,14 @@ void point_dump( const point_type * p , FILE * stream) {
 }
 
 
-void point_dump_ascii( const point_type * p , FILE * stream) {
-  fprintf(stream , "(%7.2f, %7.2f, %7.2f) " , p->x , p->y , p->z);
+void point_dump_ascii( const point_type * p , FILE * stream) {//, const double * offset) {
+  const double offset = NULL;
+
+  if (offset)
+    fprintf(stream , "(%7.2f, %7.2f, %7.2f) " , p->x - offset[0], p->y - offset[1] , p->z - offset[2]);
+  else
+    fprintf(stream , "(%7.2f, %7.2f, %7.2f) " , p->x , p->y , p->z);
+
 }
 
 
@@ -184,21 +196,21 @@ void point_normal_vector(point_type * n, const point_type * p0, const point_type
 
 /**
    This function calculates the (signed) distance from point 'p' to
-   the plane specifed by the plane vector 'n' andthe point
+   the plane specifed by the plane vector 'n' and the point
    'plane_point' which is part of the plane.
 */
 
 double point_plane_distance(const point_type * p , const point_type * n , const point_type * plane_point) {
   point_type * diff = point_alloc_diff( p , plane_point );
   double d = point_dot_product( n , diff );
-
-  printf("plane_point: "); point_fprintf( plane_point , stdout ); printf("\n");
-  printf("p:           "); point_fprintf( p , stdout );        printf("\n");
-  printf("diff:        "); point_fprintf( diff , stdout );        printf("\n");
   
-
   free( diff );
   return d;
 }
 
 
+double point3_plane_distance(const point_type * p0 , const point_type * p1 , const point_type * p2 , const point_type * x) {
+  point_type n;
+  point_normal_vector( &n , p0 , p1 , p2 );
+  return point_plane_distance( x , &n , p0 ) / sqrt( n.x*n.x + n.y*n.y + n.z*n.z);
+}
