@@ -1033,7 +1033,7 @@ static double ecl_cell_get_volume( ecl_cell_type * cell ) {
 
 
 static double ecl_cell_get_volume_tskille( ecl_cell_type * cell , int i , int j , int k) {
-  ecl_cell_assert_center( cell , i , j , k );
+  ecl_cell_assert_center( cell );
   {
     tetrahedron_type tet;
     int              itet;

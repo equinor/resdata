@@ -71,7 +71,7 @@ void point_dump( const point_type * p , FILE * stream) {
 
 
 void point_dump_ascii( const point_type * p , FILE * stream) {//, const double * offset) {
-  const double offset = NULL;
+  const double * offset = NULL;
 
   if (offset)
     fprintf(stream , "(%7.2f, %7.2f, %7.2f) " , p->x - offset[0], p->y - offset[1] , p->z - offset[2]);
