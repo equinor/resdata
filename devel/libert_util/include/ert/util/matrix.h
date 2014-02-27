@@ -132,6 +132,7 @@ typedef struct matrix_struct matrix_type;
   void          matrix_create_identiy(int n,matrix_type *Id);
   double        matrix_trace(const matrix_type *matrix);
   double        matrix_diag_std(const matrix_type * Sk,double mean);
+  double        matrix_det2( const matrix_type * A);
   double        matrix_det3( const matrix_type * A);
   double        matrix_det4( const matrix_type * A);
   
