@@ -63,6 +63,7 @@ extern "C" {
   bool            ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index , double x , double y , double z);
   bool            ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i , int j , int k, double x , double y , double z );
   double          ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_index );
+  double          ecl_grid_get_cell_volume1_tskille( const ecl_grid_type * ecl_grid, int global_index );
   double          ecl_grid_get_cell_volume3( const ecl_grid_type * ecl_grid, int i , int j , int k);
   bool            ecl_grid_cell_contains1(const ecl_grid_type * grid , int global_index , double x , double y , double z);
   bool            ecl_grid_cell_contains3(const ecl_grid_type * grid , int i , int j ,int k , double x , double y , double z);
@@ -136,8 +137,10 @@ extern "C" {
   double          ecl_grid_cell_invalid1A(const ecl_grid_type * grid , int active_index);
   
   void            ecl_grid_dump(const ecl_grid_type * grid , FILE * stream);
-  void            ecl_grid_dump_ascii(const ecl_grid_type * grid , bool active_only , FILE * stream);
-    
+  void            ecl_grid_dump_ascii(ecl_grid_type * grid , bool active_only , FILE * stream);
+  void ecl_grid_dump_ascii_cell1(ecl_grid_type * grid , int global_index , FILE * stream, const double * offset);
+  void ecl_grid_dump_ascii_cell3(ecl_grid_type * grid , int i , int j , int k , FILE * stream , const double * offset);
+
   /* lgr related functions */
   const ecl_grid_type   * ecl_grid_get_cell_lgr3(const ecl_grid_type * grid , int i, int j , int k);
   const ecl_grid_type   * ecl_grid_get_cell_lgr1A(const ecl_grid_type * grid , int active_index);
