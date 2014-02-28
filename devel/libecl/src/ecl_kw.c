@@ -1164,7 +1164,7 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 */
 void ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
   ecl_kw_alloc_data(ecl_kw);
-  return ecl_kw_fread_data(ecl_kw , fortio);
+  ecl_kw_fread_data(ecl_kw , fortio);
 }
 
 /**
@@ -1720,7 +1720,7 @@ void ecl_kw_get_data_as_float(const ecl_kw_type * ecl_kw , float * float_data) {
       const int * int_data = (const int *) ecl_kw->data;
       int i;
       for (i=0; i < ecl_kw->size; i++)
-        float_data[i] = int_data[i];
+        float_data[i] = (float) int_data[i];
     } else {
       fprintf(stderr,"%s: type can not be converted to float - aborting \n",__func__);
       ecl_kw_summarize(ecl_kw);
@@ -2349,7 +2349,7 @@ void ecl_kw_inplace_inv(ecl_kw_type * my_kw) {
       {
         float *my_float        = (float *)       my_data;
         for (i=0; i < size; i++)
-          my_float[i] = 1.0 / my_float[i];
+          my_float[i] = 1.0f / my_float[i];
         break;
       }
     default:
