@@ -1579,8 +1579,9 @@ double matrix_det4( const matrix_type * A) {
                               -a01*a13*a20*a32, 
                               -a02*a10*a23*a31, 
                               -a02*a11*a20*a33};
+      int i;
 
-      for (int i=0; i < 12; i++) 
+      for (i = 0; i < 12; i++) 
         det += (factors[i] + factors[i + 12]);
     }
     
