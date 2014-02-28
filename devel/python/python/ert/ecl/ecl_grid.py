@@ -432,6 +432,19 @@ class EclGrid(CClass):
         return cfunc.cell_contains( self , gi , x,y,z)
 
 
+    def cell_regular(self, active_index = None , global_index = None , ijk = None):
+        """
+        The ECLIPSE grid models often contain various degenerate cells,
+        which are twisted, have overlapping corners or what not. This
+        function gives a moderate sanity check on a cell, essentially
+        what the function does is to check if the cell contains it's
+        own centerpoint - which is actually not as trivial as it
+        sounds.
+        """
+        gi = self.__global_index( ijk = ijk , active_index = active_index , global_index = global_index)
+        return cfunc.cell_regular( self , gi )
+
+
     def cell_volume( self, active_index = None , global_index = None , ijk = None):
         """
         Calculate the volume of a cell.
@@ -751,6 +764,7 @@ cfunc.get_xyz1_corner              = cwrapper.prototype("void ecl_grid_get_corne
 cfunc.get_xyz1A                    = cwrapper.prototype("void ecl_grid_get_xyz1A( ecl_grid , int , double* , double* , double*)")
 cfunc.get_ijk_xyz                  = cwrapper.prototype("int  ecl_grid_get_global_index_from_xyz( ecl_grid , double , double , double , int)")
 cfunc.cell_contains                = cwrapper.prototype("bool ecl_grid_cell_contains_xyz1( ecl_grid , int , double , double , double )")
+cfunc.cell_regular                 = cwrapper.prototype("bool ecl_grid_cell_regular1( ecl_grid , int)")
 cfunc.num_lgr                      = cwrapper.prototype("int  ecl_grid_get_num_lgr( ecl_grid )")
 cfunc.has_lgr                      = cwrapper.prototype("bool ecl_grid_has_lgr( ecl_grid , char* )")
 cfunc.grid_value                   = cwrapper.prototype("double ecl_grid_get_property( ecl_grid , ecl_kw , int , int , int)")
