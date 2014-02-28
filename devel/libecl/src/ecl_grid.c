@@ -950,12 +950,13 @@ static void ecl_cell_init( ecl_cell_type * cell , bool init_valid) {
 }
 
 
-
+/*
 #define mod(x,n) ((x) % (n))
 static int ecl_cell_get_tetrahedron_method( int i , int j , int k) {
   return (1 + (1 - 2*mod(i,2)) * (1 - 2 * mod(j,2)) * (1 - 2*mod(k,2))) / 2;
 }
 #undef mod
+*/
 
 static void ecl_cell_set_center( ecl_cell_type * cell) {
   point_set(&cell->center , 0 , 0 , 0);
@@ -3098,10 +3099,8 @@ bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_in
     }
     
     {
-      const int method = ecl_cell_get_tetrahedron_method( i,j,k );
       double sign = 1.0;
       int plane_nr = 0;
-      tetrahedron_type tet;
       double signed_volume = ecl_cell_get_signed_volume( cell );
       if (fabs(signed_volume) > min_volume) {
         point_type * p0;
@@ -4106,9 +4105,7 @@ int ecl_grid_get_active_size( const ecl_grid_type * ecl_grid ) {
 
 
 bool ecl_grid_cell_regular1( const ecl_grid_type * ecl_grid, int global_index ) {
-  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
   double x,y,z;
-  
   ecl_grid_get_xyz1( ecl_grid , global_index , &x,&y,&z);
   return ecl_grid_cell_contains_xyz1( ecl_grid , global_index , x , y , z );
 }
