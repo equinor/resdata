@@ -3709,6 +3709,7 @@ void ecl_grid_get_xyz1A(const ecl_grid_type * grid , int active_index , double *
 
 double ecl_grid_get_cdepth1(const ecl_grid_type * grid , int global_index) {
   ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  ecl_cell_assert_center( cell );
   return cell->center.z;
 }
 
