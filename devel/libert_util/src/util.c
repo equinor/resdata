@@ -290,6 +290,16 @@ static bool EOL_CHAR(char c) {
 
 #undef strncpy // This is for some reason needed in RH3
 
+/*
+  The difference between /dev/random and /dev/urandom is that the
+  former will block if the entropy pool is close to empty:
+
+    util_fread_dev_random() : The 'best' quality random numbers, but
+       runtime can be quite long.
+
+    util_fread_dev_urandom(): Potentially lower quality random
+       numbers, but deterministic runtime.
+*/
 
 void util_fread_dev_random(int buffer_size , char * buffer) {
   FILE * stream = util_fopen("/dev/random" , "r");
@@ -4761,6 +4771,16 @@ char * util_realloc_sprintf(char * s , const char * fmt , ...) {
 void util_abort_signal(int signal) {
   util_abort("Program recieved signal:%d\n" , signal);
 }
+
+
+void util_install_signals(void) {
+  signal(SIGSEGV , util_abort_signal);    /* Segmentation violation, i.e. overwriting memory ... */
+  signal(SIGTERM , util_abort_signal);    /* If killing the enkf program with SIGTERM (the default kill signal) you will get a backtrace. 
+                                             Killing with SIGKILL (-9) will not give a backtrace.*/
+  signal(SIGABRT , util_abort_signal);    /* Signal abort. */ 
+  signal(SIGILL  , util_abort_signal);    /* Signal illegal instruction. */
+}
+
 
 
 void util_exit(const char * fmt , ...) {

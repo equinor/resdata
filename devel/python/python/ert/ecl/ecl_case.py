@@ -225,4 +225,4 @@ class EclCase:
 
         @type queue: EclQueue
         """
-        queue.submitDatafile( self.datafile )
+        queue.submitDataFile( self.datafile )

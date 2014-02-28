@@ -187,23 +187,33 @@ static void util_fprintf_backtrace(FILE * stream) {
 
 char * util_alloc_dump_filename() {
   time_t timestamp = time(NULL);
-  struct tm *converted = localtime(&timestamp);
   char day[32];
-  size_t last = strftime(day, 32, "%Y%m%d-%H%M%S", converted);
-  day[last] = '\0';
+  strftime(day, 32, "%Y%m%d-%H%M%S", localtime(&timestamp));
+  {
+    uid_t uid = getuid();
+    struct passwd *pwd = getpwuid(uid);
+    char * filename;
+    
+    if (pwd)
+      filename = util_alloc_sprintf("/tmp/ert_abort_dump.%s.%s.log", pwd->pw_name, day);
+    else
+      filename = util_alloc_sprintf("/tmp/ert_abort_dump.%d.%s.log", uid , day);
 
-  struct passwd *pwd = getpwuid(getuid());
-  char * filename = util_alloc_sprintf("/tmp/ert_abort_dump.%s.%s.log", pwd->pw_name, day);
-  return filename;
+    return filename;
+  }
 }
+
 
 void util_abort(const char * fmt , ...) {
   pthread_mutex_lock( &__abort_mutex ); /* Abort before unlock() */
   {
-    char * filename = util_alloc_dump_filename();
+    char * filename = NULL;
     FILE * abort_dump = NULL;
 
     if (!getenv("ERT_SHOW_BACKTRACE")) 
+      filename = util_alloc_dump_filename();
+
+    if (filename)
       abort_dump = fopen(filename, "w");
     
     if (abort_dump == NULL) 

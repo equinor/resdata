@@ -64,8 +64,10 @@ double tetrahedron_volume( const tetrahedron_type * tet ) {
 
   point_vector_cross( &b_x_c , &b , &c);
   
-  return fabs( point_dot_product( &a , &b_x_c) ) / 6.0;
+  return point_dot_product( &a , &b_x_c)  / 6.0;
 }
+
+
 
 
 /**
@@ -74,7 +76,7 @@ double tetrahedron_volume( const tetrahedron_type * tet ) {
 */
 
 static int __sign( double x) {
-  const double zero_tol = 1e-10;
+  const double zero_tol = 1e-8;
   if (fabs(x) < zero_tol)
     return 0;
   else if (x > 0) 
