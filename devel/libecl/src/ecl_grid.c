@@ -664,13 +664,21 @@ static void ecl_cell_dump( const ecl_cell_type * cell , FILE * stream) {
 }
 
 
-static void ecl_cell_dump_ascii( const ecl_cell_type * cell , int i , int j , int k , FILE * stream) {
+static void ecl_cell_assert_center( ecl_cell_type * cell);
+
+static void ecl_cell_dump_ascii( ecl_cell_type * cell , int i , int j , int k , FILE * stream , const double * offset) {
   fprintf(stream , "Cell: i:%3d  j:%3d    k:%3d   CoarseGroup:%4d active_nr:%6d\nCorners:\n",i,j,k,cell->coarse_group , cell->active_index[MATRIX_INDEX]);
+
+  ecl_cell_assert_center( cell );
+  fprintf(stream , "Center   : ");
+  point_dump_ascii( &cell->center , stream , offset);
+  fprintf(stream , "\n");
+
   {
     int l;
     for (l=0; l < 8; l++) {
       fprintf(stream , "Corner %d : ",l);
-      point_dump_ascii( &cell->corner_list[l] , stream );
+      point_dump_ascii( &cell->corner_list[l] , stream , offset);
       fprintf(stream , "\n");
     }
   }
@@ -2972,28 +2980,24 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
       ecl_cell_type *c1 = ecl_grid_get_cell( g1 , g );
       ecl_cell_type *c2 = ecl_grid_get_cell( g2 , g );
       ecl_cell_compare(c1 , c2 , &this_equal);
-      
+
       if (!this_equal) {
         if (verbose) {
           int i,j,k;
           ecl_grid_get_ijk1( g1 , g , &i , &j , &k);
-          if (i == 207 && j == 63) {
-            printf("Difference in cell: %d : %d,%d,%d  Volume:%g \n",g,i,j,k , ecl_cell_get_volume( c1 ));
-            printf("-----------------------------------------------------------------\n");
-            ecl_cell_dump_ascii( c1 , i , j , k , stdout );
-            printf("-----------------------------------------------------------------\n");
-            ecl_cell_dump_ascii( c2 , i , j , k , stdout );
-            printf("-----------------------------------------------------------------\n");
-            //break;
-          }
+
+          printf("Difference in cell: %d : %d,%d,%d  Volume:%g \n",g,i,j,k , ecl_cell_get_volume( c1 ));
+          printf("-----------------------------------------------------------------\n");
+          ecl_cell_dump_ascii( c1 , i , j , k , stdout , NULL);
+          printf("-----------------------------------------------------------------\n");
+          ecl_cell_dump_ascii( c2 , i , j , k , stdout , NULL );
+          printf("-----------------------------------------------------------------\n");
         }
         equal = false;
-        //break;
       }
 
     }
   }
-  
   return equal;
 }
 
@@ -4366,11 +4370,11 @@ static void ecl_grid_dump_ascii__(const ecl_grid_type * grid , bool active_only 
   {
     int l;
     for (l=0; l < grid->size; l++) {
-      const ecl_cell_type * cell = ecl_grid_get_cell( grid , l );
+      ecl_cell_type * cell = ecl_grid_get_cell( grid , l );
       if (cell->active_index[MATRIX_INDEX] >= 0 || !active_only) {
         int i,j,k;
         ecl_grid_get_ijk1( grid , l , &i , &j , &k);
-        ecl_cell_dump_ascii( cell , i,j,k , stream );
+        ecl_cell_dump_ascii( cell , i,j,k , stream , NULL);
       }
     }
   }
