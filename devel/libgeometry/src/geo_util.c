@@ -97,14 +97,16 @@ geo_util_xlines_status_enum geo_util_xlines( const double ** points , double * x
         return GEO_UTIL_LINES_PARALLELL;
     }
   } else {
+    double x,y;
+
     if ((dx1 == dx2) && (dx1 == 0)) {
       if (x1 == x3)
         return GEO_UTIL_LINES_OVERLAPPING;
       else
         return GEO_UTIL_LINES_PARALLELL;
     }
+
     // Only one of the lines is vertical - this will be a normal crossing.
-    double x,y;
     if (dx1 == 0) {
       double a2 = dy2 / dx2;
       y = y3 + a2*(x1 - x3);
