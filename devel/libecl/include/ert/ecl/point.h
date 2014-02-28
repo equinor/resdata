@@ -42,7 +42,7 @@ extern "C" {
   bool         point_equal( const point_type *p1 , const point_type * p2);
   void         point_compare( const point_type *p1 , const point_type * p2, bool * equal);
   void         point_dump( const point_type * p , FILE * stream);
-  void         point_dump_ascii( const point_type * p , FILE * stream);//, const double * offset);
+  void         point_dump_ascii( const point_type * p , FILE * stream , const double * offset);
   void         point_fprintf( const point_type * p , FILE * stream );
   void         point_free( point_type * p);
   void         point_set( point_type *p , double x , double y , double z);
