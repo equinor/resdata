@@ -751,11 +751,11 @@ double ecl_kw_iget_as_double(const ecl_kw_type * ecl_kw , int index) {
 
 float ecl_kw_iget_as_float(const ecl_kw_type * ecl_kw , int i) {
   if (ecl_kw->ecl_type == ECL_FLOAT_TYPE) 
-    return ecl_kw_iget_float( ecl_kw , i); /* Here the compiler will silently insert a float -> double conversion. */
+    return ecl_kw_iget_float( ecl_kw , i);
   else if (ecl_kw->ecl_type == ECL_DOUBLE_TYPE)
-    return ecl_kw_iget_double( ecl_kw, i);
+    return (float) ecl_kw_iget_double( ecl_kw, i);
   else {
-    util_abort("%s: can not be converted to double - no data for you! \n",__func__);
+    util_abort("%s: can not be converted to float - no data for you! \n",__func__);
     return -1;
   }
 }
