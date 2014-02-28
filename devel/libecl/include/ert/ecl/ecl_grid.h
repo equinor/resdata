@@ -184,6 +184,9 @@ extern "C" {
   bool             ecl_grid_dual_grid( const ecl_grid_type * ecl_grid );
   int              ecl_grid_get_num_nnc( const ecl_grid_type * grid );
 
+  bool ecl_grid_cell_regular3( const ecl_grid_type * ecl_grid, int i,int j,int k);
+  bool ecl_grid_cell_regular1( const ecl_grid_type * ecl_grid, int global_index);
+
   UTIL_IS_INSTANCE_HEADER( ecl_grid );
   
 #ifdef __cplusplus
