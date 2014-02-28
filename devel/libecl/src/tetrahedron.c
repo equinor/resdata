@@ -305,3 +305,11 @@ bool tetrahedron_contains( const tetrahedron_type * tet , const point_type * p) 
   matrix_free( D );
   return contains;
 }
+
+
+void tetrahedron_fprintf( const tetrahedron_type * tet , FILE * stream , const double* offset) {
+  fprintf(stream , "P0: "); point_dump_ascii( tet->p0 , stream , offset); fprintf(stream , "\n");
+  fprintf(stream , "P1: "); point_dump_ascii( tet->p1 , stream , offset); fprintf(stream , "\n");
+  fprintf(stream , "P2: "); point_dump_ascii( tet->p2 , stream , offset); fprintf(stream , "\n");
+  fprintf(stream , "P3: "); point_dump_ascii( tet->p3 , stream , offset); fprintf(stream , "\n");
+}
