@@ -1,5 +1,5 @@
-import libwell
-from   ert.cwrap.cwrap       import *
+from   ert.cwrap import CWrapper , CWrapperNameSpace
+from   ert.well import WELL_LIB
 
 class WellState:
     def __init__(self):
@@ -9,7 +9,7 @@ class WellState:
 
 
 # 2. Creating a wrapper object around the libwell library, 
-cwrapper = CWrapper( libwell.lib )
+cwrapper = CWrapper( WELL_LIB )
 cwrapper.registerType( "well_state" , WellState )
 
 
