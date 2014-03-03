@@ -45,13 +45,13 @@ clib.load("libz" , "libz.so.1")
 
 try:
     # First try to load without libg2c
-    clib.load("libblas.so" , "libblas.so.3")
-    clib.load("liblapack.so")
+    clib.load("libblas" , "libblas.so" , "libblas.so.3")
+    clib.load("liblapack" , "liblapack.so")
 except ImportError:
     # Then try to load with libg2c
     clib.load("libg2c.so.0")
-    clib.load("libblas.so" , "libblas.so.3")
-    clib.load("liblapack.so")
+    clib.load("libblas" , "libblas.so" , "libblas.so.3")
+    clib.load("liblapack" , "liblapack.so")
 
 UTIL_LIB = clib.ert_load("libert_util.so")
 
