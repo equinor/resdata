@@ -28,7 +28,7 @@ libecl/src directory.
 from ert.cwrap import BaseCClass, CWrapper
 from ert.ecl.ecl_sum_vector import EclSumVector
 from ert.ecl.ecl_smspec_node import EclSMSPECNode
-from ert.util import StringList, ctime, DoubleVector, TimeVector
+from ert.util import StringList, ctime, DoubleVector, TimeVector, IntVector
 from ert.ecl import ECL_LIB
 
 import numpy
@@ -119,20 +119,31 @@ class EclSum(BaseCClass):
             self.__mpl_dates[i] = date2num(self.__dates[i])
 
         index_list = self.report_index_list()
-        length = len(index_list)
+
+        length = len(index_list) - index_list.count(-1)
         self.__datesR = [0] * length
         self.__report_stepR = numpy.zeros(length, dtype=numpy.int32)
         self.__mini_stepR = numpy.zeros(length, dtype=numpy.int32)
         self.__daysR = numpy.zeros(length)
         self.__mpl_datesR = numpy.zeros(length)
 
-        for i in range(length):
-            time_index = index_list[i]
-            self.__daysR[i] = EclSum.cNamespace().iget_sim_days(self, time_index)
-            self.__datesR[i] = EclSum.cNamespace().iget_sim_time(self, time_index).datetime()
-            self.__report_stepR[i] = EclSum.cNamespace().iget_report_step(self, time_index)
-            self.__mini_stepR[i] = EclSum.cNamespace().iget_mini_step(self, time_index)
-            self.__mpl_datesR[i] = date2num(self.__datesR[i])
+        # Slightly hysterical heuristics to accomoate for the
+        # situation where there are holes in the report steps series;
+        # when a report step is completely missing there will be -1
+        # entries in the index_list.
+        i1 = 0
+        for i0 in range(length):
+            while True:
+                time_index = index_list[i1]
+                if time_index >= 0:
+                    break
+                i1 += 1
+                
+            self.__daysR[i0] = EclSum.cNamespace().iget_sim_days(self, time_index)
+            self.__datesR[i0] = EclSum.cNamespace().iget_sim_time(self, time_index).datetime()
+            self.__report_stepR[i0] = EclSum.cNamespace().iget_report_step(self, time_index)
+            self.__mini_stepR[i0] = EclSum.cNamespace().iget_mini_step(self, time_index)
+            self.__mpl_datesR[i0] = date2num(self.__datesR[i0])
 
 
     def get_vector( self , key , report_only = False):
@@ -157,7 +168,7 @@ class EclSum(BaseCClass):
         """
         first_report = self.first_report
         last_report  = self.last_report
-        index_list = []
+        index_list = IntVector()
         for report_step in range( first_report , last_report + 1):
             time_index = EclSum.cNamespace().get_report_end( self , report_step )
             index_list.append( time_index )
@@ -297,6 +308,15 @@ class EclSum(BaseCClass):
         natural to go via e.g. an EclSumVector instance.
         """
         return EclSum.cNamespace().get_general_var( self , time_index , key )
+
+
+    def __len__(self):
+        """
+        The number of timesteps in the dataset; the return when evaluating
+        len(case).
+
+        """
+        return EclSum.cNamespace().data_length( self )
 
 
     def __getitem__(self , key):
