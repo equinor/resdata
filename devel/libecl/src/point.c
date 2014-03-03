@@ -16,6 +16,7 @@
    for more details. 
 */
 
+#include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -40,7 +41,7 @@ void point_mapaxes_invtransform( point_type * p , const double origo[2], const d
   double dy     = p->y - origo[1];
 
 
-  double org_x  =  (dx*unit_y[1] - dy*unit_y[0])  * norm;
+  double org_x  =  ( dx*unit_y[1] - dy*unit_y[0]) * norm;
   double org_y  =  (-dx*unit_x[1] + dy*unit_x[0]) * norm;
   
   p->x = org_x;
@@ -49,14 +50,16 @@ void point_mapaxes_invtransform( point_type * p , const double origo[2], const d
 
 
 
-
 void point_compare( const point_type *p1 , const point_type * p2, bool * equal) {
-  const double tolerance = 0.0001;
-  if ((abs(p1->x - p2->x) + abs(p1->y - p2->y) + abs(p1->z - p2->z)) > tolerance) 
+  const double tolerance = 0.001;
+  
+  double diff_x = (abs(p1->x - p2->x) / abs(p1->x + p2->x + 1));
+  double diff_y = (abs(p1->y - p2->y) / abs(p1->y + p2->y + 1));
+  double diff_z = (abs(p1->z - p2->z) / abs(p1->z + p2->z + 1));
+  
+  if (diff_x + diff_y + diff_z > tolerance)
     *equal = false;
-
 }
-
 
 bool point_equal( const point_type *p1 , const point_type * p2) {
   return (memcmp( p1 , p2 , sizeof * p1 ) == 0);
@@ -70,9 +73,7 @@ void point_dump( const point_type * p , FILE * stream) {
 }
 
 
-void point_dump_ascii( const point_type * p , FILE * stream) {//, const double * offset) {
-  const double * offset = NULL;
-
+void point_dump_ascii( const point_type * p , FILE * stream , const double * offset) {
   if (offset)
     fprintf(stream , "(%7.2f, %7.2f, %7.2f) " , p->x - offset[0], p->y - offset[1] , p->z - offset[2]);
   else
