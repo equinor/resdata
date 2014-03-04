@@ -38,22 +38,18 @@ The modules included in the util package are:
 
 import ert.cwrap.clib as clib
 
-clib.load("libz" , "libz.so.1")
+# The libert_util library requires the libraries libz, libblas and
+# liblapack. It is assumed that the library has been compiled with a
+# suitable RPATH option (i.e. ERT_USE_RPATH has been set to True in
+# the build process) and we 'just' load the final libert_util library
+# directly. In principle it would be possible preload these libraries
+# with calls like:
+#
+# clib.load("libz" , "libz.so.1")
+# clib.load("libblas" , "libblas.so" , "libblas.so.3")
+# clib.load("liblapack" , "liblapack.so")
 
-# Depending on the Fortran compiler which has been used to compile
-# blas / lapack the there might be an additional dependency on libg2c:
-
-try:
-    # First try to load without libg2c
-    clib.load("libblas" , "libblas.so" , "libblas.so.3")
-    clib.load("liblapack" , "liblapack.so")
-except ImportError:
-    # Then try to load with libg2c
-    clib.load("libg2c.so.0")
-    clib.load("libblas" , "libblas.so" , "libblas.so.3")
-    clib.load("liblapack" , "liblapack.so")
-
-UTIL_LIB = clib.ert_load("libert_util.so")
+UTIL_LIB = clib.ert_load("libert_util")
 
 from .enums import RngAlgTypeEnum, RngInitModeEnum
 
