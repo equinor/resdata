@@ -296,7 +296,12 @@ int geo_surface_get_size( const geo_surface_type * surface ) {
 }
 
 
-
+bool geo_surface_equal( const geo_surface_type * surface1 , const geo_surface_type * surface2) {
+  if (geo_surface_equal_header(surface1 , surface2)) 
+    return geo_pointset_equal( surface1->pointset , surface2->pointset);
+  else
+    return false;
+}
 
 
 
