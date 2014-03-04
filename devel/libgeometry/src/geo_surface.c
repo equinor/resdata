@@ -148,7 +148,7 @@ static void geo_surface_fprintf_zcoord( const geo_surface_type * surface , FILE 
 
 
 static void geo_surface_fprintf_irap__( const geo_surface_type * surface, const char * filename , const double * zcoord) {
-  FILE * stream = util_fopen( filename , "w");
+  FILE * stream = util_mkdir_fopen( filename , "w");
   {
     geo_surface_fprintf_irap_header( surface , stream );
     geo_surface_fprintf_zcoord( surface , stream,  zcoord );
