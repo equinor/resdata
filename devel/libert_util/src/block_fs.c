@@ -643,7 +643,13 @@ static void block_fs_reinit( block_fs_type * block_fs ) {
 
 
 
-static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block_size , int max_cache_size, float fragmentation_limit, int fsync_interval , bool read_only) {
+static block_fs_type * block_fs_alloc_empty( const char * mount_file ,
+                                             int block_size ,
+                                             int max_cache_size,
+                                             float fragmentation_limit,
+                                             int fsync_interval ,
+                                             bool read_only,
+                                             bool block_level_lock) {
   block_fs_type * block_fs      = util_malloc( sizeof * block_fs );
   UTIL_TYPE_ID_INIT(block_fs , BLOCK_FS_TYPE_ID);
   
@@ -674,13 +680,15 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file , int block
 
   if (read_only)
     block_fs->data_owner = false;
-  else {
+  else if (block_level_lock) {
     block_fs->data_owner = util_try_lockf( block_fs->lock_file , S_IWUSR + S_IWGRP , &block_fs->lock_fd);
     block_fs->index_time = time( NULL );
     
     if (!block_fs->data_owner) 
       fprintf(stderr," Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only. Cross your fingers ....\n");
     fflush( stderr );
+  } else {
+    block_fs->data_owner = true; //locked on fs level
   }
   
   return block_fs;
@@ -1044,7 +1052,14 @@ bool block_fs_is_mount( const char * mount_file ) {
 
 
 
-block_fs_type * block_fs_mount( const char * mount_file , int block_size , int max_cache_size , float fragmentation_limit , int fsync_interval , bool preload , bool read_only) {
+block_fs_type * block_fs_mount( const char * mount_file ,
+                                int block_size ,
+                                int max_cache_size ,
+                                float fragmentation_limit ,
+                                int fsync_interval ,
+                                bool preload ,
+                                bool read_only,
+                                bool block_level_lock) {
   block_fs_type * block_fs;
   {
 
@@ -1053,7 +1068,7 @@ block_fs_type * block_fs_mount( const char * mount_file , int block_size , int m
       block_fs_fwrite_mount_info__( mount_file , 0 );
     {
       long_vector_type * fix_nodes = long_vector_alloc(0 , 0);
-      block_fs = block_fs_alloc_empty( mount_file , block_size , max_cache_size , fragmentation_limit , fsync_interval , read_only);
+      block_fs = block_fs_alloc_empty( mount_file , block_size , max_cache_size , fragmentation_limit , fsync_interval , read_only, block_level_lock);
       /* We build up the index & free_nodes_list based on the header/index information embedded in the datafile. */
       block_fs_open_data( block_fs , false );
       if (block_fs->data_stream != NULL) {
