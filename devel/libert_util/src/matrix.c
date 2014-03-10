@@ -1491,6 +1491,20 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
    LAPACK dependency.
 */
 
+double matrix_det2( const matrix_type * A) {
+  if ((A->rows == 2) && (A->columns == 2)) {
+    double a00 = A->data[GET_INDEX(A,0,0)];
+    double a01 = A->data[GET_INDEX(A,0,1)];
+    double a10 = A->data[GET_INDEX(A,1,0)];
+    double a11 = A->data[GET_INDEX(A,1,1)];
+
+    return a00 * a11 - a10 * a01;
+  } else {
+    util_abort("%s: hardcoded for 2x2 matrices A is: %d x %d \n",__func__, A->rows , A->columns); 
+    return 0;
+  }
+}
+
 double matrix_det3( const matrix_type * A) {
   if ((A->rows == 3) && (A->columns == 3)) {
     double a = A->data[GET_INDEX(A,0,0)];
@@ -1531,11 +1545,45 @@ double matrix_det4( const matrix_type * A) {
     double a31 = A->data[GET_INDEX(A,3,1)];
     double a32 = A->data[GET_INDEX(A,3,2)];
     double a33 = A->data[GET_INDEX(A,3,3)];
-
+    
+    /*
     double det = (a00*(a11*(a22*a33 - a23*a32)-a12*(a21*a33 - a23*a31)+a13*(a21*a32 - a22*a31)) -
                   a01*(a10*(a22*a33 - a23*a32)-a12*(a20*a33 - a23*a30)+a13*(a20*a32 - a22*a30)) + 
                   a02*(a10*(a21*a33 - a23*a31)-a11*(a20*a33 - a23*a30)+a13*(a20*a31 - a21*a30)) - 
                   a03*(a10*(a21*a32 - a22*a31)-a11*(a20*a32 - a22*a30)+a12*(a20*a31 - a21*a30)));
+    */
+    double det = 0;
+
+    {
+      double factors[24] = {   a00*a12*a23*a31,
+                               a00*a13*a21*a32,
+                               a00*a11*a22*a33,
+                               a01*a10*a23*a32,
+                               a01*a12*a20*a33,
+                               a01*a13*a22*a30,
+                               a02*a10*a21*a33,
+                               a02*a11*a23*a30,
+                               a02*a13*a20*a31,
+                               a03*a10*a22*a31,
+                               a03*a11*a20*a32,
+                               a03*a12*a21*a30 
+                              -a02*a13*a21*a30,
+                              -a03*a10*a21*a32, 
+                              -a03*a11*a22*a30, 
+                              -a03*a12*a20*a31, 
+                              -a00*a11*a23*a32,
+                              -a00*a12*a21*a33,
+                              -a00*a13*a22*a31,
+                              -a01*a10*a22*a33, 
+                              -a01*a12*a23*a30, 
+                              -a01*a13*a20*a32, 
+                              -a02*a10*a23*a31, 
+                              -a02*a11*a20*a33};
+      int i;
+
+      for (i = 0; i < 12; i++) 
+        det += (factors[i] + factors[i + 12]);
+    }
     
     return det;
   } else {

@@ -76,7 +76,7 @@ import ert.geo
 
 
 
-ECL_LIB = clib.ert_load("libecl.so")
+ECL_LIB = clib.ert_load("libecl")
 
 from .ecl_sum import EclSum #, EclSumVector, EclSumNode, EclSMSPECNode
 from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclTypeEnum, EclUtil
