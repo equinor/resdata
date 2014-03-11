@@ -439,13 +439,16 @@ class EclFile(CClass):
         [1]: For working with summary data you are probably better off
              using the EclSum class.
         """
-        kw_c_ptr = cfunc.iget_named_kw( self , kw_name , index )
-        ecl_kw = EclKW.wrap( kw_c_ptr , parent = self , data_owner = False)
+        if index < self.num_named_kw( kw_name ):
+            kw_c_ptr = cfunc.iget_named_kw( self , kw_name , index )
+            ecl_kw = EclKW.wrap( kw_c_ptr , parent = self , data_owner = False)
         
-        if copy:
-            return EclKW.copy( ecl_kw )
+            if copy:
+                return EclKW.copy( ecl_kw )
+            else:
+                return ecl_kw
         else:
-            return ecl_kw
+            raise KeyError("Asked for occurence:%d of keyword:%s - max:%d" % (index  , kw_name , self.num_named_kw( kw_name )))
 
 
     def restart_get_kw( self , kw_name , dtime , copy = False):

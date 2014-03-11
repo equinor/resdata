@@ -656,7 +656,7 @@ class EclRegion(CClass):
         (100,100) the @points list should be:
 
            points = [(0,0) , (0,100) , (100,100) ,  (100,0)]
-
+        
         The elements in the points list should be (utm_x, utm_y)
         values. These values will be compared with the centerpoints of
         the cells in the grid. The selection is based the top k=0
@@ -971,10 +971,10 @@ cfunc.select_below_plane        = cwrapper.prototype("void ecl_region_select_bel
 cfunc.deselect_above_plane      = cwrapper.prototype("void ecl_region_deselect_above_plane( ecl_region, double* , double* )")
 cfunc.deselect_below_plane      = cwrapper.prototype("void ecl_region_deselect_below_plane( ecl_region, double* , double* )")
 
-cfunc.select_inside_polygon     = cwrapper.prototype("void ecl_region_select_inside_polygon( ecl_region , double* , double* , int )")
-cfunc.select_outside_polygon    = cwrapper.prototype("void ecl_region_select_outside_polygon( ecl_region , double* , double* , int )")
-cfunc.deselect_inside_polygon   = cwrapper.prototype("void ecl_region_deselect_inside_polygon( ecl_region , double* , double* , int )")
-cfunc.deselect_outside_polygon  = cwrapper.prototype("void ecl_region_deselect_outside_polygon( ecl_region , double* , double* , int )")
+cfunc.select_inside_polygon     = cwrapper.prototype("void ecl_region_select_inside_polygon( ecl_region , geo_polygon)")
+cfunc.select_outside_polygon    = cwrapper.prototype("void ecl_region_select_outside_polygon( ecl_region , geo_polygon)")
+cfunc.deselect_inside_polygon   = cwrapper.prototype("void ecl_region_deselect_inside_polygon( ecl_region , geo_polygon)")
+cfunc.deselect_outside_polygon  = cwrapper.prototype("void ecl_region_deselect_outside_polygon( ecl_region , geo_polygon)")
 
 cfunc.set_name                  = cwrapper.prototype("void  ecl_region_set_name( ecl_region , char*)")
 cfunc.get_name                  = cwrapper.prototype("char* ecl_region_get_name( ecl_region )")

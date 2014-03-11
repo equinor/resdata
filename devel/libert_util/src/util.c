@@ -543,8 +543,10 @@ bool util_fseek_string(FILE * stream , const char * __string , bool skip_string 
     
     
     if (string_found) {
-      if (!skip_string)
-        util_fseek(stream , -strlen(string) , SEEK_CUR); /* Reposition to the beginning of 'string' */
+      if (!skip_string) {
+        offset_type offset = (offset_type) strlen(string);
+        util_fseek(stream , -offset , SEEK_CUR); /* Reposition to the beginning of 'string' */
+      }
     } else
       util_fseek(stream , initial_pos , SEEK_SET);       /* Could not find the string reposition at initial position. */
     
@@ -4054,7 +4056,7 @@ void util_float_to_double(double *double_ptr , const float *float_ptr , int size
 void util_double_to_float(float *float_ptr , const double *double_ptr , int size) {
   int i;
   for (i=0; i < size; i++)
-    float_ptr[i] = double_ptr[i];
+    float_ptr[i] = (float) double_ptr[i];
 }
 
 

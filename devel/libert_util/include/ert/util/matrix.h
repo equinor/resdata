@@ -111,6 +111,7 @@ typedef struct matrix_struct matrix_type;
   void          matrix_get_dims(const matrix_type * matrix ,  int * rows , int * columns , int * row_stride , int * column_stride);
   bool          matrix_is_quadratic(const matrix_type * matrix);
   bool          matrix_equal( const matrix_type * m1 , const matrix_type * m2);
+  bool          matrix_columns_equal( const matrix_type * m1 , int col1 , const matrix_type * m2 , int col2);
   
   void          matrix_diag_set_scalar(matrix_type * matrix , double value);
   void          matrix_diag_set(matrix_type * matrix , const double * diag);
@@ -131,6 +132,7 @@ typedef struct matrix_struct matrix_type;
   void          matrix_create_identiy(int n,matrix_type *Id);
   double        matrix_trace(const matrix_type *matrix);
   double        matrix_diag_std(const matrix_type * Sk,double mean);
+  double        matrix_det2( const matrix_type * A);
   double        matrix_det3( const matrix_type * A);
   double        matrix_det4( const matrix_type * A);
   

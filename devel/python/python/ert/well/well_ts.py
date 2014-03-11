@@ -1,6 +1,5 @@
-import libwell
-from   ert.cwrap.cwrap       import *
-import well_ts
+from   ert.cwrap import CWrapper , CWrapperNameSpace
+from   ert.well import WELL_LIB
 
 
 class WellTS:
@@ -12,7 +11,7 @@ class WellTS:
 
 
 # 2. Creating a wrapper object around the libecl library, 
-cwrapper = CWrapper( libwell.lib )
+cwrapper = CWrapper( WELL_LIB )
 cwrapper.registerType( "well_ts" , WellTS )
 
 
