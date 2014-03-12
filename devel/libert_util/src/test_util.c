@@ -251,4 +251,24 @@ void test_util_addr2line() {
   test_assert_string_equal( file_name , file );
 }
 
+
+void test_assert_util_abort(const char * function_name , void call_func (void *) , void * arg) {
+  bool util_abort_intercepted = false;
+
+  {
+    jmp_buf * context = util_abort_test_jump_buffer();
+    util_abort_test_set_intercept_function( function_name );
+    
+    if (setjmp(*context) == 0) 
+      call_func( arg );
+    else 
+      util_abort_intercepted = true;
+    
+    util_abort_test_set_intercept_function( NULL );
+  }
+
+  test_assert_true( util_abort_intercepted );
+}
+
+
 #endif

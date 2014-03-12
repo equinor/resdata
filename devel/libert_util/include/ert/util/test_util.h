@@ -99,7 +99,9 @@ extern "C" {
 
 
 #ifdef HAVE_UTIL_ABORT
+#include <setjmp.h>
   void test_util_addr2line();
+  void test_assert_util_abort(const char * function_name , void (void *) , void * arg);
 #endif
 
   void test_install_SIGNALS(void);
