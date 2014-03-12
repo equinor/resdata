@@ -267,7 +267,10 @@ void test_assert_util_abort(const char * function_name , void call_func (void *)
     util_abort_test_set_intercept_function( NULL );
   }
 
-  test_assert_true( util_abort_intercepted );
+  if (!util_abort_intercepted) {
+    fprintf(stderr,"Expected call to util_abort() from:%s missing \n",function_name);
+    test_assert_true( util_abort_intercepted );
+  }
 }
 
 
