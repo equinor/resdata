@@ -602,7 +602,7 @@ bool parser_fseek_string(const parser_type * parser , FILE * stream , const char
     bool cont                = true;
     
     if (strstr( string , parser->comment_start ) != NULL)
-      util_abort("%s: sorry the string contains a comment start - will never find it ... \n"); /* A bit harsh ?? */
+      util_abort("%s: sorry the string contains a comment start - will never find it ... \n",__func__); /* A bit harsh ?? */
     
     do {
       int c = fgetc( stream );
