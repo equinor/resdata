@@ -171,7 +171,7 @@ struct block_fs_struct {
 
 static void block_fs_rotate__( block_fs_type * block_fs );
 
-
+UTIL_SAFE_CAST_FUNCTION( block_fs , BLOCK_FS_TYPE_ID )
 
 
 static inline void fseek__(FILE * stream , long int arg , int whence) {

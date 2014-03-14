@@ -68,6 +68,7 @@ extern "C" {
   const char *    user_file_node_get_filename( const user_file_node_type * user_file_node );
 
 UTIL_IS_INSTANCE_HEADER( block_fs );
+UTIL_SAFE_CAST_HEADER( block_fs );
 #ifdef __cplusplus
 }
 #endif
