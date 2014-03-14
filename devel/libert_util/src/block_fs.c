@@ -163,7 +163,6 @@ struct block_fs_struct {
                                             fragmentation_limit == 1.0 : Never rotate.
                                             fragmentation_limit == 0.0 : Rotate when one byte is wasted. */
   bool             data_owner;
-  time_t           index_time;   
   int              fsync_interval;  /* 0: never  n: every nth iteration. */
 };
 
@@ -684,7 +683,6 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file ,
 
     if (use_lockfile) {
       lock_aquired = util_try_lockf( block_fs->lock_file , S_IWUSR + S_IWGRP , &block_fs->lock_fd);
-      block_fs->index_time = time( NULL );
     
       if (!lock_aquired) 
         fprintf(stderr," Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only. Cross your fingers ....\n");
@@ -973,7 +971,6 @@ static void block_fs_build_index( block_fs_type * block_fs , long_vector_type * 
     }
   } while (file_node != NULL);
   util_safe_free( filename );
-  block_fs->index_time = time( NULL );
 }
 
 
