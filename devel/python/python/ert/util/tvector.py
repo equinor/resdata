@@ -546,8 +546,11 @@ class BoolVector(TVector):
 
         return bool_vector
 
-
-
+    @classmethod
+    def createActiveList(cls, mask):
+        """ @rtype: IntVector """
+        assert isinstance(mask, BoolVector)
+        return cls.cNamespace().active_list(mask)
 
 
 
@@ -719,6 +722,7 @@ BoolVector.cNamespace().count_equal         = cwrapper.prototype("int    bool_ve
 
 BoolVector.cNamespace().create_active_mask = cwrapper.prototype("bool_vector_obj string_util_alloc_active_mask( char* )")
 BoolVector.cNamespace().update_active_mask = cwrapper.prototype("bool string_util_update_active_mask(char*, bool_vector)")
+BoolVector.cNamespace().active_list        = cwrapper.prototype("int_vector_obj bool_vector_alloc_active_list(bool_vector)")
 
 TimeVector.cNamespace().alloc               = cwrapper.prototype("c_void_p time_t_vector_alloc(int, time_t )")
 TimeVector.cNamespace().alloc_copy          = cwrapper.prototype("time_t_vector_obj time_t_vector_alloc_copy(time_t_vector )")
