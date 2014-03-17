@@ -4771,7 +4771,7 @@ char * util_realloc_sprintf(char * s , const char * fmt , ...) {
   
 
 void util_abort_signal(int signal) {
-  util_abort("Program recieved signal:%d\n" , signal);
+  util_abort("Program received signal:%d\n" , signal);
 }
 
 
