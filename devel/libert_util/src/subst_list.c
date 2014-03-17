@@ -669,7 +669,7 @@ bool subst_list_filter_file(const subst_list_type * subst_list , const char * sr
     remove( backup_file );
     free( backup_file );
   }
-  free(buffer);
+  buffer_free( buffer );
   return match;
 }
 
