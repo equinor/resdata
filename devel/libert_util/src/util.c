@@ -5013,6 +5013,7 @@ char * util_alloc_link_target(const char * link) {
 
 
 #ifdef HAVE_UTIL_ABORT
+#include "util_abort_test.c"
 #include "util_abort_gnu.c"
 #else
 #include "util_abort_simple.c"
