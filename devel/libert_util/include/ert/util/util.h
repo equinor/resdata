@@ -26,6 +26,10 @@
 #include <sys/types.h>
 #include <time.h>
 
+#ifdef COMPILER_GCC
+#include <setjmp.h>
+#endif
+
 #ifdef HAVE_GETPWUID
 #include <pwd.h>
 #endif
@@ -288,7 +292,8 @@ typedef enum {left_pad   = 0,
   
   char *  util_alloc_dump_filename();
   void    util_exit(const char * fmt , ...);
-  void    util_abort(const char * fmt , ...);
+  void    util_abort__(const char * file , const char * function , int line , const char * fmt , ...);
+
   void    util_abort_signal(int );
   void    util_install_signals(void);
   void    util_abort_append_version_info(const char * );
@@ -459,6 +464,19 @@ typedef struct {
 } util_enum_element_type;
 
 const char * util_enum_iget( int index , int size , const util_enum_element_type * enum_defs , int * value);
+
+
+#ifdef COMPILER_GCC
+
+jmp_buf * util_abort_test_jump_buffer();
+void      util_abort_test_set_intercept_function(const char * function);
+
+#define util_abort(fmt , ...) util_abort__(__FILE__ , __func__ , __LINE__ , fmt , ##__VA_ARGS__)
+#endif
+
+#ifdef COMPILER_MSVC
+#define util_abort(fmt , ...) util_abort__(__FILE__ , __func__ , __LINE__ , fmt , __VA_ARGS__)
+#endif
 
 
 /*****************************************************************/

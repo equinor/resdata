@@ -1,6 +1,6 @@
 /*                
-   Copyri                ght (C) 2012  Statoil ASA, Norway. 
-    
+   Copyright (C) 2012  Statoil ASA, Norway. 
+   
    The file 'ert_util_type_vector_test.c' is part of ERT - Ensemble based Reservoir Tool. 
     
    ERT is free software: you can redistribute it and/or modify 
@@ -67,11 +67,25 @@ void test_alloc() {
 }
 
 
+void int_vector_iget_invalid( void * arg ) {
+  int_vector_type * ivec = int_vector_safe_cast( arg );
+  int_vector_iget(ivec , -1 );
+}
+
+
+void test_abort() {
+  int_vector_type * ivec = int_vector_alloc(0,0);
+  test_assert_util_abort( "int_vector_assert_index" , int_vector_iget_invalid , ivec );
+  int_vector_free( ivec );
+}
+
+
 
 int main(int argc , char ** argv) {
   
   int_vector_type * int_vector = int_vector_alloc( 0 , 99);
-
+  
+  test_abort();
   test_assert_int_equal( -1 , int_vector_index(int_vector , 100));
   test_assert_int_equal( -1 , int_vector_index_sorted(int_vector , 100));
 

@@ -204,7 +204,8 @@ char * util_alloc_dump_filename() {
 }
 
 
-void util_abort(const char * fmt , ...) {
+void util_abort__(const char * file , const char * function , int line , const char * fmt , ...) {
+  util_abort_test_intercept( function );
   pthread_mutex_lock( &__abort_mutex ); /* Abort before unlock() */
   {
     char * filename = NULL;
@@ -223,6 +224,7 @@ void util_abort(const char * fmt , ...) {
 
     va_start(ap , fmt);
     fprintf(abort_dump , "\n\n");
+    fprintf(abort_dump , "Abort called from: %s (%s:%d) \n",function , file , line);
     vfprintf(abort_dump , fmt , ap);
     fprintf(abort_dump , "\n\n");
     va_end(ap);
