@@ -21,10 +21,13 @@
 #include <stdlib.h>
 
 #include <ert/util/test_util.h>
+#include <ert/util/test_work_area.h>
 #include <ert/util/matrix.h>
 #include <ert/util/rng.h>
 #include <ert/util/mzran.h>
 #include <ert/util/matrix_lapack.h>
+
+
 
 void test_resize() {
   matrix_type * m1 = matrix_alloc(5,5);
@@ -140,6 +143,49 @@ void test_det2() {
 }
 
 
+void test_readwrite() {
+  test_work_area_type * test_area = test_work_area_alloc("matrix-test");
+  {
+    rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM ); 
+    matrix_type * m1 = matrix_alloc(3  , 3);
+    matrix_type * m2 = matrix_alloc(3  , 3);
+    matrix_random_init( m1 , rng );
+    matrix_assign(m2 , m1);
+
+    test_assert_true( matrix_equal( m1 , m2 ) );
+    {
+      FILE * stream = util_fopen("m1" , "w");
+      matrix_fwrite( m1 , stream );
+      fclose( stream );
+    }
+    matrix_random_init( m1 , rng );
+    test_assert_false( matrix_equal( m1 , m2 ) );
+    {
+      FILE * stream = util_fopen("m1" , "r");
+      matrix_free( m1 );
+      m1 = matrix_alloc(1,1);
+      printf("-----------------------------------------------------------------\n");
+      matrix_fread( m1 , stream );
+      test_assert_int_equal( matrix_get_rows(m1) , matrix_get_rows( m2));
+      test_assert_int_equal( matrix_get_columns(m1) , matrix_get_columns( m2));
+      util_fseek( stream , 0 , SEEK_SET);
+      {
+        matrix_type * m3 = matrix_fread_alloc( stream );
+        test_assert_true( matrix_equal( m2 , m3 ));
+        matrix_free( m3 );
+      }
+      fclose( stream );
+    }
+    test_assert_true( matrix_equal( m1 , m2 ) );
+
+    matrix_free( m2 );
+    matrix_free( m1 );
+    rng_free( rng );
+  }
+  test_work_area_free( test_area );
+}
+
+
 
 int main( int argc , char ** argv) {
   test_create_invalid();
@@ -149,5 +195,6 @@ int main( int argc , char ** argv) {
   test_det2();
   test_det3();
   test_det4();
+  test_readwrite();
   exit(0);
 }
