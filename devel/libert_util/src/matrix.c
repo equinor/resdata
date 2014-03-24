@@ -1323,12 +1323,8 @@ bool matrix_equal( const matrix_type * m1 , const matrix_type * m2) {
         double d1 = m1->data[ index1 ];
         double d2 = m2->data[ index2 ];
         
-        printf("%g - %g    %d ,%d   %d,%d",d1,d2,i,j,index1,index2);
-        if (d1 != d2) {
-          printf("FAILED \n");
+        if (d1 != d2) 
           return false;
-        }
-        printf("OK \n");
       }
     }
   }
