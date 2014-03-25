@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 
 #include <ert/util/thread_pool.h>
@@ -507,10 +508,52 @@ void matrix_fprintf( const matrix_type * matrix , const char * fmt , FILE * stre
 
 
 
-/* Discard the strides?? */
 void matrix_fwrite(const matrix_type * matrix , FILE * stream) {
+  util_fwrite_int( matrix->rows , stream );
+  util_fwrite_int( matrix->columns , stream );
   
+  if (matrix->column_stride == matrix->rows)
+    util_fwrite( matrix->data , sizeof * matrix->data , matrix->columns * matrix->rows , stream , __func__);
+  else {
+    for (int column=0; column < matrix->columns; column++) {
+      if (matrix->row_stride == 1) {
+        const double * column_data = &matrix->data[ column * matrix->column_stride ];
+        util_fwrite( column_data , sizeof * column_data , matrix->rows , stream , __func__);
+      } else {
+        for (int row=0; row < matrix->rows; row++) 
+          util_fwrite_double( matrix->data[ GET_INDEX( matrix , row , column )] , stream);
+      }
+    }
+  }
 }
+
+
+void matrix_fread(matrix_type * matrix , FILE * stream) {
+  int rows    = util_fread_int( stream );
+  int columns = util_fread_int( stream );
+  
+  matrix_resize( matrix , rows , columns , false);
+  if (matrix->column_stride == matrix->rows)
+    util_fread( matrix->data , sizeof * matrix->data , matrix->columns * matrix->rows , stream , __func__);
+  else {
+    for (int column=0; column < matrix->columns; column++) {
+      if (matrix->row_stride == 1) {
+        double * column_data = &matrix->data[ column * matrix->column_stride ];
+        util_fread( column_data , sizeof * column_data , matrix->rows , stream , __func__);
+      } else {
+        for (int row=0; row < matrix->rows; row++) 
+          matrix->data[ GET_INDEX( matrix , row , column )] = util_fread_double( stream );
+      }
+    }
+  }
+}
+
+matrix_type * matrix_fread_alloc(FILE * stream) {
+  matrix_type * matrix = matrix_alloc(1,1);
+  matrix_fread(matrix , stream);
+  return matrix;
+}
+
 
 /**
      [ a11   a12  ]
@@ -1273,9 +1316,14 @@ bool matrix_equal( const matrix_type * m1 , const matrix_type * m2) {
     return false;
   {    
     int i,j;
-    for (j=0; j < m1->columns; j++) {
-      for (i=0; i < m1->rows; i++) {
-        if (memcmp( &m1->data[ GET_INDEX(m1 , i , j)]  , &m2->data[ GET_INDEX(m2 , i,j)] , sizeof * m1->data) != 0)
+    for (i=0; i < m1->rows; i++) {
+      for (j=0; j < m1->columns; j++) {
+        int index1 = GET_INDEX(m1 , i , j);
+        int index2 = GET_INDEX(m2 , i , j);
+        double d1 = m1->data[ index1 ];
+        double d2 = m2->data[ index2 ];
+        
+        if (d1 != d2) 
           return false;
       }
     }
