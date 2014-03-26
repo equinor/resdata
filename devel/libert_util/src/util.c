@@ -4771,7 +4771,7 @@ char * util_realloc_sprintf(char * s , const char * fmt , ...) {
   
 
 void util_abort_signal(int signal) {
-  util_abort("Program recieved signal:%d\n" , signal);
+  util_abort("Program received signal:%d\n" , signal);
 }
 
 
@@ -5013,6 +5013,7 @@ char * util_alloc_link_target(const char * link) {
 
 
 #ifdef HAVE_UTIL_ABORT
+#include "util_abort_test.c"
 #include "util_abort_gnu.c"
 #else
 #include "util_abort_simple.c"

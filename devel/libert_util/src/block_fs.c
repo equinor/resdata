@@ -163,7 +163,6 @@ struct block_fs_struct {
                                             fragmentation_limit == 1.0 : Never rotate.
                                             fragmentation_limit == 0.0 : Rotate when one byte is wasted. */
   bool             data_owner;
-  time_t           index_time;   
   int              fsync_interval;  /* 0: never  n: every nth iteration. */
 };
 
@@ -171,7 +170,7 @@ struct block_fs_struct {
 
 static void block_fs_rotate__( block_fs_type * block_fs );
 
-
+UTIL_SAFE_CAST_FUNCTION( block_fs , BLOCK_FS_TYPE_ID )
 
 
 static inline void fseek__(FILE * stream , long int arg , int whence) {
@@ -649,7 +648,7 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file ,
                                              float fragmentation_limit,
                                              int fsync_interval ,
                                              bool read_only,
-                                             bool block_level_lock) {
+                                             bool use_lockfile) {
   block_fs_type * block_fs      = util_malloc( sizeof * block_fs );
   UTIL_TYPE_ID_INIT(block_fs , BLOCK_FS_TYPE_ID);
   
@@ -678,19 +677,23 @@ static block_fs_type * block_fs_alloc_empty( const char * mount_file ,
   block_fs->index_file  = NULL;
   block_fs_reinit( block_fs );
 
-  if (read_only)
-    block_fs->data_owner = false;
-  else if (block_level_lock) {
-    block_fs->data_owner = util_try_lockf( block_fs->lock_file , S_IWUSR + S_IWGRP , &block_fs->lock_fd);
-    block_fs->index_time = time( NULL );
+
+  {
+    bool lock_aquired = true;
+
+    if (use_lockfile) {
+      lock_aquired = util_try_lockf( block_fs->lock_file , S_IWUSR + S_IWGRP , &block_fs->lock_fd);
     
-    if (!block_fs->data_owner) 
-      fprintf(stderr," Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only. Cross your fingers ....\n");
-    fflush( stderr );
-  } else {
-    block_fs->data_owner = true; //locked on fs level
+      if (!lock_aquired) 
+        fprintf(stderr," Another program has already opened filesystem read-write - this instance will be UNSYNCRONIZED read-only. Cross your fingers ....\n");
+    }
+
+    if (lock_aquired && (read_only == false))
+      block_fs->data_owner = true; 
+    else
+      block_fs->data_owner = false;
+
   }
-  
   return block_fs;
 }
   
@@ -968,7 +971,6 @@ static void block_fs_build_index( block_fs_type * block_fs , long_vector_type * 
     }
   } while (file_node != NULL);
   util_safe_free( filename );
-  block_fs->index_time = time( NULL );
 }
 
 
@@ -1051,6 +1053,14 @@ bool block_fs_is_mount( const char * mount_file ) {
 }
 
 
+bool block_fs_is_readonly( const block_fs_type * bfs ) {
+  if (bfs->data_owner)
+    return false;
+  else
+    return true;
+}
+
+
 
 block_fs_type * block_fs_mount( const char * mount_file ,
                                 int block_size ,
@@ -1059,7 +1069,7 @@ block_fs_type * block_fs_mount( const char * mount_file ,
                                 int fsync_interval ,
                                 bool preload ,
                                 bool read_only,
-                                bool block_level_lock) {
+                                bool use_lockfile) {
   block_fs_type * block_fs;
   {
 
@@ -1068,7 +1078,7 @@ block_fs_type * block_fs_mount( const char * mount_file ,
       block_fs_fwrite_mount_info__( mount_file , 0 );
     {
       long_vector_type * fix_nodes = long_vector_alloc(0 , 0);
-      block_fs = block_fs_alloc_empty( mount_file , block_size , max_cache_size , fragmentation_limit , fsync_interval , read_only, block_level_lock);
+      block_fs = block_fs_alloc_empty( mount_file , block_size , max_cache_size , fragmentation_limit , fsync_interval , read_only, use_lockfile);
       /* We build up the index & free_nodes_list based on the header/index information embedded in the datafile. */
       block_fs_open_data( block_fs , false );
       if (block_fs->data_stream != NULL) {
