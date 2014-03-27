@@ -76,6 +76,11 @@ class Matrix(BaseCClass):
         if not 0 <= column < self.columns():
             raise IndexError("Expected column: [0,%d) got:%d" % (self.columns() , column))
         Matrix.cNamespace().scale_column(self , column , factor)
+
+    def scaleRow(self, row , factor):
+        if not 0 <= row < self.rows():
+            raise IndexError("Expected row: [0,%d) got:%d" % (self.rows() , row))
+        Matrix.cNamespace().scale_row(self , row ,  factor)
         
 
     def setAll(self , value):
@@ -103,6 +108,7 @@ Matrix.cNamespace().iget = cwrapper.prototype("double matrix_iget( matrix , int 
 Matrix.cNamespace().iset = cwrapper.prototype("void   matrix_iset( matrix , int , int , double)")
 Matrix.cNamespace().set_all = cwrapper.prototype("void   matrix_scalar_set( matrix , double)")
 Matrix.cNamespace().scale_column = cwrapper.prototype("void matrix_scale_column(matrix , int , double)")
+Matrix.cNamespace().scale_row    = cwrapper.prototype("void matrix_scale_row(matrix , int , double)")
 
 Matrix.cNamespace().rows = cwrapper.prototype("int matrix_get_rows(matrix)")
 Matrix.cNamespace().columns = cwrapper.prototype("int matrix_get_columns(matrix)")

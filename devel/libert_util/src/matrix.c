@@ -1187,7 +1187,7 @@ void matrix_subtract_and_store_row_mean(matrix_type * matrix, matrix_type * row_
 
 void matrix_imul_col( matrix_type * matrix , int column , double factor) {
    int i;
-        for ( i=0; i < matrix->rows; i++)
+   for ( i=0; i < matrix->rows; i++)
     matrix_imul( matrix , i , column , factor );
 }
 
