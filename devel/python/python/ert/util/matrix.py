@@ -32,9 +32,10 @@ from ert.cwrap import CWrapper, BaseCClass
 
 
 class Matrix(BaseCClass):
-    def __init__(self, rows, columns):
+    def __init__(self, rows, columns , value = 0):
         c_ptr = Matrix.cNamespace().matrix_alloc(rows, columns)
         super(Matrix, self).__init__(c_ptr)
+        self.setAll(value)
 
 
     def __getitem__(self, index_tuple):
@@ -71,6 +72,15 @@ class Matrix(BaseCClass):
         assert isinstance(other, Matrix)
         return Matrix.cNamespace().equal(self, other)
 
+    def scaleColumn(self, column , factor):
+        if not 0 <= column < self.columns():
+            raise IndexError("Expected column: [0,%d) got:%d" % (self.columns() , column))
+        Matrix.cNamespace().scale_column(self , column , factor)
+        
+
+    def setAll(self , value):
+        Matrix.cNamespace().set_all(self, value)
+
 
     def prettyPrint(self, name, fmt="%6.3g"):
         Matrix.cNamespace().pretty_print(self, name, fmt)
@@ -91,6 +101,8 @@ Matrix.cNamespace().matrix_alloc = cwrapper.prototype("c_void_p matrix_alloc(int
 Matrix.cNamespace().free = cwrapper.prototype("void   matrix_free(matrix)")
 Matrix.cNamespace().iget = cwrapper.prototype("double matrix_iget( matrix , int , int )")
 Matrix.cNamespace().iset = cwrapper.prototype("void   matrix_iset( matrix , int , int , double)")
+Matrix.cNamespace().set_all = cwrapper.prototype("void   matrix_scalar_set( matrix , double)")
+Matrix.cNamespace().scale_column = cwrapper.prototype("void matrix_scale_column(matrix , int , double)")
 
 Matrix.cNamespace().rows = cwrapper.prototype("int matrix_get_rows(matrix)")
 Matrix.cNamespace().columns = cwrapper.prototype("int matrix_get_columns(matrix)")
