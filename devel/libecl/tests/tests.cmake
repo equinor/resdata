@@ -49,6 +49,10 @@ target_link_libraries( ecl_grid_lgr_name ecl test_util )
 set_target_properties( ecl_grid_lgr_name PROPERTIES COMPILE_FLAGS "-Werror")                                    
 add_test( ecl_grid_lgr_name ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_lgr_name  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID)
 
+add_executable( ecl_grid_create ecl_grid_create.c )
+target_link_libraries( ecl_grid_create ecl test_util )
+add_test( ecl_grid_create ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_create )
+
 add_executable( ecl_region ecl_region.c )
 target_link_libraries( ecl_region ecl test_util )
 add_test( ecl_region ${EXECUTABLE_OUTPUT_PATH}/ecl_region ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
