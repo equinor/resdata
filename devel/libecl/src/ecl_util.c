@@ -1342,7 +1342,7 @@ int ecl_util_get_num_cpu(const char * data_file) {
 }
 
 
-ecl_unit_enum ecl_util_get_unit_set_used(const char * data_file) {
+ecl_unit_enum ecl_util_get_unit_set(const char * data_file) {
   ecl_unit_enum units = ECL_METRIC_UNITS;
   parser_type * parser = parser_alloc(" \t\r\n" , "\"\'" , NULL , NULL , "--" , "\n");
   FILE * stream = util_fopen(data_file , "r");
