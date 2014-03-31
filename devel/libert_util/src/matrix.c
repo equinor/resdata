@@ -515,12 +515,14 @@ void matrix_fwrite(const matrix_type * matrix , FILE * stream) {
   if (matrix->column_stride == matrix->rows)
     util_fwrite( matrix->data , sizeof * matrix->data , matrix->columns * matrix->rows , stream , __func__);
   else {
-    for (int column=0; column < matrix->columns; column++) {
+    int column;
+    for (column=0; column < matrix->columns; column++) {
       if (matrix->row_stride == 1) {
         const double * column_data = &matrix->data[ column * matrix->column_stride ];
         util_fwrite( column_data , sizeof * column_data , matrix->rows , stream , __func__);
       } else {
-        for (int row=0; row < matrix->rows; row++) 
+        int row;
+        for (row=0; row < matrix->rows; row++)
           util_fwrite_double( matrix->data[ GET_INDEX( matrix , row , column )] , stream);
       }
     }
@@ -536,12 +538,14 @@ void matrix_fread(matrix_type * matrix , FILE * stream) {
   if (matrix->column_stride == matrix->rows)
     util_fread( matrix->data , sizeof * matrix->data , matrix->columns * matrix->rows , stream , __func__);
   else {
-    for (int column=0; column < matrix->columns; column++) {
+    int column;
+    for (column=0; column < matrix->columns; column++) {
       if (matrix->row_stride == 1) {
         double * column_data = &matrix->data[ column * matrix->column_stride ];
         util_fread( column_data , sizeof * column_data , matrix->rows , stream , __func__);
       } else {
-        for (int row=0; row < matrix->rows; row++) 
+        int row;
+        for (row=0; row < matrix->rows; row++)
           matrix->data[ GET_INDEX( matrix , row , column )] = util_fread_double( stream );
       }
     }
