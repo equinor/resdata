@@ -2699,6 +2699,70 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const doub
 }
 
 /**
+   This is a really broken function which is here only to support
+   creating rectangualar grids from OPM. The vectors dx,dy,dz and tops
+   are all of length nx*ny*nz. In principle all values of these four
+   arrays are independent - but taking that all out will create some
+   really weird looking grids. For physical correctness there should
+   be many constraints among the different values. 
+
+   The x and y position of a cell is found by adding the increments
+   from dx and dy, whereas the vertical position is read dircetly out
+   of the tops array.
+
+   The ECLIPSE input format only requires size(dz) >= nx*ny and the
+   same for tops. The remaining layers will then be extrapolated; such
+   trickery must be performed before calling this function.
+*/
+
+ecl_grid_type * ecl_grid_alloc_dx_dy_dz_tops( int nx, int ny , int nz , const double * dx , const double * dy , const double * dz , const double * tops , const int * actnum) {
+  
+  ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
+                                             FILEHEAD_SINGLE_POROSITY,
+                                             nx, ny, nz,
+                                             0, true);
+  int i, j, k;
+  double * y0 = util_calloc( nx, sizeof * y0 );
+
+  for (k=0; k < nz; k++) {
+    for (i=0; i < nx; i++) {
+      y0[i] = 0;
+    }
+    for (j=0; j < ny; j++) {
+      double x0 = 0;
+      for (i=0; i < nx; i++) {
+        int g = i + j*nx + k*nx*ny;
+        ecl_cell_type* cell = ecl_grid_get_cell(grid, g);
+        double z0 = tops[ g ];
+
+        point_set(&cell->corner_list[0] , x0         , y0[i]         , z0);
+        point_set(&cell->corner_list[1] , x0 + dx[g] , y0[i]         , z0);  
+        point_set(&cell->corner_list[2] , x0         , y0[i] + dy[g] , z0);
+        point_set(&cell->corner_list[3] , x0 + dx[g] , y0[i] + dy[g] , z0);
+
+        point_set(&cell->corner_list[4] , x0         , y0[i]         , z0 + dz[g]);
+        point_set(&cell->corner_list[5] , x0 + dx[g] , y0[i]         , z0 + dz[g]);  
+        point_set(&cell->corner_list[6] , x0         , y0[i] + dy[g] , z0 + dz[g]);
+        point_set(&cell->corner_list[7] , x0 + dx[g] , y0[i] + dy[g] , z0 + dz[g]);
+        
+        x0    += dx[g];
+        y0[i] += dy[g];
+        
+        if (actnum != NULL) 
+          cell->active = actnum[g];
+        else
+          cell->active = ACTIVE;
+      }
+    }
+  }
+  free( y0 );
+
+  ecl_grid_update_index(grid);
+  return grid;
+}
+
+
+/**
    This function will allocate a ecl_grid instance. As input it takes
    a filename, which can be both a GRID file and an EGRID file (both
    formatted and unformatted).

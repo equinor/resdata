@@ -34,6 +34,9 @@ extern "C" {
 
 typedef struct matrix_struct matrix_type;
 
+  matrix_type * matrix_fread_alloc(FILE * stream);
+  void          matrix_fread(matrix_type * matrix , FILE * stream);
+  void          matrix_fwrite(const matrix_type * matrix , FILE * stream);
   bool          matrix_check_dims( const matrix_type * m , int rows , int columns);
   void          matrix_fscanf_data( matrix_type * matrix , bool row_major_order , FILE * stream );
   void          matrix_fprintf( const matrix_type * matrix , const char * fmt , FILE * stream );
