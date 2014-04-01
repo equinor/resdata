@@ -53,7 +53,12 @@ UTIL_LIB = clib.ert_load("libert_util")
 
 from .enums import RngAlgTypeEnum, RngInitModeEnum
 
-from .tvector import DoubleVector, IntVector, BoolVector, TimeVector, TVector
+from .vector_template import VectorTemplate, PermutationVector
+from .double_vector import DoubleVector
+from .int_vector import IntVector
+from .bool_vector import BoolVector
+from .time_vector import TimeVector
+
 from .stringlist import StringList
 from .stat import quantile, quantile_sorted
 from .matrix import Matrix
@@ -67,3 +72,4 @@ from .substitution_list import SubstitutionList
 from .ui_return import UIReturn
 from .test_area import TestArea , TestAreaContext
 from .rng import RandomNumberGenerator
+from .thread_pool import ThreadPool
