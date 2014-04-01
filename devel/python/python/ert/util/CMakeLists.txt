@@ -17,7 +17,6 @@ set(PYTHON_SOURCES
     test_area.py
     thread_pool.py
     time_vector.py
-    tvector.py
     ui_return.py
     util_func.py
     vector_template.py
