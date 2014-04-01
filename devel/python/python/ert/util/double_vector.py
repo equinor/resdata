@@ -26,7 +26,7 @@ class DoubleVector(VectorTemplate):
 
 
 cwrapper = CWrapper(UTIL_LIB)
-CWrapper.registerObject("double_vector", DoubleVector)
+CWrapper.registerObjectType("double_vector", DoubleVector)
 
 
 DoubleVector.cNamespace().alloc            = cwrapper.prototype("c_void_p   double_vector_alloc( int , double )")

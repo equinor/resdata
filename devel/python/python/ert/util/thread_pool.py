@@ -63,7 +63,10 @@ class ThreadPool(object):
 
 
     def addTask(self, func, *args, **kwargs):
-        self.__task_list.append(Task(func, *args, **kwargs))
+        if self.__start_time is None:
+            self.__task_list.append(Task(func, *args, **kwargs))
+        else:
+            raise UserWarning("Can not add task after the pool has started!")
 
     def poolSize(self):
         return self.__size

@@ -29,7 +29,7 @@ class TimeVector(VectorTemplate):
 
 cwrapper = CWrapper(UTIL_LIB)
 
-CWrapper.registerObject("time_t_vector", TimeVector)
+CWrapper.registerObjectType("time_t_vector", TimeVector)
 
 
 TimeVector.cNamespace().alloc               = cwrapper.prototype("c_void_p time_t_vector_alloc(int, time_t )")

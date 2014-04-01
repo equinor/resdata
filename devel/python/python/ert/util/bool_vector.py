@@ -76,7 +76,7 @@ class BoolVector(VectorTemplate):
 
 
 cwrapper = CWrapper(UTIL_LIB)
-CWrapper.registerObject("bool_vector", BoolVector)
+CWrapper.registerObjectType("bool_vector", BoolVector)
 
 
 BoolVector.cNamespace().alloc               = cwrapper.prototype("c_void_p   bool_vector_alloc( int , bool )")

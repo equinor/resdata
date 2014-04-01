@@ -46,7 +46,7 @@ class IntVector(VectorTemplate):
         return IntVector.cNamespace().count_equal(self, value)
 
 cwrapper = CWrapper(UTIL_LIB)
-CWrapper.registerObject("int_vector", IntVector)
+CWrapper.registerObjectType("int_vector", IntVector)
 
 
 IntVector.cNamespace().alloc               = cwrapper.prototype("c_void_p   int_vector_alloc( int , int )")

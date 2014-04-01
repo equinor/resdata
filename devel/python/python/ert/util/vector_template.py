@@ -54,7 +54,7 @@ class PermutationVector(BaseCClass):
     def free(self):
         PermutationVector.cNamespace().free(self)
 
-CWrapper.registerObject("permutation_vector", PermutationVector)
+CWrapper.registerObjectType("permutation_vector", PermutationVector)
 
 cwrapper = CWrapper(UTIL_LIB)
 PermutationVector.cNamespace().free = cwrapper.prototype("void util_safe_free(permutation_vector)")
