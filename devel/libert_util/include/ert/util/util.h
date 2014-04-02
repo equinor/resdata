@@ -154,7 +154,7 @@ typedef enum {left_pad   = 0,
   bool         util_string_equal(const char * s1 , const char * s2 );
   char       * util_alloc_strupr_copy(const char * );
   void         util_string_tr(char * , char , char);
-  bool         util_copy_stream(FILE *, FILE *, int , void * , bool abort_on_error);
+  bool         util_copy_stream(FILE *, FILE *, size_t , void * , bool abort_on_error);
   void         util_move_file(const char * src_file , const char * target_file);
   void         util_move_file4( const char * src_name , const char * target_name , const char *src_path , const char * target_path);
   bool         util_copy_file(const char * , const char * );
