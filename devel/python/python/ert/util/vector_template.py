@@ -176,12 +176,12 @@ class VectorTemplate(BaseCClass):
         Implements read [] operator - @index can be slice instance.
         """
         if isinstance(index, IntType):
-            length = self.__len__()
+            length = len(self)
             if index < 0:
                 index += length
 
             if index < 0 or index >= length:
-                raise IndexError
+                raise IndexError("Index must be in range %d <= %d < %d" % (0, index, length))
             else:
                 return self.cNamespace().iget(self, index)
         elif isinstance(index, SliceType):

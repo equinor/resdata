@@ -2180,8 +2180,7 @@ char * util_fread_alloc_file_content(const char * filename , int * buffer_size) 
 */
   
 
-bool util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size , void * buffer , bool abort_on_error) {
-
+bool util_copy_stream(FILE *src_stream , FILE *target_stream , size_t buffer_size , void * buffer , bool abort_on_error) {
   while ( ! feof(src_stream)) {
     int bytes_read;
     int bytes_written;
@@ -2207,7 +2206,7 @@ bool util_copy_stream(FILE *src_stream , FILE *target_stream , int buffer_size ,
 }
 
 
-static bool util_copy_file__(const char * src_file , const char * target_file, int buffer_size , void * buffer , bool abort_on_error) {
+static bool util_copy_file__(const char * src_file , const char * target_file, size_t buffer_size , void * buffer , bool abort_on_error) {
   if (util_same_file(src_file , target_file)) {
     fprintf(stderr,"%s Warning: trying to copy %s onto itself - nothing done\n",__func__ , src_file);
     return false;

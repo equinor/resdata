@@ -14,8 +14,15 @@ class Task(Thread):
         self.__started = False
         self.__done = False
         self.__failed = False
+        self.__start_time = None
+
+        self.__verbose = False
+
+    def setVerbose(self, verbose):
+        self.__verbose = verbose
 
     def run(self):
+        self.__start_time = time.time()
         self.__started = True
         try:
             self.__func(*self.__args, **self.__kwargs)
@@ -25,21 +32,25 @@ class Task(Thread):
         finally:
             self.__done = True
 
+        if self.__verbose:
+            running_time = time.time() - self.__start_time
+            print("Running time of task: %f" % running_time)
+
     def isDone(self):
         return self.__done
 
     def hasStarted(self):
-        return self.__started
+        return self.__started or self.isAlive()
 
     def isRunning(self):
-        return self.__started and not self.__done
+        return self.hasStarted() and not self.__done
 
     def hasFailed(self):
         return self.__failed
 
     def join(self, timeout=None):
         while not self.hasStarted() or self.isRunning():
-            time.sleep(0.2)
+            time.sleep(0.01)
 
 
 
@@ -54,17 +65,16 @@ class ThreadPool(object):
         self.__size = size
         self.__task_list = []
         self.__pool_finished = False
-
         self.__runner_thread = None
-
         self.__verbose = verbose
-
         self.__start_time = None
 
 
     def addTask(self, func, *args, **kwargs):
         if self.__start_time is None:
-            self.__task_list.append(Task(func, *args, **kwargs))
+            task = Task(func, *args, **kwargs)
+            # task.setVerbose(self.__verbose)
+            self.__task_list.append(task)
         else:
             raise UserWarning("Can not add task after the pool has started!")
 
@@ -107,7 +117,6 @@ class ThreadPool(object):
         return None
 
     def __start(self):
-
         while not self.__allTasksFinished():
             if self.runningCount() < self.poolSize():
                 task = self.__findNextTask()
@@ -140,7 +149,3 @@ class ThreadPool(object):
                 return True
 
         return False
-
-
-
-
