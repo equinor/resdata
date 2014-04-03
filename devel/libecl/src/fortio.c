@@ -578,7 +578,7 @@ void  fortio_init_write(fortio_type *fortio , int record_size) {
   file_header = fortio->active_header;
   if (fortio->endian_flip_header)
     util_endian_flip_vector(&file_header , sizeof file_header , 1);
-  
+
   util_fwrite_int( file_header , fortio->stream );
   fortio->rec_nr++;
 }
