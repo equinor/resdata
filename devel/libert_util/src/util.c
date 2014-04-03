@@ -2219,6 +2219,18 @@ static bool util_copy_file__(const char * src_file , const char * target_file, i
         
       fclose(src_stream);
       fclose(target_stream);
+
+#ifdef HAVE_CHMOD
+      {
+        struct stat stat_buffer;
+        mode_t src_mode;
+
+        stat( src_file , &stat_buffer );
+        src_mode = stat_buffer.st_mode;
+        chmod( target_file , src_mode );
+      }
+#endif
+
       return result;
     }
   }
