@@ -22,7 +22,7 @@ from ert.util import UTIL_LIB, VectorTemplate
 class BoolVector(VectorTemplate):
     default_format       = "%8d"
 
-    def __init__(self, default_value=0, initial_size=0):
+    def __init__(self, default_value=False, initial_size=0):
         super(BoolVector, self).__init__(default_value, initial_size)
 
     def count(self, value=True):
@@ -81,12 +81,12 @@ CWrapper.registerObjectType("bool_vector", BoolVector)
 
 BoolVector.cNamespace().alloc               = cwrapper.prototype("c_void_p   bool_vector_alloc( int , bool )")
 BoolVector.cNamespace().alloc_copy          = cwrapper.prototype("bool_vector_obj bool_vector_alloc_copy( bool_vector )")
-BoolVector.cNamespace().strided_copy        = cwrapper.prototype("bool_vector_obj bool_vector_alloc_strided_copy( bool_vector , bool , bool , bool)")
+BoolVector.cNamespace().strided_copy        = cwrapper.prototype("bool_vector_obj bool_vector_alloc_strided_copy( bool_vector , int , int , int)")
 BoolVector.cNamespace().free                = cwrapper.prototype("void   bool_vector_free( bool_vector )")
-BoolVector.cNamespace().iget                = cwrapper.prototype("bool    bool_vector_iget( bool_vector , bool )")
-BoolVector.cNamespace().safe_iget           = cwrapper.prototype("bool    bool_vector_safe_iget( bool_vector , bool )")
-BoolVector.cNamespace().iset                = cwrapper.prototype("bool    bool_vector_iset( bool_vector , bool , bool)")
-BoolVector.cNamespace().size                = cwrapper.prototype("bool    bool_vector_size( bool_vector )")
+BoolVector.cNamespace().iget                = cwrapper.prototype("bool   bool_vector_iget( bool_vector , int )")
+BoolVector.cNamespace().safe_iget           = cwrapper.prototype("bool   bool_vector_safe_iget( bool_vector , int )")
+BoolVector.cNamespace().iset                = cwrapper.prototype("void   bool_vector_iset( bool_vector , int , bool)")
+BoolVector.cNamespace().size                = cwrapper.prototype("int    bool_vector_size( bool_vector )")
 BoolVector.cNamespace().append              = cwrapper.prototype("void   bool_vector_append( bool_vector , bool )")
 BoolVector.cNamespace().idel_block          = cwrapper.prototype("void   bool_vector_idel_block( bool_vector , bool , bool )")
 BoolVector.cNamespace().fprintf             = cwrapper.prototype("void   bool_vector_fprintf( bool_vector , FILE , char* , char*)")
@@ -95,10 +95,10 @@ BoolVector.cNamespace().rsort               = cwrapper.prototype("void   bool_ve
 BoolVector.cNamespace().reset               = cwrapper.prototype("void   bool_vector_reset( bool_vector )")
 BoolVector.cNamespace().set_read_only       = cwrapper.prototype("void   bool_vector_set_read_only( bool_vector , bool )")
 BoolVector.cNamespace().get_read_only       = cwrapper.prototype("bool   bool_vector_get_read_only( bool_vector )")
-BoolVector.cNamespace().get_max             = cwrapper.prototype("bool    bool_vector_get_max( bool_vector )")
-BoolVector.cNamespace().get_min             = cwrapper.prototype("bool    bool_vector_get_min( bool_vector )")
-BoolVector.cNamespace().get_max_index       = cwrapper.prototype("bool    bool_vector_get_max_index( bool_vector , bool)")
-BoolVector.cNamespace().get_min_index       = cwrapper.prototype("bool    bool_vector_get_min_index( bool_vector , bool)")
+BoolVector.cNamespace().get_max             = cwrapper.prototype("bool   bool_vector_get_max( bool_vector )")
+BoolVector.cNamespace().get_min             = cwrapper.prototype("bool   bool_vector_get_min( bool_vector )")
+BoolVector.cNamespace().get_max_index       = cwrapper.prototype("bool   bool_vector_get_max_index( bool_vector , bool)")
+BoolVector.cNamespace().get_min_index       = cwrapper.prototype("bool   bool_vector_get_min_index( bool_vector , bool)")
 BoolVector.cNamespace().shift               = cwrapper.prototype("void   bool_vector_shift( bool_vector , bool )")
 BoolVector.cNamespace().scale               = cwrapper.prototype("void   bool_vector_scale( bool_vector , bool )")
 BoolVector.cNamespace().div                 = cwrapper.prototype("void   bool_vector_div( bool_vector , bool )")
