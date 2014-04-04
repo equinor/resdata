@@ -2219,7 +2219,7 @@ static bool util_copy_file__(const char * src_file , const char * target_file, s
       fclose(src_stream);
       fclose(target_stream);
 
-#ifdef HAVE_CHMOD
+#ifdef HAVE_CHMOD_AND_MODE_T
       {
         struct stat stat_buffer;
         mode_t src_mode;
