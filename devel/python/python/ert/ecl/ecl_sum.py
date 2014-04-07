@@ -42,7 +42,6 @@ import numpy
 # implementation could be replaced with:
 #
 #   from matplotlib.dates import date2num
-from ert.util.tvector import TimeVector
 
 
 HOURS_PER_DAY     = 24.0
