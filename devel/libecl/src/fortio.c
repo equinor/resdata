@@ -23,8 +23,12 @@
 #include <errno.h>
 
 #include <ert/util/util.h>
+#include <ert/util/type_macros.h>
 
 #include <ert/ecl/fortio.h>
+
+
+#define FORTIO_ID  345116
 
 extern int errno;
 
@@ -69,6 +73,7 @@ fwrite() from the standard library.
 
 
 struct fortio_struct {
+  UTIL_TYPE_ID_DECLARATION;
   FILE             * stream;
   char             * filename;
   bool               endian_flip_header;  
@@ -82,9 +87,12 @@ struct fortio_struct {
 };
 
 
+UTIL_IS_INSTANCE_FUNCTION( fortio , FORTIO_ID );
+UTIL_SAFE_CAST_FUNCTION( fortio, FORTIO_ID );
 
 static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool endian_flip_header , bool stream_owner) {
   fortio_type * fortio       = util_malloc(sizeof * fortio );
+  UTIL_TYPE_ID_INIT( fortio, FORTIO_ID );
   fortio->filename           = util_alloc_string_copy(filename);
   fortio->endian_flip_header = endian_flip_header;
   fortio->active_header      = 0;
