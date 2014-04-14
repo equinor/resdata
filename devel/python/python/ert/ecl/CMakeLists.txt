@@ -38,3 +38,5 @@ endif()
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ecl_local.py")
    add_python_package( "Python ert.ecl.ecl_local"  ${PYTHON_INSTALL_PREFIX}/ert/ecl "ecl_local.py" True)
 endif()
+
+add_subdirectory(faults)
