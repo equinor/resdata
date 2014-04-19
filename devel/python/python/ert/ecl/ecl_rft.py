@@ -50,7 +50,7 @@ class EclRFTFile(CClass):
         
 
     def __len__(self):
-        return cfunc_file.get_size( self , None , -1)
+        return cfunc_file.get_size( self , None , ctime(-1))
 
 
     def __getitem__(self , index):
@@ -83,7 +83,7 @@ class EclRFTFile(CClass):
         if date:
             cdate = ctime( date )
         else:
-            cdate = -1
+            cdate = ctime( -1 )
 
         return cfunc_file.get_size( self , well , cdate)
 
@@ -101,7 +101,7 @@ class EclRFTFile(CClass):
         Returns a list of two tuples (well_name , date) for the whole file.
         """
         header_list = []
-        for i in (range(cfunc_file.get_size( self , None , -1))):
+        for i in (range(cfunc_file.get_size( self , None , ctime(-1)))):
             rft = self.iget( i )
             header_list.append( (rft.well , rft.date) )
         return header_list
