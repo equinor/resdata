@@ -99,6 +99,31 @@ class VectorTemplate(BaseCClass):
         new = self.__copy__(self)  # Invoking the class method
         return new
 
+    def __irshift__(self,shift):
+        if shift < 0:
+            raise ValueError("The shift must be positive")
+        self.cNamespace().rshift(self, shift)
+        return self
+        
+    def __ilshift__(self,shift):
+        if shift < 0:
+            raise ValueError("The shift must be positive")
+        if shift > len(self):
+            raise ValueError("The shift is too large")
+        self.cNamespace().lshift(self, shift)
+        return self
+
+
+    def __rshift__(self,shift):
+        copy = self.copy()
+        copy.__irshift__(shift)
+        return copy
+
+
+    def __lshift__(self,shift):
+        copy = self.copy()
+        copy.__ilshift__(shift)
+        return copy
 
     def __deepcopy__(self, memo):
         new = self.copy()
@@ -111,6 +136,13 @@ class VectorTemplate(BaseCClass):
         c_pointer = self.cNamespace().alloc(initial_size, default_value)
         super(VectorTemplate, self).__init__(c_pointer)
         self.element_size = self.cNamespace().element_size(self)
+
+
+    def pop(self):
+        if len(self) > 0:
+            return self.cNamespace().pop(self)
+        else:
+            raise ValueError("Trying to pop from empty vector")
 
 
     def str_data(self, width, index1, index2, fmt):
