@@ -13,12 +13,14 @@
 #   
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
+import re
+import datetime
 
 from ert.cwrap import CWrapper
 from ert.util import UTIL_LIB, VectorTemplate, ctime
 
 
-class TimeVector(TVector):
+class TimeVector(VectorTemplate):
     default_format = "%d"
 
     def __init__(self, default_value=None, initial_size=0):
