@@ -191,6 +191,16 @@ extern "C" {
   bool ecl_grid_cell_regular3( const ecl_grid_type * ecl_grid, int i,int j,int k);
   bool ecl_grid_cell_regular1( const ecl_grid_type * ecl_grid, int global_index);
 
+  void ecl_grid_init_zcorn_data( const ecl_grid_type * grid , float * zcorn );
+  void ecl_grid_init_zcorn_data_double( const ecl_grid_type * grid , double * zcorn );
+  int ecl_grid_get_zcorn_size( const ecl_grid_type * grid );
+  
+  void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord );
+  void ecl_grid_init_coord_data_double( const ecl_grid_type * grid , double * coord );
+  int  ecl_grid_get_coord_size( const ecl_grid_type * ecl_grid);
+
+  void ecl_grid_init_actnum_data( const ecl_grid_type * grid , int * actnum );
+
   UTIL_IS_INSTANCE_HEADER( ecl_grid );
   
 #ifdef __cplusplus
