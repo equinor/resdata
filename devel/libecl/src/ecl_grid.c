@@ -4680,6 +4680,17 @@ void ecl_grid_dump_ascii_cell3(ecl_grid_type * grid , int i , int j , int k , FI
 */
 
 
+bool ecl_grid_use_mapaxes( const ecl_grid_type * grid ) {
+  return grid->use_mapaxes;
+}
+
+void ecl_grid_init_mapaxes_data_double( const ecl_grid_type * grid , double * mapaxes) {
+  int i;
+  for (i = 0; i < 6; i++)
+    mapaxes[i] = grid->mapaxes[i];
+}
+
+
 static const float * ecl_grid_get_mapaxes( const ecl_grid_type * grid ) {
   if (grid->use_mapaxes)
     return grid->mapaxes;

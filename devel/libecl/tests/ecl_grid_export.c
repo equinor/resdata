@@ -78,6 +78,18 @@ void export_zcorn( const ecl_grid_type * grid , ecl_file_type * ecl_file ) {
 }
 
 
+void export_mapaxes( const ecl_grid_type * grid , ecl_file_type * ecl_file ) {
+  ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , "MAPAXES" , 0);
+  double mapaxes[6];
+  int i;
+  
+  test_assert_true( ecl_grid_use_mapaxes( grid ));
+  ecl_grid_init_mapaxes_data_double( grid , mapaxes );
+  for (i= 0; i < 6; i++)
+    test_assert_double_equal( ecl_kw_iget_float( mapaxes_kw , i) , mapaxes[i]);
+}
+
+
 
 int main(int argc , char ** argv) {
   const char * grid_file = argv[1];
@@ -88,6 +100,7 @@ int main(int argc , char ** argv) {
   export_actnum( ecl_grid , ecl_file );
   export_coord( ecl_grid , ecl_file );
   export_zcorn( ecl_grid , ecl_file );
+  export_mapaxes( ecl_grid , ecl_file );
 
   ecl_file_close( ecl_file );
   ecl_grid_free( ecl_grid );

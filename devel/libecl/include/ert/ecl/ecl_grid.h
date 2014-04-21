@@ -200,6 +200,9 @@ extern "C" {
   int  ecl_grid_get_coord_size( const ecl_grid_type * ecl_grid);
 
   void ecl_grid_init_actnum_data( const ecl_grid_type * grid , int * actnum );
+  bool ecl_grid_use_mapaxes( const ecl_grid_type * grid );
+  void ecl_grid_init_mapaxes_data_double( const ecl_grid_type * grid , double * mapaxes);
+  
 
   UTIL_IS_INSTANCE_HEADER( ecl_grid );
   
