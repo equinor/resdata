@@ -275,7 +275,7 @@ class EclSum(BaseCClass):
         return self[key].last
 
 
-    def iiget(self , key_index , time_index):
+    def iiget(self , time_index , key_index):
         """
         Lookup a summary value based on naive @time_index and
         @key_index.
