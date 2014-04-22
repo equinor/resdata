@@ -28,7 +28,7 @@ void test_sscan_percent() {
     const char * MIN_REALIZATIONS = "10%";
     double value = 0.0;
     test_assert_true(util_sscanf_percent(MIN_REALIZATIONS, &value));
-    test_assert_double_equal(10.0/100, value);
+    test_assert_double_equal(10.0, value);
   }
 
   {
@@ -42,7 +42,7 @@ void test_sscan_percent() {
     const char * MIN_REALIZATIONS_float = "10.2%";
     double value = 0.0;
     test_assert_true(util_sscanf_percent(MIN_REALIZATIONS_float, &value));
-    test_assert_double_equal(10.2/100, value);
+    test_assert_double_equal(10.2, value);
   }
 
   {
@@ -55,8 +55,8 @@ void test_sscan_percent() {
   {
     const char * MIN_REALIZATIONS= "9 %";
     double value = 0.0;
-    test_assert_true(util_sscanf_percent(MIN_REALIZATIONS, &value));
-    test_assert_double_equal(9.0/100, value);
+    test_assert_false(util_sscanf_percent(MIN_REALIZATIONS, &value));
+    test_assert_double_equal(0.0, value);
   }
 
 }
