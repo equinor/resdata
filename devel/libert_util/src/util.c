@@ -3053,6 +3053,19 @@ bool util_sscanf_date(const char * date_token , time_t * t) {
 }
 
 
+bool util_sscanf_percent(const char * percent_token, double * value) {
+  char * percent_ptr;
+
+  double double_val = strtod( percent_token, &percent_ptr);
+
+  if (0 == strcmp(percent_ptr, "%")) {
+    *value = double_val;
+    return true;
+  } else
+    return false;
+}
+
+
 bool util_fscanf_date(FILE *stream , time_t *t)  {
   int init_pos = util_ftell(stream);
   char * date_token = util_fscanf_alloc_token(stream);
