@@ -3054,25 +3054,15 @@ bool util_sscanf_date(const char * date_token , time_t * t) {
 
 
 bool util_sscanf_percent(const char * percent_token, double * value) {
-  int    integer_number = 0;
-  float  float_number   = 0.0;
-  char * percentage     = util_alloc_sprintf("");
-  bool   ret            = false;
+  char * percent_ptr;
 
-  if (2 == sscanf(percent_token, "%f%s", &float_number, percentage)) {
-    if (0 == strcmp(percentage, "%")) {
-      *value = float_number/100.0;
-      ret = true;
-    }
-  } else if (2 == sscanf(percent_token,"%d%s", &integer_number, percentage)) {
-    if (0 == strcmp(percentage, "%")) {
-      *value = integer_number/100;
-      ret = true;
-    }
-  }
+  double double_val = strtod( percent_token, &percent_ptr);
 
-  free(percentage);
-  return ret;
+  if (0 == strcmp(percent_ptr, "%")) {
+    *value = double_val;
+    return true;
+  } else
+    return false;
 }
 
 
