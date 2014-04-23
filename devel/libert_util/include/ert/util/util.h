@@ -375,6 +375,7 @@ typedef enum {left_pad   = 0,
   double   util_kahan_sum(const double *data, size_t N);
   bool     util_double_approx_equal( double d1 , double d2);
   bool     util_double_approx_equal__( double d1 , double d2, double epsilon);
+  bool util_float_approx_equal__( float d1 , float d2, float epsilon);
   int      util_fnmatch( const char * pattern , const char * string );
   void     util_localtime( time_t * t , struct tm * ts );
 

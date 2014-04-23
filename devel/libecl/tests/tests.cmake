@@ -95,6 +95,10 @@ add_executable( ecl_grid_simple ecl_grid_simple.c )
 target_link_libraries( ecl_grid_simple ecl test_util )
 add_test( ecl_grid_simple ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_simple  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
 
+add_executable( ecl_grid_export ecl_grid_export.c )
+target_link_libraries( ecl_grid_export ecl test_util )
+add_test( ecl_grid_export ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
+
 add_executable( ecl_grid_volume ecl_grid_volume.c )
 target_link_libraries( ecl_grid_volume ecl test_util )
 add_test( ecl_grid_volume1 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_volume  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE )
@@ -226,6 +230,7 @@ set_property( TEST ecl_lgr_test2 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_lgr_test3 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_lgr_name PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_simple PROPERTY LABELS StatoilData )
+set_property( TEST ecl_grid_export PROPERTY LABELS StatoilData )
 set_property( TEST ecl_dualp PROPERTY LABELS StatoilData )
 set_property( TEST ecl_sum_test PROPERTY LABELS StatoilData )
 

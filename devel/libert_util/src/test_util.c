@@ -217,6 +217,24 @@ void test_assert_double_not_equal__( double d1 , double d2, const char * file , 
     test_error_exit( "%s:%d => double values:%15.12g %15.12g are equal.\n" , file , line , d1 , d2);
 }
 
+bool test_check_float_equal( float d1 , float d2) {
+  const float tolerance = 1e-4;
+  return util_float_approx_equal__( d1 , d2 , tolerance );
+}
+
+
+void test_assert_float_equal__( float d1 , float d2, const char * file , int line) {
+  if (!test_check_float_equal(d1 , d2))
+    test_error_exit( "%s:%d => float values:%g %g are not sufficiently similar\n" , file , line , d1 , d2);
+}
+
+
+void test_assert_float_not_equal__( float d1 , float d2, const char * file , int line) {
+  if (test_check_float_equal(d1 , d2))
+    test_error_exit( "%s:%d => float values:%15.12g %15.12g are equal.\n" , file , line , d1 , d2);
+}
+
+
 /*****************************************************************/
 
 void test_install_SIGNALS(void) {

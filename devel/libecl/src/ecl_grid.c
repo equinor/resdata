@@ -4680,6 +4680,17 @@ void ecl_grid_dump_ascii_cell3(ecl_grid_type * grid , int i , int j , int k , FI
 */
 
 
+bool ecl_grid_use_mapaxes( const ecl_grid_type * grid ) {
+  return grid->use_mapaxes;
+}
+
+void ecl_grid_init_mapaxes_data_double( const ecl_grid_type * grid , double * mapaxes) {
+  int i;
+  for (i = 0; i < 6; i++)
+    mapaxes[i] = grid->mapaxes[i];
+}
+
+
 static const float * ecl_grid_get_mapaxes( const ecl_grid_type * grid ) {
   if (grid->use_mapaxes)
     return grid->mapaxes;
@@ -4926,7 +4937,7 @@ static int ecl_grid_get_top_valid_index( const ecl_grid_type * grid , int i , in
 
 
 
-static bool ecl_grid_init_coord_section__( const ecl_grid_type * grid , int i, int j , int i_corner, int j_corner , bool force_set , float * coord ) {
+static bool ecl_grid_init_coord_section__( const ecl_grid_type * grid , int i, int j , int i_corner, int j_corner , bool force_set , float * coord_float , double * coord_double ) {
   
   const int top_index    = ecl_grid_get_top_valid_index( grid , i , j );
   const int bottom_index = ecl_grid_get_bottom_valid_index( grid , i , j );
@@ -4959,13 +4970,27 @@ static bool ecl_grid_init_coord_section__( const ecl_grid_type * grid , int i, i
         point_mapaxes_invtransform( &top_point    , grid->origo , grid->unit_x , grid->unit_y );
         point_mapaxes_invtransform( &bottom_point , grid->origo , grid->unit_x , grid->unit_y );
         
-        coord[coord_offset]     = top_point.x;
-        coord[coord_offset + 1] = top_point.y;
-        coord[coord_offset + 2] = top_point.z;
-        
-        coord[coord_offset + 3] = bottom_point.x;
-        coord[coord_offset + 4] = bottom_point.y;
-        coord[coord_offset + 5] = bottom_point.z;
+        if (coord_float) {
+          coord_float[coord_offset]     = top_point.x;
+
+          coord_float[coord_offset + 1] = top_point.y;
+          coord_float[coord_offset + 2] = top_point.z;
+          coord_float[coord_offset + 3] = bottom_point.x;
+          coord_float[coord_offset + 4] = bottom_point.y;
+          coord_float[coord_offset + 5] = bottom_point.z;
+        }
+
+
+        if (coord_double) {
+          coord_double[coord_offset]     = top_point.x;
+          coord_double[coord_offset + 1] = top_point.y;
+          coord_double[coord_offset + 2] = top_point.z;
+          
+          coord_double[coord_offset + 3] = bottom_point.x;
+          coord_double[coord_offset + 4] = bottom_point.y;
+          coord_double[coord_offset + 5] = bottom_point.z;
+        }
+
         
         return true;
       }
@@ -4974,7 +4999,7 @@ static bool ecl_grid_init_coord_section__( const ecl_grid_type * grid , int i, i
 }
 
 
-static void ecl_grid_init_coord_section( const ecl_grid_type * grid , int i, int j , float * coord ) {
+static void ecl_grid_init_coord_section( const ecl_grid_type * grid , int i, int j , float * coord_float , double * coord_double ) {
   int i_corner = 0;
   int j_corner = 0;
 
@@ -4988,13 +5013,13 @@ static void ecl_grid_init_coord_section( const ecl_grid_type * grid , int i, int
     j_corner = 1;
   }
 
-  ecl_grid_init_coord_section__( grid , i,j, i_corner,j_corner, /*force_set=*/true, coord);
+  ecl_grid_init_coord_section__( grid , i,j, i_corner,j_corner, /*force_set=*/true, coord_float , coord_double);
 }
 
 
 
 
-static void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord ) {
+void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord ) {
   /*
     The coord vector contains the points defining the top and bottom
     of the pillars. The vector contains (nx + 1) * (ny + 1) 6 element
@@ -5004,7 +5029,23 @@ static void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord
   int i,j;
   for (j=0; j <= grid->ny; j++) {
     for (i=0; i <= grid->nx; i++) 
-      ecl_grid_init_coord_section( grid , i , j , coord );
+      ecl_grid_init_coord_section( grid , i , j , coord , NULL);
+    
+  }
+}
+
+
+void ecl_grid_init_coord_data_double( const ecl_grid_type * grid , double * coord ) {
+  /*
+    The coord vector contains the points defining the top and bottom
+    of the pillars. The vector contains (nx + 1) * (ny + 1) 6 element
+    chunks of data, where each chunk contains the coordinates (x,y,z)
+    f the top and the bottom of the pillar.
+  */
+  int i,j;
+  for (j=0; j <= grid->ny; j++) {
+    for (i=0; i <= grid->nx; i++) 
+      ecl_grid_init_coord_section( grid , i , j , NULL , coord);
     
   }
 }
@@ -5024,13 +5065,15 @@ void ecl_grid_assert_coord_kw( ecl_grid_type * grid ) {
   }
 }
 
-
+int ecl_grid_get_coord_size( const ecl_grid_type * ecl_grid) {
+  return (ecl_grid->nx + 1) * (ecl_grid->ny + 1) * 6;
+}
 
 
 
 /*****************************************************************/
 
-static void ecl_grid_init_zcorn_data( const ecl_grid_type * grid , float * zcorn ) {
+static void ecl_grid_init_zcorn_data__( const ecl_grid_type * grid , float * zcorn_float , double * zcorn_double ) {
   int nx = grid->nx;
   int ny = grid->ny;
   int nz = grid->nz;
@@ -5048,14 +5091,36 @@ static void ecl_grid_init_zcorn_data( const ecl_grid_type * grid , float * zcorn
           point_type p2 = cell->corner_list[ 4*l + 2];
           point_type p3 = cell->corner_list[ 4*l + 3];
 
-          zcorn[k*8*nx*ny + j*4*nx + 2*i            + l*4*nx*ny] = p0.z;
-          zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + l*4*nx*ny] = p1.z;
-          zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + l*4*nx*ny] = p2.z;
-          zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + l*4*nx*ny] = p3.z;
+          int z1 = k*8*nx*ny + j*4*nx + 2*i            + l*4*nx*ny;
+          int z2 = k*8*nx*ny + j*4*nx + 2*i  +  1      + l*4*nx*ny;
+          int z3 = k*8*nx*ny + j*4*nx + 2*nx + 2*i     + l*4*nx*ny;
+          int z4 = k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + l*4*nx*ny;
+
+          if (zcorn_float) {
+            zcorn_float[z1] = p0.z;
+            zcorn_float[z2] = p1.z;
+            zcorn_float[z3] = p2.z;
+            zcorn_float[z4] = p3.z;
+          }
+          
+          if (zcorn_double) {
+            zcorn_double[z1] = p0.z;
+            zcorn_double[z2] = p1.z;
+            zcorn_double[z3] = p2.z;
+            zcorn_double[z4] = p3.z;
+          }
         }
       }
     }
   }
+}
+
+void ecl_grid_init_zcorn_data( const ecl_grid_type * grid , float * zcorn ) {
+  ecl_grid_init_zcorn_data__( grid , zcorn , NULL );
+}
+
+void ecl_grid_init_zcorn_data_double( const ecl_grid_type * grid , double * zcorn ) {
+  ecl_grid_init_zcorn_data__( grid , NULL , zcorn );
 }
 
 
@@ -5073,9 +5138,14 @@ ecl_kw_type * ecl_grid_alloc_zcorn_kw( const ecl_grid_type * grid ) {
   return zcorn_kw;
 }
 
+
+int ecl_grid_get_zcorn_size( const ecl_grid_type * grid ) {
+  return 8 * grid->size;
+}
+
 /*****************************************************************/
 
-static void ecl_grid_init_actnum_data( const ecl_grid_type * grid , int * actnum ) {
+void ecl_grid_init_actnum_data( const ecl_grid_type * grid , int * actnum ) {
   int i;
   for (i=0; i < grid->size; i++) {
     const ecl_cell_type * cell = ecl_grid_get_cell( grid , i );
@@ -5091,7 +5161,6 @@ static void ecl_grid_init_actnum_data( const ecl_grid_type * grid , int * actnum
         int group_size = ecl_coarse_cell_get_size( coarse_cell );
         const int * index_ptr = ecl_coarse_cell_get_index_ptr( coarse_cell );
         int j;
-
         for (j=0; j < group_size; j++) 
           actnum[index_ptr[j]] = INACTIVE; 
       }
