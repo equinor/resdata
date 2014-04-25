@@ -146,6 +146,20 @@ class EclGrid(CClass):
                  cfunc.get_nz( self ) ,
                  cfunc.get_active( self ) )
 
+    def getNX(self):
+        """ The number of elements in the x direction"""
+        return cfunc.get_nx( self )
+
+    def getNY(self):
+        """ The number of elements in the y direction"""
+        return cfunc.get_ny( self )
+
+    def getNZ(self):
+        """ The number of elements in the z direction"""
+        return cfunc.get_nz( self )
+
+
+
     @property
     def name( self ):
         """

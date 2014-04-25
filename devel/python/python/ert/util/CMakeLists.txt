@@ -14,7 +14,6 @@ set(PYTHON_SOURCES
     stat.py
     stringlist.py
     substitution_list.py
-    test_area.py
     thread_pool.py
     time_vector.py
     ui_return.py

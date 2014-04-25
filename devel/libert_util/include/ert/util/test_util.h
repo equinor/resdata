@@ -58,6 +58,10 @@ extern "C" {
   void  test_assert_double_equal__( double d1 , double d2 , const char * file , int line );
   bool  test_check_double_equal( double d1 , double d2);
 
+#define test_assert_float_equal( d1 , d2 ) test_assert_float_equal__( (d1) , (d2) , __FILE__ , __LINE__  )
+  void  test_assert_float_equal__( float d1 , float d2 , const char * file , int line );
+  bool  test_check_float_equal( float d1 , float d2);
+
 #define test_assert_double_not_equal( d1 , d2 ) test_assert_double_not_equal__( (d1) , (d2) , __FILE__ , __LINE__  )
   void  test_assert_double_not_equal__( double d1 , double d2 , const char * file , int line );
 

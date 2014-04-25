@@ -70,6 +70,5 @@ from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .latex import LaTeX
 from .substitution_list import SubstitutionList
 from .ui_return import UIReturn
-from .test_area import TestArea , TestAreaContext
 from .rng import RandomNumberGenerator
 from .thread_pool import ThreadPool

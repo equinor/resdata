@@ -363,6 +363,21 @@ double util_kahan_sum(const double *data, size_t N) {
 }
 
 
+bool util_float_approx_equal__( float d1 , float d2, float epsilon) {
+  if (d1 == d2)
+    return true;
+  else {
+    float diff = fabs(d1 - d2);
+    float sum  = fabs(d1) + fabs(d2);
+    
+    if ((diff / sum) < epsilon)
+      return true;
+    else
+      return false;
+  }
+}
+
+
 bool util_double_approx_equal__( double d1 , double d2, double epsilon) {
   if (d1 == d2)
     return true;
@@ -3050,6 +3065,19 @@ bool util_sscanf_date(const char * date_token , time_t * t) {
     *t = -1;
     return false;
   }
+}
+
+
+bool util_sscanf_percent(const char * percent_token, double * value) {
+  char * percent_ptr;
+
+  double double_val = strtod( percent_token, &percent_ptr);
+
+  if (0 == strcmp(percent_ptr, "%")) {
+    *value = double_val;
+    return true;
+  } else
+    return false;
 }
 
 
