@@ -533,6 +533,18 @@ void @TYPE@_vector_inplace_add( @TYPE@_vector_type * vector , const @TYPE@_vecto
   }
 }
 
+/* vector - vector */
+void @TYPE@_vector_inplace_sub( @TYPE@_vector_type * vector , const @TYPE@_vector_type * delta) {
+  if (vector->size != delta->size) 
+    util_abort("%s: combining vectors with different size: %d and %d \n",__func__ , vector->size , delta->size);
+  {
+    int i;
+    for (i=0; i < vector->size; i++) 
+      vector->data[i] -= delta->data[i];
+  }
+}
+
+
 /* vector * vector (elementwise) */
 void @TYPE@_vector_inplace_mul( @TYPE@_vector_type * vector , const @TYPE@_vector_type * factor) {
   if (vector->size != factor->size) 
@@ -741,6 +753,25 @@ int @TYPE@_vector_size(const @TYPE@_vector_type * vector) {
   }
 }
 
+
+void @TYPE@_vector_rshift(@TYPE@_vector_type * vector , int shift) {
+  if ((vector->size + shift) > vector->alloc_size)
+    @TYPE@_vector_resize( vector , 2 * (vector->size + shift));
+
+  if (shift > 0) {
+    int i;
+    memmove(&vector->data[shift] , vector->data , vector->size * sizeof * vector->data );
+    for (i=0; i < shift; i++)
+      vector->data[i] = vector->default_value;
+  } else
+    memmove(vector->data , &vector->data[abs(shift)] , (vector->size + shift) * sizeof * vector->data);
+  
+  vector->size += shift;
+}
+
+void @TYPE@_vector_lshift(@TYPE@_vector_type * vector , int shift) {
+  @TYPE@_vector_rshift( vector , -shift);
+}
 
 
 @TYPE@ * @TYPE@_vector_get_ptr(const @TYPE@_vector_type * vector) {
