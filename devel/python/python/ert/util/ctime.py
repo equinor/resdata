@@ -120,5 +120,4 @@ class ctime(object):
 
 cwrapper = CWrapper(None)
 cwrapper.registerType("time_t"  , ctime)
-cwrapper.registerType("time_t*" , ctypes.POINTER(ctypes.c_long))
 
