@@ -27,17 +27,17 @@ class ctime(object):
     def __init__(self, value):
         if isinstance(value, types.IntType):
             self.value = value
+        elif isinstance(value , ctime):
+            self.value = value.value
         else:
-            if isinstance(value , ctime):
-                self.value = value.value
-            else:
-                try:
-                    # Input value is assumed to be datetime.datetime instance
-                    self.value = int(math.floor(time.mktime(
-                        (value.year, value.month, value.day, value.hour, value.minute, value.second, 0, 0, -1 ))))
-                except (OverflowError, ValueError, AttributeError):
-                    # Input value is assumed to be datetime.date instance
-                    self.value = int(math.floor(time.mktime((value.year, value.month, value.day, 0, 0, 0, 0, 0, -1 ))))
+            try:
+                # Input value is assumed to be datetime.datetime instance
+                self.value = int(math.floor(time.mktime(
+                    (value.year, value.month, value.day, value.hour, value.minute, value.second, 0, 0, -1 ))))
+            except (OverflowError, ValueError, AttributeError):
+                # Input value is assumed to be datetime.date instance
+                self.value = int(math.floor(time.mktime((value.year, value.month, value.day, 0, 0, 0, 0, 0, -1 ))))
+
 
     @classmethod
     def from_param(cls,obj):
