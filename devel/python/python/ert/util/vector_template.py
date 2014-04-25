@@ -109,7 +109,7 @@ class VectorTemplate(BaseCClass):
         if shift < 0:
             raise ValueError("The shift must be positive")
         if shift > len(self):
-            raise ValueError("The shift is too large %d > %d" % (shift, len(self))
+            raise ValueError("The shift is too large %d > %d" % (shift, len(self)))
         self.cNamespace().lshift(self, shift)
         return self
 
