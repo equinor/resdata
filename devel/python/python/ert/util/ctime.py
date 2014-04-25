@@ -65,19 +65,19 @@ class ctime(object):
         if isinstance(other , ctime):
             return self.value >= other.value
         else:
-            return self.__ge__( ctime(other))
+            return self >= ctime(other)
 
     def __lt__(self, other):
         if isinstance(other , ctime):
             return self.value < other.value
         else:
-            return self.__lt__( ctime(other))
+            return self < ctime(other)
 
     def __eq__(self, other):
         if isinstance(other , ctime):
             return self.value == other.value
         else:
-            return self.__eq__( ctime(other) )
+            return self == ctime(other)
 
             
     def __imul__(self , other):
@@ -93,7 +93,7 @@ class ctime(object):
             self.value += other.value
             return self
         else:
-            return self.__iadd__( ctime(other) )
+            self += ctime(other)
 
     def __add__(self,other):
         copy = ctime( self )
@@ -101,7 +101,7 @@ class ctime(object):
         return copy
 
     def __radd__(self,other):
-        return self.__add__(other)
+        return self + other
 
 
     def __mul__(self , other):
@@ -110,7 +110,7 @@ class ctime(object):
         return copy
 
     def __rmul__(self , other):
-        return self.__mul__( other )
+        return self * other
 
         
     @property
