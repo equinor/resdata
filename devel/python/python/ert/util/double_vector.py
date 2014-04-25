@@ -63,8 +63,6 @@ DoubleVector.cNamespace().assign           = cwrapper.prototype("void   double_v
 DoubleVector.cNamespace().memcpy           = cwrapper.prototype("void   double_vector_memcpy(double_vector , double_vector )")
 DoubleVector.cNamespace().set_default      = cwrapper.prototype("void   double_vector_set_default( double_vector , double)")
 DoubleVector.cNamespace().get_default      = cwrapper.prototype("double    double_vector_get_default( double_vector )")
-DoubleVector.cNamespace().alloc_data_copy  = cwrapper.prototype("double*  double_vector_alloc_data_copy( double_vector )")
-DoubleVector.cNamespace().data_ptr         = cwrapper.prototype("double*  double_vector_get_ptr( double_vector )")
 DoubleVector.cNamespace().element_size     = cwrapper.prototype("int      double_vector_element_size( double_vector )")
 
 DoubleVector.cNamespace().permute          = cwrapper.prototype("void double_vector_permute(double_vector, permutation_vector)")

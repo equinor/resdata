@@ -113,8 +113,6 @@ BoolVector.cNamespace().assign              = cwrapper.prototype("void   bool_ve
 BoolVector.cNamespace().memcpy              = cwrapper.prototype("void   bool_vector_memcpy(bool_vector , bool_vector )")
 BoolVector.cNamespace().set_default         = cwrapper.prototype("void   bool_vector_set_default( bool_vector , bool)")
 BoolVector.cNamespace().get_default         = cwrapper.prototype("bool   bool_vector_get_default( bool_vector )")
-BoolVector.cNamespace().alloc_data_copy     = cwrapper.prototype("bool*  bool_vector_alloc_data_copy( bool_vector )")
-BoolVector.cNamespace().data_ptr            = cwrapper.prototype("bool*  bool_vector_get_ptr( bool_vector )")
 BoolVector.cNamespace().element_size        = cwrapper.prototype("int    bool_vector_element_size( bool_vector )")
 BoolVector.cNamespace().count_equal         = cwrapper.prototype("int    bool_vector_count_equal( bool_vector, bool)")
 
