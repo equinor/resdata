@@ -23,10 +23,13 @@ import time
 from ert.cwrap import CWrapper
 
 
+
 class ctime(object):
+
     def __init__(self, value):
         if isinstance(value, types.IntType):
             self.value = value
+
         elif isinstance(value , ctime):
             self.value = value.value
         else:
@@ -37,6 +40,7 @@ class ctime(object):
             except (OverflowError, ValueError, AttributeError):
                 # Input value is assumed to be datetime.date instance
                 self.value = int(math.floor(time.mktime((value.year, value.month, value.day, 0, 0, 0, 0, 0, -1 ))))
+
 
 
     @classmethod
@@ -78,6 +82,15 @@ class ctime(object):
             return self.value == other.value
         else:
             return self == ctime(other)
+            
+    def inRange(self , d1 , d2, includeUpperLimit = False):
+        if self >= d1 and self < d2:
+            return True
+        else:
+            if self == d2 and includeUpperLimit:
+                return True
+            else:
+                return False
 
             
     def __imul__(self , other):
