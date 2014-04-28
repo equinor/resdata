@@ -25,3 +25,5 @@ ERT_GEOMETRY_LIB = clib.ert_load("libert_geometry")
 
 from .geo_polygon import GeoPolygon
 
+from .polyline import Polyline
+from .xyz_reader import XYZReader
