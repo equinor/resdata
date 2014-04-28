@@ -21,6 +21,10 @@ in the C source files ecl_sum.c, ecl_smspec.c and ecl_sum_data in the
 libecl/src directory.
 """
 
+
+import numpy
+import datetime
+
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
@@ -31,7 +35,6 @@ from ert.ecl.ecl_smspec_node import EclSMSPECNode
 from ert.util import StringList, ctime, DoubleVector, TimeVector, IntVector
 from ert.ecl import ECL_LIB
 
-import numpy
 
 
 #import ert.ecl_plot.sum_plot as sum_plot
@@ -363,6 +366,72 @@ class EclSum(BaseCClass):
                 raise ValueError("date:%s is outside range of simulation data" % date)
         else:
             raise ValueError("Must supply either days or date")
+
+    
+    def timeRange(self , start = None , end = None , interval = "1Y"):
+        (num , timeUnit) = TimeVector.parseTimeUnit( interval )
+
+        if start is None:
+            start = self.start_time
+        if isinstance(start , datetime.date):
+            start = datetime.datetime( start.year , start.month , start.day , 0 , 0 , 0 )
+                
+        if end is None:
+            end = self.end_time
+        if isinstance(end , datetime.date):
+            end = datetime.datetime( end.year , end.month , end.day , 0 , 0 , 0 )
+        
+        if end < start:
+            raise ValueError("Invalid time interval start after end")
+
+
+        if not timeUnit == "d":
+            year1 = start.year
+            year2 = end.year
+            month1 = start.month
+            month2 = end.month
+            day1 = start.day
+            day2 = end.day
+            
+            if timeUnit == 'm':
+                if day2 > 1:
+                    month2 += 1
+                    if month2 == 13:
+                        year2 += 1
+                        month2 = 1
+            elif timeUnit == "y":
+                month1 = 1
+                if year2 > 1 or day2 > 1:
+                    year2 += 1
+                month2 = 1
+            day1 = 1
+            day2 = 1
+            start = datetime.date( year1, month1 , day1)
+            end =  datetime.date(year2 , month2 , day2)
+                
+        trange = TimeVector.createRegular(start , end , interval)
+        if trange[-1] < end:
+            trange.appendTime( num , timeUnit )
+        return trange
+        
+
+
+    def blockedProduction(self , totalKey , timeRange):
+        node = self.smspec_node(totalKey)
+        if node.is_total:
+            total = DoubleVector()
+            for t in timeRange:
+                if t < ctime(self.start_time):
+                    total.append( 0 )
+                elif t >= ctime( self.end_time):
+                    total.append( self.get_last_value( totalKey ))
+                else:
+                    total.append( self.get_interp( totalKey , date = t ))
+            tmp = total << 1
+            total.pop()
+            return tmp - total
+        else:
+            raise TypeError("The blockedProduction method must be called with one of the TOTAL keys like e.g. FOPT or GWIT")
 
 
     def get_report( self , date = None , days = None):
