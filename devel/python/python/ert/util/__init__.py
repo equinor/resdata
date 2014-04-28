@@ -65,7 +65,7 @@ from .matrix import Matrix
 from .log import Log
 from .lookup_table import LookupTable
 from .buffer import Buffer
-from .ctime import ctime
+from .ctime import CTime
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .latex import LaTeX
 from .substitution_list import SubstitutionList

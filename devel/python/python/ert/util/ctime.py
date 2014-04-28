@@ -24,13 +24,13 @@ from ert.cwrap import CWrapper
 
 
 
-class ctime(object):
+class CTime(object):
 
     def __init__(self, value):
         if isinstance(value, types.IntType):
             self.value = value
 
-        elif isinstance(value , ctime):
+        elif isinstance(value , CTime):
             self.value = value.value
         else:
             try:
@@ -66,22 +66,22 @@ class ctime(object):
         return "%s" % (str(self.datetime()))
 
     def __ge__(self, other):
-        if isinstance(other , ctime):
+        if isinstance(other , CTime):
             return self.value >= other.value
         else:
-            return self >= ctime(other)
+            return self >= CTime(other)
 
     def __lt__(self, other):
-        if isinstance(other , ctime):
+        if isinstance(other , CTime):
             return self.value < other.value
         else:
-            return self < ctime(other)
+            return self < CTime(other)
 
     def __eq__(self, other):
-        if isinstance(other , ctime):
+        if isinstance(other , CTime):
             return self.value == other.value
         else:
-            return self == ctime(other)
+            return self == CTime(other)
             
     def inRange(self , d1 , d2, includeUpperLimit = False):
         if self >= d1 and self < d2:
@@ -102,14 +102,14 @@ class ctime(object):
         return hash(self.value)
 
     def __iadd__(self , other):
-        if isinstance(other , ctime):
+        if isinstance(other , CTime):
             self.value += other.value
             return self
         else:
-            self += ctime(other)
+            self += CTime(other)
 
     def __add__(self,other):
-        copy = ctime( self )
+        copy = CTime( self )
         copy += other
         return copy
 
@@ -118,7 +118,7 @@ class ctime(object):
 
 
     def __mul__(self , other):
-        copy = ctime( self )
+        copy = CTime( self )
         copy *= other
         return copy
 
@@ -132,5 +132,5 @@ class ctime(object):
 
 
 cwrapper = CWrapper(None)
-cwrapper.registerType("time_t"  , ctime)
+cwrapper.registerType("time_t"  , CTime)
 

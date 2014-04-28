@@ -32,7 +32,7 @@ import datetime
 from ert.cwrap import BaseCClass, CWrapper
 from ert.ecl.ecl_sum_vector import EclSumVector
 from ert.ecl.ecl_smspec_node import EclSMSPECNode
-from ert.util import StringList, ctime, DoubleVector, TimeVector, IntVector
+from ert.util import StringList, CTime, DoubleVector, TimeVector, IntVector
 from ert.ecl import ECL_LIB
 
 
@@ -115,7 +115,7 @@ class EclSum(BaseCClass):
 
         for i in range(length):
             self.__days[i] = EclSum.cNamespace().iget_sim_days(self, i)
-            self.__dates[i] = EclSum.cNamespace().iget_sim_time(self, i).datetime()
+            self.__dates[i] = self.iget_date( i )
             self.__report_step[i] = EclSum.cNamespace().iget_report_step(self, i)
             self.__mini_step[i] = EclSum.cNamespace().iget_mini_step(self, i)
             self.__mpl_dates[i] = date2num(self.__dates[i])
@@ -142,7 +142,7 @@ class EclSum(BaseCClass):
                 i1 += 1
                 
             self.__daysR[i0] = EclSum.cNamespace().iget_sim_days(self, time_index)
-            self.__datesR[i0] = EclSum.cNamespace().iget_sim_time(self, time_index).datetime()
+            self.__datesR[i0] = self.iget_date(time_index)
             self.__report_stepR[i0] = EclSum.cNamespace().iget_report_step(self, time_index)
             self.__mini_stepR[i0] = EclSum.cNamespace().iget_mini_step(self, time_index)
             self.__mpl_datesR[i0] = date2num(self.__datesR[i0])
@@ -334,7 +334,7 @@ class EclSum(BaseCClass):
         """
         Will check if the input date is in the time span [sim_start , sim_end].
         """
-        return EclSum.cNamespace().check_sim_time( self , ctime(date) )
+        return EclSum.cNamespace().check_sim_time( self , CTime(date) )
 
     
     def get_interp( self , key , days = None , date = None):
@@ -361,7 +361,7 @@ class EclSum(BaseCClass):
                     raise ValueError("days:%s is outside range of simulation: [%g,%g]" % (days , self.first_day , self.sim_length))
         elif date:
             if self.check_sim_time( date ):
-                return EclSum.cNamespace().get_general_var_from_sim_time( self , ctime(date) , key )
+                return EclSum.cNamespace().get_general_var_from_sim_time( self , CTime(date) , key )
             else:
                 raise ValueError("date:%s is outside range of simulation data" % date)
         else:
@@ -421,9 +421,9 @@ class EclSum(BaseCClass):
         if node.is_total:
             total = DoubleVector()
             for t in timeRange:
-                if t < ctime(self.start_time):
+                if t < CTime(self.start_time):
                     total.append( 0 )
-                elif t >= ctime( self.end_time):
+                elif t >= CTime( self.end_time):
                     total.append( self.get_last_value( totalKey ))
                 else:
                     total.append( self.get_interp( totalKey , date = t ))
@@ -445,7 +445,7 @@ class EclSum(BaseCClass):
         if date:
             if days:
                 raise ValueError("Must supply either days or date")
-            step = EclSum.cNamespace().get_report_step_from_time( self , ctime(date))
+            step = EclSum.cNamespace().get_report_step_from_time( self , CTime(date))
         elif days:
             step = EclSum.cNamespace().get_report_step_from_days( self , days)
             
@@ -456,8 +456,7 @@ class EclSum(BaseCClass):
         """
         Will return the datetime corresponding to the report_step @report.
         """
-        ctime = EclSum.cNamespace().get_report_time( self , report )
-        return ctime.date()
+        return CTime( EclSum.cNamespace().get_report_time( self , report ) ).date()
 
 
     def get_interp_vector( self , key , days_list = None , date_list = None):
@@ -493,9 +492,11 @@ class EclSum(BaseCClass):
             end_time   = self.end_date
             vector = numpy.zeros( len(date_list ))
             index = 0
+
             for date in date_list:
-                if (date >= start_time) and (date <= end_time):
-                    vector[index] =  EclSum.cNamespace().get_general_var_from_sim_time( self , ctime(date) , key)
+                ct = CTime(date)
+                if ct.inRange( start_time , end_time , includeUpperLimit = True):
+                    vector[index] =  EclSum.cNamespace().get_general_var_from_sim_time( self , ct , key)
                 else:
                     raise ValueError("Invalid date value")
                 index += 1
@@ -716,9 +717,13 @@ class EclSum(BaseCClass):
 
     def iget_date(self , time_index):
         """
-        Returns the simulation date for element nr @time_index.
+        Returns the simulation date for element nr @t
+ime_index.
         """
-        return EclSum.cNamespace().iget_sim_time( self , time_index ).datetime()
+        long_time = EclSum.cNamespace().iget_sim_time( self , time_index )
+        ct = CTime(long_time)
+        return ct.datetime()
+
 
     def iget_report( self , time_index ):
         """
@@ -763,24 +768,25 @@ class EclSum(BaseCClass):
         returned start_date might be different from the datetime of
         the first (loaded) timestep.
         """
-        ctime = EclSum.cNamespace().get_start_date( self )
-        return ctime.date()
+        ct = EclSum.cNamespace().get_start_date( self )
+        return CTime(ct).date()
+
 
     @property
     def end_date(self):
         """
         The date of the last (loaded) time step.
         """
-        ctime = EclSum.cNamespace().get_end_date( self )
-        return ctime.date()
+        return CTime( EclSum.cNamespace().get_end_date( self ) ).date()
+
+        
 
     @property
     def data_start(self):
         """
         The first date we have data for.
         """
-        ctime = EclSum.cNamespace().get_data_start( self )
-        return ctime.date()
+        return CTime( EclSum.cNamespace().get_data_start( self ) ).datetime()
     
 
     @property
@@ -790,16 +796,14 @@ class EclSum(BaseCClass):
         
         See start_date() for further details.
         """
-        ctime = EclSum.cNamespace().get_start_date( self )
-        return ctime.datetime()
+        return CTime( EclSum.cNamespace().get_start_date( self ) ).datetime()
 
     @property
     def end_time(self):
         """
         The time of the last (loaded) time step.
         """
-        ctime = EclSum.cNamespace().get_end_date( self )
-        return ctime.datetime()
+        return CTime(EclSum.cNamespace().get_end_date( self )).datetime()
     
     @property
     def last_report(self):
@@ -917,7 +921,7 @@ EclSum.cNamespace().data_length                   = cwrapper.prototype("int     
 EclSum.cNamespace().iget_sim_days                 = cwrapper.prototype("double   ecl_sum_iget_sim_days( ecl_sum , int) ")
 EclSum.cNamespace().iget_report_step              = cwrapper.prototype("int      ecl_sum_iget_report_step( ecl_sum , int) ")
 EclSum.cNamespace().iget_mini_step                = cwrapper.prototype("int      ecl_sum_iget_mini_step( ecl_sum , int) ")
-EclSum.cNamespace().iget_sim_time                 = cwrapper.prototype("time_t   ecl_sum_iget_sim_time( ecl_sum , int) ")
+EclSum.cNamespace().iget_sim_time                 = cwrapper.prototype("c_long   ecl_sum_iget_sim_time( ecl_sum , int) ")
 EclSum.cNamespace().get_report_end                = cwrapper.prototype("int      ecl_sum_iget_report_end( ecl_sum , int)")
 EclSum.cNamespace().get_general_var               = cwrapper.prototype("double   ecl_sum_get_general_var( ecl_sum , int , char*)")
 EclSum.cNamespace().get_general_var_index         = cwrapper.prototype("int      ecl_sum_get_general_var_params_index( ecl_sum , char*)")
@@ -925,8 +929,8 @@ EclSum.cNamespace().get_general_var_from_sim_days = cwrapper.prototype("double  
 EclSum.cNamespace().get_general_var_from_sim_time = cwrapper.prototype("double   ecl_sum_get_general_var_from_sim_time( ecl_sum , time_t , char*)")
 EclSum.cNamespace().get_first_gt                  = cwrapper.prototype("int      ecl_sum_get_first_gt( ecl_sum , int , double )")
 EclSum.cNamespace().get_first_lt                  = cwrapper.prototype("int      ecl_sum_get_first_lt( ecl_sum , int , double )")
-EclSum.cNamespace().get_start_date                = cwrapper.prototype("time_t   ecl_sum_get_start_time( ecl_sum )")
-EclSum.cNamespace().get_end_date                  = cwrapper.prototype("time_t   ecl_sum_get_end_time( ecl_sum )")
+EclSum.cNamespace().get_start_date                = cwrapper.prototype("c_long   ecl_sum_get_start_time( ecl_sum )")
+EclSum.cNamespace().get_end_date                  = cwrapper.prototype("c_long   ecl_sum_get_end_time( ecl_sum )")
 EclSum.cNamespace().get_last_report_step          = cwrapper.prototype("int      ecl_sum_get_last_report_step( ecl_sum )")
 EclSum.cNamespace().get_first_report_step         = cwrapper.prototype("int      ecl_sum_get_first_report_step( ecl_sum )")
 EclSum.cNamespace().select_matching_keys          = cwrapper.prototype("void     ecl_sum_select_matching_general_var_list( ecl_sum , char* , stringlist )")
@@ -935,7 +939,7 @@ EclSum.cNamespace().check_sim_time                = cwrapper.prototype("bool    
 EclSum.cNamespace().check_sim_days                = cwrapper.prototype("bool     ecl_sum_check_sim_days( ecl_sum , double )")
 EclSum.cNamespace().sim_length                    = cwrapper.prototype("double   ecl_sum_get_sim_length( ecl_sum )")
 EclSum.cNamespace().get_first_day                 = cwrapper.prototype("double   ecl_sum_get_first_day( ecl_sum )")
-EclSum.cNamespace().get_data_start                = cwrapper.prototype("time_t   ecl_sum_get_data_start( ecl_sum )")
+EclSum.cNamespace().get_data_start                = cwrapper.prototype("c_long   ecl_sum_get_data_start( ecl_sum )")
 
 EclSum.cNamespace().get_unit                      = cwrapper.prototype("char*    ecl_sum_get_unit( ecl_sum , char*)")
 EclSum.cNamespace().get_simcase                   = cwrapper.prototype("char*    ecl_sum_get_case( ecl_sum )")
@@ -944,7 +948,7 @@ EclSum.cNamespace().get_path                      = cwrapper.prototype("char*   
 EclSum.cNamespace().get_abs_path                  = cwrapper.prototype("char*    ecl_sum_get_abs_path( ecl_sum )")
 EclSum.cNamespace().get_report_step_from_time     = cwrapper.prototype("int      ecl_sum_get_report_step_from_time( ecl_sum , time_t)")
 EclSum.cNamespace().get_report_step_from_days     = cwrapper.prototype("int      ecl_sum_get_report_step_from_days( ecl_sum , double)")
-EclSum.cNamespace().get_report_time               = cwrapper.prototype("time_t   ecl_sum_get_report_time(ecl_sum , int)")
+EclSum.cNamespace().get_report_time               = cwrapper.prototype("c_long   ecl_sum_get_report_time(ecl_sum , int)")
 
 EclSum.cNamespace().fwrite_sum                    = cwrapper.prototype("void     ecl_sum_fwrite(ecl_sum)")
 EclSum.cNamespace().set_case                      = cwrapper.prototype("void     ecl_sum_set_case(ecl_sum, char*)")

@@ -50,7 +50,7 @@ class EclRFTFile(CClass):
         
 
     def __len__(self):
-        return cfunc_file.get_size( self , None , ctime(-1))
+        return cfunc_file.get_size( self , None , CTime(-1))
 
 
     def __getitem__(self , index):
@@ -81,9 +81,9 @@ class EclRFTFile(CClass):
 
         """
         if date:
-            cdate = ctime( date )
+            cdate = CTime( date )
         else:
-            cdate = ctime( -1 )
+            cdate = CTime( -1 )
 
         return cfunc_file.get_size( self , well , cdate)
 
@@ -101,7 +101,7 @@ class EclRFTFile(CClass):
         Returns a list of two tuples (well_name , date) for the whole file.
         """
         header_list = []
-        for i in (range(cfunc_file.get_size( self , None , ctime(-1)))):
+        for i in (range(cfunc_file.get_size( self , None , CTime(-1)))):
             rft = self.iget( i )
             header_list.append( (rft.well , rft.date) )
         return header_list
@@ -120,7 +120,7 @@ class EclRFTFile(CClass):
 
         Returns None if no matching RFT can be found.
         """
-        c_ptr = cfunc_file.get_rft( self , well_name , ctime( date )) 
+        c_ptr = cfunc_file.get_rft( self , well_name , CTime( date )) 
         if c_ptr:
             return EclRFT( c_ptr , self)
         else:
@@ -333,7 +333,7 @@ cfunc_file.get_rft                  = cwrapper.prototype("c_void_p ecl_rft_file_
 
 cfunc_rft.get_type                  = cwrapper.prototype("int    ecl_rft_node_get_type( ecl_rft )")
 cfunc_rft.get_well                  = cwrapper.prototype("char*  ecl_rft_node_get_well_name( ecl_rft )")
-cfunc_rft.get_date                  = cwrapper.prototype("time_t ecl_rft_node_get_date( ecl_rft )")
+cfunc_rft.get_date                  = cwrapper.prototype("c_long ecl_rft_node_get_date( ecl_rft )")
 cfunc_rft.get_size                  = cwrapper.prototype("int ecl_rft_node_get_size( ecl_rft )")
 cfunc_rft.iget_cell                 = cwrapper.prototype("c_void_p ecl_rft_node_iget_cell( ecl_rft )")
 cfunc_rft.iget_cell_sorted          = cwrapper.prototype("c_void_p ecl_rft_node_iget_cell_sorted( ecl_rft )")

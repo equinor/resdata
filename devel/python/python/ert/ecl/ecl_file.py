@@ -40,7 +40,7 @@ import types
 import datetime
 from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
 from ert.ecl import EclKW, ECL_LIB
-from ert.util import ctime
+from ert.util import CTime
 
 
 class EclFile(CClass):
@@ -66,7 +66,7 @@ class EclFile(CClass):
         obj = EclFile( filename )
         
         if dtime:
-            OK = cfunc.restart_block_time( obj , ctime( dtime ))
+            OK = cfunc.restart_block_time( obj , CTime( dtime ))
         elif not report_step is None:
             OK = cfunc.restart_block_step( obj , report_step )
         else:
@@ -273,7 +273,7 @@ class EclFile(CClass):
         if report_step:
             OK = cfunc.restart_block_step( self , report_step )
         elif sim_time:
-            OK = cfunc.restart_block_time( self , ctime( sim_time ) )
+            OK = cfunc.restart_block_time( self , CTime( sim_time ) )
         elif index:
             OK = cfunc.restart_block_iselect( self, index )
         else:
@@ -472,7 +472,7 @@ class EclFile(CClass):
         the function will raise IndexError(); if the file does not
         have the keyword at all - KeyError will be raised.
         """
-        index = cfunc.get_restart_index( self , ctime( dtime ) )
+        index = cfunc.get_restart_index( self , CTime( dtime ) )
         if index >= 0:
             if self.num_named_kw(kw_name) > index:
                 kw = self.iget_named_kw( kw_name , index )
@@ -666,7 +666,7 @@ class EclFile(CClass):
         keyword(s), but is still not a restart file. The @dtime
         argument should be a normal python datetime instance.
         """
-        return cfunc.has_sim_time( self , ctime(dtime) )    
+        return cfunc.has_sim_time( self , CTime(dtime) )    
 
     
     def iget_restart_sim_time( self , index ):
@@ -674,8 +674,8 @@ class EclFile(CClass):
         Will locate restart block nr @index and return the true time
         as a datetime instance.
         """
-        ctime = cfunc.iget_restart_time( self , index ) 
-        return ctime.datetime()
+        ct = CTime(cfunc.iget_restart_time( self , index ))
+        return ct.datetime()
 
 
     def iget_restart_sim_days( self , index ):
@@ -741,7 +741,7 @@ cfunc.close                       = cwrapper.prototype("void        ecl_file_clo
 cfunc.get_size                    = cwrapper.prototype("int         ecl_file_get_size( ecl_file )")
 cfunc.get_unique_size             = cwrapper.prototype("int         ecl_file_get_num_distinct_kw( ecl_file )")
 cfunc.get_num_named_kw            = cwrapper.prototype("int         ecl_file_get_num_named_kw( ecl_file , char* )")
-cfunc.iget_restart_time           = cwrapper.prototype("time_t      ecl_file_iget_restart_sim_date( ecl_file , int )")
+cfunc.iget_restart_time           = cwrapper.prototype("c_long      ecl_file_iget_restart_sim_date( ecl_file , int )")
 cfunc.iget_restart_days           = cwrapper.prototype("double      ecl_file_iget_restart_sim_days( ecl_file , int )")
 cfunc.get_restart_index           = cwrapper.prototype("int         ecl_file_get_restart_index( ecl_file , time_t)")
 cfunc.get_src_file                = cwrapper.prototype("char*       ecl_file_get_src_file( ecl_file )")
