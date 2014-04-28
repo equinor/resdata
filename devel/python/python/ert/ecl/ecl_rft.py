@@ -21,7 +21,7 @@ import types
 import warnings
 from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
 from ert.ecl import EclRFTCell, EclPLTCell, ECL_LIB
-from ert.util import ctime
+from ert.util import CTime
 
 
 class EclRFTFile(CClass):
@@ -207,7 +207,8 @@ class EclRFT(CClass):
         """
         The date when this RFT/PLT/... was recorded.
         """
-        return cfunc_rft.get_date( self )
+        ct = CTime(cfunc_rft.get_date( self ))
+        return ct.date()
 
     @property
     def size(self):
