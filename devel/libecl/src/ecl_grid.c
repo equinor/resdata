@@ -2727,10 +2727,12 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
           point_set(&cell->corner_list[1] , x0 + dxv[i] , y0 , z1);
           point_set(&cell->corner_list[2] , x0          , y0 + dyv[j] , z2);
           point_set(&cell->corner_list[3] , x0 + dxv[i] , y0 + dyv[j] , z3);
-          
-          for (int c = 0; c < 4; c++) {
-            cell->corner_list[c + 4] = cell->corner_list[c];
-            point_shift(&cell->corner_list[c + 4] , 0 , 0 , dzv[0]);
+          {
+            int c;
+            for (c = 0; c < 4; c++) {
+              cell->corner_list[c + 4] = cell->corner_list[c];
+              point_shift(&cell->corner_list[c + 4] , 0 , 0 , dzv[0]);
+            }
           }
           x0 += dxv[i];
         }
@@ -2748,8 +2750,9 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
             int g1 = i + j*nx + (k - 1)*nx*ny;
             ecl_cell_type* cell2 = ecl_grid_get_cell(grid, g2);
             ecl_cell_type* cell1 = ecl_grid_get_cell(grid, g1);
+            int c;
 
-            for (int c = 0; c < 4; c++) {
+            for (c = 0; c < 4; c++) {
               cell2->corner_list[c] = cell1->corner_list[c + 4];
               cell2->corner_list[c + 4] = cell1->corner_list[c + 4];
               point_shift( &cell2->corner_list[c + 4] , 0 , 0 , dzv[k]);
