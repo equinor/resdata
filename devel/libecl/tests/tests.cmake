@@ -95,6 +95,11 @@ add_executable( ecl_grid_simple ecl_grid_simple.c )
 target_link_libraries( ecl_grid_simple ecl test_util )
 add_test( ecl_grid_simple ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_simple  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
 
+
+add_executable( ecl_grid_DEPTHZ ecl_grid_DEPTHZ.c )
+target_link_libraries( ecl_grid_DEPTHZ ecl test_util )
+add_test( ecl_grid_DEPTHZ ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_DEPTHZ )
+
 add_executable( ecl_grid_export ecl_grid_export.c )
 target_link_libraries( ecl_grid_export ecl test_util )
 add_test( ecl_grid_export ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
