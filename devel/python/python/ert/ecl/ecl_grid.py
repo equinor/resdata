@@ -354,6 +354,7 @@ class EclGrid(CClass):
 
 
 
+
     def get_corner_xyz(self, corner_nr , active_index = None , global_index = None , ijk = None):
         """
         Will look up xyz of corner nr @corner_nr
@@ -372,6 +373,34 @@ class EclGrid(CClass):
         z = ctypes.c_double()
         cfunc.get_xyz1_corner( self , gi , corner_nr , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
         return (x.value , y.value , z.value)
+
+
+    def getLayerXYZ(self , xy_corner , layer):
+        nx = self.getNX()
+        ny = self.getNY()
+        nz = self.getNZ()
+
+        (j , i) = divmod(xy_corner , nx + 1)
+        k = layer
+        corner = 0
+
+        if i == nx:
+            i -= 1
+            corner += 1
+
+        if j == ny:
+            j -= 1
+            corner += 2
+
+        if k == nz:
+            k -= 1
+            corner += 4
+
+        if cfunc.ijk_valid( self , i , j , k):
+            return self.get_corner_xyz( corner , global_index = i + j*nx + k*nx*ny )
+        else:
+            raise IndexError("Invalid coordinates: (%d,%d,%d) " % (i,j,k))
+
 
 
     def distance( self , global_index1 , global_index2):
