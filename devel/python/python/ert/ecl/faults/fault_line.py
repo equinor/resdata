@@ -17,7 +17,7 @@
 
         
 
-
+from ert.geo import Polyline
 
 
 
@@ -27,7 +27,7 @@ class FaultLine(object):
         self.__grid = grid
         self.__k = k
         self.__segment_list = []
-
+        self.__polyline = None
 
     def __len__(self):
         return len(self.__segment_list)
@@ -63,10 +63,27 @@ class FaultLine(object):
                     segment.swap()
             assert tail.getC2() == segment.getC1()
         self.__segment_list.append( segment )
+        self.__polyline = None
 
 
     def getK(self):
         return self.__k
 
 
-    
+    def __initPolyline(self):
+        pl = Polyline()
+        for segment in self:
+            (x,y,z) = self.__grid.getLayerXYZ( segment.getC1( ) , self.__k )
+            pl.addPoint( x,y,z )
+
+        segment = self[-1]
+        (x,y,z) = self.__grid.getLayerXYZ( segment.getC2( ) , self.__k )
+        pl.addPoint( x,y,z )
+        self.__polyline = pl
+        
+
+    def getPolyline(self):
+        if self.__polyline is None:
+            self.__initPolyline()
+        return self.__polyline
+            
