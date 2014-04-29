@@ -495,7 +495,7 @@ class EclSum(BaseCClass):
 
             for date in date_list:
                 ct = CTime(date)
-                if ct.inRange( start_time , end_time , includeUpperLimit = True):
+                if ct.inRange( start_time , end_time , include_upper_limit= True):
                     vector[index] =  EclSum.cNamespace().get_general_var_from_sim_time( self , ct , key)
                 else:
                     raise ValueError("Invalid date value")
@@ -921,7 +921,7 @@ EclSum.cNamespace().data_length                   = cwrapper.prototype("int     
 EclSum.cNamespace().iget_sim_days                 = cwrapper.prototype("double   ecl_sum_iget_sim_days( ecl_sum , int) ")
 EclSum.cNamespace().iget_report_step              = cwrapper.prototype("int      ecl_sum_iget_report_step( ecl_sum , int) ")
 EclSum.cNamespace().iget_mini_step                = cwrapper.prototype("int      ecl_sum_iget_mini_step( ecl_sum , int) ")
-EclSum.cNamespace().iget_sim_time                 = cwrapper.prototype("c_long   ecl_sum_iget_sim_time( ecl_sum , int) ")
+EclSum.cNamespace().iget_sim_time                 = cwrapper.prototype("time_t   ecl_sum_iget_sim_time( ecl_sum , int) ")
 EclSum.cNamespace().get_report_end                = cwrapper.prototype("int      ecl_sum_iget_report_end( ecl_sum , int)")
 EclSum.cNamespace().get_general_var               = cwrapper.prototype("double   ecl_sum_get_general_var( ecl_sum , int , char*)")
 EclSum.cNamespace().get_general_var_index         = cwrapper.prototype("int      ecl_sum_get_general_var_params_index( ecl_sum , char*)")
@@ -929,8 +929,8 @@ EclSum.cNamespace().get_general_var_from_sim_days = cwrapper.prototype("double  
 EclSum.cNamespace().get_general_var_from_sim_time = cwrapper.prototype("double   ecl_sum_get_general_var_from_sim_time( ecl_sum , time_t , char*)")
 EclSum.cNamespace().get_first_gt                  = cwrapper.prototype("int      ecl_sum_get_first_gt( ecl_sum , int , double )")
 EclSum.cNamespace().get_first_lt                  = cwrapper.prototype("int      ecl_sum_get_first_lt( ecl_sum , int , double )")
-EclSum.cNamespace().get_start_date                = cwrapper.prototype("c_long   ecl_sum_get_start_time( ecl_sum )")
-EclSum.cNamespace().get_end_date                  = cwrapper.prototype("c_long   ecl_sum_get_end_time( ecl_sum )")
+EclSum.cNamespace().get_start_date                = cwrapper.prototype("time_t   ecl_sum_get_start_time( ecl_sum )")
+EclSum.cNamespace().get_end_date                  = cwrapper.prototype("time_t   ecl_sum_get_end_time( ecl_sum )")
 EclSum.cNamespace().get_last_report_step          = cwrapper.prototype("int      ecl_sum_get_last_report_step( ecl_sum )")
 EclSum.cNamespace().get_first_report_step         = cwrapper.prototype("int      ecl_sum_get_first_report_step( ecl_sum )")
 EclSum.cNamespace().select_matching_keys          = cwrapper.prototype("void     ecl_sum_select_matching_general_var_list( ecl_sum , char* , stringlist )")
@@ -939,7 +939,7 @@ EclSum.cNamespace().check_sim_time                = cwrapper.prototype("bool    
 EclSum.cNamespace().check_sim_days                = cwrapper.prototype("bool     ecl_sum_check_sim_days( ecl_sum , double )")
 EclSum.cNamespace().sim_length                    = cwrapper.prototype("double   ecl_sum_get_sim_length( ecl_sum )")
 EclSum.cNamespace().get_first_day                 = cwrapper.prototype("double   ecl_sum_get_first_day( ecl_sum )")
-EclSum.cNamespace().get_data_start                = cwrapper.prototype("c_long   ecl_sum_get_data_start( ecl_sum )")
+EclSum.cNamespace().get_data_start                = cwrapper.prototype("time_t   ecl_sum_get_data_start( ecl_sum )")
 
 EclSum.cNamespace().get_unit                      = cwrapper.prototype("char*    ecl_sum_get_unit( ecl_sum , char*)")
 EclSum.cNamespace().get_simcase                   = cwrapper.prototype("char*    ecl_sum_get_case( ecl_sum )")
@@ -948,7 +948,7 @@ EclSum.cNamespace().get_path                      = cwrapper.prototype("char*   
 EclSum.cNamespace().get_abs_path                  = cwrapper.prototype("char*    ecl_sum_get_abs_path( ecl_sum )")
 EclSum.cNamespace().get_report_step_from_time     = cwrapper.prototype("int      ecl_sum_get_report_step_from_time( ecl_sum , time_t)")
 EclSum.cNamespace().get_report_step_from_days     = cwrapper.prototype("int      ecl_sum_get_report_step_from_days( ecl_sum , double)")
-EclSum.cNamespace().get_report_time               = cwrapper.prototype("c_long   ecl_sum_get_report_time(ecl_sum , int)")
+EclSum.cNamespace().get_report_time               = cwrapper.prototype("time_t   ecl_sum_get_report_time(ecl_sum , int)")
 
 EclSum.cNamespace().fwrite_sum                    = cwrapper.prototype("void     ecl_sum_fwrite(ecl_sum)")
 EclSum.cNamespace().set_case                      = cwrapper.prototype("void     ecl_sum_set_case(ecl_sum, char*)")
