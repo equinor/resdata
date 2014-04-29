@@ -101,7 +101,88 @@ void test_create() {
 }
 
 
+void test_compare() {
+  int nx = 10;
+  int ny = 15;
+  int nz = 5;
+  int V = nx*ny*nz;
+
+  double dx = 10;
+  double dy = 15;
+  double dz = 10;
+  double z0 = 0;
+
+
+  ecl_grid_type * grid1;
+  ecl_grid_type * grid2;
+
+  {
+    double * DX = util_malloc( V * sizeof * DX );
+    double * DY = util_malloc( V * sizeof * DY );
+    double * DZ = util_malloc( V * sizeof * DZ );
+    double * TOPS = util_malloc( V * sizeof * TOPS );
+
+    for (int i = 0; i < V; i++) {
+      DX[i] = dx;
+      DY[i] = dy;
+      DZ[i] = dz;
+    }
+
+    for (int i = 0; i < nx*ny; i++) {
+      TOPS[i] = z0;
+    }
+
+    for (int k=1; k < nz; k++) {
+      for (int i = 0; i < nx*ny; i++) {
+        int g2 = k*nx*ny + i;
+        int g1 = (k- 1)*nx*ny + i;
+        TOPS[g2] = TOPS[g1];
+      }
+    }
+
+
+    grid1 = ecl_grid_alloc_dx_dy_dz_tops( nx , ny , nz , DX , DY , DZ , TOPS , NULL );
+    free( DX );
+    free( DY );
+    free( DZ );
+    free( TOPS );
+  }
+
+  {
+    double * DXV = util_malloc( nx * sizeof * DXV );
+    double * DYV = util_malloc( ny * sizeof * DYV );
+    double * DZV = util_malloc( nz * sizeof * DZV );
+    double * DEPTHZ = util_malloc( (nx + 1)*(ny + 1) * sizeof * DEPTHZ);
+
+    for (int i = 0; i < nx; i++) 
+      DXV[i] = dx;
+
+    for (int i = 0; i < ny; i++) 
+      DYV[i] = dy;
+
+    for (int i = 0; i < nz; i++) 
+      DZV[i] = dz;
+    
+    for (int i = 0; i < (nx + 1)*(ny+ 1); i++) 
+      DEPTHZ[i] = z0;
+
+    
+    grid2 = ecl_grid_alloc_dxv_dyv_dzv_depthz( nx , ny , nz , DXV , DYV , DZV , DEPTHZ , NULL );
+    free( DXV );
+    free( DYV );
+    free( DZV );
+    free( DEPTHZ );
+  }
+  
+  test_assert_true( ecl_grid_compare( grid1 , grid2 , true , true));
+  ecl_grid_free( grid1 );
+  ecl_grid_free( grid2 );
+}
+
+
+
 int main(int argc , char ** argv) {
   test_create();
+  test_compare();
   exit(0);
 }
