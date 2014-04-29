@@ -207,8 +207,24 @@ class EclGrid(CClass):
         if not active_index is None:
             global_index = cfunc.get_global_index1A( self , active_index )
         elif ijk:
+            nx = self.getNX()
+            ny = self.getNY()
+            nz = self.getNZ()
+            
+
+            if not ijk[0] >= 0 and ijk[0] < nx:
+                raise IndexError("Invalid value i:%d  Range: [%d,%d)" % (ijk[0] , 0 , nx)) 
+
+            if not ijk[1] >= 0 and ijk[1] < ny:
+                raise IndexError("Invalid value j:%d  Range: [%d,%d)" % (ijk[1] , 0 , ny)) 
+                
+            if not ijk[2] >= 0 and ijk[2] < nz:
+                raise IndexError("Invalid value k:%d  Range: [%d,%d)" % (ijk[2] , 0 , nz)) 
+
             global_index = cfunc.get_global_index3( self , ijk[0] , ijk[1] , ijk[2])
-        
+        else:
+            if global_index < 0 or global_index >= self.size:
+                raise IndexError("Invalid value global_index:%d  Range: [%d,%d)" % (global_index , 0 , self.size)) 
         return global_index
                  
 
@@ -764,6 +780,7 @@ cfunc.get_nz                       = cwrapper.prototype("int ecl_grid_get_nz( ec
 cfunc.get_active                   = cwrapper.prototype("int ecl_grid_get_active_size( ecl_grid )")
 cfunc.get_active_fracture          = cwrapper.prototype("int ecl_grid_get_nactive_fracture( ecl_grid )")
 cfunc.get_name                     = cwrapper.prototype("char* ecl_grid_get_name( ecl_grid )")
+cfunc.ijk_valid                    = cwrapper.prototype("bool ecl_grid_ijk_valid(ecl_grid , int , int , int)")
 cfunc.get_active_index3            = cwrapper.prototype("int ecl_grid_get_active_index3( ecl_grid , int , int , int)")
 cfunc.get_global_index3            = cwrapper.prototype("int ecl_grid_get_global_index3( ecl_grid , int , int , int)") 
 cfunc.get_active_index1            = cwrapper.prototype("int ecl_grid_get_active_index1( ecl_grid , int )") 
