@@ -16,7 +16,7 @@
 
 
         
-
+import sys
 from ert.geo import Polyline
 
 
@@ -44,11 +44,14 @@ class FaultLine(object):
         if len(self.__segment_list) > 1:
             current = self.__segment_list[0]
             for next_segment in self.__segment_list[1:]:
-                assert current.getC2( ) == next_segment.getC1( )
+                if not current.getC2( ) == next_segment.getC1( ):
+                    sys.stdout.write("Current:   %d ---- %d \n" % (current.getC1()      , current.getC2()))
+                    sys.stdout.write("Next   :   %d ---- %d \n" % (next_segment.getC1() , next_segment.getC2()))
+                    assert current.getC2( ) == next_segment.getC1( )
                 current = next_segment
                 
 
-    def append(self , segment):
+    def tryAppend(self , segment):
         if len(self.__segment_list) > 0:
             tail = self.__segment_list[-1]
             if tail.getC2() != segment.getC1():
@@ -91,3 +94,15 @@ class FaultLine(object):
             self.__initPolyline()
         return self.__polyline
             
+
+    def dump(self):
+        print "-----------------------------------------------------------------"
+        for segment in self:
+            C1 = segment.getC1()
+            C2 = segment.getC2()
+            (J1 , I1) = divmod(C1 , self.__grid.getNX() + 1)
+            (J2 , I2) = divmod(C2 , self.__grid.getNX() + 1)
+            print "[Corner:%5d   IJ:(%3d,%d)] -> [Corner:%5d   IJ:(%3d,%d)]" % (C1 , I1, J1 ,C2 , I2 , J2)
+
+
+
