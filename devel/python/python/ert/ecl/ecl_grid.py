@@ -212,18 +212,18 @@ class EclGrid(CClass):
             nz = self.getNZ()
             
 
-            if not ijk[0] >= 0 and ijk[0] < nx:
+            if not 0 <= ijk[0] < nx:
                 raise IndexError("Invalid value i:%d  Range: [%d,%d)" % (ijk[0] , 0 , nx)) 
 
-            if not ijk[1] >= 0 and ijk[1] < ny:
+            if not 0 <= ijk[1] < ny:
                 raise IndexError("Invalid value j:%d  Range: [%d,%d)" % (ijk[1] , 0 , ny)) 
                 
-            if not ijk[2] >= 0 and ijk[2] < nz:
+            if not 0 <= ijk[2] < nz:
                 raise IndexError("Invalid value k:%d  Range: [%d,%d)" % (ijk[2] , 0 , nz)) 
 
             global_index = cfunc.get_global_index3( self , ijk[0] , ijk[1] , ijk[2])
         else:
-            if global_index < 0 or global_index >= self.size:
+            if not 0 <= global_index < self.size:
                 raise IndexError("Invalid value global_index:%d  Range: [%d,%d)" % (global_index , 0 , self.size)) 
         return global_index
                  
