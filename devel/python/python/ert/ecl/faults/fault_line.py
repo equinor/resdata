@@ -61,9 +61,13 @@ class FaultLine(object):
                             segment.swap()
                 else:
                     segment.swap()
-            assert tail.getC2() == segment.getC1()
+
+            if not tail.getC2( ) == segment.getC1( ):
+                return False
+
         self.__segment_list.append( segment )
         self.__polyline = None
+        return True
 
 
     def getK(self):

@@ -32,7 +32,7 @@ class Layer(object):
 
     def __len__(self):
         self.processSegments()
-        return len(self.fault_lines)
+        return len(self.__fault_lines)
 
     def __iter__(self):
         self.processSegments()
@@ -52,7 +52,12 @@ class Layer(object):
 
             current_segment = self.__segment_map.popStart()
             while current_segment:
-                fault_line.append(current_segment)
+                append = fault_line.tryAppend(current_segment)
+                if not append:
+                    fault_line = FaultLine(self.__grid , self.__K)
+                    self.__fault_lines.append( fault_line )
+                    fault_line.tryAppend(current_segment)
+
                 current_segment.next_segment = self.__segment_map.popNext( current_segment )
                 current_segment = current_segment.next_segment
                 
