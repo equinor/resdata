@@ -476,6 +476,10 @@ void      util_abort_test_set_intercept_function(const char * function);
 #define util_abort(fmt , ...) util_abort__(__FILE__ , __func__ , __LINE__ , fmt , ##__VA_ARGS__)
 #endif
 
+#ifdef __clang__
+#define util_abort(fmt , ...) util_abort__(__FILE__ , __func__ , __LINE__ , fmt , ##__VA_ARGS__)
+#endif
+
 #ifdef COMPILER_MSVC
 #define util_abort(fmt , ...) util_abort__(__FILE__ , __func__ , __LINE__ , fmt , __VA_ARGS__)
 #endif
