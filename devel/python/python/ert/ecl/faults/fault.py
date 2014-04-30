@@ -97,15 +97,21 @@ class Fault(object):
 
 
     def createSegment(self , I1 , I2 , J1 , J2 , face):
-        if face in ["X" , "X-","I","I-"]:
+        if face in ["X" , "I"]:
             C1 = I1 + 1 + J1*(self.nx + 1)
-            C2 = C1 + self.nx + 1
-        elif face in ["Y" , "Y-","J","J-"]:
+            C2 = C1 + (1 + J2 - J1) * (self.nx + 1)
+        elif face in ["X-" , "I-"]:
+            C1 = I1 + J1*(self.nx + 1)
+            C2 = C1 + (1 + J2 - J1) * (self.nx + 1)
+        elif face in ["Y" , "J"]:
             C1 = I1 + (J1 + 1) * (self.nx + 1)
-            C2 = C1 + 1
+            C2 = C1 + (1 + I2 - I1)
+        elif face in ["Y-" , "J-"]:
+            C1 = I1 + J1 * (self.nx + 1)
+            C2 = C1 + (1 + I2 - I1)
         else:
             raise Exception("Can only handle X,Y faces")
-            
+
         return FaultSegment(C1,C2)
          
 
