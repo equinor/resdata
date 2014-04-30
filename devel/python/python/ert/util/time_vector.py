@@ -17,7 +17,7 @@ import re
 import datetime
 
 from ert.cwrap import CWrapper
-from ert.util import UTIL_LIB, VectorTemplate, ctime
+from ert.util import UTIL_LIB, VectorTemplate, CTime
 
 
 class TimeVector(VectorTemplate):
@@ -25,10 +25,10 @@ class TimeVector(VectorTemplate):
 
     def __init__(self, default_value=None, initial_size=0):
         if default_value is None:
-            super(TimeVector, self).__init__(ctime.ctime(0), initial_size)
+            super(TimeVector, self).__init__(CTime(0), initial_size)
         else:
             try:
-                default = ctime.ctime( default_value )
+                default = CTime( default_value )
             except:
                 raise ValueError("default value invalid - must be type ctime() or date/datetime")
             
@@ -79,7 +79,7 @@ class TimeVector(VectorTemplate):
 
     def appendTime(self , num , timeUnit):
         next = self.nextTime( num , timeUnit )
-        self.append( ctime.ctime(next) )
+        self.append( CTime(next) )
 
 
     @classmethod
@@ -115,7 +115,7 @@ class TimeVector(VectorTemplate):
         currentTime = start
 
         while currentTime <= end:
-            timeVector.append( ctime.ctime( currentTime ))
+            timeVector.append( CTime( currentTime ))
             currentTime = timeVector.nextTime( num , timeUnit )
             
         return timeVector
