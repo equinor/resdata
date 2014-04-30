@@ -92,6 +92,7 @@ extern "C" {
   ecl_grid_type * ecl_grid_alloc_rectangular( int nx , int ny , int nz , double dx , double dy , double dz , const int * actnum);
   ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double * ivec, const double * jvec , const double * kvec , const int * actnum);
   ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const double * dxv , const double * dyv , const double * dzv , const int * actnum);
+  ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , const double * dxv , const double * dyv , const double * dzv , const double * depthz , const int * actnum);
     
   bool            ecl_grid_exists( const char * case_input );
   char          * ecl_grid_alloc_case_filename( const char * case_input );
