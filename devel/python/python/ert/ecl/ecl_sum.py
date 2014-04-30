@@ -495,7 +495,7 @@ class EclSum(BaseCClass):
 
             for date in date_list:
                 ct = CTime(date)
-                if ct.inRange( start_time , end_time , include_upper_limit= True):
+                if start_time <= ct <= end_time:
                     vector[index] =  EclSum.cNamespace().get_general_var_from_sim_time( self , ct , key)
                 else:
                     raise ValueError("Invalid date value")

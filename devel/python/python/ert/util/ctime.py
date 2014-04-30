@@ -27,18 +27,16 @@ class CTime(BaseCValue):
     DATA_TYPE = ctypes.c_long
 
     def __init__(self, value):
-        if isinstance(value, types.IntType):
+        if isinstance(value, int):
             value = value
-
         elif isinstance(value, CTime):
             value = value.value()
+        elif isinstance(value, datetime.datetime):
+            value = int(math.floor(time.mktime((value.year, value.month, value.day, value.hour, value.minute, value.second, 0, 0, -1 ))))
+        elif isinstance(value, datetime.date):
+            value = int(math.floor(time.mktime((value.year, value.month, value.day, 0, 0, 0, 0, 0, -1 ))))
         else:
-            try:
-                # Input value is assumed to be datetime.datetime instance
-                value = int(math.floor(time.mktime((value.year, value.month, value.day, value.hour, value.minute, value.second, 0, 0, -1 ))))
-            except (OverflowError, ValueError, AttributeError):
-                # Input value is assumed to be datetime.date instance
-                value = int(math.floor(time.mktime((value.year, value.month, value.day, 0, 0, 0, 0, 0, -1 ))))
+            raise NotImplementedError("Can not convert class %s to CTime" % value.__class__)
 
         super(CTime, self).__init__(value)
 
@@ -62,28 +60,26 @@ class CTime(BaseCValue):
         return "%s" % (str(self.datetime()))
 
     def __ge__(self, other):
-        if isinstance(other, CTime):
-            return self.value() >= other.value()
-        else:
-            return self >= CTime(other)
+        return self > other or self == other
 
     def __le__(self, other):
-        if isinstance(other, CTime):
-            return self.value() <= other.value()
-        else:
-            return self <= CTime(other)
+        return self < other or self == other
 
     def __gt__(self, other):
         if isinstance(other, CTime):
             return self.value() > other.value()
-        else:
+        elif isinstance(other, (int, datetime.datetime, datetime.date)):
             return self > CTime(other)
+        else:
+            raise TypeError("CTIme does not support type: %s" % other.__class__)
 
     def __lt__(self, other):
         if isinstance(other, CTime):
             return self.value() < other.value()
-        else:
+        elif isinstance(other, (int, datetime.datetime, datetime.date)):
             return self < CTime(other)
+        else:
+            raise TypeError("CTIme does not support type: %s" % other.__class__)
 
     def __ne__(self, other):
         return not self == other
@@ -91,22 +87,10 @@ class CTime(BaseCValue):
     def __eq__(self, other):
         if isinstance(other, CTime):
             return self.value() == other.value()
-        else:
+        elif isinstance(other, (int, datetime.datetime, datetime.date)):
             return self == CTime(other)
-
-    def inRange(self, d1, d2, include_upper_limit = False):
-
-        if not isinstance(d1, CTime):
-            d1 = CTime(d1)
-
-        if not isinstance(d1, CTime):
-            d2 = CTime(d2)
-
-        if d1 <= self < d2:
-            return True
         else:
-            return self == d2 and include_upper_limit
-
+            raise TypeError("CTIme does not support type: %s" % other.__class__)
             
     def __imul__(self, other):
         value = int(self.value() * other)
@@ -141,7 +125,10 @@ class CTime(BaseCValue):
     def __rmul__(self , other):
         return self * other
 
-        
+    def timetuple(self):
+        # this function is a requirement for comparing against datetime objects where the CTime is on the right side
+        pass
+
     @property
     def stripped(self):
         return time.strptime(self, "%Y-%m-%d %H:%M:S%")
