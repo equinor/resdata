@@ -17,7 +17,6 @@
 
 import math
 import ctypes
-import types
 import datetime
 import time
 from ert.cwrap import CWrapper, BaseCValue

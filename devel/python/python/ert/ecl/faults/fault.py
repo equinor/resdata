@@ -32,7 +32,7 @@ class Layer(object):
 
     def __len__(self):
         self.processSegments()
-        return len(self.fault_lines)
+        return len(self.__fault_lines)
 
     def __iter__(self):
         self.processSegments()
@@ -52,7 +52,12 @@ class Layer(object):
 
             current_segment = self.__segment_map.popStart()
             while current_segment:
-                fault_line.append(current_segment)
+                append = fault_line.tryAppend(current_segment)
+                if not append:
+                    fault_line = FaultLine(self.__grid , self.__K)
+                    self.__fault_lines.append( fault_line )
+                    fault_line.tryAppend(current_segment)
+
                 current_segment.next_segment = self.__segment_map.popNext( current_segment )
                 current_segment = current_segment.next_segment
                 
@@ -97,15 +102,21 @@ class Fault(object):
 
 
     def createSegment(self , I1 , I2 , J1 , J2 , face):
-        if face in ["X" , "X-","I","I-"]:
+        if face in ["X" , "I"]:
             C1 = I1 + 1 + J1*(self.nx + 1)
-            C2 = C1 + self.nx + 1
-        elif face in ["Y" , "Y-","J","J-"]:
+            C2 = C1 + (1 + J2 - J1) * (self.nx + 1)
+        elif face in ["X-" , "I-"]:
+            C1 = I1 + J1*(self.nx + 1)
+            C2 = C1 + (1 + J2 - J1) * (self.nx + 1)
+        elif face in ["Y" , "J"]:
             C1 = I1 + (J1 + 1) * (self.nx + 1)
-            C2 = C1 + 1
+            C2 = C1 + (1 + I2 - I1)
+        elif face in ["Y-" , "J-"]:
+            C1 = I1 + J1 * (self.nx + 1)
+            C2 = C1 + (1 + I2 - I1)
         else:
             raise Exception("Can only handle X,Y faces")
-            
+
         return FaultSegment(C1,C2)
          
 
