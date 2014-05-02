@@ -16,7 +16,7 @@
 import re
 from .fault import Fault
 
-comment_regexp = re.compile("--.+")
+comment_regexp = re.compile("--.*")
 
 def dequote(s):
     if s[0] in ["'" , '"']:
