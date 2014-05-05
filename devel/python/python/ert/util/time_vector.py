@@ -15,6 +15,7 @@
 #  for more details. 
 import re
 import datetime
+import sys
 
 from ert.cwrap import CWrapper
 from ert.util import UTIL_LIB, VectorTemplate, CTime
@@ -72,14 +73,15 @@ class TimeVector(VectorTemplate):
                 (deltaYear , newMonth) = divmod( month , 12 )
                 month = newMonth + 1
                 year += deltaYear
-                
             currentTime = datetime.datetime(year , month , day , hour , minute , second )
+
         return currentTime
 
 
     def appendTime(self , num , timeUnit):
         next = self.nextTime( num , timeUnit )
         self.append( CTime(next) )
+        
 
 
     @classmethod
@@ -93,34 +95,23 @@ class TimeVector(VectorTemplate):
         createRegular(0 , 10 , delta=3) => [0,3,6,9]
         createRegular(0 , 10 , delta=2) => [0,2,4,6,8,10]
         """
+        start = CTime( start )
+        end = CTime( end )
         if start > end:
             raise ValueError("The time interval is invalid start is after end")
         
         (num , timeUnit) = cls.parseTimeUnit( deltaString )
-        try:
-            hour = start.hour
-            minute = start.minute
-            second = start.second
-        except AttributeError:
-            # The start/end input are assumed to be datetime.date()
-            # instances; they do not mix as freely as wanted with the
-            # datetime.datetime() instances.
-            hour = 0
-            minute = 0
-            second = 0
-            start = datetime.datetime( start.year , start.month , start.day , hour , minute , second )
-            end = datetime.datetime( end.year , end.month , end.day , hour , minute , second )
 
         timeVector = TimeVector()
         currentTime = start
-
         while currentTime <= end:
-            timeVector.append( CTime( currentTime ))
+            ct = CTime( currentTime )
+            timeVector.append( ct )
             currentTime = timeVector.nextTime( num , timeUnit )
             
         return timeVector
                 
-                
+        
 
 
 #################################################################
