@@ -98,10 +98,11 @@ class SegmentMap(object):
         if not self.__segment_map[C1].has_key(C2):
             self.__segment_map[C1][C2] = segment
             self.__count_map[C1] += 1
-            
+
         if not self.__segment_map[C2].has_key(C1):
             self.__segment_map[C2][C1] = segment
             self.__count_map[C2] += 1
+
 
 
     def delSegment(self , segment):
@@ -131,9 +132,9 @@ class SegmentMap(object):
         
     def popNext(self , segment):
         (C1,C2) = segment.getCorners()
-        if self.__count_map[C1] == 1:
+        if self.__count_map[C1] >= 1:
             next_segment = self.__segment_map[C1].values()[0]
-        elif self.__count_map[C2] == 1:
+        elif self.__count_map[C2] >= 1:
             next_segment = self.__segment_map[C2].values()[0]
         else:
             next_segment = None

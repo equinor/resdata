@@ -81,6 +81,36 @@ void test_abort() {
 
 
 
+void test_shift() {
+  int default_value = 88;
+  int_vector_type * v = int_vector_alloc(0,default_value);
+
+  int_vector_append(v , 1 );
+  int_vector_append(v , 2 );
+  int_vector_append(v , 3 );
+  test_assert_int_equal( 1 , int_vector_iget( v , 0 ));
+  test_assert_int_equal( 2 , int_vector_iget( v , 1 ));
+  test_assert_int_equal( 3 , int_vector_iget( v , 2 ));
+
+  int_vector_rshift(v , 3 );
+  test_assert_int_equal( 6 , int_vector_size( v ));
+  test_assert_int_equal( default_value , int_vector_iget( v , 0 ));
+  test_assert_int_equal( default_value , int_vector_iget( v , 1 ));
+  test_assert_int_equal( default_value , int_vector_iget( v , 2 ));
+  test_assert_int_equal( 1 , int_vector_iget( v , 3 ));
+  test_assert_int_equal( 2 , int_vector_iget( v , 4 ));
+  test_assert_int_equal( 3 , int_vector_iget( v , 5 ));
+
+  int_vector_lshift(v,4);
+  test_assert_int_equal( 2 , int_vector_size( v ));
+  test_assert_int_equal( 2 , int_vector_iget( v , 0 ));
+  test_assert_int_equal( 3 , int_vector_iget( v , 1 ));
+  
+  int_vector_free( v );
+}
+
+
+
 int main(int argc , char ** argv) {
   
   int_vector_type * int_vector = int_vector_alloc( 0 , 99);
@@ -159,6 +189,7 @@ int main(int argc , char ** argv) {
     int_vector_free( v1 );
     int_vector_free( v2 );
   }
+  test_shift();
   test_alloc();
   test_div();
   test_memcpy_from_data();

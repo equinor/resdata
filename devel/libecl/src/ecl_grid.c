@@ -2698,6 +2698,92 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const doub
     return grid;
 }
 
+
+ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , const double * dxv , const double * dyv , const double * dzv , const double * depthz , const int * actnum)
+{
+    ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
+                                               FILEHEAD_SINGLE_POROSITY,
+                                               nx, ny, nz,
+                                               /*lgr_nr=*/0, /*init_valid=*/true);
+
+        
+    /* First layer - where the DEPTHZ keyword applies. */
+    {
+      int i,j;
+      int k = 0;
+      double y0 = 0;
+      for (j=0; j < ny; j++) {
+        double x0 = 0;
+        for (i = 0; i < nx; i++) {
+          int global_index = i + j*nx + k*nx*ny;
+          ecl_cell_type* cell = ecl_grid_get_cell(grid, global_index);
+          double z0 = depthz[ i     + j*(nx + 1)];
+          double z1 = depthz[ i + 1 + j*(nx + 1)];
+          double z2 = depthz[ i +     (j + 1)*(nx + 1)];
+          double z3 = depthz[ i + 1 + (j + 1)*(nx + 1)];
+          
+
+          point_set(&cell->corner_list[0] , x0 , y0 , z0);
+          point_set(&cell->corner_list[1] , x0 + dxv[i] , y0 , z1);
+          point_set(&cell->corner_list[2] , x0          , y0 + dyv[j] , z2);
+          point_set(&cell->corner_list[3] , x0 + dxv[i] , y0 + dyv[j] , z3);
+          {
+            int c;
+            for (c = 0; c < 4; c++) {
+              cell->corner_list[c + 4] = cell->corner_list[c];
+              point_shift(&cell->corner_list[c + 4] , 0 , 0 , dzv[0]);
+            }
+          }
+          x0 += dxv[i];
+        }
+        y0 += dyv[j];
+      }
+    }
+
+    /* Remaining layers */
+    {
+      int i,j,k;
+      for (k=1; k < nz; k++) {
+        for (j=0; j <ny; j++) {
+          for (i=0; i < nx; i++) {
+            int g2 = i + j*nx + k*nx*ny;
+            int g1 = i + j*nx + (k - 1)*nx*ny;
+            ecl_cell_type* cell2 = ecl_grid_get_cell(grid, g2);
+            ecl_cell_type* cell1 = ecl_grid_get_cell(grid, g1);
+            int c;
+
+            for (c = 0; c < 4; c++) {
+              cell2->corner_list[c] = cell1->corner_list[c + 4];
+              cell2->corner_list[c + 4] = cell1->corner_list[c + 4];
+              point_shift( &cell2->corner_list[c + 4] , 0 , 0 , dzv[k]);
+            }
+          }
+        }
+      }
+    }
+
+    {
+      int i,j,k;
+      for (k=0; k < nz; k++) {
+        for (j=0; j <ny; j++) {
+          for (i=0; i < nx; i++) {
+            int global_index = i + j*nx + k*nx*ny;
+            ecl_cell_type* cell = ecl_grid_get_cell(grid, global_index);
+
+            if (actnum) 
+              cell->active = actnum[global_index];
+            else
+              cell->active = ACTIVE;
+          }
+        }
+      }
+    }
+
+    ecl_grid_update_index(grid);
+    return grid;
+}
+
+
 /**
    This is a really broken function which is here only to support
    creating rectangualar grids from OPM. The vectors dx,dy,dz and tops

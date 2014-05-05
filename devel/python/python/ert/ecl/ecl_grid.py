@@ -207,8 +207,24 @@ class EclGrid(CClass):
         if not active_index is None:
             global_index = cfunc.get_global_index1A( self , active_index )
         elif ijk:
+            nx = self.getNX()
+            ny = self.getNY()
+            nz = self.getNZ()
+            
+
+            if not 0 <= ijk[0] < nx:
+                raise IndexError("Invalid value i:%d  Range: [%d,%d)" % (ijk[0] , 0 , nx)) 
+
+            if not 0 <= ijk[1] < ny:
+                raise IndexError("Invalid value j:%d  Range: [%d,%d)" % (ijk[1] , 0 , ny)) 
+                
+            if not 0 <= ijk[2] < nz:
+                raise IndexError("Invalid value k:%d  Range: [%d,%d)" % (ijk[2] , 0 , nz)) 
+
             global_index = cfunc.get_global_index3( self , ijk[0] , ijk[1] , ijk[2])
-        
+        else:
+            if not 0 <= global_index < self.size:
+                raise IndexError("Invalid value global_index:%d  Range: [%d,%d)" % (global_index , 0 , self.size)) 
         return global_index
                  
 
@@ -338,6 +354,7 @@ class EclGrid(CClass):
 
 
 
+
     def get_corner_xyz(self, corner_nr , active_index = None , global_index = None , ijk = None):
         """
         Will look up xyz of corner nr @corner_nr
@@ -356,6 +373,34 @@ class EclGrid(CClass):
         z = ctypes.c_double()
         cfunc.get_xyz1_corner( self , gi , corner_nr , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
         return (x.value , y.value , z.value)
+
+
+    def getLayerXYZ(self , xy_corner , layer):
+        nx = self.getNX()
+        ny = self.getNY()
+        nz = self.getNZ()
+
+        (j , i) = divmod(xy_corner , nx + 1)
+        k = layer
+        corner = 0
+
+        if i == nx:
+            i -= 1
+            corner += 1
+
+        if j == ny:
+            j -= 1
+            corner += 2
+
+        if k == nz:
+            k -= 1
+            corner += 4
+
+        if cfunc.ijk_valid( self , i , j , k):
+            return self.get_corner_xyz( corner , global_index = i + j*nx + k*nx*ny )
+        else:
+            raise IndexError("Invalid coordinates: (%d,%d,%d) " % (i,j,k))
+
 
 
     def distance( self , global_index1 , global_index2):
@@ -764,6 +809,7 @@ cfunc.get_nz                       = cwrapper.prototype("int ecl_grid_get_nz( ec
 cfunc.get_active                   = cwrapper.prototype("int ecl_grid_get_active_size( ecl_grid )")
 cfunc.get_active_fracture          = cwrapper.prototype("int ecl_grid_get_nactive_fracture( ecl_grid )")
 cfunc.get_name                     = cwrapper.prototype("char* ecl_grid_get_name( ecl_grid )")
+cfunc.ijk_valid                    = cwrapper.prototype("bool ecl_grid_ijk_valid(ecl_grid , int , int , int)")
 cfunc.get_active_index3            = cwrapper.prototype("int ecl_grid_get_active_index3( ecl_grid , int , int , int)")
 cfunc.get_global_index3            = cwrapper.prototype("int ecl_grid_get_global_index3( ecl_grid , int , int , int)") 
 cfunc.get_active_index1            = cwrapper.prototype("int ecl_grid_get_active_index1( ecl_grid , int )") 

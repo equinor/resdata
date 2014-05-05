@@ -21,6 +21,10 @@ in the C source files ecl_sum.c, ecl_smspec.c and ecl_sum_data in the
 libecl/src directory.
 """
 
+
+import numpy
+import datetime
+
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
@@ -28,10 +32,9 @@ libecl/src directory.
 from ert.cwrap import BaseCClass, CWrapper
 from ert.ecl.ecl_sum_vector import EclSumVector
 from ert.ecl.ecl_smspec_node import EclSMSPECNode
-from ert.util import StringList, ctime, DoubleVector, TimeVector, IntVector
+from ert.util import StringList, CTime, DoubleVector, TimeVector, IntVector
 from ert.ecl import ECL_LIB
 
-import numpy
 
 
 #import ert.ecl_plot.sum_plot as sum_plot
@@ -112,7 +115,7 @@ class EclSum(BaseCClass):
 
         for i in range(length):
             self.__days[i] = EclSum.cNamespace().iget_sim_days(self, i)
-            self.__dates[i] = EclSum.cNamespace().iget_sim_time(self, i).datetime()
+            self.__dates[i] = self.iget_date( i )
             self.__report_step[i] = EclSum.cNamespace().iget_report_step(self, i)
             self.__mini_step[i] = EclSum.cNamespace().iget_mini_step(self, i)
             self.__mpl_dates[i] = date2num(self.__dates[i])
@@ -139,7 +142,7 @@ class EclSum(BaseCClass):
                 i1 += 1
                 
             self.__daysR[i0] = EclSum.cNamespace().iget_sim_days(self, time_index)
-            self.__datesR[i0] = EclSum.cNamespace().iget_sim_time(self, time_index).datetime()
+            self.__datesR[i0] = self.iget_date(time_index)
             self.__report_stepR[i0] = EclSum.cNamespace().iget_report_step(self, time_index)
             self.__mini_stepR[i0] = EclSum.cNamespace().iget_mini_step(self, time_index)
             self.__mpl_datesR[i0] = date2num(self.__datesR[i0])
@@ -275,7 +278,7 @@ class EclSum(BaseCClass):
         return self[key].last
 
 
-    def iiget(self , key_index , time_index):
+    def iiget(self , time_index , key_index):
         """
         Lookup a summary value based on naive @time_index and
         @key_index.
@@ -331,7 +334,7 @@ class EclSum(BaseCClass):
         """
         Will check if the input date is in the time span [sim_start , sim_end].
         """
-        return EclSum.cNamespace().check_sim_time( self , ctime(date) )
+        return EclSum.cNamespace().check_sim_time( self , CTime(date) )
 
     
     def get_interp( self , key , days = None , date = None):
@@ -358,11 +361,77 @@ class EclSum(BaseCClass):
                     raise ValueError("days:%s is outside range of simulation: [%g,%g]" % (days , self.first_day , self.sim_length))
         elif date:
             if self.check_sim_time( date ):
-                return EclSum.cNamespace().get_general_var_from_sim_time( self , ctime(date) , key )
+                return EclSum.cNamespace().get_general_var_from_sim_time( self , CTime(date) , key )
             else:
                 raise ValueError("date:%s is outside range of simulation data" % date)
         else:
             raise ValueError("Must supply either days or date")
+
+    
+    def timeRange(self , start = None , end = None , interval = "1Y"):
+        (num , timeUnit) = TimeVector.parseTimeUnit( interval )
+
+        if start is None:
+            start = self.start_time
+        if isinstance(start , datetime.date):
+            start = datetime.datetime( start.year , start.month , start.day , 0 , 0 , 0 )
+                
+        if end is None:
+            end = self.end_time
+        if isinstance(end , datetime.date):
+            end = datetime.datetime( end.year , end.month , end.day , 0 , 0 , 0 )
+        
+        if end < start:
+            raise ValueError("Invalid time interval start after end")
+
+
+        if not timeUnit == "d":
+            year1 = start.year
+            year2 = end.year
+            month1 = start.month
+            month2 = end.month
+            day1 = start.day
+            day2 = end.day
+            
+            if timeUnit == 'm':
+                if day2 > 1:
+                    month2 += 1
+                    if month2 == 13:
+                        year2 += 1
+                        month2 = 1
+            elif timeUnit == "y":
+                month1 = 1
+                if year2 > 1 or day2 > 1:
+                    year2 += 1
+                month2 = 1
+            day1 = 1
+            day2 = 1
+            start = datetime.date( year1, month1 , day1)
+            end =  datetime.date(year2 , month2 , day2)
+                
+        trange = TimeVector.createRegular(start , end , interval)
+        if trange[-1] < end:
+            trange.appendTime( num , timeUnit )
+        return trange
+        
+
+
+    def blockedProduction(self , totalKey , timeRange):
+        node = self.smspec_node(totalKey)
+        if node.is_total:
+            total = DoubleVector()
+            for t in timeRange:
+                if t < CTime(self.start_time):
+                    total.append( 0 )
+                elif t >= CTime( self.end_time):
+                    total.append( self.get_last_value( totalKey ))
+                else:
+                    total.append( self.get_interp( totalKey , date = t ))
+            tmp = total << 1
+            total.pop()
+            return tmp - total
+        else:
+            raise TypeError("The blockedProduction method must be called with one of the TOTAL keys like e.g. FOPT or GWIT")
 
 
     def get_report( self , date = None , days = None):
@@ -376,7 +445,7 @@ class EclSum(BaseCClass):
         if date:
             if days:
                 raise ValueError("Must supply either days or date")
-            step = EclSum.cNamespace().get_report_step_from_time( self , ctime(date))
+            step = EclSum.cNamespace().get_report_step_from_time( self , CTime(date))
         elif days:
             step = EclSum.cNamespace().get_report_step_from_days( self , days)
             
@@ -387,8 +456,7 @@ class EclSum(BaseCClass):
         """
         Will return the datetime corresponding to the report_step @report.
         """
-        ctime = EclSum.cNamespace().get_report_time( self , report )
-        return ctime.date()
+        return CTime( EclSum.cNamespace().get_report_time( self , report ) ).date()
 
 
     def get_interp_vector( self , key , days_list = None , date_list = None):
@@ -424,9 +492,11 @@ class EclSum(BaseCClass):
             end_time   = self.end_date
             vector = numpy.zeros( len(date_list ))
             index = 0
+
             for date in date_list:
-                if (date >= start_time) and (date <= end_time):
-                    vector[index] =  EclSum.cNamespace().get_general_var_from_sim_time( self , ctime(date) , key)
+                ct = CTime(date)
+                if start_time <= ct <= end_time:
+                    vector[index] =  EclSum.cNamespace().get_general_var_from_sim_time( self , ct , key)
                 else:
                     raise ValueError("Invalid date value")
                 index += 1
@@ -647,9 +717,13 @@ class EclSum(BaseCClass):
 
     def iget_date(self , time_index):
         """
-        Returns the simulation date for element nr @time_index.
+        Returns the simulation date for element nr @t
+ime_index.
         """
-        return EclSum.cNamespace().iget_sim_time( self , time_index ).datetime()
+        long_time = EclSum.cNamespace().iget_sim_time( self , time_index )
+        ct = CTime(long_time)
+        return ct.datetime()
+
 
     def iget_report( self , time_index ):
         """
@@ -694,24 +768,25 @@ class EclSum(BaseCClass):
         returned start_date might be different from the datetime of
         the first (loaded) timestep.
         """
-        ctime = EclSum.cNamespace().get_start_date( self )
-        return ctime.date()
+        ct = EclSum.cNamespace().get_start_date( self )
+        return CTime(ct).date()
+
 
     @property
     def end_date(self):
         """
         The date of the last (loaded) time step.
         """
-        ctime = EclSum.cNamespace().get_end_date( self )
-        return ctime.date()
+        return CTime( EclSum.cNamespace().get_end_date( self ) ).date()
+
+        
 
     @property
     def data_start(self):
         """
         The first date we have data for.
         """
-        ctime = EclSum.cNamespace().get_data_start( self )
-        return ctime.date()
+        return CTime( EclSum.cNamespace().get_data_start( self ) ).datetime()
     
 
     @property
@@ -721,16 +796,14 @@ class EclSum(BaseCClass):
         
         See start_date() for further details.
         """
-        ctime = EclSum.cNamespace().get_start_date( self )
-        return ctime.datetime()
+        return CTime( EclSum.cNamespace().get_start_date( self ) ).datetime()
 
     @property
     def end_time(self):
         """
         The time of the last (loaded) time step.
         """
-        ctime = EclSum.cNamespace().get_end_date( self )
-        return ctime.datetime()
+        return CTime(EclSum.cNamespace().get_end_date( self )).datetime()
     
     @property
     def last_report(self):

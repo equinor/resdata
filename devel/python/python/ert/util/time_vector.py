@@ -13,16 +13,114 @@
 #   
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
+import re
+import datetime
 
 from ert.cwrap import CWrapper
-from ert.util import UTIL_LIB, VectorTemplate, ctime
+from ert.util import UTIL_LIB, VectorTemplate, CTime
 
 
 class TimeVector(VectorTemplate):
     default_format = "%d"
 
-    def __init__(self, default_value=0, initial_size=0):
-        super(TimeVector, self).__init__(default_value, initial_size)
+    def __init__(self, default_value=None, initial_size=0):
+        if default_value is None:
+            super(TimeVector, self).__init__(CTime(0), initial_size)
+        else:
+            try:
+                default = CTime( default_value )
+            except:
+                raise ValueError("default value invalid - must be type ctime() or date/datetime")
+            
+            super(TimeVector, self).__init__(default , initial_size)
+                
+
+    @classmethod
+    def parseTimeUnit(cls , deltaString):
+        deltaRegexp = re.compile("(?P<num>\d*)(?P<unit>[dmy])" , re.IGNORECASE)
+        matchObj = deltaRegexp.match( deltaString )
+        if matchObj:
+            try:
+                num = int(matchObj.group("num"))
+            except:
+                num = 1
+                
+            timeUnit = matchObj.group("unit").lower()
+            return (num , timeUnit)
+        else:
+            raise TypeError("The delta string must be on form \'1d\', \'2m\', \'Y\' for one day, two months or one year respectively")
+
+
+    def nextTime(self , num , timeUnit ):
+        currentTime = self[-1].datetime()
+        hour = currentTime.hour
+        minute = currentTime.minute
+        second = currentTime.second
+
+        if timeUnit == "d":
+            td = datetime.timedelta( days = num )
+            currentTime += td
+        else:
+            day = currentTime.day
+            month = currentTime.month
+            year = currentTime.year
+
+            if timeUnit == "y":
+                year += num
+            else:
+                month += num - 1
+                (deltaYear , newMonth) = divmod( month , 12 )
+                month = newMonth + 1
+                year += deltaYear
+                
+            currentTime = datetime.datetime(year , month , day , hour , minute , second )
+        return currentTime
+
+
+    def appendTime(self , num , timeUnit):
+        next = self.nextTime( num , timeUnit )
+        self.append( CTime(next) )
+
+
+    @classmethod
+    def createRegular(cls , start , end , deltaString):
+        """
+        The last element in the vector will be <= end; i.e. if the
+        question of whether the range is closed in the upper end
+        depends on the commensurability of the [start,end] interval
+        and the delta:
+
+        createRegular(0 , 10 , delta=3) => [0,3,6,9]
+        createRegular(0 , 10 , delta=2) => [0,2,4,6,8,10]
+        """
+        if start > end:
+            raise ValueError("The time interval is invalid start is after end")
+        
+        (num , timeUnit) = cls.parseTimeUnit( deltaString )
+        try:
+            hour = start.hour
+            minute = start.minute
+            second = start.second
+        except AttributeError:
+            # The start/end input are assumed to be datetime.date()
+            # instances; they do not mix as freely as wanted with the
+            # datetime.datetime() instances.
+            hour = 0
+            minute = 0
+            second = 0
+            start = datetime.datetime( start.year , start.month , start.day , hour , minute , second )
+            end = datetime.datetime( end.year , end.month , end.day , hour , minute , second )
+
+        timeVector = TimeVector()
+        currentTime = start
+
+        while currentTime <= end:
+            timeVector.append( CTime( currentTime ))
+            currentTime = timeVector.nextTime( num , timeUnit )
+            
+        return timeVector
+                
+                
 
 
 #################################################################
@@ -42,6 +140,11 @@ TimeVector.cNamespace().iset                = cwrapper.prototype("time_t   time_
 TimeVector.cNamespace().size                = cwrapper.prototype("int      time_t_vector_size( time_t_vector )")
 TimeVector.cNamespace().append              = cwrapper.prototype("void     time_t_vector_append( time_t_vector , time_t )")
 TimeVector.cNamespace().idel_block          = cwrapper.prototype("void     time_t_vector_idel_block( time_t_vector , int , int )")
+TimeVector.cNamespace().idel                = cwrapper.prototype("void     time_t_vector_idel( time_t_vector , int )")
+TimeVector.cNamespace().pop                 = cwrapper.prototype("time_t   time_t_vector_pop( time_t_vector )")
+TimeVector.cNamespace().lshift              = cwrapper.prototype("void     time_t_vector_lshift( time_t_vector , int )")
+TimeVector.cNamespace().rshift              = cwrapper.prototype("void     time_t_vector_rshift( time_t_vector , int )")
+TimeVector.cNamespace().insert              = cwrapper.prototype("void     time_t_vector_insert( time_t_vector , int , time_t)")
 TimeVector.cNamespace().fprintf             = cwrapper.prototype("void     time_t_vector_fprintf( time_t_vector , FILE , char* , char*)")
 TimeVector.cNamespace().sort                = cwrapper.prototype("void     time_t_vector_sort( time_t_vector )")
 TimeVector.cNamespace().rsort               = cwrapper.prototype("void     time_t_vector_rsort( time_t_vector )")
@@ -61,8 +164,6 @@ TimeVector.cNamespace().assign              = cwrapper.prototype("void     time_
 TimeVector.cNamespace().memcpy              = cwrapper.prototype("void     time_t_vector_memcpy(time_t_vector , time_t_vector )")
 TimeVector.cNamespace().set_default         = cwrapper.prototype("void     time_t_vector_set_default( time_t_vector , time_t)")
 TimeVector.cNamespace().get_default         = cwrapper.prototype("time_t   time_t_vector_get_default( time_t_vector )")
-TimeVector.cNamespace().alloc_data_copy     = cwrapper.prototype("time_t*  time_t_vector_alloc_data_copy( time_t_vector )")
-TimeVector.cNamespace().data_ptr            = cwrapper.prototype("time_t*  time_t_vector_get_ptr( time_t_vector )")
 TimeVector.cNamespace().element_size        = cwrapper.prototype("int      time_t_vector_element_size( time_t_vector )")
 
 TimeVector.cNamespace().permute          = cwrapper.prototype("void time_t_vector_permute(time_t_vector, permutation_vector)")
