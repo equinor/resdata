@@ -51,6 +51,18 @@ class TimeVector(VectorTemplate):
         else:
             raise TypeError("The delta string must be on form \'1d\', \'2m\', \'Y\' for one day, two months or one year respectively")
 
+    
+    def __str__(self):
+        """
+        Returns string representantion of vector.
+        """
+        string_list = []
+        for d in self:
+            string_list.append( "%s" % d )
+        
+        return string_list.__str__()
+
+
 
     def nextTime(self , num , timeUnit ):
         currentTime = self[-1].datetime()
