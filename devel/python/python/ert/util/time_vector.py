@@ -60,7 +60,7 @@ class TimeVector(VectorTemplate):
         for d in self:
             string_list.append( "%s" % d )
         
-        return string_list.__str__()
+        return str(string_list)
 
 
 
