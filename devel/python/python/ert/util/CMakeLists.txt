@@ -19,6 +19,7 @@ set(PYTHON_SOURCES
     ui_return.py
     util_func.py
     vector_template.py
+    version.py
 )
 
 add_python_package("python.ert.util"  ${PYTHON_INSTALL_PREFIX}/ert/util "${PYTHON_SOURCES}" True)

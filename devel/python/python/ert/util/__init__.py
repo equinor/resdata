@@ -51,6 +51,8 @@ import ert.cwrap.clib as clib
 
 UTIL_LIB = clib.ert_load("libert_util")
 
+from .version import Version
+
 from .enums import RngAlgTypeEnum, RngInitModeEnum
 
 from .ctime import CTime
