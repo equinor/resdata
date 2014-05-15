@@ -17,6 +17,14 @@ char* version_get_git_commit() {
     #endif
 }
 
+char* version_get_git_commit_short() {
+    #ifdef GIT_COMMIT_SHORT
+        return GIT_COMMIT_SHORT;
+    #else
+        return "Unknown git short commit hash";
+    #endif
+}
+
 char* version_get_ert_version() {
     #ifdef ERT_VERSION
         return ERT_VERSION;
