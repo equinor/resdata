@@ -72,22 +72,33 @@ set( test_headers test_util.h )
 
 
 # Add compile time variable values to version.c
-execute_process(COMMAND date "+%Y-%m-%d %H:%M:%S" OUTPUT_VARIABLE BUILD_TIME )
+if (ERT_WINDOWS)
+   execute_process(COMMAND cmd.exe /c "echo %date% %time%"  OUTPUT_VARIABLE BUILD_TIME )   
+else() # Linux or Darwin
+   execute_process(COMMAND date "+%Y-%m-%d %H:%M:%S" OUTPUT_VARIABLE BUILD_TIME )
+endif()
 string(STRIP ${BUILD_TIME} BUILD_TIME)
 
-execute_process(
-  COMMAND git rev-parse HEAD
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE GIT_COMMIT
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+find_package(Git)
+if(GIT_FOUND)
+   execute_process(
+     COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+     OUTPUT_VARIABLE GIT_COMMIT
+     OUTPUT_STRIP_TRAILING_WHITESPACE
+   )
 
-execute_process(
-  COMMAND git rev-parse --short HEAD
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE GIT_COMMIT_SHORT
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+   execute_process(
+     COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+     OUTPUT_VARIABLE GIT_COMMIT_SHORT
+     OUTPUT_STRIP_TRAILING_WHITESPACE
+   )
+else()
+   set( GIT_COMMIT "unknown (git not found!)")
+   set( GIT_COMMIT_SHORT "unknown (git not found!)")
+   message( WARNING "Git not found. Build will not contain git revision info." )
+endif()
 
 set_source_files_properties( version.c PROPERTIES COMPILE_DEFINITIONS "COMPILE_TIME_STAMP=\"${BUILD_TIME}\";GIT_COMMIT=\"${GIT_COMMIT}\";GIT_COMMIT_SHORT=\"${GIT_COMMIT_SHORT}\";ERT_VERSION_MAJOR=\"${ERT_VERSION_MAJOR}\";ERT_VERSION_MINOR=\"${ERT_VERSION_MINOR}\";ERT_VERSION_MICRO=\"${ERT_VERSION_MICRO}\"")
 
