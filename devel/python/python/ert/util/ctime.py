@@ -19,6 +19,7 @@ import math
 import ctypes
 import datetime
 import time
+from types import NoneType
 from ert.cwrap import CWrapper, BaseCValue
 
 
@@ -88,6 +89,8 @@ class CTime(BaseCValue):
             return self.value() == other.value()
         elif isinstance(other, (int, datetime.datetime, datetime.date)):
             return self == CTime(other)
+        elif isinstance(other, type(None)):
+            return False
         else:
             raise TypeError("CTIme does not support type: %s" % other.__class__)
             
