@@ -38,6 +38,7 @@ set( source_files
      nnc_vector.c 
      ecl_nnc_export.c 
      fault_block.c 
+     fault_block_layer.c
      ${ext_source})
 
 set( header_files 
@@ -76,6 +77,7 @@ set( header_files
      ecl_grav_common.h 
      ecl_nnc_export.h 
      fault_block.h
+     fault_block_layer.h
      ${ext_header})
 
 if (ERT_USE_OPENMP)
