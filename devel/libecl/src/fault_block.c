@@ -32,7 +32,7 @@ struct fault_block_struct {
   const ecl_grid_type * grid;
   int_vector_type * cell_list;  
   int               block_id;
-
+  int               k;
   double            xc,yc;
   bool              valid_center;
 };
@@ -42,19 +42,20 @@ UTIL_IS_INSTANCE_FUNCTION( fault_block , FAULT_BLOCK_ID )
 static UTIL_SAFE_CAST_FUNCTION( fault_block , FAULT_BLOCK_ID )
 
 
-fault_block_type * fault_block_alloc( const ecl_grid_type * grid , int block_id ) {
+fault_block_type * fault_block_alloc( const ecl_grid_type * grid ,  int k , int block_id ) {
   fault_block_type * block = util_malloc( sizeof * block );
   UTIL_TYPE_ID_INIT( block , FAULT_BLOCK_ID );
   block->grid = grid;
   block->cell_list = int_vector_alloc(0,0);
   block->valid_center = false;
   block->block_id = block_id;
+  block->k = k;
   return block;
 }
 
 
 int fault_block_get_size( const fault_block_type * block ) {
-  return int_vector_size( block->cell_list );
+  return int_vector_size( block->cell_list );            
 }
 
 
@@ -75,7 +76,8 @@ void fault_block_free__( void * arg) {
 }
 
 
-void fault_block_add_cell( fault_block_type * fault_block , int global_index) {
+void fault_block_add_cell( fault_block_type * fault_block , int i , int j) {
+  int global_index = ecl_grid_get_global_index3( fault_block->grid , i , j , fault_block->k );
   int_vector_append( fault_block->cell_list , global_index );
   fault_block->valid_center = false;
 }

@@ -21,15 +21,15 @@ from ert.ecl import ECL_LIB
 
 class FaultBlock(BaseCClass):
 
-    def __init__(self , grid , block_id):
-        c_pointer = self.cNamespace().alloc( grid , block_id)
+    def __init__(self , grid , k , block_id):
+        c_pointer = self.cNamespace().alloc( grid , k , block_id)
         super(FaultBlock, self).__init__(c_pointer)
 
     def free(self):
         self.cNamespace().free(self)
 
-    def addCell(self , global_index):
-        self.cNamespace().add_cell( self , global_index )
+    def addCell(self , i , j ):
+        self.cNamespace().add_cell( self , i , j )
 
     def getCentroid(self):
         xc = self.cNamespace().get_xc( self )
@@ -46,7 +46,7 @@ CWrapper.registerObjectType("fault_block", FaultBlock)
 
 FaultBlock.cNamespace().alloc      = cwrapper.prototype("c_void_p fault_block_alloc(ecl_grid , int)")
 FaultBlock.cNamespace().free       = cwrapper.prototype("void     fault_block_free(fault_block)")
-FaultBlock.cNamespace().add_cell   = cwrapper.prototype("void     fault_block_add_cell(fault_block , int)")
+FaultBlock.cNamespace().add_cell   = cwrapper.prototype("void     fault_block_add_cell(fault_block , int , int)")
 FaultBlock.cNamespace().get_xc     = cwrapper.prototype("double   fault_block_get_xc(fault_block)")
 FaultBlock.cNamespace().get_yc     = cwrapper.prototype("double   fault_block_get_yc(fault_block)")
 FaultBlock.cNamespace().get_block_id = cwrapper.prototype("int    fault_block_get_id(fault_block)")

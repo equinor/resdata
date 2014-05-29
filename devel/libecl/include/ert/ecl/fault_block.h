@@ -31,13 +31,14 @@ extern "C" {
   
   typedef struct fault_block_struct  fault_block_type;
   
-  fault_block_type * fault_block_alloc( const ecl_grid_type * grid , int block_id );
+  fault_block_type * fault_block_alloc( const ecl_grid_type * grid , int k , int block_id );
   void               fault_block_free( fault_block_type * block );
   void               fault_block_free__( void * arg);
   int                fault_block_get_size( const fault_block_type * block );
-  void               fault_block_add_cell( fault_block_type * fault_block , int global_index);
+  void               fault_block_add_cell( fault_block_type * fault_block , int i , int j);
   double             fault_block_get_xc( fault_block_type * fault_block );
   double             fault_block_get_yc( fault_block_type * fault_block );
+  int                fault_block_get_id( const fault_block_type * block );
 
   UTIL_IS_INSTANCE_HEADER(fault_block);
   

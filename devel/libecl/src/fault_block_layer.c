@@ -45,7 +45,7 @@ static UTIL_SAFE_CAST_FUNCTION(fault_block_layer , FAULT_BLOCK_LAYER_ID);
 
 static void fault_block_layer_assert_has_block( fault_block_layer_type * layer , int block_id) {
   if (int_vector_safe_iget( layer->block_map , block_id) < 0) {
-    fault_block_type * block = fault_block_alloc( layer->grid , block_id );
+    fault_block_type * block = fault_block_alloc( layer->grid , layer->k , block_id );
     int storage_index = vector_get_size( layer->blocks );
     
     int_vector_iset( layer->block_map , block_id , storage_index );
@@ -59,14 +59,13 @@ static void fault_block_layer_scan( fault_block_layer_type * layer ) {
   int i,j;
   for (j=0; j < ecl_grid_get_ny( layer->grid ); j++) {
     for (i=0; i < ecl_grid_get_nx( layer->grid ); i++) {
-      
       int g = ecl_grid_get_global_index3( layer->grid , i , j , layer->k );
       int block_id = ecl_kw_iget_int( layer->fault_block_kw , g );
       
       fault_block_layer_assert_has_block( layer , block_id );
       {
         fault_block_type * block = fault_block_layer_get_block( layer , block_id );
-        fault_block_add_cell( block , g );
+        fault_block_add_cell( block , i,j );
       }
     }
   }

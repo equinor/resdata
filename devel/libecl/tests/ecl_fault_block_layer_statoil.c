@@ -43,8 +43,8 @@ void test_create( const ecl_grid_type * grid , const ecl_kw_type * fault_block_k
         for (block_id = 0; block_id <= max_block_id; block_id++) {
           if (fault_block_layer_has_block( layer , block_id)) {
             fault_block_type * block = fault_block_layer_get_block( layer , block_id );
-            double xc = fault_block_get_xc( block );
-            double yc = fault_block_get_yc( block );
+            fault_block_get_xc( block );
+            fault_block_get_yc( block );
           }
         }
       }

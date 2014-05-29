@@ -29,13 +29,13 @@
 
 
 void test_create(const ecl_grid_type * grid) {
-  fault_block_type * block = fault_block_alloc( grid , 65 );
+  fault_block_type * block = fault_block_alloc( grid , 0 , 65 );
 
   test_assert_true( fault_block_is_instance( block ));
   test_assert_int_equal( 0 , fault_block_get_size( block ));
   test_assert_int_equal( 65 , fault_block_get_id( block ));
 
-  fault_block_add_cell( block , 0 );
+  fault_block_add_cell( block , 0 , 0);
   test_assert_int_equal( 1 , fault_block_get_size( block ));
   {
     double x,y,z;
@@ -45,9 +45,9 @@ void test_create(const ecl_grid_type * grid) {
     test_assert_double_equal( y , fault_block_get_yc( block ));
 
     
-    fault_block_add_cell( block , 1 );
-    fault_block_add_cell( block , 9 );
-    fault_block_add_cell( block , 10 );
+    fault_block_add_cell( block , 1 , 0 );
+    fault_block_add_cell( block , 0 , 1 );
+    fault_block_add_cell( block , 1 , 1  );
     test_assert_double_equal( 1.0 , fault_block_get_xc( block ));
     test_assert_double_equal( 1.0 , fault_block_get_yc( block ));
   }
