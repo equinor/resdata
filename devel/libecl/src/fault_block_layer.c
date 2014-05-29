@@ -81,6 +81,8 @@ fault_block_layer_type * fault_block_layer_alloc( const ecl_grid_type * grid , c
     return NULL;
   else if (ecl_kw_get_size( fault_block_kw) != ecl_grid_get_global_size(grid))
     return NULL;
+  else if (ecl_kw_get_type( fault_block_kw ) != ECL_INT_TYPE)
+    return NULL;
   else {
     fault_block_layer_type * layer = util_malloc( sizeof * layer );
     UTIL_TYPE_ID_INIT( layer , FAULT_BLOCK_LAYER_ID);
