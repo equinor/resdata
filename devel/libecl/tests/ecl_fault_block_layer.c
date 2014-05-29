@@ -145,13 +145,22 @@ void test_create( const ecl_grid_type * grid , ecl_kw_type * fault_block_kw) {
 }
 
 
+void test_create_invalid( const ecl_grid_type * grid ) {
+  ecl_kw_type * fault_blk_kw = ecl_kw_alloc("FAULTBLK" , ecl_grid_get_global_size( grid ) - 1, ECL_INT_TYPE );
+  
+  test_assert_NULL( fault_block_layer_alloc( grid , fault_blk_kw , 7 ));
+  
+  ecl_kw_free( fault_blk_kw );
+}
+
 
 
 int main(int argc , char ** argv) {
   ecl_grid_type * ecl_grid = ecl_grid_alloc_rectangular( 9 , 9 , 2 , 1 , 1 , 1 , NULL );
   ecl_kw_type * fault_blk_kw = ecl_kw_alloc("FAULTBLK" , ecl_grid_get_global_size( ecl_grid ) , ECL_INT_TYPE );
-  
+
   test_create( ecl_grid , fault_blk_kw );
+  test_create_invalid( ecl_grid );
   
   ecl_grid_free( ecl_grid );
   ecl_kw_free( fault_blk_kw );

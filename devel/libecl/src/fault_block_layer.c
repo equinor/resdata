@@ -79,6 +79,8 @@ static void fault_block_layer_scan( fault_block_layer_type * layer ) {
 fault_block_layer_type * fault_block_layer_alloc( const ecl_grid_type * grid , const ecl_kw_type * fault_block_kw , int k) {
   if ((k < 0) || (k >= ecl_grid_get_nz( grid )))
     return NULL;
+  else if (ecl_kw_get_size( fault_block_kw) != ecl_grid_get_global_size(grid))
+    return NULL;
   else {
     fault_block_layer_type * layer = util_malloc( sizeof * layer );
     UTIL_TYPE_ID_INIT( layer , FAULT_BLOCK_LAYER_ID);
