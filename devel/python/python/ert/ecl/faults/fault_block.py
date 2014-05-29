@@ -24,6 +24,11 @@ class FaultBlock(BaseCClass):
     def __init__(self , grid , k , block_id):
         c_pointer = self.cNamespace().alloc( grid , k , block_id)
         super(FaultBlock, self).__init__(c_pointer)
+# The underlying C implementation uses lazy evaluation and needs to hold on
+# to the grid reference. We therefor take a reference to it here, to protect
+# against premature garbage collection of the grid.
+        self.grid_ref = grid
+
 
     def free(self):
         self.cNamespace().free(self)

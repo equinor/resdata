@@ -28,6 +28,12 @@ class FaultBlockLayer(BaseCClass):
         else:
             raise ValueError("Invalid input - failed to create FaultBlockLayer")
 
+# The underlying C implementation uses lazy evaluation and needs to hold on
+# to the grid and kw references. We therefor take references to them here, to protect
+# against premature garbage collection.
+        self.grid_ref = grid
+        self.kw_ref = fault_block_kw
+
 
     def __len__(self):
         return self.cNamespace().size(self)
