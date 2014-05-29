@@ -48,12 +48,18 @@ fault_block_type * fault_block_alloc( const ecl_grid_type * grid , int block_id 
   block->grid = grid;
   block->cell_list = int_vector_alloc(0,0);
   block->valid_center = false;
+  block->block_id = block_id;
   return block;
 }
 
 
 int fault_block_get_size( const fault_block_type * block ) {
   return int_vector_size( block->cell_list );
+}
+
+
+int fault_block_get_id( const fault_block_type * block ) {
+  return block->block_id;
 }
 
 

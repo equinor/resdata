@@ -33,6 +33,7 @@ void test_create(const ecl_grid_type * grid) {
 
   test_assert_true( fault_block_is_instance( block ));
   test_assert_int_equal( 0 , fault_block_get_size( block ));
+  test_assert_int_equal( 65 , fault_block_get_id( block ));
 
   fault_block_add_cell( block , 0 );
   test_assert_int_equal( 1 , fault_block_get_size( block ));
