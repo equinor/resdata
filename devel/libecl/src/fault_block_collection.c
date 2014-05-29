@@ -47,15 +47,22 @@ UTIL_IS_INSTANCE_FUNCTION(fault_block_collection , FAULT_BLOCK_COLLECTION_ID);
 
 
 fault_block_collection_type * fault_block_collection_alloc( const ecl_grid_type * grid , const ecl_kw_type * fault_block_kw) {
-  fault_block_collection_type * collection = util_malloc( sizeof * collection );
-  UTIL_TYPE_ID_INIT( collection , FAULT_BLOCK_COLLECTION_ID);
-
-  collection->grid = grid;
-  collection->fault_block_kw = fault_block_kw;
-  collection->layers = vector_alloc_new();
   
-  vector_grow_NULL( collection->layers , ecl_grid_get_nz( collection->grid ));
-  return collection;
+  if (ecl_kw_get_size( fault_block_kw) != ecl_grid_get_global_size(grid))
+    { printf("return1\n"); return NULL; }
+  else if (ecl_kw_get_type( fault_block_kw ) != ECL_INT_TYPE)
+    { printf("return2\n"); return NULL; }
+  else {
+    fault_block_collection_type * collection = util_malloc( sizeof * collection );
+    UTIL_TYPE_ID_INIT( collection , FAULT_BLOCK_COLLECTION_ID);
+    
+    collection->grid = grid;
+    collection->fault_block_kw = fault_block_kw;
+    collection->layers = vector_alloc_new();
+    
+    vector_grow_NULL( collection->layers , ecl_grid_get_nz( collection->grid ));
+    return collection;
+  }
 }
 
 
@@ -74,14 +81,14 @@ void fault_block_collection_free( fault_block_collection_type * collection ) {
 
 
 
-fault_block_layer_type * fault_block_collection_get_layer( const fault_block_collection_type * collection , int layer_index) {
-  if ((layer_index < 0) || (layer_index >= ecl_grid_get_nz( collection->grid )))
+fault_block_layer_type * fault_block_collection_get_layer( const fault_block_collection_type * collection , int k) {
+  if ((k < 0) || (k >= ecl_grid_get_nz( collection->grid )))
     return NULL;
   else {
-    fault_block_layer_type * layer = vector_iget( collection->layers , layer_index );
+    fault_block_layer_type * layer = vector_iget( collection->layers , k );
     if (layer == NULL) {
-      layer = fault_block_layer_alloc( collection->grid , collection->fault_block_kw , layer_index );
-      vector_iset_owned_ref( collection->layers , layer_index , layer , fault_block_layer_free__ );
+      layer = fault_block_layer_alloc( collection->grid , collection->fault_block_kw , k );
+      vector_iset_owned_ref( collection->layers , k , layer , fault_block_layer_free__ );
     }
     return layer;
   }
