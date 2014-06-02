@@ -91,6 +91,13 @@ void test_create_layer1( const ecl_grid_type * grid , ecl_kw_type * fault_block_
       test_assert_double_equal( x , fault_block_get_xc( block ));
       test_assert_double_equal( y , fault_block_get_yc( block ));
     }
+
+    {
+      fault_block_type * block = fault_block_layer_add_block( layer , 133);
+      test_assert_true (fault_block_is_instance( block ));
+      test_assert_NULL (fault_block_layer_add_block( layer , 133));
+    }
+    
     fault_block_layer_free( layer );
   }
 }

@@ -41,6 +41,9 @@ class FaultBlockLayer(BaseCClass):
 
     def __getitem__(self , index):
         if isinstance(index, int):
+            if index < 0:
+                index += len(self)
+                
             if index >= 0 and index < len(self):
                 return self.cNamespace().iget_block( self , index )
             else:
@@ -65,6 +68,12 @@ class FaultBlockLayer(BaseCClass):
         else:
             raise KeyError("No blocks with ID:%d in this layer" % block_id)
 
+    def addBlock(self , block_id):
+        if self.hasBlock( block_id ):
+            raise KeyError("Layer already contains block with ID:%s" % block_id)
+        else:
+            return self.cNamespace().add_block( self , block_id)
+            
 
     def free(self):
         self.cNamespace().free(self)
@@ -83,6 +92,7 @@ FaultBlockLayer.cNamespace().alloc      = cwrapper.prototype("c_void_p         f
 FaultBlockLayer.cNamespace().free       = cwrapper.prototype("void             fault_block_layer_free(fault_block_layer)")
 FaultBlockLayer.cNamespace().size       = cwrapper.prototype("int              fault_block_layer_get_size(fault_block_layer)")
 FaultBlockLayer.cNamespace().iget_block = cwrapper.prototype("fault_block_ref  fault_block_layer_iget_block(fault_block_layer, int)")
+FaultBlockLayer.cNamespace().add_block  = cwrapper.prototype("fault_block_ref  fault_block_layer_add_block(fault_block_layer, int)")
 FaultBlockLayer.cNamespace().get_block  = cwrapper.prototype("fault_block_ref  fault_block_layer_get_block(fault_block_layer, int)")
 FaultBlockLayer.cNamespace().del_block  = cwrapper.prototype("void  fault_block_layer_del_block(fault_block_layer, int)")
 FaultBlockLayer.cNamespace().has_block  = cwrapper.prototype("bool  fault_block_layer_has_block(fault_block_layer, int)")

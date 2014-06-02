@@ -42,15 +42,22 @@ UTIL_IS_INSTANCE_FUNCTION(fault_block_layer , FAULT_BLOCK_LAYER_ID);
 static UTIL_SAFE_CAST_FUNCTION(fault_block_layer , FAULT_BLOCK_LAYER_ID);
 
 
-
-static void fault_block_layer_assert_has_block( fault_block_layer_type * layer , int block_id) {
+fault_block_type * fault_block_layer_add_block( fault_block_layer_type * layer , int block_id) {
   if (int_vector_safe_iget( layer->block_map , block_id) < 0) {
     fault_block_type * block = fault_block_alloc( layer->grid , layer->k , block_id );
     int storage_index = vector_get_size( layer->blocks );
     
     int_vector_iset( layer->block_map , block_id , storage_index );
     vector_append_owned_ref( layer->blocks , block , fault_block_free__ );
-  }
+    
+    return block;
+  } else
+    return NULL;
+}
+
+
+static void fault_block_layer_assert_has_block( fault_block_layer_type * layer , int block_id) {
+  fault_block_layer_add_block( layer , block_id );
 }
 
 

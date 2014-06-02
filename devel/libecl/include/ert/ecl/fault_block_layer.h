@@ -37,6 +37,7 @@ extern "C" {
   void                     fault_block_layer_free__( void * arg );
   bool                     fault_block_layer_has_block( const fault_block_layer_type * layer , int block_id);
   void                     fault_block_layer_del_block( fault_block_layer_type * layer , int block_id);
+  fault_block_type       * fault_block_layer_add_block( fault_block_layer_type * layer , int block_id);
   fault_block_type       * fault_block_layer_get_block( const fault_block_layer_type * layer , int block_id);
   fault_block_type       * fault_block_layer_iget_block( const fault_block_layer_type * layer , int storage_index);
   int                      fault_block_layer_get_max_id( const fault_block_layer_type * layer );
