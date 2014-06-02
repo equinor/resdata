@@ -53,18 +53,17 @@ class EclRFTFile(CClass):
         return cfunc_file.get_size( self , None , CTime(-1))
 
 
-    def __getitem__(self , index):
-        if isinstance( index , types.IntType):
-            length = self.__len__()
-            if index < 0 or index >= length:
-                raise IndexError
+    def __getitem__(self, index):
+        if isinstance(index, int):
+            if 0 <= index < len(self):
+                return EclRFT( cfunc_file.iget(self, index), self)
             else:
-                return EclRFT( cfunc_file.iget( self , index ) , self )
+                raise IndexError("Index '%d' must be in range: [0, %d]" % (index, len(self) - 1))
         else:
-            raise TypeError("Index should be integer type")
+            raise TypeError("Index must be integer type")
 
     
-    def size( self , well = None , date = None):
+    def size(self, well=None, date=None):
         """
         The number of elements in EclRFTFile container. 
 

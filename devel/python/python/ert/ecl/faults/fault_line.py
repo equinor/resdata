@@ -22,12 +22,21 @@ from ert.geo import Polyline
 
 
 
+def cmpIndexPair(p1,p2):
+    if p1[0] == p2[0]:
+        return cmp(p1[1] , p2[1])
+    else:
+        return cmp(p1[0] , p2[0])
+
+
+
 class FaultLine(object):
     def __init__(self , grid , k):
         self.__grid = grid
         self.__k = k
         self.__segment_list = []
         self.__polyline = None
+        self.__neighborCells = None
 
     def __len__(self):
         return len(self.__segment_list)
@@ -93,7 +102,63 @@ class FaultLine(object):
         if self.__polyline is None:
             self.__initPolyline()
         return self.__polyline
+
+
+    def __initNeighborCells(self):
+        self.__neighborCells = []
+        nx = self.__grid.getNX()
+        ny = self.__grid.getNY()
+        k  = self.__k
+
+        for segment in self:
+            (j1,i1) = divmod(segment.getC1() , (nx + 1 ))
+            (j2,i2) = divmod(segment.getC2() , (nx + 1 ))
+
+            if j1 > j2:
+                j1,j2 = j2,j1
+
+            if i1 > i2:
+                i1,i2 = i2,i1
+
+
+            if i1 == i2:
+                i = i1
+                for j in range(j1 , j2):
+                    g2 = i + j * nx + k * nx*ny
+                    if i == 0:
+                        g1 = -1
+                    else:
+                        g1 = g2 - 1
+                        
+                    if i == nx:
+                        g2 = -1
+
+                    self.__neighborCells.append( (g1,g2) )
+            elif j1 == j2:
+                j = j1
+                for i in range(i1,i2):
+                    g2 = i + j * nx + k * nx*ny
+                    if j == 0:
+                        g1 = -1
+                    else:
+                        g1 = g2 - nx
+
+                    if j == ny:
+                        g2 = -1
+
+                    self.__neighborCells.append( (g1,g2) )
+            else:
+                raise Exception("Internal error: found fault segment with variation in two directions")
+            self.__neighborCells.sort( cmpIndexPair )
+
             
+    def getNeighborCells(self):
+        if self.__neighborCells is None:
+            self.__initNeighborCells()
+
+        return self.__neighborCells
+
+
 
     def dump(self):
         print "-----------------------------------------------------------------"
