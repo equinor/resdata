@@ -112,6 +112,27 @@ fault_block_type * fault_block_layer_get_block( const fault_block_layer_type * l
 
 
 
+void fault_block_layer_del_block( fault_block_layer_type * layer , int block_id) {
+  int storage_index = int_vector_safe_iget( layer->block_map , block_id);
+  if (storage_index >= 0) {
+
+    int_vector_iset( layer->block_map , block_id , -1 );
+    vector_idel( layer->blocks , storage_index );
+    {
+      int index;
+
+      for (index = 0; index < int_vector_size( layer->block_map ); index++) {
+        int current_storage_index = int_vector_iget( layer->block_map , index );
+        if (current_storage_index > storage_index)
+          int_vector_iset( layer->block_map ,index , current_storage_index - 1);
+      }
+    }
+  }
+  
+}
+
+
+
 bool fault_block_layer_has_block( const fault_block_layer_type * layer , int block_id) {
   if (int_vector_safe_iget( layer->block_map , block_id) >= 0)
     return true;
