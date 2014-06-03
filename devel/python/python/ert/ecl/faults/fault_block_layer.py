@@ -48,7 +48,7 @@ class FaultBlockLayer(BaseCClass):
                 index += len(self)
                 
             if 0 <= index < len(self):
-                return self.cNamespace().iget_block( self , index )
+                return self.cNamespace().iget_block( self , index ).setParent(self)
             else:
                 raise IndexError("Index:%d out of range: [0,%d)" % (index , len(self)))
         else:
@@ -63,7 +63,7 @@ class FaultBlockLayer(BaseCClass):
         @rtype: FaultBlock
         """
         if block_id in self:
-            return self.cNamespace().get_block( self , block_id)
+            return self.cNamespace().get_block( self , block_id).setParent(self)
         else:
             raise KeyError("No blocks with ID:%d in this layer" % block_id)
 
@@ -78,7 +78,7 @@ class FaultBlockLayer(BaseCClass):
         if block_id in self:
             raise KeyError("Layer already contains block with ID:%s" % block_id)
         else:
-            return self.cNamespace().add_block( self , block_id)
+            return self.cNamespace().add_block( self , block_id).setParent(self)
             
 
     def free(self):
