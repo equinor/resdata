@@ -115,3 +115,10 @@ double fault_block_get_yc( fault_block_type * fault_block ) {
   fault_block_assert_center( fault_block );
   return fault_block->yc;
 }
+
+
+void  fault_block_export_cell(const fault_block_type * fault_block , int index , int * i , int * j , int * k , double * x, double * y, double * z) {
+  int global_index = int_vector_iget( fault_block->cell_list , index);
+  ecl_grid_get_ijk1( fault_block->grid , global_index , i , j , k);
+  ecl_grid_get_xyz1( fault_block->grid , global_index , x , y , z);
+}

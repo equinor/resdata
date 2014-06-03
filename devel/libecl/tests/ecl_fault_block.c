@@ -51,7 +51,7 @@ void test_create(const ecl_grid_type * grid) {
     test_assert_double_equal( 1.0 , fault_block_get_xc( block ));
     test_assert_double_equal( 1.0 , fault_block_get_yc( block ));
   }
-  
+  test_assert_int_equal( 4 , fault_block_get_size( block ));
   
   fault_block_free( block );
 }

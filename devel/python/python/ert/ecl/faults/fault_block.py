@@ -14,9 +14,24 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-
+import ctypes
 from ert.cwrap import BaseCClass, CWrapper
 from ert.ecl import ECL_LIB
+
+
+class FaultBlockCell(object):
+    def __init__(self , i,j,k , x,y,z):
+
+        self.i = i
+        self.j = j
+        self.k = k
+
+        self.x = x
+        self.y = y
+        self.z = z
+
+        
+        
 
 
 
@@ -30,6 +45,30 @@ class FaultBlock(BaseCClass):
         # against premature garbage collection of the grid.
         self.grid_ref = grid
 
+    def __getitem__(self , index):
+        if isinstance(index, int):
+            if index < 0:
+                index += len(self)
+                
+            if 0 <= index < len(self):
+                x = ctypes.c_double()
+                y = ctypes.c_double()
+                z = ctypes.c_double()
+
+                i = ctypes.c_int()
+                j = ctypes.c_int()
+                k = ctypes.c_int()
+                
+                self.cNamespace().export_cell(self , index , ctypes.byref(i) , ctypes.byref(j) , ctypes.byref(k) , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
+                return FaultBlockCell( i.value , j.value , k.value , x.value , y.value , z.value )
+            else:
+                raise IndexError("Index:%d out of range: [0,%d)" % (index , len(self)))
+        else:
+            raise TypeError("Index:%s wrong type - integer expected")
+        
+
+    def __len__(self):
+        return self.cNamespace().get_size( self )
 
     def free(self):
         self.cNamespace().free(self)
@@ -56,4 +95,5 @@ FaultBlock.cNamespace().add_cell   = cwrapper.prototype("void     fault_block_ad
 FaultBlock.cNamespace().get_xc     = cwrapper.prototype("double   fault_block_get_xc(fault_block)")
 FaultBlock.cNamespace().get_yc     = cwrapper.prototype("double   fault_block_get_yc(fault_block)")
 FaultBlock.cNamespace().get_block_id = cwrapper.prototype("int    fault_block_get_id(fault_block)")
-
+FaultBlock.cNamespace().get_size    = cwrapper.prototype("int      fault_block_get_size(fault_block)")
+FaultBlock.cNamespace().export_cell = cwrapper.prototype("void    fault_block_export_cell(fault_block , int , int* , int* , int* , double* , double* , double*)")

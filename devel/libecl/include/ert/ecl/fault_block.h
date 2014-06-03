@@ -39,6 +39,8 @@ extern "C" {
   double             fault_block_get_xc( fault_block_type * fault_block );
   double             fault_block_get_yc( fault_block_type * fault_block );
   int                fault_block_get_id( const fault_block_type * block );
+  int                fault_block_get_size( const fault_block_type * fault_block );
+  void               fault_block_export_cell(const fault_block_type * fault_block , int index , int * i , int * j , int * k , double * x, double * y, double * z);
 
   UTIL_IS_INSTANCE_HEADER(fault_block);
   
