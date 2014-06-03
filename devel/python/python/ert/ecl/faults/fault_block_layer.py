@@ -40,6 +40,9 @@ class FaultBlockLayer(BaseCClass):
         
 
     def __getitem__(self , index):
+        """
+        @rtype: FaultBlock
+        """
         if isinstance(index, int):
             if index < 0:
                 index += len(self)
@@ -56,6 +59,9 @@ class FaultBlockLayer(BaseCClass):
 
 
     def getBlock(self , block_id):
+        """
+        @rtype: FaultBlock
+        """
         if self.hasBlock( block_id ):
             return self.cNamespace().get_block( self , block_id)
         else:
