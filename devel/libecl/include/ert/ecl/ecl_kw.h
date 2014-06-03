@@ -26,6 +26,7 @@ extern "C" {
 #include <stdio.h>
 
 #include <ert/util/buffer.h>
+#include <ert/util/type_macros.h>
 
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_util.h>
