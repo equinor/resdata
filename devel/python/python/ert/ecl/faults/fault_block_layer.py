@@ -68,7 +68,7 @@ class FaultBlockLayer(BaseCClass):
             raise KeyError("No blocks with ID:%d in this layer" % block_id)
 
 
-    def delBlock(self , block_id):
+    def deleteBlock(self , block_id):
         if block_id in self:
             self.cNamespace().del_block( self , block_id)
         else:
