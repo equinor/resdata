@@ -39,3 +39,44 @@ class GeometryTools(object):
         x = p1[0] + mua * (p2[0] - p1[0])
         y = p1[1] + mua * (p2[1] - p1[1])
         return x, y
+
+
+    @staticmethod
+    def ccw(p1, p2, p3):
+        """
+        Three points are a counter-clockwise turn if ccw > 0, clockwise if
+        ccw < 0, and collinear if ccw = 0 because ccw is a determinant that
+        gives the signed area of the triangle formed by p1, p2 and p3.
+
+        @type p1: tuple of (float, float)
+        @type p2: tuple of (float, float)
+        @type p3: tuple of (float, float)
+        @rtype: float
+        """
+        return (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0])
+
+
+    @staticmethod
+    def convexHull(points):
+        """
+        Given a list of points finds the convex hull
+        @type points: list of tuple of (float, float)
+        @rtype: list of tuple of (float, float)
+        """
+        points = sorted(points)
+
+        def keepLeft(hull, r):
+            while len(hull) > 1 and GeometryTools.ccw(hull[-2], hull[-1], r) > 0:
+                hull.pop()
+
+            if len(hull) == 0 or hull[-1] != r:
+                hull.append(r)
+
+            return hull
+
+        l = reduce(keepLeft, points, [])
+        u = reduce(keepLeft, reversed(points), [])
+        l.extend([u[i] for i in xrange(1, len(u) - 1)])
+
+        return l
+
