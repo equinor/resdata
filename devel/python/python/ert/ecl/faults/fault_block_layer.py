@@ -85,8 +85,6 @@ class FaultBlockLayer(BaseCClass):
         self.cNamespace().free(self)
 
 
-    def size(self):
-        return len(self)
 
     
 

@@ -61,8 +61,6 @@ class FaultBlockCollection(BaseCClass):
     def free(self):
         self.cNamespace().free(self)
 
-    def size(self):
-        return len(self)
 
     
 
