@@ -54,7 +54,7 @@ class FaultBlockLayer(BaseCClass):
         else:
             raise TypeError("Index should be integer type")
 
-    def hasBlock(self , block_id):
+    def __contains__(self , block_id):
         return self.cNamespace().has_block( self , block_id)
 
 
@@ -62,20 +62,20 @@ class FaultBlockLayer(BaseCClass):
         """
         @rtype: FaultBlock
         """
-        if self.hasBlock( block_id ):
+        if block_id in self:
             return self.cNamespace().get_block( self , block_id)
         else:
             raise KeyError("No blocks with ID:%d in this layer" % block_id)
 
 
     def delBlock(self , block_id):
-        if self.hasBlock( block_id ):
+        if block_id in self:
             self.cNamespace().del_block( self , block_id)
         else:
             raise KeyError("No blocks with ID:%d in this layer" % block_id)
 
     def addBlock(self , block_id):
-        if self.hasBlock( block_id ):
+        if block_id in self:
             raise KeyError("Layer already contains block with ID:%s" % block_id)
         else:
             return self.cNamespace().add_block( self , block_id)
