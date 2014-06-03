@@ -44,7 +44,7 @@ class FaultBlockCollection(BaseCClass):
         @rtype: FaultBlockLayer
         """
         if isinstance(index, int):
-            if index >= 0 and index < len(self):
+            if 0 <= index < len(self):
                 return self.cNamespace().get_layer( self , index )
             else:
                 raise IndexError("Index:%d out of range [0,%d)" % (index , len(self)))

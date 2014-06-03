@@ -47,7 +47,7 @@ class FaultBlockLayer(BaseCClass):
             if index < 0:
                 index += len(self)
                 
-            if index >= 0 and index < len(self):
+            if 0 <= index < len(self):
                 return self.cNamespace().iget_block( self , index )
             else:
                 raise IndexError("Index:%d out of range: [0,%d)" % (index , len(self)))
