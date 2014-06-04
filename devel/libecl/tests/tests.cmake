@@ -226,18 +226,42 @@ target_link_libraries( ecl_get_num_cpu ecl test_util )
 add_test( ecl_get_num_cpu ${EXECUTABLE_OUTPUT_PATH}/ecl_get_num_cpu ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu1 ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu2 ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu3)
 
 
+add_executable( ecl_fault_block ecl_fault_block.c )
+target_link_libraries( ecl_fault_block ecl test_util )
+add_test( ecl_fault_block ${EXECUTABLE_OUTPUT_PATH}/ecl_fault_block ) 
 
-set_property( TEST ecl_fmt         PROPERTY LABELS StatoilData )
-set_property( TEST ecl_coarse_test PROPERTY LABELS StatoilData )
-set_property( TEST ecl_restart_test PROPERTY LABELS StatoilData )
-set_property( TEST ecl_lgr_test1 PROPERTY LABELS StatoilData )
-set_property( TEST ecl_lgr_test2 PROPERTY LABELS StatoilData )
-set_property( TEST ecl_lgr_test3 PROPERTY LABELS StatoilData )
-set_property( TEST ecl_grid_lgr_name PROPERTY LABELS StatoilData )
-set_property( TEST ecl_grid_simple PROPERTY LABELS StatoilData )
-set_property( TEST ecl_grid_export PROPERTY LABELS StatoilData )
-set_property( TEST ecl_dualp PROPERTY LABELS StatoilData )
-set_property( TEST ecl_sum_test PROPERTY LABELS StatoilData )
+
+add_executable( ecl_fault_block_layer_statoil ecl_fault_block_layer_statoil.c )
+target_link_libraries( ecl_fault_block_layer_statoil ecl test_util )
+add_test( ecl_fault_block_layer_statoil ${EXECUTABLE_OUTPUT_PATH}/ecl_fault_block_layer_statoil 
+          ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/MARINER.EGRID
+          ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/faultblock.grdecl)
+
+
+add_executable( ecl_fault_block_layer ecl_fault_block_layer.c )
+target_link_libraries( ecl_fault_block_layer ecl test_util )
+add_test( ecl_fault_block_layer ${EXECUTABLE_OUTPUT_PATH}/ecl_fault_block_layer ) 
+
+add_executable( ecl_fault_block_collection_statoil ecl_fault_block_collection_statoil.c )
+target_link_libraries( ecl_fault_block_collection_statoil ecl test_util )
+add_test( ecl_fault_block_collection_statoil ${EXECUTABLE_OUTPUT_PATH}/ecl_fault_block_collection_statoil
+          ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/MARINER.EGRID
+          ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/faultblock.grdecl)
+
+
+set_property( TEST ecl_fault_block_collection_statoil PROPERTY LABELS StatoilData )
+set_property( TEST ecl_fault_block_layer_statoil      PROPERTY LABELS StatoilData )
+set_property( TEST ecl_fmt              PROPERTY LABELS StatoilData )
+set_property( TEST ecl_coarse_test      PROPERTY LABELS StatoilData )
+set_property( TEST ecl_restart_test     PROPERTY LABELS StatoilData )
+set_property( TEST ecl_lgr_test1        PROPERTY LABELS StatoilData )
+set_property( TEST ecl_lgr_test2        PROPERTY LABELS StatoilData )
+set_property( TEST ecl_lgr_test3        PROPERTY LABELS StatoilData )
+set_property( TEST ecl_grid_lgr_name    PROPERTY LABELS StatoilData )
+set_property( TEST ecl_grid_simple      PROPERTY LABELS StatoilData )
+set_property( TEST ecl_grid_export      PROPERTY LABELS StatoilData )
+set_property( TEST ecl_dualp            PROPERTY LABELS StatoilData )
+set_property( TEST ecl_sum_test         PROPERTY LABELS StatoilData )
 
 set_property( TEST ecl_sum_report_step_equal1 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_sum_report_step_equal2 PROPERTY LABELS StatoilData )
