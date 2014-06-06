@@ -80,3 +80,33 @@ class GeometryTools(object):
 
         return l
 
+
+    @staticmethod
+    def pointInPolygon(p, polygon):
+        """
+        Finds out if a point is inside a polygon or not
+        @type p: tuple of (float, float)
+        @type polygon: Polyline or list of tuple of (float, float)
+        @rtype: bool
+        """
+        x = p[0]
+        y = p[1]
+        n = len(polygon)
+
+        inside = False
+
+        p1x, p1y = polygon[0]
+        for index in range(n + 1):
+            p2x, p2y = polygon[index % n]
+
+            if min(p1y, p2y) < y <= max(p1y, p2y):
+                if x <= max(p1x, p2x):
+                    if p1y != p2y:
+                        xints = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+
+                    if p1x == p2x or x <= xints:
+                        inside = not inside
+
+            p1x, p1y = p2x, p2y
+
+        return inside
