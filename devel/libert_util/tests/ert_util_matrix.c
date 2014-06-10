@@ -19,8 +19,10 @@
 
 
 #include <stdlib.h>
+#include <math.h>
 
 #include <ert/util/test_util.h>
+#include <ert/util/statistics.h>
 #include <ert/util/test_work_area.h>
 #include <ert/util/matrix.h>
 #include <ert/util/rng.h>
@@ -186,6 +188,36 @@ void test_readwrite() {
 }
 
 
+void test_diag_std() {
+  const int N = 25;
+  double_vector_type * data = double_vector_alloc( 0,0);
+  rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM ); 
+  matrix_type * m = matrix_alloc( N , N );
+  double sum1 = 0;
+  double sum2 = 0;
+  int i;
+
+  for (i=0; i < N; i++) {
+    double R = rng_get_double( rng ); 
+    matrix_iset(m , i , i , R);
+    double_vector_iset( data , i , R );
+    
+    sum1 += R;
+    sum2 += R*R;
+  }
+  {
+    double mean = sum1 / N;
+    double std = sqrt( sum2 / N - mean * mean );
+
+    test_assert_double_equal( std , matrix_diag_std( m , mean ));
+    test_assert_double_equal( statistics_std( data ) , matrix_diag_std( m , mean ));
+    test_assert_double_equal( statistics_mean( data ) , mean );
+  }
+  matrix_free( m );
+  rng_free( rng );
+}
+
+
 
 int main( int argc , char ** argv) {
   test_create_invalid();
@@ -196,5 +228,6 @@ int main( int argc , char ** argv) {
   test_det3();
   test_det4();
   test_readwrite();
+  test_diag_std();
   exit(0);
 }
