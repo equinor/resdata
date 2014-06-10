@@ -95,9 +95,9 @@ class GeometryTools(object):
 
         inside = False
 
-        p1x, p1y = polygon[0]
+        p1x, p1y = polygon[0][0:2]
         for index in range(n + 1):
-            p2x, p2y = polygon[index % n]
+            p2x, p2y = polygon[index % n][0:2]
 
             if min(p1y, p2y) < y <= max(p1y, p2y):
                 if x <= max(p1x, p2x):
