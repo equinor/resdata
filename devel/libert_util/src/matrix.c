@@ -1519,10 +1519,7 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
   else{
     int nrows  = Sk->rows;
     double std = 0;
-        int i;
-
-    for ( i=0; i<nrows; i++) 
-      Sk->data[GET_INDEX(Sk , i , i)] =  Sk->data[GET_INDEX(Sk , i , i)] - mean; 
+    int i;
     
     for ( i=0; i<nrows; i++) {
       double d = Sk->data[GET_INDEX(Sk , i , i)] - mean;
@@ -1530,7 +1527,7 @@ double matrix_diag_std(const matrix_type * Sk,double mean)
     }
 
     
-    std = sqrt(std)/nrows;
+    std = sqrt(std / nrows);
     return std;
   }
 }

@@ -11,8 +11,12 @@ class Polyline(object):
     def __len__(self):
         return len(self.__points)
 
-    def addPoint(self, x, y, z):
-        self.__points.append((x, y, z))
+    def addPoint(self, x, y, z=None):
+        if z is None:
+            p = (x, y)
+        else:
+            p = (x, y, z)
+        self.__points.append(p)
 
     def __getitem__(self, index):
         """ @rtype: tuple of (float, float, float) """
