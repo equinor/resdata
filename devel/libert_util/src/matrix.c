@@ -1188,8 +1188,8 @@ void matrix_shift_row(matrix_type * matrix , int row , double shift) {
 */
 
 void matrix_subtract_row_mean(matrix_type * matrix) {
-        int i; 
-        for ( i=0; i < matrix->rows; i++) {
+		int i; 
+		for ( i=0; i < matrix->rows; i++) {
     double row_mean = matrix_get_row_sum(matrix , i) / matrix->columns;
     matrix_shift_row( matrix , i , -row_mean);
   }
