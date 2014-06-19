@@ -471,6 +471,21 @@ void matrix_safe_free( matrix_type * matrix ) {
 
 
 /*****************************************************************/
+void matrix_pretty_fprint_submat(const matrix_type * matrix , const char * name , const char * fmt , FILE * stream, int m, int M, int n, int N) {
+  int i,j;
+
+ if (m<0 || m>M || M >= matrix->rows || n<0 || n>N || N >= matrix->columns)
+         util_abort("%s: matrix:%s not compatible with print subdimensions. \n",__func__ , matrix->name);
+
+ fprintf(stream ,  "%s =" , name);
+  for (i=m; i < M; i++) {
+    fprintf(stream , " [");
+    for (j=n; j < N; j++)
+      fprintf(stream , fmt , matrix_iget(matrix , i,j));
+    fprintf(stream , "]\n");
+  }
+}
+/*****************************************************************/
 
 void matrix_pretty_fprint(const matrix_type * matrix , const char * name , const char * fmt , FILE * stream) {
   int i,j;
