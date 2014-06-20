@@ -118,39 +118,39 @@ class GeometryTools(object):
 
 
     @staticmethod
-    def slicePolygon(polygon, line):
+    def slicePolygon(bounding_polygon, poly_line):
         """
         This algorithm extends the end-points of the line and find intersections between the line
         and the enclosing polygon. The result is a polygon sliced by the extended line.
 
         The enclosing polygon must be convex, closed and completely enclose the line.
 
-        @type polygon: Polyline or list of tuple of (float, float)
-        @type line:  Polyline or list of tuple of (float, float)
+        @type bounding_polygon: Polyline or list of tuple of (float, float)
+        @type poly_line:  Polyline or list of tuple of (float, float)
         @rtype: list of tuple of (float, float)
         """
 
-        p1 = line[0]
-        ray1 = GeometryTools.lineToRay(line[1], line[0])
-        intersection1 = GeometryTools.rayPolygonIntersections(p1, ray1, polygon)[0] # assume convex
+        p1 = poly_line[0]
+        ray1 = GeometryTools.lineToRay(poly_line[1], poly_line[0])
+        intersection1 = GeometryTools.rayPolygonIntersections(p1, ray1, bounding_polygon)[0] # assume convex
 
-        p2 = line[-1]
-        ray2 = GeometryTools.lineToRay(line[-2], line[-1])
-        intersection2 = GeometryTools.rayPolygonIntersections(p2, ray2, polygon)[0] # assume convex
+        p2 = poly_line[-1]
+        ray2 = GeometryTools.lineToRay(poly_line[-2], poly_line[-1])
+        intersection2 = GeometryTools.rayPolygonIntersections(p2, ray2, bounding_polygon)[0] # assume convex
 
 
         if intersection2[0] < intersection1[0]:
             intersection1, intersection2 = intersection2, intersection1
-            line = list(reversed(line))
+            poly_line = list(reversed(poly_line))
 
         result = [intersection1[1]]
 
         for index in range(intersection1[0] + 1, intersection2[0] + 1):
-            result.append(polygon[index])
+            result.append(bounding_polygon[index])
 
         result.append(intersection2[1])
 
-        for point in reversed(line):
+        for point in reversed(poly_line):
             result.append(point)
 
         result.append(intersection1[1])
