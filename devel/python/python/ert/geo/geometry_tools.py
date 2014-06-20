@@ -1,3 +1,6 @@
+from math import sqrt
+
+
 class GeometryTools(object):
     EPSILON = 0.000001
 
@@ -110,3 +113,124 @@ class GeometryTools(object):
             p1x, p1y = p2x, p2y
 
         return inside
+
+
+
+
+    @staticmethod
+    def slicePolygon(bounding_polygon, poly_line):
+        """
+        This algorithm extends the end-points of the line and find intersections between the line
+        and the enclosing polygon. The result is a polygon sliced by the extended line.
+
+        The enclosing polygon must be convex, closed and completely enclose the line.
+
+        @type bounding_polygon: Polyline or list of tuple of (float, float)
+        @type poly_line:  Polyline or list of tuple of (float, float)
+        @rtype: list of tuple of (float, float)
+        """
+
+        p1 = poly_line[0]
+        ray1 = GeometryTools.lineToRay(poly_line[1], poly_line[0])
+        intersection1 = GeometryTools.rayPolygonIntersections(p1, ray1, bounding_polygon)[0] # assume convex
+
+        p2 = poly_line[-1]
+        ray2 = GeometryTools.lineToRay(poly_line[-2], poly_line[-1])
+        intersection2 = GeometryTools.rayPolygonIntersections(p2, ray2, bounding_polygon)[0] # assume convex
+
+
+        if intersection2[0] < intersection1[0]:
+            intersection1, intersection2 = intersection2, intersection1
+            poly_line = list(reversed(poly_line))
+
+        result = [intersection1[1]]
+
+        for index in range(intersection1[0] + 1, intersection2[0] + 1):
+            result.append(bounding_polygon[index])
+
+        result.append(intersection2[1])
+
+        for point in reversed(poly_line):
+            result.append(point)
+
+        result.append(intersection1[1])
+
+        return result
+
+
+
+    @staticmethod
+    def lineToRay(p0, p1):
+        """
+        Converts a line segment to a unit vector starting at p0 pointing towards p1.
+        @type p0: tuple of (float, float)
+        @type p1: tuple of (float, float)
+        @rtype: tuple of (float, float)
+        """
+
+        x = p1[0] - p0[0]
+        y = p1[1] - p0[1]
+
+        length = sqrt(x * x + y * y)
+
+        return x / length, y / length
+
+
+    @staticmethod
+    def rayLineIntersection(point, ray, p1, p2):
+        """
+        Finds the intersection between the ray starting at point and the line [p1, p2].
+        @type point: tuple of (float, float)
+        @type ray: tuple of (float, float)
+        @type p1: tuple of (float, float)
+        @type p2: tuple of (float, float)
+        @rtype: tuple of (float, float) or None
+        """
+        denominator = ray[1] * (p2[0] - p1[0]) - ray[0] * (p2[1] - p1[1])
+        numerator_a = ray[0] * (p1[1] - point[1]) - ray[1] * (p1[0] - point[0])
+        numerator_b = (p2[0] - p1[0]) * (p1[1] - point[1]) - (p2[1] - p1[1]) * (p1[0] - point[0])
+
+        # coincident?
+        if abs(numerator_a) < GeometryTools.EPSILON and abs(numerator_b) < GeometryTools.EPSILON and abs(denominator) < GeometryTools.EPSILON:
+            x = (p1[0] + p2[0]) / 2.0
+            y = (p1[1] + p2[1]) / 2.0
+            return x, y
+
+        # parallel?
+        if abs(denominator) < GeometryTools.EPSILON:
+            return None
+
+
+        # intersection along the segments?
+        mua = numerator_a / denominator
+        mub = numerator_b / denominator
+
+        # for rays mub can be larger than 1.0
+        if mua < 0.0 or mua > 1.0 or mub < 0.0:
+            return None
+
+        x = p1[0] + mua * (p2[0] - p1[0])
+        y = p1[1] + mua * (p2[1] - p1[1])
+        return x, y
+
+    @staticmethod
+    def rayPolygonIntersections(point, ray, polygon):
+        """
+        Finds all intersections along the ray with the polygon.
+        The returned value is a tuple containing the line segment in the polygon and the intersection coordinate.
+
+        @type point: tuple of (float, float)
+        @type ray: tuple of (float, float)
+        @type polygon: Polyline or [tuple of (float, float)]
+        @rtype: list of tuple of (int, tuple of (float, float))
+        """
+        results = []
+        for index in range(len(polygon) - 1):
+            lp1 = polygon[index]
+            lp2 = polygon[index + 1]
+
+            intersection = GeometryTools.rayLineIntersection(point, ray, lp1, lp2)
+            if intersection is not None:
+                results.append((index, intersection))
+
+        return results
