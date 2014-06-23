@@ -61,6 +61,7 @@ static void fault_block_layer_assert_has_block( fault_block_layer_type * layer ,
 
 
 
+
 bool fault_block_layer_scan_kw( fault_block_layer_type * layer , const ecl_kw_type * fault_block_kw) {
   if (ecl_kw_get_size( fault_block_kw) != ecl_grid_get_global_size(layer->grid))
     return false;

@@ -21,18 +21,18 @@ from ert.ecl import ECL_LIB
 
 class FaultBlockCollection(BaseCClass):
 
-    def __init__(self , grid , fault_block_kw):
-        c_pointer = self.cNamespace().alloc( grid , fault_block_kw)
+    def __init__(self , grid):
+        c_pointer = self.cNamespace().alloc( grid)
         if c_pointer:
             super(FaultBlockCollection, self).__init__(c_pointer)
         else:
             raise ValueError("Invalid input - failed to create FaultBlockCollection")
 
-        # The underlying C implementation uses lazy evaluation and needs to hold on
-        # to the grid and kw references. We therefor take references to them here, to protect
-        # against premature garbage collection.
+        # The underlying C implementation uses lazy evaluation and
+        # needs to hold on to the grid reference. We therefor take
+        # references to it here, to protect against premature garbage
+        # collection.
         self.grid_ref = grid
-        self.kw_ref = fault_block_kw
 
 
     def __len__(self):
@@ -62,13 +62,19 @@ class FaultBlockCollection(BaseCClass):
         self.cNamespace().free(self)
 
 
+    def scanKeyword(self , fault_block_kw):
+        ok = self.cNamespace().scan_keyword( self , fault_block_kw )
+        if not ok:
+            raise ValueError("The fault block keyword had wrong type/size")
+
     
 
 cwrapper = CWrapper(ECL_LIB)
 CWrapper.registerObjectType("fault_block_collection", FaultBlockCollection)
 
 
-FaultBlockCollection.cNamespace().alloc      = cwrapper.prototype("c_void_p         fault_block_collection_alloc(ecl_grid , ecl_kw )")
+FaultBlockCollection.cNamespace().alloc      = cwrapper.prototype("c_void_p         fault_block_collection_alloc(ecl_grid )")
 FaultBlockCollection.cNamespace().free       = cwrapper.prototype("void             fault_block_collection_free(fault_block_collection)")
 FaultBlockCollection.cNamespace().num_layers = cwrapper.prototype("int              fault_block_collection_num_layers(fault_block_collection)")
 FaultBlockCollection.cNamespace().get_layer  = cwrapper.prototype("fault_block_layer_ref  fault_block_collection_get_layer(fault_block_collection, int)")
+FaultBlockCollection.cNamespace().scan_keyword  = cwrapper.prototype("bool          fault_block_collection_scan_kw(fault_block_collection, ecl_kw)")
