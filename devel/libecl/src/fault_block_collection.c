@@ -87,8 +87,9 @@ fault_block_layer_type * fault_block_collection_get_layer( const fault_block_col
   else {
     fault_block_layer_type * layer = vector_iget( collection->layers , k );
     if (layer == NULL) {
-      layer = fault_block_layer_alloc( collection->grid , collection->fault_block_kw , k );
+      layer = fault_block_layer_alloc( collection->grid , k);
       vector_iset_owned_ref( collection->layers , k , layer , fault_block_layer_free__ );
+      fault_block_layer_scan_kw( layer , collection->fault_block_kw );
     }
     return layer;
   }

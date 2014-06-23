@@ -57,7 +57,8 @@ void test_create_layer1( const ecl_grid_type * grid , ecl_kw_type * fault_block_
     }
   }
   {
-    fault_block_layer_type * layer = fault_block_layer_alloc( grid , fault_block_kw , k );
+    fault_block_layer_type * layer = fault_block_layer_alloc( grid , k );
+    fault_block_layer_scan_kw( layer , fault_block_kw);
     test_assert_true( fault_block_layer_has_block( layer , 1 ));
     test_assert_true( fault_block_layer_has_block( layer , 4 ));
     test_assert_true( fault_block_layer_has_block( layer , 7 ));
@@ -116,8 +117,9 @@ void test_create_layer0( const ecl_grid_type * grid , ecl_kw_type * fault_block_
   }
 
   {
-    fault_block_layer_type * layer = fault_block_layer_alloc( grid , fault_block_kw , k );
+    fault_block_layer_type * layer = fault_block_layer_alloc( grid , k );
 
+    fault_block_layer_scan_kw( layer , fault_block_kw);
     test_assert_false( fault_block_layer_has_block( layer , 0 ));
     test_assert_false( fault_block_layer_has_block( layer , 1 ));
     test_assert_false( fault_block_layer_has_block( layer , 2 ));
@@ -155,7 +157,7 @@ void test_create( const ecl_grid_type * grid , ecl_kw_type * fault_block_kw) {
 void test_create_invalid( const ecl_grid_type * grid ) {
   ecl_kw_type * fault_blk_kw = ecl_kw_alloc("FAULTBLK" , ecl_grid_get_global_size( grid ) - 1, ECL_INT_TYPE );
   
-  test_assert_NULL( fault_block_layer_alloc( grid , fault_blk_kw , 7 ));
+  test_assert_NULL( fault_block_layer_alloc( grid , 7 ));
   
   ecl_kw_free( fault_blk_kw );
 }

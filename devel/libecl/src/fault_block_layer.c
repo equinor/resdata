@@ -31,7 +31,6 @@
 struct fault_block_layer_struct {
   UTIL_TYPE_ID_DECLARATION;
   const ecl_grid_type * grid;
-  const ecl_kw_type   * fault_block_kw;
   int_vector_type     * block_map;
   vector_type         * blocks;
   int                   k;
@@ -62,19 +61,26 @@ static void fault_block_layer_assert_has_block( fault_block_layer_type * layer ,
 
 
 
-static void fault_block_layer_scan( fault_block_layer_type * layer ) {
-  int i,j;
-  for (j=0; j < ecl_grid_get_ny( layer->grid ); j++) {
-    for (i=0; i < ecl_grid_get_nx( layer->grid ); i++) {
-      int g = ecl_grid_get_global_index3( layer->grid , i , j , layer->k );
-      int block_id = ecl_kw_iget_int( layer->fault_block_kw , g );
-      
-      fault_block_layer_assert_has_block( layer , block_id );
-      {
-        fault_block_type * block = fault_block_layer_get_block( layer , block_id );
-        fault_block_add_cell( block , i,j );
+bool fault_block_layer_scan_kw( fault_block_layer_type * layer , const ecl_kw_type * fault_block_kw) {
+  if (ecl_kw_get_size( fault_block_kw) != ecl_grid_get_global_size(layer->grid))
+    return false;
+  else if (ecl_kw_get_type( fault_block_kw ) != ECL_INT_TYPE)
+    return false;
+  else {
+    int i,j;
+    for (j=0; j < ecl_grid_get_ny( layer->grid ); j++) {
+      for (i=0; i < ecl_grid_get_nx( layer->grid ); i++) {
+        int g = ecl_grid_get_global_index3( layer->grid , i , j , layer->k );
+        int block_id = ecl_kw_iget_int( fault_block_kw , g );
+        
+        fault_block_layer_assert_has_block( layer , block_id );
+        {
+          fault_block_type * block = fault_block_layer_get_block( layer , block_id );
+          fault_block_add_cell( block , i,j );
+        }
       }
     }
+    return true;
   }
 }
 
@@ -82,23 +88,17 @@ static void fault_block_layer_scan( fault_block_layer_type * layer ) {
 
 
 
-fault_block_layer_type * fault_block_layer_alloc( const ecl_grid_type * grid , const ecl_kw_type * fault_block_kw , int k) {
+fault_block_layer_type * fault_block_layer_alloc( const ecl_grid_type * grid , int k) {
   if ((k < 0) || (k >= ecl_grid_get_nz( grid )))
-    return NULL;
-  else if (ecl_kw_get_size( fault_block_kw) != ecl_grid_get_global_size(grid))
-    return NULL;
-  else if (ecl_kw_get_type( fault_block_kw ) != ECL_INT_TYPE)
     return NULL;
   else {
     fault_block_layer_type * layer = util_malloc( sizeof * layer );
     UTIL_TYPE_ID_INIT( layer , FAULT_BLOCK_LAYER_ID);
     layer->grid = grid;
     layer->k    = k;
-    layer->fault_block_kw = fault_block_kw;
     layer->block_map = int_vector_alloc( 0 , -1);
     layer->blocks = vector_alloc_new();
     
-    fault_block_layer_scan( layer );
     return layer;
   }
 }

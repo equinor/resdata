@@ -21,18 +21,17 @@ from ert.ecl import ECL_LIB
 
 class FaultBlockLayer(BaseCClass):
 
-    def __init__(self , grid , fault_block_kw , k):
-        c_pointer = self.cNamespace().alloc( grid , fault_block_kw , k)
+    def __init__(self , grid , k):
+        c_pointer = self.cNamespace().alloc( grid , k)
         if c_pointer:
             super(FaultBlockLayer, self).__init__(c_pointer)
         else:
             raise ValueError("Invalid input - failed to create FaultBlockLayer")
 
         # The underlying C implementation uses lazy evaluation and needs to hold on
-        # to the grid and kw references. We therefor take references to them here, to protect
+        # to the grid reference. We therefor take references to them here, to protect
         # against premature garbage collection.
         self.grid_ref = grid
-        self.kw_ref = fault_block_kw
 
 
     def __len__(self):
@@ -56,6 +55,13 @@ class FaultBlockLayer(BaseCClass):
 
     def __contains__(self , block_id):
         return self.cNamespace().has_block( self , block_id)
+
+
+    def scanKeyword(self , fault_block_kw):
+        ok = self.cNamespace().scan_keyword( self , fault_block_kw )
+        if not ok:
+            raise ValueError("The fault block keyword had wrong type/size")
+
 
 
     def getBlock(self , block_id):
@@ -95,7 +101,7 @@ cwrapper = CWrapper(ECL_LIB)
 CWrapper.registerObjectType("fault_block_layer", FaultBlockLayer)
 
 
-FaultBlockLayer.cNamespace().alloc      = cwrapper.prototype("c_void_p         fault_block_layer_alloc(ecl_grid , ecl_kw , int)")
+FaultBlockLayer.cNamespace().alloc      = cwrapper.prototype("c_void_p         fault_block_layer_alloc(ecl_grid ,  int)")
 FaultBlockLayer.cNamespace().free       = cwrapper.prototype("void             fault_block_layer_free(fault_block_layer)")
 FaultBlockLayer.cNamespace().size       = cwrapper.prototype("int              fault_block_layer_get_size(fault_block_layer)")
 FaultBlockLayer.cNamespace().iget_block = cwrapper.prototype("fault_block_ref  fault_block_layer_iget_block(fault_block_layer, int)")

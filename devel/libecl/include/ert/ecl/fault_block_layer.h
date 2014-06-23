@@ -32,7 +32,7 @@ extern "C" {
   
   typedef struct fault_block_layer_struct  fault_block_layer_type;
   
-  fault_block_layer_type * fault_block_layer_alloc( const ecl_grid_type * grid , const ecl_kw_type * fault_block_kw , int k);
+  fault_block_layer_type * fault_block_layer_alloc( const ecl_grid_type * grid , int k);
   void                     fault_block_layer_free( fault_block_layer_type * layer );
   void                     fault_block_layer_free__( void * arg );
   bool                     fault_block_layer_has_block( const fault_block_layer_type * layer , int block_id);
