@@ -122,3 +122,8 @@ void  fault_block_export_cell(const fault_block_type * fault_block , int index ,
   ecl_grid_get_ijk1( fault_block->grid , global_index , i , j , k);
   ecl_grid_get_xyz1( fault_block->grid , global_index , x , y , z);
 }
+
+
+const int_vector_type * fault_block_get_global_index_list(const fault_block_type * fault_block) {
+  return fault_block->cell_list;
+}

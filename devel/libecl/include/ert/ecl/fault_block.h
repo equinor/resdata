@@ -22,6 +22,7 @@
 extern "C" {
 #endif
 
+#include <ert/util/int_vector.h>
 #include <ert/util/type_macros.h>
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_kw.h>
@@ -41,6 +42,7 @@ extern "C" {
   int                fault_block_get_id( const fault_block_type * block );
   int                fault_block_get_size( const fault_block_type * fault_block );
   void               fault_block_export_cell(const fault_block_type * fault_block , int index , int * i , int * j , int * k , double * x, double * y, double * z);
+  const int_vector_type * fault_block_get_global_index_list(const fault_block_type * fault_block);
 
   UTIL_IS_INSTANCE_HEADER(fault_block);
   
