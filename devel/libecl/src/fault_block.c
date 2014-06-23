@@ -31,6 +31,7 @@ struct fault_block_struct {
   UTIL_TYPE_ID_DECLARATION;
   const ecl_grid_type * grid;
   int_vector_type * cell_list;  
+  int_vector_type * region_list;
   int               block_id;
   int               k;
   double            xc,yc;
@@ -47,6 +48,7 @@ fault_block_type * fault_block_alloc( const ecl_grid_type * grid ,  int k , int 
   UTIL_TYPE_ID_INIT( block , FAULT_BLOCK_ID );
   block->grid = grid;
   block->cell_list = int_vector_alloc(0,0);
+  block->region_list = int_vector_alloc(0,0);
   block->valid_center = false;
   block->block_id = block_id;
   block->k = k;
@@ -66,6 +68,7 @@ int fault_block_get_id( const fault_block_type * block ) {
 
 void fault_block_free( fault_block_type * block ) {
   int_vector_free( block->cell_list );
+  int_vector_free( block->region_list );
   free( block );
 }
 
@@ -80,6 +83,22 @@ void fault_block_add_cell( fault_block_type * fault_block , int i , int j) {
   int global_index = ecl_grid_get_global_index3( fault_block->grid , i , j , fault_block->k );
   int_vector_append( fault_block->cell_list , global_index );
   fault_block->valid_center = false;
+}
+
+
+void fault_block_assign_to_region( fault_block_type * fault_block , int region_id ) {
+  if (int_vector_size( fault_block->region_list ) == 0)
+    int_vector_append( fault_block->region_list , region_id );
+  else {
+    if (int_vector_index_sorted( fault_block->region_list , region_id ) == -1)
+      int_vector_append( fault_block->region_list , region_id );
+  }
+  int_vector_sort( fault_block->region_list );
+}
+
+
+const int_vector_type * fault_block_get_region_list( const fault_block_type * fault_block ) {
+  return fault_block->region_list;
 }
 
 

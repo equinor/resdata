@@ -43,6 +43,8 @@ extern "C" {
   int                fault_block_get_size( const fault_block_type * fault_block );
   void               fault_block_export_cell(const fault_block_type * fault_block , int index , int * i , int * j , int * k , double * x, double * y, double * z);
   const int_vector_type * fault_block_get_global_index_list(const fault_block_type * fault_block);
+  void               fault_block_assign_to_region( fault_block_type * fault_block , int region_id );
+  const int_vector_type * fault_block_get_region_list( const fault_block_type * fault_block );
 
   UTIL_IS_INSTANCE_HEADER(fault_block);
   
