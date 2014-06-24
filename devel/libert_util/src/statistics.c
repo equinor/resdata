@@ -42,7 +42,6 @@ double statistics_std( const double_vector_type * data_vector ) {
   double std = 0;
   double mean = statistics_mean( data_vector );
   int size = double_vector_size( data_vector );
-  double sum = 0;
   int i;
 
   for (i=0; i < size; i++) {
