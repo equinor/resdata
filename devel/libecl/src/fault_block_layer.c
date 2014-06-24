@@ -157,6 +157,11 @@ int fault_block_layer_get_size( const fault_block_layer_type * layer ) {
 }
 
 
+int fault_block_layer_get_k( const fault_block_layer_type * layer ) {
+  return layer->k;
+}
+
+
 
 void fault_block_layer_free( fault_block_layer_type * layer ) {
   int_vector_free( layer->block_map );

@@ -42,6 +42,8 @@ extern "C" {
   fault_block_type       * fault_block_layer_iget_block( const fault_block_layer_type * layer , int storage_index);
   int                      fault_block_layer_get_max_id( const fault_block_layer_type * layer );
   int                      fault_block_layer_get_size( const fault_block_layer_type * layer);
+  bool                     fault_block_layer_scan_kw( fault_block_layer_type * layer , const ecl_kw_type * fault_block_kw);
+  int                      fault_block_layer_get_k( const fault_block_layer_type * layer );
   
 #ifdef __cplusplus
 }

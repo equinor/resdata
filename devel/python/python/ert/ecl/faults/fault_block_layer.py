@@ -79,6 +79,9 @@ class FaultBlockLayer(BaseCClass):
             raise KeyError("Layer already contains block with ID:%s" % block_id)
         else:
             return self.cNamespace().add_block( self , block_id).setParent(self)
+
+    def getK(self):
+        return self.cNamespace().getK( self )
             
 
     def free(self):
@@ -100,3 +103,6 @@ FaultBlockLayer.cNamespace().add_block  = cwrapper.prototype("fault_block_ref  f
 FaultBlockLayer.cNamespace().get_block  = cwrapper.prototype("fault_block_ref  fault_block_layer_get_block(fault_block_layer, int)")
 FaultBlockLayer.cNamespace().del_block  = cwrapper.prototype("void  fault_block_layer_del_block(fault_block_layer, int)")
 FaultBlockLayer.cNamespace().has_block  = cwrapper.prototype("bool  fault_block_layer_has_block(fault_block_layer, int)")
+FaultBlockLayer.cNamespace().scan_keyword  = cwrapper.prototype("bool  fault_block_layer_scan_kw(fault_block_layer, ecl_kw)")
+FaultBlockLayer.cNamespace().getK          = cwrapper.prototype("int   fault_block_layer_get_k(fault_block_layer)")
+
