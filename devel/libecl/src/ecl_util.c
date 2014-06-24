@@ -1368,12 +1368,15 @@ ecl_unit_enum ecl_util_get_unit_set(const char * data_file) {
 
 
 bool ecl_util_valid_basename( const char * basename ) {
+
+  char * eclbasename = util_split_alloc_filename(basename);
+
   int upper_count = 0;
   int lower_count = 0;
   int index;
 
   for (index = 0; index < strlen( basename ); index++) {
-    int c = basename[index];
+    int c = eclbasename[index];
     if (isalpha(c)) {
       if (isupper(c))
         upper_count++;
@@ -1381,6 +1384,8 @@ bool ecl_util_valid_basename( const char * basename ) {
         lower_count++;
     }
   }
+
+   free(eclbasename);
 
   if ((lower_count * upper_count) != 0)
     return false;
