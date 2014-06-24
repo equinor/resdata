@@ -28,6 +28,40 @@ void assert_equal( bool equal ) {
 }
 
 
+void test_contains() {
+  int_vector_type * int_vector = int_vector_alloc( 0 , 100);
+  
+  test_assert_false( int_vector_contains( int_vector , 100 ));
+  int_vector_iset( int_vector , 0 , 77 );
+  test_assert_false( int_vector_contains( int_vector , 100 ));
+  test_assert_true( int_vector_contains( int_vector , 77 ));
+
+  int_vector_iset( int_vector , 10 , 33 );
+  test_assert_true( int_vector_contains( int_vector , 100 ));
+  test_assert_true( int_vector_contains( int_vector , 77 ));
+  test_assert_true( int_vector_contains( int_vector , 33 ));
+
+  int_vector_free( int_vector );
+}
+
+void test_contains_sorted() {
+  int_vector_type * int_vector = int_vector_alloc( 0 , 100);
+  
+  int_vector_append( int_vector , 99 );
+  int_vector_append( int_vector , 89 );
+  int_vector_append( int_vector , 79 );
+  int_vector_append( int_vector , 109 );
+
+  int_vector_sort( int_vector );
+
+  test_assert_false( int_vector_contains( int_vector , 0 ));
+  test_assert_false( int_vector_contains( int_vector , 100 ));
+  test_assert_true( int_vector_contains( int_vector , 89 ));
+  test_assert_true( int_vector_contains( int_vector , 109 ));
+}
+
+
+
 void test_div() {
   int_vector_type * int_vector = int_vector_alloc( 0 , 100);
   int_vector_iset( int_vector , 10 , 100 );
@@ -189,6 +223,8 @@ int main(int argc , char ** argv) {
     int_vector_free( v1 );
     int_vector_free( v2 );
   }
+  test_contains();
+  test_contains_sorted();
   test_shift();
   test_alloc();
   test_div();

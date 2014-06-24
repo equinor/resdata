@@ -63,6 +63,12 @@ class TimeVector(VectorTemplate):
         return str(string_list)
 
 
+    def append(self, value):
+        self.cNamespace().append(self, CTime(value)) 
+
+    def __contains__(self , value):
+        return self.cNamespace().contains(self , CTime(value))
+
 
     def nextTime(self , num , timeUnit ):
         currentTime = self[-1].datetime()
@@ -172,3 +178,4 @@ TimeVector.cNamespace().element_size        = cwrapper.prototype("int      time_
 TimeVector.cNamespace().permute          = cwrapper.prototype("void time_t_vector_permute(time_t_vector, permutation_vector)")
 TimeVector.cNamespace().sort_perm        = cwrapper.prototype("permutation_vector_obj time_t_vector_alloc_sort_perm(time_t_vector)")
 TimeVector.cNamespace().rsort_perm       = cwrapper.prototype("permutation_vector_obj time_t_vector_alloc_rsort_perm(time_t_vector)")
+TimeVector.cNamespace().contains         = cwrapper.prototype("bool time_t_vector_contains(time_t_vector, time_t)")

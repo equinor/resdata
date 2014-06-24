@@ -94,6 +94,8 @@ typedef @TYPE@ (@TYPE@_ftype) (@TYPE@);
   void                 @TYPE@_vector_append_default(@TYPE@_vector_type * vector , @TYPE@ default_value);
   void                 @TYPE@_vector_iset_default(@TYPE@_vector_type * vector , int index , @TYPE@ default_value);
   bool                 @TYPE@_vector_is_sorted( const @TYPE@_vector_type * vector , bool reverse);
+  bool                 @TYPE@_vector_contains(const @TYPE@_vector_type * vector , @TYPE@ value);
+  bool                 @TYPE@_vector_contains_sorted(const @TYPE@_vector_type * vector , @TYPE@ value);
   int                  @TYPE@_vector_index(const @TYPE@_vector_type * vector , @TYPE@ value);
   int                  @TYPE@_vector_index_sorted(const @TYPE@_vector_type * vector , @TYPE@ value);
   void                 @TYPE@_vector_sort(@TYPE@_vector_type * vector);

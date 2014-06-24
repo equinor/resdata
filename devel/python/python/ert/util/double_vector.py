@@ -68,3 +68,4 @@ DoubleVector.cNamespace().element_size     = cwrapper.prototype("int      double
 DoubleVector.cNamespace().permute          = cwrapper.prototype("void double_vector_permute(double_vector, permutation_vector)")
 DoubleVector.cNamespace().sort_perm        = cwrapper.prototype("permutation_vector_obj double_vector_alloc_sort_perm(double_vector)")
 DoubleVector.cNamespace().rsort_perm       = cwrapper.prototype("permutation_vector_obj double_vector_alloc_rsort_perm(double_vector)")
+DoubleVector.cNamespace().contains       = cwrapper.prototype("bool double_vector_contains(double_vector, double)")

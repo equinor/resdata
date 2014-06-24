@@ -123,4 +123,4 @@ BoolVector.cNamespace().rsort_perm       = cwrapper.prototype("permutation_vecto
 BoolVector.cNamespace().create_active_mask = cwrapper.prototype("bool_vector_obj string_util_alloc_active_mask( char* )")
 BoolVector.cNamespace().update_active_mask = cwrapper.prototype("bool string_util_update_active_mask(char*, bool_vector)")
 BoolVector.cNamespace().active_list        = cwrapper.prototype("int_vector_obj bool_vector_alloc_active_list(bool_vector)")
-
+BoolVector.cNamespace().contains           = cwrapper.prototype("bool bool_vector_contains(bool_vector, bool)")

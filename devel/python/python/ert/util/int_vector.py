@@ -90,5 +90,6 @@ IntVector.cNamespace().create_active_list  = cwrapper.prototype("int_vector_obj 
 IntVector.cNamespace().permute          = cwrapper.prototype("void int_vector_permute(int_vector, permutation_vector)")
 IntVector.cNamespace().sort_perm        = cwrapper.prototype("permutation_vector_obj int_vector_alloc_sort_perm(int_vector)")
 IntVector.cNamespace().rsort_perm       = cwrapper.prototype("permutation_vector_obj int_vector_alloc_rsort_perm(int_vector)")
+IntVector.cNamespace().contains       = cwrapper.prototype("bool int_vector_contains(int_vector, int)")
 
 

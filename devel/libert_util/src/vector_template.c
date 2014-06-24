@@ -985,6 +985,20 @@ int @TYPE@_vector_index(const @TYPE@_vector_type * vector , @TYPE@ value) {
     return -1;
 }
 
+bool @TYPE@_vector_contains(const @TYPE@_vector_type * vector , @TYPE@ value) {
+  if (@TYPE@_vector_index( vector , value) >= 0)
+    return true;
+  else
+    return false;
+}
+
+
+bool @TYPE@_vector_contains_sorted(const @TYPE@_vector_type * vector , @TYPE@ value) {
+  if (@TYPE@_vector_index_sorted( vector , value) >= 0)
+    return true;
+  else
+    return false;
+}
 
 
 /*
