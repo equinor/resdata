@@ -1385,7 +1385,7 @@ bool ecl_util_valid_basename( const char * basename ) {
     }
   }
 
-   free(eclbasename);
+  free(eclbasename);
 
   if ((lower_count * upper_count) != 0)
     return false;
