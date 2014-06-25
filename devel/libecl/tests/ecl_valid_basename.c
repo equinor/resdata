@@ -22,7 +22,7 @@
    for more details.
 */
 
-#include <ert/util/test_util.h>ss
+#include <ert/util/test_util.h>
 #include <ert/ecl/ecl_util.h>
 
 
