@@ -85,15 +85,34 @@ class FaultBlock(BaseCClass):
         return self.cNamespace().get_block_id(self)
 
 
+    def getGlobalIndexList(self):
+        g_list = self.cNamespace().get_global_index_list(self)
+        # We return a copy; i.e. it is not possible to update the
+        # internal state of the fault block with this handle.
+        return g_list.copy()
+
+
+    def assignToRegion(self , region_id):
+        self.cNamespace().assign_to_region(self , region_id)
+        
+
+    def getRegionList(self):
+        regionList = self.cNamespace().get_region_list(self)
+        return regionList.copy()
+
+
 
 cwrapper = CWrapper(ECL_LIB)
 CWrapper.registerObjectType("fault_block", FaultBlock)
 
-FaultBlock.cNamespace().alloc      = cwrapper.prototype("c_void_p fault_block_alloc(ecl_grid , int)")
-FaultBlock.cNamespace().free       = cwrapper.prototype("void     fault_block_free(fault_block)")
-FaultBlock.cNamespace().add_cell   = cwrapper.prototype("void     fault_block_add_cell(fault_block , int , int)")
-FaultBlock.cNamespace().get_xc     = cwrapper.prototype("double   fault_block_get_xc(fault_block)")
-FaultBlock.cNamespace().get_yc     = cwrapper.prototype("double   fault_block_get_yc(fault_block)")
-FaultBlock.cNamespace().get_block_id = cwrapper.prototype("int    fault_block_get_id(fault_block)")
-FaultBlock.cNamespace().get_size    = cwrapper.prototype("int      fault_block_get_size(fault_block)")
-FaultBlock.cNamespace().export_cell = cwrapper.prototype("void    fault_block_export_cell(fault_block , int , int* , int* , int* , double* , double* , double*)")
+FaultBlock.cNamespace().alloc                 = cwrapper.prototype("c_void_p fault_block_alloc(ecl_grid , int)")
+FaultBlock.cNamespace().free                  = cwrapper.prototype("void     fault_block_free(fault_block)")
+FaultBlock.cNamespace().add_cell              = cwrapper.prototype("void     fault_block_add_cell(fault_block , int , int)")
+FaultBlock.cNamespace().get_xc                = cwrapper.prototype("double   fault_block_get_xc(fault_block)")
+FaultBlock.cNamespace().get_yc                = cwrapper.prototype("double   fault_block_get_yc(fault_block)")
+FaultBlock.cNamespace().get_block_id          = cwrapper.prototype("int    fault_block_get_id(fault_block)")
+FaultBlock.cNamespace().get_size              = cwrapper.prototype("int      fault_block_get_size(fault_block)")
+FaultBlock.cNamespace().get_global_index_list = cwrapper.prototype("int_vector_ref fault_block_get_global_index_list(fault_block)")
+FaultBlock.cNamespace().export_cell           = cwrapper.prototype("void    fault_block_export_cell(fault_block , int , int* , int* , int* , double* , double* , double*)")
+FaultBlock.cNamespace().assign_to_region      = cwrapper.prototype("void          fault_block_assign_to_region(fault_block , int)")
+FaultBlock.cNamespace().get_region_list       = cwrapper.prototype("int_vector_ref  fault_block_get_region_list(fault_block)")

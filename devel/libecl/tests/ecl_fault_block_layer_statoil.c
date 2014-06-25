@@ -27,15 +27,16 @@
 
 
 void test_create( const ecl_grid_type * grid , const ecl_kw_type * fault_block_kw) {
-  test_assert_NULL( fault_block_layer_alloc( grid , fault_block_kw , -1 ));
-  test_assert_NULL( fault_block_layer_alloc( grid , fault_block_kw , ecl_grid_get_nz( grid )));
+  test_assert_NULL( fault_block_layer_alloc( grid ,  -1 ));
+  test_assert_NULL( fault_block_layer_alloc( grid ,  ecl_grid_get_nz( grid )));
   
   { 
     int k;
     for (k = 0; k < ecl_grid_get_nz( grid ); k++) {
-      fault_block_layer_type * layer = fault_block_layer_alloc( grid , fault_block_kw  , k);
+      fault_block_layer_type * layer = fault_block_layer_alloc( grid , k);
       test_assert_true( fault_block_layer_is_instance( layer ));
-
+      
+      fault_block_layer_scan_kw( layer , fault_block_kw);
       {
         int max_block_id = fault_block_layer_get_max_id( layer ); 
         int block_id;

@@ -31,11 +31,12 @@ extern "C" {
   
   typedef struct fault_block_collection_struct  fault_block_collection_type;
   
-  fault_block_collection_type * fault_block_collection_alloc( const ecl_grid_type * grid , const ecl_kw_type * fault_block_kw);
+  fault_block_collection_type * fault_block_collection_alloc( const ecl_grid_type * grid );
   void                          fault_block_collection_free( fault_block_collection_type * collection );
   int                           fault_block_collection_num_layers( const fault_block_collection_type * collection);
   fault_block_layer_type      * fault_block_collection_get_layer( const fault_block_collection_type * collection , int layer);
-  
+  bool                          fault_block_collection_scan_kw(fault_block_collection_type * collection , const ecl_kw_type * ecl_kw);
+
 #ifdef __cplusplus
 }
 #endif

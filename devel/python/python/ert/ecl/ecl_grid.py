@@ -125,7 +125,7 @@ class EclGrid(CClass):
     @property
     def size( self ):
         """The total number of cells in the grid, i.e. nx*ny*nz."""
-        return cfunc.get_nx( self ) * cfunc.get_ny( self ) * cfunc.get_nz( self )
+        return cfunc.get_global_size( self )
 
     @property
     def nactive( self ):
@@ -158,7 +158,9 @@ class EclGrid(CClass):
         """ The number of elements in the z direction"""
         return cfunc.get_nz( self )
 
-
+    def getGlobalSize(self):
+        """Returns the total number of cells in this grid"""
+        return cfunc.get_global_size( self )
 
     @property
     def name( self ):
@@ -806,6 +808,7 @@ cfunc.free                         = cwrapper.prototype("void ecl_grid_free( ecl
 cfunc.get_nx                       = cwrapper.prototype("int ecl_grid_get_nx( ecl_grid )")
 cfunc.get_ny                       = cwrapper.prototype("int ecl_grid_get_ny( ecl_grid )")
 cfunc.get_nz                       = cwrapper.prototype("int ecl_grid_get_nz( ecl_grid )")
+cfunc.get_global_size              = cwrapper.prototype("int ecl_grid_get_global_size( ecl_grid )")
 cfunc.get_active                   = cwrapper.prototype("int ecl_grid_get_active_size( ecl_grid )")
 cfunc.get_active_fracture          = cwrapper.prototype("int ecl_grid_get_nactive_fracture( ecl_grid )")
 cfunc.get_name                     = cwrapper.prototype("char* ecl_grid_get_name( ecl_grid )")

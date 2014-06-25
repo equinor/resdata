@@ -28,7 +28,7 @@
 
 
 void test_create( const ecl_grid_type * grid , const ecl_kw_type * fault_block_kw) {
-  fault_block_collection_type * fault_blocks = fault_block_collection_alloc( grid , fault_block_kw );
+  fault_block_collection_type * fault_blocks = fault_block_collection_alloc( grid  );
   test_assert_true( fault_block_collection_is_instance( fault_blocks ));
   test_assert_int_equal( ecl_grid_get_nz( grid ) , fault_block_collection_num_layers( fault_blocks ));
   fault_block_collection_free( fault_blocks );
@@ -37,7 +37,7 @@ void test_create( const ecl_grid_type * grid , const ecl_kw_type * fault_block_k
 
 
 void test_get_layer( const ecl_grid_type * grid , const ecl_kw_type * fault_block_kw) {
-  fault_block_collection_type * fault_blocks = fault_block_collection_alloc( grid , fault_block_kw );
+  fault_block_collection_type * fault_blocks = fault_block_collection_alloc( grid );
 
   test_assert_NULL( fault_block_collection_get_layer( fault_blocks , -1 ));
   test_assert_NULL( fault_block_collection_get_layer( fault_blocks , ecl_grid_get_nz( grid ) ));

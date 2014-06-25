@@ -7,6 +7,7 @@ set(PYTHON_SOURCES
     fault.py
     fault_line.py
     fault_segments.py
+    region_definition.py
 )
 
 add_python_package("python.ert.ecl.faults"  ${PYTHON_INSTALL_PREFIX}/ert/ecl/faults "${PYTHON_SOURCES}" True)

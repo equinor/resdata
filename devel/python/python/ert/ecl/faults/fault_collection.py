@@ -53,6 +53,10 @@ class FaultCollection(object):
     def __iter__(self):
         return iter(self.__fault_list)
         
+
+    def getGrid(self):
+        return self.__grid
+
             
     def getFault(self , name):
         return self.__getitem__(name)

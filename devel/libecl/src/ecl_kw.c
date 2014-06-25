@@ -2577,6 +2577,14 @@ double ecl_kw_element_sum_float( const ecl_kw_type * ecl_kw ) {
     return 0;
 }
 
+
+int ecl_kw_element_sum_int( const ecl_kw_type * ecl_kw ) {
+  int int_sum;
+  ecl_kw_element_sum( ecl_kw , &int_sum);
+
+  return int_sum;
+}
+
 /*****************************************************************/
 
 #define ECL_KW_FPRINTF_DATA(ctype)                                                                        \
