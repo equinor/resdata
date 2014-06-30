@@ -1368,12 +1368,15 @@ ecl_unit_enum ecl_util_get_unit_set(const char * data_file) {
 
 
 bool ecl_util_valid_basename( const char * basename ) {
+
+  char * eclbasename = util_split_alloc_filename(basename);
+
   int upper_count = 0;
   int lower_count = 0;
   int index;
 
-  for (index = 0; index < strlen( basename ); index++) {
-    int c = basename[index];
+  for (index = 0; index < strlen( eclbasename ); index++) {
+    int c = eclbasename[index];
     if (isalpha(c)) {
       if (isupper(c))
         upper_count++;
@@ -1381,6 +1384,8 @@ bool ecl_util_valid_basename( const char * basename ) {
         lower_count++;
     }
   }
+
+  free(eclbasename);
 
   if ((lower_count * upper_count) != 0)
     return false;
@@ -1392,14 +1397,17 @@ bool ecl_util_valid_basename( const char * basename ) {
 bool ecl_util_valid_basename_fmt(const char * basename_fmt)
 {
   bool valid;
-  const char * percent_ptr = strchr(basename_fmt, '%');
+
+  char * eclbasename_fmt = util_split_alloc_filename(basename_fmt);
+
+  const char * percent_ptr = strchr(eclbasename_fmt, '%');
   if (percent_ptr) {
     percent_ptr++;
     while (true)
     {
       if (*percent_ptr == 'd')
       {
-        char * basename_instance = util_alloc_sprintf(basename_fmt, 0);
+        char * basename_instance = util_alloc_sprintf(eclbasename_fmt, 0);
         valid = ecl_util_valid_basename(basename_instance);
         free(basename_instance);
         break;
@@ -1410,7 +1418,9 @@ bool ecl_util_valid_basename_fmt(const char * basename_fmt)
         percent_ptr++;
     }
   } else
-    valid = ecl_util_valid_basename(basename_fmt);
+    valid = ecl_util_valid_basename(eclbasename_fmt);
+
+  free(eclbasename_fmt);
 
   return valid;
 }
