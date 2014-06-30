@@ -1420,6 +1420,8 @@ bool ecl_util_valid_basename_fmt(const char * basename_fmt)
   } else
     valid = ecl_util_valid_basename(eclbasename_fmt);
 
+  free(eclbasename_fmt);
+
   return valid;
 }
 
