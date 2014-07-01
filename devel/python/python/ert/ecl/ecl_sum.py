@@ -104,6 +104,23 @@ class EclSum(BaseCClass):
             self._initialize()
 
 
+    @staticmethod
+    def writer(case , start_time , nx,ny,nz , fmt_output = False , unified = True , key_join_string = ":"):
+        """
+        The writer is not generally usable.
+        """
+        return EclSum.cNamespace().create_writer( case , fmt_output , unified , key_join_string , CTime(start_time) , nx , ny , nz)
+
+
+    def addVariable(self , variable , wgname = None , num = 0 , unit = "None" , default_value = 0):
+        EclSum.cNamespace().add_variable(self , variable , wgname , num , unit , default_value)
+        
+
+    def addTStep(self , report_step , sim_days):
+        tstep = EclSum.cNamespace().add_tstep( self , report_step , sim_days )
+        return tstep
+
+
     def _initialize(self):
         # Initializing the time vectors
         length = self.length
@@ -958,3 +975,6 @@ EclSum.cNamespace().get_var_node                  = cwrapper.prototype("smspec_n
 EclSum.cNamespace().create_well_list              = cwrapper.prototype("stringlist_obj ecl_sum_alloc_well_list( ecl_sum , char* )")
 EclSum.cNamespace().create_group_list             = cwrapper.prototype("stringlist_obj ecl_sum_alloc_group_list( ecl_sum , char* )")
 
+EclSum.cNamespace().create_writer                 = cwrapper.prototype("ecl_sum_obj  ecl_sum_alloc_writer( char* , bool , bool , char* , time_t , int , int , int)")
+EclSum.cNamespace().add_variable                  = cwrapper.prototype("void         ecl_sum_add_var(ecl_sum , char* , char* , int , char*, double)")
+EclSum.cNamespace().add_tstep                     = cwrapper.prototype("c_void_p     ecl_sum_add_tstep(ecl_sum , int , double)")
