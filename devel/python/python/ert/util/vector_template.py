@@ -136,6 +136,9 @@ class VectorTemplate(BaseCClass):
         c_pointer = self.cNamespace().alloc(initial_size, default_value)
         super(VectorTemplate, self).__init__(c_pointer)
         self.element_size = self.cNamespace().element_size(self)
+        
+    def __contains__(self , value):
+        return self.cNamespace().contains(self , value)
 
 
     def pop(self):
