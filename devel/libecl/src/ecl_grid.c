@@ -5347,6 +5347,19 @@ ecl_kw_type * ecl_grid_alloc_gridhead_kw( int nx, int ny , int nz , int grid_nr)
 /*****************************************************************/
 
 
+void ecl_grid_reset_actnum( ecl_grid_type * grid , const int * actnum ) {
+  const int global_size = ecl_grid_get_global_size( grid );
+  int g;
+  for (g=0; g < global_size; g++) {
+    ecl_cell_type * cell = ecl_grid_get_cell( grid , g );
+    if (actnum)
+      cell->active = actnum[g];
+    else
+      cell->active = 1;
+  }
+  ecl_grid_update_index( grid );
+}
+
 
 static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio) {  
   bool is_lgr = true;

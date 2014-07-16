@@ -100,6 +100,10 @@ add_executable( ecl_grid_DEPTHZ ecl_grid_DEPTHZ.c )
 target_link_libraries( ecl_grid_DEPTHZ ecl test_util )
 add_test( ecl_grid_DEPTHZ ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_DEPTHZ )
 
+add_executable( ecl_grid_reset_actnum ecl_grid_reset_actnum.c )
+target_link_libraries( ecl_grid_reset_actnum ecl test_util )
+add_test( ecl_grid_reset_actnum ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_reset_actnum )
+
 add_executable( ecl_grid_export ecl_grid_export.c )
 target_link_libraries( ecl_grid_export ecl test_util )
 add_test( ecl_grid_export ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
