@@ -581,7 +581,6 @@ struct ecl_cell_struct {
 
 
 
-#define LARGE_CELL_MALLOC 1
 #define ECL_GRID_ID       991010
 
 struct ecl_grid_struct {
@@ -600,11 +599,7 @@ struct ecl_grid_struct {
   int                 * fracture_index_map;     /* For fractures: this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_fracture_index_map; /* For fractures: this is list of total_active elements - which point back to the index_map. */ 
 
-#ifdef LARGE_CELL_MALLOC
   ecl_cell_type      *  cells;
-#else
-  ecl_cell_type      ** cells;         
-#endif
 
   char                * parent_name;   /* the name of the parent for a nested lgr - for the main grid, and also a
                                           lgr descending directly from the main grid this will be NULL. */
@@ -1219,11 +1214,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_grid , ECL_GRID_ID);
 
 
 static ecl_cell_type * ecl_grid_get_cell(const ecl_grid_type * grid , int global_index) {
-#ifdef LARGE_CELL_MALLOC
   return &grid->cells[global_index];
-#else
-  return grid->cells[global_index];
-#endif
 }
 
 
@@ -1251,25 +1242,11 @@ static void ecl_grid_free_cells( ecl_grid_type * grid ) {
       nnc_info_free(cell->nnc_info);
   }
 
-#ifndef LARGE_CELL_MALLOC
-  int i;
-  for (i=0; i < grid->size; i++) {
-    ecl_cell_type * cell = ecl_grid_get_cell( grid , i );
-    ecl_cell_free( cell );
-  }
-#endif
   free( grid->cells );
 }
 
 static void ecl_grid_alloc_cells( ecl_grid_type * grid , bool init_valid) {
   grid->cells           = util_calloc(grid->size , sizeof * grid->cells );
-#ifndef LARGE_CELL_MALLOC
-  {
-    int i;
-    for (i=0; i < grid->size; i++) 
-      grid->cells[i] = ecl_cell_alloc();
-  }
-#endif
   {
     ecl_cell_type * cell0 = ecl_grid_get_cell( grid , 0 );
     ecl_cell_init( cell0 , init_valid );
