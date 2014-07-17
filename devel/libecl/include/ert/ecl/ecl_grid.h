@@ -115,7 +115,7 @@ extern "C" {
   void            ecl_grid_get_xyz1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos);
   void            ecl_grid_get_xyz1A(const ecl_grid_type * grid , int active_index , double *xpos , double *ypos , double *zpos);
   int             ecl_grid_get_global_size( const ecl_grid_type * ecl_grid );
-  bool            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool include_lgr, bool verbose);
+  bool            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool include_lgr, bool include_nnc , bool verbose);
   int             ecl_grid_get_active_size( const ecl_grid_type * ecl_grid );
   
   double          ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index);

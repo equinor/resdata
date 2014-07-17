@@ -644,7 +644,7 @@ struct ecl_grid_struct {
 
 
 
-static void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2, bool * equal) {
+static void ecl_cell_compare(const ecl_cell_type * c1 , const ecl_cell_type * c2,  bool include_nnc , bool * equal) {
   int i;
   
   if (c1->active != c2->active) 
@@ -662,15 +662,18 @@ static void ecl_cell_compare(const ecl_cell_type * c1 , ecl_cell_type * c2, bool
   
   if (c1->host_cell != c2->host_cell) 
     *equal = false;
-
+  
   if (*equal) {
     for (i=0; i < 8; i++) 
       point_compare( &c1->corner_list[i] , &c2->corner_list[i] , equal );
     
   }
-  
-  if (*equal)
-    *equal = nnc_info_equal( c1->nnc_info , c2->nnc_info );
+
+  if (include_nnc) {
+    if (*equal)
+      *equal = nnc_info_equal( c1->nnc_info , c2->nnc_info );
+  }
+
 }
 
 
@@ -684,7 +687,7 @@ static void ecl_cell_dump( const ecl_cell_type * cell , FILE * stream) {
 static void ecl_cell_assert_center( ecl_cell_type * cell);
 
 static void ecl_cell_dump_ascii( ecl_cell_type * cell , int i , int j , int k , FILE * stream , const double * offset) {
-  fprintf(stream , "Cell: i:%3d  j:%3d    k:%3d   CoarseGroup:%4d active_nr:%6d\nCorners:\n",i,j,k,cell->coarse_group , cell->active_index[MATRIX_INDEX]);
+  fprintf(stream , "Cell: i:%3d  j:%3d    k:%3d   host_cell:%d  CoarseGroup:%4d active_nr:%6d  active:%d \nCorners:\n",i,j,k,cell->host_cell, cell->coarse_group , cell->active_index[MATRIX_INDEX], cell->active);
 
   ecl_cell_assert_center( cell );
   fprintf(stream , "Center   : ");
@@ -3137,7 +3140,7 @@ bool ecl_grid_exists( const char * case_input ) {
 }
 
 
-static bool ecl_grid_compare_coarse_cells(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
+static bool ecl_grid_compare_coarse_cells(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool verbose) {
   if (vector_get_size( g1->coarse_cells ) == vector_get_size( g2->coarse_cells )) {
     bool equal = true;
     int c;
@@ -3146,73 +3149,92 @@ static bool ecl_grid_compare_coarse_cells(const ecl_grid_type * g1 , const ecl_g
       const ecl_coarse_cell_type * coarse_cell1 = vector_iget_const( g1->coarse_cells , c);
       const ecl_coarse_cell_type * coarse_cell2 = vector_iget_const( g2->coarse_cells , c);
       
-      if (equal)
-        equal = ecl_coarse_cell_equal( coarse_cell1 , coarse_cell2 );
+      equal = ecl_coarse_cell_equal( coarse_cell1 , coarse_cell2 );
+      if (!equal) 
+        if (verbose) fprintf(stderr,"Difference in coarse cell:%d \n",c );
       
-      if (!equal)
-        exit(1);
     }
-    return true;
+    return equal;
   } else
     return false;
 }
 
 
-static bool ecl_grid_compare_cells(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool verbose) {
+static bool ecl_grid_compare_cells(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool include_nnc , bool verbose) {
   int g;
   bool equal = true;
   for (g = 0; g < g1->size; g++) {
     bool this_equal = true;
     ecl_cell_type *c1 = ecl_grid_get_cell( g1 , g );
     ecl_cell_type *c2 = ecl_grid_get_cell( g2 , g );
-    ecl_cell_compare(c1 , c2 , &this_equal);
+    ecl_cell_compare(c1 , c2 ,  include_nnc , &this_equal);
     
     if (!this_equal) {
       if (verbose) {
         int i,j,k;
         ecl_grid_get_ijk1( g1 , g , &i , &j , &k);
-        
-        printf("Difference in cell: %d : %d,%d,%d  Volume:%g \n",g,i,j,k , ecl_cell_get_volume( c1 ));
+
+        printf("Difference in cell: %d : %d,%d,%d  nnc_equal:%d Volume:%g \n",g,i,j,k , nnc_info_equal( c1->nnc_info , c2->nnc_info) , ecl_cell_get_volume( c1 ));
         printf("-----------------------------------------------------------------\n");
         ecl_cell_dump_ascii( c1 , i , j , k , stdout , NULL);
         printf("-----------------------------------------------------------------\n");
         ecl_cell_dump_ascii( c2 , i , j , k , stdout , NULL );
         printf("-----------------------------------------------------------------\n");
+        
       }
       equal = false;
+      break;
     }
   }
   return equal;
 }
 
-static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_type * g2) {
+static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool verbose) {
   bool equal = true;
   
-  if (g1->total_active != g2->total_active)
+  if (g1->total_active != g2->total_active) {
+    if (verbose) 
+      fprintf(stderr,"Difference in total active:%d / %d\n",g1->total_active , g2->total_active);
     equal = false;
-  
-  if (equal) {
-    if (memcmp( g1->index_map , g2->index_map , g1->size * sizeof * g1->index_map ) != 0)
-      equal = false;
   }
   
   if (equal) {
-    if (memcmp( g1->inv_index_map , g2->inv_index_map , g1->total_active * sizeof * g1->inv_index_map ) != 0)
+    if (memcmp( g1->index_map , g2->index_map , g1->size * sizeof * g1->index_map ) != 0) {
       equal = false;
+      if (verbose) 
+        fprintf(stderr,"Difference in index map \n");
+    }
+  }
+  
+  if (equal) {
+    if (memcmp( g1->inv_index_map , g2->inv_index_map , g1->total_active * sizeof * g1->inv_index_map ) != 0) {
+      equal = false;
+      if (verbose)
+        fprintf(stderr,"Difference in inverse index map \n");
+    }
   }
   
   if (equal && (g1->dualp_flag != FILEHEAD_SINGLE_POROSITY)) {
-    if (g1->total_active_fracture != g2->total_active_fracture)
+    if (g1->total_active_fracture != g2->total_active_fracture) {
+      if (verbose)
+        fprintf(stderr,"Difference in toal_active_fracture %d / %d \n",g1->total_active_fracture , g2->total_active_fracture);
       equal = false;
+    }
 
     if (equal) {
-      if (memcmp( g1->fracture_index_map , g2->fracture_index_map , g1->size * sizeof * g1->fracture_index_map ) != 0)
+      if (memcmp( g1->fracture_index_map , g2->fracture_index_map , g1->size * sizeof * g1->fracture_index_map ) != 0) {
         equal = false;
+        if (verbose)
+          fprintf(stderr,"Difference in fracture_index_map \n");
+      }
     }
     
     if (equal) {
-      if (memcmp( g1->inv_fracture_index_map , g2->inv_fracture_index_map , g1->total_active * sizeof * g1->inv_fracture_index_map ) != 0)
+      if (memcmp( g1->inv_fracture_index_map , g2->inv_fracture_index_map , g1->total_active_fracture * sizeof * g1->inv_fracture_index_map ) != 0) {
         equal = false;
+        if (verbose)
+          fprintf(stderr,"Difference in inv_fracture_index_map \n");
+      }
     }
       
   }
@@ -3226,35 +3248,45 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
    return true all cells must be identical. 
 */
 
-static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool verbose) {
+static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool include_nnc , bool verbose) {
   
   bool equal = true;
   if (g1->size != g2->size)
     equal = false;
-  
-  if (equal) {
-    if (g1->name != g2->name)
-      equal = util_string_equal( g1->name , g2->name );
+
+  // The name of the parent grid corresponds to a filename; they can be different.
+  if (equal && g1->parent_grid) {  
+    if (!util_string_equal( g1->name , g2->name )) {
+      equal = false;
+      if (verbose)
+        fprintf(stderr,"Difference in name %s <-> %s \n" , g1->name , g2->name);
+    }
   }
 
+  /*
+    When .GRID files are involved this is hardwired to FILEHEAD_SINGLE_POROSITY. 
+  */
+  if (g1->dualp_flag != g2->dualp_flag) {
+    equal = false;
+    if (verbose) 
+      fprintf(stderr,"Dual porosity flags differ: %d / %d \n" , g1->dualp_flag , g2->dualp_flag);
+  }
+  
+  if (equal) 
+    equal = ecl_grid_compare_cells(g1 , g2 , include_nnc , verbose);
+
   if (equal)
-    equal = (g1->dualp_flag == g2->dualp_flag);
+    equal = ecl_grid_compare_index( g1 , g2 , true /*verbose*/);
 
   if (equal) 
-    equal = ecl_grid_compare_cells(g1 , g2 , verbose);
-    
-  if (equal)
-    equal = ecl_grid_compare_index( g1 , g2 );
-    
-  if (equal) 
-    equal = ecl_grid_compare_coarse_cells( g1 , g2 );
+    equal = ecl_grid_compare_coarse_cells( g1 , g2 , verbose );
 
   return equal;
 }
 
 
-bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool include_lgr, bool verbose) {
-  bool equal = ecl_grid_compare__(g1 , g2 , verbose);
+bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool include_lgr, bool include_nnc , bool verbose) {
+  bool equal = ecl_grid_compare__(g1 , g2 , include_nnc , verbose);
 
   if (equal && include_lgr) {
     if (vector_get_size( g1->LGR_list ) == vector_get_size( g2->LGR_list )) {
@@ -3263,7 +3295,7 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool
         const ecl_grid_type * lgr1 = vector_iget_const( g1->LGR_list , grid_nr);
         const ecl_grid_type * lgr2 = vector_iget_const( g2->LGR_list , grid_nr);
         
-        equal = ecl_grid_compare__(lgr1 , lgr2 , verbose);
+        equal = ecl_grid_compare__(lgr1 , lgr2 , include_nnc , verbose);
         if (!equal) 
           break;
       }

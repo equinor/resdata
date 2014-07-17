@@ -174,7 +174,7 @@ void test_compare() {
     free( DEPTHZ );
   }
   
-  test_assert_true( ecl_grid_compare( grid1 , grid2 , true , true));
+  test_assert_true( ecl_grid_compare( grid1 , grid2 , true , true , true));
   ecl_grid_free( grid1 );
   ecl_grid_free( grid2 );
 }
