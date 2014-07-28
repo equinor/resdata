@@ -93,13 +93,13 @@ class EclGrid(CClass):
             raise IOError("Loading grid from:%s failed" % filename)
 
 
-    def equal(self , other , include_lgr = True , verbose = False):
+    def equal(self , other , include_lgr = True , include_nnc = False , verbose = False):
         """
         Compare the current grid with the other grid.
         """
         if not isinstance(other , EclGrid):
             raise TypeError("The other argument must be an EclGrid instance")
-        return cfunc.equal( self , other , include_lgr , verbose)
+        return cfunc.equal( self , other , include_lgr , include_nnc , verbose)
 
     @property
     def dual_grid( self ):

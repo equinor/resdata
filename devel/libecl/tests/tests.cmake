@@ -225,6 +225,23 @@ add_executable( ecl_rft_cell ecl_rft_cell.c )
 target_link_libraries( ecl_rft_cell ecl test_util )
 add_test( ecl_rft_cell ${EXECUTABLE_OUTPUT_PATH}/ecl_rft_cell )
 
+add_executable( ecl_grid_copy ecl_grid_copy.c )
+target_link_libraries( ecl_grid_copy ecl test_util )
+add_test( ecl_grid_copy ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_copy )
+
+add_executable( ecl_grid_copy_statoil ecl_grid_copy_statoil.c )
+target_link_libraries( ecl_grid_copy_statoil ecl test_util )
+
+add_test( ecl_grid_copy_statoil1 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_copy_statoil ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
+
+add_test( ecl_grid_copy_statoil2 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_copy_statoil ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/MARINER.EGRID )
+
+add_test( ecl_grid_copy_statoil3 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_copy_statoil ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/LGCcase/LGC_TESTCASE2.EGRID )
+
+add_test( ecl_grid_copy_statoil4 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_copy_statoil ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/10kcase/TEST10K_FLT_LGR_NNC.EGRID )
+
+
+
 add_executable( ecl_get_num_cpu ecl_get_num_cpu_test.c )
 target_link_libraries( ecl_get_num_cpu ecl test_util )
 add_test( ecl_get_num_cpu ${EXECUTABLE_OUTPUT_PATH}/ecl_get_num_cpu ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu1 ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu2 ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu3)
@@ -319,3 +336,7 @@ set_property( TEST ecl_nnc_export5 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_nnc_export6 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_nnc_export_get_tran PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_cell_contains2 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_grid_copy_statoil1 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_grid_copy_statoil2 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_grid_copy_statoil3 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_grid_copy_statoil4 PROPERTY LABELS StatoilData )
