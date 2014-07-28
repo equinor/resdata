@@ -112,7 +112,7 @@ log_type * log_open( const char * filename , int log_level) {
 
 
 
-static bool log_include_message(const log_type *logh , int message_level) {
+bool log_include_message(const log_type *logh , int message_level) {
   if (message_level <= logh->log_level)
     return true;
   else
