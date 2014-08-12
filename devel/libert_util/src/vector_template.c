@@ -157,20 +157,20 @@ static void @TYPE@_vector_realloc_data__(@TYPE@_vector_type * vector , int new_a
 }
 
 
-static void @TYPE@_vector_memmove(@TYPE@_vector_type * vector , int offset , int count) {
-  if ((count + offset) < 0)
-    util_abort("%s: offset:%d  left_shift:%d - invalid \n",__func__ , offset , -count);
-
-  if ((count + vector->size > vector->alloc_size))
-    @TYPE@_vector_realloc_data__( vector , util_int_min( 2*vector->alloc_size , count + vector->size ));
+static void @TYPE@_vector_memmove(@TYPE@_vector_type * vector , int offset , int shift) {
+  if ((shift + offset) < 0)
+    util_abort("%s: offset:%d  left_shift:%d - invalid \n",__func__ , offset , -shift);
+  
+  if ((shift + vector->size > vector->alloc_size))
+    @TYPE@_vector_realloc_data__( vector , util_int_min( 2*vector->alloc_size , shift + vector->size ));
   
   {
-    int block_size     = abs(count) * sizeof(@TYPE@);
-    @TYPE@ * target    = &vector->data[offset + count];
+    size_t move_size   = (vector->size - offset) * sizeof(@TYPE@);
+    @TYPE@ * target    = &vector->data[offset + shift];
     const @TYPE@ * src = &vector->data[offset];
-    memmove( target , src , block_size );
+    memmove( target , src , move_size );
     
-    vector->size += count;
+    vector->size += shift;
   }
 }
 
@@ -678,6 +678,30 @@ void @TYPE@_vector_idel_block( @TYPE@_vector_type * vector , int index , int blo
 }
 
 
+
+/**
+   Removes all occurences of @value from the vector, thereby shrinking
+   the vector. The return value is the number of elements removed from
+   the vector.
+*/
+
+@TYPE@ @TYPE@_vector_del_value( @TYPE@_vector_type * vector , @TYPE@ del_value) {
+  int index = 0;
+  int del_count = 0;
+  while (true) {
+    if (index == vector->size)
+      break;
+
+    if (@TYPE@_vector_iget( vector , index) == del_value) {
+      @TYPE@_vector_idel( vector , index);
+      del_count++;
+    } else
+      index++;
+  }
+  return del_count;
+}
+
+
 void @TYPE@_vector_insert( @TYPE@_vector_type * vector , int index , @TYPE@ value) {
   if (index >= vector->size)
     @TYPE@_vector_iset( vector , index , value );
@@ -755,18 +779,14 @@ int @TYPE@_vector_size(const @TYPE@_vector_type * vector) {
 
 
 void @TYPE@_vector_rshift(@TYPE@_vector_type * vector , int shift) {
-  if ((vector->size + shift) > vector->alloc_size)
-    @TYPE@_vector_resize( vector , 2 * (vector->size + shift));
-
-  if (shift > 0) {
+  if (shift < 0) 
+    @TYPE@_vector_memmove( vector , -shift , shift);
+  else {
     int i;
-    memmove(&vector->data[shift] , vector->data , vector->size * sizeof * vector->data );
+    @TYPE@_vector_memmove( vector , 0 , shift);
     for (i=0; i < shift; i++)
       vector->data[i] = vector->default_value;
-  } else
-    memmove(vector->data , &vector->data[abs(shift)] , (vector->size + shift) * sizeof * vector->data);
-  
-  vector->size += shift;
+  }
 }
 
 void @TYPE@_vector_lshift(@TYPE@_vector_type * vector , int shift) {
