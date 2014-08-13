@@ -3242,6 +3242,22 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
 }
 
 
+static bool ecl_grid_compare_mapaxes(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool verbose) {
+  bool equal = true;
+  if (g1->use_mapaxes == g2->use_mapaxes) {
+    if (g1->use_mapaxes) {
+      if (memcmp( g1->mapaxes , g2->mapaxes , sizeof * g1->mapaxes ) != 0) 
+        equal = false;
+    }
+  } else
+    equal = false;
+
+  if (!equal && verbose)
+    fprintf(stderr,"Difference in mapaxes \n" );
+  
+  return equal;
+}
+
 
 /**
    Return true if grids g1 and g2 are equal, and false otherwise. To
@@ -3280,6 +3296,9 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
 
   if (equal) 
     equal = ecl_grid_compare_coarse_cells( g1 , g2 , verbose );
+
+  if (equal)
+    equal = ecl_grid_compare_mapaxes( g1 , g2 , verbose );
 
   return equal;
 }
