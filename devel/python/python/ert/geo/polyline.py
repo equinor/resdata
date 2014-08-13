@@ -1,5 +1,5 @@
 import collections
-
+from .geometry_tools import GeometryTools
 
 class Polyline(object):
     def __init__(self, name="Unnamed" , init_points = None):
@@ -49,6 +49,14 @@ class Polyline(object):
             self.addPoint(x,y,z)
                 
 
+    def intersects(self, other_polyline):
+        """
+        Test if instances intersects with other polyline.
+
+        @type other_polyline: Polyline or list of tuple of (float, float)
+        @rtype: bool
+        """
+        return GeometryTools.polylinesIntersect( self , other_polyline )
 
     def __iter__(self):
         index = 0
