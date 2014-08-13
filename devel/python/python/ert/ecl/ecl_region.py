@@ -92,6 +92,9 @@ class EclRegion(CClass):
         self.init_cobj( c_ptr , cfunc.free )
 
 
+    def __eq__(self , other):
+        return cfunc.equal(self , other)
+ 
             
     def __deep_copy__(self , memo):
         """
