@@ -819,11 +819,18 @@ class EclKW(CClass):
     
     @property
     def type( self ):
-        return self.ecl_type
+        return self.getEclType()
 
     @property
     def type_name( self ):
+        return self.typeName( )
+
+    def typeName(self):
         return EclUtil.type_name( self.ecl_type )
+
+    def getEclType(self):
+        return self.ecl_type
+
     
     @property
     def header( self ):
