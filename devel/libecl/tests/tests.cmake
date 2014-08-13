@@ -269,10 +269,6 @@ target_link_libraries( ecl_get_num_cpu ecl test_util )
 add_test( ecl_get_num_cpu ${EXECUTABLE_OUTPUT_PATH}/ecl_get_num_cpu ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu1 ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu2 ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu3)
 
 
-add_executable( ecl_fault_block ecl_fault_block.c )
-target_link_libraries( ecl_fault_block ecl test_util )
-add_test( ecl_fault_block ${EXECUTABLE_OUTPUT_PATH}/ecl_fault_block ) 
-
 
 add_executable( ecl_fault_block_layer_statoil ecl_fault_block_layer_statoil.c )
 target_link_libraries( ecl_fault_block_layer_statoil ecl test_util )
