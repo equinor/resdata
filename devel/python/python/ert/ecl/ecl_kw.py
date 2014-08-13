@@ -71,7 +71,7 @@ class EclKW(CClass):
     limit the operation to a part of the EclKW.
     """
 
-    int_kw_set = set( ["PVTNUM" , "FIPNUM" , "EQLNUM" , "FLUXNUM" , "MULTNUM" , "ACTNUM" , "SPECGRID"] )
+    int_kw_set = set( ["PVTNUM" , "FIPNUM" , "EQLNUM" , "FLUXNUM" , "MULTNUM" , "ACTNUM" , "SPECGRID" , "REGIONS"] )
 
     @classmethod
     def add_int_kw(cls , kw):
