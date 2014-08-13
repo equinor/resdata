@@ -208,6 +208,7 @@ extern "C" {
   void ecl_grid_reset_actnum( ecl_grid_type * grid , const int * actnum );
 
   UTIL_IS_INSTANCE_HEADER( ecl_grid );
+  UTIL_SAFE_CAST_HEADER( ecl_grid );
   
 #ifdef __cplusplus
 }
