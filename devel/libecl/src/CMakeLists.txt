@@ -39,7 +39,6 @@ set( source_files
      ecl_nnc_export.c 
      layer.c
      fault_block_layer.c
-     fault_block_collection.c
      ${ext_source})
 
 set( header_files 
