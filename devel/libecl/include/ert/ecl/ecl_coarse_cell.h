@@ -50,7 +50,7 @@ extern "C" {
   int                     ecl_coarse_cell_iget_active_cell_index( const ecl_coarse_cell_type * coarse_cell , int index);
   int                     ecl_coarse_cell_iget_active_value( const ecl_coarse_cell_type * coarse_cell , int index);
   int                     ecl_coarse_cell_get_num_active( const ecl_coarse_cell_type * coarse_cell);
-  void                    ecl_coarse_cell_fprintf( ecl_coarse_cell_type * coarse_cell , FILE * stream );
+  void                    ecl_coarse_cell_fprintf( const ecl_coarse_cell_type * coarse_cell , FILE * stream );
 
 #ifdef __cplusplus
 }
