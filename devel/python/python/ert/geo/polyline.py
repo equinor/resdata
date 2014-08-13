@@ -8,6 +8,12 @@ class Polyline(object):
         self.__points = []
         if init_points:
             self.__loadPoints( init_points )
+    def __str__(self):
+        s = "Polyline:[ "
+        for p in self:
+            s += "(%s,%s) " % (p[0],p[1])
+        s += "]"
+        return s
 
     def name(self):
         """ @rtype: str """
