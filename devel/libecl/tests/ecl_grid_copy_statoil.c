@@ -32,11 +32,10 @@
 
 
 void test_copy_grid( const char * filename ) {
-  printf("Copying grid: %s \n",filename);
   {
     ecl_grid_type * src_grid = ecl_grid_alloc( filename );
     ecl_grid_type * copy_grid = ecl_grid_alloc_copy( src_grid );
-    test_assert_true( ecl_grid_compare( src_grid , copy_grid , true , true , false ));
+    test_assert_true( ecl_grid_compare( src_grid , copy_grid , true , true , true ));
     ecl_grid_free( copy_grid );
     ecl_grid_free( src_grid );
   }
