@@ -166,6 +166,15 @@ add_executable( ecl_point ecl_point.c )
 target_link_libraries( ecl_point ecl test_util )
 add_test(ecl_point ${EXECUTABLE_OUTPUT_PATH}/ecl_point )
 
+add_executable( ecl_layer ecl_layer.c )
+target_link_libraries( ecl_layer ecl test_util )
+add_test(ecl_layer ${EXECUTABLE_OUTPUT_PATH}/ecl_layer )
+
+
+add_executable( ecl_layer_statoil ecl_layer_statoil.c )
+target_link_libraries( ecl_layer_statoil ecl test_util )
+add_test(ecl_layer_statoil ${EXECUTABLE_OUTPUT_PATH}/ecl_layer_statoil ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/MARINER.EGRID ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/faultblock.grdecl)  
+
 
 add_executable( ecl_kw_grdecl ecl_kw_grdecl.c )
 target_link_libraries( ecl_kw_grdecl ecl test_util )
@@ -354,3 +363,4 @@ set_property( TEST ecl_grid_copy_statoil1 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_copy_statoil2 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_copy_statoil3 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_copy_statoil4 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_layer_statoil PROPERTY LABELS StatoilData )

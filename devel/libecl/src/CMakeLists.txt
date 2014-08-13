@@ -37,7 +37,7 @@ set( source_files
      ecl_grav_common.c 
      nnc_vector.c 
      ecl_nnc_export.c 
-     fault_block.c 
+     layer.c
      fault_block_layer.c
      fault_block_collection.c
      ${ext_source})
@@ -77,6 +77,7 @@ set( header_files
      nnc_vector.h 
      ecl_grav_common.h 
      ecl_nnc_export.h 
+     layer.h
      fault_block.h
      fault_block_layer.h
      fault_block_collection.h
