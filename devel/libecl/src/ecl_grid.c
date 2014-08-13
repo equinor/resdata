@@ -2028,6 +2028,14 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid 
 }
 
 
+static void ecl_grid_copy_mapaxes( ecl_grid_type * target_grid , const ecl_grid_type * src_grid ) {
+  int i;
+  target_grid->use_mapaxes = src_grid->use_mapaxes;
+  for (i=0; i < 6; i++)
+    target_grid->mapaxes[i] = src_grid->mapaxes[i];
+}
+
+
 static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_type * src_grid ) {
   int global_index;
   for (global_index = 0; global_index  < src_grid->size; global_index++) {
@@ -2038,7 +2046,8 @@ static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_
     if (src_cell->nnc_info) 
       target_cell->nnc_info = nnc_info_alloc_copy( src_cell->nnc_info );
   }
-  
+  ecl_grid_copy_mapaxes( target_grid , src_grid );
+
   target_grid->parent_name = util_alloc_string_copy( src_grid->parent_name );
   target_grid->name = util_alloc_string_copy( src_grid->name ); 
   
