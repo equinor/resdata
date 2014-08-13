@@ -19,6 +19,19 @@ class Polyline(object):
         """ @rtype: str """
         return self.__name
 
+
+    def __eq__(self, other):
+        if len(self) != len(other):
+            return False
+
+        for (p1,p2) in zip(self , other):
+            if p1 != p2:
+                return False
+        
+        return True
+
+
+
     def __len__(self):
         return len(self.__points)
 
@@ -64,12 +77,22 @@ class Polyline(object):
         """
         return GeometryTools.polylinesIntersect( self , other_polyline )
 
+
     def __iter__(self):
         index = 0
 
         while index < len(self):
             yield self[index]
             index += 1
+
+
+    def saveXYFile(self , filename):
+        with open(filename , "w") as fileH:
+            for p in self:
+                fileH.write("%g %g\n" % (p[0] , p[1]))
+        
+
+
     def unzip(self):
         first_point = self[0]
         x = []
