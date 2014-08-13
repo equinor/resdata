@@ -4021,7 +4021,7 @@ void ecl_grid_get_xyz3(const ecl_grid_type * grid , int i, int j , int k, double
 */
 
 
-void ecl_grid_get_corner_xyz1(const ecl_grid_type * grid , int global_index , int corner_nr , double * xpos , double * ypos , double * zpos ) {
+void ecl_grid_get_cell_corner_xyz1(const ecl_grid_type * grid , int global_index , int corner_nr , double * xpos , double * ypos , double * zpos ) {
   if ((corner_nr >= 0) &&  (corner_nr <= 7)) {
     const ecl_cell_type * cell  = ecl_grid_get_cell( grid , global_index );
     const point_type      point = cell->corner_list[ corner_nr ];
@@ -4032,7 +4032,7 @@ void ecl_grid_get_corner_xyz1(const ecl_grid_type * grid , int global_index , in
 }
 
 
-void ecl_grid_get_corner_xyz3(const ecl_grid_type * grid , int i , int j , int k, int corner_nr , double * xpos , double * ypos , double * zpos ) {
+void ecl_grid_get_cell_corner_xyz3(const ecl_grid_type * grid , int i , int j , int k, int corner_nr , double * xpos , double * ypos , double * zpos ) {
   const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
   ecl_grid_get_corner_xyz1( grid , global_index , corner_nr , xpos , ypos , zpos);
 }

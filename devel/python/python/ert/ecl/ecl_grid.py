@@ -27,6 +27,7 @@ import ctypes
 
 import  numpy
 import sys
+import warnings
 from ert.cwrap import CClass, CFILE, CWrapper, CWrapperNameSpace
 from ert.ecl import EclTypeEnum, EclKW, ECL_LIB
 
@@ -373,8 +374,13 @@ class EclGrid(CClass):
         x = ctypes.c_double()
         y = ctypes.c_double()
         z = ctypes.c_double()
-        cfunc.get_xyz1_corner( self , gi , corner_nr , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
+        cfunc.get_cell_corner_xyz1( self , gi , corner_nr , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
         return (x.value , y.value , z.value)
+
+
+    def get_corner_xyz(self, corner_nr , active_index = None , global_index = None , ijk = None):
+        warnings.warn("The get_corner_xyz() method has been renamed: getCellCorner()" , DeprecationWarning)
+        return self.getCellCorner(corner_nr , active_index , global_index , ijk)
 
 
     def getLayerXYZ(self , xy_corner , layer):
@@ -823,7 +829,7 @@ cfunc.get_ijk1                     = cwrapper.prototype("void ecl_grid_get_ijk1(
 cfunc.get_ijk1A                    = cwrapper.prototype("void ecl_grid_get_ijk1A( ecl_grid , int , int* , int* , int*)") 
 cfunc.get_xyz3                     = cwrapper.prototype("void ecl_grid_get_xyz3( ecl_grid , int , int , int , double* , double* , double*)")
 cfunc.get_xyz1                     = cwrapper.prototype("void ecl_grid_get_xyz1( ecl_grid , int , double* , double* , double*)")
-cfunc.get_xyz1_corner              = cwrapper.prototype("void ecl_grid_get_corner_xyz1( ecl_grid , int , int , double* , double* , double*)")
+cfunc.get_cell_corner_xyz1         = cwrapper.prototype("void ecl_grid_get_cell_corner_xyz1( ecl_grid , int , int , double* , double* , double*)")
 cfunc.get_xyz1A                    = cwrapper.prototype("void ecl_grid_get_xyz1A( ecl_grid , int , double* , double* , double*)")
 cfunc.get_ijk_xyz                  = cwrapper.prototype("int  ecl_grid_get_global_index_from_xyz( ecl_grid , double , double , double , int)")
 cfunc.cell_contains                = cwrapper.prototype("bool ecl_grid_cell_contains_xyz1( ecl_grid , int , double , double , double )")
