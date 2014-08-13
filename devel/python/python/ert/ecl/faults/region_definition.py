@@ -18,7 +18,7 @@ import collections
 import os.path
 
 from ert.geo import Polyline , XYZReader, GeometryTools
-from ert.ecl.faults import Fault
+from ert.ecl.faults import Fault, FaultBlockLayer , Layer 
 from ert.ecl import EclKW, EclTypeEnum
 
 class RegionDefinition(object):
@@ -29,7 +29,7 @@ class RegionDefinition(object):
             
         self.region_id = region_id
         self.edges = []
-            
+        self.__has_polygon = False
 
                     
 
@@ -50,16 +50,20 @@ class RegionDefinition(object):
 
         return regionDef
 
-
+    
     def getRegionID(self):
         return self.region_id
 
 
     def addEdge(self , edge):
-        if isinstance(edge , Polyline) or isinstance(edge , Fault):
+        if isinstance(edge , Polyline):
+            self.edges.append( edge )
+            self.__has_polygon = True
+        elif isinstance(edge , Fault):
             self.edges.append( edge )
         else:
             raise TypeError("Tried to add edge of wrong type; must be Fault or Polyline")
+
 
 
     def __convexHull(self , k):
@@ -83,17 +87,85 @@ class RegionDefinition(object):
         return GeometryTools.convexHull( point_list )    
         
 
-    def findBlocks(self , grid , fault_block_layer):
+    def findInternalBlocks(self , grid , fault_block_layer):
         block_list = []
-        convex_hull = self.__convexHull( fault_block_layer.getK() )
-        for block in fault_block_layer:
-            block_center = block.getCentroid()
-                
-            if GeometryTools.pointInPolygon( block_center , convex_hull ):
-                block_list.append( block )
-
+        raise NotImplementedError
         return block_list
+        
 
+    def hasPolygon(self):
+        return self.__has_polygon
+
+
+    @staticmethod
+    def splitFaultBlockClosedPolygon( grid , fault_blocks , polygon ):
+        """
+        Special case code when the region is limited only by one polygon.
+        """
+        new_fault_blocks = FaultBlockLayer( grid , fault_blocks.getK() )
+        new_block = new_fault_blocks.addBlock()
+
+        for block in fault_blocks:
+            for p in block:
+                if GeometryTools.pointInPolygon( (p.x , p.y) , polygon ):
+                    new_block.addCell(p.i , p.j)
+        
+        return new_fault_blocks
+                    
+                    
+
+
+    def splitFaultBlocks(self , grid , fault_blocks ):
+        boundingPolygon = Polyline(init_points = grid.getBoundingBox2D())
+        boundingPolygon.assertClosed()
+        if self.hasPolygon():
+            if len(self.edges) == 1:
+                return self.splitFaultBlockClosedPolygon( grid , fault_blocks , self.edges[0] )
+            else:
+                current_fault_block_layer = fault_blocks
+                k = fault_blocks.getK()
+                for edge in self.edges:
+                    if isinstance(edge , Polyline):
+                        # Start on a brand new fault block layer.
+                        next_fault_block_layer = FaultBlockLayer( grid , k )
+                        for block in current_fault_block_layer:
+                            if block.containsPolyline(edge):
+                                print "Block %d is split due to edge:%s" % (block.getBlockID() , edge.name())
+                                sliced = GeometryTools.slicePolygon( boundingPolygon , edge )
+                                inside_list = []
+                                outside_list = []
+                                for p in block:
+                                    if GeometryTools.pointInPolygon( (p.x , p.y) , sliced ):
+                                        inside_list.append( p )
+                                    else:
+                                        outside_list.append( p )
+
+                                if len(inside_list) * len(outside_list) == 0:
+                                    new_block = next_fault_block_layer.addBlock( )
+                                    for p in inside_list:
+                                        new_block.addCell(p.i , p.j)
+
+                                    for p in outside_list:
+                                        new_block.addCell(p.i , p.j)
+                                else:
+                                    layer = Layer( grid.getNX() , grid.getNY() )
+                                    for p in inside_list:
+                                        layer[p.i , p.j] = 1
+
+                                    for p in outside_list:
+                                        layer[p.i , p.j] = 2
+                                            
+                                    next_fault_block_layer.scanLayer( layer )
+                            else:
+                                next_fault_block_layer.insertBlockContent( block )
+
+                        current_fault_block_layer = next_fault_block_layer
+                return current_fault_block_layer
+        else:
+            return fault_blocks
+            
+            
+            
 
 
 
