@@ -4034,7 +4034,39 @@ void ecl_grid_get_cell_corner_xyz1(const ecl_grid_type * grid , int global_index
 
 void ecl_grid_get_cell_corner_xyz3(const ecl_grid_type * grid , int i , int j , int k, int corner_nr , double * xpos , double * ypos , double * zpos ) {
   const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
-  ecl_grid_get_corner_xyz1( grid , global_index , corner_nr , xpos , ypos , zpos);
+  ecl_grid_get_cell_corner_xyz1( grid , global_index , corner_nr , xpos , ypos , zpos);
+}
+
+
+void ecl_grid_get_corner_xyz(const ecl_grid_type * grid , int i , int j , int k, double * xpos , double * ypos , double * zpos ) {
+  if (i < 0 || i > grid->nx)
+    util_abort("%s: invalid i value:%d  Valid range: [0,%d] \n",__func__ , i,grid->nx);
+
+  if (j < 0 || j > grid->ny)
+    util_abort("%s: invalid j value:%d  Valid range: [0,%d] \n",__func__ , j,grid->ny);
+
+  if (k < 0 || k > grid->nz)
+    util_abort("%s: invalid k value:%d  Valid range: [0,%d] \n",__func__ , k,grid->nz);
+  
+  {
+    int corner_nr = 0;
+    if (i == grid->nx) {
+      i -= 1;
+      corner_nr += 1;
+    }
+    
+    if (j == grid->ny) {
+      j -= 1;
+      corner_nr += 2;
+    }
+    
+    if (k == grid->nz) {
+      k -= 1;
+      corner_nr += 4;
+    }
+    
+    ecl_grid_get_cell_corner_xyz3( grid , i , j , k , corner_nr , xpos , ypos , zpos);
+  }
 }
 
 

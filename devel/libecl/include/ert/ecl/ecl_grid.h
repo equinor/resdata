@@ -54,6 +54,7 @@ extern "C" {
 
   void            ecl_grid_get_cell_corner_xyz3(const ecl_grid_type * grid , int i , int j , int k, int corner_nr , double * xpos , double * ypos , double * zpos );
   void            ecl_grid_get_cell_corner_xyz1(const ecl_grid_type * grid , int global_index , int corner_nr , double * xpos , double * ypos , double * zpos );
+  void            ecl_grid_get_corner_xyz(const ecl_grid_type * grid , int i , int j , int k, double * xpos , double * ypos , double * zpos );
   
   double          ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j , int k);
   double          ecl_grid_get_cell_thickness1( const ecl_grid_type * grid , int global_index );

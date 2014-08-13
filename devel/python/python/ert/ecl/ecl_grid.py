@@ -356,9 +356,37 @@ class EclGrid(CClass):
         return (x.value , y.value , z.value)
 
 
+    def getNodePos(self , i , j , k):
+        """Will return the (x,y,z) for the node given by (i,j,k).
+
+        Observe that this method does not consider cells, but the
+        nodes in the grid. This means that the valid input range for
+        i,j and k are are upper end inclusive. To get the four
+        bounding points of the lower layer of the grid:
+
+           p0 = grid.getNodePos(0 , 0 , 0)
+           p1 = grid.getNodePos(grid.getNX() , 0 , 0)
+           p2 = grid.getNodePos(0 , grid.getNY() , 0)
+           p3 = grid.getNodePos(grid.getNX() , grid.getNY() , 0)
+
+        """
+        if not 0 <= i <= self.getNX():
+            raise IndexError("Invalid I value:%d - valid range: [0,%d]" % (i , self.getNX()))
+
+        if not 0 <= j <= self.getNY():
+            raise IndexError("Invalid J value:%d - valid range: [0,%d]" % (j , self.getNY()))
+
+        if not 0 <= k <= self.getNZ():
+            raise IndexError("Invalid K value:%d - valid range: [0,%d]" % (k , self.getNZ()))
+            
+        x = ctypes.c_double()
+        y = ctypes.c_double()
+        z = ctypes.c_double()
+        cfunc.get_corner_xyz( self , i,j,k , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
+        return (x.value , y.value , z.value)
 
 
-    def get_corner_xyz(self, corner_nr , active_index = None , global_index = None , ijk = None):
+    def getCellCorner(self , corner_nr , active_index = None , global_index = None , ijk = None):
         """
         Will look up xyz of corner nr @corner_nr
 
@@ -830,6 +858,7 @@ cfunc.get_ijk1A                    = cwrapper.prototype("void ecl_grid_get_ijk1A
 cfunc.get_xyz3                     = cwrapper.prototype("void ecl_grid_get_xyz3( ecl_grid , int , int , int , double* , double* , double*)")
 cfunc.get_xyz1                     = cwrapper.prototype("void ecl_grid_get_xyz1( ecl_grid , int , double* , double* , double*)")
 cfunc.get_cell_corner_xyz1         = cwrapper.prototype("void ecl_grid_get_cell_corner_xyz1( ecl_grid , int , int , double* , double* , double*)")
+cfunc.get_corner_xyz               = cwrapper.prototype("void ecl_grid_get_corner_xyz( ecl_grid , int , int , int, double* , double* , double*)")
 cfunc.get_xyz1A                    = cwrapper.prototype("void ecl_grid_get_xyz1A( ecl_grid , int , double* , double* , double*)")
 cfunc.get_ijk_xyz                  = cwrapper.prototype("int  ecl_grid_get_global_index_from_xyz( ecl_grid , double , double , double , int)")
 cfunc.cell_contains                = cwrapper.prototype("bool ecl_grid_cell_contains_xyz1( ecl_grid , int , double , double , double )")

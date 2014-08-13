@@ -113,6 +113,11 @@ target_link_libraries( ecl_grid_reset_actnum ecl test_util )
 add_test( ecl_grid_reset_actnum ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_reset_actnum )
 
 add_executable( ecl_grid_export ecl_grid_export.c )
+add_executable( ecl_grid_corner ecl_grid_corner.c )
+target_link_libraries( ecl_grid_corner ecl test_util )
+add_test( ecl_grid_corner ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_corner )
+
+
 target_link_libraries( ecl_grid_export ecl test_util )
 add_test( ecl_grid_export ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
 
