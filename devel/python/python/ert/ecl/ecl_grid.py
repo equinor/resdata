@@ -163,6 +163,30 @@ class EclGrid(CClass):
         """Returns the total number of cells in this grid"""
         return cfunc.get_global_size( self )
 
+    def getBoundingBox2D(self , layer = 0):
+        if 0 <= layer <= self.getNZ():
+            x = ctypes.c_double()
+            y = ctypes.c_double()
+            z = ctypes.c_double()
+
+            cfunc.get_corner_xyz( self , 0 , 0 , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            p0 = (x.value , y.value )
+
+            cfunc.get_corner_xyz( self , self.getNX() , 0 , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            p1 = (x.value , y.value  )
+
+            cfunc.get_corner_xyz( self , self.getNX() , self.getNY() , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            p2 = (x.value , y.value  )
+
+            cfunc.get_corner_xyz( self , 0  , self.getNY() , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            p3 = (x.value , y.value  )
+
+            return (p0,p1,p2,p3)
+        else:
+            raise ValueError("Invalid layer value:%d  Valid range: [0,%d]" % (layer , self.getNZ()))
+
+
+
     @property
     def name( self ):
         """
