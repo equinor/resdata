@@ -64,3 +64,24 @@ class Polyline(object):
         while index < len(self):
             yield self[index]
             index += 1
+    def unzip(self):
+        first_point = self[0]
+        x = []
+        y = []
+
+        try:
+            z = first_point[2]
+            z = []
+            for p in self:
+                x.append(p[0])
+                y.append(p[1])
+                z.append(p[2])
+
+            return (x,y,z)
+        except IndexError:
+            for p in self:
+                x.append(p[0])
+                y.append(p[1])
+            
+            return (x,y)
+            
