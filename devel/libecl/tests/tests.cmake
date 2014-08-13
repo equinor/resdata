@@ -11,6 +11,10 @@ add_executable( ecl_restart_test ecl_restart_test.c )
 target_link_libraries( ecl_restart_test ecl test_util )
 add_test( ecl_restart_test ${EXECUTABLE_OUTPUT_PATH}/ecl_restart_test ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST )
 
+add_executable( ecl_kw_init ecl_kw_init.c )
+target_link_libraries( ecl_kw_init ecl test_util )
+add_test( ecl_kw_init ${EXECUTABLE_OUTPUT_PATH}/ecl_kw_init  )
+
 add_executable( ecl_nnc_export ecl_nnc_export.c )
 target_link_libraries( ecl_nnc_export ecl test_util )
 add_test (ecl_nnc_export1 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE )
