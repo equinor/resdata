@@ -28,6 +28,68 @@ void assert_equal( bool equal ) {
 }
 
 
+void test_range_fill_int() {
+  int_vector_type * int_vector = int_vector_alloc(0,0);
+
+  int_vector_range_fill( int_vector , 10 , 10 , 40 );  /* 10,20,30,40 */
+  test_assert_int_equal( int_vector_size( int_vector ), 4);
+  test_assert_int_equal( int_vector_iget( int_vector , 0 ) , 10 );
+  test_assert_int_equal( int_vector_iget( int_vector , 1 ) , 20 );
+  test_assert_int_equal( int_vector_iget( int_vector , 2 ) , 30 );
+  test_assert_int_equal( int_vector_iget( int_vector , 3 ) , 40 );
+  
+  int_vector_range_fill( int_vector , 10 , 10 , 44 );  /* 10,20,30,40 */
+  test_assert_int_equal( int_vector_size( int_vector ), 4);
+  test_assert_int_equal( int_vector_iget( int_vector , 0 ) , 10 );
+  test_assert_int_equal( int_vector_iget( int_vector , 1 ) , 20 );
+  test_assert_int_equal( int_vector_iget( int_vector , 2 ) , 30 );
+  test_assert_int_equal( int_vector_iget( int_vector , 3 ) , 40 );
+
+  int_vector_range_fill( int_vector , 4 , -1 , 0 );  /* 4,3,2,1,0 */
+  test_assert_int_equal( int_vector_size( int_vector ), 5);
+  test_assert_int_equal( int_vector_iget( int_vector , 0 ) , 4 );
+  test_assert_int_equal( int_vector_iget( int_vector , 1 ) , 3 );
+  test_assert_int_equal( int_vector_iget( int_vector , 2 ) , 2 );
+  test_assert_int_equal( int_vector_iget( int_vector , 3 ) , 1 );
+  test_assert_int_equal( int_vector_iget( int_vector , 4 ) , 0 );
+
+  int_vector_range_fill( int_vector , 20 , -10 , -3 );  /* 20,10,0 */
+  test_assert_int_equal( int_vector_size( int_vector ), 3);
+  test_assert_int_equal( int_vector_iget( int_vector , 0 ) , 20 );
+  test_assert_int_equal( int_vector_iget( int_vector , 1 ) , 10 );
+  test_assert_int_equal( int_vector_iget( int_vector , 2 ) ,  0 );
+
+  int_vector_free( int_vector );
+}
+
+
+void test_range_fill_double() {
+  double_vector_type * double_vector = double_vector_alloc(0,0);
+  double_vector_range_fill( double_vector , 1,2,10 ); /* 1 , 3 , 5 , 7 , 9 */
+  
+  test_assert_double_equal( double_vector_size( double_vector ), 5);
+  test_assert_double_equal( double_vector_iget( double_vector , 0 ) , 1 );
+  test_assert_double_equal( double_vector_iget( double_vector , 1 ) , 3 );
+  test_assert_double_equal( double_vector_iget( double_vector , 2 ) , 5 );
+  test_assert_double_equal( double_vector_iget( double_vector , 3 ) , 7 );
+  test_assert_double_equal( double_vector_iget( double_vector , 4 ) , 9 );
+  
+  double_vector_range_fill( double_vector , 3,3,9 ); /* 3,6,9 */
+  test_assert_double_equal( double_vector_size( double_vector ), 3);
+  test_assert_double_equal( double_vector_iget( double_vector , 0 ) , 3 );
+  test_assert_double_equal( double_vector_iget( double_vector , 1 ) , 6 );
+  test_assert_double_equal( double_vector_iget( double_vector , 2 ) , 9 );
+
+  double_vector_free( double_vector );
+}
+
+
+void test_range_fill() {
+  test_range_fill_int();
+  test_range_fill_double();
+}
+
+
 void test_contains() {
   int_vector_type * int_vector = int_vector_alloc( 0 , 100);
   
@@ -296,5 +358,6 @@ int main(int argc , char ** argv) {
   test_memcpy_from_data();
   test_idel_insert();
   test_del();
+  test_range_fill();
   exit(0);
 }

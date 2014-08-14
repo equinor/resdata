@@ -1478,7 +1478,28 @@ int @TYPE@_vector_count_equal( const @TYPE@_vector_type * vector , @TYPE@ cmp_va
 
 }
  
+/*
+  The upper limit is inclusive - if it is commensurable with the
+  delta.
+*/
 
+void @TYPE@_vector_range_fill(@TYPE@_vector_type * vector , @TYPE@ limit1 , @TYPE@ delta , @TYPE@ limit2) {
+  if (delta == 0)
+    util_abort("%s: sorry can not have delta == 0 \n",__func__);
+  
+  @TYPE@ current_value = limit1;
+  @TYPE@_vector_reset( vector );
+  while (true) {
+    @TYPE@_vector_append( vector , current_value );
+    current_value += delta;
+    if (delta > 0 && current_value > limit2)
+      break;
+    
+    if (delta < 0 && current_value < limit2)
+      break;
+  }
+}
+  
 #ifdef __cplusplus
 }
 #endif
