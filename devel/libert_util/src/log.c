@@ -104,7 +104,7 @@ log_type * log_open( const char * filename , int log_level) {
 #ifdef HAVE_PTHREAD
   pthread_mutex_init( &logh->mutex , NULL );
 #endif
-  if (filename != NULL)
+  if (filename != NULL && log_level > 0)
     log_reopen( logh , filename);
   
   return logh;
