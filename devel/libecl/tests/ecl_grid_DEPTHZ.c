@@ -83,10 +83,10 @@ void test_create() {
         test_assert_double_equal( x0 , xc );
         test_assert_double_equal( y0 , yc );
 
-        ecl_grid_get_corner_xyz1( ecl_grid , g , 0 , &xc , &yc , &zc);
+        ecl_grid_get_cell_corner_xyz1( ecl_grid , g , 0 , &xc , &yc , &zc);
         test_assert_double_equal( z0 + zfunc(x0 , y0) , zc );
 
-        ecl_grid_get_corner_xyz1( ecl_grid , g , 4, &xc , &yc , &zc);
+        ecl_grid_get_cell_corner_xyz1( ecl_grid , g , 4, &xc , &yc , &zc);
         test_assert_double_equal( z0 + zfunc(x0 , y0) + DZV[k] , zc );
       }
     }

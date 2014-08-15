@@ -143,7 +143,73 @@ void test_shift() {
   int_vector_free( v );
 }
 
+void test_idel_insert() {
+  int_vector_type * vec = int_vector_alloc(0,0);
 
+  int_vector_append(vec , 1 );
+  int_vector_append(vec , 2 );
+  int_vector_append(vec , 2 );
+  int_vector_append(vec , 3 );
+
+  int_vector_fprintf(vec , stdout , "Vec0" , "%2d");
+  int_vector_idel(vec , 1 );
+  int_vector_fprintf(vec , stdout , "Vec1" , "%2d");
+  int_vector_idel(vec , 1 );
+  int_vector_fprintf(vec , stdout , "Vec2" , "%2d");
+
+  test_assert_int_equal( 2 , int_vector_size( vec ));
+  test_assert_int_equal( 1 , int_vector_iget( vec , 0 ));
+  test_assert_int_equal( 3 , int_vector_iget( vec , 1 ));
+
+  int_vector_insert(vec , 1 , 2 );
+  int_vector_insert(vec , 1 , 2 );
+  test_assert_int_equal( 4 , int_vector_size( vec ));
+  test_assert_int_equal( 1 , int_vector_iget( vec , 0 ));
+  test_assert_int_equal( 2 , int_vector_iget( vec , 1 ));
+  test_assert_int_equal( 2 , int_vector_iget( vec , 2 ));
+  test_assert_int_equal( 3 , int_vector_iget( vec , 3 ));
+
+  int_vector_free( vec );
+}
+
+
+
+void test_del() {
+  int_vector_type * vec = int_vector_alloc(0,0);
+  
+  test_assert_int_equal( int_vector_del_value( vec , 77) , 0 );
+
+  int_vector_append(vec , 1);
+  int_vector_append(vec , 2);
+  int_vector_append(vec , 3);
+  int_vector_append(vec , 1);
+  int_vector_append(vec , 2);
+  int_vector_append(vec , 3);
+  int_vector_append(vec , 1);
+  int_vector_append(vec , 1);
+
+  int_vector_fprintf( vec , stdout , "int_vector" , "%3d");
+
+  test_assert_int_equal( int_vector_del_value( vec , 77) ,  0);
+  test_assert_int_equal( int_vector_del_value( vec , 2) , 2 );
+  test_assert_int_equal( 6 , int_vector_size( vec ));
+
+  int_vector_fprintf( vec , stdout , "int_vector" , "%3d");
+
+  test_assert_int_equal( 1 , int_vector_iget(vec , 0));
+  test_assert_int_equal( 3 , int_vector_iget(vec , 1));
+  test_assert_int_equal( 1 , int_vector_iget(vec , 2));
+  test_assert_int_equal( 3 , int_vector_iget(vec , 3));
+  test_assert_int_equal( 1 , int_vector_iget(vec , 4));
+  test_assert_int_equal( 1 , int_vector_iget(vec , 5));
+  
+  test_assert_int_equal( 4 , int_vector_del_value( vec , 1 ));
+  test_assert_int_equal( 2 , int_vector_size( vec ));
+
+  test_assert_int_equal( 3 , int_vector_iget(vec , 0));
+  test_assert_int_equal( 3 , int_vector_iget(vec , 1));
+  int_vector_free( vec );
+}
 
 int main(int argc , char ** argv) {
   
@@ -159,7 +225,6 @@ int main(int argc , char ** argv) {
   int_vector_insert( int_vector , 2 , 77 );   
   int_vector_iset( int_vector , 5 , -10);     
   
-  int_vector_fprintf( int_vector , stdout , "int_vector" , "%3d");
   assert_equal( int_vector_iget(int_vector , 0 ) == 99 );
   assert_equal( int_vector_iget(int_vector , 1 ) == 99 );
   assert_equal( int_vector_iget(int_vector , 2 ) == 77 );
@@ -229,5 +294,7 @@ int main(int argc , char ** argv) {
   test_alloc();
   test_div();
   test_memcpy_from_data();
+  test_idel_insert();
+  test_del();
   exit(0);
 }

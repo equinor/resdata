@@ -23,10 +23,11 @@ extern "C" {
 #endif
 
 #include <ert/util/type_macros.h>
+
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/fault_block.h>
-
+#include <ert/ecl/layer.h>
 
   UTIL_IS_INSTANCE_HEADER(fault_block_layer);
   
@@ -40,11 +41,20 @@ extern "C" {
   fault_block_type       * fault_block_layer_add_block( fault_block_layer_type * layer , int block_id);
   fault_block_type       * fault_block_layer_get_block( const fault_block_layer_type * layer , int block_id);
   fault_block_type       * fault_block_layer_iget_block( const fault_block_layer_type * layer , int storage_index);
+  fault_block_type       * fault_block_layer_safe_get_block( fault_block_layer_type * layer , int block_id);
   int                      fault_block_layer_get_max_id( const fault_block_layer_type * layer );
+  int                      fault_block_layer_get_next_id( const fault_block_layer_type * layer );
   int                      fault_block_layer_get_size( const fault_block_layer_type * layer);
   bool                     fault_block_layer_scan_kw( fault_block_layer_type * layer , const ecl_kw_type * fault_block_kw);
+  bool                     fault_block_layer_load_kw( fault_block_layer_type * layer , const ecl_kw_type * fault_block_kw);
   int                      fault_block_layer_get_k( const fault_block_layer_type * layer );
-  
+  void                     fault_block_layer_scan_layer( fault_block_layer_type * fault_layer , layer_type * layer);
+  void                     fault_block_layer_insert_block_content( fault_block_layer_type * layer , const fault_block_type * src_block);
+  bool                     fault_block_layer_export( const fault_block_layer_type * layer , ecl_kw_type * faultblock_kw);
+  const ecl_grid_type    * fault_block_layer_get_grid( const fault_block_layer_type * layer );
+  layer_type             * fault_block_layer_get_layer( const fault_block_layer_type * layer );
+
+
 #ifdef __cplusplus
 }
 #endif

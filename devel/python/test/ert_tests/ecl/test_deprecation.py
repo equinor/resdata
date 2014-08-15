@@ -1,6 +1,7 @@
+#!/usr/bin/env python
 #  Copyright (C) 2011  Statoil ASA, Norway. 
 #   
-#  The file '__init__.py' is part of ERT - Ensemble based Reservoir Tool. 
+#  The file 'test_deprecation.py' is part of ERT - Ensemble based Reservoir Tool.
 #   
 #  ERT is free software: you can redistribute it and/or modify 
 #  it under the terms of the GNU General Public License as published by 
@@ -12,19 +13,24 @@
 #  FITNESS FOR A PARTICULAR PURPOSE.   
 #   
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
-"""
-Simple package for working with 2D geometry.
+#  for more details.
+import warnings
 
-"""
-from ert.cwrap import clib
+try:
+    from unittest2 import skipIf
+except ImportError:
+    from unittest import skipIf
 
-import ert.util
+import time
+from ert.ecl import EclGrid
+from ert.test import ExtendedTestCase
 
-ERT_GEOMETRY_LIB = clib.ert_load("libert_geometry")
 
-from .geo_polygon import GeoPolygon
+class DeprecationTest(ExtendedTestCase):
 
-from .polyline import Polyline
-from .xyz_io import XYZIo
-from .geometry_tools import GeometryTools
+    def test_EclGrid_get_corner_xyz(self):
+        grid = EclGrid.create_rectangular( (10,20,30) , (1,1,1) )
+        with warnings.catch_warnings():
+            grid.get_corner_xyz(0 , global_index = 10)
+            
+            

@@ -11,6 +11,10 @@ add_executable( ecl_restart_test ecl_restart_test.c )
 target_link_libraries( ecl_restart_test ecl test_util )
 add_test( ecl_restart_test ${EXECUTABLE_OUTPUT_PATH}/ecl_restart_test ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST )
 
+add_executable( ecl_kw_init ecl_kw_init.c )
+target_link_libraries( ecl_kw_init ecl test_util )
+add_test( ecl_kw_init ${EXECUTABLE_OUTPUT_PATH}/ecl_kw_init  )
+
 add_executable( ecl_nnc_export ecl_nnc_export.c )
 target_link_libraries( ecl_nnc_export ecl test_util )
 add_test (ecl_nnc_export1 ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE )
@@ -109,6 +113,11 @@ target_link_libraries( ecl_grid_reset_actnum ecl test_util )
 add_test( ecl_grid_reset_actnum ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_reset_actnum )
 
 add_executable( ecl_grid_export ecl_grid_export.c )
+add_executable( ecl_grid_corner ecl_grid_corner.c )
+target_link_libraries( ecl_grid_corner ecl test_util )
+add_test( ecl_grid_corner ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_corner )
+
+
 target_link_libraries( ecl_grid_export ecl test_util )
 add_test( ecl_grid_export ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
 
@@ -156,6 +165,15 @@ add_test(ecl_nnc_vector ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_vector )
 add_executable( ecl_point ecl_point.c )
 target_link_libraries( ecl_point ecl test_util )
 add_test(ecl_point ${EXECUTABLE_OUTPUT_PATH}/ecl_point )
+
+add_executable( ecl_layer ecl_layer.c )
+target_link_libraries( ecl_layer ecl test_util )
+add_test(ecl_layer ${EXECUTABLE_OUTPUT_PATH}/ecl_layer )
+
+
+add_executable( ecl_layer_statoil ecl_layer_statoil.c )
+target_link_libraries( ecl_layer_statoil ecl test_util )
+add_test(ecl_layer_statoil ${EXECUTABLE_OUTPUT_PATH}/ecl_layer_statoil ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/MARINER.EGRID ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/faultblock.grdecl)  
 
 
 add_executable( ecl_kw_grdecl ecl_kw_grdecl.c )
@@ -251,10 +269,6 @@ target_link_libraries( ecl_get_num_cpu ecl test_util )
 add_test( ecl_get_num_cpu ${EXECUTABLE_OUTPUT_PATH}/ecl_get_num_cpu ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu1 ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu2 ${PROJECT_SOURCE_DIR}/libecl/tests/data/num_cpu3)
 
 
-add_executable( ecl_fault_block ecl_fault_block.c )
-target_link_libraries( ecl_fault_block ecl test_util )
-add_test( ecl_fault_block ${EXECUTABLE_OUTPUT_PATH}/ecl_fault_block ) 
-
 
 add_executable( ecl_fault_block_layer_statoil ecl_fault_block_layer_statoil.c )
 target_link_libraries( ecl_fault_block_layer_statoil ecl test_util )
@@ -267,14 +281,6 @@ add_executable( ecl_fault_block_layer ecl_fault_block_layer.c )
 target_link_libraries( ecl_fault_block_layer ecl test_util )
 add_test( ecl_fault_block_layer ${EXECUTABLE_OUTPUT_PATH}/ecl_fault_block_layer ) 
 
-add_executable( ecl_fault_block_collection_statoil ecl_fault_block_collection_statoil.c )
-target_link_libraries( ecl_fault_block_collection_statoil ecl test_util )
-add_test( ecl_fault_block_collection_statoil ${EXECUTABLE_OUTPUT_PATH}/ecl_fault_block_collection_statoil
-          ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/MARINER.EGRID
-          ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/faultblock.grdecl)
-
-
-set_property( TEST ecl_fault_block_collection_statoil PROPERTY LABELS StatoilData )
 set_property( TEST ecl_fault_block_layer_statoil      PROPERTY LABELS StatoilData )
 set_property( TEST ecl_fmt              PROPERTY LABELS StatoilData )
 set_property( TEST ecl_coarse_test      PROPERTY LABELS StatoilData )
@@ -345,3 +351,4 @@ set_property( TEST ecl_grid_copy_statoil1 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_copy_statoil2 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_copy_statoil3 PROPERTY LABELS StatoilData )
 set_property( TEST ecl_grid_copy_statoil4 PROPERTY LABELS StatoilData )
+set_property( TEST ecl_layer_statoil PROPERTY LABELS StatoilData )

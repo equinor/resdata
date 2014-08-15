@@ -43,6 +43,35 @@ class GeometryTools(object):
         y = p1[1] + mua * (p2[1] - p1[1])
         return x, y
 
+    @staticmethod
+    def polylinesIntersect(polyline1 , polyline2):
+        """Test if the polylines polyline1 and polyline2 intersect.
+        
+        The input arguments must be either Polyline instances[1], or a
+        list of (float,float) tuples. The method performs a super
+        naive n^2 check and should not be used for large polyline objects.
+
+        @type polyline1: Polyline or list of tuple of (float, float)
+        @type polyline2: Polyline or list of tuple of (float, float)
+
+        [1]: The z - coordinate will be ignored.
+
+        """
+
+        for index1 in range(len(polyline1) - 1):
+            p1 = polyline1[index1]
+            p2 = polyline1[index1 + 1]
+            for index2 in range(len(polyline2) - 1):
+                p3 = polyline2[index2]
+                p4 = polyline2[index2 + 1]
+
+                if GeometryTools.lineIntersection(p1,p2,p3,p4):
+                    return True
+        
+        return False
+
+
+
 
     @staticmethod
     def ccw(p1, p2, p3):

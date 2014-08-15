@@ -22,6 +22,10 @@ add_executable( ert_util_statistics ert_util_statistics.c )
 target_link_libraries( ert_util_statistics ert_util test_util )
 add_test( ert_util_statistics ${EXECUTABLE_OUTPUT_PATH}/ert_util_statistics )
 
+add_executable( ert_util_struct_vector ert_util_struct_vector.c )
+target_link_libraries( ert_util_struct_vector ert_util test_util )
+add_test( ert_util_struct_vector ${EXECUTABLE_OUTPUT_PATH}/ert_util_struct_vector )
+
 add_executable( ert_util_copy_file ert_util_copy_file.c )
 target_link_libraries( ert_util_copy_file ert_util test_util )
 add_test( ert_util_copy_file ${EXECUTABLE_OUTPUT_PATH}/ert_util_copy_file ${EXECUTABLE_OUTPUT_PATH}/ert_util_copy_file )
