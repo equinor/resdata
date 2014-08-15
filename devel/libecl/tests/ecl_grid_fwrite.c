@@ -1,8 +1,8 @@
 /*
    Copyright (C) 2014  Statoil ASA, Norway. 
     
-   The file 'ecl_grid_copy.c' is part of ERT - Ensemble based Reservoir Tool. 
-   
+   The file 'ecl_kw_fwrite.c' is part of ERT - Ensemble based Reservoir Tool. 
+    
    ERT is free software: you can redistribute it and/or modify 
    it under the terms of the GNU General Public License as published by 
    the Free Software Foundation, either version 3 of the License, or 
@@ -15,34 +15,34 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
    for more details. 
 */
-
-
-
-
-
-
 #include <stdlib.h>
 #include <stdbool.h>
 
 #include <ert/util/test_util.h>
-#include <ert/util/time_t_vector.h>
 #include <ert/util/util.h>
+#include <ert/util/test_work_area.h>
 
 #include <ert/ecl/ecl_grid.h>
 
 
-void test_copy_grid( const ecl_grid_type * grid ) {
-  ecl_grid_type * grid_copy = ecl_grid_alloc_copy( grid );
-  test_assert_true( ecl_grid_compare( grid , grid_copy , true , true ,  true ));
-  ecl_grid_free( grid_copy );
+void test_fwrite_EGRID(ecl_grid_type * grid ) {
+  test_work_area_type * work_area = test_work_area_alloc("grid-has-mapaxes");
+  
+  ecl_grid_fwrite_EGRID( grid , "TEST.EGRID");
+  {
+    ecl_grid_type * copy = ecl_grid_alloc( "TEST.EGRID" );
+    test_assert_true( ecl_grid_compare( grid , copy , false , false , true ));
+    ecl_grid_free( copy );
+  }
+  test_work_area_free( work_area );
 }
 
 
+int main( int argc , char **argv) {
+  const char * src_file = argv[1];
+  ecl_grid_type * grid = ecl_grid_alloc( src_file );
+  
+  test_fwrite_EGRID( grid );
 
-int main( int argc , char ** argv) {
-  ecl_grid_type * grid = ecl_grid_alloc_rectangular( 10,11,12,1,2,3 , NULL);
-  test_copy_grid( grid );
   ecl_grid_free( grid );
-
-  exit(0);
 }

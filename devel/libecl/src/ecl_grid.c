@@ -2028,6 +2028,14 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid 
 }
 
 
+static void ecl_grid_copy_mapaxes( ecl_grid_type * target_grid , const ecl_grid_type * src_grid ) {
+  int i;
+  target_grid->use_mapaxes = src_grid->use_mapaxes;
+  for (i=0; i < 6; i++)
+    target_grid->mapaxes[i] = src_grid->mapaxes[i];
+}
+
+
 static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_type * src_grid ) {
   int global_index;
   for (global_index = 0; global_index  < src_grid->size; global_index++) {
@@ -2038,7 +2046,8 @@ static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_
     if (src_cell->nnc_info) 
       target_cell->nnc_info = nnc_info_alloc_copy( src_cell->nnc_info );
   }
-  
+  ecl_grid_copy_mapaxes( target_grid , src_grid );
+
   target_grid->parent_name = util_alloc_string_copy( src_grid->parent_name );
   target_grid->name = util_alloc_string_copy( src_grid->name ); 
   
@@ -3242,6 +3251,22 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
 }
 
 
+static bool ecl_grid_compare_mapaxes(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool verbose) {
+  bool equal = true;
+  if (g1->use_mapaxes == g2->use_mapaxes) {
+    if (g1->use_mapaxes) {
+      if (memcmp( g1->mapaxes , g2->mapaxes , sizeof * g1->mapaxes ) != 0) 
+        equal = false;
+    }
+  } else
+    equal = false;
+
+  if (!equal && verbose)
+    fprintf(stderr,"Difference in mapaxes \n" );
+  
+  return equal;
+}
+
 
 /**
    Return true if grids g1 and g2 are equal, and false otherwise. To
@@ -3280,6 +3305,9 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
 
   if (equal) 
     equal = ecl_grid_compare_coarse_cells( g1 , g2 , verbose );
+
+  if (equal)
+    equal = ecl_grid_compare_mapaxes( g1 , g2 , verbose );
 
   return equal;
 }
