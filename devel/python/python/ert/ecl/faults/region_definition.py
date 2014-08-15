@@ -17,7 +17,7 @@
 import collections
 import os.path
 
-from ert.geo import Polyline , XYZReader, GeometryTools
+from ert.geo import Polyline , XYZIo, GeometryTools
 from ert.ecl.faults import Fault, FaultBlockLayer , Layer 
 from ert.ecl import EclKW, EclTypeEnum
 
@@ -42,7 +42,7 @@ class RegionDefinition(object):
                 if faults.hasFault( edge_name ):
                     regionDef.addEdge( faults[ edge_name ] )
                 elif os.path.exists( edge_name ):
-                    regionDef.addEdge( XYZReader.readXYZFile( edge_name ) )
+                    regionDef.addEdge( XYZIo.readXYZFile( edge_name ) )
                 else:
                     raise ValueError("The elements in edge_list must be strings with either name of faults or filename with polygon. %s: invalid" % edge_name)
             else:

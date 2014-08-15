@@ -107,12 +107,6 @@ class Polyline(object):
             index += 1
 
 
-    def saveXYFile(self , filename):
-        with open(filename , "w") as fileH:
-            for p in self:
-                fileH.write("%g %g\n" % (p[0] , p[1]))
-        
-
 
     def unzip(self):
         first_point = self[0]

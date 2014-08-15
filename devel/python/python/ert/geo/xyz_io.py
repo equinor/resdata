@@ -1,7 +1,7 @@
 import os
 from .polyline import Polyline
 
-class XYZReader(object):
+class XYZIo(object):
 
     @staticmethod
     def readXYZFile(path):
@@ -47,4 +47,16 @@ class XYZReader(object):
                 polyline.addPoint(x, y)
 
         return polyline
+
+
+    @staticmethod
+    def saveXYFile(polyline , filename):
+        """
+        @type polyline: Polyline or list of tuple of (float, float)
+        """
+        with open(filename , "w") as fileH:
+            for p in polyline:
+                fileH.write("%g %g\n" % (p[0] , p[1]))
+        
+
 
