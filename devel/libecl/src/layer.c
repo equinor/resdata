@@ -16,7 +16,6 @@
    for more details. 
 */
 #include <stdlib.h>
-#include <unistd.h>
 
 #include <ert/util/type_macros.h>
 #include <ert/util/int_vector.h>
