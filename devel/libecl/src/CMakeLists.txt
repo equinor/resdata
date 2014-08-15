@@ -79,7 +79,6 @@ set( header_files
      layer.h
      fault_block.h
      fault_block_layer.h
-     fault_block_collection.h
      ${ext_header})
 
 if (ERT_USE_OPENMP)
