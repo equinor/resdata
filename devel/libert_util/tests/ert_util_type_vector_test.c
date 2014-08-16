@@ -236,6 +236,30 @@ void test_idel_insert() {
 
 
 
+void test_iset_block() {
+  int_vector_type * vec = int_vector_alloc(0,0);
+
+  int_vector_iset_block( vec , 10 , 10 , 77 );
+  test_assert_int_equal( int_vector_size( vec ) , 20 );
+  {
+    int i; 
+    for (i=10; i < 20; i++)
+      test_assert_int_equal( int_vector_iget( vec , i ) , 77 );
+  }
+  int_vector_iset_block( vec , 10 , 0 , 177 );
+  test_assert_int_equal( int_vector_iget( vec , 10 ) , 77 );
+
+  int_vector_iset_block( vec , 10 , -11 , 66 );
+  {
+    int i; 
+    for (i=0; i <= 10; i++)
+      test_assert_int_equal( int_vector_iget( vec , i ) , 66 );
+  }
+  int_vector_free( vec );
+}
+
+
+
 void test_del() {
   int_vector_type * vec = int_vector_alloc(0,0);
   
@@ -359,5 +383,6 @@ int main(int argc , char ** argv) {
   test_idel_insert();
   test_del();
   test_range_fill();
+  test_iset_block();
   exit(0);
 }

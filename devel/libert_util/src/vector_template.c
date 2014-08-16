@@ -625,6 +625,19 @@ void @TYPE@_vector_iset(@TYPE@_vector_type * vector , int index , @TYPE@ value) 
   }
 }
 
+/*
+  The block_size can be negative, in which case the loop will walk to
+  the left in the vector.
+*/
+
+void @TYPE@_vector_iset_block(@TYPE@_vector_type * vector , int index , int block_size , @TYPE@ value) {
+  int sign = (block_size > 0) ? 1 : -1 ;
+  int c;
+  for (c=0; c < abs(block_size); c++) 
+    @TYPE@_vector_iset( vector , index + c * sign , value);
+}
+
+
 /**
    This function invokes _iset - i.e. growing the vector if needed. If
    the index is not currently set, the default value will be used.

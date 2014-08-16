@@ -63,6 +63,7 @@ typedef @TYPE@ (@TYPE@_ftype) (@TYPE@);
   int                  @TYPE@_vector_get_max_index(const @TYPE@_vector_type * vector, bool reverse);
   @TYPE@               @TYPE@_vector_iadd( @TYPE@_vector_type * vector , int index , @TYPE@ delta);
   void                 @TYPE@_vector_iset(@TYPE@_vector_type *       , int , @TYPE@);
+  void                 @TYPE@_vector_iset_block(@TYPE@_vector_type * vector , int index , int block_size , @TYPE@ value);
   void                 @TYPE@_vector_idel_block( @TYPE@_vector_type * vector , int index , int block_size);
   @TYPE@               @TYPE@_vector_idel( @TYPE@_vector_type * vector , int index);
   @TYPE@               @TYPE@_vector_del_value( @TYPE@_vector_type * vector , @TYPE@ del_value);
