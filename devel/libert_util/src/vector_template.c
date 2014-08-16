@@ -247,14 +247,16 @@ static @TYPE@_vector_type * @TYPE@_vector_alloc__(int init_size , @TYPE@ default
 
 
 /**
-   This function will change the size of the storage area of the
-   vector to become @new_alloc_size elements. If @new_alloc_size is
-   less than the current size of the vector, the last elements will be
-   lost.
+   new_size < current_size: The trailing elements will be lost
+
+   new_size > current_size: The vector will grow by adding default elements at the end.
 */
 
-void @TYPE@_vector_resize( @TYPE@_vector_type * vector , int new_alloc_size ) {
-  @TYPE@_vector_realloc_data__( vector , new_alloc_size );
+void @TYPE@_vector_resize( @TYPE@_vector_type * vector , int new_size ) {
+  if (new_size <= vector->size)
+    vector->size = new_size;
+  else 
+    @TYPE@_vector_iset( vector , new_size - 1 , vector->default_value);
 }
 
 
@@ -1444,7 +1446,7 @@ void @TYPE@_vector_buffer_fread(@TYPE@_vector_type * vector , buffer_type * buff
   buffer_fread( buffer , &default_value , sizeof default_value , 1 );
   
   @TYPE@_vector_set_default( vector , default_value );
-  @TYPE@_vector_resize( vector , size );
+  @TYPE@_vector_realloc_data__( vector , size );
   buffer_fread( buffer , vector->data , sizeof * vector->data , size );
   vector->size = size;
 }
