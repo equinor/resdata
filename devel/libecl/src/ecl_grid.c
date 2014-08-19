@@ -2028,6 +2028,14 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid 
 }
 
 
+static void ecl_grid_copy_mapaxes( ecl_grid_type * target_grid , const ecl_grid_type * src_grid ) {
+  int i;
+  target_grid->use_mapaxes = src_grid->use_mapaxes;
+  for (i=0; i < 6; i++)
+    target_grid->mapaxes[i] = src_grid->mapaxes[i];
+}
+
+
 static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_type * src_grid ) {
   int global_index;
   for (global_index = 0; global_index  < src_grid->size; global_index++) {
@@ -2038,7 +2046,8 @@ static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_
     if (src_cell->nnc_info) 
       target_cell->nnc_info = nnc_info_alloc_copy( src_cell->nnc_info );
   }
-  
+  ecl_grid_copy_mapaxes( target_grid , src_grid );
+
   target_grid->parent_name = util_alloc_string_copy( src_grid->parent_name );
   target_grid->name = util_alloc_string_copy( src_grid->name ); 
   
@@ -3242,6 +3251,22 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
 }
 
 
+static bool ecl_grid_compare_mapaxes(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool verbose) {
+  bool equal = true;
+  if (g1->use_mapaxes == g2->use_mapaxes) {
+    if (g1->use_mapaxes) {
+      if (memcmp( g1->mapaxes , g2->mapaxes , sizeof * g1->mapaxes ) != 0) 
+        equal = false;
+    }
+  } else
+    equal = false;
+
+  if (!equal && verbose)
+    fprintf(stderr,"Difference in mapaxes \n" );
+  
+  return equal;
+}
+
 
 /**
    Return true if grids g1 and g2 are equal, and false otherwise. To
@@ -3280,6 +3305,9 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
 
   if (equal) 
     equal = ecl_grid_compare_coarse_cells( g1 , g2 , verbose );
+
+  if (equal)
+    equal = ecl_grid_compare_mapaxes( g1 , g2 , verbose );
 
   return equal;
 }
@@ -3993,7 +4021,7 @@ void ecl_grid_get_xyz3(const ecl_grid_type * grid , int i, int j , int k, double
 */
 
 
-void ecl_grid_get_corner_xyz1(const ecl_grid_type * grid , int global_index , int corner_nr , double * xpos , double * ypos , double * zpos ) {
+void ecl_grid_get_cell_corner_xyz1(const ecl_grid_type * grid , int global_index , int corner_nr , double * xpos , double * ypos , double * zpos ) {
   if ((corner_nr >= 0) &&  (corner_nr <= 7)) {
     const ecl_cell_type * cell  = ecl_grid_get_cell( grid , global_index );
     const point_type      point = cell->corner_list[ corner_nr ];
@@ -4004,9 +4032,41 @@ void ecl_grid_get_corner_xyz1(const ecl_grid_type * grid , int global_index , in
 }
 
 
-void ecl_grid_get_corner_xyz3(const ecl_grid_type * grid , int i , int j , int k, int corner_nr , double * xpos , double * ypos , double * zpos ) {
+void ecl_grid_get_cell_corner_xyz3(const ecl_grid_type * grid , int i , int j , int k, int corner_nr , double * xpos , double * ypos , double * zpos ) {
   const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
-  ecl_grid_get_corner_xyz1( grid , global_index , corner_nr , xpos , ypos , zpos);
+  ecl_grid_get_cell_corner_xyz1( grid , global_index , corner_nr , xpos , ypos , zpos);
+}
+
+
+void ecl_grid_get_corner_xyz(const ecl_grid_type * grid , int i , int j , int k, double * xpos , double * ypos , double * zpos ) {
+  if (i < 0 || i > grid->nx)
+    util_abort("%s: invalid i value:%d  Valid range: [0,%d] \n",__func__ , i,grid->nx);
+
+  if (j < 0 || j > grid->ny)
+    util_abort("%s: invalid j value:%d  Valid range: [0,%d] \n",__func__ , j,grid->ny);
+
+  if (k < 0 || k > grid->nz)
+    util_abort("%s: invalid k value:%d  Valid range: [0,%d] \n",__func__ , k,grid->nz);
+  
+  {
+    int corner_nr = 0;
+    if (i == grid->nx) {
+      i -= 1;
+      corner_nr += 1;
+    }
+    
+    if (j == grid->ny) {
+      j -= 1;
+      corner_nr += 2;
+    }
+    
+    if (k == grid->nz) {
+      k -= 1;
+      corner_nr += 4;
+    }
+    
+    ecl_grid_get_cell_corner_xyz3( grid , i , j , k , corner_nr , xpos , ypos , zpos);
+  }
 }
 
 

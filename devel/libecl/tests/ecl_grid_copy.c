@@ -33,7 +33,7 @@
 
 void test_copy_grid( const ecl_grid_type * grid ) {
   ecl_grid_type * grid_copy = ecl_grid_alloc_copy( grid );
-  test_assert_true( ecl_grid_compare( grid , grid_copy , true , true ,  false ));
+  test_assert_true( ecl_grid_compare( grid , grid_copy , true , true ,  true ));
   ecl_grid_free( grid_copy );
 }
 

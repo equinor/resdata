@@ -339,7 +339,7 @@ int ecl_coarse_cell_get_num_active( const ecl_coarse_cell_type * coarse_cell) {
 
 /*****************************************************************/
 
-void ecl_coarse_cell_fprintf( ecl_coarse_cell_type * coarse_cell , FILE * stream ) {
+void ecl_coarse_cell_fprintf( const ecl_coarse_cell_type * coarse_cell , FILE * stream ) {
   fprintf(stream,"Coarse box: \n");
   fprintf(stream,"   i             : %3d - %3d\n",coarse_cell->ijk[0] , coarse_cell->ijk[1]);
   fprintf(stream,"   j             : %3d - %3d\n",coarse_cell->ijk[2] , coarse_cell->ijk[3]);

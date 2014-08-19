@@ -16,11 +16,13 @@
 
 import ctypes
 from ert.cwrap import BaseCClass, CWrapper
+from ert.geo import Polyline, GeometryTools
+from ert.util import DoubleVector , IntVector
 from ert.ecl import ECL_LIB
 
 
 class FaultBlockCell(object):
-    def __init__(self , i,j,k , x,y,z):
+    def __init__(self , i,j,k ,x,y,z):
 
         self.i = i
         self.j = j
@@ -31,19 +33,16 @@ class FaultBlockCell(object):
         self.z = z
 
         
-        
+    def __str__(self):
+        return "(%d,%d)" % (self.i , self.j)
 
 
 
 class FaultBlock(BaseCClass):
 
-    def __init__(self , grid , k , block_id):
-        c_pointer = self.cNamespace().alloc( grid , k , block_id)
-        super(FaultBlock, self).__init__(c_pointer)
-        # The underlying C implementation uses lazy evaluation and needs to hold on
-        # to the grid reference. We therefor take a reference to it here, to protect
-        # against premature garbage collection of the grid.
-        self.grid_ref = grid
+    def __init__(self , *args , **kwargs):
+        raise NotImplementedError("Class can not be instantiated directly!")
+        
 
     def __getitem__(self , index):
         if isinstance(index, int):
@@ -65,6 +64,9 @@ class FaultBlock(BaseCClass):
                 raise IndexError("Index:%d out of range: [0,%d)" % (index , len(self)))
         else:
             raise TypeError("Index:%s wrong type - integer expected")
+
+    def __str__(self):
+        return "Block ID: %d" % self.getBlockID()
         
 
     def __len__(self):
@@ -73,23 +75,26 @@ class FaultBlock(BaseCClass):
     def free(self):
         self.cNamespace().free(self)
 
-    def addCell(self , i , j ):
-        self.cNamespace().add_cell( self , i , j )
-
     def getCentroid(self):
         xc = self.cNamespace().get_xc( self )
         yc = self.cNamespace().get_yc( self )
         return (xc,yc)
 
+
+    def countInside(self , polygon):
+        """
+        Will count the number of points in block which are inside polygon.
+        """
+        inside = 0
+        for p in self:
+            if GeometryTools.pointInPolygon( (p.x , p.y) , polygon ):
+                inside += 1
+        
+        return inside 
+
+
     def getBlockID(self):
         return self.cNamespace().get_block_id(self)
-
-
-    def getGlobalIndexList(self):
-        g_list = self.cNamespace().get_global_index_list(self)
-        # We return a copy; i.e. it is not possible to update the
-        # internal state of the fault block with this handle.
-        return g_list.copy()
 
 
     def assignToRegion(self , region_id):
@@ -100,19 +105,66 @@ class FaultBlock(BaseCClass):
         regionList = self.cNamespace().get_region_list(self)
         return regionList.copy()
 
+    def addCell(self, i , j):
+        self.cNamespace().add_cell( self , i , j )
+
+    def getGlobalIndexList(self):
+        return self.cNamespace().get_global_index_list( self )
+        
+
+    def getEdgePolygon(self):
+        x_list = DoubleVector()
+        y_list = DoubleVector()
+        self.cNamespace().trace_edge( self , x_list , y_list )
+        p = Polyline()
+        for (x,y) in zip(x_list , y_list):
+            p.addPoint(x,y)
+        return p
+
+
+    def containsPolyline(self, polyline):
+        """
+        Will return true if at least one point from the polyline is inside the block.
+        """
+        edge_polyline = self.getEdgePolygon()
+        for p in polyline:
+            if GeometryTools.pointInPolygon( p , edge_polyline ):
+                return True
+        return False
+
+        
+    def getNeighbours(self):
+        """
+        Will return a list of FaultBlock instances which are in direct
+        contact with this block.
+        """
+        neighbour_id_list = IntVector()
+        self.cNamespace().get_neighbours( self , neighbour_id_list )
+
+        parent_layer = self.getParentLayer()
+        neighbour_list = []
+        for id in neighbour_id_list:
+            neighbour_list.append( parent_layer.getBlock( id ))
+        return neighbour_list
+        
+
+    def getParentLayer(self):
+        return self.parent()
+        
 
 
 cwrapper = CWrapper(ECL_LIB)
 CWrapper.registerObjectType("fault_block", FaultBlock)
 
-FaultBlock.cNamespace().alloc                 = cwrapper.prototype("c_void_p fault_block_alloc(ecl_grid , int)")
-FaultBlock.cNamespace().free                  = cwrapper.prototype("void     fault_block_free(fault_block)")
-FaultBlock.cNamespace().add_cell              = cwrapper.prototype("void     fault_block_add_cell(fault_block , int , int)")
-FaultBlock.cNamespace().get_xc                = cwrapper.prototype("double   fault_block_get_xc(fault_block)")
-FaultBlock.cNamespace().get_yc                = cwrapper.prototype("double   fault_block_get_yc(fault_block)")
-FaultBlock.cNamespace().get_block_id          = cwrapper.prototype("int    fault_block_get_id(fault_block)")
-FaultBlock.cNamespace().get_size              = cwrapper.prototype("int      fault_block_get_size(fault_block)")
-FaultBlock.cNamespace().get_global_index_list = cwrapper.prototype("int_vector_ref fault_block_get_global_index_list(fault_block)")
-FaultBlock.cNamespace().export_cell           = cwrapper.prototype("void    fault_block_export_cell(fault_block , int , int* , int* , int* , double* , double* , double*)")
-FaultBlock.cNamespace().assign_to_region      = cwrapper.prototype("void          fault_block_assign_to_region(fault_block , int)")
-FaultBlock.cNamespace().get_region_list       = cwrapper.prototype("int_vector_ref  fault_block_get_region_list(fault_block)")
+FaultBlock.cNamespace().get_xc                = cwrapper.prototype("double                fault_block_get_xc(fault_block)")
+FaultBlock.cNamespace().get_yc                = cwrapper.prototype("double                fault_block_get_yc(fault_block)")
+FaultBlock.cNamespace().get_block_id          = cwrapper.prototype("int                   fault_block_get_id(fault_block)")
+FaultBlock.cNamespace().get_size              = cwrapper.prototype("int                   fault_block_get_size(fault_block)")
+FaultBlock.cNamespace().export_cell           = cwrapper.prototype("void                  fault_block_export_cell(fault_block , int , int* , int* , int* , double* , double* , double*)")
+FaultBlock.cNamespace().assign_to_region      = cwrapper.prototype("void                  fault_block_assign_to_region(fault_block , int)")
+FaultBlock.cNamespace().get_region_list       = cwrapper.prototype("int_vector_ref        fault_block_get_region_list(fault_block)")
+FaultBlock.cNamespace().add_cell              = cwrapper.prototype("void                  fault_block_add_cell(fault_block,  int , int)")
+FaultBlock.cNamespace().get_global_index_list = cwrapper.prototype("int_vector_ref        fault_block_get_global_index_list(fault_block)")
+FaultBlock.cNamespace().trace_edge            = cwrapper.prototype("void                  fault_block_trace_edge( fault_block, double_vector , double_vector)")  
+FaultBlock.cNamespace().get_neighbours        = cwrapper.prototype("void                  fault_block_list_neighbours( fault_block , int_vector)")  
+
