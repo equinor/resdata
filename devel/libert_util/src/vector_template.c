@@ -247,14 +247,16 @@ static @TYPE@_vector_type * @TYPE@_vector_alloc__(int init_size , @TYPE@ default
 
 
 /**
-   This function will change the size of the storage area of the
-   vector to become @new_alloc_size elements. If @new_alloc_size is
-   less than the current size of the vector, the last elements will be
-   lost.
+   new_size < current_size: The trailing elements will be lost
+
+   new_size > current_size: The vector will grow by adding default elements at the end.
 */
 
-void @TYPE@_vector_resize( @TYPE@_vector_type * vector , int new_alloc_size ) {
-  @TYPE@_vector_realloc_data__( vector , new_alloc_size );
+void @TYPE@_vector_resize( @TYPE@_vector_type * vector , int new_size ) {
+  if (new_size <= vector->size)
+    vector->size = new_size;
+  else 
+    @TYPE@_vector_iset( vector , new_size - 1 , vector->default_value);
 }
 
 
@@ -624,6 +626,19 @@ void @TYPE@_vector_iset(@TYPE@_vector_type * vector , int index , @TYPE@ value) 
     }
   }
 }
+
+/*
+  The block_size can be negative, in which case the loop will walk to
+  the left in the vector.
+*/
+
+void @TYPE@_vector_iset_block(@TYPE@_vector_type * vector , int index , int block_size , @TYPE@ value) {
+  int sign = (block_size > 0) ? 1 : -1 ;
+  int c;
+  for (c=0; c < abs(block_size); c++) 
+    @TYPE@_vector_iset( vector , index + c * sign , value);
+}
+
 
 /**
    This function invokes _iset - i.e. growing the vector if needed. If
@@ -1431,7 +1446,7 @@ void @TYPE@_vector_buffer_fread(@TYPE@_vector_type * vector , buffer_type * buff
   buffer_fread( buffer , &default_value , sizeof default_value , 1 );
   
   @TYPE@_vector_set_default( vector , default_value );
-  @TYPE@_vector_resize( vector , size );
+  @TYPE@_vector_realloc_data__( vector , size );
   buffer_fread( buffer , vector->data , sizeof * vector->data , size );
   vector->size = size;
 }
@@ -1478,7 +1493,28 @@ int @TYPE@_vector_count_equal( const @TYPE@_vector_type * vector , @TYPE@ cmp_va
 
 }
  
+/*
+  The upper limit is inclusive - if it is commensurable with the
+  delta.
+*/
 
+void @TYPE@_vector_range_fill(@TYPE@_vector_type * vector , @TYPE@ limit1 , @TYPE@ delta , @TYPE@ limit2) {
+  if (delta == 0)
+    util_abort("%s: sorry can not have delta == 0 \n",__func__);
+  
+  @TYPE@ current_value = limit1;
+  @TYPE@_vector_reset( vector );
+  while (true) {
+    @TYPE@_vector_append( vector , current_value );
+    current_value += delta;
+    if (delta > 0 && current_value > limit2)
+      break;
+    
+    if (delta < 0 && current_value < limit2)
+      break;
+  }
+}
+  
 #ifdef __cplusplus
 }
 #endif
