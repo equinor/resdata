@@ -1362,8 +1362,12 @@ void ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , void * data) {
 void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
   if (ecl_kw->shared_data) 
     util_abort("%s: trying to allocate data for ecl_kw object which has been declared with shared storage - aborting \n",__func__);
-  
-  ecl_kw->data = util_realloc(ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype );
+
+  {
+    size_t byte_size = ecl_kw->size * ecl_kw->sizeof_ctype;
+    ecl_kw->data = util_realloc(ecl_kw->data , byte_size );
+    memset(ecl_kw->data , 0 , byte_size);
+  }
 }
 
 

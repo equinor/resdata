@@ -27,6 +27,7 @@ import ctypes
 
 import  numpy
 import sys
+import warnings
 from ert.cwrap import CClass, CFILE, CWrapper, CWrapperNameSpace
 from ert.ecl import EclTypeEnum, EclKW, ECL_LIB
 
@@ -93,13 +94,13 @@ class EclGrid(CClass):
             raise IOError("Loading grid from:%s failed" % filename)
 
 
-    def equal(self , other , include_lgr = True , verbose = False):
+    def equal(self , other , include_lgr = True , include_nnc = False , verbose = False):
         """
         Compare the current grid with the other grid.
         """
         if not isinstance(other , EclGrid):
             raise TypeError("The other argument must be an EclGrid instance")
-        return cfunc.equal( self , other , include_lgr , verbose)
+        return cfunc.equal( self , other , include_lgr , include_nnc , verbose)
 
     @property
     def dual_grid( self ):
@@ -161,6 +162,30 @@ class EclGrid(CClass):
     def getGlobalSize(self):
         """Returns the total number of cells in this grid"""
         return cfunc.get_global_size( self )
+
+    def getBoundingBox2D(self , layer = 0):
+        if 0 <= layer <= self.getNZ():
+            x = ctypes.c_double()
+            y = ctypes.c_double()
+            z = ctypes.c_double()
+
+            cfunc.get_corner_xyz( self , 0 , 0 , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            p0 = (x.value , y.value )
+
+            cfunc.get_corner_xyz( self , self.getNX() , 0 , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            p1 = (x.value , y.value  )
+
+            cfunc.get_corner_xyz( self , self.getNX() , self.getNY() , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            p2 = (x.value , y.value  )
+
+            cfunc.get_corner_xyz( self , 0  , self.getNY() , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            p3 = (x.value , y.value  )
+
+            return (p0,p1,p2,p3)
+        else:
+            raise ValueError("Invalid layer value:%d  Valid range: [0,%d]" % (layer , self.getNZ()))
+
+
 
     @property
     def name( self ):
@@ -355,9 +380,37 @@ class EclGrid(CClass):
         return (x.value , y.value , z.value)
 
 
+    def getNodePos(self , i , j , k):
+        """Will return the (x,y,z) for the node given by (i,j,k).
+
+        Observe that this method does not consider cells, but the
+        nodes in the grid. This means that the valid input range for
+        i,j and k are are upper end inclusive. To get the four
+        bounding points of the lower layer of the grid:
+
+           p0 = grid.getNodePos(0 , 0 , 0)
+           p1 = grid.getNodePos(grid.getNX() , 0 , 0)
+           p2 = grid.getNodePos(0 , grid.getNY() , 0)
+           p3 = grid.getNodePos(grid.getNX() , grid.getNY() , 0)
+
+        """
+        if not 0 <= i <= self.getNX():
+            raise IndexError("Invalid I value:%d - valid range: [0,%d]" % (i , self.getNX()))
+
+        if not 0 <= j <= self.getNY():
+            raise IndexError("Invalid J value:%d - valid range: [0,%d]" % (j , self.getNY()))
+
+        if not 0 <= k <= self.getNZ():
+            raise IndexError("Invalid K value:%d - valid range: [0,%d]" % (k , self.getNZ()))
+            
+        x = ctypes.c_double()
+        y = ctypes.c_double()
+        z = ctypes.c_double()
+        cfunc.get_corner_xyz( self , i,j,k , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
+        return (x.value , y.value , z.value)
 
 
-    def get_corner_xyz(self, corner_nr , active_index = None , global_index = None , ijk = None):
+    def getCellCorner(self , corner_nr , active_index = None , global_index = None , ijk = None):
         """
         Will look up xyz of corner nr @corner_nr
 
@@ -373,8 +426,13 @@ class EclGrid(CClass):
         x = ctypes.c_double()
         y = ctypes.c_double()
         z = ctypes.c_double()
-        cfunc.get_xyz1_corner( self , gi , corner_nr , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
+        cfunc.get_cell_corner_xyz1( self , gi , corner_nr , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
         return (x.value , y.value , z.value)
+
+
+    def get_corner_xyz(self, corner_nr , active_index = None , global_index = None , ijk = None):
+        warnings.warn("The get_corner_xyz() method has been renamed: getCellCorner()" , DeprecationWarning)
+        return self.getCellCorner(corner_nr , active_index , global_index , ijk)
 
 
     def getLayerXYZ(self , xy_corner , layer):
@@ -823,7 +881,8 @@ cfunc.get_ijk1                     = cwrapper.prototype("void ecl_grid_get_ijk1(
 cfunc.get_ijk1A                    = cwrapper.prototype("void ecl_grid_get_ijk1A( ecl_grid , int , int* , int* , int*)") 
 cfunc.get_xyz3                     = cwrapper.prototype("void ecl_grid_get_xyz3( ecl_grid , int , int , int , double* , double* , double*)")
 cfunc.get_xyz1                     = cwrapper.prototype("void ecl_grid_get_xyz1( ecl_grid , int , double* , double* , double*)")
-cfunc.get_xyz1_corner              = cwrapper.prototype("void ecl_grid_get_corner_xyz1( ecl_grid , int , int , double* , double* , double*)")
+cfunc.get_cell_corner_xyz1         = cwrapper.prototype("void ecl_grid_get_cell_corner_xyz1( ecl_grid , int , int , double* , double* , double*)")
+cfunc.get_corner_xyz               = cwrapper.prototype("void ecl_grid_get_corner_xyz( ecl_grid , int , int , int, double* , double* , double*)")
 cfunc.get_xyz1A                    = cwrapper.prototype("void ecl_grid_get_xyz1A( ecl_grid , int , double* , double* , double*)")
 cfunc.get_ijk_xyz                  = cwrapper.prototype("int  ecl_grid_get_global_index_from_xyz( ecl_grid , double , double , double , int)")
 cfunc.cell_contains                = cwrapper.prototype("bool ecl_grid_cell_contains_xyz1( ecl_grid , int , double , double , double )")

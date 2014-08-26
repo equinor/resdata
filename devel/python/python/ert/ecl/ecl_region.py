@@ -92,6 +92,9 @@ class EclRegion(CClass):
         self.init_cobj( c_ptr , cfunc.free )
 
 
+    def __eq__(self , other):
+        return cfunc.equal(self , other)
+ 
             
     def __deep_copy__(self , memo):
         """
@@ -802,25 +805,34 @@ class EclRegion(CClass):
         """
         return True
 
-    
+
+    def getActiveList(self):
+        active_list = cfunc.get_active_list(self)
+        active_list.setParent(self)
+        return active_list
+
+
+    def getGlobalList(self):
+        global_list = cfunc.get_global_list(self)
+        global_list.setParent(self)
+        return global_list
+        
 
     @property
     def active_list(self):
         """
         IntVector instance with active indices in the region.
         """
-        active_list = cfunc.get_active_list(self)
-        active_list.setParent(self)
-        return active_list
+        return self.getActiveList()
+
 
     @property
     def global_list(self):
         """
         IntVector instance with global indices in the region.
         """
-        global_list = cfunc.get_global_list(self)
-        global_list.setParent(self)
-        return global_list
+        return self.getGlobalList()
+
 
     @property
     def active_size( self ):
@@ -983,3 +995,4 @@ cfunc.contains_ijk              = cwrapper.prototype("void ecl_region_contains_i
 cfunc.contains_global           = cwrapper.prototype("void ecl_region_contains_global( ecl_region, int )")
 cfunc.contains_active           = cwrapper.prototype("void ecl_region_contains_active( ecl_region , int )")
 
+cfunc.equal = cwrapper.prototype("bool ecl_region_equal( ecl_region , ecl_region )")

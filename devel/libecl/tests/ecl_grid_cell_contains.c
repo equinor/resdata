@@ -42,15 +42,15 @@ void test_grid_covering( const ecl_grid_type * grid) {
         point_type p2;
 
         for (int l=0; l < 4; l++) {
-          ecl_grid_get_corner_xyz1( grid , g1 , l + 4 , &p1.x , &p1.y , &p1.z);
-          ecl_grid_get_corner_xyz1( grid , g2 , l , &p2.x , &p2.y , &p2.z);
+          ecl_grid_get_cell_corner_xyz1( grid , g1 , l + 4 , &p1.x , &p1.y , &p1.z);
+          ecl_grid_get_cell_corner_xyz1( grid , g2 , l , &p2.x , &p2.y , &p2.z);
           test_assert_true( point_equal( &p1 , &p2 ));
         }
         
         
         for (int l=0; l < 4; l++) {
-          ecl_grid_get_corner_xyz1( grid , g1 , l      , &p1.x , &p1.y , &p1.z);
-          ecl_grid_get_corner_xyz1( grid , g1 , l + 4  , &p2.x , &p2.y , &p2.z);
+          ecl_grid_get_cell_corner_xyz1( grid , g1 , l      , &p1.x , &p1.y , &p1.z);
+          ecl_grid_get_cell_corner_xyz1( grid , g1 , l + 4  , &p2.x , &p2.y , &p2.z);
           
           test_assert_true( p2.z >= p1.z );
         }
@@ -220,40 +220,40 @@ void test_corners() {
   {
     double x,y,z;
     int i;
-    ecl_grid_get_corner_xyz3( grid , 0, 0, 0 , 0 , &x , &y , &z);
+    ecl_grid_get_cell_corner_xyz3( grid , 0, 0, 0 , 0 , &x , &y , &z);
     test_assert_int_equal( 0 , ecl_grid_get_global_index_from_xyz( grid , x,y,z,0));
 
     for (i=1; i < 8; i++) {
-      ecl_grid_get_corner_xyz3( grid , 0, 0, 0 , i , &x , &y , &z);
+      ecl_grid_get_cell_corner_xyz3( grid , 0, 0, 0 , i , &x , &y , &z);
       test_assert_int_not_equal( 0 , ecl_grid_get_global_index_from_xyz( grid , x,y,z,0));
     }
     
     // Corner 1
-    ecl_grid_get_corner_xyz3(grid , 2,0,0,1 , &x,&y,&z);
+    ecl_grid_get_cell_corner_xyz3(grid , 2,0,0,1 , &x,&y,&z);
     test_assert_int_equal( ecl_grid_get_global_index3( grid , 2,0,0 ) , ecl_grid_get_global_index_from_xyz( grid , x,y,z,0));
 
     // Corner 2
-    ecl_grid_get_corner_xyz3(grid , 0,2,0,2 , &x,&y,&z);
+    ecl_grid_get_cell_corner_xyz3(grid , 0,2,0,2 , &x,&y,&z);
     test_assert_int_equal( ecl_grid_get_global_index3( grid , 0,2,0 ) , ecl_grid_get_global_index_from_xyz( grid , x,y,z,0));
 
     // Corner 3
-    ecl_grid_get_corner_xyz3(grid , 2,2,0,3 , &x,&y,&z);
+    ecl_grid_get_cell_corner_xyz3(grid , 2,2,0,3 , &x,&y,&z);
     test_assert_int_equal( ecl_grid_get_global_index3( grid , 2,2,0 ) , ecl_grid_get_global_index_from_xyz( grid , x,y,z,0));
 
     // Corner 4
-    ecl_grid_get_corner_xyz3(grid , 0,0,2,4 , &x,&y,&z);
+    ecl_grid_get_cell_corner_xyz3(grid , 0,0,2,4 , &x,&y,&z);
     test_assert_int_equal( ecl_grid_get_global_index3( grid , 0,0,2 ) , ecl_grid_get_global_index_from_xyz( grid , x,y,z,0));
 
     // Corner 5
-    ecl_grid_get_corner_xyz3(grid , 2,0,2,5 , &x,&y,&z);
+    ecl_grid_get_cell_corner_xyz3(grid , 2,0,2,5 , &x,&y,&z);
     test_assert_int_equal( ecl_grid_get_global_index3( grid , 2,0,2 ) , ecl_grid_get_global_index_from_xyz( grid , x,y,z,0));
 
     // Corner 6
-    ecl_grid_get_corner_xyz3(grid , 0,2,2,6 , &x,&y,&z);
+    ecl_grid_get_cell_corner_xyz3(grid , 0,2,2,6 , &x,&y,&z);
     test_assert_int_equal( ecl_grid_get_global_index3( grid , 0,2,2 ) , ecl_grid_get_global_index_from_xyz( grid , x,y,z,0));
 
     // Corner 7
-    ecl_grid_get_corner_xyz3(grid , 2,2,2,7 , &x,&y,&z);
+    ecl_grid_get_cell_corner_xyz3(grid , 2,2,2,7 , &x,&y,&z);
     test_assert_int_equal( ecl_grid_get_global_index3( grid , 2,2,2 ) , ecl_grid_get_global_index_from_xyz( grid , x,y,z,0));
   }
                          
