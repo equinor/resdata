@@ -172,13 +172,11 @@ class EclSum(BaseCClass):
         Will raise exception KeyError if the summary object does not
         have @key.
         """
-        if self.has_key( key ):
-            if report_only:
-                return EclSumVector( self , key, report_only = True)
-            else:
-                return EclSumVector( self , key)
+        self.assertKeyValid(key)
+        if report_only:
+            return EclSumVector( self , key, report_only = True)
         else:
-            raise KeyError("Summary object does not have key: %s" % key)
+            return EclSumVector( self , key)
 
 
     def report_index_list( self ):
@@ -343,6 +341,11 @@ class EclSum(BaseCClass):
             return True
         else:
             return False
+
+    def assertKeyValid(self , key):
+        if not key in self:
+            raise KeyError("The summary key:%s was not recognized" % key)
+
     def __getitem__(self , key):
         """
         Implements [] operator - @key should be a summary key.
@@ -373,6 +376,7 @@ class EclSum(BaseCClass):
         Also available as method get_interp() on the EclSumVector
         class.
         """
+        self.assertKeyValid( key )
         if days:
             if date:
                 raise ValueError("Must supply either days or date")
@@ -495,6 +499,7 @@ class EclSum(BaseCClass):
         Also available as method get_interp_vector() on the
         EclSumVector class.
         """
+        self.assertKeyValid(key)
         if days_list:
             if date_list:
                 raise ValueError("Must supply either days_list or date_list")
