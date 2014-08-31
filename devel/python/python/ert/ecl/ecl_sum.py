@@ -338,6 +338,11 @@ class EclSum(BaseCClass):
         return EclSum.cNamespace().data_length( self )
 
 
+    def __contains__(self , key):
+        if EclSum.cNamespace().has_key( self, key ):
+            return True
+        else:
+            return False
     def __getitem__(self , key):
         """
         Implements [] operator - @key should be a summary key.
@@ -534,7 +539,7 @@ class EclSum(BaseCClass):
         """
         Check if summary object has key @key.
         """
-        return EclSum.cNamespace().has_key( self, key )
+        return key in self
 
 
     def smspec_node( self , key ):
