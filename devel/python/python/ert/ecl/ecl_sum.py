@@ -377,19 +377,19 @@ class EclSum(BaseCClass):
         class.
         """
         self.assertKeyValid( key )
-        if days:
-            if date:
-                raise ValueError("Must supply either days or date")
-            else:
-                if EclSum.cNamespace().check_sim_days( self , days ):
-                    return EclSum.cNamespace().get_general_var_from_sim_days( self , days , key )
-                else:
-                    raise ValueError("days:%s is outside range of simulation: [%g,%g]" % (days , self.first_day , self.sim_length))
-        elif date:
+        if days is None and date is None:
+            raise ValueError("Must supply either days or date")
+
+        if days is None:
             if self.check_sim_time( date ):
                 return EclSum.cNamespace().get_general_var_from_sim_time( self , CTime(date) , key )
             else:
                 raise ValueError("date:%s is outside range of simulation data" % date)
+        elif date is None:
+            if EclSum.cNamespace().check_sim_days( self , days ):
+                return EclSum.cNamespace().get_general_var_from_sim_days( self , days , key )
+            else:
+                raise ValueError("days:%s is outside range of simulation: [%g,%g]" % (days , self.first_day , self.sim_length))
         else:
             raise ValueError("Must supply either days or date")
 
