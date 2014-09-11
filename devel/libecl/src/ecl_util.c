@@ -1267,18 +1267,14 @@ static int ecl_util_get_num_parallel_cpu__(parser_type* parser, FILE* stream, co
 
   {
     stringlist_type * tokens = parser_tokenize_buffer( parser , buffer , true );
-    int i;
-    char * item = NULL;
-    for (i=0; i < stringlist_get_size( tokens ); i++) {
-      item = util_realloc_string_copy( item , stringlist_iget( tokens , i ));
-      util_strupr( item );
-      if (( util_string_equal( item , "DISTRIBUTED" )) || 
-          ( util_string_equal( item , "DIST" ))) { 
-        num_cpu = atoi( stringlist_iget( tokens , i - 1));
-        break;
-      }
-    }
-    free( item );  
+    
+    if (stringlist_get_size( tokens ) > 0) {
+      const char * num_cpu_string = stringlist_iget( tokens , 0 );
+      if (!util_sscanf_int( num_cpu_string , &num_cpu))
+        fprintf(stderr,"** Warning: failed to interpret:%s as integer - assuming one CPU\n",num_cpu_string);
+    } else
+      fprintf(stderr,"** Warning: failed to load data for PARALLEL keyword - assuming one CPU\n");
+
     stringlist_free( tokens );
   }  
   free( buffer );
