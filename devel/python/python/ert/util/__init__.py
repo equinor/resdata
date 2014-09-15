@@ -70,8 +70,11 @@ from .log import Log
 from .lookup_table import LookupTable
 from .buffer import Buffer
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
-from .latex import LaTeX
 from .substitution_list import SubstitutionList
 from .ui_return import UIReturn
 from .rng import RandomNumberGenerator
 from .thread_pool import ThreadPool
+
+# Check if latex functionality exists in libert_util
+if hasattr(UTIL_LIB, "latex_alloc"):
+    from .latex import LaTeX
