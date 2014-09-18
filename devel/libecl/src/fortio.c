@@ -477,7 +477,13 @@ int fortio_init_read(fortio_type *fortio) {
 }
 
 
+void fortio_data_fskip(fortio_type* fortio, const int element_size, const int element_count, const int block_count) {
+    int headers = block_count * 4;
+    int trailers = block_count * 4;
+    int bytes_to_skip = headers + trailers + (element_size * element_count);
 
+    fortio_fseek(fortio, bytes_to_skip, SEEK_CUR);
+}
 
 
 void fortio_complete_read(fortio_type *fortio) {
