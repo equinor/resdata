@@ -35,6 +35,7 @@ extern "C" {
   void              well_info_add_UNRST_wells( well_info_type * well_info , ecl_file_type * rst_file);
   void              well_info_add_wells( well_info_type * well_info , ecl_file_type * rst_file , int report_nr );
   void              well_info_load_rstfile( well_info_type * well_info , const char * filename);
+  void              well_info_load_rst_eclfile( well_info_type * well_info , ecl_file_type * rst_file);
   void              well_info_free( well_info_type * well_info );
 
   well_ts_type    * well_info_get_ts( const well_info_type * well_info , const char *well_name);

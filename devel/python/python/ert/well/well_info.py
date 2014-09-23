@@ -1,18 +1,25 @@
 from ert.cwrap import BaseCClass, CWrapper
 from ert.ecl import EclGrid
+from ert.ecl.ecl_file import EclFile
 from ert.well import ECL_WELL_LIB, WellTimeLine
 
 
 class WellInfo(BaseCClass):
 
-    def __init__(self, grid, rst_file):
+    def __init__(self, grid, rst_file=None):
         """
         @type grid: EclGrid
+        @type rst_file: str or EclFile or list of str or list of EclFile
         """
         c_ptr = WellInfo.cNamespace().alloc(grid)
         super(WellInfo, self).__init__(c_ptr)
 
-        WellInfo.cNamespace().load_rstfile(self, rst_file)
+        if rst_file is not None:
+            if isinstance(rst_file, list):
+                for item in rst_file:
+                    self.addWellFile(item)
+            else:
+                self.addWellFile(rst_file)
 
 
     def __len__(self):
@@ -39,6 +46,7 @@ class WellInfo(BaseCClass):
         return WellInfo.cNamespace().get_ts(self, well_name).setParent(self)
 
     def __iter__(self):
+        """ @rtype: iterator of WellTimeLine """
         index = 0
 
         while index < len(self):
@@ -58,6 +66,15 @@ class WellInfo(BaseCClass):
         """
         return WellInfo.cNamespace().has_well(self, item)
 
+    def addWellFile(self, rst_file):
+        """ @type rstfile: str or EclFile """
+        if isinstance(rst_file, str):
+            WellInfo.cNamespace().load_rstfile(self, rst_file)
+        elif isinstance(rst_file, EclFile):
+            WellInfo.cNamespace().load_rst_eclfile(self, rst_file)
+        else:
+            raise TypeError("Expected the RST file to be a filename or an EclFile instance.")
+
 
     def free(self):
         WellInfo.cNamespace().free(self)
@@ -71,6 +88,7 @@ WellInfo.cNamespace().alloc = cwrapper.prototype("c_void_p well_info_alloc(ecl_g
 WellInfo.cNamespace().free  = cwrapper.prototype("void well_info_free(well_info)")
 
 WellInfo.cNamespace().load_rstfile = cwrapper.prototype("void well_info_load_rstfile(well_info, char*)")
+WellInfo.cNamespace().load_rst_eclfile = cwrapper.prototype("void well_info_load_rst_eclfile(well_info, ecl_file)")
 
 WellInfo.cNamespace().get_well_count = cwrapper.prototype("int well_info_get_num_wells(well_info)")
 WellInfo.cNamespace().iget_well_name = cwrapper.prototype("char* well_info_iget_well_name(well_info, int)")
