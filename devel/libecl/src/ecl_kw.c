@@ -1160,13 +1160,13 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 
 void ecl_kw_fread_indexed_data(fortio_type * fortio, offset_type data_offset, ecl_type_enum ecl_type, int element_count, const int_vector_type* index_map, char* buffer) {
     const int block_size = get_blocksize( ecl_type );
+    FILE *stream  = fortio_get_FILE( fortio );
 
     int element_size = ecl_util_get_sizeof_ctype(ecl_type);
     if(ecl_type == ECL_CHAR_TYPE || ecl_type == ECL_MESS_TYPE) {
         element_size = ECL_STRING_LENGTH;
     }
-
-    FILE *stream  = fortio_get_FILE( fortio );
+    
     int index = 0;
     for(index = 0; index < int_vector_size(index_map); index++) {
         int element_index = int_vector_iget(index_map, index);
