@@ -20,7 +20,7 @@ set( header_files
     well_segment.h
     well_segment_collection.h
     well_branch_collection.h
-    well_rseg_loader.c
+    well_rseg_loader.h
 )
 
 if (NOT ERT_WINDOWS)
