@@ -72,6 +72,7 @@ typedef struct fortio_struct fortio_type;
   offset_type        fortio_ftell( const fortio_type * fortio );
   int                fortio_fseek( fortio_type * fortio , offset_type offset , int whence);
   void               fortio_data_fskip(fortio_type* fortio, const int element_size, const int element_count, const int block_count);
+  void               fortio_data_fseek(fortio_type* fortio, offset_type data_offset, size_t data_element, const int element_size, const int element_count, const int block_size);
   int                fortio_fileno( fortio_type * fortio );
 
   bool               fortio_fclose_stream( fortio_type * fortio );
