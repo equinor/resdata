@@ -275,6 +275,18 @@ static ecl_kw_type * file_map_iget_kw( const file_map_type * file_map , int inde
   return ecl_kw;
 }
 
+static void file_map_index_fload_kw(const file_map_type * file_map, const char* kw, int index, const int_vector_type * index_map, char* buffer) {
+    ecl_file_kw_type * file_kw = file_map_iget_named_file_kw( file_map , kw , index);
+
+    if (fortio_assert_stream_open( file_map->fortio )) {
+        offset_type offset = ecl_file_kw_get_offset(file_kw);
+        ecl_type_enum ecl_type = ecl_file_kw_get_type(file_kw);
+        int element_count = ecl_file_kw_get_size(file_kw);
+
+        ecl_kw_fread_indexed_data(file_map->fortio, offset + ECL_KW_FORTIO_HEADER_SIZE, ecl_type, element_count, index_map, buffer);
+    }
+}
+
 
 static int file_map_find_kw_value( const file_map_type * file_map , const char * kw , const void * value) {
   int global_index = -1;
@@ -776,6 +788,10 @@ ecl_kw_type * ecl_file_iget_named_kw( const ecl_file_type * file , const char * 
   return file_map_iget_named_kw( file->active_map , kw , ith);
 }
 
+void ecl_file_indexed_read(const ecl_file_type * file , const char * kw, int index, const int_vector_type * index_map, char* buffer) {
+    file_map_index_fload_kw(file->active_map, kw, index, index_map, buffer);
+}
+
 ecl_type_enum ecl_file_iget_named_type( const ecl_file_type * file , const char * kw , int ith) {
   return file_map_iget_named_type( file->active_map , kw , ith );
 }
@@ -960,6 +976,13 @@ void ecl_file_close(ecl_file_type * ecl_file) {
   vector_free( ecl_file->map_list  );
   vector_free( ecl_file->map_stack );
   free( ecl_file );
+}
+
+
+void ecl_file_close_fortio_stream(ecl_file_type * ecl_file) {
+    if (ecl_file->fortio != NULL) {
+        fortio_fclose(ecl_file->fortio);
+    }
 }
 
 

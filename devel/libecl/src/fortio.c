@@ -486,6 +486,20 @@ void fortio_data_fskip(fortio_type* fortio, const int element_size, const int el
 }
 
 
+void fortio_data_fseek(fortio_type* fortio, offset_type data_offset, size_t data_element, const int element_size, const int element_count, const int block_size) {
+    if(data_element < 0 || data_element >= element_count) {
+        util_abort("%s: Element index is out of range: 0 <= %d < %d \n", __func__, data_element, element_count);
+    }
+
+    int block_index = data_element / block_size;
+    int headers = (block_index + 1) * 4;
+    int trailers = block_index * 4;
+    int bytes_to_skip = data_offset + headers + trailers + (data_element * element_size);
+
+    fortio_fseek(fortio, bytes_to_skip, SEEK_SET);
+}
+
+
 void fortio_complete_read(fortio_type *fortio) {
   int trailer;
   trailer = util_fread_int( fortio->stream );

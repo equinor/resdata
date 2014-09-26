@@ -35,6 +35,8 @@ extern "C" {
 
 
   typedef struct ecl_kw_struct      ecl_kw_type;
+
+  #define ECL_KW_FORTIO_HEADER_SIZE  4 + ECL_STRING_LENGTH + 4 + ECL_TYPE_LENGTH + 4
   
   size_t         ecl_kw_fortio_size( const ecl_kw_type * ecl_kw );
   void *         ecl_kw_get_ptr(const ecl_kw_type *ecl_kw);
@@ -60,6 +62,7 @@ extern "C" {
   void           ecl_kw_fread(ecl_kw_type * , fortio_type * );
   ecl_kw_type *  ecl_kw_fread_alloc(fortio_type *);
   void           ecl_kw_free_data(ecl_kw_type *);
+  void           ecl_kw_fread_indexed_data(fortio_type * fortio, offset_type data_offset, ecl_type_enum ecl_type, int element_count, const int_vector_type* index_map, char* buffer);
   void           ecl_kw_free(ecl_kw_type *);
   void           ecl_kw_free__(void *);
   ecl_kw_type *  ecl_kw_alloc_copy (const ecl_kw_type *);
