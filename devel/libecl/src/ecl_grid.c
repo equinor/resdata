@@ -2114,6 +2114,24 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_data(int nx , int ny , int nz , const floa
   return ecl_grid_alloc_GRDECL_data__(NULL , FILEHEAD_SINGLE_POROSITY , nx , ny , nz , zcorn , coord , actnum , mapaxes , NULL , 0);
 }
 
+
+const float * ecl_grid_get_mapaxes_from_kw__(const ecl_kw_type * mapaxes_kw) {
+    const float * mapaxes_data = ecl_kw_get_float_ptr(mapaxes_kw);
+
+    float x1 = mapaxes_data[2];
+    float y1 = mapaxes_data[3];
+    float x2 = mapaxes_data[4];
+    float y2 = mapaxes_data[5];
+
+    float norm = 1.0 / (x1 * y2 - x2 * y1);
+
+    if(!isfinite(norm)) {
+        mapaxes_data = NULL;
+    }
+
+    return mapaxes_data;
+}
+
 static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,  
                                                   int dualp_flag, 
                                                   const ecl_kw_type * gridhead_kw , 
@@ -2148,7 +2166,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
     const int   * corsnum_data = NULL;
     
     if (mapaxes_kw != NULL)
-      mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw );
+      mapaxes_data = ecl_grid_get_mapaxes_from_kw__(mapaxes_kw);
 
     if (actnum_kw != NULL)
       actnum_data = ecl_kw_get_int_ptr(actnum_kw);
@@ -2522,7 +2540,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
   {
     if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , MAPAXES_KW))) {
       const ecl_kw_type * mapaxes_kw = ecl_file_iget_named_kw( ecl_file , MAPAXES_KW , 0);
-      mapaxes_data = ecl_kw_get_float_ptr( mapaxes_kw); 
+      mapaxes_data = ecl_grid_get_mapaxes_from_kw__(mapaxes_kw);
     }
   }
   
