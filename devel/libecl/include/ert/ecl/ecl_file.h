@@ -83,6 +83,7 @@ extern "C" {
   
   bool             ecl_file_writable( const ecl_file_type * ecl_file );
   int              ecl_file_get_flags( const ecl_file_type * ecl_file );
+  void             ecl_file_set_flags( ecl_file_type * ecl_file, int new_flags );
   bool             ecl_file_flags_set( const ecl_file_type * ecl_file , int flags);
 
   

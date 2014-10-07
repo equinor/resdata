@@ -132,7 +132,7 @@ struct file_map_struct {
   fortio_type       * fortio;       /* The same fortio instance pointer as in the ecl_file styructure. */
   bool                owner;        /* Is this map the owner of the ecl_file_kw instances; only true for the global_map. */
   inv_map_type     *  inv_map;       /* Shared reference owned by the ecl_file structure. */
-  int                 flags;
+  int               * flags;
 };
 
 
@@ -191,7 +191,7 @@ static bool FILE_FLAGS_SET( int state_flags , int query_flags) {
 
 
 
-static file_map_type * file_map_alloc( fortio_type * fortio , int flags , inv_map_type * inv_map , bool owner ) {
+static file_map_type * file_map_alloc( fortio_type * fortio , int * flags , inv_map_type * inv_map , bool owner ) {
   file_map_type * file_map     = util_malloc( sizeof * file_map );
   file_map->kw_list            = vector_alloc_new();
   file_map->kw_index           = hash_alloc();
@@ -199,7 +199,7 @@ static file_map_type * file_map_alloc( fortio_type * fortio , int flags , inv_ma
   file_map->owner              = owner;
   file_map->fortio             = fortio;
   file_map->inv_map            = inv_map;
-  file_map->flags              = flags;
+  file_map->flags          = flags;
   return file_map;
 }
 
@@ -268,7 +268,7 @@ static ecl_kw_type * file_map_iget_kw( const file_map_type * file_map , int inde
       
       ecl_kw = ecl_file_kw_get_kw( file_kw , file_map->fortio , file_map->inv_map);
 
-      if (FILE_FLAGS_SET( file_map->flags , ECL_FILE_CLOSE_STREAM))
+      if (FILE_FLAGS_SET( file_map->flags[0] , ECL_FILE_CLOSE_STREAM))
         fortio_fclose_stream( file_map->fortio );
     }
   }
@@ -342,7 +342,7 @@ static ecl_kw_type * file_map_iget_named_kw( const file_map_type * file_map , co
       
       ecl_kw = ecl_file_kw_get_kw( file_kw , file_map->fortio , file_map->inv_map);
       
-      if (FILE_FLAGS_SET( file_map->flags , ECL_FILE_CLOSE_STREAM))
+      if (FILE_FLAGS_SET( file_map->flags[0] , ECL_FILE_CLOSE_STREAM))
         fortio_fclose_stream( file_map->fortio );
     }
   }
@@ -396,7 +396,7 @@ static bool file_map_load_all( file_map_type * file_map ) {
     loadOK = true;
   }
 
-  if (FILE_FLAGS_SET( file_map->flags , ECL_FILE_CLOSE_STREAM))
+  if (FILE_FLAGS_SET( file_map->flags[0] , ECL_FILE_CLOSE_STREAM))
     fortio_fclose_stream( file_map->fortio );
 
   return loadOK;
@@ -887,7 +887,7 @@ static ecl_file_type * ecl_file_open__( const char * filename , int flags) {
   if (fortio) {
     ecl_file_type * ecl_file = ecl_file_alloc_empty( flags );
     ecl_file->fortio = fortio;
-    ecl_file->global_map = file_map_alloc( ecl_file->fortio , ecl_file->flags , ecl_file->inv_map , true );
+    ecl_file->global_map = file_map_alloc( ecl_file->fortio , &ecl_file->flags , ecl_file->inv_map , true );
     
     ecl_file_add_map( ecl_file , ecl_file->global_map );
     ecl_file_scan( ecl_file );
@@ -923,6 +923,9 @@ int ecl_file_get_flags( const ecl_file_type * ecl_file ) {
   return ecl_file->flags;
 }
 
+void ecl_file_set_flags( ecl_file_type * ecl_file, int flags ) {
+  ecl_file->flags = flags;
+}
 
 bool ecl_file_flags_set( const ecl_file_type * ecl_file , int flags) {
   return FILE_FLAGS_SET( ecl_file->flags , flags );
@@ -981,7 +984,7 @@ void ecl_file_close(ecl_file_type * ecl_file) {
 
 void ecl_file_close_fortio_stream(ecl_file_type * ecl_file) {
     if (ecl_file->fortio != NULL) {
-        fortio_fclose(ecl_file->fortio);
+        fortio_fclose_stream(ecl_file->fortio);
     }
 }
 
