@@ -2123,9 +2123,9 @@ const float * ecl_grid_get_mapaxes_from_kw__(const ecl_kw_type * mapaxes_kw) {
     float x2 = mapaxes_data[4];
     float y2 = mapaxes_data[5];
 
-    float norm = 1.0 / (x1 * y2 - x2 * y1);
+    float norm_denominator = x1 * y2 - x2 * y1;
 
-    if(!isfinite(norm)) {
+    if(norm_denominator == 0.0) {
         mapaxes_data = NULL;
     }
 
