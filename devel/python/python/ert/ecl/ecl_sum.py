@@ -924,7 +924,8 @@ ime_index.
     @classmethod
     def createCReference(cls, c_pointer, parent=None):
         result = super(EclSum, cls).createCReference(c_pointer, parent)
-        result._initialize()
+        if not result is None:
+            result._initialize()
         return result
 
     @classmethod
