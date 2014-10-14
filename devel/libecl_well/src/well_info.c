@@ -274,14 +274,24 @@ static void well_info_add_state( well_info_type * well_info , well_state_type * 
  */
 
 void well_info_add_wells( well_info_type * well_info , ecl_file_type * rst_file , int report_nr) {
-  int well_nr;
-  ecl_rsthead_type * global_header = ecl_rsthead_alloc( rst_file );
-  for (well_nr = 0; well_nr < global_header->nwells; well_nr++) {
-    well_state_type * well_state = well_state_alloc_from_file( rst_file , well_info->grid , report_nr , well_nr );
-    if (well_state != NULL)
-      well_info_add_state( well_info , well_state );
+  int flags = ecl_file_get_flags(rst_file);
+  if (ecl_file_flags_set(rst_file, ECL_FILE_CLOSE_STREAM)) {
+    int new_flags = flags & ~ECL_FILE_CLOSE_STREAM;
+    ecl_file_set_flags(rst_file, new_flags);
   }
-  ecl_rsthead_free( global_header );
+
+  {
+    ecl_rsthead_type * global_header = ecl_rsthead_alloc( rst_file );
+    int well_nr;
+    for (well_nr = 0; well_nr < global_header->nwells; well_nr++) {
+      well_state_type * well_state = well_state_alloc_from_file( rst_file , well_info->grid , report_nr , well_nr );
+      if (well_state != NULL)
+        well_info_add_state( well_info , well_state );
+    }
+    ecl_rsthead_free( global_header );
+  }
+
+  ecl_file_set_flags(rst_file, flags);
 }
 
 /**

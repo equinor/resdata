@@ -80,8 +80,6 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 #define COLUMNS_INT      6
 #define COLUMNS_MESSAGE  1
 #define COLUMNS_BOOL    25
-   
-#define ECL_KW_FORTIO_HEADER_SIZE  4 + ECL_STRING_LENGTH + 4 + ECL_TYPE_LENGTH + 4
 
 
 /*****************************************************************/
@@ -1157,6 +1155,33 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
       }
     }
   }
+}
+
+
+void ecl_kw_fread_indexed_data(fortio_type * fortio, offset_type data_offset, ecl_type_enum ecl_type, int element_count, const int_vector_type* index_map, char* buffer) {
+    const int block_size = get_blocksize( ecl_type );
+    FILE *stream  = fortio_get_FILE( fortio );
+    int index;
+    int element_size = ecl_util_get_sizeof_ctype(ecl_type);
+    
+    if(ecl_type == ECL_CHAR_TYPE || ecl_type == ECL_MESS_TYPE) {
+        element_size = ECL_STRING_LENGTH;
+    }
+    
+    
+    for(index = 0; index < int_vector_size(index_map); index++) {
+        int element_index = int_vector_iget(index_map, index);
+
+        if(element_index < 0 || element_index >= element_count) {
+            util_abort("%s: Element index is out of range 0 <= %d < %d\n", __func__, element_index, element_count);
+        }
+        fortio_data_fseek(fortio, data_offset, element_index, element_size, element_count, block_size);
+        util_fread(&buffer[index * element_size], element_size, 1, stream, __func__);
+    }
+
+    if (ECL_ENDIAN_FLIP) {
+        util_endian_flip_vector(buffer, element_size, int_vector_size(index_map));
+    }
 }
 
 /**
