@@ -200,6 +200,7 @@ well_state_type * well_state_alloc(const char * well_name , int global_well_nr ,
   well_state->connections = hash_alloc();
   well_state->segments = well_segment_collection_alloc();
   well_state->branches = well_branch_collection_alloc();
+  well_state->is_MSW_well = false;
 
   /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */
   if ((type == UNDOCUMENTED_ZERO) && open)
@@ -465,9 +466,8 @@ well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , const e
           if(load_segment_information){
             well_state_add_MSW( well_state , ecl_file , global_well_nr );
           }
-      }else{
-          well_state->is_MSW_well = false;
       }
+
     }
     ecl_rsthead_free( global_header );
     return well_state;
