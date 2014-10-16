@@ -21,6 +21,24 @@ class Polyline(object):
         return self.__name
 
 
+    def __iadd__(self , other ):
+        for p in other:
+            self.__points.append( p )
+        return self
+
+
+    def __add__(self , other ):
+        copy = Polyline( init_points = self)
+        copy.__iadd__(other)
+        return copy
+
+
+    def __radd__(self , other ):
+        copy = Polyline( init_points = other )
+        copy.__iadd__(self)
+        return copy
+            
+
     def __eq__(self, other):
         if len(self) != len(other):
             return False
