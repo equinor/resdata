@@ -144,6 +144,24 @@ class GeometryTools(object):
         return inside
 
 
+    @staticmethod
+    def extendToEdge(bounding_polygon, poly_line):
+        """
+        """
+        for p in poly_line:
+            if not GeometryTools.pointInPolygon( p , bounding_polygon):
+                raise ValueError("The point:%s was not inside bounding polygon")
+        
+        p1 = poly_line[0]
+        ray1 = GeometryTools.lineToRay(poly_line[1], poly_line[0])
+        intersection1 = GeometryTools.rayPolygonIntersections(p1, ray1, bounding_polygon)[0] # assume convex
+        
+        
+        p2 = poly_line[-1]
+        ray2 = GeometryTools.lineToRay(poly_line[-2], poly_line[-1])
+        intersection2 = GeometryTools.rayPolygonIntersections(p2, ray2, bounding_polygon)[0] # assume convex
+
+        return [intersection1[1]] + poly_line + [intersection2[1]]
 
 
     @staticmethod
