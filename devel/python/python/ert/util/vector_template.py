@@ -518,3 +518,7 @@ class VectorTemplate(BaseCClass):
             l[index] = value
             
         return l
+
+    def selectUnique(self):
+        self.cNamespace().select_unique(self)
+
