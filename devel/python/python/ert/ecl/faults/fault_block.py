@@ -115,7 +115,9 @@ class FaultBlock(BaseCClass):
     def getEdgePolygon(self):
         x_list = DoubleVector()
         y_list = DoubleVector()
-        self.cNamespace().trace_edge( self , x_list , y_list )
+        cell_list = IntVector()
+        
+        self.cNamespace().trace_edge( self , x_list , y_list , cell_list )
         p = Polyline()
         for (x,y) in zip(x_list , y_list):
             p.addPoint(x,y)
@@ -165,6 +167,6 @@ FaultBlock.cNamespace().assign_to_region      = cwrapper.prototype("void        
 FaultBlock.cNamespace().get_region_list       = cwrapper.prototype("int_vector_ref        fault_block_get_region_list(fault_block)")
 FaultBlock.cNamespace().add_cell              = cwrapper.prototype("void                  fault_block_add_cell(fault_block,  int , int)")
 FaultBlock.cNamespace().get_global_index_list = cwrapper.prototype("int_vector_ref        fault_block_get_global_index_list(fault_block)")
-FaultBlock.cNamespace().trace_edge            = cwrapper.prototype("void                  fault_block_trace_edge( fault_block, double_vector , double_vector)")  
+FaultBlock.cNamespace().trace_edge            = cwrapper.prototype("void                  fault_block_trace_edge( fault_block, double_vector , double_vector , int_vector)")  
 FaultBlock.cNamespace().get_neighbours        = cwrapper.prototype("void                  fault_block_list_neighbours( fault_block , int_vector)")  
 
