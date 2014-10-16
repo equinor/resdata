@@ -170,11 +170,7 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
 
 /**
    This function tries (using some heuristic) to guess whether a
-   particular file is a Fortran file. To complicate the matters
-   further we make no assumptions regarding endian ness, if it is
-   indeed determined that this is fortran file, the endian ness is
-   returned by reference (if it is not recognized as a fortran file, 
-   the returned endian ness will be garbage).
+   particular file is a Fortran file. 
 
    The heuristic algorithm which is used is as follows:
    
@@ -182,28 +178,17 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
     2. Skip that number of bytes forward.
     3. Read four bytes again (tail).
 
-   Now, when this is done we do the following tests:
+   Now, when this is done we do the following test:
 
-    1. If header == tail. This is (probably) a fortran file, however
-       if header == 0, we might have a normal file with two
-       consequitive zeroes. In that case it is difficult to determine,
-       and we continue.
+   If header == tail. This is (probably) a fortran file, however if
+   header == 0, we might have a normal file with two consequitive
+   zeroes. In that case it is difficult to determine, and we continue.
 
-    2. If header != tail we try to reinterpret header with an endian
-       swap and read a new tail. If they are now equal we repeat test1, or
-       return false (i.e. *not* a fortran file).
 */
 
-bool fortio_is_fortran_file(const char * filename, bool * _endian_flip) {
+bool fortio_looks_like_fortran_file(const char * filename, bool endian_flip) {
   FILE * stream = util_fopen(filename , "rb");
-  bool endian_flip = false;          
   bool is_fortran_stream = fortio_is_fortran_stream__(stream , endian_flip);
-  if (!is_fortran_stream) {
-    endian_flip = !endian_flip;
-    is_fortran_stream = fortio_is_fortran_stream__(stream , endian_flip);
-  }
-
-  *_endian_flip = endian_flip;
   fclose(stream);
   return is_fortran_stream;
 }

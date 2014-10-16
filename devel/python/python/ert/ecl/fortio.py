@@ -102,6 +102,18 @@ class FortIO(BaseCClass):
         # SEEK_END = 2
         FortIO.cNamespace().seek(self, position, 0)
 
+    @classmethod
+    def isFortranFile(cls , filename , endian_flip = True):
+        """@rtype: bool
+        @type filename: str
+
+
+        Will use heuristics to try to guess if @filename is a binary
+        file written in fortran style. ASCII files will return false,
+        even if they are structured as ECLIPSE keywords.
+        """
+        return FortIO.cNamespace().guess_fortran( filename , endian_flip )
+        
 
     def free(self):
         self.close()
@@ -141,6 +153,6 @@ FortIO.cNamespace().get_position = cwrapper.prototype("long fortio_ftell(fortio)
 FortIO.cNamespace().seek = cwrapper.prototype("void fortio_fseek(fortio, int)")
 
 FortIO.cNamespace().close = cwrapper.prototype("bool fortio_fclose(fortio)")
-
+FortIO.cNamespace().guess_fortran = cwrapper.prototype("bool fortio_looks_like_fortran_file(char* , bool)")
 
 
