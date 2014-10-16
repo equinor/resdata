@@ -163,22 +163,54 @@ class EclGrid(CClass):
         """Returns the total number of cells in this grid"""
         return cfunc.get_global_size( self )
 
-    def getBoundingBox2D(self , layer = 0):
+    def getBoundingBox2D(self , layer = 0 , lower_left = None , upper_right = None):
         if 0 <= layer <= self.getNZ():
             x = ctypes.c_double()
             y = ctypes.c_double()
             z = ctypes.c_double()
+            
+            if lower_left is None:
+                i1 = 0
+                j1 = 0
+            else:
+                i1,j1 = lower_left
+                if not 0 < i1 < self.getNX():
+                    raise ValueError("lower_left i coordinate invalid")
 
-            cfunc.get_corner_xyz( self , 0 , 0 , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+                if not 0 < j1 < self.getNY():
+                    raise ValueError("lower_left j coordinate invalid")
+
+                
+            if upper_right is None:
+                i2 = self.getNX()
+                j2 = self.getNY()
+            else:
+                i2,j2 = upper_right
+                
+                if not 1 < i2 <= self.getNX():
+                    raise ValueError("upper_right i coordinate invalid")
+
+                if not 1 < j2 <= self.getNY():
+                    raise ValueError("upper_right j coordinate invalid")
+                    
+            if not i1 < i2:
+                raise ValueError("Must have lower_left < upper_right")
+            
+            if not j1 < j2:
+                raise ValueError("Must have lower_left < upper_right")
+
+
+
+            cfunc.get_corner_xyz( self , i1 , j1 , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
             p0 = (x.value , y.value )
 
-            cfunc.get_corner_xyz( self , self.getNX() , 0 , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            cfunc.get_corner_xyz( self , i2 , j1 , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
             p1 = (x.value , y.value  )
 
-            cfunc.get_corner_xyz( self , self.getNX() , self.getNY() , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            cfunc.get_corner_xyz( self , i2 , j2 , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
             p2 = (x.value , y.value  )
 
-            cfunc.get_corner_xyz( self , 0  , self.getNY() , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
+            cfunc.get_corner_xyz( self , i1 , j2 , layer , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z) )
             p3 = (x.value , y.value  )
 
             return (p0,p1,p2,p3)
