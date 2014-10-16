@@ -209,22 +209,6 @@ bool fortio_is_fortran_file(const char * filename, bool * _endian_flip) {
 }
 
 
-/**
-   This function tries to determine automatically whether a certain
-   file has endian flip or not. 
-
-   Observe that the return value is whether we managed to determine the
-   endian-ness or not, whereas the endian_flip flag is returned by
-   reference.
-
-   To be able to determine endianness the file *must* be a binary
-   fortran file - this is essentially the return value.
-*/
-
-bool fortio_guess_endian_flip(const char * filename , bool * _endian_flip) {
-  return fortio_is_fortran_file(filename , _endian_flip);
-}
-
 
 
 
