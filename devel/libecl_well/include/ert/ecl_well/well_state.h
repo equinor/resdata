@@ -50,7 +50,9 @@ extern "C" {
 
   bool well_state_add_MSW( well_state_type * well_state , 
                            const ecl_file_type * rst_file , 
-                           int well_nr);
+                           int  well_nr,
+                           bool load_segment_information);
+                           
 
   bool well_state_is_MSW( const well_state_type * well_state);
 
