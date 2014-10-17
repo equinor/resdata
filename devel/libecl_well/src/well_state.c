@@ -393,6 +393,7 @@ bool well_state_add_MSW( well_state_type * well_state ,
                                                      rst_head);
 
     if (segments) {
+      well_state->is_MSW_well = true;
       hash_iter_type * grid_iter = hash_iter_alloc( well_state->connections );
       while (!hash_iter_is_complete( grid_iter )) {
         const char * grid_name = hash_iter_get_next_key( grid_iter );
