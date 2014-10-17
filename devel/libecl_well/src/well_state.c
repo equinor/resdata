@@ -168,6 +168,7 @@ struct well_state_struct {
   int              global_well_nr;
   bool             open;
   well_type_enum   type;
+  bool             is_MSW_well;
 
   hash_type      * connections;                                                       // hash<grid_name,well_conn_collection>
   well_segment_collection_type * segments;
@@ -199,6 +200,7 @@ well_state_type * well_state_alloc(const char * well_name , int global_well_nr ,
   well_state->connections = hash_alloc();
   well_state->segments = well_segment_collection_alloc();
   well_state->branches = well_branch_collection_alloc();
+  well_state->is_MSW_well = false;
 
   /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */
   if ((type == UNDOCUMENTED_ZERO) && open)
@@ -391,6 +393,7 @@ bool well_state_add_MSW( well_state_type * well_state ,
                                                      rst_head);
 
     if (segments) {
+      well_state->is_MSW_well = true;
       hash_iter_type * grid_iter = hash_iter_alloc( well_state->connections );
       while (!hash_iter_is_complete( grid_iter )) {
         const char * grid_name = hash_iter_get_next_key( grid_iter );
@@ -414,14 +417,18 @@ bool well_state_add_MSW( well_state_type * well_state ,
 
 
 bool well_state_is_MSW( const well_state_type * well_state) {
-  if (well_segment_collection_get_size( well_state->segments ) > 0)
-    return true;
-  else
-    return false;
+  return well_state->is_MSW_well;
+}
+
+bool well_state_has_segment_data(const well_state_type * well_state){
+    if (well_segment_collection_get_size( well_state->segments ) > 0)
+      return true;
+    else
+      return false;
 }
 
 
-well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , const ecl_grid_type * grid , int report_nr ,  int global_well_nr) {
+well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , const ecl_grid_type * grid , int report_nr ,  int global_well_nr ,bool load_segment_information) {
   if (ecl_file_has_kw( ecl_file , IWEL_KW)) {
     well_state_type   * well_state = NULL;
     ecl_rsthead_type  * global_header  = ecl_rsthead_alloc( ecl_file );
@@ -455,8 +462,13 @@ well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , const e
       free( name );
 
       well_state_add_connections( well_state , grid , ecl_file , global_well_nr);
-      if (ecl_file_has_kw( ecl_file , ISEG_KW))
-        well_state_add_MSW( well_state , ecl_file , global_well_nr );
+      if (ecl_file_has_kw( ecl_file , ISEG_KW)){
+          well_state->is_MSW_well = true;
+          if(load_segment_information){
+            well_state_add_MSW( well_state , ecl_file , global_well_nr );
+          }
+      }
+
     }
     ecl_rsthead_free( global_header );
     return well_state;
