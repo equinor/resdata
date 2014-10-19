@@ -28,7 +28,9 @@ import ctypes
 import  numpy
 import sys
 import warnings
+import os.path
 from ert.cwrap import CClass, CFILE, CWrapper, CWrapperNameSpace
+from ert.util import IntVector
 from ert.ecl import EclTypeEnum, EclKW, ECL_LIB
 
 
@@ -38,7 +40,51 @@ class EclGrid(CClass):
     """
     
     @classmethod
+    def loadFromGrdecl(cls , filename):
+        """Will create a new EclGrid instance from grdecl file.
+
+        This function will scan the input file @filename and look for
+        the keywords required to build a grid. The following keywords
+        are required:
+         
+              SPECGRID   ZCORN   COORD
+
+        In addition the function will look for and use the ACTNUM and
+        MAPAXES keywords if they are found; if ACTNUM is not found all
+        cells are assumed to be active.
+
+        Slightly more exotic grid concepts like dual porosity, NNC
+        mapping, LGR and coarsened cells will be completely ignored;
+        if you need such concepts you must have an EGRID file and use
+        the default EclGrid() constructor - that is also considerably
+        faster.
+        """
+
+        if os.path.isfile(filename):
+            with open(filename) as f:
+                specgrid = EclKW.read_grdecl(f, "SPECGRID", ecl_type=EclTypeEnum.ECL_INT_TYPE, strict=False)
+                zcorn = EclKW.read_grdecl(f, "ZCORN")
+                coord = EclKW.read_grdecl(f, "COORD")
+                actnum = EclKW.read_grdecl(f, "ACTNUM", ecl_type=EclTypeEnum.ECL_INT_TYPE)
+                mapaxes = EclKW.read_grdecl(f, "MAPAXES")
+
+            if specgrid is None:
+                raise ValueError("The grdecl file:%s was invalid - could not find SPECGRID keyword" % filename)
+
+            if zcorn is None:
+                raise ValueError("The grdecl file:%s was invalid - could not find ZCORN keyword" % filename)
+
+            if coord is None:
+                raise ValueError("The grdecl file:%s was invalid - could not find COORD keyword" % filename)
+
+            return EclGrid.create( specgrid , zcorn , coord , actnum , mapaxes )
+        else:
+            raise IOError("No such file:%s" % filename)
+        
+
+    @classmethod
     def create(cls , specgrid , zcorn , coord , actnum , mapaxes = None ):
+
         """
         Create a new grid instance from existing keywords.
 
@@ -72,7 +118,19 @@ class EclGrid(CClass):
         With the default value @actnum == None all cells will be active, 
         """
         obj = object.__new__( cls )
-        c_ptr = cfunc.alloc_rectangular( dims[0] , dims[1] , dims[2] , dV[0] , dV[1] , dV[2] , actnum )
+        if actnum is None:
+            c_ptr = cfunc.alloc_rectangular( dims[0] , dims[1] , dims[2] , dV[0] , dV[1] , dV[2] , None )
+        else:
+            if not isinstance(actnum , IntVector):
+                tmp = IntVector(initial_size = len(actnum))
+                for (index , value) in enumerate(actnum):
+                    tmp[index] = value
+                actnum = tmp
+            
+            if not len(actnum) == dims[0] * dims[1] * dims[2]:
+                raise ValueError("ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d" % (len(actnum) , dims[0] * dims[1] * dims[2]))
+            c_ptr = cfunc.alloc_rectangular( dims[0] , dims[1] , dims[2] , dV[0] , dV[1] , dV[2] , actnum.getDataPtr() )
+            
         obj.init_cobj( c_ptr , cfunc.free )
         return obj
         
@@ -131,8 +189,7 @@ class EclGrid(CClass):
     @property
     def nactive( self ):
         """The number of active cells in the grid."""
-        return cfunc.get_active( self )
-
+        return self.getNumActive()
 
     @property
     def nactive_fracture( self ):
@@ -162,6 +219,11 @@ class EclGrid(CClass):
     def getGlobalSize(self):
         """Returns the total number of cells in this grid"""
         return cfunc.get_global_size( self )
+
+    def getNumActive(self):
+        """The number of active cells in the grid."""
+        return cfunc.get_active( self )
+
 
     def getBoundingBox2D(self , layer = 0 , lower_left = None , upper_right = None):
         if 0 <= layer <= self.getNZ():
