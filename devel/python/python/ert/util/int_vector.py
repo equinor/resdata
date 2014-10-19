@@ -93,5 +93,6 @@ IntVector.cNamespace().rsort_perm       = cwrapper.prototype("permutation_vector
 IntVector.cNamespace().contains       = cwrapper.prototype("bool int_vector_contains(int_vector, int)")
 IntVector.cNamespace().select_unique       = cwrapper.prototype("void int_vector_select_unique(int_vector)")
 IntVector.cNamespace().element_sum       = cwrapper.prototype("int int_vector_sum(int_vector)")
+IntVector.cNamespace().get_data_ptr      = cwrapper.prototype("int* int_vector_get_ptr(int_vector)")
 
 

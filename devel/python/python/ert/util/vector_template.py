@@ -526,3 +526,9 @@ class VectorTemplate(BaseCClass):
     def elementSum(self):
         return self.cNamespace().element_sum( self )
 
+
+    def getDataPtr(self):
+        "Low level function which returns a pointer to underlying storage"
+        # Observe that the get_data_ptr() function is not implemented
+        # for the TimeVector class.
+        return self.cNamespace().get_data_ptr(self)

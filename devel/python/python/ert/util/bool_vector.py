@@ -126,3 +126,4 @@ BoolVector.cNamespace().active_list        = cwrapper.prototype("int_vector_obj 
 BoolVector.cNamespace().contains           = cwrapper.prototype("bool bool_vector_contains(bool_vector, bool)")
 BoolVector.cNamespace().select_unique          = cwrapper.prototype("void bool_vector_select_unique(bool_vector)")
 BoolVector.cNamespace().element_sum       = cwrapper.prototype("bool bool_vector_sum(bool_vector)")
+BoolVector.cNamespace().get_data_ptr      = cwrapper.prototype("bool* bool_vector_get_ptr(bool_vector)")

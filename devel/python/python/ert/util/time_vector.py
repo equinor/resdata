@@ -129,7 +129,9 @@ class TimeVector(VectorTemplate):
             
         return timeVector
                 
-        
+
+    def getDataPtr(self):
+        raise NotImplementedError("The getDataPtr() function is not implemented for time_t vectors")
 
 
 #################################################################

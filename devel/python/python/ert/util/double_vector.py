@@ -71,3 +71,4 @@ DoubleVector.cNamespace().rsort_perm       = cwrapper.prototype("permutation_vec
 DoubleVector.cNamespace().contains       = cwrapper.prototype("bool double_vector_contains(double_vector, double)")
 DoubleVector.cNamespace().select_unique       = cwrapper.prototype("void double_vector_select_unique(double_vector)")
 DoubleVector.cNamespace().element_sum       = cwrapper.prototype("double double_vector_sum(double_vector)")
+DoubleVector.cNamespace().get_data_ptr      = cwrapper.prototype("double* double_vector_get_ptr(double_vector)")
