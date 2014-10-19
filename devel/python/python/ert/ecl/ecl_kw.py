@@ -768,10 +768,13 @@ class EclKW(CClass):
         cfunc.set_header( self , name )
 
     def get_name( self ):
-        return cfunc.get_header( self )
+        return self.getName()
         
 
     name = property( get_name , set_name )
+
+    def getName(self):
+        return cfunc.get_header( self )
 
 
     @property    
@@ -833,6 +836,8 @@ class EclKW(CClass):
 
     def getEclType(self):
         return self.ecl_type
+
+        
 
     
     @property
