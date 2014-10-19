@@ -522,3 +522,7 @@ class VectorTemplate(BaseCClass):
     def selectUnique(self):
         self.cNamespace().select_unique(self)
 
+
+    def elementSum(self):
+        return self.cNamespace().element_sum( self )
+
