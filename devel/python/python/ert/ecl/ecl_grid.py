@@ -112,6 +112,11 @@ class EclGrid(CClass):
 
     @classmethod
     def create_rectangular(cls , dims , dV , actnum = None):
+        return cls.createRectangular( dims , dV , actnum )
+
+
+    @classmethod
+    def createRectangular(cls , dims , dV , actnum = None):
         """
         Will create a new rectangular grid. @dims = (nx,ny,nz)  @dVg = (dx,dy,dz)
         
