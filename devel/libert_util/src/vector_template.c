@@ -1119,7 +1119,7 @@ static int @TYPE@_vector_rcmp(const void *a, const void *b) {
 
 void @TYPE@_vector_select_unique(@TYPE@_vector_type * vector) {
   @TYPE@_vector_assert_writable( vector ); 
-  {
+  if (vector->size > 0) {
     @TYPE@_vector_type * copy = @TYPE@_vector_alloc_copy( vector );
     @TYPE@_vector_sort( copy );
     @TYPE@_vector_reset( vector );

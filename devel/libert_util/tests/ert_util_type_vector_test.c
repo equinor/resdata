@@ -323,6 +323,14 @@ void test_del() {
   int_vector_free( vec );
 }
 
+
+void test_empty() {
+  int_vector_type * vec = int_vector_alloc(0,0);
+  int_vector_sort( vec );
+  int_vector_select_unique( vec );
+  int_vector_free( vec );
+}
+
 int main(int argc , char ** argv) {
   
   int_vector_type * int_vector = int_vector_alloc( 0 , 99);
@@ -411,5 +419,6 @@ int main(int argc , char ** argv) {
   test_range_fill();
   test_iset_block();
   test_resize();
+  test_empty();
   exit(0);
 }
