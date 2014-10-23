@@ -25,10 +25,11 @@ wrapper around the ecl_grid.c implementation from the libecl library.
 """
 import ctypes
 
-import  numpy
+import numpy
 import sys
 import warnings
 import os.path
+import math
 from ert.cwrap import CClass, CFILE, CWrapper, CWrapperNameSpace
 from ert.util import IntVector
 from ert.ecl import EclTypeEnum, EclKW, ECL_LIB, FortIO
@@ -678,6 +679,49 @@ class EclGrid(CClass):
                 raise ValueError("Could not find the point:(%g,%g) in layer:%d" % (x,y,k))
         else:
             raise IndexError("Invalid layer value:%d" % k)
+        
+
+    @staticmethod
+    def d_cmp(a,b):
+        return cmp(a[0] , b[0])
+
+
+    def findCellCornerXY(self , x, y , k):
+        """Will find the corner nr of corner closest to utm coordinates x,y.
+        
+        The @k input is the layer you are interested in, the allowed
+        values for k are [0,nz]. If the coordinates (x,y) are found to
+        be outside the grid a ValueError exception is raised.
+        """
+        i,j = self.findCellXY(x,y,k)
+        if k == self.getNZ():
+            k -= 1
+            corner_shift = 4
+        else:
+            corner_shift = 0
+        
+        
+        nx = self.getNX()
+        x0,y0,z0 = self.getCellCorner( corner_shift , ijk = (i,j,k))
+        d0 = math.sqrt( (x0 - x)*(x0 - x) + (y0 - y)*(y0 - y))
+        c0 = i + j*(nx + 1)
+
+        x1,y1,z1 = self.getCellCorner( 1 + corner_shift , ijk = (i,j,k))
+        d1 = math.sqrt( (x1 - x)*(x1 - x) + (y1 - y)*(y1 - y))
+        c1 = i + 1 + j*(nx + 1)
+
+        x2,y2,z2 = self.getCellCorner( 2 + corner_shift , ijk = (i,j,k))
+        d2 = math.sqrt( (x2 - x)*(x2 - x) + (y2 - y)*(y2 - y))
+        c2 = i + (j + 1)*(nx + 1)
+
+        x3,y3,z3 = self.getCellCorner( 3 + corner_shift , ijk = (i,j,k))
+        d3 = math.sqrt( (x3 - x)*(x3 - x) + (y3 - y)*(y3 - y))
+        c3 = i + 1 + (j + 1)*(nx + 1)
+
+        l = [(d0 , c0) , (d1,c1) , (d2 , c2) , (d3,c3)]
+        l.sort( EclGrid.d_cmp )
+        return l[0][1]
+        
 
 
     def cell_regular(self, active_index = None , global_index = None , ijk = None):
