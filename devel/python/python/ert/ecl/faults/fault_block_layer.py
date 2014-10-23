@@ -130,6 +130,34 @@ class FaultBlockLayer(BaseCClass):
         self.cNamespace().export_kw( self , kw )
 
 
+    def addFaultBarrier(self , fault , link_segments = True):
+        layer = self.getGeoLayer()
+        layer.addFaultBarrier( fault , self.getK() , link_segments )
+
+
+    def addPolylineBarrier(self , polyline):
+        layer = self.getGeoLayer()
+        p0 = polyline[0]
+        c0 = self.grid_ref.findCellCornerXY( p0[0] ,  p0[1] , self.getK() )
+        i,j = self.grid_ref.findCellXY( p0[0] ,  p0[1] , self.getK() )
+        print "%g,%g -> %d,%d   %d" % (p0[0] , p0[1] , i,j,c0)
+        for index in range(1,len(polyline)):
+            p1 = polyline[index]
+            c1 = self.grid_ref.findCellCornerXY( p1[0] ,  p1[1] , self.getK() )
+            i,j = self.grid_ref.findCellXY( p1[0] ,  p1[1] , self.getK() )
+            layer.addInterpBarrier( c0 , c1 )
+            print "%g,%g -> %d,%d   %d" % (p1[0] , p1[1] , i,j,c1)
+            print "Adding barrier %d -> %d" % (c0 , c1)
+            c0 = c1
+            
+        
+
+    def getGeoLayer(self):
+        """Returns the underlying geometric layer."""
+        return self.cNamespace().get_layer( self )
+
+
+
 cwrapper = CWrapper(ECL_LIB)
 CWrapper.registerObjectType("fault_block_layer", FaultBlockLayer)
 
@@ -149,3 +177,4 @@ FaultBlockLayer.cNamespace().get_next_id   = cwrapper.prototype("int   fault_blo
 FaultBlockLayer.cNamespace().scan_layer    = cwrapper.prototype("void  fault_block_layer_scan_layer( fault_block_layer , layer)")
 FaultBlockLayer.cNamespace().insert_block_content = cwrapper.prototype("void  fault_block_layer_insert_block_content( fault_block_layer , fault_block)")
 FaultBlockLayer.cNamespace().export_kw            = cwrapper.prototype("bool  fault_block_layer_export( fault_block_layer , ecl_kw )")
+FaultBlockLayer.cNamespace().get_layer            = cwrapper.prototype("layer_ref fault_block_layer_get_layer( fault_block_layer )")

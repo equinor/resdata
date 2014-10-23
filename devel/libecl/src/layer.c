@@ -16,6 +16,7 @@
    for more details. 
 */
 #include <stdlib.h>
+#include <math.h>
 
 #include <ert/util/type_macros.h>
 #include <ert/util/int_vector.h>
@@ -27,9 +28,12 @@
 
 
 typedef struct {
-  int cell_value;
-  int edges[4];
+  int  cell_value;
+  int  edges[4];
+  bool bottom_barrier;
+  bool left_barrier;
 } cell_type; 
+
 
 
 struct layer_struct {
@@ -50,16 +54,22 @@ layer_type * layer_alloc(int nx , int ny) {
   layer->nx = nx;
   layer->ny = ny;
   layer->cell_sum = 0;
-  layer->data = util_malloc( (layer->nx + 1)* (layer->ny + 1) * sizeof * layer->data );
   {
-    int g;
-    for (g=0; g < (layer->nx + 1)*(layer->ny + 1); g++) {
-      cell_type * cell = &layer->data[g];
-      cell->cell_value = 0;
-      cell->edges[RIGHT_EDGE] = 0;
-      cell->edges[LEFT_EDGE] = 0;
-      cell->edges[TOP_EDGE] = 0;
-      cell->edges[BOTTOM_EDGE] = 0;
+    int data_size = (layer->nx + 1)* (layer->ny + 1);
+    layer->data = util_malloc( data_size * sizeof * layer->data );
+    {
+      int g;
+      for (g=0; g < data_size; g++) {
+        cell_type * cell = &layer->data[g];
+        cell->cell_value = 0;
+        cell->edges[RIGHT_EDGE] = 0;
+        cell->edges[LEFT_EDGE] = 0;
+        cell->edges[TOP_EDGE] = 0;
+        cell->edges[BOTTOM_EDGE] = 0;
+        
+        cell->bottom_barrier = false;
+        cell->left_barrier = false;
+      }
     }
   }
   
@@ -74,6 +84,7 @@ void  layer_free( layer_type * layer ) {
   free(layer);
 }
   
+
 static int layer_get_global_cell_index( const layer_type * layer , int i , int j) {
   if ((i < 0) || (i >= layer->nx))
     util_abort("%s: invalid i value:%d Valid range: [0,%d) \n",__func__ , i , layer->nx);
@@ -82,6 +93,12 @@ static int layer_get_global_cell_index( const layer_type * layer , int i , int j
     util_abort("%s: invalid j value:%d Valid range: [0,%d) \n",__func__ , j , layer->ny);
   
   return i + j*(layer->nx + 1);
+}
+
+
+static cell_type* layer_iget_cell( const layer_type * layer , int i , int j) {
+  int g = layer_get_global_cell_index( layer , i , j );
+  return &layer->data[g];
 }
 
 
@@ -172,6 +189,7 @@ static int layer_get_global_edge_index( const layer_type * layer , int i , int j
   
   if ((i > layer->nx) || (j > layer->ny))
     util_abort("%s: invalid value for i,j \n",__func__);
+  
 
   if (i == layer->nx) {
     if (j == layer->ny)
@@ -519,3 +537,124 @@ int layer_replace_cell_values( layer_type * layer , int old_value , int new_valu
 
   return replace_count;
 }
+
+
+static void layer_assert_cell_index( const layer_type * layer , int i , int j ) {
+  if ((i < 0) || (j < 0))
+    util_abort("%s: invalid value for i,j  i:%d  [0,%d)    j:%d  [0,%d) \n",__func__ , i , layer->nx , j , layer->ny);
+  
+  if ((i >= layer->nx) || (j >= layer->ny))
+    util_abort("%s: invalid value for i,j  i:%d  [0,%d)    j:%d  [0,%d) \n",__func__ , i , layer->nx , j , layer->ny);
+  
+}
+
+
+
+bool layer_cell_contact( const layer_type * layer , int i1 , int j1 , int i2 , int j2) {
+  layer_assert_cell_index( layer , i1 , j1 );
+  layer_assert_cell_index( layer , i2 , j2 );
+  {
+    
+    if ((abs(i1 - i2) == 1) && (j1 == j2)) {
+      int i = util_int_max( i1,i2 );
+      const cell_type * cell = layer_iget_cell( layer , i , j1 );
+      return !cell->left_barrier;
+    }
+
+    if ((i1 == i2) && (abs(j1 - j2) == 1)) {
+      int j = util_int_max( j1 , j2 );
+      const cell_type * cell = layer_iget_cell( layer , i1 , j );
+      return !cell->bottom_barrier;
+    }
+    
+    return false;
+  }
+}
+
+
+
+void layer_add_barrier( layer_type * layer , int c1 , int c2) {
+  int dimx = layer->nx + 1;
+  int j1 = c1 / dimx;
+  int i1 = c1 % dimx;
+
+  int j2 = c2 / dimx;
+  int i2 = c2 % dimx;
+
+  
+  if ((j1 == j2) || (i1 == i2)) {
+    if (i1 == i2) {
+      int j;
+      int jmin = util_int_min(j1,j2);
+      int jmax = util_int_max(j1,j2);
+      
+      for (j=jmin; j < jmax; j++) {
+        cell_type * cell = layer_iget_cell( layer , i1 , j );
+        cell->left_barrier = true;
+      }
+    } else {
+      int i;
+      int imin = util_int_min(i1,i2);
+      int imax = util_int_max(i1,i2);
+      
+      for (i=imin; i < imax; i++) {
+        cell_type * cell = layer_iget_cell( layer , i , j1 );
+        cell->bottom_barrier = true;
+      }
+    }
+  } else
+    util_abort("%s: fatal error must have i1 == i2 || j1 == j2 \n",__func__);
+  
+}
+
+
+
+/*
+  Line is parameterized as: ax + by + c = 0
+*/
+static double distance_to_line(double a , double b , double c , int i , int j) {
+  double x0 = 1.0 * i;
+  double y0 = 1.0 * j;
+  
+  
+  return fabs(a*x0 + b*y0 + c) / sqrt(a*a + b*b);
+}
+
+
+
+
+void layer_add_interp_barrier( layer_type * layer , int c1 , int c2) {
+  int dimx = layer->nx + 1;
+  int j1 = c1 / dimx;
+  int i1 = c1 % dimx;
+
+  int j2 = c2 / dimx;
+  int i2 = c2 % dimx;
+  
+  if ((j1 == j2) || (i1 == i2)) 
+    layer_add_barrier( layer , c1 , c2 );
+  else {
+    int di = abs(i2 - i1) / (i2 - i1);
+    int dj = abs(j2 - j1) / (j2 - j1);
+    double a = 1.0 * (j2 - j1) / (i2 - i1);
+    double b = 1.0 * (j1 - a*i1); 
+
+    int i = i1;
+    int j = j1;
+    int c = c1;
+
+    while (c != c2) {
+      double dx = distance_to_line( a , -1 , b , i + di , j );
+      double dy = distance_to_line( a , -1 , b , i      , j + dj);
+
+      if (dx < dy) 
+        i += di;
+      else
+        j += dj;
+      
+      layer_add_barrier( layer , c , i + j*dimx);
+      c = i + j*dimx;
+    }
+  }
+}
+

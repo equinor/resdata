@@ -208,7 +208,7 @@ bool fault_block_trace_edge( const fault_block_type * block , double_vector_type
 
 
 
-void fault_block_list_neighbours( const fault_block_type * block, int_vector_type * neighbour_list) {
+void fault_block_list_neighbours( const fault_block_type * block, bool connected_only , int_vector_type * neighbour_list) {
   int_vector_reset( neighbour_list );
   {
     int_vector_type * cell_list = int_vector_alloc(0,0);
@@ -222,25 +222,42 @@ void fault_block_list_neighbours( const fault_block_type * block, int_vector_typ
       for (c = 0; c < int_vector_size( cell_list ); c++) {
         int j = int_vector_iget( cell_list , c) / layer_get_nx(layer);
         int i = int_vector_iget( cell_list , c) % layer_get_nx(layer);
-        
+        int cell_id = layer_iget_cell_value( layer , i , j );
+
         if (i > 0) {
           int neighbour_id = layer_iget_cell_value(layer , i - 1, j);
-          int_vector_append( neighbour_list , neighbour_id );
+          if (cell_id != neighbour_id) {
+            bool connected = layer_cell_contact( layer , i , j , i - 1 , j);
+            if (connected || !connected_only)
+              int_vector_append( neighbour_list , neighbour_id );
+          }
         }
 
         if (i < (layer_get_nx( layer) - 1)) {
           int neighbour_id = layer_iget_cell_value(layer , i + 1, j);
-          int_vector_append( neighbour_list , neighbour_id );
+          if (cell_id != neighbour_id) {
+            bool connected = layer_cell_contact( layer , i , j , i + 1 , j);
+            if (connected || !connected_only)
+              int_vector_append( neighbour_list , neighbour_id );
+          }
         }
 
         if (j > 0) {
           int neighbour_id = layer_iget_cell_value(layer , i, j - 1);
-          int_vector_append( neighbour_list , neighbour_id );
+          if (cell_id != neighbour_id) {
+            bool connected = layer_cell_contact( layer , i , j , i  , j - 1);
+            if (connected || !connected_only)
+              int_vector_append( neighbour_list , neighbour_id );
+          }
         }
 
         if (j < (layer_get_ny( layer) - 1)) {
           int neighbour_id = layer_iget_cell_value(layer , i, j + 1);
-          int_vector_append( neighbour_list , neighbour_id );
+          if (cell_id != neighbour_id) {
+            bool connected = layer_cell_contact( layer , i , j , i  , j + 1);
+            if (connected || !connected_only)
+              int_vector_append( neighbour_list , neighbour_id );
+          }
         }
       }
     }

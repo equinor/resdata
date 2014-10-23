@@ -49,7 +49,7 @@ extern "C" {
   bool               fault_block_trace_edge( const fault_block_type * block , double_vector_type * x_list , double_vector_type * y_list, int_vector_type * cell_list);
   const int_vector_type * fault_block_get_global_index_list( const fault_block_type * fault_block);
   void               fault_block_copy_content(fault_block_type * target_block , const fault_block_type * src_block );
-  void               fault_block_list_neighbours( const fault_block_type * block, int_vector_type * neighbour_list);
+  void               fault_block_list_neighbours( const fault_block_type * block , bool connected_only , int_vector_type * neighbour_list);
 
   UTIL_IS_INSTANCE_HEADER(fault_block);
   

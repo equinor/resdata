@@ -14,9 +14,12 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
+from ert.ecl import EclTypeEnum
+from ert.geo import Polyline
+
 from .fault_line import FaultLine
 from .fault_segments import FaultSegment , SegmentMap
-from  ert.ecl import EclTypeEnum
+
 
 class Layer(object):
     def __init__(self, grid , K):
@@ -53,7 +56,13 @@ class Layer(object):
             neighbor_cells += fl.getNeighborCells()
         return neighbor_cells
 
+    def getPolyline(self):
+        polyline = Polyline()
+        for fl in self:
+            polyline += fl.getPolyline()
+        return polyline
 
+        
     def processSegments(self):
         if self.__processed:
             return
@@ -196,4 +205,9 @@ class Fault(object):
             neighbor_cells += layer.getNeighborCells()
         return neighbor_cells
 
+        
+    def getPolyline(self , k):
+        layer = self[k]
+        return layer.getPolyline()
+        
 

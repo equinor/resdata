@@ -63,15 +63,58 @@ class Layer(BaseCClass):
     def free(self):
         self.cNamespace().free(self)
 
+    def cellContact(self , p1 , p2):
+        i1,j1 = p1
+        i2,j2 = p2
 
+        if not 0 <= i1 < self.getNX():
+            raise IndexError("Invalid i1:%d" % i1)
+
+        if not 0 <= i2 < self.getNX():
+            raise IndexError("Invalid i2:%d" % i2)
+
+        if not 0 <= j1 < self.getNY():
+            raise IndexError("Invalid i1:%d" % j1)
+
+        if not 0 <= j2 < self.getNY():
+            raise IndexError("Invalid i2:%d" % j2)
+
+        return self.cNamespace().cell_contact(self , i1,j1,i2,j2)
+        
+
+    def addInterpBarrier(self , c1 , c2):
+        self.cNamespace().add_interp_barrier( self , c1 , c2 )
+
+
+    
+    def addFaultBarrier(self , fault , K , link_segments = True ):
+        fault_layer = fault[K]
+        num_lines = len(fault_layer)
+        print "DEBUG: num_lines: %d fault:%s" % (num_lines , fault.getName())
+        for index , fault_line in enumerate(fault_layer):
+            for segment in fault_line:
+                c1 , c2 = segment.getCorners()
+                self.cNamespace().add_barrier(self , c1 , c2)
+
+            if index < num_lines - 1:
+                next_line = fault_layer[index + 1]
+                next_segment = next_line[0]
+                next_c1 , next_c2 = next_segment.getCorners()
+
+                if link_segments:
+                    self.addInterpBarrier( c2 , next_c1 )
+                    
 
 
 
 cwrapper = CWrapper(ECL_LIB)
 CWrapper.registerObjectType("layer", Layer)
-Layer.cNamespace().alloc      = cwrapper.prototype("c_void_p  layer_alloc(int,  int)")
-Layer.cNamespace().free       = cwrapper.prototype("void      layer_free(layer)")
-Layer.cNamespace().get_nx     = cwrapper.prototype("int       layer_get_nx(layer)")
-Layer.cNamespace().get_ny     = cwrapper.prototype("int       layer_get_ny(layer)")
-Layer.cNamespace().set_cell   = cwrapper.prototype("void      layer_iset_cell_value(layer , int , int , int)")
-Layer.cNamespace().get_cell   = cwrapper.prototype("int       layer_iget_cell_value(layer , int , int )")
+Layer.cNamespace().alloc        = cwrapper.prototype("c_void_p  layer_alloc(int,  int)")
+Layer.cNamespace().free         = cwrapper.prototype("void      layer_free(layer)")
+Layer.cNamespace().get_nx       = cwrapper.prototype("int       layer_get_nx(layer)")
+Layer.cNamespace().get_ny       = cwrapper.prototype("int       layer_get_ny(layer)")
+Layer.cNamespace().set_cell     = cwrapper.prototype("void      layer_iset_cell_value(layer , int , int , int)")
+Layer.cNamespace().get_cell     = cwrapper.prototype("int       layer_iget_cell_value(layer , int , int )")
+Layer.cNamespace().cell_contact = cwrapper.prototype("bool      layer_cell_contact(layer , int , int , int , int)")
+Layer.cNamespace().add_barrier  = cwrapper.prototype("void      layer_add_barrier(layer , int , int)")
+Layer.cNamespace().add_interp_barrier = cwrapper.prototype("void  layer_add_interp_barrier(layer , int , int)")

@@ -153,14 +153,14 @@ void test_neighbours( const ecl_grid_type * grid) {
       fault_block_type * block = fault_block_layer_get_block( layer , 1 );
 
       test_assert_int_equal( 0 , int_vector_size( neighbours ));
-      fault_block_list_neighbours( block , neighbours );
+      fault_block_list_neighbours( block , false , neighbours );
       test_assert_int_equal( 0 , int_vector_size( neighbours ));
     }
 
     {
       fault_block_type * block = fault_block_layer_get_block( layer , 2 );
 
-      fault_block_list_neighbours( block , neighbours );
+      fault_block_list_neighbours( block , false , neighbours );
       test_assert_int_equal( 1 , int_vector_size( neighbours ));
       test_assert_true( int_vector_contains( neighbours , 3 ));
     }

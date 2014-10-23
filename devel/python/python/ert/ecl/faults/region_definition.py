@@ -31,6 +31,8 @@ class RegionDefinition(object):
         self.edges = []
         self.__has_polygon = False
 
+
+    
                     
 
     @staticmethod
@@ -86,12 +88,47 @@ class RegionDefinition(object):
         
         return GeometryTools.convexHull( point_list )    
         
+        
+        
+    def findInternalBlocks(self , grid , start_block , fault_block_layer , block_list = None):
+        if block_list is None:
+            block_list = []
+        
+        if start_block in block_list:
+            return 
+            
+            
+        block_list.append( start_block )
+        print "Adding %s" % start_block
+        bbox = Polyline(init_points = grid.getBoundingBox2D())
+        bbox.assertClosed()
+        
+        p0 = start_block.getCentroid()
+        for block in start_block.getNeighbours():
+            print "%s -> %s" % (start_block , block)
 
-    def findInternalBlocks(self , grid , fault_block_layer):
-        block_list = []
-        raise NotImplementedError
+        for block in start_block.getNeighbours():
+            ray = Polyline( init_points = [ p0 , block.getCentroid() ] )
+            inside = True
+            for edge in self.edges:
+                
+                if isinstance( edge , Fault ):
+                    pl = edge.getPolyline( fault_block_layer.getK())
+                    extended_edge = GeometryTools.extendToEdge( bbox , edge.getPolyline( fault_block_layer.getK()))
+                else:
+                    extended_edge = GeometryTools.extendToEdge( bbox , edge )
+
+                if GeometryTools.polylinesIntersect( extended_edge , ray):
+                    inside = False
+             
+                inside = True
+   
+            if inside:
+                self.findInternalBlocks( grid , block , fault_block_layer , block_list )
+
         return block_list
         
+
 
     def hasPolygon(self):
         return self.__has_polygon
@@ -130,7 +167,6 @@ class RegionDefinition(object):
                         next_fault_block_layer = FaultBlockLayer( grid , k )
                         for block in current_fault_block_layer:
                             if block.containsPolyline(edge):
-                                print "Block %d is split due to edge:%s" % (block.getBlockID() , edge.name())
                                 sliced = GeometryTools.slicePolygon( boundingPolygon , edge )
                                 inside_list = []
                                 outside_list = []
@@ -160,6 +196,7 @@ class RegionDefinition(object):
                                 next_fault_block_layer.insertBlockContent( block )
 
                         current_fault_block_layer = next_fault_block_layer
+        
                 return current_fault_block_layer
         else:
             return fault_blocks

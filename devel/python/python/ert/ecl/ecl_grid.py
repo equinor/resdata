@@ -700,6 +700,7 @@ class EclGrid(CClass):
         else:
             corner_shift = 0
         
+        print "%g,%g -> %d,%d" % (x,y,i,j)
         
         nx = self.getNX()
         x0,y0,z0 = self.getCellCorner( corner_shift , ijk = (i,j,k))

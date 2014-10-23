@@ -365,6 +365,17 @@ void test_replace() {
 
 
 
+void test_interp_barrier() {
+  layer_type * layer = layer_alloc(10,10);
+  
+  layer_add_interp_barrier( layer , 0 , 22 );
+  
+  layer_free( layer );
+}
+
+
+
+
 int main(int argc , char ** argv) {
   test_create();
   test_get_invalid_cell();
@@ -375,4 +386,5 @@ int main(int argc , char ** argv) {
   test_content1();
   test_content2();
   test_replace();
+  test_interp_barrier();
 }

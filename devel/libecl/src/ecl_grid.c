@@ -3745,21 +3745,36 @@ bool ecl_grid_get_ij_from_xy( const ecl_grid_type * grid , double x , double y ,
         int ic = (i1 + i2) / 2;
         if (ecl_grid_sublayer_contanins_xy__(grid , x , y , k , i1 , ic , j1 , j2 , polygon))
           i2 = ic;
-        else
+        else {
+          if (!ecl_grid_sublayer_contanins_xy__(grid , x , y , k , ic , i2 , j1 , j2 , polygon))
+            util_abort("%s: point nowhere to be found ... \n",__func__);
           i1 = ic;
+        }
       }
-
+      
       if ((j2 - j1) > 1) {
         int jc = (j1 + j2) / 2;
         if (ecl_grid_sublayer_contanins_xy__(grid , x , y , k , i1 , i2 , j1 , jc , polygon))
           j2 = jc;
-        else
+        else {
+          if (!ecl_grid_sublayer_contanins_xy__(grid , x , y , k , i1 , i2 , jc , j2 , polygon))
+            util_abort("%s: point nowhere to be found ... \n",__func__);
           j1 = jc;
+        }
       }
       
+      printf("Narrowing: %d %d   %d %d \n",i1,i2,j1,j2);
+
+      /** Must have some on-edge equality testing here as well. */
       if ((i2 - i1) == 1 && (j2 - j1) == 1) {
+        double xc,yc,zc;
         *i = i1;
         *j = j1;
+        ecl_grid_get_xyz3(grid , i1,j1,k,&xc,&yc,&zc);
+        printf("Cell center: dx:%g   dy:%g \n",xc - x , yc - y);
+        geo_polygon_shift( polygon , -x , -y);
+        
+        geo_polygon_fprintf( polygon , stdout );
         break;
       }
     }

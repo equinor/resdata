@@ -66,7 +66,8 @@ extern "C" {
   int          layer_get_cell_sum( const layer_type * layer );
   bool         layer_trace_block_content( layer_type * layer , bool erase , int start_i , int start_j , int value , int_vector_type * i_list , int_vector_type * j_list);
   bool         layer_trace_block_edge( const layer_type * layer , int i , int j , int value , struct_vector_type * corner_list , int_vector_type * cell_list);
-  
+  bool         layer_cell_contact( const layer_type * layer , int i1 , int j1 , int i2 , int j2);
+  void         layer_add_interp_barrier( layer_type * layer , int c1 , int c2);
   
 UTIL_IS_INSTANCE_HEADER( layer );
 UTIL_SAFE_CAST_HEADER( layer );
