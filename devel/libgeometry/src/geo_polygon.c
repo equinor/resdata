@@ -103,3 +103,24 @@ geo_polygon_type * geo_polygon_fload_alloc_irap( const char * filename ) {
   }
   return polygon;
 }
+
+
+
+void geo_polygon_reset(geo_polygon_type * polygon ) {
+  double_vector_reset( polygon->xcoord );
+  double_vector_reset( polygon->ycoord );
+}
+
+
+
+void geo_polygon_shift(geo_polygon_type * polygon , double x0 , double y0) {
+  double_vector_shift( polygon->xcoord , x0 );
+  double_vector_shift( polygon->ycoord , y0 );
+}
+
+
+void geo_polygon_fprintf(const geo_polygon_type * polygon , FILE * stream) {
+  int i;
+  for (i=0; i < double_vector_size( polygon->xcoord ); i++)
+    fprintf(stream , "%10.3f  %10.3f \n", double_vector_iget( polygon->xcoord , i ) , double_vector_iget( polygon->ycoord , i));
+}
