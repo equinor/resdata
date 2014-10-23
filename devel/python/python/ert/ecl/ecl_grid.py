@@ -661,6 +661,25 @@ class EclGrid(CClass):
         return cfunc.cell_contains( self , gi , x,y,z)
 
 
+    def findCellXY(self , x, y , k):
+        """Will find the i,j of cell with utm coordinates x,y.
+        
+        The @k input is the layer you are interested in, the allowed
+        values for k are [0,nz]. If the coordinates (x,y) are found to
+        be outside the grid a ValueError exception is raised.
+        """
+        if 0 <= k <= self.getNZ():
+            i = ctypes.c_int()
+            j = ctypes.c_int()
+            ok = cfunc.get_ij_xy( self , x,y,k , ctypes.byref(i) , ctypes.byref(j))
+            if ok:
+                return (i.value , j.value)
+            else:
+                raise ValueError("Could not find the point:(%g,%g) in layer:%d" % (x,y,k))
+        else:
+            raise IndexError("Invalid layer value:%d" % k)
+
+
     def cell_regular(self, active_index = None , global_index = None , ijk = None):
         """
         The ECLIPSE grid models often contain various degenerate cells,
@@ -994,6 +1013,7 @@ cfunc.get_xyz1                     = cwrapper.prototype("void ecl_grid_get_xyz1(
 cfunc.get_cell_corner_xyz1         = cwrapper.prototype("void ecl_grid_get_cell_corner_xyz1( ecl_grid , int , int , double* , double* , double*)")
 cfunc.get_corner_xyz               = cwrapper.prototype("void ecl_grid_get_corner_xyz( ecl_grid , int , int , int, double* , double* , double*)")
 cfunc.get_xyz1A                    = cwrapper.prototype("void ecl_grid_get_xyz1A( ecl_grid , int , double* , double* , double*)")
+cfunc.get_ij_xy                    = cwrapper.prototype("bool ecl_grid_get_ij_from_xy( ecl_grid , double , double , int , int* , int*)")
 cfunc.get_ijk_xyz                  = cwrapper.prototype("int  ecl_grid_get_global_index_from_xyz( ecl_grid , double , double , double , int)")
 cfunc.cell_contains                = cwrapper.prototype("bool ecl_grid_cell_contains_xyz1( ecl_grid , int , double , double , double )")
 cfunc.cell_regular                 = cwrapper.prototype("bool ecl_grid_cell_regular1( ecl_grid , int)")
