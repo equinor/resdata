@@ -419,7 +419,6 @@ class EclSum(BaseCClass):
             day1 = start.day
             day2 = end.day
             if extend_end:
-                day2 = 1
                 if timeUnit == 'm':
                     if day2 > 1:
                         month2 += 1
@@ -432,6 +431,7 @@ class EclSum(BaseCClass):
                         year2 += 1
                         month2 = 1
             day1 = 1
+            day2 = 1
 
             start = datetime.date( year1, month1 , day1)
             end =  datetime.date(year2 , month2 , day2)
